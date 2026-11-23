@@ -15,7 +15,9 @@ import {
   collectCoverageProducerArtifacts,
   compareCoverageProducerArtifacts,
   discoverCoverageArtifactSources,
+  expectedShardFileCount,
   resolveCoverageProducerIdentity,
+  verifyCoverageInvocationRun,
   writeCoverageProducerArtifact,
 } from "@beep/repo-cli/test/Quality";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
@@ -27,9 +29,11 @@ import { assertDefined } from "@effect/vitest/utils";
 import { createInstrumenter } from "@vitest/istanbul-lib-instrument";
 import convertV8 from "ast-v8-to-istanbul";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constant, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -1757,5 +1761,83 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         })
       );
     });
+  }
+);
+
+describe("expectedShardFileCount", () => {
+  it("gives the first files % total shards one extra file, as Vitest slices them", () => {
+    expect(A.map(A.range(1, 8), (index) => expectedShardFileCount(41, { index, total: 8 }))).toEqual([
+      6, 5, 5, 5, 5, 5, 5, 5,
+    ]);
+    expect(expectedShardFileCount(1, { index: 4, total: 8 })).toBe(0);
+    expect(expectedShardFileCount(39, undefined)).toBe(39);
+    expect(pipe(10, expectedShardFileCount({ index: 2, total: 4 }))).toBe(3);
+  });
+});
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
+  "verifyCoverageInvocationRun",
+  (it) => {
+    const listed = ["packages/law/test/a.test.ts", "packages/law/test/b.test.ts", "packages/law/test/c.test.ts"];
+    const verify = Effect.fnUntraced(function* (
+      ran: ReadonlyArray<string>,
+      withCoverage: boolean,
+      expectedTestFiles: ReadonlyArray<string> = listed,
+      shard = { index: 1, total: 2 }
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-coverage-run-" });
+      yield* fs.makeDirectory(path.join(root, "packages/law/coverage"), { recursive: true });
+      const results = yield* encode({
+        success: true,
+        numFailedTests: 0,
+        numFailedTestSuites: 0,
+        testResults: A.map(ran, (file) => ({ name: path.join(root, file), status: "passed" })),
+      });
+      yield* fs.writeFileString(path.join(root, "packages/law/coverage/unit-results.json"), results);
+      if (withCoverage) yield* fs.writeFileString(path.join(root, "packages/law/coverage/coverage-final.json"), "{}");
+      const selection = CoverageProducerPackage.make({
+        packageName: "@beep/law",
+        packagePath: "packages/law",
+        expectedTestFiles,
+        testReportPath: "coverage/unit-results.json",
+        testRuntime: "node",
+        testRuntimeVersion: "22.22.3",
+        shard,
+      });
+      const exit = yield* Effect.exit(verifyCoverageInvocationRun(root, selection));
+      return Exit.match(exit, { onSuccess: (count) => `ran ${count}`, onFailure: Cause.pretty });
+    });
+
+    it.effect("accepts a shard that ran exactly its slice and left coverage data", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(A.take(listed, 2), true);
+        expect(outcome).toBe("ran 2");
+      })
+    );
+
+    it.effect("fails a shard that ran fewer files than its slice", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(A.take(listed, 1), true);
+        expect(outcome).toContain(
+          "@beep/law segment 0, shard 1/2: ran 1 test files, expected 2 of the segment's 3 listed."
+        );
+      })
+    );
+
+    it.effect("accepts an empty slice with no files and no coverage data", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify([], false, A.take(listed, 1), { index: 4, total: 8 });
+        expect(outcome).toBe("ran 0");
+      })
+    );
+
+    it.effect("fails a shard that ran its files but left no coverage data", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(A.take(listed, 2), false);
+        expect(outcome).toContain("missing required file");
+      })
+    );
   }
 );
