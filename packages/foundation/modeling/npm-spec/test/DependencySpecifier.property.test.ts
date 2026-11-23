@@ -34,13 +34,10 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, generation: S.Sch
   );
 };
 
-// The classified codec's public models permit hand-built raw/range/name pairs.
-// Generate its round-trip domain by parsing wire strings, rather than inventing
-// inconsistent pairs. Each of the models is also tested independently below.
 const SpecifierText = S.String.check(
   S.isPattern(/^(?:catalog:|workspace:|file:|link:|portal:|npm:|https:\/\/|git\+https:\/\/)[a-zA-Z0-9._@/~^*:-]*$/)
 );
-const ClassifiedDomain = S.declare(S.is(DependencySpecifier.FromString), {
+const ClassifiedParsedFromWireStringsNotHandBuiltPairs = S.declare(S.is(DependencySpecifier.FromString), {
   toCodecArbitrary: () =>
     S.link<typeof DependencySpecifier.FromString.Type>()(
       SpecifierText,
@@ -65,7 +62,11 @@ describe("DependencySpecifier property floor", () => {
   roundTrips("DistTagSpecifier", DistTagSpecifier);
   roundTrips("RawSpecifier", RawSpecifier);
   roundTrips("DependencySpecifier", DependencySpecifier, GeneratableSpecifier);
-  roundTrips("DependencySpecifier.FromString", DependencySpecifier.FromString, ClassifiedDomain);
+  roundTrips(
+    "DependencySpecifier.FromString",
+    DependencySpecifier.FromString,
+    ClassifiedParsedFromWireStringsNotHandBuiltPairs
+  );
 });
 
 it.effect.prop(
@@ -121,12 +122,15 @@ it.effect.prop(
         const formatted = parsed.resolve(version);
         const projection = DependencySpecifier.resolveWorkspace(text, version);
         assert.strictEqual(formatted, projection);
-        // Published ranges and npm aliases no longer need workspace resolution.
         assertTrue(DependencySpecifier.isValid(formatted));
         const published = yield* S.decodeEffect(DependencySpecifier.FromString)(formatted);
         const value4 = yield* S.encodeEffect(DependencySpecifier.FromString)(published);
         assert.strictEqual(value4, formatted);
-        assert.strictEqual(DependencySpecifier.resolveWorkspace(formatted, version), formatted);
+        assert.strictEqual(
+          DependencySpecifier.resolveWorkspace(formatted, version),
+          formatted,
+          "published ranges and npm aliases no longer need workspace resolution"
+        );
       }
     }),
   runs

@@ -35,9 +35,7 @@ const ManifestWire = S.Struct({
   name: S.optionalKey(S.Json),
   metadata: S.optionalKey(S.Json),
 });
-// Generate decoded wire values. Hand-built models may omit `rest` or put
-// dependency keys into it; the wire codec canonicalizes those representations.
-const WireDomain = S.declare(S.is(Manifest), {
+const DecodedWireValuesBecauseTheCodecCanonicalizesHandBuiltModels = S.declare(S.is(Manifest), {
   toCodecArbitrary: () =>
     S.link<Manifest>()(
       ManifestWire,
@@ -57,7 +55,7 @@ describe("Manifest property floor", () => {
   roundTrips("ManifestDecodeError", ManifestDecodeError);
   roundTrips("UnresolvedDependencyError", UnresolvedDependencyError);
   roundTrips("Manifest", Manifest);
-  roundTrips("Manifest.schema", Manifest.schema, WireDomain);
+  roundTrips("Manifest.schema", Manifest.schema, DecodedWireValuesBecauseTheCodecCanonicalizesHandBuiltModels);
 });
 
 it.effect.prop(
