@@ -13,6 +13,9 @@
     "sourceMap": false,
     "types": ["node"],
     "paths": {
+      "@beep/identity/internal/generated/Registry.data": [
+        "./src/internal/generated/Registry.data.ts"
+      ],
       "@beep/identity/internal/schemaStatics": [
         "./src/internal/schemaStatics.ts"
       ]

@@ -1,4 +1,4 @@
-import { IdentityAuthority } from "@beep/identity";
+import { IdentityAuthority } from "@beep/identity/Authority";
 import { $I } from "@beep/identity/packages";
 import {
   FileRoute,

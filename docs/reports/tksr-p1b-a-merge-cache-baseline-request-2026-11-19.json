@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "d8b876ca6f218a17d3caa9778318b5d9d92b69f4b1255cb3e92b733b02868072",
+    "@beep/rdf": "44eb69ffd56c3da0106ac6656ecc5472876c77040e949a85f9d803270999120f"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "Re-record the root and @beep/rdf after merging P1 PR A's final head 7a7b87f0328, which re-recorded them: @beep/rdf keeps PR B's @beep/spdx dependency edge, //#lint:identity-registry keeps the registry shard input glob, and turbo.json carries the regenerated seal-input lists. No command, cache flag, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p1b-a-merge-cache-review-2026-11-19.md",
+      "sha256": "9c8fc30a3333e6d879b41dbfc8ab2acccdd1b439c8998c16a4925d7f72bd3380"
+    }
+  },
+  "subjects": ["//", "@beep/rdf"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "xsd",
+    "iri": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "terms": ["anyURI", "boolean", "dateTime", "double", "integer", "string"],
+  "bindings": [],
+  "deprecations": []
+}

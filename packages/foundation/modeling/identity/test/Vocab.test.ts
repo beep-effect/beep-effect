@@ -1,116 +1,64 @@
-import { fcRuns } from "@beep/fc-runs";
-import { CoreVocab, mergeVocab, SemanticFoundationVocab, SparVocab, VocabRegistry } from "@beep/identity";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Equal from "effect/Equal";
-import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { Curie, Expand, Predicate } from "@beep/identity";
+import type { Curie, Expand, Predicate } from "@beep/identity/Vocab";
 
-const decodeVocabRegistryOption = S.decodeOption(VocabRegistry);
-const decodeUnknownVocabRegistryOption = S.decodeUnknownOption(VocabRegistry);
-const encodeVocabRegistryOption = S.encodeOption(VocabRegistry);
+type RegistryCurie = Curie<typeof RegistryVocab>;
+type RegistryPredicate = Predicate<typeof RegistryVocab>;
 
-type CoreCurie = Curie<typeof CoreVocab>;
-type CorePredicate = Predicate<typeof CoreVocab>;
-
-describe("Vocab literal types", () => {
-  it("derives CURIE literals from CoreVocab data", () => {
-    expectTypeOf<"skos:prefLabel" extends CoreCurie ? true : false>().toEqualTypeOf<true>();
-    expectTypeOf<"skos:prefLabl" extends CoreCurie ? true : false>().toEqualTypeOf<false>();
-    expectTypeOf<"dcterms:creator" extends CoreCurie ? true : false>().toEqualTypeOf<true>();
+describe("Vocab literal types over the generated registry", () => {
+  it("derives CURIE literals from the registry data", () => {
+    expectTypeOf<"skos:prefLabel" extends RegistryCurie ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<"skos:prefLabl" extends RegistryCurie ? true : false>().toEqualTypeOf<false>();
+    expectTypeOf<"dcterms:creator" extends RegistryCurie ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<"doco:Section" extends RegistryCurie ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<"cito:unknown" extends RegistryCurie ? true : false>().toEqualTypeOf<false>();
   });
 
   it("expands CURIE literals to exact namespace IRIs", () => {
     expectTypeOf<
-      Expand<"skos:prefLabel", typeof CoreVocab>
+      Expand<"skos:prefLabel", typeof RegistryVocab>
     >().toEqualTypeOf<"http://www.w3.org/2004/02/skos/core#prefLabel">();
-    expectTypeOf<Expand<"dcterms:creator", typeof CoreVocab>>().toEqualTypeOf<"http://purl.org/dc/terms/creator">();
+    expectTypeOf<Expand<"fabio:Report", typeof RegistryVocab>>().toEqualTypeOf<"http://purl.org/spar/fabio/Report">();
+    expectTypeOf<Expand<"skos:prefLabl", typeof RegistryVocab>>().toEqualTypeOf<never>();
   });
 
   it("accepts inverse predicates only for known CURIEs", () => {
-    expectTypeOf<"^rdfs:subClassOf" extends CorePredicate ? true : false>().toEqualTypeOf<true>();
-    expectTypeOf<"^rdfs:subClasOf" extends CorePredicate ? true : false>().toEqualTypeOf<false>();
+    expectTypeOf<"^rdfs:subClassOf" extends RegistryPredicate ? true : false>().toEqualTypeOf<true>();
+    expectTypeOf<"^rdfs:subClasOf" extends RegistryPredicate ? true : false>().toEqualTypeOf<false>();
   });
 
-  it("preserves extension literals when vocabularies are merged", () => {
-    const extended = mergeVocab(CoreVocab, {
-      ex: {
-        iri: "https://example.test/ns#",
-        terms: ["Thing"],
-      },
-    } as const);
+  it("derives the union of a vocabulary extension", () => {
+    const extension = { ex: { iri: "https://example.test/ns#", terms: ["Thing"] } } as const;
 
-    expectTypeOf<Curie<typeof extended>>().toEqualTypeOf<CoreCurie | "ex:Thing">();
-    expect(extended.ex.terms).toEqual(["Thing"]);
-  });
-
-  it("extends the core registry with the repository semantic authority", () => {
-    expect(SemanticFoundationVocab.beep).toEqual({
-      iri: "https://beep-effect.com/ns/",
-      terms: [
-        "ontology/semantic-foundation",
-        "ontology/semantic-foundation/taxonomy/legal-intake",
-        "ontology/semantic-foundation/filing-root/local-vault",
-        "ontology/semantic-foundation/filing-root/box-mirror",
-      ],
-    });
+    expectTypeOf<Curie<typeof extension>>().toEqualTypeOf<"ex:Thing">();
+    expectTypeOf<Curie<typeof RegistryVocab & typeof extension>>().toEqualTypeOf<RegistryCurie | "ex:Thing">();
   });
 });
 
-describe("CoreVocab runtime invariants", () => {
+describe("generated registry vocabulary invariants", () => {
   it("uses namespace IRIs ending in # or /", () => {
-    for (const [prefix, vocab] of R.toEntries(CoreVocab)) {
-      expect(Str.endsWith("#")(vocab.iri) || Str.endsWith("/")(vocab.iri), prefix).toBe(true);
+    for (const [prefix, entry] of R.toEntries(RegistryVocab)) {
+      expect(Str.endsWith("#")(entry.iri) || Str.endsWith("/")(entry.iri), prefix).toBe(true);
     }
   });
 
-  it("has non-empty term lists", () => {
-    for (const [prefix, vocab] of R.toEntries(CoreVocab)) {
-      expect(vocab.terms.length, prefix).toBeGreaterThan(0);
+  it("lists every namespace's terms strictly ascending, so no term repeats", () => {
+    for (const [prefix, entry] of R.toEntries(RegistryVocab)) {
+      const terms: ReadonlyArray<string> = entry.terms;
+
+      expect(terms.length, prefix).toBeGreaterThan(0);
+      expect(A.dedupe(A.sort(terms, Order.String)), prefix).toStrictEqual(terms);
     }
   });
 
-  it("has no duplicate terms", () => {
-    for (const [prefix, vocab] of R.toEntries(CoreVocab)) {
-      const terms: ReadonlyArray<string> = vocab.terms;
-      const duplicates = A.filter(terms, (term, index) => terms.indexOf(term) !== index);
-
-      expect(duplicates, prefix).toEqual([]);
-    }
-  });
-
-  it.prop(
-    "round-trips generated vocabulary registries through their encoded shape",
-    [Arbitrary.schema(VocabRegistry)],
-    ([registry]) => {
-      const decoded = O.flatMap(encodeVocabRegistryOption(registry), decodeUnknownVocabRegistryOption);
-
-      expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
-
-      return true;
-    },
-    { arbitrary: fcRuns(100) }
-  );
-
-  it("accepts CoreVocab through the runtime registry schema", () => {
-    decodeVocabRegistryOption(CoreVocab).pipe(O.isSome, assertTrue);
-  });
-});
-
-describe("pinned SPAR vocabulary", () => {
-  it("derives curated SPAR CURIEs and exact expanded IRIs", () => {
-    expectTypeOf<"doco:Section" extends Curie<typeof SparVocab> ? true : false>().toEqualTypeOf<true>();
-    expectTypeOf<"cito:citesAsEvidence" extends Curie<typeof SparVocab> ? true : false>().toEqualTypeOf<true>();
-    expectTypeOf<"cito:unknown" extends Curie<typeof SparVocab> ? true : false>().toEqualTypeOf<false>();
-    expectTypeOf<Expand<"fabio:Report", typeof SparVocab>>().toEqualTypeOf<"http://purl.org/spar/fabio/Report">();
-    expect(SparVocab.doco.iri).toBe("http://purl.org/spar/doco/");
-    expect(SparVocab.deo.terms).toEqual(["Introduction", "Methods"]);
-    expect(SparVocab.cito.terms).toEqual(["cites", "citesAsEvidence"]);
+  it("keeps the curated SPAR inventories", () => {
+    expect(RegistryVocab.doco.iri).toBe("http://purl.org/spar/doco/");
+    expect(RegistryVocab.deo.terms).toEqual(["Introduction", "Methods"]);
+    expect(RegistryVocab.cito.terms).toEqual(["cites", "citesAsEvidence"]);
   });
 });

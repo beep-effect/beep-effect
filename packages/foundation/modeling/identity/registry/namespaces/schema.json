@@ -1,0 +1,19 @@
+{
+  "namespace": { "prefix": "schema", "iri": "https://schema.org/" },
+  "terms": [
+    "CreativeWork",
+    "Event",
+    "Organization",
+    "Person",
+    "SportsTeam",
+    "Thing",
+    "URL",
+    "birthDate",
+    "knows",
+    "memberOf",
+    "name",
+    "url"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

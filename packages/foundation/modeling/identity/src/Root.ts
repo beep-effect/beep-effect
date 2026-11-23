@@ -4,7 +4,7 @@
  * **Details**
  *
  * `$BeepId` is the same root as `$I` in `@beep/identity/packages`, built in a
- * module that imports only `./Id.ts`. A package whose modules end up in a
+ * module that imports only `./Id.ts` and `./Authority.ts`. A package whose modules end up in a
  * deployed bundle (the CI runner Lambda handlers) derives its own composer
  * from it in a package-local leaf module, so the bundle never loads the
  * registry: registering a new workspace package then leaves the bundle, its
@@ -30,6 +30,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { IdentityAuthority } from "./Authority.ts";
 import * as Identity from "./Id.ts";
 
 /**
@@ -57,6 +58,6 @@ import * as Identity from "./Id.ts";
  * @since 0.0.0
  */
 export const $BeepId: Identity.IdentityComposer<"@beep"> = Identity.make("beep", {
-  authority: Identity.IdentityAuthority,
+  authority: IdentityAuthority,
   prefix: "beep",
 }).$BeepId;

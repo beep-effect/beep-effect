@@ -27,6 +27,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { IdentityAuthority } from "./Authority.ts";
 import * as Identity from "./Id.ts";
 
 /**
@@ -48,7 +49,7 @@ import * as Identity from "./Id.ts";
  * @category configuration
  * @since 0.0.0
  */
-export const $I = Identity.make("beep", { authority: Identity.IdentityAuthority, prefix: "beep" }).$BeepId;
+export const $I = Identity.make("beep", { authority: IdentityAuthority, prefix: "beep" }).$BeepId;
 
 const generatedComposers = /*#__PURE__*/ $I.compose(
   // IaC Infra Package

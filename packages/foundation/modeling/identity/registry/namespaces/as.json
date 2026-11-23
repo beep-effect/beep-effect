@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "as",
+    "iri": "http://www.w3.org/ns/activitystreams#"
+  },
+  "terms": ["generator"],
+  "bindings": [],
+  "deprecations": []
+}
