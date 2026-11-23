@@ -7,16 +7,16 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationMention, CitationMentionReceipt } from "@beep/law-practice-domain/values";
 import { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   toTextAnchorVerificationReceipt,
   VerifiedSourceText,
   VerifiedTextAnchor,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";

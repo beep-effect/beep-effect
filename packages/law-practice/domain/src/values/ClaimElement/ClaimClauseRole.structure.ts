@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -3209,7 +3209,7 @@ class SourcePlanner {
  * ```ts
  * import { compileClaimSourceElements } from "../../src/values/ClaimElement/ClaimClauseRole.structure.ts"
  * import type { ClaimClauseRolePlan } from "@beep/law-practice-domain/values/ClaimElement"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import * as O from "effect/Option"
  * import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument"
  *

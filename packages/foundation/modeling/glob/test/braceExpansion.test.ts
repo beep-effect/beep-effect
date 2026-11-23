@@ -1,6 +1,3 @@
-// Task 2 unit + hardening tests for the balanced-match and brace-expansion
-// ports. The engine is pure sync — no Effect in this file.
-
 import { BalancedResult, balanced } from "@beep/glob/internal/balancedMatch";
 import { expand } from "@beep/glob/internal/braceExpansion";
 import { GuardExceeded, InvalidCap } from "@beep/glob/internal/limits";
@@ -21,7 +18,7 @@ const reasonOf = (fn: () => unknown): string => {
   throw new Error("expected a GuardExceeded throw");
 };
 
-describe("balancedMatch", () => {
+describe("balancedMatch port (pure sync engine, no Effect)", () => {
   it("finds the first balanced pair", () => {
     assert.deepStrictEqual(
       balanced("{", "}", "pre{in{nest}}post"),
@@ -91,7 +88,7 @@ describe("balancedMatch", () => {
   });
 });
 
-describe("braceExpansion", () => {
+describe("braceExpansion port (pure sync engine, no Effect)", () => {
   it("expands comma sets", () => {
     assert.deepStrictEqual(expand("a{b,c}d"), ["abd", "acd"]);
   });
@@ -158,11 +155,14 @@ describe("braceExpansion", () => {
   });
 
   it("preserves dollar-prefixed brace groups", () => {
-    // Built by concatenation: a literal "${...}" in a plain string trips the
-    // noTemplateCurlyInString lint, but here it IS the glob syntax under test.
-    const dollarGroup = "$" + "{a,b}";
-    assert.deepStrictEqual(expand(dollarGroup), [dollarGroup]);
-    assert.deepStrictEqual(expand(`${dollarGroup}{c,d}`), [`${dollarGroup}c`, `${dollarGroup}d`]);
+    const dollarGroupConcatenatedSinceTheGlobSyntaxTripsNoTemplateCurlyInString = "$" + "{a,b}";
+    assert.deepStrictEqual(expand(dollarGroupConcatenatedSinceTheGlobSyntaxTripsNoTemplateCurlyInString), [
+      dollarGroupConcatenatedSinceTheGlobSyntaxTripsNoTemplateCurlyInString,
+    ]);
+    assert.deepStrictEqual(expand(`${dollarGroupConcatenatedSinceTheGlobSyntaxTripsNoTemplateCurlyInString}{c,d}`), [
+      `${dollarGroupConcatenatedSinceTheGlobSyntaxTripsNoTemplateCurlyInString}c`,
+      `${dollarGroupConcatenatedSinceTheGlobSyntaxTripsNoTemplateCurlyInString}d`,
+    ]);
   });
 
   it("returns an empty array for empty input", () => {
@@ -220,13 +220,11 @@ describe("braceExpansion hardening", () => {
   });
 
   it("fails typed on nesting past the cap, never a stack overflow", () => {
-    // The comma is load-bearing: a comma-free {{{...}}} never recurses upstream
-    // (returned unexpanded); comma-bearing nesting descends one expand_ frame
-    // per level.
     const bomb = `${Str.repeat(300)("{")}a,b${Str.repeat(300)("}")}`;
     assert.strictEqual(
       reasonOf(() => expand(bomb)),
-      "NestingDepthExceeded"
+      "NestingDepthExceeded",
+      "the comma is load-bearing: comma-bearing nesting descends one expand_ frame per level, while a comma-free nest is returned unexpanded upstream"
     );
   });
 
@@ -236,11 +234,11 @@ describe("braceExpansion hardening", () => {
   });
 
   it("fails typed when the expansion budget is exhausted", () => {
-    // 2^17 = 131_072 > 100_000
     const bomb = Str.repeat(17)("{a,b}");
     assert.strictEqual(
       reasonOf(() => expand(bomb)),
-      "ExpansionBudgetExceeded"
+      "ExpansionBudgetExceeded",
+      "2^17 = 131_072 > 100_000"
     );
   });
 
@@ -254,7 +252,7 @@ describe("braceExpansion hardening", () => {
 
   it("survives the a{},{},{} exponential-blowup shape (lazy post preserved)", () => {
     const r = expand(`a${Str.repeat(60)("{},")}b`);
-    assert.isArray(r); // completing within the test timeout IS the assertion
+    assert.isArray(r, "completing within the test timeout IS the assertion");
   });
 
   it("survives a {a},b} rewrite chain under the cap (for-loop rewrite preserved)", () => {
@@ -262,11 +260,10 @@ describe("braceExpansion hardening", () => {
   });
 
   it("fails typed, not with a stack overflow, past the sequential-group cap", () => {
-    // Each sequential group is one parseCommaParts frame; upstream left this
-    // surface unguarded and would recurse 5000 deep here.
     assert.strictEqual(
       reasonOf(() => expand(`${Str.repeat(5000)("{a},")}b}`)),
-      "NestingDepthExceeded"
+      "NestingDepthExceeded",
+      "each sequential group is one parseCommaParts frame; upstream left this surface unguarded and would recurse 5000 deep"
     );
   });
 
@@ -279,11 +276,11 @@ describe("braceExpansion hardening", () => {
   });
 
   it("guards parseCommaParts against long sequential group chains", () => {
-    // Sequential {x} groups recurse through parseCommaParts on the post side.
     const chain = `{${Str.repeat(300)("{x},")}y}`;
     assert.strictEqual(
       reasonOf(() => expand(chain)),
-      "NestingDepthExceeded"
+      "NestingDepthExceeded",
+      "sequential {x} groups recurse through parseCommaParts on the post side"
     );
   });
 
@@ -294,9 +291,8 @@ describe("braceExpansion hardening", () => {
   });
 
   it("stays fast and exact just under the budget", () => {
-    // 2^16 = 65_536 <= 100_000: expands fully, no throw
     const r = expand(Str.repeat(16)("{a,b}"));
-    assert.lengthOf(r, 65_536);
+    assert.lengthOf(r, 65_536, "2^16 = 65_536 <= 100_000: expands fully, no throw");
   });
 });
 

@@ -1,0 +1,8 @@
+---
+title: "P2: selector semantics follow the W3C model: Range ends before the end selector, Refined is relative, Fragment resolves NotFound"
+date: 2026-11-22
+lane: "goals/text-knowledge-stack-rebuild-p2-text"
+reversal: "Make Range run to the end of its end selector, or interpret a fragment specification, by a decision file before P3 builds on resolve."
+---
+
+The design module described Range as the span from the start of from to the end of to. The W3C Web Annotation model (4.2.8) says the selection runs through to the beginning of the ending selector, but not including it, and endSelector is the exclusive end point. The union claims to be the Web Annotation selector algebra, so P2 follows the specification; an empty or inverted result is NotFound. Refined applies by inside the segment base selects, with offsets relative to that segment. Fragment.conformsTo is a required absolute IRI: a fragment without a specification cannot be interpreted, so it is not a selector of this algebra; DocumentAnnotation keeps its fragment as a wire DTO without conformsTo. No fragment specification is interpreted over plain text in P2, so resolve returns NotFound for every Fragment. Position resolves through convertPosition and is NotFound when the conversion refuses. Quote counts every occurrence at scalar boundaries whose context matches, overlapping occurrences included, in one linear scan whose needle is prefix, exact and suffix together: one is Unique, two or more are Ambiguous with the count, and the first hit is never returned. A composite selector whose part is NotFound is NotFound; otherwise any ambiguous part makes it Ambiguous with the product of the counts. Unique always carries a utf16-code-unit position and the slice.

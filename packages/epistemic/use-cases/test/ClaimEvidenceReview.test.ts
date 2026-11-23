@@ -6,12 +6,12 @@ import {
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
 import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";

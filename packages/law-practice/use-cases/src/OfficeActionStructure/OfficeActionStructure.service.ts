@@ -13,14 +13,14 @@ import {
   recognizeOfficeActionPair,
   ShortenedStatutoryPeriodCandidate,
 } from "@beep/law-practice-domain";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { LiteralKit } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifiedTextAnchorError,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit } from "@beep/schema";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";

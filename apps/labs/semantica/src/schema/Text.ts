@@ -1,7 +1,7 @@
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
 import { $SemanticaId } from "@beep/identity/packages";
-import { SourceTextDigest, SourceTextExtractor, TextAnchor, TextAnchorVerificationReceipt } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, TextAnchor, TextAnchorVerificationReceipt } from "@beep/text";
 import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

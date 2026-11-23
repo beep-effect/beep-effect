@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
+
 import { Sha256Hex } from "@beep/schema";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import * as Eq from "effect/Equal";

@@ -73,6 +73,7 @@
     "@beep/md": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/spdx": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },

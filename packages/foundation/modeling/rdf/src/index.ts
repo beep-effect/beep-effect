@@ -25,13 +25,6 @@ export * from "./Adapters/MdSections.ts";
  */
 export * as WebAnnotation from "./Adapters/WebAnnotation.ts";
 /**
- * RDF-facing evidence selector and target models.
- *
- * @category models
- * @since 0.0.0
- */
-export * from "./Evidence.ts";
-/**
  * JSON-LD schema models.
  *
  * @category models

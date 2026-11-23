@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (text-knowledge-stack-rebuild P1 registry lane, PR #3439)",
-    "reason": "Re-record the root after merging main at cf685651ea6: //#lint:identity-registry keeps PR B's registry shard input glob; main's root changes and profile are kept. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "GPT-6.1 Sol (P2 text implementation lane)",
+    "reason": "Retain C final cache policy and re-record P2 text graph changes; no qualification granted.",
     "basis": {
-      "path": "docs/reports/tksr-p1b-main-merge-3-cache-review-2026-11-22.md",
-      "sha256": "642958a1f6b324af20b78612d27561acfeeeb3bff35cfdbf10f891ad8587e1e6"
+      "path": "docs/reports/tksr-p2-final-c-merge-cache-review-2026-11-23.md",
+      "sha256": "66a1f29eff36afc9fb0ba53c489212991b5bbc62f465f7ba184dd787b140fda9"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "90df6626cafe41c48eed020f50878cf29fec0b32b361782df7c51501e6edbfb9"
+      "sha256": "7fdda34d8707b01b72c4a68a3b7c27ad4e83e8bfdd2f983596ada2152e29c97d"
     }
   ],
   "nodes": [
@@ -1587,7 +1587,7 @@
         "@beep/repo-cli#lint:policy-fingerprint:lint-identity-registry"
       ],
       "configuration": {
-        "cache": true,
+        "cache": false,
         "inputs": [
           "!**/.beep/**/package.json",
           "!**/.next/**/package.json",
@@ -2263,7 +2263,6 @@
           "packages/foundation/modeling/package-json/package.json",
           "packages/foundation/modeling/package-json/src/**",
           "packages/foundation/modeling/pandoc-ast/package.json",
-          "packages/foundation/modeling/provenance/package.json",
           "packages/foundation/modeling/public-site/package.json",
           "packages/foundation/modeling/rdf/package.json",
           "packages/foundation/modeling/sbom/package.json",
@@ -2276,6 +2275,7 @@
           "packages/foundation/modeling/skill-contract/src/**",
           "packages/foundation/modeling/spdx/package.json",
           "packages/foundation/modeling/spdx/src/**",
+          "packages/foundation/modeling/text/package.json",
           "packages/foundation/modeling/toml/package.json",
           "packages/foundation/modeling/tsconfig/package.json",
           "packages/foundation/modeling/tsconfig/src/**",

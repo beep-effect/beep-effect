@@ -32,10 +32,9 @@ describe("ManagedSection schema properties", () => {
   roundTrips("ManagedSectionTestError", ManagedSectionTestError);
 });
 
-// A pinned ported-memfs layer lets the property observe actual writes.
 let writes = 0;
 let iteration = 0;
-const fs = MemoryFileSystem.makeSync(
+const pinnedMemfsObservingWrites = MemoryFileSystem.makeSync(
   {},
   {
     faults: {
@@ -46,30 +45,32 @@ const fs = MemoryFileSystem.makeSync(
     },
   }
 );
-it.layer(ManagedSection.layer.pipe(Layer.provide(fs.layer)), { timeout: "30 seconds" })((it) => {
-  it.effect.prop(
-    "syncing an up-to-date UTF-8 file writes nothing and round-trips through read",
-    [Arbitrary.schema(S.String)],
-    ([value]) =>
-      Effect.gen(function* () {
-        iteration += 1;
-        const path = `file-${iteration}`;
-        const initialWrites = writes;
-        // Filesystem text is UTF-8: replace lone UTF-16 surrogates before declaring it.
-        const content = `data:${Str.replace(/\n/g, "\ndata:")(Str.replace(/\r/g, "")(value.toWellFormed()))}`;
-        const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
-        const section = id.section(content);
-        const service = yield* ManagedSection;
-        assert.strictEqual((yield* service.sync(path, section))._tag, "Created");
-        const written = fs.volume.text(path);
-        assert.strictEqual(writes, initialWrites + 1);
-        assert.strictEqual((yield* service.sync(path, section))._tag, "Unchanged");
-        assert.strictEqual(writes, initialWrites + 1);
-        assert.strictEqual(fs.volume.text(path), written);
-        const read1 = yield* service.read(path, id);
-        const recovered = yield* Effect.fromOption(read1);
-        assert.isTrue(S.toEquivalence(Section)(recovered, section));
-      }),
-    runs
-  );
-});
+it.layer(ManagedSection.layer.pipe(Layer.provide(pinnedMemfsObservingWrites.layer)), { timeout: "30 seconds" })(
+  (it) => {
+    it.effect.prop(
+      "syncing an up-to-date UTF-8 file writes nothing and round-trips through read",
+      [Arbitrary.schema(S.String)],
+      ([value]) =>
+        Effect.gen(function* () {
+          iteration += 1;
+          const path = `file-${iteration}`;
+          const initialWrites = writes;
+          const utf8RepresentableValue = value.toWellFormed();
+          const content = `data:${Str.replace(/\n/g, "\ndata:")(Str.replace(/\r/g, "")(utf8RepresentableValue))}`;
+          const id = SectionId.make({ key: "tool", commentStyle: CommentStyle.hash });
+          const section = id.section(content);
+          const service = yield* ManagedSection;
+          assert.strictEqual((yield* service.sync(path, section))._tag, "Created");
+          const written = pinnedMemfsObservingWrites.volume.text(path);
+          assert.strictEqual(writes, initialWrites + 1);
+          assert.strictEqual((yield* service.sync(path, section))._tag, "Unchanged");
+          assert.strictEqual(writes, initialWrites + 1);
+          assert.strictEqual(pinnedMemfsObservingWrites.volume.text(path), written);
+          const read1 = yield* service.read(path, id);
+          const recovered = yield* Effect.fromOption(read1);
+          assert.isTrue(S.toEquivalence(Section)(recovered, section));
+        }),
+      runs
+    );
+  }
+);

@@ -262,7 +262,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         const policy = yield* defaultCitationEnginePolicy;
         const limits = CitationEngineLimits.make({ ...policy.limits, resolutionIterations: 2 });
         const ref = CitationGroupMember.cases.Mention.make({
-          mentionId: CitationMentionId.make(`cm1:${Str.repeat(64)("0")}`),
+          mentionId: CitationMentionId.make(`cm2:${Str.repeat(64)("0")}`),
         });
         let reads = 0;
         let denied = false;
@@ -337,7 +337,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
       const policy = yield* defaultCitationEnginePolicy;
       const limits = CitationEngineLimits.make({ ...policy.limits, resolutionIterations: 1 });
       const ref = CitationGroupMember.cases.Mention.make({
-        mentionId: CitationMentionId.make(`cm1:${Str.repeat(64)("0")}`),
+        mentionId: CitationMentionId.make(`cm2:${Str.repeat(64)("0")}`),
       });
       const models = CitationResourceModels.of({
         read: Effect.fn("LiveCaseConcurrentControls.read")(() => Effect.fail(modelFailure())),

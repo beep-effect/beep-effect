@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { TextAnchor } from "@beep/provenance/TextAnchor";
+import type { TextAnchor } from "@beep/text/TextAnchor";
 
 const Manifest = S.Struct({
   referenceProtocolVersion: S.tag("semantic-reference/v2"),

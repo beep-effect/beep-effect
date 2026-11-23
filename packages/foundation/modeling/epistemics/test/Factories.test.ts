@@ -35,12 +35,12 @@ import {
 import { makeLogicalEdgeIdentity, makeLogicalEdgeKey } from "@beep/epistemics/LogicalEdgeIdentity";
 import { $EpistemicsId } from "@beep/identity/packages";
 import { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

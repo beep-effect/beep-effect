@@ -62,6 +62,7 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
     "effect": "catalog:",

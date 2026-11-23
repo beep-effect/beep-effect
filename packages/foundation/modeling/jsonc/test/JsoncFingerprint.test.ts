@@ -18,12 +18,8 @@ import * as S from "effect/Schema";
 import { sha256, toHex } from "./support/Sha256.ts";
 import type { JsoncDigest } from "@beep/jsonc";
 
-// A real SHA-256 backend over WebCrypto, through core's own WebCrypto layers so
-// the tests exercise the exact service contract consumers provide.
-const CryptoTest = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
+const RealWebCryptoThroughCoreLayers = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
 
-// The consumer-side binding the sync twins take: a pure SHA-256 pinned to the
-// FIPS vectors below and, through the hashText cases, to WebCrypto.
 const syncDigest: JsoncDigest = sha256;
 
 const SHA256_HEX = /^[0-9a-f]{64}$/;
@@ -65,9 +61,6 @@ describe("JsoncFingerprint", () => {
       );
     });
 
-    // Regression: the port built array indices with A.makeBy, which yields at
-    // least one index, so every empty array failed (upstream handles []).
-    // Upstream parity: the detail text names the offending value or its type.
     it("renders upstream's detail for non-finite numbers and unrepresentable values", () => {
       const nonFinite = failure({ a: Number.POSITIVE_INFINITY });
       assert.strictEqual(nonFinite.code, "NonFiniteNumber");
@@ -78,7 +71,7 @@ describe("JsoncFingerprint", () => {
       assert.strictEqual(failure([() => 1]).detail, "function values have no JSON representation");
     });
 
-    it("canonicalizes empty arrays at the top level and nested", () => {
+    it("canonicalizes empty arrays at the top level and nested, which an index list built with A.makeBy (always at least one index) failed", () => {
       assertSuccess(JsoncFingerprint.canonicalizeResult([]), "[]");
       assertSuccess(JsoncFingerprint.canonicalizeResult({ a: [], b: [[], {}] }), '{"a":[],"b":[[],{}]}');
     });
@@ -328,8 +321,6 @@ describe("JsoncFingerprint", () => {
       });
     });
 
-    // Regression (review R1): every member was evaluated before `Result.all`
-    // could short-circuit, so later getters ran after an earlier failure.
     it("stops at the first failing member and never reads a later one", () => {
       let reads = 0;
       const counted = (): number => {
@@ -357,11 +348,9 @@ describe("JsoncFingerprint", () => {
           ["UnrepresentableValue", "/0"],
         ]
       );
-      assert.strictEqual(reads, 0);
+      assert.strictEqual(reads, 0, "regression: every member was evaluated before Result.all could short-circuit");
     });
 
-    // Regression (review R1): a later member's exception escaped and replaced
-    // the earlier typed failure; upstream fails at "/a" and never inspects "b".
     it("returns the earlier typed failure when a later member would throw", () => {
       const later = new Proxy(
         {},
@@ -372,12 +361,13 @@ describe("JsoncFingerprint", () => {
         }
       );
       const error = failure({ a: undefined, b: later });
-      assert.deepStrictEqual([error.code, error.path], ["UnrepresentableValue", "/a"]);
+      assert.deepStrictEqual(
+        [error.code, error.path],
+        ["UnrepresentableValue", "/a"],
+        "regression: a later member's exception replaced the earlier typed failure; upstream fails at /a and never inspects b"
+      );
     });
 
-    // Regression (review R1): a shared subgraph reached through two getters
-    // per level was walked down both branches (8,190 reads for 12 levels);
-    // upstream stops after the first failing branch, reading 12.
     it("reads a shared failing subgraph once per level, not once per path", () => {
       let reads = 0;
       let node: Record<string, unknown> = { leaf: undefined };
@@ -393,12 +383,13 @@ describe("JsoncFingerprint", () => {
         node = parent;
       }
       assert.strictEqual(failure(node).path, "/a/a/a/a/a/a/a/a/a/a/a/a/leaf");
-      assert.strictEqual(reads, 12);
+      assert.strictEqual(
+        reads,
+        12,
+        "regression: walking both getters per level read 8,190 times; upstream stops after the first failing branch"
+      );
     });
 
-    // Regression (review R1): the index list was materialized before any read;
-    // upstream's indexed loop re-reads `length`, so an element appended by an
-    // earlier getter is emitted too.
     it("re-reads the array length after every element, as upstream's indexed loop does", () => {
       const grows: Array<number> = [0];
       Object.defineProperty(grows, 0, {
@@ -412,13 +403,14 @@ describe("JsoncFingerprint", () => {
       assertSuccess(JsoncFingerprint.canonicalizeResult(grows), "[1,2]");
     });
 
-    // Regression (review R3): all keys were checked for unpaired surrogates
-    // before any member was read; upstream checks each key just before
-    // reading its member, so an earlier member's failure wins.
     it("checks each member key just before reading that member, in sorted order", () => {
       const loneHigh = String.fromCharCode(0xd800);
       const undefinedFirst = failure({ a: undefined, [loneHigh]: 1 });
-      assert.deepStrictEqual([undefinedFirst.code, undefinedFirst.path], ["UnrepresentableValue", "/a"]);
+      assert.deepStrictEqual(
+        [undefinedFirst.code, undefinedFirst.path],
+        ["UnrepresentableValue", "/a"],
+        "regression: checking every key for unpaired surrogates before any read let a later key beat an earlier member's failure"
+      );
       const throwingFirst: Record<string, unknown> = { [loneHigh]: 1 };
       Object.defineProperty(throwingFirst, "a", {
         enumerable: true,
@@ -472,9 +464,6 @@ describe("JsoncFingerprint", () => {
   });
 
   describe("refusal table", () => {
-    // Every class of value outside plain JSON, with the code and JSON pointer
-    // the owner answers. `omitUndefinedMembers` moves exactly one class, an
-    // object member whose value is `undefined`, and that class has its own test.
     const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
     const refusing = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: false });
 
@@ -489,7 +478,12 @@ describe("JsoncFingerprint", () => {
       readonly [label: string, value: unknown, code: JsoncCanonicalizeErrorCode, path: string]
     > = [
       ["undefined at the root", undefined, "UnrepresentableValue", ""],
-      ["undefined array element", [1, undefined], "UnrepresentableValue", "/1"],
+      [
+        "undefined array element, never omitted since leaving it out would shift every later index",
+        [1, undefined],
+        "UnrepresentableValue",
+        "/1",
+      ],
       ["undefined array element inside an object", { a: [undefined] }, "UnrepresentableValue", "/a/0"],
       ["array hole", hole, "UnrepresentableValue", "/1"],
       ["function member", { f: () => 0 }, "UnrepresentableValue", "/f"],
@@ -610,7 +604,7 @@ describe("JsoncFingerprint", () => {
     );
   });
 
-  it.layer(CryptoTest)("omitUndefinedMembers with a Crypto layer", (it) => {
+  it.layer(RealWebCryptoThroughCoreLayers)("omitUndefinedMembers with a Crypto layer", (it) => {
     it.effect("reaches hash", () =>
       Effect.gen(function* () {
         const omitting = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
@@ -632,7 +626,7 @@ describe("JsoncFingerprint", () => {
     });
   });
 
-  it.layer(CryptoTest)("hash and hashText with a Crypto layer", (it) => {
+  it.layer(RealWebCryptoThroughCoreLayers)("hash and hashText with a Crypto layer", (it) => {
     it.effect("hashText matches the known-answer SHA-256 vectors", () =>
       Effect.gen(function* () {
         const hashText2 = yield* JsoncFingerprint.hashText("");
@@ -757,9 +751,7 @@ describe("JsoncFingerprint", () => {
     });
   });
 
-  // Review round 2 pins. Upstream parity: an array is walked by numeric index,
-  // re-reading `length`, so no method the input owns or inherits is ever read.
-  describe("array walk never observes an input-owned method", () => {
+  describe("array walk by numeric index, re-reading length, never observes an input-owned or inherited method", () => {
     const methods: ReadonlyArray<PropertyKey> = [
       "keys",
       "values",

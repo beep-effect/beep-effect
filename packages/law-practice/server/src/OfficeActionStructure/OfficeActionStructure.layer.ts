@@ -20,7 +20,7 @@ import {
   VerifiedTextAnchorError,
   VerifySourceTextIdentityInput,
   verifySourceTextIdentity,
-} from "@beep/provenance/VerifiedTextAnchor";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

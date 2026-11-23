@@ -9,7 +9,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const digest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-const mention = `cm1:${digest}` as const;
+const mention = `cm2:${digest}` as const;
 const authority = `ca1:${digest}` as const;
 
 describe("document-local citation identity schemas", () => {
@@ -47,12 +47,12 @@ describe("document-local citation identity schemas", () => {
     for (const invalid of [
       "",
       "c0",
-      `cm1:${Str.toUpperCase(digest)}`,
-      `cm1:${digest}0`,
-      `cm1:${Str.slice(1)(digest)}`,
-      `cm1:${Str.repeat(64)("g")}`,
+      `cm2:${Str.toUpperCase(digest)}`,
+      `cm2:${digest}0`,
+      `cm2:${Str.slice(1)(digest)}`,
+      `cm2:${Str.repeat(64)("g")}`,
       authority,
-      `cm2:${digest}`,
+      `cm1:${digest}`,
     ]) {
       S.decodeUnknownResult(CitationMentionId)(invalid).pipe(Result.isFailure, assertTrue);
     }

@@ -1,0 +1,414 @@
+import { PosixPath } from "@beep/schema/PosixPath";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import {
+  TextAnchorVerificationReceipt,
+  toTextAnchorVerificationReceipt,
+  VerifiedSourceText,
+  VerifiedTextAnchor,
+  VerifySourceTextIdentityInput,
+  VerifyTextAnchorAgainstVerifiedSourceInput,
+  VerifyTextAnchorInput,
+  verifySourceTextIdentity,
+  verifyTextAnchor,
+  verifyTextAnchorAgainstVerifiedSource,
+} from "@beep/text/VerifiedTextAnchor";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+
+const decodeTextAnchorVerificationReceipt = S.decodeEffect(TextAnchorVerificationReceipt);
+const decodeSourceTextIdentityResult = S.decodeResult(SourceTextIdentity);
+const decodeUnknownVerifiedTextAnchor = S.decodeUnknownEffect(VerifiedTextAnchor);
+const encodeUnknownTextAnchorVerificationReceipt = S.encodeUnknownEffect(TextAnchorVerificationReceipt);
+const encodeUnknownSourceTextIdentityResult = S.encodeUnknownResult(SourceTextIdentity);
+const isVerifiedSourceText = S.is(VerifiedSourceText);
+const isVerifiedTextAnchor = S.is(VerifiedTextAnchor);
+
+const emptyDigest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+const alternateDigest = SourceTextDigest.make(
+  "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+);
+const factDigest = SourceTextDigest.make("sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca");
+const replacementCharacterDigest = SourceTextDigest.make(
+  "sha256:83d544ccc223c057d2bf80d3f2a32982c32c3c0db8e2674820da5064783fb097"
+);
+const surrogateDigest = SourceTextDigest.make(
+  "sha256:aacfb6637bd0df2238641c5b15898d1a61df3157b1d0b4099f590fc0b0b6fbbd"
+);
+const extractor = SourceTextExtractor.make({ name: "utf8", version: "1" });
+const decodeTextAnchor = flow(S.decodeUnknownResult(TextAnchor), Result.getOrThrow);
+
+const identity = (overrides: Partial<SourceTextIdentity> = {}): SourceTextIdentity =>
+  SourceTextIdentity.make({
+    extractor,
+    locator: PosixPath.make("documents/source.txt"),
+    normalizationVersion: "1",
+    scopeRef: "matter:example",
+    sourceDigest: emptyDigest,
+    sourceRef: "source:example",
+    textDigest: emptyDigest,
+    ...overrides,
+  });
+
+it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/text VerifiedTextAnchor", (it) => {
+  it.effect(
+    "verifies a source manifestation independently of any anchor",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+
+      const verifiedSource = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({
+          expectedSource: source,
+          source,
+          sourceText: "fact",
+        })
+      );
+
+      expect(isVerifiedSourceText(verifiedSource)).toBe(true);
+      expect(verifiedSource.source).toEqual(source);
+      expect(verifiedSource.sourceText).toBe("fact");
+    })
+  );
+
+  it.effect(
+    "snapshots source authority before the asynchronous digest boundary",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+      const digest = yield* Digest.Digest;
+      const mutatingDigest = Digest.Digest.of({
+        ...digest,
+        digest: Effect.fn("VerifiedTextAnchorTest.mutatingDigest")((algorithm, data) =>
+          Effect.sync(() => Reflect.set(source, "scopeRef", "matter:mutated")).pipe(
+            Effect.andThen(digest.digest(algorithm, data))
+          )
+        ),
+      });
+      const verified = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: "fact" })
+      ).pipe(Effect.provideService(Digest.Digest, mutatingDigest));
+
+      expect(source.scopeRef).toBe("matter:mutated");
+      expect(verified.source.scopeRef).toBe("matter:example");
+      expect(verified.sourceText).toBe("fact");
+    })
+  );
+
+  it.effect(
+    "reuses one verified source proof across exact anchors",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+      const verifiedSource = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: "fact" })
+      );
+      const verified = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          verifiedSource,
+        })
+      );
+      const failure = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fake", startChar: 0 }),
+          verifiedSource,
+        })
+      ).pipe(Effect.flip);
+
+      expect(verified.anchor.quote).toBe("fact");
+      expect(verified.source).toEqual(source);
+      expect(failure.reason).toBe("quote-mismatch");
+      expect(Reflect.set(verifiedSource, "sourceText", "fake")).toBe(false);
+      expect(() => globalThis.Object.defineProperty(verifiedSource, "sourceText", { value: "fake" })).toThrow();
+      expect(() =>
+        globalThis.Object.defineProperty(globalThis.Object.getPrototypeOf(verifiedSource), "sourceText", {
+          value: "fake",
+        })
+      ).toThrow();
+      expect(Reflect.set(verifiedSource.source, "sourceRef", "source:mutated")).toBe(true);
+      expect(Reflect.set(verifiedSource.source.extractor, "version", "2")).toBe(true);
+      expect(Reflect.set(verified.anchor, "quote", "fake")).toBe(true);
+      expect(Reflect.set(verified.source, "sourceRef", "source:mutated")).toBe(true);
+      expect(isVerifiedSourceText(verifiedSource)).toBe(true);
+      expect(isVerifiedTextAnchor(verified)).toBe(true);
+      expect(verifiedSource.sourceText).toBe("fact");
+      expect(verified.anchor.quote).toBe("fact");
+      expect(verified.source.sourceRef).toBe("source:example");
+    })
+  );
+
+  it.effect(
+    "rejects proofs constructed through recovered constructors",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+      const verifiedSource = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: "fact" })
+      );
+      const verified = yield* verifyTextAnchorAgainstVerifiedSource(
+        VerifyTextAnchorAgainstVerifiedSourceInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          verifiedSource,
+        })
+      );
+      const counterfeitSource = Reflect.construct(verifiedSource.constructor, []);
+      const counterfeitAnchor = Reflect.construct(verified.constructor, []);
+      const forgedInput = VerifyTextAnchorAgainstVerifiedSourceInput.make({
+        anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+        verifiedSource,
+      });
+
+      expect(isVerifiedSourceText(counterfeitSource)).toBe(false);
+      expect(isVerifiedTextAnchor(counterfeitAnchor)).toBe(false);
+      expect(() => Reflect.get(counterfeitSource, "source")).toThrow();
+      expect(() => Reflect.get(counterfeitSource, "sourceText")).toThrow();
+      expect(() => Reflect.get(counterfeitAnchor, "anchor")).toThrow();
+      expect(() => Reflect.get(counterfeitAnchor, "source")).toThrow();
+      expect(() => Reflect.apply(toTextAnchorVerificationReceipt, undefined, [counterfeitAnchor])).toThrow();
+      expect(Reflect.set(forgedInput, "verifiedSource", counterfeitSource)).toBe(true);
+      const forgedInputFailure = yield* verifyTextAnchorAgainstVerifiedSource(forgedInput).pipe(Effect.flip);
+      expect(forgedInputFailure.reason).toBe("stale-source");
+      expect(() => globalThis.Object.getOwnPropertyDescriptor(verifiedSource, "sourceText")).not.toThrow();
+      expect(() => globalThis.Object.defineProperty(verified, "anchor", { value: verified.anchor })).toThrow();
+      expect(() =>
+        globalThis.Object.defineProperty(globalThis.Object.getPrototypeOf(verified), "anchor", {
+          value: verified.anchor,
+        })
+      ).toThrow();
+    })
+  );
+
+  it.effect(
+    "binds an exact raw UTF-16 slice to its source identity",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: surrogateDigest });
+      const verified = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 3, quote: "😀", startChar: 1 }),
+          expectedSource: source,
+          source,
+          sourceText: "A😀B",
+        })
+      );
+
+      expect(verified.anchor.quote).toBe("😀");
+      expect(verified.source).toEqual(source);
+      expect(isVerifiedTextAnchor(verified)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "fails cross-scope identities before considering them stale",
+    Effect.fnUntraced(function* () {
+      const expectedSource = identity();
+      const failure = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          expectedSource,
+          source: identity({ scopeRef: "matter:other" }),
+          sourceText: "fact",
+        })
+      ).pipe(Effect.flip);
+
+      expect(failure.reason).toBe("cross-scope");
+    })
+  );
+
+  it.effect(
+    "fails digest and extractor-version drift without rewriting the expected identity",
+    Effect.fnUntraced(function* () {
+      const expectedSource = identity();
+      const digestFailure = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          expectedSource,
+          source: identity({ textDigest: alternateDigest }),
+          sourceText: "fact",
+        })
+      ).pipe(Effect.flip);
+      const versionFailure = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          expectedSource,
+          source: identity({ extractor: SourceTextExtractor.make({ name: "utf8", version: "2" }) }),
+          sourceText: "fact",
+        })
+      ).pipe(Effect.flip);
+
+      expect(digestFailure.reason).toBe("stale-source");
+      expect(versionFailure.reason).toBe("stale-source");
+      expect(expectedSource.textDigest).toBe(emptyDigest);
+      expect(expectedSource.extractor.version).toBe("1");
+    })
+  );
+
+  it.effect(
+    "rejects raw source text whose digest differs from the resolved identity",
+    Effect.fnUntraced(function* () {
+      const source = identity();
+      const failure = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          expectedSource: source,
+          source,
+          sourceText: "fact",
+        })
+      ).pipe(Effect.flip);
+
+      expect(failure.reason).toBe("stale-source");
+      expect(failure.message).not.toContain("fact");
+      expect(failure.message).not.toContain(emptyDigest);
+    })
+  );
+
+  it.effect(
+    "rejects lone UTF-16 surrogates without conflating them with the replacement character",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: replacementCharacterDigest });
+      const failures = yield* Effect.forEach(
+        ["\ud800", "\udc00"],
+        (sourceText) =>
+          verifySourceTextIdentity(
+            VerifySourceTextIdentityInput.make({
+              expectedSource: source,
+              source,
+              sourceText,
+            })
+          ).pipe(Effect.flip),
+        { concurrency: 1 }
+      );
+      const replacement = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({
+          expectedSource: source,
+          source,
+          sourceText: "\ufffd",
+        })
+      );
+
+      expect(A.map(failures, ({ reason }) => reason)).toEqual(["stale-source", "stale-source"]);
+      expect(replacement.sourceText).toBe("\ufffd");
+    })
+  );
+
+  it.effect(
+    "sanitizes a malformed source-text digest: the digest succeeds, and its truncated hex fails Sha256Hex decoding",
+    Effect.fnUntraced(
+      function* () {
+        const source = identity({ textDigest: factDigest });
+        const failure = yield* verifyTextAnchor(
+          VerifyTextAnchorInput.make({
+            anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+            expectedSource: source,
+            source,
+            sourceText: "fact",
+          })
+        ).pipe(Effect.flip);
+
+        expect(failure.reason).toBe("stale-source");
+        expect(failure.message).toBe("Verified text anchor rejected: stale-source.");
+      },
+      Effect.provideService(
+        Digest.Digest,
+        Digest.Digest.of({
+          digest: Effect.fn("VerifiedTextAnchorTest.truncatedDigest")(() => Effect.succeed(new Uint8Array(4))),
+          digestHex: Effect.fn("VerifiedTextAnchorTest.truncatedDigestHex")(() => Effect.succeed("00000000")),
+        })
+      )
+    )
+  );
+
+  it.effect(
+    "rejects offsets that split a surrogate pair",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: surrogateDigest });
+      const failure = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 2, quote: "\ud83d", startChar: 1 }),
+          expectedSource: source,
+          source,
+          sourceText: "A😀B",
+        })
+      ).pipe(Effect.flip);
+
+      expect(failure.reason).toBe("invalid-anchor");
+    })
+  );
+
+  it.effect(
+    "rejects a quote that differs from the exact raw slice",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+      const failure = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fake", startChar: 0 }),
+          expectedSource: source,
+          source,
+          sourceText: "fact",
+        })
+      ).pipe(Effect.flip);
+
+      expect(failure.reason).toBe("quote-mismatch");
+    })
+  );
+
+  it.effect(
+    "converts runtime proof to a round-trippable receipt without granting proof on decode",
+    Effect.fnUntraced(function* () {
+      const source = identity({ textDigest: factDigest });
+      const verified = yield* verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          anchor: decodeTextAnchor({ endChar: 4, quote: "fact", startChar: 0 }),
+          expectedSource: source,
+          source,
+          sourceText: "fact",
+        })
+      );
+      const receipt = toTextAnchorVerificationReceipt(verified);
+      const encoded = yield* encodeUnknownTextAnchorVerificationReceipt(receipt);
+      const decodedReceipt = yield* decodeTextAnchorVerificationReceipt(encoded);
+      const verificationFailure = yield* decodeUnknownVerifiedTextAnchor(encoded).pipe(Effect.flip);
+      const receiptIsNotVerified: TextAnchorVerificationReceipt extends VerifiedTextAnchor ? false : true = true;
+
+      expect(encoded).toEqual({ anchor: verified.anchor, source: verified.source });
+      expect(S.toEquivalence(TextAnchorVerificationReceipt)(decodedReceipt, receipt)).toBe(true);
+      expect(isVerifiedTextAnchor(decodedReceipt)).toBe(false);
+      expect(receiptIsNotVerified).toBe(true);
+      expect(verificationFailure.message).toContain("VerifiedTextAnchor");
+    })
+  );
+
+  it.prop(
+    "derives constructive arbitrary source identities from the schema",
+    [Arbitrary.schema(SourceTextIdentity)],
+    ([source]) => {
+      const encoded = Result.getOrThrow(encodeUnknownSourceTextIdentityResult(source));
+      const decoded = Result.getOrThrow(decodeSourceTextIdentityResult(encoded));
+
+      expect(S.toEquivalence(SourceTextIdentity)(decoded, source)).toBe(true);
+
+      return true;
+    },
+    { arbitrary: fcRuns(25) }
+  );
+});
+
+it.effect(
+  "defines SourceTextDigest over the shared sha256: grammar with its encoded form unchanged",
+  Effect.fnUntraced(function* () {
+    const hex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    const digest = yield* S.decodeEffect(SourceTextDigest)(`sha256:${hex}`);
+    const general: Sha256PrefixedDigest = digest;
+    const encoded = yield* S.encodeEffect(SourceTextDigest)(digest);
+
+    expect(encoded).toBe(`sha256:${hex}`);
+    expect(S.is(Sha256PrefixedDigest)(general)).toBe(true);
+    expect(A.filter([hex, `sha256:${hex}0`, `SHA256:${hex}`], S.is(SourceTextDigest))).toEqual([]);
+  })
+);

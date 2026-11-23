@@ -58,3 +58,15 @@
 - Doing: unblocker #3495.
 - Evidence: #3458 added `vitest.property-reporter.ts` with a four-line `//` header; once #3483 locked the root scope, main's Repo Sanity failed (`locked-scope-comment`).
 - Prevention: the pre-commit `comment-law` hook already blocks this locally; the gap was a PR green before the lock landed and merged after it. A merge-queue style re-check of the base would catch it.
+
+## 2026-11-23: `--skip coverage` also skips Test Unit, so generated-artifact drift shows only in hosted CI
+
+- Doing: w4 (#3509) final-check with coverage skipped under the 11-13 rule.
+- Evidence: an absorbed `CompilerOptions.ts` description changed text that `packages/tooling/tool/docgen/schema.json` embeds; local final-check passed, hosted Heavy / Test Unit failed on the stale `schema.json`.
+- Prevention: final-check could run the unit tests of downstream packages that embed generated schema output even when coverage is skipped, or a generator-drift lint could own `schema.json`.
+
+## 2026-11-23: the comment law fails closed on a hosted lazy-blob 403
+
+- Doing: #3515 Repo Sanity on a blobless hosted clone.
+- Evidence: `lint:comment-law` failed with `GitCommandError` on `git show <base>:<file>` (`fatal: unable to access ... 403`); setup-bun hit the same 403 in that job. A merge of main for a fresh run cleared it.
+- Prevention: fetch the base blobs the law needs in one `git fetch --filter` step before the law runs, with a retry, so a transient 403 does not red a required check.

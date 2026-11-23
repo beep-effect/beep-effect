@@ -235,9 +235,6 @@ describe("SectionDocument.parseResult", () => {
     });
 
     it("normalizes the DECLARED side too, so CRLF content does not drift against an LF document", () => {
-      // The other direction: the document is LF (or was normalized at parse)
-      // and the caller hands over content carrying CRLF. Without normalizing
-      // the declared side, this reports drift forever and rewrites on every run.
       const lfDoc = parse(lines(block("example-tool", "a\nb"), ""));
       assert.strictEqual(lfDoc.check(section("example-tool", "a\r\nb"))._tag, "UpToDate");
     });
