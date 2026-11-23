@@ -71,4 +71,6 @@ again.
 
 ## Provisioned 2026-11-23
 
-App `beep-fleet-watch`, app_id 5883973, client_id `Iv23libfygPGvZKKcDb4`.
+App `beep-fleet-watch`, app_id 5883973, client_id `Iv23libfygPGvZKKcDb4`, installation 184913707
+(selected: `beep-effect/beep-effect`). The installation holds Actions, Webhooks and
+Self-hosted runners read, plus Metadata read, and nothing else.
