@@ -151,7 +151,6 @@ export const FallbackPolling = caseInsensitiveLiterals(FallbackPollingKit).pipe(
  */
 export type FallbackPolling = typeof FallbackPolling.Type;
 
-// The known fields; unknown keys ride the passthrough record below.
 const ReferenceFields = S.Struct({
   path: S.String.check(S.isMinLength(1)).pipe(
     $I.annoteKey("Reference.path", { description: "The non-empty path to a referenced TypeScript project." })
@@ -218,7 +217,6 @@ export declare namespace Reference {
   export type Encoded = typeof Reference.Encoded;
 }
 
-// The known fields; unknown keys ride the passthrough record below.
 const WatchOptionsFields = S.Struct({
   watchFile: S.optionalKey(WatchFile).pipe(
     $I.annoteKey("WatchOptions.watchFile", { description: "The strategy for watching individual files." })
@@ -310,7 +308,6 @@ export declare namespace WatchOptions {
   export type Encoded = typeof WatchOptions.Encoded;
 }
 
-// The known fields; unknown keys ride the passthrough record below.
 const TypeAcquisitionFields = S.Struct({
   enable: S.optionalKey(S.Boolean).pipe(
     $I.annoteKey("TypeAcquisition.enable", { description: "Enables automatic type acquisition." })
@@ -391,7 +388,6 @@ export declare namespace TypeAcquisition {
   export type Encoded = typeof TypeAcquisition.Encoded;
 }
 
-// The known fields; unknown keys ride the passthrough record below.
 const TsconfigJsonFields = S.Struct({
   compilerOptions: S.optionalKey(CompilerOptions).pipe(
     $I.annoteKey("TsconfigJson.compilerOptions", { description: "The compilation options for this project." })
@@ -503,7 +499,6 @@ export declare namespace TsconfigJson {
   export type Encoded = typeof TsconfigJson.Encoded;
 }
 
-// The closed sections: the typed fields of each passthrough section, no rest record.
 const ClosedReference = ReferenceFields.pipe(
   $I.annoteSchema("ClosedReference", {
     description: "A referenced TypeScript project with no passthrough: an unknown key is an excess property.",

@@ -14,6 +14,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const corepack0340OwnYarnPinSha224Tail = "sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447";
+
 describe("IntegrityHash schema", () => {
   const sri = "sha512-tsPuRLBpQ2xk6+8HB4vP0Wq1v0EYlv6q6qz1oqTgU5U+lgY7Zp3Xf5sT2xM2mQ==";
   const corepack = "sha512.5be7cee7ff4d9c25bda31e3b5f6f3f9f2a";
@@ -53,10 +55,11 @@ describe("IntegrityHash statics", () => {
     assert.isFalse(IntegrityHash.isCorepack("sha512-YWJj"));
     assert.isTrue(IntegrityHash.isCorepack("sha512.abc"));
     assert.isFalse(IntegrityHash.isSri("sha512.abc"));
-    // sha224 is corepack-only: corepack's transparent default yarn pin emits
-    // it, and the SRI spec does not include it.
-    assert.isTrue(IntegrityHash.isCorepack("sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447"));
-    assert.isFalse(IntegrityHash.isSri("sha224-YWJj"));
+    assert.isTrue(
+      IntegrityHash.isCorepack(corepack0340OwnYarnPinSha224Tail),
+      "sha224 is corepack-only: corepack's transparent default yarn pin emits it"
+    );
+    assert.isFalse(IntegrityHash.isSri("sha224-YWJj"), "the SRI spec does not include sha224");
     assert.isTrue(IntegrityHash.isYarnChecksum("10c0/deadbeef"));
     assert.isTrue(IntegrityHash.isYarnChecksum("9c0/abc123"));
     assert.isFalse(IntegrityHash.isYarnChecksum("sha512-YWJj"));
@@ -70,7 +73,6 @@ describe("IntegrityHash statics", () => {
     assertSome(IntegrityHash.algorithmOf("sha512-YWJj"), "sha512");
     assertSome(IntegrityHash.algorithmOf("sha1.abcd"), "sha1");
     assertSome(IntegrityHash.algorithmOf("sha256.deadbeef"), "sha256");
-    // The yarn form is a valid integrity hash but names no algorithm.
     assertNone(IntegrityHash.algorithmOf("10c0/deadbeef"));
     assertNone(IntegrityHash.algorithmOf("not-a-hash"));
   });
@@ -87,13 +89,7 @@ describe("IntegrityHash statics", () => {
   );
 });
 
-// The corepack pin tail is the one place the kit meets the `<algo>.<hex>` form,
-// and TWO schemas model it — `PackageManagerPin.integrity` here and
-// `@beep/package-json`'s `PackageManager.integrity`. Both consume this
-// export. The forms the wider brand accepts and this one must not are the
-// point of the suite: an SRI or yarn hash in a pin tail is not a near-miss, it
-// is a value that field can never legitimately hold.
-describe("CorepackIntegrityHash", () => {
+describe("CorepackIntegrityHash, the pin-tail schema both pin fields consume: an SRI or yarn hash there is never a near-miss", () => {
   const decode = S.decodeUnknownEffect(CorepackIntegrityHash);
 
   it.effect("accepts every corepack form, including corepack's own sha224 default pins", () =>
@@ -102,8 +98,7 @@ describe("CorepackIntegrityHash", () => {
         "sha512.deadbeef01",
         "sha256.0badf00d",
         "sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
-        // corepack 0.34.0's own package.json pins yarn with a sha224 tail.
-        "sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447",
+        corepack0340OwnYarnPinSha224Tail,
       ]) {
         const decoded8 = yield* decode(good);
         assert.strictEqual(decoded8, good, good);
@@ -114,60 +109,50 @@ describe("CorepackIntegrityHash", () => {
   it.effect("rejects the two other forms the IntegrityHash brand accepts", () =>
     Effect.gen(function* () {
       for (const wrongForm of ["sha512-tsPuRLBpQ2xk6+8HB4vP0Wq1v0EYlv6q6qz1oqTgU5U=", "10c0/deadbeef0123"]) {
-        // The control: the unrestricted brand DOES accept it, so the failure
-        // below is the restriction firing and not a malformed fixture.
         const value9 = yield* S.decodeEffect(IntegrityHash)(wrongForm);
-        assert.strictEqual(value9, wrongForm, wrongForm);
+        assert.strictEqual(
+          value9,
+          wrongForm,
+          `control: the unrestricted brand accepts ${wrongForm}, so the rejection below is the restriction firing, not a malformed fixture`
+        );
         const error = yield* Effect.flip(decode(wrongForm));
         assert.strictEqual(error._tag, "SchemaError", wrongForm);
       }
     })
   );
 
-  it.effect("rejects malformed corepack-shaped hashes", () =>
-    Effect.gen(function* () {
-      // Uppercase hex, an unknown algorithm, an empty digest and an empty
-      // string: each is rejected by the underlying brand or the restriction.
-      for (const bad of ["sha512.DEADBEEF", "md5.deadbeef", "sha512.", "", "sha512"]) {
-        const error = yield* Effect.flip(decode(bad));
-        assert.strictEqual(error._tag, "SchemaError", bad);
-      }
-    })
+  it.effect(
+    "rejects malformed corepack-shaped hashes: uppercase hex, an unknown algorithm, an empty digest, an empty string",
+    () =>
+      Effect.gen(function* () {
+        for (const bad of ["sha512.DEADBEEF", "md5.deadbeef", "sha512.", "", "sha512"]) {
+          const error = yield* Effect.flip(decode(bad));
+          assert.strictEqual(error._tag, "SchemaError", bad);
+        }
+      })
   );
 
   it.effect("decodes to the same brand as the unrestricted schema — no second brand", () =>
     Effect.gen(function* () {
       const restricted = yield* decode("sha512.deadbeef01");
-      // Assignable in both directions at the type level (this line is the
-      // assertion; it stops compiling if a second brand is introduced), and
-      // equal at the value level.
-      const wide: typeof IntegrityHash.Type = restricted;
+      const stopsCompilingIfASecondBrandAppears: typeof IntegrityHash.Type = restricted;
       const value10 = yield* S.decodeEffect(IntegrityHash)("sha512.deadbeef01");
-      assert.strictEqual(wide, value10);
+      assert.strictEqual(stopsCompilingIfASecondBrandAppears, value10, "equal at the value level too");
     })
   );
 
-  // The consolidation guard, and it has to be an IDENTITY assertion.
-  //
-  // `Schema.check` is erased from the built type, so a consumer that severs
-  // this import type-checks; and a faithful private copy of the restriction
-  // behaves identically, so the rejection matrix above passes too. Neither
-  // `tsc` nor any behavioural test can see the re-fork. What discriminates is
-  // the field schema's OBJECT IDENTITY: the pin's `integrity` field must be
-  // this very schema, not one that merely agrees with it.
   it("PackageManagerPin.integrity IS this schema, not a copy that agrees with it", () => {
-    // `Schema.optionalKey(X)` keeps `X` on `.schema`.
+    const schemaInsideOptionalKey = PackageManagerPin.fields.integrity.schema;
     assert.strictEqual(
-      PackageManagerPin.fields.integrity.schema,
+      schemaInsideOptionalKey,
       CorepackIntegrityHash,
       "PackageManagerPin must consume the shared corepack schema, not re-derive the restriction"
     );
-    // The control: the assertion discriminates. It is NOT satisfied by the
-    // unrestricted brand, so it fails if the pin falls back to `IntegrityHash`
-    // — the mutant a type error would never catch. (Widened to `unknown`: the
-    // two schema values now carry DIFFERENT statics, so their types no longer
-    // unify — the comparison is about runtime identity, not assignability.)
-    assert.notStrictEqual<unknown>(PackageManagerPin.fields.integrity.schema, IntegrityHash);
+    assert.notStrictEqual<unknown>(
+      schemaInsideOptionalKey,
+      IntegrityHash,
+      "control: a fallback to the unrestricted IntegrityHash fails this identity check, a mutant no type error catches (compared as unknown: the two schemas carry different statics, so this is runtime identity, not assignability)"
+    );
   });
 });
 
@@ -192,25 +177,27 @@ describe("SriIntegrityHash", () => {
   it.effect("rejects the two other forms the IntegrityHash brand accepts", () =>
     Effect.gen(function* () {
       for (const wrongForm of ["sha512.deadbeef01", "10c0/deadbeef0123"]) {
-        // The control: the unrestricted brand DOES accept it, so the failure
-        // below is the restriction firing and not a malformed fixture.
         const value12 = yield* S.decodeEffect(IntegrityHash)(wrongForm);
-        assert.strictEqual(value12, wrongForm, wrongForm);
+        assert.strictEqual(
+          value12,
+          wrongForm,
+          `control: the unrestricted brand accepts ${wrongForm}, so the rejection below is the restriction firing, not a malformed fixture`
+        );
         const error = yield* Effect.flip(decode(wrongForm));
         assert.strictEqual(error._tag, "SchemaError", wrongForm);
       }
     })
   );
 
-  it.effect("rejects malformed SRI-shaped hashes", () =>
-    Effect.gen(function* () {
-      // sha224 is not an SRI algorithm; md5 is unknown; empty digest; a
-      // space in the base64; empty string.
-      for (const bad of ["sha224-3q2+7w==", "md5-3q2+7w==", "sha512-", "sha512-not base64", ""]) {
-        const error = yield* Effect.flip(decode(bad));
-        assert.strictEqual(error._tag, "SchemaError", bad);
-      }
-    })
+  it.effect(
+    "rejects malformed SRI-shaped hashes: sha224 (not an SRI algorithm), unknown md5, an empty digest, a space in the base64, an empty string",
+    () =>
+      Effect.gen(function* () {
+        for (const bad of ["sha224-3q2+7w==", "md5-3q2+7w==", "sha512-", "sha512-not base64", ""]) {
+          const error = yield* Effect.flip(decode(bad));
+          assert.strictEqual(error._tag, "SchemaError", bad);
+        }
+      })
   );
 
   it.effect("decodes to the same brand as the unrestricted schema — no second brand", () =>
@@ -229,13 +216,7 @@ describe("SriIntegrityHash", () => {
   });
 });
 
-// The SRI → corepack bridge: npm's registry speaks `sha512-<base64>`, a
-// `packageManager` pin speaks `sha512.<hex>`, and this codec is the one
-// sanctioned conversion between them. The fixture is a REAL pair — both
-// spellings of the 64-byte sha512 digest of "hello" — and the suite re-derives
-// the hex from the base64 bytes independently, so a transposed fixture cannot
-// vouch for itself.
-describe("CorepackIntegrityHash.FromSri", () => {
+describe('CorepackIntegrityHash.FromSri, the one sanctioned SRI to corepack conversion, on a real pair: both spellings of the sha512 digest of "hello"', () => {
   const sriBase64 = "m3HSJL1i83hdltRq0+o9czGb+8KJDKra4t/3JRlnPKcjI8PZm6XBHXx6zG4UuMXaDEZjR1wuXDre9G9zvN7AQw==";
   const sri = `sha512-${sriBase64}`;
   const corepack =
@@ -248,9 +229,11 @@ describe("CorepackIntegrityHash.FromSri", () => {
     Effect.gen(function* () {
       const converted = yield* decode(sri);
       assert.strictEqual(converted, corepack);
-      // The independent oracle: the same hex, derived from the base64 bytes
-      // here in the test rather than copied from the fixture.
-      assert.strictEqual(converted, `sha512.${NodeBuffer.Buffer.from(sriBase64, "base64").toString("hex")}`);
+      assert.strictEqual(
+        converted,
+        `sha512.${NodeBuffer.Buffer.from(sriBase64, "base64").toString("hex")}`,
+        "independent oracle: hex derived here from the base64 bytes, not copied from the fixture, so a transposed fixture cannot vouch for itself"
+      );
       assert.isTrue(IntegrityHash.isCorepack(converted));
       const value14 = yield* S.decodeEffect(CorepackIntegrityHash)(converted);
       assert.strictEqual(value14, converted);
@@ -261,9 +244,12 @@ describe("CorepackIntegrityHash.FromSri", () => {
     Effect.gen(function* () {
       const decoded15 = yield* decode(`"${sri}"`);
       assert.strictEqual(decoded15, corepack);
-      // Only ONE layer, and only a matched pair: a lone quote is malformed.
       const error = yield* Effect.flip(decode(`"${sri}`));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(
+        error._tag,
+        "SchemaError",
+        "only one layer, and only a matched pair: a lone quote is malformed"
+      );
     })
   );
 
@@ -277,10 +263,12 @@ describe("CorepackIntegrityHash.FromSri", () => {
   it.effect("rejects non-sha512 SRI hashes — corepack accepts nothing weaker", () =>
     Effect.gen(function* () {
       for (const bad of [`sha256-${sriBase64}`, `sha1-${sriBase64}`, `sha384-${sriBase64}`]) {
-        // The control: the wide brand DOES accept these, so the failure below
-        // is the sha512 restriction firing, not a malformed fixture.
         const value17 = yield* S.decodeEffect(IntegrityHash)(bad);
-        assert.strictEqual(value17, bad, bad);
+        assert.strictEqual(
+          value17,
+          bad,
+          `control: the wide brand accepts ${bad}, so the rejection below is the sha512 restriction firing, not a malformed fixture`
+        );
         const error = yield* Effect.flip(decode(bad));
         assert.strictEqual(error._tag, "SchemaError", bad);
       }
@@ -289,38 +277,46 @@ describe("CorepackIntegrityHash.FromSri", () => {
     })
   );
 
-  it.effect("rejects an already-corepack-form input — the conversion is one-way from SRI", () =>
-    Effect.gen(function* () {
-      // The control: the corepack schema itself accepts the value, so the
-      // rejection below is the one-way rule, not an invalid fixture.
-      const value18 = yield* S.decodeEffect(CorepackIntegrityHash)(corepack);
-      assert.strictEqual(value18, corepack);
-      const error = yield* Effect.flip(decode(corepack));
-      assert.strictEqual(error._tag, "SchemaError");
-    })
+  it.effect(
+    "rejects an already-corepack-form input — the conversion is one-way from SRI, so a pin fed back in surfaces a wiring bug",
+    () =>
+      Effect.gen(function* () {
+        const value18 = yield* S.decodeEffect(CorepackIntegrityHash)(corepack);
+        assert.strictEqual(
+          value18,
+          corepack,
+          "control: the corepack schema accepts the value, so the rejection below is the one-way rule, not an invalid fixture"
+        );
+        const error = yield* Effect.flip(decode(corepack));
+        assert.strictEqual(error._tag, "SchemaError");
+      })
   );
 
   it.effect("rejects malformed and non-canonical base64", () =>
     Effect.gen(function* () {
-      for (const bad of [
-        // A valid base64 payload that is not a 64-byte digest (the wide brand
-        // accepts this spelling; the bridge must not mint a bad pin from it).
-        "sha512-YWJj",
-        "sha512-",
-        // A length no base64 output has (remainder 1).
-        `sha512-${Str.repeat(85)("A")}`,
-        // Padding that does not match the body length (lenient decoders
-        // accept this; the canonical form ends `==`).
-        `sha512-${Str.slice(0, -1)(sriBase64)}`,
-        // Interior `=`.
-        `sha512-${Str.slice(0, -4)(sriBase64)}=${Str.slice(-4)(sriBase64)}`,
-        "sha512-ab!c",
-        // Non-zero trailing bits: `Qx==` decodes to the same byte as `Qw==`
-        // under a lenient decoder but is not the canonical spelling npm emits.
-        `sha512-${Str.slice(0, -3)(sriBase64)}x==`,
-      ]) {
+      for (const [whyRejected, bad] of [
+        [
+          "a valid base64 payload that is not a 64-byte digest: the wide brand accepts it, and the bridge must not mint a pin corepack rejects at install",
+          "sha512-YWJj",
+        ],
+        ["an empty digest", "sha512-"],
+        ["a length no base64 output has (remainder 1)", `sha512-${Str.repeat(85)("A")}`],
+        [
+          "padding that does not match the body length: lenient decoders accept it, the canonical form ends `==`",
+          `sha512-${Str.slice(0, -1)(sriBase64)}`,
+        ],
+        [
+          "an interior `=`: it leaves non-`=` characters in the padding, which never matches the expected padding",
+          `sha512-${Str.slice(0, -4)(sriBase64)}=${Str.slice(-4)(sriBase64)}`,
+        ],
+        ["a character outside the base64 alphabet", "sha512-ab!c"],
+        [
+          "non-zero trailing bits: `Qx==` decodes to the same byte as `Qw==` under a lenient decoder, a second spelling npm never emits",
+          `sha512-${Str.slice(0, -3)(sriBase64)}x==`,
+        ],
+      ] as const) {
         const error = yield* Effect.flip(decode(bad));
-        assert.strictEqual(error._tag, "SchemaError", bad);
+        assert.strictEqual(error._tag, "SchemaError", whyRejected);
       }
     })
   );
@@ -342,21 +338,25 @@ describe("CorepackIntegrityHash.FromSri", () => {
     Effect.gen(function* () {
       const encoded = yield* encode(corepack);
       assert.strictEqual(encoded, sri);
-      // A value decoded from the quoted spelling re-encodes UNQUOTED: the
-      // quote tolerance is decode-side lenience, not a remembered wire form.
       const decoded24 = yield* decode(`"${sri}"`);
       const encoded21 = yield* encode(decoded24);
-      assert.strictEqual(encoded21, sri);
+      assert.strictEqual(
+        encoded21,
+        sri,
+        "a value decoded from the quoted spelling re-encodes unquoted: quote tolerance is decode-side lenience, not a remembered wire form"
+      );
     })
   );
 
   it.effect("encode fails typed for corepack hashes SRI cannot carry", () =>
     Effect.gen(function* () {
-      // Both are valid CorepackIntegrityHash values — the control below
-      // proves it — but neither is a 64-byte sha512 digest.
-      for (const bad of ["sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447", "sha512.deadbeef"]) {
+      for (const bad of [corepack0340OwnYarnPinSha224Tail, "sha512.deadbeef"]) {
         const value22 = yield* S.decodeEffect(CorepackIntegrityHash)(bad);
-        assert.strictEqual(value22, bad, bad);
+        assert.strictEqual(
+          value22,
+          bad,
+          `control: ${bad} is a valid CorepackIntegrityHash, yet not a 64-byte sha512 digest SRI can carry`
+        );
         const error = yield* Effect.flip(encode(bad));
         assert.strictEqual(error._tag, "SchemaError", bad);
       }

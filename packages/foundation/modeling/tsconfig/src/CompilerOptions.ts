@@ -415,18 +415,13 @@ export const Lib = caseInsensitiveLiterals(LibKit).pipe(
  */
 export type Lib = typeof Lib.Type;
 
-// `compilerOptions.ignoreDeprecations` — the values are version strings, not
-// case-varying identifiers, so this stays a plain (non-case-insensitive)
-// literal schema and is not exported by name.
-const IgnoreDeprecations = LiteralKit(["5.0", "6.0"]).pipe(
-  $I.annoteSchema("IgnoreDeprecations", { description: "The deprecation version whose diagnostics are suppressed." })
+const IgnoreDeprecationsVersion = LiteralKit(["5.0", "6.0"]).pipe(
+  $I.annoteSchema("IgnoreDeprecations", {
+    description:
+      "The TypeScript version whose deprecations are suppressed: a version string with no case variants, so matched exactly rather than case-insensitively.",
+  })
 );
 
-/**
- * One `compilerOptions.plugins[]` entry: `name` is required and typed; every
- * other key is preserved verbatim (ts-plugin authors attach arbitrary extra
- * configuration).
- */
 const PluginEntry = S.StructWithRest(
   S.Struct({
     name: S.String.pipe(
@@ -440,9 +435,7 @@ const PluginEntry = S.StructWithRest(
   })
 );
 
-// The known fields; unknown keys ride the passthrough record below.
 const CompilerOptionsFields = S.Struct({
-  // ── Enum-valued options ─────────────────────────────────────
   target: S.optionalKey(Target).pipe(
     $I.annoteKey("CompilerOptions.target", { description: "The ECMAScript language target." })
   ),
@@ -464,13 +457,12 @@ const CompilerOptionsFields = S.Struct({
     S.optionalKey,
     $I.annoteKey("CompilerOptions.lib", { description: "The standard libraries included in compilation." })
   ),
-  ignoreDeprecations: S.optionalKey(IgnoreDeprecations).pipe(
+  ignoreDeprecations: S.optionalKey(IgnoreDeprecationsVersion).pipe(
     $I.annoteKey("CompilerOptions.ignoreDeprecations", {
       description: "The deprecation version whose diagnostics are suppressed.",
     })
   ),
 
-  // ── Boolean options — live typed set ─────
   strict: S.optionalKey(S.Boolean).pipe(
     $I.annoteKey("CompilerOptions.strict", { description: "Enables all strict type-checking options." })
   ),
@@ -811,7 +803,6 @@ const CompilerOptionsFields = S.Struct({
     })
   ),
 
-  // ── Path strings ─────────────────────────────────────────────
   outFile: S.optionalKey(S.String).pipe(
     $I.annoteKey("CompilerOptions.outFile", {
       description: "The combined JavaScript output file. Deprecated in TypeScript 6.0.",
@@ -849,7 +840,6 @@ const CompilerOptionsFields = S.Struct({
     $I.annoteKey("CompilerOptions.generateTrace", { description: "The directory for compiler tracing output." })
   ),
 
-  // ── Path lists ───────────────────────────────────────────────
   typeRoots: S.String.pipe(
     S.Array,
     S.optionalKey,
@@ -861,7 +851,6 @@ const CompilerOptionsFields = S.Struct({
     $I.annoteKey("CompilerOptions.rootDirs", { description: "The source directories treated as one virtual root." })
   ),
 
-  // ── Plain strings ────────────────────────────────────────────
   jsxFactory: S.optionalKey(S.String).pipe(
     $I.annoteKey("CompilerOptions.jsxFactory", { description: "The factory used for classic JSX elements." })
   ),
@@ -879,7 +868,6 @@ const CompilerOptionsFields = S.Struct({
     $I.annoteKey("CompilerOptions.reactNamespace", { description: "The namespace used for legacy React JSX." })
   ),
 
-  // ── String lists ─────────────────────────────────────────────
   types: S.String.pipe(
     S.Array,
     S.optionalKey,
@@ -900,19 +888,16 @@ const CompilerOptionsFields = S.Struct({
     })
   ),
 
-  // ── Record ────────────────────────────────────────────────────
   paths: S.optionalKey(S.Record(S.String, S.Array(S.String))).pipe(
     $I.annoteKey("CompilerOptions.paths", { description: "Module specifiers mapped to candidate path patterns." })
   ),
 
-  // ── Objects ───────────────────────────────────────────────────
   plugins: PluginEntry.pipe(
     S.Array,
     S.optionalKey,
     $I.annoteKey("CompilerOptions.plugins", { description: "Language-service plugins and their configuration." })
   ),
 
-  // ── Number ────────────────────────────────────────────────────
   maxNodeModuleJsDepth: S.optionalKey(S.Finite).pipe(
     $I.annoteKey("CompilerOptions.maxNodeModuleJsDepth", {
       description: "The maximum dependency depth for JavaScript files.",

@@ -1,7 +1,3 @@
-// The facts table, pinned cell by cell. Every row is verified against the
-// manager's own authority (cited in the module's TSDoc), and the table is the
-// contract: a "tidied" path here is a cache that silently never hits.
-
 import { CachingPackageManager, PackageManagerCache } from "@beep/npm-spec/PackageManagerCache";
 import { assert, describe, it } from "@effect/vitest";
 import * as Result from "effect/Result";
@@ -13,7 +9,7 @@ const WIN_HOME = "C:\\Users\\ci";
 const dir = (manager: CachingPackageManager, platform: string, home: string = HOME): string =>
   PackageManagerCache.defaultDirectory(manager, { platform, home });
 
-describe("PackageManagerCache", () => {
+describe("PackageManagerCache, the facts table pinned cell by cell: a tidied path is a cache that silently never hits", () => {
   it("names the five rows — the yarn pair split because the majors disagree", () => {
     assert.deepStrictEqual([...CachingPackageManager.literals], ["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]);
     assert.strictEqual(PackageManagerCache.Manager, CachingPackageManager);
@@ -26,10 +22,12 @@ describe("PackageManagerCache", () => {
   });
 
   it("pins the pnpm row: the storeDir default chain, and macOS is NOT the Linux path", () => {
-    // The prior-art table this replaces folded macOS into the XDG path; pnpm
-    // documents ~/Library/pnpm/store there.
     assert.strictEqual(dir("pnpm", "linux"), "/home/ci/.local/share/pnpm/store");
-    assert.strictEqual(dir("pnpm", "darwin"), "/home/ci/Library/pnpm/store");
+    assert.strictEqual(
+      dir("pnpm", "darwin"),
+      "/home/ci/Library/pnpm/store",
+      "the prior-art table folded macOS into the XDG path; pnpm documents ~/Library/pnpm/store there"
+    );
     assert.strictEqual(dir("pnpm", "win32", WIN_HOME), "C:\\Users\\ci\\AppData\\Local\\pnpm\\store");
   });
 
@@ -46,11 +44,13 @@ describe("PackageManagerCache", () => {
   });
 
   it("pins the bun row: under the user profile on every platform, never AppData", () => {
-    // bun documents no Windows divergence — the prior-art AppData row was
-    // wrong, and this cell is the correction.
     assert.strictEqual(dir("bun", "linux"), "/home/ci/.bun/install/cache");
     assert.strictEqual(dir("bun", "darwin"), "/home/ci/.bun/install/cache");
-    assert.strictEqual(dir("bun", "win32", WIN_HOME), "C:\\Users\\ci\\.bun\\install\\cache");
+    assert.strictEqual(
+      dir("bun", "win32", WIN_HOME),
+      "C:\\Users\\ci\\.bun\\install\\cache",
+      "bun documents no Windows divergence: the prior-art AppData row was wrong, and this cell is the correction"
+    );
   });
 
   it("sends an unrecognized platform to the Linux/XDG family rather than refusing", () => {
@@ -58,9 +58,7 @@ describe("PackageManagerCache", () => {
     assert.strictEqual(dir("pnpm", "openbsd"), "/home/ci/.local/share/pnpm/store");
   });
 
-  it("the manager literal schema decodes its rows and refuses a bare `yarn`", () => {
-    // A bare `yarn` is exactly the question this vocabulary refuses to guess
-    // at: nothing about the name says which major's cache location applies.
+  it("the manager literal schema decodes its rows and refuses a bare `yarn`: nothing in the name says which major's cache location applies", () => {
     assert.strictEqual(Result.getOrThrow(S.decodeResult(CachingPackageManager)("yarn-berry")), "yarn-berry");
     assert.throws(() => Result.getOrThrow(S.decodeUnknownResult(CachingPackageManager)("yarn")));
   });
