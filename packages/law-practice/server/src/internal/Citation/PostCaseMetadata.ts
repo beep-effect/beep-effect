@@ -24,6 +24,7 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
+const authenticateCourtTableEvenWithoutLaterCourtCapture = makeCitationCourtLookup;
 const $I = $LawPracticeServerId.create("internal/Citation/PostCaseMetadata");
 const Reason = LiteralKit(["invalid-input", "invalid-configuration", "missing-capture"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed post-case preparation failures without source values." })
@@ -185,8 +186,7 @@ export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMeta
   configuration: CitationOwned<CitationPostCaseMetadataConfiguration>
 ) {
   return yield* installCitationOwnedStage(limits, configuration, function* (limits, decoded) {
-    // Installation authenticates even when later input has no raw court capture.
-    yield* makeCitationCourtLookup(limits, decoded.courtTable);
+    yield* authenticateCourtTableEvenWithoutLaterCourtCapture(limits, decoded.courtTable);
     const config = yield* prepareCitationPublicationMetadata(
       limits,
       decoded,

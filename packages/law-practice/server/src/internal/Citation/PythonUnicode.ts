@@ -25,6 +25,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { measureCitationPythonText, validateCitationPythonStorage } from "./PythonHash.ts";
 
+const fromCodePointKeepingLoneSurrogatesUnlikeTextDecoder = (point: number) => String.fromCodePoint(point);
 const $I = $LawPracticeServerId.create("internal/Citation/PythonUnicode");
 const Limits = S.toType(CitationEngineLimits);
 const Storage = S.toType(CitationPythonUnicodeStorage);
@@ -126,8 +127,7 @@ const projectStorage = Effect.fnUntraced(function* (bytes: Uint8Array, width: 1 
   let chunk = "";
   for (let index = 0; index < bytes.length; index += width) {
     if (index % (width * 4096) === 0) yield* Effect.yieldNow;
-    // This conversion preserves lone surrogate source points, unlike TextDecoder.
-    chunk += String.fromCodePoint(readPoint(bytes, index, width));
+    chunk += fromCodePointKeepingLoneSurrogatesUnlikeTextDecoder(readPoint(bytes, index, width));
     if (Str.length(chunk) >= 1024) {
       MutableList.append(chunks, chunk);
       chunk = "";
@@ -479,15 +479,15 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
   const fromStorage = Effect.fn("Citation.prepareNativeUnicode")(function* (input: unknown) {
     const decoded = yield* decodeStorage(input);
     const width = decoded.width;
-    const bytes = new Uint8Array(decoded.bytes);
-    const units = yield* validateCitationPythonStorage(bytes, width, maximum, invalidInput, () =>
+    const copiedBeforeScanSnapshot = new Uint8Array(decoded.bytes);
+    const units = yield* validateCitationPythonStorage(copiedBeforeScanSnapshot, width, maximum, invalidInput, () =>
       fail("limit-exceeded")
     );
-    const text = yield* projectStorage(bytes, width);
+    const text = yield* projectStorage(copiedBeforeScanSnapshot, width);
     return CitationPythonUnicodeValue.make({
-      storage: CitationPythonUnicodeStorage.make({ width, bytes }),
+      storage: CitationPythonUnicodeStorage.make({ width, bytes: copiedBeforeScanSnapshot }),
       text,
-      pythonLength: bytes.length / width,
+      pythonLength: copiedBeforeScanSnapshot.length / width,
       utf16Units: units,
     });
   });
@@ -505,21 +505,22 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
       utf16Units: units,
     });
   });
-  // Reserved calls borrow immutable adapter-owned input through preflight.
-  // The receiving copy is independently validated before success; ordinary
-  // fromStorage retains its existing copy-before-scan snapshot behavior.
   const fromStorageReserved = Effect.fn("Citation.reserveNativeUnicode")(function* <E, R>(
     input: unknown,
     beforeAllocate: (units: number) => Effect.Effect<void, E, R>
   ) {
-    const decoded = yield* decodeStorage(input);
-    const units = yield* validateCitationPythonStorage(decoded.bytes, decoded.width, maximum, invalidInput, () =>
-      fail("limit-exceeded")
+    const borrowedAdapterInputThroughPreflight = yield* decodeStorage(input);
+    const units = yield* validateCitationPythonStorage(
+      borrowedAdapterInputThroughPreflight.bytes,
+      borrowedAdapterInputThroughPreflight.width,
+      maximum,
+      invalidInput,
+      () => fail("limit-exceeded")
     );
     yield* beforeAllocate(units);
-    const value = yield* fromStorage(decoded);
-    if (value.utf16Units !== units) return yield* fail("invalid-input");
-    return value;
+    const receivingCopyRevalidated = yield* fromStorage(borrowedAdapterInputThroughPreflight);
+    if (receivingCopyRevalidated.utf16Units !== units) return yield* fail("invalid-input");
+    return receivingCopyRevalidated;
   });
   const fromTextReserved = Effect.fn("Citation.reserveJavaScriptUnicode")(function* <E, R>(
     input: unknown,

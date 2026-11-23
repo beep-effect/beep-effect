@@ -196,13 +196,11 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
       })
     );
     yield* Effect.forkIn(receive, record.scope);
-    // Retirement runs outside the reader's process Scope, so closing that Scope
-    // can interrupt and join its reader without a circular retirement wait.
-    yield* Deferred.await(failed).pipe(
+    const retirementOutsideReaderScopeAvoidingCircularWait = Deferred.await(failed).pipe(
       Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: (error) => terminate(error) })),
-      Effect.catchCause(() => Effect.logError("Citation regex session retirement remains quarantined")),
-      Effect.forkIn(scope)
+      Effect.catchCause(() => Effect.logError("Citation regex session retirement remains quarantined"))
     );
+    yield* retirementOutsideReaderScopeAvoidingCircularWait.pipe(Effect.forkIn(scope));
     const take = Queue.take(replies).pipe(Effect.tap(() => ensureOpen));
     yield* take.pipe(Effect.flatMap(decodeReady), Effect.interruptible);
     return { child, take };

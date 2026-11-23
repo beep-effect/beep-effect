@@ -20,9 +20,7 @@ const max = CitationEngineAbsoluteMaxima;
 const Count = S.Natural.check(S.isLessThanOrEqualTo(max.patternMatches)).pipe(
   $I.annoteSchema("Count", { description: "Absolute raw-match count, including zero." })
 );
-// Every capturing group consumes pattern syntax. This conservative absolute
-// bound does not qualify any pattern or replace its reviewed group descriptor.
-const Groups = S.Natural.check(S.isLessThanOrEqualTo(max.patternUtf16)).pipe(
+const ConservativeGroupBoundNotPatternQualification = S.Natural.check(S.isLessThanOrEqualTo(max.patternUtf16)).pipe(
   $I.annoteSchema("Groups", { description: "Captured group count excluding the whole match." })
 );
 const Position = S.Natural.check(S.isLessThanOrEqualTo(max.producedTextUtf16)).pipe(
@@ -42,7 +40,7 @@ export class CitationRegexResultEnvelope extends S.Opaque<
 >()(
   S.TaggedStruct("Complete", {
     version: S.tag("citation-regex-result/v1"),
-    groups: Groups,
+    groups: ConservativeGroupBoundNotPatternQualification,
     matches: Count,
     spans: S.String.check(S.isMaxLength(paddedLength(max.processMessageBytes))),
   }).pipe(
@@ -118,14 +116,15 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
   sourcePointsInput: unknown
 ) {
   const badRuntime = () => CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
-  const groups = yield* S.decodeUnknownEffect(Groups)(expectedGroupsInput).pipe(Effect.mapError(badRuntime));
+  const groups = yield* S.decodeUnknownEffect(ConservativeGroupBoundNotPatternQualification)(expectedGroupsInput).pipe(
+    Effect.mapError(badRuntime)
+  );
   const sourcePoints = yield* S.decodeUnknownEffect(Position)(sourcePointsInput).pipe(Effect.mapError(badRuntime));
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const counts = Effect.fn("Citation.checkRegexResultCounts")(function* (matchesInput: unknown) {
     const matches = yield* S.decodeUnknownEffect(Count)(matchesInput).pipe(Effect.mapError(invalid));
     if (matches > limits.patternMatches) return yield* safety("patternMatches");
     const bytes = matches * (groups + 1) * 8;
-    // Includes the fixed header and LF, even for a zero-match result.
     const header = yield* S.encodeEffect(Json)(
       CitationRegexResultEnvelope.make({
         groups,
@@ -133,11 +132,16 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
         spans: "",
       })
     ).pipe(Effect.mapError(invalid));
-    const completeBytes = encoder.encode(header).byteLength + 1 + paddedLength(bytes);
+    const headerAndLineFeedEvenForZeroMatches = encoder.encode(header).byteLength + 1;
+    const completeBytes = headerAndLineFeedEvenForZeroMatches + paddedLength(bytes);
     if (completeBytes > limits.processMessageBytes) return yield* safety("processMessageBytes");
     return { matches, bytes, completeBytes };
   });
-  const checkCapture = Effect.fnUntraced(function* (start: number, end: number, group: number) {
+  const checkCaptureAgainstSourceNotWholeMatchForLookaround = Effect.fnUntraced(function* (
+    start: number,
+    end: number,
+    group: number
+  ) {
     if (start === absent || end === absent) {
       if (group === 0 || start !== absent || end !== absent) return yield* invalid();
       return false;
@@ -149,9 +153,9 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     let previousStart = -1;
     let previousEnd = -1;
     const wholeMatch = Effect.fnUntraced(function* (start: number, end: number) {
-      // Python permits empty then nonempty at one position, but no duplicate empty match.
-      if (start < previousEnd || (start === end && start === previousStart && previousStart === previousEnd))
-        return yield* invalid();
+      const duplicateEmptyMatchPythonForbids =
+        start === end && start === previousStart && previousStart === previousEnd;
+      if (start < previousEnd || duplicateEmptyMatchPythonForbids) return yield* invalid();
       previousStart = start;
       previousEnd = end;
     });
@@ -161,9 +165,8 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
         if (offset % 4096 === 0) yield* Effect.yieldNow;
         const start = view.getUint32(offset, true);
         const end = view.getUint32(offset + 4, true);
-        if (!(yield* checkCapture(start, end, group))) continue;
+        if (!(yield* checkCaptureAgainstSourceNotWholeMatchForLookaround(start, end, group))) continue;
         if (group === 0) yield* wholeMatch(start, end);
-        // Lookaround captures can lie outside the whole-match range.
       }
     });
   };
@@ -250,11 +253,13 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
       const next = yield* pull;
       if (O.isNone(next)) break;
       if (matches === maximumMatches) return yield* safety("patternMatches");
-      // Count and complete-envelope preflight precede row decoding or growth.
-      const layout = yield* counts(matches + 1);
+      const preflightBeforeRowDecodeOrGrowth = yield* counts(matches + 1);
       const captures = yield* decodeRow(next.value);
-      if (layout.bytes > bytes.byteLength) {
-        const capacity = Num.min(limits.processMessageBytes, Num.max(layout.bytes, bytes.byteLength * 2));
+      if (preflightBeforeRowDecodeOrGrowth.bytes > bytes.byteLength) {
+        const capacity = Num.min(
+          limits.processMessageBytes,
+          Num.max(preflightBeforeRowDecodeOrGrowth.bytes, bytes.byteLength * 2)
+        );
         const grown = new Uint8Array(capacity);
         grown.set(bytes);
         bytes = grown;

@@ -132,9 +132,8 @@ export const installCitationCaseNameSelection = Effect.fn("Citation.installCaseN
       });
       patch = CitationCaseNameProcessPatch.make({ ...patch, ...html });
       const selected = short ? patch.antecedentGuess : patch.defendant;
-      // The source checks `is None`; an empty assignment or retained empty field
-      // suppresses fallback just like a nonempty field.
-      if (O.getOrElse(selected, () => request.currentName) !== null) return { patch, usedHtml: true, usedPlain: false };
+      const isNotNoneEvenWhenEmpty = O.getOrElse(selected, () => request.currentName) !== null;
+      if (isNotNoneEvenWhenEmpty) return { patch, usedHtml: true, usedPlain: false };
     }
     const plain = yield* findPlain({ ...request, short });
     return { patch: merge(patch, plain.patch), usedHtml: O.isSome(request.geometry), usedPlain: true };

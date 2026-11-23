@@ -166,21 +166,26 @@ const snapshotRows = Effect.fn("Citation.snapshotOccurrenceRows")(function* (res
       const modelId = yield* Effect.fromOption(A.get(captured.ids, index), () => fail("invalid-input"));
       const selected = yield* projectCitationExtractionSelection(modelId, model);
       const metadata = "outcome" in model ? model.outcome.metadata : model.metadata;
-      // CitationBase.span_with_pincite uses all non-null endpoint observations,
-      // including token endpoints even when explicit model spans override them.
-      const start = pipe(
+      const startOverAllEndpointsIncludingOverriddenToken = pipe(
         model.token.start,
         Num.min(selected.span[0]),
         Num.min(metadata.pinCiteSpanStart ?? model.token.start)
       );
-      const end = pipe(model.token.end, Num.max(selected.span[1]), Num.max(metadata.pinCiteSpanEnd ?? model.token.end));
+      const endOverAllEndpointsIncludingOverriddenToken = pipe(
+        model.token.end,
+        Num.max(selected.span[1]),
+        Num.max(metadata.pinCiteSpanEnd ?? model.token.end)
+      );
       return {
         index,
         modelId,
         citation,
         span: selected.span,
         fullSpan: selected.fullSpan,
-        spanWithPincite: Tuple.make(start, end),
+        spanWithPincite: Tuple.make(
+          startOverAllEndpointsIncludingOverriddenToken,
+          endOverAllEndpointsIncludingOverriddenToken
+        ),
       };
     }),
     { concurrency: 1 }

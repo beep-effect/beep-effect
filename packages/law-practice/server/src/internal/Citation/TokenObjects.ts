@@ -154,12 +154,14 @@ export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(f
     const row = yield* lookup(id);
     return row.kind === "CitationToken" ? yield* editions.nominative(row.exact, row.variation) : false;
   });
-  const equal = Effect.fn("Citation.equalTokenObjects")(function* (left: number, right: number) {
+  const equalExcludingGroupsLikeDataclassUnlikeMerge = Effect.fn("Citation.equalTokenObjects")(function* (
+    left: number,
+    right: number
+  ) {
     const a = yield* lookup(left);
     const b = yield* lookup(right);
     if (left === right) return true;
     if (a.kind !== b.kind || !sameData(a.data, b.data) || a.start !== b.start || a.end !== b.end) return false;
-    // Original dataclass equality excludes groups, while merge compares them.
     if (a.kind !== "CitationToken") return true;
     if (!(yield* editions.equalOccurrences(a.exact, b.exact))) return false;
     if (!(yield* editions.equalOccurrences(a.variation, b.variation))) return false;
@@ -196,7 +198,7 @@ export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(f
       timing.timed(mutex.withPermit(nominative(id)))
     ),
     equal: Effect.fn("Citation.serialEqualTokens")((left: number, right: number) =>
-      timing.timed(mutex.withPermit(equal(left, right)))
+      timing.timed(mutex.withPermit(equalExcludingGroupsLikeDataclassUnlikeMerge(left, right)))
     ),
   };
 });

@@ -91,7 +91,7 @@ const ownStages = Effect.fn("Citation.ownSemanticExtractionStages")(function* (
 ) {
   const owned = yield* ownCitationSemanticExtraction(limits, configuration);
   return yield* Effect.gen(function* () {
-    // Installed once; an install failure surfaces where each request used to install it.
+    // decision: citation-stage-install-once-exit-replay
     const entry = yield* Effect.exit(
       makeCitationExtractionEntry(limits, runtime, ownedField(owned.config, "extraction"))
     );

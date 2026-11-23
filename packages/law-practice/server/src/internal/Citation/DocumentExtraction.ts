@@ -139,7 +139,7 @@ const ownStages = Effect.fn("Citation.ownDocumentExtractionStages")(function* (
 ) {
   const owned = yield* ownCitationDocumentExtraction(limits, configuration);
   return yield* Effect.gen(function* () {
-    // Installed once; an install failure surfaces where each request used to install it.
+    // decision: citation-stage-install-once-exit-replay
     const tokenized = yield* Effect.exit(
       makeCitationTokenizedExtraction(limits, runtime, ownedField(owned.config, "extraction"))
     );
