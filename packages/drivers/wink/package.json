@@ -67,6 +67,7 @@
     "@beep/nlp-processing": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:",
     "wink-eng-lite-web-model": "catalog:",

@@ -1,0 +1,10 @@
+---
+title: "P3: aligned grounded extractions carry a TextAnchor; the office-action attempt log reads v1 rows through a declared transform"
+date: 2026-11-22
+lane: "goals/text-knowledge-stack-rebuild-p3-annotation"
+reversal: "Keep span and matchedText on a langextract-owned span schema with the v1 key order and drop attempt v2, by a decision file before the anchor commit lands"
+---
+
+`GroundedExtraction` stays the langextract aligner's output: alignment returns it, `VerifiedSpan` locates over it and `OfficeActionStructure` stores it, and the PLAN exit forbids it only in `IrToLaw` and the semantica layers. Its four aligned cases replace `span: Contract.Span` and `matchedText` with `anchor: TextAnchor`, the canonical candidate anchor: `matchedText` is the source slice of `span` (`Alignment.behavior.ts:222-233`), so the pair already is one anchor. `Contract.Span` retires with no langextract twin, and every reader that rebuilt a `TextAnchor` from the pair (`IrToLaw`, semantica, `OfficeActionStructure`) reads the field instead. An aligned extraction with `start == end` can no longer be built; the three use-cases tests that build empty or inverted spans (`OfficeActionStructure.test.ts:148,177,191`) move from a verification refusal to a construction refusal.
+
+The office-action attempt log is a stored format. `OfficeActionStructureAttempt.schemaVersion` becomes `"2"`. `OfficeActionStructureAttemptRead` decodes a v2 row, or a v1 row through a frozen v1 reader that maps `span` and `matchedText` to `anchor`, keeps every other field as stored, decodes the result through the live v2 schema and never encodes. The frozen `office-action-attempts-v1.jsonl` is not edited; a v2 fixture is captured beside it; the two byte tests become "reads every frozen v1 row to its v2 form" and "writes v2 rows byte for byte". Checked on this base in a throwaway: both frozen v1 rows read to v2 with width-checked anchors (0..25 and 176..303 on row 1; row 2 has none) and re-encode with `schemaVersion: "2"`. `VerifiedSpanAttemptRecord` has no store and changes shape under the chapter-11 amendment.

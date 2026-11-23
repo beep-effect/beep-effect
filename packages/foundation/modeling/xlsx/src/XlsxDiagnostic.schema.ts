@@ -25,8 +25,6 @@ const whole = (description: string) =>
   S.Int.check(S.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER })).pipe(S.annotateKey({ description }));
 
 /**
- * What the first bytes and the names inside say a file is.
- *
  * **Example** (Sniff a file before reading it)
  *
  * ```ts import.meta.vitest name="Sniff a file before reading it"
@@ -206,8 +204,6 @@ export class DamagedArchive extends S.Opaque<DamagedArchive, { readonly brand: u
 ) {}
 
 /**
- * A part is not well-formed XML.
- *
  * **Example** (Malformed sheet XML)
  *
  * ```ts import.meta.vitest name="Malformed sheet XML"
@@ -231,8 +227,6 @@ export class DamagedXml extends S.Opaque<DamagedXml, { readonly brand: unique sy
 ) {}
 
 /**
- * Which cap a read ran into.
- *
  * **Example** (Known caps)
  *
  * ```ts import.meta.vitest name="Known caps"
@@ -269,8 +263,6 @@ export const XlsxLimit = LiteralKit([
 export type XlsxLimit = typeof XlsxLimit.Type;
 
 /**
- * The file went past one of its caps.
- *
  * **Example** (A file over its byte cap)
  *
  * ```ts import.meta.vitest name="A file over its byte cap"
@@ -292,8 +284,6 @@ export class LimitExceeded extends S.Opaque<LimitExceeded, { readonly brand: uni
 ) {}
 
 /**
- * The workbook names no sheet.
- *
  * **Example** (A workbook with no sheet)
  *
  * ```ts import.meta.vitest name="A workbook with no sheet"
@@ -585,8 +575,6 @@ export class ListTruncated extends S.Opaque<ListTruncated, { readonly brand: uni
 ) {}
 
 /**
- * What a read goes past.
- *
  * **Example** (Branch on a warning finding)
  *
  * ```ts import.meta.vitest name="Branch on a warning finding"
@@ -635,8 +623,6 @@ export const XlsxWarningFinding = LiteralKit([
 export type XlsxWarningFinding = typeof XlsxWarningFinding.Type;
 
 /**
- * What stops a read.
- *
  * **Example** (Branch on a fatal finding)
  *
  * ```ts import.meta.vitest name="Branch on a fatal finding"
@@ -683,8 +669,6 @@ export const XlsxFatalFinding = LiteralKit([
 export type XlsxFatalFinding = typeof XlsxFatalFinding.Type;
 
 /**
- * An oddity the read went past.
- *
  * **Example** (Wrap a finding as a warning)
  *
  * ```ts import.meta.vitest name="Wrap a finding as a warning"
@@ -706,8 +690,6 @@ export class XlsxWarning extends S.Opaque<XlsxWarning, { readonly brand: unique 
 ) {}
 
 /**
- * A problem that stopped the read.
- *
  * **Example** (The fatal finding of a failed read)
  *
  * ```ts import.meta.vitest name="The fatal finding of a failed read"
@@ -736,8 +718,6 @@ export class XlsxFatal extends S.Opaque<XlsxFatal, { readonly brand: unique symb
 ) {}
 
 /**
- * One finding and how serious it is.
- *
  * **Example** (Tell warnings from fatal problems)
  *
  * ```ts import.meta.vitest name="Tell warnings from fatal problems"

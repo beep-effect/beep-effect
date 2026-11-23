@@ -61,11 +61,6 @@ const isStringifyDepthExceeded = S.is(StringifyDepthExceeded);
 const $I = $YamlId.create("Yaml");
 
 /**
- * Options controlling parse behavior. All fields are omissible; absent fields
- * resolve to `strict` `true`, `maxAliasCount` `100` (the alias-based
- * denial-of-service guard) and `uniqueKeys` `true` (duplicate mapping keys
- * are errors).
- *
  * **Details**
  *
  * Construct with the validated `YamlParseOptions.make({ ... })` static — the
@@ -115,13 +110,6 @@ export class YamlParseOptions extends S.Opaque<YamlParseOptions, { readonly bran
 ) {}
 
 /**
- * Options controlling stringify behavior. All fields are omissible; absent
- * fields resolve to `indent` `2`, `lineWidth` `0`, `defaultScalarStyle`
- * `"plain"`, `defaultCollectionStyle` `"block"`, `sortKeys` `false`,
- * `indentSequences` `false`, `quoteStyle` `"single"`, `quoteCompat` absent
- * (no dialect-compat quoting), `finalNewline` `true` and `forceDefaultStyles`
- * `false`.
- *
  * **Details**
  *
  * `lineWidth` controls column-based scalar folding. The default `0` (and any
@@ -308,13 +296,6 @@ export class YamlStringifyOptions extends S.Opaque<YamlStringifyOptions, { reado
 ) {}
 
 /**
- * Error-recovery parse failure: aggregates every fatal {@link YamlDiagnostic}
- * encountered, so a single failure reports the whole batch. Raised by
- * {@link Yaml.parse}, {@link Yaml.parseAll}, `YamlDocument.parse`/`parseAll`
- * and the decode direction of the schema factories. The error itself has no
- * `code` field: read the code from the diagnostics —
- * `error.diagnostics[0].code` is the primary failure.
- *
  * **Details**
  *
  * The `message` renders each diagnostic's position 1-based
@@ -395,12 +376,6 @@ export class YamlParseError extends S.TaggedError<YamlParseError, { readonly bra
 }
 
 /**
- * Stringification failure (the circular-reference guard), carrying structured
- * {@link YamlDiagnostic} entries and the offending value. Raised by
- * {@link Yaml.stringify}, `YamlDocument#stringify` and the encode direction of
- * the schema factories. The error itself has no `code` field: read the code
- * from the diagnostics — `error.diagnostics[0].code` is the primary failure.
- *
  * **Example** (Inspect a stringify error summary)
  *
  * ```ts

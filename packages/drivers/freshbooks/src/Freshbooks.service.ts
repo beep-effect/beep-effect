@@ -66,8 +66,6 @@ const $I = $FreshbooksId.create("Freshbooks.service");
 export const FRESHBOOKS_MAX_PER_PAGE = 100;
 
 /**
- * Resolved runtime configuration for the FreshBooks services.
- *
  * **Example** (Make resolved config)
  *
  * ```ts

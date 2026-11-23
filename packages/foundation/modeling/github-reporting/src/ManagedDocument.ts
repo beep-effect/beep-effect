@@ -22,8 +22,6 @@ import type { SectionParseError } from "@beep/managed-section/SectionDocument";
 const $I = $GithubReportingId.create("ManagedDocument");
 
 /**
- * The region dialect rejected its own comment style.
- *
  * **Example** (Inspect a rejected region dialect)
  *
  * ```ts
@@ -86,9 +84,6 @@ const REGION_DIALECT: SectionDialect = SectionDialect.make({
 });
 
 /**
- * Raised when a managed document cannot be read or regenerated without
- * guessing.
- *
  * **Details**
  *
  * The four structural kinds (`unterminatedRegion`, `orphanedEnd`,
@@ -291,8 +286,6 @@ export class ManagedDocumentSource extends S.Opaque<ManagedDocumentSource, { rea
   }).pipe($I.annoteSchema("ManagedDocumentSource", { description: "Source text and identity of a managed document." }))
 ) {}
 /**
- * Companion types for {@link ManagedDocumentSource}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -307,9 +300,6 @@ export declare namespace ManagedDocumentSource {
 }
 
 /**
- * A marker-delimited document: named regions a tool owns, inside text a human
- * may also edit.
- *
  * **Details**
  *
  * The one primitive behind both the sticky PR comment and the managed PR

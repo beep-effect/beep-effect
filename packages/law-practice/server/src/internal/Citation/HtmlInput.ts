@@ -28,6 +28,8 @@ import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 const NativeStorage = S.toType(CitationPythonUnicodeStorage);
+const decodeAdapterOwnedImmutableBytesCallerMustNotMutate = S.decodeUnknownEffect(S.Uint8Array);
+const decodeBorrowedAdapterStorageBeforeTransportAllocation = S.decodeUnknownEffect(NativeStorage);
 
 import { visitCitationTextPoints } from "./TextPoints.ts";
 
@@ -110,16 +112,14 @@ const skipSpace = Effect.fnUntraced(function* (read: ReadPoint, length: number, 
   }
   return index;
 });
-// The same linear declaration detector can read legacy UTF-16 units or exact
-// native Python points. No JavaScript projection is needed for native input.
-const encodingAt = (read: ReadPoint, index: number) =>
+const encodingDeclarationAtOverUtf16UnitsOrNativePoints = (read: ReadPoint, index: number) =>
   index >= 7 && HashSet.has(whitespace, read(index - 1)) && matches(read, index, encodingName);
 const quote = (point: number) => point === 34 || point === 39;
 const nextEncoding = Effect.fnUntraced(function* (read: ReadPoint, length: number, start: number) {
   for (let index = start; index < length; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
     if (read(index) === 62) return -1;
-    if (encodingAt(read, index)) return index;
+    if (encodingDeclarationAtOverUtf16UnitsOrNativePoints(read, index)) return index;
   }
   return -1;
 });
@@ -270,10 +270,9 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     input: unknown,
     beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>
   ) {
-    // This private port receives an immutable, adapter-owned Python byte value.
-    // The snapshot owns transport memory; callers must not mutate their value
-    // while preparation runs. No raw byte field is added to public requests.
-    const source = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(Effect.mapError(invalidInput));
+    const source = yield* decodeAdapterOwnedImmutableBytesCallerMustNotMutate(input).pipe(
+      Effect.mapError(invalidInput)
+    );
     const size = source.byteLength;
     if (size > messageCeiling) return yield* safety("processMessageBytes");
     const start = yield* skipByteSpace(source);
@@ -287,9 +286,9 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     input: unknown,
     beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>
   ) {
-    // This private stage borrows immutable adapter-owned storage. Validation
-    // and complete-frame preflight precede allocation of transport memory.
-    const source = yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(Effect.mapError(invalidInput));
+    const source = yield* decodeBorrowedAdapterStorageBeforeTransportAllocation(input).pipe(
+      Effect.mapError(invalidInput)
+    );
     const size = source.bytes.byteLength;
     if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
     if (size > messageCeiling) return yield* safety("processMessageBytes");
@@ -307,7 +306,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     const bytes = yield* copyTransport(source.bytes, size);
     return CitationHtmlInput.make({ encoding, bytes, fullHtml });
   }, timed);
-  return {
+  const portsNotRawByteFieldsOnPublicRequests = {
     prepare: Effect.fn("Citation.prepareHtmlInput")((input: unknown) =>
       prepare(input, rawText, sourceCeiling, () => Effect.void)
     ),
@@ -316,4 +315,5 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     prepareStage: <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) =>
       prepare(input, stageText, CitationEngineAbsoluteMaxima.producedTextUtf16, beforeAllocate),
   };
+  return portsNotRawByteFieldsOnPublicRequests;
 });

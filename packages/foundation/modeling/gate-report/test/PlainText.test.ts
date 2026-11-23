@@ -1,5 +1,3 @@
-// The plain-text projection: line order, truncation, control characters, and
-// the cap under a tight budget.
 import {
   CapLine,
   ConsoleBudget,
@@ -102,8 +100,7 @@ describe("projectLines", () => {
     );
   });
 
-  // Retargets upstream ui __test__/dispatcher/helpers.test.ts "strips escape sequences an error
-  // message carries" (vitest-agent 1cf1ab94).
+  // Ported from vitest-agent 1cf1ab94 packages/ui/__test__/dispatcher/helpers.test.ts (MIT).
   it("strips escape sequences a message or a diff carries, so only the text counts", () => {
     const styled = FailureEntry.make({
       unit: "src/a.test.ts",
@@ -175,7 +172,6 @@ describe("fitDocument and the cap", () => {
   });
 
   it("reserves both verdict lines when only a note is kept beside a tailless frame", () => {
-    // The reviewer's case: a 40-character verdict and a note of seven 40-character lines.
     const minimal = ConsoleBudget.make({ maxChars: 328, maxLineChars: 40, maxDiffLines: 0 });
     const verdict40 = VerdictLine.make({
       gate: "t",

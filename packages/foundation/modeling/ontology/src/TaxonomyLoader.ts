@@ -141,8 +141,6 @@ const RepoConceptIri = HttpsIriReference.check(
 );
 
 /**
- *  Runtime type for {@link VendorLoadStatus}.
- *
  * **Example** (Assign UNVETTED status)
  *
  * ```ts

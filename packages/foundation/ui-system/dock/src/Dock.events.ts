@@ -14,8 +14,6 @@ import { PanelConstraints, PanelRenderMode, PanelView } from "./Dock.models.ts";
 const $I = $DockId.create("Dock.events");
 
 /**
- * Event recording a panel installation.
- *
  * **Example** (Make panel opened event)
  *
  * ```ts
@@ -42,8 +40,6 @@ export class PanelOpenedEvent extends S.Opaque<PanelOpenedEvent, { readonly bran
 ) {}
 
 /**
- * Event recording a newly active panel.
- *
  * **Example** (Make panel activated event)
  *
  * ```ts
@@ -70,8 +66,6 @@ export class PanelActivatedEvent extends S.Opaque<PanelActivatedEvent, { readonl
 ) {}
 
 /**
- * Event recording a panel title replacement.
- *
  * **Example** (Make title changed event)
  *
  * ```ts
@@ -92,8 +86,6 @@ export class PanelTitleChangedEvent extends S.Opaque<PanelTitleChangedEvent, { r
 ) {}
 
 /**
- * Event recording a panel view replacement.
- *
  * **Example** (Make view changed event)
  *
  * ```ts
@@ -115,8 +107,6 @@ export class PanelViewChangedEvent extends S.Opaque<PanelViewChangedEvent, { rea
 ) {}
 
 /**
- * Event recording a panel rendering-policy replacement.
- *
  * **Example** (Make render mode event)
  *
  * ```ts
@@ -243,8 +233,6 @@ export class PanelMovedEvent extends S.Opaque<PanelMovedEvent, { readonly brand:
 ) {}
 
 /**
- * Event recording a panel reorder within one group.
- *
  * **Example** (Reorder panel by index)
  *
  * ```ts
@@ -319,8 +307,6 @@ export class GroupMovedEvent extends S.Opaque<GroupMovedEvent, { readonly brand:
 ) {}
 
 /**
- * Event recording a group metadata update.
- *
  * **Example** (Update group metadata)
  *
  * ```ts
@@ -397,8 +383,6 @@ export class SplitResizedEvent extends S.Opaque<SplitResizedEvent, { readonly br
 ) {}
 
 /**
- * Event recording an atomic workspace clear.
- *
  * **Example** (Clear the workspace)
  *
  * ```ts
@@ -422,8 +406,6 @@ export class WorkspaceClearedEvent extends S.Opaque<WorkspaceClearedEvent, { rea
 ) {}
 
 /**
- * Event recording installation of a validated snapshot.
- *
  * **Example** (Restore validated snapshot)
  *
  * ```ts
@@ -451,8 +433,6 @@ export class WorkspaceRestoredEvent extends S.Opaque<WorkspaceRestoredEvent, { r
 ) {}
 
 /**
- * Event recording entry into maximized mode.
- *
  * **Example** (Maximize a group)
  *
  * ```ts
@@ -473,8 +453,6 @@ export class GroupMaximizedEvent extends S.Opaque<GroupMaximizedEvent, { readonl
 ) {}
 
 /**
- * Event recording exit from maximized mode.
- *
  * **Example** (Restore maximized group)
  *
  * ```ts
@@ -494,8 +472,6 @@ export class GroupRestoredEvent extends S.Opaque<GroupRestoredEvent, { readonly 
   )
 ) {}
 /**
- * Event recording a docked group becoming floating.
- *
  * **Example** (Float a docked group)
  *
  * ```ts
@@ -515,8 +491,6 @@ export class GroupFloatedEvent extends S.Opaque<GroupFloatedEvent, { readonly br
   )
 ) {}
 /**
- * Event recording a floating group returning to the dock tree.
- *
  * **Example** (Dock a floating group)
  *
  * ```ts

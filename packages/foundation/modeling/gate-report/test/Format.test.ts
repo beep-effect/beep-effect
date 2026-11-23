@@ -1,5 +1,4 @@
-// Retargets upstream packages/ui/__test__/format-duration.test.ts and the
-// totals line of packages/ui/src/counts.ts (vitest-agent 1cf1ab94).
+// Ported from vitest-agent 1cf1ab94 packages/ui/__test__/format-duration.test.ts and packages/ui/src/counts.ts (MIT).
 import { formatBytes, formatCounts, formatDuration, plural } from "@beep/gate-report/Format";
 import { Totals } from "@beep/gate-report/GateReport";
 import { assert, describe, it } from "@effect/vitest";
@@ -68,7 +67,7 @@ describe("plural and formatBytes", () => {
   });
 });
 
-describe("formatCounts", () => {
+describe("formatCounts, the totals line retargeted from vitest-agent 1cf1ab94 packages/ui/src/counts.ts", () => {
   const counts = (totals: Totals, itemKind: "test" | "diagnostic" | "step" = "test") =>
     formatCounts({ totals, itemKind });
 

@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $ConfigFileId.create("ConfigEvent");
 
 /**
- * A reference to one configuration source that contributed to a load.
- *
  * **Details**
  *
  * Carries the resolver's name alongside the path so a subscriber can tell
@@ -54,9 +52,6 @@ export class ConfigSourceRef extends S.Opaque<ConfigSourceRef, { readonly brand:
 ) {}
 
 /**
- * Every event published during config discovery, parsing, validation and
- * persistence.
- *
  * **Details**
  *
  * There is no discovery-failure variant: under this package's
@@ -131,8 +126,6 @@ export const ConfigEventPayload = S.Union([
 export type ConfigEventPayload = typeof ConfigEventPayload.Type;
 
 /**
- * A published event: the payload plus the instant it occurred.
- *
  * **Example** (Timestamp a missing configuration event)
  *
  * ```ts

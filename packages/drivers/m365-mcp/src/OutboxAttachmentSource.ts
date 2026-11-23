@@ -39,8 +39,6 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 });
 
 /**
- * Why an attachment path was refused.
- *
  * **Example** (Guard an attachment refusal reason)
  *
  * ```ts
@@ -69,8 +67,6 @@ export const OutboxAttachmentErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link OutboxAttachmentErrorReason}.
- *
  * **Example** (Type an attachment refusal reason)
  *
  * ```ts
@@ -86,8 +82,6 @@ export const OutboxAttachmentErrorReason = LiteralKit([
 export type OutboxAttachmentErrorReason = typeof OutboxAttachmentErrorReason.Type;
 
 /**
- * Typed refusal raised by the outbox attachment source.
- *
  * **Details**
  *
  * The message may name the offending path, which is the caller's own input.
@@ -123,8 +117,6 @@ export class OutboxAttachmentError extends S.TaggedError<OutboxAttachmentError, 
 ) {}
 
 /**
- * Name, size and SHA-256 digest of one attached file.
- *
  * **Details**
  *
  * These three values are what the server records when it attaches a file and
@@ -159,8 +151,6 @@ export class OutboxAttachmentDigest extends S.Opaque<OutboxAttachmentDigest, { r
 ) {}
 
 /**
- * One local file read and hashed for attaching.
- *
  * **Example** (Construct a resolved attachment)
  *
  * ```ts

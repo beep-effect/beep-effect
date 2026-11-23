@@ -45,8 +45,7 @@ const retainedExtractions = (outcome: DocStructureOutcome): ReadonlyArray<Ground
         GroundedExtraction.cases.match_exact.make({
           label: candidate._tag === "OfficeActionFinalityCandidate" ? "action-finality" : "shortened-statutory-period",
           text: candidate.anchor.anchor.quote,
-          matchedText: candidate.anchor.anchor.quote,
-          span: { start: candidate.anchor.anchor.startChar, end: candidate.anchor.anchor.endChar },
+          anchor: candidate.anchor.anchor,
         })
       );
 /**
@@ -101,7 +100,7 @@ export const OfficeActionDocketIntakeLive = Layer.effect(
       if (result._tag === "Failure") {
         yield* store.append(
           OfficeActionStructureAttempt.make({
-            schemaVersion: "1",
+            schemaVersion: "2",
             attemptId: request.attemptId,
             previousAttemptId: request.previousAttemptId,
             document: request.document,
@@ -117,7 +116,7 @@ export const OfficeActionDocketIntakeLive = Layer.effect(
       }
       yield* store.append(
         OfficeActionStructureAttempt.make({
-          schemaVersion: "1",
+          schemaVersion: "2",
           attemptId: request.attemptId,
           previousAttemptId: request.previousAttemptId,
           document: request.document,

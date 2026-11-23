@@ -23,8 +23,6 @@ const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unkno
   S.withConstructorDefault(Effect.succeedNone)
 );
 /**
- * OpenAI-compatible sampling temperature.
- *
  * **Example** (Making a temperature value)
  *
  * ```ts
@@ -45,8 +43,6 @@ export const OpenAiCompatTemperature = S.Finite.check(S.isBetween({ minimum: 0, 
 );
 
 /**
- * OpenAI-compatible sampling temperature.
- *
  * **Example** (Typing a temperature value)
  *
  * ```ts
@@ -63,8 +59,6 @@ export const OpenAiCompatTemperature = S.Finite.check(S.isBetween({ minimum: 0, 
 export type OpenAiCompatTemperature = typeof OpenAiCompatTemperature.Type;
 
 /**
- * OpenAI-compatible frequency or presence penalty.
- *
  * **Example** (Making a penalty value)
  *
  * ```ts
@@ -85,8 +79,6 @@ export const OpenAiCompatPenalty = S.Finite.check(S.isBetween({ minimum: -2, max
 );
 
 /**
- * OpenAI-compatible frequency or presence penalty.
- *
  * **Example** (Typing a penalty value)
  *
  * ```ts
@@ -103,8 +95,6 @@ export const OpenAiCompatPenalty = S.Finite.check(S.isBetween({ minimum: -2, max
 export type OpenAiCompatPenalty = typeof OpenAiCompatPenalty.Type;
 
 /**
- * Chat roles accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Checking a user role)
  *
  * ```ts
@@ -125,8 +115,6 @@ export const OpenAiCompatChatRole = LiteralKit(["system", "user", "assistant", "
 );
 
 /**
- * Chat roles accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Typing an assistant role)
  *
  * ```ts
@@ -143,8 +131,6 @@ export const OpenAiCompatChatRole = LiteralKit(["system", "user", "assistant", "
 export type OpenAiCompatChatRole = typeof OpenAiCompatChatRole.Type;
 
 /**
- * Finish reasons emitted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Checking a stop reason)
  *
  * ```ts
@@ -171,8 +157,6 @@ export const OpenAiCompatFinishReason = LiteralKit([
 );
 
 /**
- * Finish reasons emitted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Typing a tool_calls reason)
  *
  * ```ts
@@ -189,8 +173,6 @@ export const OpenAiCompatFinishReason = LiteralKit([
 export type OpenAiCompatFinishReason = typeof OpenAiCompatFinishReason.Type;
 
 /**
- * Function payload inside an OpenAI-compatible tool call.
- *
  * **Example** (Making a tool-call function)
  *
  * ```ts
@@ -222,8 +204,6 @@ export class OpenAiCompatToolCallFunction extends S.Opaque<
 ) {}
 
 /**
- * Tool call payload emitted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a tool call)
  *
  * ```ts
@@ -259,8 +239,6 @@ export class OpenAiCompatToolCall extends S.Opaque<OpenAiCompatToolCall, { reado
 ) {}
 
 /**
- * Incremental function payload inside an OpenAI-compatible streaming tool-call delta.
- *
  * **Example** (Making a function delta)
  *
  * ```ts
@@ -295,8 +273,6 @@ export class OpenAiCompatToolCallFunctionDelta extends S.Opaque<
 ) {}
 
 /**
- * Incremental tool-call payload emitted by OpenAI-compatible chat completion streams.
- *
  * **Example** (Making a tool-call delta)
  *
  * ```ts
@@ -334,8 +310,6 @@ export class OpenAiCompatToolCallDelta extends S.Opaque<OpenAiCompatToolCallDelt
 ) {}
 
 /**
- * Function details sent to OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a function definition)
  *
  * ```ts
@@ -375,8 +349,6 @@ export class OpenAiCompatFunctionToolDefinition extends S.Opaque<
 ) {}
 
 /**
- * Function declaration sent to OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a function tool)
  *
  * ```ts
@@ -413,8 +385,6 @@ const OpenAiCompatChatContent = S.Union([S.String, S.Array(S.Record(S.String, S.
 );
 
 /**
- * System chat message accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a system message)
  *
  * ```ts
@@ -449,8 +419,6 @@ export class OpenAiCompatSystemChatMessage extends S.Opaque<
 ) {}
 
 /**
- * User chat message accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a user message)
  *
  * ```ts
@@ -485,8 +453,6 @@ export class OpenAiCompatUserChatMessage extends S.Opaque<
 ) {}
 
 /**
- * Assistant chat message accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making an assistant message)
  *
  * ```ts
@@ -526,8 +492,6 @@ export class OpenAiCompatAssistantChatMessage extends S.Opaque<
 ) {}
 
 /**
- * Tool chat message accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a tool message)
  *
  * ```ts
@@ -566,8 +530,6 @@ export class OpenAiCompatToolChatMessage extends S.Opaque<
 ) {}
 
 /**
- * Chat message accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Decode and narrow a chat message)
  *
  * ```ts
@@ -597,8 +559,6 @@ export const OpenAiCompatChatMessage = OpenAiCompatChatRole.mapMembers(
 );
 
 /**
- * Chat message accepted by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Type a user chat message)
  *
  * ```ts
@@ -618,8 +578,6 @@ export const OpenAiCompatChatMessage = OpenAiCompatChatRole.mapMembers(
 export type OpenAiCompatChatMessage = typeof OpenAiCompatChatMessage.Type;
 
 /**
- * JSON schema response-format details for chat completion requests.
- *
  * **Example** (Making a JSON schema definition)
  *
  * ```ts
@@ -660,8 +618,6 @@ export class OpenAiCompatJsonSchemaDefinition extends S.Opaque<
 ) {}
 
 /**
- * Structured response format configuration for chat completion requests.
- *
  * **Example** (Making a JSON schema format)
  *
  * ```ts
@@ -695,8 +651,6 @@ export class OpenAiCompatJsonSchemaResponseFormat extends S.Opaque<
 ) {}
 
 /**
- * Response format discriminator accepted by OpenAI-compatible chat completion requests.
- *
  * **Example** (Checking a json_schema kind)
  *
  * ```ts
@@ -717,8 +671,6 @@ export const OpenAiCompatResponseFormatKind = LiteralKit(["text", "json_object",
 );
 
 /**
- * Type for {@link OpenAiCompatResponseFormatKind}.
- *
  * **Example** (Typing a json_object kind)
  *
  * ```ts
@@ -735,8 +687,6 @@ export const OpenAiCompatResponseFormatKind = LiteralKit(["text", "json_object",
 export type OpenAiCompatResponseFormatKind = typeof OpenAiCompatResponseFormatKind.Type;
 
 /**
- * Text response format configuration.
- *
  * **Example** (Making a text response format)
  *
  * ```ts
@@ -764,8 +714,6 @@ export class OpenAiCompatTextResponseFormat extends S.Opaque<
 ) {}
 
 /**
- * JSON object response format configuration.
- *
  * **Example** (Making a JSON object format)
  *
  * ```ts
@@ -793,8 +741,6 @@ export class OpenAiCompatJsonObjectResponseFormat extends S.Opaque<
 ) {}
 
 /**
- * Response format configuration accepted by OpenAI-compatible chat completion requests.
- *
  * **Example** (Decode a JSON object format)
  *
  * ```ts
@@ -823,8 +769,6 @@ export const OpenAiCompatResponseFormat = OpenAiCompatResponseFormatKind.mapMemb
 );
 
 /**
- * Response format configuration accepted by OpenAI-compatible chat completion requests.
- *
  * **Example** (Type a text response format)
  *
  * ```ts
@@ -841,8 +785,6 @@ export const OpenAiCompatResponseFormat = OpenAiCompatResponseFormatKind.mapMemb
 export type OpenAiCompatResponseFormat = typeof OpenAiCompatResponseFormat.Type;
 
 /**
- * Chat completion request sent to OpenAI-compatible providers.
- *
  * **Example** (Making a chat completion request)
  *
  * ```ts
@@ -916,8 +858,6 @@ export class OpenAiCompatChatCompletionRequest extends S.Opaque<
 ) {}
 
 /**
- * Assistant message returned by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making an assistant message)
  *
  * ```ts
@@ -961,8 +901,6 @@ export class OpenAiCompatAssistantMessage extends S.Opaque<
 ) {}
 
 /**
- * Delta message returned by OpenAI-compatible chat completion streams.
- *
  * **Example** (Making an assistant delta)
  *
  * ```ts
@@ -1004,8 +942,6 @@ export class OpenAiCompatAssistantDelta extends S.Opaque<
 ) {}
 
 /**
- * Token usage returned by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a usage payload)
  *
  * ```ts
@@ -1047,8 +983,6 @@ export class OpenAiCompatUsage extends S.Opaque<OpenAiCompatUsage, { readonly br
 ) {}
 
 /**
- * Chat completion choice returned by OpenAI-compatible endpoints.
- *
  * **Example** (Making a completion choice)
  *
  * ```ts
@@ -1090,8 +1024,6 @@ export class OpenAiCompatChatCompletionChoice extends S.Opaque<
 ) {}
 
 /**
- * Chat completion response returned by OpenAI-compatible endpoints.
- *
  * **Example** (Making a completion response)
  *
  * ```ts
@@ -1142,8 +1074,6 @@ export class OpenAiCompatChatCompletionResponse extends S.Opaque<
 }
 
 /**
- * Stream chunk choice returned by OpenAI-compatible endpoints.
- *
  * **Example** (Making a stream chunk choice)
  *
  * ```ts
@@ -1184,8 +1114,6 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Opaque<
 ) {}
 
 /**
- * Stream chunk returned by OpenAI-compatible chat completion endpoints.
- *
  * **Example** (Making a stream chunk)
  *
  * ```ts

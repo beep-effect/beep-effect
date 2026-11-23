@@ -66,8 +66,6 @@ const htmlChildViewFields = {
 };
 
 /**
- * Recursive structural schema shared by private HTML conformance inspectors.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -79,8 +77,6 @@ export const HtmlChildView = S.Struct(htmlChildViewFields).pipe(
 );
 
 /**
- * Decoded recursive structural view consumed by private HTML inspectors.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -124,8 +120,6 @@ export const HtmlConformanceRule = LiteralKit([
 );
 
 /**
- * Decoded type of {@link HtmlConformanceRule}.
- *
  * **Example** (Annotate a `HtmlConformanceRule` value)
  *
  * ```ts import.meta.vitest name="Annotate a HtmlConformanceRule value"
@@ -141,8 +135,6 @@ export const HtmlConformanceRule = LiteralKit([
 export type HtmlConformanceRule = typeof HtmlConformanceRule.Type;
 
 /**
- * One path-addressed HTML conformance violation.
- *
  * **Example** (Construct `HtmlConformanceIssue`)
  *
  * ```ts import.meta.vitest name="Construct HtmlConformanceIssue"

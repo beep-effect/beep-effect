@@ -27,8 +27,6 @@ import { Repo } from "./Repo.ts";
 const $I = $GithubId.create("Ruleset");
 
 /**
- * A ruleset, as listing returns it.
- *
  * **Details**
  *
  * `source_type` is the field that matters and the one easiest to drop from a
@@ -123,8 +121,6 @@ export class RulesetPayload extends S.Opaque<RulesetPayload, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link RulesetPayload}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -26,8 +26,6 @@ const $I = $TikaId.create("Tika.response");
 const tikaContentKey = "X-TIKA:content";
 
 /**
- * Trim-normalized text emitted from Apache Tika JSON content.
- *
  * **Example** (Create from unknown string)
  *
  * ```ts
@@ -48,8 +46,6 @@ export const TikaContentText = S.Trim.pipe(
 );
 
 /**
- * Type for {@link TikaContentText}.
- *
  * **Example** (Annotate typed content text)
  *
  * ```ts

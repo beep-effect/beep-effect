@@ -301,8 +301,6 @@ const CountryCodeBase = LiteralKit([
   "ZW",
 ]);
 /**
- * ISO 3166-1 alpha-2 country code schema accepted by country UI primitives.
- *
  * **Example** (Check country code validity)
  *
  * ```ts
@@ -324,8 +322,6 @@ export const CountryCode = CountryCodeBase.pipe(
   SchemaUtils.withLiteralKitStatics(CountryCodeBase)
 );
 /**
- * ISO 3166-1 alpha-2 country code used by the country primitives.
- *
  * **Example** (Type a country code)
  *
  * ```ts
@@ -342,8 +338,6 @@ export const CountryCode = CountryCodeBase.pipe(
 export type CountryCode = typeof CountryCode.Type;
 
 /**
- * A country option rendered by {@link CountrySelect}.
- *
  * **Example** (Build the option shown for Germany)
  *
  * ```ts

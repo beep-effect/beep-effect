@@ -97,8 +97,6 @@ const encodeJsonLeaf: (value: unknown) => string = flow(encodeCompactJson, Resul
 const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key);
 
 /**
- * One source and upstream operation identifier submitted to name generation.
- *
  * **Example** (Construct candidate from source)
  *
  * ```ts
@@ -128,8 +126,6 @@ export class ToolNameCandidate extends S.Opaque<ToolNameCandidate, { readonly br
 ) {}
 
 /**
- * One deterministic candidate row in the checked-in collision report.
- *
  * **Example** (Construct collision report row)
  *
  * ```ts
@@ -170,8 +166,6 @@ export class ToolNameCollisionRow extends S.Opaque<ToolNameCollisionRow, { reado
 ) {}
 
 /**
- * Versioned deterministic report for every candidate MCP tool name.
- *
  * **Example** (Read production report verdict)
  *
  * ```ts
@@ -197,8 +191,6 @@ export class ToolNameCollisionReport extends S.Opaque<ToolNameCollisionReport, {
 ) {}
 
 /**
- * Typed rejection of an empty or unsafe normalized candidate.
- *
  * **Example** (Reject empty normalized name)
  *
  * ```ts
@@ -231,8 +223,6 @@ export class ToolNameNormalizationError extends S.TaggedError<
 ) {}
 
 /**
- * Typed hard failure carrying the complete in-memory duplicate report.
- *
  * **Example** (Fail closed on duplicates)
  *
  * ```ts

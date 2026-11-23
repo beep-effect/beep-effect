@@ -170,9 +170,8 @@ const installPincited = Effect.fn("Citation.installPincitedReferences")(function
   const patterns = yield* installCitationReferencePatterns(limits, config);
   return Effect.fn("Citation.extractPincitedReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-    // Per request: the builder charges its fixed fragments to the request budget.
-    const builder = yield* patterns.make();
-    const pattern = yield* builder.build(request.metadata, "pin");
+    const perRequestBuilderChargingFixedFragments = yield* patterns.make();
+    const pattern = yield* perRequestBuilderChargingFixedFragments.build(request.metadata, "pin");
     if (O.isNone(pattern)) return A.empty<CitationGeneratedReference>();
     const input = yield* installedInput;
     const plain = yield* input.prepareUnicode(request.plain, () => Effect.void);
@@ -265,9 +264,8 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
   const patterns = yield* installCitationReferencePatterns(limits, config);
   return Effect.fn("Citation.extractMarkupReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(MarkupInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-    // Per request: the builder charges its fixed fragments to the request budget.
-    const builder = yield* patterns.make();
-    const pattern = yield* builder.build(request.metadata, "markup");
+    const perRequestBuilderChargingFixedFragments = yield* patterns.make();
+    const pattern = yield* perRequestBuilderChargingFixedFragments.build(request.metadata, "markup");
     if (O.isNone(pattern) || O.isNone(request.geometry) || request.markup.bytes.length === 0)
       return A.empty<CitationGeneratedReference>();
     const { plain, markup, forward, backward } = yield* prepareMarkupGeometry(limits, request, request.geometry.value);
@@ -277,7 +275,10 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
       () => Effect.void
     );
     const generated = yield* installedGenerated;
-    const worker = yield* generated.bindDescriptors([pattern.value.descriptor, builder.rejection.descriptor]);
+    const worker = yield* generated.bindDescriptors([
+      pattern.value.descriptor,
+      perRequestBuilderChargingFixedFragments.rejection.descriptor,
+    ]);
     const evaluated = yield* worker.evaluate(pattern.value.pattern, suffix, pattern.value.descriptor.flags);
     if (evaluated.result.matches === 0) return A.empty<CitationGeneratedReference>();
     const references = yield* Effect.forEach(
@@ -295,9 +296,9 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
           () => Effect.void
         );
         const rejected = yield* worker.evaluate(
-          builder.rejection.pattern,
+          perRequestBuilderChargingFixedFragments.rejection.pattern,
           after,
-          builder.rejection.descriptor.flags,
+          perRequestBuilderChargingFixedFragments.rejection.descriptor.flags,
           1,
           "match"
         );

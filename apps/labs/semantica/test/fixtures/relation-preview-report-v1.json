@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "cacheKey": "5737b31d6d5095afeb0123f9feb8d6e3197f8a284b94096928abce354a0c2955",
+      "candidateCount": 118,
+      "degradedRelations": 16,
+      "groundedRelations": 0,
+      "paperId": "06c93f91ef3d",
+      "relationCandidates": 16
+    },
+    {
+      "cacheKey": "6bbc2bb81a00c859ba81547fc2b04003671a0e6fd731fa9e4c9dbc6e624d3447",
+      "candidateCount": 109,
+      "degradedRelations": 5,
+      "groundedRelations": 2,
+      "paperId": "06c93f91ef3d",
+      "relationCandidates": 7
+    },
+    {
+      "cacheKey": "0ac6007d473c64776b6cc3dbba277dd11096fa387b857381a9c98b2ba8c827e9",
+      "candidateCount": 172,
+      "degradedRelations": 1,
+      "groundedRelations": 8,
+      "paperId": "057e356e94f8",
+      "relationCandidates": 9
+    }
+  ],
+  "groundedPapers": 2,
+  "groundedRelations": 10,
+  "passed": true,
+  "schemaVersion": "semantica-relation-preview-report/v1"
+}

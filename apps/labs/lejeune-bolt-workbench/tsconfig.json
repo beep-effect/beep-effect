@@ -59,9 +59,6 @@
       "path": "../../../packages/foundation/modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../../packages/foundation/modeling/nlp/tsconfig.json"
-    },
-    {
       "path": "../../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {

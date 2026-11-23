@@ -111,8 +111,6 @@ export const CommandOrigin = CommandOriginKind.mapMembers(
 export type CommandOrigin = typeof CommandOrigin.Type;
 
 /**
- * Command that opens a panel at a semantic placement.
- *
  * **Example** (Open panel at placement)
  *
  * ```ts
@@ -141,8 +139,6 @@ export class OpenPanelCommand extends S.Opaque<OpenPanelCommand, { readonly bran
 ) {}
 
 /**
- * Command that activates a panel in its tab group.
- *
  * **Example** (Activate panel by id)
  *
  * ```ts
@@ -192,8 +188,6 @@ export class UpdatePanelCommand extends S.Opaque<UpdatePanelCommand, { readonly 
 ) {}
 
 /**
- * Command that moves a panel to a semantic destination.
- *
  * **Example** (Move panel to tab)
  *
  * ```ts
@@ -221,8 +215,6 @@ export class MovePanelCommand extends S.Opaque<MovePanelCommand, { readonly bran
 ) {}
 
 /**
- * Command that merges or relocates a complete tab group.
- *
  * **Example** (Relocate complete tab group)
  *
  * ```ts
@@ -272,8 +264,6 @@ export class UpdateGroupCommand extends S.Opaque<UpdateGroupCommand, { readonly 
 ) {}
 
 /**
- * Command that closes one panel and collapses empty topology.
- *
  * **Example** (Close panel by id)
  *
  * ```ts
@@ -299,8 +289,6 @@ export class ClosePanelCommand extends S.Opaque<ClosePanelCommand, { readonly br
 ) {}
 
 /**
- * Command that changes a bounded split ratio.
- *
  * **Example** (Change bounded split ratio)
  *
  * ```ts
@@ -327,8 +315,6 @@ export class ResizeSplitCommand extends S.Opaque<ResizeSplitCommand, { readonly 
 ) {}
 
 /**
- * Command that clears the docked tree and all floating members.
- *
  * **Example** (Clear entire workspace)
  *
  * ```ts
@@ -352,8 +338,6 @@ export class ClearWorkspaceCommand extends S.Opaque<ClearWorkspaceCommand, { rea
 ) {}
 
 /**
- * Command that reveals and maximizes one group.
- *
  * **Example** (Maximize group by id)
  *
  * ```ts
@@ -395,8 +379,6 @@ export class RestoreMaximizedCommand extends S.Opaque<RestoreMaximizedCommand, {
 ) {}
 
 /**
- * Command that moves a docked group into a floating member.
- *
  * **Example** (Float group with box)
  *
  * ```ts
@@ -417,8 +399,6 @@ export class FloatGroupCommand extends S.Opaque<FloatGroupCommand, { readonly br
   )
 ) {}
 /**
- * Command that docks a floating group into the tree.
- *
  * **Example** (Dock floating group)
  *
  * ```ts
@@ -588,8 +568,6 @@ export const AllowedRenderers = RendererKey.pipe(
 );
 
 /**
- * Runtime type for {@link AllowedRenderers}.
- *
  * **Example** (Type allowed renderers list)
  *
  * ```ts
@@ -606,8 +584,6 @@ export const AllowedRenderers = RendererKey.pipe(
 export type AllowedRenderers = typeof AllowedRenderers.Type;
 
 /**
- * Causal metadata for a validated snapshot installation.
- *
  * **Example** (Make restore snapshot request)
  *
  * ```ts

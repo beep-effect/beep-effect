@@ -85,8 +85,6 @@ const PROJECTION_REMEDY =
 const WRITE_HINT = `Run ${writeCommand(O.none())} to regenerate.`;
 
 /**
- * Closed kind of an identity registry finding.
- *
  * **Example** (Check a finding kind)
  *
  * ```ts
@@ -120,8 +118,6 @@ export const IdentityRegistryIssueKind = LiteralKit([
 );
 
 /**
- * Decoded type of {@link IdentityRegistryIssueKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -275,8 +271,6 @@ export class RegistryLayout extends S.Opaque<RegistryLayout, { readonly brand: u
 }
 
 /**
- * The identity registry generator could not read or write its files.
- *
  * **Example** (Make a generator error)
  *
  * ```ts

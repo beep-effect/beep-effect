@@ -51,8 +51,6 @@ export class ItemExtension extends S.Opaque<ItemExtension, { readonly brand: uni
 ) {}
 
 /**
- * CTRF test statuses.
- *
  * **Example** (Guard a status)
  *
  * ```ts
@@ -71,8 +69,6 @@ export const CtrfStatus = LiteralKit(["passed", "failed", "skipped", "pending", 
 );
 
 /**
- * Type of {@link CtrfStatus}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -113,8 +109,6 @@ export class CtrfTest extends S.Opaque<CtrfTest, { readonly brand: unique symbol
 ) {}
 
 /**
- * SARIF result levels.
- *
  * **Example** (Guard a level)
  *
  * ```ts
@@ -133,16 +127,12 @@ export const SarifLevel = LiteralKit(["none", "note", "warning", "error"]).pipe(
 );
 
 /**
- * Type of {@link SarifLevel}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SarifLevel = typeof SarifLevel.Type;
 
 /**
- * SARIF result kinds used by the map.
- *
  * **Example** (Guard a kind)
  *
  * ```ts
@@ -161,16 +151,12 @@ export const SarifKind = LiteralKit(["pass", "fail", "review", "notApplicable"])
 );
 
 /**
- * Type of {@link SarifKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SarifKind = typeof SarifKind.Type;
 
 /**
- * A SARIF physical location: the artifact URI and the region's start.
- *
  * **Example** (Build a location)
  *
  * ```ts

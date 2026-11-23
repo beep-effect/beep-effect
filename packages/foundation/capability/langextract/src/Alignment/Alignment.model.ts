@@ -7,25 +7,24 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { AlignmentStatus, ExtractionCandidate, GroundedExtraction } from "@beep/langextract/Extraction";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
-import * as SchemaIssue from "effect/SchemaIssue";
-import { alignCandidate, alignCandidates, spanFromMatch } from "./Alignment.behavior.ts";
+import { alignCandidate, alignCandidates } from "./Alignment.behavior.ts";
 import { DEFAULT_FUZZY_THRESHOLD, DEFAULT_MAX_EXTRACTIONS } from "./Alignment.config.ts";
 import type { LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 
 const $I = $LangExtractId.create("Alignment");
 
 /**
- * Alignment status of a successfully matched candidate.
- *
  * **Details**
  *
  * Derived from {@link AlignmentStatus} minus `unaligned`: an absent match is
@@ -56,15 +55,12 @@ export const AlignedStatus = AlignmentStatus.pick([
 );
 
 /**
- * {@inheritDoc AlignedStatus}
  * @category models
  * @since 0.0.0
  */
 export type AlignedStatus = typeof AlignedStatus.Type;
 
 /**
- * A raw source slice located by one match attempt.
- *
  * **Example** (Type a matched slice)
  *
  * ```ts
@@ -96,7 +92,6 @@ export const MatchedText = S.Tuple([
 );
 
 /**
- * {@inheritDoc MatchedText}
  * @category models
  * @since 0.0.0
  */
@@ -110,7 +105,7 @@ export type MatchedText = typeof MatchedText.Type;
  * ```ts
  * import * as S from "effect/Schema"
  * import type { ScoredMatch } from "@beep/langextract/Alignment"
- * import { UnitInterval } from "@beep/nlp/Handoff"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  *
  * const scored: ScoredMatch = [S.Natural.make(0), "Acme.", UnitInterval.make(0.8)]
  * console.log(scored[2])
@@ -142,15 +137,12 @@ export const ScoredMatch = S.Tuple([
 );
 
 /**
- * {@inheritDoc ScoredMatch}
  * @category models
  * @since 0.0.0
  */
 export type ScoredMatch = typeof ScoredMatch.Type;
 
 /**
- * A successful match tagged with the alignment tier that produced it.
- *
  * **Example** (Type an aligned match)
  *
  * ```ts
@@ -187,15 +179,12 @@ export const AlignedMatch = S.Tuple([
 );
 
 /**
- * {@inheritDoc AlignedMatch}
  * @category models
  * @since 0.0.0
  */
 export type AlignedMatch = typeof AlignedMatch.Type;
 
 /**
- * Encoded companion type for the {@link AlignedMatch} runtime schema.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -210,8 +199,6 @@ export declare namespace AlignedMatch {
 }
 
 /**
- * The source text plus resolved alignment options one alignment run reads.
- *
  * **Details**
  *
  * Both options resolve at construction time through schema constructor
@@ -277,8 +264,8 @@ export class AlignmentSource extends S.Opaque<AlignmentSource, { readonly brand:
  *
  * **Details**
  *
- * Context-dependent transformations ({@link SpanFromMatch} encode,
- * {@link GroundedExtractionFromCandidate}, {@link GroundedExtractionsFromCandidates})
+ * Context-dependent transformations ({@link GroundedExtractionFromCandidate},
+ * {@link GroundedExtractionsFromCandidates})
  * require this service through the schema `DecodingServices`/`EncodingServices`
  * channel; provide it with `Effect.provideService` around `S.decodeEffect`.
  *
@@ -301,16 +288,15 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
 ) {}
 
 /**
- * Codec from a matched slice to a half-open source span.
- *
  * **Details**
  *
- * Decoding is pure: `[start, text]` becomes a half-open span covering the
- * matched text's UTF-16 length.
- * Encoding recovers the matched slice from {@link CurrentAlignmentSource} and
- * fails closed when the span exceeds the current source text.
+ * Decoding is pure: `[start, text]` becomes the anchor whose range covers the
+ * matched text's UTF-16 length and whose quote is that text, so the anchor's
+ * width check holds by construction. An empty slice is refused, since an
+ * anchor is never empty. Encoding is pure as well: the anchor carries its own
+ * quote, so `[startChar, quote]` is the matched slice.
  *
- * **Example** (Decode a matched slice into a span)
+ * **Example** (Decode a matched slice into an anchor)
  *
  * ```ts
  * import { SpanFromMatch } from "@beep/langextract/Alignment"
@@ -318,7 +304,7 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  * import * as S from "effect/Schema"
  *
  * Effect.runPromise(S.decodeEffect(SpanFromMatch)([4, "Lovelace"])).then(
- *   (span) => console.log(span.end) // 12
+ *   (anchor) => console.log(anchor.endChar) // 12
  * )
  * ```
  *
@@ -326,26 +312,19 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  * @since 0.0.0
  */
 export const SpanFromMatch = MatchedText.pipe(
-  S.decodeTo(Contract.Span, {
-    decode: SchemaGetter.transform(spanFromMatch),
-    encode: SchemaGetter.transformEffect((span: Contract.Span.Encoded, options) =>
-      CurrentAlignmentSource.use((source) => {
-        if (span.end > Str.length(source.sourceText)) {
-          return Effect.fail(
-            new SchemaIssue.InvalidValue(
-              { message: "Span end exceeds the current alignment source text." },
-              span,
-              options
-            )
-          );
-        }
-        const match: MatchedText = [S.Natural.make(span.start), Str.slice(span.start, span.end)(source.sourceText)];
-        return Effect.succeed(match);
-      })
-    ),
+  S.decodeTo(TextAnchor, {
+    decode: SchemaGetter.transform(([start, text]: MatchedText) => ({
+      endChar: Num.sum(start, Str.length(text)),
+      quote: text,
+      startChar: start,
+    })),
+    encode: SchemaGetter.transform((anchor: typeof TextAnchor.Encoded) => {
+      const match: MatchedText = [S.Natural.make(anchor.startChar), anchor.quote];
+      return match;
+    }),
   }),
   $I.annoteSchema("SpanFromMatch", {
-    description: "Bidirectional codec between matched source slices and half-open UTF-16 spans.",
+    description: "Bidirectional codec between matched source slices and the text anchors they cover.",
   })
 );
 
@@ -432,8 +411,6 @@ const candidateFromGrounded = (grounded: GroundedExtraction): ExtractionCandidat
   });
 
 /**
- * Codec from a model-emitted candidate to a source-grounded extraction.
- *
  * **Details**
  *
  * Decoding aligns the candidate against {@link CurrentAlignmentSource} and
@@ -474,8 +451,6 @@ export const GroundedExtractionFromCandidate: S.Codec<
 );
 
 /**
- * Codec from a candidate batch to source-grounded extractions.
- *
  * **Details**
  *
  * Decoding caps the batch at the already-resolved `maxExtractions` of
@@ -516,7 +491,6 @@ export const GroundedExtractionsFromCandidates: S.Codec<
 );
 
 /**
- * {@inheritDoc GroundedExtractionsFromCandidates}
  * @category models
  * @since 0.0.0
  */

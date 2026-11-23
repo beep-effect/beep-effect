@@ -97,8 +97,6 @@ export class FeedArtifactRef extends S.Opaque<FeedArtifactRef, { readonly brand:
 ) {}
 
 /**
- * One page of a run's artifact listing.
- *
  * **Example** (An empty page)
  *
  * ```ts

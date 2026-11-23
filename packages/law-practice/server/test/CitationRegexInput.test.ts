@@ -1,6 +1,5 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
 import {
   CitationRegexInputLayout,
   CitationRegexProjection,
@@ -11,6 +10,7 @@ import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/serve
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
@@ -20,7 +20,9 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import type {
@@ -190,23 +192,28 @@ it.effect("retains empty and split projections without manufacturing a verified 
     expect(citationResult9).toEqual({ _tag: "Split", startChar: 1, endChar: 1 });
     const citationResult10 = yield* pair.project({ start: 2, end: 2 });
     expect(citationResult10).toEqual({ _tag: "Point", offset: 2 });
-    const rejected = yield* convertTextOffsetRange(
-      TextOffsetRange.make({ start: S.Natural.make(0), end: S.Natural.make(1), unit: "utf16-code-unit" }),
-      pair.value.text
-    ).pipe(Effect.flip);
-    expect(rejected.reason).toBe("invalid-offset");
+    const rejected = yield* pipe(
+      Position.make({ start: 0, end: 1, unit: "utf16-code-unit" }),
+      convertPosition("utf16-code-unit", pair.value.text),
+      Result.flip,
+      Effect.fromResult
+    );
+    expect(rejected.reason).toBe("split-boundary");
     const ordinary = yield* input.prepareText("A😀B", preflight);
     const citationResult11 = yield* ordinary.project({ start: 1, end: 2 });
     expect(citationResult11).toEqual({ _tag: "Range", startChar: 1, endChar: 3 });
-    const canonical = yield* convertTextOffsetRange(
-      TextOffsetRange.make({ start: S.Natural.make(1), end: S.Natural.make(2), unit: "unicode-code-point" }),
-      ordinary.value.text
+    const canonical = yield* Effect.fromResult(
+      convertPosition(
+        Position.make({ start: 1, end: 2, unit: "unicode-code-point" }),
+        "utf16-code-unit",
+        ordinary.value.text
+      )
     );
     const citationResult12 = yield* ordinary.project({ start: 1, end: 2 });
     expect(citationResult12).toEqual({
       _tag: "Range",
-      startChar: canonical.startChar,
-      endChar: canonical.endChar,
+      startChar: canonical.start,
+      endChar: canonical.end,
     });
   })
 );

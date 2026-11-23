@@ -49,8 +49,6 @@ export const MAX_COLUMN = 16_383;
 export const MAX_ROW = 1_048_576;
 
 /**
- * A 0-based column of a worksheet, `A` being 0 and `XFD` 16,383.
- *
  * **Example** (Check a column)
  *
  * ```ts import.meta.vitest name="Check a column"
@@ -70,16 +68,12 @@ export const XlsxColumn = S.Int.check(S.isBetween({ minimum: 0, maximum: MAX_COL
 );
 
 /**
- * A column of a worksheet as a number, 0 for `A`; the type {@link XlsxColumn} decodes to.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type XlsxColumn = typeof XlsxColumn.Type;
 
 /**
- * A row of a worksheet as Excel numbers it, from 1.
- *
  * **Example** (Rows start at 1)
  *
  * ```ts import.meta.vitest name="Rows start at 1"
@@ -98,8 +92,6 @@ export const XlsxRowNumber = S.Int.check(S.isBetween({ minimum: 1, maximum: MAX_
 );
 
 /**
- * A row of a worksheet as Excel numbers it, from 1; the type {@link XlsxRowNumber} decodes to.
- *
  * @category type-level
  * @since 0.0.0
  */

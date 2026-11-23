@@ -49,6 +49,7 @@ import type { CitationEngineLimits, CitationSafetyBudget } from "@beep/law-pract
 import type { CitationHostResourceAdapter } from "./HostResources.ts";
 import type { CitationRuntimeDictionaryEntry } from "./RuntimeDictionary.ts";
 
+const isHostResourceWithoutDecoderCopyKeepingNativeIdentity = S.is(CitationHostResource);
 const CitationCallbackResourceType = S.toType(CitationCallbackResource);
 const CitationRuntimeDictionaryKeyType = S.toType(CitationRuntimeDictionaryKey);
 
@@ -349,10 +350,8 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           createHost: Effect.fn("Citation.callbackHostCreate")(function* (input: unknown) {
             if (closed || O.isNone(host)) return yield* bad();
             yield* owner.step;
-            // Validate without decoding: a structural decoder can copy an issuer-owned
-            // handle and invalidate its native object identity.
             const handle = yield* host.value.capture(input);
-            if (!S.is(CitationHostResource)(handle)) return yield* bad();
+            if (!isHostResourceWithoutDecoderCopyKeepingNativeIdentity(handle)) return yield* bad();
             const existing = HashMap.get(hostSlots, handle.slot);
             if (O.isSome(existing)) {
               const record = yield* recordAt(existing.value);

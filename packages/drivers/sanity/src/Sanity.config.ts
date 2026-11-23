@@ -67,8 +67,6 @@ export const SANITY_API_VERSION = "2025-05-14";
 
 const sanityConfigInputHeadersDefault = R.empty();
 /**
- * Runtime configuration accepted by {@link Sanity.makeLayer}.
- *
  * **Example** (Creating config with make)
  *
  * ```ts

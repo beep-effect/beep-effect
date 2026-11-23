@@ -17,9 +17,6 @@ import { FailureKind, HistoryLabel, RunReason } from "./Vocabulary.ts";
 const $I = $GateReportId.create("ConsoleDocument");
 
 /**
- * The size limits of one console: total characters, characters per line and
- * diff lines per failure entry.
- *
  * **Details**
  *
  * The model holds no default; the caller supplies the budget (the agent
@@ -96,8 +93,6 @@ export class GatePointers extends S.Opaque<GatePointers, { readonly brand: uniqu
 ) {}
 
 /**
- * The pointer table: gate name to its pointers.
- *
  * **Details**
  *
  * Replaces upstream's footer strings, which named MCP tools. A gate missing
@@ -123,8 +118,6 @@ export const PointerTable = S.Record(S.String, GatePointers).pipe(
 );
 
 /**
- * Type of {@link PointerTable}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -193,9 +186,6 @@ export class RecordPaths extends S.Opaque<RecordPaths, { readonly brand: unique 
 ) {}
 
 /**
- * The verdict line: gate, scope, verdict, counts and duration, with the delta
- * as a suffix on a green run.
- *
  * **Example** (Build a verdict line)
  *
  * ```ts
@@ -224,8 +214,6 @@ export class VerdictLine extends S.Opaque<VerdictLine, { readonly brand: unique 
 ) {}
 
 /**
- * One failing or warning item as the console shows it.
- *
  * **Details**
  *
  * Widens upstream `FailureRecord`: `modulePath`, `suitePath` and `testName`
@@ -288,8 +276,6 @@ export class NoteEntry extends S.Opaque<NoteEntry, { readonly brand: unique symb
 ) {}
 
 /**
- * An entry of the console document: a failure entry or a note.
- *
  * **Example** (Guard an entry)
  *
  * ```ts
@@ -309,8 +295,6 @@ export const ConsoleEntry = S.Union([FailureEntry, NoteEntry]).pipe(
 );
 
 /**
- * Type of {@link ConsoleEntry}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -346,8 +330,6 @@ export class FoldLine extends S.Opaque<FoldLine, { readonly brand: unique symbol
 ) {}
 
 /**
- * The cap: how many entries and folds the budget left in the record only.
- *
  * **Example** (Build a cap)
  *
  * ```ts
@@ -370,8 +352,6 @@ export class CapLine extends S.Opaque<CapLine, { readonly brand: unique symbol }
 ) {}
 
 /**
- * The pointer line: the commands to run next.
- *
  * **Example** (Build a pointer line)
  *
  * ```ts

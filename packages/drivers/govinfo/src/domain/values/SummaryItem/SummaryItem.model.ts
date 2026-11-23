@@ -11,8 +11,6 @@ import { NonNegativeInt64 } from "../GovinfoNumeric.ts";
 const $I = $GovinfoId.create("domain/values/SummaryItem/SummaryItem.model");
 
 /**
- * GovInfo collection summary row with collection identifiers and counts.
- *
  * **Details**
  *
  * `collectionCode` is the short GovInfo collection identifier used in API

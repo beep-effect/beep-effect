@@ -78,6 +78,7 @@ import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Model from "effect/ai/Model";
 import * as Response from "effect/ai/Response";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -218,24 +219,28 @@ const fixtureUsage = Response.Usage.make({
   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },
   outputTokens: { reasoning: undefined, text: 0, total: 0 },
 });
-const fixtureLanguageModel = Layer.effect(
-  LanguageModel.LanguageModel,
-  LanguageModel.make({
-    generateText: (options) =>
-      Effect.succeed([
-        Response.makePart("text", {
-          text: options.prompt.pipe(
-            S.encodeUnknownResult(UnknownJson),
-            Result.getOrThrowWith(identity),
-            Str.includes("without office action rejections")
-          )
-            ? fixtureRejectionlessOutput
-            : fixtureModelOutput,
-        }),
-        Response.makePart("finish", { reason: "stop", response: undefined, usage: fixtureUsage }),
-      ]),
-    streamText: () => Stream.empty,
-  })
+const fixtureLanguageModel = Model.make(
+  "test",
+  "stub-model",
+  Layer.effect(
+    LanguageModel.LanguageModel,
+    LanguageModel.make({
+      generateText: (options) =>
+        Effect.succeed([
+          Response.makePart("text", {
+            text: options.prompt.pipe(
+              S.encodeUnknownResult(UnknownJson),
+              Result.getOrThrowWith(identity),
+              Str.includes("without office action rejections")
+            )
+              ? fixtureRejectionlessOutput
+              : fixtureModelOutput,
+          }),
+          Response.makePart("finish", { reason: "stop", response: undefined, usage: fixtureUsage }),
+        ]),
+      streamText: () => Stream.empty,
+    })
+  )
 );
 
 const normalizedPatentFixture = Md.make([

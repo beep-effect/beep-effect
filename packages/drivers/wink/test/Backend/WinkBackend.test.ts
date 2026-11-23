@@ -11,10 +11,15 @@ import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
+
+const offsetsOf = (span: O.Option<{ readonly start: number; readonly end: number }>) =>
+  O.map(span, ({ end, start }) => ({ end, start }));
 
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
@@ -32,6 +37,20 @@ const UnresolvableSpanEngine = Layer.effect(
 const UnresolvableSpanLayer = Layer.provide(WinkBackendLive, UnresolvableSpanEngine);
 
 describe("WinkBackend", () => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("resolves a repeated entity surface once per mention", (it) => {
+    it.effect(
+      "resolves a repeated entity surface once per mention",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        const text = "Meet Monday and Monday.";
+        const entities = yield* backend.extractEntities(text);
+        deepStrictEqual(
+          A.map(entities, (entity) => offsetsOf(entity.span)),
+          [O.some({ end: 11, start: 5 }), O.some({ end: 22, start: 16 })]
+        );
+      })
+    );
+  });
   it.layer(TestLayer, { timeout: "30 seconds" })("tokenizes text into words", (it) => {
     it.effect(
       "tokenizes text into words",
@@ -92,7 +111,10 @@ describe("WinkBackend", () => {
         // wink detects temporal entities; each carries a type + span
         for (const entity of entities) {
           expect(typeof entity.entityType).toBe("string");
-          expect(entity.span.end).toBeGreaterThanOrEqual(entity.span.start);
+          assertSome(
+            O.map(entity.span, (span) => span.start < span.end),
+            true
+          );
         }
       })
     );
@@ -105,12 +127,15 @@ describe("WinkBackend", () => {
         const backend = yield* Backend.NLPBackend;
         const text = "Email a@b.com then a@b.com again.";
         const entities = yield* backend.extractEntities(text);
-        expect(A.map(entities, (entity) => entity.span)).toEqual([
-          { end: 13, start: 6 },
-          { end: 26, start: 19 },
-        ]);
+        deepStrictEqual(
+          A.map(entities, (entity) => offsetsOf(entity.span)),
+          [O.some({ end: 13, start: 6 }), O.some({ end: 26, start: 19 })]
+        );
         for (const entity of entities) {
-          expect(Str.slice(entity.span.start, entity.span.end)(text)).toBe(entity.text);
+          assertSome(
+            O.map(entity.span, (span) => Str.slice(span.start, span.end)(text)),
+            entity.text
+          );
         }
       })
     );
@@ -124,21 +149,28 @@ describe("WinkBackend", () => {
         // wink caps a token's stored preceding spaces at 65,534, so offsets rebuilt from them drift.
         const text = `${Str.repeat(65_535)(" ")}a@b.com`;
         const entities = yield* backend.extractEntities(text);
-        expect(A.map(entities, (entity) => entity.span)).toEqual([{ end: 65_542, start: 65_535 }]);
+        deepStrictEqual(
+          A.map(entities, (entity) => offsetsOf(entity.span)),
+          [O.some({ end: 65_542, start: 65_535 })]
+        );
       })
     );
   });
 
-  it.layer(UnresolvableSpanLayer, { timeout: "30 seconds" })("fails extractEntities when no span resolves", (it) => {
-    it.effect(
-      "fails extractEntities when no span resolves",
-      Effect.fnUntraced(function* () {
-        const backend = yield* Backend.NLPBackend;
-        const result = yield* Effect.flip(backend.extractEntities("Email a@b.com today."));
-        expect(result._tag).toBe("BackendOperationError");
-      })
-    );
-  });
+  it.layer(UnresolvableSpanLayer, { timeout: "30 seconds" })(
+    "leaves an entity without a token span unresolved",
+    (it) => {
+      it.effect(
+        "leaves an entity without a token span unresolved",
+        Effect.fnUntraced(function* () {
+          const backend = yield* Backend.NLPBackend;
+          const entities = yield* backend.extractEntities("Email a@b.com today.");
+          expect(entities.length).toBeGreaterThan(0);
+          for (const entity of entities) assertNone(entity.span);
+        })
+      );
+    }
+  );
 
   it.layer(TestLayer, { timeout: "30 seconds" })("fails parseDependencies with BackendNotSupported", (it) => {
     it.effect(

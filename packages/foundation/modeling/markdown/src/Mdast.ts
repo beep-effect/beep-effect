@@ -31,8 +31,6 @@ const MdastTag = S.Struct({
 });
 
 /**
- * A plain mdast node: a `type` tag plus whatever fields that type carries.
- *
  * **Details**
  *
  * Deliberately loose — plain-object mdast is a foreign, structurally-typed
@@ -60,8 +58,6 @@ export const MdastNode = S.StructWithRest(MdastTag, [S.Record(S.String, S.Unknow
 );
 
 /**
- * The plain mdast node shape.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -69,9 +65,6 @@ export const MdastNode = S.StructWithRest(MdastTag, [S.Record(S.String, S.Unknow
 export type MdastNode = typeof MdastNode.Type;
 
 /**
- * Indicates that foreign mdast input failed to decode into the package's
- * node classes.
- *
  * **Details**
  *
  * `issue` carries the **structured** schema failure — at runtime a

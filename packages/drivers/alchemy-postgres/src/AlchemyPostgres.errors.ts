@@ -31,8 +31,6 @@ const optionalDiagnostic = <Schema extends S.Top>(schema: Schema, description: s
   S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone), S.annotateKey({ description }));
 
 /**
- * Driver operation a failure belongs to.
- *
  * **Example** (Guard an operation name)
  *
  * ```ts
@@ -63,16 +61,12 @@ export const AlchemyPostgresOperation = LiteralKit([
 );
 
 /**
- * Type-level member of {@link AlchemyPostgresOperation}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AlchemyPostgresOperation = typeof AlchemyPostgresOperation.Type;
 
 /**
- * Technical failure of the Postgres alchemy Platform driver.
- *
  * **Example** (Wrap an unknown cause)
  *
  * ```ts

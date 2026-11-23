@@ -60,8 +60,6 @@ const DiscordSnowflake = S.String.check(
 );
 
 /**
- * Numeric HTTP status code used in Discord proof and error payloads.
- *
  * **Example** (Decode HTTP status code)
  *
  * ```ts
@@ -114,7 +112,6 @@ export const DiscordHttpStatus = S.Finite.check(
 );
 
 /**
- * {@inheritDoc DiscordHttpStatus}
  * @category models
  * @since 0.0.0
  */
@@ -152,8 +149,6 @@ const DiscordHttpSuccessStatus = DiscordHttpStatus.check(
 );
 
 /**
- * Runtime configuration accepted by {@link Discord.makeLayer}.
- *
  * **Details**
  *
  * Omit `baseUrl` for Discord's public v10 API. Tests and local adapters can
@@ -192,8 +187,6 @@ export class DiscordConfigInput extends S.Opaque<DiscordConfigInput, { readonly 
 ) {}
 
 /**
- * Request payload for proving a Discord channel can be reached.
- *
  * **Example** (Make channel request)
  *
  * ```ts
@@ -224,8 +217,6 @@ export class DiscordChannelRequest extends S.Opaque<DiscordChannelRequest, { rea
 }
 
 /**
- * Request payload for creating a Discord proof message.
- *
  * **Details**
  *
  * The service sends the content with `allowed_mentions.parse` set to an empty
@@ -268,8 +259,6 @@ export class DiscordCreateMessageRequest extends S.Opaque<
 }
 
 /**
- * Sanitized metadata returned after a successful channel lookup.
- *
  * **Details**
  *
  * The proof keeps the channel identifier, HTTP status, and optional guild/name
@@ -323,8 +312,6 @@ export class DiscordChannelProof extends S.Opaque<DiscordChannelProof, { readonl
 ) {}
 
 /**
- * Sanitized metadata returned after a successful proof message creation.
- *
  * **Details**
  *
  * The proof records identifiers, HTTP status, and Discord's optional timestamp

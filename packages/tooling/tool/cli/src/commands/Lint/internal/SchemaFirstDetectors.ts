@@ -297,6 +297,13 @@ const isRenderContract = (node: InterfaceDeclaration | TypeAliasDeclaration): bo
 };
 
 const isInterfaceSchemaFirstCandidate = (node: InterfaceDeclaration): boolean => {
+  if (
+    node.getMethods().length > 0 &&
+    A.some(node.getProperties(), (property) => /^(?:S|Schema)\.Top$/.test(property.getTypeNode()?.getText() ?? ""))
+  ) {
+    return false;
+  }
+
   if (node.getTypeParameters().length > 0 || isRenderContract(node) || hasSameNameSchemaCompanion(node)) {
     return false;
   }

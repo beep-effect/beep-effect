@@ -39,15 +39,23 @@ const tags = [
 ];
 const expandTag = Effect.fn("Citation.expandAnnotationStyleTag")(function* (
   source: CitationPythonUnicodeValue,
-  original: typeof Range.Type,
+  initialSpanTestedForEveryTag: typeof Range.Type,
   current: typeof Range.Type,
   tag: (typeof tags)[number],
   tolerance: number
 ) {
-  // The source deliberately tests the initial span for every tag. It does not
-  // refresh this membership view after an earlier tag changes either endpoint.
-  const open = yield* findCitationPythonLiteral(source.storage, tag.open, original.start, original.end);
-  const close = yield* findCitationPythonLiteral(source.storage, tag.close, original.start, original.end);
+  const open = yield* findCitationPythonLiteral(
+    source.storage,
+    tag.open,
+    initialSpanTestedForEveryTag.start,
+    initialSpanTestedForEveryTag.end
+  );
+  const close = yield* findCitationPythonLiteral(
+    source.storage,
+    tag.close,
+    initialSpanTestedForEveryTag.start,
+    initialSpanTestedForEveryTag.end
+  );
   let { start, end } = current;
   if (O.isSome(open) && O.isNone(close)) {
     const extendedEnd = Num.min(end + tag.close.bytes.length + tolerance, source.pythonLength);

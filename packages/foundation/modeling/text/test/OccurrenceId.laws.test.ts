@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { mintContentHashResult } from "@beep/jsonc/Mint";
 import { it } from "@beep/test-runner";
+import { anchoredOn, sourceFor, textDigestOf, wellFormedTextWith } from "@beep/text/Arbitrary";
 import { Anchored, mintOccurrenceId, OccurrencePreimage } from "@beep/text/Occurrence";
 import { mintQuoteKey } from "@beep/text/QuoteKey";
 import { SourceTextExtractor, SourceTextIdentity, SourceTextLocator } from "@beep/text/SourceTextIdentity";
@@ -17,15 +18,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  anchoredCase,
-  anchoredOn,
-  sha256,
-  sourceFor,
-  textDigestOf,
-  wellFormedText,
-  wellFormedTextWith,
-} from "./support/generators.ts";
+import { anchoredCase, sha256, wellFormedText } from "./support/generators.ts";
 import {
   citationQuoteKey,
   firstCitation,
@@ -55,7 +48,7 @@ const boilerplateThriceWithFillerCase = Arbitrary.flatMap(
     const q = passage.text;
     const text = `${q}${first.text}${q}${second.text}${q}`;
     const starts = [0, Str.length(q) + Str.length(first.text), text.length - Str.length(q)];
-    return Arbitrary.map(sourceFor(text), (source) => ({
+    return Arbitrary.map(sourceFor(sha256)(text), (source) => ({
       quote: q,
       rows: A.map(starts, (start) => anchoredOn(source, text, { start, end: start + Str.length(q) })),
     }));
@@ -92,9 +85,12 @@ const singleFieldChangesUnderNonEmptySalt: ReadonlyArray<
   ],
   [
     "sourceDigest",
-    (a, salt) => withFields(a, { sourceDigest: textDigestOf(`${a.receipt.source.sourceDigest}${salt}`) }),
+    (a, salt) => withFields(a, { sourceDigest: textDigestOf(sha256)(`${a.receipt.source.sourceDigest}${salt}`) }),
   ],
-  ["textDigest", (a, salt) => withFields(a, { textDigest: textDigestOf(`${a.receipt.source.textDigest}${salt}`) })],
+  [
+    "textDigest",
+    (a, salt) => withFields(a, { textDigest: textDigestOf(sha256)(`${a.receipt.source.textDigest}${salt}`) }),
+  ],
   [
     "extractor name",
     (a, salt) => withExtractor(a, { ...a.receipt.source.extractor, name: `${a.receipt.source.extractor.name}${salt}` }),
@@ -220,7 +216,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text Occurrenc
       const brokenAcrossALine = "The exam-\niner maintains the rejection.";
       const copies = [boilerplate, boilerplate, brokenAcrossALine];
       const text = A.join(copies, " Claim. ");
-      const source = withFields(firstCitation, { textDigest: textDigestOf(text) }).receipt.source;
+      const source = withFields(firstCitation, { textDigest: textDigestOf(sha256)(text) }).receipt.source;
       const starts = A.scan(A.dropRight(copies, 1), 0, (start, copy) => start + Str.length(copy) + 8);
       const rows = A.map(A.zip(starts, copies), ([start, copy]) =>
         anchoredOn(source, text, { start, end: start + Str.length(copy) })

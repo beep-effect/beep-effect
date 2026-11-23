@@ -103,9 +103,6 @@ const GitBoolean = S.UndefinedOr(S.String).pipe(
 const decodeGitBoolean = S.decodeUnknownOption(GitBoolean);
 
 /**
- * One `[submodule "<name>"]` entry of a `.gitmodules` document, decoded into
- * typed fields.
- *
  * **Example** (Construct a submodule entry)
  *
  * ```ts
@@ -194,8 +191,6 @@ export class GitmodulesEntry extends S.Opaque<GitmodulesEntry, { readonly brand:
 ) {}
 
 /**
- * A `[submodule]` section could not be decoded into a {@link GitmodulesEntry}.
- *
  * **Example** (Describe a missing submodule path)
  *
  * ```ts
@@ -434,9 +429,6 @@ const render = (fields: (typeof Gitmodules)["Encoded"]): string => {
 };
 
 /**
- * The typed view over a `.gitmodules` document: the decoded submodule
- * entries, in first-appearance order.
- *
  * **Details**
  *
  * This class is the READ side. The write side deliberately does not go

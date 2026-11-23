@@ -39,8 +39,6 @@ const Delimiter = S.String.check(
 ).pipe($I.annoteSchema("Delimiter", { description: "A non-empty comment delimiter free of control characters." }));
 
 /**
- * How a managed section's markers are commented out in a given file format.
- *
  * **Details**
  *
  * A **line** style carries only a `prefix` (`#`, `//`); a **wrapped** style

@@ -16,16 +16,14 @@ downstream functor consumes.
 
 ## 1. Objects: a category of typed text
 
-NLP is usually a pile of stringly-typed passes. Here, text is **stratified** by
-a small ontology of kinds (`src/Ontology`): roughly eleven strata from raw
-character spans up through tokens, lemmas, parts of speech, sentences, entities,
-mentions, relations, and whole documents. Each stratum is a distinct object;
-an operation cannot silently confuse a `Token` with a `Sentence` because they
-inhabit different types.
+The standoff annotation kinds and their containment levels live in
+`@beep/annotation`. The linguistic graph retains its own node types for NLP
+backend output.
 
 The concrete carriers live in `src/Graph/Schema.ts` as schema-first node and
 edge classes (`POSNode`, `LemmaNode`, `EntityNode`, `RelationNode`,
-`DependencyNode`, `Span`, …). Every node is an Effect `Schema.Class` annotated
+`DependencyNode`, …). Entity and relation-participant spans are optional
+`@beep/text` positions, present only when a surface resolves uniquely. Every node is an Effect schema annotated
 with a stable identifier, so the objects are simultaneously *types*, *runtime
 validators*, and *serialization codecs*. The objects of our category are these
 typed strata; the arrows are the operations that move between them.
@@ -133,18 +131,10 @@ what lets `@beep/nlp-mcp` re-expose each as an independent MCP tool.
 
 ## 8. The generic IR: a free object at the boundary
 
-`src/Handoff/Contract.ts` is the product-neutral handoff: `TextChunk`,
-`Mention`, `Entity`, `Relation`, `AnnotatedDocument` (version `nlp-ir/1.1`),
-with branded ids, character `Span`s, and PROV-O-style `Provenance`
-(source/generatedBy/timestamp/confidence). It is deliberately the **free
-object**: it carries a generic `type` discriminant on entities/relations and no
-domain vocabulary. The downstream `ip-law-knowledge-graph` initiative supplies
-the *interpretation functor* that maps generic `Entity.type`/`Relation.type` to
-its concrete KG schema. Because the IR is free, that mapping is mechanical: the
-universal property says any KG schema factors through it uniquely.
-
-`makeProvenance` stamps time via `Clock` (never `Date.now`), so provenance is
-deterministic under test and honest in production.
+`@beep/annotation` owns content-addressed standoff documents: an anchors table,
+typed annotation kinds and generation attribution. `@beep/langextract/Handoff`
+produces a verified extraction document with per-candidate readings and lossless
+residuals. The former nlp handoff and its `nlp-ir/1.1` envelope are deleted.
 
 ## 9. Proofs: laws as machine-checked tests
 
@@ -177,14 +167,14 @@ faked:
 
 | Concept                                  | Module                                                        |
 | ---------------------------------------- | ------------------------------------------------------------- |
-| Typed text strata (objects)              | `src/Ontology`                                                |
+| Typed text strata (objects)              | `@beep/annotation/Kinds`                                                |
 | Graph carriers (node/edge schemas)       | `src/Graph/Schema.ts`                                         |
 | Monoids + typeclass hierarchy            | `src/Graph/TypeClass.ts`                                      |
 | Graph-level operations, cata/ana         | `src/Graph/Operation.ts`, `src/Graph/GraphOps.ts`             |
 | Operation spine (catalog/executor/store) | `src/Graph/GraphOperations/`                                  |
 | Kleisli category of operations           | `src/Operations/Definition.ts`, `src/Operations/Composable.ts` |
 | Backends as functors                     | `src/Backend/NLPBackend.ts`, `@beep/wink`                     |
-| Free IR at the boundary                  | `src/Handoff/Contract.ts`                                     |
+| Free IR at the boundary                  | `@beep/annotation`                                     |
 | Neutral contracts and models             | `src/Core`, `src/Tools`, `src/Backend`                        |
 | MCP re-exposure (driver)                 | `@beep/nlp-mcp`                                               |
 

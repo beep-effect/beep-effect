@@ -39,8 +39,6 @@ const jsonLdBlankNodeIdentifierChecks = S.makeFilterGroup(
 );
 
 /**
- * JSON-LD keyword surface used by the bounded v1 model.
- *
  * **Example** (Validate JSON-LD keywords)
  *
  * ```ts import.meta.vitest name="Validate JSON-LD keywords"
@@ -70,8 +68,6 @@ export const JsonLdKeyword = LiteralKit([
 );
 
 /**
- * Type for {@link JsonLdKeyword}.
- *
  * **Example** (Accept keyword type)
  *
  * ```ts
@@ -87,8 +83,6 @@ export const JsonLdKeyword = LiteralKit([
 export type JsonLdKeyword = typeof JsonLdKeyword.Type;
 
 /**
- * Normalized JSON-LD term definition used by the bounded context model.
- *
  * **Example** (Decode term definition)
  *
  * ```ts import.meta.vitest name="Decode term definition"
@@ -126,8 +120,6 @@ export class JsonLdTermDefinition extends S.Opaque<JsonLdTermDefinition, { reado
 ) {}
 
 /**
- * Normalized JSON-LD context model with bounded base, vocab, and term bindings.
- *
  * **Example** (Decode context model)
  *
  * ```ts import.meta.vitest name="Decode context model"
@@ -170,8 +162,6 @@ export class JsonLdContext extends S.Opaque<JsonLdContext, { readonly brand: uni
 ) {}
 
 /**
- * JSON-LD blank-node identifier used by the bounded document model.
- *
  * **Example** (Decode blank-node id)
  *
  * ```ts import.meta.vitest name="Decode blank-node id"
@@ -203,8 +193,6 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
 );
 
 /**
- * Type for {@link JsonLdBlankNodeIdentifier}.
- *
  * **Example** (Accept blank-node type)
  *
  * ```ts
@@ -220,8 +208,6 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
 export type JsonLdBlankNodeIdentifier = typeof JsonLdBlankNodeIdentifier.Type;
 
 /**
- * JSON-LD node identifier used by the bounded document model.
- *
  * **Example** (Decode node identifier)
  *
  * ```ts import.meta.vitest name="Decode node identifier"
@@ -252,8 +238,6 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
 );
 
 /**
- * Type for {@link JsonLdNodeIdentifier}.
- *
  * **Example** (Accept node id type)
  *
  * ```ts
@@ -269,8 +253,6 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
 export type JsonLdNodeIdentifier = typeof JsonLdNodeIdentifier.Type;
 
 /**
- * JSON-LD node reference value.
- *
  * **Example** (Decode reference value)
  *
  * ```ts import.meta.vitest name="Decode reference value"
@@ -307,8 +289,6 @@ export class JsonLdReferenceValue extends S.Opaque<JsonLdReferenceValue, { reado
 ) {}
 
 /**
- * JSON-LD literal value object.
- *
  * **Example** (Decode literal value)
  *
  * ```ts import.meta.vitest name="Decode literal value"
@@ -347,8 +327,6 @@ export class JsonLdLiteralValue extends S.Opaque<JsonLdLiteralValue, { readonly 
 ) {}
 
 /**
- * JSON-LD property value union used by bounded node objects.
- *
  * **Example** (Decode property value)
  *
  * ```ts import.meta.vitest name="Decode property value"
@@ -373,8 +351,6 @@ export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralV
 );
 
 /**
- * Type for {@link JsonLdPropertyValue}.
- *
  * **Example** (Accept property value type)
  *
  * ```ts
@@ -390,8 +366,6 @@ export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralV
 export type JsonLdPropertyValue = typeof JsonLdPropertyValue.Type;
 
 /**
- * JSON-LD node object used by bounded document and framing helpers.
- *
  * **Example** (Decode node object)
  *
  * ```ts import.meta.vitest name="Decode node object"
@@ -434,8 +408,6 @@ export class JsonLdNodeObject extends S.Opaque<JsonLdNodeObject, { readonly bran
 ) {}
 
 /**
- * Bounded JSON-LD document model with normalized context and graph content.
- *
  * **Example** (Decode empty document)
  *
  * ```ts import.meta.vitest name="Decode empty document"
@@ -472,8 +444,6 @@ export class JsonLdDocument extends S.Opaque<JsonLdDocument, { readonly brand: u
 ) {}
 
 /**
- * Bounded JSON-LD frame model.
- *
  * **Example** (Decode frame model)
  *
  * ```ts import.meta.vitest name="Decode frame model"

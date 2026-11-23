@@ -47,8 +47,6 @@ const CACHE_CAPACITY = 256;
 const DEFAULT_VERSION_PATTERN = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/;
 
 /**
- * Where a tool was resolved from.
- *
  * **Example** (Recognize a local resolution)
  *
  * ```ts
@@ -76,8 +74,6 @@ export const ResolvedSource = LiteralKit(["global", "local"]).pipe(
 export type ResolvedSource = typeof ResolvedSource.Type;
 
 /**
- * A tool that was found, with everything discovery learned about it.
- *
  * **Example** (Construct a global tool result)
  *
  * ```ts
@@ -168,8 +164,6 @@ export class ResolvedTool extends S.Class<ResolvedTool, { readonly brand: unique
 }
 
 /**
- * A tool could not be found where it was required.
- *
  * **Example** (Inspect ToolNotFoundError diagnostics)
  *
  * ```ts
@@ -220,9 +214,6 @@ export class ToolNotFoundError extends S.TaggedError<ToolNotFoundError, { readon
 }
 
 /**
- * The global and project-local copies disagree, and the tool's policy is
- * `"fail"`.
- *
  * **Example** (Inspect ToolVersionMismatchError diagnostics)
  *
  * ```ts
@@ -278,9 +269,6 @@ export class ToolVersionMismatchError extends S.TaggedError<
 }
 
 /**
- * A tool name that cannot safely be spawned was refused before any process
- * started.
- *
  * **Details**
  *
  * An empty name, or one beginning with `-`, which the operating system would
@@ -358,8 +346,6 @@ export const ToolResolutionFailure = S.Union([
   LocalExecError,
 ]).pipe($I.annoteSchema("ToolResolutionFailure", { description: "Every typed failure of tool resolution." }));
 /**
- * The decoded union of typed tool-resolution failures.
- *
  * @public
  * @category type-level
  * @since 0.0.0

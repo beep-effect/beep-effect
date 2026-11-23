@@ -636,12 +636,6 @@
     "reason": "Self-recursive schema: S.suspend((): S.Codec<CpcEntry, Encoded>) needs the class Self type; Opaque's Rebuild type carries no brand (TS2322)."
   },
   {
-    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
-    "class": "SpanFields",
-    "brand": "structural",
-    "reason": "Private span shape behind the exported Contract.Span refinement; nested `span: { start, end }` literals are built across langextract, file-processing, law-practice and semantica and the class is not nameable outside nlp. Follow-up: export a Span constructor and brand it."
-  },
-  {
     "file": "packages/foundation/modeling/md/src/Md.model.ts",
     "class": "*",
     "brand": "structural",

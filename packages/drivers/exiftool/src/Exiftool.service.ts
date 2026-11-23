@@ -153,8 +153,6 @@ const metadataFromRaw = (raw: Readonly<Record<string, unknown>>): ExifMetadata =
   });
 
 /**
- * Options for building native exiftool read-tags arguments.
- *
  * **Example** (Make read-tags options)
  *
  * ```ts
@@ -236,8 +234,6 @@ export const buildReadTagsArgs: (options: BuildReadTagsArgsOptions) => ReadonlyA
   ]);
 
 /**
- * Options for building native exiftool write-tags arguments.
- *
  * **Example** (Make write-tags options)
  *
  * ```ts

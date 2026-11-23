@@ -110,8 +110,6 @@ const ObsOutputStateBase = LiteralKit([
 ]);
 
 /**
- * obs-websocket `ObsOutputState` enum values.
- *
  * **Example** (Check output started state)
  *
  * ```ts
@@ -131,8 +129,6 @@ export const ObsOutputState = ObsOutputStateBase.pipe(
 );
 
 /**
- * obs-websocket `ObsOutputState` enum values.
- *
  * **Example** (Assign output started state)
  *
  * ```ts
@@ -378,8 +374,6 @@ export class ObsRequestEnvelope extends S.Opaque<ObsRequestEnvelope, { readonly 
 ) {}
 
 /**
- * `RequestStatus` object carried by every `RequestResponse`.
- *
  * **Example** (Make request status object)
  *
  * ```ts
@@ -470,8 +464,6 @@ export class ObsRequestResponseEnvelope extends S.Opaque<
 ) {}
 
 /**
- * `Hello` base-envelope message (`op: 0`).
- *
  * **Example** (Make Hello op message)
  *
  * ```ts
@@ -504,8 +496,6 @@ export class ObsHelloMessage extends S.Opaque<ObsHelloMessage, { readonly brand:
 ) {}
 
 /**
- * `Identify` base-envelope message (`op: 1`).
- *
  * **Example** (Make Identify op message)
  *
  * ```ts
@@ -538,8 +528,6 @@ export class ObsIdentifyMessage extends S.Opaque<ObsIdentifyMessage, { readonly 
 ) {}
 
 /**
- * `Identified` base-envelope message (`op: 2`).
- *
  * **Example** (Make Identified op message)
  *
  * ```ts
@@ -572,8 +560,6 @@ export class ObsIdentifiedMessage extends S.Opaque<ObsIdentifiedMessage, { reado
 ) {}
 
 /**
- * `Event` base-envelope message (`op: 5`).
- *
  * **Example** (Make Event op message)
  *
  * ```ts
@@ -608,8 +594,6 @@ export class ObsEventMessage extends S.Opaque<ObsEventMessage, { readonly brand:
 ) {}
 
 /**
- * `Request` base-envelope message (`op: 6`).
- *
  * **Example** (Make Request op message)
  *
  * ```ts
@@ -644,8 +628,6 @@ export class ObsRequestMessage extends S.Opaque<ObsRequestMessage, { readonly br
 ) {}
 
 /**
- * `RequestResponse` base-envelope message (`op: 7`).
- *
  * **Example** (Make RequestResponse op message)
  *
  * ```ts
@@ -712,8 +694,6 @@ export const ObsIncomingMessage = S.Union([
 );
 
 /**
- * Messages the obs-websocket server sends to this client.
- *
  * **Example** (Read incoming message op)
  *
  * ```ts
@@ -868,8 +848,6 @@ export const encodeObsOutgoingMessageJson: {
 );
 
 /**
- * `RecordStateChanged` event data payload.
- *
  * **Example** (Make record state data)
  *
  * ```ts
@@ -1039,8 +1017,6 @@ export const ObsEvent = S.Union([ObsRecordStateChangedEvent, ObsUnknownEvent]).p
 );
 
 /**
- * Driver events published on the protocol event stream.
- *
  * **Example** (Read protocol event type)
  *
  * ```ts
@@ -1056,8 +1032,6 @@ export const ObsEvent = S.Union([ObsRecordStateChangedEvent, ObsUnknownEvent]).p
 export type ObsEvent = typeof ObsEvent.Type;
 
 /**
- * `GetVersion` response payload subset.
- *
  * **Example** (Make GetVersion info payload)
  *
  * ```ts
@@ -1125,8 +1099,6 @@ export class ObsVersionInfo extends S.Opaque<ObsVersionInfo, { readonly brand: u
 }
 
 /**
- * `GetRecordStatus` response payload.
- *
  * **Example** (Make GetRecordStatus payload)
  *
  * ```ts
@@ -1214,8 +1186,6 @@ export class ObsStopRecordResult extends S.Opaque<ObsStopRecordResult, { readonl
 }
 
 /**
- * `GetRecordDirectory` response payload.
- *
  * **Example** (Make record directory payload)
  *
  * ```ts
@@ -1278,8 +1248,6 @@ export class ObsCreatedScene extends S.Opaque<ObsCreatedScene, { readonly brand:
 }
 
 /**
- * One scene summary entry from `GetSceneList`.
- *
  * **Example** (Make scene summary entry)
  *
  * ```ts
@@ -1319,8 +1287,6 @@ export class ObsSceneSummary extends S.Opaque<ObsSceneSummary, { readonly brand:
 ) {}
 
 /**
- * `GetSceneList` response payload subset.
- *
  * **Example** (Make GetSceneList payload)
  *
  * ```ts
@@ -1394,8 +1360,6 @@ export class ObsCreatedInput extends S.Opaque<ObsCreatedInput, { readonly brand:
 }
 
 /**
- * `GetInputSettings` response payload.
- *
  * **Example** (Make input settings info)
  *
  * ```ts

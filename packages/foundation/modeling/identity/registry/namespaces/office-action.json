@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "office-action",
+    "iri": "https://beep-effect.com/ns/office-action/"
+  },
+  "terms": ["claim", "distinction", "office_action", "rejection_reference"],
+  "bindings": [],
+  "deprecations": []
+}

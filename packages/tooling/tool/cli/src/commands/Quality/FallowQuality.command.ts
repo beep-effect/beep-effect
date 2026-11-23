@@ -1186,6 +1186,8 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
       "health",
       "--config",
       ".fallowrc.jsonc",
+      "--changed-since",
+      base,
       "--complexity",
       "--file-scores",
       "--format",

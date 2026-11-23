@@ -21,6 +21,7 @@ import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 
+const OWNED_INPUT_PLUS_MATCHER_PREFIX_CONTEXT_WORKER_COPIES = 4;
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataStrings");
 const Reason = LiteralKit(["invalid-policy"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed metadata helper installation failure." })
@@ -169,8 +170,8 @@ export const makeCitationMetadataStrings = Effect.fn("Citation.makeMetadataStrin
         source.value.utf16Units + layout.utf16Units > limits.producedTextUtf16 ? Effect.fail(exhausted()) : Effect.void
       );
     }
-    // Existing owned input plus matcher's prefix/context/worker copies.
-    if (4 * source.value.utf16Units > limits.producedTextUtf16) return yield* exhausted();
+    if (OWNED_INPUT_PLUS_MATCHER_PREFIX_CONTEXT_WORKER_COPIES * source.value.utf16Units > limits.producedTextUtf16)
+      return yield* exhausted();
     const matched = yield* year.search({
       words: [],
       prefix: source.value.storage,

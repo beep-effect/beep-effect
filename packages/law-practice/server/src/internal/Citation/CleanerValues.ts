@@ -30,6 +30,7 @@ import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";
 
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 
+const LONGEST_FIXED_SERVER_NAME_UTF16 = 17;
 const CitationCleanerTextOutputType = S.toType(CitationCleanerTextOutput);
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerValues");
@@ -97,8 +98,7 @@ export class CitationCleanerValues extends Context.Service<
   }
 >()($I`CitationCleanerValues`) {}
 
-// These entries hold live host capabilities; they are not data/wire models.
-type Value =
+type LiveHostCapabilityValue =
   | {
       readonly kind: "text";
       readonly unicode: CitationPythonUnicodeValue;
@@ -107,7 +107,7 @@ type Value =
     }
   | { readonly kind: "bytes"; readonly bytes: Uint8Array }
   | { readonly kind: "host"; readonly host: unknown };
-type Entry = Value & { readonly slot: number };
+type Entry = LiveHostCapabilityValue & { readonly slot: number };
 const SlotDescriptor = S.Struct({ value: S.Natural });
 const fail = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailure.make({ reason });
 /**
@@ -132,9 +132,10 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       ? fail("invalid-input")
       : safety(error.reason === "limit-exceeded" ? "producedTextUtf16" : timeLimit);
   const unicode = yield* makeCitationPythonUnicode(limits).pipe(Effect.mapError(translate));
-  // Five fixed server names are configuration constants, not request source
-  // or callback output. The enum gate precedes this 17-unit representation.
-  const names = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: 17 }).pipe(Effect.mapError(translate));
+  const fixedServerNamesAfterEnumGate = yield* makeCitationPythonUnicode({
+    ...limits,
+    producedTextUtf16: LONGEST_FIXED_SERVER_NAME_UTF16,
+  }).pipe(Effect.mapError(translate));
   const sourceCeiling = limits.sourceUtf16;
   const sourceUnicode = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: sourceCeiling }).pipe(
     Effect.mapError(translate)
@@ -156,11 +157,8 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
   let space = O.none<CitationCleanerObject>();
   let next = 0;
   let closed = false;
-  // Called only inside synchronous Effect.suspend callbacks. Cache publication
-  // happens before returning an Effect, so concurrent fibers cannot issue two
-  // objects for one cached Python string.
-  const mint = (
-    value: Value,
+  const mintInsideSuspendPublishingCacheFirst = (
+    value: LiveHostCapabilityValue,
     publish: (ref: CitationCleanerObject) => void
   ): Effect.Effect<CitationCleanerObject, CitationCleanerFailure> => {
     if (closed) return Effect.fail(fail("closed-owner"));
@@ -175,7 +173,7 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       if (closed) return Effect.fail(fail("closed-owner"));
       const current = kind === "empty" ? empty : space;
       if (O.isSome(current)) return get(current.value).pipe(Effect.as(current.value));
-      return mint(
+      return mintInsideSuspendPublishingCacheFirst(
         { kind: "text", unicode: kind === "empty" ? emptyValue : spaceValue, subtype: "plain", host: undefined },
         (ref) => {
           if (kind === "empty") empty = O.some(ref);
@@ -188,7 +186,12 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
   ): Effect.Effect<CitationCleanerObject, CitationCleanerFailure> =>
     Str.length(value.text) === 0
       ? cached("empty")
-      : Effect.suspend(() => mint({ kind: "text", unicode: value, subtype: "plain", host: undefined }, () => {}));
+      : Effect.suspend(() =>
+          mintInsideSuspendPublishingCacheFirst(
+            { kind: "text", unicode: value, subtype: "plain", host: undefined },
+            () => {}
+          )
+        );
   const fresh = Effect.fn("Citation.issueCanonicalCleanerText")((text: string) =>
     unicode.fromText(text).pipe(Effect.mapError(translate), Effect.flatMap(freshUnicode))
   );
@@ -196,9 +199,8 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
     if (closed) return yield* fail("closed-owner");
     const entry = entries.get(ref);
     if (entry === undefined) return yield* fail("unissued-value");
-    // Validate the original data property without invoking a substituted getter.
-    const descriptor: unknown = Object.getOwnPropertyDescriptor(ref, "slot");
-    const slot = yield* S.decodeUnknownEffect(SlotDescriptor)(descriptor).pipe(
+    const slotDataDescriptorWithoutGetterCall: unknown = Object.getOwnPropertyDescriptor(ref, "slot");
+    const slot = yield* S.decodeUnknownEffect(SlotDescriptor)(slotDataDescriptorWithoutGetterCall).pipe(
       Effect.mapError(() => fail("unissued-value"))
     );
     if (slot.value !== entry.slot) return yield* fail("unissued-value");
@@ -265,7 +267,9 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       const name = yield* S.decodeUnknownEffect(CitationBuiltinCleanerName)(input).pipe(
         Effect.mapError(() => fail("invalid-input"))
       );
-      return yield* names.fromText(name).pipe(Effect.mapError(translate), Effect.flatMap(freshUnicode));
+      return yield* fixedServerNamesAfterEnumGate
+        .fromText(name)
+        .pipe(Effect.mapError(translate), Effect.flatMap(freshUnicode));
     }),
     sourceText: Effect.fn("Citation.issueSourceCleanerText")(function* (input) {
       if (closed) return yield* fail("closed-owner");
@@ -289,12 +293,16 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
     subclass: Effect.fn("Citation.issueCleanerSubclass")(function* (input, host) {
       if (closed) return yield* fail("closed-owner");
       const value = yield* unicode.fromText(input).pipe(Effect.mapError(translate));
-      return yield* Effect.suspend(() => mint({ kind: "text", unicode: value, subtype: "subclass", host }, () => {}));
+      return yield* Effect.suspend(() =>
+        mintInsideSuspendPublishingCacheFirst({ kind: "text", unicode: value, subtype: "subclass", host }, () => {})
+      );
     }),
     unicodeSubclass: Effect.fn("Citation.issueNativeCleanerSubclass")(function* (input, host) {
       if (closed) return yield* fail("closed-owner");
       const value = yield* unicode.fromStorage(input).pipe(Effect.mapError(translate));
-      return yield* Effect.suspend(() => mint({ kind: "text", unicode: value, subtype: "subclass", host }, () => {}));
+      return yield* Effect.suspend(() =>
+        mintInsideSuspendPublishingCacheFirst({ kind: "text", unicode: value, subtype: "subclass", host }, () => {})
+      );
     }),
     getUnicodeUnits: Effect.fn("Citation.measureNativeCleanerText")((ref) =>
       get(ref).pipe(Effect.map((entry) => (entry.kind === "text" ? O.some(entry.unicode.utf16Units) : O.none())))
@@ -316,18 +324,18 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
     ),
     bytes: Effect.fn("Citation.issueCleanerBytes")(function* (input) {
       if (closed) return yield* fail("closed-owner");
-      const bytes = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
+      const ownedImmutablePythonBytesNotBytearray = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
         Effect.mapError(() => fail("invalid-input"))
       );
-      // Registration captures an already-owned immutable Python-byte value;
-      // adapters must not pass mutable bytearray/memoryview representations.
-      return yield* Effect.suspend(() => mint({ kind: "bytes", bytes }, () => {}));
+      return yield* Effect.suspend(() =>
+        mintInsideSuspendPublishingCacheFirst({ kind: "bytes", bytes: ownedImmutablePythonBytesNotBytearray }, () => {})
+      );
     }),
     getBytes: Effect.fn("Citation.readCleanerBytes")((ref) =>
       get(ref).pipe(Effect.map((entry) => (entry.kind === "bytes" ? O.some(entry.bytes) : O.none())))
     ),
     retainHost: Effect.fn("Citation.retainCleanerHost")((host) =>
-      Effect.suspend(() => mint({ kind: "host", host }, () => {}))
+      Effect.suspend(() => mintInsideSuspendPublishingCacheFirst({ kind: "host", host }, () => {}))
     ),
     getText: Effect.fn("Citation.readCleanerText")((ref) =>
       get(ref).pipe(

@@ -32,9 +32,6 @@ import { TomlDiagnostic } from "./TomlDiagnostic.ts";
 const $I = $TomlId.create("Toml");
 
 /**
- * Options controlling stringify behavior. The only knob is `newline` —
- * omitted, it resolves to `"\n"`.
- *
  * **Details**
  *
  * Stringify deliberately emits only TOML 1.0.0 spellings — seconds always
@@ -72,11 +69,6 @@ export class TomlStringifyOptions extends S.Opaque<TomlStringifyOptions, { reado
 ) {}
 
 /**
- * Parse failure: the {@link TomlDiagnostic} entries describing why the
- * document was rejected (first violation wins, so there is one today; the
- * array shape matches `@beep/yaml`'s aggregate contract). Raised by
- * {@link Toml.parse} and the decode direction of the schema factories.
- *
  * **Details**
  *
  * The `message` renders the first diagnostic's position 1-based
@@ -181,11 +173,6 @@ export class TomlParseError extends S.TaggedError<TomlParseError, { readonly bra
 }
 
 /**
- * Stringification failure: an unsupported value, an out-of-range integer, a
- * circular reference or a tripped depth guard, as one structured
- * {@link TomlDiagnostic} (offset `0` — there is no source text). Raised by
- * {@link Toml.stringify} and the encode direction of the schema factories.
- *
  * **Example** (Inspect unsupported null values)
  *
  * ```ts

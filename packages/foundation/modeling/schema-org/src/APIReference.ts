@@ -13,8 +13,6 @@ import { TechArticleFields } from "./TechArticle.ts";
 const $I = $SchemaOrgId.create("APIReference");
 
 /**
- * A schema.org `APIReference` — documentation of an API surface.
- *
  * **Details**
  *
  * `APIReference` is `rdfs:subClassOf TechArticle` in the vocabulary, so every

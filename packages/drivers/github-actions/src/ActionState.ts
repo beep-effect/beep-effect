@@ -23,8 +23,6 @@ import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 const $I = $GithubActionsId.create("ActionState");
 
 /**
- * An invalid name cannot head an action-state runner-file entry.
- *
  * **Example** (Describe an invalid state key)
  *
  * ```ts
@@ -53,9 +51,6 @@ export class InvalidActionStateNameError extends S.TaggedError<
 const Json = S.fromJsonString(S.Unknown);
 
 /**
- * Raised when action state cannot be saved, read or decoded across the phase
- * boundary.
- *
  * **Example** (Describe missing phase state)
  *
  * ```ts

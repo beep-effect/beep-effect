@@ -34,8 +34,6 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
 const ShaclSeverityDefinition = LiteralKit(["info", "warning", "violation"]);
 
 /**
- * SHACL report severity.
- *
  * **Example** (Decode violation severity)
  *
  * ```ts
@@ -57,8 +55,6 @@ export const ShaclSeverity = ShaclSeverityDefinition.pipe(
 );
 
 /**
- * Type for {@link ShaclSeverity}.
- *
  * **Example** (Narrow violation severity type)
  *
  * ```ts
@@ -75,8 +71,6 @@ export const ShaclSeverity = ShaclSeverityDefinition.pipe(
 export type ShaclSeverity = typeof ShaclSeverity.Type;
 
 /**
- * SHACL property shape used by the bounded service contract.
- *
  * **Example** (Decode property shape)
  *
  * ```ts
@@ -115,8 +109,6 @@ export class ShaclPropertyShape extends S.Opaque<ShaclPropertyShape, { readonly 
 ) {}
 
 /**
- * SHACL node shape used by the bounded service contract.
- *
  * **Example** (Decode node shape)
  *
  * ```ts
@@ -168,8 +160,6 @@ const makeShaclValidationViolationMember = <Severity extends ShaclSeverity>(seve
   });
 
 /**
- * SHACL validation violation.
- *
  * **Example** (Decode validation violation)
  *
  * ```ts
@@ -206,8 +196,6 @@ export const ShaclValidationViolation = ShaclSeverityDefinition.mapMembers(([inf
 );
 
 /**
- * Type for {@link ShaclValidationViolation}.
- *
  * **Example** (Construct an informational finding)
  *
  * ```ts
@@ -228,8 +216,6 @@ export const ShaclValidationViolation = ShaclSeverityDefinition.mapMembers(([inf
 export type ShaclValidationViolation = typeof ShaclValidationViolation.Type;
 
 /**
- * SHACL validation request.
- *
  * **Example** (Decode validation request)
  *
  * ```ts
@@ -266,8 +252,6 @@ export class ShaclValidationRequest extends S.Opaque<ShaclValidationRequest, { r
 ) {}
 
 /**
- * SHACL validation result.
- *
  * **Example** (Make conforming result)
  *
  * ```ts
@@ -299,8 +283,6 @@ export class ShaclValidationResult extends S.Opaque<ShaclValidationResult, { rea
 ) {}
 
 /**
- * SHACL validation error reason.
- *
  * **Example** (Decode invalidShape reason)
  *
  * ```ts
@@ -323,8 +305,6 @@ export const ShaclValidationErrorReason = LiteralKit(["invalidShape", "engineFai
 );
 
 /**
- * Type for {@link ShaclValidationErrorReason}.
- *
  * **Example** (Narrow invalidShape reason type)
  *
  * ```ts
@@ -341,8 +321,6 @@ export const ShaclValidationErrorReason = LiteralKit(["invalidShape", "engineFai
 export type ShaclValidationErrorReason = typeof ShaclValidationErrorReason.Type;
 
 /**
- * Typed SHACL validation error.
- *
  * **Example** (Make invalidShape error)
  *
  * ```ts

@@ -153,9 +153,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     const bText = yield* values.getText(b);
     const aPlain = O.exists(aText, (text) => text.subtype === "plain");
     const bPlain = O.exists(bText, (text) => text.subtype === "plain");
-    // General tables retain primitive equality after conversion. Subclasses
-    // and other host values still use reflected adapter protocols.
-    if (aPlain && bPlain) {
+    const bothPlainStringsKeepPrimitiveEquality = aPlain && bPlain;
+    if (bothPlainStringsKeepPrimitiveEquality) {
       const citationResult2 = yield* values.getUnicode(a);
       const x = yield* Effect.fromOption(citationResult2, unissuedValue);
       const citationResult3 = yield* values.getUnicode(b);
@@ -166,7 +165,8 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     const bBytes = yield* values.getBytes(b);
     if (O.isSome(aBytes) && O.isSome(bBytes)) return yield* equalBytes(aBytes.value, bBytes.value);
     if (crossPrimitiveKinds(aPlain, bPlain, O.isSome(aBytes), O.isSome(bBytes))) return false;
-    return yield* protocols.equal(a, b);
+    const otherHostValuesUseReflectedAdapterProtocols = yield* protocols.equal(a, b);
+    return otherHostValuesUseReflectedAdapterProtocols;
   });
   const table = yield* makeCitationRuntimeDictionary({
     entries: limits.authorities,
@@ -202,6 +202,11 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     }
     refs = retained;
   });
+  const claimActualRunningFiberAsReentrantOwner = Effect.withFiber((running) =>
+    Effect.sync(() => {
+      owner = O.some(running.id);
+    })
+  );
   const serial = <T, E>(body: Effect.Effect<T, E>) =>
     Effect.withFiber((fiber) =>
       Effect.suspend(() =>
@@ -210,13 +215,7 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
           : mutex
               .withPermit(
                 Effect.acquireUseRelease(
-                  // timeout runs its body in a child fiber. Capture that actual owner
-                  // inside acquisition so direct hash/equality reentry never deadlocks.
-                  Effect.withFiber((running) =>
-                    Effect.sync(() => {
-                      owner = O.some(running.id);
-                    })
-                  ),
+                  claimActualRunningFiberAsReentrantOwner,
                   () => body,
                   () =>
                     Effect.sync(() => {
@@ -282,13 +281,13 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
     serial(
       Effect.gen(function* () {
         yield* values.assertOwned(value);
-        // Protect the value across reentrant hash/equality callbacks and pruning.
         const previous = active;
+        const protectValueAcrossReentrantCallbacksAndPruning = Effect.sync(() => {
+          active = A.append(active, value);
+          refs = HashMap.set(refs, value.slot, value);
+        });
         return yield* Effect.acquireUseRelease(
-          Effect.sync(() => {
-            active = A.append(active, value);
-            refs = HashMap.set(refs, value.slot, value);
-          }),
+          protectValueAcrossReentrantCallbacksAndPruning,
           () => withKey(key, (hashed) => table.set(hashed, value.slot).pipe(Effect.mapError(translate), Effect.asVoid)),
           () =>
             Effect.sync(() => {

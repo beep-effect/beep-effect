@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "c885dbf5165a0833bab0d5f1d7270e1f0e1b57e949a8b4127a09e45d5449226c"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P3 annotation lane)",
+    "reason": "Re-record the root after merging the P2 head: turbo.json gains the @beep/annotation package.json input; no qualification granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p3-p2-merge-cache-review-2026-11-23.md",
+      "sha256": "69dc602ea843244db584dfda0b9b03de7d94b4b44860483260e3dff5f31b4a0f"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

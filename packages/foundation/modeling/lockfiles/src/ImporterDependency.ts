@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $LockfilesId.create("ImporterDependency");
 
 /**
- * One declared dependency of one workspace importer, as the lockfile records it.
- *
  * **Details**
  *
  * - `name` — the dependency's package name.
@@ -95,8 +93,6 @@ export class ImporterDependency extends S.Opaque<ImporterDependency, { readonly 
 ) {}
 
 /**
- * Companion types for {@link ImporterDependency}.
- *
  * @category type-level
  * @since 0.0.0
  */

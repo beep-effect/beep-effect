@@ -122,8 +122,6 @@ export * as DuckDbEventLogServerEncrypted from "./DuckDbEventLogServerEncrypted.
  */
 export * as DuckDbMessageStorage from "./DuckDbMessageStorage.service.ts";
 /**
- * The DuckDB Migrator module.
- *
  * **Example** (Run record migrations)
  *
  * ```ts

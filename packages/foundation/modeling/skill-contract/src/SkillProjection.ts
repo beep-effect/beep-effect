@@ -101,8 +101,6 @@ export const SkillArtifactDenialReason = LiteralKit([
 );
 
 /**
- * Runtime type decoded by {@link SkillArtifactDenialReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -242,16 +240,12 @@ export const SkillArtifactVerdict = LiteralKit(["allowed", "denied"])
   );
 
 /**
- * Runtime type decoded by {@link SkillArtifactVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SkillArtifactVerdict = typeof SkillArtifactVerdict.Type;
 
 /**
- * Contract and committed Markdown evaluated by {@link verifySkillArtifact}.
- *
  * **Example** (Inspect verification input fields)
  *
  * ```ts import.meta.vitest name="Inspect verification input fields"
@@ -468,9 +462,6 @@ const checkForRender = (
   committed: string
 ): readonly [SkillArtifactCheck, O.Option<SkillArtifactDenialReason>] =>
   Result.match(rendered, {
-    // Md.render fails when its adapter throws, and a well-typed projection
-    // reaches that: the JSON frontmatter is canonical RFC 8785 text, which
-    // refuses a contract string holding an unpaired surrogate.
     onFailure: (error) => [
       SkillArtifactCheck.make({
         check: "rerender-byte-equality",

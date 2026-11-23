@@ -20,8 +20,6 @@ const normalizeHubSpotBaseUrl = Str.replace(/\/+$/, "");
 const isHubSpotUrl = (value: unknown): value is string => P.isString(value) && URLStr.is(value);
 
 /**
- * HubSpot-compatible absolute URL string.
- *
  * **Example** (Decode HubSpot absolute URL)
  *
  * ```ts
@@ -47,8 +45,6 @@ export const HubSpotUrl = S.NonEmptyString.check(
 );
 
 /**
- * HubSpot API base URL normalized without trailing slashes.
- *
  * **Example** (Normalize trailing slash URL)
  *
  * ```ts
@@ -76,8 +72,6 @@ export const HubSpotBaseUrl = S.String.pipe(
 );
 
 /**
- * Type for {@link HubSpotBaseUrl}.
- *
  * **Example** (Type annotated base URL)
  *
  * ```ts
@@ -94,8 +88,6 @@ export const HubSpotBaseUrl = S.String.pipe(
 export type HubSpotBaseUrl = typeof HubSpotBaseUrl.Type;
 
 /**
- * Non-empty HubSpot account identifier.
- *
  * **Example** (Decode HubSpot account ID)
  *
  * ```ts
@@ -149,8 +141,6 @@ export const HUBSPOT_CRM_API_URL = "https://api.hubapi.com";
 
 const hubSpotConfigInputHeadersDefault = R.empty();
 /**
- * Runtime configuration accepted by {@link HubSpot.makeLayer}.
- *
  * **Example** (Create config with make)
  *
  * ```ts

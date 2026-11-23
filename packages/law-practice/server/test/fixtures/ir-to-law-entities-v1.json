@@ -1,0 +1,140 @@
+{
+  "claim": {
+    "createdAt": 2,
+    "rowVersion": 1,
+    "updatedAt": 3,
+    "createdByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "deletedAt": null,
+    "deletedByPrincipal": null,
+    "schemaVersion": "0.0.0",
+    "source": "System",
+    "updatedByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "orgId": 1,
+    "claimNumber": 1,
+    "fixtureKey": "claim.spike",
+    "independent": true,
+    "patentAssetFixtureKey": "patent-asset.spike",
+    "text": "A widget comprising a lid and a base.",
+    "entityType": "LawPracticeClaim",
+    "id": 2,
+    "publicId": "law_practice_claim_a2"
+  },
+  "distinction": {
+    "createdAt": 5,
+    "rowVersion": 1,
+    "updatedAt": 6,
+    "createdByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "deletedAt": null,
+    "deletedByPrincipal": null,
+    "schemaVersion": "0.0.0",
+    "source": "System",
+    "updatedByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "orgId": 1,
+    "anchor": {
+      "startChar": 206,
+      "endChar": 242,
+      "quote": "A Hinge Coupling The Lid To The Base"
+    },
+    "claimFixtureKey": "claim.spike",
+    "detail": {
+      "kind": "missing_limitation",
+      "limitation": "a hinge coupling the lid to the base"
+    },
+    "fixtureKey": "distinction.spike",
+    "lifecycleState": "candidate",
+    "rejectionFixtureKey": "rejection.spike",
+    "entityType": "LawPracticeDistinction",
+    "id": 5,
+    "publicId": "law_practice_distinction_a5"
+  },
+  "officeAction": {
+    "createdAt": 1,
+    "rowVersion": 1,
+    "updatedAt": 2,
+    "createdByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "deletedAt": null,
+    "deletedByPrincipal": null,
+    "schemaVersion": "0.0.0",
+    "source": "System",
+    "updatedByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "orgId": 1,
+    "applicationNumber": "Office Action",
+    "fixtureKey": "office-action.spike",
+    "matterFixtureKey": "matter.spike",
+    "patentAssetFixtureKey": "patent-asset.spike",
+    "entityType": "LawPracticeOfficeAction",
+    "id": 1,
+    "publicId": "law_practice_office_action_a1"
+  },
+  "priorArtReference": {
+    "createdAt": 3,
+    "rowVersion": 1,
+    "updatedAt": 4,
+    "createdByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "deletedAt": null,
+    "deletedByPrincipal": null,
+    "schemaVersion": "0.0.0",
+    "source": "System",
+    "updatedByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "orgId": 1,
+    "documentNumber": "US 0,000,000 B2",
+    "fixtureKey": "prior-art.spike",
+    "officeActionFixtureKey": "office-action.spike",
+    "title": "Smith",
+    "entityType": "LawPracticePriorArtReference",
+    "id": 3,
+    "publicId": "law_practice_prior_art_reference_a3"
+  },
+  "rejection": {
+    "createdAt": 4,
+    "rowVersion": 1,
+    "updatedAt": 5,
+    "createdByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "deletedAt": null,
+    "deletedByPrincipal": null,
+    "schemaVersion": "0.0.0",
+    "source": "System",
+    "updatedByPrincipal": {
+      "component": "Runtime",
+      "kind": "System"
+    },
+    "orgId": 1,
+    "claimFixtureKey": "claim.spike",
+    "fixtureKey": "rejection.spike",
+    "ground": {
+      "statute": "102",
+      "referenceFixtureKey": "prior-art.spike"
+    },
+    "officeActionFixtureKey": "office-action.spike",
+    "entityType": "LawPracticeRejection",
+    "id": 4,
+    "publicId": "law_practice_rejection_a4"
+  }
+}

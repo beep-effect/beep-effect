@@ -143,9 +143,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
     if (storage.bytes.byteLength / storage.width > limits.patternUtf16)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
-    // Routing only: authoritative verification still uses the captured Digest
-    // after preparation. Incremental hashing borrows input without a sized copy.
-    const digest = yield* Effect.try({
+    const routingOnlyIncrementalDigestBeforeCapturedVerification = yield* Effect.try({
       try: () =>
         Hex.encode(
           sha256
@@ -156,9 +154,9 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
         ),
       catch: fingerprintUnavailable,
     });
-    const descriptor = yield* Effect.fromOption(MutableHashMap.get(installed, key(digest, flags))).pipe(
-      Effect.mapError(() => fail("unknown-pattern"))
-    );
+    const descriptor = yield* Effect.fromOption(
+      MutableHashMap.get(installed, key(routingOnlyIncrementalDigestBeforeCapturedVerification, flags))
+    ).pipe(Effect.mapError(() => fail("unknown-pattern")));
     return copyCitationRegexDescriptor(descriptor);
   }, timed);
   const verify = Effect.fn("Citation.verifyRegexDescriptor")(function* (

@@ -90,6 +90,20 @@ it is kept apart as [Generation](#generation-attribution) records. The model
 lives in `@beep/annotation` (`foundation/modeling`), with its RDF codec in an
 adapter subpath.
 
+## Annotation Document
+
+A checked standoff document over one source capture, with anchors keyed by
+OccurrenceId, annotation content keyed by AnnotationId and generation sets keyed
+by content. `@beep/annotation` owns its builder, canonical codec, merge and closed
+restriction. Wire input uses the checked codec, which also verifies every key.
+
+## Capture Id
+
+`CaptureId` in `@beep/text/Capture` hashes the whole SourceTextIdentity under
+`capture/v1`, including scope, both digests and extractor and normalization pins.
+An extraction activity names this capture in its used set. Equal bytes in two
+scopes identify two captures.
+
 ## App Layer Helper
 
 An app-local Layer composition module, usually
@@ -376,11 +390,14 @@ own model and implements in its host.
 
 ## Generation (attribution)
 
-The record that one activity produced one annotation's content at one time:
+The record that one activity produced one annotation's content, with its stated
+time when known:
 a run-specific entity, hashed from the content id and the activity id, that is
 a `prov:specializationOf` the content entity. Attribution is unique per content
 and activity pair, and two records for one pair with different times are a
-typed refusal on merge. It is not a [Stream Generation](#stream-generation).
+typed refusal on merge, including absent versus stated time. Its run id hashes
+content and activity under `generation/v1`; time is outside the id. Every OA
+generation is one run entity. It is not a [Stream Generation](#stream-generation).
 
 ## God Layer
 

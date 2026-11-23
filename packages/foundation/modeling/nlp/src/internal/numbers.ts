@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $NlpId.create("internal/numbers");
 
 /**
- * Strictly positive numeric value.
- *
  * **Example** (Import and log PositiveNumber)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const PositiveNumber = S.Finite.check(
 );
 
 /**
- * Runtime type for {@link PositiveNumber}.
- *
  * **Example** (Declare PositiveNumber type alias)
  *
  * ```ts

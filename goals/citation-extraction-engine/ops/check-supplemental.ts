@@ -1,6 +1,6 @@
 /** Verify focused probes; strict mode also requires target and remaining coverage proof. */
-import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
 import { CitationSupplementalExtraction } from "@beep/law-practice-use-cases/test";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -156,13 +156,16 @@ const program = Effect.gen(function* () {
       return yield* reject();
     for (const cite of value.citations)
       for (const span of R.values(cite.spans)) {
-        const converted = yield* convertTextOffsetRange(
-          TextOffsetRange.make({ start: span.python[0], end: span.python[1], unit: "unicode-code-point" }),
-          value.text
+        const converted = yield* Effect.fromResult(
+          convertPosition(
+            Position.make({ start: span.python[0], end: span.python[1], unit: "unicode-code-point" }),
+            "utf16-code-unit",
+            value.text
+          )
         );
         if (
-          converted.startChar !== span.utf16[0] ||
-          converted.endChar !== span.utf16[1] ||
+          converted.start !== span.utf16[0] ||
+          converted.end !== span.utf16[1] ||
           Str.slice(span.utf16[0], span.utf16[1])(value.text) !== span.text
         )
           return yield* reject();
@@ -251,23 +254,35 @@ const program = Effect.gen(function* () {
           const boundary =
             offset === 0
               ? 0
-              : (yield* convertTextOffsetRange(
-                  yield* S.decodeEffect(TextOffsetRange)({ start: 0, end: offset, unit: "unicode-code-point" }),
-                  owner
-                )).endChar;
+              : (yield* Effect.fromResult(
+                  convertPosition(
+                    yield* S.decodeEffect(Position)({
+                      _tag: "Position",
+                      start: 0,
+                      end: offset,
+                      unit: "unicode-code-point",
+                    }),
+                    "utf16-code-unit",
+                    owner
+                  )
+                )).end;
           if (span.utf16[0] !== boundary || span.utf16[1] !== boundary || span.text !== "") return yield* reject();
         } else {
-          const converted = yield* convertTextOffsetRange(
-            yield* S.decodeEffect(TextOffsetRange)({
-              start: span.python[0],
-              end: span.python[1],
-              unit: "unicode-code-point",
-            }),
-            owner
+          const converted = yield* Effect.fromResult(
+            convertPosition(
+              yield* S.decodeEffect(Position)({
+                _tag: "Position",
+                start: span.python[0],
+                end: span.python[1],
+                unit: "unicode-code-point",
+              }),
+              "utf16-code-unit",
+              owner
+            )
           );
           if (
-            converted.startChar !== span.utf16[0] ||
-            converted.endChar !== span.utf16[1] ||
+            converted.start !== span.utf16[0] ||
+            converted.end !== span.utf16[1] ||
             Str.slice(span.utf16[0], span.utf16[1])(owner) !== span.text
           )
             return yield* reject();

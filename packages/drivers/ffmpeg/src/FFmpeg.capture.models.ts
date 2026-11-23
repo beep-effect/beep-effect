@@ -26,8 +26,6 @@ import {
 const $I = $FfmpegId.create("FFmpeg.capture.models");
 
 /**
- * Positive finite duration measured in seconds.
- *
  * **Example** (Making a PositiveSeconds value)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const PositiveSeconds = S.Finite.check(
 );
 
 /**
- * Positive finite duration measured in seconds.
- *
  * **Example** (Typing a PositiveSeconds value)
  *
  * ```ts
@@ -74,8 +70,6 @@ export const PositiveSeconds = S.Finite.check(
 export type PositiveSeconds = typeof PositiveSeconds.Type;
 
 /**
- * Non-negative integer file size measured in bytes.
- *
  * **Example** (Making a FileSizeBytes value)
  *
  * ```ts
@@ -104,8 +98,6 @@ export const FileSizeBytes = S.Int.check(
 );
 
 /**
- * Non-negative integer file size measured in bytes.
- *
  * **Example** (Typing a FileSizeBytes value)
  *
  * ```ts
@@ -122,8 +114,6 @@ export const FileSizeBytes = S.Int.check(
 export type FileSizeBytes = typeof FileSizeBytes.Type;
 
 /**
- * Positive integer tile-grid count for contact sheets.
- *
  * **Example** (Making a TileCount value)
  *
  * ```ts
@@ -152,8 +142,6 @@ export const TileCount = S.Int.check(
 );
 
 /**
- * Positive integer tile-grid count for contact sheets.
- *
  * **Example** (Typing a TileCount value)
  *
  * ```ts
@@ -234,8 +222,6 @@ export const JpegQuality = S.Int.check(
 export type JpegQuality = typeof JpegQuality.Type;
 
 /**
- * Non-negative integer pixel offset from a frame edge.
- *
  * **Example** (Making a PixelOffset value)
  *
  * ```ts
@@ -264,8 +250,6 @@ export const PixelOffset = S.Int.check(
 );
 
 /**
- * Non-negative integer pixel offset from a frame edge.
- *
  * **Example** (Typing a PixelOffset value)
  *
  * ```ts
@@ -282,8 +266,6 @@ export const PixelOffset = S.Int.check(
 export type PixelOffset = typeof PixelOffset.Type;
 
 /**
- * Mean luma sample value in the closed 0-255 range.
- *
  * **Example** (Making a LumaValue value)
  *
  * ```ts
@@ -328,8 +310,6 @@ export const LumaValue = S.Finite.check(
 );
 
 /**
- * Mean luma sample value in the closed 0-255 range.
- *
  * **Example** (Typing a LumaValue value)
  *
  * ```ts
@@ -401,8 +381,6 @@ export const SafeMetadataKey = S.String.check(
 export type SafeMetadataKey = typeof SafeMetadataKey.Type;
 
 /**
- * Dithering modes accepted by ffmpeg's `paletteuse` GIF filter.
- *
  * **Example** (Reading GifDither enum member)
  *
  * ```ts
@@ -430,8 +408,6 @@ export const GifDither = LiteralKit([
 );
 
 /**
- * Dithering modes accepted by ffmpeg's `paletteuse` GIF filter.
- *
  * **Example** (Typing a GifDither value)
  *
  * ```ts
@@ -448,8 +424,6 @@ export const GifDither = LiteralKit([
 export type GifDither = typeof GifDither.Type;
 
 /**
- * Encoder presets available to the extract-clip operation.
- *
  * **Details**
  *
  * `h264` targets mp4 outputs; `vp9` targets webm outputs.
@@ -472,8 +446,6 @@ export const ClipCodec = LiteralKit(["h264", "vp9"]).pipe(
 );
 
 /**
- * Encoder presets available to the extract-clip operation.
- *
  * **Example** (Typing a ClipCodec value)
  *
  * ```ts
@@ -490,8 +462,6 @@ export const ClipCodec = LiteralKit(["h264", "vp9"]).pipe(
 export type ClipCodec = typeof ClipCodec.Type;
 
 /**
- * A single container metadata key/value assignment.
- *
  * **Details**
  *
  * Values are passed to ffmpeg as one argv element (`-metadata KEY=value`), so
@@ -529,8 +499,6 @@ export class MetadataPair extends S.Opaque<MetadataPair, { readonly brand: uniqu
 ) {}
 
 /**
- * Request to extract one frame at an exact timestamp.
- *
  * **Example** (Building ExtractFrameAtRequest)
  *
  * ```ts
@@ -582,8 +550,6 @@ export class ExtractFrameAtRequest extends S.Opaque<ExtractFrameAtRequest, { rea
 }
 
 /**
- * A frame extracted at a requested timestamp.
- *
  * **Example** (Making a TimestampedFrame)
  *
  * ```ts
@@ -637,8 +603,6 @@ export class TimestampedFrame extends S.Opaque<TimestampedFrame, { readonly bran
 ) {}
 
 /**
- * Request to extract frames at an explicit list of timestamps.
- *
  * **Example** (Building ExtractFramesAtRequest)
  *
  * ```ts
@@ -726,8 +690,6 @@ export class ExtractFramesAtRequest extends S.Opaque<ExtractFramesAtRequest, { r
 }
 
 /**
- * Options recorded in an extract-frames-at manifest.
- *
  * **Example** (Making manifest options)
  *
  * ```ts
@@ -772,8 +734,6 @@ export class ExtractFramesAtManifestOptions extends S.Opaque<
 ) {}
 
 /**
- * JSON manifest written by an extract-frames-at run.
- *
  * **Example** (Building extract-frames-at manifest)
  *
  * ```ts
@@ -856,8 +816,6 @@ export class ExtractFramesAtManifest extends S.Opaque<ExtractFramesAtManifest, {
 }
 
 /**
- * Result returned after timestamped frames have been committed.
- *
  * **Example** (Making ExtractFramesAtResult)
  *
  * ```ts
@@ -911,8 +869,6 @@ export class ExtractFramesAtResult extends S.Opaque<ExtractFramesAtResult, { rea
 ) {}
 
 /**
- * Request to cut a re-encoded clip out of a video.
- *
  * **Details**
  *
  * Uses input-side `-ss` plus output `-t` (never `-to`) so clip timestamps
@@ -989,8 +945,6 @@ export class ExtractClipRequest extends S.Opaque<ExtractClipRequest, { readonly 
 }
 
 /**
- * Result returned after a clip has been committed.
- *
  * **Example** (Making ExtractClipResult)
  *
  * ```ts
@@ -1047,8 +1001,6 @@ export class ExtractClipResult extends S.Opaque<ExtractClipResult, { readonly br
 ) {}
 
 /**
- * Request to render a palette-optimized GIF from a video window.
- *
  * **Example** (Building RenderGifRequest)
  *
  * ```ts
@@ -1130,8 +1082,6 @@ export class RenderGifRequest extends S.Opaque<RenderGifRequest, { readonly bran
 }
 
 /**
- * Result returned after a GIF has been committed.
- *
  * **Details**
  *
  * The driver surfaces `fileSizeBytes` and never silently re-encodes; callers
@@ -1178,8 +1128,6 @@ export class RenderGifResult extends S.Opaque<RenderGifResult, { readonly brand:
 ) {}
 
 /**
- * Request to render a tiled contact sheet spanning a whole video.
- *
  * **Details**
  *
  * Use a `.jpg` destination (the default recommendation) — JPEG keeps sheets
@@ -1262,8 +1210,6 @@ export class RenderContactSheetRequest extends S.Opaque<RenderContactSheetReques
 }
 
 /**
- * Result returned after a contact sheet has been committed.
- *
  * **Example** (Making contact sheet result)
  *
  * ```ts
@@ -1317,8 +1263,6 @@ export class RenderContactSheetResult extends S.Opaque<RenderContactSheetResult,
 ) {}
 
 /**
- * Request to remux a video with additional container metadata.
- *
  * **Details**
  *
  * Streams are copied (`-map 0 -c copy`); nothing is re-encoded. This is the
@@ -1389,8 +1333,6 @@ export class WriteContainerMetadataRequest extends S.Opaque<
 }
 
 /**
- * Result returned after a metadata remux has been committed.
- *
  * **Example** (Making metadata write result)
  *
  * ```ts
@@ -1435,8 +1377,6 @@ export class WriteContainerMetadataResult extends S.Opaque<
 ) {}
 
 /**
- * Request to sample mean luma over a crop region of every frame.
- *
  * **Details**
  *
  * Backs sync-beacon detection: the capture pipeline flashes a corner region
@@ -1500,8 +1440,6 @@ export class ProbeRegionLuminanceRequest extends S.Opaque<
 }
 
 /**
- * Mean luma of one frame's crop region.
- *
  * **Example** (Making a LuminanceSample)
  *
  * ```ts
@@ -1539,8 +1477,6 @@ export class LuminanceSample extends S.Opaque<LuminanceSample, { readonly brand:
 ) {}
 
 /**
- * Result returned after sampling region luminance across a video.
- *
  * **Example** (Making luminance probe result)
  *
  * ```ts

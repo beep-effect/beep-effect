@@ -2,7 +2,6 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
 import {
   Citation,
   CitationComponentAnchor,
@@ -16,6 +15,7 @@ import {
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
 import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifiedSourceText,
@@ -115,7 +115,7 @@ export class CitationOccurrenceProjectionConfiguration extends S.Opaque<
     })
   )
 ) {}
-const decodeRange = S.decodeResult(TextOffsetRange);
+const decodePosition = S.decodeResult(Position);
 /** @internal @category models @since 0.0.0 */
 export class CitationOccurrenceProjectionResult extends S.Opaque<
   CitationOccurrenceProjectionResult,
@@ -166,21 +166,26 @@ const snapshotRows = Effect.fn("Citation.snapshotOccurrenceRows")(function* (res
       const modelId = yield* Effect.fromOption(A.get(captured.ids, index), () => fail("invalid-input"));
       const selected = yield* projectCitationExtractionSelection(modelId, model);
       const metadata = "outcome" in model ? model.outcome.metadata : model.metadata;
-      // CitationBase.span_with_pincite uses all non-null endpoint observations,
-      // including token endpoints even when explicit model spans override them.
-      const start = pipe(
+      const startOverAllEndpointsIncludingOverriddenToken = pipe(
         model.token.start,
         Num.min(selected.span[0]),
         Num.min(metadata.pinCiteSpanStart ?? model.token.start)
       );
-      const end = pipe(model.token.end, Num.max(selected.span[1]), Num.max(metadata.pinCiteSpanEnd ?? model.token.end));
+      const endOverAllEndpointsIncludingOverriddenToken = pipe(
+        model.token.end,
+        Num.max(selected.span[1]),
+        Num.max(metadata.pinCiteSpanEnd ?? model.token.end)
+      );
       return {
         index,
         modelId,
         citation,
         span: selected.span,
         fullSpan: selected.fullSpan,
-        spanWithPincite: Tuple.make(start, end),
+        spanWithPincite: Tuple.make(
+          startOverAllEndpointsIncludingOverriddenToken,
+          endOverAllEndpointsIncludingOverriddenToken
+        ),
       };
     }),
     { concurrency: 1 }
@@ -191,25 +196,19 @@ const anchor = Effect.fn("Citation.verifyOccurrenceSpan")(function* (
   source: VerifiedSourceText,
   span: typeof Span.Type
 ) {
-  const decoded = decodeRange({ start: span[0], end: span[1], unit: "unicode-code-point" });
+  const decoded = decodePosition({ _tag: "Position", start: span[0], end: span[1], unit: "unicode-code-point" });
   if (Result.isFailure(decoded)) return O.none();
-  const converted = yield* convertTextOffsetRange(decoded.success, source.sourceText).pipe(
-    Effect.asSome,
-    Effect.catchTag("VerifiedSpanError", (error) =>
-      error.reason === "invalid-offset" || error.reason === "absent-text"
-        ? Effect.succeedNone
-        : Effect.fail(fail("unverifiable-source"))
-    )
-  );
-  if (O.isNone(converted)) return O.none();
-  const range = converted.value;
+  // decision: occurrence-conversion-refusal-unverified
+  const converted = convertPosition(decoded.success, "utf16-code-unit", source.sourceText);
+  if (Result.isFailure(converted)) return O.none();
+  const range = converted.success;
   const budget = yield* CitationTextBudget;
-  yield* budget.reserve(range.endChar - range.startChar);
-  const quote = Str.slice(range.startChar, range.endChar)(source.sourceText);
+  yield* budget.reserve(range.end - range.start);
+  const quote = Str.slice(range.start, range.end)(source.sourceText);
   const proof = yield* verifyTextAnchorAgainstVerifiedSource(
     VerifyTextAnchorAgainstVerifiedSourceInput.make({
       verifiedSource: source,
-      anchor: TextAnchor.make({ ...range, quote }),
+      anchor: TextAnchor.make({ startChar: range.start, endChar: range.end, quote }),
     })
   ).pipe(Effect.mapError(() => fail("unverifiable-source")));
   return O.some(proof);

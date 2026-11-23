@@ -79,9 +79,6 @@ export const MAIN_FEED_WORKFLOW = "check.yml";
 export const MAIN_FEED_ANCESTOR_LIMIT = 100;
 
 /**
- * A job's artifact key: the `<job>-<partition>` suffix of its
- * `task-outcomes-<run>-<attempt>-<job>-<partition>` artifact.
- *
  * **Example** (Accept a key)
  *
  * ```ts
@@ -101,8 +98,6 @@ export const FeedJobKey = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]
 );
 
 /**
- * Type of {@link FeedJobKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -196,8 +191,6 @@ export const MainFeedMissReason = LiteralKit(["no-main-run"]).pipe(
 );
 
 /**
- * Type of {@link MainFeedMissReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -243,8 +236,6 @@ export const MainFeedResult = S.TaggedUnion({
 );
 
 /**
- * Type of {@link MainFeedResult}.
- *
  * @category models
  * @since 0.0.0
  */

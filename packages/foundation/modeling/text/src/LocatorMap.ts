@@ -80,8 +80,10 @@ export type AlignedSegment = typeof AlignedSegment.Type;
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 
 /**
- * Two captures that should be one: the earlier map ends at `left` and the
- * later one starts at `right`.
+ * Two captures that should be one, `left` and `right`. Composing locator maps
+ * refuses with it when the earlier map ends at one capture and the later one
+ * starts at another; merging two annotation documents refuses with it when
+ * they annotate different captures.
  *
  * **Example** (Read the captures)
  *
@@ -104,7 +106,8 @@ export class CaptureMismatch extends S.TaggedError<CaptureMismatch, { readonly b
     right: SourceTextIdentity,
   },
   $I.annoteError<CaptureMismatch>("CaptureMismatch", {
-    description: "Two locator maps that do not meet: the first ends at one capture and the second starts at another.",
+    description:
+      "Two different text captures where one was required: locator maps that do not meet, or documents to merge.",
   })
 ) {}
 

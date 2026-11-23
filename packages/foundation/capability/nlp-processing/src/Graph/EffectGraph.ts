@@ -48,8 +48,6 @@ const $I = $NlpProcessingId.create("Graph/EffectGraph");
 // =============================================================================
 
 /**
- * Branded identifier for graph nodes.
- *
  * **Example** (Making a branded NodeId)
  *
  * ```ts import.meta.vitest name="Making a branded NodeId"
@@ -70,8 +68,6 @@ export const NodeId = S.String.pipe(
 );
 
 /**
- * Companion type for {@link NodeId}.
- *
  * **Example** (Using companion NodeId type)
  *
  * ```ts
@@ -110,8 +106,6 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
 });
 
 /**
- * Error raised when traversal cannot resolve a node id.
- *
  * **Example** (Creating NodeNotFoundError)
  *
  * ```ts import.meta.vitest name="Creating NodeNotFoundError"

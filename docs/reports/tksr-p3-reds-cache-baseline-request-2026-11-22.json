@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "@beep/law-practice-use-cases": "ef0f524ad64ed20747752b0ceeb2a85228ece1349e04ed9582dacca848041dbb",
+    "@beep/lejeune-bolt-workbench": "bf071a7bbf85e3f52d1ce8f2a607727066764d79eb3b09a3e0c9a966ec49a804"
+  },
+  "review": {
+    "reviewer": "GPT-6.1 Sol (P3 remediation lane)",
+    "reason": "Correct the declared dependency edges without changing cache qualification.",
+    "basis": {
+      "path": "docs/reports/tksr-p3-reds-cache-review-2026-11-22.md",
+      "sha256": "0d5d5de6353af035e3518a7e414550ea4efa7f71ab07ebb4806852a16511ec8e"
+    }
+  },
+  "subjects": ["@beep/law-practice-use-cases", "@beep/lejeune-bolt-workbench"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

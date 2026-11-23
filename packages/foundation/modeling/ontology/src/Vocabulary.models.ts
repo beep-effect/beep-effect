@@ -27,7 +27,6 @@ export const VocabularySchemeKind = LiteralKit(["docketing", "party-kinds", "leg
   $I.annoteSchema("VocabularySchemeKind", { description: "Separate repository vocabulary scheme families." })
 );
 /**
- * The decoded vocabulary scheme family.
  * @category type-level
  * @since 0.0.0
  */

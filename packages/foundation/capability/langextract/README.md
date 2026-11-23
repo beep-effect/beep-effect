@@ -8,9 +8,10 @@ source-grounded character spans.
 `@beep/langextract` is a foundation capability only while it remains a
 repo-owned structured-extraction substrate. It owns target schemas, prompt and
 response contracts, model-output parsing, deterministic source alignment, typed
-errors, service orchestration, and adapters into `@beep/nlp/Handoff`.
+errors, service orchestration, and verified extraction documents over `@beep/annotation`.
 
-It consumes an injected `effect/ai/LanguageModel` service. Concrete
+It consumes an injected `effect/ai/LanguageModel`, Effect model-name services, and
+`effect/crypto/Digest`. It verifies the requested capture before calling the model. Concrete
 providers, provider SDKs, provider environment/config loading, live provider
 smoke tests, CLI workflows, rendering, and visualization belong outside this
 package.
@@ -23,13 +24,22 @@ provider SDK or product semantics.
 
 ## Reuse Audit
 
-- Reuses `@beep/nlp/Core.DocumentId`.
-- Reuses and depends on `@beep/nlp/Handoff` for spans, provenance, mentions,
-  entities, relations, and annotated documents.
-- Promotes stricter span and confidence validation in `@beep/nlp/Handoff`
-  instead of duplicating those primitives here.
-- Keeps extraction targets, parser state, alignment scores, and orchestration
-  local because they are LangExtract-specific.
+- Reuses `@beep/text` captures, anchors, positions, verified receipts and occurrence ids.
+- Reuses `@beep/annotation` kinds, content ids, generation attribution and the checked document codec.
+- Reuses `@beep/jsonc/ActivityStart` for the extraction activity and `@beep/schema/UnitInterval` for confidence.
+- Keeps extraction targets, parser state, alignment scores, readings and residual candidates local.
+
+A target declares the class or relation vocabulary its label annotates. The handoff
+verifies the aligner's own anchors and emits typed Mention, RelationCandidate and
+CorefCandidate annotations. Readings and residuals account for every parsed candidate;
+`candidateCount` makes a lost tail detectable. Confidence stays in the reading.
+Wire callers use `decodeExtractionHandoff`; `encodeExtractionHandoff` writes canonical
+document tables and readings. In-process callers receive `LangExtractResult.handoff`.
+
+The named consumers are office-action review, semantica and the Lejeune provider smoke.
+`test/Handoff.test.ts` covers capture identity, activity pins, verified receipts, typed
+candidates, candidate preservation and the checked codec. The law-practice flow test
+runs the real extraction service into review over a synthetic fixture.
 
 ## Public Surface
 

@@ -86,9 +86,6 @@ const $I = $RepoCliId.create("commands/Ci/CiFailures");
 export const FAILED_JOB_ARTIFACT_DOWNLOADS_MAX = 8;
 
 /**
- * What `beep ci failures` reads: one workflow run, or the newest runs of a
- * pull request's head.
- *
  * **Example** (Target a run)
  *
  * ```ts
@@ -110,8 +107,6 @@ export const CiFailuresTarget = S.TaggedUnion({
 );
 
 /**
- * Type of {@link CiFailuresTarget}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -202,9 +197,6 @@ const recordJoins = (feed: FeedArtifact, job: CiRunJob): boolean =>
   feed.record.job === job.name || Str.startsWith(`${feed.record.job} / `)(job.name);
 
 /**
- * What {@link rankFeedArtifacts} reads: the run attempt's artifact prefix,
- * its artifacts and its failed jobs.
- *
  * **Example** (Nothing to rank)
  *
  * ```ts
@@ -319,8 +311,6 @@ export const CiJobReading = S.TaggedUnion({
 );
 
 /**
- * Type of {@link CiJobReading}.
- *
  * @category models
  * @since 0.0.0
  */
