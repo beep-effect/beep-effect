@@ -1999,6 +1999,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/CommentLaw.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/CommentLaw.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/CommentStrip.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/CommentStrip.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.model.ts",

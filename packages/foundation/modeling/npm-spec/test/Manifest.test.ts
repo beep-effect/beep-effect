@@ -239,11 +239,9 @@ describe("Manifest.resolve", () => {
           peerDependencies: { "@x/c": "~3.1.0" },
           optionalDependencies: { "@x/d": "4.0.0" },
         });
-        // A fresh instance: the input is not mutated, and the result is not it.
         assert.notStrictEqual(resolved, manifest);
         assert.notStrictEqual(resolved.dependencies, manifest.dependencies);
         assert.deepStrictEqual(manifest.toRecord(), snapshot);
-        // rest rides through resolution unchanged.
         assert.deepStrictEqual(resolved.rest, manifest.rest);
       })
     );

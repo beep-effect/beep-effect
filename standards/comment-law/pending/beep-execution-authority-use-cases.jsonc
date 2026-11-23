@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/execution-authority-use-cases",
-  "root": "packages/execution-authority/use-cases",
-  "scopes": ["."]
-}
