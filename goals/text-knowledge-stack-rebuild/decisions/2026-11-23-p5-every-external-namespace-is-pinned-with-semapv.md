@@ -1,0 +1,10 @@
+---
+title: "P5: the eight held namespaces and semapv are pinned and the NamespacePin test covers every external namespace; sssom is not registered"
+date: 2026-11-23
+lane: "goals/text-knowledge-stack-rebuild-p5-taxonomy"
+reversal: "Register sssom (with its pin) by a decision file naming the SSSOM RDF or TSV consumer that needs it"
+---
+
+Map questions I11, S6 and T10. The P5 pin set is the eight namespaces decision `2026-11-19-p1-pin-scope-eight-namespaces` held back (dcat, dcterms, owl, rdf, rdfs, schema, sh, void), plus `semapv`. `semapv` is registered in the same commit as a new external shard holding the five justification terms the SSSOM `MappingSet` uses, so `MappingJustification` names declared, pinned terms. `sssom:` is not registered: P5 writes no SSSOM RDF or TSV, because no consumer reads one, and a namespace enters with its first consumer (RQ3). The `pinned-vocabularies` sync target (`packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/PinnedVocabularies.ts`) acquires each artifact over the network and records location, revision, SPDX license, attribution, version, byte digest and terms digest.
+
+Licenses are recorded from the artifact, never invented. The rule follows decision `2026-11-20-p1-namespace-pins-live-tree-calls` point 3: a W3C artifact with no SPDX-identifiable notice is `LicenseRef-W3C-Document`. An artifact whose license cannot be attributed holds its pin, and with it the commit, until a source is found, as the nanopub license did in P4. `rdf/test/NamespacePin.test.ts` deletes `unpinnedUntilP5` (`:20`, `:72`). It asserts that the set of pinned prefixes equals the set of registry namespaces whose IRI is outside `IdentityAuthority`, each with an SPDX license and a `sha256:` digest. Any namespace P5 adds, internal or external, is in its shard and in this check in the same commit. The term snapshot takes the minor release the writer computes against `origin/main` over a stack that has merged a publishing base (decisions `2026-11-22-p1-the-snapshot-release-is-a-property-of-the-change-against-its-base-ref` and `2026-11-23-p5-stack-layers-write-the-term-snapshot-against-origin-main`).
