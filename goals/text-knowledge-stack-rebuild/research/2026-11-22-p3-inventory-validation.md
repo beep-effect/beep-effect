@@ -29,16 +29,17 @@ and coverage include; no whole-package law-practice or repo-cli coverage ran.
 
 ## S31 raw inventory comparison
 
-Counts below are raw rows, not a claim that the P0 ceiling is met. The P3
-lane inherited four schema-first rows and fourteen effect-vitest rows above
-P0. Commit 4 explicitly records three schema-first exceptions in the binding
-annotation-commit-4-surface decision; commit 9 removes the SpanFields row.
-Commits 9 through 11 add no exception or allowlist debt. The remaining net
-schema-first growth of two is attributable to those explicit commit-4 calls.
+Counts below are raw rows. The P3 lane inherited four schema-first rows and fourteen
+effect-vitest rows above P0. The three commit-4 schema-first exceptions are removed:
+private schema values now have distinct names from their exported types, and the
+detector recognizes schema-handle registry contracts with methods. Commit 9 also
+removes SpanFields. The final schema-first inventory has 285 rows, zero missing
+and zero stale. The two unrelated tmpfs-reap status promotions are reverted;
+C0Slice reanchoring is retained. No exception or allowlist is added.
 
 | Inventory | P0 | P3 lane base | Final local tree |
 | --- | --- | --- | --- |
-| standards/schema-first.inventory.jsonc | 282 | 286 | 288 |
+| standards/schema-first.inventory.jsonc | 282 | 286 | 285 |
 | standards/effect-vitest.inventory.jsonc | 647 | 661 | 661 |
 | standards/effect-laws.allowlist.jsonc | 36 | 36 | 36 |
 | goals/schema-opaque-default/ops/codemod/keep-class.jsonc | 114 | 114 | 113 |
@@ -66,7 +67,7 @@ coverage rows are the fully covered registrations listed above.
 | Inventory or allowance surface | P0 path lines | Lane-base path lines | Final path lines |
 | --- | --- | --- | --- |
 | standards/coverage.regression-baseline.jsonc | 216 | 234 | 245 |
-| standards/schema-first.inventory.jsonc | 10 | 10 | 12 |
+| standards/schema-first.inventory.jsonc | 10 | 10 | 9 |
 | standards/effect-laws.allowlist.jsonc | 1 | 1 | 1 |
 | packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts | 1 | 1 | 1 |
 | standards/fallow.health.regression-baseline.jsonc | 3 | 3 | 3 |

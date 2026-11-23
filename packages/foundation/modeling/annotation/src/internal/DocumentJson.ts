@@ -25,7 +25,7 @@ const GenerationJson = S.StructWithRest(S.Struct({ run: S.String }), Rest);
 const AttributionEntry = S.Tuple([S.String, S.Array(GenerationJson)]);
 
 // The document JSON as far as key handling needs it: every other field passes through unread.
-const DocumentEnvelope = S.StructWithRest(
+const documentEnvelope = S.StructWithRest(
   S.Struct({
     anchors: S.Array(TableEntry),
     annotations: S.Array(TableEntry),
@@ -45,7 +45,7 @@ const DocumentEnvelope = S.StructWithRest(
  * @internal
  * @since 0.0.0
  */
-export type DocumentEnvelope = typeof DocumentEnvelope.Type;
+export type DocumentEnvelope = typeof documentEnvelope.Type;
 
 /**
  * Decode unknown input as a document envelope.
@@ -54,7 +54,7 @@ export type DocumentEnvelope = typeof DocumentEnvelope.Type;
  * @since 0.0.0
  */
 export const decodeEnvelope = (input: unknown): Effect.Effect<DocumentEnvelope, S.SchemaError> =>
-  S.decodeUnknownEffect(DocumentEnvelope)(input);
+  S.decodeUnknownEffect(documentEnvelope)(input);
 
 const byKey = Order.mapInput(Order.String, (entry: readonly [string, unknown]) => entry[0]);
 

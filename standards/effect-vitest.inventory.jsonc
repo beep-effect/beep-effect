@@ -5727,7 +5727,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
@@ -5749,7 +5749,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {

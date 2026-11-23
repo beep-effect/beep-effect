@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-22",
+  "generatedOn": "2026-11-23",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -644,30 +644,6 @@
       "status": "exception",
       "owner": "@beep/nlp-processing",
       "reason": "Integration descriptor intentionally couples an Effectful handler with generated JSON-schema objects; the owning Effect AI Tool schemas remain the executable parameter and success truth."
-    },
-    {
-      "file": "packages/foundation/modeling/annotation/src/AnnotationDocument.ts",
-      "symbol": "AnnotationDocumentView",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/annotation",
-      "reason": "Structural view that every caller-owned document (TextDocument, ExtractionDocument, OaDocument) satisfies; only its type is exported. A branded S.Opaque would be nominal, so no document would satisfy it, and the documents themselves are annotated S.Opaque schemas."
-    },
-    {
-      "file": "packages/foundation/modeling/annotation/src/Kind.ts",
-      "symbol": "AnyAnnotationKind",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/annotation",
-      "reason": "Kind registry element type, not data: it holds a body schema, a content-case schema and a referencedIds function, which cannot be schema values. The data a kind declares (its body and case) are annotated schemas."
-    },
-    {
-      "file": "packages/foundation/modeling/annotation/src/internal/DocumentJson.ts",
-      "symbol": "DocumentEnvelope",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/annotation",
-      "reason": "Internal, module-private wire envelope of the document codec: a StructWithRest read before the document schema to refuse repeated keys, and sorted after its encode. Only its type leaves the internal module; the document it carries is the annotated S.Opaque."
     },
     {
       "file": "packages/foundation/modeling/epistemics/src/EvidenceSpan/EvidenceSpan.model.ts",

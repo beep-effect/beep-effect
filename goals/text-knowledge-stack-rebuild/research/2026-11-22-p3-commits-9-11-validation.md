@@ -99,10 +99,9 @@ failures were corrected and rerun; no failed attempt is counted as proof.
 - The effect-vitest writer refreshes occurrence metadata; existing exception
   reasons are preserved, including the unchanged scoped C0Slice runtime provision.
 - Commit 11 includes the read-codec type alias found by its inventory gate.
-- Raw S31 totals exceed P0: four schema-first and fourteen effect-vitest rows
-  were inherited at the P3 lane base. Binding commit-4 decisions require three
-  additional schema-first exceptions; deleting SpanFields leaves a net two.
-  The raw ceiling is not claimed met. Commits 9 through 11 add no exception row.
+- Raw S31 totals retain inherited debt above P0. The three commit-4 schema-first
+  exceptions are now removed under S31, along with the retired SpanFields row.
+  The corrected inventory has 285 rows; no exception or allowlist growth is admitted.
 
 The commit-8 rulings remain: semantica grounds historical unmapped-predicate
 residuals without registry additions, the Tika scaffold is text-scaffold/1, and

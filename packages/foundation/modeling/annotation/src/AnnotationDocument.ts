@@ -45,7 +45,7 @@ const sameCapture = S.toEquivalence(SourceTextIdentity);
 
 // The kind-independent view of every document: annotations read as { _tag, targets, body } with the body unread.
 // Only its type is exported: a branded schema would be nominal, and no caller-owned document would satisfy it.
-const AnnotationDocumentView = S.Struct({
+const annotationDocumentView = S.Struct({
   text: SourceTextIdentity,
   anchors: S.HashMap(OccurrenceId, Anchored),
   annotations: S.HashMap(AnnotationId, S.Struct({ _tag: S.String, targets: AnnotationTargets, body: S.Unknown })),
@@ -73,7 +73,7 @@ const AnnotationDocumentView = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export type AnnotationDocumentView = typeof AnnotationDocumentView.Type;
+export type AnnotationDocumentView = typeof annotationDocumentView.Type;
 
 const everyTargetResolves = (document: AnnotationDocumentView): boolean =>
   HashMap.every(document.annotations, (annotation) =>
