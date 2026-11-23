@@ -16,7 +16,7 @@ import { IRI } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
 import { curieNamespace, expand, expandPredicate } from "@beep/identity/Registry";
 import { NamespaceIri } from "@beep/identity/Term";
-import { LanguageTag } from "@beep/rdf/Rdf";
+import { Literal } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -253,23 +253,12 @@ const SchemaHandleValue = S.declare(
 const TypedLiteralValue = S.Struct({
   value: S.Union([S.String, S.Finite, S.Boolean]),
   datatype: S.optionalKey(TermString),
-  language: S.optionalKey(LanguageTag),
-})
-  .check(
-    S.makeFilter(
-      (literal) => literal.datatype === undefined || literal.language === undefined,
-      $I.annote("TypedLiteralExclusivityCheck", {
-        title: "Typed Literal Exclusivity",
-        description: "RDF literals carry a language tag or an explicit datatype, never both.",
-        message: "Typed literals cannot carry both language and datatype.",
-      })
-    )
-  )
-  .pipe(
-    $I.annoteSchema("TypedLiteralValue", {
-      description: "Typed literal wrapper accepted at tuple object positions.",
-    })
-  );
+  language: S.optionalKey(S.String),
+}).pipe(
+  $I.annoteSchema("TypedLiteralValue", {
+    description: "Typed literal wrapper accepted at tuple object positions.",
+  })
+);
 
 const SubjectValue = S.Union([SchemaHandleValue, TermString]);
 const ObjectValue = S.Union([SchemaHandleValue, TermString, TypedLiteralValue]);
@@ -394,33 +383,6 @@ export const AssembledPredicateKind = LiteralKit(["datatype", "object"]).pipe(
 export type AssembledPredicateKind = typeof AssembledPredicateKind.Type;
 
 /**
- * Resolved literal payload carried by an assembled fact object.
- *
- * **Example** (Usage)
- * ```ts
- * import { FactLiteral } from "@beep/ontology/Fold.models"
- * import * as O from "effect/Option"
- *
- * const literal = FactLiteral.make({ value: "Claim", datatypeIri: O.none(), language: O.none() })
- * console.log(literal.value)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export class FactLiteral extends S.Opaque<FactLiteral, { readonly brand: unique symbol }>()(
-  S.Struct({
-    value: S.Union([S.String, S.Finite, S.Boolean]),
-    datatypeIri: S.OptionFromOptionalKey(IRI),
-    language: S.OptionFromOptionalKey(LanguageTag),
-  }).pipe(
-    $I.annoteSchema("FactLiteral", {
-      description: "Resolved typed literal carried by an assembled fact.",
-    })
-  )
-) {}
-
-/**
  * Resolved object position of an assembled fact: an IRI or a literal.
  *
  * **Example** (Usage)
@@ -434,9 +396,9 @@ export class FactLiteral extends S.Opaque<FactLiteral, { readonly brand: unique 
  * @category schemas
  * @since 0.0.0
  */
-export const FactObject = S.Union([IRI, FactLiteral]).pipe(
+export const FactObject = S.Union([IRI, Literal]).pipe(
   $I.annoteSchema("FactObject", {
-    description: "Resolved fact object: IRI reference or typed literal.",
+    description: "Resolved fact object: IRI reference or RDF literal.",
   })
 );
 
@@ -446,10 +408,9 @@ export const FactObject = S.Union([IRI, FactLiteral]).pipe(
  * **Example** (Usage)
  * ```ts
  * import type { FactObject } from "@beep/ontology/Fold.models"
- * import { FactLiteral } from "@beep/ontology/Fold.models"
- * import * as O from "effect/Option"
+ * import { makeLiteral } from "@beep/rdf/Rdf"
  *
- * const object: FactObject = FactLiteral.make({ value: 1, datatypeIri: O.none(), language: O.none() })
+ * const object: FactObject = makeLiteral("Claim")
  * console.log(object)
  * ```
  *
@@ -725,6 +686,7 @@ export const OntologyAssemblyErrorReason = LiteralKit([
   "unboundClass",
   "undeclaredProperty",
   "skosIntegrity",
+  "invalidLiteral",
 ]).pipe(
   $I.annoteSchema("OntologyAssemblyErrorReason", {
     description: "Closed failure-reason domain for the ontology fold.",
@@ -787,21 +749,3 @@ export class OntologyAssemblyError extends S.TaggedError<OntologyAssemblyError, 
     description: "Typed diagnostics-ledger failure for the ontology fold.",
   })
 ) {}
-
-/**
- * Derived guard for {@link AssembledFact} literal objects.
- *
- * **Example** (Usage)
- * ```ts import.meta.vitest name="Usage"
- * import { FactLiteral, isFactLiteral } from "@beep/ontology/Fold.models"
- * import * as O from "effect/Option"
- *
- * const literal = FactLiteral.make({ value: 1, datatypeIri: O.none(), language: O.none() })
- * isFactLiteral(literal) // => true
- * isFactLiteral("https://schema.org/CreativeWork") // => false
- * ```
- *
- * @category guards
- * @since 0.0.0
- */
-export const isFactLiteral = S.is(FactLiteral);

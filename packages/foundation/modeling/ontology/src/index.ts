@@ -40,7 +40,7 @@ export * from "./Fold.markdown.ts";
  */
 export * from "./Fold.models.ts";
 /**
- * Pure JSON-LD, context, and Turtle projections over assembled ontologies.
+ * The ground RDF dataset projection of an assembled ontology.
  *
  * @category projections
  * @since 0.0.0

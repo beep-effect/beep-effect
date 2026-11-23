@@ -5,11 +5,12 @@
  */
 import * as Registry from "@beep/identity/Registry";
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec } from "@beep/n3";
-import { fold, toTurtle } from "@beep/ontology";
+import { fold, toDataset } from "@beep/ontology";
 import * as Rdf from "@beep/rdf/Rdf";
 import { CITO_NAMESPACE } from "@beep/rdf/Vocab/Cito";
 import { DCAT_DATASET, DCAT_NAMESPACE } from "@beep/rdf/Vocab/Dcat";
 import { FABIO_NAMESPACE } from "@beep/rdf/Vocab/Fabio";
+import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import * as Prov from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
@@ -358,6 +359,26 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
   return Rdf.makeDataset(quads);
 };
 
+const libraryPrefixes = S.decodeEffect(Rdf.PrefixMap)({
+  sh: SHACL_NAMESPACE,
+  xsd: XSD_NAMESPACE,
+  rdf: RDF_NAMESPACE,
+  rdfs: RDFS_NAMESPACE,
+  owl: OWL_NAMESPACE,
+  prov: Prov.PROV_NAMESPACE,
+  cito: CITO_NAMESPACE,
+  fabio: FABIO_NAMESPACE,
+  dcat: DCAT_NAMESPACE,
+  skos: SKOS_NAMESPACE,
+  library: libraryNamespace,
+});
+
+const serializeTurtle = Effect.fnUntraced(function* (dataset: Rdf.Dataset) {
+  const codec = yield* N3TurtleCodec;
+  const prefixes = yield* libraryPrefixes;
+  return (yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset, prefixes }))).source;
+});
+
 /**
  * Serialize deterministic shapes with the N3 codec.
  * **Example** (Inspect Turtle projection)
@@ -369,21 +390,21 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
  * @since 0.0.0
  */
 export const libraryShapesTurtle = Effect.fn("Library.shapesTurtle")(function* (shapes: ReadonlyArray<ShaclNodeShape>) {
-  const codec = yield* N3TurtleCodec;
-  const prefixes = yield* S.decodeEffect(Rdf.PrefixMap)({
-    sh: SHACL_NAMESPACE,
-    xsd: XSD_NAMESPACE,
-    rdf: RDF_NAMESPACE,
-    rdfs: RDFS_NAMESPACE,
-    prov: Prov.PROV_NAMESPACE,
-    cito: CITO_NAMESPACE,
-    fabio: FABIO_NAMESPACE,
-    dcat: DCAT_NAMESPACE,
-    skos: SKOS_NAMESPACE,
-    library: libraryNamespace,
-  });
-  return (yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset: libraryShapesDataset(shapes), prefixes })))
-    .source;
+  return yield* serializeTurtle(libraryShapesDataset(shapes));
+});
+
+/**
+ * Serialize the folded library ontology's dataset with the N3 codec.
+ * **Example** (Inspect the T-box writer)
+ * ```ts
+ * import { libraryTboxTurtle } from "@beep/repo-cli/commands/Research/Library/Library.ontology"
+ * console.log(libraryTboxTurtle)
+ * ```
+ * @category projections
+ * @since 0.0.0
+ */
+export const libraryTboxTurtle = Effect.fn("Library.tboxTurtle")(function* (assembled: AssembledOntology) {
+  return yield* serializeTurtle(toDataset(assembled));
 });
 
 /**
@@ -403,7 +424,7 @@ export const renderLibraryOntology = Effect.fn("Library.renderOntology")(
     const codec = yield* N3TurtleCodec;
     const assembled = yield* assembleLibraryOntology();
     const shapes = yield* libraryShapesTurtle(libraryShapes(assembled));
-    const tbox = toTurtle(assembled);
+    const tbox = yield* libraryTboxTurtle(assembled);
     const write = Effect.fn("Library.writeOntology")(function* (target: string, source: string) {
       const { absolute, relative } = yield* libraryOutputAncestor(root, target);
       if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative))

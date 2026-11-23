@@ -367,6 +367,6 @@ export const NamespacePinRows = [
     attribution: "RDF 1.1 Concepts and Abstract Syntax, W3C Recommendation 2014-02-25, section 5.1 (RDF-compatible XSD datatypes). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
     version: "W3C Recommendation 2014-02-25",
     digest: "sha256:3838c992097f72ee8784b6c96194d9879f86f2e08f53ced5a05aa4031750c5ac",
-    termsDigest: "sha256:3f6ecf7e5a97a3358394c5c2e23332cc2116faa81d6121767bd999a67cf77afa"
+    termsDigest: "sha256:02915c76db800291f2e56b20c5cfbdfb3838cf081134ef58be459cc733f9fd1e"
   }
 ] as const;

@@ -775,6 +775,7 @@ export const RegistryVocab = {
       "anyURI",
       "boolean",
       "dateTime",
+      "decimal",
       "double",
       "integer",
       "string",

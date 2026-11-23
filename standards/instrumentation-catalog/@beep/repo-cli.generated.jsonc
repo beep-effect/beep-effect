@@ -2509,6 +2509,7 @@
     {"name":"Library.selectedCatalog","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.shapesTurtle","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.stageProjection","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Library.tboxTurtle","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.topics","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.validateAlphaImport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Library.validateAlphaxivEvidence","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -694,14 +694,6 @@
       "reason": "Compile-time authoring grammar: datatype is the RegistryCurie | AbsoluteIri closed literal union, which a runtime schema cannot express without widening to string and losing the typo-is-a-compile-error property (D3). The runtime validation lives in the internal TypedLiteralValue schema inside TripleValue."
     },
     {
-      "file": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-      "symbol": "JsonLdDocument",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/ontology",
-      "reason": "Pure projection wire shape over open-keyed JSON-LD nodes (predicate-open facts compact to arbitrary term keys), emitted by a total catamorphism from the schema-first AssembledOntology, which is the modeled truth. Round-trip/inverse parsing stays bounded to beep's own dialect per the exploration No-Go."
-    },
-    {
       "file": "packages/foundation/modeling/ontology/src/internal/ClassificationXml.ts",
       "symbol": "CpcEntry",
       "kind": "plain-data-schema-class",

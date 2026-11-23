@@ -882,7 +882,7 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
     sha256: "3838c992097f72ee8784b6c96194d9879f86f2e08f53ced5a05aa4031750c5ac",
     markers: ["<title>RDF 1.1 Concepts and Abstract Syntax</title>", '<section id="xsd-datatypes"'],
     declaration: { _tag: "SpecDocument", section: "xsd-datatypes", curiePrefix: "xsd" },
-    terms: ["anyURI", "boolean", "dateTime", "double", "integer", "string"],
+    terms: ["anyURI", "boolean", "dateTime", "decimal", "double", "integer", "string"],
   },
 ];
 

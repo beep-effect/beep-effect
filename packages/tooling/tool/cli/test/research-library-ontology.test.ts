@@ -3,7 +3,7 @@ import * as Registry from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { MemoryFileSystem } from "@beep/memfs";
 import { N3ParseTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
-import { toTurtle } from "@beep/ontology";
+import { toDataset } from "@beep/ontology";
 import * as Rdf from "@beep/rdf/Rdf";
 import {
   LibraryAgentLabel,
@@ -22,6 +22,7 @@ import {
   libraryShapes,
   libraryShapesDataset,
   libraryShapesTurtle,
+  libraryTboxTurtle,
   renderLibraryOntology,
 } from "@beep/repo-cli/commands/Research/Library/Library.ontology";
 import {
@@ -36,6 +37,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -315,7 +317,9 @@ describe("research library ontology", () => {
       Effect.fnUntraced(function* () {
         const assembled = yield* assembleLibraryOntology();
         const codec = yield* N3TurtleCodec;
-        const parsed = yield* codec.parse(N3ParseTurtleRequest.make({ source: toTurtle(assembled) }));
+        const tbox = yield* libraryTboxTurtle(assembled);
+        const parsed = yield* codec.parse(N3ParseTurtleRequest.make({ source: tbox }));
+        expect(Equal.equals(parsed.dataset, toDataset(assembled))).toBe(true);
         expect(HashSet.size(parsed.dataset.quads)).toBeGreaterThan(50);
         const cls = (name: string) => O.getOrThrow(A.findFirst(assembled.classes, (c) => c.name === name));
         const subclass = (name: string, target: string) =>
@@ -343,7 +347,8 @@ describe("research library ontology", () => {
         const again = yield* assembleLibraryOntology();
         const second = yield* libraryShapesTurtle(libraryShapes(again));
         expect(second).toBe(first);
-        expect(toTurtle(again)).toBe(toTurtle(assembled));
+        const tboxAgain = yield* libraryTboxTurtle(again);
+        expect(tboxAgain).toBe(tbox);
         const turtle = yield* codec.parse(N3ParseTurtleRequest.make({ source: first }));
         const capture = O.getOrThrow(
           A.findFirst(
