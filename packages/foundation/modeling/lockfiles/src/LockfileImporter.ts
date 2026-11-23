@@ -14,8 +14,6 @@ import type * as O from "effect/Option";
 const $I = $LockfilesId.create("LockfileImporter");
 
 /**
- * One workspace importer's declared dependencies, as the lockfile records them.
- *
  * **Details**
  *
  * - `path` — the importer path relative to the workspace root, `"."` for the

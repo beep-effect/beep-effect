@@ -39,8 +39,6 @@ import type { RunnerServiceRequirements } from "./internal/runnerServices.ts";
 const $I = $GithubActionsId.create("ActionCache");
 
 /**
- * Raised when the runner's cache cannot be read or written.
- *
  * **Example** (Explain a refused cache request)
  *
  * ```ts

@@ -18,8 +18,6 @@ const $I = $ColorsId.create("Domain");
 const identity: FormatterType = String;
 
 /**
- * Browser-safe formatter model.
- *
  * **Details**
  *
  * Browser builds keep the same API shape as the Node entrypoint, but never emit ANSI

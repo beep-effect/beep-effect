@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $OxigraphId.create("Oxigraph.errors");
 
 /**
- * Oxigraph SPARQL driver failure reason.
- *
  * **Example** (Assign queryFailed reason)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const OxigraphSparqlErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link OxigraphSparqlErrorReason}.
- *
  * **Example** (Assign importFailed reason)
  *
  * ```ts
@@ -58,8 +54,6 @@ export const OxigraphSparqlErrorReason = LiteralKit([
 export type OxigraphSparqlErrorReason = typeof OxigraphSparqlErrorReason.Type;
 
 /**
- * Typed Oxigraph SPARQL driver error.
- *
  * **Example** (Make SPARQL error)
  *
  * ```ts

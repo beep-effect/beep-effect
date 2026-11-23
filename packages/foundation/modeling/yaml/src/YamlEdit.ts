@@ -63,10 +63,6 @@ export type YamlSegment = string | number;
 export type YamlPath = ReadonlyArray<YamlSegment>;
 
 /**
- * A range within a YAML document, expressed as a zero-based character
- * `offset` and a `length` in UTF-16 code units. Pass to `YamlFormat.format`
- * to restrict formatting to a region.
- *
  * **Example** (Select a formatting region)
  *
  * ```ts
@@ -101,9 +97,6 @@ export class YamlRange extends S.Opaque<YamlRange, { readonly brand: unique symb
 ) {}
 
 /**
- * A non-mutating text edit: replace the span `[offset, offset + length)` with
- * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
- *
  * **Details**
  *
  * Structurally identical to the edit shape of `@beep/jsonc`,

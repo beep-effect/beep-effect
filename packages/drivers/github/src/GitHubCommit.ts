@@ -33,8 +33,6 @@ import type { PageOptions } from "./Rest.ts";
 const $I = $GithubId.create("GitHubCommit");
 
 /**
- * A commit, projected to what callers read.
- *
  * **Example** (Read a commit subject)
  *
  * ```ts
@@ -123,8 +121,6 @@ export class CommitSummary extends S.Class<CommitSummary, { readonly brand: uniq
 }
 
 /**
- * How a file changed in a commit or a comparison.
- *
  * **Example** (Validate a renamed file status)
  *
  * ```ts
@@ -149,8 +145,6 @@ export const FileStatus = LiteralKit([
 ]).pipe($I.annoteSchema("FileStatus", { description: "How a file changed in a commit or a comparison." }));
 
 /**
- * The values accepted by {@link FileStatus}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -158,8 +152,6 @@ export const FileStatus = LiteralKit([
 export type FileStatus = typeof FileStatus.Type;
 
 /**
- * One changed file.
- *
  * **Example** (Inspect the path before a rename)
  *
  * ```ts
@@ -199,8 +191,6 @@ export class CommitFile extends S.Opaque<CommitFile, { readonly brand: unique sy
 ) {}
 
 /**
- * The result of comparing two refs.
- *
  * **Example** (Inspect commits ahead of base)
  *
  * ```ts
@@ -474,8 +464,6 @@ export class RawFile extends S.Opaque<RawFile, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Companion types for {@link RawFile}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -24,8 +24,6 @@ const htmlMimeTypePattern =
   /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+\/[!#$%&'*+\-.^_`|~0-9A-Za-z]+(?:[\t ]*;[\t ]*[!#$%&'*+\-.^_`|~0-9A-Za-z]+=(?:[!#$%&'*+\-.^_`|~0-9A-Za-z]+|"(?:[\t\u0020-\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\t\u0020-\u007e\u0080-\u00ff])*"))*$/u;
 
 /**
- * Author-valid MIME type string used by HTML attribute conformance checks.
- *
  * **Example** (Decode a MIME type)
  *
  * ```ts import.meta.vitest name="Decode a MIME type"
@@ -58,8 +56,6 @@ export const HtmlMimeType = S.String.check(
 );
 
 /**
- * Branded runtime MIME type represented by {@link HtmlMimeType}.
- *
  * @see {@link HtmlMimeType} for the schema decoder and author-conformance grammar.
  * @category type-level
  * @since 0.0.0
@@ -107,8 +103,6 @@ export const JavaScriptMimeTypeEssence = LiteralKit([
 );
 
 /**
- * Runtime JavaScript MIME essence represented by {@link JavaScriptMimeTypeEssence}.
- *
  * @see {@link JavaScriptMimeTypeEssence} for the exact standard literal registry.
  * @category type-level
  * @since 0.0.0
@@ -119,9 +113,6 @@ const isJavaScriptMimeTypeEssence = S.is(JavaScriptMimeTypeEssence);
 const isJavaScriptMimeTypeEssenceMatch = flow(toAsciiLowerCase, isJavaScriptMimeTypeEssence);
 
 /**
- * Valid MIME string that is not a JavaScript essence match, carried by a
- * script data-block state.
- *
  * **Example** (Decode a script data-block MIME type)
  *
  * ```ts import.meta.vitest name="Decode a script data-block MIME type"
@@ -154,8 +145,6 @@ export const ScriptDataBlockMimeType = HtmlMimeType.check(
 );
 
 /**
- * Branded data-block MIME type represented by {@link ScriptDataBlockMimeType}.
- *
  * @see {@link ScriptDataBlockMimeType} for MIME validation and JavaScript exclusion.
  * @category type-level
  * @since 0.0.0
@@ -169,8 +158,6 @@ const ScriptStateName = LiteralKit(["classic", "module", "importMap", "speculati
 );
 
 /**
- * Author-conforming semantic projection of the HTML script type algorithm.
- *
  * **Details**
  *
  * This additive view leaves {@link Script} and its open string `type` wire
@@ -209,8 +196,6 @@ export const ScriptState = ScriptStateName.toTaggedUnion("state")({
 );
 
 /**
- * Runtime script-state projection represented by {@link ScriptState}.
- *
  * @see {@link ScriptState} for correlated cases, guards, and exhaustive matching.
  * @category type-level
  * @since 0.0.0

@@ -44,8 +44,6 @@ const errorOptionsFromInput = (options: DuckDbErrorContextInput): DuckDbErrorFro
   });
 
 /**
- * Driver operation names surfaced in {@link DuckDbError} diagnostics.
- *
  * **Example** (Log query operation enum)
  *
  * ```ts
@@ -65,8 +63,6 @@ export const DuckDbOperation = LiteralKit(["copyTableToParquet", "query", "run",
 );
 
 /**
- * Runtime TypeScript type represented by {@link DuckDbOperation}.
- *
  * **Example** (Type a query operation)
  *
  * ```ts

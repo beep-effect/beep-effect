@@ -72,8 +72,6 @@ export const PacerAuthOption = LiteralKit(["success", "invalid"]).pipe(
 );
 
 /**
- * Type for {@link PacerAuthOption}.
- *
  * **Example** (Assign invalid auth type)
  *
  * ```ts
@@ -110,8 +108,6 @@ export const PacerBatchOption = LiteralKit(["complete", "failed"]).pipe(
 );
 
 /**
- * Type for {@link PacerBatchOption}.
- *
  * **Example** (Assign failed batch type)
  *
  * ```ts
@@ -148,8 +144,6 @@ export const PacerDeleteReportOption = LiteralKit(["success", "failed"]).pipe(
 );
 
 /**
- * Type for {@link PacerDeleteReportOption}.
- *
  * **Example** (Assign failed delete type)
  *
  * ```ts
@@ -186,8 +180,6 @@ export const PacerLogoutOption = LiteralKit(["success", "invalid"]).pipe(
 );
 
 /**
- * Type for {@link PacerLogoutOption}.
- *
  * **Example** (Assign invalid logout type)
  *
  * ```ts
@@ -224,8 +216,6 @@ export const PacerCasesOption = LiteralKit(["success", "invalid-parameter", "una
 );
 
 /**
- * Type for {@link PacerCasesOption}.
- *
  * **Example** (Assign never-last cases type)
  *
  * ```ts
@@ -242,8 +232,6 @@ export const PacerCasesOption = LiteralKit(["success", "invalid-parameter", "una
 export type PacerCasesOption = typeof PacerCasesOption.Type;
 
 /**
- * Selects which scenario the mock serves.
- *
  * **Example** (Make unauthorized mock options)
  *
  * ```ts

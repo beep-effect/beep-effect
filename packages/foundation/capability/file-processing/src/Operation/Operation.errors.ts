@@ -43,8 +43,6 @@ export const FileProcessingOperationErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link FileProcessingOperationErrorReason}.
- *
  * **Example** (Type and refine reason)
  *
  * ```ts import.meta.vitest name="Type and refine reason"
@@ -60,8 +58,6 @@ export const FileProcessingOperationErrorReason = LiteralKit([
 export type FileProcessingOperationErrorReason = typeof FileProcessingOperationErrorReason.Type;
 
 /**
- * Sanitized file-processing operation error.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

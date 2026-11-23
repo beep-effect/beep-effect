@@ -22,8 +22,6 @@ import * as Str from "effect/String";
 const $I = $HtmlId.create("Html.nodes");
 
 /**
- * A character-data text node.
- *
  * **Example** (Make a text node)
  *
  * ```ts import.meta.vitest name="Make a text node"
@@ -45,8 +43,6 @@ export class Text extends S.Opaque<Text, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Text}.
- *
  * **Example** (Encoded text shape)
  *
  * ```ts import.meta.vitest name="Encoded text shape"
@@ -149,8 +145,6 @@ export const HtmlCommentData = S.String.check(
 );
 
 /**
- * Decoded type of {@link HtmlCommentData}.
- *
  * **Example** (Typed comment value)
  *
  * ```ts
@@ -166,8 +160,6 @@ export const HtmlCommentData = S.String.check(
 export type HtmlCommentData = typeof HtmlCommentData.Type;
 
 /**
- * An HTML comment node (`<!-- ... -->`).
- *
  * **Example** (Make a comment node)
  *
  * ```ts import.meta.vitest name="Make a comment node"
@@ -189,8 +181,6 @@ export class Comment extends S.Opaque<Comment, { readonly brand: unique symbol }
 }
 
 /**
- * Companion namespace for {@link Comment}.
- *
  * **Example** (Encoded comment shape)
  *
  * ```ts import.meta.vitest name="Encoded comment shape"
@@ -214,8 +204,6 @@ export declare namespace Comment {
 }
 
 /**
- * A document type declaration (`<!DOCTYPE html>`).
- *
  * **Example** (Create HTML doctype)
  *
  * ```ts import.meta.vitest name="Create HTML doctype"
@@ -245,8 +233,6 @@ export class Doctype extends S.Opaque<Doctype, { readonly brand: unique symbol }
 }
 
 /**
- * Companion namespace for {@link Doctype}.
- *
  * **Example** (Encoded doctype shape)
  *
  * ```ts import.meta.vitest name="Encoded doctype shape"

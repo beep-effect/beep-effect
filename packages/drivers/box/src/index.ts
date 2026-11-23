@@ -21,8 +21,6 @@
  */
 export * from "./Box.config.ts";
 /**
- * Box technical error exports.
- *
  * **Example** (Import BoxError export)
  *
  * ```ts
@@ -36,8 +34,6 @@ export * from "./Box.config.ts";
  */
 export * from "./Box.errors.ts";
 /**
- * Box payload and success model exports.
- *
  * **Example** (Import file payload model)
  *
  * ```ts
@@ -51,8 +47,6 @@ export * from "./Box.errors.ts";
  */
 export * from "./Box.models.ts";
 /**
- * Box service and Layer exports.
- *
  * **Example** (Import Box service)
  *
  * ```ts

@@ -94,9 +94,6 @@ const decodeIntegrityHash = S.decodeResult(IntegrityHash);
 const decodeSpecifier = S.decodeUnknownExit(DependencySpecifier.FromString);
 
 /**
- * A recorded string split at its pnpm peer-disambiguation suffix:
- * {@link splitPeerSuffix}'s result.
- *
  * **Example** (Validate a split peer suffix)
  *
  * ```ts
@@ -130,8 +127,6 @@ export class PeerSuffixSplit extends S.Opaque<PeerSuffixSplit, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link PeerSuffixSplit}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -218,9 +213,6 @@ export const splitPeerSuffix = (raw: string): PeerSuffixSplit.Encoded =>
       });
 
 /**
- * A `name@version` key split at its separator: {@link splitNameVersion}'s
- * result.
- *
  * **Example** (Validate a split identity)
  *
  * ```ts
@@ -246,8 +238,6 @@ export class NameVersion extends S.Opaque<NameVersion, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link NameVersion}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -496,8 +486,6 @@ export class PeerDeclarations extends S.Opaque<PeerDeclarations, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link PeerDeclarations}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -805,8 +793,6 @@ export class SyntaxFailure extends S.Opaque<SyntaxFailure, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link SyntaxFailure}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -857,8 +843,6 @@ export class ValidationFailure extends S.Opaque<ValidationFailure, { readonly br
 ) {}
 
 /**
- * Companion types for {@link ValidationFailure}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -944,8 +928,6 @@ export class FramingFailure extends S.Opaque<FramingFailure, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link FramingFailure}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -1095,8 +1077,6 @@ export class LockfileFields extends S.Opaque<LockfileFields, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link LockfileFields}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -1159,8 +1139,6 @@ export class WorkspaceEntry extends S.Opaque<WorkspaceEntry, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link WorkspaceEntry}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -1437,8 +1415,6 @@ export class ResolvedEdges extends S.Opaque<ResolvedEdges, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link ResolvedEdges}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0

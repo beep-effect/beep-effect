@@ -23,8 +23,6 @@ const optionalProviderId = S.OptionFromOptionalKey(BoxProviderId).pipe(S.withCon
 const HttpStatus = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 }));
 
 /**
- * Kind of Box item a content-migration action targets.
- *
  * **Example** (Check the file action kind)
  *
  * ```ts
@@ -43,16 +41,12 @@ export const BoxContentActionKind = LiteralKit(["folder", "file"]).pipe(
 );
 
 /**
- * Runtime type for {@link BoxContentActionKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type BoxContentActionKind = typeof BoxContentActionKind.Type;
 
 /**
- * Closed classification of a failed content-migration write.
- *
  * **Details**
  *
  * `name-in-use` is a Box 409 that could not be resolved to an adoptable
@@ -85,8 +79,6 @@ export const BoxContentFailureKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link BoxContentFailureKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -113,8 +105,6 @@ export const BoxContentBlockReason = LiteralKit(["name-conflict", "source-missin
 );
 
 /**
- * Runtime type for {@link BoxContentBlockReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -141,8 +131,6 @@ export const BoxContentNotAttemptedReason = LiteralKit(["budget-exhausted", "dep
 );
 
 /**
- * Runtime type for {@link BoxContentNotAttemptedReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -347,8 +335,6 @@ export const BoxContentActionOutcome = S.Union([
 );
 
 /**
- * Runtime type for {@link BoxContentActionOutcome}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -454,8 +440,6 @@ export const BoxContentMigrationVerdict = LiteralKit(["complete", "incomplete"])
 );
 
 /**
- * Runtime type for {@link BoxContentMigrationVerdict}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -693,8 +677,6 @@ export const BoxContentJournalEntry = S.Union([
 );
 
 /**
- * Runtime type for {@link BoxContentJournalEntry}.
- *
  * @category type-level
  * @since 0.0.0
  */

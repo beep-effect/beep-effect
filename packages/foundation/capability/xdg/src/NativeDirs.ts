@@ -14,8 +14,6 @@ import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
 const $I = $XdgId.create("NativeDirs");
 
 /**
- * The OS-native application directories for one namespace.
- *
  * **Details**
  *
  * On platforms without OS-level separation of these concerns, `config`, `data`

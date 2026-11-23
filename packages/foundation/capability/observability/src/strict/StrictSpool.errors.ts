@@ -31,16 +31,12 @@ export const StrictSpoolOperation = LiteralKit(["key", "open", "append", "replay
 );
 
 /**
- * Runtime type for {@link StrictSpoolOperation}.
- *
  * @category models
  * @since 0.0.0
  */
 export type StrictSpoolOperation = typeof StrictSpoolOperation.Type;
 
 /**
- * The strict spool or its key could not be used.
- *
  * **Details**
  *
  * `message` is a fixed sentence; it never carries a telemetry body or key

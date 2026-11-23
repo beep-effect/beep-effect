@@ -6,8 +6,6 @@
  */
 
 /**
- * Pandoc JSON wire codecs.
- *
  * **Example** (Import decodePandocJsonString codec)
  *
  * ```ts
@@ -72,8 +70,6 @@ export * from "./Pandoc.mapping.ts";
  */
 export * from "./Pandoc.model.ts";
 /**
- * Pandoc compatibility report models.
- *
  * **Example** (Create empty compatibility report)
  *
  * ```ts

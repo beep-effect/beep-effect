@@ -46,8 +46,6 @@ import type { Formatter as FormatterType } from "./internal/ColorsSchema.ts";
 const $I = $ColorsId.create("Domain");
 
 /**
- * Minimal stdout metadata used by ANSI color support detection.
- *
  * **Example** (Create TTY stdout metadata)
  *
  * ```typescript
@@ -75,8 +73,6 @@ export class ProcessLikeStdout extends S.Opaque<ProcessLikeStdout, { readonly br
 ) {}
 
 /**
- * Minimal process-like runtime metadata used by ANSI color support detection.
- *
  * **Example** (Force color via process env)
  *
  * ```typescript

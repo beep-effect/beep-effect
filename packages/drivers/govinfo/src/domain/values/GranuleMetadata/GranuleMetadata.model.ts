@@ -26,8 +26,6 @@ const Md5Hex = S.String.check(
 );
 
 /**
- * Metadata row for a GovInfo granule inside a package.
- *
  * **Details**
  *
  * A granule is a subsection of a GovInfo package, such as a Federal Register

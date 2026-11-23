@@ -12,8 +12,6 @@ import { Sort } from "../Sort/index.ts";
 const $I = $GovinfoId.create("domain/values/SearchBody/SearchBody.model");
 
 /**
- * GovInfo search request body.
- *
  * **Details**
  *
  * The `query` field accepts GovInfo search syntax, including field operators

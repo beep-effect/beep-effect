@@ -66,8 +66,6 @@ export class ProvenanceMapping extends S.Opaque<ProvenanceMapping, { readonly br
 ) {}
 
 /**
- * Provenance mappings for several request-context shapes, one per context key.
- *
  * **Details**
  *
  * Context keys must be distinct, so each key names one context shape. A
@@ -106,8 +104,6 @@ export const ProvenanceMappings = S.Array(ProvenanceMapping).pipe(
 );
 
 /**
- * The type of {@link ProvenanceMappings}.
- *
  * @category models
  * @since 0.0.0
  */

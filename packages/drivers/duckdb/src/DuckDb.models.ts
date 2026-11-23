@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $DuckdbId.create("DuckDb.models");
 
 /**
- * Connection options for opening a DuckDB database instance.
- *
  * **Details**
  *
  * Use `":memory:"` for an in-memory database. File paths are passed to the
@@ -97,8 +95,6 @@ export class DuckDbParquetExport extends S.Opaque<DuckDbParquetExport, { readonl
 ) {}
 
 /**
- * Schema for a JSON-compatible row returned from a DuckDB query.
- *
  * **Details**
  *
  * The native row reader can produce arbitrary JavaScript values. The service
@@ -125,8 +121,6 @@ export const DuckDbRow = S.JsonObject.pipe(
 );
 
 /**
- * Runtime TypeScript type represented by {@link DuckDbRow}.
- *
  * **Example** (Satisfy DuckDbRow type)
  *
  * ```ts
@@ -142,8 +136,6 @@ export const DuckDbRow = S.JsonObject.pipe(
 export type DuckDbRow = typeof DuckDbRow.Type;
 
 /**
- * Schema for the row set returned from a DuckDB query.
- *
  * **Details**
  *
  * `DuckDb.query` decodes the complete array through this schema after the
@@ -171,8 +163,6 @@ export const DuckDbRows = S.Array(DuckDbRow).pipe(
 );
 
 /**
- * Runtime TypeScript type represented by {@link DuckDbRows}.
- *
  * **Example** (Satisfy DuckDbRows type)
  *
  * ```ts
@@ -188,8 +178,6 @@ export const DuckDbRows = S.Array(DuckDbRow).pipe(
 export type DuckDbRows = typeof DuckDbRows.Type;
 
 /**
- * Serializable configuration fields of a DuckDB `effect/sql` client.
- *
  * **Details**
  *
  * The data half of `DuckDbClient.DuckDbClientConfig`. Function and
@@ -263,8 +251,6 @@ export class DuckDbAppendRows extends S.Opaque<DuckDbAppendRows, { readonly bran
 ) {}
 
 /**
- * Directory artifact for EXPORT DATABASE.
- *
  * **Example** (Choose an artifact directory)
  *
  * ```ts
@@ -283,8 +269,6 @@ export class DuckDbDatabaseExport extends S.Opaque<DuckDbDatabaseExport, { reado
 ) {}
 
 /**
- * Directory artifact to restore into an empty database.
- *
  * **Example** (Choose an artifact directory)
  *
  * ```ts

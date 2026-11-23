@@ -85,8 +85,6 @@ const TRUE = HashSet.fromIterable<string>(["true", "True", "TRUE"]);
 const FALSE = HashSet.fromIterable<string>(["false", "False", "FALSE"]);
 
 /**
- * Options for {@link ActionInput.pairs}.
- *
  * **Example** (Validate PairsOptions input)
  *
  * ```ts
@@ -134,8 +132,6 @@ export class PairsOptions extends S.Opaque<PairsOptions, { readonly brand: uniqu
 ) {}
 
 /**
- * The plain-object options accepted by {@link ActionInput.pairs}.
- *
  * @category type-level
  * @since 0.0.0
  */

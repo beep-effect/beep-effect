@@ -25,9 +25,6 @@ import { YamlToken } from "./YamlToken.ts";
 const $I = $YamlId.create("YamlLintRule");
 
 /**
- * Lint diagnostic severities. `"off"` is a config-level disable only and
- * never reaches a diagnostic — a rule set to `"off"` is not run.
- *
  * **Example** (Decode a reporting severity)
  *
  * ```ts
@@ -49,8 +46,6 @@ export const YamlLintSeverity = LiteralKit(["error", "warning"]).pipe(
 );
 
 /**
- * The union of lint severity string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -58,9 +53,6 @@ export const YamlLintSeverity = LiteralKit(["error", "warning"]).pipe(
 export type YamlLintSeverity = typeof YamlLintSeverity.Type;
 
 /**
- * A single lint finding: the reporting rule, its severity, a positioned span
- * and optionally a surgical fix.
- *
  * **Details**
  *
  * Deliberately separate from the engine's `YamlDiagnostic`: that type is the
@@ -227,9 +219,6 @@ export class LintContext extends S.Opaque<LintContext, { readonly brand: unique 
 ) {}
 
 /**
- * One categorical style observation: a single occurrence of a style
- * choice in the source, voting a `value` for an inference `dimension`.
- *
  * **Details**
  *
  * The `dimension` IS the rule's option key and the `value` IS that option's
@@ -309,11 +298,6 @@ export class StyleVote extends S.Opaque<StyleVote, { readonly brand: unique symb
 ) {}
 
 /**
- * One measured style floor: a value the source PROVES is at least
- * `value`, without proving what the configured limit should be — the longest
- * observed line proves `line-length.max` is at least that long, not what it
- * is.
- *
  * **Details**
  *
  * The `_tag` literal discriminates a floor from a {@link StyleVote} at

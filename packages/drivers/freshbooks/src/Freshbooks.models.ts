@@ -22,8 +22,6 @@ import { FreshbooksAccountId, FreshbooksBusinessId } from "./Freshbooks.config.t
 const $I = $FreshbooksId.create("Freshbooks.models");
 
 /**
- * FreshBooks positive-integer client identifier.
- *
  * **Example** (Decode client id)
  *
  * ```ts
@@ -45,8 +43,6 @@ export const FreshbooksClientId = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Type for {@link FreshbooksClientId}.
- *
  * **Example** (Assign client id type)
  *
  * ```ts
@@ -63,8 +59,6 @@ export const FreshbooksClientId = S.Int.check(S.isGreaterThan(0)).pipe(
 export type FreshbooksClientId = typeof FreshbooksClientId.Type;
 
 /**
- * FreshBooks positive-integer invoice identifier.
- *
  * **Example** (Decode invoice id)
  *
  * ```ts
@@ -86,8 +80,6 @@ export const FreshbooksInvoiceId = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Type for {@link FreshbooksInvoiceId}.
- *
  * **Example** (Assign invoice id type)
  *
  * ```ts
@@ -104,8 +96,6 @@ export const FreshbooksInvoiceId = S.Int.check(S.isGreaterThan(0)).pipe(
 export type FreshbooksInvoiceId = typeof FreshbooksInvoiceId.Type;
 
 /**
- * FreshBooks positive-integer payment identifier.
- *
  * **Example** (Decode payment id)
  *
  * ```ts
@@ -127,8 +117,6 @@ export const FreshbooksPaymentId = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Type for {@link FreshbooksPaymentId}.
- *
  * **Example** (Assign payment id type)
  *
  * ```ts
@@ -218,8 +206,6 @@ export class FreshbooksBusiness extends S.Opaque<FreshbooksBusiness, { readonly 
 ) {}
 
 /**
- * A single FreshBooks business membership from the Identity Model.
- *
  * **Example** (Decode business membership)
  *
  * ```ts

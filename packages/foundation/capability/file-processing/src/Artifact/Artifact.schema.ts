@@ -61,8 +61,6 @@ const ArtifactName = S.Union([
 );
 
 /**
- * Stable artifact identifier derived from a content digest.
- *
  * **Example** (Decode ArtifactId from string)
  *
  * ```ts import.meta.vitest name="Decode ArtifactId from string"
@@ -86,8 +84,6 @@ export const ArtifactId = S.TemplateLiteral(["artifact:", Sha256Hex]).pipe(
 );
 
 /**
- * Type for {@link ArtifactId}.
- *
  * **Example** (Annotate decoded ArtifactId type)
  *
  * ```ts import.meta.vitest name="Annotate decoded ArtifactId type"
@@ -131,8 +127,6 @@ export const OperationId = S.TemplateLiteral(["operation:", Sha256Hex]).pipe(
 );
 
 /**
- * Type for {@link OperationId}.
- *
  * **Example** (Annotate decoded OperationId type)
  *
  * ```ts import.meta.vitest name="Annotate decoded OperationId type"
@@ -176,8 +170,6 @@ export const ContentDigest = Sha256PrefixedDigest.pipe(
 );
 
 /**
- * Type for {@link ContentDigest}.
- *
  * **Example** (Annotate decoded ContentDigest type)
  *
  * ```ts import.meta.vitest name="Annotate decoded ContentDigest type"
@@ -216,8 +208,6 @@ export const ArtifactLocatorKind = LiteralKit(["file", "synthetic", "memory"]).p
 );
 
 /**
- * Type for {@link ArtifactLocatorKind}.
- *
  * **Example** (Narrow memory locator kind)
  *
  * ```ts import.meta.vitest name="Narrow memory locator kind"
@@ -233,8 +223,6 @@ export const ArtifactLocatorKind = LiteralKit(["file", "synthetic", "memory"]).p
 export type ArtifactLocatorKind = typeof ArtifactLocatorKind.Type;
 
 /**
- * Runtime-neutral artifact locator.
- *
  * **Example** (Create synthetic artifact locator)
  *
  * ```ts import.meta.vitest name="Create synthetic artifact locator"
@@ -319,8 +307,6 @@ export class SourceArtifact extends S.Opaque<SourceArtifact, { readonly brand: u
 ) {}
 
 /**
- * Lightweight reference to a materialized artifact.
- *
  * **Example** (Construct ArtifactReference instance)
  *
  * ```ts import.meta.vitest name="Construct ArtifactReference instance"

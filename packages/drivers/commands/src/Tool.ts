@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $CommandsId.create("Tool");
 
 /**
- * Where a tool must be found for a resolution to succeed.
- *
  * **Details**
  *
  * `"any"` (the default) accepts either location, preferring the project-local
@@ -52,9 +50,6 @@ export const ToolSource = LiteralKit(["any", "global", "local", "both"]).pipe(
 export type ToolSource = typeof ToolSource.Type;
 
 /**
- * What to do when the global and project-local copies report different
- * versions.
- *
  * **Details**
  *
  * `"preferLocal"` and `"preferGlobal"` pick a winner; `"fail"` refuses to
@@ -90,8 +85,6 @@ export const MismatchPolicy = LiteralKit(["preferLocal", "preferGlobal", "fail"]
 export type MismatchPolicy = typeof MismatchPolicy.Type;
 
 /**
- * Ask the tool for its version with a flag and read the answer out of stdout.
- *
  * **Example** (Configure a version flag and capture pattern)
  *
  * ```ts
@@ -137,8 +130,6 @@ export class VersionFlag extends S.Opaque<VersionFlag, { readonly brand: unique 
 ) {}
 
 /**
- * Ask the tool for JSON and read the version from a dotted path within it.
- *
  * **Example** (Read a version from JSON output)
  *
  * ```ts
@@ -173,8 +164,6 @@ export class VersionJson extends S.Opaque<VersionJson, { readonly brand: unique 
 ) {}
 
 /**
- * Do not ask for a version; presence is the only question.
- *
  * **Example** (Configure a presence-only probe)
  *
  * ```ts
@@ -196,8 +185,6 @@ export class VersionNone extends S.Opaque<VersionNone, { readonly brand: unique 
 ) {}
 
 /**
- * How to learn a tool's version.
- *
  * **Details**
  *
  * A probe is plain data, so it is serializable and inspectable. A capture
@@ -233,8 +220,6 @@ export const VersionProbe = S.Union([VersionFlag, VersionJson, VersionNone]).pip
 export type VersionProbe = typeof VersionProbe.Type;
 
 /**
- * A CLI tool to resolve, and the constraints resolution must satisfy.
- *
  * **Example** (Describe a project-local CLI tool)
  *
  * ```ts

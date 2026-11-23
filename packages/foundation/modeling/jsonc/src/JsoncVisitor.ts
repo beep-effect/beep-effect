@@ -38,8 +38,6 @@ const $I = $JsoncId.create("JsoncVisitor");
 const Span = { offset: S.Finite, length: S.Finite };
 
 /**
- * The discriminated union of JSONC visitor events.
- *
  * **Details**
  *
  * Every variant carries `offset` and `length`; `ObjectBegin`, `ArrayBegin`,
@@ -85,8 +83,6 @@ export const JsoncVisitorEvent = S.TaggedUnion({
 );
 
 /**
- * The decoded shape of {@link JsoncVisitorEvent}.
- *
  * @see {@link JsoncVisitorEvent} for the runtime schema and its case helpers.
  * @category type-level
  * @since 0.0.0

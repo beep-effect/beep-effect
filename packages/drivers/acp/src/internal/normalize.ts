@@ -44,8 +44,6 @@ export const ProtocolGeneration = ProtocolGenerationBase.pipe(
 );
 
 /**
- * Type for {@link ProtocolGeneration}.
- *
  * @since 0.0.0
  */
 export type ProtocolGeneration = typeof ProtocolGeneration.Type;
@@ -435,8 +433,6 @@ export const OpenPromptAcknowledgement = S.StructWithRest(
 );
 
 /**
- * Type for {@link OpenPromptAcknowledgement}.
- *
  * @since 0.0.0
  */
 export type OpenPromptAcknowledgement = typeof OpenPromptAcknowledgement.Type;

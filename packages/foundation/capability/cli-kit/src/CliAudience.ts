@@ -89,16 +89,12 @@ export const AudienceFlagInput = S.Struct(AudienceFlagValues.fields).pipe(
 );
 
 /**
- * The plain audience flags carried by a root command.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type AudienceFlagInput = typeof AudienceFlagInput.Type;
 
 /**
- * Options for {@link CliAudience.flags}.
- *
  * **Example** (Hide shared flags from help)
  *
  * ```ts
@@ -129,8 +125,6 @@ export class CliAudienceFlagsOptions extends S.Opaque<CliAudienceFlagsOptions, {
 ) {}
 
 /**
- * Companion types for {@link CliAudienceFlagsOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

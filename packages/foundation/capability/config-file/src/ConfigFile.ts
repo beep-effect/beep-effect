@@ -34,8 +34,6 @@ import type { ConfigSource, MergeStrategy, NonEmptySources } from "./MergeStrate
 const $I = $ConfigFileId.create("ConfigFile");
 
 /**
- * Indicates that the resolver chain produced no configuration source.
- *
  * **Details**
  *
  * Its own tag, so "no config anywhere" is routable with `Effect.catchTag`
@@ -117,8 +115,6 @@ export class ConfigFileNotFoundError extends S.TaggedError<ConfigFileNotFoundErr
 }
 
 /**
- * Indicates that a config file could not be read from the filesystem.
- *
  * **Details**
  *
  * `cause` preserves the underlying filesystem failure structurally rather than
@@ -181,8 +177,6 @@ export class ConfigFileReadError extends S.TaggedError<ConfigFileReadError, { re
 }
 
 /**
- * Indicates that a config file could not be written to the filesystem.
- *
  * **Example** (Inspect a file write failure)
  *
  * ```ts
@@ -242,9 +236,6 @@ export class ConfigFileWriteError extends S.TaggedError<ConfigFileWriteError, { 
 }
 
 /**
- * Indicates that {@link ConfigFileShape.save} or {@link ConfigFileShape.update}
- * was called on a service configured without a `defaultPath`.
- *
  * **Details**
  *
  * It is distinct by tag from a real {@link ConfigFileWriteError}, so a caller
@@ -298,9 +289,6 @@ export class ConfigDefaultPathMissingError extends S.TaggedError<
 }
 
 /**
- * Indicates that parsed config content did not satisfy the schema, or that a
- * caller-supplied `validate` rejected it.
- *
  * **Details**
  *
  * `issue` carries the **structured** schema failure — at runtime a
@@ -452,8 +440,6 @@ export type ConfigWriteError = ConfigFileWriteError | ConfigCodecError | ConfigV
 export type ConfigEncodeError = ConfigCodecError | ConfigValidationError;
 
 /**
- * Options shared by {@link ConfigFileShape.encode} and {@link ConfigFileShape.write}.
- *
  * **Example** (Prefix a TOML schema directive)
  *
  * ```ts

@@ -114,8 +114,6 @@ export const LexicalConformanceResult = S.Union([
 );
 
 /**
- * Runtime result represented by {@link LexicalConformanceResult}.
- *
  * @see {@link LexicalConformanceResult} for constructors, guards, and exhaustive matching.
  * @category diagnostics
  * @since 0.0.0

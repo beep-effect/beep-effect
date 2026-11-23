@@ -38,8 +38,6 @@ export const BoxResourceKind = LiteralKit(["folder", "collaboration", "webhook",
 );
 
 /**
- * Runtime type for {@link BoxResourceKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -184,8 +182,6 @@ export const BoxBlockReason = S.Union([BoxBlockedByEntitlement, BoxBlockedByAmbi
 );
 
 /**
- * Runtime type for {@link BoxBlockReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -235,8 +231,6 @@ export class BoxNoopAction extends S.Opaque<BoxNoopAction, { readonly brand: uni
 ) {}
 
 /**
- * Plan action creating one missing Box resource.
- *
  * **Example** (Create a create action)
  *
  * ```ts
@@ -256,8 +250,6 @@ export class BoxCreateAction extends S.Opaque<BoxCreateAction, { readonly brand:
 ) {}
 
 /**
- * Plan action updating an owned Box resource in place.
- *
  * **Example** (Create an update action)
  *
  * ```ts
@@ -347,8 +339,6 @@ export class BoxBlockedAction extends S.Opaque<BoxBlockedAction, { readonly bran
 ) {}
 
 /**
- * Tagged union of every Box plan action class.
- *
  * **Example** (Inspect the action schema)
  *
  * ```ts
@@ -370,8 +360,6 @@ export const BoxPlanAction = S.Union([
 ]).pipe($I.annoteSchema("BoxPlanAction", { description: "Tagged Box provisioning plan action." }));
 
 /**
- * Runtime type for {@link BoxPlanAction}.
- *
  * @category type-level
  * @since 0.0.0
  */

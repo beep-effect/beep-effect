@@ -17,8 +17,6 @@ import { ViewName } from "./View.schemas.ts";
 const $I = $TechnicalDrawingId.create("Manifest.schemas");
 
 /**
- * Lowercase hex SHA-256 digest.
- *
  * **Example** (The empty-string digest)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const Sha256Hex = S.String.check(
 );
 
 /**
- * Type for {@link Sha256Hex}.
- *
  * **Example** (Annotate a digest)
  *
  * ```ts
@@ -239,8 +235,6 @@ export class OmissionProof extends S.Opaque<OmissionProof, { readonly brand: uni
 ) {}
 
 /**
- * An operator label font file a render outlined, with its sha256.
- *
  * **Example** (A recorded font file)
  *
  * ```ts
@@ -266,9 +260,6 @@ export class LabelFontRecord extends S.Opaque<LabelFontRecord, { readonly brand:
 ) {}
 
 /**
- * A font a render embedded for text labels: the requested family, the file it
- * resolved to, and the file's sha256.
- *
  * **Example** (A pinned Arial)
  *
  * ```ts

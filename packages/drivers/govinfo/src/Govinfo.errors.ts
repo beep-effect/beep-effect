@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $GovinfoId.create("Govinfo.errors");
 
 /**
- * Technical error reasons emitted by the GovInfo REST API driver.
- *
  * **Example** (Log AST reason constant)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const GovinfoErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link GovinfoErrorReason}.
- *
  * **Example** (Type a transport reason)
  *
  * ```ts
@@ -57,8 +53,6 @@ export const GovinfoErrorReason = LiteralKit([
 export type GovinfoErrorReason = typeof GovinfoErrorReason.Type;
 
 /**
- * Numeric HTTP status code carried by GovInfo technical errors.
- *
  * **Example** (Decode HTTP status code)
  *
  * ```ts
@@ -79,8 +73,6 @@ export const GovinfoHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.is
 );
 
 /**
- * Type for {@link GovinfoHttpStatus}.
- *
  * **Example** (Type a decoded status)
  *
  * ```ts
@@ -98,8 +90,6 @@ export const GovinfoHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.is
 export type GovinfoHttpStatus = typeof GovinfoHttpStatus.Type;
 
 /**
- * Options used when constructing {@link GovinfoError} instances.
- *
  * **Example** (Make options with status)
  *
  * ```ts
@@ -137,8 +127,6 @@ export class GovinfoErrorOptions extends S.Opaque<GovinfoErrorOptions, { readonl
 ) {}
 
 /**
- * Technical failure raised by the GovInfo REST API driver boundary.
- *
  * **Example** (Create config failure error)
  *
  * ```ts

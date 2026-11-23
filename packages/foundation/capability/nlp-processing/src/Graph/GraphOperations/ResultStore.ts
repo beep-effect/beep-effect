@@ -50,8 +50,6 @@ const AnyGraphNode = S.Struct({
 );
 
 /**
- * Type-erased operation result stored in the cache.
- *
  * **Gotchas**
  *
  * The result store is heterogeneous: one execution may cache string children
@@ -92,8 +90,6 @@ export class AnyOperationResult extends S.Opaque<AnyOperationResult, { readonly 
 // =============================================================================
 
 /**
- * Cache key pairing the operation name with the source node id.
- *
  * **Details**
  *
  * Re-running the same operation against the same leaf can reuse a cached result.

@@ -40,8 +40,6 @@ export const VerifiedSpanErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link VerifiedSpanErrorReason}.
- *
  * **Example** (Annotate error reason type)
  *
  * ```ts
@@ -57,8 +55,6 @@ export const VerifiedSpanErrorReason = LiteralKit([
 export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
 
 /**
- * Sanitized strict-span mapping failure.
- *
  * **Example** (Create error from reason)
  *
  * ```ts import.meta.vitest name="Create error from reason"

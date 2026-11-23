@@ -177,8 +177,6 @@ const completeLines = (tail: AcpStderrTail): string =>
     : tail.text;
 
 /**
- * Options for {@link collectStderrTail}.
- *
  * **Details**
  *
  * - `homeDirectories` are replaced with `~` in every excerpt.

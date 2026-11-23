@@ -82,8 +82,6 @@ const UnknownSessionUpdateFields = S.Struct({
 });
 
 /**
- * Content block or tool-call content whose `type` the client does not understand.
- *
  * **Details**
  *
  * Generation 2 lets agents send content types added after the pinned schema. The client keeps
@@ -112,8 +110,6 @@ export const UnknownContent = UnknownContentFields.pipe(
 );
 
 /**
- * Type for {@link UnknownContent}.
- *
  * **Example** (Read the original content type)
  *
  * ```ts
@@ -129,8 +125,6 @@ export const UnknownContent = UnknownContentFields.pipe(
 export type UnknownContent = typeof UnknownContent.Type;
 
 /**
- * Session update whose `sessionUpdate` kind the client does not understand.
- *
  * **Example** (Make an unknown session update)
  *
  * ```ts
@@ -154,8 +148,6 @@ export const UnknownSessionUpdate = UnknownSessionUpdateFields.pipe(
 );
 
 /**
- * Type for {@link UnknownSessionUpdate}.
- *
  * **Example** (Read the original update kind)
  *
  * ```ts
@@ -173,8 +165,6 @@ export type UnknownSessionUpdate = typeof UnknownSessionUpdate.Type;
 // --- Legacy model selection (removed unstable API) ----------------------------------------------
 
 /**
- * Model an older generation-1 agent offers through the removed `session/set_model` API.
- *
  * **Example** (Make model info)
  *
  * ```ts
@@ -203,8 +193,6 @@ export class ModelInfo extends S.Opaque<ModelInfo, { readonly brand: unique symb
 ) {}
 
 /**
- * Current and available models reported by an older generation-1 agent.
- *
  * **Example** (Make a model state)
  *
  * ```ts
@@ -233,8 +221,6 @@ export class SessionModelState extends S.Opaque<SessionModelState, { readonly br
 ) {}
 
 /**
- * Payload of the legacy `session/set_model` request.
- *
  * **Example** (Make a set-model request)
  *
  * ```ts
@@ -260,8 +246,6 @@ export class SetSessionModelRequest extends S.Opaque<SetSessionModelRequest, { r
 ) {}
 
 /**
- * Result of the legacy `session/set_model` request.
- *
  * **Example** (Make an empty set-model response)
  *
  * ```ts
@@ -282,9 +266,6 @@ export class SetSessionModelResponse extends S.Opaque<SetSessionModelResponse, {
 ) {}
 
 /**
- * Nested elicitation result that native agents expect from the legacy `session/elicitation`
- * methods.
- *
  * **Details**
  *
  * The client's elicitation handler returns the flat `CreateElicitationResponse`. For the legacy
@@ -321,8 +302,6 @@ const [V2TextContent, V2ImageContent, V2AudioContent, V2ResourceLinkContent, V2R
   V2.ContentBlock.members;
 
 /**
- * Content block as the client delivers it.
- *
  * **Details**
  *
  * The five known generation-2 content types, the generation-1 content block, or `UnknownContent`
@@ -355,8 +334,6 @@ export const ContentBlock = S.Union([
 );
 
 /**
- * Type for {@link ContentBlock}.
- *
  * **Example** (Read a content block type)
  *
  * ```ts
@@ -374,8 +351,6 @@ export type ContentBlock = typeof ContentBlock.Type;
 const [V2TextCommandInput] = V2.AvailableCommandInput.members;
 
 /**
- * Slash command an agent advertises, with a text input hint only.
- *
  * **Details**
  *
  * Generation-1 hints (`{ hint }`) are rewritten to the generation-2 `{ type: "text", hint }`
@@ -411,8 +386,6 @@ export const AvailableCommand = S.StructWithRest(
 );
 
 /**
- * Type for {@link AvailableCommand}.
- *
  * **Example** (Read a command name)
  *
  * ```ts
@@ -461,8 +434,6 @@ const EnvVarAuthMethod = S.StructWithRest(
 );
 
 /**
- * Auth method as the client delivers it (generation-1 `id` keys).
- *
  * **Details**
  *
  * A terminal method (environment as a record), an environment-variable method, or an
@@ -488,8 +459,6 @@ export const AuthMethod = S.Union([V1TerminalAuthMethod, EnvVarAuthMethod, V1.Au
 );
 
 /**
- * Type for {@link AuthMethod}.
- *
  * **Example** (Read an auth method id)
  *
  * ```ts
@@ -505,8 +474,6 @@ export const AuthMethod = S.Union([V1TerminalAuthMethod, EnvVarAuthMethod, V1.Au
 export type AuthMethod = typeof AuthMethod.Type;
 
 /**
- * Initialize result as the client delivers it (generation-1 shape).
- *
  * **Details**
  *
  * A generation-2 result (`info`, `capabilities`) is projected onto `agentInfo` and
@@ -541,8 +508,6 @@ export const InitializeResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link InitializeResponse}.
- *
  * **Example** (Read the agent info)
  *
  * ```ts
@@ -562,8 +527,6 @@ export type InitializeResponse = typeof InitializeResponse.Type;
 const [V1SelectConfigOption, V1BooleanConfigOption] = V1.SessionConfigOption.members;
 
 /**
- * Choices of a `select` config option, flat or grouped.
- *
  * **Details**
  *
  * Generation 1 keys a group by `group` and generation 2 by `groupId`; both group shapes are
@@ -588,8 +551,6 @@ export const SessionConfigSelectOptions = S.Union([V2.SessionConfigSelectOptions
 );
 
 /**
- * Type for {@link SessionConfigSelectOptions}.
- *
  * **Example** (Count the choices)
  *
  * ```ts
@@ -618,8 +579,6 @@ const SelectConfigOption = S.StructWithRest(
 );
 
 /**
- * Session config option as the client delivers it, keyed by `id`.
- *
  * **Details**
  *
  * A `select` option (flat or grouped choices) or a `boolean` option. Generation-2 options are
@@ -646,8 +605,6 @@ export const SessionConfigOption = S.Union([SelectConfigOption, V1BooleanConfigO
 );
 
 /**
- * Type for {@link SessionConfigOption}.
- *
  * **Example** (Read the option id)
  *
  * ```ts
@@ -667,8 +624,6 @@ const ConfigOptions = SessionConfigOption.pipe(S.Array, S.NullOr, S.optionalKey)
 });
 
 /**
- * Result of `session/set_config_option` as the client delivers it.
- *
  * **Example** (Check a set-config-option result)
  *
  * ```ts
@@ -697,8 +652,6 @@ export const SetSessionConfigOptionResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link SetSessionConfigOptionResponse}.
- *
  * **Example** (Count the options)
  *
  * ```ts
@@ -758,8 +711,6 @@ export const McpServer = S.Union([LegacyStdioMcpServer, V2.McpServer]).pipe(
 );
 
 /**
- * Type for {@link McpServer}.
- *
  * **Example** (Read a server name)
  *
  * ```ts
@@ -779,8 +730,6 @@ const McpServers = S.Array(McpServer).annotateKey({
 });
 
 /**
- * Payload of `session/new`.
- *
  * **Example** (Check a new-session request)
  *
  * ```ts
@@ -803,8 +752,6 @@ export const NewSessionRequest = S.StructWithRest(
 );
 
 /**
- * Type for {@link NewSessionRequest}.
- *
  * **Example** (Read the working directory)
  *
  * ```ts
@@ -820,8 +767,6 @@ export const NewSessionRequest = S.StructWithRest(
 export type NewSessionRequest = typeof NewSessionRequest.Type;
 
 /**
- * Payload of `session/resume`.
- *
  * **Example** (Check a resume request)
  *
  * ```ts
@@ -844,8 +789,6 @@ export const ResumeSessionRequest = S.StructWithRest(
 );
 
 /**
- * Type for {@link ResumeSessionRequest}.
- *
  * **Example** (Read the resumed session id)
  *
  * ```ts
@@ -886,8 +829,6 @@ export const LoadSessionRequest = S.StructWithRest(
 );
 
 /**
- * Type for {@link LoadSessionRequest}.
- *
  * **Example** (Read the loaded session id)
  *
  * ```ts
@@ -903,8 +844,6 @@ export const LoadSessionRequest = S.StructWithRest(
 export type LoadSessionRequest = typeof LoadSessionRequest.Type;
 
 /**
- * Payload of `session/fork`.
- *
  * **Example** (Check a fork request)
  *
  * ```ts
@@ -927,8 +866,6 @@ export const ForkSessionRequest = S.StructWithRest(
 );
 
 /**
- * Type for {@link ForkSessionRequest}.
- *
  * **Example** (Read the forked session id)
  *
  * ```ts
@@ -948,8 +885,6 @@ const LegacyModels = SessionModelState.pipe(S.NullOr, S.optionalKey).annotateKey
 });
 
 /**
- * Result of `session/new` (generation-1 shape plus the legacy `models`).
- *
  * **Example** (Check a new-session result)
  *
  * ```ts
@@ -972,8 +907,6 @@ export const NewSessionResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link NewSessionResponse}.
- *
  * **Example** (Read the new session id)
  *
  * ```ts
@@ -989,8 +922,6 @@ export const NewSessionResponse = S.StructWithRest(
 export type NewSessionResponse = typeof NewSessionResponse.Type;
 
 /**
- * Result of `session/load` (generation-1 shape plus the legacy `models`).
- *
  * **Example** (Check an empty load result)
  *
  * ```ts
@@ -1013,8 +944,6 @@ export const LoadSessionResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link LoadSessionResponse}.
- *
  * **Example** (Read the session modes)
  *
  * ```ts
@@ -1030,8 +959,6 @@ export const LoadSessionResponse = S.StructWithRest(
 export type LoadSessionResponse = typeof LoadSessionResponse.Type;
 
 /**
- * Result of `session/resume` (generation-1 shape plus the legacy `models`).
- *
  * **Example** (Check an empty resume result)
  *
  * ```ts
@@ -1054,8 +981,6 @@ export const ResumeSessionResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link ResumeSessionResponse}.
- *
  * **Example** (Read the config options)
  *
  * ```ts
@@ -1071,8 +996,6 @@ export const ResumeSessionResponse = S.StructWithRest(
 export type ResumeSessionResponse = typeof ResumeSessionResponse.Type;
 
 /**
- * Result of `session/fork` (generation-1 shape plus the legacy `models`).
- *
  * **Example** (Check a fork result)
  *
  * ```ts
@@ -1095,8 +1018,6 @@ export const ForkSessionResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link ForkSessionResponse}.
- *
  * **Example** (Read the forked session id)
  *
  * ```ts
@@ -1112,8 +1033,6 @@ export const ForkSessionResponse = S.StructWithRest(
 export type ForkSessionResponse = typeof ForkSessionResponse.Type;
 
 /**
- * Payload of `session/prompt`.
- *
  * **Details**
  *
  * `prompt` accepts every content block the client delivers, so a caller can re-send what it
@@ -1147,8 +1066,6 @@ export const PromptRequest = S.StructWithRest(
 );
 
 /**
- * Type for {@link PromptRequest}.
- *
  * **Example** (Count prompt blocks)
  *
  * ```ts
@@ -1194,8 +1111,6 @@ export const StopReason = S.Union([KnownStopReason, S.String]).pipe(
 );
 
 /**
- * Type for {@link StopReason}.
- *
  * **Example** (Default a missing stop reason)
  *
  * ```ts
@@ -1211,8 +1126,6 @@ export const StopReason = S.Union([KnownStopReason, S.String]).pipe(
 export type StopReason = typeof StopReason.Type;
 
 /**
- * Result of `session/prompt` as the client delivers it.
- *
  * **Details**
  *
  * A generation-1 agent returns it from `session/prompt`; for a generation-2 agent the client
@@ -1248,8 +1161,6 @@ export const PromptResponse = S.StructWithRest(
 );
 
 /**
- * Type for {@link PromptResponse}.
- *
  * **Example** (Read the stop reason)
  *
  * ```ts
@@ -1281,8 +1192,6 @@ const ContentToolCallContent = S.StructWithRest(
 );
 
 /**
- * Content a tool call produces.
- *
  * **Details**
  *
  * A content block, a generation-1 text diff (`path`, `oldText`, `newText`), a generation-2
@@ -1313,8 +1222,6 @@ export const ToolCallContent = S.Union([
 );
 
 /**
- * Type for {@link ToolCallContent}.
- *
  * **Example** (Read a tool-call content type)
  *
  * ```ts
@@ -1358,8 +1265,6 @@ export const ToolCallUpdate = S.StructWithRest(
 );
 
 /**
- * Type for {@link ToolCallUpdate}.
- *
  * **Example** (Read the tool-call id)
  *
  * ```ts
@@ -1535,8 +1440,6 @@ export const IdleStateUpdate = S.StructWithRest(
 );
 
 /**
- * Type for {@link IdleStateUpdate}.
- *
  * **Example** (Read the stop reason)
  *
  * ```ts
@@ -1552,8 +1455,6 @@ export const IdleStateUpdate = S.StructWithRest(
 export type IdleStateUpdate = typeof IdleStateUpdate.Type;
 
 /**
- * Session update as the client delivers it.
- *
  * **Details**
  *
  * The union of both generations' kinds: message chunks (the `messageId` generation 2 requires is
@@ -1628,8 +1529,6 @@ export const SessionUpdate = S.Union([
 );
 
 /**
- * Type for {@link SessionUpdate}.
- *
  * **Example** (Read the update kind)
  *
  * ```ts
@@ -1645,8 +1544,6 @@ export const SessionUpdate = S.Union([
 export type SessionUpdate = typeof SessionUpdate.Type;
 
 /**
- * Params of the `session/update` notification as the client delivers them.
- *
  * **Example** (Check a session notification)
  *
  * ```ts
@@ -1676,8 +1573,6 @@ export const SessionNotification = S.StructWithRest(
 );
 
 /**
- * Type for {@link SessionNotification}.
- *
  * **Example** (Read the session id)
  *
  * ```ts
@@ -1695,8 +1590,6 @@ export type SessionNotification = typeof SessionNotification.Type;
 // --- Permissions ---------------------------------------------------------------------------------
 
 /**
- * Params of `session/request_permission` as the client delivers them.
- *
  * **Details**
  *
  * `toolCall` is always present. For a generation-2 request it is the subject's tool call, or a
@@ -1737,8 +1630,6 @@ export const RequestPermissionRequest = S.StructWithRest(
 );
 
 /**
- * Type for {@link RequestPermissionRequest}.
- *
  * **Example** (Read the tool-call id)
  *
  * ```ts

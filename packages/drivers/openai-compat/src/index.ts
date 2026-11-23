@@ -6,8 +6,6 @@
  */
 
 /**
- * OpenAI-compatible schema model exports.
- *
  * **Example** (Build chat completion request)
  *
  * ```ts

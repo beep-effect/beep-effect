@@ -59,8 +59,6 @@ export const SIGSTORE_BUNDLE_V0_3_MEDIA_TYPE = "application/vnd.dev.sigstore.bun
 export const IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json" as const;
 
 /**
- * A signed Sigstore bundle: the wire form of an attestation.
- *
  * **Details**
  *
  * `verificationMaterial` and `dsseEnvelope` are `unknown` because their shapes
@@ -114,8 +112,6 @@ export class SigstoreBundle extends S.Opaque<SigstoreBundle, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link SigstoreBundle}.
- *
  * @category type-level
  * @since 0.0.0
  */

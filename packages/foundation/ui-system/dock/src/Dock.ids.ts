@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $DockId.create("Dock.ids");
 
 /**
- * Branded stable identity for one panel instance.
- *
  * **Example** (Make and check PanelId)
  *
  * ```ts import.meta.vitest name="Make and check PanelId"
@@ -51,8 +49,6 @@ export const PanelId = S.NonEmptyString.pipe(
 export type PanelId = typeof PanelId.Type;
 
 /**
- * Branded stable identity for a non-empty tab group.
- *
  * **Example** (Make and check GroupId)
  *
  * ```ts import.meta.vitest name="Make and check GroupId"
@@ -90,8 +86,6 @@ export const GroupId = S.NonEmptyString.pipe(
 export type GroupId = typeof GroupId.Type;
 
 /**
- * Branded stable identity for a binary layout split.
- *
  * **Example** (Make and check SplitId)
  *
  * ```ts import.meta.vitest name="Make and check SplitId"

@@ -18,8 +18,6 @@ import type { Button, Input } from "./Html.model.ts";
 const $I = $HtmlId.create("Html.form-control");
 
 /**
- * Closed semantic projection of an input element's effective type state.
- *
  * **Details**
  *
  * This view is additive: it does not replace or re-encode {@link Input}. The
@@ -70,8 +68,6 @@ export const InputState = HtmlInputStateName.toTaggedUnion("state")({
 );
 
 /**
- * Runtime input-state projection represented by {@link InputState}.
- *
  * @see {@link InputState} for case constructors, guards, and exhaustive matching.
  * @category models
  * @since 0.0.0
@@ -206,8 +202,6 @@ const ButtonNonSubmitBasis = LiteralKit([
 );
 
 /**
- * Contextual semantic projection of an HTML button's effective submit state.
- *
  * **Details**
  *
  * The two `state` cases correlate their `basis` values at the type and decode
@@ -246,8 +240,6 @@ export const ButtonState = ButtonStateName.toTaggedUnion("state")({
 );
 
 /**
- * Runtime button-state projection represented by {@link ButtonState}.
- *
  * @see {@link ButtonState} for correlated case constructors and exhaustive matching.
  * @category models
  * @since 0.0.0

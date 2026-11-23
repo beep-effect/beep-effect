@@ -92,9 +92,6 @@ const $I = $MarkdownId.create("MarkdownFormat");
 export type MarkdownRangeLike = MarkdownRange | { readonly offset: number; readonly length: number };
 
 /**
- * The two ways CommonMark spells a code block: `fenced` (a backtick or tilde
- * fence) and `indented` (four-space indentation).
- *
  * **Details**
  *
  * A formatting target for {@link MarkdownFormattingOptions}, not a node
@@ -123,8 +120,6 @@ export const CodeBlockStyle = LiteralKit(["fenced", "indented"]).pipe(
 );
 
 /**
- * The union of all code-block-style string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -132,11 +127,6 @@ export const CodeBlockStyle = LiteralKit(["fenced", "indented"]).pipe(
 export type CodeBlockStyle = typeof CodeBlockStyle.Type;
 
 /**
- * Options controlling formatting: which concrete-syntax markers to normalize,
- * plus the parse knobs (`dialect`, `frontmatter`) the formatter parses the
- * source with (same defaults as `Markdown.parse`). Every marker option is
- * optional and independent; an absent option normalizes nothing.
- *
  * **Details**
  *
  * Scope is marker normalization only — heading style, bullet
@@ -233,8 +223,6 @@ export class MarkdownFormattingOptions extends S.Opaque<MarkdownFormattingOption
 ) {}
 
 /**
- * Companion types for {@link MarkdownFormattingOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -251,8 +239,6 @@ export declare namespace MarkdownFormattingOptions {
 }
 
 /**
- * Error codes `MarkdownFormat.modify` can fail with.
- *
  * **Example** (Validate a replacement failure code)
  *
  * ```ts
@@ -278,8 +264,6 @@ export const MarkdownModificationErrorCode = LiteralKit([
 );
 
 /**
- * The union of all modification-error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -287,15 +271,6 @@ export const MarkdownModificationErrorCode = LiteralKit([
 export type MarkdownModificationErrorCode = typeof MarkdownModificationErrorCode.Type;
 
 /**
- * Raised when `MarkdownFormat.modify` cannot perform the requested
- * replacement: the target node is not in the document (`NodeNotInDocument`),
- * the target kind or splice context is outside the supported scope
- * (`UnsupportedTarget`), the fragment's content category does not fit the
- * target's slot (`FragmentCategoryMismatch`), or the fragment trips the
- * stringifier's hardening guard (`FragmentUnrenderable`). Carries the typed
- * `code` plus the target's `offset`/`length` where known — never a collapsed
- * reason string alone.
- *
  * **Example** (Inspect a typed replacement failure)
  *
  * ```ts

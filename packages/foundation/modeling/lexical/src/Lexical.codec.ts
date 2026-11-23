@@ -104,8 +104,6 @@ export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId
 );
 
 /**
- * Type for {@link ArtifactUri}.
- *
  * **Example** (Accept ArtifactUri type)
  *
  * ```ts

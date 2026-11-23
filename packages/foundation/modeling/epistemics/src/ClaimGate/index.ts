@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim gate verdict model exports.
- *
  * **Example** (Decode admitted ClaimGateResult)
  *
  * ```ts

@@ -38,8 +38,6 @@ const PositiveInteger = S.Int.check(S.isGreaterThan(0));
 const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
 
 /**
- * Dataset formats supported by the file and URL loaders.
- *
  * **Example** (Decoding a dataset format)
  *
  * ```ts
@@ -64,8 +62,6 @@ export const DatasetFormat = DatasetFormatBase.pipe(
 );
 
 /**
- * Type for {@link DatasetFormat}.
- *
  * **Example** (Typing a dataset format)
  *
  * ```ts
@@ -83,8 +79,6 @@ export type DatasetFormat = typeof DatasetFormat.Type;
 const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
 
 /**
- * Provenance source channels supported by dataset loaders.
- *
  * **Example** (Decoding a source type)
  *
  * ```ts
@@ -109,8 +103,6 @@ export const DatasetSourceType = DatasetSourceTypeBase.pipe(
 );
 
 /**
- * Type for {@link DatasetSourceType}.
- *
  * **Example** (Typing a source type)
  *
  * ```ts
@@ -126,8 +118,6 @@ export const DatasetSourceType = DatasetSourceTypeBase.pipe(
 export type DatasetSourceType = typeof DatasetSourceType.Type;
 
 /**
- * Provenance metadata returned alongside every loaded dataset.
- *
  * **Example** (Reading dataset provenance)
  *
  * ```ts
@@ -177,8 +167,6 @@ export class DatasetMeta extends S.Opaque<DatasetMeta, { readonly brand: unique 
 ) {}
 
 /**
- * A loaded dataset payload paired with its {@link DatasetMeta}.
- *
  * **Example** (Wrapping a loaded payload)
  *
  * ```ts
@@ -215,8 +203,6 @@ export const DatasetResult = <Data extends S.Top>(data: Data) =>
   );
 
 /**
- * Options for loading a dataset as raw text.
- *
  * **Example** (Configuring a text load)
  *
  * ```ts
@@ -251,8 +237,6 @@ export class DatasetLoadTextOptions extends S.Opaque<DatasetLoadTextOptions, { r
 ) {}
 
 /**
- * Options for loading a dataset as text lines.
- *
  * **Example** (Configuring a line load)
  *
  * ```ts
@@ -287,8 +271,6 @@ export class DatasetLoadLinesOptions extends S.Opaque<DatasetLoadLinesOptions, {
 ) {}
 
 /**
- * Options for loading a dataset as JSONL records.
- *
  * **Example** (Configuring a JSONL load)
  *
  * ```ts
@@ -320,8 +302,6 @@ export class DatasetLoadJsonlOptions extends S.Opaque<DatasetLoadJsonlOptions, {
 ) {}
 
 /**
- * Options for loading a dataset as a single JSON document.
- *
  * **Example** (Configuring a JSON load)
  *
  * ```ts
@@ -350,8 +330,6 @@ export class DatasetLoadJsonOptions extends S.Opaque<DatasetLoadJsonOptions, { r
 ) {}
 
 /**
- * Type for {@link DatasetResult}.
- *
  * **Example** (Typing a load result)
  *
  * ```ts
@@ -378,8 +356,6 @@ export class DatasetLoadJsonOptions extends S.Opaque<DatasetLoadJsonOptions, { r
 export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.Schema<A>>>>;
 
 /**
- * Structured failure raised when a remote fetch or JSON decode fails.
- *
  * **Example** (Handling a load failure)
  *
  * ```ts

@@ -48,8 +48,6 @@ const ContentEditableVariant = LiteralKit(["document", "compact"]).pipe(
 type ContentEditableVariant = typeof ContentEditableVariant.Type;
 
 /**
- * Props for the Lexical content-editable surface and its padding-aligned placeholder.
- *
  * **Example** (Configure a compact composer surface)
  *
  * ```ts

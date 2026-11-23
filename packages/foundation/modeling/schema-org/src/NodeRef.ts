@@ -17,9 +17,6 @@ const $I = $SchemaOrgId.create("NodeRef");
 const JsonString = S.fromJsonString(S.String);
 
 /**
- * Indicates that a string is not usable as a JSON-LD node identifier: it is
- * empty, contains whitespace, or contains a control character.
- *
  * **Details**
  *
  * The rule behind this error is deliberately loose. An `@id` is an IRI in the
@@ -148,8 +145,6 @@ export const NodeId = S.String.check(
 export type NodeId = typeof NodeId.Type;
 
 /**
- * A reference from one node to another: the `{"@id": "…"}` form.
- *
  * **Details**
  *
  * Every node-valued property in this package holds a `NodeRef` rather than an

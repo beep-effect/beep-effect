@@ -13,8 +13,6 @@ import { IsoInstant } from "./Scalars.ts";
 const $I = $GateReportId.create("GateRecord");
 
 /**
- * The record-file envelope, versioned `gate-report/v1`.
- *
  * **Details**
  *
  * Replaces upstream `RunReportFile` (`schemaVersion: 1`, many reports): a
@@ -52,8 +50,6 @@ export class GateRecord extends S.Opaque<GateRecord, { readonly brand: unique sy
 ) {}
 
 /**
- * The record file's JSON text codec.
- *
  * **Example** (Encode a record to JSON text)
  *
  * ```ts

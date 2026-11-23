@@ -46,8 +46,6 @@ export const DrawingErrorReason = DrawingErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link DrawingErrorReason}.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts
@@ -70,8 +68,6 @@ const causeText = (cause: unknown): O.Option<string> =>
 const isDrawingError = (cause: unknown): cause is DrawingError => S.is(DrawingError)(cause);
 
 /**
- * Failure raised by the technical-drawing capability.
- *
  * **Example** (Create an error from an unknown cause)
  *
  * ```ts

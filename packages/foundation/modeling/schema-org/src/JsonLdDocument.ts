@@ -31,8 +31,6 @@ const JsonString = S.fromJsonString(S.String);
 const JsonValue = S.fromJsonString(S.Json);
 
 /**
- * Indicates that two nodes in one graph claim the same `@id`.
- *
  * **Gotchas**
  *
  * This is caller error rather than a reportable issue: JSON-LD would silently
@@ -86,9 +84,6 @@ export class DuplicateNodeIdError extends S.TaggedError<DuplicateNodeIdError, { 
 }
 
 /**
- * Indicates that a key in a node's `additional` catch-all collides with a
- * typed field on that node, or with `@id` or `@type`.
- *
  * **Gotchas**
  *
  * Unambiguous caller error: the flattened output would carry one term twice
@@ -144,8 +139,6 @@ export class ConflictingTermError extends S.TaggedError<ConflictingTermError, { 
 }
 
 /**
- * Any node this package can place in a graph.
- *
  * **Example** (Validate a supported graph node)
  *
  * ```ts
@@ -171,8 +164,6 @@ export const JsonLdNode = S.Union([
 ]).pipe($I.annoteSchema("JsonLdNode", { description: "Any node this package can place in a graph." }));
 
 /**
- * Any node this package can place in a graph.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -310,9 +301,6 @@ const nodeBuildError = (node: JsonLdNode, seen: MutableHashSet.MutableHashSet<st
   );
 
 /**
- * A JSON-LD document: `@context` plus a flat `@graph` of nodes that reference
- * each other by `@id`.
- *
  * **Details**
  *
  * `JsonLdDocument` is a `Schema.Class`, so its encode direction is available through the

@@ -24,8 +24,6 @@ const UsptoErrorReasonKit = LiteralKit([
 ]);
 
 /**
- * Technical USPTO driver failure reasons.
- *
  * **Example** (Log UsptoErrorReason values)
  *
  * ```ts
@@ -45,8 +43,6 @@ export const UsptoErrorReason = UsptoErrorReasonKit.pipe(
 );
 
 /**
- * Type for {@link UsptoErrorReason}.
- *
  * **Example** (Assign typed transport reason)
  *
  * ```ts
@@ -85,8 +81,6 @@ class UsptoErrorOptions extends S.Opaque<UsptoErrorOptions, { readonly brand: un
 ) {}
 
 /**
- * Technical failure raised inside the USPTO driver boundary.
- *
  * **Example** (Create error from transport)
  *
  * ```ts

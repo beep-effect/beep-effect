@@ -34,8 +34,6 @@ export * from "./Runpod.config.ts";
  */
 export * from "./Runpod.errors.ts";
 /**
- * Runpod REST API service.
- *
  * @category services
  * @since 0.1.0
  */
