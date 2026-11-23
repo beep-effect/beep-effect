@@ -90,6 +90,27 @@ const actions = (plan: { readonly resources: Record<string, { readonly action: s
     ])
   );
 
+scenario(
+  "over the converged main-branch stack, the fleet-watch change plans only its environment and variable",
+  (stack, fake) =>
+    Effect.gen(function* () {
+      MutableHashMap.remove(fake.environments, "fleet-watch");
+      MutableHashMap.remove(fake.branchPolicies, "fleet-watch");
+      MutableHashMap.remove(fake.variables, "fleet-watch/FLEET_WATCH_APP_CLIENT_ID");
+      const mainBranchConfig = StackConfig.make({
+        ...productionConfig,
+        environments: A.filter(productionConfig.environments, ({ name }) => name !== "fleet-watch"),
+      });
+      yield* stack.deploy(declareStack(mainBranchConfig, O.none()));
+      const plan = yield* stack.plan(declareStack(productionConfig, O.none()));
+      const planned = actions(plan);
+      expect(R.filter(planned, (action) => action !== "noop")).toEqual({
+        "Environment-fleet-watch": "create",
+        "EnvironmentVariable-fleet-watch-FLEET_WATCH_APP_CLIENT_ID": "create",
+      });
+    })
+);
+
 scenario("a first plan adopts the main ruleset and creates no ruleset", (stack, fake) =>
   Effect.gen(function* () {
     const plan = yield* stack.plan(declareStack(productionConfig, O.none()));

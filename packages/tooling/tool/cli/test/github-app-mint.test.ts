@@ -38,6 +38,7 @@ const ORIGINAL_MANIFEST_SHA256 = {
   "beep-knowledge-mint": "921bbec705af05189744d649c0675db61b8216a574b4501347d3850168629cbf",
   // Added in repo-configs directly (no scripts/ predecessor): the checked-in bytes at registration.
   "beep-infra-github": "3cbdc34b0d235c8d9e47e09e5c22cd8f44ef94414dcf3676fed0aa91ba606195",
+  "beep-fleet-watch": "f370a5619bf383d8184713d1fd838eeb9609887a8644b036494a7733c3beece8",
 } as const;
 
 // A fake `op` that accepts only a real pipe carrying the complete template.
@@ -75,6 +76,12 @@ const appCases = {
     fieldCount: 5,
     slug: "beep-infra-github-3",
     slugCheck: 'if (field("slug")?.value !== "beep-infra-github-3") process.exit(87);',
+  },
+  "beep-fleet-watch": {
+    title: "beep-fleet-watch GitHub App",
+    fieldCount: 5,
+    slug: "beep-fleet-watch",
+    slugCheck: 'if (field("slug")?.value !== "beep-fleet-watch") process.exit(87);',
   },
 } as const;
 
@@ -229,6 +236,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
       })
     );
 
+    it.effect("fleet-watch mint stores its slugged template and names the install clicks", () =>
+      Effect.gen(function* () {
+        const { callback, logs, doctorRuns } = yield* register("beep-fleet-watch", 0, 201);
+        expect(callback.status).toBe(200);
+        expect(callback.text).toContain('Stored in 1Password as "beep-fleet-watch GitHub App"');
+        expect(logs).toContain('[fleet-watch] Stored "beep-fleet-watch GitHub App"');
+        expect(logs).toContain('click "Install App" in the left sidebar');
+        expect(logs).toContain('choose "Only select repositories", pick beep-effect/beep-effect');
+        expect(doctorRuns).toBe(0);
+      })
+    );
+
     it.effect("knowledge mint stores nothing when the manifest conversion is refused", () =>
       Effect.gen(function* () {
         const { callback, errors, doctorRuns } = yield* register("beep-knowledge-mint", 99, 422);
@@ -262,7 +281,7 @@ const DryRunLayer = Layer.unwrap(
 );
 
 it.layer(DryRunLayer, { timeout: "30 seconds" })("github app mint dry run", (it) => {
-  for (const app of ["beep-reviewer", "beep-knowledge-mint", "beep-infra-github"] as const) {
+  for (const app of ["beep-reviewer", "beep-knowledge-mint", "beep-infra-github", "beep-fleet-watch"] as const) {
     it.effect(`prints the ${app} manifest byte for byte`, () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

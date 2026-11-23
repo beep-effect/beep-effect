@@ -15,6 +15,25 @@ import { PosInt } from "./internal/PosInt.ts";
 
 const $I = $TikaId.create("Tika.config");
 
+/**
+ * Implementation pin of the deterministic text and metadata scaffold.
+ *
+ * **Details**
+ *
+ * This identifies the in-process scaffold, not a Java Tika app or server version.
+ *
+ * **Example** (Inspect the scaffold pin)
+ *
+ * ```ts
+ * import { TIKA_TEXT_SCAFFOLD_VERSION } from "@beep/tika"
+ * console.log(TIKA_TEXT_SCAFFOLD_VERSION) // "text-scaffold/1"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const TIKA_TEXT_SCAFFOLD_VERSION = "text-scaffold/1";
+
 const defaultTimeoutMillis = 120_000;
 const trailingSlashPattern = /\/+$/u;
 const httpProtocols = ["http:", "https:"];

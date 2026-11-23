@@ -17,6 +17,8 @@ import {
   PullRequestRule,
   RepositorySettings,
   RequiredCheck,
+  SecretSpec,
+  SecretsConfig,
   StackConfig,
   UnmanagedObject,
   VariableSpec,
@@ -164,6 +166,7 @@ export const productionConfig: StackConfig = StackConfig.make({
     mainOnly("storybook-prod", [stateRoleVariable]),
     mainOnly("turbo-cache-prod", [stateRoleVariable]),
     mainOnly("turbo-cache-write", []),
+    mainOnly("fleet-watch", [VariableSpec.make({ name: "FLEET_WATCH_APP_CLIENT_ID", value: "Iv23libfygPGvZKKcDb4" })]),
   ],
   variables: [
     VariableSpec.make({ name: "KNOWLEDGE_MINT_APP_CLIENT_ID", value: "Iv23liz4xPSwPCH0qfJR" }),
@@ -284,6 +287,10 @@ export const productionConfig: StackConfig = StackConfig.make({
     )("KNOWLEDGE_MINT_APP_PRIVATE_KEY"),
     unmanaged(
       "secret",
+      "Owned by the workstation-only InfraGithubSecrets stack (secrets.alchemy.run.ts, productionSecretsConfig); a CI deploy cannot read 1Password."
+    )("fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY"),
+    unmanaged(
+      "secret",
       "Two candidate 1Password fields (CLOUD_VERCEL_TOKEN, CLOUD_VERCEL_API_TOKEN); OIP stack (P4) decides."
     )("VERCEL_TOKEN"),
     ...A.map(
@@ -347,6 +354,8 @@ export const productionCreateAllowList: CreateAllowList = CreateAllowList.make({
     "Environment-turbo-cache-prod",
     "EnvironmentVariable-turbo-cache-prod-ALCHEMY_STATE_ROLE_ARN",
     "Environment-turbo-cache-write",
+    "Environment-fleet-watch",
+    "EnvironmentVariable-fleet-watch-FLEET_WATCH_APP_CLIENT_ID",
     "Variable-KNOWLEDGE_MINT_APP_CLIENT_ID",
     "Variable-KNOWLEDGE_MINT_APP_SLUG",
     "Label-aardvark",
@@ -375,5 +384,33 @@ export const productionCreateAllowList: CreateAllowList = CreateAllowList.make({
     "Label-size-XL",
     "Label-unblocks-main",
     "Label-wontfix",
+  ],
+});
+
+/**
+ * The secrets the workstation-only `InfraGithubSecrets` stack owns, each
+ * read from 1Password through `op run` at deploy time.
+ *
+ * **Example** (Read the fleet-watch key's reference)
+ *
+ * ```ts
+ * import { productionSecretsConfig } from "@beep/infra-github/Production"
+ *
+ * console.log(productionSecretsConfig.secrets[0]?.reference)
+ * // "op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const productionSecretsConfig: SecretsConfig = SecretsConfig.make({
+  owner: productionConfig.owner,
+  repository: productionConfig.repository,
+  secrets: [
+    SecretSpec.make({
+      environment: "fleet-watch",
+      name: "FLEET_WATCH_APP_PRIVATE_KEY",
+      reference: "op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key",
+    }),
   ],
 });

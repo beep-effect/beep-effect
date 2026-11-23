@@ -206,10 +206,10 @@ describe("C0 F1 live-to-replay slice", () => {
             .pipe(Effect.flatMap(decodeEvalTelemetryJson));
 
           expect(live.reportDigest).toBe(replay.reportDigest);
-          // Pins the whole F1 eval report, including per-document pattern (wink) claim counts.
-          // Re-pin when wink entity output changes; e.g. per-mention spans stopped repeated
-          // entities collapsing into one deduplicated claim.
-          expect(live.reportDigest).toBe("830e76afdf2c70517d62a839f18e5694d16eaab3364a1144a45141bf948c7ca3");
+          expect(
+            live.reportDigest,
+            "the digest pins the whole F1 eval report, per-document wink pattern claim counts included, so it is re-pinned whenever wink entity output changes; each repeated entity mention is its own claim"
+          ).toBe("830e76afdf2c70517d62a839f18e5694d16eaab3364a1144a45141bf948c7ca3");
           expect(writtenLive.reportDigest).toBe(writtenReplay.reportDigest);
           expect(writtenLive.reportDigest).toBe(live.reportDigest);
           expect(live.unexpectedDegraded).toBe(0);

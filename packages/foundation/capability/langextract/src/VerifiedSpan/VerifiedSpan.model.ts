@@ -16,172 +16,12 @@ import * as Eq from "effect/Equal";
 import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Tuple from "effect/Tuple";
 import { VERIFIED_SPAN_NORMALIZATION_VERSION } from "./VerifiedSpan.config.ts";
 import { VerifiedSpanErrorReason } from "./VerifiedSpan.errors.ts";
 import { normalizeTextLocator } from "./VerifiedSpan.normalization.ts";
-import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $LangExtractId.create("VerifiedSpan");
-
-/**
- * Offset units accepted at explicit foreign-boundary adapters.
- *
- * **Example** (Check offset unit membership)
- *
- * ```ts import.meta.vitest name="Check offset unit membership"
- * import { TextOffsetUnit } from "@beep/langextract/VerifiedSpan"
- *
- * TextOffsetUnit.is["utf16-code-unit"]("utf16-code-unit") // => true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TextOffsetUnit = LiteralKit(["unicode-code-point", "utf16-code-unit"]).pipe(
-  $I.annoteSchema("TextOffsetUnit", {
-    description: "Declared unit for an incoming half-open source-text offset range.",
-  })
-);
-
-/**
- * **Example** (Annotate offset unit type)
- *
- * ```ts
- * import type { TextOffsetUnit } from "@beep/langextract/VerifiedSpan"
- *
- * const unit: TextOffsetUnit = "unicode-code-point"
- * console.log(unit)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TextOffsetUnit = typeof TextOffsetUnit.Type;
-
-class TextOffsetRangeStruct extends S.Opaque<TextOffsetRangeStruct, { readonly brand: unique symbol }>()(
-  S.Struct({
-    end: S.Natural.annotateKey({
-      description: "Exclusive end offset in unit.",
-    }),
-    start: S.Natural.annotateKey({
-      description: "Inclusive start offset in unit.",
-    }),
-    unit: TextOffsetUnit,
-  }).pipe(
-    $I.annoteSchema("TextOffsetRangeStruct", {
-      description: "Internal structural base for an explicitly unit-tagged half-open text range.",
-    })
-  )
-) {}
-
-const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity).check(
-  S.makeFilter(
-    ({ end, start }) => start < end,
-    $I.annote("TextOffsetRangeOrderCheck", {
-      title: "Text Offset Range Order",
-      description: "Checks that an incoming half-open text range is non-empty and forward ordered.",
-      message: "Expected start to be less than end.",
-    })
-  )
-);
-
-/**
- * **Example** (Create half-open offset range)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { TextOffsetRange } from "@beep/langextract/VerifiedSpan"
- *
- * const range = TextOffsetRange.make({
- *   start: S.Natural.make(1),
- *   end: S.Natural.make(2),
- *   unit: "unicode-code-point",
- * })
- * console.log(range.unit)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class TextOffsetRange extends S.Class<TextOffsetRange, { readonly brand: unique symbol }>($I`TextOffsetRange`)(
-  TextOffsetRangeInvariant,
-  $I.annote("TextOffsetRange", {
-    toCodecArbitrary: (): SchemaAST.Link =>
-      S.link<TextOffsetRange>()(
-        TextOffsetRangeStruct,
-        SchemaTransformation.transform({
-          decode: (value) =>
-            TextOffsetRange.make({ ...value, end: S.Natural.make(value.start + 1 + (value.end % 10_000)) }),
-          encode: (value) => TextOffsetRangeStruct.make(value),
-        })
-      ),
-    description: "A non-empty half-open incoming text range whose offset unit is declared explicitly.",
-  })
-) {}
-
-class Utf16TextRangeStruct extends S.Opaque<Utf16TextRangeStruct, { readonly brand: unique symbol }>()(
-  S.Struct({
-    endChar: S.Natural.annotateKey({
-      description: "Exclusive UTF-16 code-unit offset.",
-    }),
-    startChar: S.Natural.annotateKey({
-      description: "Inclusive UTF-16 code-unit offset.",
-    }),
-  }).pipe(
-    $I.annoteSchema("Utf16TextRangeStruct", {
-      description: "Internal structural base for a canonical half-open UTF-16 code-unit range.",
-    })
-  )
-) {}
-
-const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity).check(
-  S.makeFilter(
-    ({ endChar, startChar }) => startChar < endChar,
-    $I.annote("Utf16TextRangeOrderCheck", {
-      title: "UTF-16 Text Range Order",
-      description: "Checks that a canonical half-open UTF-16 range is non-empty and forward ordered.",
-      message: "Expected startChar to be less than endChar.",
-    })
-  )
-);
-
-/**
- * **Example** (Create UTF-16 text range)
- *
- * ```ts import.meta.vitest name="Create UTF-16 text range"
- * import * as S from "effect/Schema"
- * import { Utf16TextRange } from "@beep/langextract/VerifiedSpan"
- *
- * const range = Utf16TextRange.make({
- *   startChar: S.Natural.make(1),
- *   endChar: S.Natural.make(3),
- * })
- * range.endChar // => 3
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class Utf16TextRange extends S.Class<Utf16TextRange, { readonly brand: unique symbol }>($I`Utf16TextRange`)(
-  Utf16TextRangeInvariant,
-  $I.annote("Utf16TextRange", {
-    toCodecArbitrary: (): SchemaAST.Link =>
-      S.link<Utf16TextRange>()(
-        Utf16TextRangeStruct,
-        SchemaTransformation.transform({
-          decode: (value) =>
-            Utf16TextRange.make({
-              ...value,
-              endChar: S.Natural.make(value.startChar + 1 + (value.endChar % 10_000)),
-            }),
-          encode: (value) => Utf16TextRangeStruct.make(value),
-        })
-      ),
-    description: "Canonical non-empty half-open UTF-16 code-unit source-text range.",
-  })
-) {}
 
 /**
  * **Details**
@@ -361,7 +201,6 @@ const VerifiedSpanSourceFailureReason = LiteralKit(["cross-scope", "normalizatio
 const VerifiedSpanLocationFailureReason = LiteralKit([
   "absent-text",
   "ambiguous",
-  "invalid-offset",
   "limit-exceeded",
   "malformed-source",
   "not-found",

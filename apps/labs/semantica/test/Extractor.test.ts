@@ -1,4 +1,30 @@
+import { ExtractionCandidate, parseModelOutput } from "@beep/langextract/Extraction";
+import { Position } from "@beep/text/OffsetUnit";
+import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Digest from "effect/crypto/Digest";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Path from "effect/Path";
+import {
+  RelationPreviewManifest,
+  RelationPreviewOptions,
+  replayRelationHandoff,
+  runRelationPreview,
+} from "@/canary/RelationPreview";
+import { CorpusManifest, CorpusPaperId, ManifestDecodeFailed } from "@/corpus/Manifest";
+import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
+import { F1Catalog, F1Index } from "@/fixtures/F1";
+import * as ExtractorLive from "@/layers/ExtractorLive";
+import { LabConfigLive } from "@/runtime/Config";
+import { contentDigestSync, sha256TextSync } from "@/schema/Digest";
+import { DocumentUnavailable } from "@/schema/Errors";
 import { ModelIdentity } from "@/schema/Model";
+import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
+import { DocumentSource } from "@/services/DocumentSource";
+import { Parser } from "@/services/Parser";
+import indexFixture from "../fixtures/f1/index.json";
+import manifestFixture from "../fixtures/w1.manifest.json";
 // @vitest-environment node
 
 import {
@@ -7,38 +33,49 @@ import {
   LangExtractError,
   LangExtractResult,
 } from "@beep/langextract/Extraction";
-import { LangExtractService } from "@beep/langextract/Service";
-import { DocumentId as NlpDocumentId } from "@beep/nlp/Core";
+import { handoff, startExtraction } from "@beep/langextract/Handoff";
+import { buildPrompt, LangExtractService } from "@beep/langextract/Service";
 import { EntityNode } from "@beep/nlp/Graph/Schema";
-import { Contract } from "@beep/nlp/Handoff";
+import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256Hex } from "@beep/schema";
-import { SourceTextExtractor } from "@beep/text";
+import { SourceTextExtractor, TextAnchor } from "@beep/text";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Model from "effect/ai/Model";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { F1FixtureId } from "@/fixtures/F1";
 import { CanonicalizerLive } from "@/layers/CanonicalizerLive";
 import { ChunkerLive } from "@/layers/ChunkerLive";
 import { HostedExtractorLive, PatternExtractorLive } from "@/layers/ExtractorLive";
 import { ActiveModelIdentityLive } from "@/layers/LanguageModelLive";
 import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
-import { ClaimBody, FrozenRelationPredicate, RelationExtractionCandidate } from "@/schema/Evidence";
+import {
+  ClaimBody,
+  EvidenceBatch,
+  ExtractOutcome,
+  FrozenRelationPredicate,
+  RelationExtractionCandidate,
+} from "@/schema/Evidence";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
-import { ParseOutcome } from "@/schema/Text";
+import { Chunk, makeChunkId, ParseOutcome } from "@/schema/Text";
 import { Canonicalizer } from "@/services/Canonicalizer";
 import { Chunker } from "@/services/Chunker";
 
 const decodeRelationExtractionCandidateResult = S.decodeResult(RelationExtractionCandidate);
 
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { describe, expect, vi } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { constant, pipe } from "effect/Function";
 import * as Str from "effect/String";
 import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
@@ -93,46 +130,57 @@ const grounded = (
     attributes,
     confidence: O.none(),
     label,
-    matchedText: text,
-    span: Contract.Span.make({
-      end: S.Natural.make(start + text.length),
-      start: S.Natural.make(start),
+    anchor: TextAnchor.make({
+      endChar: S.Natural.make(start + text.length),
+      quote: text,
+      startChar: S.Natural.make(start),
     }),
     text,
   });
 
 const langExtractLayer = (extractions: ReadonlyArray<GroundedExtraction>) =>
-  Layer.succeed(
+  Layer.effect(
     LangExtractService,
-    LangExtractService.of({
-      extract: Effect.fn("LangExtractService.stub")(function* (request) {
-        const provenance = Contract.Provenance.make({
-          generatedBy: "extractor-test",
-          source: request.documentId,
-          timestamp: 0,
-        });
-        return LangExtractResult.make({
-          annotatedDocument: Contract.AnnotatedDocument.make({
-            chunks: [],
-            entities: [],
-            mentions: [],
-            provenance,
-            relations: [],
-            version: "nlp-ir/1.1",
-          }),
-          diagnostics: LangExtractDiagnostics.make({
-            alignedCount: S.Natural.make(A.length(extractions)),
-            candidateCount: S.Natural.make(A.length(extractions)),
-            promptChars: S.Natural.make(request.text.length),
-            unalignedCount: S.Natural.make(0),
-          }),
-          documentId: NlpDocumentId.make(request.documentId),
-          extractions,
-          text: request.text,
-        });
-      }),
+    Effect.gen(function* () {
+      const digest = yield* Digest.Digest;
+      return LangExtractService.of({
+        extract: Effect.fn("LangExtractService.stub")(
+          function* (request) {
+            const verified = yield* verifySourceTextIdentity(
+              VerifySourceTextIdentityInput.make({
+                source: request.source,
+                expectedSource: request.source,
+                sourceText: request.text,
+              })
+            ).pipe(Effect.orDie);
+            const prompt = yield* buildPrompt(request);
+            const activity = yield* startExtraction({ source: request.source, prompt, started: 0 }).pipe(
+              Effect.provideService(Model.ProviderName, "test"),
+              Effect.provideService(Model.ModelName, "stub-model"),
+              Effect.orDie
+            );
+            const extractionHandoff = yield* handoff({
+              targets: request.targets,
+              candidates: extractions,
+              verified,
+              activity,
+              at: DateTime.makeUnsafe(0),
+            });
+            return LangExtractResult.make({
+              handoff: extractionHandoff,
+              diagnostics: LangExtractDiagnostics.make({
+                alignedCount: S.Natural.make(A.length(extractions)),
+                candidateCount: S.Natural.make(A.length(extractions)),
+                promptChars: S.Natural.make(request.text.length),
+                unalignedCount: S.Natural.make(0),
+              }),
+            });
+          },
+          Effect.provideService(Digest.Digest, digest)
+        ),
+      });
     })
-  );
+  ).pipe(Layer.provide(BunCrypto.layer));
 
 const hostedLayer = (extractions: ReadonlyArray<GroundedExtraction>) =>
   HostedExtractorLive.pipe(
@@ -157,6 +205,95 @@ const hostedFailureLayer = (reason: "model-generation-failed" | "model-output-pa
     Layer.provide(canonicalizerLayer)
   );
 
+const hostedCase = (
+  name: string,
+  text: string,
+  extractionsOf: (text: string) => ReadonlyArray<GroundedExtraction>
+) => ({ extractions: extractionsOf(text), name, text });
+
+const firstStartOf = (surface: string, text: string) => O.getOrElse(constant(-1))(Str.indexOf(surface)(text));
+const lastStartOf = (surface: string, text: string) => O.getOrElse(constant(-1))(Str.lastIndexOf(surface)(text));
+const relationAttributes = O.some({ object: "Engine", predicate: "selected", subject: "Ada" });
+
+const clusterCase = hostedCase("coreference cluster", "Ada wrote notes.", () => [
+  grounded("person", "Ada", 0, O.some({ cluster: "person-ada" })),
+]);
+
+const synthesizedEndpointsCase = hostedCase(
+  "synthesized relation endpoints",
+  "Ada wrote notes. Ada selected Engine.",
+  (text) => [grounded("relation", "Ada selected Engine.", lastStartOf("Ada", text), relationAttributes)]
+);
+
+const reusedEndpointsCase = hostedCase("reused relation endpoints", "Ada wrote notes. Ada selected Engine.", (text) => [
+  grounded("person", "Ada", lastStartOf("Ada", text)),
+  grounded("method", "Engine", firstStartOf("Engine", text)),
+  grounded("relation", "Ada selected Engine.", lastStartOf("Ada", text), relationAttributes),
+]);
+
+const unresolvedRelationCase = hostedCase("unresolved relation", "Ada praised Engine.", (text) => [
+  grounded("person", "Ada", 0),
+  grounded("method", "Engine", firstStartOf("Engine", text)),
+  grounded("relation", text, 0, O.some({ object: "Engine", predicate: "praised", subject: "Missing" })),
+]);
+
+const malformedRelationCase = hostedCase("malformed relation contract", "Ada selected Engine.", (text) => [
+  grounded("relation", text, 0, O.some({ object: "Engine", subject: "Ada" })),
+]);
+
+const fuzzyRelationCase = hostedCase("fuzzy relation evidence", "Ada selected Engine.", (text) => [
+  GroundedExtraction.cases.match_fuzzy.make({
+    alignmentStatus: "match_fuzzy",
+    attributes: relationAttributes,
+    confidence: O.none(),
+    label: "relation",
+    anchor: TextAnchor.make({ endChar: S.Natural.make(text.length), quote: text, startChar: S.Natural.make(0) }),
+    text,
+  }),
+]);
+
+const hostedCases = [
+  clusterCase,
+  synthesizedEndpointsCase,
+  reusedEndpointsCase,
+  unresolvedRelationCase,
+  malformedRelationCase,
+  fuzzyRelationCase,
+];
+
+class FrozenHostedBatch extends S.Opaque<FrozenHostedBatch, { readonly brand: unique symbol }>()(
+  S.Struct({ batch: EvidenceBatch, name: S.NonEmptyString })
+) {}
+
+const FrozenHostedBatchesJson = S.fromJsonString(S.Array(FrozenHostedBatch), { space: 2 });
+
+const hostedBatch = Effect.fn("ExtractorTest.hostedBatch")(function* (hosted: (typeof hostedCases)[number]) {
+  const outcome = yield* provideScopedLayer(Layer.merge(baseLayer, hostedLayer(hosted.extractions)))(
+    Effect.gen(function* () {
+      const { canonical, chunks } = yield* makeCanonical(hosted.text);
+      const extractor = yield* HostedExtractor;
+      return yield* extractor.extract(canonical, chunks);
+    })
+  );
+  if (outcome.outcome === "Degraded") {
+    return yield* Effect.die(new Error(outcome.detail));
+  }
+  return FrozenHostedBatch.make({ batch: outcome.batch, name: hosted.name });
+});
+
+describe("C0 hosted extractor frozen batch", () => {
+  it.effect(
+    "keeps the bytes of the hosted evidence batches over this file's model outputs",
+    (context) =>
+      Effect.gen(function* () {
+        const batches = yield* Effect.forEach(hostedCases, hostedBatch, { concurrency: 1 });
+        const json = yield* S.encodeEffect(FrozenHostedBatchesJson)(batches);
+        yield* Effect.promise(() => context.expect(`${json}\n`).toMatchFileSnapshot("./fixtures/hosted-batch-v1.json"));
+      }),
+    { timeout: 60_000 }
+  );
+});
+
 describe("C0 hosted extractor", () => {
   it("keeps the frozen target vocabulary separate from the legacy-preview relation contract", () => {
     expect(FrozenRelationPredicate.literals).toEqual([
@@ -180,8 +317,7 @@ describe("C0 hosted extractor", () => {
   });
 
   {
-    const text = "Ada wrote notes.";
-    const extractions = [grounded("person", "Ada", 0, O.some({ cluster: "person-ada" }))];
+    const { extractions, text } = clusterCase;
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("preserves hosted coreference cluster assignments on entity claims", () =>
         Effect.gen(function* () {
@@ -208,21 +344,9 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada wrote notes. Ada selected Engine.";
-    const relationStart = O.getOrElse(constant(-1))(Str.lastIndexOf("Ada")(text));
-    const engineStart = O.getOrElse(constant(-1))(Str.indexOf("Engine")(text));
-    const extractions = [
-      grounded(
-        "relation",
-        "Ada selected Engine.",
-        relationStart,
-        O.some({
-          object: "Engine",
-          predicate: "selected",
-          subject: "Ada",
-        })
-      ),
-    ];
+    const { extractions, text } = synthesizedEndpointsCase;
+    const relationStart = lastStartOf("Ada", text);
+    const engineStart = firstStartOf("Engine", text);
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("anchors repeated endpoint surfaces inside relation evidence and synthesizes same-batch entities", () =>
         Effect.gen(function* () {
@@ -259,19 +383,8 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada wrote notes. Ada selected Engine.";
-    const secondAda = O.getOrElse(constant(-1))(Str.lastIndexOf("Ada")(text));
-    const engine = O.getOrElse(constant(-1))(Str.indexOf("Engine")(text));
-    const extractions = [
-      grounded("person", "Ada", secondAda),
-      grounded("method", "Engine", engine),
-      grounded(
-        "relation",
-        "Ada selected Engine.",
-        secondAda,
-        O.some({ object: "Engine", predicate: "selected", subject: "Ada" })
-      ),
-    ];
+    const { extractions, text } = reusedEndpointsCase;
+    const secondAda = lastStartOf("Ada", text);
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("reuses base entity claims already anchored inside the relation evidence", () =>
         Effect.gen(function* () {
@@ -297,12 +410,7 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada praised Engine.";
-    const extractions = [
-      grounded("person", "Ada", 0),
-      grounded("method", "Engine", O.getOrElse(constant(-1))(Str.indexOf("Engine")(text))),
-      grounded("relation", text, 0, O.some({ object: "Engine", predicate: "praised", subject: "Missing" })),
-    ];
+    const { extractions, text } = unresolvedRelationCase;
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("retains an unresolved relation as a degraded claim", () =>
         Effect.gen(function* () {
@@ -324,8 +432,7 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada selected Engine.";
-    const extractions = [grounded("relation", text, 0, O.some({ object: "Engine", subject: "Ada" }))];
+    const { extractions, text } = malformedRelationCase;
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("fails a malformed relation contract as typed model-output degradation", () =>
         Effect.gen(function* () {
@@ -344,17 +451,8 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada selected Engine.";
-    const extraction = GroundedExtraction.cases.match_fuzzy.make({
-      alignmentStatus: "match_fuzzy",
-      attributes: O.some({ object: "Engine", predicate: "selected", subject: "Ada" }),
-      confidence: O.none(),
-      label: "relation",
-      matchedText: text,
-      span: Contract.Span.make({ end: S.Natural.make(text.length), start: S.Natural.make(0) }),
-      text,
-    });
-    it.layer(Layer.merge(baseLayer, hostedLayer([extraction])), { timeout: "30 seconds" })((it) => {
+    const { extractions, text } = fuzzyRelationCase;
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("disqualifies fuzzy alignment for relation evidence", () =>
         Effect.gen(function* () {
           const { canonical, chunks } = yield* makeCanonical(text);
@@ -388,7 +486,11 @@ describe("C0 hosted extractor", () => {
 });
 
 describe("C0 pattern extractor", () => {
-  {
+  for (const span of [
+    Position.makeOption({ unit: "utf16-code-unit", end: 5, start: 0 }),
+    O.none<Position>(),
+    Position.makeOption({ unit: "unicode-code-point", end: 5, start: 0 }),
+  ]) {
     const nlp = Layer.succeed(
       NLPService,
       NLPService.of({
@@ -396,7 +498,7 @@ describe("C0 pattern extractor", () => {
           Effect.succeed([
             EntityNode.make({
               entityType: "PERSON",
-              span: { end: 5, start: 0 },
+              span,
               text: "Absent",
               timestamp: 0,
             }),
@@ -426,4 +528,409 @@ describe("C0 pattern extractor", () => {
       );
     });
   }
+});
+
+const PreviewResponseJson = S.fromJsonString(S.Struct({ extractions: S.Array(ExtractionCandidate) }));
+const encodePreviewResponse = S.encodeEffect(PreviewResponseJson);
+const PreviewTailArbitrary = Arbitrary.schema(ExtractionCandidate);
+
+describe("relation preview replay cap", () => {
+  it.layer(Layer.merge(baseLayer, Digest.layerWebCrypto), { timeout: "30 seconds" })((it) => {
+    it.effect.prop(
+      "preserves schema-derived parsed candidate fields in the over-cap residual",
+      { tail: PreviewTailArbitrary },
+      ({ tail }) =>
+        Effect.gen(function* () {
+          const { canonical } = yield* makeCanonical("Ada knows Bob.");
+          const prefix = A.makeBy(256, () => ExtractionCandidate.make({ label: "person", text: "Bob" }));
+          const response = yield* encodePreviewResponse({ extractions: A.append(prefix, tail) });
+          const parsed = yield* parseModelOutput(response);
+          const original = A.getUnsafe(parsed, 256);
+          const h = yield* replayRelationHandoff(canonical, response, model);
+          expect(h.candidateCount).toBe(257);
+          const residual = A.filter(h.residual, (candidate) => candidate.candidate === 256);
+          expect(residual).toHaveLength(1);
+          const { anchor, ...fields } = A.getUnsafe(residual, 0);
+          assertNone(anchor);
+          expect(fields).toEqual({
+            ...original,
+            candidate: 256,
+            alignment: "unaligned",
+            reason: "over-extraction-cap",
+          });
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect(
+      "preserves all 257 parsed candidates and the unattempted tail",
+      Effect.fnUntraced(function* () {
+        const { canonical } = yield* makeCanonical("Ada knows Bob.");
+        const raw = A.makeBy(257, (index) =>
+          ExtractionCandidate.make({
+            label: index === 256 ? "tail-label" : "person",
+            text: "Bob",
+            attributes: O.some({ index: `${index}` }),
+          })
+        );
+        const response = yield* encodePreviewResponse({ extractions: raw });
+        const h = yield* replayRelationHandoff(canonical, response, model);
+        expect(h.candidateCount).toBe(257);
+        expect(A.length(A.appendAll(h.readings.pipe(HashMap.toValues, A.flatten), h.residual))).toBe(257);
+        const { anchor, ...tail } = A.getUnsafe(h.residual, h.residual.length - 1);
+        assertNone(anchor);
+        expect(tail).toEqual({
+          ...A.getUnsafe(raw, 256),
+          candidate: 256,
+          reason: "over-extraction-cap",
+          alignment: "unaligned",
+        });
+      })
+    );
+  });
+});
+
+const decodePreviewCorpus = S.decodeUnknownEffect(CorpusManifest);
+const decodePreviewFixtures = S.decodeUnknownEffect(F1Index);
+const encodePreviewCases = S.encodeEffect(S.fromJsonString(RelationPreviewManifest));
+const encodePreviewCache = S.encodeEffect(S.fromJsonString(ProviderCacheEntry));
+const previewOptions = RelationPreviewOptions.make({ cases: "cases", manifest: "manifest" });
+const replayPreview = Effect.fn("ExtractorTest.replayPreview")(function* (scenario: string) {
+  const manifest = yield* decodePreviewCorpus(manifestFixture);
+  const fixtures = yield* decodePreviewFixtures(indexFixture);
+  const paperId = CorpusPaperId.make("06c93f91ef3d");
+  const response =
+    scenario === "response-invalid"
+      ? "bad response"
+      : scenario === "floor"
+        ? '{"extractions":[]}'
+        : '{"extractions":[{"label":"relation","text":"Ada knows Bob.","attributes":{"subject":"Ada","object":"Bob","predicate":"shows"}}]}';
+  const key = ProviderCacheKey.make({
+    inputDigest: sha256TextSync("preview-test"),
+    model: scenario === "grounding" ? ModelIdentity.make({ ...model, name: "degraded-preview" }) : model,
+    requestKind: "generate-text",
+    schemaVersion: "provider-cache/v1",
+  });
+  const cacheKey = Result.getOrThrow(contentDigestSync(ProviderCacheKey)(key));
+  const entry = ProviderCacheEntry.make({ key, cacheKey, response, responseDigest: sha256TextSync(response) });
+  const cache = yield* encodePreviewCache(entry);
+  const cases = yield* encodePreviewCases(
+    RelationPreviewManifest.make({
+      cases: [{ paperId, cacheDigest: scenario === "cache-key" ? Sha256Hex.make(Str.repeat(64)("0")) : cacheKey }],
+    })
+  );
+  const noop = FileSystem.makeNoop({});
+  const fs = FileSystem.makeNoop({
+    readFileString: (path) => {
+      if (scenario === "cases-unavailable" || (path !== "cases" && scenario === "cache-unavailable"))
+        return noop.readFileString(path);
+      return Effect.succeed(
+        path === "cases"
+          ? scenario === "cases-invalid"
+            ? "bad json"
+            : cases
+          : scenario === "cache-invalid"
+            ? "bad json"
+            : cache
+      );
+    },
+  });
+  const selected = SourceDocument.make({
+    ...document,
+    origin: Origin.cases.W1Paper.make({ corpusId: "synthetic", paperId, relativePath: "synthetic.pdf" }),
+  });
+  const sourceFailure = DocumentUnavailable.make({ message: "synthetic unavailable" });
+  const source = DocumentSource.of({
+    list: Effect.fn("DocumentSource.list")(function* () {
+      if (scenario === "list") return yield* sourceFailure;
+      return scenario === "absent" ? [document] : [document, selected];
+    }),
+    read: Effect.fn("DocumentSource.read")(function* () {
+      if (scenario === "read") return yield* sourceFailure;
+      return new Uint8Array();
+    }),
+  });
+  const parser = Parser.of({
+    parse: Effect.fn("Parser.parse")(() =>
+      Effect.succeed(
+        scenario === "parse"
+          ? ParseOutcome.cases.Degraded.make({ document: document.id, kind: "truncated", detail: "synthetic degraded" })
+          : ParseOutcome.cases.Parsed.make({
+              document: document.id,
+              text: "Ada knows Bob.",
+              extractor: SourceTextExtractor.make({ name: "synthetic", version: "1" }),
+            })
+      )
+    ),
+  });
+  const builder = CorpusManifestBuilder.of({
+    build: Effect.succeed(manifest),
+    load: Effect.fn("CorpusManifestBuilder.load")(() => Effect.succeed(manifest)),
+    check: Effect.fn("CorpusManifestBuilder.check")(function* () {
+      if (scenario === "manifest")
+        return yield* ManifestDecodeFailed.make({ message: "synthetic manifest failure", manifestPath: "manifest" });
+      return manifest;
+    }),
+  });
+  return yield* runRelationPreview(previewOptions).pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(DocumentSource, source),
+    Effect.provideService(Parser, parser),
+    Effect.provideService(CorpusManifestBuilder, builder),
+    Effect.provideService(F1Catalog, F1Catalog.of({ load: Effect.succeed(fixtures) }))
+  );
+});
+
+describe("relation preview boundaries", () => {
+  const config = LabConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} }))));
+  it.layer(Layer.mergeAll(baseLayer, Digest.layerWebCrypto, Path.layer, config), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "reports grounded replay counts",
+      Effect.fnUntraced(function* () {
+        const report = yield* replayPreview("success");
+        expect(report.groundedRelations).toBe(1);
+        expect(report.cases[0]?.candidateCount).toBe(1);
+      })
+    );
+    it.effect(
+      "refuses a typed degradation returned by grounding",
+      Effect.fnUntraced(function* () {
+        const original = ExtractorLive.groundHostedHandoff;
+        const grounding = vi.spyOn(ExtractorLive, "groundHostedHandoff").mockImplementation((...args) =>
+          args[4].name === "degraded-preview"
+            ? Effect.succeed(
+                ExtractOutcome.cases.Degraded.make({
+                  document: document.id,
+                  lane: "hosted",
+                  kind: "model-output-invalid",
+                  detail: "synthetic degradation",
+                })
+              )
+            : original(...args)
+        );
+        try {
+          const error = yield* replayPreview("grounding").pipe(Effect.flip);
+          expect(error._tag).toBe("RelationPreviewFailed");
+          if (error._tag === "RelationPreviewFailed") expect(error.reason).toBe("response-invalid");
+        } finally {
+          grounding.mockRestore();
+        }
+      })
+    );
+    it.effect(
+      "refuses unavailable, invalid, ungrounded and degraded replay inputs",
+      Effect.fnUntraced(function* () {
+        for (const [scenario, reason] of [
+          ["cases-unavailable", "manifest-invalid"],
+          ["cases-invalid", "manifest-invalid"],
+          ["cache-unavailable", "cache-unavailable"],
+          ["cache-invalid", "cache-invalid"],
+          ["cache-key", "cache-invalid"],
+          ["manifest", "manifest-invalid"],
+          ["list", "source-unavailable"],
+          ["absent", "source-unavailable"],
+          ["read", "source-unavailable"],
+          ["parse", "parse-degraded"],
+          ["response-invalid", "response-invalid"],
+          ["floor", "preview-floor-not-met"],
+        ] as const) {
+          const error = yield* replayPreview(scenario).pipe(Effect.flip);
+          expect(error._tag).toBe("RelationPreviewFailed");
+          if (error._tag === "RelationPreviewFailed") expect(error.reason).toBe(reason);
+        }
+      })
+    );
+  });
+});
+
+describe("pattern extractor boundary outcomes", () => {
+  for (const scenario of ["default-identity", "failure"]) {
+    const nlp = Layer.succeed(
+      NLPService,
+      NLPService.of({
+        extractEntities: Effect.fn("PatternBoundaryTest.extractEntities")(function* () {
+          if (scenario === "failure") return yield* notSupported("test", "extractEntities");
+          return [
+            EntityNode.make({
+              entityType: "",
+              span: Position.makeOption({ unit: "utf16-code-unit", start: 0, end: 5 }),
+              text: "Alice",
+              timestamp: 0,
+            }),
+          ];
+        }),
+        extractRelations: Effect.fn("PatternBoundaryTest.extractRelations")(() => Effect.succeed([])),
+        getBackend: Effect.die("unused"),
+        processText: Effect.fn("PatternBoundaryTest.processText")(() => Effect.die("unused")),
+        tagPartsOfSpeech: Effect.fn("PatternBoundaryTest.tagPartsOfSpeech")(() => Effect.succeed([])),
+      })
+    );
+    const pattern = PatternExtractorLive.pipe(Layer.provide(nlp), Layer.provide(canonicalizerLayer));
+    it.layer(Layer.merge(baseLayer, pattern), { timeout: "30 seconds" })((it) => {
+      it.effect(`preserves the ${scenario} boundary outcome`, () =>
+        Effect.gen(function* () {
+          const { canonical, chunks } = yield* makeCanonical("Alice writes.");
+          const extractor = yield* PatternExtractor;
+          const outcome = yield* extractor.extract(canonical, chunks);
+          if (scenario === "failure") {
+            expect(outcome).toMatchObject({ outcome: "Degraded", kind: "extraction-failed" });
+          } else {
+            expect(outcome).toMatchObject({
+              outcome: "Extracted",
+              batch: { claims: [{ confidence: 1, body: { entityType: "UNKNOWN", quote: "Alice" } }] },
+            });
+          }
+        })
+      );
+    });
+  }
+});
+
+describe("hosted handoff residual and structure projection", () => {
+  const text = "Ada selected Engine. Bob trained Engine.";
+  const cases = [
+    {
+      name: "structure depth",
+      extractions: [
+        grounded("title", "Ada", 0, O.some({ depth: "2" })),
+        grounded("section", "Engine", 13, O.some({ depth: "invalid" })),
+      ],
+      claims: 2,
+      degraded: 0,
+    },
+    { name: "unmapped aligned label", extractions: [grounded("custom", "Ada", 0)], claims: 1, degraded: 0 },
+    {
+      name: "unaligned non-relation",
+      extractions: [
+        GroundedExtraction.cases.unaligned.make({
+          label: "person",
+          text: "Missing",
+          attributes: O.none(),
+          confidence: O.none(),
+        }),
+      ],
+      claims: 0,
+      degraded: 1,
+    },
+    {
+      name: "historical relation and sorted relation readings",
+      extractions: [
+        grounded("relation", "Ada selected Engine.", 0, relationAttributes),
+        grounded(
+          "relation",
+          "Bob trained Engine.",
+          21,
+          O.some({ subject: "Bob", object: "Engine", predicate: "trained" })
+        ),
+      ],
+      claims: 6,
+      degraded: 0,
+    },
+    {
+      name: "historical malformed relation",
+      extractions: [
+        grounded(
+          "relation",
+          "Ada selected Engine.",
+          0,
+          O.some({ subject: "", object: "Engine", predicate: "trained" })
+        ),
+      ],
+      claims: 0,
+      degraded: 1,
+    },
+    {
+      name: "historical missing endpoint",
+      extractions: [
+        grounded(
+          "relation",
+          "Ada selected Engine.",
+          0,
+          O.some({ subject: "Missing", object: "Engine", predicate: "trained" })
+        ),
+      ],
+      claims: 0,
+      degraded: 1,
+    },
+  ];
+  for (const testCase of cases) {
+    it.effect(testCase.name, () =>
+      Effect.gen(function* () {
+        const result = yield* hostedBatch({ name: testCase.name, text, extractions: testCase.extractions });
+        expect(result.batch.claims).toHaveLength(testCase.claims);
+        expect(result.batch.degraded).toHaveLength(testCase.degraded);
+        if (testCase.name === "structure depth") {
+          expect(A.map(result.batch.claims, (claim) => claim.body)).toMatchObject([
+            { kind: "Structure", depth: 2 },
+            { kind: "Structure", depth: 0 },
+          ]);
+        }
+      })
+    );
+  }
+});
+
+describe("hosted extractor runtime construction", () => {
+  const configured = LabConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} }))));
+  const languageModel = Model.make(
+    "test",
+    "construction-only",
+    Layer.effect(
+      LanguageModel.LanguageModel,
+      LanguageModel.make({
+        generateText: () => Effect.die("construction must not generate"),
+        streamText: () => Stream.die("construction must not stream"),
+      })
+    )
+  );
+  const runtime = ExtractorLive.HostedLangExtractLive.pipe(
+    Layer.provide(languageModel),
+    Layer.provide(configured),
+    Layer.provide(ActiveModelIdentityLive(model)),
+    Layer.provide(canonicalizerLayer),
+    Layer.provide(BunCrypto.layer)
+  );
+  it.layer(Layer.merge(baseLayer, runtime), { timeout: "30 seconds" })((it) => {
+    it.effect("builds the configured runtime and deterministic prompt artifact without a provider call", () =>
+      Effect.gen(function* () {
+        const extractor = yield* HostedExtractor;
+        expect(typeof extractor.extract).toBe("function");
+        const hash = yield* ExtractorLive.HOSTED_EXTRACTION_ARTIFACT_HASH;
+        expect(hash).toHaveLength(64);
+      })
+    );
+  });
+});
+
+describe("hosted claim chunk boundary fallback", () => {
+  const extractions = [grounded("person", "Ada", 0)];
+  it.layer(Layer.merge(baseLayer, langExtractLayer(extractions)), { timeout: "30 seconds" })((it) => {
+    it.effect("keeps a claim in the chunk starting its anchor, then the first available chunk", () =>
+      Effect.gen(function* () {
+        const { canonical, chunks } = yield* makeCanonical("Ada selected Engine.");
+        const canonicalizer = yield* Canonicalizer;
+        const extractor = yield* LangExtractService;
+        const extracted = yield* extractor.extract(ExtractorLive.makeHostedExtractionRequest(canonical));
+        for (const start of [0, 4]) {
+          const anchor = TextAnchor.make({
+            startChar: S.Natural.make(start),
+            endChar: S.Natural.make(start + 1),
+            quote: Str.slice(start, start + 1)(canonical.text),
+          });
+          const receipt = yield* canonicalizer.verify(canonical, anchor);
+          const source = { ...A.headNonEmpty(chunks), anchor, receipt };
+          const id = Result.getOrThrow(makeChunkId(source));
+          const chunk = Chunk.make({ ...source, id });
+          const outcome = yield* ExtractorLive.groundHostedHandoff(
+            canonicalizer,
+            canonical,
+            [chunk],
+            extracted.handoff,
+            model,
+            O.none()
+          );
+          expect(outcome).toMatchObject({ outcome: "Extracted", batch: { claims: [{ chunk: id }] } });
+        }
+      })
+    );
+  });
 });

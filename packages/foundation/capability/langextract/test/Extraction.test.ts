@@ -6,10 +6,10 @@ import {
   MAX_CANDIDATE_TEXT_LENGTH,
   parseModelOutput,
 } from "@beep/langextract/Extraction";
-import { DocumentId } from "@beep/nlp/Core";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -18,6 +18,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { sourceForText } from "./support/handoff.ts";
 
 const decodeExtractionCandidate = S.decodeEffect(ExtractionCandidate);
 const decodeGroundedExtraction = S.decodeEffect(GroundedExtraction);
@@ -87,10 +88,9 @@ describe("parseModelOutput", () => {
       const unaligned = GroundedExtraction.cases.unaligned.make({ label: "person", text: "Ada Lovelace" });
       const aligned = GroundedExtraction.cases.match_exact.make({
         attributes: O.some({ source: "fixture" }),
+        anchor: TextAnchor.make({ endChar: S.Natural.make(12), quote: "Ada Lovelace", startChar: S.Natural.make(0) }),
         confidence: UnitInterval.makeOption(0.9),
         label: "person",
-        matchedText: "Ada Lovelace",
-        span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),
         text: "Ada Lovelace",
       });
 
@@ -104,11 +104,10 @@ describe("parseModelOutput", () => {
       });
       expect(encodedAligned).toEqual({
         alignmentStatus: "match_exact",
+        anchor: { endChar: 12, quote: "Ada Lovelace", startChar: 0 },
         attributes: { source: "fixture" },
         confidence: 0.9,
         label: "person",
-        matchedText: "Ada Lovelace",
-        span: { end: 12, start: 0 },
         text: "Ada Lovelace",
       });
     })
@@ -117,21 +116,27 @@ describe("parseModelOutput", () => {
   it.effect(
     "rejects aligned extraction payloads without complete source evidence",
     Effect.fnUntraced(function* () {
-      const missingSpan = yield* decodeUnknownGroundedExtraction({
+      const missingAnchor = yield* decodeUnknownGroundedExtraction({
         alignmentStatus: "match_exact",
         label: "person",
-        matchedText: "Ada Lovelace",
         text: "Ada Lovelace",
       }).pipe(Effect.flip);
-      const missingMatchedText = yield* decodeUnknownGroundedExtraction({
+      const emptyAnchor = yield* decodeUnknownGroundedExtraction({
         alignmentStatus: "match_exact",
+        anchor: { endChar: 0, quote: "Ada Lovelace", startChar: 0 },
         label: "person",
-        span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),
+        text: "Ada Lovelace",
+      }).pipe(Effect.flip);
+      const widthMismatch = yield* decodeUnknownGroundedExtraction({
+        alignmentStatus: "match_exact",
+        anchor: { endChar: 5, quote: "Ada Lovelace", startChar: 0 },
+        label: "person",
         text: "Ada Lovelace",
       }).pipe(Effect.flip);
 
-      expect(missingSpan).toBeDefined();
-      expect(missingMatchedText).toBeDefined();
+      expect(missingAnchor._tag).toBe("SchemaError");
+      expect(emptyAnchor._tag).toBe("SchemaError");
+      expect(widthMismatch._tag).toBe("SchemaError");
     })
   );
 
@@ -187,7 +192,7 @@ describe("parseModelOutput", () => {
     "requires at least one extraction target",
     Effect.fnUntraced(function* () {
       const error = yield* decodeUnknownLangExtractRequest({
-        documentId: DocumentId.make("doc-1"),
+        source: sourceForText(""),
         targets: [],
         text: "Alice founded Acme.",
       }).pipe(Effect.flip);
@@ -195,8 +200,10 @@ describe("parseModelOutput", () => {
       expect(error).toBeDefined();
 
       const request = yield* decodeLangExtractRequest({
-        documentId: DocumentId.make("doc-1"),
-        targets: [{ kind: "entity", name: "person" }],
+        source: sourceForText(""),
+        targets: [
+          { annotates: { _tag: "Mention", class: "https://example.org/person" }, kind: "entity", name: "person" },
+        ],
         text: "Alice founded Acme.",
       });
 
@@ -209,10 +216,17 @@ describe("parseModelOutput", () => {
 
       const encodedLangExtractRequest = yield* encodeLangExtractRequest(request);
       expect(encodedLangExtractRequest).toEqual({
-        documentId: "doc-1",
+        source: sourceForText(""),
         examples: [],
         options: {},
-        targets: [{ attributes: [], kind: "entity", name: "person" }],
+        targets: [
+          {
+            annotates: { _tag: "Mention", class: "https://example.org/person" },
+            attributes: [],
+            kind: "entity",
+            name: "person",
+          },
+        ],
         text: "Alice founded Acme.",
       });
     })

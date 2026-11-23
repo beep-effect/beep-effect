@@ -30,6 +30,7 @@ const $I = $LangExtractId.create("Extraction");
  */
 export const LangExtractErrorReason = LiteralKit([
   "remote-policy-denied",
+  "source-text-mismatch",
   "model-generation-failed",
   "model-generation-timeout",
   "prompt-encoding-failed",

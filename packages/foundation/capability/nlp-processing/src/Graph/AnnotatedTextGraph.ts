@@ -150,11 +150,12 @@ export const isPOSNode: (node: AnnotatedNode) => node is POSNode = S.is(POSNode)
  * ```ts import.meta.vitest name="Check node is EntityNode"
  * import { isEntityNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { EntityNode } from "@beep/nlp/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = EntityNode.make({
  *   text: "Acme",
  *   entityType: "ORG",
- *   span: { start: 0, end: 4 },
+ *   span: Position.makeOption({ unit: "utf16-code-unit", start: 0, end: 4 }),
  *   timestamp: 0
  * })
  *
@@ -219,11 +220,12 @@ export const isDependencyNode: (node: AnnotatedNode) => node is DependencyNode =
  * ```ts import.meta.vitest name="Check node is RelationNode"
  * import { isRelationNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import { RelationNode } from "@beep/nlp/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = RelationNode.make({
  *   relationType: "acquired",
- *   subject: { text: "Acme", entityType: "ORG", span: { start: 0, end: 4 } },
- *   object: { text: "Beta", entityType: "ORG", span: { start: 14, end: 18 } },
+ *   subject: { text: "Acme", entityType: "ORG", span: Position.makeOption({ unit: "utf16-code-unit", start: 0, end: 4 }) },
+ *   object: { text: "Beta", entityType: "ORG", span: Position.makeOption({ unit: "utf16-code-unit", start: 14, end: 18 }) },
  *   timestamp: 0
  * })
  *

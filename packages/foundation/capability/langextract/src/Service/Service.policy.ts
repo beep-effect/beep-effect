@@ -22,18 +22,12 @@ import type { LangExtractRemotePolicyShape } from "./Service.service.ts";
  * **Example** (Permit remote extraction request)
  *
  * ```ts
- * import { LangExtractRequest } from "@beep/langextract/Extraction"
- * import { allowRemoteExtractionPolicy } from "@beep/langextract/Service"
- * import { ExtractionTarget } from "@beep/langextract/Target"
- * import { DocumentId } from "@beep/nlp/Core"
- * import * as Effect from "effect/Effect";
- * const request = LangExtractRequest.make({
- *   documentId: DocumentId.make("doc-1"),
- *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
- *   text: "Ada Lovelace wrote notes."
- * })
+ * import { ensureRemoteExtractionAllowed, allowRemoteExtractionPolicy } from "@beep/langextract/Service"
+ * import type { LangExtractRequest } from "@beep/langextract/Extraction"
+ * import * as O from "effect/Option"
  *
- * Effect.runPromise(allowRemoteExtractionPolicy.allowRemoteExtraction(request)).then(console.log)
+ * const authorize = (request: LangExtractRequest) => ensureRemoteExtractionAllowed(O.some(allowRemoteExtractionPolicy), request)
+ * console.log(typeof authorize)
  * ```
  *
  * @category policies
@@ -97,22 +91,12 @@ export const remoteExtractionPolicyFromConfig = Layer.effect(
  * **Example** (Deny when no policy is present)
  *
  * ```ts
- * import { LangExtractRequest } from "@beep/langextract/Extraction"
- * import { ensureRemoteExtractionAllowed } from "@beep/langextract/Service"
- * import { ExtractionTarget } from "@beep/langextract/Target"
- * import { DocumentId } from "@beep/nlp/Core"
- * import * as Effect from "effect/Effect";
+ * import { ensureRemoteExtractionAllowed, allowRemoteExtractionPolicy } from "@beep/langextract/Service"
+ * import type { LangExtractRequest } from "@beep/langextract/Extraction"
  * import * as O from "effect/Option"
  *
- * const request = LangExtractRequest.make({
- *   documentId: DocumentId.make("doc-1"),
- *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
- *   text: "Ada Lovelace wrote notes."
- * })
- *
- * Effect.runPromise(Effect.flip(ensureRemoteExtractionAllowed(O.none(), request))).then(
- *   (error) => console.log(error.reason) // "remote-policy-denied"
- * )
+ * const authorize = (request: LangExtractRequest) => ensureRemoteExtractionAllowed(O.some(allowRemoteExtractionPolicy), request)
+ * console.log(typeof authorize)
  * ```
  *
  * @category policies
@@ -136,7 +120,7 @@ export const ensureRemoteExtractionAllowed: {
 
     if (!allowed) {
       return yield* LangExtractError.fromReason("remote-policy-denied", {
-        details: { documentId: request.documentId },
+        details: { captureTextDigest: request.source.textDigest },
         message: "Remote LangExtract generation denied by policy.",
       });
     }

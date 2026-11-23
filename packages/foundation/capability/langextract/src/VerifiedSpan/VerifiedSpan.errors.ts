@@ -28,7 +28,6 @@ const $I = $LangExtractId.create("VerifiedSpan");
 export const VerifiedSpanErrorReason = LiteralKit([
   "absent-text",
   "ambiguous",
-  "invalid-offset",
   "limit-exceeded",
   "malformed-source",
   "not-found",

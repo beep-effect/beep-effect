@@ -22,6 +22,7 @@
 
 import { $NlpId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import { Position } from "@beep/text/OffsetUnit";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 
@@ -331,37 +332,17 @@ export class POSNode extends S.Opaque<POSNode, { readonly brand: unique symbol }
 ) {}
 
 /**
- * **Example** (Build character span)
- *
- * ```ts import.meta.vitest name="Build character span"
- * import { Span } from "@beep/nlp/Graph/Schema"
- *
- * const span = Span.make({ start: 0, end: 9 })
- * span.end - span.start // => 9
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class Span extends S.Opaque<Span, { readonly brand: unique symbol }>()(
-  S.Struct({ start: S.Finite, end: S.Finite }).pipe(
-    $I.annoteSchema("Span", {
-      description: "Character span (start/end offsets) within a piece of text.",
-    })
-  )
-) {}
-
-/**
  * Named entity extracted from text (a functor `Text -> Entity`).
  *
  * **Example** (Build named entity node)
  *
  * ```ts import.meta.vitest name="Build named entity node"
  * import { EntityNode } from "@beep/nlp/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = EntityNode.make({
  *   entityType: "ORG",
- *   span: { end: 9, start: 0 },
+ *   span: Position.makeOption({ unit: "utf16-code-unit", end: 9, start: 0 }),
  *   text: "Acme Inc.",
  *   timestamp: 0
  * })
@@ -376,7 +357,7 @@ export class EntityNode extends S.Opaque<EntityNode, { readonly brand: unique sy
     text: S.String,
     entityType: S.String,
     confidence: S.optionalKey(S.Finite),
-    span: Span,
+    span: S.OptionFromOptionalKey(Position),
     normalizedForm: S.optionalKey(S.String),
     timestamp: S.Finite,
     metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
@@ -477,11 +458,12 @@ export class DependencyNode extends S.Opaque<DependencyNode, { readonly brand: u
  *
  * ```ts import.meta.vitest name="Build relation participant"
  * import { RelationParticipant } from "@beep/nlp/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
  *
  * const participant = RelationParticipant.make({
  *   text: "Acme",
  *   entityType: "ORG",
- *   span: { start: 0, end: 4 }
+ *   span: Position.makeOption({ unit: "utf16-code-unit", start: 0, end: 4 })
  * })
  * participant.entityType // => "ORG"
  * ```
@@ -490,7 +472,7 @@ export class DependencyNode extends S.Opaque<DependencyNode, { readonly brand: u
  * @since 0.0.0
  */
 export class RelationParticipant extends S.Opaque<RelationParticipant, { readonly brand: unique symbol }>()(
-  S.Struct({ text: S.String, entityType: S.String, span: Span }).pipe(
+  S.Struct({ text: S.String, entityType: S.String, span: S.OptionFromOptionalKey(Position) }).pipe(
     $I.annoteSchema("RelationParticipant", {
       description: "Entity participant (text, type, and character span) referenced by a semantic relation.",
     })
@@ -504,11 +486,12 @@ export class RelationParticipant extends S.Opaque<RelationParticipant, { readonl
  *
  * ```ts import.meta.vitest name="Build semantic relation node"
  * import { RelationNode } from "@beep/nlp/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = RelationNode.make({
- *   object: { entityType: "ORG", span: { end: 15, start: 10 }, text: "Globex" },
+ *   object: { entityType: "ORG", span: Position.makeOption({ unit: "utf16-code-unit", end: 15, start: 10 }), text: "Globex" },
  *   relationType: "acquired",
- *   subject: { entityType: "ORG", span: { end: 4, start: 0 }, text: "Acme" },
+ *   subject: { entityType: "ORG", span: Position.makeOption({ unit: "utf16-code-unit", end: 4, start: 0 }), text: "Acme" },
  *   timestamp: 0
  * })
  * node.relationType // => "acquired"
