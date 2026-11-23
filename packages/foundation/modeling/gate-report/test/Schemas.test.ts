@@ -1,7 +1,4 @@
-// Retargets upstream packages/sdk/__test__/Common.test.ts, AgentReport.test.ts,
-// RunEvent.test.ts and RenderState.test.ts (vitest-agent 1cf1ab94) onto the
-// widened schemas. The console, package-manager, environment, executor and
-// detail-level sets are not ported: @beep/runtime-env owns detection.
+// Ported from vitest-agent 1cf1ab94 packages/sdk/__test__/{Common,AgentReport,RunEvent,RenderState}.test.ts (MIT).
 import { GateEvent } from "@beep/gate-report/GateEvent";
 import { GateReport, Totals, Unit } from "@beep/gate-report/GateReport";
 import { Item, ItemDetail } from "@beep/gate-report/Item";
@@ -50,7 +47,7 @@ const report = {
   totals,
 };
 
-describe("closed sets", () => {
+describe("widened schemas retargeted from vitest-agent 1cf1ab94 Common, AgentReport, RunEvent and RenderState tests; the console, package-manager, environment, executor and detail-level sets are not in this package", () => {
   it("ItemOutcome accepts its members and rejects pending and unknown values", () => {
     for (const value of ["passed", "failed", "warned", "skipped"]) assert.isTrue(accepts(ItemOutcome, value));
     for (const value of ["pending", "unknown", 1]) assert.isFalse(accepts(ItemOutcome, value));

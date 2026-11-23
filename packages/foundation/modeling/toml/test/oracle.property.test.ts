@@ -246,15 +246,14 @@ function tableArb(depth: number): Arbitrary.Arbitrary<Record<string, unknown>> {
   );
 }
 
-// decision: tests-prop-array-form
-const documentArb = tableArb(3);
+const documentBoundedAtFourNestedTablesAndWidthFive = tableArb(3);
 
 const REPRODUCIBLE_ORACLE_CHECK_OPTIONS: Arbitrary.CheckOptions = { runs: 250, seed: 20260710 };
 
 describe("smol-toml differential oracle", () => {
   it.effect.prop(
     "our stringify parses identically under both parsers",
-    [documentArb],
+    [documentBoundedAtFourNestedTablesAndWidthFive],
     ([document]) =>
       Effect.gen(function* () {
         const text = yield* Toml.stringify(document);
@@ -266,7 +265,7 @@ describe("smol-toml differential oracle", () => {
 
   it.effect.prop(
     "the oracle's stringify parses identically under both parsers",
-    [documentArb],
+    [documentBoundedAtFourNestedTablesAndWidthFive],
     ([document]) =>
       Effect.gen(function* () {
         const text = oracleStringify(document);

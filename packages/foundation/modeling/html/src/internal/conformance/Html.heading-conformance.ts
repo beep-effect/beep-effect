@@ -209,6 +209,9 @@ const headingOffsetOf = (node: HtmlChildView): number =>
     O.getOrElse(() => 0)
   );
 
+const unreachableForSchemaValidRootsKeptTotalForForeignCalls = (): ReadonlyArray<HtmlHeadingOutlineEntry> =>
+  A.emptyReadonly();
+
 const collectHeadingOutline = (
   node: HtmlChildView,
   path: ReadonlyArray<string>,
@@ -224,9 +227,7 @@ const collectHeadingOutline = (
         N.min(declaredHeadingLevel(tag) + effectiveOffset, 9),
         decodeUnknownHtmlComputedHeadingLevelResult,
         Result.match({
-          // A schema-valid root and HeadingOffset guard make this branch unreachable;
-          // retaining it keeps outline inspection total for defensive foreign calls.
-          onFailure: A.emptyReadonly,
+          onFailure: unreachableForSchemaValidRootsKeptTotalForForeignCalls,
           onSuccess: (level) => [HtmlHeadingOutlineEntry.make({ path, tag, level })],
         })
       )

@@ -13,12 +13,15 @@ import {
 } from "@beep/html";
 import { HtmlElementConformanceRules } from "@beep/html/Html.meta";
 import {
+  DirElement,
   Div,
   Html as HtmlElement,
   Input,
   Document as LosslessDocument,
   Marquee,
+  ObjectElement,
   Script,
+  SElement,
   Span,
 } from "@beep/html/Html.model";
 import { it } from "@beep/test-runner";
@@ -194,9 +197,7 @@ describe("HtmlNode AST — structure & nodes", () => {
 describe("HtmlNode AST — attributes", () => {
   it.effect("enforces enumerated attribute values (input[type])", () =>
     Effect.gen(function* () {
-      // `as const` keeps each value at its literal type, so `Input.make` actually
-      // exercises that the `S.Literals` input-type union accepts every keyword.
-      const types = [
+      const inputTypeKeywordsAtLiteralType = [
         "button",
         "checkbox",
         "color",
@@ -220,7 +221,7 @@ describe("HtmlNode AST — attributes", () => {
         "url",
         "week",
       ] as const;
-      for (const type of types) {
+      for (const type of inputTypeKeywordsAtLiteralType) {
         expect(() => Input.make({ type: O.some(type) })).not.toThrow();
       }
       const invalidType = yield* Effect.exit(decode({ _tag: "input", type: "not-a-type" }));
@@ -354,9 +355,16 @@ describe("HtmlNode AST — schema laws", () => {
 
 describe("ELEMENT_META", () => {
   it("covers every WHATWG element from the pinned dataset (conforming + obsolete)", () => {
-    // Snapshot guard tied to the version-pinned webref dataset: a deliberate
-    // re-pin / `bun run generate` that changes the element set should update this.
-    expect(R.keys(ELEMENT_META)).toHaveLength(142);
+    expect(
+      R.keys(ELEMENT_META),
+      "snapshot of the version-pinned webref dataset: a re-pin or `bun run generate` that changes the element set updates it"
+    ).toHaveLength(142);
+  });
+
+  it("suffixes a class name that collides with a reserved identifier and keeps the real tag name as _tag", () => {
+    expect(SElement.make({ children: [] })._tag).toBe("s");
+    expect(DirElement.make({ children: [] })._tag).toBe("dir");
+    expect(ObjectElement.make({ children: [] })._tag).toBe("object");
   });
 
   it("rejects tags outside the generated HtmlNode inventory", () => {

@@ -298,7 +298,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
   );
 
   it.effect(
-    "sanitizes a malformed source-text digest",
+    "sanitizes a malformed source-text digest: the digest succeeds, and its truncated hex fails Sha256Hex decoding",
     Effect.fnUntraced(
       function* () {
         const source = identity({ textDigest: factDigest });
@@ -314,7 +314,6 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
         expect(failure.reason).toBe("stale-source");
         expect(failure.message).toBe("Verified text anchor rejected: stale-source.");
       },
-      // The digest itself cannot fail; a truncated one fails `Sha256Hex` decoding instead.
       Effect.provideService(
         Digest.Digest,
         Digest.Digest.of({

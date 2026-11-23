@@ -9,9 +9,7 @@ import * as Str from "effect/String";
 import type { ReferenceKeyword } from "@beep/github-references/ClosingList";
 import type { ClosingKeyword } from "@beep/github-references/IssueReferences";
 
-// Pure functions get pure tests, with no layer at all.
-
-describe("KeywordFamily.keywordFamily", () => {
+describe("KeywordFamily.keywordFamily: pure functions get pure tests, with no layer at all", () => {
   it("defines exactly the four schema families reached by the twelve keywords", () => {
     assert.deepStrictEqual(KeywordFamily.literals, ["close", "fix", "resolve", "ref"]);
     assert.deepStrictEqual(R.values(KeywordFamily.Enum), [...KeywordFamily.literals]);
@@ -23,9 +21,7 @@ describe("KeywordFamily.keywordFamily", () => {
     }
   });
 
-  it("maps all twelve keywords — the projection is exhaustive", () => {
-    // One row per keyword, spelled out: the test restates the table so a
-    // drifted entry in the source record fails loudly, keyword by keyword.
+  it("maps all twelve keywords — the projection is exhaustive, restated row by row so a drifted source entry fails by keyword", () => {
     const expected: ReadonlyArray<readonly [ClosingKeyword | ReferenceKeyword, KeywordFamily]> = [
       ["close", "close"],
       ["closes", "close"],

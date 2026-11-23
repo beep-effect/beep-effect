@@ -200,8 +200,6 @@ const settleGateCertificateOutcomeImpl = (
   if (!CertificateReach.is.complete(reach) || A.length(inReach) < A.length(checks)) {
     return "cantTell";
   }
-  // Evaluated checks (passed, or failed at advisory severity) settle passed;
-  // only an aggregate with nothing evaluated in reach is inapplicable.
   return has("passed") || has("failed") ? "passed" : "inapplicable";
 };
 

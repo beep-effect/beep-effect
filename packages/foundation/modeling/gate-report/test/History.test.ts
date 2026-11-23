@@ -1,7 +1,4 @@
-// Ports the upstream classifyTest table (vitest-agent 1cf1ab94,
-// packages/sdk/src/utils/classify-test.ts) onto the gate-run-history rules:
-// AC-H2 labels, AC-H3 the one flaky rule, AC-H4 recovered for one run and
-// AC-H6 the fix-loop delta.
+// Ported from vitest-agent 1cf1ab94 packages/sdk/src/utils/classify-test.ts (MIT).
 import { RunDelta } from "@beep/gate-report/ConsoleDocument";
 import { Unit } from "@beep/gate-report/GateReport";
 import {
@@ -57,8 +54,7 @@ type Row = {
   readonly label: HistoryLabel | undefined;
 };
 
-// The current run is input "now"; earlier lane runs are "l1" (newest) to "l3".
-const rows: ReadonlyArray<Row> = [
+const rowsWithCurrentRunNowAndLaneRunsL1NewestToL3: ReadonlyArray<Row> = [
   {
     name: "a retried pass is flaky",
     outcome: "passed",
@@ -205,7 +201,7 @@ const rows: ReadonlyArray<Row> = [
 ];
 
 describe("classifyItem (AC-H2)", () => {
-  it.each(rows)("$name", (row) => {
+  it.each(rowsWithCurrentRunNowAndLaneRunsL1NewestToL3)("$name", (row) => {
     const evidence = SeriesEvidence.make({
       current: local(row.current),
       lane: local(row.lane),
@@ -215,7 +211,7 @@ describe("classifyItem (AC-H2)", () => {
   });
 });
 
-describe("isFlaky (AC-H3)", () => {
+describe("isFlaky (AC-H3), the one flaky rule", () => {
   it("one input with a fail and a pass is flaky", () => {
     assert.isTrue(
       isFlaky(
@@ -278,7 +274,7 @@ describe("observedOutcomes", () => {
 
 const failure = (key: string, unit = "u1") => DeltaFailure.make({ fingerprint: key, unit });
 
-describe("deltaOf (AC-H6)", () => {
+describe("deltaOf (AC-H6), the fix-loop delta", () => {
   const before = DeltaRun.make({ units: ["u1", "u2"], failed: [failure("a"), failure("b"), failure("c", "u2")] });
 
   it("counts fixed, still failing and new over the units both runs checked", () => {

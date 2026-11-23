@@ -123,10 +123,6 @@ export const makeAsciiCaseInsensitiveEnumerated = <const Values extends readonly
   );
 };
 
-// -----------------------------------------------------------------------------
-// reusable enumerated value schemas (sourced from webref html-global attr-values)
-// -----------------------------------------------------------------------------
-
 /**
  * `dir` global attribute value.
  *
@@ -1840,10 +1836,6 @@ export const HtmlIdValue = S.String.check(
  * @since 0.0.0
  */
 export type HtmlIdValue = typeof HtmlIdValue.Type;
-
-// -----------------------------------------------------------------------------
-// field bundles
-// -----------------------------------------------------------------------------
 
 const OptionalString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 type OptionalString = typeof OptionalString;

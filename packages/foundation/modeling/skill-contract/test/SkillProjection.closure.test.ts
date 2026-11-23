@@ -6,9 +6,11 @@ import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-// Every source module of this package, inlined as raw text by Vite at
-// transform time, so the scan needs no filesystem.
-const sources = import.meta.glob<string>("../src/**/*.ts", { query: "?raw", import: "default", eager: true });
+const packageSourcesInlinedByViteWithoutFilesystem = import.meta.glob<string>("../src/**/*.ts", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 
 const MARKDOWN_SPECIFIER = /["'](@beep\/markdown(?:\/[^"']*)?)["']/g;
 
@@ -18,17 +20,18 @@ const markdownSpecifiers = (source: string): ReadonlyArray<string> =>
   );
 
 describe("@beep/skill-contract SkillProjection import closure", () => {
-  it.effect("enters @beep/markdown only through the string-level FrontmatterSource leaf", () =>
-    Effect.sync(() => {
-      const specifiers = A.dedupe(A.flatMap(R.values(sources), markdownSpecifiers));
-      // The scan really read the package: SkillProjection.ts is among the sources.
-      assertTrue(A.some(R.keys(sources), Str.endsWith("/SkillProjection.ts")));
-      // FrontmatterSource's own closure is pinned in @beep/markdown
-      // (test/index.coverage.test.ts): it reaches the raw fence scanner and
-      // never the block parser, the inline parser or the root barrel. Holding
-      // every edge into the package to that one leaf keeps the parsers out of
-      // this package's closure.
-      deepStrictEqual(specifiers, ["@beep/markdown/FrontmatterSource"]);
-    })
+  it.effect(
+    "enters @beep/markdown only through FrontmatterSource; that leaf's closure, pinned by @beep/markdown test/index.coverage.test.ts, includes the raw fence scanner internal/blocks/frontmatter.ts and never the block parser, the inline parser or the root barrel, so those parsers stay out of this package",
+    () =>
+      Effect.sync(() => {
+        const specifiers = A.dedupe(
+          A.flatMap(R.values(packageSourcesInlinedByViteWithoutFilesystem), markdownSpecifiers)
+        );
+        assertTrue(
+          A.some(R.keys(packageSourcesInlinedByViteWithoutFilesystem), Str.endsWith("/SkillProjection.ts")),
+          "the scan read the package: SkillProjection.ts is among the sources"
+        );
+        deepStrictEqual(specifiers, ["@beep/markdown/FrontmatterSource"]);
+      })
   );
 });

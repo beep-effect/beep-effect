@@ -18,44 +18,49 @@ const { collectPoTaggedConstructors, getPoPattern, poConservation } = PatternOnt
 
 const patternOf = (schema: S.Top): PatternOntology.PoPattern => O.getOrThrow(getPoPattern(schema));
 
-/**
- * Lossless re-realizations: the pattern changes because the two models realize
- * the same information with different content models, so no information is
- * lost and the existing mapping emits no diagnostic. Every other pattern change
- * must coincide with a `PandocMappingIssue` at the construct's path.
- */
-const pandocToMdRerealized: ReadonlyArray<readonly [source: string, target: string]> = [
-  // A paragraph holding one display-math inline is Md's display-math block.
+type Rerealization = readonly [source: string, target: string];
+
+const paragraphHoldingOneDisplayMathIsMdMathBlock: ReadonlyArray<Rerealization> = [
   ["para", "mathBlock"],
   ["plain", "mathBlock"],
-  // Pandoc separates words with Space milestones; Md keeps whitespace in text.
+];
+const pandocSpaceMilestonesThatSeparateWordsBecomeWhitespaceKeptInMdText: ReadonlyArray<Rerealization> = [
   ["space", "text"],
-  // Pandoc alt text is an inline run; Md alt text is a string attribute. Alt
-  // content that carries structure is reported by the existing Image issue
-  // beneath the image's own path.
+];
+const pandocAltInlineRunBecomesMdAltStringAttributeWithImageIssueBeneathTheImagePath: ReadonlyArray<Rerealization> = [
   ["image", "img"],
-  // A span with empty attributes is Pandoc's identity wrapper: its children
-  // pass through unchanged to whichever Md inline they become. A span with
-  // attributes emits the Span issue at its own path.
-  ["span", "text"],
-  ["span", "strong"],
-  ["span", "em"],
-  ["span", "del"],
-  ["span", "code"],
-  ["span", "a"],
-  ["span", "img"],
-  ["span", "br"],
-  ["span", "inlineMath"],
+];
+const emptyAttributeSpanIsIdentityWrapperPassingChildrenUnchangedWhileAttributedSpanReportsSpanIssueAtItsOwnPath: ReadonlyArray<Rerealization> =
+  [
+    ["span", "text"],
+    ["span", "strong"],
+    ["span", "em"],
+    ["span", "del"],
+    ["span", "code"],
+    ["span", "a"],
+    ["span", "img"],
+    ["span", "br"],
+    ["span", "inlineMath"],
+  ];
+
+const pandocToMdLosslessRerealizations: ReadonlyArray<Rerealization> = [
+  ...paragraphHoldingOneDisplayMathIsMdMathBlock,
+  ...pandocSpaceMilestonesThatSeparateWordsBecomeWhitespaceKeptInMdText,
+  ...pandocAltInlineRunBecomesMdAltStringAttributeWithImageIssueBeneathTheImagePath,
+  ...emptyAttributeSpanIsIdentityWrapperPassingChildrenUnchangedWhileAttributedSpanReportsSpanIssueAtItsOwnPath,
 ];
 
-const mdToPandocRerealized: ReadonlyArray<readonly [source: string, target: string]> = [
-  // Md's display-math block is a Pandoc paragraph holding one display-math inline.
-  ["mathBlock", "para"],
-  // Md alt text is a string attribute; Pandoc alt text is an inline run.
-  ["img", "image"],
-  // Md text tokenizes into Pandoc words and whitespace milestones.
+const mdMathBlockIsParagraphHoldingOneDisplayMath: ReadonlyArray<Rerealization> = [["mathBlock", "para"]];
+const mdAltStringAttributeBecomesPandocAltInlineRun: ReadonlyArray<Rerealization> = [["img", "image"]];
+const mdTextTokenizesIntoPandocWordsAndWhitespaceMilestones: ReadonlyArray<Rerealization> = [
   ["text", "space"],
   ["text", "softbreak"],
+];
+
+const mdToPandocLosslessRerealizations: ReadonlyArray<Rerealization> = [
+  ...mdMathBlockIsParagraphHoldingOneDisplayMath,
+  ...mdAltStringAttributeBecomesPandocAltInlineRun,
+  ...mdTextTokenizesIntoPandocWordsAndWhitespaceMilestones,
 ];
 
 const isRerealized = (table: ReadonlyArray<readonly [string, string]>, source: string, target: string): boolean =>
@@ -67,19 +72,14 @@ const hasIssueAt = (issues: ReadonlyArray<PandocMappingIssue.Type>, path: JsonPa
     (issue) => issue.path.length === path.length && A.every(path, (segment, index) => issue.path[index] === segment)
   );
 
-/**
- * An inline whose content is empty all the way down (empty text, or wrappers
- * holding only such inlines) has nothing a projection could drop.
- */
-const heldNothing = (inline: unknown): boolean =>
+const isEmptyAllTheWayDown = (inline: unknown): boolean =>
   Predicate.hasProperty(inline, "text")
     ? inline.text === ""
     : Predicate.hasProperty(inline, "children") && A.isArray(inline.children)
-      ? A.every(inline.children, heldNothing)
+      ? A.every(inline.children, isEmptyAllTheWayDown)
       : false;
 
-/** An issue at the construct's own path or anywhere beneath it. */
-const hasIssueBeneath = (issues: ReadonlyArray<PandocMappingIssue.Type>, path: JsonPath): boolean =>
+const hasIssueAtOrBeneath = (issues: ReadonlyArray<PandocMappingIssue.Type>, path: JsonPath): boolean =>
   A.some(
     issues,
     (issue) => issue.path.length >= path.length && A.every(path, (segment, index) => issue.path[index] === segment)
@@ -100,7 +100,7 @@ const expectConserved = (input: {
 
   expect(
     justified,
-    `${input.direction}: ${input.sourceTag}(${input.sourcePattern}) -> ${input.targetTag}(${input.targetPattern}) was demoted silently`
+    `${input.direction}: ${input.sourceTag}(${input.sourcePattern}) -> ${input.targetTag}(${input.targetPattern}) was demoted silently; a lossless re-realization is the same information under different content models and the mapping emits no diagnostic, and every other pattern change must coincide with a PandocMappingIssue at the construct's path`
   ).toBe(true);
 };
 
@@ -185,7 +185,7 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
             targetTag: target._tag,
             targetPattern: patternOf(Md.Block.cases[target._tag]),
             explicit: hasIssueAt(result.report.issues, ["blocks", 0]),
-            rerealized: pandocToMdRerealized,
+            rerealized: pandocToMdLosslessRerealizations,
           });
         }),
         { arbitrary: fcRuns(25) }
@@ -203,20 +203,18 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
           const paragraph = O.getOrThrow(A.head(result.document.children));
           const explicit = hasIssueAt(result.report.issues, ["blocks", 0, "children", 0]);
 
-          // A lone display-math inline re-realizes the whole paragraph as a
-          // math block; the block law above covers that transition.
           if (paragraph._tag !== "p") {
-            expect(paragraph._tag).toBe("mathBlock");
+            expect(
+              paragraph._tag,
+              "a lone display-math inline re-realizes the whole paragraph as a math block, which the block law covers"
+            ).toBe("mathBlock");
             return;
           }
 
-          // A dropped inline (no Md output) is a demotion of everything it
-          // held: an issue at or beneath its path must explain the drop unless
-          // it held nothing.
           if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
             expect(
-              hasIssueBeneath(result.report.issues, ["blocks", 0, "children", 0]) || heldNothing(inline),
-              `pandoc-to-md: ${tag} was dropped silently`
+              hasIssueAtOrBeneath(result.report.issues, ["blocks", 0, "children", 0]) || isEmptyAllTheWayDown(inline),
+              `pandoc-to-md: ${tag} was dropped silently; a dropped inline demotes everything it held, so an issue at or beneath its path must explain it unless it held nothing`
             ).toBe(true);
           }
 
@@ -228,7 +226,7 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
               targetTag: target._tag,
               targetPattern: patternOf(Md.Inline.cases[target._tag]),
               explicit,
-              rerealized: pandocToMdRerealized,
+              rerealized: pandocToMdLosslessRerealizations,
             })
           );
         }),
@@ -253,7 +251,7 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
             targetTag: target._tag,
             targetPattern: patternOf(Pandoc.PandocBlock.cases[target._tag]),
             explicit: hasIssueAt(result.report.issues, ["children", 0]),
-            rerealized: mdToPandocRerealized,
+            rerealized: mdToPandocLosslessRerealizations,
           });
         }),
         { arbitrary: fcRuns(25) }
@@ -276,7 +274,7 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
 
           if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
             expect(
-              hasIssueBeneath(result.report.issues, ["children", 0, "children", 0]) || heldNothing(inline),
+              hasIssueAtOrBeneath(result.report.issues, ["children", 0, "children", 0]) || isEmptyAllTheWayDown(inline),
               `md-to-pandoc: ${tag} was dropped silently`
             ).toBe(true);
           }
@@ -289,7 +287,7 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
               targetTag: target._tag,
               targetPattern: patternOf(Pandoc.PandocInline.cases[target._tag]),
               explicit,
-              rerealized: mdToPandocRerealized,
+              rerealized: mdToPandocLosslessRerealizations,
             })
           );
         }),

@@ -1,14 +1,14 @@
 ---
-title: The oracle suite builds weighted choice and variable-length arrays from flatMap over a Schema-generated ticket or length
+title: The oracle suite draws a weighted choice from a Schema ticket and shrinks arrays by length first
 date: 2026-11-23
-reversal: Replace weighted and arrayOf with native effect/Arbitrary combinators once the module offers a weighted choice and an array of an arbitrary Arbitrary.
+reversal: Replace weighted with a native weighted-choice combinator once effect/Arbitrary ships one, and replace arrayOf only with a combinator that shrinks length before elements.
 governs:
   - test/oracle.property.test.ts#weighted
   - test/oracle.property.test.ts#arrayOf
 enforcedBy: []
 ---
 
-The native `effect/Arbitrary` module has no weighted choice and no array-of-Arbitrary combinator; it builds collections only from Schemas.
-So `weighted` draws an integer ticket from a Schema and picks the branch whose weight range holds it, and `arrayOf` draws a length from a Schema and collects that many draws.
-Both shrink the way the earlier fast-check suite did: a weighted pick shrinks toward its first branch, and a collection shrinks its length before its elements.
+effect/Arbitrary has no weighted choice. weighted draws an integer ticket from a Schema and picks the branch whose weight range holds it, shrinking toward the first branch.
+arrayOf stays local: it draws a length from a Schema and shrinks that length before the elements.
 Rejected: returning to fast-check combinators, which the suite left when it moved to the native module.
+Rejected: Arbitrary.array for arrayOf, which shrinks by removing blocks rather than length before elements.

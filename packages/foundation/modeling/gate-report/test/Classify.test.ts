@@ -1,6 +1,4 @@
-// Retargets upstream packages/ui/__test__/classify.test.ts (vitest-agent
-// 1cf1ab94) onto the widened shapes and outcomes, and adds the extended
-// precedence cases.
+// Ported from vitest-agent 1cf1ab94 packages/ui/__test__/classify.test.ts (MIT).
 import { classifyOutcome, classifyShape, itemBucket, tally, verdictWord } from "@beep/gate-report/Classify";
 import { Totals, Unit } from "@beep/gate-report/GateReport";
 import { ItemKey } from "@beep/gate-report/ItemKey";
@@ -98,7 +96,7 @@ const glob = PolicyBreach.cases.CoverageBreach.make({
   pattern: O.some("src/**"),
 });
 
-describe("classifyOutcome", () => {
+describe("classifyOutcome: retargets vitest-agent 1cf1ab94 packages/ui/__test__/classify.test.ts onto the widened shapes and outcomes, and adds the extended precedence cases", () => {
   const passed = Totals.make({ collected: 2, passed: 2 });
 
   it("returns all-pass for a clean run with no policy", () => {
