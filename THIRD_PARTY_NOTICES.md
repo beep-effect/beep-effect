@@ -232,6 +232,30 @@ and TypeScript representation. No upstream endorsement is implied.
 - **Fabio** — Fabio by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. CC BY 4.0. Commit `ea5b2cd49a7a8f4dc695d633c76bb05608c085db`; artifact `docs/2026-09-03/fabio.ttl`; version `2.3.1`. [Pinned artifact](https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/docs/2026-09-03/fabio.ttl); [repository license](https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/LICENSE.md).
 - **Cito** — Cito by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. CC BY 4.0. Commit `d34b42e8d4d1c9d45bc530599328897805116994`; artifact `docs/2026-09-03/cito.ttl`; version `2.9.0`. [Pinned artifact](https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/docs/2026-09-03/cito.ttl); [repository license](https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/LICENSE.md).
 
+## Pinned RDF vocabularies
+
+The `pinned-vocabularies` target of `bun run beep sync-data-to-ts` projects
+curated term names from the vocabularies below into the identity registry
+shards (`packages/foundation/modeling/identity/registry/namespaces/`) and the
+`@beep/rdf` term modules. No ontology axioms, labels or definitions are
+redistributed. Changes: curated term selection and TypeScript representation.
+No upstream endorsement is implied. The SPAR vocabularies (CiTO, DEO, DoCO,
+FaBiO) are pinned by the same target and listed in the section above; the
+sidecar `packages/foundation/modeling/rdf/src/Vocab/generated/namespace-pins.data.json`
+records each pin's digest.
+
+- **gUFO** — gUFO: A Lightweight Implementation of the Unified Foundational Ontology (UFO), by J. P. A. Almeida, G. Guizzardi, T. P. Sales and R. A. Falbo. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/. Commit `12b098158a9244179c5e0e2534cd85254a2d3b7e`; artifact `gufo.ttl`; version `1.0.0`. [Pinned artifact](https://raw.githubusercontent.com/nemo-ufes/gufo/12b098158a9244179c5e0e2534cd85254a2d3b7e/gufo.ttl).
+- **NIF Core** — NIF 2.1 Core Ontology, NLP2RDF project. Dual-licensed under the Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0) and Creative Commons Attribution 3.0 (CC BY 3.0, https://creativecommons.org/licenses/by/3.0/); used under either. Commit `225301dd65a24578e8b26fa276690f5c0623dcce`; artifact `nif-core/nif-core.ttl`; version `2.1.0`. [Pinned artifact](https://raw.githubusercontent.com/NLP2RDF/ontologies/225301dd65a24578e8b26fa276690f5c0623dcce/nif-core/nif-core.ttl).
+- **Activity Streams 2.0** — Activity Streams 2.0 Vocabulary, W3C Social Web Working Group, W3C Recommendation 2017-05-23. W3C Software and Document License (`W3C-20150513`), https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document. Commit `258bce0cd50ec9683b1417adfa1af926d447cda5`; artifact `vocabulary/activitystreams2.owl`. [Pinned artifact](https://raw.githubusercontent.com/w3c/activitystreams/258bce0cd50ec9683b1417adfa1af926d447cda5/vocabulary/activitystreams2.owl).
+- **Web Annotation (OA)** — Web Annotation Vocabulary, W3C Recommendation 2017-02-23. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/ns/oa.ttl retrieved 2026-11-19; `owl:versionInfo` `2016-11-12T21:28:11Z`.
+- **PROV-O** — PROV-O: The PROV Ontology, W3C Recommendation 2013-04-30. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/ns/prov-o-20130430.
+- **SKOS** — SKOS Simple Knowledge Organization System Reference, W3C Recommendation 2009-08-18. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/2009/08/skos-reference/skos.rdf.
+- **XSD datatypes** — RDF 1.1 Concepts and Abstract Syntax, W3C Recommendation 2014-02-25, section 5.1 (RDF-compatible XSD datatypes). Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/.
+
+The four W3C artifacts above carry no SPDX-identifiable notice of their own and
+are recorded as `LicenseRef-W3C-Document`: W3C liability, trademark and
+document use rules apply (https://www.w3.org/Consortium/Legal/2015/doc-license).
+
 ## T3 Tools Inc. (t3code) — MIT material
 
 Upstream repository: <https://github.com/pingdotgg/t3code>

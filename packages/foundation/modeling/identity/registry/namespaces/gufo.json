@@ -1,0 +1,23 @@
+{
+  "namespace": {
+    "prefix": "gufo",
+    "iri": "http://purl.org/nemo/gufo#"
+  },
+  "terms": [
+    "Category",
+    "Event",
+    "Kind",
+    "Mixin",
+    "Object",
+    "Phase",
+    "PhaseMixin",
+    "Quality",
+    "Relator",
+    "Role",
+    "RoleMixin",
+    "SubKind",
+    "mediates"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

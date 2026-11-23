@@ -1,4 +1,4 @@
-import { IdentityAuthority, make, SemanticFoundationVocab } from "@beep/identity";
+import { IdentityAuthority, make } from "@beep/identity";
 import { $EpistemicId, $I, $OntologyId, $QaId, $SemanticFoundationId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
@@ -21,7 +21,6 @@ describe("@beep/identity IRI binding", () => {
     expectTypeOf($I.curie).toEqualTypeOf<"beep:">();
     expectTypeOf(x.iri).toEqualTypeOf<"https://beep-effect.com/ns/x">();
     expectTypeOf(x.curie).toEqualTypeOf<"beep:x">();
-    expectTypeOf(SemanticFoundationVocab.beep.iri).toEqualTypeOf<"https://beep-effect.com/ns/">();
 
     expect(IdentityAuthority).toBe("https://beep-effect.com/ns/");
     expect($I.iri).toBe("https://beep-effect.com/ns/");
@@ -29,7 +28,6 @@ describe("@beep/identity IRI binding", () => {
     expect($I.curie).toBe("beep:");
     expect(x.iri).toBe("https://beep-effect.com/ns/x");
     expect(x.curie).toBe("beep:x");
-    expect(SemanticFoundationVocab.beep.iri).toBe(IdentityAuthority);
   });
 
   it("roots the shared epistemic and QA vocabularies under the identity authority", () => {

@@ -699,7 +699,7 @@
       "kind": "exported-type-literal",
       "status": "exception",
       "owner": "@beep/ontology",
-      "reason": "Compile-time authoring grammar, not wire data: schemas holds live S.Top handles and triples carries the Predicate<CoreVocab> closed literal type, both unrepresentable as runtime codecs. The runtime halves are schema-validated separately (TripleValue tuple schema; handles resolve through identity annotations during assembly)."
+      "reason": "Compile-time authoring grammar, not wire data: schemas holds live S.Top handles and triples carries the Predicate<typeof RegistryVocab> closed literal type, both unrepresentable as runtime codecs. The runtime halves are schema-validated separately (TripleValue tuple schema; handles resolve through identity annotations during assembly)."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
@@ -707,7 +707,7 @@
       "kind": "exported-type-literal",
       "status": "exception",
       "owner": "@beep/ontology",
-      "reason": "Compile-time authoring grammar: datatype is the Curie<CoreVocab> | AbsoluteIri closed literal union, which a runtime schema cannot express without widening to string and losing the typo-is-a-compile-error property (D3). The runtime validation lives in the internal TypedLiteralValue schema inside TripleValue."
+      "reason": "Compile-time authoring grammar: datatype is the RegistryCurie | AbsoluteIri closed literal union, which a runtime schema cannot express without widening to string and losing the typo-is-a-compile-error property (D3). The runtime validation lives in the internal TypedLiteralValue schema inside TripleValue."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/Fold.projections.ts",

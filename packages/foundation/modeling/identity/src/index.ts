@@ -15,20 +15,20 @@
  * @since 0.0.0
  */
 /**
- * CURIE expansion, contraction, and schema codecs for identity vocabularies.
+ * The identity authority, the IRI root of every declared internal namespace.
  *
- * **Example** (Expand CURIE to IRI)
+ * **Example** (Read the identity authority)
  *
  * ```ts
- * import { expand } from "@beep/identity/Curie"
+ * import { IdentityAuthority } from "@beep/identity/Authority"
  *
- * console.log(expand("skos:prefLabel"))
+ * console.log(IdentityAuthority)
  * ```
  *
- * @category codecs
+ * @category constants
  * @since 0.0.0
  */
-export * from "./Curie.ts";
+export * from "./Authority.ts";
 /**
  * Discrete fiber families with schema-validated section metadata.
  *
@@ -150,17 +150,35 @@ export * from "./packages.ts";
  */
 export * from "./Root.ts";
 /**
- * Static borrowed vocabulary registry and literal CURIE type helpers.
+ * Declared terms, namespaces, term bindings, deprecations and the term-stability snapshot.
  *
- * **Example** (Read core vocab IRI)
+ * **Example** (Check a term local)
  *
  * ```ts
- * import { CoreVocab } from "@beep/identity/Vocab"
+ * import * as S from "effect/Schema"
+ * import { TermLocal } from "@beep/identity/Term"
  *
- * console.log(CoreVocab.rdf.iri)
+ * console.log(S.is(TermLocal)("receipts/accepted/v2"))
  * ```
  *
- * @category constants
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Term.ts";
+/**
+ * Literal CURIE, predicate and IRI type helpers over a vocabulary shape.
+ *
+ * **Example** (Type a CURIE over the registry)
+ *
+ * ```ts
+ * import type { RegistryVocab } from "@beep/identity/Registry"
+ * import type { Curie } from "@beep/identity/Vocab"
+ *
+ * const curie: Curie<typeof RegistryVocab> = "rdfs:label"
+ * console.log(curie)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export * from "./Vocab.ts";
