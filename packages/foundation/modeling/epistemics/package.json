@@ -98,7 +98,8 @@
     "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "@beep/annotation": "workspace:^"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",

@@ -553,3 +553,21 @@ the inventory. A test-file-only discovery recipe would have prevented the interr
   failed at the same declaration boundary. **Would have prevented it:** declaration
   emit on the new shared leaf before the importer package fan-out. Export the
   documented nominal cases so generated declarations can name their brands.
+
+## 2026-11-23 — P4 generic codecs and no-op identity
+
+- **Doing:** implementing immutable claim arrows and assessment updates. **Evidence:**
+  the first test-typecheck receipt exposed inference loss through a whole generic
+  factory return type; infer the core codec directly and reuse the record ingredients.
+  Runtime refusal tests also showed schema case constructors copy nested records.
+  Return typed refusal values with the original record reference, retaining the
+  schema-derived union contract. **Would have prevented it:** a generic encoded-id
+  binding fixture plus an identity assertion in the canonical update recipe.
+
+- **Doing:** running the P4 commit-3 docgen gate. **Evidence:** one wrapper
+  failed to spawn docgen and another attempt exited 130 without a diagnostic.
+  A direct docgen run then exposed two example type errors: concatenated hash
+  strings widened past the required template-literal type. Explicit synthetic
+  hash literals fix the examples; the earlier interruption causes remain unknown.
+  **Would have prevented it:** preserving subprocess causes and compiling examples
+  during the first local edit loop.

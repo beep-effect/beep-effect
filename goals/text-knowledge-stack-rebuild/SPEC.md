@@ -1983,6 +1983,14 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Change coordinate codecs and refusal encoding together while preserving original records on failure.
 
+### P4: bind stateless arrows to owner codecs, 2026-11-23
+
+Schema factories return annotated ingredients for caller-owned Opaque wrappers. Bind the checked Effect.fn arrows once to the actual core or coordinate codecs through makeClaimArrows and makeAssessmentArrows; this captures no mutable state and creates no foundation service. Infer the core codec directly rather than through a whole generic factory return type, and reuse makeClaimRecords so encoded and constructor input types remain caller-owned. Refusal values preserve the original input record reference; schema decoding alone grants no checked identity or authority.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Replace the binding factories with explicit codec arguments while migrating callers and retaining the versioned encoded preimages.
+
 ### P4: evidence keeps position and a separate reported confidence signal, 2026-11-23
 
 epistemic tables own frozen current and legacy span codecs. Strict current rows split to TextAnchor and extractor-confidence signal; loose legacy rows derive endChar as startChar plus UTF-16 quote width. A row still failing current text constraints is a LegacyEvidenceUnresolved record retaining old fields and reason, never a verified position. A stored scalar is Present reported confidence with method legacy-reported, never a calibrated probability. New writes use a tagged position-and-signal JSON shape in the existing span column; old rows are never rewritten. Table row schemas are separated from domain read records; both query shapes are supported by the span SQL accessors and converters. Verification receipts and manifestation-key bytes are not reminted; association compares the recovered position only, and unresolved spans cannot verify. Frozen synthetic fixtures cover strict, loose-width, empty and over-bound quotes.

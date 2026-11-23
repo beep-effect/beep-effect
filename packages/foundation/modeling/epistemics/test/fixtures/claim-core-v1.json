@@ -1,0 +1,4 @@
+{
+  "hash": "sha256:46578e04e3c49d614eb84edcabfef46126c96f7de4b50ee98a25a8b138106cd7",
+  "canonical": "[\"claim/v1\",{\"assertedBy\":{\"_tag\":\"Person\",\"principal\":\"fixture\"},\"derivedFrom\":[],\"generatedBy\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"knowledgeStart\":1000,\"logicalKey\":\"synthetic\",\"proposition\":\"synthetic\",\"scope\":\"fixture\",\"supportAtCreation\":[],\"valid\":{\"_tag\":\"Unknown\"}}]"
+}

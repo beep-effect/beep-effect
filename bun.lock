@@ -2815,6 +2815,7 @@
       "name": "@beep/epistemics",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/jsonc": "workspace:^",
         "@beep/schema": "workspace:^",

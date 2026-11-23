@@ -6,6 +6,20 @@
  */
 
 /**
+ * Total owner coordinates and codec-checked update arrows.
+ *
+ * **Example** (Inspect a refusal coordinate)
+ *
+ * ```ts
+ * import { InvalidAssessment } from "@beep/epistemics/Assessments"
+ * console.log(InvalidAssessment.make({ coordinate: "review", issue: "Invalid input" }).coordinate)
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./Assessments.ts";
+/**
  * Claim envelope exports: the bitemporal claim version, review state and
  * evidence signals bound to a slice's proposition and ids.
  *
@@ -23,6 +37,20 @@
  * @since 0.0.0
  */
 export * from "./Claim/index.ts";
+/**
+ * Immutable claim core schemas and checked identity arrows.
+ *
+ * **Example** (Read claim stances)
+ *
+ * ```ts
+ * import { Stance } from "@beep/epistemics/ClaimCore"
+ * console.log(Stance.literals)
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./ClaimCore.ts";
 /**
  * Claim disposition status value exports.
  *
@@ -76,6 +104,20 @@ export * from "./ClaimEvidenceReview/index.ts";
  * @since 0.0.0
  */
 export * from "./ClaimGate/index.ts";
+/**
+ * Lawful immutable append projections and derivation closure.
+ *
+ * **Example** (Check an empty log)
+ *
+ * ```ts
+ * import { checkClaimLog } from "@beep/epistemics/ClaimLog"
+ * console.log(checkClaimLog([]))
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./ClaimLog.ts";
 /**
  * Claim projection read-model schema factories.
  *

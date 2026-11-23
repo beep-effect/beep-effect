@@ -2697,6 +2697,7 @@
       {
         "from": "@beep/epistemics",
         "allow": [
+          "@beep/annotation",
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
@@ -2706,6 +2707,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
