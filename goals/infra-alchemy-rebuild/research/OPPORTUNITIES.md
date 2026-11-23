@@ -786,10 +786,12 @@ to the gap between the reference checkout (main) and the pinned release.
   `@beep/law-practice-server`, which Turbo's affected set still placed in those partitions. So the partition
   ran it through one undivided `turbo run …#test -- --coverage … --shard=N/8` step. Its `beep:test` is two
   Vitest commands joined by `&&`, and `bun run` appended every forwarded argument to the second one only.
-  The main suite ran whole and uncovered in each of the eight shards. PRs whose base sent the coverage
+  The main suite ran whole and uncovered in each of the eight shards. PRs whose own diff sent the coverage
   planner to its full fallback split the script per segment and passed in about four minutes, which hid the
   defect.
 - **Would have prevented it:** running every package a coverage partition selects through the per-segment
   invocations the fallback uses, sealing only the planned owners. Also: refusing an undivided compound
-  script before it runs, and checking each invocation's executed file count against its exact Vitest shard
-  slice. A mis-sharded run then fails in seconds instead of timing out. The fix PR does all three.
+  script before it runs, failing a sharded segment that ran every listed file (its `--shard` never reached
+  it), and checking at the collector that all shards together ran each listed file exactly once. Shard file
+  counts follow each package's sequencer (measured `vitest.shards.json` plans), so no per-shard count is
+  predicted. A mis-sharded run then fails in seconds instead of timing out. The fix PR does all four.

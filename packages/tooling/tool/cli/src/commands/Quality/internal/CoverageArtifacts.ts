@@ -39,6 +39,7 @@ import {
   CoverageRawFile,
   CoverageRuntimeReceipt,
   CoverageSourceIdentity,
+  CoverageUnsealedRun,
 } from "./CoverageArtifacts.schemas.ts";
 import { coverageProducerEnvironment } from "./CoverageEnvironment.ts";
 import {
@@ -533,7 +534,9 @@ const actualTests = Effect.fn("CoverageArtifacts.actualTests")(function* (
  * did not run all of them (its `--shard` argument reached it), and it left
  * coverage data whenever it ran any. A shard's file count follows the
  * package's sequencer (a measured plan or Vitest's hash split), so an empty
- * slice passes with no files and no coverage data.
+ * slice passes with no files and no coverage data. The returned run goes into
+ * the producer manifest, where the collector checks that the package's shards
+ * together ran every listed file exactly once.
  *
  * **Example** (Check one run)
  *
@@ -558,7 +561,7 @@ export const verifyCoverageInvocationRun = Effect.fn("CoverageArtifacts.verifyIn
       path.join(selection.packagePath, path.dirname(selection.testReportPath), "coverage-final.json")
     );
   }
-  return A.length(files);
+  return CoverageUnsealedRun.make({ selection, actualTestFiles: files });
 });
 
 const validateRuntimeReceipt = Effect.fn("CoverageArtifacts.validateRuntimeReceipt")(function* (
@@ -642,7 +645,10 @@ export const writeCoverageProducerArtifact = Effect.fn("CoverageArtifacts.writeP
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* checkCheckout(repoRoot, options.identity);
-  yield* requireUnique(A.map(options.packages, packageInvocationKey), "producer package invocation");
+  yield* requireUnique(
+    A.map([...options.packages, ...A.map(options.unsealedRuns, (run) => run.selection)], packageInvocationKey),
+    "producer package invocation"
+  );
   const runtimeVersion = O.fromUndefinedOr(process.versions.bun);
   if (O.isNone(runtimeVersion)) {
     return yield* configurationError("coverage producer must run under Bun.");
@@ -664,6 +670,7 @@ export const writeCoverageProducerArtifact = Effect.fn("CoverageArtifacts.writeP
     producerRuntime: "bun",
     producerRuntimeVersion: runtimeVersion.value,
     packages,
+    unsealedRuns: options.unsealedRuns,
   });
   const argument = path.join(artifactRoot, "manifest.json");
   const pipe1 = yield* encodeManifest(manifest).pipe(mapError("cannot encode manifest."));
@@ -735,6 +742,39 @@ const validatePackageSlices = Effect.fn("CoverageArtifacts.validatePackageSlices
     return yield* configurationError(`incomplete executed test census for ${expected.packageName}.`);
   }
   return expected;
+});
+
+const UNSEALED_PATHS_SHOWN = 10;
+const firstPaths = (files: ReadonlyArray<string>) =>
+  A.length(files) > UNSEALED_PATHS_SHOWN
+    ? `${A.join(A.take(files, UNSEALED_PATHS_SHOWN), ", ")} and ${A.length(files) - UNSEALED_PATHS_SHOWN} more`
+    : A.join(files, ", ");
+
+const validateUnsealedShards = Effect.fn("CoverageArtifacts.validateUnsealedShards")(function* (
+  runs: A.NonEmptyReadonlyArray<CoverageUnsealedRun>
+) {
+  const expected = runs[0].selection;
+  const shardCount = expected.shard?.total ?? 1;
+  const indexes = A.sort(
+    A.map(runs, (run) => run.selection.shard?.index ?? 1),
+    Order.Number
+  );
+  const label = `${expected.packageName} segment ${expected.invocationId}, shards ${A.join(A.map(indexes, String), ",")} of ${shardCount}`;
+  if (!sameStrings(A.map(indexes, String), A.map(A.range(1, shardCount), String))) {
+    return yield* configurationError(`${label}: incomplete or duplicate shard set.`);
+  }
+  const listed = sorted(expected.expectedTestFiles);
+  if (!A.every(runs, (run) => sameStrings(sorted(run.selection.expectedTestFiles), listed))) {
+    return yield* configurationError(`${label}: the shards listed different test files.`);
+  }
+  const ran = A.flatMap(runs, (run) => run.actualTestFiles);
+  const missing = A.difference(listed, ran);
+  const extra = sorted(A.difference(ran, listed));
+  const duplicate = A.filter(sorted(ran), (file) => A.length(A.filter(ran, (other) => other === file)) > 1);
+  if (A.isReadonlyArrayEmpty(missing) && A.isReadonlyArrayEmpty(extra) && A.isReadonlyArrayEmpty(duplicate)) return;
+  return yield* configurationError(
+    `${label}: ran ${A.length(sorted(ran))} distinct of ${A.length(listed)} listed test files; missing [${firstPaths(missing)}]; extra [${firstPaths(extra)}]; duplicate [${firstPaths(duplicate)}].`
+  );
 });
 
 const validatePackageInvocations = Effect.fn("CoverageArtifacts.validatePackageInvocations")(function* (
@@ -938,6 +978,18 @@ export const collectCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.col
   if (A.isReadonlyArrayNonEmpty(missing)) {
     return yield* configurationError(`missing producer partitions: ${A.join(missing, ", ")}.`);
   }
+  const unsealedRuns = A.flatMap(selected, ([manifest]) => manifest.unsealedRuns);
+  const plannedUnsealed = A.filter(unsealedRuns, (run) => A.contains(expectedNames, run.selection.packageName));
+  if (A.isReadonlyArrayNonEmpty(plannedUnsealed)) {
+    return yield* configurationError(
+      `unsealed run of planned package ${plannedUnsealed[0].selection.packageName}; planned packages must be sealed.`
+    );
+  }
+  yield* Effect.forEach(
+    R.values(A.groupBy(unsealedRuns, (run) => packageInvocationKey(run.selection))),
+    validateUnsealedShards,
+    { concurrency: 1, discard: true }
+  );
   const locatedPackages = A.flatMap(selected, ([manifest, file]: [CoverageProducerManifest, string]) =>
     A.map(manifest.packages, (entry) => ({ entry, directory: path.dirname(path.resolve(root, file)) }))
   );

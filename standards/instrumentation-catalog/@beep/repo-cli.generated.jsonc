@@ -1233,6 +1233,7 @@
     {"name":"CoverageArtifacts.validatePackageInvocations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CoverageArtifacts.validatePackageSlices","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CoverageArtifacts.validateRuntimeReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CoverageArtifacts.validateUnsealedShards","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CoverageArtifacts.verifyInvocationRun","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CoverageArtifacts.writeProducer","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CoverageConfig.inspectSources","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -496,19 +496,20 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
   const isSealed = (entry: CoverageProducerPackage) => A.contains(sealedNames, entry.packageName);
   const sealed = A.filter(packages, isSealed);
   const unsealed = A.filter(packages, (entry) => !isSealed(entry));
-  yield* Effect.forEach(
+  const unsealedRuns = yield* Effect.forEach(
     unsealed,
     Effect.fnUntraced(function* (entry) {
-      const ran = yield* verifyCoverageInvocationRun(repoRoot, entry).pipe(
+      const run = yield* verifyCoverageInvocationRun(repoRoot, entry).pipe(
         Effect.mapError(coverageCommandError(`Unsealed run ${entry.packageName}/${entry.invocationId} is incomplete`))
       );
       yield* Console.log(
-        `[ci] ${partitionId}: ${entry.packageName}/${entry.invocationId} ran ${ran} of ${A.length(entry.expectedTestFiles)} test files${
+        `[ci] ${partitionId}: ${entry.packageName}/${entry.invocationId} ran ${A.length(run.actualTestFiles)} of ${A.length(entry.expectedTestFiles)} test files${
           entry.shard === undefined ? "" : ` (shard ${entry.shard.index}/${entry.shard.total})`
         }; not sealed, outside the coverage plan.`
       );
+      return run;
     }),
-    { concurrency: 1, discard: true }
+    { concurrency: 1 }
   );
   yield* writeCoverageProducerArtifact(
     repoRoot,
@@ -517,6 +518,7 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
       identity: plan.identity,
       partitionId,
       packages: sealed,
+      unsealedRuns,
     })
   ).pipe(Effect.mapError(coverageCommandError(`Failed to seal coverage partition ${partitionId}`)));
 });
@@ -549,16 +551,13 @@ const refuseUndividedCompoundTests = Effect.fn("CiCoverage.refuseUndividedCompou
   const names = A.filterMap(args, (arg) =>
     Str.endsWith("#test")(arg) ? Result.succeed(Str.slice(0, -"#test".length)(arg)) : Result.failVoid
   );
-  if (A.isReadonlyArrayEmpty(names)) return;
   const workspaces = yield* workspaceManifests(repoRoot).pipe(
     CiCommandError.mapError("Failed to read the test scripts of an undivided coverage step.")
   );
   const compound = A.filter(names, (name) =>
-    O.match(HashMap.get(workspaces, name), {
-      onNone: () => false,
-      onSome: (workspace) =>
-        vitestSegmentCount(O.getOrElse(HashMap.get(workspace.manifest.scripts, "beep:test"), () => "")) > 1,
-    })
+    O.exists(HashMap.get(workspaces, name), (workspace) =>
+      O.exists(HashMap.get(workspace.manifest.scripts, "beep:test"), (script) => vitestSegmentCount(script) > 1)
+    )
   );
   if (A.isReadonlyArrayNonEmpty(compound)) {
     return yield* CiCommandError.make({
@@ -656,30 +655,36 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
   // Two packages at a time: each vitest process is pinned to one worker, so a 4-vCPU hosted runner has
   // headroom for a second producer; the steps are buffered so the two logs do not interleave.
   yield* Effect.forEach(
-    A.zip(steps, packages),
-    Effect.fnUntraced(function* ([step, entry]) {
-      for (const command of entry.preparationCommands)
-        yield* runQualityTaskBufferedStepGroup(`${step.label}:prepare`, [
-          QualityTaskStep.make({
-            ...step,
-            command: command[0],
-            args: A.drop(command, 1),
-            env: { ...step.env, BEEP_COVERAGE_INVOCATION_ID: undefined, BEEP_COVERAGE_RUNTIME_RECEIPT: undefined },
-          }),
-        ]);
-      yield* runQualityTaskBufferedStepGroup(step.label, [step]);
-      for (const script of entry.continuationScripts)
-        yield* runQualityTaskBufferedStepGroup(`${step.label}:${script}`, [
-          QualityTaskStep.make({
-            ...step,
-            command: "bun",
-            args: ["run", script],
-            env: { ...step.env, BEEP_COVERAGE_INVOCATION_ID: undefined, BEEP_COVERAGE_RUNTIME_RECEIPT: undefined },
-          }),
-        ]);
-    }),
+    R.values(A.groupBy(A.zip(steps, packages), ([, entry]) => entry.packagePath)),
+    (segmentsInScriptOrder) =>
+      Effect.forEach(segmentsInScriptOrder, runCompoundSegment, { concurrency: 1, discard: true }),
     { concurrency: CI_COVERAGE_COMPOUND_STEP_CONCURRENCY, discard: true }
   );
+});
+
+const runCompoundSegment = Effect.fnUntraced(function* ([step, entry]: readonly [
+  QualityTaskStep,
+  CoverageProducerPackage,
+]) {
+  for (const command of entry.preparationCommands)
+    yield* runQualityTaskBufferedStepGroup(`${step.label}:prepare`, [
+      QualityTaskStep.make({
+        ...step,
+        command: command[0],
+        args: A.drop(command, 1),
+        env: { ...step.env, BEEP_COVERAGE_INVOCATION_ID: undefined, BEEP_COVERAGE_RUNTIME_RECEIPT: undefined },
+      }),
+    ]);
+  yield* runQualityTaskBufferedStepGroup(step.label, [step]);
+  for (const script of entry.continuationScripts)
+    yield* runQualityTaskBufferedStepGroup(`${step.label}:${script}`, [
+      QualityTaskStep.make({
+        ...step,
+        command: "bun",
+        args: ["run", script],
+        env: { ...step.env, BEEP_COVERAGE_INVOCATION_ID: undefined, BEEP_COVERAGE_RUNTIME_RECEIPT: undefined },
+      }),
+    ]);
 });
 
 /**
