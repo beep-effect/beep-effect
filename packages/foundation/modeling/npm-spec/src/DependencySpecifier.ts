@@ -671,8 +671,7 @@ const brandedSpecifier = S.String.pipe(
       $I.annote("DependencySpecifierCheck", {
         title: "Valid dependency specifier",
         message: "Expected a valid dependency specifier",
-        description:
-          "A nonempty string classified as a supported dependency protocol. Under effect 4.0.6 the `message` annotation is the issue message; `title` is only the label.",
+        description: "A nonempty string classified as a supported dependency protocol.",
       })
     )
   ),

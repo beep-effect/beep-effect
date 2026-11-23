@@ -180,8 +180,7 @@ const pinVersion = SemVer.pipe(
       $I.annote("PinVersionCheck", {
         title: "Pinnable version",
         message: "Expected a version without build metadata",
-        description:
-          "An exact version without build metadata, which the pin grammar cannot represent. Under effect 4.0.6 the `message` annotation is the issue message; `title` is only the label.",
+        description: "An exact version without build metadata, which the pin grammar cannot represent.",
       })
     )
   )

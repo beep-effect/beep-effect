@@ -115,10 +115,10 @@ export declare namespace PartialReleaseAgeGate {
   export type Encoded = typeof PartialReleaseAgeGate.Encoded;
 }
 
+// decision: release-age-minutes-not-integral
 const AgeMinutes = S.Number.check(S.isGreaterThanOrEqualTo(0), S.isFinite()).pipe(
   $I.annoteSchema("AgeMinutes", {
-    description:
-      "A non-negative, finite minute count: `isGreaterThanOrEqualTo(0)` already rejects NaN (NaN >= 0 is false) and `isFinite` rejects Infinity. Integrality is deliberately not enforced: pnpm's config is an integer of minutes, but `combine` takes `Math.max` of arbitrary finite contributions, so an integer check would make a fractional contribution throw at construction and break `combine`'s totality.",
+    description: "A non-negative, finite minute count; fractional minutes are allowed.",
   })
 );
 
