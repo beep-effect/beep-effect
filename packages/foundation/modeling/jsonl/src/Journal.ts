@@ -3,7 +3,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// The `Journal` service: one append-only, schema-validated JSONL file.
 
 import { $JsonlId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
@@ -126,8 +125,7 @@ export type JournalReadError = JournalNotFound | InvalidSlice | InvalidUtf8 | Pl
  * @category configuration
  * @since 0.0.0
  */
-// Opaque structs keep configuration as plain data at the service-construction
-// boundary: call sites pass the encoded shape, a plain object literal.
+// decision: journal-opaque-config-structs
 export class AppendOptions extends S.Opaque<AppendOptions, { readonly brand: unique symbol }>()(
   S.Struct({ scope: S.optionalKey(S.String) }).pipe(
     $I.annoteSchema("AppendOptions", { description: "Partition selection for one append." })
@@ -323,19 +321,12 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   readonly remove: Effect.Effect<void, PlatformError.PlatformError>;
 }
 
-/**
- * The duration strings `Duration.fromInput` parses: a signed decimal, whitespace
- * and a unit, or a signed `Infinity`. The grammar mirrors Effect's own parser,
- * so every string admitted here decodes into a `Duration`.
- */
-const DURATION_STRING =
+const DURATION_FROM_INPUT_GRAMMAR =
   /^(?:-?Infinity|-?\d+(?:\.\d+)?\s+(?:nanos?|micros?|millis?|seconds?|minutes?|hours?|days?|weeks?))$/;
 
-/** Text in the duration-string grammar; also the generation source for its arbitrary. */
-const DurationText = S.String.check(S.isPattern(DURATION_STRING));
+const DurationText = S.String.check(S.isPattern(DURATION_FROM_INPUT_GRAMMAR));
 const isDurationText = S.is(DurationText);
 
-/** The string members of `Duration.Input`. */
 type DurationString = Extract<Duration.Input, string>;
 
 const DurationString = S.declare((input: unknown): input is DurationString => isDurationText(input)).pipe(
@@ -345,25 +336,14 @@ const DurationString = S.declare((input: unknown): input is DurationString => is
   })
 );
 
-/**
- * Any JavaScript number. `Duration.Input` deliberately admits `NaN` and the
- * infinities (`Infinity` milliseconds is an unbounded wait), so this is not a
- * finite domain number; generation draws from finite numbers.
- */
 const DurationNumber = S.declare(P.isNumber).pipe(
   $I.annoteSchema("DurationNumber", {
-    description: "A JavaScript number, including the special values Duration.fromInput accepts.",
+    description:
+      "Any JavaScript number, not a finite domain number: Duration.fromInput admits NaN and the infinities (Infinity milliseconds is an unbounded wait). Arbitraries draw finite numbers.",
     toCodecArbitrary: () => S.link<number>()(S.Finite, SchemaTransformation.passthrough()),
   })
 );
 
-/**
- * The object member of `Duration.Input`; every component is optional and additive.
- *
- * Mirrors effect's `Duration.DurationObject`, whose members are declared
- * `weeks?: number | undefined`: a value typed against `Duration.Input` may hold
- * an explicit undefined, so these keys keep it (EF-40 exception).
- */
 const DurationObject = S.Struct({
   weeks: DurationNumber.pipe(S.UndefinedOr, S.optionalKey),
   days: DurationNumber.pipe(S.UndefinedOr, S.optionalKey),
@@ -374,13 +354,12 @@ const DurationObject = S.Struct({
   microseconds: DurationNumber.pipe(S.UndefinedOr, S.optionalKey),
   nanoseconds: DurationNumber.pipe(S.UndefinedOr, S.optionalKey),
 }).pipe(
-  $I.annoteSchema("DurationObject", { description: "Additive duration components accepted by Duration.fromInput." })
+  $I.annoteSchema("DurationObject", {
+    description:
+      "Optional, additive duration components accepted by Duration.fromInput. Mirrors Duration.DurationObject, whose members are declared `weeks?: number | undefined`, so each key admits an explicit undefined (EF-40 exception).",
+  })
 );
 
-/**
- * Every `Duration.Input` shape: a `Duration`, milliseconds, bigint nanoseconds,
- * a `[seconds, nanos]` tuple, a duration string or a duration object.
- */
 const DurationInput = S.Union([
   S.Duration,
   DurationNumber,
@@ -390,17 +369,6 @@ const DurationInput = S.Union([
   DurationObject,
 ]).pipe($I.annoteSchema("DurationInput", { description: "Every input shape Duration.fromInput accepts." }));
 
-/**
- * A `Duration.Input` decoded into a `Duration`.
- *
- * **Details**
- *
- * The union admits every input shape, but `Duration.fromInput` still refuses
- * some well-shaped values, such as a template-typed string it cannot parse.
- * Those fail the decode with an issue rather than escaping as a defect. (Since
- * effect 4.0.5 a tuple or object whose nanosecond total overflows saturates to
- * `Duration.infinity` instead of throwing a `RangeError`.)
- */
 const DurationFromInput = DurationInput.pipe(
   S.decodeTo(
     S.Duration,
@@ -457,19 +425,9 @@ export class JournalConfig extends S.Opaque<JournalConfig, { readonly brand: uni
   }).pipe($I.annoteSchema("JournalConfig", { description: "File and subscription settings for one journal layer." }))
 ) {}
 
-/**
- * How long scope close waits for the terminal `Exit` to be accepted by the hub.
- *
- * **Details**
- *
- * Bounded rather than indefinite: a subscriber that never consumes cannot
- * observe completion, so waiting on it forever only converts "one stuck
- * subscriber" into "the process cannot shut down".
- */
+// decision: journal-publish-outside-write-permit
 const SHUTDOWN_PUBLISH_TIMEOUT = Duration.seconds(5);
 
-// Decoding a JournalConfig: a missing or undefined optional key takes its
-// default, and the shutdown bound becomes a Duration.
 const JournalSettings = S.Struct({
   ...JournalConfig.fields,
   capacity: Capacity.pipe(S.withDecodingDefaultKey(Effect.succeed(64))),
@@ -481,82 +439,28 @@ const JournalSettings = S.Struct({
 );
 const decodeSettings = S.decodeEffect(JournalSettings);
 
-/**
- * How many times the watcher re-arms a watch that ends without observing
- * anything before it gives up.
- *
- * **Details**
- *
- * A watch that completes instantly — an unsupported backend, a path that keeps
- * vanishing — would otherwise spin the supervisor at full speed, and no timer
- * is permitted here to back it off. Giving up is the honest failure: local
- * appends keep working, live observation does not.
- */
+// decision: journal-arm-before-catch-up
 const MAX_IMMEDIATE_REARMS = 8;
 
-/**
- * Index of the last path separator, on either convention.
- *
- * **Details**
- *
- * Both are checked because a Windows path contains no `/` at all: matching only
- * on `/` returns `-1` there, which makes the whole path its own basename and
- * points the activation watch at the process working directory — a journal
- * created after its layer was built is then never observed.
- */
+// decision: journal-directory-activation-watch
 const lastSeparator = (path: string): number =>
   Math.max(
     O.getOrElse(Str.lastIndexOf("/")(path), () => -1),
     O.getOrElse(Str.lastIndexOf("\\")(path), () => -1)
   );
 
-/**
- * The last segment of a path.
- *
- * **Details**
- *
- * Used for **comparison only** — matching a watch event's basename against the
- * journal's filename. `event.path` is never opened or read, on any watch.
- */
 const basenameOf = (path: string): string => Str.slice(lastSeparator(path) + 1)(path);
 
-/**
- * The directory a path sits in — the single derived path this package ever
- * hands to the filesystem, and only as {@link JournalConfig.directory}'s
- * default.
- *
- * **Details**
- *
- * Path arithmetic is otherwise forbidden here: paths are opaque strings handed
- * straight to `FileSystem`. This one derivation exists because the activation
- * watch has to name a directory and the layer takes only a file path; a caller
- * whose path convention this does not fit (a drive-relative Windows path, say)
- * names the directory explicitly instead.
- */
 const parentOf = (path: string): string => {
   const separator = lastSeparator(path);
   if (separator < 0) return ".";
-  // A separator at index 0 means the file sits in the root directory, which is
-  // that separator itself — slicing to an empty string would name nothing.
-  return separator === 0 ? Str.slice(0, 1)(path) : Str.slice(0, separator)(path);
+  const rootIsTheSeparatorItself = separator === 0;
+  return rootIsTheSeparatorItself ? Str.slice(0, 1)(path) : Str.slice(0, separator)(path);
 };
 
 const textEncoder = new TextEncoder();
 
-/**
- * The last valid envelope in a tail window, with its offsets rebased onto the
- * journal.
- *
- * **Details**
- *
- * The walk-back itself is **not** reimplemented here: `Envelope.lastValidResult`
- * is the binding definition of "the journal's current state" — which lines
- * count as blank, which failures are walked over, where it stops — and a second
- * copy of those rules would only be a place for them to drift apart. All this
- * adds is the one thing the pure core cannot know: the window's text begins at
- * `window.start`, so every offset inside it is relative to that.
- */
-// The window is the subject: the tail reader pipes each widened window into it.
+// decision: journal-one-decode-loop
 const decodeWindow: {
   <R extends JsonlEvent.Registry>(
     window: TailWindow,
@@ -609,40 +513,17 @@ const makeEngine: {
       )
     );
 
-    /** Guards the WRITE critical section only: file write plus ref updates. */
+    // decision: journal-publish-outside-write-permit
     const writePermit = Semaphore.makeUnsafe(1);
-    /**
-     * The publish baton.
-     *
-     * **Details**
-     *
-     * Each append links a fresh Deferred onto this chain **while holding the
-     * write permit**, so publish order is fixed to write order; it then awaits
-     * its predecessor and publishes OUTSIDE the write permit. That is what lets
-     * a stalled subscriber block publishers without wedging writers or
-     * deadlocking scope close, while still making an append complete only once
-     * the hub has accepted its envelope.
-     */
     let publishBaton: Deferred.Deferred<void> = Deferred.makeUnsafe<void>();
     Deferred.doneUnsafe(publishBaton, Exit.void);
-    /** Bytes of leading BOM, probed from the file — never inferred from a window. */
+    // decision: journal-one-handle-sampling
     let bomBytes = 0;
-    /**
-     * The watched file's identity, for detecting replacement.
-     *
-     * **Details**
-     *
-     * Size alone cannot see a same-size replace; inode identity can. `ino` is
-     * an `Option` in core's `File.Info`, so on a platform that does not report
-     * it this degrades to truncation-only detection — stated rather than
-     * pretended away.
-     */
     let identity: O.Option<string> = O.none();
     const hub = yield* PubSub.bounded<Take.Take<EnvelopeUnion<R>, JsonlError>>(config.capacity);
     const latest = yield* SubscriptionRef.make(O.none<EnvelopeUnion<R>>());
-    /** Refusal state. Read before the permit so a late append fails fast. */
     let closed = false;
-    /** Logical bytes decoded so far — the resume cursor the watcher advances. */
+    // decision: journal-one-decode-loop
     let consumed = 0;
 
     const exists = fs.exists(config.path);
@@ -670,23 +551,7 @@ const makeEngine: {
       return O.isSome(current) && HashSet.has(terminalTags, current.value.event);
     });
 
-    /**
-     * Read `[from, to)` and decode the complete lines in it, in file order.
-     *
-     * **Details**
-     *
-     * The one decode loop the external-growth paths share. Both the watcher's
-     * catch-up ingest and an append whose bytes landed past another writer's
-     * need the same thing — "decode this gap" — and two copies of a loop that
-     * rebases offsets and tolerates a torn tail is exactly the drift that
-     * produces a cursor bug on one path only.
-     *
-     * `advanced` is where the last COMPLETE line ended: an unterminated final
-     * line is not consumed, so a torn tail holds the offset until its writer
-     * finishes it. A line that fails to decode is skipped rather than fatal —
-     * a foreign writer's unknown tag must not blind this reader to the lines
-     * after it.
-     */
+    // decision: journal-one-decode-loop
     type DecodedRange = {
       readonly decoded: Array<EnvelopeUnion<R>>;
       readonly advanced: number;
@@ -720,17 +585,7 @@ const makeEngine: {
 
     const identityOf = (info: FileSystem.File.Info): O.Option<string> => O.map(info.ino, (ino) => `${info.dev}:${ino}`);
 
-    /**
-     * The journal's BOM width and metadata, sampled through ONE handle.
-     *
-     * **Details**
-     *
-     * The width, the size and the identity then describe the same file. Probing
-     * the path once for the BOM and again for the metadata can straddle a
-     * rename-over: the old file's BOM width is paired with the replacement's
-     * identity, so nothing looks replaced while every offset is three bytes off.
-     */
-    const sampleFile = Effect.scoped(
+    const sampleBomAndInfoThroughOneHandle = Effect.scoped(
       Effect.gen(function* () {
         const sample = yield* fs.open(config.path, { flag: "r" });
         const handleBomBytes1 = yield* handleBomBytes(sample);
@@ -739,8 +594,7 @@ const makeEngine: {
       })
     );
 
-    // One reconcile outcome that publishes a single failure and no envelopes.
-    const failedBatch = (failure: JournalResync | InvalidUtf8, size: number) => {
+    const failureOnlyBatch = (failure: JournalResync | InvalidUtf8, size: number) => {
       const entries: ReadonlyArray<Take.Take<EnvelopeUnion<R>, JsonlError>> = [Exit.fail(failure)];
       return {
         entries,
@@ -750,11 +604,9 @@ const makeEngine: {
       };
     };
 
-    // Whether the path now names a different file than the one consumed so far.
     const isReplacedBy = (currentIdentity: O.Option<string>): boolean =>
       O.isSome(identity) && O.isSome(currentIdentity) && identity.value !== currentIdentity.value;
 
-    // Restart from offset zero on a replaced or truncated source, and report it.
     const resync = Effect.fnUntraced(function* (
       replaced: boolean,
       currentIdentity: O.Option<string>,
@@ -779,10 +631,9 @@ const makeEngine: {
       bomBytes = bom;
       consumed = 0;
       yield* SubscriptionRef.set(latest, O.none());
-      return failedBatch(failure, size);
+      return failureOnlyBatch(failure, size);
     });
 
-    // Advance the cursor over a decoded range and publish its envelopes.
     const acceptRange = Effect.fnUntraced(function* (
       range: DecodedRange,
       currentIdentity: O.Option<string>,
@@ -801,9 +652,8 @@ const makeEngine: {
       };
     });
 
-    // Caller owns writePermit. This stage changes state but never waits on a
-    // subscriber. Both local writes and watch pokes reconcile through it.
-    const reconcile = Effect.fn("Journal.reconcile")(function* (
+    // decision: journal-publish-outside-write-permit
+    const reconcileUnderWritePermit = Effect.fn("Journal.reconcile")(function* (
       restore: <AX, EX, RX>(effect: Effect.Effect<AX, EX, RX>) => Effect.Effect<AX, EX, RX>
     ) {
       yield* restore(requireFile);
@@ -821,7 +671,7 @@ const makeEngine: {
         Effect.catchTag("InvalidUtf8", flow(Result.fail, Effect.succeed))
       );
       return Result.isFailure(reading)
-        ? failedBatch(reading.failure, size)
+        ? failureOnlyBatch(reading.failure, size)
         : yield* acceptRange(reading.success, currentIdentity, size);
     });
 
@@ -844,8 +694,6 @@ const makeEngine: {
       })
     );
 
-    /** Reconcile the actual tail before deriving or validating a local write. */
-    // `scope` is a required (possibly undefined) argument, so arity dispatch is exact.
     const appendWith: {
       (
         event: string,
@@ -865,14 +713,13 @@ const makeEngine: {
       ): Effect.fn.Return<EnvelopeUnion<R>, JournalWriteError> {
         if (closed) return yield* JournalClosed.make({ event });
         const mine = Deferred.makeUnsafe<void>();
-        // Install cleanup BEFORE the permit can link this deferred. This covers
-        // interruption during permit release as well as suspended publication.
+        // decision: journal-publish-outside-write-permit
         return yield* Effect.gen(function* () {
           const staged = yield* writePermit.withPermits(1)(
             Effect.uninterruptibleMask(
               Effect.fn("Journal.stageAppend")(function* (restore) {
                 if (closed) return yield* JournalClosed.make({ event });
-                const state = yield* reconcile(restore);
+                const state = yield* reconcileUnderWritePermit(restore);
                 const outcome: Exit.Exit<EnvelopeUnion<R>, JournalWriteError> = O.isSome(state.failure)
                   ? Exit.fail(state.failure.value)
                   : yield* Effect.exit(
@@ -916,9 +763,7 @@ const makeEngine: {
                           )
                         );
                         const expected = state.size + bytes.length;
-                        // EOF is shared by cooperating writers. Unexpected growth cannot
-                        // prove our line's position; leave consumed at the known boundary
-                        // so the next reconciliation reads the real file in its own order.
+                        // decision: journal-one-decode-loop
                         if (actual !== expected)
                           return yield* JournalWriteConflict.make({ path: config.path, expected, actual });
                         const line = LineSlice.make({
@@ -952,24 +797,7 @@ const makeEngine: {
       decodeSelection(slice).pipe(Effect.mapError((error) => InvalidSlice.make({ error })))
     );
 
-    /**
-     * Read the file from `cursor`, frame-filtered before payload decode.
-     *
-     * **Details**
-     *
-     * Samples the BOM width, the file end and the identity through one handle,
-     * then pins the file with a second handle whose identity must match the
-     * sample, and reads bounded complete-record pages through it. A page widens
-     * only when no complete record fits, including a cursor fragment. Frame
-     * filtering still precedes payload decoding; a failed record follows all
-     * earlier selected records in the stream.
-     *
-     * Upstream reads the whole sampled region in one allocation, which is a
-     * snapshot by construction and holds the entire history in memory
-     * (spencerbeggs/effected#233). Paging keeps memory bounded, so the snapshot
-     * has to be kept explicitly: the handle pins the sampled file against a
-     * replacement, and a page shorter than the sample fails `JournalResync`.
-     */
+    // decision: journal-one-handle-sampling
     const readFrom = (
       input: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
     ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> =>
@@ -978,25 +806,16 @@ const makeEngine: {
           const slice = yield* validateSelection(input);
           yield* requireFile;
           const from = slice?.cursor ?? 0;
-          // One handle supplies the BOM width, the size and the identity. With a
-          // width from one file and a size from its replacement, a healthy first
-          // record read as malformed.
-          const [bom, info] = yield* sampleFile;
+          const [bom, info] = yield* sampleBomAndInfoThroughOneHandle;
           const logicalSize = ByteSize.toNumberUnsafe(info.size) - bom;
           if (from >= logicalSize) {
             return Stream.empty;
           }
-          // Pin the sampled file. Every page is read through this one handle, so
-          // a file renamed over the path later cannot leak into the range, and
-          // a truncation surfaces as a short page instead of an early end. A
-          // replacement between the sample above and this open is caught here.
           const file = yield* fs.open(config.path, { flag: "r" });
           const pinned = yield* file.stat;
           const sampledIdentity = identityOf(info);
           const pinnedIdentity = identityOf(pinned);
           if (O.isSome(sampledIdentity) && O.isSome(pinnedIdentity) && sampledIdentity.value !== pinnedIdentity.value) {
-            // The replacement's logical size is measured with its own BOM width,
-            // read through the handle that names it.
             return yield* JournalResync.make({
               path: config.path,
               reason: JournalResyncReason.Enum.replaced,
@@ -1004,9 +823,6 @@ const makeEngine: {
               actual: Math.max(0, ByteSize.toNumberUnsafe(pinned.size) - (yield* handleBomBytes(file))),
             });
           }
-          // Capture one absolute range. Growth after this snapshot must not
-          // move its start or extend its end. The preceding byte establishes
-          // whether the cursor is at a boundary or inside a partial line.
           const start = Math.max(0, from - 1);
           const readPage: {
             (
@@ -1036,9 +852,7 @@ const makeEngine: {
                 })
               )
           );
-          // Widen an empty window until it holds a complete line or reaches
-          // the sampled end.
-          const readFilled = Effect.fnUntraced(function* (position: number) {
+          const widenUntilCompleteLine = Effect.fnUntraced(function* (position: number) {
             let length = Math.min(DEFAULT_WINDOW, logicalSize - position);
             let window = yield* readPage(position, length);
             while (Str.isEmpty(window.text) && position + length < logicalSize) {
@@ -1048,7 +862,6 @@ const makeEngine: {
             return window;
           });
           const selectFrame = (frame: EnvelopeFrame): boolean => matchesFrame(frame, slice);
-          // Frame filtering precedes payload decoding on every page.
           const selectLine = (
             line: LineSlice,
             windowStart: number
@@ -1057,7 +870,6 @@ const makeEngine: {
             const rebased = LineSlice.rebase(line, windowStart);
             return rebased.offset < from ? O.none() : Envelope.decodeSelectedResult(rebased, events, selectFrame);
           };
-          // A failed line ends the page and the stream after it is emitted.
           const selectPage = (window: TailWindow, next: O.Option<number>) => {
             let selected = Chunk.empty<Result.Result<EnvelopeUnion<R>, JsonlError>>();
             for (const line of Line.split(window.text)) {
@@ -1071,7 +883,7 @@ const makeEngine: {
           return Stream.paginate(
             start,
             Effect.fn("Journal.readPage")(function* (position) {
-              const window = yield* readFilled(position);
+              const window = yield* widenUntilCompleteLine(position);
               const advanced = window.start + utf8Length(window.text);
               const next = advanced > position && advanced < logicalSize ? O.some(advanced) : O.none<number>();
               return selectPage(window, next);
@@ -1080,18 +892,6 @@ const makeEngine: {
         })
       );
 
-    /**
-     * Envelope-level matching, for the live path.
-     *
-     * **Details**
-     *
-     * The frame-level {@link matchesFrame} is the one that carries the
-     * filter-before-decode guarantee; this is its counterpart for envelopes
-     * that arrived already decoded from the hub, where there is no decode left
-     * to avoid.
-     * The public read overloads require an events filter when T is narrower
-     * than the registry. Without that filter they expose the complete union.
-     */
     const matchesEnvelope: {
       <T extends JsonlEvent.Tag<R>>(
         envelope: EnvelopeUnion<R>,
@@ -1126,33 +926,13 @@ const makeEngine: {
         Effect.gen(function* () {
           yield* validateSelection(input);
           const slice = input;
-          // Validation precedes subscription acquisition, including no-replay reads.
-          // Quiescent already? A terminal Exit published before this
-          // subscriber attached is invisible to it — a hub has no replay — so
-          // without this check the stream would wait for an event that has
-          // already happened. Ending here is what makes "terminates rather
-          // than hangs" true.
+          // decision: journal-subscribe-before-replay
           const alreadyQuiescent = yield* isTerminalTail;
           const replay = slice?.cursor === undefined ? Stream.empty : readFrom(slice);
           if (alreadyQuiescent || closed) {
             return replay;
           }
-          // SUBSCRIBE BEFORE REPLAYING, and do it here rather than through
-          // `Stream.fromPubSubTake`. That constructor subscribes on its first
-          // pull, which `Stream.concat` does not reach until the replay has
-          // finished — and a hub has no replay of its own, so every append
-          // published while the history was being read was dropped on the
-          // floor. Subscribing in the effect the stream is unwrapped from puts
-          // the subscription strictly before the first byte is read; the scope
-          // is the stream's own, so it is released with the stream.
           const subscription = yield* PubSub.subscribe(hub);
-          // The overlap that early subscription creates, and the reason the
-          // join still cannot duplicate: a line can be on disk when the replay
-          // reads it AND still in flight to the hub, so it arrives twice.
-          // Offsets are monotonic in file order, so the last replayed `end` is
-          // exactly the boundary between "already delivered" and "new". The
-          // requested cursor is the starting boundary, so a live line starting
-          // below it is filtered exactly as the replay filters it.
           let replayedThrough = slice?.cursor ?? 0;
           const history = replay.pipe(
             Stream.tap((envelope) =>
@@ -1165,20 +945,9 @@ const makeEngine: {
             PubSub.take,
             Channel.fromEffectTake,
             Stream.fromChannel,
-            // The terminal envelope ends THIS subscription, whatever the
-            // slice says: the journal is finished, so there is nothing more
-            // to wait for. `takeUntil` runs before the slice filter so a
-            // terminal event that the slice excludes still ends the stream —
-            // but is not delivered. It also runs before the de-duplication
-            // filter, so a terminal envelope that the replay already
-            // delivered still ends the stream rather than being dropped and
-            // leaving the subscriber waiting on a journal that is over.
             Stream.takeUntil(isTerminalEnvelope),
             Stream.filter((envelope) => envelope.line.offset >= replayedThrough)
           );
-          // ONE seam: history and tail are the same stream, filtered the same
-          // way downstream, so a consumer cannot see a gap or a duplicate at
-          // the join.
           return Stream.concat(history, live);
         })
       );
@@ -1190,7 +959,7 @@ const makeEngine: {
           Effect.uninterruptibleMask(
             Effect.fn("Journal.stageIngest")(function* (restore) {
               if (!(yield* restore(exists))) return O.none();
-              const state = yield* reconcile(restore);
+              const state = yield* reconcileUnderWritePermit(restore);
               const predecessor = publishBaton;
               publishBaton = mine;
               return O.some({ entries: state.entries, predecessor });
@@ -1228,10 +997,8 @@ const makeEngine: {
         event,
         (current) => {
           const base = O.isSome(current) ? current.value.data : undefined;
-          // Merge decoded fields into a plain record. The patch encoder uses
-          // structural class fields; envelope decoding creates the instance.
-          const merge = isRecordLike(base) && isRecordLike(patch) && canMerge(base, patch);
-          return { data: merge ? shallowMerge(base, patch) : patch, patch: merge };
+          const mergeIntoPlainRecord = isRecordLike(base) && isRecordLike(patch) && canMerge(base, patch);
+          return { data: mergeIntoPlainRecord ? shallowMerge(base, patch) : patch, patch: mergeIntoPlainRecord };
         },
         options?.scope
       );
@@ -1293,11 +1060,7 @@ const makeEngine: {
       create: Effect.gen(function* () {
         const present = yield* exists;
         if (!present) {
-          // Opening with `O_APPEND` creates the file; nothing is written.
-          // Do NOT `writeAll(new Uint8Array(0))` to "touch" it — a zero-byte
-          // write returns 0 bytes, which `writeAll`'s loop reports as a
-          // stalled write (`WriteZero`), so the create fails on a file it
-          // just successfully created.
+          // decision: journal-missing-file-contract
           yield* Effect.scoped(fs.open(config.path, { flag: "a" }));
         }
       }),
@@ -1305,80 +1068,32 @@ const makeEngine: {
       hub,
     };
 
-    // Seed `latest` from whatever is already on disk, and set the append
-    // cursor past it. A missing file is legal here: layer construction must
-    // never fail on one.
+    // decision: journal-missing-file-contract
     const present = yield* exists;
     if (present) {
-      // What a journal that vanished during the seed leaves behind: no BOM
-      // width, and the cursor, identity and `latest` still at their empty start.
-      const missing = Effect.sync(() => {
+      const resetAfterVanishedSeed = Effect.sync(() => {
         bomBytes = 0;
       });
       yield* Effect.gen(function* () {
-        // Narrowed to the vanished file only: a permissions error or a bad
-        // handle must NOT present as an empty journal. Anything other than "the
-        // file vanished between the check and the read" is a real failure.
-        // Sample identity before the seed read: a replacement during that
-        // read must not attach its old cursor to the replacement's inode. The
-        // BOM width comes from the same handle as that identity, so a
-        // replacement cannot inherit the old file's width either: the first
-        // reconciliation sees a different identity and resynchronizes.
-        const [bom, info] = yield* sampleFile;
+        // decision: journal-one-handle-sampling
+        const [bom, info] = yield* sampleBomAndInfoThroughOneHandle;
         bomBytes = bom;
         const seed = yield* refresh;
-        // Resume at the same completed seed record, never at a later stat EOF:
-        // a torn suffix or unread growth must remain pending for reconciliation.
+        // decision: journal-one-decode-loop
         consumed = O.getOrElse(
           O.map(seed, (row) => row.line.end),
           () => 0
         );
-        // Detect replacement even before the supervisor's first catch-up read.
         identity = identityOf(info);
       }).pipe(
-        // The seed read's own existence check saw the file gone.
-        Effect.catchTag("JournalNotFound", () => missing),
-        // The same disappearance, reported by the step that met it instead: the
-        // sample and the tail read each fail with a platform `NotFound`. It is a
-        // missing journal only when the file is in fact gone; a `NotFound` for a
-        // journal that still exists is a real failure and propagates untranslated.
+        Effect.catchTag("JournalNotFound", () => resetAfterVanishedSeed),
         Effect.catchReason("PlatformError", "NotFound", (_reason, error) =>
-          Effect.flatMap(exists, (stillPresent) => (stillPresent ? Effect.fail(error) : missing))
+          Effect.flatMap(exists, (stillPresent) => (stillPresent ? Effect.fail(error) : resetAfterVanishedSeed))
         )
       );
     }
 
-    /**
-     * Watch for the life of the layer scope.
-     *
-     * **Details**
-     *
-     * Two watches, and the distinction matters:
-     *
-     * - **The journal itself**, once it exists. Steady state, one `Update` per
-     *   append, and the tags are trustworthy here.
-     * - **The parent directory**, while the journal does not exist yet. The
-     *   tags are NOT trustworthy at this edge — on the installed node backend a
-     *   creation and an append both arrive as `Remove`, with a bare relative
-     *   `path` — so this watch **never branches on `WatchEvent._tag`**. Any
-     *   event whose path BASENAME matches the journal filename is an untyped
-     *   poke meaning "re-stat the journal yourself".
-     *
-     * The directory watch is an **activation** watch and nothing more: it ends
-     * as soon as the journal exists, and the supervisor then arms the file
-     * watch. Staying on it would be silently wrong rather than merely
-     * redundant — a non-recursive directory watch reports creation, not a
-     * child's later content appends, so a journal that never handed off would
-     * observe its own appends and no external ones.
-     *
-     * `event.path` is **never** used to open or read anything, on either watch.
-     * It can be a bare basename that resolves against the process CWD; the
-     * journal's own configured path is the only path this service touches. The
-     * symptom of violating that is a phantom `JournalNotFound` on a healthy
-     * journal.
-     *
-     * No timer anywhere. Activation is event-driven.
-     */
+    // decision: journal-directory-activation-watch
     const basename = basenameOf(config.path);
     const directory = config.directory ?? parentOf(config.path);
 
@@ -1387,11 +1102,8 @@ const makeEngine: {
       const stop = yield* Deferred.make<void>();
       const armed = yield* Effect.forkChild(
         fs.watch(directory, { onReady: () => Deferred.doneUnsafe(ready, Effect.void) }).pipe(
-          // Stop only upstream pulls. A downstream ingest may already have
-          // advanced the cursor and must finish publishing before handoff.
           Stream.interruptWhen(Deferred.await(stop)),
           Stream.filter((event) => basenameOf(event.path) === basename),
-          // End on activation so the supervisor can follow the file itself.
           Stream.takeUntilEffect(() => exists),
           Stream.runForEach(() => ingest),
           Effect.ignore,
@@ -1399,8 +1111,6 @@ const makeEngine: {
         )
       );
       yield* Deferred.await(ready);
-      // Creation may finish before the directory watch installs, leaving no
-      // event to activate us. Re-stat only after it can buffer later events.
       if (yield* exists) {
         yield* ingest;
         yield* Deferred.succeed(stop, undefined);
@@ -1410,59 +1120,31 @@ const makeEngine: {
       }
     });
 
-    // The journal exists: arm its watch, catch up, and follow it until the
-    // watch ends.
     const followJournal = Effect.gen(function* () {
-      // ARM FIRST, THEN CATCH UP. The reverse order — catch up, then arm —
-      // leaves a window in which the file can grow while nothing is
-      // watching and nothing will re-read, so the write stays invisible
-      // until some LATER event happens to trigger another ingest. In a
-      // quiet journal that is hours, and it presents as a stale `latest`
-      // and a silently idle subscription. Real consumer-visible staleness,
-      // not a test artifact.
-      //
-      // onReady runs after installation, when the backend can buffer events.
-      // Completion also releases this wait so failed/ending watches still
-      // reach the bounded re-arm loop instead of hanging before readiness.
+      // decision: journal-arm-before-catch-up
       const ready = yield* Deferred.make<void>();
       const armed = yield* Effect.forkChild(
         fs.watch(config.path, { onReady: () => Deferred.doneUnsafe(ready, Effect.void) }).pipe(
-          // The event is a poke, never a source of paths. Re-stat and ingest.
           Stream.runForEach(() => ingest),
           Effect.ignore,
           Effect.ensuring(Deferred.succeed(ready, undefined))
         )
       );
       yield* Deferred.await(ready);
-      // Reconcile after arming to include any growth during registration.
-      // A stable file contributes no envelopes to the publication batch.
       yield* ingest;
       yield* Fiber.join(armed);
-      // The journal watch ended — the file was replaced or removed. Loop
-      // back and re-arm, because a node watcher follows the inode and the
-      // old registration is now attached to a file nobody writes to.
       yield* ingest;
     });
 
     const supervise = Effect.gen(function* () {
-      // Activate over a missing file without a rebuild and without polling:
-      // watch the directory until the journal appears, then watch the journal.
-      // `fs.watch` stats first and fails on a missing path, which is exactly
-      // why the two cases are separate rather than one call.
-      //
-      // The re-arm loop is BOUNDED against a watch that ends or fails
-      // immediately. Looping unconditionally on such a watch is a hot spin —
-      // and since no timer is permitted here, backing off is not an option, so
-      // the honest behaviour is to stop re-arming and let local appends carry
-      // on without live observation rather than burn a core forever.
+      // decision: journal-directory-activation-watch
+      // decision: journal-arm-before-catch-up
       let immediateCompletions = 0;
       for (;;) {
         const startedAt = consumed;
         yield* (yield* exists) ? followJournal : watchForCreation;
         immediateCompletions = consumed === startedAt ? immediateCompletions + 1 : 0;
         if (immediateCompletions > MAX_IMMEDIATE_REARMS) {
-          // Returned in one statement: the log line is the observable stop, so
-          // nothing may remain to run after it.
           return yield* Effect.logWarning("Journal watcher stopped after immediate completions").pipe(
             Effect.annotateLogs({ path: config.path, rearms: immediateCompletions })
           );
@@ -1470,39 +1152,15 @@ const makeEngine: {
       }
     });
 
-    // Ignored deliberately, and the cost is stated: if the watch cannot be
-    // established the journal keeps working for local appends and simply stops
-    // observing external ones. Failing the layer instead would violate the
-    // missing-journal contract, which requires construction to succeed.
+    // decision: journal-arm-before-catch-up
     yield* Effect.forkScoped(supervise.pipe(Effect.annotateLogs({ path: config.path }), Effect.ignore));
 
-    // Graceful shutdown, as TWO mechanisms. Refusal is the flag above, checked
-    // before the permit and failing typed. Drain is here: taking the permit
-    // waits for the in-flight append to finish, and only then is the terminal
-    // Exit published — so the last accepted append is on disk and visible to
-    // subscribers before their streams end.
+    // decision: journal-publish-outside-write-permit
     yield* Effect.addFinalizer(
       Effect.fn("Journal.close")(function* () {
         closed = true;
-        // Drain the write half AND capture the tail of the publish chain under
-        // the same permit. Reading `publishBaton` here is a consistent
-        // snapshot precisely because it is only ever mutated while holding
-        // this permit.
-        //
-        // Capturing it is the whole point: once publishing moved out of the
-        // write critical section, "writes drained" stopped implying
-        // "publishes drained" — and the terminal Exit, which is NOT on the
-        // baton chain, could overtake an envelope whose append had already
-        // completed. A subscriber would see the stream end before the last
-        // line it was promised.
         const pending = yield* writePermit.withPermits(1)(Effect.sync(() => publishBaton));
 
-        // Await the outstanding publishes, THEN end the stream. Both halves
-        // share one bound: a subscriber that never consumes cannot observe
-        // completion by definition and must not hold scope close hostage, so
-        // the ordering guarantee is offered to consuming subscribers only.
-        // An interruptible region inside an otherwise-uninterruptible
-        // finalizer is what lets the timeout fire at all.
         yield* Effect.interruptible(
           Effect.gen(function* () {
             yield* Deferred.await(pending);
