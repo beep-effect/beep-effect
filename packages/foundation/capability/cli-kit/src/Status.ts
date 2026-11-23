@@ -80,8 +80,6 @@ export class StatusDef extends S.Opaque<StatusDef, { readonly brand: unique symb
   }).pipe($I.annoteSchema("StatusDef", { description: "The resolved appearance and rank of a status." }))
 ) {}
 /**
- * Companion types for {@link StatusDef}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -104,8 +102,6 @@ export declare namespace StatusDef {
 }
 
 /**
- * The names of the core vocabulary.
- *
  * **Example** (Validate a built-in status)
  *
  * ```ts
@@ -123,8 +119,6 @@ export const CoreStatusName = LiteralKit(["success", "failure", "warning", "info
   $I.annoteSchema("CoreStatusName", { description: "The six built-in names in the CLI status vocabulary." })
 );
 /**
- * A name accepted by the built-in status vocabulary.
- *
  * @category type-level
  * @since 0.0.0
  */

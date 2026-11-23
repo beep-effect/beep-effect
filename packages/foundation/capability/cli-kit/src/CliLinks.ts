@@ -31,8 +31,6 @@ import type { LinkTargetInput } from "./LinkTarget.ts";
 const $I = $CliKitId.create("CliLinks");
 
 /**
- * Whether file links open in an editor.
- *
  * **Details**
  *
  * `vscode` writes `vscode://file/<path>:<line>:<col>`, `file` writes `file://<path>`, `off` writes no file link, and
@@ -73,8 +71,6 @@ export type EditorLinks = typeof EditorLinks.Type;
 export type CliLinksShape = (typeof CliLinks)["Service"];
 
 /**
- * Options for {@link CliLinks.layer}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -105,8 +101,6 @@ export class CliLinksOptions extends S.Opaque<CliLinksOptions, { readonly brand:
   }).pipe($I.annoteSchema("CliLinksOptions", { description: "Plain CliLinksOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliLinksOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -129,8 +123,6 @@ export declare namespace CliLinksOptions {
 }
 
 /**
- * The options of {@link CliLinks.linker}.
- *
  * **Example** (Inspect the schema)
  *
  * ```ts
@@ -162,8 +154,6 @@ export class CliLinksLinkerOptions extends S.Opaque<CliLinksLinkerOptions, { rea
   }).pipe($I.annoteSchema("CliLinksLinkerOptions", { description: "Plain CliLinksLinkerOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliLinksLinkerOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

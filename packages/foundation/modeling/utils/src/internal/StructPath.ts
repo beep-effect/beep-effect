@@ -18,8 +18,6 @@ import * as A from "../Array.ts";
 const $I = $UtilsId.create("StructPath");
 
 /**
- * Schema for dot-delimited paths or path segment arrays.
- *
  * **Example** (Import PathInput schema)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const PathInput = S.Union([S.String, S.Array(S.String)]).pipe(
 );
 
 /**
- * Runtime path input accepted by struct lookup helpers.
- *
  * **Example** (Typed path segment array)
  *
  * ```ts
