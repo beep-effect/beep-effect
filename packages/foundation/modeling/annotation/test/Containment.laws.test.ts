@@ -15,22 +15,36 @@ const runs = { arbitrary: fcRuns(200) };
 const within = contains(DocumentKinds);
 
 // Irreflexive, asymmetric and transitive over every annotation of a document, pairs and triples included.
+const expectTransitive = (
+  document: TextDocument,
+  outer: AnnotationId,
+  inner: AnnotationId,
+  ids: ReadonlyArray<AnnotationId>
+): void => {
+  for (const innermost of ids) {
+    if (within(document, inner, innermost)) expect(within(document, outer, innermost)).toBe(true);
+  }
+};
+
+const expectPair = (
+  document: TextDocument,
+  outer: AnnotationId,
+  inner: AnnotationId,
+  ids: ReadonlyArray<AnnotationId>
+): void => {
+  const holds = within(document, outer, inner);
+  expect(within(outer, inner)(document)).toBe(holds);
+  if (holds) {
+    expect(within(document, inner, outer)).toBe(false);
+    expectTransitive(document, outer, inner, ids);
+  }
+};
+
 const expectStrictOrder = (document: TextDocument): void => {
   const ids = document.annotations.pipe(HashMap.keys, A.fromIterable);
   for (const outer of ids) {
     expect(within(document, outer, outer)).toBe(false);
-    for (const inner of ids) {
-      const holds = within(document, outer, inner);
-      expect(within(outer, inner)(document)).toBe(holds);
-      if (holds) {
-        expect(within(document, inner, outer)).toBe(false);
-        for (const innermost of ids) {
-          if (within(document, inner, innermost)) {
-            expect(within(document, outer, innermost)).toBe(true);
-          }
-        }
-      }
-    }
+    for (const inner of ids) expectPair(document, outer, inner, ids);
   }
 };
 

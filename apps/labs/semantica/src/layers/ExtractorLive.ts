@@ -269,7 +269,7 @@ export const PATTERN_MODEL_IDENTITY = ModelIdentity.make({
   artifactHash: sha256CanonicalSync({
     backend: "wink-nlp",
     losses: A.sort(
-      A.fromIterable(HashMap.get(declaredLosses, "pattern-wink").pipe(O.getOrElse(() => []))),
+      A.fromIterable(HashMap.get(declaredLosses, "pattern-wink").pipe(O.getOrElse(A.empty))),
       Order.String
     ),
     schemaVersion: "semantica-pattern-extraction/v1",
@@ -341,9 +341,7 @@ const makeBatch = (
       degraded,
       id,
       lossy: A.sort(
-        A.fromIterable(
-          HashMap.get(declaredLosses, method).pipe(O.getOrElse(() => [] as ReadonlyArray<LossDeclaration>))
-        ),
+        A.fromIterable(HashMap.get(declaredLosses, method).pipe(O.getOrElse(A.empty<LossDeclaration>))),
         Order.String
       ),
     }),
@@ -457,10 +455,9 @@ const historicalEndpoints = (candidate: ResidualCandidate): O.Option<readonly [T
   if (Result.isFailure(decoded)) return O.none();
   const evidence = candidate.anchor.value;
   const locate = (surface: string): O.Option<TextAnchor> => {
-    const endpoint = ExtractionCandidate.makeOption({ label: "relation-endpoint", text: surface });
-    if (O.isNone(endpoint)) return O.none();
+    const endpoint = ExtractionCandidate.make({ label: "relation-endpoint", text: surface });
     const aligned = alignCandidate(
-      endpoint.value,
+      endpoint,
       AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(1), sourceText: evidence.quote })
     );
     if (aligned.alignmentStatus === "unaligned" || aligned.alignmentStatus === "match_fuzzy") return O.none();
@@ -792,27 +789,33 @@ const fabricatedSpan = (chunks: A.NonEmptyReadonlyArray<Chunk>): DegradedClaim =
     kind: "fabricated-span",
   });
 
+const patternQuoteMatches = (start: number, end: number, quote: string, entity: EntityNode): boolean =>
+  Str.isNonEmpty(entity.text) &&
+  N.Equivalence(N.subtract(end, start), Str.length(entity.text)) &&
+  Str.Equivalence(quote, entity.text);
+
+const verifiedPatternSpan = (canonical: CanonicalText, entity: EntityNode) => {
+  if (O.isNone(entity.span) || entity.span.value.unit !== "utf16-code-unit") {
+    return O.none();
+  }
+  const start = entity.span.value.start;
+  const end = entity.span.value.end;
+  const quote = Str.slice(start, end)(canonical.text);
+  if (!patternQuoteMatches(start, end, quote, entity)) {
+    return O.none();
+  }
+  return O.some({ start, end, quote });
+};
+
 const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
   canonicalizer: CanonicalizerShape,
   canonical: CanonicalText,
   chunks: A.NonEmptyReadonlyArray<Chunk>,
   entity: EntityNode
 ) {
-  if (O.isNone(entity.span) || entity.span.value.unit !== "utf16-code-unit") {
-    return Result.fail(fabricatedSpan(chunks));
-  }
-  const start = entity.span.value.start;
-  const end = entity.span.value.end;
-  const validOffsets = isNatural(start) && isNatural(end) && start < end;
-  const quote = validOffsets ? Str.slice(start, end)(canonical.text) : Str.empty;
-  if (
-    !validOffsets ||
-    !Str.isNonEmpty(entity.text) ||
-    !N.Equivalence(N.subtract(end, start), Str.length(entity.text)) ||
-    !Str.Equivalence(quote, entity.text)
-  ) {
-    return Result.fail(fabricatedSpan(chunks));
-  }
+  const span = verifiedPatternSpan(canonical, entity);
+  if (O.isNone(span)) return Result.fail(fabricatedSpan(chunks));
+  const { start, end, quote } = span.value;
   const body = ClaimBody.cases.Entity.make({
     cluster: O.none(),
     endChar: S.Natural.make(end),

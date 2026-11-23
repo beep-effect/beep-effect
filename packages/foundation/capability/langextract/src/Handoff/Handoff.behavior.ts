@@ -213,28 +213,25 @@ export const handoff = Effect.fn("LangExtract.handoff")(function* (input: {
         Anchored,
       ]
     >();
-  for (const [candidate, extraction] of A.map(
-    input.candidates,
-    (extraction, candidate) => [candidate, extraction] as const
-  )) {
+  const readCandidate = Effect.fnUntraced(function* (candidate: number, extraction: GroundedExtraction) {
     if (extraction.alignmentStatus === "unaligned") {
       refuse(extraction, candidate, "unaligned");
-      continue;
+      return;
     }
     const target = A.findFirst(input.targets, (target) => target.name === extraction.label);
     if (O.isNone(target)) {
       refuse(extraction, candidate, "unmapped-label");
-      continue;
+      return;
     }
     const anchored = yield* verify(input.verified, extraction.anchor);
     if (O.isNone(anchored)) {
       refuse(extraction, candidate, "verification-refused");
-      continue;
+      return;
     }
     const declaration = target.value.annotates;
     if (declaration._tag === "Relation") {
       relations = A.append(relations, [candidate, extraction, declaration, anchored.value]);
-      continue;
+      return;
     }
     const id = yield* mention(anchored.value, declaration);
     addReading(id, extraction, candidate);
@@ -249,8 +246,19 @@ export const handoff = Effect.fn("LangExtract.handoff")(function* (input: {
         HashSet.add(O.getOrElse(HashMap.get(clusters, key), HashSet.empty<AnnotationId>), id)
       );
     }
+  });
+  for (const [candidate, extraction] of A.map(
+    input.candidates,
+    (extraction, candidate) => [candidate, extraction] as const
+  )) {
+    yield* readCandidate(candidate, extraction);
   }
-  for (const [candidate, extraction, declaration, evidence] of relations) {
+  const readRelation = Effect.fnUntraced(function* ([
+    candidate,
+    extraction,
+    declaration,
+    evidence,
+  ]: (typeof relations)[number]) {
     const attributes = O.flatMap(extraction.attributes, (attributes) =>
       O.all({
         subject: R.get(attributes, declaration.subject),
@@ -260,12 +268,12 @@ export const handoff = Effect.fn("LangExtract.handoff")(function* (input: {
     );
     if (O.isNone(attributes)) {
       refuse(extraction, candidate, "relation-attribute-missing");
-      continue;
+      return;
     }
     const predicate = R.get(declaration.predicates, attributes.value.predicate);
     if (O.isNone(predicate)) {
       refuse(extraction, candidate, "unmapped-predicate");
-      continue;
+      return;
     }
     const endpointAnchors = O.all({
       subject: endpointAnchor(extraction.anchor, attributes.value.subject),
@@ -273,13 +281,13 @@ export const handoff = Effect.fn("LangExtract.handoff")(function* (input: {
     });
     if (O.isNone(endpointAnchors)) {
       refuse(extraction, candidate, "relation-endpoint-unresolved");
-      continue;
+      return;
     }
     const subject = yield* verify(input.verified, endpointAnchors.value.subject);
     const object = yield* verify(input.verified, endpointAnchors.value.object);
     if (O.isNone(subject) || O.isNone(object)) {
       refuse(extraction, candidate, "relation-endpoint-unresolved");
-      continue;
+      return;
     }
     const endpoint = TargetAnnotation.cases.Mention.make({ class: declaration.endpoint });
     const subjectId = yield* mention(subject.value, endpoint);
@@ -293,6 +301,9 @@ export const handoff = Effect.fn("LangExtract.handoff")(function* (input: {
       })
     );
     addReading(id, extraction, candidate);
+  });
+  for (const relation of relations) {
+    yield* readRelation(relation);
   }
   for (const members of HashMap.values(clusters)) {
     if (HashSet.size(members) < 2) continue;

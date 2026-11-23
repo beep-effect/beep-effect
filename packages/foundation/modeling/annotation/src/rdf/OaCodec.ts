@@ -766,6 +766,39 @@ const importedQuads = (run: Rdf.NamedNode): ((activity: ImportedActivity) => Rea
     Generator: ({ agent }) => [quad(run, V.generator, node(agent))],
   });
 
+const targetSelectorQuads = (
+  id: OccurrenceId,
+  source: Rdf.NamedNode,
+  start: number,
+  end: number,
+  exact: string
+): ReadonlyArray<Rdf.Quad> => {
+  const occurrence = instanceNode(id);
+  const position = selectorNode(id, "position");
+  const quote = selectorNode(id, "quote");
+  return [
+    quad(occurrence, V.type, V.SpecificResource),
+    quad(occurrence, V.hasSource, source),
+    quad(occurrence, V.hasSelector, position),
+    quad(occurrence, V.hasSelector, quote),
+    quad(position, V.type, V.TextPositionSelector),
+    quad(position, V.start, integerLiteral(start)),
+    quad(position, V.end, integerLiteral(end)),
+    quad(quote, V.type, V.TextQuoteSelector),
+    quad(quote, V.exact, stringLiteral(exact)),
+  ];
+};
+
+const annotationTypeQuads = (
+  kinds: typeof OaKinds,
+  subject: Rdf.NamedNode,
+  annotation: OaAnnotation
+): ReadonlyArray<Rdf.Quad> => [
+  quad(subject, V.type, V.Annotation),
+  quad(subject, V.type, node(kinds[annotation._tag].iri)),
+  ...(annotation._tag === "Mention" ? [quad(subject, V.hasBody, node(annotation.body.class))] : []),
+];
+
 const encodeRefused = (reason: OaEncodeRefusal): OaEncodeRefused => OaEncodeRefused.make({ reason });
 
 const isEncodeRefusal = S.is(OaEncodeRefusal);
@@ -861,29 +894,14 @@ export const encodeOa =
               ] as const
           )
         );
-        const targetQuads = A.flatMap(HashMap.toEntries(wireOf), ([id, wire]) => {
-          const occurrence = instanceNode(id);
-          const position = selectorNode(id, "position");
-          const quote = selectorNode(id, "quote");
-          return A.flatMap(wire, ({ start, end, quote: exact }) => [
-            quad(occurrence, V.type, V.SpecificResource),
-            quad(occurrence, V.hasSource, source),
-            quad(occurrence, V.hasSelector, position),
-            quad(occurrence, V.hasSelector, quote),
-            quad(position, V.type, V.TextPositionSelector),
-            quad(position, V.start, integerLiteral(start)),
-            quad(position, V.end, integerLiteral(end)),
-            quad(quote, V.type, V.TextQuoteSelector),
-            quad(quote, V.exact, stringLiteral(exact)),
-          ]);
-        });
+        const targetQuads = A.flatMap(HashMap.toEntries(wireOf), ([id, wire]) =>
+          A.flatMap(wire, ({ start, end, quote }) => targetSelectorQuads(id, source, start, end, quote))
+        );
         const annotationQuads = A.flatMap(annotations, ([id, annotation]) => {
           const subject = instanceNode(id);
           const targetIds = A.fromIterable(annotation.targets);
           return [
-            quad(subject, V.type, V.Annotation),
-            quad(subject, V.type, node(kinds[annotation._tag].iri)),
-            ...(annotation._tag === "Mention" ? [quad(subject, V.hasBody, node(annotation.body.class))] : []),
+            ...annotationTypeQuads(kinds, subject, annotation),
             ...A.map(targetIds, (target) => quad(subject, V.hasTarget, instanceNode(target))),
             ...A.flatMap(A.fromOption(R.get(nifClasses, annotation._tag)), (nifClass) =>
               A.flatMap(targetIds, (target) => {
@@ -1318,6 +1336,38 @@ const readProfile = (kinds: typeof OaKinds) => {
       } satisfies ReadTarget;
     });
 
+    const readAttribution = Effect.fnUntraced(function* (key: string) {
+      const own = statedTime(index, key);
+      const runLinks = O.getOrElse(R.get(index.runsOf, key), A.empty<Rdf.Quad>);
+      const runs = yield* Effect.forEach(
+        runLinks,
+        (link) => {
+          const run = keyOf(link.subject);
+          const time = statedTime(index, run);
+          return Effect.map(readStatements(index, run, time.at), (statements) => ({ link, time, statements }));
+        },
+        { concurrency: 1 }
+      );
+      if (own.conflict || A.some(runs, (run) => run.time.conflict)) {
+        return yield* reject("time-conflict");
+      }
+      const ownStatements = yield* readStatements(index, key, own.at);
+      const attributedRuns = A.filter(runs, (run) => A.isReadonlyArrayNonEmpty(run.statements));
+      const stated = [...ownStatements, ...A.flatMap(attributedRuns, (run) => run.statements)];
+      const unattributed = A.isReadonlyArrayEmpty(stated);
+      const generations = unattributed
+        ? [{ activity: importActivity, imported: O.none(), at: own.at }]
+        : A.map(stated, (statement) => statement.generation);
+      return {
+        generations,
+        consumed: [
+          ...A.flatMap(stated, (statement) => statement.quads),
+          ...A.flatMap(attributedRuns, (run) => [run.link, ...run.time.quads]),
+          ...(A.isReadonlyArrayNonEmpty(ownStatements) || unattributed ? own.quads : []),
+        ],
+      };
+    });
+
     const readAnnotation = Effect.fnUntraced(function* (subject: Rdf.Subject) {
       const key = keyOf(subject);
       const about = (predicate: Rdf.NamedNode) => statementsAbout(index, key, predicate);
@@ -1344,27 +1394,7 @@ const readProfile = (kinds: typeof OaKinds) => {
       }
       const targets = yield* Effect.forEach(targetLinks, readTarget, { concurrency: 1 });
 
-      const own = statedTime(index, key);
-      const runLinks = O.getOrElse(R.get(index.runsOf, key), A.empty<Rdf.Quad>);
-      const runs = yield* Effect.forEach(
-        runLinks,
-        (link) => {
-          const run = keyOf(link.subject);
-          const time = statedTime(index, run);
-          return Effect.map(readStatements(index, run, time.at), (statements) => ({ link, time, statements }));
-        },
-        { concurrency: 1 }
-      );
-      if (own.conflict || A.some(runs, (run) => run.time.conflict)) {
-        return yield* reject("time-conflict");
-      }
-      const ownStatements = yield* readStatements(index, key, own.at);
-      const attributedRuns = A.filter(runs, (run) => A.isReadonlyArrayNonEmpty(run.statements));
-      const stated = [...ownStatements, ...A.flatMap(attributedRuns, (run) => run.statements)];
-      const unattributed = A.isReadonlyArrayEmpty(stated);
-      const generations = unattributed
-        ? [{ activity: importActivity, imported: O.none(), at: own.at }]
-        : A.map(stated, (statement) => statement.generation);
+      const attribution = yield* readAttribution(key);
       const annotation = build.value(HashSet.fromIterable(A.map(targets, (target) => target.id)));
       const content = yield* mintAnnotation(annotation);
       return {
@@ -1372,14 +1402,12 @@ const readProfile = (kinds: typeof OaKinds) => {
         content,
         annotation,
         targets,
-        generations,
+        generations: attribution.generations,
         consumed: [
           ...typeQuads,
           ...bodyQuads,
           ...A.flatMap(targets, (target) => target.quads),
-          ...A.flatMap(stated, (statement) => statement.quads),
-          ...A.flatMap(attributedRuns, (run) => [run.link, ...run.time.quads]),
-          ...(A.isReadonlyArrayNonEmpty(ownStatements) || unattributed ? own.quads : []),
+          ...attribution.consumed,
         ],
       } satisfies Candidate;
     });
@@ -1529,20 +1557,10 @@ const normalizedQuads = (kinds: typeof OaKinds, source: Rdf.NamedNode, sourceTex
     const nifClass = A.fromOption(R.get(nifClasses, annotation._tag));
     const targetQuads = A.flatMap(candidate.targets, ({ id, row }) => {
       const occurrence = instanceNode(id);
-      const position = selectorNode(id, "position");
-      const quote = selectorNode(id, "quote");
       const points = Result.getOrThrow(convertPosition(Anchored.range(row), "unicode-code-point", sourceText));
       return [
         quad(subject, V.hasTarget, occurrence),
-        quad(occurrence, V.type, V.SpecificResource),
-        quad(occurrence, V.hasSource, source),
-        quad(occurrence, V.hasSelector, position),
-        quad(occurrence, V.hasSelector, quote),
-        quad(position, V.type, V.TextPositionSelector),
-        quad(position, V.start, integerLiteral(points.start)),
-        quad(position, V.end, integerLiteral(points.end)),
-        quad(quote, V.type, V.TextQuoteSelector),
-        quad(quote, V.exact, stringLiteral(Anchored.quote(row))),
+        ...targetSelectorQuads(id, source, points.start, points.end, Anchored.quote(row)),
         ...A.flatMap(nifClass, (klass) => [
           quad(occurrence, V.type, klass),
           quad(occurrence, V.beginIndex, integerLiteral(points.start)),
@@ -1569,13 +1587,7 @@ const normalizedQuads = (kinds: typeof OaKinds, source: Rdf.NamedNode, sourceTex
         }),
       { concurrency: 1 }
     );
-    return [
-      quad(subject, V.type, V.Annotation),
-      quad(subject, V.type, node(kinds[annotation._tag].iri)),
-      ...(annotation._tag === "Mention" ? [quad(subject, V.hasBody, node(annotation.body.class))] : []),
-      ...targetQuads,
-      ...A.flatten(runQuads),
-    ];
+    return [...annotationTypeQuads(kinds, subject, annotation), ...targetQuads, ...A.flatten(runQuads)];
   });
 
 /**

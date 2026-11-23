@@ -461,3 +461,12 @@ home paths with `~`, drop session and machine ids.
   after the review. The final cache review now follows that generator.
   **Would have prevented it:** an explicit generator-order dependency from
   the cache-baseline writer to the policy-fingerprint writer.
+
+- **Doing:** remediating P3's dependency reds and replaying cheap-gates.
+  **Evidence:** the generated config and fallow checks passed after the manifest
+  fixes, but cache policy reported nine configuration-drift findings for
+  law-practice use-cases and Lejeune. The exact dependency edges also belong to
+  the reviewed cache projection. The scoped cache review carries all prior
+  reviews and grants no qualification.
+  **Would have prevented it:** dependency-edit guidance naming tsconfig-sync
+  and the reviewed cache projection as one regeneration sequence.
