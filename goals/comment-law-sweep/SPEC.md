@@ -30,7 +30,7 @@ Higher sources outrank lower sources when they conflict.
 
 - At zero pending scopes the scanner stays as the gate that rejects any directive silencing the rule; only the delta check and shards retire.
 - Starts only after `comment-law-gate` blocks.
-- Every deletion has two agreeing votes or an AST-checked mechanical rule; labels held at kappa 0.65 and T versus N is the soft boundary.
+- Every strip deletion has two agreeing votes or an AST-checked mechanical rule; the T/G-versus-rest split is held at kappa 0.65 (decision 2026-11-22, hard stop 4) and T versus N is the soft boundary. In an absorption PR every removed row has an author and an independent verifier on a different route, and the verifier cites where the information now lives.
 - A stale comment that is true except for one clause is edited, not deleted; a comment that is right where the code is wrong goes to `comment-census-defects`.
 - A decision becomes a file only if it passes the admission test in the exploration's `research/lanes/adr.md`; about 115 are expected from 1,449.
 - Re-baseline schema-first and effect-vitest inventories, re-pin sealed files, and run Biome after each batch (exploration `research/lanes/consumers.md` section 10).
@@ -80,6 +80,20 @@ Operator ruling, align round 1, recorded as the authorised deferral under the AG
 Lane explore/comment-law
 
 Reverse: Close the family issues and fix every site inside the sweep.
+
+### Hard stop 4 is measured over all classified rows, with kappa as the agreement bar, 2026-11-22
+
+The strip gate is agreement on the T/G split, since only T and G are deleted on two votes alone: S, X and D deletions also need opened evidence, an issue or pull request, or a committed decision file that passes the admission test, so those rows are checked one by one.
+
+A wave is discarded and reclassified when either bar fails: T/G disagreements exceed 5% of all classified rows, or Cohen's kappa on the T/G-versus-rest split falls below 0.65. Rows without two agreeing deletable votes go to the absorption pass, where an implementer judges each against the code.
+
+Evidence. Wave 1 (semver, npm-spec, csv, spdx, managed-section; 1,199 rows) round 1 disagreed on 18-51% of the rows either classifier called T or G; both vote sets were discarded. Round 2, with a sharper brief (a T vote names what restates it, blank paragraph lines take the paragraph's code, G only for labels): T/G disagreements 2.8% of all rows, T/G kappa 0.84, all-code kappa 0.78. Wave 2 (tsconfig, md, jsonc, toml, jsonl, glob; 2,909 rows): T/G disagreements 2.5%, T/G kappa 0.72; all-code kappa 0.59, lowered by H-versus-N splits that no longer route anything once absorption is in scope.
+
+Rejected: reading 5% over the T/G-union rows, which no brief reached because shrinking T to the obvious cases shrinks the denominator faster than the disagreements; and an all-code kappa gate, which would discard waves over H-versus-N labels that decide no deletion.
+
+Lane goals/comment-law-sweep-p0
+
+Reverse: Measure the 5% over T/G-union rows only and stop every wave above it until a brief reaches it.
 
 <!-- beep:decisions:end -->
 
