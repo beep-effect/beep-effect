@@ -38,3 +38,17 @@ describe("schema-first data-like decision short circuiting", () => {
     }
   });
 });
+
+describe("schema-first live schema registry contracts", () => {
+  it.each([
+    ["plain data", "readonly name: string", true],
+    ["S schema and method", "readonly name: string; readonly body: S.Top; encode(): unknown", false],
+    ["Schema schema and method", "readonly name: string; readonly body: Schema.Top; encode(): unknown", false],
+    ["mixed data and method", "readonly name: string; encode(): unknown", true],
+    ["schema handle without method", "readonly name: string; readonly body: S.Top", true],
+  ])("classifies %s", (_name, members, expected) => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const source = project.createSourceFile("fixture.ts", `export interface Contract { ${members} }`);
+    expect(SchemaFirstDetectors.isInterfaceSchemaFirstCandidate(source.getInterfaceOrThrow("Contract"))).toBe(expected);
+  });
+});
