@@ -36,3 +36,21 @@ identifiers are redacted.
   after a reseal moved the digest again.
 - **Would have prevented it:** a `--write` mode on the seal test that
   recomputes the pinned digests after review, as the fingerprint has.
+
+## 2026-11-23: a gate-introducing PR merges green, then main and every sibling go red
+
+- **Doing:** P1 wave 2, when main turned red on the gate #3496 introduced.
+- **Evidence:** twice in one day.
+  - The comment law (#3483) turned blocking while #3458 was in flight, so
+    Repo Sanity went red on main until #3495 landed.
+  - #3496 measured `restating-lead` at its branch base (0e305a468a0), but
+    #3439 and #3493 merged before it and added 32 restating leads. Main then
+    failed `quality:jsdoc-ratchet:regenerated` with
+    `restating-lead: 8758 > 8726 (+32)`, and #3449, #3498, #3500 and #3501
+    went red on the same line.
+  - Each PR passed its own gates against its own base. Nothing re-measured the
+    new gate against the merge ref at the moment of merge.
+- **Would have prevented it:** a PR that adds or tightens a ratcheted total
+  re-runs that gate on the up-to-date merge ref inside the merge gate (or a
+  merge queue). The PR then lands with a baseline measured on the tree it
+  actually merges into, rather than on its branch base.
