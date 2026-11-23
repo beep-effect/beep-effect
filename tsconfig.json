@@ -2615,6 +2615,15 @@
       ],
       "@beep/md/MdSections": [
         "./packages/foundation/modeling/md/src/MdSections.ts"
+      ],
+      "@beep/law-practice-domain/values/IntakeTaxonomy": [
+        "./packages/law-practice/domain/src/values/IntakeTaxonomy/index.ts"
+      ],
+      "@beep/law-practice-domain/values/LegalVocabularyPack": [
+        "./packages/law-practice/domain/src/values/LegalVocabularyPack/index.ts"
+      ],
+      "@beep/law-practice-domain/values/LibrarianLoop": [
+        "./packages/law-practice/domain/src/values/LibrarianLoop/index.ts"
       ]
     }
   }

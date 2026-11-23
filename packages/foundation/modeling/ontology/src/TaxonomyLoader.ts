@@ -23,12 +23,12 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { BroaderViolation, Concept, ConceptAlignment, ConceptScheme, checkBroader } from "./ConceptScheme.ts";
 import { sha256Hex } from "./internal/ContentDigest.ts";
 import { MappingPredicate } from "./Mapping.ts";
-import { isFilingSegment } from "./SemanticFoundation.models.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type { ConceptSchemePin } from "./ConceptScheme.ts";
 
@@ -36,9 +36,16 @@ const iriReferenceEquivalence = S.toEquivalence(IRIReference);
 
 const $I = $OntologyId.create("TaxonomyLoader");
 
+const isSafePathSegment = (segment: string): boolean =>
+  Str.isNonEmpty(segment) &&
+  segment !== "." &&
+  segment !== ".." &&
+  P.not(Str.includes("\\"))(segment) &&
+  P.not(Str.includes("\u0000"))(segment);
+
 /**
  * Relative path to one vendor slice, contained within the vendor root: one
- * or more {@link FilingSegment}-safe components joined by `/`, so `..`
+ * or more safe components joined by `/`, so `..`
  * traversal, absolute paths, and separator tricks are rejected at decode
  * time and the loader cannot read outside its configured directory.
  *
@@ -56,10 +63,10 @@ const $I = $OntologyId.create("TaxonomyLoader");
  */
 export const VendorSlicePath = S.NonEmptyString.check(
   S.makeFilter(
-    (path: string) => A.every(Str.split(path, "/"), isFilingSegment),
+    (path: string) => A.every(Str.split(path, "/"), isSafePathSegment),
     $I.annote("VendorSlicePathCheck", {
       title: "Vendor Slice Path",
-      description: "A vendor-root-relative path whose every component is a safe filing segment.",
+      description: "A vendor-root-relative path whose every component is a safe path segment.",
       message: "Vendor slice path must stay inside the vendor root",
     })
   )

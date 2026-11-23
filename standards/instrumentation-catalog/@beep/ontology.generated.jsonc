@@ -24,9 +24,6 @@
     {"name":"TaxonomyLoader.readVendorBytes","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.readVerifiedFile","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.resolveVendorPath","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.verifyRowDigest","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyRegistry.runLibrarianLoop","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"VocabularyRegistry.load","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"VocabularyRegistry.resolve","owner":"@beep/ontology","family":"foundation","conforms":true}
+    {"name":"TaxonomyLoader.verifyRowDigest","owner":"@beep/ontology","family":"foundation","conforms":true}
   ]
 }

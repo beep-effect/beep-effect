@@ -73,6 +73,9 @@
     "./values/DocStructure": "./src/values/DocStructure/index.ts",
     "./values/PracticeProfile": "./src/values/PracticeProfile/index.ts",
     "./values/SetupRequirement": "./src/values/SetupRequirement/index.ts",
+    "./values/IntakeTaxonomy": "./src/values/IntakeTaxonomy/index.ts",
+    "./values/LegalVocabularyPack": "./src/values/LegalVocabularyPack/index.ts",
+    "./values/LibrarianLoop": "./src/values/LibrarianLoop/index.ts",
     "./test": "./src/test.ts",
     "./package.json": "./package.json"
   },
@@ -81,12 +84,14 @@
     "dist/**/*.js",
     "dist/**/*.js.map",
     "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map"
+    "dist/**/*.d.ts.map",
+    "assets/vocabulary/**"
   ],
   "sideEffects": [],
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
+    "@beep/ontology": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/text": "workspace:^",
@@ -96,6 +101,7 @@
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

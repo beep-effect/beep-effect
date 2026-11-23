@@ -89,6 +89,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/n3": "workspace:^",
+    "@beep/ontology": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",

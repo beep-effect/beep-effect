@@ -80,24 +80,11 @@ Unit tests stay outside `test/integration`; package integration tests live under
 
 MIT
 
-## Versioned docketing and party-role vocabulary
+## Concept schemes and the asset pack
 
-`VocabularyRegistry` loads the committed `docketing`, `party-kinds` and
-`legal-roles` schemes at version `1.0.0`. The seeds contain 25, 6 and 11
-concepts, respectively. TTL, JSON-LD and TS data share stable IRIs; party
-holders and contextual roles share no concept or hierarchy edge.
-
-```ts
-import { VocabularyRegistry } from "@beep/ontology/VocabularyRegistry"
-import * as Effect from "effect/Effect"
-
-const lookup = VocabularyRegistry.use((registry) =>
-  registry.resolve({ kind: "docketing", version: "1.0.0" }, "StatementOfUseDeadline")
-).pipe(Effect.provide(VocabularyRegistry.layer))
-```
-
-Missing versions and unknown notations return `VocabularyError`. Definitions
-are descriptive; consumers own jurisdiction, authority evidence, date
-computation, entities and role assignments. See the goal's
-`research/2026-10-09-m3-vocabulary-contract.md` for the frozen IRI table and
-deprecation rule.
+`TaxonomyLoader` reads a manifest of digest-pinned rows into a `LoadedPack`:
+`ConceptScheme` values, vetted alignments, the broader-profile exceptions of
+vendor schemes and verified payload bytes. `LoadedPack.schemeFor` takes an
+exact `ConceptSchemePin`; there is no latest version. The legal vocabularies
+(docketing, party kinds, legal roles and legal intake) live in the
+`@beep/law-practice-domain` asset pack, not in this package.
