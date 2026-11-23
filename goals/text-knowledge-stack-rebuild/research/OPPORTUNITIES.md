@@ -470,3 +470,12 @@ home paths with `~`, drop session and machine ids.
   reviews and grants no qualification.
   **Would have prevented it:** dependency-edit guidance naming tsconfig-sync
   and the reviewed cache projection as one regeneration sequence.
+
+- **Doing:** replaying final-head fallow health with an explicit base ref.
+  **Evidence:** the wrapper recorded origin/main in its envelope but omitted it
+  from the native health invocation. It reported 47 findings in untouched files,
+  while audit attributed zero introduced findings. The wrapper now forwards the
+  requested base through Fallow's changed-since option; the existing baseline
+  and all complexity thresholds remain in force for changed files.
+  **Would have prevented it:** a health argument-contract assertion that the
+  envelope's declared base also reaches the native command.
