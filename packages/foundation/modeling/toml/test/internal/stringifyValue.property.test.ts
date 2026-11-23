@@ -26,9 +26,6 @@ const Document = S.Struct({
 const parse = (text: string) => buildValue(parseExpressions(text));
 const decodeValue = S.decodeUnknownEffect(S.Struct({ value: S.Unknown }));
 
-// Fragment renderers consume values rather than TOML text: their idempotence
-// law is parse/render normalization, since quoting an already quoted string
-// would intentionally quote its quote characters again.
 describe("stringifyValue property floor", () => {
   it.effect.prop(
     "renderKey preserves decoded keys and has stable canonical spelling",

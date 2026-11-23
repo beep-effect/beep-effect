@@ -146,7 +146,9 @@ the agent 1Password lane take precedence; a dialog never replaces those routes.
 - Apply schema defaults when safe. Keep changes focused and testable.
 - JSDoc on exported symbols uses titled `**Example** (Title)` and
   `**Details**`/`**Gotchas**` prose sections — never `@example` or `@remarks`
-  tags. Law: `.patterns/jsdoc-documentation.md`.
+  tags. Annotated schemas, their type companions and barrels take
+  their lead from the `$I.annote*` description; never restate it. Law:
+  `.patterns/jsdoc-documentation.md`.
 - No free prose comments and no JSDoc on non-exported declarations in TS/JS
   source, tests or tooling. Put a reason in a name, type, schema annotation,
   test title or assertion; a real decision in `<package>/decisions/`, cited

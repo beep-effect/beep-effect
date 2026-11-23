@@ -31,6 +31,20 @@ import {
 } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import {
+  SH_CLASS,
+  SH_CLASS_COMPONENT,
+  SH_DATATYPE,
+  SH_DATATYPE_COMPONENT,
+  SH_HAS_VALUE,
+  SH_HAS_VALUE_COMPONENT,
+  SH_MIN_COUNT,
+  SH_MIN_COUNT_COMPONENT,
+  SH_NODE_SHAPE,
+  SH_PATH,
+  SH_PROPERTY,
+  SH_TARGET_NODE,
+} from "@beep/rdf/Vocab/Shacl";
 import { XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
 import {
   ShaclValidationResult,
@@ -49,20 +63,6 @@ import * as S from "effect/Schema";
 import type { Quad } from "@beep/rdf/Rdf";
 
 const decodePrefixMap = S.decodeEffect(PrefixMap);
-
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
-const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
-const SH_MIN_COUNT = makeNamedNode(`${SHACL_NAMESPACE}minCount`);
-const SH_DATATYPE = makeNamedNode(`${SHACL_NAMESPACE}datatype`);
-const SH_CLASS = makeNamedNode(`${SHACL_NAMESPACE}class`);
-const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
-const SH_MIN_COUNT_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}MinCountConstraintComponent`);
-const SH_DATATYPE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}DatatypeConstraintComponent`);
-const SH_CLASS_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}ClassConstraintComponent`);
-const SH_HAS_VALUE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}HasValueConstraintComponent`);
 
 const sessionId = SessionId.make("session-validation");
 const material = makeNamedNode("https://example.test/materials#Material");

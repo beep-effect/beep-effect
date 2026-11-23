@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { TermIri } from "@beep/identity/Term";
 import { mintContentHash } from "@beep/jsonc/Mint";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
@@ -27,7 +28,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { TermIri } from "./L0.identity.ts";
 import { Anchored, mintOccurrenceId, OccurrenceId } from "./L1.text.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import type * as Digest from "effect/crypto/Digest";

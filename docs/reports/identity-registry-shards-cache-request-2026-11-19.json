@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "069bfcc2ddf97ea0ac5fc741a746f86db066c56ac863b0774de04398ecaeba14"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "//#lint:identity-registry gains the input glob packages/foundation/modeling/identity/registry/**/*.json because the lint now checks the registry shards and the term snapshot. No command, cache flag, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/identity-registry-shards-cache-review-2026-11-19.md",
+      "sha256": "ccb7e2b34f6d1a44de41d5340aef92473a1e5593395de764b3853b5f381f1d26"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
