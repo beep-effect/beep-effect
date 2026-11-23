@@ -258,7 +258,8 @@ const isTwoHundred = (statusCode: number): boolean => statusCode >= 200 && statu
  *
  * The candidates are the `queued` deliveries inside the job's window. A
  * 2xx candidate naming the job is `Delivered`, whatever else was read.
- * Without one, an unreadable candidate detail, or a walk that does not
+ * Without one, a candidate detail that is unreadable or names no workflow
+ * job (its request or payload absent), or a walk that does not
  * cover the window's start (its creation minus two minutes), makes the
  * evidence `Unreadable`: the unread delivery could be the 2xx. A walk
  * covers the start when it read a delivery older than it, or one at it and
@@ -317,11 +318,10 @@ export const judgeDeliveryEvidence = (input: {
       delivery.deliveredAt >= window.start &&
       delivery.deliveredAt <= window.end
   );
-  const readOf = (delivery: FleetHookDelivery) => O.flatten(HashMap.get(input.details, delivery.id));
-  const matches = A.filter(candidates, (delivery) =>
-    O.exists(readOf(delivery), (detail) => O.contains(detail.workflowJobId, `${input.job.id}`))
-  );
-  const unreadable = A.length(A.filter(candidates, (delivery) => O.isNone(readOf(delivery))));
+  const jobIdOf = (delivery: FleetHookDelivery) =>
+    O.flatMap(O.flatten(HashMap.get(input.details, delivery.id)), (detail) => detail.workflowJobId);
+  const matches = A.filter(candidates, (delivery) => O.contains(jobIdOf(delivery), `${input.job.id}`));
+  const unreadable = A.length(A.filter(candidates, (delivery) => O.isNone(jobIdOf(delivery))));
   const covered = O.filter(
     input.oldestReached,
     (oldest) => oldest < window.start || (oldest === window.start && input.listingEnded)
@@ -339,7 +339,7 @@ export const judgeDeliveryEvidence = (input: {
         }),
       onNone: () =>
         unreadable > 0
-          ? unknown(`${unreadable} candidate delivery detail(s) unreadable after retries`)
+          ? unknown(`${unreadable} candidate delivery detail(s) unreadable after retries or naming no workflow job`)
           : O.match(covered, {
               onNone: () =>
                 unknown(
@@ -502,7 +502,8 @@ const noLaunchReason = (input: {
  * `Stuck` holds only for a job created at or before the first runner read:
  * a job created between the reads may simply not have been picked up yet.
  * `NoLaunch` needs no runner idle in the second read, so a runner that just
- * booted keeps the job `Waiting`.
+ * booted keeps the job `Waiting`. `Waiting` is every below-cap job no earlier
+ * verdict holds for, with or without progress.
  *
  * **Example** (Waiting with three launches for rank four)
  *
@@ -769,7 +770,8 @@ const evidenceLabel = (evidence: O.Option<FleetDeliveryEvidence>): string =>
  */
 export const fleetVerdictLabel = (verdict: FleetVerdict): string =>
   FleetVerdict.match(verdict, {
-    Stuck: ({ idleRunnerIds }) => `Stuck (idle at cap in both reads: ${A.join(A.map(idleRunnerIds, String), ", ")})`,
+    Stuck: ({ idleRunnerIds }) =>
+      `Stuck (idle in both reads, at cap in at least one: ${A.join(A.map(idleRunnerIds, String), ", ")})`,
     Wedged: ({ notBusyRunnerIds }) =>
       `Wedged (not busy at cap, no progress: ${A.join(A.map(notBusyRunnerIds, String), ", ")})`,
     MissedDelivery: () => "MissedDelivery",
@@ -1033,14 +1035,15 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
 };
 
 /**
- * The previous scheduled run among the check's recent scheduled runs: the
- * newest that is not this run.
+ * The previous scheduled run among the check's recent scheduled runs.
  *
  * **Details**
  *
- * When this run is itself among the scheduled runs, its creation time is
- * kept, so the summary measures the cadence gap from scheduled run to
- * scheduled run, not to the end of this run's reads.
+ * When this run is itself among the scheduled runs, the previous run is the
+ * newest created before it, so a newer scheduled run pending behind this one
+ * is skipped, and this run's creation time is kept: the summary measures the
+ * cadence gap from scheduled run to scheduled run, not to the end of this
+ * run's reads. Otherwise, as for a manual dispatch, it is the newest run.
  *
  * **Example** (Skip this run)
  *
@@ -1064,22 +1067,21 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
 export const previousScheduledRun: {
   (currentRunId: O.Option<number>): (runs: ReadonlyArray<FleetScheduledRun>) => FleetPreviousRun;
   (runs: ReadonlyArray<FleetScheduledRun>, currentRunId: O.Option<number>): FleetPreviousRun;
-} = dual(
-  2,
-  (runs: ReadonlyArray<FleetScheduledRun>, currentRunId: O.Option<number>): FleetPreviousRun =>
-    pipe(
-      A.findFirst(runs, (run) => !O.contains(currentRunId, run.id)),
-      O.match({
-        onNone: () => FleetPreviousRun.cases.NoneFound.make({}),
-        onSome: (run) =>
-          FleetPreviousRun.cases.Found.make({
-            runId: run.id,
-            createdAt: run.createdAt,
-            currentCreatedAt: O.map(
-              A.findFirst(runs, (other) => O.contains(currentRunId, other.id)),
-              (current) => current.createdAt
-            ),
-          }),
-      })
-    )
-);
+} = dual(2, (runs: ReadonlyArray<FleetScheduledRun>, currentRunId: O.Option<number>): FleetPreviousRun => {
+  const current = A.findFirst(runs, (run) => O.contains(currentRunId, run.id));
+  return pipe(
+    O.match(current, {
+      onNone: () => A.head(runs),
+      onSome: (self) => A.findFirst(runs, (run) => run.createdAt < self.createdAt),
+    }),
+    O.match({
+      onNone: () => FleetPreviousRun.cases.NoneFound.make({}),
+      onSome: (run) =>
+        FleetPreviousRun.cases.Found.make({
+          runId: run.id,
+          createdAt: run.createdAt,
+          currentCreatedAt: O.map(current, (self) => self.createdAt),
+        }),
+    })
+  );
+});

@@ -126,15 +126,15 @@ const walkListing = <A>(
       const all = A.appendAll(collected, items);
       const total = O.getOrElse(firstTotal, () => totalCount);
       const totalsAgree = total === totalCount;
-      return !totalsAgree || A.length(all) >= totalCount
-        ? Effect.succeed(finish(all, page, totalsAgree))
-        : A.isReadonlyArrayEmpty(items)
-          ? Effect.fail(
-              FleetReadError.make({
-                endpoint,
-                message: `listing stopped at page ${page} with ${A.length(all)} of ${totalCount} items`,
-              })
-            )
+      return A.isReadonlyArrayEmpty(items) && A.length(all) < totalCount
+        ? Effect.fail(
+            FleetReadError.make({
+              endpoint,
+              message: `listing stopped at page ${page} with ${A.length(all)} of ${totalCount} items`,
+            })
+          )
+        : !totalsAgree || A.length(all) >= totalCount
+          ? Effect.succeed(finish(all, page, totalsAgree))
           : page < MAX_LISTING_PAGES
             ? go(page + 1, all, O.some(total))
             : Effect.fail(
@@ -172,7 +172,8 @@ const allPages = <A>(
   const settle = (walks: ReadonlyArray<ListingWalk<A>>): Effect.Effect<SettledListing<A>, FleetReadError> =>
     Effect.flatMap(walkListing(endpoint, readPage, keyOf), (walk) => {
       const walked = A.append(walks, walk);
-      return walk.consistent && (walk.pages === 1 || walksAgree(A.last(walks), walk))
+      const confirmed = A.isReadonlyArrayEmpty(walks) ? walk.pages === 1 : walksAgree(A.last(walks), walk);
+      return walk.consistent && confirmed
         ? Effect.succeed({ items: walk.items, note: O.none() })
         : A.length(walked) >= MAX_LISTING_WALKS
           ? Effect.succeed({

@@ -150,15 +150,19 @@ const fixtureOf = (input: {
 }) =>
   FleetGithubFixture.make({
     runnerReads: input.reads,
-    queuedRuns: A.map(
-      A.filter(input.jobs, (job) => job.status === "queued"),
-      (job) => job.runId
+    queuedRuns: A.dedupe(
+      A.map(
+        A.filter(input.jobs, (job) => job.status === "queued"),
+        (job) => job.runId
+      )
     ),
-    inProgressRuns: A.map(
-      A.filter(input.jobs, (job) => job.status === "in_progress"),
-      (job) => job.runId
+    inProgressRuns: A.dedupe(
+      A.map(
+        A.filter(input.jobs, (job) => job.status === "in_progress"),
+        (job) => job.runId
+      )
     ),
-    recentRuns: input.recentRuns ?? A.map(input.jobs, (job) => job.runId),
+    recentRuns: A.dedupe(input.recentRuns ?? A.map(input.jobs, (job) => job.runId)),
     jobs: input.jobs,
     deliveries: input.deliveries ?? [],
     details: input.details ?? [],
@@ -850,6 +854,170 @@ describe("fleet missed-event check review wave 1", () => {
   );
 });
 
+describe("fleet missed-event check review wave 2", () => {
+  it.effect(
+    "Waiting, not NoLaunch: a delivered job queued 12 minutes, idle only in the second read, without progress",
+    () =>
+      Effect.gen(function* () {
+        const id = "3855552300210716700";
+        const { report } = yield* runCheck(
+          fixtureOf({
+            reads: [[runner(1, "busy")], [runner(1, "busy"), runner(2, "idle")]],
+            jobs: [queued(290, ago(12))],
+            deliveries: [delivery(id, ago(12) + 2000), delivery("12", ago(40))],
+            details: [detail(id, 290), detail("12", 12)],
+          }),
+          { pools: [heavyAt(5)] }
+        );
+        const pool = report.pools[0];
+        expect([pool?.atCap, pool?.idleRunnerIds, pool?.secondReadIdleRunnerIds, pool?.progress]).toEqual([
+          false,
+          [],
+          [2],
+          false,
+        ]);
+        const finding = findingOf(report, 290);
+        expect(finding.verdict).toEqual(FleetVerdict.cases.Waiting.make({ launches: 1, rank: 1 }));
+        expect(isFleetAlert(finding.verdict)).toBe(false);
+      })
+  );
+
+  it.effect("a 2xx queued delivery whose detail names no workflow job is unknown, not MissedDelivery", () =>
+    Effect.gen(function* () {
+      const id = "3855552300210716701";
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(291, ago(12))],
+          deliveries: [delivery(id, ago(12) + 1000), delivery("13", ago(30))],
+          details: [FleetDeliveryDetail.make({ id, workflowJobId: O.none() }), detail("13", 13)],
+        })
+      );
+      const finding = findingOf(report, 291);
+      expect(finding.verdict).toEqual(
+        FleetVerdict.cases.NoLaunch.make({ reason: "no-progress", launches: 0, rank: 1 })
+      );
+      assertSome(finding.classification, "unknown");
+      expect(finding.evidence).toEqual(
+        FleetDeliveryEvidence.cases.Unreadable.makeOption({
+          reason: "1 candidate delivery detail(s) unreadable after retries or naming no workflow job",
+          oldestReached: O.some(ago(30)),
+        })
+      );
+    })
+  );
+
+  it.effect("fails the run when an empty page falls short of a changed total in every walk", () =>
+    Effect.gen(function* () {
+      const error = yield* runCheck(fixtureOf({ reads: [[]], jobs: [] }), {
+        overrides: {
+          runnersPage: (page) =>
+            Effect.succeed(
+              page === 1
+                ? FleetRunnersPage.make({ runners: [runner(1, "busy")], totalCount: 2 })
+                : FleetRunnersPage.make({ runners: [], totalCount: 3 })
+            ),
+        },
+      }).pipe(Effect.flip);
+      expect(error.message).toBe("GitHub read org runners failed: listing stopped at page 2 with 1 of 3 items");
+    })
+  );
+
+  it.effect("an empty page at a total that shrank to the items read is a disagreement, not a read error", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runCheck(fixtureOf({ reads: [[]], jobs: [] }), {
+        overrides: {
+          runnersPage: (page) =>
+            Effect.succeed(
+              page === 1
+                ? FleetRunnersPage.make({ runners: [runner(1, "busy")], totalCount: 2 })
+                : FleetRunnersPage.make({ runners: [], totalCount: 1 })
+            ),
+        },
+      });
+      expect(report.pools[0]?.firstCount).toBe(1);
+      expect(report.listingNotes).toEqual([
+        "org runners: listing unstable (3 walks)",
+        "org runners: listing unstable (3 walks)",
+      ]);
+    })
+  );
+
+  it.effect("a paginated listing that shrinks to one page is accepted only once a third walk confirms it", () =>
+    Effect.gen(function* () {
+      const walks = yield* Ref.make(0);
+      const jobRuns = yield* Ref.make<ReadonlyArray<number>>([]);
+      const { report } = yield* runCheck(fixtureOf({ reads: [[], []], jobs: [] }), {
+        overrides: {
+          runsPage: Effect.fnUntraced(function* (query, page) {
+            const queuedListing = FleetRunsQuery.guards.ByStatus(query) && query.status === "queued";
+            const walk =
+              queuedListing && page === 1 ? yield* Ref.updateAndGet(walks, (n) => n + 1) : yield* Ref.get(walks);
+            return !queuedListing
+              ? FleetRunsPage.make({ runIds: [], totalCount: 0 })
+              : walk === 1
+                ? FleetRunsPage.make({ runIds: [3291 + page - 1], totalCount: 2 })
+                : FleetRunsPage.make({ runIds: [3291], totalCount: 1 });
+          }),
+          jobsPage: Effect.fnUntraced(function* (runId) {
+            yield* Ref.update(jobRuns, A.append(runId));
+            return FleetJobsPage.make({ jobs: [], totalCount: 0 });
+          }),
+        },
+      });
+      const walkCount = yield* Ref.get(walks);
+      expect(walkCount).toBe(3);
+      const readRuns = yield* Ref.get(jobRuns);
+      expect(readRuns).toEqual([3291]);
+      expect(report.listingNotes).toEqual([]);
+    })
+  );
+
+  it.effect("a stable fixture with two queued jobs in one run settles every listing without noting instability", () =>
+    Effect.gen(function* () {
+      const read = [runner(1, "busy")];
+      const jobs = [queued(292, ago(6)), FleetJob.make({ ...queued(293, ago(6)), runId: queued(292, ago(6)).runId })];
+      const { report } = yield* runCheck(fixtureOf({ reads: [read, read], jobs }), {
+        pools: [heavyAt(5)],
+        sources: gateSources,
+      });
+      expect(report.listingNotes).toEqual([]);
+      expect(
+        A.sort(
+          A.map(report.findings, (finding) => finding.job.id),
+          Order.Number
+        )
+      ).toEqual([292, 293]);
+    })
+  );
+
+  it("the previous scheduled run is the newest created before this one, past a newer pending run", () => {
+    const runs = [
+      FleetScheduledRun.make({ id: 50, createdAt: ago(10) }),
+      FleetScheduledRun.make({ id: 40, createdAt: ago(20) }),
+      FleetScheduledRun.make({ id: 10, createdAt: ago(60) }),
+    ];
+    const previousRun = previousScheduledRun(runs, O.some(40));
+    expect(previousRun).toEqual(
+      FleetPreviousRun.cases.Found.make({ runId: 10, createdAt: ago(60), currentCreatedAt: O.some(ago(20)) })
+    );
+    const report = FleetCheckReport.make({
+      repository: REPOSITORY,
+      checkedAt: NOW,
+      pools: [],
+      findings: [],
+      previousRun,
+    });
+    expect(renderFleetCheckSummary(report)).toContain(
+      "40m00s before this scheduled run (more than 30 minutes: a finding for the gate)"
+    );
+    expect(previousScheduledRun(runs, O.some(10))).toEqual(FleetPreviousRun.cases.NoneFound.make({}));
+    expect(previousScheduledRun(runs, O.some(5555))).toEqual(
+      FleetPreviousRun.cases.Found.make({ runId: 50, createdAt: ago(10), currentCreatedAt: O.none() })
+    );
+  });
+});
+
 describe("fleet missed-event check precedence", () => {
   it.effect("Stuck before Wedged", () =>
     Effect.gen(function* () {
@@ -1125,7 +1293,7 @@ describe("fleet missed-event check output", () => {
       ],
     });
     const summary = renderFleetCheckSummary(report);
-    expect(summary).toContain("Stuck (idle at cap in both reads: 1, 2)");
+    expect(summary).toContain("Stuck (idle in both reads, at cap in at least one: 1, 2)");
     expect(summary).toContain("Wedged (not busy at cap, no progress: 3)");
     expect(summary).toContain("NoLaunch (no-progress; 0 launch(es), rank 1)");
     expect(summary).toContain("not read (job younger than 5 minutes)");
