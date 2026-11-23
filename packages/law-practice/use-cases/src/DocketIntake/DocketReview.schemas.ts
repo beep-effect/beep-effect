@@ -491,6 +491,23 @@ export const StoredDeterministicCheck = S.Union([DeterministicCheck, Determinist
 );
 
 /**
+ * Type for {@link StoredDeterministicCheck}.
+ *
+ * **Example** (Type a stored check)
+ *
+ * ```ts
+ * import type { StoredDeterministicCheck } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const read = (check: StoredDeterministicCheck) => check.result._tag;
+ * console.log(typeof read);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StoredDeterministicCheck = typeof StoredDeterministicCheck.Type;
+
+/**
  * Whether the two independent readings agree on one field.
  *
  * **Example** (Make a field agreement)

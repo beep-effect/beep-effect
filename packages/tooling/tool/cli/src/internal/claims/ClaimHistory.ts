@@ -245,19 +245,16 @@ export const eventLine = <Imported, Native extends CoreEventFacts, Review, Signa
 ): ClaimLine<Imported, Native, Review, Signals> =>
   isCoreEvent(event) ? { _tag: "Claim", entry: { _tag: "Native", row: event } } : { _tag: "Record", record: event };
 
-const refuse = (
-  ledger: typeof ClaimImportLedger.Type,
-  claim: ClaimReference,
-  reason: typeof ClaimHistoryRefusal.Type
-) => ClaimHistoryRefused.make({ ledger, claim: claimReferenceKey(claim), reason });
+const refuse = (ledger: ClaimImportLedger, claim: ClaimReference, reason: typeof ClaimHistoryRefusal.Type) =>
+  ClaimHistoryRefused.make({ ledger, claim: claimReferenceKey(claim), reason });
 
-const importedReference = (ledger: typeof ClaimImportLedger.Type, oldId: string) =>
+const importedReference = (ledger: ClaimImportLedger, oldId: string) =>
   ClaimReference.cases.Imported.make({ ledger, oldId });
 
 const nativeReference = (claim: ClaimId) => ClaimReference.cases.Native.make({ claim });
 
 const entryReference =
-  (ledger: typeof ClaimImportLedger.Type) =>
+  (ledger: ClaimImportLedger) =>
   <Imported extends ImportedFacts<unknown, unknown>, Native extends NativeFacts>(
     entry: ClaimEntry<Imported, Native>
   ): ClaimReference =>
@@ -286,7 +283,7 @@ const toLogEntry = (native: NativeFacts): ClaimLogEntry =>
   });
 
 const followChain = (
-  ledger: typeof ClaimImportLedger.Type,
+  ledger: ClaimImportLedger,
   predecessors: HashMap.HashMap<string, O.Option<string>>,
   start: string
 ): Result.Result<void, ClaimHistoryRefused> => {
@@ -304,7 +301,7 @@ const followChain = (
 };
 
 const checkImportedChains = (
-  ledger: typeof ClaimImportLedger.Type,
+  ledger: ClaimImportLedger,
   imported: ReadonlyArray<{ readonly oldId: string; readonly predecessor: O.Option<string> }>
 ): Result.Result<void, ClaimHistoryRefused> => {
   let predecessors = HashMap.empty<string, O.Option<string>>();
@@ -321,7 +318,7 @@ const checkImportedChains = (
 };
 
 const verifyNativeCore = Effect.fnUntraced(function* <Native extends NativeFacts, E, R>(
-  ledger: typeof ClaimImportLedger.Type,
+  ledger: ClaimImportLedger,
   native: Native,
   mint: (core: Native["record"]["core"]) => Effect.Effect<ClaimId, E, R>
 ) {
@@ -347,7 +344,7 @@ const joinClaimHistory = <
   Review,
   Signals,
 >(options: {
-  readonly ledger: typeof ClaimImportLedger.Type;
+  readonly ledger: ClaimImportLedger;
   readonly entries: ReadonlyArray<ClaimEntry<Imported, Native>>;
   readonly records: ReadonlyArray<SideRecord<Review, Signals>>;
   readonly proposed: Review;
@@ -490,7 +487,7 @@ export const readClaimHistory = Effect.fnUntraced(function* <
   E,
   R,
 >(options: {
-  readonly ledger: typeof ClaimImportLedger.Type;
+  readonly ledger: ClaimImportLedger;
   readonly lines: ReadonlyArray<ClaimLine<Imported, Native, Review, Signals>>;
   readonly proposed: Review;
   readonly mint: (core: Native["record"]["core"]) => Effect.Effect<ClaimId, E, R>;
@@ -524,7 +521,7 @@ export const checkAppend = Effect.fnUntraced(function* <
   E2,
   R2,
 >(options: {
-  readonly ledger: typeof ClaimImportLedger.Type;
+  readonly ledger: ClaimImportLedger;
   readonly existing: ReadonlyArray<ClaimLine<Imported, Native, Review, Signals>>;
   readonly added: ReadonlyArray<ClaimLine<Imported, Native, Review, Signals>>;
   readonly proposed: Review;

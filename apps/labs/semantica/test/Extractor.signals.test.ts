@@ -191,6 +191,7 @@ const present = (value: number, method: "hosted-langextract" | "pattern-wink", p
 
 const notAssessed = ExtractorConfidence.cases.Absent.make({ reason: "not-assessed" });
 const sameSignal = S.toEquivalence(ExtractorConfidence);
+const encodeSignalJson = S.encodeEffect(S.fromJsonString(ExtractorConfidence));
 
 const expectSignal = (actual: O.Option<ExtractorConfidence>, expected: ExtractorConfidence) => {
   expect(O.isSome(actual)).toBe(true);
@@ -247,7 +248,7 @@ it.layer(patternReadings, { timeout: 60_000 })("Extractor.signals: pattern readi
 describe("Extractor.signals: emitted claims keep reported confidence honest", () => {
   it.effect("an absent signal encodes without any numeric value", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(S.fromJsonString(ExtractorConfidence))(notAssessed);
+      const encoded = yield* encodeSignalJson(notAssessed);
       expect(encoded).toBe('{"_tag":"Absent","reason":"not-assessed"}');
     })
   );

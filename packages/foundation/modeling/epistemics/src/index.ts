@@ -122,7 +122,7 @@ export * from "./ClaimGate/index.ts";
  * **Example** (Index an imported claim reference)
  *
  * ```ts
- * import { ClaimReference, claimReferenceKey } from "@beep/epistemics"
+ * import { ClaimReference, claimReferenceKey } from "@beep/epistemics/ClaimImport.schema"
  * console.log(claimReferenceKey(ClaimReference.cases.Imported.make({ ledger: "kb", oldId: "claim-1" })))
  * ```
  *
@@ -243,7 +243,7 @@ export * from "./EdgeRelation/index.ts";
  * **Example** (Inspect the current format)
  *
  * ```ts
- * import { EvidencePosition } from "@beep/epistemics"
+ * import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema"
  * console.log(EvidencePosition.fields.version)
  * ```
  *
