@@ -3,13 +3,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// The one filter shape, shared by every read surface.
-//
-// One vocabulary means one thing to learn: a consumer who can express a
-// subscription can express a query and a projection without translating. It is
-// also what makes the filter-before-decode guarantee expressible — every field
-// here lives on the envelope **frame**, so matching never touches `data`.
-
 import { $JsonlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -21,10 +14,6 @@ import type { JsonlEvent } from "./JsonlEvent.ts";
 
 const $I = $JsonlId.create("Slice");
 
-// Selection options are plain boundary inputs. Their schemas retain literal tags
-// while preserving ordinary object-literal calls to query, changes and projection.
-// Every key is an exact optional key (EF-40, kept deviation 24): omit a key
-// rather than passing undefined.
 const fields = <T extends string>(event: S.Codec<T>) => ({
   events: event.pipe(S.Array, S.optionalKey),
   scopes: S.String.pipe(S.Array, S.optionalKey),
@@ -95,19 +84,16 @@ export type CursoredSlice<R extends JsonlEvent.Registry, T extends JsonlEvent.Ta
   typeof CursoredSlice<T>
 >["Type"];
 
-// An absent events filter admits every event.
 const matchesEvent = (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string>): boolean =>
   P.isUndefined(slice.events) || A.contains(slice.events, frame.event);
 
-// A scopes filter admits only scoped frames whose scope it lists.
 const matchesScope = (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string>): boolean =>
   P.isUndefined(slice.scopes) || (P.isNotUndefined(frame.scope) && A.contains(slice.scopes, frame.scope));
 
-// The time window is half-open: `from` inclusive, `to` exclusive.
-const matchesWindow = (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string>): boolean => {
+const matchesHalfOpenWindow = (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string>): boolean => {
   const millis = frame.at.epochMilliseconds;
-  const afterFrom = P.isUndefined(slice.from) || millis >= slice.from.epochMilliseconds;
-  return afterFrom && (P.isUndefined(slice.to) || millis < slice.to.epochMilliseconds);
+  const atOrAfterInclusiveFrom = P.isUndefined(slice.from) || millis >= slice.from.epochMilliseconds;
+  return atOrAfterInclusiveFrom && (P.isUndefined(slice.to) || millis < slice.to.epochMilliseconds);
 };
 
 /**
@@ -138,5 +124,6 @@ export const matchesFrame: {
 } = dual(
   2,
   (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string> | undefined): boolean =>
-    P.isUndefined(slice) || (matchesEvent(frame, slice) && matchesScope(frame, slice) && matchesWindow(frame, slice))
+    P.isUndefined(slice) ||
+    (matchesEvent(frame, slice) && matchesScope(frame, slice) && matchesHalfOpenWindow(frame, slice))
 );

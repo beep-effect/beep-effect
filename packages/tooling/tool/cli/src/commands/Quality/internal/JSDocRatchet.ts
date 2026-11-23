@@ -53,6 +53,7 @@ const JSDocRatchetedTotalName = LiteralKit([
   "loose-ts-fence",
   "forbidden-remarks",
   "no-root-package-import",
+  "restating-lead",
 ]).pipe(
   $I.annoteSchema("JSDocRatchetedTotalName", {
     description: "JSDoc inventory total names guarded by the A4 fail-on-growth ratchet.",

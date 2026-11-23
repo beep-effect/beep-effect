@@ -1,39 +1,3 @@
-import { identity } from "effect/Function";
-// The smol-toml differential oracle: property tests cross-checking the engine
-// against the reference implementation (smol-toml 1.7.0, exact-pinned), plus
-// a corpus-wide differential over every toml-test valid file. This is the
-// ONLY file that may import smol-toml.
-//
-// TOML 1.1 coverage: smol-toml 1.7.0 was probed against the 1.1 relaxations
-// (optional seconds, inline-table newlines/comments/trailing commas, \e and
-// \xHH escapes) and accepts them all, so the corpus differential exercises
-// the full 1.1.0 valid tree. The generator emits only 1.0-spelling documents
-// (our stringify writes conservative 1.0 output by design); the corpus is
-// the 1.1 authority and wins any disagreement.
-//
-// Probe-derived decisions (all probed against the installed 1.7.0 before the
-// normalizer was written):
-// - Datetimes are EXCLUDED from generation: smol-toml models all four TOML
-//   date-time types as TomlDate (a Date subclass) and truncates fractional
-//   seconds to milliseconds (`.999999999` parses back as `.999`,
-//   `07:32:00.123456` as `.123`) — lossy against our nanosecond-carrying
-//   classes. The corpus differential still cross-checks every corpus
-//   datetime, compared modulo the oracle's millisecond truncation.
-// - The oracle always parses with `{ integersAsBigInt: true }`: default-mode
-//   smol-toml throws "integer value cannot be represented losslessly" at the
-//   int64 extremes the corpus and the generator both exercise. Under the
-//   option EVERY integer comes back bigint, so the canonicalizer unifies
-//   integral bigints within ±(2^53 − 1) to number on BOTH sides before any
-//   comparison.
-// - smol-toml stringify accepts bigint inputs natively (probed: `123n` emits
-//   `x = 123`, int64 max emits its exact digits), so the oracle-stringify
-//   property passes generated values through unmapped.
-// - Lone surrogates are excluded from generation: smol-toml stringify happily
-//   emits `\ud800` as a basic-string escape, which is invalid TOML (escaped
-//   values must be Unicode scalar values) and our parser correctly rejects.
-// - NaN is excluded from the equality properties (canonicalized to a sentinel
-//   defensively for the corpus side) and round-trips in a dedicated test.
-
 import { Toml } from "@beep/toml/Toml";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "@beep/toml/TomlDateTime";
 import { assert, describe, it } from "@effect/vitest";
@@ -41,6 +5,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -52,19 +17,15 @@ import { assertMatchesTagged } from "./e2e/taggedJson.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// ── The canonicalizer ──────────────────────────────────────────────────────
-
 const MAX_SAFE_BIG = BigInt(Number.MAX_SAFE_INTEGER);
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_RE = /^(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?$/;
 const DATETIME_RE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/i;
 
-/** The oracle's millisecond truncation, applied to a fraction-digits string. */
-const fractionToMs = (fraction: string | undefined): number =>
+const truncateFractionToMilliseconds = (fraction: string | undefined): number =>
   fraction === undefined ? 0 : Number(Str.slice(0, 3)(Str.padEnd(3, "0")(fraction)));
 
-/** `Z`/`+hh:mm`/`-hh:mm` → signed minutes, with `-00:00` canonicalized to 0. */
 const offsetToMinutes = (offset: string): number => {
   if (Str.toUpperCase(offset) === "Z") {
     return 0;
@@ -73,11 +34,6 @@ const offsetToMinutes = (offset: string): number => {
   return Str.startsWith("-")(offset) && total !== 0 ? -total : total;
 };
 
-/**
- * A smol-toml TomlDate (the one Date subclass covering all four TOML
- * date-time kinds), keyed off its custom `toISOString` output shape and
- * mapped onto the same tagged record our classes canonicalize to.
- */
 const canonOracleDate = (value: Date): unknown => {
   const iso = value.toISOString();
   const dateTime = DATETIME_RE.exec(iso);
@@ -89,7 +45,7 @@ const canonOracleDate = (value: Date): unknown => {
       hour: Number(dateTime[4]),
       minute: Number(dateTime[5]),
       second: Number(dateTime[6]),
-      ms: fractionToMs(dateTime[7]),
+      ms: truncateFractionToMilliseconds(dateTime[7]),
     };
     const offset = dateTime[8];
     return offset === undefined
@@ -107,15 +63,14 @@ const canonOracleDate = (value: Date): unknown => {
       hour: Number(time[1]),
       minute: Number(time[2]),
       second: Number(time[3]),
-      ms: fractionToMs(time[4]),
+      ms: truncateFractionToMilliseconds(time[4]),
     };
   }
   return { $dt: "unrecognized", iso };
 };
 
-const msOf = (nanosecond: number): number => Math.floor(nanosecond / 1_000_000);
+const truncateNanosecondsToMilliseconds = (nanosecond: number): number => Math.floor(nanosecond / 1_000_000);
 
-/** Our four datetime classes as tagged records, or `undefined` for anything else. */
 const canonEngineDateTime = (value: unknown): unknown => {
   if (S.is(TomlOffsetDateTime)(value)) {
     return {
@@ -126,7 +81,7 @@ const canonEngineDateTime = (value: unknown): unknown => {
       hour: value.hour,
       minute: value.minute,
       second: value.second,
-      ms: msOf(value.nanosecond),
+      ms: truncateNanosecondsToMilliseconds(value.nanosecond),
       offset: value.offsetMinutes === 0 ? 0 : value.offsetMinutes,
     };
   }
@@ -139,7 +94,7 @@ const canonEngineDateTime = (value: unknown): unknown => {
       hour: value.hour,
       minute: value.minute,
       second: value.second,
-      ms: msOf(value.nanosecond),
+      ms: truncateNanosecondsToMilliseconds(value.nanosecond),
     };
   }
   if (S.is(TomlLocalDate)(value)) {
@@ -151,13 +106,12 @@ const canonEngineDateTime = (value: unknown): unknown => {
       hour: value.hour,
       minute: value.minute,
       second: value.second,
-      ms: msOf(value.nanosecond),
+      ms: truncateNanosecondsToMilliseconds(value.nanosecond),
     };
   }
   return undefined;
 };
 
-/** Oracle dates, arrays and tables; any other value passes through. */
 const canonContainer = (value: unknown): unknown => {
   if (value instanceof Date) {
     return canonOracleDate(value);
@@ -180,31 +134,20 @@ const canonNonPrimitive = (value: unknown): unknown => {
 const canonBigInt = (value: bigint): unknown =>
   value >= -MAX_SAFE_BIG && value <= MAX_SAFE_BIG ? Number(value) : value;
 
-/**
- * NaN and negative zero become sentinel records, so the structural
- * `Equal.equals` (which equates NaN with NaN and 0 with -0) keeps the strict
- * float comparison the differential needs.
- */
-const canonNumber = (value: number): unknown => {
+const canonicalizeNaNAndNegativeZero = (value: number): unknown => {
   if (Number.isNaN(value)) {
     return { $nan: true };
   }
   return Object.is(value, -0) ? { $negativeZero: true } : value;
 };
 
-/**
- * Map either parser's result onto one comparable model: integral bigints
- * within ±(2^53 − 1) become number, NaN and -0 become sentinel records, our
- * datetime classes and the oracle's TomlDate both become tagged records
- * truncated to millisecond precision (the oracle's ceiling), containers
- * recurse.
- */
+// decision: oracle-comparison-domain
 const canon = (value: unknown): unknown => {
   switch (typeof value) {
     case "bigint":
       return canonBigInt(value);
     case "number":
-      return canonNumber(value);
+      return canonicalizeNaNAndNegativeZero(value);
     case "string":
     case "boolean":
       return value;
@@ -213,10 +156,8 @@ const canon = (value: unknown): unknown => {
   }
 };
 
-/** Parse through the oracle in the mode the canonicalizer expects. */
 const oracle = (text: string): unknown => oracleParse(text, { integersAsBigInt: true });
 
-// ── The arbitraries ────────────────────────────────────────────────────────
 // Recursive TOML-representable plain values, bounded at depth 4 and width 5.
 // Array form ONLY for it.effect.prop: the named-record form silently discards
 // Schema conversion in @effect/vitest 4.0.0-beta.94.
@@ -227,7 +168,6 @@ const oracle = (text: string): unknown => oracleParse(text, { integersAsBigInt: 
 // way fast-check did: a weighted pick shrinks toward its first branch, a
 // collection shrinks its length before its elements.
 
-/** Picks one branch with the given relative weights. */
 function weighted<A>(
   first: readonly [weight: number, arbitrary: Arbitrary.Arbitrary<A>],
   ...rest: ReadonlyArray<readonly [weight: number, arbitrary: Arbitrary.Arbitrary<A>]>
@@ -246,7 +186,6 @@ function weighted<A>(
   );
 }
 
-/** A collection of `minLength`..`maxLength` independent draws from `item`. */
 function arrayOf<A>(
   item: Arbitrary.Arbitrary<A>,
   { minLength = 0, maxLength }: { readonly minLength?: number; readonly maxLength: number }
@@ -256,13 +195,11 @@ function arrayOf<A>(
   );
 }
 
-/** Any Unicode scalar value from space upward (escaping handled by emitters). */
 const scalarCharArb = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x10ffff }))).pipe(
   Arbitrary.filter((codePoint) => codePoint < 0xd800 || codePoint > 0xdfff),
   Arbitrary.map((codePoint) => String.fromCodePoint(codePoint))
 );
 
-/** The characters that stress escaping: quotes, backslashes, controls, DEL. */
 const nastyCharArb = Arbitrary.schema(
   S.Literals(['"', "\\", "\n", "\r", "\t", "\b", "\f", "\u0000", "\u001f", "\u007f", "'", " "])
 );
@@ -273,7 +210,6 @@ const stringArb = arrayOf(weighted([5, scalarCharArb], [3, nastyCharArb]), { max
 
 const bareKeyArb = Arbitrary.schema(S.String.check(S.isPattern(/^[abzAZ_\-019]{1,8}$/)));
 
-/** Keys that force quoting: dots, spaces, the empty key, quotes, unicode. */
 const quotedKeyArb = weighted<string>(
   [1, Arbitrary.schema(S.Literals(["", "a.b", "a b", 'quo"te', "back\\slash", "uni é中", "\ttab", "new\nline"]))],
   [1, stringArb]
@@ -281,7 +217,6 @@ const quotedKeyArb = weighted<string>(
 
 const keyArb = weighted([3, bareKeyArb], [2, quotedKeyArb]);
 
-/** Half 32-bit integers (fast-check's default range), half the full safe range. */
 const integerArb = Arbitrary.schema(
   S.Union([
     S.Int.check(S.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
@@ -293,19 +228,10 @@ const INT64_MAX = 2n ** 63n - 1n;
 
 const bigintArb = Arbitrary.schema(S.BigInt.check(S.isBetweenBigInt({ minimum: -INT64_MAX, maximum: INT64_MAX })));
 
-/** Either signed infinity: TOML's `inf` / `-inf`. */
 const infinityArb = Arbitrary.schema(S.Boolean).pipe(
   Arbitrary.map((positive) => (positive ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY))
 );
 
-/**
- * Finite-or-infinite doubles — NaN stays out of the equality properties.
- *
- * **Details**
- *
- * TOML float round-trip properties must include infinities, as the scalar
- * tests require, so finite doubles are mixed with both signed infinities.
- */
 const floatArb = weighted<number>([9, Arbitrary.schema(S.Finite)], [1, infinityArb]);
 
 const leafArb: Arbitrary.Arbitrary<unknown> = weighted<unknown>(
@@ -329,18 +255,9 @@ function tableArb(depth: number): Arbitrary.Arbitrary<Record<string, unknown>> {
   );
 }
 
-/** A TOML document is a table: the root arbitrary is always an object. */
 const documentArb = tableArb(3);
 
-// ── The differential properties ────────────────────────────────────────────
-
-/**
- * Fixed seed so a CI property failure reproduces locally: an unseeded run
- * draws a fresh seed per invocation, making a red CI run unreplayable. Bump
- * the seed deliberately (with a green run) when fresh coverage is wanted;
- * the corpus differential below is exhaustive and does not depend on it.
- */
-const ORACLE_CHECK_OPTIONS: Arbitrary.CheckOptions = { runs: 250, seed: 20260710 };
+const REPRODUCIBLE_ORACLE_CHECK_OPTIONS: Arbitrary.CheckOptions = { runs: 250, seed: 20260710 };
 
 describe("smol-toml differential oracle", () => {
   it.effect.prop(
@@ -352,7 +269,7 @@ describe("smol-toml differential oracle", () => {
         const ours = yield* Toml.parse(text);
         assert.deepStrictEqual(canon(ours), canon(oracle(text)), text);
       }),
-    { arbitrary: ORACLE_CHECK_OPTIONS }
+    { arbitrary: REPRODUCIBLE_ORACLE_CHECK_OPTIONS }
   );
 
   it.effect.prop(
@@ -364,7 +281,7 @@ describe("smol-toml differential oracle", () => {
         const ours = yield* Toml.parse(text);
         assert.deepStrictEqual(canon(ours), canon(oracle(text)), text);
       }),
-    { arbitrary: ORACLE_CHECK_OPTIONS }
+    { arbitrary: REPRODUCIBLE_ORACLE_CHECK_OPTIONS }
   );
 
   it.effect("NaN round-trips through our stringify into NaN under both parsers", () =>
@@ -381,20 +298,8 @@ describe("smol-toml differential oracle", () => {
   );
 });
 
-// ── The corpus differential ────────────────────────────────────────────────
-// Every toml-test valid file through both parsers, agreement asserted modulo
-// `canon`. Where the oracle disagrees (rejects a valid file or parses it
-// differently), OUR result is asserted against the corpus expectation instead
-// and the file is recorded — the pinned list below is the console-free
-// divergence log.
-
-// Guard against a silently-empty walk (count recorded in the fixture README).
 const README_VALID_COUNT = 214;
 
-/**
- * The corpus files where smol-toml 1.7.0 diverges from the toml-test
- * expectation (and from us). Empty means full three-way agreement.
- */
 const EXPECTED_ORACLE_DIVERGENCES: ReadonlyArray<string> = [];
 
 interface Divergence {
@@ -433,15 +338,13 @@ describe("corpus differential", () => {
     );
   }
 
-  // Defined last so every per-file test above has already run.
-  it("pins the oracle divergence log", () => {
+  it("pins the oracle divergence log after all per-file cases have accumulated", () => {
     assert.deepStrictEqual(A.map(divergences, (divergence) => `${divergence.file}: ${divergence.detail}`).sort(), [
       ...EXPECTED_ORACLE_DIVERGENCES,
     ]);
   });
 });
 
-/** Where the oracle diverges, the corpus expectation decides: assert ours against it. */
 function assertOursAgainstCorpus(ours: unknown, relPath: string): void {
   const expected: unknown = Result.getOrThrowWith(S.decodeResult(UnknownJson)(readValidExpected(relPath)), identity);
   assertMatchesTagged(ours, expected, "$");

@@ -19,8 +19,7 @@ const table = (keyPath: ReadonlyArray<TomlKey>) => TomlTableHeader.make({ keyPat
 const arrayTable = (keyPath: ReadonlyArray<TomlKey>) => TomlArrayTableHeader.make({ keyPath, offset: 0, length: 3 });
 const missingKey = /missing TOML key/;
 
-// Synthetic CSTs can bypass the parser's non-empty, dense path guarantee.
-describe("semantic defensive inputs", () => {
+describe("semantic defensive inputs from synthetic CSTs that bypass the parser's non-empty, dense path guarantee", () => {
   it.effect("rejects empty assignment and header paths", () =>
     Effect.sync(() => {
       for (const expression of [entry([]), table([]), arrayTable([])]) {

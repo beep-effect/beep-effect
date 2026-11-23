@@ -146,7 +146,9 @@ the agent 1Password lane take precedence; a dialog never replaces those routes.
 - Apply schema defaults when safe. Keep changes focused and testable.
 - JSDoc on exported symbols uses titled `**Example** (Title)` and
   `**Details**`/`**Gotchas**` prose sections — never `@example` or `@remarks`
-  tags. Law: `.patterns/jsdoc-documentation.md`.
+  tags. Annotated schemas, their type companions and barrels take
+  their lead from the `$I.annote*` description; never restate it. Law:
+  `.patterns/jsdoc-documentation.md`.
 - No free prose comments and no JSDoc on non-exported declarations in TS/JS
   source, tests or tooling. Put a reason in a name, type, schema annotation,
   test title or assertion; a real decision in `<package>/decisions/`, cited
@@ -304,8 +306,8 @@ needed only for the escalation list below.
 - Attribute verification failures before repairing — introduced / inherited /
   unrelated / environment-only; attribution decides fix vs rebase vs report,
   not blind rerun.
-- Read a completed red job's log at once through the REST logs endpoint;
-  never wait for the run to finish. Commands: yeet skill, `references/gh-rest.md`.
+- Read a completed red job at once with `bun run beep ci failures --run <id> | --pr <n>`;
+  never wait for the run to finish or pipe a raw log. Mechanics: yeet skill, `references/gh-rest.md`.
 - “Mergeable” describes the complete PR state, not GitHub's structural
   `MERGEABLE` field alone. It requires all of the following:
   - no outstanding review thread — one that is unresolved, or one the author

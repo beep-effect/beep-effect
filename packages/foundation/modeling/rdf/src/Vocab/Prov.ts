@@ -1,14 +1,17 @@
 /**
- * PROV vocabulary helpers.
+ * PROV vocabulary helpers, built from the pinned `prov` namespace of the
+ * identity registry.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { PROV_NAMESPACE } from "./generated/Prov.terms.ts";
+import type { PROV_TERMS } from "./generated/Prov.terms.ts";
 
 /**
- * PROV namespace IRI.
+ * PROV namespace IRI and its registered term locals, read from the identity registry.
  *
  * **Example** (Construct entity IRI)
  *
@@ -22,7 +25,9 @@ import { makeNamedNode } from "../Rdf.ts";
  * @category configuration
  * @since 0.0.0
  */
-export const PROV_NAMESPACE = "http://www.w3.org/ns/prov#" as const;
+export { PROV_NAMESPACE, PROV_TERMS } from "./generated/Prov.terms.ts";
+
+const provTerm = (local: (typeof PROV_TERMS)[number]) => makeNamedNode(`${PROV_NAMESPACE}${local}`);
 
 /**
  * `prov:Entity`
@@ -39,7 +44,7 @@ export const PROV_NAMESPACE = "http://www.w3.org/ns/prov#" as const;
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ENTITY = makeNamedNode(`${PROV_NAMESPACE}Entity`);
+export const PROV_ENTITY = provTerm("Entity");
 
 /**
  * `prov:Activity`
@@ -56,7 +61,7 @@ export const PROV_ENTITY = makeNamedNode(`${PROV_NAMESPACE}Entity`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ACTIVITY = makeNamedNode(`${PROV_NAMESPACE}Activity`);
+export const PROV_ACTIVITY = provTerm("Activity");
 
 /**
  * `prov:Agent`
@@ -73,7 +78,7 @@ export const PROV_ACTIVITY = makeNamedNode(`${PROV_NAMESPACE}Activity`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_AGENT = makeNamedNode(`${PROV_NAMESPACE}Agent`);
+export const PROV_AGENT = provTerm("Agent");
 
 /**
  * `prov:wasGeneratedBy`
@@ -90,7 +95,7 @@ export const PROV_AGENT = makeNamedNode(`${PROV_NAMESPACE}Agent`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_WAS_GENERATED_BY = makeNamedNode(`${PROV_NAMESPACE}wasGeneratedBy`);
+export const PROV_WAS_GENERATED_BY = provTerm("wasGeneratedBy");
 
 /**
  * `prov:used`
@@ -107,7 +112,7 @@ export const PROV_WAS_GENERATED_BY = makeNamedNode(`${PROV_NAMESPACE}wasGenerate
  * @category constants
  * @since 0.0.0
  */
-export const PROV_USED = makeNamedNode(`${PROV_NAMESPACE}used`);
+export const PROV_USED = provTerm("used");
 
 /**
  * `prov:SoftwareAgent` term.
@@ -123,7 +128,7 @@ export const PROV_USED = makeNamedNode(`${PROV_NAMESPACE}used`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_SOFTWARE_AGENT = makeNamedNode(`${PROV_NAMESPACE}SoftwareAgent`);
+export const PROV_SOFTWARE_AGENT = provTerm("SoftwareAgent");
 
 /**
  * `prov:Usage` term.
@@ -139,7 +144,7 @@ export const PROV_SOFTWARE_AGENT = makeNamedNode(`${PROV_NAMESPACE}SoftwareAgent
  * @category constants
  * @since 0.0.0
  */
-export const PROV_USAGE = makeNamedNode(`${PROV_NAMESPACE}Usage`);
+export const PROV_USAGE = provTerm("Usage");
 
 /**
  * `prov:Generation` term.
@@ -155,7 +160,7 @@ export const PROV_USAGE = makeNamedNode(`${PROV_NAMESPACE}Usage`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_GENERATION = makeNamedNode(`${PROV_NAMESPACE}Generation`);
+export const PROV_GENERATION = provTerm("Generation");
 
 /**
  * `prov:Association` term.
@@ -171,7 +176,7 @@ export const PROV_GENERATION = makeNamedNode(`${PROV_NAMESPACE}Generation`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ASSOCIATION = makeNamedNode(`${PROV_NAMESPACE}Association`);
+export const PROV_ASSOCIATION = provTerm("Association");
 
 /**
  * `prov:Attribution` term.
@@ -187,7 +192,7 @@ export const PROV_ASSOCIATION = makeNamedNode(`${PROV_NAMESPACE}Association`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ATTRIBUTION = makeNamedNode(`${PROV_NAMESPACE}Attribution`);
+export const PROV_ATTRIBUTION = provTerm("Attribution");
 
 /**
  * `prov:Derivation` term.
@@ -203,7 +208,7 @@ export const PROV_ATTRIBUTION = makeNamedNode(`${PROV_NAMESPACE}Attribution`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_DERIVATION = makeNamedNode(`${PROV_NAMESPACE}Derivation`);
+export const PROV_DERIVATION = provTerm("Derivation");
 
 /**
  * `prov:PrimarySource` term.
@@ -219,7 +224,7 @@ export const PROV_DERIVATION = makeNamedNode(`${PROV_NAMESPACE}Derivation`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}PrimarySource`);
+export const PROV_PRIMARY_SOURCE = provTerm("PrimarySource");
 
 /**
  * `prov:wasAssociatedWith` term.
@@ -235,7 +240,7 @@ export const PROV_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}PrimarySource
  * @category constants
  * @since 0.0.0
  */
-export const PROV_WAS_ASSOCIATED_WITH = makeNamedNode(`${PROV_NAMESPACE}wasAssociatedWith`);
+export const PROV_WAS_ASSOCIATED_WITH = provTerm("wasAssociatedWith");
 
 /**
  * `prov:wasAttributedTo` term.
@@ -251,7 +256,7 @@ export const PROV_WAS_ASSOCIATED_WITH = makeNamedNode(`${PROV_NAMESPACE}wasAssoc
  * @category constants
  * @since 0.0.0
  */
-export const PROV_WAS_ATTRIBUTED_TO = makeNamedNode(`${PROV_NAMESPACE}wasAttributedTo`);
+export const PROV_WAS_ATTRIBUTED_TO = provTerm("wasAttributedTo");
 
 /**
  * `prov:hadPrimarySource` term.
@@ -267,7 +272,7 @@ export const PROV_WAS_ATTRIBUTED_TO = makeNamedNode(`${PROV_NAMESPACE}wasAttribu
  * @category constants
  * @since 0.0.0
  */
-export const PROV_HAD_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}hadPrimarySource`);
+export const PROV_HAD_PRIMARY_SOURCE = provTerm("hadPrimarySource");
 
 /**
  * `prov:wasDerivedFrom` term.
@@ -283,7 +288,7 @@ export const PROV_HAD_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}hadPrimar
  * @category constants
  * @since 0.0.0
  */
-export const PROV_WAS_DERIVED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasDerivedFrom`);
+export const PROV_WAS_DERIVED_FROM = provTerm("wasDerivedFrom");
 
 /**
  * `prov:wasQuotedFrom` term.
@@ -299,7 +304,7 @@ export const PROV_WAS_DERIVED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasDerivedF
  * @category constants
  * @since 0.0.0
  */
-export const PROV_WAS_QUOTED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasQuotedFrom`);
+export const PROV_WAS_QUOTED_FROM = provTerm("wasQuotedFrom");
 
 /**
  * `prov:wasRevisionOf` term.
@@ -315,7 +320,7 @@ export const PROV_WAS_QUOTED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasQuotedFro
  * @category constants
  * @since 0.0.0
  */
-export const PROV_WAS_REVISION_OF = makeNamedNode(`${PROV_NAMESPACE}wasRevisionOf`);
+export const PROV_WAS_REVISION_OF = provTerm("wasRevisionOf");
 
 /**
  * `prov:generatedAtTime` term.
@@ -331,7 +336,7 @@ export const PROV_WAS_REVISION_OF = makeNamedNode(`${PROV_NAMESPACE}wasRevisionO
  * @category constants
  * @since 0.0.0
  */
-export const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
+export const PROV_GENERATED_AT_TIME = provTerm("generatedAtTime");
 
 /**
  * `prov:invalidatedAtTime` term.
@@ -347,7 +352,7 @@ export const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedA
  * @category constants
  * @since 0.0.0
  */
-export const PROV_INVALIDATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}invalidatedAtTime`);
+export const PROV_INVALIDATED_AT_TIME = provTerm("invalidatedAtTime");
 
 /**
  * `prov:startedAtTime` term.
@@ -363,7 +368,7 @@ export const PROV_INVALIDATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}invalida
  * @category constants
  * @since 0.0.0
  */
-export const PROV_STARTED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}startedAtTime`);
+export const PROV_STARTED_AT_TIME = provTerm("startedAtTime");
 
 /**
  * `prov:endedAtTime` term.
@@ -379,7 +384,7 @@ export const PROV_STARTED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}startedAtTim
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ENDED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}endedAtTime`);
+export const PROV_ENDED_AT_TIME = provTerm("endedAtTime");
 
 /**
  * `prov:atTime` term.
@@ -395,7 +400,7 @@ export const PROV_ENDED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}endedAtTime`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}atTime`);
+export const PROV_AT_TIME = provTerm("atTime");
 
 /**
  * `prov:value` term.
@@ -411,7 +416,7 @@ export const PROV_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}atTime`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_VALUE = makeNamedNode(`${PROV_NAMESPACE}value`);
+export const PROV_VALUE = provTerm("value");
 
 /**
  * `prov:hadPlan` term.
@@ -427,7 +432,7 @@ export const PROV_VALUE = makeNamedNode(`${PROV_NAMESPACE}value`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_HAD_PLAN = makeNamedNode(`${PROV_NAMESPACE}hadPlan`);
+export const PROV_HAD_PLAN = provTerm("hadPlan");
 
 /**
  * `prov:qualifiedUsage` term.
@@ -443,7 +448,7 @@ export const PROV_HAD_PLAN = makeNamedNode(`${PROV_NAMESPACE}hadPlan`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_QUALIFIED_USAGE = makeNamedNode(`${PROV_NAMESPACE}qualifiedUsage`);
+export const PROV_QUALIFIED_USAGE = provTerm("qualifiedUsage");
 
 /**
  * `prov:qualifiedGeneration` term.
@@ -459,7 +464,7 @@ export const PROV_QUALIFIED_USAGE = makeNamedNode(`${PROV_NAMESPACE}qualifiedUsa
  * @category constants
  * @since 0.0.0
  */
-export const PROV_QUALIFIED_GENERATION = makeNamedNode(`${PROV_NAMESPACE}qualifiedGeneration`);
+export const PROV_QUALIFIED_GENERATION = provTerm("qualifiedGeneration");
 
 /**
  * `prov:qualifiedAssociation` term.
@@ -475,7 +480,7 @@ export const PROV_QUALIFIED_GENERATION = makeNamedNode(`${PROV_NAMESPACE}qualifi
  * @category constants
  * @since 0.0.0
  */
-export const PROV_QUALIFIED_ASSOCIATION = makeNamedNode(`${PROV_NAMESPACE}qualifiedAssociation`);
+export const PROV_QUALIFIED_ASSOCIATION = provTerm("qualifiedAssociation");
 
 /**
  * `prov:qualifiedAttribution` term.
@@ -491,7 +496,7 @@ export const PROV_QUALIFIED_ASSOCIATION = makeNamedNode(`${PROV_NAMESPACE}qualif
  * @category constants
  * @since 0.0.0
  */
-export const PROV_QUALIFIED_ATTRIBUTION = makeNamedNode(`${PROV_NAMESPACE}qualifiedAttribution`);
+export const PROV_QUALIFIED_ATTRIBUTION = provTerm("qualifiedAttribution");
 
 /**
  * `prov:qualifiedDerivation` term.
@@ -507,7 +512,7 @@ export const PROV_QUALIFIED_ATTRIBUTION = makeNamedNode(`${PROV_NAMESPACE}qualif
  * @category constants
  * @since 0.0.0
  */
-export const PROV_QUALIFIED_DERIVATION = makeNamedNode(`${PROV_NAMESPACE}qualifiedDerivation`);
+export const PROV_QUALIFIED_DERIVATION = provTerm("qualifiedDerivation");
 
 /**
  * `prov:qualifiedPrimarySource` term.
@@ -523,7 +528,7 @@ export const PROV_QUALIFIED_DERIVATION = makeNamedNode(`${PROV_NAMESPACE}qualifi
  * @category constants
  * @since 0.0.0
  */
-export const PROV_QUALIFIED_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}qualifiedPrimarySource`);
+export const PROV_QUALIFIED_PRIMARY_SOURCE = provTerm("qualifiedPrimarySource");
 
 /**
  * `prov:entity` relation target.
@@ -539,7 +544,7 @@ export const PROV_QUALIFIED_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}qua
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ENTITY_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}entity`);
+export const PROV_ENTITY_PROPERTY = provTerm("entity");
 
 /**
  * `prov:activity` relation target.
@@ -555,7 +560,7 @@ export const PROV_ENTITY_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}entity`);
  * @category constants
  * @since 0.0.0
  */
-export const PROV_ACTIVITY_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}activity`);
+export const PROV_ACTIVITY_PROPERTY = provTerm("activity");
 
 /**
  * `prov:agent` relation target.
@@ -571,4 +576,4 @@ export const PROV_ACTIVITY_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}activity`)
  * @category constants
  * @since 0.0.0
  */
-export const PROV_AGENT_PROPERTY = makeNamedNode(`${PROV_NAMESPACE}agent`);
+export const PROV_AGENT_PROPERTY = provTerm("agent");

@@ -50,8 +50,6 @@ const parsedDocuments = S.toType(codec).annotate({
 });
 describe("lossless document laws", () => {
   roundTrips("document data schema", TomlDocument);
-  // Class data may have arbitrary spans. The text codec's arbitrary uses parsed
-  // documents so that spans tile the source, including comments and semantic errors.
   it.effect.prop(
     "text codec decode(encode(x)) identity and total decoding",
     [Arbitrary.schema(parsedDocuments)],

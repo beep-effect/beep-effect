@@ -59,6 +59,7 @@ import { Node, Project } from "ts-morph";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
+import { checkRegistry, registryPresent, resolveRegistryLayout, writeRegistry } from "../Identity/Registry.ts";
 import type { CallExpression, ImportDeclaration, ImportSpecifier, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
 
@@ -93,10 +94,14 @@ const IdentityRegistryViolationKind = LiteralKit([
   "labs-segment-missing",
   "labs-segment-extra",
   "labs-segment-misplaced",
+  "registry-shard-invalid",
+  "registry-conflict",
+  "registry-snapshot-break",
+  "registry-generated-drift",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, and generated-labs-segment drift.",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, and the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift).",
   })
 );
 
@@ -570,6 +575,32 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   return violations;
 });
 
+const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
+  repoRoot: string,
+  fix: boolean
+) {
+  const layout = yield* resolveRegistryLayout(repoRoot);
+
+  if (!(yield* registryPresent(repoRoot, layout))) {
+    return A.empty<IdentityRegistryViolation>();
+  }
+
+  if (fix) {
+    const written = yield* writeRegistry(repoRoot, layout);
+
+    if (Result.isSuccess(written)) {
+      for (const artifact of written.success) {
+        yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
+      }
+    }
+  }
+
+  const issues = yield* checkRegistry(repoRoot, layout);
+  return A.map(issues, (issue) =>
+    IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })
+  );
+});
+
 // Violation report: count header, one row per violation, reported non-zero exit.
 const reportViolations = Effect.fn("IdentityRegistry.reportViolations")(function* (
   violations: A.NonEmptyReadonlyArray<IdentityRegistryViolation>
@@ -649,7 +680,8 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     labsSegmentViolations(labsState, identityPackagesFilePath)
   );
   const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
-  const found = A.appendAll(argument, collectLocalRootViolations1);
+  const termRegistryViolations = yield* collectTermRegistryViolations(repoRoot, options.fix);
+  const found = A.appendAll(A.appendAll(argument, collectLocalRootViolations1), termRegistryViolations);
   const { skipped, violations } = yield* withoutPrunedOwners(repoRoot, found);
 
   if (A.isReadonlyArrayNonEmpty(skipped)) {
@@ -666,6 +698,12 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 /**
  * Lint command enforcing canonical `@beep/identity` composer registration.
  *
+ * **Details**
+ *
+ * Reports invalid shards, shard conflicts and generated-artifact drift. A fixture
+ * checkout with neither shards nor the generated data module has no term registry.
+ * The --fix mode regenerates artifacts first and never edits a shard.
+ *
  * **Example** (Run the identity-registry lint command)
  *
  * ```ts
@@ -680,12 +718,14 @@ export const lintIdentityRegistryCommand = Command.make(
   {
     fix: Flag.Boolean("fix").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Register missing workspace packages in the identity composer registry")
+      Flag.withDescription(
+        "Register missing workspace packages in the identity composer registry and regenerate the declared-term registry artifacts"
+      )
     ),
   },
   runIdentityRegistryLint
 ).pipe(
   Command.withDescription(
-    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, and the registry-free root stays in package leaves"
+    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, the registry-free root stays in package leaves, and the declared-term registry artifacts match their shards"
   )
 );

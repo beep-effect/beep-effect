@@ -22,6 +22,7 @@ import {
   serializeQuad,
 } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { SH_NODE, SH_NODE_SHAPE, SH_PATH, SH_PROPERTY } from "@beep/rdf/Vocab/Shacl";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -43,11 +44,6 @@ const knowsQuad = makeQuad(
   makeNamedNode("https://example.test/knows"),
   makeNamedNode("https://example.test/bob")
 );
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
-const SH_NODE = makeNamedNode(`${SHACL_NAMESPACE}node`);
 const ontologyGraphQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/knows"),
