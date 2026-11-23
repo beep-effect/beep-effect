@@ -96,31 +96,22 @@ export class NormalizedText extends S.Opaque<NormalizedText, { readonly brand: u
 
 const normalizeNfkc = Str.normalize("NFKC");
 
-// A scalar whose own NFKC form starts with a combining mark joins the open cluster (decision
-// p2-nfkc-clusters-join-on-the-normalized-mark): U+0E33, U+0EB3, U+FF9E and U+FF9F are letters of that kind.
 const startsWithMark = /^\p{M}/u;
 
-// A hyphen or U+2010 and one line break, between a letter and a lowercase letter. The lookarounds read the two
-// letters without consuming them, so two matches can share one.
 const hyphenBreak = /(?<=\p{L})[-‐](?:\r\n|\n|\r)(?=\p{Ll})/gu;
 
-// One part of the input rewritten as a whole: the half-open UTF-16 range and the text it became.
 type Rewrite = { readonly start: number; readonly end: number; readonly replacement: string };
 
 const utf16 = (start: number, end: number): Position => Position.make({ unit: "utf16-code-unit", start, end });
 
-// Performance boundary (single-pass scans): normalization visits every scalar of its input, so the scans iterate
-// the string natively and keep their running offsets and the rewrites in local mutable state; the same boundary is
-// drawn in `internal/scalars.ts`. Nothing mutable escapes a call: the result is an immutable schema value.
+type FormOrComputedOnRead = string | undefined;
 
-// The open cluster's NFKC form once `scalar` joins it, or `O.none()` when `scalar` opens a new cluster. A join on a
-// mark leaves the form unknown (`undefined`), to be computed when it is read.
-const joinedForm = (
+const joinedFormOrNewCluster = (
   cluster: string,
-  form: string | undefined,
+  form: FormOrComputedOnRead,
   scalar: string,
   scalarForm: string
-): O.Option<string | undefined> => {
+): O.Option<FormOrComputedOnRead> => {
   if (cluster === "") {
     return O.none();
   }
@@ -131,16 +122,13 @@ const joinedForm = (
   return joined === (form ?? normalizeNfkc(cluster)) + scalarForm ? O.none() : O.some(joined);
 };
 
-// The NFKC clusters of a text: a scalar joins the open cluster when its NFKC form starts with a combining mark or
-// when normalizing the two together differs from normalizing each. Normalization never moves text across a cluster
-// edge, so the NFKC forms of the clusters concatenate to the NFKC form of the text. A cluster whose form differs
-// from it is a rewrite; the open cluster's form is computed only when a pair test or the close reads it.
+// decision: native-scan-hot-paths
 const nfkcRewrites = (text: string): ReadonlyArray<Rewrite> => {
   const rewrites: Array<Rewrite> = [];
   let start = 0;
   let end = 0;
   let cluster = "";
-  let form: string | undefined = "";
+  let form: FormOrComputedOnRead = "";
   const close = (): void => {
     const replacement = form ?? normalizeNfkc(cluster);
     if (replacement !== cluster) {
@@ -149,7 +137,7 @@ const nfkcRewrites = (text: string): ReadonlyArray<Rewrite> => {
   };
   for (const scalar of text) {
     const scalarForm = normalizeNfkc(scalar);
-    const joined = joinedForm(cluster, form, scalar, scalarForm);
+    const joined = joinedFormOrNewCluster(cluster, form, scalar, scalarForm);
     if (O.isSome(joined)) {
       cluster += scalar;
       form = joined.value;
@@ -167,22 +155,24 @@ const nfkcRewrites = (text: string): ReadonlyArray<Rewrite> => {
 
 const isAstral = (codePoint: number): boolean => codePoint > 0xffff;
 
-// UTF-16 width of the scalar that ends at `offset`, and of the one that starts there; both exist where they are read.
-const widthBefore = (text: string, offset: number): number =>
+const utf16WidthOfScalarEndingAt = (text: string, offset: number): number =>
   O.exists(Str.codePointAt(text, offset - 2), isAstral) ? 2 : 1;
-const widthAt = (text: string, offset: number): number => (O.exists(Str.codePointAt(text, offset), isAstral) ? 2 : 1);
+const utf16WidthOfScalarStartingAt = (text: string, offset: number): number =>
+  O.exists(Str.codePointAt(text, offset), isAstral) ? 2 : 1;
 
-// Each rewrite is the whole context the rule reads: the letter before, the hyphen and break, and the lowercase letter
-// after. A match whose letter before is the previous match's letter after extends that rewrite, so `a-\nb-\nc` is one.
+// decision: native-scan-hot-paths
 const dehyphenateRewrites = (text: string): ReadonlyArray<Rewrite> => {
   const rewrites: Array<Rewrite> = [];
-  // A copy of the pattern per call: its `lastIndex` is the scan's own state.
-  const pattern = new RegExp(hyphenBreak);
-  for (let match = pattern.exec(text); match !== null; match = pattern.exec(text)) {
+  const patternWithCallOwnedLastIndex = new RegExp(hyphenBreak);
+  for (
+    let match = patternWithCallOwnedLastIndex.exec(text);
+    match !== null;
+    match = patternWithCallOwnedLastIndex.exec(text)
+  ) {
     const runStart = match.index;
     const runEnd = runStart + match[0].length;
-    const start = runStart - widthBefore(text, runStart);
-    const end = runEnd + widthAt(text, runEnd);
+    const start = runStart - utf16WidthOfScalarEndingAt(text, runStart);
+    const end = runEnd + utf16WidthOfScalarStartingAt(text, runEnd);
     const after = Str.slice(runEnd, end)(text);
     const previous = rewrites.at(-1);
     if (previous !== undefined && start < previous.end) {
@@ -194,7 +184,7 @@ const dehyphenateRewrites = (text: string): ReadonlyArray<Rewrite> => {
   return rewrites;
 };
 
-// The normalized text and its segments: the ranges between rewrites are kept, each rewrite is one segment.
+// decision: native-scan-hot-paths
 const fromRewrites = (text: string, rewrites: ReadonlyArray<Rewrite>): NormalizedText => {
   const parts: Array<string> = [];
   const segments: Array<AlignedSegment> = [];

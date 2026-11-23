@@ -3,10 +3,7 @@ import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
-// The identity registry declares these terms in its `vitest` shard and projects them into this
-// package; @beep/identity's VitestErrorsParity test proves the projection equals the registry.
-
-const annotated = [
+const projectedVitestShardAnnotations = [
   ["TestContextUnavailable", S.resolveAnnotations(TestContextUnavailable)],
   ["TestContextUnavailable.method", S.resolveAnnotationsKey(TestContextUnavailable.fields.method)],
   ["TestHang", S.resolveAnnotations(TestHang)],
@@ -19,14 +16,14 @@ const annotated = [
 describe("@beep/test-runner registry terms", () => {
   it("annotates every Vitest error schema with its registry identity, IRI and CURIE", () => {
     expect(
-      A.map(annotated, ([, annotations]) => ({
+      A.map(projectedVitestShardAnnotations, ([, annotations]) => ({
         schemaId: annotations?.schemaId,
         identifier: annotations?.identifier,
         iri: annotations?.iri,
         curie: annotations?.curie,
       }))
     ).toStrictEqual(
-      A.map(annotated, ([local]) => ({
+      A.map(projectedVitestShardAnnotations, ([local]) => ({
         schemaId: Symbol.for(`@beep/test-runner/Vitest/${local}`),
         identifier: `@beep/test-runner/Vitest/${local}`,
         iri: `https://beep-effect.com/ns/vitest/${local}`,

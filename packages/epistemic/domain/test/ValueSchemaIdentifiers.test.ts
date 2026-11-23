@@ -14,9 +14,6 @@ import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
-// Every schema identifier the bound value modules emit. The fixture records
-// them so a change of an identifier is a reviewed diff: a package rename under
-// a decision regenerates it, anything else leaves it byte-identical.
 const modules: R.ReadonlyRecord<string, R.ReadonlyRecord<string, unknown>> = {
   ClaimEvidenceReview,
   ClaimProjection,
@@ -64,7 +61,8 @@ const listing = pipe(
 );
 
 describe("bound value schema identifiers", () => {
-  it.effect("emits the same identifiers as before the factory extraction", () =>
-    Effect.promise(() => expect(`${listing}\n`).toMatchFileSnapshot("./fixtures/value-schema-identifiers.txt"))
+  it.effect(
+    "emits the same identifiers as before the factory extraction (only a decided package rename regenerates the fixture)",
+    () => Effect.promise(() => expect(`${listing}\n`).toMatchFileSnapshot("./fixtures/value-schema-identifiers.txt"))
   );
 });

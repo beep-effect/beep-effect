@@ -22,20 +22,17 @@ import * as Str from "effect/String";
 
 const $I = $TomlId.create("TomlDateTime");
 
-/** Zero-pad `value` to `width` digits (never truncates a wider value). */
 const pad: {
   (value: number, width: number): string;
   (width: number): (value: number) => string;
 } = dual(2, (value: number, width: number): string => Str.padStart(width, "0")(String(value)));
 
-/** Whether `year` is a Gregorian leap year (div-4, except centuries unless div-400). */
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
 const MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-/** The number of days in `month` (1-12) of `year`, accounting for leap years. */
 const daysInMonth: {
   (year: number, month: number): number;
   (month: number): (year: number) => number;
@@ -46,7 +43,6 @@ const daysInMonth: {
   return A.getUnsafe(MONTH_LENGTHS, month - 1);
 });
 
-/** Class-level filter shared by every class carrying a `{ year, month, day }` triple. */
 const isRealCalendarDate = S.makeFilter(
   ({ year, month, day }: { readonly year: number; readonly month: number; readonly day: number }) => {
     const max = daysInMonth(year, month);
@@ -113,7 +109,6 @@ const timeFields = {
       })
     )
   ).pipe($I.annoteKey("timeFields.minute", { description: "Minute of the local time from 0 through 59." })),
-  // 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
   second: S.Int.check(
     S.isBetween(
       { minimum: 0, maximum: 60 },
@@ -141,15 +136,10 @@ const timeFields = {
   ),
 };
 
-/** `YYYY-MM-DD`. */
 function formatDate(date: { readonly year: number; readonly month: number; readonly day: number }): string {
   return `${pad(date.year, 4)}-${pad(date.month, 2)}-${pad(date.day, 2)}`;
 }
 
-/**
- * `HH:MM:SS[.fraction]` — the fractional part is present only when
- * `nanosecond > 0`, trimmed to the shortest exact representation.
- */
 function formatTime(time: {
   readonly hour: number;
   readonly minute: number;
@@ -164,7 +154,6 @@ function formatTime(time: {
   return `${base}.${fraction}`;
 }
 
-/** `Z` for a zero offset, else `+hh:mm` / `-hh:mm`. */
 function formatOffset(offsetMinutes: number): string {
   if (offsetMinutes === 0) {
     return "Z";

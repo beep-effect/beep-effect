@@ -305,7 +305,7 @@ export class RunnerLossRun extends S.Opaque<RunnerLossRun, { readonly brand: uni
  * const job = RunnerLossFailedJob.make({
  *   id: 110050993181,
  *   name: "Heavy / Lint Policy",
- *   runnerName: "beep-ci-i-0747b6f71d6489e73",
+ *   runnerName: "beep-fleet-heavy-i-0747b6f71d6489e73",
  *   runnerLoss: true,
  * })
  * console.log(job.reruns) // 0
@@ -633,7 +633,7 @@ export const runnerLossJobReruns: {
  *   name: "Heavy / Lint Policy",
  *   run_attempt: 1,
  *   run_id: 36763005302,
- *   runner_name: "beep-ci-i-0747b6f71d6489e73",
+ *   runner_name: "beep-fleet-heavy-i-0747b6f71d6489e73",
  *   started_at: "2026-09-30T19:38:28Z",
  *   status: "completed",
  *   steps: [

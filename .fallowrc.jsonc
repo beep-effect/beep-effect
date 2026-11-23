@@ -316,6 +316,11 @@
       "file": "vitest.property-runner.ts",
       "exports": ["default"]
     },
+    // The sweep's reporter is loaded by path too (`test.reporters` in vitest.shared.ts).
+    {
+      "file": "vitest.property-reporter.ts",
+      "exports": ["default"]
+    },
     // @beep/canvas command bridge: documented request/schema values kept as
     // public bridge contracts for typed host integrations.
     {

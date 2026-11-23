@@ -683,7 +683,6 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
     .annotate($I.class("Manifest", { description: "Portable library layout and creation provenance." }))
 ) {}
 
-// Whether the registry mints the instance IRI, so an invariant below is the minter's own rule.
 const isMintable = (mint: () => string): boolean => Result.isSuccess(Result.try(mint));
 
 /**
@@ -738,7 +737,7 @@ export const LibraryTopicId = S.String.check(
 );
 
 /**
- * Decoded type of {@link LibraryTopicId}.
+ * Groups evidence by packet so readers can follow a goal across captures.
  *
  * @category models
  * @since 0.0.0
@@ -746,8 +745,6 @@ export const LibraryTopicId = S.String.check(
 export type LibraryTopicId = typeof LibraryTopicId.Type;
 
 /**
- * A model or effort label that names an agent under `research-library:SoftwareAgent`.
- *
  * **Details**
  *
  * A label is percent-encoded into one IRI segment, so any text is a label
@@ -779,7 +776,7 @@ export const LibraryAgentLabel = S.String.check(
 );
 
 /**
- * Decoded type of {@link LibraryAgentLabel}.
+ * Attributes recorded findings to the runner configuration that produced them.
  *
  * @category models
  * @since 0.0.0

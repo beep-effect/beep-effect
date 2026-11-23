@@ -165,8 +165,6 @@ export class Range extends S.Class<
       "A SemVer range expression: a union (OR) of ComparatorSets. Supports node-semver syntax — hyphen ranges (`1.0.0 - 2.0.0`), X-ranges (`1.x`, `*`), tilde (`~1.2.3`), caret (`^1.2.3`) and `||` unions — which parsing desugars into primitive comparators and normalizes.",
   })
 ) {
-  // ── Schema ──────────────────────────────────────────────────────────
-
   /**
    * Schema transformation between the range expression string and
    * {@link Range}: decoding parses, desugars and normalizes; encoding
@@ -215,8 +213,6 @@ export class Range extends S.Class<
       })
     )
   );
-
-  // ── Construction ────────────────────────────────────────────────────
 
   /**
    * Parse a range expression and normalize its comparator sets,
@@ -281,8 +277,6 @@ export class Range extends S.Class<
    * @since 0.0.0
    */
   static readonly parse = Effect.fn("Range.parse")((input: string) => Effect.fromResult(Range.parseResult(input)));
-
-  // ── Matching statics (dual) ─────────────────────────────────────────
 
   /**
    * Test whether a version satisfies a range; see {@link Range.test} for the
@@ -418,8 +412,6 @@ export class Range extends S.Class<
     2,
     pickSatisfying((candidate, best) => candidate.lt(best))
   );
-
-  // ── Algebra statics ─────────────────────────────────────────────────
 
   /**
    * Combine two ranges with OR semantics: the union of their comparator
@@ -618,8 +610,6 @@ export class Range extends S.Class<
     return Range.make({ sets });
   }
 
-  // ── Instance ────────────────────────────────────────────────────────
-
   /**
    * Test whether a version satisfies this range.
    *
@@ -781,8 +771,6 @@ export class UnsatisfiableConstraintError extends S.TaggedError<
   }
 }
 
-// ── Matching internals ───────────────────────────────────────────────────
-
 // Prerelease tuple restriction (node-semver semantics): a prerelease version
 // only matches a set when some comparator in the set carries a prerelease on
 // the same major.minor.patch tuple.
@@ -806,8 +794,6 @@ const satisfiesSet: {
 
   return A.every(set, (c) => c.test(version));
 });
-
-// ── Algebra internals ────────────────────────────────────────────────────
 
 // All tuple checks ignore build metadata and prerelease identifiers.
 const sameTuple: {

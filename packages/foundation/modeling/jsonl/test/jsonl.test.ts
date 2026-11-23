@@ -360,9 +360,7 @@ describe("JSONL generic engine", () => {
   );
 });
 
-// Compile-only negative checks: the callback is never run. Each expected error
-// fails the compiler if an invalid operation becomes accepted by the facade.
-const rejectsInvalidCalls = (
+const compileOnlyRejectsInvalidCalls = (
   journal: JournalShape<Registry>,
   needsService: S.Codec<string, string, FileSystem.FileSystem>
 ) => {
@@ -405,11 +403,9 @@ const rejectsInvalidCalls = (
     invalid10,
   ];
 };
-void rejectsInvalidCalls;
+void compileOnlyRejectsInvalidCalls;
 
-// Kept deviation D15 (EF-40): optional configuration and slice keys are exact,
-// so an explicitly undefined key is a compile error rather than an omission.
-const rejectsExplicitUndefined: ReadonlyArray<unknown> = [
+const exactOptionalKeysRejectExplicitUndefinedD15: ReadonlyArray<unknown> = [
   // @ts-expect-error An optional configuration key is omitted, never undefined.
   { path, capacity: undefined } satisfies typeof JournalConfig.Encoded,
   // @ts-expect-error An optional slice key is omitted, never undefined.
@@ -417,4 +413,4 @@ const rejectsExplicitUndefined: ReadonlyArray<unknown> = [
   // @ts-expect-error An undefined cursor is spelled by omitting it.
   { cursor: undefined } satisfies CursoredSlice<Registry, "updated">,
 ];
-void rejectsExplicitUndefined;
+void exactOptionalKeysRejectExplicitUndefinedD15;

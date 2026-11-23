@@ -31,17 +31,15 @@ type NodePath = ReadonlyArray<DocumentSafetyPathSegment>;
 const childrenOf = (node: unknown): ReadonlyArray<unknown> =>
   P.hasProperty(node, "children") && A.isArray(node.children) ? node.children : [];
 
-// Every node path of a document in pre-order, so a path's index is its source-map ordinal.
-const preOrderPaths = (node: unknown, path: NodePath): ReadonlyArray<NodePath> => [
+const pathsBySourceMapOrdinal = (node: unknown, path: NodePath): ReadonlyArray<NodePath> => [
   path,
-  ...A.flatMap(childrenOf(node), (child, index) => preOrderPaths(child, [...path, "children", index])),
+  ...A.flatMap(childrenOf(node), (child, index) => pathsBySourceMapOrdinal(child, [...path, "children", index])),
 ];
 
 const utf8 = new TextEncoder();
 const hashText = S.decodeUnknownEffect(Sha256HexFromBytes);
 const isProof = S.is(VerifiedTextAnchor);
 
-// A source identity whose text digest is the digest of `text`, verified against that text.
 const verifiedSourceOf = Effect.fnUntraced(function* (text: string) {
   const hex = yield* hashText(utf8.encode(text));
   const digest = SourceTextDigest.make(`sha256:${hex}`);
@@ -74,7 +72,7 @@ describe("@beep/md/Md.anchors", () => {
           const id = `${input.corpus}#${input.example}`;
           const bridged = Result.getOrThrow(parseResult(input.markdown, { dialect: input.dialect }));
           const source = yield* verifiedSourceOf(input.markdown);
-          const paths = preOrderPaths(bridged.document, []);
+          const paths = pathsBySourceMapOrdinal(bridged.document, []);
           for (const [ordinal, path] of paths.entries()) {
             const position = O.getOrThrow(positionAt(bridged.sourceMap, bridged.document, path));
             const anchor = yield* anchorAt(bridged.sourceMap, bridged.document, path, source);
@@ -145,9 +143,8 @@ describe("@beep/md/Md.anchors", () => {
     );
 
     it.effect(
-      "refuses a span that splits a surrogate pair of the verified text",
+      "refuses a span that splits a surrogate pair of the verified text (parsed yz at 3..5 starts inside the verified emoji)",
       Effect.fnUntraced(function* () {
-        // "yz" sits at 3..5 in the parsed text; offset 3 falls inside the emoji of the verified text.
         const parsed = bridge("x\n\nyz");
         const source = yield* verifiedSourceOf("x\n\u{1F600}z");
         const error = yield* Effect.flip(anchorAt(parsed.sourceMap, parsed.document, ["children", 1], source));

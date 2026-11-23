@@ -30,13 +30,13 @@ artifacts:
     authority: proposal only
     consumer: term proposer
   - artifact: term-proposals
-    producer: conceptualization agent
+    producer: foundational auditor (synthesis seat)
     llm_allowed: true
     authority: proposal only
     consumer: steward
   - artifact: rejections
-    producer: adversary/steward
-    llm_allowed: true
+    producer: human steward (adversary findings are input)
+    llm_allowed: scribe-only    # may record the steward's verbatim decision, never decide
     authority: steward decision
     consumer: future runs
   - artifact: ratifications
@@ -45,9 +45,12 @@ artifacts:
     authority: authoritative
     consumer: formalizer
   - artifact: conceptual-model
-    producer: generator over ratified proposals
-    llm_allowed: false          # no semantic invention
-    authority: derived
+    producer: ontology-conceptualizer over ratified proposals
+    llm_allowed: draft-only     # structure derived from ratified proposals; new design
+                                # (domain/range, cardinality, characteristics, disjointness,
+                                # equivalence) is an entry with status: proposed until the
+                                # steward ratifies it (status: ratified)
+    authority: derived + steward ratification of new design commitments
     consumer: ontology-architect
   - artifact: ontology (OWL)
     producer: formalizer
@@ -64,16 +67,18 @@ artifacts:
     llm_allowed: draft-only
     authority: validator
     consumer: CI
-  # NOTE: these are THREE different semantics (reference/logical/integrity/
-  # operational split) — they must not bleed together; see foundational-analysis.md.
+  # NOTE: these are FOUR different semantics that must not bleed together:
+  # reference (labels, definitions, SKOS), logical (OWL entailment), integrity
+  # (SHACL conformance) and operational (code, rules, tests). OWL domain/range
+  # never stands in for an integrity check (foundational-analysis.md,
+  # Domain/range-as-validation).
   - artifact: benchmark gold labels
     producer: expert adjudication
     llm_allowed: challenge-only  # may attack a label, never set it, never vote
     authority: human gold
     consumer: benchmark runner
 
-# Decisions an LLM may PROPOSE but never AUTHORIZE (condensed; the full 40-row
-# table lives in the source review preserved in the beep-effect packet):
+# Decisions an LLM may PROPOSE but never AUTHORIZE:
 forbidden_autonomous_decisions:
   - mint a production class/property IRI
   - decide class vs individual; entity vs information artifact; spec vs execution

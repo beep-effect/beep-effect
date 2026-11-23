@@ -100,8 +100,6 @@ const evidenceInput = (id: number) => ({
   spanFixtureKey: "span:oa-1:12-57",
 });
 
-// One stored row, exactly as `toEvidenceInsert` wrote `evidenceInput(10)` before the anchor schemas changed
-// package. Rows on disk keep these bytes: the literal is never regenerated.
 const frozenEvidenceRow =
   '{"createdAt":10,"rowVersion":1,"updatedAt":11,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"artifactFixtureKey":"artifact:oa-1","spanFixtureKey":"span:oa-1:12-57","span":{"startChar":12,"endChar":57,"quote":"a processor configured to receive sensor data","confidence":0.92},"entityType":"EpistemicEvidence","publicId":"epistemic_evidence_a10","id":10}';
 const RowJson = S.fromJsonString(S.Unknown);
@@ -506,7 +504,7 @@ describe("EpistemicTables", () => {
   );
 
   it.effect(
-    "reads and rewrites the frozen Evidence span row without changing a byte",
+    "reads and rewrites the frozen Evidence span row without changing a byte (written by toEvidenceInsert before the anchor schemas moved package; never regenerated)",
     Effect.fnUntraced(function* () {
       const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
       const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
@@ -514,8 +512,10 @@ describe("EpistemicTables", () => {
       expect(written).toBe(frozenEvidenceRow);
 
       const columns = yield* S.decodeEffect(EvidenceColumnsJson)(frozenEvidenceRow);
-      // The strict model reads it: the legacy span read is not what keeps the row alive.
-      pipe(decodeUnknownEvidenceModelResult(columns), Result.isSuccess, assertTrue);
+      assertTrue(
+        Result.isSuccess(decodeUnknownEvidenceModelResult(columns)),
+        "the strict model reads the frozen row; the legacy span read is not what keeps it alive"
+      );
       const read = yield* Effect.fromResult(
         Evidence.fromEvidenceRow({
           ...columns,

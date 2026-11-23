@@ -1,8 +1,16 @@
-import { McpbManifestFields, McpbPackageSpec, makeMcpbPackageCommand, mcpbWindowsRuntime } from "@beep/mcpb-kit";
+import {
+  McpbManifestFields,
+  McpbPackageFailure,
+  McpbPackageSpec,
+  makeMcpbPackageCommand,
+  mcpbCacheDirectory,
+  mcpbWindowsRuntime,
+} from "@beep/mcpb-kit";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { afterEach, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -12,6 +20,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
+import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 
 const spec = McpbPackageSpec.make({
@@ -41,10 +50,12 @@ const inventory =
 const windowsArchive = `${output}/example-mcp-windows-x64.mcpb`;
 const windowsInventory =
   "manifest.json\nbun.exe\nexample-mcp.js\nengine.wasm\nnode_modules/\nnode_modules/@duckdb/\nnode_modules/@duckdb/node-bindings-win32-x64/duckdb.dll\nnode_modules/@duckdb/node-bindings-win32-x64/duckdb.node\n";
-const cache = `${output}/.cache`;
+const cacheHome = "/xdg-cache";
+const cache = `${cacheHome}/beep/mcpb`;
 const bindingsCache = `${cache}/node-bindings-win32-x64-2.0.1-r.1`;
 const runtimeCache = `${cache}/bun-windows-x64-${mcpbWindowsRuntime.version}`;
-const runtimeArchive = `${cache}/bun-windows-x64-${mcpbWindowsRuntime.version}.zip`;
+const stagedRuntime = (suffix: string) =>
+  new RegExp(`^${cache}/\\.bun-windows-x64-${mcpbWindowsRuntime.version}-[^/]+${suffix}`);
 
 // A Portable Executable header with 16 data directories. Directory 4 is the
 // Authenticode certificate table: a file offset and a size.
@@ -66,7 +77,8 @@ const portableExecutable = (options: {
   return bytes;
 };
 const signedRuntime = portableExecutable({ optionalMagic: 0x20b, certificateTable: { offset: 0x1c0, size: 0x40 } });
-const syntheticArchive = new TextEncoder().encode("synthetic archive");
+const textEncoder = new TextEncoder();
+const syntheticArchive = textEncoder.encode("synthetic archive");
 
 const originalSpawn = Bun.spawn;
 
@@ -92,7 +104,8 @@ const commandEnvironment = Layer.mergeAll(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("Unexpected process execution"))
   ),
-  Digest.layerWebCrypto
+  Digest.layerWebCrypto,
+  ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_CACHE_HOME: cacheHome }))
 );
 
 it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB packaging boundaries", (it) => {
@@ -104,10 +117,12 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       readonly bunVersion?: string;
       readonly noArchive?: boolean;
       readonly rejectLaunch?: boolean;
+      readonly concurrentRuntimeWinner?: boolean;
     } = {}
   ) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove("/repo", { recursive: true, force: true });
+    yield* fs.remove(cacheHome, { recursive: true, force: true });
     yield* fs.makeDirectory(nativeDir, { recursive: true });
     yield* fs.writeFileString("/repo/.bun-version", `${options.bunVersion ?? mcpbWindowsRuntime.version}\n`);
     const argument = `${nativeDir}/package.json`;
@@ -138,16 +153,27 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       Queue.offerUnsafe(fileWrites, { path, content, exitCode, exited });
       return exited.promise;
     };
-    const settle = (args: ReadonlyArray<string>, exitCode: number): Promise<number> => {
-      if (args[0] === "zip" && options.noArchive !== true) {
-        return offerFileWrite(args[3] ?? archive, syntheticArchive, exitCode);
-      }
-      // `unzip -q -j -o <archive> <member> -d <directory>` unpacks the runtime; `unzip -Z1` only lists.
-      if (args[0] === "unzip" && args[1] === "-q") {
-        return offerFileWrite(`${args[7]}/bun.exe`, signedRuntime, exitCode);
-      }
-      return Promise.resolve(exitCode);
+    type Settler = (args: ReadonlyArray<string>, exitCode: number) => Promise<number>;
+    const exitOnly: Settler = (_, exitCode) => Promise.resolve(exitCode);
+    const unpackRuntime: Settler = (args, exitCode) => {
+      const unpack = () => offerFileWrite(`${args[7]}/bun.exe`, signedRuntime, exitCode);
+      return options.concurrentRuntimeWinner === true
+        ? offerFileWrite(`${runtimeCache}/bun.exe`, signedRuntime, 0).then(unpack)
+        : unpack();
     };
+    const settlers: Readonly<Record<string, Settler>> = {
+      zip: (args, exitCode) =>
+        options.noArchive === true
+          ? exitOnly(args, exitCode)
+          : offerFileWrite(args[3] ?? archive, syntheticArchive, exitCode),
+      curl: (args, exitCode) =>
+        offerFileWrite(args[args.length - 1] ?? "", textEncoder.encode("synthetic download"), exitCode),
+      tar: (args, exitCode) =>
+        offerFileWrite(`${args[5]}/duckdb.node`, textEncoder.encode("downloaded Windows sidecar"), exitCode),
+      // `unzip -q -j -o <archive> <member> -d <directory>` unpacks the runtime; `unzip -Z1` only lists.
+      unzip: (args, exitCode) => (args[1] === "-q" ? unpackRuntime : exitOnly)(args, exitCode),
+    };
+    const settle: Settler = (args, exitCode) => (settlers[args[0] ?? ""] ?? exitOnly)(args, exitCode);
     const calls: Array<ReadonlyArray<string>> = [];
     Object.defineProperty(Bun, "spawn", {
       value: (args: ReadonlyArray<string>) => {
@@ -241,8 +267,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       const fixture = yield* prepare({ listing: windowsInventory });
       yield* cacheWindowsDownloads();
       yield* fixture.fs.remove(runtimeCache, { recursive: true });
-      // What curl leaves behind; the digest service below reports the pinned sha256 for it.
-      yield* fixture.fs.writeFileString(runtimeArchive, "synthetic release archive");
+      // The digest service below reports the pinned sha256 for what curl downloads.
       yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
         Effect.provideService(FileSystem.FileSystem, fixture.fs),
         Effect.provideService(Digest.Digest, {
@@ -259,15 +284,45 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
         "-q",
         "-j",
         "-o",
-        runtimeArchive,
+        expect.stringMatching(stagedRuntime(`/bun-windows-x64-${mcpbWindowsRuntime.version}\\.zip$`)),
         "bun-windows-x64/bun.exe",
         "-d",
-        runtimeCache,
+        expect.stringMatching(stagedRuntime(`/bun-windows-x64-${mcpbWindowsRuntime.version}$`)),
       ]);
       const runtime = yield* fixture.fs.readFile(`${output}/windows-x64/bun.exe`);
       expect(Uint8Array.from(runtime)).toEqual(signedRuntime);
+      const cached = yield* fixture.fs.readFile(`${runtimeCache}/bun.exe`);
+      expect(Uint8Array.from(cached)).toEqual(signedRuntime);
+      const entries = yield* fixture.fs.readDirectory(cache);
+      expect(A.filter(entries, Str.startsWith("."))).toEqual([]);
     })
   );
+
+  for (const [name, options] of [
+    ["replaces an incomplete entry an interrupted run left behind", {}],
+    ["uses the entry a concurrent run moved into place first", { concurrentRuntimeWinner: true }],
+  ] as const) {
+    it.effect(name, () =>
+      Effect.gen(function* () {
+        const fixture = yield* prepare({ listing: windowsInventory, ...options });
+        yield* cacheWindowsDownloads();
+        yield* fixture.fs.remove(runtimeCache, { recursive: true });
+        yield* fixture.fs.makeDirectory(runtimeCache, { recursive: true });
+        yield* fixture.fs.writeFileString(`${runtimeCache}/partial`, "interrupted unpack");
+        yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
+          Effect.provideService(FileSystem.FileSystem, fixture.fs),
+          Effect.provideService(Digest.Digest, {
+            digest: () => Effect.succeed(new Uint8Array()),
+            digestHex: () => Effect.succeed(mcpbWindowsRuntime.sha256),
+          })
+        );
+        const cached = yield* fixture.fs.readFile(`${runtimeCache}/bun.exe`);
+        expect(Uint8Array.from(cached)).toEqual(signedRuntime);
+        const entries = yield* fixture.fs.readDirectory(cache);
+        expect(A.filter(entries, Str.startsWith("."))).toEqual([]);
+      })
+    );
+  }
 
   it.effect("packages Linux, then Windows, when no target is named", () =>
     Effect.gen(function* () {
@@ -280,6 +335,33 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       const linuxArchived = yield* fixture.fs.exists(archive);
       const windowsArchived = yield* fixture.fs.exists(windowsArchive);
       expect([linuxArchived, windowsArchived]).toEqual([true, true]);
+    })
+  );
+
+  it.effect("writes to apps/<appName>/.mcpb, outside dist/, when no output is named", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const defaultOutput = "/repo/apps/example-mcp/.mcpb";
+      yield* runCommand(["--target", "linux-x64"]).pipe(Effect.provideService(FileSystem.FileSystem, fixture.fs));
+      expect(fixture.calls[0]).toContain(`--outfile=${defaultOutput}/linux-x64/example-mcp`);
+      expect(fixture.calls[1]?.[3]).toBe(`${defaultOutput}/example-mcp-linux-x64.mcpb`);
+      const manifestExists = yield* fixture.fs.exists(`${defaultOutput}/linux-x64/manifest.json`);
+      expect(manifestExists).toBe(true);
+      const distExists = yield* fixture.fs.exists("/repo/apps/example-mcp/dist");
+      expect(distExists).toBe(false);
+    })
+  );
+
+  it.effect("keeps the Windows downloads in the cache home, never in the output tree", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      yield* cacheWindowsDownloads();
+      yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
+        Effect.provideService(FileSystem.FileSystem, fixture.fs)
+      );
+      expect(A.map(fixture.calls, (args) => args[0])).not.toContain("curl");
+      const outputCacheExists = yield* fixture.fs.exists(`${output}/.cache`);
+      expect(outputCacheExists).toBe(false);
     })
   );
 
@@ -436,15 +518,14 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       const fixture = yield* prepare();
       yield* cacheWindowsDownloads();
       yield* fixture.fs.remove(runtimeCache, { recursive: true });
-      yield* fixture.fs.writeFileString(runtimeArchive, "synthetic tampered archive");
       const result = yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(Effect.result);
       expect(result).toMatchObject({
         _tag: "Failure",
         failure: { message: expect.stringContaining("failed sha256 verification") },
       });
       expect(A.map(fixture.calls, (args) => args[0])).toEqual(["curl"]);
-      const kept = yield* fixture.fs.exists(runtimeArchive);
-      expect(kept).toBe(false);
+      const staged = yield* fixture.fs.readDirectory(cache);
+      expect(A.filter(staged, Str.startsWith("."))).toEqual([]);
       const unpacked = yield* fixture.fs.exists(`${runtimeCache}/bun.exe`);
       expect(unpacked).toBe(false);
     })
@@ -453,7 +534,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
   it.effect("never reuses a cached unpack from another DuckDB pin", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      const stale = `${output}/.cache/node-bindings-win32-x64-1.5.6-r.2`;
+      const stale = `${cache}/node-bindings-win32-x64-1.5.6-r.2`;
       yield* fixture.fs.makeDirectory(stale, { recursive: true });
       yield* fixture.fs.writeFileString(`${stale}/duckdb.node`, "stale Windows sidecar");
       yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(Effect.result);
@@ -491,9 +572,6 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
   it.effect("deletes an untrusted Windows tarball and never extracts it", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      const tarball = `${cache}/node-bindings-win32-x64-2.0.1-r.1.tgz`;
-      yield* fixture.fs.makeDirectory(cache, { recursive: true });
-      yield* fixture.fs.writeFileString(tarball, "synthetic tampered tarball");
       const result = yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(Effect.result);
       expect(result).toMatchObject({
         _tag: "Failure",
@@ -503,8 +581,8 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       expect(fixture.calls[0]).toContain(
         "https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-2.0.1-r.1.tgz"
       );
-      const exists4 = yield* fixture.fs.exists(tarball);
-      expect(exists4).toBe(false);
+      const staged = yield* fixture.fs.readDirectory(cache);
+      expect(staged).toEqual([]);
     })
   );
 
@@ -517,6 +595,35 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
         failure: { message: expect.stringContaining("differ from pinned") },
       });
       expect(fixture.calls).toEqual([]);
+    })
+  );
+});
+
+it.layer(BunPath.layer)("mcpbCacheDirectory", (it) => {
+  const resolveWith = (env: Record<string, string>) =>
+    mcpbCacheDirectory.pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+
+  it.effect("uses an absolute XDG_CACHE_HOME", () =>
+    Effect.gen(function* () {
+      const directory = yield* resolveWith({ XDG_CACHE_HOME: "/var/cache", HOME: "/home/ada" });
+      expect(directory).toBe("/var/cache/beep/mcpb");
+    })
+  );
+
+  it.effect("falls back to $HOME/.cache when XDG_CACHE_HOME is unset or relative", () =>
+    Effect.gen(function* () {
+      const unset = yield* resolveWith({ HOME: "/home/ada" });
+      const relative = yield* resolveWith({ XDG_CACHE_HOME: "relative/cache", HOME: "/home/ada" });
+      expect(unset).toBe("/home/ada/.cache/beep/mcpb");
+      expect(relative).toBe("/home/ada/.cache/beep/mcpb");
+    })
+  );
+
+  it.effect("fails with a packaging failure when neither variable is absolute", () =>
+    Effect.gen(function* () {
+      const error = yield* resolveWith({ HOME: "relative-home" }).pipe(Effect.flip);
+      expect(error).toBeInstanceOf(McpbPackageFailure);
+      expect(error.message).toContain("XDG_CACHE_HOME");
     })
   );
 });

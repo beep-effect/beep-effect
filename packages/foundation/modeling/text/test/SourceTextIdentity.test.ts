@@ -38,11 +38,9 @@ const astral = SourceTextIdentity.make({
   textDigest: digest,
 });
 
-// The stored JSON of one identity: the field order, and astral text unescaped.
-const astralJson = `{"scopeRef":"matter:😀","sourceRef":"source:𝒳","locator":"documents/😀.txt","sourceDigest":"${digest}","textDigest":"${digest}","extractor":{"name":"utf8 😀","version":"1 𝒳"},"normalizationVersion":"1 😀"}`;
+const storedAstralJsonInFieldOrderUnescaped = `{"scopeRef":"matter:😀","sourceRef":"source:𝒳","locator":"documents/😀.txt","sourceDigest":"${digest}","textDigest":"${digest}","extractor":{"name":"utf8 😀","version":"1 𝒳"},"normalizationVersion":"1 😀"}`;
 
-// The six text leaves of an identity, each replaced in the encoded form by text with a lone surrogate.
-const illFormed = (
+const eachTextLeafWithLoneSurrogate = (
   source: typeof SourceTextIdentity.Encoded,
   surrogate: string
 ): ReadonlyArray<typeof SourceTextIdentity.Encoded> => [
@@ -59,15 +57,17 @@ describe("@beep/text SourceTextIdentity", () => {
     "keeps the stored bytes of an identity with astral text",
     Effect.fnUntraced(function* () {
       const written = yield* encodeIdentityJson(astral);
-      expect(written).toBe(astralJson);
+      expect(written).toBe(storedAstralJsonInFieldOrderUnescaped);
 
-      const read = yield* decodeIdentityJson(astralJson);
+      const read = yield* decodeIdentityJson(storedAstralJsonInFieldOrderUnescaped);
       expect(read).toEqual(astral);
     })
   );
 
   it("refuses a lone surrogate in every text field on decode and on construction", () => {
-    const rows = A.flatMap(loneSurrogates, (surrogate) => illFormed(encodeIdentity(astral), surrogate));
+    const rows = A.flatMap(loneSurrogates, (surrogate) =>
+      eachTextLeafWithLoneSurrogate(encodeIdentity(astral), surrogate)
+    );
     expect(rows).toHaveLength(18);
     A.forEach(rows, (row) => {
       assertNone(decodeIdentityOption(row));
@@ -80,12 +80,14 @@ describe("@beep/text SourceTextIdentity", () => {
   it.effect(
     "refuses a stored identity that spells a lone surrogate as a JSON escape",
     Effect.fnUntraced(function* () {
-      const paired = yield* decodeIdentityJson(Str.replace("matter:😀", "matter:\\ud83d\\ude00")(astralJson));
+      const paired = yield* decodeIdentityJson(
+        Str.replace("matter:😀", "matter:\\ud83d\\ude00")(storedAstralJsonInFieldOrderUnescaped)
+      );
       expect(paired).toEqual(astral);
 
-      const failure = yield* decodeIdentityJson(Str.replace("matter:😀", "matter:\\ud83d")(astralJson)).pipe(
-        Effect.flip
-      );
+      const failure = yield* decodeIdentityJson(
+        Str.replace("matter:😀", "matter:\\ud83d")(storedAstralJsonInFieldOrderUnescaped)
+      ).pipe(Effect.flip);
       expect(failure.message).toContain("Expected text without lone UTF-16 surrogates.");
     })
   );
@@ -110,7 +112,7 @@ describe("@beep/text SourceTextIdentity", () => {
     ([source, surrogate]) => {
       const encoded = encodeIdentity(source);
       expect(encodeIdentity(SourceTextIdentity.make(source))).toEqual(encoded);
-      expect(A.filter(illFormed(encoded, surrogate), isIdentity)).toEqual([]);
+      expect(A.filter(eachTextLeafWithLoneSurrogate(encoded, surrogate), isIdentity)).toEqual([]);
       return true;
     },
     { arbitrary: fcRuns(300) }

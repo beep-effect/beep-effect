@@ -46,8 +46,11 @@ const scope = (asOf = 20, validAt = 100) =>
 
 const syntheticDigest = (fill: string) => `sha256:${Str.repeat(64)(fill)}`;
 
-// The encoded `TextOccurrence` evidence case over a synthetic note capture.
-const textOccurrence = (anchor: { readonly startChar: number; readonly endChar: number; readonly quote: string }) => ({
+const encodedTextOccurrenceEvidenceOverSyntheticNote = (anchor: {
+  readonly startChar: number;
+  readonly endChar: number;
+  readonly quote: string;
+}) => ({
   _tag: "TextOccurrence",
   occurrence: "party-occ:synthetic",
   anchored: {
@@ -81,7 +84,9 @@ describe("party model competency questions", () => {
       TestUtils.assertTrue
     );
     pipe(
-      S.decodeUnknownResult(EvidenceAnchor)(textOccurrence({ startChar: 0, endChar: 5, quote: "fact" })),
+      S.decodeUnknownResult(EvidenceAnchor)(
+        encodedTextOccurrenceEvidenceOverSyntheticNote({ startChar: 0, endChar: 5, quote: "fact" })
+      ),
       Result.isFailure,
       TestUtils.assertTrue
     );
@@ -91,7 +96,7 @@ describe("party model competency questions", () => {
   it.effect(
     "anchors text through a text occurrence whose receipt keeps its encoding",
     Effect.fnUntraced(function* () {
-      const encoded = textOccurrence({ startChar: 6, endChar: 10, quote: "fact" });
+      const encoded = encodedTextOccurrenceEvidenceOverSyntheticNote({ startChar: 6, endChar: 10, quote: "fact" });
       const decoded = yield* S.decodeUnknownEffect(EvidenceAnchor)(encoded);
       expect(decoded._tag).toBe("TextOccurrence");
       const reencoded = yield* S.encodeEffect(EvidenceAnchor)(decoded);

@@ -26,41 +26,25 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-/**
- * Every error's `message` getter is exercised.
- *
- * Not a coverage exercise. A `message` getter is the one piece of an error that
- * runs at the moment something has already gone wrong — usually inside a
- * reporter — so a throw there converts a legible failure into an unreadable
- * one. This branch paid for that shape once already, when a test-runner SDK
- * crashed recording an error and made a failing test impossible to read.
- */
-
 const slice = LineSlice.make({ offset: 12, end: 20, length: 7, text: '{"a":1}', terminated: true });
 
-/** A real `SchemaError`, obtained the way the package obtains one. */
 const InvalidNumber = S.Struct({ n: S.Finite });
-const schemaError = (() => {
+const decodedSchemaError = (() => {
   const decoded = S.decodeUnknownResult(InvalidNumber)({ n: "no" });
   const error = decoded.pipe(Result.getFailure, O.getOrThrow);
   assertFailure(decoded, error);
   return error;
 })();
 
-describe("error messages render", () => {
+describe("every error message field renders, since a reporter reads it after something already failed and a throw there hides the failure", () => {
   it("MalformedLine", () => {
     const message = MalformedLine.make({ line: slice }).message;
     assert.include(message, "12");
     assert.include(message, "malformed line", "a terminated line is a hole in the history");
   });
 
-  it("MalformedLine distinguishes an UNTERMINATED tail", () => {
-    // The two cases have different recoveries — a torn tail heals when the
-    // writer finishes its line, a terminated malformed line never does — so the
-    // rendering has to tell them apart, and the branch that does needs a
-    // fixture that reaches it.
-    // Unterminated, so `end` is exactly `offset + length`.
-    const torn = LineSlice.make({ offset: 12, end: 15, length: 3, text: '{"a', terminated: false });
+  it("MalformedLine distinguishes an UNTERMINATED tail, which heals when the writer finishes its line, from a terminated hole that never does", () => {
+    const torn = LineSlice.make({ offset: 12, end: 12 + 3, length: 3, text: '{"a', terminated: false });
     const message = MalformedLine.make({ line: torn }).message;
     assert.include(message, "unterminated final line");
     assert.include(message, "12");
@@ -71,12 +55,12 @@ describe("error messages render", () => {
   });
 
   it("InvalidData", () => {
-    const error = InvalidData.make({ line: slice, event: O.some("noted"), error: schemaError });
+    const error = InvalidData.make({ line: slice, event: O.some("noted"), error: decodedSchemaError });
     assert.include(error.message, "noted");
   });
 
   it("InvalidData with no event names the envelope", () => {
-    const error = InvalidData.make({ line: slice, event: O.none(), error: schemaError });
+    const error = InvalidData.make({ line: slice, event: O.none(), error: decodedSchemaError });
     assert.include(error.message, "envelope");
   });
 
@@ -115,11 +99,7 @@ describe("UnserializableData renders a CIRCULAR cause safely", () => {
     return node;
   };
 
-  it("returns without throwing", () => {
-    // The cause here is, by construction, the very value that could not be
-    // serialized. Rendering it is the plausible "better diagnostics" change,
-    // and it would reintroduce a throw inside an error's own accessor — at the
-    // exact moment a reporter is trying to print the failure.
+  it("returns without throwing, because the cause is the very value that could not be serialized", () => {
     const error = UnserializableData.make({ event: "noted", cause: circular() });
     let threw: unknown;
     let rendered = "";
@@ -141,10 +121,10 @@ describe("UnserializableData renders a CIRCULAR cause safely", () => {
 
 describe("boundary and write-conflict failures", () => {
   it("preserves schema issue trees on configuration and selection failures", () => {
-    const configuration = InvalidJournalConfig.make({ error: schemaError });
-    const selection = InvalidSlice.make({ error: schemaError });
-    assert.strictEqual(configuration.error, schemaError);
-    assert.strictEqual(selection.error, schemaError);
+    const configuration = InvalidJournalConfig.make({ error: decodedSchemaError });
+    const selection = InvalidSlice.make({ error: decodedSchemaError });
+    assert.strictEqual(configuration.error, decodedSchemaError);
+    assert.strictEqual(selection.error, decodedSchemaError);
     assert.strictEqual(configuration.message, "invalid journal configuration");
     assert.strictEqual(selection.message, "invalid journal selection");
     assert.isTrue(JsonlError.guards.InvalidJournalConfig(configuration));

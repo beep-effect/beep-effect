@@ -16,11 +16,9 @@ import * as Str from "effect/String";
 import { sha256 } from "./support/generators.ts";
 import { firstCitation } from "./support/goldens.ts";
 
-// The canonical bytes each golden hashes, written out by hand. A plain SHA-256 of these strings gives the recorded
-// hashes (section 1.4 of the P2 design), independently of the minting code.
-const occurrenceBytes = `["occurrence/v1","matter:example","source:example","documents/source.txt","sha256:${Str.repeat(64)("a")}","sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","utf8","1","1","utf16-code-unit",3,11,"1 U.S. 1"]`;
-const captureBytes = `["capture/v1","matter:example","source:example","documents/source.txt","sha256:${Str.repeat(64)("a")}","sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","utf8","1","1"]`;
-const quoteKeyBytes = '["quote-key/v1","nfkc-dehyphenate/v1","1 U.S. 1"]';
+const handWrittenOccurrenceBytes = `["occurrence/v1","matter:example","source:example","documents/source.txt","sha256:${Str.repeat(64)("a")}","sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","utf8","1","1","utf16-code-unit",3,11,"1 U.S. 1"]`;
+const handWrittenCaptureBytes = `["capture/v1","matter:example","source:example","documents/source.txt","sha256:${Str.repeat(64)("a")}","sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","utf8","1","1"]`;
+const handWrittenQuoteKeyBytes = '["quote-key/v1","nfkc-dehyphenate/v1","1 U.S. 1"]';
 
 const registry = () => PreimageRegistry.make([OccurrencePreimage, QuoteKeyPreimage, CapturePreimage]);
 
@@ -43,18 +41,19 @@ describe("@beep/text preimages", () => {
 
   it("hashes the hand-written canonical bytes of each golden", () => {
     for (const [preimage, bytes] of [
-      [OccurrencePreimage, occurrenceBytes],
-      [QuoteKeyPreimage, quoteKeyBytes],
-      [CapturePreimage, captureBytes],
+      [OccurrencePreimage, handWrittenOccurrenceBytes],
+      [QuoteKeyPreimage, handWrittenQuoteKeyBytes],
+      [CapturePreimage, handWrittenCaptureBytes],
     ] as const) {
       assertSuccess(
         JsoncFingerprint.canonicalizeResult(A.prepend(preimage.golden.preimage, preimage.domainTag)),
         bytes
       );
     }
-    expect(OccurrencePreimage.golden.hash).toBe(
-      "sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48"
-    );
+    expect(
+      OccurrencePreimage.golden.hash,
+      "a plain SHA-256 of the hand-written bytes gives the hash recorded in section 1.4 of the P2 design"
+    ).toBe("sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48");
     expect(QuoteKeyPreimage.golden.hash).toBe(
       "sha256:4d35c407eaeb249dd409c6f6e33515178a35b09ce1bfc6f088dfdf459c69c7ab"
     );

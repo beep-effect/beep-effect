@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/data",
+  "root": "packages/foundation/primitive/data",
+  "scopes": ["."]
+}

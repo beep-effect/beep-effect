@@ -11,8 +11,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-/** The property run floor; `BEEP_FC_NUM_RUNS` can raise it, never lower it. */
-const runs = { arbitrary: fcRuns(100) };
+const minimum100RunsRaisedByEnvironment = { arbitrary: fcRuns(100) };
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const first = (text: string) => O.getOrThrow(A.head(Line.split(text)));
@@ -187,7 +186,7 @@ describe("Line properties", () => {
     ([text]) => {
       assert.strictEqual(Line.byteLength(text), encoder.encode(text).length);
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
   it.prop(
     "slices address their encoded text and tile all source bytes",
@@ -205,7 +204,7 @@ describe("Line properties", () => {
       }
       assert.strictEqual(end, bytes.length);
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
   it.prop(
     "reports every nonblank line and leaves the unterminated tail unconsumed",
@@ -222,7 +221,7 @@ describe("Line properties", () => {
         O.getOrElse(expected, () => 0)
       );
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
   it.prop(
     "lastValid is exactly the last successful parse",
@@ -234,7 +233,7 @@ describe("Line properties", () => {
         onNonEmpty: (rows) => assertSome(Line.lastValid(text), A.lastNonEmpty(rows)),
       });
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
   it.prop(
     "a complete appended line becomes the last valid line",
@@ -245,7 +244,7 @@ describe("Line properties", () => {
         Result.getOrThrow(json(text))
       );
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
   it.prop(
     "truncating the final object recovers the previous object",
@@ -260,7 +259,7 @@ describe("Line properties", () => {
         Result.getOrThrow(json(previous))
       );
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
   it.prop(
     "all pure read surfaces are total",
@@ -273,6 +272,6 @@ describe("Line properties", () => {
         Line.consumedOffset(text);
       });
     },
-    runs
+    minimum100RunsRaisedByEnvironment
   );
 });

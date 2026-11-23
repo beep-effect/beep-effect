@@ -227,7 +227,7 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
 // goals/quality-speedup/research/instantiation-census.md §5. The heavy lanes now
-// run on 32GB beep-ec2-heavy fleet workers, so the cap is back to the 8vCPU
+// run on 32GB beep-fleet-heavy fleet workers, so the cap is back to the 8vCPU
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
@@ -3857,6 +3857,9 @@ const policyLintTurboStep = (
   });
 };
 
+const withProofBase = (step: QualityTaskStep, base: string): QualityTaskStep =>
+  QualityTaskStep.make({ ...step, env: { ...step.env, BEEP_PROOF_BASE: base } });
+
 const deprecatedApisTurboStep = (
   repoRoot: string,
   base?: string,
@@ -3944,13 +3947,11 @@ const policyTrackedDiscoveryTasks = [
 // contract and cost about two minutes on a clean tree, so a local full-scope `bun run lint`
 // (no review base, no PR) leaves them to the hosted plan and to the changed-scope
 // `lint:policy` run, which carries an explicit base.
-const policyGitDeltaTasks = ["knowledge:semantic-delta", "knowledge:refs-check"];
+const policyGitDeltaTasks = ["knowledge:semantic-delta", "knowledge:refs-check", "lint:comment-law"];
 const policyStateTasks = [
   ...policyGitDeltaTasks,
   "goals:doctor",
   "lint:oxlint",
-  // `lint:identity-registry` compares the term snapshot against the merge base with origin/main, git
-  // state no Turbo input hashes, so it is uncached and runs unscoped (law L0-3).
   "lint:identity-registry",
   // `lint:shadcn` is owned by hosted Repo Sanity (the `repo-sanity` CiLane
   // body), its one hosted owner (hosted-setup-tax PERIH-02).
@@ -4261,13 +4262,16 @@ const changedScopePolicyStages = (
       plan,
       Math.max(1, plan.policyLint - POLICY_UNSCOPED_STATE_WIDTH)
     ),
-    policyLintTurboStep(
-      repoRoot,
-      "lint:policy:state",
-      policyUnscopedStateTasks,
-      undefined,
-      plan,
-      POLICY_UNSCOPED_STATE_WIDTH
+    withProofBase(
+      policyLintTurboStep(
+        repoRoot,
+        "lint:policy:state",
+        policyUnscopedStateTasks,
+        undefined,
+        plan,
+        POLICY_UNSCOPED_STATE_WIDTH
+      ),
+      base
     ),
     ...knowledgeDoctorPolicySteps(repoRoot, base, hosted)
   ),

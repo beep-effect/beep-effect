@@ -314,7 +314,6 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/text VerifiedTextAnch
         expect(failure.reason).toBe("stale-source");
         expect(failure.message).toBe("Verified text anchor rejected: stale-source.");
       },
-      // The digest itself cannot fail; a truncated one fails `Sha256Hex` decoding instead.
       Effect.provideService(
         Digest.Digest,
         Digest.Digest.of({

@@ -9,6 +9,16 @@
  * successor snapshot breaks it. Collections are strictly ascending arrays, so
  * the committed snapshot is byte-deterministic without a hash set.
  *
+ * **Gotchas**
+ *
+ * Canonicalization uses a stable key sort and drops adjacent exact repeats.
+ * Distinct rows with one key remain for schema refusal, including repeats
+ * separated by a distinct row. Snapshot terms include namespace IRIs;
+ * vocabulary membership excludes those and checks namespaces separately.
+ * Replacement chains end at declared terms. Namespace IRIs are neither
+ * replacements nor binding targets. Release components are unbounded decimal integers, so release
+ * arithmetic uses exact bigint operations.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -138,16 +148,12 @@ export const CodePackage = S.String.check(
 );
 
 /**
- * Decoded type of {@link CodePackage}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CodePackage = typeof CodePackage.Type;
 
 /**
- * The rename of one code identity, and of every code identity under it.
- *
  * **Details**
  *
  * Neither end is under the other. A move from `@beep/p/A` to `@beep/p/A/B`
@@ -240,8 +246,6 @@ export const CodeMove = S.Union([CodeIdMove, CodePackageMove]).pipe(
 );
 
 /**
- * Decoded type of {@link CodeMove}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -395,8 +399,6 @@ export type TermLocal = typeof TermLocal.Type;
 export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(iri) || Str.endsWith("#")(iri);
 
 /**
- * A namespace IRI: an IRI that ends with the separator its terms follow, `/` or `#`.
- *
  * **Details**
  *
  * A term IRI is the namespace IRI followed by a local, with nothing between
@@ -432,8 +434,6 @@ export const NamespaceIri = IRI.check(
 );
 
 /**
- * Decoded type of {@link NamespaceIri}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -817,8 +817,6 @@ export declare namespace TermSnapshot {
 
 const decodeSnapshotType = S.decodeUnknownResult(S.toType(TermSnapshot));
 
-// The sort is stable and groups rows by key, so one linear pass drops exact repeats. Distinct rows
-// with one key stay for the schema to refuse, and so does a repeat they separate.
 const canonicalRows = <Row>(rows: Iterable<Row>, key: (row: Row) => string): ReadonlyArray<Row> =>
   pipe(A.fromIterable(rows), A.sort(Order.mapInput(Order.String, key)), A.dedupeAdjacent);
 
@@ -927,8 +925,6 @@ const Violation = SnapshotViolation.cases;
 const indexBy = <Row, Key>(rows: ReadonlyArray<Row>, key: (row: Row) => Key): HashMap.HashMap<Key, Row> =>
   HashMap.fromIterable(A.map(rows, (row) => [key(row), row] as const));
 
-// `terms` holds namespace IRIs too; a vocabulary term is one that is not a namespace IRI of its
-// snapshot. Namespace membership is judged apart, by `namespaceViolations`.
 const vocabularyTerms = (snapshot: TermSnapshot): ReadonlyArray<TermIri> => {
   const namespaceIris = HashSet.fromIterable(A.map(snapshot.namespaces, (namespace): string => namespace.iri));
   return A.filter(snapshot.terms, (term) => !HashSet.has(namespaceIris, term));
@@ -1034,8 +1030,6 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
   );
 };
 
-// A release as its major, minor and patch, ordered component by component. Components are
-// unbounded decimal integers, so they compare as exact `bigint`s, never as rounded numbers.
 const releaseNumbers = (release: ReleaseVersion): readonly [bigint, bigint, bigint] => {
   const [major = "0", minor = "0", patch = "0"] = Str.split(".")(release);
   return [BigInt(major), BigInt(minor), BigInt(patch)];
@@ -1048,7 +1042,6 @@ const releaseOrder: Order.Order<ReleaseVersion> = Order.mapInput(
 const releaseIsLower = Order.isLessThan(releaseOrder);
 const latestRelease = Order.max(releaseOrder);
 
-// Release arithmetic is exact `bigint` arithmetic over the components `releaseNumbers` reads.
 const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
   ReleaseVersion.make(`${BI.increment(releaseNumbers(release)[0])}.0.0`);
 
@@ -1060,9 +1053,6 @@ const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
 const genesisRelease = ReleaseVersion.make("1.0.0");
 const snapshotEquivalence = S.toEquivalence(TermSnapshot);
 
-// The release that publishes `unchanged` (the next rows, still at the previous release) after
-// `previous`: the same release when nothing changed, the genesis release after the empty
-// snapshot, a major bump when a deprecation is new and a minor bump otherwise.
 const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
   if (snapshotEquivalence(unchanged, previous)) {
     return previous.release;
@@ -1076,8 +1066,6 @@ const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVe
     : nextMinor(previous.release);
 };
 
-// The rows `next` adds to a published term set record the release the change calls for. A binding is
-// added when its term was not bound: a rebind moves the code and keeps the term's `since`.
 const sinceViolations = (
   previous: TermSnapshot,
   next: TermSnapshot,
@@ -1099,10 +1087,6 @@ const sinceViolations = (
   );
 };
 
-// A release below the previous one is wound back. Any other release is the one the change itself calls
-// for, so a changed term set never ships under a release that already published a different one and one
-// change is never counted twice. The first release of a term set may be any release from the genesis
-// release on, because a stacked layer carries releases its empty base never saw.
 const releaseViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> => {
   const expected = nextRelease(previous, TermSnapshot.make({ ...next, release: previous.release }));
   const published = TermSnapshot.isPublished(previous);
@@ -1179,6 +1163,11 @@ export const termSetViolations: {
  * snapshot, which publishes nothing, a changed snapshot may state any release
  * from `1.0.0` on. An unchanged empty snapshot stays unpublished, so it
  * accepts `0.0.0`.
+ *
+ * **Gotchas**
+ *
+ * Release components are unbounded decimal integers. Ordering and arithmetic use exact
+ * bigint components so adjacent releases beyond the safe integer range remain distinct.
  *
  * **Example** (Report a removal without a deprecation)
  *
@@ -1286,7 +1275,6 @@ export declare namespace ShardBinding {
   export type Encoded = typeof ShardBinding.Encoded;
 }
 
-// A replacement local of the shard namespace, or "" for the namespace IRI itself.
 const ShardReplacement = S.Union([TermLocal, S.Literal("")]);
 
 /**
@@ -1549,8 +1537,6 @@ const duplicateGroups = <Row>(
 const sortedStrings = <Value extends string>(values: ReadonlyArray<Value>): Array<Value> =>
   A.sort(A.dedupe(values), Order.String);
 
-// A retired term's chain ends at a declared term, never at a namespace IRI; a retired namespace IRI's
-// chain ends at a declared namespace IRI, never at a term. A namespace IRI is never a binding target.
 const followReplacement = (
   successors: HashSet.HashSet<string>,
   byTerm: HashMap.HashMap<string, Deprecation>,

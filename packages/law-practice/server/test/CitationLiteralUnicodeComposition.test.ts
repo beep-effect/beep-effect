@@ -3,7 +3,7 @@ import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citat
 import { CitationCleaner, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
+import { fcRunsCapped } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
@@ -95,7 +95,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
       },
       (effect) => withCitationTestInvocation(effect)
     ),
-    { arbitrary: fcRuns(25) }
+    { arbitrary: fcRunsCapped(25) }
   );
   it.effect("matches every non-HTML source history through builtin dispatch and the real reservation ledger", () =>
     Effect.gen(function* () {

@@ -134,14 +134,10 @@ export type Reanchoring = typeof Reanchoring.Type;
 
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
 
-// The image of a range in the target text, and whether it grew past the range's own boundaries.
 type Image = { readonly start: number; readonly end: number; readonly widened: boolean };
 
 const textOf = (text: string, start: number, end: number): string => Str.slice(start, end)(text);
 
-// Walks the segments a range overlaps. A boundary inside a kept segment maps pointwise; one strictly inside a
-// rewritten segment moves to the segment edge and widens; target text between two covering segments was inserted
-// and widens. A kept part whose target text is not the same part of the quote means the map does not describe it.
 const imageOf = (
   segments: ReadonlyArray<AlignedSegment>,
   range: { readonly start: number; readonly end: number; readonly quote: string },

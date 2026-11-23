@@ -113,19 +113,15 @@ export const canMerge: {
   );
 });
 
-// Filter keys before reading values: forbidden getters never run and each
-// retained own field is read once, just as in the upstream copy loop.
-const safeFields = (value: Record<string, unknown>): Record<string, unknown> =>
-  R.fromEntries(
-    A.map(
-      A.filter(R.keys(value), (key) => !HashSet.has(FORBIDDEN, key) && !Str.startsWith("~effect/Schema/Class/")(key)),
-      (key) => Tuple.make(key, value[key])
-    )
-  );
+const isCopyableKey = (key: string): boolean =>
+  !HashSet.has(FORBIDDEN, key) && !Str.startsWith("~effect/Schema/Class/")(key);
 
-// Schema class markers are inherited, non-enumerable metadata. Copy names,
-// without invoking prototype getters, and never admit markers from the patch.
-const classProvenance = (base: Record<string, unknown>): Record<string, unknown> => {
+const safeFields = (value: Record<string, unknown>): Record<string, unknown> => {
+  const keysFilteredBeforeAnyRead = A.filter(R.keys(value), isCopyableKey);
+  return R.fromEntries(A.map(keysFilteredBeforeAnyRead, (key) => Tuple.make(key, value[key])));
+};
+
+const inheritedClassMarkerNames = (base: Record<string, unknown>): Record<string, unknown> => {
   let markers: ReadonlyArray<readonly [string, string]> = [];
   let prototype = Reflect.getPrototypeOf(base);
   while (prototype !== null) {
@@ -171,6 +167,6 @@ export const shallowMerge: {
   (base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => ({
     ...safeFields(base),
     ...safeFields(patch),
-    ...classProvenance(base),
+    ...inheritedClassMarkerNames(base),
   })
 );

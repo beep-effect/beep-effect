@@ -14,13 +14,15 @@ import { A, thunkEmptyStr, thunkUndefined } from "@beep/utils";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { constant, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { WinkEngine, WinkEngineLive } from "./Wink.service.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
 import type { ItemSentence, ItemToken, ItsHelpers, Document as WinkDocument } from "wink-nlp";
@@ -151,10 +153,22 @@ const optionFromTokenNumber = (token: ItemToken, itsFunction: unknown): O.Option
 const readPrecedingSpaces = (token: ItemToken, its: ItsHelpers): string =>
   O.getOrElse(optionFromTokenString(token, its.precedingSpaces), thunkEmptyStr);
 
-const makeToken = (token: ItemToken, index: number, its: ItsHelpers, previousEnd: number): readonly [Token, number] => {
+// Token offsets are located in the source text from the previous token's end; wink caps a token's
+// stored preceding spaces at 65,534, so `previousEnd + precedingSpaces.length` drifts after a longer
+// whitespace run. The rebuilt offset remains the fallback for a token whose text is not in the source.
+const makeToken = (
+  source: string,
+  token: ItemToken,
+  index: number,
+  its: ItsHelpers,
+  previousEnd: number
+): readonly [Token, number] => {
   const text = token.out();
   const precedingSpaces = readPrecedingSpaces(token, its);
-  const start = previousEnd + precedingSpaces.length;
+  const start = O.getOrElse(
+    O.map(Str.indexOf(text)(Str.slice(previousEnd)(source)), N.sum(previousEnd)),
+    constant(previousEnd + precedingSpaces.length)
+  );
   const end = start + text.length;
 
   return [
@@ -183,12 +197,12 @@ const makeToken = (token: ItemToken, index: number, its: ItsHelpers, previousEnd
   ] as const;
 };
 
-const collectTokens = (doc: WinkDocument, its: ItsHelpers): Chunk.Chunk<Token> => {
+const collectTokens = (doc: WinkDocument, its: ItsHelpers, source: string): Chunk.Chunk<Token> => {
   const tokens = A.empty<Token>();
   let previousEnd = 0;
 
   doc.tokens().each((token, index) => {
-    const [mappedToken, nextEnd] = makeToken(token, index, its, previousEnd);
+    const [mappedToken, nextEnd] = makeToken(source, token, index, its, previousEnd);
     A.appendInPlace(tokens, mappedToken);
     previousEnd = nextEnd;
   });
@@ -321,7 +335,7 @@ const makeWinkTokenization = Effect.gen(function* () {
       });
       const doc = yield* engine.getWinkDoc(text).pipe(Effect.mapError(makeTokenizationError("document")));
       const its = yield* engine.its.pipe(Effect.mapError(makeTokenizationError("document")));
-      const tokens = collectTokens(doc, its);
+      const tokens = collectTokens(doc, its, text);
       const sentences = yield* collectSentences(doc, tokens, its).pipe(
         Effect.mapError(makeTokenizationError("document"))
       );
@@ -334,7 +348,7 @@ const makeWinkTokenization = Effect.gen(function* () {
         yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
         const doc = yield* engine.getWinkDoc(text);
         const its = yield* engine.its;
-        const tokens = collectTokens(doc, its);
+        const tokens = collectTokens(doc, its, text);
         return yield* collectSentences(doc, tokens, its).pipe(Effect.map(Chunk.toReadonlyArray));
       },
       (effect) => effect.pipe(Effect.mapError(makeTokenizationError("sentences")), observeTokenizer("sentences"))
@@ -348,7 +362,7 @@ const makeWinkTokenization = Effect.gen(function* () {
         yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
         const doc = yield* engine.getWinkDoc(text);
         const its = yield* engine.its;
-        return Chunk.toReadonlyArray(collectTokens(doc, its));
+        return Chunk.toReadonlyArray(collectTokens(doc, its, text));
       },
       (effect) => effect.pipe(Effect.mapError(makeTokenizationError("tokenize")), observeTokenizer("tokenize"))
     ),

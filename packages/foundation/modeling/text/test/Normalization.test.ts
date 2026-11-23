@@ -14,7 +14,6 @@ import { normalizationText } from "./support/generators.ts";
 const runs = { arbitrary: fcRuns(300) };
 
 const nfkc = Str.normalize("NFKC");
-// The de-hyphenation rule over a whole string, as an oracle for the text and for each rewritten segment.
 const dehyphenate = Str.replace(/(?<=\p{L})[-‐](?:\r\n|\n|\r)(?=\p{Ll})/gu, "");
 const oracles: { readonly [Normalization in TextNormalization]: (text: string) => string } = {
   nfkc,
@@ -23,28 +22,35 @@ const oracles: { readonly [Normalization in TextNormalization]: (text: string) =
 
 const sliceAt = (text: string, position: Position): string => Str.slice(position.start, position.end)(text);
 
-// The segments are ordered, gap-free over both texts and all in UTF-16; a kept segment is the same text on both
-// sides, a rewritten one is the rewrite of its source and differs from it, and no two kept segments are adjacent.
 const expectAligned = (input: string, normalized: NormalizedText, rewrite: (text: string) => string): void => {
   const ends = A.reduce(normalized.segments, { from: 0, to: 0, kept: false }, (at, segment) => {
-    expect([segment.from.unit, segment.to.unit]).toEqual(["utf16-code-unit", "utf16-code-unit"]);
-    expect([segment.from.start, segment.to.start]).toEqual([at.from, at.to]);
+    expect([segment.from.unit, segment.to.unit], "every segment is UTF-16").toEqual([
+      "utf16-code-unit",
+      "utf16-code-unit",
+    ]);
+    expect([segment.from.start, segment.to.start], "segments are ordered and gap-free on both sides").toEqual([
+      at.from,
+      at.to,
+    ]);
     expect(segment.from.end).toBeGreaterThan(segment.from.start);
     const source = sliceAt(input, segment.from);
     const target = sliceAt(normalized.text, segment.to);
     AlignedSegment.match(segment, {
       Kept: () => {
-        expect(at.kept).toBe(false);
-        expect(target).toBe(source);
+        expect(at.kept, "no two kept segments are adjacent").toBe(false);
+        expect(target, "a kept segment is the same text on both sides").toBe(source);
       },
       Rewritten: () => {
-        expect(target).toBe(rewrite(source));
-        expect(target).not.toBe(source);
+        expect(target, "a rewritten segment is the rewrite of its source").toBe(rewrite(source));
+        expect(target, "a rewritten segment differs from its source").not.toBe(source);
       },
     });
     return { from: segment.from.end, to: segment.to.end, kept: AlignedSegment.guards.Kept(segment) };
   });
-  expect([ends.from, ends.to]).toEqual([Str.length(input), Str.length(normalized.text)]);
+  expect([ends.from, ends.to], "segments cover both texts to the end").toEqual([
+    Str.length(input),
+    Str.length(normalized.text),
+  ]);
 };
 
 const at = (start: number, end: number) => Position.make({ unit: "utf16-code-unit", start, end });
@@ -85,10 +91,10 @@ describe("@beep/text TextNormalization", () => {
   });
 
   it("joins a letter whose NFKC form starts with a mark to the open cluster", () => {
-    // Z, U+FF9E, U+0323 is one cluster: NFKC composes Z with the dot below across the voiced sound mark.
-    expect(normalizeText("Zﾞ̣", "nfkc")).toEqual(
-      NormalizedText.make({ text: "Ẓ゙", segments: [rewritten(at(0, 3), at(0, 2))] })
-    );
+    expect(
+      normalizeText("Zﾞ̣", "nfkc"),
+      "Z, U+FF9E, U+0323 is one cluster: NFKC composes Z with the dot below across the voiced sound mark"
+    ).toEqual(NormalizedText.make({ text: "Ẓ゙", segments: [rewritten(at(0, 3), at(0, 2))] }));
   });
 
   it("removes a hyphen break between a letter and a lowercase letter as one rewritten segment", () => {

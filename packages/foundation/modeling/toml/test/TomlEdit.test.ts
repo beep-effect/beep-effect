@@ -1,6 +1,3 @@
-// TomlEdit.applyAll: reverse-offset splicing so earlier offsets stay valid,
-// overlap rejection as a programmer-error defect, and input immutability.
-
 import { TomlEdit } from "@beep/toml/TomlEdit";
 import { assert, describe, it } from "@effect/vitest";
 
