@@ -435,6 +435,22 @@
       ]
     },
     {
+      "name": "fleet-watch",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "protection_rule_types": ["branch_policy"],
+      "branch_policies": [
+        {
+          "name": "main",
+          "type": "branch"
+        }
+      ],
+      "variables": [],
+      "secret_names": ["FLEET_WATCH_APP_PRIVATE_KEY"]
+    },
+    {
       "name": "vercel-oip-web-preview",
       "deployment_branch_policy": null,
       "protection_rule_types": [],

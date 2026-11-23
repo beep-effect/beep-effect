@@ -164,6 +164,7 @@ export const productionConfig: StackConfig = StackConfig.make({
     mainOnly("storybook-prod", [stateRoleVariable]),
     mainOnly("turbo-cache-prod", [stateRoleVariable]),
     mainOnly("turbo-cache-write", []),
+    mainOnly("fleet-watch", []),
   ],
   variables: [
     VariableSpec.make({ name: "KNOWLEDGE_MINT_APP_CLIENT_ID", value: "Iv23liz4xPSwPCH0qfJR" }),
@@ -284,6 +285,10 @@ export const productionConfig: StackConfig = StackConfig.make({
     )("KNOWLEDGE_MINT_APP_PRIVATE_KEY"),
     unmanaged(
       "secret",
+      "Value source exists (beep-fleet-watch GitHub App item, private_key); a CI deploy cannot read it, so it waits for the secret-delivery route."
+    )("fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY"),
+    unmanaged(
+      "secret",
       "Two candidate 1Password fields (CLOUD_VERCEL_TOKEN, CLOUD_VERCEL_API_TOKEN); OIP stack (P4) decides."
     )("VERCEL_TOKEN"),
     ...A.map(
@@ -347,6 +352,7 @@ export const productionCreateAllowList: CreateAllowList = CreateAllowList.make({
     "Environment-turbo-cache-prod",
     "EnvironmentVariable-turbo-cache-prod-ALCHEMY_STATE_ROLE_ARN",
     "Environment-turbo-cache-write",
+    "Environment-fleet-watch",
     "Variable-KNOWLEDGE_MINT_APP_CLIENT_ID",
     "Variable-KNOWLEDGE_MINT_APP_SLUG",
     "Label-aardvark",

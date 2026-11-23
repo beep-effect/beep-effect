@@ -32,6 +32,7 @@ Design order is schema, typed configuration, then resources.
 | Ruleset `main` (10240248) | adopted (`adopt(true)`, `protect()`) | singleton (D20); same-name ruleset reads as `Unowned` |
 | Ruleset `queue-lab` (26917133) | unmanaged | `goals/merge-queue-lab` parks it and `merge-group-parity` re-arms it by a live edit |
 | Environments `beep-effect-web-prod`, `storybook-prod`, `turbo-cache-prod`, `turbo-cache-write` | owned, adopted by name | Alchemy deploy environments; branch policy `main` |
+| Environment `fleet-watch` | owned, created by the stack | the fleet missed-event check (`fleet-missed-event-check.yml`); branch policy `main` |
 | Environment `professional-desktop-release` | unmanaged | its policy is a tag pattern; the provider recreates missing policies as branch policies |
 | Vercel-created environments (`Preview*`, `Production*`, `vercel-*`, 22 in all) | unmanaged | owned by the Vercel App; the OIP stack (P4) decides |
 | Env variable `ALCHEMY_STATE_ROLE_ARN` on the three `-prod` environments | owned | value is known and non-secret |
@@ -39,7 +40,7 @@ Design order is schema, typed configuration, then resources.
 | Repo variable `BEEP_SHARD_OVERFLOW` | unmanaged | an operator switch flipped live |
 | Repo variables `TURBO_*` | unmanaged | the turbo cache cutover sets them |
 | All 26 labels | owned, adopted by name | `GitHub.Label` observes by name and updates |
-| Every secret (11 repository, 9 environment) | unmanaged | see "Secrets" |
+| Every secret (11 repository, 10 environment) | unmanaged | see "Secrets" |
 | Environment secret `INFRA_GITHUB_APP_PRIVATE_KEY` on `infra-github-prod` | operator-set, not managed by the stack | the deploy identity; only the token-mint step reads it (ruling 2026-11-14) |
 | Two repository webhooks (`workflow_job`) | unmanaged | runner fleet; their secret belongs to the ci-runners stack (P5) |
 | Actions permissions | unmanaged | no `@alchemy.run/github` resource (verified gap) |
@@ -55,6 +56,7 @@ delete them fails before anything is applied.
 deploy can read its value. On day one the stack manages none:
 
 - Has a 1Password source: `KNOWLEDGE_MINT_APP_PRIVATE_KEY` (`beep-knowledge-mint GitHub App`
+  item, `private_key`); `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY` (`beep-fleet-watch GitHub App`
   item, `private_key`). `VERCEL_TOKEN` has two candidate fields (`CLOUD_VERCEL_TOKEN`,
   `CLOUD_VERCEL_API_TOKEN`) and no record of which one it holds.
 - No known source: `APP_ENV`, `APP_LOG_FORMAT`, `APP_LOG_LEVEL`, `APP_NAME`, `NEXT_PUBLIC_ENV`.
