@@ -2701,8 +2701,10 @@
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/text",
           "@beep/utils"
         ],
@@ -2711,8 +2713,10 @@
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/text",
           "@beep/utils"
         ]

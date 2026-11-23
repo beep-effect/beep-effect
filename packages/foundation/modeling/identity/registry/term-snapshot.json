@@ -75,6 +75,10 @@
       "iri": "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#"
     },
     {
+      "prefix": "np",
+      "iri": "http://www.nanopub.org/nschema#"
+    },
+    {
       "prefix": "oa",
       "iri": "http://www.w3.org/ns/oa#"
     },
@@ -296,10 +300,16 @@
     "http://rdfs.org/ns/void#",
     "http://rdfs.org/ns/void#Dataset",
     "http://rdfs.org/ns/void#triples",
+    "http://www.nanopub.org/nschema#",
+    "http://www.nanopub.org/nschema#Nanopublication",
+    "http://www.nanopub.org/nschema#hasAssertion",
+    "http://www.nanopub.org/nschema#hasProvenance",
+    "http://www.nanopub.org/nschema#hasPublicationInfo",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Alt",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML",
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#JSON",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#List",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq",
@@ -538,7 +548,9 @@
     "https://beep-effect.com/ns/epistemic/",
     "https://beep-effect.com/ns/epistemic/Claim",
     "https://beep-effect.com/ns/epistemic/claim",
+    "https://beep-effect.com/ns/epistemic/coreJson",
     "https://beep-effect.com/ns/epistemic/hasEvidenceQuote",
+    "https://beep-effect.com/ns/epistemic/sourceDigest",
     "https://beep-effect.com/ns/instance/",
     "https://beep-effect.com/ns/lejeune/ontology/",
     "https://beep-effect.com/ns/lejeune/ontology/delivery_date",

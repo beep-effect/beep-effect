@@ -1,0 +1,14 @@
+{
+  "namespace": {
+    "prefix": "np",
+    "iri": "http://www.nanopub.org/nschema#"
+  },
+  "terms": [
+    "Nanopublication",
+    "hasAssertion",
+    "hasProvenance",
+    "hasPublicationInfo"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

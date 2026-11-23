@@ -2033,6 +2033,14 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Change the checker and law fixtures together while preserving immutable old import records.
 
+### P4: prov:wasAttributedTo names the asserting agent by a nanopub-agent/v1 hash, 2026-11-23
+
+The provenance graph names the agent by the hash of its encoded assertedBy under a new nanopub-agent/v1 preimage with a committed golden, so one agent always gets one IRI and decode rechecks it against the decoded core.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Bump the preimage to nanopub-agent/v2, or take an agent-IRI port from the caller binding.
+
 ### P4: recheck nanopub publication identity on decode, 2026-11-23
 
 Decode rechecks ClaimId and canonical publication metadata, re-mints nanopub/v1 NanopubId and compares the publication plus four derived graph IRIs exactly. Stale publication id after publisher/time edits and wrong derived graph IRI are integrity refusals with original input. Foreign graph/publication names may remain import metadata but are not accepted native-profile publications. Normalization runs only after integrity validation and sorts/deduplicates accepted quads; it cannot rename or repair failed identity. Add both fixtures to NanopubAdapter.test.ts. The exact TTL licensing hold is unchanged.
@@ -2040,6 +2048,30 @@ Decode rechecks ClaimId and canonical publication metadata, re-mints nanopub/v1 
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Version the native profile and identity preimage together; retain refused foreign data with original names.
+
+### P4: the nanopub profile uses the existing epistemic namespace and rdf:JSON, 2026-11-23
+
+The profile's own predicates are epistemic:coreJson and epistemic:sourceDigest in the existing epistemic namespace shard, and rdf:JSON is added to the rdf shard, rather than introducing a new epistemics: prefix. The registry writer regenerated the registry data and vocabulary terms.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Add a dedicated prefix with these terms and deprecate the two epistemic locals through the registry's deprecation records.
+
+### P4: the np NamespacePin records an unstated license instead of holding the adapter, 2026-11-23
+
+Parent ruling 2026-11-23, amending the hold in 2026-11-23-p4-nanopub-restricted-profile. A NamespacePin vendors no artifact bytes: it records the source location, revision and digests and projects only the curated term names, the np: IRIs needed to speak the vocabulary. The np pin therefore needs no granted license to exist, and it must not claim one. Its license is the SPDX LicenseRef leaf LicenseRef-nanopub-nschema-unstated, not an invented license. Its attribution states that no license is given at commit 8388dd90795b of Nanopublication/Guidelines, that the companion nschema.html grants CC BY-SA 3.0 for that document, and that only term IRIs are projected. nschema.ttl is never copied into the repo; adapter fixtures are minimal synthetic profile data written for this repo.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: When upstream publishes a license for nschema.ttl, or the operator rules that the nschema.html notice covers the TTL, replace LicenseRef-nanopub-nschema-unstated with that SPDX id and regenerate the pin.
+
+### P4: nanopub decode reads only the exact profile encoding, 2026-11-23
+
+Decode accepts the core literal and the publication metadata only when they equal their re-encoded form byte for byte (otherwise invalid-core or invalid-publication-metadata). Publication time is dcterms:created as a UTC xsd:dateTime and the publisher is dcterms:publisher. A profile predicate in the wrong graph is graph-mixing; foreign predicates inside profile graphs and all quads outside them are residual; a blank graph name anywhere is refused. Instance IRIs reuse instanceIri and instanceHash from @beep/annotation/rdf/OaCodec.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Relax a rule in a new profile version and keep the old one decodable.
 
 ### P4: nanopub is a restricted adapter profile and never imports authority, 2026-11-23
 
@@ -2068,6 +2100,14 @@ The append law accepts supersession only inside one (scope, logicalKey) partitio
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Allow cross-key supersession in the append law and migrate party fixtures back; existing retraction records stay append-only.
+
+### P4: the pinned-vocabularies Turtle check accepts owl:FunctionalProperty, 2026-11-23
+
+nschema.ttl types its three has* properties as owl:FunctionalProperty, which the pinned-vocabularies target did not recognise as a declaration type, so the np pin could not curate them. The target now accepts owl:FunctionalProperty, with a fixture test.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Drop the type from the accepted set and curate only np:Nanopublication.
 
 ### P4: require explicit native creation facts at party projection boundaries, 2026-11-23
 

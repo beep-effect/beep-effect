@@ -2818,6 +2818,7 @@
         "@beep/annotation": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/jsonc": "workspace:^",
+        "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/text": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -2826,6 +2827,7 @@
       },
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
