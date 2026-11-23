@@ -899,10 +899,10 @@ Since v1.0.0`
         Effect.gen(function* () {
           const source = `/**
            * Lead of written.
-           *
-           * **Details**
-           *
-           * More.
+           * **Example** (Read written)
+           * \`\`\`ts
+           * console.log(written)
+           * \`\`\`
            *
            * @since 1.0.0
            */

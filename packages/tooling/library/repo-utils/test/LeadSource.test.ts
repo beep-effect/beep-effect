@@ -1,5 +1,6 @@
 import { annotationDescription, derivedLead, jsDocLead, leadRestates } from "@beep/repo-utils/JSDoc/LeadSource";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Project } from "ts-morph";
@@ -93,7 +94,7 @@ describe("annotationDescription", () => {
       )
     );
     for (const name of ["Dynamic", "Spread", "Shorthand", "Named", "Other", "Plain"]) {
-      expect(O.isNone(annotationDescription(source.getVariableDeclarationOrThrow(name), name))).toBe(true);
+      assertNone(annotationDescription(source.getVariableDeclarationOrThrow(name), name));
     }
   });
 });
@@ -129,7 +130,7 @@ describe("derivedLead", () => {
   });
 
   it("is None for unannotated exports", () => {
-    expect(O.isNone(derivedLead(source.getTypeAliasOrThrow("Orphan"), "Orphan"))).toBe(true);
-    expect(O.isNone(derivedLead(source.getVariableDeclarationOrThrow("plain"), "plain"))).toBe(true);
+    assertNone(derivedLead(source.getTypeAliasOrThrow("Orphan"), "Orphan"));
+    assertNone(derivedLead(source.getVariableDeclarationOrThrow("plain"), "plain"));
   });
 });

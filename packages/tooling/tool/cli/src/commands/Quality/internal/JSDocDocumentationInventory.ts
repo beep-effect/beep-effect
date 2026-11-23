@@ -1089,6 +1089,57 @@ const derivedLeadFindings = (
 const countFindings = (missingSummary: boolean, ...findingGroups: ReadonlyArray<ReadonlyArray<unknown>>): number =>
   A.reduce(findingGroups, missingSummary ? 1 : 0, (total, findings) => total + findings.length);
 
+type ExportFindings = {
+  readonly name: string;
+  readonly declaration: Node;
+  readonly location: { readonly filePath: string; readonly repoPath: string; readonly line: number };
+  readonly presentTags: ReadonlyArray<string>;
+  readonly missingTags: ReadonlyArray<string>;
+  readonly forbidden: ReadonlyArray<string>;
+  readonly missingSummary: boolean;
+  readonly malformedTags: ReadonlyArray<DocumentationIssue>;
+  readonly importIssues: ReadonlyArray<DocumentationIssue>;
+  readonly unsafeIssues: ReadonlyArray<DocumentationIssue>;
+  readonly categoryIssues: ReadonlyArray<DocumentationIssue>;
+  readonly schemaGaps: ReadonlyArray<DocumentationIssue>;
+  readonly shapeIssues: ReadonlyArray<DocumentationIssue>;
+  readonly leadIssues: ReadonlyArray<DocumentationIssue>;
+};
+
+const exportEntry = (findings: ExportFindings): InventoryEntry => {
+  const { filePath, repoPath, line } = findings.location;
+  const findingCount = countFindings(
+    findings.missingSummary,
+    findings.missingTags,
+    findings.forbidden,
+    findings.malformedTags,
+    findings.importIssues,
+    findings.unsafeIssues,
+    findings.categoryIssues,
+    findings.schemaGaps,
+    findings.shapeIssues
+  );
+  return {
+    symbolName: findings.name,
+    exportKind: declarationKind(findings.declaration),
+    filePath,
+    repoPath,
+    line,
+    anchor: markdownAnchor(`${repoPath}-${line}-${findings.name}`),
+    currentTags: findings.presentTags,
+    missingRequiredTags: findings.missingTags,
+    forbiddenTags: findings.forbidden,
+    missingSummary: findings.missingSummary,
+    malformedConditionalTags: findings.malformedTags,
+    exampleImportViolations: findings.importIssues,
+    unsafeExampleViolations: findings.unsafeIssues,
+    schemaAnnotationGaps: findings.schemaGaps,
+    categoryViolations: findings.categoryIssues,
+    documentationShapeViolations: A.appendAll(findings.shapeIssues, findings.leadIssues),
+    remediationStatus: findingCount === 0 ? "resolved" : "open",
+  };
+};
+
 const analyzeDirectExport = (
   name: string,
   declaration: Node,
@@ -1111,38 +1162,22 @@ const analyzeDirectExport = (
   const missingSummary = O.isNone(lead) && Str.isEmpty(jsDocLead(docText));
   const schemaGaps = schemaAnnotationGaps(name, declaration, sourceFile);
   const shapeIssues = documentationShapeViolations(docText);
-  const leadIssues = derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile));
-  const findingCount = countFindings(
-    missingSummary,
+  return exportEntry({
+    name,
+    declaration: declaration,
+    location: { filePath, repoPath, line },
+    presentTags,
     missingTags,
     forbidden,
+    missingSummary,
     malformedTags,
     importIssues,
     unsafeIssues,
     categoryIssues,
     schemaGaps,
-    shapeIssues
-  );
-
-  return {
-    symbolName: name,
-    exportKind: declarationKind(declaration),
-    filePath,
-    repoPath,
-    line,
-    anchor: markdownAnchor(`${repoPath}-${line}-${name}`),
-    currentTags: presentTags,
-    missingRequiredTags: missingTags,
-    forbiddenTags: forbidden,
-    missingSummary,
-    malformedConditionalTags: malformedTags,
-    exampleImportViolations: importIssues,
-    unsafeExampleViolations: unsafeIssues,
-    schemaAnnotationGaps: schemaGaps,
-    categoryViolations: categoryIssues,
-    documentationShapeViolations: A.appendAll(shapeIssues, leadIssues),
-    remediationStatus: findingCount === 0 ? "resolved" : "open",
-  };
+    shapeIssues,
+    leadIssues: derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile)),
+  });
 };
 
 // R19: a function-overload group (one or more overload signatures plus the
@@ -1186,38 +1221,22 @@ const analyzeFunctionOverloadGroup = (
   const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
   const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
   const shapeIssues = A.flatMap(groupDocTexts, documentationShapeViolations);
-  const leadIssues = derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile));
-  const findingCount = countFindings(
-    missingSummary,
+  return exportEntry({
+    name,
+    declaration: anchor,
+    location: { filePath, repoPath, line },
+    presentTags,
     missingTags,
     forbidden,
+    missingSummary,
     malformedTags,
     importIssues,
     unsafeIssues,
     categoryIssues,
     schemaGaps,
-    shapeIssues
-  );
-
-  return {
-    symbolName: name,
-    exportKind: declarationKind(anchor),
-    filePath,
-    repoPath,
-    line,
-    anchor: markdownAnchor(`${repoPath}-${line}-${name}`),
-    currentTags: presentTags,
-    missingRequiredTags: missingTags,
-    forbiddenTags: forbidden,
-    missingSummary,
-    malformedConditionalTags: malformedTags,
-    exampleImportViolations: importIssues,
-    unsafeExampleViolations: unsafeIssues,
-    schemaAnnotationGaps: schemaGaps,
-    categoryViolations: categoryIssues,
-    documentationShapeViolations: A.appendAll(shapeIssues, leadIssues),
-    remediationStatus: findingCount === 0 ? "resolved" : "open",
-  };
+    shapeIssues,
+    leadIssues: derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile)),
+  });
 };
 
 const collectReExportDescriptors = (
