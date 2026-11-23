@@ -79,8 +79,7 @@ const importActivityOf = (sourceDigest: Sha256PrefixedDigest) =>
 
 const targetsOf = (row: Anchored) => Effect.map(mintOccurrenceId(row), (id) => HashSet.make(id));
 
-const quadSet = (dataset: Rdf.Dataset): HashSet.HashSet<string> =>
-  HashSet.fromIterable(A.map(dataset.quads, Rdf.serializeQuad));
+const quadSet = (dataset: Rdf.Dataset): HashSet.HashSet<string> => HashSet.map(dataset.quads, Rdf.serializeQuad);
 
 const nifNamespace = "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#";
 
@@ -569,12 +568,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         const text = yield* verify(document.text, sourceText);
         const options = { source: oaSource, text, importActivity: importActivityOf(sourceDigest) };
         const dataset = Result.getOrThrow(encode({ document, importedActivities }, options));
-        expect(A.filter(dataset.quads, hasBlankNode)).toStrictEqual([]);
+        expect(A.filter(A.fromIterable(dataset.quads), hasBlankNode)).toStrictEqual([]);
         const decoded = yield* decode(dataset, options);
         assertEquals(decoded.document, document);
         assertEquals(decoded.importedActivities, importedActivities);
         expect(decoded.rejected).toStrictEqual([]);
-        expect(A.every(decoded.residual.quads, isNifQuad)).toBe(true);
+        expect(HashSet.every(decoded.residual.quads, isNifQuad)).toBe(true);
         assertEquals(resolutions(sourceText, decoded.document), resolutions(sourceText, document));
         // The encoder's output is already in normal form.
         const normalized = yield* normalize(dataset, options);
@@ -595,12 +594,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         const normalized = yield* normalize(input.dataset, options);
         assertEquals(quadSet(encoded), quadSet(normalized));
         const inputQuads = quadSet(input.dataset);
-        expect(A.every(decoded.residual.quads, (q) => HashSet.has(inputQuads, Rdf.serializeQuad(q)))).toBe(true);
+        expect(HashSet.every(decoded.residual.quads, (q) => HashSet.has(inputQuads, Rdf.serializeQuad(q)))).toBe(true);
         // Every quad a rejected annotation reaches stays in the residual, so the residual rejects it again.
         const residual = quadSet(decoded.residual);
         for (const rejection of decoded.rejected) {
           const missing = A.filter(
-            reachedFrom(input.dataset.quads, rejection.subject),
+            reachedFrom(A.fromIterable(input.dataset.quads), rejection.subject),
             (q) => !HashSet.has(residual, Rdf.serializeQuad(q))
           );
           expect(A.map(missing, Rdf.serializeQuad)).toStrictEqual([]);
@@ -624,7 +623,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         const decoded = yield* decode(dataset, options);
         const encoded = Result.getOrThrow(encode(decoded, options));
         const normalized = yield* normalize(dataset, options);
-        expect([fixture.name, Rdf.areDatasetsEquivalent(encoded, normalized)]).toStrictEqual([fixture.name, true]);
+        expect([fixture.name, Equal.equals(encoded, normalized)]).toStrictEqual([fixture.name, true]);
         expect([fixture.name, decoded.rejected]).toStrictEqual([
           fixture.name,
           A.map(fixture.rejected, ([subject, reason]) => OaRejection.make({ subject, reason })),
@@ -727,7 +726,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         annotations: [OaKinds.Word.case.make({ targets: wordOnB, body: Word.make({}) })],
       });
       const dataset = Result.getOrThrow(encode({ document, importedActivities: HashMap.empty() }, options));
-      const offsets = A.flatMap(dataset.quads, (q) =>
+      const offsets = A.flatMap(A.fromIterable(dataset.quads), (q) =>
         q.predicate.value === term.start || q.predicate.value === term.end ? [q.object.value] : []
       );
       expect(A.sort(offsets, Order.String)).toStrictEqual(["2", "3"]);
@@ -821,7 +820,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         Effect.fromResult(mergeDocuments(merged, part))
       );
       const dataset = Result.getOrThrow(encode({ document, importedActivities: HashMap.empty() }, options));
-      const literals = A.flatMap(dataset.quads, (q) =>
+      const literals = A.flatMap(A.fromIterable(dataset.quads), (q) =>
         q.predicate.value === term.generatedAtTime ? [q.object.value] : []
       );
       expect(A.sort(literals, Order.String)).toStrictEqual(
@@ -832,7 +831,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       );
       const decoded = yield* decode(dataset, options);
       assertEquals(decoded.document, document);
-      expect(A.every(decoded.residual.quads, isNifQuad)).toBe(true);
+      expect(HashSet.every(decoded.residual.quads, isNifQuad)).toBe(true);
     })
   );
 
@@ -863,7 +862,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const importedActivities = HashMap.make([importedId, imported]);
       const dataset = Result.getOrThrow(encode({ document: merged, importedActivities }, options));
       expect(
-        A.some(dataset.quads, (q) => q.predicate.value === term.wasGeneratedBy && q.object.value === activity.value)
+        HashSet.some(
+          dataset.quads,
+          (q) => q.predicate.value === term.wasGeneratedBy && q.object.value === activity.value
+        )
       ).toBe(true);
       const decoded = yield* decode(dataset, options);
       assertEquals(decoded.document, merged);
@@ -883,7 +885,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const decoded = yield* decode(Rdf.makeDataset([]), options);
       expect(HashMap.size(decoded.document.annotations)).toBe(0);
       const normalized = yield* normalize(Rdf.makeDataset([]), options);
-      expect(normalized.quads).toStrictEqual([]);
+      expect(HashSet.size(normalized.quads)).toBe(0);
     })
   );
 });

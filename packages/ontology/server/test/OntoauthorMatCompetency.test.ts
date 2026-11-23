@@ -124,7 +124,7 @@ const askQueries = (source: string): ReadonlyArray<string> =>
   pipe(source, Str.match(/ASK\s*\{[\s\S]*?\n\}/g), O.getOrElse(A.empty<string>));
 
 const shapeOperations = (dataset: Dataset): ReadonlyArray<ChangeOperation> =>
-  A.map(dataset.quads, (quad) =>
+  A.map(A.fromIterable(dataset.quads), (quad) =>
     ChangeOperation.make({
       kind: "addQuad",
       partition: "shapes",

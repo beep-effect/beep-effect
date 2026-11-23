@@ -22,6 +22,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -140,7 +141,7 @@ const leaves = (ast: AST.AST): ReadonlyArray<AST.AST> =>
   AST.isUnion(ast) ? A.flatMap(ast.types, leaves) : AST.isArrays(ast) ? A.flatMap(ast.rest, leaves) : [ast];
 const literals = (ast: AST.AST): ReadonlyArray<Rdf.Literal> =>
   A.flatMap(leaves(ast), (leaf) =>
-    AST.isLiteral(leaf) && P.isString(leaf.literal) ? [Rdf.makeLiteral(leaf.literal, XSD_STRING.value)] : []
+    AST.isLiteral(leaf) && P.isString(leaf.literal) ? [Rdf.makeLiteral(leaf.literal)] : []
   );
 const referenceClass = (name: string, key: string): O.Option<string> => {
   if (key === "sourceId") return O.some("Source");
@@ -313,8 +314,8 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
     quads.push(Rdf.makeQuad(node, sh("property"), p), Rdf.makeQuad(p, sh("path"), property.path));
     A.forEach(
       [
-        ["minCount", O.map(property.minCount, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value))],
-        ["maxCount", O.map(property.maxCount, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value))],
+        ["minCount", O.map(property.minCount, (v) => Rdf.Literal.typed(`${v}`, XSD_INTEGER.value))],
+        ["maxCount", O.map(property.maxCount, (v) => Rdf.Literal.typed(`${v}`, XSD_INTEGER.value))],
         ["datatype", property.datatype],
         ["class", property.class],
       ] satisfies ReadonlyArray<readonly [(typeof SHACL_TERMS)[number], O.Option<Rdf.ObjectTerm>]>,
@@ -342,7 +343,7 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
         ),
         Rdf.makeQuad(alternative, sh("property"), property),
         Rdf.makeQuad(property, sh("path"), nn(`${libraryNamespace}${key}`)),
-        Rdf.makeQuad(property, sh("minCount"), Rdf.makeLiteral("1", XSD_INTEGER.value))
+        Rdf.makeQuad(property, sh("minCount"), Rdf.Literal.typed("1", XSD_INTEGER.value))
       );
     });
   };
@@ -354,7 +355,7 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
     A.forEach(shape.properties, (property, index) => propertyQuads(node, name, property, index));
     if (name === "Finding") bindingQuads(node);
   });
-  return Rdf.makeDataset(Rdf.sortDatasetQuads(Rdf.makeDataset(quads)));
+  return Rdf.makeDataset(quads);
 };
 
 /**
@@ -418,7 +419,8 @@ export const renderLibraryOntology = Effect.fn("Library.renderOntology")(
       });
       yield* Effect.scoped(publish());
       const saved = yield* fs.readFileString(absolute);
-      return (yield* codec.parse(N3ParseTurtleRequest.make({ source: saved }))).dataset.quads.length;
+      const parsed = yield* codec.parse(N3ParseTurtleRequest.make({ source: saved }));
+      return HashSet.size(parsed.dataset.quads);
     });
     const tboxCount = yield* write(LIBRARY_TBOX_FILE, tbox);
     const shapesCount = yield* write(LIBRARY_SHAPES_FILE, shapes);

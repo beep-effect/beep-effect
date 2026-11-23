@@ -131,13 +131,11 @@ const toRdfJsSubject = (factory: RdfJsFactory.DataFactory, subject: Rdf.Subject)
   });
 
 const toRdfJsLiteral = (factory: RdfJsFactory.DataFactory, value: Rdf.Literal): RdfJsFactory.Literal =>
-  pipe(
-    value.language,
-    O.match({
-      onNone: () => factory.literal(value.value, factory.namedNode(value.datatype.value)),
-      onSome: (language) => factory.literal(value.value, language),
-    })
-  );
+  Rdf.LiteralForm.match(value.form, {
+    Simple: () => factory.literal(value.value),
+    Typed: (form) => factory.literal(value.value, factory.namedNode(form.datatype.value)),
+    LangTagged: (form) => factory.literal(value.value, form.language),
+  });
 
 const toRdfJsObject = (factory: RdfJsFactory.DataFactory, object: Rdf.ObjectTerm): RdfJsFactory.Object =>
   Rdf.ObjectTerm.match(object, {
@@ -213,10 +211,14 @@ const objectTermFromUnknown = (value: unknown): O.Option<Rdf.ObjectTerm> =>
               datatype: pipe(property(value, "datatype"), O.flatMap(namedNodeLikeFromUnknown)),
               lexical: termValue(value),
             }),
-            O.map(({ datatype, lexical }) =>
-              Rdf.makeLiteral(lexical, datatype.value, {
-                ...O.getSomesStruct({ language: pipe(stringProperty(value, "language"), O.filter(Str.isNonEmpty)) }),
-              })
+            O.flatMap(({ datatype, lexical }) =>
+              O.getSuccess(
+                Rdf.Literal.fromParts({
+                  value: lexical,
+                  datatype: datatype.value,
+                  ...O.getSomesStruct({ language: pipe(stringProperty(value, "language"), O.filter(Str.isNonEmpty)) }),
+                })
+              )
             )
           )
         ),
@@ -329,7 +331,7 @@ const shapeSubject = (shape: ShaclNodeShape, index: number): Rdf.Subject =>
 const propertySubject = (shapeIndex: number, propertyIndex: number): Rdf.Subject =>
   Rdf.makeBlankNode(`shape-${shapeIndex}-property-${propertyIndex}`);
 
-const integerLiteral = (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}`, XSD_INTEGER.value);
+const integerLiteral = (value: number): Rdf.Literal => Rdf.Literal.typed(`${value}`, XSD_INTEGER.value);
 
 const typedPropertyShapeQuads = (
   node: Rdf.Subject,

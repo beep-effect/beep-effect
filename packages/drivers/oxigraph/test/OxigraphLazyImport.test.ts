@@ -4,6 +4,7 @@ import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/servi
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import { vi } from "vitest";
 
 const engine = vi.hoisted(() => ({ imports: 0, constructions: 0, loadedQuads: 0 }));
@@ -43,7 +44,7 @@ it.layer(OxigraphSparqlQueryServiceLive, { timeout: "30 seconds" })("@beep/oxigr
         makeQuad(
           makeNamedNode("https://example.test/alice"),
           makeNamedNode("https://example.test/name"),
-          makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string")
+          makeLiteral("Alice")
         ),
       ]);
       const request = SparqlQueryRequest.make({
@@ -58,7 +59,7 @@ it.layer(OxigraphSparqlQueryServiceLive, { timeout: "30 seconds" })("@beep/oxigr
       expect(first).toEqual(second);
       expect(engine.imports).toBe(1);
       expect(engine.constructions).toBe(1);
-      expect(engine.loadedQuads).toBe(dataset.quads.length);
+      expect(engine.loadedQuads).toBe(HashSet.size(dataset.quads));
       expect(first.profile).toBe("select");
       if (first.profile === "select") {
         expect(first.rows).toHaveLength(1);
@@ -68,14 +69,14 @@ it.layer(OxigraphSparqlQueryServiceLive, { timeout: "30 seconds" })("@beep/oxigr
         makeQuad(
           makeNamedNode("https://example.test/bob"),
           makeNamedNode("https://example.test/name"),
-          makeLiteral("Bob", "http://www.w3.org/2001/XMLSchema#string")
+          makeLiteral("Bob")
         ),
       ]);
       const different = yield* sparql.execute(
         SparqlQueryRequest.make({ dataset: differentDataset, profile: "select", query: request.query })
       );
       expect(engine.constructions).toBe(2);
-      expect(engine.loadedQuads).toBe(dataset.quads.length + differentDataset.quads.length);
+      expect(engine.loadedQuads).toBe(HashSet.size(dataset.quads) + HashSet.size(differentDataset.quads));
       expect(different.profile).toBe("select");
       if (different.profile === "select") {
         expect(different.rows).toHaveLength(0);

@@ -14,20 +14,11 @@ import {
   Usage,
 } from "@beep/rdf/Prov";
 import { datasetToProvBundle, ProvRdfCodecOptions, provBundleToDataset } from "@beep/rdf/ProvRdf";
-import {
-  areDatasetsEquivalent,
-  makeBlankNode,
-  makeDataset,
-  makeLiteral,
-  makeNamedNode,
-  makeQuad,
-  serializeQuad,
-  sortDatasetQuads,
-} from "@beep/rdf/Rdf";
+import { Literal, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import * as ProvVocabulary from "@beep/rdf/Vocab/Prov";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
-import { XSD_DATE_TIME, XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_DATE_TIME, XSD_DOUBLE } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -35,14 +26,16 @@ import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { mapResultFailureTag } from "./helpers/FailureTags.ts";
-import type { Literal } from "@beep/rdf/Rdf";
 
 const decodeProvBundleResult = S.decodeResult(ProvBundle);
+const recordSet = (bundle: ProvBundle) => HashSet.fromIterable(bundle.records);
 const isAgent = S.is(Agent);
 const isAssociation = S.is(Association);
 const isGeneration = S.is(Generation);
@@ -168,19 +161,20 @@ describe("ProvRdf", () => {
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded, options));
 
       pipe(
-        A.every(dataset.quads, (quad) => quad.graph.termType === "NamedNode" && quad.graph.value === auditGraph.value),
+        HashSet.every(
+          dataset.quads,
+          (quad) => quad.graph.termType === "NamedNode" && quad.graph.value === auditGraph.value
+        ),
         assertTrue
       );
       expect(decoded.records).toHaveLength(bundle.records.length);
-      expect(A.map(sortDatasetQuads(reencoded), serializeQuad)).toEqual(
-        A.map(sortDatasetQuads(dataset), serializeQuad)
-      );
+      pipe(Equal.equals(reencoded, dataset), assertTrue);
       pipe(
-        A.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_QUALIFIED_USAGE.value),
+        HashSet.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_QUALIFIED_USAGE.value),
         assertTrue
       );
       pipe(
-        A.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_USED.value),
+        HashSet.some(dataset.quads, (quad) => quad.predicate.value === ProvVocabulary.PROV_USED.value),
         assertTrue
       );
     })
@@ -194,7 +188,7 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
       const encodedAgain = yield* Effect.fromResult(provBundleToDataset(decoded));
 
-      pipe(areDatasetsEquivalent(dataset, encodedAgain), assertTrue);
+      pipe(Equal.equals(dataset, encodedAgain), assertTrue);
     })
   );
 
@@ -222,7 +216,11 @@ describe("ProvRdf", () => {
             onSuccess: (decoded) =>
               Result.match(provBundleToDataset(decoded), {
                 onFailure: () => false,
-                onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+                onSuccess: (reencoded) =>
+                  Result.match(datasetToProvBundle(reencoded), {
+                    onFailure: () => false,
+                    onSuccess: (redecoded) => Equal.equals(recordSet(redecoded), recordSet(decoded)),
+                  }),
               }),
           }),
       }),
@@ -261,7 +259,8 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded));
 
-      pipe(areDatasetsEquivalent(dataset, reencoded), assertTrue);
+      const redecoded = yield* Effect.fromResult(datasetToProvBundle(reencoded));
+      pipe(Equal.equals(recordSet(redecoded), recordSet(decoded)), assertTrue);
       pipe(A.some(decoded.records, isAgent), assertTrue);
       pipe(A.some(decoded.records, isGeneration), assertTrue);
       pipe(A.some(decoded.records, isAssociation), assertTrue);
@@ -324,17 +323,15 @@ describe("ProvRdf", () => {
       ]);
 
     assertFailure(
-      mapResultFailureTag(datasetToProvBundle(datasetWithValue(makeLiteral("not-a-number", XSD_DOUBLE.value)))),
+      mapResultFailureTag(datasetToProvBundle(datasetWithValue(Literal.typed("not-a-number", XSD_DOUBLE.value)))),
       "ProvRdfCodecError"
     );
     assertFailure(
-      mapResultFailureTag(datasetToProvBundle(datasetWithValue(makeLiteral("2026-08-17", XSD_DATE_TIME.value)))),
+      mapResultFailureTag(datasetToProvBundle(datasetWithValue(Literal.typed("2026-08-17", XSD_DATE_TIME.value)))),
       "ProvRdfCodecError"
     );
     assertFailure(
-      mapResultFailureTag(
-        datasetToProvBundle(datasetWithValue(makeLiteral("bonjour", XSD_STRING.value, { language: "fr" })))
-      ),
+      mapResultFailureTag(datasetToProvBundle(datasetWithValue(Literal.langTagged("bonjour", "fr")))),
       "ProvRdfCodecError"
     );
   });
@@ -357,7 +354,7 @@ describe("ProvRdf", () => {
       const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
       const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded));
 
-      pipe(areDatasetsEquivalent(dataset, reencoded), assertTrue);
+      pipe(Equal.equals(dataset, reencoded), assertTrue);
     })
   );
 
@@ -383,7 +380,7 @@ describe("ProvRdf", () => {
       const encodedLocal = yield* Effect.fromResult(provBundleToDataset(localBundle));
       const decodedLocal = yield* Effect.fromResult(datasetToProvBundle(encodedLocal));
 
-      pipe(areDatasetsEquivalent(externalDataset, reencodedExternal), assertTrue);
+      pipe(Equal.equals(externalDataset, reencodedExternal), assertTrue);
       expect(decodedReserved.records).toEqual(reservedBundle.records);
       expect(decodedLocal.records).toEqual(localBundle.records);
     })
@@ -411,7 +408,7 @@ describe("ProvRdf", () => {
     const subject = makeNamedNode("urn:example:derived-entity");
     const dataset = makeDataset([
       makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
-      makeQuad(subject, ProvVocabulary.PROV_WAS_DERIVED_FROM, makeLiteral("not-a-reference", XSD_STRING.value)),
+      makeQuad(subject, ProvVocabulary.PROV_WAS_DERIVED_FROM, makeLiteral("not-a-reference")),
     ]);
 
     assertFailure(mapResultFailureTag(datasetToProvBundle(dataset)), "ProvRdfCodecError");
@@ -432,15 +429,15 @@ describe("ProvRdf", () => {
     const agent = makeNamedNode("urn:example:language-agent");
     const wrongDatatype = makeDataset([
       makeQuad(entity, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
-      makeQuad(entity, ProvVocabulary.PROV_GENERATED_AT_TIME, makeLiteral("2026-08-17T12:00:00Z", XSD_STRING.value)),
+      makeQuad(entity, ProvVocabulary.PROV_GENERATED_AT_TIME, makeLiteral("2026-08-17T12:00:00Z")),
     ]);
     const invalidLexicalForm = makeDataset([
       makeQuad(entity, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
-      makeQuad(entity, ProvVocabulary.PROV_GENERATED_AT_TIME, makeLiteral("2026-08-17", XSD_DATE_TIME.value)),
+      makeQuad(entity, ProvVocabulary.PROV_GENERATED_AT_TIME, Literal.typed("2026-08-17", XSD_DATE_TIME.value)),
     ]);
     const languageLabel = makeDataset([
       makeQuad(agent, RDF_TYPE, ProvVocabulary.PROV_AGENT),
-      makeQuad(agent, RDFS_LABEL, makeLiteral("Agent", XSD_STRING.value, { language: "en" })),
+      makeQuad(agent, RDFS_LABEL, Literal.langTagged("Agent", "en")),
     ]);
 
     assertFailure(mapResultFailureTag(datasetToProvBundle(wrongDatatype)), "ProvRdfCodecError");
@@ -452,8 +449,8 @@ describe("ProvRdf", () => {
     const subject = makeNamedNode("urn:example:duplicate-value-entity");
     const duplicateValue = makeDataset([
       makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
-      makeQuad(subject, ProvVocabulary.PROV_VALUE, makeLiteral("first", XSD_STRING.value)),
-      makeQuad(subject, ProvVocabulary.PROV_VALUE, makeLiteral("second", XSD_STRING.value)),
+      makeQuad(subject, ProvVocabulary.PROV_VALUE, makeLiteral("first")),
+      makeQuad(subject, ProvVocabulary.PROV_VALUE, makeLiteral("second")),
     ]);
     const blankSubject = makeBlankNode("anonymous-entity");
     const blankRecord = makeDataset([makeQuad(blankSubject, RDF_TYPE, ProvVocabulary.PROV_ENTITY)]);
@@ -589,7 +586,11 @@ it.prop(
           onSuccess: (decoded) =>
             Result.match(provBundleToDataset(decoded), {
               onFailure: () => false,
-              onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+              onSuccess: (reencoded) =>
+                Result.match(datasetToProvBundle(reencoded), {
+                  onFailure: () => false,
+                  onSuccess: (redecoded) => Equal.equals(recordSet(redecoded), recordSet(decoded)),
+                }),
             }),
         }),
     }),

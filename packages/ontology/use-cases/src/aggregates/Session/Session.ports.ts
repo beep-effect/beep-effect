@@ -220,12 +220,13 @@ export class ParseTurtleRequest extends S.Opaque<ParseTurtleRequest, { readonly 
  * ```ts
  * import { ParseTurtleResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const result = ParseTurtleResult.make({
  *   dataset: makeDataset([])
  * })
  *
- * console.log(result.dataset.quads.length)
+ * console.log(HashSet.size(result.dataset.quads))
  * ```
  *
  * @category models
@@ -250,12 +251,13 @@ export class ParseTurtleResult extends S.Opaque<ParseTurtleResult, { readonly br
  * ```ts
  * import { SerializeTurtleRequest } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const request = SerializeTurtleRequest.make({
  *   dataset: makeDataset([])
  * })
  *
- * console.log(request.dataset.quads.length)
+ * console.log(HashSet.size(request.dataset.quads))
  * ```
  *
  * @category models

@@ -23,21 +23,26 @@ import {
 } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { SH_NODE, SH_NODE_SHAPE, SH_PATH, SH_PROPERTY } from "@beep/rdf/Vocab/Shacl";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as SchemaIssue from "effect/SchemaIssue";
+import type { Quad } from "@beep/rdf/Rdf";
+
+const quadLines = (quads: Iterable<Quad>): ReadonlyArray<string> =>
+  A.sort(A.map(A.fromIterable(quads), serializeQuad), Order.String);
 
 const sessionId = SessionId.make("session-1");
 const nameQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),
-  makeLiteral("Alice", XSD_STRING.value)
+  makeLiteral("Alice")
 );
 const knowsQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
@@ -85,9 +90,9 @@ describe("Ontology Session aggregate", () => {
 
     const partitions = deriveSessionGraphPartitions(session);
 
-    expect(partitions.asserted.quads).toHaveLength(1);
-    expect(partitions.ontologies.quads).toHaveLength(1);
-    expect(partitions.inferred.quads).toHaveLength(0);
+    expect(HashSet.size(partitions.asserted.quads)).toBe(1);
+    expect(HashSet.size(partitions.ontologies.quads)).toBe(1);
+    expect(HashSet.size(partitions.inferred.quads)).toBe(0);
   });
 
   it("routes opened SHACL node and property shapes into the shapes partition", () => {
@@ -113,8 +118,8 @@ describe("Ontology Session aggregate", () => {
 
     const partitions = deriveSessionGraphPartitions(session);
 
-    expect(A.map(partitions.asserted.quads, serializeQuad)).toEqual([serializeQuad(nameQuad)]);
-    expect(A.map(partitions.shapes.quads, serializeQuad)).toEqual(A.map(shapeQuads, serializeQuad));
+    expect(quadLines(partitions.asserted.quads)).toEqual([serializeQuad(nameQuad)]);
+    expect(quadLines(partitions.shapes.quads)).toEqual(quadLines(shapeQuads));
   });
 
   it("applies remove operations without mutating other partitions", () => {
@@ -137,7 +142,7 @@ describe("Ontology Session aggregate", () => {
       )
     );
     const before = deriveSessionGraphPartitions(seeded);
-    for (const partition of untouched) expect(before[partition].quads).toHaveLength(1);
+    for (const partition of untouched) expect(HashSet.size(before[partition].quads)).toBe(1);
     const session = appendChange(
       seeded,
       ChangeOperation.make({
@@ -147,10 +152,10 @@ describe("Ontology Session aggregate", () => {
       })
     );
     const after = deriveSessionGraphPartitions(session);
-    expect(deriveSessionGraphPartitions(session).asserted.quads).toHaveLength(1);
-    expect(A.map(after.asserted.quads, serializeQuad)).toEqual([serializeQuad(nameQuad)]);
+    expect(HashSet.size(deriveSessionGraphPartitions(session).asserted.quads)).toBe(1);
+    expect(quadLines(after.asserted.quads)).toEqual([serializeQuad(nameQuad)]);
     for (const partition of untouched) {
-      expect(A.map(after[partition].quads, serializeQuad)).toEqual(A.map(before[partition].quads, serializeQuad));
+      expect(quadLines(after[partition].quads)).toEqual(quadLines(before[partition].quads));
     }
   });
 
@@ -217,10 +222,10 @@ describe("Ontology Session aggregate", () => {
 
       expect(applied.delta.added).toHaveLength(1);
       expect(applied.delta.removed).toHaveLength(1);
-      expect(deriveSessionGraphPartitions(applied.session).asserted.quads).toHaveLength(1);
+      expect(HashSet.size(deriveSessionGraphPartitions(applied.session).asserted.quads)).toBe(1);
       expect(A.map(applied.delta.added, serializeQuad)).toEqual([serializeQuad(knowsQuad)]);
       expect(A.map(applied.delta.removed, serializeQuad)).toEqual([serializeQuad(nameQuad)]);
-      expect(A.map(deriveSessionGraphPartitions(applied.session).asserted.quads, serializeQuad)).toEqual([
+      expect(quadLines(deriveSessionGraphPartitions(applied.session).asserted.quads)).toEqual([
         serializeQuad(knowsQuad),
       ]);
       yield* Effect.void;

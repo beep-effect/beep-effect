@@ -14,7 +14,6 @@ import {
   ValidateOntologyRequest,
 } from "@beep/ontology-use-cases/tools";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -92,7 +91,7 @@ const addName = (person: string, name: string) =>
     quad: makeQuad(
       makeNamedNode(`https://example.test/${person}`),
       makeNamedNode("https://example.test/name"),
-      makeLiteral(name, XSD_STRING.value)
+      makeLiteral(name)
     ),
   });
 
@@ -257,7 +256,7 @@ describe("ontology agent toolkit real-engine handlers", () => {
           expect(literal.query.result).toEqual(
             SparqlSelectResult.make({
               profile: "select",
-              rows: [{ value: makeLiteral("0", XSD_STRING.value) }],
+              rows: [{ value: makeLiteral("0") }],
             })
           );
         })

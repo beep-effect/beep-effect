@@ -581,8 +581,9 @@ export class OaEncodeRefused extends S.TaggedError<OaEncodeRefused, { readonly b
  *
  * ```ts
  * import type { OaImport } from "@beep/annotation/rdf/OaCodec"
+ * import * as HashSet from "effect/HashSet"
  *
- * const counts = (result: OaImport) => [result.residual.quads.length, result.rejected.length]
+ * const counts = (result: OaImport) => [HashSet.size(result.residual.quads), result.rejected.length]
  * console.log(typeof counts)
  * ```
  *
@@ -644,7 +645,6 @@ const nifClasses: Readonly<Record<string, Rdf.NamedNode>> = {
 };
 
 const xsdInteger = iri("xsd:integer");
-const xsdString = iri("xsd:string");
 const xsdDateTime = iri("xsd:dateTime");
 
 const instanceBase = namespace("instance").iri;
@@ -712,31 +712,21 @@ const instanceNode = (hash: ContentHash): Rdf.NamedNode => node(instanceIri(hash
 const selectorNode = (occurrence: OccurrenceId, selector: "position" | "quote"): Rdf.NamedNode =>
   node(mint("instance", instanceSegment(occurrence), selector));
 
-const integerLiteral = (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}`, xsdInteger);
+const integerLiteral = (value: number): Rdf.Literal => Rdf.Literal.typed(`${value}`, xsdInteger);
 
-const stringLiteral = (value: string): Rdf.Literal => Rdf.makeLiteral(value, xsdString);
+const stringLiteral = (value: string): Rdf.Literal => Rdf.makeLiteral(value);
 
 // `toISOString` writes a year outside 0000..9999 with a sign and six digits (`+010000`, `-000001`), which the
 // xsd:dateTime lexical space does not admit: drop the `+` and every leading zero past four digits.
 const ExpandedIsoYear = /^\+?(-?)0*(\d{4,}-)/;
 
 const timeLiteral = (at: DateTime.Utc): Rdf.Literal =>
-  Rdf.makeLiteral(at.pipe(DateTime.formatIso, Str.replace(ExpandedIsoYear, "$1$2")), xsdDateTime);
+  Rdf.Literal.typed(at.pipe(DateTime.formatIso, Str.replace(ExpandedIsoYear, "$1$2")), xsdDateTime);
 
 const quad = (subject: Rdf.Subject, predicate: Rdf.NamedNode, object: Rdf.ObjectTerm): Rdf.Quad =>
   Rdf.makeQuad(subject, predicate, object);
 
-// One dataset per quad set: deduplicated and in the lexical order of the serialized quads.
-const toDataset = (quads: ReadonlyArray<Rdf.Quad>): Rdf.Dataset =>
-  pipe(
-    A.map(quads, (q) => [Rdf.serializeQuad(q), q] as const),
-    HashMap.fromIterable,
-    HashMap.values,
-    A.fromIterable,
-    Rdf.makeDataset,
-    Rdf.sortDatasetQuads,
-    Rdf.makeDataset
-  );
+const toDataset = (quads: ReadonlyArray<Rdf.Quad>): Rdf.Dataset => Rdf.makeDataset(quads);
 
 const sameCapture = S.toEquivalence(SourceTextIdentity);
 
@@ -1040,7 +1030,7 @@ const instantOf = (lexical: string): O.Option<DateTime.Utc> =>
 const timeOf = (q: Rdf.Quad): O.Option<DateTime.Utc> =>
   O.some(q.object).pipe(
     O.filter(Rdf.Literal.is),
-    O.filter((literal) => literal.datatype.value === xsdDateTime),
+    O.filter((literal) => Rdf.Literal.datatypeOf(literal).value === xsdDateTime),
     O.flatMap((literal) => instantOf(literal.value))
   );
 

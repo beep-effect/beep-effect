@@ -8,7 +8,7 @@ import { Triple } from "../../../Domain/Rdf/Types.ts";
 
 const isSafePnLocal = S.is(SafePnLocal);
 
-const { BlankNode, Literal, makeBlankNode, makeLiteral, makeNamedNode, NamedNode, Quad } = CanonicalRdf;
+const { BlankNode, Literal, makeBlankNode, makeNamedNode, NamedNode, Quad } = CanonicalRdf;
 const isBlankNode = S.is(BlankNode);
 const isLiteral = S.is(Literal);
 const isNamedNode = S.is(NamedNode);
@@ -38,7 +38,7 @@ describe("effect-ontology RDF types", () => {
   it("uses canonical RDF/JS term discrimination", () => {
     const namedNode = makeNamedNode("https://example.org/alice");
     const blankNode = makeBlankNode("alice");
-    const literal = makeLiteral("Alice", "https://www.w3.org/2001/XMLSchema#string");
+    const literal = Literal.typed("Alice", "https://www.w3.org/2001/XMLSchema#string");
 
     expect(isNamedNode(namedNode)).toBe(true);
     expect(isBlankNode(blankNode)).toBe(true);
@@ -50,7 +50,7 @@ describe("effect-ontology RDF types", () => {
     const triple = Triple.make({
       subject: makeNamedNode("https://example.org/alice"),
       predicate: makeNamedNode("https://schema.org/name"),
-      object: makeLiteral("Alice", "https://www.w3.org/2001/XMLSchema#string"),
+      object: Literal.typed("Alice", "https://www.w3.org/2001/XMLSchema#string"),
     });
     const quad = triple.toQuad();
     const recovered = Triple.fromQuad(quad);

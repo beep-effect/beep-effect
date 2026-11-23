@@ -16,7 +16,7 @@ import type { Assertion, KbClaim, KbView } from "./Kb.schemas.ts";
 const kb = "urn:beep:kb:";
 const iri = (id: string): string => `<${kb}${encodeURIComponent(id)}>`;
 const term = (name: string): string => `<${kb}${name}>`;
-const literal = (value: string): string => serializeTerm(makeLiteral(value, "http://www.w3.org/2001/XMLSchema#string"));
+const literal = (value: string): string => serializeTerm(makeLiteral(value));
 const standardPredicates: Readonly<Record<string, string>> = {
   type: "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",
   comment: "<http://www.w3.org/2000/01/rdf-schema#comment>",

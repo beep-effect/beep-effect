@@ -200,12 +200,13 @@ export class CanonicalizeDatasetRequest extends S.Opaque<
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
  * import { FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization"
+ * import * as HashSet from "effect/HashSet"
  *
  * const request = S.decodeUnknownSync(FingerprintDatasetRequest)({
  *   dataset: { quads: [] },
  *   algorithm: "lexical-sort-v1"
  * })
- * strictEqual(request.dataset.quads.length, 0)
+ * strictEqual(HashSet.size(request.dataset.quads), 0)
  * ```
  *
  * @category models

@@ -18,7 +18,7 @@ describe("canonical SPARQL adapter", () => {
               Rdf.makeQuad(
                 Rdf.makeNamedNode("https://example.org/ada"),
                 Rdf.makeNamedNode("https://schema.org/name"),
-                Rdf.makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
+                Rdf.Literal.typed("Ada", "https://www.w3.org/2001/XMLSchema#string")
               ),
             ]),
           })

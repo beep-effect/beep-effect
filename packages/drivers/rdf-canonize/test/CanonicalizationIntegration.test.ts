@@ -1,6 +1,5 @@
 import { Dataset, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import {
   CanonicalizationService,
@@ -24,7 +23,7 @@ const dataset = makeDataset([
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
     makeNamedNode("https://schema.org/name"),
-    makeLiteral("Alice", XSD_STRING.value)
+    makeLiteral("Alice")
   ),
   makeQuad(makeNamedNode("https://example.com/people/alice"), RDF_TYPE, makeNamedNode("https://schema.org/Person")),
 ]);
@@ -33,7 +32,7 @@ const dataset = makeDataset([
 // the semantic-web contracts; declaring the reverse dependency would create a cycle.
 it.layer(CanonicalizationServiceLive, { timeout: "10 seconds" })("canonicalization adapter integration", (it) => {
   const boundedDataset = Arbitrary.schema(S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) })).pipe(
-    Arbitrary.map(Dataset.make)
+    Arbitrary.map(({ quads }) => makeDataset(quads))
   );
   it.effect.prop(
     "keeps fingerprints stable under quad order for schema-derived datasets",
@@ -45,7 +44,10 @@ it.layer(CanonicalizationServiceLive, { timeout: "10 seconds" })("canonicalizati
           FingerprintDatasetRequest.make({ algorithm: "rdfc-1.0", dataset: generated })
         );
         const right = yield* service.fingerprint(
-          FingerprintDatasetRequest.make({ algorithm: "rdfc-1.0", dataset: makeDataset(A.reverse(generated.quads)) })
+          FingerprintDatasetRequest.make({
+            algorithm: "rdfc-1.0",
+            dataset: makeDataset(generated.quads.pipe(A.fromIterable, A.reverse)),
+          })
         );
         expect(left.fingerprint).toBe(right.fingerprint);
         expect(left.canonicalText).toBe(right.canonicalText);
@@ -86,14 +88,14 @@ it.layer(CanonicalizationServiceLive, { timeout: "10 seconds" })("canonicalizati
 
       const left = makeDataset([
         makeQuad(makeBlankNode("a"), knows, makeBlankNode("b")),
-        makeQuad(makeBlankNode("a"), name, makeLiteral("Alice", XSD_STRING.value)),
-        makeQuad(makeBlankNode("b"), name, makeLiteral("Bob", XSD_STRING.value)),
+        makeQuad(makeBlankNode("a"), name, makeLiteral("Alice")),
+        makeQuad(makeBlankNode("b"), name, makeLiteral("Bob")),
       ]);
 
       const right = makeDataset([
         makeQuad(makeBlankNode("x"), knows, makeBlankNode("y")),
-        makeQuad(makeBlankNode("x"), name, makeLiteral("Alice", XSD_STRING.value)),
-        makeQuad(makeBlankNode("y"), name, makeLiteral("Bob", XSD_STRING.value)),
+        makeQuad(makeBlankNode("x"), name, makeLiteral("Alice")),
+        makeQuad(makeBlankNode("y"), name, makeLiteral("Bob")),
       ]);
 
       const [leftRequest, rightRequest] = yield* Effect.all(

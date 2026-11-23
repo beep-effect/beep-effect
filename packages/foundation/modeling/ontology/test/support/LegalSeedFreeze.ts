@@ -92,7 +92,7 @@ const objectKey = (object: Rdf.ObjectTerm): string =>
     NamedNode: (node) => `<${node.value}>`,
     BlankNode: (node) => `_:${node.value}`,
     Literal: (literal) =>
-      O.match(literal.language, {
+      O.match(Rdf.Literal.languageOf(literal), {
         onNone: () => `"${literal.value}"`,
         onSome: (language) => `"${literal.value}"@${language}`,
       }),
@@ -173,7 +173,7 @@ export const observeLegalSeeds = Effect.fnUntraced(function* (seedDirectory: str
   const projected = intakeProjection(SemanticFoundationSeed);
   const legalIntakeParity = yield* codec.parse(N3ParseTurtleRequest.make({ source: rendering })).pipe(
     Effect.map((parsed) => {
-      const rendered = A.map(parsed.dataset.quads, (quad) =>
+      const rendered = A.map(A.fromIterable(parsed.dataset.quads), (quad) =>
         statement(quad.subject.value, quad.predicate.value, objectKey(quad.object))
       );
       return {

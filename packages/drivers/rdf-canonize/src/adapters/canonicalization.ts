@@ -11,15 +11,15 @@
 import {
   DefaultGraph,
   GraphTerm,
+  Literal,
   MakeQuadOptionsInput,
   makeBlankNode,
   makeDataset,
-  makeLiteral,
   makeNamedNode,
   makeQuad,
   ObjectTerm,
   Subject,
-  sortDatasetQuads,
+  serializeQuad,
 } from "@beep/rdf/Rdf";
 import { Sha256Hex } from "@beep/schema";
 import {
@@ -33,11 +33,14 @@ import { A, O, Str } from "@beep/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { canonize, NQuads } from "rdf-canonize";
-import type { Quad } from "@beep/rdf/Rdf";
+import type { LiteralFormRefused, Quad } from "@beep/rdf/Rdf";
 import type { CanonicalizationServiceShape } from "@beep/semantic-web/services/canonicalization";
 import type { CanonizeGraph, CanonizeObject, CanonizeQuad, CanonizeSubject } from "rdf-canonize";
 
@@ -85,14 +88,14 @@ const hashCanonicalText = Effect.fn("SemanticWeb.hashCanonicalText")(function* (
 });
 
 const enforceWorkLimit = (
-  quads: ReadonlyArray<Quad>,
+  quadCount: number,
   workLimit: O.Option<number>
 ): Effect.Effect<void, CanonicalizationError> =>
-  O.isSome(workLimit) && quads.length > workLimit.value
+  O.isSome(workLimit) && quadCount > workLimit.value
     ? Effect.fail(
         CanonicalizationError.make({
           reason: "workLimitExceeded",
-          message: `Dataset contains ${quads.length} quads, exceeding the work limit of ${workLimit.value}.`,
+          message: `Dataset contains ${quadCount} quads, exceeding the work limit of ${workLimit.value}.`,
         })
       )
     : Effect.void;
@@ -113,8 +116,8 @@ const toCanonizeObject = (object: ObjectTerm): CanonizeObject =>
     Literal: (value): CanonizeObject => ({
       termType: "Literal",
       value: value.value,
-      datatype: { termType: "NamedNode", value: value.datatype.value },
-      ...O.getSomesStruct({ language: value.language }),
+      datatype: { termType: "NamedNode", value: Literal.datatypeOf(value).value },
+      ...O.getSomesStruct({ language: Literal.languageOf(value) }),
     }),
   });
 
@@ -142,15 +145,26 @@ const fromCanonizeSubject = (subject: CanonizeSubject): Subject =>
     Match.exhaustive
   );
 
-const fromCanonizeObject = (object: CanonizeObject): ObjectTerm =>
+const refusedLiteral = (refused: LiteralFormRefused): CanonicalizationError =>
+  CanonicalizationError.make({
+    reason: "canonicalizationFailure",
+    message: `Canonical N-Quads held a literal with no RDF literal form: datatype ${refused.datatype}.`,
+  });
+
+const fromCanonizeObject = (object: CanonizeObject): Result.Result<ObjectTerm, CanonicalizationError> =>
   Match.value(object).pipe(
-    Match.withReturnType<ObjectTerm>(),
-    Match.discriminator("termType")("NamedNode", (value) => makeNamedNode(value.value)),
-    Match.discriminator("termType")("BlankNode", (value) => makeBlankNode(value.value)),
+    Match.withReturnType<Result.Result<ObjectTerm, CanonicalizationError>>(),
+    Match.discriminator("termType")("NamedNode", (value) => Result.succeed(makeNamedNode(value.value))),
+    Match.discriminator("termType")("BlankNode", (value) => Result.succeed(makeBlankNode(value.value))),
     Match.discriminator("termType")("Literal", (value) =>
-      makeLiteral(value.value, value.datatype.value, {
-        ...O.getSomesStruct({ language: O.fromUndefinedOr(value.language) }),
-      })
+      pipe(
+        Literal.fromParts({
+          value: value.value,
+          datatype: value.datatype.value,
+          ...O.getSomesStruct({ language: pipe(value.language, O.fromUndefinedOr, O.filter(Str.isNonEmpty)) }),
+        }),
+        Result.mapError(refusedLiteral)
+      )
     ),
     Match.exhaustive
   );
@@ -164,15 +178,19 @@ const fromCanonizeGraph = (graph: CanonizeGraph): GraphTerm =>
     Match.exhaustive
   );
 
-const fromCanonizeQuad = (quad: CanonizeQuad): Quad =>
-  makeQuad(
-    fromCanonizeSubject(quad.subject),
-    makeNamedNode(quad.predicate.value),
-    MakeQuadOptionsInput.make({
-      object: fromCanonizeObject(quad.object),
-      graph: fromCanonizeGraph(quad.graph),
-    })
+const fromCanonizeQuad = (quad: CanonizeQuad): Result.Result<Quad, CanonicalizationError> =>
+  Result.map(fromCanonizeObject(quad.object), (object) =>
+    makeQuad(
+      fromCanonizeSubject(quad.subject),
+      makeNamedNode(quad.predicate.value),
+      MakeQuadOptionsInput.make({
+        object,
+        graph: fromCanonizeGraph(quad.graph),
+      })
+    )
   );
+
+const byQuadLine: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
 
 const hasSemanticCanonicalizationBudgetFailureName = (error: unknown): boolean =>
   error instanceof Error && A.some(semanticCanonicalizationBudgetFailureNames, (name) => error.name === name);
@@ -214,14 +232,16 @@ const canonicalizeSemantically = Effect.fn("SemanticWeb.canonicalizeSemantically
     catch: mapCanonizeFailure,
   });
 
+  const canonicalQuads = yield* Effect.fromResult(Result.all(A.map(parsed, fromCanonizeQuad)));
+
   return {
     canonicalText: pipe(canonicalText, Str.trimEnd),
-    dataset: makeDataset(pipe(parsed, A.map(fromCanonizeQuad))),
+    dataset: makeDataset(canonicalQuads),
   };
 });
 
 const canonicalizeLexically = (quads: ReadonlyArray<Quad>) => {
-  const sorted = sortDatasetQuads(makeDataset(quads));
+  const sorted = A.sort(quads, byQuadLine);
   return {
     canonicalText: lexicalCanonicalTextFromQuads(sorted),
     dataset: makeDataset(sorted),
@@ -235,8 +255,8 @@ const getCanonicalDataset = (
   CanonicalizationError
 > =>
   CanonicalizationAlgorithm.match(request.algorithm, {
-    "rdfc-1.0": () => canonicalizeSemantically(request.dataset.quads),
-    "lexical-sort-v1": () => Effect.succeed(canonicalizeLexically(request.dataset.quads)),
+    "rdfc-1.0": () => canonicalizeSemantically(A.fromIterable(request.dataset.quads)),
+    "lexical-sort-v1": () => Effect.succeed(canonicalizeLexically(A.fromIterable(request.dataset.quads))),
   });
 
 /**
@@ -257,12 +277,12 @@ export const CanonicalizationServiceLive = Layer.succeed(
   CanonicalizationService,
   CanonicalizationService.of({
     canonicalize: Effect.fn(function* (request) {
-      yield* enforceWorkLimit(request.dataset.quads, request.workLimit);
+      yield* enforceWorkLimit(HashSet.size(request.dataset.quads), request.workLimit);
       const canonical = yield* getCanonicalDataset(request);
       return CanonicalDatasetResult.make(canonical);
     }),
     fingerprint: Effect.fn(function* (request) {
-      yield* enforceWorkLimit(request.dataset.quads, request.workLimit);
+      yield* enforceWorkLimit(HashSet.size(request.dataset.quads), request.workLimit);
       const canonical = yield* getCanonicalDataset(request);
       const fingerprint = yield* hashCanonicalText(canonical.canonicalText);
       return DatasetFingerprint.make({

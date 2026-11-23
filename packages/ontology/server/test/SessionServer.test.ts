@@ -24,7 +24,6 @@ import {
 import { MakeQuadOptionsInput, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { it } from "@beep/test-runner";
@@ -42,6 +41,7 @@ import * as Eq from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -133,7 +133,7 @@ const roundTripFixture = Effect.fn("roundTripFixture")(function* (path: Ontology
     after,
     before,
     prefixes: parsed.prefixes,
-    quadCount: parsed.dataset.quads.length,
+    quadCount: HashSet.size(parsed.dataset.quads),
     serializedSource: serialized.source,
   };
 });
@@ -240,7 +240,7 @@ describe("Ontology server Turtle round-trip", () => {
           makeNamedNode("urn:beep:ontology:interop:provenance-only"),
           makeNamedNode("http://purl.org/dc/terms/description"),
           MakeQuadOptionsInput.make({
-            object: makeLiteral("derived partition sentinel", XSD_STRING.value),
+            object: makeLiteral("derived partition sentinel"),
             graph: makeNamedNode(graphPartitionIri("provenance")),
           })
         );

@@ -52,7 +52,7 @@ const toDataset = (
     evidence,
     A.flatMap((ev) =>
       isCurrentPosition(ev.span)
-        ? [makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.position.quote, XSD_STRING.value))]
+        ? [makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.position.quote))]
         : []
     )
   );

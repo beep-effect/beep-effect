@@ -28,7 +28,7 @@ import { ArticleMetadata } from "../Service/ClaimPersistence.ts";
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
-import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { Literal, makeNamedNode, makeQuad } from "@beep/rdf";
 import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
@@ -1713,7 +1713,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
               makeNamedNode(p),
               Str.startsWith("http")(o) || Str.startsWith("urn:")(o)
                 ? makeNamedNode(o)
-                : makeLiteral(o, "https://www.w3.org/2001/XMLSchema#string")
+                : Literal.typed(o, "https://www.w3.org/2001/XMLSchema#string")
             )
           );
         };

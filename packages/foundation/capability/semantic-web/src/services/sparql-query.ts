@@ -168,12 +168,13 @@ export class SparqlAskResult extends S.Opaque<SparqlAskResult, { readonly brand:
  * import { strictEqual } from "node:assert"
  * import * as S from "effect/Schema"
  * import { SparqlConstructResult } from "@beep/semantic-web/services/sparql-query"
+ * import * as HashSet from "effect/HashSet"
  *
  * const result = S.decodeUnknownSync(SparqlConstructResult)({
  *   profile: "construct",
  *   dataset: { quads: [] }
  * })
- * strictEqual(result.dataset.quads.length, 0)
+ * strictEqual(HashSet.size(result.dataset.quads), 0)
  * ```
  *
  * @category models

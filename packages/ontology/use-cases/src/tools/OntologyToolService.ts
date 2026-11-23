@@ -14,7 +14,7 @@ import {
   deriveSessionGraphPartitions,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { makeDataset, serializeQuad } from "@beep/rdf/Rdf";
+import { makeDataset } from "@beep/rdf/Rdf";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { A, O } from "@beep/utils";
 import * as Config from "effect/Config";
@@ -23,6 +23,7 @@ import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -205,11 +206,9 @@ const ensureRealDelta = (application: SessionChangeApplication) =>
 
 const operationIntroducesShape = (application: SessionChangeApplication, operation: ChangeOperation): boolean => {
   const partitions = deriveSessionGraphPartitions(application.session);
-  const persisted = makeDataset(pipe(partitions.asserted.quads, A.appendAll(partitions.shapes.quads)));
+  const persisted = makeDataset(HashSet.union(partitions.asserted.quads, partitions.shapes.quads));
   const classified = classifySessionDatasetPartitions(persisted);
-  const shapeQuadKeys = A.map(classified.shapes.quads, serializeQuad);
-
-  return operation.kind === "addQuad" && pipe(shapeQuadKeys, A.contains(serializeQuad(operation.quad)));
+  return operation.kind === "addQuad" && HashSet.has(classified.shapes.quads, operation.quad);
 };
 
 const ensureSharedPartitionClassification = (
@@ -456,7 +455,7 @@ const makeOntologyToolService = Effect.gen(function* () {
               path: request.path,
               sessionId: opened.session.id,
               fingerprint: opened.fingerprint,
-              quadCount: S.Natural.make(A.length(opened.session.baseDataset.quads)),
+              quadCount: S.Natural.make(HashSet.size(opened.session.baseDataset.quads)),
               prefixes: opened.session.prefixes,
             })
           )

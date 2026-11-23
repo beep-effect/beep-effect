@@ -1,5 +1,4 @@
 import { Dataset, MakeQuadOptionsInput, makeDataset, makeLiteral, makeNamedNode, makeQuad, Quad } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import {
   CanonicalDatasetResult,
@@ -41,18 +40,22 @@ const expectEncodedRoundTrip = Effect.fnUntraced(function* <
 const BoundedDataset = S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) });
 const CanonicalDatasetResultArbitrary = Arbitrary.schema(
   S.Struct({ ...CanonicalDatasetResult.fields, dataset: BoundedDataset })
-).pipe(Arbitrary.map((result) => CanonicalDatasetResult.make({ ...result, dataset: Dataset.make(result.dataset) })));
+).pipe(
+  Arbitrary.map((result) => CanonicalDatasetResult.make({ ...result, dataset: makeDataset(result.dataset.quads) }))
+);
 const CanonicalizeDatasetRequestArbitrary = Arbitrary.schema(
   S.Struct({ ...CanonicalizeDatasetRequest.fields, dataset: BoundedDataset })
 ).pipe(
-  Arbitrary.map((request) => CanonicalizeDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
+  Arbitrary.map((request) =>
+    CanonicalizeDatasetRequest.make({ ...request, dataset: makeDataset(request.dataset.quads) })
+  )
 );
 
 const dataset = makeDataset([
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
     makeNamedNode("https://schema.org/name"),
-    makeLiteral("Alice", XSD_STRING.value)
+    makeLiteral("Alice")
   ),
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),

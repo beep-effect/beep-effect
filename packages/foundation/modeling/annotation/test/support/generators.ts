@@ -637,10 +637,11 @@ export const oaQuads = {
   quad: (subject: Rdf.Subject, predicate: string, object: Rdf.ObjectTerm): Rdf.Quad =>
     Rdf.makeQuad(subject, rdfNode(predicate), object),
   type: (subject: Rdf.Subject, klass: string): Rdf.Quad => Rdf.makeQuad(subject, rdfNode(rdfType), rdfNode(klass)),
-  integer: (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}`, xsd.integer),
-  string: (value: string): Rdf.Literal => Rdf.makeLiteral(value, xsd.string),
-  time: (millis: number): Rdf.Literal => Rdf.makeLiteral(DateTime.formatIso(DateTime.makeUnsafe(millis)), xsd.dateTime),
-  lexicalTime: (lexical: string): Rdf.Literal => Rdf.makeLiteral(lexical, xsd.dateTime),
+  integer: (value: number): Rdf.Literal => Rdf.Literal.typed(`${value}`, xsd.integer),
+  string: (value: string): Rdf.Literal => Rdf.makeLiteral(value),
+  time: (millis: number): Rdf.Literal =>
+    Rdf.Literal.typed(DateTime.formatIso(DateTime.makeUnsafe(millis)), xsd.dateTime),
+  lexicalTime: (lexical: string): Rdf.Literal => Rdf.Literal.typed(lexical, xsd.dateTime),
 };
 
 const Q = oaQuads;

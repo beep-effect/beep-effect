@@ -1,8 +1,8 @@
 import { IdentityEntry, IdentityRegistry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
 import { iri } from "@beep/identity/Registry";
-import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { Literal, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { XSD_DOUBLE } from "@beep/rdf/Vocab/Xsd";
 import {
   datasetToEntries,
   entriesToDataset,
@@ -33,8 +33,8 @@ const RegistryTestLayer = Layer.unwrap(
   entriesToDataset(binding)([entry]).pipe(Effect.map((dataset) => layerDataset(dataset)(binding)))
 );
 const subject = makeNamedNode(entry.iri);
-const identifierQuad = makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value));
-const curieQuad = makeQuad(subject, binding.curiePath, makeLiteral(entry.curie, XSD_STRING.value));
+const identifierQuad = makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity));
+const curieQuad = makeQuad(subject, binding.curiePath, makeLiteral(entry.curie));
 
 const datasetWith = (...quads: ReadonlyArray<Quad>): Dataset => makeDataset(quads);
 
@@ -54,9 +54,7 @@ describe("identity RDF binding decode failures", () => {
     "rejects a blank-node identity subject",
     Effect.fnUntraced(function* () {
       const blankSubject = makeBlankNode("anonymous-identity");
-      const dataset = datasetWith(
-        makeQuad(blankSubject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value))
-      );
+      const dataset = datasetWith(makeQuad(blankSubject, binding.identifierPath, makeLiteral(entry.identity)));
 
       yield* expectDecodeError(dataset, blankSubject.value, "Identity entry subjects must be named nodes.");
     })
@@ -71,11 +69,7 @@ describe("identity RDF binding decode failures", () => {
         "Expected exactly one identity identifier literal."
       );
       yield* expectDecodeError(
-        datasetWith(
-          identifierQuad,
-          makeQuad(subject, binding.identifierPath, makeLiteral("duplicate", XSD_STRING.value)),
-          curieQuad
-        ),
+        datasetWith(identifierQuad, makeQuad(subject, binding.identifierPath, makeLiteral("duplicate")), curieQuad),
         subject.value,
         "Expected exactly one identity identifier literal."
       );
@@ -91,11 +85,7 @@ describe("identity RDF binding decode failures", () => {
         "Expected exactly one identity CURIE literal."
       );
       yield* expectDecodeError(
-        datasetWith(
-          identifierQuad,
-          curieQuad,
-          makeQuad(subject, binding.curiePath, makeLiteral("duplicate:curie", XSD_STRING.value))
-        ),
+        datasetWith(identifierQuad, curieQuad, makeQuad(subject, binding.curiePath, makeLiteral("duplicate:curie"))),
         subject.value,
         "Expected exactly one identity CURIE literal."
       );
@@ -126,15 +116,12 @@ describe("identity RDF binding decode failures", () => {
       const expectedMessage = "Identity registry values must be plain string literals.";
 
       yield* expectDecodeError(
-        datasetWith(makeQuad(subject, binding.identifierPath, makeLiteral("1", XSD_DOUBLE.value)), curieQuad),
+        datasetWith(makeQuad(subject, binding.identifierPath, Literal.typed("1", XSD_DOUBLE.value)), curieQuad),
         subject.value,
         expectedMessage
       );
       yield* expectDecodeError(
-        datasetWith(
-          makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value, { language: "en" })),
-          curieQuad
-        ),
+        datasetWith(makeQuad(subject, binding.identifierPath, Literal.langTagged(entry.identity, "en")), curieQuad),
         subject.value,
         expectedMessage
       );
@@ -145,11 +132,7 @@ describe("identity RDF binding decode failures", () => {
     "rejects an unmapped RDF predicate",
     Effect.fnUntraced(function* () {
       const unknownPath = makeNamedNode("https://example.test/identity/unknown");
-      const dataset = datasetWith(
-        identifierQuad,
-        curieQuad,
-        makeQuad(subject, unknownPath, makeLiteral("unknown", XSD_STRING.value))
-      );
+      const dataset = datasetWith(identifierQuad, curieQuad, makeQuad(subject, unknownPath, makeLiteral("unknown")));
 
       yield* expectDecodeError(dataset, subject.value, "Identity entry contains an unmapped RDF predicate.");
     })
@@ -161,8 +144,8 @@ describe("identity RDF binding decode failures", () => {
       const dataset = datasetWith(
         identifierQuad,
         curieQuad,
-        makeQuad(subject, labelPath, makeLiteral("first", XSD_STRING.value)),
-        makeQuad(subject, labelPath, makeLiteral("second", XSD_STRING.value))
+        makeQuad(subject, labelPath, makeLiteral("first")),
+        makeQuad(subject, labelPath, makeLiteral("second"))
       );
 
       yield* expectDecodeError(

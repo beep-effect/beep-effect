@@ -21,6 +21,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import type { ChangeEvent } from "react";
 
 const sessionId = SessionId.make("session-1");
@@ -182,8 +183,10 @@ describe("OntologyWorkbench hierarchy", () => {
         );
         const itemIds = collectTreeItemIds(ontologyTreeItemsFor(snapshot, "all"));
 
-        expect(inference.inferredDataset.quads).toHaveLength(3);
-        expect(inference.inferredDataset.quads[0]?.graph.value).toBe(graphPartitionIri("inferred"));
+        expect(HashSet.size(inference.inferredDataset.quads)).toBe(3);
+        expect(
+          HashSet.every(inference.inferredDataset.quads, (quad) => quad.graph.value === graphPartitionIri("inferred"))
+        ).toBe(true);
         expect(neapolitan.parentIris).toEqual(expect.arrayContaining([margherita.value, pizza.value]));
         expect(itemIds).toEqual(A.dedupe(itemIds));
         expect(A.filter(itemIds, (id) => id === neapolitanMargherita.value)).toHaveLength(1);

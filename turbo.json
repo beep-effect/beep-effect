@@ -1115,6 +1115,7 @@
         "$TURBO_ROOT$/packages/foundation/modeling/epistemics/src/ValidInterval/ValidInterval.behavior.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/epistemics/src/ValidInterval/ValidInterval.model.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/epistemics/src/ValidInterval/index.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/schema/src/Signal.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/schema/TextCodec.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.ts",

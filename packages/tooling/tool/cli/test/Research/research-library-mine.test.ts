@@ -61,6 +61,7 @@ import { assertInstanceOf, assertNone, assertSome, assertTrue, strictEqual } fro
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -774,7 +775,10 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
       );
       strictEqual(findingEdges("documentId").length, 2);
       const unbound = yield* validate(
-        Rdf.makeDataset(A.filter(dataset.quads, (quad) => !A.contains(findingEdges("documentId"), quad)))
+        dataset.quads.pipe(
+          HashSet.filter((quad) => !A.contains(findingEdges("documentId"), quad)),
+          Rdf.makeDataset
+        )
       );
       assertTrue(!unbound.conforms);
       const [sourceEdge] = findingEdges("sourceId");

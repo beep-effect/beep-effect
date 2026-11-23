@@ -8,13 +8,22 @@
 import { IdentityEntry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
 import { iri } from "@beep/identity/Registry";
-import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import {
+  makeDataset,
+  makeLiteral,
+  makeNamedNode,
+  makeQuad,
+  NamedNode,
+  ObjectTerm,
+  Subject,
+  serializeQuad,
+} from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -28,6 +37,7 @@ const $I = $SemanticWebId.create("identity/IdentityRdfBinding");
 const identifierPathIri = iri("identity-rdf:identifier");
 const curiePathIri = iri("identity-rdf:curie");
 const sameNamedNode = S.toEquivalence(NamedNode);
+const byQuadLine: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
 const sameSubject = S.toEquivalence(Subject);
 
 const IdentityRdfBindingFields = S.Struct({
@@ -362,7 +372,7 @@ const literalAt = Effect.fn("IdentityRdfBinding.literalAt")(function* (
         })
       ),
     Literal: (literal) =>
-      sameNamedNode(literal.datatype, XSD_STRING) && O.isNone(literal.language)
+      literal.form._tag === "Simple"
         ? Effect.succeed(literal.value)
         : Effect.fail(
             IdentityDatasetDecodeError.make({
@@ -482,9 +492,10 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
  *
  * ```ts import.meta.vitest name="Encode an empty registry dataset"
  * import { DefaultIdentityRdfBinding, entriesToDataset } from "@beep/semantic-web/identity/IdentityRdfBinding"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
  * const dataset = await Effect.runPromise(entriesToDataset(DefaultIdentityRdfBinding)([]))
- * dataset.quads.length // => 0
+ * HashSet.size(dataset.quads) // => 0
  * ```
  *
  * @category encoding
@@ -500,16 +511,14 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
         return yield* Effect.forEach(
           R.toEntries(entry.fibers),
           ([fiber, value]) =>
-            Effect.map(resolveFiberPath(binding, fiber), (path) =>
-              makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))
-            ),
+            Effect.map(resolveFiberPath(binding, fiber), (path) => makeQuad(subject, path, makeLiteral(value))),
           { concurrency: 1 }
         ).pipe(
           Effect.map((fiberQuads) =>
             pipe(
               [
-                makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity, XSD_STRING.value)),
-                makeQuad(subject, binding.curiePath, makeLiteral(entry.curie, XSD_STRING.value)),
+                makeQuad(subject, binding.identifierPath, makeLiteral(entry.identity)),
+                makeQuad(subject, binding.curiePath, makeLiteral(entry.curie)),
               ],
               A.appendAll(fiberQuads)
             )
@@ -547,7 +556,7 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
 export const datasetToEntries = (binding: IdentityRdfBinding) =>
   Effect.fn("IdentityRdfBinding.datasetToEntries")(function* (dataset: Dataset) {
     const subjects = pipe(
-      dataset.quads,
+      A.sort(dataset.quads, byQuadLine),
       A.map((quad) => quad.subject),
       A.dedupeWith(sameSubject)
     );

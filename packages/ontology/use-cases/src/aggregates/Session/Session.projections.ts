@@ -7,7 +7,7 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, GraphPartition } from "@beep/ontology-domain/aggregates/Session";
-import { makeNamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
+import { makeNamedNode, ObjectTerm, Subject, serializeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_CLASS, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
@@ -766,6 +766,8 @@ const collectSnapshotQuad = (accumulator: SnapshotAccumulator, partition: GraphP
   collectSnapshotRelationship(accumulator, partition, quad);
 };
 
+const byQuadLine: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
+
 const buildOntologySnapshotFromPartitions = (
   session: Session,
   partitions: SessionGraphPartitions,
@@ -780,7 +782,7 @@ const buildOntologySnapshotFromPartitions = (
     A.flatMap((partition) =>
       pipe(
         partitions,
-        (current) => current[partition].quads,
+        (current) => A.sort(current[partition].quads, byQuadLine),
         A.map((quad) => ({ partition, quad }))
       )
     )

@@ -1368,6 +1368,7 @@
         "packages/foundation/modeling/epistemics/src/ValidInterval/ValidInterval.behavior.ts",
         "packages/foundation/modeling/epistemics/src/ValidInterval/ValidInterval.model.ts",
         "packages/foundation/modeling/epistemics/src/ValidInterval/index.ts",
+        "packages/foundation/modeling/schema/src/Signal.ts",
         "packages/tooling/library/repo-cli-kit/src/schema/TextCodec.ts",
         "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.schemas.ts",
         "packages/tooling/library/repo-cli-kit/src/systemd/SystemdUnit.ts",

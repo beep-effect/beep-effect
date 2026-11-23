@@ -14,6 +14,8 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { DataFactory, Parser, Writer } from "n3";
 import { N3TurtleCodecError } from "./N3.errors.ts";
@@ -67,12 +69,13 @@ export class N3ParseTurtleRequest extends S.Opaque<N3ParseTurtleRequest, { reado
  * ```ts
  * import { N3ParseTurtleResult } from "@beep/n3"
  * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const result = N3ParseTurtleResult.make({
  *   dataset: makeDataset([])
  * })
  *
- * console.log(result.dataset.quads.length)
+ * console.log(HashSet.size(result.dataset.quads))
  * ```
  *
  * @category models
@@ -97,12 +100,13 @@ export class N3ParseTurtleResult extends S.Opaque<N3ParseTurtleResult, { readonl
  * ```ts
  * import { N3SerializeTurtleRequest } from "@beep/n3"
  * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const request = N3SerializeTurtleRequest.make({
  *   dataset: makeDataset([])
  * })
  *
- * console.log(request.dataset.quads.length)
+ * console.log(HashSet.size(request.dataset.quads))
  * ```
  *
  * @category models
@@ -164,6 +168,15 @@ const unsupportedTerm = (position: string, termType: string): N3TurtleCodecError
     message: `Unsupported ${position} term type in Turtle input: ${termType}.`,
   });
 
+const refusedLiteral = (refused: Rdf.LiteralFormRefused): N3TurtleCodecError =>
+  N3TurtleCodecError.make({
+    reason: "parseFailed",
+    message: `Unsupported literal form in Turtle input: datatype ${refused.datatype}${O.match(refused.language, {
+      onNone: () => "",
+      onSome: (language) => ` with language ${language}`,
+    })}.`,
+  });
+
 const parseFailure = (cause: unknown): N3TurtleCodecError =>
   N3TurtleCodecError.make({
     reason: "parseFailed",
@@ -207,12 +220,15 @@ const fromN3Object = (object: N3.Quad_Object): Effect.Effect<Rdf.ObjectTerm, N3T
     Match.discriminator("termType")("NamedNode", (value) => Effect.succeed(Rdf.makeNamedNode(value.value))),
     Match.discriminator("termType")("BlankNode", (value) => Effect.succeed(Rdf.makeBlankNode(value.value))),
     Match.discriminator("termType")("Literal", (value) =>
-      Effect.succeed(
-        Rdf.makeLiteral(value.value, value.datatype.value, {
-          ...O.getSomesStruct({
-            language: pipe(value.language, O.liftPredicate(Str.isNonEmpty)),
+      Effect.fromResult(
+        pipe(
+          Rdf.Literal.fromParts({
+            value: value.value,
+            datatype: value.datatype.value,
+            ...O.getSomesStruct({ language: pipe(value.language, O.liftPredicate(Str.isNonEmpty)) }),
           }),
-        })
+          Result.mapError(refusedLiteral)
+        )
       )
     ),
     Match.discriminator("termType")("Variable", (value) => Effect.fail(unsupportedTerm("object", value.termType))),
@@ -258,11 +274,14 @@ const toN3Object = (object: Rdf.ObjectTerm): N3.Quad_Object =>
     NamedNode: (value) => DataFactory.namedNode(value.value),
     BlankNode: (value) => DataFactory.blankNode(value.value),
     Literal: (value) =>
-      O.match(value.language, {
-        onNone: () => DataFactory.literal(value.value, DataFactory.namedNode(value.datatype.value)),
-        onSome: (language) => DataFactory.literal(value.value, language),
+      Rdf.LiteralForm.match(value.form, {
+        Simple: () => DataFactory.literal(value.value),
+        Typed: (form) => DataFactory.literal(value.value, DataFactory.namedNode(form.datatype.value)),
+        LangTagged: (form) => DataFactory.literal(value.value, form.language),
       }),
   });
+
+const byQuadLine: Order.Order<Rdf.Quad> = Order.mapInput(Order.String, Rdf.serializeQuad);
 
 const toN3Graph = (graph: Rdf.GraphTerm): Effect.Effect<N3.Quad_Graph, N3TurtleCodecError> =>
   Rdf.GraphTerm.match(graph, {
@@ -309,7 +328,9 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
 });
 
 const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3SerializeTurtleRequest) {
-  const quads = yield* Effect.forEach(request.dataset.quads, toN3Quad, { concurrency: 1 });
+  const quads = yield* Effect.forEach(A.sort(request.dataset.quads, byQuadLine), toN3Quad, {
+    concurrency: 1,
+  });
   const output = yield* Effect.try({
     try: () => {
       let source = "";

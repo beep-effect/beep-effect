@@ -11,7 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Quad } from "@beep/rdf/Rdf";
+import { Literal, Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -40,7 +40,7 @@ const serializeQuad = (quad: Quad): string => {
 
   const object =
     quad.object.termType === "Literal"
-      ? `"${quad.object.value}"^^${quad.object.datatype.value}`
+      ? `"${quad.object.value}"^^${Literal.datatypeOf(quad.object).value}`
       : quad.object.termType === "BlankNode"
         ? `_:${quad.object.value}`
         : quad.object.value;

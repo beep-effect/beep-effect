@@ -18,7 +18,6 @@ import { ProviderMetadata } from "../Service/EmbeddingProvider.ts";
  */
 
 import * as Rdf from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { BunServices } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -165,16 +164,10 @@ export const MockShaclService = (options?: {
     readonly sourceShape?: string;
   }>;
 }) => {
-  const makeEncodedLiteral = (
-    value: string
-  ): {
-    readonly termType: "Literal";
-    readonly value: string;
-    readonly datatype: { readonly termType: "NamedNode"; readonly value: string };
-  } => ({
+  const makeEncodedLiteral = (value: string): typeof Rdf.Literal.Encoded => ({
     termType: "Literal",
     value,
-    datatype: Rdf.makeNamedNode(XSD_STRING.value),
+    form: { _tag: "Simple" },
   });
   const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: RdfStore, shapesStore: RdfStore) {
     const violations = A.map(options?.violations ?? [], (violation) => ({

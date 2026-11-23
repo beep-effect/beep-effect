@@ -21,6 +21,7 @@ import {
   TurtleCodec,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import {
+  Literal,
   makeBlankNode,
   makeDataset,
   makeLiteral,
@@ -59,8 +60,12 @@ import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import type { Quad } from "@beep/rdf/Rdf";
+
+const quadLines = (quads: Iterable<Quad>): ReadonlyArray<string> =>
+  A.sort(A.map(A.fromIterable(quads), serializeQuad), Order.String);
 
 const decodePrefixMap = S.decodeEffect(PrefixMap);
 
@@ -80,7 +85,7 @@ const shapeOperations = (): ReadonlyArray<ChangeOperation> =>
       makeQuad(shape, SH_PROPERTY, property),
       makeQuad(property, SH_PATH, RDF_TYPE),
       makeQuad(property, SH_HAS_VALUE, OWL_CLASS),
-      makeQuad(property, SH_MIN_COUNT, makeLiteral("1", XSD_INTEGER.value)),
+      makeQuad(property, SH_MIN_COUNT, Literal.typed("1", XSD_INTEGER.value)),
     ],
     (quad) =>
       ChangeOperation.make({
@@ -112,7 +117,7 @@ describe("Ontology validation and provenance", () => {
       });
     }),
     serialize: Effect.fn("TurtleCodec.serialize")((request) =>
-      Effect.succeed(SerializeTurtleResult.make({ source: A.join(A.map(request.dataset.quads, serializeQuad), "\n") }))
+      Effect.succeed(SerializeTurtleResult.make({ source: A.join(quadLines(request.dataset.quads), "\n") }))
     ),
   });
   const fileStore = OntologyFileStore.of({
@@ -170,7 +175,7 @@ describe("Ontology validation and provenance", () => {
     ).session;
     const shacl = ShaclValidationService.of({
       validate: Effect.fn("ShaclValidationService.validate")((request) => {
-        const repaired = A.map(request.dataset.quads, serializeQuad).includes(serializeQuad(repairQuad));
+        const repaired = quadLines(request.dataset.quads).includes(serializeQuad(repairQuad));
         return Effect.succeed(
           ShaclValidationResult.make({
             conforms: repaired,
@@ -227,7 +232,6 @@ describe("Ontology validation and provenance", () => {
         const agePath = makeNamedNode("https://example.test/age");
         const relatedPath = makeNamedNode("https://example.test/related");
         const relatedValue = makeNamedNode("https://example.test/related-value");
-        const stringDatatype = makeNamedNode("http://www.w3.org/2001/XMLSchema#string");
         const runScenario = Effect.fn("OntologyValidationTest.runRepairScenario")(function* (
           data: ReadonlyArray<Quad>,
           propertyQuads: ReadonlyArray<Quad>,
@@ -288,13 +292,13 @@ describe("Ontology validation and provenance", () => {
           [makeQuad(material, marker, markerValue)],
           [
             makeQuad(material, SH_PATH, requiredPath),
-            makeQuad(material, SH_MIN_COUNT, makeLiteral("1", XSD_INTEGER.value)),
+            makeQuad(material, SH_MIN_COUNT, Literal.typed("1", XSD_INTEGER.value)),
             makeQuad(material, SH_HAS_VALUE, markerValue),
           ],
           SH_MIN_COUNT_COMPONENT
         );
         const datatypeRepair = yield* runScenario(
-          [makeQuad(material, agePath, makeLiteral("7", stringDatatype.value))],
+          [makeQuad(material, agePath, makeLiteral("7"))],
           [makeQuad(material, SH_PATH, agePath), makeQuad(material, SH_DATATYPE, XSD_INTEGER)],
           SH_DATATYPE_COMPONENT
         );
@@ -319,10 +323,9 @@ describe("Ontology validation and provenance", () => {
   {
     const blankFocus = makeBlankNode("datatype-focus");
     const agePath = makeNamedNode("https://example.test/age");
-    const stringDatatype = makeNamedNode("http://www.w3.org/2001/XMLSchema#string");
     const scenarioShape = makeNamedNode("urn:shape:blank-node-datatype");
     const propertyNode = makeBlankNode("blank-node-datatype-property");
-    const value = makeLiteral("7", stringDatatype.value);
+    const value = makeLiteral("7");
     const session = applyChangeOperationsWithDelta(
       createSession(
         CreateSessionInput.make({

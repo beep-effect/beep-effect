@@ -20,7 +20,6 @@ import {
   MakeQuadOptionsInput,
   makeBlankNode,
   makeNamedNode as makeCanonicalNamedNode,
-  makeLiteral,
   makeNamedNode,
   makeQuad,
   NamedNode,
@@ -227,7 +226,7 @@ export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
  * @since 0.0.0
  */
 export const rdfStoreFromDataset = (dataset: CanonicalRdf.Dataset): RdfStore =>
-  makeRdfStore(new N3.Store(A.map(dataset.quads, canonicalQuadToN3)));
+  makeRdfStore(new N3.Store(A.map(A.fromIterable(dataset.quads), canonicalQuadToN3)));
 
 const backend = RdfStoreHandle.backend;
 
@@ -314,7 +313,7 @@ export const rdfStoreAllQuads = (store: RdfStore): Effect.Effect<ReadonlyArray<Q
  *   makeQuad(
  *     makeNamedNode("https://example.org/Ada"),
  *     makeNamedNode("https://schema.org/name"),
- *     makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+ *     makeLiteral("Ada")
  *   )
  * )
  * console.log(rdfStoreSize(store)) // 1
@@ -343,7 +342,7 @@ export const rdfStoreAddQuad: {
  * const quad = makeQuad(
  *   makeNamedNode("https://example.org/Ada"),
  *   makeNamedNode("https://schema.org/name"),
- *   makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+ *   makeLiteral("Ada")
  * )
  * rdfStoreAddQuad(store, quad)
  * rdfStoreRemoveQuads(store, [quad])
@@ -476,9 +475,13 @@ const n3TermToDomainTerm = Match.type<N3.Quad_Object>().pipe(
   Match.when({ termType: "NamedNode" }, (term) => Effect.succeed(makeNamedNode(term.value))),
   Match.when({ termType: "BlankNode" }, (term) => Effect.succeed(makeBlankNode(term.value))),
   Match.when({ termType: "Literal" }, (term) =>
-    Effect.succeed(
-      makeLiteral(term.value, term.datatype.value, P.isTruthy(term.language) ? { language: term.language } : {})
-    )
+    Effect.fromResult(
+      CanonicalRdf.Literal.fromParts({
+        value: term.value,
+        datatype: term.datatype.value,
+        ...(P.isTruthy(term.language) ? { language: term.language } : {}),
+      })
+    ).pipe(Effect.mapError(() => unsupportedN3Term("object", term.termType)))
   ),
   Match.when({ termType: "Variable" }, (term) => Effect.fail(unsupportedN3Term("object", term.termType))),
   Match.exhaustive
@@ -515,8 +518,9 @@ const canonicalObjectToN3 = (term: CanonicalRdf.ObjectTerm): N3.Quad_Object =>
     NamedNode: (value) => N3.DataFactory.namedNode(value.value),
     BlankNode: (value) => N3.DataFactory.blankNode(value.value),
     Literal: (value) =>
-      O.match(value.language, {
-        onNone: () => N3.DataFactory.literal(value.value, N3.DataFactory.namedNode(value.datatype.value)),
+      O.match(CanonicalRdf.Literal.languageOf(value), {
+        onNone: () =>
+          N3.DataFactory.literal(value.value, N3.DataFactory.namedNode(CanonicalRdf.Literal.datatypeOf(value).value)),
         onSome: (language) => N3.DataFactory.literal(value.value, language),
       }),
   });
@@ -571,9 +575,11 @@ const domainTermToN3Term = (
     return N3.DataFactory.namedNode(term);
   }
   if (term.termType === "Literal") {
-    return O.isSome(term.language)
-      ? N3.DataFactory.literal(term.value, term.language.value)
-      : N3.DataFactory.literal(term.value, N3.DataFactory.namedNode(term.datatype.value));
+    return O.match(CanonicalRdf.Literal.languageOf(term), {
+      onNone: () =>
+        N3.DataFactory.literal(term.value, N3.DataFactory.namedNode(CanonicalRdf.Literal.datatypeOf(term).value)),
+      onSome: (language) => N3.DataFactory.literal(term.value, language),
+    });
   }
   if (term.termType === "BlankNode") {
     return N3.DataFactory.blankNode(term.value);
@@ -989,7 +995,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
           Effect.mapBoth({
             onSuccess: ({ dataset }) => {
               const n3Store = new N3.Store();
-              n3Store.addQuads(A.map(dataset.quads, canonicalQuadToN3));
+              n3Store.addQuads(A.map(A.fromIterable(dataset.quads), canonicalQuadToN3));
               return makeRdfStore(n3Store);
             },
             onFailure: (error) =>

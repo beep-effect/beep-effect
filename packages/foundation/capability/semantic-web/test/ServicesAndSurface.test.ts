@@ -2,7 +2,6 @@ import { WebAnnotation } from "@beep/rdf/Adapters/WebAnnotation";
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad, Quad } from "@beep/rdf/Rdf";
 import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as SemanticWeb from "@beep/semantic-web";
 import * as CanonicalizationServiceModule from "@beep/semantic-web/services/canonicalization";
 import { CanonicalizeDatasetRequest, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
@@ -54,22 +53,26 @@ const dataset = makeDataset([
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
     makeNamedNode("https://schema.org/name"),
-    makeLiteral("Alice", XSD_STRING.value)
+    makeLiteral("Alice")
   ),
   makeQuad(makeNamedNode("https://example.com/people/alice"), RDF_TYPE, makeNamedNode("https://schema.org/Person")),
 ]);
 
 const BoundedDataset = S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) });
-const DatasetArbitrary = Arbitrary.schema(BoundedDataset).pipe(Arbitrary.map(Dataset.make));
+const DatasetArbitrary = Arbitrary.schema(BoundedDataset).pipe(Arbitrary.map(({ quads }) => makeDataset(quads)));
 const CanonicalizeDatasetRequestArbitrary = Arbitrary.schema(
   S.Struct({ ...CanonicalizeDatasetRequest.fields, dataset: BoundedDataset })
 ).pipe(
-  Arbitrary.map((request) => CanonicalizeDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
+  Arbitrary.map((request) =>
+    CanonicalizeDatasetRequest.make({ ...request, dataset: makeDataset(request.dataset.quads) })
+  )
 );
 const FingerprintDatasetRequestArbitrary = Arbitrary.schema(
   S.Struct({ ...FingerprintDatasetRequest.fields, dataset: BoundedDataset })
 ).pipe(
-  Arbitrary.map((request) => FingerprintDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
+  Arbitrary.map((request) =>
+    FingerprintDatasetRequest.make({ ...request, dataset: makeDataset(request.dataset.quads) })
+  )
 );
 
 const ServiceTestLayer = UnsupportedSparqlQueryServiceLive;
