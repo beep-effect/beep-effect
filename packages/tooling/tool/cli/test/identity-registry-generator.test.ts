@@ -288,8 +288,10 @@ describe("planRegistryArtifacts", () => {
     const remedy =
       "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a term's deprecation.";
     const write = "`bun run beep identity registry --write";
-    // A check knows only the committed snapshot, so it leaves the verdict to the writer, which reads the base.
-    expect(detailsOf(O.none())).toStrictEqual([
+    expect(
+      detailsOf(O.none()),
+      "A check knows only the committed snapshot, so it leaves the verdict to the writer, which reads the base."
+    ).toStrictEqual([
       `Against the committed snapshot: ${removal} Run ${write}\`, which judges the change against its base ref.`,
     ]);
     expect(detailsOf(BaseSnapshot.makeOption({ snapshot: first.snapshot }))).toStrictEqual([
@@ -324,22 +326,24 @@ describe("planRegistryArtifacts", () => {
     const base = BaseSnapshot.makeOption({ snapshot: first.snapshot });
     const textOf = (plan: RegistryPlan) => O.some(renderTermSnapshot(plan.snapshot));
 
-    // Two additions in two writes are one minor release.
     const grown = Result.getOrThrow(planOf(["Article", "Report"], textOf(first), base));
     expect(grown.snapshot.release).toBe("1.1.0");
     const again = Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), base));
     expect(again.snapshot.release).toBe("1.1.0");
-    // A row the base never published goes again, and with it the bump.
-    expect(Result.getOrThrow(planOf(["Report"], textOf(again), base))).toStrictEqual(first);
-    // A committed snapshot that does not decode, such as one with conflict markers, is regenerated from the base.
-    expect(Result.getOrThrow(planOf(["Article", "Report"], O.some("<<<<<<<"), base))).toStrictEqual(grown);
-    // A base that publishes nothing leaves the registry unreleased: a writer keeps the committed release.
+    expect(
+      Result.getOrThrow(planOf(["Report"], textOf(again), base)),
+      "A row the base never published goes again, and with it the bump."
+    ).toStrictEqual(first);
+    expect(
+      Result.getOrThrow(planOf(["Article", "Report"], O.some("<<<<<<<"), base)),
+      "A committed snapshot that does not decode, such as one with conflict markers, is regenerated from the base."
+    ).toStrictEqual(grown);
     const unpublished = BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty });
     expect(
-      Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), unpublished)).snapshot.release
+      Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), unpublished)).snapshot.release,
+      "A base that publishes nothing leaves the registry unreleased: a writer keeps the committed release."
     ).toBe("1.1.0");
     expect(Result.getOrThrow(planOf(["Report"], O.none(), unpublished)).snapshot.release).toBe("1.0.0");
-    // A check reads no base and succeeds the committed snapshot.
     expect(Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), O.none())).snapshot.release).toBe(
       "1.2.0"
     );
@@ -442,7 +446,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
     const errorLineWith = (lines: ReadonlyArray<unknown>, needle: string): boolean =>
       A.some(lines, (line) => Str.includes(needle)(String(line)));
 
-    it.effect("checks by default, writes with --write and refuses both flags", () =>
+    it.effect("checks without a base, writes against one, and refuses --check with --base or --write", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
         Effect.gen(function* () {
@@ -468,7 +472,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           const both = yield* Effect.exit(runIdentityCommand(["registry", "--write", "--check"]));
           expectReportedExit(both);
-          // A check compares with no base, so naming one is refused instead of ignored.
           const based = yield* Effect.exit(runIdentityCommand(["registry", "--check", "--base", "HEAD"]));
           expectReportedExit(based);
         })
@@ -521,7 +524,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* fs.writeFileString("packages/widget/src/Report.ts", "export const report = 1;\n");
           yield* fs.writeFileString("packages/widget/src/View.tsx", "export const view = 1;\n");
           yield* fs.writeFileString("packages/widget/src/Nested/index.ts", "export const nested = 1;\n");
-          // Directories named like a module file, and a regular file where a directory would hold index.ts.
           yield* fs.makeDirectory("packages/widget/src/Runner.ts", { recursive: true });
           yield* fs.makeDirectory("packages/widget/src/Panel/index.ts", { recursive: true });
           const root = yield* Effect.sync(() => process.cwd());
@@ -530,8 +532,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Report/Report",
             "@beep/widget/View/View.title",
             "@beep/widget/Nested/Section",
-            // A module the package does not have, a package the checkout does not have, and codes whose
-            // only segment is the member, or that have none, so they name no module at all.
             "@beep/widget/Gone/Report",
             "@beep/nowhere/Report/Report",
             "@beep/widget/Report",
@@ -539,12 +539,14 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
-            // Dot-only segments are no code identity, even where the joined path reaches a real module.
             "@beep/widget/../src/Report/Report",
             "@beep/widget/./Report/Report",
           ]);
 
-          expect(dangling).toStrictEqual([
+          expect(
+            dangling,
+            "Directories named like a module file, and a regular file where a directory would hold index.ts. A module the package does not have, a package the checkout does not have, and codes whose only segment is the member, or that have none, so they name no module at all. Dot-only segments are no code identity, even where the joined path reaches a real module."
+          ).toStrictEqual([
             "@beep/widget/Gone/Report",
             "@beep/nowhere/Report/Report",
             "@beep/widget/Report",
@@ -654,7 +656,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* runIdentityCommand(["registry", "--write"]);
           yield* runIdentityCommand(["registry", "--check"]);
 
-          // One shard still projects into the package, so its module is still generated.
           yield* fs.writeFileString(
             `${layout.shards}/fabio.json`,
             renderRegistryJson({ ...fabio, bindings: [], deprecations: [] })
@@ -663,7 +664,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const kept = yield* fs.readFileString(projection);
           expect(kept).toContain('"@beep/test-runner/Vitest/TestHang"');
 
-          // The last one drops out: the file is drift, and --write removes it.
           yield* fs.writeFileString(`${layout.shards}/vitest.json`, renderRegistryJson(vitest));
           const stale = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
           expectReportedExit(stale);
@@ -678,12 +678,13 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(logs).toContain(`[identity:registry] removed ${projection}.`);
           yield* runIdentityCommand(["registry", "--check"]);
 
-          // A file the generator did not write at the same path is neither drift nor removed.
           yield* fs.writeFileString(projection, "export const RegistryTerms = {};\n");
           yield* runIdentityCommand(["registry", "--check"]);
           yield* runIdentityCommand(["registry", "--write"]);
           const authored = yield* fs.readFileString(projection);
-          expect(authored).toBe("export const RegistryTerms = {};\n");
+          expect(authored, "A file the generator did not write at the same path is neither drift nor removed.").toBe(
+            "export const RegistryTerms = {};\n"
+          );
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -714,8 +715,10 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             BaseSnapshot.make({ snapshot: TermSnapshot.empty })
           ).pipe(Effect.provideService(FileSystem.FileSystem, unremovable), Effect.flip);
 
-          // No shard was edited, so the failure names no recovery: the same command is the recovery.
-          expect(error.message).toBe(`Cannot remove ${target.path}.`);
+          expect(
+            error.message,
+            "No shard was edited, so the failure names no recovery: the same command is the recovery."
+          ).toBe(`Cannot remove ${target.path}.`);
         })
       )
     );
@@ -731,7 +734,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* fs.makeDirectory("outside", { recursive: true });
           yield* fs.writeFileString("outside/victim.txt", "untouched\n");
           yield* fs.makeDirectory(path.dirname(layout.data), { recursive: true });
-          // A link and a stale file where a fixed staging path would be.
           yield* fs.symlink(path.join(root, "outside/victim.txt"), `${layout.snapshot}.tmp`);
           yield* fs.writeFileString(`${layout.data}.tmp`, "stale\n");
 
@@ -740,10 +742,9 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const victim = yield* fs.readFileString("outside/victim.txt");
           const stale = yield* fs.readFileString(`${layout.data}.tmp`);
           const written = yield* fs.readFileString(layout.snapshot);
-          expect(victim).toBe("untouched\n");
+          expect(victim, "A link and a stale file where a fixed staging path would be.").toBe("untouched\n");
           expect(stale).toBe("stale\n");
           expect(written).toContain('"release": "1.0.0"');
-          // Every staging directory is gone after the write.
           for (const directory of [path.dirname(layout.snapshot), path.dirname(layout.data)]) {
             const entries = yield* fs.readDirectory(directory);
             expect(A.filter(entries, Str.includes(".staging-")), directory).toStrictEqual([]);

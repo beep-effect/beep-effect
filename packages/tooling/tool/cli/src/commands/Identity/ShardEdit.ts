@@ -196,10 +196,6 @@ export class ShardEditInput extends S.Opaque<ShardEditInput, { readonly brand: u
   }).pipe($I.annoteSchema("ShardEditInput", { description: "The inputs of one registry shard edit." }))
 ) {}
 
-// ---------------------------------------------------------------------------
-// Planning
-// ---------------------------------------------------------------------------
-
 type ShardEditResult = Result.Result<ReadonlyArray<RegistrySourceFile>, A.NonEmptyReadonlyArray<ShardEditRefusal>>;
 
 type ShardFile = readonly [file: RegistrySourceFile, shard: RegistryShard];
@@ -236,7 +232,6 @@ const tableOf = (
 const shardFileOf = (file: RegistrySourceFile, encoded: RegistryShard.Encoded): RegistrySourceFile =>
   RegistrySourceFile.make({ path: file.path, content: renderRegistryJson(encoded) });
 
-// The edited shard as its file, validated by decoding the edited rows.
 const editedFile = (
   file: RegistrySourceFile,
   encoded: RegistryShard.Encoded
@@ -250,8 +245,6 @@ const editedFile = (
 const byCode = Order.mapInput(Order.String, (binding: { readonly code: string }) => binding.code);
 const byTerm = Order.mapInput(Order.String, (deprecation: { readonly term: string }) => deprecation.term);
 
-// The shard with its bindings moved. The moved table has no conflict, so the moved codes are distinct
-// and the sorted bindings always form a shard.
 const movedShard = (shard: RegistryShard, move: CodeMove): RegistryShard =>
   RegistryShard.make({
     ...shard,
@@ -275,6 +268,11 @@ const movedShard = (shard: RegistryShard, move: CodeMove): RegistryShard =>
  * (`target-module-missing`), which would leave every moved class unbound. Terms,
  * namespaces and deprecations are untouched, so the regenerated snapshot
  * publishes exactly the IRIs it published before.
+ *
+ * **Gotchas**
+ *
+ * The moved table must be conflict-free before its shards are rebuilt: that guarantees
+ * moved codes remain distinct and sorted bindings decode as shards.
  *
  * **Example** (Rebind a test-runner module)
  *
@@ -341,7 +339,6 @@ export const planRebind: {
     })
 );
 
-// A CURIE split at its first colon into prefix and local.
 const splitCurie = (curie: string): Result.Result<readonly [prefix: string, local: string], ShardEditRefusal> =>
   pipe(
     Str.indexOf(":")(curie),
@@ -350,8 +347,6 @@ const splitCurie = (curie: string): Result.Result<readonly [prefix: string, loca
     Result.fromOption(() => refusal("invalid-curie", curie, "Expected a CURIE of the form <prefix>:<local>."))
   );
 
-// The shard-relative replacement: a live local of the term's own shard. A retired term is never succeeded by
-// its namespace IRI (the table refuses that chain), so `<prefix>:` is refused here with the same reason.
 const replacementLocal = (
   shard: RegistryShard,
   local: string,
@@ -422,6 +417,12 @@ const deprecatedRows = (
  * The edited shards must still form a table, which refuses a replacement chain
  * that the retirement breaks.
  *
+ * **Gotchas**
+ *
+ * A retired term cannot be succeeded by its namespace IRI, so a prefix followed by an
+ * empty local is refused. The release depends on which rows the change adds,
+ * independently of their since values; a draft row can therefore determine the release.
+ *
  * **Example** (Deprecate a term in favour of another)
  *
  * ```ts
@@ -488,7 +489,6 @@ export const planDeprecate: {
       const others = A.filterMap(files, ([other, otherShard]) =>
         other.path === file.path ? Result.failVoid : Result.succeed(otherShard)
       );
-      // The release depends on which rows the change adds, never on their `since`, so a draft row finds it.
       const [, draft] = yield* Result.mapError(
         editedFile(file, deprecatedRows(shard, local, replacement, input.previous.release)),
         A.of
@@ -505,10 +505,6 @@ export const planDeprecate: {
       return A.of(edited);
     })
 );
-
-// ---------------------------------------------------------------------------
-// Effects
-// ---------------------------------------------------------------------------
 
 /**
  * Read the inputs of a shard edit from the checkout at `repoRoot`, over the given base.
@@ -549,7 +545,6 @@ const reportRefusals = Effect.fn("IdentityShardEdit.reportRefusals")(function* (
   return yield* failWithReportedExit(`identity ${label}: refused.`);
 });
 
-// Refusals an edit earns from the checkout itself, after its plan over `input` succeeded.
 type CheckoutRefusals = (
   repoRoot: string,
   input: ShardEditInput
@@ -557,7 +552,6 @@ type CheckoutRefusals = (
 
 const noCheckoutRefusals: CheckoutRefusals = () => Effect.succeed(A.empty());
 
-// One line per file an applied edit rewrote, regenerated or removed.
 const reportWrite = Effect.fn("IdentityShardEdit.reportWrite")(function* (
   label: string,
   planned: ReadonlyArray<RegistrySourceFile>,
@@ -583,8 +577,6 @@ const reportIssues = Effect.fn("IdentityShardEdit.reportIssues")(function* (
   return yield* failWithReportedExit(`identity ${label}: ${reason}`);
 });
 
-// Plan the edit over the base, check it against the checkout, then write the shards it changes with the
-// regenerated registry artifacts. Nothing is written unless the edited shards regenerate.
 const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   label: string,
   ref: O.Option<string>,
@@ -624,8 +616,6 @@ const isMoveEnd = S.is(S.Union([CodeId, CodePackage]));
 const isCodeId = S.is(CodeId);
 const decodeMove = S.decodeUnknownResult(CodeMove);
 
-// The requested move, or a refusal for each end that is neither a code identity nor a package, for a move
-// between the two kinds, or for a move between two code identities one of which is under the other.
 const moveOf = (options: {
   readonly from: string;
   readonly to: string;
@@ -658,9 +648,6 @@ const moveOf = (options: {
       );
 };
 
-// A rebind onto a module the checkout does not have would leave every moved class unbound, so each
-// code the move changes must name a module file of its package. A binding the move leaves alone is not
-// judged here, even when it already dangles: the registry check reports that one.
 const rebindTargetRefusals = (move: CodeMove): CheckoutRefusals =>
   Effect.fnUntraced(function* (repoRoot: string, input: ShardEditInput) {
     const moved = pipe(
@@ -701,6 +688,12 @@ const runRebind = Effect.fn("IdentityShardEdit.runRebind")(function* (options: {
 /**
  * `beep identity rebind <from> <to>`: move the bindings of a renamed module, or of a renamed package, to its new code identities.
  *
+ * **Gotchas**
+ *
+ * Rename the module before rebinding it: every changed code must name a module file in
+ * its package. Bindings untouched by the move are left to the registry check, including
+ * any that already dangle.
+ *
  * **Example** (Read the command name)
  *
  * ```ts
@@ -736,6 +729,11 @@ export const identityRebindCommand = Command.make(
 
 /**
  * `beep identity deprecate <curie> [--replacement <curie>]`: retire a live term with an append-only deprecation.
+ *
+ * **Gotchas**
+ *
+ * The edit is planned against the base and checked against the checkout. No shard is
+ * written unless all edited shards can regenerate the registry artifacts.
  *
  * **Example** (Read the command name)
  *

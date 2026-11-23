@@ -1034,8 +1034,6 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
   );
 };
 
-// A release as its major, minor and patch, ordered component by component. Components are
-// unbounded decimal integers, so they compare as exact `bigint`s, never as rounded numbers.
 const releaseNumbers = (release: ReleaseVersion): readonly [bigint, bigint, bigint] => {
   const [major = "0", minor = "0", patch = "0"] = Str.split(".")(release);
   return [BigInt(major), BigInt(minor), BigInt(patch)];
@@ -1048,7 +1046,6 @@ const releaseOrder: Order.Order<ReleaseVersion> = Order.mapInput(
 const releaseIsLower = Order.isLessThan(releaseOrder);
 const latestRelease = Order.max(releaseOrder);
 
-// Release arithmetic is exact `bigint` arithmetic over the components `releaseNumbers` reads.
 const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
   ReleaseVersion.make(`${BI.increment(releaseNumbers(release)[0])}.0.0`);
 
@@ -1060,9 +1057,6 @@ const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
 const genesisRelease = ReleaseVersion.make("1.0.0");
 const snapshotEquivalence = S.toEquivalence(TermSnapshot);
 
-// The release that publishes `unchanged` (the next rows, still at the previous release) after
-// `previous`: the same release when nothing changed, the genesis release after the empty
-// snapshot, a major bump when a deprecation is new and a minor bump otherwise.
 const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
   if (snapshotEquivalence(unchanged, previous)) {
     return previous.release;
@@ -1076,8 +1070,6 @@ const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVe
     : nextMinor(previous.release);
 };
 
-// The rows `next` adds to a published term set record the release the change calls for. A binding is
-// added when its term was not bound: a rebind moves the code and keeps the term's `since`.
 const sinceViolations = (
   previous: TermSnapshot,
   next: TermSnapshot,
@@ -1099,10 +1091,6 @@ const sinceViolations = (
   );
 };
 
-// A release below the previous one is wound back. Any other release is the one the change itself calls
-// for, so a changed term set never ships under a release that already published a different one and one
-// change is never counted twice. The first release of a term set may be any release from the genesis
-// release on, because a stacked layer carries releases its empty base never saw.
 const releaseViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> => {
   const expected = nextRelease(previous, TermSnapshot.make({ ...next, release: previous.release }));
   const published = TermSnapshot.isPublished(previous);
@@ -1179,6 +1167,11 @@ export const termSetViolations: {
  * snapshot, which publishes nothing, a changed snapshot may state any release
  * from `1.0.0` on. An unchanged empty snapshot stays unpublished, so it
  * accepts `0.0.0`.
+ *
+ * **Gotchas**
+ *
+ * Release components are unbounded decimal integers. Ordering and arithmetic use exact
+ * bigint components so adjacent releases beyond the safe integer range remain distinct.
  *
  * **Example** (Report a removal without a deprecation)
  *
@@ -1286,7 +1279,6 @@ export declare namespace ShardBinding {
   export type Encoded = typeof ShardBinding.Encoded;
 }
 
-// A replacement local of the shard namespace, or "" for the namespace IRI itself.
 const ShardReplacement = S.Union([TermLocal, S.Literal("")]);
 
 /**
@@ -1549,8 +1541,6 @@ const duplicateGroups = <Row>(
 const sortedStrings = <Value extends string>(values: ReadonlyArray<Value>): Array<Value> =>
   A.sort(A.dedupe(values), Order.String);
 
-// A retired term's chain ends at a declared term, never at a namespace IRI; a retired namespace IRI's
-// chain ends at a declared namespace IRI, never at a term. A namespace IRI is never a binding target.
 const followReplacement = (
   successors: HashSet.HashSet<string>,
   byTerm: HashMap.HashMap<string, Deprecation>,

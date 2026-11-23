@@ -23,7 +23,6 @@ const binding = IdentityRdfBinding.make({
   curiePath: makeNamedNode($SemanticWebId.create("identity/coverage-curie").iri),
   fiberPaths: { label: labelPath },
 });
-// Identity entries come from registry bindings; any bound code identity serves the binding.
 const entry = IdentityEntry.fromBinding(
   "@beep/test-runner/Vitest/TestHang",
   { curie: "vitest:TestHang", iri: iri("vitest:TestHang") },

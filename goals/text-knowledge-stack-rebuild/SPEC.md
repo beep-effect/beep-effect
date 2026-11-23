@@ -1167,6 +1167,22 @@ Lane tksr-p1c · PR #3449
 
 Reverse: Drop sinceIssues from planRegistryArtifacts, the CodeIdMove disjointness filter and the CodeId dot-segment guard, and restore checkRegistryAgainstBase and the fixed .tmp staging path.
 
+### P1 bootstrap identities use generated literals without importing the registry, 2026-11-23
+
+The test runner is a bootstrap dependency and cannot import @beep/identity. The registry generator projects the vitest shard into the runner as literals; parity tests verify the annotations against the registry. Rejected: a runtime dependency from the runner to identity, which would reverse the bootstrap dependency boundary.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Move the runner above identity in the dependency graph and replace the generated literals with registry lookups.
+
+### P1 term stability runs uncached over git state, 2026-11-23
+
+The identity registry gate compares the published term snapshot against the merge base with origin/main. Turbo inputs do not hash that git state, so the gate runs uncached and unscoped under law L0-3. Rejected: caching the gate by source files alone, which could replay a verdict against a different published base.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Add certified git base inputs to the cache key before admitting the term stability gate to a cached scoped graph.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

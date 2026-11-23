@@ -25,7 +25,6 @@ import type { AssembledClass, AssembledPredicate, OntologyFoldInput, Triple } fr
 const decodeShard = flow(S.decodeResult(RegistryShard), Result.getOrThrow);
 const ascending = (values: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(A.dedupe(values), Order.String);
 
-// Every generated namespace with its terms and no bindings, so borrowed CURIEs resolve as in production.
 const externalShards = A.map(R.toEntries(RegistryVocab), ([prefix, entry]) =>
   decodeShard({ namespace: { prefix, iri: entry.iri }, terms: entry.terms, bindings: [], deprecations: [] })
 );
@@ -50,8 +49,6 @@ const ownedClass = (schema: S.Top): Owned => {
   return { identifier, local: P.isString(annotations?.title) ? annotations.title : identifier };
 };
 
-// A fixture registry: the generated namespaces, plus an owned namespace that binds every given
-// schema to its title and declares every field key, plus any extra shards.
 const registryFor = (
   prefix: string,
   iri: string,
@@ -792,18 +789,21 @@ describe("Ontology.fold negative fixtures", () => {
           )
         )(owned, { label: "Rebound", schemas: [], triples: [] });
 
-      // The rebound prefix is refused whether it owns the fold or only lends terms to it.
       for (const owned of ["skos", "patent"]) {
         const error = yield* Effect.flip(rebound("skos", owned));
-        expect(error.reason).toBe("reservedPrefix");
+        expect(error.reason, "The rebound prefix is refused whether it owns the fold or only lends terms to it.").toBe(
+          "reservedPrefix"
+        );
         assertSome(error.term, "skos");
         expect(error.message).toContain(custom);
       }
       for (const prefix of ["dcterms", "owl", "rdf", "rdfs"]) {
         expect((yield* Effect.flip(rebound(prefix, "patent"))).reason).toBe("reservedPrefix");
       }
-      // A registry may leave the core prefixes out, or bind them to the core namespaces.
-      expect((yield* rebound("ex", "patent")).prefix).toBe("patent");
+      expect(
+        (yield* rebound("ex", "patent")).prefix,
+        "A registry may leave the core prefixes out, or bind them to the core namespaces."
+      ).toBe("patent");
       expect((yield* assemble).prefix).toBe("beep");
     })
   );

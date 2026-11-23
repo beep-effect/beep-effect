@@ -464,7 +464,6 @@ const escapeTurtleLiteral: (value: string) => string = flow(
   Str.replaceAll("\r", "\\r")
 );
 
-// A quoted Turtle string: the only lexical form a language tag or a datatype may follow.
 const quotedLiteral = (value: string | number | boolean): string => `"${escapeTurtleLiteral(`${value}`)}"`;
 
 const literalValue = (value: string | number | boolean): string =>
@@ -611,7 +610,6 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
     [ontology.prefix, ontology.baseIri] as const,
     ...pipe(
       coreNamespaces,
-      // An ontology owned by a core prefix has that core namespace as its base, so the owned entry declares it.
       A.filter(({ iri, prefix }) => prefix !== ontology.prefix && pipe(usedIris, A.some(Str.startsWith(iri)))),
       A.map(({ iri, prefix }) => [prefix, iri] as const)
     ),
@@ -627,6 +625,12 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  *
  * Owned locals emit as prefixed names only when PN_LOCAL-safe, otherwise the
  * writer falls back to full IRI references; literals are escaped.
+ *
+ * **Gotchas**
+ *
+ * Language tags and datatypes follow quoted Turtle strings, including when the value is
+ * numeric or boolean. An ontology owned by a core prefix declares its core namespace
+ * through the owned entry.
  *
  * **Example** (Turtle from folded ontology)
  *

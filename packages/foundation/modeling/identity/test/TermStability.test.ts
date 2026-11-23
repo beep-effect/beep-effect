@@ -30,15 +30,15 @@ import * as Str from "effect/String";
 import committedSnapshot from "../registry/term-snapshot.json" with { type: "json" };
 import retired from "./fixtures/p1-retired-iris.json" with { type: "json" };
 
-// The path-derived IRIs P1 re-published, frozen from the live research-library fold and the
-// test-runner pins at the P1 base, each with the registry IRI that replaces it.
-const RetiredIris = S.Array(S.Struct({ term: TermIri, replacement: TermIri }));
+const RetiredIris = S.Array(S.Struct({ term: TermIri, replacement: TermIri })).annotate({
+  description:
+    "Path-derived IRIs frozen from the research-library fold and test-runner pins at the P1 base, paired with their registry successors.",
+});
 const deprecated: Readonly<Record<string, unknown>> = RegistryDeprecations;
 
 const isLive = (iri: string): boolean =>
   O.isSome(Registry.contract(iri)) || A.some(R.values(Registry.RegistryVocab), (entry) => entry.iri === iri);
 
-// The committed source shards, as their encoded rows, and the committed term snapshot.
 const shardTexts = import.meta.glob<string>("../registry/namespaces/*.json", {
   eager: true,
   import: "default",
@@ -52,13 +52,11 @@ const committedShards: ReadonlyArray<RegistryShard.Encoded> = A.map(R.values(sha
 );
 const committed = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(committedSnapshot));
 
-// Release components are unbounded, so they compare as exact `bigint`s, as the snapshot does.
 const releaseNumbers = (release: string): readonly [bigint, bigint, bigint] => {
   const [major = 0n, minor = 0n, patch = 0n] = A.map(Str.split(".")(release), BigInt);
   return [major, minor, patch];
 };
 
-// The releases a change to the committed snapshot calls for: an addition alone, and a deprecation.
 const [committedMajor, committedMinor] = releaseNumbers(committed.release);
 const nextMinorRelease = `${committedMajor}.${committedMinor + 1n}.0`;
 const nextMajorRelease = `${committedMajor + 1n}.0.0`;
@@ -86,10 +84,8 @@ const deprecatingPrefLabel = editShard("skos", (shard) => ({
   deprecations: A.sort(A.append(shard.deprecations, { term: prefLabel, since: nextMajorRelease }), byTerm),
 }));
 
-// The research-library namespace IRI P1 retired, whose successor is the `research-library` namespace.
 const retiredLibraryNamespace = "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/";
 
-// The IRI a composer derives from a code identity's module path, as `$BeepId.create(path).iri` prints it.
 const moduleIriOf = (code: string): string => {
   const composer = $BeepId.create(Str.slice(Str.length("@beep/"))(code));
   expect(composer.identifier).toBe(code);
@@ -98,7 +94,6 @@ const moduleIriOf = (code: string): string => {
 
 const published = HashSet.fromIterable<string>(committed.terms);
 
-// A module path segment a code identity and the composer both accept.
 const ModuleSegment = S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9_-]{0,11}$/));
 
 const LibraryModule = CodeId.make("@beep/repo-cli/commands/Research/Library/Library.schemas");
@@ -176,8 +171,6 @@ describe("term stability", () => {
   });
 
   it("L0-3 a changed term set never ships under a release its base already published", () => {
-    // A head regenerated from an older base keeps that base's release; against the committed
-    // snapshot, a change released at the committed release is understated.
     const added: RegistryShard.Encoded = {
       namespace: { prefix: "gen", iri: "https://example.test/gen/" },
       terms: ["Added"],
@@ -186,7 +179,10 @@ describe("term stability", () => {
     };
     const next = RegistryTable.snapshot(tableOf(A.append(committedShards, added)), committed);
     const understated = TermSnapshot.make({ ...next, release: committed.release });
-    expect(snapshotViolations(committed, understated)).toStrictEqual([
+    expect(
+      snapshotViolations(committed, understated),
+      "A head regenerated from an older base keeps that base's release; against the committed snapshot, a change released at the committed release is understated."
+    ).toStrictEqual([
       SnapshotViolation.cases.ReleaseUnderstated.make({
         base: committed.release,
         expected: next.release,
@@ -202,19 +198,22 @@ describe("term stability", () => {
       bindings: [{ code: "@beep/identity/Term/Added", local: "Added", since }],
       deprecations: [],
     });
-    // The addition alone is the next minor; with the deprecation the whole change is the next major, so the
-    // binding moves with it.
-    expect(violationsOf(A.append(committedShards, addedAt(nextMinorRelease)))).toStrictEqual([]);
+    expect(
+      violationsOf(A.append(committedShards, addedAt(nextMinorRelease))),
+      "The addition alone is the next minor; with the deprecation the whole change is the next major, so the binding moves with it."
+    ).toStrictEqual([]);
     const deprecating = deprecatingPrefLabel(withoutPrefLabel(committedShards));
     expect(violationsOf(A.append(deprecating, addedAt(nextMajorRelease)))).toStrictEqual([]);
     const stale = violationsOf(A.append(deprecating, addedAt(nextMinorRelease)));
     expect(A.map(stale, snapshotViolationMessage)).toStrictEqual([
       `The new binding of https://example.test/gen/Added to @beep/identity/Term/Added records since ${nextMinorRelease}; the change is release ${nextMajorRelease}.`,
     ]);
-    // Released in two steps, the same change skips a release.
     const next = RegistryTable.snapshot(tableOf(A.append(committedShards, addedAt(nextMinorRelease))), committed);
     const skipped = ReleaseVersion.make(`${committedMajor}.${committedMinor + 2n}.0`);
-    expect(snapshotViolations(committed, TermSnapshot.make({ ...next, release: skipped }))).toStrictEqual([
+    expect(
+      snapshotViolations(committed, TermSnapshot.make({ ...next, release: skipped })),
+      "Released in two steps, the same change skips a release."
+    ).toStrictEqual([
       SnapshotViolation.cases.ReleaseOverstated.make({
         base: committed.release,
         expected: next.release,
@@ -233,20 +232,21 @@ describe("term stability", () => {
         bindings: [],
         deprecations: [],
       });
-      // A PN_LOCAL may hold a code point RFC 3987 refuses in an IRI; the shard check refuses those.
       if (Result.isFailure(added)) return;
       const next = RegistryTable.snapshot(
         tableOf(A.append(committedShards, Result.getOrThrow(encodeShard(added.success)))),
         committed
       );
-      expect(snapshotViolations(committed, next)).toStrictEqual([]);
-      // An addition alone bumps the minor of the committed release.
+      expect(
+        snapshotViolations(committed, next),
+        "A PN_LOCAL may hold a code point RFC 3987 refuses in an IRI; the shard check refuses those."
+      ).toStrictEqual([]);
       expect(next.release).toBe(nextMinorRelease);
     },
     { arbitrary: fcRuns(25) }
   );
 
-  it("L0-3 renaming a module changes no published IRI", () => {
+  it("L0-3 renaming a module requires rebinding its moved code to preserve published IRIs", () => {
     const before = tableOf(committedShards);
     const after = Result.getOrThrow(
       RegistryTable.rebind(before, CodeIdMove.make({ from: LibraryModule, to: CatalogModule }))
@@ -270,7 +270,6 @@ describe("term stability", () => {
         binding.term
       );
       expect(afterView.bindingOf(renamed)).toStrictEqual(beforeView.bindingOf(binding.code));
-      // The binding moved: a file move without a rebind leaves the old module unbound.
       assertNone(afterView.bindingOf(binding.code));
     }
   });
@@ -288,14 +287,13 @@ describe("term stability", () => {
       }
     })
   );
-  it("L0-3 a module-derived IRI of a bound code is never published in place of its term", () => {
+  it("L0-3 retires a module-derived IRI exposed before P1 in favour of its bound term", () => {
     const table = tableOf(committedShards);
     expect(A.isReadonlyArrayNonEmpty(table.bindings)).toBe(true);
     for (const binding of table.bindings) {
       const moduleIri = moduleIriOf(binding.code);
       expect(moduleIri, binding.code).not.toBe(binding.term);
       expect(HashSet.has(published, moduleIri), moduleIri).toBe(false);
-      // A module-derived IRI that left the process before P1 is retired in favour of the bound term.
       if (R.has(deprecated, moduleIri)) {
         assertSome(Registry.replacementOf(moduleIri), binding.term);
       }

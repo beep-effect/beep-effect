@@ -191,7 +191,6 @@ const makeView = (data: RegistryData): RegistryView => {
   );
 
   const namespaceIris = HashSet.fromIterable(A.map(namespaces, ({ namespace }): string => namespace.iri));
-  // A retired namespace IRI is succeeded by a namespace IRI, a retired term by a term, as the table requires.
   const isSuccessor =
     (origin: string) =>
     (iri: string): boolean =>

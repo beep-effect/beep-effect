@@ -41,6 +41,14 @@
  * term the base published, and a term snapshot left without its registry is
  * drift. Moving the package hides no removal.
  *
+ * **Gotchas**
+ *
+ * A checkout with neither shards nor generated registry data publishes no terms. Every
+ * term published by the base is then removed; a leftover snapshot is drift because
+ * nothing regenerates it. An undecodable base is compared as empty to retain checkout
+ * findings, but prevents fix mode from writing a release that no base backs. Fix mode
+ * regenerates artifacts only; it never edits shards or writes deprecations.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -610,8 +618,6 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   return violations;
 });
 
-// `--fix`: regenerate the artifacts against the lint's own base and say what changed. A registry that does not regenerate is
-// reported by the checks that follow.
 const regenerateRegistry = Effect.fn("IdentityRegistry.regenerateRegistry")(function* (
   repoRoot: string,
   layout: RegistryLayout,
@@ -627,8 +633,6 @@ const regenerateRegistry = Effect.fn("IdentityRegistry.regenerateRegistry")(func
   }
 });
 
-// The rows of a checkout with no registry: every term the base published is removed, and a term snapshot
-// left behind is drift, because nothing regenerates it and it would become the next base.
 const absentRegistryIssues = Effect.fn("IdentityRegistry.absentRegistryIssues")(function* (
   repoRoot: string,
   layout: RegistryLayout,
@@ -649,11 +653,6 @@ const absentRegistryIssues = Effect.fn("IdentityRegistry.absentRegistryIssues")(
   return A.appendAll(baseSnapshotIssues(base, TermSnapshot.empty, layout), snapshotIssues);
 });
 
-// Declared-term registry rows: invalid shards, shard conflicts, generated-artifact drift and breaks
-// of the base ref's published term set. A checkout with neither shards nor the generated data module
-// carries no registry: it publishes nothing, so every term the base published is removed, and a base
-// that published nothing (a fixture repo) leaves no row. `--fix` regenerates the artifacts first, and
-// only over a base snapshot that decodes; it never edits a shard and never writes a deprecation.
 const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
   repoRoot: string,
   fix: boolean,
@@ -664,18 +663,15 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
   const present = yield* registryPresent(repoRoot, layout);
 
   const baseSnapshot = yield* readBaseSnapshot("lint:identity-registry", repoRoot, layout, base);
-  // A base that does not decode is compared as empty, so the checkout's own rows are still reported.
   const published = Result.getOrElse(baseSnapshot, () =>
     BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref: base })
   );
   const undecodable = A.fromOption(Result.getFailure(baseSnapshot));
 
-  // Regenerating against the empty stand-in would write a release no base backs, so --fix needs the base.
   if (fix && present && Result.isSuccess(baseSnapshot)) {
     yield* regenerateRegistry(repoRoot, layout, baseSnapshot.success);
   }
 
-  // One plan of the shards gives both the drift and the comparison with the base.
   const found = present
     ? yield* checkRegistry(repoRoot, layout, O.some(published))
     : yield* absentRegistryIssues(repoRoot, layout, published);

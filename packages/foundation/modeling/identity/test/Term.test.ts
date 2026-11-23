@@ -93,9 +93,9 @@ describe("Term schemas", () => {
     expect(S.is(CodeId)("@beep/repo-cli/commands/Research/Library/Library.schemas/Source")).toBe(true);
     expect(S.is(CodeId)("@other/pkg/Name")).toBe(false);
     expect(S.is(CodeId)("@beep/Pkg/Name")).toBe(false);
-    // A segment of dots alone would name a path outside the package; dots inside a segment are kept.
     expect(
-      A.map(["@beep/p/../x/Name", "@beep/p/./Name", "@beep/p/A/..", "@beep/p/.../Name"], S.is(CodeId))
+      A.map(["@beep/p/../x/Name", "@beep/p/./Name", "@beep/p/A/..", "@beep/p/.../Name"], S.is(CodeId)),
+      "A segment of dots alone would name a path outside the package; dots inside a segment are kept."
     ).toStrictEqual([false, false, false, false]);
     expect(A.map(["@beep/p/a..b/Name", "@beep/p/.hidden/Name"], S.is(CodeId))).toStrictEqual([true, true]);
     expect(S.is(ReleaseVersion)("10.20.30")).toBe(true);
@@ -264,7 +264,6 @@ describe("snapshotViolations", () => {
   it("judges term membership apart from namespace membership", () => {
     const previous = snapshot();
     const extraNs = Namespace.make({ prefix: "extra", iri: NamespaceIri.make("https://example.test/extra/") });
-    // A published IRI no namespace declared, which becomes a namespace IRI, is still a removed term.
     expect(
       snapshotViolations(
         snapshot({ terms: [...baseRows.terms, iri(extraNs.iri)] }),
@@ -273,7 +272,8 @@ describe("snapshotViolations", () => {
           namespaces: [...baseRows.namespaces, extraNs],
           terms: [...baseRows.terms, iri(extraNs.iri)],
         })
-      )
+      ),
+      "A published IRI no namespace declared, which becomes a namespace IRI, is still a removed term."
     ).toStrictEqual([SnapshotViolation.cases.TermRemoved.make({ term: iri(extraNs.iri) })]);
     expect(
       snapshotViolations(
@@ -323,15 +323,13 @@ describe("snapshotViolations", () => {
         A.map((local) => Term.of(vitest, TermLocal.make(local)).iri)
       );
       const grown = snapshot({ terms: [...baseRows.terms, ...added] });
-      // No new local leaves the published set, and its release, unchanged.
       const next = TermSnapshot.make({ ...grown, release: grown.terms.length > snapshot().terms.length ? v1_1 : v1 });
       expect(snapshotViolations(snapshot(), next)).toStrictEqual([]);
     },
     runs
   );
 
-  it("orders releases exactly past the safe integer range", () => {
-    // 2^53 + 1 and 2^53 are one number as a float; as release components they differ.
+  it("distinguishes release components 2^53 and 2^53 + 1 beyond floating point precision", () => {
     const base = snapshot({ release: release("9007199254740993.0.0") });
     const wound = snapshot({ release: release("9007199254740992.0.0") });
     expect(snapshotViolations(base, wound)).toStrictEqual([
@@ -349,28 +347,30 @@ describe("snapshotViolations", () => {
   it("refuses a changed term set released below or above the release its change calls for", () => {
     const previous = snapshot();
     const added = { terms: [...baseRows.terms, iri(`${vitest.iri}Added`)] };
-    // An addition at the base release would ship two term sets as 1.0.0; it calls for a minor bump.
-    expect(snapshotViolations(previous, snapshot(added))).toStrictEqual([
-      SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v1_1, release: v1 }),
-    ]);
+    expect(
+      snapshotViolations(previous, snapshot(added)),
+      "An addition at the base release would ship two term sets as 1.0.0; it calls for a minor bump."
+    ).toStrictEqual([SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v1_1, release: v1 })]);
     expect(snapshotViolations(previous, snapshot({ ...added, release: v1_1 }))).toStrictEqual([]);
-    // A major for an addition alone, or any bump for no change, skips a release.
-    expect(snapshotViolations(previous, snapshot({ ...added, release: v2 }))).toStrictEqual([
-      SnapshotViolation.cases.ReleaseOverstated.make({ base: v1, expected: v1_1, release: v2 }),
-    ]);
+    expect(
+      snapshotViolations(previous, snapshot({ ...added, release: v2 })),
+      "A major for an addition alone, or any bump for no change, skips a release."
+    ).toStrictEqual([SnapshotViolation.cases.ReleaseOverstated.make({ base: v1, expected: v1_1, release: v2 })]);
     expect(snapshotViolations(previous, snapshot({ release: v1_1 }))).toStrictEqual([
       SnapshotViolation.cases.ReleaseOverstated.make({ base: v1, expected: v1, release: v1_1 }),
     ]);
-    // A new deprecation calls for a major bump, so a minor bump is still understated.
     const retired = {
       terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
       deprecations: [...baseRows.deprecations, Deprecation.make({ term: entity, since: v2, replacement: O.none() })],
     };
-    expect(snapshotViolations(previous, snapshot({ ...retired, release: v1_1 }))).toStrictEqual([
-      SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v2, release: v1_1 }),
-    ]);
-    // An unchanged term set keeps its release, and the empty base calls for the genesis release.
-    expect(snapshotViolations(previous, previous)).toStrictEqual([]);
+    expect(
+      snapshotViolations(previous, snapshot({ ...retired, release: v1_1 })),
+      "A new deprecation calls for a major bump, so a minor bump is still understated."
+    ).toStrictEqual([SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v2, release: v1_1 })]);
+    expect(
+      snapshotViolations(previous, previous),
+      "An unchanged term set keeps its release, and the empty base calls for the genesis release."
+    ).toStrictEqual([]);
     expect(snapshotViolations(TermSnapshot.empty, snapshot({ release: release("0.0.0") }))).toStrictEqual([
       SnapshotViolation.cases.ReleaseUnderstated.make({
         base: release("0.0.0"),
@@ -380,8 +380,7 @@ describe("snapshotViolations", () => {
     ]);
   });
 
-  it("accepts any first release over the empty snapshot, with rows of any since", () => {
-    // A stacked layer carries releases its empty base never saw.
+  it("accepts stacked releases unseen by the empty base, with rows of any since", () => {
     expect(TermSnapshot.isPublished(TermSnapshot.empty)).toBe(false);
     expect(TermSnapshot.isPublished(snapshot())).toBe(true);
     expect(snapshotViolations(TermSnapshot.empty, snapshot({ release: v2 }))).toStrictEqual([]);
@@ -403,12 +402,14 @@ describe("snapshotViolations", () => {
       SnapshotViolation.cases.DeprecationSinceMisstated.make({ term: activity, since: v1_1, expected: v2 }),
     ];
     expect(snapshotViolations(previous, changedAt(v1_1))).toStrictEqual(misstated);
-    // Neither is a break of the term set: regenerating and correcting the row repairs both.
-    expect(termSetViolations(previous, changedAt(v1_1))).toStrictEqual([]);
-    expect(termSetViolations(changedAt(v1_1))(previous)).toStrictEqual([]);
-    // The release the rows should record does not depend on the release the snapshot states.
     expect(
-      snapshotViolations(previous, TermSnapshot.make({ ...changedAt(v1_1), release: release("0.9.0") }))
+      termSetViolations(previous, changedAt(v1_1)),
+      "Neither is a break of the term set: regenerating and correcting the row repairs both."
+    ).toStrictEqual([]);
+    expect(termSetViolations(changedAt(v1_1))(previous)).toStrictEqual([]);
+    expect(
+      snapshotViolations(previous, TermSnapshot.make({ ...changedAt(v1_1), release: release("0.9.0") })),
+      "The release the rows should record does not depend on the release the snapshot states."
     ).toStrictEqual([...misstated, SnapshotViolation.cases.ReleaseRegressed.make({ from: v1, to: release("0.9.0") })]);
   });
 });

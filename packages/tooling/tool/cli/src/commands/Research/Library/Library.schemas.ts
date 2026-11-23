@@ -683,7 +683,6 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
     .annotate($I.class("Manifest", { description: "Portable library layout and creation provenance." }))
 ) {}
 
-// Whether the registry mints the instance IRI, so an invariant below is the minter's own rule.
 const isMintable = (mint: () => string): boolean => Result.isSuccess(Result.try(mint));
 
 /**
