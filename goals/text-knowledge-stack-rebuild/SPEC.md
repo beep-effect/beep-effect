@@ -1991,6 +1991,22 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the binding factories with explicit codec arguments while migrating callers and retaining the versioned encoded preimages.
 
+### P4: every breaking change lands in private workspaces and is recorded here, with no changeset, 2026-11-23
+
+Every workspace P4 changes is private (package.json private true), so per 2026-11-19-p1-no-changesets-for-private-workspaces no changeset is written and each breaking change is recorded here. @beep/schema: makeSignal, AbsenceReason and Measurement ship from @beep/schema/Signal and left @beep/epistemics (row 2, 3002e3add48). @beep/epistemics: Confidence moved to @beep/epistemics/Confidence (row 2); EvidenceSpan and its subpath were deleted for EvidencePosition (row 5, b61b79aa79f); makeClaimEnvelope, ClaimVersion, StructuralVerdict, BitemporalVersion and versionsAt were deleted, makeClaimReview replaces the envelope's review vocabulary and ReviewTag derives from the ReviewState cases (row 6, 2ced3e0a632); ClaimImport.schema, ClaimCore, ClaimLog, Admission, Assessments and rdf/NanopubCodec are new subpaths. @beep/epistemic-domain, -tables, -use-cases, -server, -ui and @beep/professional-desktop: evidence spans became EvidencePosition with a stored EvidenceRow reader (row 5). @beep/party-domain, -use-cases, -server: ClaimVersionId and the envelope claim model were replaced by ClaimCore, ClaimRecord and separate generation, evidence, review, signal, challenge, retraction, admission and stance records, and the ledger port changed accordingly (row 6). @beep/repo-cli: Kb and Holds claim types and helpers were renamed (HoldClaimVersion to HoldClaim, liveHoldVersions to liveHoldClaims), HoldProbeRunV1Row and KbAssertionV1Row became Opaque classes and declaresFormat takes a LineFormat (row 10) and new appends are kb-claim-record/v2 and hold-claim-record/v2 events (row 6). @beep/law-practice-domain: TextQuote was deleted for @beep/text QuoteSelector and ReviewItem reads as a union with LegacyReviewItemImported; @beep/law-practice-use-cases: DeterministicCheck.passed became result (Passed, Failed, Unknown) and ReviewItemStore.upsert returns held ids beside a new repair method, and planReviewItemWrite takes one ReviewItemWriteRequest (row 10); @beep/law-practice-server: items.jsonl writes review-item/v2 (row 7, 960b792a314). @beep/semantica: EvidenceClaim.confidence is an ExtractorConfidence signal and the ledger writes ledger-evidence/v2 (row 7). @beep/docket-intake reads only current review items (row 7). @beep/identity and @beep/rdf only gained terms and the np pin (row 8, 97b2de8a43b). Stored bytes are never rewritten; each old format has a frozen reader proved by a frozen fixture.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Make a touched package public by a decision file and write its major changeset from this record in the PR that publishes it.
+
+### Claim-event union cases are private annotated structs, 2026-11-23
+
+The non-core cases of the v2 Holds and Kb claim-event unions (Evidence, Review, Signals, Succession) are private annotated S.Struct schemas rather than exported Opaque classes. The public surface stays the union plus its .cases accessor, and the decoded case types stay structural, which the ClaimHistory generic constraints (Native extends NativeFacts, CoreEventFacts) rely on. The v1 row codecs HoldProbeRunV1Row and KbAssertionV1Row became branded S.Opaque classes over unchanged structs, so the frozen v1 fixtures and their digests are untouched.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Export each case as a branded Opaque class and widen the ClaimHistory SideRecord constraints to match.
+
 ### P4: CLI native cores link imported predecessors through a separate succession record, 2026-11-23
 
 ClaimCore.supersedes names only a content-addressed ClaimId, and an imported legacy row has no ClaimId. A Holds renewal (or Kb revision) of an imported claim therefore appends a native v2 core with no supersedes field plus a separate Succession record from ClaimReference Imported{ledger, oldId} to the new ClaimId. The history reader closes the imported knowledge interval at the successor's knowledge start, refuses a second successor (fork), an unknown target or a logical-key mismatch with ClaimHistoryRefused, and never relabels the old id as a hash. Review changes are separate Review events, never new cores. Renewal facts (activity, generation end, knowledge start, agent, scope) are supplied by the effectful program, not a hidden clock.

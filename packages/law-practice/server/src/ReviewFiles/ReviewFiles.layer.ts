@@ -14,6 +14,7 @@ import {
   planReviewItemWrite,
   ReviewItemStore,
   ReviewItemStoreError,
+  ReviewItemWriteRequest,
 } from "@beep/law-practice-use-cases/ReviewItemStore";
 import { VerdictLog, VerdictLogError } from "@beep/law-practice-use-cases/ReviewQueue";
 import * as Context from "effect/Context";
@@ -99,7 +100,8 @@ const reviewItemStore = (file: string) =>
     (log) => {
       const list = Effect.map(log.rows, latestItems);
       const write = Effect.fnUntraced(function* (items: ReadonlyArray<ReviewItem>, repair: boolean) {
-        const plan = planReviewItemWrite({ items, repair, stored: yield* list });
+        const stored = yield* list;
+        const plan = planReviewItemWrite(ReviewItemWriteRequest.make({ items, repair, stored }));
         yield* log.append(plan.write);
         return plan.held;
       });

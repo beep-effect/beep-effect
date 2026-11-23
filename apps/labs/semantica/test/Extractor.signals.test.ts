@@ -11,7 +11,6 @@ import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { SourceTextExtractor, TextAnchor } from "@beep/text";
 import { Position } from "@beep/text/OffsetUnit";
 import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
@@ -198,60 +197,54 @@ const expectSignal = (actual: O.Option<ExtractorConfidence>, expected: Extractor
   expect(O.exists(actual, (signal) => sameSignal(signal, expected))).toBe(true);
 };
 
+const hostedReadings = Layer.merge(
+  baseLayer,
+  hostedLayer([grounded("Ada", O.none()), grounded("Bob", O.some(0)), grounded("Cy", O.some(1))])
+);
+
+const patternReadings = Layer.merge(
+  baseLayer,
+  patternLayer([entity("Ada", O.none()), entity("Bob", O.some(0)), entity("Cy", O.some(1))])
+);
+
+it.layer(hostedReadings, { timeout: 60_000 })("Extractor.signals: hosted readings", (it) => {
+  it.effect("hosted readings map None to absent and keep explicit 0 and 1 present with producer pin and method", () =>
+    Effect.gen(function* () {
+      const { canonical, chunks } = yield* makeCanonical();
+      const extractor = yield* HostedExtractor;
+      const outcome = yield* extractor.extract(canonical, chunks);
+      const claims = claimsOf(outcome);
+      const pin = ActivityPin.cases.Model.make({ model: model.name, version: model.revision });
+
+      expect(A.length(claims)).toBe(3);
+      expectSignal(signalOf(claims, "Ada"), notAssessed);
+      expectSignal(signalOf(claims, "Bob"), present(0, "hosted-langextract", pin));
+      expectSignal(signalOf(claims, "Cy"), present(1, "hosted-langextract", pin));
+    })
+  );
+});
+
+it.layer(patternReadings, { timeout: 60_000 })("Extractor.signals: pattern readings", (it) => {
+  it.effect("pattern output without confidence stays absent while a reported pattern value stays present", () =>
+    Effect.gen(function* () {
+      const { canonical, chunks } = yield* makeCanonical();
+      const extractor = yield* PatternExtractor;
+      const outcome = yield* extractor.extract(canonical, chunks);
+      const claims = claimsOf(outcome);
+      const pin = ActivityPin.cases.Engine.make({
+        engine: PATTERN_MODEL_IDENTITY.name,
+        edition: PATTERN_MODEL_IDENTITY.revision,
+      });
+
+      expect(A.length(claims)).toBe(3);
+      expectSignal(signalOf(claims, "Ada"), notAssessed);
+      expectSignal(signalOf(claims, "Bob"), present(0, "pattern-wink", pin));
+      expectSignal(signalOf(claims, "Cy"), present(1, "pattern-wink", pin));
+    })
+  );
+});
+
 describe("Extractor.signals: emitted claims keep reported confidence honest", () => {
-  it.effect(
-    "hosted readings map None to absent and keep explicit 0 and 1 present with producer pin and method",
-    () =>
-      provideScopedLayer(
-        Layer.merge(
-          baseLayer,
-          hostedLayer([grounded("Ada", O.none()), grounded("Bob", O.some(0)), grounded("Cy", O.some(1))])
-        )
-      )(
-        Effect.gen(function* () {
-          const { canonical, chunks } = yield* makeCanonical();
-          const extractor = yield* HostedExtractor;
-          const outcome = yield* extractor.extract(canonical, chunks);
-          const claims = claimsOf(outcome);
-          const pin = ActivityPin.cases.Model.make({ model: model.name, version: model.revision });
-
-          expect(A.length(claims)).toBe(3);
-          expectSignal(signalOf(claims, "Ada"), notAssessed);
-          expectSignal(signalOf(claims, "Bob"), present(0, "hosted-langextract", pin));
-          expectSignal(signalOf(claims, "Cy"), present(1, "hosted-langextract", pin));
-        })
-      ),
-    { timeout: 60_000 }
-  );
-
-  it.effect(
-    "pattern output without confidence stays absent while a reported pattern value stays present",
-    () =>
-      provideScopedLayer(
-        Layer.merge(
-          baseLayer,
-          patternLayer([entity("Ada", O.none()), entity("Bob", O.some(0)), entity("Cy", O.some(1))])
-        )
-      )(
-        Effect.gen(function* () {
-          const { canonical, chunks } = yield* makeCanonical();
-          const extractor = yield* PatternExtractor;
-          const outcome = yield* extractor.extract(canonical, chunks);
-          const claims = claimsOf(outcome);
-          const pin = ActivityPin.cases.Engine.make({
-            engine: PATTERN_MODEL_IDENTITY.name,
-            edition: PATTERN_MODEL_IDENTITY.revision,
-          });
-
-          expect(A.length(claims)).toBe(3);
-          expectSignal(signalOf(claims, "Ada"), notAssessed);
-          expectSignal(signalOf(claims, "Bob"), present(0, "pattern-wink", pin));
-          expectSignal(signalOf(claims, "Cy"), present(1, "pattern-wink", pin));
-        })
-      ),
-    { timeout: 60_000 }
-  );
-
   it.effect("an absent signal encodes without any numeric value", () =>
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(S.fromJsonString(ExtractorConfidence))(notAssessed);

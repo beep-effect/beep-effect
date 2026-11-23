@@ -18,6 +18,7 @@ import {
   checkAppend,
   declaresFormat,
   eventLine,
+  LineFormat,
   legacyMissingFacts,
   lineDigest,
   readClaimHistory,
@@ -68,20 +69,22 @@ const runFields = ProbeRun.fields;
  * @category schemas
  * @since 0.0.0
  */
-export const HoldProbeRunV1Row = S.Struct({
-  schemaVersion: S.tag("hold-probe-run/v1"),
-  id: runFields.id,
-  holdId: runFields.holdId,
-  holdVersionId: S.NonEmptyString,
-  ranAt: runFields.ranAt,
-  commitSha: runFields.commitSha,
-  runtime: runFields.runtime,
-  controlVersion: runFields.controlVersion,
-  control: runFields.control,
-  candidateVersion: runFields.candidateVersion,
-  candidate: runFields.candidate,
-  verdict: runFields.verdict,
-}).pipe($I.annoteSchema("HoldProbeRunV1Row", { description: "One frozen hold-probe-run/v1 line." }));
+export class HoldProbeRunV1Row extends S.Opaque<HoldProbeRunV1Row, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("hold-probe-run/v1"),
+    id: runFields.id,
+    holdId: runFields.holdId,
+    holdVersionId: S.NonEmptyString,
+    ranAt: runFields.ranAt,
+    commitSha: runFields.commitSha,
+    runtime: runFields.runtime,
+    controlVersion: runFields.controlVersion,
+    control: runFields.control,
+    candidateVersion: runFields.candidateVersion,
+    candidate: runFields.candidate,
+    verdict: runFields.verdict,
+  }).pipe($I.annoteSchema("HoldProbeRunV1Row", { description: "One frozen hold-probe-run/v1 line." }))
+) {}
 
 /**
  * Content-addressed arrows bound to the hold claim core.
@@ -99,8 +102,8 @@ export const holdArrows = makeClaimArrows({ $I, ClaimCore: HoldClaimCore });
  */
 export type HoldClaimLine = ClaimLine<HoldLegacyImported, HoldCoreEvent, HoldReviewState, HoldEvidenceSignals>;
 
-const isClaimEvent = declaresFormat({ key: "version", version: "hold-claim-record/v2" });
-const isRunV1 = declaresFormat({ key: "schemaVersion", version: "hold-probe-run/v1" });
+const isClaimEvent = declaresFormat(LineFormat.make({ key: "version", version: "hold-claim-record/v2" }));
+const isRunV1 = declaresFormat(LineFormat.make({ key: "schemaVersion", version: "hold-probe-run/v1" }));
 const decodeEvent = S.decodeUnknownEffect(HoldClaimEvent);
 const decodeV1 = S.decodeUnknownEffect(HoldClaimsV1Row);
 const decodeRun = S.decodeUnknownEffect(ProbeRun);

@@ -4,6 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { ValidTime } from "@beep/epistemics/Claim";
+import { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import {
   ClaimImportLedger,
   ClaimReference,
@@ -12,8 +15,8 @@ import {
 } from "@beep/epistemics/ClaimImport.schema";
 import { ClaimLogEntry, checkClaimLog } from "@beep/epistemics/ClaimLog";
 import { $RepoCliId } from "@beep/identity/packages";
-import { mintActivityId } from "@beep/jsonc/ActivityStart";
-import { ContentHash } from "@beep/schema/ContentHash";
+import { ActivityStartFields, mintActivityId } from "@beep/jsonc/ActivityStart";
+import { ActivityId, ContentHash } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -26,10 +29,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { ValidTime } from "@beep/epistemics/Claim";
-import type { ClaimId } from "@beep/epistemics/ClaimCore.schema";
-import type { ActivityStartView } from "@beep/jsonc/ActivityStart";
-import type { ActivityId } from "@beep/schema/ContentHash";
 
 const $I = $RepoCliId.create("internal/claims/ClaimHistory");
 
@@ -98,15 +97,30 @@ export const storedLines = (content: string): ReadonlyArray<string> =>
   A.filter(Str.split(content, "\n"), (line) => Str.isNonEmpty(Str.trim(line)));
 
 /**
+ * The key a stored line names its format under, and the exact version it must carry.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LineFormat extends S.Opaque<LineFormat, { readonly brand: unique symbol }>()(
+  S.Struct({
+    key: S.NonEmptyString.annotateKey({ description: "Property that names the stored format." }),
+    version: S.NonEmptyString.annotateKey({ description: "Exact format version the property must hold." }),
+  }).pipe(
+    $I.annoteSchema("LineFormat", { description: "The key and exact version that identify one stored line format." })
+  )
+) {}
+
+/**
  * Whether a parsed line declares one exact versioned format under a key.
  *
+ * @param format - Key and exact version the line must declare.
+ * @returns A guard over parsed JSON lines.
  * @category guards
  * @since 0.0.0
  */
-export const declaresFormat = (format: {
-  readonly key: string;
-  readonly version: string;
-}): ((json: unknown) => boolean) => S.is(S.Struct({ [format.key]: S.Literal(format.version) }));
+export const declaresFormat = (format: LineFormat): ((json: unknown) => boolean) =>
+  S.is(S.Struct({ [format.key]: S.tag(format.version) }));
 
 /**
  * Historical facts the join reads from an imported row.
@@ -126,28 +140,32 @@ export interface ImportedFacts<Review, Signals> {
   readonly validTime: ValidTime;
 }
 
+const NativeFactsFields = {
+  activity: S.Struct(ActivityStartFields),
+  generatedAt: S.DateTimeUtc,
+  record: S.Struct({
+    claim: ClaimId,
+    core: S.Struct({
+      logicalKey: S.String,
+      scope: S.Union([S.String, S.Finite]),
+      supersedes: S.Option(ClaimId),
+      derivedFrom: S.HashSet(ClaimId),
+      knowledgeStart: S.DateTimeUtc,
+      generatedBy: ActivityId,
+      valid: ValidTime,
+    }),
+  }),
+};
+
+const CoreEventFactsFields = { ...NativeFactsFields, event: S.tag("Core") };
+
 /**
  * Native creation facts the join and append law read from a v2 core event.
  *
  * @category models
  * @since 0.0.0
  */
-export interface NativeFacts {
-  readonly activity: ActivityStartView;
-  readonly generatedAt: DateTime.Utc;
-  readonly record: {
-    readonly claim: ClaimId;
-    readonly core: {
-      readonly logicalKey: string;
-      readonly scope: string | number;
-      readonly supersedes: O.Option<ClaimId>;
-      readonly derivedFrom: HashSet.HashSet<ClaimId>;
-      readonly knowledgeStart: DateTime.Utc;
-      readonly generatedBy: ActivityId;
-      readonly valid: ValidTime;
-    };
-  };
-}
+export type NativeFacts = S.Struct.Type<typeof NativeFactsFields>;
 
 /**
  * One stored claim entry, in file order.
@@ -210,9 +228,7 @@ export type ClaimLine<Imported, Native, Review, Signals> =
  * @category models
  * @since 0.0.0
  */
-export interface CoreEventFacts extends NativeFacts {
-  readonly event: "Core";
-}
+export type CoreEventFacts = S.Struct.Type<typeof CoreEventFactsFields>;
 
 const isCoreEvent = <Native extends CoreEventFacts, Review, Signals>(
   event: Native | SideRecord<Review, Signals>

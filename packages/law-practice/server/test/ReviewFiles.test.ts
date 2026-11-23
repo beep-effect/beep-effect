@@ -18,9 +18,11 @@ import { AnswerLog, AnswerLogError } from "@beep/law-practice-use-cases/Question
 import { ReviewItemStore, ReviewItemStoreError } from "@beep/law-practice-use-cases/ReviewItemStore";
 import { VerdictLog, VerdictLogError } from "@beep/law-practice-use-cases/ReviewQueue";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as P4Digest from "effect/crypto/Digest";
@@ -409,3 +411,18 @@ it.layer(P4Layer.merge(Platform, P4Digest.layerWebCrypto), { timeout: "10 second
     );
   }
 );
+
+describe("review-item/v2 line properties", () => {
+  const equivalent = S.toEquivalence(ReviewItem);
+  it.effect.prop(
+    "every generated current item is written as a v2 line and reads back as the same current item",
+    [Arbitrary.schema(ReviewItem)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const line = yield* S.encodeEffect(itemLine)(value);
+        const decoded = yield* S.decodeEffect(itemLine)(line);
+        assertTrue(isCurrentReviewItem(decoded) && equivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+});

@@ -13,7 +13,12 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { AnswerLog } from "../QuestionQueue/QuestionQueue.ports.ts";
-import { latestItems, planReviewItemWrite, ReviewItemStore } from "../ReviewItemStore/ReviewItemStore.ports.ts";
+import {
+  latestItems,
+  planReviewItemWrite,
+  ReviewItemStore,
+  ReviewItemWriteRequest,
+} from "../ReviewItemStore/ReviewItemStore.ports.ts";
 import { VerdictLog } from "../ReviewQueue/ReviewQueue.ports.ts";
 import type { AnswerRow, ReviewItem, StoredReviewItem, VerdictRow } from "@beep/law-practice-domain";
 
@@ -142,7 +147,7 @@ export const reviewItemStoreMemoryFrom = (stored: ReadonlyArray<StoredReviewItem
     Effect.map(Ref.make(latestItems(stored)), (ref) => {
       const write = (items: ReadonlyArray<ReviewItem>, repair: boolean) =>
         Ref.modify(ref, (current) => {
-          const plan = planReviewItemWrite({ items, repair, stored: current });
+          const plan = planReviewItemWrite(ReviewItemWriteRequest.make({ items, repair, stored: current }));
           return [plan.held, latestItems(A.appendAll(current, plan.write))] as const;
         });
       return ReviewItemStore.of({

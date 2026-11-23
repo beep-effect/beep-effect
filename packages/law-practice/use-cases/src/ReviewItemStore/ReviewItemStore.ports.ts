@@ -7,12 +7,17 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { isCurrentReviewItem, isLegacyReviewItemImported, ReviewItem, ReviewItemId } from "@beep/law-practice-domain";
+import {
+  isCurrentReviewItem,
+  isLegacyReviewItemImported,
+  ReviewItem,
+  ReviewItemId,
+  StoredReviewItem,
+} from "@beep/law-practice-domain";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { StoredReviewItem } from "@beep/law-practice-domain";
 import type * as Effect from "effect/Effect";
 import type { ReviewItemStoreError } from "./ReviewItemStore.errors.ts";
 
@@ -144,6 +149,34 @@ export class ReviewItemWritePlan extends S.Opaque<ReviewItemWritePlan, { readonl
 const sameItem = S.toEquivalence(ReviewItem);
 
 /**
+ * A store write to plan: the latest stored versions, the items to store, and whether it is a repair.
+ *
+ * **Example** (Request a plain upsert)
+ *
+ * ```ts
+ * import { ReviewItemWriteRequest } from "@beep/law-practice-use-cases/ReviewItemStore"
+ *
+ * console.log(ReviewItemWriteRequest.make({ stored: [], items: [], repair: false }).repair) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReviewItemWriteRequest extends S.Opaque<ReviewItemWriteRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    items: S.Array(ReviewItem).annotateKey({ description: "Items to store, in the order given." }),
+    repair: S.Boolean.annotateKey({
+      description: "Whether the write is an explicit repair that may revise an unresolved import.",
+    }),
+    stored: S.Array(StoredReviewItem).annotateKey({ description: "The latest stored version of each id." }),
+  }).pipe(
+    $I.annoteSchema("ReviewItemWriteRequest", {
+      description: "The stored versions, the items and the repair flag one review-item write is planned from.",
+    })
+  )
+) {}
+
+/**
  * Plan a store write against the latest stored versions.
  *
  * **Details**
@@ -157,10 +190,11 @@ const sameItem = S.toEquivalence(ReviewItem);
  *
  * ```ts
  * import { ReviewItem } from "@beep/law-practice-domain"
- * import { planReviewItemWrite } from "@beep/law-practice-use-cases/ReviewItemStore"
+ * import { planReviewItemWrite, ReviewItemWriteRequest } from "@beep/law-practice-use-cases/ReviewItemStore"
  *
  * const item = ReviewItem.cases["kg-answer"].make({ itemId: "a", text: "Answer", sourceRefs: [] })
- * console.log(planReviewItemWrite({ stored: [item], items: [item], repair: false }).write.length) // 0
+ * const request = ReviewItemWriteRequest.make({ stored: [item], items: [item], repair: false })
+ * console.log(planReviewItemWrite(request).write.length) // 0
  * ```
  *
  * @param input - The latest stored version of each id, the items to store, and whether the write is an explicit repair.
@@ -168,15 +202,7 @@ const sameItem = S.toEquivalence(ReviewItem);
  * @category utilities
  * @since 0.0.0
  */
-export const planReviewItemWrite = ({
-  items,
-  repair,
-  stored,
-}: {
-  readonly items: ReadonlyArray<ReviewItem>;
-  readonly repair: boolean;
-  readonly stored: ReadonlyArray<StoredReviewItem>;
-}): ReviewItemWritePlan => {
+export const planReviewItemWrite = ({ items, repair, stored }: ReviewItemWriteRequest): ReviewItemWritePlan => {
   const latestOf = (item: ReviewItem) => A.findFirst(stored, ({ itemId }) => itemId === item.itemId);
   const isHeld = (item: ReviewItem) => !repair && O.exists(latestOf(item), isLegacyReviewItemImported);
   const isUnchanged = (item: ReviewItem) =>

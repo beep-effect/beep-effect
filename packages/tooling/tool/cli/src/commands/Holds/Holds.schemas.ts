@@ -532,6 +532,55 @@ export class HoldCoreEvent extends S.Opaque<HoldCoreEvent, { readonly brand: uni
   }).pipe($I.annoteSchema("HoldCoreEvent", { description: "A native hold core and the end of its activity." }))
 ) {}
 
+const HoldEvidenceEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Evidence"),
+  claim: ClaimReference,
+  supportedBy: S.Array(ProbeRunId),
+  challengedBy: S.Array(ProbeRunId),
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldEvidenceEvent", {
+    description: "A separate hold evidence record listing supporting and challenging refs for one claim.",
+  })
+);
+
+const HoldReviewEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Review"),
+  claim: ClaimReference,
+  review: HoldReviewState,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldReviewEvent", {
+    description: "A separate hold review record for one claim.",
+  })
+);
+
+const HoldSignalsEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Signals"),
+  claim: ClaimReference,
+  signals: HoldEvidenceSignals,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldSignalsEvent", {
+    description: "A separate hold evidence-signals record for one claim.",
+  })
+);
+
+const HoldSuccessionEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Succession"),
+  claim: ClaimId,
+  predecessor: ClaimReference,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldSuccessionEvent", {
+    description: "A hold succession record linking a native core to the claim it replaces.",
+  })
+);
+
 /**
  * Separate v2 hold records attached to an explicitly namespaced claim.
  *
@@ -559,35 +608,10 @@ export class HoldCoreEvent extends S.Opaque<HoldCoreEvent, { readonly brand: uni
  */
 export const HoldClaimEvent = S.Union([
   HoldCoreEvent,
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Evidence"),
-    claim: ClaimReference,
-    supportedBy: S.Array(ProbeRunId),
-    challengedBy: S.Array(ProbeRunId),
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Review"),
-    claim: ClaimReference,
-    review: HoldReviewState,
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Signals"),
-    claim: ClaimReference,
-    signals: HoldEvidenceSignals,
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Succession"),
-    claim: ClaimId,
-    predecessor: ClaimReference,
-    at: S.DateTimeUtcFromMillis,
-  }),
+  HoldEvidenceEvent,
+  HoldReviewEvent,
+  HoldSignalsEvent,
+  HoldSuccessionEvent,
 ]).pipe(
   S.toTaggedUnion("event"),
   $I.annoteSchema("HoldClaimEvent", { description: "One hold-claim-record/v2 line; old envelopes are never written." })
