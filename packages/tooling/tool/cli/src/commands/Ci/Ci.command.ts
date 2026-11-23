@@ -41,6 +41,7 @@ import { ciTaskOutcomesCommand } from "./CiTaskOutcomes.ts";
 import { ciUnitTimingsCommand } from "./CiUnitTimings.ts";
 import { ciLedgerCommand } from "./CostLedger.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
+import { ciFleetMissedEventCheckCommand } from "./FleetMissedEvent.command.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 import { ciRouteCommand } from "./Route.command.ts";
 import type { ActionOutputs } from "@beep/github-actions/ActionOutputs";
@@ -394,6 +395,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci dependency-review --base <sha> --head <sha>",
     "- bun run beep ci ruleset [--capture|--check]",
     "- bun run beep ci settings [--check]",
+    "- bun run beep ci fleet-missed-event-check [--repository owner/name] [--workflow-file file]",
     "- bun run beep ci held-group",
     "- bun run beep ci job-env",
     "- bun run beep ci partitions rebalance [--check] [--write --run <id> [--run <id>...]] [--prune]",
@@ -428,6 +430,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     appendTurboSummaryCommand,
     ciAppendGateReportsCommand,
     ciDependencyReviewCommand,
+    ciFleetMissedEventCheckCommand,
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciCertaintyCommand,
