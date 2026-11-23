@@ -2673,11 +2673,11 @@ A pool makes **progress** when at least one of its jobs started in the last 15 m
 | `Stuck` | yes | The pool is at cap, a job of that pool is queued, and a runner of the pool is idle in both runner reads of the run. |
 | `Wedged` | yes | The pool is at cap, at least one counted runner is not busy (offline or idle), a pool job has been queued 15 minutes or more, and the pool made no progress. |
 | `MissedDelivery` | yes, before 6b | No 2xx `queued` delivery for the job on repository hook 714397446, 5 minutes or more after the job was created. |
-| `NoLaunch` | yes | The job has been queued 10 minutes or more, the pool is below cap counting registered runners, the pool has no idle runner, and either the launches since the job's creation do not cover its rank or the pool made no progress. This is the trigger. |
+| `NoLaunch` | yes | The job has been queued 10 minutes or more, the pool is below cap counting registered runners, the pool has no idle runner, and one of three holds. The launches since the job's creation cover its rank (launches ≥ rank, and the job is still queued). Or the pool made no progress. Or the job has been queued 2 hours or more. This is the trigger. |
 | `WaitingAtCap` | no | The pool is at cap, and no `Stuck` or `Wedged` condition holds. All runners busy at cap stays here. |
 | `Waiting` | no | The pool is below cap, has made progress, and the launches since the job's creation are fewer than the job's rank: the pool's queued jobs created at or before it, itself included. |
 
-**Precedence.** A job gets the first verdict that holds, in this order: `Stuck`, `Wedged`, `MissedDelivery`, `NoLaunch`, `WaitingAtCap`, `Waiting`. Below the 10-minute threshold a job is `WaitingAtCap` or `Waiting`, unless `Stuck`, `Wedged` or `MissedDelivery` holds. `Waiting` needs progress: with no progress, a job queued 10 minutes or more below cap is `NoLaunch` whatever its rank, so a total scale-up outage cannot hide as `Waiting`.
+**Precedence.** A job gets the first verdict that holds, in this order: `Stuck`, `Wedged`, `MissedDelivery`, `NoLaunch`, `WaitingAtCap`, `Waiting`. Below the 10-minute threshold a job is `WaitingAtCap` or `Waiting`, unless `Stuck`, `Wedged` or `MissedDelivery` holds. `Waiting` needs progress: with no progress, a job queued 10 minutes or more below cap is `NoLaunch` whatever its rank, so a total scale-up outage cannot hide as `Waiting`. Launches are read only from runs created in the last two hours, so a job queued 2 hours or more below cap is `NoLaunch` whatever its rank or progress: an undercount of launches cannot leave it `Waiting` forever.
 
 Each `NoLaunch` carries a classification:
 
@@ -2745,6 +2745,8 @@ The check never redelivers, cancels, reruns or writes anything. It files no issu
 - a detail read that fails (`unknown`);
 - the rank rule with progress (`Waiting` with 3 launches for rank 4);
 - a total outage: 0 launches and 3 jobs queued 10 minutes or more below cap, all `NoLaunch`;
+- launches that cover the rank while the job is still queued (`NoLaunch`, watch-once's LOST rule);
+- a job queued 2 hours or more below cap with progress and launches below its rank (`NoLaunch`, not `Waiting`);
 - a cap read that cycles between the two runner reads (`WaitingAtCap`, not `Stuck`);
 - an idle runner at cap in both reads (`Stuck`);
 - two ghost `offline` runners at cap 2 with a job queued 20 minutes and no progress (`Wedged`);
