@@ -62,8 +62,7 @@ export type Platform = typeof Platform.Type;
 const optionalFlag = (key: string, description: string) =>
   S.optionalKey(S.Boolean).pipe($I.annoteKey(`EngineOptions.${key}`, { description }));
 
-// A cap is a positive safe integer: the domain assertCap enforces at runtime.
-const optionalCap = (key: string, description: string) =>
+const optionalPositiveIntCapLikeAssertCap = (key: string, description: string) =>
   S.optionalKey(S.Finite.check(S.isInt(), S.isGreaterThan(0))).pipe(
     $I.annoteKey(`EngineOptions.${key}`, { description })
   );
@@ -95,7 +94,7 @@ const optionalCap = (key: string, description: string) =>
  */
 export class EngineOptions extends S.Opaque<EngineOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    braceExpandMax: optionalCap(
+    braceExpandMax: optionalPositiveIntCapLikeAssertCap(
       "braceExpandMax",
       "Max number of `{...}` patterns to expand (default and ceiling 100_000)."
     ),
@@ -106,11 +105,11 @@ export class EngineOptions extends S.Opaque<EngineOptions, { readonly brand: uni
       "matchBase",
       "Match patterns without slashes against the basename of a path that contains slashes."
     ),
-    maxExtglobRecursion: optionalCap(
+    maxExtglobRecursion: optionalPositiveIntCapLikeAssertCap(
       "maxExtglobRecursion",
       "Max depth to traverse for nested extglobs like `*(a|b|c)`."
     ),
-    maxGlobstarRecursion: optionalCap(
+    maxGlobstarRecursion: optionalPositiveIntCapLikeAssertCap(
       "maxGlobstarRecursion",
       "Max number of non-adjacent `**` patterns to recursively walk down."
     ),

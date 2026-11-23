@@ -215,8 +215,6 @@ export class FailureDetails extends S.Opaque<FailureDetails, { readonly brand: u
   }).pipe($I.annoteSchema("FailureDetails", { description: "Plain FailureDetails data." }))
 ) {}
 /**
- * Companion types for {@link FailureDetails}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -317,8 +315,6 @@ export class ReportFailuresOptions extends S.Opaque<ReportFailuresOptions, { rea
   }).pipe($I.annoteSchema("ReportFailuresOptions", { description: "Plain ReportFailuresOptions data." }))
 ) {}
 /**
- * Companion types for {@link ReportFailuresOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

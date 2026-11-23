@@ -4,36 +4,41 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import type { ProgrammaticRecord } from "@beep/tsconfig/CompilerOptionsFromProgrammatic";
 
-/** Transcription of `CompilerOptionsValue` (typescript@6.0.3). */
+// Adapted from typescript@6.0.3 lib/typescript.d.ts CompilerOptionsValue and CompilerOptions (Apache-2.0).
+type MapLikeStringArray = { [index: string]: string[] };
+type PluginImportArray = { name: string }[];
+type ProjectReferenceArray = { path: string; originalPath?: string; prepend?: boolean; circular?: boolean }[];
 type CompilerOptionsValueReplica =
   | string
   | number
   | boolean
   | (string | number)[]
   | string[]
-  | { [index: string]: string[] } // MapLike<string[]>
-  | { name: string }[] // PluginImport[]
-  | { path: string; originalPath?: string; prepend?: boolean; circular?: boolean }[] // ProjectReference[]
+  | MapLikeStringArray
+  | PluginImportArray
+  | ProjectReferenceArray
   | null
   | undefined;
 
-/** Structural replica of `ts.CompilerOptions` (typescript@6.0.3), enums as `number`. */
-interface CompilerOptionsReplica {
-  jsx?: number; // JsxEmit
+type JsxEmit = number;
+type ModuleKind = number;
+type ModuleDetectionKind = number;
+type ModuleResolutionKind = number;
+type NewLineKind = number;
+type ScriptTarget = number;
+interface CompilerOptionsReplicaWithEnumsAsNumber {
+  jsx?: JsxEmit;
   lib?: string[];
-  module?: number; // ModuleKind
-  moduleDetection?: number; // ModuleDetectionKind
-  moduleResolution?: number; // ModuleResolutionKind
-  newLine?: number; // NewLineKind
-  target?: number; // ScriptTarget
+  module?: ModuleKind;
+  moduleDetection?: ModuleDetectionKind;
+  moduleResolution?: ModuleResolutionKind;
+  newLine?: NewLineKind;
+  target?: ScriptTarget;
   [option: string]: CompilerOptionsValueReplica;
 }
 
-// Unknown options are preserved by the source schema and the encoder. Their
-// values need not fit TypeScript's CompilerOptionsValue union, so the output
-// belongs to the unknown-valued record accepted by the programmatic codec.
 describe("TsEnumCodec — ProgrammaticCompilerOptions assignability", () => {
-  it("ProgrammaticCompilerOptions accepts unknown values and assigns to ProgrammaticRecord", () => {
+  it("ProgrammaticCompilerOptions accepts unknown values and assigns to ProgrammaticRecord: unknown options survive the schema and encoder, and their values need not fit CompilerOptionsValue", () => {
     const futureOption = { enabled: true };
     const programmatic: ProgrammaticCompilerOptions = {
       target: 10,
@@ -76,7 +81,7 @@ describe("TsEnumCodec — ProgrammaticCompilerOptions assignability", () => {
       lib: ["esnext", "dom"],
       futureOption: { enabled: true },
     });
-    const compilerOptions: CompilerOptionsReplica = Struct.pick(programmatic, [
+    const compilerOptions: CompilerOptionsReplicaWithEnumsAsNumber = Struct.pick(programmatic, [
       "target",
       "module",
       "moduleResolution",

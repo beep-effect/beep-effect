@@ -880,10 +880,6 @@
   "@beep/law-practice-use-cases/server": [
     "./packages/law-practice/use-cases/src/server.ts"
   ],
-  "@beep/provenance": [
-    "./packages/foundation/modeling/provenance/src/index.ts"
-  ],
-  "@beep/provenance/*": ["./packages/foundation/modeling/provenance/src/*"],
   "@beep/schema/UnitInterval": [
     "./packages/foundation/modeling/schema/src/UnitInterval.ts"
   ],
@@ -2415,10 +2411,15 @@
   "@beep/repo-cli/commands/Identity": [
     "./packages/tooling/tool/cli/src/commands/Identity/index.ts"
   ],
-  "@beep/repo-cli/commands/Decisions": [
-    "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
+  "@beep/text": ["./packages/foundation/modeling/text/src/index.ts"],
+  "@beep/text/*": ["./packages/foundation/modeling/text/src/*"],
+  "@beep/md/Md.anchors": [
+    "./packages/foundation/modeling/md/src/Md.anchors.ts"
   ],
   "@beep/lint-rules/comment-grammar": [
     "./packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts"
+  ],
+  "@beep/repo-cli/commands/Decisions": [
+    "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
   ]
 }

@@ -1,6 +1,4 @@
 import * as WebAnnotationAdapters from "@beep/rdf/Adapters/WebAnnotation";
-import * as EvidenceModule from "@beep/rdf/Evidence";
-import { EvidenceAnchor } from "@beep/rdf/Evidence";
 import * as JsonLdModule from "@beep/rdf/JsonLd";
 import * as ProvModule from "@beep/rdf/Prov";
 import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
@@ -8,24 +6,15 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-
-const decodeUnknown = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
-  S.decodeUnknownEffect(schema);
 
 const auditModules = [
   {
     exclude: new Set(["JsonLdKeyword", "JsonLdPropertyValue", "JsonLdScalar"]),
     exports: JsonLdModule,
     name: "jsonld",
-  },
-  {
-    exclude: new Set(["EvidenceSelector", "EvidenceSelectorKind"]),
-    exports: EvidenceModule,
-    name: "evidence",
   },
   {
     exclude: new Set(["ProvO", "ProvRecord"]),
@@ -40,33 +29,6 @@ const auditModules = [
 ] as const;
 
 describe("Interop and Metadata", () => {
-  it.effect("round-trips EvidenceAnchor values through Web Annotation mappers", () =>
-    Effect.gen(function* () {
-      const anchor = yield* decodeUnknown(EvidenceAnchor)({
-        id: "https://example.com/annotations/position-1",
-        note: "Selected code span",
-        target: {
-          selector: {
-            end: 8,
-            kind: "text-position",
-            start: 2,
-          },
-          source: "https://example.com/documents/1",
-        },
-      });
-
-      const annotation = WebAnnotationAdapters.evidenceAnchorToWebAnnotation(anchor);
-      expect(annotation.type).toBe("Annotation");
-      expect(annotation.bodyValue).toEqual(anchor.note);
-      expect(annotation.target.selector.type).toBe("TextPositionSelector");
-
-      const roundTripped = WebAnnotationAdapters.webAnnotationToEvidenceAnchor(annotation);
-      expect(roundTripped.note).toEqual(anchor.note);
-      expect(roundTripped.target.source).toBe(anchor.target.source);
-      expect(roundTripped.target.selector).toEqual(anchor.target.selector);
-    })
-  );
-
   it("audits semantic schema metadata coverage for public schema families", () => {
     for (const moduleAudit of auditModules) {
       const moduleExports: Readonly<Record<string, unknown>> = moduleAudit.exports;

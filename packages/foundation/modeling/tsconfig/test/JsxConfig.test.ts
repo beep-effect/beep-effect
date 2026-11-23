@@ -8,8 +8,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 
-/** Unwrap a `Some`, failing the test on `None`. */
-const expectSome = (result: O.Option<JsxConfig>): JsxConfig => {
+const unwrapSomeFailingOnNone = (result: O.Option<JsxConfig>): JsxConfig => {
   const config = O.getOrThrow(result);
   assertSome(result, config);
   return config;
@@ -17,23 +16,22 @@ const expectSome = (result: O.Option<JsxConfig>): JsxConfig => {
 
 describe("JsxConfig.fromCompilerOptions", () => {
   it("react-jsx selects the automatic runtime with the react default import source", () => {
-    const config = expectSome(JsxConfig.fromCompilerOptions({ jsx: "react-jsx" }));
+    const config = unwrapSomeFailingOnNone(JsxConfig.fromCompilerOptions({ jsx: "react-jsx" }));
     assert(config.runtime === "automatic");
     assert.strictEqual(config.importSource, "react");
   });
 
   it("react-jsxdev honors an explicit jsxImportSource", () => {
     const options: CompilerOptions.Type = { jsx: "react-jsxdev", jsxImportSource: "preact" };
-    const config = expectSome(JsxConfig.fromCompilerOptions(options));
+    const config = unwrapSomeFailingOnNone(JsxConfig.fromCompilerOptions(options));
     assert(config.runtime === "automatic");
     assert.strictEqual(config.importSource, "preact");
   });
 
   it("react selects the classic runtime and carries no import source", () => {
-    const config = expectSome(JsxConfig.fromCompilerOptions({ jsx: "react", jsxImportSource: "ignored" }));
+    const config = unwrapSomeFailingOnNone(JsxConfig.fromCompilerOptions({ jsx: "react", jsxImportSource: "ignored" }));
     assert.strictEqual(config.runtime, "classic");
-    // The classic variant omits the field, rather than carrying undefined.
-    assert.isFalse("importSource" in config);
+    assert.isFalse("importSource" in config, "the classic variant omits the field rather than carrying undefined");
   });
 
   it("preserve leaves JSX untransformed: nothing for a bundler to configure", () => {

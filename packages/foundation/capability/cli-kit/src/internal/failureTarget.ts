@@ -69,8 +69,6 @@ export class FailureTarget extends S.Opaque<FailureTarget, { readonly brand: uni
   }).pipe($I.annoteSchema("FailureTarget", { description: "Plain FailureTarget data." }))
 ) {}
 /**
- * Companion types for {@link FailureTarget}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -128,8 +126,6 @@ export class FailureSettings extends S.Opaque<FailureSettings, { readonly brand:
   }).pipe($I.annoteSchema("FailureSettings", { description: "Plain FailureSettings data." }))
 ) {}
 /**
- * Companion types for {@link FailureSettings}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

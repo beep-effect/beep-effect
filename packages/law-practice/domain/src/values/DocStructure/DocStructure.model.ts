@@ -4,11 +4,11 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/DocStructure/DocStructure.model");

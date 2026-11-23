@@ -31,8 +31,9 @@ const isSkipped = S.is(SyntaxKind.pick(["Trivia", "LineBreak"]));
 const isCloser = S.is(SyntaxKind.pick(["CloseBrace", "CloseBracket"]));
 const isOpener = S.is(SyntaxKind.pick(["OpenBrace", "OpenBracket"]));
 const isComment = S.is(SyntaxKind.pick(["LineComment", "BlockComment"]));
-// Tokens after which only a comma, a comment or the end of input may follow.
-const isValueEnd = S.is(SyntaxKind.pick(["Null", "True", "False", "Number", "CloseBrace", "CloseBracket"]));
+const isValueEndNeedingCommaCommentOrEof = S.is(
+  SyntaxKind.pick(["Null", "True", "False", "Number", "CloseBrace", "CloseBracket"])
+);
 
 /**
  * Formats JSONC text into canonical whitespace, as minimal edits or as a
@@ -114,31 +115,19 @@ export abstract class JsoncFormatter {
   );
 }
 
-// The formatter is a port of the `format` function of Microsoft's
-// `jsonc-parser` 3.3.1 (MIT), token for token: the gap after each token is
-// replaced by its canonical form, an empty container stays compact, the first
-// structural error suppresses the edit it would make, and a range formats the
-// lines it touches, starting at the indentation of its first line. The indent
-// unit keeps this package's total reading of `tabSize` (see the README
-// deviations). Upstream's one function is split into small steps over a
-// mutable `FormatRun`.
+// Ported from microsoft/node-jsonc-parser src/impl/format.ts (MIT).
 
-// The document's own line ending wins over the option, as upstream reads it.
 const documentEol = (text: string, fallback: string): string =>
   O.match(Str.match(/\r\n?|\n/)(text), { onNone: () => fallback, onSome: (found) => found[0] });
 
-// The indent level of the first line of `text`, counting a tab as `tabSize`
-// columns (a zero width counts as 4, as upstream does).
 const leadingIndentLevel = (text: string, tabSize: number): number => {
-  const width = tabSize === 0 ? 4 : tabSize;
+  const tabWidthZeroReadAsFour = tabSize === 0 ? 4 : tabSize;
   const leading = Str.slice(0, text.length - Str.replace(/^[ \t]+/, "")(text).length)(text);
   const tabs = Str.split(leading, "\t").length - 1;
-  return Math.floor((leading.length - tabs + tabs * width) / width);
+  return Math.floor((leading.length - tabs + tabs * tabWidthZeroReadAsFour) / tabWidthZeroReadAsFour);
 };
 
 interface FormatRun {
-  // Edits grow in place: an immutable append copies every earlier edit per
-  // token gap and makes reflowing a compact document quadratic.
   readonly edits: Array<JsoncEdit>;
   readonly eol: string;
   readonly formatTextStart: number;
@@ -180,8 +169,6 @@ const makeRun = (text: string, range: O.Option<JsoncRange>, options: JsoncFormat
   };
 };
 
-// A negative level (a surplus closer) clamps to no indent: `Str.repeat`
-// yields the empty string, so formatting stays total.
 const indentOf = (run: FormatRun, level: number): string => Str.repeat(level)(run.indentUnit);
 
 const newLinesAndIndent = (run: FormatRun): string =>
@@ -214,10 +201,8 @@ const tokenStart = (run: FormatRun): number => run.scanner.getTokenOffset() + ru
 const tokenEnd = (run: FormatRun): number => tokenStart(run) + run.scanner.getTokenLength();
 const keptBreak = (run: FormatRun): boolean => run.options.keepLines && run.lineBreaks > 0;
 
-// One token gap: the token before it, the token after it, whether a line
-// comment between them forces a break, and the content chosen so far.
 interface Gap {
-  readonly current: string;
+  readonly contentChosenSoFar: string;
   readonly first: SyntaxKind;
   readonly needsLineBreak: boolean;
   readonly second: SyntaxKind;
@@ -226,25 +211,23 @@ interface Gap {
 const opensIt = (gap: Gap): boolean =>
   SyntaxKind.is.CloseBrace(gap.second) ? SyntaxKind.is.OpenBrace(gap.first) : SyntaxKind.is.OpenBracket(gap.first);
 
-// The gap before a closer: a matched empty container stays compact.
 const closerGap = (run: FormatRun, gap: Gap): string => {
-  const empty = opensIt(gap);
-  if (!empty) {
+  const isMatchedEmptyContainer = opensIt(gap);
+  if (!isMatchedEmptyContainer) {
     run.indentLevel--;
   }
-  if (keptBreak(run) || (!run.options.keepLines && !empty)) {
+  if (keptBreak(run) || (!run.options.keepLines && !isMatchedEmptyContainer)) {
     return newLinesAndIndent(run);
   }
-  return run.options.keepLines ? " " : gap.current;
+  return run.options.keepLines ? " " : gap.contentChosenSoFar;
 };
 
 const breakOrSpace = (run: FormatRun): string =>
   !run.options.keepLines || run.lineBreaks > 0 ? newLinesAndIndent(run) : " ";
 const keptBreakOr = (run: FormatRun, otherwise: () => string): string =>
   keptBreak(run) ? newLinesAndIndent(run) : otherwise();
-const spaceUnlessBreak = (gap: Gap): string => (gap.needsLineBreak ? gap.current : " ");
+const spaceUnlessBreak = (gap: Gap): string => (gap.needsLineBreak ? gap.contentChosenSoFar : " ");
 
-// The gap after an opener, a separator, a comment, a key or a value.
 const tokenGap: (run: FormatRun, gap: Gap) => string = (run, gap) =>
   Match.value(gap.first).pipe(
     Match.when(isOpener, () => {
@@ -256,13 +239,13 @@ const tokenGap: (run: FormatRun, gap: Gap) => string = (run, gap) =>
     Match.when(SyntaxKind.is.BlockComment, () => (run.lineBreaks > 0 ? newLinesAndIndent(run) : spaceUnlessBreak(gap))),
     Match.when(SyntaxKind.is.Colon, () => keptBreakOr(run, () => spaceUnlessBreak(gap))),
     Match.when(SyntaxKind.is.String, () =>
-      keptBreakOr(run, () => (SyntaxKind.is.Colon(gap.second) && !gap.needsLineBreak ? "" : gap.current))
+      keptBreakOr(run, () => (SyntaxKind.is.Colon(gap.second) && !gap.needsLineBreak ? "" : gap.contentChosenSoFar))
     ),
-    Match.orElse(() => keptBreakOr(run, () => (isComment(gap.second) && !gap.needsLineBreak ? " " : gap.current)))
+    Match.orElse(() =>
+      keptBreakOr(run, () => (isComment(gap.second) && !gap.needsLineBreak ? " " : gap.contentChosenSoFar))
+    )
   );
 
-// Upstream's structural errors: a value followed by anything but a comma, a
-// comment on its line or the end of input, and an unknown token.
 const isStructuralError = (run: FormatRun, gap: Gap): boolean => {
   if (SyntaxKind.is.Unknown(gap.first)) {
     return true;
@@ -272,7 +255,7 @@ const isStructuralError = (run: FormatRun, gap: Gap): boolean => {
     (isComment(gap.second) && !gap.needsLineBreak) ||
     SyntaxKind.is.Comma(gap.second) ||
     SyntaxKind.is.EOF(gap.second);
-  return isValueEnd(gap.first) && !allowed;
+  return isValueEndNeedingCommaCommentOrEof(gap.first) && !allowed;
 };
 
 const openGap = (run: FormatRun, gap: Gap): string => {
@@ -288,26 +271,24 @@ const finalGap = (run: FormatRun): string => {
   return run.options.insertFinalNewline ? run.eol : "";
 };
 
-// Comments on the same line stay there, one space after the token.
 const sameLineComments = (run: FormatRun, firstEnd: number) => {
   let end = firstEnd;
   let second = scanNext(run);
   let needsLineBreak = false;
-  let current = "";
+  let contentChosenSoFar = "";
   while (run.lineBreaks === 0 && isComment(second)) {
     addEdit(run, " ", end, tokenStart(run));
     end = tokenEnd(run);
     needsLineBreak = SyntaxKind.is.LineComment(second);
-    current = needsLineBreak ? newLinesAndIndent(run) : "";
+    contentChosenSoFar = needsLineBreak ? newLinesAndIndent(run) : "";
     second = scanNext(run);
   }
-  return { end, second, needsLineBreak, current };
+  return { end, second, needsLineBreak, contentChosenSoFar };
 };
 
-// Format the gap after `first`, returning the token that follows it.
-const formatGap = (run: FormatRun, first: SyntaxKind): SyntaxKind => {
-  const { end, second, needsLineBreak, current } = sameLineComments(run, tokenEnd(run));
-  const gap: Gap = { first, second, needsLineBreak, current };
+const formatGapAfterTokenReturningNext = (run: FormatRun, first: SyntaxKind): SyntaxKind => {
+  const { end, second, needsLineBreak, contentChosenSoFar } = sameLineComments(run, tokenEnd(run));
+  const gap: Gap = { first, second, needsLineBreak, contentChosenSoFar };
   const content = isCloser(second) ? closerGap(run, gap) : openGap(run, gap);
   addEdit(run, SyntaxKind.is.EOF(second) ? finalGap(run) : content, end, tokenStart(run));
   return second;
@@ -326,7 +307,7 @@ const formatImpl: {
     addEdit(run, indentOf(run, run.initialIndentLevel), run.formatTextStart, tokenStart(run));
   }
   while (!SyntaxKind.is.EOF(token)) {
-    token = formatGap(run, token);
+    token = formatGapAfterTokenReturningNext(run, token);
   }
   return run.edits;
 });

@@ -1,16 +1,3 @@
-// Property floor for the jsonc module (effected-port goal 11.4, D10).
-//
-// Every exported schema and codec round-trips: encoding then decoding returns
-// the value under the schema's own equivalence, and decoding an encoded value
-// never fails. Every parser and formatter keeps its idempotence and fidelity
-// laws, together with the README's guarantees: comments survive edits, value
-// spans are exact, a formatter pass is a whitespace diff, comment stripping
-// keeps offsets with a replacement character, and fingerprints ignore key order
-// (and line endings when asked). The properties already in Jsonc.test.ts (parse
-// agreeing with stripComments, JsoncFromString over one fixed struct) and
-// JsoncFormatter.test.ts (idempotence on plain JSON) are not repeated here.
-//
-// The synchronous digest twin is checked against WebCrypto's SHA-256 backend.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import {
   Jsonc,
@@ -63,21 +50,16 @@ import type { JsoncDigest } from "@beep/jsonc";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// ── Shared JSON vocabulary ──────────────────────────────────────────────────
-
 const decodeJson = S.decodeUnknownEffect(S.Json);
 const jsonEquivalent = S.toEquivalence(S.Json);
 const compact = JsoncStringifyOptions.make({ tabSize: 0 });
 const commentsRejected = JsoncParseOptions.make({ disallowComments: true });
 
-// Parse a document and read the result back as a JSON value.
 const parseJson = Effect.fnUntraced(function* (text: string, options?: JsoncParseOptions) {
   const parsed1 = yield* Jsonc.parse(text, options);
   return yield* decodeJson(parsed1);
 });
 
-// The members of a JSON container as `[key, value]` pairs (array keys are
-// indexes); a scalar has none.
 const members = (value: unknown): ReadonlyArray<readonly [string, unknown]> => {
   if (A.isArray(value)) {
     return A.map(value, (item, index): readonly [string, unknown] => [String(index), item]);
@@ -85,7 +67,6 @@ const members = (value: unknown): ReadonlyArray<readonly [string, unknown]> => {
   return P.isObject(value) ? R.toEntries(value) : A.empty();
 };
 
-// The same JSON value with every object's members in reverse order.
 const reverseKeys = (value: unknown): unknown => {
   if (A.isArray(value)) {
     return A.map(value, (item) => reverseKeys(item));
@@ -98,8 +79,6 @@ const reverseKeys = (value: unknown): unknown => {
   return value;
 };
 
-// The same JSON value with one extra member, valued `undefined`, on every
-// object that does not already use the key.
 const UNSET_KEY = "unset";
 
 const withUnsetMembers = (value: unknown): unknown => {
@@ -113,23 +92,21 @@ const withUnsetMembers = (value: unknown): unknown => {
   return value;
 };
 
-// Whether `withUnsetMembers` adds a member anywhere in the value.
-const hasObject = (value: unknown): boolean =>
+const withUnsetMembersWouldAddAMember = (value: unknown): boolean =>
   (P.isObject(value) && !A.isArray(value) && !R.has(value, UNSET_KEY)) ||
-  A.some(members(value), ([, item]) => hasObject(item));
+  A.some(members(value), ([, item]) => withUnsetMembersWouldAddAMember(item));
 
-// Whether every string and member key is well-formed Unicode: the domain on
-// which RFC 8785 canonicalization is total.
-const isWellFormed = (value: unknown): boolean =>
+const isWellFormedSoRfc8785CanonicalizationIsTotal = (value: unknown): boolean =>
   P.isString(value)
     ? value.isWellFormed()
-    : A.every(members(value), ([key, item]) => key.isWellFormed() && isWellFormed(item));
+    : A.every(
+        members(value),
+        ([key, item]) => key.isWellFormed() && isWellFormedSoRfc8785CanonicalizationIsTotal(item)
+      );
 
-// The number of scalar leaves of a JSON value.
 const leaves = (value: unknown): number =>
   A.isArray(value) || P.isObject(value) ? A.reduce(members(value), 0, (count, [, item]) => count + leaves(item)) : 1;
 
-// The value a parsed document holds at a path, if any.
 const at = (value: unknown, path: JsoncPath): O.Option<unknown> =>
   A.reduce(path, O.some(value), (current, segment) =>
     O.flatMap(current, (node) => {
@@ -142,22 +119,15 @@ const at = (value: unknown, path: JsoncPath): O.Option<unknown> =>
 
 const lineBreaks = (text: string): number => Str.split(text, "\n").length - 1;
 
-// A JSONC rendering of JSON text: a leading line comment, a block comment at
-// the start of every line, a trailing comma before every closer that opens a
-// line, and a trailing block comment. JSON text carries raw line breaks only
-// between tokens, so every insertion lands between tokens. The rendering holds
-// exactly `2 + lineBreaks(json)` comments.
-const decorate = (json: string): string =>
+const decorateBetweenTokensWithCommentsAndTrailingCommas = (json: string): string =>
   `// lead\n${pipe(json, Str.replace(/\n(\s*[}\]])/g, ",\n$1"), Str.replaceAll("\n", "\n/* c */"))} /* tail */`;
 
 const render = Effect.fnUntraced(function* (value: S.Json, options: JsoncStringifyOptions) {
   const stringify2 = yield* Jsonc.stringify(value, options);
-  return decorate(stringify2);
+  return decorateBetweenTokensWithCommentsAndTrailingCommas(stringify2);
 });
 
-// Formatting options whose `eol` is a real line ending; the schema itself
-// accepts any string there, which no formatter can honour as a line break.
-const FormattingSample = S.Struct({
+const FormattingSampleWithAnEolAFormatterCanHonour = S.Struct({
   tabSize: S.Int.check(S.isBetween({ minimum: 0, maximum: 8 })),
   insertSpaces: S.Boolean,
   eol: S.Literals(["\n", "\r\n"]),
@@ -165,9 +135,7 @@ const FormattingSample = S.Struct({
   keepLines: S.Boolean,
 });
 
-// A domain target whose own encoding is not the identity (`size` travels as a
-// string), so the JSONC factories are exercised through a real composition.
-const Config = S.Struct({
+const ConfigWithNonIdentitySizeEncoding = S.Struct({
   name: S.String,
   port: S.Int,
   size: S.BigIntFromString,
@@ -175,18 +143,15 @@ const Config = S.Struct({
   tags: S.Array(S.String),
   extra: S.optionalKey(S.Json),
 });
-const decodeConfigJsonc = S.decodeEffect(Jsonc.schema(Config));
-const configEquivalent = S.toEquivalence(Config);
+const decodeConfigJsonc = S.decodeEffect(Jsonc.schema(ConfigWithNonIdentitySizeEncoding));
+const configEquivalent = S.toEquivalence(ConfigWithNonIdentitySizeEncoding);
 
-// A three-member object for the modifier, with a fresh member name to insert.
 const Document = S.Struct({ alpha: S.Json, beta: S.Json, gamma: S.Json });
 const MemberKey = S.Literals(["alpha", "beta", "gamma"]);
 
-const wellFormedJson = Arbitrary.schema(S.Json).pipe(Arbitrary.filter(isWellFormed));
+const wellFormedJson = Arbitrary.schema(S.Json).pipe(Arbitrary.filter(isWellFormedSoRfc8785CanonicalizationIsTotal));
 
-// Text made of the characters that matter to a JSONC scanner, so most samples
-// are near-miss documents rather than plain prose.
-const hostileText = S.Literals([
+const nearMissTextOfJsoncScannerCharacters = S.Literals([
   "{",
   "}",
   "[",
@@ -212,21 +177,15 @@ const hostileText = S.Literals([
   "\u2028",
 ]).pipe(S.Array, Arbitrary.schema, Arbitrary.map(A.join("")));
 
-// Text mixing every line-ending convention with ordinary characters.
 const lineText = S.Literals(["a", " ", "\n", "\r", "\r\n", "{", "\u00e9"]).pipe(
   S.Array,
   Arbitrary.schema,
   Arbitrary.map(A.join(""))
 );
 
-// A real SHA-256 backend over WebCrypto behind core's Digest contract, and the
-// synchronous digest the Result twins take.
-const CryptoTest = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
+const RealWebCryptoThroughCoreLayers = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
 const syncDigest: JsoncDigest = sha256;
 
-// encode then decode is the identity under the schema's own equivalence;
-// decoding the encoded value never fails (a failure falsifies the property);
-// re-encoding the decoded value reproduces the encoded form.
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   const encode = S.encodeEffect(schema);
   const decode = S.decodeEffect(schema);
@@ -240,13 +199,13 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
         const decoded = yield* decode(encoded);
         assertTrue(equivalent(decoded, value));
         const encoded3 = yield* encode(decoded);
-        assert.deepStrictEqual(encoded3, encoded);
+        assert.deepStrictEqual(encoded3, encoded, "re-encoding the decoded value reproduces the encoded form");
       }),
     runs
   );
 };
 
-describe("jsonc property floor", () => {
+describe("jsonc property floor (effected-port goal 11.4, D10), not repeating the properties Jsonc.test.ts and JsoncFormatter.test.ts already hold", () => {
   describe("schemas round-trip", () => {
     roundTrips("JsoncParseErrorCode", JsoncParseErrorCode);
     roundTrips("JsoncParseErrorDetail", JsoncParseErrorDetail);
@@ -290,14 +249,14 @@ describe("jsonc property floor", () => {
 
     it.effect.prop(
       "Jsonc.schema(Target, options) round-trips a domain value, and decodes its commented rendering",
-      [Arbitrary.schema(JsoncParseOptions), Arbitrary.schema(Config)],
+      [Arbitrary.schema(JsoncParseOptions), Arbitrary.schema(ConfigWithNonIdentitySizeEncoding)],
       ([options, value]) =>
         Effect.gen(function* () {
-          const codec = Jsonc.schema(Config, options);
+          const codec = Jsonc.schema(ConfigWithNonIdentitySizeEncoding, options);
           const text = yield* S.encodeEffect(codec)(value);
           const value4 = yield* S.decodeEffect(codec)(text);
           assertTrue(configEquivalent(value4, value));
-          const decodedConfigJsonc = yield* decodeConfigJsonc(decorate(text));
+          const decodedConfigJsonc = yield* decodeConfigJsonc(decorateBetweenTokensWithCommentsAndTrailingCommas(text));
           assertTrue(configEquivalent(decodedConfigJsonc, value));
         }),
       runs
@@ -305,10 +264,10 @@ describe("jsonc property floor", () => {
 
     it.effect.prop(
       "Jsonc.bind(Target) decodes what it encodes, through the bound and the composed codec alike",
-      [Arbitrary.schema(Config)],
+      [Arbitrary.schema(ConfigWithNonIdentitySizeEncoding)],
       ([value]) =>
         Effect.gen(function* () {
-          const bound = Jsonc.bind(Config);
+          const bound = Jsonc.bind(ConfigWithNonIdentitySizeEncoding);
           const text = yield* bound.encode(value);
           const decoded5 = yield* bound.decode(text);
           assertTrue(configEquivalent(decoded5, value));
@@ -352,7 +311,7 @@ describe("jsonc property floor", () => {
 
     it.effect.prop(
       "parsing is total on hostile text, and the value and AST modes agree",
-      [hostileText],
+      [nearMissTextOfJsoncScannerCharacters],
       ([text]) =>
         Effect.gen(function* () {
           const tree = Jsonc.parseTreeResult(text);
@@ -391,7 +350,7 @@ describe("jsonc property floor", () => {
 
     it.effect.prop(
       "stripComments is idempotent and offset-stable on hostile text",
-      [hostileText],
+      [nearMissTextOfJsoncScannerCharacters],
       ([text]) =>
         Effect.gen(function* () {
           const stripped = Jsonc.stripComments(text);
@@ -421,13 +380,17 @@ describe("jsonc property floor", () => {
       ([value, rendering]) =>
         Effect.gen(function* () {
           const json = yield* Jsonc.stringify(value, rendering);
-          const text = decorate(json);
+          const text = decorateBetweenTokensWithCommentsAndTrailingCommas(json);
           const parsed = yield* Jsonc.parse(text);
           const parsedTree12 = yield* Jsonc.parseTree(text);
           const root = yield* Effect.fromOption(parsedTree12);
           const events = yield* Stream.runCollect(JsoncVisitor.visit(text));
           assert.deepStrictEqual(A.filter(events, JsoncVisitorEvent.guards.Error), []);
-          assert.strictEqual(A.filter(events, JsoncVisitorEvent.guards.Comment).length, 2 + lineBreaks(json));
+          assert.strictEqual(
+            A.filter(events, JsoncVisitorEvent.guards.Comment).length,
+            2 + lineBreaks(json),
+            "the decoration adds a lead comment, one comment per line break and a tail comment"
+          );
           const literals = A.filter(events, JsoncVisitorEvent.guards.LiteralValue);
           assert.strictEqual(literals.length, leaves(value));
           for (const literal of literals) {
@@ -442,7 +405,11 @@ describe("jsonc property floor", () => {
   describe("formatter laws", () => {
     it.effect.prop(
       "formatting a commented document is idempotent, a whitespace-only diff, and value-preserving",
-      [Arbitrary.schema(S.Json), Arbitrary.schema(JsoncStringifyOptions), Arbitrary.schema(FormattingSample)],
+      [
+        Arbitrary.schema(S.Json),
+        Arbitrary.schema(JsoncStringifyOptions),
+        Arbitrary.schema(FormattingSampleWithAnEolAFormatterCanHonour),
+      ],
       ([value, rendering, formatting]) =>
         Effect.gen(function* () {
           const text = yield* render(value, rendering);
@@ -459,10 +426,9 @@ describe("jsonc property floor", () => {
       runs
     );
 
-    // Port deviation (upstream-bug: upstream's String.prototype.repeat throws a RangeError on a surplus closer, a defect from a total function): the lab clamps the indent to none.
     it.effect.prop(
       "formatting is total on hostile text and rewrites only whitespace",
-      [hostileText, Arbitrary.schema(FormattingSample)],
+      [nearMissTextOfJsoncScannerCharacters, Arbitrary.schema(FormattingSampleWithAnEolAFormatterCanHonour)],
       ([text, formatting]) =>
         Effect.gen(function* () {
           const edits = JsoncFormatter.format(text, undefined, formatting);
@@ -472,7 +438,8 @@ describe("jsonc property floor", () => {
           }
           assert.strictEqual(
             JsoncFormatter.formatToString(text, undefined, formatting),
-            JsoncEdit.applyAll(text, edits)
+            JsoncEdit.applyAll(text, edits),
+            "port deviation (upstream-bug): upstream's String.prototype.repeat throws a RangeError on a surplus closer; the lab clamps the indent to none"
           );
         }),
       runs
@@ -529,7 +496,7 @@ describe("jsonc property floor", () => {
         Arbitrary.schema(Document),
         Arbitrary.schema(S.Json),
         Arbitrary.schema(JsoncStringifyOptions),
-        Arbitrary.schema(FormattingSample),
+        Arbitrary.schema(FormattingSampleWithAnEolAFormatterCanHonour),
       ],
       ([document, next, rendering, formatting]) =>
         Effect.gen(function* () {
@@ -578,7 +545,10 @@ describe("jsonc property floor", () => {
           const sparse = withUnsetMembers(value);
           const omitted = yield* JsoncFingerprint.canonicalize(sparse, omitting);
           assert.strictEqual(omitted, canonical);
-          assert.strictEqual(Result.isFailure(JsoncFingerprint.canonicalizeResult(sparse)), hasObject(value));
+          assert.strictEqual(
+            Result.isFailure(JsoncFingerprint.canonicalizeResult(sparse)),
+            withUnsetMembersWouldAddAMember(value)
+          );
         }),
       runs
     );
@@ -597,7 +567,7 @@ describe("jsonc property floor", () => {
       runs
     );
 
-    it.layer(CryptoTest)("hashing with a Crypto layer", (it) => {
+    it.layer(RealWebCryptoThroughCoreLayers)("hashing with a Crypto layer", (it) => {
       it.effect.prop(
         "hash is hashText of the canonical text, agrees with hashResult, and ignores key order",
         [wellFormedJson],

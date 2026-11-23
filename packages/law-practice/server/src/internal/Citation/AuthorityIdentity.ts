@@ -74,13 +74,13 @@ const Components = S.Array(Component);
 const Key = S.fromJsonString(
   S.Union([
     S.Tuple([S.tag("citation-authority/v1"), S.tag("case"), Components]),
-    S.Tuple([S.tag("citation-authority/v1"), S.tag("case-occurrence"), CitationMentionId]),
+    S.Tuple([S.tag("citation-authority/v2"), S.tag("case-occurrence"), CitationMentionId]),
     S.Tuple([S.tag("citation-authority/v1"), S.Literals(["law", "journal"]), Components, S.Array(CitationEditionRef)]),
   ])
 ).pipe(
   $I.annoteSchema("Key", {
     description:
-      "Ordered JSON authority protocol; case resource identity or complete legal groups and edition bag, without metadata.",
+      "Ordered JSON authority protocol; case resource identity or complete legal groups and edition bag, without metadata. The case-occurrence key is citation-authority/v2 because it embeds a cm2 mention id.",
   })
 );
 const FailureReason = LiteralKit(["invalid-input", "missing-edition", "digest-failed"]).pipe(
@@ -104,6 +104,15 @@ export class CitationAuthorityIdentityFailure extends S.TaggedError<
 ) {}
 const invalid = () => CitationAuthorityIdentityFailure.make({ reason: "invalid-input" });
 const componentOrder = Order.mapInput(Order.String, (entry: typeof Component.Type) => entry[0]);
+const caseOccurrencePreimage = (mentionId: CitationMentionId) =>
+  S.encodeEffect(Key)(["citation-authority/v2", "case-occurrence", mentionId]).pipe(Effect.mapError(invalid));
+const digestFailed = () => CitationAuthorityIdentityFailure.make({ reason: "digest-failed" });
+const hashKey = (preimage: string) =>
+  S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
+    Effect.mapError(digestFailed),
+    Effect.catchDefect(() => Effect.fail(digestFailed())),
+    Effect.map((digest) => CitationAuthorityId.make(`ca1:${digest}`))
+  );
 
 const caseAuthorityPreimage = Effect.fn("Citation.caseAuthorityPreimage")(function* (
   decoded: typeof CitationAuthorityIdentityInputType.Type,
@@ -115,9 +124,7 @@ const caseAuthorityPreimage = Effect.fn("Citation.caseAuthorityPreimage")(functi
   const reporter = R.get(components, "reporter");
   if (O.isNone(page)) return yield* invalid();
   if (page.value === null) {
-    return yield* S.encodeEffect(Key)(["citation-authority/v1", "case-occurrence", decoded.mentionId]).pipe(
-      Effect.mapError(invalid)
-    );
+    return yield* caseOccurrencePreimage(decoded.mentionId);
   }
   const groups = A.filter(pairs, ([name]) => name === "volume" || name === "page");
   if (O.isNone(edition) && O.isNone(reporter)) return yield* invalid();
@@ -172,9 +179,20 @@ export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(fun
       A.sort(citation.publication.editions, Order.String),
     ]).pipe(Effect.mapError(invalid));
   }
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => CitationAuthorityIdentityFailure.make({ reason: "digest-failed" })),
-    Effect.catchDefect(() => Effect.fail(CitationAuthorityIdentityFailure.make({ reason: "digest-failed" })))
-  );
-  return CitationAuthorityId.make(`ca1:${digest}`);
+  return yield* hashKey(preimage);
+});
+
+/**
+ * The `citation-authority/v2` case-occurrence authority id of one mention: the
+ * key of a case whose page is explicitly null, which stays occurrence-unique.
+ *
+ * @internal
+ * @category encoding
+ * @since 0.0.0
+ */
+export const makeCaseOccurrenceAuthorityId = Effect.fn("Citation.makeCaseOccurrenceAuthorityId")(function* (
+  mentionId: CitationMentionId
+): Effect.fn.Return<CitationAuthorityId, CitationAuthorityIdentityFailure, Digest.Digest> {
+  const preimage = yield* caseOccurrencePreimage(mentionId);
+  return yield* hashKey(preimage);
 });

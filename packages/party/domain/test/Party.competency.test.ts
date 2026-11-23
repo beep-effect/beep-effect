@@ -38,10 +38,36 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { AcmeFixture, AcmeFixtureLive, at, email, ids } from "./fixtures/acme.ts";
 
 const scope = (asOf = 20, validAt = 100) =>
   ProjectionScope.make({ asOf: at(asOf), validAt: at(validAt), states: ["Accepted"] });
+
+const syntheticDigest = (fill: string) => `sha256:${Str.repeat(64)(fill)}`;
+
+const encodedTextOccurrenceEvidenceOverSyntheticNote = (anchor: {
+  readonly startChar: number;
+  readonly endChar: number;
+  readonly quote: string;
+}) => ({
+  _tag: "TextOccurrence",
+  occurrence: "party-occ:synthetic",
+  anchored: {
+    receipt: {
+      anchor,
+      source: {
+        scopeRef: "matter:synthetic",
+        sourceRef: "source:synthetic",
+        locator: "notes/synthetic.txt",
+        sourceDigest: syntheticDigest("a"),
+        textDigest: syntheticDigest("b"),
+        extractor: { name: "utf8", version: "1" },
+        normalizationVersion: "1",
+      },
+    },
+  },
+});
 
 describe("party model competency questions", () => {
   it.prop(
@@ -58,18 +84,39 @@ describe("party model competency questions", () => {
       TestUtils.assertTrue
     );
     pipe(
-      S.decodeResult(EvidenceAnchor)({
-        _tag: "TextSpan",
-        occurrence: "party-occ:synthetic",
-        textDigest: "feedface",
-        start: 8,
-        end: 3,
-        quote: "synthetic",
-      }),
+      S.decodeUnknownResult(EvidenceAnchor)(
+        encodedTextOccurrenceEvidenceOverSyntheticNote({ startChar: 0, endChar: 5, quote: "fact" })
+      ),
       Result.isFailure,
       TestUtils.assertTrue
     );
     pipe(S.decodeUnknownResult(CommunicationEvent)({ participants: [] }), Result.isFailure, TestUtils.assertTrue);
+  });
+
+  it.effect(
+    "anchors text through a text occurrence whose receipt keeps its encoding",
+    Effect.fnUntraced(function* () {
+      const encoded = encodedTextOccurrenceEvidenceOverSyntheticNote({ startChar: 6, endChar: 10, quote: "fact" });
+      const decoded = yield* S.decodeUnknownEffect(EvidenceAnchor)(encoded);
+      expect(decoded._tag).toBe("TextOccurrence");
+      const reencoded = yield* S.encodeEffect(EvidenceAnchor)(decoded);
+      expect(reencoded).toEqual(encoded);
+    })
+  );
+
+  it("refuses the retired TextSpan evidence case", () => {
+    pipe(
+      S.decodeUnknownResult(EvidenceAnchor)({
+        _tag: "TextSpan",
+        occurrence: "party-occ:synthetic",
+        textDigest: "feedface",
+        start: 3,
+        end: 8,
+        quote: "synth",
+      }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
   });
 
   it("distinguishes structural gates from reviewer acceptance and rejects self-reporting", () => {

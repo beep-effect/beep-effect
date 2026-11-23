@@ -768,6 +768,10 @@ describe("GitCommand", () => {
       assertGitCommand(GitCommand.isShallow(), ["rev-parse", "--is-shallow-repository"]);
     });
 
+    it("localOnlyCommitCount builds `git rev-list --count --all --not --remotes --`", () => {
+      assertGitCommand(GitCommand.localOnlyCommitCount(), ["rev-list", "--count", "--all", "--not", "--remotes", "--"]);
+    });
+
     it("fetchUnshallow builds `git fetch --unshallow <remote>`", () => {
       assertGitCommand(GitCommand.fetchUnshallow(), ["fetch", "--unshallow", "origin"]);
       assertGitCommand(GitCommand.fetchUnshallow("upstream"), ["fetch", "--unshallow", "upstream"]);

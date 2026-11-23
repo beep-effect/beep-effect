@@ -18,7 +18,7 @@ import fixture from "../../use-cases/test/fixtures/eyecite/authority-identity-ca
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({
-  schemaVersion: S.tag("citation-authority-identity-cases/v1"),
+  schemaVersion: S.tag("citation-authority-identity-cases/v2"),
   oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
   cases: S.Array(
     S.Struct({ name: S.NonEmptyString, expectedId: CitationAuthorityId, input: CitationAuthorityIdentityInput })

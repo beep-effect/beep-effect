@@ -31,9 +31,6 @@ const countTag = (node: unknown, tag: string): number =>
     (total, child) => total + countTag(child, tag)
   );
 
-// A safe-profile success must hold no safety issue and must render through
-// the safe HTML renderer; a failure must be a typed error, and an unsafe
-// document error must name at least one violation.
 const holdsSafeProfile = (result: Result.Result<SafeDocument, MdParseSafeFailure>): boolean =>
   Result.match(result, {
     onSuccess: (document) =>
@@ -78,11 +75,13 @@ const MarkdownText = pipe(
   Arbitrary.map((tokens) => A.join(tokens, ""))
 );
 
-describe("@beep/md bridge corpus", () => {
-  it.effect("reproduces the bridge-corpus ledger", () =>
-    Effect.promise(() =>
-      expect(bridgeCorpusText(bridgeCorpusLedger(ROWS))).toMatchFileSnapshot("../data/conformance/bridge-corpus.json")
-    )
+describe("@beep/md bridge corpus, read from the @beep/markdown/conformance JSON subpaths that Vite inlines at transform time, so no test reads a file", () => {
+  it.effect(
+    "reproduces the bridge-corpus ledger, a conformance fixture no code reads to excuse a failure, so any bridge behaviour change shows up as a ledger diff in review",
+    () =>
+      Effect.promise(() =>
+        expect(bridgeCorpusText(bridgeCorpusLedger(ROWS))).toMatchFileSnapshot("../data/conformance/bridge-corpus.json")
+      )
   );
 
   it("covers every vendored conformance example", () => {

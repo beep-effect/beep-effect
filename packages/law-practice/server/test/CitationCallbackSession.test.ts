@@ -71,7 +71,7 @@ const Corpus = S.Struct({ schemaVersion: S.tag("citation-custom-resolution-obser
 const CorpusJson = S.fromJsonString(Corpus);
 
 const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
-const staleId = () => CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
+const staleId = () => CitationMentionId.make(`cm2:${Str.repeat(64)("f")}`);
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 const emptyCallbacks = CitationResolutionCallbacks.of({
   full: Effect.fn("CallbackTest.emptyFull")(() => Effect.succeed(none())),
@@ -428,7 +428,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const callbacks = CitationResolutionCallbacks.of({
         ...emptyCallbacks,
         id: Effect.fn("CallbackTest.invalid")(function* () {
-          yield* dictionary.allocate([member(CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`))]);
+          yield* dictionary.allocate([member(CitationMentionId.make(`cm2:${Str.repeat(64)("f")}`))]);
           return CitationCallbackResult.make({ resource: none() });
         }),
       });

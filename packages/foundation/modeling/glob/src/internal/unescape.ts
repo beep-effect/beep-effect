@@ -54,7 +54,7 @@ import type { EngineOptions } from "./types.ts";
  * @category formatting
  * @since 0.0.0
  */
-const unescapePattern: {
+const unescapeWithoutShadowingGlobalUnescape: {
   (options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
   (s: string, options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
 } = dual(
@@ -77,6 +77,4 @@ const unescapePattern: {
   }
 );
 
-// Exported under the upstream name; the internal binding avoids shadowing the
-// deprecated global unescape().
-export { unescapePattern as unescape };
+export { unescapeWithoutShadowingGlobalUnescape as unescape };

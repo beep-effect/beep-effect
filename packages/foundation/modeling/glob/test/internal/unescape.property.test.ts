@@ -10,13 +10,21 @@ import { unescape as oracleUnescape } from "minimatch";
 
 const runs = { arbitrary: fcRuns(100) };
 const options = Arbitrary.schema(S.Struct({ windowsPathsNoEscape: S.Boolean, magicalBraces: S.Boolean }));
-// Unescape consumes one escape layer. Literal normal forms exclude backslashes
-// and brackets, which can reveal another escape layer on a later pass.
-const normalText = S.Literals(["a", "é", "*", "?", "(", ")", "{", "}", "/", ",", "+", "@", " "]).pipe(
-  S.Array,
-  Arbitrary.schema,
-  Arbitrary.map(A.join(""))
-);
+const literalNormalFormsExcludingBackslashAndBracketsWhichRevealAnotherEscapeLayerOnALaterPass = S.Literals([
+  "a",
+  "é",
+  "*",
+  "?",
+  "(",
+  ")",
+  "{",
+  "}",
+  "/",
+  ",",
+  "+",
+  "@",
+  " ",
+]).pipe(S.Array, Arbitrary.schema, Arbitrary.map(A.join("")));
 
 describe("unescape property floor", () => {
   it.effect.prop(
@@ -34,7 +42,7 @@ describe("unescape property floor", () => {
 
   it.effect.prop(
     "unescaping encoded normal forms is idempotent",
-    [normalText, options],
+    [literalNormalFormsExcludingBackslashAndBracketsWhichRevealAnotherEscapeLayerOnALaterPass, options],
     ([literal, mode]) =>
       Effect.sync(() => {
         const formatted = unescape(escape(`*?${literal}`, mode), mode);

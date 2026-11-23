@@ -5,7 +5,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { Line } from "@beep/jsonl/Line";
-import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
+import { isUtf16Boundary, TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

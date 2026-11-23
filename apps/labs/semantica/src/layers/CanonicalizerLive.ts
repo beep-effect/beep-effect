@@ -1,12 +1,12 @@
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
+import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import {
   SourceTextDigest,
   SourceTextIdentity,
   toTextAnchorVerificationReceipt,
   VerifyTextAnchorInput,
   verifyTextAnchor,
-} from "@beep/provenance";
-import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
+} from "@beep/text";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

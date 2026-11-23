@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
-import type { TextAnchor, TextAnchorVerificationReceipt } from "@beep/provenance";
+import type { TextAnchor, TextAnchorVerificationReceipt } from "@beep/text";
 import type * as Effect from "effect/Effect";
 import type { SourceDocument } from "@/schema/Document";
 import type { AnchorRejected } from "@/schema/Errors";

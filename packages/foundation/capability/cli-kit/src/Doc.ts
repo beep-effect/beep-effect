@@ -73,8 +73,6 @@ export class StatusRef extends S.Opaque<StatusRef, { readonly brand: unique symb
   }).pipe($I.annoteSchema("StatusRef", { description: "A status name and its resolved definition." }))
 ) {}
 /**
- * Companion types for {@link StatusRef}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -247,8 +245,6 @@ export const Column = S.TaggedStruct("Column", {
 }).pipe($I.annoteSchema("Column", { description: "A table header and optional alignment." }));
 
 /**
- * A table column node.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -302,8 +298,6 @@ export class Counter extends S.Opaque<Counter, { readonly brand: unique symbol }
   )
 ) {}
 /**
- * Companion types for {@link Counter}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -564,8 +558,6 @@ type BlockEncoded = ReturnType<typeof blockShape<S.Codec<BlockEncodedChildren>>>
  */
 export type Block = ReturnType<typeof blockShape<S.Codec<BlockChildren, BlockEncodedChildren>>>["Type"];
 /**
- * Describes the block variants that compose a document.
- *
  * **Details**
  *
  * - `Paragraph`: one logical line; a paragraph of paragraphs is a `Section`.
@@ -673,8 +665,6 @@ export class CountsRow extends S.Opaque<CountsRow, { readonly brand: unique symb
   )
 ) {}
 /**
- * Companion types for {@link CountsRow}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -696,8 +686,6 @@ export declare namespace CountsRow {
 }
 
 /**
- * The options of {@link Doc.countsTable}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -734,8 +722,6 @@ export class CountsTableOptions extends S.Opaque<CountsTableOptions, { readonly 
   }).pipe($I.annoteSchema("CountsTableOptions", { description: "Plain CountsTableOptions data." }))
 ) {}
 /**
- * Companion types for {@link CountsTableOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -786,8 +772,6 @@ export class OverflowOptions extends S.Opaque<OverflowOptions, { readonly brand:
   }).pipe($I.annoteSchema("OverflowOptions", { description: "Plain OverflowOptions data." }))
 ) {}
 /**
- * Companion types for {@link OverflowOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -810,8 +794,6 @@ export declare namespace OverflowOptions {
 }
 
 /**
- * Options for {@link Doc.list}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -835,8 +817,6 @@ export class ListOptions extends S.Opaque<ListOptions, { readonly brand: unique 
   }).pipe($I.annoteSchema("ListOptions", { description: "Plain ListOptions data." }))
 ) {}
 /**
- * Companion types for {@link ListOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -859,8 +839,6 @@ export declare namespace ListOptions {
 }
 
 /**
- * Options for {@link Doc.table}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -887,8 +865,6 @@ export class TableOptions extends S.Opaque<TableOptions, { readonly brand: uniqu
   }).pipe($I.annoteSchema("TableOptions", { description: "Plain TableOptions data." }))
 ) {}
 /**
- * Companion types for {@link TableOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -911,8 +887,6 @@ export declare namespace TableOptions {
 }
 
 /**
- * Options for `Doc.link`.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -939,8 +913,6 @@ export class LinkOptions extends S.Opaque<LinkOptions, { readonly brand: unique 
   }).pipe($I.annoteSchema("LinkOptions", { description: "Plain LinkOptions data." }))
 ) {}
 /**
- * Companion types for {@link LinkOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -1013,8 +985,6 @@ export class TreeInput extends S.Opaque<TreeInput, { readonly brand: unique symb
   }).pipe($I.annoteSchema("TreeInput", { description: "Plain TreeInput data." }))
 ) {}
 /**
- * Companion types for {@link TreeInput}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -1058,8 +1028,6 @@ export type InlineOf<Tag extends Inline["_tag"]> = Extract<Inline, { readonly _t
 export type BlockOf<Tag extends Block["_tag"]> = Extract<Block, { readonly _tag: Tag }>;
 
 /**
- * The options of {@link Doc.counts}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -1117,8 +1085,6 @@ export class CountsOptions extends S.Opaque<CountsOptions, { readonly brand: uni
   }).pipe($I.annoteSchema("CountsOptions", { description: "Plain CountsOptions data." }))
 ) {}
 /**
- * Companion types for {@link CountsOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -1209,8 +1175,6 @@ const counterOf = (counter: Counter.Encoded): Counter =>
   });
 
 /**
- * Options for {@link Doc.print}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -1248,8 +1212,6 @@ export class DocPrintOptions extends S.Opaque<DocPrintOptions, { readonly brand:
   }).pipe($I.annoteSchema("DocPrintOptions", { description: "Plain DocPrintOptions data." }))
 ) {}
 /**
- * Companion types for {@link DocPrintOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

@@ -8,8 +8,8 @@ import {
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { it } from "@beep/test-runner";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";

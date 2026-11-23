@@ -12,11 +12,12 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TermIri } from "@beep/identity/Term";
 import { mintContentHash } from "@beep/jsonc/Mint";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { WellFormedText } from "@beep/schema/WellFormedText";
+import { Anchored, mintOccurrenceId, OccurrenceId } from "@beep/text/Occurrence";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -28,10 +29,10 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { Anchored, mintOccurrenceId, OccurrenceId } from "./L1.text.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
+import type { PreimageMintError } from "@beep/text/Occurrence";
+import type { Position } from "@beep/text/OffsetUnit";
 import type * as Digest from "effect/crypto/Digest";
-import type { Position } from "./L1.text.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/L2.annotation");
 const sameCapture = S.toEquivalence(SourceTextIdentity);
@@ -695,7 +696,7 @@ const requireKey = (table: DocumentTable, key: ContentHash) => (minted: ContentH
 export const verifyDocument = (kinds: KindRegistry) =>
   Effect.fn("AnnotationDocument.verify")(function* (
     doc: AnnotationDocumentView
-  ): Effect.fn.Return<void, DocumentKeyMismatch | JsoncCanonicalizeError | S.SchemaError, Digest.Digest> {
+  ): Effect.fn.Return<void, DocumentKeyMismatch | PreimageMintError, Digest.Digest> {
     yield* Effect.forEach(
       HashMap.toEntries(doc.anchors),
       ([key, anchored]) => Effect.flatMap(mintOccurrenceId(anchored), requireKey("anchors", key)),

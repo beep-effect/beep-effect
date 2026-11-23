@@ -16,8 +16,6 @@ import { displayWidth, graphemes, stripAnsi } from "./internal/displayWidth.ts";
 const $I = $CliKitId.create("Fmt");
 
 /**
- * Options for {@link Fmt.truncate}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -40,8 +38,6 @@ export class TruncateOptions extends S.Opaque<TruncateOptions, { readonly brand:
   }).pipe($I.annoteSchema("TruncateOptions", { description: "Plain TruncateOptions data." }))
 ) {}
 /**
- * Companion types for {@link TruncateOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -64,8 +60,6 @@ export declare namespace TruncateOptions {
 }
 
 /**
- * Options for {@link Fmt.percent}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -95,8 +89,6 @@ export class PercentOptions extends S.Opaque<PercentOptions, { readonly brand: u
   }).pipe($I.annoteSchema("PercentOptions", { description: "Plain PercentOptions data." }))
 ) {}
 /**
- * Companion types for {@link PercentOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

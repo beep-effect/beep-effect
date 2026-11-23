@@ -18,6 +18,7 @@ import {
   CoverageArtifacts,
   CoverageProducerIdentity,
   CoverageScopeOwner,
+  CoverageUnsealedRun,
   QualityTaskConfigurationError,
   workspaceCoverageScopeOwners,
 } from "@beep/repo-cli/test/Quality";
@@ -31,6 +32,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { identity as identityFunction } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -38,6 +40,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
 import { parseCLI } from "vitest/node";
+import type { CoverageProducerPackage } from "@beep/repo-cli/test/Quality";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
@@ -51,6 +54,7 @@ const mocks = vi.hoisted(() => ({
   run: vi.fn(),
   discover: vi.fn(),
   write: vi.fn(),
+  verify: vi.fn(),
   compare: vi.fn<typeof CoverageArtifacts.compareCoverageProducerArtifacts>(),
 }));
 
@@ -99,9 +103,14 @@ beforeEach(() => {
   vi.spyOn(StepExec, "runCaptured").mockImplementation(mocks.discover);
   vi.spyOn(CoverageArtifacts, "writeCoverageProducerArtifact").mockImplementation(mocks.write);
   vi.spyOn(CoverageArtifacts, "compareCoverageProducerArtifacts").mockImplementation(mocks.compare);
-  for (const mock of [mocks.plan, mocks.run, mocks.discover, mocks.write, mocks.compare]) mock.mockReset();
+  vi.spyOn(CoverageArtifacts, "verifyCoverageInvocationRun").mockImplementation(mocks.verify);
+  for (const mock of [mocks.plan, mocks.run, mocks.discover, mocks.write, mocks.verify, mocks.compare])
+    mock.mockReset();
   mocks.run.mockReturnValue(Effect.void);
   mocks.write.mockReturnValue(Effect.void);
+  mocks.verify.mockImplementation((_root: string, selection: CoverageProducerPackage) =>
+    Effect.succeed(CoverageUnsealedRun.make({ selection, actualTestFiles: [] }))
+  );
   mocks.compare.mockReturnValue(Effect.void);
 });
 
@@ -1177,6 +1186,196 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
       );
     })
   );
+  const outsidePlanProof = (...packageNames: ReadonlyArray<string>) =>
+    CiLanePartitionProof.make({
+      laneId: "test-unit",
+      partition: "law-practice-4",
+      selectedTaskCount: A.length(packageNames),
+      partitionTaskCount: A.length(packageNames),
+      packages: packageNames,
+      shard: CiLanePartitionShard.make({ index: 4, total: 8 }),
+    });
+  const outsidePlanStep = (root: string, ...packageNames: ReadonlyArray<string>) =>
+    QualityTaskStep.make({
+      label: "ci:test-unit:law-practice-4",
+      command: "bunx",
+      cwd: root,
+      args: [
+        "turbo",
+        "run",
+        ...A.map(packageNames, (name) => `${name}#test`),
+        ...A.map(packageNames, (name) => `--filter=${name}`),
+        "--force",
+        "--",
+        "--coverage",
+        "--shard=4/8",
+      ],
+    });
+
+  it.effect("starts a package's next segment only after its previous segment completes", () =>
+    Effect.gen(function* () {
+      const law = owner("@beep/law-practice-server", "packages/law");
+      const other = owner("@beep/law-practice-client", "packages/client");
+      const { root } = yield* fixture(
+        [law, other],
+        "bunx --bun vitest run --passWithNoTests --exclude=test/boundary.test.ts && BEEP_GATE_CONTINUES=1 bunx vitest run test/boundary.test.ts"
+      );
+      const timeline: Array<string> = [];
+      mocks.run.mockImplementation((label: string) =>
+        Effect.sync(() => timeline.push(`start ${label}`)).pipe(
+          Effect.andThen(Effect.yieldNow),
+          Effect.andThen(Effect.yieldNow),
+          Effect.andThen(Effect.sync(() => timeline.push(`end ${label}`)))
+        )
+      );
+      yield* runCiCoveragePartition(
+        root,
+        options(),
+        plan([]),
+        outsidePlanProof(law.packageName, other.packageName),
+        outsidePlanStep(root, law.packageName, other.packageName)
+      );
+      const at = (event: string) =>
+        O.getOrElse(
+          A.findFirstIndex(timeline, (entry) => entry === event),
+          () => -1
+        );
+      for (const name of [law.packageName, other.packageName]) {
+        expect(at(`end ci:test:${name}:0`)).toBeGreaterThanOrEqual(0);
+        expect(at(`start ci:test:${name}:1`)).toBeGreaterThan(at(`end ci:test:${name}:0`));
+      }
+      expect(at(`start ci:test:${other.packageName}:0`)).toBeLessThan(at(`end ci:test:${law.packageName}:0`));
+    })
+  );
+
+  it.effect(
+    "gives every segment of a compound script the shard and coverage arguments when the plan leaves it out",
+    () =>
+      Effect.gen(function* () {
+        const entry = owner("@beep/law-practice-server", "packages/law");
+        const { root } = yield* fixture(
+          [entry],
+          "bunx --bun vitest run --passWithNoTests --exclude=test/boundary.test.ts && BEEP_GATE_CONTINUES=1 bunx vitest run test/boundary.test.ts"
+        );
+        yield* runCiCoveragePartition(
+          root,
+          options(),
+          plan([]),
+          outsidePlanProof(entry.packageName),
+          outsidePlanStep(root, entry.packageName)
+        );
+        const labels = A.map(mocks.run.mock.calls, ([label]) => label);
+        expect(labels).toEqual([
+          "ci:coverage:compound-prerequisites",
+          `ci:test:${entry.packageName}:0`,
+          `ci:test:${entry.packageName}:1`,
+        ]);
+        for (const segment of ["0", "1"]) {
+          expect(mocks.run).toHaveBeenCalledWith(`ci:test:${entry.packageName}:${segment}`, [
+            expect.objectContaining({ args: expect.arrayContaining(["--coverage", "--shard=4/8"]) }),
+          ]);
+        }
+        expect(mocks.verify).toHaveBeenCalledTimes(2);
+        expect(mocks.write).toHaveBeenCalledWith(
+          root,
+          expect.objectContaining({
+            partitionId: "law-practice-4",
+            packages: [],
+            unsealedRuns: [
+              expect.objectContaining({ actualTestFiles: [] }),
+              expect.objectContaining({ actualTestFiles: [] }),
+            ],
+          })
+        );
+      })
+  );
+
+  it.effect("runs a single-segment script outside the plan as one sharded invocation", () =>
+    Effect.gen(function* () {
+      const entry = owner("@beep/law-practice-server", "packages/law");
+      const { root } = yield* fixture([entry], "bunx --bun vitest run --passWithNoTests");
+      yield* runCiCoveragePartition(
+        root,
+        options(),
+        plan([]),
+        outsidePlanProof(entry.packageName),
+        outsidePlanStep(root, entry.packageName)
+      );
+      const labels = A.map(mocks.run.mock.calls, ([label]) => label);
+      expect(labels).toEqual(["ci:coverage:compound-prerequisites", `ci:test:${entry.packageName}:0`]);
+      expect(mocks.run).toHaveBeenCalledWith(`ci:test:${entry.packageName}:0`, [
+        expect.objectContaining({
+          args: expect.arrayContaining(["vitest", "run", "--passWithNoTests", "--coverage", "--shard=4/8"]),
+        }),
+      ]);
+      expect(mocks.verify).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect("records an unsharded run outside the plan without a shard", () =>
+    Effect.gen(function* () {
+      const entry = owner("@beep/law-practice-server", "packages/law");
+      const { root } = yield* fixture([entry], "bunx --bun vitest run --passWithNoTests");
+      const step = outsidePlanStep(root, entry.packageName);
+      yield* runCiCoveragePartition(
+        root,
+        options(),
+        plan([]),
+        CiLanePartitionProof.make({
+          laneId: "test-unit",
+          partition: "law-practice-4",
+          selectedTaskCount: 1,
+          partitionTaskCount: 1,
+          packages: [entry.packageName],
+        }),
+        QualityTaskStep.make({ ...step, args: A.filter(step.args, (arg) => arg !== "--shard=4/8") })
+      );
+      expect(mocks.run).toHaveBeenCalledWith(`ci:test:${entry.packageName}:0`, [
+        expect.objectContaining({ args: expect.not.arrayContaining(["--shard=4/8"]) }),
+      ]);
+      expect(mocks.write).toHaveBeenCalledWith(
+        root,
+        expect.objectContaining({
+          packages: [],
+          unsealedRuns: [
+            expect.objectContaining({ selection: expect.not.objectContaining({ shard: expect.anything() }) }),
+          ],
+        })
+      );
+    })
+  );
+
+  it.effect("refuses an undivided compound script before any test runs", () =>
+    Effect.gen(function* () {
+      const entry = owner("@beep/law-practice-server", "packages/law");
+      const { root, fs, path } = yield* fixture(
+        [entry],
+        "bunx --bun vitest run --exclude=test/boundary.test.ts && bunx vitest run test/boundary.test.ts"
+      );
+      const manifest = yield* encode({
+        name: entry.packageName,
+        version: "0.0.0",
+        scripts: {
+          "beep:test": "bunx --bun vitest run --exclude=test/boundary.test.ts && bunx vitest run test/boundary.test.ts",
+          test: "bun run beep:test",
+        },
+      });
+      yield* fs.writeFileString(path.join(root, entry.packagePath, "package.json"), manifest);
+      const error = yield* Effect.flip(
+        runCiCoveragePartition(
+          root,
+          options(),
+          plan([]),
+          outsidePlanProof(entry.packageName),
+          outsidePlanStep(root, entry.packageName)
+        )
+      );
+      expect(error.message).toContain("reach only the last segment of a compound beep:test");
+      expect(mocks.run).not.toHaveBeenCalled();
+      expect(mocks.write).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("stops a compound chain after failure and never seals partial coverage", () =>
     Effect.gen(function* () {
       const entry = owner("@beep/repo-utils", "packages/tool");

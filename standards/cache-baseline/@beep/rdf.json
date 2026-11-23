@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/rdf",
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
-    "reason": "Re-record the root and @beep/rdf after merging P1 PR A's final head 7a7b87f0328, which re-recorded them: @beep/rdf keeps PR B's @beep/spdx dependency edge, //#lint:identity-registry keeps the registry shard input glob, and turbo.json carries the regenerated seal-input lists. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P2 L1 text lane)",
+    "reason": "Re-stamp the L1 move recorded in 8aaaff47f51 with a reason that does not spell the retired package name: every consumer task depends on @beep/text#build, and @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md keep the edges P2 adds. No node, edge, command, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p1b-a-merge-cache-review-2026-11-19.md",
-      "sha256": "9c8fc30a3333e6d879b41dbfc8ab2acccdd1b439c8998c16a4925d7f72bd3380"
+      "path": "docs/reports/tksr-p2-l1-reason-cache-review-2026-11-22.md",
+      "sha256": "b2cb02cedd42461aefcd0d3515a12f72b51dce461bfd869ead45290edd6e2e6a"
     }
   },
   "nodes": [
@@ -21,6 +21,7 @@
         "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -82,6 +83,7 @@
         "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -138,6 +140,7 @@
         "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -234,6 +237,7 @@
         "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -324,6 +328,7 @@
         "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -526,6 +531,7 @@
         "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -576,6 +582,7 @@
         "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -636,6 +643,7 @@
         "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],

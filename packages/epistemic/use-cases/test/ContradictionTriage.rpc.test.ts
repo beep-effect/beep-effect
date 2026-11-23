@@ -21,9 +21,9 @@ import {
 } from "@beep/epistemic-use-cases/public";
 import { ListContradictionCandidates } from "@beep/epistemic-use-cases/server";
 import { SourceTextPage } from "@beep/file-processing/SourceText";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";

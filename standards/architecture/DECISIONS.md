@@ -3279,3 +3279,78 @@ for a separate migration goal. Encodings already changed are restored by a
 further version step under the same rule. Widening the entry to rewrite stored
 rows needs a dated entry that amends the stored-format law for the named table
 before the PR that needs it opens.
+
+## 2026-11-22: L1 Lands In `@beep/text`; Re-Anchoring Carries The Target Receipt
+
+- **Status:** Active
+- **Amends:** "The Canonical Anchor Is `TextAnchor` With `Selector` And
+  `OccurrenceId`; Re-Anchoring Is A Recorded Map" (2026-11-19), on the
+  re-anchoring shape and the count of stored anchor columns; "Knowledge-Stack
+  Glossary Additions" (2026-11-19), by four entries
+
+Decision:
+
+P2 of `goals/text-knowledge-stack-rebuild` lands layer L1 of chapter 16.
+`@beep/text` (`packages/foundation/modeling/text`) is created through
+`bun run beep create-package`; `SourceTextIdentity`, `TextAnchor` and
+`VerifiedTextAnchor` move into it with their names and encodings, and
+`@beep/provenance` is retired with every consumer migrated in the same PR and
+no alias. The package adds `OffsetUnit`, `Position` and unit conversion,
+`Selector` and `resolve`, `Anchored`, `OccurrenceId`, `QuoteKey`, the NFKC and
+de-hyphenation normalizations, `LocatorMap` and `reanchor`, and declares no
+`Context` service.
+
+The 2026-11-19 entry is made concrete in three places:
+
+- Re-anchoring is a `Reanchoring` value over a `LocatorMap` of `Kept` and
+  `Rewritten` segments. `Exact` and `Widened` carry the target capture's
+  receipt as `Anchored`, produced by verification against the target text, and
+  the target's `OccurrenceId` is minted from it, never stored beside it. The
+  lax law compares the two steps with the composite map only when all three
+  are mapped; `Unmapped` is outside the comparison.
+- The occurrence preimage spells its unit as the literal `utf16-code-unit`, so
+  one range in two units is one id, and `SourceTextIdentity` strings are
+  well-formed text on decode, since a lone surrogate cannot be canonicalized.
+  `QuoteKey` normalizes the quote itself under its own `QuoteNormalization`
+  version, separate from the capture's `normalizationVersion`.
+- Three stored columns hold an anchor shape, not four:
+  `epistemic_evidence.span` (an `EvidenceSpan`) and the verification receipts
+  in `epistemic_evidence_verification.verified_anchor` and
+  `law_practice_patent_citation_event.grounding`.
+  `law_practice_legal_position_relator.grounding` holds no anchor, and a
+  `VerifiedTextAnchor` is runtime-only. Their bytes stay, pinned by frozen rows
+  and a golden `manifestation_key`.
+
+The `@beep/rdf` evidence selectors and the party `TextSpan` case are deleted.
+The party union points at text through a `TextOccurrence` case over
+`Anchored`, and its record identifier is renamed `ArtifactOccurrenceId`, so
+`OccurrenceId` names one identity. `TextAnchor` maps to and from `oa:` in
+`@beep/rdf/Adapters/WebAnnotation`, failing closed on disagreeing selectors.
+The citation mention id is minted over `OccurrenceId` (`cm2:`) in the
+law-practice server, where its legal kinds belong, and v3 citation document
+receipts convert to v4 on read. `@beep/md` is the one AST package with a source
+map over `@beep/text`. `GLOSSARY.md` gains Anchored, Locator Map, Quote Key and
+Re-anchoring.
+
+Rationale:
+
+The 2026-11-19 entry gave re-anchoring "its own receipt", but the design
+module's cases held two ids, so a caller could not read the new range. The
+four-column count came from the P0 census and was re-measured by the P2 map.
+The law tests `L1-1` to `L1-6` in `packages/foundation/modeling/text/test`
+falsify the layer's structural claims. Evidence: the packet's
+`decisions/2026-11-22-p2-*` files and
+`goals/text-knowledge-stack-rebuild/research/2026-11-20-p2-design.md`.
+
+Rejected:
+
+- A re-anchoring outcome of two ids. It records that a move happened without
+  where it landed.
+- `OffsetUnit` in the occurrence preimage. One occurrence would have three ids.
+- Keeping the `@beep/provenance` name as an alias. Chapter 11 rule 3 forbids it.
+
+Reversal:
+
+Mark this entry superseded by a new dated entry; restoring a design-module
+shape after P2 is a further preimage or receipt version step under the
+2026-11-19 scoped amendment, with a frozen fixture where rows are stored.

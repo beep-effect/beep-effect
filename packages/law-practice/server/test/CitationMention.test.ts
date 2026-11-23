@@ -13,13 +13,13 @@ import {
   restoreCitationMention,
 } from "@beep/law-practice-server/internal/Citation/Mention";
 import { makeCitationMentionId } from "@beep/law-practice-server/internal/Citation/MentionIdentity";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { VerifiedTextAnchor, VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { VerifiedTextAnchor, VerifyTextAnchorInput, verifyTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
@@ -206,7 +206,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
     Effect.gen(function* () {
       const { source, receipt } = yield* fixture;
       const wire = yield* S.encodeEffect(CitationMentionReceipt)(receipt);
-      const changedId = yield* S.decodeEffect(CitationMentionReceipt)({ ...wire, id: `cm1:${otherArtifact}` });
+      const changedId = yield* S.decodeEffect(CitationMentionReceipt)({ ...wire, id: `cm2:${otherArtifact}` });
       const changedKind = yield* S.decodeEffect(CitationMentionReceipt)({
         ...wire,
         citation: { type: "id", components: {}, metadata: { pinCite: null, parenthetical: null } },
@@ -233,7 +233,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
   it.effect("checks ID coherence before projecting caller-constructed runtime data", () =>
     Effect.gen(function* () {
       const { mention } = yield* fixture;
-      const altered = CitationMention.make({ ...mention, id: CitationMentionId.make(`cm1:${otherArtifact}`) });
+      const altered = CitationMention.make({ ...mention, id: CitationMentionId.make(`cm2:${otherArtifact}`) });
       const citationResult7 = yield* projectCitationMentionReceipt(altered).pipe(Effect.flip);
       expect(citationResult7.reason).toBe("stale-identity");
     })
@@ -288,7 +288,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
         expectedEngineArtifact: artifact,
         sourceText: text,
       }).pipe(Effect.provideService(Digest.Digest, mutating));
-      expect(calls).toBe(2); // raw source digest + occurrence identity digest
+      expect(calls, "raw source digest + occurrence id digest + mention id digest").toBe(3);
       expect(restored.id).toBe(mention.id);
       expect(restored.anchor.anchor.quote).toBe("1 U.S. 1");
       expect(restored.anchor.source.scopeRef).toBe("matter:example");

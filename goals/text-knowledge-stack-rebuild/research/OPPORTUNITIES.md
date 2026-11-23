@@ -98,6 +98,90 @@ home paths with `~`, drop session and machine ids.
   a search of every transcript could show that. **Would have prevented it:** an
   actor or session id on PR state changes that Yeet and T3 make.
 
+## 2026-11-21 — P2 package move
+
+- **Doing:** retiring `@beep/provenance` with `delete-package`. **Evidence:** its
+  baseline writers regenerate the whole fallow health baseline (3 minutes) and
+  wrote about 75 changed rows of churn-based targets and stale complexity rows,
+  none of which named the package; the dead-code and schema-first outputs
+  changed only their timestamps. All three were restored by hand, because a
+  retirement must not re-baseline other packages. **Would have prevented it:**
+  subtracting the target's rows in process, as the coverage baseline step
+  already does, and leaving a baseline alone when it has no such row.
+- **Doing:** the same command. **Evidence:** `standards/fallow.boundaries.provenance.jsonc`
+  is a hand-kept file with no writer, so the apply leaves the retired row as
+  residue after a dry run with no hard hits. `config-sync` likewise leaves the
+  `paths` block of `apps/professional-desktop/tsconfig.json` alone, and
+  `create-package` adds no shape row for the new composer. **Would have
+  prevented it:** a `rename-package` command that carries those rows over.
+
+## 2026-11-21 — P2 source identity
+
+- **Doing:** adding one import to `ContradictionTriage.pglite.test.ts`. **Evidence:**
+  `lint:schema-first` failed with "Stale schema-first inventory entry" because
+  the row is keyed by line (94 became 95); the fix is a write that changes a
+  line number and a date. **Would have prevented it:** keying the rows by file
+  and symbol, which every row already carries.
+- **Doing:** reading a red `lint effect-vitest`. **Evidence:** after a 60 second
+  scan it prints "1 new finding(s)" with the file and no line, rule or primitive,
+  so the finding has to be guessed from the diff. **Would have prevented it:**
+  printing the line and the matched rule of each new finding.
+
+## 2026-11-22 — P2 offset units, selectors and resolution
+
+- **Doing:** documenting `convertPosition` and `resolve` in `@beep/text`. **Evidence:**
+  the package's own `bun run docgen` passed with `@category conversions`, and the
+  docgen step of `beep quality package-verify @beep/text` then failed with
+  "Unknown @category value conversions". **Would have prevented it:** the plain
+  docgen script checking categories against the same allow list.
+- **Doing:** exporting the internal scan of `internal/scalars.ts` as a dual.
+  **Evidence:** `missingPipeableSignature` reported both overloads as unmatched
+  while they returned the same inline labelled tuple type; naming the result type
+  once and using it in both overloads cleared it. **Would have prevented it:** the
+  rule comparing return types structurally, or its message naming the mismatch.
+- **Doing:** a new property test in `@beep/langextract`. **Evidence:** the package's
+  `tsrs -p tsconfig.test.json` was clean, and the `check` gate inside
+  `package-verify` then failed on `missedPipeableOpportunity` (TS377050), a
+  diagnostic the plain test typecheck does not run. **Would have prevented it:**
+  one test typecheck command that runs the gate's diagnostic set.
+- **Doing:** answering a verifier on the L1-5 law. **Evidence:** replacing the KMP
+  fallback `matched = table[matched - 1]` with `matched = 0` left every L1-5
+  property green at 10,000 runs, and again over a random two-letter alphabet,
+  because separated copies of a random passage never need the fallback; only a
+  generator that builds a passage as `border + middle + border` and overlaps two
+  copies by the border turned it red (about one sample in five). **Would have
+  prevented it:** a mutation pass over each new scan (one hand mutant per
+  fallback or boundary branch) before a law is called green.
+- **Doing:** regenerating the decision projections. **Evidence:** `goals decisions add`
+  takes the slug as a positional argument and `goals decisions write` refuses it
+  ("Unexpected positional argument") and wants `--slug`. **Would have prevented
+  it:** one argument shape for the two sibling commands.
+- **Doing:** finishing commit 5 of P2 over an interrupted attempt's tree. **Evidence:**
+  the inherited L1-4 property shifted a preimage slot with `A.modify(encoded, slot, f)`,
+  which in Effect 4 returns an `Option`, so the mint saw an `Option` object and failed
+  `NonPlainObject at "/1"`; a refusal test written the same way passed for the wrong
+  reason, because `S.decodeUnknownResult` takes `unknown` and an `Option` never decodes
+  as a tuple, so no type error points at it. **Would have prevented it:** an effect
+  diagnostic that flags an `A.modify` or `A.replace` result used where an array or an
+  `unknown` input is expected.
+- **Doing:** checking that the L1-3 chain property is not vacuous (how many generated map
+  pairs reach the comparison). **Evidence:** module counters read by a later `it` in the
+  same file reported 17 of 50 `it.effect.prop` trials and 5 of 4,000 in the law file,
+  while `Arbitrary.checkEffect` run directly evaluated all 50; appending one line per
+  trial to a file showed every run (3,000 chain cases: 1,743 compared, 1,307 Exact/Exact,
+  no counterexample). **Would have prevented it:** a `@beep/test-runner` hook or
+  documented recipe for per-property sample statistics, so a law's coverage of its
+  interesting cases is measured the same way every time.
+- **Doing:** killing two verifier mutants of `@beep/text` without editing the lane's
+  sources, through a scratch vitest config whose plugin rewrote one module in memory, with
+  the mutant chosen by an environment variable. **Evidence:** the second mutant's runs
+  reported the first mutant's failures and its own test passed: `fsModuleCache` keys an
+  entry by module id, file content, plugin names and the config file's contents, not by
+  plugin output, so two runs of one config file with different environments share
+  transformed modules (`test: { fsModuleCache: false }` in the scratch config fixed it;
+  the lane's own config never reads those entries). **Would have prevented it:** a
+  documented mutation recipe in the test-runner docs, or a `beep` command that applies a
+  named in-memory mutant with the module cache off.
 ## 2026-11-22: a Claude child's weekly limit killed a fix mid-edit
 
 - **Doing:** PR C's release-against-base fix, a Workflow child pinned to Opus 5.5.
@@ -107,6 +191,71 @@ home paths with `~`, drop session and machine ids.
 - **Prevention:** read Claude headroom before a long child is launched, and give a fallback child a brief
   file that it can continue from. This lane moved to Codex `gpt-6.1-sol` medium with such a brief.
 
+## 2026-11-22: a dependent's type check read stale declarations of a changed package
+
+- **Doing:** commit 7, moving `CitationMentionId` from `cm1:` to `cm2:` in law-practice-domain and
+  type-checking law-practice-server against it.
+- **Evidence:** `bunx tsrs -p packages/law-practice/server/tsconfig.check.json --noEmit` reported
+  `` Argument of type '`cm2:${string}`' is not assignable to parameter of type '`cm1:${string}`' `` until
+  `bunx tsrs -b packages/law-practice/domain/tsconfig.json` rewrote the domain's declaration output; the
+  server project reads the referenced project's emitted `.d.ts`, not its source.
+- **Prevention:** a `beep` check of one package that rebuilds the stale declarations of its changed
+  workspace references first (or warns that they are older than their sources).
+
+## 2026-11-22: the trustgraph verify script was already broken before its evidence import moved
+
+- **Doing:** commit 9, giving goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts a local schema for
+  the frozen evidence artifact before `rdf/src/Evidence.ts` is deleted, then running the script as the
+  design's gate asks.
+- **Evidence:** `bun goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts` exits 1 with
+  `Expected @beep/rdf/prov/ProvRecord at ["records"][6]`: the live `ProvBundle` no longer decodes the frozen
+  `beep-effect-documentation-seed.provenance.json`, whose record 6 is `{ activity, entity }`. A probe that
+  decodes the same file with the untouched `Prov.ts` fails the same way, so the break predates P2. The
+  local evidence schema decodes all three anchors and the dataset decodes; the evidence decode is never
+  reached in the script because the provenance decode runs first. `rerun.verify` names the script, and no
+  typecheck or test runs it.
+- **Prevention:** a gate that runs each reference goal's `rerun.verify` (or at least decodes its frozen
+  artifacts) whenever a schema it imports changes.
+
+## 2026-11-22: `lint schema-catalog --write` given a directory reports a write and writes nothing
+
+- **Doing:** commit 10, regenerating the `@beep/party-domain` schema-catalog shard after renaming the party
+  `OccurrenceId` and replacing `TextSpan`.
+- **Evidence:** `bun run beep lint schema-catalog --write packages/party/domain/src` printed
+  `[schema-catalog] wrote @beep/party-domain` and `entries=147 shards=1`, but the shard kept the `TextSpan`
+  and `OccurrenceId` rows. The same command with the two changed `.ts` files as arguments rewrote the shard.
+- **Prevention:** the command expands a directory argument to the sources under it, or refuses a path that
+  names no source file instead of reporting a write.
+
+## 2026-11-22: `config-sync` writes a root tsconfig that biome then reformats
+
+- **Doing:** commit 11, adding the `./Md.anchors` subpath to `@beep/md` and running `bun run config-sync`
+  for its alias.
+- **Evidence:** the sync appended the alias after `@beep/text/*` and rewrote that neighbouring one-line
+  array as three lines; `bunx biome check tsconfig.json` then failed with `Formatter would have printed
+  the following content`. `config-sync:check` reported no drift both before and after `biome --write`.
+- **Prevention:** the sync formats the file it writes (or runs biome on it), so a lane does not carry a
+  formatter-only hunk in a generated file.
+
+## 2026-11-22: a cache-baseline review reason becomes delete-package residue
+
+- **Doing:** the P2 final gate, `bun run beep delete-package @beep/provenance --allow-stale-packets --check`.
+- **Evidence:** exit 1 with `[check] authored-references: residue` on chapter 16, the glossary and 22
+  files under `standards/cache-baseline/`. `bun run beep cache baseline` copies the request's
+  `review.reason` into every subject file it stamps, and the commit-13 reason spelled the retired
+  package name, so the record of a retirement became residue of it.
+- **Prevention:** `cache baseline` refuses (or warns on) a request whose review reason names a package
+  that is not in the task graph, and the retirement runbook says to describe a retired package without
+  its name in any live file.
+
+## 2026-11-22: "fallow inventories are current" was proved on two of the four fallow gates
+
+- **Doing:** verifying commit 13, which said the fallow inventories were current.
+- **Evidence:** only `fallow:boundaries:check` and dead-code had run; `fallow:health:check` and
+  `fallow:audit:check` each failed with 2 introduced findings (`resolveQuote` cognitive 19, CRAP 37.1;
+  `nfkcRewrites` cognitive 10), which the hosted Fallow gate would have reported.
+- **Prevention:** the package-verify of a new package runs `fallow health --base` scoped to its files,
+  so complexity over the threshold shows up in the commit that adds the function.
 ## 2026-11-22: the full effect-vitest ratchet names files, not the findings
 
 - **Doing:** PR C's third review round, new tests in two repo-cli test files.
@@ -132,3 +281,24 @@ home paths with `~`, drop session and machine ids.
   not.
 - **Prevention:** every refusal whose message prescribes commands gets a test that runs those
   commands and ends with a passing lint, as `L0-3 a namespace is retired by hand` does.
+
+## 2026-11-22: the P2 PR cannot open as a third stack layer
+
+- **Doing:** opening the P2 PR stacked on PR #3449 at content-final, after `yeet final-check`
+  passed on 183872d5710.
+- **Evidence:** `yeet open --stack-on 3449` refused with `parent-off-trunk: #3449 targets` the
+  P1 B branch, `not main; a stack holds 2 layers at most`. The packet's P2 decision planned a
+  stack layer on C while B and C are held. It did not say that C is itself a layer on B.
+- **Prevention:** a decision that plans a stack layer should check the parent's base first, with
+  `gh pr view <n> --json baseRefName`. Or Yeet's stack plan could name the depth limit when a
+  packet's held PRs already form a two-layer stack.
+
+## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
+
+- **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.
+- **Evidence:** the new request was copied from the earlier one and kept
+  `"profile": "local-linux-x64-bun1.4.4"`. `.bun-version` and main's root both say 1.4.5.
+  `beep cache baseline --request` accepted the stale profile and wrote it, and `cache audit` passed.
+  beep-reviewer caught it on the PR ("Merge re-record reverts main's root baseline profile").
+- **Prevention:** `cache baseline` could refuse a request whose profile is not the one the
+  checkout's `.bun-version` yields, or derive the profile itself when the request omits it.

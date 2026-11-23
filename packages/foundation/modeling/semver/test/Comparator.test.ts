@@ -94,10 +94,7 @@ describe("Comparator", () => {
     );
   });
 
-  // `parseResult` is the primitive; `parse` derives from it via
-  // `Effect.fromResult` and adds only the tracing span. Both directions are
-  // asserted per row so the two forms cannot drift.
-  describe("Result parity", () => {
+  describe("Result parity: parse is parseResult behind Effect.fromResult, asserted both ways per row", () => {
     const rows: ReadonlyArray<readonly [label: string, input: string]> = [
       ["an implicit equals", "1.2.3"],
       ["an explicit equals", "=1.2.3"],

@@ -830,8 +830,6 @@ export const replaceAllWith: {
   ): string => globalSearchPattern(searchValue)[Symbol.replace](self, replacer)
 );
 /**
- * Re-export of all helpers from `effect/String`.
- *
  * **Example** (Call a re-exported helper)
  *
  * ```ts

@@ -2,6 +2,9 @@
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
+import { Sha256Hex } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   SourceTextDigest,
   SourceTextExtractor,
@@ -9,10 +12,7 @@ import {
   TextAnchor,
   TextAnchorVerificationReceipt,
   VerifiedTextAnchorError,
-} from "@beep/provenance";
-import { Sha256Hex } from "@beep/schema";
-import { PosixPath } from "@beep/schema/PosixPath";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+} from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
