@@ -18,8 +18,8 @@ import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
+import type { TermIri } from "@beep/identity/Term";
 import type { ActivityPin } from "@beep/jsonc/ActivityStart";
-import type { TermIri } from "./L0.identity.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/L5.operations");
 

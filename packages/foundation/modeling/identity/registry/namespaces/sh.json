@@ -1,0 +1,29 @@
+{
+  "namespace": {
+    "prefix": "sh",
+    "iri": "http://www.w3.org/ns/shacl#"
+  },
+  "terms": [
+    "ClassConstraintComponent",
+    "DatatypeConstraintComponent",
+    "HasValueConstraintComponent",
+    "Info",
+    "MinCountConstraintComponent",
+    "NodeShape",
+    "Warning",
+    "class",
+    "datatype",
+    "hasValue",
+    "in",
+    "maxCount",
+    "minCount",
+    "node",
+    "path",
+    "property",
+    "targetClass",
+    "targetNode",
+    "xone"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

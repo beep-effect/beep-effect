@@ -17,4 +17,5 @@ export * from "@beep/repo-cli/commands/SyncDataToTs/targets/IanaTimezones";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/Iso3166";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/Iso4217";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/index";
+export * from "@beep/repo-cli/commands/SyncDataToTs/targets/PinnedVocabularies";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/ReportersDb";

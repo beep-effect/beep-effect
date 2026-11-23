@@ -35,6 +35,7 @@ import { makeBlankNode, makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/R
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { SH_HAS_VALUE, SH_NODE_SHAPE, SH_PATH, SH_PROPERTY, SH_TARGET_NODE } from "@beep/rdf/Vocab/Shacl";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
@@ -58,12 +59,6 @@ import type {
 const sessionId = SessionId.make("session-1");
 const fixturePath = OntologyFilePath.make("tmp/ontology-workbench/pizza-tutorial.ttl");
 const materialsPath = OntologyFilePath.make("tmp/ontology-workbench/materials.ttl");
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
-const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
-const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
 const decodeRunOntologyValidationResult = S.decodeUnknownEffect(RunOntologyValidationResult);
 
 const waitUntil = (label: string, predicate: () => boolean): Effect.Effect<void, string> =>

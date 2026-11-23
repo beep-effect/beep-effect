@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "80f47cad7fd4d2fe58e884dd32b174caaa9abec2d8f6ac9afa2c6c220900f45f"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, PR #3439)",
+    "reason": "Re-record the root after merging main at 9f921d29d9d: //#lint:identity-registry keeps PR B's registry shard input glob; main's root changes are kept. No command, cache flag, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p1b-main-merge-2-cache-review-2026-11-22.md",
+      "sha256": "7add2bc4aa3061c6bed864324a178137d11990f9a40c4ffb5e8132734ca64fee"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

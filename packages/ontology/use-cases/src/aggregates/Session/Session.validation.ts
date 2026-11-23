@@ -33,7 +33,24 @@ import {
   PROV_WAS_GENERATED_BY,
 } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import {
+  SH_CLASS,
+  SH_CLASS_COMPONENT,
+  SH_DATATYPE,
+  SH_DATATYPE_COMPONENT,
+  SH_HAS_VALUE,
+  SH_HAS_VALUE_COMPONENT,
+  SH_MAX_COUNT,
+  SH_MIN_COUNT,
+  SH_MIN_COUNT_COMPONENT,
+  SH_NODE_SHAPE,
+  SH_PATH,
+  SH_PROPERTY,
+  SH_TARGET_CLASS,
+  SH_TARGET_NODE,
+} from "@beep/rdf/Vocab/Shacl";
+import { VOID_DATASET, VOID_NAMESPACE, VOID_TRIPLES } from "@beep/rdf/Vocab/Void";
+import { XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import {
   ShaclNodeShape,
@@ -65,25 +82,7 @@ import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.t
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.validation");
 
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const VOID_NAMESPACE = "http://rdfs.org/ns/void#" as const;
 const DCAT_NAMESPACE = "http://www.w3.org/ns/dcat#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
-const SH_TARGET_CLASS = makeNamedNode(`${SHACL_NAMESPACE}targetClass`);
-const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
-const SH_MIN_COUNT = makeNamedNode(`${SHACL_NAMESPACE}minCount`);
-const SH_MAX_COUNT = makeNamedNode(`${SHACL_NAMESPACE}maxCount`);
-const SH_DATATYPE = makeNamedNode(`${SHACL_NAMESPACE}datatype`);
-const SH_CLASS = makeNamedNode(`${SHACL_NAMESPACE}class`);
-const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
-const SH_MIN_COUNT_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}MinCountConstraintComponent`);
-const SH_DATATYPE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}DatatypeConstraintComponent`);
-const SH_CLASS_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}ClassConstraintComponent`);
-const SH_HAS_VALUE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}HasValueConstraintComponent`);
-const VOID_DATASET = makeNamedNode(`${VOID_NAMESPACE}Dataset`);
-const VOID_TRIPLES = makeNamedNode(`${VOID_NAMESPACE}triples`);
 const DCAT_DATASET = makeNamedNode(`${DCAT_NAMESPACE}Dataset`);
 const DCAT_DISTRIBUTION = makeNamedNode(`${DCAT_NAMESPACE}distribution`);
 
@@ -837,7 +836,7 @@ const exportPrefixes = (): PrefixMap =>
       prov: PROV_NAMESPACE,
       rdf: RDF_NAMESPACE,
       void: VOID_NAMESPACE,
-      xsd: "http://www.w3.org/2001/XMLSchema#",
+      xsd: XSD_NAMESPACE,
     })
   );
 

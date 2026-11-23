@@ -1,108 +1,112 @@
 /**
- * Vocabulary term-inventory target definition.
+ * Vocabulary term-module target definition.
  *
- * Generates the shared namespace term inventories
- * (`rdf`/`rdfs`/`skos`/`owl`/`dcterms`/`schema`/`dcat`) in `@beep/rdf` from the
- * `@beep/identity` `CoreVocab` registry, single-sourcing the inventories the
- * CURIE literal types are derived from. Curated named-node constants in the
- * hand-authored Vocab modules stay untouched.
+ * Generates the `@beep/rdf` term modules (`<PREFIX>_NAMESPACE` and
+ * `<PREFIX>_TERMS`) as projections of the `@beep/identity` registry: each
+ * module reads its namespace from `RegistryVocab`, so the rdf constants and the
+ * registry cannot drift. A pinned namespace's module header carries its
+ * `@beep/rdf` pin: source, revision, license and attribution.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { CoreVocab } from "@beep/identity";
+import { RegistryVocab } from "@beep/identity/Registry";
+import { namespacePins } from "@beep/rdf/NamespacePin";
 import { doctestFenceInfo } from "@beep/repo-utils/JSDoc/DoctestSource";
-import { A, Str } from "@beep/utils";
+import { revisionLabel } from "@beep/schema/Conformance";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
-import { formatJson, outputFile } from "../internal/Source.ts";
-import { SyncDataTargetMetadata, SyncDataTargetProjection } from "../SyncDataToTs.schemas.ts";
+import * as Str from "effect/String";
+import { formatJson, formatTsDocCommentValue, outputFile } from "../internal/Source.ts";
+import { SyncDataTargetMetadata, SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
+import type { NamespacePin } from "@beep/rdf/NamespacePin";
 import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
 
 const targetId = "vocab-terms" as const;
 const outputDir = "packages/foundation/modeling/rdf/src/Vocab/generated" as const;
 const canonicalPath = `${outputDir}/vocab-terms.data.json` as const;
 
-const SHARED_PREFIXES = ["rdf", "rdfs", "skos", "owl", "dcterms", "schema", "dcat"] as const;
+type ProjectedPrefix = keyof typeof RegistryVocab & string;
 
-type SharedPrefix = (typeof SHARED_PREFIXES)[number];
-
-const moduleNames: Record<SharedPrefix, string> = {
-  rdf: "Rdf",
-  rdfs: "Rdfs",
-  skos: "Skos",
-  owl: "Owl",
-  dcterms: "Dcterms",
-  schema: "SchemaOrg",
-  dcat: "Dcat",
+type TermModule = {
+  readonly module: string;
+  readonly display: string;
+  readonly constant: string;
 };
 
-const displayNames: Record<SharedPrefix, string> = {
-  rdf: "RDF",
-  rdfs: "RDFS",
-  skos: "SKOS",
-  owl: "OWL",
-  dcterms: "DCMI Terms",
-  schema: "Schema.org",
-  dcat: "DCAT",
-};
+const termModules = {
+  cito: { module: "Cito", display: "CiTO", constant: "CITO" },
+  dcat: { module: "Dcat", display: "DCAT", constant: "DCAT" },
+  dcterms: { module: "Dcterms", display: "DCMI Terms", constant: "DCTERMS" },
+  deo: { module: "Deo", display: "DEO", constant: "DEO" },
+  doco: { module: "Doco", display: "DoCO", constant: "DOCO" },
+  fabio: { module: "Fabio", display: "FaBiO", constant: "FABIO" },
+  oa: { module: "Oa", display: "Web Annotation", constant: "OA" },
+  owl: { module: "Owl", display: "OWL", constant: "OWL" },
+  prov: { module: "Prov", display: "PROV-O", constant: "PROV" },
+  rdf: { module: "Rdf", display: "RDF", constant: "RDF" },
+  rdfs: { module: "Rdfs", display: "RDFS", constant: "RDFS" },
+  schema: { module: "SchemaOrg", display: "Schema.org", constant: "SCHEMA_ORG" },
+  sh: { module: "Shacl", display: "SHACL", constant: "SHACL" },
+  skos: { module: "Skos", display: "SKOS", constant: "SKOS" },
+  void: { module: "Void", display: "VoID", constant: "VOID" },
+  xsd: { module: "Xsd", display: "XSD", constant: "XSD" },
+} as const satisfies Partial<Record<ProjectedPrefix, TermModule>>;
 
-const constantPrefixes: Record<SharedPrefix, string> = {
-  rdf: "RDF",
-  rdfs: "RDFS",
-  skos: "SKOS",
-  owl: "OWL",
-  dcterms: "DCTERMS",
-  schema: "SCHEMA_ORG",
-  dcat: "DCAT",
-};
+const projectedPrefixes = A.sort(R.keys(termModules), Str.Order);
 
-const sortedTerms = (prefix: SharedPrefix): ReadonlyArray<string> => pipe(CoreVocab[prefix].terms, A.sort(Str.Order));
-
-const renderTermsModule = (prefix: SharedPrefix): string => {
-  const moduleName = moduleNames[prefix];
-  const display = displayNames[prefix];
-  const constant = constantPrefixes[prefix];
-  const terms = pipe(
-    sortedTerms(prefix),
-    A.map((term) => `  "${term}",`),
+const pinLines = (pin: NamespacePin): string =>
+  pipe(
+    [
+      `Pinned source: ${pin.source.location} (${revisionLabel(pin.source.revision)}).`,
+      `License: ${pin.license.toString()}. ${pin.attribution}`,
+    ],
+    A.map((line) => ` * ${formatTsDocCommentValue(line)}`),
     A.join("\n")
   );
 
+const renderTermsModule = (prefix: keyof typeof termModules, pin: O.Option<NamespacePin>): string => {
+  const { module, display, constant } = termModules[prefix];
+  const pinned = O.match(pin, { onNone: () => "", onSome: (value) => `\n${pinLines(value)}` });
+
   return `/**
  * Generated by \`bun run beep sync-data-to-ts --target vocab-terms\`.
- * Source: the \`@beep/identity\` \`CoreVocab\` registry (${prefix} namespace).
+ * Source: the \`@beep/identity\` registry (${prefix} namespace).${pinned}
  * Do not edit by hand.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { RegistryVocab } from "@beep/identity/Registry";
+
 /**
- * ${display} namespace IRI generated from the identity \`CoreVocab\` registry.
+ * ${display} namespace IRI, read from the identity registry.
  *
  * **Example** (Read the ${display} namespace IRI)
  *
  * \`\`\`${doctestFenceInfo(`Read the ${display} namespace IRI`)}
- * import { ${constant}_NAMESPACE } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
+ * import { ${constant}_NAMESPACE } from "@beep/rdf/Vocab/generated/${module}.terms"
  *
- * ${constant}_NAMESPACE.length > 0 // => true
+ * ${constant}_NAMESPACE // => "${RegistryVocab[prefix].iri}"
  * \`\`\`
  *
  * @category constants
  * @since 0.0.0
  */
-export const ${constant}_NAMESPACE = "${CoreVocab[prefix].iri}" as const;
+export const ${constant}_NAMESPACE = RegistryVocab.${prefix}.iri;
 
 /**
- * ${display} local-name inventory generated from the identity \`CoreVocab\` registry.
+ * ${display} term locals, read from the identity registry.
  *
  * **Example** (Read the ${display} term inventory)
  *
  * \`\`\`${doctestFenceInfo(`Read the ${display} term inventory`)}
- * import { ${constant}_TERMS } from "@beep/rdf/Vocab/generated/${moduleName}.terms"
+ * import { ${constant}_TERMS } from "@beep/rdf/Vocab/generated/${module}.terms"
  *
  * ${constant}_TERMS.length > 0 // => true
  * \`\`\`
@@ -110,22 +114,24 @@ export const ${constant}_NAMESPACE = "${CoreVocab[prefix].iri}" as const;
  * @category constants
  * @since 0.0.0
  */
-// fallow-ignore-next-line code-duplication -- generator-emitted vocabulary tuple; beep sync-data-to-ts --target vocab-terms writes this directive into every terms file, and only the dcterms tuple currently clones the identity CoreVocab list. Owner: @beep/repo-cli (vocab-terms target). Exit: drop it from the generator template and regenerate once the terms derive from @beep/identity CoreVocab instead of a copy.
-export const ${constant}_TERMS = [
-${terms}
-] as const;
+export const ${constant}_TERMS = RegistryVocab.${prefix}.terms;
 `;
 };
 
 const canonicalDocument = (): Record<string, { readonly iri: string; readonly terms: ReadonlyArray<string> }> =>
   pipe(
-    SHARED_PREFIXES,
-    A.map((prefix) => [prefix, { iri: CoreVocab[prefix].iri, terms: sortedTerms(prefix) }] as const),
+    projectedPrefixes,
+    A.map((prefix) => [prefix, { iri: RegistryVocab[prefix].iri, terms: RegistryVocab[prefix].terms }] as const),
     R.fromEntries
   );
 
 /**
- * Vocabulary term-inventory sync target.
+ * Vocabulary term-module sync target.
+ *
+ * **Details**
+ *
+ * Projects registry namespaces into RDF term modules. nif, gufo and as remain
+ * registry-only until a consumer needs their named nodes.
  *
  * **Example** (Inspect the vocab-terms sync target)
  *
@@ -140,21 +146,23 @@ const canonicalDocument = (): Record<string, { readonly iri: string; readonly te
 export const vocabTermsTarget: SyncDataTarget = {
   ...SyncDataTargetMetadata.make({
     id: targetId,
-    description:
-      "Shared vocabulary term inventories in @beep/rdf generated from the @beep/identity CoreVocab registry.",
+    description: "@beep/rdf term modules generated as projections of the @beep/identity registry.",
     access: "public",
     sourceUrls: [],
   }),
-  acquire: Effect.sync(() => {
-    const canonical = canonicalDocument();
-    const files = pipe(
-      SHARED_PREFIXES,
-      A.map((prefix) => outputFile(`${outputDir}/${moduleNames[prefix]}.terms.ts`, renderTermsModule(prefix)))
+  acquire: Effect.gen(function* () {
+    const pins = yield* Effect.fromResult(namespacePins()).pipe(
+      SyncDataToTsError.mapError("Failed to decode the committed namespace pins", targetId)
     );
-    const recordCount = pipe(
-      SHARED_PREFIXES,
-      A.map((prefix) => A.length(CoreVocab[prefix].terms)),
-      A.reduce(0, (total, count) => total + count)
+    const pinOf = (prefix: string) => A.findFirst(pins, (pin) => pin.prefix === prefix);
+    const canonical = canonicalDocument();
+    const files = A.map(projectedPrefixes, (prefix) =>
+      outputFile(`${outputDir}/${termModules[prefix].module}.terms.ts`, renderTermsModule(prefix, pinOf(prefix)))
+    );
+    const recordCount = A.reduce(
+      projectedPrefixes,
+      0,
+      (total, prefix) => total + A.length(RegistryVocab[prefix].terms)
     );
 
     return SyncDataTargetProjection.make({
@@ -162,7 +170,7 @@ export const vocabTermsTarget: SyncDataTarget = {
       canonicalPath,
       canonical,
       recordCount,
-      summary: `vocab-terms: ${recordCount} terms across ${A.length(SHARED_PREFIXES)} namespaces from CoreVocab`,
+      summary: `vocab-terms: ${recordCount} terms across ${A.length(projectedPrefixes)} namespaces from the identity registry`,
       sources: [],
     });
   }),

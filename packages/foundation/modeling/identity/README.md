@@ -85,33 +85,32 @@ The [composer contract](src/Id.ts) also documents declaration-specific
 ## Expand registered vocabulary terms
 
 A CURIE is a compact name such as `skos:prefLabel`; its IRI is the full
-vocabulary identifier. Use `expand` and `contract` for statically known terms
-when you want the exact result's literal type preserved.
+vocabulary identifier. Every namespace and term lives in one generated registry,
+built from the shards in [registry/namespaces](registry/namespaces) by
+`bun run beep identity registry --write`. Use `iri` for a statically known term
+when you want the exact IRI literal type preserved.
 
 ```ts
-import { contract, expand } from "@beep/identity/Curie";
+import { iri } from "@beep/identity/Registry";
 
-const iri = expand("skos:prefLabel");
-const exactIri: "http://www.w3.org/2004/02/skos/core#prefLabel" = iri;
-const curie: "skos:prefLabel" = contract(exactIri);
+const exactIri: "http://www.w3.org/2004/02/skos/core#prefLabel" = iri("skos:prefLabel");
 
-console.log(curie); // skos:prefLabel
+console.log(exactIri); // http://www.w3.org/2004/02/skos/core#prefLabel
 ```
 
-For a string read at runtime, use `expandOption` or `contractOption` with the
-vocabulary you intend to accept. Both return `None` for unregistered terms;
-recognizing a prefix alone is insufficient. These functions look up local
-vocabulary declarations and do not fetch an IRI over the network.
+For a string read at runtime, use `expand` or `contract`. Both are exact
+lookups that return `None` for an unregistered or deprecated term; recognizing
+a prefix alone is insufficient, and neither fetches an IRI over the network.
+`CurieFromIri` is the same mapping as a schema codec.
 
 ```ts
-import { expandOption } from "@beep/identity/Curie";
-import { CoreVocab } from "@beep/identity/Vocab";
+import { expand } from "@beep/identity/Registry";
 import * as O from "effect/Option";
 
 const describeTerm = (input: string): string =>
-  O.match(expandOption(input, CoreVocab), {
+  O.match(expand(input), {
     onNone: () => "Unregistered vocabulary term",
-    onSome: (iri) => iri,
+    onSome: (term) => term,
   });
 
 console.log(describeTerm("skos:prefLabel"));
@@ -126,8 +125,9 @@ console.log(describeTerm("skos:unregisteredTerm"));
 | --- | --- |
 | `@beep/identity/packages` | Registered package composers; the normal starting point for consumers. |
 | `@beep/identity/Id` | Composer contracts, identity construction, and schema annotation helpers. |
-| `@beep/identity/Vocab` | Declared vocabularies and literal vocabulary types. |
-| `@beep/identity/Curie` | CURIE/IRI conversion and schema codecs. |
+| `@beep/identity/Registry` | The generated term registry and the one CURIE codec: expansion, contraction, bindings, deprecations and instance minting. |
+| `@beep/identity/Term` | Declared terms, namespaces, bindings, deprecations, registry shards and the term snapshot. |
+| `@beep/identity/Vocab` | Literal CURIE, predicate and IRI types over a vocabulary shape. |
 | `@beep/identity/IdentityRegistry` | Exact identity, IRI, and CURIE lookup through a local registry service. |
 | `@beep/identity/Iri` | RFC 3987 IRI, IRI-reference, relative-reference, and absolute-IRI schemas. |
 | `@beep/identity/PnLocal` | Turtle local-name parsing and safe name emission. |
