@@ -41,7 +41,10 @@ function finishEarly() {
   return false;
 }
 let sequence = 0;
-if (hostileRealProcessModeForParentProtocolAndKillPath !== "closed-stdin" && hostileRealProcessModeForParentProtocolAndKillPath !== "blocked-stdin")
+if (
+  hostileRealProcessModeForParentProtocolAndKillPath !== "closed-stdin" &&
+  hostileRealProcessModeForParentProtocolAndKillPath !== "blocked-stdin"
+)
   NodeReadline.createInterface({ input: process.stdin }).on("line", () => {
     if (finishEarly()) return;
     const selected = hostileRealProcessModeForParentProtocolAndKillPath === "wrong-sequence" ? sequence + 1 : sequence;
