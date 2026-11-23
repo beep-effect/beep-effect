@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ConceptAlignment } from "./ConceptScheme.ts";
 
 const $I = $OntologyId.create("SemanticFoundation.models");
 
@@ -130,75 +131,6 @@ export const DocumentClass = LiteralKit([
  * @since 0.0.0
  */
 export type DocumentClass = typeof DocumentClass.Type;
-
-/**
- * Supported SKOS mapping relationship for a vetted external alignment.
- *
- * **Example** (Check closeMatch mapping)
- *
- * ```ts import.meta.vitest name="Check closeMatch mapping"
- * import { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
- *
- * SkosMappingKind.is.closeMatch("closeMatch") // => true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const SkosMappingKind = LiteralKit(["exactMatch", "closeMatch"]).pipe(
-  $I.annoteSchema("SkosMappingKind", {
-    description: "SKOS mapping predicate used for an externally vetted concept alignment.",
-  })
-);
-
-/**
- * Runtime type for {@link SkosMappingKind}.
- *
- * **Example** (Type a mapping kind)
- *
- * ```ts
- * import type { SkosMappingKind } from "@beep/ontology/SemanticFoundation.models"
- *
- * const kind: SkosMappingKind = "closeMatch"
- * console.log(kind)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SkosMappingKind = typeof SkosMappingKind.Type;
-
-/**
- * Vetted external mapping attached to a repo-owned SKOS concept.
- *
- * **Example** (Make concept alignment)
- *
- * ```ts
- * import { ConceptAlignment } from "@beep/ontology/SemanticFoundation.models"
- * import { IRIReference } from "@beep/identity/Iri"
- *
- * const alignment = ConceptAlignment.make({
- *   conceptIri: IRIReference.make("https://folio.openlegalstandard.org/example"),
- *   kind: "closeMatch",
- *   sourceIri: IRIReference.make("https://openlegalstandard.org/resources/folio-python-library/taxonomy")
- * })
- * console.log(alignment.kind)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ConceptAlignment extends S.Opaque<ConceptAlignment, { readonly brand: unique symbol }>()(
-  S.Struct({
-    conceptIri: IRIReference,
-    kind: SkosMappingKind,
-    sourceIri: IRIReference,
-  }).pipe(
-    $I.annoteSchema("ConceptAlignment", {
-      description: "Vetted external SKOS mapping metadata for a repo-owned concept.",
-    })
-  )
-) {}
 
 /**
  * One repo-owned concept in an intake taxonomy scheme.

@@ -1,0 +1,23 @@
+{
+  "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/two-cycle",
+  "version": "1",
+  "prefLabel": "Two-cycle scheme",
+  "concepts": [
+    {
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/two-cycle/a",
+      "prefLabel": "A",
+      "broader": [
+        "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/two-cycle/b"
+      ],
+      "alignments": []
+    },
+    {
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/two-cycle/b",
+      "prefLabel": "B",
+      "broader": [
+        "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/two-cycle/a"
+      ],
+      "alignments": []
+    }
+  ]
+}

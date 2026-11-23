@@ -8,7 +8,7 @@ import { IRIReference } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ConceptAlignment } from "./SemanticFoundation.models.ts";
+import { ConceptAlignment } from "./ConceptScheme.ts";
 
 const $I = $OntologyId.create("Vocabulary.models");
 

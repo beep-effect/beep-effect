@@ -1,0 +1,22 @@
+[
+  {
+    "pin": { "kind": "ipc", "edition": "2026.01" },
+    "id": "ipc-fixture",
+    "digest": "9e36a0875ce07211674f462ad4f34ab0a170d2242f7fcc829d9078b45a1839ce"
+  },
+  {
+    "pin": { "kind": "cpc", "edition": "2026.08" },
+    "id": "cpc-fixture",
+    "digest": "1162cd9833298396e9a4d7701064004b83e6459f04cc6e13eb1de5732894c6a3"
+  },
+  {
+    "pin": { "kind": "nice", "edition": "13-2026" },
+    "id": "nice-structure-fixture",
+    "digest": "7ce5854b2d113d9b24f7fb28432c11ec5906bad2f966ca83d853f827f3a30951"
+  },
+  {
+    "pin": { "kind": "nice", "edition": "13-2026" },
+    "id": "nice-texts-fixture",
+    "digest": "7003de2bcd62dce105dc277e558f114245babdd4a94498aaddf578722bbdd558"
+  }
+]

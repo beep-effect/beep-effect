@@ -1,0 +1,15 @@
+{
+  "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/self-loop",
+  "version": "1",
+  "prefLabel": "Self-loop scheme",
+  "concepts": [
+    {
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/self-loop/a",
+      "prefLabel": "A",
+      "broader": [
+        "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/self-loop/a"
+      ],
+      "alignments": []
+    }
+  ]
+}

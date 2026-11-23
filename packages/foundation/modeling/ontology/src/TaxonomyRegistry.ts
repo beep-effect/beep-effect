@@ -11,7 +11,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ConceptAlignment, DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
+import { ConceptAlignment } from "./ConceptScheme.ts";
+import { DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
 import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.ts";
 
 const iriReferenceEquivalence = S.toEquivalence(IRIReference);

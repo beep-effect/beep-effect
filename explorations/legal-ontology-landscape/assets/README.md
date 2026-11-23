@@ -30,12 +30,16 @@ Vetted, license-checked ontology artifacts for the IP-practice DMS/KG.
   "verdictRationale": "one or two sentences",
   "phase": "P1 | P2 | P3 | P4 | M2",
   "verified": false,
-  "loadKind": "concept-alignment | classification-scheme (optional)",
+  "loadKind": "concept-scheme | concept-alignment | payload | classification-scheme (optional)",
   "loadStatus": "VETTED | UNVETTED (required with loadKind)",
   "path": "vendor-root-relative fetched filename (required with loadKind)",
   "localConceptIri": "https://beep-effect.com/ns/... (required with concept-alignment)",
   "conceptIri": "exact external class IRI under namespaceIri (required with concept-alignment)",
-  "mappingKind": "exactMatch | closeMatch (required with concept-alignment)",
+  "mappingPredicate": "skos:exactMatch | skos:closeMatch | skos:broadMatch | skos:narrowMatch | skos:relatedMatch (required with concept-alignment)",
+  "origin": "repo-owned | vendor (required with concept-scheme)",
+  "mediaType": "media type (required with payload)",
+  "digestUnit": "file | archive-entry | tree (optional; archive-entry when archivePath is present, else file)",
+  "contentSha256": "checksum of the bytes the loader reads (required to load an archive-entry or tree row)",
   "notes": ""
 }
 ```
@@ -44,21 +48,31 @@ Vetted, license-checked ontology artifacts for the IP-practice DMS/KG.
 license, IRI resolution, and checksum.
 
 Most rows are research references and are not loaded. An asset-pack row opts
-into alignment loading by declaring `loadKind`; the loader then requires
-`verified:true`, `loadStatus`, and all kind-specific fields. Concept-alignment
+into loading by declaring `loadKind`; the loader then requires
+`verified:true`, `loadStatus`, and all kind-specific fields, and a row with no
+`loadKind` is never loaded. Concept-alignment
 rows must keep `conceptIri` and `fetchUrl` under their declared `namespaceIri`,
 and `localConceptIri` must use the repository-owned `https://beep-effect.com/ns/`
-authority. A `loadStatus`-only row still denotes a complete, verified
-`TaxonomySeed` JSON-LD slice, but legacy slices carrying alignments are rejected;
-all external mappings use the explicit concept-alignment path. `VETTED` is an
-implementation admission decision in addition to `verified`, not a synonym for
-it. `fetch.sh` writes loadable rows to their manifested vendor-relative `path`.
+authority and name a concept of a `concept-scheme` row in the same manifest.
+`VETTED` is an implementation admission decision in addition to `verified`,
+not a synonym for it. `fetch.sh` writes loadable rows to their manifested
+vendor-relative `path`.
+
+Every loaded row's bytes are hashed in the row's digest unit and compared with
+the manifest: a `file` row against `sha256`; an `archive-entry` row (the
+`path`/`entryPath` member unpacked from `archivePath`) and a `tree` row (every
+file the loader reads under the `path` directory) against `contentSha256`.
+`sha256` always keeps the meaning `fetch.sh` gives it, the digest of the
+fetched artifact. A `tree` digest is the SHA-256 of the UTF-8 lines
+`<relative-path>\t<sha256-hex>\n`, one per file, sorted by path in code point
+order. The `cpc` row states `"digestUnit": "tree"`. An `archive-entry` or
+`tree` row without `contentSha256` decodes but is refused at load.
 
 ## Classification archives (M2)
 
-`loadKind` is the `VendorLoadKind` domain. `concept-alignment` routes to the
-M1 taxonomy loader; `classification-scheme` routes away from M1 and belongs
-to the pinned classification registry. Every classification row must carry
+`loadKind` is the `VendorLoadKind` domain. `concept-scheme`,
+`concept-alignment` and `payload` route to the taxonomy loader;
+`classification-scheme` routes to the pinned classification registry. Every classification row must carry
 that kind, `schemeKind` (`ipc`, `cpc`, `nice`) and `edition`. `version` is the
 same edition; the archive revision remains in its exact URL and checksum.
 

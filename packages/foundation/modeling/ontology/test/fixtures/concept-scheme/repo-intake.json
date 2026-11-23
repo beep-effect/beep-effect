@@ -1,0 +1,22 @@
+{
+  "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/intake",
+  "version": "1",
+  "prefLabel": "Fixture intake scheme",
+  "concepts": [
+    {
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/intake/communication",
+      "prefLabel": "Communication",
+      "broader": [],
+      "alignments": []
+    },
+    {
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/intake/email-message",
+      "prefLabel": "Email message",
+      "definition": "A message sent by email.",
+      "broader": [
+        "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/intake/communication"
+      ],
+      "alignments": []
+    }
+  ]
+}

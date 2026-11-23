@@ -1,14 +1,6 @@
 {
-  "concepts": [],
-  "filingRoots": [],
-  "pathTemplateSegments": [
-    "root",
-    "client",
-    "matter",
-    "taxonomy-concept",
-    "document-class",
-    "file-name"
-  ],
-  "schemeIri": "https://beep-effect.com/ns/ontology/semantic-foundation/taxonomy/fixture",
-  "title": "Fixture vendor slice"
+  "@id": "https://folio.openlegalstandard.org/RDQy4rbUg82ScgiiXEQ7ZBU",
+  "@type": "owl:Class",
+  "rdfs:label": "Email Communication",
+  "skos:definition": "A communication that occurs via email."
 }

@@ -1,5 +1,6 @@
 import { N3ParseTurtleRequest, N3TurtleCodec } from "@beep/n3";
 import { DocketingVocabulary, LegalRoleVocabulary, PartyKindVocabulary, SemanticFoundationSeed } from "@beep/ontology";
+import { mappingPredicateIri } from "@beep/ontology/Mapping";
 import * as Rdf from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -129,7 +130,7 @@ const intakeProjection = (seed: TaxonomySeed) => [
     statement(concept.iri, `${skos}definition`, enObject(concept.definition)),
     ...A.map(concept.broader, (broader) => statement(concept.iri, `${skos}broader`, iriObject(broader))),
     ...A.map(concept.alignments, (alignment) =>
-      statement(concept.iri, `${skos}${alignment.kind}`, iriObject(alignment.conceptIri))
+      statement(concept.iri, mappingPredicateIri(alignment.predicate), iriObject(alignment.target))
     ),
   ]),
   ...A.flatMap(seed.filingRoots, (root) => [
