@@ -14,8 +14,6 @@ import * as Tuple from "effect/Tuple";
 const $I = $ProfessionalDesktopId.create("sync/VaultSyncIntent.model");
 
 /**
- * The operator asked the destination to run one sync pass.
- *
  * **Example** (Build a sync request)
  *
  * ```ts
@@ -37,8 +35,6 @@ export class RequestSyncAction extends S.Opaque<RequestSyncAction, { readonly br
 ) {}
 
 /**
- * The operator asked the destination to probe its Box connection again.
- *
  * **Example** (Build a connection probe)
  *
  * ```ts
@@ -60,8 +56,6 @@ export class ProbeAction extends S.Opaque<ProbeAction, { readonly brand: unique 
 ) {}
 
 /**
- * The operator asked the destination to stop starting sync passes.
- *
  * **Example** (Build a pause)
  *
  * ```ts
@@ -83,8 +77,6 @@ export class PauseAction extends S.Opaque<PauseAction, { readonly brand: unique 
 ) {}
 
 /**
- * The operator asked a paused destination to accept sync passes again.
- *
  * **Example** (Build a resume)
  *
  * ```ts
@@ -106,8 +98,6 @@ export class ResumeAction extends S.Opaque<ResumeAction, { readonly brand: uniqu
 ) {}
 
 /**
- * The operator marked one open drift conflict as reviewed.
- *
  * **Example** (Mark a conflict reviewed)
  *
  * ```ts
@@ -162,8 +152,6 @@ export const VaultSyncActionKind = LiteralKit(["request-sync", "probe", "pause",
 );
 
 /**
- * Runtime type for {@link VaultSyncActionKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -199,8 +187,6 @@ export const VaultSyncAction = VaultSyncActionKind.mapMembers(
 );
 
 /**
- * Runtime type for {@link VaultSyncAction}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -267,8 +253,6 @@ export const VaultSyncIntentQueue = S.Array(VaultSyncIntent).pipe(
 );
 
 /**
- * Runtime type for {@link VaultSyncIntentQueue}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -318,8 +302,6 @@ export const VaultSyncRefusalReason = S.Union([V.SyncRuleViolation, V.ScopeDenie
 );
 
 /**
- * Runtime type for {@link VaultSyncRefusalReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -377,8 +359,6 @@ const VaultSyncLink = LiteralKit(["online", "offline"]).pipe(
 );
 
 /**
- * Runtime type for {@link VaultSyncLink}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -84,8 +84,6 @@ export const PracticeKgRunLabel = S.String.check(
 );
 
 /**
- * Runtime type for {@link PracticeKgRunLabel}.
- *
  * **Example** (Type a run label)
  *
  * ```ts
@@ -119,8 +117,6 @@ export const PRACTICE_KG_REFRESH_RUN = "2026-07-refresh";
 const emptyStringList = Effect.succeed(A.empty<string>());
 
 /**
- * Validated options used by `corpus graph`.
- *
  * **Gotchas**
  *
  * Omitting `bundleOut` puts the bundle under
@@ -288,8 +284,6 @@ export type PracticeKgIncludedRunsInput = Pick<PracticeKgOptions, "includeRefres
 export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "corpusRoot">;
 
 /**
- * One persisted `kg_node` row.
- *
  * **Details**
  *
  * `iri` is the node's identity across the whole graph and the join target for
@@ -347,8 +341,6 @@ export class PracticeKgNodeRow extends S.Opaque<PracticeKgNodeRow, { readonly br
 ) {}
 
 /**
- * One persisted `kg_edge` row.
- *
  * **Details**
  *
  * The `(subjectIri, predicate, objectIri)` triple is the row's identity, so the
@@ -392,8 +384,6 @@ export class PracticeKgEdgeRow extends S.Opaque<PracticeKgEdgeRow, { readonly br
 ) {}
 
 /**
- * One parsed pffexport email-header row.
- *
  * **Details**
  *
  * Headers only — no message body is ever read. `messageOrd` is the ordinal
@@ -556,8 +546,6 @@ export class PracticeKgCounts extends S.Opaque<PracticeKgCounts, { readonly bran
 ) {}
 
 /**
- * Portable practice knowledge-graph bundle manifest.
- *
  * **Details**
  *
  * Written as `bundle.manifest.json` at the bundle root and read first by any

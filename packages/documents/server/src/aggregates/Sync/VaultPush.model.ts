@@ -36,7 +36,6 @@ export const EchoClass = LiteralKit(["content", "moved", "renamed"]).pipe(
   })
 );
 /**
- * Runtime echo class represented by {@link EchoClass}.
  * @category models
  * @since 0.0.0
  */

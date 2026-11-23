@@ -46,14 +46,12 @@ export const Citation = S.Union([
   })
 );
 /**
- * Schema-derived citation value.
  * @category models
  * @since 0.0.0
  */
 export type Citation = typeof Citation.Type;
 
 /**
- * Full authorities selected from the existing citation union's cases.
  * **Example** (Inspect a full law branch)
  * ```ts
  * import { FullCitation } from "@beep/law-practice-domain/values"
@@ -69,7 +67,6 @@ export const FullCitation = S.Union([Citation.cases.case, Citation.cases.law, Ci
   })
 );
 /**
- * Schema-derived full citation value.
  * @category models
  * @since 0.0.0
  */
@@ -102,7 +99,6 @@ export declare namespace FullCitation {
 }
 
 /**
- * Short and named references derived from the existing citation union.
  * **Example** (Inspect the named-reference branch)
  * ```ts
  * import { ShortFormCitation } from "@beep/law-practice-domain/values"
@@ -123,7 +119,6 @@ export const ShortFormCitation = S.Union([
   })
 );
 /**
- * Schema-derived short or named reference.
  * @category models
  * @since 0.0.0
  */

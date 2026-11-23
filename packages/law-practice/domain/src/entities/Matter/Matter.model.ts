@@ -14,8 +14,6 @@ const $I = $LawPracticeDomainId.create("entities/Matter/Matter.model");
 const pg = ProductEntity.pg;
 
 /**
- * Legal matter entity grouping prosecution work for one legal client.
- *
  * **Example** (Decode Matter with Schema)
  *
  * ```ts

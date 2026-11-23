@@ -8,8 +8,6 @@
 
 export * from "./CorrectionDelta.model.ts";
 /**
- * Correction delta value objects.
- *
  * @category value-objects
  * @since 0.0.0
  */

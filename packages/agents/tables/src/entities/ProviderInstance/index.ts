@@ -6,8 +6,6 @@
  */
 
 /**
- * ProviderInstance row converter exports.
- *
  * **Example** (Import insert converter)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./ProviderInstance.converters.ts";
 /**
- * ProviderInstance converter error exports.
- *
  * **Example** (Import converter error)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./ProviderInstance.converters.ts";
  */
 export * from "./ProviderInstance.errors.ts";
 /**
- * ProviderInstance table exports.
- *
  * **Example** (Access table entity type)
  *
  * ```ts

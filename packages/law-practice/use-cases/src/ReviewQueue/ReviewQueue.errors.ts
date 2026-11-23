@@ -14,8 +14,6 @@ import { DefectCause } from "../internal/DefectCause.ts";
 const $I = $LawPracticeUseCasesId.create("ReviewQueue/ReviewQueue.errors");
 
 /**
- * A write targeted a review batch that a lock row has already closed.
- *
  * **Details**
  *
  * Raised by every write to a locked batch: a verdict for any item, an undo,
@@ -57,8 +55,6 @@ export class VerdictBatchLockedError extends S.TaggedError<VerdictBatchLockedErr
 ) {}
 
 /**
- * A lock targeted a review batch that has no verdict rows.
- *
  * **Details**
  *
  * The lock is carried on a copy of the batch's latest row, so a batch with no
@@ -94,8 +90,6 @@ export class VerdictBatchEmptyError extends S.TaggedError<VerdictBatchEmptyError
 const VerdictLogOperationBase = LiteralKit(["read", "append"]);
 
 /**
- * Verdict-log store operation that failed.
- *
  * **Example** (Guard a store operation)
  *
  * ```ts
@@ -115,8 +109,6 @@ export const VerdictLogOperation = VerdictLogOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link VerdictLogOperation}.
- *
  * @see {@link VerdictLogOperation} for the operation names.
  * @category errors
  * @since 0.0.0
@@ -124,8 +116,6 @@ export const VerdictLogOperation = VerdictLogOperationBase.pipe(
 export type VerdictLogOperation = typeof VerdictLogOperation.Type;
 
 /**
- * The verdict-log store could not read its rows or append one.
- *
  * **Details**
  *
  * A store that cannot answer fails with this error rather than returning an

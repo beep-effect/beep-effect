@@ -56,8 +56,6 @@ export const PracticeKgContactLinkSource = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgContactLinkSource}.
- *
  * **Example** (Type a link source)
  *
  * ```ts
@@ -101,8 +99,6 @@ export const PracticeKgAttorneyLinkSource = PracticeKgContactLinkSource.pick([
 );
 
 /**
- * Runtime type of {@link PracticeKgAttorneyLinkSource}.
- *
  * **Example** (Type an attorney link source)
  *
  * ```ts
@@ -143,8 +139,6 @@ export const PracticeKgInferredLinkSource = PracticeKgContactLinkSource.pick([
 );
 
 /**
- * Runtime type of {@link PracticeKgInferredLinkSource}.
- *
  * **Example** (Type an inferred link source)
  *
  * ```ts
@@ -193,8 +187,6 @@ export const PracticeKgCorrespondentRowResolution = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgCorrespondentRowResolution}.
- *
  * **Example** (Type a row resolution)
  *
  * ```ts
@@ -317,8 +309,6 @@ export class PracticeKgCorrespondentContact extends S.Opaque<
 ) {}
 
 /**
- * One link from a contact to a client or matter.
- *
  * **Example** (Make a contact link)
  *
  * ```ts
@@ -355,8 +345,6 @@ export class PracticeKgCorrespondentLink extends S.Opaque<
 ) {}
 
 /**
- * One matter the address appears on in filed email, with message counts.
- *
  * **Example** (Make a candidate matter)
  *
  * ```ts

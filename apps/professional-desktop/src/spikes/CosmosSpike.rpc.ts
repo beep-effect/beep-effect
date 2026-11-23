@@ -45,8 +45,6 @@ export const SyntheticProjectionNodeCount = S.Int.check(
 );
 
 /**
- * Runtime type for a positive synthetic projection node or element count.
- *
  * **Example** (Constructing branded node count)
  *
  * ```ts
@@ -92,8 +90,6 @@ export const SyntheticProjectionCount = S.Int.check(
 );
 
 /**
- * Runtime type for a non-negative synthetic projection edge or aggregate count.
- *
  * **Example** (Constructing branded zero count)
  *
  * ```ts
@@ -117,8 +113,6 @@ const SyntheticProjectionSeed = SyntheticProjectionCount.pipe(
 );
 
 /**
- * Response returned by the synthetic projection worker.
- *
  * **Example** (Accessing response schema fields)
  *
  * ```ts

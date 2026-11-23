@@ -16,8 +16,6 @@ const $I = $DocumentsServerId.create("aggregates/Sync/SyncWriterEpoch.service");
 const decodePresence = S.decodeUnknownEffect(S.Tuple([S.Struct({ present: S.Boolean })]));
 
 /**
- * Lifecycle of the store's single writer.
- *
  * **Details**
  *
  * `legacy` admits only the drizzle-era writer, `migrating` admits only the
@@ -43,16 +41,12 @@ export const SyncWriterEpoch = LiteralKit(["legacy", "migrating", "model"]).pipe
 );
 
 /**
- * Runtime type for {@link SyncWriterEpoch}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SyncWriterEpoch = typeof SyncWriterEpoch.Type;
 
 /**
- * Writer identity that asks the epoch for admission.
- *
  * **Example** (Check a writer)
  *
  * ```ts
@@ -71,16 +65,12 @@ export const SyncWriter = LiteralKit(["legacy", "model"]).pipe(
 );
 
 /**
- * Runtime type for {@link SyncWriter}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SyncWriter = typeof SyncWriter.Type;
 
 /**
- * Persisted epoch row of one migrated store.
- *
  * **Example** (Construct an epoch state)
  *
  * ```ts
@@ -106,8 +96,6 @@ export class SyncWriterEpochState extends S.Opaque<SyncWriterEpochState, { reado
 ) {}
 
 /**
- * A writer asked for admission under an epoch that does not admit it.
- *
  * **Example** (Inspect a refusal)
  *
  * ```ts

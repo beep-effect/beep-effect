@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $WorkspaceTablesId.create("entities/Turn/Turn.errors");
 
 /**
- * Failure converting a Turn persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

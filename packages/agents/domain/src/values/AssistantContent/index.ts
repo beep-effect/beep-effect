@@ -24,8 +24,6 @@
  */
 export * from "./AssistantContent.behavior.ts";
 /**
- * AssistantContent schema model exports.
- *
  * **Example** (Decode empty AssistantContent)
  *
  * ```ts

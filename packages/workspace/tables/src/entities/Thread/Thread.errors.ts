@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $WorkspaceTablesId.create("entities/Thread/Thread.errors");
 
 /**
- * Failure converting a Thread persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

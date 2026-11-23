@@ -17,8 +17,6 @@ const UnknownRecord = S.Record(S.String, S.Unknown);
 const $I = $WorkspaceDomainId.create("entities/Turn/Turn.values");
 
 /**
- * Message item in a turn aggregate.
- *
  * **Example** (Decode message item)
  *
  * ```ts
@@ -47,8 +45,6 @@ export class MessageItem extends S.Opaque<MessageItem, { readonly brand: unique 
 ) {}
 
 /**
- * Tool call item in a turn aggregate.
- *
  * **Example** (Decode tool call item)
  *
  * ```ts
@@ -81,8 +77,6 @@ export class ToolCallItem extends S.Opaque<ToolCallItem, { readonly brand: uniqu
 ) {}
 
 /**
- * Tool result item in a turn aggregate.
- *
  * **Example** (Decode tool result item)
  *
  * ```ts
@@ -175,8 +169,6 @@ export class ActivityItem extends S.Opaque<ActivityItem, { readonly brand: uniqu
 const TurnItemTag = LiteralKit(["message", "tool_call", "tool_result", "artifact_ref", "activity"]);
 
 /**
- * Ordered typed item held by a turn aggregate.
- *
  * **Example** (Decode turn item union)
  *
  * ```ts
@@ -205,8 +197,6 @@ export const TurnItem = TurnItemTag.mapMembers(
 );
 
 /**
- * Runtime type for {@link TurnItem}.
- *
  * **Example** (Annotate turn item type)
  *
  * ```ts
@@ -225,8 +215,6 @@ export const TurnItem = TurnItemTag.mapMembers(
 export type TurnItem = typeof TurnItem.Type;
 
 /**
- * Ordered turn item list.
- *
  * **Example** (Decode turn items list)
  *
  * ```ts
@@ -255,8 +243,6 @@ export const TurnItems = S.NonEmptyArray(TurnItem).pipe(
 );
 
 /**
- * Runtime type for {@link TurnItems}.
- *
  * **Example** (Annotate turn items type)
  *
  * ```ts

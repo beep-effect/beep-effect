@@ -55,8 +55,6 @@ export const EdgeAuthorityOperation = EdgeAuthorityOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link EdgeAuthorityOperation}.
- *
  * **Example** (Satisfy operation type)
  *
  * ```ts
@@ -99,8 +97,6 @@ export const EdgeWriteOperation = EdgeWriteOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link EdgeWriteOperation}.
- *
  * **Example** (Satisfy write operation type)
  *
  * ```ts
@@ -380,8 +376,6 @@ export class EdgeRepositoryUnavailable extends S.TaggedError<
 }
 
 /**
- * Union of every edge authority repository failure.
- *
  * **Example** (Check error union membership)
  *
  * ```ts
@@ -406,8 +400,6 @@ export const EdgeAuthorityError = S.Union([
 );
 
 /**
- * Runtime type for {@link EdgeAuthorityError}.
- *
  * **Example** (Assign error union type)
  *
  * ```ts

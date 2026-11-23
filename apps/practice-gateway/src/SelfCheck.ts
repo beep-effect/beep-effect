@@ -27,8 +27,6 @@ import type { ProfileStoreFailure } from "./PracticeGateway.errors.ts";
 const $I = $PracticeGatewayId.create("SelfCheck");
 
 /**
- * The line `--self-check` prints when the doctor ran.
- *
  * **Details**
  *
  * `ok` means the doctor ran, not that setup is complete; read
@@ -68,8 +66,6 @@ export class GatewaySelfCheckReport extends S.Opaque<GatewaySelfCheckReport, { r
 ) {}
 
 /**
- * The line `--self-check` prints when the doctor could not run.
- *
  * **Example** (Build a refusal line)
  *
  * ```ts

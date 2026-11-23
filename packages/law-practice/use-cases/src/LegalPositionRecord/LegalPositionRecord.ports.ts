@@ -39,8 +39,6 @@ const LegalPositionRecordOperationBase = LiteralKit([
 ]);
 
 /**
- * Bounded vocabulary of legal position record repository operations.
- *
  * **Details**
  *
  * Every member is either an append or a read. There is deliberately no update
@@ -66,8 +64,6 @@ export const LegalPositionRecordOperation = LegalPositionRecordOperationBase.pip
 );
 
 /**
- * Runtime type for {@link LegalPositionRecordOperation}.
- *
  * @see {@link LegalPositionRecordOperation} for the runtime schema and the append-only rule.
  * @category models
  * @since 0.0.0
@@ -75,8 +71,6 @@ export const LegalPositionRecordOperation = LegalPositionRecordOperationBase.pip
 export type LegalPositionRecordOperation = typeof LegalPositionRecordOperation.Type;
 
 /**
- * Raised when the legal position record repository could not serve a request.
- *
  * **When to use**
  *
  * Use when an append or a read cannot be completed. Both directions matter: an
@@ -159,8 +153,6 @@ export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<
 }
 
 /**
- * Service shape for the legal position record repository.
- *
  * **When to use**
  *
  * Use as the durable seam behind everything the legal position runtime records

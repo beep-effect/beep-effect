@@ -24,8 +24,6 @@ import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.ts";
 const $I = $DocumentsServerId.create("aggregates/Document/FilingTextExtraction");
 
 /**
- * Input supplied to the optional filing text-extraction seam.
- *
  * **Example** (Construct extraction input)
  *
  * ```ts

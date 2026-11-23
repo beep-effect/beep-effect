@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.state");
 
 /**
- * Configuration of the file-backed mail-tagging state.
- *
  * **Details**
  *
  * The directory is private operator state and is never tracked. It holds

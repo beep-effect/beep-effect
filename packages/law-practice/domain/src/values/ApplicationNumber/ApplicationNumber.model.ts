@@ -13,9 +13,6 @@ const $I = $LawPracticeDomainId.create("values/ApplicationNumber/ApplicationNumb
 const applicationNumberPattern = /^(?:1[0-9]|91)[0-9]{4}[A-Z0-9]{2}[0-9]{7}$/u;
 
 /**
- * Validates canonical WIPO ST.13 patent application numbers in machine-readable
- * form.
- *
  * **When to use**
  *
  * Use when a patent application identifier must cross a domain or persistence
@@ -77,8 +74,6 @@ export const ApplicationNumber = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link ApplicationNumber}.
- *
  * **Example** (Annotate a decoded application number)
  *
  * ```ts

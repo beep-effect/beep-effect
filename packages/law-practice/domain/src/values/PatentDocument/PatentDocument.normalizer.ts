@@ -72,8 +72,6 @@ const PatentDocumentNormalizationReason = LiteralKit([
 ]);
 
 /**
- * Typed failure raised while normalizing a Markdown patent application.
- *
  * **Example** (Construct an unknown-heading failure)
  *
  * ```ts

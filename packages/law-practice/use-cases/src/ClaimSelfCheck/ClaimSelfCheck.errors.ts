@@ -50,8 +50,6 @@ export const UsptoClaimsFailureReason = LiteralKit([
 );
 
 /**
- * Runtime reason type produced by {@link UsptoClaimsFailureReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -99,8 +97,6 @@ export class UsptoClaimsError extends S.TaggedError<UsptoClaimsError, { readonly
 ) {}
 
 /**
- * Closed reasons a claim self-check can fail.
- *
  * **Details**
  *
  * - `decomposition-failed`: no claim of the set could be decomposed into a
@@ -135,8 +131,6 @@ export const ClaimSelfCheckFailureReason = LiteralKit([
 );
 
 /**
- * Runtime reason type produced by {@link ClaimSelfCheckFailureReason}.
- *
  * @category type-level
  * @since 0.0.0
  */

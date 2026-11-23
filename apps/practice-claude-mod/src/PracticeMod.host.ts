@@ -35,8 +35,6 @@ const ModHostOperation = LiteralKit(["store-get", "store-set", "session-id", "cl
 type ModHostOperation = typeof ModHostOperation.Type;
 
 /**
- * A mod engine call rejected.
- *
  * **Example** (Make a host error)
  *
  * ```ts

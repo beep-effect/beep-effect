@@ -33,8 +33,6 @@ const $I = $LawPracticeUseCasesId.create("LegalPositionRelatorPolicy/LegalPositi
 const LegalRelatorViewKindBase = LiteralKit(["correlative", "opposite"]);
 
 /**
- * Which derivation a relator view was produced by.
- *
  * **When to use**
  *
  * Use to label a view wherever one is rendered, so a reader can never mistake a
@@ -65,8 +63,6 @@ export const LegalRelatorViewKind = LegalRelatorViewKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link LegalRelatorViewKind}.
- *
  * @see {@link LegalRelatorViewKind} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -74,8 +70,6 @@ export const LegalRelatorViewKind = LegalRelatorViewKindBase.pipe(
 export type LegalRelatorViewKind = typeof LegalRelatorViewKind.Type;
 
 /**
- * One derived reading of one stored relation.
- *
  * **When to use**
  *
  * Use as the whole output of either derivation. A view is what a renderer shows

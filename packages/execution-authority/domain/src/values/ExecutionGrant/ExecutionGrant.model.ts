@@ -50,8 +50,6 @@ export const SinkClass = LiteralKit(["network-egress", "mcp-write"]).pipe(
 );
 
 /**
- * Runtime type for {@link SinkClass}.
- *
  * **Example** (Assign mcp-write type)
  *
  * ```ts
@@ -97,8 +95,6 @@ export const SinkAudience = LiteralKit(["local-workspace", "external-network"]).
 );
 
 /**
- * Runtime type for {@link SinkAudience}.
- *
  * **Example** (Assign external-network type)
  *
  * ```ts
@@ -138,8 +134,6 @@ export const SinkDestination = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link SinkDestination}.
- *
  * **Example** (Make destination value)
  *
  * ```ts
@@ -216,8 +210,6 @@ export const GrantPurpose = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link GrantPurpose}.
- *
  * **Example** (Assign grant purpose type)
  *
  * ```ts
@@ -233,8 +225,6 @@ export const GrantPurpose = S.NonEmptyString.pipe(
 export type GrantPurpose = typeof GrantPurpose.Type;
 
 /**
- * Resource selector the grant covers. Opaque to the evaluator in v1.
- *
  * **Example** (Make grant resource)
  *
  * ```ts
@@ -254,8 +244,6 @@ export const GrantResource = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link GrantResource}.
- *
  * **Example** (Assign grant resource type)
  *
  * ```ts
@@ -294,8 +282,6 @@ export const GrantOperation = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link GrantOperation}.
- *
  * **Example** (Assign grant operation type)
  *
  * ```ts
@@ -336,8 +322,6 @@ export const PolicyRevision = S.make<(typeof SemanticVersion)["Rebuild"]>(Semant
 );
 
 /**
- * Runtime type for {@link PolicyRevision}.
- *
  * **Example** (Assign policy revision type)
  *
  * ```ts

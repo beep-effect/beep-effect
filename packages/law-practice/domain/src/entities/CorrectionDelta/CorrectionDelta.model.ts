@@ -22,8 +22,6 @@ const $I = $LawPracticeDomainId.create("entities/CorrectionDelta/CorrectionDelta
 const pg = ProductEntity.pg;
 
 /**
- * One appended record of a correction to a recorded interpretation.
- *
  * **When to use**
  *
  * Use to record that somebody proposed changing part of a recorded frame, what

@@ -76,8 +76,6 @@ export interface VerdictLogShape {
 export class VerdictLog extends Context.Service<VerdictLog, VerdictLogShape>()($I`VerdictLog`) {}
 
 /**
- * The attorney's verdict on one review item, as submitted to the queue.
- *
  * **Details**
  *
  * The queue fills in the rest of the row: `revision` and `recordedAt`.
@@ -129,8 +127,6 @@ export class RecordVerdictInput extends S.Opaque<RecordVerdictInput, { readonly 
 ) {}
 
 /**
- * Companion namespace for `RecordVerdictInput`.
- *
  * **Example** (Type an encoded verdict submission)
  *
  * ```ts

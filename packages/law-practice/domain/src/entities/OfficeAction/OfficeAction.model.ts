@@ -13,8 +13,6 @@ const $I = $LawPracticeDomainId.create("entities/OfficeAction/OfficeAction.model
 const pg = ProductEntity.pg;
 
 /**
- * USPTO office action entity for a patent asset under examination.
- *
  * **Details**
  *
  * Links the action to the prosecuting matter and patent asset fixture while

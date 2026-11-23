@@ -7,8 +7,6 @@
  */
 
 /**
- * ReviewItem model exports.
- *
  * **Example** (Import ReviewItem)
  *
  * ```ts

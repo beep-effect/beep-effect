@@ -13,8 +13,6 @@ const $I = $WorkspaceDomainId.create("entities/ContextPacket/ContextPacket.model
 const pg = ProductEntity.pg;
 
 /**
- * Bounded context packet returned through the SDK facade.
- *
  * **Example** (Log table name)
  *
  * ```ts

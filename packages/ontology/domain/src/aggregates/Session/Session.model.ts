@@ -42,8 +42,6 @@ type PartitionedQuad = {
 };
 
 /**
- *  Authenticated actor IRI retained on an ontology change journal entry.
- *
  * **Example** (Make actor from IRI)
  *
  * ```ts
@@ -63,8 +61,6 @@ export const OntologyChangeActor = S.NonEmptyString.pipe(
 );
 
 /**
- *  Type for {@link OntologyChangeActor}.
- *
  * **Example** (Annotate actor with type)
  *
  * ```ts
@@ -164,8 +160,6 @@ export const ChangeOperation = Object.assign(
 );
 
 /**
- * Type for {@link ChangeOperation}.
- *
  * **Example** (Type removeQuad operation)
  *
  * ```ts
@@ -191,8 +185,6 @@ export const ChangeOperation = Object.assign(
 export type ChangeOperation = typeof ChangeOperation.Type;
 
 /**
- * Derived RDF datasets for every ontology session named graph partition.
- *
  * **Example** (Empty session graph partitions)
  *
  * ```ts
@@ -221,8 +213,6 @@ export class SessionGraphPartitions extends S.Opaque<SessionGraphPartitions, { r
 ) {}
 
 /**
- * Named graph view derived from a session partition.
- *
  * **Example** (Make named graph partition)
  *
  * ```ts
@@ -256,8 +246,6 @@ export class NamedGraphPartition extends S.Opaque<NamedGraphPartition, { readonl
 ) {}
 
 /**
- * Real dataset delta produced by applying ontology change operations.
- *
  * **Example** (Make empty change delta)
  *
  * ```ts
@@ -294,8 +282,6 @@ const PrefixMapWithEmptyDefault = PrefixMap.pipe(
 );
 
 /**
- * Ontology workbench session with base dataset and ordered change log.
- *
  * **Example** (Make ontology session)
  *
  * ```ts
@@ -329,8 +315,6 @@ export class Session extends S.Opaque<Session, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Applied session batch with the updated session and real dataset delta.
- *
  * **Example** (Make change application result)
  *
  * ```ts
@@ -369,8 +353,6 @@ export class SessionChangeApplication extends S.Opaque<SessionChangeApplication,
 ) {}
 
 /**
- * Input for creating an ontology session.
- *
  * **Example** (Make create session input)
  *
  * ```ts

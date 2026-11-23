@@ -6,8 +6,6 @@
  */
 
 /**
- * Sync value-object schema exports.
- *
  * @category value-objects
  * @since 0.0.0
  */

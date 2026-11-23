@@ -26,8 +26,6 @@
  */
 export * from "./ProviderInstance.behavior.ts";
 /**
- * ProviderInstance entity schema exports.
- *
  * **Example** (Log ProviderInstance entity type)
  *
  * ```ts
@@ -41,8 +39,6 @@ export * from "./ProviderInstance.behavior.ts";
  */
 export * from "./ProviderInstance.model.ts";
 /**
- * ProviderInstance value-schema exports.
- *
  * **Example** (Check ProviderKind is claude)
  *
  * ```ts

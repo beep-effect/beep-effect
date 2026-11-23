@@ -58,8 +58,6 @@ export class OntologyActionError extends S.TaggedError<OntologyActionError, { re
 }
 
 /**
- * Result returned after opening a Turtle document through the sidecar.
- *
  * **Example** (Build open document result)
  *
  * ```ts
@@ -116,8 +114,6 @@ export class OpenOntologyDocumentResult extends S.Opaque<
 ) {}
 
 /**
- * Result returned after saving a Turtle document through the sidecar.
- *
  * **Example** (Build save document result)
  *
  * ```ts
@@ -150,8 +146,6 @@ export class SaveOntologyDocumentResult extends S.Opaque<
 ) {}
 
 /**
- * Result returned after previewing Turtle serialization.
- *
  * **Example** (Build preview turtle result)
  *
  * ```ts
@@ -181,8 +175,6 @@ export class PreviewOntologyTurtleResult extends S.Opaque<
 ) {}
 
 /**
- * Batch operation payload accepted by the ontology sidecar.
- *
  * **Example** (Build batch command)
  *
  * ```ts
@@ -229,8 +221,6 @@ export class ApplyOntologyBatchCommand extends S.Opaque<ApplyOntologyBatchComman
 ) {}
 
 /**
- * Batch operation result carrying the updated session and real delta.
- *
  * **Example** (Build batch result)
  *
  * ```ts
@@ -269,8 +259,6 @@ export class ApplyOntologyBatchResult extends S.Opaque<ApplyOntologyBatchResult,
 ) {}
 
 /**
- * Wire payload for opening an ontology document from the desktop sidecar.
- *
  * **Example** (Open a Turtle file with a base IRI)
  *
  * ```ts
@@ -307,8 +295,6 @@ export class OpenOntologyDocumentPayload extends S.Opaque<
 ) {}
 
 /**
- * Wire payload for saving an ontology document from the desktop sidecar.
- *
  * **Example** (Save an empty session to a Turtle file)
  *
  * ```ts
@@ -348,8 +334,6 @@ export class SaveOntologyDocumentPayload extends S.Opaque<
 ) {}
 
 /**
- * Wire payload for previewing Turtle serialization in the desktop sidecar.
- *
  * **Example** (Preview Turtle for a session without writing it)
  *
  * ```ts
@@ -386,8 +370,6 @@ export class PreviewOntologyTurtlePayload extends S.Opaque<
 ) {}
 
 /**
- * Wire payload for building the current ontology explorer snapshot.
- *
  * **Example** (Request the explorer snapshot for a session)
  *
  * ```ts

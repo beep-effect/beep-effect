@@ -30,8 +30,6 @@ import type { ExtractorFieldResponse, ReviewDispute, ReviewField, ReviewFinding 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.ports");
 
 /**
- * Failure of one docket intake port call.
- *
  * **Details**
  *
  * `ambiguousWrite` is true only when a calendar create may or may not have

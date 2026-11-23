@@ -20,8 +20,6 @@ import type * as FileSystem from "effect/FileSystem";
 const $I = $LawPracticeServerId.create("PracticeKg.contacts");
 
 /**
- * One email address of a contact.
- *
  * **Example** (Make a contact address)
  *
  * ```ts
@@ -84,8 +82,6 @@ export class PracticeKgContactLink extends S.Opaque<PracticeKgContactLink, { rea
 ) {}
 
 /**
- * Where a contact row was read from.
- *
  * **Example** (Decode a contact origin)
  *
  * ```ts
@@ -103,8 +99,6 @@ export const PracticeKgContactOrigin = LiteralKit(["csv", "vcf"]).pipe(
 );
 
 /**
- * Runtime type of {@link PracticeKgContactOrigin}.
- *
  * **Example** (Type a contact origin)
  *
  * ```ts
@@ -163,8 +157,6 @@ export class PracticeKgContact extends S.Opaque<PracticeKgContact, { readonly br
 ) {}
 
 /**
- * Failure reading the contacts file.
- *
  * **Details**
  *
  * `lineNumber` is the one-based line that failed and is absent when the file

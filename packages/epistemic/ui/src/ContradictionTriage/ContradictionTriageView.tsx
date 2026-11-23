@@ -61,8 +61,6 @@ const $I = $EpistemicUiId.create("ContradictionTriage/ContradictionTriageView");
 const ContradictionTriageTabBase = LiteralKit(["queue", "comparison", "source"]);
 
 /**
- * Narrow-layout panes available in the contradiction-triage workspace.
- *
  * **Example** (Log comparison enum member)
  *
  * ```ts
@@ -83,8 +81,6 @@ export const ContradictionTriageTab = ContradictionTriageTabBase.pipe(
 const isContradictionTriageTab = S.is(ContradictionTriageTab);
 
 /**
- * Narrow-layout pane selected by the contradiction-triage host.
- *
  * **Example** (Assign comparison tab literal)
  *
  * ```ts

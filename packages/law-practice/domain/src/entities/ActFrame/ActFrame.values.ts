@@ -40,8 +40,6 @@ const OperativeFactPolarityBase = LiteralKit(["present", "absent"]);
 const PositionDerivationKindBase = LiteralKit(["create", "alter", "extinguish"]);
 
 /**
- * Which structural place in an act frame a slot occupies.
- *
  * **Details**
  *
  * `actor` is who does the act, `object` is what it is done to, and `recipient`
@@ -83,8 +81,6 @@ export const ActFrameSlotKind = ActFrameSlotKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link ActFrameSlotKind}.
- *
  * @see {@link ActFrameSlotKind} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -92,8 +88,6 @@ export const ActFrameSlotKind = ActFrameSlotKindBase.pipe(
 export type ActFrameSlotKind = typeof ActFrameSlotKind.Type;
 
 /**
- * Whether a precondition requires a fact to be present or to be absent.
- *
  * **When to use**
  *
  * Use as the direction on every recorded precondition. There is no default and
@@ -134,8 +128,6 @@ export const OperativeFactPolarity = OperativeFactPolarityBase.pipe(
 );
 
 /**
- * Runtime type for {@link OperativeFactPolarity}.
- *
  * @see {@link OperativeFactPolarity} for the runtime schema and the negative operative fact.
  * @category models
  * @since 0.0.0
@@ -143,8 +135,6 @@ export const OperativeFactPolarity = OperativeFactPolarityBase.pipe(
 export type OperativeFactPolarity = typeof OperativeFactPolarity.Type;
 
 /**
- * What an act frame does to the positions it names.
- *
  * **When to use**
  *
  * Use as the member type of an act frame's `derivationKind` set. A frame
@@ -178,8 +168,6 @@ export const PositionDerivationKind = PositionDerivationKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link PositionDerivationKind}.
- *
  * @see {@link PositionDerivationKind} for the runtime schema and why it is carried as a set.
  * @category models
  * @since 0.0.0
@@ -248,8 +236,6 @@ export class PositionDerivation extends S.Opaque<PositionDerivation, { readonly 
 ) {}
 
 /**
- * The operative fact a precondition is about, as the recorder stated it.
- *
  * **Example** (State an operative fact)
  *
  * ```ts
@@ -268,8 +254,6 @@ export const OperativeFactStatement = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link OperativeFactStatement}.
- *
  * @see {@link OperativeFactStatement} for the runtime schema.
  * @category models
  * @since 0.0.0
@@ -277,8 +261,6 @@ export const OperativeFactStatement = S.NonEmptyString.pipe(
 export type OperativeFactStatement = typeof OperativeFactStatement.Type;
 
 /**
- * One named place in an act frame that a party fills.
- *
  * **When to use**
  *
  * Use as an element of a frame's slot list. An exercise of the frame assigns a
@@ -325,8 +307,6 @@ export const ActFrameSlot = ActFrameSlotKind.mapMembers(([actor, object, recipie
 );
 
 /**
- * Decoded representation of one named place in an act frame.
- *
  * @category models
  * @since 0.0.0
  */
@@ -366,8 +346,6 @@ export const hasDistinctLabels = (elements: ReadonlyArray<{ readonly label: ActF
 export const hasActorSlot = (slots: ReadonlyArray<ActFrameSlot>): boolean => A.some(slots, ActFrameSlot.guards.actor);
 
 /**
- * One condition a recorded act frame states for its act.
- *
  * **When to use**
  *
  * Use as an element of a frame's precondition list, one per condition the
@@ -430,8 +408,6 @@ export class ActFramePrecondition extends S.Opaque<ActFramePrecondition, { reado
 ) {}
 
 /**
- * One position a recorded act frame creates or terminates.
- *
  * **When to use**
  *
  * Use as an element of a frame's `creates` or `terminates` list. Which of the
@@ -548,8 +524,6 @@ const DistinctLabels = S.makeFilter(
 );
 
 /**
- * Frame preconditions constrained to distinct element labels.
- *
  * **Example** (Inspect precondition schema)
  *
  * ```ts
@@ -570,8 +544,6 @@ export const ActFramePreconditions = S.Array(ActFramePrecondition)
   );
 
 /**
- * Runtime type for {@link ActFramePreconditions}.
- *
  * @see {@link ActFramePreconditions} for the runtime schema.
  * @category models
  * @since 0.0.0
@@ -579,8 +551,6 @@ export const ActFramePreconditions = S.Array(ActFramePrecondition)
 export type ActFramePreconditions = typeof ActFramePreconditions.Type;
 
 /**
- * Position transitions constrained to distinct element labels.
- *
  * **Example** (Inspect transition schema)
  *
  * ```ts
@@ -601,8 +571,6 @@ export const PositionTransitions = S.Array(PositionTransition)
   );
 
 /**
- * Runtime type for {@link PositionTransitions}.
- *
  * @see {@link PositionTransitions} for the runtime schema.
  * @category models
  * @since 0.0.0

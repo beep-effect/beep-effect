@@ -69,8 +69,6 @@ class VerdictStoreUnreadable extends S.TaggedError<VerdictStoreUnreadable, { rea
 type VerdictLogError = VerdictLocked | VerdictStoreUnreadable | ModHostError;
 
 /**
- * One verdict to record on one answer.
- *
  * **Example** (Prepare an undo revision)
  *
  * ```ts

@@ -32,8 +32,6 @@ const $I = $LawPracticeDomainId.create("entities/ActFrame/ActFrame.model");
 const pg = ProductEntity.pg;
 
 /**
- * One recorded reading of a norm as an act that moves legal positions.
- *
  * **When to use**
  *
  * Use to record that an interpreter read a source as describing an act: who may

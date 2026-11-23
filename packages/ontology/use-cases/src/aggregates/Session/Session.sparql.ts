@@ -32,8 +32,6 @@ import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query"
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.sparql");
 
 /**
- * SPARQL query profiles exposed by the ontology workbench panel.
- *
  * **Example** (Assign select profile)
  *
  * ```ts
@@ -54,8 +52,6 @@ export const OntologySparqlPanelProfile = LiteralKit(["select", "construct", "as
 );
 
 /**
- * Type for {@link OntologySparqlPanelProfile}.
- *
  * **Example** (Assign construct profile)
  *
  * ```ts
@@ -72,8 +68,6 @@ export const OntologySparqlPanelProfile = LiteralKit(["select", "construct", "as
 export type OntologySparqlPanelProfile = typeof OntologySparqlPanelProfile.Type;
 
 /**
- * SPARQL query safeguard envelope.
- *
  * **Example** (Make empty safeguards)
  *
  * ```ts
@@ -105,8 +99,6 @@ export class OntologySparqlSafeguards extends S.Opaque<OntologySparqlSafeguards,
 ) {}
 
 /**
- * SPARQL panel example query.
- *
  * **Example** (Make all-triples example)
  *
  * ```ts
@@ -139,8 +131,6 @@ export class OntologySparqlExample extends S.Opaque<OntologySparqlExample, { rea
 ) {}
 
 /**
- * SPARQL execution input for an ontology session.
- *
  * **Example** (Make SPARQL run input)
  *
  * ```ts
@@ -188,8 +178,6 @@ export class RunOntologySparqlInput extends S.Opaque<RunOntologySparqlInput, { r
 ) {}
 
 /**
- * SPARQL execution result with applied safeguards.
- *
  * **Example** (Make safeguarded result)
  *
  * ```ts
@@ -234,8 +222,6 @@ export class RunOntologySparqlResult extends S.Opaque<RunOntologySparqlResult, {
 ) {}
 
 /**
- * SPARQL safeguard validation failure.
- *
  * **Example** (Make profile mismatch error)
  *
  * ```ts

@@ -21,8 +21,6 @@ const OptionalText = S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstr
 const OptionalDate = CalendarDate.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**
- * What tells the attorney which email a docket question is about.
- *
  * **Details**
  *
  * Every field is optional: a question shows the parts it has and leaves the
@@ -57,8 +55,6 @@ export class DocketQuestionEmail extends S.Opaque<DocketQuestionEmail, { readonl
 ) {}
 
 /**
- * A docket intake outcome, with what the pipeline knows about it, to raise as a question.
- *
  * **Details**
  *
  * Only a `DocketNeedsReview` outcome becomes a question; the context fields
@@ -128,9 +124,6 @@ export const DocketMessageDigest = S.String.check(S.isPattern(/^[0-9a-f]{32}$/))
 );
 
 /**
- * Item id of a docket intake question, parsed into its parts:
- * `docket-intake:<reason>:<digest>`.
- *
  * **Details**
  *
  * The decoded value is the tuple `["docket-intake:", reason, ":", digest]`.

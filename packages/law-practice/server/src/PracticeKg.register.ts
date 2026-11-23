@@ -22,8 +22,6 @@ import type * as FileSystem from "effect/FileSystem";
 const $I = $LawPracticeServerId.create("PracticeKg.register");
 
 /**
- * One row of the attorney's docket register.
- *
  * **Details**
  *
  * The register is converted to JSONL outside the repo, one object per line.
@@ -69,8 +67,6 @@ export class PracticeKgDocketRegisterRow extends S.Opaque<
 ) {}
 
 /**
- * Failure reading the docket register file.
- *
  * **Details**
  *
  * `lineNumber` is the one-based line that failed to decode and is absent when

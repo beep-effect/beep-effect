@@ -14,8 +14,6 @@ const $I = $LawPracticeDomainId.create("values/ActFrameElementRef/ActFrameElemen
 const ActFramePartBase = LiteralKit(["slot", "precondition", "creates", "terminates"]);
 
 /**
- * The name a recorded frame gives to one of its elements.
- *
  * **When to use**
  *
  * Use as the label on every frame element, and as the half of an
@@ -46,8 +44,6 @@ export const ActFrameElementLabel = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link ActFrameElementLabel}.
- *
  * @see {@link ActFrameElementLabel} for the runtime schema and why labels beat indexes.
  * @category models
  * @since 0.0.0
@@ -55,8 +51,6 @@ export const ActFrameElementLabel = S.NonEmptyString.pipe(
 export type ActFrameElementLabel = typeof ActFrameElementLabel.Type;
 
 /**
- * Which part of a recorded act frame an element belongs to.
- *
  * **Details**
  *
  * The four parts are the frame's own structure: the slots a party fills, the
@@ -84,8 +78,6 @@ export const ActFramePart = ActFramePartBase.pipe(
 );
 
 /**
- * Runtime type for {@link ActFramePart}.
- *
  * @see {@link ActFramePart} for the runtime schema and the per-part label rule.
  * @category models
  * @since 0.0.0
@@ -103,8 +95,6 @@ const makeActFrameElementRefMember = <T extends ActFramePart>(literal: S.Literal
   });
 
 /**
- * A pointer at one element of a recorded act frame.
- *
  * **When to use**
  *
  * Use when a record must say which element of a frame it is about: an
@@ -151,8 +141,6 @@ export const ActFrameElementRef = ActFramePart.mapMembers(([slot, precondition, 
 );
 
 /**
- * Runtime type for {@link ActFrameElementRef}.
- *
  * @see {@link ActFrameElementRef} for the tagged-union schema and pointer semantics.
  * @category models
  * @since 0.0.0

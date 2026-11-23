@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $SharedDomainId.create("values/LocalDate/LocalDate.calendar");
 
 /**
- * Raw calendar fields used before LocalDate class construction.
- *
  * **Example** (Make leap day parts)
  *
  * ```ts

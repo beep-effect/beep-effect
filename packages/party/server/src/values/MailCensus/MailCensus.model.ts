@@ -12,7 +12,6 @@ import { ObservedSpan } from "../OrgEvidence/OrgEvidence.model.ts";
 const $I = $PartyServerId.create("values/MailCensus/MailCensus.model");
 
 /**
- * Immutable census evidence state; contains private identifiers and names.
  * **Example** (Decode MailCensus)
  * ```ts
  * import { MailCensus } from "@beep/party-server/MailCensus"
@@ -45,7 +44,6 @@ export class MailCensus extends S.Opaque<MailCensus, { readonly brand: unique sy
 ) {}
 
 /**
- * Count distribution with fixed buckets and a maximum.
  * **Example** (Decode CensusHistogram)
  * ```ts
  * import { CensusHistogram } from "@beep/party-server/MailCensus"
@@ -62,7 +60,6 @@ export class CensusHistogram extends S.Opaque<CensusHistogram, { readonly brand:
 ) {}
 
 /**
- * Distinct identifier counts by the mail identifier families.
  * **Example** (Decode IdentifierCounts)
  * ```ts
  * import { IdentifierCounts } from "@beep/party-server/MailCensus"
@@ -79,7 +76,6 @@ export class IdentifierCounts extends S.Opaque<IdentifierCounts, { readonly bran
 ) {}
 
 /**
- * Counts of observed DN and SMTP pairing coverage.
  * **Example** (Decode ExchangeUnificationCounts)
  * ```ts
  * import { ExchangeUnificationCounts } from "@beep/party-server/MailCensus"
@@ -101,7 +97,6 @@ export class ExchangeUnificationCounts extends S.Opaque<ExchangeUnificationCount
 ) {}
 
 /**
- * Message and distinct voice counts for delegated mail.
  * **Example** (Decode DelegationCounts)
  * ```ts
  * import { DelegationCounts } from "@beep/party-server/MailCensus"
@@ -118,7 +113,6 @@ export class DelegationCounts extends S.Opaque<DelegationCounts, { readonly bran
 ) {}
 
 /**
- * Count-only mail summary without source names, addresses or identifier values.
  * **Example** (Decode CensusSummary)
  * ```ts
  * import { CensusSummary } from "@beep/party-server/MailCensus"

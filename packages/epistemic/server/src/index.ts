@@ -36,8 +36,6 @@ export * from "./EdgeAuthority/index.ts";
 export * from "./Layer.ts";
 export * from "./Retention/index.ts";
 /**
- * Bounded SHACL validation exports.
- *
  * @category layers
  * @since 0.0.0
  */

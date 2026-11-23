@@ -55,7 +55,6 @@ export const CitationGroupMember = S.TaggedUnion({
   })
 );
 /**
- * Schema-derived group member reference.
  * @category models
  * @since 0.0.0
  */

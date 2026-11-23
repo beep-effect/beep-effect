@@ -122,8 +122,6 @@ export const MatterContactsJson = MatterContacts.pipe(
 );
 
 /**
- * Runtime type for {@link MatterContactsJson}.
- *
  * @category models
  * @since 0.0.0
  */

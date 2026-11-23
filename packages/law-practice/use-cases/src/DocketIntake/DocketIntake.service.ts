@@ -138,8 +138,6 @@ const docketIntakeConfigOverlapMinutesDefault = 120;
 const docketIntakeConfigReviewDefault = DocketReviewConfig.make({});
 
 /**
- * Settings of the docket intake pipeline.
- *
  * **Example** (Make a config)
  *
  * ```ts

@@ -56,8 +56,6 @@ export const AntecedentRuleId = S.String.check(
 );
 
 /**
- * Branded rule id type produced by {@link AntecedentRuleId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -108,16 +106,12 @@ export const AntecedentDependencyChain = S.NonEmptyArray(PosInt)
   );
 
 /**
- * Runtime chain type produced by {@link AntecedentDependencyChain}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type AntecedentDependencyChain = typeof AntecedentDependencyChain.Type;
 
 /**
- * Discriminator of {@link AntecedentFinding}.
- *
  * **Example** (Inspect finding kinds)
  *
  * ```ts
@@ -143,8 +137,6 @@ export const AntecedentFindingKind = LiteralKit([
 );
 
 /**
- * Runtime finding kind produced by {@link AntecedentFindingKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -284,8 +276,6 @@ export const AntecedentFinding = S.toTaggedUnion("kind")(
 );
 
 /**
- * Runtime finding type produced by {@link AntecedentFinding}.
- *
  * @category type-level
  * @since 0.0.0
  */
