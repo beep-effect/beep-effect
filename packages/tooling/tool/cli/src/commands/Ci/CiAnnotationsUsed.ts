@@ -83,6 +83,8 @@ export const WorkflowCommandLevel = LiteralKit(["error", "warning", "notice"]).p
 );
 
 /**
+ * The level a `::error`, `::warning` or `::notice` log line starts with.
+ *
  * @category models
  * @since 0.0.0
  */
