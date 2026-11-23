@@ -305,7 +305,6 @@ describe("Range", () => {
       Effect.gen(function* () {
         const lower = yield* Range.parse(">=1.0.0");
         const upper = yield* Range.parse("<2.0.0");
-        // Data-last: intersect(that)(self) intersects self with that.
         const both = yield* Range.intersect(upper)(lower);
         const parsed19 = yield* SemVer.parse("1.5.0");
         assert.isTrue(both.test(parsed19));
@@ -334,10 +333,12 @@ describe("Range", () => {
         const parsed23 = yield* Range.parse(">=1.0.0");
         const parsed37 = yield* Range.parse("^1.2.0");
         assert.isFalse(Range.isSubset(parsed23, parsed37));
-        // Documented false negative: the sub-range straddles sup's set boundary.
         const parsed24 = yield* Range.parse(">=1.0.0 <3.0.0");
         const parsed38 = yield* Range.parse(">=1.0.0 <2.0.0 || >=2.0.0 <3.0.0");
-        assert.isFalse(Range.isSubset(parsed24, parsed38));
+        assert.isFalse(
+          Range.isSubset(parsed24, parsed38),
+          "documented false negative: the sub-range straddles sup's set boundary"
+        );
       })
     );
 
@@ -362,11 +363,7 @@ describe("Range", () => {
     );
   });
 
-  // `parseResult` and `intersectResult` are the primitives; `parse` and
-  // `intersect` derive from them via `Effect.fromResult` and add only the
-  // tracing span. Both directions are asserted per row so the two forms
-  // cannot drift.
-  describe("Result parity", () => {
+  describe("Result parity: parse and intersect are their *Result twins behind Effect.fromResult, asserted both ways per row", () => {
     const parseRows: ReadonlyArray<readonly [label: string, input: string]> = [
       ["a caret range", "^1.0.0"],
       ["a tilde range", "~1.2.3"],
@@ -427,9 +424,7 @@ describe("Range", () => {
       );
     }
 
-    // `Range` is a `Schema.Class`, which is not `Pipeable` in v4, so the
-    // data-last forms are applied directly rather than through `.pipe`.
-    it.effect("the data-last forms of both agree too", () =>
+    it.effect("the data-last forms of both agree too, applied directly because a Schema.Class is not Pipeable", () =>
       Effect.gen(function* () {
         const left = yield* Range.parse("^1.0.0");
         const right = yield* Range.parse(">=1.5.0");
@@ -455,8 +450,7 @@ describe("Range", () => {
   });
 });
 
-// Required round-1 regressions; upstream assertions above remain intact.
-describe("Range round-1 regressions", () => {
+describe("Range round-1 regressions, added without changing the upstream assertions above", () => {
   it.effect("simplify retains the earliest duplicate alongside unrelated branches", () =>
     Effect.gen(function* () {
       const range = yield* Range.parse(">=1.0.0+a || >=1.0.0+b || <0.5.0");
@@ -566,9 +560,11 @@ describe("Range round-1 regressions", () => {
         const v = yield* SemVer.parse(input);
         assert.strictEqual(simplified.test(v), union.test(v), input);
       }
-      // A mentioned tuple with no possible prerelease witness adds no permission.
       const parsed28 = yield* Range.parse(">=1.0.0 <2.0.0-0");
-      assert.isTrue(Range.isSubset(parsed28, sup));
+      assert.isTrue(
+        Range.isSubset(parsed28, sup),
+        "a mentioned tuple with no possible prerelease witness adds no permission"
+      );
     })
   );
 

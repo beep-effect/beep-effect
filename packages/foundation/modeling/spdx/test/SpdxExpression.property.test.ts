@@ -31,34 +31,43 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   );
 };
 
-// The AST field schemas deliberately accept strings outside the parser domain.
-// Preserve arbitrary tree shapes, plus flags and optional scope presence while
-// projecting identifiers onto SPDX grammar/catalog members for string fidelity.
-const validTree: (node: SpdxExpression) => SpdxExpression = Match.type<SpdxExpression>().pipe(
-  Match.tagsExhaustive({
-    License: (node) => LicenseNode.make({ id: node.id.length % 2 === 0 ? "MIT" : "Apache-2.0", plus: node.plus }),
-    LicenseRef: (node) =>
-      LicenseRefNode.make(
-        node.documentRef === undefined
-          ? { ref: `custom-${node.ref.length}` }
-          : { ref: `custom-${node.ref.length}`, documentRef: `doc-${node.documentRef.length}` }
-      ),
-    WithException: (node) =>
-      WithExceptionNode.make({
-        license:
-          node.license._tag === "License"
-            ? LicenseNode.make({ id: "GPL-2.0-only", plus: node.license.plus })
-            : LicenseRefNode.make(
-                node.license.documentRef === undefined
-                  ? { ref: `custom-${node.license.ref.length}` }
-                  : { ref: `custom-${node.license.ref.length}`, documentRef: `doc-${node.license.documentRef.length}` }
-              ),
-        exception: node.exception.length % 2 === 0 ? "Classpath-exception-2.0" : "Nokia-Qt-exception-1.1",
-      }),
-    And: (node) => AndNode.make({ left: validTree(node.left), right: validTree(node.right) }),
-    Or: (node) => OrNode.make({ left: validTree(node.left), right: validTree(node.right) }),
-  })
-);
+const projectLeafIdsOntoGrammarKeepingShape: (node: SpdxExpression) => SpdxExpression =
+  Match.type<SpdxExpression>().pipe(
+    Match.tagsExhaustive({
+      License: (node) => LicenseNode.make({ id: node.id.length % 2 === 0 ? "MIT" : "Apache-2.0", plus: node.plus }),
+      LicenseRef: (node) =>
+        LicenseRefNode.make(
+          node.documentRef === undefined
+            ? { ref: `custom-${node.ref.length}` }
+            : { ref: `custom-${node.ref.length}`, documentRef: `doc-${node.documentRef.length}` }
+        ),
+      WithException: (node) =>
+        WithExceptionNode.make({
+          license:
+            node.license._tag === "License"
+              ? LicenseNode.make({ id: "GPL-2.0-only", plus: node.license.plus })
+              : LicenseRefNode.make(
+                  node.license.documentRef === undefined
+                    ? { ref: `custom-${node.license.ref.length}` }
+                    : {
+                        ref: `custom-${node.license.ref.length}`,
+                        documentRef: `doc-${node.license.documentRef.length}`,
+                      }
+                ),
+          exception: node.exception.length % 2 === 0 ? "Classpath-exception-2.0" : "Nokia-Qt-exception-1.1",
+        }),
+      And: (node) =>
+        AndNode.make({
+          left: projectLeafIdsOntoGrammarKeepingShape(node.left),
+          right: projectLeafIdsOntoGrammarKeepingShape(node.right),
+        }),
+      Or: (node) =>
+        OrNode.make({
+          left: projectLeafIdsOntoGrammarKeepingShape(node.left),
+          right: projectLeafIdsOntoGrammarKeepingShape(node.right),
+        }),
+    })
+  );
 
 describe("SpdxExpression property floor", () => {
   roundTrips("LicenseNode", LicenseNode);
@@ -70,7 +79,7 @@ describe("SpdxExpression property floor", () => {
 
   it.effect.prop(
     "FromString codec round-trips valid arbitrary expression trees without decode failure",
-    [Arbitrary.schema(SpdxExpression.FromString).pipe(Arbitrary.map(validTree))],
+    [Arbitrary.schema(SpdxExpression.FromString).pipe(Arbitrary.map(projectLeafIdsOntoGrammarKeepingShape))],
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(SpdxExpression.FromString)(value);
@@ -84,7 +93,7 @@ describe("SpdxExpression property floor", () => {
 
   it.effect.prop(
     "every node formatter is idempotent and parsing preserves its AST and written license order",
-    [Arbitrary.schema(SpdxExpression.Schema).pipe(Arbitrary.map(validTree))],
+    [Arbitrary.schema(SpdxExpression.Schema).pipe(Arbitrary.map(projectLeafIdsOntoGrammarKeepingShape))],
     ([value]) =>
       Effect.gen(function* () {
         const text = value.toString();
