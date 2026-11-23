@@ -43,6 +43,12 @@ projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is n
 
 ## Latest Evidence
 
+2026-11-23: P2 gaps closed in code, no workflow change: a hosted `ci lane` step that writes no
+gate record now records a `lane` root run from its exit code and log, and counts the annotations
+its output wrote for `append-gate-reports` (decisions `lane-step-gate-records`,
+`annotations-used-tally`). Fixture tests spawn real lane children under Node and Bun: pass, red,
+own-record, broken count, lingering descendant (`test/ci-lane-recording.test.ts`).
+
 2026-11-22: P3 fixture tests pass (23 across `ci-main-feed`, `ci-job-adapter`, `ci-failures`): a
 merge-base hit in 3 REST requests and the ancestor walk in 4, no GraphQL; the monitor's 48 tests
 pass unchanged after the log-route extraction.
