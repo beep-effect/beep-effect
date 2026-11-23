@@ -96,6 +96,30 @@ export class CoverageProducerPackage extends S.Opaque<CoverageProducerPackage, {
 ) {}
 
 /**
+ * One shard segment a partition ran outside the coverage plan: its selection and the test files it ran.
+ *
+ * **Example** (Inspect the unsealed run contract)
+ * ```ts
+ * import { CoverageUnsealedRun } from "@beep/repo-cli/test/Quality"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CoverageUnsealedRun)({})) // false
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CoverageUnsealedRun extends S.Opaque<CoverageUnsealedRun, { readonly brand: unique symbol }>()(
+  S.Struct({
+    selection: CoverageProducerPackage,
+    actualTestFiles: S.Array(RelativePath),
+  }).pipe(
+    $I.annoteSchema("CoverageUnsealedRun", {
+      description:
+        "A verified test segment outside the coverage plan; its coverage is never sealed, and the collector checks that its shards together ran every listed file once.",
+    })
+  )
+) {}
+
+/**
  * Expected package assignments of one successful CI producer.
  *
  * **Example** (An empty partition remains explicit)
@@ -135,6 +159,9 @@ export class CoverageProducerWriteOptions extends S.Opaque<
     identity: CoverageProducerIdentity,
     partitionId: S.NonEmptyString,
     packages: S.Array(CoverageProducerPackage),
+    unsealedRuns: S.Array(CoverageUnsealedRun).pipe(
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoverageUnsealedRun>>([]))
+    ),
   }).pipe(
     $I.annoteSchema("CoverageProducerWriteOptions", {
       description: "Destination and authoritative inputs for a successful coverage artifact producer.",
@@ -311,6 +338,10 @@ export class CoverageProducerManifest extends S.Opaque<CoverageProducerManifest,
     producerRuntime: S.tag("bun"),
     producerRuntimeVersion: S.NonEmptyString,
     packages: S.Array(CoveragePackageArtifact),
+    unsealedRuns: S.Array(CoverageUnsealedRun).pipe(
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<CoverageUnsealedRun>>([])),
+      S.withDecodingDefaultTypeKey(Effect.succeed<ReadonlyArray<CoverageUnsealedRun>>([]))
+    ),
   }).pipe(
     $I.annoteSchema("CoverageProducerManifest", {
       description: "Exact successful Bun sealing attempt and its integrity-checked package reports.",
