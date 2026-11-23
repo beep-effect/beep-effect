@@ -1,5 +1,3 @@
-// Shared guard leaf; it never imports the glob engine or facades.
-
 import { $GlobId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as N from "@beep/utils/Number";
@@ -240,7 +238,6 @@ export class GuardExceeded extends S.TaggedError<GuardExceeded, { readonly brand
     limit: S.Finite.pipe(
       $I.annoteKey("GuardExceeded.limit", { description: "The finite cap enforced by the compile-time guard." })
     ),
-    // Expansion arithmetic intentionally overflows to Infinity; retain the oracle measurement.
     actual: GuardMeasurement.pipe(
       $I.annoteKey("GuardExceeded.actual", {
         description: "The measured value, including Infinity when an expansion count overflows.",
