@@ -49,12 +49,7 @@ export const KeywordFamily = LiteralKit(["close", "fix", "resolve", "ref"]).pipe
  */
 export type KeywordFamily = typeof KeywordFamily.Type;
 
-/**
- * The projection table IS the totality proof: `Record` over the union of
- * both keyword types makes a keyword added to either constant without an
- * entry here fail to compile.
- */
-const FAMILIES: Record<ListKeyword, KeywordFamily> = {
+const FAMILY_BY_KEYWORD_TOTAL_SO_A_MISSING_ENTRY_FAILS_TO_COMPILE: Record<ListKeyword, KeywordFamily> = {
   close: "close",
   closes: "close",
   closed: "close",
@@ -93,4 +88,5 @@ const FAMILIES: Record<ListKeyword, KeywordFamily> = {
  * @category mapping
  * @since 0.0.0
  */
-export const keywordFamily = (keyword: ListKeyword): KeywordFamily => FAMILIES[keyword];
+export const keywordFamily = (keyword: ListKeyword): KeywordFamily =>
+  FAMILY_BY_KEYWORD_TOTAL_SO_A_MISSING_ENTRY_FAILS_TO_COMPILE[keyword];

@@ -1,8 +1,4 @@
-// Retargets upstream packages/ui/__test__/reducer.test.ts and the model half
-// of packages/sdk/__test__/build-report.test.ts (vitest-agent 1cf1ab94), and
-// holds the AC-L4 honest-count cases. Cases about Vitest objects (stack
-// frames, missing diagnostics, throwing getters, unknown states) belong to the
-// Vitest adapter slice and are listed in its port inventory.
+// Ported from vitest-agent 1cf1ab94 packages/ui/__test__/reducer.test.ts and packages/sdk/__test__/build-report.test.ts (MIT).
 
 import { Unit } from "@beep/gate-report/GateReport";
 import { Item, ItemDetail } from "@beep/gate-report/Item";
@@ -419,9 +415,7 @@ describe("reduceEvents — timeouts and unit faults (build-report retargeted)", 
     assert.strictEqual(report.outcome, "some-fail");
   });
 
-  // The Vitest adapter reports a module that failed to load as `UnitCollected { items: 0 }`
-  // and a `UnitFaulted` load, with no collected count on `RunFinished`.
-  const loadFailure = (unit: string) => [
+  const vitestAdapterLoadFailureEvents = (unit: string) => [
     E.UnitCollected.make({ unit, items: 0 }),
     E.UnitFaulted.make({
       unit,
@@ -432,7 +426,11 @@ describe("reduceEvents — timeouts and unit faults (build-report retargeted)", 
   ];
 
   it("a load failure of the only module is surfaced as its own total and fails the run", () => {
-    const report = reduce([runStarted(), ...loadFailure(FILE), runFinished({ reason: "failed", exitCode: O.some(1) })]);
+    const report = reduce([
+      runStarted(),
+      ...vitestAdapterLoadFailureEvents(FILE),
+      runFinished({ reason: "failed", exitCode: O.some(1) }),
+    ]);
     assert.strictEqual(report.totals.collected, 0);
     assert.strictEqual(report.totals.loadFailed, 1);
     assert.strictEqual(report.totals.failed, 0);
@@ -443,7 +441,7 @@ describe("reduceEvents — timeouts and unit faults (build-report retargeted)", 
   it("a load failure beside a module that collected renders the same verdict", () => {
     const report = reduce([
       runStarted(),
-      ...loadFailure("src/broken.test.ts"),
+      ...vitestAdapterLoadFailureEvents("src/broken.test.ts"),
       E.UnitCollected.make({ unit: FILE, items: 1 }),
       finished(testItem({ name: "adds", outcome: "passed" })),
       runFinished({ reason: "failed", exitCode: O.some(1) }),

@@ -23,66 +23,45 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $ContractKitId.create("Parity");
 
-// Each opaque object (a transformation, an undescribed filter or declaration, a
-// unique symbol) gets one number for the life of the process, so two
-// signatures hold the same number exactly when they hold the same object.
-const identities = MutableHashMap.empty<object | symbol, number>();
+const processLifetimeNumberPerObject = MutableHashMap.empty<object | symbol, number>();
 
-const identityOf = (value: object | symbol): number =>
-  O.getOrElse(MutableHashMap.get(identities, value), () => {
-    const identity = MutableHashMap.size(identities);
-    MutableHashMap.set(identities, value, identity);
+const objectIdentityNumber = (value: object | symbol): number =>
+  O.getOrElse(MutableHashMap.get(processLifetimeNumberPerObject, value), () => {
+    const identity = MutableHashMap.size(processLifetimeNumberPerObject);
+    MutableHashMap.set(processLifetimeNumberPerObject, value, identity);
     return identity;
   });
 
-// Plain data inside a `representation` annotation, with functions dropped (an
-// array becomes an index-keyed record, which compares the same way).
-const dataOf = (value: unknown): unknown => {
+const functionFreeIndexKeyedDataOf = (value: unknown): unknown => {
   if (P.isObject(value)) {
     return R.map(
       R.filter(value as R.ReadonlyRecord<string, unknown>, (entry) => !P.isFunction(entry)),
-      dataOf
+      functionFreeIndexKeyedDataOf
     );
   }
   return value;
 };
 
-// A node or check a schema representation can describe carries a
-// `representation` annotation; anything else is compared by reference.
 const describedBy = (annotations: SchemaAST.AST["annotations"]): O.Option<unknown> =>
   pipe(
     O.fromNullishOr(annotations),
     O.flatMap((value) => O.fromNullishOr(value.representation)),
-    O.map(dataOf)
+    O.map(functionFreeIndexKeyedDataOf)
   );
 
 const checkSignature = (check: SchemaAST.Check<unknown>): unknown =>
   check._tag === "FilterGroup"
     ? { _tag: "FilterGroup", checks: A.map(check.checks, checkSignature) }
     : O.match(describedBy(check.annotations), {
-        onNone: () => ({ _tag: "Filter", aborted: check.aborted, identity: identityOf(check) }),
+        onNone: () => ({ _tag: "Filter", aborted: check.aborted, identity: objectIdentityNumber(check) }),
         onSome: (representation) => ({ _tag: "Filter", aborted: check.aborted, representation }),
       });
 
-const keySignature = (key: PropertyKey): unknown => (P.isSymbol(key) ? { symbol: identityOf(key) } : key);
+const literalKeepingBigIntKind = (literal: SchemaAST.LiteralValue): unknown =>
+  P.isBigInt(literal) ? { bigint: String(literal) } : literal;
 
-/**
- * The parity signature of one schema AST: its structure node by node, with
- * every node a representation cannot describe (a transformation, a filter or
- * declaration without a `representation` annotation, a unique symbol) held as
- * the identity of that object at its position.
- *
- * **Details**
- *
- * `Suspend` is resolved and walked; a node already on the current path is a
- * cycle and is recorded by its depth, so a recursive schema terminates.
- * Annotations other than `representation` are not part of the wire and are
- * not compared.
- *
- * @param ast - The AST to sign.
- * @param path - The nodes from the root to `ast`, for cycle detection.
- * @returns A plain value; two schemas are in parity when their signatures are deeply equal.
- */
+const keySignature = (key: PropertyKey): unknown => (P.isSymbol(key) ? { symbol: objectIdentityNumber(key) } : key);
+
 const signatureOf = (ast: SchemaAST.AST, path: ReadonlyArray<SchemaAST.AST>): unknown => {
   const depth = A.findFirstIndex(path, (ancestor) => ancestor === ast);
   if (O.isSome(depth)) return { _tag: "Cycle", depth: A.length(path) - depth.value };
@@ -92,7 +71,7 @@ const signatureOf = (ast: SchemaAST.AST, path: ReadonlyArray<SchemaAST.AST>): un
     _tag: ast._tag,
     checks: A.map(ast.checks ?? [], checkSignature),
     encoding: A.map(ast.encoding ?? [], (link) => ({
-      transformation: identityOf(link.transformation),
+      transformation: objectIdentityNumber(link.transformation),
       to: sign(link.to),
     })),
     optional: ast.context?.isOptional ?? false,
@@ -104,7 +83,7 @@ const signatureOf = (ast: SchemaAST.AST, path: ReadonlyArray<SchemaAST.AST>): un
         ...common,
         typeParameters: A.map(node.typeParameters, sign),
         declaration: O.match(describedBy(node.annotations), {
-          onNone: () => ({ identity: identityOf(node) }),
+          onNone: () => ({ identity: objectIdentityNumber(node) }),
           onSome: (representation) => ({ representation }),
         }),
       }),
@@ -120,12 +99,8 @@ const signatureOf = (ast: SchemaAST.AST, path: ReadonlyArray<SchemaAST.AST>): un
       BigInt: () => common,
       Symbol: () => common,
       ObjectKeyword: () => common,
-      // A bigint keeps its kind, so `1n` and the string `"1n"` sign apart.
-      Literal: (node) => ({
-        ...common,
-        literal: P.isBigInt(node.literal) ? { bigint: String(node.literal) } : node.literal,
-      }),
-      UniqueSymbol: (node) => ({ ...common, symbol: identityOf(node.symbol) }),
+      Literal: (node) => ({ ...common, literal: literalKeepingBigIntKind(node.literal) }),
+      UniqueSymbol: (node) => ({ ...common, symbol: objectIdentityNumber(node.symbol) }),
       Enum: (node) => ({ ...common, enums: node.enums }),
       TemplateLiteral: (node) => ({ ...common, parts: A.map(node.parts, sign) }),
       Arrays: (node) => ({

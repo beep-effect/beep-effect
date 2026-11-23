@@ -26,8 +26,10 @@ import type { Location } from "./Item.ts";
 
 const ELLIPSIS = "...";
 
-// Escapes go first, so what they styled is what counts against the line and the budget.
-const oneLine: (text: string) => string = flow(stripEscapes, Str.replace(/[\u0000-\u001f\u007f]/gu, " "));
+const oneLineStrippingEscapesBeforeMeasuring: (text: string) => string = flow(
+  stripEscapes,
+  Str.replace(/[\u0000-\u001f\u007f]/gu, " ")
+);
 
 const cut = (text: string, room: number): string =>
   text.length <= room ? text : `${Str.takeLeft(text, room - ELLIPSIS.length)}${ELLIPSIS}`;
@@ -35,7 +37,7 @@ const cut = (text: string, room: number): string =>
 const fitLine =
   (budget: ConsoleBudget) =>
   (text: string): string =>
-    cut(oneLine(text), budget.maxLineChars);
+    cut(oneLineStrippingEscapesBeforeMeasuring(text), budget.maxLineChars);
 
 const SCOPE_DIFFERS = "scope differs";
 
@@ -66,16 +68,14 @@ const verdictHead = (verdict: VerdictLine): string => `${verdict.gate} ${verdict
 const verdictResult = (verdict: VerdictLine): string =>
   `: ${verdictWord(verdict.reason)}, ${verdict.counts} (${formatDuration(verdict.durationMs)})`;
 
-// A green verdict carries the delta only as its fixed count, and only when it fixed something:
-// a green run has nothing still failing and nothing new.
-const greenDeltaText = (delta: RunDelta): string =>
+const greenDeltaAsFixedCountSinceNothingFailsOrIsNew = (delta: RunDelta): string =>
   ` (${delta.fixed} fixed since last run${delta.scopeDiffers ? `, ${SCOPE_DIFFERS}` : ""})`;
 
 const deltaSuffix = (verdict: VerdictLine): string =>
   pipe(
     verdict.delta,
     O.filter((delta) => delta.fixed > 0),
-    O.map(greenDeltaText),
+    O.map(greenDeltaAsFixedCountSinceNothingFailsOrIsNew),
     O.getOrElse(() => "")
   );
 
@@ -104,10 +104,10 @@ const fitVerdict =
   (budget: ConsoleBudget) =>
   (verdict: VerdictLine): string => {
     const max = budget.maxLineChars;
-    const result = oneLine(verdictResult(verdict));
-    const withDelta = `${result}${oneLine(deltaSuffix(verdict))}`;
+    const result = oneLineStrippingEscapesBeforeMeasuring(verdictResult(verdict));
+    const withDelta = `${result}${oneLineStrippingEscapesBeforeMeasuring(deltaSuffix(verdict))}`;
     const tail = withDelta.length + MIN_HEAD <= max ? withDelta : result;
-    const head = oneLine(verdictHead(verdict));
+    const head = oneLineStrippingEscapesBeforeMeasuring(verdictHead(verdict));
     return tail.length + MIN_HEAD <= max ? `${cut(head, max - tail.length)}${tail}` : cut(`${head}${tail}`, max);
   };
 
@@ -211,15 +211,11 @@ const keepPrefix = <V>(values: ReadonlyArray<V>, sizes: ReadonlyArray<number>, r
   return A.take(values, count);
 };
 
-// What the cap counts: failure entries and folds, the blocks that stand for items in the record.
-// A note (an empty-run warning, a breach, stray output) is not in the record, so dropping one
-// adds nothing to the cap.
 const recordBlocks = (blocks: Kept): number =>
   A.filter(blocks.entries, ConsoleEntry.guards.FailureEntry).length + blocks.folds.length;
 
-// The room the frame takes: a frame with no tail renders as its verdict alone, but anything kept
-// beside it brings the closing verdict back, so both verdict lines are always reserved.
-const frameSize = (lines: ReadonlyArray<string>): number => size(lines.length === 1 ? [...lines, ...lines] : lines);
+const frameSizeReservingBothVerdictLines = (lines: ReadonlyArray<string>): number =>
+  size(lines.length === 1 ? [...lines, ...lines] : lines);
 
 const capOf = (dropped: number): O.Option<CapLine> => (dropped > 0 ? CapLine.makeOption({ dropped }) : O.none());
 
@@ -271,7 +267,11 @@ export const fitDocument = (input: {
   if (size(render(document, budget)) <= budget.maxChars) return document;
   const blocks = recordBlocks(document);
   const frame = ConsoleDocument.make({ ...document, entries: [], folds: [], cap: capOf(prior + blocks) });
-  const kept = keepWithin(document, budget, budget.maxChars - frameSize(render(frame, budget)));
+  const kept = keepWithin(
+    document,
+    budget,
+    budget.maxChars - frameSizeReservingBothVerdictLines(render(frame, budget))
+  );
   return ConsoleDocument.make({ ...document, ...kept, cap: capOf(prior + blocks - recordBlocks(kept)) });
 };
 

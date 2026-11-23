@@ -14,14 +14,7 @@ import * as Str from "effect/String";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 import { expectFailure } from "./expectFailure.ts";
 
-/**
- * Elapsed-time ceiling for the scale and path-depth rows. The bound is a
- * hang/quadratic-blowup guard, not a performance target: linear behavior was
- * verified out of band (12.5k->126ms through 100k->762ms key-values locally),
- * and a quadratic parse at these sizes would take minutes. 30s tolerates
- * shared CI runners, which measured ~4x slower than local (5,955ms for the
- * 2MB document that takes ~1.4s here) and flaked the previous 5s bound.
- */
+// decision: hostile-elapsed-bound
 const ELAPSED_BOUND_MS = 30_000;
 
 const parseError = Effect.fn("parseError")(function* (text: string) {

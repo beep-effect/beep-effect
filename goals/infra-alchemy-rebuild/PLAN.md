@@ -11,7 +11,7 @@ Status: `active`
 | P0 Research | complete | Deep-research pass: the alchemy.run doc pages listed in `research/SOURCES.md`, the full `alchemy` and `distilled` sources, t3code t3code's relay and task-cache stacks, all 47 alchemy.run blog posts (grok-4.7 xhigh lanes). Produce the "use this, never roll that" matrix. | Matrix reviewed by the operator; every planned package and resource maps to an Alchemy/distilled primitive or a recorded gap. |
 | P1 Foundations | complete | Doctrine amendment (tooling kind `infra`); catalog pins for `alchemy`, `@alchemy.run/*`, `@distilled.cloud/*`; S3 state store bootstrapped under a new bucket; `BeepEffectWeb` re-adopted into it; CI deploy skeleton (per-stack concurrency, `op run`). | `alchemy plan` for `BeepEffectWeb` is a no-op on the shared store; one workflow deploys a stack from `main`. |
 | P2 Providers | complete | `@beep/alchemy-vercel`, `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, each on the `@alchemy.run/test` harness. | `package-verify` green; provider tests cover create/update/delete/read/adopt. |
-| P3 Low-risk stacks | in-progress | Storybook, turbo cache (move scratchpad module, delete scratchpad), cost controls, GitHub. Parallel build, flip, destroy Pulumi program. | Each stack live on Alchemy; CI enrolled on the Worker cache with hit evidence; four Pulumi programs destroyed with export archives recorded. |
+| P3 Low-risk stacks | complete | Storybook, turbo cache (move scratchpad module, delete scratchpad), cost controls, GitHub. Parallel build, flip, destroy Pulumi program. | Each stack live on Alchemy; CI enrolled on the Worker cache with hit evidence; four Pulumi programs destroyed with export archives recorded. |
 | P4 OIP and hosts | pending | OIP web (Vercel project, env vars, domains, DNS, assets bucket), AI metrics through `@beep/infra-hosts`; OpenClaw declared and tested there, not installed (operator ruling, 2026-11-22). | oip.law prod and staging served from Alchemy-managed config; AI metrics deploys via Alchemy and the OpenClaw stack passes its tests undeployed; both opip-web Pulumi stacks destroyed (done 2026-11-14); the host programs have no Pulumi state (decision 2026-11-13) and their files are deleted in P6. |
 | P5 Runner fleet | pending | `@beep/infra-ci-runners` deployed beside the live fleet, CI moved over, old fleet destroyed. | Hosted CI green on the new fleet for a full day; `beep-ci-runners` destroyed; export archived. |
 | P6 Retire | pending | Delete `infra/`, Pulumi and TS6 pins, root `postinstall` hook, runbook rewrite. | Verification matrix rows "Pulumi gone" and "Infra gone" pass on `main`. |
@@ -135,5 +135,20 @@ Fix (A) deployed to the CiRunners stack on 2026-11-20, and its post-check passed
 Lane docs/infra-alchemy-p5-fix-a-checkpoint
 
 Reverse: none: a checkpoint; the code reverts with #3443 and #3442, the boundary with set-default-policy-version v1
+
+### P3 Low-risk stacks complete, 2026-11-23
+
+All four P3 stacks are live on Alchemy, and none has a live Pulumi program.
+
+- **Storybook:** live since #3289 (2026-11-13); Pulumi stack `beep-storybook/production` removed (`decisions/2026-11-13-storybook-is-live-on-alchemy-pulumi-stack-beep-storybook-production-removed.md`).
+- **Turbo cache:** `@beep/infra-turbo-cache` serves CI. Stage 2 moved every Turbo-backed workflow to the Worker cache (`decisions/2026-11-18-turbo-cache-stage-2-every-turbo-backed-ci-job-reads-the-worker-cache-under-new-names.md`), and the follow-on chain (#3380, #3385, #3389, #3390) brought the schedule and dispatch callers along. Hit evidence: main Check run 45225209782 at `3a5d25a64b7c`, job Heavy / Docgen 137885914937, `TURBO_API` the Worker, `Cached: 197 cached, 200 total`. The Pulumi lab stack `lab-c1023a` was destroyed on 2026-10-24 and never held live state (`decisions/2026-11-14-turbo-cache-lab-lab-c1023a-was-destroyed-on-2026-10-24-nothing-is-live.md`).
+- **Cost controls:** live since #3320; the old pair was destroyed and 11 state entries removed, with the BEFORE export archived by sha256 (`decisions/2026-11-14-cost-controls-pulumi-cutover-executed.md`).
+- **GitHub:** `@beep/infra-github` is armed and has deployed since 2026-11-18 (`decisions/2026-11-18-infra-github-is-armed-beep-infra-github-app-5808968-first-deploy-adopted-ruleset-10240248-with-no-write.md`). Its latest deploy, run 45253869434 after #3510, created exactly the `fleet-watch` environment and its variable. GitHub never had a Pulumi program.
+
+The exit criterion's four Pulumi programs therefore resolve to two destroyed with export archives (Storybook, cost controls), one lab stack destroyed before this packet, and one that never existed (GitHub).
+
+Lane docs/infra-alchemy-p3-close
+
+Reverse: Set P3 back to in-progress in ops/manifest.json, PLAN.md and README.md and delete this checkpoint.
 
 <!-- beep:decisions:end -->

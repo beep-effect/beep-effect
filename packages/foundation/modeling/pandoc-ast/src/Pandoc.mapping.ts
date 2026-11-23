@@ -114,9 +114,12 @@ const hasOrderedListMarkerLoss = (node: OrderedList.Type): boolean =>
 
 const optionalNonEmpty = (value: string): O.Option<string> => (value.length === 0 ? O.none() : O.some(value));
 
+const firstArbitraryClassAsFenceLanguageOrNoneLikePreInsteadOfThrowing = (
+  classes: ReadonlyArray<string>
+): O.Option<Md.CodeFenceLanguage> => O.flatMap(O.fromUndefinedOr(classes[0]), S.decodeOption(Md.CodeFenceLanguage));
+
 const appendIndex = (path: JsonPath, key: string, index: number): JsonPath => [...path, key, index];
 
-// Projects each value in order under `path[key][index]`, merging every issue.
 const projectEach = <Input, Output>(
   values: ReadonlyArray<Input>,
   path: JsonPath,
@@ -848,10 +851,7 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
             ]
           : [],
         value: Md.Pre.make({
-          // Pandoc code-block classes are arbitrary external tokens; fold the
-          // first class through CodeFenceLanguage so non-conforming hints drop
-          // to None (matching the Pre codec) instead of throwing on construction.
-          language: O.flatMap(O.fromUndefinedOr(node.attr.classes[0]), S.decodeOption(Md.CodeFenceLanguage)),
+          language: firstArbitraryClassAsFenceLanguageOrNoneLikePreInsteadOfThrowing(node.attr.classes),
           value: node.text,
         }),
       })
