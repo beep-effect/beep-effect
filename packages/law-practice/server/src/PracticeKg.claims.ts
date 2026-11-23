@@ -540,11 +540,12 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       const identityDigest = yield* decodeContentDigest(`sha256:${identityHex}`);
       const operationId = yield* decodeOperationId(`operation:${digestHex}`);
       const baseSeed = (Number.parseInt(Str.slice(0, 8)(identityHex), 16) % 20_000_000) + 1;
-      const claimsSectionIndex = O.getOrThrowWith(
-        A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims")),
-        () => new Error("PatentApplicationDocument coherence guarantees a claims section")
+      const claimsSectionIndexThatPatentApplicationDocumentCoherenceGuarantees = O.getOrThrow(
+        A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims"))
       );
-      const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
+      const claimsHeading = O.getOrThrow(
+        A.get(input.document.sections, claimsSectionIndexThatPatentApplicationDocumentCoherenceGuarantees)
+      );
       const sourceDocumentDigest =
         input.sourceDocumentDigest ?? (yield* Effect.map(sourceDocumentDigestFor(input.sourceFile), O.getOrUndefined));
       yield* Effect.forEach(
