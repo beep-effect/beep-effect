@@ -15,7 +15,7 @@
  */
 
 import { ClaimGateViolation } from "@beep/epistemics/ClaimGate";
-import { $EpistemicId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
@@ -36,9 +36,9 @@ import type { Dataset } from "@beep/rdf/Rdf";
 import type { ShaclValidationResult, ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation";
 import type { ClaimGateShape } from "./ClaimGate.ports.ts";
 
-const CLAIM_CLASS_IRI = $EpistemicId.create("Claim").iri;
-const EVIDENCE_QUOTE_IRI = $EpistemicId.create("hasEvidenceQuote").iri;
-const CLAIM_SUBJECT_PREFIX = `${$EpistemicId.create("claim").iri}/`;
+const CLAIM_CLASS_IRI = iri("epistemic:Claim");
+const EVIDENCE_QUOTE_IRI = iri("epistemic:hasEvidenceQuote");
+const CLAIM_SUBJECT_PREFIX = `${iri("epistemic:claim")}/`;
 
 const toDataset = (
   claim: DomainCandidateClaim.CandidateClaim,

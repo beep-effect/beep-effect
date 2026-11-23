@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 
-import { $I as $BeepId, $QaId, $RepoCliId } from "@beep/identity/packages";
+import { $RepoCliId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { RoundNumber } from "@beep/qa-capture";
 import { decodeQaInventory, QaInventory } from "@beep/qa-capture/QaInventory.schemas";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -61,16 +62,10 @@ const declaredRoundCoherentGateId = QaJudgeGateId.make("declared-round-coherent"
 const evidenceCrossCheckCleanGateId = QaJudgeGateId.make("evidence-cross-check-clean");
 const judgeOutputInventoryDecodesGateId = QaJudgeGateId.make("judge-output-inventory-decodes");
 
-const $QaEvidence = $QaId.create("evidence");
-
-const citedEventIdExistsPredicateType = EvidencePredicateType.make($QaEvidence.create("cited-event-id-exists/v2").iri);
-const declaredRoundCoherentPredicateType = EvidencePredicateType.make(
-  $QaEvidence.create("declared-round-coherent/v2").iri
-);
-const evidenceCrossCheckPredicateType = EvidencePredicateType.make($QaEvidence.create("evidence-cross-check/v2").iri);
-const judgeOutputInventoryPredicateType = EvidencePredicateType.make(
-  $QaEvidence.create("judge-output-inventory/v2").iri
-);
+const citedEventIdExistsPredicateType = EvidencePredicateType.make(iri("qa:evidence/cited-event-id-exists/v2"));
+const declaredRoundCoherentPredicateType = EvidencePredicateType.make(iri("qa:evidence/declared-round-coherent/v2"));
+const evidenceCrossCheckPredicateType = EvidencePredicateType.make(iri("qa:evidence/evidence-cross-check/v2"));
+const judgeOutputInventoryPredicateType = EvidencePredicateType.make(iri("qa:evidence/judge-output-inventory/v2"));
 
 const alwaysBlockingGate = (id: QaJudgeGateId, predicateType: EvidencePredicateType): GateDeclaration =>
   GateDeclaration.make({
@@ -766,11 +761,7 @@ export const evaluateJudgeOutputInventoryDecodes: GateEvaluator<
   });
 });
 
-const qaReceiptType = (name: string): EvidencePredicateType =>
-  EvidencePredicateType.make($QaId.create(`receipts/${name}/v2`).iri);
-
-const qaJudgeContractId = SkillContractId.make($BeepId.create("contracts").create("qa-inventory/v1").iri);
-const $QaJudgeSchemas = $BeepId.create("schemas");
+const qaJudgeContractId = SkillContractId.make(iri("contracts:qa-inventory/v1"));
 const qaJudgeContractVersion = SemanticVersion.make("2.0.0");
 
 /**
@@ -838,22 +829,22 @@ export const QaJudgeContract = SkillContract.make({
   }),
   id: qaJudgeContractId,
   input: SchemaReference.make({
-    schemaId: SchemaReferenceId.make($QaJudgeSchemas.create("qa-judge-input/v1").iri),
+    schemaId: SchemaReferenceId.make(iri("schemas:qa-judge-input/v1")),
   }),
   output: SchemaReference.make({
-    schemaId: SchemaReferenceId.make($QaJudgeSchemas.create("qa-judge-settlement/v1").iri),
+    schemaId: SchemaReferenceId.make(iri("schemas:qa-judge-settlement/v1")),
   }),
   promise: "Validate a qa-inventory/v1 value against its declared round and cited evidence.",
   receiptTypes: ReceiptTypeBindings.make({
     failure: FailurePredicateType,
     gateSummary: GateSummaryPredicateType,
     ladder: EvidenceLadderReceiptTypes.make({
-      accepted: qaReceiptType("accepted"),
-      delivered: qaReceiptType("delivered"),
-      persisted: qaReceiptType("persisted"),
-      semanticallyApplied: qaReceiptType("semantically-applied"),
+      accepted: EvidencePredicateType.make(iri("qa:receipts/accepted/v2")),
+      delivered: EvidencePredicateType.make(iri("qa:receipts/delivered/v2")),
+      persisted: EvidencePredicateType.make(iri("qa:receipts/persisted/v2")),
+      semanticallyApplied: EvidencePredicateType.make(iri("qa:receipts/semantically-applied/v2")),
     }),
-    recoveryAttempt: qaReceiptType("recovery-attempt"),
+    recoveryAttempt: EvidencePredicateType.make(iri("qa:receipts/recovery-attempt/v2")),
   }),
   recovery: NoRecoveryPolicy.make({}),
   version: qaJudgeContractVersion,
@@ -939,7 +930,7 @@ export class QaJudgeSettlement extends S.Opaque<QaJudgeSettlement, { readonly br
 ) {}
 
 const qaJudgeCertificateVerifier = GateSummaryVerifier.make({
-  id: URLStr.make($QaId.create("verifiers/judge-settlement/v1").iri),
+  id: URLStr.make(iri("qa:verifiers/judge-settlement/v1")),
   version: { [qaJudgeContractId]: qaJudgeContractVersion },
 });
 

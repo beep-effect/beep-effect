@@ -1,0 +1,21 @@
+{
+  "namespace": {
+    "prefix": "qa",
+    "iri": "https://beep-effect.com/ns/qa/"
+  },
+  "terms": [
+    "evidence/cited-artifact-exists/v2",
+    "evidence/cited-event-id-exists/v2",
+    "evidence/declared-round-coherent/v2",
+    "evidence/evidence-cross-check/v2",
+    "evidence/judge-output-inventory/v2",
+    "receipts/accepted/v2",
+    "receipts/delivered/v2",
+    "receipts/persisted/v2",
+    "receipts/recovery-attempt/v2",
+    "receipts/semantically-applied/v2",
+    "verifiers/judge-settlement/v1"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

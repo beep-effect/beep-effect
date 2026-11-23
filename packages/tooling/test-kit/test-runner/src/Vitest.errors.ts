@@ -7,21 +7,21 @@
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { RegistryTerms } from "./internal/generated/RegistryTerms.ts";
 
-// Historical public schema identities are pinned here to keep this bootstrap
-// package independent of identity and schema while preserving compatibility.
+const identity = (code: keyof typeof RegistryTerms) => {
+  const { identifier, iri, curie } = RegistryTerms[code];
+  return { schemaId: Symbol.for(identifier), identifier, iri, curie };
+};
 
 const PositiveTimeoutMillis = S.Finite.check(
   S.isGreaterThan(0, {
-    identifier: "@beep/test-utils/Vitest/PositiveTimeoutMillisCheck",
+    identifier: "@beep/test-runner/Vitest/PositiveTimeoutMillisCheck",
     message: "A test watchdog timeout must be greater than zero",
   })
 ).pipe(
   S.annotate({
-    schemaId: Symbol.for("@beep/test-utils/Vitest/PositiveTimeoutMillis"),
-    identifier: "@beep/test-utils/Vitest/PositiveTimeoutMillis",
-    iri: "https://beep-effect.com/ns/test-utils/Vitest/PositiveTimeoutMillis",
-    curie: "beep:test-utils/Vitest/PositiveTimeoutMillis",
+    ...identity("@beep/test-runner/Vitest/PositiveTimeoutMillis"),
     title: "PositiveTimeoutMillis",
     description: "Finite positive live-clock watchdog budget in milliseconds.",
   })
@@ -44,26 +44,20 @@ const PositiveTimeoutMillis = S.Finite.check(
  * @since 0.0.0
  */
 export class TestContextUnavailable extends S.TaggedError<TestContextUnavailable, { readonly brand: unique symbol }>(
-  "@beep/test-utils/Vitest/TestContextUnavailable"
+  RegistryTerms["@beep/test-runner/Vitest/TestContextUnavailable"].identifier
 )(
   "TestContextUnavailable",
   {
     method: S.NonEmptyString.pipe(
       S.annotateKey({
-        schemaId: Symbol.for("@beep/test-utils/Vitest/TestContextUnavailable.method"),
-        identifier: "@beep/test-utils/Vitest/TestContextUnavailable.method",
-        iri: "https://beep-effect.com/ns/test-utils/Vitest/TestContextUnavailable.method",
-        curie: "beep:test-utils/Vitest/TestContextUnavailable.method",
+        ...identity("@beep/test-runner/Vitest/TestContextUnavailable.method"),
         title: "TestContextUnavailable.method",
         description: "Instrumented tester method that could not resolve its public Vitest execution context.",
       })
     ),
   },
   {
-    schemaId: Symbol.for("@beep/test-utils/Vitest/TestContextUnavailable"),
-    identifier: "@beep/test-utils/Vitest/TestContextUnavailable",
-    iri: "https://beep-effect.com/ns/test-utils/Vitest/TestContextUnavailable",
-    curie: "beep:test-utils/Vitest/TestContextUnavailable",
+    ...identity("@beep/test-runner/Vitest/TestContextUnavailable"),
     title: "TestContextUnavailable",
     description: "Typed failure for an instrumented callback invoked outside the public Vitest context boundary.",
   }
@@ -109,47 +103,35 @@ export class TestContextUnavailable extends S.TaggedError<TestContextUnavailable
  * @since 0.0.0
  */
 export class TestHang extends S.TaggedError<TestHang, { readonly brand: unique symbol }>(
-  "@beep/test-utils/Vitest/TestHang"
+  RegistryTerms["@beep/test-runner/Vitest/TestHang"].identifier
 )(
   "TestHang",
   {
     lastLogLine: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<string>())),
       S.annotateKey({
-        schemaId: Symbol.for("@beep/test-utils/Vitest/TestHang.lastLogLine"),
-        identifier: "@beep/test-utils/Vitest/TestHang.lastLogLine",
-        iri: "https://beep-effect.com/ns/test-utils/Vitest/TestHang.lastLogLine",
-        curie: "beep:test-utils/Vitest/TestHang.lastLogLine",
+        ...identity("@beep/test-runner/Vitest/TestHang.lastLogLine"),
         title: "TestHang.lastLogLine",
         description: "Last Effect log line observed locally for the hanging test, when one exists.",
       })
     ),
     testName: S.NonEmptyString.pipe(
       S.annotateKey({
-        schemaId: Symbol.for("@beep/test-utils/Vitest/TestHang.testName"),
-        identifier: "@beep/test-utils/Vitest/TestHang.testName",
-        iri: "https://beep-effect.com/ns/test-utils/Vitest/TestHang.testName",
-        curie: "beep:test-utils/Vitest/TestHang.testName",
+        ...identity("@beep/test-runner/Vitest/TestHang.testName"),
         title: "TestHang.testName",
         description: "Resolved full Vitest task name for the hanging test.",
       })
     ),
     timeoutMillis: PositiveTimeoutMillis.pipe(
       S.annotateKey({
-        schemaId: Symbol.for("@beep/test-utils/Vitest/TestHang.timeoutMillis"),
-        identifier: "@beep/test-utils/Vitest/TestHang.timeoutMillis",
-        iri: "https://beep-effect.com/ns/test-utils/Vitest/TestHang.timeoutMillis",
-        curie: "beep:test-utils/Vitest/TestHang.timeoutMillis",
+        ...identity("@beep/test-runner/Vitest/TestHang.timeoutMillis"),
         title: "TestHang.timeoutMillis",
         description: "Live-clock watchdog budget derived from the resolved Vitest task timeout.",
       })
     ),
   },
   {
-    schemaId: Symbol.for("@beep/test-utils/Vitest/TestHang"),
-    identifier: "@beep/test-utils/Vitest/TestHang",
-    iri: "https://beep-effect.com/ns/test-utils/Vitest/TestHang",
-    curie: "beep:test-utils/Vitest/TestHang",
+    ...identity("@beep/test-runner/Vitest/TestHang"),
     title: "TestHang",
     description: "Typed failure for an Effect test that exceeded its live-clock watchdog budget.",
   }

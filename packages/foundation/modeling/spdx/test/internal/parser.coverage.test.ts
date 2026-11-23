@@ -77,13 +77,15 @@ describe("SPDX parser rejection paths", () => {
         assertNone(parse(input));
     })
   );
+  it("reads an operator word inside a maximal idstring run as part of the id, not as an operator", () => {
+    assert.deepStrictEqual(parse("GPL-2.0-or-later"), O.some({ kind: "license", id: "GPL-2.0-or-later", plus: false }));
+  });
   it.effect("bounds recursion at each grammar entry and recovers on a fresh parse", () =>
     Effect.gen(function* () {
       for (const operator of ["OR", "AND"])
         assertNone(parse(A.join(A.replicate("MIT", MAX_NESTING_DEPTH + 1), ` ${operator} `)));
-      // A parenthesis enters Or, And and Atom in sequence. These three depths
-      // target each entry guard rather than just one deeply parenthesized case.
-      for (const padding of ["MIT OR ", "MIT AND ", ""])
+      const paddingThatTripsTheOrAndOrAtomGuard = ["MIT OR ", "MIT AND ", ""];
+      for (const padding of paddingThatTripsTheOrAndOrAtomGuard)
         assertNone(parse(`${padding + Str.repeat(85)("(")}MIT${Str.repeat(85)(")")}`));
       assert.deepStrictEqual(parse("MIT"), O.some({ kind: "license", id: "MIT", plus: false }));
     })

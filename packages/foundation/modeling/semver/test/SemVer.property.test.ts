@@ -24,11 +24,8 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 };
 
 describe("SemVer property floor", () => {
-  // The version-string schemas carry the grammar as a pattern check, so the derived generator yields
-  // well-formed versions; a schema embedding them (e.g. repo-cli's cache pins) no longer exhausts
-  // its discard budget against the predicate.
   it.effect.prop(
-    "PinnableVersionString generates only pinnable versions",
+    "PinnableVersionString generates only pinnable versions from its grammar pattern, never discarding against the predicate",
     [Arbitrary.schema(SemVer.PinnableVersionString)],
     ([value]) => Effect.sync(() => assert.isTrue(SemVer.isPinnable(value))),
     runs
@@ -65,16 +62,15 @@ describe("SemVer property floor", () => {
   );
 });
 
-// Constructive pattern hints make the opaque isValid/isPinnable refinements generatable.
-const exactSamples = SemVer.ExactVersionString.check(
+const generatableExactVersionStrings = SemVer.ExactVersionString.check(
   S.isPattern(/^[1-9][0-9]{0,3}\.[0-9]\.[0-9](-alpha\.[0-9])?(\+build\.[0-9])?$/)
 );
-const pinnableSamples = SemVer.PinnableVersionString.check(
+const generatablePinnableVersionStrings = SemVer.PinnableVersionString.check(
   S.isPattern(/^[1-9][0-9]{0,3}\.[0-9]\.[0-9](-alpha\.[0-9])?$/)
 );
 for (const [name, schema, samples] of [
-  ["ExactVersionString", SemVer.ExactVersionString, exactSamples],
-  ["PinnableVersionString", SemVer.PinnableVersionString, pinnableSamples],
+  ["ExactVersionString", SemVer.ExactVersionString, generatableExactVersionStrings],
+  ["PinnableVersionString", SemVer.PinnableVersionString, generatablePinnableVersionStrings],
 ] as const) {
   it.effect.prop(
     `${name}: encoded strings decode unchanged and formatting preserves them`,
