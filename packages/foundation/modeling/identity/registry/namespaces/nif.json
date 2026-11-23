@@ -1,0 +1,18 @@
+{
+  "namespace": {
+    "prefix": "nif",
+    "iri": "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#"
+  },
+  "terms": [
+    "Context",
+    "Sentence",
+    "Word",
+    "anchorOf",
+    "beginIndex",
+    "endIndex",
+    "isString",
+    "referenceContext"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

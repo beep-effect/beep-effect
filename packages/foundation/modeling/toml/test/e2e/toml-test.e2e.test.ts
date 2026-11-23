@@ -1,13 +1,3 @@
-// The toml-test compliance gate: one test per vendored corpus case, no skip
-// list. Every valid pair must decode to its tagged expected value; every
-// invalid file must fail through the typed error channel (TomlParseError,
-// any code) — never as a defect, crash or hang.
-//
-// Fixtures arrive as raw UTF-8 text (NO newline normalization, see
-// ../corpus.ts): several cases deliberately carry CRLF / lone-CR bytes — in
-// both directions, valid CRLF documents and invalid bare-CR ones — protected
-// by a scoped .gitattributes in the fixture tree.
-
 import { Toml, TomlParseError } from "@beep/toml/Toml";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -18,7 +8,6 @@ import { assertMatchesTagged } from "./taggedJson.ts";
 
 const TaggedJson = S.fromJsonString(S.Unknown);
 
-// Counts recorded in the fixture README — guards against a silently-empty walk.
 const README_VALID_COUNT = 214;
 const README_INVALID_COUNT = 467;
 

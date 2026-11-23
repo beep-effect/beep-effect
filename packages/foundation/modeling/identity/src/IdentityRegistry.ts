@@ -4,13 +4,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { RegistryBindings } from "./internal/generated/Registry.data.ts";
 import { $IdentityId } from "./packages.ts";
 import type { IdentityComposer } from "./Id.ts";
 import type { VocabShape } from "./Vocab.ts";
@@ -145,6 +149,30 @@ export class IdentityEntry extends S.Opaque<IdentityEntry, { readonly brand: uni
       curie: composer.curie,
       fibers,
     });
+
+  /**
+   * Builds the entry of a code identity bound in the registry from its binding row.
+   *
+   * **Example** (Build an entry from a binding row)
+   *
+   * ```ts import.meta.vitest name="Build an entry from a binding row"
+   * import { IdentityEntry } from "@beep/identity/IdentityRegistry"
+   *
+   * const entry = IdentityEntry.fromBinding("@beep/test-runner/Vitest/TestHang", {
+   *   curie: "vitest:TestHang",
+   *   iri: "https://beep-effect.com/ns/vitest/TestHang"
+   * })
+   * entry.curie // => "vitest:TestHang"
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly fromBinding = (
+    code: string,
+    binding: { readonly curie: string; readonly iri: string },
+    fibers: Readonly<Record<string, string>> = {}
+  ): IdentityEntry => IdentityEntry.make({ identity: code, iri: binding.iri, curie: binding.curie, fibers });
 }
 
 /**
@@ -277,6 +305,69 @@ export class IdentityRegistry extends Context.Service<IdentityRegistry, Identity
     entries: ReadonlyArray<IdentityEntry>
   ): Layer.Layer<IdentityRegistry, IdentityRegistryConflictError> =>
     Layer.effect(IdentityRegistry, makeLocalRegistry(entries));
+
+  /**
+   * Builds a registry from binding rows in the generated shape, one entry per bound code identity.
+   *
+   * **Details**
+   *
+   * Each row becomes one entry through {@link IdentityEntry.fromBinding}, with
+   * no fibers. The entries are built when the layer is built, not when it is
+   * constructed.
+   *
+   * **Example** (Resolve a fixture binding)
+   *
+   * ```ts
+   * import { IdentityRegistry } from "@beep/identity/IdentityRegistry"
+   * import * as Effect from "effect/Effect"
+   *
+   * const layer = IdentityRegistry.layerFromBindings({
+   *   "@beep/test-runner/Vitest/TestHang": {
+   *     curie: "vitest:TestHang",
+   *     iri: "https://beep-effect.com/ns/vitest/TestHang"
+   *   }
+   * })
+   * const program = IdentityRegistry.use((registry) =>
+   *   registry.resolve({ _tag: "curie", value: "vitest:TestHang" })
+   * ).pipe(Effect.provide(layer))
+   *
+   * console.log(program)
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly layerFromBindings = (
+    bindings: Readonly<Record<string, { readonly curie: string; readonly iri: string }>>
+  ): Layer.Layer<IdentityRegistry, IdentityRegistryConflictError> =>
+    Layer.effect(
+      IdentityRegistry,
+      Effect.suspend(() =>
+        makeLocalRegistry(A.map(R.toEntries(bindings), ([code, binding]) => IdentityEntry.fromBinding(code, binding)))
+      )
+    );
+
+  /**
+   * The registry of every code identity bound in the generated identity registry.
+   *
+   * **Example** (Provide the generated registry)
+   *
+   * ```ts
+   * import { IdentityRegistry } from "@beep/identity/IdentityRegistry"
+   * import * as Effect from "effect/Effect"
+   *
+   * const program = IdentityRegistry.use((registry) =>
+   *   registry.resolve({ _tag: "identity", value: "@beep/test-runner/Vitest/TestHang" })
+   * ).pipe(Effect.provide(IdentityRegistry.layer))
+   *
+   * console.log(program)
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly layer: Layer.Layer<IdentityRegistry, IdentityRegistryConflictError> =
+    IdentityRegistry.layerFromBindings(RegistryBindings);
 }
 
 const makeLocalRegistry = Effect.fn("IdentityRegistry.layerLocal")(function* (entries: ReadonlyArray<IdentityEntry>) {

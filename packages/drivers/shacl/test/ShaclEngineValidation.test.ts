@@ -1,6 +1,15 @@
 import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import {
+  SH_DATATYPE,
+  SH_HAS_VALUE,
+  SH_MIN_COUNT,
+  SH_NODE_SHAPE,
+  SH_PATH,
+  SH_PROPERTY,
+  SH_TARGET_NODE,
+} from "@beep/rdf/Vocab/Shacl";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
@@ -10,15 +19,6 @@ import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
-const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
-const SH_MIN_COUNT = makeNamedNode(`${SHACL_NAMESPACE}minCount`);
-const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
-const SH_DATATYPE = makeNamedNode(`${SHACL_NAMESPACE}datatype`);
 
 const material = makeNamedNode("https://example.test/materials#Material");
 const marker = makeNamedNode("https://example.test/marker");

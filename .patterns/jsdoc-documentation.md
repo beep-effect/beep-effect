@@ -12,15 +12,15 @@ dependency on `@effect/jsdocs`.
 
 ## Hard requirements
 
-- Every public export has a useful lead description, canonical `@category`, and
-  `@since 0.0.0`.
+- Every public export has a lead, canonical `@category`, and `@since 0.0.0`. The
+  lead is written, or taken from the `$I.annote*` description (see "Lead source").
 - JSDoc belongs on exported declarations, module headers and members. A
   non-exported declaration carries none unless it is tagged `@internal`,
   `@public`, `@expected-unused`, `@ignore` or `@deprecated`; put its reason in a
   name, type or schema annotation instead (Effect law 15,
   `bun run beep laws comments`).
 - Value-level exports require at least one Example. Pure type-level exports require
-  useful prose; their Example is optional.
+  useful prose, written or derived; their Example is optional.
 - Examples compile through the docgen TypeScript gate. Never remove an Example to
   hide a compilation error.
 - New and touched documentation uses titled `**Example** (Title)` sections.
@@ -31,7 +31,8 @@ dependency on `@effect/jsdocs`.
 
 ## Description and section grammar
 
-A doc block begins with exactly one lead paragraph. The lead explains the symbol's
+A doc block begins with exactly one lead paragraph, unless its lead is derived
+(see "Lead source"). The lead explains the symbol's
 purpose or the problem it solves instead of restating its name or signature. Do not
 put a Markdown heading or a blank-padded fragment in the lead.
 
@@ -55,6 +56,21 @@ Rules for all sections:
 
 Sections are opt-in except where an Example is required by symbol kind. Do not add
 empty or formulaic sections merely to fill out the shape.
+
+## Lead source
+
+A lead is said once. An annotated schema or schema-backed class takes its lead
+from its own `$I.annote*` `description`; a same-name type alias, interface or
+namespace, and an `Encoded` type inside that namespace, take the value's
+description; a re-export declaration needs none. Docgen supplies the derived lead
+when the block has no lead or opens with a section, so these blocks keep only
+their Examples, real Details and Gotchas, and tags.
+
+Do not write a lead on them that restates the annotation, the name or the
+documentation boilerplate (`Runtime type for {@link X}.`, `X schema exports.`).
+The JSDoc inventory counts each one as `restating-lead`, and the ratchet only lets
+the count fall. A lead that says what the annotation does not stays; when the
+annotation is the weaker sentence, improve the annotation instead.
 
 ## Carrier policy
 
@@ -91,7 +107,8 @@ An Example is optional for pure type-level exports:
 - `.Encoded` companions;
 - same-name type companions for runtime schemas.
 
-Pure type-level exports still require precise prose, `@category`, and `@since`.
+Pure type-level exports still require precise prose (a same-name schema companion
+derives it), `@category`, and `@since`.
 When a type-level Example genuinely teaches narrowing, inference, or composition,
 it may be included and must obey the full Example grammar.
 
@@ -369,7 +386,7 @@ Import `pipe` and `flow` from `effect/Function`. Never import from the root
 
 - Schema values and schema-backed classes are value-level and require an Example.
 - Same-name schema type aliases and `.Encoded` companions are pure type-level and
-  require prose only.
+  take their prose from the schema annotation.
 - Error classes are value-level; show how a caller constructs, raises, or handles
   the error.
 - Services and layers are value-level; show acquisition, provision, or a useful
@@ -447,7 +464,8 @@ use Details or Gotchas for general semantics.
 
 ## Review checklist
 
-- [ ] Lead description is one useful paragraph.
+- [ ] Lead description is one useful paragraph, or derived from the annotation and
+      not restated.
 - [ ] Optional sections are non-empty, unique, and in canonical order.
 - [ ] When-to-use text begins with an allowed opener.
 - [ ] Every required value-level Example is titled, unique, last, single-fence,

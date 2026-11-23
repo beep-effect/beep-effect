@@ -1,6 +1,7 @@
-import { CoreVocab, make, mergeVocab } from "@beep/identity";
+import { make } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { fold, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
 import { FactLiteral } from "@beep/ontology/Fold.models";
 import { OWLClass } from "@beep/ontology/Ontology.models";
@@ -688,12 +689,13 @@ describe("Ontology.fold rebase", () => {
 describe("Ontology.fold extended vocabulary", () => {
   it.effect("resolves borrowed field terms from the composer's registry", () =>
     Effect.gen(function* () {
-      const vocab = mergeVocab(CoreVocab, {
+      const vocab = {
+        ...RegistryVocab,
         ex: {
           iri: "https://example.test/ns#",
           terms: ["relation"],
         },
-      });
+      } as const;
       const $Custom = make("custom", {
         authority: "https://example.test/ontology/",
         prefix: "custom",

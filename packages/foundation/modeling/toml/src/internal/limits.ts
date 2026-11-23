@@ -4,9 +4,6 @@ import * as N from "@beep/utils/Number";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
-// The zero-dependency leaf every guard imports — no import cycle is possible
-// through here (jsonc/yaml/glob precedent).
-
 const $I = $TomlId.create("internal/limits");
 
 class TomlCapError extends S.TaggedError<TomlCapError, { readonly brand: unique symbol }>($I`TomlCapError`)(
@@ -49,6 +46,7 @@ const GuardReason = LiteralKit(["NestingDepthExceeded"]).pipe(
  */
 export type GuardReason = typeof GuardReason.Type;
 
+// decision: engine-diagnostic-boundary
 /**
  * Signals a raw guard trip from the engine.
  *
