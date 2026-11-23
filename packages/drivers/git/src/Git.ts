@@ -3341,18 +3341,6 @@ export interface GitShape {
    */
   readonly isShallow: (cwd: string) => Effect.Effect<boolean, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
-   * `git rev-list --count [--first-parent] <range> --` — how many commits
-   * `range` selects (`base..head`, one ref, `^a b`), as a non-negative
-   * integer.
-   *
-   * **Details**
-   *
-   * The answer is decoded fail-closed: anything but one decimal count fails
-   * as `GitCommandError` with an `unparseable rev-list count output` detail,
-   * never as zero. A range git cannot resolve fails as `UnknownRefError`;
-   * an option-like range is refused typed before any spawn.
-   */
-  /**
    * `git rev-list --count --all --not --remotes --` — how many commits HEAD
    * or any local ref (branches, tags, stash, notes) reaches that no
    * remote-tracking ref reaches: the work a clone would lose if deleted.
@@ -3924,6 +3912,18 @@ export interface GitShape {
       options?: { readonly limit?: number; readonly firstParent?: boolean }
     ): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
+  /**
+   * `git rev-list --count [--first-parent] <range> --` — how many commits
+   * `range` selects (`base..head`, one ref, `^a b`), as a non-negative
+   * integer.
+   *
+   * **Details**
+   *
+   * The answer is decoded fail-closed: anything but one decimal count fails
+   * as `GitCommandError` with an `unparseable rev-list count output` detail,
+   * never as zero. A range git cannot resolve fails as `UnknownRefError`;
+   * an option-like range is refused typed before any spawn.
+   */
   readonly revListCount: {
     (
       cwd: string,
