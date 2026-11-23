@@ -687,8 +687,6 @@ export const decodeShardFile = (file: RegistrySourceFile): Result.Result<Registr
   );
 
 /**
- * The term snapshot of a base ref and the ref a run named for it.
- *
  * **Details**
  *
  * A base that publishes no term set has the empty snapshot. `ref` is the
@@ -794,8 +792,6 @@ const publishedBase = (input: RegistryPlanInput): O.Option<BaseSnapshot> =>
   O.filter(input.base, (base) => TermSnapshot.isPublished(base.snapshot));
 
 /**
- * How a regeneration releases its change: `succeed` the previous snapshot, or `keep` its release.
- *
  * **Details**
  *
  * A writer over a base commit that publishes no term set keeps: until the
@@ -824,7 +820,7 @@ export const ReleasePolicy = LiteralKit(["succeed", "keep"]).pipe(
 );
 
 /**
- * Type of {@link ReleasePolicy}.
+ * Keeps an unpublished edit series on one release until a published base requires succession.
  *
  * @category models
  * @since 0.0.0

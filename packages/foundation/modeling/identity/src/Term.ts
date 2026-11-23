@@ -148,16 +148,12 @@ export const CodePackage = S.String.check(
 );
 
 /**
- * Decoded type of {@link CodePackage}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CodePackage = typeof CodePackage.Type;
 
 /**
- * The rename of one code identity, and of every code identity under it.
- *
  * **Details**
  *
  * Neither end is under the other. A move from `@beep/p/A` to `@beep/p/A/B`
@@ -250,8 +246,6 @@ export const CodeMove = S.Union([CodeIdMove, CodePackageMove]).pipe(
 );
 
 /**
- * Decoded type of {@link CodeMove}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -405,8 +399,6 @@ export type TermLocal = typeof TermLocal.Type;
 export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(iri) || Str.endsWith("#")(iri);
 
 /**
- * A namespace IRI: an IRI that ends with the separator its terms follow, `/` or `#`.
- *
  * **Details**
  *
  * A term IRI is the namespace IRI followed by a local, with nothing between
@@ -442,8 +434,6 @@ export const NamespaceIri = IRI.check(
 );
 
 /**
- * Decoded type of {@link NamespaceIri}.
- *
  * @category models
  * @since 0.0.0
  */

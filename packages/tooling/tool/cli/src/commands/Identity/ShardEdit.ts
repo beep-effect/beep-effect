@@ -69,8 +69,6 @@ import type { BaseSnapshot, IdentityRegistryIssue, RegistryWrite } from "./Regis
 const $I = $RepoCliId.create("commands/Identity/ShardEdit");
 
 /**
- * Closed reason a shard edit is refused.
- *
  * **Example** (Check a refusal reason)
  *
  * ```ts
@@ -103,7 +101,7 @@ export const ShardEditRefusalReason = LiteralKit([
 );
 
 /**
- * Decoded type of {@link ShardEditRefusalReason}.
+ * Lets callers select a repair path without parsing diagnostic prose.
  *
  * @category models
  * @since 0.0.0
