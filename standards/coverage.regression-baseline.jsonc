@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-08T16:35:47.519Z",
-  "git_sha": "cd9653f803d25d26dc880008b8df8db1a381a1e4",
-  "command": "bun run coverage:baseline:write",
+  "generated_at": "2026-11-22T23:28:34.744Z",
+  "git_sha": "53b2d03038b8c02732ed5bb5d857af8060f4555d",
+  "command": "bun run coverage -- --filter=@beep/annotation --filter=@beep/text --filter=@beep/langextract --filter=@beep/nlp --filter=@beep/law-practice-use-cases --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -2610,6 +2610,153 @@
           }
         },
         "packages/tooling/library/alchemy-vercel/src/internal/scope.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/annotation": {
+      "path": "packages/foundation/modeling/annotation",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/foundation/modeling/annotation/src/AnnotationDocument.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/AnnotationId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/Containment.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/Generation.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/Kind.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/Kinds.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/Merge.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/Restrict.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/internal/DocumentJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/annotation/src/rdf/OaCodec.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -17664,26 +17811,26 @@
     },
     "@beep/langextract": {
       "path": "packages/foundation/capability/langextract",
-      "lines": 98.53,
-      "statements": 97.98,
-      "branches": 97.52,
-      "functions": 96.21,
+      "lines": 99.48,
+      "statements": 99.04,
+      "branches": 99.51,
+      "functions": 97.57,
       "uncovered": {
-        "lines": 9,
-        "statements": 13,
-        "branches": 3,
-        "functions": 11
+        "lines": 4,
+        "statements": 8,
+        "branches": 1,
+        "functions": 7
       },
       "files": {
         "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts": {
           "lines": 100,
-          "statements": 98.24,
-          "branches": 96.29,
-          "functions": 96.55,
+          "statements": 98.59,
+          "branches": 100,
+          "functions": 96.38,
           "uncovered": {
             "lines": 0,
             "statements": 3,
-            "branches": 1,
+            "branches": 0,
             "functions": 3
           }
         },
@@ -17747,6 +17894,18 @@
             "functions": 0
           }
         },
+        "packages/foundation/capability/langextract/src/Extraction/Extraction.result.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/capability/langextract/src/Extraction/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -17760,6 +17919,18 @@
           }
         },
         "packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Handoff/Handoff.codec.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -17796,15 +17967,15 @@
           }
         },
         "packages/foundation/capability/langextract/src/Service/Service.layer.ts": {
-          "lines": 90.9,
-          "statements": 90.9,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 66.66,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 2
+            "functions": 0
           }
         },
         "packages/foundation/capability/langextract/src/Service/Service.policy.ts": {
@@ -17820,7 +17991,7 @@
           }
         },
         "packages/foundation/capability/langextract/src/Service/Service.prompt.ts": {
-          "lines": 95.45,
+          "lines": 95.65,
           "statements": 95.83,
           "branches": 100,
           "functions": 92.3,
@@ -17880,15 +18051,15 @@
           }
         },
         "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts": {
-          "lines": 97.15,
-          "statements": 96.7,
-          "branches": 95.74,
-          "functions": 95.06,
+          "lines": 98.72,
+          "statements": 98.17,
+          "branches": 98.11,
+          "functions": 96.87,
           "uncovered": {
-            "lines": 5,
-            "statements": 6,
-            "branches": 2,
-            "functions": 4
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 2
           }
         },
         "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.errors.ts": {
@@ -25726,6 +25897,18 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/law-practice/use-cases/src/OfficeActionStructure/OfficeActionStructure.read.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -28473,14 +28656,14 @@
     },
     "@beep/nlp": {
       "path": "packages/foundation/modeling/nlp",
-      "lines": 86.23,
-      "statements": 82.49,
-      "branches": 53.02,
-      "functions": 71.75,
+      "lines": 85.69,
+      "statements": 81.71,
+      "branches": 50.84,
+      "functions": 70.5,
       "uncovered": {
-        "lines": 90,
+        "lines": 89,
         "statements": 132,
-        "branches": 70,
+        "branches": 58,
         "functions": 100
       },
       "files": {
@@ -28497,10 +28680,10 @@
           }
         },
         "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts": {
-          "lines": 93.33,
-          "statements": 88.23,
-          "branches": 60,
-          "functions": 70,
+          "lines": 93.84,
+          "statements": 89.04,
+          "branches": 66.66,
+          "functions": 72.72,
           "uncovered": {
             "lines": 4,
             "statements": 8,
@@ -28533,8 +28716,8 @@
           }
         },
         "packages/foundation/modeling/nlp/src/Core/Pattern.ts": {
-          "lines": 83.72,
-          "statements": 84.44,
+          "lines": 87.27,
+          "statements": 87.93,
           "branches": 0,
           "functions": 66.66,
           "uncovered": {
@@ -28569,8 +28752,8 @@
           }
         },
         "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts": {
-          "lines": 78.04,
-          "statements": 79.54,
+          "lines": 79.54,
+          "statements": 80.85,
           "branches": 100,
           "functions": 66.66,
           "uncovered": {
@@ -28641,12 +28824,12 @@
           }
         },
         "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts": {
-          "lines": 88.98,
-          "statements": 88.72,
+          "lines": 89.74,
+          "statements": 88.88,
           "branches": 70,
-          "functions": 81.42,
+          "functions": 81.69,
           "uncovered": {
-            "lines": 13,
+            "lines": 12,
             "statements": 15,
             "branches": 6,
             "functions": 13
@@ -28676,55 +28859,7 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/nlp/src/Handoff/Contract.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/nlp/src/Handoff/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/nlp/src/IdentifierText.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/nlp/src/Ontology/Kind.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 53.84,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 12,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/nlp/src/Ontology/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -57461,6 +57596,30 @@
         "functions": 0
       },
       "files": {
+        "packages/foundation/modeling/text/src/Arbitrary.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/Capture.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/text/src/LocatorMap.ts": {
           "lines": 100,
           "statements": 100,

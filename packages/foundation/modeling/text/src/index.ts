@@ -7,6 +7,13 @@
  */
 
 /**
+ * Capture identity: the id minted over a whole text capture, scope included.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Capture.ts";
+/**
  * Locator maps between two text captures and their aligned segments.
  *
  * @category models

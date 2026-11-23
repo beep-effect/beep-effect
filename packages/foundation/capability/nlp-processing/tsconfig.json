@@ -21,6 +21,9 @@
       "path": "../../modeling/schema/tsconfig.json"
     },
     {
+      "path": "../../modeling/text/tsconfig.json"
+    },
+    {
       "path": "../../modeling/utils/tsconfig.json"
     },
     {

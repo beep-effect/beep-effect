@@ -3,7 +3,22 @@
     "prefix": "semantica",
     "iri": "https://beep-effect.com/ns/semantica/"
   },
-  "terms": [],
+  "terms": [
+    "abstract",
+    "affiliatedWith",
+    "authoredBy",
+    "locatedIn",
+    "method",
+    "organization",
+    "person",
+    "reEvaluatesClaimDueTo",
+    "reference",
+    "relation-endpoint",
+    "section",
+    "selected",
+    "shows",
+    "title"
+  ],
   "bindings": [],
   "deprecations": []
 }

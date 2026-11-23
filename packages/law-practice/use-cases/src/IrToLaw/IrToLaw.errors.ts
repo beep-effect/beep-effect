@@ -8,6 +8,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { AlignmentStatus } from "@beep/langextract/Extraction";
+import { ResidualReason } from "@beep/langextract/Handoff";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -37,6 +38,7 @@ const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.errors");
 export const IrToLawExtractionErrorReason = LiteralKit([
   "required-extraction-missing",
   "required-extraction-unaligned",
+  "required-extraction-residual",
 ]).pipe(
   $I.annoteSchema("IrToLawExtractionErrorReason", {
     description: "Reasons the law-practice IR mapper rejects extraction output.",
@@ -51,7 +53,8 @@ export const IrToLawExtractionErrorReason = LiteralKit([
  *
  * const labels: Readonly<Record<IrToLawExtractionErrorReason, string>> = {
  *   "required-extraction-missing": "The model omitted a required legal label.",
- *   "required-extraction-unaligned": "The label could not be grounded to source text."
+ *   "required-extraction-unaligned": "The label could not be grounded to source text.",
+ *   "required-extraction-residual": "The label stayed residual for a reason other than alignment."
  * }
  *
  * console.log(labels["required-extraction-missing"])
@@ -102,6 +105,11 @@ export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError
     message: S.NonEmptyString.annotateKey({
       description: "Sanitized diagnostic for the failed IR-to-law extraction boundary.",
     }),
+    residualReason: S.OptionFromOptionalKey(ResidualReason)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Optional LangExtract residual reason copied from the rejected candidate.",
+      }),
     reason: IrToLawExtractionErrorReason.annotateKey({
       description: "Machine-readable reason for rejecting the extraction output.",
     }),
@@ -122,12 +130,14 @@ export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError
       readonly alignmentStatus?: AlignmentStatus;
       readonly label: string;
       readonly message: string;
+      readonly residualReason?: ResidualReason;
     }
   ): IrToLawExtractionError =>
     IrToLawExtractionError.make({
       alignmentStatus: O.fromUndefinedOr(options.alignmentStatus),
       label: options.label,
       message: options.message,
+      residualReason: O.fromUndefinedOr(options.residualReason),
       reason,
     });
 }

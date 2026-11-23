@@ -1,4 +1,3 @@
-// The escape pattern every console text and stray-output sample is cleaned with.
 import { stripEscapes } from "@beep/gate-report/Escapes";
 import { assert, describe, it } from "@effect/vitest";
 

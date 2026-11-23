@@ -224,8 +224,7 @@ const collectHeadingOutline = (
         N.min(declaredHeadingLevel(tag) + effectiveOffset, 9),
         decodeUnknownHtmlComputedHeadingLevelResult,
         Result.match({
-          // A schema-valid root and HeadingOffset guard make this branch unreachable;
-          // retaining it keeps outline inspection total for defensive foreign calls.
+          // decision: heading-outline-total-on-unreachable-level
           onFailure: A.emptyReadonly,
           onSuccess: (level) => [HtmlHeadingOutlineEntry.make({ path, tag, level })],
         })

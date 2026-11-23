@@ -235,9 +235,17 @@ and the phase order is `PLAN.md`), this file is normative.
   chapter, then the file is retired with the package), `standards/instrumentation-catalog/` shards for every package
   that gains spans.
 
+P3 lane facts (2026-11-22): annotation documents and the checked handoff are
+implemented; readings and residuals retain every parsed candidate, including the
+over-extraction-cap tail. Semantica grounds historical unmapped-predicate
+residuals for E5 replay without declaring those predicates. The deterministic
+Tika scaffold declares text-scaffold/1. Handoff and Ontology facets and Graph
+float spans are deleted; Graph nodes remain for P6. The phase is content-complete
+in its lane, with no P3 PR opened.
+
 ## Constraints
 
-- Effect v4 against the installed `effect` (4.1.4 at P0; validate every API in
+- Effect v4 against the installed `effect` (4.1.5 at P3; validate every API in
   `.repos/effect`, never from priors). Schema first: plain data as branded
   `S.Opaque` with `$I` annotations, finite cases as discriminated unions
   (`S.TaggedUnion` for canonical `_tag` unions, `S.toTaggedUnion` for other
@@ -400,7 +408,7 @@ decision file) and the law-test ledger:
       encodings go in P3 and P4); `TextAnchor <-> oa:` round-trips in `@beep/rdf`; `L1-1` to
       `L1-6` are green, including the repeated-boilerplate, NFKC,
       de-hyphenation and split-surrogate fixtures.
-- [ ] L2: `@beep/annotation` exists with `makeAnnotationDocument` (anchors
+- [x] L2: `@beep/annotation` exists with `makeAnnotationDocument` (anchors
       table, content map, `Generation` attribution), `merge`, `restrict` and
       containment; the langextract handoff mints verified receipts and emits
       annotations with both digests, scope, extractor and normalization pins,
@@ -1468,6 +1476,484 @@ Step 5 of the read transform rewrites every reference through the old-to-new map
 Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Check every authority, group and list reference against the converted receipt inside convertDocumentV3 and refuse with its own issue message.
+
+### P3: @beep/annotation exports its target-set schema and assembly-refusal kit, and the document view only as a type, 2026-11-22
+
+Three surface calls the design did not settle, taken while writing commit 4.
+
+- `AnnotationTargets` (the design's private `Targets`, a non-empty `CanonicalHashSet(OccurrenceId)`) is exported from `src/AnnotationId.ts`. It is the first element of the `annotation/v1` preimage there and the `targets` field of every content case in `src/Kind.ts`, so both modules read one schema, and the declared type of `AnnotationKind.case` names it.
+- `DocumentAssemblyRefusal` is the exported `LiteralKit` of the three `DocumentAssemblyRefused` reasons, hoisted as `HandoffRefusal` is in section 4.2.
+- `AnnotationDocumentView` is exported as a type over a module-private schema. A branded `S.Opaque` view would be nominal, so no caller-owned document would satisfy it. The private values are named `annotationDocumentView` and `documentEnvelope`, distinct from their exported types. `AnyAnnotationKind` is an operational registry contract with live schema handles and a method, excluded by the narrow detector rule. All three former schema-first exception rows are removed under S31; none is admitted.
+
+`mintAnnotationId(kinds)` compiles one JSON body encoder per kind when it is applied to a registry and takes the kind-independent `{ _tag, targets, body }` shape, so a generic caller such as the document codec needs no cast. `assemble` mints every key first, then refuses in a fixed order (`anchor-off-capture`, `target-without-anchor`, `reference-unresolved`), and repeated parts collapse to one row each. `encode` returns the canonical JSON value; its bytes are the RFC 8785 form, which `test/fixtures/canonical-document-v1.json` holds.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Make the target set and the refusal kit module-private while preserving the type-only document view
+
+### P3: merge and restrict return the caller's document type, conflicts take the least and greatest time, contains is dual, 2026-11-22
+
+Four surface calls the design did not settle, taken while writing commit 5.
+
+- `merge` and `restrict` take any document type over `AnnotationDocumentView` and return that type, rebuilt from the input with its tables replaced; neither re-runs the schema. Both preserve every pure check by construction (the union of content-keyed tables of one capture, refused when a pair would carry two times; the kept annotations of a set closed under references, with the anchors and attribution they use), and `L2-4` proves the outputs pass the schema and the checked codec.
+- A `GenerationTimeConflict` takes the least and the greatest time of its (content, activity) group under `Option.makeOrder(DateTime.Order)`, `None` first. Two documents that each pass their checks give at most two times per pair, so the group is the two sides.
+- `contains(kinds)` is dual: `(document, outer, inner)` and `(outer, inner)(document)`, as the design module had it.
+- `restrictToOa` throws when its restriction or its `OaDocument` decode fails, which the design calls a defect; it stays a pure function with the signature of section 1.6, through `Result.getOrThrow`.
+
+`closure` and `restrict` take any `KindRegistry`, and the kept set is `HashSet<KindName<Kinds>>`, so an unregistered name is a type error. The test generator of commit 4 now prefixes each activity seed with its index, so two equal drawn labels still name two activities and a generated document never holds two generations of one pair.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Re-validate the outputs through the schema, refuse more than two times, and drop the data-last contains form, by a decision file
+
+### P3: annotation/v1 and generation/v1 are declared preimages with goldens; one preimage serves every kind through its JSON body, 2026-11-22
+
+`AnnotationPreimage` is `definePreimage` under `annotation/v1` over `Tuple[CanonicalHashSet(OccurrenceId) (non-empty), TermIri, S.Unknown]`, whose third element is the body encoded by `S.toCodecJson(kind.body)`. One preimage serves every kind, because the kind IRI already separates the body schemas. `GenerationPreimage` is `definePreimage` under `generation/v1` over `Tuple[AnnotationId, ActivityId]`. The design module's hand sort goes: the set codec sorts.
+
+Goldens: `[["sha256:68270708…4a48"], "https://beep-effect.com/ns/annotation/Mention", {"class": "https://beep-effect.com/ns/office-action/distinction"}]` gives `sha256:8a816f6d07f571cb31aba23d9650d0cb67c72ce6832c12b6c89f388b6fd9ddb9`; `[that id, "sha256:2a2b259a…7388"]` gives `sha256:e1303854ed5d9fddcba55d0d0ae4e4dd5d9ca20c4e4738e0ba643f5696575acd`. Both were checked on this base through `Preimage.verifyGolden` with `Digest.layerWebCrypto` and by an independent SHA-256 over the RFC 8785 JSON, and one `PreimageRegistry` accepted both. `test/Preimages.test.ts` registers them with the two import preimages. An unregistered tag cannot reach the mint, because the document schema's annotation union is closed over the registry; the mint dies on one as a construction defect.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Declare one preimage per kind by a decision file that bumps annotation/v1
+
+### P3: @beep/annotation defines no Context.Service, exports Annotation<Kinds, K>, and restrict takes registered kind names by type, 2026-11-22
+
+`@beep/annotation` defines no `Context.Service`. Every arrow is pure or needs only core's `Digest.Digest`, as in `@beep/text` (decision `p2-no-context-service-in-text`); a service would be a name for a function. The SPEC name is exported as `Annotation<Kinds, K>`, the content of an annotation of kind `K` (all kinds by default), and `AnnotationOf` goes. `restrict` and `closure` take a `HashSet` of `KindName<Kinds>`, so an unregistered name is a type error and needs no runtime refusal. `verifyDocument` stays internal to the checked decode; a body that fails its kind's encoding there is a `PreimageMintError`, and only a key that is not the hash of its value is a `DocumentKeyMismatch`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Add a service contract when a second implementation or state appears, by a decision file
+
+### P3: candidates past maxExtractions enter the residual unaligned-by-cap; the cap still bounds alignment, 2026-11-22
+
+Design section 4 requires every parsed candidate in the handoff, but alignCandidates bounds its work by maxExtractions and returns only that prefix. By orchestrator ruling, handoff accepts optional overCap: ReadonlyArray<ExtractionCandidate>, defaulting to empty for its non-schema input. The service passes the unattempted raw tail without manufacturing GroundedExtraction values. The handoff appends those candidates with reason over-extraction-cap, alignment unaligned meaning no aligned proof, and no anchor. The reason distinguishes alignment not attempted from attempted and failed. Text, attributes and confidence survive. candidateCount is attempted input length plus overCap length, equal to the parsed count; diagnostics remain as before and maxExtractions still bounds alignment work. No residual-specific alignment domain is added and IrToLawExtractionError keeps its wire. The existing two-parsed, cap-one service test pins the distinction. This is an explicit amendment of design sections 4.2 and 4.3.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Align every parsed candidate and drop the cap from alignment, by a superseding decision
+
+### P3: @beep/text gains CaptureId, the capture/v1 hash of the whole SourceTextIdentity, as the id an extraction run used, 2026-11-22
+
+An activity's `used` set holds the ids of what it read. The handoff reads one capture, and a capture has no id. Its `textDigest` is scope-free: two matters holding the same bytes share it, so a `used` set built from it would join activities across a matter wall in a provenance traversal.
+
+`@beep/text/Capture` adds `CaptureId`, the hash of (`capture/v1`, `scopeRef`, `sourceRef`, `locator`, `sourceDigest`, `textDigest`, extractor name, extractor version, `normalizationVersion`), the first eight elements of `occurrence/v1` in the same order, declared through `definePreimage` with a golden. Golden: `["matter:example","source:example","documents/source.txt","sha256:aaaa…(64)","sha256:8de1c1a5…515f","utf8","1","1"]` gives `sha256:c7f8616c75be6548d508e2e6a071d3400673dd915454e7e90d97f26bb967eed6`, checked on this base through `Preimage.verifyGolden` with `Digest.layerWebCrypto` and by an independent SHA-256 over the RFC 8785 JSON. `mintCaptureId` is `Effect.fn("Capture.mint")`. P5's `prov:Entity` projection of `SourceTextIdentity` uses this id or amends this decision.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Use the capture's textDigest as the used id, accepting a scope-free provenance join, by a decision file before P3 merges
+
+### P3: commit 1 freezes one hosted batch per model output of the Extractor test, through file snapshots, 2026-11-22
+
+Section 10 of `research/2026-11-22-p3-design.md` asks commit 1 for "today's `EvidenceBatch` over the `Extractor.test.ts` model output". That file holds six hosted model outputs that reach a batch: a coreference cluster, synthesized relation endpoints, reused relation endpoints, an unresolved relation, a malformed relation contract and fuzzy relation evidence. All six are frozen, in that order, as `apps/labs/semantica/test/fixtures/hosted-batch-v1.json`, an array of `{ name, batch }`. Commit 8 changes the relation grounding and every degradation path, so freezing only the cluster case would leave the relation lane and the three degradations unproved. The six cases move to module scope in `Extractor.test.ts`, where the behaviour tests and the frozen test share them, so commit 7 and commit 8 rewrite one constructor per case.
+
+The two frozen tests (semantica `C0 hosted extractor frozen batch`, law-practice `IrToLaw keeps the bytes of the frozen v1 law entities for the server fixture`) compare with `toMatchFileSnapshot`, as `ValueSchemaIdentifiers.test.ts` does. A missing file is written only outside CI, so each fixture was written by the code at `525c61bb090` and is compared byte for byte afterwards; a changed byte fails. The law-practice fixture freezes the entities of the primary model output (`match_lesser`), the one the design names; the minimal-fold run gives the same anchor and is already asserted by its own test.
+
+The relation-preview report was produced with `SEMANTICA_OFFLINE=true`, `SEMANTICA_CORPUS_ROOT` set to the W1 PDF root and `SEMANTICA_PROVIDER_CACHE_DIR` set to a directory holding the three committed cache entries (sha256 of the entry files `60f24303…`, `91d2370b…`, `daee2459…` for the cases in fixture order 1, 2 and 3 by key prefix `5737`, `6bbc`, `0ac6`). Two runs gave the same bytes, sha256 `296bcd0d919d49b4ad6b7ef9299b82c763a24fc0489e3245e81ea2691aaa9ae6`, and the counts equal the table in `goals/semantica-canary/history/p2-c0-evidence-quote-reentry.md` (16/0/16, 7/2/5, 9/8/1).
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Freeze only the first hosted batch, or move the fixtures to hand-written comparisons, by a decision file before commit 8
+
+### P3: containment needs a non-decreasing level under strict inclusion and a lower level on equal spans, 2026-11-22
+
+Amends decision `p0-structure-kinds-carry-containment-levels`. Under the design rule a `Word` whose range strictly includes a `Sentence` contained it, because levels were consulted only on equal spans. Now `outer` contains `inner` when `outer`'s range covers `inner`'s and `outer.level <= inner.level`, with `outer.level < inner.level` on equal spans. Extraction kinds and multi-target annotations still take no part. The relation stays a strict order: over 200,000 random triples of ranges and levels it was irreflexive, asymmetric and transitive with no counterexample. Ledger row `L2-5` reads "containment is a strict order: range inclusion with a non-decreasing level, and the lower level on equal spans".
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Return to levels as an equal-span tie-break only, by a decision file with the L2-5 row
+
+### P3: a document has one checked decode and one canonical encode; the decoder refuses a repeated table key, 2026-11-22
+
+`S.HashMap` encodes its entries in iteration order and decodes a repeated key by keeping the last (`.repos/effect/packages/effect/src/Schema.ts:16021-16026`, `HashMap.ts:893-894`), so document bytes were not stable and a forged first entry was dropped without notice. The tables stay `S.HashMap`. `makeDocumentCodec(schema, kinds)` returns the one checked `decode` (an envelope decode, `DocumentKeyRepeated { table, key }` for a repeated key in `anchors`, `annotations` or `attribution`, then the schema, then the key verification) and the one canonical `encode` (the schema encode, then every table sorted by encoded key and every generation set sorted by run id). The bare schema stays exported for composition and generators.
+
+A generic sorted-entry carrier was tried and dropped: `S.Tuple` over generic element schemas leaves its optionality conditional unresolved under tsrs, and the record form loses the key brand. Checked in a throwaway on this base: encode then decode round-trips; encode is a fixed point of the canonical sort; a repeated key is refused by the entrypoint and accepted by the bare schema; a consistently forged annotation key (key, attribution key, generation content and re-minted run all replaced) is accepted by the bare schema and refused by the entrypoint with `DocumentKeyMismatch` on `annotations`, the L2-4 case.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Encode tables as JSON objects keyed by id, which RFC 8785 sorts, by a decision file; fixtures are regenerated
+
+### P3: extraction result and checked wire codecs live in acyclic module leaves, 2026-11-22
+
+LangExtractResult lives in Extraction.result.ts so its dependency on Handoff.model does not cycle through Extraction.model. The Extraction public barrel still exports the result. Handoff.codec.ts owns the checked wire decode and canonical encode path, keeping Handoff.model available to the result and producer without a codec cycle.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move the result and codec back into the existing model leaves using lazy schema composition
+
+### P3: OfficeActionReview.flow.test.ts runs the real langextract service over a stubbed model on its own synthetic fixture, 2026-11-22
+
+`packages/law-practice/use-cases/test/OfficeActionReview.flow.test.ts` composes: the file-processing test engine from `@beep/file-processing/test`, returning a new synthetic office-action text kept under the use-cases test fixtures (not a copy of the server-local fixture, which the use-cases tests cannot import); the real LangExtract layer over a stubbed `LanguageModel` wrapped in `Model.make` (`effect/ai/Model`), which supplies the provider and model names of the run's pin; the real `IrToLaw`; `makeClaimGate` over a conforming stub `ShaclValidationService` (the epistemic use-cases test pattern) and `makeClaimTransition`; `Digest.layerWebCrypto`.
+
+It asserts that the handoff passes the checked decode after an encode; that every anchor receipt names the fixture capture; that the distinction anchor re-slices the text; that the candidate indices are lossless; that `IrToLaw` maps the five entities; that the loop ends at `shape_valid`; that a missing label fails typed; and that an unaligned label fails with `required-extraction-unaligned`. It asserts no confidence, so P4 adds `OfficeActionReview.signals.test.ts` without rewriting it.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Build the handoff by hand in the flow test instead of running the service, by a decision file
+
+### P3: Generation.at is the stated generation time, absent when none was stated; an imported activity keeps only what the input named, 2026-11-22
+
+Amends decisions `p0-items4-6-9-annotation-document-shape` (item 6) and `p0-item7-oa-profile`. Native generations always carry a time. A third-party annotation with `prov:wasGeneratedBy` and no time has none, and neither does an unattributed annotation given the import activity unless it states a time itself: writing the import time into its generation would make `normalize(s)` depend on the import time, which item 7 keeps outside. So `Generation.at` is `S.OptionFromOptionalKey(S.DateTimeUtcFromMillis)`, the stated generation time. Time stays canonical per (content, activity): two records for one pair that differ, `None` against `Some` included, are a `GenerationTimeConflict`, whose `left` and `right` are options. The import activity's own time is its record's `importedAt`.
+
+`ImportedActivity` becomes a tagged union `Activity { iri } | Creator { agent } | Generator { agent }`, so `dcterms:creator` and `as:generator` round-trip as what they name, an agent, instead of being read as an activity. The stated-time field moves from the activity record to the generation, where the profile states it. `imported-activity/v1` hashes the encoded case; golden `[{"_tag":"Activity","iri":"https://example.org/activity/1"}]` gives `sha256:9924f029d9bb4a3a0788bb5c915176e98210d3b4bbd604efd8b2dfc65b6de8fa`. `import-activity/v1` golden `["sha256:bbbb…(64)"]` gives `sha256:f5431a3f22f3b795221229eb7c7b3e424d4f89fec11f5ebf7b536973d91429b1`. Both were checked through `Preimage.verifyGolden` and an independent SHA-256. A time stated on a third-party annotation (`prov:generatedAtTime`, else `dcterms:created`) applies to each generation its own statements give and to its import generation when it has no statement; a time stated on a run applies to the generations of that run's statements. On the wire every stated time is the `prov:generatedAtTime` of its generation's run entity, so two creators with two times are two runs (decision `p3-oa-codec-signatures-and-profile`).
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Require Generation.at and give imported generations the import time, accepting a normalize that depends on it, by a decision file with L2-6
+
+### P3: the nlp Graph span becomes an optional Position resolved uniquely; the node schemas move with Core in P6, 2026-11-22
+
+Census disposition change for Graph `Schema` (147 lines in 10 files, 138 of them in `@beep/nlp-processing`), from "adapt into `@beep/annotation` kinds in P3" to "moves with Core to `@beep/nlp-processing` in P6". The node types (text, POS, lemma, dependency, entity, relation) are an NLP engine's linguistic graph for which L2 has no kinds. The PLAN row asks only for the span, and P6 already moves Core and absorbs nlp-processing's graph layer.
+
+P3 deletes the float `Span`. `EntityNode.span` and `RelationParticipant.span` become `S.OptionFromOptionalKey(Position)` from `@beep/text` (`start < end`, `utf16-code-unit`), and `@beep/nlp` gains `@beep/text`. The wink backend fills the span with `resolve` of a quote selector over the text: `Unique` gives the position, and `Ambiguous` or `NotFound` give none. Today it returns the first match, or the fabricated `{ start: 0, end: length }` when the value is absent, which is the L1-5 bug. semantica's pattern lane keeps its `fabricated-span` degradation for a missing span.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Adapt the Graph node schemas into annotation kinds in P3 by a decision file with re-measured census sums
+
+### P3: aligned grounded extractions carry a TextAnchor; the office-action attempt log reads v1 rows through a declared transform, 2026-11-22
+
+`GroundedExtraction` stays the langextract aligner's output: alignment returns it, `VerifiedSpan` locates over it and `OfficeActionStructure` stores it, and the PLAN exit forbids it only in `IrToLaw` and the semantica layers. Its four aligned cases replace `span: Contract.Span` and `matchedText` with `anchor: TextAnchor`, the canonical candidate anchor: `matchedText` is the source slice of `span` (`Alignment.behavior.ts:222-233`), so the pair already is one anchor. `Contract.Span` retires with no langextract twin, and every reader that rebuilt a `TextAnchor` from the pair (`IrToLaw`, semantica, `OfficeActionStructure`) reads the field instead. An aligned extraction with `start == end` can no longer be built; the three use-cases tests that build empty or inverted spans (`OfficeActionStructure.test.ts:148,177,191`) move from a verification refusal to a construction refusal.
+
+The office-action attempt log is a stored format. `OfficeActionStructureAttempt.schemaVersion` becomes `"2"`. `OfficeActionStructureAttemptRead` decodes a v2 row, or a v1 row through a frozen v1 reader that maps `span` and `matchedText` to `anchor`, keeps every other field as stored, decodes the result through the live v2 schema and never encodes. The frozen `office-action-attempts-v1.jsonl` is not edited; a v2 fixture is captured beside it; the two byte tests become "reads every frozen v1 row to its v2 form" and "writes v2 rows byte for byte". Checked on this base in a throwaway: both frozen v1 rows read to v2 with width-checked anchors (0..25 and 176..303 on row 1; row 2 has none) and re-encode with `schemaVersion: "2"`. `VerifiedSpanAttemptRecord` has no store and changes shape under the chapter-11 amendment.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Keep span and matchedText on a langextract-owned span schema with the v1 key order and drop attempt v2, by a decision file before the anchor commit lands
+
+### P3: the handoff run is an activity minted at start from operation:Extract, an Engine pin from Effect's model names, the prompt digest and the capture id, 2026-11-22
+
+`GENERATED_BY` is deleted. The run's `ActivityStart` is:
+
+- `operation`: the registry term `operation:Extract`.
+- `pin`: `ActivityPin.Engine { engine, edition }`, read from Effect's own model services `Model.ProviderName` and `Model.ModelName` (`effect/ai/Model.ts:69`, `:86`).
+- `promptDigest`: the SHA-256 of the prompt's UTF-8 bytes, through `Digest.digestHex`.
+- `used`: the `CaptureId` of `request.source`.
+- `started`: a clock read before the prompt.
+
+`activity.id = mintActivityId(start)`.
+
+Every model built with `Model.make` (`:135`) provides the two model names together with its `LanguageModel`, so no langextract service is added. The upstream `AnthropicLanguageModel.model` is `Model.make("anthropic", model, layer(...))` (`.repos/effect/packages/ai/anthropic/src/AnthropicLanguageModel.ts:704-708`), and `@beep/anthropic` builds its layer with it instead of `.layer`.
+
+The pin is `Engine` rather than `Model` because a requester knows the provider and the model id it asked for, not the snapshot behind an alias. `ActivityPin.Model`'s `version` would therefore be invented.
+
+`LangExtractService.layer` requires `LanguageModel`, the two names and `Digest`. These sites provide them:
+
+- the law-practice server (`LawPracticeServerLive`'s requirement grows by the two names, and its hosts get them from `AnthropicLanguageModelLive`);
+- semantica (the names come from its `ActiveModelIdentity`);
+- the lejeune provider smoke (through `AnthropicLanguageModelLive`);
+- the tests, which wrap their stub models in `Model.make`.
+
+Checked on this base: `startExtraction` under `Model.make("test-provider", "stub-model", Layer.empty)` gives the pin `{"_tag":"Engine","engine":"test-provider","edition":"stub-model"}`, and `AnthropicLanguageModel.model(...)` type-checks as `Layer<LanguageModel | ProviderName | ModelName, never, AnthropicClient>`.
+
+Every generation of the run has `at = Some(t)` for one clock read after alignment. Generated therefore never precedes started (the L5-3 order holds for the handoff), and one run has one time, so a run cannot conflict with itself.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Add a langextract service that carries a version-bearing ActivityPin, provided by each host, by a decision file
+
+### P3: the request names its capture, the service verifies the text against it, and every target is a receipt of the aligner's own anchor, 2026-11-22
+
+`LangExtractRequest` drops `documentId` (the `@beep/nlp/Core` `DocumentId`) and gains `source: SourceTextIdentity`; with the Handoff subpath gone and `UnitInterval` read from `@beep/schema`, langextract has no `@beep/nlp` import. Before any model call, the service calls `verifySourceTextIdentity` with the request's identity as both the expected and the supplied identity, so a text whose digest is not the capture's fails the run with a new `LangExtractError` reason `source-text-mismatch`: an input error, not a value.
+
+Each aligned candidate's `TextAnchor` is verified against that `VerifiedSourceText` with `verifyTextAnchorAgainstVerifiedSource`, projected to its receipt and stored as `Anchored`. The anchor is the aligner's own range. It is not re-located through `VerifiedSpan.locateGroundedExtractions`, which ignores the span, searches for the model text and can pick another range for the lesser, minimal-fold and fuzzy tiers. A refused verification is a residual candidate with reason `verification-refused`, a value as the SPEC error boundaries require.
+
+Scope: the capture's `scopeRef` is the scope; a cross-scope refusal belongs to a caller that compares an expected identity, as `OfficeActionStructure` does. `LangExtractService.layer` gains `Digest.Digest` in its requirement beside Effect's two model names (decision `p3-handoff-activity`); the composition sites are listed in section 2 of `research/2026-11-22-p3-design.md`. A `PreimageMintError` while minting over verified text cannot happen (every quote is a slice of well-formed text) and dies in the service as an internal error.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Take a caller-held VerifiedSourceText in the request instead of verifying inside the service, by a decision file
+
+### P3: the handoff emits a checked annotation document with its activity, per-candidate readings and a residual; LangExtractResult is the handoff and its counts, 2026-11-22
+
+The handoff emits `ExtractionHandoff`: `document`, an `ExtractionDocument` over the extraction kinds; `activity`, an `ExtractionActivity` `{ id, start: ActivityStart }`; `candidateCount`, the number of parsed candidates; `readings`, a `HashMap` from `AnnotationId` to a non-empty array of `ExtractionReading`; and `residual`, an array of `ResidualCandidate`. A reading keeps what the run said and the content hash must not: the candidate index, the raw label, the model text, the attributes, the alignment tier and the extractor confidence. Two runs, or two candidates of one run, that read one class at one occurrence are one annotation with their readings beside it. The residual keeps every candidate that became no annotation, with its tier, a `ResidualReason` (`unaligned`, `unmapped-label`, `verification-refused`, `relation-attribute-missing`, `unmapped-predicate`, `relation-endpoint-unresolved`) and, whenever the candidate aligned, the aligner's `TextAnchor` (the evidence range for a relation), unverified. Without it a reader could not place a `relation-unresolved` degradation in the chunk of its evidence, turn an aligned off-target label into the Entity claim semantica makes of it today, or refuse it as the lejeune smoke does today.
+
+Schema checks: every readings key is an annotation of the document; every generation names the handoff's activity; the candidate indices across readings and residual are exactly `0..candidateCount-1`, each once, which is the lossless rule (without the count, losing the last candidates would pass); a residual has an anchor exactly when its tier is not `unaligned`. The encoded handoff is canonical like the document: the readings table is the array of entries sorted by annotation id, each reading array in candidate order. The checked decode for wire input refuses a repeated readings key, runs the document's checked decode and verifies `activity.id = mintActivityId(activity.start)`; the two handoff refusals are `HandoffRefused { reason: "readings-key-repeated" | "activity-id-mismatch", key }`. A reading belongs to the annotation its candidate became, a `Mention` or a `RelationCandidate`; an endpoint Mention minted for a relation and a `CorefCandidate` have none. Checked on this base: the checks accept candidate indices `0..3` of four across readings and residual and an empty run, and refuse a truncated tail (`0..2` of four), a gap, a repeat, an unaligned residual with an anchor and an aligned one without.
+
+`LangExtractResult` becomes `{ handoff, diagnostics }`. `documentId`, `text`, `extractions` and `annotatedDocument` leave it: the caller holds the text, and the extractions are the readings plus the residual. Confidence stays an unpromoted reading field until P4 turns it into a signal.
+
+`ExtractionDocument` is `@beep/annotation`'s caller-owned document over `ExtractionKinds`; it widens to `TextDocument` by decoding its type side, since every extraction kind is a document kind, so a later structure pass merges with it. The handoff emits no `Chunk`: the whole-text chunk of today duplicated the capture and cannot exist over empty text. The `Chunk` kind stays for a chunking pass, and `Mention.chunkId` has no successor.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Keep GroundedExtraction[] in LangExtractResult beside the document by a decision file; readers then choose between two carriers
+
+### P3: IrToLaw maps a checked handoff, picks each label's Mention by text position and reads the model text from its reading, 2026-11-22
+
+`toLaw(handoff: ExtractionHandoff)` returns `Effect<LawEntities, IrToLawExtractionError>`, stays pure and needs no `Digest`: the handoff comes from the service in process, built through the checked constructor, and a handoff from outside the process goes through the checked decode first. For each label, the candidates are the `Mention` annotations whose class is the label's `office-action` term, and the one with the least (start, end, `AnnotationId`) is taken. That is a function of the document alone; today the first in model order is taken, and the fixtures hold one of each. Its text is its first reading's model text, as today, which keeps the lower-case limitation the server test asserts. The distinction anchor is the anchors row's receipt anchor.
+
+When a label has no annotation, a residual candidate with that label gives `required-extraction-unaligned` with its tier as `alignmentStatus`; otherwise the error is `required-extraction-missing`. The error's encoded shape does not change (`SchemaParity.test.ts:148-178`). The stale port comment (`IrToLaw.ports.ts:6-14`) goes.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Pick by candidate order instead of text position, by a decision file; the reading's candidate index carries the order
+
+### P3: L2-3 lands in two halves, its decode and assemble half in commit 4 and its merge and restrict half in commit 5, 2026-11-22
+
+Section 10 of the P3 design lists `L2-3` in commit 4, but the restated row (decision `p3-ledger-rows-restated`) also asks that `merge` and `restrict` keep every annotation attributed with one generation per pair, and those two functions arrive in commit 5. Commit 4 therefore ships `packages/foundation/modeling/annotation/test/Generation.laws.test.ts` with the cases its code can carry: the checked decode refuses an unattributed annotation and a second generation for one (content, activity) pair; `assemble` gives every annotation exactly one generation of its activity; every generated run is the `generation/v1` hash of its pair, with the golden; and a generation with no stated time encodes without the `at` key. Commit 5 adds the merge and restrict cases to the same file under the same ledger title, so the row turns green in commit 10 with both halves.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move every L2-3 case into commit 5 and keep Generation.laws.test.ts out of commit 4, by a decision file
+
+### P3: the aligner's codec yields a TextAnchor, langextract ranges give way to Position, and the attempt read codec is exported, 2026-11-22
+
+Seven calls the design did not settle, taken while writing commit 7.
+
+- `SpanFromMatch` and `spanFromMatch` keep their names and now produce a `TextAnchor`. The anchor carries its own quote, so the codec's encode is pure, `[startChar, quote]`, and no longer reads `CurrentAlignmentSource`; an empty matched slice is refused on decode, since an anchor is never empty.
+- `TextOffsetUnit`, `TextOffsetRange`, `Utf16TextRange` and `convertTextOffsetRange` go with no langextract successor; callers use `@beep/text/OffsetUnit` `Position` and `convertPosition`. `VerifiedSpanOffsets.test.ts` goes with `UnitConversionAgreement.test.ts`: every case in it exercised the deleted function, and `@beep/text`'s offset-unit laws cover the conversion.
+- `invalid-offset` leaves `VerifiedSpanErrorReason` and the verified-span attempt's location-failure reasons, because no producer of it remains. `VerifiedSpanAttemptRecord` has no store.
+- The citation `OccurrenceProjection` maps every `convertPosition` refusal (`split-boundary`, `out-of-range`, `ill-formed-text`) to an unverified row, as it mapped `invalid-offset` and `absent-text` before. None of them names a UTF-16 range the source could prove. The old `limit-exceeded` failure cannot arise, since `convertPosition` has no source-length ceiling of its own.
+- `OfficeActionStructureAttemptRead` is exported from `@beep/law-practice-use-cases/OfficeActionStructure`, because the server store reads through it and the package serves no deeper path. The frozen v1 schemas and `convertV1` stay private to `OfficeActionStructure.read.ts`.
+- The read union lists the v1 reader first, `S.Union([FromV1, OfficeActionStructureAttempt])`, the reverse of the design. A v2 row never enters the v1 reader, whose `schemaVersion` literal prunes it; an encode enters it first and is refused by its forbidden getter, then falls through to the v2 schema. Every encode through the read codec therefore passes the refusal, and `test/OfficeActionStructure.read.test.ts` in the use-cases package covers the module at 100 percent without exporting the v1 reader.
+- The two citation-extraction-engine ops scripts convert through `convertPosition`, which refuses a lone surrogate before the end boundary where the deleted function counted it as a code point. Their fixture texts are well formed.
+
+`apps/labs/lejeune-bolt-workbench/src/workflows/Normalize.ts` and `Rules.ts` need no edit: they build unaligned extractions for the locate input and read the located `TextAnchor`, and neither named `TextOffsetRange`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Restore the langextract range types and convertTextOffsetRange, the invalid-offset reason and a source-reading SpanFromMatch encode, by a decision file
+
+### P3: the langextract offset ranges move in P3; the law-practice TextQuote, SourceRef and SourceQuote move in P4, 2026-11-22
+
+Decision `p2-langextract-and-law-quotes-move-in-p3` sent the law-practice `TextQuote`, `SourceRef` and `SourceQuote` to P3 beside the langextract ranges. P3 takes the langextract ranges: `TextOffsetRange` and `Utf16TextRange` become `Position`, and `convertTextOffsetRange` becomes `convertPosition` with its refusals, including `ill-formed-text`. Their consumers are the law-practice `OccurrenceProjection` and two tests, lejeune `Normalize` and `Rules`, and two citation-extraction-engine ops scripts. The three law-practice shapes have no annotation reader: `TextQuote` and `SourceRef` locate ReviewHub evidence by quote, and `SourceQuote` feeds claim evidence, which P4 rewrites with `EvidenceSpan`. They move in P4, where `TextQuote` becomes the `@beep/text` quote selector.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Re-express the three law-practice shapes in the P3 PR by a decision file
+
+### P3: ledger rows L2-1, L2-3, L2-5 and L2-6 are restated over the functions under test, 2026-11-22
+
+`L2-1`: merge over one capture is idempotent, commutative and associative on content, attribution unions, and a refusal is the same value in either argument order (decision `p3-merge-refusals-are-symmetric`). `L2-3`: the checked decode refuses an annotation with no generation and a second generation for one (content, activity) pair, and `merge` and `restrict` keep every annotation attributed with one generation per pair. As written, the row restated two schema filters and named no function. `L2-5`: containment is a strict order, range inclusion with a non-decreasing level and the lower level on equal spans (decision `p3-containment-levels-are-monotone`). `L2-6`: for a document over the OA kinds, `decode(encode(d)) = d` with its imported activities; for third-party input `s`, `encode(decode(s)) = normalize(s)` on ground datasets; `resolve` gives the same result on every target before and after; offsets are code points on the wire and refuse a split surrogate (astral fixture); every generation is written as one run entity, and unattributed input is attributed to the import activity (decisions `p3-oa-codec-signatures-and-profile`, `p3-oa-instance-iris-and-ground-datasets`, `p3-oa-rejections-go-to-the-residual`, `p3-generation-time-is-the-stated-time`). Each row's package column becomes `@beep/annotation`, and each test title keeps its row id.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Restore the P0 row texts by a decision file edited with the ledger
+
+### P3: merge reports the least conflict and orders the captures, so it commutes on refusals too; CaptureMismatch is the @beep/text one, 2026-11-22
+
+The design module's `merge` reported the first conflict found by iteration with fixed sides, so `merge(a, b)` and `merge(b, a)` could fail with different values. `merge` now collects every `GenerationTimeConflict` and returns the least by (annotation id, activity id), with `left` the earlier time (`None` first). A `CaptureMismatch` names the two identities in a fixed order of their eight fields. The L2 copy of `CaptureMismatch`, with the same tag and fields as `@beep/text/LocatorMap`, goes; `merge` returns the text one, whose annotation description is widened from two locator maps to any two values that name different captures.
+
+Simulated on this base over 400 generated document triples, 4 percent of the left documents on a second capture and times drawn from none and two instants, 23 of the pairs refused: idempotent 400 of 400, commutative including refusals 400 of 400, associative 363 of 363 where both groupings succeed.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Return the first conflict found and restrict L2-1 commutativity to compatible documents, by a decision file with the ledger row
+
+### P3: the nlp Handoff and Ontology subpaths are deleted; UnitInterval consumers import @beep/schema/UnitInterval, 2026-11-22
+
+The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so the `@beep/nlp` Handoff module, its test and the package's Handoff exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
+
+Ontology `Kind` (0 consumers) was to fold into the kind registry. The structure kinds' containment levels replace its poset, and its `Document`, `Token` and `Character` kinds have no annotation kind and no consumer, so it is deleted rather than ported. Semantic-loss row: those three kinds. The sums are re-measured in the census at the P3 base.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Restore the Ontology subpath from history by a decision file; the Handoff contract has no consumer to restore it for
+
+### P3: the OA codec is @beep/annotation/rdf/OaCodec, held rdf-free at the base by an import-boundary test, with registry vocabulary, 2026-11-22
+
+The codec lives in `packages/foundation/modeling/annotation/src/rdf/OaCodec.ts`, served as `@beep/annotation/rdf/OaCodec` by the `./*` export; `src/index.ts` does not re-export it. `test/Annotation.import-boundary.test.ts`, following `@beep/md`'s `Md.import-boundary.test.ts`, asserts that no module outside `src/rdf` reaches `@beep/rdf` in its import closure. The adapter's transitive `@beep/md` edge through `@beep/rdf` is accepted until P5 removes `rdf -> md`.
+
+OA, PROV, dcterms, AS, NIF and rdf terms are read through `@beep/identity/Registry`; every profile term and `nif:Context` is declared, so no `Vocab/Nif.ts` or `Vocab/As.ts` is added to `@beep/rdf`. Each target's selectors go through P2's `textAnchorToWebAnnotationTarget` and `webAnnotationTargetToTextAnchor`. Chapter 16's "bound to DoCO terms" for the structure kinds becomes an SSSOM mapping in P5 (L3 `MappingSet`); P3 writes no DoCO triple and binds no DoCO term.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move the adapter to its own package depending on @beep/annotation and @beep/rdf, by a decision file
+
+### P3: the OA codec reads one default graph, refuses in the listed order, and needs IRI attribution and typed times, 2026-11-22
+
+Calls taken while writing commit 6 that section 8 of the P3 design does not settle. Each keeps `L2-6` a law over every input: `decodeOa` and `normalize` share one reading rule, so a call changes both sides alike.
+
+- Only the default graph is read. Quads in a named graph go to the residual untouched, and the input is deduplicated as a quad set before it is read.
+- An annotation's kind is its one `rdf:type` besides `oa:Annotation`, and it must be an OA kind IRI. No other type, two, or a non-OA kind (such as `annotation:Section`) is `unknown-kind`.
+- A `Mention` reads exactly one `oa:hasBody`, an IRI that decodes as a `TermIri`; the four empty-bodied kinds read none. Anything else is `body-refused`.
+- A target needs an `oa:hasSource`, and one or more selectors typed `oa:TextPositionSelector` or `oa:TextQuoteSelector`. A selector typed both, a position without exactly one natural `oa:start` and `oa:end`, a quote without exactly one non-empty `oa:exact`, or a second `oa:prefix` or `oa:suffix` is `target-refused`, as is an annotation with no target. A selector of any other class is not read and stays in the residual. Offsets are read from the literal's lexical form whatever its datatype, and written as `xsd:integer`; quotes are written as `xsd:string`.
+- The checks run in the order of the refusal list (`other-source`, `unknown-kind`, `body-refused`, `target-refused`, `time-conflict`), and the first that fails names the rejection. Rejections are ordered by the serialized subject term.
+- An attribution statement needs an IRI object. A blank-node or literal activity, creator or generator is no statement: its triple stays in the residual, and an annotation with no other statement takes the import activity.
+- A stated time is a literal typed `xsd:dateTime` with that lexical form. Another time literal is no time and stays in the residual. A subject's `prov:generatedAtTime` values win over its `dcterms:created` values, and two different values of the winning kind on one subject are `time-conflict`.
+- An annotation's own time triples are carried only when its time is used: it makes statements itself, or it is unattributed and its time goes to the import generation. A run with no statement is not read: its triples, `prov:specializationOf` included, stay in the residual.
+- The encoder writes only the anchors rows some annotation targets, so `decode(encode(d)) = d` holds for documents in which every row is a target, as `restrictToOa` and `decodeOa` leave them.
+- The adapter's `selector-conflict`, an anchor whose quote is not the text it ranges over, is reported as `capture-mismatch`: the receipt is not over the given text. The other conversion refusals keep their own reasons. Neither happens for a verified receipt.
+- `normalize` builds no document. It writes the run entities, selectors and NIF triples from what the shared rule read, by its own writer, and calls neither `decodeOa` nor `encodeOa`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Widen what the reading rule admits by a decision file edited with the L2-6 row; decodeOa and normalize change together
+
+### P3: the OA codec takes the verified text and the source IRI, returns typed results, and round-trips five kinds, 2026-11-22
+
+Amends decision `p0-item7-oa-profile`. A code-point offset needs the text before it (decision `p2-text-anchor-oa-codec`), and no profile property carries the capture. So `encodeOa(kinds)({ document, importedActivities }, { source: IRI, text: VerifiedSourceText })` (an `OaDocument` with the imported-activity table, as the amended item 7 requires) returns `Result<Dataset, OaEncodeRefused>`, and `decodeOa(kinds)(dataset, { source, text, importActivity })` returns `Effect<{ document: OaDocument, importedActivities, residual, rejected }, PreimageMintError, Digest>`. `normalize` takes the same options. The decoder rebuilds the capture from the verified text it is given: `oa:hasSource` must equal `options.source`, and every decoded target is verified against that text before it becomes `Anchored`.
+
+The OA kinds are the kinds whose body the profile can carry: `Mention`, whose class IRI is the `oa:hasBody`, and the empty-bodied `Title`, `Paragraph`, `Sentence` and `Word`. `encodeOa`'s input is an `OaDocument`, the caller-owned document of `@beep/annotation/Kinds` over the OA kinds. A caller narrows a `TextDocument` with `restrictToOa`, which restricts to the five kinds and decodes the result's type side through `OaDocument`; the five reference no kind, so neither step can fail, and a failure is a defect. `Section`, `Figure`, `Chunk`, `RelationCandidate` and `CorefCandidate` are not exported in P3; widening is a decision edited with the L2-6 row. The annotation kind is a second `rdf:type` of the `oa:Annotation`.
+
+NIF stays export-only. `Sentence` and `Word` are also written as `nif:Sentence` or `nif:Word` with `nif:beginIndex`, `nif:endIndex`, `nif:anchorOf` and `nif:referenceContext` pointing at the source IRI typed `nif:Context`; `nif:Context` joins the NIF export terms. `nif:isString` is not written, so the export does not embed the source text. On decode every `nif:` triple goes to the residual, and `normalize` re-adds the NIF triples for `Sentence` and `Word`.
+
+Every generation has one written form, in the encoder, the decoder and `normalize` alike: a run entity `<r> prov:specializationOf <a>` at the instance IRI of `mintRunEntityId(content, activity)`, with `<r> prov:generatedAtTime t` when the time is stated. A native activity, the import activity included, adds `<r> prov:wasGeneratedBy <act>` with `<act>` the instance IRI of its `ActivityId`; an `ImportedActivity.Activity` adds `<r> prov:wasGeneratedBy <iri>`; every such object is typed `prov:Activity`. A `Creator` or `Generator` adds `<r> dcterms:creator <agent>` or `<r> as:generator <agent>`, both profile properties, and no `prov:wasGeneratedBy`. The decoder reads an instance-form activity IRI as the native id it prints, so an import generation round-trips with no import record in the encoder's input, and an annotation holding an import generation beside a native one keeps both. `normalize` rewrites annotation-level `prov:wasGeneratedBy`, `dcterms:creator`, `as:generator` and `dcterms:created` into exactly these run triples and gives an annotation with no attribution the import run. Checked on a quad model of the attribution: `encode(decode(s)) = normalize(s)` for 2,000 of 2,000 generated datasets and the creator-only, generator-only, unattributed and two-creators fixtures, and `decode(encode(d)) = d` for 2,000 of 2,000 generated documents; the earlier form, with annotation-level creators and no import triples, held for 157 and 577.
+
+The decoder mints every key itself and reads no annotation, occurrence or run IRI as an id, so its only error is `PreimageMintError`. It builds the document as the `merge` of one `assemble` per distinct (activity, time) of the decoded generations, since `assemble` gives every annotation one generation. With verified anchors, no body references in the OA kinds and the `time-conflict` rejections made first (decision `p3-oa-rejections-go-to-the-residual`), neither can refuse, and a refusal is a defect. This amends the 2026-11-19 amendment of item 7 that built the OA decoder on the checked decode entrypoint: that entrypoint decodes the document JSON, not RDF. Its purpose, that no key in the decoder's output is unverified, holds because every key is minted.
+
+The import activity is the caller's argument to the decoder and `normalize`. Its `sourceDigest` is the SHA-256 of the RDF document bytes the caller parsed the dataset from, because the codec receives a `Dataset` and the canonical dataset digest lands only in P5 (L6-1); `normalize(s)` is then a function of `s` and that digest, as item 7 requires. P5 may switch the input to the canonical dataset digest by a decision, which re-mints import activity ids.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Widen the OA kinds with body properties by a decision file edited with the L2-6 row
+
+### P3: content ids print as instance IRIs, so native documents round-trip and the codec's datasets are ground, 2026-11-22
+
+Annotation, occurrence, run-entity and activity ids print as `https://beep-effect.com/ns/instance/sha256-<hex>` (`Registry.mint` under the `instance` namespace); the domain tags keep the hashes of different brands apart. A target is its occurrence's `oa:SpecificResource`, shared by every annotation on that occurrence, with selectors at `<occurrence IRI>/position` and `<occurrence IRI>/quote`. A generation is written `<run> prov:specializationOf <annotation>`, plus `prov:generatedAtTime` when its time is stated, and its activity on the run: `prov:wasGeneratedBy` the instance IRI of a native or import `ActivityId`, `prov:wasGeneratedBy` the original IRI of an `ImportedActivity.Activity`, or `dcterms:creator` or `as:generator` the agent of a `Creator` or `Generator` (decision `p3-oa-codec-signatures-and-profile`). On decode a `prov:wasGeneratedBy` object in the instance form is the native `ActivityId` it prints, so `decode(encode(d)) = d` holds for native documents, import generations included; any other object is an `ImportedActivity`.
+
+`normalize(s)` renames every annotation subject to the instance IRI of its re-minted `AnnotationId`, every target and selector to the occurrence form, and writes every generation, annotation-level creators and generators and the import attribution included, as the run entity above. Its output and the encoder's are therefore ground (no blank nodes). Until P5 lands the `Dataset` quotient (L6-1), equality on these outputs is set equality of quads, which is the quotient restricted to ground datasets; the decoder still accepts blank nodes in its input. Checked on this base: 1,000 random hashes round-trip through the print and parse functions, and a foreign IRI parses to none. Only an activity IRI is read through the instance form: the decoder re-mints every annotation, occurrence and run id from the content, as `normalize` does, and never reads one from a subject IRI, so a third-party annotation IRI in the instance form with the wrong hash is renamed, not refused. A third-party activity IRI in the instance form is read as its hash; attribution grants no admission, since L4-2 requires grounding that verifies.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Use blank nodes for targets and selectors and prove L2-6 on the P5 quotient, by a decision file once L6-1 lands
+
+### P3: a third-party annotation the profile cannot take is rejected into the residual with its reason; no whole input is refused, 2026-11-22
+
+Amends decision `p0-item7-oa-profile`, which refused a whole input for one bad annotation. A third-party annotation is rejected, with its triples sent to the residual and an `OaRejection { subject, reason }` returned, when its target names another `oa:hasSource` (`other-source`), its kind IRI is not in the registry (`unknown-kind`), its body is not one its kind reads (`body-refused`), its selectors do not decode to one verified anchor (`target-refused`), or its times conflict (`time-conflict`): one subject, the annotation or one of its runs, states two different times, or the annotation gives one (content, activity) pair a time that another of its statements, or another annotation of equal content, contradicts (`None` against `Some` included). Every annotation contributing to such a pair is rejected, and `normalize` leaves out the same annotations. Multi-capture input therefore splits: the annotations on the given source decode and the others are `other-source`. Triples outside the profile go to the residual as before; nothing is dropped silently. The decoder mints each `importedActivities` key through `imported-activity/v1` and every other key from content, so it verifies nothing it reads. `decode` refuses no whole input; its error channel holds only `PreimageMintError`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Refuse the whole input on the first rejected annotation, by a decision file with the L2-6 row
+
+### P3: the OA residual keeps every quad a rejected annotation reaches, even when an accepted one carries it, 2026-11-22
+
+A call the P3 design does not settle, taken in the fix commit after commit 6. Decision `p3-oa-rejections-go-to-the-residual` sends a rejected annotation's triples to the residual. Two third-party annotations can share a target node, and through it its selectors, or an activity node. Commit 6 removed from the residual every quad an accepted annotation consumed, so a rejected annotation that shared a target with an accepted one kept its `oa:hasTarget` link in the residual while the target and selector quads it points at left it, and a shared `prov:Activity` typing quad went the same way.
+
+The residual now keeps every quad a rejected annotation reaches through the profile: the quads about the annotation, its targets, their selectors and the runs that specialize it, and the `rdf:type prov:Activity` quad of each activity it or one of its runs names. Where an accepted annotation shares those nodes, the same input quads are both carried by the document and kept in the residual; the residual is therefore not disjoint from what the document carries. `L2-6` states it two ways over generated input that now draws shared target nodes: each rejected annotation's reached quads, read by an independent walk in the test, are in the residual, and decoding the residual alone gives the same rejections. A fixture shares a target and an activity between an accepted `Word` and an `unknown-kind` `Section`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Subtract only the quads no accepted annotation consumes, by a decision file edited with the L2-6 row
+
+### P3: the OA codec writes and reads the xsd:dateTime lexical form of every instant a DateTime holds, 2026-11-22
+
+A call the P3 design does not settle, taken in the fix commit after commit 6. `Generation.at` is any `DateTimeUtcFromMillis`, so a stated time can lie outside years 0000 to 9999. Commit 6 wrote `DateTime.formatIso`, which for such years prints `+010000-...` or `-000001-...`; neither is in the xsd:dateTime lexical space, and the decoder refused the first, so `decode(encode(d)) = d` failed for a valid document and a third-party time of `9999-12-31T23:59:59-14:00` was lost on the second decode.
+
+The codec keeps the full range instead of bounding it, since bounding would refuse native documents the schema accepts. The encoder writes the year with no `+` and with four or more digits, negative years signed (`10000-01-01T00:00:00.000Z`, `-0001-01-01T00:00:00.000Z`, `275760-09-13T00:00:00.000Z`). The decoder reads the xsd:dateTime lexical form: a year of four or more digits with no leading zero past four, the date, the clock, an optional fraction and an optional zone. It converts the year to the ECMAScript form, truncates the fraction to milliseconds, reads a missing zone as UTC (as `DateTime.make` already did), and gives no time for a calendar date that does not exist (`2024-02-30`, which ECMAScript rolls to March 1) or an instant outside the range a DateTime holds. Such a literal stays in the residual, as decision `p3-oa-codec-reading-calls` says of any other time literal. Year numbering follows XSD 1.1 and ISO 8601: `0000` is 1 BCE. The `L2-6` generators now draw document times over the whole range, half of them at its edges, and third-party times on both sides of the four-digit year and around year 0.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Bound Generation.at and the decoder's times to years 0001 to 9999 by a schema check, by a decision file with L2-6
+
+### P3: the office-action review builds its capture from the artifact and the processing result; OfficeActionStructure stays on extractions, 2026-11-22
+
+`OfficeActionReviewInput` does not change. After file processing the use case builds the capture: `scopeRef` the matter fixture key, `sourceRef` the artifact id, `locator` the artifact's `relativePath`, `sourceDigest` the artifact digest, `textDigest` the SHA-256 of the extracted text, `extractor` the processing engine and its `engineVersion`, and `normalizationVersion` `"raw/1"`, since the text is used as extracted. A result with no `engineVersion` fails as the existing `FileProcessingOperationError`, because an unversioned extractor would be an invented pin. The server layer already requires `Digest`.
+
+`OfficeActionStructure` is deterministic rule extraction with its own verified anchors and a stored attempt log. It keeps `GroundedExtraction`, now anchored (decision `p3-grounded-extraction-anchors-on-text-anchor`), and does not read the annotation document in P3.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Add a SourceTextIdentity field to OfficeActionReviewInput built by its callers, by a decision file
+
+### P3: office-action review captures Digest as an explicit factory dependency, 2026-11-22
+
+The pure office-action review factory receives the existing Digest service as an explicit dependency. The server layer captures the service and passes it to the factory so returned review methods keep no requirements. This supplies capture hashing without widening the existing public method environments.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Make the factory effectful and capture Digest during construction, updating its callers
+
+### P3: one PR stacked on the P2 branch, opened under the three-PR limit and on the orchestrator's word, 2026-11-22
+
+P3 ships as one PR from its lane, a stack layer on the P2 branch, in the commit order of section 10 of `research/2026-11-22-p3-design.md`. The handoff commit is indivisible: changing `LangExtractRequest`, `LangExtractResult` and the target breaks every caller, so chapter 11 rule 3 puts the consumer migration in the same commit. The registry terms, `@beep/text` additions, the annotation package, the OA adapter and the nlp deletions are separate commits around it. The PR opens only when the packet has fewer than three open PRs, after P2 is open, and on the orchestrator's word while P2 is unmerged. Before the final check the lane merges its parent once.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Split the commits after the annotation package into two PRs by a decision file; the commit order makes the cut clean
+
+### P3: producer and checked wire path share the document codec, 2026-11-22
+
+The producer and checked handoff wire path use the same exported module-scoped extractionDocumentCodec from Handoff.model. This preserves identical document verification and avoids constructing a schema or compiling a codec inside a call. The codec is configured for the extraction annotation document once at module scope.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Make each leaf own a private module-scoped document codec
+
+### P3: the annotation, operation, instance and office-action namespaces and the semantica lab terms are declared at a minor release, 2026-11-22
+
+Kind IRIs enter every `annotation/v1` preimage and the OA export, so they leave the process and must be declared terms (decision `p1-registry-first-fold-terms-declared`); no shard declares them on this base. New shards: `annotation` (`https://beep-effect.com/ns/annotation/`) with the ten kinds `Section`, `Paragraph`, `Title`, `Figure`, `Sentence`, `Word`, `Mention`, `Chunk`, `RelationCandidate`, `CorefCandidate`; `operation` (`https://beep-effect.com/ns/operation/`) with `Extract`; `instance` (`https://beep-effect.com/ns/instance/`) with no terms, the namespace content-addressed instance IRIs are minted under; `office-action` (`https://beep-effect.com/ns/office-action/`) with the four extraction labels `office_action`, `claim`, `rejection_reference` and `distinction` as locals, product vocabulary owned by law-practice.
+
+The existing empty `semantica` shard gains its entity types (`person`, `organization`, `method`), its structure roles (`title`, `abstract`, `section`, `reference`), `relation-endpoint` and its six relation predicates as one-segment locals (`affiliatedWith`, `authoredBy`, `locatedIn`, `reEvaluatesClaimDueTo`, `selected`, `shows`); semantica keeps a label-to-term table for the strings its fixtures hold. The design generators' `annotation/class/*` and `annotation/predicate/relatedTo` IRIs, which have two-segment locals, are replaced by these terms.
+
+Additions need no deprecation record; the snapshot release is the minor bump the writer computes against the base (2.0.0 to 2.1.0 if nothing else lands first). Production reads every one of these IRIs through `@beep/identity/Registry`.
+
+The existing empty `lejeune` shard (`https://beep-effect.com/ns/lejeune/ontology/`) gains `project`, `delivery_date` and `finish`, the three targets of the lejeune provider smoke.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Drop a shard and its read sites by a decision file before P3 merges; after the merge a published term leaves only with a deprecation record
+
+### P3: semantica grounds unmapped-predicate residuals for the E5 replay; the handoff keeps declared predicates only, 2026-11-22
+
+The offline E5 replay contains pre-freeze non-empty predicates outside the six FrozenRelationPredicate surfaces. The strict handoff keeps them as unmapped-predicate residuals with the aligner's anchor. By the orchestrator ruling, semantica alone grounds these residuals with its existing evidence-scoped unique endpoint alignment, preserving the arbitrary historical predicate string. Hosted declared predicates still read RelationCandidate annotations. This departs from the letter of design section 5.4; the frozen batch, claim order, first-wins deduplication and byte-for-byte preview report remain gates. No historical predicate is declared as a registry term.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Declare a historical replay vocabulary in the semantica shard and map it in the target, by a superseding decision
+
+### P3: semantica's hosted extractor reads the handoff; the projection, the ledger and the fixtures keep their shapes, 2026-11-22
+
+`ExtractorLive` builds its `EvidenceBatch` from `ExtractionHandoff`. It reads the `Mention` annotations of its entity and structure classes (class back to label through its term table) and their anchors from the anchors table, still verified through its canonicalizer against `canonical.identity`, which is now the request's `source`. It reads depth and cluster from the readings, and the tier from the readings, so fuzzy relation evidence is still refused. It reads relation candidates with their endpoint Mentions and keeps choosing an existing entity claim at an endpoint anchor, or synthesizing a `relation-endpoint` claim, as today. It maps each residual candidate to what today's code makes of it, in today's order, from the fields the residual keeps. An aligned `unmapped-label` residual becomes today's Entity claim with its label as `entityType`, its anchor verified through the canonicalizer. Any other non-relation residual is `fabricated-span`. A relation residual is undecodable attributes (`model-output-invalid`), then an unaligned or fuzzy tier (`fabricated-span`), then an unresolved endpoint (`relation-unresolved`), placed in the chunk containing the residual's anchor. `groundHostedExtractions` becomes `groundHostedHandoff`; `canary/RelationPreview` calls it over a handoff built from the cached response. Its `relationCandidates` counts the candidates whose label is the relation target across readings and residual, and its `candidateCount` is the handoff's. Commit 1 freezes the preview report of the committed cases from today's code, and commit 8 compares the new report with it; the fixture `relation-preview.json` lists the cases only and proves nothing by staying unchanged.
+
+`RdfProjectionLive` reads `EvidenceBatch`, which does not change shape, so "the semantica projection reads it" is met through the extractor that feeds the projection; `g-projection.json` waits for P5. The PGlite ledger is a per-run lab directory under a gitignored root whose payloads keep their shape; by this record it is outside the stored-format law. The `evidenceConfidence` default of `1` stays until P4.
+
+The extractor grounds in two passes, as today, where every non-relation claim is built before any relation is grounded against all of them. Pass one walks, in candidate order, every reading of a `Mention` of an entity or structure class and every aligned `unmapped-label` residual, one claim each, so a Mention read twice with different depths or clusters gives two claims as today; the other non-relation residuals become `fabricated-span` in candidate order. Pass two walks, in candidate order, every `RelationCandidate` reading and every residual whose label is the relation target, with endpoint reuse over all of pass one's claims. Claims and degradations keep today's order, pass one's first, and the first-wins de-duplication (`ExtractorLive.ts:279`) is unchanged. Checked on a simulation of both: the two passes over the handoff give today's claim ids and degradations for 3,000 of 3,000 generated candidate lists, where one walk in model order gives them for 2,298.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Project annotations directly in RdfProjectionLive by a decision file, regenerating g-projection.json in the same PR
+
+### P3: each extraction target declares what its label annotates; the handoff mints typed relation and coreference candidates from it, 2026-11-22
+
+`ExtractionTarget` gains a required `annotates: TargetAnnotation`, a tagged union. `Mention { class: TermIri, coreference: Option<attribute name> }` reads the target's label as a class. `Relation { subject, predicate, object: attribute names; predicates: Record<string, TermIri>; endpoint: TermIri }` reads it as a relation. The prompt does not render it (`renderTarget` prints name, kind, attributes and description), so prompts and semantica's provider-cache keys do not change.
+
+A `Mention` target turns each aligned, verified candidate whose label is the target name into a `Mention { class }` over its occurrence. Mentions of one class whose readings carry the same coreference attribute value form a `CorefCandidate` when there are two or more distinct Mentions; its targets are the union of its members' targets, which enters its `annotation/v1` id. A single-member cluster stays an attribute of its reading.
+
+A `Relation` target takes the candidate's anchor as the evidence occurrence, the one target of its `RelationCandidate`, independent of the endpoints' occurrences; the ported test generator does the same, where the design module's (`ops/design/generators.ts:374-391`) used the endpoints' targets. Its subject and object attribute surfaces are aligned inside the evidence quote by the langextract aligner at fuzzy threshold 1, and only the exact, lesser and minimal-fold tiers count (semantica's `scopedEndpointAnchor` and `locateRelationEvidence`, `ExtractorLive.ts:403-437`, moved into the handoff); each is shifted by the evidence start, verified and anchored. Each endpoint is a `Mention { class: endpoint }` over its occurrence, so two relations naming one endpoint surface share one endpoint Mention by content. The handoff does not pick among other Mentions at the endpoint occurrence: semantica's endpoint reuse (`exactAnchoredEntity`, `:438-445`) chooses an entity claim by anchor and skips structure roles, a distinction the generic handoff cannot draw, and a refusal on two Mentions there could change the relation counts of the preview report. A reader that wants an entity at the endpoint reads the anchors row. An unaligned or fuzzy endpoint, a missing attribute or an unmapped predicate makes the candidate a residual with its reason (`relation-endpoint-unresolved`, `relation-attribute-missing`, `unmapped-predicate`) and its evidence anchor. A label that names no target is residual `unmapped-label`, with the aligner's anchor. Fuzzy relation evidence is kept; a reader that refuses it reads the tier from the reading, as semantica does.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move the label mapping to a separate request vocabulary, or mint candidates in each consumer, by a decision file
+
+### P3: the term snapshot keeps release 2.0.0, because the stack's base publishes no term set, 2026-11-22
+
+Decision `p3-registry-terms` expected the registry writer to release the P3 term additions as 2.0.0 to 2.1.0, "if nothing else lands first". Commit 2 ran `bun run beep identity registry --write` with its default base, the merge base of the lane with `origin/main` (`9a4f7b0258d`). That commit has no `@beep/identity` term snapshot, because the P1 registry has not merged, so the writer took its `keep` release policy (`packages/tooling/tool/cli/src/commands/Identity/Registry.ts`, `releasePolicy`): until a base publishes a term set, every edit of the P1, P2 and P3 stack is part of one unreleased change, and the committed release stays 2.0.0. `beep lint identity-registry` and `beep identity registry --check` both pass on that snapshot.
+
+The release is not set by hand and no `--base` naming the P2 lane is passed: that would release one step of an unpublished stack and bump once per layer. When a parent that publishes 2.0.0 reaches `origin/main` and the lane merges it, the writer then succeeds that snapshot. The lane regenerates at that merge, which gives 2.1.0 for these additions, and `release-regressed` in the identity-registry lint fails the lane until it does.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Regenerate with bun run beep identity registry --write --base <ref> against a ref that publishes 2.0.0, which writes 2.1.0
+
+### P3: the @beep/text law generators move to src as @beep/text/Arbitrary and take the digest as an argument, 2026-11-22
+
+The L2 laws need well-formed text, scalar-boundary ranges and `Anchored` rows, which `packages/foundation/modeling/text/test/support/generators.ts` already builds. Another package may not import a test file across packages, and a copy would trip the duplication gate. `@beep/file-processing` already ships its test engine from `src` (`src/test.ts`, served as `@beep/file-processing/test`). So `wellFormedTextWith`, `rangeIn`, `sourceFor` and `anchoredOn` move to `packages/foundation/modeling/text/src/Arbitrary.ts`, served as `@beep/text/Arbitrary`. They take a `JsoncDigest` argument instead of calling `node:crypto`, so the module stays runtime-neutral. The text tests import them from there, and the text laws cover the module fully. The annotation package's own generators (documents, document triples, containment cases) live in its `test/support`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move them back to text/test/support and give @beep/annotation its own copy under a duplication waiver, by a decision file
+
+### P3: @beep/text/Arbitrary also serves scalarRangeIn, textDigestOf and wellFormedTextOf, with the digest as the first curried argument, 2026-11-22
+
+Decision `p3-text-arbitraries-in-src` names four generators for `@beep/text/Arbitrary` (`wellFormedTextWith`, `rangeIn`, `sourceFor`, `anchoredOn`) and says they take a `JsoncDigest` argument. Three more move with them, and the digest is the first, curried argument.
+
+- `scalarRangeIn` draws the scalar-index range that `rangeIn` turns into offsets. Without it, `rangeIn` alone gives the annotation generators no range on scalar boundaries, so they would rebuild it.
+- `textDigestOf(digest)(text)` is the digest `sourceFor` writes as the capture's `textDigest`. The annotation generators need it for captures built from a document's text, as the design module's `mint.textDigest` does today.
+- `wellFormedTextOf(codePoints)` is the text-and-boundaries builder behind `wellFormedTextWith`. The narrow-alphabet and overlapping-repeat generators that stay in `packages/foundation/modeling/text/test/support/generators.ts` build their text through it, so the builder is not copied.
+
+`sourceFor(digest)(text)` and `textDigestOf(digest)(text)` take the digest first, so a test or generator fixes it once at module scope. `rangeIn` reads boundaries with `A.getUnsafe`, so the module has no unreachable fallback and its four coverage measures stay at 100 percent from the text tests alone. The narrow alphabet, the normalization pieces, `locatorStep`, `anchoredCase` and the platform SHA-256 stay in the text test support.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Keep only the four named generators in src and copy the range, digest and boundary helpers into each test support under a duplication waiver, by a decision file
+
+### P3: the deterministic Tika scaffold declares text-scaffold/1, since the capture gate refuses an unversioned engine, 2026-11-22
+
+The server standing tests use the deterministic apache-tika scaffold. Its descriptor and both ExtractionResult paths omitted engineVersion, so the versioned capture gate correctly refused review. By orchestrator ruling, the exported TIKA_TEXT_SCAFFOLD_VERSION constant is text-scaffold/1; descriptor.version and every scaffold result engineVersion use it. The engine name stays apache-tika. This is a pin of the in-process implementation, not a Java Tika version. The text and image-metadata paths have regression assertions in Tika.service.test.ts. Tika.tikaapp.ts and Tika.server.ts are untouched. The package is private, so no changeset is added. Commit 8 additionally runs package-verify for @beep/tika.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Replace the pin with the real Tika server version when the app/server path becomes the text engine
 
 ### P1 bootstrap identities use generated literals without importing the registry, 2026-11-23
 

@@ -21,7 +21,6 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -531,25 +530,24 @@ describe("Pandoc.mapping", () => {
     })
   );
 
-  it.effect("emits a safe YouTube watch URL and placeholders empty tables", () =>
-    Effect.gen(function* () {
-      // `videoId` is constrained to the bare 11-character YouTube id at the
-      // `@beep/md` model boundary (CSF-026), so a mapped id can never contain
-      // reserved characters and the emitted watch URL is always well-formed.
-      const document = Md.Document.make({
-        children: [Md.Table.make({ headerRow: false, children: [] }), Md.YouTube.make({ videoId: "ab-CD_12xyz" })],
-      });
+  it.effect(
+    "emits a well-formed YouTube watch URL from the bare 11-character id the Md model admits (CSF-026), so a mapped id cannot contain reserved characters, and placeholders empty tables",
+    () =>
+      Effect.gen(function* () {
+        const document = Md.Document.make({
+          children: [Md.Table.make({ headerRow: false, children: [] }), Md.YouTube.make({ videoId: "ab-CD_12xyz" })],
+        });
 
-      const result = yield* documentToPandoc(document);
+        const result = yield* documentToPandoc(document);
 
-      expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
-        expect.arrayContaining(["Table", "YouTube"])
-      );
-      expect(expectStr(expectPara(result.pandoc.blocks[0]).children[0]).text).toBe("[table]");
-      expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
-        "https://www.youtube.com/watch?v=ab-CD_12xyz"
-      );
-    })
+        expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
+          expect.arrayContaining(["Table", "YouTube"])
+        );
+        expect(expectStr(expectPara(result.pandoc.blocks[0]).children[0]).text).toBe("[table]");
+        expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
+          "https://www.youtube.com/watch?v=ab-CD_12xyz"
+        );
+      })
   );
 
   it.effect("retains structured table-caption text in the explicit gap projection", () =>
@@ -580,18 +578,16 @@ describe("Pandoc.mapping", () => {
 
   it.effect("rejects malformed YouTube video ids at the model boundary so the mapping cannot crash", () =>
     Effect.gen(function* () {
-      // CSF-026 guard: a hostile lone-surrogate id (which would make
-      // `encodeURIComponent` throw a `URIError`) and reserved characters are
-      // refused at the `@beep/md` schema boundary through the typed
-      // `SchemaError` channel, so they can never reach `documentToPandoc`.
       for (const hostileVideoId of ["\ud800", "a b&c", "../../etc/passwd", "tooShort"]) {
         const exit = yield* Effect.exit(decodeUnknownMdYouTube({ _tag: "youtube", videoId: hostileVideoId }));
-        pipe(exit, Exit.isFailure, assertTrue);
+        assertTrue(
+          Exit.isFailure(exit),
+          "CSF-026: the @beep/md schema refuses a lone surrogate (encodeURIComponent would throw URIError) and reserved characters before documentToPandoc"
+        );
       }
 
-      // The bare 11-character form still decodes successfully.
       const safe = yield* decodeUnknownMdYouTube({ _tag: "youtube", videoId: "M7lc1UVf-VE" });
-      expect(safe.videoId).toBe("M7lc1UVf-VE");
+      expect(safe.videoId, "the bare 11-character form still decodes").toBe("M7lc1UVf-VE");
     })
   );
 

@@ -219,11 +219,10 @@ export class ReferenceList extends S.Opaque<ReferenceList, { readonly brand: uni
     )
 ) {}
 
-const HASH = "#"; // #
-const COLON = ":"; // :
-const COMMA = ","; // ,
+const HASH = "#";
+const COLON = ":";
+const COMMA = ",";
 
-/** `[ \t]` — the only whitespace the dialect admits, per the header comment. */
 const isSpaceTab = (char: string | undefined): boolean => char === " " || char === "\t";
 
 const isDigit = (char: string | undefined): boolean => char !== undefined && char >= "0" && char <= "9";
@@ -231,7 +230,6 @@ const isDigit = (char: string | undefined): boolean => char !== undefined && cha
 const isAsciiLetter = (char: string | undefined): boolean =>
   char !== undefined && ((char >= "A" && char <= "Z") || (char >= "a" && char <= "z"));
 
-/** The index after the run of `[ \t]` starting at `from` (possibly `from` itself). */
 const skipSpaceTab: {
   (line: string, from: number): number;
   (from: number): (line: string) => number;
@@ -256,20 +254,14 @@ const ItemScan = S.TaggedUnion({
   $I.annoteSchema("ItemScan", { description: "An item, unsafe digit run or absent item in the internal scanner." })
 );
 type ItemScan = typeof ItemScan.Type;
-const ITEM_MISS: ItemScan = { _tag: "miss" };
-/** An item scan that consumed digits: a parsed item or an unsafe run. */
+const SHARED_ITEM_MISS: ItemScan = { _tag: "miss" };
 type ItemFound = Exclude<ItemScan, { readonly _tag: "miss" }>;
 
-/**
- * One list item at exactly `from`: `#<digits>` and the index one past it.
- * An unsafe digit run retains its ending offset so the caller can abandon
- * the entire candidate. A shared miss avoids allocating on non-items.
- */
 const readItem: {
   (line: string, from: number): ItemScan;
   (from: number): (line: string) => ItemScan;
 } = dual(2, (line: string, from: number): ItemScan => {
-  if (line[from] !== HASH) return ITEM_MISS;
+  if (line[from] !== HASH) return SHARED_ITEM_MISS;
   const start = from + 1;
   let index = start;
   let value = 0;
@@ -277,47 +269,28 @@ const readItem: {
     value = value * 10 + Number(line[index]);
     index += 1;
   }
-  if (index === start) return ITEM_MISS;
+  if (index === start) return SHARED_ITEM_MISS;
   return Number.isSafeInteger(value) ? { _tag: "item", value, next: index } : { _tag: "unsafe", next: index };
 });
 
-/**
- * An optional `and` at exactly `from` that must be followed by `[ \t]+`;
- * the offset after that whitespace, or `fallback` when no such `and` stands
- * there.
- */
-const scanAndSeparator = (line: string, from: number, fallback: number): number => {
+const afterAndWithTrailingSpaceTabElse = (line: string, from: number, fallback: number): number => {
   if (Str.slice(from, from + 3)(line) !== "and") return fallback;
   const afterAnd = skipSpaceTab(line, from + 3);
   return afterAnd > from + 3 ? afterAnd : fallback;
 };
 
-/**
- * One separator at exactly `from`: a comma with optional surrounding `[ \t]`
- * and an optional Oxford `and` (consumed only when its own trailing `[ \t]+`
- * is present), or a bare `and` requiring `[ \t]+` on both sides. `and` is
- * lowercase-only — the keyword head is case-insensitive, the separator is
- * not. Returns the index where the next item must start, or `from` when
- * the scan consumed no separator.
- */
-const scanSeparator: {
+const scanLowercaseOnlySeparator: {
   (line: string, from: number): number;
   (from: number): (line: string) => number;
 } = dual(2, (line: string, from: number): number => {
   const afterLeading = skipSpaceTab(line, from);
   if (line[afterLeading] === COMMA) {
     const afterComma = skipSpaceTab(line, afterLeading + 1);
-    return scanAndSeparator(line, afterComma, afterComma);
+    return afterAndWithTrailingSpaceTabElse(line, afterComma, afterComma);
   }
-  return afterLeading > from ? scanAndSeparator(line, afterLeading, from) : from;
+  return afterLeading > from ? afterAndWithTrailingSpaceTabElse(line, afterLeading, from) : from;
 });
 
-/**
- * The scan walk: item, then separator, then item, until the cursor stands
- * exactly at the end of the string. Anything else — a malformed item, an
- * unknown separator, trailing content, an unsafe issue number — is
- * `None`, and the caller rejects the whole line.
- */
 const parseItems: {
   (line: string, from: number): O.Option<A.NonEmptyReadonlyArray<number>>;
   (from: number): (line: string) => O.Option<A.NonEmptyReadonlyArray<number>>;
@@ -327,7 +300,7 @@ const parseItems: {
   const issueNumbers: A.NonEmptyArray<number> = [first.value];
   let cursor = first.next;
   while (cursor < line.length) {
-    const next = scanSeparator(line, cursor);
+    const next = scanLowercaseOnlySeparator(line, cursor);
     if (next === cursor) return O.none();
     const item = readItem(line, next);
     if (item._tag !== "item") return O.none();
@@ -547,15 +520,12 @@ export const parseClosingLists = (text: string): ReadonlyArray<ClosingList> => {
   return lists;
 };
 
-/** `[A-Za-z0-9_]` — the word-boundary alphabet the inline dialects use. */
 const isWordChar = (char: string | undefined): boolean => isAsciiLetter(char) || isDigit(char) || char === "_";
 
-/** ASCII space plus the `\t`..`\r` controls. */
 const isAsciiWhitespace = (char: string | undefined): boolean =>
   char === " " || (char !== undefined && char >= "\t" && char <= "\r");
 
-/** The isolated non-ASCII characters of the JavaScript `\s` set. */
-const UNICODE_SPACE_CHARS: HashSet.HashSet<string> = HashSet.make(
+const ISOLATED_NON_ASCII_JS_WHITESPACE: HashSet.HashSet<string> = HashSet.make(
   "\xa0",
   "\u1680",
   "\u2028",
@@ -566,19 +536,12 @@ const UNICODE_SPACE_CHARS: HashSet.HashSet<string> = HashSet.make(
   "\ufeff"
 );
 
-/** The non-ASCII members of the JavaScript `\s` set. */
-const isUnicodeSpace = (char: string | undefined): boolean =>
+const isNonAsciiJsWhitespace = (char: string | undefined): boolean =>
   (char !== undefined && char >= "\u2000" && char <= "\u200a") ||
-  (char !== undefined && HashSet.has(UNICODE_SPACE_CHARS, char));
+  (char !== undefined && HashSet.has(ISOLATED_NON_ASCII_JS_WHITESPACE, char));
 
-/**
- * The full JavaScript `\s` set, spelled as a predicate so the module keeps
- * its no-regex promise: ASCII whitespace, NEL-adjacent controls, and the
- * Unicode space separators. Only the keyword→first-item gap of
- * {@link harvestReferenceLists} admits this set — everything inside a list
- * stays `[ \t]`, per the header comment.
- */
-const isAnyWhitespace = (char: string | undefined): boolean => isAsciiWhitespace(char) || isUnicodeSpace(char);
+const isJsRegexWhitespaceWithoutARegex = (char: string | undefined): boolean =>
+  isAsciiWhitespace(char) || isNonAsciiJsWhitespace(char);
 
 /**
  * A reference list harvested out of running text by
@@ -632,46 +595,36 @@ export class HarvestedReferenceList extends S.Opaque<HarvestedReferenceList, { r
     )
 ) {}
 
-/** The index one past the ASCII letter run that starts at `from`. */
 const letterRunEnd = (text: string, from: number): number => {
   let runEnd = from + 1;
   while (runEnd < text.length && isAsciiLetter(text[runEnd])) runEnd += 1;
   return runEnd;
 };
 
-/** Whether `[runStart, runEnd)` touches a word character on either side. */
 const isWordEmbedded = (text: string, runStart: number, runEnd: number): boolean =>
   (runStart > 0 && isWordChar(text[runStart - 1])) || (runEnd < text.length && isWordChar(text[runEnd]));
 
-/** The list keyword a free-standing letter run spells, or `Option.none()`. */
-const keywordAt = (text: string, runStart: number, runEnd: number): O.Option<ListKeyword> =>
+const freeStandingKeywordAt = (text: string, runStart: number, runEnd: number): O.Option<ListKeyword> =>
   isWordEmbedded(text, runStart, runEnd)
     ? O.none()
     : R.get(LIST_KEYWORD_BY_NAME, Str.toLowerCase(Str.slice(runStart, runEnd)(text)));
 
-/** The first item after the keyword→item gap, which admits any whitespace. */
-const readFirstItem = (text: string, runEnd: number): ItemScan => {
+const readFirstItemAfterAnyWhitespaceGap = (text: string, runEnd: number): ItemScan => {
   let cursor = runEnd;
-  while (cursor < text.length && isAnyWhitespace(text[cursor])) cursor += 1;
-  return cursor === runEnd ? ITEM_MISS : readItem(text, cursor);
+  while (cursor < text.length && isJsRegexWhitespaceWithoutARegex(text[cursor])) cursor += 1;
+  return cursor === runEnd ? SHARED_ITEM_MISS : readItem(text, cursor);
 };
 
-/**
- * Extends `issueNumbers` with every separator-and-item pair after `first`.
- * Returns the last item scan, whose `next` is the list end, or the `unsafe`
- * scan that poisons the whole candidate.
- */
-const readContinuation = (text: string, first: ItemFound, issueNumbers: A.NonEmptyArray<number>): ItemFound => {
+const readContinuationToListEndOrPoisoningUnsafe = (
+  text: string,
+  first: ItemFound,
+  issueNumbers: A.NonEmptyArray<number>
+): ItemFound => {
   let last: ItemFound = first;
   while (last._tag === "item") {
-    const next = scanSeparator(text, last.next);
+    const next = scanLowercaseOnlySeparator(text, last.next);
     if (next === last.next) break;
     const item = readItem(text, next);
-    // A separator not followed by an item is prose, not grammar: the
-    // list already ended at its last item and the separator stays
-    // unconsumed for the outer scan. One unsafe item poisons the whole
-    // candidate — never a partial list — and scanning resumes after the
-    // candidate's extent.
     if (item._tag === "miss") break;
     if (item._tag === "item") issueNumbers.push(item.value);
     last = item;
@@ -679,23 +632,18 @@ const readContinuation = (text: string, first: ItemFound, issueNumbers: A.NonEmp
   return last;
 };
 
-/**
- * Harvests the candidate list headed by `keyword` at `[runStart, runEnd)`
- * into `lists` and returns the offset where the outer scan resumes.
- */
-const harvestCandidate = (
+const harvestCandidateReturningResumeOffset = (
   text: string,
   runStart: number,
   runEnd: number,
   keyword: ListKeyword,
   lists: Array<HarvestedReferenceList>
 ): number => {
-  const first = readFirstItem(text, runEnd);
-  // No valid first item: resume right after the keyword run.
+  const first = readFirstItemAfterAnyWhitespaceGap(text, runEnd);
   if (first._tag === "miss") return runEnd;
   if (first._tag === "unsafe") return first.next;
   const issueNumbers: A.NonEmptyArray<number> = [first.value];
-  const tail = readContinuation(text, first, issueNumbers);
+  const tail = readContinuationToListEndOrPoisoningUnsafe(text, first, issueNumbers);
   if (tail._tag === "unsafe") return tail.next;
   lists.push(
     HarvestedReferenceList.make({
@@ -709,15 +657,11 @@ const harvestCandidate = (
   return tail.next;
 };
 
-/**
- * Scans the letter run at `runStart`, harvesting a list when it is a
- * free-standing keyword, and returns the offset where the outer scan resumes.
- */
 const harvestAtLetterRun = (text: string, runStart: number, lists: Array<HarvestedReferenceList>): number => {
   const runEnd = letterRunEnd(text, runStart);
-  return O.match(keywordAt(text, runStart, runEnd), {
+  return O.match(freeStandingKeywordAt(text, runStart, runEnd), {
     onNone: () => runEnd,
-    onSome: (keyword) => harvestCandidate(text, runStart, runEnd, keyword, lists),
+    onSome: (keyword) => harvestCandidateReturningResumeOffset(text, runStart, runEnd, keyword, lists),
   });
 };
 

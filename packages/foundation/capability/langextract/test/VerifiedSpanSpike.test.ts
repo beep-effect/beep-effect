@@ -1,32 +1,24 @@
 import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
 import {
-  convertTextOffsetRange,
   locateGroundedExtractions,
   locateRawText,
   normalizeTextLocator,
   RawTextChunk,
   reconstructSourceText,
-  TextOffsetRange,
-  Utf16TextRange,
 } from "@beep/langextract/VerifiedSpan";
-import { Contract } from "@beep/nlp/Handoff";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-
-const decodeTextOffsetRangeResult = S.decodeResult(TextOffsetRange);
-const decodeUtf16TextRangeResult = S.decodeResult(Utf16TextRange);
-const encodeUnknownTextOffsetRangeResult = S.encodeUnknownResult(TextOffsetRange);
-const encodeUnknownUtf16TextRangeResult = S.encodeUnknownResult(Utf16TextRange);
 
 // Letters whose NFKC form starts with a combining mark, beside the text that shows a wrong cluster:
 // bases that compose, marks of different canonical classes, conjoining and halfwidth Jamo, compatibility
@@ -57,16 +49,12 @@ describe("verified-span hostile-text contract", () => {
     "uses canonical half-open UTF-16 code-unit offsets for surrogate pairs",
     Effect.fnUntraced(function* () {
       const source = "A😀B";
-      const converted = yield* convertTextOffsetRange(source)(
-        TextOffsetRange.make({
-          end: S.Natural.make(2),
-          start: S.Natural.make(1),
-          unit: "unicode-code-point",
-        })
+      const converted = Result.getOrThrow(
+        convertPosition("utf16-code-unit", source)(Position.make({ end: 2, start: 1, unit: "unicode-code-point" }))
       );
       const anchor = yield* locateRawText("😀")(source);
 
-      expect(converted).toEqual({ endChar: 3, startChar: 1 });
+      expect(converted).toMatchObject({ end: 3, start: 1, unit: "utf16-code-unit" });
       expect(anchor).toEqual({ endChar: 3, quote: "😀", startChar: 1 });
       expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
     })
@@ -329,8 +317,11 @@ describe("verified-span hostile-text contract", () => {
         [
           GroundedExtraction.cases.match_fuzzy.make({
             label: "quotation",
-            matchedText: "“Affirmed.”",
-            span: Contract.Span.make({ end: S.Natural.make(27), start: S.Natural.make(16) }),
+            anchor: TextAnchor.make({
+              endChar: S.Natural.make(27),
+              quote: "“Affirmed.”",
+              startChar: S.Natural.make(16),
+            }),
             text: '"Affrmed."',
           }),
         ],
@@ -383,36 +374,19 @@ describe("verified-span hostile-text contract", () => {
     })
   );
 
-  it.effect(
-    "validates both declared offset units against source boundaries",
-    Effect.fnUntraced(function* () {
-      const emptySource = yield* convertTextOffsetRange(
-        TextOffsetRange.make({ end: S.Natural.make(1), start: S.Natural.make(0), unit: "utf16-code-unit" }),
-        ""
-      ).pipe(Effect.flip);
-      const utf16Range = yield* convertTextOffsetRange(
-        TextOffsetRange.make({ end: S.Natural.make(3), start: S.Natural.make(1), unit: "utf16-code-unit" }),
-        "A😀B"
-      );
-      const splitSurrogate = yield* convertTextOffsetRange(
-        TextOffsetRange.make({ end: S.Natural.make(2), start: S.Natural.make(1), unit: "utf16-code-unit" }),
-        "A😀B"
-      ).pipe(Effect.flip);
-      const missingCodePoint = yield* convertTextOffsetRange(
-        TextOffsetRange.make({
-          end: S.Natural.make(4),
-          start: S.Natural.make(1),
-          unit: "unicode-code-point",
-        }),
-        "A😀B"
-      ).pipe(Effect.flip);
+  it("validates both declared offset units against source boundaries through convertPosition", () => {
+    const toUtf16 = (position: Position, source: string) => convertPosition(position, "utf16-code-unit", source);
+    const emptySource = toUtf16(Position.make({ end: 1, start: 0, unit: "utf16-code-unit" }), "");
+    const utf16Range = toUtf16(Position.make({ end: 3, start: 1, unit: "utf16-code-unit" }), "A😀B");
+    const splitSurrogate = toUtf16(Position.make({ end: 2, start: 1, unit: "utf16-code-unit" }), "A😀B");
+    const missingCodePoint = toUtf16(Position.make({ end: 4, start: 1, unit: "unicode-code-point" }), "A😀B");
 
-      expect(emptySource.reason).toBe("absent-text");
-      expect(utf16Range).toEqual({ endChar: 3, startChar: 1 });
-      expect(splitSurrogate.reason).toBe("invalid-offset");
-      expect(missingCodePoint.reason).toBe("invalid-offset");
-    })
-  );
+    const reasonOf = (result: typeof emptySource) => O.map(Result.getFailure(result), (refused) => refused.reason);
+    assertSome(reasonOf(emptySource), "out-of-range");
+    expect(Result.getOrThrow(utf16Range)).toMatchObject({ end: 3, start: 1 });
+    assertSome(reasonOf(splitSurrogate), "split-boundary");
+    assertSome(reasonOf(missingCodePoint), "out-of-range");
+  });
 
   it.effect(
     "fails closed at reconstruction and extraction source limits",
@@ -437,87 +411,4 @@ describe("verified-span hostile-text contract", () => {
       expect(oversizedBatchSource.reason).toBe("limit-exceeded");
     })
   );
-
-  it("rejects empty and reversed ranges at construction and decode boundaries", () => {
-    expect(() =>
-      TextOffsetRange.make({
-        end: S.Natural.make(1),
-        start: S.Natural.make(1),
-        unit: "utf16-code-unit",
-      })
-    ).toThrow();
-    expect(() =>
-      Utf16TextRange.make({
-        endChar: S.Natural.make(1),
-        startChar: S.Natural.make(2),
-      })
-    ).toThrow();
-    pipe(
-      decodeTextOffsetRangeResult({
-        end: 1,
-        start: 2,
-        unit: "unicode-code-point",
-      }),
-      Result.isFailure,
-      assertTrue
-    );
-    pipe(decodeUtf16TextRangeResult({ endChar: 0, startChar: 0 }), Result.isFailure, assertTrue);
-  });
-
-  it.prop(
-    "derives only ordered, round-trippable ranges from both schemas",
-    { offsetRange: Arbitrary.schema(TextOffsetRange), utf16Range: Arbitrary.schema(Utf16TextRange) },
-    ({ offsetRange, utf16Range }) => {
-      const encodedOffsetRange = Result.getOrThrow(encodeUnknownTextOffsetRangeResult(offsetRange));
-      const encodedUtf16Range = Result.getOrThrow(encodeUnknownUtf16TextRangeResult(utf16Range));
-      const decodedOffsetRange = Result.getOrThrow(decodeTextOffsetRangeResult(encodedOffsetRange));
-      const decodedUtf16Range = Result.getOrThrow(decodeUtf16TextRangeResult(encodedUtf16Range));
-
-      expect(offsetRange.start).toBeLessThan(offsetRange.end);
-      expect(utf16Range.startChar).toBeLessThan(utf16Range.endChar);
-      expect(S.toEquivalence(TextOffsetRange)(decodedOffsetRange, offsetRange)).toBe(true);
-      expect(S.toEquivalence(Utf16TextRange)(decodedUtf16Range, utf16Range)).toBe(true);
-    },
-    { arbitrary: fcRuns(50) }
-  );
 });
-
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
-it.effect("encodes TextOffsetRange through its generation link", () =>
-  Effect.gen(function* () {
-    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
-      TextOffsetRange.ast
-    ).annotations;
-    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
-    if (link === undefined || link.transformation._tag !== "Transformation")
-      throw new Error("Missing generation transformation");
-    const value = TextOffsetRange.make({
-      start: S.Natural.make(1),
-      end: S.Natural.make(4),
-      unit: "utf16-code-unit",
-    });
-    const codec = S.make<S.Codec<TextOffsetRange, unknown>>(
-      SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(TextOffsetRange.ast), link.transformation)
-    );
-    const value1 = yield* S.encodeEffect(codec)(value);
-    expect(value1).toEqual(value);
-  })
-);
-
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
-it.effect("encodes Utf16TextRange through its generation link", () =>
-  Effect.gen(function* () {
-    const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(
-      Utf16TextRange.ast
-    ).annotations;
-    const link = annotations?.toCodecArbitrary?.({ typeParameters: [], constraint: undefined });
-    if (link === undefined || link.transformation._tag !== "Transformation")
-      throw new Error("Missing generation transformation");
-    const value = Utf16TextRange.make({ startChar: S.Natural.make(1), endChar: S.Natural.make(4) });
-    const codec = S.make<S.Codec<Utf16TextRange, unknown>>(
-      SchemaAST.decodeTo(S.Unknown.ast, SchemaAST.toType(Utf16TextRange.ast), link.transformation)
-    );
-    const value2 = yield* S.encodeEffect(codec)(value);
-    expect(value2).toEqual(value);
-  })
-);

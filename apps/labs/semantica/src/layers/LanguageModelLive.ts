@@ -10,6 +10,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Model from "effect/ai/Model";
 import * as Response from "effect/ai/Response";
 import * as Config from "effect/Config";
 import * as Digest from "effect/crypto/Digest";
@@ -361,7 +362,12 @@ export const LanguageModelRuntimeLive = <E, R>(live: Layer.Layer<LanguageModel.L
  * @category layers
  * @since 0.0.0
  */
-export const ActiveModelIdentityLive = (identity: ModelIdentity) => Layer.succeed(ActiveModelIdentity, identity);
+export const ActiveModelIdentityLive = (identity: ModelIdentity) =>
+  Layer.mergeAll(
+    Layer.succeed(ActiveModelIdentity, identity),
+    Layer.succeed(Model.ProviderName, identity.provider),
+    Layer.succeed(Model.ModelName, identity.name)
+  );
 
 /**
  * Requires a dated or explicitly versioned model id and retains it verbatim as
@@ -487,7 +493,9 @@ export const AnthropicExtractionLanguageModelLive = (artifactHash: ModelIdentity
   Layer.unwrap(
     Effect.gen(function* () {
       const model = yield* Config.NonEmptyString(ANTHROPIC_MODEL_ENV).pipe(Config.withDefault(ANTHROPIC_DEFAULT_MODEL));
-      const identity = Layer.effect(ActiveModelIdentity, AnthropicExtractionModelIdentity({ artifactHash, model }));
+      const identity = Layer.unwrap(
+        AnthropicExtractionModelIdentity({ artifactHash, model }).pipe(Effect.map(ActiveModelIdentityLive))
+      );
       const languageModel = CachingLanguageModelLive(AnthropicLanguageModelLive).pipe(Layer.provide(identity));
       return Layer.merge(languageModel, identity);
     })

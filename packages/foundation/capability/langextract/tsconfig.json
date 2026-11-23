@@ -9,10 +9,13 @@
   },
   "references": [
     {
+      "path": "../../modeling/annotation/tsconfig.json"
+    },
+    {
       "path": "../../modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../modeling/nlp/tsconfig.json"
+      "path": "../../modeling/jsonc/tsconfig.json"
     },
     {
       "path": "../../modeling/schema/tsconfig.json"

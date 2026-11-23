@@ -28,8 +28,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-// The package root initializes Node WebIDL wrappers. These pure subpaths keep
-// the author-validity algorithm exact without pulling that layer into browsers.
+// decision: whatwg-url-pure-subpaths
 import { parseURL } from "whatwg-url/lib/url-state-machine.js";
 import { isValidURLString } from "whatwg-url/lib/url-string-validator.js";
 import { stripHtmlAsciiWhitespace, tokenizeHtmlSpaceSeparated } from "./Html.attributes.ts";
@@ -1770,8 +1769,6 @@ const inspectElementOrder = (
     children,
     (child) => child._tag === "#text" && isString(child.value) && Str.isNonEmpty(stripHtmlAsciiWhitespace(child.value))
   );
-  // Content-model order ignores comments and inter-element whitespace; every
-  // other direct child is significant.
   const firstSignificantChild = A.head(significantChildren);
   const issue = (message: string): ReadonlyArray<HtmlConformanceIssue> => [makeIssue(path, "elementOrder", message)];
   const oneAtEdge = (tag: HtmlTag, edge: "first" | "either"): boolean => {

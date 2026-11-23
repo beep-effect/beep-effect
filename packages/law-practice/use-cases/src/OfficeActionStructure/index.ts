@@ -8,5 +8,7 @@
 /** Office-action errors exports. @category services @since 0.0.0 */
 export * from "./OfficeActionStructure.errors.ts";
 export * from "./OfficeActionStructure.ports.ts";
+/** Office-action attempt-log read codec exports. @category codecs @since 0.0.0 */
+export * from "./OfficeActionStructure.read.ts";
 /** Office-action service exports. @category services @since 0.0.0 */
 export * from "./OfficeActionStructure.service.ts";

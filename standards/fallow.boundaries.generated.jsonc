@@ -84,6 +84,12 @@
         ]
       },
       {
+        "name": "@beep/annotation",
+        "patterns": [
+          "packages/foundation/modeling/annotation/src/**"
+        ]
+      },
+      {
         "name": "@beep/anthropic",
         "patterns": [
           "packages/drivers/anthropic/src/**"
@@ -1600,6 +1606,29 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/annotation",
+        "allow": [
+          "@beep/annotation",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/text"
+        ],
+        "allowTypeOnly": [
+          "@beep/annotation",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/text"
         ]
       },
       {
@@ -3344,9 +3373,10 @@
       {
         "from": "@beep/langextract",
         "allow": [
+          "@beep/annotation",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
-          "@beep/nlp",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3354,9 +3384,10 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
-          "@beep/nlp",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3490,6 +3521,7 @@
       {
         "from": "@beep/law-practice-use-cases",
         "allow": [
+          "@beep/annotation",
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
@@ -3502,6 +3534,7 @@
           "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3509,6 +3542,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
@@ -3521,6 +3555,7 @@
           "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3538,7 +3573,6 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/lejeune-bolt-workbench",
-          "@beep/nlp",
           "@beep/oxigraph",
           "@beep/pglite",
           "@beep/rdf",
@@ -3557,7 +3591,6 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/lejeune-bolt-workbench",
-          "@beep/nlp",
           "@beep/oxigraph",
           "@beep/pglite",
           "@beep/rdf",
@@ -3856,6 +3889,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3864,6 +3898,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -3904,6 +3939,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3914,6 +3950,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -5640,6 +5677,7 @@
       {
         "from": "@beep/semantica",
         "allow": [
+          "@beep/annotation",
           "@beep/anthropic",
           "@beep/doc-text",
           "@beep/duckdb",
@@ -5663,6 +5701,7 @@
           "@beep/wink"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/anthropic",
           "@beep/doc-text",
           "@beep/duckdb",
@@ -6170,6 +6209,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -6181,6 +6221,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/wink"
         ]

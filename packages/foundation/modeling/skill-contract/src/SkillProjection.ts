@@ -468,9 +468,6 @@ const checkForRender = (
   committed: string
 ): readonly [SkillArtifactCheck, O.Option<SkillArtifactDenialReason>] =>
   Result.match(rendered, {
-    // Md.render fails when its adapter throws, and a well-typed projection
-    // reaches that: the JSON frontmatter is canonical RFC 8785 text, which
-    // refuses a contract string holding an unpaired surrogate.
     onFailure: (error) => [
       SkillArtifactCheck.make({
         check: "rerender-byte-equality",

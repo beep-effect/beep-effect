@@ -7,16 +7,22 @@
 
 import { ANTHROPIC_DEFAULT_MODEL, AnthropicLanguageModelLive } from "@beep/anthropic";
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { AlignedStatus } from "@beep/langextract/Alignment";
-import { GroundedExtraction, LangExtractRequest } from "@beep/langextract/Extraction";
+import { iri } from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
+import { LangExtractRequest } from "@beep/langextract/Extraction";
 import {
   allowRemoteExtractionPolicyLayer,
   LangExtractService,
   layer as LangExtractServiceLive,
 } from "@beep/langextract/Service";
-import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@beep/langextract/Target";
-import { DocumentId } from "@beep/nlp/Core";
+import { ExtractionExample, ExtractionExampleItem, ExtractionTarget, TargetAnnotation } from "@beep/langextract/Target";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  SourceTextLocator,
+} from "@beep/text/SourceTextIdentity";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -25,8 +31,9 @@ import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -41,6 +48,7 @@ import {
 import { IsoTimestamp } from "@/domain/Ontology";
 import { RFQ_A_OUTLOOK_BODY } from "@/fixtures/Sources";
 import { verifyProviderRecording } from "@/workflows/ProviderRecording";
+import type { ExtractionReading } from "@beep/langextract/Handoff";
 
 const decodeProviderCandidateListFromJsonString = S.decodeEffect(ProviderCandidateListFromJsonString);
 const decodeUnknownProviderCandidate = S.decodeUnknownEffect(ProviderCandidate);
@@ -122,24 +130,47 @@ const configuredRecordingMode = Config.String("LEJEUNE_RECORDING_MODE").pipe(
   )
 );
 
-const request = LangExtractRequest.make({
-  documentId: DocumentId.make("lejeune-provider-smoke-rfq-a"),
-  examples: [
-    ExtractionExample.make({
-      extractions: [
-        ExtractionExampleItem.make({ label: "project", text: "River Pier Retrofit" }),
-        ExtractionExampleItem.make({ label: "delivery_date", text: "2026-09-01" }),
-        ExtractionExampleItem.make({ label: "finish", text: "plain" }),
-      ],
-      text: "SYNTHETIC RFQ | Project River Pier Retrofit | Delivery 2026-09-01 | Finish plain",
+const makeRequest = Effect.fn("LeJeuneProviderSmoke.request")(function* () {
+  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(strToU8(RFQ_A_OUTLOOK_BODY));
+  return LangExtractRequest.make({
+    source: SourceTextIdentity.make({
+      scopeRef: "lejeune-provider-smoke-rfq-a",
+      sourceRef: "lejeune-provider-smoke-rfq-a",
+      locator: SourceTextLocator.make("rfq-a.txt"),
+      sourceDigest: SourceTextDigest.make(`sha256:${digest}`),
+      textDigest: SourceTextDigest.make(`sha256:${digest}`),
+      extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
+      normalizationVersion: "raw/1",
     }),
-  ],
-  targets: [
-    ExtractionTarget.make({ kind: "entity", name: "project" }),
-    ExtractionTarget.make({ kind: "attribute", name: "delivery_date" }),
-    ExtractionTarget.make({ kind: "attribute", name: "finish" }),
-  ],
-  text: RFQ_A_OUTLOOK_BODY,
+    examples: [
+      ExtractionExample.make({
+        extractions: [
+          ExtractionExampleItem.make({ label: "project", text: "River Pier Retrofit" }),
+          ExtractionExampleItem.make({ label: "delivery_date", text: "2026-09-01" }),
+          ExtractionExampleItem.make({ label: "finish", text: "plain" }),
+        ],
+        text: "SYNTHETIC RFQ | Project River Pier Retrofit | Delivery 2026-09-01 | Finish plain",
+      }),
+    ],
+    targets: [
+      ExtractionTarget.make({
+        kind: "entity",
+        name: "project",
+        annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("lejeune:project")) }),
+      }),
+      ExtractionTarget.make({
+        kind: "attribute",
+        name: "delivery_date",
+        annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("lejeune:delivery_date")) }),
+      }),
+      ExtractionTarget.make({
+        kind: "attribute",
+        name: "finish",
+        annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("lejeune:finish")) }),
+      }),
+    ],
+    text: RFQ_A_OUTLOOK_BODY,
+  });
 });
 
 const removeOwnedTemporary = Effect.fn("LeJeuneProviderSmoke.removeOwnedTemporary")(function* (temporary: string) {
@@ -281,6 +312,7 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
   );
   yield* Effect.annotateCurrentSpan("lejeune.provider", provider);
   yield* Effect.annotateCurrentSpan("lejeune.recording_target", target.kind);
+  const request = yield* makeRequest();
   const result = yield* service
     .extract(request)
     .pipe(
@@ -288,7 +320,17 @@ const recordProviderSmoke = Effect.fn("LeJeuneProviderSmoke.record")(function* (
         providerSmokeErrorWithCause("provider-extraction", "The selected provider extraction failed.", cause)
       )
     );
-  const groundedExtractions = pipe(result.extractions, A.filter(GroundedExtraction.isAnyOf(AlignedStatus.literals)));
+  if (A.some(result.handoff.residual, (candidate) => candidate.reason === "unmapped-label")) {
+    return yield* providerSmokeError(
+      "provider-extraction",
+      "The provider returned a candidate outside the authorized label set."
+    );
+  }
+  const groundedExtractions = result.handoff.readings.pipe(
+    HashMap.toValues,
+    A.flatten,
+    A.sort(Order.mapInput(Order.Number, (reading: ExtractionReading) => reading.candidate))
+  );
   const candidates = yield* Effect.forEach(
     groundedExtractions,
     (extraction) =>

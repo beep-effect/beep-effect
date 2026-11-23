@@ -186,7 +186,6 @@
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/langextract": "workspace:^",
-        "@beep/nlp": "workspace:^",
         "@beep/oxigraph": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/rdf": "workspace:^",
@@ -220,6 +219,7 @@
       "name": "@beep/semantica",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/anthropic": "workspace:^",
         "@beep/doc-text": "workspace:^",
         "@beep/duckdb": "workspace:^",
@@ -2156,6 +2156,7 @@
         "@beep/nlp-processing": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/text": "workspace:^",
         "@beep/utils": "workspace:^",
         "effect": "catalog:",
         "wink-eng-lite-web-model": "catalog:",
@@ -2589,8 +2590,9 @@
       "name": "@beep/langextract",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/identity": "workspace:^",
-        "@beep/nlp": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/text": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -2634,6 +2636,7 @@
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@beep/text": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
@@ -2753,6 +2756,25 @@
       "devDependencies": {
         "@beep/fc-runs": "workspace:^",
         "@beep/memfs": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/foundation/modeling/annotation": {
+      "name": "@beep/annotation",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
+        "@beep/rdf": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/text": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -3077,6 +3099,7 @@
       "dependencies": {
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/text": "workspace:^",
         "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
@@ -3726,6 +3749,7 @@
       "name": "@beep/law-practice-use-cases",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/epistemics": "workspace:^",
@@ -3744,6 +3768,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/semantic-web": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
@@ -5371,6 +5396,8 @@
     "@beep/alchemy-postgres": ["@beep/alchemy-postgres@workspace:packages/drivers/alchemy-postgres"],
 
     "@beep/alchemy-vercel": ["@beep/alchemy-vercel@workspace:packages/tooling/library/alchemy-vercel"],
+
+    "@beep/annotation": ["@beep/annotation@workspace:packages/foundation/modeling/annotation"],
 
     "@beep/anthropic": ["@beep/anthropic@workspace:packages/drivers/anthropic"],
 

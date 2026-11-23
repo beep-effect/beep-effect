@@ -50,6 +50,7 @@
     {"name":"MailTaggingUndo.restore","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"MailTaggingUndo.run","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"MailTaggingUndo.undoEntry","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
+    {"name":"OfficeActionReview.extractionRequestFrom","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"OfficeActionStructure.extract","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"OfficeActionStructure.fromExtractions","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"PatentClaimCandidate.from","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},

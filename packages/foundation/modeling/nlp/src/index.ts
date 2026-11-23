@@ -37,7 +37,7 @@ export * as Algebra from "./Algebra/index.ts";
  */
 export * as Core from "./Core/index.ts";
 /**
- * Text-graph IR: node/edge schema classes (the handoff-contract basis).
+ * Text-graph IR: linguistic node and edge schema classes.
  *
  * **Example** (Log text node schema)
  *
@@ -51,22 +51,6 @@ export * as Core from "./Core/index.ts";
  * @since 0.0.0
  */
 export * as Graph from "./Graph/index.ts";
-/**
- * The product-neutral generic IR handoff contract emitted for downstream
- * consumers (chunks/mentions/entities/relations + spans + PROV-O provenance).
- *
- * **Example** (Log annotated document contract)
- *
- * ```ts
- * import * as Handoff from "@beep/nlp/Handoff"
- *
- * console.log(Handoff.Contract.AnnotatedDocument)
- * ```
- *
- * @category interop
- * @since 0.0.0
- */
-export * as Handoff from "./Handoff/index.ts";
 /**
  * Deterministic identifier tokenization and variant helpers.
  *
@@ -83,21 +67,6 @@ export * as Handoff from "./Handoff/index.ts";
  * @since 0.0.0
  */
 export * as IdentifierText from "./IdentifierText.ts";
-/**
- * Type-level ontology of text strata (kinds) and the containment poset.
- *
- * **Example** (Check kind containment)
- *
- * ```ts import.meta.vitest name="Check kind containment"
- * import * as Ontology from "@beep/nlp/Ontology"
- *
- * Ontology.Kind.canContain("Document", "Sentence") // => true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * as Ontology from "./Ontology/index.ts";
 /**
  * Deterministic path and module-specifier normalization helpers.
  *

@@ -1,6 +1,7 @@
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { DuplicateDomainTag, PreimageRegistry } from "@beep/jsonc/Mint";
 import { it } from "@beep/test-runner";
+import { CapturePreimage } from "@beep/text/Capture";
 import { OccurrencePreimage } from "@beep/text/Occurrence";
 import { QuoteKeyPreimage } from "@beep/text/QuoteKey";
 import { describe, expect } from "@effect/vitest";
@@ -16,15 +17,17 @@ import { sha256 } from "./support/generators.ts";
 import { firstCitation } from "./support/goldens.ts";
 
 const handWrittenOccurrenceBytes = `["occurrence/v1","matter:example","source:example","documents/source.txt","sha256:${Str.repeat(64)("a")}","sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","utf8","1","1","utf16-code-unit",3,11,"1 U.S. 1"]`;
+const handWrittenCaptureBytes = `["capture/v1","matter:example","source:example","documents/source.txt","sha256:${Str.repeat(64)("a")}","sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","utf8","1","1"]`;
 const handWrittenQuoteKeyBytes = '["quote-key/v1","nfkc-dehyphenate/v1","1 U.S. 1"]';
 
-const registry = () => PreimageRegistry.make([OccurrencePreimage, QuoteKeyPreimage]);
+const registry = () => PreimageRegistry.make([OccurrencePreimage, QuoteKeyPreimage, CapturePreimage]);
 
 describe("@beep/text preimages", () => {
-  it("registers both preimages under distinct domain tags and verifies both goldens", () => {
-    expect(A.map([OccurrencePreimage, QuoteKeyPreimage], (preimage) => preimage.domainTag)).toEqual([
+  it("registers the three preimages under distinct domain tags and verifies their goldens", () => {
+    expect(A.map([OccurrencePreimage, QuoteKeyPreimage, CapturePreimage], (preimage) => preimage.domainTag)).toEqual([
       "occurrence/v1",
       "quote-key/v1",
+      "capture/v1",
     ]);
     assertSuccess(registry().pipe(Result.flatMap((declared) => declared.verifyGoldensResult(sha256))), undefined);
   });
@@ -40,6 +43,7 @@ describe("@beep/text preimages", () => {
     for (const [preimage, bytes] of [
       [OccurrencePreimage, handWrittenOccurrenceBytes],
       [QuoteKeyPreimage, handWrittenQuoteKeyBytes],
+      [CapturePreimage, handWrittenCaptureBytes],
     ] as const) {
       assertSuccess(
         JsoncFingerprint.canonicalizeResult(A.prepend(preimage.golden.preimage, preimage.domainTag)),
@@ -53,6 +57,7 @@ describe("@beep/text preimages", () => {
     expect(QuoteKeyPreimage.golden.hash).toBe(
       "sha256:4d35c407eaeb249dd409c6f6e33515178a35b09ce1bfc6f088dfdf459c69c7ab"
     );
+    expect(CapturePreimage.golden.hash).toBe("sha256:c7f8616c75be6548d508e2e6a071d3400673dd915454e7e90d97f26bb967eed6");
   });
 
   it("decodes the occurrence golden to the anchors row of the first citation", () => {
@@ -71,7 +76,7 @@ describe("@beep/text preimages", () => {
 });
 
 it.layer(Digest.layerWebCrypto)("@beep/text preimages through the Digest service", (it) => {
-  it.effect("verifies both goldens", () =>
+  it.effect("verifies the three goldens", () =>
     Effect.fromResult(registry()).pipe(Effect.flatMap((declared) => declared.verifyGoldens()))
   );
 });

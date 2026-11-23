@@ -686,14 +686,6 @@
       "reason": "Lossless editor-state envelope whose root and nested nodes admit arbitrary future extension keys. S.StructWithRest preserves those keys exactly; an S.Class would close the envelope and violate the property-tested wire identity contract."
     },
     {
-      "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
-      "symbol": "SpanFields",
-      "kind": "unbranded-schema-class",
-      "status": "exception",
-      "owner": "@beep/nlp",
-      "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Private span shape behind the exported Contract.Span refinement; nested `span: { start, end }` literals are built across langextract, file-processing, law-practice and semantica and the class is not nameable outside nlp. Follow-up: export a Span constructor and brand it. Follow-up: brand nominally once the blocker above is removed."
-    },
-    {
       "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
       "symbol": "OntologyFoldInput",
       "kind": "exported-type-literal",

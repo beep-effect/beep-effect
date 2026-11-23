@@ -31,11 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Low-risk stacks (started 2026-11-13), in parallel with P2: Storybook is live on Alchemy
-(PR #3289; Pulumi stack `beep-storybook/production` removed); the turbo cache's stage 1 (the
-`@beep/infra-turbo-cache` Worker and R2 stack, deployed beside the live caches) is in its PR; cost
-controls and GitHub are in flight. Turbo-cache stage 2 (CI enrolment) and the P5 runner fleet wait for
-the ci-lane-economics window-5 verdict (2026-11-20T20:10Z).
+P5 Runner fleet: the new fleet serves CI. The fleet-watch App's environment is live (#3510), and the
+standing missed-event check (#3499) follows. Then come the old fleet's drain and destroy. P4's hosts
+half (AI metrics, after P5) and P6-P8 follow.
+
+P3 Low-risk stacks closed 2026-11-23: Storybook, the turbo cache, cost controls and GitHub are live on
+Alchemy. CI reads the Worker cache, and no live Pulumi program remains for any of them
+(`decisions/2026-11-23-p3-low-risk-stacks-complete.md`).
 
 P2 Providers closed 2026-11-14: `@beep/alchemy-aws-extras` (#3292), `@beep/alchemy-vercel` (#3290) and
 `@beep/alchemy-github-runners` (#3291 for the Lambdas, #3314 for the composite) each pass `package-verify`, with
@@ -45,6 +47,7 @@ or replace.
 
 ## Latest Evidence
 
+- 2026-11-23 P3 exit: Storybook (#3289), turbo cache (stage 2 plus #3380/#3385/#3389/#3390; main run 45225209782 Docgen `Cached: 197 cached, 200 total` on the Worker), cost controls (#3320) and GitHub (run 45253869434); `decisions/2026-11-23-p3-low-risk-stacks-complete.md`.
 - 2026-11-14 P2 exit: #3292 (aws-extras), #3290 (vercel), #3291 (runner Lambdas) and #3314 (`RunnerFleet`, `RunnerSweep`, runner user data, composing `RunnerLaunchTemplate`); `decisions/2026-11-14-p2-providers-complete.md`.
 - 2026-11-13 P3 turbo cache stage 1: personal-stage live proof on the Worker (remote miss then hit, read-only upload refused), stage destroyed (`decisions/2026-11-13-personal-stage-deploy-proof-blocked-the-alchemy-cloudflare-token-has-no-r2-permission.md`).
 - 2026-11-13 P3 Storybook live: `decisions/2026-11-13-storybook-is-live-on-alchemy-pulumi-stack-beep-storybook-production-removed.md`.

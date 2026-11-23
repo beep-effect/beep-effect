@@ -1,0 +1,539 @@
+[
+  {
+    "batch": {
+      "id": "05f50d8098b2b2e4eac14f81432f960e249c07b40761c27b904d46af6933b4fd",
+      "document": "1111111111111111111111111111111111111111111111111111111111111111",
+      "method": "hosted-langextract",
+      "model": {
+        "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "stub-extractor-20260826",
+        "provider": "anthropic",
+        "revision": "stub-extractor-20260826",
+        "taskType": "extraction"
+      },
+      "inputs": [
+        "1c7c27effbf59073be6de49a2a44e1146ce4d464024f128ce65369f6da85b05f"
+      ],
+      "claims": [
+        {
+          "id": "17e008d49b083e2d7c20b5ef20dca4276ceff77113efe20b3673b3e8a90f5515",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "1c7c27effbf59073be6de49a2a44e1146ce4d464024f128ce65369f6da85b05f",
+          "body": {
+            "kind": "Entity",
+            "label": "Ada",
+            "entityType": "person",
+            "cluster": "person-ada",
+            "startChar": 0,
+            "endChar": 3,
+            "quote": "Ada"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "4b59be808b1bc422a3828d2d4949cfe5035c09d509673177ec19f04626a9db72",
+          "receipt": {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 3,
+              "quote": "Ada"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:72105f862d22379415088e0ad0d8a0f3cc31bd78547147609ce3bb9ece60ef16",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        }
+      ],
+      "degraded": [],
+      "lossy": []
+    },
+    "name": "coreference cluster"
+  },
+  {
+    "batch": {
+      "id": "782f24a1009bfb47d4e96fc8ac3aa910798da62dfd6103ffca36b2cc33bf3cb3",
+      "document": "1111111111111111111111111111111111111111111111111111111111111111",
+      "method": "hosted-langextract",
+      "model": {
+        "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "stub-extractor-20260826",
+        "provider": "anthropic",
+        "revision": "stub-extractor-20260826",
+        "taskType": "extraction"
+      },
+      "inputs": [
+        "b74eb22786519ca3e5e6d2109b0e73ea9112cf512ea1b46ee06d289c031b1843",
+        "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911"
+      ],
+      "claims": [
+        {
+          "id": "7ab0c4ad0090405db5b1b54b8ada615aa46eb9fa8372d06d280acb790faeb4a7",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911",
+          "body": {
+            "kind": "Entity",
+            "label": "Ada",
+            "entityType": "relation-endpoint",
+            "cluster": null,
+            "startChar": 17,
+            "endChar": 20,
+            "quote": "Ada"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e",
+          "receipt": {
+            "anchor": {
+              "startChar": 17,
+              "endChar": 20,
+              "quote": "Ada"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:c40bb132844e722ddb669751270210f603036b2100c3e1c55d48ceaa8331af18",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        },
+        {
+          "id": "d63098997364cf980613af14a47dc304af53d945f52fa6347090d2ebb5f8de32",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911",
+          "body": {
+            "kind": "Entity",
+            "label": "Engine",
+            "entityType": "relation-endpoint",
+            "cluster": null,
+            "startChar": 30,
+            "endChar": 36,
+            "quote": "Engine"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e",
+          "receipt": {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 36,
+              "quote": "Engine"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:c40bb132844e722ddb669751270210f603036b2100c3e1c55d48ceaa8331af18",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        },
+        {
+          "id": "4e51a752f29314f2874543dea33b47d684f924dca7fc0c0344ef2d0c4b9d3e31",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911",
+          "body": {
+            "kind": "Relation",
+            "predicate": "selected",
+            "subject": "7ab0c4ad0090405db5b1b54b8ada615aa46eb9fa8372d06d280acb790faeb4a7",
+            "object": "d63098997364cf980613af14a47dc304af53d945f52fa6347090d2ebb5f8de32",
+            "startChar": 17,
+            "endChar": 37,
+            "quote": "Ada selected Engine."
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e",
+          "receipt": {
+            "anchor": {
+              "startChar": 17,
+              "endChar": 37,
+              "quote": "Ada selected Engine."
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:c40bb132844e722ddb669751270210f603036b2100c3e1c55d48ceaa8331af18",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        }
+      ],
+      "degraded": [],
+      "lossy": []
+    },
+    "name": "synthesized relation endpoints"
+  },
+  {
+    "batch": {
+      "id": "782f24a1009bfb47d4e96fc8ac3aa910798da62dfd6103ffca36b2cc33bf3cb3",
+      "document": "1111111111111111111111111111111111111111111111111111111111111111",
+      "method": "hosted-langextract",
+      "model": {
+        "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "stub-extractor-20260826",
+        "provider": "anthropic",
+        "revision": "stub-extractor-20260826",
+        "taskType": "extraction"
+      },
+      "inputs": [
+        "b74eb22786519ca3e5e6d2109b0e73ea9112cf512ea1b46ee06d289c031b1843",
+        "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911"
+      ],
+      "claims": [
+        {
+          "id": "5ce0176cf8893692c781ff96ac9d5b3ca3929808eee7da6f525627ba5feee0e6",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911",
+          "body": {
+            "kind": "Entity",
+            "label": "Ada",
+            "entityType": "person",
+            "cluster": null,
+            "startChar": 17,
+            "endChar": 20,
+            "quote": "Ada"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e",
+          "receipt": {
+            "anchor": {
+              "startChar": 17,
+              "endChar": 20,
+              "quote": "Ada"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:c40bb132844e722ddb669751270210f603036b2100c3e1c55d48ceaa8331af18",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        },
+        {
+          "id": "5b6c68dfd65d131169566c16e7bacadf9b51d26fbe830006245421a777cccfda",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911",
+          "body": {
+            "kind": "Entity",
+            "label": "Engine",
+            "entityType": "method",
+            "cluster": null,
+            "startChar": 30,
+            "endChar": 36,
+            "quote": "Engine"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e",
+          "receipt": {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 36,
+              "quote": "Engine"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:c40bb132844e722ddb669751270210f603036b2100c3e1c55d48ceaa8331af18",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        },
+        {
+          "id": "2764cd3e8e6a81928014bcc25cc3eb913dc98c512ec7c87eba2c3753e957096a",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "162ffe9fb703833a088db5fd0af1c5f013b38c1568e41b6331e8e411c83e0911",
+          "body": {
+            "kind": "Relation",
+            "predicate": "selected",
+            "subject": "5ce0176cf8893692c781ff96ac9d5b3ca3929808eee7da6f525627ba5feee0e6",
+            "object": "5b6c68dfd65d131169566c16e7bacadf9b51d26fbe830006245421a777cccfda",
+            "startChar": 17,
+            "endChar": 37,
+            "quote": "Ada selected Engine."
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e",
+          "receipt": {
+            "anchor": {
+              "startChar": 17,
+              "endChar": 37,
+              "quote": "Ada selected Engine."
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:c40bb132844e722ddb669751270210f603036b2100c3e1c55d48ceaa8331af18",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        }
+      ],
+      "degraded": [],
+      "lossy": []
+    },
+    "name": "reused relation endpoints"
+  },
+  {
+    "batch": {
+      "id": "40da3513f22a598bea2d65dc2f2a2864e4d58a7f780389fd3cc7bb2d10db0fb9",
+      "document": "1111111111111111111111111111111111111111111111111111111111111111",
+      "method": "hosted-langextract",
+      "model": {
+        "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "stub-extractor-20260826",
+        "provider": "anthropic",
+        "revision": "stub-extractor-20260826",
+        "taskType": "extraction"
+      },
+      "inputs": [
+        "0e024d784121bd30aca9a361276f21f534752b733f4d84679cd31eccea225612"
+      ],
+      "claims": [
+        {
+          "id": "b39672026fb8724489cb7beb71fcdd0c3b7ff503ff324d76c7fbc5343cdf5669",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "0e024d784121bd30aca9a361276f21f534752b733f4d84679cd31eccea225612",
+          "body": {
+            "kind": "Entity",
+            "label": "Ada",
+            "entityType": "person",
+            "cluster": null,
+            "startChar": 0,
+            "endChar": 3,
+            "quote": "Ada"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "6d8f749c57a82ca554be9ced96f5ee8c24fd29fe7d1d15f48390de8c3761bb63",
+          "receipt": {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 3,
+              "quote": "Ada"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:8dee979ebb6cf331d862fc4b99f2e6f7d30df2c91faa632b92579c61cfe1990d",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        },
+        {
+          "id": "48dc56c87dcdcdc7501780a7e088c3d549bb2f8346407be30d6da7db7e732bfc",
+          "document": "1111111111111111111111111111111111111111111111111111111111111111",
+          "chunk": "0e024d784121bd30aca9a361276f21f534752b733f4d84679cd31eccea225612",
+          "body": {
+            "kind": "Entity",
+            "label": "Engine",
+            "entityType": "method",
+            "cluster": null,
+            "startChar": 12,
+            "endChar": 18,
+            "quote": "Engine"
+          },
+          "confidence": 1,
+          "method": "hosted-langextract",
+          "model": {
+            "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+            "name": "stub-extractor-20260826",
+            "provider": "anthropic",
+            "revision": "stub-extractor-20260826",
+            "taskType": "extraction"
+          },
+          "cacheKey": "6d8f749c57a82ca554be9ced96f5ee8c24fd29fe7d1d15f48390de8c3761bb63",
+          "receipt": {
+            "anchor": {
+              "startChar": 12,
+              "endChar": 18,
+              "quote": "Engine"
+            },
+            "source": {
+              "scopeRef": "semantica-canary",
+              "sourceRef": "1111111111111111111111111111111111111111111111111111111111111111",
+              "locator": "documents/md-structure.md",
+              "sourceDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+              "textDigest": "sha256:8dee979ebb6cf331d862fc4b99f2e6f7d30df2c91faa632b92579c61cfe1990d",
+              "extractor": {
+                "name": "extractor-test",
+                "version": "0.0.0"
+              },
+              "normalizationVersion": "raw/1"
+            }
+          }
+        }
+      ],
+      "degraded": [
+        {
+          "kind": "relation-unresolved",
+          "detail": "A relation endpoint did not align uniquely inside its evidence quote.",
+          "chunk": "0e024d784121bd30aca9a361276f21f534752b733f4d84679cd31eccea225612"
+        }
+      ],
+      "lossy": []
+    },
+    "name": "unresolved relation"
+  },
+  {
+    "batch": {
+      "id": "deec88e4ab31403d09d44096fc93f9c940c1cfdc855e1a584238f6a46f62ec09",
+      "document": "1111111111111111111111111111111111111111111111111111111111111111",
+      "method": "hosted-langextract",
+      "model": {
+        "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "stub-extractor-20260826",
+        "provider": "anthropic",
+        "revision": "stub-extractor-20260826",
+        "taskType": "extraction"
+      },
+      "inputs": [
+        "d1efbf2fd9789ea06b23140b0430cb033a61473aa6e874acbf73947e92ed8121"
+      ],
+      "claims": [],
+      "degraded": [
+        {
+          "kind": "model-output-invalid",
+          "detail": "A relation candidate did not decode subject, object, predicate, and evidence quote.",
+          "chunk": "d1efbf2fd9789ea06b23140b0430cb033a61473aa6e874acbf73947e92ed8121"
+        }
+      ],
+      "lossy": []
+    },
+    "name": "malformed relation contract"
+  },
+  {
+    "batch": {
+      "id": "deec88e4ab31403d09d44096fc93f9c940c1cfdc855e1a584238f6a46f62ec09",
+      "document": "1111111111111111111111111111111111111111111111111111111111111111",
+      "method": "hosted-langextract",
+      "model": {
+        "artifactHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "name": "stub-extractor-20260826",
+        "provider": "anthropic",
+        "revision": "stub-extractor-20260826",
+        "taskType": "extraction"
+      },
+      "inputs": [
+        "d1efbf2fd9789ea06b23140b0430cb033a61473aa6e874acbf73947e92ed8121"
+      ],
+      "claims": [],
+      "degraded": [
+        {
+          "kind": "fabricated-span",
+          "detail": "Relation evidence did not align uniquely through the exact, lesser, or minimal-fold tiers.",
+          "chunk": "d1efbf2fd9789ea06b23140b0430cb033a61473aa6e874acbf73947e92ed8121"
+        }
+      ],
+      "lossy": []
+    },
+    "name": "fuzzy relation evidence"
+  }
+]

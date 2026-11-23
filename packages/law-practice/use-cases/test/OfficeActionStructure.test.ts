@@ -14,8 +14,10 @@ import {
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
 import { fixtureOcrPage } from "@beep/law-practice-use-cases/test";
 import { SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import { expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -65,8 +67,7 @@ const verifyRecognized = Effect.fn("OfficeActionStructureTest.verifyRecognized")
     GroundedExtraction.cases.match_exact.make({
       label: candidate._tag === "OfficeActionFinalityCandidate" ? "action-finality" : "shortened-statutory-period",
       text: candidate.anchor.anchor.quote,
-      matchedText: candidate.anchor.anchor.quote,
-      span: { start: candidate.anchor.anchor.startChar, end: candidate.anchor.anchor.endChar },
+      anchor: candidate.anchor.anchor,
     })
   );
   const adapted = yield* structure.fromExtractions(input, extractions);
@@ -113,8 +114,7 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         GroundedExtraction.cases.match_exact.make({
           label,
           text: quote,
-          matchedText: quote,
-          span: { start: anchor.startChar, end: anchor.endChar },
+          anchor: TextAnchor.make({ startChar: anchor.startChar, endChar: anchor.endChar, quote }),
         });
       const period = candidate("shortened-statutory-period", raw.periodAnchor);
       const finality = candidate("action-finality", raw.finalityAnchor);
@@ -128,8 +128,7 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         GroundedExtraction.cases.match_fuzzy.make({
           label,
           text: anchor.quote,
-          matchedText: anchor.quote,
-          span: { start: anchor.startChar, end: anchor.endChar },
+          anchor,
         });
       const fromExtractions1 = yield* structure.fromExtractions(input, [
         fuzzy("action-finality", raw.finalityAnchor),
@@ -141,24 +140,21 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         fuzzy("shortened-statutory-period", raw.periodAnchor),
       ]);
       expect(fromExtractions2).toMatchObject({ code: "rule-not-covered" });
-      const invalidPeriod = GroundedExtraction.cases.match_exact.make({
-        label: "shortened-statutory-period",
-        text: raw.periodAnchor.quote,
-        matchedText: raw.periodAnchor.quote,
-        span: { start: raw.periodAnchor.startChar, end: raw.periodAnchor.startChar },
+      const emptySpanAnchorRefusedBeforeTheRule = TextAnchor.makeOption({
+        startChar: raw.periodAnchor.startChar,
+        endChar: raw.periodAnchor.startChar,
+        quote: raw.periodAnchor.quote,
       });
-      expect((yield* structure.fromExtractions(input, [finality, invalidPeriod]).pipe(Effect.flip)).reason).toBe(
-        "invalid-anchor"
-      );
+      assertNone(emptySpanAnchorRefusedBeforeTheRule);
       const otherQuote = "A";
       const other = GroundedExtraction.cases.match_exact.make({
         label: "action-finality",
         text: otherQuote,
-        matchedText: otherQuote,
-        span: {
-          start: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0))),
-          end: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0)) + 1),
-        },
+        anchor: TextAnchor.make({
+          startChar: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0))),
+          endChar: S.Natural.make(Str.indexOf("A")(text).pipe(O.getOrElse(() => 0)) + 1),
+          quote: otherQuote,
+        }),
       });
       const fromExtractions3 = yield* structure.fromExtractions(input, [other, period]);
       expect(fromExtractions3).toMatchObject({ code: "rule-not-covered" });
@@ -174,7 +170,11 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
       const reversed = yield* S.decodeEffect(GroundedExtraction)({
         ...encodedFinality,
         alignmentStatus: "match_exact",
-        span: { start: raw.finalityAnchor.endChar, end: raw.finalityAnchor.startChar },
+        anchor: {
+          startChar: raw.finalityAnchor.endChar,
+          endChar: raw.finalityAnchor.startChar,
+          quote: raw.finalityAnchor.quote,
+        },
       }).pipe(Effect.flip);
       expect(reversed._tag).toBe("SchemaError");
       const mismatched = yield* structure
@@ -184,14 +184,13 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         ])
         .pipe(Effect.flip);
       expect(mismatched.reason).toBe("quote-mismatch");
-      const zeroWidth = GroundedExtraction.cases.match_exact.make({
-        label: "action-finality",
-        text: raw.finalityAnchor.quote,
-        matchedText: raw.finalityAnchor.quote,
-        span: { start: raw.finalityAnchor.startChar, end: raw.finalityAnchor.startChar },
-      });
-      const malformed = yield* structure.fromExtractions(input, [zeroWidth, period]).pipe(Effect.flip);
-      expect(malformed.reason).toBe("invalid-anchor");
+      assertNone(
+        TextAnchor.makeOption({
+          startChar: raw.finalityAnchor.startChar,
+          endChar: raw.finalityAnchor.startChar,
+          quote: raw.finalityAnchor.quote,
+        })
+      );
       expect((yield* structure.fromExtractions(input, [period])).status).toBe("abstained");
       expect((yield* structure.fromExtractions(input, [period, period, period])).status).toBe("abstained");
     })
