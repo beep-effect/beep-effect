@@ -101,6 +101,7 @@ export const TmpfsReapSkipReason = LiteralKit([
   "live-fd-ref",
   "live-flock",
   "dirty-worktree",
+  "unpushed-commits",
   "too-young",
   "parent-repo-missing-but-refs",
   "wrong-shape",

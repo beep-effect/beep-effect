@@ -325,6 +325,37 @@ const initFixtureRepository = Effect.fn("TmpfsReapTest.initFixtureRepository")(f
   );
 });
 
+const cloneFixtureRepository = Effect.fn("TmpfsReapTest.cloneFixtureRepository")(function* (
+  origin: string,
+  clone: string
+) {
+  const path = yield* Path.Path;
+  yield* runCommand("git", ["clone", "--quiet", origin, clone], path.dirname(origin));
+});
+
+const commitFixtureFile = Effect.fn("TmpfsReapTest.commitFixtureFile")(function* (repo: string, name: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(path.join(repo, name), "local-only work\n");
+  yield* runCommand("git", ["add", name], repo);
+  yield* runCommand(
+    "git",
+    [
+      "-c",
+      "user.email=tmpfs-reap@example.invalid",
+      "-c",
+      "user.name=Tmpfs Reap Test",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-m",
+      "local-only",
+    ],
+    repo
+  );
+});
+
 const ageFixtureTree = (directory: string, hoursAgo: number, cwd: string) =>
   runCommand("find", [directory, "-exec", "touch", "-h", "-d", fixtureTimestamp(hoursAgo), "{}", "+"], cwd);
 
@@ -343,12 +374,18 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
   const heldWorktree = path.join(worktreeHolder, "held");
   const separateGitDirClone = path.join(tmpRoot, "separate-gitdir-clone");
   const separateGitDir = path.join(root, "separate-gitdir");
+  const origin = path.join(root, "origin");
+  const dirtyParent = path.join(tmpRoot, "dirty-probes");
+  const dirtyClone = path.join(dirtyParent, "probe-dirty");
+  const dirtyParentCleanClone = path.join(dirtyParent, "probe-clean");
+  const unpushedClone = path.join(tmpRoot, "unpushed-clone");
 
   yield* Effect.forEach(
-    [cacheRoot, path.join(mixedParent, "notes"), worktreeHolder],
+    [cacheRoot, path.join(mixedParent, "notes"), worktreeHolder, dirtyParent],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
     { concurrency: 1, discard: true }
   );
+  yield* initFixtureRepository(origin);
   yield* Effect.forEach(
     [
       depthOneClone,
@@ -357,16 +394,31 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
       mixedClone,
       youngClone,
       mainClone,
+      dirtyClone,
+      dirtyParentCleanClone,
+      unpushedClone,
     ],
-    initFixtureRepository,
+    (clone) => cloneFixtureRepository(origin, clone),
     { concurrency: 1, discard: true }
   );
+  yield* fs.writeFileString(path.join(dirtyClone, "untracked-notes.txt"), "uncommitted work\n");
+  yield* commitFixtureFile(unpushedClone, "local-only.txt");
   yield* fs.writeFileString(path.join(probesParent, "probe-run.log"), "loose log\n");
   yield* fs.writeFileString(path.join(mixedParent, "notes", "keep.txt"), "not a checkout\n");
   yield* runCommand("git", ["worktree", "add", "--quiet", "--detach", heldWorktree], mainClone);
   yield* runCommand("git", ["init", "--quiet", "--separate-git-dir", separateGitDir, separateGitDirClone], root);
   yield* Effect.forEach(
-    [depthOneClone, probesParent, mixedParent, mainClone, worktreeHolder, separateGitDirClone, separateGitDir],
+    [
+      depthOneClone,
+      probesParent,
+      mixedParent,
+      mainClone,
+      worktreeHolder,
+      separateGitDirClone,
+      separateGitDir,
+      dirtyParent,
+      unpushedClone,
+    ],
     (directory) => ageFixtureTree(directory, 3, root),
     { concurrency: 1, discard: true }
   );
@@ -375,6 +427,9 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
   return {
     cacheRoot,
     depthOneClone,
+    dirtyClone,
+    dirtyParent,
+    dirtyParentCleanClone,
     heldWorktree,
     mainClone,
     mixedClone,
@@ -383,6 +438,7 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
     separateGitDir,
     separateGitDirClone,
     tmpRoot,
+    unpushedClone,
     worktreeHolder,
     youngClone,
   };
@@ -1859,6 +1915,12 @@ describe("tmpfs reap", () => {
           expect(young.skipReason).toBe("too-young");
           expect(young.bytes).toBeGreaterThan(0);
           expect(candidateByPath(dryRun, fixture.mainClone).skipReason).toBe("linked-worktrees-present");
+          expect(candidateByPath(dryRun, fixture.dirtyClone).skipReason).toBe("dirty-worktree");
+          expect(candidateByPath(dryRun, fixture.dirtyParent).skipReason).toBe("dirty-worktree");
+          expect(candidateByPath(dryRun, fixture.dirtyParentCleanClone).action).toBe("remove-dir");
+          const unpushed = candidateByPath(dryRun, fixture.unpushedClone);
+          expect(unpushed.skipReason).toBe("unpushed-commits");
+          expect(unpushed.bytes).toBeGreaterThan(0);
           expect(
             A.some(
               dryRun.candidates,
@@ -1874,14 +1936,20 @@ describe("tmpfs reap", () => {
             nowMillis: FIXTURE_NOW_MILLIS,
             tmpRoot: fixture.tmpRoot,
           });
-          expect(applied.reapedCount).toBe(4);
+          expect(applied.reapedCount).toBe(5);
           expect(applied.reclaimedBytes).toBeGreaterThan(0);
           const removed = yield* Effect.forEach(
-            [fixture.depthOneClone, fixture.probesParent, fixture.mixedClone, fixture.separateGitDirClone],
+            [
+              fixture.depthOneClone,
+              fixture.probesParent,
+              fixture.mixedClone,
+              fixture.separateGitDirClone,
+              fixture.dirtyParentCleanClone,
+            ],
             (candidate) => fs.exists(candidate),
             { concurrency: 1 }
           );
-          expect(removed).toEqual([false, false, false, false]);
+          expect(removed).toEqual([false, false, false, false, false]);
           const kept = yield* Effect.forEach(
             [
               path.join(fixture.mixedParent, "notes", "keep.txt"),
@@ -1889,11 +1957,13 @@ describe("tmpfs reap", () => {
               fixture.mainClone,
               fixture.heldWorktree,
               fixture.separateGitDir,
+              path.join(fixture.dirtyClone, "untracked-notes.txt"),
+              path.join(fixture.unpushedClone, "local-only.txt"),
             ],
             (candidate) => fs.exists(candidate),
             { concurrency: 1 }
           );
-          expect(kept).toEqual([true, true, true, true, true]);
+          expect(kept).toEqual([true, true, true, true, true, true, true]);
         })
       )
     );

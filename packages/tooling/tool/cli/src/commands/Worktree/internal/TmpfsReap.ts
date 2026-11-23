@@ -15,7 +15,9 @@
  * temporary root, because repository law forbids clones there. A folder whose
  * entries are only such checkouts plus loose regular files is reaped as one
  * `git-checkout-parent` row. A checkout that other linked worktrees still
- * register is never reaped. Configured `*-worktrees` roots stay with the
+ * register is never reaped, and neither is one whose status is dirty or
+ * unreadable or whose local refs hold commits no remote ref reaches; a
+ * checkout-only folder inherits any of its clones' refusals. Configured `*-worktrees` roots stay with the
  * dangling-stub family and are not scanned for checkouts.
  *
  * @packageDocumentation
@@ -33,7 +35,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -1067,26 +1069,101 @@ const livenessSkipReason = (liveness: CandidateLiveness): O.Option<TmpfsReapSkip
 const stateSkipReason = (
   candidate: DiscoveredCandidate,
   ageHours: number,
-  dirtyWorktree: boolean
-): O.Option<TmpfsReapSkipReason> => {
-  if (dirtyWorktree) {
-    return O.some("dirty-worktree");
-  }
-  return ageHours < Duration.toHours(thresholdFor(candidate)) ? O.some("too-young") : O.none();
-};
+  cleanliness: O.Option<TmpfsReapSkipReason>
+): O.Option<TmpfsReapSkipReason> =>
+  O.firstSomeOf([cleanliness, skipReasonWhen(ageHours < Duration.toHours(thresholdFor(candidate)), "too-young")]);
 
 const skipReasonFor = (
   candidate: DiscoveredCandidate,
   ageHours: number,
   liveness: CandidateLiveness,
-  dirtyWorktree: boolean,
+  cleanliness: O.Option<TmpfsReapSkipReason>,
   vitestRunning: boolean
 ): O.Option<TmpfsReapSkipReason> =>
   O.firstSomeOf([
     classificationSkipReason(candidate, vitestRunning),
     livenessSkipReason(liveness),
-    stateSkipReason(candidate, ageHours, dirtyWorktree),
+    stateSkipReason(candidate, ageHours, cleanliness),
   ]);
+
+const gitCheckoutCleanlinessSkip = Effect.fnUntraced(function* (
+  checkoutPath: string
+): Effect.fn.Return<
+  O.Option<TmpfsReapSkipReason>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
+  const git = yield* Git;
+  const status = yield* git.status(checkoutPath, { noRenames: true }).pipe(Effect.option);
+  if (O.isNone(status) || A.isReadonlyArrayNonEmpty(status.value)) {
+    return O.some("dirty-worktree");
+  }
+  const refs = yield* git.forEachRef(checkoutPath).pipe(Effect.option);
+  if (O.isNone(refs)) {
+    return O.some("unpushed-commits");
+  }
+  const remoteShas = A.dedupe(
+    A.map(
+      A.filter(refs.value, (entry) => Str.startsWith("refs/remotes/")(entry.ref)),
+      (entry) => entry.sha
+    )
+  );
+  const head = yield* git.revParse(checkoutPath, "HEAD", { peel: "commit", quiet: true }).pipe(Effect.option);
+  const localShas = A.dedupe(
+    A.appendAll(
+      A.map(
+        A.filter(
+          refs.value,
+          (entry) =>
+            !Str.startsWith("refs/remotes/")(entry.ref) &&
+            (Str.Equivalence(entry.objectType, "commit") || Str.Equivalence(entry.objectType, "tag"))
+        ),
+        (entry) => entry.sha
+      ),
+      O.match(head, { onNone: A.empty<string>, onSome: A.of })
+    )
+  );
+  const reachability = yield* Effect.forEach(
+    localShas,
+    (localSha) =>
+      Effect.map(
+        Effect.forEach(
+          remoteShas,
+          (remoteSha) => git.isAncestor(checkoutPath, localSha, remoteSha).pipe(Effect.orElseSucceed(() => false)),
+          { concurrency: 1 }
+        ),
+        A.some(identity)
+      ),
+    { concurrency: 1 }
+  );
+  return skipReasonWhen(!A.every(reachability, identity), "unpushed-commits");
+});
+
+const checkoutParentCleanliness = (
+  pathService: Path.Path,
+  parentPath: string,
+  childCleanliness: ReadonlyArray<readonly [string, O.Option<TmpfsReapSkipReason>]>
+): O.Option<TmpfsReapSkipReason> =>
+  O.firstSomeOf(
+    A.map(
+      A.filter(childCleanliness, ([childPath]) => Str.Equivalence(pathService.dirname(childPath), parentPath)),
+      ([, skip]) => skip
+    )
+  );
+
+const gitCheckoutChildCleanliness = Effect.fnUntraced(function* (
+  candidates: ReadonlyArray<DiscoveredCandidate>
+): Effect.fn.Return<
+  ReadonlyArray<readonly [string, O.Option<TmpfsReapSkipReason>]>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
+  return yield* Effect.forEach(
+    A.filter(candidates, (candidate) => Str.Equivalence(candidate.reapClass, "git-checkout")),
+    (candidate) => Effect.map(gitCheckoutCleanlinessSkip(candidate.path), (skip) => [candidate.path, skip] as const),
+    { concurrency: 4 }
+  );
+});
 
 const measureBytes = Effect.fnUntraced(function* (
   candidatePath: string
@@ -1296,7 +1373,7 @@ const danglingCandidateIsStillEligible = Effect.fnUntraced(function* (
   const proc = yield* scanProcReferences(processListing);
   const liveness = yield* candidateLiveness(rediscovered, proc, A.empty(), pathService.sep);
   const ageHours = Duration.toHours(Duration.millis(N.max(0, nowMillis - rediscovered.idleSinceMillis)));
-  return O.isNone(skipReasonFor(rediscovered, ageHours, liveness, false, proc.vitestRunning));
+  return O.isNone(skipReasonFor(rediscovered, ageHours, liveness, O.none(), proc.vitestRunning));
 });
 
 const isGitCheckoutClass = (reapClass: TmpfsReapClass): boolean =>
@@ -1323,16 +1400,27 @@ const gitCheckoutCandidateIsStillEligible = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate,
   processListing: ProcessCommandLineListing,
   nowMillis: number
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  boolean,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
   const pathService = yield* Path.Path;
   const rediscovered = yield* rediscoverGitCheckoutCandidate(candidate);
   if (O.isNone(rediscovered)) {
     return false;
   }
+  const checkoutRows = Str.Equivalence(rediscovered.value.reapClass, "git-checkout-parent")
+    ? yield* discoverCheckoutContainer(rediscovered.value.root, pathService.basename(rediscovered.value.path))
+    : A.of(rediscovered.value);
+  const childCleanliness = yield* gitCheckoutChildCleanliness(checkoutRows);
+  const cleanliness = Str.Equivalence(rediscovered.value.reapClass, "git-checkout-parent")
+    ? checkoutParentCleanliness(pathService, rediscovered.value.path, childCleanliness)
+    : O.firstSomeOf(A.map(childCleanliness, ([, skip]) => skip));
   const proc = yield* scanProcReferences(processListing);
   const liveness = yield* candidateLiveness(rediscovered.value, proc, A.empty(), pathService.sep);
   const ageHours = Duration.toHours(Duration.millis(N.max(0, nowMillis - rediscovered.value.idleSinceMillis)));
-  return O.isNone(skipReasonFor(rediscovered.value, ageHours, liveness, false, proc.vitestRunning));
+  return O.isNone(skipReasonFor(rediscovered.value, ageHours, liveness, cleanliness, proc.vitestRunning));
 });
 
 const applyCandidate = Effect.fnUntraced(function* (
@@ -1547,13 +1635,24 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
   const heldLockInodes = lockInodes(readFileString25);
   const nowMillis = yield* Clock.currentTimeMillis;
   const effectiveNowMillis = O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => nowMillis);
+  const childCleanliness = yield* gitCheckoutChildCleanliness(discovered);
   const assessed = yield* Effect.forEach(
     discovered,
     Effect.fnUntraced(function* (candidate: DiscoveredCandidate) {
       const liveness = yield* candidateLiveness(candidate, proc, heldLockInodes, pathService.sep);
       const ageHours = Duration.toHours(Duration.millis(N.max(0, effectiveNowMillis - candidate.idleSinceMillis)));
       const dirtyWorktree = yield* worktreeIsDirty(candidate);
-      const skipReason = skipReasonFor(candidate, ageHours, liveness, dirtyWorktree, proc.vitestRunning);
+      const cleanliness = O.firstSomeOf([
+        skipReasonWhen(dirtyWorktree, "dirty-worktree"),
+        O.flatMap(
+          A.findFirst(childCleanliness, ([childPath]) => Str.Equivalence(childPath, candidate.path)),
+          ([, skip]) => skip
+        ),
+        Str.Equivalence(candidate.reapClass, "git-checkout-parent")
+          ? checkoutParentCleanliness(pathService, candidate.path, childCleanliness)
+          : O.none<TmpfsReapSkipReason>(),
+      ]);
+      const skipReason = skipReasonFor(candidate, ageHours, liveness, cleanliness, proc.vitestRunning);
       return {
         discovered: candidate,
         ageHours,
