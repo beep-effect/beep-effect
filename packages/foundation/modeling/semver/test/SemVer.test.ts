@@ -15,14 +15,11 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const SemVerBumpOverflowErrorJson = S.fromJsonString(SemVerBumpOverflowError);
 
-// Narrows a schema check to a filter group, failing the test otherwise.
 const expectFilterGroup = <T>(check: SchemaAST.Check<T> | undefined, message: string): SchemaAST.FilterGroup<T> => {
   if (check?._tag !== "FilterGroup") return assert.fail(message);
   return check;
 };
 
-// Asserts a check is a filter carrying the `@beep/semver/SemVer/<name>`
-// identifier plus a nonempty title and description.
 const assertAnnotatedFilter = <T>(name: string, check: SchemaAST.Check<T> | undefined): void => {
   assert.strictEqual(check?._tag, "Filter");
   const annotations = check?.annotations;
@@ -35,8 +32,6 @@ const assertAnnotatedFilter = <T>(name: string, check: SchemaAST.Check<T> | unde
 
 const versionStringPrefix = "@beep/semver/SemVer/";
 
-// Asserts a version-string schema and its first filter carry identity,
-// title and description metadata.
 const assertVersionStringMetadata = (name: string, schema: S.Top): void => {
   const annotations = S.resolveAnnotations(schema);
   assert.strictEqual(annotations?.identifier, `${versionStringPrefix}${name}`);
@@ -62,8 +57,6 @@ const versionStringInputs = [
   "",
 ] as const;
 
-// Asserts a version-string schema accepts exactly what its predicate accepts
-// and decodes accepted input unchanged.
 const assertVersionStringValidation = (
   name: string,
   schema: S.Codec<string, string>,
@@ -76,8 +69,7 @@ const assertVersionStringValidation = (
   }
 };
 
-/** Groups `versions` by `strategy` and checks the group keys and the members of the first group. */
-const expectGroupKeys = (
+const expectGroupKeysAndFirstGroupMembers = (
   versions: ReadonlyArray<SemVer>,
   strategy: "minor" | "patch",
   keys: ReadonlyArray<string>
@@ -193,7 +185,6 @@ describe("SemVer", () => {
       assert.strictEqual(SemVer.compare(a, b), -1);
       assert.strictEqual(SemVer.compare(b)(a), -1);
       assert.isTrue(SemVer.lt(a, b));
-      // Data-last: gt(that)(self) tests self > that.
       assert.isTrue(SemVer.gt(a)(b));
       assert.isTrue(SemVer.equal(a, SemVer.of(1, 0, 0, [], ["different", "build"])));
     });
@@ -262,10 +253,11 @@ describe("SemVer", () => {
     });
 
     it("major/minor/patch bump a prerelease version's numeric core directly — diverges from node-semver", () => {
-      // node-semver: inc("2.0.0-beta.1", "major") === "2.0.0" (drops the prerelease
-      // without incrementing, since the release target is already ahead of it).
-      // This package always increments the requested component, prerelease or not.
-      assert.strictEqual(SemVer.of(2, 0, 0, ["beta", 1]).bump.major().toString(), "3.0.0");
+      assert.strictEqual(
+        SemVer.of(2, 0, 0, ["beta", 1]).bump.major().toString(),
+        "3.0.0",
+        "node-semver inc drops 2.0.0-beta.1 to 2.0.0 without incrementing; this package always increments"
+      );
       assert.strictEqual(SemVer.of(1, 2, 3, ["beta", 1]).bump.minor().toString(), "1.3.0");
       assert.strictEqual(SemVer.of(1, 2, 3, ["beta", 1]).bump.patch().toString(), "1.2.4");
     });
@@ -376,11 +368,7 @@ describe("SemVer", () => {
     });
   });
 
-  // `parseResult` is the primitive; `parse` derives from it via
-  // `Effect.fromResult` and adds only the tracing span. Every row is checked
-  // in BOTH directions so the sync path can never become the reason the two
-  // drift — a future edit that re-derives the grammar on one side fails here.
-  describe("Result parity", () => {
+  describe("Result parity: parse is parseResult behind Effect.fromResult, asserted both ways per row so neither side re-derives the grammar", () => {
     const rows: ReadonlyArray<readonly [label: string, input: string]> = [
       ["a bare version", "1.2.3"],
       ["a prerelease", "1.2.3-beta.1"],
@@ -428,8 +416,10 @@ describe("SemVer", () => {
       assert.isTrue(SemVer.isValid("1.2.3"));
       assert.isTrue(SemVer.isValid("0.0.0"));
       assert.isTrue(SemVer.isValid("1.2.3-rc.1"));
-      // Build metadata is valid grammar; only the PINNABLE notion excludes it.
-      assert.isTrue(SemVer.isValid("1.2.3+build.42"));
+      assert.isTrue(
+        SemVer.isValid("1.2.3+build.42"),
+        "build metadata is valid grammar; only the pinnable notion excludes it"
+      );
       assert.isTrue(SemVer.isValid("1.2.3-rc.1+build"));
     });
 
@@ -444,11 +434,6 @@ describe("SemVer", () => {
     });
 
     it("rejects padded input that parseResult would trim into validity", () => {
-      // The posture, stated as a control pair: parseResult TRIMS (matching
-      // node-semver), so the boolean must diverge from it on exactly this
-      // class of input — whitespace is the caller's bug to surface, never
-      // this package's to hide. A version of isValid written as a bare
-      // parseResult success check passes every other case and fails here.
       assertSuccess(SemVer.parseResult(" 1.2.3"), SemVer.of(1, 2, 3));
       assert.isFalse(SemVer.isValid(" 1.2.3"));
       assert.isFalse(SemVer.isValid("1.2.3 "));
@@ -484,7 +469,6 @@ describe("SemVer", () => {
       if (Result.isFailure(accepted)) {
         return assert.fail("a valid version string must decode");
       }
-      // The point of the schema: a consumer struct field stays a plain string.
       assert.strictEqual(accepted.success, "1.2.3+build.42");
       const padded = decodeExact(" 1.2.3");
       assertFailure(padded, padded.pipe(Result.flip, Result.getOrThrow));
@@ -638,8 +622,8 @@ describe("SemVer round-1 regressions", () => {
     const major = SemVer.groupBy(versions, "major");
     assert.deepStrictEqual(R.keys(major), ["1", "2"]);
     assert.deepStrictEqual(A.map(major["1"] ?? [], String), ["1.0.0-alpha", "1.0.0+z", "1.0.0+a", "1.5.1"]);
-    expectGroupKeys(versions, "minor", ["1.0", "1.5", "2.0"]);
-    expectGroupKeys(versions, "patch", ["1.0.0", "1.5.1", "2.0.0"]);
+    expectGroupKeysAndFirstGroupMembers(versions, "minor", ["1.0", "1.5", "2.0"]);
+    expectGroupKeysAndFirstGroupMembers(versions, "patch", ["1.0.0", "1.5.1", "2.0.0"]);
     assert.deepStrictEqual(SemVer.groupBy([], "major"), {});
   });
 });

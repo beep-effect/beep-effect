@@ -6,6 +6,15 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
+
+const canonicalizeDeliberateNumericEnumAliasesKeepingOtherFields = (
+  value: Config.CompilerOptionsFromProgrammatic
+): Config.CompilerOptionsFromProgrammatic => ({
+  ...value,
+  ...(value.target === "es6" ? { target: "es2015" as const } : {}),
+  ...(value.module === "es6" ? { module: "es2015" as const } : {}),
+  ...(value.moduleResolution === "node" ? { moduleResolution: "node10" as const } : {}),
+});
 const roundTrips = <T, E>(
   name: string,
   schema: S.Codec<T, E>,
@@ -35,14 +44,11 @@ describe("index exported schema property floor", () => {
   roundTrips("ModuleResolution", Config.ModuleResolution);
   roundTrips("NewLine", Config.NewLine);
   roundTrips("Target", Config.Target);
-  // Numeric TypeScript enums have deliberate aliases; compare their documented
-  // canonical spelling while retaining every other field structurally.
-  roundTrips("CompilerOptionsFromProgrammatic", Config.CompilerOptionsFromProgrammatic, (value) => ({
-    ...value,
-    ...(value.target === "es6" ? { target: "es2015" as const } : {}),
-    ...(value.module === "es6" ? { module: "es2015" as const } : {}),
-    ...(value.moduleResolution === "node" ? { moduleResolution: "node10" as const } : {}),
-  }));
+  roundTrips(
+    "CompilerOptionsFromProgrammatic",
+    Config.CompilerOptionsFromProgrammatic,
+    canonicalizeDeliberateNumericEnumAliasesKeepingOtherFields
+  );
   roundTrips("JsxConfig", Config.JsxConfig);
   roundTrips("PortableTsconfig", Config.PortableTsconfig);
   roundTrips("ResolvedTsconfig", Config.ResolvedTsconfig);

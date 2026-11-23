@@ -806,8 +806,6 @@ const absoluteIriChecks = makeNonEmptyReferenceChecks(
 const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", "Expected a valid RFC 3987 IRI", isIri);
 
 /**
- * RFC 3987 `IRI-reference` schema, including absolute and relative forms.
- *
  * **Example** (Decode absolute IRI reference)
  *
  * ```ts import.meta.vitest name="Decode absolute IRI reference"
@@ -830,8 +828,6 @@ export const IRIReference = S.String.pipe(
 );
 
 /**
- * RFC 3987 `IRI-reference` syntax, including absolute and relative forms.
- *
  * **Example** (Accept IRIReference type)
  *
  * ```ts
@@ -847,8 +843,6 @@ export const IRIReference = S.String.pipe(
 export type IRIReference = typeof IRIReference.Type;
 
 /**
- * RFC 3987 `irelative-ref` schema.
- *
  * **Example** (Decode relative IRI path)
  *
  * ```ts import.meta.vitest name="Decode relative IRI path"
@@ -870,8 +864,6 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks).p
 );
 
 /**
- * RFC 3987 `irelative-ref` syntax.
- *
  * **Example** (Accept RelativeIRIReference type)
  *
  * ```ts
@@ -887,8 +879,6 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks).p
 export type RelativeIRIReference = typeof RelativeIRIReference.Type;
 
 /**
- * RFC 3987 `absolute-IRI` schema without a fragment component.
- *
  * **Example** (Decode absolute IRI)
  *
  * ```ts import.meta.vitest name="Decode absolute IRI"
@@ -911,8 +901,6 @@ export const AbsoluteIRI = S.String.pipe(
 );
 
 /**
- * RFC 3987 `absolute-IRI` syntax without a fragment component.
- *
  * **Example** (Accept AbsoluteIRI type)
  *
  * ```ts
@@ -928,8 +916,6 @@ export const AbsoluteIRI = S.String.pipe(
 export type AbsoluteIRI = typeof AbsoluteIRI.Type;
 
 /**
- * RFC 3987 `IRI` schema.
- *
  * **Example** (Decode IRI with fragment)
  *
  * ```ts import.meta.vitest name="Decode IRI with fragment"
@@ -952,8 +938,6 @@ export const IRI = S.String.pipe(
 );
 
 /**
- * RFC 3987 `IRI` syntax.
- *
  * **Example** (Accept IRI type)
  *
  * ```ts

@@ -61,8 +61,6 @@ const DetectedTerminal = S.Struct({
 );
 
 /**
- * A snapshot of who is running the program: the agent, the CI, and the terminal.
- *
  * **Details**
  *
  * Each field is an `Option` in memory and `null` when absent on the wire, so the snapshot persists as plain JSON
@@ -159,8 +157,6 @@ const TerminalOverride = S.Struct({
 );
 
 /**
- * The fields {@link CurrentRuntimeEnv.layerTest} can override.
- *
  * **Example** (Validate an explicit absent agent override)
  *
  * ```ts
@@ -205,8 +201,6 @@ export class RuntimeEnvOverrides extends S.Opaque<RuntimeEnvOverrides, { readonl
 ) {}
 
 /**
- * Companion types for {@link RuntimeEnvOverrides}.
- *
  * @category type-level
  * @since 0.0.0
  */

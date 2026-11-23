@@ -76,8 +76,6 @@ export interface CliDocSource {
 }
 
 /**
- * Options for {@link CliFailure.toDoc}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -148,8 +146,6 @@ export class CliFailureOptions extends S.Opaque<CliFailureOptions, { readonly br
   }).pipe($I.annoteSchema("CliFailureOptions", { description: "Plain CliFailureOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliFailureOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

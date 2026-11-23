@@ -47,6 +47,12 @@ projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is n
 
 ## Latest Evidence
 
+2026-11-23: P2 gaps closed in code, no workflow change: a hosted `ci lane` step that writes no
+gate record now records a `lane` root run from its exit code and log, and counts the annotations
+its output wrote for `append-gate-reports` (decisions `lane-step-gate-records`,
+`annotations-used-tally`). Fixture tests spawn real lane children under Node and Bun: pass, red,
+own-record, broken count, lingering descendant (`test/ci-lane-recording.test.ts`).
+
 2026-11-23: census baseline `standards/agent-output-census/runs/2026-11-23T02-00-00Z--census-rules-2026-11-23.json`
 (rules that count `beep ci failures` as a CI-log read): 479 of 483 CI-log fetches piped or
 redirected (99.2%), 427 of 7,224 run-verification turns fetching a CI log (5.9%). `beep ci failures` on two live red runs printed 7,950 and 7,976

@@ -101,8 +101,6 @@ export class RawDiagnostic extends S.Opaque<RawDiagnostic, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link RawDiagnostic}.
- *
  * @category type-level
  * @since 0.0.0
  */

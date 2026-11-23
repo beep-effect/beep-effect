@@ -22,8 +22,6 @@ const $I = $GithubActionsId.create("ActionEnvironment");
 const Json = S.fromJsonString(S.Unknown);
 
 /**
- * Raised when the runner environment does not say what an action needs.
- *
  * **Details**
  *
  * Two reasons, and the distinction is actionable: `missing` means the variable
@@ -101,8 +99,6 @@ export class ActionEnvironmentError extends S.TaggedError<ActionEnvironmentError
 }
 
 /**
- * The workflow's GitHub context, projected from the `GITHUB_*` variables.
- *
  * **Example** (Read a seeded workflow context)
  *
  * ```ts
@@ -272,8 +268,6 @@ export class GitHubContext extends S.Class<GitHubContext, { readonly brand: uniq
 }
 
 /**
- * The runner's own context, projected from the `RUNNER_*` variables.
- *
  * **Example** (Construct a runner context)
  *
  * ```ts
@@ -332,8 +326,6 @@ export class RunnerContext extends S.Opaque<RunnerContext, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link RunnerContext}.
- *
  * @category type-level
  * @since 0.0.0
  */

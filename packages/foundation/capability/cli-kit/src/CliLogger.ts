@@ -83,8 +83,6 @@ export class CliLoggerOptions extends S.Opaque<CliLoggerOptions, { readonly bran
   }).pipe($I.annoteSchema("CliLoggerOptions", { description: "Plain CliLoggerOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliLoggerOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
