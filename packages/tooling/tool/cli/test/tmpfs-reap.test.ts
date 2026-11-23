@@ -300,6 +300,94 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
   };
 });
 
+const initFixtureRepository = Effect.fn("TmpfsReapTest.initFixtureRepository")(function* (repo: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(repo, { recursive: true });
+  yield* runCommand("git", ["init", "--quiet"], repo);
+  yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
+  yield* runCommand("git", ["add", "README.md"], repo);
+  yield* runCommand(
+    "git",
+    [
+      "-c",
+      "user.email=tmpfs-reap@example.invalid",
+      "-c",
+      "user.name=Tmpfs Reap Test",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-m",
+      "fixture",
+    ],
+    repo
+  );
+});
+
+const ageFixtureTree = (directory: string, hoursAgo: number, cwd: string) =>
+  runCommand("find", [directory, "-exec", "touch", "-h", "-d", fixtureTimestamp(hoursAgo), "{}", "+"], cwd);
+
+const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tmpRoot = path.join(root, "tmp");
+  const cacheRoot = path.join(root, "cache");
+  const depthOneClone = path.join(tmpRoot, "probe-clone");
+  const probesParent = path.join(tmpRoot, "claude-probes");
+  const mixedParent = path.join(tmpRoot, "mixed-scratch");
+  const mixedClone = path.join(mixedParent, "clone");
+  const youngClone = path.join(tmpRoot, "young-clone");
+  const mainClone = path.join(tmpRoot, "main-clone");
+  const worktreeHolder = path.join(tmpRoot, "worktree-holder");
+  const heldWorktree = path.join(worktreeHolder, "held");
+  const separateGitDirClone = path.join(tmpRoot, "separate-gitdir-clone");
+  const separateGitDir = path.join(root, "separate-gitdir");
+
+  yield* Effect.forEach(
+    [cacheRoot, path.join(mixedParent, "notes"), worktreeHolder],
+    (directory) => fs.makeDirectory(directory, { recursive: true }),
+    { concurrency: 1, discard: true }
+  );
+  yield* Effect.forEach(
+    [
+      depthOneClone,
+      path.join(probesParent, "probe-a"),
+      path.join(probesParent, "probe-b"),
+      mixedClone,
+      youngClone,
+      mainClone,
+    ],
+    initFixtureRepository,
+    { concurrency: 1, discard: true }
+  );
+  yield* fs.writeFileString(path.join(probesParent, "probe-run.log"), "loose log\n");
+  yield* fs.writeFileString(path.join(mixedParent, "notes", "keep.txt"), "not a checkout\n");
+  yield* runCommand("git", ["worktree", "add", "--quiet", "--detach", heldWorktree], mainClone);
+  yield* runCommand("git", ["init", "--quiet", "--separate-git-dir", separateGitDir, separateGitDirClone], root);
+  yield* Effect.forEach(
+    [depthOneClone, probesParent, mixedParent, mainClone, worktreeHolder, separateGitDirClone, separateGitDir],
+    (directory) => ageFixtureTree(directory, 3, root),
+    { concurrency: 1, discard: true }
+  );
+  yield* ageFixtureTree(youngClone, 0, root);
+
+  return {
+    cacheRoot,
+    depthOneClone,
+    heldWorktree,
+    mainClone,
+    mixedClone,
+    mixedParent,
+    probesParent,
+    separateGitDir,
+    separateGitDirClone,
+    tmpRoot,
+    worktreeHolder,
+    youngClone,
+  };
+});
+
 describe("tmpfs reap", () => {
   it.layer(platformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("resolves the persistent cache root through every configuration fallback", () =>
@@ -1737,6 +1825,111 @@ describe("tmpfs reap", () => {
           const exists60 = yield* fs.exists(diskWorktree);
           expect(exists60).toBe(true);
         })
+      )
+    );
+    it.effect("finds idle full Git checkouts at depth one and two and reaps a checkout-only parent folder", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makeGitCheckoutFixture(root);
+
+          const dryRun = yield* runTmpfsReap({
+            cacheRoot: fixture.cacheRoot,
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot: fixture.tmpRoot,
+          });
+          const depthOne = candidateByPath(dryRun, fixture.depthOneClone);
+          expect(depthOne.reapClass).toBe("git-checkout");
+          expect(depthOne.action).toBe("remove-dir");
+          expect(depthOne.bytes).toBeGreaterThan(0);
+          const probes = candidateByPath(dryRun, fixture.probesParent);
+          expect(probes.reapClass).toBe("git-checkout-parent");
+          expect(probes.action).toBe("remove-dir");
+          expect(probes.bytes).toBeGreaterThan(0);
+          expect(
+            A.some(dryRun.candidates, (candidate) => Str.startsWith(`${fixture.probesParent}/`)(candidate.path))
+          ).toBe(false);
+          const mixedChild = candidateByPath(dryRun, fixture.mixedClone);
+          expect(mixedChild.reapClass).toBe("git-checkout");
+          expect(mixedChild.action).toBe("remove-dir");
+          expect(A.some(dryRun.candidates, (candidate) => candidate.path === fixture.mixedParent)).toBe(false);
+          expect(candidateByPath(dryRun, fixture.separateGitDirClone).reapClass).toBe("git-checkout");
+          const young = candidateByPath(dryRun, fixture.youngClone);
+          expect(young.skipReason).toBe("too-young");
+          expect(young.bytes).toBeGreaterThan(0);
+          expect(candidateByPath(dryRun, fixture.mainClone).skipReason).toBe("linked-worktrees-present");
+          expect(
+            A.some(
+              dryRun.candidates,
+              (candidate) => candidate.path === fixture.worktreeHolder || candidate.path === fixture.heldWorktree
+            )
+          ).toBe(false);
+          const existsBeforeApply = yield* fs.exists(fixture.depthOneClone);
+          expect(existsBeforeApply).toBe(true);
+
+          const applied = yield* runTmpfsReap({
+            apply: true,
+            cacheRoot: fixture.cacheRoot,
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot: fixture.tmpRoot,
+          });
+          expect(applied.reapedCount).toBe(4);
+          expect(applied.reclaimedBytes).toBeGreaterThan(0);
+          const removed = yield* Effect.forEach(
+            [fixture.depthOneClone, fixture.probesParent, fixture.mixedClone, fixture.separateGitDirClone],
+            (candidate) => fs.exists(candidate),
+            { concurrency: 1 }
+          );
+          expect(removed).toEqual([false, false, false, false]);
+          const kept = yield* Effect.forEach(
+            [
+              path.join(fixture.mixedParent, "notes", "keep.txt"),
+              fixture.youngClone,
+              fixture.mainClone,
+              fixture.heldWorktree,
+              fixture.separateGitDir,
+            ],
+            (candidate) => fs.exists(candidate),
+            { concurrency: 1 }
+          );
+          expect(kept).toEqual([true, true, true, true, true]);
+        })
+      )
+    );
+    it.effect("refuses a Git checkout parent folder while a process works inside one of its clones", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.scoped(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const fixture = yield* makeGitCheckoutFixture(root);
+            const liveClone = path.join(fixture.probesParent, "probe-b");
+
+            yield* ChildProcess.make("sh", ["-c", "while :; do sleep 1; done"], {
+              cwd: liveClone,
+              stdin: "ignore",
+              stderr: "pipe",
+              stdout: "pipe",
+            });
+            const report = yield* runTmpfsReap({
+              apply: true,
+              cacheRoot: fixture.cacheRoot,
+              classes: ["git-checkout", "git-checkout-parent"],
+              nowMillis: FIXTURE_NOW_MILLIS,
+              tmpRoot: fixture.tmpRoot,
+            });
+            const parent = candidateByPath(report, fixture.probesParent);
+            expect(parent.action).toBe("skip");
+            expect(parent.skipReason).toBe("live-cwd-ref");
+            expect(candidateByPath(report, liveClone).skipReason).toBe("live-cwd-ref");
+            expect(candidateByPath(report, path.join(fixture.probesParent, "probe-a")).action).toBe("remove-dir");
+            const liveExists = yield* fs.exists(liveClone);
+            expect(liveExists).toBe(true);
+            const idleSiblingExists = yield* fs.exists(path.join(fixture.probesParent, "probe-a"));
+            expect(idleSiblingExists).toBe(false);
+          })
+        )
       )
     );
   });
