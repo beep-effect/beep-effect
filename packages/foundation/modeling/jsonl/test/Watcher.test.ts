@@ -1,5 +1,4 @@
-// Adapted from upstream Watcher.test.ts (MIT). Storage and real mutation events
-// come from MemoryFileSystem; the decorator only exposes watcher registration.
+// Adapted from upstream Watcher.test.ts (MIT).
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -22,7 +21,7 @@ const watched = Effect.fn("JsonlTest.watched")(function* (seed: O.Option<string>
   const fs = yield* memory();
   if (O.isSome(seed)) yield* fs.writeFileString(path, seed.value);
   const registrations = yield* Queue.unbounded<string>();
-  const decorated: FileSystem.FileSystem = {
+  const registrationObserverOverSharedMemoryFileSystem: FileSystem.FileSystem = {
     ...fs,
     watch: (target, options) =>
       Stream.unwrap(
@@ -33,7 +32,7 @@ const watched = Effect.fn("JsonlTest.watched")(function* (seed: O.Option<string>
         })
       ),
   };
-  const journal = yield* open(decorated);
+  const journal = yield* open(registrationObserverOverSharedMemoryFileSystem);
   const take1 = yield* Queue.take(registrations);
   assert.strictEqual(take1, O.isSome(seed) ? path : "/journal");
   return { fs, journal, registrations };
@@ -80,8 +79,11 @@ it.effect("a torn external tail is consumed only after completion", () =>
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     const whole = line(2);
     yield* externalAppend(fs, Str.slice(0, 20)(whole));
-    // Complete history remains readable while the original writer finishes.
-    assert.strictEqual((yield* journal.query().pipe(Stream.runCollect)).length, 1);
+    assert.strictEqual(
+      (yield* journal.query().pipe(Stream.runCollect)).length,
+      1,
+      "complete history remains readable while the original writer finishes"
+    );
     yield* externalAppend(fs, Str.slice(20)(whole));
     const join3 = yield* Fiber.join(reader);
     assert.deepStrictEqual(
@@ -180,11 +182,12 @@ for (const present of [false, true]) {
         Stream.runHead,
         Effect.forkChild({ startImmediately: true })
       );
-      // This append finishes while acquisition is blocked, so the installed
-      // watch cannot emit its event. Only catch-up after readiness can see it.
       yield* externalAppend(fs, line(2));
       const isDone6 = yield* Deferred.isDone(release);
-      assert.isFalse(isDone6);
+      assert.isFalse(
+        isDone6,
+        "the append finished while watch acquisition was blocked, so only catch-up after readiness can see it"
+      );
       yield* Deferred.succeed(release, undefined);
       const join7 = yield* Fiber.join(reader);
       assertSome(O.flatten(join7).pipe(O.map((row) => row.data)), { round: 2, label: "seed" });
@@ -280,8 +283,6 @@ it.effect("activation handoff drains an ingest staged behind a backpressured cat
       Stream.filter((value) => O.exists(value, (row) => row.event === "noted" && row.data.round === 2)),
       Stream.runHead
     );
-    // Catch-up A has advanced through two rows but capacity one blocks its
-    // second publication. A directory poke now stages B behind A's baton.
     yield* externalAppend(fs, line(3));
     yield* Queue.offer(directoryEvents, { _tag: "Create", path });
     yield* SubscriptionRef.changes(journal.latest).pipe(
@@ -292,7 +293,11 @@ it.effect("activation handoff drains an ingest staged behind a backpressured cat
     const second = yield* PubSub.take(subscription);
     yield* Deferred.await(fileArmed);
     const size9 = yield* PubSub.size(journal.hub);
-    assert.strictEqual(size9, 1, "handoff must retain B's staged publication");
+    assert.strictEqual(
+      size9,
+      1,
+      "capacity one blocks catch-up A's second publication and a directory poke stages B behind A's baton, so the handoff must retain B's staged publication"
+    );
     const third = yield* PubSub.take(subscription);
     assert.deepStrictEqual(
       A.flatMap([first, second, third], (take) =>
