@@ -5,12 +5,13 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpUrl } from "@beep/ontology/Ontology.models";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { URLStr } from "@beep/schema/URL";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PosInt } from "../../Schema/PosInt.ts";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
@@ -18,7 +19,38 @@ import { SourceType } from "../Model/EnrichedContent.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
-export { HttpUrl };
+const decodeUrlOption = S.decodeOption(S.URLFromString);
+
+const hasHttpScheme = (value: URLStr): boolean =>
+  O.exists(decodeUrlOption(value), (url) => url.protocol === "http:" || url.protocol === "https:");
+
+/**
+ * An absolute URL with the http or https scheme, as link ingestion accepts it.
+ *
+ * **Example** (Accept an https link)
+ *
+ * ```ts
+ * import { HttpUrl } from "@effect-ontology/Domain/Schema/LinkIngestion"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HttpUrl)("https://example.com/page")) // true
+ * console.log(S.is(HttpUrl)("ftp://example.com/file")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HttpUrl = URLStr.check(
+  S.makeFilter(hasHttpScheme, { message: "URL must use the http or https scheme" })
+).pipe($I.annoteSchema("HttpUrl", { description: "An absolute URL with the http or https scheme." }));
+
+/**
+ * Decoded type of {@link HttpUrl}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HttpUrl = typeof HttpUrl.Type;
 
 /**
  * Canonical lifecycle status shared by link contracts and persistence.

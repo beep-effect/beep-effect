@@ -47,11 +47,6 @@ export * from "./Fold.models.ts";
  */
 export * from "./Fold.projections.ts";
 /**
- * @since 0.0.0
- * @category configuration
- */
-export * as Ontology from "./Ontology.models.ts";
-/**
  * Intake-serving semantic-foundation models and services.
  *
  * @category models

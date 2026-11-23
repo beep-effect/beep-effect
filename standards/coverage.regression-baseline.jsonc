@@ -31262,18 +31262,6 @@
             "functions": 9
           }
         },
-        "packages/foundation/modeling/ontology/src/Ontology.models.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts": {
           "lines": 100,
           "statements": 100,

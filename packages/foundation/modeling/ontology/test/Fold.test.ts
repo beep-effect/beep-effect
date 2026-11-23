@@ -1,11 +1,9 @@
 import { make } from "@beep/identity";
-import { IdentityAuthority } from "@beep/identity/Authority";
 import { IRI } from "@beep/identity/Iri";
 import { RegistryVocab, view } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable } from "@beep/identity/Term";
 import { foldWith, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
 import { AssembledOntology, FactLiteral } from "@beep/ontology/Fold.models";
-import { OWLClass } from "@beep/ontology/Ontology.models";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
@@ -101,7 +99,7 @@ class Spec extends S.Opaque<Spec, { readonly brand: unique symbol }>()(
 class UnsafeLocal extends S.Opaque<UnsafeLocal, { readonly brand: unique symbol }>()(
   S.Struct({
     label: S.String,
-  }).pipe($I.annoteSchema("Ontology.models/HttpUrl", { description: "Unsafe local." }))
+  }).pipe($I.annoteSchema("Classification.models/ClassificationPin", { description: "Unsafe local." }))
 ) {}
 
 const triples = [
@@ -354,7 +352,9 @@ describe("Ontology.fold projections", () => {
       expect(turtle).toContain("@prefix beep: <https://beep-effect.com/ns/patent/> .");
       expect(turtle).toContain("a rdfs:Class");
       expect(turtle).toContain("beep:Claim owl:sameAs <https://schema.org/CreativeWork> .");
-      expect(turtle).toContain("<https://beep-effect.com/ns/patent/Ontology.models/HttpUrl> a rdfs:Class");
+      expect(turtle).toContain(
+        "<https://beep-effect.com/ns/patent/Classification.models/ClassificationPin> a rdfs:Class"
+      );
       expect(turtle).toContain('rdfs:comment "Patent claim\\nwith escaped text."');
       expect(toTurtle(first)).toBe(toTurtle(first));
       expect(toTurtle(first)).toBe(toTurtle(second));
@@ -944,28 +944,50 @@ describe("Ontology.fold extended vocabulary", () => {
   );
 });
 
-describe("Ontology.fold FOLIO-derived module", () => {
-  it.effect("renders the migrated OWLClass module through all four projections byte-identically", () =>
+class FoldedConcept extends S.Opaque<FoldedConcept, { readonly brand: unique symbol }>()(
+  S.Struct({
+    iri: S.NonEmptyString,
+    label: S.String.pipe(
+      S.OptionFromOptionalNullOr,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.key({ term: "rdfs:label", title: "Label" })
+    ),
+    sub_class_of: S.NonEmptyString.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.key({ term: "rdfs:subClassOf", title: "Sub Class Of" })
+    ),
+    parent_class_of: S.NonEmptyString.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.key({ term: "^rdfs:subClassOf", title: "Parent Class Of" })
+    ),
+  }).pipe($I.annoteSchema("FoldedConcept", { description: "Test-declared class with forward and reverse keys." }))
+) {}
+
+describe("Ontology.fold of a class with forward and reverse keys", () => {
+  it.effect("renders a test-declared class through all four projections byte-identically", () =>
     Effect.gen(function* () {
-      const foldFolio = foldUnder("folio", `${IdentityAuthority}ontology/Ontology.models/`);
       const input = {
-        label: "FOLIO Class Vocabulary",
-        schemas: [OWLClass],
-        triples: [[OWLClass, "rdfs:seeAlso", "https://folio.openlegalstandard.org/"]],
+        label: "Folded Concept Vocabulary",
+        schemas: [FoldedConcept],
+        triples: [[FoldedConcept, "rdfs:seeAlso", "https://example.test/concepts"]],
       } satisfies OntologyFoldInput;
 
-      const assembled = yield* foldFolio(input);
-      const second = yield* foldFolio(input);
+      const assembled = yield* foldPatent(input);
+      const second = yield* foldPatent(input);
 
       expect(toJsonLd(assembled)).toEqual(toJsonLd(second));
       expect(toTurtle(assembled)).toBe(toTurtle(second));
       expect(toMarkdown(assembled)).toBe(toMarkdown(second));
       expect(toContext(assembled)).toEqual(toContext(second));
 
-      const claimClass = O.getOrThrow(A.head(assembled.classes));
-      expect(claimClass.iri).toBe("https://beep-effect.com/ns/ontology/Ontology.models/OWLClass");
+      const conceptClass = O.getOrThrow(A.head(assembled.classes));
+      expect(conceptClass.iri).toBe("https://beep-effect.com/ns/patent/FoldedConcept");
       const predicate = (key: string) =>
-        O.getOrThrow(A.findFirst(claimClass.predicates, (candidate) => candidate.key === key));
+        O.getOrThrow(A.findFirst(conceptClass.predicates, (candidate) => candidate.key === key));
       const subClassOf = predicate("sub_class_of");
       const parentClassOf = predicate("parent_class_of");
       strictEqual(subClassOf.termIri, "http://www.w3.org/2000/01/rdf-schema#subClassOf");

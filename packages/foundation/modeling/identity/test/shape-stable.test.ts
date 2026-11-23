@@ -413,7 +413,7 @@ describe("@beep/identity shape-stable harness", () => {
     const representatives = [
       IdentityPackages.$I,
       IdentityPackages.$SchemaId,
-      IdentityPackages.$OntologyId.create("Ontology.models").create("OWLClass"),
+      IdentityPackages.$OntologyId.create("Classification.models").create("ClassificationPin"),
       IdentityPackages.$UsptoMcpId.create("Server"),
     ];
 
@@ -426,22 +426,30 @@ describe("@beep/identity shape-stable harness", () => {
   });
 
   it("keeps annote and annoteSchema existing record keys and values stable while allowing additions", () => {
-    const $I = IdentityPackages.$OntologyId.create("Ontology.models");
-    const annotation = $I.annote("OWLClass", {
-      description: "Regression model for ontology class annotations.",
+    const $I = IdentityPackages.$OntologyId.create("Classification.models");
+    const annotation = $I.annote("ClassificationPin", {
+      description: "Regression model for classification pin annotations.",
     });
     const schema = S.String.pipe(
-      $I.annoteSchema("OWLClassLabel", {
+      $I.annoteSchema("ClassificationPinLabel", {
         description: "Regression schema annotation.",
       })
     );
     const schemaAnnotations = S.resolveAnnotations(schema);
 
-    expectExistingAnnotationShape(annotation, "@beep/ontology/Ontology.models/OWLClass", "OWLClass", ["description"]);
-    expect(annotation.description).toBe("Regression model for ontology class annotations.");
-    expectExistingAnnotationShape(schemaAnnotations, "@beep/ontology/Ontology.models/OWLClassLabel", "OWLClassLabel", [
-      "description",
-    ]);
+    expectExistingAnnotationShape(
+      annotation,
+      "@beep/ontology/Classification.models/ClassificationPin",
+      "ClassificationPin",
+      ["description"]
+    );
+    expect(annotation.description).toBe("Regression model for classification pin annotations.");
+    expectExistingAnnotationShape(
+      schemaAnnotations,
+      "@beep/ontology/Classification.models/ClassificationPinLabel",
+      "ClassificationPinLabel",
+      ["description"]
+    );
     expect(schemaAnnotations?.description).toBe("Regression schema annotation.");
   });
 

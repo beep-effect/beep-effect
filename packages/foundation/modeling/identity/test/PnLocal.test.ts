@@ -53,8 +53,8 @@ const escapableLocalCharacters = [
 
 describe("PnLocal", () => {
   it("recognizes safe unescaped Turtle PN_LOCAL values", () => {
-    expect(isSafeLocal("HttpUrl")).toBe(true);
-    expect(isSafeLocal("Ontology.models/HttpUrl")).toBe(false);
+    expect(isSafeLocal("ClassificationPin")).toBe(true);
+    expect(isSafeLocal("Classification.models/ClassificationPin")).toBe(false);
     expect(isSafeLocal("a.b")).toBe(true);
     expect(isSafeLocal("a.b.")).toBe(false);
     expect(isSafeLocal("9lives")).toBe(true);
@@ -71,7 +71,7 @@ describe("PnLocal", () => {
   });
 
   it("accepts escaped parser-side local names", () => {
-    expect(acceptsEscapedLocal("Ontology.models\\/HttpUrl")).toBe(true);
+    expect(acceptsEscapedLocal("Classification.models\\/ClassificationPin")).toBe(true);
     expect(acceptsEscapedLocal("claim\\#1")).toBe(true);
     expect(acceptsEscapedLocal("bad\\z")).toBe(false);
     expect(acceptsEscapedLocal("bad%0Z")).toBe(false);
@@ -139,11 +139,11 @@ describe("PnLocal", () => {
 
   it("falls back to full IRI when a local cannot be emitted unescaped", () => {
     expect(
-      prefixedNameOrIri("Ontology.models/HttpUrl", {
+      prefixedNameOrIri("Classification.models/ClassificationPin", {
         prefix: "beep",
-        fullIri: "https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl",
+        fullIri: "https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin",
       })
-    ).toBe("<https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl>");
+    ).toBe("<https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin>");
   });
 
   it("does not interpolate unsafe prefixes or full IRI delimiters into Turtle", () => {

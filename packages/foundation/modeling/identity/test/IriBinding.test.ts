@@ -50,26 +50,28 @@ describe("@beep/identity IRI binding", () => {
   it("derives exact IRI and CURIE literals through create and compose chains", () => {
     const { $BeepId } = make({ authority: "https://beep-effect.com/ns/", prefix: "beep" })("beep");
     const modules = $BeepId.compose("ontology", "schema");
-    const model = modules.$OntologyId.create("Ontology.models").create("HttpUrl");
+    const model = modules.$OntologyId.create("Classification.models").create("ClassificationPin");
 
     expectTypeOf<
-      IriFromIdentity<"https://beep-effect.com/ns/", "@beep/ontology/Ontology.models/HttpUrl">
-    >().toEqualTypeOf<"https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl">();
+      IriFromIdentity<"https://beep-effect.com/ns/", "@beep/ontology/Classification.models/ClassificationPin">
+    >().toEqualTypeOf<"https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin">();
     expectTypeOf<
-      CurieFromIdentity<"beep", "@beep/ontology/Ontology.models/HttpUrl">
-    >().toEqualTypeOf<"beep:ontology/Ontology.models/HttpUrl">();
+      CurieFromIdentity<"beep", "@beep/ontology/Classification.models/ClassificationPin">
+    >().toEqualTypeOf<"beep:ontology/Classification.models/ClassificationPin">();
     expectTypeOf<
-      SlugFromIdentifier<"@beep/ontology/Ontology.models/HttpUrl">
-    >().toEqualTypeOf<"beep-ontology-ontology-models-http-url">();
+      SlugFromIdentifier<"@beep/ontology/Classification.models/ClassificationPin">
+    >().toEqualTypeOf<"beep-ontology-classification-models-classification-pin">();
     expectTypeOf(modules.$OntologyId.iri).toEqualTypeOf<"https://beep-effect.com/ns/ontology">();
-    expectTypeOf(model.iri).toEqualTypeOf<"https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl">();
-    expectTypeOf(model.curie).toEqualTypeOf<"beep:ontology/Ontology.models/HttpUrl">();
-    expectTypeOf(model.slug).toEqualTypeOf<"beep-ontology-ontology-models-http-url">();
+    expectTypeOf(
+      model.iri
+    ).toEqualTypeOf<"https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin">();
+    expectTypeOf(model.curie).toEqualTypeOf<"beep:ontology/Classification.models/ClassificationPin">();
+    expectTypeOf(model.slug).toEqualTypeOf<"beep-ontology-classification-models-classification-pin">();
 
-    expect(model.string()).toBe("@beep/ontology/Ontology.models/HttpUrl");
-    expect(model.iri).toBe("https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl");
-    expect(model.curie).toBe("beep:ontology/Ontology.models/HttpUrl");
-    expect(model.slug).toBe("beep-ontology-ontology-models-http-url");
+    expect(model.string()).toBe("@beep/ontology/Classification.models/ClassificationPin");
+    expect(model.iri).toBe("https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin");
+    expect(model.curie).toBe("beep:ontology/Classification.models/ClassificationPin");
+    expect(model.slug).toBe("beep-ontology-classification-models-classification-pin");
   });
 
   it("rebases projections while preserving identity and symbol interning", () => {
@@ -94,30 +96,32 @@ describe("@beep/identity IRI binding", () => {
   });
 
   it("adds owned iri and curie fields to bound annotation records", () => {
-    const $Model = $OntologyId.create("Ontology.models");
-    const annotation = $Model.annote("OWLClass", {
-      description: "Ontology class metadata.",
+    const $Model = $OntologyId.create("Classification.models");
+    const annotation = $Model.annote("ClassificationPin", {
+      description: "Classification pin metadata.",
     });
     const schema = S.String.pipe(
-      $Model.annoteSchema("OWLClassLabel", {
-        description: "Ontology class label.",
+      $Model.annoteSchema("ClassificationPinLabel", {
+        description: "Classification pin label.",
       })
     );
     const schemaAnnotations = S.resolveAnnotations(schema);
 
-    expectTypeOf(annotation.iri).toEqualTypeOf<"https://beep-effect.com/ns/ontology/Ontology.models/OWLClass">();
-    expectTypeOf(annotation.curie).toEqualTypeOf<"beep:ontology/Ontology.models/OWLClass">();
+    expectTypeOf(
+      annotation.iri
+    ).toEqualTypeOf<"https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin">();
+    expectTypeOf(annotation.curie).toEqualTypeOf<"beep:ontology/Classification.models/ClassificationPin">();
     expect(annotation).toMatchObject({
-      identifier: "@beep/ontology/Ontology.models/OWLClass",
-      iri: "https://beep-effect.com/ns/ontology/Ontology.models/OWLClass",
-      curie: "beep:ontology/Ontology.models/OWLClass",
-      title: "OWLClass",
-      description: "Ontology class metadata.",
+      identifier: "@beep/ontology/Classification.models/ClassificationPin",
+      iri: "https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin",
+      curie: "beep:ontology/Classification.models/ClassificationPin",
+      title: "ClassificationPin",
+      description: "Classification pin metadata.",
     });
     expect(getProperty(schemaAnnotations, "iri")).toBe(
-      "https://beep-effect.com/ns/ontology/Ontology.models/OWLClassLabel"
+      "https://beep-effect.com/ns/ontology/Classification.models/ClassificationPinLabel"
     );
-    expect(getProperty(schemaAnnotations, "curie")).toBe("beep:ontology/Ontology.models/OWLClassLabel");
+    expect(getProperty(schemaAnnotations, "curie")).toBe("beep:ontology/Classification.models/ClassificationPinLabel");
   });
 
   it("keeps one-argument make composers unbound and type-safe", () => {

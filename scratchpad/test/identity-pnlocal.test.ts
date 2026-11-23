@@ -30,8 +30,8 @@ const escapableLocalCharacters = [
 
 describe("PnLocal", () => {
   it("recognizes safe unescaped Turtle PN_LOCAL values", () => {
-    expect(isSafeLocal("HttpUrl")).toBe(true);
-    expect(isSafeLocal("Ontology.models/HttpUrl")).toBe(false);
+    expect(isSafeLocal("ClassificationPin")).toBe(true);
+    expect(isSafeLocal("Classification.models/ClassificationPin")).toBe(false);
     expect(isSafeLocal("a.b")).toBe(true);
     expect(isSafeLocal("a.b.")).toBe(false);
     expect(isSafeLocal("9lives")).toBe(true);
@@ -66,10 +66,10 @@ describe("PnLocal", () => {
 
   it("falls back to full IRI when a local cannot be emitted unescaped", () => {
     expect(
-      prefixedNameOrIri("Ontology.models/HttpUrl", {
+      prefixedNameOrIri("Classification.models/ClassificationPin", {
         prefix: "beep",
-        fullIri: "https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl",
+        fullIri: "https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin",
       }),
-    ).toBe("<https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl>");
+    ).toBe("<https://beep-effect.com/ns/ontology/Classification.models/ClassificationPin>");
   });
 });
