@@ -29,6 +29,7 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -41,6 +42,7 @@ import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import type { GateToolExit } from "@beep/repo-cli/commands/Gate";
 
 const ENTRY = "/home/alice/beep-effect/packages/tooling/tool/cli/src/bin.ts";
 
@@ -117,16 +119,17 @@ describe("the lane run's report", () => {
   });
 
   it("the record is a root run of the lane gate", () => {
-    deepStrictEqual(recordLocation(ciLaneRecordTarget("20261122T100000000Z-0001")), {
-      record: ".beep/gates/lane/20261122T100000000Z-0001.json",
-      log: ".beep/gates/lane/20261122T100000000Z-0001.log",
-    });
+    const location = recordLocation(ciLaneRecordTarget("20261122T100000000Z-0001"));
+    deepStrictEqual(
+      [location.record, location.log],
+      [".beep/gates/lane/20261122T100000000Z-0001.json", ".beep/gates/lane/20261122T100000000Z-0001.log"]
+    );
   });
 
   it("a step wrote a record when one is new or written again", () => {
     const before = HashMap.make(["packages/a/.beep/gates/test/report.json", 1]);
     assertTrue(stepWroteGateRecords(before, HashMap.make(["packages/a/.beep/gates/test/report.json", 2])));
-    assertTrue(stepWroteGateRecords(HashMap.make(["packages/b/.beep/gates/test/report.json", 1]))(before));
+    assertTrue(before.pipe(stepWroteGateRecords(HashMap.make(["packages/b/.beep/gates/test/report.json", 1]))));
     strictEqual(stepWroteGateRecords(before, before), false);
   });
 });
@@ -140,7 +143,7 @@ const childScript = (lines: ReadonlyArray<string>, exitCode: number, writesRecor
             'require("node:fs").writeFileSync("pkg/.beep/gates/test/report.json", "{}");',
           ]
         : []),
-      `process.stdout.write(${JSON.stringify(A.join(lines, "\n"))} + "\\n");`,
+      `process.stdout.write(\`${A.join(lines, "\\n")}\\n\`);`,
       `process.stderr.write("recorded=" + process.env.${CI_LANE_RECORDED_ENV} + "\\n");`,
       `process.exit(${exitCode});`,
     ],
@@ -167,8 +170,10 @@ const capturedStdout = Effect.gen(function* () {
 });
 
 const withRecorder = <A, E, R>(stdio: Layer.Layer<Stdio.Stdio>, effect: Effect.Effect<A, E, R | CiLaneRecorder>) =>
-  effect.pipe(
-    Effect.provide(CiLaneRecorder.layer.pipe(Layer.provide(stdio))),
+  CiLaneRecorder.layer.pipe(
+    Layer.provide(stdio),
+    Layer.build,
+    Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
     Effect.provideServiceEffect(Console.Console, TestConsole.make)
   );
 
@@ -188,16 +193,17 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("a recorded lane step", 
       );
       strictEqual(recording.exitCode, 0);
       deepStrictEqual([recording.commands.errors, recording.commands.warnings, recording.commands.notices], [1, 1, 0]);
-      const teed = A.join(yield* Ref.get(stdout.chunks), "");
+      const chunks = yield* Ref.get(stdout.chunks);
+      const teed = A.join(chunks, "");
       assertTrue(Str.includes("::warning::y")(teed));
       assertTrue(Str.includes("recorded=1")(teed));
-      assertTrue(O.isSome(recording.record));
+      assertTrue(recording.record.pipe(O.isSome));
       const found = yield* findJobGateRecords(root);
       deepStrictEqual(
         A.map(found, (entry) => [entry.report.gate, entry.report.subject, entry.report.outcome]),
         [[CI_LANE_GATE, "docs-policy", "all-pass"]]
       );
-      const log = yield* fs.readFileString(path.join(root, recordLocation(O.getOrThrow(recording.record)).log));
+      const log = yield* fs.readFileString(path.join(root, recording.record.pipe(O.getOrThrow, recordLocation).log));
       assertTrue(Str.includes("::error file=a.ts::x")(log));
       const used = yield* readAnnotationsUsed(root);
       deepStrictEqual([used.errors, used.warnings, used.notices], [1, 1, 0]);
@@ -244,7 +250,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("a recorded lane step", 
       const laneDir = yield* fs.exists(path.join(root, ".beep", "gates", CI_LANE_GATE));
       strictEqual(laneDir, false);
       const stamps = yield* gateRecordStamps(root);
-      deepStrictEqual(A.fromIterable(HashMap.keys(stamps)), ["pkg/.beep/gates/test/report.json"]);
+      deepStrictEqual(stamps.pipe(HashMap.keys, A.fromIterable), ["pkg/.beep/gates/test/report.json"]);
     })
   );
 
@@ -322,12 +328,13 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("a recorded lane step", 
       yield* withRecorder(stdout.layer, recordCiLaneStep(requestFor(root, childScript(["ok"], 0))));
       const failure = yield* withRecorder(
         stdout.layer,
-        recordCiLaneStep(requestFor(root, childScript(["red"], 2))).pipe(Effect.flip)
+        recordCiLaneStep(requestFor(root, childScript(["red"], 2))).pipe(
+          Effect.as(O.none<GateToolExit>()),
+          Effect.catchTag("GateToolExit", flow(O.some, Effect.succeed))
+        )
       );
-      deepStrictEqual(
-        [failure._tag, failure.exitCode, failure.gate, failure.subject],
-        ["GateToolExit", 2, CI_LANE_GATE, "docs-policy"]
-      );
+      const exit = O.getOrThrow(failure);
+      deepStrictEqual([exit.exitCode, exit.gate, exit.subject], [2, CI_LANE_GATE, "docs-policy"]);
     })
   );
 });
