@@ -36,7 +36,7 @@ import { IRI } from "./Iri.ts";
 import { RegistryBindings, RegistryDeprecations, RegistryVocab } from "./internal/generated/Registry.data.ts";
 import { SegmentSchema } from "./internal/Segment.ts";
 import { $IdentityId } from "./packages.ts";
-import { Namespace, Term, TermIri, TermLocal } from "./Term.ts";
+import { isNamespaceShapedIri, Namespace, NamespaceIri, Term, TermIri, TermLocal } from "./Term.ts";
 import type { RegistryTable } from "./Term.ts";
 import type { Curie, Expand, VocabShape } from "./Vocab.ts";
 
@@ -156,7 +156,7 @@ export interface RegistryView {
   readonly expandPredicate: (predicate: string) => O.Option<ExpandedPredicate>;
   /** The namespace a prefix names. */
   readonly namespaceOf: (prefix: string) => O.Option<Namespace>;
-  /** The live term a deprecated IRI is replaced by, following the deprecation chain. */
+  /** The live term (or, for a retired namespace IRI, the namespace IRI) a deprecated IRI is replaced by, following the chain. */
   readonly replacementOf: (iri: string) => O.Option<TermIri>;
 }
 
@@ -170,7 +170,7 @@ const curieOf = (term: Term): string => `${term.namespace}:${term.local}`;
 
 const makeView = (data: RegistryData): RegistryView => {
   const namespaces = A.map(R.toEntries(data.vocab), ([prefix, entry]) => ({
-    namespace: Namespace.make({ prefix, iri: IRI.make(entry.iri) }),
+    namespace: Namespace.make({ prefix, iri: NamespaceIri.make(entry.iri) }),
     locals: entry.terms,
   }));
   const terms = A.flatMap(namespaces, ({ namespace, locals }) =>
@@ -191,16 +191,19 @@ const makeView = (data: RegistryData): RegistryView => {
     ])
   );
 
-  const follow = (current: string, seen: HashSet.HashSet<string>): O.Option<TermIri> =>
+  const namespaceIris = HashSet.fromIterable(A.map(namespaces, ({ namespace }): string => namespace.iri));
+  const isSuccessor =
+    (origin: string) =>
+    (iri: string): boolean =>
+      isNamespaceShapedIri(origin) ? HashSet.has(namespaceIris, iri) : HashMap.has(termByIri, iri);
+
+  const follow = (origin: string, current: string, seen: HashSet.HashSet<string>): O.Option<TermIri> =>
     pipe(
       HashMap.get(replacementByTerm, current),
       O.flatten,
       O.filter((next) => !HashSet.has(seen, next)),
       O.flatMap((next) =>
-        O.match(HashMap.get(termByIri, next), {
-          onNone: () => follow(next, HashSet.add(seen, next)),
-          onSome: (term) => O.some(term.iri),
-        })
+        isSuccessor(origin)(next) ? TermIri.makeOption(next) : follow(origin, next, HashSet.add(seen, next))
       )
     );
 
@@ -226,7 +229,7 @@ const makeView = (data: RegistryData): RegistryView => {
         HashMap.get(bindingByCode, code),
         O.flatMap((term) => HashMap.get(termByIri, term))
       ),
-    replacementOf: (iri) => follow(iri, HashSet.make(iri)),
+    replacementOf: (iri) => follow(iri, iri, HashSet.make(iri)),
   };
 };
 
@@ -303,6 +306,7 @@ export const view = (table: RegistryTable): RegistryView => {
  * O.isNone(registry.expand("skos:prefLabel")) // => true
  * ```
  *
+ * @throws A schema validation error when an entry's IRI does not end with `/` or `#`, or a term is not a local.
  * @category constructors
  * @since 0.0.0
  */
@@ -313,6 +317,28 @@ const generated: RegistryView = /*#__PURE__*/ makeView({
   bindings: RegistryBindings,
   deprecations: RegistryDeprecations,
 });
+
+/**
+ * The view over the generated registry, the one the module-level lookups read.
+ *
+ * **When to use**
+ *
+ * Use when a caller takes a {@link RegistryView} and should read the
+ * generated registry, such as `foldWith` in `@beep/ontology`.
+ *
+ * **Example** (Read a binding through the generated view)
+ *
+ * ```ts import.meta.vitest name="Read a binding through the generated view"
+ * import * as O from "effect/Option"
+ * import { generatedView } from "@beep/identity/Registry"
+ *
+ * O.getOrThrow(generatedView.expand("skos:prefLabel")) // => "http://www.w3.org/2004/02/skos/core#prefLabel"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const generatedView: RegistryView = generated;
 
 const isRegistryCurie = (curie: string): curie is RegistryCurie => O.isSome(generated.expand(curie));
 
@@ -502,11 +528,10 @@ export const namespace = <const P extends RegistryPrefix>(prefix: P): RegistryNa
   iri: RegistryVocab[prefix].iri,
 });
 
-const baseIri = (base: string): string =>
-  O.getOrThrowWith(
-    Str.includes(":")(base) ? generated.expand(base) : O.map(generated.namespaceOf(base), (row) => row.iri),
-    unregistered(base)
-  );
+const baseOf = (base: string): O.Option<IRI> =>
+  Str.includes(":")(base) ? generated.expand(base) : O.map(generated.namespaceOf(base), (row) => row.iri);
+
+const baseIri = (base: string): string => O.getOrThrowWith(baseOf(base), unregistered(base));
 
 /**
  * Refusal of an instance IRI that the generated registry already publishes, or of an empty raw key.

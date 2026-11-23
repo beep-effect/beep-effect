@@ -180,7 +180,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Holds/index.ts").then((module) => module.holdsCommand)),
   groupRoute(
-    { name: "identity", description: "Declared terms: generate and check the identity registry" },
+    {
+      name: "identity",
+      description: "Declared terms: generate and check the identity registry, rebind codes, deprecate terms",
+    },
     []
   )(() => import("../../commands/Identity/index.ts").then((module) => module.identityCommand)),
   groupRoute(

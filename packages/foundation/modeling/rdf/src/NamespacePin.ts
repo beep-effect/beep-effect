@@ -10,6 +10,7 @@
 import { IRI } from "@beep/identity/Iri";
 import { SafePnPrefix } from "@beep/identity/PnLocal";
 import { $RdfId } from "@beep/identity/packages";
+import { NamespaceIri } from "@beep/identity/Term";
 import { SpecificationRevision } from "@beep/schema/Conformance";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { SpdxExpression } from "@beep/spdx/SpdxExpression";
@@ -85,7 +86,7 @@ export class PinnedSource extends S.Opaque<PinnedSource, { readonly brand: uniqu
 export class NamespacePin extends S.Opaque<NamespacePin, { readonly brand: unique symbol }>()(
   S.Struct({
     prefix: SafePnPrefix.annotateKey({ description: "Registry prefix of the pinned namespace." }),
-    namespace: IRI.annotateKey({ description: "Registry namespace IRI the curated terms are minted under." }),
+    namespace: NamespaceIri.annotateKey({ description: "Registry namespace IRI the curated terms are minted under." }),
     source: PinnedSource.annotateKey({ description: "Where and at which revision the artifact was acquired." }),
     license: SpdxExpression.FromString.annotateKey({ description: "SPDX license expression of the artifact." }),
     attribution: S.NonEmptyString.annotateKey({ description: "Attribution notice carried with the projection." }),

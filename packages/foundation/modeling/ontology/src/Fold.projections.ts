@@ -12,7 +12,7 @@
  */
 
 import { prefixedNameOrIri } from "@beep/identity";
-import { contract, namespace } from "@beep/identity/Registry";
+import { contract } from "@beep/identity/Registry";
 import { O as OU } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -22,6 +22,7 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { coreNamespaces } from "./internal/CoreNamespaces.ts";
 import type {
   AssembledClass,
   AssembledFact,
@@ -149,28 +150,15 @@ const OWL_OBJECT_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
 const SKOS_CONCEPT = "http://www.w3.org/2004/02/skos/core#Concept";
 const SKOS_CONCEPT_SCHEME = "http://www.w3.org/2004/02/skos/core#ConceptScheme";
 
-type CorePrefix = { readonly prefix: string; readonly iri: string };
-
-const corePrefixes: ReadonlyArray<CorePrefix> = [
-  namespace("dcterms"),
-  namespace("owl"),
-  namespace("rdf"),
-  namespace("rdfs"),
-  namespace("skos"),
-];
-
-const withNamespaceSeparator = (iri: string): string =>
-  pipe(iri, Str.endsWith("/")) || pipe(iri, Str.endsWith("#")) ? iri : `${iri}/`;
-
 const localFromNamespace = (namespace: string, iri: string): O.Option<string> =>
   pipe(iri, Str.startsWith(namespace)) ? O.some(pipe(iri, Str.slice(Str.length(namespace)))) : O.none();
 
 const compactCore = (iri: string): O.Option<string> =>
-  O.filter(contract(iri), (curie) => A.some(corePrefixes, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
+  O.filter(contract(iri), (curie) => A.some(coreNamespaces, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
 
 const compactOwned = (ontology: AssembledOntology, iri: string): O.Option<string> =>
   pipe(
-    localFromNamespace(withNamespaceSeparator(ontology.baseIri), iri),
+    localFromNamespace(ontology.baseIri, iri),
     O.map((local) => `${ontology.prefix}:${local}`)
   );
 
@@ -182,7 +170,7 @@ const compactIri = (ontology: AssembledOntology, iri: string): string =>
   );
 
 const isOwnedPredicate = (ontology: AssembledOntology, predicate: AssembledPredicate): boolean =>
-  O.isSome(localFromNamespace(withNamespaceSeparator(ontology.baseIri), predicate.termIri));
+  O.isSome(localFromNamespace(ontology.baseIri, predicate.termIri));
 
 const predicateContextTerm = (predicate: AssembledPredicate): JsonLdTerm => {
   if (predicate.reverse) {
@@ -220,9 +208,12 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toContext } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -231,9 +222,22 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
  *   { prefLabel: S.String.pipe($I.key("skos:prefLabel")) },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "prefLabel"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const skos = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "skos", iri: "http://www.w3.org/2004/02/skos/core#" },
+ *   terms: ["prefLabel"],
+ *   bindings: [],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent, skos])))
  *
  * const context = toContext(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
  * console.log(context.prefLabel) // "http://www.w3.org/2004/02/skos/core#prefLabel"
  * ```
@@ -244,9 +248,9 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
 export const toContext = (ontology: AssembledOntology): JsonLdContext =>
   R.fromEntries([
     ["@vocab", ontology.baseIri],
-    [ontology.prefix, prefixTerm(withNamespaceSeparator(ontology.baseIri))],
+    [ontology.prefix, prefixTerm(ontology.baseIri)],
     ...pipe(
-      corePrefixes,
+      coreNamespaces,
       A.map(({ iri, prefix }) => [prefix, prefixTerm(iri)] as const)
     ),
     ...classContextEntries(ontology.classes),
@@ -374,9 +378,12 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toJsonLd } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -385,11 +392,18 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  *   { text: S.String },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "text"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
  *
  * const document = toJsonLd(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
- * console.log(document["@graph"][0]?.["@id"]) // "https://beep-effect.com/ns/patent/Claim"
+ * console.log(document["@graph"][0]?.["@id"]) // "https://example.test/patent/Claim"
  * ```
  *
  * @category projections
@@ -422,9 +436,8 @@ export const toJsonLd = (ontology: AssembledOntology): JsonLdDocument => ({
 const iriRef = (iri: string): string => `<${iri}>`;
 
 const turtleTerm = (ontology: AssembledOntology, iri: string): string => {
-  const ownedNamespace = withNamespaceSeparator(ontology.baseIri);
   const owned = pipe(
-    localFromNamespace(ownedNamespace, iri),
+    localFromNamespace(ontology.baseIri, iri),
     O.map(prefixedNameOrIri({ prefix: ontology.prefix, fullIri: iri }))
   );
 
@@ -433,7 +446,7 @@ const turtleTerm = (ontology: AssembledOntology, iri: string): string => {
   }
 
   return pipe(
-    corePrefixes,
+    coreNamespaces,
     A.findFirst(({ iri: namespace }) => pipe(iri, Str.startsWith(namespace))),
     O.map(({ iri: namespace, prefix }) =>
       prefixedNameOrIri(pipe(iri, Str.slice(Str.length(namespace))), { prefix, fullIri: iri })
@@ -450,24 +463,22 @@ const escapeTurtleLiteral: (value: string) => string = flow(
   Str.replaceAll("\r", "\\r")
 );
 
+const quotedLiteral = (value: string | number | boolean): string => `"${escapeTurtleLiteral(`${value}`)}"`;
+
 const literalValue = (value: string | number | boolean): string =>
-  P.isString(value)
-    ? `"${escapeTurtleLiteral(value)}"`
-    : P.isBoolean(value)
-      ? `${value ? "true" : "false"}`
-      : `${value}`;
+  P.isString(value) ? quotedLiteral(value) : `${value}`;
 
 const turtleObject = (ontology: AssembledOntology, object: FactObject): string => {
   if (P.isString(object)) {
     return turtleTerm(ontology, object);
   }
 
-  const literal = literalValue(object.value);
+  const quoted = quotedLiteral(object.value);
 
   return pipe(
-    O.map(object.language, (language) => `${literal}@${language}`),
-    O.orElse(() => O.map(object.datatypeIri, (datatypeIri) => `${literal}^^${turtleTerm(ontology, datatypeIri)}`)),
-    O.getOrElse(() => literal)
+    O.map(object.language, (language) => `${quoted}@${language}`),
+    O.orElse(() => O.map(object.datatypeIri, (datatypeIri) => `${quoted}^^${turtleTerm(ontology, datatypeIri)}`)),
+    O.getOrElse(() => literalValue(object.value))
   );
 };
 
@@ -595,10 +606,10 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
   ];
 
   const entries: ReadonlyArray<readonly [string, string]> = [
-    [ontology.prefix, withNamespaceSeparator(ontology.baseIri)] as const,
+    [ontology.prefix, ontology.baseIri] as const,
     ...pipe(
-      corePrefixes,
-      A.filter(({ iri }) => pipe(usedIris, A.some(Str.startsWith(iri)))),
+      coreNamespaces,
+      A.filter(({ iri, prefix }) => prefix !== ontology.prefix && pipe(usedIris, A.some(Str.startsWith(iri)))),
       A.map(({ iri, prefix }) => [prefix, iri] as const)
     ),
   ];
@@ -615,13 +626,22 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  * writer falls back to full IRI references; literals are escaped. Only namespaces
  * declared in the Turtle header compact, so every printed prefixed name resolves.
  *
+ * **Gotchas**
+ *
+ * Language tags and datatypes follow quoted Turtle strings, including when the value is
+ * numeric or boolean. An ontology owned by a core prefix declares its core namespace
+ * through the owned entry.
+ *
  * **Example** (Turtle from folded ontology)
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toTurtle } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -630,11 +650,18 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  *   { text: S.String },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "text"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
  *
  * const turtle = toTurtle(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
- * console.log(turtle.includes("beep:Claim")) // true
+ * console.log(turtle.includes("patent:Claim")) // true
  * ```
  *
  * @category projections

@@ -3,8 +3,9 @@
  *
  * **Details**
  *
- * Every rule here is the rule that produced the 2026-11-18 transcript audit, under the rule version
- * {@link CensusRuleVersion}. Shell commands land in the first {@link ShellClassRules} entry whose pattern
+ * The rules started as the ones that produced the 2026-11-18 transcript audit; rule version
+ * `census-rules/2026-11-23` adds `beep ci failures` to the `ci-logs` class. Each report carries the
+ * {@link CensusRuleVersion} it ran under. Shell commands land in the first {@link ShellClassRules} entry whose pattern
  * matches, then `other-shell`; output lines land in the first {@link LineClassRules} entry that matches.
  * Changing any rule here changes what the census measures and needs a new rule version.
  *
@@ -26,13 +27,13 @@ const $I = $RepoAiMetricsId.create("census-rules");
  *
  * ```ts
  * import { CensusRuleVersion } from "@beep/repo-ai-metrics/census-rules"
- * console.log(CensusRuleVersion.literals[0]) // "census-rules/2026-11-18"
+ * console.log(CensusRuleVersion.literals) // ["census-rules/2026-11-18", "census-rules/2026-11-23"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CensusRuleVersion = LiteralKit(["census-rules/2026-11-18"]).pipe(
+export const CensusRuleVersion = LiteralKit(["census-rules/2026-11-18", "census-rules/2026-11-23"]).pipe(
   $I.annoteSchema("CensusRuleVersion", {
     description: "Version of the census class domains, matching rules and corpus selection rules.",
   })
@@ -45,7 +46,7 @@ export const CensusRuleVersion = LiteralKit(["census-rules/2026-11-18"]).pipe(
  *
  * ```ts
  * import type { CensusRuleVersion } from "@beep/repo-ai-metrics/census-rules"
- * const version: CensusRuleVersion = "census-rules/2026-11-18"
+ * const version: CensusRuleVersion = "census-rules/2026-11-23"
  * console.log(version)
  * ```
  *
@@ -61,13 +62,13 @@ export type CensusRuleVersion = typeof CensusRuleVersion.Type;
  *
  * ```ts
  * import { currentCensusRuleVersion } from "@beep/repo-ai-metrics/census-rules"
- * console.log(currentCensusRuleVersion) // "census-rules/2026-11-18"
+ * console.log(currentCensusRuleVersion) // "census-rules/2026-11-23"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const currentCensusRuleVersion: CensusRuleVersion = "census-rules/2026-11-18";
+export const currentCensusRuleVersion: CensusRuleVersion = "census-rules/2026-11-23";
 
 /**
  * The transcript populations the census reports separately.
@@ -289,7 +290,7 @@ export const ShellClassRules: ReadonlyArray<ShellClassRule> = A.map(
   [
     [
       "ci-logs",
-      /gh run view[^|;&]*--log|actions\/(jobs|runs)\/\d+\/(attempts\/\d+\/)?logs|\/logs\b.*gh api|gh api[^|;&]*\/logs|yeet gh[^|;&]*log|job-logs|run-logs/,
+      /gh run view[^|;&]*--log|actions\/(jobs|runs)\/\d+\/(attempts\/\d+\/)?logs|\/logs\b.*gh api|gh api[^|;&]*\/logs|yeet gh[^|;&]*log|job-logs|run-logs|beep(\.ts)? ci failures\b/,
     ],
     [
       "yeet",

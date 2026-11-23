@@ -7,6 +7,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import snapshot from "../registry/term-snapshot.json" with { type: "json" };
 import type { Curie, Expand } from "@beep/identity/Vocab";
 
@@ -20,21 +21,42 @@ describe("generated registry data", () => {
     expectTypeOf<Expand<"cito:cites", typeof RegistryVocab>>().toEqualTypeOf<"http://purl.org/spar/cito/cites">();
   });
 
-  it("binds no code identity and deprecates no term before the internal namespaces land", () => {
-    expect(R.keys(RegistryBindings)).toStrictEqual([]);
-    expect(R.keys(RegistryDeprecations)).toStrictEqual([]);
+  it("binds the 16 research-library classes and the 7 test-runner identities and deprecates 113 retired IRIs", () => {
+    expect(R.keys(RegistryBindings)).toHaveLength(23);
+    const boundPrefix = (curie: string) =>
+      Str.startsWith("research-library:")(curie) || Str.startsWith("vitest:")(curie);
+    expect(A.every(R.values(RegistryBindings), (binding) => boundPrefix(binding.curie))).toBe(true);
+    expect(R.keys(RegistryDeprecations)).toHaveLength(113);
   });
 
-  it("publishes the first term snapshot at release 1.0.0 with every term and namespace IRI", () => {
+  it("publishes the term snapshot at release 2.0.0 with every term and namespace IRI", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(snapshot));
-    expect(decoded.release).toBe("1.0.0");
+    expect(
+      decoded.release,
+      "PR B publishes the first snapshot at 1.0.0 with no bindings or deprecations. This change adds deprecations, so it is a major release and every binding and deprecation records since 2.0.0."
+    ).toBe("2.0.0");
+    expect(
+      A.dedupe(
+        A.appendAll(
+          A.map(decoded.bindings, (row) => row.since),
+          A.map(decoded.deprecations, (row) => row.since)
+        )
+      )
+    ).toStrictEqual(["2.0.0"]);
+    expect(
+      decoded.terms,
+      "schema:Athlete left the schema shard before the first snapshot, so it is neither live nor deprecated."
+    ).not.toContain("https://schema.org/Athlete");
+    expect(A.map(decoded.deprecations, (row): string => row.term)).not.toContain("https://schema.org/Athlete");
     expect(A.map(decoded.namespaces, (namespace) => namespace.prefix)).toStrictEqual(sorted(R.keys(RegistryVocab)));
     const published = A.flatMap(
       R.values(RegistryVocab),
       (entry): ReadonlyArray<string> => [entry.iri, ...A.map(entry.terms, (term) => `${entry.iri}${term}`)]
     );
     expect(decoded.terms).toStrictEqual(sorted(published));
-    expect(decoded.bindings).toStrictEqual([]);
-    expect(decoded.deprecations).toStrictEqual([]);
+    expect(A.map(decoded.bindings, (binding) => binding.code)).toStrictEqual(sorted(R.keys(RegistryBindings)));
+    expect(A.map(decoded.deprecations, (deprecation) => deprecation.term)).toStrictEqual(
+      sorted(R.keys(RegistryDeprecations))
+    );
   });
 });

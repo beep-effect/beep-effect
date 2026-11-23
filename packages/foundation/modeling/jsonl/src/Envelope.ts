@@ -143,13 +143,11 @@ export type EnvelopeWithTag<R extends JsonlEvent.Registry, T extends string> = E
 
 type DecodeError = MalformedLine | InvalidData | UnknownEvent;
 type EncodeError = UnknownEvent | InvalidData | UnserializableData;
-// As upstream's encoder signature: an explicitly undefined scope is accepted and omitted.
 type InputOf<E extends JsonlEvent.Any> = E extends JsonlEvent.Any
   ? Omit<EnvelopeOf<E>, "line" | "scope"> & { readonly scope?: string | undefined }
   : never;
 type Encoding<R extends JsonlEvent.Registry> = InputOf<R[number]>;
 
-// Each owned registry carries its compiled tag index for its entire lifetime.
 class Registry<R extends JsonlEvent.Registry> {
   readonly events: ReadonlyArray<R[number]>;
   readonly index: HashMap.HashMap<string, number>;
@@ -180,9 +178,6 @@ const encodeScope = S.encodeUnknownResult(
 const encodeJson = S.encodeResult(S.fromJsonString(S.Unknown));
 const emptyLine = LineSlice.make({ offset: 0, end: 0, length: 0, text: "", terminated: false });
 
-// The envelope codec only runs on a frame that passed EnvelopeFrame and whose tag
-// selected it, so its failure is the payload's. Report it as the payload codec
-// does, with issue paths relative to data; the envelope error is kept otherwise.
 const payloadError: {
   (data: DataSchema, value: unknown, error: S.SchemaError): S.SchemaError;
   (value: unknown, error: S.SchemaError): (data: DataSchema) => S.SchemaError;
@@ -192,7 +187,6 @@ const payloadError: {
     pipe(S.decodeUnknownResult(data)(value), Result.flip, Result.getOrElse(constant(error)))
 );
 
-// The frame is the subject: the decoders pipe a decoded frame into it.
 const completeResult: {
   <R extends JsonlEvent.Registry>(
     frame: EnvelopeFrame,
@@ -308,9 +302,7 @@ const lastValidResult: {
   );
 });
 
-// Follow only wire containers, never payload fields. Resolve suspensions when
-// the encoder runs; an identity stack bounds recursive wire targets.
-const structuralTarget: {
+const reachesWireContainer: {
   (ast: SchemaAST.AST, ancestors?: ReadonlyArray<SchemaAST.AST>): boolean;
   (ancestors?: ReadonlyArray<SchemaAST.AST>): (ast: SchemaAST.AST) => boolean;
 } = dual(
@@ -319,44 +311,37 @@ const structuralTarget: {
     if (A.some(ancestors, (ancestor) => ancestor === ast)) return false;
     if (SchemaAST.isObjects(ast)) return true;
     const next = A.append(ancestors, ast);
-    if (SchemaAST.isUnion(ast)) return A.some(ast.types, structuralTarget(next));
-    if (SchemaAST.isSuspend(ast)) return structuralTarget(ast.thunk(), next);
-    return ast.encoding !== undefined && A.some(ast.encoding, (link) => structuralTarget(link.to, next));
+    if (SchemaAST.isUnion(ast)) return A.some(ast.types, reachesWireContainer(next));
+    if (SchemaAST.isSuspend(ast)) return reachesWireContainer(ast.thunk(), next);
+    return ast.encoding !== undefined && A.some(ast.encoding, (link) => reachesWireContainer(link.to, next));
   }
 );
 
-// The merge stays plain. Class declarations accept only the decoded base's
-// provenance; non-class structural transformations retain their patch adapter.
-// The original registered codec still validates the result before persistence.
 type PatchAst = (ast: SchemaAST.AST) => SchemaAST.AST;
 type PatchedEncoding = SchemaAST.AST["encoding"];
 
-// The class provenance marker a declaration's encoded value must carry, when
-// the declaration is a class with a string identifier.
-const classMarker = (ast: SchemaAST.Declaration): string | undefined => {
+const classProvenanceMarker = (ast: SchemaAST.Declaration): string | undefined => {
   const identifier = ast.annotations?.identifier;
   return P.isFunction(ast.annotations?.["~constructor"]) && P.isString(identifier)
     ? `~effect/Schema/Class/${identifier}`
     : undefined;
 };
 
-// Whether an encoded value may skip the declaration's own encoder and pass
-// through as a plain record with the class provenance keys removed.
-const passesThroughPlain = (
+const passesThroughAsPlainRecord = (
   value: unknown,
   marker: string | undefined,
   links: NonNullable<PatchedEncoding>
 ): value is Record<string, unknown> =>
   isRecordLike(value) &&
   (marker === undefined || (R.has(value, marker) && value[marker] === marker)) &&
-  A.some(links, (link) => structuralTarget(link.to));
+  A.some(links, (link) => reachesWireContainer(link.to));
 
 const patchDeclaration = (
   ast: SchemaAST.Declaration,
   links: NonNullable<PatchedEncoding>,
   encoding: PatchedEncoding
 ): SchemaAST.AST => {
-  const marker = classMarker(ast);
+  const marker = classProvenanceMarker(ast);
   return new SchemaAST.Declaration(
     ast.typeParameters,
     ast.run,
@@ -371,7 +356,7 @@ const patchDeclaration = (
         self: SchemaAST.Declaration,
         options: SchemaAST.ParseOptions
       ): Effect.fn.Return<unknown, SchemaIssue.Issue> {
-        if (passesThroughPlain(value, marker, links)) {
+        if (passesThroughAsPlainRecord(value, marker, links)) {
           return R.filter(value, (_, key) => !Str.startsWith("~effect/Schema/Class/")(key));
         }
         return yield* (ast.encodingRun ?? ast.run)(ast.typeParameters)(value, self, options);
@@ -379,9 +364,11 @@ const patchDeclaration = (
   );
 };
 
-// Rebuild one node around its already-patched encoding chain. Nodes that are
-// neither containers nor encoded declarations are kept as they are.
-const rewriteNode = (ast: SchemaAST.AST, encoding: PatchedEncoding, patchAst: PatchAst): SchemaAST.AST => {
+const rebuildAroundPatchedEncoding = (
+  ast: SchemaAST.AST,
+  encoding: PatchedEncoding,
+  patchAst: PatchAst
+): SchemaAST.AST => {
   if (SchemaAST.isSuspend(ast)) {
     return new SchemaAST.Suspend(() => patchAst(ast.thunk()), ast.annotations, undefined, encoding, ast.context);
   }
@@ -421,7 +408,7 @@ const patchCodec = (data: DataSchema): DataSchema => {
       ast.encoding === undefined
         ? undefined
         : A.map(ast.encoding, (link) => new SchemaAST.Link(patchAst(link.to), link.transformation));
-    const rewritten = rewriteNode(ast, encoding, patchAst);
+    const rewritten = rebuildAroundPatchedEncoding(ast, encoding, patchAst);
     memo = A.append(memo, Tuple.make(ast, rewritten));
     return rewritten;
   };
@@ -452,8 +439,6 @@ const encodeResultWith: {
         UnknownEvent.make({ line: emptyLine, event: envelope.event, known: A.map(owned.events, (event) => event.tag) })
       );
     }
-    // Upstream's order and roots: the payload codec, then the timestamp codec,
-    // each on its own value, then the scope check that keeps the frame readable.
     const encoded = Result.all({
       data: S.encodeUnknownResult(patch ? patchCodec(found.value.data) : found.value.data)(envelope.data),
       at: encodeAt(envelope.at),
