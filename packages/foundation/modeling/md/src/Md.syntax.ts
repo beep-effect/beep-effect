@@ -68,10 +68,6 @@ import type { SafeDocument } from "./Md.safe.ts";
 
 const $I = $MdId.create("Md.syntax");
 
-// ---------------------------------------------------------------------------
-// Loss taxonomy
-// ---------------------------------------------------------------------------
-
 /**
  * Why the bridge could not carry a piece of the syntax tree unchanged.
  *
@@ -282,10 +278,6 @@ export declare namespace MdLoss {
  */
 export const lossSeverity = (loss: MdLoss): MdLossSeverity => severityOf(loss.reason);
 
-// ---------------------------------------------------------------------------
-// Source map
-// ---------------------------------------------------------------------------
-
 /**
  * How an Md node came from the source: parsed one-to-one, produced by a
  * recognizer, merged from adjacent text nodes, or synthesized around source
@@ -475,24 +467,18 @@ const tagOf = (node: unknown): string => (P.hasProperty(node, "_tag") && P.isStr
 const fieldsOf = (node: unknown): ReadonlyArray<readonly [string, unknown]> =>
   P.isReadonlyObject(node) ? R.toEntries(node) : [];
 
-// A field's share of its node's fingerprint, or None for an absent value.
-// `None`, `false` and a missing key hash alike, so the plain data the fold
-// builds and the admitted document (which fills constructor defaults such as
-// `title: None` or `checked: false`) fingerprint the same.
-const fieldFingerprint = (value: unknown): O.Option<number> =>
+const fieldFingerprintHashingConstructorDefaultsLikeAMissingKey = (value: unknown): O.Option<number> =>
   O.isOption(value)
     ? O.map(value, Hash.hash)
     : value === false || P.isUndefined(value)
       ? O.none()
       : O.some(Hash.hash(value));
 
-// Merkle-style: the node's own fields (order-free, as `Hash.structure` does)
-// combined with its children's fingerprints in order.
 const nodeFingerprint = (node: unknown, children: ReadonlyArray<number>): number => {
   let fields = Hash.string("@beep/md/MdSourceEntry");
   for (const [key, value] of fieldsOf(node)) {
     if (key !== "children") {
-      fields ^= O.match(fieldFingerprint(value), {
+      fields ^= O.match(fieldFingerprintHashingConstructorDefaultsLikeAMissingKey(value), {
         onNone: () => 0,
         onSome: (hash) => Hash.combine(Hash.string(key), hash),
       });
@@ -501,35 +487,29 @@ const nodeFingerprint = (node: unknown, children: ReadonlyArray<number>): number
   return Hash.combine(Hash.optimize(fields), Hash.array(children));
 };
 
-// The fingerprint of a whole subtree, in O(subtree).
 const subtreeFingerprint = (node: unknown): number =>
   nodeFingerprint(node, A.map(childrenOf(node), subtreeFingerprint));
 
-// Every node's tag and fingerprint in pre-order, in one bottom-up pass.
-const recordFingerprints = (node: unknown, out: Array<readonly [string, number]>): number => {
+const recordPreOrderFingerprintsAlignedWithFoldSlots = (
+  node: unknown,
+  out: Array<readonly [string, number]>
+): number => {
   const at = out.length;
   out.push([tagOf(node), 0]);
   const fingerprint = nodeFingerprint(
     node,
-    A.map(childrenOf(node), (child) => recordFingerprints(child, out))
+    A.map(childrenOf(node), (child) => recordPreOrderFingerprintsAlignedWithFoldSlots(child, out))
   );
   out[at] = [tagOf(node), fingerprint];
   return fingerprint;
 };
 
-// An ancestor on the walk still matches its entry when its tag and its child
-// count are unchanged; any transform that adds, drops or retypes a child
-// breaks that.
 const matchesEntry = (entries: ReadonlyArray<MdSourceEntry>, ordinal: number, node: unknown): boolean =>
   entries[ordinal]?.tag === tagOf(node) && childrenOf(node).length === directChildOrdinals(entries, ordinal).length;
 
-// The addressed node must also be the very subtree the entry recorded, so a
-// reorder of same-shape siblings or an in-place edit yields None.
 const matchesTarget = (entries: ReadonlyArray<MdSourceEntry>, ordinal: number, node: unknown): boolean =>
   matchesEntry(entries, ordinal, node) && entries[ordinal]?.fingerprint === subtreeFingerprint(node);
 
-// One step down the path: the child's ordinal and node, or None when the
-// current node no longer matches its entry or has no such child.
 const descend = (
   entries: ReadonlyArray<MdSourceEntry>,
   [ordinal, node]: readonly [number, unknown],
@@ -553,8 +533,6 @@ const positionAtImpl = (
   for (let at = 0; O.isSome(cursor) && isChildStep(path, at); at += 2) {
     cursor = descend(entries, cursor.value, path[at + 1]);
   }
-  // The addressed node must be the recorded subtree, so a transform that only
-  // touched the target (the document itself included) still yields None.
   return O.flatMap(cursor, ([ordinal, node]) =>
     matchesTarget(entries, ordinal, node) ? O.fromUndefinedOr(entries[ordinal]?.position) : O.none()
   );
@@ -607,10 +585,6 @@ export const positionAt: {
   ): (map: MdSourceMap) => O.Option<Kit.Position>;
   (map: MdSourceMap, document: Model.Document, path: ReadonlyArray<DocumentSafetyPathSegment>): O.Option<Kit.Position>;
 } = dual(3, positionAtImpl);
-
-// ---------------------------------------------------------------------------
-// Options
-// ---------------------------------------------------------------------------
 
 /**
  * How parsed raw HTML enters the Md tree: as escaped text (the default), as
@@ -902,10 +876,6 @@ export declare namespace MdSyntaxOptions {
   export type Encoded = typeof MdSyntaxOptions.Encoded;
 }
 
-// ---------------------------------------------------------------------------
-// Results and errors
-// ---------------------------------------------------------------------------
-
 /**
  * The bridged document, the losses the bridge recorded in source order, and
  * the source map.
@@ -1088,10 +1058,6 @@ export class MdUnsafeDocumentError extends S.TaggedError<MdUnsafeDocumentError, 
   })
 ) {}
 
-// ---------------------------------------------------------------------------
-// Bridge state
-// ---------------------------------------------------------------------------
-
 class SlotPath {
   readonly parent: SlotPath | undefined;
   readonly index: number;
@@ -1185,14 +1151,8 @@ const branch = <Node>(state: BridgeState, position: Kit.Position, origin: MdSour
 
 const slice = (state: BridgeState, position: Kit.Position): string => sourceSlice(state.document.source, position);
 
-// ---------------------------------------------------------------------------
-// Phrasing content
-// ---------------------------------------------------------------------------
-
 type PhrasingStep = (state: BridgeState, path: SlotPath) => ReadonlyArray<Model.Inline>;
 
-// Decode only source newlines as soft breaks. A newline from an entity is
-// literal text, including the spelling used to preserve escaped HTML.
 const softBreak = (state: BridgeState, value: string, raw: string): string => {
   if (state.options.softBreak !== MdSoftBreak.Enum.space || !Str.includes("\n")(value)) {
     return value;
@@ -1209,9 +1169,6 @@ const softBreak = (state: BridgeState, value: string, raw: string): string => {
 
 const textNode = (value: string): Model.Text => Model.Text.make({ _tag: "text", value });
 
-// Segments come from the raw slice, so a backslash-escaped `$` never
-// delimits; a math piece keeps its raw TeX, and a text piece drops its
-// backslash escapes to read as the decoded text it came from.
 const recognizeInlineMath = (
   state: BridgeState,
   raw: string,
@@ -1260,8 +1217,6 @@ const inlineMathRun = (
   if (!hasMath(segments)) {
     return O.none();
   }
-  // Decode entities only outside math; TeX stays raw. Container line
-  // prefixes still make the reconstructed run differ from its decoded text.
   const decoded = A.join(
     A.map(segments, (segment) => {
       const piece = Str.slice(segment.from, segment.to)(raw);
@@ -1575,10 +1530,6 @@ const phrasingStep: (node: Kit.PhrasingContent) => PhrasingStep = Match.type<Kit
   })
 );
 
-// ---------------------------------------------------------------------------
-// Flow content
-// ---------------------------------------------------------------------------
-
 type FlowStep = (state: BridgeState, path: SlotPath) => ReadonlyArray<Model.Block>;
 
 const mapFlowChildren = (
@@ -1626,10 +1577,6 @@ const mathParagraph = (state: BridgeState, node: Kit.Paragraph, path: SlotPath):
     })
   );
 
-// A YouTube block carries only the video id, so the recognizer takes a link
-// whose text is its own URL and has no title (a bare or `<…>` URL, which is
-// what `Md.render` writes); a link with its own text or title stays a link
-// instead of losing them.
 const isBareLink = (link: Kit.Link): boolean => {
   const text = link.children.length === 1 ? link.children[0] : undefined;
   return link.title === undefined && text?.type === "text" && text.value === link.url;
@@ -1653,10 +1600,6 @@ const paragraphFlow =
       O.getOrElse(() => paragraphBlock(state, node.children, node.position, path))
     );
 
-// Raw HTML in an admonition head line lands in a plain-string title, so it
-// follows the inline HTML policy with one difference: the title cannot carry
-// raw HTML, so only `escapeAsText` keeps the markup (as text) and `rawHtml`
-// drops it like `drop` does. Comments follow `htmlComments` first.
 const headHtmlKept = (state: BridgeState, value: string): boolean =>
   !(state.options.htmlComments === MdHtmlCommentPolicy.Enum.drop && isHtmlComment(value)) &&
   state.options.html === MdHtmlPolicy.Enum.escapeAsText;
@@ -1670,19 +1613,12 @@ const recordHeadHtml = (state: BridgeState, node: Kit.Html, path: SlotPath): voi
   }
 };
 
-// A hard break ends the head line, and so does a `<br>` tag under `breakTag`,
-// which the inline mapping recognizes as a break before any HTML policy.
 const isHeadBreak = (state: BridgeState, kid: Kit.PhrasingContent): boolean =>
   kid.type === "break" || (kid.type === "html" && state.options.breakTag && isBreakTag(kid.value));
 
-// The literal text a leaf head-line node carries: its value, or an image's
-// alt text.
 const leafPlainText = (node: Kit.PhrasingContent): string =>
   "value" in node ? node.value : "alt" in node ? (node.alt ?? "") : "";
 
-// The plain text a head-line node contributes to the title, recording a loss
-// for every raw HTML node inside it. A break nested in inline markup
-// contributes nothing, as a nested hard break does.
 const headPlainText = (state: BridgeState, path: SlotPath, node: Kit.PhrasingContent): string => {
   if (isHeadBreak(state, node)) {
     return "";
@@ -1699,8 +1635,6 @@ const headPlainText = (state: BridgeState, path: SlotPath, node: Kit.PhrasingCon
     : leafPlainText(node);
 };
 
-// A head-line node flattens into the title unless it is plain text or raw
-// HTML the policy drops outright.
 const flattensIntoTitle = (state: BridgeState, kid: Kit.PhrasingContent): boolean =>
   kid.type === "html" ? headHtmlKept(state, kid.value) : kid.type !== "text";
 
@@ -1817,8 +1751,6 @@ const blockquoteFlow =
       )
     );
 
-// CommonMark code content keeps the newline that ends its last line; Md code
-// values carry content without it, and `Md.render` writes the newline back.
 const codeContent = Str.replace(/\r?\n$/u, "");
 
 const codeFlow =
@@ -2043,10 +1975,6 @@ const flowStep: (node: Kit.FlowContent) => FlowStep = Match.type<Kit.FlowContent
   })
 );
 
-// ---------------------------------------------------------------------------
-// Frontmatter and the document
-// ---------------------------------------------------------------------------
-
 const codecFor: (format: Kit.FrontmatterFormat) => FrontmatterCodec = Kit.FrontmatterFormat.match({
   yaml: (): FrontmatterCodec => YamlFrontmatter,
   toml: (): FrontmatterCodec => TomlFrontmatter,
@@ -2085,8 +2013,6 @@ const frontmatterObject = (
   if (O.isNone(object)) {
     return frontmatterFailure(state, node, "notObject", value);
   }
-  // An object emptied by projection leaves no frontmatter behind, so its
-  // coercions name no destination (`mdPath` None) rather than a missing field.
   const empty = R.isEmptyReadonlyRecord(object.value);
   const landing = empty ? O.none() : frontmatterPath;
   for (const coercion of projection.coercions) {
@@ -2130,11 +2056,9 @@ const reportUnreferencedDefinitions = (state: BridgeState): void => {
 
 const byPosition = (loss: MdLoss): number => loss.position.start.offset;
 
-// The fold opens one slot per Md node in pre-order, so the fingerprint pass
-// over the finished plain document lines up with the slots ordinal by ordinal.
 const sourceEntries = (state: BridgeState, document: unknown): ReadonlyArray<MdSourceEntry> => {
   const fingerprints: Array<readonly [string, number]> = [];
-  recordFingerprints(document, fingerprints);
+  recordPreOrderFingerprintsAlignedWithFoldSlots(document, fingerprints);
   return A.map(state.slots, (slot, ordinal) => {
     const [tag, fingerprint] = fingerprints[ordinal] ?? ["document", 0];
     return MdSourceEntry.make({

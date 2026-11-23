@@ -121,8 +121,6 @@ const makeChainRefinement =
     A.every(refinements, (refinement) => refinement(self));
 
 /**
- * Re-export of all helpers from `effect/Predicate`.
- *
  * **Example** (Import Predicate helpers)
  *
  * ```ts

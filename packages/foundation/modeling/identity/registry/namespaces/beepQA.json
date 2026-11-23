@@ -1,0 +1,18 @@
+{
+  "namespace": {
+    "prefix": "beepQA",
+    "iri": "https://beep-effect.com/ns/qa/1.0/"
+  },
+  "terms": [
+    "actionId",
+    "capturedAtEpochMs",
+    "clockOffsetMs",
+    "commitSha",
+    "scenarioName",
+    "sessionId",
+    "sourceVideo",
+    "toolVersions"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

@@ -62,8 +62,6 @@ export const TermIri = IRI.pipe(
 );
 
 /**
- * Decoded type of {@link TermIri}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -71,6 +69,12 @@ export type TermIri = typeof TermIri.Type;
 
 /**
  * The compile-checked code identity of a kind, `@beep/<package>/<path>`, as a composer prints it.
+ *
+ * **Details**
+ *
+ * No path segment is made of dots alone, so a code identity never names a
+ * path outside its package: `.` and `..` are refused, and `Library.schemas`
+ * is a segment like any other.
  *
  * **Example** (Check a code identity)
  *
@@ -80,6 +84,7 @@ export type TermIri = typeof TermIri.Type;
  *
  * S.is(CodeId)("@beep/test-runner/Vitest/TestHang") // => true
  * S.is(CodeId)("@beep/test-runner") // => false
+ * S.is(CodeId)("@beep/test-runner/../Vitest/TestHang") // => false
  * ```
  *
  * @category schemas
@@ -87,22 +92,191 @@ export type TermIri = typeof TermIri.Type;
  */
 export const CodeId = S.String.check(
   S.isPattern(
-    /^@beep\/[a-z0-9][a-z0-9-]*(?:\/[A-Za-z0-9._-]+)+$/,
+    /^@beep\/[a-z0-9][a-z0-9-]*(?:\/(?!\.+(?:\/|$))[A-Za-z0-9._-]+)+$/,
     $I.annote("CodeIdPattern", {
       title: "Code Identity",
-      description: "A @beep package name followed by at least one module path segment.",
+      description:
+        "A @beep package name followed by at least one module path segment, none of which is made of dots alone.",
       message: "Expected a code identity of the form @beep/<package>/<path>.",
     })
   )
 ).pipe(S.brand("CodeId"), $I.annoteSchema("CodeId", { description: "A code-path identity for a kind." }));
 
 /**
- * Decoded type of {@link CodeId}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CodeId = typeof CodeId.Type;
+
+/**
+ * The package half of a code identity, `@beep/<package>`: the prefix every code identity of the package shares.
+ *
+ * **Details**
+ *
+ * A package is never a {@link CodeId}: a binding names a kind, so a stored
+ * code always has a module path. Only a {@link CodeMove} names a package.
+ *
+ * **Example** (Check a code package)
+ *
+ * ```ts import.meta.vitest name="Check a code package"
+ * import * as S from "effect/Schema"
+ * import { CodePackage } from "@beep/identity/Term"
+ *
+ * S.is(CodePackage)("@beep/test-runner") // => true
+ * S.is(CodePackage)("@beep/test-runner/Vitest/TestHang") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodePackage = S.String.check(
+  S.isPattern(
+    /^@beep\/[a-z0-9][a-z0-9-]*$/,
+    $I.annote("CodePackagePattern", {
+      title: "Code Package",
+      description: "A @beep package name with no module path.",
+      message: "Expected a package of the form @beep/<package>.",
+    })
+  )
+).pipe(
+  S.brand("CodePackage"),
+  $I.annoteSchema("CodePackage", { description: "The package prefix of a package's code identities." })
+);
+
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type CodePackage = typeof CodePackage.Type;
+
+/**
+ * **Details**
+ *
+ * Neither end is under the other. A move from `@beep/p/A` to `@beep/p/A/B`
+ * would match the codes it moved again, so it could not be run twice, and a
+ * retry after a partial write would move those codes a second time. Make such
+ * a move in two moves through a third code identity that is outside both ends
+ * and has no code under it, so the second move carries only the moved codes.
+ *
+ * **Example** (Rename a module)
+ *
+ * ```ts import.meta.vitest name="Rename a module"
+ * import { CodeId, CodeIdMove } from "@beep/identity/Term"
+ *
+ * const move = CodeIdMove.make({
+ *   from: CodeId.make("@beep/test-runner/Vitest"),
+ *   to: CodeId.make("@beep/test-runner/Runner")
+ * })
+ * move.to // => "@beep/test-runner/Runner"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodeIdMove extends S.Opaque<CodeIdMove, { readonly brand: unique symbol }>()(
+  S.Struct({ from: CodeId, to: CodeId })
+    .check(
+      S.makeFilter(
+        ({ from, to }) => !Str.startsWith(`${from}/`)(to) && !Str.startsWith(`${to}/`)(from),
+        $I.annote("CodeIdMoveDisjoint", {
+          title: "Code Identity Move Disjoint",
+          description: "Neither end of the move is under the other, so the move never applies to a code it moved.",
+          message: "Expected a move whose ends are not under one another; move through a third code identity.",
+        })
+      )
+    )
+    .pipe($I.annoteSchema("CodeIdMove", { description: "The rename of a code identity and every code under it." }))
+) {}
+
+/**
+ * The rename of a package: every code identity of it moves to the new package and keeps its path.
+ *
+ * **Example** (Rename a package)
+ *
+ * ```ts import.meta.vitest name="Rename a package"
+ * import { CodePackage, CodePackageMove } from "@beep/identity/Term"
+ *
+ * const move = CodePackageMove.make({
+ *   from: CodePackage.make("@beep/test-runner"),
+ *   to: CodePackage.make("@beep/test-kit")
+ * })
+ * move.to // => "@beep/test-kit"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodePackageMove extends S.Opaque<CodePackageMove, { readonly brand: unique symbol }>()(
+  S.Struct({ from: CodePackage, to: CodePackage }).pipe(
+    $I.annoteSchema("CodePackageMove", { description: "The rename of a package and every code identity of it." })
+  )
+) {}
+
+/**
+ * A rename of code identities: one code identity (with every code under it) or one whole package.
+ *
+ * **Details**
+ *
+ * Both ends are of the same kind, so a moved code always keeps a package and
+ * at least one path segment: a package moves to a package, and a code
+ * identity to a code identity. {@link moveCode} applies the move to one code.
+ *
+ * **Example** (Check the ends of a move)
+ *
+ * ```ts import.meta.vitest name="Check the ends of a move"
+ * import * as S from "effect/Schema"
+ * import { CodeMove } from "@beep/identity/Term"
+ *
+ * S.is(CodeMove)({ from: "@beep/test-runner", to: "@beep/test-kit" }) // => true
+ * S.is(CodeMove)({ from: "@beep/test-runner/Vitest", to: "@beep/test-runner/Runner" }) // => true
+ * S.is(CodeMove)({ from: "@beep/test-runner/Vitest", to: "@beep/test-kit" }) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodeMove = S.Union([CodeIdMove, CodePackageMove]).pipe(
+  $I.annoteSchema("CodeMove", {
+    description: "A rename of a code identity and every code under it, or of every code identity of a package.",
+  })
+);
+
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type CodeMove = typeof CodeMove.Type;
+
+/**
+ * The code identity a code has after a move: `to` for `from` itself, `to/<rest>` for `from/<rest>`, else itself.
+ *
+ * **Example** (Move a code with its package)
+ *
+ * ```ts import.meta.vitest name="Move a code with its package"
+ * import { CodeId, CodePackage, CodePackageMove, moveCode } from "@beep/identity/Term"
+ *
+ * const move = CodePackageMove.make({
+ *   from: CodePackage.make("@beep/test-runner"),
+ *   to: CodePackage.make("@beep/test-kit")
+ * })
+ * moveCode(CodeId.make("@beep/test-runner/Vitest/TestHang"), move) // => "@beep/test-kit/Vitest/TestHang"
+ * moveCode(CodeId.make("@beep/test-runner-ui/Vitest/TestHang"), move) // => "@beep/test-runner-ui/Vitest/TestHang"
+ * ```
+ *
+ * @param code - The code identity to move.
+ * @param move - The rename to apply.
+ * @returns The moved code identity, or `code` when the move does not reach it.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const moveCode: {
+  (move: CodeMove): (code: CodeId) => CodeId;
+  (code: CodeId, move: CodeMove): CodeId;
+} = dual(
+  2,
+  (code: CodeId, { from, to }: CodeMove): CodeId =>
+    code === from || Str.startsWith(`${from}/`)(code) ? CodeId.make(`${to}${Str.slice(Str.length(from))(code)}`) : code
+);
 
 /**
  * A vocabulary release `major.minor.patch` of the term snapshot.
@@ -143,8 +317,6 @@ export const ReleaseVersion = S.String.check(
 );
 
 /**
- * Decoded type of {@link ReleaseVersion}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -187,12 +359,77 @@ export const TermLocal = S.String.check(
 ).pipe(S.brand("TermLocal"), $I.annoteSchema("TermLocal", { description: "The local name of a declared term." }));
 
 /**
- * Decoded type of {@link TermLocal}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TermLocal = typeof TermLocal.Type;
+
+/**
+ * Check whether an IRI has the shape of a namespace IRI: it ends with `/` or `#`.
+ *
+ * **Details**
+ *
+ * A {@link TermLocal} never ends with `/` or `#`, so no term IRI does, and a
+ * {@link NamespaceIri} always does. A deprecated IRI of that shape is therefore
+ * a retired namespace IRI, whose replacement chain ends at a namespace IRI;
+ * every other deprecated IRI is a retired term, whose chain ends at a declared
+ * term.
+ *
+ * **Example** (Tell a namespace IRI from a term IRI)
+ *
+ * ```ts import.meta.vitest name="Tell a namespace IRI from a term IRI"
+ * import { isNamespaceShapedIri } from "@beep/identity/Term"
+ *
+ * isNamespaceShapedIri("http://www.w3.org/ns/prov#") // => true
+ * isNamespaceShapedIri("https://beep-effect.com/ns/research-library/") // => true
+ * isNamespaceShapedIri("http://www.w3.org/ns/prov#Activity") // => false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(iri) || Str.endsWith("#")(iri);
+
+/**
+ * **Details**
+ *
+ * A term IRI is the namespace IRI followed by a local, with nothing between
+ * them, so the namespace IRI carries the separator itself. The check is
+ * {@link isNamespaceShapedIri}, which also tells a retired namespace IRI from a
+ * retired term.
+ *
+ * **Example** (Refuse an IRI without a separator)
+ *
+ * ```ts import.meta.vitest name="Refuse an IRI without a separator"
+ * import * as S from "effect/Schema"
+ * import { NamespaceIri } from "@beep/identity/Term"
+ *
+ * S.is(NamespaceIri)("http://www.w3.org/ns/prov#") // => true
+ * S.is(NamespaceIri)("https://example.test/old") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NamespaceIri = IRI.check(
+  S.makeFilter(
+    isNamespaceShapedIri,
+    $I.annote("NamespaceIriSeparator", {
+      title: "Namespace IRI Separator",
+      description: "A namespace IRI ends with the separator its terms follow, a slash or a hash.",
+      message: "Expected a namespace IRI that ends with / or #.",
+    })
+  )
+).pipe(
+  S.brand("NamespaceIri"),
+  $I.annoteSchema("NamespaceIri", { description: "An IRI that ends with the separator its terms follow." })
+);
+
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type NamespaceIri = typeof NamespaceIri.Type;
 
 /**
  * One registry namespace: the CURIE prefix and the IRI it expands to.
@@ -200,10 +437,9 @@ export type TermLocal = typeof TermLocal.Type;
  * **Example** (Make a namespace)
  *
  * ```ts import.meta.vitest name="Make a namespace"
- * import { IRI } from "@beep/identity/Iri"
- * import { Namespace } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri } from "@beep/identity/Term"
  *
- * const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })
+ * const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })
  * prov.prefix // => "prov"
  * ```
  *
@@ -213,13 +449,11 @@ export type TermLocal = typeof TermLocal.Type;
 export class Namespace extends S.Opaque<Namespace, { readonly brand: unique symbol }>()(
   S.Struct({
     prefix: SafePnPrefix.annotateKey({ description: "CURIE prefix, for example prov or oa." }),
-    iri: IRI.annotateKey({ description: "Namespace IRI the prefix expands to." }),
+    iri: NamespaceIri.annotateKey({ description: "Namespace IRI the prefix expands to, ending with / or #." }),
   }).pipe($I.annoteSchema("Namespace", { description: "A registry namespace: prefix and IRI." }))
 ) {}
 
 /**
- * Encoded representation of {@link Namespace}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -239,10 +473,9 @@ export declare namespace Namespace {
  * **Example** (Declare a term under a namespace)
  *
  * ```ts import.meta.vitest name="Declare a term under a namespace"
- * import { IRI } from "@beep/identity/Iri"
- * import { Namespace, Term, TermLocal } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri, Term, TermLocal } from "@beep/identity/Term"
  *
- * const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })
+ * const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })
  * const activity = Term.of(prov, TermLocal.make("Activity"))
  * activity.iri // => "http://www.w3.org/ns/prov#Activity"
  * ```
@@ -268,10 +501,9 @@ export class Term extends S.Opaque<Term, { readonly brand: unique symbol }>()(
    * **Example** (Declare a multi-segment term)
    *
    * ```ts import.meta.vitest name="Declare a multi-segment term"
-   * import { IRI } from "@beep/identity/Iri"
-   * import { Namespace, Term, TermLocal } from "@beep/identity/Term"
+   * import { Namespace, NamespaceIri, Term, TermLocal } from "@beep/identity/Term"
    *
-   * const qa = Namespace.make({ prefix: "qa", iri: IRI.make("https://beep-effect.com/ns/qa/") })
+   * const qa = Namespace.make({ prefix: "qa", iri: NamespaceIri.make("https://beep-effect.com/ns/qa/") })
    * Term.of(qa, TermLocal.make("receipts/accepted/v2")).iri // => "https://beep-effect.com/ns/qa/receipts/accepted/v2"
    * ```
    *
@@ -283,8 +515,6 @@ export class Term extends S.Opaque<Term, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Encoded representation of {@link Term}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -335,8 +565,6 @@ export class TermBinding extends S.Opaque<TermBinding, { readonly brand: unique 
 ) {}
 
 /**
- * Encoded representation of {@link TermBinding}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -379,8 +607,6 @@ export class Deprecation extends S.Opaque<Deprecation, { readonly brand: unique 
 ) {}
 
 /**
- * Encoded representation of {@link Deprecation}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -433,13 +659,12 @@ const strictlyAscending = <Row>(key: (row: Row) => string, name: string) =>
  * **Example** (Build a snapshot from unsorted rows)
  *
  * ```ts import.meta.vitest name="Build a snapshot from unsorted rows"
- * import { IRI } from "@beep/identity/Iri"
  * import * as Result from "effect/Result"
- * import { Namespace, ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri, ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
  *
  * const snapshot = TermSnapshot.fromRows({
  *   release: ReleaseVersion.make("1.0.0"),
- *   namespaces: [Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })],
+ *   namespaces: [Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })],
  *   terms: [TermIri.make("http://www.w3.org/ns/prov#Entity"), TermIri.make("http://www.w3.org/ns/prov#Activity")],
  *   bindings: [],
  *   deprecations: []
@@ -539,11 +764,26 @@ export class TermSnapshot extends S.Opaque<TermSnapshot, { readonly brand: uniqu
     bindings: [],
     deprecations: [],
   });
+
+  /**
+   * Whether a snapshot publishes a term set; the empty snapshot, at release `0.0.0`, publishes none.
+   *
+   * **Example** (Tell the empty snapshot from a release)
+   *
+   * ```ts import.meta.vitest name="Tell the empty snapshot from a release"
+   * import { ReleaseVersion, TermSnapshot } from "@beep/identity/Term"
+   *
+   * TermSnapshot.isPublished(TermSnapshot.empty) // => false
+   * TermSnapshot.isPublished(TermSnapshot.make({ ...TermSnapshot.empty, release: ReleaseVersion.make("1.0.0") })) // => true
+   * ```
+   *
+   * @category predicates
+   * @since 0.0.0
+   */
+  static readonly isPublished = (snapshot: TermSnapshot): boolean => snapshot.release !== TermSnapshot.empty.release;
 }
 
 /**
- * Encoded representation of {@link TermSnapshot}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -575,6 +815,17 @@ const canonicalRows = <Row>(rows: Iterable<Row>, key: (row: Row) => string): Rea
  * - `BindingAmbiguous`: one term is bound by more than one code identity.
  * - `NamespaceDropped`: a namespace is gone and its IRI has no deprecation.
  * - `NamespacePrefixChanged`: a namespace IRI is published under a new prefix.
+ * - `ReleaseRegressed`: the release is lower than the previous snapshot's release.
+ * - `ReleaseUnderstated`: the rows changed but the release is lower than the one the change
+ *   calls for (a minor bump for additions, a major bump for a new deprecation), so a
+ *   different term set would ship under a release the previous snapshot already published.
+ * - `ReleaseOverstated`: the release is higher than the one the change calls for, so one
+ *   change would skip a release.
+ * - `BindingSinceMisstated` and `DeprecationSinceMisstated`: a binding of a term the previous
+ *   snapshot did not bind, or a deprecation it did not hold, records another `since` than the
+ *   release the change calls for. A rebind keeps the term bound, so it keeps its `since`.
+ *
+ * The empty snapshot publishes nothing, so the last three are never reported against it.
  *
  * **Example** (Match a violation)
  *
@@ -600,11 +851,14 @@ export const SnapshotViolation = S.TaggedUnion({
   BindingAmbiguous: { term: TermIri, codes: S.Array(CodeId) },
   NamespaceDropped: { prefix: SafePnPrefix, iri: IRI },
   NamespacePrefixChanged: { iri: IRI, from: SafePnPrefix, to: SafePnPrefix },
+  ReleaseRegressed: { from: ReleaseVersion, to: ReleaseVersion },
+  ReleaseUnderstated: { base: ReleaseVersion, expected: ReleaseVersion, release: ReleaseVersion },
+  ReleaseOverstated: { base: ReleaseVersion, expected: ReleaseVersion, release: ReleaseVersion },
+  BindingSinceMisstated: { code: CodeId, term: TermIri, since: ReleaseVersion, expected: ReleaseVersion },
+  DeprecationSinceMisstated: { term: TermIri, since: ReleaseVersion, expected: ReleaseVersion },
 }).pipe($I.annoteSchema("SnapshotViolation", { description: "A break of the published term set (L0-3)." }));
 
 /**
- * Decoded type of {@link SnapshotViolation}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -635,6 +889,15 @@ export const snapshotViolationMessage: (violation: SnapshotViolation) => string 
   BindingAmbiguous: ({ term, codes }) => `${term} is bound by more than one code identity (${A.join(codes, ", ")}).`,
   NamespaceDropped: ({ prefix, iri }) => `Namespace "${prefix}" (${iri}) is removed without a deprecation of its IRI.`,
   NamespacePrefixChanged: ({ iri, from, to }) => `Namespace ${iri} changes its prefix from "${from}" to "${to}".`,
+  ReleaseRegressed: ({ from, to }) => `The snapshot release goes back from ${from} to ${to}.`,
+  ReleaseUnderstated: ({ base, expected, release }) =>
+    `The snapshot changes the rows of release ${base} but is released as ${release}; the change calls for ${expected}.`,
+  ReleaseOverstated: ({ base, expected, release }) =>
+    `The snapshot is released as ${release}; its change to release ${base} calls for ${expected}.`,
+  BindingSinceMisstated: ({ code, term, since, expected }) =>
+    `The new binding of ${term} to ${code} records since ${since}; the change is release ${expected}.`,
+  DeprecationSinceMisstated: ({ term, since, expected }) =>
+    `The new deprecation of ${term} records since ${since}; the change is release ${expected}.`,
 });
 
 const Violation = SnapshotViolation.cases;
@@ -747,40 +1010,105 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
   );
 };
 
+const releaseNumbers = (release: ReleaseVersion): readonly [bigint, bigint, bigint] => {
+  const [major = "0", minor = "0", patch = "0"] = Str.split(".")(release);
+  return [BigInt(major), BigInt(minor), BigInt(patch)];
+};
+
+const releaseOrder: Order.Order<ReleaseVersion> = Order.mapInput(
+  Order.Tuple([Order.BigInt, Order.BigInt, Order.BigInt]),
+  releaseNumbers
+);
+const releaseIsLower = Order.isLessThan(releaseOrder);
+const latestRelease = Order.max(releaseOrder);
+
+const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
+  ReleaseVersion.make(`${BI.increment(releaseNumbers(release)[0])}.0.0`);
+
+const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
+  const [major, minor] = releaseNumbers(release);
+  return ReleaseVersion.make(`${major}.${BI.increment(minor)}.0`);
+};
+
+const genesisRelease = ReleaseVersion.make("1.0.0");
+const snapshotEquivalence = S.toEquivalence(TermSnapshot);
+
+const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
+  if (snapshotEquivalence(unchanged, previous)) {
+    return previous.release;
+  }
+  if (!TermSnapshot.isPublished(previous)) {
+    return genesisRelease;
+  }
+  const deprecated = HashSet.fromIterable(A.map(previous.deprecations, deprecationKey));
+  return A.some(unchanged.deprecations, (deprecation) => !HashSet.has(deprecated, deprecation.term))
+    ? nextMajor(previous.release)
+    : nextMinor(previous.release);
+};
+
+const sinceViolations = (
+  previous: TermSnapshot,
+  next: TermSnapshot,
+  expected: ReleaseVersion
+): ReadonlyArray<SnapshotViolation> => {
+  const bound = HashSet.fromIterable(A.map(previous.bindings, (binding) => binding.term));
+  const deprecated = HashSet.fromIterable(A.map(previous.deprecations, (deprecation) => deprecation.term));
+  return A.appendAll(
+    pipe(
+      next.bindings,
+      A.filter((binding) => !HashSet.has(bound, binding.term) && binding.since !== expected),
+      A.map(({ code, term, since }) => Violation.BindingSinceMisstated.make({ code, term, since, expected }))
+    ),
+    pipe(
+      next.deprecations,
+      A.filter((deprecation) => !HashSet.has(deprecated, deprecation.term) && deprecation.since !== expected),
+      A.map(({ term, since }) => Violation.DeprecationSinceMisstated.make({ term, since, expected }))
+    )
+  );
+};
+
+const releaseViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> => {
+  const expected = nextRelease(previous, TermSnapshot.make({ ...next, release: previous.release }));
+  const published = TermSnapshot.isPublished(previous);
+  const misstated = published ? sinceViolations(previous, next, expected) : A.empty<SnapshotViolation>();
+  if (releaseIsLower(next.release, previous.release)) {
+    return A.append(misstated, Violation.ReleaseRegressed.make({ from: previous.release, to: next.release }));
+  }
+  const stated = { base: previous.release, expected, release: next.release };
+  if (releaseIsLower(next.release, expected)) {
+    return A.append(misstated, Violation.ReleaseUnderstated.make(stated));
+  }
+  return published && next.release !== expected
+    ? A.append(misstated, Violation.ReleaseOverstated.make(stated))
+    : misstated;
+};
+
 /**
- * Every way `next` breaks the published term set of `previous` (law L0-3).
+ * Every way the rows of `next` break the term set of `previous`, whatever release `next` states.
  *
  * **When to use**
  *
- * Use to gate a regenerated snapshot against the committed base: an empty
- * result means the change only added terms or explained each removal with a
- * deprecation.
+ * Use to refuse a regeneration: no release repairs these breaks. {@link snapshotViolations} adds the
+ * release and `since` violations, which a regeneration against the base repairs or reports.
  *
- * **Details**
+ * **Example** (Judge the rows apart from the release)
  *
- * The result is ordered by kind (terms, deprecations, bindings, namespaces)
- * and, within a kind, by the ascending row order of the snapshots, so equal
- * inputs give equal arrays.
- *
- * **Example** (Report a removal without a deprecation)
- *
- * ```ts import.meta.vitest name="Report a removal without a deprecation"
+ * ```ts import.meta.vitest name="Judge the rows apart from the release"
  * import * as A from "effect/Array"
  * import * as Result from "effect/Result"
- * import { ReleaseVersion, snapshotViolations, TermIri, TermSnapshot } from "@beep/identity/Term"
+ * import { ReleaseVersion, termSetViolations, TermIri, TermSnapshot } from "@beep/identity/Term"
  *
  * const activity = TermIri.make("http://www.w3.org/ns/prov#Activity")
  * const previous = Result.getOrThrow(
  *   TermSnapshot.fromRows({ release: ReleaseVersion.make("1.0.0"), namespaces: [], terms: [activity], bindings: [], deprecations: [] })
  * )
- * A.map(snapshotViolations(previous, TermSnapshot.empty), (violation) => violation._tag) // => ["TermRemoved"]
- * snapshotViolations(TermSnapshot.empty, previous).length // => 0
+ * A.map(termSetViolations(previous, TermSnapshot.empty), (violation) => violation._tag) // => ["TermRemoved"]
  * ```
  *
  * @category validation
  * @since 0.0.0
  */
-export const snapshotViolations: {
+export const termSetViolations: {
   (next: TermSnapshot): (previous: TermSnapshot) => ReadonlyArray<SnapshotViolation>;
   (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation>;
 } = dual(
@@ -795,12 +1123,67 @@ export const snapshotViolations: {
 );
 
 /**
- * The packages a registry shard may project its rows into.
+ * Every way `next` breaks the published term set of `previous` (law L0-3).
+ *
+ * **When to use**
+ *
+ * Use to gate a regenerated snapshot against the committed base: an empty
+ * result means the change only added terms or explained each removal with a
+ * deprecation.
  *
  * **Details**
  *
+ * The result is ordered by kind (terms, deprecations, bindings, namespaces,
+ * `since` values, release) and, within a kind, by the ascending row order of
+ * the snapshots, so equal inputs give equal arrays.
+ *
+ * The release is a property of the whole change from `previous` to `next`: it
+ * must be exactly the release that change calls for, and every binding or
+ * deprecation the change adds records it as `since`. Against the empty
+ * snapshot, which publishes nothing, a changed snapshot may state any release
+ * from `1.0.0` on. An unchanged empty snapshot stays unpublished, so it
+ * accepts `0.0.0`.
+ *
+ * **Gotchas**
+ *
+ * Release components are unbounded decimal integers. Ordering and arithmetic use exact
+ * bigint components so adjacent releases beyond the safe integer range remain distinct.
+ *
+ * **Example** (Report a removal without a deprecation)
+ *
+ * ```ts import.meta.vitest name="Report a removal without a deprecation"
+ * import * as A from "effect/Array"
+ * import * as Result from "effect/Result"
+ * import { ReleaseVersion, snapshotViolations, TermIri, TermSnapshot } from "@beep/identity/Term"
+ *
+ * const activity = TermIri.make("http://www.w3.org/ns/prov#Activity")
+ * const previous = Result.getOrThrow(
+ *   TermSnapshot.fromRows({ release: ReleaseVersion.make("1.0.0"), namespaces: [], terms: [activity], bindings: [], deprecations: [] })
+ * )
+ * A.map(snapshotViolations(previous, TermSnapshot.empty), (violation) => violation._tag) // => ["TermRemoved", "ReleaseRegressed"]
+ * snapshotViolations(TermSnapshot.empty, previous).length // => 0
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const snapshotViolations: {
+  (next: TermSnapshot): (previous: TermSnapshot) => ReadonlyArray<SnapshotViolation>;
+  (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation>;
+} = dual(
+  2,
+  (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> =>
+    A.appendAll(termSetViolations(previous, next), releaseViolations(previous, next))
+);
+
+/**
+ * **Details**
+ *
  * A package that `@beep/identity` depends on cannot import the registry, so the
- * generator writes such a shard's rows into that package as plain literals.
+ * generator writes such a shard's rows into that package as plain literals. The
+ * set is closed in source: renaming such a package changes its name here and in
+ * the shard's `projection` first, and `beep identity rebind` then moves its
+ * bindings.
  *
  * **Example** (Check a projection target)
  *
@@ -820,8 +1203,6 @@ export const RegistryProjection = S.Literals(["@beep/test-runner"]).pipe(
 );
 
 /**
- * Decoded type of {@link RegistryProjection}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -855,8 +1236,6 @@ export class ShardBinding extends S.Opaque<ShardBinding, { readonly brand: uniqu
 ) {}
 
 /**
- * Encoded representation of {@link ShardBinding}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -870,8 +1249,18 @@ export declare namespace ShardBinding {
   export type Encoded = typeof ShardBinding.Encoded;
 }
 
+const ShardReplacement = S.Union([TermLocal, S.Literal("")]);
+
 /**
  * A deprecation row of a source shard, whose replacement is a local of the shard's namespace.
+ *
+ * **Details**
+ *
+ * The empty replacement `""` names the shard namespace itself, for a retired
+ * namespace IRI whose successor is the namespace, not one of its terms. The
+ * table accepts it only for a deprecated IRI that ends with `/` or `#`
+ * ({@link isNamespaceShapedIri}): a retired term is never succeeded by a
+ * namespace IRI.
  *
  * **Example** (Deprecate a re-minted term inside a shard)
  *
@@ -894,15 +1283,13 @@ export class ShardDeprecation extends S.Opaque<ShardDeprecation, { readonly bran
   S.Struct({
     term: TermIri.annotateKey({ description: "The deprecated term IRI, under any namespace." }),
     since: ReleaseVersion.annotateKey({ description: "Vocabulary release that deprecated the term." }),
-    replacement: S.OptionFromOptionalKey(TermLocal).annotateKey({
-      description: "Local of the shard namespace that succeeds the term, when one exists.",
+    replacement: S.OptionFromOptionalKey(ShardReplacement).annotateKey({
+      description: 'Local of the shard namespace that succeeds the term, or "" for the namespace itself.',
     }),
   }).pipe($I.annoteSchema("ShardDeprecation", { description: "A source-shard term deprecation." }))
 ) {}
 
 /**
- * Encoded representation of {@link ShardDeprecation}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -993,8 +1380,6 @@ export class RegistryShard extends S.Opaque<RegistryShard, { readonly brand: uni
 ) {}
 
 /**
- * Encoded representation of {@link RegistryShard}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1015,13 +1400,14 @@ export declare namespace RegistryShard {
  *
  * - `DuplicatePrefix` and `DuplicateNamespaceIri`: prefixes and namespace IRIs are unique.
  * - `DuplicateTermIri`: a term IRI is declared once, so contraction is an exact lookup.
- * - `NamespaceIriIsTerm`: no namespace IRI is also a term IRI, so the snapshot keeps the two apart.
- * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local.
+ * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local, so it never ends with the
+ *   separator a {@link NamespaceIri} ends with, and no namespace IRI is also a term IRI.
  * - `DuplicateBinding`: a code identity is bound at most once.
  * - `BindingToUnknownTerm`: a binding names a declared term, never a namespace IRI.
  * - `DuplicateDeprecation`: a term is deprecated at most once.
  * - `DeprecatedTermLive`: a deprecated IRI is neither a term IRI nor a namespace IRI.
- * - `ReplacementUnknown` and `ReplacementCycle`: a replacement chain ends at a declared term, never a namespace IRI.
+ * - `ReplacementUnknown` and `ReplacementCycle`: a retired term's replacement chain ends at a declared term,
+ *   never a namespace IRI; a retired namespace IRI ({@link isNamespaceShapedIri}) ends at a declared namespace IRI.
  *
  * **Example** (Make a conflict)
  *
@@ -1039,7 +1425,6 @@ export const RegistryConflict = S.TaggedUnion({
   DuplicatePrefix: { prefix: SafePnPrefix, iris: S.Array(IRI) },
   DuplicateNamespaceIri: { iri: IRI, prefixes: S.Array(SafePnPrefix) },
   DuplicateTermIri: { term: TermIri, namespaces: S.Array(SafePnPrefix) },
-  NamespaceIriIsTerm: { iri: TermIri, namespaces: S.Array(SafePnPrefix), termNamespaces: S.Array(SafePnPrefix) },
   TermOutsideNamespace: { term: TermIri, namespace: SafePnPrefix },
   DuplicateBinding: { code: CodeId, terms: S.Array(TermIri) },
   BindingToUnknownTerm: { code: CodeId, term: TermIri },
@@ -1050,8 +1435,6 @@ export const RegistryConflict = S.TaggedUnion({
 }).pipe($I.annoteSchema("RegistryConflict", { description: "A reason shards do not form one registry table." }));
 
 /**
- * Decoded type of {@link RegistryConflict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1080,8 +1463,6 @@ export const registryConflictMessage: (conflict: RegistryConflict) => string = R
     `Namespace IRI ${iri} is declared under more than one prefix (${A.join(prefixes, ", ")}).`,
   DuplicateTermIri: ({ term, namespaces }) =>
     `Term ${term} is declared more than once (in ${A.join(namespaces, ", ")}).`,
-  NamespaceIriIsTerm: ({ iri, namespaces, termNamespaces }) =>
-    `${iri} is the IRI of namespace ${A.join(namespaces, ", ")} and a term of ${A.join(termNamespaces, ", ")}.`,
   TermOutsideNamespace: ({ term, namespace }) =>
     `Term ${term} is not its namespace "${namespace}" IRI followed by its local.`,
   DuplicateBinding: ({ code, terms }) => `Code identity ${code} is bound more than once (${A.join(terms, ", ")}).`,
@@ -1089,7 +1470,7 @@ export const registryConflictMessage: (conflict: RegistryConflict) => string = R
   DuplicateDeprecation: ({ term }) => `Term ${term} is deprecated more than once.`,
   DeprecatedTermLive: ({ term }) => `${term} is deprecated and still declared live.`,
   ReplacementUnknown: ({ term, replacement }) =>
-    `The replacement chain of ${term} reaches ${replacement}, which is neither live nor deprecated with a successor.`,
+    `The replacement chain of ${term} reaches ${replacement}, which is neither a declared ${isNamespaceShapedIri(term) ? "namespace IRI" : "term"} nor deprecated with a successor.`,
   ReplacementCycle: ({ term }) => `The replacement chain of ${term} returns to a term it already visited.`,
 });
 
@@ -1125,13 +1506,13 @@ const sortedStrings = <Value extends string>(values: ReadonlyArray<Value>): Arra
   A.sort(A.dedupe(values), Order.String);
 
 const followReplacement = (
-  terms: HashSet.HashSet<string>,
+  successors: HashSet.HashSet<string>,
   byTerm: HashMap.HashMap<string, Deprecation>,
   origin: TermIri,
   current: TermIri,
   seen: HashSet.HashSet<string>
 ): O.Option<RegistryConflict> =>
-  HashSet.has(terms, current)
+  HashSet.has(successors, current)
     ? O.none()
     : HashSet.has(seen, current)
       ? Conflict.ReplacementCycle.makeOption({ term: origin })
@@ -1140,13 +1521,14 @@ const followReplacement = (
           O.flatMap((successor) => successor.replacement),
           O.match({
             onNone: () => Conflict.ReplacementUnknown.makeOption({ term: origin, replacement: current }),
-            onSome: (next) => followReplacement(terms, byTerm, origin, next, HashSet.add(seen, current)),
+            onSome: (next) => followReplacement(successors, byTerm, origin, next, HashSet.add(seen, current)),
           })
         );
 
 const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> => {
   const terms = HashSet.fromIterable(A.map(rows.terms, (term): string => term.iri));
-  const live = HashSet.union(terms, HashSet.fromIterable(A.map(rows.namespaces, (namespace): string => namespace.iri)));
+  const namespaceIris = HashSet.fromIterable(A.map(rows.namespaces, (namespace): string => namespace.iri));
+  const live = HashSet.union(terms, namespaceIris);
   const namespaceByPrefix = indexBy(rows.namespaces, namespaceKey);
   const deprecationByTerm = indexBy(rows.deprecations, deprecationKey);
   return A.flatten([
@@ -1171,29 +1553,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
           term: A.headNonEmpty(group).iri,
           namespaces: sortedStrings(A.map(group, (term) => term.namespace)),
         })
-    ),
-    A.filterMap(
-      duplicateGroups(
-        A.appendAll(
-          A.map(rows.terms, (term) => ({ iri: term.iri, prefix: term.namespace, namespace: false })),
-          A.map(rows.namespaces, (namespace) => ({ iri: namespace.iri, prefix: namespace.prefix, namespace: true }))
-        ),
-        (row) => row.iri
-      ),
-      (group) => {
-        const [namespaces, termNamespaces] = A.partition(group, (row) =>
-          row.namespace ? Result.succeed(row.prefix) : Result.fail(row.prefix)
-        );
-        return A.isReadonlyArrayNonEmpty(namespaces) && A.isReadonlyArrayNonEmpty(termNamespaces)
-          ? Result.succeed(
-              Conflict.NamespaceIriIsTerm.make({
-                iri: TermIri.make(A.headNonEmpty(group).iri),
-                namespaces: sortedStrings(namespaces),
-                termNamespaces: sortedStrings(termNamespaces),
-              })
-            )
-          : Result.failVoid;
-      }
     ),
     pipe(
       rows.terms,
@@ -1228,7 +1587,13 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
       pipe(
         deprecation.replacement,
         O.flatMap((replacement) =>
-          followReplacement(terms, deprecationByTerm, deprecation.term, replacement, HashSet.make(deprecation.term))
+          followReplacement(
+            isNamespaceShapedIri(deprecation.term) ? namespaceIris : terms,
+            deprecationByTerm,
+            deprecation.term,
+            replacement,
+            HashSet.make(deprecation.term)
+          )
         ),
         Result.fromOption(() => deprecation)
       )
@@ -1237,22 +1602,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
 };
 
 const termIriOf = (namespace: Namespace, local: TermLocal): TermIri => TermIri.make(`${namespace.iri}${local}`);
-
-const releaseParts = (release: ReleaseVersion): readonly [bigint, bigint] => {
-  const [major = "0", minor = "0"] = Str.split(".")(release);
-  return [BigInt(major), BigInt(minor)];
-};
-
-const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
-  ReleaseVersion.make(`${BI.increment(releaseParts(release)[0])}.0.0`);
-
-const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
-  const [major, minor] = releaseParts(release);
-  return ReleaseVersion.make(`${major}.${BI.increment(minor)}.0`);
-};
-
-const genesisRelease = ReleaseVersion.make("1.0.0");
-const snapshotEquivalence = S.toEquivalence(TermSnapshot);
 
 const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot =>
   Result.getOrThrow(
@@ -1268,18 +1617,11 @@ const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot 
     })
   );
 
-const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
-  if (snapshotEquivalence(unchanged, previous)) {
-    return previous.release;
-  }
-  if (previous.release === TermSnapshot.empty.release) {
-    return genesisRelease;
-  }
-  const deprecated = HashSet.fromIterable(A.map(previous.deprecations, deprecationKey));
-  return A.some(unchanged.deprecations, (deprecation) => !HashSet.has(deprecated, deprecation.term))
-    ? nextMajor(previous.release)
-    : nextMinor(previous.release);
-};
+const sinceValues = (table: RegistryRows): ReadonlyArray<ReleaseVersion> =>
+  A.appendAll(
+    A.map(table.bindings, (binding) => binding.since),
+    A.map(table.deprecations, (deprecation) => deprecation.since)
+  );
 
 /**
  * The one registry table: every namespace, live term, binding and deprecation.
@@ -1368,7 +1710,7 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
           Deprecation.make({
             term: deprecation.term,
             since: deprecation.since,
-            replacement: O.map(deprecation.replacement, (local) => termIriOf(shard.namespace, local)),
+            replacement: O.map(deprecation.replacement, (local) => TermIri.make(`${shard.namespace.iri}${local}`)),
           })
         )
       ),
@@ -1387,15 +1729,60 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
   };
 
   /**
+   * The release the change from `previous` to the table calls for.
+   *
+   * **Details**
+   *
+   * It is `previous.release` when nothing changed, so an unchanged empty
+   * snapshot stays at `0.0.0`, unpublished. It is `1.0.0` for the first change
+   * after the empty snapshot, the next major when the table adds a deprecation and
+   * the next minor for any other change. It depends on the rows alone, so a
+   * change made in many steps calls for the same release as the same change
+   * made at once.
+   *
+   * **Example** (Count a change once)
+   *
+   * ```ts import.meta.vitest name="Count a change once"
+   * import * as Effect from "effect/Effect"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term"
+   *
+   * const tableOf = async (terms: ReadonlyArray<string>) => {
+   *   const shard = await Effect.runPromise(S.decodeUnknownEffect(RegistryShard)({
+   *     namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+   *     terms,
+   *     bindings: [],
+   *     deprecations: []
+   *   }))
+   *   return Result.getOrThrow(RegistryTable.fromShards([shard]))
+   * }
+   * const base = RegistryTable.snapshot(await tableOf(["Report"]), TermSnapshot.empty)
+   * RegistryTable.releaseAfter(await tableOf(["Article", "Report"]), base) // => "1.1.0"
+   * RegistryTable.releaseAfter(await tableOf(["Article", "Report", "Thesis"]), base) // => "1.1.0"
+   * ```
+   *
+   * @category projections
+   * @since 0.0.0
+   */
+  static readonly releaseAfter: {
+    (previous: TermSnapshot): (table: RegistryTable) => ReleaseVersion;
+    (table: RegistryTable, previous: TermSnapshot): ReleaseVersion;
+  } = dual(
+    2,
+    (table: RegistryTable, previous: TermSnapshot): ReleaseVersion =>
+      nextRelease(previous, snapshotAt(table, previous.release))
+  );
+
+  /**
    * Project the table to the term-stability snapshot that succeeds `previous`.
    *
    * **Details**
    *
    * The snapshot's `terms` hold every live term IRI and every namespace IRI.
-   * Its `release` is `previous.release` when nothing changed, `1.0.0` when
-   * `previous` is the empty snapshot, the next major when the table adds a
-   * deprecation and the next minor for any other change. Rows keep their own
-   * `since`.
+   * Its `release` is {@link RegistryTable.releaseAfter}, raised to the largest
+   * `since` a row records: a row names a release that exists. Rows keep their
+   * own `since`.
    *
    * **Example** (Take the first snapshot)
    *
@@ -1422,15 +1809,115 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
     (previous: TermSnapshot): (table: RegistryTable) => TermSnapshot;
     (table: RegistryTable, previous: TermSnapshot): TermSnapshot;
   } = dual(2, (table: RegistryTable, previous: TermSnapshot): TermSnapshot => {
-    const unchanged = snapshotAt(table, previous.release);
-    const release = nextRelease(previous, unchanged);
-    return release === previous.release ? unchanged : snapshotAt(table, release);
+    const release = A.reduce(sinceValues(table), RegistryTable.releaseAfter(table, previous), latestRelease);
+    return snapshotAt(table, release);
   });
+
+  /**
+   * Project the table to the snapshot of a registry no base has published yet, keeping the release `committed` has.
+   *
+   * **Details**
+   *
+   * Until a base publishes a term set, every row of the checkout belongs to one
+   * unreleased change, so a further edit calls for no further release. The
+   * snapshot keeps the release of `committed`, or takes the one
+   * {@link RegistryTable.releaseAfter} gives when `committed` publishes nothing,
+   * raised to the largest `since` a row records.
+   *
+   * **Example** (Keep the release across two edits)
+   *
+   * ```ts import.meta.vitest name="Keep the release across two edits"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term"
+   *
+   * const tableOf = (terms: ReadonlyArray<string>) =>
+   *   Result.getOrThrow(RegistryTable.fromShards([S.decodeUnknownSync(RegistryShard)({
+   *     namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+   *     terms,
+   *     bindings: [],
+   *     deprecations: []
+   *   })]))
+   * const first = RegistryTable.snapshotKeeping(tableOf(["Report"]), TermSnapshot.empty)
+   * first.release // => "1.0.0"
+   * RegistryTable.snapshotKeeping(tableOf(["Article", "Report"]), first).release // => "1.0.0"
+   * ```
+   *
+   * @category projections
+   * @since 0.0.0
+   */
+  static readonly snapshotKeeping: {
+    (committed: TermSnapshot): (table: RegistryTable) => TermSnapshot;
+    (table: RegistryTable, committed: TermSnapshot): TermSnapshot;
+  } = dual(2, (table: RegistryTable, committed: TermSnapshot): TermSnapshot => {
+    const kept = TermSnapshot.isPublished(committed) ? committed.release : RegistryTable.releaseAfter(table, committed);
+    return snapshotAt(table, A.reduce(sinceValues(table), kept, latestRelease));
+  });
+
+  /**
+   * Move the bindings a {@link CodeMove} reaches to their new code identities, keeping each term and `since`.
+   *
+   * **Details**
+   *
+   * A binding moves when its code is the move's `from` or is under `from/`; the
+   * rest of the code is kept under `to/`. Terms, namespaces and deprecations
+   * are untouched, so the published term set of the table's snapshot is
+   * unchanged. A move onto a code that is already bound returns the
+   * `DuplicateBinding` conflict.
+   *
+   * **When to use**
+   *
+   * Use after a module or package rename: the code identity follows the file
+   * and the published IRI stays.
+   *
+   * **Example** (Rebind a module's code identities)
+   *
+   * ```ts import.meta.vitest name="Rebind a module's code identities"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { CodeId, CodeIdMove, RegistryShard, RegistryTable } from "@beep/identity/Term"
+   *
+   * const vitest = S.decodeUnknownSync(RegistryShard)({
+   *   namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+   *   terms: ["TestHang"],
+   *   bindings: [{ code: "@beep/test-runner/Vitest/TestHang", local: "TestHang", since: "2.0.0" }],
+   *   deprecations: []
+   * })
+   * const table = Result.getOrThrow(RegistryTable.fromShards([vitest]))
+   * const move = CodeIdMove.make({
+   *   from: CodeId.make("@beep/test-runner/Vitest"),
+   *   to: CodeId.make("@beep/test-runner/Runner")
+   * })
+   * const moved = RegistryTable.rebind(table, move)
+   * Result.getOrThrow(moved).bindings[0]?.code // => "@beep/test-runner/Runner/TestHang"
+   * ```
+   *
+   * @category combinators
+   * @since 0.0.0
+   */
+  static readonly rebind: {
+    (move: CodeMove): (table: RegistryTable) => Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+    (table: RegistryTable, move: CodeMove): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+  } = dual(
+    2,
+    (table: RegistryTable, move: CodeMove): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
+      const rows: RegistryRows = {
+        namespaces: table.namespaces,
+        terms: table.terms,
+        bindings: A.map(table.bindings, (binding) =>
+          TermBinding.make({ code: moveCode(binding.code, move), term: binding.term, since: binding.since })
+        ),
+        deprecations: table.deprecations,
+      };
+      const conflicts = registryConflicts(rows);
+      return A.isReadonlyArrayNonEmpty(conflicts)
+        ? Result.fail(conflicts)
+        : Result.succeed(RegistryTable.make({ ...rows, bindings: canonicalRows(rows.bindings, bindingKey) }));
+    }
+  );
 }
 
 /**
- * Encoded representation of {@link RegistryTable}.
- *
  * @category type-level
  * @since 0.0.0
  */

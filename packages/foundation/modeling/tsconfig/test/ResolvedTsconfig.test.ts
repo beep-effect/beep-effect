@@ -9,24 +9,17 @@ import * as S from "effect/Schema";
 import { deliberatelyInvalid } from "./support/deliberatelyInvalid.ts";
 import type { TsconfigJson } from "@beep/tsconfig/TsconfigJson";
 
-// The injected path resolver is `Path.Path.resolve` from the built-in POSIX
-// `Path.layer` (absolute `b` wins; relative `b` resolves against `a`,
-// collapsing `.`/`..`). POSIX for determinism — the engine operates on
-// normalized forward-slash paths.
-const posixJoin = Effect.map(
+const posixResolveFromPathLayerForDeterminism = Effect.map(
   Effect.service(Path.Path),
   (path) =>
     (a: string, b: string): string =>
       path.resolve(a, b)
 );
 
-// A `${configDir}`-prefixed value, written as an escaped template literal so the
-// intentional token survives Biome's noTemplateCurlyInString rule.
-const cd = (rest: string): string => `\${configDir}${rest}`;
+const escapedConfigDirPrefixedForNoTemplateCurlyInString = (rest: string): string => `\${configDir}${rest}`;
 
-// The base-most fold seed: an empty accumulator the loader (Task 8) folds every
-// config onto, own config last.
-const seed = (): ResolvedTsconfig => ResolvedTsconfig.make({ configPath: "", extendedPaths: [], compilerOptions: {} });
+const emptyBaseMostFoldSeed = (): ResolvedTsconfig =>
+  ResolvedTsconfig.make({ configPath: "", extendedPaths: [], compilerOptions: {} });
 
 const { absolutize, merge, substituteConfigDir } = ResolvedTsconfig;
 
@@ -47,9 +40,13 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig runtime model 
 
   it.effect("absolutize is equivalent in data-first and data-last forms", () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const doc: TsconfigJson.Type = {
-        compilerOptions: { outDir: "./dist", rootDirs: ["./src", cd("/shared")], paths: { "@app/*": ["src/*"] } },
+        compilerOptions: {
+          outDir: "./dist",
+          rootDirs: ["./src", escapedConfigDirPrefixedForNoTemplateCurlyInString("/shared")],
+          paths: { "@app/*": ["src/*"] },
+        },
       };
       assert.deepStrictEqual(pipe(doc, absolutize("/proj", join)), absolutize(doc, "/proj", join));
       const withoutOptions: TsconfigJson.Type = { files: ["src/index.ts"] };
@@ -59,13 +56,13 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig runtime model 
 
   it("merge is equivalent in data-first and data-last forms", () => {
     const base = merge(
-      seed(),
+      emptyBaseMostFoldSeed(),
       { compilerOptions: { strict: false }, include: ["src"], futureKey: "base" },
       "/proj/config/base.json"
     );
     const derived: TsconfigJson.Type = {
       compilerOptions: { strict: true, paths: { "@app/*": ["src/*"] } },
-      watchOptions: { excludeFiles: [cd("/generated")] },
+      watchOptions: { excludeFiles: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/generated")] },
       futureKey: "derived",
     };
     assert.deepStrictEqual(
@@ -76,11 +73,14 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig runtime model 
 
   it("substituteConfigDir is equivalent in data-first and data-last forms", () => {
     const resolved = merge(
-      seed(),
+      emptyBaseMostFoldSeed(),
       {
-        compilerOptions: { outDir: cd("/dist"), paths: { "@app/*": [cd("/src/*")] } },
-        include: [cd("/src")],
-        watchOptions: { excludeDirectories: [cd("/generated")] },
+        compilerOptions: {
+          outDir: escapedConfigDirPrefixedForNoTemplateCurlyInString("/dist"),
+          paths: { "@app/*": [escapedConfigDirPrefixedForNoTemplateCurlyInString("/src/*")] },
+        },
+        include: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/src")],
+        watchOptions: { excludeDirectories: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/generated")] },
       },
       "/proj/tsconfig.json"
     );
@@ -90,86 +90,109 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig runtime model 
 
 describe("ResolvedTsconfig.merge — E4 merge per field", () => {
   it("E4 compilerOptions: per-key shallow assign, derived wins", () => {
-    const base = merge(seed(), { compilerOptions: { strict: false, lib: ["esnext"] } }, "/proj/base.json");
+    const base = merge(
+      emptyBaseMostFoldSeed(),
+      { compilerOptions: { strict: false, lib: ["esnext"] } },
+      "/proj/base.json"
+    );
     const result = merge(base, { compilerOptions: { strict: true, target: "es2022" } }, "/proj/tsconfig.json");
     assert.deepStrictEqual(result.compilerOptions, { strict: true, target: "es2022", lib: ["esnext"] });
   });
 
   it("E4 paths: replaced wholesale; pathsBase tracks the declaring config through a two-level chain", () => {
-    const base = merge(seed(), { compilerOptions: { paths: { "@app/*": ["src/*"] } } }, "/proj/configs/base.json");
-    // A more-derived config that does NOT redeclare paths inherits them and the pathsBase.
+    const base = merge(
+      emptyBaseMostFoldSeed(),
+      { compilerOptions: { paths: { "@app/*": ["src/*"] } } },
+      "/proj/configs/base.json"
+    );
     const result = merge(base, { compilerOptions: { strict: true } }, "/proj/tsconfig.json");
-    assert.deepStrictEqual(result.compilerOptions.paths, { "@app/*": ["src/*"] });
-    assert.strictEqual(result.pathsBase, "/proj/configs");
+    const notRedeclaring = "a more-derived config that does not redeclare paths inherits them and the pathsBase";
+    assert.deepStrictEqual(result.compilerOptions.paths, { "@app/*": ["src/*"] }, notRedeclaring);
+    assert.strictEqual(result.pathsBase, "/proj/configs", notRedeclaring);
 
-    // A third config that DOES redeclare paths replaces them wholesale and moves pathsBase.
     const result2 = merge(result, { compilerOptions: { paths: { "@x/*": ["y/*"] } } }, "/proj/deep/tsconfig.json");
-    assert.deepStrictEqual(result2.compilerOptions.paths, { "@x/*": ["y/*"] });
-    assert.strictEqual(result2.pathsBase, "/proj/deep");
+    const redeclaring = "a third config that redeclares paths replaces them wholesale and moves pathsBase";
+    assert.deepStrictEqual(result2.compilerOptions.paths, { "@x/*": ["y/*"] }, redeclaring);
+    assert.strictEqual(result2.pathsBase, "/proj/deep", redeclaring);
   });
 
   it("E4 files/include/exclude: own empty array beats inherited", () => {
-    const base = merge(seed(), { include: ["src"] }, "/proj/configs/base.json");
+    const base = merge(emptyBaseMostFoldSeed(), { include: ["src"] }, "/proj/configs/base.json");
     const result = merge(base, { include: [] }, "/proj/tsconfig.json");
     assert.deepStrictEqual(result.include, []);
   });
 
   it("E4 files/include/exclude: inherited entries re-rooted relative to the declaring config", () => {
-    const base = merge(seed(), { include: ["src/**/*", "/abs/x", cd("/g")] }, "/proj/configs/base.json");
+    const base = merge(
+      emptyBaseMostFoldSeed(),
+      { include: ["src/**/*", "/abs/x", escapedConfigDirPrefixedForNoTemplateCurlyInString("/g")] },
+      "/proj/configs/base.json"
+    );
     const result = merge(base, {}, "/proj/tsconfig.json");
-    // relative(dirname("/proj/tsconfig.json"), dirname("/proj/configs/base.json"))
-    //   = relative("/proj", "/proj/configs") = "configs"
-    // Absolute and ${configDir}-prefixed entries are exempt from re-rooting.
-    assert.deepStrictEqual(result.include, ["configs/src/**/*", "/abs/x", cd("/g")]);
+    assert.deepStrictEqual(
+      result.include,
+      ["configs/src/**/*", "/abs/x", escapedConfigDirPrefixedForNoTemplateCurlyInString("/g")],
+      'the prefix is relative("/proj", "/proj/configs") = "configs"; absolute and ${configDir}-prefixed entries are exempt from re-rooting'
+    );
   });
 
   it("E4 references: never inherited", () => {
-    const base = merge(seed(), { references: [{ path: "../core" }] }, "/proj/base.json");
+    const base = merge(emptyBaseMostFoldSeed(), { references: [{ path: "../core" }] }, "/proj/base.json");
     const inherited = merge(base, { compilerOptions: {} }, "/proj/tsconfig.json");
     assert.isUndefined(inherited.references);
-    // The own config's references win outright.
     const own = merge(base, { references: [{ path: "../own" }] }, "/proj/tsconfig.json");
-    assert.deepStrictEqual(own.references, [{ path: "../own" }]);
+    assert.deepStrictEqual(own.references, [{ path: "../own" }], "the own config's references win outright");
   });
 
   it("E4 typeAcquisition: never inherited", () => {
-    const base = merge(seed(), { typeAcquisition: { enable: true } }, "/proj/base.json");
+    const base = merge(emptyBaseMostFoldSeed(), { typeAcquisition: { enable: true } }, "/proj/base.json");
     const result = merge(base, {}, "/proj/tsconfig.json");
     assert.isUndefined(result.typeAcquisition);
   });
 
   it("E4 compileOnSave: inherited only when own undefined and inherited truthy", () => {
-    // Own defined wins.
-    const ownWins = merge(merge(seed(), { compileOnSave: true }, "/b"), { compileOnSave: false }, "/o");
-    assert.strictEqual(ownWins.compileOnSave, false);
-    // Own undefined + inherited truthy -> inherited.
-    const carried = merge(merge(seed(), { compileOnSave: true }, "/b"), {}, "/o");
-    assert.strictEqual(carried.compileOnSave, true);
-    // Own undefined + inherited falsy -> NOT carried.
-    const dropped = merge(merge(seed(), { compileOnSave: false }, "/b"), {}, "/o");
-    assert.isUndefined(dropped.compileOnSave);
+    const ownWins = merge(
+      merge(emptyBaseMostFoldSeed(), { compileOnSave: true }, "/b"),
+      { compileOnSave: false },
+      "/o"
+    );
+    assert.strictEqual(ownWins.compileOnSave, false, "an own defined value wins");
+    const carried = merge(merge(emptyBaseMostFoldSeed(), { compileOnSave: true }, "/b"), {}, "/o");
+    assert.strictEqual(carried.compileOnSave, true, "own undefined and inherited truthy: inherited");
+    const dropped = merge(merge(emptyBaseMostFoldSeed(), { compileOnSave: false }, "/b"), {}, "/o");
+    assert.isUndefined(dropped.compileOnSave, "own undefined and inherited falsy: not carried");
   });
 
   it("E4 watchOptions: per-key shallow merge", () => {
-    const base = merge(seed(), { watchOptions: { watchFile: "usefsevents", excludeFiles: ["a"] } }, "/b");
+    const base = merge(
+      emptyBaseMostFoldSeed(),
+      { watchOptions: { watchFile: "usefsevents", excludeFiles: ["a"] } },
+      "/b"
+    );
     const result = merge(base, { watchOptions: { watchFile: "fixedpollinginterval" } }, "/o");
     assert.deepStrictEqual(result.watchOptions, { watchFile: "fixedpollinginterval", excludeFiles: ["a"] });
   });
 
   it("E4 unknown passthrough keys: derived wins per key (assign semantics)", () => {
-    const base = merge(seed(), { "ts-node": { esm: true }, buildOptions: { a: 1, b: 9 } }, "/proj/base.json");
+    const base = merge(
+      emptyBaseMostFoldSeed(),
+      { "ts-node": { esm: true }, buildOptions: { a: 1, b: 9 } },
+      "/proj/base.json"
+    );
     const result = merge(base, { buildOptions: { a: 2 }, custom: "x" }, "/proj/tsconfig.json");
-    // buildOptions replaced wholesale by the derived value; ts-node survives; custom added.
-    assert.deepStrictEqual(result.buildOptions, { a: 2 });
-    assert.deepStrictEqual(result["ts-node"], { esm: true });
-    assert.strictEqual(result.custom, "x");
-    // extends is consumed, never data.
-    const withExtends = merge(seed(), { extends: "./base.json", compilerOptions: {} }, "/proj/tsconfig.json");
-    assert.isUndefined(withExtends.extends);
+    assert.deepStrictEqual(result.buildOptions, { a: 2 }, "buildOptions is replaced wholesale by the derived value");
+    assert.deepStrictEqual(result["ts-node"], { esm: true }, "an inherited-only ts-node survives");
+    assert.strictEqual(result.custom, "x", "a derived-only custom key is added");
+    const withExtends = merge(
+      emptyBaseMostFoldSeed(),
+      { extends: "./base.json", compilerOptions: {} },
+      "/proj/tsconfig.json"
+    );
+    assert.isUndefined(withExtends.extends, "extends is consumed, never data");
   });
 
   it("configPath and extendedPaths track the fold, own config last", () => {
-    const base = merge(seed(), {}, "/proj/configs/base.json");
+    const base = merge(emptyBaseMostFoldSeed(), {}, "/proj/configs/base.json");
     const result = merge(base, {}, "/proj/tsconfig.json");
     assert.strictEqual(result.configPath, "/proj/tsconfig.json");
     assert.deepStrictEqual(result.extendedPaths, ["/proj/configs/base.json", "/proj/tsconfig.json"]);
@@ -179,7 +202,7 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
     const baseProto = { polluted: "base" };
     const derivedProto = { polluted: "derived" };
     const base = merge(
-      seed(),
+      emptyBaseMostFoldSeed(),
       {
         ["__proto__"]: baseProto,
         constructor: "base constructor",
@@ -247,7 +270,7 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
     const reads: Array<string> = [];
     let consumedReads = 0;
     const base: ResolvedTsconfig = {
-      ...seed(),
+      ...emptyBaseMostFoldSeed(),
       get second() {
         reads.push("base second");
         return "second";
@@ -301,38 +324,28 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
   });
 
   it("E4 files/include/exclude: a 3-config chain re-roots per-step, composing WITHOUT collapsing `..` (byte-identical to tsc)", () => {
-    // Three non-nested dirs: /proj/shared (base) and /proj/apps (mid) are
-    // SIBLINGS under /proj; /proj/apps/web (leaf) is nested under /proj/apps.
-    // TsconfigLoader folds base-most first, own config last — exactly the two
-    // merge calls below.
-    const base = merge(seed(), { include: ["src"] }, "/proj/shared/base.json");
-    const mid = merge(base, {}, "/proj/apps/tsconfig.base.json");
-    const result = merge(mid, {}, "/proj/apps/web/tsconfig.json");
+    const siblingBaseDir = "/proj/shared";
+    const siblingMidDir = "/proj/apps";
+    const leafNestedUnderMidDir = "/proj/apps/web";
+    const base = merge(emptyBaseMostFoldSeed(), { include: ["src"] }, `${siblingBaseDir}/base.json`);
+    assert.deepStrictEqual(
+      base.include,
+      ["src"],
+      "step 1: the derived config declares include, so it wins outright, unrooted"
+    );
+    const mid = merge(base, {}, `${siblingMidDir}/tsconfig.base.json`);
+    assert.deepStrictEqual(
+      mid.include,
+      ["../shared/src"],
+      'step 2: rerootPrefix = relative("/proj/apps", "/proj/shared") = "../shared", applied to the accumulated "src"'
+    );
+    const result = merge(mid, {}, `${leafNestedUnderMidDir}/tsconfig.json`);
 
-    // Per the merge() formula (rerootPrefix = relative(dirname(derivedPath),
-    // dirname(base.configPath)), applied to every inherited entry via
-    // rerootEntry), each step re-roots the CURRENT accumulated entries — it
-    // does not recompute a single relative path from the leaf straight to the
-    // original base. Composed by hand, step by step:
-    //
-    // Step 1 (base.json itself): merge(seed(), {include:["src"]}, ".../base.json")
-    //   -> derived declares include, so it wins outright, unrooted: ["src"]
-    //
-    // Step 2 (tsconfig.base.json extends base.json):
-    //   rerootPrefix = relative("/proj/apps", "/proj/shared") = "../shared"
-    //   mergeFileList(["src"], undefined, "../shared")
-    //     -> rerootEntry("src", "../shared") = "../shared/src"
-    //
-    // Step 3 (tsconfig.json extends tsconfig.base.json):
-    //   rerootPrefix = relative("/proj/apps/web", "/proj/apps") = ".."
-    //   mergeFileList(["../shared/src"], undefined, "..")
-    //     -> rerootEntry("../shared/src", "..") = "../" + "../shared/src" = "../../shared/src"
-    //
-    // The two step-prefixes ("../shared" then "..") compose onto the ORIGINAL
-    // "src" entry rather than being collapsed into one direct
-    // relative(leaf, originalBase) computation — pinning that merge() folds
-    // per-step, as TsconfigLoader actually drives it.
-    assert.deepStrictEqual(result.include, ["../../shared/src"]);
+    assert.deepStrictEqual(
+      result.include,
+      ["../../shared/src"],
+      'step 3: rerootPrefix = relative("/proj/apps/web", "/proj/apps") = "..", prefixed onto the accumulated "../shared/src"; each step re-roots the current entries instead of computing one relative(leaf, originalBase), as TsconfigLoader folds base-most first'
+    );
     assert.strictEqual(result.configPath, "/proj/apps/web/tsconfig.json");
     assert.deepStrictEqual(result.extendedPaths, [
       "/proj/shared/base.json",
@@ -342,34 +355,23 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
   });
 
   it("E4 files/include/exclude: composed re-rooting keeps a cancellable `web/..` segment UNCOLLAPSED (byte-identical to tsc)", () => {
-    // The previous test's expected string ("../../shared/src") is identical
-    // under collapsed and uncollapsed composition — nothing cancels — so it
-    // cannot catch a mutation that normalizes `..` segments. This fixture
-    // INVERTS the nesting so composition creates a cancellable segment: the
-    // mid config lives BELOW the own config's directory.
-    //
-    //   base: /proj/shared/base.json           include ["src"]
-    //   mid:  /proj/apps/web/tsconfig.base.json (extends ../../shared/base.json)
-    //   own:  /proj/apps/tsconfig.json          (extends ./web/tsconfig.base.json)
-    const base = merge(seed(), { include: ["src"] }, "/proj/shared/base.json");
-    const mid = merge(base, {}, "/proj/apps/web/tsconfig.base.json");
-    const result = merge(mid, {}, "/proj/apps/tsconfig.json");
+    const baseAtSharedIncludingSrc = "/proj/shared/base.json";
+    const midNestedBelowOwnDir = "/proj/apps/web/tsconfig.base.json";
+    const ownAboveMidDir = "/proj/apps/tsconfig.json";
+    const base = merge(emptyBaseMostFoldSeed(), { include: ["src"] }, baseAtSharedIncludingSrc);
+    const mid = merge(base, {}, midNestedBelowOwnDir);
+    assert.deepStrictEqual(
+      mid.include,
+      ["../../shared/src"],
+      'step 2: rerootPrefix = relative("/proj/apps/web", "/proj/shared") = "../../shared"'
+    );
+    const result = merge(mid, {}, ownAboveMidDir);
 
-    // Composed by hand from the merge() formula:
-    //
-    // Step 2 (mid extends base):
-    //   rerootPrefix = relative("/proj/apps/web", "/proj/shared") = "../../shared"
-    //   rerootEntry("src", "../../shared") = "../../shared/src"
-    //
-    // Step 3 (own extends mid):
-    //   rerootPrefix = relative("/proj/apps", "/proj/apps/web") = "web"
-    //   rerootEntry("../../shared/src", "web") = "web/../../shared/src"
-    //
-    // The "web/.." pair is cancellable — a `..`-collapsing mutation would emit
-    // "../shared/src" instead and this assertion fails. tsc performs exactly
-    // this prefix concatenation without normalizing, so the uncollapsed string
-    // is the byte-identical-to-tsc behavior the design doc records.
-    assert.deepStrictEqual(result.include, ["web/../../shared/src"]);
+    assert.deepStrictEqual(
+      result.include,
+      ["web/../../shared/src"],
+      'step 3: rerootPrefix = relative("/proj/apps", "/proj/apps/web") = "web"; the cancellable "web/.." pair stays uncollapsed, byte-identical to tsc prefix concatenation, which the previous fixture cannot catch because nothing cancels there'
+    );
     assert.strictEqual(result.configPath, "/proj/apps/tsconfig.json");
     assert.deepStrictEqual(result.extendedPaths, [
       "/proj/shared/base.json",
@@ -382,18 +384,22 @@ describe("ResolvedTsconfig.merge — E4 merge per field", () => {
 it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig.absolutize — E5 parse-time absolutization", (it) => {
   it.effect("E5 transforms string path-list entries and preserves invalid entries and paths values", () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const marker = { future: true };
       const doc = deliberatelyInvalid<TsconfigJson.Type>({
         compilerOptions: {
           typeRoots: ["./types", 1, null, marker],
-          rootDirs: ["./src", false, cd("/shared")],
+          rootDirs: ["./src", false, escapedConfigDirPrefixedForNoTemplateCurlyInString("/shared")],
           paths: { mixed: ["./src/*", 2, marker], scalar: "./raw/*", absent: null },
         },
       });
       const out = absolutize(doc, "/proj/base", join);
       assert.deepStrictEqual<unknown>(out.compilerOptions?.typeRoots, ["/proj/base/types", 1, null, marker]);
-      assert.deepStrictEqual<unknown>(out.compilerOptions?.rootDirs, ["/proj/base/src", false, cd("/shared")]);
+      assert.deepStrictEqual<unknown>(out.compilerOptions?.rootDirs, [
+        "/proj/base/src",
+        false,
+        escapedConfigDirPrefixedForNoTemplateCurlyInString("/shared"),
+      ]);
       assert.strictEqual(out.compilerOptions?.paths, doc.compilerOptions?.paths);
       assert.deepStrictEqual<unknown>(doc.compilerOptions?.typeRoots, ["./types", 1, null, marker]);
     })
@@ -401,7 +407,7 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig.absolutize —
 
   it.effect("E5 path options absolutized against the declaring config's directory", () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const out = absolutize(
         { compilerOptions: { outDir: "./dist", rootDir: "src", typeRoots: ["./types", "node_modules/@types"] } },
         "/proj/base",
@@ -415,7 +421,7 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig.absolutize —
 
   it.effect("E5 paths values stay verbatim", () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const out = absolutize({ compilerOptions: { paths: { "@app/*": ["./src/*"] } } }, "/proj/base", join);
       assert.deepStrictEqual(out.compilerOptions?.paths, { "@app/*": ["./src/*"] });
     })
@@ -423,20 +429,28 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig.absolutize —
 
   it.effect(`E5 \${configDir}-prefixed values are exempt from absolutization`, () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const out = absolutize(
-        { compilerOptions: { outDir: cd("/out"), typeRoots: [cd("/types"), "./local"] } },
+        {
+          compilerOptions: {
+            outDir: escapedConfigDirPrefixedForNoTemplateCurlyInString("/out"),
+            typeRoots: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/types"), "./local"],
+          },
+        },
         "/proj/base",
         join
       );
-      assert.strictEqual(out.compilerOptions?.outDir, cd("/out"));
-      assert.deepStrictEqual(out.compilerOptions?.typeRoots, [cd("/types"), "/proj/base/local"]);
+      assert.strictEqual(out.compilerOptions?.outDir, escapedConfigDirPrefixedForNoTemplateCurlyInString("/out"));
+      assert.deepStrictEqual(out.compilerOptions?.typeRoots, [
+        escapedConfigDirPrefixedForNoTemplateCurlyInString("/types"),
+        "/proj/base/local",
+      ]);
     })
   );
 
   it.effect("E5 already-absolute path options are preserved", () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const out = absolutize({ compilerOptions: { outDir: "/already/abs" } }, "/proj/base", join);
       assert.strictEqual(out.compilerOptions?.outDir, "/already/abs");
     })
@@ -444,7 +458,7 @@ it.layer(Path.layer, { timeout: "10 seconds" })("ResolvedTsconfig.absolutize —
 
   it.effect("a doc without compilerOptions is returned untouched", () =>
     Effect.gen(function* () {
-      const join = yield* posixJoin;
+      const join = yield* posixResolveFromPathLayerForDeterminism;
       const doc = { include: ["src"] };
       const out = absolutize(doc, "/proj/base", join);
       assert.deepStrictEqual(out, doc);
@@ -458,22 +472,22 @@ describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
     const paths: Record<string, Array<string>> = {
       get ordinary() {
         reads.push("ordinary");
-        return [cd("/ordinary")];
+        return [escapedConfigDirPrefixedForNoTemplateCurlyInString("/ordinary")];
       },
       get ["__proto__"]() {
         reads.push("__proto__");
-        return [cd("/proto")];
+        return [escapedConfigDirPrefixedForNoTemplateCurlyInString("/proto")];
       },
       get 2() {
         reads.push("2");
-        return [cd("/two")];
+        return [escapedConfigDirPrefixedForNoTemplateCurlyInString("/two")];
       },
       get constructor() {
         reads.push("constructor");
-        return [cd("/constructor")];
+        return [escapedConfigDirPrefixedForNoTemplateCurlyInString("/constructor")];
       },
     };
-    const result = substituteConfigDir({ ...seed(), compilerOptions: { paths } }, "/final");
+    const result = substituteConfigDir({ ...emptyBaseMostFoldSeed(), compilerOptions: { paths } }, "/final");
     assert.deepStrictEqual(reads, ["2", "ordinary", "__proto__", "constructor"]);
     assert.deepStrictEqual(result.compilerOptions.paths, {
       "2": ["/final/two"],
@@ -503,11 +517,11 @@ describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
       configPath: "/proj/tsconfig.json",
       extendedPaths: [],
       compilerOptions: {
-        typeRoots: [cd("/types"), 1, null, marker],
-        rootDirs: [cd("/src"), false, "plain"],
+        typeRoots: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/types"), 1, null, marker],
+        rootDirs: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/src"), false, "plain"],
         paths: {
-          mixed: [cd("/src/*"), 2, null, marker, "plain/*"],
-          scalar: cd("/raw/*"),
+          mixed: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/src/*"), 2, null, marker, "plain/*"],
+          scalar: escapedConfigDirPrefixedForNoTemplateCurlyInString("/raw/*"),
           absent: null,
           object: marker,
         },
@@ -518,12 +532,23 @@ describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
     assert.deepStrictEqual<unknown>(out.compilerOptions.rootDirs, ["/final/src", false, "plain"]);
     assert.deepStrictEqual<unknown>(out.compilerOptions.paths, {
       mixed: ["/final/src/*", 2, null, marker, "plain/*"],
-      scalar: cd("/raw/*"),
+      scalar: escapedConfigDirPrefixedForNoTemplateCurlyInString("/raw/*"),
       absent: null,
       object: marker,
     });
-    assert.deepStrictEqual<unknown>(resolved.compilerOptions.typeRoots, [cd("/types"), 1, null, marker]);
-    assert.deepStrictEqual<unknown>(resolved.compilerOptions.paths?.mixed, [cd("/src/*"), 2, null, marker, "plain/*"]);
+    assert.deepStrictEqual<unknown>(resolved.compilerOptions.typeRoots, [
+      escapedConfigDirPrefixedForNoTemplateCurlyInString("/types"),
+      1,
+      null,
+      marker,
+    ]);
+    assert.deepStrictEqual<unknown>(resolved.compilerOptions.paths?.mixed, [
+      escapedConfigDirPrefixedForNoTemplateCurlyInString("/src/*"),
+      2,
+      null,
+      marker,
+      "plain/*",
+    ]);
   });
 
   it("E5 watch excludes substitute strings and preserve non-string entries in both lists", () => {
@@ -533,8 +558,14 @@ describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
       extendedPaths: [],
       compilerOptions: {},
       watchOptions: {
-        excludeDirectories: [cd("/generated"), 1, null, marker, "plain"],
-        excludeFiles: [cd("/gen.ts"), false, marker, "plain.ts"],
+        excludeDirectories: [
+          escapedConfigDirPrefixedForNoTemplateCurlyInString("/generated"),
+          1,
+          null,
+          marker,
+          "plain",
+        ],
+        excludeFiles: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/gen.ts"), false, marker, "plain.ts"],
       },
     });
     const out = substituteConfigDir(resolved, "/final");
@@ -543,8 +574,8 @@ describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
       excludeFiles: ["/final/gen.ts", false, marker, "plain.ts"],
     });
     assert.deepStrictEqual<unknown>(resolved.watchOptions, {
-      excludeDirectories: [cd("/generated"), 1, null, marker, "plain"],
-      excludeFiles: [cd("/gen.ts"), false, marker, "plain.ts"],
+      excludeDirectories: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/generated"), 1, null, marker, "plain"],
+      excludeFiles: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/gen.ts"), false, marker, "plain.ts"],
     });
   });
 
@@ -553,16 +584,16 @@ describe("ResolvedTsconfig.substituteConfigDir — E5 final phase", () => {
       configPath: "/proj/tsconfig.json",
       extendedPaths: ["/proj/tsconfig.json"],
       compilerOptions: {
-        outDir: cd("/out"),
-        typeRoots: [cd("/types")],
-        paths: { "@a/*": [cd("/src/*")] },
+        outDir: escapedConfigDirPrefixedForNoTemplateCurlyInString("/out"),
+        typeRoots: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/types")],
+        paths: { "@a/*": [escapedConfigDirPrefixedForNoTemplateCurlyInString("/src/*")] },
       },
-      include: [cd("/src/**/*"), "plain/**/*"],
-      files: [cd("/main.ts")],
-      exclude: [cd("/dist")],
+      include: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/src/**/*"), "plain/**/*"],
+      files: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/main.ts")],
+      exclude: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/dist")],
       watchOptions: {
-        excludeDirectories: [cd("/node_modules")],
-        excludeFiles: [cd("/gen.ts")],
+        excludeDirectories: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/node_modules")],
+        excludeFiles: [escapedConfigDirPrefixedForNoTemplateCurlyInString("/gen.ts")],
       },
     });
     const out = substituteConfigDir(resolved, "/final");

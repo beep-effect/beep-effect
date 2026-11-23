@@ -1,17 +1,21 @@
 import { Envelope } from "@beep/jsonl";
+import { AfterTerminalCheck } from "@beep/jsonl/internal/changesSeam";
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as PubSub from "effect/PubSub";
 import * as Result from "effect/Result";
+import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
+import * as TestClock from "effect/testing/TestClock";
 import { at, events, externalAppend, line, memory, open, path } from "./fixtures.ts";
 
 it.effect("patch catches up a completed foreign snapshot before deriving data", () =>
@@ -461,8 +465,8 @@ it.effect("a partial failed write leaves a recoverable tail that refuses later l
                 if (fail) {
                   fail = false;
                   yield* handle.writeAll(bytes.subarray(0, 20));
-                  // A real missing-resource failure supplies the injected platform error.
-                  yield* fs.readFile("/journal/missing");
+                  const injectMissingResourcePlatformError = fs.readFile("/journal/missing");
+                  yield* injectMissingResourcePlatformError;
                 }
                 yield* handle.writeAll(bytes);
               }),
@@ -733,33 +737,32 @@ it.effect("an unfinished multibyte code point is held until its original writer 
   })
 );
 
-// Upstream semantics (D13 reverted): a cursor compares at-or-after against a
-// line's start offset on the live half too, so a future cursor delivers nothing
-// that starts below it, even a line that straddles it.
-it.effect("future replay cursor delivers nothing that starts below the cursor", () =>
-  Effect.gen(function* () {
-    const fs = yield* memory();
-    yield* fs.writeFileString(path, line(1));
-    const journal = yield* open({ ...fs, watch: () => Stream.never });
-    const cursor = 100000;
-    const reader = yield* journal
-      .changes({ cursor })
-      .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
-    for (let turn = 0; turn < 8; turn++) yield* Effect.yieldNow;
-    const pipe27 = yield* journal.query({ cursor }).pipe(Stream.runCollect);
-    assert.deepStrictEqual(pipe27, []);
-    const straddling = yield* journal.append("noted", { round: 2, label: Str.repeat(cursor)("x") });
-    assert.isBelow(straddling.line.offset, cursor);
-    assert.isAbove(straddling.line.end, cursor);
-    const after = yield* journal.append("noted", { round: 3, label: "live" });
-    const join28 = yield* Fiber.join(reader);
-    assert.deepStrictEqual(join28, [after]);
-    const pipe29 = yield* journal.query({ events: ["noted"], cursor }).pipe(Stream.runCollect);
-    assert.deepStrictEqual(
-      A.map(pipe29, (row) => row.data.round),
-      [3]
-    );
-  })
+it.effect(
+  "future replay cursor delivers nothing that starts below it, even a straddling line, comparing line start offsets on the live half too (upstream, D13 reverted)",
+  () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      yield* fs.writeFileString(path, line(1));
+      const journal = yield* open({ ...fs, watch: () => Stream.never });
+      const cursor = 100000;
+      const reader = yield* journal
+        .changes({ cursor })
+        .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
+      for (let turn = 0; turn < 8; turn++) yield* Effect.yieldNow;
+      const pipe27 = yield* journal.query({ cursor }).pipe(Stream.runCollect);
+      assert.deepStrictEqual(pipe27, []);
+      const straddling = yield* journal.append("noted", { round: 2, label: Str.repeat(cursor)("x") });
+      assert.isBelow(straddling.line.offset, cursor);
+      assert.isAbove(straddling.line.end, cursor);
+      const after = yield* journal.append("noted", { round: 3, label: "live" });
+      const join28 = yield* Fiber.join(reader);
+      assert.deepStrictEqual(join28, [after]);
+      const pipe29 = yield* journal.query({ events: ["noted"], cursor }).pipe(Stream.runCollect);
+      assert.deepStrictEqual(
+        A.map(pipe29, (row) => row.data.round),
+        [3]
+      );
+    })
 );
 
 it.effect("invalid UTF-8 suffix is withheld until the original writer commits LF", () =>
@@ -981,5 +984,51 @@ it.effect("paged query delivers earlier pages before a terminated malformed reco
       delivered,
       A.makeBy(200, (index) => index)
     );
+  })
+);
+
+it.effect(
+  "changes without a cursor ends when a terminal append lands between the terminal read and the subscription",
+  () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      const journal = yield* open({ ...fs, watch: () => Stream.never });
+      yield* journal.create;
+      const reader = yield* journal
+        .changes()
+        .pipe(
+          Stream.runCollect,
+          Effect.provideService(AfterTerminalCheck, journal.append("ended", null).pipe(Effect.orDie, Effect.asVoid)),
+          Effect.timeoutOption("1 second"),
+          Effect.forkChild({ startImmediately: true })
+        );
+      yield* TestClock.adjust("1 second");
+      const delivered = yield* Fiber.join(reader);
+      assertSome(
+        O.map(
+          delivered,
+          A.map((row) => row.event)
+        ),
+        ["ended"]
+      );
+    })
+);
+it.effect("changes without a cursor ends when the journal closes between the terminal read and the subscription", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    const scope = yield* Scope.make();
+    const journal = yield* open({ ...fs, watch: () => Stream.never }).pipe(Effect.provideService(Scope.Scope, scope));
+    yield* journal.create;
+    const reader = yield* journal
+      .changes()
+      .pipe(
+        Stream.runCollect,
+        Effect.provideService(AfterTerminalCheck, Scope.close(scope, Exit.void)),
+        Effect.timeoutOption("1 second"),
+        Effect.forkChild({ startImmediately: true })
+      );
+    yield* TestClock.adjust("1 second");
+    const delivered = yield* Fiber.join(reader);
+    assertSome(O.map(delivered, A.length), 0);
   })
 );

@@ -702,6 +702,10 @@ const blockFootnoteDefinitionOccurrences = (
     hr: () => A.emptyReadonly(),
   });
 
+const makeDuplicateFootnoteViolationWithBoundClassReceiver = (
+  fields: FootnoteDefinitionOccurrence
+): DocumentSafetyViolation => DuplicateFootnoteDefinitionSafetyViolation.make(fields);
+
 const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> =>
   pipe(
     pipeChildren(document.children, (block, index) => blockFootnoteDefinitionOccurrences(block, ["children", index])),
@@ -712,13 +716,7 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
         length: N.isGreaterThan(1),
       })
     ),
-    // `make` on a class schema calls `new this(...)`, so it cannot be passed as
-    // a detached reference — the lambda is what keeps the receiver bound.
-    A.flatMap(
-      A.map(
-        flow(Struct.pick(["identifier", "path"]), (fields) => DuplicateFootnoteDefinitionSafetyViolation.make(fields))
-      )
-    )
+    A.flatMap(A.map(flow(Struct.pick(["identifier", "path"]), makeDuplicateFootnoteViolationWithBoundClassReceiver)))
   );
 
 const htmlProjectionSafetyIssues = flow(
@@ -846,6 +844,8 @@ export const SafeInline = Inline.pipe(
  */
 export type SafeInline = typeof SafeInline.Type;
 
+const documentCodecKeepingNominalTypeThroughCheckAndBrand = S.make<S.Codec<Document, Document.Encoded>>(Document.ast);
+
 /**
  * Branded user-content document refinement with the same wire representation
  * as {@link Document}.
@@ -866,8 +866,7 @@ export type SafeInline = typeof SafeInline.Type;
  * @category validation
  * @since 0.0.0
  */
-// Keep the nominal decoded Document type when checks and branding rebuild the schema.
-export const SafeDocument = S.make<S.Codec<Document, Document.Encoded>>(Document.ast).pipe(
+export const SafeDocument = documentCodecKeepingNominalTypeThroughCheckAndBrand.pipe(
   S.check(SafeDocumentCheck),
   S.brand("SafeDocument"),
   $I.annoteSchema("SafeDocument", {

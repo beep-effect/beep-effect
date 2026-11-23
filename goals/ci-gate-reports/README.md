@@ -34,6 +34,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
+P4 Guidance and measurement — complete (2026-11-23): `AGENTS.md` and the yeet and orchestrate
+skills name `bun run beep ci failures` instead of the raw logs endpoint; the pre-merge census
+baseline is recorded. P2 (workflow wiring) remains open.
+
 P3 Lookup, adapter and failing-region command — complete (2026-11-22): the main-feed lookup
 (`MainFeed`), the CI-job adapter, the shared job-log route and `beep ci failures --run <id> | --pr
 <number>`. P2 (workflow wiring) is next, after PR 1 merges.
@@ -42,6 +46,17 @@ P1 Projection and feed record — complete (2026-11-22): `task-outcomes/v2` reco
 projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is next, after PR 1 merges.
 
 ## Latest Evidence
+
+2026-11-23: P2 gaps closed in code, no workflow change: a hosted `ci lane` step that writes no
+gate record now records a `lane` root run from its exit code and log, and counts the annotations
+its output wrote for `append-gate-reports` (decisions `lane-step-gate-records`,
+`annotations-used-tally`). Fixture tests spawn real lane children under Node and Bun: pass, red,
+own-record, broken count, lingering descendant (`test/ci-lane-recording.test.ts`).
+
+2026-11-23: census baseline `standards/agent-output-census/runs/2026-11-23T02-00-00Z--census-rules-2026-11-23.json`
+(rules that count `beep ci failures` as a CI-log read): 479 of 483 CI-log fetches piped or
+redirected (99.2%), 427 of 7,224 run-verification turns fetching a CI log (5.9%). `beep ci failures` on two live red runs printed 7,950 and 7,976
+characters per job, within the 8,000-character agent budget.
 
 2026-11-22: P3 fixture tests pass (23 across `ci-main-feed`, `ci-job-adapter`, `ci-failures`): a
 merge-base hit in 3 REST requests and the ancestor walk in 4, no GraphQL; the monitor's 48 tests

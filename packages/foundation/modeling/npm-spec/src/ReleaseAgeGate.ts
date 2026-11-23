@@ -35,11 +35,9 @@ import * as Str from "effect/String";
 
 const $I = $NpmSpecId.create("ReleaseAgeGate");
 
-// pnpm's release-age is measured in minutes; the filter converts to ms.
 const MS_PER_MINUTE = 60_000;
 
-// Preserve native string-date parsing, including local-time strings without a zone.
-const decodePublishDate = S.decodeOption(S.DateFromString);
+const decodePublishDateNativelyIncludingZonelessLocalTime = S.decodeOption(S.DateFromString);
 
 /**
  * A source's partial contribution to a {@link ReleaseAgeGate}: the effective
@@ -117,20 +115,19 @@ export declare namespace PartialReleaseAgeGate {
   export type Encoded = typeof PartialReleaseAgeGate.Encoded;
 }
 
-// A non-negative, finite minute count. `isGreaterThanOrEqualTo(0)` already
-// rejects `NaN` (NaN >= 0 is false); `isFinite` additionally rejects Infinity.
-// Integrality is deliberately NOT enforced — pnpm's config is a non-negative
-// integer of minutes, but `combine` takes `Math.max` of arbitrary finite
-// contributions, and requiring an integer here would make a fractional
-// contribution throw at construction, breaking `combine`'s totality.
-const AgeMinutes = S.Number.check(S.isGreaterThanOrEqualTo(0), S.isFinite());
+// decision: release-age-minutes-not-integral
+const AgeMinutes = S.Number.check(S.isGreaterThanOrEqualTo(0), S.isFinite()).pipe(
+  $I.annoteSchema("AgeMinutes", {
+    description: "A non-negative, finite minute count; fractional minutes are allowed.",
+  })
+);
 
-// One step of the linear wildcard scan over `[nameIndex, patternIndex,
-// starIndex, retryNameIndex]`: consume a `*` (remembering where it was),
-// consume a literal match, or backtrack to the last `*` and let it swallow one
-// more character. `None` when the scan cannot continue.
-type WildcardScan = readonly [number, number, number, number];
-const stepWildcard = (name: string, pattern: string, scan: WildcardScan): O.Option<WildcardScan> => {
+type WildcardScan = readonly [nameIndex: number, patternIndex: number, starIndex: number, retryNameIndex: number];
+const stepWildcardConsumingStarOrLiteralElseBacktrackingToLastStar = (
+  name: string,
+  pattern: string,
+  scan: WildcardScan
+): O.Option<WildcardScan> => {
   const [nameIndex, patternIndex, starIndex, retryNameIndex] = scan;
   if (pattern[patternIndex] === "*") return O.some([nameIndex, patternIndex + 1, patternIndex, nameIndex]);
   if (pattern[patternIndex] === name[nameIndex]) {
@@ -141,30 +138,26 @@ const stepWildcard = (name: string, pattern: string, scan: WildcardScan): O.Opti
 
 const ONLY_STARS = /^\**$/;
 
-// Greedy `*` with backtrack-to-star: `*` matches any run of characters
-// including `/` (crosses `/`, unlike minimatch); every other character matches
-// literally. No RegExp is built from the pattern — a config-supplied pattern
-// like `*a*a*a*b` must not be able to trigger catastrophic regex backtracking
-// against a near-match.
-const matchesWildcard = (name: string, pattern: string): boolean => {
+const matchesWildcardWithoutBuildingARegExpThatCouldBacktrackCatastrophically = (
+  name: string,
+  pattern: string
+): boolean => {
   let scan: O.Option<WildcardScan> = O.some([0, 0, -1, 0]);
   while (O.isSome(scan) && scan.value[0] < name.length) {
-    scan = stepWildcard(name, pattern, scan.value);
+    scan = stepWildcardConsumingStarOrLiteralElseBacktrackingToLastStar(name, pattern, scan.value);
   }
   return O.isSome(scan) && ONLY_STARS.test(Str.slice(scan.value[1])(pattern));
 };
 
-// Match a package name against a single pattern with pnpm `@pnpm/matcher`
-// semantics: an exact-name match, or a `*`-glob where `*` matches ANY run of
-// characters INCLUDING `/`. Every other character matches literally, so `*`
-// is the only wildcard. See the divergence note on `matchesExclude`.
 const matchesPattern: {
   (name: string, pattern: string): boolean;
   (pattern: string): (name: string) => boolean;
 } = dual(
   2,
   (name: string, pattern: string): boolean =>
-    pattern === name || (Str.includes("*")(pattern) && matchesWildcard(name, pattern))
+    pattern === name ||
+    (Str.includes("*")(pattern) &&
+      matchesWildcardWithoutBuildingARegExpThatCouldBacktrackCatastrophically(name, pattern))
 );
 
 const matchesExclude: {
@@ -390,7 +383,7 @@ export class ReleaseAgeGate extends S.Class<ReleaseAgeGate, { readonly brand: un
       const time = times[version];
       if (time === undefined) return false;
       return O.exists(
-        O.flatMap(decodePublishDate(time), DateTime.make),
+        O.flatMap(decodePublishDateNativelyIncludingZonelessLocalTime(time), DateTime.make),
         (published) => DateTime.toEpochMillis(published) <= cutoff
       );
     });

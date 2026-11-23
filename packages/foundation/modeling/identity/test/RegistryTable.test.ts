@@ -1,10 +1,15 @@
 import { fcRuns } from "@beep/fc-runs";
-import { IRI } from "@beep/identity/Iri";
 import { SafePnLocal } from "@beep/identity/PnLocal";
 import {
   CodeId,
+  CodeIdMove,
+  CodeMove,
+  CodePackage,
+  CodePackageMove,
   Deprecation,
+  moveCode,
   Namespace,
+  NamespaceIri,
   RegistryConflict,
   RegistryShard,
   RegistryTable,
@@ -33,11 +38,12 @@ const local = (value: string): TermLocal => TermLocal.make(value);
 const iri = (value: string): TermIri => TermIri.make(value);
 const code = (value: string): CodeId => CodeId.make(value);
 
-const vitestNs = Namespace.make({ prefix: "vitest", iri: IRI.make("https://beep-effect.com/ns/vitest/") });
+const vitestNs = Namespace.make({ prefix: "vitest", iri: NamespaceIri.make("https://beep-effect.com/ns/vitest/") });
 const hangCode = code("@beep/test-runner/Vitest/TestHang");
 const oldHang = iri("https://beep-effect.com/ns/test-utils/Vitest/TestHang");
 
 const decodeShard = S.decodeResult(RegistryShard);
+const decodeTable = S.decodeUnknownResult(S.toType(RegistryTable));
 const shard = (fields: Partial<RegistryShard.Encoded> & Pick<RegistryShard.Encoded, "namespace">): RegistryShard =>
   Result.getOrThrow(decodeShard({ terms: [], bindings: [], deprecations: [], ...fields }));
 
@@ -134,17 +140,14 @@ describe("RegistryTable.fromShards", () => {
     expect(conflictTags(RegistryTable.fromShards([parent, nested]))).toStrictEqual(["DuplicateTermIri"]);
   });
 
-  it("reports a namespace IRI that is also a term IRI", () => {
-    const parent = shard({ namespace: { prefix: "p", iri: "https://e.test/" }, terms: ["q"] });
-    const child = shard({ namespace: { prefix: "r", iri: "https://e.test/q" }, terms: ["x"] });
-    const result = RegistryTable.fromShards([parent, child]);
-    expect(conflictsOf(result)).toStrictEqual([
-      RegistryConflict.cases.NamespaceIriIsTerm.make({
-        iri: iri("https://e.test/q"),
-        namespaces: ["r"],
-        termNamespaces: ["p"],
-      }),
-    ]);
+  it("rejects namespaces without separators and handwritten terms whose IRI is the namespace itself", () => {
+    const decode = S.decodeUnknownResult(RegistryShard);
+    const rows = { terms: [], bindings: [], deprecations: [] };
+    assertTrue(decode({ ...rows, namespace: { prefix: "r", iri: "https://e.test/q" } }).pipe(Result.isFailure));
+    assertTrue(decode({ ...rows, namespace: { prefix: "r", iri: "https://e.test/q/" } }).pipe(Result.isSuccess));
+    const table = Result.getOrThrow(RegistryTable.fromShards([fabioShard]));
+    const term = Term.make({ iri: iri("http://purl.org/spar/fabio/"), namespace: "fabio", local: local("Report") });
+    assertTrue(decodeTable({ ...table, terms: [term] }).pipe(Result.isFailure));
   });
 
   it("reports a binding to an unknown term and a code bound twice", () => {
@@ -164,19 +167,55 @@ describe("RegistryTable.fromShards", () => {
 
   it("refuses a binding or a replacement that names only a namespace IRI", () => {
     const vocab = { prefix: "ex", iri: "https://example.test/vocab/" };
-    const entryNs = shard({ namespace: { prefix: "entry", iri: "https://example.test/vocab/Entry" } });
-    const bound = shard({ namespace: vocab, bindings: [{ code: hangCode, local: "Entry", since: "1.0.0" }] });
-    expect(conflictTags(RegistryTable.fromShards([bound, entryNs]))).toStrictEqual(["BindingToUnknownTerm"]);
+    const table = Result.getOrThrow(RegistryTable.fromShards([shard({ namespace: vocab, terms: ["Entry"] })]));
+    const bound = { code: hangCode, term: iri(vocab.iri), since: v1 };
+    assertTrue(
+      decodeTable({ ...table, bindings: [{ ...bound, term: iri(`${vocab.iri}Entry`) }] }).pipe(Result.isSuccess)
+    );
+    assertTrue(decodeTable({ ...table, bindings: [bound] }).pipe(Result.isFailure));
     const replaced = shard({
       namespace: vocab,
-      deprecations: [{ term: "https://example.test/vocab/Old", since: "1.0.0", replacement: "Entry" }],
+      deprecations: [{ term: "https://example.test/vocab/Old", since: "1.0.0", replacement: "" }],
     });
-    expect(conflictTags(RegistryTable.fromShards([replaced, entryNs]))).toStrictEqual(["ReplacementUnknown"]);
-    const deprecatedNs = shard({
-      namespace: vocab,
-      deprecations: [{ term: "https://example.test/vocab/Entry", since: "1.0.0" }],
-    });
-    expect(conflictTags(RegistryTable.fromShards([deprecatedNs, entryNs]))).toStrictEqual(["DeprecatedTermLive"]);
+    expect(
+      conflictTags(RegistryTable.fromShards([replaced])),
+      "A shard binds locals, so only a hand-written row can bind a code to the namespace IRI itself."
+    ).toStrictEqual(["ReplacementUnknown"]);
+    const deprecatedNs = shard({ namespace: vocab, deprecations: [{ term: vocab.iri, since: "1.0.0" }] });
+    expect(conflictTags(RegistryTable.fromShards([deprecatedNs]))).toStrictEqual(["DeprecatedTermLive"]);
+  });
+
+  it("lets only a retired namespace IRI end its replacement chain at a namespace IRI", () => {
+    const vocab = { prefix: "ex", iri: "https://example.test/vocab/" };
+    const retiredNs = "https://example.test/old/";
+    const succeeded = (deprecations: RegistryShard.Encoded["deprecations"]) =>
+      RegistryTable.fromShards([shard({ namespace: vocab, terms: ["Entry"], deprecations })]);
+    const direct = Result.getOrThrow(succeeded([{ term: retiredNs, since: "1.0.0", replacement: "" }]));
+    assertSome(A.head(direct.deprecations).pipe(O.flatMap((row) => row.replacement)), iri(vocab.iri));
+    const hashNs = "https://example.test/older#";
+    assertTrue(
+      succeeded([
+        { term: retiredNs, since: "1.0.0", replacement: "" },
+        { term: hashNs, since: "1.0.0", replacement: "" },
+      ]).pipe(Result.isSuccess)
+    );
+    const termToNamespace = succeeded([{ term: "https://example.test/old/Entry", since: "1.0.0", replacement: "" }]);
+    expect(
+      conflictsOf(termToNamespace),
+      'The empty local names the shard namespace: a retired namespace IRI ending in "/" or "#" may take it. A retired term is never succeeded by a namespace IRI, and a retired namespace IRI never by a term.'
+    ).toStrictEqual([
+      RegistryConflict.cases.ReplacementUnknown.make({
+        term: iri("https://example.test/old/Entry"),
+        replacement: iri(vocab.iri),
+      }),
+    ]);
+    expect(A.map(conflictsOf(termToNamespace), registryConflictMessage)).toStrictEqual([
+      `The replacement chain of https://example.test/old/Entry reaches ${vocab.iri}, which is neither a declared term nor deprecated with a successor.`,
+    ]);
+    const namespaceToTerm = succeeded([{ term: retiredNs, since: "1.0.0", replacement: "Entry" }]);
+    expect(A.map(conflictsOf(namespaceToTerm), registryConflictMessage)).toStrictEqual([
+      `The replacement chain of ${retiredNs} reaches https://example.test/vocab/Entry, which is neither a declared namespace IRI nor deprecated with a successor.`,
+    ]);
   });
 
   it("reports a live deprecated term, a repeated deprecation and broken replacement chains", () => {
@@ -288,6 +327,29 @@ describe("RegistryTable.snapshot", () => {
     expect(RegistryTable.snapshot(grown, first).release).toBe("1.1.0");
   });
 
+  it("keeps the release of a registry no base has published, however the table changes", () => {
+    const first = RegistryTable.snapshotKeeping(table, TermSnapshot.empty);
+    expect(first).toStrictEqual(RegistryTable.snapshot(table, TermSnapshot.empty));
+    const grown = Result.getOrThrow(
+      RegistryTable.fromShards([vitestShard, shard({ namespace: fabioShard.namespace, terms: ["Article", "Report"] })])
+    );
+    const kept = RegistryTable.snapshotKeeping(grown, first);
+    expect(kept.release).toBe("1.0.0");
+    expect(kept.terms).toContain("http://purl.org/spar/fabio/Article");
+    expect(RegistryTable.snapshotKeeping(first)(grown)).toStrictEqual(kept);
+    expect(RegistryTable.snapshot(grown, first).release).toBe("1.1.0");
+    const bound = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: fabioShard.namespace,
+          terms: ["Report"],
+          bindings: [{ code: "@beep/widget/Report/Report", local: "Report", since: "2.0.0" }],
+        }),
+      ])
+    );
+    expect(RegistryTable.snapshotKeeping(bound, first).release).toBe("2.0.0");
+  });
+
   it("bumps the major when the table adds a deprecation", () => {
     const first = RegistryTable.snapshot(table, TermSnapshot.empty);
     const shrunk = Result.getOrThrow(
@@ -300,6 +362,23 @@ describe("RegistryTable.snapshot", () => {
       ])
     );
     expect(RegistryTable.snapshot(shrunk, first).release).toBe("2.0.0");
+  });
+
+  it("raises the release to the largest since a row records", () => {
+    const bound = (since: string) =>
+      Result.getOrThrow(
+        RegistryTable.fromShards([
+          shard({
+            namespace: fabioShard.namespace,
+            terms: ["Report"],
+            bindings: [{ code: "@beep/widget/Report/Report", local: "Report", since }],
+          }),
+        ])
+      );
+    expect(RegistryTable.snapshot(bound("1.0.0"), TermSnapshot.empty).release).toBe("1.0.0");
+    expect(RegistryTable.snapshot(bound("2.0.0"), TermSnapshot.empty).release).toBe("2.0.0");
+    expect(RegistryTable.releaseAfter(bound("2.0.0"), TermSnapshot.empty)).toBe("1.0.0");
+    expect(RegistryTable.releaseAfter(TermSnapshot.empty)(bound("2.0.0"))).toBe("1.0.0");
   });
 
   it("advances a release past the safe-integer range exactly", () => {
@@ -322,6 +401,116 @@ describe("RegistryTable.snapshot", () => {
   });
 });
 
+describe("RegistryTable.rebind", () => {
+  const moveTo = (from: CodeId, to: string) => CodeIdMove.make({ from, to: code(to) });
+  const table = Result.getOrThrow(RegistryTable.fromShards([vitestShard, fabioShard]));
+  const codes = (result: Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>) =>
+    A.map(Result.getOrThrow(result).bindings, (binding) => binding.code);
+
+  it("moves one code identity and keeps its term and since", () => {
+    const moved = Result.getOrThrow(RegistryTable.rebind(table, moveTo(hangCode, "@beep/test-runner/Runner/Hang")));
+    expect(moved.bindings).toStrictEqual([
+      TermBinding.make({
+        code: code("@beep/test-runner/Runner/Hang"),
+        term: iri("https://beep-effect.com/ns/vitest/TestHang"),
+        since: v1,
+      }),
+    ]);
+    expect(moved.terms).toStrictEqual(table.terms);
+    expect(moved.deprecations).toStrictEqual(table.deprecations);
+  });
+
+  it("moves every code identity under a module in prefix mode and leaves other codes alone", () => {
+    expect(
+      codes(RegistryTable.rebind(table, moveTo(code("@beep/test-runner/Vitest"), "@beep/test-kit/Runner")))
+    ).toStrictEqual(["@beep/test-kit/Runner/TestHang"]);
+    expect(
+      codes(RegistryTable.rebind(table, moveTo(code("@beep/test-runner/Vit"), "@beep/test-kit/Runner")))
+    ).toStrictEqual([hangCode]);
+  });
+
+  it("moves every code identity of a renamed package and no code of a package that shares its prefix", () => {
+    const twoPackages = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+          terms: ["TestFailure", "TestHang"],
+          bindings: [
+            { code: "@beep/test-runner-ui/Vitest/TestFailure", local: "TestFailure", since: "1.0.0" },
+            { code: hangCode, local: "TestHang", since: "1.0.0" },
+          ],
+        }),
+      ])
+    );
+    const rename = CodePackageMove.make({
+      from: CodePackage.make("@beep/test-runner"),
+      to: CodePackage.make("@beep/test-kit"),
+    });
+    expect(codes(RegistryTable.rebind(rename)(twoPackages))).toStrictEqual([
+      "@beep/test-kit/Vitest/TestHang",
+      "@beep/test-runner-ui/Vitest/TestFailure",
+    ]);
+  });
+
+  it("refuses a move between a package and a code identity", () => {
+    const isMove = S.is(CodeMove);
+    expect(isMove({ from: "@beep/test-runner", to: "@beep/test-kit" })).toBe(true);
+    expect(isMove({ from: hangCode, to: "@beep/test-kit/Vitest/TestHang" })).toBe(true);
+    expect(
+      isMove({ from: hangCode, to: "@beep/test-kit" }),
+      "Moving the code itself onto a package would leave a code with no path."
+    ).toBe(false);
+    expect(isMove({ from: "@beep/test-runner", to: hangCode })).toBe(false);
+    expect(isMove({ from: "@beep/Test_Runner", to: "@beep/test-kit" })).toBe(false);
+  });
+
+  it("refuses a move whose ends are under one another", () => {
+    const isMove = S.is(CodeIdMove);
+    expect(isMove({ from: "@beep/p/A", to: "@beep/p/A/B" })).toBe(false);
+    expect(isMove({ from: "@beep/p/A/B", to: "@beep/p/A" })).toBe(false);
+    expect(isMove({ from: "@beep/p/A", to: "@beep/p/AB" }), "A shared string prefix is not a shared path.").toBe(true);
+  });
+
+  const MoveSegment = S.Literals(["A", "B"]).annotate({
+    description: "Two segments frequently generate nested move ends, exercising refusal of moves that could reapply.",
+  });
+  const codeOf = (segments: ReadonlyArray<string>) => `@beep/p/${A.join(segments, "/")}`;
+  const Segments = S.Array(MoveSegment).check(S.isMinLength(1), S.isMaxLength(4));
+
+  it.prop(
+    "a code identity move is idempotent, so a retry never moves a moved code again",
+    [Segments, Segments, Segments],
+    ([from, to, rest]) => {
+      const candidate = { from: codeOf(from), to: codeOf(to) };
+      if (!S.is(CodeIdMove)(candidate)) return;
+      const move = CodeIdMove.make({ from: code(candidate.from), to: code(candidate.to) });
+      for (const start of [code(codeOf(rest)), code(`${candidate.from}/${A.join(rest, "/")}`)]) {
+        const once = moveCode(start, move);
+        expect(moveCode(once, move)).toBe(once);
+      }
+    },
+    { arbitrary: fcRuns(200) }
+  );
+
+  it("refuses a move onto a code identity that is already bound", () => {
+    const twoBound = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+          terms: ["TestFailure", "TestHang"],
+          bindings: [
+            { code: "@beep/test-runner/Vitest/TestFailure", local: "TestFailure", since: "1.0.0" },
+            { code: hangCode, local: "TestHang", since: "1.0.0" },
+          ],
+        }),
+      ])
+    );
+    expect(
+      conflictTags(RegistryTable.rebind(twoBound, moveTo(hangCode, "@beep/test-runner/Vitest/TestFailure")))
+    ).toStrictEqual(["DuplicateBinding"]);
+  });
+});
+
 describe("registryConflictMessage", () => {
   it("names the subject of every conflict", () => {
     const term = iri("https://beep-effect.com/ns/vitest/TestHang");
@@ -329,7 +518,6 @@ describe("registryConflictMessage", () => {
       RegistryConflict.cases.DuplicatePrefix.make({ prefix: "vitest", iris: [vitestNs.iri] }),
       RegistryConflict.cases.DuplicateNamespaceIri.make({ iri: vitestNs.iri, prefixes: ["a", "b"] }),
       RegistryConflict.cases.DuplicateTermIri.make({ term, namespaces: ["a", "b"] }),
-      RegistryConflict.cases.NamespaceIriIsTerm.make({ iri: term, namespaces: ["a"], termNamespaces: ["b"] }),
       RegistryConflict.cases.TermOutsideNamespace.make({ term, namespace: "vitest" }),
       RegistryConflict.cases.DuplicateBinding.make({ code: hangCode, terms: [term] }),
       RegistryConflict.cases.BindingToUnknownTerm.make({ code: hangCode, term }),
@@ -341,7 +529,7 @@ describe("registryConflictMessage", () => {
     const messages = A.map(conflicts, registryConflictMessage);
     expect(A.dedupe(messages)).toHaveLength(conflicts.length);
     expect(messages[0]).toContain('"vitest"');
-    expect(messages[5]).toContain(hangCode);
+    expect(messages[4]).toContain(hangCode);
     expect(
       A.every(A.drop(messages, 2), (message) => Str.includes(term)(message) || Str.includes(hangCode)(message))
     ).toBe(true);

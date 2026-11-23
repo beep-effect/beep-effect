@@ -31,11 +31,8 @@ describe("Range property floor", () => {
   roundTrips("Range", Range);
   roundTrips("InvalidRangeError", InvalidRangeError);
   roundTrips("UnsatisfiableConstraintError", UnsatisfiableConstraintError);
-  // FromString is partial on unrestricted empty AND branches and normalizes sets.
-  // Generate its canonical representable domain, retaining a separate membership
-  // property below for arbitrary representable, non-normalized ranges.
   it.effect.prop(
-    "canonical Range.FromString round-trips structurally and decoding never fails",
+    "canonical Range.FromString round-trips structurally and decoding never fails (generated over its normalized domain without empty AND branches)",
     [
       Arbitrary.schema(Range.FromString).pipe(
         Arbitrary.map((range) =>

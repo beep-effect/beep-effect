@@ -16,8 +16,6 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { RegistryBindings } from "./internal/generated/Registry.data.ts";
 import { $IdentityId } from "./packages.ts";
-import type { IdentityComposer } from "./Id.ts";
-import type { VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("IdentityRegistry");
 
@@ -117,39 +115,6 @@ export class IdentityEntry extends S.Opaque<IdentityEntry, { readonly brand: uni
     })
   )
 ) {
-  /**
-   * Copies literal address projections from an already-bound identity composer.
-   *
-   * **Example** (Build an entry from a package composer)
-   *
-   * ```ts import.meta.vitest name="Build an entry from a package composer"
-   * import { $IdentityId } from "@beep/identity/packages"
-   * import { IdentityEntry } from "@beep/identity/IdentityRegistry"
-   *
-   * const composer = $IdentityId.create("Widget")
-   * const entry = IdentityEntry.fromComposer(composer, { label: "Widget" })
-   * entry.iri === composer.iri // => true
-   * ```
-   *
-   * @category constructors
-   * @since 0.0.0
-   */
-  static readonly fromComposer = <
-    const Value extends string,
-    const Authority extends string,
-    const Prefix extends string,
-    const Vocab extends VocabShape,
-  >(
-    composer: IdentityComposer<Value, Authority, Prefix, Vocab>,
-    fibers: Readonly<Record<string, string>>
-  ): IdentityEntry =>
-    IdentityEntry.make({
-      identity: composer.identifier,
-      iri: composer.iri,
-      curie: composer.curie,
-      fibers,
-    });
-
   /**
    * Builds the entry of a code identity bound in the registry from its binding row.
    *

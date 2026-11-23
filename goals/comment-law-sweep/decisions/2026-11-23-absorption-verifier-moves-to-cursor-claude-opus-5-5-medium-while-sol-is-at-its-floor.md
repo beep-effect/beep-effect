@@ -1,0 +1,8 @@
+---
+title: "Absorption verifier moves to Cursor claude-opus-5-5-medium while Sol is at its floor"
+date: 2026-11-23
+lane: "goals/comment-law-sweep-w3"
+reversal: "At the Codex reset (about 2026-11-24T12:00Z), verify on Codex gpt-6.1-sol medium again."
+---
+
+Pool readings 2026-11-23: Codex benoppold@gmail.com 7% left (resets in 1d 16h), near the 5% floor; JetBrains AI (Junie) exhausted ('Insufficient account balance' after a $1.77 gpt-6.1-sol run that edited nothing); Cursor seat 99% left, sandbox healthy (`cursor-agent sandbox run echo ok` printed ok). Ruling by the parent session (owner of the cross-provider fallback): the verifier is Cursor `claude-opus-5-5-medium`, Claude fallback chain step 3, until Codex resets; Grok `grok-4.7 --effort medium` if the seat or its sandbox fails; verification holds if both fail. Authors stay on Opus 5.5 children, so the verifier shares a model family. To compensate it runs as a separate session that gets no author context, only the worklist rows, the diff and the carrier claims; its brief is adversarial: when uncertain it rules the carrier insufficient, and a deletion survives only with a cited carrier. Cursor reads repository files only (inputs are copied into the gitignored .beep/comment-law/verify/ of the lane), runs no git, sudo or pkexec (D11, D21), and the orchestrator stages and commits its output. Argv: `cursor-agent -p --trust --force --sandbox enabled --workspace <lane> --model claude-opus-5-5-medium --output-format stream-json <brief>`, captured per run in the PR body. Rejected: holding verification until the Codex reset, which stalls the sweep for 1d 16h; Grok first, which the chain orders after Cursor.

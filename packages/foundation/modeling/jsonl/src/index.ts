@@ -48,8 +48,6 @@ export { JsonlEvent, JsonlEventTypeId } from "./JsonlEvent.ts";
 export { Line, ParsedLine } from "./Line.ts";
 export { ByteCount, LineSlice } from "./LineSlice.ts";
 export { CursoredSlice, Slice } from "./Slice.ts";
-// `Envelope` and `JsonlEvent` each carry BOTH a value and a type declaration,
-// so one export name covers the factory and the type it produces.
 export type { EnvelopeInput, EnvelopeOf, EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
 export type {
   JournalClass,
