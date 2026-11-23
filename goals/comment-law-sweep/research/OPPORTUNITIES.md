@@ -17,3 +17,9 @@
 - Doing: writing the first package decision file.
 - Evidence: `decisions check` printed `decisions: 0` until the file was `git add`ed.
 - Prevention: say in the delete-comment skill step 3 that the file must be staged before `decisions check` sees it.
+
+## Turn-end reap kills background proofs (2026-11-23)
+
+- Doing: a background `yeet final-check` (wave 3a) and three sequential Cursor verifier runs (wave 4), both started from an agent shell with run_in_background.
+- Evidence: all three cursor-agent runs exited 143 at the same second the turn ended; the final-check log shows `lint:oxlint ... terminated by signal SIGTERM`, `script "beep" was terminated by signal SIGKILL`, docgen exit 130, and a merge-base vitest exit 143 that Yeet then read as `masks-base-red` for an unrelated expectation rewrite.
+- Would have prevented it: start any proof or verifier that may outlive the turn as a systemd user unit (`systemd-run --user --unit=<name> --collect`), as the detached Yeet jobs already do; a final-check whose base run died by signal should report "base run killed" instead of `masks-base-red`.
