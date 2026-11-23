@@ -177,10 +177,17 @@ const infraGithubProfile = sluggedProfile(
   "Install it on beep-effect/beep-effect only, record installation_id, then press Ctrl-C and continue with the InfraGithub runbook section."
 );
 
+const fleetWatchProfile = sluggedProfile(
+  "fleet-watch",
+  "beep-fleet-watch GitHub App",
+  'Install it: on the App\'s page click "Install App" in the left sidebar, then "Install" beside beep-effect, choose "Only select repositories", pick beep-effect/beep-effect and click "Install". Then press Ctrl-C.'
+);
+
 const profileOf = GitHubAppName.match({
   "beep-reviewer": () => reviewerProfile,
   "beep-knowledge-mint": () => knowledgeMintProfile,
   "beep-infra-github": () => infraGithubProfile,
+  "beep-fleet-watch": () => fleetWatchProfile,
 });
 
 const vaultTemplate = (profile: AppProfile, converted: GitHubAppManifestConversion, slug: O.Option<string>) =>

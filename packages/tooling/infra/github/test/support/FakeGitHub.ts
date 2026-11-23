@@ -27,6 +27,9 @@ type Reply = readonly [number, unknown];
 
 const notFound: Reply = [404, { message: "Not Found" }];
 
+const environmentPublicKeyId = "fake-environment-key";
+const environmentPublicKey = "U3JF04TQ4ExYTXcO9XRc2fOvSp9a4cJmgwnTw2QQFzk=";
+
 /** A page past the first is always empty: every list fits one page. */
 const isLaterPage = (method: string, query: URLSearchParams) =>
   method === "GET" && Number(query.get("page") ?? "1") > 1;
@@ -103,6 +106,7 @@ export class FakeRepository {
   readonly environments = MutableHashMap.empty<string, Json>();
   readonly branchPolicies = MutableHashMap.empty<string, Array<Json>>();
   readonly variables = MutableHashMap.empty<string, Json>();
+  readonly secrets = MutableHashMap.empty<string, Json>();
   nextId = 900_000;
 
   /** A repository seeded from the committed census snapshot (names and non-secret settings). */
@@ -118,6 +122,7 @@ export class FakeRepository {
     MutableHashMap.clear(this.environments);
     MutableHashMap.clear(this.branchPolicies);
     MutableHashMap.clear(this.variables);
+    MutableHashMap.clear(this.secrets);
     this.repo = {
       id: 1_035_190_071,
       node_id: "R_fake",
@@ -261,6 +266,7 @@ export class FakeRepository {
     }
     if (sub === "variables") return this.variableRoute(method, `${name}/`, tail, body);
     if (sub === "deployment-branch-policies") return this.branchPolicyRoute(method, name, tail, body);
+    if (sub === "secrets") return this.secretRoute(method, name, tail, body);
     return this.environmentObjectRoute(method, name, body);
   }
 
@@ -300,6 +306,26 @@ export class FakeRepository {
       return [204, undefined];
     }
     return [200, found.value];
+  }
+
+  private secretRoute(method: string, environment: string, tail: ReadonlyArray<string>, body: Json): Reply {
+    const [name] = tail;
+    if (name === "public-key") return [200, { key_id: environmentPublicKeyId, key: environmentPublicKey }];
+    if (name === undefined) return notFound;
+    const key = `${environment}/${name}`;
+    if (method === "PUT") {
+      const existed = O.isSome(MutableHashMap.get(this.secrets, key));
+      MutableHashMap.set(this.secrets, key, { name, encrypted_value: body.encrypted_value, key_id: body.key_id });
+      return [existed ? 204 : 201, existed ? undefined : {}];
+    }
+    if (method === "DELETE") {
+      MutableHashMap.remove(this.secrets, key);
+      return [204, undefined];
+    }
+    return O.match(MutableHashMap.get(this.secrets, key), {
+      onNone: () => notFound,
+      onSome: (): Reply => [200, { name, created_at: "2026-11-23T00:00:00Z", updated_at: "2026-11-23T00:00:00Z" }],
+    });
   }
 
   private variableRoute(method: string, scope: string, rest: ReadonlyArray<string>, body: Json): Reply {
@@ -361,7 +387,14 @@ const fakeHttpClient = (fake: FakeRepository) =>
 export const fakeProviders = (fake: FakeRepository) =>
   Layer.effect(
     GitHub.Providers,
-    Provider.collection([GitHub.Repository, GitHub.Ruleset, GitHub.Environment, GitHub.Variable, GitHub.Label])
+    Provider.collection([
+      GitHub.Repository,
+      GitHub.Ruleset,
+      GitHub.Environment,
+      GitHub.Variable,
+      GitHub.Label,
+      GitHub.Secret,
+    ])
   ).pipe(
     Layer.provide(
       Layer.mergeAll(
@@ -369,7 +402,8 @@ export const fakeProviders = (fake: FakeRepository) =>
         GitHub.RulesetProvider(),
         GitHub.EnvironmentProvider(),
         GitHub.VariableProvider(),
-        GitHub.LabelProvider()
+        GitHub.LabelProvider(),
+        GitHub.SecretProvider()
       )
     ),
     Layer.provideMerge(GitHub.fromToken("fake-token-for-tests")),

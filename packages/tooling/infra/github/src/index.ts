@@ -37,6 +37,19 @@ export * as Config from "./Config.ts";
  */
 export * as Production from "./Production.ts";
 /**
+ * **Example** (Render the op run env file)
+ *
+ * ```ts
+ * import { Production, Secrets } from "@beep/infra-github"
+ *
+ * console.log(Secrets.secretsEnvFile(Production.productionSecretsConfig).includes("op://")) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * as Secrets from "./Secrets.ts";
+/**
  * The stack's resource declarations.
  *
  * **Example** (Make a logical id fragment)
