@@ -763,9 +763,11 @@ const digitsOf = (value: string): string =>
 const familyKeysByValue = (
   entries: ReadonlyArray<readonly [string, string]>
 ): MutableHashMap.MutableHashMap<string, ReadonlyArray<string>> => {
-  const emptyDigitlessValueStoredButNeverLookedUp = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  A.forEach(entries, ([value, familyKey]) => appendTo(emptyDigitlessValueStoredButNeverLookedUp, value, familyKey));
-  return emptyDigitlessValueStoredButNeverLookedUp;
+  const familyKeysByValueKeepingUnreadEmptyDigitlessKeys = MutableHashMap.empty<string, ReadonlyArray<string>>();
+  A.forEach(entries, ([value, familyKey]) =>
+    appendTo(familyKeysByValueKeepingUnreadEmptyDigitlessKeys, value, familyKey)
+  );
+  return familyKeysByValueKeepingUnreadEmptyDigitlessKeys;
 };
 
 const hitsAt = (
