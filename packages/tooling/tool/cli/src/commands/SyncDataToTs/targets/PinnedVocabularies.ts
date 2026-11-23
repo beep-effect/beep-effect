@@ -173,9 +173,9 @@ const w3cAttribution = (title: string): string =>
  * of their own, so they are pinned under `LicenseRef-W3C-Document`, except
  * ActivityStreams, whose repository licenses its documents under the W3C
  * Software and Document License (`W3C-20150513`). The nanopublication schema
- * states no license at its pinned commit, so `np` records
- * `LicenseRef-nanopub-nschema-unstated` rather than a license it was never
- * granted; only its term IRIs are projected.
+ * is pinned under `CC-BY-SA-3.0` by operator ruling: the CC BY-SA 3.0 notice of
+ * its companion nschema.html covers it, and its bytes are vendored with that
+ * license in `@beep/rdf` `data/vocab/nanopub-nschema`; only its term IRIs are projected.
  *
  * **Example** (Count the pinned namespaces)
  *
@@ -325,9 +325,9 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
       repository: "https://github.com/Nanopublication/Guidelines",
       commit: "8388dd90795b264f4b01c64d0f7218babcae4871",
     },
-    license: "LicenseRef-nanopub-nschema-unstated",
+    license: "CC-BY-SA-3.0",
     attribution:
-      "Nanopublication schema, Nanopublication Guidelines. No license is given at commit 8388dd90795b of Nanopublication/Guidelines; the companion nschema.html grants CC BY-SA 3.0 for that document. Only term IRIs are projected to TypeScript.",
+      "Nanopublication schema, Nanopublication Guidelines (github.com/Nanopublication/Guidelines, nschema.ttl at commit 8388dd90795b); editors and authors as named in its nschema.html. Licensed CC BY-SA 3.0 under the nschema.html notice, which the operator ruling of 2026-11-23 treats as covering nschema.ttl. The file is vendored at packages/foundation/modeling/rdf/data/vocab/nanopub-nschema; the vendored file and anything derived from it stay under CC BY-SA 3.0.",
     version: "2013-10-23",
     sha256: "1275f6a00121f54248899b9a4c39b2511fdbb65b2925a4dc6f4a13174059f649",
     markers: ["@prefix np: <http://www.nanopub.org/nschema#>.", 'dc:modified "2013-10-23"^^xsd:date'],

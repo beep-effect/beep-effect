@@ -1,0 +1,35 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rdfg: <http://www.w3.org/2004/03/trix/rdfg-1/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix np: <http://www.nanopub.org/nschema#>.
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+<http://www.nanopub.org/nschema> a owl:Ontology ;
+	dc:created "2012-10-26"^^xsd:date;
+	dc:modified "2013-10-23"^^xsd:date;
+	dc:description <http://www.nanopub.org/2013/WD-guidelines-20131215/> ;
+	owl:priorVersion <http://www.nanopub.org/nschema-1.9> .
+
+## A nanopublication should be associated with at most one assertion,
+## provenance of assertion, and provenance of the nanopublication (publicationInfo)
+## We use rdfg:Graph to denote a graph as used in the RDF 1.1. Trig syntax. 
+## Each sub class of rdfg:Graph should be separate Named Graph
+
+np:Nanopublication rdf:type owl:Class.
+np:Assertion rdfs:subClassOf rdfg:Graph.
+np:Provenance rdfs:subClassOf rdfg:Graph.
+np:PublicationInfo rdfs:subClassOf rdfg:Graph.
+
+np:hasAssertion a owl:FunctionalProperty.
+np:hasAssertion rdfs:domain np:Nanopublication.
+np:hasAssertion rdfs:range np:Assertion.
+
+np:hasProvenance a owl:FunctionalProperty.
+np:hasProvenance rdfs:domain np:Nanopublication.
+np:hasProvenance rdfs:range np:Provenance.
+
+np:hasPublicationInfo a owl:FunctionalProperty.
+np:hasPublicationInfo rdfs:domain np:Nanopublication.
+np:hasPublicationInfo rdfs:range np:PublicationInfo. 
