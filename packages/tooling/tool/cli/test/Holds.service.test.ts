@@ -8,6 +8,8 @@ import {
   HoldsError,
   HoldsProbeInput,
   HoldsUpdateInput,
+  holdClaimLabel,
+  holdProposition,
   holdsCommand,
   holdsPlatformError,
   makeHoldLedger,
@@ -275,7 +277,7 @@ layer(layerFor(ledgerFiles), { timeout: "30 seconds" })("probing the statelyai h
       const resultHoldsProbe3 = yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false));
       expect(lastLine(resultHoldsProbe3)).toContain("confirmed verdict: Flipped");
       const ledger = yield* HoldLedger;
-      const versions = yield* ledger.currentVersions;
+      const versions = yield* ledger.currentClaims;
       const runs = yield* Effect.forEach(versions, ledger.runsFor, { concurrency: 1 });
       expect(A.map(runs, A.length)).toEqual([2]);
     })
@@ -323,13 +325,13 @@ layer(
     Effect.gen(function* () {
       const ledger = yield* HoldLedger;
       const probe = yield* HoldProbe;
-      const versions = yield* ledger.currentVersions;
+      const versions = yield* ledger.currentClaims;
       const errors = yield* Effect.forEach(
         versions,
         (version) =>
           Effect.flip(
             probe.probe(
-              HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha })
+              HoldProbeRequest.make({ proposition: holdProposition(version), claim: version.reference, commitSha })
             )
           ),
         { concurrency: 1 }
@@ -400,7 +402,7 @@ layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flippe
         "[holds] update planned (dry run): 2 probed, 1 unpinned.",
       ]);
       const ledger = yield* HoldLedger;
-      const allVersions4 = yield* ledger.allVersions;
+      const allVersions4 = yield* ledger.allClaims;
       expect(A.length(allVersions4)).toBe(3);
       const fs = yield* FileSystem.FileSystem;
       const exists5 = yield* fs.exists(`${root}/hold-ledger/syncpack-held.generated.json`);
@@ -421,10 +423,11 @@ layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flippe
       const resultHoldsUpdate7 = yield* runHoldsUpdate(updateInput(false));
       expect(lastLine(resultHoldsUpdate7)).toBe("[holds] update done: 2 probed, 1 unpinned.");
       const ledger = yield* HoldLedger;
-      const currentVersions8 = yield* ledger.currentVersions;
-      expect(A.map(currentVersions8, (version) => version.id)).toEqual(["glob-hold@1", "jsdom-hold@1"]);
-      const all = yield* ledger.allVersions;
-      expect(A.map(all, (version) => version.id)).toContain("statelyai-model-testing-404@3");
+      const currentVersions8 = yield* ledger.currentClaims;
+      expect(A.map(currentVersions8, holdClaimLabel)).toEqual(["glob-hold@1", "jsdom-hold@1"]);
+      const all = yield* ledger.allClaims;
+      expect(A.map(all, holdClaimLabel)).toEqual(["statelyai-model-testing-404@2", "jsdom-hold@1", "glob-hold@1"]);
+      expect(all[0]?.review._tag).toBe("Retracted");
       const fs = yield* FileSystem.FileSystem;
       const readFileString9 = yield* fs.readFileString(`${root}/hold-ledger/syncpack-held.generated.json`);
       expect(readFileString9).toBe('[\n  "jsdom"\n]\n');
@@ -432,7 +435,7 @@ layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flippe
       expect(why[0]).toBe(
         "[holds] statelyai-model-testing-404 (exact-pin, statelyai): tombstoned 1970-01-01: Flipped: the candidate passed twice, the newest run today; unpinned by deps:update."
       );
-      expect(why).toContain("  evidence: manual; 2 version(s)");
+      expect(why).toContain("  evidence: manual; 1 version(s)");
     })
   );
 });
@@ -451,7 +454,7 @@ layer(
         "[holds] update done: 1 probed, 0 unpinned.",
       ]);
       const ledger = yield* HoldLedger;
-      const [version] = yield* ledger.currentVersions;
+      const [version] = yield* ledger.currentClaims;
       const runsFor10 = yield* ledger.runsFor(version!);
       expect(A.length(runsFor10)).toBe(1);
     })
@@ -582,8 +585,8 @@ layer(
         "[holds] update done: 1 probed, 0 unpinned.",
       ]);
       const ledger = yield* HoldLedger;
-      const currentVersions14 = yield* ledger.currentVersions;
-      expect(A.map(currentVersions14, (version) => version.id)).toEqual(["statelyai-model-testing-404@2"]);
+      const currentVersions14 = yield* ledger.currentClaims;
+      expect(A.map(currentVersions14, holdClaimLabel)).toEqual(["statelyai-model-testing-404@2"]);
     })
   );
 });

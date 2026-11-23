@@ -3,6 +3,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
 import { makeLiteral, serializeTerm } from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -10,6 +12,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { kbClaimKey, kbClaimLabel, kbProposition, kbReferenceLabel } from "./Kb.schemas.ts";
 import { selectKb } from "./Kb.service.ts";
 import type { Assertion, KbClaim, KbView } from "./Kb.schemas.ts";
 
@@ -29,19 +32,25 @@ type Selector = Assertion["selector"];
 // A claim enters the current graph only when accepted, unexpired, not superseded and backed by captured evidence.
 const isCurrent = (c: KbClaim, claims: ReadonlyArray<KbClaim>, evidence: ReadonlyArray<Assertion>): boolean =>
   c.review._tag === "Accepted" &&
-  c.knowledge.expiredAt._tag === "None" &&
-  !A.some(claims, (candidate) => O.exists(candidate.supersedes, (id) => id === c.id)) &&
+  O.isNone(c.knowledge.end) &&
+  !A.some(claims, (candidate) =>
+    O.exists(candidate.predecessor, (reference) => claimReferenceKey(reference) === kbClaimKey(c))
+  ) &&
   A.some(
     evidence,
-    (a) => a.claimId === c.id && A.contains(c.supportedBy, a.id) && a.review === "accepted" && a.outcome === "captured"
+    (a) =>
+      claimReferenceKey(a.claim) === kbClaimKey(c) &&
+      A.contains(c.evidence.supportedBy, a.id) &&
+      a.review === "accepted" &&
+      a.outcome === "captured"
   );
 const claimQuads = (
   c: KbClaim,
   claims: ReadonlyArray<KbClaim>,
   evidence: ReadonlyArray<Assertion>
 ): ReadonlyArray<string> => {
-  const id = iri(c.id);
-  const p = c.proposition;
+  const id = iri(kbClaimLabel(c));
+  const p = kbProposition(c);
   const base = [
     quad(id, "type", term("Claim"), "claims"),
     quad(id, "review", literal(c.review._tag), "claims"),
@@ -77,7 +86,7 @@ const assertionQuads = (a: Assertion): ReadonlyArray<string> => {
   const id = iri(a.id);
   return A.appendAll(
     [
-      quad(id, "claim", iri(a.claimId), "provenance"),
+      quad(id, "claim", iri(kbReferenceLabel(a.claim)), "provenance"),
       quad(id, "capture", iri(a.captureId), "provenance"),
       quad(id, "quote", literal(a.quote), "provenance"),
       quad(id, "audience", literal(a.audience), "provenance"),
@@ -122,7 +131,7 @@ export const projectKb: {
     view: KbView
   ): Readonly<Record<string, string>> => {
     const { claims: selected, assertions: evidence } = selectKb(claims, assertions, view);
-    const terms = HashSet.fromIterable(A.map(selected, (c) => c.proposition._tag));
+    const terms = HashSet.fromIterable(A.map(selected, (c) => kbProposition(c)._tag));
     const lines = A.flatten([
       A.map(["claims", "provenance", "current", "schema"], (graph) =>
         quad(term(`graph:${graph}`), "graphKind", literal(graph), graph)
@@ -135,7 +144,7 @@ export const projectKb: {
       "dataset.nq": `${A.join(A.sort(A.fromIterable(HashSet.fromIterable(lines)), Str.Order), "\n")}\n`,
       "INDEX.md": `# Knowledge ledger\n\nView: ${view}\n\n${A.join(
         A.sort(
-          A.map(selected, (c) => `- ${c.id} (${c.review._tag})`),
+          A.map(selected, (c) => `- ${kbClaimLabel(c)} (${c.review._tag})`),
           Str.Order
         ),
         "\n"

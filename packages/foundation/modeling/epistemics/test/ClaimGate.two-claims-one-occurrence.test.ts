@@ -1,4 +1,4 @@
-import { makeClaimEnvelope } from "@beep/epistemics/Claim";
+import { makeClaimReview } from "@beep/epistemics/Claim";
 import { ClaimId } from "@beep/epistemics/ClaimCore";
 import {
   makeClaimEvidenceBasis,
@@ -38,11 +38,9 @@ const { reviewStatusFor } = makeReviewStatusFor({
   ClaimEvidenceReview: Approval,
   ClaimEvidenceReviewStatus: reviewStatusVocabulary.ClaimEvidenceReviewStatus,
 });
-const reviewVocabulary = makeClaimEnvelope({
+const reviewVocabulary = makeClaimReview({
   $I,
-  proposition: S.NonEmptyString,
-  logicalKey: (value) => value,
-  ids: { claimVersion: ClaimId, assertion: S.NonEmptyString, activity: S.NonEmptyString, principal: S.NonEmptyString },
+  ids: { assertion: S.NonEmptyString, activity: S.NonEmptyString, principal: S.NonEmptyString },
 });
 class ReviewedEvidence extends S.Opaque<ReviewedEvidence, { readonly brand: unique symbol }>()(
   S.Struct({

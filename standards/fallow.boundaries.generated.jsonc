@@ -4455,22 +4455,26 @@
         "allow": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/m365",
           "@beep/party-domain",
           "@beep/party-server",
           "@beep/party-use-cases",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/text"
         ],
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/m365",
           "@beep/party-domain",
           "@beep/party-server",
           "@beep/party-use-cases",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/text"
         ]
       },
       {

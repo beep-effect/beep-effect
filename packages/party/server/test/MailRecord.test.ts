@@ -7,17 +7,19 @@ import {
   PairingObservation,
   pairingClaims,
 } from "@beep/party-server/IdentityEvidence";
-import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { adaptMailRecord, ingestMailRecord, MailIndexInput } from "@beep/party-server/MailIndex";
 import { PartyLedger } from "@beep/party-use-cases/Ledger";
 import { describe, expect, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import { creation, LedgerLive } from "./fixtures/claims.ts";
 
 const dn = (name: string) => `/O=ACME/OU=EXCHANGE/CN=RECIPIENTS/CN=${name}`;
 const base = { tree: "synthetic", sourceArtifactId: "artifact:synthetic-pst", messagePath: "Inbox/Message1" };
@@ -144,8 +146,8 @@ describe("mail record adaptation", () => {
     })
   );
 });
-it.layer(PartyLedgerMemory)("mail ledger ingestion", (it) => {
-  it.effect("appends anchored observations and rejects replay without duplicate rows", () =>
+it.layer(LedgerLive)("mail ledger ingestion", (it) => {
+  it.effect("appends anchored observations, replays exactly once and rejects conflicting rows", () =>
     Effect.gen(function* () {
       const input = yield* request(delegated);
       const result = yield* ingestMailRecord(input);
@@ -154,11 +156,18 @@ it.layer(PartyLedgerMemory)("mail ledger ingestion", (it) => {
       expect(before.observations).toEqual(result.observations);
       expect(before.assertions).toEqual(result.assertions);
       expect(before.assertions).toHaveLength(2);
-      expect(before.versions).toEqual([]);
-      const failure = yield* ingestMailRecord(input).pipe(Effect.flip);
-      expect(failure._tag).toBe("LedgerConflict");
+      expect(before.claims).toEqual([]);
+      const replayed = yield* ingestMailRecord(input);
+      expect(replayed.observations).toEqual(result.observations);
       const resolved1 = yield* ledger.snapshot;
       expect(resolved1).toEqual(before);
+      const observation = O.getOrThrow(A.head(result.observations));
+      const failure = yield* ledger
+        .recordObservation({ ...observation, observedAt: DateTime.makeUnsafe(999) })
+        .pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "LedgerConflict", reason: "conflicting-observation" });
+      const resolved2 = yield* ledger.snapshot;
+      expect(resolved2).toEqual(before);
     })
   );
 });
@@ -215,26 +224,37 @@ it.effect("binds every pairing to a real assertion anchored in both source heade
   })
 );
 
-it.effect("builds pairing proposals whose support resolves to the extracted assertions", () =>
-  Effect.gen(function* () {
-    const input = yield* request(delegated);
-    const mail = yield* adaptMailRecord(input);
-    const supports = aggregatePairings(
-      PairingAggregationInput.make({
-        observations: A.map(mail.pairings, (pairing) =>
-          PairingObservation.make({ pairing, sentAt: O.flatMap(mail.event, (event) => event.sentAt) })
-        ),
-        sampleSize: 5,
-      })
-    );
-    const claims = pairingClaims(PairingClaimsInput.make({ supports, recordedAt: input.observedAt }));
-    expect(claims).toHaveLength(2);
-    A.forEach(claims, (claim) => {
-      expect(claim.review._tag).toBe("Proposed");
-      A.forEach(claim.supportedBy, (id) => {
-        const assertion = O.getOrThrow(A.findFirst(mail.assertions, (row) => row.id === id));
-        expect(assertion.proposition).toEqual(claim.proposition);
+it.layer(Digest.layerWebCrypto)("pairing proposals", (it) => {
+  it.effect("builds pairing proposals whose support resolves to the extracted assertions", () =>
+    Effect.gen(function* () {
+      const input = yield* request(delegated);
+      const mail = yield* adaptMailRecord(input);
+      const supports = aggregatePairings(
+        PairingAggregationInput.make({
+          observations: A.map(mail.pairings, (pairing) =>
+            PairingObservation.make({ pairing, sentAt: O.flatMap(mail.event, (event) => event.sentAt) })
+          ),
+          sampleSize: 5,
+        })
+      );
+      const claims = yield* pairingClaims(
+        PairingClaimsInput.make({
+          supports,
+          creation: creation({ operation: "pairing", at: 1 }),
+          sourceAssertions: mail.assertions,
+        })
+      );
+      expect(claims.claims).toHaveLength(2);
+      A.forEach(claims.claims, (record) => {
+        const review = O.getOrThrow(A.findFirst(claims.reviews, (row) => row.claim === record.claim));
+        expect(review.review._tag).toBe("Proposed");
+        const links = O.getOrThrow(A.findFirst(claims.evidence, (row) => row.claim === record.claim));
+        expect(links.supportedBy).not.toHaveLength(0);
+        A.forEach(links.supportedBy, (id) => {
+          const assertion = O.getOrThrow(A.findFirst(mail.assertions, (row) => row.id === id));
+          expect(assertion.proposition).toEqual(record.core.proposition);
+        });
       });
-    });
-  })
-);
+    })
+  );
+});

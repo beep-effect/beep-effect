@@ -1,13 +1,12 @@
 import {
   classifyProbeOutput,
   confirmHoldVerdict,
-  HoldClaimVersion,
   HoldId,
   HoldProposition,
   judgeProbeRun,
   ProbeOutcome,
-  ProbeRun,
 } from "@beep/repo-cli/commands/Holds";
+import { HoldClaimsV1Row, HoldProbeRunV1Row } from "@beep/repo-cli/commands/Holds/internal/HoldStore";
 import { it as p4it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -101,7 +100,7 @@ describe("hold schemas", () => {
     );
   });
 
-  it("rejects a claim version whose logical key disagrees with the hold id", () => {
+  it("rejects a frozen v1 row whose logical key disagrees with the hold id", () => {
     const version = {
       id: "jsdom-vitest-eventtarget@1",
       logicalKey: "hold:something-else",
@@ -120,9 +119,9 @@ describe("hold schemas", () => {
         reviewer: { _tag: "Absent", reason: "not-assessed" },
       },
     };
-    assertTrue(S.decodeUnknownResult(HoldClaimVersion)(version).pipe(Result.isFailure));
+    assertTrue(S.decodeUnknownResult(HoldClaimsV1Row)(version).pipe(Result.isFailure));
     assertTrue(
-      S.decodeUnknownResult(HoldClaimVersion)({ ...version, logicalKey: "hold:jsdom-vitest-eventtarget" }).pipe(
+      S.decodeUnknownResult(HoldClaimsV1Row)({ ...version, logicalKey: "hold:jsdom-vitest-eventtarget" }).pipe(
         Result.isSuccess
       )
     );
@@ -184,9 +183,9 @@ describe("schema-derived hold properties", () => {
   );
 });
 
-const p4holdclaimsv1jsonl = S.fromJsonString(HoldClaimVersion);
+const p4holdclaimsv1jsonl = S.fromJsonString(HoldClaimsV1Row);
 
-const p4holdproberunv1jsonl = S.fromJsonString(ProbeRun);
+const p4holdproberunv1jsonl = S.fromJsonString(HoldProbeRunV1Row);
 
 p4it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
   timeout: "10 seconds",

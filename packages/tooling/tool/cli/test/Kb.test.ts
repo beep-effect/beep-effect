@@ -1,15 +1,16 @@
+import { ClaimReference } from "@beep/epistemics/ClaimImport.schema";
 import {
   Assertion,
   Audience,
   buildKb,
   DerivationBasis,
   hasKbCanary,
-  KbClaim,
   KbGraph,
   KbGraphExport,
   KbLedger,
   KbProposition,
   KbRegistryNode,
+  kbClaimLabel,
   kbCommand,
   kbLogicalKey,
   makeKbGraphExport,
@@ -17,6 +18,12 @@ import {
   projectKb,
   validateKb,
 } from "@beep/repo-cli/commands/Kb";
+import {
+  decodeKbClaimLine,
+  joinKbClaims,
+  KbAssertionV1Row,
+  KbClaimsV1Row,
+} from "@beep/repo-cli/commands/Kb/internal/KbStore";
 import { it as p4it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
@@ -24,7 +31,7 @@ import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { expect, layer } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -44,14 +51,29 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import type { KbClaim } from "@beep/repo-cli/commands/Kb";
 
-const encodeClaim = S.encodeEffect(S.fromJsonString(KbClaim));
+type KbClaimRow = typeof KbClaimsV1Row.Type;
+const encodeClaim = S.encodeEffect(S.fromJsonString(KbClaimsV1Row));
 const encodeAssertion = S.encodeEffect(S.fromJsonString(Assertion));
 const encodeRegistryNode = S.encodeEffect(S.fromJsonString(KbRegistryNode));
 const decodeGraph = S.decodeEffect(S.fromJsonString(KbGraph));
-const decodeClaim = S.decodeUnknownEffect(S.toType(KbClaim));
+const decodeClaim = S.decodeUnknownEffect(S.toType(KbClaimsV1Row));
 const decodeAssertion = S.decodeUnknownEffect(S.toType(Assertion));
-const decodeTypedClaim = S.decodeEffect(S.toType(KbClaim));
+const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const importedKb = (oldId: string) => ClaimReference.cases.Imported.make({ ledger: "kb", oldId });
+const views = Effect.fnUntraced(function* (rows: ReadonlyArray<KbClaimRow>) {
+  const lines = yield* Effect.forEach(
+    rows,
+    Effect.fnUntraced(function* (row) {
+      const line = yield* encodeClaim(row);
+      const json = yield* decodeJson(line);
+      return yield* decodeKbClaimLine(line, json);
+    }),
+    { concurrency: 1 }
+  );
+  return yield* joinKbClaims(lines);
+});
 
 const digest = Str.repeat(64)("a");
 const absent = { _tag: "Absent", reason: "not-assessed" };
@@ -70,7 +92,7 @@ const fixture = Effect.fnUntraced(function* (
   const proposition = KbProposition.cases.Published.make({ subject: "entity/1", object: "entity/2", text });
   const internalId = `${id}/internal`;
   const publicId = `${id}/public`;
-  const claim = yield* S.decodeUnknownEffect(KbClaim)({
+  const claim = yield* S.decodeUnknownEffect(KbClaimsV1Row)({
     id,
     logicalKey: kbLogicalKey(proposition),
     proposition,
@@ -93,8 +115,9 @@ const fixture = Effect.fnUntraced(function* (
   });
   const assertion = (audience: "public" | "internal") =>
     S.decodeEffect(Assertion)({
+      version: "kb-assertion/v2",
       id: audience === "public" ? publicId : internalId,
-      claimId: id,
+      claim: { _tag: "Imported", ledger: "kb", oldId: id },
       captureId: `${id}/capture/${audience}`,
       sourceRef: {
         kind: audience === "public" ? "web" : "internal-file",
@@ -115,10 +138,13 @@ const fixture = Effect.fnUntraced(function* (
     });
   const internal = yield* assertion("internal");
   const assertions = options.public === true ? [internal, yield* assertion("public")] : [internal];
-  return { claim, assertions, internal };
+  const current: ReadonlyArray<KbClaim> = yield* views([claim]);
+  return { claim, views: current, assertions, internal };
 });
 const platform = Layer.mergeAll(NodeFileSystem.layer, Path.layer);
-const live = Layer.effect(KbLedger, makeKbLedger).pipe(Layer.provideMerge(platform));
+const live = Layer.effect(KbLedger, makeKbLedger).pipe(
+  Layer.provideMerge(Layer.mergeAll(platform, P4Digest.layerWebCrypto))
+);
 
 const withLedger = Effect.fnUntraced(function* (options: { readonly public?: boolean; readonly text?: string } = {}) {
   const fs = yield* FileSystem.FileSystem;
@@ -132,32 +158,34 @@ const withLedger = Effect.fnUntraced(function* (options: { readonly public?: boo
   return { ...f, root, out: `${dir}/out` };
 });
 
-describe("knowledge ledger admission and disclosure", () => {
+layer(P4Digest.layerWebCrypto)("knowledge ledger admission and disclosure", (it) => {
   it.effect("retains challenge-only media evidence without asserting a current relationship", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      const claim = yield* decodeClaim({
+      const row = yield* decodeClaim({
         ...f.claim,
         review: { _tag: "Proposed" },
         challengedBy: ["assertion/challenge"],
       });
+      const claims = yield* views([row]);
       const assertion = Assertion.make({ ...f.internal, selector: { _tag: "MediaFragment", start: 1, end: 2 } });
       const challenge = Assertion.make({ ...assertion, id: "assertion/challenge" });
-      expect(validateKb([claim], [assertion, challenge]).valid).toBe(true);
-      const output = projectKb([claim], [assertion, challenge], "planning")["dataset.nq"];
+      expect(validateKb(claims, [assertion, challenge]).valid).toBe(true);
+      const output = projectKb(claims, [assertion, challenge], "planning")["dataset.nq"];
       expect(output).toContain('"MediaFragment"');
       expect(output).not.toContain("<urn:beep:kb:authorizedBy>");
       expect(output).not.toContain("<urn:beep:kb:exact>");
-      const invalid = Assertion.make({ ...assertion, claimId: "claim/missing" });
-      expect(projectKb([claim], [invalid], "outward")["INDEX.md"]).not.toContain(claim.id);
+      const invalid = Assertion.make({ ...assertion, claim: importedKb("claim/missing") });
+      expect(projectKb(claims, [invalid], "outward")["INDEX.md"]).not.toContain(row.id);
+      expect(A.map(claims, kbClaimLabel)).toEqual([row.id]);
     })
   );
   it.effect("rejects every conflicting capture identity field while allowing identical metadata", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      const claim = KbClaim.make({ ...f.claim, challengedBy: ["assertion/challenge"] });
+      const claim = yield* views([{ ...f.claim, challengedBy: ["assertion/challenge"] }]);
       const same = Assertion.make({ ...f.internal, id: "assertion/challenge" });
-      expect(validateKb([claim], [f.internal, same]).valid).toBe(true);
+      expect(validateKb(claim, [f.internal, same]).valid).toBe(true);
       const sources: ReadonlyArray<Assertion["sourceRef"]> = [
         { ...same.sourceRef, sha256: Str.repeat(64)("b") },
         { ...same.sourceRef, kind: "self-report" },
@@ -165,7 +193,7 @@ describe("knowledge ledger admission and disclosure", () => {
       ];
       for (const sourceRef of sources) {
         const changed = Assertion.make({ ...same, sourceRef });
-        expect(validateKb([claim], [f.internal, changed]).violations).toContain(
+        expect(validateKb(claim, [f.internal, changed]).violations).toContain(
           `Assertion ${same.id}: inconsistent capture metadata`
         );
       }
@@ -184,8 +212,8 @@ describe("knowledge ledger admission and disclosure", () => {
           derivation: { basis, ref: basis === "none" ? "" : "https://example.com/evidence" },
         });
         const expected = audience !== "internal" && basis !== "none";
-        const report = validateKb([f.claim], [assertion]);
-        const outward = projectKb([f.claim], [assertion], "outward");
+        const report = validateKb(f.views, [assertion]);
+        const outward = projectKb(f.views, [assertion], "outward");
         expect(A.isReadonlyArrayNonEmpty(report.outwardEligible)).toBe(expected);
         expect(Str.includes("%2Finternal")(outward["dataset.nq"] ?? "")).toBe(expected);
       }),
@@ -195,7 +223,7 @@ describe("knowledge ledger admission and disclosure", () => {
   it.effect("promotes a claim only when accepted independent public evidence is added", () =>
     Effect.gen(function* () {
       const before = yield* fixture();
-      expect(validateKb([before.claim], before.assertions).outwardEligible).toEqual([]);
+      expect(validateKb(before.views, before.assertions).outwardEligible).toEqual([]);
       const after = yield* fixture({ id: "claim/2", public: true });
       const promoted = {
         ...after.claim,
@@ -213,7 +241,7 @@ describe("knowledge ledger admission and disclosure", () => {
         },
       };
       const decoded = yield* decodeClaim(promoted);
-      const claims = [before.claim, decoded];
+      const claims = yield* views([before.claim, decoded]);
       const assertions = A.appendAll(before.assertions, after.assertions);
       expect(validateKb(claims, assertions).outwardEligible).toEqual([after.claim.id]);
       const output = projectKb(claims, assertions, "outward");
@@ -228,7 +256,7 @@ describe("knowledge ledger admission and disclosure", () => {
     Effect.gen(function* () {
       const internal = yield* fixture({ id: "CANARY-INTERNAL-opaque", text: "CANARY-INTERNAL-private" });
       const publicFact = yield* fixture({ id: "claim/2", public: true });
-      const claims = [internal.claim, publicFact.claim];
+      const claims = yield* views([internal.claim, publicFact.claim]);
       const assertions = A.appendAll(internal.assertions, publicFact.assertions);
       const outward = projectKb(claims, assertions, "outward");
       expect(hasKbCanary(outward)).toBe(false);
@@ -242,11 +270,11 @@ describe("knowledge ledger admission and disclosure", () => {
       const f = yield* fixture();
       const bad = Assertion.make({ ...f.internal, audience: "public" });
       expect(validateKb([], [bad]).valid).toBe(false);
-      expect(validateKb([f.claim], [bad]).violations).toContain(
+      expect(validateKb(f.views, [bad]).violations).toContain(
         `Assertion ${bad.id}: internal-only source requires internal audience`
       );
-      expect(validateKb([f.claim, f.claim], f.assertions).valid).toBe(false);
-      expect(validateKb([f.claim], []).valid).toBe(false);
+      expect(validateKb([...f.views, ...f.views], f.assertions).valid).toBe(false);
+      expect(validateKb(f.views, []).valid).toBe(false);
     })
   );
   it.effect("counts astral characters as UTF-16 and rejects split surrogate anchors", () =>
@@ -258,24 +286,25 @@ describe("knowledge ledger admission and disclosure", () => {
         sourceRef: { ...f.internal.sourceRef, text: "x😀y" },
         selector: { _tag: "TextQuote", exact: "😀", prefix: "x", suffix: "y", start: 1, end: 3 },
       });
-      expect(validateKb([f.claim], [valid]).valid).toBe(true);
+      expect(validateKb(f.views, [valid]).valid).toBe(true);
       const invalid = Assertion.make({
         ...valid,
         selector: { ...valid.selector, _tag: "TextQuote", exact: "😀", prefix: "", suffix: "", start: 1, end: 2 },
       });
-      expect(validateKb([f.claim], [invalid]).valid).toBe(false);
+      expect(validateKb(f.views, [invalid]).valid).toBe(false);
     })
   );
   it.effect("blocks pending and rejected evidence, missing derivation and expired versions", () =>
     Effect.gen(function* () {
       const f = yield* fixture({ public: true });
       const evidence = A.map(f.assertions, (a) => Assertion.make({ ...a, review: "pending" }));
-      expect(validateKb([f.claim], evidence).outwardEligible).toEqual([]);
+      expect(validateKb(f.views, evidence).outwardEligible).toEqual([]);
       const noBasis = A.map(f.assertions, (a) => Assertion.make({ ...a, derivation: { basis: "none", ref: "" } }));
-      expect(validateKb([f.claim], noBasis).outwardEligible).toEqual([]);
+      expect(validateKb(f.views, noBasis).outwardEligible).toEqual([]);
       const proposed = { ...f.claim, review: { _tag: "Proposed" } };
       const decoded = yield* decodeClaim(proposed);
-      expect(validateKb([decoded], f.assertions).outwardEligible).toEqual([]);
+      const proposedViews = yield* views([decoded]);
+      expect(validateKb(proposedViews, f.assertions).outwardEligible).toEqual([]);
     })
   );
 
@@ -283,12 +312,14 @@ describe("knowledge ledger admission and disclosure", () => {
     Effect.gen(function* () {
       const f = yield* fixture({ public: true });
       const rejected = A.map(f.assertions, (a) => Assertion.make({ ...a, review: "rejected" }));
-      expect(validateKb([f.claim], rejected).outwardEligible).toEqual([]);
+      expect(validateKb(f.views, rejected).outwardEligible).toEqual([]);
       const expired = { ...f.claim, knowledge: { ...f.claim.knowledge, expiredAt: O.some(DateTime.makeUnsafe(3)) } };
-      expect(validateKb([expired], f.assertions).outwardEligible).toEqual([]);
+      const expiredViews = yield* views([expired]);
+      expect(validateKb(expiredViews, f.assertions).outwardEligible).toEqual([]);
       const next = yield* fixture({ id: "claim/2", public: true });
       const superseding = { ...next.claim, supersedes: O.some(f.claim.id) };
-      expect(validateKb([f.claim, superseding], A.appendAll(f.assertions, next.assertions)).outwardEligible).toEqual([
+      const supersededViews = yield* views([f.claim, superseding]);
+      expect(validateKb(supersededViews, A.appendAll(f.assertions, next.assertions)).outwardEligible).toEqual([
         next.claim.id,
       ]);
     })
@@ -303,17 +334,17 @@ describe("knowledge ledger admission and disclosure", () => {
         derivation: { basis: "own-public-work", ref: "https://example.com/commit/1", firstCommit: "commit/1" },
         selector: { _tag: "MediaFragment", start: 0, end: 1 },
       });
-      expect(validateKb([f.claim], [personal]).outwardEligible).toEqual([f.claim.id]);
+      expect(validateKb(f.views, [personal]).outwardEligible).toEqual([f.claim.id]);
       const invalid = Assertion.make({ ...personal, selector: { _tag: "MediaFragment", start: 2, end: 1 } });
-      expect(validateKb([f.claim], [invalid]).valid).toBe(false);
+      expect(validateKb(f.views, [invalid]).valid).toBe(false);
     })
   );
   it.effect("rejects conflicting audiences on a shared capture and preserves escaped literal text", () =>
     Effect.gen(function* () {
       const f = yield* fixture({ public: true, text: 'Acme says "hello".\nA second line with \\.' });
       const conflicting = A.map(f.assertions, (a) => Assertion.make({ ...a, captureId: "capture/shared" }));
-      expect(validateKb([f.claim], conflicting).valid).toBe(false);
-      const dataset = projectKb([f.claim], f.assertions, "outward")["dataset.nq"] ?? "";
+      expect(validateKb(f.views, conflicting).valid).toBe(false);
+      const dataset = projectKb(f.views, f.assertions, "outward")["dataset.nq"] ?? "";
       expect(dataset).toContain('Acme says \\"hello\\".\\n');
       expect(dataset).not.toContain('"hello".\nA second');
     })
@@ -460,7 +491,7 @@ layer(live, { timeout: "30 seconds" })("knowledge ledger filesystem", (it) => {
 const graphLive = Layer.effect(KbGraphExport, makeKbGraphExport).pipe(Layer.provideMerge(live));
 const writeGraphRows = Effect.fnUntraced(function* (
   root: string,
-  claims: ReadonlyArray<KbClaim>,
+  claims: ReadonlyArray<KbClaimRow>,
   assertions: ReadonlyArray<Assertion>
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -651,7 +682,7 @@ layer(graphLive, { timeout: "30 seconds" })("knowledge JSON graph", (it) => {
       const exporter = yield* KbGraphExport;
       const f = yield* withLedger({});
       const after = yield* fixture({ id: "claim/2", public: true });
-      const next = yield* decodeTypedClaim({
+      const next = yield* decodeClaim({
         ...after.claim,
         supersedes: O.some(f.claim.id),
       });
@@ -691,7 +722,7 @@ layer(graphLive, { timeout: "30 seconds" })("knowledge JSON graph", (it) => {
       Effect.gen(function* () {
         const f = yield* withLedger({ public: true });
         const hidden = yield* fixture({ id: "claim/hidden", text: "CANARY-INTERNAL-hidden" });
-        const hiddenClaim = KbClaim.make({
+        const hiddenClaim: KbClaimRow = {
           ...hidden.claim,
           proposition: { ...hidden.claim.proposition, subject: "entity/hidden", object: "entity/secret" },
           logicalKey: kbLogicalKey({
@@ -699,7 +730,7 @@ layer(graphLive, { timeout: "30 seconds" })("knowledge JSON graph", (it) => {
             subject: "entity/hidden",
             object: "entity/secret",
           }),
-        });
+        };
         const canaryAssertion = Assertion.make({
           ...f.internal,
           quote: "CANARY-INTERNAL-quote",
@@ -724,7 +755,7 @@ layer(graphLive, { timeout: "30 seconds" })("knowledge JSON graph", (it) => {
         expect(before.stats).toEqual({ nodes: 0, links: 0, claims: 0 });
         // An independent public assertion promotes a new immutable claim version.
         const promoted = yield* fixture({ id: "claim/promoted", public: true });
-        const next = KbClaim.make({ ...promoted.claim, supersedes: O.some(f.claim.id) });
+        const next = { ...promoted.claim, supersedes: O.some(f.claim.id) };
         yield* writeGraphRows(f.root, [f.claim, next], A.appendAll(f.assertions, promoted.assertions));
         const after = yield* exporter.write(f.root, "outward", `${f.out}-after.json`, false);
         expect(R.keys(after.claims)).toEqual([next.id]);
@@ -808,7 +839,9 @@ layer(graphLive, { timeout: "30 seconds" })("knowledge JSON graph", (it) => {
 
 const runKb = Command.runWith(kbCommand, { version: "0.0.0" });
 layer(
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(Layer.mergeAll(platform, NodeStdio.layer, NodeTerminal.layer))),
+  NodeChildProcessSpawner.layer.pipe(
+    Layer.provideMerge(Layer.mergeAll(platform, NodeStdio.layer, NodeTerminal.layer, P4Digest.layerWebCrypto))
+  ),
   { timeout: "30 seconds" }
 )("knowledge ledger CLI", (it) => {
   it.effect("validates, builds and exports a valid ledger through the command handlers", () =>
@@ -843,9 +876,9 @@ layer(
   );
 });
 
-const p4kbclaimsv1jsonl = S.fromJsonString(KbClaim);
+const p4kbclaimsv1jsonl = S.fromJsonString(KbClaimsV1Row);
 
-const p4kbassertionsv1jsonl = S.fromJsonString(Assertion);
+const p4kbassertionsv1jsonl = S.fromJsonString(KbAssertionV1Row);
 
 const p4kbregistryv1jsonl = S.fromJsonString(KbRegistryNode);
 

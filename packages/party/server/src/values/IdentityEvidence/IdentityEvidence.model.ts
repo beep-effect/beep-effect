@@ -3,7 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $PartyServerId } from "@beep/identity/packages";
+import { ClaimCreation, SourceAssertion } from "@beep/party-domain/Claim";
 import { AccountId, AssertionId, EventId, IdentifierId } from "@beep/party-domain/Ids";
 import { LiteralKit } from "@beep/schema";
 import { PartyId } from "@beep/shared-domain/identity/Party";
@@ -298,7 +300,11 @@ export class PairingAggregationInput extends S.Opaque<PairingAggregationInput, {
  * @since 0.0.0
  */
 export class PairingClaimsInput extends S.Opaque<PairingClaimsInput, { readonly brand: unique symbol }>()(
-  S.Struct({ supports: S.Array(PairingSupport), recordedAt: S.DateTimeUtcFromMillis }).pipe(
+  S.Struct({
+    supports: S.Array(PairingSupport),
+    creation: ClaimCreation,
+    sourceAssertions: S.Array(SourceAssertion),
+  }).pipe(
     $I.annoteSchema("PairingClaimsInput", { description: "Source-backed pairing support and proposal knowledge time." })
   )
 ) {}

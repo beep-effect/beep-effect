@@ -1,4 +1,15 @@
-import { AccountId, AssertionId, EventId, IdentifierId } from "@beep/party-domain/Ids";
+import { ValidTime } from "@beep/epistemics/Claim";
+import { SourceAssertion } from "@beep/party-domain/Claim";
+import {
+  AccountId,
+  ActivityId,
+  ArtifactOccurrenceId,
+  AssertionId,
+  EventId,
+  IdentifierId,
+} from "@beep/party-domain/Ids";
+import { Proposition } from "@beep/party-domain/Proposition";
+import { EvidenceAnchor } from "@beep/party-domain/Provenance";
 import {
   aggregatePairings,
   CardIdentifier,
@@ -23,13 +34,18 @@ import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { creation } from "./fixtures/claims.ts";
+import type { ClaimLedger } from "@beep/party-domain/Claim";
 
 const dn = IdentifierId.make("party-ident:dn");
 const smtp = IdentifierId.make("party-ident:smtp");
@@ -271,31 +287,136 @@ describe("pairing claim proposals", () => {
     expect(interval._tag).toBe("Interval");
     if (interval._tag === "Interval") TestUtils.assertNone(interval.validTo);
   });
-  it("emits no claim without sampled assertions and keeps supported claims proposed", () => {
-    const recordedAt = DateTime.makeUnsafe(100);
-    expect(pairingClaims(PairingClaimsInput.make({ supports: [support], recordedAt }))).toEqual([]);
-    const backed = PairingSupport.make({ ...support, assertions: [AssertionId.make("party-asrt:a")] });
-    const claims = pairingClaims(PairingClaimsInput.make({ supports: [backed], recordedAt }));
-    const claim = O.getOrThrow(A.head(claims));
-    expect(claim.review._tag).toBe("Proposed");
-    expect(claim.proposition).toMatchObject({ _tag: "AccountIdentifier", account: support.mailbox, identifier: smtp });
-    expect(claim.supportedBy).toEqual(backed.assertions);
-    expect(claim.validTime._tag).toBe("Unknown");
+});
+
+const sourceAssertion = (id: AssertionId) =>
+  SourceAssertion.make({
+    id,
+    proposition: Proposition.cases.AccountIdentifier.make({ account: support.mailbox, identifier: smtp }),
+    stance: "asserts",
+    anchors: [
+      EvidenceAnchor.cases.HeaderField.make({
+        occurrence: ArtifactOccurrenceId.make("party-occ:pairing"),
+        namespace: "mapi",
+        field: "PR_SENDER_EMAIL_ADDRESS",
+      }),
+    ],
+    producedBy: ActivityId.make("party-act:pairing"),
+    validTime: ValidTime.cases.Unknown.make({}),
+    recordedAt: DateTime.makeUnsafe(1),
   });
-  it("binds immutable version identity to evidence, observation bounds and knowledge time", () => {
-    const a = AssertionId.make("party-asrt:a");
-    const b = AssertionId.make("party-asrt:b");
-    const backed = PairingSupport.make({ ...timedSupport("a", 2, 9), assertions: [b, a] });
-    const build = (value: PairingSupport, time = 100) =>
-      O.getOrThrow(
-        A.head(pairingClaims(PairingClaimsInput.make({ supports: [value], recordedAt: DateTime.makeUnsafe(time) })))
+const a = AssertionId.make("party-asrt:a");
+const b = AssertionId.make("party-asrt:b");
+const sources = [sourceAssertion(a), sourceAssertion(b)];
+const build = (supports: ReadonlyArray<PairingSupport>, time = 100) =>
+  pairingClaims(
+    PairingClaimsInput.make({
+      supports,
+      creation: creation({ operation: "pairing", at: time }),
+      sourceAssertions: sources,
+    })
+  );
+
+it.layer(Digest.layerWebCrypto)("pairing claim projection", (it) => {
+  it.effect("emits no claim without sampled assertions and keeps supported claims proposed", () =>
+    Effect.gen(function* () {
+      const empty = yield* build([support]);
+      expect(empty.claims).toEqual([]);
+      const backed = PairingSupport.make({ ...support, assertions: [a] });
+      const ledger = yield* build([backed]);
+      const record = O.getOrThrow(A.head(ledger.claims));
+      TestUtils.assertSome(
+        O.map(A.head(ledger.reviews), (row) => row.review._tag),
+        "Proposed"
       );
-    const original = build(backed);
-    expect(build(PairingSupport.make({ ...backed, assertions: [a, b, a] }))).toEqual(original);
-    expect(build(PairingSupport.make({ ...backed, assertions: [a] })).id).not.toBe(original.id);
-    expect(build(PairingSupport.make({ ...backed, lastSeen: O.some(DateTime.makeUnsafe(10)) })).id).not.toBe(
-      original.id
-    );
-    expect(build(backed, 101).id).not.toBe(original.id);
+      expect(record.core.proposition).toMatchObject({
+        _tag: "AccountIdentifier",
+        account: support.mailbox,
+        identifier: smtp,
+      });
+      TestUtils.assertSome(
+        O.map(A.head(ledger.evidence), (row) => row.supportedBy),
+        backed.assertions
+      );
+      expect(record.core.valid._tag).toBe("Unknown");
+      expect(HashSet.size(record.core.supportAtCreation)).toBe(0);
+    })
+  );
+
+  it.effect("binds core identity to native creation facts and observation bounds, not source references", () =>
+    Effect.gen(function* () {
+      const backed = PairingSupport.make({ ...timedSupport("a", 2, 9), assertions: [b, a] });
+      const claimOf = (ledger: ClaimLedger) => O.getOrThrow(A.head(ledger.claims)).claim;
+      const original = yield* build([backed]);
+      const repeated = yield* build([PairingSupport.make({ ...backed, assertions: [a, b, a] })]);
+      expect(repeated).toEqual(original);
+      TestUtils.assertSome(
+        O.map(A.head(original.evidence), (row) => row.supportedBy),
+        [a, b]
+      );
+      const narrower = yield* build([PairingSupport.make({ ...backed, assertions: [a] })]);
+      expect(claimOf(narrower)).toBe(claimOf(original));
+      expect(narrower.evidence).not.toEqual(original.evidence);
+      const later = yield* build([PairingSupport.make({ ...backed, lastSeen: O.some(DateTime.makeUnsafe(10)) })]);
+      expect(claimOf(later)).not.toBe(claimOf(original));
+      const known = yield* build([backed], 101);
+      expect(claimOf(known)).not.toBe(claimOf(original));
+    })
+  );
+
+  it.effect("refuses a projection whose source assertion payload is missing", () =>
+    Effect.gen(function* () {
+      const missing = AssertionId.make("party-asrt:missing");
+      const failure = yield* build([PairingSupport.make({ ...support, assertions: [a, missing] })]).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "LedgerConflict", recordId: missing, reason: "source-assertion-missing" });
+    })
+  );
+});
+
+const syntheticDigest = (fill: string) => `sha256:${Str.repeat(64)(fill)}`;
+const textAnchor = (quote: string, startChar: number) =>
+  S.decodeUnknownEffect(EvidenceAnchor)({
+    _tag: "TextOccurrence",
+    occurrence: "party-occ:synthetic",
+    anchored: {
+      receipt: {
+        anchor: { startChar, endChar: startChar + Str.length(quote), quote },
+        source: {
+          scopeRef: "matter:synthetic",
+          sourceRef: "source:synthetic",
+          locator: "notes/synthetic.txt",
+          sourceDigest: syntheticDigest("a"),
+          textDigest: syntheticDigest("b"),
+          extractor: { name: "utf8", version: "1" },
+          normalizationVersion: "1",
+        },
+      },
+    },
   });
+
+it.layer(Digest.layerWebCrypto)("text-grounded pairing support", (it) => {
+  it.effect("mints text occurrences into core support only from text receipts", () =>
+    Effect.gen(function* () {
+      const grounded = (anchor: EvidenceAnchor) =>
+        SourceAssertion.make({ ...sourceAssertion(a), anchors: [anchor, ...sourceAssertion(a).anchors] });
+      const project = (assertion: SourceAssertion) =>
+        pairingClaims(
+          PairingClaimsInput.make({
+            supports: [PairingSupport.make({ ...support, assertions: [a] })],
+            creation: creation({ operation: "pairing", at: 100 }),
+            sourceAssertions: [assertion],
+          })
+        );
+      const first = yield* textAnchor("fact", 6);
+      const moved = yield* textAnchor("fact", 12);
+      const textual = yield* project(grounded(first));
+      const relocated = yield* project(grounded(moved));
+      const headerOnly = yield* project(sourceAssertion(a));
+      const recordOf = (ledger: ClaimLedger) => O.getOrThrow(A.head(ledger.claims));
+      expect(HashSet.size(recordOf(textual).core.supportAtCreation)).toBe(1);
+      expect(HashSet.size(recordOf(headerOnly).core.supportAtCreation)).toBe(0);
+      expect(recordOf(relocated).claim).not.toBe(recordOf(textual).claim);
+      expect(recordOf(headerOnly).claim).not.toBe(recordOf(textual).claim);
+    })
+  );
 });

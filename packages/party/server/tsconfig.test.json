@@ -24,7 +24,13 @@
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/jsonc/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/text/tsconfig.json"
     },
     {
       "path": "../domain/tsconfig.json"

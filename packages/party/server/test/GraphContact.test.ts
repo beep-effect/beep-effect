@@ -6,16 +6,16 @@ import {
   GraphContactInput,
   ingestContact,
 } from "@beep/party-server/ContactEvidence";
-import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { ContactCard, ContactEmailInput } from "@beep/party-use-cases/ContactSource";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { creation, LedgerLive } from "./fixtures/claims.ts";
 
 const at = DateTime.makeUnsafe(1);
-it.layer(PartyLedgerMemory)("Graph contact adapter", (it) => {
+it.layer(LedgerLive)("Graph contact adapter", (it) => {
   it.effect("shares canonical keys with generic cards and preserves explicit phone context", () =>
     Effect.gen(function* () {
       const graph = GraphContact.make({
@@ -40,10 +40,20 @@ it.layer(PartyLedgerMemory)("Graph contact adapter", (it) => {
         roles: [],
       });
       const left = yield* ingestContact(
-        ContactIngestInput.make({ card: mapped, activity: ActivityId.make("party-act:graph"), recordedAt: at })
+        ContactIngestInput.make({
+          card: mapped,
+          creation: creation({ operation: "graph", at: 0 }),
+          activity: ActivityId.make("party-act:graph"),
+          recordedAt: at,
+        })
       );
       const right = yield* ingestContact(
-        ContactIngestInput.make({ card: generic, activity: ActivityId.make("party-act:generic"), recordedAt: at })
+        ContactIngestInput.make({
+          card: generic,
+          creation: creation({ operation: "generic", at: 0 }),
+          activity: ActivityId.make("party-act:generic"),
+          recordedAt: at,
+        })
       );
       expect(mapped.kind).toBe("Person");
       expect(left.identifiers[0]?.key).toBe(right.identifiers[0]?.key);
@@ -66,7 +76,12 @@ it.layer(PartyLedgerMemory)("Graph contact adapter", (it) => {
       expect(mapped.kind).toBe("Organization");
       expect(mapped.label).toBe("Example Services");
       const result = yield* ingestContact(
-        ContactIngestInput.make({ card: mapped, activity: ActivityId.make("party-act:company"), recordedAt: at })
+        ContactIngestInput.make({
+          card: mapped,
+          creation: creation({ operation: "company", at: 0 }),
+          activity: ActivityId.make("party-act:company"),
+          recordedAt: at,
+        })
       );
       expect(result.issues[0]?.reason).toBe("ambiguous-phone");
       expect(O.getOrThrow(result.party).keys).toHaveLength(1);

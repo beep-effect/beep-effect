@@ -3,7 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { versionsAt } from "@beep/epistemics/Claim";
+
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual, pipe } from "effect/Function";
@@ -13,19 +13,20 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
+import { claimsAtScope } from "../../Claim.ts";
 import { Proposition, partiesOf } from "../../Proposition.ts";
 import { ConflictingReview, KeyRepresentative, PartyRepresentative, ResolutionView } from "./Resolution.model.ts";
+import type { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import type { PartyId } from "@beep/shared-domain/identity/Party";
-import type { ClaimVersion } from "../../Claim.ts";
-import type { ClaimVersionId } from "../../Ids.ts";
+import type { ClaimLedgerData, ClaimRead } from "../../Claim.ts";
 import type { ResolutionScope } from "./Resolution.model.ts";
 
 const codePoints = (value: string) =>
   A.flatMap(A.fromIterable(value), (character) => O.toArray(Str.codePointAt(character, 0)));
 const codePointOrder = Order.mapInput(Order.Array(Order.Number), codePoints);
 const claimOrder = Order.combine(
-  Order.mapInput(Order.Number, (claim: ClaimVersion) => DateTime.toEpochMillis(claim.knowledge.recordedAt)),
-  Order.mapInput(codePointOrder, (claim: ClaimVersion) => claim.id)
+  Order.mapInput(Order.Number, (claim: ClaimRead) => DateTime.toEpochMillis(claim.record.core.knowledgeStart)),
+  Order.mapInput(codePointOrder, (claim: ClaimRead) => claim.record.claim)
 );
 
 /**
@@ -37,34 +38,42 @@ const claimOrder = Order.combine(
  *
  * **Example** (Resolve an empty ledger)
  * ```ts
+ * import { ClaimLedger } from "@beep/party-domain/Claim"
  * import { resolveParties, ResolutionScope } from "@beep/party-domain/Resolution"
  * import * as DateTime from "effect/DateTime"
- * resolveParties([], ResolutionScope.make({ asOf: DateTime.makeUnsafe(0), validAt: DateTime.makeUnsafe(0) }))
+ * resolveParties(ClaimLedger.make({}), ResolutionScope.make({ asOf: DateTime.makeUnsafe(0), scope: "synthetic", validAt: DateTime.makeUnsafe(0) }))
  * ```
  * @category queries
  * @since 0.0.0
  */
 export const resolveParties: {
-  (scope: ResolutionScope): (versions: ReadonlyArray<ClaimVersion>) => ResolutionView;
-  (versions: ReadonlyArray<ClaimVersion>, scope: ResolutionScope): ResolutionView;
-} = dual(2, (versions: ReadonlyArray<ClaimVersion>, scope: ResolutionScope): ResolutionView => {
-  const active = A.sort(versionsAt(versions, { ...scope, states: ["Accepted"] }), claimOrder);
+  (scope: ResolutionScope): (ledger: ClaimLedgerData) => ResolutionView;
+  (ledger: ClaimLedgerData, scope: ResolutionScope): ResolutionView;
+} = dual(2, (ledger: ClaimLedgerData, scope: ResolutionScope): ResolutionView => {
+  const active = A.sort(claimsAtScope(ledger, { ...scope, states: ["Accepted"] }), claimOrder);
   const vetoes = A.flatMap(active, (claim) =>
-    Proposition.isAnyOf(["DistinctParty"])(claim.proposition) ? [{ claim, pair: claim.proposition }] : []
+    Proposition.isAnyOf(["DistinctParty"])(claim.record.core.proposition)
+      ? [{ claim, pair: claim.record.core.proposition }]
+      : []
   );
   const merges = A.flatMap(active, (claim) =>
-    Proposition.isAnyOf(["SameParty"])(claim.proposition) ? [{ claim, pair: claim.proposition }] : []
+    Proposition.isAnyOf(["SameParty"])(claim.record.core.proposition)
+      ? [{ claim, pair: claim.record.core.proposition }]
+      : []
   );
   const parties = pipe(
-    versions,
-    A.filter((claim) => DateTime.isLessThanOrEqualTo(claim.knowledge.recordedAt, scope.asOf)),
-    A.flatMap((claim) => partiesOf(claim.proposition)),
+    ledger.claims,
+    A.filter(
+      (record) =>
+        record.core.scope === scope.scope && DateTime.isLessThanOrEqualTo(record.core.knowledgeStart, scope.asOf)
+    ),
+    A.flatMap((record) => partiesOf(record.core.proposition)),
     A.dedupe,
     A.sort(Order.Number)
   );
   let indices = HashMap.empty<PartyId, Graph.NodeIndex>();
   let reviewCases = A.empty<ConflictingReview>();
-  const graph = Graph.undirected<PartyId, ClaimVersionId>((g) => {
+  const graph = Graph.undirected<PartyId, ClaimId>((g) => {
     A.forEach(parties, (party) => {
       indices = HashMap.set(indices, party, Graph.addNode(g, party));
     });
@@ -84,15 +93,15 @@ export const resolveParties: {
         reviewCases = A.append(
           reviewCases,
           ConflictingReview.make({
-            blockedClaim: claim.id,
-            vetoClaims: A.map(conflicts, (veto) => veto.claim.id),
+            blockedClaim: claim.record.claim,
+            vetoClaims: A.map(conflicts, (veto) => veto.claim.record.claim),
             left: pair.left,
             right: pair.right,
             scope,
           })
         );
       } else if (!HashSet.has(left, pair.right)) {
-        Graph.addEdge(g, node(pair.left), node(pair.right), claim.id);
+        Graph.addEdge(g, node(pair.left), node(pair.right), claim.record.claim);
       }
     });
   });
@@ -113,12 +122,12 @@ export const resolveParties: {
       O.getOrElse(() => party)
     );
   const keys = A.flatMap(active, (claim) =>
-    Proposition.isAnyOf(["KeyAssignment"])(claim.proposition)
+    Proposition.isAnyOf(["KeyAssignment"])(claim.record.core.proposition)
       ? [
           KeyRepresentative.make({
-            key: claim.proposition.key,
-            party: claim.proposition.party,
-            survivor: survivor(claim.proposition.party),
+            key: claim.record.core.proposition.key,
+            party: claim.record.core.proposition.party,
+            survivor: survivor(claim.record.core.proposition.party),
           }),
         ]
       : []

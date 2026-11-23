@@ -1991,6 +1991,14 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the binding factories with explicit codec arguments while migrating callers and retaining the versioned encoded preimages.
 
+### P4: CLI native cores link imported predecessors through a separate succession record, 2026-11-23
+
+ClaimCore.supersedes names only a content-addressed ClaimId, and an imported legacy row has no ClaimId. A Holds renewal (or Kb revision) of an imported claim therefore appends a native v2 core with no supersedes field plus a separate Succession record from ClaimReference Imported{ledger, oldId} to the new ClaimId. The history reader closes the imported knowledge interval at the successor's knowledge start, refuses a second successor (fork), an unknown target or a logical-key mismatch with ClaimHistoryRefused, and never relabels the old id as a hash. Review changes are separate Review events, never new cores. Renewal facts (activity, generation end, knowledge start, agent, scope) are supplied by the effectful program, not a hidden clock.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Drop the Succession event kind and read native cores without imported predecessors; old v1 lines and v2 cores are unchanged.
+
 ### P4: evidence keeps position and a separate reported confidence signal, 2026-11-23
 
 epistemic tables own frozen current and legacy span codecs. Strict current rows split to TextAnchor and extractor-confidence signal; loose legacy rows derive endChar as startChar plus UTF-16 quote width. A row still failing current text constraints is a LegacyEvidenceUnresolved record retaining old fields and reason, never a verified position. A stored scalar is Present reported confidence with method legacy-reported, never a calibrated probability. New writes use a tagged position-and-signal JSON shape in the existing span column; old rows are never rewritten. Table row schemas are separated from domain read records; both query shapes are supported by the span SQL accessors and converters. Verification receipts and manifestation-key bytes are not reminted; association compares the recovered position only, and unresolved spans cannot verify. Frozen synthetic fixtures cover strict, loose-width, empty and over-bound quotes.
@@ -2036,6 +2044,22 @@ The HTML notice does not explicitly cover the TTL. The website repository MIT li
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the declared profile and golden with a new adapter version while retaining rejected input as residual.
+
+### P4: party corrections across a logical key retract and reassert instead of superseding, 2026-11-23
+
+The append law accepts supersession only inside one (scope, logicalKey) partition. A party correction that changes the proposition's logical key (for example a corrected finance fact or a vetoed merge) is recorded as a direct Retraction of the old claim plus a newly minted claim, so the history stays checkable and nothing is silently overwritten. An exact replay of an identical record into PartyLedgerMemory is unchanged state, not a conflict; a different record under an existing id or claim/time key is still a LedgerConflict. Party challenge records must name existing claims at both ends.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Allow cross-key supersession in the append law and migrate party fixtures back; existing retraction records stay append-only.
+
+### P4: require explicit native creation facts at party projection boundaries, 2026-11-23
+
+Party projection entry points receive an explicit native ActivityStart, generation end, knowledge start, asserting agent and scope. Existing source activity ids and assertion timestamps remain source provenance; they are never relabeled as content-addressed generation facts. The projection mints text occurrences only from TextOccurrence receipts, and retains non-text assertion references separately with empty text support. Ledger writes store cores, generation receipts, evidence links, review records and signal records separately; reads join them at an explicit asOf time.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Version the party creation request and migrate callers without changing existing core identities or source assertion ids.
 
 ### P4: preserve ReviewHub quote imports across selector retirement, 2026-11-23
 

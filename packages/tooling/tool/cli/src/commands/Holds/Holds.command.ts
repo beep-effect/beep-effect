@@ -13,6 +13,7 @@ import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -60,7 +61,9 @@ const headCommitSha = Effect.fn("Holds.headCommitSha")(function* () {
     .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), gitAdapter)));
 });
 
-const layerHoldLedgerLive = Layer.effect(HoldLedger, Effect.flatMap(resolveRoot, makeHoldLedger));
+const layerHoldLedgerLive = Layer.effect(HoldLedger, Effect.flatMap(resolveRoot, makeHoldLedger)).pipe(
+  Layer.provide(Digest.layerWebCrypto)
+);
 
 const layerHoldSitesLive = Layer.effect(HoldSites, Effect.flatMap(resolveRoot, makeHoldSites));
 

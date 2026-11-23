@@ -17,22 +17,22 @@
  * @since 0.0.0
  */
 
-import { knownAt } from "@beep/epistemics/KnowledgeInterval";
+import { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import { $PartyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { thunkEmptyArray } from "@beep/utils";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { ClaimVersion, DependenceAssessment, ReviewState } from "../../Claim.ts";
+import { ClaimRead, DependenceAssessment, ReviewState } from "../../Claim.ts";
 import { EvidenceKind } from "../../Communication.ts";
-import { AssertionId, ClaimVersionId } from "../../Ids.ts";
+import { AssertionId } from "../../Ids.ts";
 import { Proposition } from "../../Proposition.ts";
 import { CollectionSide } from "../../Provenance.ts";
-import type * as DateTime from "effect/DateTime";
 
 const $I = $PartyDomainId.create("policies/Admission/Admission.model");
 
@@ -262,7 +262,7 @@ export class SupportFacts extends S.Opaque<SupportFacts, { readonly brand: uniqu
  * @since 0.0.0
  */
 export class AdmissionEvidence extends S.Opaque<AdmissionEvidence, { readonly brand: unique symbol }>()(
-  S.Struct({ version: ClaimVersion, supports: S.Array(SupportFacts), dependence: S.Array(DependenceAssessment) }).pipe(
+  S.Struct({ claim: ClaimRead, supports: S.Array(SupportFacts), dependence: S.Array(DependenceAssessment) }).pipe(
     $I.annoteSchema("AdmissionEvidence", { description: "AdmissionEvidence admission data." })
   )
 ) {}
@@ -320,7 +320,6 @@ export class SupportCountInput extends S.Opaque<SupportCountInput, { readonly br
     unknownCountsAs: S.Literals(["dependent", "independent"]),
   }).pipe($I.annoteSchema("SupportCountInput", { description: "SupportCountInput admission data." }))
 ) {}
-/** Module-private mint token: code outside this module cannot obtain it, so cannot construct a proof. */
 const mintToken: unique symbol = Symbol("party/Admission/mint");
 
 /**
@@ -339,7 +338,7 @@ const mintToken: unique symbol = Symbol("party/Admission/mint");
 export class Admitted<T extends AdmissionTier> {
   readonly #tier: T;
   readonly tier: T;
-  readonly claimVersion: ClaimVersion;
+  readonly claim: ClaimRead;
   readonly policy: PolicyReference;
   readonly knowledgeTime: DateTime.Utc;
   readonly basis: ReadonlyArray<AssertionId>;
@@ -348,7 +347,7 @@ export class Admitted<T extends AdmissionTier> {
     token: typeof mintToken,
     fields: {
       readonly tier: T;
-      readonly claimVersion: ClaimVersion;
+      readonly claim: ClaimRead;
       readonly policy: PolicyReference;
       readonly knowledgeTime: DateTime.Utc;
       readonly basis: ReadonlyArray<AssertionId>;
@@ -357,7 +356,7 @@ export class Admitted<T extends AdmissionTier> {
     void token;
     this.#tier = fields.tier;
     this.tier = fields.tier;
-    this.claimVersion = fields.claimVersion;
+    this.claim = fields.claim;
     this.policy = fields.policy;
     this.knowledgeTime = fields.knowledgeTime;
     this.basis = fields.basis;
@@ -384,7 +383,7 @@ export class Admitted<T extends AdmissionTier> {
 export class AdmissionRecord extends S.Opaque<AdmissionRecord, { readonly brand: unique symbol }>()(
   S.Struct({
     tier: AdmissionTier,
-    claimVersion: ClaimVersionId,
+    claim: ClaimId,
     policyId: S.NonEmptyString,
     policyVersion: S.NonEmptyString,
     knowledgeTime: S.DateTimeUtcFromMillis,
@@ -448,7 +447,6 @@ export const independentSupportCount = ({ supports, dependence, unknownCountsAs 
   return graph.pipe(Graph.connectedComponents, A.length);
 };
 
-/** Clauses `admit` checks before any policy clause, so no policy can omit them. */
 const integrityClauses: ReadonlyArray<AdmissionClause> = [SupportsInVersion.make({}), KnownAtKnowledgeTime.make({})];
 
 const evaluate = (
@@ -468,13 +466,19 @@ const evaluate = (
       return count >= n ? O.none() : O.some(`${count} independent support cluster(s), need ${n}`);
     },
     RequireReviewerAcceptance: () =>
-      ReviewState.guards.Accepted(evidence.version.review)
+      O.exists(evidence.claim.review, (event) => ReviewState.guards.Accepted(event.review))
         ? O.none()
-        : O.some(`review state is ${evidence.version.review._tag}`),
+        : O.some(
+            O.match(evidence.claim.review, {
+              onNone: () => "review is unassessed",
+              onSome: (event) => `review state is ${event.review._tag}`,
+            })
+          ),
     NoOpenChallenge: () =>
-      A.isReadonlyArrayEmpty(evidence.version.challengedBy) && !ReviewState.guards.Disputed(evidence.version.review)
+      O.exists(evidence.claim.evidence, (links) => A.isReadonlyArrayEmpty(links.challengedBy)) &&
+      O.exists(evidence.claim.review, (event) => !ReviewState.guards.Disputed(event.review))
         ? O.none()
-        : O.some(`${A.length(evidence.version.challengedBy)} challenging assertion(s)`),
+        : O.some("source challenges are open or unavailable"),
     RequireDistinctiveEvidence: () =>
       A.some(evidence.supports, (s) => s.kind === "distinctive-behavior")
         ? O.none()
@@ -482,15 +486,22 @@ const evaluate = (
     RequireSupportOutsideSide: ({ side }) =>
       A.some(evidence.supports, (s) => s.side !== side) ? O.none() : O.some(`all support comes from ${side}`),
     SupportsInVersion: () => {
-      const outside = A.filter(evidence.supports, (s) => !A.contains(evidence.version.supportedBy, s.assertion));
+      if (O.isNone(evidence.claim.evidence)) return O.some("source evidence links are unavailable");
+      const links = evidence.claim.evidence.value;
+      const outside = A.filter(evidence.supports, (support) => !A.contains(links.supportedBy, support.assertion));
       return A.isReadonlyArrayEmpty(outside)
         ? O.none()
         : O.some(`${A.length(outside)} support(s) not in the version's supportedBy`);
     },
     KnownAtKnowledgeTime: () =>
-      knownAt(evidence.version.knowledge, knowledgeTime)
+      O.exists(
+        evidence.claim.knowledge,
+        (interval) =>
+          DateTime.isLessThanOrEqualTo(interval.start, knowledgeTime) &&
+          O.match(interval.end, { onNone: () => true, onSome: (end) => DateTime.isLessThan(knowledgeTime, end) })
+      )
         ? O.none()
-        : O.some(`version ${evidence.version.id} is not known at ${knowledgeTime}`),
+        : O.some(`version ${evidence.claim.record.claim} is not known at ${knowledgeTime}`),
   });
 
 /**
@@ -525,7 +536,7 @@ export const admit = <T extends AdmissionTier>({
     : Result.succeed(
         new Admitted(mintToken, {
           tier: policy.tier,
-          claimVersion: evidence.version,
+          claim: evidence.claim,
           policy: ref,
           knowledgeTime,
           basis: A.map(evidence.supports, (s) => s.assertion),
@@ -547,7 +558,7 @@ export const admit = <T extends AdmissionTier>({
  */
 export class DepositionEntry extends S.Opaque<DepositionEntry, { readonly brand: unique symbol }>()(
   S.Struct({
-    claimVersion: ClaimVersionId,
+    claim: ClaimId,
     proposition: Proposition,
     policy: PolicyReference,
     knowledgeTime: S.DateTimeUtcFromMillis,
@@ -577,8 +588,8 @@ export const depositionOutlineEntry = ({
   readonly note: string;
 }) =>
   DepositionEntry.make({
-    claimVersion: admitted.claimVersion.id,
-    proposition: admitted.claimVersion.proposition,
+    claim: admitted.claim.record.claim,
+    proposition: admitted.claim.record.core.proposition,
     policy: admitted.policy,
     knowledgeTime: admitted.knowledgeTime,
     basis: admitted.basis,

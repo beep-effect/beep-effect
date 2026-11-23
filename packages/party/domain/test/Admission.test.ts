@@ -8,20 +8,43 @@ import {
   SupportCountInput,
   SupportFacts,
 } from "@beep/party-domain/Admission";
-import { ClaimVersion, DependenceAssessment, ReviewState } from "@beep/party-domain/Claim";
+import {
+  ClaimEvidenceLinks,
+  ClaimLedger,
+  ClaimReviewRecord,
+  DependenceAssessment,
+  mergeClaimLedgers,
+  ReviewState,
+  readClaims,
+} from "@beep/party-domain/Claim";
 import { ActivityId, AssertionId } from "@beep/party-domain/Ids";
+import { Proposition } from "@beep/party-domain/Proposition";
+import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import { AcmeFixture, AcmeFixtureLive, at } from "./fixtures/acme.ts";
+import { partyClaim } from "./fixtures/claims.ts";
+import type { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import type { Admitted } from "@beep/party-domain/Admission";
 
 const a = AssertionId.make("party-asrt:a");
 const b = AssertionId.make("party-asrt:b");
 const c = AssertionId.make("party-asrt:c");
+const readAt = (ledger: ClaimLedger, claim: ClaimId, asOf: number) =>
+  O.getOrThrow(A.findFirst(readClaims(ledger, at(asOf)), (row) => row.record.claim === claim));
+const linksAt = (
+  claim: ClaimId,
+  recordedAt: number,
+  supportedBy: ReadonlyArray<AssertionId>,
+  challengedBy: ReadonlyArray<AssertionId>
+) =>
+  ClaimLedger.make({ evidence: [ClaimEvidenceLinks.make({ claim, at: at(recordedAt), supportedBy, challengedBy })] });
 const independent = (left: AssertionId, right: AssertionId) =>
   DependenceAssessment.make({
     left,
@@ -69,7 +92,11 @@ describe("independent evidence and admission tiers", () => {
             AdmissionClause.cases.NoOpenChallenge.make({}),
           ],
         });
-        const evidence = AdmissionEvidence.make({ version: fx.averyAuthorship, supports: [], dependence: [] });
+        const evidence = AdmissionEvidence.make({
+          claim: readAt(fx.ledger, fx.averyAuthorship.claim, 20),
+          supports: [],
+          dependence: [],
+        });
         const proof = Result.getOrThrow(admit({ policy, evidence, knowledgeTime: at(20) }));
         expect(proof.provenTier).toBe("client-facing");
         const refused = admit({
@@ -77,11 +104,23 @@ describe("independent evidence and admission tiers", () => {
           knowledgeTime: at(20),
           evidence: AdmissionEvidence.make({
             ...evidence,
-            version: ClaimVersion.make({
-              ...evidence.version,
-              review: ReviewState.cases.Proposed.make({}),
-              challengedBy: [a],
-            }),
+            claim: readAt(
+              mergeClaimLedgers([
+                fx.ledger,
+                linksAt(fx.averyAuthorship.claim, 15, [], [a]),
+                ClaimLedger.make({
+                  reviews: [
+                    ClaimReviewRecord.make({
+                      claim: fx.averyAuthorship.claim,
+                      at: at(15),
+                      review: ReviewState.cases.Proposed.make({}),
+                    }),
+                  ],
+                }),
+              ]),
+              fx.averyAuthorship.claim,
+              20
+            ),
           }),
         });
         pipe(refused, Result.isFailure, TestUtils.assertTrue);
@@ -107,9 +146,13 @@ describe("independent evidence and admission tiers", () => {
           }),
           tier: AdmissionTier.Enum["deposition-ready"],
         };
-        const version = ClaimVersion.make({ ...fx.averyAuthorship, supportedBy: [a, b, c] });
+        const claim = readAt(
+          mergeClaimLedgers([fx.ledger, linksAt(fx.averyAuthorship.claim, 15, [a, b, c], [])]),
+          fx.averyAuthorship.claim,
+          20
+        );
         const evidence = AdmissionEvidence.make({
-          version,
+          claim,
           supports: [
             SupportFacts.make({ assertion: a, side: "adversary-production", kind: "distinctive-behavior" }),
             SupportFacts.make({ assertion: b, side: "adversary-production", kind: "distinctive-behavior" }),
@@ -135,4 +178,46 @@ describe("independent evidence and admission tiers", () => {
       })
     );
   });
+});
+
+it.layer(Digest.layerWebCrypto)("joined admission coordinates", (it) => {
+  it.effect("refuses absent review, absent evidence links and a knowledge time outside the selected interval", () =>
+    Effect.gen(function* () {
+      const proposition = Proposition.cases.SameParty.make({ left: PartyId.make(1), right: PartyId.make(2) });
+      const original = yield* partyClaim({ proposition, knowledgeStart: 1, review: O.none(), supportedBy: [a] });
+      const successor = yield* partyClaim({ proposition, knowledgeStart: 5, supersedes: original.claim });
+      const ledger = mergeClaimLedgers([ClaimLedger.make({ ...original.ledger, evidence: [] }), successor.ledger]);
+      const policy = AdmissionPolicy.make({
+        id: "joined",
+        version: "1",
+        tier: "client-facing",
+        clauses: [
+          AdmissionClause.cases.RequireReviewerAcceptance.make({}),
+          AdmissionClause.cases.NoOpenChallenge.make({}),
+        ],
+      });
+      const evidence = AdmissionEvidence.make({
+        claim: readAt(ledger, original.claim, 3),
+        supports: [SupportFacts.make({ assertion: a, side: "client-file", kind: "distinctive-behavior" })],
+        dependence: [],
+      });
+      const refused = admit({ policy, evidence, knowledgeTime: at(5) });
+      pipe(refused, Result.isFailure, TestUtils.assertTrue);
+      if (Result.isFailure(refused))
+        expect(A.map(refused.failure.unmet, (row) => [row.clause._tag, row.saw])).toEqual([
+          ["SupportsInVersion", "source evidence links are unavailable"],
+          ["KnownAtKnowledgeTime", `version ${original.claim} is not known at ${at(5)}`],
+          ["RequireReviewerAcceptance", "review is unassessed"],
+          ["NoOpenChallenge", "source challenges are open or unavailable"],
+        ]);
+      const reviewed = AdmissionEvidence.make({ ...evidence, claim: readAt(ledger, successor.claim, 5) });
+      pipe(admit({ policy, evidence: reviewed, knowledgeTime: at(4) }), Result.isFailure, TestUtils.assertTrue);
+      const outside = admit({ policy, evidence: reviewed, knowledgeTime: at(5) });
+      pipe(outside, Result.isFailure, TestUtils.assertTrue);
+      if (Result.isFailure(outside))
+        expect(A.map(outside.failure.unmet, (row) => row.saw)).toEqual([
+          "1 support(s) not in the version's supportedBy",
+        ]);
+    })
+  );
 });

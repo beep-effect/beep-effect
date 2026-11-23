@@ -5,6 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -26,11 +28,20 @@ import {
   lintHolds,
   liveAnchorValues,
 } from "./Holds.inventory.ts";
-import { HoldExitAction, HoldFalsifier, HoldId, HoldVersionId } from "./Holds.schemas.ts";
+import {
+  HoldClaimEvent,
+  HoldExitAction,
+  HoldFalsifier,
+  HoldId,
+  HoldReviewState,
+  holdClaimKey,
+  holdClaimLabel,
+  holdProposition,
+} from "./Holds.schemas.ts";
 import { HoldLedger, HoldProbe, HoldProbeRequest } from "./Holds.service.ts";
 import { HoldSites } from "./Holds.sites.ts";
 import { confirmHoldRuns } from "./Holds.verdict.ts";
-import type { HoldClaimVersion, HoldLintFinding, ProbeOutcome, ProbeRun } from "./Holds.schemas.ts";
+import type { HoldClaim, HoldLintFinding, ProbeOutcome, ProbeRun } from "./Holds.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.program");
 
@@ -56,7 +67,7 @@ const outcomeText = (outcome: ProbeOutcome): string =>
  */
 export const runHoldsList = Effect.gen(function* () {
   const ledger = yield* HoldLedger;
-  const versions = yield* ledger.currentVersions;
+  const versions = yield* ledger.currentClaims;
   if (A.isReadonlyArrayEmpty(versions)) {
     return ["[holds] no hold records yet."];
   }
@@ -66,7 +77,7 @@ export const runHoldsList = Effect.gen(function* () {
       Effect.map(
         ledger.runsFor(version),
         (runs) =>
-          `[holds] ${version.proposition.holdId} (${version.proposition.kind}, ${A.join(version.proposition.subject.packages, ", ")}): ${confirmHoldRuns(runs)} after ${A.length(runs)} run(s)`
+          `[holds] ${holdProposition(version).holdId} (${holdProposition(version).kind}, ${A.join(holdProposition(version).subject.packages, ", ")}): ${confirmHoldRuns(runs)} after ${A.length(runs)} run(s)`
       ),
     { concurrency: 1 }
   );
@@ -126,17 +137,21 @@ export const runHoldsProbe = Effect.fn("Holds.probeProgram")(function* (input: H
   );
   const ledger = yield* HoldLedger;
   const probe = yield* HoldProbe;
-  const currentVersions1 = yield* ledger.currentVersions;
+  const currentVersions1 = yield* ledger.currentClaims;
   const version = yield* pipe(
     currentVersions1,
-    A.findFirst((candidate) => candidate.proposition.holdId === id),
+    A.findFirst((candidate) => holdProposition(candidate).holdId === id),
     O.match({
       onNone: () => HoldsError.make({ reason: "not-found", message: `No current hold record named ${id}.` }),
       onSome: Effect.succeed,
     })
   );
   const run = yield* probe.probe(
-    HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha: input.commitSha })
+    HoldProbeRequest.make({
+      proposition: holdProposition(version),
+      claim: version.reference,
+      commitSha: input.commitSha,
+    })
   );
   const report = [
     `[holds] ${id}`,
@@ -157,7 +172,7 @@ const manifestsNamedBy = liveAnchorValues((anchor) =>
   anchor._tag === "ManifestDependency" ? O.some(anchor.manifest) : O.none()
 );
 
-const lintSnapshot = Effect.fn("Holds.lintSnapshot")(function* (live: ReadonlyArray<HoldClaimVersion>) {
+const lintSnapshot = Effect.fn("Holds.lintSnapshot")(function* (live: ReadonlyArray<HoldClaim>) {
   const sites = yield* HoldSites;
   const snapshot = yield* sites.snapshot(manifestsNamedBy(live));
   return lintHolds(snapshot, live);
@@ -175,69 +190,60 @@ const goneAnchorsByHold = (findings: ReadonlyArray<HoldLintFinding>): HashMap.Ha
       : gone
   );
 
-// Version ids are not guaranteed consecutive, so skip any id the ledger already uses.
-const unusedVersionId = (holdId: string, n: number, taken: HashSet.HashSet<string>): typeof HoldVersionId.Type =>
-  HashSet.has(taken, `${holdId}@${n}`) ? unusedVersionId(holdId, n + 1, taken) : HoldVersionId.make(`${holdId}@${n}`);
-
 // Every anchor the lint can check is gone, so nothing in config still enforces the hold.
-const isFullyOrphaned = (version: HoldClaimVersion, gone: ReadonlyArray<string>): boolean =>
+const isFullyOrphaned = (version: HoldClaim, gone: ReadonlyArray<string>): boolean =>
   A.length(gone) ===
-  A.length(A.filter(version.proposition.subject.anchors, (anchor) => anchor._tag !== "SyncpackHeld"));
+  A.length(A.filter(holdProposition(version).subject.anchors, (anchor) => anchor._tag !== "SyncpackHeld"));
 
-// The tombstone keeps the proposition so a re-introduced hold can cite what was retired.
 const retract =
-  (all: ReadonlyArray<HoldClaimVersion>, at: DateTime.Utc) =>
-  (version: HoldClaimVersion, reason: string): HoldClaimVersion => ({
-    ...version,
-    id: unusedVersionId(
-      version.proposition.holdId,
-      A.length(A.filter(all, (row) => row.logicalKey === version.logicalKey)) + 1,
-      HashSet.fromIterable(A.map(all, (row) => row.id))
-    ),
-    supersedes: O.some(version.id),
-    knowledge: { ...version.knowledge, recordedAt: at },
-    review: { _tag: "Retracted", reason, at },
-  });
+  (at: DateTime.Utc) =>
+  (version: HoldClaim, reason: string): HoldClaimEvent =>
+    HoldClaimEvent.cases.Review.make({
+      claim: version.reference,
+      review: HoldReviewState.cases.Retracted.make({ reason, at }),
+      at,
+    });
 
 const tombstonesFor = Effect.fn("Holds.tombstones")(function* (
-  all: ReadonlyArray<HoldClaimVersion>,
-  live: ReadonlyArray<HoldClaimVersion>,
+  live: ReadonlyArray<HoldClaim>,
   gone: HashMap.HashMap<string, ReadonlyArray<string>>
 ) {
   const now3 = yield* DateTime.now;
-  const tombstone = retract(all, now3);
+  const tombstone = retract(now3);
   return A.getSomes(
     A.map(live, (version) =>
       pipe(
-        HashMap.get(gone, version.proposition.holdId),
+        HashMap.get(gone, holdProposition(version).holdId),
         O.filter((keys) => isFullyOrphaned(version, keys)),
-        O.map((keys) => tombstone(version, `Anchor gone: ${A.join(keys, ", ")}.`))
+        O.map((keys) => ({ version, event: tombstone(version, `Anchor gone: ${A.join(keys, ", ")}.`) }))
       )
     )
   );
 });
 
 const writeLintFixes = Effect.fn("Holds.writeLintFixes")(function* (
-  live: ReadonlyArray<HoldClaimVersion>,
+  live: ReadonlyArray<HoldClaim>,
   findings: ReadonlyArray<HoldLintFinding>
 ) {
   const ledger = yield* HoldLedger;
   const gone = goneAnchorsByHold(findings);
-  const allVersions4 = yield* ledger.allVersions;
-  const tombstones = yield* tombstonesFor(allVersions4, live, gone);
-  yield* ledger.appendVersions(tombstones);
-  const currentVersions5 = yield* ledger.currentVersions;
+  const tombstones = yield* tombstonesFor(live, gone);
+  yield* ledger.appendEvents(A.map(tombstones, (tombstone) => tombstone.event));
+  const currentVersions5 = yield* ledger.currentClaims;
   yield* ledger.writeHeldList(heldListFor(currentVersions5));
   // A hold that lost only some anchors may still apply, so it stays live and the lint keeps failing on it.
   const kept = A.filter(live, (version) =>
-    O.exists(HashMap.get(gone, version.proposition.holdId), (keys) => !isFullyOrphaned(version, keys))
+    O.exists(HashMap.get(gone, holdProposition(version).holdId), (keys) => !isFullyOrphaned(version, keys))
   );
   return [
-    ...A.map(tombstones, (tombstone) => `[holds] tombstoned ${tombstone.id}: ${tombstone.proposition.holdId}`),
+    ...A.map(
+      tombstones,
+      ({ version }) => `[holds] tombstoned ${holdClaimLabel(version)}: ${holdProposition(version).holdId}`
+    ),
     ...A.map(
       kept,
       (version) =>
-        `[holds] kept ${version.proposition.holdId}: some anchors remain; update or retire the record by hand`
+        `[holds] kept ${holdProposition(version).holdId}: some anchors remain; update or retire the record by hand`
     ),
   ];
 });
@@ -267,17 +273,17 @@ const writeLintFixes = Effect.fn("Holds.writeLintFixes")(function* (
  */
 export const runHoldsLint = Effect.fn("Holds.lintProgram")(function* (write: boolean) {
   const ledger = yield* HoldLedger;
-  const before = yield* ledger.currentVersions;
+  const before = yield* ledger.currentClaims;
   const initial = yield* lintSnapshot(before);
   const written = write ? yield* writeLintFixes(before, initial) : [];
-  const findings = write ? yield* yield* Effect.map(ledger.currentVersions, lintSnapshot) : initial;
+  const findings = write ? yield* yield* Effect.map(ledger.currentClaims, lintSnapshot) : initial;
   if (A.isReadonlyArrayNonEmpty(findings)) {
     return yield* HoldsError.make({
       reason: "lint",
       message: A.join([...written, ...A.map(findings, holdLintFindingText)], "\n"),
     });
   }
-  const currentVersions6 = yield* ledger.currentVersions;
+  const currentVersions6 = yield* ledger.currentClaims;
   return A.append(written, `[holds] lint ok: ${A.length(currentVersions6)} live hold(s) cover every site.`);
 });
 
@@ -307,53 +313,53 @@ export class HoldsUpdateInput extends S.Opaque<HoldsUpdateInput, { readonly bran
   )
 ) {}
 
-const exitText = (version: HoldClaimVersion): string =>
-  HoldExitAction.match(version.proposition.exitAction, {
+const exitText = (version: HoldClaim): string =>
+  HoldExitAction.match(holdProposition(version).exitAction, {
     Unpin: () => "Unpin",
     Rewrite: ({ path }) => `Rewrite ${path}`,
     EscalateToGoal: ({ slug }) => `EscalateToGoal goals/${slug}`,
   });
 
 // A probe that cannot run returns no run, so its hold keeps whatever it had and cannot be retired this time.
-const probeNow = Effect.fn("Holds.probeNow")(function* (version: HoldClaimVersion, commitSha: string) {
+const probeNow = Effect.fn("Holds.probeNow")(function* (version: HoldClaim, commitSha: string) {
   const probe = yield* HoldProbe;
   return yield* probe
-    .probe(HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha }))
+    .probe(HoldProbeRequest.make({ proposition: holdProposition(version), claim: version.reference, commitSha }))
     .pipe(
       Effect.map((run) => ({
         run: O.some(run),
-        line: `[holds] probed ${version.proposition.holdId}: ${run.verdict} (candidate ${run.candidateVersion})`,
+        line: `[holds] probed ${holdProposition(version).holdId}: ${run.verdict} (candidate ${run.candidateVersion})`,
       })),
       Effect.catchTag("HoldsError", (error) =>
         Effect.succeed({
           run: O.none<ProbeRun>(),
-          line: `[holds] probe of ${version.proposition.holdId} did not run; the hold stays: ${error.message}`,
+          line: `[holds] probe of ${holdProposition(version).holdId} did not run; the hold stays: ${error.message}`,
         })
       )
     );
 });
 
-const flipLine = (version: HoldClaimVersion, unpinned: boolean, dryRun: boolean): string =>
+const flipLine = (version: HoldClaim, unpinned: boolean, dryRun: boolean): string =>
   unpinned
-    ? `[holds] ${dryRun ? "would unpin" : "unpinned"} ${version.proposition.holdId}: flipped; dropped from the held list for this catalog bump`
-    : `[holds] flipped ${version.proposition.holdId}: its exit (${exitText(version)}) needs a reviewed change`;
+    ? `[holds] ${dryRun ? "would unpin" : "unpinned"} ${holdProposition(version).holdId}: flipped; dropped from the held list for this catalog bump`
+    : `[holds] flipped ${holdProposition(version).holdId}: its exit (${exitText(version)}) needs a reviewed change`;
 
 const maxLifetimeMillis = 180 * 24 * 60 * 60 * 1000;
 
 // A hold past its lease or its 180-day lifetime escalates whatever its probe says.
-const escalationLine = (all: ReadonlyArray<HoldClaimVersion>, now: DateTime.Utc) => (version: HoldClaimVersion) => {
+const escalationLine = (all: ReadonlyArray<HoldClaim>, now: DateTime.Utc) => (version: HoldClaim) => {
   const firstRecorded = A.reduce(
     A.filter(all, (row) => row.logicalKey === version.logicalKey),
-    DateTime.toEpochMillis(version.knowledge.recordedAt),
-    (earliest, row) => Math.min(earliest, DateTime.toEpochMillis(row.knowledge.recordedAt))
+    DateTime.toEpochMillis(version.knowledge.start),
+    (earliest, row) => Math.min(earliest, DateTime.toEpochMillis(row.knowledge.start))
   );
   const leaseOver =
-    version.validTime._tag === "Interval" &&
-    O.exists(version.validTime.validTo, (validTo) => DateTime.toEpochMillis(validTo) < DateTime.toEpochMillis(now));
+    version.valid._tag === "Interval" &&
+    O.exists(version.valid.validTo, (validTo) => DateTime.toEpochMillis(validTo) < DateTime.toEpochMillis(now));
   const lifetimeOver = DateTime.toEpochMillis(now) - firstRecorded > maxLifetimeMillis;
   return leaseOver || lifetimeOver
     ? O.some(
-        `[holds] escalate ${version.proposition.holdId}: ${lifetimeOver ? "older than 180 days" : "lease ended"}; exit ${exitText(version)}, or renew with fresh evidence`
+        `[holds] escalate ${holdProposition(version).holdId}: ${lifetimeOver ? "older than 180 days" : "lease ended"}; exit ${exitText(version)}, or renew with fresh evidence`
       )
     : O.none();
 };
@@ -394,7 +400,7 @@ const escalationLine = (all: ReadonlyArray<HoldClaimVersion>, now: DateTime.Utc)
 export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input: HoldsUpdateInput) {
   const ledger = yield* HoldLedger;
   const now = yield* DateTime.now;
-  const live = yield* ledger.currentVersions;
+  const live = yield* ledger.currentClaims;
   const stored = yield* Effect.forEach(
     live,
     (version) => Effect.map(ledger.runsFor(version), (runs) => [version, runs] as const),
@@ -404,7 +410,7 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
   const toProbe = A.filter(
     stored,
     ([version, runs]) =>
-      version.proposition.falsifier._tag === "Scripted" &&
+      holdProposition(version).falsifier._tag === "Scripted" &&
       (isProbeDue(version, now) || confirmHoldRuns(runs) === "Flipped")
   );
   const probed = yield* Effect.forEach(
@@ -414,32 +420,34 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
   );
   // Plan on the fresh runs in memory, so a dry run previews what a real run would do.
   const verdicts = A.map(stored, ([version, runs]) => {
-    const fresh = A.findFirst(probed, (entry) => entry.version.id === version.id);
+    const fresh = A.findFirst(probed, (entry) => holdClaimKey(entry.version) === holdClaimKey(version));
     const freshRun = O.flatMap(fresh, (entry) => entry.run);
     const failed = O.isSome(fresh) && O.isNone(freshRun);
     return { version, freshRun, flipped: !failed && confirmHoldRuns([...O.toArray(freshRun), ...runs]) === "Flipped" };
   });
   // A hold past its lease or 180-day lifetime escalates whatever its probe says, so it is never auto-retired.
-  const allVersions7 = yield* ledger.allVersions;
+  const allVersions7 = yield* ledger.allClaims;
   const escalate = escalationLine(allVersions7, now);
   const flipped = A.filter(verdicts, (entry) => entry.flipped);
   const unpinned = A.filter(
     flipped,
-    (entry) => O.isSome(entry.freshRun) && isUnpinnedByCatalogBump(entry.version) && O.isNone(escalate(entry.version))
+    (entry) =>
+      O.isSome(entry.freshRun) &&
+      isUnpinnedByCatalogBump(holdProposition(entry.version)) &&
+      O.isNone(escalate(entry.version))
   );
   if (!input.dryRun) {
     yield* Effect.forEach(A.getSomes(A.map(probed, (entry) => entry.run)), ledger.appendRun, {
       concurrency: 1,
       discard: true,
     });
-    const allVersions8 = yield* ledger.allVersions;
-    const tombstone = retract(allVersions8, now);
-    yield* ledger.appendVersions(
+    const tombstone = retract(now);
+    yield* ledger.appendEvents(
       A.map(unpinned, ({ version }) =>
         tombstone(version, "Flipped: the candidate passed twice, the newest run today; unpinned by deps:update.")
       )
     );
-    const currentVersions9 = yield* ledger.currentVersions;
+    const currentVersions9 = yield* ledger.currentClaims;
     yield* ledger.writeHeldList(heldListFor(currentVersions9));
   }
   return [
@@ -447,7 +455,7 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     ...A.map(flipped, ({ version }) =>
       flipLine(
         version,
-        A.some(unpinned, (entry) => entry.version.id === version.id),
+        A.some(unpinned, (entry) => holdClaimKey(entry.version) === holdClaimKey(version)),
         input.dryRun
       )
     ),
@@ -456,29 +464,29 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
   ];
 });
 
-const leaseText = (version: HoldClaimVersion): string =>
-  version.validTime._tag === "Interval"
-    ? O.match(version.validTime.validTo, {
+const leaseText = (version: HoldClaim): string =>
+  version.valid._tag === "Interval"
+    ? O.match(version.valid.validTo, {
         onNone: () => "open lease",
         onSome: (validTo) => `lease to ${validTo.pipe(DateTime.formatIso, Str.slice(0, 10))}`,
       })
     : "unknown lease";
 
-const falsifierText = (version: HoldClaimVersion): string =>
-  HoldFalsifier.match(version.proposition.falsifier, {
+const falsifierText = (version: HoldClaim): string =>
+  HoldFalsifier.match(holdProposition(version).falsifier, {
     Scripted: ({ runtime, command, controlVersion, candidate }) =>
       `scripted (${runtime}) \`${A.join(command, " ")}\`, control ${controlVersion}, candidate ${candidate}`,
     Judgement: ({ question }) => `judgement: ${question}`,
   });
 
-const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaimVersion, versionCount: number) {
+const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaim, versionCount: number) {
   const ledger = yield* HoldLedger;
-  const proposition = head.proposition;
+  const proposition = holdProposition(head);
   // Same liveness as `liveHoldVersions`; only a live head reads probe runs, so damaged run history cannot hide a retirement.
   const status =
     head.review._tag === "Retracted"
       ? `tombstoned ${head.review.at.pipe(DateTime.formatIso, Str.slice(0, 10))}: ${head.review.reason}`
-      : yield* O.match(head.knowledge.expiredAt, {
+      : yield* O.match(head.knowledge.end, {
           onSome: (at) => Effect.succeed(`expired ${at.pipe(DateTime.formatIso, Str.slice(0, 10))}, not live`),
           onNone: () =>
             Effect.map(ledger.runsFor(head), (runs) => `live, ${leaseText(head)}, confirmed ${confirmHoldRuns(runs)}`),
@@ -488,7 +496,7 @@ const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaimVersion, 
     `  assertion: ${proposition.assertion}`,
     `  probe: ${falsifierText(head)}`,
     `  exit: ${exitText(head)}; anchors: ${A.join(A.map(proposition.subject.anchors, anchorKey), ", ")}`,
-    `  evidence: ${A.join(head.supportedBy, ", ")}; ${versionCount} version(s)`,
+    `  evidence: ${A.join(head.evidence.supportedBy, ", ")}; ${versionCount} version(s)`,
   ];
 });
 
@@ -512,12 +520,13 @@ const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaimVersion, 
  */
 export const runHoldsWhy = Effect.fn("Holds.whyProgram")(function* (packageName: string) {
   const ledger = yield* HoldLedger;
-  const all = yield* ledger.allVersions;
-  const superseded = HashSet.fromIterable(A.getSomes(A.map(all, (row) => row.supersedes)));
+  const all = yield* ledger.allClaims;
+  const superseded = HashSet.fromIterable(A.getSomes(A.map(all, (row) => O.map(row.predecessor, claimReferenceKey))));
   const heads = A.filter(
     all,
     (row) =>
-      !HashSet.has(superseded, row.id) && A.some(row.proposition.subject.packages, holdPackageMatches(packageName))
+      !HashSet.has(superseded, holdClaimKey(row)) &&
+      A.some(holdProposition(row).subject.packages, holdPackageMatches(packageName))
   );
   if (A.isReadonlyArrayEmpty(heads)) {
     return [`[holds] no hold record governs ${packageName}.`];

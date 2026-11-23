@@ -3,6 +3,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -22,6 +24,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { KbError } from "./Kb.errors.ts";
 import { hasKbCanary } from "./Kb.projection.ts";
+import { kbClaimKey, kbClaimLabel, kbProposition } from "./Kb.schemas.ts";
 import { KbLedger, selectKb } from "./Kb.service.ts";
 import {
   KbGraph,
@@ -31,7 +34,7 @@ import {
   KbGraphNode,
   KbRegistryNode,
 } from "./KbGraph.schemas.ts";
-import type { Assertion, Audience, KbClaim, KbView } from "./Kb.schemas.ts";
+import type { Assertion, Audience, KbReviewState, KbView } from "./Kb.schemas.ts";
 import type { KbGraphConfidence, KbGraphReview } from "./KbGraph.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Kb/KbGraph.service");
@@ -69,7 +72,7 @@ const confidenceOf = (evidence: ReadonlyArray<Assertion>): KbGraphConfidence => 
 const isHttpUrl = (value: string): boolean => Str.startsWith("https://")(value) || Str.startsWith("http://")(value);
 /** Outward graphs never expose capture-system locators (local paths); a public URL or the derivation basis stands in. */
 const basisLabel = { "public-source": "public source", "own-public-work": "own public work", none: "self-report" };
-const review = Match.type<KbClaim["review"]>().pipe(
+const review = Match.type<KbReviewState>().pipe(
   Match.tagsExhaustive({
     Proposed: (): KbGraphReview => "proposed",
     Accepted: (): KbGraphReview => "accepted",
@@ -125,15 +128,17 @@ export const makeKbGraphExport = Effect.gen(function* () {
     const metadata = HashMap.fromIterable(A.map(registry, (node) => Tuple.make(node.id, node)));
     const selected = selectKb(loaded.claims, loaded.assertions, view);
     // The graph is a current-state view in both disclosures; superseded versions stay in the N-Quads history.
-    const superseded = HashSet.fromIterable(A.getSomes(A.map(loaded.claims, (c) => c.supersedes)));
-    const current = A.filter(selected.claims, (c) => !HashSet.has(superseded, c.id));
+    const superseded = HashSet.fromIterable(
+      A.getSomes(A.map(loaded.claims, (c) => O.map(c.predecessor, claimReferenceKey)))
+    );
+    const current = A.filter(selected.claims, (c) => !HashSet.has(superseded, kbClaimKey(c)));
     let nodes = HashMap.empty<string, KbGraphNode>();
     let claims = A.empty<readonly [string, KbGraphClaim]>();
     let links = A.empty<KbGraphLink>();
     let builtAt = "1970-01-01T00:00:00.000Z";
-    for (const c of A.sort(current, byId)) {
+    for (const c of A.sort(current, Order.mapInput(Str.Order, kbClaimLabel))) {
       const evidence = A.sort(
-        A.filter(selected.assertions, (a) => a.claimId === c.id),
+        A.filter(selected.assertions, (a) => claimReferenceKey(a.claim) === kbClaimKey(c)),
         byId
       );
       const audience: Audience = A.reduce(
@@ -142,7 +147,7 @@ export const makeKbGraphExport = Effect.gen(function* () {
         (strictest: Audience, a): Audience =>
           audienceRank[a.audience] > audienceRank[strictest] ? a.audience : strictest
       );
-      const recordedAt = DateTime.formatIso(c.knowledge.recordedAt);
+      const recordedAt = DateTime.formatIso(c.knowledge.start);
       if (recordedAt > builtAt) builtAt = recordedAt;
       const disposition = review(c.review);
       const confidence = confidenceOf(evidence);
@@ -159,25 +164,28 @@ export const makeKbGraphExport = Effect.gen(function* () {
       });
       claims = A.append(
         claims,
-        Tuple.make(c.id, KbGraphClaim.make({ text: c.proposition.text, review: disposition, confidence, assertions }))
+        Tuple.make(
+          kbClaimLabel(c),
+          KbGraphClaim.make({ text: kbProposition(c).text, review: disposition, confidence, assertions })
+        )
       );
-      const p = c.proposition;
+      const p = kbProposition(c);
       links = A.append(
         links,
         KbGraphLink.make({
-          id: `edge/${c.id}`,
+          id: `edge/${kbClaimLabel(c)}`,
           source: p.subject,
           target: p.object,
           predicate: `kb:${p._tag}`,
           label: Str.toLowerCase(Str.replace(/([a-z])([A-Z])/g, "$1 $2")(p._tag)),
-          claimId: c.id,
+          claimId: kbClaimLabel(c),
           audience,
           review: disposition,
           confidence,
-          ...(c.validTime._tag === "Interval"
+          ...(c.valid._tag === "Interval"
             ? {
-                validFrom: DateTime.formatIso(c.validTime.validFrom),
-                ...OptionUtils.getSomesStruct({ validTo: O.map(c.validTime.validTo, DateTime.formatIso) }),
+                validFrom: DateTime.formatIso(c.valid.validFrom),
+                ...OptionUtils.getSomesStruct({ validTo: O.map(c.valid.validTo, DateTime.formatIso) }),
               }
             : {}),
         })
@@ -191,7 +199,7 @@ export const makeKbGraphExport = Effect.gen(function* () {
           O.map((n) => n.claimIds),
           O.getOrElse(() => []),
           HashSet.fromIterable,
-          HashSet.add(c.id),
+          HashSet.add(kbClaimLabel(c)),
           A.fromIterable,
           A.sort(Str.Order)
         );

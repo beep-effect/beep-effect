@@ -5,7 +5,7 @@
  */
 
 import { ValidTime } from "@beep/epistemics/Claim";
-import { EvidenceSignals, SourceAssertion } from "@beep/party-domain/Claim";
+import { ClaimLedger, EvidenceSignals, mergeClaimLedgers, SourceAssertion } from "@beep/party-domain/Claim";
 import { DirectoryRow } from "@beep/party-domain/Communication";
 import { emailAddress, phoneNumber } from "@beep/party-domain/Identifier";
 import { ArtifactOccurrenceId, AssertionId, IdentifierId, ObservationId } from "@beep/party-domain/Ids";
@@ -17,11 +17,12 @@ import { ContactCard, ContactEmailInput, ContactSource, PhoneNumberInput } from 
 import { LedgerSnapshot, PartyLedger } from "@beep/party-use-cases/Ledger";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { claimFromAssertion } from "../../internal/claimFromAssertion.ts";
+import { projectPartyClaim } from "../../internal/claimFromAssertion.ts";
 import { ContactIngest, ContactIngestInput, IngestIdentifier, IngestIssue } from "./ContactEvidence.model.ts";
 import type { Identifier, IdentifierIssue } from "@beep/party-domain/Identifier";
 import type { ContactSourceIngestInput, GraphContactInput } from "./ContactEvidence.model.ts";
@@ -65,7 +66,7 @@ export const ingestContact = Effect.fn("PartyContact.ingestContact")(function* (
       identifiers: [],
       observations: [],
       assertions: [],
-      versions: [],
+      claimLedger: ClaimLedger.make({}),
       issues: [issueOf(source.failure)],
     });
   const collect = Effect.fn("PartyContact.collect")(function* (
@@ -139,14 +140,29 @@ export const ingestContact = Effect.fn("PartyContact.ingestContact")(function* (
       RecordRow.make({ occurrence, rowKey: role.anchor })
     )
   );
-  const versions = A.map(assertions, (assertion) => claimFromAssertion(assertion, { _tag: "Proposed" }, signals));
-  yield* ledger.appendEvidence(LedgerSnapshot.make({ observations: [observation], assertions, versions }));
+  const batches = yield* Effect.forEach(
+    assertions,
+    (assertion) =>
+      projectPartyClaim({
+        proposition: assertion.proposition,
+        assertions: [assertion],
+        validTime: assertion.validTime,
+        review: { _tag: "Proposed" },
+        signals,
+        creation: input.creation,
+        supersedes: O.none(),
+        derivedFrom: HashSet.empty(),
+      }),
+    { concurrency: 1 }
+  );
+  const claimLedger = mergeClaimLedgers(batches);
+  yield* ledger.appendEvidence(LedgerSnapshot.make({ ...claimLedger, observations: [observation], assertions }));
   return ContactIngest.make({
     party: O.some(party),
     identifiers: unique,
     observations: [observation],
     assertions,
-    versions,
+    claimLedger,
     issues,
   });
 });
