@@ -2,7 +2,7 @@
 title: "Environment secrets come from a workstation-only InfraGithubSecrets stack"
 date: 2026-11-23
 lane: "feat/fleet-watch-app-and-env"
-reversal: "Delete secrets.alchemy.run.ts, secrets.env and productionSecretsConfig; the secret stays in GitHub, unmanaged, with its reason restored to awaiting a delivery route."
+reversal: "Delete secrets.alchemy.run.ts, secrets.env, src/Secrets.ts with its index.ts export and test/Secrets.test.ts, the declareSecrets case in test/ReadOnlyProviders.test.ts, and productionSecretsConfig with its README section; the secret stays in GitHub, unmanaged, with its Production.ts reason restored to awaiting a delivery route."
 ---
 
 Ruling relayed by the orchestrator on 2026-11-23: the operator wants the fleet-watch App's secret managed as code, not set by hand. The packet-gate ruling of 2026-11-13 still holds, so no credential that can read 1Password enters CI.

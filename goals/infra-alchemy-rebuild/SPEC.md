@@ -2670,7 +2670,7 @@ Rejected: a scoped 1Password service-account token as an `infra-github-prod` sec
 
 Lane feat/fleet-watch-app-and-env
 
-Reverse: Delete secrets.alchemy.run.ts, secrets.env and productionSecretsConfig; the secret stays in GitHub, unmanaged, with its reason restored to awaiting a delivery route.
+Reverse: Delete secrets.alchemy.run.ts, secrets.env, src/Secrets.ts with its index.ts export and test/Secrets.test.ts, the declareSecrets case in test/ReadOnlyProviders.test.ts, and productionSecretsConfig with its README section; the secret stays in GitHub, unmanaged, with its Production.ts reason restored to awaiting a delivery route.
 
 <!-- beep:decisions:end -->
 

@@ -41,11 +41,12 @@ const scenario = <E>(
   test.provider(name, (stack) => body(typed(stack), fake));
 };
 
-const recordingConfig = () => {
+const recordingConfig = (overrides: Readonly<Record<string, string>> = {}) => {
   const loaded: Array<string> = [];
   const values = ConfigProvider.fromUnknown({
     INFRA_GITHUB_SECRETS_PLANE: "workstation",
     FLEET_WATCH_APP_PRIVATE_KEY: plaintextForTests,
+    ...overrides,
   });
   const provider = ConfigProvider.make((path) => {
     loaded.push(A.join(A.map(path, String), "."));
@@ -75,6 +76,45 @@ scenario(
       expect(A.map(fake.writes(), ({ method, path }) => `${method} ${path}`)).toEqual([
         "PUT /repos/beep-effect/beep-effect/environments/fleet-watch/secrets/FLEET_WATCH_APP_PRIVATE_KEY",
       ]);
+    }),
+  productionStage
+);
+
+scenario(
+  "on prod a set CI variable dies before the key is read or any request is sent",
+  (stack, fake) =>
+    Effect.gen(function* () {
+      const config = recordingConfig({ CI: "true" });
+      const exit = yield* Effect.exit(stack.deploy(config.program));
+      const text = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+      expect(text).toContain("InfraGithubSecrets deploys from a workstation under op run, never from CI.");
+      expect(config.loaded).not.toContain("FLEET_WATCH_APP_PRIVATE_KEY");
+      expect(fake.writes()).toEqual([]);
+    }),
+  productionStage
+);
+
+scenario(
+  "on prod an empty CI variable is not CI and the key still uploads",
+  (stack, fake) =>
+    Effect.gen(function* () {
+      const config = recordingConfig({ CI: "" });
+      yield* stack.deploy(config.program);
+      expect(A.length(fake.writes())).toBe(1);
+    }),
+  productionStage
+);
+
+scenario(
+  "on prod an empty key dies before any declaration, so it never replaces the working secret",
+  (stack, fake) =>
+    Effect.gen(function* () {
+      const config = recordingConfig({ FLEET_WATCH_APP_PRIVATE_KEY: "" });
+      const exit = yield* Effect.exit(stack.deploy(config.program));
+      const text = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+      expect(text).toContain("FLEET_WATCH_APP_PRIVATE_KEY");
+      expect(Str.includes(plaintextForTests)(text)).toBe(false);
+      expect(fake.writes()).toEqual([]);
     }),
   productionStage
 );

@@ -210,7 +210,8 @@ export class SecretsStageIsNotProd extends S.TaggedError<SecretsStageIsNotProd, 
  * with {@link SecretsStageIsNotProd} before any configuration read, so no
  * secret value is loaded and no request is sent. On `prod` it refuses CI,
  * requires `INFRA_GITHUB_SECRETS_PLANE=workstation`, then reads each value
- * as `Redacted` and declares the secrets.
+ * as a non-empty `Redacted` string and declares the secrets. An empty value
+ * dies before any declaration, so it never replaces a working secret.
  *
  * **Example** (Mount the program in a stack)
  *
@@ -236,7 +237,7 @@ export const secretsProgram = Effect.gen(function* () {
   const entries = yield* Effect.forEach(
     productionSecretsConfig.secrets,
     Effect.fnUntraced(function* (spec) {
-      const value = yield* Config.Redacted(spec.name);
+      const value = yield* Config.schema(S.Redacted(S.NonEmptyString), spec.name);
       return [spec.name, value] as const;
     }),
     { concurrency: 1 }
