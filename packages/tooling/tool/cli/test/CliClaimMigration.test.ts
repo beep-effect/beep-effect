@@ -30,7 +30,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -317,7 +317,7 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
       })
     );
 
-    it.effect("refuses a tampered native core, an unmintable core and a forged activity", () =>
+    it.effect("refuses a tampered native core, a malformed native assertion and a forged activity", () =>
       Effect.gen(function* () {
         const { lines, before, head, renew } = yield* holdHistory();
         const renewal = yield* renew(head);
@@ -329,12 +329,31 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         const unmintable = yield* read(
           replaceOnce(core, '"assertion":"Synthetic dependency remains pinned."', '"assertion":"\\ud800"')
         );
-        expect(unmintable).toMatchObject({ reason: "claim-key-mismatch" });
+        strictEqual(unmintable._tag, "SchemaError");
         const forged = yield* read(replaceOnce(core, '"started":6', '"started":5'));
         expect(forged).toMatchObject({ reason: "activity-mismatch" });
         const early = yield* renew(head, { generatedAt: 5 });
         const premature = yield* Effect.flip(planHoldAppend(before.decoded, early.events));
         expect(premature).toMatchObject({ reason: "activity-mismatch" });
+      })
+    );
+
+    it.effect("keeps reading a v1 hold with a lone surrogate but refuses to renew it as a native core", () =>
+      Effect.gen(function* () {
+        const { lines, renew } = yield* holdHistory();
+        const [first, ...rest] = lines;
+        if (first === undefined) return yield* Effect.die("empty hold fixture");
+        const malformed = replaceOnce(
+          first,
+          '"assertion":"Synthetic dependency remains pinned."',
+          '"assertion":"\\ud800"'
+        );
+        const { claims } = yield* readHolds([malformed, ...rest]);
+        const imported = claims[0];
+        if (imported === undefined) return yield* Effect.die("short hold fixture");
+        strictEqual(holdProposition(imported).assertion, "\uD800");
+        const refused = yield* Effect.flip(renew(imported));
+        strictEqual(refused._tag, "SchemaError");
       })
     );
 

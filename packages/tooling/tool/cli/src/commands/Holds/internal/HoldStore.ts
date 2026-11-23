@@ -222,6 +222,8 @@ export const planHoldAppend = Effect.fnUntraced(function* (
   return yield* Effect.forEach(events, (event) => encodeEvent(event), { concurrency: 1 });
 });
 
+const decodeNativeProposition = S.decodeEffect(S.toType(HoldClaimCore.fields.proposition));
+
 /**
  * Build the v2 events of a renewal: a new native core superseding its predecessor.
  *
@@ -244,12 +246,13 @@ export const makeHoldRenewal = Effect.fnUntraced(function* (renewal: {
   readonly knowledgeStart: DateTime.Utc;
   readonly supportedBy: ReadonlyArray<ProbeRunId>;
 }) {
+  const proposition = yield* decodeNativeProposition(renewal.proposition);
   const generatedBy = yield* mintActivityId(renewal.activity);
   const native =
     renewal.predecessor.reference._tag === "Native" ? O.some(renewal.predecessor.reference.claim) : O.none();
   const core = HoldClaimCore.make({
-    proposition: renewal.proposition,
-    logicalKey: holdLogicalKey(renewal.proposition),
+    proposition,
+    logicalKey: holdLogicalKey(proposition),
     supportAtCreation: HashSet.empty(),
     derivedFrom: HashSet.empty(),
     supersedes: native,

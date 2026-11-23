@@ -13,7 +13,9 @@ import { ClaimKnowledgeInterval } from "@beep/epistemics/ClaimLog.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActivityStart } from "@beep/jsonc/ActivityStart";
 import { LiteralKit } from "@beep/schema";
+import { WellFormedText } from "@beep/schema/WellFormedText";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.schemas");
 
@@ -402,9 +404,15 @@ export const HoldPrincipalId = S.NonEmptyString.pipe(
  */
 export const holdLogicalKey = (proposition: HoldProposition): string => `hold:${proposition.holdId}`;
 
+const NativeHoldProposition = HoldProposition.mapFields(Struct.assign({ assertion: WellFormedText })).pipe(
+  $I.annoteSchema("NativeHoldProposition", {
+    description: "A hold proposition a native core asserts: its assertion is well-formed Unicode text.",
+  })
+);
+
 const claimVocabulary = makeClaimCore({
   $I,
-  proposition: HoldProposition,
+  proposition: NativeHoldProposition,
   ids: {
     logicalKey: holdLogicalKey,
     scope: S.NonEmptyString,
