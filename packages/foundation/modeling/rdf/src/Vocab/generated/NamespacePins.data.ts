@@ -143,6 +143,23 @@ export const NamespacePinRows = [
     termsDigest: "sha256:199caae75ed149b4be5a8a7956317b845a49c8757e1041f466be044ef754f9ac"
   },
   {
+    prefix: "np",
+    namespace: "http://www.nanopub.org/nschema#",
+    source: {
+      location: "https://raw.githubusercontent.com/Nanopublication/Guidelines/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.ttl",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/Nanopublication/Guidelines",
+        commit: "8388dd90795b264f4b01c64d0f7218babcae4871"
+      }
+    },
+    license: "LicenseRef-nanopub-nschema-unstated",
+    attribution: "Nanopublication schema, Nanopublication Guidelines. No license is given at commit 8388dd90795b of Nanopublication/Guidelines; the companion nschema.html grants CC BY-SA 3.0 for that document. Only term IRIs are projected to TypeScript.",
+    version: "2013-10-23",
+    digest: "sha256:1275f6a00121f54248899b9a4c39b2511fdbb65b2925a4dc6f4a13174059f649",
+    termsDigest: "sha256:97eb74dd95c8dd5ae18e9b9096c599fd74c8353361ce13aad1e76c6c7305048b"
+  },
+  {
     prefix: "oa",
     namespace: "http://www.w3.org/ns/oa#",
     source: {

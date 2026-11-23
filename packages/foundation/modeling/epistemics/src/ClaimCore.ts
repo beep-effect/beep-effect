@@ -221,19 +221,18 @@ export const makeClaimArrows = <
     }
     const receipts = yield* Effect.forEach(
       verified,
-      (proof) =>
-        Effect.gen(function* () {
-          const receipt = toTextAnchorVerificationReceipt(proof);
-          const occurrence = yield* mintOccurrenceId(Anchored.make({ receipt }));
-          const stored = HashMap.get(document.anchors, occurrence);
-          if (
-            !sameSource(receipt.source, document.text) ||
-            !O.exists(stored, (stored) => sameReceipt(stored.receipt, receipt))
-          ) {
-            return yield* ClaimCoreInvalid.make({ reason: "invalid-creation-support" });
-          }
-          return occurrence;
-        }),
+      Effect.fnUntraced(function* (proof: VerifiedTextAnchor) {
+        const receipt = toTextAnchorVerificationReceipt(proof);
+        const occurrence = yield* mintOccurrenceId(Anchored.make({ receipt }));
+        const stored = HashMap.get(document.anchors, occurrence);
+        if (
+          !sameSource(receipt.source, document.text) ||
+          !O.exists(stored, (stored) => sameReceipt(stored.receipt, receipt))
+        ) {
+          return yield* ClaimCoreInvalid.make({ reason: "invalid-creation-support" });
+        }
+        return occurrence;
+      }),
       { concurrency: 1 }
     );
     const occurrences = HashSet.fromIterable(receipts);

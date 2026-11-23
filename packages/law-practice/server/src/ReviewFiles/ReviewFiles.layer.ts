@@ -7,11 +7,15 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { AnswerRow, ReviewItem, VerdictRow } from "@beep/law-practice-domain";
+import { AnswerRow, VerdictRow } from "@beep/law-practice-domain";
 import { AnswerLog, AnswerLogError } from "@beep/law-practice-use-cases/QuestionQueue";
-import { latestItems, ReviewItemStore, ReviewItemStoreError } from "@beep/law-practice-use-cases/ReviewItemStore";
+import {
+  latestItems,
+  planReviewItemWrite,
+  ReviewItemStore,
+  ReviewItemStoreError,
+} from "@beep/law-practice-use-cases/ReviewItemStore";
 import { VerdictLog, VerdictLogError } from "@beep/law-practice-use-cases/ReviewQueue";
-import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -19,6 +23,8 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { makeJsonlLog } from "../internal/JsonlLog.ts";
+import { ReviewItemLine } from "../internal/ReviewItemLine.ts";
+import type { ReviewItem } from "@beep/law-practice-domain";
 import type * as FileSystem from "effect/FileSystem";
 
 const $I = $LawPracticeServerId.create("ReviewFiles/ReviewFiles.layer");
@@ -50,8 +56,6 @@ export class ReviewFilesConfig extends S.Opaque<ReviewFilesConfig, { readonly br
     })
   )
 ) {}
-
-const sameItem = S.toEquivalence(ReviewItem);
 
 const verdictLog = (file: string) =>
   Effect.map(
@@ -87,20 +91,25 @@ const reviewItemStore = (file: string) =>
   Effect.map(
     makeJsonlLog({
       file,
-      schema: ReviewItem,
+      schema: ReviewItemLine,
       readFailure: (reason, cause) => ReviewItemStoreError.make({ cause: O.some(cause), operation: "read", reason }),
       appendFailure: (reason, cause) =>
         ReviewItemStoreError.make({ cause: O.some(cause), operation: "upsert", reason }),
     }),
     (log) => {
       const list = Effect.map(log.rows, latestItems);
+      const write = Effect.fnUntraced(function* (items: ReadonlyArray<ReviewItem>, repair: boolean) {
+        const plan = planReviewItemWrite({ items, repair, stored: yield* list });
+        yield* log.append(plan.write);
+        return plan.held;
+      });
       return ReviewItemStore.of({
         list: list.pipe(Effect.withSpan("ReviewFiles.listItems")),
-        // Only items that differ from their stored version are appended, so
-        // storing the same items again leaves the file as it is.
         upsert: Effect.fn("ReviewFiles.upsertItems")(function* (items: ReadonlyArray<ReviewItem>) {
-          const stored = yield* list;
-          yield* log.append(A.filter(items, (item) => !A.some(stored, (current) => sameItem(current, item))));
+          return yield* write(items, false);
+        }, log.serialized),
+        repair: Effect.fn("ReviewFiles.repairItems")(function* (items: ReadonlyArray<ReviewItem>) {
+          yield* write(items, true);
         }, log.serialized),
       });
     }
@@ -118,9 +127,13 @@ const reviewItemStore = (file: string) =>
  * an append still in progress, by this process or another, and is left for
  * the next read. Appends to each file are serialized by one permit and synced
  * to disk, and the files are created owner-only.
+ * `items.jsonl` lines are written as `review-item/v2` envelopes; older
+ * untagged v1 lines are read through a frozen reader and never rewritten, a
+ * v1 item with an empty quote reading as a `LegacyReviewItemImported`.
  * `ReviewItemStore.upsert` appends only items that differ from their stored
- * version, and `list` keeps the latest version of each id in first-stored
- * order.
+ * current version and holds ids whose latest version is such an import;
+ * `repair` appends an explicit revision over one. `list` keeps the latest
+ * version of each id in first-stored order.
  *
  * **Example** (Make the store layer)
  *

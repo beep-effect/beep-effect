@@ -34,17 +34,15 @@ export * from "./Admission.ts";
  */
 export * from "./Assessments.ts";
 /**
- * Claim envelope exports: the bitemporal claim version, review state and
- * evidence signals bound to a slice's proposition and ids.
+ * Review coordinates, evidence signals and valid-time vocabulary for claim owners.
  *
- * **Example** (Read the current accepted view)
+ * **Example** (Unknown valid time is never selected)
  *
  * ```ts
- * import { versionsAt } from "@beep/epistemics/Claim"
+ * import { ValidTime, validAt } from "@beep/epistemics/Claim"
  * import * as DateTime from "effect/DateTime"
  *
- * const now = DateTime.makeUnsafe(1_000)
- * console.log(versionsAt([], { asOf: now, validAt: now, states: ["Accepted"] }))
+ * console.log(validAt(ValidTime.cases.Unknown.make({}), DateTime.makeUnsafe(1_000)))
  * ```
  *
  * @category value-objects
@@ -118,6 +116,20 @@ export * from "./ClaimEvidenceReview/index.ts";
  * @since 0.0.0
  */
 export * from "./ClaimGate/index.ts";
+/**
+ * Historical claim imports and explicit identifier namespaces.
+ *
+ * **Example** (Index an imported claim reference)
+ *
+ * ```ts
+ * import { ClaimReference, claimReferenceKey } from "@beep/epistemics"
+ * console.log(claimReferenceKey(ClaimReference.cases.Imported.make({ ledger: "kb", oldId: "claim-1" })))
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./ClaimImport.schema.ts";
 /**
  * Lawful immutable append projections and derivation closure.
  *

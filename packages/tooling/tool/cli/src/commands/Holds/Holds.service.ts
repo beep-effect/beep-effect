@@ -5,11 +5,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { ClaimReference, claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { repoRunOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -17,23 +20,19 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
+import { storedLines } from "../../internal/claims/ClaimHistory.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
-import { liveHoldVersions } from "./Holds.inventory.ts";
-import {
-  HoldClaimVersion,
-  HoldProposition,
-  HoldVersionId,
-  ProbeOutcome,
-  ProbeRun,
-  ProbeRunId,
-} from "./Holds.schemas.ts";
+import { liveHoldClaims } from "./Holds.inventory.ts";
+import { HoldProposition, holdClaimKey, ProbeOutcome, ProbeRun, ProbeRunId } from "./Holds.schemas.ts";
 import { judgeProbeRun } from "./Holds.verdict.ts";
+import { decodeHoldClaimLine, decodeProbeRunLine, joinHoldClaims, planHoldAppend } from "./internal/HoldStore.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as O from "effect/Option";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { ClaimHistoryRefused } from "../../internal/claims/ClaimHistory.ts";
+import type { HoldClaim, HoldClaimEvent } from "./Holds.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.service");
 
@@ -69,19 +68,22 @@ export const holdLedgerDirectory = "hold-ledger";
  */
 export const syncpackHeldListFile = "syncpack-held.generated.json";
 
-const HoldClaimVersionJson = JsonStringCodec(HoldClaimVersion);
 const encodeHeldList = S.encodeUnknownEffect(S.fromJsonString(S.Array(S.String), { space: 2 }));
 const ProbeRunJson = JsonStringCodec(ProbeRun);
 
 /**
- * The in-repo hold ledger: append-only claim versions and probe runs.
+ * The in-repo hold ledger: append-only stored holds, their separate records and probe runs.
  *
- * **Example** (Read current versions through the shape)
+ * **Details**
+ * Frozen v1 rows are read through the declared import transform and are never rewritten;
+ * every append writes hold-claim-record/v2 or hold-probe-run/v2 lines only.
+ *
+ * **Example** (Read current holds through the shape)
  *
  * ```ts
  * import type { HoldLedgerShape } from "@beep/repo-cli/commands/Holds"
  *
- * const current = (ledger: HoldLedgerShape) => ledger.currentVersions
+ * const current = (ledger: HoldLedgerShape) => ledger.currentClaims
  * console.log(typeof current) // "function"
  * ```
  *
@@ -89,16 +91,16 @@ const ProbeRunJson = JsonStringCodec(ProbeRun);
  * @since 0.0.0
  */
 export interface HoldLedgerShape {
-  /** Every claim version in file order, superseded and retracted rows included. */
-  readonly allVersions: Effect.Effect<ReadonlyArray<HoldClaimVersion>, HoldsError>;
+  /** Every stored hold joined with its records, in file order, superseded and retracted holds included. */
+  readonly allClaims: Effect.Effect<ReadonlyArray<HoldClaim>, HoldsError>;
+  /** Append claim events, such as renewals and retirements, after checking them against the history. */
+  readonly appendEvents: (events: ReadonlyArray<HoldClaimEvent>) => Effect.Effect<void, HoldsError>;
   /** Append one probe run. */
   readonly appendRun: (run: ProbeRun) => Effect.Effect<void, HoldsError>;
-  /** Append claim versions, such as tombstones, in order. */
-  readonly appendVersions: (versions: ReadonlyArray<HoldClaimVersion>) => Effect.Effect<void, HoldsError>;
-  /** Current hold versions: not superseded, retracted or expired. */
-  readonly currentVersions: Effect.Effect<ReadonlyArray<HoldClaimVersion>, HoldsError>;
-  /** Probe runs recorded against one claim version, newest first; a changed probe starts with no evidence. */
-  readonly runsFor: (version: HoldClaimVersion) => Effect.Effect<ReadonlyArray<ProbeRun>, HoldsError>;
+  /** Current holds: not superseded, retracted or expired. */
+  readonly currentClaims: Effect.Effect<ReadonlyArray<HoldClaim>, HoldsError>;
+  /** Probe runs recorded against one hold, newest first; a changed probe starts with no evidence. */
+  readonly runsFor: (claim: HoldClaim) => Effect.Effect<ReadonlyArray<ProbeRun>, HoldsError>;
   /** Replace the generated syncpack held list. */
   readonly writeHeldList: (heldList: ReadonlyArray<string>) => Effect.Effect<void, HoldsError>;
 }
@@ -114,7 +116,7 @@ export interface HoldLedgerShape {
  *
  * const program = Effect.gen(function* () {
  *   const ledger = yield* HoldLedger
- *   return yield* ledger.currentVersions
+ *   return yield* ledger.currentClaims
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -123,6 +125,13 @@ export interface HoldLedgerShape {
  * @since 0.0.0
  */
 export class HoldLedger extends Context.Service<HoldLedger, HoldLedgerShape>()($I`HoldLedger`) {}
+
+const refusedError = (refused: ClaimHistoryRefused): HoldsError =>
+  HoldsError.make({
+    reason: "decode",
+    message: `hold history refused (${refused.reason}): ${refused.claim}; repair the ledger before reading verdicts.`,
+    cause: refused,
+  });
 
 /**
  * Build the file-backed ledger rooted at a repository checkout.
@@ -142,6 +151,8 @@ export class HoldLedger extends Context.Service<HoldLedger, HoldLedgerShape>()($
 export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const digest = yield* Digest.Digest;
+  const withDigest = Effect.provideService(Digest.Digest, digest);
   const directory = path.join(repoRoot, holdLedgerDirectory);
   const claimsFile = path.join(directory, "claims.jsonl");
   const runsFile = path.join(directory, "runs.jsonl");
@@ -155,28 +166,33 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
   });
 
   // A line that does not decode could be newer evidence, so a damaged ledger fails instead of reading short.
-  const strictRows = <Row>(file: string, decodeOption: (line: string) => O.Option<Row>) =>
-    readLines(file).pipe(
-      Effect.flatMap((content) => {
-        const { rows, corruptLineCount } = partitionJsonLines(decodeOption)(content);
-        return corruptLineCount > 0
-          ? Effect.fail(
-              HoldsError.make({
-                reason: "decode",
-                message: `${file} has ${corruptLineCount} line(s) that do not decode; repair the ledger before reading verdicts.`,
-              })
-            )
-          : Effect.succeed(rows);
-      })
-    );
+  const strictRows = Effect.fn("HoldLedger.strictRows")(function* <Row, E>(
+    file: string,
+    decode: (line: string) => Effect.Effect<Row, E, Digest.Digest>
+  ) {
+    const content = yield* readLines(file);
+    const decoded = yield* Effect.forEach(storedLines(content), (line) => Effect.result(decode(line)), {
+      concurrency: 1,
+    }).pipe(withDigest);
+    const corruptLineCount = A.length(A.filter(decoded, Result.isFailure));
+    return corruptLineCount > 0
+      ? yield* HoldsError.make({
+          reason: "decode",
+          message: `${file} has ${corruptLineCount} line(s) that do not decode; repair the ledger before reading verdicts.`,
+        })
+      : A.getSuccesses(decoded);
+  });
 
-  const allVersions = strictRows(claimsFile, HoldClaimVersionJson.decodeOption);
-  const currentVersions = Effect.map(allVersions, liveHoldVersions);
+  const claimLines = strictRows(claimsFile, decodeHoldClaimLine);
+  const allClaims = Effect.flatMap(claimLines, (lines) =>
+    joinHoldClaims(lines).pipe(withDigest, Effect.mapError(refusedError))
+  );
+  const currentClaims = Effect.map(allClaims, liveHoldClaims);
 
-  const runsFor = Effect.fn("HoldLedger.runsFor")(function* (version: HoldClaimVersion) {
-    const rows = yield* strictRows(runsFile, ProbeRunJson.decodeOption);
+  const runsFor = Effect.fn("HoldLedger.runsFor")(function* (claim: HoldClaim) {
+    const rows = yield* strictRows(runsFile, decodeProbeRunLine);
     return pipe(
-      A.filter(rows, (run) => run.holdVersionId === version.id),
+      A.filter(rows, (run) => claimReferenceKey(run.claim) === holdClaimKey(claim)),
       A.reverse
     );
   });
@@ -201,14 +217,16 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
     yield* appendLines(runsFile, [line]);
   });
 
-  const appendVersions = Effect.fn("HoldLedger.appendVersions")(function* (versions: ReadonlyArray<HoldClaimVersion>) {
-    if (A.isReadonlyArrayEmpty(versions)) {
+  const appendEvents = Effect.fn("HoldLedger.appendEvents")(function* (events: ReadonlyArray<HoldClaimEvent>) {
+    if (A.isReadonlyArrayEmpty(events)) {
       return;
     }
-    const lines = yield* Effect.forEach(
-      versions,
-      (version) => HoldClaimVersionJson.encode(version).pipe(Effect.mapError(encodeFailure("a hold claim version"))),
-      { concurrency: 1 }
+    const existing = yield* claimLines;
+    const lines = yield* planHoldAppend(existing, events).pipe(
+      withDigest,
+      Effect.mapError((cause) =>
+        cause._tag === "ClaimHistoryRefused" ? refusedError(cause) : encodeFailure("a hold claim event")(cause)
+      )
     );
     yield* appendLines(claimsFile, lines);
   });
@@ -220,7 +238,7 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
       .pipe(Effect.mapError(holdsPlatformError(`Could not write ${heldListFile}`)));
   });
 
-  return HoldLedger.of({ allVersions, currentVersions, runsFor, appendRun, appendVersions, writeHeldList });
+  return HoldLedger.of({ allClaims, currentClaims, runsFor, appendRun, appendEvents, writeHeldList });
 });
 
 /**
@@ -240,11 +258,11 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
 export class HoldProbeRequest extends S.Opaque<HoldProbeRequest, { readonly brand: unique symbol }>()(
   S.Struct({
     commitSha: S.String.check(S.isPattern(/^[0-9a-f]{40}$/)),
-    holdVersionId: HoldVersionId,
+    claim: ClaimReference,
     proposition: HoldProposition,
   }).pipe(
     $I.annoteSchema("HoldProbeRequest", {
-      description: "The hold to probe and the commit the probe run is recorded against.",
+      description: "The hold to probe, its explicit claim reference and the commit the run is recorded against.",
     })
   )
 ) {}
@@ -428,10 +446,10 @@ const runScriptedProbe = Effect.fn("HoldProbe.scripted")(function* (
   );
   const ranAt = yield* DateTime.now;
   return ProbeRun.make({
-    schemaVersion: "hold-probe-run/v1",
+    schemaVersion: "hold-probe-run/v2",
     id: ProbeRunId.make(`${proposition.holdId}@${DateTime.toEpochMillis(ranAt)}`),
     holdId: proposition.holdId,
-    holdVersionId: request.holdVersionId,
+    claim: request.claim,
     ranAt,
     commitSha: request.commitSha,
     runtime: falsifier.runtime,

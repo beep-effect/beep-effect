@@ -3,11 +3,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Line } from "@beep/jsonl/Line";
 import { isUtf16Boundary, TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
@@ -20,10 +22,12 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { decodeKbAssertionLine, decodeKbClaimLine, joinKbClaims, planKbAppend } from "./internal/KbStore.ts";
 import { KbError } from "./Kb.errors.ts";
-import { Assertion, KbClaim, KbReport, KbSnapshot } from "./Kb.schemas.ts";
+import { KbReport, KbSnapshot, kbClaimKey, kbClaimLabel, kbLogicalKey, kbProposition } from "./Kb.schemas.ts";
 import { KbRegistryNode } from "./KbGraph.schemas.ts";
-import type { KbView } from "./Kb.schemas.ts";
+import type { ClaimHistoryRefused } from "../../internal/claims/ClaimHistory.ts";
+import type { Assertion, KbClaim, KbClaimEvent, KbView } from "./Kb.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Kb/Kb.service");
 const internalOnlyKinds = HashSet.make("internal-file");
@@ -55,9 +59,9 @@ type AssertionIndex = HashMap.HashMap<string, Assertion>;
 const flag = (condition: boolean, message: string): ReadonlyArray<string> =>
   condition ? A.of(message) : A.empty<string>();
 const isLinkedFrom = (claim: KbClaim, id: string): boolean =>
-  A.contains(claim.supportedBy, id) || A.contains(claim.challengedBy, id);
+  A.contains(claim.evidence.supportedBy, id) || A.contains(claim.evidence.challengedBy, id);
 const linkViolations = (a: Assertion, claimIndex: ClaimIndex): ReadonlyArray<string> =>
-  O.match(HashMap.get(claimIndex, a.claimId), {
+  O.match(HashMap.get(claimIndex, claimReferenceKey(a.claim)), {
     onNone: () => A.of(`Assertion ${a.id}: missing claim`),
     onSome: (claim) => flag(!isLinkedFrom(claim, a.id), `Assertion ${a.id}: absent from claim evidence links`),
   });
@@ -124,21 +128,24 @@ const everyAssertionViolations = (
 };
 const claimViolations = (c: KbClaim, claimIndex: ClaimIndex, assertionIndex: AssertionIndex): ReadonlyArray<string> =>
   A.flatten([
-    A.flatMap(A.appendAll(c.supportedBy, c.challengedBy), (id) =>
+    A.flatMap(A.flatten([c.evidence.supportedBy, c.evidence.challengedBy]), (id) =>
       flag(
-        !O.exists(HashMap.get(assertionIndex, id), (a) => a.claimId === c.id),
-        `Claim ${c.id}: missing or mismatched assertion ${id}`
+        !O.exists(HashMap.get(assertionIndex, id), (a) => claimReferenceKey(a.claim) === kbClaimKey(c)),
+        `Claim ${kbClaimLabel(c)}: missing or mismatched assertion ${id}`
       )
     ),
     flag(
-      O.exists(c.supersedes, (id) => id === c.id || !HashMap.has(claimIndex, id)),
-      `Claim ${c.id}: invalid supersedes reference`
+      O.exists(O.map(c.predecessor, claimReferenceKey), (id) => id === kbClaimKey(c) || !HashMap.has(claimIndex, id)),
+      `Claim ${kbClaimLabel(c)}: invalid supersedes reference`
     ),
     flag(
-      O.exists(c.supersedes, (id) =>
-        O.exists(HashMap.get(claimIndex, id), (previous) => previous.logicalKey !== c.logicalKey)
+      O.exists(O.map(c.predecessor, claimReferenceKey), (id) =>
+        O.exists(
+          HashMap.get(claimIndex, id),
+          (previous) => kbLogicalKey(kbProposition(previous)) !== kbLogicalKey(kbProposition(c))
+        )
       ),
-      `Claim ${c.id}: supersedes a different proposition`
+      `Claim ${kbClaimLabel(c)}: supersedes a different proposition`
     ),
   ]);
 const isOutwardEligible = (
@@ -147,18 +154,22 @@ const isOutwardEligible = (
   assertions: ReadonlyArray<Assertion>
 ): boolean =>
   c.review._tag === "Accepted" &&
-  !HashSet.has(superseded, c.id) &&
-  O.isNone(c.knowledge.expiredAt) &&
-  A.some(assertions, (a) => a.claimId === c.id && A.contains(c.supportedBy, a.id) && isOutwardAssertion(a));
+  !HashSet.has(superseded, kbClaimKey(c)) &&
+  O.isNone(c.knowledge.end) &&
+  A.some(
+    assertions,
+    (a) =>
+      claimReferenceKey(a.claim) === kbClaimKey(c) && A.contains(c.evidence.supportedBy, a.id) && isOutwardAssertion(a)
+  );
 const outwardEligibleIds = (
   claims: ReadonlyArray<KbClaim>,
   assertions: ReadonlyArray<Assertion>
 ): ReadonlyArray<string> => {
-  const superseded = HashSet.fromIterable(A.getSomes(A.map(claims, (c) => c.supersedes)));
+  const superseded = HashSet.fromIterable(A.getSomes(A.map(claims, (c) => O.map(c.predecessor, claimReferenceKey))));
   return A.sort(
     A.map(
       A.filter(claims, (c) => isOutwardEligible(c, superseded, assertions)),
-      (c) => c.id
+      kbClaimLabel
     ),
     Str.Order
   );
@@ -178,10 +189,14 @@ export const validateKb: {
   (claims: ReadonlyArray<KbClaim>, assertions: ReadonlyArray<Assertion>): KbReport;
   (assertions: ReadonlyArray<Assertion>): (claims: ReadonlyArray<KbClaim>) => KbReport;
 } = dual(2, (claims: ReadonlyArray<KbClaim>, assertions: ReadonlyArray<Assertion>): KbReport => {
-  const claimIndex = HashMap.fromIterable(A.map(claims, (c) => Tuple.make(c.id, c)));
+  const claimIndex = HashMap.fromIterable(A.map(claims, (c) => Tuple.make(kbClaimKey(c), c)));
   const assertionIndex = HashMap.fromIterable(A.map(assertions, (a) => Tuple.make(a.id, a)));
   const violations = A.flatten([
-    flag(HashMap.size(claimIndex) !== A.length(claims), "Duplicate claim ids"),
+    flag(
+      HashMap.size(claimIndex) !== A.length(claims) ||
+        HashSet.size(HashSet.fromIterable(A.map(claims, kbClaimLabel))) !== A.length(claims),
+      "Duplicate claim ids"
+    ),
     flag(HashMap.size(assertionIndex) !== A.length(assertions), "Duplicate assertion ids"),
     everyAssertionViolations(assertions, claimIndex),
     A.flatMap(claims, (c) => claimViolations(c, claimIndex, assertionIndex)),
@@ -211,17 +226,22 @@ export const selectKb: {
 } = dual(3, (claims: ReadonlyArray<KbClaim>, assertions: ReadonlyArray<Assertion>, view: KbView): KbSnapshot => {
   const report = validateKb(claims, assertions);
   const eligible = HashSet.fromIterable(report.valid ? report.outwardEligible : []);
-  const selected = view === "outward" ? A.filter(claims, (c) => HashSet.has(eligible, c.id)) : claims;
-  const selectedIds = HashSet.fromIterable(A.map(selected, (c) => c.id));
+  const selected = view === "outward" ? A.filter(claims, (c) => HashSet.has(eligible, kbClaimLabel(c))) : claims;
+  const selectedIds = HashSet.fromIterable(A.map(selected, (c) => kbClaimKey(c)));
   const evidence = A.filter(
     assertions,
-    (a) => HashSet.has(selectedIds, a.claimId) && (view === "planning" || isOutwardAssertion(a))
+    (a) => HashSet.has(selectedIds, claimReferenceKey(a.claim)) && (view === "planning" || isOutwardAssertion(a))
   );
   return KbSnapshot.make({ claims: selected, assertions: evidence, report });
 });
 
 /**
  * File-backed ledger contract. Root is always supplied by the caller.
+ *
+ * **Details**
+ * Reads accept frozen v1 rows and v2 records line by line; appends write v2 records only and
+ * never rewrite an existing line.
+ *
  * **Example** (Access the service tag)
  * ```ts
  * import { KbLedger } from "@beep/repo-cli/commands/Kb"
@@ -235,8 +255,12 @@ export class KbLedger extends Context.Service<
   {
     readonly read: (root: string) => Effect.Effect<KbSnapshot, KbError>;
     readonly readRegistry: (root: string) => Effect.Effect<ReadonlyArray<KbRegistryNode>, KbError>;
+    readonly append: (root: string, events: ReadonlyArray<KbClaimEvent>) => Effect.Effect<void, KbError>;
   }
 >()($I`KbLedger`) {}
+
+const refusedMessage = (refused: ClaimHistoryRefused): string =>
+  `Claim history refused (${refused.reason}): ${refused.claim}`;
 
 /**
  * Capture platform dependencies inside the ledger implementation.
@@ -252,43 +276,75 @@ export class KbLedger extends Context.Service<
 export const makeKbLedger = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const readRows = Effect.fn("Kb.readRows")(function* <C extends S.Top & { readonly DecodingServices: never }>(
-    schema: C,
-    file: string
-  ) {
-    const text = yield* fs
+  const digest = yield* Digest.Digest;
+  const withDigest = Effect.provideService(Digest.Digest, digest);
+  const readText = (file: string) =>
+    fs
       .readFileString(file)
       .pipe(Effect.mapError(() => KbError.make({ message: `Cannot read ${path.basename(file)}` })));
+  const readRows = Effect.fn("Kb.readRows")(function* <Row, E>(
+    file: string,
+    decode: (text: string, json: unknown) => Effect.Effect<Row, E, Digest.Digest>
+  ) {
+    const text = yield* readText(file);
     return yield* Effect.forEach(
       A.filter(Line.split(text), (line) => !Line.isBlank(line)),
       Effect.fnUntraced(function* (line) {
         const parsed = Line.parseResult(line);
         if (Result.isFailure(parsed))
           return yield* KbError.make({ message: `Malformed JSON in ${path.basename(file)} at byte ${line.offset}` });
-        return yield* S.decodeUnknownEffect(schema)(parsed.success.value).pipe(
+        return yield* decode(line.text, parsed.success.value).pipe(
           Effect.mapError(() =>
             KbError.make({ message: `Invalid row in ${path.basename(file)} at byte ${line.offset}` })
           )
         );
       }),
       { concurrency: 1 }
-    );
+    ).pipe(withDigest);
   });
+  const readClaimLines = (root: string) => readRows(path.join(root, "claims.jsonl"), decodeKbClaimLine);
   return KbLedger.of({
     readRegistry: Effect.fn("KbLedger.readRegistry")(function* (root) {
       const file = path.join(root, "registry.jsonl");
       const exists = yield* fs
         .exists(file)
         .pipe(Effect.mapError(() => KbError.make({ message: "Cannot inspect registry.jsonl" })));
-      const rows = exists ? yield* readRows(KbRegistryNode, file) : [];
+      const rows = exists ? yield* readRows(file, (_text, json) => S.decodeUnknownEffect(KbRegistryNode)(json)) : [];
       if (HashSet.size(HashSet.fromIterable(A.map(rows, (row) => row.id))) !== A.length(rows))
         return yield* KbError.make({ message: "Duplicate registry ids" });
       return rows;
     }),
     read: Effect.fn("KbLedger.read")(function* (root) {
-      const claims = yield* readRows(KbClaim, path.join(root, "claims.jsonl"));
-      const assertions = yield* readRows(Assertion, path.join(root, "assertions.jsonl"));
+      const lines = yield* readClaimLines(root);
+      const claims = yield* joinKbClaims(lines).pipe(
+        withDigest,
+        Effect.mapError((refused) => KbError.make({ message: refusedMessage(refused) }))
+      );
+      const assertions = yield* readRows(path.join(root, "assertions.jsonl"), (_text, json) =>
+        decodeKbAssertionLine(json)
+      );
       return KbSnapshot.make({ claims, assertions, report: validateKb(claims, assertions) });
+    }),
+    append: Effect.fn("KbLedger.append")(function* (root, events) {
+      if (A.isReadonlyArrayEmpty(events)) return;
+      const file = path.join(root, "claims.jsonl");
+      const exists = yield* fs
+        .exists(file)
+        .pipe(Effect.mapError(() => KbError.make({ message: "Cannot inspect claims.jsonl" })));
+      const existing = exists ? yield* readClaimLines(root) : [];
+      const lines = yield* planKbAppend(existing, events).pipe(
+        withDigest,
+        Effect.mapError((cause) =>
+          KbError.make({
+            message: cause._tag === "ClaimHistoryRefused" ? refusedMessage(cause) : "Cannot encode claim records",
+          })
+        )
+      );
+      const text = exists ? yield* readText(file) : "";
+      const separator = Str.isEmpty(text) || Str.endsWith("\n")(text) ? "" : "\n";
+      yield* fs
+        .writeFileString(file, `${separator}${A.join(lines, "\n")}\n`, { flag: "a" })
+        .pipe(Effect.mapError(() => KbError.make({ message: "Cannot append to claims.jsonl" })));
     }),
   });
 });

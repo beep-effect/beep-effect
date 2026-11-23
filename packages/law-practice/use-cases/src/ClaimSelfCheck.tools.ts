@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { TextQuote } from "@beep/law-practice-domain/values";
 import {
   AntecedentFinding,
   ClaimDecompositionError,
@@ -14,6 +13,7 @@ import {
 import { ReviewItem, ReviewItemId } from "@beep/law-practice-domain/values/ReviewItem";
 import { BoxFileId, SourceRef } from "@beep/law-practice-domain/values/SourceRef";
 import { annotateFourHints, FourHintAnnotations } from "@beep/mcp-kit";
+import { QuoteSelector } from "@beep/text/Selector";
 import * as A from "effect/Array";
 import * as Tool from "effect/ai/Tool";
 import * as Effect from "effect/Effect";
@@ -202,7 +202,10 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
       );
       const sourceRefs = O.toArray(
         O.map(request.boxFileId, (boxFileId) =>
-          SourceRef.make({ boxFileId, quote: TextQuote.make({ exact: claim.claimText }) })
+          SourceRef.make({
+            boxFileId,
+            quote: QuoteSelector.make({ exact: claim.claimText, prefix: O.none(), suffix: O.none() }),
+          })
         )
       );
       const item = ReviewItem.cases["claim-finding"].make({

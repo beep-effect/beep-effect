@@ -7,13 +7,13 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { QuoteSelector } from "@beep/text/Selector";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { constTrue } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";
-import { TextQuote } from "./TextQuote.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/SourceRef/SourceRef.model");
 
@@ -198,8 +198,8 @@ const SourceRefCropPageCheck = S.makeFilter(
  *
  * **Details**
  *
- * `quote` retains the review-source TextQuoteSelector shape
- * ({@link TextQuote}); it is unverified selector data. `page` and `crop` decode from optional
+ * `quote` is the shared `@beep/text` {@link QuoteSelector}: an unverified
+ * locator, never an occurrence or a receipt, with a non-empty `exact`. `page` and `crop` decode from optional
  * keys into `Option` values and default to `Option.none()` on construction.
  * When both are present, `crop.page` must equal `page`; decoding and `make`
  * reject a crop taken from another page.
@@ -207,13 +207,14 @@ const SourceRefCropPageCheck = S.makeFilter(
  * **Example** (Build a source reference)
  *
  * ```ts
- * import { SourceRef, TextQuote } from "@beep/law-practice-domain"
+ * import { SourceRef } from "@beep/law-practice-domain"
+ * import { QuoteSelector } from "@beep/text/Selector"
  * import * as O from "effect/Option"
  *
  * const ref = SourceRef.make({
  *   boxFileId: "1234567890",
  *   page: O.some(3),
- *   quote: TextQuote.make({ exact: "a hinge coupling the lid to the base" }),
+ *   quote: QuoteSelector.make({ exact: "a hinge coupling the lid to the base", prefix: O.none(), suffix: O.none() }),
  * })
  *
  * console.log(ref.boxFileId) // "1234567890"
@@ -235,8 +236,8 @@ export class SourceRef extends S.Opaque<SourceRef, { readonly brand: unique symb
         description: "One-based page number of the passage, when known.",
       })
     ),
-    quote: TextQuote.annotateKey({
-      description: "W3C TextQuoteSelector for the passage.",
+    quote: QuoteSelector.annotateKey({
+      description: "W3C quote selector for the passage: its exact text with optional prefix and suffix context.",
     }),
     crop: PageCrop.pipe(
       S.OptionFromOptionalKey,

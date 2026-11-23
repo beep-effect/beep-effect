@@ -11,7 +11,9 @@ import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketReview.schemas");
 
@@ -197,7 +199,197 @@ export const ReviewSide = LiteralKit(["extractor", "critic"]).pipe(
  */
 export type ReviewSide = typeof ReviewSide.Type;
 
+/**
+ * Why a deterministic check could not be decided.
+ *
+ * **Example** (Read the unknown reasons)
+ *
+ * ```ts
+ * import { DeterministicCheckUnknownReason } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DeterministicCheckUnknownReason.literals); // ["document-text-unavailable"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DeterministicCheckUnknownReason = LiteralKit(["document-text-unavailable"]).pipe(
+  $I.annoteSchema("DeterministicCheckUnknownReason", {
+    description:
+      "Why a deterministic check could not be decided: the cited passage is not in the message and an attached document's text is unavailable.",
+  })
+);
+
+/**
+ * Type for {@link DeterministicCheckUnknownReason}.
+ *
+ * **Example** (Type an unknown reason)
+ *
+ * ```ts
+ * import type { DeterministicCheckUnknownReason } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const reason: DeterministicCheckUnknownReason = "document-text-unavailable";
+ * console.log(reason);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DeterministicCheckUnknownReason = typeof DeterministicCheckUnknownReason.Type;
+
+/**
+ * The `Passed` case of {@link DeterministicCheckResult}.
+ *
+ * **Example** (Make a passed result)
+ *
+ * ```ts
+ * import { DeterministicCheckPassed } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DeterministicCheckPassed.make({})._tag); // "Passed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeterministicCheckPassed extends S.Opaque<DeterministicCheckPassed, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("Passed", {}).pipe(
+    $I.annoteSchema("DeterministicCheckPassed", { description: "The reading passed the check." })
+  )
+) {}
+
+/**
+ * The `Failed` case of {@link DeterministicCheckResult}.
+ *
+ * **Example** (Make a failed result)
+ *
+ * ```ts
+ * import { DeterministicCheckFailed } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DeterministicCheckFailed.make({})._tag); // "Failed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeterministicCheckFailed extends S.Opaque<DeterministicCheckFailed, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("Failed", {}).pipe(
+    $I.annoteSchema("DeterministicCheckFailed", {
+      description: "The reading failed the check against text that was all available.",
+    })
+  )
+) {}
+
+/**
+ * The `Unknown` case of {@link DeterministicCheckResult}.
+ *
+ * **Example** (Make an unknown result)
+ *
+ * ```ts
+ * import { DeterministicCheckUnknown } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DeterministicCheckUnknown.make({ reason: "document-text-unavailable" }).reason);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeterministicCheckUnknown extends S.Opaque<DeterministicCheckUnknown, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("Unknown", {
+    reason: DeterministicCheckUnknownReason.annotateKey({ description: "Why the check could not be decided." }),
+  }).pipe(
+    $I.annoteSchema("DeterministicCheckUnknown", {
+      description: "The check could not be decided from the text that was available.",
+    })
+  )
+) {}
+
+/**
+ * Three-valued result of one deterministic check: `Passed`, `Failed`, or
+ * `Unknown` with the reason it could not be decided.
+ *
+ * **Details**
+ *
+ * Only `Passed` lets a gate pass. `Unknown` is never a failure of the
+ * reading: an explanation of it never says that the cited text is wrong.
+ *
+ * **Example** (Match a result)
+ *
+ * ```ts
+ * import { DeterministicCheckResult, DeterministicCheckUnknown } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const result = DeterministicCheckUnknown.make({ reason: "document-text-unavailable" });
+ * console.log(DeterministicCheckResult.guards.Unknown(result)); // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DeterministicCheckResult = S.Union([
+  DeterministicCheckPassed,
+  DeterministicCheckFailed,
+  DeterministicCheckUnknown,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DeterministicCheckResult", { description: "Three-valued result of one deterministic check." })
+);
+
+/**
+ * Type for {@link DeterministicCheckResult}.
+ *
+ * **Example** (Type a result)
+ *
+ * ```ts
+ * import type { DeterministicCheckResult } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const passed = (result: DeterministicCheckResult) => result._tag === "Passed";
+ * console.log(passed);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DeterministicCheckResult = typeof DeterministicCheckResult.Type;
+
+/**
+ * Where a deterministic check result came from: a check this code ran, or a
+ * Boolean result read back from a `docket-check/v1` record.
+ *
+ * **Example** (Guard a provenance)
+ *
+ * ```ts
+ * import { DeterministicCheckProvenance } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DeterministicCheckProvenance.is.current("current")); // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DeterministicCheckProvenance = LiteralKit(["current", "docket-check/v1"]).pipe(
+  $I.annoteSchema("DeterministicCheckProvenance", {
+    description: "Whether a check result was run now or read back from a historical docket-check/v1 Boolean.",
+  })
+);
+
+/**
+ * Type for {@link DeterministicCheckProvenance}.
+ *
+ * **Example** (Type a provenance)
+ *
+ * ```ts
+ * import type { DeterministicCheckProvenance } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const provenance: DeterministicCheckProvenance = "docket-check/v1";
+ * console.log(provenance);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DeterministicCheckProvenance = typeof DeterministicCheckProvenance.Type;
+
 const deterministicCheckSideDefault: ReviewSide = "extractor";
+const deterministicCheckProvenanceDefault: DeterministicCheckProvenance = "current";
 
 /**
  * Result of one deterministic check.
@@ -208,14 +400,15 @@ const deterministicCheckSideDefault: ReviewSide = "extractor";
  * extractor's entry and, when the critic cites text, on the critic's reading
  * too; the others run on the extractor's entry only. `field` is set on the
  * rows that check the text the extractor quoted for one disputed field, so a
- * failure is disputed on that field.
+ * failure is disputed on that field. `provenance` is `docket-check/v1` on a
+ * historical Boolean read back from storage; such a row never passes a gate.
  *
  * **Example** (Make a check result)
  *
  * ```ts
- * import { DeterministicCheck } from "@beep/law-practice-use-cases/DocketIntake";
+ * import { DeterministicCheck, DeterministicCheckPassed } from "@beep/law-practice-use-cases/DocketIntake";
  *
- * console.log(DeterministicCheck.make({ check: "cited-span-exists", passed: true }).passed);
+ * console.log(DeterministicCheck.make({ check: "cited-span-exists", result: DeterministicCheckPassed.make({}) }).result._tag);
  * ```
  *
  * @category models
@@ -225,13 +418,77 @@ export class DeterministicCheck extends S.Opaque<DeterministicCheck, { readonly 
   S.Struct({
     check: DeterministicCheckName.annotateKey({ description: "Which check ran." }),
     field: opt(ReviewField, "The disputed field whose quoted text was checked, on per-field rows."),
-    passed: S.Boolean.annotateKey({ description: "Whether the reading passed it." }),
+    provenance: DeterministicCheckProvenance.pipe(
+      S.withConstructorDefault(Effect.succeed(deterministicCheckProvenanceDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(deterministicCheckProvenanceDefault))
+    ).annotateKey({ description: "Whether the result was run now or read back from a docket-check/v1 Boolean." }),
+    result: DeterministicCheckResult.annotateKey({ description: "Passed, failed, or unknown with its reason." }),
     side: ReviewSide.pipe(
       S.withConstructorDefault(Effect.succeed(deterministicCheckSideDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(deterministicCheckSideDefault))
     ).annotateKey({ description: "Whose reading was checked; the extractor's unless stated." }),
   }).pipe($I.annoteSchema("DeterministicCheck", { description: "Result of one deterministic check on a reading." }))
 ) {}
+
+const DeterministicCheckV1 = S.Struct({
+  check: DeterministicCheckName,
+  field: S.optionalKey(ReviewField),
+  passed: S.Boolean,
+  side: S.optionalKey(ReviewSide),
+}).pipe(
+  $I.annoteSchema("DeterministicCheckV1", {
+    description: "A deterministic check as docket-check/v1 stored it, with a Boolean passed.",
+  })
+);
+
+const DeterministicCheckFromV1 = DeterministicCheckV1.pipe(
+  S.decodeTo(S.toType(DeterministicCheck), {
+    decode: SchemaGetter.transform((v1: typeof DeterministicCheckV1.Type) =>
+      DeterministicCheck.make({
+        check: v1.check,
+        field: O.fromUndefinedOr(v1.field),
+        provenance: "docket-check/v1",
+        result: v1.passed ? DeterministicCheckPassed.make({}) : DeterministicCheckFailed.make({}),
+        side: v1.side ?? deterministicCheckSideDefault,
+      })
+    ),
+    encode: SchemaGetter.forbidden(() => "docket-check/v1 is read only"),
+  }),
+  $I.annoteSchema("DeterministicCheckFromV1", {
+    description:
+      "Read-only projection of a docket-check/v1 Boolean row to a historical check that never passes a gate.",
+  })
+);
+
+/**
+ * Reads a stored deterministic check: a current row as stored, or a
+ * `docket-check/v1` Boolean row as a historical check. Encoding always
+ * writes the current form.
+ *
+ * **Details**
+ *
+ * A v1 row keeps its Boolean as `Passed` or `Failed` with provenance
+ * `docket-check/v1`. That is history, not a fresh verification: the gate
+ * never passes on it, and a resumed review runs its checks again.
+ *
+ * **Example** (Read a v1 row as history)
+ *
+ * ```ts
+ * import { StoredDeterministicCheck } from "@beep/law-practice-use-cases/DocketIntake";
+ * import * as S from "effect/Schema";
+ *
+ * const check = S.decodeUnknownSync(StoredDeterministicCheck)({ check: "cited-span-exists", passed: true });
+ * console.log(check.provenance, check.result._tag); // "docket-check/v1" "Passed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const StoredDeterministicCheck = S.Union([DeterministicCheck, DeterministicCheckFromV1]).pipe(
+  $I.annoteSchema("StoredDeterministicCheck", {
+    description: "A stored deterministic check: current, or a docket-check/v1 Boolean read as history.",
+  })
+);
 
 /**
  * Whether the two independent readings agree on one field.
@@ -348,8 +605,9 @@ export class ReviewDispute extends S.Opaque<ReviewDispute, { readonly brand: uni
  * **Details**
  *
  * `documentText` is the text of the attached documents when the adapter can
- * supply it. Without it a citation can only be checked against the message,
- * and one that is not in the message fails only when no document was attached.
+ * supply it. Without it a citation can only be checked against the message:
+ * one found there passes, and one that is not is unknown when a document was
+ * attached and failed only when none was.
  *
  * **Example** (Make a source text)
  *
@@ -520,8 +778,8 @@ const fieldList = (description: string) =>
  * two runs of the same message (a dry run and a live run, say) can be
  * explained afterwards. It holds no message text: no dates, quotes, titles or
  * finding reasons, only which fields each side disputed, revised, defended or
- * agreed on, the findings' severities, the failed checks, the gate result and
- * the score.
+ * agreed on, the findings' severities, the checks that did not pass, the gate
+ * result and the score.
  *
  * **Example** (Make a round trace)
  *
@@ -551,9 +809,13 @@ export class ReviewRoundTrace extends S.Opaque<ReviewRoundTrace, { readonly bran
     defendedFields: fieldList("Disputed fields the extractor kept this round."),
     disagreedFields: fieldList("Compared fields the two readings differ on."),
     extractorDocketItem: S.Boolean.annotateKey({ description: "Whether the extractor entered a docket item." }),
-    failedChecks: S.Array(DeterministicCheck).annotateKey({ description: "The deterministic checks that failed." }),
+    failedChecks: S.Array(StoredDeterministicCheck).annotateKey({
+      description: "The deterministic checks that did not pass: failed, or unknown with a reason.",
+    }),
     findings: S.Array(ReviewFindingTrace).annotateKey({ description: "The critic's findings, without reasons." }),
-    gatePassed: S.Boolean.annotateKey({ description: "Whether every deterministic check passed." }),
+    gatePassed: S.Boolean.annotateKey({
+      description: "Whether every deterministic check passed, none failed or unknown.",
+    }),
     index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
     revisedFields: fieldList("Disputed fields the extractor changed this round."),
     score: UnitInterval.annotateKey({ description: "Confidence score of the round." }),

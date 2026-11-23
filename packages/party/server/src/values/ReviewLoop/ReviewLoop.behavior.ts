@@ -6,7 +6,13 @@
 
 import { ValidTime } from "@beep/epistemics/Claim";
 import { holdsAt } from "@beep/epistemics/ValidInterval";
-import { EvidenceSignals, ReviewerDisposition, SourceAssertion } from "@beep/party-domain/Claim";
+import {
+  ClaimLedger,
+  EvidenceSignals,
+  mergeClaimLedgers,
+  ReviewerDisposition,
+  SourceAssertion,
+} from "@beep/party-domain/Claim";
 import { AssertionId, Digest } from "@beep/party-domain/Ids";
 import { SourceRecordInput, sourceRecordPartyKey } from "@beep/party-domain/PartyKey";
 import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
@@ -17,12 +23,13 @@ import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { claimFromAssertion } from "../../internal/claimFromAssertion.ts";
+import { projectPartyClaim } from "../../internal/claimFromAssertion.ts";
 import {
   CaseEvidence,
   CaseMailbox,
@@ -38,7 +45,7 @@ import type { PartyId } from "@beep/shared-domain/identity/Party";
 import type { MailboxAnchorInput, ReviewInput, ReviewStatus } from "./ReviewLoop.model.ts";
 
 const digest = (text: string) => Digest.make(bytesToHex(sha256(utf8ToBytes(text))));
-const emptyEvidence = () => ReviewEvidence.make({ assertions: [], versions: [] });
+const emptyEvidence = () => ReviewEvidence.make({ assertions: [], claimLedger: ClaimLedger.make({}) });
 
 const encodeCaseEvidence = S.encodeEffect(S.fromJsonString(CaseEvidence));
 const encodeCollisionDecision = S.encodeEffect(S.fromJsonString(CollisionDecision));
@@ -154,14 +161,22 @@ export const decisionClaims = Effect.fn("PartyReview.decisionClaims")(function* 
       recordedAt: decision.reviewedAt,
     })
   );
-  const versions = A.map(assertions, (assertion) =>
-    claimFromAssertion(
-      assertion,
-      { _tag: "Accepted", disposition: { ...disposition, disposition: "accepted" } },
-      signals
-    )
+  const batches = yield* Effect.forEach(
+    assertions,
+    (assertion) =>
+      projectPartyClaim({
+        proposition: assertion.proposition,
+        assertions: [assertion],
+        validTime: assertion.validTime,
+        review: { _tag: "Accepted", disposition: { ...disposition, disposition: "accepted" } },
+        signals,
+        creation: decision.creation,
+        supersedes: O.none(),
+        derivedFrom: HashSet.empty(),
+      }),
+    { concurrency: 1 }
   );
-  return ReviewEvidence.make({ assertions, versions });
+  return ReviewEvidence.make({ assertions, claimLedger: mergeClaimLedgers(batches) });
 });
 
 /**
@@ -241,7 +256,7 @@ export const applyReviews = Effect.fn("PartyReview.applyReviews")(function* (inp
   while (changed) {
     changed = false;
     const view = resolveParties(
-      A.flatMap(applications, (application) => application.evidence.versions),
+      mergeClaimLedgers(A.map(applications, (application) => application.evidence.claimLedger)),
       input.scope
     );
     const representative = (party: PartyId) =>

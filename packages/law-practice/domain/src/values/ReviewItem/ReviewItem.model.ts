@@ -172,7 +172,7 @@ const ReviewItemDefinition = ReviewItemKind.toTaggedUnion("kind")({
  *     itemId: "claim-finding:1",
  *     text: "Claim 1 element (b) is disclosed by the cited reference.",
  *     claimId: 1,
- *     sourceRefs: [{ boxFileId: "1234567890", page: 3, quote: { exact: "a hinge" } }],
+ *     sourceRefs: [{ boxFileId: "1234567890", page: 3, quote: { _tag: "Quote", exact: "a hinge" } }],
  *   })
  * )
  *

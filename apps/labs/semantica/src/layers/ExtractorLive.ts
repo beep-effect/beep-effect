@@ -1,6 +1,8 @@
-import { Confidence } from "@beep/epistemics/Confidence";
+import { Confidence, ReportedConfidence } from "@beep/epistemics/Confidence";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import { AlignmentSource, alignCandidate } from "@beep/langextract/Alignment";
 import { ExtractionCandidate, LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 import {
@@ -59,6 +61,7 @@ import type { EntityNode } from "@beep/nlp/Graph/Schema";
 import type { Sha256Hex } from "@beep/schema";
 import type {
   EvidenceClaim as EvidenceClaimValue,
+  ExtractionMethod,
   ExtractOutcome as ExtractOutcomeValue,
   LossDeclaration,
 } from "@/schema/Evidence";
@@ -296,15 +299,31 @@ const containingChunk = (chunks: A.NonEmptyReadonlyArray<Chunk>, anchor: TextAnc
     O.getOrElse(() => A.headNonEmpty(chunks))
   );
 
-const evidenceConfidence = (confidence: O.Option<number>): Confidence =>
-  Confidence.make(confidence.pipe(O.getOrElse(() => 1)));
+const hostedProducer = (model: ModelIdentity): ActivityPin =>
+  ActivityPin.cases.Model.make({ model: model.name, version: model.revision });
+
+const patternProducer = (model: ModelIdentity): ActivityPin =>
+  ActivityPin.cases.Engine.make({ engine: model.name, edition: model.revision });
+
+const evidenceConfidence =
+  (method: ExtractionMethod, producer: ActivityPin) =>
+  (confidence: O.Option<number>): ExtractorConfidence =>
+    O.match(confidence, {
+      onNone: () => ExtractorConfidence.cases.Absent.make({ reason: "not-assessed" }),
+      onSome: (value) =>
+        ExtractorConfidence.cases.Present.make({
+          value: ReportedConfidence.make({ value: Confidence.make(value), method, producer: O.some(producer) }),
+        }),
+    });
+
+const hostedConfidence = (model: ModelIdentity) => evidenceConfidence("hosted-langextract", hostedProducer(model));
 
 const makeClaim = Effect.fn("Extractor.makeClaim")(function* (
   canonicalizer: CanonicalizerShape,
   canonical: CanonicalText,
   chunks: A.NonEmptyReadonlyArray<Chunk>,
   body: ClaimBody,
-  confidence: Confidence,
+  confidence: ExtractorConfidence,
   method: "hosted-langextract" | "pattern-wink",
   model: ModelIdentity,
   cacheKey: O.Option<Sha256Hex>
@@ -502,7 +521,7 @@ const endpointClaim = Effect.fn("Extractor.endpointClaim")(function* (
   chunks: A.NonEmptyReadonlyArray<Chunk>,
   baseClaims: ReadonlyArray<EvidenceClaimValue>,
   anchor: TextAnchor,
-  confidence: Confidence,
+  confidence: ExtractorConfidence,
   model: ModelIdentity,
   cacheKey: O.Option<Sha256Hex>
 ) {
@@ -570,7 +589,7 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
       )
     );
   }
-  const confidence = evidenceConfidence(extraction.confidence);
+  const confidence = hostedConfidence(model)(extraction.confidence);
   const subject = yield* endpointClaim(
     canonicalizer,
     canonical,
@@ -698,7 +717,7 @@ export const groundHostedHandoff = Effect.fn("Extractor.groundHostedHandoff")(fu
         canonical,
         chunks,
         nonRelationBody(row.reading, row.anchor),
-        evidenceConfidence(row.reading.confidence),
+        hostedConfidence(model)(row.reading.confidence),
         "hosted-langextract",
         model,
         cacheKey
@@ -830,7 +849,7 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
     canonical,
     chunks,
     body,
-    Confidence.make(O.fromUndefinedOr(entity.confidence).pipe(O.getOrElse(() => 1))),
+    evidenceConfidence("pattern-wink", patternProducer(PATTERN_MODEL_IDENTITY))(O.fromUndefinedOr(entity.confidence)),
     "pattern-wink",
     PATTERN_MODEL_IDENTITY,
     O.none()

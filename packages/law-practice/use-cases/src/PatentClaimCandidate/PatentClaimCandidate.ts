@@ -181,7 +181,7 @@ const patentClaimCandidateError = (cause: unknown): PatentClaimCandidateError =>
 export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(function* (
   input: PatentClaimCandidateInput
 ): Effect.fn.Return<OfficeActionCandidateExtraction, PatentClaimCandidateError> {
-  const [startChar, evidenceQuote] = yield* Effect.fromOption(
+  const anchor = yield* Effect.fromOption(
     claimEvidenceFrom(input.claim, input.sourceText, input.claimsSectionStart, input.claimsSectionEnd),
     () =>
       patentClaimCandidateError(`Claim ${input.claim.claimNumber} does not align to the normalized patent source text.`)
@@ -200,7 +200,7 @@ export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(f
       evidenceFixtureKey,
       fixtureKey,
       identityKey,
-      quote: evidenceQuote,
+      anchor,
       snapshot: {
         activityKind: "patent-document-normalization",
         activityOperation: input.operationId,
@@ -215,7 +215,6 @@ export const patentClaimCandidateFrom = Effect.fn("PatentClaimCandidate.from")(f
         sourceDocumentDigest: input.sourceDocumentDigest ?? null,
         sourceFile: input.sourceFile,
       },
-      startChar,
     })
   ).pipe(Effect.mapError(patentClaimCandidateError));
   return OfficeActionCandidateExtraction.make({ candidate, evidence });

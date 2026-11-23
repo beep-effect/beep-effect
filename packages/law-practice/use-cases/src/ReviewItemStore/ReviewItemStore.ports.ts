@@ -7,9 +7,12 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { isCurrentReviewItem, isLegacyReviewItemImported, ReviewItem, ReviewItemId } from "@beep/law-practice-domain";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import type { ReviewItem } from "@beep/law-practice-domain";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import type { StoredReviewItem } from "@beep/law-practice-domain";
 import type * as Effect from "effect/Effect";
 import type { ReviewItemStoreError } from "./ReviewItemStore.errors.ts";
 
@@ -20,11 +23,16 @@ const $I = $LawPracticeUseCasesId.create("ReviewItemStore/ReviewItemStore.ports"
  *
  * **Details**
  *
- * `upsert` is idempotent by `itemId`: storing an item whose id is already
- * stored replaces it (the latest write wins), and storing the same items
- * again changes nothing. `list` returns the latest version of every item, in
- * the order the ids were first stored. Producers own the items; the queues
- * store only verdicts and answers.
+ * `list` returns the latest version of every item, in the order the ids were
+ * first stored. A stored legacy item whose quote could not become a selector
+ * reads as a `LegacyReviewItemImported` and stays listed for repair.
+ * `upsert` is idempotent by `itemId`: an item equal to its stored current
+ * version is not written again, and any other item is stored as its latest
+ * version, except over an id whose latest version is an unresolved import:
+ * those ids are held, not written, and returned. `repair` stores the given
+ * items as an explicit revision even over an unresolved import; earlier
+ * versions stay stored. Producers own the items; the queues store only
+ * verdicts and answers.
  *
  * **Example** (Name a store method)
  *
@@ -40,9 +48,13 @@ const $I = $LawPracticeUseCasesId.create("ReviewItemStore/ReviewItemStore.ports"
  */
 export interface ReviewItemStoreShape {
   /** The latest version of every stored item, in the order the ids were first stored. */
-  readonly list: Effect.Effect<ReadonlyArray<ReviewItem>, ReviewItemStoreError>;
-  /** Store the items; an item whose id is already stored replaces it. */
-  readonly upsert: (items: ReadonlyArray<ReviewItem>) => Effect.Effect<void, ReviewItemStoreError>;
+  readonly list: Effect.Effect<ReadonlyArray<StoredReviewItem>, ReviewItemStoreError>;
+  /** Store the items as an explicit revision, replacing an unresolved import of the same id. */
+  readonly repair: (items: ReadonlyArray<ReviewItem>) => Effect.Effect<void, ReviewItemStoreError>;
+  /** Store the items; returns the ids held because their latest version is an unresolved import. */
+  readonly upsert: (
+    items: ReadonlyArray<ReviewItem>
+  ) => Effect.Effect<ReadonlyArray<ReviewItemId>, ReviewItemStoreError>;
 }
 
 /**
@@ -66,8 +78,7 @@ export interface ReviewItemStoreShape {
  */
 export class ReviewItemStore extends Context.Service<ReviewItemStore, ReviewItemStoreShape>()($I`ReviewItemStore`) {}
 
-// Replace the item with the same id in place, or add the item at the end.
-const upsertOne = (items: ReadonlyArray<ReviewItem>, item: ReviewItem): Array<ReviewItem> =>
+const upsertOne = <Item extends StoredReviewItem>(items: ReadonlyArray<Item>, item: Item): Array<Item> =>
   A.some(items, ({ itemId }) => itemId === item.itemId)
     ? A.map(items, (stored) => (stored.itemId === item.itemId ? item : stored))
     : A.append(items, item);
@@ -95,8 +106,83 @@ const upsertOne = (items: ReadonlyArray<ReviewItem>, item: ReviewItem): Array<Re
  * console.log(A.map(items, ({ itemId, text }) => `${itemId}:${text}`)) // ["a:Second", "b:Other"]
  * ```
  *
+ * @param versions - Every stored version, in write order.
+ * @returns The latest version of each id, in first-stored order.
  * @category utilities
  * @since 0.0.0
  */
-export const latestItems = (versions: ReadonlyArray<ReviewItem>): ReadonlyArray<ReviewItem> =>
-  A.reduce(versions, A.empty<ReviewItem>(), upsertOne);
+export const latestItems = <Item extends StoredReviewItem>(versions: ReadonlyArray<Item>): ReadonlyArray<Item> =>
+  A.reduce(versions, A.empty<Item>(), upsertOne);
+
+/**
+ * What an upsert or a repair writes, and the ids an upsert holds.
+ *
+ * **Example** (Read an empty plan)
+ *
+ * ```ts
+ * import { ReviewItemWritePlan } from "@beep/law-practice-use-cases/ReviewItemStore"
+ *
+ * console.log(ReviewItemWritePlan.make({ held: [], write: [] }).write.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReviewItemWritePlan extends S.Opaque<ReviewItemWritePlan, { readonly brand: unique symbol }>()(
+  S.Struct({
+    held: S.Array(ReviewItemId).annotateKey({
+      description: "Ids not written because their latest version is an unresolved import awaiting repair.",
+    }),
+    write: S.Array(ReviewItem).annotateKey({ description: "Items to append, in the order given." }),
+  }).pipe(
+    $I.annoteSchema("ReviewItemWritePlan", {
+      description: "What a review-item upsert or repair appends, and the ids an upsert holds for repair.",
+    })
+  )
+) {}
+
+const sameItem = S.toEquivalence(ReviewItem);
+
+/**
+ * Plan a store write against the latest stored versions.
+ *
+ * **Details**
+ *
+ * An item equal to its stored current version is a no-op. With `repair`
+ * false, an item whose id's latest version is an unresolved import is held,
+ * never written over it; with `repair` true it is written as an explicit
+ * revision. Every other item is written.
+ *
+ * **Example** (Hold an item over an unresolved import)
+ *
+ * ```ts
+ * import { ReviewItem } from "@beep/law-practice-domain"
+ * import { planReviewItemWrite } from "@beep/law-practice-use-cases/ReviewItemStore"
+ *
+ * const item = ReviewItem.cases["kg-answer"].make({ itemId: "a", text: "Answer", sourceRefs: [] })
+ * console.log(planReviewItemWrite({ stored: [item], items: [item], repair: false }).write.length) // 0
+ * ```
+ *
+ * @param input - The latest stored version of each id, the items to store, and whether the write is an explicit repair.
+ * @returns The items to append and the ids held for repair.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planReviewItemWrite = ({
+  items,
+  repair,
+  stored,
+}: {
+  readonly items: ReadonlyArray<ReviewItem>;
+  readonly repair: boolean;
+  readonly stored: ReadonlyArray<StoredReviewItem>;
+}): ReviewItemWritePlan => {
+  const latestOf = (item: ReviewItem) => A.findFirst(stored, ({ itemId }) => itemId === item.itemId);
+  const isHeld = (item: ReviewItem) => !repair && O.exists(latestOf(item), isLegacyReviewItemImported);
+  const isUnchanged = (item: ReviewItem) =>
+    O.exists(latestOf(item), (current) => isCurrentReviewItem(current) && sameItem(current, item));
+  return ReviewItemWritePlan.make({
+    held: A.map(A.filter(items, isHeld), ({ itemId }) => itemId),
+    write: A.filter(items, (item) => !isHeld(item) && !isUnchanged(item)),
+  });
+};

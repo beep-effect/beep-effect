@@ -1991,6 +1991,30 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the binding factories with explicit codec arguments while migrating callers and retaining the versioned encoded preimages.
 
+### P4: CLI native cores link imported predecessors through a separate succession record, 2026-11-23
+
+ClaimCore.supersedes names only a content-addressed ClaimId, and an imported legacy row has no ClaimId. A Holds renewal (or Kb revision) of an imported claim therefore appends a native v2 core with no supersedes field plus a separate Succession record from ClaimReference Imported{ledger, oldId} to the new ClaimId. The history reader closes the imported knowledge interval at the successor's knowledge start, refuses a second successor (fork), an unknown target or a logical-key mismatch with ClaimHistoryRefused, and never relabels the old id as a hash. Review changes are separate Review events, never new cores. Renewal facts (activity, generation end, knowledge start, agent, scope) are supplied by the effectful program, not a hidden clock.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Drop the Succession event kind and read native cores without imported predecessors; old v1 lines and v2 cores are unchanged.
+
+### P4: historical docket checks carry provenance and never pass the gate, 2026-11-23
+
+DeterministicCheck gains provenance (current or docket-check/v1) instead of a fourth result case. Stored v1 Boolean checks read through a private frozen projection as Passed or Failed tagged docket-check/v1. Only a current Passed check passes the review gate, and resumed rounds re-run their checks, so a historical true is never a fresh verification.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Drop the provenance field and read v1 Booleans as current results.
+
+### P4: an Unknown docket gate reuses the deterministic-failure terminal status, 2026-11-23
+
+A round whose gate is Unknown keeps the existing deterministic-failure terminal status (subject [CHECK FAILED]); its body shows a distinct line naming the unknown check, its side and the reason document-text-unavailable, so the explanation never asserts a disproved citation.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Add a dedicated terminal status literal for Unknown gates and route it separately.
+
 ### P4: evidence keeps position and a separate reported confidence signal, 2026-11-23
 
 epistemic tables own frozen current and legacy span codecs. Strict current rows split to TextAnchor and extractor-confidence signal; loose legacy rows derive endChar as startChar plus UTF-16 quote width. A row still failing current text constraints is a LegacyEvidenceUnresolved record retaining old fields and reason, never a verified position. A stored scalar is Present reported confidence with method legacy-reported, never a calibrated probability. New writes use a tagged position-and-signal JSON shape in the existing span column; old rows are never rewritten. Table row schemas are separated from domain read records; both query shapes are supported by the span SQL accessors and converters. Verification receipts and manifestation-key bytes are not reminted; association compares the recovered position only, and unresolved spans cannot verify. Frozen synthetic fixtures cover strict, loose-width, empty and over-bound quotes.
@@ -2009,6 +2033,14 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Change the checker and law fixtures together while preserving immutable old import records.
 
+### P4: prov:wasAttributedTo names the asserting agent by a nanopub-agent/v1 hash, 2026-11-23
+
+The provenance graph names the agent by the hash of its encoded assertedBy under a new nanopub-agent/v1 preimage with a committed golden, so one agent always gets one IRI and decode rechecks it against the decoded core.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Bump the preimage to nanopub-agent/v2, or take an agent-IRI port from the caller binding.
+
 ### P4: recheck nanopub publication identity on decode, 2026-11-23
 
 Decode rechecks ClaimId and canonical publication metadata, re-mints nanopub/v1 NanopubId and compares the publication plus four derived graph IRIs exactly. Stale publication id after publisher/time edits and wrong derived graph IRI are integrity refusals with original input. Foreign graph/publication names may remain import metadata but are not accepted native-profile publications. Normalization runs only after integrity validation and sorts/deduplicates accepted quads; it cannot rename or repair failed identity. Add both fixtures to NanopubAdapter.test.ts. The exact TTL licensing hold is unchanged.
@@ -2016,6 +2048,30 @@ Decode rechecks ClaimId and canonical publication metadata, re-mints nanopub/v1 
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Version the native profile and identity preimage together; retain refused foreign data with original names.
+
+### P4: the nanopub profile uses the existing epistemic namespace and rdf:JSON, 2026-11-23
+
+The profile's own predicates are epistemic:coreJson and epistemic:sourceDigest in the existing epistemic namespace shard, and rdf:JSON is added to the rdf shard, rather than introducing a new epistemics: prefix. The registry writer regenerated the registry data and vocabulary terms.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Add a dedicated prefix with these terms and deprecate the two epistemic locals through the registry's deprecation records.
+
+### P4: the np NamespacePin records an unstated license instead of holding the adapter, 2026-11-23
+
+Parent ruling 2026-11-23, amending the hold in 2026-11-23-p4-nanopub-restricted-profile. A NamespacePin vendors no artifact bytes: it records the source location, revision and digests and projects only the curated term names, the np: IRIs needed to speak the vocabulary. The np pin therefore needs no granted license to exist, and it must not claim one. Its license is the SPDX LicenseRef leaf LicenseRef-nanopub-nschema-unstated, not an invented license. Its attribution states that no license is given at commit 8388dd90795b of Nanopublication/Guidelines, that the companion nschema.html grants CC BY-SA 3.0 for that document, and that only term IRIs are projected. nschema.ttl is never copied into the repo; adapter fixtures are minimal synthetic profile data written for this repo.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: When upstream publishes a license for nschema.ttl, or the operator rules that the nschema.html notice covers the TTL, replace LicenseRef-nanopub-nschema-unstated with that SPDX id and regenerate the pin.
+
+### P4: nanopub decode reads only the exact profile encoding, 2026-11-23
+
+Decode accepts the core literal and the publication metadata only when they equal their re-encoded form byte for byte (otherwise invalid-core or invalid-publication-metadata). Publication time is dcterms:created as a UTC xsd:dateTime and the publisher is dcterms:publisher. A profile predicate in the wrong graph is graph-mixing; foreign predicates inside profile graphs and all quads outside them are residual; a blank graph name anywhere is refused. Instance IRIs reuse instanceIri and instanceHash from @beep/annotation/rdf/OaCodec.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Relax a rule in a new profile version and keep the old one decodable.
 
 ### P4: nanopub is a restricted adapter profile and never imports authority, 2026-11-23
 
@@ -2037,6 +2093,54 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the declared profile and golden with a new adapter version while retaining rejected input as residual.
 
+### P4: party corrections across a logical key retract and reassert instead of superseding, 2026-11-23
+
+The append law accepts supersession only inside one (scope, logicalKey) partition. A party correction that changes the proposition's logical key (for example a corrected finance fact or a vetoed merge) is recorded as a direct Retraction of the old claim plus a newly minted claim, so the history stays checkable and nothing is silently overwritten. An exact replay of an identical record into PartyLedgerMemory is unchanged state, not a conflict; a different record under an existing id or claim/time key is still a LedgerConflict. Party challenge records must name existing claims at both ends.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Allow cross-key supersession in the append law and migrate party fixtures back; existing retraction records stay append-only.
+
+### P4: the pinned-vocabularies Turtle check accepts owl:FunctionalProperty, 2026-11-23
+
+nschema.ttl types its three has* properties as owl:FunctionalProperty, which the pinned-vocabularies target did not recognise as a declaration type, so the np pin could not curate them. The target now accepts owl:FunctionalProperty, with a fixture test.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Drop the type from the accepted set and curate only np:Nanopublication.
+
+### P4: require explicit native creation facts at party projection boundaries, 2026-11-23
+
+Party projection entry points receive an explicit native ActivityStart, generation end, knowledge start, asserting agent and scope. Existing source activity ids and assertion timestamps remain source provenance; they are never relabeled as content-addressed generation facts. The projection mints text occurrences only from TextOccurrence receipts, and retains non-text assertion references separately with empty text support. Ledger writes store cores, generation receipts, evidence links, review records and signal records separately; reads join them at an explicit asOf time.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Version the party creation request and migrate callers without changing existing core identities or source assertion ids.
+
+### P4: the review hub lists legacy imports and refuses answers to them, 2026-11-23
+
+Unresolved legacy review items stay visible in hub queues for repair. Answering one fails with the typed ReviewItemRepairRequiredError (code repair-required), so admission and executable question writes refuse the imported case.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Hide imported items from the hub instead of listing them.
+
+### P4: review item upsert holds unresolved imports; repair is a separate port method, 2026-11-23
+
+ReviewItemStore.upsert returns the ids it held because their latest stored version is an unresolved legacy import, and never overwrites that import with a generated selector. The new repair method writes an explicit revision that retains the old bytes; writing an item equal to the stored current item is skipped. The docket question publisher logs held ids as a warning.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Fold repair into upsert behind an explicit flag.
+
+### P4: new review hub items.jsonl lines use a review-item/v2 envelope, 2026-11-23
+
+New items.jsonl lines are written as {format: review-item/v2, item}. Untagged v1 rows are read only through the frozen private ReviewItemLine reader, which projects nonempty quotes to QuoteSelector and empty ones to LegacyQuoteUnresolved; v1 bytes are never rewritten.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: No stored-data reversal is needed: v1 bytes are untouched; switching writes back means re-pointing the writer at the untagged v1 shape.
+
 ### P4: preserve ReviewHub quote imports across selector retirement, 2026-11-23
 
 ReviewHub items.jsonl persists ReviewItem, including SourceRef arrays directly and inside QuestionFact. Freeze representative synthetic v1 rows before migration. A private frozen untagged quote reader preserves exact/prefix/suffix and all locators. Nonempty exact becomes QuoteSelector; empty exact becomes LegacyQuoteUnresolved with raw data and field path. Any unresolved nested quote yields LegacyReviewItemImported, displayed for repair and refused by executable writes/admission. Read old and versioned v2 rows; append only current v2 items and preserve raw old bytes. Migrate SourceRef, ReviewItem, QuestionFact, DocketQuestions and all measured consumers in commit 7 with ReviewFiles.test.ts reopened-store, mixed-version, byte-digest and no-op replay tests.
@@ -2044,6 +2148,14 @@ ReviewHub items.jsonl persists ReviewItem, including SourceRef arrays directly a
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the private versioned reader and explicit repair path together while preserving old JSONL bytes.
+
+### P4: semantica v1 ledger scalars import as legacy-unknown with side-car raw values, 2026-11-23
+
+Every ledger-evidence/v1 claim, top-level or nested in a batch, reads as Absent legacy-unknown without consulting the provider cache, because the old ledger wrote 1 whenever confidence was missing. The stored number is kept as a LegacyConfidenceImport in LedgerSnapshot.legacyConfidence, not on the current claim. New writes are ledger-evidence/v2 envelopes, read only after the raw payload bytes match the stored digest. Degraded batch ids stay the digest of the plain outcome encoding, so ids do not change. Pattern readings carry the producer pin Engine{wink-nlp, 0.0.0}. A fresh reading that differs from a stored v1 row fails with immutable-payload-conflict instead of overwriting it; re-appending the projected outcome is a no-op. hosted-batch-v1.json stays frozen beside the new v2 snapshot.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Add a reader that proves a v1 scalar from the cached provider response and upgrades that claim to Present without rewriting stored bytes; drop legacyConfidence once no v1 rows remain.
 
 ### P4: missing confidence stays absent and docket unknown is not passed, 2026-11-23
 

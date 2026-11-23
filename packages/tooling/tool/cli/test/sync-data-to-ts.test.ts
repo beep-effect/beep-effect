@@ -1100,6 +1100,7 @@ ex:Thing a owl:Class ;
 ex:related
     a owl:AnnotationProperty, owl:ObjectProperty ;
   rdfs:domain ex:Thing .
+ex:functional a owl:FunctionalProperty .
 `;
 const fixtureRdfXml = `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <rdf:Description rdf:about="#Concept">
@@ -1179,7 +1180,7 @@ const acquireFixture = (rows: ReadonlyArray<typeof VocabularyPin.Encoded>) =>
 const exShardPath = "packages/foundation/modeling/identity/registry/namespaces/ex.json";
 
 it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisition", (it) => {
-  it.effect("pins the eleven namespaces at immutable sources and rejects byte drift", () =>
+  it.effect("pins the twelve namespaces at immutable sources and rejects byte drift", () =>
     Effect.gen(function* () {
       const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "pinned-vocabularies"));
       expect(A.map(pinnedVocabularyRows, (row) => row.prefix)).toStrictEqual([
@@ -1190,12 +1191,13 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
         "fabio",
         "gufo",
         "nif",
+        "np",
         "oa",
         "prov",
         "skos",
         "xsd",
       ]);
-      expect(target.sourceUrls).toHaveLength(11);
+      expect(target.sourceUrls).toHaveLength(12);
       for (const url of target.sourceUrls) {
         expect(url).toMatch(/^https:\/\/(?:raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\/|www\.w3\.org\/)/u);
       }
@@ -1261,6 +1263,15 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
         { ...dt, declaration: { _tag: "SpecDocument", section: "absent", curiePrefix: "dt" } },
       ]).pipe(Effect.flip);
       expect(absentSection.message).toContain("dt: curated terms have no declaration in the artifact: string");
+    })
+  );
+
+  it.effect("accepts an OWL functional property declaration", () =>
+    Effect.gen(function* () {
+      const { ex } = yield* fixturePins();
+      const projection = yield* acquireFixture([{ ...ex, terms: ["functional"] }]);
+      const shard = O.getOrThrow(A.head(projection.files));
+      expect(shard.content).toContain('"terms": ["functional"]');
     })
   );
 

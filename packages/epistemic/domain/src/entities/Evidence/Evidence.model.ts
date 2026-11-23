@@ -102,3 +102,63 @@ export class Evidence extends ProductEntity.Entity<Evidence>()(Epistemic.Evidenc
     description: "Source span evidence reference.",
   })
 ) {}
+
+/**
+ * Frozen pre-v2 evidence position bytes, retaining inconsistent widths and empty quotes.
+ *
+ * **Example** (Decode a frozen position row)
+ *
+ * ```ts
+ * import { FrozenEvidencePosition } from "@beep/epistemic-domain/entities/Evidence"
+ * import * as S from "effect/Schema"
+ *
+ * const decode = S.decodeUnknownEffect(FrozenEvidencePosition)
+ * console.log(typeof decode)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FrozenEvidencePosition extends S.Opaque<FrozenEvidencePosition, { readonly brand: unique symbol }>()(
+  S.Struct({
+    confidence: Confidence,
+    endChar: S.Natural,
+    quote: S.String,
+    startChar: S.Natural,
+  }).pipe(
+    $I.annoteSchema("FrozenEvidencePosition", {
+      description: "Frozen pre-v2 evidence position payload, retaining inconsistent widths and empty quotes.",
+    })
+  )
+) {}
+
+/**
+ * Persistence row whose span column declares every stored evidence position format.
+ *
+ * **Details**
+ *
+ * The domain read record is {@link Evidence}; table converters project this row into it, so the
+ * physical JSON column is never derived from the current read schema alone.
+ *
+ * **Example** (Inspect the stored span column)
+ *
+ * ```ts
+ * import { EvidenceRow } from "@beep/epistemic-domain/entities/Evidence"
+ *
+ * console.log(EvidenceRow.fields.span)
+ * ```
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export class EvidenceRow extends ProductEntity.Entity<EvidenceRow>()(Epistemic.EvidenceId)(
+  {
+    artifactFixtureKey: EpistemicFixtureKey.pipe(pg.text(), pg.columnName("artifact_fixture_key")),
+    spanFixtureKey: EpistemicFixtureKey.pipe(pg.text(), pg.columnName("span_fixture_key")),
+    span: S.Union([EvidencePosition, FrozenEvidencePosition]).pipe(
+      $I.annoteSchema("StoredEvidencePosition", { description: "Current and frozen evidence JSON column formats." }),
+      pg.jsonb()
+    ),
+  },
+  $I.annote("EvidenceRow", { description: "Persistence row with explicitly versioned evidence column formats." })
+) {}

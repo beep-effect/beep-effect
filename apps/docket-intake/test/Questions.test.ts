@@ -5,6 +5,7 @@
  * data directory is a temporary directory on the tests' in-memory file
  * system; every message is synthetic.
  */
+import { isCurrentReviewItem } from "@beep/law-practice-domain";
 import { makeReviewFilesLayer, ReviewFilesConfig } from "@beep/law-practice-server/ReviewFiles";
 import {
   DocketCandidateDate,
@@ -120,7 +121,8 @@ describe("@beep/docket-intake review hub questions", () => {
         const store = Context.get(build2, ReviewItemStore);
 
         yield* publisher.publish(DocketIntakeState.make({ ledger: { "m-named": identified } }));
-        const [item] = yield* store.list;
+        const listed = yield* store.list;
+        const [item] = A.filter(listed, isCurrentReviewItem);
 
         expect(item?.kind).toBe("question");
         expect(item?.text).toBe(

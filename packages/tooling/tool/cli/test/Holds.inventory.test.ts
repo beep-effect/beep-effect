@@ -3,22 +3,23 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   anchorKey,
   HoldAnchor,
-  HoldClaimVersion,
   HoldLedger,
   HoldLintFinding,
   HoldSiteSnapshot,
   HoldSites,
   heldListFor,
+  holdClaimLabel,
   holdLintFindingText,
   holdsCommand,
   lintHolds,
-  liveHoldVersions,
+  liveHoldClaims,
   makeHoldLedger,
   makeHoldSites,
   runHoldsLint,
 } from "@beep/repo-cli/commands/Holds";
+import { decodeHoldClaimLine, joinHoldClaims } from "@beep/repo-cli/commands/Holds/internal/HoldStore";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { describe, expect, it, layer } from "@effect/vitest";
+import { expect, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
@@ -36,7 +37,8 @@ import * as Terminal from "effect/Terminal";
 // The command resolves the repository root from the working directory, so the in-memory checkout lives there.
 const root = process.cwd();
 
-const decodeClaims = S.decodeEffect(S.Array(S.fromJsonString(HoldClaimVersion)));
+const decodeClaims = (lines: ReadonlyArray<string>) =>
+  Effect.forEach(lines, (line) => decodeHoldClaimLine(line), { concurrency: 1 }).pipe(Effect.flatMap(joinHoldClaims));
 
 const signals =
   '{"sourceTrust":{"_tag":"Absent","reason":"not-assessed"},"sourceAssertedConfidence":{"_tag":"Absent","reason":"not-assessed"},"extractorConfidence":{"_tag":"Absent","reason":"not-applicable"},"validator":{"_tag":"Absent","reason":"not-assessed"},"reviewer":{"_tag":"Absent","reason":"not-assessed"}}';
@@ -84,7 +86,7 @@ const snapshotOf = (options: {
     heldList: options.heldList ?? [],
   });
 
-describe("hold inventory rules", () => {
+layer(BunCrypto.layer)("hold inventory rules", (it) => {
   it("keys every anchor kind distinctly", () => {
     const keys = A.map(
       [
@@ -121,7 +123,7 @@ describe("hold inventory rules", () => {
       claim({ holdId: "alpha", anchors: [zod] }),
     ]);
     return Effect.map(rows, (decoded) =>
-      expect(A.map(liveHoldVersions(decoded), (row) => row.id)).toEqual(["alpha@1", "renewed@2"])
+      expect(A.map(liveHoldClaims(decoded), holdClaimLabel)).toEqual(["alpha@1", "renewed@2"])
     );
   });
 
@@ -406,17 +408,23 @@ layer(
     Effect.gen(function* () {
       const lines = yield* runHoldsLint(true);
       expect(lines).toEqual([
-        "[holds] tombstoned glob-hold@2: glob-hold",
+        "[holds] tombstoned glob-hold@1: glob-hold",
         "[holds] lint ok: 5 live hold(s) cover every site.",
       ]);
       const ledger = yield* HoldLedger;
-      const all = yield* ledger.allVersions;
-      const tombstone = A.findFirst(all, (row) => row.id === "glob-hold@2");
-      expect(tombstone._tag).toBe("Some");
-      if (tombstone._tag === "Some") {
-        expect(tombstone.value.review).toMatchObject({ _tag: "Retracted", reason: "Anchor gone: override:glob." });
-        expect(tombstone.value.supersedes).toMatchObject({ _tag: "Some", value: "glob-hold@1" });
+      const all = yield* ledger.allClaims;
+      const retired = A.findFirst(all, (row) => holdClaimLabel(row) === "glob-hold@1");
+      expect(retired._tag).toBe("Some");
+      if (retired._tag === "Some") {
+        expect(retired.value.review).toMatchObject({ _tag: "Retracted", reason: "Anchor gone: override:glob." });
+        expect(retired.value.source.version).toBe("legacy-claim-import/v1");
       }
+      expect(A.length(all)).toBe(A.length(coveringHolds));
+      const fs0 = yield* FileSystem.FileSystem;
+      const stored = yield* fs0.readFileString(`${root}/hold-ledger/claims.jsonl`);
+      const appended = A.filter(Str.split(stored, "\n"), Str.includes("hold-claim-record/v2"));
+      expect(A.length(appended)).toBe(1);
+      expect(appended[0]).not.toContain('"supersedes"');
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const readFileString1 = yield* fs.readFileString(path.join(root, "hold-ledger/syncpack-held.generated.json"));
@@ -449,7 +457,7 @@ layer(
         "orphaned: glob-hold anchors override:glob, which is gone",
       ]);
       const ledger = yield* HoldLedger;
-      const allVersions2 = yield* ledger.allVersions;
+      const allVersions2 = yield* ledger.allClaims;
       expect(A.length(allVersions2)).toBe(6);
     })
   );
@@ -470,10 +478,10 @@ layer(
   }),
   { timeout: "30 seconds" }
 )("a hold whose version numbers have a gap", (it) => {
-  it.effect("gives the tombstone an id no row uses", () =>
+  it.effect("retires the current head by a review record instead of minting a version id", () =>
     Effect.map(runHoldsLint(true), (lines) =>
       expect(lines).toEqual([
-        "[holds] tombstoned glob-hold@4: glob-hold",
+        "[holds] tombstoned glob-hold@3: glob-hold",
         "[holds] lint ok: 5 live hold(s) cover every site.",
       ])
     )

@@ -78,7 +78,8 @@
     "research/figures/boundary-worlds.svg",
     "research/figures/stack-layers.dot",
     "research/figures/stack-layers.svg",
-    "research/law-test-plan.md"
+    "research/law-test-plan.md",
+    "research/status-census.md"
   ],
   "agentLaunchers": [
     {

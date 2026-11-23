@@ -3,10 +3,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import { $PartyDomainId } from "@beep/identity/packages";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import * as S from "effect/Schema";
-import { ClaimVersionId } from "../../Ids.ts";
 import { PartyKey } from "../../PartyKey.ts";
 
 const $I = $PartyDomainId.create("policies/Resolution/Resolution.model");
@@ -23,7 +24,7 @@ const $I = $PartyDomainId.create("policies/Resolution/Resolution.model");
  * @since 0.0.0
  */
 export class ResolutionScope extends S.Opaque<ResolutionScope, { readonly brand: unique symbol }>()(
-  S.Struct({ asOf: S.DateTimeUtcFromMillis, validAt: S.DateTimeUtcFromMillis }).pipe(
+  S.Struct({ scope: S.NonEmptyString, asOf: S.DateTimeUtcFromMillis, validAt: S.DateTimeUtcFromMillis }).pipe(
     $I.annoteSchema("ResolutionScope", { description: "Knowledge and valid time for an identity view." })
   )
 ) {}
@@ -41,8 +42,8 @@ export class ResolutionScope extends S.Opaque<ResolutionScope, { readonly brand:
  */
 export class ConflictingReview extends S.Opaque<ConflictingReview, { readonly brand: unique symbol }>()(
   S.TaggedStruct("conflicting-review", {
-    blockedClaim: ClaimVersionId,
-    vetoClaims: S.NonEmptyArray(ClaimVersionId),
+    blockedClaim: ClaimId,
+    vetoClaims: S.NonEmptyArray(ClaimId),
     left: PartyId,
     right: PartyId,
     scope: ResolutionScope,

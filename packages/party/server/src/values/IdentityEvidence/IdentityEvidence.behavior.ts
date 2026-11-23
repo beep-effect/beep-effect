@@ -4,11 +4,12 @@
  * @since 0.0.0
  */
 import { ValidTime } from "@beep/epistemics/Claim";
-import { ClaimVersion, EvidenceSignals } from "@beep/party-domain/Claim";
-import { ClaimVersionId } from "@beep/party-domain/Ids";
-import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
+import { EvidenceSignals, mergeClaimLedgers } from "@beep/party-domain/Claim";
+import { Proposition } from "@beep/party-domain/Proposition";
+import { LedgerConflict } from "@beep/party-use-cases/Ledger";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
@@ -17,6 +18,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Tuple from "effect/Tuple";
+import { projectPartyClaim } from "../../internal/claimFromAssertion.ts";
 import {
   CardMergeProposal,
   Collision,
@@ -284,8 +286,8 @@ export const observedSpan = (support: PairingSupport): ValidTime =>
  * Propose account-identifier claims backed by sampled source assertions.
  * **Details**
  * Empty evidence produces no claim. Claims remain Proposed and never merge
- * people. Version identity includes the exact assertion set, observed bounds
- * and knowledge time so changed evidence cannot reuse an immutable version id.
+ * people. Native core identity includes explicit creation facts and text occurrences; source assertion
+ * references remain separate evidence links, and missing source payloads refuse projection.
  * **Example** (Build pairing proposals)
  * ```ts
  * import { pairingClaims } from "@beep/party-server/IdentityEvidence"
@@ -294,7 +296,7 @@ export const observedSpan = (support: PairingSupport): ValidTime =>
  * @category constructors
  * @since 0.0.0
  */
-export const pairingClaims = (input: PairingClaimsInput): ReadonlyArray<ClaimVersion> => {
+export const pairingClaims = Effect.fn("PartyIdentity.pairingClaims")(function* (input: PairingClaimsInput) {
   const absent = EvidenceSignals.fields.sourceTrust.cases.Absent.make({ reason: "not-assessed" });
   const signals = EvidenceSignals.make({
     sourceTrust: absent,
@@ -303,43 +305,31 @@ export const pairingClaims = (input: PairingClaimsInput): ReadonlyArray<ClaimVer
     validator: absent,
     reviewer: absent,
   });
-  return A.flatMap(input.supports, (support) => {
-    const assertions = A.sort(A.dedupe(support.assertions), Order.String);
-    if (!A.isArrayNonEmpty(assertions)) return [];
-    const proposition = Proposition.cases.AccountIdentifier.make({
-      account: support.mailbox,
-      identifier: support.smtp,
-    });
-    const key = logicalKey(proposition);
-    const frame = (value: string) => `${value.length}:${value}`;
-    const bound = (value: O.Option<DateTime.Utc>) =>
-      O.match(value, { onNone: () => "unknown", onSome: (time) => `${DateTime.toEpochMillis(time)}` });
-    const identity = A.join(
-      A.map(
-        [
-          key,
-          `${DateTime.toEpochMillis(input.recordedAt)}`,
-          bound(support.firstSeen),
-          bound(support.lastSeen),
-          ...assertions,
-        ],
-        frame
-      ),
-      ""
-    );
-    return [
-      ClaimVersion.make({
-        id: ClaimVersionId.make(`party-cv:pairing:${encodeURIComponent(identity)}`),
-        proposition,
-        logicalKey: key,
-        supportedBy: assertions,
-        challengedBy: [],
-        supersedes: O.none(),
-        knowledge: { recordedAt: input.recordedAt, expiredAt: O.none() },
+  const batches = yield* Effect.forEach(
+    A.filter(input.supports, (support) => A.isReadonlyArrayNonEmpty(support.assertions)),
+    Effect.fnUntraced(function* (support) {
+      const references = A.sort(A.dedupe(support.assertions), Order.String);
+      const assertions = yield* Effect.forEach(
+        references,
+        (reference) =>
+          Effect.fromOption(
+            A.findFirst(input.sourceAssertions, (assertion) => assertion.id === reference),
+            () => LedgerConflict.make({ recordId: reference, reason: "source-assertion-missing" })
+          ),
+        { concurrency: 1 }
+      );
+      return yield* projectPartyClaim({
+        proposition: Proposition.cases.AccountIdentifier.make({ account: support.mailbox, identifier: support.smtp }),
+        assertions,
         validTime: observedSpan(support),
         review: { _tag: "Proposed" },
         signals,
-      }),
-    ];
-  });
-};
+        creation: input.creation,
+        supersedes: O.none(),
+        derivedFrom: HashSet.empty(),
+      });
+    }),
+    { concurrency: 1 }
+  );
+  return mergeClaimLedgers(batches);
+});

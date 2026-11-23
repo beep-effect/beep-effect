@@ -6,7 +6,6 @@ import {
   ingestContact,
   ingestContactSource,
 } from "@beep/party-server/ContactEvidence";
-import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { ContactCard, ContactEmailInput, ContactSource, PhoneNumberInput } from "@beep/party-use-cases/ContactSource";
 import { PartyLedger } from "@beep/party-use-cases/Ledger";
 import { expect, it } from "@effect/vitest";
@@ -17,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
+import { creation, LedgerLive } from "./fixtures/claims.ts";
 
 const at = DateTime.makeUnsafe(1);
 const card = (sourceRecordId: string, emails: ReadonlyArray<string>) =>
@@ -30,10 +30,15 @@ const card = (sourceRecordId: string, emails: ReadonlyArray<string>) =>
     identifiers: [],
     roles: [],
   });
-const request = (card: ContactCard, name: string) =>
-  ContactIngestInput.make({ card, activity: ActivityId.make(`party-act:${name}`), recordedAt: at });
+const request = (card: ContactCard, name: string, knownAt = 1) =>
+  ContactIngestInput.make({
+    card,
+    creation: creation({ operation: name, at: knownAt }),
+    activity: ActivityId.make(`party-act:${name}`),
+    recordedAt: at,
+  });
 
-it.layer(PartyLedgerMemory)("contact evidence", (it) => {
+it.layer(LedgerLive)("contact evidence", (it) => {
   it.effect("normalizes identifiers into shared keys while keeping cards and claims provisional", () =>
     Effect.gen(function* () {
       const left = yield* ingestContact(request(card("one", ["Dana Example <Dana@EXAMPLE.test>"]), "one"));
@@ -41,18 +46,21 @@ it.layer(PartyLedgerMemory)("contact evidence", (it) => {
       expect(left.identifiers[0]?.key).toEqual(right.identifiers[0]?.key);
       expect(left.identifiers[0]?.id).toEqual(right.identifiers[0]?.id);
       expect(O.getOrThrow(left.party).id).not.toBe(O.getOrThrow(right.party).id);
-      expect(A.every(left.versions, (version) => version.review._tag === "Proposed")).toBe(true);
-      expect(A.some(left.versions, (version) => version.proposition._tag === "SameParty")).toBe(false);
+      expect(A.every(left.claimLedger.reviews, (row) => row.review._tag === "Proposed")).toBe(true);
+      expect(left.claimLedger.reviews).toHaveLength(A.length(left.claimLedger.claims));
+      expect(A.some(left.claimLedger.claims, (row) => row.core.proposition._tag === "SameParty")).toBe(false);
       const ledger = yield* PartyLedger;
       const snapshot = yield* ledger.snapshot;
       expect(snapshot.observations).toHaveLength(2);
       expect(snapshot.assertions).toHaveLength(4);
-      expect(snapshot.versions).toHaveLength(4);
-      expect(resolveParties(snapshot.versions, ResolutionScope.make({ asOf: at, validAt: at })).keys).toEqual([]);
+      expect(snapshot.claims).toHaveLength(4);
+      expect(
+        resolveParties(snapshot, ResolutionScope.make({ scope: "synthetic", asOf: at, validAt: at })).keys
+      ).toEqual([]);
     })
   );
 });
-it.layer(PartyLedgerMemory)("contact data quality", (it) => {
+it.layer(LedgerLive)("contact data quality", (it) => {
   it.effect("reports invalid inputs and uses a stable source-record fallback", () =>
     Effect.gen(function* () {
       const input = ContactCard.make({
@@ -79,28 +87,34 @@ it.layer(PartyLedgerMemory)("contact data quality", (it) => {
     })
   );
 });
-it.layer(PartyLedgerMemory)("contact replay", (it) => {
-  it.effect("keeps keys independent of input ordering and rejects repeated extraction without duplicate evidence", () =>
-    Effect.gen(function* () {
-      const input = card("ordered", ["dana@example.test", "dana+team@example.test"]);
-      const original = yield* ingestContact(request(input, "ordered"));
-      const reordered = yield* ingestContact(
-        request(ContactCard.make({ ...input, emails: A.reverse(input.emails) }), "reordered")
-      );
-      expect(A.map(original.identifiers, (row) => row.key)).toEqual(
-        A.reverse(A.map(reordered.identifiers, (row) => row.key))
-      );
-      expect(A.dedupe(A.map(original.identifiers, (row) => row.key))).toHaveLength(2);
-      const ledger = yield* PartyLedger;
-      const before = yield* ledger.snapshot;
-      const failure = yield* ingestContact(request(input, "ordered")).pipe(Effect.flip);
-      expect(failure._tag).toBe("LedgerConflict");
-      const resolved2 = yield* ledger.snapshot;
-      expect(resolved2).toEqual(before);
-    })
+it.layer(LedgerLive)("contact replay", (it) => {
+  it.effect(
+    "keeps keys independent of input ordering and rejects repeated and out-of-order extraction without duplicate evidence",
+    () =>
+      Effect.gen(function* () {
+        const input = card("ordered", ["dana@example.test", "dana+team@example.test"]);
+        const original = yield* ingestContact(request(input, "ordered"));
+        const reordered = yield* ingestContact(
+          request(ContactCard.make({ ...input, emails: A.reverse(input.emails) }), "reordered")
+        );
+        expect(A.map(original.identifiers, (row) => row.key)).toEqual(
+          A.reverse(A.map(reordered.identifiers, (row) => row.key))
+        );
+        expect(A.dedupe(A.map(original.identifiers, (row) => row.key))).toHaveLength(2);
+        const ledger = yield* PartyLedger;
+        const before = yield* ledger.snapshot;
+        const repeated = yield* ingestContact(request(input, "ordered")).pipe(Effect.flip);
+        expect(repeated).toMatchObject({ _tag: "LedgerConflict", reason: "conflicting-assertion" });
+        const replayed = yield* ledger.snapshot;
+        expect(replayed).toEqual(before);
+        const failure = yield* ingestContact(request(input, "ordered-earlier", 0)).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "LedgerConflict", reason: "KnowledgeStartRegression" });
+        const resolved2 = yield* ledger.snapshot;
+        expect(resolved2).toEqual(before);
+      })
   );
 });
-it.layer(PartyLedgerMemory)("contact shared mailbox", (it) => {
+it.layer(LedgerLive)("contact shared mailbox", (it) => {
   it.effect("retains represents without converting it into personal attribution", () =>
     Effect.gen(function* () {
       const input = ContactCard.make({
@@ -121,7 +135,7 @@ it.layer(PartyLedgerMemory)("contact shared mailbox", (it) => {
 });
 
 const sourceLayer = Layer.merge(
-  PartyLedgerMemory,
+  LedgerLive,
   Layer.succeed(
     ContactSource,
     ContactSource.of({
@@ -133,14 +147,18 @@ it.layer(sourceLayer)("generic contact source workflow", (it) => {
   it.effect("consumes the source port and records all provisional evidence", () =>
     Effect.gen(function* () {
       const results = yield* ingestContactSource(
-        ContactSourceIngestInput.make({ activity: ActivityId.make("party-act:source"), recordedAt: at })
+        ContactSourceIngestInput.make({
+          creation: creation({ operation: "source", at: 1 }),
+          activity: ActivityId.make("party-act:source"),
+          recordedAt: at,
+        })
       );
       expect(results).toHaveLength(2);
       const ledger = yield* PartyLedger;
       const snapshot = yield* ledger.snapshot;
       expect(snapshot.observations).toHaveLength(2);
       expect(snapshot.assertions).toHaveLength(4);
-      expect(snapshot.versions).toHaveLength(4);
+      expect(snapshot.claims).toHaveLength(4);
     })
   );
 });

@@ -17,7 +17,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 // Synthetic question and answers; no matter, client or person is named.
-const sourceRef = { boxFileId: "1234567890", page: 1, quote: { exact: "mailed on August 2, 2026" } };
+const sourceRef = { boxFileId: "1234567890", page: 1, quote: { _tag: "Quote", exact: "mailed on August 2, 2026" } };
 
 const keepDate = { optionId: "keep-date", label: "Keep the current response date" };
 const moveDate = {
