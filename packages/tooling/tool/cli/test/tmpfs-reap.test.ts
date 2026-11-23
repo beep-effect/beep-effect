@@ -379,6 +379,7 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
   const dirtyClone = path.join(dirtyParent, "probe-dirty");
   const dirtyParentCleanClone = path.join(dirtyParent, "probe-clean");
   const unpushedClone = path.join(tmpRoot, "unpushed-clone");
+  const modifiedClone = path.join(tmpRoot, "modified-clone");
 
   yield* Effect.forEach(
     [cacheRoot, path.join(mixedParent, "notes"), worktreeHolder, dirtyParent],
@@ -397,12 +398,14 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
       dirtyClone,
       dirtyParentCleanClone,
       unpushedClone,
+      modifiedClone,
     ],
     (clone) => cloneFixtureRepository(origin, clone),
     { concurrency: 1, discard: true }
   );
   yield* fs.writeFileString(path.join(dirtyClone, "untracked-notes.txt"), "uncommitted work\n");
   yield* runCommand("git", ["config", "status.showUntrackedFiles", "no"], dirtyClone);
+  yield* fs.writeFileString(path.join(modifiedClone, "README.md"), "uncommitted tracked edit\n");
   yield* runCommand(
     "git",
     [
@@ -436,6 +439,7 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
       separateGitDir,
       dirtyParent,
       unpushedClone,
+      modifiedClone,
     ],
     (directory) => ageFixtureTree(directory, 3, root),
     { concurrency: 1, discard: true }
@@ -452,6 +456,7 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
     mainClone,
     mixedClone,
     mixedParent,
+    modifiedClone,
     probesParent,
     separateGitDir,
     separateGitDirClone,
@@ -1934,6 +1939,9 @@ describe("tmpfs reap", () => {
           expect(young.bytes).toBeGreaterThan(0);
           expect(candidateByPath(dryRun, fixture.mainClone).skipReason).toBe("linked-worktrees-present");
           expect(candidateByPath(dryRun, fixture.dirtyClone).skipReason).toBe("dirty-worktree");
+          const modified = candidateByPath(dryRun, fixture.modifiedClone);
+          expect(modified.skipReason).toBe("dirty-worktree");
+          expect(modified.action).not.toBe("remove-dir");
           expect(candidateByPath(dryRun, fixture.dirtyParent).skipReason).toBe("dirty-worktree");
           expect(candidateByPath(dryRun, fixture.dirtyParentCleanClone).action).toBe("remove-dir");
           const unpushed = candidateByPath(dryRun, fixture.unpushedClone);
@@ -1982,6 +1990,8 @@ describe("tmpfs reap", () => {
             { concurrency: 1 }
           );
           expect(kept).toEqual([true, true, true, true, true, true, true]);
+          const modifiedReadme = yield* fs.readFileString(path.join(fixture.modifiedClone, "README.md"));
+          expect(modifiedReadme).toBe("uncommitted tracked edit\n");
         })
       )
     );
