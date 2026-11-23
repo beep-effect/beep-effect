@@ -34,10 +34,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
+P3 Lookup, adapter and failing-region command — complete (2026-11-22): the main-feed lookup
+(`MainFeed`), the CI-job adapter, the shared job-log route and `beep ci failures --run <id> | --pr
+<number>`. P2 (workflow wiring) is next, after PR 1 merges.
+
 P1 Projection and feed record — complete (2026-11-22): `task-outcomes/v2` record and reader, the CI
 projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is next, after PR 1 merges.
 
 ## Latest Evidence
+
+2026-11-22: P3 fixture tests pass (23 across `ci-main-feed`, `ci-job-adapter`, `ci-failures`): a
+merge-base hit in 3 REST requests and the ancestor walk in 4, no GraphQL; the monitor's 48 tests
+pass unchanged after the log-route extraction.
 
 2026-11-22: P1 renderer tests pass under Node and Bun: the summary of a red record equals `beep gate
 show`'s console line for line; a 200-item fixture gives 10 error annotations, both cap lines and a
