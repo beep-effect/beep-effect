@@ -25,6 +25,13 @@ export * from "./Adapters/MdSections.ts";
  */
 export * as WebAnnotation from "./Adapters/WebAnnotation.ts";
 /**
+ * RDFC-1.0 canonical forms, the dataset digest and dataset isomorphism.
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export * from "./Canonical.ts";
+/**
  * JSON-LD schema models.
  *
  * @category models
