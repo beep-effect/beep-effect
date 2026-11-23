@@ -71,10 +71,9 @@ describe("GlobString", () => {
   it.effect("rejects patterns that trip the expansion or nesting caps at compile time", () =>
     Effect.gen(function* () {
       const message = "Glob pattern must compile within the expansion and nesting caps";
-      // 2^17 = 131072 alternatives exceeds the 100000 expansion budget; 2^16 does not.
       const failureMessage6 = yield* failureMessage(Str.repeat(17)("{a,b}"));
-      assert.include(failureMessage6, message);
-      assert.isTrue(isGlobString(Str.repeat(16)("{a,b}")));
+      assert.include(failureMessage6, message, "2^17 = 131072 alternatives exceeds the 100000 expansion budget");
+      assert.isTrue(isGlobString(Str.repeat(16)("{a,b}")), "2^16 = 65536 alternatives stays within the budget");
       const failureMessage7 = yield* failureMessage("{1..100001}");
       assert.include(failureMessage7, message);
       assert.isTrue(isGlobString("{1..10}"));

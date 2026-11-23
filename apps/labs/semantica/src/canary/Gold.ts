@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Console from "effect/Console";

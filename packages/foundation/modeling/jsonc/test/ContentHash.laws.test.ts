@@ -1,11 +1,3 @@
-// L0-2 of the text-knowledge stack rebuild law catalogue: equivalent records
-// hash alike under key order and set order. Canonical JSON (RFC 8785) sorts
-// object keys only, so the set order half rests on the preimage schema, which
-// encodes every set-valued field with CanonicalHashSet.
-//
-// Leaves come from Arbitrary.schema over the production schemas; every
-// dependent hash is minted through the production minting function. The
-// golden-vector tests pin the bytes of each preimage the package declares.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { IRI } from "@beep/identity/Iri";
 import { ActivityPin, ActivityPreimage, mintActivityId, mintActivityIdResult } from "@beep/jsonc/ActivityStart";
@@ -41,7 +33,6 @@ import { sha256 } from "./support/Sha256.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// A record with two set-valued fields, one of them nested.
 const Probe = S.Struct({
   label: WellFormedText,
   count: S.Int,
@@ -68,15 +59,13 @@ const mintProbe = ProbePreimage.mintResult(sha256);
 const sameProbe = S.toEquivalence(Probe);
 const isContentHash = S.is(ContentHash);
 
-// The weights that scramble one encoded probe: the key order of each object
-// level, and the order and the repeats of each set-valued array.
-const Scramble = S.Struct({
+const ScrambleWeights = S.Struct({
   outerKeys: S.Tuple([S.Int, S.Int, S.Int, S.Int]),
   nestedKeys: S.Tuple([S.Int, S.Int]),
   tags: S.Array(S.Int),
   flags: S.Array(S.Int),
 });
-type Scramble = typeof Scramble.Type;
+type ScrambleWeights = typeof ScrambleWeights.Type;
 
 const weightAt = (weights: ReadonlyArray<number>, index: number): number =>
   A.isReadonlyArrayNonEmpty(weights) ? A.getUnsafe(weights, index % weights.length) : 0;
@@ -91,36 +80,35 @@ const byWeight = <Item>(items: ReadonlyArray<Item>, weights: ReadonlyArray<numbe
     A.map(([item]) => item)
   );
 
-// Re-insert the object's keys in the weighted order, keeping every value.
 const reorderKeys = (record: R.ReadonlyRecord<string, unknown>, weights: ReadonlyArray<number>) =>
   R.fromEntries(byWeight(R.toEntries(record), weights));
 
-// Shuffle the members by weight and repeat every member whose weight is even.
-const scrambleMembers = (members: ReadonlyArray<string>, weights: ReadonlyArray<number>): Array<string> =>
+const shuffleByWeightRepeatingEvenWeighted = (
+  members: ReadonlyArray<string>,
+  weights: ReadonlyArray<number>
+): Array<string> =>
   A.appendAll(
     byWeight(members, weights),
     A.filter(members, (_, index) => N.remainder(weightAt(weights, index), 2) === 0)
   );
 
-const scrambleKeys = (encoded: typeof Probe.Encoded, scramble: Scramble) =>
+const scrambleKeys = (encoded: typeof Probe.Encoded, scramble: ScrambleWeights) =>
   reorderKeys({ ...encoded, nested: reorderKeys(encoded.nested, scramble.nestedKeys) }, scramble.outerKeys);
 
-const scrambleAll = (encoded: typeof Probe.Encoded, scramble: Scramble) =>
+const scrambleAll = (encoded: typeof Probe.Encoded, scramble: ScrambleWeights) =>
   scrambleKeys(
     {
       ...encoded,
-      tags: scrambleMembers(encoded.tags, scramble.tags),
-      nested: { ...encoded.nested, flags: scrambleMembers(encoded.nested.flags, scramble.flags) },
+      tags: shuffleByWeightRepeatingEvenWeighted(encoded.tags, scramble.tags),
+      nested: { ...encoded.nested, flags: shuffleByWeightRepeatingEvenWeighted(encoded.nested.flags, scramble.flags) },
     },
     scramble
   );
 
-// A probe, two independent scrambles of its encoding decoded back, and the
-// hashes the production minting function gives each of the three.
-const Equivalents = Arbitrary.all([
+const ProbeTwoDecodedScramblesAndTheirHashes = Arbitrary.all([
   Arbitrary.schema(Probe),
-  Arbitrary.schema(Scramble),
-  Arbitrary.schema(Scramble),
+  Arbitrary.schema(ScrambleWeights),
+  Arbitrary.schema(ScrambleWeights),
 ]).pipe(
   Arbitrary.map(([probe, first, second]) => {
     const encoded = Result.getOrThrow(encodeProbe(probe));
@@ -135,9 +123,7 @@ const Equivalents = Arbitrary.all([
   })
 );
 
-// An encoded probe and the same encoding with its keys re-inserted in a
-// generated order at every level, both minted as plain JSON.
-const KeyOrders = Arbitrary.all([Arbitrary.schema(Probe), Arbitrary.schema(Scramble)]).pipe(
+const KeyOrders = Arbitrary.all([Arbitrary.schema(Probe), Arbitrary.schema(ScrambleWeights)]).pipe(
   Arbitrary.map(([probe, scramble]) => {
     const encoded = Result.getOrThrow(encodeProbe(probe));
     return {
@@ -153,7 +139,6 @@ const goldenStart = {
   promptDigest: Sha256PrefixedDigest.makeOption(
     "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   ),
-  // The two members in descending order with a repeat: the id must not see it.
   used: HashSet.make(
     ContentHash.make("sha256:fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"),
     ContentHash.make("sha256:2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"),
@@ -162,10 +147,10 @@ const goldenStart = {
   started: DateTime.makeUnsafe(1_763_510_400_000),
 };
 
-describe("ContentHash laws", () => {
+describe("ContentHash laws: RFC 8785 sorts object keys only, so set order rests on CanonicalHashSet in the preimage schema", () => {
   it.prop(
     "L0-2 equivalent records hash alike under key order and under two orderings and duplications of one set",
-    [Equivalents],
+    [ProbeTwoDecodedScramblesAndTheirHashes],
     ([{ probe, left, right, hashes }]) => {
       assertTrue(sameProbe(probe, left));
       assertTrue(sameProbe(probe, right));

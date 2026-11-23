@@ -1,7 +1,7 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $SemanticaId } from "@beep/identity/packages";
-import { TextAnchor, TextAnchorFields, TextAnchorVerificationReceipt, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { TextAnchor, TextAnchorFields, TextAnchorVerificationReceipt, TextAnchorWidthCheck } from "@beep/text";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import { identity } from "effect/Function";

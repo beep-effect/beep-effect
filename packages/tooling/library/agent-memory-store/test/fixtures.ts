@@ -9,8 +9,8 @@ import {
   OccurrenceAnchor,
   RevisionId,
 } from "@beep/agent-memory-store";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/provenance";
 import { PosixPath, Sha256Hex } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/text";
 
 export const nodeId = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e7f");
 export const otherNodeId = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e80");

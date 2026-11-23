@@ -1,5 +1,5 @@
 import * as NLPService from "@beep/nlp-processing/NLPService";
-import { SourceTextExtractor } from "@beep/provenance";
+import { SourceTextExtractor } from "@beep/text";
 import { WinkBackendLive, WinkEngineLive } from "@beep/wink";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";

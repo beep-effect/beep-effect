@@ -227,9 +227,6 @@ export interface VersionCacheShape {
   readonly versions: Effect.Effect<ReadonlyArray<SemVer>>;
 }
 
-// Membership and ordering follow SemVer precedence (build metadata ignored):
-// versions differing only in build metadata occupy one slot.
-
 const search: {
   (arr: ReadonlyArray<SemVer>, target: SemVer): { readonly found: boolean; readonly index: number };
   (target: SemVer): (arr: ReadonlyArray<SemVer>) => { readonly found: boolean; readonly index: number };

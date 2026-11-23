@@ -419,7 +419,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
         );
         expect(citationResult23.reason).toBe("invalid-input");
         const unknown = CitationGroupMember.cases.Mention.make({
-          mentionId: CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`),
+          mentionId: CitationMentionId.make(`cm2:${Str.repeat(64)("f")}`),
         });
         const citationResult24 = yield* Effect.flip(owner.writeCitation(unknown, original.citation));
         expect(citationResult24.reason).toBe("invalid-input");

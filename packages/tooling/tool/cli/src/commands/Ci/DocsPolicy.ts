@@ -45,6 +45,7 @@ export const DOCS_POLICY_ROOT_TASKS = [
   "lint:effect-imports-markdown",
   "lint:entity-kit-freeze",
   "lint:holds",
+  "lint:identity-registry",
   "lint:jsdoc-module-tags",
   "lint:judge-rubric",
   "lint:markdown-fences",

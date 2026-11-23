@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "documents-taxonomy",
+    "iri": "https://beep-effect.com/ns/documents/taxonomy/"
+  },
+  "terms": ["legal-document"],
+  "bindings": [],
+  "deprecations": []
+}

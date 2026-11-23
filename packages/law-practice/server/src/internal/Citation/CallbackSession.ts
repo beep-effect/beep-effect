@@ -19,8 +19,8 @@ import {
   FullCitation,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -863,8 +863,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const citationResult15 = yield* S.encodeEffect(CitationJson)(input).pipe(Effect.mapError(invalid));
     const citation = yield* S.decodeEffect(CitationJson)(citationResult15).pipe(Effect.mapError(invalid));
     if (target._tag === "Mention") {
-      // cm1 includes the semantic discriminant; no stale ID or fake proof.
-      if (citation.type !== current.type) return yield* invalid();
+      const keepsSemanticKindMintedIntoCm2Id = citation.type === current.type;
+      if (!keepsSemanticKindMintedIntoCm2Id) return yield* invalid();
       known = HashMap.set(known, target.mentionId, citation);
     } else {
       const object = CitationDetached.make({ id: target.detachedId, citation });

@@ -6,10 +6,10 @@
       "path": "../../modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../modeling/provenance/tsconfig.json"
+      "path": "../../modeling/schema/tsconfig.json"
     },
     {
-      "path": "../../modeling/schema/tsconfig.json"
+      "path": "../../modeling/text/tsconfig.json"
     },
     {
       "path": "../../modeling/utils/tsconfig.json"

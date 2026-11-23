@@ -8,7 +8,7 @@ import {
   inspectPreparedClaimRoles,
   prepareClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";

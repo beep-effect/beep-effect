@@ -22,7 +22,7 @@
 import { AlignedStatus } from "@beep/langextract/Alignment";
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
-import { TextAnchor } from "@beep/provenance";
+import { TextAnchor } from "@beep/text";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";

@@ -8,8 +8,6 @@ import { dual } from "effect/Function";
 import * as R from "effect/Record";
 
 /**
- * Re-export of all helpers from `effect/Record`.
- *
  * **Example** (Import Record helpers)
  *
  * ```ts

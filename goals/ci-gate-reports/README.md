@@ -52,6 +52,12 @@ projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is n
 
 ## Latest Evidence
 
+2026-11-23: P2 gaps closed in code, no workflow change: a hosted `ci lane` step that writes no
+gate record now records a `lane` root run from its exit code and log, and counts the annotations
+its output wrote for `append-gate-reports` (decisions `lane-step-gate-records`,
+`annotations-used-tally`). Fixture tests spawn real lane children under Node and Bun: pass, red,
+own-record, broken count, lingering descendant (`test/ci-lane-recording.test.ts`).
+
 2026-11-22: P2 part 1 built: 18 gate jobs render the projection and upload the v2 task-outcomes
 artifact with `retention-days: 30`; `bun run beep ci workflow-lint` is clean and the 19 repo-cli
 workflow test files pass (964 tests). Hosted proof is pending the first `main` run after merge.

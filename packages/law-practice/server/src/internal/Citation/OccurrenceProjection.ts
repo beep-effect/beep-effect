@@ -15,13 +15,13 @@ import {
   CitationSafetyLimitExceeded,
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifiedSourceText,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -42,7 +42,7 @@ import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { CitationSemanticExtractionResult } from "./SemanticExtraction.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 

@@ -6,8 +6,8 @@
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CitationMentionReceipt } from "@beep/law-practice-domain/values";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationEngineAbsoluteMaxima } from "./CitationEngine.limits.ts";

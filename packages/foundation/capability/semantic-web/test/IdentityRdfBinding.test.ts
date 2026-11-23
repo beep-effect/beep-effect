@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { IdentityEntry, IdentityRegistry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { makeNamedNode, NamedNode } from "@beep/rdf/Rdf";
 import {
   DefaultIdentityRdfBinding,
@@ -44,7 +45,6 @@ const encodeShaclValidationRequest = S.encodeEffect(ShaclValidationRequest);
 const isIdentityEntryIriError2 = S.is(IdentityEntryIriError);
 const isIdentityFiberPathError = S.is(IdentityFiberPathError);
 
-const entryComposer = $SemanticWebId.create("identity/registry-test-entry");
 const propertyEntryComposer = $SemanticWebId.create("identity/property-test-entry");
 const labelPath = makeNamedNode($SemanticWebId.create("identity/fibers/label").iri);
 const routePath = makeNamedNode($SemanticWebId.create("identity/fibers/route").iri);
@@ -53,10 +53,14 @@ const binding = IdentityRdfBinding.make({
   curiePath: DefaultIdentityRdfBinding.curiePath,
   fiberPaths: { label: labelPath, route: routePath },
 });
-const entry = IdentityEntry.fromComposer(entryComposer, {
-  label: "Registry test entry",
-  route: "/identity/registry-test-entry",
-});
+const entry = IdentityEntry.fromBinding(
+  "@beep/test-runner/Vitest/TestHang",
+  { curie: "vitest:TestHang", iri: iri("vitest:TestHang") },
+  {
+    label: "Registry test entry",
+    route: "/identity/registry-test-entry",
+  }
+);
 const RegistryTestLayer = Layer.unwrap(
   entriesToDataset(binding)([entry]).pipe(Effect.map((dataset) => layerDataset(binding, dataset)))
 );

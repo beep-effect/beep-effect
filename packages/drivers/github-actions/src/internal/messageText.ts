@@ -24,8 +24,6 @@ export class Frame extends S.Opaque<Frame, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * Companion types for {@link Frame}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0

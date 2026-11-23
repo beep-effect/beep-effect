@@ -5,10 +5,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import * as Registry from "@beep/identity/Registry";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import { LibraryHopPolicy, LibraryStringList } from "./Library.hopPolicy.ts";
@@ -681,6 +683,106 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
     .annotate($I.class("Manifest", { description: "Portable library layout and creation provenance." }))
 ) {}
 
+const isMintable = (mint: () => string): boolean => Result.isSuccess(Result.try(mint));
+
+/**
+ * The IRI of a packet topic under `research-library:Topic`.
+ *
+ * **Gotchas**
+ *
+ * Throws for a key that is no {@link LibraryTopicId}.
+ *
+ * **Example** (Name a topic)
+ * ```ts
+ * import { libraryTopicIri } from "@beep/repo-cli/commands/Research"
+ * console.log(libraryTopicIri("goals/example"))
+ * // https://beep-effect.com/ns/research-library/Topic/goals/example
+ * ```
+ *
+ * @param id - A packet key such as `goals/example`, used as it stands.
+ * @returns An IRI under the `research-library:Topic` term.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const libraryTopicIri = (id: string): string => Registry.mint("research-library:Topic", id);
+
+/**
+ * A packet topic key, `<kind>/<slug>` or a bare slug, that forms an IRI under `research-library:Topic`.
+ *
+ * **Details**
+ *
+ * A key is used as IRI path segments as it stands, so it is non-empty, has no
+ * leading or trailing `/` and no character an IRI refuses, such as a space.
+ *
+ * **Example** (Check a topic key)
+ * ```ts
+ * import { LibraryTopicId } from "@beep/repo-cli/commands/Research"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(LibraryTopicId)("goals/example")) // true
+ * console.log(S.is(LibraryTopicId)("goals/an example/")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LibraryTopicId = S.String.check(
+  S.makeFilter((id) => isMintable(() => libraryTopicIri(id)), {
+    title: "Library Topic Key",
+    message: "Expected a topic key that forms an IRI under research-library:Topic.",
+  })
+).pipe(
+  $I.annoteSchema("LibraryTopicId", {
+    description: "A packet topic key that forms an IRI under research-library:Topic.",
+  })
+);
+
+/**
+ * Groups evidence by packet so readers can follow a goal across captures.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryTopicId = typeof LibraryTopicId.Type;
+
+/**
+ * **Details**
+ *
+ * A label is percent-encoded into one IRI segment, so any text is a label
+ * except the empty string and text that has no UTF-8 form (a lone surrogate).
+ *
+ * **Example** (Check an agent label)
+ * ```ts
+ * import { LibraryAgentLabel } from "@beep/repo-cli/commands/Research"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(LibraryAgentLabel)("gpt-6.1-sol")) // true
+ * console.log(S.is(LibraryAgentLabel)("")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LibraryAgentLabel = S.String.check(
+  S.makeFilter(
+    (label) => isMintable(() => Registry.mint("research-library:SoftwareAgent", encodeURIComponent(label))),
+    {
+      title: "Library Agent Label",
+      message: "Expected a non-empty label that forms an IRI segment under research-library:SoftwareAgent.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("LibraryAgentLabel", {
+    description: "A model or effort label that forms an IRI segment under research-library:SoftwareAgent.",
+  })
+);
+
+/**
+ * Attributes recorded findings to the runner configuration that produced them.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LibraryAgentLabel = typeof LibraryAgentLabel.Type;
+
 /**
  * A finding bound to a source capture or a hop-0 intake document, with citation semantics and model provenance.
  *
@@ -689,6 +791,8 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
  * Exactly one binding is present: a source finding carries `sourceId` (and its
  * `captureId`), a hop-0 document finding carries `documentId` with an empty
  * `sourceId`. Rows recorded before `documentId` existed decode with an empty one.
+ * Every `topicIds` member is a {@link LibraryTopicId}, because the projection
+ * links the finding to that topic's IRI.
  *
  * **Example** (Inspect LibraryFinding)
  * ```ts
@@ -719,7 +823,10 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
     citoRelation: LibraryCitoRelation,
     span: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     summary: S.String,
-    topicIds: LibraryStringList,
+    topicIds: S.Array(LibraryTopicId).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
     modelRunId: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultKey(Effect.succeed(""))
@@ -779,7 +886,8 @@ export class LibraryDerivation extends S.Opaque<LibraryDerivation, { readonly br
  * **Details**
  *
  * `argv` is the exact launch argv of the runner. Rows recorded before the field
- * existed decode with an empty argv.
+ * existed decode with an empty argv. `model` and `effort` name the run's agent
+ * in the projection, so each is a {@link LibraryAgentLabel}.
  *
  * **Example** (Inspect LibraryModelRun)
  * ```ts
@@ -794,8 +902,8 @@ export class LibraryDerivation extends S.Opaque<LibraryDerivation, { readonly br
 export class LibraryModelRun extends S.Opaque<LibraryModelRun, { readonly brand: unique symbol }>()(
   S.Struct({
     id: S.String,
-    model: S.String,
-    effort: S.String,
+    model: LibraryAgentLabel,
+    effort: LibraryAgentLabel,
     route: S.String,
     startedAt: S.String,
     argv: LibraryStringList,
@@ -803,6 +911,23 @@ export class LibraryModelRun extends S.Opaque<LibraryModelRun, { readonly brand:
     .pipe($I.annoteSchema("LibraryModelRun", { description: "Model execution provenance for recorded findings." }))
     .annotate($I.class("ModelRun", { description: "Model execution provenance for recorded findings." }))
 ) {}
+
+/**
+ * The IRI of the agent a model run ran as, under `research-library:SoftwareAgent`.
+ *
+ * **Example** (Name an agent)
+ * ```ts
+ * import { libraryAgentIri } from "@beep/repo-cli/commands/Research"
+ * console.log(libraryAgentIri({ model: "gpt-6-luna", effort: "medium" }))
+ * // https://beep-effect.com/ns/research-library/SoftwareAgent/gpt-6-luna/medium
+ * ```
+ *
+ * @returns An IRI whose last two segments are the percent-encoded model and effort.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const libraryAgentIri = ({ effort, model }: Pick<LibraryModelRun, "effort" | "model">): string =>
+  Registry.mint("research-library:SoftwareAgent", encodeURIComponent(model), encodeURIComponent(effort));
 
 /**
  * Catalog record for persisted research provenance.

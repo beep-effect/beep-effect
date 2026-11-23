@@ -1,6 +1,3 @@
-// Line arithmetic shared by the formatter and the formatted modifier.
-// Private implementation.
-
 import { dual } from "effect/Function";
 import * as Str from "effect/String";
 

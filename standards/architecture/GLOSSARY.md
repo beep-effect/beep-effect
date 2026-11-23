@@ -66,6 +66,14 @@ or collective agent as a product record in the party slice. A claim names its
 asserting `prov:Agent`; an admission names its actor as a principal; neither
 makes the other a party.
 
+## Anchored
+
+An anchors-table row of `@beep/text`: an `S.Opaque` that holds only the powerless
+`TextAnchorVerificationReceipt` and reads range, quote and capture from it.
+Decoding one grants no proof; a `VerifiedTextAnchor` comes only from
+re-verification against the text (`L1-6`). Its `OccurrenceId` is minted from
+the receipt and never stored beside it.
+
 ## Anemic Domain Model
 
 A domain model that only describes data shape and maybe validation. An anemic
@@ -188,6 +196,15 @@ ids, commands with their events and private rejections, read contracts,
 integration facts, gateway contracts, capabilities and client Apis over the
 [catalog](#catalog-contract). It resolves no model, host, aggregate, handler or
 driver.
+
+## Content Hash
+
+`ContentHash` in `@beep/schema/ContentHash`: `sha256:` plus 64 lowercase hex,
+the one digest format of a content-addressed identifier. The preimage is
+domain-tagged and versioned (`activity/v1`), hashed as RFC 8785 canonical JSON
+by the one minting function in `@beep/jsonc/Mint`, and each identifier domain
+has its own brand over it (`ActivityId`, `OccurrenceId`). A changed preimage
+takes a new domain tag version; it never re-hashes under the old one.
 
 ## Concept
 
@@ -418,14 +435,27 @@ context's model or host.
 
 ## Identity Authority
 
-The IRI root every beep identity mints under: `https://beep-effect.com/ns/`,
-written once as `IdentityAuthority` in `@beep/identity` and carried as a
-type-level literal by the `$I` composers, so `@beep/a/b` names
-`https://beep-effect.com/ns/a/b`. It names things; it does not decide where
-anything is hosted. Code derives IRIs from identity composers and never writes
-the authority as a string. It is not the [Public Origin](#public-origin):
-`/ns/` is the one route of the origin reserved for dereferencing these IRIs,
-and `@beep/identity` never depends on `@beep/public-site`.
+The root of the declared internal namespaces: `https://beep-effect.com/ns/`,
+written once as `IdentityAuthority` in `@beep/identity/Authority`. Every
+internal namespace of the term registry (`research-library:`, `vitest:`,
+`qa:`) sits under it, and a published internal IRI is a declared term of one
+of them, bound to code through a [Term Binding](#term-binding). It names
+things; it does not decide where anything is hosted. A published IRI comes
+from the registry, and code never writes the authority as a string. It is not the
+[Public Origin](#public-origin): `/ns/` is the one route of the origin
+reserved for dereferencing these IRIs, and `@beep/identity` never depends on
+`@beep/public-site`.
+
+## Identity Regime
+
+One of the two ways a thing gets an identifier, joined by minting
+([`16-knowledge-stack.md`](16-knowledge-stack.md), section 4). Kinds have
+compile-checked code ids (`@beep/<pkg>/<module>/<Name>`) and, when published, a
+declared term bound to the code id by a [Term Binding](#term-binding).
+Instances have content-addressed ids (a domain tag plus a
+[Content Hash](#content-hash) digest) or are minted under a declared term or
+namespace (`Registry.mint`). Neither regime derives a published IRI from a
+package or file path.
 
 ## Inbox
 
@@ -491,6 +521,14 @@ config, server, client, tables and UI. Existing slices keep it until their own
 migration under the checkers' baselines; no new slice and no new migration to
 `@alchemy.run/domain` starts on it.
 
+## Locator Map
+
+A recorded alignment between two text captures, in `utf16-code-unit`
+positions: ordered, disjoint `Kept` segments (equal width, mapped pointwise) and
+`Rewritten` segments (mapped only as a whole); a gap is unmapped.
+`normalizeText` returns one for each text normalization, and maps compose.
+It is the input of [re-anchoring](#re-anchoring).
+
 ## Matter Wall
 
 Authorization that keeps one matter's material out of another's. One authority
@@ -541,7 +579,9 @@ contract and the model. Modules replace domain-kind and subdomain folders.
 A registered vocabulary prefix in `@beep/identity`: prefix and IRI. Every
 namespace the repo speaks, external ones included (`prov:`, `oa:`, `nif:`,
 `xsd:`, `gufo:`, `as:`), is registered, so CURIEs expand and contract
-closed-world. An external namespace's pin (source, license, version, digest)
+closed-world. An instance that is not content-addressed is minted under a
+declared namespace (`Registry.mint("practice-kg:client", id)`), not under a
+code path. An external namespace's pin (source, license, version, digest)
 is a `NamespacePin` keyed by prefix in `@beep/rdf`, because `@beep/identity`
 imports `effect` only.
 
@@ -551,7 +591,9 @@ One place in one text capture. `OccurrenceId` (`@beep/text`) is the digest of
 the versioned tuple of scope, source reference, locator, source and text
 digests, extractor and normalization pins, offset unit, range and quote. It is
 the only text-occurrence identity in the repository. Quotes locate and verify;
-ranges identify.
+ranges identify. The preimage spells the unit as the literal `utf16-code-unit`, so one range
+in two units is one id. Grouping repeated passages is a [quote key](#quote-key),
+never an identity.
 
 ## Ontology (OWL) Versus Taxonomy (SKOS)
 
@@ -594,17 +636,17 @@ decided under.
 ## Provenance Anchor
 
 A domain-agnostic value that pins derived knowledge to where it came from in a
-source. The canonical shape is `TextAnchor` (`@beep/provenance`): a half-open
+source. The canonical shape is `TextAnchor` (`@beep/text`): a half-open
 character range `[startChar, endChar)` into a source document plus the exact
 quoted substring, re-sliceable as `text.slice(startChar, endChar)`. It is pure
 provenance substrate — no confidence, claim, or domain semantics — and lives in
 `foundation/modeling` so any slice's `domain` can ground knowledge in a source
 span without depending on another slice. Consuming slices wrap it (e.g.
 epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`). Beside it,
-`@beep/text`, which replaces `@beep/provenance` in P2 of
-`goals/text-knowledge-stack-rebuild`, adds the
-[`Selector`](#selector) union and [`OccurrenceId`](#occurrence), the one
-text-occurrence identity.
+`@beep/text` holds the [`Selector`](#selector) union and
+[`OccurrenceId`](#occurrence), the one text-occurrence identity, which P2 of
+`goals/text-knowledge-stack-rebuild` added when it retired the former
+provenance package.
 
 ## Published Stream
 
@@ -612,6 +654,15 @@ A `Domain.Stream` that carries [integration facts](#integration-fact), served
 by the producer's host as a feed. It is pinned to its writer, generation and
 sources, is never rebuilt in place, and serves closed generations followed by
 the open one as one log.
+
+## Quote Key
+
+A grouping key over a quote (`QuoteKey`, `@beep/text`): the digest of
+`quote-key/v1`, the `QuoteNormalization` version and the quote normalized under
+it (NFKC, then de-hyphenation). The key normalizes the quote itself, and its
+version is not the capture's `normalizationVersion`. It is explicitly not
+injective: three copies of one boilerplate passage share one key and have three
+[occurrence](#occurrence) ids.
 
 ## Schema Concept Module
 
@@ -743,6 +794,18 @@ rebuild an Invocation from a stored provenance and live grants. It never adds a
 grant and passes those still in force; a command that needs a lapsed one is
 refused and the refusal recorded.
 
+## Re-anchoring
+
+Carrying an [occurrence](#occurrence) from one text capture to another across a
+[locator map](#locator-map) (`reanchor`, `@beep/text`). The outcome is a value:
+`Exact` when both boundaries land on a segment edge or inside a `Kept` segment,
+`Widened` when a boundary fell inside a `Rewritten` segment and the image grew
+to its edge, `Unmapped` with its reason otherwise. `Exact` and `Widened` carry
+the target capture's [`Anchored`](#anchored), verified against the target text.
+It is lax-functorial: when two steps and their composite map are all mapped,
+the stepwise image lies inside the composite image, and `Exact` then `Exact`
+is `Exact` (`L1-3`).
+
 ## Referent
 
 The thing a mention names, as distinct from the text that names it. Referents
@@ -793,8 +856,9 @@ through `/public` or any other browser-safe surface.
 The one selector union of `@beep/text`, after Web Annotation's: `Position`
 (unit, start, end), `Quote` (exact, prefix, suffix), `Fragment`, `Refined` and
 `Range`. `resolve` maps a capture and a selector to `Unique`, `Ambiguous` or
-`NotFound`; an ambiguous quote never resolves to its first hit. `TextAnchor`
-keeps its wire shape beside it.
+`NotFound`; an ambiguous quote never resolves to its first hit, `Range` ends
+before its end selector as in the W3C model, and `Unique` always carries a
+`utf16-code-unit` position. `TextAnchor` keeps its wire shape beside it.
 
 ## Server Config
 
@@ -911,9 +975,34 @@ replacement). Optional gUFO class typing (type of type, category of
 instances, and for a relator the role terms it mediates) is a record keyed by
 term IRI in `@beep/ontology`. A published term IRI is declared in the
 `@beep/identity` registry and bound to code through
-`TermBinding`, never derived from a code path; the published set changes only
-with a deprecation record. `since` names a vocabulary release of the
-term-stability snapshot, not a package version.
+`TermBinding`, never derived from a code path; a published IRI leaves the set
+only with a deprecation record, and an addition needs none. `since` names a vocabulary release of the
+term-stability snapshot, not a package version. A term can also be an
+instance base: identifiers of its instances are minted beneath it
+(`Registry.mint`) instead of being declared one by one.
+
+## Term Binding
+
+`TermBinding` in `@beep/identity/Term`: a code id, the declared term it
+publishes, and the release (`since`) that bound it. Bindings live in the
+registry shards beside their terms. A code id has at most one binding and a
+term at most one code id. The binding is the only arrow from code to a
+published IRI; a module or package rename moves the binding
+(`bun run beep identity rebind <from> <to>`) and leaves the term unchanged.
+
+## Term-Stability Snapshot
+
+`packages/foundation/modeling/identity/registry/term-snapshot.json`, generated
+by `bun run beep identity registry --write`: every published namespace, term,
+binding and deprecation with its `since`, under a vocabulary `release`. The
+release is one per change against a base ref: the minor is bumped when the
+change adds and the major when it deprecates.
+`snapshotViolations(previous, next)` lists every change that breaks the
+published set (a term removed without a deprecation, a changed prefix, a
+dropped or changed deprecation, a revived IRI, a rewritten binding) and every
+release or new `since` other than the one the change calls for, and
+`bun run beep lint identity-registry` runs it against the snapshot of a base
+ref. Law `L0-3` is its acceptance test.
 
 ## Tooling Package
 
@@ -986,7 +1075,7 @@ canonical stems for evaluation outcomes, and the ownership law binding them:
 | Concern | Canonical stem | Owner |
 | --- | --- | --- |
 | Shape validity | `ShapeValidationResult` | the schema-owning domain |
-| Anchor fidelity | `AnchorVerificationResult` | `@beep/provenance` |
+| Anchor fidelity | `AnchorVerificationResult` | `@beep/text` |
 | Semantic stance | `SemanticStance` | epistemic domain |
 | Source authority | `SourceAuthorityAssessment` | the consuming legal/domain slice |
 | Human decision | `HumanDisposition` stem; domain-qualified concretes (e.g. `ClaimDisposition`) | the domain owning the reviewed subject |

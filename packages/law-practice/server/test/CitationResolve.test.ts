@@ -241,7 +241,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
       );
       expect(citationResult14.reason).toBe("invalid-input");
       const first = A.getUnsafe(input.mentions, 0);
-      Reflect.set(first, "id", `cm1:${Str.repeat(64)("f")}`);
+      Reflect.set(first, "id", `cm2:${Str.repeat(64)("f")}`);
       const citationResult15 = yield* Effect.flip(resolveCitationMentions(input));
       expect(citationResult15.reason).toBe("evidence-failed");
     })

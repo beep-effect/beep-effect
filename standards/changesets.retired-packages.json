@@ -35,6 +35,10 @@
     {
       "name": "@beep/epistemic-config",
       "rationale": "Retired by goals/execution-authority-slice P1 (#2853): execution-authority config moved to @beep/execution-authority-config with EXECUTION_AUTHORITY_* env keys and no fallback. Name-reuse guard; recover the source from commit cf46c70048."
+    },
+    {
+      "name": "@beep/provenance",
+      "rationale": "Retired by goals/text-knowledge-stack-rebuild P2: its three modules moved to @beep/text with every consumer in the same commit and no alias. Name-reuse guard; recover the source from commit 79469596a0."
     }
   ]
 }

@@ -35,8 +35,11 @@ it.effect.prop(
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(CompilerOptionsFromProgrammatic)(value);
       const decoded = yield* S.decodeEffect(CompilerOptionsFromProgrammatic)(encoded);
-      // es6/es2015 and node/node10 have the same numeric meaning.
-      assert.deepStrictEqual(TsEnumCodec.encodeCompilerOptions(decoded), TsEnumCodec.encodeCompilerOptions(value));
+      assert.deepStrictEqual(
+        TsEnumCodec.encodeCompilerOptions(decoded),
+        TsEnumCodec.encodeCompilerOptions(value),
+        "es6/es2015 and node/node10 have the same numeric meaning"
+      );
       const value2 = yield* S.encodeEffect(CompilerOptionsFromProgrammatic)(decoded);
       assert.deepStrictEqual(value2, encoded);
     }),

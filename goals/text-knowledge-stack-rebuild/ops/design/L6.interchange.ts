@@ -292,7 +292,7 @@ export const OaDecodeRefusal = LiteralKit([
 /** Decoded type of {@link OaDecodeRefusal}. */
 export type OaDecodeRefusal = typeof OaDecodeRefusal.Type;
 
-/** Typed refusal of OA input, following L1's UnitConversionRefused. */
+/** Typed refusal of OA input, following `@beep/text`'s UnitConversionRefused. */
 export class OaDecodeRefused extends S.TaggedError<OaDecodeRefused, { readonly brand: unique symbol }>(
   $I`OaDecodeRefused`
 )(
@@ -305,8 +305,8 @@ export class OaDecodeRefused extends S.TaggedError<OaDecodeRefused, { readonly b
  * Encode a document and its imported activities to the profile's dataset
  * (L2-6: decode(encode(d)) = d, imported activities included).
  * `oa:start` and `oa:end` are Unicode code points on the wire; the codec
- * converts from the stored utf16-code-unit through `convertPosition`
- * (decision 2026-11-19-p0-item7-oa-profile).
+ * converts from the stored utf16-code-unit through `@beep/text`
+ * `convertPosition` (decision 2026-11-19-p0-item7-oa-profile).
  */
 export declare const encodeOa: (kinds: KindRegistry) => (input: OaEncodeInput) => Dataset;
 

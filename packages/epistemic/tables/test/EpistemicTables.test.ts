@@ -100,6 +100,11 @@ const evidenceInput = (id: number) => ({
   spanFixtureKey: "span:oa-1:12-57",
 });
 
+const frozenEvidenceRow =
+  '{"createdAt":10,"rowVersion":1,"updatedAt":11,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"artifactFixtureKey":"artifact:oa-1","spanFixtureKey":"span:oa-1:12-57","span":{"startChar":12,"endChar":57,"quote":"a processor configured to receive sensor data","confidence":0.92},"entityType":"EpistemicEvidence","publicId":"epistemic_evidence_a10","id":10}';
+const RowJson = S.fromJsonString(S.Unknown);
+const EvidenceColumnsJson = S.toEncoded(EvidenceModel).pipe(S.fromJsonString);
+
 // Exactly the decode input documented on EdgeVersion.model.ts: both temporal
 // axes arrive as epoch millis and every open bound as null.
 const edgeVersionInput = (id: number) => ({
@@ -495,6 +500,33 @@ describe("EpistemicTables", () => {
       expect(decoded.id).toBe(10);
       expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
       expect(decoded.span.confidence).toBe(0.92);
+    })
+  );
+
+  it.effect(
+    "reads and rewrites the frozen Evidence span row without changing a byte (written by toEvidenceInsert before the anchor schemas moved package; never regenerated)",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const written = yield* S.encodeEffect(RowJson)({ ...insert, id: 10 });
+      expect(written).toBe(frozenEvidenceRow);
+
+      const columns = yield* S.decodeEffect(EvidenceColumnsJson)(frozenEvidenceRow);
+      assertTrue(
+        Result.isSuccess(decodeUnknownEvidenceModelResult(columns)),
+        "the strict model reads the frozen row; the legacy span read is not what keeps it alive"
+      );
+      const read = yield* Effect.fromResult(
+        Evidence.fromEvidenceRow({
+          ...columns,
+          deletedAt: absentAsNull(columns.deletedAt),
+          deletedByPrincipal: absentAsNull(columns.deletedByPrincipal),
+        })
+      );
+      expect(read.span).toStrictEqual(evidence.span);
+      const reinsert = yield* Effect.fromResult(Evidence.toEvidenceInsert(read));
+      const rewritten = yield* S.encodeEffect(RowJson)({ ...reinsert, id: 10 });
+      expect(rewritten).toBe(frozenEvidenceRow);
     })
   );
 

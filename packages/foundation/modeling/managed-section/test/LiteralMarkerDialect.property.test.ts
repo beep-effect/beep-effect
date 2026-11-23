@@ -133,7 +133,6 @@ const styles = [
   CommentStyle.block,
 ] as const;
 
-// Content lines are prefixed so arbitrary text cannot become a marker line.
 it.effect.prop(
   "literal render/parse preserves content and reaches a fixed point",
   [Arbitrary.schema(SectionMarkers), Arbitrary.schema(S.String), Arbitrary.schema(Eol), Arbitrary.schema(StyleIndex)],
@@ -141,8 +140,8 @@ it.effect.prop(
     Effect.gen(function* () {
       const dialect = LiteralMarkerDialect.make({ phrase: "MANAGED SECTION", styles, markers: [markers] });
       const id = SectionId.make({ key: markers.key, commentStyle: styles[index] });
-      const content = `data:${Str.replace(/\n/g, "\ndata:")(Str.replace(/\r/g, "")(value))}`;
-      const section = id.section(content);
+      const contentNoLineOfWhichCanFormAMarker = `data:${Str.replace(/\n/g, "\ndata:")(Str.replace(/\r/g, "")(value))}`;
+      const section = id.section(contentNoLineOfWhichCanFormAMarker);
       const rendered = yield* Effect.fromResult(dialect.render(section, eol));
       strictEqual(Str.split(eol)(rendered)[0], styles[index].comment(markers.begin));
       const parsed = yield* SectionDocument.parse(rendered, dialect);

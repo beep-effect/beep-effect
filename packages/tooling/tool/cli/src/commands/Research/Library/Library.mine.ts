@@ -68,6 +68,7 @@ import {
   LibraryDocument,
   LibraryFinding,
   LibraryModelRun,
+  LibraryTopicId,
 } from "./Library.schemas.ts";
 import { hashBytes, loadCatalog, saveImmutable, withCatalog } from "./Library.store.ts";
 import type { PdfTools } from "@beep/pdf-tools";
@@ -486,7 +487,12 @@ const loadTopics = Effect.fn("Library.mine.topics")(function* (repoRoot: O.Optio
 });
 
 const topicIdsOf = (topics: ReadonlyArray<LibraryTopic>) =>
-  HashSet.fromIterable(A.flatMap(topics, (topic) => [topic.id, topic.initiativeId]));
+  HashSet.fromIterable(
+    A.filter(
+      A.flatMap(topics, (topic) => [topic.id, topic.initiativeId]),
+      S.is(LibraryTopicId)
+    )
+  );
 
 const partitionTopics = (known: HashSet.HashSet<string>, ids: ReadonlyArray<string>) => ({
   kept: A.dedupe(A.filter(ids, (id) => HashSet.has(known, id))),

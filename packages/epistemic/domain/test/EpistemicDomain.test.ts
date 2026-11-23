@@ -18,10 +18,10 @@ import {
   EvidenceSpanArbitrary,
 } from "@beep/epistemics/EvidenceSpan";
 import { $EpistemicId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

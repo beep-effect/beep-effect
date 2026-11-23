@@ -1,18 +1,24 @@
 import { CitationMentionId } from "@beep/law-practice-domain/values";
+import { makeCaseOccurrenceAuthorityId } from "@beep/law-practice-server/internal/Citation/AuthorityIdentity";
 import {
   CitationMentionIdentityInput,
+  CitationMentionPreimage,
   makeCitationMentionId,
 } from "@beep/law-practice-server/internal/Citation/MentionIdentity";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import {
+  caseOccurrenceKeyV1,
+  citationMentionIdV1,
+} from "@beep/law-practice-server/internal/Citation/MentionIdentityV1";
+import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   TextAnchorVerificationReceipt,
   toTextAnchorVerificationReceipt,
   VerifyTextAnchorInput,
   verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { it } from "@beep/test-runner";
+} from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -62,15 +68,58 @@ const verifiedAnchor = Effect.fn("CitationIdentityTest.anchor")(function* (
 });
 
 it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
-  it.effect("matches the independently computed cm1 protocol vector and ignores input property order", () =>
+  it.effect("matches the citation-mention/v2 golden and ignores input property order", () =>
     Effect.gen(function* () {
+      yield* CitationMentionPreimage.verifyGolden();
       const source = yield* sourceIdentity(sourceText);
       const anchor = yield* verifiedAnchor(sourceText, 3, source);
       const first = yield* makeCitationMentionId({ anchor, engineArtifact: artifact, semanticKind: "case" });
       const reordered = yield* makeCitationMentionId({ semanticKind: "case", engineArtifact: artifact, anchor });
-      expect(first).toBe("cm1:dc70e426b0b9aa61caf21a5e6e0c7274720c7e674ff2b06a8cdfd82ee0346ae9");
+      expect(first).toBe("cm2:7ece8d5655b197d8063442248a8f630cd05fee535fe5ae550f2b15754425cd44");
       expect(reordered).toBe(first);
       expect(S.is(CitationMentionId)(first)).toBe(true);
+    })
+  );
+
+  it.effect("keeps the pinned cm1 vector reproducible beside the v2 id over the same anchor", () =>
+    Effect.gen(function* () {
+      const source = yield* sourceIdentity(sourceText);
+      const anchor = yield* verifiedAnchor(sourceText, 3, source);
+      const receipt = toTextAnchorVerificationReceipt(anchor);
+      const v1 = yield* citationMentionIdV1(receipt, artifact, "case");
+      const v2 = yield* makeCitationMentionId({ anchor, engineArtifact: artifact, semanticKind: "case" });
+      expect(v1).toBe("cm1:dc70e426b0b9aa61caf21a5e6e0c7274720c7e674ff2b06a8cdfd82ee0346ae9");
+      expect(v2).toBe("cm2:7ece8d5655b197d8063442248a8f630cd05fee535fe5ae550f2b15754425cd44");
+      const keyV1 = yield* caseOccurrenceKeyV1(v1);
+      const keyV2 = yield* makeCaseOccurrenceAuthorityId(v2);
+      expect(keyV1).toBe("ca1:7f43ae8777fd804f01172cce2e73b1762c712f9f7e4c8d08bffdb58a49341bf6");
+      expect(keyV2).toBe("ca1:4d2adc3d142ce1c3a4b028bde50b9f27253a829404d1f7d773442e6d6ab5ee13");
+    })
+  );
+
+  it.effect("refuses an invalid semantic kind and a failed digest in the pinned v1 encoder", () =>
+    Effect.gen(function* () {
+      const source = yield* sourceIdentity(sourceText);
+      const anchor = yield* verifiedAnchor(sourceText, 3, source);
+      const receipt = toTextAnchorVerificationReceipt(anchor);
+      const invalid = yield* citationMentionIdV1(receipt, artifact, Str.repeat(129)("a")).pipe(Effect.flip);
+      expect(invalid).toMatchObject({ _tag: "CitationMentionIdentityFailure", reason: "invalid-input" });
+      const failedCrypto = makeTestCitationDigest(() =>
+        Effect.die(PlatformError.systemError({ _tag: "Unknown", module: "CitationIdentityTest", method: "digest" }))
+      );
+      const failed = yield* citationMentionIdV1(receipt, artifact, "case").pipe(
+        Effect.provideService(Digest.Digest, failedCrypto),
+        Effect.flip
+      );
+      expect(failed).toMatchObject({ _tag: "CitationMentionIdentityFailure", reason: "digest-failed" });
+      const malformed = yield* citationMentionIdV1(receipt, artifact, "case").pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
+        ),
+        Effect.flip
+      );
+      expect(malformed).toMatchObject({ _tag: "CitationMentionIdentityFailure", reason: "digest-failed" });
     })
   );
 
@@ -237,8 +286,23 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
         expect("cause" in failure).toBe(false);
         expect(failure.message).not.toContain("1 U.S.");
       }
+      let second = 0;
+      const lateFailure = yield* makeCitationMentionId(input).pipe(
+        Effect.provideService(
+          Digest.Digest,
+          makeTestCitationDigest(() =>
+            Effect.sync(() => {
+              second++;
+              return new Uint8Array(second === 1 ? 32 : 1);
+            })
+          )
+        ),
+        Effect.flip
+      );
+      expect(second, "the occurrence id digest succeeds and the malformed mention id digest still ran").toBe(2);
+      expect(lateFailure).toMatchObject({ _tag: "CitationMentionIdentityFailure", reason: "digest-failed" });
       const recovered = yield* makeCitationMentionId(input);
-      expect(recovered).toBe("cm1:dc70e426b0b9aa61caf21a5e6e0c7274720c7e674ff2b06a8cdfd82ee0346ae9");
+      expect(recovered).toBe("cm2:7ece8d5655b197d8063442248a8f630cd05fee535fe5ae550f2b15754425cd44");
     })
   );
 });

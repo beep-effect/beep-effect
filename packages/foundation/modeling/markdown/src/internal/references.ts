@@ -468,8 +468,6 @@ export class ParsedReference extends S.Opaque<ParsedReference, { readonly brand:
 ) {}
 
 /**
- * The encoded (plain) shape of {@link ParsedReference}.
- *
  * @category models
  * @since 0.0.0
  */

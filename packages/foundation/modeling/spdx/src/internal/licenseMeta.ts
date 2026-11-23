@@ -4,22 +4,8 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-// Vendored SPDX license metadata. The entry array below is machine-generated
-// by `lib/scripts/generate-data.ts` from the SPDX workgroup's own published
-// catalog, committed at `lib/data/spdx-licenses.json`
-// (https://github.com/spdx/license-list-data), CC0-1.0, which republishes the
-// SPDX License List (https://spdx.org/licenses/). Do not edit the array by
-// hand — run the generator to refresh it, which rewrites only the byte span
-// between the markers.
-//
-// The entries are tuples rather than objects: `[id, name, flags]`, with the
-// same 721 ids the `licenseIds.ts` catalog carries. Repeating three object
-// keys 721 times would cost consumers roughly 20KB of shipped bytes for no
-// information. `reference` is deliberately NOT vendored — every upstream
-// entry's URL is exactly `https://spdx.org/licenses/<id>.html`, so it is
-// templated in `License.referenceUrl`; the generator asserts that template
-// against upstream for every id and fails loudly on any deviation, which
-// keeps the templating a checked invariant rather than an assumption.
+// Ported from @effected/spdx src/internal/licenseMeta.ts (MIT).
+// Adapted from the SPDX workgroup's license-list-data catalog (https://github.com/spdx/license-list-data, CC0-1.0), which republishes the SPDX License List (https://spdx.org/licenses/).
 
 /**
  * Bit set in a metadata entry's `flags` when the license is OSI-approved.
@@ -90,7 +76,6 @@ export type LicenseMetaEntry = readonly [id: string, name: string, flags: number
  * @since 0.0.0
  */
 export const LICENSE_META_ROWS: readonly string[] = [
-  // spdx:license-meta:start
   "0BSD\tBSD Zero Clause License\t1",
   "3D-Slicer-1.0\t3D Slicer License v1.0\t0",
   "AAL\tAttribution Assurance License\t1",
@@ -812,7 +797,6 @@ export const LICENSE_META_ROWS: readonly string[] = [
   "xpp\tXPP License\t0",
   "xzoom\txzoom License\t0",
   "zlib-acknowledgement\tzlib/libpng License with Acknowledgement\t0",
-  // spdx:license-meta:end
 ];
 
 /**
