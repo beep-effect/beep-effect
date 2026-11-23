@@ -151,7 +151,6 @@ export type TomlErrorCodeRaw =
   | TomlSemanticErrorCodeRaw
   | TomlStringifyErrorCodeRaw;
 
-/** The engine's diagnostic record. Public modules derive line/character. */
 const $I = $TomlId.create("internal/diagnostics");
 
 /**

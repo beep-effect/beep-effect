@@ -186,8 +186,6 @@ export class TomlModificationError extends S.TaggedError<TomlModificationError, 
   }
 }
 
-// ── Internal: shared text helpers ───────────────────────────────────────────
-
 const TAB = "\t";
 const LF = "\n";
 const CR = "\r";
@@ -235,8 +233,6 @@ const dominantNewline = (source: string): "\n" | "\r\n" => {
   }
   return crlf > newlines - crlf ? "\r\n" : "\n";
 };
-
-// ── Internal: format ─────────────────────────────────────────────────────────
 
 /** A raw splice tagged with its owning expression's span for range filtering. */
 interface TaggedEdit {
@@ -548,8 +544,6 @@ const computeFormatEdits: {
   return emit.edits;
 });
 
-// ── Internal: modify — the semantic index ───────────────────────────────────
-
 /** One document section: the root run or a header's contiguous run of expressions. */
 interface Section {
   readonly header: TomlTableHeader | TomlArrayTableHeader | undefined;
@@ -706,8 +700,6 @@ const buildSemanticIndex = (
   });
   return { root, sections };
 };
-
-// ── Internal: modify — path resolution ──────────────────────────────────────
 
 /** Thrown by the pure resolution helpers; `modify` materializes {@link TomlModificationError}. */
 class ModifyFailure extends S.TaggedError<ModifyFailure, { readonly brand: unique symbol }>($I`ModifyFailure`)(
@@ -901,8 +893,6 @@ const step: {
   return stepCst(cur.node, segment);
 });
 
-// ── Internal: modify — terminal edits ───────────────────────────────────────
-
 interface RawEdit {
   readonly length: number;
   readonly newText: string;
@@ -1095,8 +1085,6 @@ const terminal: {
   }
   return terminalCst(cur.node, segment, value);
 });
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Formats TOML text and modifies values at a path as byte-minimal edits that

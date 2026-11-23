@@ -241,8 +241,6 @@ export class TomlStringifyError extends S.TaggedError<TomlStringifyError, { read
   }
 }
 
-// ── Internal helpers ────────────────────────────────────────────────────────
-
 /**
  * Run the parser and semantic pass, materializing the engine's raw carriers
  * into the typed error: `RawTomlError` becomes a positioned diagnostic and a
@@ -278,8 +276,6 @@ const stringifyToResult = (value: unknown, options?: TomlStringifyOptions): Resu
     },
   });
 
-// ── Bound codec ─────────────────────────────────────────────────────────────
-
 /**
  * A domain codec pre-bound to its two directions, returned by
  * {@link Toml.bind}: the composed `schema` (what {@link Toml.schema} returns)
@@ -310,8 +306,6 @@ export interface TomlBoundCodec<T, RD = never, RE = never> {
    */
   readonly schema: S.Codec<T, string, RD, RE>;
 }
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Static entry points for TOML parsing, stringification and the schema

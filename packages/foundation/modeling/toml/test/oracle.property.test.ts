@@ -52,8 +52,6 @@ import { assertMatchesTagged } from "./e2e/taggedJson.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// ── The canonicalizer ──────────────────────────────────────────────────────
-
 const MAX_SAFE_BIG = BigInt(Number.MAX_SAFE_INTEGER);
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -216,7 +214,6 @@ const canon = (value: unknown): unknown => {
 /** Parse through the oracle in the mode the canonicalizer expects. */
 const oracle = (text: string): unknown => oracleParse(text, { integersAsBigInt: true });
 
-// ── The arbitraries ────────────────────────────────────────────────────────
 // Recursive TOML-representable plain values, bounded at depth 4 and width 5.
 // Array form ONLY for it.effect.prop: the named-record form silently discards
 // Schema conversion in @effect/vitest 4.0.0-beta.94.
@@ -332,8 +329,6 @@ function tableArb(depth: number): Arbitrary.Arbitrary<Record<string, unknown>> {
 /** A TOML document is a table: the root arbitrary is always an object. */
 const documentArb = tableArb(3);
 
-// ── The differential properties ────────────────────────────────────────────
-
 /**
  * Fixed seed so a CI property failure reproduces locally: an unseeded run
  * draws a fresh seed per invocation, making a red CI run unreplayable. Bump
@@ -381,7 +376,6 @@ describe("smol-toml differential oracle", () => {
   );
 });
 
-// ── The corpus differential ────────────────────────────────────────────────
 // Every toml-test valid file through both parsers, agreement asserted modulo
 // `canon`. Where the oracle disagrees (rejects a valid file or parses it
 // differently), OUR result is asserted against the corpus expectation instead
