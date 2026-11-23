@@ -14,6 +14,21 @@ import { IdentityAuthority } from "../../Authority.ts";
  * @since 0.0.0
  */
 export const RegistryVocab = {
+  annotation: {
+    iri: `${IdentityAuthority}annotation/`,
+    terms: [
+      "Chunk",
+      "CorefCandidate",
+      "Figure",
+      "Mention",
+      "Paragraph",
+      "RelationCandidate",
+      "Section",
+      "Sentence",
+      "Title",
+      "Word",
+    ],
+  },
   as: {
     iri: "http://www.w3.org/ns/activitystreams#",
     terms: [
@@ -269,9 +284,17 @@ export const RegistryVocab = {
       "identifier",
     ],
   },
+  instance: {
+    iri: `${IdentityAuthority}instance/`,
+    terms: [],
+  },
   lejeune: {
     iri: `${IdentityAuthority}lejeune/ontology/`,
-    terms: [],
+    terms: [
+      "delivery_date",
+      "finish",
+      "project",
+    ],
   },
   nif: {
     iri: "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
@@ -305,6 +328,21 @@ export const RegistryVocab = {
       "refinedBy",
       "start",
       "suffix",
+    ],
+  },
+  "office-action": {
+    iri: `${IdentityAuthority}office-action/`,
+    terms: [
+      "claim",
+      "distinction",
+      "office_action",
+      "rejection_reference",
+    ],
+  },
+  operation: {
+    iri: `${IdentityAuthority}operation/`,
+    terms: [
+      "Extract",
     ],
   },
   owl: {
@@ -591,7 +629,22 @@ export const RegistryVocab = {
   },
   semantica: {
     iri: `${IdentityAuthority}semantica/`,
-    terms: [],
+    terms: [
+      "abstract",
+      "affiliatedWith",
+      "authoredBy",
+      "locatedIn",
+      "method",
+      "organization",
+      "person",
+      "reEvaluatesClaimDueTo",
+      "reference",
+      "relation-endpoint",
+      "section",
+      "selected",
+      "shows",
+      "title",
+    ],
   },
   sh: {
     iri: "http://www.w3.org/ns/shacl#",

@@ -1,6 +1,7 @@
 import * as GraphSchema from "@beep/nlp/Graph/Schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { Position } from "@beep/text/OffsetUnit";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -146,11 +147,11 @@ describe("Annotation nodes round-trip", () => {
       const decoded = yield* decodeGraphSchemaEntityNode({
         text: "Apple Inc.",
         entityType: "ORG",
-        span: { start: 0, end: 10 },
+        span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 10 },
         timestamp: 0,
       });
       expect(decoded.entityType).toBe("ORG");
-      expect(decoded.span).toEqual({ start: 0, end: 10 });
+      expect(decoded.span).toEqual(Position.makeOption({ unit: "utf16-code-unit", start: 0, end: 10 }));
       const encoded = yield* encodeGraphSchemaEntityNode(decoded);
       const redecoded = yield* decodeGraphSchemaEntityNode(encoded);
       expect(redecoded.text).toBe("Apple Inc.");
@@ -190,8 +191,16 @@ describe("Annotation nodes round-trip", () => {
       expect(dep.relation).toBe("nsubj");
       const rel = yield* decodeGraphSchemaRelationNode({
         relationType: "FOUNDED_BY",
-        subject: { text: "Apple Inc.", entityType: "ORG", span: { start: 0, end: 10 } },
-        object: { text: "Steve Jobs", entityType: "PERSON", span: { start: 14, end: 24 } },
+        subject: {
+          text: "Apple Inc.",
+          entityType: "ORG",
+          span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 10 },
+        },
+        object: {
+          text: "Steve Jobs",
+          entityType: "PERSON",
+          span: { _tag: "Position", unit: "utf16-code-unit", start: 14, end: 24 },
+        },
         timestamp: 0,
       });
       expect(rel.relationType).toBe("FOUNDED_BY");

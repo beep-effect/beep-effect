@@ -1,6 +1,6 @@
 /** Validate portable public-operation evidence without a live Python clone. */
-import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
 import { CitationOracleDiscovery, CitationOracleOperations } from "@beep/law-practice-use-cases/test";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -112,18 +112,17 @@ const program = Effect.gen(function* () {
       }
       for (const ranges of citationSpans) {
         for (const evidence of [ranges.span, ranges.fullSpan, ranges.spanWithPincite]) {
-          const converted = yield* convertTextOffsetRange(
-            TextOffsetRange.make({
-              start: evidence.python[0],
-              end: evidence.python[1],
-              unit: "unicode-code-point",
-            }),
-            document.plainText
+          const converted = yield* Effect.fromResult(
+            convertPosition(
+              Position.make({ start: evidence.python[0], end: evidence.python[1], unit: "unicode-code-point" }),
+              "utf16-code-unit",
+              document.plainText
+            )
           );
           if (
-            converted.startChar !== evidence.utf16[0] ||
-            converted.endChar !== evidence.utf16[1] ||
-            Str.slice(converted.startChar, converted.endChar)(document.plainText) !== evidence.text
+            converted.start !== evidence.utf16[0] ||
+            converted.end !== evidence.utf16[1] ||
+            Str.slice(converted.start, converted.end)(document.plainText) !== evidence.text
           ) {
             return yield* Effect.fail(new Error("Python/UTF-16 coordinate evidence failed exact slice equality"));
           }

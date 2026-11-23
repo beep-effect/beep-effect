@@ -293,6 +293,192 @@ home paths with `~`, drop session and machine ids.
   `gh pr view <n> --json baseRefName`. Or Yeet's stack plan could name the depth limit when a
   packet's held PRs already form a two-layer stack.
 
+## 2026-11-22: the semantica provider cache survives only in the desktop Trash
+
+- **Doing:** freezing today's `bun run canary relation preview` report for P3 commit 1.
+- **Evidence:** no checkout has `.beep/semantica/provider-cache`, and no configured
+  `SEMANTICA_PROVIDER_CACHE_DIR` exists. The 152 MB cache (4,903 entries) was found only under
+  `~/.local/share/Trash/files/` in a retired `beep-effect11` clone, by a whole-disk `find` for one
+  cache key. Emptying the Trash would have made the relation-preview gate of commits 1 and 8
+  impossible. The three committed cases were copied to `~/.cache/beep/semantica-relation-preview-cache/`.
+- **Prevention:** give the provider cache a fixed workstation home outside every clone, set as the
+  default of `SEMANTICA_PROVIDER_CACHE_DIR`, and have the lane drain refuse to archive a clone that
+  holds the only copy of an untracked cache a gate reads.
+
+## 2026-11-22: `package-test-typecheck` exits 0 over test type errors
+
+- **Doing:** typechecking the semantica and law-practice server tests for P3 commit 1.
+- **Evidence:** `bun run package-test-typecheck` (`beep-cli quality test-tsgo-package`) printed only
+  its command line and exited 0, while `.turbo/package-test-typecheck-result.json` recorded
+  `"exitCode": 1` with `TS2345` and `TS377188` in `test/Extractor.test.ts`. Read by exit code
+  alone, the gate passed a test file that does not compile.
+- **Prevention:** have the script exit with the recorded `exitCode` and print the diagnostics it
+  stores, or name the artifact as the verdict in its own output.
+
+## 2026-11-22: the instrumentation-catalog hook skips a module directly under `src/`
+
+- **Doing:** P3 commit 3 added `packages/foundation/modeling/text/src/Capture.ts` with the
+  `Capture.mint` span. The commit carried the schema-catalog shard but not the instrumentation
+  shard, so `beep observability catalog --check` reported `@beep/text.generated.jsonc: stale`.
+- **Evidence:** `lefthook run pre-commit --command instrumentation-catalog --file
+  packages/foundation/modeling/text/src/Capture.ts --verbose` printed `filtered [ ]` and
+  `no files for inspection`, while the same run on `src/internal/scalars.ts` matched. Lefthook's
+  default glob matcher needs at least one directory for `**/`, so
+  `{apps,packages}/**/src/**/*.{ts,tsx}` never matched `src/<Module>.ts`. Every new top-level module
+  in any package had the same gap.
+- **Prevention:** the hook's glob is now a list that adds `{apps,packages}/**/src/*.{ts,tsx}`. A
+  repo test that runs each `lefthook.yml` glob against one top-level and one nested sample path
+  would catch the next pattern of this shape.
+
+## 2026-11-22: `goals decisions add` and `goals decisions write` spell the slug two ways
+
+- **Doing:** recording the two decision files of P3 commit 4, then regenerating their projections.
+- **Evidence:** `bun run beep goals decisions add text-knowledge-stack-rebuild ...` takes the slug as a
+  positional argument; the follow-up `bun run beep goals decisions write text-knowledge-stack-rebuild`
+  failed with `Unexpected positional argument: "text-knowledge-stack-rebuild"` and needs `--slug`.
+  In a `set -e` script the second command aborted the run after the files were written.
+- **Prevention:** accept the slug positionally in `write` and `check` as `add` does, or accept
+  `--slug` in `add`, so one spelling works for the whole family.
+
+## 2026-11-22: schema-first flags a structural view whose schema is module-private
+
+- **Doing:** P3 commit 4 exported `AnnotationDocumentView`, the kind-independent view every
+  caller-owned annotation document satisfies.
+- **Evidence:** `bun run lint:schema-first` reported `object-struct-schema` for it after the schema was
+  made module-private and only `export type AnnotationDocumentView = typeof View.Type` remained. A
+  branded `S.Opaque` view is nominal, so no `TextDocument` would satisfy it; the only way through was
+  an inventory exception, as for the internal `DocumentEnvelope`.
+- **Prevention:** let the rule tell a structural view (a type consumed only as a constraint) from an
+  exported data model, or document the exception pattern for generic views beside the D1 rule.
+
+## 2026-11-22: vitest `toEqual` compares a `HashMap`'s trie, not its entries
+
+- **Doing:** P3 commit 5, the `L2-1` and `L2-4` laws over merged and restricted annotation documents.
+- **Evidence:** `expect(merged).toEqual(expected)` failed on documents and generation sets that
+  `Equal.equals` holds equal (`expected { Object (~effect/HashSet, keyMap) } to deeply equal ...`),
+  about one property run in three. `@effect/vitest`'s `addEqualityTesters` registers an empty
+  tester list, so `toEqual` walks the internal trie, whose shape depends on how the map was built
+  (a union against a decoded copy). The same test passed on its first run, so a green run proved
+  nothing.
+- **Prevention:** compare Effect collections with `assertEquals` from `@effect/vitest/utils`, and
+  have the effect-vitest lint flag `toEqual` whose operands carry a `HashMap` or `HashSet`; or
+  register an `Equal.equals` tester in `@beep/test-runner` so `toEqual` means `Equal` for them.
+
+## 2026-11-22: `annotateKey` on an `S.Opaque` field drops the opaque type
+
+- **Doing:** P3 commit 6, the `OaImport` result schema of `@beep/annotation/rdf/OaCodec`, whose `document` field is the
+  caller-owned `OaDocument` and whose `residual` is `@beep/rdf`'s `Dataset`.
+- **Evidence:** with `document: OaDocument.annotateKey({ ... })` the field's decoded type became the bare struct, and
+  every caller that passed `result.document` on as an `OaDocument` failed with `Property 'brand' is missing in type
+  '{ readonly text: SourceTextIdentity; ... }' but required in type 'OaDocument'` (TS2741); the same held for
+  `Rdf.Dataset.annotateKey`. `annotateKey` rebuilds the schema from its AST, and an opaque class's rebuild is its
+  struct, so the `Self` type is lost. The source module type-checked; only the test that used the result failed.
+- **Prevention:** a lint or schema-first rule that flags `annotateKey` on an `S.Opaque` class used as a struct field,
+  or an `annotateKey` overload on opaque classes that keeps `Self`; until then, annotate the field's description on
+  the opaque class itself and leave the field unannotated.
+
+## 2026-11-22: a scoped `lint schema-catalog --write` reports a shard written that it left stale
+
+- **Doing:** P3 commit 7, refreshing the `@beep/langextract` and `@beep/law-practice-use-cases` schema-catalog shards
+  after deleting the langextract range schemas and adding the attempt-log read codec.
+- **Evidence:** `bun run beep lint schema-catalog --write packages/foundation/capability/langextract
+  packages/law-practice/use-cases` printed `wrote @beep/langextract, @beep/law-practice-use-cases` and changed no
+  file; the same command over one source file of each package wrote only the use-cases shard. The check still said
+  `stale standards/schema-catalog/@beep/langextract.generated.jsonc` until a repository-wide `--write` rewrote it.
+  `observability catalog --write <file>` refreshed the langextract instrumentation shard from one file.
+- **Prevention:** make the scoped write resolve directory paths to their owning package and fail when a shard it
+  reports as written is still stale; until then, run the unscoped `--write` and read `git status` afterwards.
+
+## 2026-11-22: commit 8 preview vocabulary conflicts with the design
+
+- Work: replay the frozen relation-preview report through the verified annotation handoff.
+- Evidence: the offline preview exits 1 with "The E5 preview grounded no relation"; historical aligned relation candidates become `unmapped-predicate` residuals. The frozen report requires 10 grounded relations.
+- Cause: design section 5.4 declares six predicates; semantica `src/schema/Evidence.ts` explicitly admits arbitrary non-empty historical predicates for this preview. The full semantica suite, including frozen hosted batches, passes 152 tests but does not catch this conflict.
+- Prevention: include the historical replay vocabulary in the design simulation, and assert the actual frozen report before calling the contract settled. Sent the contradiction to the orchestrator for a bounded resolution; no corpus text recorded.
+
+## 2026-11-22: versioned review captures expose an unversioned deterministic Tika scaffold
+
+- Work: run the server standing tests after capture construction.
+- Evidence: the review fails with "Office-action review requires a versioned extractor" from the deterministic `apache-tika` scaffold. Its descriptor and both result paths omitted a version.
+- Prevention: every text-producing engine should declare its implementation pin before a consumer constructs provenance from it. The orchestrator approved `text-scaffold/1` for this in-process scaffold, with both result paths and a regression test; app/server runtime paths stay separate.
+
+## 2026-11-22: source verification changes timeout-test scheduling under Node
+
+- Work: run langextract coverage under Node/V8 after adding capture verification.
+- Evidence: the full coverage run waited in the two TestClock timeout cases; focused handoff coverage completed in under two seconds at 100 percent. The model timeout was scheduled only after the asynchronous source digest completed, while the test advanced the clock immediately after forking.
+- Prevention: synchronize on a Deferred from the stub model before advancing TestClock. The tests now wait until generation starts; they keep the real digest service and production timeout.
+
+## 2026-11-22: the alignment cap and the lossless handoff need separate candidate inputs
+
+- Work: inspect commit 8 against the handoff count contract.
+- Evidence: the existing service case parses two candidates with an alignment cap of one. Passing only the aligner result gives a handoff count of one while diagnostics say two.
+- Prevention: keep the attempted prefix and raw skipped tail explicit. By orchestrator ruling, optional `overCap` preserves the latter as `over-extraction-cap` residuals, with no anchor and `alignment: unaligned` meaning no proof. The reason records that alignment was not attempted. The cap test now pins raw fields and matching parsed counts.
+
+## 2026-11-22: lab documentation wrappers intentionally select no source files
+
+- Work: run JSDoc lint for the two touched lab workspaces.
+- Evidence: the package wrapper and an explicit invocation using `.oxlintrc.docs.json` report "No files found to lint" because that config excludes `apps/labs/**`; neither lab declares a docgen script.
+- Prevention: report that exclusion as an empty selection. For this change the touched lab sources are additionally checked with a temporary copy of the same documentation policy whose lab exclusion is removed; no repository policy is changed.
+
+## 2026-11-22 — P3 Graph position retirement
+
+- **Doing:** migrating Graph spans and running package verification.
+  **Evidence:** nlp-processing docgen caught three nested float-span examples
+  outside the design's file list. Wink's resolver match also needed an explicit
+  Option<Position> result to prevent a generic none from widening inference.
+  **Would have prevented it:** a span-constructor search that includes JSDoc,
+  plus an explicit result type at the resolver boundary.
+- **Doing:** proving the semantica pattern lane after unique-only resolution.
+  **Evidence:** C0Slice live and replay digests still agreed, but its fixed digest
+  changed when repeated entity surfaces lost their fabricated first-match spans.
+  **Would have prevented it:** naming that expected pattern-report change beside
+  the design's repeated-surface warning. Hosted frozen batches remain unchanged.
+- **Doing:** checking the retained P3 design-module handoff.
+  **Evidence:** the root oxlint configuration excludes goals, so a normal
+  invocation exits with “No files found to lint.” A temporary configuration
+  that removes only this exclusion found a claim-log codec compiled per call;
+  it is now hoisted beside its schema at module scope.
+  **Would have prevented it:** a supported explicit-files lint mode that reports
+  excluded inputs instead of silently leaving them outside the check.
+- **Doing:** registering targeted law-practice read-codec coverage through the
+  existing additions-only coverage writer.
+  **Evidence:** the writer refuses an unselected measured package even when its
+  rows were just registered by the preceding small-package run. The exact
+  selected set must include every retained summary; all five measured package
+  names are now supplied. The law-practice run itself remains file-targeted.
+  **Would have prevented it:** the additions-only CLI accepting a summary path
+  or filtering its snapshot to the exact selected packages before validation.
+- **Doing:** regenerating the P3 JSDoc totals.
+  **Evidence:** the full inventory found that the commit-7 exported read codec
+  lacked its same-name runtime type alias; package docgen alone had passed.
+  The alias and its titled example are now present; the new finding is removed
+  rather than admitted into the JSDoc baseline.
+  **Would have prevented it:** the package JSDoc gate sharing the inventory's
+  schema/value/type parity check.
+- **Doing:** proving the L2 cache baseline after inventory regeneration.
+  **Evidence:** cache audit reported configuration-drift on the root
+  lint:policy-fingerprint computation because the fingerprint was regenerated
+  after the review. The final cache review now follows that generator.
+  **Would have prevented it:** an explicit generator-order dependency from
+  the cache-baseline writer to the policy-fingerprint writer.
+
+- **Doing:** remediating P3's dependency reds and replaying cheap-gates.
+  **Evidence:** the generated config and fallow checks passed after the manifest
+  fixes, but cache policy reported nine configuration-drift findings for
+  law-practice use-cases and Lejeune. The exact dependency edges also belong to
+  the reviewed cache projection. The scoped cache review carries all prior
+  reviews and grants no qualification.
+  **Would have prevented it:** dependency-edit guidance naming tsconfig-sync
+  and the reviewed cache projection as one regeneration sequence.
+
+- **Doing:** replaying final-head fallow health with an explicit base ref.
+  **Evidence:** the wrapper recorded origin/main in its envelope but omitted it
+  from the native health invocation. It reported 47 findings in untouched files,
+  while audit attributed zero introduced findings. The wrapper now forwards the
+  requested base through Fallow's changed-since option; the existing baseline
+  and all complexity thresholds remain in force for changed files.
+  **Would have prevented it:** a health argument-contract assertion that the
+  envelope's declared base also reaches the native command.
 ## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
 
 - **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.
@@ -302,3 +488,14 @@ home paths with `~`, drop session and machine ids.
   beep-reviewer caught it on the PR ("Merge re-record reverts main's root baseline profile").
 - **Prevention:** `cache baseline` could refuse a request whose profile is not the one the
   checkout's `.bun-version` yields, or derive the profile itself when the request omits it.
+
+## 2026-11-23: the goal Stop hook re-fired every few seconds while P3 waited on P2's merge slot
+
+- **Doing:** holding the P3 lane (#3516) until the orchestrator merged P2 (#3511) in a slot the
+  CI goals driver ruled on (pin-PR hour, runner burst until 14:39Z).
+- **Evidence:** P2 was CLEAN and MERGEABLE with 73 passing checks. The goal Stop hook re-fired more
+  than 60 times between 13:48Z and 13:52Z with the same "P2 is OPEN" judgment. The repo forbids
+  polling loops for PR waits, and `gh event listen` returned HTTP 403 (event subscriptions not
+  enabled), so the only wake signal was the PR watch.
+- **Prevention:** the goal hook could accept a recorded external blocker (owner, wake signal,
+  earliest time) and stay quiet until that signal fires, instead of judging each idle turn.

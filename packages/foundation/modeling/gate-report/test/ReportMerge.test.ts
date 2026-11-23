@@ -1,5 +1,3 @@
-// Folding the runs one script invocation made into one report: units and items
-// once each, totals recounted, the worse reason, policy and stray output summed.
 import { Totals, Unit } from "@beep/gate-report/GateReport";
 import { ItemKey } from "@beep/gate-report/ItemKey";
 import { PolicyBreach, PolicyRenderState } from "@beep/gate-report/Policy";

@@ -25,11 +25,6 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 
 const $I = $SkillContractId.create("Recovery");
 
-// A budget duration travels as a JSON number of whole milliseconds. The check
-// pins that representation on the Duration itself: infinities and negative
-// values aside, a sub-millisecond nanosecond value or a magnitude past the
-// safe-integer range encodes to a number that decodes to a different Duration
-// (or to no JSON number at all), so such values never round-trip.
 const isWholeMillisDuration = (duration: Duration.Duration): boolean => {
   const millis = Duration.toMillis(duration);
   return Number.isSafeInteger(millis) && millis >= 0 && Duration.Equivalence(Duration.millis(millis), duration);

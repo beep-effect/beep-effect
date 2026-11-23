@@ -54,7 +54,6 @@ import type { AssistantTurnEvent, TurnHistoryItem } from "@beep/agents-use-cases
 import type * as AiError from "effect/ai/AiError";
 import type * as Response from "effect/ai/Response";
 import type * as Config from "effect/Config";
-import type * as ExecutionPlan from "effect/ExecutionPlan";
 import type { RepairInvalidBlocks } from "./BlockRepair.ts";
 
 const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnKernel");
@@ -95,12 +94,7 @@ const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnKernel");
 export class AnthropicTurnProvider extends Context.Service<
   AnthropicTurnProvider,
   {
-    readonly turnPlan: ExecutionPlan.ExecutionPlan<{
-      provides: LanguageModel.LanguageModel;
-      input: AiError.AiError | Config.ConfigError;
-      error: Config.ConfigError;
-      requirements: never;
-    }>;
+    readonly turnPlan: typeof AnthropicTurnPlan;
     readonly repairInvalidBlocks: RepairInvalidBlocks;
   }
 >()($I`AnthropicTurnProvider`) {}

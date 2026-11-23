@@ -46,14 +46,12 @@ const grounded = (pair: OfficeActionRawPair): ReadonlyArray<GroundedExtraction> 
   GroundedExtraction.cases.match_exact.make({
     label: labels[0],
     text: pair.finalityAnchor.quote,
-    matchedText: pair.finalityAnchor.quote,
-    span: { start: pair.finalityAnchor.startChar, end: pair.finalityAnchor.endChar },
+    anchor: pair.finalityAnchor,
   }),
   GroundedExtraction.cases.match_exact.make({
     label: labels[1],
     text: pair.periodAnchor.quote,
-    matchedText: pair.periodAnchor.quote,
-    span: { start: pair.periodAnchor.startChar, end: pair.periodAnchor.endChar },
+    anchor: pair.periodAnchor,
   }),
 ];
 const fromExtractions = Effect.fn("OfficeActionStructure.fromExtractions")(function* (
@@ -75,16 +73,8 @@ const fromExtractions = Effect.fn("OfficeActionStructure.fromExtractions")(funct
   if (!GroundedExtraction.guards.match_exact(first) || !GroundedExtraction.guards.match_exact(second)) {
     return DocStructureAbstention.make({ rule: input.rule, code: "rule-not-covered" });
   }
-  const finalityAnchor = yield* S.decodeEffect(TextAnchor)({
-    startChar: first.span.start,
-    endChar: first.span.end,
-    quote: first.matchedText,
-  }).pipe(Effect.mapError(() => VerifiedTextAnchorError.fromReason("invalid-anchor")));
-  const periodAnchor = yield* S.decodeEffect(TextAnchor)({
-    startChar: second.span.start,
-    endChar: second.span.end,
-    quote: second.matchedText,
-  }).pipe(Effect.mapError(() => VerifiedTextAnchorError.fromReason("invalid-anchor")));
+  const finalityAnchor = first.anchor;
+  const periodAnchor = second.anchor;
   const finalityProof = yield* verifyTextAnchorAgainstVerifiedSource(
     VerifyTextAnchorAgainstVerifiedSourceInput.make({ anchor: finalityAnchor, verifiedSource: input.verifiedSource })
   );

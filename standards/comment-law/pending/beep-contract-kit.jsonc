@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/contract-kit",
-  "root": "packages/foundation/modeling/contract-kit",
-  "scopes": ["."]
-}

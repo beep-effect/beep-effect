@@ -12,10 +12,14 @@ import {
   LangExtractResult,
   parseModelOutput,
 } from "@beep/langextract/Extraction";
-import { toAnnotatedDocument } from "@beep/langextract/Handoff";
+import { handoff, startExtraction } from "@beep/langextract/Handoff";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as A from "@beep/utils/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Model from "effect/ai/Model";
 import * as Clock from "effect/Clock";
+import * as Digest from "effect/crypto/Digest";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -24,12 +28,10 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AnnotatedDocumentInput } from "../Handoff/Handoff.model.ts";
 import { ensureRemoteExtractionAllowed } from "./Service.policy.ts";
 import { buildPrompt } from "./Service.prompt.ts";
 import { LangExtractGenerationTimeout, LangExtractRemotePolicy, LangExtractService } from "./Service.service.ts";
 
-const GENERATED_BY = "@beep/langextract";
 const GENERATE_TEXT_TIMEOUT = Duration.seconds(30);
 
 /**
@@ -49,6 +51,9 @@ const GENERATE_TEXT_TIMEOUT = Duration.seconds(30);
  */
 export const make = Effect.fn("LangExtractService.make")(function* () {
   const languageModel = yield* LanguageModel.LanguageModel;
+  const digest = yield* Digest.Digest;
+  const providerName = yield* Model.ProviderName;
+  const modelName = yield* Model.ModelName;
   const remotePolicy = yield* Effect.serviceOption(LangExtractRemotePolicy);
   const generationTimeout = (yield* Effect.serviceOption(LangExtractGenerationTimeout)).pipe(
     O.getOrElse(() => GENERATE_TEXT_TIMEOUT)
@@ -57,12 +62,31 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
   return LangExtractService.of({
     extract: Effect.fn("LangExtractService.extract")(function* (request) {
       yield* ensureRemoteExtractionAllowed(remotePolicy, request);
+      const verified = yield* verifySourceTextIdentity(
+        VerifySourceTextIdentityInput.make({
+          expectedSource: request.source,
+          source: request.source,
+          sourceText: request.text,
+        })
+      ).pipe(
+        Effect.provideService(Digest.Digest, digest),
+        Effect.mapError(() =>
+          LangExtractError.fromReason("source-text-mismatch", { message: "Text does not match the source capture." })
+        )
+      );
+      const started = yield* Clock.currentTimeMillis;
       const prompt = yield* buildPrompt(request);
+      const activity = yield* startExtraction({ prompt, source: request.source, started }).pipe(
+        Effect.provideService(Digest.Digest, digest),
+        Effect.provideService(Model.ProviderName, providerName),
+        Effect.provideService(Model.ModelName, modelName),
+        Effect.orDie
+      );
       const response = yield* languageModel.generateText({ prompt }).pipe(
         Effect.tapCause(() =>
           Effect.logWarning("LangExtract language-model generation failed.").pipe(
             Effect.annotateLogs({
-              "langextract.document_id": request.documentId,
+              "langextract.capture_id": activity.start.used,
               "langextract.operation": "generate_text",
             })
           )
@@ -87,15 +111,14 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
       const candidates = yield* parseModelOutput(response.text);
       const extractions = alignCandidates(candidates, AlignmentSource.fromRequest(request));
       const timestamp = yield* Clock.currentTimeMillis;
-      const annotatedDocument = toAnnotatedDocument(
-        AnnotatedDocumentInput.make({
-          documentId: request.documentId,
-          extractions,
-          generatedBy: GENERATED_BY,
-          text: request.text,
-          timestamp,
-        })
-      );
+      const extractionHandoff = yield* handoff({
+        targets: request.targets,
+        verified,
+        candidates: extractions,
+        overCap: A.drop(candidates, extractions.length),
+        activity,
+        at: DateTime.makeUnsafe(timestamp),
+      }).pipe(Effect.provideService(Digest.Digest, digest));
       const alignedCount = pipe(
         extractions,
         A.filter(GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"])),
@@ -104,16 +127,13 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
       const unalignedCount = Num.subtract(A.length(extractions), alignedCount);
 
       return LangExtractResult.make({
-        annotatedDocument,
+        handoff: extractionHandoff,
         diagnostics: LangExtractDiagnostics.make({
           alignedCount: S.Natural.make(alignedCount),
           candidateCount: S.Natural.make(A.length(candidates)),
           promptChars: S.Natural.make(Str.length(prompt)),
           unalignedCount: S.Natural.make(unalignedCount),
         }),
-        documentId: request.documentId,
-        extractions,
-        text: request.text,
       });
     }),
   });
@@ -125,51 +145,22 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
  * **Example** (Provide service with test model)
  *
  * ```ts
- * import { LangExtractService, layer } from "@beep/langextract/Service"
- * import { ExtractionTarget } from "@beep/langextract/Target"
- * import { LangExtractRequest } from "@beep/langextract/Extraction"
- * import { DocumentId } from "@beep/nlp/Core"
- * import * as Effect from "effect/Effect";
- * import * as Layer from "effect/Layer";
- * import * as Stream from "effect/Stream";
- * import * as LanguageModel from "effect/ai/LanguageModel";
- * import * as Response from "effect/ai/Response";
- * const usage = Response.Usage.make({
- *   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 10, uncached: 10 },
- *   outputTokens: { reasoning: undefined, text: 8, total: 8 }
- * })
- * const TestLanguageModel = Layer.effect(
- *   LanguageModel.LanguageModel,
- *   LanguageModel.make({
- *     generateText: () =>
- *       Effect.succeed([
- *         Response.makePart("text", {
- *           text: '{"extractions":[{"label":"person","text":"Ada Lovelace"}]}'
- *         }),
- *         Response.makePart("finish", { reason: "stop", response: undefined, usage })
- *       ]),
- *     streamText: () => Stream.empty
- *   })
- * )
- * const request = LangExtractRequest.make({
- *   documentId: DocumentId.make("doc-1"),
- *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
- *   text: "Ada Lovelace wrote notes."
- * })
+ * import { layer } from "@beep/langextract/Service"
+ * import type * as LanguageModel from "effect/ai/LanguageModel"
+ * import type * as Model from "effect/ai/Model"
+ * import * as Digest from "effect/crypto/Digest"
+ * import * as Layer from "effect/Layer"
  *
- * const program = Effect.gen(function* () {
- *   const service = yield* LangExtractService
- *   const result = yield* service.extract(request)
- *   return result.diagnostics.alignedCount
- * }).pipe(Effect.provide(layer), Effect.provide(TestLanguageModel))
- *
- * Effect.runPromise(program).then(console.log)
+ * const withModel = (model: Layer.Layer<LanguageModel.LanguageModel | Model.ProviderName | Model.ModelName>) =>
+ *   layer.pipe(Layer.provide(Layer.merge(model, Digest.layerWebCrypto)))
+ * console.log(typeof withModel)
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const layer: Layer.Layer<LangExtractService, never, LanguageModel.LanguageModel> = Layer.effect(
+export const layer: Layer.Layer<
   LangExtractService,
-  make()
-);
+  never,
+  LanguageModel.LanguageModel | Model.ProviderName | Model.ModelName | Digest.Digest
+> = Layer.effect(LangExtractService, make());

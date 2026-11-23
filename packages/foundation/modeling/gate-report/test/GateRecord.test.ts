@@ -1,5 +1,4 @@
-// Retargets upstream packages/sdk/__test__/RunReportFile.test.ts (vitest-agent
-// 1cf1ab94): the gate-report/v1 envelope and its ISO instant.
+// Ported from vitest-agent 1cf1ab94 packages/sdk/__test__/RunReportFile.test.ts (MIT).
 
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GateRecord, GateRecordFromJson } from "@beep/gate-report/GateRecord";
@@ -17,7 +16,7 @@ const record = GateRecord.make({ generatedAt: DateTime.makeUnsafe(1_763_546_757_
 
 const instant = (text: string): boolean => O.isSome(decodes(IsoInstant)(text));
 
-describe("GateRecord", () => {
+describe("GateRecord: the gate-report/v1 envelope and its ISO instant", () => {
   it.effect("round-trips through its JSON text", () =>
     Effect.gen(function* () {
       const text = yield* S.encodeEffect(GateRecordFromJson)(record);

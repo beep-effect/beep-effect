@@ -27,12 +27,10 @@ import * as Str from "effect/String";
 
 const isHarvestedReferenceLists = S.is(S.Array(HarvestedReferenceList));
 
-// Pure functions get pure tests, with no layer at all.
-
 const capitalized = (word: string): string =>
   Str.toUpperCase(O.getOrElse(Str.charAt(0)(word), constant(""))) + Str.slice(1)(word);
 
-describe("ClosingList.parseClosingList", () => {
+describe("ClosingList.parseClosingList: pure functions get pure tests, with no layer at all", () => {
   it("exports exactly the three reference keywords", () => {
     assert.deepStrictEqual([...REFERENCE_KEYWORDS], ["ref", "refs", "references"]);
   });
@@ -82,31 +80,30 @@ describe("ClosingList.parseClosingList", () => {
   });
 
   it("rejects everything that is not exactly one whole-line list", () => {
-    const negatives = [
-      "Closes: 123", // the # is mandatory
-      "closes #1 because reasons", // trailing prose after the list
-      "see closes #1", // leading prose
-      "closes #1, #2 done", // trailing prose after a longer list
-      "closes #1, and", // Oxford comma with no final item
-      "closes #1 and", // dangling and
-      "closes #1,", // dangling comma
-      "closes:#1", // colon without the mandatory space
-      "closes#1", // no separator at all
-      "closes", // keyword without a list
-      "closes\n#1", // an embedded newline means this was never one line
-      "closes #1,\n#2", // ...even between items
-      "closes #1 android #2", // and must stand alone
-      "closes owner/repo#3", // cross-repo is out of scope
-      "#1, #2", // no keyword
-      "", // an empty line carries nothing
-      "complete garbage", // not the grammar at all
+    const negatives: ReadonlyArray<readonly [line: string, reason: string]> = [
+      ["Closes: 123", "the # is mandatory"],
+      ["closes #1 because reasons", "trailing prose after the list"],
+      ["see closes #1", "leading prose"],
+      ["closes #1, #2 done", "trailing prose after a longer list"],
+      ["closes #1, and", "Oxford comma with no final item"],
+      ["closes #1 and", "dangling and"],
+      ["closes #1,", "dangling comma"],
+      ["closes:#1", "colon without the mandatory space"],
+      ["closes#1", "no separator at all"],
+      ["closes", "keyword without a list"],
+      ["closes\n#1", "an embedded newline means this was never one line"],
+      ["closes #1,\n#2", "...even between items"],
+      ["closes #1 android #2", "and must stand alone"],
+      ["closes owner/repo#3", "cross-repo is out of scope"],
+      ["#1, #2", "no keyword"],
+      ["", "an empty line carries nothing"],
+      ["complete garbage", "not the grammar at all"],
     ];
-    for (const line of negatives) assert.doesNotThrow(() => assertNone(parseClosingList(line)), line);
+    for (const [line, reason] of negatives)
+      assert.doesNotThrow(() => assertNone(parseClosingList(line)), `${reason}: ${line}`);
   });
 
-  it("rejects the WHOLE line when any item exceeds Number.MAX_SAFE_INTEGER", () => {
-    // Contrast the harvest dialect, which skips the one bad match: a list is
-    // a single claim about a set of issues, and a partial list misrepresents.
+  it("rejects the WHOLE line when any item exceeds Number.MAX_SAFE_INTEGER, where the harvest skips one match: a partial list misrepresents the claim", () => {
     assertNone(parseClosingList("closes #1, #9007199254740993, #2"));
     assertNone(parseClosingList("closes #9007199254740993"));
   });
@@ -122,17 +119,14 @@ describe("ClosingList.parseClosingList", () => {
     }
   });
 
-  it("keeps the separator case-sensitive while the keyword is not", () => {
-    // The keyword head lowercases; the `and` separator is grammar, not prose.
+  it("keeps the `and` separator case-sensitive, as grammar not prose, while the keyword head lowercases", () => {
     const parsed = parseClosingList("CLOSES #1 and #2");
     assertSome(parsed, O.getOrThrow(parsed));
     assertNone(parseClosingList("closes #1 AND #2"));
     assertNone(parseClosingList("closes #1, And #2"));
   });
 
-  it("stays linear on hostile input — long runs of tabs and huge lists", () => {
-    // The scan is a single pass with no regex engine behind it; these would
-    // hang a backtracking list pattern and must simply answer, fast.
+  it("stays linear on hostile input that would hang a backtracking list pattern — long runs of tabs and huge lists", () => {
     const tabs = Str.repeat(100_000)("\t");
     assertNone(parseClosingList(`closes${tabs}x`));
     assertNone(parseClosingList(`closes #1,${tabs}and#2`));
@@ -370,15 +364,16 @@ describe("ClosingList.parseReferenceList", () => {
   });
 
   it("shares the closing dialect's rejections", () => {
-    const negatives = [
-      "refs: 123", // the # is mandatory
-      "refs #1 trailing", // trailing prose
-      "refs\n#1", // embedded newline
-      "refs #9007199254740993", // unsafe integer rejects the whole line
-      "reference #1", // not a listed keyword spelling
-      "", // an empty line carries nothing
+    const negatives: ReadonlyArray<readonly [line: string, reason: string]> = [
+      ["refs: 123", "the # is mandatory"],
+      ["refs #1 trailing", "trailing prose"],
+      ["refs\n#1", "embedded newline"],
+      ["refs #9007199254740993", "unsafe integer rejects the whole line"],
+      ["reference #1", "not a listed keyword spelling"],
+      ["", "an empty line carries nothing"],
     ];
-    for (const line of negatives) assert.doesNotThrow(() => assertNone(parseReferenceList(line)), line);
+    for (const [line, reason] of negatives)
+      assert.doesNotThrow(() => assertNone(parseReferenceList(line)), `${reason}: ${line}`);
   });
 });
 
@@ -429,14 +424,13 @@ describe("ClosingList.harvestReferenceLists", () => {
   it("harvests two lists with different keywords from one line, offsets exact", () => {
     const text = "Closes #123, Fixes #456";
     const found = harvestReferenceLists(text);
-    // `, Fixes` fails as a separator continuation because what follows the
-    // comma is not `#`, so this is two single-item lists, not one of three.
     assert.deepStrictEqual(
       A.map(found, (list) => ({ keyword: list.keyword, closing: list.closing, issueNumbers: [...list.issueNumbers] })),
       [
         { keyword: "closes", closing: true, issueNumbers: [123] },
         { keyword: "fixes", closing: true, issueNumbers: [456] },
-      ]
+      ],
+      "`, Fixes` is no separator continuation, since no `#` follows the comma: two single-item lists, not one of three"
     );
     assert.strictEqual(Str.slice(found[0]?.start, found[0]?.end)(text), "Closes #123");
     assert.strictEqual(Str.slice(found[1]?.start, found[1]?.end)(text), "Fixes #456");
@@ -477,14 +471,19 @@ describe("ClosingList.harvestReferenceLists", () => {
   });
 
   it("crosses a newline between keyword and first item, but never inside a list", () => {
-    // The keyword→first-item gap mirrors the inline dialect's \s+ ...
     const gapped = harvestReferenceLists("closes\n#1, #2");
-    assert.deepStrictEqual([...(gapped[0]?.issueNumbers ?? [])], [1, 2]);
-    // ...while list continuation stays [ \t]-only: a later line makes its
-    // own claims, so the newline ends the list at #1.
+    assert.deepStrictEqual(
+      [...(gapped[0]?.issueNumbers ?? [])],
+      [1, 2],
+      "the keyword-to-first-item gap mirrors the inline dialect's \\s+"
+    );
     const split = harvestReferenceLists("closes #1,\n#2");
     assert.lengthOf(split, 1);
-    assert.deepStrictEqual([...(split[0]?.issueNumbers ?? [])], [1]);
+    assert.deepStrictEqual(
+      [...(split[0]?.issueNumbers ?? [])],
+      [1],
+      "list continuation stays [ \\t]-only: a later line makes its own claims, so the newline ends the list at #1"
+    );
   });
 
   it("holds word boundaries on both sides of the keyword", () => {
@@ -493,9 +492,7 @@ describe("ClosingList.harvestReferenceLists", () => {
     }
   });
 
-  it("rejects the colon inline — the colon spelling belongs to the line dialects", () => {
-    // The same contrast harvestIssueReferences pins: GitHub's prose scanner
-    // does not read `closes: #1`, but the whole-line dialects do.
+  it("rejects the colon inline, as GitHub's prose scanner does — the colon spelling belongs to the line dialects", () => {
     assert.deepStrictEqual(harvestReferenceLists("closes: #1"), []);
     const reference = parseReferenceList("closes: #1");
     const closing = parseClosingList("closes: #1");
@@ -507,9 +504,7 @@ describe("ClosingList.harvestReferenceLists", () => {
     assert.deepStrictEqual(harvestReferenceLists("closes#1"), []);
   });
 
-  it("skips the WHOLE candidate on an unsafe item, then keeps scanning", () => {
-    // Never a partial list — the same reasoning as parseReferenceList — but
-    // prose after the poisoned candidate still gets harvested.
+  it("skips the WHOLE candidate on an unsafe item, never a partial list, then harvests the prose after it", () => {
     const found = harvestReferenceLists("closes #1, #9007199254740993 and fixes #2");
     assert.deepStrictEqual(
       A.map(found, (list) => ({ keyword: list.keyword, issueNumbers: [...list.issueNumbers] })),
@@ -535,9 +530,7 @@ describe("ClosingList.harvestReferenceLists", () => {
     assert.deepStrictEqual(harvestReferenceLists("the fix closed the gap"), []);
   });
 
-  it("stays linear on hostile input — long runs of tabs and newlines", () => {
-    // Same posture as the whole-line parsers: a single pass with no regex
-    // engine behind it must simply answer, fast.
+  it("stays linear on hostile input, as a single pass with no regex engine — long runs of tabs and newlines", () => {
     const tabs = Str.repeat(100_000)("\t");
     const newlines = Str.repeat(100_000)("\n");
     assert.deepStrictEqual(harvestReferenceLists(`closes${tabs}x`), []);
@@ -569,9 +562,8 @@ describe("ClosingList.collectReferenceLists", () => {
   });
 
   it("never counts a colon-less trailer line once per posture", () => {
-    // The line parses whole-line AND would harvest inline; preference means one list.
     const lists = collectReferenceLists("closes #1, #2");
-    assert.lengthOf(lists, 1);
+    assert.lengthOf(lists, 1, "the line parses whole-line and would harvest inline; preference yields one list");
   });
 
   it("interleaves both postures across lines, in document order, with no offsets", () => {

@@ -9,6 +9,9 @@
       "path": "../schema/tsconfig.json"
     },
     {
+      "path": "../text/tsconfig.json"
+    },
+    {
       "path": "../utils/tsconfig.json"
     },
     {

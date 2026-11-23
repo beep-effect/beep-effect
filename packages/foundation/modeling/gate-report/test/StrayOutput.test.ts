@@ -1,6 +1,4 @@
-// Retargets the model half of upstream packages/sdk/__test__/stray-output.test.ts
-// (vitest-agent 1cf1ab94): the summary schema and the note text. The recorder
-// cases belong to the Vitest adapter slice.
+// Ported from vitest-agent 1cf1ab94 packages/sdk/__test__/stray-output.test.ts (MIT).
 import { GateReport } from "@beep/gate-report/GateReport";
 import { StrayOutput, StrayOutputSample, strayOutputNote } from "@beep/gate-report/StrayOutput";
 import { assert, describe, it } from "@effect/vitest";

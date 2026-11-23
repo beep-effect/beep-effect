@@ -98,8 +98,7 @@ const patternSuffix: (pattern: O.Option<string>) => string = flow(
 
 const DIGITS: ReadonlyArray<number> = [1, 2, 3, 4, 5, 6];
 
-// The first precision that tells the two numbers apart; past six decimals, the numbers as given.
-const comparison = (actual: number, expected: number): string =>
+const atFirstDistinguishingPrecisionElseAsGiven = (actual: number, expected: number): string =>
   O.getOrElse(
     O.map(
       A.findFirst(DIGITS, (digits) => Num.round(actual, digits) !== Num.round(expected, digits)),
@@ -131,7 +130,7 @@ const comparison = (actual: number, expected: number): string =>
  */
 export const breachLine: (breach: PolicyBreach) => string = PolicyBreach.match({
   CoverageBreach: (breach) =>
-    `coverage ${breach.metric} ${comparison(breach.actual, breach.expected)}${patternSuffix(breach.pattern)}`,
+    `coverage ${breach.metric} ${atFirstDistinguishingPrecisionElseAsGiven(breach.actual, breach.expected)}${patternSuffix(breach.pattern)}`,
   ErrorBudgetBreach: (breach) => `error budget: ${breach.actual} errors > ${breach.budget} allowed`,
   WarningLimitBreach: (breach) => `warnings: ${breach.actual} > ${breach.maximum} allowed`,
 });
