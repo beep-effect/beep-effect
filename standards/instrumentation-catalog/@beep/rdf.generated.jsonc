@@ -8,6 +8,8 @@
   "spans": [
     {"name":"Canonical.canonicalDigest","owner":"@beep/rdf","family":"foundation","conforms":true},
     {"name":"Canonical.canonicalize","owner":"@beep/rdf","family":"foundation","conforms":true},
-    {"name":"Canonical.isIsomorphic","owner":"@beep/rdf","family":"foundation","conforms":true}
+    {"name":"Canonical.isIsomorphic","owner":"@beep/rdf","family":"foundation","conforms":true},
+    {"name":"SourceTextEntity.fromDataset","owner":"@beep/rdf","family":"foundation","conforms":true},
+    {"name":"SourceTextEntity.toDataset","owner":"@beep/rdf","family":"foundation","conforms":true}
   ]
 }

@@ -13,7 +13,7 @@ import {
   SoftwareAgent,
   Usage,
 } from "@beep/rdf/Prov";
-import { datasetToProvBundle, ProvRdfCodecOptions, provBundleToDataset } from "@beep/rdf/ProvRdf";
+import { datasetToProvBundle, ProvRdfCodecOptions, provBundleToDataset, provSlice } from "@beep/rdf/ProvRdf";
 import { Literal, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import * as ProvVocabulary from "@beep/rdf/Vocab/Prov";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
@@ -596,3 +596,33 @@ it.prop(
     }),
   { arbitrary: fcRuns(100) }
 );
+describe("ProvRdf quad claims", () => {
+  it("refuses a quad that no supported record reads", () => {
+    const subject = makeNamedNode("https://example.test/entity");
+    const typed = makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY);
+    const extra = makeQuad(subject, makeNamedNode("https://example.test/extra"), makeLiteral("x"));
+    const orphan = makeQuad(
+      makeNamedNode("https://example.test/orphan"),
+      ProvVocabulary.PROV_WAS_GENERATED_BY,
+      makeNamedNode("https://example.test/activity")
+    );
+    expect(Result.isSuccess(datasetToProvBundle(makeDataset([typed])))).toBe(true);
+    expect(Result.isFailure(datasetToProvBundle(makeDataset([typed, extra])))).toBe(true);
+    expect(Result.isFailure(datasetToProvBundle(makeDataset([typed, orphan])))).toBe(true);
+  });
+});
+
+describe("ProvRdf provSlice", () => {
+  it("keeps the quads supported records read and the type quad of an unsupported one", () => {
+    const subject = makeNamedNode("https://example.test/entity");
+    const plan = makeNamedNode("https://example.test/plan");
+    const typed = makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY);
+    const value = makeQuad(subject, ProvVocabulary.PROV_VALUE, makeLiteral("v"));
+    const title = makeQuad(subject, makeNamedNode("https://example.test/title"), makeLiteral("t"));
+    const planType = makeQuad(plan, RDF_TYPE, makeNamedNode(`${ProvVocabulary.PROV_NAMESPACE}Plan`));
+    const sliced = provSlice(makeDataset([typed, value, title, planType]));
+    expect(Equal.equals(sliced, makeDataset([typed, value, planType]))).toBe(true);
+    expect(Result.isFailure(datasetToProvBundle(sliced))).toBe(true);
+    expect(Result.isSuccess(datasetToProvBundle(provSlice(makeDataset([typed, value, title]))))).toBe(true);
+  });
+});

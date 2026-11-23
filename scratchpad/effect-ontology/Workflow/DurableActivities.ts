@@ -29,7 +29,7 @@ import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
 import { Literal, makeNamedNode, makeQuad } from "@beep/rdf";
-import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
+import { datasetToProvBundle, provBundleToDataset, provSlice } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
@@ -434,7 +434,7 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
 const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (store: RdfStore) {
   const rdf = yield* RdfBuilder;
   const provenance = yield* rdfStoreToDataset(store).pipe(
-    Effect.flatMap((dataset) => Effect.fromResult(datasetToProvBundle(dataset)))
+    Effect.flatMap((dataset) => Effect.fromResult(datasetToProvBundle(provSlice(dataset))))
   );
   const typeQuads = yield* rdf.queryStore(store, { predicate: RDF_TYPE });
   const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS_LABEL });

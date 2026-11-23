@@ -13,6 +13,8 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Base64Url from "effect/encoding/Base64Url";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -934,6 +936,108 @@ const decodeRecord = (
 ): Result.Result<ProvRecordType, ProvRdfCodecError> =>
   decodeRecordByType(typeQuad.object.value)(quads, typeQuad.subject);
 
+const recordPredicates = HashMap.make(
+  [
+    PROV_ENTITY.value,
+    [
+      PROV_WAS_GENERATED_BY,
+      PROV_WAS_ATTRIBUTED_TO,
+      PROV_HAD_PRIMARY_SOURCE,
+      PROV_WAS_QUOTED_FROM,
+      PROV_WAS_REVISION_OF,
+      PROV_WAS_DERIVED_FROM,
+      PROV_GENERATED_AT_TIME,
+      PROV_INVALIDATED_AT_TIME,
+      PROV_VALUE,
+    ],
+  ],
+  [PROV_ACTIVITY.value, [PROV_USED, PROV_WAS_ASSOCIATED_WITH, PROV_STARTED_AT_TIME, PROV_ENDED_AT_TIME]],
+  [PROV_AGENT.value, [RDFS_LABEL]],
+  [PROV_SOFTWARE_AGENT.value, [RDFS_LABEL]],
+  [PROV_USAGE.value, [PROV_ENTITY_PROPERTY, PROV_AT_TIME]],
+  [PROV_GENERATION.value, [PROV_ACTIVITY_PROPERTY, PROV_AT_TIME]],
+  [PROV_ASSOCIATION.value, [PROV_AGENT_PROPERTY, PROV_HAD_PLAN]],
+  [PROV_ATTRIBUTION.value, [PROV_AGENT_PROPERTY]],
+  [PROV_DERIVATION.value, [PROV_ENTITY_PROPERTY]],
+  [PROV_PRIMARY_SOURCE.value, [PROV_ENTITY_PROPERTY]]
+);
+
+const relationPredicates = HashMap.make(
+  [PROV_USAGE.value, { qualified: PROV_QUALIFIED_USAGE, direct: PROV_USED, target: PROV_ENTITY_PROPERTY }],
+  [
+    PROV_GENERATION.value,
+    { qualified: PROV_QUALIFIED_GENERATION, direct: PROV_WAS_GENERATED_BY, target: PROV_ACTIVITY_PROPERTY },
+  ],
+  [
+    PROV_ASSOCIATION.value,
+    { qualified: PROV_QUALIFIED_ASSOCIATION, direct: PROV_WAS_ASSOCIATED_WITH, target: PROV_AGENT_PROPERTY },
+  ],
+  [
+    PROV_ATTRIBUTION.value,
+    { qualified: PROV_QUALIFIED_ATTRIBUTION, direct: PROV_WAS_ATTRIBUTED_TO, target: PROV_AGENT_PROPERTY },
+  ],
+  [
+    PROV_DERIVATION.value,
+    { qualified: PROV_QUALIFIED_DERIVATION, direct: PROV_WAS_DERIVED_FROM, target: PROV_ENTITY_PROPERTY },
+  ],
+  [
+    PROV_PRIMARY_SOURCE.value,
+    { qualified: PROV_QUALIFIED_PRIMARY_SOURCE, direct: PROV_HAD_PRIMARY_SOURCE, target: PROV_ENTITY_PROPERTY },
+  ]
+);
+
+const relationClaims = (
+  quads: ReadonlyArray<Quad>,
+  node: Subject,
+  {
+    qualified,
+    direct,
+    target,
+  }: { readonly qualified: NamedNode; readonly direct: NamedNode; readonly target: NamedNode }
+): ReadonlyArray<Quad> => {
+  const parents = parentSubjects(quads, qualified, node);
+  const targets = objects(quads, node, target);
+  return A.filter(
+    quads,
+    (value) =>
+      (samePredicate(value.predicate, qualified) && sameTerm(value.object, node)) ||
+      (samePredicate(value.predicate, direct) &&
+        A.some(parents, (parent) => sameTerm(value.subject, parent)) &&
+        A.some(targets, (object) => sameTerm(value.object, object)))
+  );
+};
+
+const recordClaims =
+  (quads: ReadonlyArray<Quad>) =>
+  (typeQuad: Quad & { readonly object: NamedNode }): ReadonlyArray<Quad> => {
+    const predicates = O.getOrElse(HashMap.get(recordPredicates, typeQuad.object.value), A.empty<NamedNode>);
+    const own = A.filter(
+      quads,
+      (value) =>
+        sameTerm(value.subject, typeQuad.subject) &&
+        A.some(predicates, (predicate) => samePredicate(value.predicate, predicate))
+    );
+    const relation = O.match(HashMap.get(relationPredicates, typeQuad.object.value), {
+      onNone: A.empty<Quad>,
+      onSome: (shape) => relationClaims(quads, typeQuad.subject, shape),
+    });
+    return [typeQuad, ...own, ...relation];
+  };
+
+const ensureEveryQuadClaimed = (
+  quads: ReadonlyArray<Quad>,
+  typeQuads: ReadonlyArray<Quad & { readonly object: NamedNode }>
+): Result.Result<void, ProvRdfCodecError> => {
+  const claimed = HashSet.fromIterable(A.map(A.flatMap(typeQuads, recordClaims(quads)), serializeQuad));
+  return O.match(
+    A.findFirst(quads, (value) => !HashSet.has(claimed, serializeQuad(value))),
+    {
+      onNone: () => Result.void,
+      onSome: (value) => Result.fail(codecError(`Quad outside every supported PROV record: ${serializeQuad(value)}`)),
+    }
+  );
+};
+
 const ensureUniqueTypeSubjects = <TypeQuad extends Quad>(
   typeQuads: ReadonlyArray<TypeQuad>
 ): Result.Result<ReadonlyArray<TypeQuad>, ProvRdfCodecError> =>
@@ -973,7 +1077,12 @@ const datasetToProvBundleInternal = (
         Result.all
       )
     ),
-    Result.map((records) => ProvBundle.make({ records }))
+    Result.flatMap((records) =>
+      pipe(
+        ensureEveryQuadClaimed(quads, typeQuads),
+        Result.map(() => ProvBundle.make({ records }))
+      )
+    )
   );
 };
 
@@ -1001,3 +1110,42 @@ export const datasetToProvBundle: {
   (dataset: Dataset, options: ProvRdfCodecOptions): Result.Result<ProvBundle, ProvRdfCodecError>;
   (options: ProvRdfCodecOptions): (dataset: Dataset) => Result.Result<ProvBundle, ProvRdfCodecError>;
 } = dual(isDatasetDataFirst, datasetToProvBundleInternal);
+
+const provSliceInternal = (dataset: Dataset, options: ProvRdfCodecOptions = defaultOptions): Dataset => {
+  const quads = A.filter(A.sort(dataset.quads, byQuadLine), inSelectedGraph(selectGraph(options)));
+  return makeDataset(A.flatMap(A.filter(quads, isProvTypeQuad), recordClaims(quads)));
+};
+
+/**
+ * Selects the quads of one graph that a supported PROV record reads.
+ *
+ * **Details**
+ *
+ * {@link datasetToProvBundle} refuses a quad no supported record reads, so a
+ * dataset that mixes provenance with other statements is sliced first.
+ *
+ * **Example** (Slice provenance out of a mixed dataset)
+ *
+ * ```ts import.meta.vitest name="Slice provenance out of a mixed dataset"
+ * import * as HashSet from "effect/HashSet"
+ * import { provSlice } from "@beep/rdf/ProvRdf"
+ * import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import { PROV_ENTITY } from "@beep/rdf/Vocab/Prov"
+ * import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf"
+ *
+ * const subject = makeNamedNode("https://example.test/report")
+ * const mixed = makeDataset([
+ *   makeQuad(subject, RDF_TYPE, PROV_ENTITY),
+ *   makeQuad(subject, makeNamedNode("https://example.test/title"), makeLiteral("Report"))
+ * ])
+ * HashSet.size(provSlice(mixed).quads) // => 1
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const provSlice: {
+  (dataset: Dataset): Dataset;
+  (dataset: Dataset, options: ProvRdfCodecOptions): Dataset;
+  (options: ProvRdfCodecOptions): (dataset: Dataset) => Dataset;
+} = dual(isDatasetDataFirst, provSliceInternal);

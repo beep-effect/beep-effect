@@ -1,0 +1,18 @@
+{
+  "namespace": {
+    "prefix": "text",
+    "iri": "https://beep-effect.com/ns/text/"
+  },
+  "terms": [
+    "SourceTextCapture",
+    "extractorName",
+    "extractorVersion",
+    "locator",
+    "normalizationVersion",
+    "sourceDigest",
+    "sourceRef",
+    "textDigest"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

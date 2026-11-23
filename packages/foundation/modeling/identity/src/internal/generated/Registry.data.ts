@@ -727,6 +727,19 @@ export const RegistryVocab = {
       "topConceptOf",
     ],
   },
+  text: {
+    iri: `${IdentityAuthority}text/`,
+    terms: [
+      "SourceTextCapture",
+      "extractorName",
+      "extractorVersion",
+      "locator",
+      "normalizationVersion",
+      "sourceDigest",
+      "sourceRef",
+      "textDigest",
+    ],
+  },
   vitest: {
     iri: `${IdentityAuthority}vitest/`,
     terms: [

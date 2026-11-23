@@ -1,6 +1,6 @@
 {
   "version": "term-snapshot/v1",
-  "release": "2.0.0",
+  "release": "2.1.0",
   "namespaces": [
     {
       "prefix": "annotation",
@@ -145,6 +145,10 @@
     {
       "prefix": "skos",
       "iri": "http://www.w3.org/2004/02/skos/core#"
+    },
+    {
+      "prefix": "text",
+      "iri": "https://beep-effect.com/ns/text/"
     },
     {
       "prefix": "vitest",
@@ -728,6 +732,15 @@
     "https://beep-effect.com/ns/skill-contract/evidence/failure/v2",
     "https://beep-effect.com/ns/skill-contract/evidence/gate-certificate/v1",
     "https://beep-effect.com/ns/skill-contract/evidence/gate-summary/v2",
+    "https://beep-effect.com/ns/text/",
+    "https://beep-effect.com/ns/text/SourceTextCapture",
+    "https://beep-effect.com/ns/text/extractorName",
+    "https://beep-effect.com/ns/text/extractorVersion",
+    "https://beep-effect.com/ns/text/locator",
+    "https://beep-effect.com/ns/text/normalizationVersion",
+    "https://beep-effect.com/ns/text/sourceDigest",
+    "https://beep-effect.com/ns/text/sourceRef",
+    "https://beep-effect.com/ns/text/textDigest",
     "https://beep-effect.com/ns/vitest/",
     "https://beep-effect.com/ns/vitest/PositiveTimeoutMillis",
     "https://beep-effect.com/ns/vitest/TestContextUnavailable",
