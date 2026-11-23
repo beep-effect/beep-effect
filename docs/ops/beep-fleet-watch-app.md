@@ -63,7 +63,7 @@ again.
   to `main`. The client id is not secret; `KNOWLEDGE_MINT_APP_CLIENT_ID` follows the same
   precedent.
 - The private key is owned by the workstation-only `InfraGithubSecrets` stack
-  (`packages/tooling/infra/github/secrets.run.ts`). It reads
+  (`packages/tooling/infra/github/secrets.alchemy.run.ts`). It reads
   `op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key` through `op run` at deploy
   time, so no credential that can read 1Password enters CI (packet-gate ruling 2026-11-13).
   The recipe and its guards are in the package README, under "Secrets from a workstation".

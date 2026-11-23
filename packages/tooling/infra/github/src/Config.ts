@@ -375,7 +375,7 @@ export const OpReference = S.String.check(S.isPattern(/^op:\/\/[^/]+\/[^/]+\/[^/
 );
 
 /**
- * Runtime type for {@link OpReference}.
+ * A pattern-checked string that only `op run` resolves; the repository never holds the value it names.
  *
  * @category models
  * @since 0.0.0

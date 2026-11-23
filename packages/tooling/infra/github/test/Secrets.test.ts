@@ -104,7 +104,7 @@ it.layer(BunServices.layer)("InfraGithubSecrets committed files", (it) => {
         (file) =>
           Effect.map(
             fs.readFileString(path.join(workflows, file)),
-            (text) => Str.includes("secrets.run.ts")(text) || Str.includes("InfraGithubSecrets")(text)
+            (text) => Str.includes("secrets.alchemy.run.ts")(text) || Str.includes("InfraGithubSecrets")(text)
           ),
         { concurrency: 1 }
       );

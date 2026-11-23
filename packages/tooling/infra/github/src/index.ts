@@ -37,8 +37,6 @@ export * as Config from "./Config.ts";
  */
 export * as Production from "./Production.ts";
 /**
- * The workstation-only `InfraGithubSecrets` stack's declarations.
- *
  * **Example** (Render the op run env file)
  *
  * ```ts

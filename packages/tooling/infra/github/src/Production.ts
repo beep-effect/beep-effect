@@ -287,7 +287,7 @@ export const productionConfig: StackConfig = StackConfig.make({
     )("KNOWLEDGE_MINT_APP_PRIVATE_KEY"),
     unmanaged(
       "secret",
-      "Owned by the workstation-only InfraGithubSecrets stack (secrets.run.ts, productionSecretsConfig); a CI deploy cannot read 1Password."
+      "Owned by the workstation-only InfraGithubSecrets stack (secrets.alchemy.run.ts, productionSecretsConfig); a CI deploy cannot read 1Password."
     )("fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY"),
     unmanaged(
       "secret",

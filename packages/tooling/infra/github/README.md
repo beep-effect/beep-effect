@@ -76,7 +76,7 @@ and stores it (decision `2026-11-14-packet-gate-ruling-the-infra-github-app-key-
 
 ### Secrets from a workstation: `InfraGithubSecrets`
 
-`secrets.run.ts` is a second stack with its own state. It owns only the environment secrets
+`secrets.alchemy.run.ts` is a second stack with its own state. It owns only the environment secrets
 that `productionSecretsConfig` (`src/Production.ts`) declares, and it reads each value from
 1Password at deploy time (decision
 `2026-11-23-environment-secrets-come-from-a-workstation-only-infragithubsecrets-stack`). Today
@@ -96,7 +96,7 @@ that is one secret, `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY`, from the
 
   ```sh
   GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_SECRETS_PLANE=workstation \
-    op run --env-file=secrets.env -- bunx alchemy deploy secrets.run.ts --stage prod --yes --env-file /dev/null
+    op run --env-file=secrets.env -- bunx alchemy deploy secrets.alchemy.run.ts --stage prod --yes --env-file /dev/null
   ```
 
   Read back the timestamp only:
