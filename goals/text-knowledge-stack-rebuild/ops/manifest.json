@@ -171,27 +171,11 @@
   "opsScripts": [
     {
       "path": "ops/design/index.ts",
-      "purpose": "Design index for L3 to L6; L0, L1, L2 and the OA adapter are production packages."
-    },
-    {
-      "path": "ops/design/L3.taxonomy.ts",
-      "purpose": "L3 design: SSSOM MappingSet with a typed confidence signal, OntoViolation, audit and coherence-check signatures."
-    },
-    {
-      "path": "ops/design/L4.claims.ts",
-      "purpose": "L4 design: makeClaimCore, Stance, Challenge, Admission, Retraction, makeAssessments, Gate, the proposed-only record and the log checker signature."
+      "purpose": "Design index for L5; L0 to L4, L6, the OA adapter, the nanopublication codec, the gUFO audit and the mapping sets are production packages."
     },
     {
       "path": "ops/design/L5.operations.ts",
       "purpose": "L5 design: Operation, Activity, Association, mintActivityId, pure, compose and withActivity."
-    },
-    {
-      "path": "ops/design/L6.interchange.ts",
-      "purpose": "L6 design: three-case Literal, Dataset quotient and DatasetDigest; OA moved to annotation."
-    },
-    {
-      "path": "ops/design/generators.ts",
-      "purpose": "Coherent claim-log arbitraries for the remaining L4 design."
     }
   ]
 }

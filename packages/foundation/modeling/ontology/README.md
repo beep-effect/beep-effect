@@ -88,3 +88,19 @@ vendor schemes and verified payload bytes. `LoadedPack.schemeFor` takes an
 exact `ConceptSchemePin`; there is no latest version. The legal vocabularies
 (docketing, party kinds, legal roles and legal intake) live in the
 `@beep/law-practice-domain` asset pack, not in this package.
+
+## gUFO typing and mapping sets
+
+`Gufo.ts` types a term with its gUFO class type, the category of its instances
+and, for a relator, the role terms it mediates with their cardinalities.
+`audit(hierarchy)(term)` reports a role with no kind above it, a rigid type
+under an anti-rigid one and an undermediated relator; an untyped term yields
+no finding.
+
+`Mapping.ts` holds SSSOM mapping sets: one row per `(subject, predicate,
+object)` triple, each with a semapv justification and a confidence that may be
+absent with a reason. `checkMappingCoherence(hierarchy)(set)` reports
+predicates that contradict over the set's SKOS closure and exact or close
+matches that join terms with disjoint upper types. `Mapping.annotation.ts`
+ships the repository's mapping set from the annotation structure kinds to
+DoCO and NIF.
