@@ -12,8 +12,6 @@ import type { O } from "@beep/utils";
 const $I = $LawPracticeDomainId.create("values/PatentOffice/PatentOffice");
 
 /**
- * WIPO ST.16 / office logo + flag metadata, used for jurisdiction-aware UI.
- *
  * **Example** (Create empty Metadata value)
  *
  * ```ts

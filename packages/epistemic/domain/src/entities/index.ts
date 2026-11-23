@@ -6,8 +6,6 @@
  */
 
 /**
- * Activity entity exports.
- *
  * **Example** (Log Activity table name)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Activity/index.ts";
 /**
- * Candidate claim entity exports.
- *
  * **Example** (Log CandidateClaim table name)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./Activity/index.ts";
  */
 export * from "./CandidateClaim/index.ts";
 /**
- * Claim disposition entity exports.
- *
  * **Example** (Log ClaimDisposition table name)
  *
  * ```ts
@@ -73,8 +67,6 @@ export * from "./Contradiction/index.ts";
  */
 export * from "./EdgeVersion/index.ts";
 /**
- * Evidence entity exports.
- *
  * **Example** (Log Evidence table name)
  *
  * ```ts
@@ -103,8 +95,6 @@ export * from "./Evidence/index.ts";
  */
 export * from "./EvidenceVerification/index.ts";
 /**
- * Usage record entity exports.
- *
  * **Example** (Log UsageRecord table name)
  *
  * ```ts

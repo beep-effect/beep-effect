@@ -13,8 +13,6 @@ import { SessionId } from "./Session.values.ts";
 const $I = $OntologyDomainId.create("aggregates/Session/Session.errors");
 
 /**
- * Reasons an ontology session change can be rejected.
- *
  * **Example** (Make invalidChange reason)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "inva
 );
 
 /**
- * Type for {@link SessionChangeRejectedReason}.
- *
  * **Example** (Type a rejection reason)
  *
  * ```ts
@@ -53,8 +49,6 @@ export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "inva
 export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Type;
 
 /**
- * Typed domain error for rejected ontology session changes.
- *
  * **Example** (Create SessionChangeRejected error)
  *
  * ```ts

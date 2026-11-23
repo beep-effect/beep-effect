@@ -75,8 +75,6 @@ export const ExecutionRunKey = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link ExecutionRunKey}.
- *
  * **Example** (Typed run key usage)
  *
  * ```ts
@@ -116,8 +114,6 @@ export const DecisionRecordHash = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link DecisionRecordHash}.
- *
  * **Example** (Typed decision hash usage)
  *
  * ```ts
@@ -133,8 +129,6 @@ export const DecisionRecordHash = Sha256Hex.pipe(
 export type DecisionRecordHash = typeof DecisionRecordHash.Type;
 
 /**
- * Seal hash of one outcome record.
- *
  * **Example** (Make outcome hash length)
  *
  * ```ts
@@ -155,8 +149,6 @@ export const OutcomeRecordHash = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link OutcomeRecordHash}.
- *
  * **Example** (Typed outcome hash usage)
  *
  * ```ts
@@ -196,8 +188,6 @@ export const SinkDestinationDigest = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link SinkDestinationDigest}.
- *
  * **Example** (Typed destination digest usage)
  *
  * ```ts
@@ -237,8 +227,6 @@ export const GrantOperationDigest = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link GrantOperationDigest}.
- *
  * **Example** (Typed operation digest usage)
  *
  * ```ts
@@ -280,8 +268,6 @@ export const ExecutionSettlement = LiteralKit(["completed", "failed", "interrupt
 );
 
 /**
- * Runtime type for {@link ExecutionSettlement}.
- *
  * **Example** (Typed settlement assignment)
  *
  * ```ts
@@ -378,8 +364,6 @@ export const ExecutionDecisionRecord = DecisionVerdictTag.toTaggedUnion("verdict
 );
 
 /**
- * Runtime type for {@link ExecutionDecisionRecord}.
- *
  * **Example** (Typed allowed decision record)
  *
  * ```ts
@@ -616,8 +600,6 @@ export const ChainVerification = ChainVerificationTag.toTaggedUnion("result")({
 );
 
 /**
- * Runtime type for {@link ChainVerification}.
- *
  * **Example** (Typed chain-intact result)
  *
  * ```ts

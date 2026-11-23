@@ -12,8 +12,6 @@ import * as V from "./Values.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/DestinationNameReservation.command");
 /**
- * NameClaim vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { NameClaim } from "@beep/documents-domain/aggregates/VaultSync";

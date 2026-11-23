@@ -60,8 +60,6 @@ export class CreateWorkItemCommand extends S.Opaque<CreateWorkItemCommand, { rea
 ) {}
 
 /**
- * Command payload for assigning a WorkItem to a Worker.
- *
  * **Example** (Assign WorkItem to Worker)
  *
  * ```ts
@@ -98,8 +96,6 @@ export class AssignWorkItemCommand extends S.Opaque<AssignWorkItemCommand, { rea
 ) {}
 
 /**
- * Command payload for completing a WorkItem.
- *
  * **Example** (Complete WorkItem by id)
  *
  * ```ts
@@ -131,8 +127,6 @@ export class CompleteWorkItemCommand extends S.Opaque<CompleteWorkItemCommand, {
 ) {}
 
 /**
- * Command payload for reopening a completed WorkItem.
- *
  * **Example** (Reopen completed WorkItem)
  *
  * ```ts
@@ -164,8 +158,6 @@ export class ReopenWorkItemCommand extends S.Opaque<ReopenWorkItemCommand, { rea
 ) {}
 
 /**
- * Command payload for archiving a WorkItem.
- *
  * **Example** (Archive WorkItem by id)
  *
  * ```ts
@@ -197,8 +189,6 @@ export class ArchiveWorkItemCommand extends S.Opaque<ArchiveWorkItemCommand, { r
 ) {}
 
 /**
- * Query payload for loading a single WorkItem.
- *
  * **Example** (Load WorkItem by id)
  *
  * ```ts

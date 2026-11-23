@@ -49,7 +49,6 @@ export const ParticipantRole = LiteralKit(["from", "sender", "sent-representing"
   $I.annoteSchema("ParticipantRole", { description: "Header role of a communication participant." })
 );
 /**
- * Decoded ParticipantRole type.
  * @category models
  * @since 0.0.0
  */
@@ -72,7 +71,6 @@ export const EvidenceKind = LiteralKit(["distinctive-behavior", "shared-template
   $I.annoteSchema("EvidenceKind", { description: "How shareable or forgeable a piece of evidence is." })
 );
 /**
- * Decoded EvidenceKind type.
  * @category models
  * @since 0.0.0
  */
@@ -99,7 +97,6 @@ export const SpeechAct = LiteralKit([
   "reports-status",
 ]).pipe($I.annoteSchema("SpeechAct", { description: "Speech act labelled on a message." }));
 /**
- * Decoded SpeechAct type.
  * @category models
  * @since 0.0.0
  */
@@ -257,8 +254,6 @@ export class Absence extends S.Opaque<Absence, { readonly brand: unique symbol }
   }).pipe($I.annoteSchema("Absence", { description: "Absence data." }))
 ) {}
 /**
- * Observation public schema for the communication model.
- *
  * **Example** (Decode Observation)
  * ```ts
  * import { Observation } from "@beep/party-domain/Communication"
@@ -281,7 +276,6 @@ export const Observation = S.Union([
   $I.annoteSchema("Observation", { description: "Immutable extractor/tool/classifier output." })
 );
 /**
- * Decoded Observation type.
  * @category models
  * @since 0.0.0
  */

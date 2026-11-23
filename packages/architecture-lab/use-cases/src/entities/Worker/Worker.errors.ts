@@ -139,8 +139,6 @@ export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed, { read
 ) {}
 
 /**
- * Public Worker use-case failure schema.
- *
  * **Example** (Check error with is)
  *
  * ```ts
@@ -167,8 +165,6 @@ export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, Worker
 );
 
 /**
- * Runtime type for {@link WorkerActionError}.
- *
  * **Example** (Annotate error variable type)
  *
  * ```ts

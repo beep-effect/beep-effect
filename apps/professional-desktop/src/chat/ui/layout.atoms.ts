@@ -155,8 +155,6 @@ export const sidebarPercentAtom = Atom.kvs({
 });
 
 /**
- * A completed resizable-panel layout accepted by the persisted layout action.
- *
  * **Example** (Record a user-dragged sidebar layout)
  *
  * ```ts

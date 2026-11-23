@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeServerId.create("PracticeKg.errors");
 
 /**
- * Failure raised while projecting a practice knowledge-graph bundle.
- *
  * **Gotchas**
  *
  * This is the single failure type on the projection lane: filesystem, DuckDB,

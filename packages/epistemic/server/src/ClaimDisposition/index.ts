@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim disposition repository layer exports.
- *
  * **Example** (In-memory repository export)
  *
  * ```ts

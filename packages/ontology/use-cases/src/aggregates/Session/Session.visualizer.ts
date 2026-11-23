@@ -53,8 +53,6 @@ const Uint32Arr = S.instanceOf<globalThis.Uint32ArrayConstructor, globalThis.Uin
   );
 
 /**
- * Visualizer fold level.
- *
  * **Example** (Assign L2 fold level)
  *
  * ```ts
@@ -75,8 +73,6 @@ export const OntologyFoldLevel = LiteralKit(["L0", "L1", "L2", "L3"]).pipe(
 );
 
 /**
- * Type for {@link OntologyFoldLevel}.
- *
  * **Example** (Type L1 fold level)
  *
  * ```ts
@@ -93,8 +89,6 @@ export const OntologyFoldLevel = LiteralKit(["L0", "L1", "L2", "L3"]).pipe(
 export type OntologyFoldLevel = typeof OntologyFoldLevel.Type;
 
 /**
- * Label level-of-detail selected for the projected viewport.
- *
  * **Example** (Assign key label detail)
  *
  * ```ts
@@ -115,8 +109,6 @@ export const OntologyLabelLevelOfDetail = LiteralKit(["full", "key", "hidden"]).
 );
 
 /**
- * Type for {@link OntologyLabelLevelOfDetail}.
- *
  * **Example** (Type hidden label detail)
  *
  * ```ts
@@ -133,8 +125,6 @@ export const OntologyLabelLevelOfDetail = LiteralKit(["full", "key", "hidden"]).
 export type OntologyLabelLevelOfDetail = typeof OntologyLabelLevelOfDetail.Type;
 
 /**
- * Pinned node position preserved across worker projections.
- *
  * **Example** (Create pinned node)
  *
  * ```ts
@@ -165,8 +155,6 @@ export class OntologyPinnedNode extends S.Opaque<OntologyPinnedNode, { readonly 
 ) {}
 
 /**
- * Worker graph projection options.
- *
  * **Example** (Default projection options)
  *
  * ```ts
@@ -233,8 +221,6 @@ export const defaultOntologyGraphProjectionOptions = (): OntologyGraphProjection
   });
 
 /**
- * Graph node metadata paired with typed-array buffers.
- *
  * **Example** (Create graph node)
  *
  * ```ts
@@ -319,8 +305,6 @@ export class OntologyGraphEdge extends S.Opaque<OntologyGraphEdge, { readonly br
 ) {}
 
 /**
- * Fold cluster summary produced by the worker.
- *
  * **Example** (Create fold cluster)
  *
  * ```ts
@@ -512,8 +496,6 @@ export const OntologyGraphGesture = LiteralKit(["connect", "delete", "expand", "
   );
 
 /**
- * Type for {@link OntologyGraphGesture}.
- *
  * **Example** (Type connect gesture)
  *
  * ```ts
@@ -535,8 +517,6 @@ export const OntologyGraphGesture = LiteralKit(["connect", "delete", "expand", "
 export type OntologyGraphGesture = typeof OntologyGraphGesture.Type;
 
 /**
- * Predicate autocomplete suggestion for graph gestures.
- *
  * **Example** (Create predicate suggestion)
  *
  * ```ts
@@ -1485,8 +1465,6 @@ export const buildOntologyGraphProjection: {
 );
 
 /**
- * Input for applying a graph projection delta.
- *
  * **Example** (Create delta input)
  *
  * ```ts

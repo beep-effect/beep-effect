@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $EpistemicDomainId.create("values/EpistemicFixtureKey/EpistemicFixtureKey.model");
 
 /**
- * Stable non-empty fixture/reference key used by epistemic fixtures and projections.
- *
  * **Example** (Make fixture key from string)
  *
  * ```ts
@@ -31,8 +29,6 @@ export const EpistemicFixtureKey = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link EpistemicFixtureKey}.
- *
  * **Example** (Type a fixture key value)
  *
  * ```ts

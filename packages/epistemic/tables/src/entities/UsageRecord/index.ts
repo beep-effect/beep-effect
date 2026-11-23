@@ -6,8 +6,6 @@
  */
 
 /**
- * UsageRecord row converter exports.
- *
  * **Example** (Access toUsageRecordInsert export)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./UsageRecord.converters.ts";
 /**
- * UsageRecord converter error exports.
- *
  * **Example** (Access UsageRecordConverterError export)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./UsageRecord.converters.ts";
  */
 export * from "./UsageRecord.errors.ts";
 /**
- * UsageRecord table exports.
- *
  * **Example** (Access Table entityType path)
  *
  * ```ts

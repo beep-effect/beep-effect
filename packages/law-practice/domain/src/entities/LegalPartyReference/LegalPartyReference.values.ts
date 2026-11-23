@@ -15,8 +15,6 @@ const $I = $LawPracticeDomainId.create("entities/LegalPartyReference/LegalPartyR
 const PartyLikeKindBase = LiteralKit(["legal_client", "legal_contact"]);
 
 /**
- * Which existing law-practice record a party reference points at.
- *
  * **When to use**
  *
  * Use with {@link PartyReference} to say which registry the reference key
@@ -47,8 +45,6 @@ export const PartyLikeKind = PartyLikeKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link PartyLikeKind}.
- *
  * @see {@link PartyLikeKind} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -56,8 +52,6 @@ export const PartyLikeKind = PartyLikeKindBase.pipe(
 export type PartyLikeKind = typeof PartyLikeKind.Type;
 
 /**
- * Opaque reference from a party to an existing law-practice record.
- *
  * **When to use**
  *
  * Use to say which already-recorded client or contact a party is, without

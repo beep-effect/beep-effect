@@ -18,8 +18,6 @@ const $I = $SharedDomainId.create("entity/EntityRef");
 const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
 /**
- * Entity type grammar used by polymorphic references.
- *
  * **Example** (Decode EntityType schema)
  *
  * ```ts
@@ -54,8 +52,6 @@ export const EntityType = S.NonEmptyString.check(
 );
 
 /**
- * Runtime type for {@link EntityType}.
- *
  * **Example** (Annotate EntityType parameter)
  *
  * ```ts

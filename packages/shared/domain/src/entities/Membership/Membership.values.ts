@@ -13,8 +13,6 @@ const RoleBase = LiteralKit(["owner", "member"]);
 const StatusBase = LiteralKit(["active"]);
 
 /**
- * Organization membership role.
- *
  * **Example** (Check owner role value)
  *
  * ```ts
@@ -34,8 +32,6 @@ export const Role = RoleBase.pipe(
 );
 
 /**
- * Runtime type for {@link Role}.
- *
  * **Example** (Type a Role value)
  *
  * ```ts
@@ -51,8 +47,6 @@ export const Role = RoleBase.pipe(
 export type Role = typeof Role.Type;
 
 /**
- * Organization membership lifecycle status.
- *
  * **Example** (Check active status value)
  *
  * ```ts
@@ -72,8 +66,6 @@ export const Status = StatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link Status}.
- *
  * **Example** (Type a Status value)
  *
  * ```ts

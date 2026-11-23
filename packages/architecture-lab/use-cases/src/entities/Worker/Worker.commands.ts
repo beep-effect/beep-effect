@@ -57,8 +57,6 @@ export class CreateWorkerCommand extends S.Opaque<CreateWorkerCommand, { readonl
 ) {}
 
 /**
- * Query payload for loading one Worker by id.
- *
  * **Example** (Make GetWorkerQuery by id)
  *
  * ```ts

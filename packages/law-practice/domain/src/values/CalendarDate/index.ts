@@ -7,8 +7,6 @@
  */
 
 /**
- * CalendarDate model exports.
- *
  * **Example** (Import CalendarDate)
  *
  * ```ts

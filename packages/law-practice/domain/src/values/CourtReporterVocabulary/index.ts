@@ -6,8 +6,6 @@
  */
 
 /**
- * Court/reporter lifecycle compatibility exports.
- *
  * **Example** (Import the compatibility classifier)
  *
  * ```ts
@@ -32,8 +30,6 @@ export * from "./CourtReporterVocabulary.compatibility.ts";
  */
 export * from "./CourtReporterVocabulary.data.ts";
 /**
- * Court/reporter schema and model exports.
- *
  * **Example** (Import the stable identifiers)
  *
  * ```ts

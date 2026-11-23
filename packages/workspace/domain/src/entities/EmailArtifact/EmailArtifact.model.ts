@@ -29,8 +29,6 @@ const UtcIsoTimestamp = S.NonEmptyString.check(
 );
 
 /**
- * Normalized email artifact imported into a workspace thread.
- *
  * **Example** (Log resource name)
  *
  * ```ts

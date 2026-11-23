@@ -14,8 +14,6 @@ const $I = $WorkspaceDomainId.create("entities/CandidateDraft/CandidateDraft.mod
 const pg = ProductEntity.pg;
 
 /**
- * Candidate draft artifact proposed by an agent.
- *
  * **Example** (Log entity resource)
  *
  * ```ts

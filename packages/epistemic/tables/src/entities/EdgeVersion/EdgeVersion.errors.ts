@@ -13,9 +13,6 @@ const $I = $EpistemicTablesId.create("entities/EdgeVersion/EdgeVersion.errors");
 const EdgeVersionConverterOperation = LiteralKit(["toInsert", "fromRow"]);
 
 /**
- * Schema conversion failed while projecting an EdgeVersion across the
- * persistence boundary.
- *
  * **Example** (Construct converter error)
  *
  * ```ts

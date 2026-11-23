@@ -26,8 +26,6 @@ export * from "./Session.projections.ts";
  */
 export * from "./Session.visualizer.ts";
 /**
- * Session worker protocol exports.
- *
  * @category protocols
  * @since 0.0.0
  */

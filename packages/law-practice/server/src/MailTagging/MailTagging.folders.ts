@@ -97,8 +97,6 @@ export const MatterFolderMapJson = MatterFolders.pipe(
 );
 
 /**
- * Runtime type for {@link MatterFolderMapJson}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -87,8 +87,6 @@ const blocksRepaired = Metric.counter("agents_assistant_turn_blocks_repaired_tot
 });
 
 /**
- * Validation issue report for one streamed assistant-block slice.
- *
  * **Example** (Use IssueReport)
  *
  * ```ts
@@ -447,8 +445,6 @@ export const PatchOpSummary = S.Union([AddPatchOpSummary, RemovePatchOpSummary, 
 );
 
 /**
- * Runtime type of the {@link PatchOpSummary} tagged union of JSON Patch operation summaries.
- *
  * **Example** (Use PatchOpSummary)
  *
  * ```ts

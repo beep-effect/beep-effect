@@ -78,8 +78,6 @@ export const VaultSyncApiCommand = LiteralKit([
 );
 
 /**
- * Runtime type for {@link VaultSyncApiCommand}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -112,8 +110,6 @@ export const VaultSyncApiView = LiteralKit([
 );
 
 /**
- * Runtime type for {@link VaultSyncApiView}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -140,17 +136,12 @@ export const VaultSyncReadMode = LiteralKit(["get", "snapshot", "list", "watch",
 );
 
 /**
- * Runtime type for {@link VaultSyncReadMode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type VaultSyncReadMode = typeof VaultSyncReadMode.Type;
 
 /**
- * The durable activities of one vault-sync pass, the value of
- * `documents.vault_sync.pass_step`.
- *
  * **Example** (Read a pass step)
  *
  * ```ts
@@ -177,8 +168,6 @@ export const VaultSyncPassStep = LiteralKit([
 );
 
 /**
- * Runtime type for {@link VaultSyncPassStep}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -206,18 +195,12 @@ export const VaultSyncBoxOperation = LiteralKit(["probe", ...V.MirrorOperation.l
 );
 
 /**
- * Runtime type for {@link VaultSyncBoxOperation}.
- *
  * @category models
  * @since 0.0.0
  */
 export type VaultSyncBoxOperation = typeof VaultSyncBoxOperation.Type;
 
 /**
- * Where a `BoxMirror` call failed, the value of
- * `documents.vault_sync.box_failure`: an adapter stage, or `remote` when Box
- * itself failed.
- *
  * **Example** (Read a failure place)
  *
  * ```ts
@@ -236,17 +219,12 @@ export const VaultSyncBoxFailure = LiteralKit([...MirrorFailureStage.literals, "
 );
 
 /**
- * Runtime type for {@link VaultSyncBoxFailure}.
- *
  * @category models
  * @since 0.0.0
  */
 export type VaultSyncBoxFailure = typeof VaultSyncBoxFailure.Type;
 
 /**
- * Terminal outcomes of a vault-sync boundary span other than a rule
- * violation, which is recorded as `SyncRuleViolation:<rule>`.
- *
  * **Example** (Read an outcome)
  *
  * ```ts
@@ -265,8 +243,6 @@ export const VaultSyncOutcome = LiteralKit(["accepted", "ScopeDenied", "failed",
 );
 
 /**
- * Runtime type for {@link VaultSyncOutcome}.
- *
  * @category models
  * @since 0.0.0
  */

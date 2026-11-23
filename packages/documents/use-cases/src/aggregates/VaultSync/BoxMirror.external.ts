@@ -28,8 +28,6 @@ export const DisconnectReason = LiteralKit(["credentials-missing", "auth-failed"
 );
 
 /**
- * Why a Box mirror is disconnected.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -58,8 +56,6 @@ export const MirrorFailureStage = LiteralKit([
 );
 
 /**
- * The adapter-side stage at which a Box call stopped.
- *
  * @category type-level
  * @since 0.0.0
  */

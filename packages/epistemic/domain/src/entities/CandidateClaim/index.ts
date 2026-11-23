@@ -6,8 +6,6 @@
  */
 
 /**
- * Module exports.
- *
  * **Example** (Import CandidateClaim entity)
  *
  * ```ts

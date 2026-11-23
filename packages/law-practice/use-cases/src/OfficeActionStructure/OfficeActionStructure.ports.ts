@@ -167,8 +167,6 @@ export const OfficeActionStoredOutcome = S.Union([RecognizedReceipt, DocStructur
  */
 export type OfficeActionStoredOutcome = typeof OfficeActionStoredOutcome.Type;
 /**
- * Retains an immutable source- and rule-versioned attempt with its linked predecessor.
- *
  * **Details**
  *
  * Schema version 2 stores each aligned extraction with its `anchor`. A version 1 row, which stored `span` and
@@ -242,8 +240,6 @@ export class OfficeActionStructureStore extends Context.Service<
 >()($I`OfficeActionStructureStore`) {}
 
 /**
- * Pins explicit source authorization and the predecessor for a new immutable attempt.
- *
  * **Example** (Inspect OfficeActionAttemptRequest)
  *
  * ```ts

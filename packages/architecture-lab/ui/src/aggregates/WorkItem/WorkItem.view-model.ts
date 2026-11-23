@@ -60,8 +60,6 @@ export const WorkItemVisibleAction = WorkItemVisibleActionBase.pipe(
 );
 
 /**
- * Runtime type for {@link WorkItemVisibleAction}.
- *
  * **Example** (Type assign action values)
  *
  * ```ts
@@ -103,8 +101,6 @@ const VisibleActionList = S.Array(WorkItemVisibleAction)
   );
 
 /**
- * Client-renderable summary for a canonical WorkItem aggregate.
- *
  * **Example** (Make display-ready summary)
  *
  * ```ts

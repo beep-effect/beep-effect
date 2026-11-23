@@ -68,8 +68,6 @@ export const PracticeKgToolId = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgToolId}.
- *
  * @category models
  * @since 0.0.0
  */

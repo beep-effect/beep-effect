@@ -16,8 +16,6 @@ const $I = $WorkspaceDomainId.create("entities/Message/Message.model");
 const pg = ProductEntity.pg;
 
 /**
- * Md-aligned message content in a workspace turn.
- *
  * **Example** (Log Message table name)
  *
  * ```ts

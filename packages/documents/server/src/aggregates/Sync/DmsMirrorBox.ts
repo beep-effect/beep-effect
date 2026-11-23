@@ -116,8 +116,6 @@ export const BOX_MIRROR_ROOT_NAME_ENV = "DOCUMENTS_SYNC_BOX_MIRROR_ROOT";
 export const BOX_MIRROR_DEFAULT_ROOT_NAME = "beep-vault";
 
 /**
- * Resolved configuration value for the Box DMS mirror adapter.
- *
  * **Example** (Make config with root name)
  *
  * ```ts

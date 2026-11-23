@@ -35,7 +35,6 @@ export const CitationUnresolvedReason = LiteralKit([
   })
 );
 /**
- * Schema-derived unresolved diagnostic.
  * @category models
  * @since 0.0.0
  */
@@ -66,7 +65,6 @@ export class CitationResolved extends S.Opaque<CitationResolved, { readonly bran
 ) {}
 
 /**
- * Multiple distinct candidate authorities without a chosen resource.
  * **Example** (Inspect candidate evidence)
  * ```ts
  * import { CitationAmbiguous } from "@beep/law-practice-domain/values"
@@ -125,7 +123,6 @@ export const CitationResolution = S.Union([CitationResolved, CitationAmbiguous, 
   })
 );
 /**
- * Schema-derived resolution outcome.
  * @category models
  * @since 0.0.0
  */

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeServerId.create("PracticeKgHost/PracticeKgHost.errors");
 
 /**
- * Sanitized startup failure while resolving a portable practice KG bundle.
- *
  * **Details**
  *
  * `message` is the stable operator-facing sentence every host prints; `cause`

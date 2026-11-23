@@ -13,9 +13,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.model");
 
 /**
- * Structured date components. Month and day are optional to support year-only
- * dates.
- *
  * **Details**
  *
  * A missing `month` or `day` decodes to `None`, so a bare-year citation date is
@@ -67,8 +64,6 @@ export class ParsedDate extends S.Opaque<ParsedDate, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion namespace for `ParsedDate`.
- *
  * **Example** (Encoded type alias)
  *
  * ```ts
@@ -99,8 +94,6 @@ export declare namespace ParsedDate {
 }
 
 /**
- * Date in both ISO string and structured format.
- *
  * **Details**
  *
  * Pairs an ISO 8601 `iso` string with its {@link ParsedDate} component
@@ -145,8 +138,6 @@ export class StructuredDate extends S.Opaque<StructuredDate, { readonly brand: u
 ) {}
 
 /**
- * Companion namespace for `StructuredDate`.
- *
  * **Example** (Encoded type alias)
  *
  * ```ts

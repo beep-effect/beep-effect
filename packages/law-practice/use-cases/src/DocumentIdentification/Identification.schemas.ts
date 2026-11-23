@@ -12,8 +12,6 @@ import { practiceKgDocketCountryCodes } from "../PracticeKg.matter-lookup.ts";
 const $I = $LawPracticeUseCasesId.create("DocumentIdentification/Identification.schemas");
 const optional = <T extends S.Top>(schema: T) => S.OptionFromNullOr(schema);
 /**
- * Origin format of a contact card.
- *
  * **Example** (Inspect ContactSource)
  *
  * ```ts
@@ -29,15 +27,11 @@ export const ContactSource = LiteralKit(["outlook-csv", "vcard"]).pipe(
   $I.annoteSchema("ContactSource", { description: "Origin format of a contact card." })
 );
 /**
- * Runtime type of {@link ContactSource}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ContactSource = typeof ContactSource.Type;
 /**
- * Provenance of a contact link.
- *
  * **Example** (Inspect ContactLinkSource)
  *
  * ```ts
@@ -58,15 +52,11 @@ export const ContactLinkSource = LiteralKit([
   "email-subject-ref",
 ]).pipe($I.annoteSchema("ContactLinkSource", { description: "Provenance of a contact link." }));
 /**
- * Runtime type of {@link ContactLinkSource}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ContactLinkSource = typeof ContactLinkSource.Type;
 /**
- * Provenance of a client index assertion.
- *
  * **Example** (Inspect IndexSource)
  *
  * ```ts
@@ -88,15 +78,11 @@ export const IndexSource = LiteralKit([
   "email-subject-ref",
 ]).pipe($I.annoteSchema("IndexSource", { description: "Provenance of a client index assertion." }));
 /**
- * Runtime type of {@link IndexSource}.
- *
  * @category models
  * @since 0.0.0
  */
 export type IndexSource = typeof IndexSource.Type;
 /**
- * Five-digit practice client number.
- *
  * **Example** (Inspect ClientNumber)
  *
  * ```ts
@@ -113,15 +99,11 @@ export const ClientNumber = S.String.check(S.isPattern(/^[0-9]{5}$/u)).pipe(
   $I.annoteSchema("ClientNumber", { description: "Five-digit practice client number." })
 );
 /**
- * Runtime type of {@link ClientNumber}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ClientNumber = typeof ClientNumber.Type;
 /**
- * Client-relative docket identifier using KG country stages.
- *
  * **Example** (Inspect DocketId)
  *
  * ```ts
@@ -142,15 +124,11 @@ export const DocketId = S.String.check(
   $I.annoteSchema("DocketId", { description: "Client-relative docket identifier using KG country stages." })
 );
 /**
- * Runtime type of {@link DocketId}.
- *
  * @category models
  * @since 0.0.0
  */
 export type DocketId = typeof DocketId.Type;
 /**
- * Numbered client or input-supplied named pseudo-client key.
- *
  * **Example** (Inspect ClientKey)
  *
  * ```ts
@@ -166,15 +144,11 @@ export const ClientKey = S.Union([ClientNumber, S.String.check(S.isPattern(/^new
   $I.annoteSchema("ClientKey", { description: "Numbered client or input-supplied named pseudo-client key." })
 );
 /**
- * Runtime type of {@link ClientKey}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ClientKey = typeof ClientKey.Type;
 /**
- * Lowercase SHA-256 content digest.
- *
  * **Example** (Inspect ContentHash)
  *
  * ```ts
@@ -191,15 +165,11 @@ export const ContentHash = S.String.check(S.isPattern(/^[0-9a-f]{64}$/u)).pipe(
   $I.annoteSchema("ContentHash", { description: "Lowercase SHA-256 content digest." })
 );
 /**
- * Runtime type of {@link ContentHash}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ContentHash = typeof ContentHash.Type;
 /**
- * Normalised email address with shared mailbox status.
- *
  * **Example** (Inspect ContactEmail)
  *
  * ```ts
@@ -218,8 +188,6 @@ export class ContactEmail extends S.Opaque<ContactEmail, { readonly brand: uniqu
   }).pipe($I.annoteSchema("ContactEmail", { description: "Normalised email address with shared mailbox status." }))
 ) {}
 /**
- * E.164 telephone number and optional NANP area code.
- *
  * **Example** (Inspect PhoneNumber)
  *
  * ```ts
@@ -238,8 +206,6 @@ export class PhoneNumber extends S.Opaque<PhoneNumber, { readonly brand: unique 
   }).pipe($I.annoteSchema("PhoneNumber", { description: "E.164 telephone number and optional NANP area code." }))
 ) {}
 /**
- * Contact attribution with source and log-safe evidence description.
- *
  * **Example** (Inspect ContactLink)
  *
  * ```ts
@@ -264,8 +230,6 @@ export class ContactLink extends S.Opaque<ContactLink, { readonly brand: unique 
   )
 ) {}
 /**
- * Unnormalised card read from a private contact source.
- *
  * **Example** (Inspect RawContactCard)
  *
  * ```ts
@@ -289,8 +253,6 @@ export class RawContactCard extends S.Opaque<RawContactCard, { readonly brand: u
   }).pipe($I.annoteSchema("RawContactCard", { description: "Unnormalised card read from a private contact source." }))
 ) {}
 /**
- * Deduplicated person or organisation with stable identifier.
- *
  * **Example** (Inspect Contact)
  *
  * ```ts
@@ -317,8 +279,6 @@ export class Contact extends S.Opaque<Contact, { readonly brand: unique symbol }
   }).pipe($I.annoteSchema("Contact", { description: "Deduplicated person or organisation with stable identifier." }))
 ) {}
 /**
- * Contact projection excluding telephone and postal address data.
- *
  * **Example** (Inspect ContactProjection)
  *
  * ```ts
@@ -345,8 +305,6 @@ export class ContactProjection extends S.Opaque<ContactProjection, { readonly br
   )
 ) {}
 /**
- * Count of assertions from one provenance source.
- *
  * **Example** (Inspect SourceCount)
  *
  * ```ts
@@ -365,8 +323,6 @@ export class SourceCount extends S.Opaque<SourceCount, { readonly brand: unique 
   }).pipe($I.annoteSchema("SourceCount", { description: "Count of assertions from one provenance source." }))
 ) {}
 /**
- * Known client and docket pair; docket alone never identifies a client.
- *
  * **Example** (Inspect ClientDocketPair)
  *
  * ```ts
@@ -390,8 +346,6 @@ export class ClientDocketPair extends S.Opaque<ClientDocketPair, { readonly bran
   )
 ) {}
 /**
- * Client name with provenance.
- *
  * **Example** (Inspect ClientName)
  *
  * ```ts
@@ -410,8 +364,6 @@ export class ClientName extends S.Opaque<ClientName, { readonly brand: unique sy
   }).pipe($I.annoteSchema("ClientName", { description: "Client name with provenance." }))
 ) {}
 /**
- * Known names and input folder names for a numbered client.
- *
  * **Example** (Inspect ClientIndexEntry)
  *
  * ```ts
@@ -433,8 +385,6 @@ export class ClientIndexEntry extends S.Opaque<ClientIndexEntry, { readonly bran
   )
 ) {}
 /**
- * Input assertion from answers, folders, docket sheet, KG or email subjects.
- *
  * **Example** (Inspect IndexEvidence)
  *
  * ```ts
@@ -462,8 +412,6 @@ export class IndexEvidence extends S.Opaque<IndexEvidence, { readonly brand: uni
   )
 ) {}
 /**
- * Private index output consumed by resolution and evaluation.
- *
  * **Example** (Inspect IdentificationIndex)
  *
  * ```ts
@@ -487,8 +435,6 @@ export class IdentificationIndex extends S.Opaque<IdentificationIndex, { readonl
   )
 ) {}
 /**
- * Kind of extracted party.
- *
  * **Example** (Inspect PartyKind)
  *
  * ```ts
@@ -504,15 +450,11 @@ export const PartyKind = LiteralKit(["person", "organization"]).pipe(
   $I.annoteSchema("PartyKind", { description: "Kind of extracted party." })
 );
 /**
- * Runtime type of {@link PartyKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type PartyKind = typeof PartyKind.Type;
 /**
- * Document role of a quoted party.
- *
  * **Example** (Inspect PartyRole)
  *
  * ```ts
@@ -538,15 +480,11 @@ export const PartyRole = LiteralKit([
   "other",
 ]).pipe($I.annoteSchema("PartyRole", { description: "Document role of a quoted party." }));
 /**
- * Runtime type of {@link PartyRole}.
- *
  * @category models
  * @since 0.0.0
  */
 export type PartyRole = typeof PartyRole.Type;
 /**
- * Extractor and critic document classification.
- *
  * **Example** (Inspect DocumentType)
  *
  * ```ts
@@ -577,15 +515,11 @@ export const DocumentType = LiteralKit([
   "other",
 ]).pipe($I.annoteSchema("DocumentType", { description: "Extractor and critic document classification." }));
 /**
- * Runtime type of {@link DocumentType}.
- *
  * @category models
  * @since 0.0.0
  */
 export type DocumentType = typeof DocumentType.Type;
 /**
- * Quoted party claim subject to independent critic confirmation.
- *
  * **Example** (Inspect ExtractedParty)
  *
  * ```ts
@@ -608,8 +542,6 @@ export class ExtractedParty extends S.Opaque<ExtractedParty, { readonly brand: u
   )
 ) {}
 /**
- * Verbatim docket string with its source quote.
- *
  * **Example** (Inspect ExtractedDocket)
  *
  * ```ts
@@ -628,8 +560,6 @@ export class ExtractedDocket extends S.Opaque<ExtractedDocket, { readonly brand:
   }).pipe($I.annoteSchema("ExtractedDocket", { description: "Verbatim docket string with its source quote." }))
 ) {}
 /**
- * Extractor facts kept private; quotes never appear in resolution outputs.
- *
  * **Example** (Inspect DocumentExtraction)
  *
  * ```ts
@@ -658,8 +588,6 @@ export class DocumentExtraction extends S.Opaque<DocumentExtraction, { readonly 
   )
 ) {}
 /**
- * Independent critic accepted indexes and corrected document type.
- *
  * **Example** (Inspect CriticVerdict)
  *
  * ```ts
@@ -684,8 +612,6 @@ export class CriticVerdict extends S.Opaque<CriticVerdict, { readonly brand: uni
   )
 ) {}
 /**
- * Paired extractor and critic output for one document.
- *
  * **Example** (Inspect ConfirmedExtraction)
  *
  * ```ts
@@ -706,8 +632,6 @@ export class ConfirmedExtraction extends S.Opaque<ConfirmedExtraction, { readonl
   )
 ) {}
 /**
- * Canonical nested extractor JSONL record.
- *
  * **Example** (Inspect ExtractionRecord)
  *
  * ```ts
@@ -726,8 +650,6 @@ export class ExtractionRecord extends S.Opaque<ExtractionRecord, { readonly bran
   }).pipe($I.annoteSchema("ExtractionRecord", { description: "Canonical nested extractor JSONL record." }))
 ) {}
 /**
- * Canonical nested critic JSONL record.
- *
  * **Example** (Inspect CriticRecord)
  *
  * ```ts
@@ -746,8 +668,6 @@ export class CriticRecord extends S.Opaque<CriticRecord, { readonly brand: uniqu
   }).pipe($I.annoteSchema("CriticRecord", { description: "Canonical nested critic JSONL record." }))
 ) {}
 /**
- * Log-safe identification signal kind.
- *
  * **Example** (Inspect EvidenceKind)
  *
  * ```ts
@@ -776,15 +696,11 @@ export const EvidenceKind = LiteralKit([
   "organisation-firm",
 ]).pipe($I.annoteSchema("EvidenceKind", { description: "Log-safe identification signal kind." }));
 /**
- * Runtime type of {@link EvidenceKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EvidenceKind = typeof EvidenceKind.Type;
 /**
- * One reason containing identifiers or counts, never document text.
- *
  * **Example** (Inspect EvidenceLine)
  *
  * ```ts
@@ -807,8 +723,6 @@ export class EvidenceLine extends S.Opaque<EvidenceLine, { readonly brand: uniqu
   )
 ) {}
 /**
- * Measured confidence tier of a document attribution.
- *
  * **Example** (Inspect ConfidenceTier)
  *
  * ```ts
@@ -828,15 +742,11 @@ export const ConfidenceTier = LiteralKit([
   "unknown",
 ]).pipe($I.annoteSchema("ConfidenceTier", { description: "Measured confidence tier of a document attribution." }));
 /**
- * Runtime type of {@link ConfidenceTier}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ConfidenceTier = typeof ConfidenceTier.Type;
 /**
- * Resolution retaining ambiguity rather than guessing a client or docket.
- *
  * **Example** (Inspect Resolution)
  *
  * ```ts
@@ -861,8 +771,6 @@ export class Resolution extends S.Opaque<Resolution, { readonly brand: unique sy
   )
 ) {}
 /**
- * Measured precision and coverage for one outcome tier.
- *
  * **Example** (Inspect TierEvaluation)
  *
  * ```ts
@@ -885,8 +793,6 @@ export class TierEvaluation extends S.Opaque<TierEvaluation, { readonly brand: u
   }).pipe($I.annoteSchema("TierEvaluation", { description: "Measured precision and coverage for one outcome tier." }))
 ) {}
 /**
- * Counts-only evaluation report for a deterministic hold-out.
- *
  * **Example** (Inspect EvaluationReport)
  *
  * ```ts
@@ -908,8 +814,6 @@ export class EvaluationReport extends S.Opaque<EvaluationReport, { readonly bran
   )
 ) {}
 /**
- * Public record facts used for numeric application or patent queries.
- *
  * **Example** (Inspect UsptoRecordFacts)
  *
  * ```ts
@@ -932,8 +836,6 @@ export class UsptoRecordFacts extends S.Opaque<UsptoRecordFacts, { readonly bran
   )
 ) {}
 /**
- * Public USPTO numeric lookup kind.
- *
  * **Example** (Inspect LookupKind)
  *
  * ```ts
@@ -949,15 +851,11 @@ export const LookupKind = LiteralKit(["application", "patent"]).pipe(
   $I.annoteSchema("LookupKind", { description: "Public USPTO numeric lookup kind." })
 );
 /**
- * Runtime type of {@link LookupKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type LookupKind = typeof LookupKind.Type;
 /**
- * Numeric-only public lookup request.
- *
  * **Example** (Inspect UsptoQuery)
  *
  * ```ts
@@ -976,8 +874,6 @@ export class UsptoQuery extends S.Opaque<UsptoQuery, { readonly brand: unique sy
   }).pipe($I.annoteSchema("UsptoQuery", { description: "Numeric-only public lookup request." }))
 ) {}
 /**
- * Public facts bound to the exact cited number.
- *
  * **Example** (Inspect UsptoEvidence)
  *
  * ```ts
@@ -996,8 +892,6 @@ export class UsptoEvidence extends S.Opaque<UsptoEvidence, { readonly brand: uni
   }).pipe($I.annoteSchema("UsptoEvidence", { description: "Public facts bound to the exact cited number." }))
 ) {}
 /**
- * Private lookup result including explicit missing records.
- *
  * **Example** (Inspect UsptoLookupResult)
  *
  * ```ts
@@ -1018,8 +912,6 @@ export class UsptoLookupResult extends S.Opaque<UsptoLookupResult, { readonly br
   )
 ) {}
 /**
- * Operator supplied alias; no aliases are embedded in the resolver.
- *
  * **Example** (Inspect ClientAlias)
  *
  * ```ts
@@ -1040,8 +932,6 @@ export class ClientAlias extends S.Opaque<ClientAlias, { readonly brand: unique 
   )
 ) {}
 /**
- * Input-supplied unnumbered client and its names.
- *
  * **Example** (Inspect PseudoClient)
  *
  * ```ts
@@ -1060,8 +950,6 @@ export class PseudoClient extends S.Opaque<PseudoClient, { readonly brand: uniqu
   }).pipe($I.annoteSchema("PseudoClient", { description: "Input-supplied unnumbered client and its names." }))
 ) {}
 /**
- * Private attribution index and explicit operator policy inputs.
- *
  * **Example** (Inspect ResolverContext)
  *
  * ```ts
@@ -1088,8 +976,6 @@ export class ResolverContext extends S.Opaque<ResolverContext, { readonly brand:
   )
 ) {}
 /**
- * Content identity from an attorney-filed client folder.
- *
  * **Example** (Inspect IdenticalCopy)
  *
  * ```ts
@@ -1109,8 +995,6 @@ export class IdenticalCopy extends S.Opaque<IdenticalCopy, { readonly brand: uni
   }).pipe($I.annoteSchema("IdenticalCopy", { description: "Content identity from an attorney-filed client folder." }))
 ) {}
 /**
- * Typed private evidence bundle for a single document.
- *
  * **Example** (Inspect IdentificationDocument)
  *
  * ```ts
@@ -1136,8 +1020,6 @@ export class IdentificationDocument extends S.Opaque<IdentificationDocument, { r
   )
 ) {}
 /**
- * Attorney-filed ground truth document used for training or hold-out.
- *
  * **Example** (Inspect TrainingDocument)
  *
  * ```ts
@@ -1161,8 +1043,6 @@ export class TrainingDocument extends S.Opaque<TrainingDocument, { readonly bran
   )
 ) {}
 /**
- * Deterministic partition that keeps duplicate content together.
- *
  * **Example** (Inspect HoldOutSplit)
  *
  * ```ts
@@ -1183,8 +1063,6 @@ export class HoldOutSplit extends S.Opaque<HoldOutSplit, { readonly brand: uniqu
   )
 ) {}
 /**
- * Training-only client ownership of an evidence token.
- *
  * **Example** (Inspect TokenOwnership)
  *
  * ```ts
@@ -1203,8 +1081,6 @@ export class TokenOwnership extends S.Opaque<TokenOwnership, { readonly brand: u
   }).pipe($I.annoteSchema("TokenOwnership", { description: "Training-only client ownership of an evidence token." }))
 ) {}
 /**
- * Normalised text of one training document, kept for name learning.
- *
  * **Example** (Inspect LearningText)
  *
  * ```ts
@@ -1228,8 +1104,6 @@ export class LearningText extends S.Opaque<LearningText, { readonly brand: uniqu
   )
 ) {}
 /**
- * Fitted token ownership and private training documents for name learning.
- *
  * **Example** (Inspect TokenFilter)
  *
  * ```ts
@@ -1252,8 +1126,6 @@ export class TokenFilter extends S.Opaque<TokenFilter, { readonly brand: unique 
   )
 ) {}
 /**
- * Log-safe JSONL output for a resolved document.
- *
  * **Example** (Inspect ResolutionRecord)
  *
  * ```ts
@@ -1273,8 +1145,6 @@ export class ResolutionRecord extends S.Opaque<ResolutionRecord, { readonly bran
   }).pipe($I.annoteSchema("ResolutionRecord", { description: "Log-safe JSONL output for a resolved document." }))
 ) {}
 /**
- * A held-out prediction paired with attorney-filed ground truth.
- *
  * **Example** (Inspect EvaluationCase)
  *
  * ```ts
@@ -1295,8 +1165,6 @@ export class EvaluationCase extends S.Opaque<EvaluationCase, { readonly brand: u
   )
 ) {}
 /**
- * Input-only folder policy for organising unresolved administration files.
- *
  * **Example** (Inspect OrganisationRules)
  *
  * ```ts
@@ -1319,8 +1187,6 @@ export class OrganisationRules extends S.Opaque<OrganisationRules, { readonly br
   )
 ) {}
 /**
- * Non-client administrative organisation decision.
- *
  * **Example** (Inspect OrganisationKind)
  *
  * ```ts
@@ -1336,15 +1202,11 @@ export const OrganisationKind = LiteralKit(["form", "firm", "unresolved"]).pipe(
   $I.annoteSchema("OrganisationKind", { description: "Non-client administrative organisation decision." })
 );
 /**
- * Runtime type of {@link OrganisationKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type OrganisationKind = typeof OrganisationKind.Type;
 /**
- * Administrative organisation without inventing a client.
- *
  * **Example** (Inspect OrganisationDecision)
  *
  * ```ts

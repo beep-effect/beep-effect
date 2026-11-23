@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $DocumentsTablesId.create("entities/SyncConflict/SyncConflict.errors");
 
 /**
- * Failure converting a SyncConflict persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

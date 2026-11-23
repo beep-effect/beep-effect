@@ -14,8 +14,6 @@ import { PracticeCapability, PracticeProvider } from "../PracticeProfile/Practic
 const $I = $LawPracticeDomainId.create("values/SetupRequirement/SetupRequirement.model");
 
 /**
- * Stable kebab-case identifier of a setup requirement.
- *
  * **Example** (Decode a requirement id)
  *
  * ```ts
@@ -38,8 +36,6 @@ export const SetupRequirementId = Slug.pipe(
 );
 
 /**
- * Decoded type of {@link SetupRequirementId}.
- *
  * **Example** (Type a requirement id)
  *
  * ```ts
@@ -55,8 +51,6 @@ export const SetupRequirementId = Slug.pipe(
 export type SetupRequirementId = typeof SetupRequirementId.Type;
 
 /**
- * A step only the lawyer can perform.
- *
  * **Details**
  *
  * Agents never create accounts or type credentials. These are the only
@@ -93,8 +87,6 @@ export const HumanStep = LiteralKit([
 );
 
 /**
- * Decoded type of {@link HumanStep}.
- *
  * **Example** (Type a human step)
  *
  * ```ts
@@ -110,9 +102,6 @@ export const HumanStep = LiteralKit([
 export type HumanStep = typeof HumanStep.Type;
 
 /**
- * What a setup requirement serves: a practice capability, or the workstation
- * itself.
- *
  * **Details**
  *
  * Extends {@link PracticeCapability} with `workstation` for requirements every
@@ -137,8 +126,6 @@ export const SetupCapability = LiteralKit([...PracticeCapability.literals, "work
 );
 
 /**
- * Decoded type of {@link SetupCapability}.
- *
  * **Example** (Type a setup capability)
  *
  * ```ts
@@ -154,8 +141,6 @@ export const SetupCapability = LiteralKit([...PracticeCapability.literals, "work
 export type SetupCapability = typeof SetupCapability.Type;
 
 /**
- * Who owns a setup requirement: a provider adapter, Claude, or Windows.
- *
  * **Details**
  *
  * Extends {@link PracticeProvider} with `claude` (the host app the lawyer
@@ -179,8 +164,6 @@ export const SetupProvider = LiteralKit([...PracticeProvider.literals, "claude",
 );
 
 /**
- * Decoded type of {@link SetupProvider}.
- *
  * **Example** (Type a setup provider)
  *
  * ```ts
@@ -196,8 +179,6 @@ export const SetupProvider = LiteralKit([...PracticeProvider.literals, "claude",
 export type SetupProvider = typeof SetupProvider.Type;
 
 /**
- * A repair the gateway performs itself after the lawyer approves it.
- *
  * **Example** (Describe an automatic repair)
  *
  * ```ts
@@ -224,8 +205,6 @@ export class AutomaticRemediation extends S.Opaque<AutomaticRemediation, { reado
 ) {}
 
 /**
- * A repair that needs the lawyer to act.
- *
  * **Example** (Ask the lawyer to sign in to Box Drive)
  *
  * ```ts
@@ -278,8 +257,6 @@ export const Remediation = S.Union([AutomaticRemediation, HumanRemediation]).pip
 );
 
 /**
- * Decoded type of {@link Remediation}.
- *
  * **Example** (Type a human remediation)
  *
  * ```ts
@@ -295,8 +272,6 @@ export const Remediation = S.Union([AutomaticRemediation, HumanRemediation]).pip
 export type Remediation = typeof Remediation.Type;
 
 /**
- * One checkable condition a lawyer's workstation must meet.
- *
  * **Details**
  *
  * The practice profile selects which requirements apply. Requirements form a
@@ -352,8 +327,6 @@ export class SetupRequirement extends S.Opaque<SetupRequirement, { readonly bran
 ) {}
 
 /**
- * The requirement holds.
- *
  * **Example** (Report a satisfied probe)
  *
  * ```ts
@@ -376,8 +349,6 @@ export class ProbeSatisfied extends S.Opaque<ProbeSatisfied, { readonly brand: u
 ) {}
 
 /**
- * The requirement is not set up yet.
- *
  * **Example** (Report a missing install)
  *
  * ```ts
@@ -401,8 +372,6 @@ export class ProbeMissing extends S.Opaque<ProbeMissing, { readonly brand: uniqu
 ) {}
 
 /**
- * The requirement was set up but no longer works.
- *
  * **Example** (Report an expired sign-in)
  *
  * ```ts
@@ -448,8 +417,6 @@ export const ProbeResult = S.Union([ProbeSatisfied, ProbeMissing, ProbeBroken]).
 );
 
 /**
- * Decoded type of {@link ProbeResult}.
- *
  * **Example** (Type a missing result)
  *
  * ```ts
@@ -465,8 +432,6 @@ export const ProbeResult = S.Union([ProbeSatisfied, ProbeMissing, ProbeBroken]).
 export type ProbeResult = typeof ProbeResult.Type;
 
 /**
- * A requirement the doctor probed, with what the probe found.
- *
  * **Example** (Record a probed requirement)
  *
  * ```ts
@@ -556,8 +521,6 @@ export const RequirementCheck = S.Union([CheckProbed, CheckBlocked]).pipe(
 );
 
 /**
- * Decoded type of {@link RequirementCheck}.
- *
  * **Example** (Accept any check)
  *
  * ```ts
@@ -573,8 +536,6 @@ export const RequirementCheck = S.Union([CheckProbed, CheckBlocked]).pipe(
 export type RequirementCheck = typeof RequirementCheck.Type;
 
 /**
- * A step the lawyer must take, tied to the requirement it repairs.
- *
  * **Example** (Ask for a Microsoft 365 consent)
  *
  * ```ts

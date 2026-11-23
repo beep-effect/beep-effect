@@ -44,8 +44,6 @@ const isProvisional = S.is(
 );
 
 /**
- * What an undo does with one event a run created.
- *
  * **Details**
  *
  * `delete` when every category the event carries is one of the service's
@@ -70,8 +68,6 @@ export const DocketUndoEventAction = LiteralKit(["delete", "keep", "gone", "undo
 );
 
 /**
- * Type of {@link DocketUndoEventAction}.
- *
  * **Example** (Type an event action)
  *
  * ```ts
@@ -87,8 +83,6 @@ export const DocketUndoEventAction = LiteralKit(["delete", "keep", "gone", "undo
 export type DocketUndoEventAction = typeof DocketUndoEventAction.Type;
 
 /**
- * What an undo does with one message a run marked.
- *
  * **Details**
  *
  * `unmark` takes `Docket - entered` off it. `keep` leaves it alone because a
@@ -112,8 +106,6 @@ export const DocketUndoMessageAction = LiteralKit(["unmark", "keep", "gone", "un
 );
 
 /**
- * Type of {@link DocketUndoMessageAction}.
- *
  * **Example** (Type a message action)
  *
  * ```ts
@@ -129,8 +121,6 @@ export const DocketUndoMessageAction = LiteralKit(["unmark", "keep", "gone", "un
 export type DocketUndoMessageAction = typeof DocketUndoMessageAction.Type;
 
 /**
- * One event a run created and what an undo does with it.
- *
  * **Example** (Plan to keep an event)
  *
  * ```ts
@@ -150,8 +140,6 @@ export class DocketUndoEvent extends S.Opaque<DocketUndoEvent, { readonly brand:
 ) {}
 
 /**
- * One message a run marked and what an undo does with it.
- *
  * **Example** (Plan to unmark a message)
  *
  * ```ts

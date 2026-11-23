@@ -989,6 +989,21 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     config.pool.maximumCount === -1 ? wanted : Math.max(0, Math.min(wanted, config.pool.maximumCount - current));
   const skipped = wanted - allowed;
   const overCap = config.pool.ephemeral ? A.take(stillQueued, skipped) : [];
+  yield* Effect.forEach(
+    overCap,
+    (request) =>
+      Effect.logInfo("scale-up: deferred at cap").pipe(
+        Effect.annotateLogs({
+          messageId: request.messageId,
+          jobId: request.message.id,
+          environment: config.environment,
+          retryCounter: request.message.retryCounter ?? 0,
+          runners: current,
+          maximumCount: config.pool.maximumCount,
+        })
+      ),
+    { concurrency: 1, discard: true }
+  );
   const publishRetries = (requests: ReadonlyArray<QueuedActionRequest>) =>
     Effect.forEach(requests, (request) => publishRetryLogged(config, request), { concurrency: 1, discard: true });
   const handledExcept = (excluded: ReadonlyArray<QueuedActionRequest>) => {

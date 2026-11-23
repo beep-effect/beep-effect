@@ -36,7 +36,6 @@ export const CollectionSide = LiteralKit([
   "open-source",
 ]).pipe($I.annoteSchema("CollectionSide", { description: "Which side of the matter an artifact came from." }));
 /**
- * Decoded CollectionSide type.
  * @category models
  * @since 0.0.0
  */
@@ -112,8 +111,6 @@ export class Url extends S.Opaque<Url, { readonly brand: unique symbol }>()(
   S.TaggedStruct("Url", { url: S.NonEmptyString }).pipe($I.annoteSchema("Url", { description: "Url data." }))
 ) {}
 /**
- * Locator public schema for the provenance model.
- *
  * **Example** (Decode Locator)
  * ```ts
  * import { Locator } from "@beep/party-domain/Provenance"
@@ -128,7 +125,6 @@ export const Locator = S.Union([Bates, ContainerChild, FilePath, Url]).pipe(
   $I.annoteSchema("Locator", { description: "Where an occurrence sits." })
 );
 /**
- * Decoded Locator type.
  * @category models
  * @since 0.0.0
  */
@@ -160,8 +156,6 @@ export class ArtifactOccurrence extends S.Opaque<ArtifactOccurrence, { readonly 
 ) {}
 
 /**
- * What kind of work an activity did.
- *
  * **Example** (Decode ActivityKind)
  * ```ts
  * import { ActivityKind } from "@beep/party-domain/Provenance"
@@ -243,8 +237,6 @@ export class Failed extends S.Opaque<Failed, { readonly brand: unique symbol }>(
   )
 ) {}
 /**
- * ActivityStatus public schema for the provenance model.
- *
  * **Example** (Decode ActivityStatus)
  * ```ts
  * import { ActivityStatus } from "@beep/party-domain/Provenance"
@@ -317,8 +309,6 @@ export class Human extends S.Opaque<Human, { readonly brand: unique symbol }>()(
   S.TaggedStruct("Human", { principal: PrincipalId }).pipe($I.annoteSchema("Human", { description: "Human data." }))
 ) {}
 /**
- * Producer public schema for the provenance model.
- *
  * **Example** (Decode Producer)
  * ```ts
  * import { Producer } from "@beep/party-domain/Provenance"
@@ -333,7 +323,6 @@ export const Producer = S.Union([Software, Model, Human]).pipe(
   $I.annoteSchema("Producer", { description: "Who did the work." })
 );
 /**
- * Decoded Producer type.
  * @category models
  * @since 0.0.0
  */
@@ -429,8 +418,6 @@ export class TextOccurrence extends S.Opaque<TextOccurrence, { readonly brand: u
   )
 ) {}
 /**
- * MetadataTag evidence location.
- *
  * **Example** (Decode MetadataTag)
  * ```ts
  * import { MetadataTag } from "@beep/party-domain/Provenance"
@@ -448,8 +435,6 @@ export class MetadataTag extends S.Opaque<MetadataTag, { readonly brand: unique 
   }).pipe($I.annoteSchema("MetadataTag", { description: "MetadataTag evidence location." }))
 ) {}
 /**
- * RecordRow evidence location.
- *
  * **Example** (Decode RecordRow)
  * ```ts
  * import { RecordRow } from "@beep/party-domain/Provenance"
@@ -465,8 +450,6 @@ export class RecordRow extends S.Opaque<RecordRow, { readonly brand: unique symb
   )
 ) {}
 /**
- * EvidenceAnchor public schema for the provenance model.
- *
  * **Example** (Decode EvidenceAnchor)
  * ```ts
  * import { EvidenceAnchor } from "@beep/party-domain/Provenance"
@@ -481,14 +464,12 @@ export const EvidenceAnchor = S.Union([HeaderField, TextOccurrence, MetadataTag,
   $I.annoteSchema("EvidenceAnchor", { description: "Exact evidence location." })
 );
 /**
- * Decoded EvidenceAnchor type.
  * @category models
  * @since 0.0.0
  */
 export type EvidenceAnchor = typeof EvidenceAnchor.Type;
 
 /**
- * Decoded header namespace.
  * @category models
  * @since 0.0.0
  */

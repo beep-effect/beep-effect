@@ -23,8 +23,6 @@ import type { LocalDate } from "@beep/schema/LocalDate";
 const $I = $LawPracticeDomainId.create("values/CalendarDate/CalendarDate.model");
 
 /**
- * A day that exists in its month, encoded as an ISO date string (`YYYY-MM-DD`).
- *
  * **Details**
  *
  * The decoded value is a `LocalDate`. Decoding and construction both reject a

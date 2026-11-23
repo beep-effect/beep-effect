@@ -51,8 +51,6 @@ export class SetupProbeUnavailable extends S.TaggedError<SetupProbeUnavailable, 
 ) {}
 
 /**
- * An approved automatic repair failed.
- *
  * **Example** (Report a failed repair)
  *
  * ```ts
@@ -85,8 +83,6 @@ export class SetupRepairFailed extends S.TaggedError<SetupRepairFailed, { readon
 ) {}
 
 /**
- * Host service shape for probing and repairing setup requirements.
- *
  * **Details**
  *
  * The gateway implements one probe and, for automatic remediations, one
@@ -146,8 +142,6 @@ export class SetupProbes extends Context.Service<SetupProbes, SetupProbesShape>(
 const RepairDecisionBase = LiteralKit(["approved", "declined"]);
 
 /**
- * The lawyer's answer to a repair request.
- *
  * **Example** (Check a decision)
  *
  * ```ts
@@ -167,8 +161,6 @@ export const RepairDecision = RepairDecisionBase.pipe(
 );
 
 /**
- * Decoded type of {@link RepairDecision}.
- *
  * **Example** (Type a decision)
  *
  * ```ts
@@ -184,8 +176,6 @@ export const RepairDecision = RepairDecisionBase.pipe(
 export type RepairDecision = typeof RepairDecision.Type;
 
 /**
- * Host service shape for asking the lawyer to approve an automatic repair.
- *
  * **Example** (Decline every repair)
  *
  * ```ts

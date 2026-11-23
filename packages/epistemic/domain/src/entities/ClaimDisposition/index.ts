@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim disposition entity exports.
- *
  * **Example** (Log entity table name)
  *
  * ```ts

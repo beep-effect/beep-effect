@@ -15,8 +15,6 @@ const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.model");
 const pg = ProductEntity.pg;
 
 /**
- * User or team work area.
- *
  * **Example** (Log Workspace table name)
  *
  * ```ts
