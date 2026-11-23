@@ -1,8 +1,3 @@
-// Bytes to text: a byte-order mark names the encoding, else valid UTF-8 is UTF-8, else Windows-1252; a fixed UTF-8
-// refuses invalid bytes with their offset; the byte cap holds for whole reads and streams; a U+FEFF inside the data
-// survives a stream split right before it; a failing upstream fails a channel with its own error, nothing flushed
-// before it; and the two places a stream may differ from a whole read are pinned.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import { InvalidUtf8, TooManyBytes } from "@beep/csv/CsvDiagnostic.schema";
 import { CsvDetectEncoding, CsvFixedEncoding, CsvLimits, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
@@ -94,8 +89,6 @@ describe("encoding detection", () => {
 });
 
 describe("Windows-1252", () => {
-  // Node 22's whole-buffer Windows-1252 decoder drops a leading 0xFF when it is asked to keep byte-order marks; a
-  // single-byte encoding has no byte-order mark, so the decoder must not be asked.
   it.effect("a leading 0xFF reads as ÿ, whole or streamed, fixed or detected, in one chunk or split", () =>
     Effect.gen(function* () {
       const bytes = bytesOf([0xff], "a,b\n");
@@ -115,12 +108,13 @@ describe("Windows-1252", () => {
 describe("the detect window", () => {
   it.effect("decides on the same leading bytes however the input is cut", () =>
     Effect.gen(function* () {
-      // The window is one byte; the invalid byte is past it and past the three bytes that may finish a sequence.
-      const bytes = bytesOf("aaaaa", [0xe9], "\n");
-      const oneChunk = yield* streamBytes([bytes], detectWindow(1n));
+      const oneByteWindow = detectWindow(1n);
+      const invalidBytePastWindowAndItsThreeTailBytes = bytesOf("aaaaa", [0xe9], "\n");
+      const bytes = invalidBytePastWindowAndItsThreeTailBytes;
+      const oneChunk = yield* streamBytes([bytes], oneByteWindow);
       assertFailure(fatalFindings(oneChunk), [InvalidUtf8.make({ byteOffset: 5 })]);
       for (const at of [1, 4, 5, 6]) {
-        const split = yield* streamBytes([bytes.subarray(0, at), bytes.subarray(at)], detectWindow(1n));
+        const split = yield* streamBytes([bytes.subarray(0, at), bytes.subarray(at)], oneByteWindow);
         deepStrictEqual(split, oneChunk);
       }
     })
@@ -207,15 +201,15 @@ describe("streaming bytes", () => {
     })
   );
 
-  it.effect("a multi-byte character split across every byte reads as one character", () =>
-    Effect.gen(function* () {
-      const bytes = utf8("é,😀\n");
-      const chunks = pieces(bytes.length, A.replicate(1, bytes.length), (from, to) => bytes.subarray(from, to));
-      // A fixed UTF-8 decodes each byte as it comes, so every sequence is carried across decoder calls; a detected
-      // encoding would hold this short input in its window and decode it whole.
-      const streamed = yield* streamBytes(chunks, fixedUtf8Comma);
-      assertSuccess(streamed, [["é", "😀"]]);
-    })
+  it.effect(
+    "a multi-byte character split across every byte reads as one character, carried across decoder calls under a fixed UTF-8 that a detect window would hold whole",
+    () =>
+      Effect.gen(function* () {
+        const bytes = utf8("é,😀\n");
+        const chunks = pieces(bytes.length, A.replicate(1, bytes.length), (from, to) => bytes.subarray(from, to));
+        const streamed = yield* streamBytes(chunks, fixedUtf8Comma);
+        assertSuccess(streamed, [["é", "😀"]]);
+      })
   );
 
   it.effect("an unfinished UTF-8 sequence at the end fails the stream at its offset", () =>
@@ -313,9 +307,8 @@ describe("a failing upstream", () => {
         readWithRules(",", { encoding: CsvFixedEncoding.make({ encoding: "utf-8" }) })
       );
       deepStrictEqual(A.map(fixedUtf8, cellsOf), [Result.succeed<CsvRecord>(["1", "2"]), Result.fail("io")]);
-      // The detect window is still open when the upstream fails, so nothing was decoded.
-      const detected = yield* decodeWith(readWith(","));
-      deepStrictEqual(detected, [Result.fail("io")]);
+      const detectWindowStillOpenSoNothingDecoded = yield* decodeWith(readWith(","));
+      deepStrictEqual(detectWindowStillOpenSoNothingDecoded, [Result.fail("io")]);
     })
   );
 
@@ -336,9 +329,14 @@ describe("a failing upstream", () => {
     Effect.gen(function* () {
       const emitted = yield* emittedFromBytes([bytesOf("a\n", [0xff], "\n")], fixedUtf8Comma);
       deepStrictEqual(emitted, [Result.succeed<CsvRecord>(["a"]), Result.fail([InvalidUtf8.make({ byteOffset: 2 })])]);
-      // The open record is not flushed ahead of the failure.
-      const open = yield* emittedFromBytes([bytesOf("a\nb", [0xff], "\n")], fixedUtf8Comma);
-      deepStrictEqual(open, [Result.succeed<CsvRecord>(["a"]), Result.fail([InvalidUtf8.make({ byteOffset: 3 })])]);
+      const openRecordNotFlushedAheadOfFailure = yield* emittedFromBytes(
+        [bytesOf("a\nb", [0xff], "\n")],
+        fixedUtf8Comma
+      );
+      deepStrictEqual(openRecordNotFlushedAheadOfFailure, [
+        Result.succeed<CsvRecord>(["a"]),
+        Result.fail([InvalidUtf8.make({ byteOffset: 3 })]),
+      ]);
     })
   );
 

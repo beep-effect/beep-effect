@@ -1,6 +1,3 @@
-// Each listed schema generates only values it accepts (schema-first rule SF-7): the roots, whose fields hold every
-// other exported schema, the header row, the parse error, and the engine's own schemas.
-
 import { CsvDiagnostic } from "@beep/csv/CsvDiagnostic.schema";
 import { CsvParseError } from "@beep/csv/CsvError.errors";
 import { CsvCodecOptions, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
@@ -36,7 +33,7 @@ const schemas = {
   Prepared,
 };
 
-describe("each listed schema generates only valid values", () => {
+describe("each listed schema generates only valid values (SF-7): the roots, whose fields hold every other exported schema, the header row, the parse error and the engine's schemas", () => {
   for (const [name, schema] of R.toEntries(schemas)) {
     it.prop(
       name,
