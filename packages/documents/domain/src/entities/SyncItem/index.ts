@@ -6,8 +6,6 @@
  */
 export * from "./SyncItem.model.ts";
 /**
- * SyncItem subsidiary value schema exports.
- *
  * @category entities
  * @since 0.0.0
  */

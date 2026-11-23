@@ -12,8 +12,6 @@ const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.values"
 const PatentAssetStatusBase = LiteralKit(["pre_filing"]);
 
 /**
- * Patent asset lifecycle status accepted by the law-practice proof fixtures.
- *
  * **Example** (Decode pre-filing status)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const PatentAssetStatus = PatentAssetStatusBase.pipe(
 );
 
 /**
- * Type-level literal union produced by {@link PatentAssetStatus}.
- *
  * **Example** (Satisfy type-level status)
  *
  * ```ts

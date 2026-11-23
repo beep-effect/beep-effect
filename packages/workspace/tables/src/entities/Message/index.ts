@@ -6,8 +6,6 @@
  */
 
 /**
- * Message row converter exports.
- *
  * **Example** (Import Message converter exports)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Message.converters.ts";
 /**
- * Message converter error exports.
- *
  * **Example** (Import Message converter error)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./Message.converters.ts";
  */
 export * from "./Message.errors.ts";
 /**
- * Message table exports.
- *
  * **Example** (Log Message entity type)
  *
  * ```ts

@@ -6,8 +6,6 @@
  */
 
 /**
- * Agent entity schema exports.
- *
  * **Example** (Import Agent entity type)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Agent.model.ts";
 /**
- * Agent value-schema exports.
- *
  * **Example** (Check AgentMode deterministic fixture)
  *
  * ```ts

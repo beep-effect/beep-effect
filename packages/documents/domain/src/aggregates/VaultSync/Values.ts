@@ -80,8 +80,6 @@ export const ConflictId = PublicEntityId.factory(SyncConflictId);
  */
 export type ConflictId = typeof ConflictId.Type;
 /**
- * Opaque minted vault sync destination identity.
- *
  * **Details**
  *
  * A destination id is the fixed prefix `documents_sync_destination_` followed by
@@ -107,8 +105,6 @@ export const DestinationId = S.TemplateLiteral([destinationIdPrefix, Cuid]).pipe
   })
 );
 /**
- * Runtime value accepted by {@link DestinationId}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -163,15 +159,11 @@ export const RequestToken = S.String.check(S.isPattern(/^[A-Za-z0-9_-]{1,64}$/))
   $I.annoteSchema("RequestToken", { description: "Bounded opaque caller-supplied request or correlation token." })
 );
 /**
- * Runtime value accepted by {@link RequestToken}.
- *
  * @category aggregates
  * @since 0.0.0
  */
 export type RequestToken = typeof RequestToken.Type;
 /**
- * Org-qualified destination name reservation key.
- *
  * **Details**
  *
  * The key is `${orgId}:${sha256hex(normalizedName)}`. The name is hashed so it
@@ -192,8 +184,6 @@ export const ReservationKey = S.TemplateLiteral([S.Int, ":", Sha256Hex]).pipe(
   $I.annoteSchema("ReservationKey", { description: "Org id and the SHA-256 hex of the normalized destination name." })
 );
 /**
- * Runtime value accepted by {@link ReservationKey}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -245,8 +235,6 @@ export const OrgKey = S.NonEmptyString.pipe(
   $I.annoteSchema("OrgKey", { description: "Organization view key." })
 );
 /**
- * Runtime value accepted by {@link OrgKey}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -272,8 +260,6 @@ export const OperationType = LiteralKit([
   $I.annoteSchema("OperationType", { description: "One-way mirror operations; deletion is deliberately absent." })
 );
 /**
- * Runtime value accepted by {@link OperationType}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -306,8 +292,6 @@ export const MirrorOperation = LiteralKit([
   "pollEvents",
 ]).pipe($I.annoteSchema("MirrorOperation", { description: "The remote mirror call a vault sync failure names." }));
 /**
- * Runtime value accepted by {@link MirrorOperation}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -328,8 +312,6 @@ export const SupersedeReason = LiteralKit(["kind-replaced", "review-heal"]).pipe
   $I.annoteSchema("SupersedeReason", { description: "Why a queued vault sync operation was superseded." })
 );
 /**
- * Runtime value accepted by {@link SupersedeReason}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -349,8 +331,6 @@ export const OperationStatus = LiteralKit(["queued", "leased", "retrying", "succ
   $I.annoteSchema("OperationStatus", { description: "Distinct terminal failure and supersession." })
 );
 /**
- * Runtime value accepted by {@link OperationStatus}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -370,8 +350,6 @@ export const ItemStatus = LiteralKit(["pending", "synced", "drifted", "error"]).
   $I.annoteSchema("ItemStatus", { description: "Local mirror progress." })
 );
 /**
- * Runtime value accepted by {@link ItemStatus}.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -398,8 +376,6 @@ export const RemoteEvidence = S.String.check(
   })
 ).pipe($I.annoteSchema("RemoteEvidence", { description: "Bounded remote evidence snapshot." }));
 /**
- * Remote evidence value.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -421,7 +397,6 @@ export const WorkspaceKey = S.NonEmptyString.pipe(
   $I.annoteSchema("WorkspaceKey", { description: "Organization and workspace destination-list partition." })
 );
 /**
- * Workspace partition value.
  * @category aggregates
  * @since 0.0.0
  */

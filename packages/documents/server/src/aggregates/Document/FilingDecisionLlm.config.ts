@@ -178,8 +178,6 @@ const ConfiguredMaxMaterializedBytes = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Resolved configuration value for LLM-backed filing.
- *
  * **Example** (Decode filing config value)
  *
  * ```ts

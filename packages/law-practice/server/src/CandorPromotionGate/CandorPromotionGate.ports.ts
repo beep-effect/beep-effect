@@ -45,8 +45,6 @@ export const CandorPromotionSubjectResolutionReason = CandorPromotionSubjectReso
 );
 
 /**
- * Runtime type for {@link CandorPromotionSubjectResolutionReason}.
- *
  * @category errors
  * @since 0.0.0
  */

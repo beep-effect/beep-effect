@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $LawPracticeDomainId.create("values/HistorySignal/HistorySignal.model");
 
 /**
- * Normalized subsequent-history signal classification.
- *
  * **Details**
  *
  * Maps variant spellings (`aff'd`, `affirmed`) onto a single canonical form so

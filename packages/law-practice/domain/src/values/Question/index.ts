@@ -7,8 +7,6 @@
  */
 
 /**
- * Question model exports.
- *
  * **Example** (Import QuestionOption)
  *
  * ```ts

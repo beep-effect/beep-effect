@@ -15,7 +15,6 @@ import { AliasPairing } from "../MailIndex/MailIndex.model.ts";
 const $I = $PartyServerId.create("values/IdentityEvidence/IdentityEvidence.model");
 
 /**
- * Aggregated same-message support for one DN/SMTP mailbox pairing.
  * **Example** (Decode PairingSupport)
  * ```ts
  * import { PairingSupport } from "@beep/party-server/IdentityEvidence"
@@ -56,7 +55,6 @@ export class PairingSupport extends S.Opaque<PairingSupport, { readonly brand: u
 ) {}
 
 /**
- * Identifiers and pairing edges for a review-only mailbox graph.
  * **Example** (Decode MailboxClusterInput)
  * ```ts
  * import { MailboxClusterInput } from "@beep/party-server/IdentityEvidence"
@@ -75,7 +73,6 @@ export class MailboxClusterInput extends S.Opaque<MailboxClusterInput, { readonl
 ) {}
 
 /**
- * One name’s identifiers and their mailbox cluster map.
  * **Example** (Decode MailboxGroupInput)
  * ```ts
  * import { MailboxGroupInput } from "@beep/party-server/IdentityEvidence"
@@ -92,7 +89,6 @@ export class MailboxGroupInput extends S.Opaque<MailboxGroupInput, { readonly br
 ) {}
 
 /**
- * The identifiers observed under one display-name spelling.
  * **Example** (Decode NamedIdentifiers)
  * ```ts
  * import { NamedIdentifiers } from "@beep/party-server/IdentityEvidence"
@@ -109,7 +105,6 @@ export class NamedIdentifiers extends S.Opaque<NamedIdentifiers, { readonly bran
 ) {}
 
 /**
- * Name collisions compared with contact-card evidence.
  * **Example** (Decode CollisionInput)
  * ```ts
  * import { CollisionInput } from "@beep/party-server/IdentityEvidence"
@@ -146,14 +141,12 @@ export const CollisionOutcome = LiteralKit([
   "unresolved",
 ]).pipe($I.annoteSchema("CollisionOutcome", { description: "Contact-evidence review classification." }));
 /**
- * Decoded collision outcome.
  * @category models
  * @since 0.0.0
  */
 export type CollisionOutcome = typeof CollisionOutcome.Type;
 
 /**
- * One name spanning multiple mailbox groups and its review outcome.
  * **Example** (Decode Collision)
  * ```ts
  * import { Collision } from "@beep/party-server/IdentityEvidence"
@@ -170,7 +163,6 @@ export class Collision extends S.Opaque<Collision, { readonly brand: unique symb
 ) {}
 
 /**
- * One source card’s personal identifier; shared addresses must be excluded by the caller.
  * **Example** (Decode CardIdentifier)
  * ```ts
  * import { CardIdentifier } from "@beep/party-server/IdentityEvidence"
@@ -194,7 +186,6 @@ export class CardIdentifier extends S.Opaque<CardIdentifier, { readonly brand: u
 ) {}
 
 /**
- * A conservative cross-source candidate requiring human identity review.
  * **Example** (Decode CardMergeProposal)
  * ```ts
  * import { CardMergeProposal } from "@beep/party-server/IdentityEvidence"
@@ -227,7 +218,6 @@ export const DriftKind = LiteralKit(["sequential-migration", "concurrent-aliases
   $I.annoteSchema("DriftKind", { description: "Observed mailbox drift, not an accepted identity claim." })
 );
 /**
- * Decoded drift kind.
  * @category models
  * @since 0.0.0
  */
@@ -251,7 +241,6 @@ export class DriftEvidence extends S.Opaque<DriftEvidence, { readonly brand: uni
 ) {}
 
 /**
- * One source-backed alias pairing with its optional message time.
  * **Example** (Decode PairingObservation)
  * ```ts
  * import { PairingObservation } from "@beep/party-server/IdentityEvidence"

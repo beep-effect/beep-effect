@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim gate port exports.
- *
  * **Example** (ClaimGate is a function)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./ClaimGate.ports.ts";
 /**
- * Claim gate implementation exports.
- *
  * **Example** (makeClaimGate is a function)
  *
  * ```ts

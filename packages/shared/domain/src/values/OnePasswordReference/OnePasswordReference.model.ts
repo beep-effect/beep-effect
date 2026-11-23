@@ -25,8 +25,6 @@ const OnePasswordReferenceChecks = S.makeFilterGroup([
 ]);
 
 /**
- * Typed reference to a 1Password item field.
- *
  * **Details**
  *
  * This value is a reference only. It is safe for manifests, approvals, and
@@ -58,8 +56,6 @@ export const OnePasswordReference = S.String.check(OnePasswordReferenceChecks).p
 );
 
 /**
- * Runtime type for {@link OnePasswordReference}.
- *
  * **Example** (Typing a decoded reference)
  *
  * ```ts

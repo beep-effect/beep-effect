@@ -44,8 +44,6 @@ export const IrToLawExtractionErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link IrToLawExtractionErrorReason}.
- *
  * **Example** (Map reasons to labels)
  *
  * ```ts

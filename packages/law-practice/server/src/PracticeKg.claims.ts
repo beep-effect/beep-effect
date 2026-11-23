@@ -185,8 +185,6 @@ INSERT INTO epistemic_evidence (
 ON CONFLICT (public_id) DO NOTHING`;
 
 /**
- * Inputs for one candidate-claims batch.
- *
  * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsOptions } from "@beep/law-practice-server"
@@ -215,8 +213,6 @@ export class PracticeKgClaimsOptions extends S.Opaque<PracticeKgClaimsOptions, {
 ) {}
 
 /**
- * Deterministic claims-batch summary.
- *
  * **Example** (Usage)
  * ```ts
  * import * as S from "effect/Schema"
@@ -684,8 +680,6 @@ export class PracticeKgClaimsCarry extends S.Opaque<PracticeKgClaimsCarry, { rea
 ) {}
 
 /**
- * Destination bundle and rows for one claims carry.
- *
  * **Example** (Make a carry write request)
  *
  * ```ts
@@ -716,8 +710,6 @@ export class PracticeKgClaimsCarryWrite extends S.Opaque<
 ) {}
 
 /**
- * Counts from one claims carry.
- *
  * **Example** (Make a carry summary)
  *
  * ```ts

@@ -6,8 +6,6 @@
  */
 
 /**
- * Thread row converter exports.
- *
  * **Example** (Import converter exports)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Thread.converters.ts";
 /**
- * Thread converter error exports.
- *
  * **Example** (Import Thread converter error)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./Thread.converters.ts";
  */
 export * from "./Thread.errors.ts";
 /**
- * Thread table exports.
- *
  * **Example** (Import table exports)
  *
  * ```ts

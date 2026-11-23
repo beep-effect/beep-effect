@@ -7,22 +7,16 @@
  */
 
 /**
- * Docket intake ports.
- *
  * @category ports
  * @since 0.0.0
  */
 export * from "./DocketIntake.ports.ts";
 /**
- * Docket intake schema models.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./DocketIntake.schemas.ts";
 /**
- * Docket intake pipeline service.
- *
  * @category services
  * @since 0.0.0
  */
@@ -42,15 +36,11 @@ export * from "./DocketQuestions.schemas.ts";
  */
 export * from "./DocketQuestions.service.ts";
 /**
- * Docket review loop policy.
- *
  * @category utilities
  * @since 0.0.0
  */
 export * from "./DocketReview.policy.ts";
 /**
- * Docket review loop schema models.
- *
  * @category models
  * @since 0.0.0
  */

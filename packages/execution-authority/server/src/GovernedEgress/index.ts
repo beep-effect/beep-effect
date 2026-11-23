@@ -12,8 +12,6 @@
  */
 export * from "./GovernedEgress.fetch.ts";
 /**
- * Governed egress layer factory exports.
- *
  * @since 0.0.0
  */
 export * from "./GovernedEgress.layer.ts";

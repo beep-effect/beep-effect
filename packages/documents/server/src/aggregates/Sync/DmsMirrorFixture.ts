@@ -50,8 +50,6 @@ import type {
 const $I = $DocumentsServerId.create("aggregates/Sync/DmsMirrorFixture");
 
 /**
- * Mirror verb addressed by fixture call counts and failure injection.
- *
  * **Example** (Assert uploadFile verb)
  *
  * ```ts
@@ -81,8 +79,6 @@ export const DmsMirrorFixtureVerb = LiteralKit([
 );
 
 /**
- * Runtime type for {@link DmsMirrorFixtureVerb}.
- *
  * **Example** (Type pollEvents string)
  *
  * ```ts
@@ -98,8 +94,6 @@ export const DmsMirrorFixtureVerb = LiteralKit([
 export type DmsMirrorFixtureVerb = typeof DmsMirrorFixtureVerb.Type;
 
 /**
- * Per-verb call counts observed by the fixture since construction.
- *
  * **Example** (Decode per-verb call counts)
  *
  * ```ts
@@ -148,8 +142,6 @@ export class DmsMirrorFixtureCounts extends S.Opaque<DmsMirrorFixtureCounts, { r
 ) {}
 
 /**
- * One node of the fixture's synthetic remote tree keyed by mirror-root-relative path.
- *
  * **Example** (Decode folder tree node)
  *
  * ```ts

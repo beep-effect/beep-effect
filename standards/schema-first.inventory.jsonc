@@ -1155,7 +1155,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1336,
+      "line": 1314,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory parser over optional API image maps and Markdown content; it normalizes directly into the schema-backed PatentFigure model and neither decodes nor persists the transient option bag."
     },
@@ -1165,7 +1165,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1499,
+      "line": 1477,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory text parser whose required content and optional title are already strings; the transient option bag is call-site ergonomics and never crosses a decode or persistence boundary."
     },
@@ -1175,7 +1175,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 932,
+      "line": 910,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory office and kind-code strings; it returns Effect Option and the transient option bag is never decoded or persisted."
     },
@@ -1185,7 +1185,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1092,
+      "line": 1070,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure projection from optional API metadata and content into the schema-backed PatentDisplay model; the transient option bag is assembled in-process and never decoded or persisted."
     },
@@ -1195,7 +1195,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 849,
+      "line": 827,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory country text and an Effect Option kind code; it returns the schema-backed PatentStatus literal and the transient option bag is never decoded or persisted."
     },
@@ -1205,7 +1205,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1427,
+      "line": 1405,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
@@ -1613,7 +1613,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 218,
+      "line": 212,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"assessOperational\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1623,7 +1623,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 373,
+      "line": 367,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"divergences\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1633,7 +1633,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 572,
+      "line": 558,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1653,7 +1653,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 324,
+      "line": 322,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"chainOfCommand\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1683,7 +1683,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 256,
+      "line": 254,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"orgGraph\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1693,7 +1693,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 376,
+      "line": 374,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"orgMermaid\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1703,7 +1703,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 479,
+      "line": 477,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"selectorReach\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },

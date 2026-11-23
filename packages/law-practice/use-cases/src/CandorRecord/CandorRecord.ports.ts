@@ -31,8 +31,6 @@ const CandorRecordOperationBase = LiteralKit([
 ]);
 
 /**
- * Bounded vocabulary of candor record repository operations.
- *
  * **Details**
  *
  * Every member is either an append or a read. There is deliberately no update
@@ -58,8 +56,6 @@ export const CandorRecordOperation = CandorRecordOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link CandorRecordOperation}.
- *
  * @see {@link CandorRecordOperation} for the runtime schema and the append-only rule.
  * @category models
  * @since 0.0.0
@@ -67,8 +63,6 @@ export const CandorRecordOperation = CandorRecordOperationBase.pipe(
 export type CandorRecordOperation = typeof CandorRecordOperation.Type;
 
 /**
- * Raised when the candor record repository could not serve a request.
- *
  * **When to use**
  *
  * Use when an append or a read cannot be completed. Both directions
@@ -151,8 +145,6 @@ export class CandorRecordRepositoryUnavailable extends S.TaggedError<
 }
 
 /**
- * Service shape for the candor record repository.
- *
  * **When to use**
  *
  * Use as the durable seam behind everything the candor gate reads and

@@ -22,8 +22,6 @@ export {
   makeDmsMirrorFixture,
 } from "./aggregates/Sync/DmsMirrorFixture.ts";
 /**
- * Deterministic documents server test layers.
- *
  * @category testing
  * @since 0.0.0
  */

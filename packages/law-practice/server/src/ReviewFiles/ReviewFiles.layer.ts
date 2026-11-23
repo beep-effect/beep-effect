@@ -24,8 +24,6 @@ import type * as FileSystem from "effect/FileSystem";
 const $I = $LawPracticeServerId.create("ReviewFiles/ReviewFiles.layer");
 
 /**
- * The directory that holds the review hub's store files.
- *
  * **Example** (Decode a store config)
  *
  * ```ts

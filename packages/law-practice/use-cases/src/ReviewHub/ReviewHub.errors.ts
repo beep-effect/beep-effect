@@ -14,8 +14,6 @@ const $I = $LawPracticeUseCasesId.create("ReviewHub/ReviewHub.errors");
 const ReviewHubErrorCodeBase = LiteralKit(["not-found", "locked", "unknown-option", "store-unavailable"]);
 
 /**
- * Stable code of a review hub tool failure.
- *
  * **Details**
  *
  * - `not-found`: the item is not a stored question, or the batch has no
@@ -43,8 +41,6 @@ export const ReviewHubErrorCode = ReviewHubErrorCodeBase.pipe(
 );
 
 /**
- * Runtime type for {@link ReviewHubErrorCode}.
- *
  * @see {@link ReviewHubErrorCode} for the codes.
  * @category errors
  * @since 0.0.0
@@ -52,8 +48,6 @@ export const ReviewHubErrorCode = ReviewHubErrorCodeBase.pipe(
 export type ReviewHubErrorCode = typeof ReviewHubErrorCode.Type;
 
 /**
- * Failure a review hub tool returns: a stable code and a plain message.
- *
  * **Details**
  *
  * Every tool returns this value as an MCP tool error (`isError: true`), its

@@ -147,8 +147,6 @@ const PracticeKgReceiptSpool = S.Struct({
 type PracticeKgReceiptSpool = typeof PracticeKgReceiptSpool.Type;
 
 /**
- * The weekly privacy receipt: counts and names only.
- *
  * **Details**
  *
  * `refusals` is how much each refusal counter of the strict gate grew in the

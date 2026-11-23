@@ -131,8 +131,6 @@ const RuntimeContextPacketSchemaVersion = S.tag("runtime-data-loop.expected.cont
 );
 
 /**
- * Scope for an SDK request.
- *
  * **Example** (Make scope with IDs)
  *
  * ```ts
@@ -167,8 +165,6 @@ export class RuntimeScope extends S.Opaque<RuntimeScope, { readonly brand: uniqu
 ) {}
 
 /**
- * Lightweight reference to a vertical or runtime entity.
- *
  * **Example** (Make household entity ref)
  *
  * ```ts
@@ -237,8 +233,6 @@ export class RuntimeEvidenceRef extends S.Opaque<RuntimeEvidenceRef, { readonly 
 }
 
 /**
- * Candidate claim proposed by the runtime.
- *
  * **Example** (Make high-confidence claim)
  *
  * ```ts
@@ -294,8 +288,6 @@ export class RuntimeCandidateClaim extends S.Opaque<RuntimeCandidateClaim, { rea
 }
 
 /**
- * Candidate project proposed by the runtime.
- *
  * **Example** (Make candidate project)
  *
  * ```ts
@@ -341,8 +333,6 @@ export class RuntimeCandidateProject extends S.Opaque<RuntimeCandidateProject, {
 ) {}
 
 /**
- * Candidate task proposed by the runtime.
- *
  * **Example** (Make task with due date)
  *
  * ```ts
@@ -384,8 +374,6 @@ export class RuntimeCandidateTask extends S.Opaque<RuntimeCandidateTask, { reado
 ) {}
 
 /**
- * Recipient for a candidate draft.
- *
  * **Example** (Make draft recipient)
  *
  * ```ts
@@ -416,8 +404,6 @@ export class RuntimeDraftRecipient extends S.Opaque<RuntimeDraftRecipient, { rea
 ) {}
 
 /**
- * Candidate draft proposed by the runtime.
- *
  * **Example** (Make approval-required draft)
  *
  * ```ts
@@ -476,8 +462,6 @@ export class RuntimeCandidateDraft extends S.Opaque<RuntimeCandidateDraft, { rea
 ) {}
 
 /**
- * Candidate approval gate proposed by the runtime.
- *
  * **Example** (Make pending approval gate)
  *
  * ```ts
@@ -707,8 +691,6 @@ export class RuntimeUsageRecord extends S.Opaque<RuntimeUsageRecord, { readonly 
 ) {}
 
 /**
- * Context packet returned to SDK clients.
- *
  * **Example** (Assemble full context packet)
  *
  * ```ts

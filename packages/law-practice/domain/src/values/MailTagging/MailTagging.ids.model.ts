@@ -22,8 +22,6 @@ const opaqueToken = (identifier: string, subject: string) =>
   });
 
 /**
- * Provider message id of one mailbox message (the Graph `id`).
- *
  * **Example** (Guard a message id)
  *
  * ```ts
@@ -45,8 +43,6 @@ export const MailMessageId = S.String.check(opaqueToken($I`MailMessageIdPatternC
 );
 
 /**
- * Type-level brand produced by {@link MailMessageId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -78,16 +74,12 @@ export const InternetMessageId = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link InternetMessageId}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type InternetMessageId = typeof InternetMessageId.Type;
 
 /**
- * Provider conversation (thread) id shared by the messages of one thread.
- *
  * **Example** (Guard a conversation id)
  *
  * ```ts
@@ -111,8 +103,6 @@ export const MailConversationId = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link MailConversationId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -142,16 +132,12 @@ export const MatterDocketNumber = S.String.check(opaqueToken($I`MatterDocketNumb
 );
 
 /**
- * Type-level brand produced by {@link MatterDocketNumber}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MatterDocketNumber = typeof MatterDocketNumber.Type;
 
 /**
- * Provider id of one attachment on a mailbox message.
- *
  * **Example** (Guard an attachment id)
  *
  * ```ts
@@ -173,8 +159,6 @@ export const MailAttachmentId = S.String.check(opaqueToken($I`MailAttachmentIdPa
 );
 
 /**
- * Type-level brand produced by {@link MailAttachmentId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -204,16 +188,12 @@ export const TaggingRunId = S.String.check(opaqueToken($I`TaggingRunIdPatternChe
 );
 
 /**
- * Type-level brand produced by {@link TaggingRunId}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TaggingRunId = typeof TaggingRunId.Type;
 
 /**
- * Document-store id of the folder a matter files into.
- *
  * **Example** (Guard a document folder id)
  *
  * ```ts
@@ -237,16 +217,12 @@ export const DocumentFolderId = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link DocumentFolderId}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type DocumentFolderId = typeof DocumentFolderId.Type;
 
 /**
- * Document-store id of one filed attachment.
- *
  * **Example** (Guard a document file id)
  *
  * ```ts
@@ -268,8 +244,6 @@ export const DocumentFileId = S.String.check(opaqueToken($I`DocumentFileIdPatter
 );
 
 /**
- * Type-level brand produced by {@link DocumentFileId}.
- *
  * @category type-level
  * @since 0.0.0
  */

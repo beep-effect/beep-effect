@@ -683,8 +683,6 @@ export const daysInMonth: {
 } = dual(2, (year: number, month: number): number => daysInGregorianMonth(year, month));
 
 /**
- * Schema that transforms ISO 8601 date strings into LocalDate models.
- *
  * **Details**
  *
  * Decodes `YYYY-MM-DD` text to {@link Model} and encodes the model back to the
@@ -724,8 +722,6 @@ export const LocalDateFromString = S.String.pipe(
 );
 
 /**
- * Type for {@link LocalDateFromString}.
- *
  * **Example** (Typed LocalDateFromString value)
  *
  * ```ts
@@ -742,8 +738,6 @@ export const LocalDateFromString = S.String.pipe(
 export type LocalDateFromString = typeof LocalDateFromString.Type;
 
 /**
- * Namespace members for {@link LocalDateFromString}.
- *
  * **Example** (Encoded string type member)
  *
  * ```ts

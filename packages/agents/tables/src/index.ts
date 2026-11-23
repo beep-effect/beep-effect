@@ -22,8 +22,6 @@
  */
 export * as Entities from "./entities/index.ts";
 /**
- * Table collection exports.
- *
  * @category tables
  * @since 0.0.0
  */

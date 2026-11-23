@@ -119,8 +119,6 @@ export class WorkItemRepositoryUnavailable extends S.TaggedError<
 ) {}
 
 /**
- * WorkItem repository failure schema.
- *
  * **Example** (Check repository error type)
  *
  * ```ts
@@ -151,8 +149,6 @@ export const WorkItemRepositoryError = S.Union([
 );
 
 /**
- * Runtime type for {@link WorkItemRepositoryError}.
- *
  * **Example** (Annotate repository error type)
  *
  * ```ts

@@ -7,8 +7,6 @@
  */
 
 /**
- * PartyId schema and runtime type exports.
- *
  * @category entity-ids
  * @since 0.0.0
  */

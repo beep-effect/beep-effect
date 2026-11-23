@@ -52,8 +52,6 @@ export const ClaimProjection = Fn({
 );
 
 /**
- * Runtime type for {@link ClaimProjection}.
- *
  * **Example** (Typed projectClaims empty total)
  *
  * ```ts

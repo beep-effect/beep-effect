@@ -6,8 +6,6 @@
  */
 
 /**
- * EdgeVersion row converter exports.
- *
  * **Example** (Access toEdgeVersionInsert export)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./EdgeVersion.converters.ts";
 /**
- * EdgeVersion converter error exports.
- *
  * **Example** (Access EdgeVersionConverterError export)
  *
  * ```ts
@@ -37,8 +33,6 @@ export * from "./EdgeVersion.converters.ts";
  */
 export * from "./EdgeVersion.errors.ts";
 /**
- * EdgeVersion table exports.
- *
  * **Example** (Access Table entityType)
  *
  * ```ts

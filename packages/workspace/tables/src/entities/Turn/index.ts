@@ -6,8 +6,6 @@
  */
 
 /**
- * Turn row converter exports.
- *
  * **Example** (Log toTurnInsert export)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Turn.converters.ts";
 /**
- * Turn converter error exports.
- *
  * **Example** (Import Turn converter error)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./Turn.converters.ts";
  */
 export * from "./Turn.errors.ts";
 /**
- * Turn table exports.
- *
  * **Example** (Log table entity type)
  *
  * ```ts

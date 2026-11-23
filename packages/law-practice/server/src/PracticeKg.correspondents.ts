@@ -46,8 +46,6 @@ import type { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-us
 const $I = $LawPracticeServerId.create("PracticeKg.correspondents");
 
 /**
- * Header an address appeared in.
- *
  * **Example** (Decode a participant role)
  *
  * ```ts
@@ -65,8 +63,6 @@ export const PracticeKgEmailParticipantRole = LiteralKit(["from", "to", "cc"]).p
 );
 
 /**
- * Runtime type for {@link PracticeKgEmailParticipantRole}.
- *
  * **Example** (Type a participant role)
  *
  * ```ts
@@ -342,8 +338,6 @@ export class PracticeKgCorrespondentTables extends S.Opaque<
 ) {}
 
 /**
- * Input to {@link buildPracticeKgCorrespondentTables}.
- *
  * **Example** (Make an empty input)
  *
  * ```ts
@@ -378,8 +372,6 @@ export class PracticeKgCorrespondentTablesInput extends S.Opaque<
 ) {}
 
 /**
- * Input to {@link readPracticeKgEmailMessages}.
- *
  * **Example** (Make a read input)
  *
  * ```ts

@@ -7,8 +7,6 @@
  */
 
 /**
- * History-signal model exports.
- *
  * **Example** (Importing HistorySignal)
  *
  * ```ts

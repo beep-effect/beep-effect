@@ -138,8 +138,6 @@ export class ProviderInstanceRepository extends Context.Service<
 >()($I`ProviderInstanceRepository`) {}
 
 /**
- *  Input consumed by the product-neutral provider probe port.
- *
  * **Example** (Make probe input)
  *
  * ```ts

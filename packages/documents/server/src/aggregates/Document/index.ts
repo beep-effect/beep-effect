@@ -6,8 +6,6 @@
  */
 
 /**
- * Document intake layer exports.
- *
  * @category layers
  * @since 0.0.0
  */
@@ -20,8 +18,6 @@ export * from "./DocumentIntake.service.ts";
  */
 export * from "./FilingDecisionHeuristic.ts";
 /**
- * LLM filing configuration exports.
- *
  * @category configuration
  * @since 0.0.0
  */
@@ -34,8 +30,6 @@ export * from "./FilingDecisionLlm.config.ts";
  */
 export * from "./FilingDecisionLlm.ts";
 /**
- * Optional filing text-extraction exports.
- *
  * @category services
  * @since 0.0.0
  */

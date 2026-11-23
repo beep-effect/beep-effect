@@ -33,8 +33,6 @@ const $I = $LawPracticeUseCasesId.create("MailTagging/MailTagging.values");
 const defaultPolicy = TaggingPolicy.pipe(S.withConstructorDefault(Effect.sync(() => TaggingPolicy.make({}))));
 
 /**
- * Opaque continuation token of a mailbox listing.
- *
  * **Example** (Guard a page cursor)
  *
  * ```ts
@@ -56,16 +54,12 @@ export const MailPageCursor = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link MailPageCursor}.
- *
  * @category identifiers
  * @since 0.0.0
  */
 export type MailPageCursor = typeof MailPageCursor.Type;
 
 /**
- * One page request of the ascending mailbox listing.
- *
  * **Details**
  *
  * `since` is inclusive: a message received exactly at `since` is listed. The
@@ -102,8 +96,6 @@ export class ListMessagesSinceRequest extends S.Opaque<ListMessagesSinceRequest,
 ) {}
 
 /**
- * One page of envelopes in ascending received order.
- *
  * **Example** (Describe the last page)
  *
  * ```ts
@@ -133,8 +125,6 @@ export class MailPage extends S.Opaque<MailPage, { readonly brand: unique symbol
 ) {}
 
 /**
- * Full-list replacement of one message's categories.
- *
  * **Details**
  *
  * The list replaces what the message carries, so a caller sends every category
@@ -187,8 +177,6 @@ export class SetCategoriesRequest extends S.Opaque<SetCategoriesRequest, { reado
 ) {}
 
 /**
- * Metadata of one attachment, read before any download.
- *
  * **Example** (Describe a file attachment)
  *
  * ```ts
@@ -236,8 +224,6 @@ export class MailAttachmentMeta extends S.Opaque<MailAttachmentMeta, { readonly 
 ) {}
 
 /**
- * Address of one attachment's bytes.
- *
  * **Example** (Address an attachment)
  *
  * ```ts
@@ -270,8 +256,6 @@ export class DownloadAttachmentRequest extends S.Opaque<DownloadAttachmentReques
 ) {}
 
 /**
- * Address of one filing subfolder of one matter.
- *
  * **Example** (Address the USPTO correspondence folder)
  *
  * ```ts
@@ -304,8 +288,6 @@ export class MatterFolderRequest extends S.Opaque<MatterFolderRequest, { readonl
 ) {}
 
 /**
- * One new file for a matter's document folder.
- *
  * **Example** (Describe an upload)
  *
  * ```ts
@@ -345,8 +327,6 @@ export class UploadDocumentRequest extends S.Opaque<UploadDocumentRequest, { rea
 ) {}
 
 /**
- * Outcome of an upload that created the file.
- *
  * **Example** (Report a created file)
  *
  * ```ts
@@ -373,8 +353,6 @@ export class DocumentUploaded extends S.Opaque<DocumentUploaded, { readonly bran
 ) {}
 
 /**
- * SHA-1 of a stored file's bytes as 40 lowercase hex characters.
- *
  * **Details**
  *
  * Document stores that report a content hash for a name conflict report
@@ -411,16 +389,12 @@ export const ContentSha1 = S.String.check(
 );
 
 /**
- * Runtime type for {@link ContentSha1}.
- *
  * @category identifiers
  * @since 0.0.0
  */
 export type ContentSha1 = typeof ContentSha1.Type;
 
 /**
- * What a document store says about the file that already holds a name.
- *
  * **Details**
  *
  * A store reports what it can: always the id, and the size and SHA-1 when it
@@ -495,8 +469,6 @@ export class DocumentNameTaken extends S.Opaque<DocumentNameTaken, { readonly br
 ) {}
 
 /**
- * What a create-only upload answers: the new file, or the name being taken.
- *
  * **Example** (Match an upload result)
  *
  * ```ts
@@ -520,8 +492,6 @@ export const DocumentUploadResult = S.Union([DocumentUploaded, DocumentNameTaken
 );
 
 /**
- * Runtime type for {@link DocumentUploadResult}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -563,8 +533,6 @@ export class KnownDocumentRequest extends S.Opaque<KnownDocumentRequest, { reado
 ) {}
 
 /**
- * Everything the pure tagger reads besides the message itself.
- *
  * **Example** (Build a context with the default policy)
  *
  * ```ts
@@ -606,8 +574,6 @@ export class MatterTaggerContext extends S.Opaque<MatterTaggerContext, { readonl
 ) {}
 
 /**
- * Request to file the attachments of one matched message.
- *
  * **Example** (Plan the filing of one message)
  *
  * ```ts
@@ -674,8 +640,6 @@ export class FileAttachmentsRequest extends S.Opaque<FileAttachmentsRequest, { r
 ) {}
 
 /**
- * Request to tag the mailbox from an instant onwards.
- *
  * **Example** (Plan a bounded dry run)
  *
  * ```ts
@@ -721,8 +685,6 @@ export class RunMailTaggingRequest extends S.Opaque<RunMailTaggingRequest, { rea
 ) {}
 
 /**
- * Request to take back the categories one run added.
- *
  * **Example** (Plan an undo)
  *
  * ```ts

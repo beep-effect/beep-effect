@@ -112,8 +112,6 @@ export const EntityIdValue = PosInt.check(
 );
 
 /**
- * Runtime type for {@link EntityIdValue}.
- *
  * **Example** (Type annotated entity id)
  *
  * ```ts
@@ -151,8 +149,6 @@ export type EntityIdValue = typeof EntityIdValue.Type;
 export type EntityIdValueFor<TBrand extends string> = BrandNS.Branded<EntityIdValue, TBrand>;
 
 /**
- * Constrained metadata overrides accepted by {@link factory}.
- *
  * **Example** (Make options with tableName)
  *
  * ```ts
@@ -313,8 +309,6 @@ type ResolvedBrand<Slice extends string, Name extends string, Overrides> = Overr
 >;
 
 /**
- * Materialized entity-id definition metadata.
- *
  * **Example** (Make full definition metadata)
  *
  * ```ts

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $AgentsTablesId.create("entities/ProviderInstance/ProviderInstance.errors");
 
 /**
- * Failure converting a ProviderInstance persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

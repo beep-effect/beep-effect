@@ -46,7 +46,6 @@ export const CitationResourceIdentity = S.TaggedUnion({
 const CitationResourceIdentityType = S.toType(CitationResourceIdentity);
 
 /**
- * Schema-derived trusted resource identity.
  * @internal
  * @category models
  * @since 0.0.0

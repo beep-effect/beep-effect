@@ -74,8 +74,6 @@ const PostgresSchemaName = S.NonEmptyString.pipe(
 );
 
 /**
- * Options accepted when applying the Professional Desktop runtime migrations.
- *
  * **Example** (Making options with make)
  *
  * ```ts

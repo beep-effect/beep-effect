@@ -6,8 +6,6 @@
  */
 
 /**
- * Evidence row converter exports.
- *
  * **Example** (Log toEvidenceInsert converter)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./Evidence.converters.ts";
 /**
- * Evidence converter error exports.
- *
  * **Example** (Access EvidenceConverterError export)
  *
  * ```ts
@@ -37,8 +33,6 @@ export * from "./Evidence.converters.ts";
  */
 export * from "./Evidence.errors.ts";
 /**
- * Evidence table exports.
- *
  * **Example** (Log table entity type)
  *
  * ```ts

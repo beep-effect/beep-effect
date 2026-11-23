@@ -38,8 +38,6 @@ import type { LocalDate } from "@beep/schema/LocalDate";
 const $I = $LawPracticeServerId.create("QuestionCalendar/QuestionCalendar.layer");
 
 /**
- * Mailbox and time zone of the calendar question writes go to.
- *
  * **Example** (Decode a calendar config)
  *
  * ```ts

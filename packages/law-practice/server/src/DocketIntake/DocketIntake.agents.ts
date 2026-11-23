@@ -57,8 +57,6 @@ const MAX_RETRIES = 3;
 const RETRY_FACTOR = 2;
 
 /**
- * Settings of the docket intake agents.
- *
  * **Example** (Make agent options)
  *
  * ```ts

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $DocumentsDomainId.create("values/Sync/Sync.values");
 
 /**
- * Document management system provider receiving the one-way vault mirror.
- *
  * **Details**
  *
  * The P3 Box-sync phase supports only `"box"`; the P6 phase extends this
@@ -39,8 +37,6 @@ export const DmsProvider = LiteralKit(["box"]).pipe(
 );
 
 /**
- * Type for {@link DmsProvider}.
- *
  * **Example** (Annotate box provider type)
  *
  * ```ts
@@ -56,8 +52,6 @@ export const DmsProvider = LiteralKit(["box"]).pipe(
 export type DmsProvider = typeof DmsProvider.Type;
 
 /**
- * Vault-root-relative POSIX path; never absolute.
- *
  * **Example** (Decode relative vault path)
  *
  * ```ts
@@ -79,8 +73,6 @@ export const VaultRelPath = S.NonEmptyString.pipe(
 );
 
 /**
- * Type for {@link VaultRelPath}.
- *
  * **Example** (Type vault relative path)
  *
  * ```ts
@@ -97,8 +89,6 @@ export const VaultRelPath = S.NonEmptyString.pipe(
 export type VaultRelPath = typeof VaultRelPath.Type;
 
 /**
- * Provider-neutral identifier for an item stored in the remote DMS.
- *
  * **Example** (Decode remote item id)
  *
  * ```ts
@@ -120,8 +110,6 @@ export const RemoteItemId = S.NonEmptyString.pipe(
 );
 
 /**
- * Type for {@link RemoteItemId}.
- *
  * **Example** (Type remote item id)
  *
  * ```ts
@@ -138,8 +126,6 @@ export const RemoteItemId = S.NonEmptyString.pipe(
 export type RemoteItemId = typeof RemoteItemId.Type;
 
 /**
- * Kind of vault item mirrored to the DMS.
- *
  * **Example** (Decode file item kind)
  *
  * ```ts
@@ -160,8 +146,6 @@ export const SyncItemKind = LiteralKit(["file", "folder"]).pipe(
 );
 
 /**
- * Type for {@link SyncItemKind}.
- *
  * **Example** (Annotate folder item kind)
  *
  * ```ts

@@ -35,8 +35,6 @@ export const ClaimInputTextFailure = LiteralKit(["empty-text", "invalid-text"]).
 );
 
 /**
- * Runtime source-text failure type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -63,8 +61,6 @@ export const ClaimInputRecordKind = LiteralKit(["text", "unavailable"]).pipe(
 );
 
 /**
- * Runtime extraction outcome type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -135,8 +131,6 @@ export const ClaimInputRecord = ClaimInputRecordKind.toTaggedUnion("kind")({
 );
 
 /**
- * Runtime source-record type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -227,8 +221,6 @@ export const ClaimInputNormalization = normalizationOutcome
   );
 
 /**
- * Runtime per-record normalization result type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -272,8 +264,6 @@ export const ClaimInputContextIssue = contextIssueKind
   );
 
 /**
- * Runtime context-qualification issue type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -327,8 +317,6 @@ export const ClaimInputQualification = contextStatus
   );
 
 /**
- * Runtime per-record dependency qualification type.
- *
  * @category type-level
  * @since 0.0.0
  */
