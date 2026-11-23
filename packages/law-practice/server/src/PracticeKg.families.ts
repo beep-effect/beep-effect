@@ -221,42 +221,34 @@ const uniqueMember: (values: HashSet.HashSet<string>) => O.Option<string> = flow
 const sortedUnique = (values: Iterable<string>): ReadonlyArray<string> =>
   A.sort(A.dedupe(A.fromIterable(values)), Order.String);
 
-// Exact match only: `20001US01` and `20001US010` are different matters. A
-// national-stage docket such as `10109WO02-US1` also answers to its base code.
-const sameDocket = (reference: string, docket: string): boolean =>
+const nationalStageBaseCodeOf = (docket: string): O.Option<string> => A.head(Str.split(docket, "-"));
+
+const exactDocketOrItsNationalStageBase = (reference: string, docket: string): boolean =>
   reference === docket ||
   pipe(
-    Str.split(docket, "-"),
-    A.head,
+    nationalStageBaseCodeOf(docket),
     O.exists((base) => base === reference)
   );
 
-/*
- * A document may cite another client's matter that shares its bare family
- * number. When the document has a docket code, only references naming that
- * docket are evidence; every other reference is a citation, and a document
- * with citations alone falls through to the client map, family consensus, or
- * the bare family. Family-level documents have no docket code, so all of their
- * family references count.
- */
-const ownReferences = (
+const ownDocketEvidenceNotCrossClientCitations = (
   row: PracticeKgCatalogRow,
   references: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): ReadonlyArray<PracticeKgDocketReferenceRow> => {
   const { docket } = row;
-  if (docket === null) {
+  const familyLevelDocumentCountsEveryFamilyReference = docket === null;
+  if (familyLevelDocumentCountsEveryFamilyReference) {
     return references;
   }
-  return A.filter(references, (reference) => sameDocket(reference.docket, Str.toUpperCase(docket)));
+  return A.filter(references, (reference) =>
+    exactDocketOrItsNationalStageBase(reference.docket, Str.toUpperCase(docket))
+  );
 };
 
 const clientsByDigestFor = (
   rowsByDigest: MutableHashMap.MutableHashMap<string, PracticeKgCatalogRow>,
   docketReferences: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>> => {
-  // Keyed by digest; each entry keeps its row beside the references that name
-  // the row's own family, so the second pass needs no further lookup.
-  const referencesByDigest = MutableHashMap.empty<
+  const rowWithOwnFamilyReferencesByDigest = MutableHashMap.empty<
     string,
     { readonly references: ReadonlyArray<PracticeKgDocketReferenceRow>; readonly row: PracticeKgCatalogRow }
   >();
@@ -266,10 +258,10 @@ const clientsByDigestFor = (
       O.filter((candidate) => candidate.docketFamily === reference.family)
     );
     if (O.isSome(row)) {
-      MutableHashMap.set(referencesByDigest, reference.digest, {
+      MutableHashMap.set(rowWithOwnFamilyReferencesByDigest, reference.digest, {
         references: A.append(
           pipe(
-            MutableHashMap.get(referencesByDigest, reference.digest),
+            MutableHashMap.get(rowWithOwnFamilyReferencesByDigest, reference.digest),
             O.map((entry) => entry.references),
             O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)
           ),
@@ -280,11 +272,13 @@ const clientsByDigestFor = (
     }
   });
   const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
-  MutableHashMap.forEach(referencesByDigest, ({ references, row }, digest) => {
+  MutableHashMap.forEach(rowWithOwnFamilyReferencesByDigest, ({ references, row }, digest) => {
     MutableHashMap.set(
       clients,
       digest,
-      HashSet.fromIterable(A.map(ownReferences(row, references), (reference) => reference.client))
+      HashSet.fromIterable(
+        A.map(ownDocketEvidenceNotCrossClientCitations(row, references), (reference) => reference.client)
+      )
     );
   });
   return clients;
@@ -352,9 +346,7 @@ export class PracticeKgResolveAnchorsInput extends S.Opaque<
 
 const afterFamilyPattern = /[^0-9].*$/u;
 
-// `<client>.<family>` gives its client only when it names the row's own family:
-// a file name can cite another client's matter beside the folder's docket.
-const folderClientFor = (familyKeys: ReadonlyArray<string>, family: string): string | null =>
+const folderClientOnlyWhenKeyNamesOwnFamily = (familyKeys: ReadonlyArray<string>, family: string): string | null =>
   pipe(
     soleOf(familyKeys),
     O.filter(Str.endsWith(`.${family}`)),
@@ -375,7 +367,7 @@ const withPathEvidence = (row: PracticeKgCatalogRow): PracticeKgCatalogRow => {
           category: "docket",
           docket,
           docketFamily,
-          folderClient: folderClientFor(evidence.familyKeys, docketFamily),
+          folderClient: folderClientOnlyWhenKeyNamesOwnFamily(evidence.familyKeys, docketFamily),
         });
       },
     })
@@ -444,8 +436,6 @@ type DirectClient = { readonly client: string; readonly source: KgAttributionSou
 
 type ClientLookup = (row: PracticeKgCatalogRow) => O.Option<string>;
 
-// The register is keyed by docket code; a national-stage docket such as
-// `10109WO02-US1` also answers to its base code, as text references do.
 const registerClientLookup = (registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>): ClientLookup => {
   const clientOf = practiceKgRegisterDocketClients(registerRows);
   return (row) =>
@@ -454,7 +444,7 @@ const registerClientLookup = (registerRows: ReadonlyArray<PracticeKgDocketRegist
       O.flatMap((docket) =>
         pipe(
           clientOf(docket),
-          O.orElse(() => pipe(Str.split(docket, "-"), A.head, O.flatMap(clientOf)))
+          O.orElse(() => O.flatMap(nationalStageBaseCodeOf(docket), clientOf))
         )
       )
     );
@@ -466,24 +456,7 @@ const tagged =
   (source: KgAttributionSource) =>
   (client: string): DirectClient => ({ client, source });
 
-/*
- * Attribution precedence, strongest first. The first two are a document's own
- * direct evidence and are the only things that vote in family consensus:
- *
- *   1. folder-path      - the attorney's folder path names one client
- *   2. text-reference   - the document's text names one client for its family
- *   3. client-map       - the organizer's source-label map
- *   4. family-consensus - every direct-evidence document of the family agrees
- *   5. docket-register  - last, and only for a family with no direct-evidence
- *                         vote at all: the register lists exactly one client
- *                         for the docket
- *   6. filename / restored-name - no client; the bare family
- *
- * The register never overrides a document's own evidence and never votes. Bare
- * docket codes are reused across clients and the register lists only current
- * dockets, so a register-first order moved older documents, whose own text
- * names their client, onto whichever client holds that code today.
- */
+// decision: docket-register-attributes-last-and-never-votes
 const directClientLookup =
   (textClient: ClientLookup) =>
   (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
@@ -591,7 +564,6 @@ export const attributeDocuments = (
     );
   const consensusClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
     O.map(uniqueMember(votesFor(row)), tagged("family-consensus"));
-  // Only a family nobody has named a client for may take the register's word.
   const unvotedRegisterClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
     pipe(
       O.liftPredicate(row, (candidate) => HashSet.size(votesFor(candidate)) === 0),
@@ -759,8 +731,6 @@ const filenameFamiliesOf = (mentions: ReadonlyArray<AnchorMention>): HashSet.Has
 const clientKeyedFamiliesOf = (mentions: ReadonlyArray<AnchorMention>): HashSet.HashSet<string> =>
   familyKeysWhere(mentions, (mention) => mention.attribution.client !== null);
 
-// Membership by unanimity: every mention, file names and text alike, sits in one
-// client-keyed family. An unattributed remainder cannot own an anchor.
 const uniqueAnchorMember = (mentions: ReadonlyArray<AnchorMention>): O.Option<AnchorMember> => {
   const filenameFamilies = filenameFamiliesOf(mentions);
   return pipe(
@@ -801,8 +771,6 @@ const documentsByFamily = (mentions: ReadonlyArray<AnchorMention>): ReadonlyArra
   );
 };
 
-// Membership by dominance (D-23): one client-keyed family holds enough of the
-// mentioning documents, and no file name elsewhere carries the number.
 const dominantAnchorMember = (mentions: ReadonlyArray<AnchorMention>): O.Option<AnchorMember> => {
   const total = HashSet.size(HashSet.fromIterable(A.map(mentions, (mention) => mention.attribution.digest)));
   const filenameFamilies = filenameFamiliesOf(mentions);

@@ -103,28 +103,23 @@ const noCounts: CorrespondentCounts = {
   toCount: 0,
 };
 
-// A link names a matter, or only a client when its family key is null.
-const linksFor =
+const linksNamingMatterElseClientOnlyWhenFamilyKeyNull =
   (links: ReadonlyArray<PracticeKgCorrespondentLink>) => (familyKey: string | null, clientNumber: string | null) =>
     A.filter(links, (link) =>
       familyKey === null ? link.familyKey === null && link.clientNumber === clientNumber : link.familyKey === familyKey
     );
 
-// Only the decided row of a unique lookup may say unique; its siblings are
-// candidates, so no row read alone looks actionable.
-const rowResolution = (
+const onlyDecidedRowSaysUniqueSiblingsAreCandidates = (
   result: PracticeKgCorrespondentLookupResult,
   decided: boolean
 ): PracticeKgCorrespondentRowResolution =>
   decided ? "unique" : result.resolution === "unique" ? "candidate" : result.resolution;
 
-// One row per matter the address is tied to: the filed-mail candidates first,
-// in their rank order, then matters and clients named only by contact links.
-const correspondentRows = (
+const rowPerTiedMatterCandidatesInRankThenLinkOnly = (
   result: PracticeKgCorrespondentLookupResult
 ): ReadonlyArray<PracticeKgCorrespondentToolRow> => {
   const contact = A.length(result.contacts) === 1 ? A.head(result.contacts) : O.none();
-  const linked = linksFor(result.links);
+  const linked = linksNamingMatterElseClientOnlyWhenFamilyKeyNull(result.links);
   const shared = {
     address: result.address,
     contactId: O.getOrNull(O.map(contact, (owner) => owner.contactId)),
@@ -140,7 +135,7 @@ const correspondentRows = (
       ...counts,
       clientNumber,
       decided,
-      resolution: rowResolution(result, decided),
+      resolution: onlyDecidedRowSaysUniqueSiblingsAreCandidates(result, decided),
       familyKey,
       linkEvidence: A.join(
         A.map(links, (link) => link.evidence),
@@ -155,7 +150,6 @@ const correspondentRows = (
     (left: PracticeKgCorrespondentLink, right: PracticeKgCorrespondentLink) =>
       left.familyKey === right.familyKey && left.clientNumber === right.clientNumber
   );
-  // The decided row leads so a budget that keeps one row keeps that one.
   const [decided, undecided] = A.partition(
     A.appendAll(
       A.map(result.candidates, (candidate) => row(candidate.familyKey, candidate.client, candidate)),
@@ -163,7 +157,8 @@ const correspondentRows = (
     ),
     (entry) => (entry.decided ? Result.succeed(entry) : Result.fail(entry))
   );
-  return A.appendAll(decided, undecided);
+  const decidedRowLeadsSoAOneRowBudgetKeepsIt = A.appendAll(decided, undecided);
+  return decidedRowLeadsSoAOneRowBudgetKeepsIt;
 };
 
 const withheldColumnsFor = (
@@ -247,8 +242,7 @@ const projectRows = (
  */
 export const PracticeKgFailureReasonKey = "beep.practice_kg.failure_reason";
 
-// Runs inside each handler's span, so the literal reason lands on that span.
-const stampFailureReason = <A, R>(
+const stampFailureReasonOnHandlerSpan = <A, R>(
   self: Effect.Effect<A, PracticeKgToolError, R>
 ): Effect.Effect<A, PracticeKgToolError, R> =>
   Effect.tapError(self, (error) =>
@@ -273,12 +267,7 @@ const failureOf =
   (_cause: unknown): PracticeKgToolError =>
     PracticeKgToolError.make({ message: failureMessages[reason], reason, tool: "bundle" });
 
-/*
- * Stamps the tool name on a failure. A failure that already carries a reason
- * keeps it, so a caller can tell a store fault from a version mismatch; anything
- * else is reported as a store fault.
- */
-const toolFailure =
+const stampToolNameKeepingCauseReasonElseStoreFault =
   (tool: string) =>
   (cause: unknown): PracticeKgToolError =>
     isToolError(cause)
@@ -395,37 +384,37 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
     return PracticeKgToolkit.of({
       kg_clients: Effect.fn("PracticeKgTools.kg_clients")(function* (request) {
         const rows = yield* queryPglite(sql, PracticeKgQueries.clients, [], decodePracticeKgGraphRows).pipe(
-          Effect.mapError(toolFailure("kg_clients"))
+          Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_clients"))
         );
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
-      }, stampFailureReason),
+      }, stampFailureReasonOnHandlerSpan),
       kg_docket_family: Effect.fn("PracticeKgTools.kg_docket_family")(function* (request) {
         const rows = yield* queryPglite(
           sql,
           PracticeKgQueries.family,
           [request.family],
           decodePracticeKgFamilyRows
-        ).pipe(Effect.mapError(toolFailure("kg_docket_family")));
+        ).pipe(Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_docket_family")));
         return projectRows(A.map(rows, toToolRecord), practiceKgFamilyFieldTiers, request.budgetBytes, version);
-      }, stampFailureReason),
+      }, stampFailureReasonOnHandlerSpan),
       kg_application_lookup: Effect.fn("PracticeKgTools.kg_application_lookup")(function* (request) {
         const rows = yield* queryPglite(
           sql,
           PracticeKgQueries.application,
           [request.application_number ?? null, request.patent_number ?? null, request.docket ?? null],
           decodePracticeKgGraphRows
-        ).pipe(Effect.mapError(toolFailure("kg_application_lookup")));
+        ).pipe(Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_application_lookup")));
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
-      }, stampFailureReason),
+      }, stampFailureReasonOnHandlerSpan),
       kg_find: Effect.fn("PracticeKgTools.kg_find")(function* (request) {
         const rows = yield* queryPglite(
           sql,
           PracticeKgQueries.find,
           [likePattern(request.query)],
           decodePracticeKgGraphRows
-        ).pipe(Effect.mapError(toolFailure("kg_find")));
+        ).pipe(Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_find")));
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
-      }, stampFailureReason),
+      }, stampFailureReasonOnHandlerSpan),
       corpus_search_text: Effect.fn("PracticeKgTools.corpus_search_text")(function* (request) {
         const rows = yield* duckdb
           .query(PracticeKgQueries.searchText, [request.query, request.family ?? null, request.limit])
@@ -433,12 +422,12 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
             Effect.mapBoth({
-              onFailure: toolFailure("corpus_search_text"),
+              onFailure: stampToolNameKeepingCauseReasonElseStoreFault("corpus_search_text"),
               onSuccess: addPracticeKgCorpusPointers(bundle.corpusRoot, path),
             })
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
-      }, stampFailureReason),
+      }, stampFailureReasonOnHandlerSpan),
       corpus_get_document: Effect.fn("PracticeKgTools.corpus_get_document")(function* (request) {
         const rows = yield* duckdb
           .query(PracticeKgQueries.getDocument, [
@@ -451,12 +440,12 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
             Effect.mapBoth({
-              onFailure: toolFailure("corpus_get_document"),
+              onFailure: stampToolNameKeepingCauseReasonElseStoreFault("corpus_get_document"),
               onSuccess: addPracticeKgCorpusPointers(bundle.corpusRoot, path),
             })
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
-      }, stampFailureReason),
+      }, stampFailureReasonOnHandlerSpan),
       email_search: Effect.fn("PracticeKgTools.email_search")(function* (request) {
         const rows = yield* duckdb
           .query(PracticeKgQueries.email, [
@@ -469,7 +458,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           .pipe(
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgEmailRows)),
-            Effect.mapError(toolFailure("email_search"))
+            Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("email_search"))
           );
         return projectRows(
           A.map(rows, toToolRecord),
@@ -478,9 +467,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           version,
           emailLinkageNote
         );
-      }, stampFailureReason),
-      // Local normalized input is the complete read boundary. This handler does
-      // not fetch public sources, require API credentials, or persist candidates.
+      }, stampFailureReasonOnHandlerSpan),
       claim_self_check: Effect.fn("PracticeKgTools.claim_self_check")((request) =>
         claimSelfCheckReview(ClaimSelfCheckReviewRequest.make(request)).pipe(
           Effect.provideService(ClaimSelfCheck, selfCheck)
@@ -517,8 +504,8 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             candidateStatus
           );
         },
-        Effect.mapError(toolFailure("kg_candidate_claims")),
-        stampFailureReason
+        Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_candidate_claims")),
+        stampFailureReasonOnHandlerSpan
       ),
       kg_matter_lookup: Effect.fn("PracticeKgTools.kg_matter_lookup")(
         function* (request) {
@@ -569,8 +556,8 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             `${matterLookupNote} resolution: ${result.resolution}.`
           );
         },
-        Effect.mapError(toolFailure("kg_matter_lookup")),
-        stampFailureReason
+        Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_matter_lookup")),
+        stampFailureReasonOnHandlerSpan
       ),
       kg_correspondent_lookup: Effect.fn("PracticeKgTools.kg_correspondent_lookup")(
         function* (request) {
@@ -578,7 +565,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             PracticeKgCorrespondentLookupRequest.make({ address: request.address })
           ).pipe(Effect.provideService(DuckDb, duckdb), Effect.provideService(PracticeKgBundle, bundle));
           return projectRows(
-            A.map(correspondentRows(result), toToolRecord),
+            A.map(rowPerTiedMatterCandidatesInRankThenLinkOnly(result), toToolRecord),
             practiceKgCorrespondentFieldTiers,
             request.budgetBytes,
             version,
@@ -595,9 +582,9 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
                   reason: "invalid-input",
                   tool: "kg_correspondent_lookup",
                 })
-              : toolFailure("kg_correspondent_lookup")(cause)
+              : stampToolNameKeepingCauseReasonElseStoreFault("kg_correspondent_lookup")(cause)
         ),
-        stampFailureReason
+        stampFailureReasonOnHandlerSpan
       ),
       kg_provenance: Effect.fn("PracticeKgTools.kg_provenance")(
         function* (request) {
@@ -648,8 +635,8 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             A.isReadonlyArrayNonEmpty(rows) ? nodeProvenanceNote : provenanceNotFoundNote
           );
         },
-        Effect.mapError(toolFailure("kg_provenance")),
-        stampFailureReason
+        Effect.mapError(stampToolNameKeepingCauseReasonElseStoreFault("kg_provenance")),
+        stampFailureReasonOnHandlerSpan
       ),
     });
   })
