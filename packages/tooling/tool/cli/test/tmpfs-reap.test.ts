@@ -402,6 +402,7 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
     { concurrency: 1, discard: true }
   );
   yield* fs.writeFileString(path.join(dirtyClone, "untracked-notes.txt"), "uncommitted work\n");
+  yield* runCommand("git", ["config", "status.showUntrackedFiles", "no"], dirtyClone);
   yield* runCommand(
     "git",
     [
@@ -2032,8 +2033,12 @@ describe("tmpfs reap", () => {
           const oddContainer = path.join(tmpRoot, "odd-container");
           const oddClone = path.join(oddContainer, "clone");
           const lockedContainer = path.join(tmpRoot, "locked-container");
+          const bareNamedWorktree = path.join(tmpRoot, "bare-named-worktree");
+          const bareNamedGitDir = path.join(root, "metadata", "repo.git", "worktrees", "held");
+          const lockedRegistrationsClone = path.join(tmpRoot, "locked-registrations-clone");
+          const lockedRegistrations = path.join(lockedRegistrationsClone, ".git", "worktrees");
           yield* Effect.forEach(
-            [cacheRoot, symlinkedGit, oddContainer, lockedContainer],
+            [cacheRoot, symlinkedGit, oddContainer, lockedContainer, bareNamedWorktree, bareNamedGitDir],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
             { concurrency: 1, discard: true }
           );
@@ -2042,11 +2047,26 @@ describe("tmpfs reap", () => {
           yield* cloneFixtureRepository(origin, oddClone);
           yield* fs.symlink(path.join(realClone, ".git"), path.join(symlinkedGit, ".git"));
           yield* runCommand("mkfifo", [path.join(oddContainer, "probe.fifo")], root);
-          yield* ageFixtureTree(oddContainer, 3, root);
+          yield* fs.writeFileString(path.join(bareNamedGitDir, "commondir"), "../..\n");
+          yield* fs.writeFileString(path.join(bareNamedWorktree, ".git"), `gitdir: ${bareNamedGitDir}\n`);
+          yield* cloneFixtureRepository(origin, lockedRegistrationsClone);
+          yield* fs.makeDirectory(lockedRegistrations, { recursive: true });
+          yield* Effect.forEach(
+            [oddContainer, bareNamedWorktree, lockedRegistrationsClone],
+            (directory) => ageFixtureTree(directory, 3, root),
+            { concurrency: 1, discard: true }
+          );
           yield* runCommand("chmod", ["000", lockedContainer], root);
+          yield* runCommand("chmod", ["000", lockedRegistrations], root);
 
           const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot }).pipe(
-            Effect.ensuring(runCommand("chmod", ["755", lockedContainer], root).pipe(Effect.orDie))
+            Effect.ensuring(
+              Effect.forEach(
+                [lockedContainer, lockedRegistrations],
+                (directory) => runCommand("chmod", ["755", directory], root),
+                { concurrency: 1, discard: true }
+              ).pipe(Effect.orDie)
+            )
           );
 
           expect(
@@ -2055,6 +2075,8 @@ describe("tmpfs reap", () => {
             )
           ).toBe(false);
           expect(candidateByPath(report, oddClone).action).toBe("remove-dir");
+          expect(candidateByPath(report, bareNamedWorktree).reapClass).toBe("git-worktree");
+          expect(candidateByPath(report, lockedRegistrationsClone).skipReason).toBe("linked-worktrees-present");
         })
       )
     );
@@ -2099,6 +2121,42 @@ describe("tmpfs reap", () => {
           expect(report.warnings).toContain(`Skipped ${clone}: Git checkout eligibility changed before removal.`);
           const cloneExists = yield* fs.exists(clone);
           expect(cloneExists).toBe(true);
+        })
+      )
+    );
+    it.effect("refuses every checkout while an inherited Git environment could redirect its probes", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const fixture = yield* makeGitCheckoutFixture(root);
+          const report = yield* runTmpfsReap({
+            cacheRoot: fixture.cacheRoot,
+            classes: ["git-checkout", "git-checkout-parent"],
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot: fixture.tmpRoot,
+          }).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ GIT_DIR: fixture.depthOneClone })
+            )
+          );
+          expect(candidateByPath(report, fixture.depthOneClone).skipReason).toBe("git-environment-override");
+          expect(candidateByPath(report, fixture.probesParent).skipReason).toBe("git-environment-override");
+        })
+      )
+    );
+    it.effect("keeps a parent's child refusals when only the parent class is requested", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const fixture = yield* makeGitCheckoutFixture(root);
+          const report = yield* runTmpfsReap({
+            cacheRoot: fixture.cacheRoot,
+            classes: ["git-checkout-parent"],
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot: fixture.tmpRoot,
+          });
+          expect(candidateByPath(report, fixture.dirtyParent).skipReason).toBe("dirty-worktree");
+          expect(candidateByPath(report, fixture.probesParent).action).toBe("remove-dir");
+          expect(A.every(report.candidates, (candidate) => candidate.reapClass === "git-checkout-parent")).toBe(true);
         })
       )
     );

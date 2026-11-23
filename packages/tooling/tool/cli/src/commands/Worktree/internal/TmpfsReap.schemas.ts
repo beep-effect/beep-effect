@@ -102,6 +102,7 @@ export const TmpfsReapSkipReason = LiteralKit([
   "live-flock",
   "dirty-worktree",
   "unpushed-commits",
+  "git-environment-override",
   "too-young",
   "parent-repo-missing-but-refs",
   "wrong-shape",

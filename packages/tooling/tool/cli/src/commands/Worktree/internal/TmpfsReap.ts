@@ -35,7 +35,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { constant, constTrue, pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -343,6 +343,15 @@ const discoverGitWorktree = Effect.fnUntraced(function* (
 
 const constZero = constant(0);
 
+const GIT_REPOSITORY_LOCATION_VARIABLES = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_COMMON_DIR",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+];
+
 const GIT_CHECKOUT_ACTIVITY_MARKERS = ["index", "HEAD", "FETCH_HEAD", "ORIG_HEAD"];
 
 const gitCheckoutDirectory = Effect.fnUntraced(function* (
@@ -366,7 +375,10 @@ const gitCheckoutDirectory = Effect.fnUntraced(function* (
   if (O.isNone(separateGitDir)) {
     return O.none();
   }
-  return (yield* isDirectory(separateGitDir.value)) ? separateGitDir : O.none();
+  const registeredAsLinkedWorktree = yield* fs
+    .exists(pathService.join(separateGitDir.value, "commondir"))
+    .pipe(Effect.orElseSucceed(constTrue));
+  return !registeredAsLinkedWorktree && (yield* isDirectory(separateGitDir.value)) ? separateGitDir : O.none();
 });
 
 const discoverGitCheckout = Effect.fnUntraced(function* (
@@ -379,7 +391,12 @@ const discoverGitCheckout = Effect.fnUntraced(function* (
   if (O.isNone(gitDir)) {
     return O.none();
   }
-  const linkedWorktrees = yield* directoryNames(pathService.join(gitDir.value, "worktrees"));
+  const worktreesPath = pathService.join(gitDir.value, "worktrees");
+  const linkedWorktrees = yield* readDirectoryOption(worktreesPath);
+  const worktreesMissing = O.isNone(linkedWorktrees) ? yield* statIsMissing(worktreesPath) : O.some(false);
+  const registrationsMayExist =
+    O.exists(linkedWorktrees, A.isReadonlyArrayNonEmpty) ||
+    (O.isNone(linkedWorktrees) && !O.contains(worktreesMissing, true));
   const activity = yield* Effect.forEach(
     [
       gitDir.value,
@@ -395,7 +412,7 @@ const discoverGitCheckout = Effect.fnUntraced(function* (
     reapClass: "git-checkout",
     idleSinceMillis: newestMillis(A.append(A.getSomes(activity), candidateMtimeMillis), candidateMtimeMillis),
     classified: true,
-    shapeSkipReason: skipReasonWhen(A.isReadonlyArrayNonEmpty(linkedWorktrees), "linked-worktrees-present"),
+    shapeSkipReason: skipReasonWhen(registrationsMayExist, "linked-worktrees-present"),
     parentRepo: O.none(),
     ownerRoot: O.none(),
     ownerRootMissing: O.none(),
@@ -1095,8 +1112,14 @@ const gitCheckoutCleanlinessSkip = Effect.fnUntraced(function* (
   never,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
+  const overrides = yield* Effect.forEach(GIT_REPOSITORY_LOCATION_VARIABLES, configuredPath, { concurrency: 1 });
+  if (A.some(overrides, O.isSome)) {
+    return O.some("git-environment-override");
+  }
   const git = yield* Git;
-  const status = yield* git.status(checkoutPath, { noRenames: true }).pipe(Effect.option);
+  const status = yield* git
+    .status(checkoutPath, { ignoreSubmodules: "none", noRenames: true, untrackedFiles: "all" })
+    .pipe(Effect.option);
   if (O.isNone(status) || A.isReadonlyArrayNonEmpty(status.value)) {
     return O.some("dirty-worktree");
   }
@@ -1344,21 +1367,18 @@ const danglingCandidateIsStillEligible = Effect.fnUntraced(function* (
 const isGitCheckoutClass = (reapClass: TmpfsReapClass): boolean =>
   Str.Equivalence(reapClass, "git-checkout") || Str.Equivalence(reapClass, "git-checkout-parent");
 
-const rediscoverGitCheckoutCandidate = Effect.fnUntraced(function* (
+const rediscoverGitCheckoutRows = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate
-): Effect.fn.Return<O.Option<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const pathService = yield* Path.Path;
   if (Str.Equivalence(candidate.reapClass, "git-checkout-parent")) {
-    const containerRows = yield* discoverCheckoutContainer(candidate.root, pathService.basename(candidate.path));
-    return A.findFirst(
-      containerRows,
-      (row) => Str.Equivalence(row.reapClass, "git-checkout-parent") && Str.Equivalence(row.path, candidate.path)
-    );
+    return yield* discoverCheckoutContainer(candidate.root, pathService.basename(candidate.path));
   }
   const currentMtime = yield* statMtimeMillis(candidate.path);
-  return O.isNone(currentMtime)
-    ? O.none()
+  const checkout = O.isNone(currentMtime)
+    ? O.none<DiscoveredCandidate>()
     : yield* discoverGitCheckout(candidate.root, candidate.path, currentMtime.value);
+  return A.fromOption(checkout);
 });
 
 const gitCheckoutCandidateIsStillEligible = Effect.fnUntraced(function* (
@@ -1371,13 +1391,14 @@ const gitCheckoutCandidateIsStillEligible = Effect.fnUntraced(function* (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const pathService = yield* Path.Path;
-  const rediscovered = yield* rediscoverGitCheckoutCandidate(candidate);
+  const checkoutRows = yield* rediscoverGitCheckoutRows(candidate);
+  const rediscovered = A.findFirst(
+    checkoutRows,
+    (row) => Str.Equivalence(row.reapClass, candidate.reapClass) && Str.Equivalence(row.path, candidate.path)
+  );
   if (O.isNone(rediscovered)) {
     return false;
   }
-  const checkoutRows = Str.Equivalence(rediscovered.value.reapClass, "git-checkout-parent")
-    ? yield* discoverCheckoutContainer(rediscovered.value.root, pathService.basename(rediscovered.value.path))
-    : A.of(rediscovered.value);
   const childCleanliness = yield* gitCheckoutChildCleanliness(checkoutRows);
   const cleanliness = Str.Equivalence(rediscovered.value.reapClass, "git-checkout-parent")
     ? checkoutParentCleanliness(pathService, rediscovered.value.path, childCleanliness)
@@ -1586,10 +1607,8 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
     ? yield* discoverCacheFallowCaches(cacheRoot)
     : A.empty<DiscoveredCandidate>();
   const cacheCandidates = A.appendAll(cacheHeadInstalls, cacheFallowCaches);
-  const discovered = A.filter(
-    A.dedupeWith(A.appendAll(tmpCandidates, cacheCandidates), sameCandidatePath),
-    (candidate) => includeClass(candidate.reapClass)
-  );
+  const unfilteredCandidates = A.dedupeWith(A.appendAll(tmpCandidates, cacheCandidates), sameCandidatePath);
+  const discovered = A.filter(unfilteredCandidates, (candidate) => includeClass(candidate.reapClass));
 
   const processListing: ProcessCommandLineListing = O.getOrElse(
     O.fromUndefinedOr(options.listProcessCommandLines),
@@ -1600,7 +1619,9 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
   const heldLockInodes = lockInodes(readFileString25);
   const nowMillis = yield* Clock.currentTimeMillis;
   const effectiveNowMillis = O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => nowMillis);
-  const childCleanliness = yield* gitCheckoutChildCleanliness(discovered);
+  const childCleanliness = yield* gitCheckoutChildCleanliness(
+    includeClass("git-checkout") || includeClass("git-checkout-parent") ? unfilteredCandidates : A.empty()
+  );
   const assessed = yield* Effect.forEach(
     discovered,
     Effect.fnUntraced(function* (candidate: DiscoveredCandidate) {
