@@ -16,8 +16,7 @@ import type { CitationAssetFailureReason } from "@beep/law-practice-server/inter
 
 const Payload = S.fromJsonString(S.Struct({ version: S.Finite }));
 const failed = (reason: CitationAssetFailureReason) => ({ reason });
-// Write one asset and seal it exactly as a trusted adapter would.
-const sealed = Effect.fnUntraced(function* (text: string) {
+const writeAndSealAsTrustedAdapter = Effect.fnUntraced(function* (text: string) {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-asset-coverage-" });
   const path = `${directory}/asset.json`;
@@ -30,7 +29,7 @@ const sealed = Effect.fnUntraced(function* (text: string) {
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded production assets", (it) => {
   it.effect("decodes authenticated JSON text through the supplied codec", () =>
     Effect.gen(function* () {
-      const { path, seal } = yield* sealed('{"version":3}');
+      const { path, seal } = yield* writeAndSealAsTrustedAdapter('{"version":3}');
       const text = yield* loadCitationTextAsset(path, seal, failed);
       strictEqual(text, '{"version":3}');
       const decoded = yield* loadCitationJsonAsset(path, seal, Payload, failed);
@@ -39,14 +38,14 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded production 
   );
   it.effect("refuses an empty asset path as unavailable before any read", () =>
     Effect.gen(function* () {
-      const { seal } = yield* sealed("{}");
+      const { seal } = yield* writeAndSealAsTrustedAdapter("{}");
       const failure = yield* loadCitationTextAsset("", seal, failed).pipe(Effect.flip);
       deepStrictEqual(failure, { reason: "unavailable" });
     })
   );
   it.effect("refuses authenticated text the supplied codec cannot decode as invalid data", () =>
     Effect.gen(function* () {
-      const { path, seal } = yield* sealed('{"version":"three"}');
+      const { path, seal } = yield* writeAndSealAsTrustedAdapter('{"version":"three"}');
       const failure = yield* loadCitationJsonAsset(path, seal, Payload, failed).pipe(Effect.flip);
       deepStrictEqual(failure, { reason: "invalid-data" });
     })

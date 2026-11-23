@@ -60,9 +60,7 @@ const short = S.decodeEffect(Citation)({
     antecedentGuess: null,
   },
 });
-// These independent verified labels exercise linking supplied semantic mentions;
-// they intentionally make no parser/discovery claim.
-const context = Effect.fnUntraced(function* (citations: ReadonlyArray<Citation>) {
+const verifiedLabelMentionsWithoutParserClaim = Effect.fnUntraced(function* (citations: ReadonlyArray<Citation>) {
   const quotes = A.map(citations, (_, index) => `mention ${index}`);
   let start = 0;
   const mentions = A.map(citations, (citation, index) => {
@@ -101,7 +99,7 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
       ]) {
         const first = yield* full(party);
         const reference = yield* supra(guess);
-        const input = yield* context([first, reference]);
+        const input = yield* verifiedLabelMentionsWithoutParserClaim([first, reference]);
         const document = yield* resolveSixFormCitationMentions(input);
         expect(A.getUnsafe(document.resolutions, 1).status, `${party} / ${guess}`).toBe(expected);
       }
@@ -125,7 +123,7 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
           antecedentGuess: "Alpha",
         },
       });
-      const input = yield* context([first, second, short]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([first, second, short]);
       const document = yield* resolveSixFormCitationMentions(input);
       expect(A.getUnsafe(document.resolutions, 2).status).toBe("Ambiguous");
       const retained = yield* resolveCitationMentions(input);
@@ -138,7 +136,7 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
       const second = yield* full("Alpha", "200");
       const reference = yield* supra("Alpha");
       const next = yield* id;
-      const input = yield* context([first, second, reference, next, next]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([first, second, reference, next, next]);
       const document = yield* resolveSixFormCitationMentions({
         ...input,
         limits: { ...input.limits, resolutionEdges: 8 },
@@ -163,7 +161,16 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
       const next = yield* id;
       const reference = yield* supra("Alpha");
       const shortForm = yield* short;
-      const input = yield* context([first, omitted, next, next, reference, next, shortForm, next]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([
+        first,
+        omitted,
+        next,
+        next,
+        reference,
+        next,
+        shortForm,
+        next,
+      ]);
       const document = yield* resolveSixFormCitationMentions({
         ...input,
         mentions: A.filter(input.mentions, (_, index) => index !== 1),
@@ -190,7 +197,7 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
     Effect.gen(function* () {
       const first = yield* full("Alpha");
       const next = yield* id;
-      const input = yield* context([first, first, next, first]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([first, first, next, first]);
       const request = {
         ...input,
         mentions: A.filter(input.mentions, (_, index) => index === 1 || index === 2),
@@ -212,7 +219,15 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
       const reference = yield* supra("Alpha");
       const next = yield* id;
       const shortForm = yield* short;
-      const input = yield* context([first, second, reference, first, next, shortForm, next]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([
+        first,
+        second,
+        reference,
+        first,
+        next,
+        shortForm,
+        next,
+      ]);
       const document = yield* resolveSixFormCitationMentions({
         ...input,
         mentions: A.filter(input.mentions, (_, index) => index !== 3),
@@ -231,8 +246,8 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
   it.effect("refuses reordered, overlapping or cross-source excluded proofs", () =>
     Effect.gen(function* () {
       const citation = yield* full("Alpha");
-      const input = yield* context([citation, citation, citation]);
-      const other = yield* context([citation]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([citation, citation, citation]);
+      const other = yield* verifiedLabelMentionsWithoutParserClaim([citation]);
       const first = A.getUnsafe(input.mentions, 0);
       const last = A.getUnsafe(input.mentions, 2);
       for (const excludedAnchors of [
@@ -254,7 +269,7 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
   it.effect("refuses reversed supported mentions even when the excluded stream is empty", () =>
     Effect.gen(function* () {
       const citation = yield* full("Alpha");
-      const input = yield* context([citation, citation]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([citation, citation]);
       const failure = yield* resolveSixFormCitationMentions({
         ...input,
         mentions: A.reverse(input.mentions),
@@ -266,7 +281,7 @@ it.layer(BunCrypto.layer)("six-form local linking", (it) => {
   it.effect("charges excluded candidates without adding a candidates gate to legacy inputs", () =>
     Effect.gen(function* () {
       const citation = yield* full("Alpha");
-      const input = yield* context([citation, citation]);
+      const input = yield* verifiedLabelMentionsWithoutParserClaim([citation, citation]);
       const legacy = yield* resolveCitationMentions({ ...input, limits: { ...input.limits, candidates: 1 } });
       expect(legacy.mentions).toHaveLength(2);
       const failure = yield* resolveSixFormCitationMentions({

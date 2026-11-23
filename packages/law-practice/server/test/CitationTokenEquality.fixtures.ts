@@ -38,8 +38,6 @@ export const readCitationTokenEquality = Effect.fn("TokenEqualityTest.read")(fun
   );
   const corpus = yield* S.decodeEffect(Corpus)(text);
   yield* readCitationOracleFixture("token-editions", corpus.editionProfileSha256);
-  // The Python producer was removed with the repository's Python (goal python-free-repo). Its
-  // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
-  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-token-equality.py`.
+  // decision: python-oracle-producers-pinned-by-digest
   return corpus;
 });

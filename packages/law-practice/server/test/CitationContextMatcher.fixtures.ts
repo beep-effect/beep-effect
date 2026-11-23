@@ -20,7 +20,6 @@ import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.t
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationContextMatcher = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationContextMatcher>[0],
   a1: unknown,

@@ -2,9 +2,8 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeReadline from "node:readline";
 
-// Hostile real processes exercise the parent session's protocol and kill path.
 const file = process.argv[1];
-const mode = NodePath.basename(file, ".mjs");
+const hostileRealProcessModeForParentProtocolAndKillPath = NodePath.basename(file, ".mjs");
 const version = "citation-regex-worker/v3";
 const ready = `{"_tag":"Ready","version":"${version}"}\n`;
 process.stdout.write(ready);
@@ -26,40 +25,40 @@ function closeStdoutWhileAlive() {
 }
 
 function finishEarly() {
-  if (mode === "sent") return true;
-  if (mode === "eof") {
+  if (hostileRealProcessModeForParentProtocolAndKillPath === "sent") return true;
+  if (hostileRealProcessModeForParentProtocolAndKillPath === "eof") {
     process.exit(0);
     return true;
   }
-  if (mode === "eof-live") {
+  if (hostileRealProcessModeForParentProtocolAndKillPath === "eof-live") {
     closeStdoutWhileAlive();
     return true;
   }
-  if (mode === "oversize") {
+  if (hostileRealProcessModeForParentProtocolAndKillPath === "oversize") {
     process.stdout.write("x".repeat(8192));
     return true;
   }
   return false;
 }
 let sequence = 0;
-if (mode !== "closed-stdin" && mode !== "blocked-stdin")
+if (hostileRealProcessModeForParentProtocolAndKillPath !== "closed-stdin" && hostileRealProcessModeForParentProtocolAndKillPath !== "blocked-stdin")
   NodeReadline.createInterface({ input: process.stdin }).on("line", () => {
     if (finishEarly()) return;
-    const selected = mode === "wrong-sequence" ? sequence + 1 : sequence;
+    const selected = hostileRealProcessModeForParentProtocolAndKillPath === "wrong-sequence" ? sequence + 1 : sequence;
     process.stdout.write(`{"_tag":"Started","version":"${version}","sequence":${selected}}\n`);
-    if (mode === "running") {
+    if (hostileRealProcessModeForParentProtocolAndKillPath === "running") {
       NodeFS.writeFileSync(`${file}.entered`, "entered");
       /^(a+)+$/.test(`${"a".repeat(40)}!`);
       return;
     }
-    if (mode === "wrong-sequence") return;
-    if (mode === "failure") {
+    if (hostileRealProcessModeForParentProtocolAndKillPath === "wrong-sequence") return;
+    if (hostileRealProcessModeForParentProtocolAndKillPath === "failure") {
       process.stdout.write(
         `{"_tag":"Failure","version":"${version}","sequence":${sequence},"failure":{"_tag":"CitationSafetyLimitExceeded","operation":"extract","limit":"patternMatches"}}\n`
       );
       return;
     }
-    if (mode === "result") {
+    if (hostileRealProcessModeForParentProtocolAndKillPath === "result") {
       const timer = setInterval(() => {
         if (NodeFS.existsSync(`${file}.result-release`)) {
           clearInterval(timer);
@@ -75,7 +74,7 @@ if (mode !== "closed-stdin" && mode !== "blocked-stdin")
     );
     sequence++;
   });
-if (mode === "idle") {
+if (hostileRealProcessModeForParentProtocolAndKillPath === "idle") {
   const timer = setInterval(() => {
     if (NodeFS.existsSync(`${file}.release`)) {
       clearInterval(timer);
@@ -84,7 +83,7 @@ if (mode === "idle") {
   }, 5);
 }
 
-if (mode === "closed-stdin") {
+if (hostileRealProcessModeForParentProtocolAndKillPath === "closed-stdin") {
   const timer = setInterval(() => {
     if (NodeFS.existsSync(`${file}.close-input`)) {
       clearInterval(timer);
@@ -95,4 +94,4 @@ if (mode === "closed-stdin") {
   }, 5);
 }
 
-if (mode === "blocked-stdin") setInterval(() => {}, 1000);
+if (hostileRealProcessModeForParentProtocolAndKillPath === "blocked-stdin") setInterval(() => {}, 1000);

@@ -139,8 +139,10 @@ export const replayCitationCanonicalParsedEquality = Effect.fn("CanonicalParsedE
       A.map(actual, (value) => value.citationHash),
       row.hashId
     ).toEqual(row.hashes);
-    // CitationBase.__eq__ delegates to the exact hash comparison in models.py.
-    expect(A.getUnsafe(actual, 0).citationHash === A.getUnsafe(actual, 1).citationHash, row.modelId).toBe(true);
+    expect(
+      A.getUnsafe(actual, 0).citationHash === A.getUnsafe(actual, 1).citationHash,
+      `${row.modelId}: CitationBase.__eq__ delegates to the exact hash comparison in models.py`
+    ).toBe(true);
   }
   yield* replay.assertRetired;
 });

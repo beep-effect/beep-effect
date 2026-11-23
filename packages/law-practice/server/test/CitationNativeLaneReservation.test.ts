@@ -16,7 +16,7 @@ import {
 import { CitationNativeLaneFailure } from "@beep/law-practice-server/internal/Citation/NativeLane";
 import {
   makeCitationNativeProcessOwner,
-  CitationNativeProcessRuntime as NativeRuntime,
+  CitationNativeProcessRuntime as NativeRuntimeFieldsWithoutFixtureCapabilities,
 } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
@@ -169,17 +169,13 @@ const makeReservationFixture = Effect.fn("NativeReservationTest.fixture")(functi
     return timer.clock.sleep(duration);
   });
   const operations = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock));
-  // The shared admission has its own captured Clock, exactly as at installation.
-  const admission = yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock));
+  const withOwnCapturedClockAsAtInstallation = Effect.provideService(Clock.Clock, clock);
+  const admission = yield* makeCitationNativeProcessAdmission(limits).pipe(withOwnCapturedClockAsAtInstallation);
   const runtime = yield* family === "xml"
     ? makeCitationXmlTestRuntime(kind)
     : makeCitationNativeWorkerFixture("busy", family, kind).pipe(
         Effect.flatMap((runtime) =>
-          ownCitationTestConfiguration(
-            // The fixture's filesystem/marker capabilities are not runtime fields.
-            NativeRuntime,
-            runtime
-          )
+          ownCitationTestConfiguration(NativeRuntimeFieldsWithoutFixtureCapabilities, runtime)
         )
       );
   const provide = <A, E, R>(body: Effect.Effect<A, E, R>) =>
@@ -202,16 +198,14 @@ const makeReservationFixture = Effect.fn("NativeReservationTest.fixture")(functi
     killSignal: "SIGKILL",
     forceKillAfter: Duration.zero,
   });
-  // Isolate the private stage's captured timer from the enclosing
-  // invocation timer of the same duration; production placement is unchanged.
-  const enclosureClock = yield* makeCitationNativeSleepClock((duration) =>
+  const clockIsolatingStageTimerFromSameDurationInvocationTimer = yield* makeCitationNativeSleepClock((duration) =>
     path === "job-deadline" && Duration.equals(duration, limits[jobLimit]) ? Effect.never : clock.sleep(duration)
   );
   const invoke = <A, E, R>(body: Effect.Effect<A, E, R | CitationInvocation>) =>
     openCitationInvocation(
       CitationInvocationPolicy.make({ limits, operation, deadlineStarts: "before-admission" }),
       body
-    ).pipe(Effect.provideService(Clock.Clock, enclosureClock), provide);
+    ).pipe(Effect.provideService(Clock.Clock, clockIsolatingStageTimerFromSameDurationInvocationTimer), provide);
   return {
     family,
     operation,

@@ -62,7 +62,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
             });
             const skip = yield* entry.annotate({ mode: "skip", plain: source, replacements: [balanced] });
             expect(skip.text).toEqual(word("<a><i>Foo</i></a>"));
-            // Pinned annotation-wrap-composition case 20: an unbalanced interior slice.
             const partial = CitationAnnotationReplacement.make({
               start: 1,
               end: 9,
@@ -70,12 +69,13 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
               after: word("]"),
             });
             const wrap = yield* entry.annotate({ mode: "wrap", plain: source, replacements: [partial] });
-            expect(wrap.text).toEqual(word("<[i>Foo</i]>"));
+            expect(wrap.text, "pinned annotation-wrap-composition case 20: an unbalanced interior slice").toEqual(
+              word("<[i>Foo</i]>")
+            );
             const exits = yield* setup.observed.snapshot;
             const admission = yield* setup.operation.snapshot;
             expect(exits).toEqual({ spawned: 3, confirmed: 3 });
             expect(admission).toMatchObject({ active: 0, queued: 0 });
-            // Pinned annotation-mapping case 0: sort/map against original HTML.
             const mapped = yield* entry.annotate({
               plain: word("foo 1 U.S. 1 bar"),
               source: word("foo <i>1 U.S. 1</i> bar"),
@@ -83,7 +83,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
                 CitationAnnotationReplacement.make({ start: 0, end: 16, before: word("["), after: word("]") }),
               ],
             });
-            expect(mapped.text).toEqual(word("[foo <i>1 U.S. 1</i> bar]"));
+            expect(mapped.text, "pinned annotation-mapping case 0: sort and map against the original HTML").toEqual(
+              word("[foo <i>1 U.S. 1</i> bar]")
+            );
             const mappedExits = yield* setup.observed.snapshot;
             expect(mappedExits.spawned).toBeGreaterThan(exits.spawned);
             expect(mappedExits.confirmed).toBe(mappedExits.spawned);

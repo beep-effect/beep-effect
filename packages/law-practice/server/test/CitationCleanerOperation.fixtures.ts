@@ -24,11 +24,10 @@ export const makeCitationReplayCleanerOperation = Effect.fn("CleanerReplayTest.m
     })),
     Effect.provideService(CitationCleaner, runtime)
   );
-  // Original private failure categories remain observable in the source replay.
-  // CitationPortFailure.test.ts separately verifies the public redaction boundary.
-  const operation = {
-    run: Effect.fn("CleanerReplayTest.run")((input: unknown) => admission.run("clean", pipeline.run(input))),
-  };
+  const runKeepingPrivateFailureCategories = Effect.fn("CleanerReplayTest.run")((input: unknown) =>
+    admission.run("clean", pipeline.run(input))
+  );
+  const operation = { run: runKeepingPrivateFailureCategories };
   return { operation, admission };
 });
 

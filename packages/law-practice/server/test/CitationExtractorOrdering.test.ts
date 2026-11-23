@@ -19,7 +19,6 @@ import * as S from "effect/Schema";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationExtractorOrdering = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationExtractorOrdering>[0],
   a1: unknown
@@ -28,7 +27,6 @@ const makeCitationExtractorOrdering = Effect.fnUntraced(function* (
   return yield* makeOwnedCitationExtractorOrdering(a0, o1);
 });
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationExtractorSelection = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationExtractorSelection>[0],
   a1: unknown
@@ -76,11 +74,12 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           if (!sameOrder(result.indices, row.selected)) nonIndexOrders++;
         }
         expect(nonIndexOrders).toBeGreaterThan(0);
-        // Identical configurations collapse by equality at the same hash;
-        // equal dictionaries with distinct repr hashes remain separate in source.
         const dictCase = A.getUnsafe(controls.ordering.cases, 23);
         const dictOrder = (yield* ordering.ordered(dictCase.source)).indices;
-        expect(dictOrder).toEqual(expect.arrayContaining([1, 18, 19]));
+        expect(
+          dictOrder,
+          "identical configurations collapse by equality at the same hash; equal dictionaries with distinct repr hashes stay separate"
+        ).toEqual(expect.arrayContaining([1, 18, 19]));
         expect(dictOrder).not.toContain(16);
         expect(dictOrder).not.toContain(17);
       })
