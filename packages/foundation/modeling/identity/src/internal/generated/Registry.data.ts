@@ -658,6 +658,16 @@ export const RegistryVocab = {
       "title",
     ],
   },
+  semapv: {
+    iri: "https://w3id.org/semapv/vocab/",
+    terms: [
+      "LexicalMatching",
+      "LogicalReasoning",
+      "ManualMappingCuration",
+      "SemanticSimilarityThresholdMatching",
+      "UnspecifiedMatching",
+    ],
+  },
   sh: {
     iri: "http://www.w3.org/ns/shacl#",
     terms: [

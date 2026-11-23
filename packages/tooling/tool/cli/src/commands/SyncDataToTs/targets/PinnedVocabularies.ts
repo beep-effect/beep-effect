@@ -19,6 +19,7 @@ import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
@@ -48,14 +49,17 @@ const pinModulePath = `${pinDirectory}/NamespacePins.data.ts`;
  *
  * **Details**
  *
- * `Turtle` matches a subject written `<subjectPrefix><term>` at line start and
- * typed (`a` or `rdf:type`) as an OWL class or property, an RDFS class or
- * datatype, or an RDF property. `RdfXml` matches an `rdf:Description` about
- * `#<term>` carrying such an `rdf:type`. `SpecDocument` matches
- * `<code><curiePrefix>:<term></code>` inside the HTML section with the given id,
- * for a vocabulary a specification document defines, such as the RDF-compatible
- * XSD datatypes. The checks cover the layouts of the pinned artifacts; they are
- * not general parsers.
+ * A term is declared when the artifact types it. `Turtle` matches a subject
+ * written `<subjectPrefix><term>` at line start whose statement, up to its
+ * closing `.`, carries `a` or `rdf:type`, or `owl:inverseOf`, which entails an
+ * object property. `RdfXml` matches a typed node element, or an
+ * `rdf:Description` carrying an `rdf:type`, about `#<term>` or the namespace
+ * IRI followed by the term. `SpecDocument` matches
+ * `<code><curiePrefix>:<term></code>`, optionally wrapping a link, inside the
+ * HTML section or `h2` heading with the given id, for a vocabulary a
+ * specification document defines, such as the RDF-compatible XSD datatypes.
+ * The checks cover the layouts of the pinned artifacts; they are not general
+ * parsers.
  *
  * **Example** (Decode a Turtle declaration strategy)
  *
@@ -172,7 +176,11 @@ const w3cAttribution = (title: string): string =>
  * target, never typed in. The W3C artifacts carry no SPDX-identifiable notice
  * of their own, so they are pinned under `LicenseRef-W3C-Document`, except
  * ActivityStreams, whose repository licenses its documents under the W3C
- * Software and Document License (`W3C-20150513`). The nanopublication schema
+ * Software and Document License (`W3C-20150513`), and DCAT 3, whose artifact
+ * states CC BY 4.0. DCMI Metadata Terms carry DCMI's CC BY 4.0 document
+ * notice, Schema.org its CC BY-SA 3.0 schema terms, and SEMAPV the CC0 1.0
+ * its artifact states. VoID is pinned at the W3C Interest Group Note's term
+ * index, because its RDFS file states no license. The nanopublication schema
  * states no license at its pinned commit, so `np` records
  * `LicenseRef-nanopub-nschema-unstated` rather than a license it was never
  * granted; only its term IRIs are projected.
@@ -181,7 +189,7 @@ const w3cAttribution = (title: string): string =>
  *
  * ```ts
  * import { pinnedVocabularyRows } from "@beep/repo-cli/commands/SyncDataToTs/targets/PinnedVocabularies"
- * console.log(pinnedVocabularyRows.length) // 12
+ * console.log(pinnedVocabularyRows.length) // 21
  * ```
  *
  * @category configuration
@@ -222,6 +230,186 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
     licenseIri: "https://creativecommons.org/licenses/by/4.0/legalcode",
     terms: ["cites", "citesAsEvidence"],
   }),
+  {
+    prefix: "dcat",
+    namespace: "http://www.w3.org/ns/dcat#",
+    location: "https://www.w3.org/ns/dcat3.ttl",
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-23" },
+    license: "CC-BY-4.0",
+    attribution:
+      "Data Catalog Vocabulary (DCAT) - Version 3, World Wide Web Consortium. CC BY 4.0. Curated term names projected to TypeScript.",
+    version: "3",
+    sha256: "d1624d3bbf364f6fc1d43b9a188bbb9e67639b1a7d46a5cb7ea3f5d47d02b62f",
+    markers: [
+      "@prefix dcat: <http://www.w3.org/ns/dcat#> .",
+      "dcterms:license <https://creativecommons.org/licenses/by/4.0/>",
+      'owl:versionInfo "3"',
+    ],
+    declaration: turtle("dcat:"),
+    terms: [
+      "Catalog",
+      "CatalogRecord",
+      "DataService",
+      "Dataset",
+      "DatasetSeries",
+      "Distribution",
+      "Relationship",
+      "Resource",
+      "Role",
+      "accessService",
+      "accessURL",
+      "bbox",
+      "byteSize",
+      "catalog",
+      "centroid",
+      "compressFormat",
+      "contactPoint",
+      "dataset",
+      "distribution",
+      "downloadURL",
+      "endDate",
+      "endpointDescription",
+      "endpointURL",
+      "first",
+      "hadRole",
+      "inCatalog",
+      "inSeries",
+      "keyword",
+      "landingPage",
+      "last",
+      "mediaType",
+      "next",
+      "packageFormat",
+      "prev",
+      "qualifiedRelation",
+      "record",
+      "resource",
+      "servesDataset",
+      "service",
+      "spatialResolutionInMeters",
+      "startDate",
+      "temporalResolution",
+      "theme",
+      "themeTaxonomy",
+      "version",
+    ],
+  },
+  {
+    prefix: "dcterms",
+    namespace: "http://purl.org/dc/terms/",
+    location: "https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl",
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-23" },
+    license: "CC-BY-4.0",
+    attribution:
+      "DCMI Metadata Terms. Copyright 2012 Dublin Core Metadata Initiative, http://dublincore.org/about/copyright/. CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. Curated term names projected to TypeScript.",
+    version: "2012-06-14",
+    sha256: "13df401072dd7015bf9d75162f3e41c8138075304b7b9cc1aa1e9c16db976797",
+    markers: [
+      "@prefix dcterms: <http://purl.org/dc/terms/> .",
+      'dcterms:modified "2012-06-14"^^<http://www.w3.org/2001/XMLSchema#date>',
+    ],
+    declaration: turtle("dcterms:"),
+    terms: [
+      "Agent",
+      "AgentClass",
+      "BibliographicResource",
+      "Box",
+      "DCMIType",
+      "DDC",
+      "FileFormat",
+      "Frequency",
+      "IMT",
+      "ISO3166",
+      "ISO639-2",
+      "ISO639-3",
+      "Jurisdiction",
+      "LCC",
+      "LCSH",
+      "LicenseDocument",
+      "LinguisticSystem",
+      "Location",
+      "LocationPeriodOrJurisdiction",
+      "MESH",
+      "MediaType",
+      "MediaTypeOrExtent",
+      "MethodOfAccrual",
+      "MethodOfInstruction",
+      "NLM",
+      "Period",
+      "PeriodOfTime",
+      "PhysicalMedium",
+      "PhysicalResource",
+      "Point",
+      "Policy",
+      "ProvenanceStatement",
+      "RFC1766",
+      "RFC3066",
+      "RFC4646",
+      "RFC5646",
+      "RightsStatement",
+      "SizeOrDuration",
+      "Standard",
+      "TGN",
+      "UDC",
+      "URI",
+      "W3CDTF",
+      "abstract",
+      "accessRights",
+      "accrualMethod",
+      "accrualPeriodicity",
+      "accrualPolicy",
+      "alternative",
+      "audience",
+      "available",
+      "bibliographicCitation",
+      "conformsTo",
+      "contributor",
+      "coverage",
+      "created",
+      "creator",
+      "date",
+      "dateAccepted",
+      "dateCopyrighted",
+      "dateSubmitted",
+      "description",
+      "educationLevel",
+      "extent",
+      "format",
+      "hasFormat",
+      "hasPart",
+      "hasVersion",
+      "identifier",
+      "instructionalMethod",
+      "isFormatOf",
+      "isPartOf",
+      "isReferencedBy",
+      "isReplacedBy",
+      "isRequiredBy",
+      "isVersionOf",
+      "issued",
+      "language",
+      "license",
+      "mediator",
+      "medium",
+      "modified",
+      "provenance",
+      "publisher",
+      "references",
+      "relation",
+      "replaces",
+      "requires",
+      "rights",
+      "rightsHolder",
+      "source",
+      "spatial",
+      "subject",
+      "tableOfContents",
+      "temporal",
+      "title",
+      "type",
+      "valid",
+    ],
+  },
   sparPin({
     prefix: "deo",
     name: "Deo",
@@ -365,6 +553,49 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
     ],
   },
   {
+    prefix: "owl",
+    namespace: "http://www.w3.org/2002/07/owl#",
+    location: "https://www.w3.org/2002/07/owl.ttl",
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-23" },
+    license: "LicenseRef-W3C-Document",
+    attribution: w3cAttribution("The OWL 2 Schema vocabulary (OWL 2)"),
+    version: "$Date: 2009/11/15 10:54:12 $",
+    sha256: "718fa1db7840d3315bfce94398543f91437ef6fe933054fd93f5471d19262fc5",
+    markers: [
+      "@prefix owl: <http://www.w3.org/2002/07/owl#> .",
+      'dc:title "The OWL 2 Schema vocabulary (OWL 2)"',
+      'owl:versionInfo "$Date: 2009/11/15 10:54:12 $"',
+    ],
+    declaration: turtle("owl:"),
+    terms: [
+      "AnnotationProperty",
+      "AsymmetricProperty",
+      "Class",
+      "DatatypeProperty",
+      "FunctionalProperty",
+      "InverseFunctionalProperty",
+      "IrreflexiveProperty",
+      "NamedIndividual",
+      "Nothing",
+      "ObjectProperty",
+      "Ontology",
+      "ReflexiveProperty",
+      "SymmetricProperty",
+      "Thing",
+      "TransitiveProperty",
+      "backwardCompatibleWith",
+      "deprecated",
+      "equivalentClass",
+      "equivalentProperty",
+      "imports",
+      "incompatibleWith",
+      "inverseOf",
+      "priorVersion",
+      "sameAs",
+      "versionInfo",
+    ],
+  },
+  {
     prefix: "prov",
     namespace: "http://www.w3.org/ns/prov#",
     location: "https://www.w3.org/ns/prov-o-20130430",
@@ -411,6 +642,167 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
       "wasGeneratedBy",
       "wasQuotedFrom",
       "wasRevisionOf",
+    ],
+  },
+  {
+    prefix: "rdf",
+    namespace: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    location: "https://www.w3.org/1999/02/22-rdf-syntax-ns.ttl",
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-23" },
+    license: "LicenseRef-W3C-Document",
+    attribution: w3cAttribution("The RDF Concepts Vocabulary (RDF)"),
+    version: "2019-12-16",
+    sha256: "93d52b1a5824c7dd6504ca79c16205c0b740a0ba68b7a14952780f52561186a2",
+    markers: [
+      "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
+      'dc:title "The RDF Concepts Vocabulary (RDF)"',
+      'dc:date "2019-12-16"',
+    ],
+    declaration: turtle("rdf:"),
+    terms: [
+      "Alt",
+      "Bag",
+      "HTML",
+      "JSON",
+      "List",
+      "Property",
+      "Seq",
+      "Statement",
+      "XMLLiteral",
+      "first",
+      "langString",
+      "nil",
+      "object",
+      "predicate",
+      "rest",
+      "subject",
+      "type",
+      "value",
+    ],
+  },
+  {
+    prefix: "rdfs",
+    namespace: "http://www.w3.org/2000/01/rdf-schema#",
+    location: "https://www.w3.org/2000/01/rdf-schema.ttl",
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-23" },
+    license: "LicenseRef-W3C-Document",
+    attribution: w3cAttribution("The RDF Schema vocabulary (RDFS)"),
+    version: "unversioned, retrieved 2026-11-23",
+    sha256: "ecee3a011b7c13ea2a7e40b0a208bfe6be53d69fdd53ee035e09e9f9e5108ad6",
+    markers: ["@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .", 'dc:title "The RDF Schema vocabulary (RDFS)"'],
+    declaration: turtle("rdfs:"),
+    terms: [
+      "Class",
+      "Container",
+      "ContainerMembershipProperty",
+      "Datatype",
+      "Literal",
+      "Resource",
+      "comment",
+      "domain",
+      "isDefinedBy",
+      "label",
+      "member",
+      "range",
+      "seeAlso",
+      "subClassOf",
+      "subPropertyOf",
+    ],
+  },
+  {
+    prefix: "schema",
+    namespace: "https://schema.org/",
+    location:
+      "https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-current-https.ttl",
+    revision: {
+      kind: "gitCommit",
+      repository: "https://github.com/schemaorg/schemaorg",
+      commit: "5f2d8cdec99b7329459ef6584e94b6a840f88471",
+    },
+    license: "CC-BY-SA-3.0",
+    attribution:
+      "Schema.org vocabulary, release 30.1. Schema.org schemas are made available under CC BY-SA 3.0, https://schema.org/docs/terms.html. Curated term names projected to TypeScript.",
+    version: "30.1",
+    sha256: "7f15ca89398c4f235f478a4b3b8d1f975d63c5a860b77c8a8fce01f791b7ae2f",
+    markers: ["@prefix schema: <https://schema.org/> ."],
+    declaration: turtle("schema:"),
+    terms: [
+      "CreativeWork",
+      "Event",
+      "Organization",
+      "Person",
+      "SportsTeam",
+      "Thing",
+      "URL",
+      "birthDate",
+      "knows",
+      "memberOf",
+      "name",
+      "url",
+    ],
+  },
+  {
+    prefix: "semapv",
+    namespace: "https://w3id.org/semapv/vocab/",
+    location:
+      "https://raw.githubusercontent.com/mapping-commons/semantic-mapping-vocabulary/0db5676d4ce4854543281a6c983a55fd9a6ef521/semapv.owl",
+    revision: {
+      kind: "gitCommit",
+      repository: "https://github.com/mapping-commons/semantic-mapping-vocabulary",
+      commit: "0db5676d4ce4854543281a6c983a55fd9a6ef521",
+    },
+    license: "CC0-1.0",
+    attribution:
+      "Semantic Mapping Vocabulary (SEMAPV), mapping-commons, release 2026-06-10. CC0 1.0. Curated term names projected to TypeScript.",
+    version: "2026-06-10",
+    sha256: "f072f1472767530231f045a67f717066754b1e83301f02ec030381cdb4045c6b",
+    markers: [
+      '<dcterms:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/"/>',
+      '<owl:versionIRI rdf:resource="http://w3id.org/semapv/vocab/releases/2026-06-10/semapv.owl"/>',
+    ],
+    declaration: { _tag: "RdfXml" },
+    terms: [
+      "LexicalMatching",
+      "LogicalReasoning",
+      "ManualMappingCuration",
+      "SemanticSimilarityThresholdMatching",
+      "UnspecifiedMatching",
+    ],
+  },
+  {
+    prefix: "sh",
+    namespace: "http://www.w3.org/ns/shacl#",
+    location: "https://www.w3.org/ns/shacl.ttl",
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-23" },
+    license: "LicenseRef-W3C-Document",
+    attribution: w3cAttribution("W3C Shapes Constraint Language (SHACL) Vocabulary"),
+    version: "unversioned, retrieved 2026-11-23",
+    sha256: "0e5d8aea0eab98a072d4a02faaee1ee914ec99eab2ca473429726faed4a13f69",
+    markers: [
+      "@prefix sh:   <http://www.w3.org/ns/shacl#> .",
+      'rdfs:label "W3C Shapes Constraint Language (SHACL) Vocabulary"@en',
+    ],
+    declaration: turtle("sh:"),
+    terms: [
+      "ClassConstraintComponent",
+      "DatatypeConstraintComponent",
+      "HasValueConstraintComponent",
+      "Info",
+      "MinCountConstraintComponent",
+      "NodeShape",
+      "Warning",
+      "class",
+      "datatype",
+      "hasValue",
+      "in",
+      "maxCount",
+      "minCount",
+      "node",
+      "path",
+      "property",
+      "targetClass",
+      "targetNode",
+      "xone",
     ],
   },
   {
@@ -463,6 +855,21 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
     ],
   },
   {
+    prefix: "void",
+    namespace: "http://rdfs.org/ns/void#",
+    location: "https://www.w3.org/TR/2011/NOTE-void-20110303/",
+    revision: { kind: "datedSnapshot", date: "2011-03-03" },
+    license: "LicenseRef-W3C-Document",
+    attribution: w3cAttribution(
+      "Describing Linked Datasets with the VoID Vocabulary, W3C Interest Group Note 2011-03-03, section 8 (Index of VoID classes and properties)"
+    ),
+    version: "W3C Interest Group Note 2011-03-03",
+    sha256: "54e5a4fcd28ea26b77e54402a944774d6de1af528e8ca8ad21b3d8601b8051ce",
+    markers: ["<title>Describing Linked Datasets with the VoID Vocabulary</title>", '<h2 id="cheatsheet">'],
+    declaration: { _tag: "SpecDocument", section: "cheatsheet", curiePrefix: "void" },
+    terms: ["Dataset", "triples"],
+  },
+  {
     prefix: "xsd",
     namespace: "http://www.w3.org/2001/XMLSchema#",
     location: "https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/",
@@ -479,42 +886,53 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
   },
 ];
 
-const declarationTypes =
-  "owl:(?:Class|ObjectProperty|DatatypeProperty|AnnotationProperty|FunctionalProperty)|rdfs:(?:Class|Datatype)|rdf:Property";
-const rdfXmlDeclarationTypes =
-  "http://www\\.w3\\.org/(?:2002/07/owl#(?:Class|ObjectProperty|DatatypeProperty|AnnotationProperty)|1999/02/22-rdf-syntax-ns#Property)";
+const turtleStatementEnd = /\s\.[ \t]*$/mu;
+const turtleTyping = /(?:^\S+|;)\s+(?:a|rdf:type|owl:inverseOf)\s+(?:<[^>\s]+>|[\w-]*:[\w-]+)/u;
+
+const turtleSubjectBlock = (text: string, subjectPrefix: string, term: string): O.Option<string> =>
+  pipe(
+    Str.search(new RegExp(`^${Regex.escape(subjectPrefix)}${Regex.escape(term)}(?=\\s)`, "mu"))(text),
+    O.map((start) => Str.slice(start)(text)),
+    O.map((rest) =>
+      O.match(Str.search(turtleStatementEnd)(rest), {
+        onNone: () => rest,
+        onSome: (end) => Str.slice(0, end)(rest),
+      })
+    )
+  );
 
 const sectionText = (text: string, section: string): string =>
   pipe(
-    Str.indexOf(`<section id="${section}"`)(text),
+    Str.indexOf(`id="${section}"`)(text),
     O.map((start) => Str.slice(start)(text)),
-    O.flatMap((rest) => A.head(Str.split("</section>")(rest))),
+    O.map((rest) =>
+      pipe(
+        [Str.indexOf("</section>")(rest), O.map(Str.search(/<h2[\s>]/u)(Str.slice(1)(rest)), (end) => end + 1)],
+        A.getSomes,
+        A.match({ onEmpty: () => rest, onNonEmpty: (ends) => Str.slice(0, A.min(ends, Order.Number))(rest) })
+      )
+    ),
     O.getOrElse(() => "")
   );
 
-// Whether an artifact's text declares a curated term under its declaration strategy.
-const declaresTerm = (declaration: VocabularyDeclaration, text: string, term: string): boolean =>
-  VocabularyDeclaration.match(declaration, {
+const declaresTerm = (pin: VocabularyPin, text: string, term: string): boolean =>
+  VocabularyDeclaration.match(pin.declaration, {
     Turtle: ({ subjectPrefix }) =>
-      O.isSome(
-        Str.match(
-          new RegExp(
-            `^${Regex.escape(subjectPrefix)}${Regex.escape(term)}\\s+(?:a|rdf:type)\\s+(?:[\\w-]*:[\\w-]+\\s*,\\s*)*(?:${declarationTypes})\\b`,
-            "mu"
-          )
-        )(text)
-      ),
-    RdfXml: () =>
-      O.isSome(
-        Str.match(
-          new RegExp(
-            `<rdf:Description rdf:about="#${Regex.escape(term)}">(?:(?!</rdf:Description>)[\\s\\S])*<rdf:type rdf:resource="${rdfXmlDeclarationTypes}"/>`,
-            "u"
-          )
-        )(text)
-      ),
+      O.exists(turtleSubjectBlock(text, subjectPrefix, term), (block) => turtleTyping.test(block)),
+    RdfXml: () => {
+      const about = `rdf:about="(?:#|${Regex.escape(pin.namespace)})${Regex.escape(term)}"`;
+      return (
+        new RegExp(`<(?!rdf:Description\\b)[\\w-]+:[\\w-]+ ${about}`, "u").test(text) ||
+        new RegExp(
+          `<rdf:Description ${about}>(?:(?!</rdf:Description>)[\\s\\S])*<rdf:type rdf:resource="[^"]+"/>`,
+          "u"
+        ).test(text)
+      );
+    },
     SpecDocument: ({ section, curiePrefix }) =>
-      Str.includes(`<code>${curiePrefix}:${term}</code>`)(sectionText(text, section)),
+      new RegExp(`<code>(?:<a [^>]*>)?${Regex.escape(`${curiePrefix}:${term}`)}(?:</a>)?</code>`, "u").test(
+        sectionText(text, section)
+      ),
   });
 
 const sha256Hex = Effect.fn("SyncDataToTs.PinnedVocabularies.sha256Hex")(function* (text: string) {
@@ -536,7 +954,7 @@ const project = Effect.fn("SyncDataToTs.PinnedVocabularies.project")(function* (
     return yield* fail(`${pin.prefix}: pinned artifact metadata is missing: ${A.join(missingMarkers, " | ")}`);
   }
   const terms = A.sort(pin.terms, Str.Order);
-  const undeclared = A.filter(terms, (term) => !declaresTerm(pin.declaration, source.text, term));
+  const undeclared = A.filter(terms, (term) => !declaresTerm(pin, source.text, term));
   if (A.isReadonlyArrayNonEmpty(undeclared)) {
     return yield* fail(`${pin.prefix}: curated terms have no declaration in the artifact: ${A.join(undeclared, ", ")}`);
   }
@@ -675,7 +1093,7 @@ const validateProjections = Effect.fn("SyncDataToTs.PinnedVocabularies.validate"
  *   pinnedVocabularyRows
  * } from "@beep/repo-cli/commands/SyncDataToTs/targets/PinnedVocabularies"
  *
- * console.log(makePinnedVocabulariesTarget(pinnedVocabularyRows).sourceUrls.length) // 12
+ * console.log(makePinnedVocabulariesTarget(pinnedVocabularyRows).sourceUrls.length) // 21
  * ```
  *
  * @param pinRowsInput - The encoded acquisition pins the target fetches and proves.

@@ -135,6 +135,10 @@
       "iri": "https://beep-effect.com/ns/semantica/"
     },
     {
+      "prefix": "semapv",
+      "iri": "https://w3id.org/semapv/vocab/"
+    },
+    {
       "prefix": "sh",
       "iri": "http://www.w3.org/ns/shacl#"
     },
@@ -761,7 +765,13 @@
     "https://schema.org/knows",
     "https://schema.org/memberOf",
     "https://schema.org/name",
-    "https://schema.org/url"
+    "https://schema.org/url",
+    "https://w3id.org/semapv/vocab/",
+    "https://w3id.org/semapv/vocab/LexicalMatching",
+    "https://w3id.org/semapv/vocab/LogicalReasoning",
+    "https://w3id.org/semapv/vocab/ManualMappingCuration",
+    "https://w3id.org/semapv/vocab/SemanticSimilarityThresholdMatching",
+    "https://w3id.org/semapv/vocab/UnspecifiedMatching"
   ],
   "bindings": [
     {

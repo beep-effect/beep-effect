@@ -15,10 +15,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// P1 ruling 3 (decision 2026-11-19-p1-pin-scope-eight-namespaces): these external namespaces
-// stay unpinned until P5, whose exit test asserts a pin for every external namespace.
-const unpinnedUntilP5 = ["dcat", "dcterms", "owl", "rdf", "rdfs", "schema", "sh", "void"];
-
 const pins = Result.getOrThrow(namespacePins());
 
 const termsDigest = Effect.fn("termsDigest")(function* (terms: ReadonlyArray<string>) {
@@ -41,36 +37,19 @@ it.layer(Digest.layerWebCrypto)("namespace pin digests", (it) => {
 });
 
 describe("namespace pins", () => {
-  it("pins exactly the P1 namespaces and the P4 nanopublication schema, each under its registry IRI", () => {
-    expect(A.map(pins, (pin) => pin.prefix)).toStrictEqual([
-      "as",
-      "cito",
-      "deo",
-      "doco",
-      "fabio",
-      "gufo",
-      "nif",
-      "np",
-      "oa",
-      "prov",
-      "skos",
-      "xsd",
-    ]);
+  it("pins every external registry namespace under its registry IRI with a license and a byte digest", () => {
+    const external = A.filter(
+      R.keys(RegistryVocab),
+      (prefix) => !Str.startsWith(IdentityAuthority)(RegistryVocab[prefix].iri)
+    );
+    expect(A.map(pins, (pin) => pin.prefix)).toStrictEqual(A.sort(external, Str.Order));
+    expect(A.map(pins, (pin) => pin.prefix)).toContain("semapv");
     for (const pin of pins) {
       const namespace = O.getOrThrow(namespaceOf(pin.prefix));
       expect(namespace.iri, pin.prefix).toBe(pin.namespace);
       expect(pin.license.toString().length, pin.prefix).toBeGreaterThan(0);
       expect(pin.digest, pin.prefix).toMatch(/^sha256:[a-f0-9]{64}$/u);
     }
-  });
-
-  it("leaves only the P5 namespaces of the registry unpinned", () => {
-    const external = A.filter(
-      R.keys(RegistryVocab),
-      (prefix) => !Str.startsWith(IdentityAuthority)(RegistryVocab[prefix].iri)
-    );
-    const unpinned = A.filter(external, (prefix) => !A.some(pins, (pin) => pin.prefix === prefix));
-    expect(A.sort(unpinned, Str.Order)).toStrictEqual(unpinnedUntilP5);
   });
 
   it("refuses unsorted or duplicate prefixes and an invalid license", () => {

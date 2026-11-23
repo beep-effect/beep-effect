@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "dcterms", "iri": "http://purl.org/dc/terms/" },
+  "namespace": {
+    "prefix": "dcterms",
+    "iri": "http://purl.org/dc/terms/"
+  },
   "terms": [
     "Agent",
     "AgentClass",
