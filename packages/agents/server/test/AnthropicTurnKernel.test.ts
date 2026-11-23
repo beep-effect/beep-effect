@@ -1,6 +1,6 @@
 import { AnthropicTurnKernelFromProvider, AnthropicTurnProvider } from "@beep/agents-server/AnthropicTurnKernel";
 import { makeRepairInvalidBlocks } from "@beep/agents-server/BlockRepair";
-import { AgentTurnKernel, TurnGenerationError } from "@beep/agents-use-cases/public";
+import { AgentTurnKernel, TurnGenerationError, UserTurnHistoryItem } from "@beep/agents-use-cases/public";
 import { AnthropicToolJsonResponse, RepairError } from "@beep/anthropic";
 import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect } from "@effect/vitest";
@@ -139,7 +139,9 @@ describe("AnthropicTurnKernel", () => {
           finishPart(),
         ];
         const kernel = yield* AgentTurnKernel;
-        const events = yield* Stream.runCollect(kernel.streamTurn([{ role: "user", text: "previous question" }]));
+        const events = yield* Stream.runCollect(
+          kernel.streamTurn([UserTurnHistoryItem.make({ text: "previous question" })])
+        );
         expect(A.map(events, (event) => event.type)).toEqual(["block", "finalization"]);
       })
     );

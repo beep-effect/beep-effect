@@ -1,5 +1,6 @@
 import { SchemaFirstDetectors } from "@beep/repo-cli/test/Lint";
 import { describe, expect, it, vi } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -124,7 +125,10 @@ describe("schema-first advisory container names", () => {
     const source = detectorFixture(text);
     const property = source.getFirstDescendantByKindOrThrow(SyntaxKind.PropertyAssignment);
     const entry = SchemaFirstDetectors.numericDomainEntryFromProperty(property, "fixture.ts", "@beep/test");
-    expect(O.map(entry, (value) => value.symbol)).toEqual(O.some(symbol));
+    assertSome(
+      O.map(entry, (value) => value.symbol),
+      symbol
+    );
   });
 
   it.each([
@@ -135,54 +139,57 @@ describe("schema-first advisory container names", () => {
     const source = detectorFixture(text);
     const statement = source.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement);
     const entry = SchemaFirstDetectors.staticApiEntryFromSwitch(statement, "fixture.ts", "@beep/test");
-    expect(O.map(entry, (value) => value.symbol)).toEqual(O.some(symbol));
+    assertSome(
+      O.map(entry, (value) => value.symbol),
+      symbol
+    );
   });
 
   it("ignores a switch without a schema discriminator", () => {
     const source = detectorFixture("switch (input) {}");
-    expect(
+    assertNone(
       SchemaFirstDetectors.staticApiEntryFromSwitch(
         source.getFirstDescendantByKindOrThrow(SyntaxKind.SwitchStatement),
         "fixture.ts",
         "@beep/test"
       )
-    ).toEqual(O.none());
+    );
   });
 
   it("does not classify unrelated getSomes receivers or parameter defaults", () => {
     const source = detectorFixture("function parse(value = { a: 1 }) { return Other.getSomes({ a: 1 }) }");
-    expect(
+    assertNone(
       SchemaFirstDetectors.getsomesStructEntryFromCallExpression(
         source.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression),
         "fixture.ts",
         "@beep/test"
       )
-    ).toEqual(O.none());
-    expect(
+    );
+    assertNone(
       SchemaFirstDetectors.defaultsEntryFromParameter(
         source.getFirstDescendantByKindOrThrow(SyntaxKind.Parameter),
         "fixture.ts",
         "@beep/test"
       )
-    ).toEqual(O.none());
+    );
   });
 
   it("does not advise a generic null-return contract or module-scope normalization", () => {
     const source = detectorFixture("export function parse<T>(): T | null { return null }; value.trim()");
-    expect(
+    assertNone(
       SchemaFirstDetectors.nullReturnEntryFromFunctionLike(
         source.getFunctionOrThrow("parse"),
         "fixture.ts",
         "@beep/test"
       )
-    ).toEqual(O.none());
-    expect(
+    );
+    assertNone(
       SchemaFirstDetectors.normalizationEntryFromCallExpression(
         source.getFirstDescendantByKindOrThrow(SyntaxKind.CallExpression),
         "fixture.ts",
         "@beep/test"
       )
-    ).toEqual(O.none());
+    );
   });
 
   it.layer(Digest.layerWebCrypto)((it) =>

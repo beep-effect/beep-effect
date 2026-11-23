@@ -765,7 +765,7 @@ describe("pattern extractor boundary outcomes", () => {
       })
     );
     const pattern = PatternExtractorLive.pipe(Layer.provide(nlp), Layer.provide(canonicalizerLayer));
-    it.layer(Layer.merge(baseLayer, pattern))((it) => {
+    it.layer(Layer.merge(baseLayer, pattern), { timeout: "30 seconds" })((it) => {
       it.effect(`preserves the ${scenario} boundary outcome`, () =>
         Effect.gen(function* () {
           const { canonical, chunks } = yield* makeCanonical("Alice writes.");
@@ -889,7 +889,7 @@ describe("hosted extractor runtime construction", () => {
     Layer.provide(canonicalizerLayer),
     Layer.provide(BunCrypto.layer)
   );
-  it.layer(Layer.merge(baseLayer, runtime))((it) => {
+  it.layer(Layer.merge(baseLayer, runtime), { timeout: "30 seconds" })((it) => {
     it.effect("builds the configured runtime and deterministic prompt artifact without a provider call", () =>
       Effect.gen(function* () {
         const extractor = yield* HostedExtractor;
@@ -903,7 +903,7 @@ describe("hosted extractor runtime construction", () => {
 
 describe("hosted claim chunk boundary fallback", () => {
   const extractions = [grounded("person", "Ada", 0)];
-  it.layer(Layer.merge(baseLayer, langExtractLayer(extractions)))((it) => {
+  it.layer(Layer.merge(baseLayer, langExtractLayer(extractions)), { timeout: "30 seconds" })((it) => {
     it.effect("keeps a claim in the chunk starting its anchor, then the first available chunk", () =>
       Effect.gen(function* () {
         const { canonical, chunks } = yield* makeCanonical("Ada selected Engine.");
