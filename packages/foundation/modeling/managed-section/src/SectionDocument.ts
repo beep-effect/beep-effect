@@ -25,6 +25,8 @@ import type { SectionRenderError } from "./SectionDialect.ts";
 
 const $I = $ManagedSectionId.create("SectionDocument");
 
+const optionalKeyOmittedWhenAbsent = (key: string | undefined) => O.getSomesStruct({ key: O.fromUndefinedOr(key) });
+
 /**
  * Raised when a document's managed-section structure cannot be read without
  * guessing.
@@ -145,8 +147,7 @@ export class SectionParseError extends S.TaggedError<SectionParseError, { readon
       SectionParseError.make({
         reason: error.reason,
         line: error.line,
-        // An `optionalKey` field must be OMITTED rather than set to undefined.
-        ...O.getSomesStruct({ key: O.fromUndefinedOr(error.key) }),
+        ...optionalKeyOmittedWhenAbsent(error.key),
         path,
       })
   );

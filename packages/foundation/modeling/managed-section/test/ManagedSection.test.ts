@@ -96,18 +96,17 @@ describe("ManagedSection", () => {
     }
 
     {
-      // The hook's PARENT must exist: this package requires no `Path`, so it
-      // cannot derive a directory to create, and a real filesystem refuses a
-      // write into a missing one. The file itself is what this test creates.
       const fs = memoryFs({ ".husky": MemoryFileSystem.directory() });
       it.layer(ManagedSection.layer.pipe(Layer.provide(fs.layer)), { timeout: "30 seconds" })((it) => {
-        it.effect("creates the file when it does not exist", () =>
-          Effect.gen(function* () {
-            const service = yield* ManagedSection;
-            const outcome = yield* service.sync(HOOK, section("example-tool", "echo hi"));
-            assert.strictEqual(outcome._tag, "Created");
-            assert.strictEqual(fs.text(HOOK), `${block("example-tool", "echo hi")}\n`);
-          })
+        it.effect(
+          "creates the file when it does not exist; its parent must already exist (no Path service to create one)",
+          () =>
+            Effect.gen(function* () {
+              const service = yield* ManagedSection;
+              const outcome = yield* service.sync(HOOK, section("example-tool", "echo hi"));
+              assert.strictEqual(outcome._tag, "Created");
+              assert.strictEqual(fs.text(HOOK), `${block("example-tool", "echo hi")}\n`);
+            })
         );
       });
     }
@@ -331,14 +330,16 @@ describe("ManagedSection", () => {
         it.effect("distinguishes a write failure from a read failure", () =>
           Effect.gen(function* () {
             const service = yield* ManagedSection;
-            // The file is missing, so the read degrades to an absent document
-            // and the failure can only come from the WRITE half.
             const error = yield* Effect.flip(service.sync(HOOK, section("example-tool", "body")));
             assert.strictEqual(error._tag, "SectionFileError");
             if (error._tag !== "SectionFileError") {
               return;
             }
-            assert.strictEqual(error.operation, "write");
+            assert.strictEqual(
+              error.operation,
+              "write",
+              "the file is missing, so the read degrades to an absent document and only the write can fail"
+            );
           })
         );
       });
