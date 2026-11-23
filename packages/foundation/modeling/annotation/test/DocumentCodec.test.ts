@@ -41,7 +41,6 @@ const reversed = (envelope: Envelope): Envelope => ({
 
 const fake = ContentHash.make(`sha256:${Str.repeat(64)("f")}`);
 
-// Replace every occurrence of one string anywhere in a JSON value.
 const replaceEverywhere = (value: unknown, from: string, to: string): unknown =>
   S.encodeResult(JsonText)(value).pipe(
     Result.map(Str.replaceAll(from, to)),
@@ -123,9 +122,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation doc
     Effect.fnUntraced(function* () {
       const document = yield* codec.assemble(fixtureParts);
       const encoded = yield* codec.encode(document);
-      // An anchors key replaced together with every target that names it: the targets still resolve.
-      const forgedAnchor = replaceEverywhere(encoded, head(encoded.anchors)[0], fake);
-      // A Word's key, its attribution key, its generation's content and its re-minted run, all replaced.
+      const forgedAnchorWithResolvingTargets = replaceEverywhere(encoded, head(encoded.anchors)[0], fake);
       const word = keyOfKind(encoded, "Word");
       const run = runOf({ content: word, activity: fixtureGeneration.activity });
       const forgedAnnotation = replaceEverywhere(
@@ -137,12 +134,11 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation doc
         word,
         fake
       );
-      // One generation's run replaced: to the schema a run is only a branded hash.
-      const forgedGeneration = replaceEverywhere(encoded, run, fake);
+      const forgedRunTheSchemaSeesAsAnyBrandedHash = replaceEverywhere(encoded, run, fake);
       const cases = [
-        [forgedAnchor, "anchors"],
+        [forgedAnchorWithResolvingTargets, "anchors"],
         [forgedAnnotation, "annotations"],
-        [forgedGeneration, "attribution"],
+        [forgedRunTheSchemaSeesAsAnyBrandedHash, "attribution"],
       ] as const;
       for (const [forged, table] of cases) {
         yield* decodeBare(forged);

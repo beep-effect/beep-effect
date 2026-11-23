@@ -80,15 +80,14 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/annotation ass
         ...fixtureParts,
         anchors: A.filter(fixtureParts.anchors, (row) => row !== fixtureRows.claim),
       };
-      // The relation and the cluster stay, but the examiner Mention they reference is left out.
-      const withoutExaminer = {
+      const referencesWithoutExaminer = {
         ...fixtureParts,
         annotations: A.filter(fixtureParts.annotations, (annotation) => annotation !== fixtureMentions.examiner),
       };
       const cases = [
         [offCapture, "anchor-off-capture"],
         [withoutClaimRow, "target-without-anchor"],
-        [withoutExaminer, "reference-unresolved"],
+        [referencesWithoutExaminer, "reference-unresolved"],
       ] as const;
       for (const [parts, reason] of cases) {
         const refused = yield* Effect.flip(codec.assemble(parts));

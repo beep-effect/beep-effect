@@ -90,10 +90,10 @@ const isNifQuad = (quad: Rdf.Quad): boolean =>
 const hasBlankNode = (quad: Rdf.Quad): boolean =>
   quad.subject.termType === "BlankNode" || quad.object.termType === "BlankNode";
 
-// The input quads a rejected annotation reaches through the profile's links, read independently of the codec: its
-// own quads, its targets', their selectors', its runs', and the prov:Activity typing of the activities it or a run
-// names.
-const reachedFrom = (quads: ReadonlyArray<Rdf.Quad>, subject: Rdf.Term): ReadonlyArray<Rdf.Quad> => {
+const reachedFromIndependentlyOfCodec = (
+  quads: ReadonlyArray<Rdf.Quad>,
+  subject: Rdf.Term
+): ReadonlyArray<Rdf.Quad> => {
   const defaults = A.filter(quads, (q) => q.graph.termType === "DefaultGraph");
   const key = Rdf.serializeTerm;
   const objects = (from: ReadonlyArray<Rdf.Term>, predicate: string): ReadonlyArray<Rdf.Term> =>
@@ -116,7 +116,6 @@ const reachedFrom = (quads: ReadonlyArray<Rdf.Quad>, subject: Rdf.Term): Readonl
   );
 };
 
-// `resolve` of each anchors row's quote, by occurrence id.
 const resolutions = (text: string, document: OaDocument) =>
   HashMap.map(document.anchors, (row) =>
     resolve(text, QuoteSelector.make({ exact: Anchored.quote(row), prefix: O.none(), suffix: O.none() }))
@@ -125,7 +124,6 @@ const resolutions = (text: string, document: OaDocument) =>
 const L26 =
   "L2-6 the OA codec round-trips the declared profile, normalizes third-party input, converts code-point offsets and preserves resolve";
 
-// The fixture text: an astral character before the last word, so code points and code units differ there.
 const fixtureText = "Alpha beta. Gamma 😀 delta.";
 
 const fixtureSource = SourceTextIdentity.make({
@@ -212,7 +210,6 @@ const quoteOf = (
   ];
 };
 
-// A quote-only target on one word of the fixture text.
 const wordTarget = (subject: Rdf.Subject, label: string, word: string, source: string = oaSource) =>
   targetOf(subject, Q.blank(`t-${label}`), quoteOf(Q.blank(`t-${label}`), `q-${label}`, Q.string(word)), source);
 
@@ -266,8 +263,6 @@ const sharedRejected = annotationNode("shared-rejected");
 const sharedTarget = Q.named("https://example.org/target/shared");
 const sharedActivity = Q.named("https://example.org/activity/shared");
 
-// Stated times at the edges of the four-digit year, by annotation label: the lexical form, its kind and word, and
-// the instant it names (none for a literal outside the xsd:dateTime lexical or value space).
 const edgeTimes: ReadonlyArray<readonly [string, string, string, string, O.Option<number>]> = [
   ["offset-past-9999", "9999-12-31T23:59:59-14:00", term.Word, "Gamma", O.some(253_402_351_199_000)],
   ["year-10000", "10000-01-01T13:59:59.5Z", term.Word, "delta", O.some(253_402_351_199_500)],
@@ -521,7 +516,7 @@ const fixtures: ReadonlyArray<Fixture> = [
       ),
   },
   {
-    name: "a rejected annotation that shares its target and its activity with an accepted one",
+    name: "a rejected annotation that shares its target and its activity with an accepted one keeps them in the residual",
     quads: [
       ...annotationOf(sharedAccepted, O.some(term.Word)),
       ...targetOf(sharedAccepted, sharedTarget, quoteOf(sharedTarget, "shared-q", Q.string("beta"))),
@@ -533,7 +528,6 @@ const fixtures: ReadonlyArray<Fixture> = [
     ],
     rejected: [[sharedRejected, "unknown-kind"]],
     annotations: 1,
-    // Everything but the accepted annotation's own quads: the shared target, selector and activity typing included.
     residual: (input) => A.filter(input, (q) => q.subject.value !== sharedAccepted.value),
   },
   {
@@ -576,9 +570,8 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         expect(decoded.rejected).toStrictEqual([]);
         expect(A.every(decoded.residual.quads, isNifQuad)).toBe(true);
         assertEquals(resolutions(sourceText, decoded.document), resolutions(sourceText, document));
-        // The encoder's output is already in normal form.
         const normalized = yield* normalize(dataset, options);
-        assertEquals(quadSet(normalized), quadSet(dataset));
+        assertEquals(quadSet(normalized), quadSet(dataset), "the encoder's output is already in normal form");
       }),
     runs
   );
@@ -596,14 +589,16 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         assertEquals(quadSet(encoded), quadSet(normalized));
         const inputQuads = quadSet(input.dataset);
         expect(A.every(decoded.residual.quads, (q) => HashSet.has(inputQuads, Rdf.serializeQuad(q)))).toBe(true);
-        // Every quad a rejected annotation reaches stays in the residual, so the residual rejects it again.
         const residual = quadSet(decoded.residual);
         for (const rejection of decoded.rejected) {
           const missing = A.filter(
-            reachedFrom(input.dataset.quads, rejection.subject),
+            reachedFromIndependentlyOfCodec(input.dataset.quads, rejection.subject),
             (q) => !HashSet.has(residual, Rdf.serializeQuad(q))
           );
-          expect(A.map(missing, Rdf.serializeQuad)).toStrictEqual([]);
+          expect(
+            A.map(missing, Rdf.serializeQuad),
+            "every quad a rejected annotation reaches stays in the residual, so the residual rejects it again"
+          ).toStrictEqual([]);
         }
         const reread = yield* decode(decoded.residual, options);
         expect(reread.rejected).toStrictEqual(decoded.rejected);
@@ -689,14 +684,14 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         A.sort([`${importedActivityIdOf(creator)} ${T0}`, `${importedActivityIdOf(bobCreator)} ${T1}`], Order.String)
       );
 
-      // An xsd:dateTime past year 9999 or before year 1 is a time; a literal outside the lexical or value space is none.
       const edges = yield* generationsOf(12);
       const shown = (instant: O.Option<number>) => O.match(instant, { onNone: () => "none", onSome: (m) => `${m}` });
       expect(
         A.sort(
           A.map(edges.generations, (g) => shown(stated(g))),
           Order.String
-        )
+        ),
+        "an xsd:dateTime past year 9999 or before year 1 is a time; a literal outside the lexical or value space is none"
       ).toStrictEqual(
         A.sort(
           A.map(edgeTimes, ([, , , , instant]) => shown(instant)),
@@ -706,8 +701,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const mixed = yield* generationsOf(10);
       const activities = HashSet.fromIterable(A.map(mixed.generations, (g) => g.activity));
       expect(HashSet.has(activities, activityIdOf("native"))).toBe(true);
-      // The blank activity is no statement, so that annotation takes the import activity.
-      expect(HashSet.has(activities, importActivityIdOf(inputDigest))).toBe(true);
+      expect(
+        HashSet.has(activities, importActivityIdOf(inputDigest)),
+        "the blank activity is no statement, so that annotation takes the import activity"
+      ).toBe(true);
     })
   );
 
@@ -737,7 +734,6 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         A.map(decoded.document.anchors.pipe(HashMap.values, A.fromIterable), (row) => row.receipt.anchor.startChar)
       ).toStrictEqual([3]);
 
-      // A third-party position selector at code points 2..3 reads back as UTF-16 3..4.
       const reader = annotationNode("astral");
       const thirdParty = Rdf.makeDataset([
         ...annotationOf(reader, O.some(term.Word)),
@@ -748,10 +744,13 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         ),
       ]);
       const read = yield* decode(thirdParty, options);
-      assertEquals(read.document.anchors, document.anchors);
+      assertEquals(
+        read.document.anchors,
+        document.anchors,
+        "a third-party position selector at code points 2..3 reads back as UTF-16 3..4"
+      );
 
-      // A forged row, keyed by a seeded id through the bare schema: minting refuses a quote that is not well formed.
-      const forged = (anchor: TextAnchor) => {
+      const encodeRowKeyedBySeededId = (anchor: TextAnchor) => {
         const id = occurrenceIdOf(anchor.quote);
         const forgedWord = OaKinds.Word.case.make({ targets: HashSet.make(id), body: Word.make({}) });
         const content = annotationIdOf(forgedWord);
@@ -769,17 +768,25 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         });
         return encode({ document: forgedDocument, importedActivities: HashMap.empty() }, options);
       };
-      // UTF-16 2..4 splits the surrogate pair of the emoji.
-      const split = forged(TextAnchor.make({ startChar: 2, endChar: 4, quote: Str.slice(2, 4)(astral) }));
-      assertEquals(split, Result.fail(OaEncodeRefused.make({ reason: "split-boundary" })));
-      // A quote that is not the text it ranges over is not a receipt over this text.
-      const mismatched = forged(TextAnchor.make({ startChar: 0, endChar: 1, quote: "Z" }));
-      assertEquals(mismatched, Result.fail(OaEncodeRefused.make({ reason: "capture-mismatch" })));
-      // Another text is another capture.
+      const split = encodeRowKeyedBySeededId(
+        TextAnchor.make({ startChar: 2, endChar: 4, quote: Str.slice(2, 4)(astral) })
+      );
+      assertEquals(
+        split,
+        Result.fail(OaEncodeRefused.make({ reason: "split-boundary" })),
+        "UTF-16 2..4 splits the surrogate pair of the emoji"
+      );
+      const mismatched = encodeRowKeyedBySeededId(TextAnchor.make({ startChar: 0, endChar: 1, quote: "Z" }));
+      assertEquals(
+        mismatched,
+        Result.fail(OaEncodeRefused.make({ reason: "capture-mismatch" })),
+        "a quote that is not the text it ranges over is not a receipt over this text"
+      );
       const other = yield* verify(fixtureSource, fixtureText);
       assertEquals(
         encode({ document, importedActivities: HashMap.empty() }, { source: oaSource, text: other }),
-        Result.fail(OaEncodeRefused.make({ reason: "capture-mismatch" }))
+        Result.fail(OaEncodeRefused.make({ reason: "capture-mismatch" })),
+        "another text is another capture"
       );
     })
   );
@@ -791,7 +798,6 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const options = fixtureOptions(text);
       const row = anchoredOn(fixtureSource, fixtureText, { start: 12, end: 17 });
       const word = OaKinds.Word.case.make({ targets: yield* targetsOf(row), body: Word.make({}) });
-      // Each instant with the lexical form the encoder writes for it: no `+`, four or more year digits.
       const written: ReadonlyArray<readonly [number, string]> = [
         [-8_640_000_000_000_000, "-271821-04-20T00:00:00.000Z"],
         [-62_198_755_200_000, "-0001-01-01T00:00:00.000Z"],
@@ -824,7 +830,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const literals = A.flatMap(dataset.quads, (q) =>
         q.predicate.value === term.generatedAtTime ? [q.object.value] : []
       );
-      expect(A.sort(literals, Order.String)).toStrictEqual(
+      expect(
+        A.sort(literals, Order.String),
+        "each instant is written with no `+` and four or more year digits"
+      ).toStrictEqual(
         A.sort(
           A.map(written, ([, lexical]) => lexical),
           Order.String

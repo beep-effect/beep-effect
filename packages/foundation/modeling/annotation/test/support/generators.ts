@@ -1,10 +1,3 @@
-// The `@beep/annotation` law generators. Text, scalar ranges, captures and anchors rows come from
-// `@beep/text/Arbitrary` (decision p3-text-arbitraries-in-src); this file builds annotations and documents over them.
-// Every dependent value (occurrence, annotation and run ids) is minted through the preimages' synchronous twins
-// while the value is built, so a generated document passes the schema checks and the checked decode by
-// construction; nothing is filtered. A relation's one target is its own evidence occurrence, drawn independently
-// of its endpoints' occurrences, and a coreference cluster targets the union of its members' targets (decision
-// p3-target-annotation-vocabulary). Time is drawn once per activity, so each (content, activity) pair has one time.
 import { AnnotationId, AnnotationPreimage, GenerationPreimage, RunEntityId } from "@beep/annotation/AnnotationId";
 import { Generation } from "@beep/annotation/Generation";
 import {
@@ -54,7 +47,6 @@ import type { JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
 import type { Anchored } from "@beep/text/Occurrence";
 import type { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 
-// A synchronous SHA-256 from the platform, the digest the preimages' Result twins take.
 const { createHash } = process.getBuiltinModule("node:crypto");
 
 /** The platform SHA-256 the synchronous minting twins take. */
@@ -68,7 +60,6 @@ const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.che
 const at = <Value>(values: A.NonEmptyReadonlyArray<Value>, pick: number): Value =>
   A.getUnsafe(values, pick % values.length);
 
-// A non-empty array arbitrary whose type says so: a head and a tail.
 const nonEmptyArray = <Value>(item: Arbitrary.Arbitrary<Value>, maxLength: number) =>
   Arbitrary.map(
     Arbitrary.all([item, Arbitrary.array(item, { maxLength: maxLength - 1 })]),
@@ -129,24 +120,37 @@ const predicates: A.NonEmptyReadonlyArray<TermIri> = [
   TermIri.make(iri("semantica:authoredBy")),
 ];
 
-// The edges the xsd:dateTime lexical form turns on: both ends of the range a DateTime holds, the first and last
-// instants of years -1 and 0, the last of year 9999, the first of year 10000, and the epoch.
-const edgeInstants: A.NonEmptyReadonlyArray<number> = [
-  -8_640_000_000_000_000, -62_198_755_200_000, -62_167_219_200_001, -62_167_219_200_000, 0, 253_402_300_799_999,
-  253_402_300_800_000, 8_640_000_000_000_000,
+const dateTimeMinimum = -8_640_000_000_000_000;
+const firstInstantOfYearMinusOne = -62_198_755_200_000;
+const lastInstantOfYearMinusOne = -62_167_219_200_001;
+const firstInstantOfYearZero = -62_167_219_200_000;
+const epoch = 0;
+const lastInstantOfYear9999 = 253_402_300_799_999;
+const firstInstantOfYear10000 = 253_402_300_800_000;
+const dateTimeMaximum = 8_640_000_000_000_000;
+
+const xsdDateTimeEdgeInstants: A.NonEmptyReadonlyArray<number> = [
+  dateTimeMinimum,
+  firstInstantOfYearMinusOne,
+  lastInstantOfYearMinusOne,
+  firstInstantOfYearZero,
+  epoch,
+  lastInstantOfYear9999,
+  firstInstantOfYear10000,
+  dateTimeMaximum,
 ];
 
-// Instants over the whole range a DateTime holds, one draw in two at one of its edges.
-const instant = Arbitrary.map(
+const instantHalfAtEdges = Arbitrary.map(
   Arbitrary.all({
-    edge: between(0, 2 * edgeInstants.length - 1),
-    millis: between(-8_640_000_000_000_000, 8_640_000_000_000_000),
+    edge: between(0, 2 * xsdDateTimeEdgeInstants.length - 1),
+    millis: between(dateTimeMinimum, dateTimeMaximum),
   }),
-  ({ edge, millis }) => DateTime.makeUnsafe(edge < edgeInstants.length ? A.getUnsafe(edgeInstants, edge) : millis)
+  ({ edge, millis }) =>
+    DateTime.makeUnsafe(edge < xsdDateTimeEdgeInstants.length ? A.getUnsafe(xsdDateTimeEdgeInstants, edge) : millis)
 );
 
 const statedTime = Arbitrary.map(
-  Arbitrary.all({ stated: Arbitrary.schema(S.Boolean), instant }),
+  Arbitrary.all({ stated: Arbitrary.schema(S.Boolean), instant: instantHalfAtEdges }),
   ({ stated, instant }) => (stated ? O.some(instant) : O.none<DateTime.Utc>())
 );
 
@@ -167,7 +171,6 @@ type StructureBodies = {
 
 const K = DocumentKinds;
 
-// One builder per structure and segmentation kind, picked by index.
 const structureBuilders: A.NonEmptyReadonlyArray<
   (targets: HashSet.HashSet<OccurrenceId>, bodies: StructureBodies) => AnyAnnotation
 > = [
@@ -179,14 +182,15 @@ const structureBuilders: A.NonEmptyReadonlyArray<
   (targets) => K.Word.case.make({ targets, body: Word.make({}) }),
 ];
 
-// Which of the two activities generate an annotation: the first, the second or both.
+// decision: law-generators-mint-by-construction
 const activitySets: A.NonEmptyReadonlyArray<ReadonlyArray<0 | 1>> = [[0], [1], [0, 1]];
 
 /**
  * Generated text documents: one capture, one to five anchors rows, at least one structure annotation and any
  * extraction annotations over
  * them, relations and coreference clusters over the generated Mentions, and every annotation generated by one or
- * both of two activities.
+ * both of two activities. Each activity's seed carries its index, so two equal drawn labels still name two
+ * activities.
  */
 export const documentCase: Arbitrary.Arbitrary<GeneratedDocument> = Arbitrary.flatMap(
   wellFormedTextWith({ minLength: 1, maxLength: 40 }),
@@ -265,7 +269,6 @@ export const documentCase: Arbitrary.Arbitrary<GeneratedDocument> = Arbitrary.fl
         const attribution = HashMap.fromIterable(
           A.map(annotations.pipe(HashMap.keys, A.fromIterable), (content, index) => {
             const activities = at(activitySets, at(drawn.membership, index));
-            // The seed is prefixed with the activity's index, so two equal drawn labels still name two activities.
             const generations = A.map(activities, (activity) =>
               generationOf({
                 content,
@@ -327,7 +330,6 @@ export const targetArrayCase = Arbitrary.flatMap(between(1, 6), (count) =>
 
 const registry: KindRegistry = DocumentKinds;
 
-// The annotation ids a body references, read through its kind.
 const referencesOf = (annotation: AnyAnnotation): ReadonlyArray<AnnotationId> =>
   R.get(registry, annotation._tag).pipe(
     O.map((kind) => A.fromIterable(kind.referencedIds(annotation.body))),
@@ -338,7 +340,6 @@ const byActivity = Order.mapInput(Order.String, (generation: Generation) => gene
 
 const byKey = Order.mapInput(Order.String, ([key]: readonly [AnnotationId, AnyAnnotation]) => key);
 
-/** What one document of a merge triple keeps of the shared pool, and the time it may restate. */
 const partDraw = Arbitrary.all({
   membership: nonEmptyArray(Arbitrary.schema(S.Boolean), 8),
   generations: nonEmptyArray(between(0, activitySets.length - 1), 8),
@@ -348,10 +349,6 @@ const partDraw = Arbitrary.all({
 
 type PartDraw = typeof partDraw extends Arbitrary.Arbitrary<infer Draw> ? Draw : never;
 
-// One document of a merge triple: the drawn annotations of the pool closed over their body references, the anchors
-// their targets use, and for each a drawn non-empty part of its pool generations. One draw in eight restates the time
-// of the pool's least activity, which conflicts with any other document that keeps one of those generations at its
-// pool time.
 const partOf = (pool: TextDocument, draw: PartDraw): TextDocument => {
   const entries = A.sort(HashMap.toEntries(pool.annotations), byKey);
   const chosen = A.filter(entries, (_, index) => at(draw.membership, index));
@@ -396,14 +393,19 @@ export type MergeTriple = {
   readonly triple: readonly [TextDocument, TextDocument, TextDocument];
 };
 
-// Four values in the middle of 0..99: the integer arbitrary favours its bounds, so a window at either end would be
-// drawn far more often than four times in a hundred.
+// decision: law-generators-mint-by-construction
 const isForeign = (draw: number): boolean => draw >= 48 && draw < 52;
 
 /**
  * Generated merge triples: three parts of one generated pool document, so they share one capture, contents and
  * activities, with drawn time restatements that conflict. In about four draws of a hundred the first document is
  * replaced by an independently generated document, which is on another capture.
+ *
+ * **Details**
+ *
+ * Each part keeps the drawn annotations of the pool closed over their body references, the anchors their targets
+ * use, and for each a drawn non-empty part of its pool generations. One draw in eight restates the time of the
+ * pool's least activity, which conflicts with any other part that keeps one of those generations at its pool time.
  */
 export const mergeTripleCase: Arbitrary.Arbitrary<MergeTriple> = Arbitrary.flatMap(documentCase, ({ text, document }) =>
   Arbitrary.map(
@@ -456,7 +458,7 @@ export const containmentCase: Arbitrary.Arbitrary<ContainmentCase> = Arbitrary.f
         source: sourceFor(sha256)(generated.text),
         inner: scalarRangeIn(generated.codePoints.length),
         activity: label,
-        at: instant,
+        at: instantHalfAtEdges,
         klass: pick,
       }),
       (drawn) => {
@@ -527,7 +529,6 @@ export type GeneratedOaDocument = {
 
 const activityHex = (activity: ActivityId): string => Str.slice(7, 23)(activity);
 
-// How one activity of a generated document is written: natively, or as one of the three imported forms.
 const importedForms: A.NonEmptyReadonlyArray<(activity: ActivityId) => O.Option<ImportedActivity>> = [
   () => O.none(),
   (activity) =>
@@ -645,7 +646,6 @@ export const oaQuads = {
 
 const Q = oaQuads;
 
-/** A target as third-party input writes it: its code-point range, its UTF-16 range and how its selectors look. */
 type InputTarget = {
   readonly node: Rdf.Subject;
   readonly label: string;
@@ -656,7 +656,6 @@ type InputTarget = {
   readonly source: string;
 };
 
-// The selectors of one target: both, position only, quote only, or a quote with its prefix.
 const targetQuads = (text: string, target: InputTarget): ReadonlyArray<Rdf.Quad> => {
   const position = Q.blank(`${target.label}p`);
   const quote = Q.blank(`${target.label}q`);
@@ -673,7 +672,7 @@ const targetQuads = (text: string, target: InputTarget): ReadonlyArray<Rdf.Quad>
     Q.quad(quote, iri("oa:exact"), Q.string(exact)),
   ];
   const prefix = Str.slice(target.prefixFrom, target.units.start)(text);
-  const styles: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
+  const bothPositionOnlyQuoteOnlyOrPrefixed: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
     [...positionQuads, ...quoteQuads],
     positionQuads,
     quoteQuads,
@@ -682,7 +681,7 @@ const targetQuads = (text: string, target: InputTarget): ReadonlyArray<Rdf.Quad>
   return [
     Q.type(target.node, iri("oa:SpecificResource")),
     Q.quad(target.node, iri("oa:hasSource"), Q.named(target.source)),
-    ...at(styles, target.style),
+    ...at(bothPositionOnlyQuoteOnlyOrPrefixed, target.style),
   ];
 };
 
@@ -696,10 +695,7 @@ const kindIris: A.NonEmptyReadonlyArray<O.Option<string>> = [
   O.none(),
 ];
 
-// Pairs of xsd:dateTime lexical forms an annotation states its times with: two ordinary instants; one instant
-// written on both sides of the four-digit year, with an offset and in UTC with a fraction; and two instants around
-// year 0, one with a fraction past milliseconds.
-const timePairs: A.NonEmptyReadonlyArray<readonly [string, string]> = [
+const lexicalTimePairs: A.NonEmptyReadonlyArray<readonly [string, string]> = [
   ["2025-11-19T00:00:00Z", "2025-11-19T00:00:01.000Z"],
   ["9999-12-31T23:59:59-14:00", "10000-01-01T13:59:59.000Z"],
   ["-0001-12-31T23:59:59.99999Z", "0000-01-01T00:00:00+00:00"],
@@ -725,7 +721,7 @@ const inputAnnotation = Arbitrary.all({
   agent: between(0, 2),
   ownTime: between(0, 3),
   runTime: between(0, 2),
-  era: between(0, timePairs.length - 1),
+  era: between(0, lexicalTimePairs.length - 1),
   copy: between(0, 3),
   share: between(0, 3),
   extra: between(0, 3),
@@ -754,7 +750,6 @@ export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flat
       (drawn) => {
         const points = generated.boundaries["unicode-code-point"];
         const units = generated.boundaries["utf16-code-unit"];
-        // A drawn copy repeats the previous annotation's kind, body and targets under its own subject and attribution.
         const shapeOf = (annotation: InputAnnotation, index: number): InputAnnotation =>
           annotation.copy === 0 && index > 0 ? A.getUnsafe(drawn.annotations, index - 1) : annotation;
         const ownTargets = A.map(drawn.annotations, (annotation, index) =>
@@ -778,12 +773,11 @@ export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flat
           const subject = annotation.blank ? Q.blank(`a${index}`) : Q.named(`https://example.org/annotation/${index}`);
           const kind = at(kindIris, shape.kind);
           const own = A.getUnsafe(ownTargets, index);
-          // A drawn share makes the first target the previous annotation's first target node, selectors and all.
           const targets: A.NonEmptyReadonlyArray<InputTarget> =
             annotation.share === 0 && index > 0
               ? A.prepend(A.drop(own, 1), A.headNonEmpty(A.getUnsafe(ownTargets, index - 1)))
               : own;
-          const [firstTime, lastTime] = at(timePairs, annotation.era);
+          const [firstTime, lastTime] = at(lexicalTimePairs, annotation.era);
           const isMention = O.contains(kind, iri("annotation:Mention"));
           const body = isMention
             ? shape.body === 0

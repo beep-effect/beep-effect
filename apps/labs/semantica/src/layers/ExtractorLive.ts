@@ -447,9 +447,9 @@ const decodeRelationCandidate = (
     subject: O.getOrUndefined(extractionAttribute(extraction, "subject")),
   });
 
-// Historical E5 responses predate the frozen predicate vocabulary. The strict handoff leaves
-// those relations residual; the lab retains its evidence-scoped endpoint policy for replay.
-const historicalEndpoints = (candidate: ResidualCandidate): O.Option<readonly [TextAnchor, TextAnchor, string]> => {
+const replayPreVocabularyE5RelationEndpoints = (
+  candidate: ResidualCandidate
+): O.Option<readonly [TextAnchor, TextAnchor, string]> => {
   if (candidate.reason !== "unmapped-predicate" || O.isNone(candidate.anchor)) return O.none();
   const decoded = decodeRelationCandidate(candidate);
   if (Result.isFailure(decoded)) return O.none();
@@ -722,7 +722,11 @@ export const groundHostedHandoff = Effect.fn("Extractor.groundHostedHandoff")(fu
       }),
       A.map(
         A.filter(handoff.residual, (candidate) => candidate.label === "relation"),
-        (candidate) => ({ reading: candidate, anchor: candidate.anchor, endpoints: historicalEndpoints(candidate) })
+        (candidate) => ({
+          reading: candidate,
+          anchor: candidate.anchor,
+          endpoints: replayPreVocabularyE5RelationEndpoints(candidate),
+        })
       )
     ),
     Order.mapInput(

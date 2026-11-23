@@ -29,13 +29,11 @@ const pairsOf = <Value>([a, b, c]: readonly [Value, Value, Value]) =>
     [a, c],
   ] as const;
 
-// The generation set of one annotation in a document, empty when it is absent.
 const generationsOf = (document: TextDocument, id: AnnotationId) =>
   O.getOrElse(HashMap.get(document.attribution, id), HashSet.empty);
 
 const sameCapture = S.toEquivalence(SourceTextIdentity);
 
-// Stated times, `None` first.
 const timeOrder: Order.Order<O.Option<DateTime.Utc>> = O.makeOrder(DateTime.Order);
 
 const conflictOrder = Order.mapInput(Order.Array(Order.String), (conflict: GenerationTimeConflict) => [
@@ -43,15 +41,12 @@ const conflictOrder = Order.mapInput(Order.Array(Order.String), (conflict: Gener
   conflict.activity,
 ]);
 
-// Every (annotation, activity, time) a document states.
 const timed = (document: TextDocument) =>
   A.flatMap(A.fromIterable(document.attribution), ([annotation, generations]) =>
     A.map(A.fromIterable(generations), ({ activity, at }) => ({ annotation, activity, at }))
   );
 
-// The refusal L2-1 expects of two documents over one capture, read from the design alone: the least (annotation,
-// activity) pair the two documents time differently, with the earlier time on the left.
-const expectedConflict = (left: TextDocument, right: TextDocument): O.Option<GenerationTimeConflict> =>
+const leastConflictReadFromDesign = (left: TextDocument, right: TextDocument): O.Option<GenerationTimeConflict> =>
   A.head(
     A.sort(
       A.flatMap(timed(left), (l) =>
@@ -86,12 +81,14 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation mer
       }
       for (const [left, right] of pairsOf(triple)) {
         const forward = merge(left, right);
-        // A refusal is the same value in either argument order.
-        assertEquals(merge(right, left), forward);
-        assertEquals(merge(right)(left), forward);
-        // Over one capture, the refusal is the least pair timed twice, the earlier time on the left.
+        assertEquals(merge(right, left), forward, "a refusal is the same value in either argument order");
+        assertEquals(merge(right)(left), forward, "a refusal is the same value in either argument order");
         if (sameCapture(left.text, right.text)) {
-          assertEquals(Result.getFailure(forward), expectedConflict(left, right));
+          assertEquals(
+            Result.getFailure(forward),
+            leastConflictReadFromDesign(left, right),
+            "over one capture, the refusal is the least (annotation, activity) pair timed twice, the earlier time on the left"
+          );
         }
         Result.match(forward, {
           onFailure: () => undefined,
@@ -147,8 +144,8 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation mer
         assertEquals(merge(left, right), expected);
         assertEquals(merge(right, left), expected);
       }
-      // One activity per case, so the two generations of the pair iterate in either order across the cases; the
-      // earlier time is on the left whichever iterates first.
+      const earlierOnTheLeftWhicheverIteratesFirst =
+        "one activity per seed, so the pair's two generations iterate in either order across seeds; the earlier time is on the left";
       for (const seed of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
         const generation = { activity: activityIdOf(`conflict-${seed}`), at: O.some(later) };
         const late = yield* codec.assemble({ ...fixtureParts, generation });
@@ -164,8 +161,8 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation mer
             right: O.some(later),
           })
         );
-        assertEquals(merge(early, late), expected);
-        assertEquals(merge(late, early), expected);
+        assertEquals(merge(early, late), expected, earlierOnTheLeftWhicheverIteratesFirst);
+        assertEquals(merge(late, early), expected, earlierOnTheLeftWhicheverIteratesFirst);
       }
     })
   );

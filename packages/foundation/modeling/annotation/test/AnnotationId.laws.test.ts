@@ -29,10 +29,6 @@ const decodeMention = S.decodeUnknownEffect(DocumentKinds.Mention.case);
 
 const encodeMention = S.encodeEffect(DocumentKinds.Mention.case);
 
-// Six occurrence ids whose HashSet iteration order is not their ascending order, and the annotation/v1 id of a claim
-// Mention over them: the SHA-256 of the RFC 8785 JSON of
-// ["annotation/v1",["sha256:1…1",…,"sha256:6…6"],"https://beep-effect.com/ns/annotation/Mention",
-// {"class":"https://beep-effect.com/ns/office-action/claim"}], computed outside the repo by sha256sum.
 const ascendingOccurrences = A.map(["1", "2", "3", "4", "5", "6"], (digit) =>
   OccurrenceId.make(`sha256:${Str.repeat(64)(digit)}`)
 );
@@ -55,14 +51,19 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/annotation ann
         const fromSet = yield* mint(
           DocumentKinds.Mention.case.make({ targets: set, body: Mention.make({ class: claim }) })
         );
-        // The array arrives in a drawn order with repeats, through the wire codec of the case.
-        const decoded = yield* decodeMention({ _tag: "Mention", targets: array, body: { class: claim } });
-        const fromArray = yield* mint(decoded);
+        const decodedFromDrawnOrderWithRepeats = yield* decodeMention({
+          _tag: "Mention",
+          targets: array,
+          body: { class: claim },
+        });
+        const fromArray = yield* mint(decodedFromDrawnOrderWithRepeats);
         expect(fromArray).toBe(fromSet);
-        expect(HashSet.size(decoded.targets)).toBe(HashSet.size(set));
-        // The set codec the preimage hashes writes the targets ascending, never in iteration order.
-        const encoded = yield* encodeMention(decoded);
-        expect(encoded.targets).toStrictEqual(A.sort(A.fromIterable(set), Order.String));
+        expect(HashSet.size(decodedFromDrawnOrderWithRepeats.targets)).toBe(HashSet.size(set));
+        const encoded = yield* encodeMention(decodedFromDrawnOrderWithRepeats);
+        expect(
+          encoded.targets,
+          "the set codec the preimage hashes writes the targets ascending, never in iteration order"
+        ).toStrictEqual(A.sort(A.fromIterable(set), Order.String));
       }),
     runs
   );
@@ -112,11 +113,18 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/annotation ann
     "L2-2 a six-target vector hashes its targets ascending, not in iteration order",
     Effect.fnUntraced(function* () {
       const targets = HashSet.fromIterable(A.reverse(ascendingOccurrences));
-      expect(A.fromIterable(targets)).not.toStrictEqual(ascendingOccurrences);
+      expect(
+        A.fromIterable(targets),
+        "the HashSet iteration order of the six occurrence ids is not their ascending order"
+      ).not.toStrictEqual(ascendingOccurrences);
       const mention = DocumentKinds.Mention.case.make({ targets, body: Mention.make({ class: claim }) });
       const id = yield* mint(mention);
-      expect(id).toBe(sixTargetMention);
-      expect(annotationIdOf(mention)).toBe(sixTargetMention);
+      const sixTargetMentionBytes =
+        'the SHA-256 of the RFC 8785 JSON ["annotation/v1",["sha256:1…1",…,"sha256:6…6"],' +
+        '"https://beep-effect.com/ns/annotation/Mention",{"class":"https://beep-effect.com/ns/office-action/claim"}], ' +
+        "computed outside the repo by sha256sum";
+      expect(id, sixTargetMentionBytes).toBe(sixTargetMention);
+      expect(annotationIdOf(mention), sixTargetMentionBytes).toBe(sixTargetMention);
     })
   );
 

@@ -193,8 +193,7 @@ const anchor = Effect.fn("Citation.verifyOccurrenceSpan")(function* (
 ) {
   const decoded = decodePosition({ _tag: "Position", start: span[0], end: span[1], unit: "unicode-code-point" });
   if (Result.isFailure(decoded)) return O.none();
-  // Every conversion refusal (a split boundary, a point past the text, a lone surrogate before the end) leaves the
-  // row unverified: none of them names a UTF-16 range the source could prove.
+  // decision: occurrence-conversion-refusal-unverified
   const converted = convertPosition(decoded.success, "utf16-code-unit", source.sourceText);
   if (Result.isFailure(converted)) return O.none();
   const range = converted.success;

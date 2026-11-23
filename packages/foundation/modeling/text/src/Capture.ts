@@ -69,8 +69,7 @@ export const CaptureId = ContentHash.pipe(
  */
 export type CaptureId = typeof CaptureId.Type;
 
-// The eight elements after the domain tag: the first eight of `occurrence/v1`, in the same order
-// (decision p3-capture-id-in-text).
+// decision: capture-preimage-elements
 const CaptureElements = S.Tuple([
   WellFormedText,
   WellFormedText,
@@ -82,8 +81,7 @@ const CaptureElements = S.Tuple([
   WellFormedText,
 ]);
 
-// The preimage schema runs between a capture identity and its elements. Each element is decoded through the
-// schema of its field, so building the identity from them cannot fail; encoding reads its fields.
+// decision: capture-preimage-elements
 const CaptureSchema = CaptureElements.pipe(
   S.decodeTo(S.toType(SourceTextIdentity), {
     decode: SchemaGetter.transform(

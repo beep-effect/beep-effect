@@ -22,8 +22,7 @@ const sameAttempt = S.toEquivalence(OfficeActionStructureAttempt);
 
 type EncodedExtraction = (typeof OfficeActionStructureAttempt.Encoded)["extractions"][number];
 
-// Version 1 wrote the same row with each aligned extraction's anchor spelled as `span` and `matchedText`.
-const extractionAsV1 = (extraction: EncodedExtraction) => {
+const extractionWithAnchorAsV1SpanAndMatchedText = (extraction: EncodedExtraction) => {
   if (!("anchor" in extraction)) return extraction;
   const { anchor, ...rest } = extraction;
   return { ...rest, matchedText: anchor.quote, span: { end: anchor.endChar, start: anchor.startChar } };
@@ -31,7 +30,7 @@ const extractionAsV1 = (extraction: EncodedExtraction) => {
 const asV1 = (row: typeof OfficeActionStructureAttempt.Encoded) => ({
   ...row,
   schemaVersion: "1",
-  extractions: A.map(row.extractions, extractionAsV1),
+  extractions: A.map(row.extractions, extractionWithAnchorAsV1SpanAndMatchedText),
 });
 
 const fixtureAttempt = Effect.gen(function* () {
