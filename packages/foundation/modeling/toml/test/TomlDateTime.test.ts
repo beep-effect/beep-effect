@@ -1,15 +1,20 @@
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "@beep/toml/TomlDateTime";
 import { assert, describe, it } from "@effect/vitest";
 import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 
 describe("TomlDateTime classes", () => {
   it("constructs a valid local date and prints canonically", () => {
     const d = TomlLocalDate.make({ year: 1979, month: 5, day: 27 });
     assert.strictEqual(d.toString(), "1979-05-27");
   });
-  it("rejects impossible calendar dates", () => {
+  it("rejects impossible calendar dates with the predicate's own text naming the day, which no static message annotation may replace", () => {
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 2, day: 29 }));
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 4, day: 31 }));
+    const february = S.decodeUnknownResult(TomlLocalDate)({ year: 2021, month: 2, day: 29 });
+    const reported = Result.match(february, { onFailure: String, onSuccess: () => "decoded" });
+    assert.include(reported, "day 29 does not exist in 2021-02 (month has 28 days)");
   });
   it("accepts leap-day and century rules", () => {
     assert.strictEqual(TomlLocalDate.make({ year: 2000, month: 2, day: 29 }).day, 29);
