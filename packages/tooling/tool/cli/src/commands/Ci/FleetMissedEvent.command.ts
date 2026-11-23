@@ -102,12 +102,20 @@ const allPages = <A>(
   const go = (page: number, collected: ReadonlyArray<A>): Effect.Effect<ReadonlyArray<A>, FleetReadError> =>
     Effect.flatMap(readPage(page), ({ items, totalCount }) => {
       const all = A.appendAll(collected, items);
-      const incomplete = A.isReadonlyArrayNonEmpty(items) && A.length(all) < totalCount;
-      return !incomplete
+      return A.length(all) >= totalCount
         ? Effect.succeed(all)
-        : page < MAX_LISTING_PAGES
-          ? go(page + 1, all)
-          : Effect.fail(FleetReadError.make({ endpoint, message: `listing truncated at ${MAX_LISTING_PAGES} pages` }));
+        : A.isReadonlyArrayEmpty(items)
+          ? Effect.fail(
+              FleetReadError.make({
+                endpoint,
+                message: `listing stopped at page ${page} with ${A.length(all)} of ${totalCount} items`,
+              })
+            )
+          : page < MAX_LISTING_PAGES
+            ? go(page + 1, all)
+            : Effect.fail(
+                FleetReadError.make({ endpoint, message: `listing truncated at ${MAX_LISTING_PAGES} pages` })
+              );
     });
   return go(1, A.empty());
 };

@@ -1293,6 +1293,23 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
       })
     );
 
+    layerIt.effect("fails the run when a listing serves an empty page short of its total count", () =>
+      Effect.gen(function* () {
+        const routes: ReadonlyArray<Route> = [
+          ["actions/runners", 200, '{"total_count":5,"runners":[]}'],
+          ["actions/runs?", 200, '{"total_count":0,"workflow_runs":[]}'],
+          ["workflows/fleet-missed-event-check.yml/runs", 200, '{"total_count":0,"workflow_runs":[]}'],
+        ];
+        const { exit } = yield* runCommandFor(
+          [],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_RUN_ID: "12" },
+          routes
+        );
+        expect(exit._tag).toBe("Failure");
+        expect(String(exit)).toContain("listing stopped at page 1 with 0 of 5 items");
+      })
+    );
+
     layerIt.effect("fails on an alert", () =>
       Effect.gen(function* () {
         const createdAt = DateTime.formatIso(DateTime.makeUnsafe(ago(12)));
