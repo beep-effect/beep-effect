@@ -22,7 +22,6 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -519,52 +518,22 @@ const actualTests = Effect.fn("CoverageArtifacts.actualTests")(function* (
   if (A.isReadonlyArrayNonEmpty(A.difference(files, selection.expectedTestFiles))) {
     return yield* configurationError(`unexpected executed tests for ${selection.packageName}.`);
   }
-  const expected = expectedShardFileCount(A.length(selection.expectedTestFiles), selection.shard);
-  if (A.length(files) !== expected) {
+  const listed = A.length(selection.expectedTestFiles);
+  if (selection.shard !== undefined && selection.shard.total > 1 && listed > 1 && A.length(files) === listed) {
     return yield* configurationError(
-      `${selection.packageName} segment ${selection.invocationId}, ${
-        selection.shard === undefined ? "unsharded" : `shard ${selection.shard.index}/${selection.shard.total}`
-      }: ran ${A.length(files)} test files, expected ${expected} of the segment's ${A.length(selection.expectedTestFiles)} listed.`
+      `${selection.packageName} segment ${selection.invocationId}, shard ${selection.shard.index}/${selection.shard.total}: ran all ${listed} listed test files, so its --shard argument never reached this segment.`
     );
   }
   return sorted(files);
 });
 
 /**
- * The number of test files Vitest gives one shard of an invocation: its
- * `--shard=<index>/<total>` slice of the listed files, the first
- * `files % total` shards taking one extra. Without a shard it is every file.
- *
- * **Example** (Slice 41 files into 8 shards)
- *
- * ```ts
- * import { expectedShardFileCount } from "@beep/repo-cli/test/Quality"
- *
- * console.log(expectedShardFileCount(41, { index: 1, total: 8 })) // 6
- * console.log(expectedShardFileCount(41, { index: 8, total: 8 })) // 5
- * ```
- *
- * @param fileCount - The invocation's listed test files (data-first form).
- * @param shard - The shard the invocation ran, if any.
- * @returns How many of those files the shard runs.
- * @category utilities
- * @since 0.0.0
- */
-export const expectedShardFileCount: {
-  (shard: { readonly index: number; readonly total: number } | undefined): (fileCount: number) => number;
-  (fileCount: number, shard: { readonly index: number; readonly total: number } | undefined): number;
-} = dual(2, (fileCount: number, shard: { readonly index: number; readonly total: number } | undefined): number =>
-  shard === undefined
-    ? fileCount
-    : Math.floor(fileCount / shard.total) + (fileCount % shard.total >= shard.index ? 1 : 0)
-);
-
-/**
  * Checks an invocation that ran but is not sealed into this partition's
- * artifact: its results passed, it ran exactly its shard's slice of the
- * listed files, and it left coverage data whenever that slice was not empty.
- * A shard that ran the wrong files, or none, fails here instead of sealing
- * an empty partition.
+ * artifact: its results passed, it ran only listed files, a sharded segment
+ * did not run all of them (its `--shard` argument reached it), and it left
+ * coverage data whenever it ran any. A shard's file count follows the
+ * package's sequencer (a measured plan or Vitest's hash split), so an empty
+ * slice passes with no files and no coverage data.
  *
  * **Example** (Check one run)
  *

@@ -15,7 +15,6 @@ import {
   collectCoverageProducerArtifacts,
   compareCoverageProducerArtifacts,
   discoverCoverageArtifactSources,
-  expectedShardFileCount,
   resolveCoverageProducerIdentity,
   verifyCoverageInvocationRun,
   writeCoverageProducerArtifact,
@@ -1764,17 +1763,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
   }
 );
 
-describe("expectedShardFileCount", () => {
-  it("gives the first files % total shards one extra file, as Vitest slices them", () => {
-    expect(A.map(A.range(1, 8), (index) => expectedShardFileCount(41, { index, total: 8 }))).toEqual([
-      6, 5, 5, 5, 5, 5, 5, 5,
-    ]);
-    expect(expectedShardFileCount(1, { index: 4, total: 8 })).toBe(0);
-    expect(expectedShardFileCount(39, undefined)).toBe(39);
-    expect(pipe(10, expectedShardFileCount({ index: 2, total: 4 }))).toBe(3);
-  });
-});
-
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "verifyCoverageInvocationRun",
   (it) => {
@@ -1817,11 +1805,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
-    it.effect("fails a shard that ran fewer files than its slice", () =>
+    it.effect("accepts a shard whose count follows its own sequencer", () =>
       Effect.gen(function* () {
         const outcome = yield* verify(A.take(listed, 1), true);
+        expect(outcome).toBe("ran 1");
+      })
+    );
+
+    it.effect("fails a sharded segment that ran every listed file", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(listed, true, listed, { index: 4, total: 8 });
         expect(outcome).toContain(
-          "@beep/law segment 0, shard 1/2: ran 1 test files, expected 2 of the segment's 3 listed."
+          "@beep/law segment 0, shard 4/8: ran all 3 listed test files, so its --shard argument never reached this segment."
         );
       })
     );
