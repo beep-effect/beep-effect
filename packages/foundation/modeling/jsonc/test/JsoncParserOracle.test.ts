@@ -1,15 +1,4 @@
-// `jsonc-parser` oracle for the formatter and the formatted modifier.
-//
-// WHY THIS FILE EXISTS: `JsoncFormatter.format` and
-// `JsoncModifier.modifyWithFormatting` are ports of Microsoft's `jsonc-parser`
-// 3.3.1 `format` and `modify` (README deviation 15 and "Added exports"). The
-// repo-cli JSONC editing facade and its pretty JSON renderer moved onto them
-// when `jsonc-parser` left `@beep/repo-cli` (effected-promotion R3b), so every
-// edit they compute must match the npm package byte for byte. `jsonc-parser`
-// is a devDependency of this suite only. The repository-wide run of the same
-// comparison (every tracked `*.json` and `*.jsonc` file) is
-// `goals/effected-promotion/ops/jsonc-parser-drop-differential.ts`.
-
+// decision: tests-jsonc-parser-oracle
 import {
   Jsonc,
   JsoncEdit,
@@ -102,7 +91,7 @@ const kitModify = (
     Result.mapError((error) => error._tag)
   );
 
-describe("jsonc-parser oracle", () => {
+describe("jsonc-parser oracle: the formatter and the formatted modifier match jsonc-parser byte for byte", () => {
   describe("JsoncFormatter.format", () => {
     it("matches jsonc-parser on the fixed corpus, whole and ranged, under every option set", () => {
       const optionSets: ReadonlyArray<jsoncParser.FormattingOptions> = [
@@ -188,14 +177,16 @@ describe("jsonc-parser oracle", () => {
     });
 
     it("deletes the last element without the character jsonc-parser cuts from it", () => {
-      // jsonc-parser ends the removal two characters before the parent's end,
-      // so a compact array joins its last two elements; the kit ends it at the element.
       for (const [text, upstream, kit] of [
         ["[1,2]", "[12]", "[1]"],
         ['["x","y"]', '["x""]', '["x"]'],
         ["[1, 2 // c\n]", "[1\n]", "[1 // c\n]"],
       ] as const) {
-        assert.deepStrictEqual(oracleModify(text, [1], undefined, {}), Result.succeed(upstream));
+        assert.deepStrictEqual(
+          oracleModify(text, [1], undefined, {}),
+          Result.succeed(upstream),
+          "jsonc-parser ends the removal two characters before the parent's end, so a compact array joins its last two elements"
+        );
         assert.deepStrictEqual(
           Result.map(JsoncModifier.modifyWithFormattingResult(text, [1], undefined), (edits) =>
             JsoncEdit.applyAll(text, edits)

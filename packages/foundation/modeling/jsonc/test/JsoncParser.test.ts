@@ -116,8 +116,6 @@ describe("internal/parser", () => {
     });
 
     it("reports a missing colon, a non-string key and a missing value, resynchronizing on the next entry", () => {
-      // Recovery stops on the comma, which the loop then reports as a missing
-      // property name before continuing with the next entry.
       assert.deepStrictEqual(
         parseValue('{"a" 1, "b": 2}', flags),
         ParseValueResult.make({
@@ -126,7 +124,8 @@ describe("internal/parser", () => {
             RawParseError.make({ code: "ColonExpected", offset: 5, length: 1 }),
             RawParseError.make({ code: "PropertyNameExpected", offset: 6, length: 1 }),
           ],
-        })
+        }),
+        "recovery stops on the comma, which the loop reports as a missing property name before continuing with the next entry"
       );
       assert.deepStrictEqual(codes('{1: 2, "b": 3}'), ["PropertyNameExpected", "PropertyNameExpected"]);
       assert.deepStrictEqual(parseValue('{1: 2, "b": 3}', flags).value, { b: 3 });
