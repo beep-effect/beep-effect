@@ -488,3 +488,14 @@ home paths with `~`, drop session and machine ids.
   beep-reviewer caught it on the PR ("Merge re-record reverts main's root baseline profile").
 - **Prevention:** `cache baseline` could refuse a request whose profile is not the one the
   checkout's `.bun-version` yields, or derive the profile itself when the request omits it.
+
+## 2026-11-23: the goal Stop hook re-fired every few seconds while P3 waited on P2's merge slot
+
+- **Doing:** holding the P3 lane (#3516) until the orchestrator merged P2 (#3511) in a slot the
+  CI goals driver ruled on (pin-PR hour, runner burst until 14:39Z).
+- **Evidence:** P2 was CLEAN and MERGEABLE with 73 passing checks. The goal Stop hook re-fired more
+  than 60 times between 13:48Z and 13:52Z with the same "P2 is OPEN" judgment. The repo forbids
+  polling loops for PR waits, and `gh event listen` returned HTTP 403 (event subscriptions not
+  enabled), so the only wake signal was the PR watch.
+- **Prevention:** the goal hook could accept a recorded external blocker (owner, wake signal,
+  earliest time) and stay quiet until that signal fires, instead of judging each idle turn.
