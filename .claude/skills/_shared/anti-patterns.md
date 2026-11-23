@@ -27,6 +27,9 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
+# When an upper ontology or other imported terms are loaded, restrict ?parent
+# to the project's own namespace: an imported class with one local child is
+# expected, not a lazy taxonomy.
 SELECT ?parent (COUNT(?child) AS ?childCount) WHERE {
   ?child rdfs:subClassOf ?parent .
   FILTER(?parent != owl:Thing)
@@ -39,29 +42,44 @@ HAVING (COUNT(?child) = 1)
 
 ---
 
-## 2. Role-Type Confusion
+## 2. Role-Type Confusion (Role-as-Kind)
 
-**Description**: Modeling a role as a subclass instead of using the role
-pattern. The entity changes "type" depending on context.
+**Description**: Modeling a role as if it were a kind: rigid, disjoint from
+the other roles of the same bearer, or placed above the kind that bears it.
+The entity changes "type" depending on context.
 
 **Example** (wrong):
 ```
 Person → Student
 Person → Teacher
+DisjointClasses: Student, Teacher
+# or: Student → Person (a kind placed under a role)
 ```
 
 **Why it's wrong**: A person can be both a student and a teacher, and can
 stop being either without changing identity. If Student and Teacher are
-disjoint subclasses of Person, a Person cannot be both simultaneously.
+disjoint, a Person cannot be both simultaneously. A role placed above a kind
+makes an anti-rigid class subsume a rigid one, which OntoClean forbids
+(`ontoclean-rules.yaml`: anti-rigid superclass with rigid subclass).
 
-**Fix**: Use BFO's Role pattern:
+`Student SubClassOf Person` on its own is not the error: under OntoClean
+and UFO a role specializes the kind that bears it, provided Student is
+recorded as anti-rigid and is not made disjoint with the bearer's other
+roles.
+
+**Fix**: Keep Student under Person as an anti-rigid role class, with no
+disjointness against other roles. With BFO as the upper ontology, define it
+through the role it bears (RO:0000087 has role):
 ```
-Person bearerOf some StudentRole
 StudentRole SubClassOf Role
+Student EquivalentTo Person and ('has role' some StudentRole)
 ```
+Do not write `Person SubClassOf 'has role' some StudentRole`: that states
+every person bears a student role.
 
 **Detection**: Look for classes whose names suggest roles (ending in -er,
--or, -ist, -ant) that are modeled as subclasses of their bearer.
+-or, -ist, -ant) that are declared disjoint with sibling roles, have a kind
+as a subclass, or are recorded as rigid.
 
 ---
 
@@ -80,8 +98,9 @@ participants — it's a Process, not an Object.
 
 **Fix**: `Surgery SubClassOf Process`, with `hasParticipant some Surgeon`.
 
-**Detection**: Check class names against BFO categories. Terms ending in
--tion, -ment, -sis, -ing typically denote processes.
+**Detection**: Check class names against the upper ontology's categories
+(continuant/occurrent in BFO). Terms ending in -tion, -ment, -sis, -ing
+typically denote processes.
 
 ---
 
@@ -103,14 +122,20 @@ and Reptile without triggering inconsistency.
 
 **Fix**: `DisjointClasses: Mammal, Reptile, Amphibian, ...`
 
+This applies to rigid sibling kinds. Roles and phases of the same bearer
+(customer and supplier, active and suspended) can overlap and are never
+made disjoint by default (see `axiom-patterns.md` #5).
+
 **Detection (SPARQL)**:
 ```sparql
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-# Finds sibling classes missing pairwise disjointness.
-# Note: also check owl:AllDisjointClasses declarations,
-# which cover multi-way disjointness more concisely.
+# Finds sibling classes with no disjointness between them, whether declared
+# pairwise (owl:disjointWith), multi-way (owl:AllDisjointClasses) or as a
+# partition of their parent (owl:disjointUnionOf). Review each pair: siblings
+# that are roles or phases are expected to overlap.
 SELECT ?parent ?child1 ?child2 WHERE {
   ?child1 rdfs:subClassOf ?parent .
   ?child2 rdfs:subClassOf ?parent .
@@ -123,8 +148,14 @@ SELECT ?parent ?child1 ?child2 WHERE {
     ?list rdf:rest*/rdf:first ?child1 .
     ?list rdf:rest*/rdf:first ?child2 .
   }
+  FILTER NOT EXISTS {
+    ?parent owl:disjointUnionOf ?union .
+    ?union rdf:rest*/rdf:first ?child1 .
+    ?union rdf:rest*/rdf:first ?child2 .
+  }
   FILTER(!isBlank(?child1))
   FILTER(!isBlank(?child2))
+  FILTER(!isBlank(?parent))
   FILTER(?parent != owl:Thing)
 }
 ```
@@ -154,26 +185,32 @@ expansion, it's circular.
 
 ---
 
-## 6. Quality-as-Class (Reified Attribute)
+## 6. Quality-as-Class (Bearer-Value Compound Classes)
 
-**Description**: Modeling a quality value as a standalone class in the
-hierarchy instead of using the value partition or quality pattern.
+**Description**: Minting a class for each combination of a bearer and a
+quality value (RedCar, BlueCar, RedThing) instead of relating the bearer to
+the value.
 
 **Example** (wrong):
 ```
-Color → Red
-Color → Blue
-Thing → RedThing  (EquivalentTo Thing and hasColor value Red)
+Car → RedCar
+Car → BlueCar
+Thing → RedThing
 ```
 
-**Why it's wrong**: Conflates the quality (color) with the quality value
-(red). Leads to proliferation of classes like RedCar, BlueCar.
+**Why it's wrong**: Conflates the bearer (car) with its quality value
+(red). Every new value or bearer multiplies the classes. Value classes
+themselves are not the problem: Red as a subclass of Color is the value
+partition, and is how PATO and BFO treat determinate qualities.
 
-**Fix**: Use value partition pattern (see axiom-patterns.md #8):
+**Fix**: Keep the values in one partition and relate the bearer to them
+(see `axiom-patterns.md` #8):
 ```
 Color DisjointUnionOf Red, Blue, Green
 Car SubClassOf hasColor some Color
 ```
+If the values need no reasoning (a plain code list), a SKOS concept scheme
+or `sh:in` is enough (see `foundational-analysis.md`, Enum-is-taxonomy).
 
 ---
 
@@ -192,11 +229,14 @@ Book SubClassOf InformationContentEntity
 (information) are distinct entities. The text can exist in multiple
 physical copies.
 
-**Fix** (BFO pattern):
+**Fix** (BFO pattern, when BFO is the upper ontology): the copy bears a
+pattern (a specifically dependent continuant), and the pattern concretizes
+the work (RO:0000053 has characteristic, formerly "bearer of"; RO:0000059
+concretizes):
 ```
-BookCopy SubClassOf MaterialEntity (Object)
+BookCopy SubClassOf Object
 TextualWork SubClassOf GenericallyDependentContinuant
-BookCopy isConcretizationOf some TextualWork
+BookCopy SubClassOf 'has characteristic' some ('concretizes' some TextualWork)
 ```
 
 ---
@@ -222,6 +262,9 @@ exists, it may indicate a gap in the upper-level alignment.
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
+# When an upper ontology or other imported terms are loaded, restrict
+# ?orphan to the project's own namespace: imported top classes have no
+# named parent by design.
 SELECT ?orphan WHERE {
   ?orphan a owl:Class .
   FILTER NOT EXISTS {
@@ -302,16 +345,17 @@ is a major source of unexpected unsatisfiable classes in real-world ontologies.
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
-# Find properties with domain or range set to leaf classes (high risk)
+# Find properties with domain or range set to leaf classes (high risk).
+# Datatype ranges such as xsd:string are not classes and are left out.
 SELECT ?prop ?narrowClass ?position WHERE {
   {
     ?prop rdfs:domain ?narrowClass .
     BIND("domain" AS ?position)
   } UNION {
     ?prop rdfs:range ?narrowClass .
-    FILTER(isIRI(?narrowClass))
     BIND("range" AS ?position)
   }
+  ?narrowClass a owl:Class .
   FILTER NOT EXISTS {
     ?child rdfs:subClassOf ?narrowClass .
     FILTER(?child != ?narrowClass)
@@ -475,11 +519,11 @@ SELECT ?x WHERE {
 Before finalizing any ontology design, verify:
 
 - [ ] No singleton hierarchies (every parent has ≥2 children, or is a leaf)
-- [ ] Roles modeled as roles, not subtypes
-- [ ] Processes separated from objects (BFO alignment)
-- [ ] Sibling classes are disjoint where appropriate
+- [ ] Roles modeled as anti-rigid roles, not as rigid or mutually disjoint kinds
+- [ ] Processes separated from objects (upper-ontology alignment)
+- [ ] Sibling kinds are disjoint where appropriate (never roles or phases by default)
 - [ ] No circular definitions in equivalence chains
-- [ ] Quality values use value partition, not standalone class hierarchies
+- [ ] Quality values use a value partition, not bearer-value compound classes
 - [ ] Information content distinguished from physical carriers
 - [ ] No orphan classes (every class has a named parent)
 - [ ] No polysemous terms (one class = one concept)

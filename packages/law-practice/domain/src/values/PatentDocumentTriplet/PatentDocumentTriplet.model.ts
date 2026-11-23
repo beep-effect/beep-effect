@@ -28,8 +28,6 @@ const CanonicalPatentDocumentNumber = S.String.check(
 );
 
 /**
- * Canonical display triplet for identifying a published patent document.
- *
  * **Details**
  *
  * WIPO ST.1 defines the minimum data elements for identifying a patent
@@ -75,8 +73,6 @@ export const PatentDocumentTriplet = S.TemplateLiteral([
 );
 
 /**
- * Type-level brand produced by {@link PatentDocumentTriplet}.
- *
  * **Example** (Decode branded patent triplet)
  *
  * ```ts

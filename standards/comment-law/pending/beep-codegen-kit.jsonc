@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/codegen-kit",
+  "root": "packages/tooling/library/codegen-kit",
+  "scopes": ["."]
+}

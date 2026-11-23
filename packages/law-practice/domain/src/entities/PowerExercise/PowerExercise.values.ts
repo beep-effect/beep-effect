@@ -25,8 +25,6 @@ const ActDispositionBase = LiteralKit(["effective", "void", "disputed", "undeter
 const PreconditionAssertionStatusBase = LiteralKit(["asserted-met", "asserted-unmet", "unassessed"]);
 
 /**
- * Where a recorded act stands, as somebody has disposed of it.
- *
  * **When to use**
  *
  * Use as the required disposition on every recorded exercise, including one
@@ -72,8 +70,6 @@ export const ActDisposition = ActDispositionBase.pipe(
 );
 
 /**
- * Runtime type for {@link ActDisposition}.
- *
  * @see {@link ActDisposition} for the runtime schema and why `undetermined` is a member.
  * @category models
  * @since 0.0.0
@@ -81,8 +77,6 @@ export const ActDisposition = ActDispositionBase.pipe(
 export type ActDisposition = typeof ActDisposition.Type;
 
 /**
- * What somebody asserted about one of an act frame's preconditions.
- *
  * **Details**
  *
  * `asserted-met` and `asserted-unmet` record a claim a person made about the
@@ -109,8 +103,6 @@ export const PreconditionAssertionStatus = PreconditionAssertionStatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link PreconditionAssertionStatus}.
- *
  * @see {@link PreconditionAssertionStatus} for the runtime schema and its assertion-not-finding rule.
  * @category models
  * @since 0.0.0
@@ -118,8 +110,6 @@ export const PreconditionAssertionStatus = PreconditionAssertionStatusBase.pipe(
 export type PreconditionAssertionStatus = typeof PreconditionAssertionStatus.Type;
 
 /**
- * The stated ground a determination was made on.
- *
  * **Example** (Record why a violation was asserted)
  *
  * ```ts
@@ -138,8 +128,6 @@ export const DeterminationBasis = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link DeterminationBasis}.
- *
  * @see {@link DeterminationBasis} for the runtime schema.
  * @category models
  * @since 0.0.0
@@ -147,8 +135,6 @@ export const DeterminationBasis = S.NonEmptyString.pipe(
 export type DeterminationBasis = typeof DeterminationBasis.Type;
 
 /**
- * One person's determination that an act did or did not constitute its effect.
- *
  * **Details**
  *
  * The interpreter is required because this is somebody's reading and never the
@@ -193,8 +179,6 @@ export class ConstitutionDetermination extends S.Opaque<ConstitutionDeterminatio
 ) {}
 
 /**
- * One person's determination that an act was permitted or breached a duty.
- *
  * **Details**
  *
  * Recorded independently of the constitution determination, always. An act may
@@ -239,8 +223,6 @@ export class PermissionDetermination extends S.Opaque<PermissionDetermination, {
 ) {}
 
 /**
- * One person's disposition of a recorded act.
- *
  * **Details**
  *
  * An interpreter is required even for `undetermined`, because somebody records
@@ -284,8 +266,6 @@ export class DispositionDetermination extends S.Opaque<DispositionDetermination,
 ) {}
 
 /**
- * What was determined about one recorded exercise.
- *
  * **When to use**
  *
  * Use as the required `result` of every recorded exercise. It is required
@@ -370,9 +350,6 @@ export class ExerciseResult extends S.Opaque<ExerciseResult, { readonly brand: u
 ) {}
 
 /**
- * What somebody asserted about one of the frame's preconditions on this
- * occasion.
- *
  * **Details**
  *
  * The element pointer says which condition; the status says what was claimed
@@ -411,8 +388,6 @@ export class PreconditionAssertion extends S.Opaque<PreconditionAssertion, { rea
 ) {}
 
 /**
- * The party recorded as filling one of the frame's slots on this occasion.
- *
  * **Details**
  *
  * The frame names slots; an occasion fills them. Linkage is by party id, and
@@ -451,8 +426,6 @@ export class ActFrameSlotAssignment extends S.Opaque<ActFrameSlotAssignment, { r
 ) {}
 
 /**
- * The authority somebody claimed for an act, as they claimed it.
- *
  * **When to use**
  *
  * Use as the required authority basis of a recorded exercise, so an act is

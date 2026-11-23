@@ -24,7 +24,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const storageError = (message: string) => OfficeActionStructureStorageError.make({ message });
-// Rows are read as v2 or as frozen v1 rows converted on read, and always written as v2.
 const JsonAttemptRead = S.fromJsonString(OfficeActionStructureAttemptRead);
 const JsonAttempt = S.fromJsonString(OfficeActionStructureAttempt);
 const DocumentKey = S.fromJsonString(S.Struct({ scope: S.String, document: S.String }));

@@ -955,6 +955,26 @@ describe("comment fidelity (#127)", () => {
         assert.strictEqual(YamlFormat.formatToString(text), text);
       });
 
+      // An INDENTED root collection disowns a column-0 terminal comment: it
+      // escapes past the root to document scope. The document's trailing
+      // `comment` carries it (yaml@2.9.0: `doc.comment === " esc"`); it used
+      // to be dropped there, so one format pass deleted the line.
+      it.effect("a comment escaping an indented root collection lands on the document", () =>
+        Effect.gen(function* () {
+          assert.strictEqual((yield* YamlDocument.parse("  - a\n  - b\n# esc\n")).comment, " esc");
+          assert.strictEqual((yield* YamlDocument.parse("  a: 1\n  b: 2\n# e1\n\n# e2\n")).comment, " e1\n\n e2");
+          assert.strictEqual((yield* YamlDocument.parse("  - a\n# esc\n...\n# after\n")).comment, " esc\n after");
+        })
+      );
+
+      it("an escaped root comment is a fixed point through the format path", () => {
+        assert.strictEqual(YamlFormat.formatToString("  - a\n  - b\n# esc\n"), "- a\n- b\n# esc\n");
+        assert.strictEqual(YamlFormat.formatToString("  - a\n  # own\n# esc\n"), "- a\n# own\n# esc\n");
+        for (const text of ["- a\n- b\n# esc\n", "a: 1\n# own\n\n# esc\n"]) {
+          assert.strictEqual(YamlFormat.formatToString(text), text);
+        }
+      });
+
       it("keeps both header comments across two empty-key documents", () => {
         const once = YamlFormat.formatToString("---\n# c1\n:\n---\n# c2\n{ : }\n");
         assert.include(once, "# c1");

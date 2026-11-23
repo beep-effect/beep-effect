@@ -42,7 +42,6 @@ export const ResidualReason = LiteralKit([
   "over-extraction-cap",
 ]).pipe($I.annoteSchema("ResidualReason", { description: "Why an extraction candidate remains residual." }));
 /**
- * Type of a residual reason.
  * @category models
  * @since 0.0.0
  */
@@ -194,7 +193,6 @@ export const HandoffRefusal = LiteralKit(["activity-id-mismatch", "readings-key-
   $I.annoteSchema("HandoffRefusal", { description: "Why checked handoff decoding refused the wire input." })
 );
 /**
- * Type of a wire refusal.
  * @category models
  * @since 0.0.0
  */

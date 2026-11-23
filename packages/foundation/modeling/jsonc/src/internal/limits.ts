@@ -1,7 +1,3 @@
-// Shared hardening limits. Lives in its own leaf module so every recursive
-// surface (parser, AST evaluator, equality walker, SAX visitor, canonicalizer)
-// imports the same cap without an import cycle.
-
 /**
  * Maximum collection-nesting depth any recursive walk over untrusted input
  * descends into before failing through its typed channel.

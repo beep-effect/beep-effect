@@ -93,8 +93,6 @@ export class SourceLine extends S.Opaque<SourceLine, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link SourceLine}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -70,8 +70,6 @@ export const RejectionGround = S.make<(typeof RejectionGroundDefinition)["Rebuil
 );
 
 /**
- * Type-level tagged union produced by {@link RejectionGround}.
- *
  * **Example** (Satisfy §103 obviousness ground)
  *
  * ```ts

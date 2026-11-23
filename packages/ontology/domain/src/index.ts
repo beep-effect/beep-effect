@@ -14,8 +14,6 @@
  */
 export * as Aggregates from "./aggregates/index.ts";
 /**
- * Direct Session aggregate namespace export.
- *
  * @category aggregates
  * @since 0.0.0
  */

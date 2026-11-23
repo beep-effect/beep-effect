@@ -42,6 +42,7 @@
     "are-docs-informative": "catalog:",
     "comment-parser": "catalog:",
     "effect": "catalog:",
+    "oxc-parser": "catalog:",
     "oxlint": "catalog:"
   },
   "exports": {
@@ -52,7 +53,8 @@
     "./core": "./configs/core.jsonc",
     "./schema": "./configs/schema.jsonc",
     "./services": "./configs/services.jsonc",
-    "./oxlint-docs": "./src/rules/docs.index.ts"
+    "./oxlint-docs": "./src/rules/docs.index.ts",
+    "./comment-grammar": "./src/rules/comment-grammar.ts"
   },
   "files": [
     "src/**/*.ts",

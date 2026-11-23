@@ -55,8 +55,11 @@ describe("JsoncFormatter", () => {
     it("keeps blank lines between tokens with keepLines", () => {
       const text = '{\n\n  "a": 1,\n\n\n  "b": 2\n}';
       assert.strictEqual(JsoncFormatter.formatToString(text, undefined, { keepLines: true }), text);
-      // Port deviation 15 (jsonc-parser format): keepLines keeps a compact line compact.
-      assert.strictEqual(JsoncFormatter.formatToString('{"a":1}', undefined, { keepLines: true }), '{ "a": 1 }');
+      assert.strictEqual(
+        JsoncFormatter.formatToString('{"a":1}', undefined, { keepLines: true }),
+        '{ "a": 1 }',
+        "port deviation 15 (jsonc-parser format): keepLines keeps a compact line compact"
+      );
     });
 
     it("leaves gaps between scalar tokens alone", () => {
@@ -68,9 +71,12 @@ describe("JsoncFormatter", () => {
       assert.strictEqual(JsoncFormatter.formatToString('}{"a":1}'), '}{\n  "a": 1\n}');
     });
 
-    // Port deviation (upstream-bug: upstream's String.prototype.repeat throws a RangeError on a surplus closer, a defect from a total function): the lab clamps the indent to none.
     it("a surplus closer formats with no indent instead of throwing", () => {
-      assert.deepStrictEqual(JsoncFormatter.format("]]"), [JsoncEdit.make({ offset: 1, length: 0, content: "\n" })]);
+      assert.deepStrictEqual(
+        JsoncFormatter.format("]]"),
+        [JsoncEdit.make({ offset: 1, length: 0, content: "\n" })],
+        "port deviation (upstream-bug): upstream's String.prototype.repeat throws a RangeError on a surplus closer, a defect from a total function"
+      );
       assert.strictEqual(JsoncFormatter.formatToString("]]"), "]\n]");
       assert.deepStrictEqual(
         A.map(JsoncFormatter.format('{"a":1}}'), (edit) => [edit.offset, edit.length, edit.content]),
@@ -88,8 +94,11 @@ describe("JsoncFormatter", () => {
       const options = JsoncFormattingOptions.make({ insertFinalNewline: true });
       assert.strictEqual(JsoncFormatter.formatToString('{"a":1}', undefined, options), '{\n  "a": 1\n}\n');
       assert.strictEqual(JsoncFormatter.formatToString('{"a":1}\n', undefined, options), '{\n  "a": 1\n}\n');
-      // Port deviation 15 (jsonc-parser format): the gap after the last token becomes the final newline.
-      assert.strictEqual(JsoncFormatter.formatToString('{"a":1}  \n', undefined, options), '{\n  "a": 1\n}\n');
+      assert.strictEqual(
+        JsoncFormatter.formatToString('{"a":1}  \n', undefined, options),
+        '{\n  "a": 1\n}\n',
+        "port deviation 15 (jsonc-parser format): the gap after the last token becomes the final newline"
+      );
       assert.strictEqual(JsoncFormatter.formatToString("", undefined, options), "");
     });
   });
@@ -117,12 +126,11 @@ describe("JsoncFormatter", () => {
           (e) => e.offset >= text.length
         )
       );
-      // Port deviation 15 (jsonc-parser format): a range keeps the edits that overlap it, so the
-      // empty edit at the document end lies outside even a range covering the whole text.
       assert.isFalse(
         Str.endsWith("\n")(
           JsoncFormatter.formatToString(text, JsoncRange.make({ offset: 0, length: text.length }), options)
-        )
+        ),
+        "port deviation 15 (jsonc-parser format): a range keeps the edits that overlap it, so the empty edit at the document end lies outside even a whole-text range"
       );
       assert.isTrue(Str.endsWith("\n")(JsoncFormatter.formatToString(text, undefined, options)));
     });
@@ -147,17 +155,17 @@ describe("JsoncFormatter", () => {
     );
   });
 
-  // Review round 2 pins. They sit at the end of the file so every test above
-  // keeps the line number the README and the ledger cite.
   describe("tabSize", () => {
     const format = (text: string, tabSize: number, insertSpaces = true): string =>
       JsoncFormatter.formatToString(text, undefined, { tabSize, insertSpaces });
     const isOptionsLike = S.is(JsoncFormattingOptionsLike);
 
-    // Upstream parity: `tabSize` is any number and the indent unit truncates it
-    // toward zero.
     it("accepts a fractional width, truncated toward zero", () => {
-      assert.strictEqual(format('{"a":[1]}', 1.5), '{\n "a": [\n  1\n ]\n}');
+      assert.strictEqual(
+        format('{"a":[1]}', 1.5),
+        '{\n "a": [\n  1\n ]\n}',
+        "upstream parity: tabSize is any number and the indent unit truncates it toward zero"
+      );
       assert.strictEqual(format('{"a":[1]}', 2.9), '{\n  "a": [\n    1\n  ]\n}');
       assert.strictEqual(format("[1,[2]] // c", 1.5), "[\n 1,\n [\n  2\n ]\n] // c");
       for (const tabSize of [0.5, -0.5, -0.999]) {
@@ -172,13 +180,13 @@ describe("JsoncFormatter", () => {
       }
     });
 
-    // Port deviation (upstream-bug): upstream builds the indent unit with
-    // `" ".repeat(tabSize)`, which throws a RangeError for a width of -1 or
-    // below, a defect from a total function; the lab clamps the unit to no
-    // indent.
     it("formats a width of -1 or below with no indent instead of throwing", () => {
       for (const tabSize of [-1, -1.5, -100]) {
-        assert.strictEqual(format('{"a":[1]}', tabSize), '{\n"a": [\n1\n]\n}');
+        assert.strictEqual(
+          format('{"a":[1]}', tabSize),
+          '{\n"a": [\n1\n]\n}',
+          'port deviation (upstream-bug): upstream\'s " ".repeat(tabSize) throws a RangeError for a width of -1 or below, a defect from a total function'
+        );
         assert.deepStrictEqual(
           A.map(JsoncFormatter.format('{"a":[1]}', undefined, JsoncFormattingOptions.make({ tabSize })), (edit) => [
             edit.offset,
@@ -196,13 +204,12 @@ describe("JsoncFormatter", () => {
       }
     });
 
-    // Port deviation (law: the schemaNumber Effect rule): upstream types
-    // `tabSize` as Schema.Number and reads its options without validating them,
-    // so NaN formats with no indent; the lab's S.Finite rejects NaN and the
-    // infinities when the options are constructed.
     it("rejects a non-finite width", () => {
       for (const tabSize of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
-        assert.isFalse(isOptionsLike({ tabSize }));
+        assert.isFalse(
+          isOptionsLike({ tabSize }),
+          "port deviation (schemaNumber rule): upstream's unvalidated Schema.Number tabSize formats NaN with no indent; S.Finite rejects NaN and the infinities"
+        );
         assert.throws(() => JsoncFormattingOptions.make({ tabSize }));
         assert.throws(() => JsoncFormatter.format("{}", undefined, { tabSize }));
       }

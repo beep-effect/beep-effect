@@ -1391,6 +1391,7 @@ let need_hex: unknown;
 let need_str: unknown;
 let norm_cat: unknown;
 let occurs: unknown;
+let ontoclean_category_gate: unknown;
 let print_run_id: unknown;
 let record: unknown;
 let repo: unknown;
@@ -1471,6 +1472,12 @@ CATEGORY = rt.set([
   "subkind",
   "role",
   "phase",
+  "category",
+  "mixin",
+  "role_mixin",
+  "phase_mixin",
+  "collective",
+  "quantity",
   "relator",
   "quality",
   "mode",
@@ -3344,7 +3351,15 @@ check_otp = rt.call(record, [
         rt.compare(
           "notin",
           rt.invoke(get, d, "term.owl_entity_kind"),
-          rt.tuple(["class", "object_property", "data_property", "individual"])
+          rt.tuple([
+            "class",
+            "object_property",
+            "data_property",
+            "annotation_property",
+            "individual",
+            "skos_concept",
+            "skos_concept_scheme",
+          ])
         )
       )
     ) {
@@ -8246,6 +8261,122 @@ norm_cat = rt.fn("norm_cat", (args, kwargs) => {
   );
   return null;
 });
+ontoclean_category_gate = rt.fn("ontoclean_category_gate", (args, kwargs) => {
+  let cat: unknown;
+  let ic: unknown;
+  let p: unknown;
+  let rig: unknown;
+  p = rt.argument(args, kwargs, 0, "p", undefined);
+  cat = rt.argument(args, kwargs, 1, "cat", undefined);
+  ic = rt.argument(args, kwargs, 2, "ic", undefined);
+  rig = rt.invoke(get, ic, "ontoclean.rigidity");
+  if (rt.truth(rt.compare("in", cat, rt.tuple(["kind", "subkind"])))) {
+    if (rt.truth(rt.compare("ne", rig, "rigid"))) {
+      rt.invoke(
+        err,
+        p,
+        [
+          "GATE: OntoClean BLOCK — ",
+          rt.format(cat, -1, null),
+          " requires rigidity: rigid (got ",
+          rt.format(rig, 114, null),
+          ")",
+        ].join("")
+      );
+    }
+    if (
+      rt.truth(
+        rt.and(
+          rt.compare("eq", cat, "kind"),
+          () =>
+            !rt.truth(
+              rt.and(rt.compare("is", rt.invoke(get, ic, "identity.supplies_identity"), true), () =>
+                rt.compare("is", rt.invoke(get, ic, "ontoclean.supplies_identity"), true)
+              )
+            )
+        )
+      )
+    ) {
+      rt.invoke(err, p, "GATE: OntoClean BLOCK — a kind must SUPPLY identity, and BOTH provider fields must say so");
+    }
+    if (
+      rt.truth(
+        rt.and(rt.compare("eq", cat, "subkind"), () =>
+          rt.compare("isnot", rt.invoke(get, ic, "ontoclean.carries_identity"), true)
+        )
+      )
+    ) {
+      rt.invoke(err, p, "GATE: OntoClean BLOCK — a subkind must CARRY (inherit) identity; it need not supply it");
+    }
+  } else {
+    if (rt.truth(rt.compare("eq", cat, "role"))) {
+      if (rt.truth(rt.compare("ne", rt.invoke(get, ic, "ontoclean.dependence"), "relational"))) {
+        rt.invoke(
+          err,
+          p,
+          "GATE: OntoClean BLOCK — a role is relationally dependent by definition; dependence must be relational"
+        );
+      }
+      if (rt.truth(rt.compare("ne", rig, "anti_rigid"))) {
+        rt.invoke(
+          err,
+          p,
+          "GATE: OntoClean BLOCK — a role is anti-rigid by definition (a rigid role is a kind wearing a costume)"
+        );
+      }
+    } else {
+      if (rt.truth(rt.and(rt.compare("eq", cat, "phase"), () => rt.compare("ne", rig, "anti_rigid")))) {
+        rt.invoke(err, p, "GATE: OntoClean BLOCK — a phase is anti-rigid by definition");
+      }
+    }
+  }
+  // Non-sortals (identity-card.schema.yaml): the same rigidity and dependence
+  // as their sortal counterparts, and none supplies identity, so relabelling a
+  // rigid role as a role_mixin (or a kind as a category) cannot pass the gate.
+  if (rt.truth(rt.compare("eq", cat, "role_mixin"))) {
+    if (rt.truth(rt.compare("ne", rt.invoke(get, ic, "ontoclean.dependence"), "relational"))) {
+      rt.invoke(
+        err,
+        p,
+        "GATE: OntoClean BLOCK — a role_mixin is relationally dependent by definition; dependence must be relational"
+      );
+    }
+    if (rt.truth(rt.compare("ne", rig, "anti_rigid"))) {
+      rt.invoke(err, p, "GATE: OntoClean BLOCK — a role_mixin is anti-rigid by definition");
+    }
+  }
+  if (rt.truth(rt.and(rt.compare("eq", cat, "phase_mixin"), () => rt.compare("ne", rig, "anti_rigid")))) {
+    rt.invoke(err, p, "GATE: OntoClean BLOCK — a phase_mixin is anti-rigid by definition");
+  }
+  if (rt.truth(rt.and(rt.compare("eq", cat, "category"), () => rt.compare("ne", rig, "rigid")))) {
+    rt.invoke(err, p, "GATE: OntoClean BLOCK — a category is rigid by definition");
+  }
+  if (rt.truth(rt.and(rt.compare("eq", cat, "mixin"), () => rt.compare("ne", rig, "semi_rigid")))) {
+    rt.invoke(err, p, "GATE: OntoClean BLOCK — a mixin is semi-rigid by definition");
+  }
+  if (
+    rt.truth(
+      rt.and(rt.compare("in", cat, rt.tuple(["category", "mixin", "role_mixin", "phase_mixin"])), () =>
+        !rt.truth(
+          rt.and(rt.compare("is", rt.invoke(get, ic, "identity.supplies_identity"), false), () =>
+            rt.compare("is", rt.invoke(get, ic, "ontoclean.supplies_identity"), false)
+          )
+        )
+      )
+    )
+  ) {
+    rt.invoke(
+      err,
+      p,
+      [
+        "GATE: OntoClean BLOCK — a ",
+        rt.format(cat, -1, null),
+        " is a non-sortal and supplies no identity; BOTH provider fields must say false",
+      ].join("")
+    );
+  }
+  return null;
+});
 run_gate = rt.fn("run_gate", (args, kwargs) => {
   let _: unknown;
   let a: unknown;
@@ -8827,66 +8958,7 @@ run_gate = rt.fn("run_gate", (args, kwargs) => {
     }
     cat = rt.or(otp_cat, () => ic_cat);
     rig = rt.invoke(get, ic, "ontoclean.rigidity");
-    if (rt.truth(rt.compare("in", cat, rt.tuple(["kind", "subkind"])))) {
-      if (rt.truth(rt.compare("ne", rig, "rigid"))) {
-        rt.invoke(
-          err,
-          p,
-          [
-            "GATE: OntoClean BLOCK — ",
-            rt.format(cat, -1, null),
-            " requires rigidity: rigid (got ",
-            rt.format(rig, 114, null),
-            ")",
-          ].join("")
-        );
-      }
-      if (
-        rt.truth(
-          rt.and(
-            rt.compare("eq", cat, "kind"),
-            () =>
-              !rt.truth(
-                rt.and(rt.compare("is", rt.invoke(get, ic, "identity.supplies_identity"), true), () =>
-                  rt.compare("is", rt.invoke(get, ic, "ontoclean.supplies_identity"), true)
-                )
-              )
-          )
-        )
-      ) {
-        rt.invoke(err, p, "GATE: OntoClean BLOCK — a kind must SUPPLY identity, and BOTH provider fields must say so");
-      }
-      if (
-        rt.truth(
-          rt.and(rt.compare("eq", cat, "subkind"), () =>
-            rt.compare("isnot", rt.invoke(get, ic, "ontoclean.carries_identity"), true)
-          )
-        )
-      ) {
-        rt.invoke(err, p, "GATE: OntoClean BLOCK — a subkind must CARRY (inherit) identity; it need not supply it");
-      }
-    } else {
-      if (rt.truth(rt.compare("eq", cat, "role"))) {
-        if (rt.truth(rt.compare("ne", rt.invoke(get, ic, "ontoclean.dependence"), "relational"))) {
-          rt.invoke(
-            err,
-            p,
-            "GATE: OntoClean BLOCK — a role is relationally dependent by definition; dependence must be relational"
-          );
-        }
-        if (rt.truth(rt.compare("ne", rig, "anti_rigid"))) {
-          rt.invoke(
-            err,
-            p,
-            "GATE: OntoClean BLOCK — a role is anti-rigid by definition (a rigid role is a kind wearing a costume)"
-          );
-        }
-      } else {
-        if (rt.truth(rt.and(rt.compare("eq", cat, "phase"), () => rt.compare("ne", rig, "anti_rigid")))) {
-          rt.invoke(err, p, "GATE: OntoClean BLOCK — a phase is anti-rigid by definition");
-        }
-      }
-    }
+    rt.invoke(ontoclean_category_gate, p, cat, ic);
     if (rt.truth(rt.compare("eq", rt.get(d, "foundational_status"), "explicitly_deferred"))) {
       fa = rt.or(rt.get(fa_by_icr, rt.invoke(skey, rt.get(d, "identity_card_ref"))), () => rt.dict([]));
       rt.method(
@@ -9778,6 +9850,48 @@ self_test = rt.fn("self_test", (args, kwargs) => {
     ["status", "proposed"],
   ]);
   rt.invoke(expect_err, "identifier pad fires at any length", check_ic, ic_full, "self:pad_ic");
+  // OntoClean category gate: each non-sortal gets its rigidity, dependence
+  // and no-identity rule, and a correct record passes silently. Called
+  // directly, not through expect_err, which passes its label and fn on as
+  // the first two arguments.
+  const expect_gate = (label: string, p: string, gate_cat: unknown, card: unknown) => {
+    const before = rt.invoke(len, errors);
+    rt.invoke(ontoclean_category_gate, p, gate_cat, card);
+    rt.assert(rt.compare("gt", rt.invoke(len, errors), before), [label, ": rule failed to fire"].join(""));
+    rt.deleteItem(errors, rt.slice(before, undefined, undefined));
+  };
+  for (const loop_nsg of rt.iter(
+    rt.tuple([
+      rt.tuple(["role_mixin", "anti_rigid", "relational"]),
+      rt.tuple(["phase_mixin", "anti_rigid", "none"]),
+      rt.tuple(["category", "rigid", "none"]),
+      rt.tuple(["mixin", "semi_rigid", "none"]),
+    ])
+  )) {
+    const ns_cat = rt.item(loop_nsg, 0);
+    const ns_good = rt.method(copy, "deepcopy", ic_full);
+    rt.setItem(rt.item(ns_good, "ontoclean"), "rigidity", rt.item(loop_nsg, 1));
+    rt.setItem(rt.item(ns_good, "ontoclean"), "dependence", rt.item(loop_nsg, 2));
+    rt.setItem(rt.item(ns_good, "ontoclean"), "supplies_identity", false);
+    rt.setItem(rt.item(ns_good, "identity"), "supplies_identity", false);
+    rt.invoke(ontoclean_category_gate, "self:ns_good", ns_cat, ns_good);
+    rt.assert(!rt.truth(errors), ["non-sortal gate should pass: ", rt.format(errors, -1, null)].join(""));
+    const ns_rigidity = rt.method(copy, "deepcopy", ns_good);
+    rt.setItem(
+      rt.item(ns_rigidity, "ontoclean"),
+      "rigidity",
+      rt.truth(rt.compare("eq", rt.item(loop_nsg, 1), "rigid")) ? "anti_rigid" : "rigid"
+    );
+    expect_gate("non-sortal rigidity gate", "self:ns_rig", ns_cat, ns_rigidity);
+    const ns_identity = rt.method(copy, "deepcopy", ns_good);
+    rt.setItem(rt.item(ns_identity, "ontoclean"), "supplies_identity", true);
+    expect_gate("non-sortal supplies-no-identity gate", "self:ns_id", ns_cat, ns_identity);
+  }
+  b = rt.method(copy, "deepcopy", ic_full);
+  rt.setItem(rt.item(b, "ontoclean"), "rigidity", "anti_rigid");
+  rt.setItem(rt.item(b, "ontoclean"), "supplies_identity", false);
+  rt.setItem(rt.item(b, "identity"), "supplies_identity", false);
+  expect_gate("role_mixin dependence gate", "self:rm_dep", "role_mixin", b);
   b = rt.method(copy, "deepcopy", ic_full);
   rt.setItem(
     rt.item(b, "identity"),
@@ -11986,6 +12100,16 @@ print_run_id = rt.fn("print_run_id", (args, kwargs) => {
 });
 rt.boundary(() => {
   if (import.meta.main) {
+    // The contracts live in the _shared folder beside the skill; without it every check would crash.
+    const contractDir = `${RuntimeFs.realpathSync(new URL("..", import.meta.url))}/../_shared`;
+    const mode = process.argv[2];
+    if (mode !== undefined && mode !== "--print-run-id" && !RuntimeFs.existsSync(`${contractDir}/schemas`)) {
+      process.stderr.write(
+        `refusing: contract directory missing: ${contractDir} (the _shared folder must sit beside this skill's directory)\n`
+      );
+      process.exitCode = 2;
+      return;
+    }
     const status = runArgumentBoundary(process.argv.slice(2), __doc__, {
       selfTest: () => {
         rt.invoke(self_test);

@@ -149,8 +149,6 @@ export const BoxRelativePath = S.String.check(
 );
 
 /**
- * Whether a Box entry is a file or a folder.
- *
  * **Example** (Check an entry kind)
  *
  * ```ts
@@ -169,8 +167,6 @@ export const BoxEntryKind = LiteralKit(["file", "folder"]).pipe(
 );
 
 /**
- * Decoded type of {@link BoxEntryKind}.
- *
  * **Example** (Type an entry kind)
  *
  * ```ts
@@ -186,8 +182,6 @@ export const BoxEntryKind = LiteralKit(["file", "folder"]).pipe(
 export type BoxEntryKind = typeof BoxEntryKind.Type;
 
 /**
- * One file or folder in a Box listing.
- *
  * **Example** (Describe a file)
  *
  * ```ts
@@ -215,8 +209,6 @@ export class BoxEntry extends S.Opaque<BoxEntry, { readonly brand: unique symbol
 ) {}
 
 /**
- * The entries of one Box folder.
- *
  * **Example** (An empty listing)
  *
  * ```ts
@@ -243,8 +235,6 @@ export class BoxListing extends S.Opaque<BoxListing, { readonly brand: unique sy
 ) {}
 
 /**
- * Text read from a Box file.
- *
  * **Example** (Text content)
  *
  * ```ts
@@ -271,8 +261,6 @@ export class BoxTextContent extends S.Opaque<BoxTextContent, { readonly brand: u
 ) {}
 
 /**
- * A Box file whose text was not read, and why.
- *
  * **Example** (Metadata only)
  *
  * ```ts
@@ -318,8 +306,6 @@ export const BoxContent = S.Union([BoxTextContent, BoxMetadataOnly]).pipe(
 );
 
 /**
- * Decoded type of {@link BoxContent}.
- *
  * **Example** (Type content)
  *
  * ```ts
@@ -336,8 +322,6 @@ export const BoxContent = S.Union([BoxTextContent, BoxMetadataOnly]).pipe(
 export type BoxContent = typeof BoxContent.Type;
 
 /**
- * A Box file and its content.
- *
  * **Example** (A read text file)
  *
  * ```ts
@@ -369,8 +353,6 @@ export class BoxDocument extends S.Opaque<BoxDocument, { readonly brand: unique 
 ) {}
 
 /**
- * Why a Box tool call failed.
- *
  * **Example** (Check a failure reason)
  *
  * ```ts
@@ -396,8 +378,6 @@ export const BoxToolFailureReason = LiteralKit([
 );
 
 /**
- * Decoded type of {@link BoxToolFailureReason}.
- *
  * **Example** (Type a failure reason)
  *
  * ```ts
@@ -413,8 +393,6 @@ export const BoxToolFailureReason = LiteralKit([
 export type BoxToolFailureReason = typeof BoxToolFailureReason.Type;
 
 /**
- * Plain-language failure returned by a Box tool.
- *
  * **Example** (A missing file)
  *
  * ```ts
@@ -440,8 +418,6 @@ export class BoxToolError extends S.Opaque<BoxToolError, { readonly brand: uniqu
 ) {}
 
 /**
- * Parameters of `box_list`.
- *
  * **Example** (List a client folder)
  *
  * ```ts
@@ -466,8 +442,6 @@ export class BoxListRequest extends S.Opaque<BoxListRequest, { readonly brand: u
 ) {}
 
 /**
- * Parameters of `box_read`.
- *
  * **Example** (Read a letter)
  *
  * ```ts

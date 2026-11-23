@@ -1,6 +1,4 @@
-// The behaviour each read and write option stands for, kept beside the engine that applies it rather than on the
-// option schemas: how serious a quoting or ragged finding is under its rule, what trimming leaves of a cell, what the
-// formula guard writes, and which cells must be quoted to read back unchanged.
+// decision: engine-findings-facade-fails
 import { dual } from "effect/Function";
 import * as Str from "effect/String";
 import { CsvDiagnostic } from "../CsvDiagnostic.schema.ts";

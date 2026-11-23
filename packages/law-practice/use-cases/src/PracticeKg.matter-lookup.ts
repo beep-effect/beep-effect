@@ -18,8 +18,6 @@ import * as Str from "effect/String";
 const $I = $LawPracticeUseCasesId.create("PracticeKg.matter-lookup");
 
 /**
- * Which identity of a matter a lookup reference matched.
- *
  * **Details**
  *
  * `docket-key` and `family-key` are the client-keyed forms (`<client>.<docket>`,
@@ -54,8 +52,6 @@ export const PracticeKgMatterMatchedOn = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgMatterMatchedOn}.
- *
  * **Example** (Type a matched-on label)
  *
  * ```ts
@@ -99,8 +95,6 @@ export const PracticeKgMatterResolution = LiteralKit(["unique", "ambiguous", "no
 );
 
 /**
- * Runtime type for {@link PracticeKgMatterResolution}.
- *
  * **Example** (Type a resolution)
  *
  * ```ts
@@ -195,8 +189,6 @@ export class PracticeKgMatterDocket extends S.Opaque<PracticeKgMatterDocket, { r
 ) {}
 
 /**
- * One practice matter: a client-keyed docket family and its dockets.
- *
  * **Gotchas**
  *
  * `client` is null and `familyKey` equals the bare `family` for the
@@ -252,8 +244,6 @@ export class PracticeKgMatter extends S.Opaque<PracticeKgMatter, { readonly bran
 ) {}
 
 /**
- * Result of resolving one reference.
- *
  * **Example** (Make an empty result)
  *
  * ```ts

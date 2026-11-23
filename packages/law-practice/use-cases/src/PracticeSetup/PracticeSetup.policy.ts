@@ -30,8 +30,6 @@ const $I = $LawPracticeUseCasesId.create("PracticeSetup/PracticeSetup.policy");
 const SetupGraphProblemBase = LiteralKit(["duplicate-id", "unknown-dependency", "cycle"]);
 
 /**
- * What is wrong with a requirement graph.
- *
  * **Example** (Check a problem kind)
  *
  * ```ts
@@ -51,8 +49,6 @@ export const SetupGraphProblem = SetupGraphProblemBase.pipe(
 );
 
 /**
- * Decoded type of {@link SetupGraphProblem}.
- *
  * **Example** (Type a problem)
  *
  * ```ts
@@ -68,8 +64,6 @@ export const SetupGraphProblem = SetupGraphProblemBase.pipe(
 export type SetupGraphProblem = typeof SetupGraphProblem.Type;
 
 /**
- * The requirement set cannot be ordered.
- *
  * **Details**
  *
  * A defect in the gateway's requirement catalog, not in the lawyer's machine:

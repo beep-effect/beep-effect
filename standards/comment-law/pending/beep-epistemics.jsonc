@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/epistemics",
+  "root": "packages/foundation/modeling/epistemics",
+  "scopes": ["."]
+}

@@ -124,8 +124,7 @@ type MemberV3 = typeof MemberV3.Type;
 const issue = (message: string) => new SchemaIssue.InvalidValue({ message });
 const unmintable = () => issue("A v1 citation mention could not be recomputed or minted under citation-mention/v2.");
 
-// Steps 1 and 2 for one mention: the stored cm1 must be its own recomputation, then the cm2 id is minted.
-const convertMentionId = Effect.fnUntraced(function* (
+const recomputeCm1ThenMintCm2 = Effect.fnUntraced(function* (
   mention: MentionReceiptV1
 ): Effect.fn.Return<readonly [typeof CitationMentionIdV1.Type, CitationMentionId], SchemaIssue.Issue, Digest.Digest> {
   const recomputed = yield* citationMentionIdV1(mention.anchor, mention.engineArtifact, mention.citation.type).pipe(
@@ -147,11 +146,10 @@ const suffix = Str.slice(4);
 const convertDocumentV3 = Effect.fnUntraced(function* (
   v3: typeof DocumentReceiptV3.Type
 ): Effect.fn.Return<CitationDocumentReceipt, SchemaIssue.Issue, Digest.Digest> {
-  const pairs = yield* Effect.forEach(v3.mentions, convertMentionId, { concurrency: 1 });
+  const pairs = yield* Effect.forEach(v3.mentions, recomputeCm1ThenMintCm2, { concurrency: 1 });
   const mentionIds = HashMap.fromIterable(pairs);
   const stored = HashSet.fromIterable(A.map(v3.authorities, (authority) => authority.id));
-  // Step 3: an authority whose id is the v1 case-occurrence key of a mention takes the v2 key over its new id.
-  const rekeyed = yield* Effect.forEach(
+  const caseOccurrenceV1KeysToV2Keys = yield* Effect.forEach(
     pairs,
     Effect.fnUntraced(function* ([previous, next]) {
       const key = yield* caseOccurrenceKeyV1(previous);
@@ -161,21 +159,19 @@ const convertDocumentV3 = Effect.fnUntraced(function* (
     }, Effect.mapError(unmintable)),
     { concurrency: 1 }
   );
-  const authorityIds = HashMap.fromIterable(A.getSomes(rekeyed));
-  // Step 4: a default group or list id is its authority's digest under another prefix; it follows that digest.
-  const digests = HashMap.fromIterable(
+  const authorityIds = HashMap.fromIterable(A.getSomes(caseOccurrenceV1KeysToV2Keys));
+  const authorityDigestsForDefaultGroupAndListIds = HashMap.fromIterable(
     authorityIds.pipe(
       HashMap.toEntries,
       A.map(([previous, next]) => Tuple.make(suffix(previous), suffix(next)))
     )
   );
   const nodeId = (id: string) =>
-    O.match(HashMap.get(digests, suffix(id)), {
+    O.match(HashMap.get(authorityDigestsForDefaultGroupAndListIds, suffix(id)), {
       onNone: () => id,
       onSome: (digest) => `${Str.slice(0, 4)(id)}${digest}`,
     });
   const authorityId = (id: string) => O.getOrElse(HashMap.get(authorityIds, id), () => id);
-  // Step 5: every reference goes through the maps; a mention reference that names no mention is refused.
   const mentionId = (id: typeof CitationMentionIdV1.Type) =>
     Effect.fromOption(HashMap.get(mentionIds, id)).pipe(
       Effect.mapError(() => issue("A v3 receipt references a mention it does not hold."))
@@ -244,7 +240,6 @@ const convertDocumentV3 = Effect.fnUntraced(function* (
     }),
     { concurrency: 1 }
   );
-  // Step 6 sets the tags; the live schema then runs its coherence filter over the result.
   return yield* liveDocument({
     ...v3,
     schemaVersion: "citation-document-receipt/v4",
@@ -256,13 +251,12 @@ const convertDocumentV3 = Effect.fnUntraced(function* (
   }).pipe(Effect.mapError(issueOf));
 });
 
-// Steps 1, 2 and 6 for a standalone mention receipt. A warning would name a mention this receipt cannot map.
 const convertMentionV1 = Effect.fnUntraced(function* (
   v1: MentionReceiptV1
 ): Effect.fn.Return<CitationMentionReceipt, SchemaIssue.Issue, Digest.Digest> {
   if (A.isReadonlyArrayNonEmpty(v1.warnings))
     return yield* Effect.fail(issue("A standalone v1 mention receipt references other mentions."));
-  const [, id] = yield* convertMentionId(v1);
+  const [, id] = yield* recomputeCm1ThenMintCm2(v1);
   return yield* liveMention({ ...v1, schemaVersion: "citation-mention-receipt/v2", id }).pipe(Effect.mapError(issueOf));
 });
 

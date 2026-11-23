@@ -468,12 +468,12 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
 
       const decodedInline1 = yield* decodeInline(text);
       expect(decodedInline1).toEqual(text);
-      // Pre.language is a codec field (OptionFromNullOr: Option<string> <-> string
-      // | null), so Pre's encoded form differs from a constructed instance. Decode
-      // through the encoded form rather than feeding a decoded instance back in.
       const encodedBlock = yield* encodeBlock(pre);
       const decodedBlock2 = yield* decodeBlock(encodedBlock);
-      expect(decodedBlock2).toEqual(pre);
+      expect(
+        decodedBlock2,
+        "Pre.language is an OptionFromNullOr codec field (Option<string> <-> string | null), so Pre decodes from its encoded form, never from a constructed instance"
+      ).toEqual(pre);
       const encodedDocument9 = yield* encodeDocument(doc);
       const decodedDocument3 = yield* decodeDocument(encodedDocument9);
       expect(decodedDocument3).toEqual(doc);
@@ -491,10 +491,11 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
         }),
         Cause.fail("SchemaError")
       );
-      // Pre.language now folds non-conforming legacy info strings to None at decode,
-      // so a free-form "ts bad" token drops out instead of being preserved.
       const decodedPre4 = yield* decodePre({ _tag: "pre", language: "ts bad", value: "x" });
-      expect(decodedPre4).toEqual(Pre.make({ value: "x", language: O.none() }));
+      expect(
+        decodedPre4,
+        "Pre.language decode folds a non-conforming legacy info string such as `ts bad` to None instead of preserving it"
+      ).toEqual(Pre.make({ value: "x", language: O.none() }));
       const decodedText = yield* decodeText(Text.make({ value: "Hello" }));
       expect(decodedText).toEqual(text);
     })
@@ -517,16 +518,17 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       expect(decodedDocument).toEqual(document);
       expect(renderMarkdownInline(decodedInline)).toEqual(expect.any(String));
       expect(renderMarkdownBlock(decodedBlock)).toEqual(expect.any(String));
-      // JSON frontmatter renders through the canonical digest owner, which
-      // refuses an unpaired surrogate. Schema-derived frontmatter holds one
-      // now and then; the render then fails typed, with the refusal as cause.
       Result.match(
         Result.mapError(Md.render(decodedDocument), (error) =>
           S.is(JsoncCanonicalizeError)(error.cause) ? error.cause.code : "not refused"
         ),
         {
           onSuccess: (rendered) => expect(typeof rendered).toBe("string"),
-          onFailure: (refusal) => expect(refusal).toBe("LoneSurrogate"),
+          onFailure: (refusal) =>
+            expect(
+              refusal,
+              "JSON frontmatter renders as JsoncFingerprint's RFC 8785 text, which refuses the unpaired surrogate schema-derived frontmatter sometimes holds, so the Result render returns a RenderError with that refusal as cause"
+            ).toBe("LoneSurrogate"),
         }
       );
 
@@ -549,11 +551,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     { arbitrary: fcRuns(100) }
   );
 
-  it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)", () => {
-    // Regression: a real Option in an encoded node must survive a JSON string
-    // boundary. Persisting a Document into a jsonb column or sending it over the
-    // rpc wire must decode back identically. Code blocks carry the only Option
-    // field (Pre.language), so they are the canonical case.
+  it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire) and decode back identically, with Pre.language, the only OptionFromNullOr field and so the only Option that encodes None as JSON null, as the canonical regression case", () => {
     const doc = Md.make([
       Md.pre("const x = 1", { language: "ts" }),
       Md.pre("flowchart TD\nA-->B", { language: "mermaid" }),
@@ -581,9 +579,10 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       const encoded = Result.getOrThrow(encodeDocumentResult(document));
       const json = Result.getOrThrow(encodeJsonResult(encoded));
 
-      // JavaScript JSON stringification normalizes -0 to 0, so compare against
-      // the exact document value representable after the JSON boundary.
-      expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(normalizeDocumentForJsonBoundary(document));
+      expect(
+        Result.getOrThrow(decodeDocumentJsonResult(json)),
+        "JSON stringification normalizes -0 to 0, so compare against the document value representable after the JSON boundary"
+      ).toEqual(normalizeDocumentForJsonBoundary(document));
 
       return true;
     },
@@ -703,7 +702,10 @@ ${Md.h3("Inside")}
     expect(renderMarkdownBlock(templateBlockQuote)).toBe("> ### Inside");
     expect(renderHtmlBlock(templateInlineArrayQuote)).toBe("<blockquote><p>Quoted <em>inline</em>!</p></blockquote>");
     expect(renderMarkdownBlock(templateStringArrayQuote)).toBe("> ab");
-    expect(renderHtmlBlock(multilineTemplateBlockQuote)).toBe("<blockquote><h3>Inside</h3></blockquote>");
+    expect(
+      renderHtmlBlock(multilineTemplateBlockQuote),
+      "a whitespace-only template chunk beside a block interpolation is source-layout indentation and is not rendered"
+    ).toBe("<blockquote><h3>Inside</h3></blockquote>");
   });
 
   it("renders every block variant to Markdown and HTML", () => {
@@ -906,12 +908,18 @@ Demo video`);
       '<figure data-embed-kind="video"><a href="https://example.com/demo">Demo</a></figure>'
     );
 
-    expect(sanitizeUrlDestination("file:///tmp/a")).toBe("file:///tmp/a");
+    expect(
+      sanitizeUrlDestination("file:///tmp/a"),
+      "the default policy blocks only active script protocols; file:, blob: and filesystem: are not execution sinks at this boundary"
+    ).toBe("file:///tmp/a");
     expect(sanitizeUrlDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicySpec)).toBe("#");
     expect(sanitizeUrlDestinationWithPolicy("artifact:abc", BrowserSafeUrlPolicySpec)).toBe("artifact:abc");
     expect(sanitizeUrlDestinationWithPolicy("artifact:abc", StrictWebUrlPolicySpec)).toBe("#");
     expect(sanitizeUrlDestinationWithPolicy("//example.com", BrowserSafeUrlPolicySpec)).toBe("#");
-    expect(sanitizeUrlDestinationWithPolicy("/\n/example.com", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(
+      sanitizeUrlDestinationWithPolicy("/\n/example.com", BrowserSafeUrlPolicySpec),
+      "URL parsers drop embedded ASCII whitespace before reading special-scheme slashes, so relative-destination flags judge the stripped candidate and `/\\n/host` cannot become `//host`"
+    ).toBe("#");
     expect(sanitizeUrlDestinationWithPolicy("/\r/example.com", BrowserSafeUrlPolicySpec)).toBe("#");
     expect(sanitizeUrlDestinationWithPolicy("/\t/example.com", BrowserSafeUrlPolicySpec)).toBe("#");
     expect(sanitizeUrlDestinationWithPolicy("\\relative", BrowserSafeUrlPolicySpec)).toBe("#");
@@ -1397,7 +1405,10 @@ Demo video`);
     expect(escapeHtmlUrlAttribute("a&b")).toBe("a&amp;b");
     expect(escapeHtmlUrlAttribute("javascript&#58alert(1)")).toBe("#");
     expect(escapeHtmlUrlAttribute("%6a%61%76%61%73%63%72%69%70%74:alert(1)")).toBe("#");
-    expect(escapeHtmlUrlAttribute("%256a%2561%2576%2561%2573%2563%2572%2569%2570%2574:alert(1)")).toBe("#");
+    expect(
+      escapeHtmlUrlAttribute("%256a%2561%2576%2561%2573%2563%2572%2569%2570%2574:alert(1)"),
+      "percent-decoding repeats until the value stabilizes or the pass budget ends, defeating multiply-encoded protocols (%256a -> %6a -> j)"
+    ).toBe("#");
     expect(escapeHtmlUrlAttribute("%26%23x6a%3Bavascript:alert(1)")).toBe("#");
     expect(escapeMarkdownDestination("\\()")).toBe("%5C\\(\\)");
     expect(escapeMarkdownDestination("%6a%61%76%61%73%63%72%69%70%74:alert(1)")).toBe("#");
@@ -1419,13 +1430,9 @@ Demo video`);
     expect(isStringArray(["a", 1])).toBe(false);
   });
 
-  // §5.3 crispen parity: the escape guards derive from their schemas with
-  // `S.is(...)`. These Arbitrary.schema laws pin that each guard agrees with
-  // the schema it derives from, so the derivation cannot silently drift.
-  describe("colocated escape-schema guards agree with their schemas", () => {
-    // Mirrors the module-private StringArray schema in Md.escape.ts.
-    const StringArraySchema = S.Array(S.String);
-    const stringArrayArbitrary = Arbitrary.schema(StringArraySchema);
+  describe("colocated escape-schema guards derived with S.is agree with their schemas, so the derivation cannot silently drift", () => {
+    const StringArraySchemaMirroringMdEscapePrivate = S.Array(S.String);
+    const stringArrayArbitrary = Arbitrary.schema(StringArraySchemaMirroringMdEscapePrivate);
     it.prop(
       "recognizes every schema-derived string array",
       [stringArrayArbitrary],
@@ -1437,14 +1444,12 @@ Demo video`);
       { arbitrary: fcRuns(100) }
     );
 
-    // Any destination normalizing to an active unsafe protocol is neutralized
-    // to "#" by the colocated UnsafeUrlProtocolDestination.is guard.
     const unsafeDestinationArbitrary = Arbitrary.all([
       Arbitrary.schema(S.Literals(["javascript:", "vbscript:", "data:"])),
       Arbitrary.schema(S.String),
     ]).pipe(Arbitrary.map(([protocol, rest]) => `${protocol}${rest}`));
     it.prop(
-      "neutralizes every generated unsafe protocol destination",
+      "neutralizes every destination normalizing to an active unsafe protocol to `#` via the colocated UnsafeUrlProtocolDestination.is guard",
       [unsafeDestinationArbitrary],
       ([destination]) => {
         expect(sanitizeUrlDestination(destination)).toBe("#");

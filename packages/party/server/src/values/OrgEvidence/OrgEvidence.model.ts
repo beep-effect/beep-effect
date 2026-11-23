@@ -19,7 +19,6 @@ import * as Tuple from "effect/Tuple";
 const $I = $PartyServerId.create("values/OrgEvidence/OrgEvidence.model");
 
 /**
- * Consumer-mail domains excluded from organization leads.
  * **Example** (Use FreeMailDomain)
  * ```ts
  * import { FreeMailDomain } from "@beep/party-server/OrgEvidence"
@@ -63,14 +62,12 @@ export const FreeMailDomain = LiteralKit([
   "gmx.com",
 ]).pipe($I.annoteSchema("FreeMailDomain", { description: "Consumer-mail domains excluded from organization leads." }));
 /**
- * Decoded FreeMailDomain.
  * @category models
  * @since 0.0.0
  */
 export type FreeMailDomain = typeof FreeMailDomain.Type;
 
 /**
- * A review lead, never an accepted identity or affiliation claim.
  * **Example** (Use OrgLead)
  * ```ts
  * import { OrgLead } from "@beep/party-server/OrgEvidence"
@@ -88,14 +85,12 @@ export const OrgLead = LiteralKit([
   "no-org-evidence",
 ]).pipe($I.annoteSchema("OrgLead", { description: "A review lead, never an accepted identity or affiliation claim." }));
 /**
- * Decoded OrgLead.
  * @category models
  * @since 0.0.0
  */
 export type OrgLead = typeof OrgLead.Type;
 
 /**
- * Display-name information shape; never sufficient evidence of identity.
  * **Example** (Use NameShape)
  * ```ts
  * import { NameShape } from "@beep/party-server/OrgEvidence"
@@ -111,7 +106,6 @@ export const NameShape = LiteralKit(["full-name", "single-token"]).pipe(
   })
 );
 /**
- * Decoded NameShape.
  * @category models
  * @since 0.0.0
  */

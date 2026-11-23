@@ -50,10 +50,12 @@ describe("ReleaseAgeGate.combine", () => {
   });
 
   it("unions and deduplicates the exclude sets in sorted order", () => {
-    // Insertion order (c, b, a, d) differs from sorted order so a
-    // regression back to insertion-order preservation fails this test.
     const gate = ReleaseAgeGate.combine({ exclude: ["c", "b"] }, { exclude: ["b", "a", "d"] });
-    assert.deepStrictEqual(gate.exclude, ["a", "b", "c", "d"]);
+    assert.deepStrictEqual(
+      gate.exclude,
+      ["a", "b", "c", "d"],
+      "insertion order (c, b, a, d) differs from sorted order, so a regression to insertion-order preservation fails"
+    );
   });
 
   it("returns the same sorted union regardless of contribution order", () => {
@@ -101,8 +103,10 @@ describe("ReleaseAgeGate.matchesExclude", () => {
   });
 
   it("does not treat other glob metacharacters as wildcards", () => {
-    // A `.` in the pattern is a literal dot, not a regex any-char.
-    assert.isFalse(ReleaseAgeGate.matchesExclude("aXb", ["a.b"]));
+    assert.isFalse(
+      ReleaseAgeGate.matchesExclude("aXb", ["a.b"]),
+      "a `.` in the pattern is a literal dot, not a regex any-char"
+    );
     assert.isTrue(ReleaseAgeGate.matchesExclude("a.b", ["a.b"]));
   });
 
@@ -120,46 +124,46 @@ describe("ReleaseAgeGate#isExcluded", () => {
 });
 
 describe("ReleaseAgeGate#filterVersions", () => {
-  // Fixed clock: 2026-07-21T00:00:00Z.
   const now = Date.parse("2026-07-21T00:00:00Z");
-  const day = 24 * 60; // minutes in a day
+  const minutesPerDay = 24 * 60;
 
   it("drops versions younger than the cutoff", () => {
-    const gate = ReleaseAgeGate.make({ ageMinutes: day, exclude: [] });
+    const gate = ReleaseAgeGate.make({ ageMinutes: minutesPerDay, exclude: [] });
     const versions = ["1.0.0", "1.0.1"];
-    const times = {
-      "1.0.0": "2026-07-01T00:00:00Z", // old
-      "1.0.1": "2026-07-20T23:00:00Z", // 1h old, younger than 1 day
-    };
+    const old = "2026-07-01T00:00:00Z";
+    const oneHourOldSoYoungerThanADay = "2026-07-20T23:00:00Z";
+    const times = { "1.0.0": old, "1.0.1": oneHourOldSoYoungerThanADay };
     assert.deepStrictEqual(gate.filterVersions(versions, times, "prettier", now), ["1.0.0"]);
   });
 
   it("keeps a version published exactly at the cutoff (boundary inclusive)", () => {
-    const gate = ReleaseAgeGate.make({ ageMinutes: day, exclude: [] });
-    const times = { "1.0.0": "2026-07-20T00:00:00Z" }; // exactly 1 day old
+    const gate = ReleaseAgeGate.make({ ageMinutes: minutesPerDay, exclude: [] });
+    const exactlyOneDayOld = "2026-07-20T00:00:00Z";
+    const times = { "1.0.0": exactlyOneDayOld };
     assert.deepStrictEqual(gate.filterVersions(["1.0.0"], times, "prettier", now), ["1.0.0"]);
   });
 
   it("drops a version one millisecond younger than the cutoff", () => {
-    const gate = ReleaseAgeGate.make({ ageMinutes: day, exclude: [] });
-    const times = { "1.0.0": "2026-07-20T00:00:00.001Z" }; // 1ms too young
+    const gate = ReleaseAgeGate.make({ ageMinutes: minutesPerDay, exclude: [] });
+    const oneMillisecondTooYoung = "2026-07-20T00:00:00.001Z";
+    const times = { "1.0.0": oneMillisecondTooYoung };
     assert.deepStrictEqual(gate.filterVersions(["1.0.0"], times, "prettier", now), []);
   });
 
   it("drops versions with a missing timestamp", () => {
-    const gate = ReleaseAgeGate.make({ ageMinutes: day, exclude: [] });
-    const times = { "1.0.0": "2026-07-01T00:00:00Z" }; // no entry for 1.0.1
-    assert.deepStrictEqual(gate.filterVersions(["1.0.0", "1.0.1"], times, "prettier", now), ["1.0.0"]);
+    const gate = ReleaseAgeGate.make({ ageMinutes: minutesPerDay, exclude: [] });
+    const timesWithNoEntryFor101 = { "1.0.0": "2026-07-01T00:00:00Z" };
+    assert.deepStrictEqual(gate.filterVersions(["1.0.0", "1.0.1"], timesWithNoEntryFor101, "prettier", now), ["1.0.0"]);
   });
 
   it("drops versions with an unparseable timestamp", () => {
-    const gate = ReleaseAgeGate.make({ ageMinutes: day, exclude: [] });
+    const gate = ReleaseAgeGate.make({ ageMinutes: minutesPerDay, exclude: [] });
     const times = { "1.0.0": "not-a-date", "1.0.1": "2026-07-01T00:00:00Z" };
     assert.deepStrictEqual(gate.filterVersions(["1.0.0", "1.0.1"], times, "prettier", now), ["1.0.1"]);
   });
 
   it("is a no-op (returns all versions) when the package is excluded", () => {
-    const gate = ReleaseAgeGate.make({ ageMinutes: day, exclude: ["@my/*"] });
+    const gate = ReleaseAgeGate.make({ ageMinutes: minutesPerDay, exclude: ["@my/*"] });
     const versions = ["1.0.0", "1.0.1"];
     const times = { "1.0.0": "2026-07-20T23:00:00Z", "1.0.1": "2026-07-20T23:59:00Z" };
     assert.deepStrictEqual(gate.filterVersions(versions, times, "@my/pkg", now), versions);

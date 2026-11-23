@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("values/LegalScopeContext/LegalScopeContext.model");
 
 /**
- * One recorded value on a scope axis.
- *
  * **Details**
  *
  * Values are recorded designations, compared exactly. Two axes overlap when
@@ -36,8 +34,6 @@ export const LegalScopeValue = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link LegalScopeValue}.
- *
  * @see {@link LegalScopeValue} for the runtime schema and its exact-comparison rule.
  * @category models
  * @since 0.0.0
@@ -50,9 +46,6 @@ export type LegalScopeValue = typeof LegalScopeValue.Type;
 const LegalScopeAxis = LegalScopeValue.pipe(S.HashSet, S.toCodecJson);
 
 /**
- * The scope a legal position is recorded as holding within, on exactly five
- * axes.
- *
  * **When to use**
  *
  * Use as the recorded scope of a stored relation, so two relations can be asked

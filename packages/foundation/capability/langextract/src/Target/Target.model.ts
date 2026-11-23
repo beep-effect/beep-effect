@@ -95,7 +95,6 @@ export const TargetAnnotation = S.TaggedUnion({
 );
 
 /**
- * {@inheritDoc TargetAnnotation}
  * @category models
  * @since 0.0.0
  */

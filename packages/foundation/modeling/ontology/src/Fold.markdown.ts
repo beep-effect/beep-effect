@@ -119,7 +119,6 @@ const compactOwnedLabel = (ontology: AssembledOntology, iri: string): O.Option<s
     O.map((local) => `${ontology.prefix}:${local}`)
   );
 
-// The owned prefix labels only IRIs under the base: the generated registry may bind it to another namespace.
 const compactLabel = (ontology: AssembledOntology, iri: string): string =>
   pipe(
     O.filter(contract(iri), P.not(Str.startsWith(`${ontology.prefix}:`))),
@@ -265,6 +264,11 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
 
 /**
  * Project an assembled ontology into deterministic Markdown.
+ *
+ * **Gotchas**
+ *
+ * The owned prefix labels only IRIs under the ontology base. The generated registry may
+ * bind that prefix to another namespace.
  *
  * **Example** (Render a folded ontology as Markdown)
  *

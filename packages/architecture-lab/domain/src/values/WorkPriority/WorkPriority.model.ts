@@ -38,8 +38,6 @@ export const WorkPriority = LiteralKit(["low", "normal", "high"]).pipe(
 );
 
 /**
- * Runtime type for {@link WorkPriority}.
- *
  * **Example** (Use normal priority enum)
  *
  * ```ts

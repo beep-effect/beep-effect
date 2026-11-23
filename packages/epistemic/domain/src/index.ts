@@ -6,8 +6,6 @@
  */
 
 /**
- * Epistemic entity model exports.
- *
  * **Example** (Import Activity table name)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./entities/index.ts";
 /**
- * Epistemic value model exports.
- *
  * **Example** (Log admitted lifecycle status)
  *
  * ```ts

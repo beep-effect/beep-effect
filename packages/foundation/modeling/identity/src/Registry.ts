@@ -11,6 +11,13 @@
  * generated registry; {@link view} builds the same codec over any
  * {@link RegistryTable}, which tests and fixture registries use.
  *
+ * **Gotchas**
+ *
+ * Literal-typed lookups use an internal invariant error for an unresolved
+ * registered argument; it is never a caught public failure. Generated data
+ * and table views share one codec path. When minting refuses a published IRI,
+ * a deprecation takes precedence over a namespace.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -35,10 +42,6 @@ import type { Curie, Expand, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Registry");
 
-// Internal invariant guard for the literal-typed lookups (`iri`, `mint`,
-// `mintEncoded`): their argument is registered by its literal type, so the
-// unresolved branch is type-level unreachable. Not exported: never a caught
-// public failure.
 class RegistryInvariantError extends S.TaggedError<RegistryInvariantError, { readonly brand: unique symbol }>(
   "@beep/identity/Registry/RegistryInvariantError"
 )(
@@ -157,8 +160,6 @@ export interface RegistryView {
   readonly replacementOf: (iri: string) => O.Option<TermIri>;
 }
 
-// The generated data shape, which a table is projected to, so the generated registry and a
-// table view share one code path.
 type RegistryData = {
   readonly vocab: VocabShape;
   readonly bindings: Readonly<Record<string, { readonly iri: string }>>;
@@ -191,7 +192,6 @@ const makeView = (data: RegistryData): RegistryView => {
   );
 
   const namespaceIris = HashSet.fromIterable(A.map(namespaces, ({ namespace }): string => namespace.iri));
-  // A retired namespace IRI is succeeded by a namespace IRI, a retired term by a term, as the table requires.
   const isSuccessor =
     (origin: string) =>
     (iri: string): boolean =>
@@ -569,7 +569,6 @@ export class RegistryMintError extends S.TaggedError<RegistryMintError, { readon
 
 const deprecatedTerms: Readonly<Record<string, unknown>> = RegistryDeprecations;
 
-// Every published non-live IRI and the refusal it earns; a deprecation outranks a namespace.
 const publishedReasons: Readonly<Record<string, RegistryMintError["reason"]>> = {
   ...R.fromEntries(A.map(R.values(RegistryVocab), (entry) => [entry.iri, "NamespaceIri"] as const)),
   ...R.map(deprecatedTerms, constant<RegistryMintError["reason"]>("DeprecatedTerm")),
@@ -578,7 +577,6 @@ const publishedReasons: Readonly<Record<string, RegistryMintError["reason"]>> = 
 const publishedAs = (minted: string): O.Option<RegistryMintError["reason"]> =>
   O.isSome(generated.contract(minted)) ? O.some("LiveTerm") : R.get(publishedReasons, minted);
 
-// A minted instance IRI never equals an IRI the registry publishes.
 const refusePublished = (minted: string): string => {
   const published = publishedAs(minted);
   if (O.isSome(published)) {
@@ -587,8 +585,6 @@ const refusePublished = (minted: string): string => {
   return minted;
 };
 
-// A namespace IRI ends with its own separator; a term IRI takes "/" before the next segment.
-// The segment grammar admits characters an IRI refuses, such as a space, so the result is an `IRI`.
 const joinUnder = (base: string, tail: string): string =>
   refusePublished(IRI.make(Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`));
 

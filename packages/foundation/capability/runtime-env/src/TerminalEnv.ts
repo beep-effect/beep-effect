@@ -68,8 +68,6 @@ const StreamEnvFields = {
 };
 
 /**
- * What one output stream can do.
- *
  * **Example** (Validate a quiet output stream)
  *
  * ```ts
@@ -111,8 +109,6 @@ const PartialStreamEnv = S.Struct(Struct.map(StreamEnvFields, S.optionalKey)).pi
 );
 
 /**
- * The options {@link TerminalEnv.layerTest} takes: fields to set over the quiet terminal.
- *
  * **Example** (Validate a partial terminal override)
  *
  * ```ts
@@ -146,8 +142,6 @@ export class TerminalEnvTestOptions extends S.Opaque<TerminalEnvTestOptions, { r
 ) {}
 
 /**
- * Companion types for {@link TerminalEnvTestOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

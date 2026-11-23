@@ -7,8 +7,6 @@
  */
 
 /**
- * AnswerRow model exports.
- *
  * **Example** (Import AnswerRow)
  *
  * ```ts

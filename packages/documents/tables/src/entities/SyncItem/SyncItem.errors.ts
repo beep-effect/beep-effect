@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $DocumentsTablesId.create("entities/SyncItem/SyncItem.errors");
 
 /**
- * Failure converting a SyncItem persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

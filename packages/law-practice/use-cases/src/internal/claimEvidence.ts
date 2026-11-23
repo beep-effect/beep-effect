@@ -185,8 +185,6 @@ export const termEvidenceFrom: {
 );
 
 /**
- * Inputs of one candidate claim and the evidence span that supports it.
- *
  * **Example** (Construct a candidate input)
  *
  * ```ts

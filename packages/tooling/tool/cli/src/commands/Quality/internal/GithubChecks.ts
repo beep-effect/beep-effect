@@ -1001,6 +1001,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     bunRunLane(repoRoot, "lint:oxlint", ["lint:oxlint"])
   ),
   githubCheckLane(
+    "lint:comment-law",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:comment-law", "lint:comment-law", PRE_PUSH_CI_LANE_PLAN.base)
+  ),
+  githubCheckLane(
     "quality:jsdoc-ratchet:regenerated",
     "cheap-gates",
     "repo-quality",

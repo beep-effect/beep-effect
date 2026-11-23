@@ -8,8 +8,6 @@
 
 export * from "./CandorDisposition.model.ts";
 /**
- * Candor disposition value objects.
- *
  * @category value-objects
  * @since 0.0.0
  */

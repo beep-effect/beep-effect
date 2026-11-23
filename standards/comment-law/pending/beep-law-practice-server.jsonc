@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/law-practice-server",
+  "root": "packages/law-practice/server",
+  "scopes": ["."]
+}

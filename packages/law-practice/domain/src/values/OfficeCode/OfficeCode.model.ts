@@ -12,8 +12,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $LawPracticeDomainId.create("values/OfficeCode/OfficeCode");
 
 /**
- * WIPO ST.3 two-letter office, state, entity, or organization code.
- *
  * **Details**
  *
  * The set is sourced from WIPO Standard ST.3 Annex I, Section 2, plus the
@@ -280,8 +278,6 @@ export const OfficeCode = LiteralKit([
 );
 
 /**
- * Type-level literal union produced by {@link OfficeCode}.
- *
  * **Example** (Satisfy OfficeCode literal)
  *
  * ```ts

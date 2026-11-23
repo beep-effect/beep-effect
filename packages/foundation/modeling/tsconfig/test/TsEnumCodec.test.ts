@@ -7,10 +7,6 @@ import * as O from "effect/Option";
 import { deliberatelyInvalid } from "./support/deliberatelyInvalid.ts";
 import type { CompilerOptions } from "@beep/tsconfig/CompilerOptions";
 
-// Exact R1.6 table rows, transcribed verbatim. `canonical: false` marks a
-// forward-only alias: encode must still resolve it, but decode of its value
-// must resolve to the row marked `canonical: true` sharing that value, per
-// R1.6's "aliases normalize on decode" rule.
 interface Row {
   readonly canonical: boolean;
   readonly name: string;
@@ -111,7 +107,7 @@ const FAMILIES = [
 ] as const;
 
 describe("TsEnumCodec", () => {
-  describe("R1.6 tables — every row, both directions", () => {
+  describe("R1.6 tables, transcribed verbatim — every row, both directions; a canonical: false alias still encodes, and its value decodes to the canonical row sharing it (aliases normalize on decode)", () => {
     for (const [family, rows] of FAMILIES) {
       it(`${family}`, () => {
         for (const { name, value, canonical } of rows) {
@@ -151,12 +147,15 @@ describe("TsEnumCodec", () => {
     });
 
     it("decode of an unknown/future numeric member returns Option.none()", () => {
-      assertNone(TsEnumCodec.decode("target", 0)); // es3 — decode-only, no table entry
-      assertNone(TsEnumCodec.decode("target", 100)); // JSON — decode-only, no table entry
-      assertNone(TsEnumCodec.decode("jsx", 0)); // JsxEmit.None — no tsconfig string
       assertNone(TsEnumCodec.decode("target", 12345));
       assertNone(TsEnumCodec.decode(12345)("target"));
       assertNone(TsEnumCodec.decode(0)("jsx"));
+    });
+
+    it("decode-only ScriptTarget 0=es3 and 100=JSON and JsxEmit 0=None have no tsconfig string, so the tables omit them and decode returns Option.none()", () => {
+      assertNone(TsEnumCodec.decode("target", 0));
+      assertNone(TsEnumCodec.decode("target", 100));
+      assertNone(TsEnumCodec.decode("jsx", 0));
     });
   });
 
@@ -211,12 +210,7 @@ describe("TsEnumCodec", () => {
       assert.deepStrictEqual<unknown>(encoded, { lib: ["lib.esnext.d.ts", 1, "lib.dom.iterable.d.ts"] });
     });
 
-    it("normalizes a mixed-case lib entry before re-encoding to file-name form", () => {
-      // `lib`'s decoded type is the canonical-lowercase literal union, so a
-      // mixed-case entry can only reach this function by bypassing the
-      // schema decode (e.g. hand-assembled options) — exactly the input
-      // `normalizeLibReference` must tolerate. Cast past the narrower type
-      // to construct that input directly.
+    it("normalizes a mixed-case lib entry, reachable only by bypassing the canonical-lowercase schema decode with hand-assembled options, before re-encoding to file-name form", () => {
       const encoded = TsEnumCodec.encodeCompilerOptions(deliberatelyInvalid<CompilerOptions.Type>({ lib: ["ESNext"] }));
       assert.deepStrictEqual(encoded, { lib: ["lib.esnext.d.ts"] });
     });

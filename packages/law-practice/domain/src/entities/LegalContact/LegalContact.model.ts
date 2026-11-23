@@ -14,8 +14,6 @@ const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.model
 const pg = ProductEntity.pg;
 
 /**
- * Legal contact entity attached to a legal client.
- *
  * **Example** (Decode LegalContact entity)
  *
  * ```ts

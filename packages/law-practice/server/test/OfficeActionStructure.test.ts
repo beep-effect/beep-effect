@@ -296,38 +296,36 @@ const writtenLog = "/written/attempts.jsonl";
 it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeout: "10 seconds" })(
   "frozen attempt log",
   (it) => {
-    // `fixtures/office-action-attempts-v1.jsonl` is the log this intake and store wrote as schema version 1: one
-    // recognized row and one failed row. Logs on disk hold these bytes, so the file is never regenerated. Version 2
-    // stores each aligned extraction's `span` and `matchedText` as one `anchor`;
-    // `fixtures/office-action-attempts-v2.jsonl` is the same two attempts as this intake writes them now.
-    it.effect("writes v2 rows byte for byte", () =>
-      Effect.gen(function* () {
-        const state = yield* TestState;
-        const intake = yield* OfficeActionDocketIntake;
-        const fs = yield* FileSystem.FileSystem;
-        const changed = yield* fixtureSource(`prefix ${state.text}`);
-        const recognized = yield* intake.record(
-          OfficeActionAttemptRequest.make({ attemptId: "a-1", document, verification: state.verification })
-        );
-        expect(recognized.status).toBe("recognized");
-        const refused = yield* intake
-          .record(
-            OfficeActionAttemptRequest.make({
-              attemptId: "a-2",
-              previousAttemptId: O.some("a-1"),
-              document,
-              verification: VerifySourceTextIdentityInput.make({
-                expectedSource: state.verification.expectedSource,
-                source: changed.source,
-                sourceText: `prefix ${state.text}`,
-              }),
-            })
-          )
-          .pipe(Effect.flip);
-        expect(refused._tag).toBe("VerifiedTextAnchorError");
-        const written = yield* fs.readFileString(writtenLog);
-        expect(written).toBe(frozenAttemptLogV2);
-      })
+    it.effect(
+      "writes v2 rows byte for byte (the same recognized and failed attempts as the frozen v1 log, which is never regenerated, with each aligned extraction's span and matchedText stored as one anchor)",
+      () =>
+        Effect.gen(function* () {
+          const state = yield* TestState;
+          const intake = yield* OfficeActionDocketIntake;
+          const fs = yield* FileSystem.FileSystem;
+          const changed = yield* fixtureSource(`prefix ${state.text}`);
+          const recognized = yield* intake.record(
+            OfficeActionAttemptRequest.make({ attemptId: "a-1", document, verification: state.verification })
+          );
+          expect(recognized.status).toBe("recognized");
+          const refused = yield* intake
+            .record(
+              OfficeActionAttemptRequest.make({
+                attemptId: "a-2",
+                previousAttemptId: O.some("a-1"),
+                document,
+                verification: VerifySourceTextIdentityInput.make({
+                  expectedSource: state.verification.expectedSource,
+                  source: changed.source,
+                  sourceText: `prefix ${state.text}`,
+                }),
+              })
+            )
+            .pipe(Effect.flip);
+          expect(refused._tag).toBe("VerifiedTextAnchorError");
+          const written = yield* fs.readFileString(writtenLog);
+          expect(written).toBe(frozenAttemptLogV2);
+        })
     );
 
     it.effect("reads every frozen v1 row to its v2 form", () =>
@@ -412,61 +410,65 @@ it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeo
       })
     );
 
-    // A lone surrogate in a source identity is refused, never repaired: replacing it would change `scopeRef`, which is
-    // the matter wall and half of the predecessor-chain key. The frozen log is the same file without the escape.
-    it.effect("refuses a row whose source identity spells a lone surrogate, in either direction", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const file = "/ill-formed/attempts.jsonl";
-        const context = yield* Layer.build(officeActionStructureFileStore(file));
-        const store = Context.get(context, OfficeActionStructureStore);
-        const refusals = yield* Effect.forEach(
-          [
-            '"scopeRef":"',
-            '"sourceRef":"',
-            '"locator":"',
-            '"name":"',
-            '"utf8","version":"',
-            '"normalizationVersion":"',
-          ],
-          Effect.fnUntraced(function* (field) {
-            yield* fs.writeFileString(file, Str.replaceAll(field, `${field}\\ud800`)(frozenAttemptLog));
-            return yield* store.read.pipe(Effect.flip);
-          }),
-          { concurrency: 1 }
-        );
-        expect(A.dedupe(A.map(refusals, (refusal) => refusal.message))).toEqual([
-          "Cannot decode complete attempt history.",
-        ]);
-        expect(A.map(refusals, (refusal) => refusal._tag)).toEqual(A.replicate("OfficeActionStructureStorageError", 6));
+    it.effect(
+      "refuses a row whose source identity spells a lone surrogate, in either direction, never repairing scopeRef (the matter wall and half the predecessor-chain key)",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const file = "/ill-formed/attempts.jsonl";
+          const context = yield* Layer.build(officeActionStructureFileStore(file));
+          const store = Context.get(context, OfficeActionStructureStore);
+          const refusals = yield* Effect.forEach(
+            [
+              '"scopeRef":"',
+              '"sourceRef":"',
+              '"locator":"',
+              '"name":"',
+              '"utf8","version":"',
+              '"normalizationVersion":"',
+            ],
+            Effect.fnUntraced(function* (field) {
+              yield* fs.writeFileString(file, Str.replaceAll(field, `${field}\\ud800`)(frozenAttemptLog));
+              return yield* store.read.pipe(Effect.flip);
+            }),
+            { concurrency: 1 }
+          );
+          expect(A.dedupe(A.map(refusals, (refusal) => refusal.message))).toEqual([
+            "Cannot decode complete attempt history.",
+          ]);
+          expect(A.map(refusals, (refusal) => refusal._tag)).toEqual(
+            A.replicate("OfficeActionStructureStorageError", 6)
+          );
 
-        yield* fs.writeFileString(file, Str.replaceAll("matter:", "matter:\\ud83d\\ude00")(frozenAttemptLog));
-        const paired = yield* store.read;
-        expect(A.map(paired, (row) => row.source.scopeRef)).toEqual(A.replicate("matter:😀fixture", 2));
+          yield* fs.writeFileString(file, Str.replaceAll("matter:", "matter:\\ud83d\\ude00")(frozenAttemptLog));
+          const paired = yield* store.read;
+          expect(A.map(paired, (row) => row.source.scopeRef)).toEqual(A.replicate("matter:😀fixture", 2));
 
-        yield* fs.writeFileString(file, frozenAttemptLog);
-        const rows = yield* store.read;
-        const last = yield* Effect.fromOption(A.last(rows), () => "missing failed row");
-        assertNone(SourceTextIdentity.makeOption({ ...last.source, scopeRef: "matter:\ud800" }));
-        const next = OfficeActionStructureAttempt.make({
-          ...last,
-          attemptId: "a-3",
-          previousAttemptId: O.some("a-2"),
-          source: SourceTextIdentity.make({ ...last.source }),
-        });
-        // A value that got past its constructor still cannot be written.
-        expect(Reflect.set(next.source, "sourceRef", "source:\ud800")).toBe(true);
-        const cause = yield* store.append(next).pipe(Effect.sandbox, Effect.flip);
-        pipe(cause, Cause.hasDies, assertTrue);
-        expect(Cause.pretty(cause)).toContain("Expected text without lone UTF-16 surrogates.");
-        const kept = yield* fs.readFileString(file);
-        expect(kept).toBe(frozenAttemptLog);
+          yield* fs.writeFileString(file, frozenAttemptLog);
+          const rows = yield* store.read;
+          const last = yield* Effect.fromOption(A.last(rows), () => "missing failed row");
+          assertNone(SourceTextIdentity.makeOption({ ...last.source, scopeRef: "matter:\ud800" }));
+          const next = OfficeActionStructureAttempt.make({
+            ...last,
+            attemptId: "a-3",
+            previousAttemptId: O.some("a-2"),
+            source: SourceTextIdentity.make({ ...last.source }),
+          });
+          expect(
+            Reflect.set(next.source, "sourceRef", "source:\ud800"),
+            "a value smuggled past its constructor still cannot be written"
+          ).toBe(true);
+          const cause = yield* store.append(next).pipe(Effect.sandbox, Effect.flip);
+          pipe(cause, Cause.hasDies, assertTrue);
+          expect(Cause.pretty(cause)).toContain("Expected text without lone UTF-16 surrogates.");
+          const kept = yield* fs.readFileString(file);
+          expect(kept).toBe(frozenAttemptLog);
 
-        expect(Reflect.set(next.source, "sourceRef", last.source.sourceRef)).toBe(true);
-        yield* store.append(next);
-        const grown = yield* store.read;
-        expect(A.map(grown, (row) => row.attemptId)).toEqual(["a-1", "a-2", "a-3"]);
-      })
+          expect(Reflect.set(next.source, "sourceRef", last.source.sourceRef)).toBe(true);
+          yield* store.append(next);
+          const grown = yield* store.read;
+          expect(A.map(grown, (row) => row.attemptId)).toEqual(["a-1", "a-2", "a-3"]);
+        })
     );
   }
 );

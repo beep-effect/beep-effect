@@ -1,0 +1,3 @@
+# P2 final C merge cache review
+
+The merge retains C final cache policy and the Bun 1.4.5 profile. P2 adds @beep/text to the workspace graph and repository CLI dependency references. The regenerated root task projection changes //#lint:policy-fingerprint inputs. The CLI manifest and graph change @beep/repo-cli#build, @beep/repo-cli#check, @beep/repo-cli#doctest, @beep/repo-cli#lint:deprecated-apis, @beep/repo-cli#test and @beep/repo-cli#test:property. These are the seven configuration-drift findings in cache audit after the merge. The turbo.json source drift reflects the retained P2 text dependency edges. No cache qualification is granted.

@@ -24,8 +24,6 @@ import type { SetupRequirement } from "@beep/law-practice-domain";
 const $I = $PracticeGatewayId.create("Approvals");
 
 /**
- * The lawyer's answer in the approval prompt.
- *
  * **Example** (An approving answer)
  *
  * ```ts

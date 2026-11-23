@@ -28,8 +28,6 @@ import { WindowsHostFailure } from "./PracticeGateway.errors.ts";
 const $I = $PracticeGatewayId.create("WindowsHost");
 
 /**
- * Environment-backed folders the probes resolve paths under.
- *
  * **Example** (Check a known folder)
  *
  * ```ts
@@ -48,8 +46,6 @@ export const KnownFolder = LiteralKit(["ProgramFiles", "LOCALAPPDATA", "APPDATA"
 );
 
 /**
- * Decoded type of {@link KnownFolder}.
- *
  * **Example** (Type a known folder)
  *
  * ```ts
@@ -65,9 +61,6 @@ export const KnownFolder = LiteralKit(["ProgramFiles", "LOCALAPPDATA", "APPDATA"
 export type KnownFolder = typeof KnownFolder.Type;
 
 /**
- * Whether BitLocker protects a drive, as far as an unelevated process can
- * tell.
- *
  * **Example** (Check a protection state)
  *
  * ```ts
@@ -86,8 +79,6 @@ export const BitLockerProtection = LiteralKit(["on", "off", "unknown"]).pipe(
 );
 
 /**
- * Decoded type of {@link BitLockerProtection}.
- *
  * **Example** (Type a protection state)
  *
  * ```ts
@@ -136,8 +127,6 @@ export const WindowsHostOutput = <A>() =>
   );
 
 /**
- * One registry value to read: the key path and the value name under it.
- *
  * **Example** (Name a registry value)
  *
  * ```ts
@@ -162,8 +151,6 @@ export class RegistryValueQuery extends S.Opaque<RegistryValueQuery, { readonly 
 ) {}
 
 /**
- * A Yes/No question shown in a Windows dialog on the lawyer's desktop.
- *
  * **Example** (Ask before installing Box Drive)
  *
  * ```ts
@@ -188,8 +175,6 @@ export class YesNoQuestion extends S.Opaque<YesNoQuestion, { readonly brand: uni
 ) {}
 
 /**
- * Service shape of {@link WindowsHost}.
- *
  * **Example** (Build a host shape)
  *
  * ```ts

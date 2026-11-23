@@ -22,8 +22,6 @@ import * as S from "effect/Schema";
 const $I = $ExecutionAuthorityUseCasesId.create("ExecutionLedger/ExecutionLedger.errors");
 
 /**
- * Operations the execution ledger port exposes.
- *
  * **Example** (Log appendDecision enum value)
  *
  * ```ts
@@ -48,8 +46,6 @@ export const ExecutionLedgerOperation = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ExecutionLedgerOperation}.
- *
  * **Example** (Assign typed operation value)
  *
  * ```ts
@@ -128,8 +124,6 @@ export class ExecutionLedgerConstraintViolation extends S.TaggedError<
 }
 
 /**
- * The execution ledger could not serve a request.
- *
  * **Example** (Create unavailable during error)
  *
  * ```ts
@@ -187,8 +181,6 @@ export class ExecutionLedgerUnavailable extends S.TaggedError<
 }
 
 /**
- * Union of execution ledger write failures.
- *
  * **Example** (Check error union membership)
  *
  * ```ts
@@ -208,8 +200,6 @@ export const ExecutionLedgerError = S.Union([ExecutionLedgerConstraintViolation,
 );
 
 /**
- * Runtime type for {@link ExecutionLedgerError}.
- *
  * **Example** (Type error handler parameter)
  *
  * ```ts

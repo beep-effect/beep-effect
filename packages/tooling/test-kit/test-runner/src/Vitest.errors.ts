@@ -9,8 +9,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { RegistryTerms } from "./internal/generated/RegistryTerms.ts";
 
-// This bootstrap package cannot import @beep/identity, so its schema identities
-// come from the registry projection the identity registry generator writes.
 const identity = (code: keyof typeof RegistryTerms) => {
   const { identifier, iri, curie } = RegistryTerms[code];
   return { schemaId: Symbol.for(identifier), identifier, iri, curie };

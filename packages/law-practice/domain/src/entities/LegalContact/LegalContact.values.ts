@@ -12,8 +12,6 @@ const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.value
 const LegalContactRoleBase = LiteralKit(["founder"]);
 
 /**
- * Legal contact role accepted by the law-practice proof fixtures.
- *
  * **Example** (Decode founder role value)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const LegalContactRole = LegalContactRoleBase.pipe(
 );
 
 /**
- * Type-level literal union produced by {@link LegalContactRole}.
- *
  * **Example** (Satisfy founder role type)
  *
  * ```ts

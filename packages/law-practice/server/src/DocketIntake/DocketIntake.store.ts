@@ -30,8 +30,6 @@ const LOCK_FILE = "state.lock";
 const DIGEST_DIRECTORY = "digests";
 
 /**
- * Settings of the file-backed docket intake store.
- *
  * **Example** (Make store options)
  *
  * ```ts

@@ -793,6 +793,158 @@ Since v1.0.0`
       );
     });
 
+    describe("derived leads", () => {
+      const descriptionsOf = Effect.fn("ParserTest.descriptionsOf")(function* <A extends { readonly doc: Domain.Doc }>(
+        eff: Effect.Effect<ReadonlyArray<A>, never, Parser.Source | Configuration.Configuration>,
+        source: string
+      ) {
+        const entries = yield* Effect.provide(eff, makeParserTestContext(source));
+        return A.map(entries, (entry) => entry.doc.description);
+      });
+
+      const annotated = `const $I = make();
+        /**
+         * @since 1.0.0
+         */
+        export const Name = S.String.pipe($I.annoteSchema("Name", { description: "A party name." }))`;
+
+      it.effect("takes a constant's lead from its annotation when the block has none", () =>
+        Effect.gen(function* () {
+          const descriptions = yield* descriptionsOf(Parser.parseConstants, annotated);
+          expect(descriptions).toEqual(["A party name."]);
+        })
+      );
+
+      it.effect("puts the annotation lead before a block that opens with a section", () =>
+        Effect.gen(function* () {
+          const source = `/**
+           * **Example** (Use it)
+           *
+           * \`\`\`ts
+           * Name
+           * \`\`\`
+           *
+           * @since 1.0.0
+           */
+          export const Name = S.String.pipe($I.annoteSchema("Name", { description: "A party name." }))`;
+          const [description] = yield* descriptionsOf(Parser.parseConstants, source);
+          expect(description).toMatch(/^A party name\.\n\n\*\*Example\*\* \(Use it\)/);
+        })
+      );
+
+      it.effect("keeps a written lead", () =>
+        Effect.gen(function* () {
+          const source = `/**
+           * Names are dated claims.
+           * @since 1.0.0
+           */
+          export const Name = S.String.pipe($I.annoteSchema("Name", { description: "A party name." }))`;
+          const descriptions = yield* descriptionsOf(Parser.parseConstants, source);
+          expect(descriptions).toEqual(["Names are dated claims."]);
+        })
+      );
+
+      it.effect("takes a type companion's lead from the same-name value", () =>
+        Effect.gen(function* () {
+          const source = `${annotated}
+          /**
+           * @since 1.0.0
+           */
+          export type Name = typeof Name.Type`;
+          const descriptions = yield* descriptionsOf(Parser.parseTypeAliases, source);
+          expect(descriptions).toEqual(["A party name."]);
+        })
+      );
+
+      it.effect("takes classes, functions, interfaces and namespaces from their annotations", () =>
+        Effect.gen(function* () {
+          const source = `/**
+           * @since 1.0.0
+           */
+          export class Party extends S.Class<Party>("Party")({}, $I.annote("Party", { description: "A party." })) {}
+          /**
+           * @since 1.0.0
+           */
+          export interface Party { readonly brand: unique symbol }
+          /**
+           * @since 1.0.0
+           */
+          export declare namespace Party {
+            /**
+             * @since 1.0.0
+             */
+            export type Encoded = {}
+          }
+          /**
+           * @since 1.0.0
+           */
+          export function plain() {}
+          /**
+           * @since 1.0.0
+           */
+          export const run = () => 1`;
+          const classes = yield* descriptionsOf(Parser.parseClasses, source);
+          expect(classes).toEqual(["A party."]);
+          const interfaces = yield* descriptionsOf(Parser.parseInterfaces, source);
+          expect(interfaces).toEqual(["A party."]);
+          const namespaces = yield* Effect.provide(Parser.parseNamespaces, makeParserTestContext(source));
+          expect(A.map(namespaces, (namespace) => namespace.doc.description)).toEqual(["A party."]);
+          expect(A.map(namespaces[0]?.typeAliases ?? [], (alias) => alias.doc.description)).toEqual(["A party."]);
+          const functions = yield* descriptionsOf(Parser.parseFunctions, source);
+          expect(functions).toEqual([undefined, undefined]);
+        })
+      );
+
+      it.effect("takes a re-exported name's lead from its target", () =>
+        Effect.gen(function* () {
+          const source = `/**
+           * Lead of written.
+           * **Example** (Read written)
+           * \`\`\`ts
+           * console.log(written)
+           * \`\`\`
+           *
+           * @since 1.0.0
+           */
+          const written = 1
+          /**
+           * **Details**
+           *
+           * Section only.
+           *
+           * @since 1.0.0
+           */
+          const sectionOnly = S.String.pipe($I.annoteSchema("sectionOnly", { description: "From the annotation." }))
+          const bare = 2
+          /**
+           * Lead of fn.
+           * @since 1.0.0
+           */
+          function fn() {}
+          export {
+            /**
+             * @since 1.0.0
+             */
+            fn,
+            /**
+             * @since 1.0.0
+             */
+            written,
+            /**
+             * @since 1.0.0
+             */
+            sectionOnly as renamed,
+            /**
+             * @since 1.0.0
+             */
+            bare
+          }`;
+          const descriptions = yield* descriptionsOf(Parser.parseExports, source);
+          expect(descriptions).toEqual(["Lead of fn.", "Lead of written.", "From the annotation.", undefined]);
+        })
+      );
+    });
+
     describe("parseConstants", () => {
       it.effect("should handle a constant value", () =>
         expectMarkdown(

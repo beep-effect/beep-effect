@@ -6,8 +6,6 @@
  */
 
 /**
- * Execution verdict model exports.
- *
  * **Example** (Import DenialReason enum value)
  *
  * ```ts

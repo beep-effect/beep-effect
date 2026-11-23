@@ -80,12 +80,8 @@ const unique = (sourceText: string, start: number, end: number): Resolution =>
     quote: Str.slice(start, end)(sourceText),
   });
 
-// The count of a part of a composite that is not NotFound: a Unique part counts once.
 const countOf = (outcome: Resolution): number => (Resolution.guards.Ambiguous(outcome) ? outcome.count : 1);
 
-// Nested ranges multiply counts past `Number.MAX_SAFE_INTEGER`, which `S.Int` refuses; the count saturates there, so a
-// saturated count is a lower bound (decision p2-ambiguous-count-saturates). Both factors are safe integers, so a
-// product at or below the cap is exact.
 const saturatingProduct = (left: number, right: number): number =>
   N.min(N.multiply(left, right), Number.MAX_SAFE_INTEGER);
 
@@ -112,11 +108,7 @@ const resolvePosition = (sourceText: string, position: Position): Resolution =>
 const getUnsafe = A.getUnsafe;
 const emptyText = constant("");
 
-// Performance boundary (KMP scan): one pass over every UTF-16 code unit of the text and of the needle, with native
-// string indexing; the same boundary is drawn in `@beep/langextract` `VerifiedSpan.behavior.ts`. The prefix table
-// is the one allocation and is not mutated once built.
-
-// The matched length of `needle` after reading one more code unit, falling back through the prefix table.
+// decision: native-scan-hot-paths
 const advance = (needle: string, table: ReadonlyArray<number>, matched: number, unit: string | undefined): number => {
   let next = matched;
   while (next > 0 && unit !== needle[next]) {
@@ -135,14 +127,13 @@ const prefixTable = (needle: string): ReadonlyArray<number> => {
   return table;
 };
 
-// Calls `onMatch` with the end offset of every match of `needle` in the text, overlapping matches included.
-const scanMatches = (sourceText: string, needle: string, onMatch: (end: number) => void): void => {
+const scanMatches = (sourceText: string, needle: string, onMatchEnd: (end: number) => void): void => {
   const table = prefixTable(needle);
   let matched = 0;
   for (let index = 0; index < sourceText.length; index++) {
     matched = advance(needle, table, matched, sourceText[index]);
     if (matched === needle.length) {
-      onMatch(index + 1);
+      onMatchEnd(index + 1);
       matched = getUnsafe(table, matched - 1);
     }
   }
@@ -158,8 +149,6 @@ const quoteOutcome = (sourceText: string, hits: number, first: number, width: nu
   return hits === 1 ? unique(sourceText, first, first + width) : ambiguous(hits);
 };
 
-// Every start of `exact` whose context matches is one hit, overlapping hits included, so the scan runs over the
-// concatenated needle `prefix + exact + suffix` and applies the scalar-boundary test to the `exact` range only.
 const resolveQuote = (sourceText: string, quote: QuoteSelector): Resolution => {
   const prefix = O.getOrElse(quote.prefix, emptyText);
   const needle = `${prefix}${quote.exact}${O.getOrElse(quote.suffix, emptyText)}`;
@@ -176,7 +165,6 @@ const resolveQuote = (sourceText: string, quote: QuoteSelector): Resolution => {
   return quoteOutcome(sourceText, hits, first, width);
 };
 
-// `by` applies inside the segment `base` selects; a base that is not Unique has no segment, so it is the outcome.
 const resolveRefined = (sourceText: string, refined: RefinedSelector): Resolution => {
   const base = resolveSelector(sourceText, refined.base);
   return Resolution.guards.Unique(base) ? shiftBy(base.position.start)(resolveSelector(base.quote, refined.by)) : base;

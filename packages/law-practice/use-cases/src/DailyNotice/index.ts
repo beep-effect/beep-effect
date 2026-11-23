@@ -7,8 +7,6 @@
  */
 
 /**
- * Daily notice typed errors.
- *
  * @category errors
  * @since 0.0.0
  */

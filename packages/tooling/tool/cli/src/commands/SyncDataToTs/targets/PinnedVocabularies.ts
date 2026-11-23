@@ -177,6 +177,9 @@ const w3cAttribution = (title: string): string =>
  * its companion nschema.html covers it, and its bytes are vendored with that
  * license in `@beep/rdf` `data/vocab/nanopub-nschema`; only its term IRIs are projected.
  *
+ * Web Annotation binds as: to the HTTP namespace in anno.jsonld, whereas
+ * the AS2 artifact writes its HTTPS form.
+ *
  * **Example** (Count the pinned namespaces)
  *
  * ```ts
@@ -190,7 +193,6 @@ const w3cAttribution = (title: string): string =>
 export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> = [
   {
     prefix: "as",
-    // Web Annotation binds `as:` to the http form (anno.jsonld); the AS2 artifact writes the https form.
     namespace: "http://www.w3.org/ns/activitystreams#",
     location:
       "https://raw.githubusercontent.com/w3c/activitystreams/258bce0cd50ec9683b1417adfa1af926d447cda5/vocabulary/activitystreams2.owl",
@@ -492,7 +494,6 @@ const sectionText = (text: string, section: string): string =>
     O.getOrElse(() => "")
   );
 
-// Whether an artifact's text declares a curated term under its declaration strategy.
 const declaresTerm = (declaration: VocabularyDeclaration, text: string, term: string): boolean =>
   VocabularyDeclaration.match(declaration, {
     Turtle: ({ subjectPrefix }) =>
@@ -565,8 +566,6 @@ const encodedPin = (row: ProjectedVocabulary, revision: typeof SpecificationRevi
 
 const emptyShardRows = { bindings: [], deprecations: [] } as const;
 
-// The pin owns the namespace and the live terms; the hand-authored rows
-// (bindings, deprecations, projection) are carried from the checked-in shard.
 const encodedShard = (row: ProjectedVocabulary, existing: O.Option<typeof RegistryShard.Encoded>) => ({
   ...O.getOrElse(existing, () => emptyShardRows),
   namespace: { prefix: row.pin.prefix, iri: row.pin.namespace },

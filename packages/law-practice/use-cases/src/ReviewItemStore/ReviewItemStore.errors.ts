@@ -16,8 +16,6 @@ const $I = $LawPracticeUseCasesId.create("ReviewItemStore/ReviewItemStore.errors
 const ReviewItemStoreOperationBase = LiteralKit(["read", "upsert", "repair"]);
 
 /**
- * Review-item store operation that failed.
- *
  * **Example** (Guard a store operation)
  *
  * ```ts
@@ -38,8 +36,6 @@ export const ReviewItemStoreOperation = ReviewItemStoreOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link ReviewItemStoreOperation}.
- *
  * @see {@link ReviewItemStoreOperation} for the operation names.
  * @category errors
  * @since 0.0.0
@@ -47,8 +43,6 @@ export const ReviewItemStoreOperation = ReviewItemStoreOperationBase.pipe(
 export type ReviewItemStoreOperation = typeof ReviewItemStoreOperation.Type;
 
 /**
- * The review-item store could not read its items or store some.
- *
  * **Details**
  *
  * A store that cannot answer fails with this error rather than returning no

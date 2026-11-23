@@ -25,7 +25,6 @@ import type { AnnotationDocumentView } from "./AnnotationDocument.ts";
 import type { AnnotationId } from "./AnnotationId.ts";
 import type { KindRegistry } from "./Kind.ts";
 
-// The range and level of an annotation that takes part in containment.
 type Located = { readonly range: Position; readonly level: number };
 
 const locate = (kinds: KindRegistry, document: AnnotationDocumentView, id: AnnotationId): O.Option<Located> =>

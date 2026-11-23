@@ -69,8 +69,6 @@ export const DocketRunId = S.String.check(S.isPattern(/^run-[+-]?\d{8,}T\d{9}Z$/
 );
 
 /**
- * Type of {@link DocketRunId}.
- *
  * **Example** (Type a run id)
  *
  * ```ts
@@ -105,8 +103,6 @@ export const makeDocketRunId = (instant: DateTime.DateTime): DocketRunId =>
   DocketRunId.make(`run-${instant.pipe(DateTime.toUtc, DateTime.formatIso, compactInstant)}`);
 
 /**
- * What one journal line records.
- *
  * **Details**
  *
  * `event-created` and `message-marked` are the writes of a poll cycle.
@@ -146,8 +142,6 @@ export const DocketJournalKind = LiteralKit([
 ]).pipe($I.annoteSchema("DocketJournalKind", { description: "What one docket intake journal line records." }));
 
 /**
- * Type of {@link DocketJournalKind}.
- *
  * **Example** (Type a journal kind)
  *
  * ```ts
@@ -545,8 +539,6 @@ export const recordDocketRunCompleted = Effect.fn("DocketJournal.runCompleted")(
 });
 
 /**
- * Counts of one run in the journal.
- *
  * **Example** (Read a run summary)
  *
  * ```ts

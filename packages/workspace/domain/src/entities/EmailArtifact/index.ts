@@ -6,8 +6,6 @@
  */
 
 /**
- * Module exports.
- *
  * **Example** (Import EmailArtifact module)
  *
  * ```ts

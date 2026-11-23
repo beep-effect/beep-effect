@@ -24,8 +24,6 @@ import * as S from "effect/Schema";
 const $I = $UtilsId.create("TestDouble");
 
 /**
- * A test-double member was called without an override.
- *
  * **Example** (Construct an unstubbed-member error)
  *
  * ```ts
@@ -83,9 +81,6 @@ export const unstubbed =
     );
 
 /**
- * How a test double's unstubbed member was used: called as a function, or
- * read as a value.
- *
  * **Example** (Validate an access kind)
  *
  * ```ts
@@ -105,16 +100,12 @@ export const UnstubbedAccess = S.Literals(["called", "read"]).pipe(
 );
 
 /**
- * The values accepted by {@link UnstubbedAccess}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type UnstubbedAccess = typeof UnstubbedAccess.Type;
 
 /**
- * The test double a synchronous unstubbed thrower reports for.
- *
  * **Example** (Describe a double whose members are read)
  *
  * ```ts
@@ -149,8 +140,6 @@ export class UnstubbedTarget extends S.Opaque<UnstubbedTarget, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link UnstubbedTarget}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -225,8 +214,6 @@ export const UnstubbedMember = S.Literals(["call", "effect"]).pipe(
 );
 
 /**
- * The values accepted by {@link UnstubbedMember}.
- *
  * @category type-level
  * @since 0.0.0
  */

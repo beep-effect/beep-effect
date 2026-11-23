@@ -6,8 +6,6 @@
  */
 
 /**
- * Turn model exports.
- *
  * **Example** (Log Turn entity type)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Turn.model.ts";
 /**
- * Turn subsidiary value schema exports.
- *
  * @category models
  * @since 0.0.0
  */

@@ -2610,6 +2610,12 @@
         "./packages/foundation/modeling/annotation/src/index.ts"
       ],
       "@beep/annotation/*": ["./packages/foundation/modeling/annotation/src/*"],
+      "@beep/lint-rules/comment-grammar": [
+        "./packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts"
+      ],
+      "@beep/repo-cli/commands/Decisions": [
+        "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
+      ],
       "@beep/schema/Signal": [
         "./packages/foundation/modeling/schema/src/Signal.ts"
       ]

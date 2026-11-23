@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/sbom",
+  "root": "packages/foundation/modeling/sbom",
+  "scopes": ["."]
+}

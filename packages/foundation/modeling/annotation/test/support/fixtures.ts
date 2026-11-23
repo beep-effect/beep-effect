@@ -1,7 +1,3 @@
-// One fixed annotation document over one fixed capture: every declared kind, a relation and a coreference
-// cluster over two Mentions, an astral character before the last word, and one generation per annotation by one
-// activity at one stated time. The committed canonical JSON of this document is
-// `test/fixtures/canonical-document-v1.json`.
 import { makeDocumentCodec } from "@beep/annotation/AnnotationDocument";
 import {
   Chunk,
@@ -111,7 +107,12 @@ export const fixtureGeneration = {
   at: O.some(DateTime.makeUnsafe(1_763_510_400_000)),
 };
 
-/** The parts `assemble` takes for the fixture document. */
+/**
+ * The parts `assemble` takes for the fixture document over one fixed capture: every declared kind, a relation and a
+ * coreference cluster over two Mentions, an astral character before the last word, and one generation per
+ * annotation by one activity at one stated time. The committed canonical JSON of the assembled document is
+ * `test/fixtures/canonical-document-v1.json`.
+ */
 export const fixtureParts = {
   text: fixtureSource,
   generation: fixtureGeneration,

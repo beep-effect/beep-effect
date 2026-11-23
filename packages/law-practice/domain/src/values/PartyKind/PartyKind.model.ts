@@ -12,8 +12,6 @@ const $I = $LawPracticeDomainId.create("values/PartyKind/PartyKind.model");
 const PartyKindBase = LiteralKit(["natural-person", "juristic-person"]);
 
 /**
- * The kind of legal person a party is.
- *
  * **When to use**
  *
  * Use to record what a party is, and on a legal role to record which kinds of
@@ -50,8 +48,6 @@ export const PartyKind = PartyKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link PartyKind}.
- *
  * @see {@link PartyKind} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0

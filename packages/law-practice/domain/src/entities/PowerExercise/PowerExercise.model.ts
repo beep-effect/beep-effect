@@ -19,8 +19,6 @@ const $I = $LawPracticeDomainId.create("entities/PowerExercise/PowerExercise.mod
 const pg = ProductEntity.pg;
 
 /**
- * One attempt to exercise a power, recorded whether or not it worked.
- *
  * **When to use**
  *
  * Use to record that somebody did something under a claimed authority, on an

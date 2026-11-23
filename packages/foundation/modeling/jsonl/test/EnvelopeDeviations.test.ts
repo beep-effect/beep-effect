@@ -1,7 +1,3 @@
-// Pins from the Envelope deviation review. D19 restores upstream's issue roots and
-// messages byte for byte (oracle: effected/packages/jsonl, probe 29); D21 pins the
-// lab's lazy Effect forms; D15 pins upstream's omission of an undefined scope.
-
 import { fcRuns } from "@beep/fc-runs";
 import { Envelope, InvalidData, JsonlEvent, Line } from "@beep/jsonl";
 import { assert, describe, it } from "@effect/vitest";
@@ -33,15 +29,17 @@ const invalidData = (result: Result.Result<unknown, unknown>): InvalidData => {
   return failure;
 };
 
-/** A typed input that an untyped caller then corrupts field by field. */
-const corrupted = (fields: R.ReadonlyRecord<string, unknown>, data: R.ReadonlyRecord<string, unknown> = {}) => {
+const typedInputCorruptedByUntypedCaller = (
+  fields: R.ReadonlyRecord<string, unknown>,
+  data: R.ReadonlyRecord<string, unknown> = {}
+) => {
   const input: EnvelopeInput<"noted", typeof Round.Type> = { at, event: "noted", data: { round: 1, label: "x" } };
   for (const [key, value] of R.toEntries(fields)) Reflect.set(input, key, value);
   for (const [key, value] of R.toEntries(data)) Reflect.set(input.data, key, value);
   return input;
 };
 
-describe("D19: payload failures are rooted at the payload, as upstream reports them", () => {
+describe("D19: payload failures are rooted at the payload, with issue roots and messages byte for byte as upstream reports them (oracle: effected/packages/jsonl, probe 29)", () => {
   it.each([
     {
       name: "a struct payload field",
@@ -95,37 +93,37 @@ describe("D19: payload failures are rooted at the payload, as upstream reports t
   it.each([
     {
       name: "an invalid timestamp, with no path",
-      input: corrupted({ at: "not-a-date" }),
+      input: typedInputCorruptedByUntypedCaller({ at: "not-a-date" }),
       issue: "Expected DateTime.Utc",
       root: "Encoding",
     },
     {
       name: "a null timestamp, with no path",
-      input: corrupted({ at: null }),
+      input: typedInputCorruptedByUntypedCaller({ at: null }),
       issue: "Expected DateTime.Utc",
       root: "Encoding",
     },
     {
       name: "an invalid payload, relative to data",
-      input: corrupted({}, { round: "1" }),
+      input: typedInputCorruptedByUntypedCaller({}, { round: "1" }),
       issue: 'Expected number\n  at ["round"]',
       root: "Composite",
     },
     {
       name: "the payload before the timestamp",
-      input: corrupted({ at: "not-a-date" }, { round: "1" }),
+      input: typedInputCorruptedByUntypedCaller({ at: "not-a-date" }, { round: "1" }),
       issue: 'Expected number\n  at ["round"]',
       root: "Composite",
     },
     {
       name: "the timestamp before an untyped scope",
-      input: corrupted({ at: "not-a-date", scope: 42 }),
+      input: typedInputCorruptedByUntypedCaller({ at: "not-a-date", scope: 42 }),
       issue: "Expected DateTime.Utc",
       root: "Encoding",
     },
     {
       name: "the payload before an untyped scope",
-      input: corrupted({ scope: 42 }, { round: "1" }),
+      input: typedInputCorruptedByUntypedCaller({ scope: 42 }, { round: "1" }),
       issue: 'Expected number\n  at ["round"]',
       root: "Composite",
     },

@@ -733,7 +733,12 @@ Render CI helper output from checked-in repo automation.
 ```bash
 bun run beep ci append-turbo-summary
 bun run beep ci append-turbo-summary .turbo/runs/latest.json
+bun run beep ci append-gate-reports --artifact <task-outcome-artifact>
 ```
+
+`append-gate-reports` prints the gate reports a job wrote as a grouped log with
+annotations and appends their summary (the same lines `beep gate show` prints)
+to the step summary.
 
 ### `codex`
 

@@ -20,8 +20,6 @@ const $I = $LawPracticeDomainId.create("values/SourceRef/SourceRef.model");
 const PAGE_CROP_MAX_DATA_LENGTH = 120_000;
 
 /**
- * Box file identifier: the decimal digit string Box assigns to every file.
- *
  * **Example** (Decode a Box file id)
  *
  * ```ts
@@ -44,8 +42,6 @@ export const BoxFileId = S.String.check(
 );
 
 /**
- * Runtime type for {@link BoxFileId}.
- *
  * @see {@link BoxFileId} for the digit-string check.
  * @category models
  * @since 0.0.0
@@ -53,8 +49,6 @@ export const BoxFileId = S.String.check(
 export type BoxFileId = typeof BoxFileId.Type;
 
 /**
- * Image formats a {@link PageCrop} may carry.
- *
  * **Example** (Read the crop image formats)
  *
  * ```ts
@@ -73,8 +67,6 @@ export const PageCropMimeType = LiteralKit(["image/png", "image/jpeg"]).pipe(
 );
 
 /**
- * Runtime type for {@link PageCropMimeType}.
- *
  * @see {@link PageCropMimeType} for the literal domain.
  * @category models
  * @since 0.0.0
@@ -95,8 +87,6 @@ const PageCropData = S.String.check(
 );
 
 /**
- * A pre-rendered, size-bounded image of the passage region on one page.
- *
  * **Details**
  *
  * Producers render the crop; the review pane never draws whole Box pages.
@@ -147,8 +137,6 @@ export class PageCrop extends S.Opaque<PageCrop, { readonly brand: unique symbol
 ) {}
 
 /**
- * Companion namespace for `PageCrop`.
- *
  * **Example** (Type an encoded crop image format)
  *
  * ```ts
@@ -257,8 +245,6 @@ export class SourceRef extends S.Opaque<SourceRef, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion namespace for `SourceRef`.
- *
  * **Example** (Type an encoded source reference page)
  *
  * ```ts

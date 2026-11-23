@@ -629,7 +629,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           )
         )
       );
-      expect(hashes).toBe(9); // One source, three mentions at two digests each, two resolved full keys.
+      expect(hashes, "one source, three mentions at two digests each, two resolved full keys").toBe(9);
       const citationResult21 = yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions });
       const citationResult22 = yield* S.encodeEffect(Json)(citationResult21);
       expect(citationResult22).toBe(captured);

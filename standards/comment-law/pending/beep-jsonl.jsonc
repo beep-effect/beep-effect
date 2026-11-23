@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/jsonl",
+  "root": "packages/foundation/modeling/jsonl",
+  "scopes": ["."]
+}

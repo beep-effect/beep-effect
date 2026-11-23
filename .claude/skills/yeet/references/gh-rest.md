@@ -62,10 +62,22 @@ its own budget. Use `bun run beep yeet gh <command>` instead of those `gh pr` co
   re-trigger comment. Still GraphQL: review-thread resolution state and
   replies (`closeout`, `reply`, `status`, `watch`).
 
-## Read a failed job's log without waiting for the run (moved from `AGENTS.md`)
+## Read a failed job without waiting for the run (moved from `AGENTS.md`)
 
-Read a completed red job's log at once with
-`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`;
-never wait for the run to finish. `gh run view --log` refuses mid-run, and
-plain `gh api` prints nothing on ANSI output. Commands: yeet skill, "Read a
-failed job's log without waiting for the run".
+Read a completed red job at once with `bun run beep ci failures --run <id>` or
+`--pr <n>` (the PR head's newest runs); never wait for the run to finish, and
+never pipe a raw job log through `tail`, `head` or `grep`. For each failed job
+it prints the job's verdict and failures:
+
+- the uploaded gate report's agent console when the job's task-outcome
+  artifact carries one, with no log fetched;
+- otherwise the failing region of the log (`gh run view --log-failed`, then the
+  per-job logs endpoint, which serves a completed job mid-run), within core's
+  agent budget of 8,000 characters, verdict first and last. The full log and
+  the run's record are saved under `.beep/gates/run/<run>-<attempt>` and named
+  by path and size; a log whose failing step cannot be bounded prints one line
+  naming the saved path. Read deeper in that file, not in a fresh fetch.
+
+Every request is REST through `GitHubClient` and shows in
+`bun run beep github ledger report`; it spends no GraphQL. Mechanics and the
+annotations read: `references/failure-handling.md`.

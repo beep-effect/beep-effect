@@ -105,7 +105,6 @@ export const ClaimInputCoverageIssue = coverageIssueKind
   );
 
 /**
- * Runtime coverage-issue type.
  * @category type-level
  * @since 0.0.0
  */

@@ -665,7 +665,6 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
   it.effect("records no topic whose packet id forms no topic IRI", () =>
     Effect.gen(function* () {
       const { root, repo, fs, path } = yield* fixture;
-      // A template packet carries a placeholder id, which is a live topic's initiative id and no IRI.
       yield* fs.makeDirectory(path.join(repo, "goals/_template/ops"), { recursive: true });
       const manifest = yield* encodeJson({ initiative: { id: "<slug>", title: "Template" } });
       yield* fs.writeFileString(path.join(repo, "goals/_template/ops/manifest.json"), manifest);
@@ -687,7 +686,10 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
       yield* fs.writeFileString(file, synthesisText);
       yield* mineLibrarySynthesize(root, file, O.some(repo), false);
       const catalog = yield* loadCatalog(root);
-      expect(A.map(catalog.findings, (finding) => finding.topicIds)).toStrictEqual([["goals/demo-memory"]]);
+      expect(
+        A.map(catalog.findings, (finding) => finding.topicIds),
+        "A template packet carries a placeholder id, which is a live topic's initiative id and no IRI."
+      ).toStrictEqual([["goals/demo-memory"]]);
     })
   );
 

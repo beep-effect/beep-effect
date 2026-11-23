@@ -9,7 +9,10 @@
  * repository is public, and a fork's pull request runs its own copy of
  * `check.yml`, so the guard alone is not enough: a group that admits every
  * workflow (GitHub's default) would let a fork write
- * `runs-on: beep-shard-overflow` in its copy and reach the pool. The group is
+ * `runs-on: beep-fleet-overflow` in its copy and reach the pool. Jobs request
+ * the pool's label (`SHARD_OVERFLOW_RUNNER_LABEL`) while the group kept its
+ * own name (`SHARD_OVERFLOW_RUNNER_GROUP`), so the check finds the group by
+ * the group name, never by the label. The group is
  * configured by hand, as the heavy pool's is, because the infrastructure stack
  * holds no GitHub credential (the decision record in `goals/ci-lane-economics`
  * says why), so this check reads it back instead of trusting a checklist.
@@ -38,8 +41,9 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
-import { SHARD_OVERFLOW_RUNNER_LABEL } from "./CiShardOverflow.ts";
+import { SHARD_OVERFLOW_RUNNER_GROUP } from "./CiShardOverflow.ts";
 import { ghApiJson, withCiGithub } from "./LaneTimings.ts";
 import type { GitHubClient } from "@beep/github/GitHubClient";
 
@@ -61,7 +65,7 @@ const $I = $RepoCliId.create("commands/Ci/CiShardOverflowPreflight");
  * - `public-repositories-refused`: the group refuses public repositories, so a
  *   routed shard would never get a runner.
  * - `missing-webhook`: no active repository webhook delivers `workflow_job`
- *   events to the overflow controller's endpoint, so the pool never launches a VM.
+ *   events to the runner fleet's webhook URL, so the pool never launches a VM.
  *
  * **Example** (Check a problem)
  *
@@ -144,7 +148,7 @@ export class ShardOverflowRunnerGroup extends S.Opaque<ShardOverflowRunnerGroup,
  * const hook = ShardOverflowRepositoryHook.make({
  *   active: true,
  *   events: ["workflow_job"],
- *   url: "https://example.execute-api.us-east-1.amazonaws.com/webhook",
+ *   url: "https://example.lambda-url.us-east-1.on.aws/",
  * })
  * console.log(hook.active) // true
  * ```
@@ -174,10 +178,14 @@ export class ShardOverflowRepositoryHook extends S.Opaque<
  *
  * `group` is the runner group named `beep-shard-overflow`, if any;
  * `repositories` the `owner/name` of every repository the group admits;
- * `repository` this repository; `webhookUrl` the overflow controller's endpoint
- * (the `endpoint` of the stack output `shardOverflowWebhook`). The URL is
- * required: the heavy pool's controller already has a `workflow_job` webhook on
- * this repository, so "some webhook delivers jobs" proves nothing.
+ * `repository` this repository; `webhookUrl` the runner fleet's webhook
+ * function URL (`https://<id>.lambda-url.<region>.on.aws/`: the `CiRunners`
+ * stack output `webhookUrl`, which `deploy-ci-runners.yml` prints as
+ * `webhookUrl=<url>` in its deploy log). One function serves both the heavy
+ * and the overflow pool. The URL is required: while the Pulumi fleet exists
+ * its controllers keep `workflow_job` webhooks of their own, so "some webhook
+ * delivers jobs" proves nothing. A hook matches with or without the function
+ * URL's trailing slash.
  *
  * **Example** (Facts with no group)
  *
@@ -190,7 +198,7 @@ export class ShardOverflowRepositoryHook extends S.Opaque<
  *   group: O.none(),
  *   repositories: [],
  *   hooks: [],
- *   webhookUrl: "https://example.execute-api.us-east-1.amazonaws.com/webhook",
+ *   webhookUrl: "https://example.lambda-url.us-east-1.on.aws/",
  * })
  * console.log(facts.repository) // "beep-effect/beep-effect"
  * ```
@@ -245,8 +253,20 @@ const groupFails =
   (facts: ShardOverflowPreflightFacts): boolean =>
     O.exists(facts.group, (group) => failing(group, facts));
 
+// A Lambda function URL is printed with its root path ("/"), and GitHub keeps
+// whichever spelling the operator entered: both name the same endpoint.
+const withoutTrailingSlash = Str.replace(/\/$/u, "");
+
+// The fleet's endpoint is a Lambda function URL. The Pulumi overflow pool's API Gateway webhook is still a live
+// repository hook during the overlap, so a URL of any other shape never counts, even when a hook matches it.
+const isFleetFunctionUrl = (url: string): boolean =>
+  /^https:\/\/[a-z0-9]+\.lambda-url\.[a-z0-9-]+\.on\.aws\/?$/u.test(url);
+
 const deliversJobsTo = (webhookUrl: string) => (hook: ShardOverflowRepositoryHook) =>
-  hook.active && hook.url === webhookUrl && A.contains(hook.events, "workflow_job");
+  hook.active &&
+  isFleetFunctionUrl(webhookUrl) &&
+  withoutTrailingSlash(hook.url) === withoutTrailingSlash(webhookUrl) &&
+  A.contains(hook.events, "workflow_job");
 
 const preflightGates: ReadonlyArray<
   readonly [ShardOverflowPreflightProblem, (facts: ShardOverflowPreflightFacts) => boolean]
@@ -298,7 +318,7 @@ const preflightGates: ReadonlyArray<
  *     ),
  *     repositories: [],
  *     hooks: [],
- *     webhookUrl: "https://example.execute-api.us-east-1.amazonaws.com/webhook",
+ *     webhookUrl: "https://example.lambda-url.us-east-1.on.aws/",
  *   })
  * )
  * console.log(problems)
@@ -358,7 +378,7 @@ const readGroupRepositories = (group: O.Option<ShardOverflowRunnerGroup>) =>
  * console.log(Effect.isEffect(readShardOverflowPreflightFacts("https://example.invalid/webhook"))) // true
  * ```
  *
- * @param webhookUrl - The overflow controller's webhook endpoint.
+ * @param webhookUrl - The runner fleet's webhook function URL.
  * @returns The facts the decision reads.
  * @category use-cases
  * @since 0.0.0
@@ -371,7 +391,7 @@ export const readShardOverflowPreflightFacts = Effect.fn("Ci.readShardOverflowPr
   const groups = yield* decodeRunnerGroupsPage(groupsJson).pipe(
     CiCommandError.mapError("shard-overflow-preflight: the runner group listing did not decode")
   );
-  const group = A.findFirst(groups.runner_groups, (candidate) => candidate.name === SHARD_OVERFLOW_RUNNER_LABEL);
+  const group = A.findFirst(groups.runner_groups, (candidate) => candidate.name === SHARD_OVERFLOW_RUNNER_GROUP);
   const repositoriesJson = yield* readGroupRepositories(group);
   const repositories = yield* decodeGroupRepositoriesPage(repositoriesJson).pipe(
     CiCommandError.mapError("shard-overflow-preflight: the runner group's repository listing did not decode")
@@ -396,7 +416,7 @@ export const readShardOverflowPreflightFacts = Effect.fn("Ci.readShardOverflowPr
 });
 
 const problemLines: { readonly [Problem in ShardOverflowPreflightProblem]: (repository: string) => string } = {
-  "missing-group": () => `no organization runner group is named ${SHARD_OVERFLOW_RUNNER_LABEL}`,
+  "missing-group": () => `no organization runner group is named ${SHARD_OVERFLOW_RUNNER_GROUP}`,
   "workflows-unrestricted": (repository) =>
     `the runner group admits every workflow; restrict it to ${shardOverflowAllowedWorkflow(repository)} so a fork's own workflow cannot reach the pool`,
   "wrong-workflows": (repository) => `the runner group must admit exactly ${shardOverflowAllowedWorkflow(repository)}`,
@@ -423,7 +443,7 @@ const reportProblem = (repository: string) => (problem: ShardOverflowPreflightPr
  * console.log(Effect.isEffect(runShardOverflowPreflight("https://example.invalid/webhook"))) // true
  * ```
  *
- * @param webhookUrl - The overflow controller's webhook endpoint.
+ * @param webhookUrl - The runner fleet's webhook function URL.
  * @returns Nothing; fails with {@link CiCommandError} when any problem is found.
  * @category use-cases
  * @since 0.0.0
@@ -438,7 +458,7 @@ export const runShardOverflowPreflight = Effect.fn("Ci.runShardOverflowPreflight
     });
   }
   yield* Console.log(
-    `shard-overflow-preflight: ok; ${SHARD_OVERFLOW_RUNNER_LABEL} admits only ${shardOverflowAllowedWorkflow(facts.repository)} for ${facts.repository}, and an active workflow_job webhook delivers to ${webhookUrl}`
+    `shard-overflow-preflight: ok; ${SHARD_OVERFLOW_RUNNER_GROUP} admits only ${shardOverflowAllowedWorkflow(facts.repository)} for ${facts.repository}, and an active workflow_job webhook delivers to ${webhookUrl}`
   );
 });
 
@@ -461,7 +481,7 @@ export const ciShardOverflowPreflightCommand = Command.make(
   {
     webhookUrl: Flag.String("webhook-url").pipe(
       Flag.withDescription(
-        "The overflow controller's webhook endpoint (the endpoint of pulumi stack output shardOverflowWebhook)"
+        "The runner fleet's webhook function URL (CiRunners stack output webhookUrl; deploy-ci-runners.yml prints it as webhookUrl=<url>)"
       )
     ),
   },

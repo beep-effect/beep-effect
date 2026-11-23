@@ -51,7 +51,6 @@ describe("generated registry vocabulary invariants", () => {
   it("lists every namespace's terms strictly ascending, so no term repeats", () => {
     for (const [prefix, entry] of R.toEntries(RegistryVocab)) {
       const terms: ReadonlyArray<string> = entry.terms;
-      // An internal namespace may declare no term: instances are minted under it (semantica, lejeune).
       const internal = Str.startsWith(IdentityAuthority)(entry.iri);
 
       expect(internal || terms.length > 0, prefix).toBe(true);

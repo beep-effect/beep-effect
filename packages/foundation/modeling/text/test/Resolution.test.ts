@@ -33,8 +33,10 @@ describe("@beep/text Resolution", () => {
   });
 
   it("counts a quote only at scalar boundaries and needs its whole context", () => {
-    // The low half of the emoji is not a scalar, so the quote of it matches nowhere.
-    expect(resolve("A😀B", quote("\ude00B"))).toEqual(notFound);
+    expect(
+      resolve("A😀B", quote("\ude00B")),
+      "the low half of the emoji is not a scalar, so a quote of it matches nowhere"
+    ).toEqual(notFound);
     expect(resolve("A😀B", quote("B", "\ude00"))).toEqual(unique(3, 4, "B"));
     expect(resolve("aaab", quote("aab"))).toEqual(unique(1, 4, "aab"));
     expect(resolve("abcabe", quote("d", "abcab"))).toEqual(notFound);
@@ -55,16 +57,22 @@ describe("@beep/text Resolution", () => {
     expect(resolve(text, RefinedSelector.make({ base: quote("y fact"), by: at("unicode-code-point", 2, 6) }))).toEqual(
       unique(9, 13, "fact")
     );
-    // A base that is not Unique has no segment for `by`: the outcome is the base's.
-    expect(resolve(text, RefinedSelector.make({ base: quote("fact"), by: quote("a") }))).toEqual(ambiguous(2));
-    expect(resolve(text, RefinedSelector.make({ base: quote("w"), by: quote("a") }))).toEqual(notFound);
-    // `by` may itself be ambiguous or absent inside the base.
-    expect(resolve(text, RefinedSelector.make({ base: at("utf16-code-unit", 0, 15), by: quote("fact") }))).toEqual(
-      ambiguous(2)
-    );
-    expect(resolve(text, RefinedSelector.make({ base: at("utf16-code-unit", 0, 4), by: quote("y") }))).toEqual(
-      notFound
-    );
+    expect(
+      resolve(text, RefinedSelector.make({ base: quote("fact"), by: quote("a") })),
+      "a base that is not Unique has no segment for by: the outcome is the base's"
+    ).toEqual(ambiguous(2));
+    expect(
+      resolve(text, RefinedSelector.make({ base: quote("w"), by: quote("a") })),
+      "a base that is not Unique has no segment for by: the outcome is the base's"
+    ).toEqual(notFound);
+    expect(
+      resolve(text, RefinedSelector.make({ base: at("utf16-code-unit", 0, 15), by: quote("fact") })),
+      "by may itself be ambiguous inside the base"
+    ).toEqual(ambiguous(2));
+    expect(
+      resolve(text, RefinedSelector.make({ base: at("utf16-code-unit", 0, 4), by: quote("y") })),
+      "by may itself be absent inside the base"
+    ).toEqual(notFound);
   });
 
   it("runs a range from the start of `from` to the start of `to`, exclusive", () => {
@@ -72,24 +80,41 @@ describe("@beep/text Resolution", () => {
     expect(resolve(text, RangeSelector.make({ from: quote("Claim 1."), to: quote("Claim 2.") }))).toEqual(
       unique(0, 14, "Claim 1. one. ")
     );
-    // Empty and inverted ranges are NotFound.
-    expect(resolve(text, RangeSelector.make({ from: quote("Claim 2."), to: quote("Claim 2.") }))).toEqual(notFound);
-    expect(resolve(text, RangeSelector.make({ from: quote("Claim 2."), to: quote("Claim 1.") }))).toEqual(notFound);
-    // Any NotFound part is NotFound, whatever the other part is.
-    expect(resolve(text, RangeSelector.make({ from: quote("Claim 3."), to: quote("Claim") }))).toEqual(notFound);
-    expect(resolve(text, RangeSelector.make({ from: quote("Claim"), to: fragment }))).toEqual(notFound);
-    // Otherwise an ambiguous part makes the range ambiguous with the product of the counts.
-    expect(resolve(text, RangeSelector.make({ from: quote("Claim"), to: quote("two") }))).toEqual(ambiguous(2));
-    expect(resolve(text, RangeSelector.make({ from: quote("Claim"), to: quote(".") }))).toEqual(ambiguous(8));
+    expect(
+      resolve(text, RangeSelector.make({ from: quote("Claim 2."), to: quote("Claim 2.") })),
+      "an empty range is NotFound"
+    ).toEqual(notFound);
+    expect(
+      resolve(text, RangeSelector.make({ from: quote("Claim 2."), to: quote("Claim 1.") })),
+      "an inverted range is NotFound"
+    ).toEqual(notFound);
+    expect(
+      resolve(text, RangeSelector.make({ from: quote("Claim 3."), to: quote("Claim") })),
+      "a NotFound part is NotFound whatever the other part is"
+    ).toEqual(notFound);
+    expect(
+      resolve(text, RangeSelector.make({ from: quote("Claim"), to: fragment })),
+      "a NotFound part is NotFound whatever the other part is"
+    ).toEqual(notFound);
+    expect(
+      resolve(text, RangeSelector.make({ from: quote("Claim"), to: quote("two") })),
+      "an ambiguous part makes the range ambiguous with the product of the counts"
+    ).toEqual(ambiguous(2));
+    expect(
+      resolve(text, RangeSelector.make({ from: quote("Claim"), to: quote(".") })),
+      "an ambiguous part makes the range ambiguous with the product of the counts"
+    ).toEqual(ambiguous(8));
   });
 
   it("saturates the count of nested ranges instead of throwing", () => {
-    // (10^4 * 10^4)^2 = 10^16 selections, past Number.MAX_SAFE_INTEGER: the count saturates there.
     const text = Str.repeat(10_000)("a");
     const inner = RangeSelector.make({ from: quote("a"), to: quote("a") });
     const nested = RangeSelector.make({ from: inner, to: inner });
     expect(resolve(text, inner)).toEqual(ambiguous(100_000_000));
-    expect(resolve(text, nested)).toEqual(ambiguous(Number.MAX_SAFE_INTEGER));
+    expect(
+      resolve(text, nested),
+      "(10^4 * 10^4)^2 = 10^16 selections, past Number.MAX_SAFE_INTEGER: the count saturates there"
+    ).toEqual(ambiguous(Number.MAX_SAFE_INTEGER));
     expect(resolve(text, RangeSelector.make({ from: nested, to: nested }))).toEqual(ambiguous(Number.MAX_SAFE_INTEGER));
     expect(resolve(text, RefinedSelector.make({ base: nested, by: quote("a") }))).toEqual(
       ambiguous(Number.MAX_SAFE_INTEGER)

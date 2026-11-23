@@ -26,8 +26,6 @@ const $I = $ProfessionalDesktopId.create("chat/ui/YouTubeWatchOpener");
 const hasTauriRuntime = (): boolean => "__TAURI_INTERNALS__" in globalThis;
 
 /**
- * Failure raised when the Tauri native opener rejects a validated YouTube watch request.
- *
  * **Example** (Create a retryable opener failure)
  *
  * ```ts

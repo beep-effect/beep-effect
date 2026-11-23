@@ -34,7 +34,6 @@ const reportIssues = Effect.fn("IdentityRegistry.reportIssues")(function* (
   return yield* failWithReportedExit("identity registry: findings.");
 });
 
-// What one `--write` did, one line per kind of change.
 const writeLines = ({ removed, written }: RegistryWrite): A.NonEmptyReadonlyArray<string> => {
   const lines = A.getSomes([
     O.map(O.liftPredicate(A.isReadonlyArrayNonEmpty)(written), (files) => `wrote ${A.join(files, ", ")}.`),

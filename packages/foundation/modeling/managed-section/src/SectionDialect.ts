@@ -169,15 +169,24 @@ export class SectionRenderError extends S.TaggedError<SectionRenderError, { read
   }
 }
 
-/** The key grammar, mirrored from `SectionKey` for the scanner's capture group. */
-const KEY_CAPTURE = "([A-Za-z0-9][A-Za-z0-9._-]*)";
+const KEY_CAPTURE_MIRRORING_SECTION_KEY = "([A-Za-z0-9][A-Za-z0-9._-]*)";
 
 const escapeRegex = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(value);
 
-/** Inter-token whitespace is tolerated on read, normalized on write. */
 const GAP = "[ \\t]+";
 
-/** The first offset of a trailing horizontal separator run. */
+const LINE_START_OR_AFTER_DOCUMENT_LEADING_BOM = "(?:^|(?<=(?<![\\s\\S])\\uFEFF))";
+
+const UNCONSUMED_LINE_END_LOOKAHEAD = "(?=[\\r\\n\\u2028\\u2029]|(?![\\s\\S]))";
+
+const escapedWithSpaceRunsAsGap = (text: string): string => Str.replace(/ +/g, GAP)(escapeRegex(text));
+
+type RuleSpan = readonly [ruleStart: number, runEnd: number];
+
+type ClosingBoundary = readonly [end: number, ruleStart: number, runEnd: number];
+
+type MarkerSpan = readonly [end: number, runEnd: number];
+
 const markerGapStart: {
   (text: string, end: number): number;
   (end: number): (text: string) => number;
@@ -187,14 +196,12 @@ const markerGapStart: {
   return index;
 });
 
-/** The first offset after a leading horizontal separator run, bounded by `limit`. */
 const markerGapEnd = (text: string, start: number, limit: number): number => {
   let index = start;
   while (index < limit && (text[index] === " " || text[index] === "\t")) index += 1;
   return index;
 };
 
-/** A literal suffix's preceding gap start, or `undefined` when the suffix is absent or unseparated. */
 const literalSuffixGap = (text: string, boundary: number, end: number, suffix: string, suffixEnd: number) => {
   const suffixStart = end - suffixEnd;
   const suffixStop = end + suffix.length - suffixEnd;
@@ -205,36 +212,34 @@ const literalSuffixGap = (text: string, boundary: number, end: number, suffix: s
   return gapStart === suffixStart ? undefined : gapStart;
 };
 
-/** Where the closing rule must end once a style's suffix is accounted for. */
-const suffixGap = (text: string, boundary: number, suffix: string): number | undefined => {
+const ruleEndBeforeSuffix = (text: string, boundary: number, suffix: string): number | undefined => {
   const end = markerGapStart(text, boundary);
   const suffixEnd = markerGapStart(suffix, suffix.length);
-  if (suffixEnd !== 0) {
+  const suffixIsWhitespaceOnly = suffixEnd === 0;
+  if (!suffixIsWhitespaceOnly) {
     return literalSuffixGap(text, boundary, end, suffix, suffixEnd);
   }
-  // A whitespace-only suffix still requires a separate preceding gap.
-  return Str.includes(suffix)(Str.slice(end + 1, boundary)(text)) ? end : undefined;
+  const whitespaceSuffixFollowsSeparateGap = Str.includes(suffix)(Str.slice(end + 1, boundary)(text));
+  return whitespaceSuffixFollowsSeparateGap ? end : undefined;
 };
 
-/** The `---` rule ending at `end` and the start of its preceding gap. */
-const ruleSpan = (text: string, end: number): readonly [number, number] | undefined => {
+const ruleSpan = (text: string, end: number): RuleSpan | undefined => {
   if (end < 3 || Str.slice(end - 3, end)(text) !== "---") return undefined;
   const ruleStart = end - 3;
   const runEnd = markerGapStart(text, ruleStart);
   return runEnd === ruleStart ? undefined : [ruleStart, runEnd];
 };
 
-/** Recognize a closing rule at one multiline boundary without parsing attributes. */
 const closingRule: {
-  (text: string, boundary: number, style: CommentStyle): readonly [number, number] | undefined;
-  (boundary: number, style: CommentStyle): (text: string) => readonly [number, number] | undefined;
-} = dual(3, (text: string, boundary: number, style: CommentStyle): readonly [number, number] | undefined => {
-  const end = style.suffix === undefined ? markerGapStart(text, boundary) : suffixGap(text, boundary, style.suffix);
+  (text: string, boundary: number, style: CommentStyle): RuleSpan | undefined;
+  (boundary: number, style: CommentStyle): (text: string) => RuleSpan | undefined;
+} = dual(3, (text: string, boundary: number, style: CommentStyle): RuleSpan | undefined => {
+  const end =
+    style.suffix === undefined ? markerGapStart(text, boundary) : ruleEndBeforeSuffix(text, boundary, style.suffix);
   return end === undefined ? undefined : ruleSpan(text, end);
 });
 
-/** Every multiline boundary offset (including the end), and the subset that are CR or LF. */
-const lineEndings = (text: string): readonly [Array<number>, Array<number>] => {
+const multilineBoundariesAndCrLfBreaks = (text: string): readonly [Array<number>, Array<number>] => {
   const endings: Array<number> = [];
   const breaks: Array<number> = [];
   for (const match of Str.matchAll(/[\r\n\u2028\u2029]|$/g)(text)) {
@@ -245,13 +250,12 @@ const lineEndings = (text: string): readonly [Array<number>, Array<number>] => {
   return [endings, breaks];
 };
 
-/** Each boundary that closes a marker in `style`, as `[end, ruleStart, runEnd]`, in offset order. */
 const closingBoundaries = (
   text: string,
   endings: ReadonlyArray<number>,
   style: CommentStyle
-): Array<readonly [number, number, number]> => {
-  const boundaries: Array<readonly [number, number, number]> = [];
+): Array<ClosingBoundary> => {
+  const boundaries: Array<ClosingBoundary> = [];
   for (const end of endings) {
     const boundary = closingRule(text, end, style);
     if (boundary !== undefined) boundaries.push([end, boundary[0], boundary[1]]);
@@ -259,7 +263,6 @@ const closingBoundaries = (
   return boundaries;
 };
 
-/** The parsed attributes of a marker head, `{}` for none, `undefined` when the run refuses the marker. */
 const markerAttributes = (
   text: string,
   match: RegExpMatchArray,
@@ -276,39 +279,28 @@ const markerAttributes = (
   return parsed.value;
 };
 
-/**
- * A forward cursor over one style's closing boundaries and the CR/LF breaks,
- * associating each candidate head with the first closing boundary on its line.
- */
 class BoundaryCursor {
   #boundary = 0;
   #break = 0;
-  #consumed = 0;
+  #consumedRegardlessOfAttributes = 0;
   readonly #text: string;
   readonly #breaks: ReadonlyArray<number>;
-  readonly #boundaries: ReadonlyArray<readonly [number, number, number]>;
+  readonly #boundaries: ReadonlyArray<ClosingBoundary>;
 
-  constructor(
-    text: string,
-    breaks: ReadonlyArray<number>,
-    boundaries: ReadonlyArray<readonly [number, number, number]>
-  ) {
+  constructor(text: string, breaks: ReadonlyArray<number>, boundaries: ReadonlyArray<ClosingBoundary>) {
     this.#text = text;
     this.#breaks = breaks;
     this.#boundaries = boundaries;
   }
 
-  /** The `[end, runEnd]` closing a head, `"skip"` for a non-marker head, `"exhausted"` when none can close. */
-  locate(start: number, headEnd: number): readonly [number, number] | "skip" | "exhausted" {
-    if (start < this.#consumed) return "skip";
+  locate(start: number, headEnd: number): MarkerSpan | "skip" | "exhausted" {
+    if (start < this.#consumedRegardlessOfAttributes) return "skip";
     this.advance(headEnd);
     if (this.#boundary === this.#boundaries.length) return "exhausted";
     const [end, ruleStart, runEnd] = A.getUnsafe(this.#boundaries, this.#boundary);
     const lineEnd = this.#break < this.#breaks.length ? A.getUnsafe(this.#breaks, this.#break) : this.#text.length;
     if (end > lineEnd || ruleStart <= headEnd) return "skip";
-    // A syntactically matched marker consumes its span even when its
-    // attribute grammar subsequently rejects it, just as matchAll did.
-    this.#consumed = end;
+    this.#consumedRegardlessOfAttributes = end;
     return [end, runEnd];
   }
 
@@ -319,7 +311,6 @@ class BoundaryCursor {
   }
 }
 
-/** Recognized markers of one style, in offset order. */
 function* styleMatches(
   text: string,
   matcher: { readonly style: CommentStyle; readonly regex: RegExp },
@@ -340,7 +331,6 @@ function* styleMatches(
   }
 }
 
-/** The first attribute name a marker could not carry verbatim, if any. */
 const invalidAttribute = (attributes: Readonly<Record<string, string>>): O.Option<string> =>
   O.map(
     A.findFirst(
@@ -378,8 +368,7 @@ const MarkerText = S.String.check(
   )
 ).pipe($I.annoteSchema("MarkerText", { description: "The text of one literal marker inside its comment." }));
 
-/** The scanner reads a run of spaces as one gap, so texts compare by that form. */
-const canonicalText = (text: string): string => Str.replace(/ +/g, " ")(text);
+const collapseSpaceRunsLikeScanner = (text: string): string => Str.replace(/ +/g, " ")(text);
 
 /**
  * A fixed BEGIN/END marker spelling for one section key.
@@ -422,7 +411,7 @@ export class SectionMarkers extends S.Opaque<SectionMarkers, { readonly brand: u
   })
     .check(
       S.makeFilter(
-        (markers) => canonicalText(markers.begin) !== canonicalText(markers.end),
+        (markers) => collapseSpaceRunsLikeScanner(markers.begin) !== collapseSpaceRunsLikeScanner(markers.end),
         $I.annote("SectionMarkers.DistinctEnds", {
           description: "The opening and closing marker texts differ, also once space runs are collapsed.",
           message: "Expected the begin and end marker texts to differ.",
@@ -436,11 +425,17 @@ export class SectionMarkers extends S.Opaque<SectionMarkers, { readonly brand: u
     )
 ) {}
 
-/** No two literal spellings share a key, and no marker text is used twice. */
 const DistinctSpellings = S.makeFilter(
   (markers: ReadonlyArray<SectionMarkers>) =>
     A.length(A.dedupe(A.map(markers, (entry) => entry.key))) === A.length(markers) &&
-    A.length(A.dedupe(A.flatMap(markers, (entry) => [canonicalText(entry.begin), canonicalText(entry.end)]))) ===
+    A.length(
+      A.dedupe(
+        A.flatMap(markers, (entry) => [
+          collapseSpaceRunsLikeScanner(entry.begin),
+          collapseSpaceRunsLikeScanner(entry.end),
+        ])
+      )
+    ) ===
       2 * A.length(markers),
   $I.annote("SectionDialect.DistinctSpellings", {
     description:
@@ -449,30 +444,23 @@ const DistinctSpellings = S.makeFilter(
   })
 );
 
-/** A literal marker's text, with internal spaces read as "some whitespace". */
-const literalPattern = (text: string): string => `(${Str.replace(/ +/g, GAP)(escapeRegex(text))})`;
+const literalPattern = (text: string): string => `(${escapedWithSpaceRunsAsGap(text)})`;
 
-/**
- * Yields every literal marker in `text`, in the same capture shape the ruled
- * scanner produces: `[1]` is BEGIN or END and `[2]` the section key.
- */
 function* literalMatches(
   text: string,
   matcher: { readonly style: CommentStyle; readonly regex: RegExp },
   markers: ReadonlyArray<SectionMarkers>
 ): Generator<readonly [CommentStyle, RegExpMatchArray, Record<string, string>]> {
   for (const match of Str.matchAll(matcher.regex)(text)) {
-    // Groups come in BEGIN/END pairs, one pair per spelling, in declared order.
-    // Exactly one alternative matched, so exactly one group is defined.
-    const group = O.getOrThrow(A.findFirstIndex(A.drop(match, 1), (capture) => capture !== undefined));
-    const spelling = A.getUnsafe(markers, group >> 1);
-    match[1] = group % 2 === 0 ? "BEGIN" : "END";
-    match[2] = spelling.key;
+    const onlyMatchedGroup = O.getOrThrow(A.findFirstIndex(A.drop(match, 1), (capture) => capture !== undefined));
+    const spellingOfGroupPair = A.getUnsafe(markers, onlyMatchedGroup >> 1);
+    const isBeginOfPair = onlyMatchedGroup % 2 === 0;
+    match[1] = isBeginOfPair ? "BEGIN" : "END";
+    match[2] = spellingOfGroupPair.key;
     yield [matcher.style, match, {}] as const;
   }
 }
 
-/** The literal spelling listed for a key, if any. */
 const spellingFor: {
   (spellings: ReadonlyArray<SectionMarkers>, key: string): O.Option<SectionMarkers>;
   (key: string): (spellings: ReadonlyArray<SectionMarkers>) => O.Option<SectionMarkers>;
@@ -482,7 +470,6 @@ const spellingFor: {
     A.findFirst(spellings, (entry) => entry.key === key)
 );
 
-/** One line-anchored scanner per comment style over every literal spelling. */
 const compileLiteralMatchers = (
   styles: ReadonlyArray<CommentStyle>,
   markers: ReadonlyArray<SectionMarkers>
@@ -495,10 +482,8 @@ const compileLiteralMatchers = (
     const suffix = style.suffix === undefined ? "" : `${GAP}${escapeRegex(style.suffix)}`;
     return {
       style,
-      // Same line and leading-BOM anchors as the ruled scanner; the trailing
-      // line break is a lookahead, never consumed.
       regex: new RegExp(
-        `(?:^|(?<=(?<![\\s\\S])\\uFEFF))${escapeRegex(style.prefix)}${GAP}(?:${texts})${suffix}[ \\t]*(?=[\\r\\n\\u2028\\u2029]|(?![\\s\\S]))`,
+        `${LINE_START_OR_AFTER_DOCUMENT_LEADING_BOM}${escapeRegex(style.prefix)}${GAP}(?:${texts})${suffix}[ \\t]*${UNCONSUMED_LINE_END_LOOKAHEAD}`,
         "gm"
       ),
     };
@@ -572,7 +557,6 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
       "The marker vocabulary: what phrase delimits a managed section, and which comment styles a document is scanned for.",
   })
 ) {
-  // Runtime-only state belongs to its dialect; private fields never enter the wire form.
   /**
    * Keeps the compiled scanners on this dialect instance, outside its wire form.
    *
@@ -703,10 +687,6 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
     if (!this.recognizes(section.commentStyle)) {
       return Result.fail(SectionRenderError.make({ reason: "unknownCommentStyle", key: section.key }));
     }
-    // Attribute names and values are runtime data, so a violation is a
-    // typed failure here rather than a defect at construction. Either kind
-    // of violation would emit a marker the scanner reads differently — or
-    // not at all — so both are refused before anything is written.
     const invalid = invalidAttribute(section.attributes);
     if (O.isSome(invalid)) {
       return Result.fail(
@@ -722,8 +702,6 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
     }
     const body = eol === "\n" ? normalized : Str.replace(/\n/g, eol)(normalized);
     const begin = this.marker("BEGIN", section.id, section.attributes);
-    // A closing rule before a Unicode boundary can truncate a quoted value.
-    // Validate the emitted marker with the same scanner that reads it back.
     const recognized = this.readsBack(begin, section);
     if (!recognized) {
       return Result.fail(SectionRenderError.make({ reason: "invalidAttribute", key: section.key }));
@@ -748,9 +726,8 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
    * @since 0.0.0
    */
   containsMarker(text: string): boolean {
-    // Content is embedded after an opening marker, so its BOM is never at
-    // absolute document offset zero. Real line anchors still apply.
-    for (const _marker of this.markerMatches(`\n${text}`)) return true;
+    const contentAfterOpeningMarkerLine = `\n${text}`;
+    for (const _marker of this.markerMatches(contentAfterOpeningMarkerLine)) return true;
     return false;
   }
 
@@ -780,10 +757,9 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
    * @since 0.0.0
    */
   *markerMatches(text: string): Iterable<readonly [CommentStyle, RegExpMatchArray, Record<string, string>]> {
-    const [endings, breaks] = lineEndings(text);
+    const [endings, breaks] = multilineBoundariesAndCrLfBreaks(text);
     for (const matcher of this.matchers()) {
       for (const hit of styleMatches(text, matcher, breaks, endings)) {
-        // A key with a literal spelling has no ruled one.
         if (O.isNone(spellingFor(this.spellings(), A.getUnsafe(hit[1], 2)))) yield hit;
       }
     }
@@ -885,15 +861,11 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
    * @since 0.0.0
    */
   private compileMatchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
-    // A phrase's internal spaces read as "some whitespace" so a hand-edited
-    // file with a double space still matches.
-    const phrase = Str.replace(/ +/g, GAP)(escapeRegex(this.phrase));
+    const phrase = escapedWithSpaceRunsAsGap(this.phrase);
     const compiled = A.map(this.styles, (style) => ({
       style,
-      // Prefix candidates preserve multiline and absolute-leading-BOM anchors.
-      // Closing spans and attribute captures are filled by markerMatches.
       regex: new RegExp(
-        `(?:^|(?<=(?<![\\s\\S])\\uFEFF))${escapeRegex(style.prefix)}${GAP}---${GAP}(BEGIN|END)${GAP}${KEY_CAPTURE}${GAP}${phrase}(?=[ \\t])`,
+        `${LINE_START_OR_AFTER_DOCUMENT_LEADING_BOM}${escapeRegex(style.prefix)}${GAP}---${GAP}(BEGIN|END)${GAP}${KEY_CAPTURE_MIRRORING_SECTION_KEY}${GAP}${phrase}(?=[ \\t])`,
         "gm"
       ),
     }));
@@ -958,14 +930,8 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
   private marker(kind: "BEGIN" | "END", id: SectionId, attributes?: Readonly<Record<string, string>>): string {
     const literal = spellingFor(this.spellings(), id.key);
     if (O.isSome(literal)) {
-      // A literal marker has no attribute slot; `render` refuses attributes
-      // on it through the read-back check.
       return id.commentStyle.comment(kind === "BEGIN" ? literal.value.begin : literal.value.end);
     }
-    // Emission order is the record's insertion order — the caller's declared
-    // order — while equality over attributes is order-insensitive, so a
-    // hand-reordered marker with equal pairs compares Unchanged and an actual
-    // rewrite renders in declared order.
     const run =
       attributes === undefined
         ? ""

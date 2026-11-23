@@ -12,9 +12,6 @@ const $I = $LawPracticeDomainId.create("values/ConstitutionOutcome/ConstitutionO
 const ConstitutionOutcomeBase = LiteralKit(["constituted", "not-constituted"]);
 
 /**
- * Whether an attempted act was recorded as constituting the legal effect it
- * aimed at.
- *
  * **When to use**
  *
  * Use as one of the two independent recorded axes an attempted act carries. The
@@ -58,8 +55,6 @@ export const ConstitutionOutcome = ConstitutionOutcomeBase.pipe(
 );
 
 /**
- * Runtime type for {@link ConstitutionOutcome}.
- *
  * @see {@link ConstitutionOutcome} for the runtime schema and the two-axis rule.
  * @category models
  * @since 0.0.0

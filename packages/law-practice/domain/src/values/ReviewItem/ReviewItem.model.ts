@@ -16,8 +16,6 @@ import { SourceRef } from "../SourceRef/index.ts";
 const $I = $LawPracticeDomainId.create("values/ReviewItem/ReviewItem.model");
 
 /**
- * Stable identifier of a review item; verdict rows key on it.
- *
  * **Details**
  *
  * Producers own the format. A `kg-answer` item uses
@@ -44,8 +42,6 @@ export const ReviewItemId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link ReviewItemId}.
- *
  * @see {@link ReviewItemId} for the identifier conventions.
  * @category models
  * @since 0.0.0
@@ -53,8 +49,6 @@ export const ReviewItemId = S.NonEmptyString.pipe(
 export type ReviewItemId = typeof ReviewItemId.Type;
 
 /**
- * Kinds of agent work product, and agent questions, that reach the review queue.
- *
  * **Example** (Read the review item kinds)
  *
  * ```ts
@@ -81,8 +75,6 @@ export const ReviewItemKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ReviewItemKind}.
- *
  * @see {@link ReviewItemKind} for the literal domain.
  * @category models
  * @since 0.0.0
@@ -146,9 +138,6 @@ const ReviewItemDefinition = ReviewItemKind.toTaggedUnion("kind")({
 });
 
 /**
- * One piece of agent work awaiting the attorney's verdict, discriminated on
- * `kind`.
- *
  * **Details**
  *
  * Every member carries `itemId`, the plain-language `text`, an optional
@@ -190,8 +179,6 @@ export const ReviewItem = ReviewItemDefinition.pipe(
 );
 
 /**
- * Runtime type for {@link ReviewItem}.
- *
  * @see {@link ReviewItem} for the tagged-union schema and its members.
  * @category value-objects
  * @since 0.0.0
@@ -199,8 +186,6 @@ export const ReviewItem = ReviewItemDefinition.pipe(
 export type ReviewItem = typeof ReviewItem.Type;
 
 /**
- * Companion namespace for `ReviewItem`.
- *
  * **Example** (Type an encoded review item kind)
  *
  * ```ts

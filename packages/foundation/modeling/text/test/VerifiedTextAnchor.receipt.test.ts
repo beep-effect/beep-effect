@@ -30,9 +30,6 @@ const decodesAsProof = (candidate: unknown): boolean =>
 
 const sourceText = "😀 1 U.S. 1; 1 U.S. 1";
 
-// The stored JSON of one receipt, exactly as `S.fromJsonString(TextAnchorVerificationReceipt)` encoded the
-// projection of a `verifyTextAnchor` proof before the package became @beep/text. Columns, logs, events and
-// the epistemic manifestation key hold these bytes: the literal is never regenerated.
 const frozenReceipt =
   '{"anchor":{"startChar":3,"endChar":11,"quote":"1 U.S. 1"},"source":{"scopeRef":"matter:example","sourceRef":"source:example","locator":"documents/source.txt","sourceDigest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","textDigest":"sha256:8de1c1a5a8abb0bdb1fc6c7b77a78338e87ab823115cb2dad18003f268e5515f","extractor":{"name":"utf8","version":"1"},"normalizationVersion":"1"}}';
 
@@ -59,7 +56,10 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("stored text anchor receipts
       );
       const receipt = toTextAnchorVerificationReceipt(proof);
       const written = yield* S.encodeEffect(ReceiptJson)(receipt);
-      expect(written).toBe(frozenReceipt);
+      expect(
+        written,
+        "the receipt JSON encoded before the package became @beep/text; columns, logs, events and the epistemic manifestation key hold these bytes, so the literal is never regenerated"
+      ).toBe(frozenReceipt);
 
       const read = yield* S.decodeEffect(ReceiptJson)(frozenReceipt);
       expect(read).toEqual(receipt);
@@ -88,9 +88,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("stored text anchor receipts
       const anchored = yield* S.decodeEffect(AnchoredJson)(anchoredJson);
       const proofJson = yield* S.encodeEffect(UnknownJson)(proof);
       const proofReadBack = yield* S.decodeEffect(UnknownJson)(proofJson);
-      // Every way a value can look like a proof without passing through verification: decoded receipts and rows,
-      // copies of a genuine proof, an object on its frozen prototype, and the JSON of one read back.
-      const lookalikes: ReadonlyArray<readonly [string, unknown]> = [
+      const lookalikesThatSkippedVerification: ReadonlyArray<readonly [string, unknown]> = [
         ["decoded receipt", receipt],
         ["decoded Anchored", anchored],
         ["receipt of a decoded Anchored", anchored.receipt],
@@ -100,7 +98,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("stored text anchor receipts
         ["forged prototype", Object.create(Object.getPrototypeOf(proof))],
         ["proof JSON read back", proofReadBack],
       ];
-      for (const [name, lookalike] of lookalikes) {
+      for (const [name, lookalike] of lookalikesThatSkippedVerification) {
         expect(isProof(lookalike), name).toBe(false);
         expect(decodesAsProof(lookalike), name).toBe(false);
         expect(() => toTextAnchorVerificationReceipt(lookalike as VerifiedTextAnchor), name).toThrow();
@@ -115,15 +113,17 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("stored text anchor receipts
       // @ts-expect-error an anchors row is not a proof
       expect(() => toTextAnchorVerificationReceipt(anchored)).toThrow();
 
-      // Re-verification against the text the receipt names yields a proof whose receipt is the decoded one.
       const reverified = yield* verify(sourceText);
-      expect(isProof(reverified)).toBe(true);
-      expect(toTextAnchorVerificationReceipt(reverified)).toEqual(receipt);
-      // Against altered text, of the same length and with the quote still in place, it does not.
+      expect(isProof(reverified), "re-verification against the text the receipt names yields a proof").toBe(true);
+      expect(toTextAnchorVerificationReceipt(reverified), "the re-verified proof's receipt is the decoded one").toEqual(
+        receipt
+      );
       const altered = Str.replace("😀", "😁")(sourceText);
-      expect(Str.slice(3, 11)(altered)).toBe(receipt.anchor.quote);
+      expect(Str.slice(3, 11)(altered), "altered text keeps its length and the quote in place").toBe(
+        receipt.anchor.quote
+      );
       const refusal = yield* Effect.flip(verify(altered));
-      expect(refusal.reason).toBe("stale-source");
+      expect(refusal.reason, "re-verification against altered text is refused").toBe("stale-source");
     })
   );
 

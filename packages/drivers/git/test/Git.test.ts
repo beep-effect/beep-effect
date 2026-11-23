@@ -2358,6 +2358,22 @@ describe("Git", () => {
       })
     );
 
+    it.effect("localOnlyCommitCount decodes one count and fails closed on anything else", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.localOnlyCommitCount(cwd);
+        });
+        const count = yield* run(program, (args) => {
+          assert.deepStrictEqual(args, ["rev-list", "--count", "--all", "--not", "--remotes", "--"]);
+          return { stdout: "3\n", exit: 0 };
+        });
+        assert.strictEqual(count, 3);
+        const garbled = yield* Effect.flip(run(program, () => ({ stdout: "three\n", exit: 0 })));
+        assert.strictEqual(garbled._tag, "GitCommandError");
+      })
+    );
+
     it.effect("fetchUnshallow builds `git fetch --unshallow <remote>`", () =>
       Effect.gen(function* () {
         const program = Effect.gen(function* () {

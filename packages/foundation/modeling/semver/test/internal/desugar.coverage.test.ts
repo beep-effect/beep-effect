@@ -27,6 +27,7 @@ describe("desugar coverage", () => {
       const caret: ReadonlyArray<readonly [PartialParts, string]> = [
         [partial(null), ">=0.0.0"],
         [partial(1), ">=1.0.0 <2.0.0-0"],
+        [partial(1, 2, 3), ">=1.2.3 <2.0.0-0"],
         [partial(0), ">=0.0.0 <1.0.0-0"],
         [partial(0, 2, 3), ">=0.2.3 <0.3.0-0"],
         [partial(0, 0), ">=0.0.0 <0.1.0-0"],

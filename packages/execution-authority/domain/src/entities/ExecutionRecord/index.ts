@@ -6,8 +6,6 @@
  */
 
 /**
- * Execution ledger record model exports.
- *
  * **Example** (Import ExecutionSettlement enum)
  *
  * ```ts

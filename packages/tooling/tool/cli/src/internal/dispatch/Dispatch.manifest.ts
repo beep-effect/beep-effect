@@ -121,6 +121,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Corpus/index.ts").then((module) => module.corpusCommand)),
   groupRoute(
+    { name: "decisions", description: "Package code decisions under <package>/decisions/ (check, for)" },
+    []
+  )(() => import("../../commands/Decisions/index.ts").then((module) => module.decisionsCommand)),
+  groupRoute(
     { name: "docgen", description: "Documentation generation, analysis, and report-only quality review utilities" },
     ["fs-utils"]
   )(() => import("../../commands/Docgen/index.ts").then((module) => module.docgenCommand)),

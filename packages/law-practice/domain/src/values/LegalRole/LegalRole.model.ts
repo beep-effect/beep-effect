@@ -31,8 +31,6 @@ const AdmittedPlayerKinds = PartyKind.pipe(S.HashSet, S.toCodecJson).check(
 );
 
 /**
- * The name a norm gives to a role.
- *
  * **Example** (Record a prescribed role name)
  *
  * ```ts
@@ -51,8 +49,6 @@ export const LegalRoleName = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link LegalRoleName}.
- *
  * @see {@link LegalRoleName} for the runtime schema.
  * @category models
  * @since 0.0.0
@@ -60,8 +56,6 @@ export const LegalRoleName = S.NonEmptyString.pipe(
 export type LegalRoleName = typeof LegalRoleName.Type;
 
 /**
- * One norm-prescribed role, scoped to the relator it is recorded in.
- *
  * **When to use**
  *
  * Use as the bearer and counterparty ends of a legal position relator. A role

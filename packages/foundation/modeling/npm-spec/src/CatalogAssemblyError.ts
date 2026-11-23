@@ -24,8 +24,7 @@ import * as Str from "effect/String";
 
 const $I = $NpmSpecId.create("CatalogAssemblyError");
 
-/** The message a cause carries, if it carries a non-empty one: an `Error`'s `message`, or a thrown string. */
-const causeMessage = (cause: unknown): string | undefined => {
+const nonBlankCauseMessage = (cause: unknown): string | undefined => {
   const text = cause instanceof Error ? cause.message : P.isString(cause) ? cause : undefined;
   return text === undefined || Str.trim(text) === "" ? undefined : text;
 };
@@ -40,53 +39,28 @@ const CatalogHooksReason = LiteralKit([
   "fetchFailed",
   "integrityMismatch",
   "integrityUnavailable",
-]).pipe($I.annoteSchema("CatalogHooksReason", { description: "Why a config dependency could not be resolved." }));
+]).pipe(
+  $I.annoteSchema("CatalogHooksReason", {
+    description:
+      "Why a config dependency could not be resolved. `notInstalled`: the declared version is in neither `node_modules/.pnpm-config` nor any pnpm store and the replaying layer does not fetch, typical of the base side of a diff across a config-dependency bump. `ambiguous`: one store holds the declared version more than once and nothing records which copy the declaration pinned. `fetchFailed`: the replaying layer tried to fetch the declared version and the fetch failed, including the package manager's own integrity check rejecting the download. `integrityMismatch`: the inline `configDependencies` integrity and the lockfile's recorded integrity disagree, so nothing was fetched. `integrityUnavailable`: a fetch was needed but the declaring side records no integrity to verify it against (no inline integrity and no readable lockfile entry), so nothing was fetched.",
+  })
+);
 
 const CatalogAssemblyErrorPayload = S.Struct({
-  /**
-   * Which input failed: `manifest` for a file-level or top-level shape problem,
-   * `catalog` for a malformed catalog block or the double-default duplication,
-   * `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure.
-   */
   source: CatalogAssemblySource.pipe(
     $I.annoteKey("CatalogAssemblyErrorPayload.source", {
       description:
         "Which input failed: `manifest` for a file-level or top-level shape problem, `catalog` for a malformed catalog block or the double-default duplication, `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure.",
     })
   ),
-  /** The file, the catalog name, or the config dependency name. */
   path: S.String.pipe(
     $I.annoteKey("CatalogAssemblyErrorPayload.path", {
       description: "The file, the catalog name, or the config dependency name.",
     })
   ),
-  /** The originating failure. */
   cause: S.Defect({ includeStack: true }).pipe(
     $I.annoteKey("CatalogAssemblyErrorPayload.cause", { description: "The originating failure." })
   ),
-  /**
-   * Why a `hooks`-source failure could not resolve a config dependency at its
-   * declared version, when that is what failed. Absent for every other
-   * failure, including a pnpmfile that resolved but failed to load or replay.
-   *
-   * **Details**
-   *
-   * - `notInstalled` — the declared version is in neither
-   *   `node_modules/.pnpm-config` nor any pnpm store, and the replaying layer
-   *   does not fetch. Typical of the base side of a diff across a
-   *   config-dependency bump: that side declares a version this checkout never
-   *   installed.
-   * - `ambiguous` — one store holds the declared version more than once, and
-   *   nothing records which copy the declaration pinned.
-   * - `fetchFailed` — the replaying layer tried to fetch the declared version
-   *   into the store and the fetch failed. The package manager's own integrity
-   *   check rejecting the download lands here too.
-   * - `integrityMismatch` — the inline `configDependencies` integrity and the
-   *   lockfile's recorded integrity disagree, so nothing was fetched.
-   * - `integrityUnavailable` — a fetch was needed but the declaring side records
-   *   no integrity to verify it against (no inline integrity, and no lockfile
-   *   entry, or a lockfile that could not be read), so nothing was fetched.
-   */
   reason: S.optionalKey(CatalogHooksReason).pipe(
     $I.annoteKey("CatalogAssemblyErrorPayload.reason", {
       description:
@@ -264,7 +238,7 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError, { 
     const failure = this.failure;
     if (S.is(CatalogAssemblyError)(failure.cause)) return failure.cause.message;
     const summary = `Failed to assemble catalogs from ${failure.source} ${failure.path}`;
-    const detail = causeMessage(failure.cause);
+    const detail = nonBlankCauseMessage(failure.cause);
     return detail === undefined ? summary : `${summary}: ${detail}`;
   }
 }

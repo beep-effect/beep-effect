@@ -40,8 +40,6 @@ export const SeniorityTier = LiteralKit([
 );
 
 /**
- * Decoded lawyer seniority tier.
- *
  * **Example** (Assign partner tier type)
  *
  * ```ts

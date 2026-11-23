@@ -7,7 +7,14 @@ import {
   OperationId,
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
-import { ExtractionResult } from "@beep/file-processing/Extraction";
+import {
+  ArchiveExportProcessFileResult,
+  ArchiveExportResult,
+  ExtractedProcessFileResult,
+  ExtractionResult,
+  ProcessFileResult,
+  SkippedProcessFileResult,
+} from "@beep/file-processing/Extraction";
 import { FileProcessingService, makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { decodeExtractionHandoff, encodeExtractionHandoff } from "@beep/langextract/Handoff";
@@ -25,6 +32,7 @@ import * as Model from "effect/ai/Model";
 import * as Response from "effect/ai/Response";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -33,7 +41,13 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { missingOutput, modelOutput, text, unalignedOutput } from "./fixtures/office-action-review/fixture.ts";
+import {
+  missingOutput,
+  modelOutput,
+  overCapOutput,
+  text,
+  unalignedOutput,
+} from "./fixtures/office-action-review/fixture.ts";
 import type { ExtractionHandoff } from "@beep/langextract/Handoff";
 
 const usage = Response.Usage.make({
@@ -87,22 +101,22 @@ const fixtureInput = Effect.fn("OfficeActionFlow.fixtureInput")(function* () {
     }),
   });
 });
+const conformingShacl = ShaclValidationService.of({
+  validate: Effect.fn("ShaclValidationService.validate")(() =>
+    Effect.succeed(ShaclValidationResult.make({ conforms: true, violations: [], truncated: false }))
+  ),
+});
 const scenario = Effect.fn("OfficeActionFlow.scenario")(function* () {
   const digest = yield* Digest.Digest;
   const fileProcessing = yield* FileProcessingService;
   const langExtract = yield* LangExtractService;
   let captured = O.none<ExtractionHandoff>();
-  const shacl = ShaclValidationService.of({
-    validate: Effect.fn("ShaclValidationService.validate")(() =>
-      Effect.succeed(ShaclValidationResult.make({ conforms: true, violations: [], truncated: false }))
-    ),
-  });
   const irToLaw = makeIrToLaw();
   const review = makeOfficeActionReview({
     digest,
     fileProcessing,
     irToLaw,
-    gate: makeClaimGate(shacl),
+    gate: makeClaimGate(conformingShacl),
     transition: makeClaimTransition(),
     langExtract: {
       extract: (request) =>
@@ -120,6 +134,70 @@ const scenario = Effect.fn("OfficeActionFlow.scenario")(function* () {
   const handoff = O.getOrThrow(captured);
   const law = yield* irToLaw.toLaw(handoff);
   return { input, handoff, law, view };
+});
+
+const skipped = (processed: ProcessFileResult): ProcessFileResult =>
+  SkippedProcessFileResult.make({
+    engine: processed.engine,
+    format: processed.format,
+    operationId: processed.operationId,
+    resultKind: "skipped",
+    skipReason: "format-out-of-scope",
+    sourceArtifactId: processed.sourceArtifactId,
+    warnings: [],
+  });
+const archived = (processed: ProcessFileResult): ProcessFileResult =>
+  ArchiveExportProcessFileResult.make({
+    archiveExport: ArchiveExportResult.make({
+      children: [],
+      engine: processed.engine,
+      operationId: processed.operationId,
+      sourceArtifactId: processed.sourceArtifactId,
+      warnings: [],
+    }),
+    engine: processed.engine,
+    format: processed.format,
+    operationId: processed.operationId,
+    resultKind: "archive-exported",
+    sourceArtifactId: processed.sourceArtifactId,
+    warnings: [],
+  });
+const extractedWith =
+  (fields: { readonly engineVersion?: string; readonly text?: string }) =>
+  (processed: ProcessFileResult): ProcessFileResult =>
+    ProcessFileResult.match(processed, {
+      "archive-exported": (archive): ProcessFileResult => archive,
+      extracted: (extracted) =>
+        ExtractedProcessFileResult.make({
+          ...extracted,
+          extraction: ExtractionResult.make({
+            engine: extracted.extraction.engine,
+            format: extracted.extraction.format,
+            metadata: extracted.extraction.metadata,
+            operationId: extracted.extraction.operationId,
+            sourceArtifactId: extracted.extraction.sourceArtifactId,
+            warnings: extracted.extraction.warnings,
+            ...fields,
+          }),
+        }),
+      skipped: (skip): ProcessFileResult => skip,
+    });
+const refusedBy = Effect.fn("OfficeActionFlow.refusedBy")(function* (
+  reshape: (processed: ProcessFileResult) => ProcessFileResult
+) {
+  const digest = yield* Digest.Digest;
+  const fileProcessing = yield* FileProcessingService;
+  const langExtract = yield* LangExtractService;
+  const review = makeOfficeActionReview({
+    digest,
+    fileProcessing: { ...fileProcessing, process: flow(fileProcessing.process, Effect.map(reshape)) },
+    irToLaw: makeIrToLaw(),
+    gate: makeClaimGate(conformingShacl),
+    transition: makeClaimTransition(),
+    langExtract,
+  });
+  const input = yield* fixtureInput();
+  return yield* review.review(input).pipe(Effect.flip);
 });
 
 describe("office-action annotation flow", () => {
@@ -167,6 +245,32 @@ describe("office-action annotation flow", () => {
     );
   });
 
+  it.layer(makeLayer(modelOutput), { timeout: "10 seconds" })("unusable extraction results", (it) => {
+    it.effect(
+      "office-action review refuses a skipped, archived, textless or unversioned extraction before the model",
+      Effect.fnUntraced(function* () {
+        const refusals = yield* Effect.forEach(
+          [skipped, archived, extractedWith({ engineVersion: "1" }), extractedWith({ text })],
+          refusedBy,
+          { concurrency: 1 }
+        );
+        expect(A.map(refusals, (refusal) => refusal._tag)).toStrictEqual(
+          A.replicate("FileProcessingOperationError", 4)
+        );
+        expect(
+          A.map(refusals, (refusal) =>
+            refusal._tag === "FileProcessingOperationError" ? refusal.message : refusal._tag
+          )
+        ).toStrictEqual([
+          "Office-action review requires extracted text, received skipped.",
+          "Office-action review requires extracted text, received archive-exported.",
+          "Office-action review requires text extraction output.",
+          "Office-action review requires a versioned extractor.",
+        ]);
+      })
+    );
+  });
+
   it.layer(makeLayer(missingOutput), { timeout: "10 seconds" })("missing label", (it) => {
     it.effect(
       "office-action flow refuses a missing or unaligned label before the gate",
@@ -186,6 +290,21 @@ describe("office-action annotation flow", () => {
         if (unaligned._tag === "IrToLawExtractionError") {
           expect(unaligned.reason).toBe("required-extraction-unaligned");
           assertSome(unaligned.alignmentStatus, "unaligned");
+          assertSome(unaligned.residualReason, "unaligned");
+        }
+      })
+    );
+  });
+  it.layer(makeLayer(overCapOutput), { timeout: "10 seconds" })("over-cap label", (it) => {
+    it.effect(
+      "office-action flow reports a required label past the extraction cap as residual, not unaligned",
+      Effect.fnUntraced(function* () {
+        const capped = yield* scenario().pipe(Effect.flip);
+        expect(capped._tag).toBe("IrToLawExtractionError");
+        if (capped._tag === "IrToLawExtractionError") {
+          expect(capped.reason).toBe("required-extraction-residual");
+          expect(capped.label).toBe("distinction");
+          assertSome(capped.residualReason, "over-extraction-cap");
         }
       })
     );

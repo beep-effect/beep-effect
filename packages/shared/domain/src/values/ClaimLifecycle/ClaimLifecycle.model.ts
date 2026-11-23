@@ -25,8 +25,6 @@ const ClaimLifecycleTransitionReason = S.NonEmptyString.pipe(
 );
 
 /**
- * Lifecycle vocabulary for claims.
- *
  * **Details**
  *
  * The four states form a linear admission pipeline: a claim starts as a
@@ -54,8 +52,6 @@ export const ClaimLifecycle = ClaimLifecycleBase.pipe(
 );
 
 /**
- * Runtime type for {@link ClaimLifecycle}.
- *
  * **Example** (Type a lifecycle value)
  *
  * ```ts

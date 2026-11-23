@@ -6,8 +6,6 @@
  */
 
 /**
- * Shared identity namespace exports.
- *
  * **Example** (Import identity namespace)
  *
  * ```ts

@@ -17,6 +17,7 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { isBlockedRemoteHost } from "@beep/schema/SafeRemoteHost";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -441,68 +442,9 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
 export const isUrl = (location: string): boolean =>
   Str.startsWith("http://")(location) || Str.startsWith("https://")(location);
 
-/**
- * Reject hostnames that resolve to the local host or to private/internal
- * network space. This bounds the SSRF surface of the URL-backed loaders: the
- * `location` is attacker-controllable through the MCP tool parameters, so a
- * prompt-injected agent must not be able to reach loopback services, link-local
- * addresses, RFC1918/ULA private network space, or the cloud metadata endpoint
- * (`169.254.169.254`).
- */
-const isPrivate172 = (host: string): boolean =>
-  pipe(
-    Str.match(/^172\.(\d{1,3})\./)(host),
-    O.flatMap(A.get(1)),
-    O.map((octet) => Number.parseInt(octet, 10)),
-    O.filter((n) => !Number.isNaN(n)),
-    O.exists((n) => n >= 16 && n <= 31)
-  );
-
-const isInternalIpv4 = (host: string): boolean =>
-  Str.startsWith("127.")(host) ||
-  Str.startsWith("169.254.")(host) ||
-  Str.startsWith("10.")(host) ||
-  Str.startsWith("192.168.")(host) ||
-  isPrivate172(host);
-
-// Decode the IPv4 embedded in an IPv4-mapped IPv6 host. `new URL(...).hostname`
-// normalizes mapped addresses to compressed hex (::ffff:c0a8:101), so the dotted
-// prefixes never fire for URL input; decode hex and dotted suffixes back to IPv4
-// so mapped private ranges classify like their bare form. None for non-mapped.
-const extractMappedIpv4 = (host: string): O.Option<string> =>
-  pipe(
-    Str.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/)(host),
-    O.flatMap((groups) => O.all([A.get(groups, 1), A.get(groups, 2)])),
-    O.map(([hi, lo]) => {
-      const high = Number.parseInt(hi, 16);
-      const low = Number.parseInt(lo, 16);
-      return `${(high >> 8) & 0xff}.${high & 0xff}.${(low >> 8) & 0xff}.${low & 0xff}`;
-    }),
-    O.orElse(() => pipe(Str.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/)(host), O.flatMap(A.get(1))))
-  );
-
-const isBlockedRemoteHost = (hostname: string): boolean => {
-  const host = pipe(Str.toLowerCase(hostname), Str.replace(/^\[|\]$/g, ""));
-  // SSRF guard duplicated with @beep/schema SafeRemoteHost.isInternalHost by
-  // design: each slice owns a self-contained, independently auditable blocklist
-  // rather than coupling this driver to a foundation schema's internals.
-  // IPv4-mapped IPv6 is decoded back to its IPv4 form so mapped private ranges
-  // classify through the same isInternalIpv4 checks.
-  // fallow-ignore-next-line code-duplication -- the SSRF blocklist mirrors @beep/schema SafeRemoteHost so each security boundary audits independently. Owner: @beep/nlp-mcp. Exit: import SafeRemoteHost from @beep/schema, then delete both directives.
-  return (
-    host === "localhost" ||
-    Str.endsWith(".localhost")(host) ||
-    host === "0.0.0.0" ||
-    host === "::" ||
-    host === "::1" ||
-    Str.startsWith("fe80:")(host) ||
-    Str.startsWith("fc")(host) ||
-    Str.startsWith("fd")(host) ||
-    isInternalIpv4(host) ||
-    O.exists(extractMappedIpv4(host), isInternalIpv4)
-  );
-};
-
+// SSRF guard: the remote `location` is attacker-controllable through the MCP tool
+// parameters, so loopback, link-local, private, and cloud-metadata hosts are
+// refused before any request is issued.
 const assertAllowedRemote = (location: string): Effect.Effect<void, DatasetLoadError> =>
   Effect.try({
     catch: () => DatasetLoadError.make({ location, message: `Invalid URL: ${location}` }),

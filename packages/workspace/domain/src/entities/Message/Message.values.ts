@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $WorkspaceDomainId.create("entities/Message/Message.values");
 
 /**
- * Workspace message author role.
- *
  * **Example** (Check MessageRole user)
  *
  * ```ts
@@ -31,8 +29,6 @@ export const MessageRole = LiteralKit(["system", "user", "assistant", "agent", "
 );
 
 /**
- * Runtime type for {@link MessageRole}.
- *
  * @category models
  * @since 0.0.0
  */

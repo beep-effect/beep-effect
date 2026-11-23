@@ -26,8 +26,6 @@ const WorkItemMigrationSchemaName = S.NonEmptyString.check(
 );
 
 /**
- * Client-safe feature flags for WorkItem behavior.
- *
  * **Example** (Decode public feature flags)
  *
  * ```ts

@@ -1741,7 +1741,7 @@ Reverse: Return the first conflict found and restrict L2-1 commutativity to comp
 
 ### P3: the nlp Handoff and Ontology subpaths are deleted; UnitInterval consumers import @beep/schema/UnitInterval, 2026-11-22
 
-The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so `packages/foundation/modeling/nlp/src/Handoff`, its test and the `./Handoff` exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
+The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so the `@beep/nlp` Handoff module, its test and the package's Handoff exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
 
 Ontology `Kind` (0 consumers) was to fold into the kind registry. The structure kinds' containment levels replace its poset, and its `Document`, `Token` and `Character` kinds have no annotation kind and no consumer, so it is deleted rather than ported. Semantic-loss row: those three kinds. The sums are re-measured in the census at the P3 base.
 
@@ -1954,6 +1954,30 @@ The server standing tests use the deterministic apache-tika scaffold. Its descri
 Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Replace the pin with the real Tika server version when the app/server path becomes the text engine
+
+### P1 bootstrap identities use generated literals without importing the registry, 2026-11-23
+
+The test runner is a bootstrap dependency and cannot import @beep/identity. The registry generator projects the vitest shard into the runner as literals; parity tests verify the annotations against the registry. Rejected: a runtime dependency from the runner to identity, which would reverse the bootstrap dependency boundary.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Move the runner above identity in the dependency graph and replace the generated literals with registry lookups.
+
+### P1 registry boundary and projection choices survive comment absorption, 2026-11-23
+
+Identity keeps its local release-version pattern and S.Literals domains because it cannot depend on schema. Parity tests live in schema, where schema to identity is legal. Reject importing schema into identity because it creates a dependency cycle. External dcat, dcterms, owl, rdf, rdfs, schema, sh and void remain unpinned until the P5 exit test requires every external namespace pin, retaining P1 ruling 3. Reject expanding P1 acquisition scope ahead of that phase. nif, gufo and as remain registry-only until a consumer needs named nodes; reject generating unused RDF modules. ActivityStreams uses the HTTP namespace bound by Web Annotation anno.jsonld even though its AS2 acquisition artifact writes HTTPS; reject changing identity bytes to match that artifact.
+
+Lane goals/text-knowledge-stack-rebuild-p1b-registry
+
+Reverse: Replace local parity models and curated projection scope only with dependency-safe equivalents and update their tests
+
+### P1 term stability runs uncached over git state, 2026-11-23
+
+The identity registry gate compares the published term snapshot against the merge base with origin/main. Turbo inputs do not hash that git state, so the gate runs uncached and unscoped under law L0-3. Rejected: caching the gate by source files alone, which could replay a verdict against a different published base.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Add certified git base inputs to the cache key before admitting the term stability gate to a cached scoped graph.
 
 ### P4: admission returns refusals and authenticates before writing, 2026-11-23
 

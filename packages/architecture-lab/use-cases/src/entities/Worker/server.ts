@@ -13,8 +13,6 @@ export * from "./index.ts";
  */
 export * from "./Worker.repository.ts";
 /**
- * Worker use-case factory exports.
- *
  * @category use-cases
  * @since 0.0.0
  */

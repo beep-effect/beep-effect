@@ -19,8 +19,6 @@ import { PosInt } from "../../internal/PosInt.ts";
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.model");
 
 /**
- * Closed section-role domain in the preferred order of 37 CFR 1.77(b).
- *
  * **Details**
  *
  * The order of `Options` is normative. Applications may omit inapplicable
@@ -61,8 +59,6 @@ export const PatentApplicationSectionRole = LiteralKit([
 );
 
 /**
- * Runtime section-role type produced by {@link PatentApplicationSectionRole}.
- *
  * @see {@link PatentApplicationSectionRole} for the ordered runtime schema.
  * @category value-objects
  * @since 0.0.0
@@ -99,8 +95,6 @@ export const PatentClaimTransition = LiteralKit([
 );
 
 /**
- * Runtime transition type produced by {@link PatentClaimTransition}.
- *
  * @see {@link PatentClaimTransition} for the runtime schema and supported phrases.
  * @category value-objects
  * @since 0.0.0
@@ -248,8 +242,6 @@ export const PatentClaimDependencyIssue = PatentClaimDependencyIssueKind.toTagge
 );
 
 /**
- * Runtime diagnostic type produced by {@link PatentClaimDependencyIssue}.
- *
  * @see {@link PatentClaimDependencyIssue} for the complete diagnostic case set.
  * @category diagnostics
  * @since 0.0.0
@@ -414,8 +406,6 @@ const PatentClaimStructureCheck = S.makeFilter(
 );
 
 /**
- * Non-empty, consecutively numbered, acyclic patent claim collection.
- *
  * **Example** (Validate one independent claim)
  *
  * ```ts
@@ -446,8 +436,6 @@ export const PatentClaims = S.NonEmptyArray(PatentClaim)
   );
 
 /**
- * Runtime claim collection produced by {@link PatentClaims}.
- *
  * @see {@link PatentClaims} for dependency validation behavior.
  * @category value-objects
  * @since 0.0.0
@@ -455,8 +443,6 @@ export const PatentClaims = S.NonEmptyArray(PatentClaim)
 export type PatentClaims = typeof PatentClaims.Type;
 
 /**
- * One normalized patent application section.
- *
  * **Example** (Construct a claims section)
  *
  * ```ts
@@ -563,8 +549,6 @@ const PatentApplicationSectionOrderCheck = S.makeFilter(
 );
 
 /**
- * Non-empty patent application sections in their normative relative order.
- *
  * **Example** (Validate an ordered subset)
  *
  * ```ts
@@ -590,8 +574,6 @@ export const PatentApplicationSections = S.NonEmptyArray(PatentApplicationSectio
   );
 
 /**
- * Runtime section collection produced by {@link PatentApplicationSections}.
- *
  * @see {@link PatentApplicationSections} for order and uniqueness validation.
  * @category value-objects
  * @since 0.0.0
@@ -639,8 +621,6 @@ const PatentApplicationDocumentCoherenceCheck = S.makeFilter(
 );
 
 /**
- * Normalized Markdown patent application with typed ordered sections and claims.
- *
  * **Example** (Construct a minimal document)
  *
  * ```ts

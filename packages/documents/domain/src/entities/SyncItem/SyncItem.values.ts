@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $DocumentsDomainId.create("entities/SyncItem/SyncItem.values");
 
 /**
- * Reconciliation state for one mirrored vault item.
- *
  * **Example** (Check pending sync state)
  *
  * ```ts
@@ -32,8 +30,6 @@ export const SyncItemState = LiteralKit(["pending", "current", "error", "conflic
 );
 
 /**
- * Runtime type for {@link SyncItemState}.
- *
  * @category value-objects
  * @since 0.0.0
  */

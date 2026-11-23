@@ -6,7 +6,7 @@
       "type": "string",
       "enum": ["5.0", "6.0"],
       "title": "IgnoreDeprecations",
-      "description": "The deprecation version whose diagnostics are suppressed."
+      "description": "The TypeScript version whose deprecations are suppressed, matched case-sensitively."
     },
     "@beep/tsconfig/CompilerOptions/PluginEntry": {
       "type": "object",

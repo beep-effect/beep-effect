@@ -108,9 +108,6 @@ describe("JsoncVisitor", () => {
       })
     );
 
-    // Port deviation (upstream-bug): upstream wraps one generator object, so a
-    // second run of the same stream resumes the exhausted generator and yields
-    // nothing; the lab creates a fresh generator per run.
     it.effect("one visit stream can be run more than once with the same events", () =>
       Effect.gen(function* () {
         const stream = JsoncVisitor.visit('{ "a": [1, 2] } // c');
@@ -131,7 +128,11 @@ describe("JsoncVisitor", () => {
             "Comment",
           ]
         );
-        assert.deepStrictEqual(second, first);
+        assert.deepStrictEqual(
+          second,
+          first,
+          "port deviation (upstream-bug): upstream wraps one generator object, so a second run resumes the exhausted generator and yields nothing"
+        );
         const literals = yield* stream.pipe(Stream.filter(JsoncVisitorEvent.guards.LiteralValue), Stream.runCollect);
         assert.deepStrictEqual(
           A.map(literals, (e) => e.value),
