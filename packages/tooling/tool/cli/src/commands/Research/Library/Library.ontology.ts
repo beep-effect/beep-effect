@@ -3,7 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $RepoCliId } from "@beep/identity/packages";
+import * as Registry from "@beep/identity/Registry";
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec } from "@beep/n3";
 import { fold, toTurtle } from "@beep/ontology";
 import * as Rdf from "@beep/rdf/Rdf";
@@ -35,7 +35,7 @@ import * as M from "./Library.schemas.ts";
 import type { AssembledClass, AssembledOntology, Triple } from "@beep/ontology";
 import type { SHACL_TERMS } from "@beep/rdf/Vocab/Shacl";
 
-const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
+const libraryNamespace = Registry.namespace("research-library").iri;
 const sh = (name: (typeof SHACL_TERMS)[number]) => Rdf.makeNamedNode(`${SHACL_NAMESPACE}${name}`);
 const nn = Rdf.makeNamedNode;
 
@@ -103,7 +103,7 @@ export const libraryAlignmentTriples: ReadonlyArray<Triple> = [
 ];
 
 /**
- * Assemble class and field identities using the schema file's composer.
+ * Assemble class and field identities from the research-library registry namespace.
  * **Example** (Prepare assembly)
  * ```ts
  * import { assembleLibraryOntology } from "@beep/repo-cli/commands/Research/Library/Library.ontology"
@@ -113,7 +113,7 @@ export const libraryAlignmentTriples: ReadonlyArray<Triple> = [
  * @since 0.0.0
  */
 export const assembleLibraryOntology = Effect.fn("Library.assembleOntology")(function* () {
-  return yield* fold($I, {
+  return yield* fold("research-library", {
     label: "Research Library",
     schemas: libraryOntologySchemas,
     triples: libraryAlignmentTriples,
@@ -288,7 +288,7 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
       fields,
       (f) =>
         f.schema.name === `Library${name === "Report" ? "Document" : name}` &&
-        property.path.value === `${$I.iri}/${f.key}`
+        property.path.value === `${libraryNamespace}${f.key}`
     );
     const members = O.getOrElse(
       O.map(entry, (f) => literals(AST.toType(f.field.ast))),
@@ -341,7 +341,7 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
             : nn(`${node.value}/xone/list/${i + 1}`)
         ),
         Rdf.makeQuad(alternative, sh("property"), property),
-        Rdf.makeQuad(property, sh("path"), nn(`${$I.iri}/${key}`)),
+        Rdf.makeQuad(property, sh("path"), nn(`${libraryNamespace}${key}`)),
         Rdf.makeQuad(property, sh("minCount"), Rdf.makeLiteral("1", XSD_INTEGER.value))
       );
     });
@@ -379,7 +379,7 @@ export const libraryShapesTurtle = Effect.fn("Library.shapesTurtle")(function* (
     fabio: FABIO_NAMESPACE,
     dcat: DCAT_NAMESPACE,
     skos: SKOS_NAMESPACE,
-    library: `${$I.iri}/`,
+    library: libraryNamespace,
   });
   return (yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset: libraryShapesDataset(shapes), prefixes })))
     .source;

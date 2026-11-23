@@ -1,14 +1,22 @@
 {
   "version": "term-snapshot/v1",
-  "release": "1.0.0",
+  "release": "2.0.0",
   "namespaces": [
     {
       "prefix": "as",
       "iri": "http://www.w3.org/ns/activitystreams#"
     },
     {
+      "prefix": "beepQA",
+      "iri": "https://beep-effect.com/ns/qa/1.0/"
+    },
+    {
       "prefix": "cito",
       "iri": "http://purl.org/spar/cito/"
+    },
+    {
+      "prefix": "contracts",
+      "iri": "https://beep-effect.com/ns/contracts/"
     },
     {
       "prefix": "dcat",
@@ -27,12 +35,32 @@
       "iri": "http://purl.org/spar/doco/"
     },
     {
+      "prefix": "document",
+      "iri": "https://beep-effect.com/ns/document/"
+    },
+    {
+      "prefix": "documents-taxonomy",
+      "iri": "https://beep-effect.com/ns/documents/taxonomy/"
+    },
+    {
+      "prefix": "epistemic",
+      "iri": "https://beep-effect.com/ns/epistemic/"
+    },
+    {
       "prefix": "fabio",
       "iri": "http://purl.org/spar/fabio/"
     },
     {
       "prefix": "gufo",
       "iri": "http://purl.org/nemo/gufo#"
+    },
+    {
+      "prefix": "identity-rdf",
+      "iri": "https://beep-effect.com/ns/semantic-web/identity/"
+    },
+    {
+      "prefix": "lejeune",
+      "iri": "https://beep-effect.com/ns/lejeune/ontology/"
     },
     {
       "prefix": "nif",
@@ -47,8 +75,16 @@
       "iri": "http://www.w3.org/2002/07/owl#"
     },
     {
+      "prefix": "practice-kg",
+      "iri": "https://beep-effect.com/ns/practice-kg/"
+    },
+    {
       "prefix": "prov",
       "iri": "http://www.w3.org/ns/prov#"
+    },
+    {
+      "prefix": "qa",
+      "iri": "https://beep-effect.com/ns/qa/"
     },
     {
       "prefix": "rdf",
@@ -59,16 +95,40 @@
       "iri": "http://www.w3.org/2000/01/rdf-schema#"
     },
     {
+      "prefix": "research-library",
+      "iri": "https://beep-effect.com/ns/research-library/"
+    },
+    {
       "prefix": "schema",
       "iri": "https://schema.org/"
+    },
+    {
+      "prefix": "schemas",
+      "iri": "https://beep-effect.com/ns/schemas/"
+    },
+    {
+      "prefix": "semantic-foundation",
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/"
+    },
+    {
+      "prefix": "semantica",
+      "iri": "https://beep-effect.com/ns/semantica/"
     },
     {
       "prefix": "sh",
       "iri": "http://www.w3.org/ns/shacl#"
     },
     {
+      "prefix": "skill-contract",
+      "iri": "https://beep-effect.com/ns/skill-contract/"
+    },
+    {
       "prefix": "skos",
       "iri": "http://www.w3.org/2004/02/skos/core#"
+    },
+    {
+      "prefix": "vitest",
+      "iri": "https://beep-effect.com/ns/vitest/"
     },
     {
       "prefix": "void",
@@ -441,6 +501,177 @@
     "http://www.w3.org/ns/shacl#targetClass",
     "http://www.w3.org/ns/shacl#targetNode",
     "http://www.w3.org/ns/shacl#xone",
+    "https://beep-effect.com/ns/contracts/",
+    "https://beep-effect.com/ns/contracts/qa-inventory/v1",
+    "https://beep-effect.com/ns/document/",
+    "https://beep-effect.com/ns/document/citation",
+    "https://beep-effect.com/ns/document/pattern",
+    "https://beep-effect.com/ns/documents/taxonomy/",
+    "https://beep-effect.com/ns/documents/taxonomy/legal-document",
+    "https://beep-effect.com/ns/epistemic/",
+    "https://beep-effect.com/ns/epistemic/Claim",
+    "https://beep-effect.com/ns/epistemic/claim",
+    "https://beep-effect.com/ns/epistemic/hasEvidenceQuote",
+    "https://beep-effect.com/ns/lejeune/ontology/",
+    "https://beep-effect.com/ns/ontology/semantic-foundation/",
+    "https://beep-effect.com/ns/practice-kg/",
+    "https://beep-effect.com/ns/practice-kg/application",
+    "https://beep-effect.com/ns/practice-kg/client",
+    "https://beep-effect.com/ns/practice-kg/docket",
+    "https://beep-effect.com/ns/practice-kg/docket_family",
+    "https://beep-effect.com/ns/practice-kg/document",
+    "https://beep-effect.com/ns/practice-kg/email_archive",
+    "https://beep-effect.com/ns/practice-kg/patent",
+    "https://beep-effect.com/ns/qa/",
+    "https://beep-effect.com/ns/qa/1.0/",
+    "https://beep-effect.com/ns/qa/1.0/actionId",
+    "https://beep-effect.com/ns/qa/1.0/capturedAtEpochMs",
+    "https://beep-effect.com/ns/qa/1.0/clockOffsetMs",
+    "https://beep-effect.com/ns/qa/1.0/commitSha",
+    "https://beep-effect.com/ns/qa/1.0/scenarioName",
+    "https://beep-effect.com/ns/qa/1.0/sessionId",
+    "https://beep-effect.com/ns/qa/1.0/sourceVideo",
+    "https://beep-effect.com/ns/qa/1.0/toolVersions",
+    "https://beep-effect.com/ns/qa/evidence/cited-artifact-exists/v2",
+    "https://beep-effect.com/ns/qa/evidence/cited-event-id-exists/v2",
+    "https://beep-effect.com/ns/qa/evidence/declared-round-coherent/v2",
+    "https://beep-effect.com/ns/qa/evidence/evidence-cross-check/v2",
+    "https://beep-effect.com/ns/qa/evidence/judge-output-inventory/v2",
+    "https://beep-effect.com/ns/qa/receipts/accepted/v2",
+    "https://beep-effect.com/ns/qa/receipts/delivered/v2",
+    "https://beep-effect.com/ns/qa/receipts/persisted/v2",
+    "https://beep-effect.com/ns/qa/receipts/recovery-attempt/v2",
+    "https://beep-effect.com/ns/qa/receipts/semantically-applied/v2",
+    "https://beep-effect.com/ns/qa/verifiers/judge-settlement/v1",
+    "https://beep-effect.com/ns/research-library/",
+    "https://beep-effect.com/ns/research-library/Artifact",
+    "https://beep-effect.com/ns/research-library/Capture",
+    "https://beep-effect.com/ns/research-library/Catalog",
+    "https://beep-effect.com/ns/research-library/Derivation",
+    "https://beep-effect.com/ns/research-library/Distribution",
+    "https://beep-effect.com/ns/research-library/Finding",
+    "https://beep-effect.com/ns/research-library/Intake",
+    "https://beep-effect.com/ns/research-library/IntakeFile",
+    "https://beep-effect.com/ns/research-library/IntakeRoot",
+    "https://beep-effect.com/ns/research-library/Manifest",
+    "https://beep-effect.com/ns/research-library/ModelRun",
+    "https://beep-effect.com/ns/research-library/Occurrence",
+    "https://beep-effect.com/ns/research-library/Qualification",
+    "https://beep-effect.com/ns/research-library/Reference",
+    "https://beep-effect.com/ns/research-library/Report",
+    "https://beep-effect.com/ns/research-library/SoftwareAgent",
+    "https://beep-effect.com/ns/research-library/Source",
+    "https://beep-effect.com/ns/research-library/SourceVersion",
+    "https://beep-effect.com/ns/research-library/Topic",
+    "https://beep-effect.com/ns/research-library/accessClass",
+    "https://beep-effect.com/ns/research-library/adapter",
+    "https://beep-effect.com/ns/research-library/aliasIds",
+    "https://beep-effect.com/ns/research-library/argv",
+    "https://beep-effect.com/ns/research-library/artifacts",
+    "https://beep-effect.com/ns/research-library/bytes",
+    "https://beep-effect.com/ns/research-library/canonicalUrl",
+    "https://beep-effect.com/ns/research-library/captureId",
+    "https://beep-effect.com/ns/research-library/capturedRevision",
+    "https://beep-effect.com/ns/research-library/captures",
+    "https://beep-effect.com/ns/research-library/catalogIndex",
+    "https://beep-effect.com/ns/research-library/catalogPath",
+    "https://beep-effect.com/ns/research-library/citationText",
+    "https://beep-effect.com/ns/research-library/citoRelation",
+    "https://beep-effect.com/ns/research-library/column",
+    "https://beep-effect.com/ns/research-library/complete",
+    "https://beep-effect.com/ns/research-library/context",
+    "https://beep-effect.com/ns/research-library/date",
+    "https://beep-effect.com/ns/research-library/definitionColumn",
+    "https://beep-effect.com/ns/research-library/definitionEndColumn",
+    "https://beep-effect.com/ns/research-library/definitionEndLine",
+    "https://beep-effect.com/ns/research-library/definitionLine",
+    "https://beep-effect.com/ns/research-library/derivations",
+    "https://beep-effect.com/ns/research-library/derivedId",
+    "https://beep-effect.com/ns/research-library/documentId",
+    "https://beep-effect.com/ns/research-library/documents",
+    "https://beep-effect.com/ns/research-library/effectiveCategory",
+    "https://beep-effect.com/ns/research-library/effort",
+    "https://beep-effect.com/ns/research-library/endColumn",
+    "https://beep-effect.com/ns/research-library/endLine",
+    "https://beep-effect.com/ns/research-library/evidence",
+    "https://beep-effect.com/ns/research-library/expectedOccurrences",
+    "https://beep-effect.com/ns/research-library/filenameDate",
+    "https://beep-effect.com/ns/research-library/files",
+    "https://beep-effect.com/ns/research-library/findingId",
+    "https://beep-effect.com/ns/research-library/findings",
+    "https://beep-effect.com/ns/research-library/form",
+    "https://beep-effect.com/ns/research-library/headingDate",
+    "https://beep-effect.com/ns/research-library/hopDepth",
+    "https://beep-effect.com/ns/research-library/id",
+    "https://beep-effect.com/ns/research-library/identity",
+    "https://beep-effect.com/ns/research-library/inputRoots",
+    "https://beep-effect.com/ns/research-library/intakeId",
+    "https://beep-effect.com/ns/research-library/intakeRoot",
+    "https://beep-effect.com/ns/research-library/intakes",
+    "https://beep-effect.com/ns/research-library/kind",
+    "https://beep-effect.com/ns/research-library/label",
+    "https://beep-effect.com/ns/research-library/line",
+    "https://beep-effect.com/ns/research-library/locator",
+    "https://beep-effect.com/ns/research-library/locators",
+    "https://beep-effect.com/ns/research-library/manifestPath",
+    "https://beep-effect.com/ns/research-library/mediaType",
+    "https://beep-effect.com/ns/research-library/method",
+    "https://beep-effect.com/ns/research-library/model",
+    "https://beep-effect.com/ns/research-library/modelRunId",
+    "https://beep-effect.com/ns/research-library/modelRuns",
+    "https://beep-effect.com/ns/research-library/objectRoot",
+    "https://beep-effect.com/ns/research-library/occurrenceId",
+    "https://beep-effect.com/ns/research-library/occurrences",
+    "https://beep-effect.com/ns/research-library/originalPath",
+    "https://beep-effect.com/ns/research-library/ownership",
+    "https://beep-effect.com/ns/research-library/parseable",
+    "https://beep-effect.com/ns/research-library/path",
+    "https://beep-effect.com/ns/research-library/qualifications",
+    "https://beep-effect.com/ns/research-library/reason",
+    "https://beep-effect.com/ns/research-library/referenceKey",
+    "https://beep-effect.com/ns/research-library/repoCommit",
+    "https://beep-effect.com/ns/research-library/reportDate",
+    "https://beep-effect.com/ns/research-library/repository",
+    "https://beep-effect.com/ns/research-library/requestedRevision",
+    "https://beep-effect.com/ns/research-library/required",
+    "https://beep-effect.com/ns/research-library/retention",
+    "https://beep-effect.com/ns/research-library/revision",
+    "https://beep-effect.com/ns/research-library/role",
+    "https://beep-effect.com/ns/research-library/rootId",
+    "https://beep-effect.com/ns/research-library/route",
+    "https://beep-effect.com/ns/research-library/schema",
+    "https://beep-effect.com/ns/research-library/sha256",
+    "https://beep-effect.com/ns/research-library/snapshotPath",
+    "https://beep-effect.com/ns/research-library/sourceId",
+    "https://beep-effect.com/ns/research-library/sources",
+    "https://beep-effect.com/ns/research-library/span",
+    "https://beep-effect.com/ns/research-library/startedAt",
+    "https://beep-effect.com/ns/research-library/status",
+    "https://beep-effect.com/ns/research-library/summary",
+    "https://beep-effect.com/ns/research-library/topicDerivation",
+    "https://beep-effect.com/ns/research-library/topicIds",
+    "https://beep-effect.com/ns/research-library/topics",
+    "https://beep-effect.com/ns/research-library/versions",
+    "https://beep-effect.com/ns/research-library/view",
+    "https://beep-effect.com/ns/schemas/",
+    "https://beep-effect.com/ns/schemas/qa-judge-input/v1",
+    "https://beep-effect.com/ns/schemas/qa-judge-settlement/v1",
+    "https://beep-effect.com/ns/semantic-web/identity/",
+    "https://beep-effect.com/ns/semantic-web/identity/curie",
+    "https://beep-effect.com/ns/semantic-web/identity/identifier",
+    "https://beep-effect.com/ns/semantica/",
+    "https://beep-effect.com/ns/skill-contract/",
+    "https://beep-effect.com/ns/skill-contract/evidence/failure/v2",
+    "https://beep-effect.com/ns/skill-contract/evidence/gate-certificate/v1",
+    "https://beep-effect.com/ns/skill-contract/evidence/gate-summary/v2",
+    "https://beep-effect.com/ns/vitest/",
+    "https://beep-effect.com/ns/vitest/PositiveTimeoutMillis",
+    "https://beep-effect.com/ns/vitest/TestContextUnavailable",
+    "https://beep-effect.com/ns/vitest/TestContextUnavailable.method",
+    "https://beep-effect.com/ns/vitest/TestHang",
+    "https://beep-effect.com/ns/vitest/TestHang.lastLogLine",
+    "https://beep-effect.com/ns/vitest/TestHang.testName",
+    "https://beep-effect.com/ns/vitest/TestHang.timeoutMillis",
     "https://schema.org/",
     "https://schema.org/CreativeWork",
     "https://schema.org/Event",
@@ -455,6 +686,688 @@
     "https://schema.org/name",
     "https://schema.org/url"
   ],
-  "bindings": [],
-  "deprecations": []
+  "bindings": [
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Artifact",
+      "term": "https://beep-effect.com/ns/research-library/Artifact",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Capture",
+      "term": "https://beep-effect.com/ns/research-library/Capture",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Catalog",
+      "term": "https://beep-effect.com/ns/research-library/Catalog",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Derivation",
+      "term": "https://beep-effect.com/ns/research-library/Derivation",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Finding",
+      "term": "https://beep-effect.com/ns/research-library/Finding",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Intake",
+      "term": "https://beep-effect.com/ns/research-library/Intake",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/IntakeFile",
+      "term": "https://beep-effect.com/ns/research-library/IntakeFile",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/IntakeRoot",
+      "term": "https://beep-effect.com/ns/research-library/IntakeRoot",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Manifest",
+      "term": "https://beep-effect.com/ns/research-library/Manifest",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/ModelRun",
+      "term": "https://beep-effect.com/ns/research-library/ModelRun",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Occurrence",
+      "term": "https://beep-effect.com/ns/research-library/Occurrence",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Qualification",
+      "term": "https://beep-effect.com/ns/research-library/Qualification",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Reference",
+      "term": "https://beep-effect.com/ns/research-library/Reference",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Report",
+      "term": "https://beep-effect.com/ns/research-library/Report",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/Source",
+      "term": "https://beep-effect.com/ns/research-library/Source",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/repo-cli/commands/Research/Library/Library.schemas/SourceVersion",
+      "term": "https://beep-effect.com/ns/research-library/SourceVersion",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/PositiveTimeoutMillis",
+      "term": "https://beep-effect.com/ns/vitest/PositiveTimeoutMillis",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/TestContextUnavailable",
+      "term": "https://beep-effect.com/ns/vitest/TestContextUnavailable",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/TestContextUnavailable.method",
+      "term": "https://beep-effect.com/ns/vitest/TestContextUnavailable.method",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/TestHang",
+      "term": "https://beep-effect.com/ns/vitest/TestHang",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/TestHang.lastLogLine",
+      "term": "https://beep-effect.com/ns/vitest/TestHang.lastLogLine",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/TestHang.testName",
+      "term": "https://beep-effect.com/ns/vitest/TestHang.testName",
+      "since": "2.0.0"
+    },
+    {
+      "code": "@beep/test-runner/Vitest/TestHang.timeoutMillis",
+      "term": "https://beep-effect.com/ns/vitest/TestHang.timeoutMillis",
+      "since": "2.0.0"
+    }
+  ],
+  "deprecations": [
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Artifact",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Artifact"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Capture",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Capture"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Catalog",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Catalog"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Derivation",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Derivation"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Finding",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Finding"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Intake",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Intake"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/IntakeFile",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/IntakeFile"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/IntakeRoot",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/IntakeRoot"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Manifest",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Manifest"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/ModelRun",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/ModelRun"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Occurrence",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Occurrence"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Qualification",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Qualification"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Reference",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Reference"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Report",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Report"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/Source",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/Source"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/SourceVersion",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/SourceVersion"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/accessClass",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/accessClass"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/adapter",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/adapter"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/aliasIds",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/aliasIds"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/argv",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/argv"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/artifacts",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/artifacts"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/bytes",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/bytes"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/canonicalUrl",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/canonicalUrl"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/captureId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/captureId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/capturedRevision",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/capturedRevision"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/captures",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/captures"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/catalogIndex",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/catalogIndex"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/catalogPath",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/catalogPath"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/citationText",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/citationText"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/citoRelation",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/citoRelation"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/column",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/column"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/complete",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/complete"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/context",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/context"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/date",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/date"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/definitionColumn",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/definitionColumn"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/definitionEndColumn",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/definitionEndColumn"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/definitionEndLine",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/definitionEndLine"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/definitionLine",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/definitionLine"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/derivations",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/derivations"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/derivedId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/derivedId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/documentId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/documentId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/documents",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/documents"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/effectiveCategory",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/effectiveCategory"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/effort",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/effort"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/endColumn",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/endColumn"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/endLine",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/endLine"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/evidence",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/evidence"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/expectedOccurrences",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/expectedOccurrences"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/filenameDate",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/filenameDate"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/files",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/files"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/findingId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/findingId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/findings",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/findings"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/form",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/form"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/headingDate",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/headingDate"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/hopDepth",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/hopDepth"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/id",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/id"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/identity",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/identity"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/inputRoots",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/inputRoots"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/intakeId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/intakeId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/intakeRoot",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/intakeRoot"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/intakes",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/intakes"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/kind",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/kind"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/label",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/label"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/line",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/line"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/locator",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/locator"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/locators",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/locators"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/manifestPath",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/manifestPath"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/mediaType",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/mediaType"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/method",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/method"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/model",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/model"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/modelRunId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/modelRunId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/modelRuns",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/modelRuns"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/objectRoot",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/objectRoot"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/occurrenceId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/occurrenceId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/occurrences",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/occurrences"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/originalPath",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/originalPath"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/ownership",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/ownership"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/parseable",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/parseable"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/path",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/path"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/qualifications",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/qualifications"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/reason",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/reason"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/referenceKey",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/referenceKey"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/repoCommit",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/repoCommit"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/reportDate",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/reportDate"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/repository",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/repository"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/requestedRevision",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/requestedRevision"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/required",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/required"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/retention",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/retention"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/revision",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/revision"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/role",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/role"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/rootId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/rootId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/route",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/route"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/schema",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/schema"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/sha256",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/sha256"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/snapshotPath",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/snapshotPath"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/sourceId",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/sourceId"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/sources",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/sources"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/span",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/span"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/startedAt",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/startedAt"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/status",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/status"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/summary",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/summary"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/topicDerivation",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/topicDerivation"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/topicIds",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/topicIds"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/topics",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/topics"
+    },
+    {
+      "term": "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/versions",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/research-library/versions"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/PositiveTimeoutMillis",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/PositiveTimeoutMillis"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/TestContextUnavailable",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/TestContextUnavailable"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/TestContextUnavailable.method",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/TestContextUnavailable.method"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/TestHang"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang.lastLogLine",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/TestHang.lastLogLine"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang.testName",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/TestHang.testName"
+    },
+    {
+      "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang.timeoutMillis",
+      "since": "2.0.0",
+      "replacement": "https://beep-effect.com/ns/vitest/TestHang.timeoutMillis"
+    }
+  ]
 }

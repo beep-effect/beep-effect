@@ -208,6 +208,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "knowledge:semantic-delta",
   "knowledge:refs-check",
   "lint:comment-law",
+  "lint:identity-registry",
   "lint:oxlint",
   "lint:shadcn",
   "goals:doctor",
