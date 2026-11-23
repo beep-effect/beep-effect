@@ -23,8 +23,6 @@ import type { ClaimElementPath, ClaimTermRef } from "./ClaimElement.model.ts";
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.tree.model");
 
 /**
- * Who produced a claim-element tree.
- *
  * **Example** (Inspect producers)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const ClaimElementProducer = LiteralKit(["rule", "llm", "human"]).pipe(
 );
 
 /**
- * Runtime producer type produced by {@link ClaimElementProducer}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -234,8 +230,6 @@ const ClaimElementTreeCoherenceCheck = S.makeFilter(
 );
 
 /**
- * Span-anchored element decomposition of one patent claim, keyed by claim number.
- *
  * **Details**
  *
  * The tree sits beside `PatentClaim` rather than inside it. Element and term
@@ -293,8 +287,6 @@ export class ClaimElementTree extends S.Opaque<ClaimElementTree, { readonly bran
 ) {}
 
 /**
- * Companion namespace for {@link ClaimElementTree}.
- *
  * @category type-level
  * @since 0.0.0
  */

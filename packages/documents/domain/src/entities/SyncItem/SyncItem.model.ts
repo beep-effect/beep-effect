@@ -18,8 +18,6 @@ const $I = $DocumentsDomainId.create("entities/SyncItem/SyncItem.model");
 const pg = ProductEntity.pg;
 
 /**
- * Durable sync-tracking row for one workspace-vault item mirrored one-way to a DMS provider.
- *
  * **Example** (Decode full SyncItem row)
  *
  * ```ts

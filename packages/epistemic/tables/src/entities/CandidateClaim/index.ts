@@ -6,8 +6,6 @@
  */
 
 /**
- * CandidateClaim row converter exports.
- *
  * **Example** (Import row converter exports)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./CandidateClaim.converters.ts";
 /**
- * CandidateClaim converter error exports.
- *
  * **Example** (Access CandidateClaimConverterError export)
  *
  * ```ts
@@ -37,8 +33,6 @@ export * from "./CandidateClaim.converters.ts";
  */
 export * from "./CandidateClaim.errors.ts";
 /**
- * CandidateClaim table exports.
- *
  * **Example** (Import table definition exports)
  *
  * ```ts

@@ -6,8 +6,6 @@
  */
 
 /**
- * Execution grant value exports.
- *
  * **Example** (Log network-egress sink class)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./ExecutionGrant/index.ts";
 /**
- * Execution verdict value exports.
- *
  * **Example** (Log denial reason enum)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./ExecutionGrant/index.ts";
  */
 export * from "./ExecutionVerdict/index.ts";
 /**
- * Grant set value exports.
- *
  * **Example** (Decode draft grant set)
  *
  * ```ts

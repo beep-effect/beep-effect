@@ -84,8 +84,6 @@ export class AssistantTurnHistoryItem extends S.Opaque<AssistantTurnHistoryItem,
 ) {}
 
 /**
- * Plain-text prompt projection of a thread item consumed by the turn kernel.
- *
  * **Example** (Decode turn history item)
  *
  * ```ts
@@ -107,8 +105,6 @@ export const TurnHistoryItem = S.Union([UserTurnHistoryItem, AssistantTurnHistor
 );
 
 /**
- * Runtime type for {@link TurnHistoryItem}.
- *
  * **Example** (Annotate history item type)
  *
  * ```ts
@@ -213,8 +209,6 @@ export class ProviderUsageMetadata extends S.Opaque<ProviderUsageMetadata, { rea
 }
 
 /**
- * Stream event carrying one completed assistant block.
- *
  * **Example** (Inspect block event make)
  *
  * ```ts
@@ -239,9 +233,6 @@ export class AssistantTurnBlockEvent extends S.Opaque<AssistantTurnBlockEvent, {
 ) {}
 
 /**
- * Terminal stream signal carrying provider usage for a successfully finalized
- * assistant turn.
- *
  * **Example** (Inspect finalization make)
  *
  * ```ts
@@ -293,8 +284,6 @@ export const AssistantTurnEvent = AssistantTurnEventTag.mapMembers(
 );
 
 /**
- * Runtime type for {@link AssistantTurnEvent}.
- *
  * **Example** (Extract event type field)
  *
  * ```ts

@@ -43,8 +43,6 @@ const SetupStep = LiteralKit(["claude-desktop", "claude-sign-in", "gateway-exten
 export type SetupStep = typeof SetupStep.Type;
 
 /**
- * How Claude Desktop is installed for this Windows account, if at all.
- *
  * **Details**
  *
  * `per-user` is Claude Setup's per-user install (the `AnthropicClaude`
@@ -69,8 +67,6 @@ export const ClaudeInstall = LiteralKit(["per-user", "msix", "missing"]).pipe(
 );
 
 /**
- * Decoded type of {@link ClaudeInstall}.
- *
  * **Example** (Type an install kind)
  *
  * ```ts
@@ -88,8 +84,6 @@ export type ClaudeInstall = typeof ClaudeInstall.Type;
 const StepDetail = S.NonEmptyString.annotateKey({ description: "What happened, in plain language." });
 
 /**
- * A step that ran and did its job.
- *
  * **Example** (A finished step)
  *
  * ```ts
@@ -148,8 +142,6 @@ export class StepFailed extends S.Opaque<StepFailed, { readonly brand: unique sy
 ) {}
 
 /**
- * The outcome of one bootstrapper step.
- *
  * **Example** (Match an outcome)
  *
  * ```ts
@@ -168,8 +160,6 @@ export const StepOutcome = S.Union([StepDone, StepSkipped, StepFailed]).pipe(
 );
 
 /**
- * Decoded type of {@link StepOutcome}.
- *
  * **Example** (Type an outcome)
  *
  * ```ts
@@ -219,8 +209,6 @@ export class SetupReport extends S.Opaque<SetupReport, { readonly brand: unique 
 ) {}
 
 /**
- * A Claude Desktop installer pinned by URL and SHA-256.
- *
  * **Example** (Pin an installer)
  *
  * ```ts
@@ -342,9 +330,6 @@ export const newChatLink = (message: string): string => `claude://claude.ai/new?
 export const OPEN_CLAUDE_LINK = "claude://claude.ai/new";
 
 /**
- * Whether Claude Desktop has a signed-in account: `signed-in`, `signed-out`,
- * or `unknown` when its state file cannot be read or decoded.
- *
  * **Example** (Check a sign-in state)
  *
  * ```ts
@@ -363,8 +348,6 @@ export const SignInState = LiteralKit(["signed-in", "signed-out", "unknown"]).pi
 );
 
 /**
- * Decoded type of {@link SignInState}.
- *
  * **Example** (Type a sign-in state)
  *
  * ```ts
@@ -402,8 +385,6 @@ export const GatewayInstallState = LiteralKit(["current", "outdated", "missing",
 );
 
 /**
- * Decoded type of {@link GatewayInstallState}.
- *
  * **Example** (Type a gateway state)
  *
  * ```ts

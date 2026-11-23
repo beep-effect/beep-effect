@@ -112,8 +112,6 @@ export const EvidenceSourcePageSelector = EvidenceSourcePageSelectorBase.pipe(
 );
 
 /**
- * Runtime type for {@link EvidenceSourcePageSelector}.
- *
  * **Example** (Type anchor selector value)
  *
  * ```ts
@@ -449,8 +447,6 @@ export const ContradictionActionErrorReason = ContradictionActionErrorReasonBase
 );
 
 /**
- * Runtime type for {@link ContradictionActionErrorReason}.
- *
  * **Example** (Type source-access-denied reason)
  *
  * ```ts

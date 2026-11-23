@@ -6,8 +6,6 @@
  */
 
 /**
- * Contradiction-triage Atom exports.
- *
  * @category atoms
  * @since 0.0.0
  */

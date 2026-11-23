@@ -7,8 +7,6 @@
  */
 
 /**
- * Worker server namespace.
- *
  * @category handlers
  * @since 0.0.0
  */

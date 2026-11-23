@@ -61,7 +61,6 @@ export const CitationCallbackResourceOrigin = S.TaggedUnion({
   })
 );
 /**
- * Schema-derived registry origin.
  * @internal
  * @category models
  * @since 0.0.0

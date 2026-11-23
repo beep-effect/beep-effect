@@ -72,8 +72,6 @@ export class CosmosWorkerInitializationError extends S.TaggedError<
 ) {}
 
 /**
- * Headless probe contract exposed by a mounted Cosmos spike.
- *
  * **Example** (Constructing probe contract)
  *
  * ```ts
@@ -186,8 +184,6 @@ const CosmosSpikeState = LiteralKit(["rendering", "ready", "failed"]).pipe(
 );
 
 /**
- * Exhaustive lifecycle state for the Cosmos spike renderer.
- *
  * **Example** (Creating rendering status)
  *
  * ```ts

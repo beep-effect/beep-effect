@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $PracticeReviewHubId.create("Config");
 
 /**
- * Resolved settings of the review hub.
- *
  * **Example** (Decode the settings)
  *
  * ```ts
@@ -141,8 +139,6 @@ export const decodeReviewHubConfig = Effect.fn("ReviewHubConfig.decode")(functio
 });
 
 /**
- * Resolved settings of the daily notice.
- *
  * **Details**
  *
  * `claudeFolder` is the folder on the attorney's PC that the notice's

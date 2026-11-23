@@ -141,7 +141,6 @@ export const CitationMentionWarning = S.Union([CitationOverlapWarning]).pipe(
   })
 );
 /**
- * Schema-derived occurrence warning.
  * @category models
  * @since 0.0.0
  */
@@ -188,8 +187,6 @@ const coherentEvidence = (mention: typeof MentionShape.Type | typeof ReceiptShap
 };
 
 /**
- * Semantic citation composed with genuine verified occurrence evidence.
- *
  * **Details**
  *
  * The primary anchor is the citation token span. Extended/full/pincite spans

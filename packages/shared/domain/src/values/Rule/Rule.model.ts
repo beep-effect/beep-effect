@@ -68,8 +68,6 @@ export const Effect = EffectBase.pipe(
 );
 
 /**
- * Companion namespace for {@link Effect}.
- *
  * **Example** (Check encoded allow value)
  *
  * ```ts
@@ -104,8 +102,6 @@ export declare namespace Effect {
 }
 
 /**
- * Shared action and resource fields for rule decision variants.
- *
  * **Example** (Decode base rule fields)
  *
  * ```ts
@@ -252,8 +248,6 @@ export const Rule = S.Union([Allow, Deny, Ask]).pipe(
 );
 
 /**
- * Companion type for {@link Rule}.
- *
  * **Example** (Extract rule effect type)
  *
  * ```ts
@@ -299,8 +293,6 @@ export const Ruleset = Rule.pipe(
 );
 
 /**
- * Type for {@link Ruleset}.
- *
  * **Example** (Extract ruleset effect type)
  *
  * ```ts

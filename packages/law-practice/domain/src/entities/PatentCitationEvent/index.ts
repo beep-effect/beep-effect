@@ -8,8 +8,6 @@
 
 export * from "./PatentCitationEvent.model.ts";
 /**
- * Patent citation event value objects.
- *
  * @category value-objects
  * @since 0.0.0
  */

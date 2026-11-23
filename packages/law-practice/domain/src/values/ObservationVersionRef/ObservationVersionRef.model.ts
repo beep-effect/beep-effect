@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("values/ObservationVersionRef/ObservationVersionRef.model");
 
 /**
- * Names one exact observation: which event, and which version it carried.
- *
  * **When to use**
  *
  * Use when something must point at an observation *version* rather than at

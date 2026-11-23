@@ -52,16 +52,12 @@ export const TaggingMode = LiteralKit(["dry-run", "apply"]).pipe(
 );
 
 /**
- * Runtime type for {@link TaggingMode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TaggingMode = typeof TaggingMode.Type;
 
 /**
- * Outcome tag of a tagging decision, as recorded in the tag ledger.
- *
  * **Example** (Guard a tagging outcome)
  *
  * ```ts
@@ -82,8 +78,6 @@ export const TaggingOutcome = LiteralKit(["MatterMatched", "MatterUnmatched"]).p
 );
 
 /**
- * Runtime type for {@link TaggingOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -176,8 +170,6 @@ export const summarizeDecision: (decision: TaggingDecision) => TagDecisionSummar
 });
 
 /**
- * Tag-ledger line: categories one run added to one message.
- *
  * **Gotchas**
  *
  * `addedCategories` lists only what this run added. Undo may remove exactly
@@ -243,8 +235,6 @@ export class TagLedgerEntry extends S.Opaque<TagLedgerEntry, { readonly brand: u
 ) {}
 
 /**
- * Tag-ledger line: categories an undo run removed from one message.
- *
  * **Example** (Record removed categories)
  *
  * ```ts
@@ -289,8 +279,6 @@ export class TagUndoEntry extends S.Opaque<TagUndoEntry, { readonly brand: uniqu
 ) {}
 
 /**
- * Any line of the append-only tag ledger.
- *
  * **Example** (Branch on a ledger record)
  *
  * ```ts
@@ -322,16 +310,12 @@ export const TagLedgerRecord = S.Union([TagLedgerEntry, TagUndoEntry]).pipe(
 );
 
 /**
- * Runtime type for {@link TagLedgerRecord}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TagLedgerRecord = typeof TagLedgerRecord.Type;
 
 /**
- * Codec between one JSONL line and a {@link TagLedgerRecord}.
- *
  * **Example** (Decode one tag-ledger line)
  *
  * ```ts
@@ -354,16 +338,12 @@ export const TagLedgerRecordJsonLine = S.fromJsonString(TagLedgerRecord).pipe(
 );
 
 /**
- * Runtime type for {@link TagLedgerRecordJsonLine}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TagLedgerRecordJsonLine = typeof TagLedgerRecordJsonLine.Type;
 
 /**
- * Subfolder of a matter's document folder an attachment is filed into.
- *
  * **Details**
  *
  * `uspto-incoming` is `05 USPTO Correspondence/01 Incoming` and `from-client`
@@ -390,16 +370,12 @@ export const FilingDestination = LiteralKit(["uspto-incoming", "from-client"]).p
 );
 
 /**
- * Runtime type for {@link FilingDestination}.
- *
  * @category models
  * @since 0.0.0
  */
 export type FilingDestination = typeof FilingDestination.Type;
 
 /**
- * SHA-256 of an attachment's bytes: 64 lowercase hex characters.
- *
  * **Example** (Reject a malformed content hash)
  *
  * ```ts
@@ -424,8 +400,6 @@ export const ContentSha256 = Sha256Hex.pipe(
 );
 
 /**
- * Type-level brand produced by {@link ContentSha256}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -511,8 +485,6 @@ export class FilingIntent extends S.Opaque<FilingIntent, { readonly brand: uniqu
 ) {}
 
 /**
- * Filing-ledger completion line: one attachment filed into a matter's folder.
- *
  * **Details**
  *
  * The dedupe key is `(contentSha256, matterKey)`: the same bytes are filed at
@@ -567,8 +539,6 @@ export class FilingLedgerEntry extends S.Opaque<FilingLedgerEntry, { readonly br
 ) {}
 
 /**
- * Why a filing intent was given up without storing a file.
- *
  * **Details**
  *
  * `name-taken`: a first upload found its name held, so the holder is a file
@@ -597,16 +567,12 @@ export const FilingAbandonReason = LiteralKit(["name-taken", "holder-mismatch"])
 );
 
 /**
- * Runtime type for {@link FilingAbandonReason}.
- *
  * @category models
  * @since 0.0.0
  */
 export type FilingAbandonReason = typeof FilingAbandonReason.Type;
 
 /**
- * Filing-ledger line retiring an intent whose upload stored nothing.
- *
  * **Details**
  *
  * A first upload that finds its name taken proves the name belongs to a file
@@ -656,9 +622,6 @@ export class FilingAbandoned extends S.Opaque<FilingAbandoned, { readonly brand:
 ) {}
 
 /**
- * Any line of the append-only filing ledger: an intent, a completion, or an
- * abandonment.
- *
  * **Example** (Match a filing-ledger record)
  *
  * ```ts
@@ -697,16 +660,12 @@ export const FilingLedgerRecord = S.Union([FilingIntent, FilingLedgerEntry, Fili
 );
 
 /**
- * Runtime type for {@link FilingLedgerRecord}.
- *
  * @category models
  * @since 0.0.0
  */
 export type FilingLedgerRecord = typeof FilingLedgerRecord.Type;
 
 /**
- * Codec between one JSONL line and a {@link FilingLedgerRecord}.
- *
  * **Example** (Decode one filing-ledger line)
  *
  * ```ts
@@ -729,16 +688,12 @@ export const FilingLedgerRecordJsonLine = S.fromJsonString(FilingLedgerRecord).p
 );
 
 /**
- * Runtime type for {@link FilingLedgerRecordJsonLine}.
- *
  * @category models
  * @since 0.0.0
  */
 export type FilingLedgerRecordJsonLine = typeof FilingLedgerRecordJsonLine.Type;
 
 /**
- * Why an attachment was not filed.
- *
  * **Example** (Guard a skip reason)
  *
  * ```ts
@@ -767,8 +722,6 @@ export const AttachmentSkipReason = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AttachmentSkipReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -852,8 +805,6 @@ export const BackfillCheckpointJson = S.fromJsonString(BackfillCheckpoint).pipe(
 );
 
 /**
- * Runtime type for {@link BackfillCheckpointJson}.
- *
  * @category models
  * @since 0.0.0
  */

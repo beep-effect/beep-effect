@@ -207,8 +207,6 @@ export class ContradictionCandidateView extends S.Opaque<
 ) {}
 
 /**
- * Paginated contradiction-candidate read result.
- *
  * **Example** (Make empty candidate page)
  *
  * ```ts

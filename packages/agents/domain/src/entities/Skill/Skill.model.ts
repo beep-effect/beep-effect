@@ -16,8 +16,6 @@ const $I = $AgentsDomainId.create("entities/Skill/Skill.model");
 const pg = ProductEntity.pg;
 
 /**
- * Persisted skill record referenced by fixture-backed agents.
- *
  * **Details**
  *
  * `name` derives its `varchar(64)` bound from the `SkillName` value schema.

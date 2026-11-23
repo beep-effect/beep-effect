@@ -214,8 +214,6 @@ const ContradictionQaSeedErrorReason = LiteralKit([
 type ContradictionQaSeedErrorReason = typeof ContradictionQaSeedErrorReason.Type;
 
 /**
- * Sanitized contradiction browser-QA seed failure.
- *
  * **Example** (Create and identify error)
  *
  * ```ts

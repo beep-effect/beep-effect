@@ -21,8 +21,6 @@ const ClaimFunctionalPartKind = LiteralKit(["term", "text"]).pipe(
 );
 
 /**
- * One ordered part of a functional relation: a term reference or span-anchored connecting text.
- *
  * **Example** (Decode a connecting-text part)
  *
  * ```ts
@@ -60,16 +58,12 @@ export const ClaimFunctionalPart = ClaimFunctionalPartKind.toTaggedUnion("kind")
 );
 
 /**
- * Runtime part type produced by {@link ClaimFunctionalPart}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ClaimFunctionalPart = typeof ClaimFunctionalPart.Type;
 
 /**
- * Discriminator of {@link ClaimElementEdge}.
- *
  * **Example** (Inspect edge kinds)
  *
  * ```ts
@@ -88,8 +82,6 @@ export const ClaimElementEdgeKind = LiteralKit(["part-of", "depends-on-element",
 );
 
 /**
- * Runtime edge kind produced by {@link ClaimElementEdgeKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -170,8 +162,6 @@ export const ClaimElementEdge = ClaimElementEdgeKind.toTaggedUnion("kind")({
 );
 
 /**
- * Runtime edge type produced by {@link ClaimElementEdge}.
- *
  * @category type-level
  * @since 0.0.0
  */

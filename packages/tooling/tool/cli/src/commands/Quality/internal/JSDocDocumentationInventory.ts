@@ -1004,10 +1004,11 @@ const analyzeExportDeclaration = (
   const unsafeIssues = unsafeExampleViolations(commentText);
   const categoryIssues = categoryViolations(commentText);
   const forbidden = forbiddenTagsIn(presentTags);
+  const barrelDocText = leadingJsDocText(declaration);
   const barrelLeadIssues = restatingLeadFindings(
-    leadingJsDocText(declaration),
+    barrelDocText,
     barrelReferences(declaration),
-    isGeneratedSource(repoPath, sourceFile)
+    leadCheckExempt(repoPath, sourceFile, barrelDocText)
   );
   // Re-export declarations are graph edges, not symbol-quality subjects
   // (.patterns/jsdoc-documentation.md:91-96; rulings R2, R5): exempt them from
@@ -1058,19 +1059,21 @@ const barrelReferences = (declaration: ExportDeclaration): ReadonlyArray<string>
     P.isString
   );
 
-const isGeneratedSource = (repoPath: string, sourceFile: SourceFile): boolean =>
-  isGeneratedSourceFile(repoPath) || hasGeneratedFileHeader(sourceFile.getFullText());
+const leadCheckExempt = (repoPath: string, sourceFile: SourceFile, docText: string): boolean =>
+  isGeneratedSourceFile(repoPath) ||
+  hasGeneratedFileHeader(sourceFile.getFullText()) ||
+  O.exists(topFileoverview(sourceFile), (moduleDoc) => moduleDoc === docText);
 
 const moduleHeaderTags = ["@packageDocumentation", "@fileoverview", "@file"];
 
 const restatingLeadFindings = (
   docText: string,
   references: ReadonlyArray<string>,
-  generated: boolean
+  exempt: boolean
 ): ReadonlyArray<DocumentationIssue> => {
   const written = jsDocLead(docText);
   const moduleHeader = A.some(tagsFromComment(docText), (tag) => A.contains(moduleHeaderTags, tag));
-  return !generated && !moduleHeader && Str.isNonEmpty(written) && leadRestates(written, references)
+  return !exempt && !moduleHeader && Str.isNonEmpty(written) && leadRestates(written, references)
     ? [{ rule: "restating-lead", detail: written }]
     : [];
 };
@@ -1079,11 +1082,11 @@ const derivedLeadFindings = (
   docText: string,
   name: string,
   lead: O.Option<string>,
-  generated: boolean
+  exempt: boolean
 ): ReadonlyArray<DocumentationIssue> =>
   O.match(lead, {
     onNone: () => [],
-    onSome: (description) => restatingLeadFindings(docText, [description, name], generated),
+    onSome: (description) => restatingLeadFindings(docText, [description, name], exempt),
   });
 
 const countFindings = (missingSummary: boolean, ...findingGroups: ReadonlyArray<ReadonlyArray<unknown>>): number =>
@@ -1122,7 +1125,7 @@ const analyzeAnchoredExport = (input: AnchoredExport): InventoryEntry => {
   const unsafeIssues = A.flatMap(docTexts, unsafeExampleViolations);
   const categoryIssues = A.flatMap(docTexts, categoryViolations);
   const shapeIssues = A.flatMap(docTexts, documentationShapeViolations);
-  const leadIssues = derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile));
+  const leadIssues = derivedLeadFindings(docText, name, lead, leadCheckExempt(repoPath, sourceFile, docText));
   const findingCount = countFindings(
     missingSummary,
     missingTags,

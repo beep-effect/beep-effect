@@ -86,8 +86,6 @@ export const ClaimTermIntroducingDeterminer = ClaimTermDeterminer.pick([
 );
 
 /**
- * Runtime determiner produced by {@link ClaimTermIntroducingDeterminer}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -116,8 +114,6 @@ export const ClaimTermReferringDeterminer = ClaimTermDeterminer.pick(["the", "sa
 );
 
 /**
- * Runtime determiner produced by {@link ClaimTermReferringDeterminer}.
- *
  * @category type-level
  * @since 0.0.0
  */

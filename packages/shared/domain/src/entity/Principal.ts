@@ -36,8 +36,6 @@ export const SystemComponent = SystemComponentBase.pipe(
 );
 
 /**
- * Runtime type for {@link SystemComponent}.
- *
  * **Example** (Type a system component)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const SystemComponent = SystemComponentBase.pipe(
 export type SystemComponent = typeof SystemComponent.Type;
 
 /**
- * Principal variant for a user actor.
- *
  * **Example** (Decode user principal)
  *
  * ```ts
@@ -84,8 +80,6 @@ export class UserPrincipal extends S.Opaque<UserPrincipal, { readonly brand: uni
 ) {}
 
 /**
- * Principal variant for a service account.
- *
  * **Example** (Decode service account principal)
  *
  * ```ts
@@ -164,8 +158,6 @@ export class AgentPrincipal extends S.Opaque<AgentPrincipal, { readonly brand: u
 ) {}
 
 /**
- * Principal variant for a connector account.
- *
  * **Example** (Decode connector account principal)
  *
  * ```ts

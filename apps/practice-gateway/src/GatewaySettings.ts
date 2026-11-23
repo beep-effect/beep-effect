@@ -22,8 +22,6 @@ import * as Str from "effect/String";
 const $I = $PracticeGatewayId.create("GatewaySettings");
 
 /**
- * Resolved gateway settings.
- *
  * **Details**
  *
  * `bundleDir`, `corpusRoot` and `m365ClientId` come from the extension's

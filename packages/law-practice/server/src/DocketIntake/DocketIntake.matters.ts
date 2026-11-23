@@ -434,9 +434,6 @@ export const DocketMatterLookupPracticeKg: Layer.Layer<
 );
 
 /**
- * The practice knowledge-graph bundle could not be opened for the docket
- * intake.
- *
  * **Example** (Make a bundle error)
  *
  * ```ts
@@ -462,8 +459,6 @@ export class DocketKgBundleError extends S.TaggedError<DocketKgBundleError, { re
 ) {}
 
 /**
- * Where the practice knowledge-graph bundle is.
- *
  * **Example** (Make bundle options)
  *
  * ```ts

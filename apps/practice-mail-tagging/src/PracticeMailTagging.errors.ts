@@ -20,8 +20,6 @@ import type * as Config from "effect/Config";
 const $I = $PracticeMailTaggingId.create("PracticeMailTagging.errors");
 
 /**
- * Why a mail-tagging command ended without doing its work.
- *
  * **Details**
  *
  * `refused` is a write the operator did not confirm. `throttled` is a
@@ -47,8 +45,6 @@ export const PracticeMailTaggingFailureKind = LiteralKit(["failed", "refused", "
 );
 
 /**
- * Type-level union produced by {@link PracticeMailTaggingFailureKind}.
- *
  * @category type-level
  * @since 0.0.0
  */

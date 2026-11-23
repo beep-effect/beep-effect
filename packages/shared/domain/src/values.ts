@@ -6,8 +6,6 @@
  */
 
 /**
- * Shared value-object exports.
- *
  * **Example** (Import shared values module)
  *
  * ```ts

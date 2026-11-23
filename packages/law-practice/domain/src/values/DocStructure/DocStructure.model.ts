@@ -145,8 +145,6 @@ export class DocStructureRuleFamily extends S.Opaque<DocStructureRuleFamily, { r
  */
 export const officeActionRuleV1 = DocStructureRuleFamily.make({ id: "uspto-oa-finality-ssp", version: 1 });
 /**
- * Carries law-practice document identity and source version alongside substrate identity.
- *
  * **Example** (Inspect DocStructureDocument)
  *
  * ```ts
@@ -386,8 +384,6 @@ export const DocStructureCandidate: S.toTaggedUnion<
  */
 export type DocStructureCandidate = typeof DocStructureCandidate.Type;
 /**
- * Carries exactly two ordered verified evidence inputs as one atomic outcome.
- *
  * **Example** (Inspect OfficeActionRecognizedPair)
  *
  * ```ts
@@ -427,8 +423,6 @@ export class OfficeActionRecognizedPair extends S.Opaque<
     )
 ) {}
 /**
- * Exposes the atomic verified pair or one typed abstention.
- *
  * **Example** (Inspect DocStructureOutcome)
  *
  * ```ts
@@ -450,7 +444,6 @@ export const DocStructureOutcome: S.toTaggedUnion<
   })
 );
 /**
- * Exposes the atomic verified pair or one typed abstention.
  * @category type-level
  * @since 0.0.0
  */

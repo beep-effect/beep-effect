@@ -41,8 +41,6 @@ export const CitationMentionId = S.TemplateLiteral(["cm1:", Sha256Hex]).pipe(
 );
 
 /**
- * Schema-derived citation occurrence identity.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +77,6 @@ export const CitationAuthorityId = S.TemplateLiteral(["ca1:", Sha256Hex]).pipe(
 );
 
 /**
- * Schema-derived document-local authority identity.
- *
  * @category models
  * @since 0.0.0
  */
@@ -105,7 +101,6 @@ export const CitationDetachedId = S.TemplateLiteral(["cd1:", Sha256Hex]).pipe(
   })
 );
 /**
- * Schema-derived detached object identity.
  * @category models
  * @since 0.0.0
  */
@@ -130,7 +125,6 @@ export const CitationMemberListId = S.TemplateLiteral(["cl1:", Sha256Hex]).pipe(
   })
 );
 /**
- * Schema-derived member-list identity.
  * @category models
  * @since 0.0.0
  */
@@ -155,7 +149,6 @@ export const CitationResourceGroupId = S.TemplateLiteral(["cg1:", Sha256Hex]).pi
   })
 );
 /**
- * Schema-derived insertion-entry identity.
  * @category models
  * @since 0.0.0
  */

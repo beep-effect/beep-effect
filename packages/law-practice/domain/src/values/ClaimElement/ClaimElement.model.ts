@@ -20,8 +20,6 @@ import type * as SchemaAST from "effect/SchemaAST";
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.model");
 
 /**
- * Ordinal address of one claim element, rooted at its claim number.
- *
  * **Details**
  *
  * The first dot-separated segment is the claim number, so a path is a
@@ -63,8 +61,6 @@ export const ClaimElementPath = S.String.check(
 );
 
 /**
- * Branded path type produced by {@link ClaimElementPath}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -100,8 +96,6 @@ export const claimNumberOfPath: (path: ClaimElementPath) => number = flow(
 );
 
 /**
- * Role an element plays in the claim's structure.
- *
  * **Example** (Inspect element kinds)
  *
  * ```ts
@@ -126,16 +120,12 @@ export const ClaimElementKind = LiteralKit([
 );
 
 /**
- * Runtime element kind produced by {@link ClaimElementKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ClaimElementKind = typeof ClaimElementKind.Type;
 
 /**
- * Determiner that opens a claim term, which decides whether it introduces or refers back.
- *
  * **Details**
  *
  * `a`, `an`, `at-least-one`, and `plurality-of` introduce a term; `the` and
@@ -161,8 +151,6 @@ export const ClaimTermDeterminer = LiteralKit(["a", "an", "the", "said", "at-lea
 );
 
 /**
- * Runtime determiner produced by {@link ClaimTermDeterminer}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -212,8 +200,6 @@ export const ClaimTermHead = S.String.check(
 );
 
 /**
- * Runtime head type produced by {@link ClaimTermHead}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -306,8 +292,6 @@ const ClaimTermDeterminerSurfaceCheck = S.makeFilter(
 );
 
 /**
- * One determiner-bearing noun phrase recited in a claim element.
- *
  * **Details**
  *
  * `anchor` covers the full surface phrase, determiner included, as a
@@ -367,8 +351,6 @@ export class ClaimTerm extends S.Class<ClaimTerm, { readonly brand: unique symbo
 ) {}
 
 /**
- * Companion namespace for {@link ClaimTerm}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -383,8 +365,6 @@ export declare namespace ClaimTerm {
 }
 
 /**
- * Address of one term: the element that recites it and its exact span.
- *
  * **Details**
  *
  * Terms within an element never overlap, so the element path plus the span
@@ -426,8 +406,6 @@ export class ClaimTermRef extends S.Opaque<ClaimTermRef, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion namespace for {@link ClaimTermRef}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -442,8 +420,6 @@ export declare namespace ClaimTermRef {
 }
 
 /**
- * One span-anchored element of a claim with the terms it recites.
- *
  * **Example** (Decode a limitation)
  *
  * ```ts
@@ -493,8 +469,6 @@ export class ClaimElement extends S.Opaque<ClaimElement, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion namespace for {@link ClaimElement}.
- *
  * @category type-level
  * @since 0.0.0
  */

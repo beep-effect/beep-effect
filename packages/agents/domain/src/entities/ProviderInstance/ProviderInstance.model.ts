@@ -15,9 +15,6 @@ const $I = $AgentsDomainId.create("entities/ProviderInstance/ProviderInstance.mo
 const pg = ProductEntity.pg;
 
 /**
- * Persisted provider CLI instance: a labeled binary + HOME/env configuration
- * for one vendor CLI, plus the latest auth-probe snapshot.
- *
  * **Details**
  *
  * Invariant: no token-bearing fields. The vendor CLI owns login, token

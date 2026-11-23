@@ -61,7 +61,6 @@ export const ClaimIntrinsicNounWitness = LiteralKit(["unavailable", "known"])
     })
   );
 /**
- * Intrinsic input witness type.
  * @category type-level
  * @since 0.0.0
  */
@@ -87,7 +86,6 @@ export const ClaimLexicalSourceWork = S.Int.check(S.isBetween({ minimum: 0, maxi
   })
 );
 /**
- * Source-work value type.
  * @category type-level
  * @since 0.0.0
  */
@@ -169,8 +167,6 @@ export const ClaimLexicalEvidence = evidenceStatus
     })
   );
 /**
- * Neutral evidence type.
- *
  * @category type-level
  * @since 0.0.0
  */

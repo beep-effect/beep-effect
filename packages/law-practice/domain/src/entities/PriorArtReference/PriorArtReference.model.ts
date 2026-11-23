@@ -13,8 +13,6 @@ const $I = $LawPracticeDomainId.create("entities/PriorArtReference/PriorArtRefer
 const pg = ProductEntity.pg;
 
 /**
- * Prior-art reference entity cited by an office action.
- *
  * **Details**
  *
  * Captures the examiner-cited document number and title while linking back to

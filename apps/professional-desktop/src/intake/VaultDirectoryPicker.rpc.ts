@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $ProfessionalDesktopId.create("intake/VaultDirectoryPicker.rpc");
 
 /**
- * Client-safe native vault directory picker failure.
- *
  * **Example** (Creating error with message)
  *
  * ```ts

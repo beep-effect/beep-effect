@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim projection read-model exports.
- *
  * **Example** (Decode a ClaimProjectionView)
  *
  * ```ts

@@ -65,8 +65,6 @@ const preconditionFailed = 412;
 const notFound = 404;
 
 /**
- * Configuration of the `@beep/m365` mailbox adapter.
- *
  * **Details**
  *
  * `userId` is the mailbox address or object id; every driver request carries
