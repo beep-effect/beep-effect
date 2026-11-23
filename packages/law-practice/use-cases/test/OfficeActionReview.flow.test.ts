@@ -41,7 +41,13 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { missingOutput, modelOutput, text, unalignedOutput } from "./fixtures/office-action-review/fixture.ts";
+import {
+  missingOutput,
+  modelOutput,
+  overCapOutput,
+  text,
+  unalignedOutput,
+} from "./fixtures/office-action-review/fixture.ts";
 import type { ExtractionHandoff } from "@beep/langextract/Handoff";
 
 const usage = Response.Usage.make({
@@ -284,6 +290,21 @@ describe("office-action annotation flow", () => {
         if (unaligned._tag === "IrToLawExtractionError") {
           expect(unaligned.reason).toBe("required-extraction-unaligned");
           assertSome(unaligned.alignmentStatus, "unaligned");
+          assertSome(unaligned.residualReason, "unaligned");
+        }
+      })
+    );
+  });
+  it.layer(makeLayer(overCapOutput), { timeout: "10 seconds" })("over-cap label", (it) => {
+    it.effect(
+      "office-action flow reports a required label past the extraction cap as residual, not unaligned",
+      Effect.fnUntraced(function* () {
+        const capped = yield* scenario().pipe(Effect.flip);
+        expect(capped._tag).toBe("IrToLawExtractionError");
+        if (capped._tag === "IrToLawExtractionError") {
+          expect(capped.reason).toBe("required-extraction-residual");
+          expect(capped.label).toBe("distinction");
+          assertSome(capped.residualReason, "over-extraction-cap");
         }
       })
     );

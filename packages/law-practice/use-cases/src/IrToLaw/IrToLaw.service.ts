@@ -12,13 +12,14 @@
  * Entities are decoded through their schemas with a spike audit envelope (see
  * {@link spikeEntityInput}) — a spike affordance, not the production id/audit
  * path. The mapping is effectful and fails typed when required extraction labels
- * are missing or unaligned before any law entity is decoded.
+ * are missing, unaligned or otherwise residual before any law entity is decoded.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { iri } from "@beep/identity/Registry";
+import { ResidualReason } from "@beep/langextract/Handoff";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -80,11 +81,19 @@ const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction
     onNone: () => Effect.fail(missingExtraction(label)),
     onSome: (candidate) =>
       Effect.fail(
-        IrToLawExtractionError.fromReason("required-extraction-unaligned", {
-          alignmentStatus: candidate.alignment,
-          label,
-          message: `Office-action extraction label "${label}" is not source-grounded.`,
-        })
+        ResidualReason.is.unaligned(candidate.reason)
+          ? IrToLawExtractionError.fromReason("required-extraction-unaligned", {
+              alignmentStatus: candidate.alignment,
+              label,
+              message: `Office-action extraction label "${label}" is not source-grounded.`,
+              residualReason: candidate.reason,
+            })
+          : IrToLawExtractionError.fromReason("required-extraction-residual", {
+              alignmentStatus: candidate.alignment,
+              label,
+              message: `Office-action extraction label "${label}" stayed residual (${candidate.reason}).`,
+              residualReason: candidate.reason,
+            })
       ),
   });
 });
