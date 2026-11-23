@@ -13,8 +13,6 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 
-// One memoized layer for the whole group; each test loads its own state
-// (load replaces the cache contents) instead of re-providing per test.
 layer(VersionCache.layer, { timeout: "30 seconds" })("VersionCache", (it) => {
   describe("mutation and query", () => {
     it.effect("load replaces contents, sorted and deduplicated by precedence", () =>

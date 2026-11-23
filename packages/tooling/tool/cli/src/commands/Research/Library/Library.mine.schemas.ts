@@ -11,6 +11,7 @@ import * as S from "effect/Schema";
 import { LibraryStringList } from "./Library.hopPolicy.ts";
 import {
   LibraryAccessClass,
+  LibraryAgentLabel,
   LibraryArtifact,
   LibraryCitoRelation,
   LibraryDocument,
@@ -481,8 +482,8 @@ export class LibraryReadingRecord extends S.Opaque<LibraryReadingRecord, { reado
  */
 export class LibrarySynthesisAuthor extends S.Opaque<LibrarySynthesisAuthor, { readonly brand: unique symbol }>()(
   S.Struct({
-    model: S.NonEmptyString,
-    effort: S.NonEmptyString,
+    model: LibraryAgentLabel,
+    effort: LibraryAgentLabel,
     route: S.NonEmptyString,
     argv: LibraryStringList,
   }).pipe($I.annoteSchema("LibrarySynthesisAuthor", { description: "Orchestrator that authored a synthesis." }))

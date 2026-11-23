@@ -1,23 +1,81 @@
 import { make } from "@beep/identity";
+import { IdentityAuthority } from "@beep/identity/Authority";
 import { IRI } from "@beep/identity/Iri";
-import { $OntologyId } from "@beep/identity/packages";
-import { RegistryVocab } from "@beep/identity/Registry";
-import { fold, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
-import { FactLiteral } from "@beep/ontology/Fold.models";
+import { RegistryVocab, view } from "@beep/identity/Registry";
+import { RegistryShard, RegistryTable } from "@beep/identity/Term";
+import { foldWith, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
+import { AssembledOntology, FactLiteral } from "@beep/ontology/Fold.models";
 import { OWLClass } from "@beep/ontology/Ontology.models";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import type { AssembledClass, AssembledPredicate, Triple } from "@beep/ontology";
+import type { AssembledClass, AssembledPredicate, OntologyFoldInput, Triple } from "@beep/ontology";
 
-const $I = make("beep", { authority: "https://beep-effect.com/ns/", prefix: "beep" }).$BeepId.create("patent");
+const decodeShard = flow(S.decodeResult(RegistryShard), Result.getOrThrow);
+const ascending = (values: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(A.dedupe(values), Order.String);
+
+const externalShards = A.map(R.toEntries(RegistryVocab), ([prefix, entry]) =>
+  decodeShard({ namespace: { prefix, iri: entry.iri }, terms: entry.terms, bindings: [], deprecations: [] })
+);
+
+const objectFields = (ast: SchemaAST.AST): ReadonlyArray<string> =>
+  SchemaAST.isObjects(ast)
+    ? A.filterMap(ast.propertySignatures, (property) =>
+        P.isString(property.name) ? Result.succeed(property.name) : Result.failVoid
+      )
+    : SchemaAST.isDeclaration(ast)
+      ? A.flatMap(ast.typeParameters, objectFields)
+      : [];
+
+type Owned = {
+  readonly identifier: string;
+  readonly local: string;
+};
+
+const ownedClass = (schema: S.Top): Owned => {
+  const annotations = S.resolveAnnotations(schema);
+  const identifier = P.isString(annotations?.identifier) ? annotations.identifier : "";
+  return { identifier, local: P.isString(annotations?.title) ? annotations.title : identifier };
+};
+
+const registryFor = (
+  prefix: string,
+  iri: string,
+  schemas: ReadonlyArray<S.Top>,
+  extra: ReadonlyArray<RegistryShard> = []
+) => {
+  const owned = A.map(schemas, ownedClass);
+  const shard = decodeShard({
+    namespace: { prefix, iri },
+    terms: ascending([
+      ...A.map(owned, (row) => row.local),
+      ...A.flatMap(schemas, (schema) => objectFields(schema.ast)),
+    ]),
+    bindings: A.sort(
+      A.map(owned, (row) => ({ code: row.identifier, local: row.local, since: "1.0.0" })),
+      Order.mapInput(Order.String, (row: { readonly code: string }) => row.code)
+    ),
+    deprecations: [],
+  });
+  return RegistryTable.fromShards([...externalShards, shard, ...extra]).pipe(Result.getOrThrow, view);
+};
+
+const foldUnder = (prefix: string, iri: string) => (input: OntologyFoldInput) =>
+  foldWith(registryFor(prefix, iri, input.schemas))(prefix, input);
+
+const $I = make("beep").$BeepId.create("patent");
+const foldPatent = foldUnder("beep", "https://beep-effect.com/ns/patent/");
 
 class Claim extends S.Opaque<Claim, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -50,7 +108,7 @@ const triples = [
   [Claim, "^rdfs:subClassOf", Spec],
 ] satisfies ReadonlyArray<Triple>;
 
-const assemble = fold($I, {
+const assemble = foldPatent({
   label: "Patent Core",
   schemas: [Claim, Spec, UnsafeLocal],
   triples,
@@ -71,7 +129,7 @@ const findPredicate = (assembled: AssembledClass, keyName: string): O.Option<Ass
 describe("Ontology.fold", () => {
   it.effect("resolves an explicit literal datatype without losing its value", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($I, {
+      const assembled = yield* foldPatent({
         label: "Typed literal",
         schemas: [Claim],
         triples: [[Claim, "rdfs:label", { value: 42, datatype: "http://www.w3.org/2001/XMLSchema#integer" }]],
@@ -162,7 +220,7 @@ describe("Ontology.fold", () => {
       ) {}
 
       const error = yield* Effect.flip(
-        fold($I, {
+        foldPatent({
           label: "Broken",
           schemas: [WithExternal],
           triples: [],
@@ -177,7 +235,7 @@ describe("Ontology.fold", () => {
     Effect.gen(function* () {
       const badTriple = ["https://beep-effect.com/ns/patent/Claim", "nope:term", "owl:Thing"] as unknown as Triple;
       const error = yield* Effect.flip(
-        fold($I, {
+        foldPatent({
           label: "Broken",
           schemas: [Claim],
           triples: [badTriple],
@@ -224,7 +282,7 @@ describe("Ontology.fold projections", () => {
   it.effect("preserves fact subjects that are not assembled classes in JSON-LD", () =>
     Effect.gen(function* () {
       const externalSubject = "https://example.test/resources/external";
-      const assembled = yield* fold($I, {
+      const assembled = yield* foldPatent({
         label: "External Subject",
         schemas: [Claim],
         triples: [[externalSubject, "rdfs:seeAlso", Claim]],
@@ -262,7 +320,7 @@ describe("Ontology.fold projections", () => {
 
   it.effect("merges explicit label and comment facts with class metadata", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($I, {
+      const assembled = yield* foldPatent({
         label: "Metadata Merge",
         schemas: [Claim],
         triples: [
@@ -315,7 +373,8 @@ describe("Ontology.fold projections", () => {
 });
 
 describe("Ontology.fold SKOS gate", () => {
-  const $Skos = make("beep", { authority: "https://beep-effect.com/ns/", prefix: "beep" }).$BeepId.create("vocab");
+  const $Skos = make("beep").$BeepId.create("vocab");
+  const foldVocab = foldUnder("beep", "https://beep-effect.com/ns/vocab/");
 
   class Concept extends S.Opaque<Concept, { readonly brand: unique symbol }>()(
     S.Struct({
@@ -333,9 +392,48 @@ describe("Ontology.fold SKOS gate", () => {
       .annotate($Skos.class("Scheme", { description: "A scheme.", skos: "conceptScheme" }))
   ) {}
 
+  it.effect("prints literal facts and SKOS warnings in every projection that carries them", () =>
+    Effect.gen(function* () {
+      const integer = "http://www.w3.org/2001/XMLSchema#integer";
+      const assembled = yield* foldVocab({
+        label: "Literals",
+        schemas: [Concept],
+        triples: [
+          [Concept, "rdfs:comment", { value: "Idea", language: "en" }],
+          [Concept, "rdfs:comment", { value: 42, datatype: integer }],
+          [Concept, "rdfs:comment", { value: true }],
+        ],
+      });
+      const markdown = toMarkdown(assembled);
+      const turtle = toTurtle(assembled);
+      const concept = pipe(
+        toJsonLd(assembled)["@graph"],
+        A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/vocab/Concept"),
+        O.getOrThrow
+      );
+
+      expect(markdown).toContain("`Idea`@en");
+      expect(markdown).toContain("`42` (`xsd:integer`)");
+      expect(markdown).toContain("`true`");
+      expect(markdown).toContain("SKOS: `skos:Concept`");
+      expect(markdown).toContain(
+        "SKOS concept has no concept\\-scheme membership\\. (<https://beep-effect.com/ns/vocab/Concept>)"
+      );
+      expect(turtle).toContain('rdfs:comment "Idea"@en');
+      expect(turtle).toContain(`rdfs:comment "42"^^<${integer}>`);
+      expect(turtle).toContain("rdfs:comment true");
+      expect(concept["rdfs:comment"]).toStrictEqual([
+        "A concept.",
+        { "@value": "Idea", "@language": "en" },
+        { "@value": 42, "@type": integer },
+        { "@value": true },
+      ]);
+    })
+  );
+
   it.effect("emits SKOS classification beside rdfs:Class in JSON-LD and Turtle", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($Skos, {
+      const assembled = yield* foldVocab({
         label: "Vocab",
         schemas: [Concept, Scheme],
         triples: [
@@ -361,7 +459,7 @@ describe("Ontology.fold SKOS gate", () => {
   it.effect("fails on duplicate preferred labels for one language", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        fold($Skos, {
+        foldVocab({
           label: "Broken",
           schemas: [Concept],
           triples: [
@@ -378,7 +476,7 @@ describe("Ontology.fold SKOS gate", () => {
   it.effect("rejects a broader/narrower cycle with a typed failure naming both IRIs", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        fold($Skos, {
+        foldVocab({
           label: "Broken",
           schemas: [Concept, Scheme],
           triples: [
@@ -407,7 +505,7 @@ describe("Ontology.fold SKOS gate", () => {
       ) {}
 
       const error = yield* Effect.flip(
-        fold($Skos, {
+        foldVocab({
           label: "Broken",
           schemas: [Concept, Scheme, Third],
           triples: [
@@ -427,7 +525,7 @@ describe("Ontology.fold SKOS gate", () => {
   it.effect("normalizes narrower edges into the broader digraph for cycle detection", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        fold($Skos, {
+        foldVocab({
           label: "Broken",
           schemas: [Concept, Scheme],
           triples: [
@@ -444,7 +542,7 @@ describe("Ontology.fold SKOS gate", () => {
   it.effect("rejects reverse predicates with literal objects at the gate", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        fold($Skos, {
+        foldVocab({
           label: "Broken",
           schemas: [Concept],
           triples: [[Concept, "^rdfs:subClassOf", { value: "not a subject" }]],
@@ -458,7 +556,7 @@ describe("Ontology.fold SKOS gate", () => {
 
   it.effect("keeps scheme-membership gaps observable as warnings without failing", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($Skos, {
+      const assembled = yield* foldVocab({
         label: "Vocab",
         schemas: [Concept],
         triples: [[Concept, "skos:prefLabel", { value: "Concept", language: "en" }]],
@@ -470,7 +568,7 @@ describe("Ontology.fold SKOS gate", () => {
 
   it.effect("applies SKOS gates to the semantic direction of reverse facts", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($Skos, {
+      const assembled = yield* foldVocab({
         label: "Vocab",
         schemas: [Concept, Scheme],
         triples: [
@@ -485,7 +583,8 @@ describe("Ontology.fold SKOS gate", () => {
 });
 
 describe("Ontology.fold negative fixtures", () => {
-  const $Neg = make("beep", { authority: "https://beep-effect.com/ns/", prefix: "beep" }).$BeepId.create("negative");
+  const $Neg = make("beep").$BeepId.create("negative");
+  const foldNegative = foldUnder("beep", "https://beep-effect.com/ns/negative/");
 
   class LeftDocument extends S.Opaque<LeftDocument, { readonly brand: unique symbol }>()(
     S.Struct({
@@ -505,7 +604,7 @@ describe("Ontology.fold negative fixtures", () => {
 
   it.effect("keeps equal-label distinct resources unfolded: no identity edge is synthesized", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($Neg, {
+      const assembled = yield* foldNegative({
         label: "Equal Labels",
         schemas: [LeftDocument, RightDocument],
         triples: [],
@@ -523,7 +622,7 @@ describe("Ontology.fold negative fixtures", () => {
     Effect.gen(function* () {
       const mention = ["LeftDocument", "rdfs:seeAlso", "owl:Thing"] as unknown as Triple;
       const error = yield* Effect.flip(
-        fold($Neg, {
+        foldNegative({
           label: "Ambiguous",
           schemas: [LeftDocument, RightDocument],
           triples: [mention],
@@ -537,7 +636,7 @@ describe("Ontology.fold negative fixtures", () => {
 
   it.effect("accepts non-HTTP absolute IRI schemes at tuple endpoints", () =>
     Effect.gen(function* () {
-      const assembled = yield* fold($Neg, {
+      const assembled = yield* foldNegative({
         label: "URN Endpoint",
         schemas: [LeftDocument],
         triples: [[LeftDocument, "rdfs:seeAlso", "urn:isbn:9780140328721"]],
@@ -558,7 +657,7 @@ describe("Ontology.fold negative fixtures", () => {
       ) {}
 
       const error = yield* Effect.flip(
-        fold($Neg, {
+        foldNegative({
           label: "Ambiguous Range",
           schemas: [LeftDocument, RightDocument, AmbiguousRange],
           triples: [],
@@ -578,7 +677,7 @@ describe("Ontology.fold negative fixtures", () => {
         { value: "Document", datatype: "rdf:langString", language: "en" },
       ] as unknown as Triple;
       const error = yield* Effect.flip(
-        fold($Neg, {
+        foldNegative({
           label: "Invalid Literal",
           schemas: [LeftDocument],
           triples: [invalid],
@@ -597,7 +696,7 @@ describe("Ontology.fold negative fixtures", () => {
         { value: "Document", language: 'en" . <https://attacker.example/s> <https://attacker.example/p> "x' },
       ] as unknown as Triple;
       const error = yield* Effect.flip(
-        fold($Neg, {
+        foldNegative({
           label: "Invalid Language Tag",
           schemas: [LeftDocument],
           triples: [injected],
@@ -611,7 +710,7 @@ describe("Ontology.fold negative fixtures", () => {
   it.effect("rejects empty ontology labels with a typed error", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        fold($Neg, {
+        foldNegative({
           label: "",
           schemas: [LeftDocument],
           triples: [],
@@ -622,19 +721,144 @@ describe("Ontology.fold negative fixtures", () => {
     })
   );
 
-  it.effect("rejects owned prefixes that collide with registered vocabularies", () =>
+  it.effect("refuses a namespace the registry does not declare", () =>
     Effect.gen(function* () {
-      const $Reserved = make("reserved", { authority: "https://example.test/", prefix: "skos" }).$ReservedId;
       const error = yield* Effect.flip(
-        fold($Reserved, {
-          label: "Reserved",
+        foldWith(registryFor("beep", "https://beep-effect.com/ns/negative/", []))("missing", {
+          label: "Missing",
           schemas: [],
           triples: [],
         })
       );
 
-      expect(error.reason).toBe("reservedPrefix");
-      expect(O.getOrThrow(error.term)).toBe("skos");
+      expect(error.reason).toBe("unknownTerm");
+      expect(O.getOrThrow(error.term)).toBe("missing");
+    })
+  );
+
+  it.effect("refuses a schema whose code identity has no registry binding", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        foldWith(registryFor("beep", "https://beep-effect.com/ns/negative/", [LeftDocument]))("beep", {
+          label: "Unbound",
+          schemas: [LeftDocument, RightDocument],
+          triples: [],
+        })
+      );
+
+      expect(error.reason).toBe("unboundClass");
+      expect(O.getOrThrow(error.identifier)).toBe("@beep/negative/RightDocument");
+    })
+  );
+
+  it.effect("refuses an owned field that is not a declared term of the namespace", () =>
+    Effect.gen(function* () {
+      const bindsOnly = decodeShard({
+        namespace: { prefix: "beep", iri: "https://beep-effect.com/ns/negative/" },
+        terms: ["LeftDocument"],
+        bindings: [{ code: "@beep/negative/LeftDocument", local: "LeftDocument", since: "1.0.0" }],
+        deprecations: [],
+      });
+      const registry = RegistryTable.fromShards([...externalShards, bindsOnly]).pipe(Result.getOrThrow, view);
+      const error = yield* Effect.flip(
+        foldWith(registry)("beep", { label: "Undeclared", schemas: [LeftDocument], triples: [] })
+      );
+
+      expect(error.reason).toBe("undeclaredProperty");
+      expect(O.getOrThrow(error.field)).toBe("label");
+    })
+  );
+
+  it.effect("refuses a registry that binds a core prefix to another namespace", () =>
+    Effect.gen(function* () {
+      const custom = "https://example.test/custom/";
+      const rebound = (prefix: string, owned: string) =>
+        foldWith(
+          view(
+            Result.getOrThrow(
+              RegistryTable.fromShards([
+                decodeShard({ namespace: { prefix, iri: custom }, terms: [], bindings: [], deprecations: [] }),
+                decodeShard({
+                  namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+                  terms: [],
+                  bindings: [],
+                  deprecations: [],
+                }),
+              ])
+            )
+          )
+        )(owned, { label: "Rebound", schemas: [], triples: [] });
+
+      for (const owned of ["skos", "patent"]) {
+        const error = yield* Effect.flip(rebound("skos", owned));
+        expect(error.reason, "The rebound prefix is refused whether it owns the fold or only lends terms to it.").toBe(
+          "reservedPrefix"
+        );
+        assertSome(error.term, "skos");
+        expect(error.message).toContain(custom);
+      }
+      for (const prefix of ["dcterms", "owl", "rdf", "rdfs"]) {
+        expect((yield* Effect.flip(rebound(prefix, "patent"))).reason).toBe("reservedPrefix");
+      }
+      expect(
+        (yield* rebound("ex", "patent")).prefix,
+        "A registry may leave the core prefixes out, or bind them to the core namespaces."
+      ).toBe("patent");
+      expect((yield* assemble).prefix).toBe("beep");
+    })
+  );
+
+  it.effect("folds an ontology owned by a core namespace, declaring its prefix once", () =>
+    Effect.gen(function* () {
+      const assembled = yield* foldWith(registryFor("ex", "https://example.test/ns#", []))("skos", {
+        label: "SKOS",
+        schemas: [],
+        triples: [["skos:Concept", "rdfs:seeAlso", "skos:ConceptScheme"]],
+      });
+
+      expect(toContext(assembled).skos).toStrictEqual({
+        "@id": "http://www.w3.org/2004/02/skos/core#",
+        "@prefix": true,
+      });
+      expect(A.filter(Str.split("\n")(toTurtle(assembled)), Str.startsWith("@prefix skos:"))).toStrictEqual([
+        "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .",
+      ]);
+    })
+  );
+
+  it("refuses an assembled ontology whose core prefix or base IRI its projections could not print", () => {
+    const decode = S.decodeUnknownResult(AssembledOntology);
+    const assembled = (prefix: string, baseIri: string) =>
+      Result.isSuccess(decode({ label: "Decoded", baseIri, prefix, classes: [], facts: [], warnings: [] }));
+
+    assertTrue(assembled("patent", "https://example.test/patent/"));
+    assertTrue(assembled("skos", "http://www.w3.org/2004/02/skos/core#"));
+    assertFalse(assembled("skos", "https://example.test/custom/"));
+    assertFalse(assembled("patent", "https://example.test/patent"));
+  });
+
+  it.effect("labels Markdown IRIs with the owned prefix only under the owned namespace", () =>
+    Effect.gen(function* () {
+      const provShard = decodeShard({
+        namespace: { prefix: "prov", iri: "https://example.test/prov/" },
+        terms: ["Entry"],
+        bindings: [],
+        deprecations: [],
+      });
+      const registry = RegistryTable.fromShards([
+        provShard,
+        ...A.filter(externalShards, (row) => row.namespace.prefix === "rdfs"),
+      ]).pipe(Result.getOrThrow, view);
+      const assembled = yield* foldWith(registry)("prov", {
+        label: "Rebound",
+        schemas: [],
+        triples: [["https://example.test/prov/Entry", "rdfs:seeAlso", "http://www.w3.org/ns/prov#Activity"]],
+      });
+      const markdown = toMarkdown(assembled);
+
+      expect(markdown).toContain("[prov:Entry](");
+      expect(markdown).not.toContain("prov:Activity");
+      expect(markdown).toContain("`rdfs:seeAlso`");
     })
   );
 
@@ -651,13 +875,10 @@ describe("Ontology.fold negative fixtures", () => {
   );
 });
 
-describe("Ontology.fold rebase", () => {
-  it.effect("renders a rebased hash-namespace vocabulary with prefixed names in every projection", () =>
+describe("Ontology.fold hash namespace", () => {
+  it.effect("renders a hash-namespace vocabulary with prefixed names in every projection", () =>
     Effect.gen(function* () {
-      const $Patent = make("beep", { authority: "https://beep-effect.com/ns/", prefix: "beep" })
-        .$BeepId.create("ontology")
-        .create("patent")
-        .rebase({ iri: "https://opip.law/ns/patent#", prefix: "patent" });
+      const $Patent = make("beep").$BeepId.create("ontology").create("patent");
 
       class PublishedClaim extends S.Opaque<PublishedClaim, { readonly brand: unique symbol }>()(
         S.Struct({
@@ -667,7 +888,10 @@ describe("Ontology.fold rebase", () => {
           .annotate($Patent.class("PublishedClaim", { description: "A published claim." }))
       ) {}
 
-      const assembled = yield* fold($Patent, {
+      const assembled = yield* foldUnder(
+        "patent",
+        "https://opip.law/ns/patent#"
+      )({
         label: "Published Patent Vocabulary",
         schemas: [PublishedClaim],
         triples: [[PublishedClaim, "rdfs:subClassOf", "owl:Thing"]],
@@ -675,7 +899,7 @@ describe("Ontology.fold rebase", () => {
       const turtle = toTurtle(assembled);
       const context = toContext(assembled);
 
-      pipe(Str.startsWith("https://opip.law/ns/patent#")(assembled.baseIri), assertTrue);
+      expect(assembled.baseIri).toBe("https://opip.law/ns/patent#");
       expect(assembled.prefix).toBe("patent");
       expect(turtle).toContain("@prefix patent: <https://opip.law/ns/patent#");
       expect(turtle).toContain("patent:");
@@ -687,30 +911,26 @@ describe("Ontology.fold rebase", () => {
 });
 
 describe("Ontology.fold extended vocabulary", () => {
-  it.effect("resolves borrowed field terms from the composer's registry", () =>
+  it.effect("resolves borrowed field terms from the fold's registry", () =>
     Effect.gen(function* () {
-      const vocab = {
-        ...RegistryVocab,
-        ex: {
-          iri: "https://example.test/ns#",
-          terms: ["relation"],
-        },
-      } as const;
-      const $Custom = make("custom", {
-        authority: "https://example.test/ontology/",
-        prefix: "custom",
-        vocab,
-      }).$CustomId;
+      const ex = decodeShard({
+        namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+        terms: ["relation"],
+        bindings: [],
+        deprecations: [],
+      });
+      const $Custom = make("beep").$BeepId.create("custom");
 
       class CustomClass extends S.Opaque<CustomClass, { readonly brand: unique symbol }>()(
         S.Struct({
-          relation: S.String.pipe($Custom.key("ex:relation")),
+          relation: S.String.pipe(S.annotateKey({ ontologyTerm: "ex:relation" })),
         })
           .pipe($Custom.annoteSchema("CustomClass"))
           .annotate($Custom.class("CustomClass"))
       ) {}
 
-      const assembled = yield* fold($Custom, {
+      const registry = registryFor("custom", "https://example.test/ontology/", [CustomClass], [ex]);
+      const assembled = yield* foldWith(registry)("custom", {
         label: "Custom Vocabulary",
         schemas: [CustomClass],
         triples: [],
@@ -727,15 +947,15 @@ describe("Ontology.fold extended vocabulary", () => {
 describe("Ontology.fold FOLIO-derived module", () => {
   it.effect("renders the migrated OWLClass module through all four projections byte-identically", () =>
     Effect.gen(function* () {
-      const $Folio = $OntologyId.create("Ontology.models");
+      const foldFolio = foldUnder("folio", `${IdentityAuthority}ontology/Ontology.models/`);
       const input = {
         label: "FOLIO Class Vocabulary",
         schemas: [OWLClass],
         triples: [[OWLClass, "rdfs:seeAlso", "https://folio.openlegalstandard.org/"]],
-      } satisfies Parameters<typeof fold>[1];
+      } satisfies OntologyFoldInput;
 
-      const assembled = yield* fold($Folio, input);
-      const second = yield* fold($Folio, input);
+      const assembled = yield* foldFolio(input);
+      const second = yield* foldFolio(input);
 
       expect(toJsonLd(assembled)).toEqual(toJsonLd(second));
       expect(toTurtle(assembled)).toBe(toTurtle(second));

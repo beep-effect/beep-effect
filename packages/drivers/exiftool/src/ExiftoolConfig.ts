@@ -16,7 +16,8 @@
  * @since 0.0.0
  */
 
-import { $ExiftoolId, $QaId } from "@beep/identity/packages";
+import { $ExiftoolId } from "@beep/identity/packages";
+import { namespace } from "@beep/identity/Registry";
 import { Fn, LiteralKit } from "@beep/schema";
 import { A, N, O, P, pipe, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -34,7 +35,7 @@ const $I = $ExiftoolId.create("ExiftoolConfig");
  *
  * **Details**
  *
- * Derived from the `@beep/identity` QA vocabulary composer (`$QaId`), so the
+ * Read from the `beepQA` namespace of the `@beep/identity` registry, so the
  * namespace follows the repository identity authority: the value is the
  * `qa/1.0` vocabulary IRI with a trailing slash.
  *
@@ -57,7 +58,7 @@ const $I = $ExiftoolId.create("ExiftoolConfig");
  * @category constants
  * @since 0.0.0
  */
-export const BEEP_QA_XMP_NAMESPACE_URI = `${$QaId.create("1.0").iri}/` as const;
+export const BEEP_QA_XMP_NAMESPACE_URI = namespace("beepQA").iri;
 
 /**
  * XMP namespace prefix registered by the rendered exiftool config.

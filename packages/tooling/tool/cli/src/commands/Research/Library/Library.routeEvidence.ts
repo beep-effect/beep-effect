@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { LibraryBoxFileMetadata, libraryBoxFileId, libraryBoxRevision, libraryBoxSha1 } from "./Library.box.ts";
+import { LibraryAgentLabel } from "./Library.schemas.ts";
 import type { LibraryArtifact, LibraryCapture, LibrarySource } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.routeEvidence");
@@ -40,8 +41,8 @@ export class LibraryVidbeeBinding extends S.Opaque<LibraryVidbeeBinding, { reado
     mediaBytes: S.Finite,
     transcriptSha256: S.String,
     faqSha256: S.String,
-    model: S.String,
-    effort: S.String,
+    model: LibraryAgentLabel,
+    effort: LibraryAgentLabel,
     generatedAt: S.String,
   }).pipe(
     $I.annoteSchema("LibraryVidbeeBinding", {

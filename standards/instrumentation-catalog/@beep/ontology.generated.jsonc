@@ -12,6 +12,7 @@
     {"name":"ClassificationRegistry.resolve","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"ClassificationRegistry.validateSnapshot","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"Ontology.fold","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"Ontology.foldWith","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.decodeLoadManifestEntry","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.decodeVendorManifestRow","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.load","owner":"@beep/ontology","family":"foundation","conforms":true},

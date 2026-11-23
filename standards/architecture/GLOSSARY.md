@@ -189,6 +189,15 @@ integration facts, gateway contracts, capabilities and client Apis over the
 [catalog](#catalog-contract). It resolves no model, host, aggregate, handler or
 driver.
 
+## Content Hash
+
+`ContentHash` in `@beep/schema/ContentHash`: `sha256:` plus 64 lowercase hex,
+the one digest format of a content-addressed identifier. The preimage is
+domain-tagged and versioned (`activity/v1`), hashed as RFC 8785 canonical JSON
+by the one minting function in `@beep/jsonc/Mint`, and each identifier domain
+has its own brand over it (`ActivityId`, `OccurrenceId`). A changed preimage
+takes a new domain tag version; it never re-hashes under the old one.
+
 ## Concept
 
 A named domain idea such as `Membership`, `Account`, `Enrollment`, or
@@ -418,14 +427,27 @@ context's model or host.
 
 ## Identity Authority
 
-The IRI root every beep identity mints under: `https://beep-effect.com/ns/`,
-written once as `IdentityAuthority` in `@beep/identity` and carried as a
-type-level literal by the `$I` composers, so `@beep/a/b` names
-`https://beep-effect.com/ns/a/b`. It names things; it does not decide where
-anything is hosted. Code derives IRIs from identity composers and never writes
-the authority as a string. It is not the [Public Origin](#public-origin):
-`/ns/` is the one route of the origin reserved for dereferencing these IRIs,
-and `@beep/identity` never depends on `@beep/public-site`.
+The root of the declared internal namespaces: `https://beep-effect.com/ns/`,
+written once as `IdentityAuthority` in `@beep/identity/Authority`. Every
+internal namespace of the term registry (`research-library:`, `vitest:`,
+`qa:`) sits under it, and a published internal IRI is a declared term of one
+of them, bound to code through a [Term Binding](#term-binding). It names
+things; it does not decide where anything is hosted. A published IRI comes
+from the registry, and code never writes the authority as a string. It is not the
+[Public Origin](#public-origin): `/ns/` is the one route of the origin
+reserved for dereferencing these IRIs, and `@beep/identity` never depends on
+`@beep/public-site`.
+
+## Identity Regime
+
+One of the two ways a thing gets an identifier, joined by minting
+([`16-knowledge-stack.md`](16-knowledge-stack.md), section 4). Kinds have
+compile-checked code ids (`@beep/<pkg>/<module>/<Name>`) and, when published, a
+declared term bound to the code id by a [Term Binding](#term-binding).
+Instances have content-addressed ids (a domain tag plus a
+[Content Hash](#content-hash) digest) or are minted under a declared term or
+namespace (`Registry.mint`). Neither regime derives a published IRI from a
+package or file path.
 
 ## Inbox
 
@@ -541,7 +563,9 @@ contract and the model. Modules replace domain-kind and subdomain folders.
 A registered vocabulary prefix in `@beep/identity`: prefix and IRI. Every
 namespace the repo speaks, external ones included (`prov:`, `oa:`, `nif:`,
 `xsd:`, `gufo:`, `as:`), is registered, so CURIEs expand and contract
-closed-world. An external namespace's pin (source, license, version, digest)
+closed-world. An instance that is not content-addressed is minted under a
+declared namespace (`Registry.mint("practice-kg:client", id)`), not under a
+code path. An external namespace's pin (source, license, version, digest)
 is a `NamespacePin` keyed by prefix in `@beep/rdf`, because `@beep/identity`
 imports `effect` only.
 
@@ -911,9 +935,34 @@ replacement). Optional gUFO class typing (type of type, category of
 instances, and for a relator the role terms it mediates) is a record keyed by
 term IRI in `@beep/ontology`. A published term IRI is declared in the
 `@beep/identity` registry and bound to code through
-`TermBinding`, never derived from a code path; the published set changes only
-with a deprecation record. `since` names a vocabulary release of the
-term-stability snapshot, not a package version.
+`TermBinding`, never derived from a code path; a published IRI leaves the set
+only with a deprecation record, and an addition needs none. `since` names a vocabulary release of the
+term-stability snapshot, not a package version. A term can also be an
+instance base: identifiers of its instances are minted beneath it
+(`Registry.mint`) instead of being declared one by one.
+
+## Term Binding
+
+`TermBinding` in `@beep/identity/Term`: a code id, the declared term it
+publishes, and the release (`since`) that bound it. Bindings live in the
+registry shards beside their terms. A code id has at most one binding and a
+term at most one code id. The binding is the only arrow from code to a
+published IRI; a module or package rename moves the binding
+(`bun run beep identity rebind <from> <to>`) and leaves the term unchanged.
+
+## Term-Stability Snapshot
+
+`packages/foundation/modeling/identity/registry/term-snapshot.json`, generated
+by `bun run beep identity registry --write`: every published namespace, term,
+binding and deprecation with its `since`, under a vocabulary `release`. The
+release is one per change against a base ref: the minor is bumped when the
+change adds and the major when it deprecates.
+`snapshotViolations(previous, next)` lists every change that breaks the
+published set (a term removed without a deprecation, a changed prefix, a
+dropped or changed deprecation, a revived IRI, a rewritten binding) and every
+release or new `since` other than the one the change calls for, and
+`bun run beep lint identity-registry` runs it against the snapshot of a base
+ref. Law `L0-3` is its acceptance test.
 
 ## Tooling Package
 

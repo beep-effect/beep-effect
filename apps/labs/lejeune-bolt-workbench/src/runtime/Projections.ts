@@ -6,7 +6,8 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { $I as $BeepId, $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
+import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
+import { namespace } from "@beep/identity/Registry";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import * as Rdf from "@beep/rdf/Rdf";
@@ -28,7 +29,7 @@ import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query"
 import type * as SqlError from "effect/sql/SqlError";
 
 const $I = $LejeuneBoltWorkbenchId.create("runtime/Projections");
-const LEJEUNE_ONTOLOGY_NAMESPACE = `${$BeepId.create("lejeune").create("ontology").iri}/`;
+const LEJEUNE_ONTOLOGY_NAMESPACE = namespace("lejeune").iri;
 const RDF_TYPE = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
 const OWL_CLASS = Rdf.makeNamedNode("http://www.w3.org/2002/07/owl#Class");
 const DCTERMS_SOURCE = Rdf.makeNamedNode("http://purl.org/dc/terms/source");

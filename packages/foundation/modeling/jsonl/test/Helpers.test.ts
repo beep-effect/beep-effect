@@ -73,8 +73,7 @@ describe("selection schemas", () => {
   });
 });
 
-// Decorate the real shared storage with a legal short-read file handle.
-const shortReads = (fs: FileSystem.FileSystem, limit: number): FileSystem.FileSystem => ({
+const legalShortReadHandles = (fs: FileSystem.FileSystem, limit: number): FileSystem.FileSystem => ({
   ...fs,
   open: (path, options) =>
     fs.open(path, options).pipe(
@@ -99,7 +98,7 @@ describe("bounded short reads", () => {
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFileString("/journal", "42\n");
-      const short = shortReads(fs, 1);
+      const short = legalShortReadHandles(fs, 1);
       const window = yield* readRangeWindow(short, "/journal", 0, 100, 0);
       assert.strictEqual(window.text, "42\n");
       assert.strictEqual(window.start, 0);
@@ -115,7 +114,7 @@ describe("bounded short reads", () => {
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFileString("/journal", "\ufeff42\né😀\n");
-      const short = shortReads(fs, 1);
+      const short = legalShortReadHandles(fs, 1);
       const window = yield* readRangeWindow(short, "/journal", 3, 100, 3);
       assert.strictEqual(window.text, "42\né😀\n");
       assert.strictEqual(window.start, 0);
@@ -133,7 +132,7 @@ describe("bounded short reads", () => {
       const fs = yield* MemoryFileSystem.make;
       const text = "α😀\nβé\n";
       yield* fs.writeFileString("/journal", `\ufeff${text}`);
-      const short = shortReads(fs, 1);
+      const short = legalShortReadHandles(fs, 1);
       const probeBomBytes1 = yield* probeBomBytes(short, "/journal");
       assert.strictEqual(probeBomBytes1, 3);
       const tail = yield* readTail(short, "/journal", 100, 3);
@@ -150,7 +149,7 @@ describe("bounded short reads", () => {
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFileString("/journal", "é");
-      const short = shortReads(fs, 1);
+      const short = legalShortReadHandles(fs, 1);
       assert.strictEqual(
         (yield* readRangeWindow(short, "/journal", 0, 100, 0)).text,
         "",
@@ -201,7 +200,7 @@ describe("bounded short reads", () => {
       const fs = yield* MemoryFileSystem.make;
       const content = "first\n\ufeffsecond\n";
       yield* fs.writeFileString("/journal", content);
-      const short = shortReads(fs, 1);
+      const short = legalShortReadHandles(fs, 1);
       const probeBomBytes4 = yield* probeBomBytes(short, "/journal");
       assert.strictEqual(probeBomBytes4, 0);
       const tail = yield* readTail(short, "/journal", 11, 0);
@@ -218,7 +217,7 @@ it.effect("seeds and queries every envelope through one-byte file reads", () =>
     const first = line(1, "α😀");
     const second = line(2, "βé");
     yield* fs.writeFileString(path, `\ufeff${first}${second}`);
-    const journal = yield* open({ ...shortReads(fs, 1), watch: () => Stream.never });
+    const journal = yield* open({ ...legalShortReadHandles(fs, 1), watch: () => Stream.never });
     assertSome((yield* SubscriptionRef.get(journal.latest)).pipe(O.map((row) => row.data)), { round: 2, label: "βé" });
     const rows = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
     assert.deepStrictEqual(
@@ -269,22 +268,22 @@ describe("strict byte decoding", () => {
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFile("/journal", new Uint8Array([0x34, 0x32, 0x0a, 0xe2]));
-      assert.strictEqual((yield* readRangeWindow(shortReads(fs, 1), "/journal", 0, 4, 0)).text, "42\n");
+      assert.strictEqual((yield* readRangeWindow(legalShortReadHandles(fs, 1), "/journal", 0, 4, 0)).text, "42\n");
       assertFailure(
-        (yield* Effect.result(readTail(shortReads(fs, 1), "/journal", 100, 0))).pipe(
+        (yield* Effect.result(readTail(legalShortReadHandles(fs, 1), "/journal", 100, 0))).pipe(
           Result.mapError((error) => error._tag)
         ),
         "InvalidUtf8"
       );
       yield* fs.writeFile("/journal", new Uint8Array([0x34, 0x32, 0x0a, 0xe2, 0x82, 0xac, 0x0a]));
-      assert.strictEqual((yield* readRangeWindow(shortReads(fs, 1), "/journal", 0, 7, 0)).text, "42\n€\n");
+      assert.strictEqual((yield* readRangeWindow(legalShortReadHandles(fs, 1), "/journal", 0, 7, 0)).text, "42\n€\n");
     })
   );
   it.effect("skips a leading cursor fragment as bytes before strict decoding", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFileString("/journal", "😀\n42\n");
-      const window = yield* readRangeWindow(shortReads(fs, 1), "/journal", 1, 7, 0, true);
+      const window = yield* readRangeWindow(legalShortReadHandles(fs, 1), "/journal", 1, 7, 0, true);
       assert.strictEqual(window.text, "42\n");
       assert.strictEqual(window.start, 5);
       assert.strictEqual(window.size, 8);
@@ -340,7 +339,9 @@ it.effect("rejects overlong, surrogate and isolated continuation encodings befor
     for (const invalid of [[0xc0, 0xaf], [0xed, 0xa0, 0x80], [0x80], [0xf4, 0x90, 0x80, 0x80]]) {
       const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x22, ...invalid, 0x22, 0x0a, 0x34, 0x32, 0x0a]);
       yield* fs.writeFile("/journal", bytes);
-      const result = yield* Effect.result(readRangeWindow(shortReads(fs, 1), "/journal", 3, bytes.length - 3, 3));
+      const result = yield* Effect.result(
+        readRangeWindow(legalShortReadHandles(fs, 1), "/journal", 3, bytes.length - 3, 3)
+      );
       const error = result.pipe(Result.getFailure, O.getOrThrow);
       if (!S.is(InvalidUtf8)(error)) return assert.fail("expected InvalidUtf8");
       assert.strictEqual(
@@ -352,21 +353,24 @@ it.effect("rejects overlong, surrogate and isolated continuation encodings befor
   })
 );
 
-// Review round 1 (R1): the BOM width is read through a handle, so it describes
-// the file that handle names even after another file is renamed over the path.
-it.effect("reads a BOM width through a handle that outlives a rename over its path", () =>
-  Effect.gen(function* () {
-    const fs = yield* MemoryFileSystem.make;
-    yield* fs.writeFileString("/journal", "\ufeff42\n");
-    const file = yield* fs.open("/journal", { flag: "r" });
-    yield* fs.writeFileString("/next", "42\n");
-    yield* fs.rename("/next", "/journal");
-    // Rewound before each read: the answer does not depend on the handle's position.
-    const handleBomBytes5 = yield* handleBomBytes(file);
-    assert.strictEqual(handleBomBytes5, 3);
-    const handleBomBytes6 = yield* handleBomBytes(file);
-    assert.strictEqual(handleBomBytes6, 3);
-    const probeBomBytes7 = yield* probeBomBytes(fs, "/journal");
-    assert.strictEqual(probeBomBytes7, 0);
-  })
+it.effect(
+  "reads a BOM width through a handle that outlives a rename over its path, describing the file the handle names (R1)",
+  () =>
+    Effect.gen(function* () {
+      const fs = yield* MemoryFileSystem.make;
+      yield* fs.writeFileString("/journal", "\ufeff42\n");
+      const file = yield* fs.open("/journal", { flag: "r" });
+      yield* fs.writeFileString("/next", "42\n");
+      yield* fs.rename("/next", "/journal");
+      const handleBomBytes5 = yield* handleBomBytes(file);
+      assert.strictEqual(handleBomBytes5, 3);
+      const handleBomBytes6 = yield* handleBomBytes(file);
+      assert.strictEqual(
+        handleBomBytes6,
+        3,
+        "rewound before each read: the answer does not depend on the handle's position"
+      );
+      const probeBomBytes7 = yield* probeBomBytes(fs, "/journal");
+      assert.strictEqual(probeBomBytes7, 0);
+    })
 );

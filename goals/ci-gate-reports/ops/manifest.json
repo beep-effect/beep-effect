@@ -6,7 +6,7 @@
     "title": "CI Gate Reports",
     "status": "active",
     "created": "2026-11-18",
-    "updated": "2026-11-22",
+    "updated": "2026-11-23",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ci-gate-reports",
@@ -80,7 +80,7 @@
     {
       "id": "P4",
       "name": "Guidance and measurement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",

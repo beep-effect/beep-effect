@@ -3914,7 +3914,6 @@ const policyMediumTasks = [
   "lint:laws",
   "lint:native-runtime:roots",
   "lint:schema-first",
-  "lint:identity-registry",
   "lint:circular",
   "lint:effect-imports",
   "lint:holds",
@@ -3953,6 +3952,7 @@ const policyStateTasks = [
   ...policyGitDeltaTasks,
   "goals:doctor",
   "lint:oxlint",
+  "lint:identity-registry",
   // `lint:shadcn` is owned by hosted Repo Sanity (the `repo-sanity` CiLane
   // body), its one hosted owner (hosted-setup-tax PERIH-02).
   "lint:typos",
