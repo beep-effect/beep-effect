@@ -1,3 +1,4 @@
+import { renderRegistryJson } from "@beep/repo-cli/commands/Identity/Registry";
 import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
 import { DEFAULT_JSON_PRETTY_MAX_LENGTH } from "@beep/repo-cli/test/Cli";
 import {
@@ -14,9 +15,11 @@ import {
   ISO3166_PART2_CSV_URL_ENV,
   ISO3166_SOURCE_URL,
   ISO4217_SOURCE_URL,
+  makePinnedVocabulariesTarget,
   normalizeJson,
   outputFile,
   parseCsvSource,
+  pinnedVocabularyRows,
   preserveIssuedVocabularyRecords,
   projectCourtVocabulary,
   projectReporterVocabulary,
@@ -39,8 +42,10 @@ import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -53,7 +58,7 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { create as createTar } from "tar";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
-import type { SyncDataTarget } from "@beep/repo-cli/test/SyncDataToTs";
+import type { SyncDataTarget, VocabularyPin } from "@beep/repo-cli/test/SyncDataToTs";
 
 const decodeSyncDataTargetResult = S.decodeEffect(SyncDataTargetResult);
 const encodeSyncDataTargetResult = S.encodeEffect(SyncDataTargetResult);
@@ -1088,13 +1093,111 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
   });
 });
 
-it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned SPAR acquisition", (it) => {
-  it.effect("rejects byte drift before emitting generated files", () =>
+const fixtureTurtle = `@prefix ex: <https://example.test/ns#> .
+<https://example.test/ns> a owl:Ontology ; owl:versionInfo "1.0.0" .
+ex:Thing a owl:Class ;
+  rdfs:label "Thing" .
+ex:related
+    a owl:AnnotationProperty, owl:ObjectProperty ;
+  rdfs:domain ex:Thing .
+`;
+const fixtureRdfXml = `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about="#Concept">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="#broader">
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+  </rdf:Description>
+</rdf:RDF>
+`;
+const fixtureSpec = `<html><title>Fixture Datatypes</title>
+<section id="datatypes"><table><tr><td><code>dt:string</code></td></tr></table></section>
+<section id="other"><code>dt:integer</code></section></html>
+`;
+const fixtureTexts: Record<string, string> = {
+  "https://example.test/ex.ttl": fixtureTurtle,
+  "https://example.test/sk.rdf": fixtureRdfXml,
+  "https://example.test/dt.html": fixtureSpec,
+};
+
+const fixtureSha256 = Effect.fn("fixtureSha256")(function* (text: string) {
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
+  return Hex.encode(digest);
+});
+
+type FixturePin = typeof VocabularyPin.Encoded;
+
+const fixturePins = Effect.fn("fixturePins")(function* () {
+  const ex = yield* fixtureSha256(fixtureTurtle);
+  const sk = yield* fixtureSha256(fixtureRdfXml);
+  const dt = yield* fixtureSha256(fixtureSpec);
+  const base = {
+    revision: { kind: "retrievedSnapshot", retrievedOn: "2026-11-19" },
+    license: "CC-BY-4.0",
+    attribution: "Fixture vocabulary.",
+    version: "1.0.0",
+  } as const;
+  const dtPin: FixturePin = {
+    ...base,
+    prefix: "dt",
+    namespace: "https://example.test/dt#",
+    location: "https://example.test/dt.html",
+    sha256: dt,
+    markers: ["<title>Fixture Datatypes</title>"],
+    declaration: { _tag: "SpecDocument", section: "datatypes", curiePrefix: "dt" },
+    terms: ["string"],
+  };
+  const exPin: FixturePin = {
+    ...base,
+    prefix: "ex",
+    namespace: "https://example.test/ns#",
+    location: "https://example.test/ex.ttl",
+    sha256: ex,
+    markers: ["@prefix ex: <https://example.test/ns#> ."],
+    declaration: { _tag: "Turtle", subjectPrefix: "ex:" },
+    terms: ["related", "Thing"],
+  };
+  const skPin: FixturePin = {
+    ...base,
+    prefix: "sk",
+    namespace: "https://example.test/sk#",
+    location: "https://example.test/sk.rdf",
+    sha256: sk,
+    markers: [],
+    declaration: { _tag: "RdfXml" },
+    terms: ["broader", "Concept"],
+  };
+  return { dt: dtPin, ex: exPin, sk: skPin };
+});
+
+const fixtureClient = makeWebHandlerClient((request) => new Response(fixtureTexts[request.url] ?? "missing"));
+
+const acquireFixture = (rows: ReadonlyArray<typeof VocabularyPin.Encoded>) =>
+  makePinnedVocabulariesTarget(rows).acquire.pipe(Effect.provideService(HttpClient.HttpClient, fixtureClient));
+
+const exShardPath = "packages/foundation/modeling/identity/registry/namespaces/ex.json";
+
+it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisition", (it) => {
+  it.effect("pins the eleven namespaces at immutable sources and rejects byte drift", () =>
     Effect.gen(function* () {
-      const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "spar-terms"));
-      expect(target.sourceUrls).toHaveLength(4);
+      const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "pinned-vocabularies"));
+      expect(A.map(pinnedVocabularyRows, (row) => row.prefix)).toStrictEqual([
+        "as",
+        "cito",
+        "deo",
+        "doco",
+        "fabio",
+        "gufo",
+        "nif",
+        "oa",
+        "prov",
+        "skos",
+        "xsd",
+      ]);
+      expect(target.sourceUrls).toHaveLength(11);
       for (const url of target.sourceUrls) {
-        expect(url).toMatch(/raw\.githubusercontent\.com\/SPAROntologies\/[^/]+\/[a-f0-9]{40}\/docs\/2026-/u);
+        expect(url).toMatch(/^https:\/\/(?:raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\/|www\.w3\.org\/)/u);
       }
       const error = yield* target.acquire.pipe(
         Effect.provideService(
@@ -1104,11 +1207,161 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned SPAR acquisition",
         Effect.flip
       );
       expect(error._tag).toBe("SyncDataToTsError");
-      expect(error.message).toContain("SHA-256 does not match");
+      expect(error.message).toContain("does not match the immutable pin");
+    })
+  );
+
+  it.effect("proves each declaration format and writes the shards and the pins", () =>
+    Effect.gen(function* () {
+      const { dt, ex, sk } = yield* fixturePins();
+      const projection = yield* acquireFixture([dt, ex, sk]);
+      expect(projection.recordCount).toBe(5);
+      expect(A.map(projection.files, (file) => file.path)).toStrictEqual([
+        "packages/foundation/modeling/identity/registry/namespaces/dt.json",
+        "packages/foundation/modeling/identity/registry/namespaces/ex.json",
+        "packages/foundation/modeling/identity/registry/namespaces/sk.json",
+        "packages/foundation/modeling/rdf/src/Vocab/generated/NamespacePins.data.ts",
+        "packages/foundation/modeling/rdf/src/Vocab/generated/namespace-pins.data.json",
+      ]);
+      const shard = O.getOrThrow(A.head(projection.files));
+      expect(shard.content).toContain('"terms": ["string"]');
+      const exShard = O.getOrThrow(A.get(projection.files, 1));
+      expect(exShard.content).toContain('"terms": ["Thing", "related"]');
+      const termsDigest = yield* fixtureSha256("Thing\nrelated");
+      const canonical = O.getOrThrow(A.last(projection.files));
+      expect(canonical.content).toContain(`"termsDigest": "sha256:${termsDigest}"`);
+      expect(canonical.content).toContain('"license": "CC-BY-4.0"');
+      const pinModule = O.getOrThrow(A.get(projection.files, 3));
+      expect(pinModule.content).toContain("export const NamespacePinRows = [");
+    })
+  );
+
+  it.effect("refuses an artifact missing a pinned metadata marker", () =>
+    Effect.gen(function* () {
+      const { dt, ex, sk } = yield* fixturePins();
+      const error = yield* acquireFixture([dt, { ...ex, markers: ["owl:versionIRI <absent>"] }, sk]).pipe(Effect.flip);
+      expect(error.message).toContain("ex: pinned artifact metadata is missing: owl:versionIRI <absent>");
+    })
+  );
+
+  it.effect("refuses a curated term the artifact does not declare, in every format", () =>
+    Effect.gen(function* () {
+      const { dt, ex, sk } = yield* fixturePins();
+      const turtle = yield* acquireFixture([{ ...ex, terms: ["Thing", "Missing"] }]).pipe(Effect.flip);
+      expect(turtle.message).toContain("ex: curated terms have no declaration in the artifact: Missing");
+      const metacharacter = yield* acquireFixture([{ ...ex, terms: ["Th.ng"] }]).pipe(Effect.flip);
+      expect(metacharacter.message).toContain("ex: curated terms have no declaration in the artifact: Th.ng");
+      const rdfXmlMetacharacter = yield* acquireFixture([{ ...sk, terms: ["Con.ept"] }]).pipe(Effect.flip);
+      expect(rdfXmlMetacharacter.message).toContain("sk: curated terms have no declaration in the artifact: Con.ept");
+      const rdfXml = yield* acquireFixture([{ ...sk, terms: ["Concept", "narrower"] }]).pipe(Effect.flip);
+      expect(rdfXml.message).toContain("sk: curated terms have no declaration in the artifact: narrower");
+      const spec = yield* acquireFixture([{ ...dt, terms: ["integer"] }]).pipe(Effect.flip);
+      expect(spec.message).toContain("dt: curated terms have no declaration in the artifact: integer");
+      const absentSection = yield* acquireFixture([
+        { ...dt, declaration: { _tag: "SpecDocument", section: "absent", curiePrefix: "dt" } },
+      ]).pipe(Effect.flip);
+      expect(absentSection.message).toContain("dt: curated terms have no declaration in the artifact: string");
+    })
+  );
+
+  it.effect("refuses malformed pin rows and an invalid license", () =>
+    Effect.gen(function* () {
+      const { dt } = yield* fixturePins();
+      const malformed = yield* acquireFixture([{ ...dt, sha256: "not-a-digest" }]).pipe(Effect.flip);
+      expect(malformed.message).toContain("Failed to decode the pinned vocabulary rows");
+      const license = yield* acquireFixture([{ ...dt, license: "Not A License" }]).pipe(Effect.flip);
+      expect(license.message).toContain("Failed to validate the namespace pins and registry shards");
+    })
+  );
+
+  it.effect("carries a shard's hand-authored bindings and deprecations through a sync", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const { ex } = yield* fixturePins();
+      const handAuthored = {
+        namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+        terms: ["Retired", "Thing"],
+        bindings: [{ code: "@beep/fixture/Thing", local: "Thing", since: "1.0.0" }],
+        deprecations: [{ term: "https://example.test/ns#Retired", since: "1.1.0", replacement: "Thing" }],
+      };
+      yield* writeOutputFile(exShardPath, formatJson(handAuthored));
+      const projection = yield* acquireFixture([ex]);
+      const shard = O.getOrThrow(A.findFirst(projection.files, (file) => file.path === exShardPath));
+      expect(shard.content).toBe(renderRegistryJson({ ...handAuthored, terms: ["Thing", "related"] }));
+      yield* writeOutputFile(exShardPath, shard.content);
+      const second = yield* acquireFixture([ex]);
+      const rerun = O.getOrThrow(A.findFirst(second.files, (file) => file.path === exShardPath));
+      expect(rerun.content).toBe(shard.content);
+    })
+  );
+
+  it.effect("writes a shard that does not exist yet with empty rows", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const { ex } = yield* fixturePins();
+      const projection = yield* acquireFixture([ex]);
+      const shard = O.getOrThrow(A.findFirst(projection.files, (file) => file.path === exShardPath));
+      expect(shard.content).toBe(
+        renderRegistryJson({
+          namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+          terms: ["Thing", "related"],
+          bindings: [],
+          deprecations: [],
+        })
+      );
+    })
+  );
+
+  it.effect("fails typed on a malformed existing shard instead of overwriting it", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const { ex } = yield* fixturePins();
+      const malformed = formatJson({
+        namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+        terms: ["Thing"],
+        bindings: [],
+        deprecations: [{ term: "https://example.test/ns#Retired", since: "not-a-version" }],
+      });
+      yield* writeOutputFile(exShardPath, malformed);
+      const error = yield* acquireFixture([ex]).pipe(Effect.flip);
+      expect(error._tag).toBe("SyncDataToTsError");
+      expect(error.file).toBe(exShardPath);
+      expect(error.message).toContain("ex: the existing registry shard is not a valid RegistryShard");
+      const unparsable = yield* writeOutputFile(exShardPath, "{ not json").pipe(
+        Effect.andThen(acquireFixture([ex])),
+        Effect.flip
+      );
+      expect(unparsable.message).toContain("ex: the existing registry shard is not a valid RegistryShard");
+      const kept = yield* readOutputFile(exShardPath);
+      expect(kept).toBe("{ not json");
     })
   );
 });
 
+it.layer(CommandTestLayer)("registry term modules", (it) => {
+  it.effect("projects every registry namespace module with its pin header", () =>
+    Effect.gen(function* () {
+      const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "vocab-terms"));
+      const projection = yield* target.acquire.pipe(
+        Effect.provideService(
+          HttpClient.HttpClient,
+          makeWebHandlerClient(() => new Response("offline"))
+        )
+      );
+      const prov = O.getOrThrow(A.findFirst(projection.files, (file) => Str.endsWith("/Prov.terms.ts")(file.path)));
+      expect(prov.content).toContain("export const PROV_NAMESPACE = RegistryVocab.prov.iri;");
+      expect(prov.content).toContain(
+        "Pinned source: https://www.w3.org/ns/prov-o-20130430 (datedSnapshot:2013-04-30)."
+      );
+      const shacl = O.getOrThrow(A.findFirst(projection.files, (file) => Str.endsWith("/Shacl.terms.ts")(file.path)));
+      expect(shacl.content).not.toContain("Pinned source:");
+      expect(A.length(projection.files)).toBe(17);
+      expect(projection.canonicalPath).toBe(
+        "packages/foundation/modeling/rdf/src/Vocab/generated/vocab-terms.data.json"
+      );
+    })
+  );
+});
 it.layer(CommandTestLayer)("IANA timezone archive projection", (it) => {
   it.effect(
     "preserves aliases, deduplicates zones, and excludes pseudo-zones in both generated artifacts",

@@ -4952,6 +4952,7 @@
           "@beep/md",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
@@ -4961,6 +4962,7 @@
           "@beep/md",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"

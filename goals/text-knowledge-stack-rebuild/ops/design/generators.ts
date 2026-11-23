@@ -26,6 +26,7 @@
 
 import { ValidTime } from "@beep/epistemics/Claim";
 import { $RepoCliId } from "@beep/identity/packages";
+import { TermIri } from "@beep/identity/Term";
 import { ActivityPin, ActivityStart, mintActivityIdResult } from "@beep/jsonc/ActivityStart";
 import { mintContentHashResult } from "@beep/jsonc/Mint";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -45,7 +46,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TermIri } from "./L0.identity.ts";
 import { Anchored, OccurrenceDomainTag, OccurrenceId, occurrencePreimage } from "./L1.text.ts";
 import {
   AnnotationContent,

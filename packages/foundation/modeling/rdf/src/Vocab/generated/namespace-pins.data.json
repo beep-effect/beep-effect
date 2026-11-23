@@ -1,0 +1,185 @@
+[
+  {
+    "prefix": "as",
+    "namespace": "http://www.w3.org/ns/activitystreams#",
+    "source": {
+      "location": "https://raw.githubusercontent.com/w3c/activitystreams/258bce0cd50ec9683b1417adfa1af926d447cda5/vocabulary/activitystreams2.owl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/w3c/activitystreams",
+        "commit": "258bce0cd50ec9683b1417adfa1af926d447cda5"
+      }
+    },
+    "license": "W3C-20150513",
+    "attribution": "Activity Streams 2.0 Vocabulary, W3C Social Web Working Group. W3C Software and Document License. Curated term names projected to TypeScript.",
+    "version": "W3C Recommendation 2017-05-23",
+    "digest": "sha256:d1cfeb6f830f47f4271ebdb53cef1cad5b7b9bede76144a1bf00b07c901ab9d5",
+    "termsDigest": "sha256:9123dcbb0b42652b0e105956c68d3ca2ff34584f324fa41a29aedd32b883e131"
+  },
+  {
+    "prefix": "cito",
+    "namespace": "http://purl.org/spar/cito/",
+    "source": {
+      "location": "https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/docs/2026-09-03/cito.ttl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/SPAROntologies/cito",
+        "commit": "d34b42e8d4d1c9d45bc530599328897805116994"
+      }
+    },
+    "license": "CC-BY-4.0",
+    "attribution": "Cito by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. CC BY 4.0. Curated term names projected to TypeScript.",
+    "version": "2.9.0",
+    "digest": "sha256:1b0570e2126525365d325771d1c8cf3ba399f6dfd829cb69fd2851f42802d7b0",
+    "termsDigest": "sha256:7b748150bdc75159bc015a93e17523e93158d7421422bce8a36547e4f1b81669"
+  },
+  {
+    "prefix": "deo",
+    "namespace": "http://purl.org/spar/deo/",
+    "source": {
+      "location": "https://raw.githubusercontent.com/SPAROntologies/deo/dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4/docs/2026-08-14/deo.ttl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/SPAROntologies/deo",
+        "commit": "dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4"
+      }
+    },
+    "license": "CC-BY-4.0",
+    "attribution": "Deo by David Shotton and Silvio Peroni. Contributors: Sebastian Barzaghi. CC BY 4.0. Curated term names projected to TypeScript.",
+    "version": "1.2.0",
+    "digest": "sha256:c66ac7523cef1d57b88fbb8d8e5bb3fe81e8ce2932e24167700f0aafd89126cc",
+    "termsDigest": "sha256:bae13b8cd5aa68e5273b6a94053dbe4859ec7ddecd25ebd2fab19199e2842283"
+  },
+  {
+    "prefix": "doco",
+    "namespace": "http://purl.org/spar/doco/",
+    "source": {
+      "location": "https://raw.githubusercontent.com/SPAROntologies/doco/4c4109a64148c207f80d48a611a79a2d996a44b4/docs/2026-06-25/doco.ttl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/SPAROntologies/doco",
+        "commit": "4c4109a64148c207f80d48a611a79a2d996a44b4"
+      }
+    },
+    "license": "CC-BY-4.0",
+    "attribution": "Doco by David Shotton and Silvio Peroni. Contributors: Sebastian Barzaghi. CC BY 4.0. Curated term names projected to TypeScript.",
+    "version": "1.4.0",
+    "digest": "sha256:616c0f7611168d4ff8325ce361ab79625f9664aead7bfe6bf8e0c66982f7c4ae",
+    "termsDigest": "sha256:d01a7e4eaa8ede7c08c76c324ac0dc0ff8f24576df48d5d65e45d9cddf39a79d"
+  },
+  {
+    "prefix": "fabio",
+    "namespace": "http://purl.org/spar/fabio/",
+    "source": {
+      "location": "https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/docs/2026-09-03/fabio.ttl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/SPAROntologies/fabio",
+        "commit": "ea5b2cd49a7a8f4dc695d633c76bb05608c085db"
+      }
+    },
+    "license": "CC-BY-4.0",
+    "attribution": "Fabio by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. CC BY 4.0. Curated term names projected to TypeScript.",
+    "version": "2.3.1",
+    "digest": "sha256:86523bded037828b13c3d2083c6eccdb0daa223009d4ed8ddd70ff1a4d1789ea",
+    "termsDigest": "sha256:b6ce788d9786917c9d19adaa0d904213365607c7f683d7277f508dcf142b4cc2"
+  },
+  {
+    "prefix": "gufo",
+    "namespace": "http://purl.org/nemo/gufo#",
+    "source": {
+      "location": "https://raw.githubusercontent.com/nemo-ufes/gufo/12b098158a9244179c5e0e2534cd85254a2d3b7e/gufo.ttl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/nemo-ufes/gufo",
+        "commit": "12b098158a9244179c5e0e2534cd85254a2d3b7e"
+      }
+    },
+    "license": "CC-BY-4.0",
+    "attribution": "gUFO: A Lightweight Implementation of the Unified Foundational Ontology (UFO), by J. P. A. Almeida, G. Guizzardi, T. P. Sales and R. A. Falbo. CC BY 4.0. Curated term names projected to TypeScript.",
+    "version": "1.0.0",
+    "digest": "sha256:b234c7a22d738b66dc8fcf735146fdbe828122e2a04bec43c8c9b08f34fd9027",
+    "termsDigest": "sha256:2ca2fad898ae2e068729abbbe9a03ad429499370e4bb63a469c7cb2afc711a8c"
+  },
+  {
+    "prefix": "nif",
+    "namespace": "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
+    "source": {
+      "location": "https://raw.githubusercontent.com/NLP2RDF/ontologies/225301dd65a24578e8b26fa276690f5c0623dcce/nif-core/nif-core.ttl",
+      "revision": {
+        "kind": "gitCommit",
+        "repository": "https://github.com/NLP2RDF/ontologies",
+        "commit": "225301dd65a24578e8b26fa276690f5c0623dcce"
+      }
+    },
+    "license": "(Apache-2.0 OR CC-BY-3.0)",
+    "attribution": "NIF 2.1 Core Ontology, NLP2RDF project. Dual-licensed under Apache 2.0 and CC BY 3.0. Curated term names projected to TypeScript.",
+    "version": "2.1.0",
+    "digest": "sha256:4416ff80b6d14634e9c6609a2d27198c7ac804e2b7a0d8fd165d7b0b3fa1212d",
+    "termsDigest": "sha256:199caae75ed149b4be5a8a7956317b845a49c8757e1041f466be044ef754f9ac"
+  },
+  {
+    "prefix": "oa",
+    "namespace": "http://www.w3.org/ns/oa#",
+    "source": {
+      "location": "https://www.w3.org/ns/oa.ttl",
+      "revision": {
+        "kind": "retrievedSnapshot",
+        "retrievedOn": "2026-11-19"
+      }
+    },
+    "license": "LicenseRef-W3C-Document",
+    "attribution": "Web Annotation Vocabulary, W3C Recommendation 2017-02-23. Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    "version": "2016-11-12T21:28:11Z",
+    "digest": "sha256:f661e37d33bf29176390101687711734a7e33a716bdecfb66b90c732373d7af5",
+    "termsDigest": "sha256:549b21dbfed2d09cfee7aa77553c889214934a7388f2d2851bcc9b3a8095d116"
+  },
+  {
+    "prefix": "prov",
+    "namespace": "http://www.w3.org/ns/prov#",
+    "source": {
+      "location": "https://www.w3.org/ns/prov-o-20130430",
+      "revision": {
+        "kind": "datedSnapshot",
+        "date": "2013-04-30"
+      }
+    },
+    "license": "LicenseRef-W3C-Document",
+    "attribution": "PROV-O: The PROV Ontology, W3C Recommendation 2013-04-30. Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    "version": "Recommendation version 2013-04-30",
+    "digest": "sha256:3d03c8e15753178541fb8cd59fbefecaf1861f9c37ef75190c6e938b85fb0c3d",
+    "termsDigest": "sha256:2659bd8c21a22435e47694ac638446107153b50e2d758f4774e25b75199ab94c"
+  },
+  {
+    "prefix": "skos",
+    "namespace": "http://www.w3.org/2004/02/skos/core#",
+    "source": {
+      "location": "https://www.w3.org/2009/08/skos-reference/skos.rdf",
+      "revision": {
+        "kind": "datedSnapshot",
+        "date": "2009-08-18"
+      }
+    },
+    "license": "LicenseRef-W3C-Document",
+    "attribution": "SKOS Simple Knowledge Organization System Reference, W3C Recommendation 2009-08-18. Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    "version": "W3C Recommendation 2009-08-18",
+    "digest": "sha256:e79633b8d0564816cee8a99f5c9acf9a0e6fc7257c7209acd684ecad53a89dd6",
+    "termsDigest": "sha256:5616e4e69f5d9881c90545c86992a7cd120f9a8fffd8c7a7194c65eaab0eb5eb"
+  },
+  {
+    "prefix": "xsd",
+    "namespace": "http://www.w3.org/2001/XMLSchema#",
+    "source": {
+      "location": "https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/",
+      "revision": {
+        "kind": "datedSnapshot",
+        "date": "2014-02-25"
+      }
+    },
+    "license": "LicenseRef-W3C-Document",
+    "attribution": "RDF 1.1 Concepts and Abstract Syntax, W3C Recommendation 2014-02-25, section 5.1 (RDF-compatible XSD datatypes). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    "version": "W3C Recommendation 2014-02-25",
+    "digest": "sha256:3838c992097f72ee8784b6c96194d9879f86f2e08f53ced5a05aa4031750c5ac",
+    "termsDigest": "sha256:3f6ecf7e5a97a3358394c5c2e23332cc2116faa81d6121767bd999a67cf77afa"
+  }
+]

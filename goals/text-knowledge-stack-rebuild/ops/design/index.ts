@@ -27,17 +27,17 @@
  * else has a real implementation, including merge, restrict, closure,
  * containment, the claim log checker and the retraction closure.
  *
- * Layer edges used here: L1 -> none (L0 digest now via `@beep/schema` and
- * `@beep/jsonc`); L2 -> L0, L1; L3 -> L0 and `@beep/epistemics` (`makeSignal`,
- * `Measurement`), an ontology -> epistemics edge that decision
+ * Layer edges used here: L1 -> none; L2 -> L1; L3 -> `@beep/epistemics`
+ * (`makeSignal`, `Measurement`), an ontology -> epistemics edge that decision
  * 2026-11-19-p0-census-dispositions removes in P4 by moving them to
- * `@beep/schema`; L4 -> L1; L5 -> L0; L6 -> L2.
- * L0 is split by dependency: `L0.identity.ts` imports only effect and
- * `@beep/identity` (the RFC 3987 schemas included, `@beep/identity/Iri`).
- * The L0 digest layer left the design module in P1: the digest brands, the
- * set codec and well-formed text are `@beep/schema` (`ContentHash`,
- * `CanonicalHashSet`, `WellFormedText`), and minting and the activity id are
- * `@beep/jsonc` (`Mint`, `ActivityStart`).
+ * `@beep/schema`; L4 -> L1; L5 -> none; L6 -> L2.
+ * L0 left the design module in P1. The identity layer is `@beep/identity`:
+ * term IRIs, code ids, namespaces, terms, bindings, deprecations and the
+ * snapshot are `@beep/identity/Term`, and the CURIE codec is
+ * `@beep/identity/Registry`. The digest brands, the set codec and well-formed
+ * text are `@beep/schema` (`ContentHash`, `CanonicalHashSet`,
+ * `WellFormedText`), and minting and the activity id are `@beep/jsonc`
+ * (`Mint`, `ActivityStart`).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -45,8 +45,6 @@
 
 /** Composed `Arbitrary` prototypes for the annotation document and the claim log. */
 export * as Generators from "./generators.ts";
-/** L0 identity (`@beep/identity`): term IRIs, code ids, namespaces, terms, bindings, deprecations, the snapshot. */
-export * as L0 from "./L0.identity.ts";
 /** L1 text: occurrence identity, selectors, resolution, re-anchoring, `Anchored`. */
 export * as L1 from "./L1.text.ts";
 /** L2 annotation: kind registry, document ingredients, merge, restrict, closure, refusals. */
