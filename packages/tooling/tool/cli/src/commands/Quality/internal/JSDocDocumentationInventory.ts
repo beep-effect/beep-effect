@@ -1089,53 +1089,68 @@ const derivedLeadFindings = (
 const countFindings = (missingSummary: boolean, ...findingGroups: ReadonlyArray<ReadonlyArray<unknown>>): number =>
   A.reduce(findingGroups, missingSummary ? 1 : 0, (total, findings) => total + findings.length);
 
-type ExportFindings = {
+type AnchoredExport = {
   readonly name: string;
-  readonly declaration: Node;
-  readonly location: { readonly filePath: string; readonly repoPath: string; readonly line: number };
-  readonly presentTags: ReadonlyArray<string>;
-  readonly missingTags: ReadonlyArray<string>;
-  readonly forbidden: ReadonlyArray<string>;
-  readonly missingSummary: boolean;
-  readonly malformedTags: ReadonlyArray<DocumentationIssue>;
-  readonly importIssues: ReadonlyArray<DocumentationIssue>;
-  readonly unsafeIssues: ReadonlyArray<DocumentationIssue>;
-  readonly categoryIssues: ReadonlyArray<DocumentationIssue>;
-  readonly schemaGaps: ReadonlyArray<DocumentationIssue>;
-  readonly shapeIssues: ReadonlyArray<DocumentationIssue>;
-  readonly leadIssues: ReadonlyArray<DocumentationIssue>;
+  readonly anchor: Node;
+  readonly docTexts: ReadonlyArray<string>;
+  readonly missingTags: (docText: string, presentTags: ReadonlyArray<string>) => ReadonlyArray<string>;
+  readonly sourceFile: SourceFile;
+  readonly packagePath: string;
+  readonly repoRoot: string;
+  readonly path: Path.Path;
+  readonly forbiddenRootImports: MutableHashSet.MutableHashSet<string>;
 };
 
-const exportEntry = (findings: ExportFindings): InventoryEntry => {
-  const { filePath, repoPath, line } = findings.location;
+const analyzeAnchoredExport = (input: AnchoredExport): InventoryEntry => {
+  const { name, anchor, docTexts, sourceFile } = input;
+  const docText = getJsDocText(anchor);
+  const presentTags = tagsFromComment(docText);
+  const missingTags = input.missingTags(docText, presentTags);
+  const { filePath, repoPath, line } = declarationLocationOf(
+    anchor,
+    sourceFile,
+    input.packagePath,
+    input.repoRoot,
+    input.path
+  );
+  const forbidden = forbiddenTagsIn(presentTags);
+  const lead = derivedLead(anchor, name);
+  const missingSummary = O.isNone(lead) && Str.isEmpty(jsDocLead(docText));
+  const schemaGaps = schemaAnnotationGaps(name, anchor, sourceFile);
+  const malformedTags = A.flatMap(docTexts, malformedConditionalTags);
+  const importIssues = A.flatMap(docTexts, (text) => exampleImportViolations(text, input.forbiddenRootImports));
+  const unsafeIssues = A.flatMap(docTexts, unsafeExampleViolations);
+  const categoryIssues = A.flatMap(docTexts, categoryViolations);
+  const shapeIssues = A.flatMap(docTexts, documentationShapeViolations);
+  const leadIssues = derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile));
   const findingCount = countFindings(
-    findings.missingSummary,
-    findings.missingTags,
-    findings.forbidden,
-    findings.malformedTags,
-    findings.importIssues,
-    findings.unsafeIssues,
-    findings.categoryIssues,
-    findings.schemaGaps,
-    findings.shapeIssues
+    missingSummary,
+    missingTags,
+    forbidden,
+    malformedTags,
+    importIssues,
+    unsafeIssues,
+    categoryIssues,
+    schemaGaps,
+    shapeIssues
   );
   return {
-    symbolName: findings.name,
-    exportKind: declarationKind(findings.declaration),
+    symbolName: name,
+    exportKind: declarationKind(anchor),
     filePath,
     repoPath,
     line,
-    anchor: markdownAnchor(`${repoPath}-${line}-${findings.name}`),
-    currentTags: findings.presentTags,
-    missingRequiredTags: findings.missingTags,
-    forbiddenTags: findings.forbidden,
-    missingSummary: findings.missingSummary,
-    malformedConditionalTags: findings.malformedTags,
-    exampleImportViolations: findings.importIssues,
-    unsafeExampleViolations: findings.unsafeIssues,
-    schemaAnnotationGaps: findings.schemaGaps,
-    categoryViolations: findings.categoryIssues,
-    documentationShapeViolations: A.appendAll(findings.shapeIssues, findings.leadIssues),
+    anchor: markdownAnchor(`${repoPath}-${line}-${name}`),
+    currentTags: presentTags,
+    missingRequiredTags: missingTags,
+    forbiddenTags: forbidden,
+    missingSummary,
+    malformedConditionalTags: malformedTags,
+    exampleImportViolations: importIssues,
+    unsafeExampleViolations: unsafeIssues,
+    schemaAnnotationGaps: schemaGaps,
+    categoryViolations: categoryIssues,
+    documentationShapeViolations: A.appendAll(shapeIssues, leadIssues),
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
@@ -1148,37 +1163,18 @@ const analyzeDirectExport = (
   repoRoot: string,
   path: Path.Path,
   forbiddenRootImports: MutableHashSet.MutableHashSet<string>
-): InventoryEntry => {
-  const docText = getJsDocText(declaration);
-  const presentTags = tagsFromComment(docText);
-  const missingTags = missingRequiredExportTags(declaration, docText, presentTags);
-  const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
-  const malformedTags = malformedConditionalTags(docText);
-  const importIssues = exampleImportViolations(docText, forbiddenRootImports);
-  const unsafeIssues = unsafeExampleViolations(docText);
-  const categoryIssues = categoryViolations(docText);
-  const forbidden = forbiddenTagsIn(presentTags);
-  const lead = derivedLead(declaration, name);
-  const missingSummary = O.isNone(lead) && Str.isEmpty(jsDocLead(docText));
-  const schemaGaps = schemaAnnotationGaps(name, declaration, sourceFile);
-  const shapeIssues = documentationShapeViolations(docText);
-  return exportEntry({
+): InventoryEntry =>
+  analyzeAnchoredExport({
     name,
-    declaration: declaration,
-    location: { filePath, repoPath, line },
-    presentTags,
-    missingTags,
-    forbidden,
-    missingSummary,
-    malformedTags,
-    importIssues,
-    unsafeIssues,
-    categoryIssues,
-    schemaGaps,
-    shapeIssues,
-    leadIssues: derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile)),
+    anchor: declaration,
+    docTexts: [getJsDocText(declaration)],
+    missingTags: (docText, presentTags) => missingRequiredExportTags(declaration, docText, presentTags),
+    sourceFile,
+    packagePath,
+    repoRoot,
+    path,
+    forbiddenRootImports,
   });
-};
 
 // R19: a function-overload group (one or more overload signatures plus the
 // implementation, all sharing one exported name) scores as ONE unit — the
@@ -1200,44 +1196,25 @@ const analyzeFunctionOverloadGroup = (
   repoRoot: string,
   path: Path.Path,
   forbiddenRootImports: MutableHashSet.MutableHashSet<string>
-): InventoryEntry => {
-  const anchor = anchorDeclarationForOverloadGroup(declarations);
-  const docText = getJsDocText(anchor);
-  const presentTags = tagsFromComment(docText);
-  const effectiveTags = hasExampleCarrier(docText) ? A.append(presentTags, "@example") : presentTags;
-  const missingTags = missingRequiredTags(effectiveTags, requiredExportTags);
-  const { filePath, repoPath, line } = declarationLocationOf(anchor, sourceFile, packagePath, repoRoot, path);
-  const forbidden = forbiddenTagsIn(presentTags);
-  const lead = derivedLead(anchor, name);
-  const missingSummary = O.isNone(lead) && Str.isEmpty(jsDocLead(docText));
-  const schemaGaps = schemaAnnotationGaps(name, anchor, sourceFile);
-
-  // Malformed/forbidden-tag checks apply to any doc block found on any
-  // signature in the group, not only the anchor's — a stray malformed
-  // comment on a non-anchor overload signature must still surface.
-  const groupDocTexts = A.filter(A.map(declarations, getJsDocText), Str.isNonEmpty);
-  const malformedTags = A.flatMap(groupDocTexts, malformedConditionalTags);
-  const importIssues = A.flatMap(groupDocTexts, (docText) => exampleImportViolations(docText, forbiddenRootImports));
-  const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
-  const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
-  const shapeIssues = A.flatMap(groupDocTexts, documentationShapeViolations);
-  return exportEntry({
+): InventoryEntry =>
+  analyzeAnchoredExport({
     name,
-    declaration: anchor,
-    location: { filePath, repoPath, line },
-    presentTags,
-    missingTags,
-    forbidden,
-    missingSummary,
-    malformedTags,
-    importIssues,
-    unsafeIssues,
-    categoryIssues,
-    schemaGaps,
-    shapeIssues,
-    leadIssues: derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile)),
+    anchor: anchorDeclarationForOverloadGroup(declarations),
+    // Malformed/forbidden-tag checks apply to any doc block found on any
+    // signature in the group, not only the anchor's — a stray malformed
+    // comment on a non-anchor overload signature must still surface.
+    docTexts: A.filter(A.map(declarations, getJsDocText), Str.isNonEmpty),
+    missingTags: (docText, presentTags) =>
+      missingRequiredTags(
+        hasExampleCarrier(docText) ? A.append(presentTags, "@example") : presentTags,
+        requiredExportTags
+      ),
+    sourceFile,
+    packagePath,
+    repoRoot,
+    path,
+    forbiddenRootImports,
   });
-};
 
 const collectReExportDescriptors = (
   sourceFile: SourceFile,
