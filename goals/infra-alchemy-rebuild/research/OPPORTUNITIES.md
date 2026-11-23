@@ -810,6 +810,11 @@ to the gap between the reference checkout (main) and the pinned release.
   falls back to update on a conflict. Both are therefore standing provider behaviour, not drift. In both
   windows every write stayed on the functions, their `CiRunners-*-prod-*` roles and their log groups, with
   no `AccessDenied`.
+- **Standing expectation (driver ruling, 2026-11-23):** every (d) CloudTrail read expects exactly N
+  `iam:PutRolePolicy` and N `iam:AttachRolePolicy` for N updated functions. When the webhook is updated, it
+  also expects at most one `CreateFunctionUrlConfig` that fails with `ResourceConflictException`, followed by
+  `UpdateFunctionUrlConfig`. Any IAM write outside that pattern, or on a role whose function had no code
+  row, is a finding.
 - **Would have prevented it:** a CloudTrail read that knows this reconcile shape. It should count one put
   and one attach per updated function, plus a create→update pair for a function with a URL, as expected,
   and flag only counts or targets outside that shape.
