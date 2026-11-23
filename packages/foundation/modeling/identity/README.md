@@ -119,6 +119,137 @@ console.log(describeTerm("skos:unregisteredTerm"));
 // Unregistered vocabulary term
 ```
 
+## Publish an IRI: declared terms and bindings
+
+A composer identity such as `@beep/schema/Example/Title` is a code id. It
+names code (schema identifiers, `Symbol.for` keys, JSON Schema `$defs`) and is
+not, by itself, a published IRI. An IRI that leaves the process, in Turtle,
+SHACL, SPARQL or an exported entry, is a declared term of a registry shard,
+and the code that publishes it is bound to that term by a `TermBinding`.
+Look a code id's term up with `bindingOf`; a code id with no binding has no
+published IRI.
+
+```ts
+import { bindingOf } from "@beep/identity/Registry";
+import * as O from "effect/Option";
+
+const publishedIri = (code: string): string =>
+  O.match(bindingOf(code), {
+    onNone: () => "No published IRI",
+    onSome: ({ iri }) => iri,
+  });
+
+console.log(publishedIri("@beep/test-runner/Vitest/PositiveTimeoutMillis"));
+// https://beep-effect.com/ns/vitest/PositiveTimeoutMillis
+console.log(publishedIri("@beep/schema/Example/Title"));
+// No published IRI
+```
+
+A new internal term lives in a namespace named for its vocabulary, under the
+identity authority `https://beep-effect.com/ns/`, never under a package or file
+path, so renaming a module changes no published IRI. An instance that is not
+content-addressed is minted under a declared term or namespace with `mint`
+(or `mintEncoded` for a free-text key), which refuses to mint an IRI the
+registry already publishes as a term.
+
+The composers still carry a path-derived `.iri`. It equals the declared term
+only at the kept read sites, which `test/KeptValues.test.ts` pins byte for
+byte; new code reads a published IRI from the registry. The composer surface
+stays registry-free because the CI runner handlers bundle `Id.ts` and must
+not load the registry (`packages/tooling/infra/ci-runners/test/HandlerBundles.test.ts`).
+
+### Changing the term set
+
+The shards in [registry/namespaces](registry/namespaces) are the source; the
+generated `src/internal/generated/Registry.data.ts` and the committed
+[term snapshot](registry/term-snapshot.json) are written from them.
+
+| Change | Command |
+| --- | --- |
+| Add a term or binding | edit the shard, then `bun run beep identity registry --write` |
+| Retire a published term | `bun run beep identity deprecate <curie> [--replacement <curie>]` |
+| Retire a published namespace IRI | by hand: deprecate it and its live terms in a remaining shard, then `bun run beep identity registry --write` |
+| Move the bindings of a renamed module | `bun run beep identity rebind @beep/<package>/<old path> @beep/<package>/<new path>` |
+| Move the bindings of a renamed package | `bun run beep identity rebind @beep/<old package> @beep/<new package>` |
+| Check generated drift | `bun run beep identity registry --check` |
+| Check the published set against a base ref | `bun run beep lint identity-registry [--base <ref>]` |
+
+The snapshot's `release` is the vocabulary release a binding or deprecation
+names as `since`: an addition bumps the minor and a deprecation the major. It
+is a property of the whole change against a base ref, the merge base of `HEAD`
+with `origin/main` unless `--base <ref>` names another. `registry --write`,
+`deprecate` and `rebind` compute it from the snapshot that base publishes, so a
+branch of two additions is one minor and a branch of two deprecations is one
+major, however many commands made it. The regenerated release is never below a
+`since` a row records. Where the base commit publishes no term set, the registry
+is still unreleased: the writers keep the release the checkout's snapshot has,
+however many commands run, and a deprecation records that release. `--check`
+reads no git state and succeeds the checkout's own snapshot, as the writers do
+in a checkout with no base commit at all (no `origin/main`, or not a git work
+tree).
+
+Against a base that publishes a term set, the lint wants exactly that release
+and the same release in every row the change adds. It reports:
+
+| Kind | State | Repair |
+| --- | --- | --- |
+| `release-regressed` | the release is below the base's, or below the one the change calls for | `bun run beep identity registry --write` |
+| `release-overstated` | the release is above the one the change calls for | the same |
+| `since-misstated` | an added binding or deprecation records another release | set that `since` in its shard, then the same |
+
+Each message names the release and the command, with the `--base` the lint was
+given. Merge the base first when it is not merged yet. A rebind keeps the term
+bound, so it keeps its `since`; a binding added in the same branch as a later
+deprecation moves to the major with it. In a stack, keep the default base: until
+its parent merges, a layer is part of one change against `main`. While `main`
+publishes no term set, that change is unreleased and the writers leave the
+release alone. Once the parent's release is on `main`, merge `main` into the
+layer; the lint then names the layer's next release and every row to move to it.
+
+Renaming a package that a shard projects into (`@beep/test-runner`) takes two
+source edits before the rebind, because a package move rewrites binding codes
+only: put the new name in the `RegistryProjection` literal of
+[src/Term.ts](src/Term.ts), put it in the shard's `projection`, then run the
+package rebind above. Until then every registry command refuses the shard,
+because the checkout has no package of the old name.
+
+`deprecate` retires a live term of a shard and nothing else, so no command
+retires a namespace. To drop a namespace whose IRI the base published, remove
+its shard and add to a remaining shard a deprecation of the namespace IRI and
+of each live term the shard had, with the release of the change as `since` and
+`"replacement": ""` on the namespace IRI when that shard's namespace succeeds it;
+then run `registry --write`. The
+`research-library` shard retires the IRI P1 replaced this way.
+
+A rebind moves a code identity and every code under it, so its two ends are
+never one under the other: `@beep/p/A` to `@beep/p/A/B` is refused
+(`nested-move`), because it would match the codes it moved and a retry could
+not finish it. Make that move through a third code identity outside both ends
+that no binding uses. A rebind's target must name a module, so create a
+temporary module file for it (`src/Tmp.ts` for `@beep/p/Tmp`), rebind
+`@beep/p/A` to `@beep/p/Tmp`, rebind `@beep/p/Tmp` to `@beep/p/A/B`, then
+delete the temporary file. An identity that already has bindings will not do:
+the second rebind would move them too.
+Only the codes a rebind moves must name a module; a binding it leaves alone is
+reported by `--check`, not by the rebind.
+
+A bound term is deprecated only after its binding is removed from the shard; a
+rebind keeps the term bound. When the last shard drops its `projection`, the
+generated projection module is drift and `--write` removes it. An edit command
+that stops while it writes says how to finish: the shards are written first, so
+a failure after them is finished with `bun run beep identity registry --write`.
+Against a base that publishes a term set, every writer refuses a binding or
+deprecation the change adds whose `since` is not the release of the change, and
+writes nothing: set that `since` in its shard, then run the same command again.
+
+Removing a term, changing a namespace prefix, dropping a deprecation or
+reviving a retired IRI without a deprecation record fails the writer and the
+lint, and so does deleting the whole registry against a base that published it.
+The lint reads the snapshot where the base tree has its `@beep/identity` package,
+so moving the package hides no removal. Law
+`L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the
+acceptance test.
+
 ## Module map
 
 | Import | Responsibility |
@@ -126,7 +257,8 @@ console.log(describeTerm("skos:unregisteredTerm"));
 | `@beep/identity/packages` | Registered package composers; the normal starting point for consumers. |
 | `@beep/identity/Id` | Composer contracts, identity construction, and schema annotation helpers. |
 | `@beep/identity/Registry` | The generated term registry and the one CURIE codec: expansion, contraction, bindings, deprecations and instance minting. |
-| `@beep/identity/Term` | Declared terms, namespaces, bindings, deprecations, registry shards and the term snapshot. |
+| `@beep/identity/Term` | Declared terms, namespaces, bindings, deprecations, registry shards, the term snapshot and `snapshotViolations`. |
+| `@beep/identity/Authority` | `IdentityAuthority`, the root of the internal namespaces. |
 | `@beep/identity/Vocab` | Literal CURIE, predicate and IRI types over a vocabulary shape. |
 | `@beep/identity/IdentityRegistry` | Exact identity, IRI, and CURIE lookup through a local registry service. |
 | `@beep/identity/Iri` | RFC 3987 IRI, IRI-reference, relative-reference, and absolute-IRI schemas. |
@@ -156,8 +288,9 @@ bun run beep quality package-verify @beep/identity
 
 For a focused edit loop, run `bun run check`, `bun run test`, or `bun run lint`
 from this package directory. The test suite covers literal identities, annotation
-metadata and schema statics, template guards, vocabulary conversion, and registry
-behavior.
+metadata and schema statics, template guards, vocabulary conversion, registry
+behavior, and the `L0-1` and `L0-3` laws (`Curie.laws.test.ts`,
+`TermStability.test.ts`).
 
 ## License
 

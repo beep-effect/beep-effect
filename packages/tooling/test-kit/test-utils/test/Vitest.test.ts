@@ -1,4 +1,4 @@
-import { $TestUtilsId } from "@beep/identity/packages";
+import { bindingOf } from "@beep/identity/Registry";
 import {
   TestContextUnavailable as LeafContextUnavailable,
   TestHang as LeafHang,
@@ -8,9 +8,9 @@ import { makeIt as makeLeafIt } from "@beep/test-runner/test/Vitest";
 import { makeIt } from "@beep/test-utils/test/Vitest";
 import { it, TestContextUnavailable, TestHang } from "@beep/test-utils/Vitest";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
-const $I = $TestUtilsId.create("Vitest");
 
 it("preserves runner and error constructor identity through compatibility exports", () => {
   expect(it).toBe(leafIt);
@@ -19,13 +19,26 @@ it("preserves runner and error constructor identity through compatibility export
   expect(makeIt).toBe(makeLeafIt);
 });
 
-it("preserves historical schema identities without a runner dependency on identity", () => {
-  expect(S.resolveAnnotations(TestContextUnavailable)).toMatchObject($I.annoteError("TestContextUnavailable"));
-  expect(S.resolveAnnotations(TestHang)).toMatchObject($I.annoteError("TestHang"));
-  expect(S.resolveAnnotationsKey(TestContextUnavailable.fields.method)).toMatchObject(
-    $I.annote("TestContextUnavailable.method")
+it("carries the registry-bound vitest identities through the compatibility exports", () => {
+  const annotated = [
+    ["TestContextUnavailable", S.resolveAnnotations(TestContextUnavailable)],
+    ["TestContextUnavailable.method", S.resolveAnnotationsKey(TestContextUnavailable.fields.method)],
+    ["TestHang", S.resolveAnnotations(TestHang)],
+    ["TestHang.lastLogLine", S.resolveAnnotationsKey(TestHang.fields.lastLogLine)],
+    ["TestHang.testName", S.resolveAnnotationsKey(TestHang.fields.testName)],
+    ["TestHang.timeoutMillis", S.resolveAnnotationsKey(TestHang.fields.timeoutMillis)],
+  ] as const;
+  expect(
+    A.map(annotated, ([, annotations]) => ({
+      identifier: annotations?.identifier,
+      iri: annotations?.iri,
+      curie: annotations?.curie,
+    }))
+  ).toStrictEqual(
+    A.map(annotated, ([local]) => {
+      const code = `@beep/test-runner/Vitest/${local}`;
+      const term = O.getOrThrow(bindingOf(code));
+      return { identifier: code, iri: term.iri, curie: `${term.namespace}:${term.local}` };
+    })
   );
-  expect(S.resolveAnnotationsKey(TestHang.fields.lastLogLine)).toMatchObject($I.annote("TestHang.lastLogLine"));
-  expect(S.resolveAnnotationsKey(TestHang.fields.testName)).toMatchObject($I.annote("TestHang.testName"));
-  expect(S.resolveAnnotationsKey(TestHang.fields.timeoutMillis)).toMatchObject($I.annote("TestHang.timeoutMillis"));
 });

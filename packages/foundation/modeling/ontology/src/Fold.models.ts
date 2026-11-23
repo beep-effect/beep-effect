@@ -15,11 +15,13 @@
 import { IRI } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
 import { curieNamespace, expand, expandPredicate } from "@beep/identity/Registry";
+import { NamespaceIri } from "@beep/identity/Term";
 import { LanguageTag } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { rebindsCorePrefix } from "./internal/CoreNamespaces.ts";
 import type { Predicate } from "@beep/identity";
 import type { RegistryCurie, RegistryVocab } from "@beep/identity/Registry";
 
@@ -646,16 +648,22 @@ export class OntologyValidationWarning extends S.Opaque<OntologyValidationWarnin
 /**
  * The assembled, deterministic result of an ontology fold.
  *
+ * **Details**
+ *
+ * `baseIri` is a namespace IRI, so it carries the separator its terms follow.
+ * A core prefix (`dcterms`, `owl`, `rdf`, `rdfs`, `skos`) owns only its own
+ * namespace: the projections bind those prefixes themselves, so a value that
+ * rebinds one is refused.
+ *
  * **Example** (Usage)
  * ```ts
- * import { $I } from "@beep/identity/packages"
  * import { AssembledOntology } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const assembled = S.decodeUnknownSync(AssembledOntology)({
  *   label: "Patent Core",
- *   baseIri: $I.create("patent").iri,
- *   prefix: "beep",
+ *   baseIri: "https://example.test/patent/",
+ *   prefix: "patent",
  *   classes: [],
  *   facts: [],
  *   warnings: [],
@@ -669,16 +677,27 @@ export class OntologyValidationWarning extends S.Opaque<OntologyValidationWarnin
 export class AssembledOntology extends S.Opaque<AssembledOntology, { readonly brand: unique symbol }>()(
   S.Struct({
     label: S.NonEmptyString,
-    baseIri: IRI,
+    baseIri: NamespaceIri,
     prefix: S.NonEmptyString,
     classes: S.Array(AssembledClass),
     facts: S.Array(AssembledFact),
     warnings: S.Array(OntologyValidationWarning),
-  }).pipe(
-    $I.annoteSchema("AssembledOntology", {
-      description: "Predicate-open assembled ontology with observable warnings.",
-    })
-  )
+  })
+    .check(
+      S.makeFilter(
+        ({ baseIri, prefix }) => !rebindsCorePrefix({ prefix, iri: baseIri }),
+        $I.annote("AssembledOntologyCorePrefix", {
+          title: "Assembled Ontology Core Prefix",
+          description: "An ontology owned by a core prefix has that core namespace as its base IRI.",
+          message: "Expected a core prefix to own its core namespace.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("AssembledOntology", {
+        description: "Predicate-open assembled ontology with observable warnings.",
+      })
+    )
 ) {}
 
 /**
@@ -703,6 +722,8 @@ export const OntologyAssemblyErrorReason = LiteralKit([
   "invalidTriple",
   "invalidLabel",
   "reservedPrefix",
+  "unboundClass",
+  "undeclaredProperty",
   "skosIntegrity",
 ]).pipe(
   $I.annoteSchema("OntologyAssemblyErrorReason", {

@@ -428,15 +428,13 @@ describe("retired IRI authority law", () => {
 
     it.effect("allowlists the bootstrap test runner with a reason", () =>
       Effect.sync(() => {
-        const file = "packages/tooling/test-kit/test-runner/src/Vitest.errors.ts";
+        const file = "packages/tooling/test-kit/test-runner/src/internal/generated/RegistryTerms.ts";
         expect(isPublicOriginAllowlisted(file)).toBe(true);
         expect(isPublicOriginScoped(file)).toBe(false);
         for (const entry of retiredIriAuthoritiesScope.originAllowlist) {
           expect(entry.reason.length).toBeGreaterThan(0);
         }
-        expect(scanRetiredIriAuthorityFile(file, `const iri = "${ORIGIN}/ns/test-utils/Vitest/TestHang";\n`)).toEqual(
-          []
-        );
+        expect(scanRetiredIriAuthorityFile(file, `const iri = "${ORIGIN}/ns/vitest/TestHang";\n`)).toEqual([]);
       })
     );
 

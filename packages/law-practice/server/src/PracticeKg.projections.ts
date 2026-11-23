@@ -6,7 +6,8 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { $I as $BeepId, $LawPracticeServerId } from "@beep/identity/packages";
+import { $LawPracticeServerId } from "@beep/identity/packages";
+import { mint } from "@beep/identity/Registry";
 import { KG_BUILD_TABLE_NAME } from "@beep/law-practice-tables/entities/KgBuild";
 import { KG_EDGE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgEdge";
 import { KG_NODE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgNode";
@@ -76,7 +77,6 @@ import type {
 } from "./PracticeKg.schemas.ts";
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
-const graphIdentity = $BeepId.create("practice-kg");
 const graphBundleVersion = "2026-10-20-01";
 const runListSeparator = " | ";
 const graphReadme = `Practice Knowledge Graph Bundle
@@ -282,7 +282,7 @@ INSERT INTO ${KG_EDGE_TABLE_NAME}
   (subject_iri, predicate, object_iri, epistemic_status, provenance_kind, provenance_ref)
 VALUES ($1, $2, $3, $4, $5, $6)`;
 
-const graphIri = (kind: KgNodeKind, naturalKey: string): string => graphIdentity.create(kind).create(naturalKey).iri;
+const graphIri = (kind: KgNodeKind, naturalKey: string): string => mint(`practice-kg:${kind}`, naturalKey);
 
 const edgeKey = (edge: PracticeKgEdgeRow): string => `${edge.subjectIri}\u0000${edge.predicate}\u0000${edge.objectIri}`;
 
