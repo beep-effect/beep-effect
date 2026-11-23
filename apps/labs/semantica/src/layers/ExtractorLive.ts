@@ -1,4 +1,4 @@
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { AlignmentSource, alignCandidate } from "@beep/langextract/Alignment";

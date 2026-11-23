@@ -42,7 +42,8 @@ import {
   RecordEdgeFact,
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
-import { Confidence, EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
+import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import {
   SOURCE_TEXT_PAGE_CODE_UNITS,

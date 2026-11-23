@@ -11,12 +11,8 @@ import {
   UsageRecord,
 } from "@beep/epistemic-domain";
 import { ClaimGateResult, ClaimGateSeverity, ClaimGateViolation } from "@beep/epistemics/ClaimGate";
-import {
-  Confidence,
-  EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
-  EvidenceSpan,
-  EvidenceSpanArbitrary,
-} from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
+import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH, EvidenceSpan, EvidenceSpanArbitrary } from "@beep/epistemics/EvidenceSpan";
 import { $EpistemicId } from "@beep/identity/packages";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";

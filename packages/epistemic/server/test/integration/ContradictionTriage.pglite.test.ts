@@ -44,7 +44,7 @@ import {
   RecordEdgeFact,
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { PosixPath } from "@beep/schema/PosixPath";

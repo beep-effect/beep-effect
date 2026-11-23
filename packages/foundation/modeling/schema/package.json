@@ -213,7 +213,9 @@
     "./XssProtection/*": null,
     "./test/Markdown": "./src/internal/test/Markdown.test-kit.ts",
     "./test/*": null,
-    "./internal/*": null
+    "./internal/*": null,
+    "./Signal": "./src/Signal.ts",
+    "./Signal/*": null
   },
   "files": [
     "src/**/*.ts",
@@ -391,7 +393,9 @@
       "./XssProtection/*": null,
       "./test/Markdown": null,
       "./test/*": null,
-      "./internal/*": null
+      "./internal/*": null,
+      "./Signal": "./dist/Signal.js",
+      "./Signal/*": null
     }
   },
   "beep": {

@@ -1,4 +1,4 @@
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { TextAnchor, TextAnchorFields, TextAnchorVerificationReceipt, TextAnchorWidthCheck } from "@beep/text";

@@ -1,6 +1,6 @@
 ClaimEvidenceReview.ClaimEvidenceBasis	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ClaimEvidenceBasis
 ClaimEvidenceReview.ClaimEvidenceBasis	@beep/epistemic-domain/values/EpistemicFixtureKey/EpistemicFixtureKey.model/EpistemicFixtureKey
-ClaimEvidenceReview.ClaimEvidenceBasis	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+ClaimEvidenceReview.ClaimEvidenceBasis	@beep/epistemics/Confidence/Confidence
 ClaimEvidenceReview.ClaimEvidenceBasis	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpan
 ClaimEvidenceReview.ClaimEvidenceBasis	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpanQuote
 ClaimEvidenceReview.ClaimEvidenceBasis	@beep/schema/PosixPath/PosixPath
@@ -17,7 +17,7 @@ ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemic-domain/values/Claim
 ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ClaimEvidenceVerification
 ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ReviewStalenessReason
 ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemic-domain/values/EpistemicFixtureKey/EpistemicFixtureKey.model/EpistemicFixtureKey
-ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemics/Confidence/Confidence
 ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpan
 ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpanQuote
 ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/schema/PosixPath/PosixPath
@@ -34,7 +34,7 @@ ClaimEvidenceReview.ClaimEvidenceExplanation	@beep/text/VerifiedTextAnchor/Verif
 ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ClaimEvidenceBasis
 ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ClaimEvidenceReview
 ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemic-domain/values/EpistemicFixtureKey/EpistemicFixtureKey.model/EpistemicFixtureKey
-ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemics/Confidence/Confidence
 ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpan
 ClaimEvidenceReview.ClaimEvidenceReview	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpanQuote
 ClaimEvidenceReview.ClaimEvidenceReview	@beep/schema/PosixPath/PosixPath
@@ -52,7 +52,7 @@ ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemic-domain/values/Clai
 ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ClaimEvidenceReviewStatus
 ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemic-domain/values/ClaimEvidenceReview/ClaimEvidenceReview.model/ReviewStalenessReason
 ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemic-domain/values/EpistemicFixtureKey/EpistemicFixtureKey.model/EpistemicFixtureKey
-ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemics/Confidence/Confidence
 ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpan
 ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/EvidenceSpanQuote
 ClaimEvidenceReview.ClaimEvidenceReviewStatus	@beep/schema/PosixPath/PosixPath
@@ -95,7 +95,7 @@ Contradiction.ContradictionAssessment	@beep/epistemic-domain/values/Contradictio
 Contradiction.ContradictionAssessment	@beep/epistemic-domain/values/Contradiction/Contradiction.model/UniqueNonEmptyContradictionProposals
 Contradiction.ContradictionAssessment	@beep/epistemic-domain/values/Contradiction/Contradiction.model/UniqueNonEmptyContradictionProposalsMaximumLengthCheck
 Contradiction.ContradictionAssessment	@beep/epistemic-domain/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model/LogicalEdgeKey
-Contradiction.ContradictionAssessment	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+Contradiction.ContradictionAssessment	@beep/epistemics/Confidence/Confidence
 Contradiction.ContradictionAssessment	@beep/shared-domain/internal/PosInt/PosInt
 Contradiction.ContradictionBeliefPair	@beep/epistemic-domain/identity/Epistemic/EpistemicEdgeVersionId
 Contradiction.ContradictionBeliefPair	@beep/epistemic-domain/internal/PosInt/PosInt
@@ -125,7 +125,7 @@ Contradiction.ContradictionCandidateContent	@beep/epistemic-domain/values/Contra
 Contradiction.ContradictionCandidateContent	@beep/epistemic-domain/values/Contradiction/Contradiction.model/UniqueNonEmptyEvidenceIds
 Contradiction.ContradictionCandidateContent	@beep/epistemic-domain/values/Contradiction/Contradiction.model/UniqueNonEmptyEvidenceIdsMaximumLengthCheck
 Contradiction.ContradictionCandidateContent	@beep/epistemic-domain/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model/LogicalEdgeKey
-Contradiction.ContradictionCandidateContent	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+Contradiction.ContradictionCandidateContent	@beep/epistemics/Confidence/Confidence
 Contradiction.ContradictionCandidateContent	@beep/schema/SemanticVersion/SemanticVersion
 Contradiction.ContradictionCandidateContent	@beep/shared-domain/internal/PosInt/PosInt
 Contradiction.ContradictionCandidateDigest	@beep/epistemic-domain/values/Contradiction/Contradiction.model/ContradictionCandidateDigest
@@ -210,7 +210,7 @@ ContradictionDetection.DetectedContradiction	@beep/epistemic-domain/values/Contr
 ContradictionDetection.DetectedContradiction	@beep/epistemic-domain/values/Contradiction/Contradiction.model/UniqueNonEmptyEvidenceIdsMaximumLengthCheck
 ContradictionDetection.DetectedContradiction	@beep/epistemic-domain/values/ContradictionDetection/ContradictionDetection.model/DetectedContradiction
 ContradictionDetection.DetectedContradiction	@beep/epistemic-domain/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model/LogicalEdgeKey
-ContradictionDetection.DetectedContradiction	@beep/epistemics/EvidenceSpan/EvidenceSpan.model/Confidence
+ContradictionDetection.DetectedContradiction	@beep/epistemics/Confidence/Confidence
 ContradictionDetection.DetectedContradiction	@beep/schema/SemanticVersion/SemanticVersion
 ContradictionDetection.DetectedContradiction	@beep/shared-domain/internal/PosInt/PosInt
 ContradictionDetection.DetectionBelief	@beep/epistemic-domain/identity/Epistemic/EpistemicEdgeVersionId

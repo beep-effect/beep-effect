@@ -35,7 +35,7 @@ import {
   toContradictionDispositionInsert,
   toContradictionReceiptInsert,
 } from "@beep/epistemic-tables/entities/Contradiction";
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";

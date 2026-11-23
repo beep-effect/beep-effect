@@ -14,100 +14,13 @@
  */
 import { $EpistemicsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Measurement, makeSignal } from "@beep/schema/Signal";
 import * as S from "effect/Schema";
 import { KnowledgeInterval } from "../KnowledgeInterval/index.ts";
 import { ValidInterval, ValidIntervalFields } from "../ValidInterval/index.ts";
 import type { FieldSchema, IdCodec, SchemaIdentity } from "../Factory/index.ts";
 
 const $I = $EpistemicsId.create("Claim/Claim.model");
-
-/**
- * Why an evidence signal is absent. Absence is never zero.
- *
- * **Example** (Decode an absence reason)
- *
- * ```ts
- * import { AbsenceReason } from "@beep/epistemics/Claim"
- * import * as S from "effect/Schema"
- *
- * console.log(S.decodeUnknownSync(AbsenceReason)("not-assessed"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AbsenceReason = LiteralKit(["not-assessed", "unavailable", "not-applicable", "legacy-unknown"]).pipe(
-  $I.annoteSchema("AbsenceReason", { description: "Why an evidence signal is absent." })
-);
-
-/**
- * Decoded type of {@link AbsenceReason}.
- *
- * @category models
- * @since 0.0.0
- */
-export type AbsenceReason = typeof AbsenceReason.Type;
-
-/**
- * Wrap a value schema as a signal that is either present or absent with a
- * reason.
- *
- * **Example** (A present trust signal)
- *
- * ```ts
- * import { makeSignal } from "@beep/epistemics/Claim"
- * import { LiteralKit } from "@beep/schema/LiteralKit"
- * import * as S from "effect/Schema"
- *
- * const Trust = makeSignal(LiteralKit(["low", "high"]))
- * S.decodeUnknownSync(Trust)({ _tag: "Absent", reason: "not-assessed" })
- * ```
- *
- * @category factories
- * @since 0.0.0
- */
-export const makeSignal = <A extends S.Top>(value: A) =>
-  S.TaggedUnion({ Present: { value }, Absent: { reason: AbsenceReason } });
-
-/**
- * A typed measurement. A detector score, a cosine similarity and a calibrated
- * probability are different contracts and never share a field.
- *
- * **Example** (Decode a calibrated classifier probability)
- *
- * ```ts
- * import { Measurement } from "@beep/epistemics/Claim"
- * import * as S from "effect/Schema"
- *
- * const m = S.decodeUnknownSync(Measurement)({
- *   _tag: "ClassifierProbability",
- *   value: 0.82,
- *   model: "detector-v1",
- *   calibrated: true,
- * })
- * console.log(m._tag)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Measurement = S.TaggedUnion({
-  Similarity: { value: S.Finite, metric: S.NonEmptyString, model: S.NonEmptyString },
-  ClassifierProbability: {
-    value: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })),
-    model: S.NonEmptyString,
-    calibrated: S.Boolean,
-  },
-  OrdinalJudgment: { level: LiteralKit(["low", "moderate", "high"]) },
-}).pipe($I.annoteSchema("Measurement", { description: "Typed measurement; never a blended score." }));
-
-/**
- * Decoded type of {@link Measurement}.
- *
- * @category models
- * @since 0.0.0
- */
-export type Measurement = typeof Measurement.Type;
 
 /**
  * Lowercase SHA-256 hex digest of the evidence basis a reviewer looked at.

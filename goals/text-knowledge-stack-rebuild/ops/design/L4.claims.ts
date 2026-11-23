@@ -13,7 +13,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { AbsenceReason, ValidTime } from "@beep/epistemics/Claim";
+import { ValidTime } from "@beep/epistemics/Claim";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import { mintContentHash } from "@beep/jsonc/Mint";
@@ -21,6 +21,7 @@ import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
+import { AbsenceReason } from "@beep/schema/Signal";
 import { OccurrenceId } from "@beep/text/Occurrence";
 import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";

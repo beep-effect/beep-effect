@@ -13,7 +13,6 @@
  * @since 0.0.0
  */
 import { $EpistemicsId } from "@beep/identity/packages";
-import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   isInternallyConsistent as isTextAnchorInternallyConsistent,
   TextAnchor,
@@ -24,52 +23,10 @@ import * as Arbitrary from "effect/Arbitrary";
 import { dual, identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { Confidence } from "../Confidence.ts";
 
 const $I = $EpistemicsId.create("EvidenceSpan/EvidenceSpan.model");
 const textAnchorEquivalent = S.toEquivalence(TextAnchor);
-
-/**
- * Extraction confidence in the unit interval `[0, 1]` — the epistemic semantic
- * name for the domain-agnostic {@link UnitInterval} primitive.
- *
- * **Example** (Decode confidence value)
- *
- * ```ts
- * import * as Effect from "effect/Effect";
- * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import * as S from "effect/Schema"
- *
- * Effect.runPromise(S.decodeUnknownEffect(Confidence)(0.92)).then(console.log)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Confidence = UnitInterval.pipe(
-  $I.annoteSchema("Confidence", {
-    description: "Extraction confidence in the unit interval [0, 1].",
-  })
-);
-
-/**
- * Runtime type for {@link Confidence}.
- *
- * **Example** (Typed confidence decode)
- *
- * ```ts
- * import * as Effect from "effect/Effect";
- * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import type { Confidence as ConfidenceValue } from "@beep/epistemics/EvidenceSpan"
- * import * as S from "effect/Schema"
- *
- * const program = S.decodeUnknownEffect(Confidence)(0.92)
- * Effect.runPromise(program).then((value: ConfidenceValue) => console.log(value))
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type Confidence = typeof Confidence.Type;
 
 /**
  * Maximum UTF-16 code-unit length retained by one evidence quote.
@@ -190,7 +147,8 @@ export class EvidenceSpan extends S.Opaque<EvidenceSpan, { readonly brand: uniqu
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Confidence, EvidenceSpan, isEvidenceSpanInternallyConsistent } from "@beep/epistemics/EvidenceSpan"
+ * import { Confidence } from "@beep/epistemics/Confidence"
+ * import { EvidenceSpan, isEvidenceSpanInternallyConsistent } from "@beep/epistemics/EvidenceSpan"
  *
  * const span = EvidenceSpan.make({
  *   startChar: S.Natural.make(0),

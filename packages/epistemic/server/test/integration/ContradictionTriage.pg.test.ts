@@ -38,7 +38,7 @@ import {
   GetExpandedContradictionCandidate,
   RecordEdgeFact,
 } from "@beep/epistemic-use-cases/server";
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";

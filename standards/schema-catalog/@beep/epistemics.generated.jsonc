@@ -4,8 +4,6 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/epistemics",
   "entries": [
-    {"file":"packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts","symbol":"AbsenceReason","kind":"literal-kit","owner":"@beep/epistemics","identity":"AbsenceReason","description":"Why an evidence signal is absent."},
-    {"file":"packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts","symbol":"Measurement","kind":"literal-kit","owner":"@beep/epistemics","identity":"Measurement","description":"Typed measurement; never a blended score."},
     {"file":"packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts","symbol":"ReviewTag","kind":"literal-kit","owner":"@beep/epistemics","identity":"ReviewTag","description":"Review-state tag."},
     {"file":"packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts","symbol":"StructuralVerdict","kind":"tagged-union","owner":"@beep/epistemics","identity":"StructuralVerdict","description":"Shape verdict only."},
     {"file":"packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts","symbol":"ValidTime","kind":"tagged-union","owner":"@beep/epistemics","identity":"ValidTime","description":"Valid time: unknown, or a half-open interval."},

@@ -1,5 +1,5 @@
+import { Confidence } from "@beep/epistemics/Confidence";
 import {
-  Confidence,
   EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
   EvidenceSpan,
   EvidenceSpanArbitrary,
@@ -15,6 +15,13 @@ import * as Str from "effect/String";
 const isSpan = S.is(EvidenceSpan);
 
 describe("EvidenceSpan", () => {
+  it("L4-7 confidence keeps zero and one and refuses values outside the unit interval", () => {
+    const isConfidence = S.is(Confidence);
+    expect(isConfidence(0)).toBe(true);
+    expect(isConfidence(1)).toBe(true);
+    expect(isConfidence(-0.01)).toBe(false);
+    expect(isConfidence(1.01)).toBe(false);
+  });
   it.effect.prop("generates consistent spans that round-trip", [EvidenceSpanArbitrary], ([span]) =>
     Effect.gen(function* () {
       expect(EvidenceSpan.isInternallyConsistent(span)).toBe(true);

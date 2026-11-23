@@ -544,3 +544,12 @@ the inventory. A test-file-only discovery recipe would have prevented the interr
   a scanner boundary test checks changed values, wrong paths and another token detector.
   **Would have prevented it:** treating nested frozen ledger payloads as part of the original
   synthetic cache-digest fixture closure. No standards exception inventory changes.
+
+## 2026-11-23 — P4 signal declaration boundary
+
+- **Doing:** re-proving commit 2 after moving Measurement to schema. **Evidence:**
+  seven-package verification reproduced TS2527 at Claim.model.ts:189 because the
+  exported union referenced private nominal measurement cases. Downstream audits
+  failed at the same declaration boundary. **Would have prevented it:** declaration
+  emit on the new shared leaf before the importer package fan-out. Export the
+  documented nominal cases so generated declarations can name their brands.

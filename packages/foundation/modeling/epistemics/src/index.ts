@@ -94,6 +94,20 @@ export * from "./ClaimGate/index.ts";
  */
 export * from "./ClaimProjection/index.ts";
 /**
+ * Reported confidence scalar for measurement payloads.
+ *
+ * **Example** (Read a reported confidence)
+ *
+ * ```ts
+ * import { Confidence } from "@beep/epistemics/Confidence"
+ * console.log(Confidence.make(1))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Confidence.ts";
+/**
  * Contradiction-candidate schema factories, seals and arbitraries.
  *
  * **Example** (Bind the contradiction vocabulary)
@@ -158,14 +172,13 @@ export * from "./EdgeRelation/index.ts";
 /**
  * Evidence span value exports.
  *
- * **Example** (Decode confidence value)
+ * **Example** (Check an evidence span)
  *
  * ```ts
- * import { Confidence } from "@beep/epistemics/EvidenceSpan"
+ * import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan"
  * import * as S from "effect/Schema"
  *
- * const confidence = S.decodeUnknownSync(Confidence)(0.88)
- * console.log(confidence)
+ * console.log(S.is(EvidenceSpan)({ startChar: 0, endChar: 4, quote: "text", confidence: 0.88 }))
  * ```
  *
  * @category value-objects

@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-22T23:28:34.744Z",
-  "git_sha": "53b2d03038b8c02732ed5bb5d857af8060f4555d",
-  "command": "bun run coverage -- --filter=@beep/annotation --filter=@beep/text --filter=@beep/langextract --filter=@beep/nlp --filter=@beep/law-practice-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-23T02:27:03.888Z",
+  "git_sha": "39861ae8937630c0dccc3fdba14f4aed74fea335",
+  "command": "bun run coverage -- --filter=@beep/schema --filter=@beep/epistemics --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -12957,6 +12957,18 @@
           }
         },
         "packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/Confidence.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -53814,6 +53826,54 @@
           }
         },
         "packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/CanonicalHashSet.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/ContentHash.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Signal.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/WellFormedText.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

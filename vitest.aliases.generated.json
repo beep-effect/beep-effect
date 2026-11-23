@@ -2411,5 +2411,6 @@
   "@beep/annotation": [
     "./packages/foundation/modeling/annotation/src/index.ts"
   ],
-  "@beep/annotation/*": ["./packages/foundation/modeling/annotation/src/*"]
+  "@beep/annotation/*": ["./packages/foundation/modeling/annotation/src/*"],
+  "@beep/schema/Signal": ["./packages/foundation/modeling/schema/src/Signal.ts"]
 }
