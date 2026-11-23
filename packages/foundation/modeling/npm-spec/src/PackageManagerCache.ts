@@ -133,8 +133,7 @@ export declare namespace DefaultCacheDirectoryOptions {
   export type Encoded = typeof DefaultCacheDirectoryOptions.Encoded;
 }
 
-/** Join under `home` with the platform family's separator — no IO, no `node:path`. */
-const under = (home: string, windows: boolean, ...parts: ReadonlyArray<string>): string =>
+const joinUnderHomeWithoutNodePath = (home: string, windows: boolean, ...parts: ReadonlyArray<string>): string =>
   A.join([home, ...parts], windows ? "\\" : "/");
 
 /**
@@ -229,28 +228,30 @@ export abstract class PackageManagerCache {
     const darwin = options.platform === "darwin";
     return Match.value(manager).pipe(
       Match.when("npm", () =>
-        windows ? under(options.home, windows, "AppData", "Local", "npm-cache") : under(options.home, windows, ".npm")
+        windows
+          ? joinUnderHomeWithoutNodePath(options.home, windows, "AppData", "Local", "npm-cache")
+          : joinUnderHomeWithoutNodePath(options.home, windows, ".npm")
       ),
       Match.when("pnpm", () =>
         windows
-          ? under(options.home, windows, "AppData", "Local", "pnpm", "store")
+          ? joinUnderHomeWithoutNodePath(options.home, windows, "AppData", "Local", "pnpm", "store")
           : darwin
-            ? under(options.home, windows, "Library", "pnpm", "store")
-            : under(options.home, windows, ".local", "share", "pnpm", "store")
+            ? joinUnderHomeWithoutNodePath(options.home, windows, "Library", "pnpm", "store")
+            : joinUnderHomeWithoutNodePath(options.home, windows, ".local", "share", "pnpm", "store")
       ),
       Match.when("yarn-classic", () =>
         windows
-          ? under(options.home, windows, "AppData", "Local", "Yarn", "Cache")
+          ? joinUnderHomeWithoutNodePath(options.home, windows, "AppData", "Local", "Yarn", "Cache")
           : darwin
-            ? under(options.home, windows, "Library", "Caches", "Yarn")
-            : under(options.home, windows, ".cache", "yarn")
+            ? joinUnderHomeWithoutNodePath(options.home, windows, "Library", "Caches", "Yarn")
+            : joinUnderHomeWithoutNodePath(options.home, windows, ".cache", "yarn")
       ),
       Match.when("yarn-berry", () =>
         windows
-          ? under(options.home, windows, "AppData", "Local", "Yarn", "Berry", "cache")
-          : under(options.home, windows, ".yarn", "berry", "cache")
+          ? joinUnderHomeWithoutNodePath(options.home, windows, "AppData", "Local", "Yarn", "Berry", "cache")
+          : joinUnderHomeWithoutNodePath(options.home, windows, ".yarn", "berry", "cache")
       ),
-      Match.when("bun", () => under(options.home, windows, ".bun", "install", "cache")),
+      Match.when("bun", () => joinUnderHomeWithoutNodePath(options.home, windows, ".bun", "install", "cache")),
       Match.exhaustive
     );
   });

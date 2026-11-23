@@ -1,7 +1,3 @@
-// Hostile input fails typed, with its finding and position, never as a defect or a stack overflow; every cap holds
-// the same whether the input is read at once, in one-character pieces or through a channel; and no input makes a read
-// cost more than linear time or memory, wide records and floods of warnings included.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import {
   CsvFatal,
@@ -61,11 +57,10 @@ import {
 import type { CsvFatalFinding } from "@beep/csv/CsvDiagnostic.schema";
 import type { CsvRecord } from "@beep/csv/CsvTable.schema";
 
-/** A fatal finding as its kind, and its cap when it is one. */
-const summary = (finding: CsvFatalFinding): string =>
+const kindAndCapOf = (finding: CsvFatalFinding): string =>
   finding.kind === "LimitExceeded" ? `${finding.kind}:${finding.limit}` : finding.kind;
 
-const failedWith = flow(fatalFindings, Result.mapError(A.map(summary)));
+const failedWith = flow(fatalFindings, Result.mapError(A.map(kindAndCapOf)));
 
 const limited = (limits: Partial<CsvLimits>) => readWithRules(",", { limits: CsvLimits.make(limits) });
 
@@ -133,15 +128,15 @@ describe("the record-length cap counts a record's text, not its line break", () 
 });
 
 describe("every cap, read at once, in one-character pieces and through both channels", () => {
-  // Every record is as wide as the first except in the padding row, so padding the reads changes only that row.
-  for (const [name, limits, text] of [
+  const capCasesAsWideAsTheirFirstRecordSoPaddingChangesOnlyThePaddingRow = [
     ["records", { maxRecords: 10 }, Str.repeat(11)("a,b\n")],
     ["fieldsPerRecord", { maxFieldsPerRecord: 5 }, "a,b,c,d,e,f\n"],
     ["fieldLength", { maxFieldLength: 10 }, `a,${Str.repeat(11)("x")}\n`],
     ["recordLength", { maxRecordLength: 20 }, `${A.join(A.replicate("abcd", 6), ",")}\n`],
     ["textLength", { maxTextLength: 20 }, Str.repeat(7)("a,b\n")],
     ["paddingCells", { maxPaddingCells: 10 }, `a,b,c\n${Str.repeat(6)("a\n")}`],
-  ] as const) {
+  ] as const;
+  for (const [name, limits, text] of capCasesAsWideAsTheirFirstRecordSoPaddingChangesOnlyThePaddingRow) {
     it.effect(`${name} fails the same everywhere`, () =>
       Effect.gen(function* () {
         const options = readWithRules(",", { ragged: "pad", limits: CsvLimits.make(limits) });
@@ -163,8 +158,6 @@ describe("every cap, read at once, in one-character pieces and through both chan
   }
 });
 
-// Padding makes cells out of no text, so the padding cap, not the text caps, bounds what a padded read holds. It
-// counts the padding alone, so it never refuses what an unpadded read of the same cells accepts.
 describe("the padding cap bounds padding and nothing else", () => {
   const padded = (maxPaddingCells: number) =>
     readWithRules(",", { ragged: "pad", limits: CsvLimits.make({ maxPaddingCells }) });
@@ -209,8 +202,7 @@ describe("the padding cap bounds padding and nothing else", () => {
   );
 });
 
-// A stream has no length of its own, so the text-length cap is what keeps its positions valid `CsvIndex` values.
-describe("the text-length cap bounds every position a read reports", () => {
+describe("the text-length cap bounds every position a read reports, a stream's too, which has no length of its own", () => {
   const capped = limited({ maxTextLength: 20 });
   const units = (text: string) =>
     pieces(text.length, A.replicate(1, text.length), (from, to) => Str.slice(from, to)(text));
@@ -258,7 +250,7 @@ describe("the text-length cap bounds every position a read reports", () => {
             A.map(
               Result.mapBoth({
                 onSuccess: (slice) => slice.cells,
-                onFailure: (error) => A.map(error.diagnostics, (fatal) => summary(fatal.finding)),
+                onFailure: (error) => A.map(error.diagnostics, (fatal) => kindAndCapOf(fatal.finding)),
               })
             )
           )
@@ -306,39 +298,38 @@ describe("the text-length cap bounds every position a read reports", () => {
   );
 });
 
-// One test at a time: the suites and tests of a file run concurrently, and the spies here would count other tests'
-// calls too.
-describe("linear cost", { concurrent: false }, () => {
+describe("linear cost (one test at a time: its spies would count concurrent tests' calls)", {
+  concurrent: false,
+}, () => {
   const wide = `${Str.repeat(40_000)("a,")}a\n`;
 
-  /** Runs `use` with a spy installed, and restores it however `use` ends. */
   const spying = <Spy extends { readonly mockRestore: () => void }, A, E>(
     spyOn: () => Spy,
     use: (spy: Spy) => Effect.Effect<A, E>
   ): Effect.Effect<A, E> =>
     Effect.acquireUseRelease(Effect.sync(spyOn), use, (spy) => Effect.sync(() => spy.mockRestore()));
 
-  /** What `effect` gives and how many machines it starts. */
   const machinesStarted = <A, E>(effect: Effect.Effect<A, E>) =>
     spying(
       () => vi.spyOn(Machine, "start"),
       (start) => Effect.map(effect, (value) => ({ value, started: start.mock.calls.length }))
     );
 
-  // Copying the open record into a new machine each piece took about 16 s here; one machine lives across the pieces.
-  it.effect("a record of 40,001 cells read in 8-character pieces is read by one machine", () =>
-    Effect.gen(function* () {
-      const { value: read, started } = yield* machinesStarted(
-        Effect.sync(() =>
-          Csv.parseBytesInPiecesResult(utf8(wide), { options: readWith(","), pieceChars: 8, onPiece: constVoid })
-        )
-      );
-      assertSuccess(
-        Result.map(read, (done) => done.table.records[0]?.length),
-        40_001
-      );
-      strictEqual(started, 1);
-    })
+  it.effect(
+    "a record of 40,001 cells read in 8-character pieces is read by one machine, not copied into a new one per piece (about 16 s)",
+    () =>
+      Effect.gen(function* () {
+        const { value: read, started } = yield* machinesStarted(
+          Effect.sync(() =>
+            Csv.parseBytesInPiecesResult(utf8(wide), { options: readWith(","), pieceChars: 8, onPiece: constVoid })
+          )
+        );
+        assertSuccess(
+          Result.map(read, (done) => done.table.records[0]?.length),
+          40_001
+        );
+        strictEqual(started, 1);
+      })
   );
 
   it.effect("the same record dripped through the text channel in 8-character chunks is read by one machine", () =>
@@ -353,11 +344,8 @@ describe("linear cost", { concurrent: false }, () => {
     })
   );
 
-  // The first text was rebuilt and re-read with every chunk, about 6 s of CPU for a 256K-character start fed one
-  // character at a time; now an undecided start is at most a BOM and `sep=X\r`, and the rest is held as the chunks
-  // that came, joined once.
   it.prop(
-    "the text channel holds an undecided start in at most 7 units, and the text after it as the chunks that came",
+    "the text channel holds an undecided start in at most 7 units (a BOM and a sep= line up to its CR), and the text after it as the chunks that came, joined once, not rebuilt per chunk (about 6 s for a 256K-character start)",
     [messyText, cuts],
     ([text, cutLengths]) => {
       for (const options of [readConfigs.detect, CsvReadOptions.make({ excelSepHint: true })]) {
@@ -385,25 +373,26 @@ describe("linear cost", { concurrent: false }, () => {
     runs
   );
 
-  // The detect window was copied whole with every chunk: 1 MiB in 256-byte chunks copied about 2 GiB.
-  it.effect("a wide detect window filled in small chunks copies each byte at most twice", () =>
-    Effect.gen(function* () {
-      const options = CsvReadOptions.make({ encoding: CsvDetectEncoding.make({ window: MAX_DETECT_WINDOW }) });
-      const bytes = utf8(Str.repeat(64 * 1024)("a,b\n"));
-      const chunks = pieces(bytes.length, A.replicate(256, bytes.length / 256 + 1), (from, to) =>
-        bytes.subarray(from, to)
-      );
-      const { streamed, copied } = yield* spying(
-        () => vi.spyOn(Uint8Array.prototype, "set"),
-        (set) =>
-          Effect.map(streamBytes(chunks, options), (streamed) => ({
-            streamed,
-            copied: Num.sumAll(A.map(set.mock.calls, ([source]) => source.length)),
-          }))
-      );
-      assertSuccess(Result.map(streamed, A.length), 64 * 1024);
-      assertTrue(copied <= 2 * bytes.length, `copied ${copied} bytes of ${bytes.length}`);
-    })
+  it.effect(
+    "a wide detect window filled in small chunks copies each byte at most twice, not the whole window per chunk (1 MiB in 256-byte chunks copied about 2 GiB)",
+    () =>
+      Effect.gen(function* () {
+        const options = CsvReadOptions.make({ encoding: CsvDetectEncoding.make({ window: MAX_DETECT_WINDOW }) });
+        const bytes = utf8(Str.repeat(64 * 1024)("a,b\n"));
+        const chunks = pieces(bytes.length, A.replicate(256, bytes.length / 256 + 1), (from, to) =>
+          bytes.subarray(from, to)
+        );
+        const { streamed, copied } = yield* spying(
+          () => vi.spyOn(Uint8Array.prototype, "set"),
+          (set) =>
+            Effect.map(streamBytes(chunks, options), (streamed) => ({
+              streamed,
+              copied: Num.sumAll(A.map(set.mock.calls, ([source]) => source.length)),
+            }))
+        );
+        assertSuccess(Result.map(streamed, A.length), 64 * 1024);
+        assertTrue(copied <= 2 * bytes.length, `copied ${copied} bytes of ${bytes.length}`);
+      })
   );
 
   it("a flood of warnings keeps the first maxWarnings and counts the rest in one WarningsTruncated", () => {
@@ -425,8 +414,7 @@ describe("linear cost", { concurrent: false }, () => {
     );
   });
 
-  // The property tests only sometimes mix line endings after the cap is spent, so this example always does.
-  it("a change of line ending past the cap is counted and not kept", () => {
+  it("a change of line ending past the cap is counted and not kept, pinned by example since the properties seldom mix line endings after the cap", () => {
     const read = Csv.parseResult("a,b\r\nc\r\nd,e\n", limited({ maxWarnings: 1 }));
     assertSuccess(
       Result.map(read, (done) => A.map(CsvRead.warnings(done), (warning) => warning.finding)),

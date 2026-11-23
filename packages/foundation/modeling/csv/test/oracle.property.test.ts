@@ -1,6 +1,3 @@
-// Strict mode against Effect's own `effect/encoding/Csv`, the only file that imports it: on RFC 4180 text both accept
-// the same records, on text with misplaced quotes both refuse, and each reads the other's output back unchanged.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvFixedDelimiter, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvRecord, CsvTable } from "@beep/csv/CsvTable.schema";
@@ -27,14 +24,13 @@ const effectWrite = (records: ReadonlyArray<ReadonlyArray<string>>) =>
     Effect.map((parts) => A.join(parts, ""))
   );
 
-// Records without blank lines: Effect reads a blank line differently only in what it counts.
-const Records = S.Array(CsvRecord.check(S.isMinLength(2)));
+const RecordsWithoutBlankLinesWhichEffectCountsDifferently = S.Array(CsvRecord.check(S.isMinLength(2)));
 const quotey = Arbitrary.schema(S.Literals(['"', ",", "\n", "a", "b"]).pipe(S.Array));
 
 describe("strict mode agrees with effect/encoding/Csv", () => {
   it.effect.prop(
     "on Effect's own output, both read the same records",
-    [Arbitrary.schema(Records)],
+    [Arbitrary.schema(RecordsWithoutBlankLinesWhichEffectCountsDifferently)],
     ([records]) =>
       Effect.gen(function* () {
         const text = yield* effectWrite(records);
@@ -50,7 +46,7 @@ describe("strict mode agrees with effect/encoding/Csv", () => {
 
   it.effect.prop(
     "on our output, Effect reads the same records",
-    [Arbitrary.schema(Records)],
+    [Arbitrary.schema(RecordsWithoutBlankLinesWhichEffectCountsDifferently)],
     ([records]) =>
       Effect.gen(function* () {
         const streamed = yield* effectRead(Csv.stringify(CsvTable.make({ records })));

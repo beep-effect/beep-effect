@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $CliKitId.create("NotInteractive");
 
 /**
- * A command needed to prompt, but there is no terminal to prompt on.
- *
  * **Details**
  *
  * Exits `64` (BSD `EX_USAGE`) through core's `Runtime.errorExitCode` marker:

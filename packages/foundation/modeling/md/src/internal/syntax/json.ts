@@ -108,11 +108,9 @@ const projectDate = (value: Date, pointer: string, out: Array<JsonCoercion>): O.
 const projectArray = (value: ReadonlyArray<unknown>, pointer: string, out: Array<JsonCoercion>): S.Json =>
   A.map(value, (item, index) => {
     const itemPointer = childPointer(pointer, index);
-    const recorded = out.length;
+    const coercionsBeforeDroppedLeafElement = out.length;
     return O.getOrElse(project(item, itemPointer, out), () => {
-      // A dropped element is always a leaf, so it recorded exactly one
-      // coercion; replace it with the null substitution that really happened.
-      out.length = recorded;
+      out.length = coercionsBeforeDroppedLeafElement;
       out.push(JsonCoercion.make({ pointer: itemPointer, detail: "array element without a JSON form became null" }));
       return null;
     });

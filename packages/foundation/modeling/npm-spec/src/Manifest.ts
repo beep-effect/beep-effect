@@ -177,16 +177,9 @@ export class UnresolvedDependencyError extends S.TaggedError<
 
 const RawManifest = S.Record(S.String, S.Unknown);
 
-// The keys the wire codec partitions into typed members; everything else
-// rides through `rest`.
-const DEPENDENCY_FIELDS = HashSet.fromIterable<string>(DependencyField.literals);
+const DEPENDENCY_FIELDS_PARTITIONED_OUT_OF_REST = HashSet.fromIterable<string>(DependencyField.literals);
 
-// Build the open-record ↔ class wire codec: on decode the four dependency
-// field names become typed members and everything else lands in `rest`; on
-// encode `rest` flattens back to top-level keys so the wire shape never
-// carries a literal `rest` key. Mirrors `@beep/package-json`'s wire
-// transform at a smaller scale, without taking the dependency.
-const makeWire = (
+const makeOpenRecordWireCodecMirroringPackageJsonWithoutDependingOnIt = (
   Class: S.Codec<Manifest, Record<string, unknown> & { readonly rest?: Record<string, unknown> }>
 ): S.Codec<Manifest, { readonly [k: string]: unknown }> => {
   const wire = RawManifest.pipe(
@@ -200,17 +193,15 @@ const makeWire = (
           const known: Record<string, unknown> = {};
           const rest: Array<readonly [string, unknown]> = [];
           for (const [key, value] of R.toEntries(raw)) {
-            if (HashSet.has(DEPENDENCY_FIELDS, key)) known[key] = value;
+            if (HashSet.has(DEPENDENCY_FIELDS_PARTITIONED_OUT_OF_REST, key)) known[key] = value;
             else rest.push([key, value]);
           }
           return { ...known, rest: R.fromEntries(rest) };
         },
         encode: (encoded: Record<string, unknown> & { readonly rest?: Record<string, unknown> }) => {
           const { rest, ...known } = encoded;
-          // Typed fields win on a key collision: a hand-built Manifest whose
-          // `rest` smuggles a dependency-field key must not shadow the typed
-          // member on the wire.
-          return { ...(rest ?? {}), ...known };
+          const typedFieldsWinOverDependencyKeysSmuggledIntoRest = { ...(rest ?? {}), ...known };
+          return typedFieldsWinOverDependencyKeysSmuggledIntoRest;
         },
       })
     )
@@ -320,7 +311,8 @@ export class Manifest extends S.Class<Manifest, { readonly brand: unique symbol 
    * @category codecs
    * @since 0.0.0
    */
-  static readonly schema: S.Codec<Manifest, { readonly [k: string]: unknown }> = makeWire(Manifest);
+  static readonly schema: S.Codec<Manifest, { readonly [k: string]: unknown }> =
+    makeOpenRecordWireCodecMirroringPackageJsonWithoutDependingOnIt(Manifest);
 
   /**
    * Decode an unknown value into a {@link Manifest}, normalizing any
@@ -420,7 +412,7 @@ export class Manifest extends S.Class<Manifest, { readonly brand: unique symbol 
     CatalogAssemblyError | DependencyResolutionError | UnresolvedDependencyError,
     CatalogResolver | WorkspaceResolver
   > {
-    return resolveManifest(this);
+    return resolveManifestAsTheNamedSpanTheMethodDelegatesTo(this);
   }
 
   /**
@@ -445,15 +437,10 @@ export class Manifest extends S.Class<Manifest, { readonly brand: unique symbol 
   }
 }
 
-// The resolution walk behind `Manifest.resolve`, module-private so the
-// instance method carries a named span (`Effect.fn` wraps functions; the
-// method delegates — the Package.ts house pattern).
-const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manifest) {
+const resolveManifestAsTheNamedSpanTheMethodDelegatesTo = Effect.fn("Manifest.resolve")(function* (manifest: Manifest) {
   const catalogs = yield* CatalogResolver;
   const workspaces = yield* WorkspaceResolver;
-  // Only the fields present on the input land on the output — an optionalKey
-  // field must never be spread in as an explicit `undefined`.
-  const output: { [K in DependencyField]?: Record<string, string> } = {};
+  const onlyPresentFieldsNeverAnExplicitUndefined: { [K in DependencyField]?: Record<string, string> } = {};
   for (const field of DependencyField.literals) {
     const section = manifest[field];
     if (section === undefined) continue;
@@ -473,10 +460,6 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
           return [dependency, range.value] as const;
         }
         if (DependencySpecifier.isWorkspace(specifier)) {
-          // pnpm's alias form (`workspace:<name>@<range>`) resolves the TARGET
-          // package's version; the plain form resolves the map key's. The error
-          // names whichever package the lookup actually missed, with the
-          // original specifier preserved.
           const target = O.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => dependency);
           const version = yield* workspaces.versionOf(target);
           if (O.isNone(version)) {
@@ -493,10 +476,10 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
       }),
       { concurrency: 1 }
     );
-    output[field] = R.fromEntries(resolved);
+    onlyPresentFieldsNeverAnExplicitUndefined[field] = R.fromEntries(resolved);
   }
   return Manifest.make({
-    ...output,
+    ...onlyPresentFieldsNeverAnExplicitUndefined,
     ...O.getSomesStruct({ rest: O.fromUndefinedOr(manifest.rest) }),
   });
 });

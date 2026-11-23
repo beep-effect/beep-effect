@@ -1,11 +1,3 @@
-// CatalogAssemblyError.message renders the cause's message after the summary,
-// because the cause is where the actionable detail lives (effected#842). Each
-// case below is a cause shape `@beep/repo-workspaces` really produces: the
-// resolution ladder's not-installed and ambiguous messages, a pnpmfile's
-// ERR_MODULE_NOT_FOUND, a throwing hook, a hook throwing a bare string, and a
-// transport failure that is itself an assembly error (recognized by type, not
-// by its text containing the summary).
-
 import { CatalogAssemblyError } from "@beep/npm-spec/CatalogAssemblyError";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -15,7 +7,7 @@ import * as Str from "effect/String";
 const NAME = "@effected/pnpm-plugin-effect";
 const SUMMARY = `Failed to assemble catalogs from hooks ${NAME}`;
 
-describe("CatalogAssemblyError.message", () => {
+describe("CatalogAssemblyError.message appends the cause's message (effected#842), over cause shapes @beep/repo-workspaces really produces", () => {
   it("appends the ladder's not-installed message, remediation included", () => {
     const detail =
       `config dependency ${NAME}@0.11.1 is not installed: node_modules/.pnpm-config/${NAME} holds version 0.11.2, ` +
@@ -91,17 +83,18 @@ describe("CatalogAssemblyError.message", () => {
   });
 });
 
-// Cause encoding must keep the diagnostic information used outside this process.
-it.effect("CatalogAssemblyError encodes the originating cause stack", () =>
-  Effect.gen(function* () {
-    const cause = new Error("unreadable catalog");
-    const stack = cause.stack;
-    if (stack === undefined) assert.fail("expected the originating Error stack");
-    const encoded = yield* S.encodeEffect(CatalogAssemblyError)(
-      CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause })
-    );
-    assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
-  })
+it.effect(
+  "CatalogAssemblyError encodes the originating cause stack, diagnostic information used outside this process",
+  () =>
+    Effect.gen(function* () {
+      const cause = new Error("unreadable catalog");
+      const stack = cause.stack;
+      if (stack === undefined) assert.fail("expected the originating Error stack");
+      const encoded = yield* S.encodeEffect(CatalogAssemblyError)(
+        CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause })
+      );
+      assert.deepStrictEqual(encoded.cause, { name: cause.name, message: cause.message, stack });
+    })
 );
 
 describe("CatalogAssemblyError source projection", () => {

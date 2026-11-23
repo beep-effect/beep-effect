@@ -59,8 +59,6 @@ const isNonEmptyStringKeys = S.is(NonEmptyStringKeys);
 // input is opaque unknown data: equivalence is declared diagnostic identity, input stays payload.
 
 /**
- * Thrown when a struct expected to have at least one string key is empty.
- *
  * **Example** (EmptyStructError instance)
  *
  * ```ts
@@ -709,8 +707,6 @@ export const fromEntries = <const E extends readonly [PropertyKey, unknown]>(ent
 };
 
 /**
- * Re-export of all helpers from `effect/Struct`.
- *
  * **Example** (Import effect Struct helpers)
  *
  * ```ts
