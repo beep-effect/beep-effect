@@ -1105,15 +1105,44 @@ const skipReasonFor = (
     stateSkipReason(candidate, ageHours, cleanliness),
   ]);
 
+const sameCanonicalPath = (left: O.Option<string>, right: O.Option<string>): boolean =>
+  O.isSome(left) && O.isSome(right) && Str.Equivalence(left.value, right.value);
+
+const gitResolvesCheckout = Effect.fnUntraced(function* (
+  checkoutPath: string
+): Effect.fn.Return<
+  boolean,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git | FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const git = yield* Git;
+  const gitDir = yield* gitCheckoutDirectory(checkoutPath);
+  if (O.isNone(gitDir)) {
+    return false;
+  }
+  const [expectedRoot, expectedCommonDir, resolvedRoot, resolvedCommonDir] = yield* Effect.all(
+    [
+      fs.realPath(checkoutPath).pipe(Effect.option),
+      fs.realPath(gitDir.value).pipe(Effect.option),
+      git.repoRoot(checkoutPath).pipe(Effect.flatMap(fs.realPath), Effect.option),
+      git.commonDir(checkoutPath).pipe(Effect.flatMap(fs.realPath), Effect.option),
+    ],
+    { concurrency: 1 }
+  );
+  return sameCanonicalPath(expectedRoot, resolvedRoot) && sameCanonicalPath(expectedCommonDir, resolvedCommonDir);
+});
+
 const gitCheckoutCleanlinessSkip = Effect.fnUntraced(function* (
   checkoutPath: string
 ): Effect.fn.Return<
   O.Option<TmpfsReapSkipReason>,
   never,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git | FileSystem.FileSystem | Path.Path
 > {
   const overrides = yield* Effect.forEach(GIT_REPOSITORY_LOCATION_VARIABLES, configuredPath, { concurrency: 1 });
-  if (A.some(overrides, O.isSome)) {
+  const resolvesCheckout = A.some(overrides, O.isSome) ? false : yield* gitResolvesCheckout(checkoutPath);
+  if (!resolvesCheckout) {
     return O.some("git-environment-override");
   }
   const git = yield* Git;
@@ -1144,7 +1173,7 @@ const gitCheckoutChildCleanliness = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<readonly [string, O.Option<TmpfsReapSkipReason>]>,
   never,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git | FileSystem.FileSystem | Path.Path
 > {
   return yield* Effect.forEach(
     A.filter(candidates, (candidate) => Str.Equivalence(candidate.reapClass, "git-checkout")),

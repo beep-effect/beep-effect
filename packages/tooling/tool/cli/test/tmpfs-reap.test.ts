@@ -1,6 +1,7 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { Git } from "@beep/git/Git";
+import { NotARepositoryError } from "@beep/git/Git.errors";
 import { resolveBeepCacheRoot, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { runTmpfsReap, TmpfsReapReport } from "@beep/repo-cli/test/Worktree";
 import { runTmpfsWorktreesStep } from "@beep/repo-cli/test/Yeet";
@@ -2113,7 +2114,7 @@ describe("tmpfs reap", () => {
             readLink: (target) => {
               if (!Str.Equivalence(target, gitMarker)) return fs.readLink(target);
               gitMarkerReadLinkCount += 1;
-              return gitMarkerReadLinkCount > 1 ? Effect.succeed("raced-git-marker") : fs.readLink(target);
+              return gitMarkerReadLinkCount > 2 ? Effect.succeed("raced-git-marker") : fs.readLink(target);
             },
           });
 
@@ -2151,6 +2152,55 @@ describe("tmpfs reap", () => {
           );
           expect(candidateByPath(report, fixture.depthOneClone).skipReason).toBe("git-environment-override");
           expect(candidateByPath(report, fixture.probesParent).skipReason).toBe("git-environment-override");
+        })
+      )
+    );
+    it.effect("refuses and keeps every checkout when Git resolves a different repository than the one on disk", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const git = yield* Git;
+          const fixture = yield* makeGitCheckoutFixture(root);
+          const redirectedCommonDir = path.join(root, "origin", ".git");
+          const report = yield* runTmpfsReap({
+            apply: true,
+            cacheRoot: fixture.cacheRoot,
+            classes: ["git-checkout", "git-checkout-parent"],
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot: fixture.tmpRoot,
+          }).pipe(Effect.provideService(Git, { ...git, commonDir: () => Effect.succeed(redirectedCommonDir) }));
+          expect(report.reapedCount).toBe(0);
+          expect(candidateByPath(report, fixture.depthOneClone).skipReason).toBe("git-environment-override");
+          expect(candidateByPath(report, fixture.probesParent).skipReason).toBe("git-environment-override");
+          expect(candidateByPath(report, fixture.dirtyClone).skipReason).toBe("git-environment-override");
+          const kept = yield* Effect.forEach(
+            [fixture.depthOneClone, fixture.probesParent, path.join(fixture.dirtyClone, "untracked-notes.txt")],
+            (candidate) => fs.exists(candidate),
+            { concurrency: 1 }
+          );
+          expect(kept).toEqual([true, true, true]);
+        })
+      )
+    );
+    it.effect("refuses every checkout when Git cannot report which repository a checkout resolves to", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const fixture = yield* makeGitCheckoutFixture(root);
+          const report = yield* runTmpfsReap({
+            cacheRoot: fixture.cacheRoot,
+            classes: ["git-checkout"],
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot: fixture.tmpRoot,
+          }).pipe(
+            Effect.provideService(Git, {
+              ...git,
+              repoRoot: (cwd: string) => Effect.fail(NotARepositoryError.make({ cwd })),
+            })
+          );
+          expect(candidateByPath(report, fixture.depthOneClone).skipReason).toBe("git-environment-override");
+          expect(A.every(report.candidates, (candidate) => candidate.skipReason !== undefined)).toBe(true);
         })
       )
     );
