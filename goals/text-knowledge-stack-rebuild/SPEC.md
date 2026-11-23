@@ -1741,7 +1741,7 @@ Reverse: Return the first conflict found and restrict L2-1 commutativity to comp
 
 ### P3: the nlp Handoff and Ontology subpaths are deleted; UnitInterval consumers import @beep/schema/UnitInterval, 2026-11-22
 
-The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so `packages/foundation/modeling/nlp/src/Handoff`, its test and the `./Handoff` exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
+The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so the `@beep/nlp` Handoff module, its test and the package's Handoff exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
 
 Ontology `Kind` (0 consumers) was to fold into the kind registry. The structure kinds' containment levels replace its poset, and its `Document`, `Token` and `Character` kinds have no annotation kind and no consumer, so it is deleted rather than ported. Semantic-loss row: those three kinds. The sums are re-measured in the census at the P3 base.
 
