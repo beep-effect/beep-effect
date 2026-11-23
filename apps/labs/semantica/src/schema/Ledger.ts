@@ -1,9 +1,11 @@
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
 import { $SemanticaId } from "@beep/identity/packages";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { SourceDocument } from "@/schema/Document";
 import { ExtractOutcome } from "@/schema/Evidence";
 import { RunId } from "@/schema/Ids";
+import { LegacyConfidenceImport } from "@/schema/LedgerEvidence";
 import { ProvenanceEvent } from "@/schema/Provenance";
 import { Chunk, ParseOutcome } from "@/schema/Text";
 
@@ -43,6 +45,8 @@ export class LedgerDocumentSnapshot extends S.Opaque<LedgerDocumentSnapshot, { r
  *
  * Extracted batches retain claims and degraded claims per lane; document rows
  * retain every parse outcome, including expected malformed F1 fixtures.
+ * `legacyConfidence` keeps the stored scalar of every claim read from a
+ * `ledger-evidence/v1` row, whose projected signal is absent `legacy-unknown`.
  *
  * **Example** (Inspect the run field)
  *
@@ -60,6 +64,7 @@ export class LedgerSnapshot extends S.Opaque<LedgerSnapshot, { readonly brand: u
     batches: S.Array(ExtractOutcome),
     documents: S.Array(LedgerDocumentSnapshot),
     events: S.Array(ProvenanceEvent),
+    legacyConfidence: S.Array(LegacyConfidenceImport).pipe(S.withConstructorDefault(Effect.succeed([]))),
     run: RunId,
   }).pipe(
     $I.annoteSchema("LedgerSnapshot", {

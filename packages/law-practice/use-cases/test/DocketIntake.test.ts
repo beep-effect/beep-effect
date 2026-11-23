@@ -6,6 +6,7 @@
  */
 import { DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import {
+  compareReadings,
   DocketCalendar,
   DocketIntake,
   DocketIntakeConfig,
@@ -26,6 +27,7 @@ import {
   DocketTrackedDates,
   DocketWrittenEntry,
   ExtractorFieldResponse,
+  IntakeFailed,
   MatterAmbiguous,
   MatterNotFound,
   MatterSuggested,
@@ -36,7 +38,9 @@ import {
   ParalegalNotDocketItem,
   ParalegalRevision,
   ReviewFinding,
+  ReviewRound,
   SecretaryReview,
+  StoredDeterministicCheck,
   TrackedDate,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { addDays, isAfter, LocalDate, equals as sameDate } from "@beep/schema/LocalDate";
@@ -221,6 +225,7 @@ type Script = {
   readonly calendarDown: boolean;
   readonly entryLinks: boolean;
   readonly documents: boolean;
+  readonly documentText: O.Option<string>;
   readonly critique: (input: CritiqueInput) => Effect.Effect<ReadonlyArray<ReviewFinding>, DocketIntakeError>;
   readonly enter: (messageId: string) => Effect.Effect<ParalegalEntry, DocketIntakeError>;
   readonly matter: Effect.Effect<MatterLookupResult, DocketIntakeError>;
@@ -243,6 +248,7 @@ const defaultScript: Script = {
   calendarDown: false,
   entryLinks: true,
   documents: true,
+  documentText: O.none(),
   critique: () => Effect.succeed([]),
   enter: () => Effect.succeed(datedEntry()),
   matter: Effect.succeed(MatterUnique.make({ client: O.some("0000"), familyKey: "0000.0001", verified: true })),
@@ -359,7 +365,13 @@ const portsLayer = Layer.mergeAll(
         sourceDocuments: Effect.fn("FakeMailbox.sourceDocuments")(function* () {
           const script = yield* Ref.get(harness.script);
           return script.documents
-            ? [DocketSourceDocument.make({ bytes: new Uint8Array([1, 2, 3]), contentType: "application/pdf" })]
+            ? [
+                DocketSourceDocument.make({
+                  bytes: new Uint8Array([1, 2, 3]),
+                  contentType: "application/pdf",
+                  text: script.documentText,
+                }),
+              ]
             : [];
         }),
       });
@@ -1457,7 +1469,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         expect(A.map(traceOf(outcome), traceRow)).toStrictEqual([
           {
             agreed: ["classification", "mail-date", "matter-references"],
-            checks: ["extractor:values-appear-in-cited-text"],
+            checks: ["extractor:values-appear-in-cited-text", "extractor:cited-span-exists"],
             critic: true,
             defended: [],
             disagreed: ["response-period", "due-date"],
@@ -1886,7 +1898,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
   it.layer(
     testLayer(
-      { enter: statedEntry, review: () => Effect.succeed(inconsistentReview) },
+      { documentText: O.some(CITED), enter: statedEntry, review: () => Effect.succeed(inconsistentReview) },
       { review: DocketReviewConfig.make({ maxRounds: 1 }) }
     ),
     { timeout: "5 seconds" }
@@ -1919,7 +1931,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
   it.layer(
     testLayer(
-      { enter: statedEntry, review: () => Effect.succeed(inconsistentReview) },
+      { documentText: O.some(CITED), enter: statedEntry, review: () => Effect.succeed(inconsistentReview) },
       { review: DocketReviewConfig.make({ acceptThreshold: UnitInterval.make(0.3), maxRounds: 1 }) }
     ),
     { timeout: "5 seconds" }
@@ -2618,6 +2630,83 @@ describe("@beep/law-practice-use-cases DocketIntake needs-review identity", () =
         expect(outcome.candidateDates).toStrictEqual([]);
         assertNone(outcome.matter);
         assertNone(outcome.docket);
+      })
+    );
+  });
+  it.layer(testLayer({}, { review: DocketReviewConfig.make({ maxRounds: 1 }) }), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "keeps a citation it cannot check against an unreadable attachment unknown on the urgent tentative entry",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(oldMessage("m-unknown"), TODAY);
+        const entries = yield* entriesOf;
+        const flagged = A.head(entries);
+
+        expect(reasonOf(outcome)).toBe("deterministic-failure");
+        expect(
+          A.map(traceOf(outcome), (round) => [
+            round.gatePassed,
+            A.map(round.failedChecks, (check) => `${check.side}:${check.check}:${check.result._tag}`),
+          ])
+        ).toStrictEqual([[false, ["extractor:cited-span-exists:Unknown"]]]);
+        expect(A.map(entries, (entry) => [entry.kind, entry.tentative])).toStrictEqual([["needs-review", true]]);
+        assertTrue(
+          O.exists(flagged, (entry) =>
+            Str.includes("- unknown check (extractor): cited-span-exists: document-text-unavailable")(entry.bodyText)
+          )
+        );
+        assertTrue(O.exists(flagged, (entry) => !Str.includes("- failed check")(entry.bodyText)));
+      })
+    );
+  });
+
+  it.layer(testLayer({ documents: false }), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "runs the checks of a resumed round again instead of trusting a stored docket-check/v1 Boolean",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+        const resumed = message("m-resumed");
+        const historical = yield* S.decodeEffect(StoredDeterministicCheck)({
+          check: "cited-span-exists",
+          passed: false,
+        });
+        const storedRound = ReviewRound.make({
+          agreement: compareReadings(datedEntry(), agreeingReview),
+          checks: [historical],
+          entry: datedEntry(),
+          findings: [],
+          index: 1,
+          reading: agreeingReview,
+          score: UnitInterval.make(1),
+        });
+        yield* Ref.update(
+          harness.saves,
+          A.append(
+            DocketIntakeState.make({
+              ledger: {
+                [resumed.messageId]: DocketLedgerRecord.make({
+                  attempts: 0,
+                  outcome: IntakeFailed.make({ messageId: resumed.messageId, stage: "review" }),
+                  processedOn: TODAY,
+                  receivedAt: resumed.receivedAt,
+                  review: DocketReviewProgress.makeOption({ rounds: [storedRound] }),
+                }),
+              },
+            })
+          )
+        );
+
+        const outcome = yield* intake.processMessage(resumed, TODAY);
+        const revises = yield* Ref.get(harness.revises);
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        expect(revises).toHaveLength(0);
+        assertSome(
+          O.map(reviewOf(outcome), (review) => [review.status, review.rounds]),
+          ["accepted", 1]
+        );
       })
     );
   });

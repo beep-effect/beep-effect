@@ -16,11 +16,11 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
-  DeterministicCheck,
   ExtractorFieldResponse,
   FieldAgreement,
   ReviewFinding,
   ReviewVerdict,
+  StoredDeterministicCheck,
 } from "./DocketReview.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.schemas");
@@ -362,7 +362,9 @@ export class ParalegalRevision extends S.Opaque<ParalegalRevision, { readonly br
 export class ReviewRound extends S.Opaque<ReviewRound, { readonly brand: unique symbol }>()(
   S.Struct({
     agreement: S.Array(FieldAgreement).annotateKey({ description: "Agreement per compared field." }),
-    checks: S.Array(DeterministicCheck).annotateKey({ description: "Results of the deterministic checks." }),
+    checks: S.Array(StoredDeterministicCheck).annotateKey({
+      description: "Results of the deterministic checks; a stored docket-check/v1 Boolean reads as history.",
+    }),
     entry: ParalegalEntry.annotateKey({ description: "The extractor's entry for this round." }),
     extractorConfidence: opt(UnitInterval, "The extractor's own confidence; recorded, never scored."),
     extractorResponse: S.Array(ExtractorFieldResponse)

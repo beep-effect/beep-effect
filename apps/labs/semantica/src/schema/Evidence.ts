@@ -1,4 +1,4 @@
-import { Confidence } from "@beep/epistemics/Confidence";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { $SemanticaId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { TextAnchor, TextAnchorFields, TextAnchorVerificationReceipt, TextAnchorWidthCheck } from "@beep/text";
@@ -415,7 +415,7 @@ const EvidenceClaimFields = S.Struct({
   document: DocumentId,
   chunk: ChunkId,
   body: ClaimBody,
-  confidence: Confidence,
+  confidence: ExtractorConfidence,
   method: ExtractionMethod,
   model: ModelIdentity,
   cacheKey: S.OptionFromNullOr(Sha256Hex),
@@ -526,7 +526,8 @@ export class EvidenceClaim extends S.Opaque<EvidenceClaim, { readonly brand: uni
     .check(EvidenceClaimChecks)
     .pipe(
       $I.annoteSchema("EvidenceClaim", {
-        description: "Grounded claim with model, method, confidence, cache provenance, and verified anchor receipt.",
+        description:
+          "Grounded claim with model, method, a reported-or-absent confidence signal, cache provenance, and verified anchor receipt.",
       })
     )
 ) {}

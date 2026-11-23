@@ -31,7 +31,12 @@ import * as Str from "effect/String";
 import { ParalegalEntry, ReviewRound, SecretaryReview } from "./DocketIntake.schemas.ts";
 import {
   DeterministicCheck,
+  DeterministicCheckFailed,
   DeterministicCheckName,
+  DeterministicCheckPassed,
+  DeterministicCheckResult,
+  DeterministicCheckUnknown,
+  DeterministicCheckUnknownReason,
   DocketReviewConfig,
   ExtractorFieldResponse,
   FieldAgreement,
@@ -275,15 +280,26 @@ const passagesOf = (cited: string): ReadonlyArray<string> =>
 const searchableText = (source: ReviewSourceText): string =>
   collapse(`${source.messageText}\n${O.getOrElse(source.documentText, () => "")}`);
 
-// Without the text of an attached document, a citation that is not in the message cannot be
-// told from one that quotes the document, so it is not failed.
+const PASSED: DeterministicCheckResult = DeterministicCheckPassed.make({});
+const FAILED: DeterministicCheckResult = DeterministicCheckFailed.make({});
+const DOCUMENT_TEXT_UNAVAILABLE: DeterministicCheckResult = DeterministicCheckUnknown.make({
+  reason: "document-text-unavailable",
+});
+
+const resultOf = (passed: boolean): DeterministicCheckResult => (passed ? PASSED : FAILED);
+
 const isUnverifiable = (source: ReviewSourceText): boolean => source.hasDocuments && O.isNone(source.documentText);
 
-const citedSpanExists = (claims: { readonly citedText: O.Option<string> }, source: ReviewSourceText): boolean =>
-  isUnverifiable(source) ||
+const citedSpanFound = (claims: { readonly citedText: O.Option<string> }, source: ReviewSourceText): boolean =>
   holds(claims.citedText, (cited) =>
     A.every(passagesOf(cited), (passage) => pipe(searchableText(source), Str.includes(passage)))
   );
+
+const citedSpanResult = (
+  claims: { readonly citedText: O.Option<string> },
+  source: ReviewSourceText
+): DeterministicCheckResult =>
+  citedSpanFound(claims, source) ? PASSED : isUnverifiable(source) ? DOCUMENT_TEXT_UNAVAILABLE : FAILED;
 
 /**
  * Run the deterministic checks on an extractor entry.
@@ -296,8 +312,12 @@ const citedSpanExists = (claims: { readonly citedText: O.Option<string> }, sourc
  * `M/D/YYYY`, `Month D, YYYY` or `D Month YYYY`; a reported period as its
  * number (digits, or the English word for 1 to 12) plus its unit. An entry
  * that reports a date or a period and cites nothing fails. The cited text is compared line by line,
- * ignoring case and runs of whitespace. When a document is attached and its
- * text is not available, a citation that is not in the message is not failed.
+ * ignoring case and runs of whitespace. Each result is `Passed`, `Failed` or
+ * `Unknown`. A citation is first looked for in the text that is available, so
+ * one the message proves passes even when an attached document could not be
+ * read. A citation that is missing is `Unknown` (`document-text-unavailable`)
+ * while an attached document's text is unavailable, and `Failed` only when
+ * all of the relevant text was searched.
  *
  * **Example** (Check an entry that cites nothing)
  *
@@ -312,7 +332,7 @@ const citedSpanExists = (claims: { readonly citedText: O.Option<string> }, sourc
  *   ParalegalNotDocketItem.make({ rationale: "Newsletter." }),
  *   ReviewSourceText.make({ messageText: "Fixture body." })
  * );
- * console.log(checks.every((check) => check.passed)); // true
+ * console.log(checks.every((check) => check.result._tag === "Passed")); // true
  * ```
  *
  * @category utilities
@@ -324,10 +344,16 @@ export const runDeterministicChecks: {
 } = dual(2, (entry: ParalegalEntry, source: ReviewSourceText): ReadonlyArray<DeterministicCheck> => {
   const claims = claimsOf(entry);
   return [
-    DeterministicCheck.make({ check: "due-equals-mail-plus-period", passed: dueEqualsMailPlusPeriod(claims) }),
-    DeterministicCheck.make({ check: "due-not-before-mail", passed: dueNotBeforeMail(claims) }),
-    DeterministicCheck.make({ check: "values-appear-in-cited-text", passed: valuesAppearInCitedText(claims) }),
-    DeterministicCheck.make({ check: "cited-span-exists", passed: citedSpanExists(claims, source) }),
+    DeterministicCheck.make({
+      check: "due-equals-mail-plus-period",
+      result: resultOf(dueEqualsMailPlusPeriod(claims)),
+    }),
+    DeterministicCheck.make({ check: "due-not-before-mail", result: resultOf(dueNotBeforeMail(claims)) }),
+    DeterministicCheck.make({
+      check: "values-appear-in-cited-text",
+      result: resultOf(valuesAppearInCitedText(claims)),
+    }),
+    DeterministicCheck.make({ check: "cited-span-exists", result: citedSpanResult(claims, source) }),
   ];
 });
 
@@ -350,7 +376,7 @@ export const runDeterministicChecks: {
  *   SecretaryReview.make({ isDocketItem: true, notes: "Fixture." }),
  *   ReviewSourceText.make({ messageText: "Fixture body." })
  * );
- * console.log(checks.map((check) => [check.side, check.passed])); // [["critic", true], ["critic", true]]
+ * console.log(checks.map((check) => [check.side, check.result._tag])); // [["critic", "Passed"], ["critic", "Passed"]]
  * ```
  *
  * @category utilities
@@ -364,15 +390,24 @@ export const runCriticChecks: {
   (reading: SecretaryReview, source: ReviewSourceText): ReadonlyArray<DeterministicCheck> => [
     DeterministicCheck.make({
       check: "values-appear-in-cited-text",
-      passed: O.isNone(reading.citedText) || valuesAppearInCitedText(reading),
+      result: resultOf(O.isNone(reading.citedText) || valuesAppearInCitedText(reading)),
       side: "critic",
     }),
-    DeterministicCheck.make({ check: "cited-span-exists", passed: citedSpanExists(reading, source), side: "critic" }),
+    DeterministicCheck.make({ check: "cited-span-exists", result: citedSpanResult(reading, source), side: "critic" }),
   ]
 );
 
+const passedNow = (check: DeterministicCheck): boolean =>
+  check.provenance === "current" && DeterministicCheckResult.guards.Passed(check.result);
+
 /**
  * Whether every deterministic check of a round passed.
+ *
+ * **Details**
+ *
+ * Only a `Passed` result that was run now counts. A `Failed` or `Unknown`
+ * result keeps the gate closed, and so does a `docket-check/v1` Boolean read
+ * back from storage: historical `true` is never a fresh verification.
  *
  * **Example** (An empty list passes)
  *
@@ -385,8 +420,7 @@ export const runCriticChecks: {
  * @category utilities
  * @since 0.0.0
  */
-export const reviewGatePassed = (checks: ReadonlyArray<DeterministicCheck>): boolean =>
-  A.every(checks, (check) => check.passed);
+export const reviewGatePassed = (checks: ReadonlyArray<DeterministicCheck>): boolean => A.every(checks, passedNow);
 
 const isDocketEntry = S.is(ParalegalEntry.cases.ParalegalDocketEntry);
 
@@ -571,9 +605,9 @@ const quotedTextChecks = (
         DeterministicCheck.make({
           check: "values-appear-in-cited-text",
           field,
-          passed: valuesAppearInCitedText(quoted),
+          result: resultOf(valuesAppearInCitedText(quoted)),
         }),
-        DeterministicCheck.make({ check: "cited-span-exists", field, passed: citedSpanExists(quoted, source) }),
+        DeterministicCheck.make({ check: "cited-span-exists", field, result: citedSpanResult(quoted, source) }),
       ];
     }
   );
@@ -788,13 +822,41 @@ const quotedFieldReason = (check: DeterministicCheck, field: ReviewField): Dispu
       : "The value of this field does not appear in the text you quoted for it.",
 });
 
-const checkReason = (check: DeterministicCheck): DisputeReason =>
+const failedCheckReason = (check: DeterministicCheck): DisputeReason =>
   check.side === "critic"
     ? CRITIC_CHECK_REASON
     : O.match(check.field, {
         onNone: () => extractorCheckReason(check.check),
         onSome: (field) => quotedFieldReason(check, field),
       });
+
+const unreadableDocument: (reason: DeterministicCheckUnknownReason) => string = DeterministicCheckUnknownReason.match({
+  "document-text-unavailable": () => "the attached document's text could not be read to confirm it",
+});
+
+const unknownCheckReason = (check: DeterministicCheck, reason: DeterministicCheckUnknownReason): DisputeReason =>
+  check.side === "critic"
+    ? {
+        field: CRITIC_CHECK_REASON.field,
+        text: `The reviewer's own citation was not found in the message and ${unreadableDocument(reason)}, so the dates are read again.`,
+      }
+    : O.match(check.field, {
+        onNone: (): DisputeReason => ({
+          field: "source-document",
+          text: `The text you cited was not found in the message, and ${unreadableDocument(reason)}.`,
+        }),
+        onSome: (field): DisputeReason => ({
+          field,
+          text: `The text you quoted for this field was not found in the message, and ${unreadableDocument(reason)}.`,
+        }),
+      });
+
+const checkReason = (check: DeterministicCheck): O.Option<DisputeReason> =>
+  DeterministicCheckResult.match(check.result, {
+    Failed: () => O.some(failedCheckReason(check)),
+    Passed: () => O.none(),
+    Unknown: ({ reason }) => O.some(unknownCheckReason(check, reason)),
+  });
 
 const disputeReasons = (round: ReviewRound): ReadonlyArray<DisputeReason> => [
   ...A.map(disagreedFields(round), (field): DisputeReason => ({ field, text: DISAGREEMENT_REASON })),
@@ -805,10 +867,7 @@ const disputeReasons = (round: ReviewRound): ReadonlyArray<DisputeReason> => [
       text: finding.reason,
     })
   ),
-  ...A.map(
-    A.filter(round.checks, (check) => !check.passed),
-    checkReason
-  ),
+  ...A.getSomes(A.map(round.checks, checkReason)),
 ];
 
 /**

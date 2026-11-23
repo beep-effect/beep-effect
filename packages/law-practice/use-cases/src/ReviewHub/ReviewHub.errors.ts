@@ -11,7 +11,13 @@ import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("ReviewHub/ReviewHub.errors");
 
-const ReviewHubErrorCodeBase = LiteralKit(["not-found", "locked", "unknown-option", "store-unavailable"]);
+const ReviewHubErrorCodeBase = LiteralKit([
+  "not-found",
+  "locked",
+  "unknown-option",
+  "store-unavailable",
+  "repair-required",
+]);
 
 /**
  * Stable code of a review hub tool failure.
@@ -22,7 +28,9 @@ const ReviewHubErrorCodeBase = LiteralKit(["not-found", "locked", "unknown-optio
  *   verdicts to lock;
  * - `locked`: the batch is already locked;
  * - `unknown-option`: the answer names an option the question does not offer;
- * - `store-unavailable`: a store could not be read or written; retry later.
+ * - `store-unavailable`: a store could not be read or written; retry later;
+ * - `repair-required`: the item is a legacy import whose quote must be
+ *   repaired before an answer is recorded.
  *
  * **Example** (Guard a failure code)
  *
@@ -37,7 +45,8 @@ const ReviewHubErrorCodeBase = LiteralKit(["not-found", "locked", "unknown-optio
  */
 export const ReviewHubErrorCode = ReviewHubErrorCodeBase.pipe(
   $I.annoteSchema("ReviewHubErrorCode", {
-    description: "Stable code of a review hub tool failure: not-found, locked, unknown-option or store-unavailable.",
+    description:
+      "Stable code of a review hub tool failure: not-found, locked, unknown-option, store-unavailable or repair-required.",
   }),
   SchemaUtils.withLiteralKitStatics(ReviewHubErrorCodeBase)
 );

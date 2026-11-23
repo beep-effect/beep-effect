@@ -1999,6 +1999,22 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Drop the Succession event kind and read native cores without imported predecessors; old v1 lines and v2 cores are unchanged.
 
+### P4: historical docket checks carry provenance and never pass the gate, 2026-11-23
+
+DeterministicCheck gains provenance (current or docket-check/v1) instead of a fourth result case. Stored v1 Boolean checks read through a private frozen projection as Passed or Failed tagged docket-check/v1. Only a current Passed check passes the review gate, and resumed rounds re-run their checks, so a historical true is never a fresh verification.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Drop the provenance field and read v1 Booleans as current results.
+
+### P4: an Unknown docket gate reuses the deterministic-failure terminal status, 2026-11-23
+
+A round whose gate is Unknown keeps the existing deterministic-failure terminal status (subject [CHECK FAILED]); its body shows a distinct line naming the unknown check, its side and the reason document-text-unavailable, so the explanation never asserts a disproved citation.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Add a dedicated terminal status literal for Unknown gates and route it separately.
+
 ### P4: evidence keeps position and a separate reported confidence signal, 2026-11-23
 
 epistemic tables own frozen current and legacy span codecs. Strict current rows split to TextAnchor and extractor-confidence signal; loose legacy rows derive endChar as startChar plus UTF-16 quote width. A row still failing current text constraints is a LegacyEvidenceUnresolved record retaining old fields and reason, never a verified position. A stored scalar is Present reported confidence with method legacy-reported, never a calibrated probability. New writes use a tagged position-and-signal JSON shape in the existing span column; old rows are never rewritten. Table row schemas are separated from domain read records; both query shapes are supported by the span SQL accessors and converters. Verification receipts and manifestation-key bytes are not reminted; association compares the recovered position only, and unresolved spans cannot verify. Frozen synthetic fixtures cover strict, loose-width, empty and over-bound quotes.
@@ -2061,6 +2077,30 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Version the party creation request and migrate callers without changing existing core identities or source assertion ids.
 
+### P4: the review hub lists legacy imports and refuses answers to them, 2026-11-23
+
+Unresolved legacy review items stay visible in hub queues for repair. Answering one fails with the typed ReviewItemRepairRequiredError (code repair-required), so admission and executable question writes refuse the imported case.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Hide imported items from the hub instead of listing them.
+
+### P4: review item upsert holds unresolved imports; repair is a separate port method, 2026-11-23
+
+ReviewItemStore.upsert returns the ids it held because their latest stored version is an unresolved legacy import, and never overwrites that import with a generated selector. The new repair method writes an explicit revision that retains the old bytes; writing an item equal to the stored current item is skipped. The docket question publisher logs held ids as a warning.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Fold repair into upsert behind an explicit flag.
+
+### P4: new review hub items.jsonl lines use a review-item/v2 envelope, 2026-11-23
+
+New items.jsonl lines are written as {format: review-item/v2, item}. Untagged v1 rows are read only through the frozen private ReviewItemLine reader, which projects nonempty quotes to QuoteSelector and empty ones to LegacyQuoteUnresolved; v1 bytes are never rewritten.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: No stored-data reversal is needed: v1 bytes are untouched; switching writes back means re-pointing the writer at the untagged v1 shape.
+
 ### P4: preserve ReviewHub quote imports across selector retirement, 2026-11-23
 
 ReviewHub items.jsonl persists ReviewItem, including SourceRef arrays directly and inside QuestionFact. Freeze representative synthetic v1 rows before migration. A private frozen untagged quote reader preserves exact/prefix/suffix and all locators. Nonempty exact becomes QuoteSelector; empty exact becomes LegacyQuoteUnresolved with raw data and field path. Any unresolved nested quote yields LegacyReviewItemImported, displayed for repair and refused by executable writes/admission. Read old and versioned v2 rows; append only current v2 items and preserve raw old bytes. Migrate SourceRef, ReviewItem, QuestionFact, DocketQuestions and all measured consumers in commit 7 with ReviewFiles.test.ts reopened-store, mixed-version, byte-digest and no-op replay tests.
@@ -2068,6 +2108,14 @@ ReviewHub items.jsonl persists ReviewItem, including SourceRef arrays directly a
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the private versioned reader and explicit repair path together while preserving old JSONL bytes.
+
+### P4: semantica v1 ledger scalars import as legacy-unknown with side-car raw values, 2026-11-23
+
+Every ledger-evidence/v1 claim, top-level or nested in a batch, reads as Absent legacy-unknown without consulting the provider cache, because the old ledger wrote 1 whenever confidence was missing. The stored number is kept as a LegacyConfidenceImport in LedgerSnapshot.legacyConfidence, not on the current claim. New writes are ledger-evidence/v2 envelopes, read only after the raw payload bytes match the stored digest. Degraded batch ids stay the digest of the plain outcome encoding, so ids do not change. Pattern readings carry the producer pin Engine{wink-nlp, 0.0.0}. A fresh reading that differs from a stored v1 row fails with immutable-payload-conflict instead of overwriting it; re-appending the projected outcome is a no-op. hosted-batch-v1.json stays frozen beside the new v2 snapshot.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Add a reader that proves a v1 scalar from the cached provider response and upgrades that claim to Present without rewriting stored bytes; drop legacyConfidence once no v1 rows remain.
 
 ### P4: missing confidence stays absent and docket unknown is not passed, 2026-11-23
 

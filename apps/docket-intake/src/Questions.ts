@@ -116,7 +116,9 @@ export const questionInput = ({ outcome }: DocketLedgerRecord): DocketQuestionIn
  * Every cycle raises a question for every needs-review record in the ledger,
  * from {@link questionInput}, and upserts them all. The store writes only
  * questions that changed, and a question's id is stable per message and
- * reason, so repeating a cycle adds nothing. A record pruned from the ledger
+ * reason, so repeating a cycle adds nothing. A question whose id is held
+ * behind an unresolved legacy review item is not written and is logged as a
+ * warning until the item is repaired. A record pruned from the ledger
  * leaves its last stored question as it was; `backfill-questions` names the
  * email of such questions stored before they carried it.
  *
@@ -150,7 +152,10 @@ export const makeDocketQuestionPublisherLayer = (
             const raised = yield* Effect.forEach(R.values(state.ledger), flow(questionInput, questions.raise), {
               concurrency: 1,
             });
-            yield* store.upsert(A.getSomes(raised));
+            const held = yield* store.upsert(A.getSomes(raised));
+            yield* Effect.logWarning("docket intake questions held behind unresolved review-item imports", {
+              held,
+            }).pipe(Effect.when(Effect.succeed(A.isReadonlyArrayNonEmpty(held))));
           },
           Effect.catchTags({
             DocketIntakeError: ({ stage }) => Effect.logError("docket intake questions were not raised", { stage }),

@@ -13,9 +13,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Ref from "effect/Ref";
 import { AnswerLog } from "../QuestionQueue/QuestionQueue.ports.ts";
-import { latestItems, ReviewItemStore } from "../ReviewItemStore/ReviewItemStore.ports.ts";
+import { latestItems, planReviewItemWrite, ReviewItemStore } from "../ReviewItemStore/ReviewItemStore.ports.ts";
 import { VerdictLog } from "../ReviewQueue/ReviewQueue.ports.ts";
-import type { AnswerRow, ReviewItem, VerdictRow } from "@beep/law-practice-domain";
+import type { AnswerRow, ReviewItem, StoredReviewItem, VerdictRow } from "@beep/law-practice-domain";
 
 // An append-only chunk of rows in a `Ref`: atomic appends, reads in append order.
 const appendOnlyRows = <Row>() =>
@@ -107,6 +107,55 @@ export const AnswerLogMemory: Layer.Layer<AnswerLog> = Layer.effect(
 );
 
 /**
+ * In-memory review-item store over the given stored versions, held in a `Ref`.
+ *
+ * **Details**
+ *
+ * Each build of the layer starts from `stored`, which may hold unresolved
+ * legacy imports. It never fails, plans every write with
+ * `planReviewItemWrite` and orders and replaces items with `latestItems`, as
+ * every adapter does.
+ *
+ * **Example** (Start from an imported item)
+ *
+ * ```ts
+ * import { ReviewItem } from "@beep/law-practice-domain"
+ * import { ReviewItemStore } from "@beep/law-practice-use-cases/ReviewItemStore"
+ * import { reviewItemStoreMemoryFrom } from "@beep/law-practice-use-cases/test"
+ * import * as Effect from "effect/Effect"
+ *
+ * const item = ReviewItem.cases["kg-answer"].make({ itemId: "kg-answer:1", text: "A synthetic answer.", sourceRefs: [] })
+ * const program = Effect.gen(function* () {
+ *   const store = yield* ReviewItemStore
+ *   console.log((yield* store.list).length) // 1
+ * }).pipe(Effect.provide(reviewItemStoreMemoryFrom([item])))
+ * ```
+ *
+ * @param stored - The stored versions the store starts from, in write order.
+ * @returns A layer of the in-memory store.
+ * @category testing
+ * @since 0.0.0
+ */
+export const reviewItemStoreMemoryFrom = (stored: ReadonlyArray<StoredReviewItem>): Layer.Layer<ReviewItemStore> =>
+  Layer.effect(
+    ReviewItemStore,
+    Effect.map(Ref.make(latestItems(stored)), (ref) => {
+      const write = (items: ReadonlyArray<ReviewItem>, repair: boolean) =>
+        Ref.modify(ref, (current) => {
+          const plan = planReviewItemWrite({ items, repair, stored: current });
+          return [plan.held, latestItems(A.appendAll(current, plan.write))] as const;
+        });
+      return ReviewItemStore.of({
+        list: Ref.get(ref),
+        repair: Effect.fn("ReviewItemStore.repair")(function* (items: ReadonlyArray<ReviewItem>) {
+          yield* write(items, true);
+        }),
+        upsert: Effect.fn("ReviewItemStore.upsert")((items: ReadonlyArray<ReviewItem>) => write(items, false)),
+      });
+    })
+  );
+
+/**
  * In-memory review-item store: the latest version of each item, held in a `Ref`.
  *
  * **Details**
@@ -133,14 +182,4 @@ export const AnswerLogMemory: Layer.Layer<AnswerLog> = Layer.effect(
  * @category testing
  * @since 0.0.0
  */
-export const ReviewItemStoreMemory: Layer.Layer<ReviewItemStore> = Layer.effect(
-  ReviewItemStore,
-  Effect.map(Ref.make<ReadonlyArray<ReviewItem>>([]), (ref) =>
-    ReviewItemStore.of({
-      list: Ref.get(ref),
-      upsert: Effect.fn("ReviewItemStore.upsert")((items: ReadonlyArray<ReviewItem>) =>
-        Ref.update(ref, (stored) => latestItems(A.appendAll(stored, items)))
-      ),
-    })
-  )
-);
+export const ReviewItemStoreMemory: Layer.Layer<ReviewItemStore> = reviewItemStoreMemoryFrom([]);

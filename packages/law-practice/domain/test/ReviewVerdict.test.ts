@@ -19,12 +19,12 @@ const encodeRef = S.encodeEffect(SourceRef);
 const decodeRow = S.decodeUnknownEffect(VerdictRow);
 const encodeRow = S.encodeEffect(VerdictRow);
 
-const minimalRef = { boxFileId: "1234567890", quote: { exact: "a hinge coupling the lid to the base" } };
+const minimalRef = { boxFileId: "1234567890", quote: { _tag: "Quote", exact: "a hinge coupling the lid to the base" } };
 
 const fullRef = {
   boxFileId: "1234567890",
   page: 3,
-  quote: { exact: "a hinge", prefix: "comprising ", suffix: " coupling the lid" },
+  quote: { _tag: "Quote", exact: "a hinge", prefix: "comprising ", suffix: " coupling the lid" },
   crop: { page: 3, mimeType: "image/png", width: 640, height: 120, data: "iVBORw0KGgo=" },
 };
 

@@ -1,6 +1,7 @@
 // @vitest-environment node
 
-import { Confidence } from "@beep/epistemics/Confidence";
+import { Confidence, ReportedConfidence } from "@beep/epistemics/Confidence";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -102,6 +103,7 @@ import {
   ProvenanceEventId,
   RunId,
 } from "@/schema/Ids";
+import { LedgerEvidenceV1Outcome } from "@/schema/LedgerEvidence";
 import { MediaType } from "@/schema/MediaType";
 import { ModelIdentity, ProviderFamily, TaskType } from "@/schema/Model";
 import { EventBody, ProvenanceEvent } from "@/schema/Provenance";
@@ -362,7 +364,13 @@ const evidenceClaim = EvidenceClaim.make({
   document: documentId,
   chunk: chunkId,
   body: entityBody,
-  confidence: Confidence.make(0.9),
+  confidence: ExtractorConfidence.cases.Present.make({
+    value: ReportedConfidence.make({
+      value: Confidence.make(0.9),
+      method: "hosted-langextract",
+      producer: Option.none(),
+    }),
+  }),
   method: "hosted-langextract",
   model: hostedModel,
   cacheKey: Option.some(providerCacheKey),
@@ -373,7 +381,13 @@ const secondEvidenceClaim = EvidenceClaim.make({
   document: documentId,
   chunk: chunkId,
   body: secondEntityBody,
-  confidence: Confidence.make(0.8),
+  confidence: ExtractorConfidence.cases.Present.make({
+    value: ReportedConfidence.make({
+      value: Confidence.make(0.8),
+      method: "hosted-langextract",
+      producer: Option.none(),
+    }),
+  }),
   method: "hosted-langextract",
   model: hostedModel,
   cacheKey: Option.some(providerCacheKey),
@@ -384,7 +398,13 @@ const relationClaim = EvidenceClaim.make({
   document: documentId,
   chunk: chunkId,
   body: relationBody,
-  confidence: Confidence.make(0.7),
+  confidence: ExtractorConfidence.cases.Present.make({
+    value: ReportedConfidence.make({
+      value: Confidence.make(0.7),
+      method: "hosted-langextract",
+      producer: Option.none(),
+    }),
+  }),
   method: "hosted-langextract",
   model: hostedModel,
   cacheKey: Option.some(providerCacheKey),
@@ -1483,13 +1503,13 @@ describe("F1 degraded-kind subset", () => {
   });
 });
 
-const p4ledgerevidencev1json = S.fromJsonString(S.Array(ExtractOutcome), { space: 2 });
+const p4ledgerevidencev1json = S.fromJsonString(S.Array(LedgerEvidenceV1Outcome), { space: 2 });
 
 it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
   timeout: "10 seconds",
   excludeTestServices: true,
 })("P4 frozen formats", (it) => {
-  it.effect("P4 format freeze: ledger-evidence-v1.json retains today's codec and raw digest", () =>
+  it.effect("P4 format freeze: ledger-evidence-v1.json retains the frozen v1 codec and raw digest", () =>
     Effect.gen(function* () {
       const fs = yield* P4FileSystem.FileSystem;
       const fixtureRoot = yield* fs.realPath(".");

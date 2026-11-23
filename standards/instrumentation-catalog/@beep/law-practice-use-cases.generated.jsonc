@@ -64,6 +64,7 @@
     {"name":"ReviewHub.openItems","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ReviewHub.recordAnswer","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ReviewHub.recordVerdict","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
+    {"name":"ReviewItemStore.repair","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ReviewItemStore.upsert","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ReviewQueue.lockBatch","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},
     {"name":"ReviewQueue.openItems","owner":"@beep/law-practice-use-cases","family":"slice","conforms":true},

@@ -1,7 +1,8 @@
 // @vitest-environment node
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { Confidence } from "@beep/epistemics/Confidence";
+import { Confidence, ReportedConfidence } from "@beep/epistemics/Confidence";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -312,7 +313,13 @@ const makeEvidenceClaim = (id: typeof entityId, body: typeof entityBody | typeof
     body,
     cacheKey: Option.none(),
     chunk: claimChunk,
-    confidence: Confidence.make(0.9),
+    confidence: ExtractorConfidence.cases.Present.make({
+      value: ReportedConfidence.make({
+        value: Confidence.make(0.9),
+        method: "hosted-langextract",
+        producer: Option.none(),
+      }),
+    }),
     document,
     id,
     method: "hosted-langextract",
