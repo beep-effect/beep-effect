@@ -242,6 +242,9 @@ describe("main feed lookup", () => {
   });
 });
 
+const CENTRAL_DIRECTORY_SIGNATURE = 0x02014b50;
+const CENTRAL_ORIGINAL_SIZE_OFFSET = 24;
+
 describe("feed artifact reader", () => {
   it.effect("refuses a body that is not a zip, and a zip with no task-outcome record", () =>
     Effect.gen(function* () {
@@ -267,6 +270,25 @@ describe("feed artifact reader", () => {
         )
       );
       assertInclude(bomb.message, "declares more than 8388608 bytes of JSON entries");
+    })
+  );
+
+  it.effect("refuses stored entries whose compressed size differs from their declared original size", () =>
+    Effect.gen(function* () {
+      const payload = bytes(Str.repeat(600 * 1024)(" "));
+      const zip = zipSync({
+        "record.json": bytes(v1Json("Labs")),
+        ...R.fromEntries(A.makeBy(3, (index) => [`pad-${index}.json`, [payload, { level: 0 }]] as const)),
+      });
+      const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
+      const centralHeaders = A.filter(
+        A.makeBy(zip.byteLength - 4, (offset) => offset),
+        (offset) => view.getUint32(offset, true) === CENTRAL_DIRECTORY_SIGNATURE
+      );
+      A.forEach(centralHeaders, (offset) => view.setUint32(offset + CENTRAL_ORIGINAL_SIZE_OFFSET, 2, true));
+      strictEqual(centralHeaders.length, 4);
+      const refused = yield* Effect.flip(readFeedArchive(zip, "stored", () => true));
+      assertInclude(refused.message, "stores entry pad-0.json uncompressed with a size that differs");
     })
   );
 

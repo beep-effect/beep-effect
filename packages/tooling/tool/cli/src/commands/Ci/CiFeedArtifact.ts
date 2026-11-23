@@ -7,10 +7,11 @@
  *
  * The main-feed lookup and `beep ci failures` both download a job's artifact
  * through `GitHubClient` and read it here. Only JSON entries up to 1 MiB
- * inflate, 8 MiB in all by their declared sizes: an archive declaring more is
- * refused before an entry past the limit inflates. A raw log never inflates:
- * only its size is read, from the zip's directory, so a job's agent console
- * can name it.
+ * inflate, 8 MiB in all, each counted at the larger of its compressed and
+ * declared sizes: an archive declaring more is refused before an entry past
+ * the limit inflates, and so is a stored entry whose two sizes differ. A raw
+ * log never inflates: only its size is read, from the zip's directory, so a
+ * job's agent console can name it.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -26,6 +27,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableRef from "effect/MutableRef";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -34,6 +36,7 @@ import * as Str from "effect/String";
 import { unzipSync } from "fflate";
 import { CiCommandError } from "./Ci.errors.ts";
 import { AnyTaskOutcomeRecord, GateFeedEntry } from "./CiTaskOutcomes.ts";
+import type { UnzipFileInfo } from "fflate";
 
 const $I = $RepoCliId.create("commands/Ci/CiFeedArtifact");
 
@@ -57,8 +60,12 @@ export const FEED_ARTIFACT_BYTES_MAX = 64 * 1024 * 1024;
 const ENTRY_INFLATE_BYTES_MAX = 1024 * 1024;
 const ARCHIVE_INFLATE_BYTES_MAX = 8 * ENTRY_INFLATE_BYTES_MAX;
 
-const inflatableJson = (file: { readonly name: string; readonly originalSize: number }): boolean =>
-  Str.endsWith(".json")(file.name) && file.originalSize <= ENTRY_INFLATE_BYTES_MAX;
+const extractedBytes = (file: UnzipFileInfo): number => Num.max(file.size, file.originalSize);
+
+const storedSizeMismatch = (file: UnzipFileInfo): boolean => file.compression === 0 && file.size !== file.originalSize;
+
+const inflatableJson = (file: UnzipFileInfo): boolean =>
+  Str.endsWith(".json")(file.name) && extractedBytes(file) <= ENTRY_INFLATE_BYTES_MAX;
 
 /**
  * One artifact of a workflow run, as `GET /actions/runs/{run_id}/artifacts`
@@ -240,19 +247,30 @@ export const readFeedArchive = Effect.fn("CiFeedArtifact.readFeedArchive")(funct
 ) {
   const sizes = MutableHashMap.empty<string, number>();
   const inflated = MutableRef.make(0);
+  const mismatched = MutableRef.make(O.none<string>());
   const entries = yield* Effect.try({
     try: () =>
       unzipSync(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), {
         filter: (file) => {
           MutableHashMap.set(sizes, file.name, file.originalSize);
+          const stored = storedSizeMismatch(file);
+          MutableRef.update(mismatched, (first) => (stored ? O.orElseSome(first, () => file.name) : first));
           const accepted =
-            inflatableJson(file) && MutableRef.get(inflated) + file.originalSize <= ARCHIVE_INFLATE_BYTES_MAX;
-          MutableRef.update(inflated, (total) => total + (inflatableJson(file) ? file.originalSize : 0));
+            !stored &&
+            inflatableJson(file) &&
+            MutableRef.get(inflated) + extractedBytes(file) <= ARCHIVE_INFLATE_BYTES_MAX;
+          MutableRef.update(inflated, (total) => total + (inflatableJson(file) ? extractedBytes(file) : 0));
           return accepted;
         },
       }),
     catch: CiCommandError.new(`Artifact ${name} is not a zip archive.`),
   });
+  const storedEntry = MutableRef.get(mismatched);
+  if (O.isSome(storedEntry)) {
+    return yield* CiCommandError.make({
+      message: `Artifact ${name} stores entry ${storedEntry.value} uncompressed with a size that differs from its declared original size; it was not read.`,
+    });
+  }
   if (MutableRef.get(inflated) > ARCHIVE_INFLATE_BYTES_MAX) {
     return yield* CiCommandError.make({
       message: `Artifact ${name} declares more than ${ARCHIVE_INFLATE_BYTES_MAX} bytes of JSON entries; none past the limit was inflated.`,

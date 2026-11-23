@@ -355,11 +355,10 @@ const regionOf: (log: YeetJobLogRead) => O.Option<string> = YeetJobLogRead.match
   Unreadable: () => O.none(),
 });
 
-const reportVerdicts = (feed: FeedArtifact): string =>
-  A.join(
-    A.map(feed.reports, (found) => A.headNonEmpty(consoleLines(ConsoleRequest.make({ report: found.record.report })))),
-    "\n"
-  );
+const verdictLines = (feed: FeedArtifact): ReadonlyArray<string> =>
+  A.map(feed.reports, (found) => A.headNonEmpty(consoleLines(ConsoleRequest.make({ report: found.record.report }))));
+
+const reportVerdicts = (feed: FeedArtifact): string => A.join(verdictLines(feed), "\n");
 
 const detailOf: (reading: JobReading) => O.Option<string> = CiJobReading.match({
   Reported: ({ feed }) => O.some(reportVerdicts(feed)),
@@ -377,6 +376,8 @@ const cutLine = (line: string): string =>
  *
  * The tail is kept because a failing step's cause sits next to its exit; the
  * lines left out are counted on one leading line that names the saved log.
+ * When even that line does not fit beside the frame, no line is returned, so
+ * the frame and region together never pass `agentBudget.maxChars`.
  *
  * **Example** (A region that fits)
  *
@@ -404,7 +405,8 @@ export const boundFailingRegion: {
     return all;
   }
   const kept = tailWithin(lines, room - omissionLine(lines.length).length - 1);
-  return A.prepend(kept, omissionLine(lines.length - kept.length));
+  const omission = omissionLine(lines.length - kept.length);
+  return omission.length + 1 <= room ? A.prepend(kept, omission) : A.empty<string>();
 });
 
 const omissionLine = (dropped: number): string => `... ${dropped} earlier lines in the saved log`;
@@ -461,10 +463,22 @@ const partialLines = (partial: O.Option<FeedArtifact>): ReadonlyArray<string> =>
   O.match(partial, {
     onNone: A.empty<string>,
     onSome: (feed) => [
-      `reports: artifact ${feed.name} has ${feed.unreadable.length} unreadable: ${A.join(feed.unreadable, ", ")}; log read`,
-      ...reportLines(feed),
+      cutLine(
+        `reports: artifact ${feed.name} has ${feed.unreadable.length} unreadable: ${A.join(feed.unreadable, ", ")}; log read`
+      ),
+      ...readableVerdicts(feed),
     ],
   });
+
+const readableVerdicts = (feed: FeedArtifact): ReadonlyArray<string> => {
+  const verdicts = A.map(verdictLines(feed), cutLine);
+  const all = tailWithin(verdicts, PARTIAL_VERDICT_CHARS_MAX);
+  if (all.length === verdicts.length) return all;
+  const kept = tailWithin(verdicts, PARTIAL_VERDICT_CHARS_MAX - agentBudget.maxLineChars - 1);
+  return A.prepend(kept, `... ${verdicts.length - kept.length} more readable reports in the artifact`);
+};
+
+const PARTIAL_VERDICT_CHARS_MAX = agentBudget.maxChars / 4;
 
 const jobSection =
   (run: CiRunView, saved: Saved) =>
@@ -493,13 +507,16 @@ const framedRegion = (
   verdict: string,
   region: string,
   logLine: string
-): ReadonlyArray<string> => [
-  ...head,
-  verdict,
-  ...boundFailingRegion(region, linesChars([...head, verdict, logLine, verdict])),
-  logLine,
-  verdict,
-];
+): ReadonlyArray<string> => {
+  const [cutHead, cutVerdict, cutLogLine] = [A.map(head, cutLine), cutLine(verdict), cutLine(logLine)];
+  return [
+    ...cutHead,
+    cutVerdict,
+    ...boundFailingRegion(region, linesChars([...cutHead, cutVerdict, cutLogLine, cutVerdict])),
+    cutLogLine,
+    cutVerdict,
+  ];
+};
 
 const readJob = (repoRoot: string, feeds: ReadonlyArray<FeedArtifact>) => (job: CiRunJob) => {
   const joined = joinedFeed(feeds, job);

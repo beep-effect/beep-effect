@@ -25,6 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
@@ -413,6 +414,48 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, CommandSupport), {
       }
     );
 
+    it.effect("keeps the failing log region when readable reports beside an unreadable one are long and many", () => {
+      const readable = A.makeBy(40, (index) =>
+        packageEntry({ packageDir: `packages/long-${index}`, gate: "test", subject: `@beep/long-${index}` })
+      );
+      const lostEntry = packageEntry({ packageDir: "packages/lost", gate: "check", subject: "@beep/lost" });
+      const longReport = (subject: string) =>
+        gateRecordJson(
+          gateReport({
+            gate: "test",
+            subject,
+            messages: A.makeBy(60, (index) => `readable report message ${index} ${Str.repeat(200)("y")}`),
+          })
+        );
+      const partialZip = feedZip({
+        recordJson: v2Json({ job: "Lint (lint-2)", reports: [...readable, lostEntry] }),
+        files: R.fromEntries(A.map(readable, (entry) => [entry.record, longReport(entry.subject)])),
+      });
+      const lintOnly = { total_count: 1, jobs: [recordedJobs.jobs[2]] };
+      const transport = restRoutes(
+        runRoutes({
+          jobs: lintOnly,
+          artifacts: [artifact(2, `task-outcomes-${RUN}-2-lint-shard-lint-2`)],
+          zips: { "2": partialZip },
+        })
+      );
+      return Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-failures-partial-long-" });
+        const root = yield* fs.realPath(temp);
+        const lines = yield* printCiFailures(root, CiFailuresTarget.cases.RunTarget.make({ runId: RUN }));
+        const section = A.drop(lines, lineOf(lines, "== job Lint"));
+        const text = A.join(section, "\n");
+        assertInclude(text, "1 unreadable");
+        assertInclude(text, "more readable reports in the artifact");
+        assertInclude(text, "test @beep/long-39");
+        assertInclude(text, "noUnusedVariables");
+        assertTrue(!Str.includes("readable report message")(text));
+        assertTrue(!Str.includes("earlier lines in the saved log")(text));
+        assertTrue(A.reduce(section, 0, (sum, line) => sum + line.length + 1) <= agentBudget.maxChars);
+      }).pipe(provideSpawner(ghSpawner({ "103": { stdout: ghLogFailed, exit: 0 } })), provideBuilt(transport.layer));
+    });
+
     it.effect("reports a record it cannot write as a CiCommandError", () => {
       const transport = restRoutes(runRoutes({ jobs: recordedJobs, artifacts: [], zips: {} }));
       return Effect.gen(function* () {
@@ -481,6 +524,22 @@ describe("failing-region bounds", () => {
     strictEqual(long[0]!.length, agentBudget.maxLineChars);
     assertTrue(Str.endsWith("...")(long[0]!));
     deepStrictEqual(boundFailingRegion("short", 0), ["short"]);
+  });
+
+  it("returns no line when even the omission line does not fit beside the frame", () => {
+    deepStrictEqual(boundFailingRegion("x", agentBudget.maxChars - 1), []);
+    deepStrictEqual(
+      boundFailingRegion(
+        A.join(
+          A.makeBy(10, () => Str.repeat(10)("z")),
+          "\n"
+        ),
+        agentBudget.maxChars - 20
+      ),
+      []
+    );
+    deepStrictEqual(boundFailingRegion("x", agentBudget.maxChars - 2), ["x"]);
+    deepStrictEqual(boundFailingRegion("x", agentBudget.maxChars + 10), []);
   });
 
   it("ranks only this attempt's live artifacts that share a word with a failed job, at most the cap", () => {
