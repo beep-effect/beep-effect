@@ -479,3 +479,11 @@ home paths with `~`, drop session and machine ids.
   and all complexity thresholds remain in force for changed files.
   **Would have prevented it:** a health argument-contract assertion that the
   envelope's declared base also reaches the native command.
+
+
+### P4 design inventory buffer, 2026-11-22
+
+While enumerating test existence for the P4 maps, the Node child-process default buffer
+refused `rg --files packages apps` with `ENOBUFS`. No data was changed. Restricting the
+search to `--glob '*.test.ts'` and setting an explicit bounded output buffer completed
+the inventory. A test-file-only discovery recipe would have prevented the interruption.
