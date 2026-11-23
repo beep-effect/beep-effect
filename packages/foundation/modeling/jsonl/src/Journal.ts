@@ -34,6 +34,7 @@ import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as Tuple from "effect/Tuple";
 import { Envelope, EnvelopeFrame } from "./Envelope.ts";
+import { AfterTerminalCheck } from "./internal/changesSeam.ts";
 import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.ts";
 import {
   DEFAULT_WINDOW,
@@ -1128,16 +1129,6 @@ const makeEngine: {
           yield* validateSelection(input);
           const slice = input;
           // Validation precedes subscription acquisition, including no-replay reads.
-          // Quiescent already? A terminal Exit published before this
-          // subscriber attached is invisible to it — a hub has no replay — so
-          // without this check the stream would wait for an event that has
-          // already happened. Ending here is what makes "terminates rather
-          // than hangs" true.
-          const alreadyQuiescent = yield* isTerminalTail;
-          const replay = slice?.cursor === undefined ? Stream.empty : readFrom(slice);
-          if (alreadyQuiescent || closed) {
-            return replay;
-          }
           // SUBSCRIBE BEFORE REPLAYING, and do it here rather than through
           // `Stream.fromPubSubTake`. That constructor subscribes on its first
           // pull, which `Stream.concat` does not reach until the replay has
@@ -1147,6 +1138,18 @@ const makeEngine: {
           // the subscription strictly before the first byte is read; the scope
           // is the stream's own, so it is released with the stream.
           const subscription = yield* PubSub.subscribe(hub);
+          // Quiescent already? A terminal Exit published before this
+          // subscriber attached is invisible to it — a hub has no replay — so
+          // without this check the stream would wait for an event that has
+          // already happened. Ending here is what makes "terminates rather
+          // than hangs" true.
+          const alreadyQuiescent = yield* isTerminalTail;
+          const alreadyClosed = closed;
+          yield* Effect.flatten(AfterTerminalCheck);
+          const replay = slice?.cursor === undefined ? Stream.empty : readFrom(slice);
+          if (alreadyQuiescent || alreadyClosed) {
+            return replay;
+          }
           // The overlap that early subscription creates, and the reason the
           // join still cannot duplicate: a line can be on disk when the replay
           // reads it AND still in flight to the hub, so it arrives twice.

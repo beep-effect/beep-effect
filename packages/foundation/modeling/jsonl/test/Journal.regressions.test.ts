@@ -1,17 +1,21 @@
 import { Envelope } from "@beep/jsonl";
+import { AfterTerminalCheck } from "@beep/jsonl/internal/changesSeam";
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as PubSub from "effect/PubSub";
 import * as Result from "effect/Result";
+import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
+import * as TestClock from "effect/testing/TestClock";
 import { at, events, externalAppend, line, memory, open, path } from "./fixtures.ts";
 
 it.effect("patch catches up a completed foreign snapshot before deriving data", () =>
@@ -981,5 +985,51 @@ it.effect("paged query delivers earlier pages before a terminated malformed reco
       delivered,
       A.makeBy(200, (index) => index)
     );
+  })
+);
+
+it.effect(
+  "changes without a cursor ends when a terminal append lands between the terminal read and the subscription",
+  () =>
+    Effect.gen(function* () {
+      const fs = yield* memory();
+      const journal = yield* open({ ...fs, watch: () => Stream.never });
+      yield* journal.create;
+      const reader = yield* journal
+        .changes()
+        .pipe(
+          Stream.runCollect,
+          Effect.provideService(AfterTerminalCheck, journal.append("ended", null).pipe(Effect.orDie, Effect.asVoid)),
+          Effect.timeoutOption("1 second"),
+          Effect.forkChild({ startImmediately: true })
+        );
+      yield* TestClock.adjust("1 second");
+      const delivered = yield* Fiber.join(reader);
+      assertSome(
+        O.map(
+          delivered,
+          A.map((row) => row.event)
+        ),
+        ["ended"]
+      );
+    })
+);
+it.effect("changes without a cursor ends when the journal closes between the terminal read and the subscription", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    const scope = yield* Scope.make();
+    const journal = yield* open({ ...fs, watch: () => Stream.never }).pipe(Effect.provideService(Scope.Scope, scope));
+    yield* journal.create;
+    const reader = yield* journal
+      .changes()
+      .pipe(
+        Stream.runCollect,
+        Effect.provideService(AfterTerminalCheck, Scope.close(scope, Exit.void)),
+        Effect.timeoutOption("1 second"),
+        Effect.forkChild({ startImmediately: true })
+      );
+    yield* TestClock.adjust("1 second");
+    const delivered = yield* Fiber.join(reader);
+    assertSome(O.map(delivered, A.length), 0);
   })
 );
