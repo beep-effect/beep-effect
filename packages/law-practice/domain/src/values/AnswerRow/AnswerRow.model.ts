@@ -17,8 +17,6 @@ import { ReviewItemId } from "../ReviewItem/index.ts";
 const $I = $LawPracticeDomainId.create("values/AnswerRow/AnswerRow.model");
 
 /**
- * Where the attorney left a question.
- *
  * **Details**
  *
  * - `decided`: the attorney chose an option;
@@ -47,8 +45,6 @@ export const AnswerState = LiteralKit(["decided", "pending-on-client", "keep-rem
 );
 
 /**
- * Runtime type for {@link AnswerState}.
- *
  * @see {@link AnswerState} for the literal domain.
  * @category models
  * @since 0.0.0
@@ -92,8 +88,6 @@ const AnswerRowDefinition = AnswerState.toTaggedUnion("state")({
 });
 
 /**
- * One append-only entry in the attorney's answer log for a question, discriminated on `state`.
- *
  * **Details**
  *
  * Rows are never edited or deleted, and none is ever locked. The current
@@ -137,8 +131,6 @@ export const AnswerRow = AnswerRowDefinition.pipe(
 );
 
 /**
- * Runtime type for {@link AnswerRow}.
- *
  * @see {@link AnswerRow} for the tagged-union schema and its states.
  * @category value-objects
  * @since 0.0.0
@@ -146,8 +138,6 @@ export const AnswerRow = AnswerRowDefinition.pipe(
 export type AnswerRow = typeof AnswerRow.Type;
 
 /**
- * Companion namespace for `AnswerRow`.
- *
  * **Example** (Type an encoded answer state)
  *
  * ```ts

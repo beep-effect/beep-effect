@@ -13,8 +13,6 @@ import * as V from "./Values.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/SyncConflict.command");
 /**
- * ConflictRecord vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { ConflictRecord } from "@beep/documents-domain/aggregates/VaultSync";

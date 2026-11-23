@@ -11,8 +11,8 @@ import {
   ClaimEvidenceVerification,
   reviewStatusFor,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";

@@ -6,9 +6,9 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CitationDocument } from "@beep/law-practice-domain/values";
 import { CourtReporterArtifactVersion } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";

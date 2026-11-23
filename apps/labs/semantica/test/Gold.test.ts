@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { SourceTextExtractor } from "@beep/provenance";
+import { SourceTextExtractor } from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";

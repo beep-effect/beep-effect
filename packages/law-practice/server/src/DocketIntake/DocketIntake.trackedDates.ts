@@ -30,8 +30,6 @@ import type { LocalDate } from "@beep/schema/LocalDate";
 const $I = $LawPracticeServerId.create("DocketIntake/DocketIntake.trackedDates");
 
 /**
- * Where the CSV export of the attorney's docket sheet is.
- *
  * **Example** (Make the CSV options)
  *
  * ```ts

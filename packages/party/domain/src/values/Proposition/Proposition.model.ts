@@ -45,7 +45,6 @@ export const IdentifierRelation = LiteralKit([
   "represents",
 ]).pipe($I.annoteSchema("IdentifierRelation", { description: "How an identifier or account relates to a party." }));
 /**
- * Decoded IdentifierRelation type.
  * @category models
  * @since 0.0.0
  */
@@ -74,7 +73,6 @@ export const NameKind = LiteralKit([
 ]).pipe($I.annoteSchema("NameKind", { description: "Kind of name a party is known by." }));
 
 /**
- * Runtime name-kind vocabulary.
  * @category models
  * @since 0.0.0
  */
@@ -90,8 +88,6 @@ const distinctPair = <L extends string, R extends string>(tag: string, left: L, 
   );
 
 /**
- * SameParty assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { SameParty } from "@beep/party-domain/Proposition"
@@ -108,8 +104,6 @@ export class SameParty extends S.Opaque<SameParty, { readonly brand: unique symb
 ) {}
 
 /**
- * DistinctParty assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { DistinctParty } from "@beep/party-domain/Proposition"
@@ -126,8 +120,6 @@ export class DistinctParty extends S.Opaque<DistinctParty, { readonly brand: uni
 ) {}
 
 /**
- * ReportsTo assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { ReportsTo } from "@beep/party-domain/Proposition"
@@ -146,8 +138,6 @@ export class ReportsTo extends S.Opaque<ReportsTo, { readonly brand: unique symb
 ) {}
 
 /**
- * DelegateOf assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { DelegateOf } from "@beep/party-domain/Proposition"
@@ -166,8 +156,6 @@ export class DelegateOf extends S.Opaque<DelegateOf, { readonly brand: unique sy
 ) {}
 
 /**
- * KeyAssignment assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { KeyAssignment } from "@beep/party-domain/Proposition"
@@ -184,8 +172,6 @@ export class KeyAssignment extends S.Opaque<KeyAssignment, { readonly brand: uni
 ) {}
 
 /**
- * IdentifierOf assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { IdentifierOf } from "@beep/party-domain/Proposition"
@@ -202,8 +188,6 @@ export class IdentifierOf extends S.Opaque<IdentifierOf, { readonly brand: uniqu
 ) {}
 
 /**
- * AccountIdentifier assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { AccountIdentifier } from "@beep/party-domain/Proposition"
@@ -220,8 +204,6 @@ export class AccountIdentifier extends S.Opaque<AccountIdentifier, { readonly br
 ) {}
 
 /**
- * MailboxKind assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { MailboxKind } from "@beep/party-domain/Proposition"
@@ -239,8 +221,6 @@ export class MailboxKind extends S.Opaque<MailboxKind, { readonly brand: unique 
 ) {}
 
 /**
- * AccountControl assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { AccountControl } from "@beep/party-domain/Proposition"
@@ -257,8 +237,6 @@ export class AccountControl extends S.Opaque<AccountControl, { readonly brand: u
 ) {}
 
 /**
- * VoiceAuthor assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { VoiceAuthor } from "@beep/party-domain/Proposition"
@@ -275,8 +253,6 @@ export class VoiceAuthor extends S.Opaque<VoiceAuthor, { readonly brand: unique 
 ) {}
 
 /**
- * PartyName assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { PartyName } from "@beep/party-domain/Proposition"
@@ -293,8 +269,6 @@ export class PartyName extends S.Opaque<PartyName, { readonly brand: unique symb
 ) {}
 
 /**
- * Membership assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { Membership } from "@beep/party-domain/Proposition"
@@ -314,8 +288,6 @@ export class Membership extends S.Opaque<Membership, { readonly brand: unique sy
 ) {}
 
 /**
- * ContextRole assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { ContextRole } from "@beep/party-domain/Proposition"
@@ -332,8 +304,6 @@ export class ContextRole extends S.Opaque<ContextRole, { readonly brand: unique 
 ) {}
 
 /**
- * External assertion payload with explicit role fields.
- *
  * **Example** (Decode an assertion payload)
  * ```ts
  * import { External } from "@beep/party-domain/Proposition"
@@ -388,7 +358,6 @@ export const Proposition = S.Union([
   $I.annoteSchema("Proposition", { description: "Closed, role-named proposition algebra." })
 );
 /**
- * Decoded Proposition type.
  * @category models
  * @since 0.0.0
  */

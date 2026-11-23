@@ -94,8 +94,8 @@ const readOnly = <R extends ResourceLike, E, RIn>(
   ).pipe(Layer.provide(shipped));
 
 /**
- * The read-only providers for every resource type the stack declares
- * (`Repository`, `Ruleset`, `Environment`, `Variable`, `Label`). Registered
+ * The read-only providers for every resource type either stack declares
+ * (`Repository`, `Ruleset`, `Environment`, `Variable`, `Label`, `Secret`). Registered
  * for each type directly, they take precedence over the same types in the
  * `GitHub.providers()` collection, so layering them over the collection is enough.
  *
@@ -119,5 +119,6 @@ export const readOnlyGitHubProviders = (stage: string) =>
     readOnly(GitHub.Ruleset, GitHub.RulesetProvider(), stage),
     readOnly(GitHub.Environment, GitHub.EnvironmentProvider(), stage),
     readOnly(GitHub.Variable, GitHub.VariableProvider(), stage),
-    readOnly(GitHub.Label, GitHub.LabelProvider(), stage)
+    readOnly(GitHub.Label, GitHub.LabelProvider(), stage),
+    readOnly(GitHub.Secret, GitHub.SecretProvider(), stage)
   );

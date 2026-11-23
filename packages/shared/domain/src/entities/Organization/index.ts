@@ -15,8 +15,6 @@
  */
 export * from "./Organization.behavior.ts";
 /**
- * Organization model schema namespace.
- *
  * **Example** (Read model table name)
  *
  * ```ts
@@ -30,8 +28,6 @@ export * from "./Organization.behavior.ts";
  */
 export * from "./Organization.model.ts";
 /**
- * Organization value schemas.
- *
  * **Example** (Check team license tier)
  *
  * ```ts

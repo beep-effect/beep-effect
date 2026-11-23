@@ -1,14 +1,3 @@
-// Task 4, the engine compliance gate (part 1): a deterministic behavioral
-// fixture table across every dialect feature category, where EVERY row asserts
-// both the expected boolean AND the independent minimatch 10.2.6 reference.
-// The original property generators are sampled in the versioned reference
-// corpus; current upstream still checks unchanged escape/expansion primitives.
-//
-// Rule of the gate: if the vendored engine disagrees with the oracle, fix the
-// engine, never the expectation — except where a row exercises the two
-// documented deviations (typed budget exhaustion; explicit platform), which
-// are tested separately and excluded from oracle comparison.
-
 import { escape as escapePattern, Minimatch } from "@beep/glob/internal/minimatch";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -26,17 +15,38 @@ const JsonString = S.fromJsonString(S.String);
 
 type Row = readonly [pattern: string, candidate: string, expected: boolean, options?: EngineOptionsInput];
 
-// Upstream's Platform union has no "posix" member (its posix default is the
-// ambient-detection fallback the port deletes). "linux" is behaviorally
-// identical (non-win32) and keeps the oracle pinned regardless of the machine
-// the suite runs on.
+const LINUX_STANDS_IN_FOR_POSIX_SINCE_UPSTREAM_PLATFORM_HAS_NO_POSIX_AND_THE_ORACLE_MUST_NOT_READ_THE_HOST = "linux";
+
 const oracleOpts = (opts: EngineOptionsInput): MinimatchOptions => {
   const { platform, ...options } = opts;
-  return platform === undefined ? options : { ...options, platform: platform === "posix" ? "linux" : platform };
+  return platform === undefined
+    ? options
+    : {
+        ...options,
+        platform:
+          platform === "posix"
+            ? LINUX_STANDS_IN_FOR_POSIX_SINCE_UPSTREAM_PLATFORM_HAS_NO_POSIX_AND_THE_ORACLE_MUST_NOT_READ_THE_HOST
+            : platform,
+      };
 };
 
+const LEADING_BANG_PAREN_IS_WHOLE_PATTERN_NEGATION_STRIPPED_BEFORE_THE_AST_SO_ONLY_NONEGATE_ROWS_HIT_THE_EXTGLOB: ReadonlyArray<Row> =
+  [
+    ["!(a)", "b", true],
+    ["!(a)", "a", true],
+    ["!(a)", "(a)", false],
+    ["!(a)", "a", false, { nonegate: true }],
+    ["!(a)", "b", true, { nonegate: true }],
+  ];
+
+const GLOBSTAR_DOTDOT_REWRITE_NEEDS_TWO_TRAILING_PORTIONS_ELSE_DOTDOT_STAYS_LITERAL_AND_MATCHES_NOTHING: ReadonlyArray<Row> =
+  [
+    ["a/**/../b/c", "a/x/b/c", true, { optimizationLevel: 2 }],
+    ["a/**/../b", "a/x/b", false, { optimizationLevel: 2 }],
+  ];
+
+// decision: tests-compliance-oracle-gate
 const table: ReadonlyArray<Row> = [
-  // ── star / qmark segment scoping ──────────────────────────────────────
   ["*", "abc", true],
   ["*", ".abc", false],
   ["*", "a/b", false],
@@ -52,14 +62,12 @@ const table: ReadonlyArray<Row> = [
   ["a?c", "ac", false],
   ["???", "abc", true],
   ["???", "ab", false],
-  // ── dots ──────────────────────────────────────────────────────────────
   [".*", ".abc", true],
   ["*", ".abc", true, { dot: true }],
   ["*", ".", false, { dot: true }],
   ["*", "..", false, { dot: true }],
   ["a/*/b", "a/.x/b", false],
   ["a/*/b", "a/.x/b", true, { dot: true }],
-  // ── globstar (the #62 inversion class) ────────────────────────────────
   ["packages/**", "packages/a", true],
   ["packages/**", "packages/a/b", true],
   ["packages/**", "other/a", false],
@@ -75,7 +83,6 @@ const table: ReadonlyArray<Row> = [
   ["a/**/b/**/c", "a/x/b/y/c", true],
   ["a/**/b/**/c", "a/b/c", true],
   ["a/**/b/**/c", "a/c", false],
-  // ── negation / flipNegate / nonegate ──────────────────────────────────
   ["!a/*", "b/x", true],
   ["!a/*", "a/x", false],
   ["!a/*", "a/x", true, { flipNegate: true }],
@@ -84,14 +91,11 @@ const table: ReadonlyArray<Row> = [
   ["!!!a", "a", false],
   ["!a", "!a", true, { nonegate: true }],
   ["!a", "b", false, { nonegate: true }],
-  // ── comments / nocomment ──────────────────────────────────────────────
   ["#a", "#a", false],
   ["#a", "anything", false],
   ["#a", "#a", true, { nocomment: true }],
-  // ── empty pattern ─────────────────────────────────────────────────────
   ["", "", true],
   ["", "a", false],
-  // ── braces incl. sequences; nobrace ───────────────────────────────────
   ["a{b,c}d", "abd", true],
   ["a{b,c}d", "acd", true],
   ["a{b,c}d", "aed", false],
@@ -101,7 +105,6 @@ const table: ReadonlyArray<Row> = [
   ["{a,b}/*", "c/x", false],
   ["a{b,c}d", "a{b,c}d", true, { nobrace: true }],
   ["a{b,c}d", "abd", false, { nobrace: true }],
-  // ── extglobs, all five types; noext ───────────────────────────────────
   ["+(a|b)c", "aabc", true],
   ["+(a|b)c", "c", false],
   ["?(a)b", "b", true],
@@ -111,20 +114,11 @@ const table: ReadonlyArray<Row> = [
   ["*(a|b)", "abab", true],
   ["@(a|b)", "a", true],
   ["@(a|b)", "ab", false],
-  // NOTE: a LEADING !( is whole-pattern negation, not an extglob — parseNegate
-  // strips the bang before the AST ever sees it (oracle-confirmed; the sketch
-  // that assumed extglob semantics here was wrong). The nonegate rows exercise
-  // the actual !() extglob at the pattern start.
-  ["!(a)", "b", true],
-  ["!(a)", "a", true],
-  ["!(a)", "(a)", false],
-  ["!(a)", "a", false, { nonegate: true }],
-  ["!(a)", "b", true, { nonegate: true }],
+  ...LEADING_BANG_PAREN_IS_WHOLE_PATTERN_NEGATION_STRIPPED_BEFORE_THE_AST_SO_ONLY_NONEGATE_ROWS_HIT_THE_EXTGLOB,
   ["a!(b)c", "axc", true],
   ["a!(b)c", "abc", false],
   ["+(a)", "+(a)", true, { noext: true }],
   ["+(a)", "a", false, { noext: true }],
-  // ── classes incl. POSIX ───────────────────────────────────────────────
   ["[abc]", "b", true],
   ["[abc]", "d", false],
   ["[a-c]x", "bx", true],
@@ -134,53 +128,40 @@ const table: ReadonlyArray<Row> = [
   ["[[:digit:]]", "5", true],
   ["[[:digit:]]", "x", false],
   ["[[:alpha:]][[:digit:]]", "x5", true],
-  // ── escaping / regex metachars ────────────────────────────────────────
   ["libs/a.b+c/*", "libs/a.b+c/x", true],
   ["libs/a.b+c/*", "libs/aXbYc/x", false],
   ["\\*", "*", true],
   ["\\*", "x", false],
   ["a\\?b", "a?b", true],
   ["a\\?b", "axb", false],
-  // ── matchBase ─────────────────────────────────────────────────────────
   ["a?b", "/xyz/123/acb", true, { matchBase: true }],
   ["a?b", "/xyz/acb/123", false, { matchBase: true }],
   ["a/b", "/x/a/b", false, { matchBase: true }],
-  // ── nocase / nocaseMagicOnly ──────────────────────────────────────────
   ["AbC", "abc", true, { nocase: true }],
   ["AbC", "abc", false],
   ["A*C", "abc", true, { nocase: true }],
   ["AbC", "abc", false, { nocase: true, nocaseMagicOnly: true }],
   ["A*C", "abc", true, { nocase: true, nocaseMagicOnly: true }],
-  // ── partial ───────────────────────────────────────────────────────────
   ["/a/b/*/d", "/a/b", true, { partial: true }],
   ["/", "/", true, { partial: true }],
   ["/a/b", "/x", false, { partial: true }],
-  // ── multiple slashes / preserveMultipleSlashes ────────────────────────
   ["a//b", "a/b", true],
   ["a//b", "a/b", false, { preserveMultipleSlashes: true }],
   ["a//b", "a//b", true, { preserveMultipleSlashes: true }],
-  // ── optimization levels over . and .. ─────────────────────────────────
   ["a/b/../c", "a/c", true, { optimizationLevel: 2 }],
   ["a/./b", "a/b", true, { optimizationLevel: 2 }],
   ["a/b/../c", "a/c", true, { optimizationLevel: 1 }],
-  // The **/.. rewrite needs TWO trailing portions (<pre>/**/../<p>/<p>/<rest>);
-  // with one, .. stays literal and nothing matches it (oracle-confirmed — the
-  // sketched single-portion row was wrong).
-  ["a/**/../b/c", "a/x/b/c", true, { optimizationLevel: 2 }],
-  ["a/**/../b", "a/x/b", false, { optimizationLevel: 2 }],
+  ...GLOBSTAR_DOTDOT_REWRITE_NEEDS_TWO_TRAILING_PORTIONS_ELSE_DOTDOT_STAYS_LITERAL_AND_MATCHES_NOTHING,
   ["a/b", "a/b", true, { optimizationLevel: 0 }],
   ["a/**/**/b", "a/x/b", true, { optimizationLevel: 0 }],
-  // ── win32 behavior, explicit platform on BOTH engines ─────────────────
   ["a/b", "a\\b", true, { platform: "win32" }],
   ["a/b", "a\\b", false],
   ["c:/x/*", "C:/x/y", true, { platform: "win32", nocase: true }],
   ["//?/c:/x", "c:/x", true, { platform: "win32" }],
   ["a\\*b", "a*b", false, { windowsPathsNoEscape: true, platform: "win32" }],
   ["a\\*b", "a/xb", true, { windowsPathsNoEscape: true, platform: "win32" }],
-  // ── noglobstar ────────────────────────────────────────────────────────
   ["a/**/b", "a/x/y/b", false, { noglobstar: true }],
   ["a/**/b", "a/x/b", true, { noglobstar: true }],
-  // ── trailing-slash semantics ──────────────────────────────────────────
   ["a/*", "a/b/", true],
   ["a/b/", "a/b", false],
   ["a/b/", "a/b/", true],
@@ -221,18 +202,10 @@ describe("engine compliance: behavioral table", () => {
   });
 });
 
-// ── Oracle property tests ─────────────────────────────────────────────────
-// Array form ONLY: the named-record form of it.effect.prop silently discards
-// Schema conversion in @effect/vitest 4.0.0-beta.94.
-//
-// Original full-dialect and option-bag generators are retained by source
-// digest and seed in fixtures/minimatch-v10-provenance.json. Their independent
-// outputs cover the older contract; they are not regenerated by this engine.
-// Printable ASCII only, as the property's name promises; the pattern also
-// keeps `/` and `\` out constructively instead of by residual filtering. The
-// class is spelled as the four spans printable ASCII splits into around those
-// two characters so the exclusions read as such.
-const printableNoSlashArb = Arbitrary.schema(S.String.check(S.isPattern(/^[ -.0-9:-@A-Z[\]-~]{1,30}$/)));
+// decision: tests-prop-array-form
+const printableAsciiMinusSlashAndBackslashSpelledAsTheFourSpansAroundThemArb = Arbitrary.schema(
+  S.String.check(S.isPattern(/^[ -.0-9:-@A-Z[\]-~]{1,30}$/))
+);
 const braceSegArb = Arbitrary.schema(
   S.Array(S.Literals(["a", "{b,c}", "{1..4}", "x{y,z}w", "{a,{b,c}}", "plain"])).check(S.isBetweenLength(1, 4))
 ).pipe(Arbitrary.map((xs) => A.join(xs, "/")));
@@ -264,21 +237,31 @@ describe("engine compliance: oracle properties", () => {
 
   it.effect.prop(
     "a compiled escape of any printable string matches exactly that string",
-    [printableNoSlashArb],
+    [printableAsciiMinusSlashAndBackslashSpelledAsTheFourSpansAroundThemArb],
     ([s]) =>
       Effect.sync(() => {
-        // nocomment/nonegate: escape() escapes glob magic, but a leading #
-        // or ! is comment/negation syntax that escape deliberately does not
-        // touch. magicalBraces: brace EXPANSION is magic regardless, but
-        // escape() only escapes braces under this flag. Both are
-        // oracle-confirmed upstream semantics.
-        const opts: EngineOptionsInput = { platform: "posix", nocomment: true, nonegate: true };
-        const m = new Minimatch(escapePattern(s, { magicalBraces: true }), opts);
+        const leadingHashOrBangIsSyntaxEscapeLeavesAloneSoDisableIt: EngineOptionsInput = {
+          platform: "posix",
+          nocomment: true,
+          nonegate: true,
+        };
+        const escapeBracesSinceExpansionIsMagicRegardless = { magicalBraces: true };
+        const m = new Minimatch(
+          escapePattern(s, escapeBracesSinceExpansionIsMagicRegardless),
+          leadingHashOrBangIsSyntaxEscapeLeavesAloneSoDisableIt
+        );
         assert.isTrue(
           m.match(s),
           `escape(${Result.getOrThrow(S.encodeResult(JsonString)(s))}) must match its own literal`
         );
-        assert.strictEqual(m.match(s), oracle(s, oracle.escape(s, { magicalBraces: true }), oracleOpts(opts)));
+        assert.strictEqual(
+          m.match(s),
+          oracle(
+            s,
+            oracle.escape(s, escapeBracesSinceExpansionIsMagicRegardless),
+            oracleOpts(leadingHashOrBangIsSyntaxEscapeLeavesAloneSoDisableIt)
+          )
+        );
       }),
     { arbitrary: { runs: 300 } }
   );

@@ -14,8 +14,6 @@
  */
 export * as Aggregates from "./aggregates/index.ts";
 /**
- * Direct WorkItem aggregate namespace export.
- *
  * @category aggregates
  * @since 0.0.0
  */
@@ -28,8 +26,6 @@ export * as WorkItem from "./aggregates/WorkItem/index.ts";
  */
 export * as Entities from "./entities/index.ts";
 /**
- * Direct Worker entity namespace export.
- *
  * @category entities
  * @since 0.0.0
  */
@@ -42,8 +38,6 @@ export * as Worker from "./entities/Worker/index.ts";
  */
 export * as Values from "./values/index.ts";
 /**
- * Direct WorkPriority value-object namespace export.
- *
  * @category value-objects
  * @since 0.0.0
  */

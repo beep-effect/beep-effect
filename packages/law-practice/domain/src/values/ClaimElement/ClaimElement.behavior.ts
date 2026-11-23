@@ -15,8 +15,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant, dual, flow, identity, pipe } from "effect/Function";
@@ -86,8 +86,6 @@ export const ClaimTermIntroducingDeterminer = ClaimTermDeterminer.pick([
 );
 
 /**
- * Runtime determiner produced by {@link ClaimTermIntroducingDeterminer}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -116,8 +114,6 @@ export const ClaimTermReferringDeterminer = ClaimTermDeterminer.pick(["the", "sa
 );
 
 /**
- * Runtime determiner produced by {@link ClaimTermReferringDeterminer}.
- *
  * @category type-level
  * @since 0.0.0
  */

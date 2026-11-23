@@ -1,7 +1,3 @@
-// Writing: the formula guard defuses exactly the OWASP first characters, a guarded table is not a round trip, the
-// non-default write options spell what they say, and the writing channels give `stringify`'s text however the records
-// are batched, and a failing upstream fails them with its own error.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvTable } from "@beep/csv/CsvTable.schema";
@@ -19,7 +15,7 @@ import type { CsvRecord } from "@beep/csv/CsvTable.schema";
 const guarded = CsvWriteOptions.make({ formulaGuard: "apostrophe" });
 const one = (cell: string) => ({ records: [[cell]] as const });
 
-describe("the formula guard", () => {
+describe("the formula guard defuses exactly the OWASP CSV-injection first characters", () => {
   for (const [label, cell] of [
     ["an equals sign", "=SUM(A1:A9)"],
     ["a plus sign", "+1"],

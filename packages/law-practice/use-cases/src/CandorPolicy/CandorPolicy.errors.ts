@@ -13,8 +13,6 @@ const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.errors");
 const CandorRecordReadReasonBase = LiteralKit(["snapshot-unavailable"]);
 
 /**
- * Machine-readable reason the recorded candor material could not be read.
- *
  * **Example** (Narrow a read failure reason)
  *
  * ```ts
@@ -34,8 +32,6 @@ export const CandorRecordReadReason = CandorRecordReadReasonBase.pipe(
 );
 
 /**
- * Runtime type for {@link CandorRecordReadReason}.
- *
  * @see {@link CandorRecordReadReason} for the runtime schema and member meanings.
  * @category errors
  * @since 0.0.0

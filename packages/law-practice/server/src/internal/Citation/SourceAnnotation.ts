@@ -11,7 +11,7 @@ import {
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { O as OptionUtils } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -30,7 +30,7 @@ import { CitationRegexOperation } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import type { CitationAnnotationEntryConfiguration } from "./AnnotationEntry.ts";
 import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";

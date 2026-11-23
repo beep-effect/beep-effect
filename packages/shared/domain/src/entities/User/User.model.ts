@@ -14,8 +14,6 @@ const $I = $SharedDomainId.create("entities/User/User.model");
 const pg = ProductEntity.pg;
 
 /**
- * Shared-kernel human account entity schema.
- *
  * **Example** (Read user table name)
  *
  * ```ts

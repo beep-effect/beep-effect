@@ -1,14 +1,14 @@
 // fallow-ignore-file unused-file -- tests spawn this crash-probe child process by file path, so no import reaches it. Owner: @beep/semantica. Exit: remove when the probe runs in-process or fallow learns spawned entries.
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Sha256Hex } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
 import {
   SourceTextDigest,
   SourceTextExtractor,
   SourceTextIdentity,
   TextAnchor,
   TextAnchorVerificationReceipt,
-} from "@beep/provenance";
-import { Sha256Hex } from "@beep/schema";
-import { PosixPath } from "@beep/schema/PosixPath";
+} from "@beep/text";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

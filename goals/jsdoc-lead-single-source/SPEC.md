@@ -102,6 +102,19 @@ Lane explore/comment-law
 
 Reverse: Restore required leads in docs lint, the inventory and law 15.
 
+### Sweep the CI binary closure files in wave 5 behind a map-sources and comment-only proof, 2026-11-23
+
+The CI goals driver ruled that the 64 closure files wave 3 reverted ride wave 5 with identity `Term.ts`, at the ordinary gate, under two proofs attached to the PR before it opens:
+
+- **Map-sources exclusion.** Every runner handler entry (the seven alchemy-github-runners Lambdas and the ci-runners reaper; 8 bundles, 11 functions) is built with `HandlerBundles.test.ts`'s Alchemy options at the wave 5 tree, and each map's `sources` is resolved to repo paths. A wave 5 file found there would leave for a deploy-worded wave. The intersection is empty; the handler graphs load five identity sources (the five `HandlerBundles.test.ts` pins), four `@beep/schema` modules, and the runner packages, and no `@beep/utils` or `@beep/data` module.
+- **Comment-only proof.** Each of the 65 changed files is transpiled before and after with `bun build --no-bundle --minify`; all 65 outputs are byte-identical. A file that differed would leave as a code change.
+
+All 65 files are listed in the latest release's `beep-linux-x64.closure.json` (`beep-ci-0b8fef917164`) and in the current `beep ci binary-closure --list`. After the merge the driver reads the Beep CI Binary run (expected: closure changed, binary identical, re-record, no release) and a plan_only on the merge head (expected: 0 code rows). Wave 5 merges only after the pin PR #3500 and never while another binary cycle is open.
+
+Lane goals/jsdoc-lead-single-source-w5
+
+Reverse: Revert the wave 5 PR; the binary re-records its closure digest back and no Lambda code hash moves
+
 ### The 25,000 estimate counts all tautological exported prose; 8,726 single-source restating leads is the addressable backlog, 2026-11-23
 
 The measured backlog (8,726 restating leads in the JSDoc ratchet) is about a third of the
@@ -147,6 +160,37 @@ tautological exported prose.
 Lane goals/jsdoc-lead-single-source-p0 · PR #3496
 
 Reverse: Widen leadRestates or derivedLead sources in @beep/repo-utils/JSDoc/LeadSource and rewrite the jsdoc ratchet baseline
+
+### Double-classify paraphrase leads in law-practice/domain, then stop the pass at 23% yield, 2026-11-23
+
+The lexical `restating-lead` rule finds leads that repeat their `$I.annote` description word for
+word. A second class restates it in other words: an annotated schema whose lead is a paraphrase
+of its annotation. Wave 2 ran a double-classification pass on that class for its first package,
+`@beep/law-practice-domain`, and stops the pass there.
+
+- **Candidates:** 254 exports in `packages/law-practice/domain` whose lead shares words with the
+  annotation but is not flagged by the lexical rule.
+- **Classifier A:** an Opus 5.5 medium Agent child, given only the rows (file, export, lead,
+  annotation), labelled each row `delete` (the lead says nothing the annotation does not) or
+  `keep`.
+- **Classifier B:** Cursor `claude-opus-5-5-medium` in a separate session with no author context:
+  `cursor-agent -p --trust --mode ask --sandbox enabled --model claude-opus-5-5-medium
+  --output-format text <prompt>`. Cursor's sandbox failed to mount its tool environment
+  ("Mount count limit reached"), so the session ran with no tools and the rows in the prompt;
+  the sandbox stayed enabled.
+- **Result:** A and B agreed on 240 of 254 rows; 59 rows are `delete` on both sides (23%
+  yield). Only those 59 leads are removed. An earlier pairing of two Opus Agent children agreed
+  on 64; it is superseded because the second classifier must be a separate provider session.
+- **Stop:** the brief stops the pass when the first package yields under about 30%. At 23%, a
+  paraphrase lead is more often a different sentence than a restatement, and the cost is two
+  classifier sessions per package. Later waves remove lexical restatements only.
+
+Paraphrase removals are reported apart from the lexical count: they do not move the
+`restating-lead` total, which counts only lexical restatements.
+
+Lane goals/jsdoc-lead-single-source-p1
+
+Reverse: Restore the 59 leads from the W2 merge base and resume the pass in later waves with the same two-classifier route
 
 ### Re-baseline restating-lead to 8,758 for the 32 leads two PRs added before #3496 merged, 2026-11-23
 

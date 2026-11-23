@@ -14,15 +14,11 @@
  */
 export * from "./Approvals.ts";
 /**
- * Box Drive provider tools.
- *
  * @category tools
  * @since 0.0.0
  */
 export * from "./BoxDriveTools.ts";
 /**
- * Process-level gateway settings.
- *
  * @category services
  * @since 0.0.0
  */
@@ -105,15 +101,11 @@ export * from "./Server.ts";
  */
 export * from "./SetupTools.ts";
 /**
- * The system web browser.
- *
  * @category services
  * @since 0.0.0
  */
 export * from "./SystemBrowser.ts";
 /**
- * Gateway version.
- *
  * @category constants
  * @since 0.0.0
  */

@@ -66,7 +66,6 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "nlp-processing",
   "observability",
   "ontology",
-  "provenance",
   "rdf",
   "schema",
   "semantic-web",
@@ -275,7 +274,8 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "repo-gate-run",
   "csv",
   "xlsx",
-  "repo-gate-vitest"
+  "repo-gate-vitest",
+  "text"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -479,23 +479,6 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PUR
  * @since 0.0.0
  */
 export const $SchemaId: Identity.IdentityComposer<"@beep/schema"> = /*#__PURE__*/ $I.create("schema");
-
-/**
- * Identity composer for the `@beep/provenance` package.
- *
- * **Example** (Make provenance package ID)
- *
- * ```ts import.meta.vitest name="Make provenance package ID"
- * import { $ProvenanceId } from "@beep/identity/packages"
- *
- * const id = $ProvenanceId.make("TextAnchor")
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $ProvenanceId: Identity.IdentityComposer<"@beep/provenance"> = /*#__PURE__*/ $I.create("provenance");
-
 /**
  * Identity composer for the `@beep/rdf` package.
  *
@@ -4251,3 +4234,20 @@ export const $XlsxId: Identity.IdentityComposer<"@beep/xlsx"> = /*#__PURE__*/ $I
 export const $RepoGateVitestId: Identity.IdentityComposer<"@beep/repo-gate-vitest"> = /*#__PURE__*/ $I.create(
   "repo-gate-vitest"
 );
+
+/**
+ * Identity composer for `@beep/text`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $TextId } from "@beep/identity/packages"
+ *
+ * const id = $TextId.make("Text")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TextId: Identity.IdentityComposer<"@beep/text"> = /*#__PURE__*/ $I.create("text");

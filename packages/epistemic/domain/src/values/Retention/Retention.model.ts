@@ -18,8 +18,6 @@ const $I = $EpistemicDomainId.create("values/Retention/Retention.model");
 const Count = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const Positive = S.Int.check(S.isGreaterThan(0));
 /**
- * Claim endpoint disposition; absence is explicit and never inferred as active.
- *
  * **Example** (Inspect RetentionDisposition)
  *
  * ```ts
@@ -42,14 +40,11 @@ export const RetentionDisposition = LiteralKit([
   })
 );
 /**
- * Runtime type of {@link RetentionDisposition}.
  * @category type-level
  * @since 0.0.0
  */
 export type RetentionDisposition = typeof RetentionDisposition.Type;
 /**
- * Disposable policy tier; evictable is advisory and never deletes authority.
- *
  * **Example** (Inspect RetentionTier)
  *
  * ```ts
@@ -66,14 +61,11 @@ export const RetentionTier = LiteralKit(["hot", "warm", "cold", "evictable", "un
   })
 );
 /**
- * Runtime type of {@link RetentionTier}.
  * @category type-level
  * @since 0.0.0
  */
 export type RetentionTier = typeof RetentionTier.Type;
 /**
- * Scoped two-axis query; an empty disposition filter includes all rows.
- *
  * **Example** (Inspect RetentionQuery)
  *
  * ```ts
@@ -98,8 +90,6 @@ export class RetentionQuery extends S.Opaque<RetentionQuery, { readonly brand: u
   )
 ) {}
 /**
- * Candidate age windows, rational decay scale and payload budget with no defaults.
- *
  * **Example** (Inspect RetentionPolicy)
  *
  * ```ts
@@ -133,8 +123,6 @@ export class RetentionPolicy extends S.Opaque<RetentionPolicy, { readonly brand:
   )
 ) {}
 /**
- * Registry-owned approval receipt; decoding this data is insufficient to activate policy.
- *
  * **Example** (Inspect RetentionCalibration)
  *
  * ```ts
@@ -189,15 +177,12 @@ export const RetentionPolicyAdmission = PolicyAdmissionState.mapMembers(
   })
 );
 /**
- * Runtime type of the policy admission union.
  * @category type-level
  * @since 0.0.0
  */
 export type RetentionPolicyAdmission = typeof RetentionPolicyAdmission.Type;
 
 /**
- * Consistent accepted authority snapshot from the server read seam.
- *
  * **Example** (Inspect RetentionSnapshot)
  *
  * ```ts
@@ -219,8 +204,6 @@ export class RetentionSnapshot extends S.Opaque<RetentionSnapshot, { readonly br
   )
 ) {}
 /**
- * One visible accepted edge with orthogonal endpoint dispositions and advisory tier.
- *
  * **Example** (Inspect RetentionRow)
  *
  * ```ts
@@ -249,8 +232,6 @@ export class RetentionRow extends S.Opaque<RetentionRow, { readonly brand: uniqu
   )
 ) {}
 /**
- * Disposition bucket; a row may belong to two distinct endpoint buckets.
- *
  * **Example** (Inspect RetentionGroup)
  *
  * ```ts
@@ -273,8 +254,6 @@ export class RetentionGroup extends S.Opaque<RetentionGroup, { readonly brand: u
   )
 ) {}
 /**
- * Tier counts and canonical payload bytes for the selected report rows.
- *
  * **Example** (Inspect RetentionTierSummary)
  *
  * ```ts
@@ -297,8 +276,6 @@ export class RetentionTierSummary extends S.Opaque<RetentionTierSummary, { reado
   )
 ) {}
 /**
- * Canonical disposable report with explicit scope, measured pressure and calibration state.
- *
  * **Example** (Inspect RetentionReport)
  *
  * ```ts

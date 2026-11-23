@@ -110,10 +110,10 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "file": "packages/foundation/modeling/text/src/VerifiedTextAnchor.ts",
       "kind": "weak-collection",
       "reason": "Verified source and anchor capabilities require module-private weak identity registries so structural lookalikes remain unforgeable without retaining discarded proof objects.",
-      "owner": "@beep/provenance",
+      "owner": "@beep/text",
       "issue": "CODEX-SECURITY-VERIFIED-ANCHOR-WEAK-IDENTITY"
     },
     {

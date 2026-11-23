@@ -27,8 +27,6 @@ import type { TerminalMatch } from "./terminals.ts";
 const $I = $RuntimeEnvId.create("internal/osc8/detect");
 
 /**
- * Explains why detection produced its verdict; the discriminator on {@link Osc8Info}.
- *
  * **Example** (Validate a detection reason)
  *
  * ```ts
@@ -55,16 +53,12 @@ export const Osc8Reason = LiteralKit([
   $I.annoteSchema("Osc8Reason", { description: "Why detection produced its verdict. The discriminator on Osc8Info." })
 );
 /**
- * Reason literal accepted by the {@link Osc8Reason} schema.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type Osc8Reason = typeof Osc8Reason.Type;
 
 /**
- * Environment override that produced an OSC8 verdict.
- *
  * **Example** (Validate a hyperlink override)
  *
  * ```ts
@@ -81,8 +75,6 @@ export const Osc8Override = LiteralKit(["force-hyperlink", "no-hyperlink", "no-c
   $I.annoteSchema("Osc8Override", { description: "Environment override that produced an OSC8 verdict." })
 );
 /**
- * Override literal accepted by the {@link Osc8Override} schema.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -238,8 +230,6 @@ export class ProcessSnapshot extends S.Opaque<ProcessSnapshot, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link ProcessSnapshot}.
- *
  * @category type-level
  * @since 0.0.0
  */

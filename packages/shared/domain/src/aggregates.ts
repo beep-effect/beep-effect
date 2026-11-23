@@ -6,8 +6,6 @@
  */
 
 /**
- * Shared aggregate exports.
- *
  * **Example** (Import shared aggregates module)
  *
  * ```ts

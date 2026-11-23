@@ -13,18 +13,18 @@ import {
   OfficeActionFinality,
   officeActionRuleV1,
 } from "@beep/law-practice-domain";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import {
   TextAnchorVerificationReceipt,
   VerifiedSourceText,
   VerifiedTextAnchorErrorReason,
   VerifySourceTextIdentityInput,
-} from "@beep/provenance/VerifiedTextAnchor";
+} from "@beep/text/VerifiedTextAnchor";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { DocStructureOutcome, OfficeActionRecognizedPair } from "@beep/law-practice-domain";
-import type { VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedTextAnchorError } from "@beep/text/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
 import type { OfficeActionStructureStorageError } from "./OfficeActionStructure.errors.ts";
 
@@ -167,8 +167,6 @@ export const OfficeActionStoredOutcome = S.Union([RecognizedReceipt, DocStructur
  */
 export type OfficeActionStoredOutcome = typeof OfficeActionStoredOutcome.Type;
 /**
- * Retains an immutable source- and rule-versioned attempt with its linked predecessor.
- *
  * **Example** (Inspect OfficeActionStructureAttempt)
  *
  * ```ts
@@ -237,8 +235,6 @@ export class OfficeActionStructureStore extends Context.Service<
 >()($I`OfficeActionStructureStore`) {}
 
 /**
- * Pins explicit source authorization and the predecessor for a new immutable attempt.
- *
  * **Example** (Inspect OfficeActionAttemptRequest)
  *
  * ```ts

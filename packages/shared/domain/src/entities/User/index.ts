@@ -6,8 +6,6 @@
  */
 
 /**
- * User model schema namespace.
- *
  * **Example** (Read model table name)
  *
  * ```ts

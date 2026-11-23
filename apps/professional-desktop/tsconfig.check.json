@@ -99,13 +99,13 @@
       "path": "../../packages/foundation/modeling/md/tsconfig.json"
     },
     {
-      "path": "../../packages/foundation/modeling/provenance/tsconfig.json"
-    },
-    {
       "path": "../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/text/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"

@@ -32,6 +32,7 @@ Design order is schema, typed configuration, then resources.
 | Ruleset `main` (10240248) | adopted (`adopt(true)`, `protect()`) | singleton (D20); same-name ruleset reads as `Unowned` |
 | Ruleset `queue-lab` (26917133) | unmanaged | `goals/merge-queue-lab` parks it and `merge-group-parity` re-arms it by a live edit |
 | Environments `beep-effect-web-prod`, `storybook-prod`, `turbo-cache-prod`, `turbo-cache-write` | owned, adopted by name | Alchemy deploy environments; branch policy `main` |
+| Environment `fleet-watch` | owned, created by the stack | the fleet missed-event check (`fleet-missed-event-check.yml`); branch policy `main` |
 | Environment `professional-desktop-release` | unmanaged | its policy is a tag pattern; the provider recreates missing policies as branch policies |
 | Vercel-created environments (`Preview*`, `Production*`, `vercel-*`, 22 in all) | unmanaged | owned by the Vercel App; the OIP stack (P4) decides |
 | Env variable `ALCHEMY_STATE_ROLE_ARN` on the three `-prod` environments | owned | value is known and non-secret |
@@ -39,7 +40,7 @@ Design order is schema, typed configuration, then resources.
 | Repo variable `BEEP_SHARD_OVERFLOW` | unmanaged | an operator switch flipped live |
 | Repo variables `TURBO_*` | unmanaged | the turbo cache cutover sets them |
 | All 26 labels | owned, adopted by name | `GitHub.Label` observes by name and updates |
-| Every secret (11 repository, 9 environment) | unmanaged | see "Secrets" |
+| Every secret (11 repository, 10 environment) | unmanaged | see "Secrets" |
 | Environment secret `INFRA_GITHUB_APP_PRIVATE_KEY` on `infra-github-prod` | operator-set, not managed by the stack | the deploy identity; only the token-mint step reads it (ruling 2026-11-14) |
 | Two repository webhooks (`workflow_job`) | unmanaged | runner fleet; their secret belongs to the ci-runners stack (P5) |
 | Actions permissions | unmanaged | no `@alchemy.run/github` resource (verified gap) |
@@ -55,6 +56,7 @@ delete them fails before anything is applied.
 deploy can read its value. On day one the stack manages none:
 
 - Has a 1Password source: `KNOWLEDGE_MINT_APP_PRIVATE_KEY` (`beep-knowledge-mint GitHub App`
+  item, `private_key`); `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY` (`beep-fleet-watch GitHub App`
   item, `private_key`). `VERCEL_TOKEN` has two candidate fields (`CLOUD_VERCEL_TOKEN`,
   `CLOUD_VERCEL_API_TOKEN`) and no record of which one it holds.
 - No known source: `APP_ENV`, `APP_LOG_FORMAT`, `APP_LOG_LEVEL`, `APP_NAME`, `NEXT_PUBLIC_ENV`.
@@ -71,6 +73,37 @@ later decision works from. Amended 2026-11-14 for one credential, the deploy ide
 (`main`-only branch policy). It enters CI only in the token-mint step, which exchanges it
 for a one-hour installation token. It is never a repository secret, and the operator mints
 and stores it (decision `2026-11-14-packet-gate-ruling-the-infra-github-app-key-is-the-one-credential-that-enters-ci`).
+
+### Secrets from a workstation: `InfraGithubSecrets`
+
+`secrets.alchemy.run.ts` is a second stack with its own state. It owns only the environment secrets
+that `productionSecretsConfig` (`src/Production.ts`) declares, and it reads each value from
+1Password at deploy time (decision
+`2026-11-23-environment-secrets-come-from-a-workstation-only-infragithubsecrets-stack`). Today
+that is one secret, `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY`, from the
+`beep-fleet-watch GitHub App` item.
+
+- `secrets.env` holds one `NAME="op://..."` reference per secret and never a value. A test
+  holds it equal to `secretsEnvFile(productionSecretsConfig)`.
+- No workflow references the stack, and a test checks that. Every stage writes the live
+  repository's secrets, so the stack has no preview: any stage other than `prod` dies with
+  `SecretsStageIsNotProd` before it reads configuration or sends a request, and the read-only
+  provider set refuses `Secret` writes too. On `prod` it refuses to start when `CI` is set and
+  requires `INFRA_GITHUB_SECRETS_PLANE=workstation`.
+- Values stay `Redacted`, so they never reach logs or state, and the upload is sealed to the
+  environment's public key. `op run` masks values in its output.
+- The CI stack keeps each of these secrets in `unmanaged`, so the two stacks never compete.
+- An apply is an announced live step. Run it from this directory, with the PATH `op` shim
+  (the agent service account can read the item) and the AWS state credentials exported as
+  in the runbook:
+
+  ```sh
+  GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_SECRETS_PLANE=workstation \
+    op run --env-file=secrets.env -- bunx alchemy deploy secrets.alchemy.run.ts --stage prod --yes --env-file /dev/null
+  ```
+
+  Read back the timestamp only:
+  `gh api repos/beep-effect/beep-effect/environments/fleet-watch/secrets/FLEET_WATCH_APP_PRIVATE_KEY --jq .updated_at`.
 
 ### Credential
 

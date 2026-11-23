@@ -6,8 +6,6 @@
  */
 
 /**
- * Agent entity and value-schema exports.
- *
  * **Example** (Access Agent entity type)
  *
  * ```ts
@@ -52,8 +50,6 @@ export * from "./Fixture.values.ts";
  */
 export * from "./ProviderInstance/index.ts";
 /**
- * Skill entity exports.
- *
  * **Example** (Access Skill table name)
  *
  * ```ts

@@ -19,7 +19,6 @@ import { NameShape, ObservedSpan, OrgLead } from "../OrgEvidence/OrgEvidence.mod
 const $I = $PartyServerId.create("values/ReviewLoop/ReviewLoop.model");
 
 /**
- * A reviewer-visible mailbox attached to an existing integer party anchor.
  * **Example** (Decode CaseMailbox)
  * ```ts
  * import { CaseMailbox } from "@beep/party-server/ReviewLoop"
@@ -43,7 +42,6 @@ export class CaseMailbox extends S.Opaque<CaseMailbox, { readonly brand: unique 
 ) {}
 
 /**
- * The exact evidence presented for an identity collision.
  * **Example** (Decode CaseEvidence)
  * ```ts
  * import { CaseEvidence } from "@beep/party-server/ReviewLoop"
@@ -71,7 +69,6 @@ export class CaseEvidence extends S.Opaque<CaseEvidence, { readonly brand: uniqu
 ) {}
 
 /**
- * A collision case bound to its canonical evidence digest.
  * **Example** (Decode CollisionCase)
  * ```ts
  * import { CollisionCase } from "@beep/party-server/ReviewLoop"
@@ -110,14 +107,12 @@ export const ReviewVerdict = S.TaggedUnion({
   Skip: {},
 }).pipe($I.annoteSchema("ReviewVerdict", { description: "Partition of the current case parties, or skip." }));
 /**
- * Decoded review verdict.
  * @category models
  * @since 0.0.0
  */
 export type ReviewVerdict = typeof ReviewVerdict.Type;
 
 /**
- * A sourced reviewer decision bound to an evidence digest and explicit validity.
  * **Example** (Decode CollisionDecision)
  * ```ts
  * import { CollisionDecision } from "@beep/party-server/ReviewLoop"
@@ -168,14 +163,12 @@ export const ReviewStatus = LiteralKit([
   "out-of-scope",
 ]).pipe($I.annoteSchema("ReviewStatus", { description: "Review queue status in a specific resolution scope." }));
 /**
- * Decoded review status.
  * @category models
  * @since 0.0.0
  */
 export type ReviewStatus = typeof ReviewStatus.Type;
 
 /**
- * A current sealed case and the decision proposed for it.
  * **Example** (Decode DecisionClaimsInput)
  * ```ts
  * import { DecisionClaimsInput } from "@beep/party-server/ReviewLoop"
@@ -192,7 +185,6 @@ export class DecisionClaimsInput extends S.Opaque<DecisionClaimsInput, { readonl
 ) {}
 
 /**
- * Source assertions and accepted versions from a validated reviewer decision.
  * **Example** (Decode ReviewEvidence)
  * ```ts
  * import { ReviewEvidence } from "@beep/party-server/ReviewLoop"
@@ -211,7 +203,6 @@ export class ReviewEvidence extends S.Opaque<ReviewEvidence, { readonly brand: u
 ) {}
 
 /**
- * Current cases, recorded decisions and the bitemporal scope to evaluate.
  * **Example** (Decode ReviewInput)
  * ```ts
  * import { ReviewInput } from "@beep/party-server/ReviewLoop"
@@ -230,7 +221,6 @@ export class ReviewInput extends S.Opaque<ReviewInput, { readonly brand: unique 
 ) {}
 
 /**
- * One case status and evidence emitted only when its decision settles.
  * **Example** (Decode ReviewApplication)
  * ```ts
  * import { ReviewApplication } from "@beep/party-server/ReviewLoop"

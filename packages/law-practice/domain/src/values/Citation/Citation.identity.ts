@@ -16,33 +16,33 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.identity");
  * **Details**
  *
  * Validates the versioned token, not source evidence or the producer's digest
- * inputs. The engine producer must bind the source version, engine artifact,
- * verified anchor and semantic discriminant. Consumers compare tokens without
- * parsing them. Persisted citation entities use the shared LawPractice ID.
+ * inputs. The engine producer hashes the engine artifact, the semantic
+ * discriminant and the `OccurrenceId` of a verified anchor, which binds the
+ * source version, the range and the quote. Receipts that hold `cm1:` tokens are
+ * converted on read. Consumers compare tokens without parsing them. Persisted
+ * citation entities use the shared LawPractice ID.
  *
  * **Example** (Construct a mention token)
  *
  * ```ts
  * import { CitationMentionId } from "@beep/law-practice-domain/values"
  *
- * const id = CitationMentionId.make("cm1:0000000000000000000000000000000000000000000000000000000000000000")
+ * const id = CitationMentionId.make("cm2:0000000000000000000000000000000000000000000000000000000000000000")
  * console.log(id.length) // 68
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CitationMentionId = S.TemplateLiteral(["cm1:", Sha256Hex]).pipe(
+export const CitationMentionId = S.TemplateLiteral(["cm2:", Sha256Hex]).pipe(
   S.brand("CitationMentionId"),
   $I.annoteSchema("CitationMentionId", {
     description:
-      "Version-one document-local occurrence token; its digest producer must bind source, engine, verified anchor and semantic kind.",
+      "Version-two document-local occurrence token; its digest producer binds the engine artifact, the semantic kind and the OccurrenceId of a verified anchor.",
   })
 );
 
 /**
- * Schema-derived citation occurrence identity.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +79,6 @@ export const CitationAuthorityId = S.TemplateLiteral(["ca1:", Sha256Hex]).pipe(
 );
 
 /**
- * Schema-derived document-local authority identity.
- *
  * @category models
  * @since 0.0.0
  */
@@ -105,7 +103,6 @@ export const CitationDetachedId = S.TemplateLiteral(["cd1:", Sha256Hex]).pipe(
   })
 );
 /**
- * Schema-derived detached object identity.
  * @category models
  * @since 0.0.0
  */
@@ -130,7 +127,6 @@ export const CitationMemberListId = S.TemplateLiteral(["cl1:", Sha256Hex]).pipe(
   })
 );
 /**
- * Schema-derived member-list identity.
  * @category models
  * @since 0.0.0
  */
@@ -155,7 +151,6 @@ export const CitationResourceGroupId = S.TemplateLiteral(["cg1:", Sha256Hex]).pi
   })
 );
 /**
- * Schema-derived insertion-entry identity.
  * @category models
  * @since 0.0.0
  */

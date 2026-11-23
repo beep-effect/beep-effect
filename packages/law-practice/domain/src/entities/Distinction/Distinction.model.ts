@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle";
+import { TextAnchor } from "@beep/text";
 import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { DistinctionDetail } from "./Distinction.values.ts";
 
@@ -16,8 +16,6 @@ const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model")
 const pg = ProductEntity.pg;
 
 /**
- * Distinction entity asserted to overcome a rejection against a claim.
- *
  * **Details**
  *
  * Stores the argued {@link DistinctionDetail}, a source {@link TextAnchor}, and

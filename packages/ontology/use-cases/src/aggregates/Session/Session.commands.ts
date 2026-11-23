@@ -14,8 +14,6 @@ import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
 
 /**
- * Command to open a Turtle document into a session.
- *
  * **Example** (Make open file command)
  *
  * ```ts
@@ -47,8 +45,6 @@ export class OpenOntologyFileCommand extends S.Opaque<OpenOntologyFileCommand, {
 ) {}
 
 /**
- * Result of opening a Turtle document into a session.
- *
  * **Example** (Make open file result)
  *
  * ```ts
@@ -87,8 +83,6 @@ export class OpenOntologyFileResult extends S.Opaque<OpenOntologyFileResult, { r
 ) {}
 
 /**
- * Command to serialize a session's asserted graph without writing it.
- *
  * **Example** (Make serialize session command)
  *
  * ```ts
@@ -126,8 +120,6 @@ export class SerializeOntologySessionCommand extends S.Opaque<
 ) {}
 
 /**
- * Result of serializing a session's asserted graph.
- *
  * **Example** (Make serialize session result)
  *
  * ```ts
@@ -157,8 +149,6 @@ export class SerializeOntologySessionResult extends S.Opaque<
 ) {}
 
 /**
- * Command to serialize a session's asserted graph to a Turtle document.
- *
  * **Example** (Make save file command)
  *
  * ```ts
@@ -195,8 +185,6 @@ export class SaveOntologyFileCommand extends S.Opaque<SaveOntologyFileCommand, {
 ) {}
 
 /**
- * Result of saving a session's asserted graph.
- *
  * **Example** (Make save file result)
  *
  * ```ts

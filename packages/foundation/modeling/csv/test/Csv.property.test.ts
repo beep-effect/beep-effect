@@ -1,7 +1,3 @@
-// The laws: a table written and read back is the same table; canonical text read and written back is the same text;
-// and reading in pieces, split anywhere (inside a BOM, a `sep=` line, a UTF-8 sequence or a CRLF), gives what
-// reading at once gives.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import {
   CsvDelimiter,
@@ -53,13 +49,12 @@ const streamRows = <Row extends S.Top & { readonly DecodingServices: never }>(ro
 
 const pieceSizes = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 1, maximum: 64 })));
 
-/** A delimiter as a test name shows it. */
-const delimiterName = (delimiter: CsvDelimiter): string => (delimiter === "\t" ? "tab" : delimiter);
+const delimiterAsTestName = (delimiter: CsvDelimiter): string => (delimiter === "\t" ? "tab" : delimiter);
 
 describe("round trip", () => {
   for (const [delimiter, terminator] of A.cartesian(CsvDelimiter.literals, CsvTerminator.literals)) {
     it.prop(
-      `decode(encode(t)) = t, ${delimiterName(delimiter)} ${terminator}`,
+      `decode(encode(t)) = t, ${delimiterAsTestName(delimiter)} ${terminator}`,
       [tables],
       ([table]) => {
         const options = CsvWriteOptions.make({ delimiter, terminator });
@@ -81,8 +76,7 @@ describe("round trip", () => {
     );
   }
 
-  // First records a `sep=` reader would take for its line if they were written bare, under each delimiter.
-  const sepStarts: ReadonlyArray<CsvTable["records"][number]> = [
+  const firstRecordsASepReaderWouldTakeForItsLineIfBare: ReadonlyArray<CsvTable["records"][number]> = [
     ["sep=;"],
     ["sep=,"],
     ["sep=\t"],
@@ -90,13 +84,15 @@ describe("round trip", () => {
     ["sep=", ""],
     ["SEP=;"],
   ];
-  const sepStart = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: sepStarts.length })));
+  const sepStart = Arbitrary.schema(
+    S.Int.check(S.isBetween({ minimum: 0, maximum: firstRecordsASepReaderWouldTakeForItsLineIfBare.length }))
+  );
   for (const delimiter of CsvDelimiter.literals) {
     it.prop(
-      `decode(encode(t)) = t with excelSepHint on, a sep= first cell included, ${delimiterName(delimiter)}`,
+      `decode(encode(t)) = t with excelSepHint on, a sep= first cell included, ${delimiterAsTestName(delimiter)}`,
       [tables, sepStart, Arbitrary.schema(CsvWriteOptions)],
       ([table, start, written]) => {
-        const records = O.match(A.get(sepStarts, start), {
+        const records = O.match(A.get(firstRecordsASepReaderWouldTakeForItsLineIfBare, start), {
           onNone: () => table.records,
           onSome: (first) => A.prepend(table.records, first),
         });
@@ -223,16 +219,13 @@ describe("chunk invariance", () => {
     }
   }
 
-  // Raw bytes, valid UTF-8 or not, under the decodings whose window holds the whole input. The caps stay wide: a
-  // stream reports the first fatal finding in input order, so a passed text cap ahead of bytes UTF-8 refuses fails it
-  // differently from the whole read, which decodes first (the `Csv.decode` Gotchas).
   for (const [name, options] of R.toEntries({ fixed: readConfigs.fixed, detect: readConfigs.detect })) {
     for (const [decoding, encoding] of R.toEntries({
       fixedUtf8: byteConfigs.fixedUtf8,
       detectDefault: byteConfigs.detectDefault,
     })) {
       it.effect.prop(
-        `the bytes channel over raw bytes, cut anywhere, gives the read at once (${name}, ${decoding})`,
+        `the bytes channel over raw bytes, cut anywhere, gives the read at once under a window holding the whole input and wide caps, since a stream reports its first fatal finding in input order (${name}, ${decoding})`,
         [rawBytes, cuts],
         ([bytes, cutLengths]) =>
           Effect.gen(function* () {
@@ -246,8 +239,6 @@ describe("chunk invariance", () => {
     }
   }
 
-  // Raw bytes that end one byte before a small detect window, at it, or up to three bytes past it: the stream holds
-  // them all to the end, so it decides on every byte, as the whole read does.
   const windowEdges = Arbitrary.schema(
     S.Tuple([
       S.Int.check(S.isBetween({ minimum: 1, maximum: 8 })),
@@ -256,7 +247,7 @@ describe("chunk invariance", () => {
   );
   for (const [name, options] of R.toEntries({ fixed: readConfigs.fixed, detect: readConfigs.detect })) {
     it.effect.prop(
-      `the bytes channel over raw bytes ending at a small detect window's edge gives the read at once (${name})`,
+      `the bytes channel over raw bytes ending one byte before a small detect window's edge to three past it holds them to the end and decides on every byte, as the read at once does (${name})`,
       [windowEdges, rawBytes, rawBytes, cuts],
       ([[window, past], head, tail, cutLengths]) =>
         Effect.gen(function* () {
@@ -276,9 +267,6 @@ describe("chunk invariance", () => {
     );
   }
 
-  // A channel stops at its first fatal finding, so what it emitted before it is part of its result. The decoding, the
-  // detect window, the byte cap and the record cap all meet raw bytes here; the byte cap's `actual` is the count when
-  // the cap was passed, so only that field may depend on the cuts.
   const channelRules = Arbitrary.schema(
     S.Struct({
       utf8: S.Boolean,
@@ -287,12 +275,13 @@ describe("chunk invariance", () => {
       maxRecords: S.Int.check(S.isBetween({ minimum: 1, maximum: 4 })),
     })
   );
-  const withoutCount = A.map((emitted: Emitted[number]) =>
+  const withoutTooManyBytesCountWhichAloneDependsOnCuts = A.map((emitted: Emitted[number]) =>
     Result.mapError(
       emitted,
       A.map((finding) => (finding.kind === "TooManyBytes" ? finding.kind : finding))
     )
   );
+  const moreRunsSinceFewCutsLandBesideACapOrAnInvalidByte = { arbitrary: { runs: 1000 } };
   it.effect.prop(
     "the bytes channel emits the same records, then the same failure, however its bytes are cut",
     [channelRules, rawBytes, cuts],
@@ -310,10 +299,12 @@ describe("chunk invariance", () => {
         const chunks = pieces(bytes.length, cutLengths, (from, to) => bytes.subarray(from, to));
         const cut = yield* emittedFromBytes(chunks, read);
         const whole = yield* emittedFromBytes([bytes], read);
-        deepStrictEqual(withoutCount(cut), withoutCount(whole));
+        deepStrictEqual(
+          withoutTooManyBytesCountWhichAloneDependsOnCuts(cut),
+          withoutTooManyBytesCountWhichAloneDependsOnCuts(whole)
+        );
       }),
-    // More runs than the other laws: the cuts that matter are the few that land beside a cap or an invalid byte.
-    { arbitrary: { runs: 1000 } }
+    moreRunsSinceFewCutsLandBesideACapOrAnInvalidByte
   );
 
   it.effect("a sep= line split across chunks is still the sep= line", () =>

@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitingApplicationIdentity } from "../../values/CitingApplicationIdentity/index.ts";
@@ -23,8 +23,6 @@ const $I = $LawPracticeDomainId.create("entities/PatentCitationEvent/PatentCitat
 const pg = ProductEntity.pg;
 
 /**
- * One observed occurrence of a patent reference cited against a filing.
- *
  * **When to use**
  *
  * Use to record an occurrence exactly as observed, so an attorney can later

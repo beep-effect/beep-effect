@@ -47,8 +47,6 @@ export class AudienceFlagValues extends S.Opaque<AudienceFlagValues, { readonly 
 ) {}
 
 /**
- * Companion types for {@link AudienceFlagValues}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -96,8 +94,6 @@ export class AudienceTally extends S.Opaque<AudienceTally, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link AudienceTally}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

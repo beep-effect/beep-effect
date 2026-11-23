@@ -15,8 +15,6 @@ import { ReviewItemId } from "../ReviewItem/index.ts";
 const $I = $LawPracticeDomainId.create("values/VerdictRow/VerdictRow.model");
 
 /**
- * The attorney's judgement of a review item.
- *
  * **Details**
  *
  * `right` and `wrong` are final judgements. `partly` is a judgement that
@@ -45,8 +43,6 @@ export const Verdict = LiteralKit(["right", "wrong", "partly", "withdrawn"]).pip
 );
 
 /**
- * Runtime type for {@link Verdict}.
- *
  * @see {@link Verdict} for the literal domain.
  * @category models
  * @since 0.0.0
@@ -54,8 +50,6 @@ export const Verdict = LiteralKit(["right", "wrong", "partly", "withdrawn"]).pip
 export type Verdict = typeof Verdict.Type;
 
 /**
- * Identifier of one review batch: a single review sitting or queue run.
- *
  * **Details**
  *
  * Every {@link VerdictRow} names its batch. Locking closes one batch, not the
@@ -84,8 +78,6 @@ export const ReviewBatchId = S.NonEmptyString.check(S.isTrimmed()).pipe(
 );
 
 /**
- * Runtime type for {@link ReviewBatchId}.
- *
  * @see {@link ReviewBatchId} for the batch semantics.
  * @category models
  * @since 0.0.0
@@ -93,8 +85,6 @@ export const ReviewBatchId = S.NonEmptyString.check(S.isTrimmed()).pipe(
 export type ReviewBatchId = typeof ReviewBatchId.Type;
 
 /**
- * One append-only entry in the attorney's verdict log for a review item.
- *
  * **Details**
  *
  * Rows are never edited or deleted. Undo appends a superseding row for the
@@ -175,8 +165,6 @@ export class VerdictRow extends S.Opaque<VerdictRow, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion namespace for `VerdictRow`.
- *
  * **Example** (Type an encoded verdict row timestamp)
  *
  * ```ts

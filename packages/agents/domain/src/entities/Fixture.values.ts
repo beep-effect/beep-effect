@@ -24,8 +24,6 @@ const FixtureKey = S.NonEmptyString.check(
 );
 
 /**
- * Stable dotted fixture key for an agent entity.
- *
  * **Example** (Decode agent fixture key)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const AgentFixtureKey = FixtureKey.pipe(
 );
 
 /**
- * Type accepted by the {@link AgentFixtureKey} schema.
- *
  * **Example** (Type agent fixture key)
  *
  * ```ts
@@ -64,8 +60,6 @@ export const AgentFixtureKey = FixtureKey.pipe(
 export type AgentFixtureKey = typeof AgentFixtureKey.Type;
 
 /**
- * Stable dotted fixture key for a skill entity.
- *
  * **Example** (Decode skill fixture key)
  *
  * ```ts
@@ -86,8 +80,6 @@ export const SkillFixtureKey = FixtureKey.pipe(
 );
 
 /**
- * Type accepted by the {@link SkillFixtureKey} schema.
- *
  * **Example** (Type skill fixture key)
  *
  * ```ts
@@ -104,8 +96,6 @@ export const SkillFixtureKey = FixtureKey.pipe(
 export type SkillFixtureKey = typeof SkillFixtureKey.Type;
 
 /**
- * Non-empty display name for a fixture-backed agent.
- *
  * **Example** (Decode agent display name)
  *
  * ```ts
@@ -126,8 +116,6 @@ export const AgentName = S.NonEmptyString.pipe(
 );
 
 /**
- * Type accepted by the {@link AgentName} schema.
- *
  * **Example** (Type agent display name)
  *
  * ```ts
@@ -144,8 +132,6 @@ export const AgentName = S.NonEmptyString.pipe(
 export type AgentName = typeof AgentName.Type;
 
 /**
- * Agent Skills-compatible name for a fixture-backed skill.
- *
  * **Example** (Decode skill display name)
  *
  * ```ts
@@ -176,8 +162,6 @@ export const SkillName = S.NonEmptyString.pipe(
 );
 
 /**
- * Type accepted by the {@link SkillName} schema.
- *
  * **Example** (Type skill display name)
  *
  * ```ts

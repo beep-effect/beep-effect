@@ -52,8 +52,6 @@ export class VaultSyncWorkspacePayload extends S.Class<VaultSyncWorkspacePayload
 ) {}
 
 /**
- * Payload for marking one vault sync drift record as reviewed.
- *
  * **Example** (Make conflict reviewed payload)
  *
  * ```ts
@@ -91,9 +89,6 @@ export class MarkVaultSyncConflictReviewedPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for reading vault sync status, optionally forcing a fresh mirror
- * probe.
- *
  * **Details**
  *
  * `forceProbe` defaults to `false` for both construction and missing-key

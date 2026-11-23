@@ -7,15 +7,13 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
+import { SourceTextDigest } from "@beep/text/SourceTextIdentity";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/ObservationVersionRef/ObservationVersionRef.model");
 
 /**
- * Names one exact observation: which event, and which version it carried.
- *
  * **When to use**
  *
  * Use when something must point at an observation *version* rather than at
@@ -41,7 +39,7 @@ const $I = $LawPracticeDomainId.create("values/ObservationVersionRef/Observation
  *
  * ```ts
  * import { ObservationVersionRef } from "@beep/law-practice-domain"
- * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
+ * import { SourceTextDigest } from "@beep/text/SourceTextIdentity"
  * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
  *
  * const ref = ObservationVersionRef.make({

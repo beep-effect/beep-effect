@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { SourceTextExtractor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
+import { SourceTextExtractor } from "@beep/text";
 import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

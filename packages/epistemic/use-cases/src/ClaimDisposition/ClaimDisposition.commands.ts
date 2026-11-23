@@ -20,8 +20,6 @@ import * as S from "effect/Schema";
 const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.commands");
 
 /**
- * Decoded append payload for one durable claim disposition.
- *
  * **Details**
  *
  * The `id` and `publicId` a caller supplies are the identity it reserves for the

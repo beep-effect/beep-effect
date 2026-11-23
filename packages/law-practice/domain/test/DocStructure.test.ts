@@ -9,12 +9,12 @@ import {
   ShortenedStatutoryPeriodCandidate,
 } from "@beep/law-practice-domain";
 import { fixtureSource, TestCrypto } from "@beep/law-practice-domain/test";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+} from "@beep/text/VerifiedTextAnchor";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";

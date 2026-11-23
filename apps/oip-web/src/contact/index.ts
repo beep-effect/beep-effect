@@ -13,8 +13,6 @@
  */
 export * from "./ContactSubmission.http.ts";
 /**
- * Contact form models.
- *
  * @category models
  * @since 0.0.0
  */

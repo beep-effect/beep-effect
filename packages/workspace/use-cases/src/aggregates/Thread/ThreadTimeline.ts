@@ -28,8 +28,6 @@ const CostMicros = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * Timeline item projecting a turn's message reference to resolved content.
- *
  * **Example** (Decode message timeline item)
  *
  * ```ts
@@ -71,8 +69,6 @@ export class TimelineMessageItem extends S.Opaque<TimelineMessageItem, { readonl
 const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn.turnIndex);
 
 /**
- * Timeline item placeholder for a tool-call turn item.
- *
  * **Example** (Decode tool-call timeline item)
  *
  * ```ts
@@ -108,8 +104,6 @@ export class TimelineToolCallItem extends S.Opaque<TimelineToolCallItem, { reado
 ) {}
 
 /**
- * Resolved timeline item for a turn.
- *
  * **Example** (Decode union timeline item)
  *
  * ```ts
@@ -138,8 +132,6 @@ export const TimelineItem = pipe(
 );
 
 /**
- * Runtime type for {@link TimelineItem}.
- *
  * **Example** (Annotate a TimelineItem value)
  *
  * ```ts
@@ -155,8 +147,6 @@ export const TimelineItem = pipe(
 export type TimelineItem = typeof TimelineItem.Type;
 
 /**
- * Projected turn within a thread timeline.
- *
  * **Example** (Decode projected timeline turn)
  *
  * ```ts
@@ -206,8 +196,6 @@ export class TimelineTurn extends S.Opaque<TimelineTurn, { readonly brand: uniqu
 ) {}
 
 /**
- * Read model projecting a thread's ordered turns and resolved items.
- *
  * **Example** (Decode thread timeline model)
  *
  * ```ts

@@ -14,8 +14,6 @@ const $I = $WorkspaceDomainId.create("entities/ApprovalGate/ApprovalGate.model")
 const pg = ProductEntity.pg;
 
 /**
- * Human approval gate for candidate work.
- *
  * **Example** (Log entity type)
  *
  * ```ts

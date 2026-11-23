@@ -14,7 +14,6 @@
  */
 export * from "./Identifier/index.ts";
 /**
- * Party ids public surface.
  * @category re-exports
  * @since 0.0.0
  */
@@ -27,7 +26,6 @@ export * as Ids from "./Ids/index.ts";
  */
 export * from "./PartyKey/index.ts";
 /**
- * Party proposition public surface.
  * @category re-exports
  * @since 0.0.0
  */

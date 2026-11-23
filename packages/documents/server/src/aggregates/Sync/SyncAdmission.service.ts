@@ -45,8 +45,6 @@ const entities = ["item", "operation", "conflict", "cursor"] as const;
 export const SyncCutoverBackupId = "vault-sync-cutover-v1";
 
 /**
- * Options for the startup state machine.
- *
  * **Example** (Construct admission options)
  *
  * ```ts
@@ -72,8 +70,6 @@ export class SyncAdmissionOptions extends S.Opaque<SyncAdmissionOptions, { reado
 ) {}
 
 /**
- * One column that differs between the cutover backup and the live table.
- *
  * **Example** (Construct a difference)
  *
  * ```ts
@@ -99,8 +95,6 @@ export class SyncCutoverDifference extends S.Opaque<SyncCutoverDifference, { rea
 ) {}
 
 /**
- * Outcome of one startup admission run.
- *
  * **Example** (Construct an admission outcome)
  *
  * ```ts
@@ -121,8 +115,6 @@ export class SyncAdmissionOutcome extends S.Opaque<SyncAdmissionOutcome, { reado
 ) {}
 
 /**
- * Receipt of a completed post-admission reversal.
- *
  * **Example** (Construct a reversal receipt)
  *
  * ```ts

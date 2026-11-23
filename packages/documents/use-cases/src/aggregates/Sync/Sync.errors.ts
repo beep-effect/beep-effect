@@ -61,8 +61,6 @@ export class DmsMirrorUnavailable extends S.TaggedError<DmsMirrorUnavailable, { 
 ) {}
 
 /**
- * Raised when scanning the local workspace vault fails.
- *
  * **Example** (Make VaultScanFailed error)
  *
  * ```ts
@@ -118,8 +116,6 @@ export class VaultSyncReadUnavailable extends S.TaggedError<
 ) {}
 
 /**
- * Client-safe failure raised when a vault sync action cannot complete.
- *
  * **Example** (Create VaultSyncActionError instance)
  *
  * ```ts

@@ -62,8 +62,6 @@ export class DocketAttachmentRef extends S.Opaque<DocketAttachmentRef, { readonl
 ) {}
 
 /**
- * Where in the mailbox a message was found.
- *
  * **Details**
  *
  * `mailbox` is anywhere a message normally sits. `junk` and `deleted` are the
@@ -87,8 +85,6 @@ export const DocketSourceFolder = LiteralKit(["mailbox", "junk", "deleted"]).pip
 );
 
 /**
- * Type for {@link DocketSourceFolder}.
- *
  * **Example** (Type a source folder)
  *
  * ```ts
@@ -106,8 +102,6 @@ export type DocketSourceFolder = typeof DocketSourceFolder.Type;
 const docketMessageSourceFolderDefault: DocketSourceFolder = "mailbox";
 
 /**
- * A mailbox message as the docket intake pipeline sees it.
- *
  * **Example** (Make a message)
  *
  * ```ts
@@ -194,8 +188,6 @@ export class ParalegalNotDocketItem extends S.Opaque<ParalegalNotDocketItem, { r
 ) {}
 
 /**
- * Agent 1 (paralegal role) entered the message as a docket item.
- *
  * **Details**
  *
  * Every date field is optional and is filled only with what the message
@@ -249,8 +241,6 @@ export const ParalegalEntry = S.Union([ParalegalNotDocketItem, ParalegalDocketEn
 );
 
 /**
- * Type for {@link ParalegalEntry}.
- *
  * **Example** (Type an entry)
  *
  * ```ts
@@ -339,8 +329,6 @@ export class ParalegalRevision extends S.Opaque<ParalegalRevision, { readonly br
 ) {}
 
 /**
- * One completed round of the review loop.
- *
  * **Details**
  *
  * `entry` is the extractor's entry for the round and `reading` the critic's
@@ -376,8 +364,6 @@ export class ReviewRound extends S.Opaque<ReviewRound, { readonly brand: unique 
 ) {}
 
 /**
- * The rounds of a review that has not settled yet.
- *
  * **Example** (Make empty progress)
  *
  * ```ts
@@ -499,8 +485,6 @@ export class MatterNotFound extends S.Opaque<MatterNotFound, { readonly brand: u
 ) {}
 
 /**
- * Answer of a practice-KG matter lookup.
- *
  * **Example** (Read the lookup tag)
  *
  * ```ts
@@ -519,8 +503,6 @@ export const MatterLookupResult = S.Union([MatterUnique, MatterAmbiguous, Matter
 );
 
 /**
- * Type for {@link MatterLookupResult}.
- *
  * **Example** (Type a lookup result)
  *
  * ```ts
@@ -566,8 +548,6 @@ export const DocketEntryFlag = LiteralKit([
 ]).pipe($I.annoteSchema("DocketEntryFlag", { description: "A reason the attorney should check a tentative entry." }));
 
 /**
- * Type for {@link DocketEntryFlag}.
- *
  * **Example** (Type a flag)
  *
  * ```ts
@@ -583,8 +563,6 @@ export const DocketEntryFlag = LiteralKit([
 export type DocketEntryFlag = typeof DocketEntryFlag.Type;
 
 /**
- * Kinds of calendar entry the pipeline writes.
- *
  * **Example** (Guard an entry kind)
  *
  * ```ts
@@ -601,8 +579,6 @@ export const DocketEntryKind = LiteralKit(["due", "reminder", "needs-review", "d
 );
 
 /**
- * Type for {@link DocketEntryKind}.
- *
  * **Example** (Type an entry kind)
  *
  * ```ts
@@ -618,8 +594,6 @@ export const DocketEntryKind = LiteralKit(["due", "reminder", "needs-review", "d
 export type DocketEntryKind = typeof DocketEntryKind.Type;
 
 /**
- * One all-day calendar entry the pipeline wants to exist.
- *
  * **Example** (Make a calendar entry)
  *
  * ```ts
@@ -656,8 +630,6 @@ export class DocketCalendarEntry extends S.Opaque<DocketCalendarEntry, { readonl
 ) {}
 
 /**
- * A calendar entry that exists in the mailbox.
- *
  * **Example** (Make a written entry)
  *
  * ```ts
@@ -706,8 +678,6 @@ export const DocketNeedsReviewReason = LiteralKit([
 ]).pipe($I.annoteSchema("DocketNeedsReviewReason", { description: "Why a docket item needs the attorney's review." }));
 
 /**
- * Type for {@link DocketNeedsReviewReason}.
- *
  * **Example** (Type a reason)
  *
  * ```ts
@@ -747,8 +717,6 @@ export const DocketIntakeStage = LiteralKit([
 ]).pipe($I.annoteSchema("DocketIntakeStage", { description: "Docket intake pipeline stage." }));
 
 /**
- * Type for {@link DocketIntakeStage}.
- *
  * **Example** (Type a stage)
  *
  * ```ts
@@ -764,8 +732,6 @@ export const DocketIntakeStage = LiteralKit([
 export type DocketIntakeStage = typeof DocketIntakeStage.Type;
 
 /**
- * Kind of a tracked date on the attorney's docket sheet.
- *
  * **Details**
  *
  * The sheet's `Date Type` column says `Due Date` (sometimes `Due`),
@@ -788,8 +754,6 @@ export const TrackedDateType = LiteralKit(["due-date", "reminder", "final-date",
 );
 
 /**
- * Type for {@link TrackedDateType}.
- *
  * **Example** (Type a tracked date type)
  *
  * ```ts
@@ -805,8 +769,6 @@ export const TrackedDateType = LiteralKit(["due-date", "reminder", "final-date",
 export type TrackedDateType = typeof TrackedDateType.Type;
 
 /**
- * One tracked date of one docket on the attorney's docket sheet.
- *
  * **Example** (Make a tracked date)
  *
  * ```ts
@@ -837,8 +799,6 @@ export class TrackedDate extends S.Opaque<TrackedDate, { readonly brand: unique 
 ) {}
 
 /**
- * Where a candidate due date came from.
- *
  * **Details**
  *
  * - `stated`: the message states the date outright;
@@ -865,8 +825,6 @@ export const DocketCandidateDateSource = LiteralKit(["stated", "computed", "extr
 );
 
 /**
- * Runtime type for {@link DocketCandidateDateSource}.
- *
  * @see {@link DocketCandidateDateSource} for the sources.
  * @category models
  * @since 0.0.0
@@ -874,8 +832,6 @@ export const DocketCandidateDateSource = LiteralKit(["stated", "computed", "extr
 export type DocketCandidateDateSource = typeof DocketCandidateDateSource.Type;
 
 /**
- * One date a docket item's deadline could be, with where it came from.
- *
  * **Example** (Decode a stated date)
  *
  * ```ts
@@ -1039,8 +995,6 @@ export const DocketIntakeOutcome = S.Union([NotDocketItem, DocketEntered, Docket
 );
 
 /**
- * Type for {@link DocketIntakeOutcome}.
- *
  * **Example** (Type an outcome)
  *
  * ```ts

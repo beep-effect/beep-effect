@@ -13,15 +13,11 @@
  */
 export * from "./ExecutionLedger/index.ts";
 /**
- * Governed egress exports.
- *
  * @category services
  * @since 0.0.0
  */
 export * from "./GovernedEgress/index.ts";
 /**
- * Governed tier gate exports.
- *
  * @category services
  * @since 0.0.0
  */

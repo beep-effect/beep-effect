@@ -54,9 +54,6 @@ export const ATTORNEY_CONFIRMED_REASON = "Attorney confirmed the finding";
 export const ATTORNEY_REJECTED_REASON = "Attorney rejected the finding";
 
 /**
- * Disposition statuses a verdict can project to: `active` for `right`,
- * `rejected` for `wrong`.
- *
  * **Details**
  *
  * The subset of `ClaimDispositionStatus` without `superseded`. Superseding a
@@ -83,8 +80,6 @@ export const ClaimDispositionProjectionStatus = ClaimDispositionStatus.pick(["ac
 );
 
 /**
- * Runtime type for {@link ClaimDispositionProjectionStatus}.
- *
  * @see {@link ClaimDispositionProjectionStatus} for the verdict mapping.
  * @category models
  * @since 0.0.0
@@ -161,8 +156,6 @@ export class ClaimDispositionProjection extends S.Opaque<
 ) {}
 
 /**
- * Companion namespace for `ClaimDispositionProjection`.
- *
  * **Example** (Type an encoded projection timestamp)
  *
  * ```ts

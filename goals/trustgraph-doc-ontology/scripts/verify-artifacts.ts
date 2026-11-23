@@ -7,9 +7,29 @@ import {
   ShaclValidationRequest,
   ShaclValidationService,
 } from "../../../packages/foundation/capability/semantic-web/src/services/shacl-validation.ts";
-import { BoundedEvidenceProjection } from "../../../packages/foundation/modeling/rdf/src/Evidence.ts";
 import { ProvBundle } from "../../../packages/foundation/modeling/rdf/src/Prov.ts";
 import { Dataset } from "../../../packages/foundation/modeling/rdf/src/Rdf.ts";
+
+// The frozen shape of `beep-effect-documentation-seed.evidence.json`. The rdf evidence module that wrote it was
+// deleted with the move to `@beep/text`; this script keeps the artifact readable on its own.
+const FrozenEvidenceProjection = S.Struct({
+  anchors: S.Array(
+    S.Struct({
+      id: S.NonEmptyString,
+      note: S.optionalKey(S.String),
+      target: S.Struct({
+        source: S.NonEmptyString,
+        selector: S.Struct({
+          kind: S.tag("text-quote"),
+          exact: S.NonEmptyString,
+          prefix: S.optionalKey(S.String),
+          suffix: S.optionalKey(S.String),
+        }),
+      }),
+    })
+  ),
+  truncated: S.Boolean,
+});
 
 const outputsUrl = new URL("../history/outputs/", import.meta.url);
 const readJson = async (fileName: string) => Bun.file(new URL(fileName, outputsUrl)).json();
@@ -108,7 +128,7 @@ const run = async () => {
 
   const dataset = S.decodeUnknownSync(Dataset)(rawDataset);
   const provenance = S.decodeUnknownSync(ProvBundle)(rawProvenance);
-  const evidence = S.decodeUnknownSync(BoundedEvidenceProjection)(rawEvidence);
+  const evidence = S.decodeUnknownSync(FrozenEvidenceProjection)(rawEvidence);
   const shapes = S.decodeUnknownSync(S.Array(ShaclNodeShape))(rawShapes);
 
   const shaclResult = await Effect.runPromise(

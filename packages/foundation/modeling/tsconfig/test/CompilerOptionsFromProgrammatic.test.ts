@@ -9,28 +9,42 @@ import * as S from "effect/Schema";
 
 const decode = S.decodeUnknownEffect(CompilerOptionsFromProgrammatic);
 
-// One numeric value per family, with the canonical string it must decode to.
-// `module: 5` and `moduleResolution: 2` are deliberately the alias-carrying
-// values — R1.6's last-row-wins rule makes "es2015" and "node10" canonical
-// over "es6" and "node", and a decode landing on the alias would be wrong.
-const FAMILY_CASES: ReadonlyArray<readonly [key: string, numeric: number, canonical: string]> = [
+const ONE_NUMERIC_PER_FAMILY_WITH_CANONICAL_DECODE: ReadonlyArray<
+  readonly [key: string, numeric: number, canonical: string]
+> = [
   ["target", 12, "es2025"],
   ["module", 199, "nodenext"],
-  ["module", 5, "es2015"],
   ["moduleResolution", 100, "bundler"],
-  ["moduleResolution", 2, "node10"],
   ["jsx", 4, "react-jsx"],
   ["newLine", 1, "lf"],
   ["moduleDetection", 3, "force"],
 ];
 
+const ALIAS_CARRYING_NUMERICS_DECODING_TO_LAST_ROW_CANONICAL: ReadonlyArray<
+  readonly [key: string, numeric: number, canonical: string]
+> = [
+  ["module", 5, "es2015"],
+  ["moduleResolution", 2, "node10"],
+];
+
 describe("CompilerOptionsFromProgrammatic", () => {
-  for (const [key, numeric, canonical] of FAMILY_CASES) {
+  for (const [key, numeric, canonical] of ONE_NUMERIC_PER_FAMILY_WITH_CANONICAL_DECODE) {
     it.effect(`decodes ${key}: ${numeric} to "${canonical}"`, () =>
       Effect.gen(function* () {
         const decoded = yield* decode({ [key]: numeric });
         assert.strictEqual(decoded[key], canonical);
       })
+    );
+  }
+
+  for (const [key, numeric, canonical] of ALIAS_CARRYING_NUMERICS_DECODING_TO_LAST_ROW_CANONICAL) {
+    it.effect(
+      `decodes alias-carrying ${key}: ${numeric} to the last-row canonical "${canonical}", never the alias`,
+      () =>
+        Effect.gen(function* () {
+          const decoded = yield* decode({ [key]: numeric });
+          assert.strictEqual(decoded[key], canonical);
+        })
     );
   }
 
@@ -101,9 +115,7 @@ describe("CompilerOptionsFromProgrammatic", () => {
     })
   );
 
-  // The consumer path this codec exists for: a synchronous caller holding the
-  // programmatic spelling gets a validated result with no cast and no Effect.
-  it("decodes synchronously through Result for a non-Effect caller", () => {
+  it("decodes synchronously through Result for a non-Effect caller, the consumer path this codec exists for: a validated result with no cast and no Effect", () => {
     const ok = S.decodeResult(CompilerOptionsFromProgrammatic)({ target: 12, strict: true });
     assertSuccess(
       Result.map(ok, (options) => options.target),
@@ -119,10 +131,7 @@ describe("CompilerOptionsFromProgrammatic", () => {
 });
 
 describe("CompilerOptionsFromProgrammatic idempotence", () => {
-  // Canonical input must survive decode untouched — the property that lets a
-  // caller run mixed and already-normalized options through the same door.
-  // Every key optional, so the generator walks subsets of the canonical fields.
-  const Canonical = S.Struct({
+  const CanonicalWithEveryKeyOptionalSoGeneratorWalksSubsets = S.Struct({
     target: S.optionalKey(S.Literals(["es5", "es2015", "es2023", "esnext"])),
     module: S.optionalKey(S.Literals(["commonjs", "es2015", "nodenext", "preserve"])),
     moduleResolution: S.optionalKey(S.Literals(["classic", "node10", "bundler"])),
@@ -133,14 +142,17 @@ describe("CompilerOptionsFromProgrammatic idempotence", () => {
     strict: S.optionalKey(S.Boolean),
   });
 
-  it.effect.prop("decode leaves already-canonical options unchanged", [Canonical], ([canonical]) =>
-    Effect.gen(function* () {
-      const decoded = yield* decode(canonical);
-      assert.deepStrictEqual(decoded, canonical);
-    })
+  it.effect.prop(
+    "decode leaves already-canonical options unchanged, so mixed and already-normalized options share one door",
+    [CanonicalWithEveryKeyOptionalSoGeneratorWalksSubsets],
+    ([canonical]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decode(canonical);
+        assert.deepStrictEqual(decoded, canonical);
+      })
   );
 
-  it.effect.prop("decode is idempotent", [Canonical], ([canonical]) =>
+  it.effect.prop("decode is idempotent", [CanonicalWithEveryKeyOptionalSoGeneratorWalksSubsets], ([canonical]) =>
     Effect.gen(function* () {
       const once = yield* decode(canonical);
       const twice = yield* decode(once);
@@ -148,14 +160,15 @@ describe("CompilerOptionsFromProgrammatic idempotence", () => {
     })
   );
 
-  // Guards the composition the downstream consumer actually writes: normalize
-  // through this codec, then hand the result to `encodeCompilerOptions`.
-  it.effect.prop("decode composes with encodeCompilerOptions", [Canonical], ([canonical]) =>
-    Effect.gen(function* () {
-      const decoded = yield* decode(canonical);
-      const programmatic = TsEnumCodec.encodeCompilerOptions(decoded);
-      const redecoded = yield* decode(programmatic);
-      assert.deepStrictEqual(redecoded, decoded);
-    })
+  it.effect.prop(
+    "decode composes with encodeCompilerOptions, the composition the downstream consumer writes",
+    [CanonicalWithEveryKeyOptionalSoGeneratorWalksSubsets],
+    ([canonical]) =>
+      Effect.gen(function* () {
+        const decoded = yield* decode(canonical);
+        const programmatic = TsEnumCodec.encodeCompilerOptions(decoded);
+        const redecoded = yield* decode(programmatic);
+        assert.deepStrictEqual(redecoded, decoded);
+      })
   );
 });

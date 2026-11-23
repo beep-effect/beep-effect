@@ -21,8 +21,6 @@ const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.ports"
 const ClaimDispositionOperationBase = LiteralKit(["record", "listByClaim"]);
 
 /**
- * Bounded vocabulary of claim disposition repository operations.
- *
  * **Example** (Decode operation with Schema)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const ClaimDispositionOperation = ClaimDispositionOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link ClaimDispositionOperation}.
- *
  * **Example** (Satisfy operation type check)
  *
  * ```ts
@@ -60,8 +56,6 @@ export const ClaimDispositionOperation = ClaimDispositionOperationBase.pipe(
 export type ClaimDispositionOperation = typeof ClaimDispositionOperation.Type;
 
 /**
- * Raised when the claim disposition repository could not serve a request.
- *
  * **Details**
  *
  * Persisting a rejection is not optional bookkeeping: a rejected claim that

@@ -599,8 +599,6 @@ export const spliceInPlace: {
 );
 
 /**
- * Re-export of all helpers from `effect/Array`.
- *
  * **Example** (Re-export makeReadonly usage)
  *
  * ```ts

@@ -41,7 +41,6 @@ export const IdentifierId = prefixed("party-ident").pipe(
   $I.annoteSchema("IdentifierId", { description: "Identifier with the ident: scheme." })
 );
 /**
- * Decoded IdentifierId type.
  * @category models
  * @since 0.0.0
  */
@@ -66,7 +65,6 @@ export const AccountId = prefixed("party-acct").pipe(
   $I.annoteSchema("AccountId", { description: "Identifier with the acct: scheme." })
 );
 /**
- * Decoded AccountId type.
  * @category models
  * @since 0.0.0
  */
@@ -91,7 +89,6 @@ export const VoiceId = prefixed("party-voice").pipe(
   $I.annoteSchema("VoiceId", { description: "Identifier with the voice: scheme." })
 );
 /**
- * Decoded VoiceId type.
  * @category models
  * @since 0.0.0
  */
@@ -116,36 +113,42 @@ export const ContentId = prefixed("party-sha256").pipe(
   $I.annoteSchema("ContentId", { description: "Identifier with the sha256: scheme." })
 );
 /**
- * Decoded ContentId type.
  * @category models
  * @since 0.0.0
  */
 export type ContentId = typeof ContentId.Type;
 
 /**
- * One occurrence of artifact content in a collection (a path, a Bates range, a PST child).
+ * One occurrence of artifact content in a collection (a path, a Bates range, a PST child): the key of an
+ * `ArtifactOccurrence`.
  *
- * **Example** (Decode a slice-owned identifier)
+ * **Details**
+ *
+ * It is not the `@beep/text` `OccurrenceId`, which names one place in one text capture and is a digest. This id
+ * keeps its `party-occ:` prefix and every stored value.
+ *
+ * **Example** (Decode an artifact occurrence id)
  *
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ArtifactOccurrenceId)("party-occ:msg:1")
  * ```
  *
  * @category identifiers
  * @since 0.0.0
  */
-export const OccurrenceId = prefixed("party-occ").pipe(
-  S.brand("OccurrenceId"),
-  $I.annoteSchema("OccurrenceId", { description: "Identifier with the occ: scheme." })
+export const ArtifactOccurrenceId = prefixed("party-occ").pipe(
+  S.brand("ArtifactOccurrenceId"),
+  $I.annoteSchema("ArtifactOccurrenceId", {
+    description: "Identifier of one artifact occurrence, with the party-occ: scheme.",
+  })
 );
 /**
- * Decoded OccurrenceId type.
  * @category models
  * @since 0.0.0
  */
-export type OccurrenceId = typeof OccurrenceId.Type;
+export type ArtifactOccurrenceId = typeof ArtifactOccurrenceId.Type;
 
 /**
  * A provenance activity (extraction run, resolver run, human review).
@@ -166,7 +169,6 @@ export const ActivityId = prefixed("party-act").pipe(
   $I.annoteSchema("ActivityId", { description: "Identifier with the act: scheme." })
 );
 /**
- * Decoded ActivityId type.
  * @category models
  * @since 0.0.0
  */
@@ -191,7 +193,6 @@ export const ObservationId = prefixed("party-obs").pipe(
   $I.annoteSchema("ObservationId", { description: "Identifier with the obs: scheme." })
 );
 /**
- * Decoded ObservationId type.
  * @category models
  * @since 0.0.0
  */
@@ -216,7 +217,6 @@ export const EventId = prefixed("party-evt").pipe(
   $I.annoteSchema("EventId", { description: "Identifier with the evt: scheme." })
 );
 /**
- * Decoded EventId type.
  * @category models
  * @since 0.0.0
  */
@@ -241,7 +241,6 @@ export const AssertionId = prefixed("party-asrt").pipe(
   $I.annoteSchema("AssertionId", { description: "Identifier with the asrt: scheme." })
 );
 /**
- * Decoded AssertionId type.
  * @category models
  * @since 0.0.0
  */
@@ -266,7 +265,6 @@ export const ClaimVersionId = prefixed("party-cv").pipe(
   $I.annoteSchema("ClaimVersionId", { description: "Identifier with the cv: scheme." })
 );
 /**
- * Decoded ClaimVersionId type.
  * @category models
  * @since 0.0.0
  */
@@ -291,7 +289,6 @@ export const AssessmentId = prefixed("party-asmt").pipe(
   $I.annoteSchema("AssessmentId", { description: "Identifier with the asmt: scheme." })
 );
 /**
- * Decoded AssessmentId type.
  * @category models
  * @since 0.0.0
  */
@@ -316,7 +313,6 @@ export const PrincipalId = prefixed("party-user").pipe(
   $I.annoteSchema("PrincipalId", { description: "Identifier with the user: scheme." })
 );
 /**
- * Decoded PrincipalId type.
  * @category models
  * @since 0.0.0
  */
@@ -341,7 +337,6 @@ export const ContextRef = prefixed("party-ctx").pipe(
   $I.annoteSchema("ContextRef", { description: "Identifier with the ctx: scheme." })
 );
 /**
- * Decoded ContextRef type.
  * @category models
  * @since 0.0.0
  */
@@ -368,7 +363,6 @@ export const ConceptIri = S.String.check(
   )
 ).pipe(S.brand("ConceptIri"), $I.annoteSchema("ConceptIri", { description: "SKOS concept IRI." }));
 /**
- * Decoded ConceptIri type.
  * @category models
  * @since 0.0.0
  */
@@ -392,7 +386,6 @@ export const Digest = S.String.check(
   S.isPattern(/^[0-9a-f]{8,64}$/, $I.annote("DigestCheck", { message: "Expected a lowercase hex digest." }))
 ).pipe(S.brand("Digest"), $I.annoteSchema("Digest", { description: "Lowercase hex digest." }));
 /**
- * Decoded Digest type.
  * @category models
  * @since 0.0.0
  */

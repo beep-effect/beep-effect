@@ -927,6 +927,44 @@ describe("handleScaleUp configure failures", () => {
     })
   );
 
+  it.effect("logs each message deferred at the cap with its job and the count it was deferred at", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.launch(1, {
+        "ghr:Application": "github-action-runner",
+        "ghr:environment": "beep-ci-heavy",
+        "ghr:Type": "Org",
+        "ghr:Owner": "beep-effect",
+      });
+      const config = poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }));
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 }), queued({ id: 2, retryCounter: 3 })], config);
+      expect(retry).toStrictEqual(["m-1", "m-2"]);
+      expect(
+        A.map(
+          A.filter(lines, (line) => line.message === "scale-up: deferred at cap"),
+          (line) => [line.level, line.annotations]
+        )
+      ).toStrictEqual([
+        [
+          "INFO",
+          { messageId: "m-1", jobId: 1, environment: "beep-ci-heavy", retryCounter: 0, runners: 1, maximumCount: 1 },
+        ],
+        [
+          "INFO",
+          { messageId: "m-2", jobId: 2, environment: "beep-ci-heavy", retryCounter: 3, runners: 1, maximumCount: 1 },
+        ],
+      ]);
+    })
+  );
+
+  it.effect("logs nothing as deferred when the batch fits under the cap", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect(A.filter(lines, (line) => line.message === "scale-up: deferred at cap")).toStrictEqual([]);
+    })
+  );
+
   it.effect("logs a failed instance tag once and keeps the runner", () =>
     Effect.gen(function* () {
       const world = new World();

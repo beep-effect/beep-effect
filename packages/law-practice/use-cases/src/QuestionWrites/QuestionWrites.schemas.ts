@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeUseCasesId.create("QuestionWrites/QuestionWrites.schemas");
 
 /**
- * One write a decided answer implies, waiting for the operator's approval.
- *
  * **Example** (Decode a proposed calendar write)
  *
  * ```ts
@@ -63,8 +61,6 @@ export class ProposedWrite extends S.Opaque<ProposedWrite, { readonly brand: uni
 ) {}
 
 /**
- * Companion namespace for `ProposedWrite`.
- *
  * **Example** (Type an encoded answer time)
  *
  * ```ts
@@ -96,8 +92,6 @@ export declare namespace ProposedWrite {
 }
 
 /**
- * The proposed writes the operator approves or declines as one batch.
- *
  * **Example** (Reject an empty batch)
  *
  * ```ts
@@ -126,8 +120,6 @@ export class ProposedWriteBatch extends S.Opaque<ProposedWriteBatch, { readonly 
 ) {}
 
 /**
- * Companion namespace for `ProposedWriteBatch`.
- *
  * **Example** (Type an encoded batch id)
  *
  * ```ts
@@ -194,8 +186,6 @@ export class OperatorApproval extends S.Opaque<OperatorApproval, { readonly bran
 ) {}
 
 /**
- * Companion namespace for `OperatorApproval`.
- *
  * **Example** (Type an encoded approval time)
  *
  * ```ts
@@ -227,8 +217,6 @@ export declare namespace OperatorApproval {
 }
 
 /**
- * A calendar event as it was before a question write updated it, enough to restore it.
- *
  * **Example** (Decode a prior event state)
  *
  * ```ts
@@ -265,8 +253,6 @@ export class CalendarPrior extends S.Opaque<CalendarPrior, { readonly brand: uni
 ) {}
 
 /**
- * Companion namespace for `CalendarPrior`.
- *
  * **Example** (Type an encoded prior date)
  *
  * ```ts
@@ -355,8 +341,6 @@ export class AppliedWrite extends S.Opaque<AppliedWrite, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion namespace for `AppliedWrite`.
- *
  * **Example** (Type an encoded event id)
  *
  * ```ts
@@ -388,8 +372,6 @@ export declare namespace AppliedWrite {
 }
 
 /**
- * An approved batch as applied, the journal entry its undo reads.
- *
  * **Example** (Read an applied batch's fields)
  *
  * ```ts
@@ -420,8 +402,6 @@ export class AppliedWriteBatch extends S.Opaque<AppliedWriteBatch, { readonly br
 ) {}
 
 /**
- * Companion namespace for `AppliedWriteBatch`.
- *
  * **Example** (Type an encoded batch id)
  *
  * ```ts

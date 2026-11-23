@@ -3,8 +3,8 @@ import { CitationRegexOperation } from "@beep/law-practice-server/internal/Citat
 import { makeCitationSourceEvidence } from "@beep/law-practice-server/internal/Citation/SourceEvidence";
 import { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { it } from "@beep/test-runner";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";

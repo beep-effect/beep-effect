@@ -1,10 +1,10 @@
 // @vitest-environment node
 
 import { ResolvedSourceText } from "@beep/file-processing/SourceText";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance";
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";

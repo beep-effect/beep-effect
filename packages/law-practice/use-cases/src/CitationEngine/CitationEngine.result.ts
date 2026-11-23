@@ -4,8 +4,8 @@
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Citation, CitationDocument } from "@beep/law-practice-domain/values";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import * as S from "effect/Schema";
 import { CitationLiveCleanerObject } from "./CitationEngine.cleaner.ts";
 import { CitationEngineSourceEvidence, CitationExtractionDiagnostics } from "./CitationEngine.evidence.ts";

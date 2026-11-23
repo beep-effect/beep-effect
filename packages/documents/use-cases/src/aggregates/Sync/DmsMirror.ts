@@ -17,8 +17,6 @@ import type { DmsMirrorUnavailable } from "./Sync.errors.ts";
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/DmsMirror");
 
 /**
- * Provider-neutral view of one item stored in the remote DMS.
- *
  * **Example** (Make remote file item)
  *
  * ```ts
@@ -59,8 +57,6 @@ export class DmsRemoteItem extends S.Opaque<DmsRemoteItem, { readonly brand: uni
 ) {}
 
 /**
- * Provider-neutral kind of remote change reported by the DMS event stream.
- *
  * **Example** (Assert edited event type)
  *
  * ```ts
@@ -83,8 +79,6 @@ export const DmsEventType = LiteralKit(["created", "edited", "moved", "renamed",
 );
 
 /**
- * Runtime type for {@link DmsEventType}.
- *
  * **Example** (Type event type string)
  *
  * ```ts
@@ -100,8 +94,6 @@ export const DmsEventType = LiteralKit(["created", "edited", "moved", "renamed",
 export type DmsEventType = typeof DmsEventType.Type;
 
 /**
- * One provider-neutral remote event observed on the DMS event stream.
- *
  * **Example** (Make remote edited event)
  *
  * ```ts
@@ -149,8 +141,6 @@ export class DmsRemoteEvent extends S.Opaque<DmsRemoteEvent, { readonly brand: u
 ) {}
 
 /**
- * One page of remote events plus the stream position to resume from.
- *
  * **Example** (Make empty event page)
  *
  * ```ts
@@ -179,8 +169,6 @@ export class DmsEventPage extends S.Opaque<DmsEventPage, { readonly brand: uniqu
 ) {}
 
 /**
- * Input for idempotent remote folder creation.
- *
  * **Details**
  *
  * A `none` `parentRemoteId` targets the provider mirror root.
@@ -213,8 +201,6 @@ export class EnsureFolderInput extends S.Opaque<EnsureFolderInput, { readonly br
 ) {}
 
 /**
- * Input for uploading a new remote file.
- *
  * **Details**
  *
  * A `none` `parentRemoteId` targets the provider mirror root.
@@ -253,8 +239,6 @@ export class UploadFileInput extends S.Opaque<UploadFileInput, { readonly brand:
 ) {}
 
 /**
- * Input for uploading a new version of an existing remote file.
- *
  * **Example** (Make upload version input)
  *
  * ```ts
@@ -292,8 +276,6 @@ export class UploadFileVersionInput extends S.Opaque<UploadFileVersionInput, { r
 ) {}
 
 /**
- * Input for moving a remote item to a new parent folder.
- *
  * **Details**
  *
  * A `none` `newParentRemoteId` targets the provider mirror root.
@@ -336,8 +318,6 @@ export class MoveItemInput extends S.Opaque<MoveItemInput, { readonly brand: uni
 ) {}
 
 /**
- * Input for renaming a remote item in place.
- *
  * **Example** (Make rename item input)
  *
  * ```ts
@@ -375,8 +355,6 @@ export class RenameItemInput extends S.Opaque<RenameItemInput, { readonly brand:
 ) {}
 
 /**
- * Input for polling one page of remote events.
- *
  * **Details**
  *
  * A `none` `streamPosition` bootstraps the stream at the provider's "now": the
@@ -494,8 +472,6 @@ export interface DmsMirrorShape {
 export class DmsMirror extends Context.Service<DmsMirror, DmsMirrorShape>()($I`DmsMirror`) {}
 
 /**
- * Why a DMS mirror adapter reports the provider as disconnected.
- *
  * **Details**
  *
  * `credentials-missing` means the application never configured provider
@@ -534,8 +510,6 @@ export const DmsMirrorDisconnectReason = LiteralKit([
 );
 
 /**
- * Runtime type for {@link DmsMirrorDisconnectReason}.
- *
  * **Example** (Type disconnect reason string)
  *
  * ```ts
@@ -551,8 +525,6 @@ export const DmsMirrorDisconnectReason = LiteralKit([
 export type DmsMirrorDisconnectReason = typeof DmsMirrorDisconnectReason.Type;
 
 /**
- * Connectivity probe result for one DMS mirror adapter.
- *
  * **Details**
  *
  * `rootRemoteId` carries the provider identifier of the resolved mirror-root

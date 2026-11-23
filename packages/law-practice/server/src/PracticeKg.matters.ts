@@ -35,8 +35,6 @@ import type { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases
 const $I = $LawPracticeServerId.create("PracticeKg.matters");
 
 /**
- * One row of the bundle's `matters` table: a client-keyed docket family.
- *
  * **Example** (Make a matter row)
  *
  * ```ts
@@ -727,8 +725,6 @@ export const readPracticeKgMatterTables: Effect.Effect<PracticeKgMatterTables, P
   }).pipe(PracticeKgProjectionError.mapError("Practice KG matter tables could not be read."));
 
 /**
- * One matter a reference in free text names, and the field it matched.
- *
  * **Example** (A hit on a docket key)
  *
  * ```ts

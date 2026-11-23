@@ -95,7 +95,7 @@ scenario("deploying over the live objects converges by name: no POST, no DELETE,
       "PATCH /repos/beep-effect/beep-effect": 1,
       "PUT /repos/beep-effect/beep-effect/topics": 1,
       [`PUT /repos/beep-effect/beep-effect/rulesets/${MAIN}`]: 1,
-      "PUT /repos/beep-effect/beep-effect/environments/:name": 4,
+      "PUT /repos/beep-effect/beep-effect/environments/:name": 5,
       "PATCH /repos/beep-effect/beep-effect/labels/:name": 26,
     });
     expect(fake.rulesets.pipe(MutableHashMap.keys, A.fromIterable, A.sort(Order.Number))).toEqual([MAIN, 26_917_133]);

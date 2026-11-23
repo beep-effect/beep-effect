@@ -58,8 +58,6 @@ export const IdentifierNamespace = S.String.check(CanonicalTextCheck).pipe(
 );
 
 /**
- * {@inheritDoc IdentifierNamespace}
- *
  * @category models
  * @since 0.0.0
  */
@@ -88,8 +86,6 @@ export const IdentifierValue = S.String.check(CanonicalTextCheck).pipe(
 );
 
 /**
- * {@inheritDoc IdentifierValue}
- *
  * @category models
  * @since 0.0.0
  */
@@ -123,8 +119,6 @@ export const NormalizedEmail = S.String.check(
 ).pipe(S.brand("NormalizedEmail"), $I.annoteSchema("NormalizedEmail", { description: "Graduated email address." }));
 
 /**
- * {@inheritDoc NormalizedEmail}
- *
  * @category models
  * @since 0.0.0
  */
@@ -154,8 +148,6 @@ export const E164Phone = S.String.check(S.isPattern(e164Pattern, { message: "Exp
 );
 
 /**
- * {@inheritDoc E164Phone}
- *
  * @category models
  * @since 0.0.0
  */
@@ -192,8 +184,6 @@ export const NormalizedExchangeDn = S.String.check(
 );
 
 /**
- * {@inheritDoc NormalizedExchangeDn}
- *
  * @category models
  * @since 0.0.0
  */
@@ -227,8 +217,6 @@ export const NormalizedHandle = S.String.check(
 ).pipe(S.brand("NormalizedHandle"), $I.annoteSchema("NormalizedHandle", { description: "Graduated handle." }));
 
 /**
- * {@inheritDoc NormalizedHandle}
- *
  * @category models
  * @since 0.0.0
  */
@@ -306,8 +294,6 @@ export class ExchangeDn extends S.Opaque<ExchangeDn, { readonly brand: unique sy
 ) {}
 
 /**
- * Username within one service.
- *
  * **Example** (Guard a graduated username)
  *
  * ```ts
@@ -329,8 +315,6 @@ export class Username extends S.Opaque<Username, { readonly brand: unique symbol
 ) {}
 
 /**
- * Service-native account id.
- *
  * **Example** (Guard a native account id)
  *
  * ```ts
@@ -352,8 +336,6 @@ export class NativeAccountId extends S.Opaque<NativeAccountId, { readonly brand:
 ) {}
 
 /**
- * Id issued under an external scheme namespace.
- *
  * **Example** (Guard an external id)
  *
  * ```ts
@@ -405,8 +387,6 @@ export const Identifier = S.Union([EmailAddress, PhoneNumber, ExchangeDn, Userna
 );
 
 /**
- * {@inheritDoc Identifier}
- *
  * @category models
  * @since 0.0.0
  */
@@ -436,8 +416,6 @@ export class PhoneNumberInput extends S.Opaque<PhoneNumberInput, { readonly bran
 ) {}
 
 /**
- * Raw username input.
- *
  * **Example** (Build raw username input)
  *
  * ```ts
@@ -457,8 +435,6 @@ export class UsernameInput extends S.Opaque<UsernameInput, { readonly brand: uni
 ) {}
 
 /**
- * Raw native account id input.
- *
  * **Example** (Build raw native account input)
  *
  * ```ts
@@ -478,8 +454,6 @@ export class NativeAccountIdInput extends S.Opaque<NativeAccountIdInput, { reado
 ) {}
 
 /**
- * Raw external id input.
- *
  * **Example** (Build raw external id input)
  *
  * ```ts

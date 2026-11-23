@@ -4,10 +4,10 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchorVerificationReceipt, VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchorVerificationReceipt, VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -141,7 +141,6 @@ export const CitationMentionWarning = S.Union([CitationOverlapWarning]).pipe(
   })
 );
 /**
- * Schema-derived occurrence warning.
  * @category models
  * @since 0.0.0
  */
@@ -166,7 +165,7 @@ const EvidenceFields: EvidenceFields = { anchor: AnchorProof, components: Compon
 const MentionShape = S.Struct({ ...MetadataFields, ...EvidenceFields });
 
 const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-mention-receipt/v1"),
+  schemaVersion: S.tag("citation-mention-receipt/v2"),
   ...MetadataFields,
   anchor: TextAnchorVerificationReceipt,
   components: S.Array(CitationComponentReceipt),
@@ -188,8 +187,6 @@ const coherentEvidence = (mention: typeof MentionShape.Type | typeof ReceiptShap
 };
 
 /**
- * Semantic citation composed with genuine verified occurrence evidence.
- *
  * **Details**
  *
  * The primary anchor is the citation token span. Extended/full/pincite spans

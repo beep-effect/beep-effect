@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";
@@ -38,7 +38,6 @@ export const OriginalLexicalTokenOrdinal = PosInt.pipe(
   })
 );
 /**
- * Original data ordinal type.
  * @category type-level
  * @since 0.0.0
  */
@@ -65,7 +64,6 @@ export const ClaimSourceProofOrdinal = PosInt.pipe(
   })
 );
 /**
- * Proof ordinal type.
  * @category type-level
  * @since 0.0.0
  */
@@ -100,8 +98,6 @@ export const ClaimNominalPolicyRole = LiteralKit([
   })
 );
 /**
- * Nominal policy role type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -279,7 +275,6 @@ export const ClaimSourceProof = LiteralKit([
     })
   );
 /**
- * Source proof type.
  * @category type-level
  * @since 0.0.0
  */
@@ -318,7 +313,6 @@ export const ClaimSourceProofSlot = LiteralKit([
   })
 );
 /**
- * Source proof membership type.
  * @category type-level
  * @since 0.0.0
  */
@@ -375,7 +369,6 @@ export const ClaimHeadOpening = LiteralKit([
   })
 );
 /**
- * Nominal opening type.
  * @category type-level
  * @since 0.0.0
  */
@@ -414,7 +407,6 @@ export const ClaimHeadBoundary = LiteralKit([
   })
 );
 /**
- * Nominal boundary type.
  * @category type-level
  * @since 0.0.0
  */
@@ -451,7 +443,6 @@ export const ClaimOperatorLicense = LiteralKit([
   })
 );
 /**
- * Positive operator type.
  * @category type-level
  * @since 0.0.0
  */
@@ -487,7 +478,6 @@ export const ClaimArgumentCoverage = LiteralKit(["token", "gap"])
     })
   );
 /**
- * Argument segment coverage type.
  * @category type-level
  * @since 0.0.0
  */
@@ -534,7 +524,6 @@ export const ClaimOperatorHeadWitness = LiteralKit([
     })
   );
 /**
- * Operator head witness type.
  * @category type-level
  * @since 0.0.0
  */
@@ -624,7 +613,6 @@ export const ClaimHeadTerminalEvidence = LiteralKit(["lexical-terminal", "intrin
     })
   );
 /**
- * Terminal evidence type.
  * @category type-level
  * @since 0.0.0
  */
@@ -815,7 +803,6 @@ export const ClaimFiniteSourceProof = LiteralKit([
     })
   );
 /**
- * Ranked source proof type.
  * @category type-level
  * @since 0.0.0
  */
@@ -915,7 +902,6 @@ export const ClaimNominalCandidateState = LiteralKit(["unproved", "proved"])
     })
   );
 /**
- * Source candidate lifecycle type.
  * @category type-level
  * @since 0.0.0
  */
@@ -987,8 +973,6 @@ export const ClaimFrameAttachment = LiteralKit([
   })
 );
 /**
- * Grammatical attachment type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1069,7 +1053,6 @@ export const ClaimPrivateFrameArgument = LiteralKit(["predicate", "selection"])
     })
   );
 /**
- * Private argument governor type.
  * @category type-level
  * @since 0.0.0
  */
@@ -1102,7 +1085,6 @@ export const ClaimOperatorLexicalSlot = LiteralKit(["lexical", "adjunct", "gap"]
     })
   );
 /**
- * Committed lexical slot type.
  * @category type-level
  * @since 0.0.0
  */
@@ -1233,8 +1215,6 @@ export class ClaimAttachedNominal extends S.Opaque<ClaimAttachedNominal, { reado
   )
 ) {}
 /**
- * Source-backed element grouping production.
- *
  * **Example** (Check an untrusted claim element grouping value)
  *
  * ```ts
@@ -1265,8 +1245,6 @@ export const ClaimElementGrouping = LiteralKit([
   })
 );
 /**
- * Structural grouping type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1309,7 +1287,6 @@ export const ClaimTermOwnerCertificate = LiteralKit(["existing-element-nominal",
     })
   );
 /**
- * Source membership certificate type.
  * @category type-level
  * @since 0.0.0
  */
@@ -1449,7 +1426,6 @@ export const ClaimSourceExclusion = LiteralKit([
     })
   );
 /**
- * Source exclusion type.
  * @category type-level
  * @since 0.0.0
  */
@@ -1497,7 +1473,6 @@ export const ClaimSourceDeclaration = LiteralKit(["labelled", "composition", "ac
     })
   );
 /**
- * Source declaration type.
  * @category type-level
  * @since 0.0.0
  */
@@ -1663,7 +1638,6 @@ export const ClaimSourceTokenOwnership = LiteralKit(["public-core", "private-val
     })
   );
 /**
- * Whole-source token ownership type.
  * @category type-level
  * @since 0.0.0
  */

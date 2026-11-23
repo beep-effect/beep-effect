@@ -16,8 +16,6 @@ const $I = $WorkspaceDomainId.create("entities/Turn/Turn.model");
 const pg = ProductEntity.pg;
 
 /**
- * Workspace turn aggregate with parent-turn lineage for branching.
- *
  * **Example** (Log turn table name)
  *
  * ```ts

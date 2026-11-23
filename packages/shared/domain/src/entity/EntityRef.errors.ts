@@ -63,8 +63,6 @@ export class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantErr
 }
 
 /**
- * Closed union of entity-reference invariant failures.
- *
  * **Example** (Recognize an entity-reference failure)
  *
  * ```ts
@@ -82,8 +80,6 @@ export const EntityRefError = S.Union([EntityRefInvariantError]).pipe(
 );
 
 /**
- * Runtime failure type derived from the entity-reference error union.
- *
  * @category type-level
  * @since 0.0.0
  */

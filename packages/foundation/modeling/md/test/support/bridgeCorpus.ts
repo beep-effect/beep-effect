@@ -1,16 +1,3 @@
-// The bridge-corpus ledger: every @beep/markdown conformance example run
-// through Md.parse, with its loss reasons, safety tags, node counts and the
-// MQ6 writer differential (Md.render against the kit's own stringify).
-//
-// The ledger is a conformance fixture, not an allow-list: nothing reads it
-// to excuse a failure. A test regenerates it and compares the file, so any
-// change in bridge behaviour shows up as a ledger diff in review.
-//
-// Corpora come from the `@beep/markdown/conformance/*` JSON subpaths. The
-// mdast fixtures export only their reference trees, so an mdast row decodes
-// the tree with `Mdast.fromMdastResult`, writes it with the kit's
-// stringify, and parses that text.
-
 import { Markdown, MarkdownDialect } from "@beep/markdown/Markdown";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { Mdast } from "@beep/markdown/Mdast";
@@ -31,19 +18,12 @@ import * as Str from "effect/String";
 import { ROUND_TRIP_GAPS, RoundTripGap } from "./bridgeArbitrary.ts";
 import type { MdFromSyntax } from "@beep/md/Md.syntax";
 
-/** The conformance corpus a ledger row comes from. */
 const BridgeCorpusName = LiteralKit(["commonmark", "gfm-spec", "gfm-extensions", "mdast"]);
 
-/** Type for {@link BridgeCorpusName}. */
 type BridgeCorpusName = typeof BridgeCorpusName.Type;
 
-/** How one example crossed the bridge. */
 const BridgeOutcome = LiteralKit(["lossless", "lossy", "unsafe", "parseError"]);
 
-/**
- * Md.render against `Markdown.stringify` for one example: byte-identical
- * text, different text that re-parses to the same Md document, or neither.
- */
 const WriterOutcome = LiteralKit([
   "byteEqual",
   "reparseEqual",
@@ -53,10 +33,8 @@ const WriterOutcome = LiteralKit([
   "notApplicable",
 ]);
 
-/** Type for {@link WriterOutcome}. */
 type WriterOutcome = typeof WriterOutcome.Type;
 
-/** One spec example as the CommonMark and GFM corpora store it. */
 class SpecExample extends S.Opaque<SpecExample, { readonly brand: unique symbol }>()(
   S.Struct({
     example: S.Finite,
@@ -73,7 +51,6 @@ export class MdastFixture extends S.Opaque<MdastFixture, { readonly brand: uniqu
   })
 ) {}
 
-/** One example's ledger row. */
 class BridgeCorpusRow extends S.Opaque<BridgeCorpusRow, { readonly brand: unique symbol }>()(
   S.Struct({
     corpus: BridgeCorpusName,
@@ -88,7 +65,6 @@ class BridgeCorpusRow extends S.Opaque<BridgeCorpusRow, { readonly brand: unique
   })
 ) {}
 
-/** Ledger totals, each count keyed in sorted order. */
 class BridgeCorpusSummary extends S.Opaque<BridgeCorpusSummary, { readonly brand: unique symbol }>()(
   S.Struct({
     examples: S.Record(S.String, S.Int),
@@ -99,7 +75,6 @@ class BridgeCorpusSummary extends S.Opaque<BridgeCorpusSummary, { readonly brand
   })
 ) {}
 
-/** The whole ledger file. */
 class BridgeCorpusLedger extends S.Opaque<BridgeCorpusLedger, { readonly brand: unique symbol }>()(
   S.Struct({
     summary: BridgeCorpusSummary,
@@ -108,7 +83,6 @@ class BridgeCorpusLedger extends S.Opaque<BridgeCorpusLedger, { readonly brand: 
   })
 ) {}
 
-/** One corpus input: where it came from, its text, and the dialect it is read in. */
 class CorpusInput extends S.Opaque<CorpusInput, { readonly brand: unique symbol }>()(
   S.Struct({
     corpus: BridgeCorpusName,
@@ -250,11 +224,7 @@ export const bridgeCorpusLedger = (rows: ReadonlyArray<BridgeCorpusRow>): Bridge
     rows,
   });
 
-// The ledger is checked into a Biome-formatted tree, so the text follows
-// Biome's JSON layout (80 columns, two-space indent): objects always expand,
-// and an array stays on one line when that line, with its trailing comma,
-// fits.
-const JSON_LINE_WIDTH = 80;
+const BIOME_JSON_LINE_WIDTH = 80;
 const encodeJsonText = S.encodeResult(S.fromJsonString(S.String));
 const encodeJsonString = (value: string): string => Result.getOrThrow(encodeJsonText(value));
 const encodeLedgerJson = (ledger: BridgeCorpusLedger): S.Json =>
@@ -284,7 +254,7 @@ const layoutJson = (value: S.Json, indent: string, prefix: string, suffix: strin
         ];
   if (isJsonArray(value)) {
     const line = `${indent}${prefix}${inlineJson(value)}${suffix}`;
-    return Str.length(line) <= JSON_LINE_WIDTH && !A.some(value, isJsonObject)
+    return Str.length(line) <= BIOME_JSON_LINE_WIDTH && !A.some(value, isJsonObject)
       ? [line]
       : members(
           A.map(value, (member) => ["", member] as const),

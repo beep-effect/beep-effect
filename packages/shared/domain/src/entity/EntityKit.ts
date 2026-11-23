@@ -71,8 +71,6 @@ export const RowVersion = PosInt.pipe(
 );
 
 /**
- * Type of {@link RowVersion}.
- *
  * @category models
  * @since 0.0.0
  */

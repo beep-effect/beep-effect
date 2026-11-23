@@ -63,8 +63,6 @@ export class TextQuote extends S.Opaque<TextQuote, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion namespace for `TextQuote`.
- *
  * **Example** (Type an encoded quote prefix)
  *
  * ```ts

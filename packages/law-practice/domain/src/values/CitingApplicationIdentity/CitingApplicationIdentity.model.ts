@@ -16,8 +16,6 @@ const $I = $LawPracticeDomainId.create("values/CitingApplicationIdentity/CitingA
 const usptoNormalizedPattern = /^\d{8}$/u;
 
 /**
- * Normalized eight-digit USPTO application number in its law-owned form.
- *
  * **When to use**
  *
  * Use when a filing is identified the way USPTO systems identify it, rather
@@ -67,8 +65,6 @@ export const UsptoNormalizedApplicationNumber = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link UsptoNormalizedApplicationNumber}.
- *
  * @see {@link UsptoNormalizedApplicationNumber} for the runtime schema and validation behavior.
  * @category type-level
  * @since 0.0.0
@@ -79,8 +75,6 @@ export type UsptoNormalizedApplicationNumber = typeof UsptoNormalizedApplication
 const WipoSt13OfficeCodeBase = OfficeCode.omit(["US", "XX"]);
 
 /**
- * Known non-U.S. ST.3 office code owning an observed ST.13 application number.
- *
  * **Details**
  *
  * The current WIPO office-practice table records that the United States uses
@@ -112,16 +106,12 @@ export const WipoSt13OfficeCode = WipoSt13OfficeCodeBase.pipe(
 );
 
 /**
- * Runtime type for {@link WipoSt13OfficeCode}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type WipoSt13OfficeCode = typeof WipoSt13OfficeCode.Type;
 
 /**
- * Citing application identified by its normalized eight-digit USPTO number.
- *
  * **Example** (Identify a filing the way USPTO systems do)
  *
  * ```ts
@@ -153,8 +143,6 @@ export class UsptoCitingApplication extends S.Opaque<UsptoCitingApplication, { r
 ) {}
 
 /**
- * Citing application identified by its canonical WIPO ST.13 number.
- *
  * **Example** (Identify a filing in the ST.13 machine-readable form)
  *
  * ```ts
@@ -243,8 +231,6 @@ export const CitingApplicationIdentity = S.Union([UsptoCitingApplication, WipoCi
 );
 
 /**
- * Runtime type for {@link CitingApplicationIdentity}.
- *
  * @see {@link CitingApplicationIdentity} for the runtime schema and representation rules.
  * @category models
  * @since 0.0.0

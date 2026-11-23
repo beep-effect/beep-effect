@@ -15,8 +15,6 @@ import { RecordAnswerInput } from "../QuestionQueue/QuestionQueue.schemas.ts";
 const $I = $LawPracticeUseCasesId.create("ReviewHub/ReviewHub.schemas");
 
 /**
- * Request for the items waiting for the attorney on one day.
- *
  * **Example** (Decode an open-items request)
  *
  * ```ts
@@ -43,8 +41,6 @@ export class OpenItemsRequest extends S.Opaque<OpenItemsRequest, { readonly bran
 ) {}
 
 /**
- * The items waiting for the attorney, in the order the store holds them.
- *
  * **Details**
  *
  * Verdict items appear while they lack a final verdict; questions appear
@@ -74,8 +70,6 @@ export class OpenItems extends S.Opaque<OpenItems, { readonly brand: unique symb
 ) {}
 
 /**
- * Request to lock one review batch.
- *
  * **Example** (Decode a lock request)
  *
  * ```ts
@@ -101,8 +95,6 @@ export class LockBatchRequest extends S.Opaque<LockBatchRequest, { readonly bran
 ) {}
 
 /**
- * Request to record the attorney's answer to one stored question.
- *
  * **Details**
  *
  * The hub looks the question up by `itemId`; the answer must name the same

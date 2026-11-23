@@ -21,8 +21,8 @@ import {
   prepareClaimInspection,
   validateClaimFiniteSourceProofsFromOriginalInput,
 } from "@beep/law-practice-domain/values/ClaimElement";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { assert, describe } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";

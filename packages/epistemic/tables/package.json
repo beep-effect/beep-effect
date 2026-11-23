@@ -75,8 +75,8 @@
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemics": "workspace:^",
     "@beep/identity": "workspace:^",
-    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/text": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

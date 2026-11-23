@@ -6,8 +6,6 @@
  */
 
 /**
- * Office-action extraction label exports.
- *
  * **Example** (Check extraction label export)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./OfficeActionExtractionLabel.ts";
 /**
- * Office-action review port exports.
- *
  * **Example** (Check review port export)
  *
  * ```ts
@@ -36,8 +32,6 @@ export * from "./OfficeActionExtractionLabel.ts";
  */
 export * from "./OfficeActionReview.ports.ts";
 /**
- * Office-action review implementation exports.
- *
  * **Example** (Check review implementation export)
  *
  * ```ts

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $WorkspaceTablesId.create("entities/Workspace/Workspace.errors");
 
 /**
- * Failure converting a Workspace persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

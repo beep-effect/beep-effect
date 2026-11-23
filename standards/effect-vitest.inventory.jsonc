@@ -1661,6 +1661,28 @@
       "reason": "Owner: @beep/law-practice-server. The failure injection writes a carry into brokenBundle, a directory the body creates with a corrupt practice.duckdb after its carry writes over target, and asserts the typed failure. it.layer cannot take a path the body creates mid-test. Exit: retire when the broken-bundle case splits into its own test over a nested it.layer(Layer.unwrap(...)), or when EV002 recognises this shape (#1855 wave 4 register)."
     },
     {
+      "id": "EV010:packages/tooling/infra/github/test/Secrets.test.ts:12:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/infra-github",
+      "file": "packages/tooling/infra/github/test/Secrets.test.ts",
+      "line": 12,
+      "endLine": 12,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The committed secrets.env and the checked-in .github/workflows directory are the subject: the tests prove the op run env file matches the configuration and that no workflow references the workstation-only stack, and seeding MemoryFileSystem would fabricate both. Owner: @beep/infra-github. Exit: retire when the workflow check and the env-file comparison move to a repo-level law that reads the checkout."
+    },
+    {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:112:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -5746,6 +5768,28 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1902:scoped@8#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "line": 1902,
+      "endLine": 1932,
+      "symbol": "scoped",
+      "occurrence": "v2:9c337fc5f009cad8cb785a254286593f4e6252efc85243817f3224752b50506b",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fixture = yield* makeGitCheckoutFixture(root); const liveClone = path.join(fixtur",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The inner scope releases the child process that holds a cwd reference inside the fixture clone before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:220:scoped@2#1",

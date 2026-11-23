@@ -51,14 +51,6 @@ import {
 } from "@beep/file-processing/SourceText";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { PostgresDrizzle } from "@beep/postgres";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import {
-  TextAnchorVerificationReceipt,
-  toTextAnchorVerificationReceipt,
-  VerifyTextAnchorInput,
-  verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
 import { Cuid } from "@beep/schema/Cuid";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -69,6 +61,14 @@ import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import {
+  TextAnchorVerificationReceipt,
+  toTextAnchorVerificationReceipt,
+  VerifyTextAnchorInput,
+  verifyTextAnchor,
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
@@ -214,8 +214,6 @@ const ContradictionQaSeedErrorReason = LiteralKit([
 type ContradictionQaSeedErrorReason = typeof ContradictionQaSeedErrorReason.Type;
 
 /**
- * Sanitized contradiction browser-QA seed failure.
- *
  * **Example** (Create and identify error)
  *
  * ```ts

@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $DocumentsDomainId.create("entities/SyncConflict/SyncConflict.values");
 
 /**
- * Kind of remote drift detected against the one-way mirror.
- *
  * **Example** (Check remoteEdit kind)
  *
  * ```ts
@@ -38,16 +36,12 @@ export const SyncConflictKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link SyncConflictKind}.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export type SyncConflictKind = typeof SyncConflictKind.Type;
 
 /**
- * Review status for a surfaced remote-drift record.
- *
  * **Example** (Check open resolution)
  *
  * ```ts
@@ -66,8 +60,6 @@ export const SyncConflictResolution = LiteralKit(["open", "reviewed"]).pipe(
 );
 
 /**
- * Runtime type for {@link SyncConflictResolution}.
- *
  * @category value-objects
  * @since 0.0.0
  */

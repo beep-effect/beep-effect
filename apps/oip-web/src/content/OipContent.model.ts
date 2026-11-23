@@ -81,8 +81,6 @@ export const ReviewStatus = ReviewStatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link ReviewStatus}.
- *
  * **Example** (Assign approved status type)
  *
  * ```ts
@@ -102,8 +100,6 @@ export const ReviewStatus = ReviewStatusBase.pipe(
 export type ReviewStatus = typeof ReviewStatus.Type;
 
 /**
- * Review note attached to a public website claim.
- *
  * **Example** (Create approved review gate)
  *
  * ```ts
@@ -132,8 +128,6 @@ export class ReviewGate extends S.Opaque<ReviewGate, { readonly brand: unique sy
 ) {}
 
 /**
- * External link displayed by the public site.
- *
  * **Example** (Create external link instance)
  *
  * ```ts
@@ -162,8 +156,6 @@ export class ExternalLink extends S.Opaque<ExternalLink, { readonly brand: uniqu
 ) {}
 
 /**
- * Social platform the OIP firm maintains a public profile on.
- *
  * **Example** (Access instagram enum value)
  *
  * ```ts
@@ -193,8 +185,6 @@ export const SocialPlatform = LiteralKit([
 );
 
 /**
- * Runtime type for {@link SocialPlatform}.
- *
  * **Example** (Assign instagram platform type)
  *
  * ```ts
@@ -210,8 +200,6 @@ export const SocialPlatform = LiteralKit([
 export type SocialPlatform = typeof SocialPlatform.Type;
 
 /**
- * Public social media profile link for the OIP firm.
- *
  * **Example** (Create Instagram social link)
  *
  * ```ts
@@ -279,8 +267,6 @@ export class SiteAsset extends S.Opaque<SiteAsset, { readonly brand: unique symb
 ) {}
 
 /**
- * Top-level metadata used by Next.js and JSON-LD generation.
- *
  * **Example** (Create site metadata content)
  *
  * ```ts
@@ -317,8 +303,6 @@ export class SiteMetadataContent extends S.Opaque<SiteMetadataContent, { readonl
 ) {}
 
 /**
- * Anchor navigation item.
- *
  * **Example** (Create contact nav item)
  *
  * ```ts
@@ -374,8 +358,6 @@ export class HeroClip extends S.Opaque<HeroClip, { readonly brand: unique symbol
 ) {}
 
 /**
- * Hero opening claim and rotating background media.
- *
  * **Example** (Create hero content instance)
  *
  * ```ts
@@ -414,8 +396,6 @@ export class HeroContent extends S.Opaque<HeroContent, { readonly brand: unique 
 ) {}
 
 /**
- * Biographical bridge panel.
- *
  * **Example** (Create about panel instance)
  *
  * ```ts
@@ -448,8 +428,6 @@ export class AboutPanel extends S.Opaque<AboutPanel, { readonly brand: unique sy
 ) {}
 
 /**
- * Practice-area summary.
- *
  * **Example** (Create practice area summary)
  *
  * ```ts
@@ -480,8 +458,6 @@ export class PracticeArea extends S.Opaque<PracticeArea, { readonly brand: uniqu
 ) {}
 
 /**
- * Selected matter summary.
- *
  * **Example** (Create matter item instance)
  *
  * ```ts
@@ -523,8 +499,6 @@ export class MatterItem extends S.Opaque<MatterItem, { readonly brand: unique sy
 ) {}
 
 /**
- * Client logo reference.
- *
  * **Example** (Create client logo reference)
  *
  * ```ts
@@ -559,8 +533,6 @@ export class ClientLogo extends S.Opaque<ClientLogo, { readonly brand: unique sy
 ) {}
 
 /**
- * Press item summary.
- *
  * **Example** (Create press item summary)
  *
  * ```ts
@@ -597,8 +569,6 @@ export class PressItem extends S.Opaque<PressItem, { readonly brand: unique symb
 ) {}
 
 /**
- * Public contact and legal notice content.
- *
  * **Example** (Create contact content instance)
  *
  * ```ts
@@ -639,8 +609,6 @@ export class ContactContent extends S.Opaque<ContactContent, { readonly brand: u
 ) {}
 
 /**
- * Complete content contract for the OIP public site.
- *
  * **Example** (Instantiate from site content)
  *
  * ```ts

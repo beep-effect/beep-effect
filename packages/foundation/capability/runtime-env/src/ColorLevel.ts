@@ -19,8 +19,6 @@ import type { Env } from "./internal/types.ts";
 const $I = $RuntimeEnvId.create("ColorLevel");
 
 /**
- * The colour support of one output stream: none, 16 colours, 256 colours or truecolor.
- *
  * **Example** (Validate truecolor support)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const ColorLevel = LiteralKit(["none", "basic", "256", "truecolor"]).pipe
 );
 
 /**
- * Represents the colour capability of a stream: none, 16 colours, 256 colours, or truecolor.
- *
  * @category type-level
  * @since 0.0.0
  */

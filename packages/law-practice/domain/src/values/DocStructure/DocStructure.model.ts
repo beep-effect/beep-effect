@@ -4,11 +4,11 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/DocStructure/DocStructure.model");
@@ -145,8 +145,6 @@ export class DocStructureRuleFamily extends S.Opaque<DocStructureRuleFamily, { r
  */
 export const officeActionRuleV1 = DocStructureRuleFamily.make({ id: "uspto-oa-finality-ssp", version: 1 });
 /**
- * Carries law-practice document identity and source version alongside substrate identity.
- *
  * **Example** (Inspect DocStructureDocument)
  *
  * ```ts
@@ -386,8 +384,6 @@ export const DocStructureCandidate: S.toTaggedUnion<
  */
 export type DocStructureCandidate = typeof DocStructureCandidate.Type;
 /**
- * Carries exactly two ordered verified evidence inputs as one atomic outcome.
- *
  * **Example** (Inspect OfficeActionRecognizedPair)
  *
  * ```ts
@@ -427,8 +423,6 @@ export class OfficeActionRecognizedPair extends S.Opaque<
     )
 ) {}
 /**
- * Exposes the atomic verified pair or one typed abstention.
- *
  * **Example** (Inspect DocStructureOutcome)
  *
  * ```ts
@@ -450,7 +444,6 @@ export const DocStructureOutcome: S.toTaggedUnion<
   })
 );
 /**
- * Exposes the atomic verified pair or one typed abstention.
  * @category type-level
  * @since 0.0.0
  */

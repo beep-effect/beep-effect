@@ -6,8 +6,6 @@
  */
 
 /**
- * ClaimDisposition row converter exports.
- *
  * **Example** (Import row converter exports)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./ClaimDisposition.converters.ts";
 /**
- * ClaimDisposition converter error exports.
- *
  * **Example** (Access ClaimDispositionConverterError export)
  *
  * ```ts
@@ -37,8 +33,6 @@ export * from "./ClaimDisposition.converters.ts";
  */
 export * from "./ClaimDisposition.errors.ts";
 /**
- * ClaimDisposition table exports.
- *
  * **Example** (Import table definition exports)
  *
  * ```ts

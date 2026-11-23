@@ -7,13 +7,13 @@ import {
   CitationSourceRole,
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import {
   VerifiedSourceText,
   VerifySourceTextIdentityInput,
   verifySourceTextIdentity,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";

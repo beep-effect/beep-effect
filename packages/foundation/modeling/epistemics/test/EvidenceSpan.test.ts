@@ -5,8 +5,8 @@ import {
   EvidenceSpanArbitrary,
   isEvidenceSpanInternallyConsistent,
 } from "@beep/epistemics/EvidenceSpan";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";

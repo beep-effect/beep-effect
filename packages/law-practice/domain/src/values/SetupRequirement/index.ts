@@ -7,8 +7,6 @@
  */
 
 /**
- * SetupRequirement model exports.
- *
  * **Example** (Import SetupRequirement)
  *
  * ```ts

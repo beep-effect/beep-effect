@@ -21,11 +21,11 @@ import * as S from "effect/Schema";
 import {
   AccountId,
   ActivityId,
+  ArtifactOccurrenceId,
   ContextRef,
   EventId,
   IdentifierId,
   ObservationId,
-  OccurrenceId,
   VoiceId,
 } from "../../Ids.ts";
 import { EvidenceAnchor } from "../../Provenance.ts";
@@ -49,7 +49,6 @@ export const ParticipantRole = LiteralKit(["from", "sender", "sent-representing"
   $I.annoteSchema("ParticipantRole", { description: "Header role of a communication participant." })
 );
 /**
- * Decoded ParticipantRole type.
  * @category models
  * @since 0.0.0
  */
@@ -72,7 +71,6 @@ export const EvidenceKind = LiteralKit(["distinctive-behavior", "shared-template
   $I.annoteSchema("EvidenceKind", { description: "How shareable or forgeable a piece of evidence is." })
 );
 /**
- * Decoded EvidenceKind type.
  * @category models
  * @since 0.0.0
  */
@@ -99,7 +97,6 @@ export const SpeechAct = LiteralKit([
   "reports-status",
 ]).pipe($I.annoteSchema("SpeechAct", { description: "Speech act labelled on a message." }));
 /**
- * Decoded SpeechAct type.
  * @category models
  * @since 0.0.0
  */
@@ -146,7 +143,7 @@ export class HeaderParticipant extends S.Opaque<HeaderParticipant, { readonly br
 export class MetadataTag extends S.Opaque<MetadataTag, { readonly brand: unique symbol }>()(
   S.TaggedStruct("MetadataTag", {
     ...base,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     namespace: S.NonEmptyString,
     tag: S.NonEmptyString,
     rawValue: S.String,
@@ -191,7 +188,7 @@ export class SignatureBlock extends S.Opaque<SignatureBlock, { readonly brand: u
 export class DirectoryRow extends S.Opaque<DirectoryRow, { readonly brand: unique symbol }>()(
   S.TaggedStruct("DirectoryRow", {
     ...base,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     fields: S.Record(S.String, S.String),
     anchor: EvidenceAnchor,
   }).pipe($I.annoteSchema("DirectoryRow", { description: "DirectoryRow data." }))
@@ -257,8 +254,6 @@ export class Absence extends S.Opaque<Absence, { readonly brand: unique symbol }
   }).pipe($I.annoteSchema("Absence", { description: "Absence data." }))
 ) {}
 /**
- * Observation public schema for the communication model.
- *
  * **Example** (Decode Observation)
  * ```ts
  * import { Observation } from "@beep/party-domain/Communication"
@@ -281,7 +276,6 @@ export const Observation = S.Union([
   $I.annoteSchema("Observation", { description: "Immutable extractor/tool/classifier output." })
 );
 /**
- * Decoded Observation type.
  * @category models
  * @since 0.0.0
  */
@@ -346,7 +340,7 @@ export class Participant extends S.Opaque<Participant, { readonly brand: unique 
 export class CommunicationEvent extends S.Opaque<CommunicationEvent, { readonly brand: unique symbol }>()(
   S.Struct({
     id: EventId,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     channel: LiteralKit(["email", "meeting", "call", "chat"]),
     sentAt: S.OptionFromNullOr(S.DateTimeUtcFromMillis),
     messageId: S.OptionFromNullOr(S.String),
@@ -457,7 +451,7 @@ export const isDelegated = (voice: Voice): boolean =>
 export class RedactedPartySlot extends S.Opaque<RedactedPartySlot, { readonly brand: unique symbol }>()(
   S.Struct({
     placeholder: PartyId,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     redactionReason: S.NonEmptyString,
   }).pipe($I.annoteSchema("RedactedPartySlot", { description: "Withheld party known to exist." }))
 ) {}

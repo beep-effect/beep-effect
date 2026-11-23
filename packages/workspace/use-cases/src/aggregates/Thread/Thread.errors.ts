@@ -128,8 +128,6 @@ export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable
 ) {}
 
 /**
- * ThreadStore port failure.
- *
  * **Example** (Test ThreadStoreError guard)
  *
  * ```ts
@@ -150,8 +148,6 @@ export const ThreadStoreError = S.Union([ThreadStoreNotFound, ThreadStoreConflic
 );
 
 /**
- * Companion type for {@link ThreadStoreError}
- *
  * **Example** (Enumerate error tag values)
  *
  * ```ts

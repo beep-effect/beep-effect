@@ -26,8 +26,6 @@ const FALLBACK_STEM = "document" as const;
 const SHORT_DIGEST_LENGTH = 12;
 
 /**
- * Failure raised when deterministic vault path projection cannot complete.
- *
  * **Example** (Create projection error)
  *
  * ```ts
@@ -55,8 +53,6 @@ export class TaxonomyProjectionError extends S.TaggedError<TaxonomyProjectionErr
 ) {}
 
 /**
- * Input accepted by deterministic filed-document path projection.
- *
  * **Example** (Build filed path input)
  *
  * ```ts
@@ -107,8 +103,6 @@ export class ProjectFiledDocumentPathInput extends S.Opaque<
 ) {}
 
 /**
- * Deterministic relative vault path for a filed document.
- *
  * **Example** (Decode projected vault path)
  *
  * ```ts
@@ -259,8 +253,6 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
 });
 
 /**
- * Input accepted by deterministic inbox document path projection.
- *
  * **Example** (Build inbox path input)
  *
  * ```ts

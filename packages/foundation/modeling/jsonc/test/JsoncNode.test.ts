@@ -18,7 +18,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const tree = (text: string): JsoncNode => Jsonc.parseTreeResult(text).pipe(Result.getOrThrow, O.getOrThrow);
 
-// A hand-built tree deeper than the walker cap: arrays wrapping one leaf.
 const deepArray = (depth: number): JsoncNode => {
   let node = makeNodeUnsafe({ type: "number", offset: depth, length: 1, value: 1 });
   for (let i = depth - 1; i >= 0; i--) {
@@ -27,7 +26,6 @@ const deepArray = (depth: number): JsoncNode => {
   return node;
 };
 
-// A hand-built tree of nested single-property objects deeper than the cap.
 const deepObject = (depth: number): JsoncNode => {
   let node = makeNodeUnsafe({ type: "number", offset: 5 * depth, length: 1, value: 1 });
   for (let i = depth - 1; i >= 0; i--) {
@@ -164,9 +162,7 @@ describe("JsoncNode", () => {
       );
     });
 
-    // Upstream parity: upstream reads `children[segment]`, so an index that is
-    // not a non-negative integer finds nothing instead of a floored element.
-    it("returns none for a fractional or negative array index", () => {
+    it("returns none for a fractional or negative array index, never a floored element, as upstream's children[segment] read does", () => {
       const root = tree("[10,20]");
       assertNone(root.find([0.5]));
       assertNone(root.find([1.5]));
@@ -407,7 +403,6 @@ describe("JsoncNode", () => {
   });
 
   describe("properties", () => {
-    // Construction keeps every finite span exactly, for every node type.
     it.prop(
       "constructs any node type with any finite span unchanged",
       [JsoncNodeType, S.Finite, S.Finite],
