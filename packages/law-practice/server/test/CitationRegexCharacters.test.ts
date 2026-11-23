@@ -88,6 +88,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
       const facts = yield* S.decodeEffect(Facts)(raw);
       expect(citationPythonRegexData).toEqual({ unicodeVersion: "14.0.0", ...facts.classBodies });
       // decision: python-oracle-producers-pinned-by-digest
+      expect(
+        facts.producerSha256,
+        "pins the removed producer, recoverable with git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-regex-characters.py"
+      ).toMatch(/^[0-9a-f]{64}$/u);
       for (const [name, body] of R.toEntries(facts.classBodies)) {
         const observed = facts.observations[name];
         const intervals = facts.intervals[name];

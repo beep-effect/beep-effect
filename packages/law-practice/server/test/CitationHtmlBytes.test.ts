@@ -63,6 +63,10 @@ const load = Effect.fn("HtmlBytesTest.load")(function* () {
   expect(A.filter(data.nonTextCases, (r) => r.outcome.kind === "success")).toHaveLength(6);
   expect(A.every(data.nonTextCases, (r) => r.hooks.length === 0)).toBe(true);
   // decision: python-oracle-producers-pinned-by-digest
+  expect(
+    data.producerSha256,
+    "pins the removed producer, recoverable with git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-html-bytes.py"
+  ).toMatch(/^[0-9a-f]{64}$/u);
   return { data, strings: HashMap.fromIterable(A.map(data.artifacts, (r) => [r.sha256, r.value] as const)) };
 });
 const verify = Effect.fn("HtmlBytesTest.verify")(function* (

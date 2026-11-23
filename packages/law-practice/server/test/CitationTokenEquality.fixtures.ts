@@ -2,6 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
+import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
@@ -39,5 +40,9 @@ export const readCitationTokenEquality = Effect.fn("TokenEqualityTest.read")(fun
   const corpus = yield* S.decodeEffect(Corpus)(text);
   yield* readCitationOracleFixture("token-editions", corpus.editionProfileSha256);
   // decision: python-oracle-producers-pinned-by-digest
+  expect(
+    corpus.producerSha256,
+    "pins the removed producer, recoverable with git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-token-equality.py"
+  ).toMatch(/^[0-9a-f]{64}$/u);
   return corpus;
 });
