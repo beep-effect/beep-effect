@@ -23,7 +23,6 @@ import * as Equal from "effect/Equal";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-/** A small `a = 1`-shaped key-value tree, built fresh on every call. */
 function sampleKeyValue(): TomlKeyValue {
   return TomlKeyValue.make({
     keyPath: [TomlKey.make({ value: "a", kind: "bare", offset: 0, length: 1 })],
@@ -86,9 +85,11 @@ describe("TomlNode", () => {
       assert.strictEqual(table.entries.length, 1);
       const array = TomlArray.make({ items: [table], offset: 3, length: 11 });
       assert.strictEqual(array._tag, "TomlArray");
-      // S.Opaque construction re-validates nested plain-data nodes into fresh objects; the item is
-      // structurally the same table, not the same reference.
-      assert.deepStrictEqual(array.items[0], table);
+      assert.deepStrictEqual(
+        array.items[0],
+        table,
+        "S.Opaque construction re-validates nested nodes into fresh objects, so the item matches structurally, not by reference"
+      );
     });
     it("constructs TomlKeyValue with and without the optional comment", () => {
       const withComment = sampleKeyValue();

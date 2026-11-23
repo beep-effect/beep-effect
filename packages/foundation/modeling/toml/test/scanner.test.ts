@@ -23,7 +23,6 @@ import type { TomlErrorCodeRaw } from "@beep/toml/internal/diagnostics";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** Assert `fn` throws a RawTomlError with `code` (and `offset`, when given). */
 function assertScanError(fn: () => unknown, code: TomlErrorCodeRaw, offset?: number): void {
   try {
     fn();
@@ -40,7 +39,6 @@ function assertScanError(fn: () => unknown, code: TomlErrorCodeRaw, offset?: num
   assert.fail(`expected RawTomlError with code ${code}, but nothing was thrown`);
 }
 
-/** Classify `token` and narrow to an expected datetime class. */
 function classifyInstance<T>(token: string, ctor: abstract new (...args: never[]) => T): T {
   const value = classifyValueToken(token, 0);
   if (!(value instanceof ctor)) {
@@ -76,13 +74,8 @@ describe("scanner", () => {
       assert.strictEqual(scanBasicString('"\\x41\\xff"', 0).value, "Aÿ");
     });
     it("decodes \\xHH control characters preserved unnormalized beside real newlines", () => {
-      // Escapes are grammar-siblings of basic-unescaped: the full 0x00-0xFF
-      // range is legal, control characters included, and the decoded bytes
-      // bypass both the control-character ban and newline normalization.
       assert.strictEqual(scanBasicString('"\\x00"', 0).value, "\u0000");
       assert.strictEqual(scanBasicString('"a\\x0d\\x0ab"', 0).value, "a\r\nb");
-      // a real newline beside the escaped CRLF is still consumed as a line
-      // ending in a multiline string, while the escaped bytes stay literal
       assert.strictEqual(scanMultilineBasicString('"""\na\\x0d\\x0a\nb"""', 0).value, "a\r\n\nb");
     });
     it("throws UnterminatedString at EOF and on a trailing backslash", () => {
@@ -277,8 +270,11 @@ describe("scanner", () => {
   describe("floats", () => {
     it("decodes plain and exponent forms", () => {
       assert.strictEqual(classifyValueToken("1.0", 0), 1);
-      // Number(...) rather than a literal: biome flags 3.1415 as an approximation of pi
-      assert.strictEqual(classifyValueToken("3.1415", 0), Number("3.1415"));
+      assert.strictEqual(
+        classifyValueToken("3.1415", 0),
+        Number("3.1415"),
+        "Number(...) keeps biome from flagging the 3.1415 literal as an approximation of pi"
+      );
       assert.strictEqual(classifyValueToken("-0.01", 0), -0.01);
       assert.strictEqual(classifyValueToken("5e+22", 0), 5e22);
       assert.strictEqual(classifyValueToken("1e06", 0), 1000000);
@@ -334,7 +330,7 @@ describe("scanner", () => {
       assert.strictEqual(classifyInstance("07:32:00.9999999999", TomlLocalTime).nanosecond, 999999999);
       assert.strictEqual(classifyInstance("07:32:00.1234567891", TomlLocalTime).nanosecond, 123456789);
     });
-    it("validates the Gregorian calendar including leap years", () => {
+    it("validates the Gregorian calendar including leap years before construction, so diagnostics carry the token offset", () => {
       assertScanError(() => classifyValueToken("2021-02-29T00:00:00Z", 0), "InvalidDateTime", 0);
       assertScanError(() => classifyValueToken("1900-02-29", 0), "InvalidDateTime", 0);
       assertScanError(() => classifyValueToken("2021-04-31", 0), "InvalidDateTime", 0);
@@ -366,8 +362,6 @@ describe("scanner", () => {
       assert.strictEqual(classifyInstance("1979-05-27 07:32-07:00", TomlOffsetDateTime).offsetMinutes, -420);
     });
     it("rejects a fractional second without seconds: secfrac nests inside the seconds group", () => {
-      // partial-time = time-hour ":" time-minute [ ":" time-second [ time-secfrac ] ]
-      // — the fraction is only reachable through the seconds group.
       assertScanError(() => classifyValueToken("07:32.5", 0), "InvalidNumber", 0);
       assertScanError(() => classifyValueToken("1979-05-27T07:32.5", 0), "InvalidNumber", 0);
       assertScanError(() => classifyValueToken("1979-05-27T07:32.5Z", 0), "InvalidNumber", 0);
@@ -432,10 +426,6 @@ describe("scanner", () => {
 
   describe("misc", () => {
     it("throws InvalidUtf8 on U+FFFD, the lossy-decode marker of a malformed byte sequence", () => {
-      // Pinned by toml-test invalid/encoding/bad-utf8-in-string.toml and friends:
-      // after a lossy utf8 decode, U+FFFD is the only surviving evidence that
-      // the source bytes were not valid UTF-8, so the document is rejected
-      // even where the grammar would admit the character.
       assertScanError(() => assertValidUnicode('bad = "�"'), "InvalidUtf8", 7);
       assertScanError(() => assertValidUnicode("# �"), "InvalidUtf8", 2);
       assert.doesNotThrow(() => assertValidUnicode('ok = "plain"'));
