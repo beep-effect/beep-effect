@@ -6,8 +6,6 @@
  */
 
 /**
- * Shared entity exports.
- *
  * **Example** (Import shared entities module)
  *
  * ```ts

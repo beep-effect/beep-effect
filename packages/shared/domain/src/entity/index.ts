@@ -6,8 +6,6 @@
  */
 
 /**
- * Audit entity tier namespace.
- *
  * **Example** (Access the audit tier factory)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * as AuditEntity from "./AuditEntity.ts";
 /**
- * Base entity tier namespace.
- *
  * **Example** (Access the base tier factory)
  *
  * ```ts
@@ -81,8 +77,6 @@ export * as EntityKit from "./EntityKit.ts";
  */
 export * as EntityRef from "./EntityRef.ts";
 /**
- * Org entity tier namespace.
- *
  * **Example** (Access the org tier factory)
  *
  * ```ts
@@ -111,8 +105,6 @@ export * as OrgEntity from "./OrgEntity.ts";
  */
 export * as Principal from "./Principal.ts";
 /**
- * Product entity tier namespace.
- *
  * @category factories
  * @since 0.0.0
  */
@@ -148,8 +140,6 @@ export * as PublicEntityId from "./PublicEntityId.ts";
  */
 export * as primitives from "./primitives.ts";
 /**
- * Canonical source-kind namespace.
- *
  * **Example** (Access SourceKind export)
  *
  * ```ts

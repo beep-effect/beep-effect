@@ -14,8 +14,6 @@ const $I = $SharedDomainId.create("entities/Membership/Membership.model");
 const pg = ProductEntity.pg;
 
 /**
- * Shared organization membership entity schema.
- *
  * **Details**
  *
  * The inherited `orgId` field is the organization being joined.

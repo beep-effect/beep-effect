@@ -42,8 +42,6 @@ export class IdentificationError extends S.TaggedError<IdentificationError, { re
   }
 }
 /**
- * Typed operations of ContactCardSource.
- *
  * **Example** (Inspect ContactCardSourceShape)
  *
  * ```ts
@@ -83,8 +81,6 @@ export class ContactCardSource extends Context.Service<ContactCardSource, Contac
   $I`ContactCardSource`
 ) {}
 /**
- * Typed operations of UsptoRecordLookup.
- *
  * **Example** (Inspect UsptoRecordLookupShape)
  *
  * ```ts
@@ -124,8 +120,6 @@ export class UsptoRecordLookup extends Context.Service<UsptoRecordLookup, UsptoR
   $I`UsptoRecordLookup`
 ) {}
 /**
- * Typed operations of DomainRegistrantLookup.
- *
  * **Example** (Inspect DomainRegistrantLookupShape)
  *
  * ```ts
@@ -167,8 +161,6 @@ export class DomainRegistrantLookup extends Context.Service<DomainRegistrantLook
   $I`DomainRegistrantLookup`
 ) {}
 /**
- * Typed operations of DocumentExtractionSource.
- *
  * **Example** (Inspect DocumentExtractionSourceShape)
  *
  * ```ts

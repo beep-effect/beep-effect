@@ -7,8 +7,6 @@
  */
 
 /**
- * Chat public action error.
- *
  * **Example** (Make ChatActionError instance)
  *
  * ```ts

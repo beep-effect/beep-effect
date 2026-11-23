@@ -27,8 +27,6 @@ const hasOnlyValidEnvVarNames = (envVars: Readonly<Record<string, string>>): boo
   A.every(R.keys(envVars), isValidEnvVarName);
 
 /**
- * Closed vocabulary of provider CLI kinds a provider instance can delegate to.
- *
  * **Details**
  *
  * This deliberately duplicates the driver vocabulary: the domain must not
@@ -52,8 +50,6 @@ export const ProviderKind = LiteralKit(["claude", "codex"]).pipe(
 );
 
 /**
- * Type accepted by the {@link ProviderKind} schema.
- *
  * **Example** (Satisfy ProviderKind type)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const ProviderKind = LiteralKit(["claude", "codex"]).pipe(
 export type ProviderKind = typeof ProviderKind.Type;
 
 /**
- * Trimmed non-empty display label for one provider instance.
- *
  * **Example** (Decode instance label)
  *
  * ```ts
@@ -92,8 +86,6 @@ export const InstanceLabel = S.NonEmptyString.check(S.isTrimmed(), S.isMaxLength
 );
 
 /**
- * Type accepted by the {@link InstanceLabel} schema.
- *
  * **Example** (Type decoded instance label)
  *
  * ```ts
@@ -110,8 +102,6 @@ export const InstanceLabel = S.NonEmptyString.check(S.isTrimmed(), S.isMaxLength
 export type InstanceLabel = typeof InstanceLabel.Type;
 
 /**
- * Non-empty filesystem path to the provider CLI binary.
- *
  * **Example** (Decode binary path)
  *
  * ```ts
@@ -133,8 +123,6 @@ export const BinaryPath = S.NonEmptyString.pipe(
 );
 
 /**
- * Type accepted by the {@link BinaryPath} schema.
- *
  * **Example** (Type decoded binary path)
  *
  * ```ts
@@ -151,9 +139,6 @@ export const BinaryPath = S.NonEmptyString.pipe(
 export type BinaryPath = typeof BinaryPath.Type;
 
 /**
- * Non-empty filesystem path used as the isolated HOME directory of one
- * provider instance.
- *
  * **Example** (Decode home path)
  *
  * ```ts
@@ -175,8 +160,6 @@ export const HomePath = S.NonEmptyString.pipe(
 );
 
 /**
- * Type accepted by the {@link HomePath} schema.
- *
  * **Example** (Type decoded home path)
  *
  * ```ts
@@ -193,8 +176,6 @@ export const HomePath = S.NonEmptyString.pipe(
 export type HomePath = typeof HomePath.Type;
 
 /**
- * Environment-variable name safe to persist on a provider instance.
- *
  * **Details**
  *
  * Rejects token-bearing names at decode time (`ANTHROPIC_API_KEY`,
@@ -243,8 +224,6 @@ export const EnvVarName = S.NonEmptyString.check(
 );
 
 /**
- * Type accepted by the {@link EnvVarName} schema.
- *
  * **Example** (Type decoded env var name)
  *
  * ```ts
@@ -273,9 +252,6 @@ const TokenSafeEnvVarRecord = S.Record(S.String, S.NonEmptyString).check(
 );
 
 /**
- * Extra child-process environment injected when spawning the provider CLI,
- * keyed by token-safe {@link EnvVarName}.
- *
  * **Details**
  *
  * Decoding fails (rather than silently dropping keys, the default record
@@ -303,8 +279,6 @@ export const EnvVars = TokenSafeEnvVarRecord.pipe(
 );
 
 /**
- * Type accepted by the {@link EnvVars} schema.
- *
  * **Example** (Type decoded env vars)
  *
  * ```ts
@@ -321,8 +295,6 @@ export const EnvVars = TokenSafeEnvVarRecord.pipe(
 export type EnvVars = typeof EnvVars.Type;
 
 /**
- * Closed vocabulary of credential sources a probe can report.
- *
  * **Example** (Check token source membership)
  *
  * ```ts
@@ -341,8 +313,6 @@ export const TokenSource = LiteralKit(["claude.ai", "console", "api-key", "chatg
 );
 
 /**
- * Type accepted by the {@link TokenSource} schema.
- *
  * **Example** (Satisfy TokenSource type)
  *
  * ```ts
@@ -407,8 +377,6 @@ export class AuthenticatedSnapshot extends S.Opaque<AuthenticatedSnapshot, { rea
 }
 
 /**
- * Auth-snapshot variant for a provider CLI that responded but is logged out.
- *
  * **Example** (Decode unauthenticated snapshot)
  *
  * ```ts
@@ -473,8 +441,6 @@ export class ProbeFailedSnapshot extends S.Opaque<ProbeFailedSnapshot, { readonl
 ) {}
 
 /**
- * Tagged union of provider auth-probe outcomes, discriminated by `status`.
- *
  * **Example** (Build auth snapshot union)
  *
  * ```ts
@@ -500,8 +466,6 @@ export const AuthSnapshot = pipe(
 );
 
 /**
- * Type accepted by the {@link AuthSnapshot} schema.
- *
  * **Example** (Type auth snapshot union)
  *
  * ```ts

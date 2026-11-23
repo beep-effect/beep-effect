@@ -162,8 +162,6 @@ export class WorkItemAssigneeRequired extends S.TaggedError<
 ) {}
 
 /**
- * WorkItem aggregate domain failure schema.
- *
  * **Example** (Decode domain error schema)
  *
  * ```ts
@@ -197,8 +195,6 @@ export const WorkItemDomainError = S.Union([
 );
 
 /**
- * Runtime type for {@link WorkItemDomainError}.
- *
  * **Example** (Type domain error union member)
  *
  * ```ts

@@ -134,6 +134,14 @@ ${example("Read the value", "console.log(libValue)")} * @category constants
 export const libValue = "lib";
 `;
 
+const headlessIndexSource = `/**
+ * Lib value exports.
+ *
+ * @since 0.0.0
+ */
+export * from "./lib.ts";
+`;
+
 const generatedSource = `import * as S from "effect/Schema";
 
 const $I = { annoteSchema: (_: string, __: object) => <A>(self: A) => self };
@@ -171,7 +179,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     it.effect("derives leads from annotations and counts restating leads without opening the package", () =>
       Effect.flatMap(
         acquireFixtureRepo({
-          topoSortScript: "printf '@beep/demo\\n'",
+          topoSortScript: "printf '@beep/demo\\n@beep/headless\\n'",
           packages: [
             {
               name: "@beep/demo",
@@ -180,6 +188,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
                 ["src/index.ts", indexSource],
                 ["src/lib.ts", libSource],
                 ["src/_generated/Box.gen.ts", generatedSource],
+              ],
+            },
+            {
+              name: "@beep/headless",
+              dir: "headless",
+              files: [
+                ["src/index.ts", headlessIndexSource],
+                ["src/lib.ts", libSource],
               ],
             },
           ],
@@ -217,6 +233,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           expect(rulesOf(named("Box"))).toEqual([]);
           expect(rulesOf(find((entry) => entry.symbolName === "libValue"))).toEqual([]);
           expect(pkg.counts.documentationRuleFindings["restating-lead"]).toBe(5);
+
+          const headless = O.getOrThrow(
+            A.findFirst(inventory.packages, (entry) => entry.packageName === "@beep/headless")
+          );
+          const moduleDocBarrels = A.filter(headless.exports, (entry) => Str.startsWith("export ")(entry.symbolName));
+          expect(A.map(moduleDocBarrels, rulesOf)).toEqual([[]]);
+          expect(headless.counts.documentationRuleFindings["restating-lead"] ?? 0).toBe(0);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );

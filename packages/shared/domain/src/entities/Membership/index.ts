@@ -6,8 +6,6 @@
  */
 
 /**
- * Membership model schema namespace.
- *
  * **Example** (Access model table name)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Membership.model.ts";
 /**
- * Membership value schemas.
- *
  * **Example** (Check member role value)
  *
  * ```ts

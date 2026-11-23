@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $PartyDomainId.create("values/Identifier/Identifier.errors");
 
 /**
- * Why an identifier or PartyKey basis was rejected as a data-quality issue.
- *
  * **Example** (Check an issue reason)
  *
  * ```ts
@@ -45,16 +43,12 @@ export const IdentifierIssueReason = LiteralKit([
 );
 
 /**
- * {@inheritDoc IdentifierIssueReason}
- *
  * @category errors
  * @since 0.0.0
  */
 export type IdentifierIssueReason = typeof IdentifierIssueReason.Type;
 
 /**
- * Which input field an issue concerns.
- *
  * **Example** (Check an issue field)
  *
  * ```ts
@@ -73,8 +67,6 @@ export const IdentifierIssueField = LiteralKit(["value", "namespace", "handle", 
 );
 
 /**
- * {@inheritDoc IdentifierIssueField}
- *
  * @category errors
  * @since 0.0.0
  */

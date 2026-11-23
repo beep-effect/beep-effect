@@ -13,8 +13,6 @@ const $I = $LawPracticeDomainId.create("values/PatentNumber/PatentNumber");
 const patentNumberDigitsPattern = /^[0-9]+$/;
 
 /**
- * Canonical WIPO ST.6 patent publication number.
- *
  * **Details**
  *
  * WIPO ST.6 recommends that the publication number itself contain digits only
@@ -62,8 +60,6 @@ export const PatentNumber = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link PatentNumber}.
- *
  * **Example** (Decode branded patent number)
  *
  * ```ts

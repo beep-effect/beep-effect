@@ -14,8 +14,6 @@ import { DmsMirrorDisconnectReason } from "./DmsMirror.ts";
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
 
 /**
- * Point-in-time vault sync status read model for one workspace mirror.
- *
  * **Example** (Decode vault sync status)
  *
  * ```ts

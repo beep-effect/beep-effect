@@ -52,8 +52,6 @@ export const OntologyMcpMutationsEnabledConfig = Config.Boolean("ONTOLOGY_MCP_MU
 );
 
 /**
- * Server-only ontology MCP surface settings.
- *
  * **Example** (Make MCP server config)
  *
  * ```ts

@@ -40,9 +40,6 @@ const $I = $LawPracticeServerId.create("NoticeMailbox/NoticeMailbox.layer");
 const hasDotSegment = flow(Str.split(/[\\/]+/u), A.some(S.is(WindowsDotSegment)));
 
 /**
- * An absolute Windows folder on the attorney's PC, written with `\` or `/`
- * separators.
- *
  * **Details**
  *
  * It is a `WindowsDrivePath` that also starts at the drive's root, so a
@@ -106,8 +103,6 @@ export const NoticeClaudeFolder = WindowsDrivePath.check(
 );
 
 /**
- * Type of {@link NoticeClaudeFolder}.
- *
  * **Example** (Type a review folder)
  *
  * ```ts
@@ -177,9 +172,6 @@ export class NoticeClaudeLink extends S.Opaque<NoticeClaudeLink, { readonly bran
 ) {}
 
 /**
- * The attorney's mailbox the notice goes from and to, the data directory its
- * day claims are kept in, and an optional Claude Code link.
- *
  * **Details**
  *
  * Without `claudeLink` the notice is plain text. With it, the notice is HTML

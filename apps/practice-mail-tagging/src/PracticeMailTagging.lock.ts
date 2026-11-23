@@ -113,8 +113,6 @@ const encodeHolder = S.encodeEffect(StateLockHolderJson);
 const decodeHolder = S.decodeUnknownEffect(StateLockHolderJson);
 
 /**
- * Another writing command holds the state directory.
- *
  * **Details**
  *
  * The process exits with code 4. The message names the lock file and the

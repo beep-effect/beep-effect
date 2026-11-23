@@ -24,9 +24,6 @@ const $I = $EpistemicDomainId.create("entities/Contradiction/Contradiction.model
 const pg = ProductEntity.pg;
 
 /**
- * Immutable, evidence-backed proposal that two exact belief versions
- * contradict.
- *
  * **Example** (Log entity table name)
  *
  * ```ts
@@ -112,8 +109,6 @@ export class ContradictionReceipt extends ProductEntity.Entity<ContradictionRece
 ) {}
 
 /**
- * Append-only record of a human contradiction review.
- *
  * **Example** (Log entity table name)
  *
  * ```ts

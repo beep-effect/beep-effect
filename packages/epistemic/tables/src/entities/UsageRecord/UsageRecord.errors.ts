@@ -13,9 +13,6 @@ const $I = $EpistemicTablesId.create("entities/UsageRecord/UsageRecord.errors");
 const UsageRecordConverterOperation = LiteralKit(["toInsert", "fromRow"]);
 
 /**
- * Schema conversion failed while projecting a UsageRecord across the
- * persistence boundary.
- *
  * **Example** (Construct converter error)
  *
  * ```ts

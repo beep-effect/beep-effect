@@ -21,8 +21,6 @@
  */
 export * from "./migrate.ts";
 /**
- * Migration target exports.
- *
  * @category configuration
  * @since 0.0.0
  */

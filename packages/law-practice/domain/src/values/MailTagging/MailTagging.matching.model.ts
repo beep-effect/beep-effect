@@ -31,8 +31,6 @@ import type { MailCategoryName } from "./MailTagging.taxonomy.model.ts";
 const $I = $LawPracticeDomainId.create("values/MailTagging/MailTagging.matching.model");
 
 /**
- * The identifiers and contacts that tie mail to one matter.
- *
  * **Details**
  *
  * Application numbers use the eight-digit USPTO form and patent numbers the
@@ -98,8 +96,6 @@ export class MatterIndexEntry extends S.Opaque<MatterIndexEntry, { readonly bran
 ) {}
 
 /**
- * Identifiers of a matter that cannot be a tag target.
- *
  * **Details**
  *
  * A matter without a client number, or one whose family number was recycled
@@ -195,8 +191,6 @@ export class MatterIndex extends S.Opaque<MatterIndex, { readonly brand: unique 
 ) {}
 
 /**
- * The subset of a mailbox message the tagger reads.
- *
  * **Gotchas**
  *
  * `categories` holds plain strings on purpose: categories owned by other
@@ -282,8 +276,6 @@ export class MailEnvelope extends S.Opaque<MailEnvelope, { readonly brand: uniqu
 ) {}
 
 /**
- * Kinds of evidence that tie a message to a matter.
- *
  * **Example** (Guard an evidence kind)
  *
  * ```ts
@@ -312,8 +304,6 @@ export const MatterEvidenceKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MatterEvidenceKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -352,8 +342,6 @@ export const matterEvidenceWeight: (kind: MatterEvidenceKind) => UnitInterval = 
 });
 
 /**
- * The normalized identifier or address that produced one piece of evidence.
- *
  * **Example** (Guard an evidence token)
  *
  * ```ts
@@ -392,16 +380,12 @@ export const MatterEvidenceToken = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link MatterEvidenceToken}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MatterEvidenceToken = typeof MatterEvidenceToken.Type;
 
 /**
- * One piece of evidence tying a message to a matter.
- *
  * **Example** (Record identifier evidence)
  *
  * ```ts
@@ -467,8 +451,6 @@ export const matterEvidenceConfidence = (evidence: ReadonlyArray<MatterEvidence>
   );
 
 /**
- * A matter the evidence points at, with its combined confidence.
- *
  * **Example** (Describe a candidate)
  *
  * ```ts
@@ -507,8 +489,6 @@ export class MatterCandidate extends S.Opaque<MatterCandidate, { readonly brand:
 const defaultMaxAttachmentBytes = 50 * 1024 * 1024;
 
 /**
- * Thresholds that turn candidates into a decision, plus the attachment size cap.
- *
  * **Example** (Decode the default policy)
  *
  * ```ts
@@ -552,8 +532,6 @@ export class TaggingPolicy extends S.Opaque<TaggingPolicy, { readonly brand: uni
 ) {}
 
 /**
- * Why a message was not assigned to a matter.
- *
  * **Example** (Guard an unmatched reason)
  *
  * ```ts
@@ -574,16 +552,12 @@ export const UnmatchedReason = LiteralKit(["no-signal", "below-threshold", "ambi
 );
 
 /**
- * Runtime type for {@link UnmatchedReason}.
- *
  * @category models
  * @since 0.0.0
  */
 export type UnmatchedReason = typeof UnmatchedReason.Type;
 
 /**
- * Decision: the message belongs to one matter.
- *
  * **Example** (Record a matched decision)
  *
  * ```ts
@@ -625,8 +599,6 @@ export class MatterMatched extends S.Opaque<MatterMatched, { readonly brand: uni
 ) {}
 
 /**
- * Decision: the message is not assigned to any matter.
- *
  * **Example** (Record an ambiguous decision)
  *
  * ```ts
@@ -662,9 +634,6 @@ export class MatterUnmatched extends S.Opaque<MatterUnmatched, { readonly brand:
 ) {}
 
 /**
- * The tagger's verdict on one message: matched to a matter, or explicitly
- * unmatched.
- *
  * **Example** (Branch on a tagging decision)
  *
  * ```ts
@@ -690,8 +659,6 @@ export const TaggingDecision = S.Union([MatterMatched, MatterUnmatched]).pipe(
 );
 
 /**
- * Runtime type for {@link TaggingDecision}.
- *
  * @category models
  * @since 0.0.0
  */

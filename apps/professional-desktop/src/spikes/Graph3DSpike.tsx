@@ -151,8 +151,6 @@ const Graph3DSpikeState = LiteralKit(["rendering", "ready", "failed"]).pipe(
 );
 
 /**
- * Exhaustive lifecycle state for the graph-3d spike renderer.
- *
  * **Example** (Creating rendering status)
  *
  * ```ts

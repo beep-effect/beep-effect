@@ -14,8 +14,6 @@ const $I = $WorkspaceDomainId.create("entities/CandidateTask/CandidateTask.model
 const pg = ProductEntity.pg;
 
 /**
- * Candidate task proposed by an agent.
- *
  * **Example** (Log table name)
  *
  * ```ts

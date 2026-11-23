@@ -24,8 +24,6 @@ const $I = $LawPracticeDomainId.create("entities/IdsSubmissionFact/IdsSubmission
 const pg = ProductEntity.pg;
 
 /**
- * One information-disclosure submission act, recorded as presence-only facts.
- *
  * **When to use**
  *
  * Use to record what a submission contained and how the Office treated it, so

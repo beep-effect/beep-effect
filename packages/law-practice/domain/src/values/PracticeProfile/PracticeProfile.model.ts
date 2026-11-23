@@ -13,8 +13,6 @@ import { LawPracticeText } from "../../entities/LawPracticeEntity.fields.ts";
 const $I = $LawPracticeDomainId.create("values/PracticeProfile/PracticeProfile.model");
 
 /**
- * A capability a practice can ask the gateway to provide.
- *
  * **Example** (Check a capability literal)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const PracticeCapability = LiteralKit([
 );
 
 /**
- * Decoded type of {@link PracticeCapability}.
- *
  * **Example** (Type a capability)
  *
  * ```ts
@@ -56,8 +52,6 @@ export const PracticeCapability = LiteralKit([
 export type PracticeCapability = typeof PracticeCapability.Type;
 
 /**
- * A provider the gateway has an adapter for.
- *
  * **Details**
  *
  * Grows one adapter at a time in solo/small-firm adoption order. A provider a
@@ -87,8 +81,6 @@ export const PracticeProvider = LiteralKit([
 );
 
 /**
- * Decoded type of {@link PracticeProvider}.
- *
  * **Example** (Type a provider)
  *
  * ```ts
@@ -104,8 +96,6 @@ export const PracticeProvider = LiteralKit([
 export type PracticeProvider = typeof PracticeProvider.Type;
 
 /**
- * A capability served by a supported provider.
- *
  * **Example** (Choose Box Drive for documents)
  *
  * ```ts
@@ -176,8 +166,6 @@ export class CapabilityGap extends S.Opaque<CapabilityGap, { readonly brand: uni
 ) {}
 
 /**
- * A capability the practice chose not to set up.
- *
  * **Example** (Decline practice billing)
  *
  * ```ts
@@ -224,8 +212,6 @@ export const CapabilityChoice = S.Union([CapabilitySupported, CapabilityGap, Cap
 );
 
 /**
- * Decoded type of {@link CapabilityChoice}.
- *
  * **Example** (Type a declined choice)
  *
  * ```ts
@@ -261,8 +247,6 @@ export const AdminRights = LiteralKit(["available", "blocked", "unknown"]).pipe(
 );
 
 /**
- * Decoded type of {@link AdminRights}.
- *
  * **Example** (Type admin rights)
  *
  * ```ts
@@ -278,8 +262,6 @@ export const AdminRights = LiteralKit(["available", "blocked", "unknown"]).pipe(
 export type AdminRights = typeof AdminRights.Type;
 
 /**
- * Whether outbound traffic passes through a network proxy.
- *
  * **Example** (Check proxy presence)
  *
  * ```ts
@@ -298,8 +280,6 @@ export const NetworkProxy = LiteralKit(["none", "present", "unknown"]).pipe(
 );
 
 /**
- * Decoded type of {@link NetworkProxy}.
- *
  * **Example** (Type proxy presence)
  *
  * ```ts
@@ -315,8 +295,6 @@ export const NetworkProxy = LiteralKit(["none", "present", "unknown"]).pipe(
 export type NetworkProxy = typeof NetworkProxy.Type;
 
 /**
- * Firm IT limits that shape which remediations the doctor may attempt.
- *
  * **Example** (Record unknown IT limits)
  *
  * ```ts

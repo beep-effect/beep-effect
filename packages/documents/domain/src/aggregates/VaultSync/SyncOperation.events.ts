@@ -12,8 +12,6 @@ import * as V from "./Values.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/SyncOperation.command");
 /**
- * OperationInput vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { OperationInput } from "@beep/documents-domain/aggregates/VaultSync";
@@ -36,8 +34,6 @@ export class OperationInput extends S.Opaque<OperationInput, { readonly brand: u
 ) {}
 
 /**
- * Persisted non-empty state of the OperationState aggregate.
- *
  * **Example** (Inspect persisted state fields)
  * ```ts
  * import { OperationRecord } from "@beep/documents-domain/aggregates/VaultSync";
@@ -58,8 +54,6 @@ export class OperationRecord extends S.Opaque<OperationRecord, { readonly brand:
   }).pipe($I.annoteSchema("OperationRecord", { description: "Persisted non-empty vault sync state." }))
 ) {}
 /**
- * OperationState vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { OperationState } from "@beep/documents-domain/aggregates/VaultSync";
@@ -72,8 +66,6 @@ export const OperationState = S.NullOr(OperationRecord).pipe(
   $I.annoteSchema("OperationState", { description: "OperationState persisted vault sync value." })
 );
 /**
- * Runtime value accepted by {@link OperationState}.
- *
  * @category aggregates
  * @since 0.0.0
  */

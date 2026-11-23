@@ -6,8 +6,6 @@
  */
 
 /**
- * Logical edge identity and digest exports.
- *
  * **Example** (Decode LogicalEdgeIdentity and key)
  *
  * ```ts

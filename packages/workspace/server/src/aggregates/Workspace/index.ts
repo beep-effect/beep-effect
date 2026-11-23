@@ -6,8 +6,6 @@
  */
 
 /**
- * Workspace vault store layer exports.
- *
  * @category layers
  * @since 0.0.0
  */

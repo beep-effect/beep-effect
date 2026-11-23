@@ -86,8 +86,6 @@ export class CandorFilingScope extends S.Opaque<CandorFilingScope, { readonly br
 ) {}
 
 /**
- * Why one recorded event is not covered by an attorney judgment.
- *
  * **When to use**
  *
  * Use to explain a blocking verdict to a human. Every member is a fail-closed
@@ -127,8 +125,6 @@ export const UncoveredReason = UncoveredReasonBase.pipe(
 );
 
 /**
- * Runtime type for {@link UncoveredReason}.
- *
  * @see {@link UncoveredReason} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -136,8 +132,6 @@ export const UncoveredReason = UncoveredReasonBase.pipe(
 export type UncoveredReason = typeof UncoveredReason.Type;
 
 /**
- * One event the gate declines to treat as covered, and why.
- *
  * **Example** (Report an uncovered event)
  *
  * ```ts
@@ -170,8 +164,6 @@ export class UncoveredEvent extends S.Opaque<UncoveredEvent, { readonly brand: u
 ) {}
 
 /**
- * The gate's recomputed answer for one filing.
- *
  * **When to use**
  *
  * Use as the whole output of a candor evaluation. Callers decide whether to

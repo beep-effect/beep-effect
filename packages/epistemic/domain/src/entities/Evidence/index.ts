@@ -6,8 +6,6 @@
  */
 
 /**
- * Module exports.
- *
  * **Example** (Importing Evidence entity)
  *
  * ```ts

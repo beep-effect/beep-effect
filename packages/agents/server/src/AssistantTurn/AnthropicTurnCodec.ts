@@ -39,8 +39,6 @@ import * as Str from "effect/String";
 const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnCodec");
 
 /**
- * Mermaid diagram declarations accepted by the Anthropic code-block adapter.
- *
  * **Example** (Validate graph type membership)
  *
  * ```ts
@@ -74,8 +72,6 @@ export const MermaidDiagramType = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MermaidDiagramType}.
- *
  * **Example** (Assign typed diagram value)
  *
  * ```ts

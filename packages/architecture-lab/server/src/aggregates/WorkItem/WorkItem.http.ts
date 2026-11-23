@@ -21,8 +21,6 @@ const serviceUnavailableBody = WorkItemUseCases.WorkItemActionFailed.make({
 const WorkItemHttpStatusBase = LiteralKit([200, 201, 404, 409, 422, 503]);
 
 /**
- * HTTP status values emitted by the WorkItem proof protocol adapter.
- *
  * **Example** (Create status from number)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link WorkItemHttpStatus}.
- *
  * **Example** (Type a status parameter)
  *
  * ```ts
@@ -74,8 +70,6 @@ export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe(
 export type WorkItemHttpStatus = typeof WorkItemHttpStatus.Type;
 
 /**
- * Minimal HTTP response envelope used by the architecture lab proof.
- *
  * **Example** (Make HTTP response envelope)
  *
  * ```ts

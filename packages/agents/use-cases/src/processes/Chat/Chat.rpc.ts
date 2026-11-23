@@ -134,8 +134,6 @@ export const TurnRequestStatus = S.Literals([
 );
 
 /**
- * Runtime type for {@link TurnRequestStatus}.
- *
  * **Example** (Assign status type value)
  *
  * ```ts

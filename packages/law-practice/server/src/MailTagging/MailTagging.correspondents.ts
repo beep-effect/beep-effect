@@ -61,8 +61,6 @@ export const MatterContactEvidence = LiteralKit(["off", "kg"]).pipe(
 );
 
 /**
- * Runtime type for {@link MatterContactEvidence}.
- *
  * @category models
  * @since 0.0.0
  */

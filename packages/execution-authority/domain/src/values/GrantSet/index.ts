@@ -6,8 +6,6 @@
  */
 
 /**
- * Grant set construction error exports.
- *
  * **Example** (Create GrantRevisionMismatch error)
  *
  * ```ts
@@ -27,8 +25,6 @@
  */
 export * from "./GrantSet.errors.ts";
 /**
- * Grant set model exports.
- *
  * **Example** (Decode a DraftGrantSet)
  *
  * ```ts

@@ -29,8 +29,6 @@ import type { MailTaggingPassFailure } from "./PracticeMailTagging.errors.ts";
 const $I = $PracticeMailTaggingId.create("PracticeMailTagging.passes");
 
 /**
- * When passes start from and how a `watch` process paces them.
- *
  * **Example** (Pace a watch process)
  *
  * ```ts
@@ -219,8 +217,6 @@ export const makeMailTaggingPasses: {
 });
 
 /**
- * Leading word of a generated run id: a tagging pass or an undo.
- *
  * **Example** (Guard a run id prefix)
  *
  * ```ts
@@ -240,8 +236,6 @@ export const RunIdPrefix = LiteralKit(["tag", "undo"]).pipe(
 );
 
 /**
- * Type-level union produced by {@link RunIdPrefix}.
- *
  * @category type-level
  * @since 0.0.0
  */

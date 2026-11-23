@@ -77,8 +77,6 @@ export const KgAttributionSource = LiteralKit([
 );
 
 /**
- * Runtime type for {@link KgAttributionSource}.
- *
  * **Example** (Type evidence-backed sources)
  *
  * ```ts

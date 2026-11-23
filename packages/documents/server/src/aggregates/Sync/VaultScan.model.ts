@@ -40,8 +40,6 @@ export class ObservedFile extends S.Opaque<ObservedFile, { readonly brand: uniqu
 ) {}
 
 /**
- * A visible directory discovered within the canonical vault root.
- *
  * **Example** (Describe an observed folder)
  * ```ts
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"

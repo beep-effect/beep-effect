@@ -52,8 +52,6 @@ const OWL_DISJOINT_WITH = makeNamedNode(`${OWL_NAMESPACE}disjointWith`);
 const INFERRED_GRAPH = makeNamedNode(graphPartitionIri("inferred"));
 
 /**
- * Structural inference module.
- *
  * **Example** (Assign closure module value)
  *
  * ```ts
@@ -74,8 +72,6 @@ export const OntologyInferenceModule = LiteralKit(["closure", "domainRange", "di
 );
 
 /**
- * Type for {@link OntologyInferenceModule}.
- *
  * **Example** (Assign domainRange module type)
  *
  * ```ts
@@ -92,8 +88,6 @@ export const OntologyInferenceModule = LiteralKit(["closure", "domainRange", "di
 export type OntologyInferenceModule = typeof OntologyInferenceModule.Type;
 
 /**
- * Inference recompute mode for a module.
- *
  * **Example** (Assign incremental recompute mode)
  *
  * ```ts
@@ -114,8 +108,6 @@ export const OntologyInferenceRecomputeMode = LiteralKit(["full", "incremental",
 );
 
 /**
- * Type for {@link OntologyInferenceRecomputeMode}.
- *
  * **Example** (Assign full recompute mode)
  *
  * ```ts
@@ -132,8 +124,6 @@ export const OntologyInferenceRecomputeMode = LiteralKit(["full", "incremental",
 export type OntologyInferenceRecomputeMode = typeof OntologyInferenceRecomputeMode.Type;
 
 /**
- * Changed signature role used by inference invalidation.
- *
  * **Example** (Assign predicate signature role)
  *
  * ```ts
@@ -154,8 +144,6 @@ export const OntologyInferenceSignatureRole = LiteralKit(["subject", "predicate"
 );
 
 /**
- * Type for {@link OntologyInferenceSignatureRole}.
- *
  * **Example** (Assign object signature role)
  *
  * ```ts
@@ -172,8 +160,6 @@ export const OntologyInferenceSignatureRole = LiteralKit(["subject", "predicate"
 export type OntologyInferenceSignatureRole = typeof OntologyInferenceSignatureRole.Type;
 
 /**
- * Signature touched by the session change log since the last inference pass.
- *
  * **Example** (Make changed signature)
  *
  * ```ts
@@ -205,8 +191,6 @@ export class OntologyInferenceChangedSignature extends S.Opaque<
 ) {}
 
 /**
- * Result for one structural inference module.
- *
  * **Example** (Make module result)
  *
  * ```ts
@@ -240,8 +224,6 @@ export class OntologyInferenceModuleResult extends S.Opaque<
 ) {}
 
 /**
- * Structural disjointness violation derived from asserted plus inferred types.
- *
  * **Example** (Make disjointness violation)
  *
  * ```ts
@@ -275,8 +257,6 @@ export class OntologyDisjointnessViolation extends S.Opaque<
 ) {}
 
 /**
- * Complete structural inference result for an ontology session.
- *
  * **Example** (Make complete inference result)
  *
  * ```ts
@@ -319,8 +299,6 @@ export class OntologyInferenceResult extends S.Opaque<OntologyInferenceResult, {
 ) {}
 
 /**
- * Input for structural inference over an ontology session.
- *
  * **Example** (Make session inference input)
  *
  * ```ts

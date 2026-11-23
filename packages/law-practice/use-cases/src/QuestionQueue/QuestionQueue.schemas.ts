@@ -68,8 +68,6 @@ export const RecordAnswerInput = AnswerState.toTaggedUnion("state")({
 );
 
 /**
- * Runtime type for {@link RecordAnswerInput}.
- *
  * @see {@link RecordAnswerInput} for the tagged-union schema.
  * @category models
  * @since 0.0.0
@@ -77,8 +75,6 @@ export const RecordAnswerInput = AnswerState.toTaggedUnion("state")({
 export type RecordAnswerInput = typeof RecordAnswerInput.Type;
 
 /**
- * Companion namespace for `RecordAnswerInput`.
- *
  * **Example** (Type an encoded answer state)
  *
  * ```ts
@@ -110,8 +106,6 @@ export declare namespace RecordAnswerInput {
 }
 
 /**
- * The questions the daily digest is drawn from, and the day it is drawn for.
- *
  * **Example** (Build an empty selection)
  *
  * ```ts
@@ -142,8 +136,6 @@ export class DigestSelection extends S.Opaque<DigestSelection, { readonly brand:
 ) {}
 
 /**
- * Companion namespace for `DigestSelection`.
- *
  * **Example** (Type an encoded digest day)
  *
  * ```ts

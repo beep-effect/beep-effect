@@ -39,8 +39,6 @@ const WorkspaceVaultRootPathValue = S.String.check(WorkspaceVaultRootPathChecks)
 );
 
 /**
- * Absolute local root path for a workspace document vault.
- *
  * **Details**
  *
  * Decoding normalizes trailing path separators, so `"/tmp/vault/"` and
@@ -70,7 +68,6 @@ export const WorkspaceVaultRootPath = S.String.pipe(
 );
 
 /**
- * {@inheritDoc WorkspaceVaultRootPath}
  * @category value-objects
  * @since 0.0.0
  */

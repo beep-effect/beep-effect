@@ -14,8 +14,6 @@ const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model")
 const pg = ProductEntity.pg;
 
 /**
- * Patent asset entity managed inside a prosecution matter.
- *
  * **Example** (Decoding a PatentAsset)
  *
  * ```ts

@@ -16,8 +16,6 @@ import { SourceRef } from "../SourceRef/index.ts";
 const $I = $LawPracticeDomainId.create("values/Question/Question.model");
 
 /**
- * Identifier of one answer option, stable within its question.
- *
  * **Details**
  *
  * Lowercase kebab-case, such as `keep-date` or `move-to-2026-11-02`. Answer
@@ -52,8 +50,6 @@ export const QuestionOptionId = S.NonEmptyString.check(
 );
 
 /**
- * Runtime type for {@link QuestionOptionId}.
- *
  * @see {@link QuestionOptionId} for the id format.
  * @category models
  * @since 0.0.0
@@ -61,8 +57,6 @@ export const QuestionOptionId = S.NonEmptyString.check(
 export type QuestionOptionId = typeof QuestionOptionId.Type;
 
 /**
- * Kinds of write an answer option can imply.
- *
  * **Example** (Read the write kinds)
  *
  * ```ts
@@ -81,8 +75,6 @@ export const OptionWriteKind = LiteralKit(["calendar-date"]).pipe(
 );
 
 /**
- * Runtime type for {@link OptionWriteKind}.
- *
  * @see {@link OptionWriteKind} for the literal domain.
  * @category models
  * @since 0.0.0
@@ -90,8 +82,6 @@ export const OptionWriteKind = LiteralKit(["calendar-date"]).pipe(
 export type OptionWriteKind = typeof OptionWriteKind.Type;
 
 /**
- * The write an answer option implies, discriminated on `kind`.
- *
  * **Details**
  *
  * `calendar-date` sets a calendar event's title and due date. With `eventId`
@@ -146,8 +136,6 @@ export const OptionWrite = OptionWriteKind.toTaggedUnion("kind")({
 );
 
 /**
- * Runtime type for {@link OptionWrite}.
- *
  * @see {@link OptionWrite} for the tagged-union schema.
  * @category value-objects
  * @since 0.0.0
@@ -155,8 +143,6 @@ export const OptionWrite = OptionWriteKind.toTaggedUnion("kind")({
 export type OptionWrite = typeof OptionWrite.Type;
 
 /**
- * One answer the attorney can choose, optionally naming the write it implies.
- *
  * **Example** (Build an option without a write)
  *
  * ```ts
@@ -194,8 +180,6 @@ export class QuestionOption extends S.Opaque<QuestionOption, { readonly brand: u
 ) {}
 
 /**
- * Companion namespace for `QuestionOption`.
- *
  * **Example** (Type an encoded option id)
  *
  * ```ts
@@ -227,8 +211,6 @@ export declare namespace QuestionOption {
 }
 
 /**
- * The two to five answer options of one question, with distinct option ids.
- *
  * **Example** (Check the option count)
  *
  * ```ts
@@ -280,8 +262,6 @@ export const QuestionOptions = S.Array(QuestionOption)
   );
 
 /**
- * Runtime type for {@link QuestionOptions}.
- *
  * @see {@link QuestionOptions} for the count and uniqueness checks.
  * @category value-objects
  * @since 0.0.0
@@ -289,8 +269,6 @@ export const QuestionOptions = S.Array(QuestionOption)
 export type QuestionOptions = typeof QuestionOptions.Type;
 
 /**
- * A fact the asking agent already checked against records, with its sources.
- *
  * **Example** (Build a checked fact)
  *
  * ```ts
@@ -320,8 +298,6 @@ export class QuestionFact extends S.Opaque<QuestionFact, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion namespace for `QuestionFact`.
- *
  * **Example** (Type an encoded fact)
  *
  * ```ts

@@ -39,8 +39,6 @@ const negatedPolarity = LegalActPolarity.match({
 });
 
 /**
- * One Hohfeldian legal position: a position kind applied to act content.
- *
  * **When to use**
  *
  * Use as the argument and result of every position derivation, and as the shape

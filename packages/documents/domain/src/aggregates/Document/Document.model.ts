@@ -16,8 +16,6 @@ const $I = $DocumentsDomainId.create("aggregates/Document/Document.model");
 const FilingOutcomeKind = LiteralKit(["filed", "inboxed"]);
 
 /**
- * Reason a document was routed to the intake inbox instead of a taxonomy folder.
- *
  * **Example** (Decode low-confidence reason)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const InboxedFilingReason = LiteralKit([
 );
 
 /**
- * Type for {@link InboxedFilingReason}.
- *
  * **Example** (Assign no-match reason type)
  *
  * ```ts
@@ -72,8 +68,6 @@ const FilingOutcomeBase = FilingOutcomeKind.toTaggedUnion("kind")({
 });
 
 /**
- * Filing decision outcome: filed under a taxonomy concept, or routed to the intake inbox.
- *
  * **Example** (Build filed FilingOutcome)
  *
  * ```ts
@@ -100,8 +94,6 @@ export const FilingOutcome = FilingOutcomeBase.rebuild(FilingOutcomeBase.ast).pi
 );
 
 /**
- * Type for {@link FilingOutcome}.
- *
  * **Example** (Make inboxed FilingOutcome)
  *
  * ```ts
@@ -162,8 +154,6 @@ export const DocumentContentDigest = S.NonEmptyString.pipe(
 export type DocumentContentDigest = typeof DocumentContentDigest.Type;
 
 /**
- * A document materialized into the workspace vault.
- *
  * **Example** (Decode filed Document aggregate)
  *
  * ```ts

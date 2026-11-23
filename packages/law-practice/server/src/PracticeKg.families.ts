@@ -128,8 +128,6 @@ export class PracticeKgAnchorRecord extends S.Opaque<PracticeKgAnchorRecord, { r
 ) {}
 
 /**
- * Family placement decided for one USPTO anchor.
- *
  * **Details**
  *
  * `memberFamilyKey` is set only when the anchor's number appears in exactly one
@@ -293,9 +291,6 @@ const clientsByDigestFor = (
 };
 
 /**
- * Input to {@link attributeDocuments}: the catalog rows, the client-prefixed
- * references scanned from them, and the attorney's docket register.
- *
  * **Example** (Make an empty attribution input)
  *
  * ```ts
@@ -327,9 +322,6 @@ export class PracticeKgAttributeDocumentsInput extends S.Opaque<
 ) {}
 
 /**
- * Input to {@link resolveAnchors}: reconciled anchors, number mentions, and the
- * document attributions they resolve against.
- *
  * **Example** (Make an empty resolution input)
  *
  * ```ts

@@ -18,8 +18,6 @@ import type { DocumentIntakeError } from "./Document.errors.ts";
 const $I = $DocumentsUseCasesId.create("aggregates/Document/DocumentIntake");
 
 /**
- * Client payload for app-level dropped-file intake.
- *
  * **Example** (Make dropped-file client payload)
  *
  * ```ts
@@ -67,8 +65,6 @@ export class IntakeDroppedFilePayload extends S.Opaque<IntakeDroppedFilePayload,
 ) {}
 
 /**
- * Server-side input for dropped-file intake after workspace vault resolution.
- *
  * **Example** (Make dropped-file server input)
  *
  * ```ts

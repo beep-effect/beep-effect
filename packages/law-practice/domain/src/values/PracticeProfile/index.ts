@@ -7,8 +7,6 @@
  */
 
 /**
- * PracticeProfile model exports.
- *
  * **Example** (Import PracticeProfile)
  *
  * ```ts

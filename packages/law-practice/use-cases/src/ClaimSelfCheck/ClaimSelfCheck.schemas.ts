@@ -79,16 +79,12 @@ export const UsptoClaimSource = UsptoClaimSourceKind.toTaggedUnion("kind")({
 );
 
 /**
- * Runtime source type produced by {@link UsptoClaimSource}.
- *
  * @category models
  * @since 0.0.0
  */
 export type UsptoClaimSource = typeof UsptoClaimSource.Type;
 
 /**
- * Public USPTO claim set normalized into validated patent claims.
- *
  * **Details**
  *
  * Only full-text claims are returned. The adapter reads structured XML,
@@ -237,8 +233,6 @@ export class ClaimSelfCheckReport extends S.Opaque<ClaimSelfCheckReport, { reado
 ) {}
 
 /**
- * Self-check report over a public USPTO claim set, with the claim set it was run on.
- *
  * **Details**
  *
  * The claim set carries the USPTO `documentIdentifier` and the requested
@@ -330,8 +324,6 @@ export class ClaimSelfCheckInput extends S.Opaque<ClaimSelfCheckInput, { readonl
 ) {}
 
 /**
- * One antecedent finding with the epistemic candidate and evidence it maps to.
- *
  * **Details**
  *
  * The candidate is in `candidate` lifecycle and the evidence span is the

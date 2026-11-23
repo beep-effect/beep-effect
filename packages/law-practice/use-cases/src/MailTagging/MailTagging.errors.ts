@@ -15,8 +15,6 @@ import { DefectCause } from "../internal/DefectCause.ts";
 const $I = $LawPracticeUseCasesId.create("MailTagging/MailTagging.errors");
 
 /**
- * Collaborator a mail-tagging use-case reaches through a port.
- *
  * **Example** (Guard a port name)
  *
  * ```ts
@@ -44,16 +42,12 @@ export const MailTaggingPort = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MailTaggingPort}.
- *
  * @category models
  * @since 0.0.0
  */
 export type MailTaggingPort = typeof MailTaggingPort.Type;
 
 /**
- * How a mail-tagging port call failed.
- *
  * **Details**
  *
  * `unavailable` is any provider failure. `conflict` is a create the provider
@@ -79,8 +73,6 @@ export const MailTaggingPortFailure = LiteralKit(["unavailable", "conflict", "th
 );
 
 /**
- * Runtime type for {@link MailTaggingPortFailure}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -182,8 +174,6 @@ export class MailTaggingPortError extends S.TaggedError<MailTaggingPortError, { 
 }
 
 /**
- * Durable state file a mail-tagging run reads and writes.
- *
  * **Example** (Guard a state store name)
  *
  * ```ts
@@ -211,8 +201,6 @@ export const MailTaggingStateStore = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MailTaggingStateStore}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -240,8 +228,6 @@ export const MailTaggingStateFailure = LiteralKit(["unavailable", "corrupt"]).pi
 );
 
 /**
- * Runtime type for {@link MailTaggingStateFailure}.
- *
  * @category models
  * @since 0.0.0
  */
