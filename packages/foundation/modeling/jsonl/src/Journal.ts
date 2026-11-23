@@ -33,6 +33,7 @@ import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as Tuple from "effect/Tuple";
 import { Envelope, EnvelopeFrame } from "./Envelope.ts";
+import { AfterTerminalCheck } from "./internal/changesSeam.ts";
 import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.ts";
 import {
   DEFAULT_WINDOW,
@@ -927,12 +928,14 @@ const makeEngine: {
           yield* validateSelection(input);
           const slice = input;
           // decision: journal-subscribe-before-replay
+          const subscription = yield* PubSub.subscribe(hub);
           const alreadyQuiescent = yield* isTerminalTail;
+          const alreadyClosed = closed;
+          yield* Effect.flatten(AfterTerminalCheck);
           const replay = slice?.cursor === undefined ? Stream.empty : readFrom(slice);
-          if (alreadyQuiescent || closed) {
+          if (alreadyQuiescent || alreadyClosed) {
             return replay;
           }
-          const subscription = yield* PubSub.subscribe(hub);
           let replayedThrough = slice?.cursor ?? 0;
           const history = replay.pipe(
             Stream.tap((envelope) =>

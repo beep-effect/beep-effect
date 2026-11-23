@@ -18,8 +18,6 @@ import type { Env } from "../types.ts";
 const $I = $RuntimeEnvId.create("internal/osc8/wrappers");
 
 /**
- * Describe multiplexer info when a wrapper is detected.
- *
  * **Example** (Validate a detected multiplexer)
  *
  * ```ts

@@ -13,7 +13,7 @@ describe("vendored spdx data", () => {
   it("separates deprecated identifiers", () => {
     assert.isTrue(HashSet.has(DEPRECATED_LICENSE_IDS, "GPL-3.0"));
     assert.isTrue(HashSet.has(DEPRECATED_LICENSE_IDS, "AGPL-3.0"));
-    assert.isFalse(HashSet.has(LICENSE_IDS, "GPL-3.0")); // deprecated ids are not in the active set
+    assert.isFalse(HashSet.has(LICENSE_IDS, "GPL-3.0"), "deprecated ids are not in the active set");
   });
   it("carries the exception identifiers", () => {
     assert.isTrue(HashSet.has(EXCEPTION_IDS, "Classpath-exception-2.0"));

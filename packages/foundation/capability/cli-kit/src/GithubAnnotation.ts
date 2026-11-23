@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $CliKitId.create("GithubAnnotation");
 
 /**
- * The severity of a GitHub annotation.
- *
  * **Example** (Read the annotation severity vocabulary)
  *
  * ```ts
@@ -97,8 +95,6 @@ export class GithubAnnotationProperties extends S.Opaque<
   )
 ) {}
 /**
- * Companion types for {@link GithubAnnotationProperties}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

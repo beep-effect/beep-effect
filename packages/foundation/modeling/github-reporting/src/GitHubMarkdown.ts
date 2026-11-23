@@ -37,8 +37,6 @@ import { admission } from "./internal/admission.ts";
 const $I = $GithubReportingId.create("GitHubMarkdown");
 
 /**
- * A heading level GitHub renders, `1` through `6`.
- *
  * **Example** (Validate GitHubHeadingDepth input)
  *
  * ```ts
@@ -67,8 +65,6 @@ export const GitHubHeadingDepth = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
 export type GitHubHeadingDepth = typeof GitHubHeadingDepth.Type;
 
 /**
- * Options for {@link GitHubMarkdown.list}.
- *
  * **Example** (Validate GitHubListOptions input)
  *
  * ```ts
@@ -97,8 +93,6 @@ export class GitHubListOptions extends S.Opaque<GitHubListOptions, { readonly br
   }).pipe($I.annoteSchema("GitHubListOptions", { description: "Options for rendering a GitHub Markdown list." }))
 ) {}
 /**
- * Companion types for {@link GitHubListOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

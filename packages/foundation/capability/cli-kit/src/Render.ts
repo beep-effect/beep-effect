@@ -139,8 +139,6 @@ export class RenderContext extends S.Opaque<RenderContext, { readonly brand: uni
   }).pipe($I.annoteSchema("RenderContext", { description: "Plain RenderContext data." }))
 ) {}
 /**
- * Companion types for {@link RenderContext}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -162,8 +160,6 @@ export declare namespace RenderContext {
 }
 
 /**
- * Options for {@link Render.contextOf}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -224,8 +220,6 @@ export class RenderContextOfOptions extends S.Opaque<RenderContextOfOptions, { r
   }).pipe($I.annoteSchema("RenderContextOfOptions", { description: "Plain RenderContextOfOptions data." }))
 ) {}
 /**
- * Companion types for {@link RenderContextOfOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -256,8 +250,6 @@ const guarded: {
 );
 
 /**
- * Options for {@link Render.context}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -290,8 +282,6 @@ export class RenderContextOptions extends S.Opaque<RenderContextOptions, { reado
   }).pipe($I.annoteSchema("RenderContextOptions", { description: "Plain RenderContextOptions data." }))
 ) {}
 /**
- * Companion types for {@link RenderContextOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
