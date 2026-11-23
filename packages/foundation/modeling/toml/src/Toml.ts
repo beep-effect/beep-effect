@@ -241,14 +241,7 @@ export class TomlStringifyError extends S.TaggedError<TomlStringifyError, { read
   }
 }
 
-/**
- * Run the parser and semantic pass, materializing the engine's raw carriers
- * into the typed error: `RawTomlError` becomes a positioned diagnostic and a
- * `GuardExceeded` depth trip becomes a `NestingDepthExceeded` diagnostic
- * (never an unhandled defect). Anything else is a genuine defect and rethrows
- * — synchronously to a `Result` caller, and as a `Die` through the `Effect`
- * forms, which evaluate this inside the effect.
- */
+// decision: engine-diagnostic-boundary
 const parseToResult = (text: string): Result.Result<unknown, TomlParseError> =>
   Result.try({
     try: () => buildValue(parseExpressions(text)),

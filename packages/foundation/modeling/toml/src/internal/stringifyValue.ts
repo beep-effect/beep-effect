@@ -6,18 +6,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-// The canonical TOML document emitter over plain JavaScript values — the
-// encode side of the value pipeline. Layout contract: within a table,
-// non-table pairs emit first (document order), then sub-tables as
-// `[dotted.header]` sections depth-first, then arrays whose every element is
-// a plain object as `[[dotted.header]]` sections; a blank line precedes every
-// header line except at document start.
-//
-// Error carriers per the engine firewall: RawTomlError for value errors
-// (UnsupportedValue, IntegerOutOfRange, CircularReference — offsets 0, there
-// is no source text) and GuardExceeded for the nesting-depth cap. ONLY the
-// public facade catches them.
-
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import { RawTomlError } from "./diagnostics.ts";
 import { GuardExceeded, MAX_NESTING_DEPTH } from "./limits.ts";
@@ -43,14 +31,13 @@ class TomlStringifyInvariantError extends S.TaggedError<TomlStringifyInvariantEr
 
 const INT64_MIN = -(BigInt(2) ** BigInt(63));
 const INT64_MAX = BigInt(2) ** BigInt(63) - BigInt(1);
-// 2^63 as a float is exact (a power of two); anything >= it overflows int64.
-const INT64_FLOAT_BOUND = 2 ** 63;
+const INT64_EXCLUSIVE_FLOAT_BOUND = 2 ** 63;
 
 const BARE_KEY = /^[A-Za-z0-9_-]+$/;
 
-/** Error path segments: keys are strings, array indices are numbers. */
 type Path = ReadonlyArray<string | number>;
 
+// decision: engine-diagnostic-boundary
 const raise: {
   (code: TomlStringifyErrorCodeRaw, message: string): never;
   (message: string): (code: TomlStringifyErrorCodeRaw) => never;
@@ -58,13 +45,12 @@ const raise: {
   throw RawTomlError.make({ code, message, offset: 0, length: 0 });
 });
 
-const guardDepth = (depth: number): void => {
+const guardContainerDepth = (depth: number): void => {
   if (depth > MAX_NESTING_DEPTH) {
     throw GuardExceeded.new("NestingDepthExceeded", MAX_NESTING_DEPTH, depth, 0);
   }
 };
 
-/** Render an error path for diagnostics: dotted keys, bracketed indices. */
 const renderPath = (path: Path): string => {
   if (path.length === 0) {
     return "(root)";
@@ -80,7 +66,6 @@ const renderPath = (path: Path): string => {
   return out;
 };
 
-/** The JS type name for an UnsupportedValue message. */
 const jsTypeName = (value: unknown): string => {
   if (value === null) {
     return "null";
@@ -92,7 +77,6 @@ const jsTypeName = (value: unknown): string => {
   return P.isString(name) && name.length > 0 ? name : "object";
 };
 
-/** Escapes indexed by UTF-16 character; ordinary characters pass through without allocation. */
 const STRING_ESCAPES: Readonly<Record<string, string>> = {
   "\u0000": "\\u0000",
   "\u0001": "\\u0001",
@@ -131,7 +115,6 @@ const STRING_ESCAPES: Readonly<Record<string, string>> = {
   "\u007f": "\\u007F",
 };
 
-/** A basic single-line string: `"` `\` and control characters escaped. */
 const renderString = (value: string): string => {
   let out = '"';
   for (let i = 0; i < value.length; i++) {
@@ -156,17 +139,8 @@ const renderString = (value: string): string => {
  */
 export const renderKey = (key: string): string => (BARE_KEY.test(key) ? key : renderString(key));
 
-/** A dotted header path, quoting per-segment by the key rule. */
 const renderHeaderPath: (path: ReadonlyArray<string>) => string = flow(A.map(renderKey), A.join("."));
 
-/**
- * A `number`: integral values inside the int64 range emit as decimal integers
- * (a JS `1.0` is indistinguishable from `1` — every JS emitter shares this
- * divergence); `-0` emits as `-0.0`; integral values outside the int64 range
- * emit as floats so they round-trip instead of overflowing at parse time;
- * non-integral values emit as the shortest round-trip decimal with a
- * guaranteed `.` or `e`; the specials emit as `inf`/`-inf`/`nan`.
- */
 const renderNumber = (value: number): string => {
   if (Number.isNaN(value)) {
     return "nan";
@@ -180,7 +154,7 @@ const renderNumber = (value: number): string => {
   if (Object.is(value, -0)) {
     return "-0.0";
   }
-  if (Number.isInteger(value) && value >= -INT64_FLOAT_BOUND && value < INT64_FLOAT_BOUND) {
+  if (Number.isInteger(value) && value >= -INT64_EXCLUSIVE_FLOAT_BOUND && value < INT64_EXCLUSIVE_FLOAT_BOUND) {
     return String(value);
   }
   const text = String(value);
@@ -189,7 +163,6 @@ const renderNumber = (value: number): string => {
 
 const isTomlDateTime = S.is(S.Union([TomlOffsetDateTime, TomlLocalDateTime, TomlLocalDate, TomlLocalTime]));
 
-/** Plain objects only (null-prototype included) — never arrays or class instances. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   if (!P.isObjectKeyword(value) || P.isFunction(value) || A.isArray(value)) {
     return false;
@@ -198,7 +171,6 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
   return proto === Object.prototype || proto === null;
 };
 
-/** Scalar rendering; `undefined` means "not a scalar" (arrays/objects/rejects). */
 const renderScalar = Match.fn((value: unknown, _path: Path) => value).pipe(
   Match.when(P.isString, renderString),
   Match.when(P.isBoolean, (value) => (value ? "true" : "false")),
@@ -222,26 +194,19 @@ const checkCircular: {
   }
 });
 
-/** One value as an inline fragment: scalars, inline arrays, inline tables. */
 const renderInline: {
   (value: unknown, path: Path, depth: number, ancestors: ReadonlyArray<object>): string;
   (path: Path, depth: number, ancestors: ReadonlyArray<object>): (value: unknown) => string;
 } = dual(4, (value: unknown, path: Path, depth: number, ancestors: ReadonlyArray<object>): string => {
-  // Guard on container DESCENT only, never on a scalar leaf — mirroring the
-  // parse side, which checks parseArray/parseInlineTable at the opening
-  // bracket and never guards the leaf. Guarding the leaf too would give
-  // stringify a one-level tighter effective bound than parse: a value parsed
-  // at exactly MAX_NESTING_DEPTH containers with a non-empty innermost
-  // element would fail to re-emit.
   if (A.isArray(value)) {
-    guardDepth(depth);
+    guardContainerDepth(depth);
     checkCircular(value, ancestors, path);
     const nextAncestors = [...ancestors, value];
     const items = A.map(value, (item, index) => renderInline(item, [...path, index], depth + 1, nextAncestors));
     return `[${A.join(items, ", ")}]`;
   }
   if (isPlainObject(value)) {
-    guardDepth(depth);
+    guardContainerDepth(depth);
     checkCircular(value, ancestors, path);
     const nextAncestors = [...ancestors, value];
     const parts = A.map(
@@ -278,14 +243,13 @@ const renderInline: {
  */
 export const renderInlineValue = (value: unknown): string => renderInline(value, [], 0, []);
 
-/** A table's entries split into the three layout groups, document order kept. */
 interface Classified {
   readonly arrayTables: Array<string>;
   readonly pairs: Array<string>;
   readonly tables: Array<string>;
 }
 
-const classify = (table: Record<string, unknown>): Classified => {
+const partitionTableLayoutGroups = (table: Record<string, unknown>): Classified => {
   const pairs: Array<string> = [];
   const tables: Array<string> = [];
   const arrayTables: Array<string> = [];
@@ -302,7 +266,6 @@ const classify = (table: Record<string, unknown>): Classified => {
   return { pairs, tables, arrayTables };
 };
 
-/** Push a header line, preceded by a blank line except at document start. */
 const pushHeader: {
   (lines: Array<string>, header: string): void;
   (header: string): (lines: Array<string>) => void;
@@ -313,7 +276,6 @@ const pushHeader: {
   lines.push(header);
 });
 
-/** One `[sub.table]` section for the plain-object `value` under `key`. */
 const emitSubTable = (
   value: unknown,
   key: string,
@@ -330,7 +292,6 @@ const emitSubTable = (
   emitTable(value, [...headerPath, key], [...errorPath, key], lines, depth + 1, tableAncestors);
 };
 
-/** One `[[array.of.tables]]` section per element of the plain-object array `array` under `key`. */
 const emitArrayTables = (
   array: unknown,
   key: string,
@@ -355,11 +316,6 @@ const emitArrayTables = (
   }
 };
 
-/**
- * Emit one table's body: pairs, then sub-table sections, then
- * array-of-tables sections. `headerPath` carries the dotted section path
- * (strings only); `errorPath` additionally carries array indices.
- */
 const emitTable: {
   (
     table: Record<string, unknown>,
@@ -386,10 +342,10 @@ const emitTable: {
     depth: number,
     ancestors: ReadonlyArray<object>
   ): void => {
-    guardDepth(depth);
+    guardContainerDepth(depth);
     checkCircular(table, ancestors, errorPath);
     const tableAncestors = [...ancestors, table];
-    const { pairs, tables, arrayTables } = classify(table);
+    const { pairs, tables, arrayTables } = partitionTableLayoutGroups(table);
     for (const key of pairs) {
       lines.push(`${renderKey(key)} = ${renderInline(table[key], [...errorPath, key], depth + 1, tableAncestors)}`);
     }

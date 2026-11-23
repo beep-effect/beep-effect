@@ -218,7 +218,6 @@ const scanWsBack: {
   return i;
 });
 
-/** The document's dominant newline: CRLF only when CRLF pairs outnumber bare LFs. */
 const dominantNewline = (source: string): "\n" | "\r\n" => {
   let newlines = 0;
   let crlf = 0;
@@ -234,7 +233,6 @@ const dominantNewline = (source: string): "\n" | "\r\n" => {
   return crlf > newlines - crlf ? "\r\n" : "\n";
 };
 
-/** A raw splice tagged with its owning expression's span for range filtering. */
 interface TaggedEdit {
   readonly exprEnd: number;
   readonly exprOffset: number;
@@ -246,7 +244,6 @@ interface TaggedEdit {
 const isMultilineString = (node: TomlValueNode): boolean =>
   P.isTagged(node, "TomlString") && (node.style === "multiline-basic" || node.style === "multiline-literal");
 
-/** The direct child values of a container node; scalars have none. */
 const childValues = (node: TomlValueNode): ReadonlyArray<TomlValueNode> => {
   if (P.isTagged(node, "TomlArray")) {
     return node.items;
@@ -254,8 +251,7 @@ const childValues = (node: TomlValueNode): ReadonlyArray<TomlValueNode> => {
   return P.isTagged(node, "TomlInlineTable") ? A.map(node.entries, (entry) => entry.value) : [];
 };
 
-/** Multi-line string value spans — the bytes formatting must never touch. */
-const collectMultilineSpans: {
+const collectProtectedMultilineStringSpans: {
   (node: TomlValueNode, out: Array<readonly [number, number]>): void;
   (out: Array<readonly [number, number]>): (node: TomlValueNode) => void;
 } = dual(2, (node: TomlValueNode, out: Array<readonly [number, number]>): void => {
@@ -264,12 +260,11 @@ const collectMultilineSpans: {
     return;
   }
   for (const child of childValues(node)) {
-    collectMultilineSpans(child, out);
+    collectProtectedMultilineStringSpans(child, out);
   }
 });
 
-/** Accumulates format edits for one document; drops no-op splices to keep format idempotent. */
-class FormatEmitter {
+class NonRedundantFormatEmitter {
   readonly edits: Array<TaggedEdit> = [];
   private readonly source: string;
   constructor(source: string) {
@@ -283,14 +278,12 @@ class FormatEmitter {
   }
 }
 
-/** A line start past the document's BOM, when the line is the first one. */
 const skipBom = (source: string, lineStart: number): number => (lineStart === 0 && source[0] === BOM ? 1 : lineStart);
 
-/** Rule 2: strip the expression's leading indentation (the first line's BOM excluded). */
 const formatLeading: {
-  (source: string, emit: FormatEmitter, expr: TomlExpression): void;
-  (emit: FormatEmitter, expr: TomlExpression): (source: string) => void;
-} = dual(3, (source: string, emit: FormatEmitter, expr: TomlExpression): void => {
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void;
+  (emit: NonRedundantFormatEmitter, expr: TomlExpression): (source: string) => void;
+} = dual(3, (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void => {
   const start = skipBom(source, expr.offset);
   const end = scanWs(source, start, expr.offset + expr.length);
   if (end > start) {
@@ -298,24 +291,25 @@ const formatLeading: {
   }
 });
 
-/** Rule 4 (space after `#`) and the rule-3 trailing-whitespace strip, for one comment body. */
 const formatCommentBody: {
-  (source: string, emit: FormatEmitter, expr: TomlExpression, bodyStart: number, lineEnd: number): void;
-  (emit: FormatEmitter, expr: TomlExpression, bodyStart: number, lineEnd: number): (source: string) => void;
-} = dual(5, (source: string, emit: FormatEmitter, expr: TomlExpression, bodyStart: number, lineEnd: number): void => {
-  const bodyEnd = scanWsBack(source, lineEnd, bodyStart);
-  if (bodyEnd < lineEnd) {
-    emit.push(expr, bodyEnd, lineEnd - bodyEnd, "");
-  }
-  if (bodyEnd > bodyStart) {
-    const code = source[bodyStart];
-    if (code !== SPACE && code !== TAB && code !== BANG) {
-      emit.push(expr, bodyStart, 0, " ");
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression, bodyStart: number, lineEnd: number): void;
+  (emit: NonRedundantFormatEmitter, expr: TomlExpression, bodyStart: number, lineEnd: number): (source: string) => void;
+} = dual(
+  5,
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression, bodyStart: number, lineEnd: number): void => {
+    const bodyEnd = scanWsBack(source, lineEnd, bodyStart);
+    if (bodyEnd < lineEnd) {
+      emit.push(expr, bodyEnd, lineEnd - bodyEnd, "");
+    }
+    if (bodyEnd > bodyStart) {
+      const code = source[bodyStart];
+      if (code !== SPACE && code !== TAB && code !== BANG) {
+        emit.push(expr, bodyStart, 0, " ");
+      }
     }
   }
-});
+);
 
-/** Where the expression's terminating newline (LF or CRLF) begins, never before `contentEnd`. */
 const newlineStart = (source: string, exprEnd: number, contentEnd: number): number => {
   let nlStart = exprEnd;
   if (nlStart > contentEnd && source[nlStart - 1] === LF) {
@@ -327,27 +321,22 @@ const newlineStart = (source: string, exprEnd: number, contentEnd: number): numb
   return nlStart;
 };
 
-/** Rule 3: the run between an expression's content end and its newline — trailing ws and the comment gap. */
 const formatTail: {
-  (source: string, emit: FormatEmitter, expr: TomlExpression, contentEnd: number): void;
-  (emit: FormatEmitter, expr: TomlExpression, contentEnd: number): (source: string) => void;
-} = dual(4, (source: string, emit: FormatEmitter, expr: TomlExpression, contentEnd: number): void => {
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression, contentEnd: number): void;
+  (emit: NonRedundantFormatEmitter, expr: TomlExpression, contentEnd: number): (source: string) => void;
+} = dual(4, (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression, contentEnd: number): void => {
   const nlStart = newlineStart(source, expr.offset + expr.length, contentEnd);
-  // The tail grammar is whitespace then an optional comment, so the first
-  // non-ws character is `#` or there is no comment — a bounded scan, never
-  // an unbounded indexOf across the rest of the document.
-  const hashIdx = scanWs(source, contentEnd, nlStart);
-  if (hashIdx >= nlStart || source[hashIdx] !== HASH) {
+  const boundedTailCommentStart = scanWs(source, contentEnd, nlStart);
+  if (boundedTailCommentStart >= nlStart || source[boundedTailCommentStart] !== HASH) {
     if (nlStart > contentEnd) {
       emit.push(expr, contentEnd, nlStart - contentEnd, "");
     }
     return;
   }
-  emit.push(expr, contentEnd, hashIdx - contentEnd, " ");
-  formatCommentBody(source, emit, expr, hashIdx + 1, nlStart);
+  emit.push(expr, contentEnd, boundedTailCommentStart - contentEnd, " ");
+  formatCommentBody(source, emit, expr, boundedTailCommentStart + 1, nlStart);
 });
 
-/** The end of the line starting at `pos` (its first CR or LF), bounded by `end`. */
 const scanLineEnd = (source: string, pos: number, end: number): number => {
   let j = pos;
   while (j < end && source[j] !== LF && source[j] !== CR) {
@@ -356,7 +345,6 @@ const scanLineEnd = (source: string, pos: number, end: number): number => {
   return j;
 };
 
-/** The position past the newline (CRLF, CR or LF) at `pos`, bounded by `end`. */
 const skipNewline = (source: string, pos: number, end: number): number => {
   if (pos >= end) {
     return pos;
@@ -365,10 +353,9 @@ const skipNewline = (source: string, pos: number, end: number): number => {
   return pos + (isCrlf ? 2 : 1);
 };
 
-/** Rules 2–4 over one blank or comment-only trivia line spanning `start..lineEnd`. */
 const formatTriviaLine = (
   source: string,
-  emit: FormatEmitter,
+  emit: NonRedundantFormatEmitter,
   expr: TomlTrivia,
   start: number,
   lineEnd: number
@@ -386,11 +373,10 @@ const formatTriviaLine = (
   formatCommentBody(source, emit, expr, wsEnd + 1, lineEnd);
 };
 
-/** Rules 2–4 over a trivia run's blank and comment-only lines. */
 const formatTrivia: {
-  (source: string, emit: FormatEmitter, expr: TomlTrivia): void;
-  (emit: FormatEmitter, expr: TomlTrivia): (source: string) => void;
-} = dual(3, (source: string, emit: FormatEmitter, expr: TomlTrivia): void => {
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlTrivia): void;
+  (emit: NonRedundantFormatEmitter, expr: TomlTrivia): (source: string) => void;
+} = dual(3, (source: string, emit: NonRedundantFormatEmitter, expr: TomlTrivia): void => {
   const end = expr.offset + expr.length;
   let i = expr.offset;
   while (i < end) {
@@ -400,7 +386,6 @@ const formatTrivia: {
   }
 });
 
-/** The first protected span (from index `p` on) that ends after `pos`. */
 const firstSpanEndingAfter = (spans: ReadonlyArray<readonly [number, number]>, p: number, pos: number): number => {
   let index = p;
   let span = spans[index];
@@ -411,10 +396,9 @@ const firstSpanEndingAfter = (spans: ReadonlyArray<readonly [number, number]>, p
   return index;
 };
 
-/** Rule 6 at one position: rewrite a newline there to `target`; returns the next scan position. */
 const normalizeNewlineAt = (
   source: string,
-  emit: FormatEmitter,
+  emit: NonRedundantFormatEmitter,
   expr: TomlExpression,
   i: number,
   end: number,
@@ -433,17 +417,16 @@ const normalizeNewlineAt = (
   return i + 1;
 };
 
-/** Rule 6: normalize every newline within the expression span, skipping the protected string spans. */
 const normalizeNewlines: {
   (
     source: string,
-    emit: FormatEmitter,
+    emit: NonRedundantFormatEmitter,
     expr: TomlExpression,
     protectedSpans: ReadonlyArray<readonly [number, number]>,
     target: "\n" | "\r\n"
   ): void;
   (
-    emit: FormatEmitter,
+    emit: NonRedundantFormatEmitter,
     expr: TomlExpression,
     protectedSpans: ReadonlyArray<readonly [number, number]>,
     target: "\n" | "\r\n"
@@ -452,7 +435,7 @@ const normalizeNewlines: {
   5,
   (
     source: string,
-    emit: FormatEmitter,
+    emit: NonRedundantFormatEmitter,
     expr: TomlExpression,
     protectedSpans: ReadonlyArray<readonly [number, number]>,
     target: "\n" | "\r\n"
@@ -471,10 +454,6 @@ const normalizeNewlines: {
   }
 );
 
-// Parser-produced key paths and expression lists are dense. Their grammar or
-// the local bounds check establishes every indexed access below; getUnsafe
-// expresses that invariant without a second, unreachable missing-element arm.
-/** The position just past a header's closing bracket(s). */
 const headerContentEnd: {
   (source: string, expr: TomlTableHeader | TomlArrayTableHeader): number;
   (expr: TomlTableHeader | TomlArrayTableHeader): (source: string) => number;
@@ -484,8 +463,7 @@ const headerContentEnd: {
   return bracket + (P.isTagged(expr, "TomlArrayTableHeader") ? 2 : 1);
 });
 
-/** Rules 1–4 for one expression: leading indentation, the `=` gap, the tail and trivia lines. */
-const formatExpressionLayout = (source: string, emit: FormatEmitter, expr: TomlExpression): void => {
+const formatExpressionLayout = (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void => {
   if (P.isTagged(expr, "TomlTrivia")) {
     formatTrivia(source, emit, expr);
     return;
@@ -501,19 +479,17 @@ const formatExpressionLayout = (source: string, emit: FormatEmitter, expr: TomlE
   formatTail(source, emit, expr, headerContentEnd(source, expr));
 };
 
-/** The multi-line string spans rule 6 must skip inside one expression (only key-values carry values). */
 const protectedSpansOf = (expr: TomlExpression): ReadonlyArray<readonly [number, number]> => {
   const spans: Array<readonly [number, number]> = [];
   if (P.isTagged(expr, "TomlKeyValue")) {
-    collectMultilineSpans(expr.value, spans);
+    collectProtectedMultilineStringSpans(expr.value, spans);
   }
   return spans;
 };
 
-/** Rule 5: a single final newline. */
 const formatFinalNewline = (
   source: string,
-  emit: FormatEmitter,
+  emit: NonRedundantFormatEmitter,
   expressions: ReadonlyArray<TomlExpression>,
   target: "\n" | "\r\n" | undefined
 ): void => {
@@ -524,7 +500,6 @@ const formatFinalNewline = (
   emit.push(last, source.length, 0, target ?? dominantNewline(source));
 };
 
-/** All six format rules over the expression list; `[]` on malformed input (never corrupt it). */
 const computeFormatEdits: {
   (source: string, options: TomlFormattingOptions | undefined): Array<TaggedEdit>;
   (options: TomlFormattingOptions | undefined): (source: string) => Array<TaggedEdit>;
@@ -532,7 +507,7 @@ const computeFormatEdits: {
   const parsed = Result.try(() => parseExpressions(source));
   if (Result.isFailure(parsed)) return [];
   const expressions = parsed.success;
-  const emit = new FormatEmitter(source);
+  const emit = new NonRedundantFormatEmitter(source);
   const target = options?.newline;
   for (const expr of expressions) {
     formatExpressionLayout(source, emit, expr);
@@ -544,10 +519,8 @@ const computeFormatEdits: {
   return emit.edits;
 });
 
-/** One document section: the root run or a header's contiguous run of expressions. */
 interface Section {
   readonly header: TomlTableHeader | TomlArrayTableHeader | undefined;
-  /** End offset of the section's last non-trivia expression — the insertion point. */
   insertAfter: number | undefined;
 }
 
@@ -558,23 +531,19 @@ const ResTableOrigin = LiteralKit(["root", "explicit", "implicit", "dotted", "el
 );
 type ResTableOrigin = typeof ResTableOrigin.Type;
 
-/** A table in the resolution tree, tagged with how it came to exist and where inserts land. */
 interface ResTable {
   readonly entries: MutableHashMap.MutableHashMap<string, ResNode>;
   readonly kind: "table";
   origin: ResTableOrigin;
-  /** Dotted tables only: the key path relative to the defining section's header. */
   readonly relPath: ReadonlyArray<string>;
   sectionIndex: number;
 }
 
 interface ResArrayTables {
-  /** Created with its first element and only ever appended to, so never empty. */
   readonly elements: A.NonEmptyArray<ResTable>;
   readonly kind: "array-tables";
 }
 
-/** A value assigned by a key-value expression; `expr` is the deletable host line. */
 interface ResValue {
   readonly expr: TomlKeyValue;
   readonly kind: "value";
@@ -597,10 +566,6 @@ const mkTable: {
   })
 );
 
-/** Descend into a navigable node: tables pass through, array-of-tables yield their last element.
- * The semantic pass guarantees the node exists and is navigable; an array-of-tables node is
- * non-empty by construction.
- */
 const intoTable = (node: ResNode | undefined): ResTable => {
   if (node !== undefined && node.kind === "array-tables") {
     return A.lastNonEmpty(node.elements);
@@ -608,19 +573,11 @@ const intoTable = (node: ResNode | undefined): ResTable => {
   if (node !== undefined && node.kind === "table") {
     return node;
   }
-  // The semantic pass already validated every navigation; reaching a value here is an invariant violation.
   throw TomlFormatInvariantError.make({
     message: "invariant: semantic pass admitted a value where a table was navigated",
   });
 };
 
-/**
- * Build the resolution tree and section list by riding `analyze`'s visitor.
- * The expressions were validated at parse time, so the walk cannot throw;
- * `onKeyValue` paths are name-only, so array-of-tables element association
- * comes from descending into the LAST element — expressions arrive in
- * document order, so the last element is always the current one.
- */
 const buildSemanticIndex = (
   expressions: ReadonlyArray<TomlExpression>
 ): { readonly root: ResTable; readonly sections: ReadonlyArray<Section> } => {
@@ -701,7 +658,6 @@ const buildSemanticIndex = (
   return { root, sections };
 };
 
-/** Thrown by the pure resolution helpers; `modify` materializes {@link TomlModificationError}. */
 class ModifyFailure extends S.TaggedError<ModifyFailure, { readonly brand: unique symbol }>($I`ModifyFailure`)(
   "ModifyFailure",
   {
@@ -779,7 +735,6 @@ type Cursor =
       readonly depth: number;
     };
 
-/** Wrap a CST value as a cursor; inline tables open as an entry scope (dotted keys included). */
 const cstCursor: {
   (node: TomlValueNode, del: DeleteTarget): Cursor;
   (del: DeleteTarget): (node: TomlValueNode) => Cursor;
@@ -818,7 +773,6 @@ const stepInline: {
 
 type InlineCursor = Extract<Cursor, { t: "inline" }>;
 
-/** Step from a table into the child named `key`; intermediate tables are never auto-created. */
 const stepTable = (table: ResTable, key: string): Cursor => {
   const child = O.getOrUndefined(MutableHashMap.get(table.entries, key));
   if (child === undefined) {
@@ -836,7 +790,6 @@ const stepTable = (table: ResTable, key: string): Cursor => {
   return cstCursor(child.node, { kind: "expression", expr: child.expr });
 };
 
-/** Step from an array of tables into the element at `segment`. */
 const stepArrayTables = (node: ResArrayTables, segment: TomlSegment): Cursor => {
   const idx = requireIndex(segment, "an array of tables", 0, 0);
   if (idx >= node.elements.length) {
@@ -846,7 +799,6 @@ const stepArrayTables = (node: ResArrayTables, segment: TomlSegment): Cursor => 
   return { t: "table", table };
 };
 
-/** Step from an inline-table scope by `key`: a full entry opens its value, a prefix narrows the scope. */
 const stepInlineScope = (cur: InlineCursor, key: string): Cursor => {
   const { matches, full } = stepInline(cur, key);
   if (matches.length === 0) {
@@ -863,7 +815,6 @@ const stepInlineScope = (cur: InlineCursor, key: string): Cursor => {
   return { t: "inline", table: cur.table, candidates: matches, depth: cur.depth + 1 };
 };
 
-/** Step from a CST value: only arrays are navigable, by index. */
 const stepCst = (node: TomlValueNode, segment: TomlSegment): Cursor => {
   if (!P.isTagged(node, "TomlArray")) {
     return failResolve("DottedKeyConflict", "cannot navigate through a scalar value", node.offset, node.length);
@@ -876,7 +827,6 @@ const stepCst = (node: TomlValueNode, segment: TomlSegment): Cursor => {
   return cstCursor(item, { kind: "array-item", array: node, index: idx });
 };
 
-/** One navigation step (never the terminal segment). */
 const step: {
   (cur: Cursor, segment: TomlSegment): Cursor;
   (segment: TomlSegment): (cur: Cursor) => Cursor;
@@ -905,7 +855,6 @@ interface ModifyContext {
   readonly source: string;
 }
 
-/** Delete one array item, splicing the separator: leading comma for a last item, trailing for the rest. */
 const spliceArrayItem: {
   (array: TomlArray, index: number): RawEdit;
   (index: number): (array: TomlArray) => RawEdit;
@@ -924,7 +873,6 @@ const spliceArrayItem: {
   return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
 });
 
-/** Delete one inline-table entry with the same separator-splicing rule. */
 const spliceInlineEntry: {
   (table: TomlInlineTable, index: number): RawEdit;
   (index: number): (table: TomlInlineTable) => RawEdit;
@@ -943,21 +891,17 @@ const spliceInlineEntry: {
   return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
 });
 
-/** Root inserts land after the last root expression, else before the first header, else at 0. */
 const rootInsertOffset = (ctx: ModifyContext): number => {
   const firstHeader = ctx.sections[1]?.header;
   const section = A.getUnsafe(ctx.sections, 0);
   return section.insertAfter ?? firstHeader?.offset ?? 0;
 };
 
-/** Section inserts land after the section's last non-trivia expression. */
 const sectionInsertOffset = (ctx: ModifyContext, sectionIndex: number): number => {
   const section = A.getUnsafe(ctx.sections, sectionIndex);
-  // Every non-root section begins with a header that sets insertAfter.
   return O.getOrThrow(O.fromUndefinedOr(section.insertAfter));
 };
 
-/** The pinned insertion-placement rules: where a new `key = value` line lands and how its key renders. */
 const insertEdit: {
   (table: ResTable, key: string, value: unknown, ctx: ModifyContext): RawEdit;
   (key: string, value: unknown, ctx: ModifyContext): (table: ResTable) => RawEdit;
@@ -975,7 +919,6 @@ const insertEdit: {
   return { offset, length: 0, newText: `${needLeading ? ctx.nl : ""}${line}${ctx.nl}` };
 });
 
-/** Delete the value bound to `key` in a table; absent keys are a no-op. */
 const deleteTableValue = (key: string, existing: ResNode | undefined): Array<RawEdit> => {
   if (existing === undefined) {
     return [];
@@ -986,7 +929,6 @@ const deleteTableValue = (key: string, existing: ResNode | undefined): Array<Raw
   return [{ offset: existing.expr.offset, length: existing.expr.length, newText: "" }];
 };
 
-/** Terminal edits against a table: delete, insert a new line, or replace an existing value. */
 const terminalTable = (table: ResTable, key: string, value: unknown, ctx: ModifyContext): Array<RawEdit> => {
   const existing = O.getOrUndefined(MutableHashMap.get(table.entries, key));
   if (value === undefined) {
@@ -1001,7 +943,6 @@ const terminalTable = (table: ResTable, key: string, value: unknown, ctx: Modify
   return [{ offset: existing.node.offset, length: existing.node.length, newText: renderInlineValue(value) }];
 };
 
-/** Terminal edits against an array of tables: only deleting an absent element succeeds (as a no-op). */
 const terminalArrayTables = (node: ResArrayTables, segment: TomlSegment, value: unknown): Array<RawEdit> => {
   const idx = requireIndex(segment, "an array of tables", 0, 0);
   const inBounds = idx < node.elements.length;
@@ -1016,7 +957,6 @@ const terminalArrayTables = (node: ResArrayTables, segment: TomlSegment, value: 
   );
 };
 
-/** The single inline entry `key` names; a dotted-key group refuses. */
 const requireFullEntry = (cur: InlineCursor, key: string, full: Candidate | undefined): Candidate => {
   if (full === undefined) {
     return failResolve(
@@ -1029,7 +969,6 @@ const requireFullEntry = (cur: InlineCursor, key: string, full: Candidate | unde
   return full;
 };
 
-/** Terminal edits against an inline-table scope: delete or replace an entry; never extend the table. */
 const terminalInline = (cur: InlineCursor, key: string, value: unknown): Array<RawEdit> => {
   const { matches, full } = stepInline(cur, key);
   if (value === undefined) {
@@ -1047,7 +986,6 @@ const terminalInline = (cur: InlineCursor, key: string, value: unknown): Array<R
   return [{ offset: entry.value.offset, length: entry.value.length, newText: renderInlineValue(value) }];
 };
 
-/** Terminal edits against a CST value: delete or replace an array item; scalars refuse. */
 const terminalCst = (node: TomlValueNode, segment: TomlSegment, value: unknown): Array<RawEdit> => {
   if (!P.isTagged(node, "TomlArray")) {
     return failResolve("DottedKeyConflict", "cannot address a key beneath a scalar value", node.offset, node.length);
@@ -1069,7 +1007,6 @@ const terminalCst = (node: TomlValueNode, segment: TomlSegment, value: unknown):
   return [{ offset: item.offset, length: item.length, newText: renderInlineValue(value) }];
 };
 
-/** Resolve the final segment against the parent cursor and produce the terminal edits. */
 const terminal: {
   (cur: Cursor, segment: TomlSegment, value: unknown, ctx: ModifyContext): Array<RawEdit>;
   (segment: TomlSegment, value: unknown, ctx: ModifyContext): (cur: Cursor) => Array<RawEdit>;
