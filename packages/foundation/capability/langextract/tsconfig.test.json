@@ -24,9 +24,6 @@
       "path": "../../modeling/jsonc/tsconfig.json"
     },
     {
-      "path": "../../modeling/nlp/tsconfig.json"
-    },
-    {
       "path": "../../modeling/schema/tsconfig.json"
     },
     {

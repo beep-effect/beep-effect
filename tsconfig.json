@@ -801,17 +801,11 @@
       "@beep/nlp/Algebra": [
         "./packages/foundation/modeling/nlp/src/Algebra/index.ts"
       ],
-      "@beep/nlp/Ontology": [
-        "./packages/foundation/modeling/nlp/src/Ontology/index.ts"
-      ],
       "@beep/nlp/Graph": [
         "./packages/foundation/modeling/nlp/src/Graph/index.ts"
       ],
       "@beep/nlp/Operations": [
         "./packages/foundation/modeling/nlp/src/Operations/index.ts"
-      ],
-      "@beep/nlp/Handoff": [
-        "./packages/foundation/modeling/nlp/src/Handoff/index.ts"
       ],
       "@beep/langextract/Alignment": [
         "./packages/foundation/capability/langextract/src/Alignment/index.ts"
@@ -1357,12 +1351,6 @@
       ],
       "@beep/nlp/Core/*": ["./packages/foundation/modeling/nlp/src/Core/*"],
       "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
-      "@beep/nlp/Handoff/*": [
-        "./packages/foundation/modeling/nlp/src/Handoff/*"
-      ],
-      "@beep/nlp/Ontology/*": [
-        "./packages/foundation/modeling/nlp/src/Ontology/*"
-      ],
       "@beep/nlp/Operations/*": [
         "./packages/foundation/modeling/nlp/src/Operations/*"
       ],

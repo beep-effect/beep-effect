@@ -14,7 +14,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $AnnotationId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { definePreimage } from "@beep/jsonc/Mint";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
@@ -181,8 +183,8 @@ export const AnnotationPreimage = definePreimage({
   golden: {
     preimage: [
       ["sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48"],
-      "https://beep-effect.com/ns/annotation/Mention",
-      { class: "https://beep-effect.com/ns/office-action/distinction" },
+      iri("annotation:Mention"),
+      { class: iri("office-action:distinction") },
     ],
     hash: ContentHash.make("sha256:8a816f6d07f571cb31aba23d9650d0cb67c72ce6832c12b6c89f388b6fd9ddb9"),
   },

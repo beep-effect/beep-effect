@@ -186,7 +186,6 @@
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/langextract": "workspace:^",
-        "@beep/nlp": "workspace:^",
         "@beep/oxigraph": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/rdf": "workspace:^",
@@ -3769,6 +3768,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/semantic-web": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",

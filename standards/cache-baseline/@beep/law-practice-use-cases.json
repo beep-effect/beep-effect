@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/law-practice-use-cases",
   "review": {
-    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
-    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
+    "reviewer": "GPT-6.1 Sol (P3 remediation lane)",
+    "reason": "Correct the declared dependency edges without changing cache qualification.",
     "basis": {
-      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
-      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
+      "path": "docs/reports/tksr-p3-reds-cache-review-2026-11-22.md",
+      "sha256": "0d5d5de6353af035e3518a7e414550ea4efa7f71ab07ebb4806852a16511ec8e"
     }
   },
   "nodes": [
@@ -27,6 +27,7 @@
         "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/schema#build",
+        "@beep/semantic-web#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
@@ -98,6 +99,7 @@
         "@beep/nlp-processing#build",
         "@beep/repo-gate-record#transit",
         "@beep/schema#build",
+        "@beep/semantic-web#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
@@ -164,6 +166,7 @@
         "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/schema#build",
+        "@beep/semantic-web#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
@@ -305,6 +308,7 @@
         "@beep/nlp-processing#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
+        "@beep/semantic-web#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
@@ -517,6 +521,7 @@
         "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/schema#transit",
+        "@beep/semantic-web#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
@@ -577,6 +582,7 @@
         "@beep/nlp-processing#transit",
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
+        "@beep/semantic-web#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
@@ -647,6 +653,7 @@
         "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/schema#transit",
+        "@beep/semantic-web#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",

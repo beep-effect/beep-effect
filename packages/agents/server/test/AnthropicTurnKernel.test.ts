@@ -8,6 +8,7 @@ import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Model from "effect/ai/Model";
 import * as Response from "effect/ai/Response";
 import * as Effect from "effect/Effect";
 import * as ExecutionPlan from "effect/ExecutionPlan";
@@ -49,7 +50,11 @@ const TestLanguageModel: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigE
 const TestAnthropicTurnProvider = Layer.succeed(AnthropicTurnProvider)({
   // One attempt that never retries: the plan only supplies the scripted model.
   turnPlan: ExecutionPlan.make({
-    provide: TestLanguageModel,
+    provide: Layer.mergeAll(
+      TestLanguageModel,
+      Layer.succeed(Model.ProviderName)("test-provider"),
+      Layer.succeed(Model.ModelName)("test-model")
+    ),
     while: (_error: AiError.AiError | Config.ConfigError) => false,
   }),
   repairInvalidBlocks: makeRepairInvalidBlocks(() =>
@@ -125,6 +130,20 @@ describe("AnthropicTurnKernel", () => {
   // The test provider reads one scenario record; deferred provider and repair
   // reads must finish before the next case resets or mutates that record.
   it.layer(TestAnthropicTurnKernel, { concurrent: false })("with a deterministic provider stream", (it) => {
+    it.effect("streams a turn with prior conversation history", () =>
+      Effect.gen(function* () {
+        providerState.parts = [
+          deltaPart(envelope(validParagraph("reply"))),
+          endPart,
+          metadataPart("claude-test"),
+          finishPart(),
+        ];
+        const kernel = yield* AgentTurnKernel;
+        const events = yield* Stream.runCollect(kernel.streamTurn([{ role: "user", text: "previous question" }]));
+        expect(A.map(events, (event) => event.type)).toEqual(["block", "finalization"]);
+      })
+    );
+
     it.effect(
       "captures finish usage and response metadata, then finalizes after every block",
       Effect.fnUntraced(function* () {
