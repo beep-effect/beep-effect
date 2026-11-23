@@ -30,6 +30,7 @@ import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
 import { writeCacheLocalSummary } from "./CiCacheLocalSummary.ts";
 import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
 import { ciCompileBinaryCommand } from "./CiCompileBinary.ts";
+import { ciFailuresCommand } from "./CiFailures.ts";
 import { ciAppendGateReportsCommand } from "./CiGateProjection.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
@@ -392,6 +393,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci binary-pin-sync --cwd <checkout> --tag <beep-ci-...> --sha256 <hex> --releases <json> [--base <ref>] [--output <file>]",
     "- bun run beep ci compile-binary --outfile <path> [--target bun-linux-x64]",
     "- bun run beep ci dependency-review --base <sha> --head <sha>",
+    "- bun run beep ci failures --run <id> | --pr <number>",
     "- bun run beep ci ruleset [--capture|--check]",
     "- bun run beep ci settings [--check]",
     "- bun run beep ci held-group",
@@ -428,6 +430,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     appendTurboSummaryCommand,
     ciAppendGateReportsCommand,
     ciDependencyReviewCommand,
+    ciFailuresCommand,
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciCertaintyCommand,

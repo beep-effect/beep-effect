@@ -34,8 +34,6 @@ import type { CsvRecord } from "../CsvTable.schema.ts";
 
 const $I = $CsvId.create("internal/machine");
 
-// ── the state of a read, as schemas ──────────────────────────────────────────────────────────────────────────────────
-
 /** The names of the places the machine can be inside a record. */
 export const MachineModeName = LiteralKit([
   "fieldStart",
@@ -173,8 +171,6 @@ export class MachineConfig extends S.Opaque<MachineConfig, { readonly brand: uni
     delimiter: CsvDelimiter.pipe(S.annotateKey({ description: "The settled delimiter" })),
   }).pipe($I.annoteSchema("MachineConfig", { description: "The rules the machine reads by" }))
 ) {}
-
-// ── the machine ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** Every `MachineState` field, writable, with the open record's cells as an array the machine appends to. */
 type Working = {
@@ -519,13 +515,11 @@ export class Machine {
   }
 }
 
-// ── one step per mode ────────────────────────────────────────────────────────────────────────────────────────────────
 // Each step reads at `i` and returns where the next step reads. A step that stops the read returns `i`; the loop in
 // `Machine.feed` ends on `stopped`.
 
 type Stepper = (run: Machine, text: string, i: number) => number;
 
-/** A delimiter ends the field. */
 const delimit = (run: Machine, i: number): number => {
   run.endField();
   run.advance(1);
@@ -542,7 +536,6 @@ const plainLineBreak = (run: Machine, c: string, i: number): number => {
   return i + 1;
 };
 
-/** A quote that starts a field opens a quoted field. */
 const openQuote = (run: Machine, i: number): number => {
   run.mode = "quoted";
   run.s.fieldQuoted = true;

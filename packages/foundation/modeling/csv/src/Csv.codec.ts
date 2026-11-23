@@ -57,8 +57,6 @@ import type { CsvRecord, CsvRecordSlice } from "./CsvTable.schema.ts";
 import type { MachineConfig } from "./internal/machine.ts";
 import type { Prepared } from "./internal/start.ts";
 
-// ── reading ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-
 type ReadOptions = CsvCodecOptions["read"];
 type WriteOptions = CsvCodecOptions["write"];
 
@@ -187,8 +185,6 @@ const readBytes = (
 
 const WHOLE = Number.MAX_SAFE_INTEGER;
 
-// ── schema plumbing ──────────────────────────────────────────────────────────────────────────────────────────────────
-
 const issue = (error: CsvParseError, input: unknown): SchemaIssue.Issue =>
   new SchemaIssue.InvalidValue({ message: error.message }, input);
 
@@ -245,8 +241,6 @@ const headerRecords = (rows: ReadonlyArray<CsvHeaderRow>): Result.Result<Readonl
     onNonEmpty: (nonEmpty) =>
       Result.map(headerOf(nonEmpty), (header) => [header, ...A.map(nonEmpty, (row) => rowCells(header, row))]),
   });
-
-// ── streaming ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 const decodeStringChannel = <IE, Done>(
   options: ReadOptions
@@ -335,8 +329,6 @@ const stepRows = (
       });
     },
   });
-
-// ── the facade ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Static entry points for reading and writing CSV. Not instantiable.
