@@ -33,6 +33,8 @@ import type {
   CitationEngineLimits,
 } from "@beep/law-practice-use-cases/server";
 
+const RETAIN_SOURCE_POINT = 1;
+const EMIT_ONE_SPACE_AT_RUN_START = 2;
 const $I = $LawPracticeServerId.create("internal/Citation/LiteralCleaners");
 /**
  * The four regex-free primitive cleaner implementations. HTML and the public
@@ -130,8 +132,8 @@ const xmlEnd = Effect.fnUntraced(function* (text: string) {
   for (let index = 5; index < Str.length(text); index++) {
     if (index % 4096 === 5) yield* Effect.yieldNow;
     const char = at(text, index);
-    // Python dot excludes LF, while CR and Unicode separators match.
-    if (char === "\n") break;
+    const pythonDotStopsOnlyAtLineFeed = char === "\n";
+    if (pythonDotStopsOnlyAtLineFeed) break;
     if (xmlTerminator(text, index)) return index + 2;
   }
   return 0;
@@ -140,7 +142,7 @@ const selectRange = Effect.fnUntraced(function* (selection: O.Option<Uint8Array>
   if (O.isNone(selection)) return;
   for (let index = start; index < end; index++) {
     if (index % 8192 === 0) yield* Effect.yieldNow;
-    selection.value[index] = 1;
+    selection.value[index] = RETAIN_SOURCE_POINT;
   }
 });
 const scanRuns = Effect.fnUntraced(function* <E>(
@@ -187,7 +189,9 @@ const readNativePoint = (source: CitationPythonUnicodeStorage, index: number) =>
   return point;
 };
 const selectedPoint = (original: number, flag: number | undefined) =>
-  flag === 1 || flag === 2 ? O.some(flag === 2 ? 32 : original) : O.none<number>();
+  flag === RETAIN_SOURCE_POINT || flag === EMIT_ONE_SPACE_AT_RUN_START
+    ? O.some(flag === EMIT_ONE_SPACE_AT_RUN_START ? 32 : original)
+    : O.none<number>();
 const visitNative = Effect.fnUntraced(function* <E>(
   source: CitationPythonUnicodeStorage,
   selection: Uint8Array,
@@ -224,7 +228,7 @@ const encodeSelection = Effect.fnUntraced(function* (
       if (original > 65535 && selection[offset + 1] !== flag) return yield* failure("invalid-input");
       const selected = selectedPoint(original, flag);
       if (O.isNone(selected)) return;
-      if (flag === 2 && original > 65535) return yield* failure("invalid-input");
+      if (flag === EMIT_ONE_SPACE_AT_RUN_START && original > 65535) return yield* failure("invalid-input");
       if (selected.value > largest) largest = selected.value;
       units += pointUnits(selected.value);
       points++;
@@ -232,16 +236,16 @@ const encodeSelection = Effect.fnUntraced(function* (
   );
   if (units !== expectedUnits) return yield* failure("invalid-input");
   const width = pointWidth(largest);
-  // All result slices and replacements have already reserved their units.
-  const bytes = new Uint8Array(points * width);
+  const bytesForAlreadyReservedSlicesAndReplacements = new Uint8Array(points * width);
   let cursor = 0;
   yield* visitNative(source, selection, (original, flag) =>
     Effect.sync(() => {
       const selected = selectedPoint(original, flag);
-      if (O.isSome(selected)) cursor = writeNativePoint(bytes, cursor, width, selected.value);
+      if (O.isSome(selected))
+        cursor = writeNativePoint(bytesForAlreadyReservedSlicesAndReplacements, cursor, width, selected.value);
     })
   );
-  return CitationPythonUnicodeStorage.make({ width, bytes });
+  return CitationPythonUnicodeStorage.make({ width, bytes: bytesForAlreadyReservedSlicesAndReplacements });
 });
 /**
  * Capture count ceilings, deadline and Clock. Each apply owns its output budget
@@ -299,7 +303,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
             yield* appendRange(end, length);
           } else {
             allocation = yield* scanRuns(text, cleaner, appendRange, (start) => {
-              if (O.isSome(selection)) selection.value[start] = 2;
+              if (O.isSome(selection)) selection.value[start] = EMIT_ONE_SPACE_AT_RUN_START;
               return append(1, () => " ");
             });
           }
@@ -360,11 +364,17 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
               })
         )
       );
-      // Selection is bounded metadata over the validated input, not produced text.
-      // 1 retains a source point; 2 emits the one replacement space at a run start.
-      const selection = new Uint8Array(source.utf16Units);
-      const result = yield* stageSelection({ cleaner: name, text: source.text }, work, O.some(selection));
-      const encoded = yield* encodeSelection(source.storage, selection, Str.length(result.text));
+      const boundedSelectionMetadataNotProducedText = new Uint8Array(source.utf16Units);
+      const result = yield* stageSelection(
+        { cleaner: name, text: source.text },
+        work,
+        O.some(boundedSelectionMetadataNotProducedText)
+      );
+      const encoded = yield* encodeSelection(
+        source.storage,
+        boundedSelectionMetadataNotProducedText,
+        Str.length(result.text)
+      );
       return CitationLiteralCleanerUnicodeStage.make({
         ...result,
         storage: encoded,

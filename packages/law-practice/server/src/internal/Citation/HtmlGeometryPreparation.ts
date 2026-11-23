@@ -135,12 +135,9 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
       forward: CitationSpanOffsetsPlan.make({ before: plain.layout, after: placeholder.layout, steps: forwardSteps }),
     };
   });
-  /** Continue the same prepared forward path with the original backward diff and
-   * emphasis discovery. Source order and four physical worker exits are retained. */
-  const geometry = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <E>(
-    markup: unknown,
-    plainInput: Effect.Effect<unknown, E>
-  ) {
+  const sameForwardPathThenOriginalBackwardDiffThenEmphasis = Effect.fn("Citation.prepareOwnedHtmlGeometry")(function* <
+    E,
+  >(markup: unknown, plainInput: Effect.Effect<unknown, E>) {
     const prepared = yield* forward(markup, plainInput);
     const discovery = yield* installedDiscovery;
     const invocation = yield* CitationInvocation;
@@ -163,7 +160,7 @@ export const installCitationHtmlGeometry = Effect.fn("Citation.installHtmlGeomet
       tags,
     });
   });
-  return { forward, geometry };
+  return { forward, geometry: sameForwardPathThenOriginalBackwardDiffThenEmphasis };
 });
 const installPrepare = Effect.fn("Citation.installHtmlGeometryPreparation")(function* (
   limits: CitationEngineLimits,

@@ -106,9 +106,9 @@ export class CitationRegexAlphabetText extends S.Opaque<CitationRegexAlphabetTex
 const invalid = () => CitationRegexWorkerFailure.make({ reason: "invalid-frame" });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
-// With at most 8192 intervals there are at most 16385 cells. Starting at
-// U+0100 avoids regex syntax and never reaches the surrogate range.
-const symbol = (cell: number) => String.fromCodePoint(0x100 + cell);
+const FIRST_CELL_POINT_ABOVE_REGEX_SYNTAX = 0x100;
+const cellSymbolBelowSurrogatesForAtMost16385Cells = (cell: number) =>
+  String.fromCodePoint(FIRST_CELL_POINT_ABOVE_REGEX_SYNTAX + cell);
 /** Locate a validated point in sorted boundaries with a terminal upper sentinel.
  * The caller proves nonempty boundaries and `point < sentinel`. Points below
  * the first boundary map to zero; interval users must still check their start.
@@ -148,7 +148,9 @@ const encodeInterval = Effect.fnUntraced(function* (
   const last = citationRegexCellFor(boundaries, row.end);
   const units = first === last ? 1 : 3;
   if (units > available) return yield* safety("patternUtf16");
-  return first === last ? symbol(first) : `${symbol(first)}-${symbol(last)}`;
+  return first === last
+    ? cellSymbolBelowSurrogatesForAtMost16385Cells(first)
+    : `${cellSymbolBelowSurrogatesForAtMost16385Cells(first)}-${cellSymbolBelowSurrogatesForAtMost16385Cells(last)}`;
 });
 const encodeAtoms = Effect.fn("Citation.encodeRegexAtoms")(function* (
   sets: CitationRegexAtomSets,
@@ -194,7 +196,7 @@ const encodeSource = Effect.fn("Citation.encodeRegexAlphabetSource")(function* (
   for (let index = 0; index < value.pythonLength; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
     const point = sourcePoint(view, native.width, index);
-    chunk += symbol(citationRegexCellFor(boundaries, point));
+    chunk += cellSymbolBelowSurrogatesForAtMost16385Cells(citationRegexCellFor(boundaries, point));
     if (Str.length(chunk) === 4096) {
       chunks.push(chunk);
       chunk = "";

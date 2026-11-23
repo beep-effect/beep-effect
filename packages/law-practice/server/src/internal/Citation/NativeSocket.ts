@@ -16,10 +16,12 @@ import * as Socket from "effect/socket/Socket";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
 const encoder = new TextEncoder();
-// Transport errors deliberately discard platform causes and process/source data.
+const discardedPlatformCauseAndSourceData = undefined;
 const closed = () => Socket.SocketError.make({ reason: Socket.SocketCloseError.make({ code: 1006 }) });
-const readFailed = () => Socket.SocketError.make({ reason: Socket.SocketReadError.make({ cause: undefined }) });
-const writeFailed = () => Socket.SocketError.make({ reason: Socket.SocketWriteError.make({ cause: undefined }) });
+const readFailed = () =>
+  Socket.SocketError.make({ reason: Socket.SocketReadError.make({ cause: discardedPlatformCauseAndSourceData }) });
+const writeFailed = () =>
+  Socket.SocketError.make({ reason: Socket.SocketWriteError.make({ cause: discardedPlatformCauseAndSourceData }) });
 
 /**
  * Connect Effect RPC's supplied socket protocol to an owned process. A single

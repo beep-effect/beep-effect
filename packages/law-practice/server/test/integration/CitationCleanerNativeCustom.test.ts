@@ -8,9 +8,8 @@ import { controlledNativeScenes } from "../CitationCleanerCustom.fixtures.ts";
 import { replayControlledCleanerScenes } from "../CitationCleanerCustomReplay.fixtures.ts";
 import { CitationNativeExitCounts, makeCitationObservedSpawner } from "../CitationNativeSpawner.fixtures.ts";
 
-// Real-worker proof stays in hosted integration. No environment skip can green it.
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })(
-  "native controlled cleaner source scenes",
+  "native controlled cleaner source scenes on real workers, never environment-skipped",
   (it) => {
     it.effect(
       "replays all eleven native/function scenes, withholds resource-truncated output and confirms every child exit",
