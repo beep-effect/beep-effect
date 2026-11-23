@@ -60,7 +60,6 @@ const CatalogAssemblyErrorPayload = S.Struct({
       description: "The file, the catalog name, or the config dependency name.",
     })
   ),
-  /** The originating failure. */
   cause: S.Defect({ includeStack: true }).pipe(
     $I.annoteKey("CatalogAssemblyErrorPayload.cause", { description: "The originating failure." })
   ),

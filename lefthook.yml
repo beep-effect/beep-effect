@@ -6,8 +6,12 @@ pre-commit:
       exclude: ".beep/**|goals/**|outputs/**|scratchpad/**"
       run: bunx biome check --write --files-ignore-unknown=true --no-errors-on-unmatched {staged_files}
       stage_fixed: true
+    # lefthook's default glob matcher needs at least one directory for `**/`; each `**/` glob
+    # below is paired with a pattern for the files directly under its root.
     jsdoc:
-      glob: "packages/tooling/*/*/src/**/*.ts"
+      glob:
+        - "packages/tooling/*/*/src/*.ts"
+        - "packages/tooling/*/*/src/**/*.ts"
       exclude:
         - "packages/tooling/*/*/src/internal/**"
         - "**/*.test.ts"
@@ -31,6 +35,13 @@ pre-commit:
     no-tracked-python:
       glob: "*.{py,pyi,pyw,ipynb}"
       run: printf '%s  port it to TypeScript or run it outside the repository; tracked Python is banned\n' {staged_files} >&2; exit 1
+    # The comment law (`bun run beep laws comments --staged`) diffs the index against HEAD. It is
+    # advisory (standards/comment-law/policy.jsonc), so it reports introduced comments and never
+    # blocks the commit: `|| true` keeps a scanner failure advisory too.
+    comment-law:
+      glob: "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+      exclude: ".beep/**|goals/**|explorations/**|research/**|docs/**|standards/**|outputs/**|scratchpad/**"
+      run: bun run beep laws comments --staged || true
     instructions-drift:
       glob: "{CLAUDE.md,AGENTS.md}"
       run: bun run instructions:drift
@@ -50,7 +61,11 @@ pre-commit:
     # regenerates the shards.
     schema-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
-      glob: "{apps,packages,infra}/**/*.{ts,tsx}"
+      # Only infra/ is a workspace at its root; a file directly under apps/ or packages/ belongs to no
+      # workspace, so a scoped catalog run would have no shard to write for it.
+      glob:
+        - "infra/*.{ts,tsx}"
+        - "{apps,packages,infra}/**/*.{ts,tsx}"
       exclude:
         - "**/docs/**"
         - "**/*.d.ts"
@@ -60,9 +75,13 @@ pre-commit:
       run: bun run beep lint schema-catalog --write --stage {files}
     instrumentation-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
-      glob: "{apps,packages}/**/src/**/*.{ts,tsx}"
+      glob:
+        - "{apps,packages}/**/src/*.{ts,tsx}"
+        - "{apps,packages}/**/src/**/*.{ts,tsx}"
       exclude:
         - "**/test/**"
+        - "**/*.test.{ts,tsx}"
+        - "**/*.spec.{ts,tsx}"
         - "**/*.d.ts"
         - "**/node_modules/**"
       skip:

@@ -40,7 +40,7 @@ describe("TomlDiagnostic", () => {
     assert.strictEqual(d.line, 0);
     assert.strictEqual(d.character, 1);
   });
-  it("pins the stage code array overlap contract", () => {
+  it("only parse and stringify share IntegerOutOfRange and NestingDepthExceeded codes", () => {
     const stageArrays = [
       TOML_LEX_ERROR_CODES,
       TOML_PARSE_ERROR_CODES,
@@ -58,14 +58,11 @@ describe("TomlDiagnostic", () => {
     const intersect = (a: ReadonlySet<string>, b: ReadonlySet<string>) =>
       A.filter([...a], (code) => b.has(code)).sort();
 
-    // The lex and semantic stages share no codes with any other stage.
     assert.deepStrictEqual(intersect(lex, parse), []);
     assert.deepStrictEqual(intersect(lex, semantic), []);
     assert.deepStrictEqual(intersect(lex, stringify), []);
     assert.deepStrictEqual(intersect(semantic, parse), []);
     assert.deepStrictEqual(intersect(semantic, stringify), []);
-    // Parse and stringify intentionally share these two codes (same concept,
-    // two stages); pin the overlap so a future addition must be a decision.
     assert.deepStrictEqual(intersect(parse, stringify), ["IntegerOutOfRange", "NestingDepthExceeded"]);
   });
   it("RawTomlError carries its diagnostic", () => {

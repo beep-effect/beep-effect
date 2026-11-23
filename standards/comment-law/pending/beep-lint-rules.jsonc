@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/lint-rules",
+  "root": "packages/tooling/policy-pack/lint-rules",
+  "scopes": ["."]
+}

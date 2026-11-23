@@ -20,23 +20,16 @@ import * as Str from "effect/String";
 
 const IDENTITY_SOURCE_PREFIX = "foundation/modeling/identity/src/";
 const IDENTITY_CORE_SOURCE = "Id.ts";
-// The only @beep/identity sources a handler's map may embed, as exact paths relative to the
-// package's src (compared by equality, never as a directory, glob or prefix). Each one is allowed
-// because it loads neither the package registry nor the declared-term registry:
-// - Authority.ts: no imports; one constant, the `IdentityAuthority` IRI root.
-// - Id.ts: the identity core the handlers' composer comes from.
-// - Root.ts: the registry-free root `$I` composer.
-// - internal/Segment.ts: the segment grammar schemas; imports only effect modules and an erased
-//   `import type` from @beep/types, so no @beep/types source reaches a map.
-// - internal/schemaStatics.ts: the schema statics the core attaches.
-// The registry, the declared-term registry data, the barrel or any other identity module in a map
-// would change every function's code hash whenever an unrelated package or term is registered.
 const ALLOWED_IDENTITY_SOURCES = [
-  "Authority.ts",
-  "Id.ts",
-  "Root.ts",
-  "internal/Segment.ts",
-  "internal/schemaStatics.ts",
+  { source: "Authority.ts", reason: "Import-free IdentityAuthority IRI root; loads neither registry." },
+  { source: "Id.ts", reason: "Identity core supplying handler composers; loads neither registry." },
+  { source: "Root.ts", reason: "Registry-free root $I composer; loads neither registry." },
+  {
+    source: "internal/Segment.ts",
+    reason:
+      "Segment grammar schemas import only Effect and erased @beep/types; no types source reaches maps and neither registry loads.",
+  },
+  { source: "internal/schemaStatics.ts", reason: "Schema statics attached by the core; loads neither registry." },
 ];
 
 // Each source-map source under @beep/identity's src, as a path relative to that directory.
@@ -170,45 +163,50 @@ it.layer(BunServices.layer, { timeout: "240 seconds" })((it) => {
       })
     );
 
-    it.effect("embed no identity module in a handler's source map but the core, the root and its statics", () =>
-      Effect.gen(function* () {
-        const path = yield* Path.Path;
-        const libraryDirectory = path.resolve(
-          import.meta.dirname,
-          "../../../library/alchemy-github-runners/src/internal/lambda"
-        );
-        const stackDirectory = path.resolve(import.meta.dirname, "../src/internal/lambda");
+    it.effect(
+      "embed only exact registry-free identity paths so unrelated package or term registrations cannot change Lambda code hashes",
+      () =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const libraryDirectory = path.resolve(
+            import.meta.dirname,
+            "../../../library/alchemy-github-runners/src/internal/lambda"
+          );
+          const stackDirectory = path.resolve(import.meta.dirname, "../src/internal/lambda");
 
-        const libraryFiles = yield* handlerFiles(libraryDirectory);
-        const stackFiles = yield* handlerFiles(stackDirectory);
-        expect({ library: libraryFiles, stack: stackFiles }).toStrictEqual({
-          library: LIBRARY_ENTRIES,
-          stack: STACK_ENTRIES,
-        });
+          const libraryFiles = yield* handlerFiles(libraryDirectory);
+          const stackFiles = yield* handlerFiles(stackDirectory);
+          expect({ library: libraryFiles, stack: stackFiles }).toStrictEqual({
+            library: LIBRARY_ENTRIES,
+            stack: STACK_ENTRIES,
+          });
 
-        const mains = A.appendAll(
-          A.map(LIBRARY_ENTRIES, (entry) => path.join(libraryDirectory, entry)),
-          A.map(STACK_ENTRIES, (entry) => path.join(stackDirectory, entry))
-        );
-        // One build at a time: each holds the whole module graph in native memory.
-        const report = yield* Effect.forEach(
-          mains,
-          (main) =>
-            Effect.map(bundleSources(main), (sources) => {
-              const identity = identitySources(sources);
-              return {
-                entry: path.basename(main),
-                loadsIdentityCore: A.contains(identity, IDENTITY_CORE_SOURCE),
-                outsideAllowed: A.filter(identity, (source) => !A.contains(ALLOWED_IDENTITY_SOURCES, source)),
-              };
-            }),
-          { concurrency: 1 }
-        );
+          const mains = A.appendAll(
+            A.map(LIBRARY_ENTRIES, (entry) => path.join(libraryDirectory, entry)),
+            A.map(STACK_ENTRIES, (entry) => path.join(stackDirectory, entry))
+          );
+          // One build at a time: each holds the whole module graph in native memory.
+          const report = yield* Effect.forEach(
+            mains,
+            (main) =>
+              Effect.map(bundleSources(main), (sources) => {
+                const identity = identitySources(sources);
+                return {
+                  entry: path.basename(main),
+                  loadsIdentityCore: A.contains(identity, IDENTITY_CORE_SOURCE),
+                  outsideAllowed: A.filter(
+                    identity,
+                    (source) => !A.some(ALLOWED_IDENTITY_SOURCES, (allowed) => allowed.source === source)
+                  ),
+                };
+              }),
+            { concurrency: 1 }
+          );
 
-        expect(report).toStrictEqual(
-          A.map(mains, (main) => ({ entry: path.basename(main), loadsIdentityCore: true, outsideAllowed: [] }))
-        );
-      })
+          expect(report).toStrictEqual(
+            A.map(mains, (main) => ({ entry: path.basename(main), loadsIdentityCore: true, outsideAllowed: [] }))
+          );
+        })
     );
   });
 });

@@ -1,7 +1,3 @@
-// The Toml facade: parse, canonical value stringify, and the schema
-// factories, plus the boundary rows the emitter contract pins (int64 bigint
-// bounds, integral-float-to-integer, -0.0, key quoting, canonical layout).
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { renderInlineValue } from "@beep/toml/internal/stringifyValue";
 import { Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions } from "@beep/toml/Toml";
@@ -198,8 +194,6 @@ describe("Toml", () => {
         assert.strictEqual(stringify7, "a = 0.5\n");
         const stringify8 = yield* Toml.stringify({ a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY });
         assert.strictEqual(stringify8, "a = inf\nb = -inf\n");
-        // Integral but past the int64 range: emitted as a float, so it
-        // round-trips instead of overflowing at parse time.
         const stringify9 = yield* Toml.stringify({ a: 1e21 });
         assert.strictEqual(stringify9, "a = 1e+21\n");
       })
@@ -392,11 +386,6 @@ describe("Toml", () => {
     );
   });
 
-  // The sync `Result` forms are the primitives; the `Effect` forms derive
-  // from them via `Effect.fromResult` and add only the tracing span. These
-  // assertions are what stop the two paths from ever drifting: every row is
-  // checked in BOTH directions, so a future edit that re-derives the engine
-  // on one side fails here rather than in a consumer.
   describe("Result parity", () => {
     const parseRows: ReadonlyArray<readonly [label: string, text: string]> = [
       ["a representative document", 'title = "x"\n[owner]\nname = "y"\n[[srv]]\nport = 1\n'],
@@ -463,9 +452,6 @@ describe("Toml", () => {
       assert.instanceOf(result.failure, TomlStringifyError);
     });
 
-    // The defect firewall is a property of the engine, not of the wrapper:
-    // a non-carrier throw must escape the sync form as a real throw, the
-    // same way it dies through the Effect form (pinned in hostile.test.ts).
     it("parseResult rethrows a non-engine defect rather than typing it", () => {
       assert.throws(() => Toml.parseResult(deliberatelyInvalid<string>(42)), TypeError);
     });

@@ -516,7 +516,7 @@ export class McpbManifestFields extends S.Opaque<McpbManifestFields, { readonly 
  * `appName` names the app directory under `apps/`, the Linux executable, the
  * Windows script bundle (`<appName>.js`), the archive
  * (`<appName>-<target>.mcpb`) and the default output directory
- * (`apps/<appName>/dist/mcpb`). The entrypoint is `apps/<appName>/src/bin.ts`.
+ * (`apps/<appName>/.mcpb`). The entrypoint is `apps/<appName>/src/bin.ts`.
  *
  * `assets` lists the files that entrypoint imports `with { type: "file" }`.
  * A compiled executable embeds them; a runtime-script bundle ships them

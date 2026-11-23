@@ -2,17 +2,19 @@
 
 ## Status
 
-Status: `pending`. Blocked on `goals/gate-report-core`: P1 starts once core's model, recorder and
-neutral document are on `main`. P0 may start at once.
+Status: `active`. P0, P1 and P3 are complete (decision `report-carrier` and the P1 and P3
+checkpoints): the `task-outcomes/v2` feed record, the CI projection, `beep ci append-gate-reports`,
+the main-feed lookup, the CI-job adapter and `beep ci failures` are built. P2 (workflow wiring) is
+next and opens after PR 1 merges.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the workflow census, choose the report carrier against the six criteria in `SPEC.md`, and fix the feed's record schema. | One decision file names the carrier with each criterion answered by evidence; the census table in `SPEC.md` matches the workflows at that head. |
-| P1 Projection and feed record | pending | The CI renderer (summary, grouped log, annotations) from gate reports, the planned CI subcommand that appends it, and the feed record schema. | The renderer, limit and neutralization tests pass. |
+| P0 Research | complete | Confirm the workflow census, choose the report carrier against the six criteria in `SPEC.md`, and fix the feed's record schema. | One decision file names the carrier with each criterion answered by evidence; the census table in `SPEC.md` matches the workflows at that head. |
+| P1 Projection and feed record | complete | The CI renderer (summary, grouped log, annotations) from gate reports, the planned CI subcommand that appends it, and the feed record schema. | The renderer, limit and neutralization tests pass. |
 | P2 Workflow wiring | pending | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
-| P3 Lookup, adapter and failing-region command | pending | The main-feed lookup, the CI-job adapter, the extracted log route and the failing-region command. | The lookup, adapter and command fixture tests pass; the monitor's tests pass unchanged; the ledger shows REST only. |
+| P3 Lookup, adapter and failing-region command | complete | The main-feed lookup, the CI-job adapter, the extracted log route and the failing-region command. | The lookup, adapter and command fixture tests pass; the monitor's tests pass unchanged; the ledger shows REST only. |
 | P4 Guidance and measurement | pending | Replace the raw `gh api` log recipe in `AGENTS.md` and the yeet skill; record the census or fixture numbers. | `bun run beep skills update --check` passes; the measurement is recorded as a checkpoint. |
 | P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -89,6 +91,28 @@ git diff --check -- goals/ci-gate-reports
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-gate-reports`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 complete: census re-listed, carrier chosen, 2026-11-22
+
+P0 is complete. The SPEC census was re-listed at origin/main on 2026-11-22: 33 workflows; Test Plan added; Commitlint, Secret Scanning and Security marked as gates without `ci lane`; the task-outcome writers corrected. The carrier is chosen in decision `report-carrier`: the per-job `task-outcomes-*` artifact widened to a `task-outcomes/v2` record plus the job's gate records, with each criterion answered by a live REST lookup (3 requests at the merge base, 4 for an ancestor). P1 (renderer, CI subcommand, the v2 feed record) is next and rides PR 1 with these decisions.
+
+Lane goals/ci-gate-reports-p0
+
+Reverse: Reopen P0 by reverting this checkpoint and the report-carrier decision
+
+### P1 complete: feed record v2, CI projection and append-gate-reports, 2026-11-22
+
+P1 is complete. `beep ci task-outcomes` writes `task-outcomes/v2` (`TaskOutcomeRecordV2` in `Ci/CiTaskOutcomes.ts`), whose `reports` index every gate record found in the job's checkout (`<package>/.beep/gates/<gate>/report.json` and root `.beep/gates/<gate>/<run-id>.json`); `GateFeedEntry` reuses `GateName` and `RepoRelativeDir` from `@beep/repo-gate-record/GatePaths`. `AnyTaskOutcomeRecord` decodes v1 or v2, and `Ci/RouteCorpus.ts` reads both and skips the `.beep/gates/` files a v2 artifact carries. The CI projection lives in `Ci/CiGateProjection.ts` (the repo CLI, not `@beep/repo-gate-run`, since its limits are GitHub's and its only caller is the ci command family): each summary section is the agent console `beep gate show` prints, fenced, under a 64 KiB budget; the grouped log has one group per unit and the verdict last; annotations keep 10 per level per step and 50 per job. `beep ci append-gate-reports --artifact <name>` prints the log and appends the summary. The route corpus downloads a task-outcome artifact up to 64 MiB (`ARTIFACT_DOWNLOAD_BYTES_MAX`), so a v2 artifact carrying raw logs is still read, and inflates only JSON entries up to 1 MiB (`ENTRY_INFLATE_BYTES_MAX`).
+
+Lane goals/ci-gate-reports-p0
+
+Reverse: Revert the P1 commit; task-outcomes writes v1 again and the append-gate-reports command is removed
+
+### P3 complete: main-feed lookup, CI-job adapter, shared log route and `beep ci failures`, 2026-11-22
+
+P3 is complete. `MainFeed` (`Ci/CiMainFeed.ts`) returns main's newest reports, red included, at the merge base or the nearest first-parent ancestor within 100, through `GitHubClient`; the recorded-REST tests show a merge-base hit in 3 requests and the ancestor walk in 4, with no GraphQL. `Ci/CiFeedArtifact.ts` downloads a task-outcome artifact up to 64 MiB and inflates only JSON entries up to 1 MiB. `ciRunGateReport` (`Ci/CiJobAdapter.ts`) maps `GET /actions/runs/{id}/jobs` to gate `run`, unit job, item step. The log route moved out of the monitor's private `readFailedJobLog` into the exported `readYeetFailedJobLog` and its `YeetJobLogRead` union (`Yeet/internal/MonitorLoop.ts`, same span name); the monitor's 48 tests pass unchanged. `bun run beep ci failures --run <id> | --pr <number>` prints each red job's uploaded agent console without fetching a log, or else the bounded failing region with the verdict first and last, and saves the run's record and full log under `.beep/gates/run/<run>-<attempt>`; an unbounded log prints one line naming the saved path. 23 fixture tests across `ci-main-feed`, `ci-job-adapter` and `ci-failures` pass, with 100% statement, branch, function and line coverage of the four new modules.
+
+Lane goals/ci-gate-reports-p3
+
+Reverse: Revert the P3 commit; the monitor's private log read returns and the ci failures command is removed
 
 <!-- beep:decisions:end -->

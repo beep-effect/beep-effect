@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/package-json",
+  "root": "packages/foundation/modeling/package-json",
+  "scopes": ["."]
+}

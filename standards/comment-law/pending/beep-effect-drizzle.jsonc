@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/effect-drizzle",
+  "root": "packages/ecosystem/effect-drizzle",
+  "scopes": ["."]
+}

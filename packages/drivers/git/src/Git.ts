@@ -632,29 +632,28 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  // Runs a NUL-separated, ref-free path listing (the working-tree queries) and
-  // classifies through the shared path. No ref is involved, so `unknownRef`
-  // cannot arise in practice — it is handled defensively to keep the match
-  // exhaustive and the error channel uniform with the ref-taking methods.
+  // Runs a NUL-separated working-tree path listing and classifies through the
+  // shared path. `ref` labels an `unknownRef` failure: the two diffs pass their
+  // caller-supplied `head` (git rejects a missing one as an unknown revision),
+  // while `untrackedFiles` and a head-less diff are ref-free and pass
+  // `"working tree"`, where the arm only keeps the match exhaustive.
   const collectPaths: {
     (
-      method: string,
+      ref: string,
       invocation: GitInvocation,
       cwd: string
     ): Effect.Effect<ReadonlyArray<string>, NotARepositoryError | UnknownRefError | GitCommandError>;
     (
       invocation: GitInvocation,
       cwd: string
-    ): (
-      method: string
-    ) => Effect.Effect<ReadonlyArray<string>, NotARepositoryError | UnknownRefError | GitCommandError>;
+    ): (ref: string) => Effect.Effect<ReadonlyArray<string>, NotARepositoryError | UnknownRefError | GitCommandError>;
   } = dual(
     3,
-    Effect.fnUntraced(function* (_method: string, invocation: GitInvocation, cwd: string) {
+    Effect.fnUntraced(function* (ref: string, invocation: GitInvocation, cwd: string) {
       const classified = yield* runFor(invocation, cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeed(parseNulSeparated(classified.output)),
-        ...refFailureArms(cwd, "working tree"),
+        ...refFailureArms(cwd, ref),
       });
     })
   );
@@ -684,7 +683,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const relative = options?.relative ?? false;
       yield* Effect.annotateCurrentSpan({ cwd, relative, head: options?.head ?? "(index)" });
       const rendered = yield* workingDiffOptions(cwd, options ?? {});
-      return yield* collectPaths("Git.unstagedChanges", GitCommand.unstagedChanges(relative, rendered), cwd);
+      return yield* collectPaths(options?.head ?? "working tree", GitCommand.unstagedChanges(relative, rendered), cwd);
     })
   );
 
@@ -697,7 +696,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const relative = options?.relative ?? false;
       yield* Effect.annotateCurrentSpan({ cwd, relative, head: options?.head ?? "HEAD" });
       const rendered = yield* workingDiffOptions(cwd, options ?? {});
-      return yield* collectPaths("Git.stagedChanges", GitCommand.stagedChanges(relative, rendered), cwd);
+      return yield* collectPaths(options?.head ?? "working tree", GitCommand.stagedChanges(relative, rendered), cwd);
     })
   );
 
@@ -711,7 +710,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const pathspec = options?.pathspec ?? [];
       yield* Effect.annotateCurrentSpan({ cwd, relative, pathspec: pathspec.length });
       yield* rejectOptionLikeRefs(cwd, pathspec);
-      return yield* collectPaths("Git.untrackedFiles", GitCommand.untrackedFiles(relative, pathspec), cwd);
+      return yield* collectPaths("working tree", GitCommand.untrackedFiles(relative, pathspec), cwd);
     })
   );
 

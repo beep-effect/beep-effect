@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/csv",
+  "root": "packages/foundation/modeling/csv",
+  "scopes": ["."]
+}

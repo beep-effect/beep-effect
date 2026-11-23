@@ -53,7 +53,6 @@ const binding = IdentityRdfBinding.make({
   curiePath: DefaultIdentityRdfBinding.curiePath,
   fiberPaths: { label: labelPath, route: routePath },
 });
-// Identity entries come from registry bindings; any bound code identity serves the binding.
 const entry = IdentityEntry.fromBinding(
   "@beep/test-runner/Vitest/TestHang",
   { curie: "vitest:TestHang", iri: iri("vitest:TestHang") },

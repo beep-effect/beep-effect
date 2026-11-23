@@ -202,8 +202,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
       "A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is either a member of the SPDX License List or a well-formed `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema — there is no `*Schema` suffix.",
   })
 ) {
-  // ── Catalog ─────────────────────────────────────────────────────────
-
   /**
    * The full SPDX license catalog keyed by identifier, holding resolved
    * {@link License} domain objects for every active and deprecated id. Built
@@ -289,8 +287,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
   static isLicenseRef(id: string): boolean {
     return isLicenseRefId(id);
   }
-
-  // ── Construction ────────────────────────────────────────────────────
 
   /**
    * Validate a license identifier synchronously, returning a `Result`. The
@@ -381,8 +377,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
     (args) => P.isString(args[0]),
     (id: string, deprecated = false): License => License.make({ id, deprecated })
   );
-
-  // ── Catalog metadata ────────────────────────────────────────────────
 
   /**
    * The canonical SPDX web page for this license — for example
@@ -486,8 +480,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
   get fsfLibre(): boolean {
     return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_FSF_LIBRE) !== 0);
   }
-
-  // ── Display ─────────────────────────────────────────────────────────
 
   /**
    * Returns the SPDX identifier for display without adding expression operators.

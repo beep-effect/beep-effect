@@ -16,8 +16,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-// WHATWG's tokenizer-lowercased attribute and event names are normative.
-
 const $I = $HtmlId.create("Html.meta");
 
 /**

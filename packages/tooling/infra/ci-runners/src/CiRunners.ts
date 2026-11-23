@@ -50,13 +50,14 @@ export const liveJobRetry = JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 
  *
  * **Details**
  *
- * Spot only, `capacity-optimized`, bidirectional label match, ephemeral JIT
- * runners and no job-queued check: the live module's settings
- * (`RunnerPool`'s defaults already equal them). The check stays off because
- * GitHub's jobs API can answer "not queued" for a job that is queued, and
- * scale-up then consumes the message with no retry.
+ * Spot only, `capacity-optimized`, bidirectional label match and ephemeral
+ * JIT runners: the live module's settings (`RunnerPool`'s defaults already
+ * equal them). The job-queued check follows the pool's `jobQueuedCheck`.
+ * Scale-up then drops a message only for a job GitHub reports
+ * `in_progress` or `completed`, so a lagging read that shows an earlier
+ * state still launches, and a served job's redelivered message does not.
  *
- * **Example** (The production overflow pool in the overlap)
+ * **Example** (The production overflow pool in each phase)
  *
  * ```ts
  * import { toRunnerPool } from "@beep/infra-ci-runners/CiRunners"
@@ -64,7 +65,8 @@ export const liveJobRetry = JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 
  * import * as Effect from "effect/Effect"
  *
  * const config = Effect.runSync(decodeCiRunnersConfig(productionConfig))
- * console.log(toRunnerPool(config.overflow, config.phase).maximumCount) // 2
+ * console.log(toRunnerPool(config.overflow, "overlap").maximumCount) // 2
+ * console.log(toRunnerPool(config.overflow, config.phase).maximumCount) // 48
  * ```
  *
  * @param pool - The configured pool.
@@ -86,6 +88,7 @@ export const toRunnerPool: {
       labels: [pool.label],
       runnerGroup: pool.runnerGroup,
       runnerNamePrefix: pool.runnerNamePrefix,
+      jobQueuedCheck: pool.jobQueuedCheck,
       jobRetry: pool.jobRetry ? O.some(liveJobRetry) : O.none(),
     })
 );

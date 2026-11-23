@@ -5,8 +5,6 @@ export default mergeConfig(
   shared,
   defineConfig({
     root: import.meta.dirname,
-    test: {
-      // Package-specific overrides
-    },
+    test: {},
   })
 );

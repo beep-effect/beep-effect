@@ -85,6 +85,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:private-home-paths",
   "//#lint:tracked-shell-allowlist",
   "//#lint:no-tracked-python",
+  "//#lint:comment-law",
   "//#lint:schema-tag-idioms",
   "//#lint:holds",
   "//#lint:ecosystem-polarity",

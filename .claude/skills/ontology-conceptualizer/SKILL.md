@@ -1,10 +1,12 @@
 ---
 name: ontology-conceptualizer
 description: >
-  Builds conceptual models from requirements. Creates glossaries,
-  taxonomies, and property designs. Aligns to BFO upper ontology.
-  Detects modeling anti-patterns. Use when designing the structure
-  of an ontology before formalization.
+  Builds the conceptual model of an OWL/RDF ontology from its ratified
+  terms and competency questions: glossary, class taxonomy, property
+  designs, and alignment to the upper ontology the scope document names
+  (BFO, another, or none). Detects ontology modeling anti-patterns. Use
+  when designing the structure of an ontology before formalization; not
+  for application data models, database schemas or software design.
 ---
 
 # Ontology Conceptualizer
@@ -13,28 +15,31 @@ description: >
 
 You are responsible for the conceptualization phase — transforming
 requirements and knowledge acquisition outputs into a semi-formal
-conceptual model. You design the taxonomy, align to BFO, specify
-properties, select axiom patterns, and detect anti-patterns. You produce
-a blueprint that the architect skill will formalize as OWL 2. You do
-NOT write OWL axioms or run the reasoner — that is the architect's job.
+conceptual model. You design the taxonomy, align to the project's upper
+ontology, specify properties, select axiom patterns, and detect
+anti-patterns. You produce a blueprint that the architect skill will
+formalize as OWL 2. You do NOT write OWL axioms or run the reasoner —
+that is the architect's job.
 
 ## When to Activate
 
 - After requirements are gathered (CQs defined)
-- User wants to design a class hierarchy or relations
-- User mentions "model", "conceptualize", "taxonomy", or "hierarchy"
-- User asks about BFO alignment or upper ontology decisions
+- User wants to design an ontology's class hierarchy or relations
+- User asks to conceptualize an ontology, or to design its taxonomy
+- User asks about upper ontology alignment (BFO or another)
 - Pipeline A Step 3
 
 ## Shared Reference Materials
 
-Read these files from `_shared/` before beginning work:
+Read these files from `../_shared/` (relative to this skill's directory)
+before beginning work:
 
-- `_shared/methodology-backbone.md` — lifecycle phase context (Phase 3: Conceptualization)
-- `_shared/bfo-categories.md` — BFO decision procedure for alignment
-- `_shared/axiom-patterns.md` — OWL pattern catalog for axiom planning
-- `_shared/anti-patterns.md` — modeling mistakes to detect and prevent
-- `_shared/naming-conventions.md` — term naming standards
+- `../_shared/methodology-backbone.md` — lifecycle phase context (Phase 3: Conceptualization)
+- `../_shared/bfo-categories.md` — BFO decision procedure, when the scope
+  document names BFO as the upper ontology
+- `../_shared/axiom-patterns.md` — OWL pattern catalog for axiom planning
+- `../_shared/anti-patterns.md` — modeling mistakes to detect and prevent
+- `../_shared/naming-conventions.md` — term naming standards
 
 ## Core Workflow
 
@@ -53,9 +58,9 @@ From the ratified proposals, refine each term:
 | Term | Preferred label (following naming conventions) |
 | Synonyms | Alternative labels |
 | Definition | Genus-differentia: "A [parent] that [differentia]" |
-| Category | Class / ObjectProperty / DataProperty / Individual |
+| Category | Class / ObjectProperty / DataProperty / AnnotationProperty / Individual / SKOS concept / SKOS concept scheme (mirrors the proposal's `owl_entity_kind`) |
 | Source CQ | The CQ that requires this term — OR, for a ratified SUPPORT term (which by the warrant XOR has no direct CQ), the decision term it serves plus that term's CQ ("supports: Lease (CQ-003)") |
-| BFO Category | Alignment to BFO (from Step 3) |
+| Upper Category | Category in the project's upper ontology (from Step 3); empty when the scope document records no upper ontology |
 
 Output as `ontologies/{name}/docs/glossary.csv`.
 
@@ -65,18 +70,18 @@ Build the class hierarchy using the middle-out approach — ORGANIZING the
 ratified term set, never minting: a parent class or sub-distinction that is
 not itself among the ratified proposals is a NEW CANDIDATE, and candidates
 route back through `ontology-foundational-auditor` (denotation + category
-analysis + steward ratification) before this skill may place them. Upper
-alignment to BFO categories is annotation of ratified terms, not license to
+analysis + steward ratification) before this skill may place them. Alignment
+to upper-ontology categories is annotation of ratified terms, not license to
 introduce unratified intermediates.
 
 1. **Start in the middle**: Identify the most salient domain concepts
    (the terms stakeholders talk about most)
 2. **Generalize upward**: Select parent classes FROM the ratified set (or
-   BFO upper categories); an absent parent is a new candidate → auditor.
+   the upper ontology's categories); an absent parent is a new candidate → auditor.
    An EDGE is a commitment too: assert `A subClassOf B` only when that edge
    appears in a ratified proposal's `parents` (ratifying A and B as nodes
    does NOT ratify the edge between them — autonomous subsumption is
-   forbidden by `_shared/stage-authority-matrix.yaml`); an edge not yet
+   forbidden by `../_shared/stage-authority-matrix.yaml`); an edge not yet
    ratified routes back to the auditor as a revision of A's proposal
 3. **Specialize downward**: Sub-distinctions needed by CQs that are not
    ratified terms are new candidates → auditor
@@ -108,8 +113,14 @@ Document layer assignment for every module in the conceptual model.
 
 ### Step 3: Upper Ontology Alignment
 
-For each top-level domain class, apply the BFO decision procedure from
-`_shared/bfo-categories.md`:
+The upper ontology is a project input, recorded in
+`ontologies/{name}/docs/scope.md`: BFO, another upper ontology (DOLCE,
+gist, ...), or none. If the scope document records no choice, ask the user
+and have the choice recorded there before aligning; never default to one.
+
+For each top-level domain class, record the upper-ontology class it falls
+under and why. When the choice is BFO, apply the BFO decision procedure from
+`../_shared/bfo-categories.md`:
 
 1. **Continuant or Occurrent?** Does it persist or unfold in time?
 2. **If Continuant**: Independent or Dependent?
@@ -117,7 +128,10 @@ For each top-level domain class, apply the BFO decision procedure from
 4. **If Dependent**: Quality, Role, Disposition, Function, or GDC?
 5. **If Occurrent**: Process, Process Boundary, or Temporal Region?
 
-Document each alignment decision with rationale in `ontologies/{name}/docs/bfo-alignment.md`.
+For another upper ontology, use its own category guide. When the choice is
+none, say so and skip the alignment.
+
+Document each alignment decision with rationale in `ontologies/{name}/docs/upper-alignment.md`.
 
 ### Step 4: Property Design
 
@@ -132,7 +146,21 @@ For each property:
 | Cardinality | min/max or exact |
 | Characteristics | functional, inverse-functional, transitive, symmetric |
 | Inverse | Inverse property name (if applicable) |
-| BFO/RO relation | Which standard relation it specializes |
+| Standard relation | Which relation of the upper ontology or a relation ontology (such as RO) it specializes, if any |
+| Status | `proposed` until the steward ratifies it |
+
+Each entry is a proposal. Domain, range, cardinality and characteristics
+are commitments an agent may propose but never authorize
+(`../_shared/stage-authority-matrix.yaml`, `forbidden_autonomous_decisions`):
+the steward decides each entry. No shared record carries these
+commitments yet: `ratification.schema.yaml` ratifies an
+`OntologyTermProposal`, which holds the property as a term
+(`owl_entity_kind`) but has no field for its domain, range, cardinality or
+characteristics. So ratifying the property's proposal does not ratify them.
+Present each entry to the steward one at a time, scribe the steward's
+verbatim decision on that entry (`steward_decision: {steward, decided_at,
+verbatim}`, naming the property), and set `ratified` only when that decision
+accepts it. Leave every other entry `proposed`.
 
 #### Property Categories Reference
 
@@ -166,36 +194,38 @@ Do you want to RESTRICT per-class usage?
   → Use local OWL restrictions: SubClassOf hasP some/only C
 ```
 
-See anti-pattern #10 in `_shared/anti-patterns.md` for the full explanation
+See anti-pattern #10 in `../_shared/anti-patterns.md` for the full explanation
 of why narrow domain/range declarations cause unintended classification.
 
 Output as `ontologies/{name}/docs/property-design.yaml`.
 
 ### Step 5: Axiom Pattern Selection
 
-For each CQ, determine the needed axiom pattern from
-`_shared/axiom-patterns.md`:
+For each CQ, choose the needed axiom pattern from the Pattern Selection
+Guide in `../_shared/axiom-patterns.md` (it maps each CQ wording to a
+pattern and its number in the catalog).
 
-| CQ Pattern | Axiom Pattern |
-|-----------|--------------|
-| "Every X has a Y" | Existential restriction (#2) |
-| "X can only have Y" | Universal restriction / closure (#3) |
-| "X is defined as Y with Z" | Equivalent class (#4) |
-| "X and Y never overlap" | Disjoint classes (#5) |
-| "X is exactly A, B, or C" | Covering axiom (#6) |
-| "X has exactly N of Y" | Qualified cardinality (#7) |
-| "X has high/medium/low Z" | Value partition (#8) |
-| "X did Y to Z at time T" | N-ary relation (#9) |
+Each entry is a proposal with `status: proposed`, as in Step 4, and the
+steward decides it before the architect formalizes it. Subsumption has a
+carrier: an is-a edge is ratified as an entry in the child's proposal
+`parents` (Step 2). Equivalence, disjointness, keys and `owl:sameAs` have
+none in the shared schemas, so they are decided per entry and recorded with
+`steward_decision`, as in Step 4.
 
 Output as `ontologies/{name}/docs/axiom-plan.yaml`.
 
 ### Step 6: Anti-Pattern Detection
 
-Review the conceptual model against `_shared/anti-patterns.md`. Check for:
+Review the conceptual model against all sixteen entries of
+`../_shared/anti-patterns.md` (its Summary Checklist). Check for:
 
 1. Singleton hierarchies (only one subclass)
-2. Role-type confusion (roles as subclasses)
-3. Process-object confusion (processes as material entities)
+2. Role-as-kind: a role modelled as a rigid class, or a rigid kind placed
+   under a role. A role (anti-rigid) specializing its bearer kind
+   (`Student subClassOf Person`) is correct; the OntoClean rule "anti-rigid
+   superclass with rigid subclass" in `../_shared/ontoclean-rules.yaml`
+   decides
+3. Process-object confusion (processes modelled as objects)
 4. Missing disjointness (siblings without disjoint axioms)
 5. Circular definitions
 6. Quality-as-class (quality values as class hierarchies)
@@ -203,6 +233,12 @@ Review the conceptual model against `_shared/anti-patterns.md`. Check for:
 8. Orphan classes (no named parent)
 9. Polysemy (one class for multiple meanings)
 10. Domain/range overcommitment
+11. Individuals in the T-box
+12. Negative universals / class complements overuse
+13. False is-a from OO inheritance
+14. System blueprint instead of domain model
+15. Technical perspective over domain perspective
+16. Mixing individuals with classes
 
 Flag any detected anti-patterns and recommend corrections.
 
@@ -213,15 +249,16 @@ Flag any detected anti-patterns and recommend corrections.
 ```bash
 # Before routing any NEW class candidate to the foundational auditor,
 # search for existing terms (an exact match becomes a reuse proposal there)
-uv run runoak -i sqlite:obo:bfo info BFO:0000040  # Material Entity
-uv run runoak -i ols: search "instrument"
+uvx --from oaklib runoak -i sqlite:obo:bfo info BFO:0000040  # Material Entity, when the upper ontology is BFO
+uvx --from oaklib runoak -i ols: search "instrument"
 ```
 
 ### Visualizing taxonomy (for review)
 
 ```bash
-# Get tree view of a hierarchy
-uv run runoak -i ontology.ttl tree --root EX:0000
+# Tree of the is-a hierarchy below a root class; --prefix maps the CURIE
+# prefix to the ontology's IRI base, without which runoak finds no EX: terms
+uvx --from oaklib runoak --prefix EX=http://example.org/EX_ -i ontology.ttl tree EX:0000 --down -p i
 ```
 
 ## Outputs
@@ -230,11 +267,11 @@ This skill produces:
 
 | Artifact | Location | Format | Description |
 |----------|----------|--------|-------------|
-| Glossary | `ontologies/{name}/docs/glossary.csv` | CSV | Complete term glossary with categories and BFO alignment |
+| Glossary | `ontologies/{name}/docs/glossary.csv` | CSV | Complete term glossary with categories and upper-ontology alignment |
 | Conceptual model | `ontologies/{name}/docs/conceptual-model.yaml` | YAML | Structured model: classes, hierarchy, module boundaries, layer assignments |
-| BFO alignment | `ontologies/{name}/docs/bfo-alignment.md` | Markdown | Alignment rationale for each top-level class |
-| Property design | `ontologies/{name}/docs/property-design.yaml` | YAML | Property specifications with domain/range/characteristics |
-| Axiom plan | `ontologies/{name}/docs/axiom-plan.yaml` | YAML | Planned axiom patterns per CQ |
+| Upper alignment | `ontologies/{name}/docs/upper-alignment.md` | Markdown | The upper ontology from the scope document and the alignment rationale for each top-level class |
+| Property design | `ontologies/{name}/docs/property-design.yaml` | YAML | Property specifications with domain/range/characteristics, each `proposed` or `ratified` |
+| Axiom plan | `ontologies/{name}/docs/axiom-plan.yaml` | YAML | Planned axiom patterns per CQ, each `proposed` or `ratified` |
 
 ## Handoff
 
@@ -247,7 +284,8 @@ This skill produces:
   remainder hides open questions from every later phase. REFUSE any term
   lacking its ratification record — a proposal's own status field proves
   nothing.
-- `ontology-requirements` — `ontologies/{name}/docs/competency-questions.yaml` (context)
+- `ontology-requirements` — `ontologies/{name}/docs/competency-questions.yaml` (context) and
+  `ontologies/{name}/docs/scope.md` (its `Upper ontology:` line drives Step 3)
 - `ontology-scout` — reuse report, import term lists, ODP recommendations (context)
 
 The INPUT RULE at Step 1 governs the whole workflow: it operates on RATIFIED
@@ -262,28 +300,33 @@ it at any handoff hides open questions from the phases that must answer them
 
 **Handoff checklist**:
 - [ ] Glossary covers all RATIFIED proposals (with additions/removals justified against ratification records)
-- [ ] Every class is aligned to a BFO category
+- [ ] Every top-level class is aligned to the upper ontology named in `scope.md`, or `scope.md` records that there is none
 - [ ] Every Must-Have CQ has a corresponding axiom plan entry
-- [ ] Anti-pattern review is complete with zero unresolved issues
+- [ ] Every property and axiom-plan entry is `ratified` (a `parents` ratification, or a `steward_decision` that accepts it), or marked `proposed` and listed for the steward
+- [ ] Anti-pattern review is complete with zero unresolved issues, except trade-offs the user has decided, recorded with their rationale
 - [ ] User has reviewed and approved the conceptual model
 
 ## Anti-Patterns to Avoid
 
 - **Premature formalization**: Don't start writing OWL or ROBOT templates.
   Produce a conceptual model, not axioms.
-- **Ignoring BFO**: Every top-level domain class should align to BFO. If
-  alignment is unclear, consult `_shared/bfo-categories.md` and document
-  the ambiguity for user decision.
+- **Skipping the upper-ontology decision**: Every top-level domain class
+  should align to the upper ontology named in `scope.md`; if none is named,
+  ask the user rather than defaulting to one. If alignment is unclear,
+  consult that ontology's category guide (for BFO,
+  `../_shared/bfo-categories.md`) and document the ambiguity for user decision.
 - **Over-modeling**: Don't create classes or properties that no CQ requires.
-  Every term must trace back to a competency question.
+  Every term is a decision term with a CQ, or a ratified support term that
+  names the decision term it serves (Step 1).
 - **Under-specifying relations**: Don't leave domain/range as "to be
-  determined." Specify even if provisional — the architect needs this.
+  determined." Propose a domain and range, marked `proposed` until the steward
+  ratifies it — the architect needs this.
 
 ## Error Handling
 
 | Error | Likely Cause | Recovery |
 |-------|-------------|----------|
-| Term doesn't fit any BFO category | Polysemy or category mismatch | Disambiguate the term; consult BFO common mistakes table |
+| Term doesn't fit any category of the chosen upper ontology | Polysemy, category mismatch, or an upper ontology that does not suit the domain | Disambiguate the term; consult the upper ontology's common mistakes (for BFO, the table in `../_shared/bfo-categories.md`); if many terms are social or legal constructs, raise the choice of upper ontology with the user |
 | Conflicting CQ requirements | Stakeholder disagreement | Escalate to user for priority decision |
 | Anti-pattern cannot be resolved | Genuine modeling dilemma | Document the trade-off and let user decide |
 | Pre-glossary terms missing from reuse report | Scout didn't find matches | Route the candidate to `ontology-foundational-auditor` (denotation + ratification); it enters the glossary only as a ratified proposal — never mark raw candidates "new term needed" |

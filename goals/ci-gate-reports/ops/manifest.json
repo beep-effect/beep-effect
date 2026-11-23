@@ -6,7 +6,7 @@
     "title": "CI Gate Reports",
     "status": "active",
     "created": "2026-11-18",
-    "updated": "2026-11-18",
+    "updated": "2026-11-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ci-gate-reports",
@@ -60,12 +60,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Projection and feed record",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
@@ -75,7 +75,7 @@
     {
       "id": "P3",
       "name": "Lookup, adapter and failing-region command",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",

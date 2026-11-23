@@ -14,6 +14,7 @@ import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { DecisionDate, DecisionFileName, DecisionSingleLine } from "../../internal/decisions/DecisionFile.ts";
 import { GoalOperatorRuling, GoalRedAttributionBlock } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Decisions.schemas");
@@ -84,20 +85,7 @@ export type GoalDecisionKind = typeof GoalDecisionKind.Type;
  * @category models
  * @since 0.0.0
  */
-export const GoalDecisionDate = S.String.check(
-  S.isPattern(
-    /^\d{4}-\d{2}-\d{2}$/,
-    $I.annote("GoalDecisionDatePatternCheck", {
-      title: "Goal Decision Date Pattern",
-      description: "An ISO calendar date (YYYY-MM-DD).",
-      message: "Expected an ISO calendar date (YYYY-MM-DD)",
-    })
-  )
-).pipe(
-  $I.annoteSchema("GoalDecisionDate", {
-    description: "The calendar date a decision was taken, as written in its file name and frontmatter.",
-  })
-);
+export const GoalDecisionDate = DecisionDate;
 
 /**
  * Decision date string.
@@ -124,20 +112,7 @@ export type GoalDecisionDate = typeof GoalDecisionDate.Type;
  * @category models
  * @since 0.0.0
  */
-export const GoalDecisionFileName = S.String.check(
-  S.isPattern(
-    /^\d{4}-\d{2}-\d{2}-[a-z0-9]+(-[a-z0-9]+)*\.md$/,
-    $I.annote("GoalDecisionFileNamePatternCheck", {
-      title: "Goal Decision File Name Pattern",
-      description: "<YYYY-MM-DD>-<lowercase-hyphenated-topic>.md",
-      message: "Expected <YYYY-MM-DD>-<topic>.md with a lowercase hyphenated topic",
-    })
-  )
-).pipe(
-  $I.annoteSchema("GoalDecisionFileName", {
-    description: "File name of one decision under goals/<slug>/decisions/.",
-  })
-);
+export const GoalDecisionFileName = DecisionFileName;
 
 /**
  * Decision file name string.
@@ -146,17 +121,6 @@ export const GoalDecisionFileName = S.String.check(
  * @since 0.0.0
  */
 export type GoalDecisionFileName = typeof GoalDecisionFileName.Type;
-
-const SingleLine = S.String.check(
-  S.isPattern(
-    /^\S(?:.*\S)?$/,
-    $I.annote("GoalDecisionSingleLineCheck", {
-      title: "Goal Decision Single Line",
-      description: "A non-empty single line without leading or trailing whitespace.",
-      message: "Expected a non-empty single line",
-    })
-  )
-);
 
 const GoalDecisionClaimKind = S.makeFilter(
   (frontmatter: {
@@ -230,11 +194,11 @@ const GoalDecisionClaimKind = S.makeFilter(
  */
 export class GoalDecisionFrontmatter extends S.Opaque<GoalDecisionFrontmatter, { readonly brand: unique symbol }>()(
   S.Struct({
-    title: SingleLine,
+    title: DecisionSingleLine,
     date: GoalDecisionDate,
-    reversal: SingleLine,
+    reversal: DecisionSingleLine,
     kind: GoalDecisionKind.pipe(S.withDecodingDefaultKey(Effect.succeed(GoalDecisionKind.Enum.decision))),
-    lane: S.optionalKey(SingleLine),
+    lane: S.optionalKey(DecisionSingleLine),
     pullRequest: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
     redAttribution: S.optionalKey(GoalRedAttributionBlock),
     operatorRuling: S.optionalKey(GoalOperatorRuling),

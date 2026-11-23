@@ -34,7 +34,7 @@
     "goals/comment-law-sweep/GOAL.md",
     "goals/comment-law-sweep/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +50,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

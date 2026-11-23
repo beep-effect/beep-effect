@@ -718,3 +718,61 @@ to the gap between the reference checkout (main) and the pinned release.
   nothing about the patch and cost a full cheap-gates rerun.
 - **Would have prevented it:** a Fallow lane that resolves its base itself and never runs with an empty
   value. #3427 (merged 2026-11-20, `56f52bf398d`) does that and adds a test.
+
+## 2026-11-22: a no-op mock passed a runner-group PATCH that cleared the group's repositories live
+
+- **Doing:** adding the overflow proof workflow to the `beep-shard-overflow` runner group's allow-list
+  (overflow proof, step 1).
+- **Evidence:** the step script sent `visibility` with the workflow fields in one
+  `PATCH orgs/<org>/actions/runner-groups/<id>`. On GitHub that body resets a `selected` group's repository
+  list, so the group lost its repository and was restored by hand. The script's test used a mock that
+  accepted any body and returned it, so it could not show the side effect.
+- **Would have prevented it:** a two-key body (`selected_workflows`, `restricted_to_workflows`), a read-back
+  of both the group and its `/repositories` endpoint after every write, and a repair step when the
+  repository list comes back shorter than the snapshot. The proof scripts now do all three.
+
+## 2026-11-22: a proof watcher counted a terminated instance and raised a false abort
+
+- **Doing:** watching the overflow proof for its "more than one launch" abort.
+- **Evidence:** the watcher counted every instance tagged with either pool's `ghr:environment`, in any
+  state. The heavy re-proof's runner had already terminated but still matched, so the watcher reported two
+  launches for one. A terminated instance stays visible to `describe-instances` for about an hour.
+- **Would have prevented it:** keeping the two questions apart. The live reading of what is running now
+  counts only the proof pool's instances in `pending` or `running`. The "more than one launch" abort counts
+  launches, not live instances: the CloudTrail `CreateFleet` calls by the proof pool's scale-up role since
+  the proof started, which still include a launch whose instance has terminated. The evidence script decides
+  the proof that way (exactly one call). The watcher's active count is an early warning only, and a later
+  watcher reads the same CloudTrail count for its launch abort.
+
+## 2026-11-22: after the label move, the Pulumi fleet relaunched idle runners for stale queued-build messages
+
+- **Doing:** P5 step 4a, moving every workflow reader onto the `beep-fleet-*` labels while the old fleet
+  drained.
+- **Evidence:** the old fleet's queued-build queue held about 234 in-flight messages for jobs that had
+  already finished (`0/234/0`; no sends since 19:20Z). The old scale-up has no job-queued check and the queue
+  keeps messages for one day, so each redelivery launched an idle Spot runner: 15 `RunInstances` by the old
+  scale-up between 19:12Z and 19:58Z, 6 of them after the 4a merge. The queue was purged at 20:07:24Z on
+  the driver's word and read back `0/0/0`; the old fleet's own scale-down then retired its last two
+  instances (20:08Z, 20:10Z) and it has had none since.
+- **Would have prevented it:** purging the old build queue as part of the label move, in the same step that
+  stops new work from reaching the old fleet, with a read-back of the queue depth before the move is called
+  done.
+
+## 2026-11-22: `gh --jq` rounds webhook delivery ids, and the rounded ids 404
+
+- **Doing:** dry-running the 4a watch's delivery matching after the driver's gap ruling.
+- **Evidence:** delivery ids exceed 2^53. `gh api .../hooks/<id>/deliveries --jq '.[0].id'` printed
+  `...401472` where the API returned `...401474`, and fetching the rounded id answered `404 Not Found` with a
+  scope hint, which reads like a permissions problem. System `jq` 1.8 kept the exact id and the fetch worked.
+- **Would have prevented it:** reading delivery ids with system `jq` on the raw body (`gh api ... | jq -r`)
+  and passing them on as strings; never through `gh --jq`. The watch script does this, and a failed detail
+  read now gives UNKNOWN rather than a miss.
+
+## 2026-11-22: a JMESPath `length()` over nested instance lists counted reservations
+
+- **Doing:** checking that exactly one heavy runner launched after the 4b cap change.
+- **Evidence:** `length(Reservations[].Instances[?LaunchTime>='<t>'])` returned 14 while one instance had
+  launched: the filter yields one (often empty) list per reservation, so `length` counts reservations. The
+  4a watch's launch count used the same expression.
+- **Would have prevented it:** flattening before counting, `length(Reservations[].Instances[?...][])`, as the
+  running-instance count already did. The watch script is fixed.

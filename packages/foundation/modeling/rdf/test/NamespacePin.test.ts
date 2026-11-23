@@ -15,8 +15,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// P1 ruling 3 (decision 2026-11-19-p1-pin-scope-eight-namespaces): these external namespaces
-// stay unpinned until P5, whose exit test asserts a pin for every external namespace.
 const unpinnedUntilP5 = ["dcat", "dcterms", "owl", "rdf", "rdfs", "schema", "sh", "void"];
 
 const pins = Result.getOrThrow(namespacePins());

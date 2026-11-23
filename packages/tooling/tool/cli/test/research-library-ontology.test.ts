@@ -511,14 +511,15 @@ describe("research library ontology", () => {
         // A manifest that exists but does not decode is skipped and counted, not fatal.
         yield* fs.makeDirectory(path.join(root, "goals/garbled/ops"), { recursive: true });
         yield* fs.writeFileString(path.join(root, "goals/garbled/ops/manifest.json"), "not json");
-        // A packet directory whose name forms no topic IRI is skipped and counted the same way.
         const spaced = path.join(root, "goals/an example/ops");
         yield* fs.makeDirectory(spaced, { recursive: true });
         const spacedManifest = yield* S.encodeEffect(SUnknownJson)({ initiative: { id: "spaced", title: "Spaced" } });
         yield* fs.writeFileString(path.join(spaced, "manifest.json"), spacedManifest);
         const quiet = yield* libraryTopics(root, false);
         const topics = yield* libraryTopics(root);
-        expect(quiet).toEqual(topics);
+        expect(quiet, "A packet directory whose name forms no topic IRI is skipped and counted the same way.").toEqual(
+          topics
+        );
         expect(A.map(topics, (topic) => [topic.id, topic.initiativeId, topic.title])).toEqual([
           ["goals/example", "example", "Example"],
           ["explorations/example", "example-exploration", "Example exploration"],

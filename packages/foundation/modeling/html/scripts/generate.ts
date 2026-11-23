@@ -334,8 +334,6 @@ const buildLanguageTagRegistryModule = (registry: LanguageTagRegistryData): stri
  * @since 0.0.0
  */
 
-// Raw registered IANA subtags are authoritative data, not prose.
-
 type GeneratedLanguageTagRegistry = Readonly<{
   fileDate: string;
   languages: ReadonlyArray<string>;
@@ -2714,8 +2712,6 @@ import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
-// WHATWG's lowercase global event handler names are normative.
-
 import {
   AutocompleteAttribute,
   BooleanAttribute,
@@ -2758,13 +2754,6 @@ type TaggedMembers<A extends Tagged, E extends Tagged> = readonly [
   ...ReadonlyArray<TaggedSchema<A, E>>,
 ];
 
-/**
- * Build a large \`_tag\`-discriminated union without erasing member Type or
- * Encoded information.
- *
- * @category models
- * @since 0.0.0
- */
 const taggedUnion = <A extends Tagged, E extends Tagged>(
   id: string,
   description: string,
@@ -3095,8 +3084,6 @@ import { flow } from "effect/Function";
 import * as Result from "effect/Result";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-
-// WHATWG's tokenizer-lowercased attribute and event names are normative.
 
 const $I = $HtmlId.create("Html.meta");
 
