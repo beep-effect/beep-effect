@@ -402,6 +402,23 @@ const makeGitCheckoutFixture = Effect.fn("TmpfsReapTest.makeGitCheckoutFixture")
     { concurrency: 1, discard: true }
   );
   yield* fs.writeFileString(path.join(dirtyClone, "untracked-notes.txt"), "uncommitted work\n");
+  yield* runCommand(
+    "git",
+    [
+      "-c",
+      "user.email=tmpfs-reap@example.invalid",
+      "-c",
+      "user.name=Tmpfs Reap Test",
+      "-c",
+      "tag.gpgsign=false",
+      "tag",
+      "-a",
+      "fixture-tag",
+      "-m",
+      "pushed commit tag",
+    ],
+    depthOneClone
+  );
   yield* commitFixtureFile(unpushedClone, "local-only.txt");
   yield* fs.writeFileString(path.join(probesParent, "probe-run.log"), "loose log\n");
   yield* fs.writeFileString(path.join(mixedParent, "notes", "keep.txt"), "not a checkout\n");
@@ -2000,6 +2017,89 @@ describe("tmpfs reap", () => {
             expect(idleSiblingExists).toBe(false);
           })
         )
+      )
+    );
+    it.effect("ignores symlinked Git markers, special container entries and unreadable containers", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpRoot = path.join(root, "tmp");
+          const cacheRoot = path.join(root, "cache");
+          const origin = path.join(root, "origin");
+          const realClone = path.join(root, "outside-clone");
+          const symlinkedGit = path.join(tmpRoot, "symlinked-git");
+          const oddContainer = path.join(tmpRoot, "odd-container");
+          const oddClone = path.join(oddContainer, "clone");
+          const lockedContainer = path.join(tmpRoot, "locked-container");
+          yield* Effect.forEach(
+            [cacheRoot, symlinkedGit, oddContainer, lockedContainer],
+            (directory) => fs.makeDirectory(directory, { recursive: true }),
+            { concurrency: 1, discard: true }
+          );
+          yield* initFixtureRepository(origin);
+          yield* cloneFixtureRepository(origin, realClone);
+          yield* cloneFixtureRepository(origin, oddClone);
+          yield* fs.symlink(path.join(realClone, ".git"), path.join(symlinkedGit, ".git"));
+          yield* runCommand("mkfifo", [path.join(oddContainer, "probe.fifo")], root);
+          yield* ageFixtureTree(oddContainer, 3, root);
+          yield* runCommand("chmod", ["000", lockedContainer], root);
+
+          const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot }).pipe(
+            Effect.ensuring(runCommand("chmod", ["755", lockedContainer], root).pipe(Effect.orDie))
+          );
+
+          expect(
+            A.some(report.candidates, (candidate) =>
+              A.contains([symlinkedGit, oddContainer, lockedContainer], candidate.path)
+            )
+          ).toBe(false);
+          expect(candidateByPath(report, oddClone).action).toBe("remove-dir");
+        })
+      )
+    );
+    it.effect("refuses a checkout whose Git marker becomes a symlink before apply-time removal", () =>
+      Effect.flatMap(temporaryDirectory, (root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpRoot = path.join(root, "tmp");
+          const cacheRoot = path.join(root, "cache");
+          const origin = path.join(root, "origin");
+          const clone = path.join(tmpRoot, "raced-clone");
+          const gitMarker = path.join(clone, ".git");
+          yield* Effect.forEach([tmpRoot, cacheRoot], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
+            discard: true,
+          });
+          yield* initFixtureRepository(origin);
+          yield* cloneFixtureRepository(origin, clone);
+          yield* ageFixtureTree(clone, 3, root);
+          let gitMarkerReadLinkCount = 0;
+          const racingFileSystem = FileSystem.makeNoop({
+            ...fs,
+            readLink: (target) => {
+              if (!Str.Equivalence(target, gitMarker)) return fs.readLink(target);
+              gitMarkerReadLinkCount += 1;
+              return gitMarkerReadLinkCount > 1 ? Effect.succeed("raced-git-marker") : fs.readLink(target);
+            },
+          });
+
+          const report = yield* runTmpfsReap({
+            apply: true,
+            cacheRoot,
+            classes: ["git-checkout"],
+            listProcessCommandLines: noProcessCommandLines,
+            nowMillis: FIXTURE_NOW_MILLIS,
+            tmpRoot,
+          }).pipe(Effect.provideService(FileSystem.FileSystem, racingFileSystem));
+
+          expect(candidateByPath(report, clone).action).toBe("remove-dir");
+          expect(report.reapedCount).toBe(0);
+          expect(report.warnings).toContain(`Skipped ${clone}: Git checkout eligibility changed before removal.`);
+          const cloneExists = yield* fs.exists(clone);
+          expect(cloneExists).toBe(true);
+        })
       )
     );
   });

@@ -35,7 +35,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { identity, pipe } from "effect/Function";
+import { constant, pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -341,6 +341,8 @@ const discoverGitWorktree = Effect.fnUntraced(function* (
   );
 });
 
+const constZero = constant(0);
+
 const GIT_CHECKOUT_ACTIVITY_MARKERS = ["index", "HEAD", "FETCH_HEAD", "ORIG_HEAD"];
 
 const gitCheckoutDirectory = Effect.fnUntraced(function* (
@@ -421,7 +423,7 @@ const checkoutContainerEntry = Effect.fnUntraced(function* (
   const mtimeMillis = pipe(
     info.value.mtime,
     O.map((mtime) => mtime.getTime()),
-    O.getOrElse(() => 0)
+    O.getOrElse(constZero)
   );
   if (Str.Equivalence(info.value.type, "File")) {
     return { _tag: "LooseFile", mtimeMillis };
@@ -467,7 +469,7 @@ const discoverCheckoutContainer = Effect.fnUntraced(function* (
     return checkouts;
   }
   const containerMtimeReading = yield* statMtimeMillis(containerPath);
-  const containerMtime = O.getOrElse(containerMtimeReading, () => 0);
+  const containerMtime = O.getOrElse(containerMtimeReading, constZero);
   return A.append(checkouts, {
     root,
     path: containerPath,
@@ -1098,45 +1100,8 @@ const gitCheckoutCleanlinessSkip = Effect.fnUntraced(function* (
   if (O.isNone(status) || A.isReadonlyArrayNonEmpty(status.value)) {
     return O.some("dirty-worktree");
   }
-  const refs = yield* git.forEachRef(checkoutPath).pipe(Effect.option);
-  if (O.isNone(refs)) {
-    return O.some("unpushed-commits");
-  }
-  const remoteShas = A.dedupe(
-    A.map(
-      A.filter(refs.value, (entry) => Str.startsWith("refs/remotes/")(entry.ref)),
-      (entry) => entry.sha
-    )
-  );
-  const head = yield* git.revParse(checkoutPath, "HEAD", { peel: "commit", quiet: true }).pipe(Effect.option);
-  const localShas = A.dedupe(
-    A.appendAll(
-      A.map(
-        A.filter(
-          refs.value,
-          (entry) =>
-            !Str.startsWith("refs/remotes/")(entry.ref) &&
-            (Str.Equivalence(entry.objectType, "commit") || Str.Equivalence(entry.objectType, "tag"))
-        ),
-        (entry) => entry.sha
-      ),
-      O.match(head, { onNone: A.empty<string>, onSome: A.of })
-    )
-  );
-  const reachability = yield* Effect.forEach(
-    localShas,
-    (localSha) =>
-      Effect.map(
-        Effect.forEach(
-          remoteShas,
-          (remoteSha) => git.isAncestor(checkoutPath, localSha, remoteSha).pipe(Effect.orElseSucceed(() => false)),
-          { concurrency: 1 }
-        ),
-        A.some(identity)
-      ),
-    { concurrency: 1 }
-  );
-  return skipReasonWhen(!A.every(reachability, identity), "unpushed-commits");
+  const localOnlyCommits = yield* git.localOnlyCommitCount(checkoutPath).pipe(Effect.option);
+  return skipReasonWhen(O.isNone(localOnlyCommits) || localOnlyCommits.value > 0, "unpushed-commits");
 });
 
 const checkoutParentCleanliness = (
