@@ -36,21 +36,15 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const $I = $GlobId.create("GlobSet");
 
-// Strip exactly ONE leading bang: the set-level exclusion marker. A remaining
-// bang is then ordinary minimatch whole-pattern negation inside the exclude —
-// degenerate, permitted, not specially cased.
-const exclusionTarget = (pattern: string): string | undefined =>
+const stripExactlyOneSetExclusionBang = (pattern: string): string | undefined =>
   Str.startsWith("!")(pattern) ? Str.slice(1)(pattern) : undefined;
 
-// Compiles every member (exclusion bang stripped) under default options and
-// maps the FIRST guard trip. A non-guard throw is programmer error and stays a
-// defect.
 const firstGuardTrip = <E>(
   patterns: ReadonlyArray<string>,
   onGuard: (pattern: string, guard: GuardExceeded) => E
 ): O.Option<E> => {
   for (const pattern of patterns) {
-    const target = exclusionTarget(pattern) ?? pattern;
+    const target = stripExactlyOneSetExclusionBang(pattern) ?? pattern;
     const compiled = Result.try({
       try: () => new Minimatch(target, {}),
       catch: (e) => {
@@ -63,9 +57,7 @@ const firstGuardTrip = <E>(
   return O.none();
 };
 
-// The schema check: every member must compile under default options.
-// Returning the guard message string makes it the thrown validation message.
-const allCompileUnderDefaults = (patterns: ReadonlyArray<string>): true | string =>
+const allCompileUnderDefaultsElseGuardMessageAsValidationMessage = (patterns: ReadonlyArray<string>): true | string =>
   O.getOrElse(
     firstGuardTrip(
       patterns,
@@ -89,10 +81,7 @@ interface ClassifiedBuilder {
   readonly wildcards: Array<GlobPattern>;
 }
 
-// The engine's UNESCAPED single plain-string row joined as an exact-match key,
-// or undefined when an exact-string key cannot represent the alternative
-// (negation, several rows, or a row the engine did not reduce to strings).
-const literalRowKey = (engine: Minimatch): string | undefined => {
+const exactKeyFromEnginesUnescapedSingleRowElseUndefined = (engine: Minimatch): string | undefined => {
   if (engine.negate || engine.set.length !== 1) return undefined;
   const row = engine.set[0];
   return row !== undefined && A.every(row, P.isString) ? A.join(row, "/") : undefined;
@@ -104,13 +93,11 @@ const addLiteral = (builder: ClassifiedBuilder, key: string): void => {
   builder.literals.push(key);
 };
 
-// Routes one expanded include alternative by its own magic. Comments match
-// nothing and contribute nothing.
-const classifyAlternative = (builder: ClassifiedBuilder, alternative: string): void => {
+const routeExpandedIncludeAlternativeByItsOwnMagic = (builder: ClassifiedBuilder, alternative: string): void => {
   const engine = new Minimatch(alternative, {});
   const magic = engine.hasMagic();
   if (!magic && engine.comment) return;
-  const key = magic ? undefined : literalRowKey(engine);
+  const key = magic ? undefined : exactKeyFromEnginesUnescapedSingleRowElseUndefined(engine);
   if (key === undefined) {
     builder.wildcards.push(GlobPattern.make({ source: alternative }));
     return;
@@ -119,12 +106,13 @@ const classifyAlternative = (builder: ClassifiedBuilder, alternative: string): v
 };
 
 const classifyPattern = (builder: ClassifiedBuilder, pattern: string): void => {
-  const target = exclusionTarget(pattern);
+  const target = stripExactlyOneSetExclusionBang(pattern);
   if (target !== undefined) {
     builder.excludes.push(GlobPattern.make({ source: target }));
     return;
   }
-  for (const alternative of braceExpand(pattern, {})) classifyAlternative(builder, alternative);
+  for (const alternative of braceExpand(pattern, {}))
+    routeExpandedIncludeAlternativeByItsOwnMagic(builder, alternative);
 };
 
 /**
@@ -173,11 +161,11 @@ export class GlobSet extends S.Class<GlobSet, { readonly brand: unique symbol }>
     ),
   }).check(
     S.makeFilter(
-      (v) => allCompileUnderDefaults(v.patterns),
+      (v) => allCompileUnderDefaultsElseGuardMessageAsValidationMessage(v.patterns),
       $I.annote("AllCompileUnderDefaults", {
         message: "compilable glob pattern set",
         description:
-          "Requires every member, after stripping its set-level exclusion bang, to compile within the default caps.",
+          "Requires every member, after stripping exactly one set-level exclusion bang, to compile within the default caps; any further leading bang negates the excluded pattern itself.",
       })
     )
   ),
@@ -202,17 +190,6 @@ export class GlobSet extends S.Class<GlobSet, { readonly brand: unique symbol }>
    */
   #classified: Classified | undefined;
 
-  // Lazy: the schema check guarantees every member is defaults-compilable, so
-  // classification cannot fail for constructed instances. Classification is
-  // per expanded alternative: brace-expand each include under default options
-  // and route each alternative by its own magic.
-  //
-  // The literal bucket keys on the engine's UNESCAPED single row, never the
-  // raw alternative source — the engine matches candidates in unescaped form,
-  // so keying on an escaped-magic source (foo\*bar) would silently drop every
-  // match its member pattern accepts. Comments match nothing and contribute
-  // nothing; anything else an exact-string key cannot represent (negation, a
-  // row the engine did not reduce to plain strings) is engine-matched instead.
   /**
    * Lazily classifies expanded include alternatives and exclusion patterns into cached indexes.
    *

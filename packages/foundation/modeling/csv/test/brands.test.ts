@@ -1,7 +1,3 @@
-// Every field typed by an Opaque schema keeps the Opaque's nominal type. Key-annotating an Opaque field
-// (`.pipe(S.annotateKey(...))`) rebuilds it as the bare inner struct and silently drops the brand, so these
-// assertions fail to compile if one comes back; the package typecheck (`beep:check:tests`) is what runs them.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvCodecOptions } from "@beep/csv/CsvOptions.schema";
 import { describe, expectTypeOf, it } from "@effect/vitest";
@@ -15,8 +11,8 @@ import type { CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
 import type { MachineConfig, MachineState } from "@beep/csv/internal/machine";
 import type { Prepared } from "@beep/csv/internal/start";
 
-describe("Opaque fields keep their brands", () => {
-  it("in reads, options, findings and the engine's records", () => {
+describe("Opaque fields keep their brands, which S.annotateKey on an Opaque field silently drops", () => {
+  it("in reads, options, findings and the engine's records (compile-time: beep:check:tests runs these)", () => {
     expectTypeOf<CsvRead["table"]>().toEqualTypeOf<CsvTable>();
     expectTypeOf<CsvNoted["warnings"][number]>().toEqualTypeOf<CsvWarning>();
     expectTypeOf<CsvReadOptions["limits"]>().toEqualTypeOf<CsvLimits>();

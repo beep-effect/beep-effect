@@ -1,23 +1,3 @@
-// Generator and normalizer for the Md.render -> Md.parse round-trip property.
-//
-// The generator stays inside the writer contract the bridge can invert
-// (wave-2d plan, Plan 2 section 7): no RawMarkdown or Embed, no nested
-// links, emphasis-like children with alphanumeric edges, no CR or NUL, no
-// whitespace at line edges, no newlines in headings, cells or alt text, no
-// list mixing tight and loose items, display math only at the top level,
-// and footnote references only to existing definitions. Text, code and
-// link destinations carry `$`, `&` and character-reference shapes, math is
-// generated, adjacent lists may share a marker family, and an admonition
-// may open on any block (wave 2d-3 writer fixes). Every other exclusion is
-// a named gap in `ROUND_TRIP_GAPS`, which the bridge-corpus ledger prints
-// so the gaps stay visible in review.
-//
-// `normalizeBridgeDocument` erases only writer-contract canonicalization:
-// adjacent Text runs merge (the parser reads one run where the generator
-// joined several), RawHtml becomes Text (the built-in Markdown adapter
-// escapes it), and footnote labels fold to lower case (CommonMark label
-// matching is case-insensitive and the kit keeps the folded identifier).
-
 import {
   Admonition,
   A as Anchor,
@@ -86,34 +66,34 @@ export const ROUND_TRIP_GAPS: ReadonlyArray<RoundTripGap> = [
 
 const PlainWords = ["alpha", "beta", "gamma", "delta", "omega", "kappa", "zeta", "Note"] as const;
 
-// Identifier-like slots (titles, code languages, footnote labels) take plain
-// words; text, code and destinations also take words a writer must escape:
-// `$` that would open inline math and `&` that would open a character
-// reference. Each keeps alphanumeric edges, so emphasis around it flanks.
-const PlainWord = Arbitrary.schema(S.Literals(PlainWords));
-const Word = Arbitrary.schema(S.Literals([...PlainWords, "a$b$c", "x$y", "p&amp;q", "q&#38;r", "AT&T"]));
+const PlainWordForIdentifierSlots = Arbitrary.schema(S.Literals(PlainWords));
+const WordWithWriterEscapeShapesAndAlphanumericEdges = Arbitrary.schema(
+  S.Literals([...PlainWords, "a$b$c", "x$y", "p&amp;q", "q&#38;r", "AT&T"])
+);
 
-// Raw TeX, including escaped dollars (`\\$`), an escaped backslash before a
-// dollar (`\\\\$`), backslash escapes of Markdown punctuation and bare
-// dollars at either edge, which the writer canonicalizes to `\\$`.
 const MathValue = Arbitrary.schema(
   S.Literals(["x", "y^2", "a+b", "e=mc^2", "a\\$b", "\\\\$x", "a\\_b", "$x", "x$", "\\$y$"])
 );
 
 const Words = pipe(
-  Arbitrary.array(Word, { minLength: 1, maxLength: 3 }),
+  Arbitrary.array(WordWithWriterEscapeShapesAndAlphanumericEdges, { minLength: 1, maxLength: 3 }),
   Arbitrary.map((words) => A.join(words, " "))
 );
 
 const OptionalWord = pipe(
-  Arbitrary.all([Arbitrary.schema(S.Boolean), PlainWord]),
+  Arbitrary.all([Arbitrary.schema(S.Boolean), PlainWordForIdentifierSlots]),
   Arbitrary.map(([present, word]) => (present ? O.some(word) : O.none()))
 );
 
 const InlineKinds = S.Literals(["text", "strong", "em", "del", "code", "a", "img", "rawHtml", "inlineMath"]);
 type InlineKind = typeof InlineKinds.Type;
 
-const InlineSeed = Arbitrary.all({ words: Words, word: Word, title: OptionalWord, math: MathValue });
+const InlineSeed = Arbitrary.all({
+  words: Words,
+  word: WordWithWriterEscapeShapesAndAlphanumericEdges,
+  title: OptionalWord,
+  math: MathValue,
+});
 
 type InlineSeed = typeof InlineSeed extends Arbitrary.Arbitrary<infer Seed> ? Seed : never;
 
@@ -140,8 +120,6 @@ const Separator = pipe(
   Arbitrary.map((kind): Inline => (kind === "space" ? Text.make({ value: " " }) : Br.make({})))
 );
 
-// One inline run: atoms joined by a space or a hard break, so no two
-// emphasis-like atoms touch and no run starts or ends with whitespace.
 const InlineRun: Arbitrary.Arbitrary<ReadonlyArray<Inline>> = pipe(
   Arbitrary.all([Arbitrary.array(InlineAtom, { minLength: 1, maxLength: 3 }), Separator]),
   Arbitrary.map(([atoms, separator]) => A.intersperse(atoms, separator))
@@ -155,8 +133,7 @@ const TextRun = pipe(
 const LeafKinds = S.Literals(["p", "heading", "hr", "pre", "ul", "ol", "taskList", "table", "youtube", "mathBlock"]);
 type LeafKind = typeof LeafKinds.Type;
 const LeafKind = Arbitrary.schema(LeafKinds);
-// Display math is recognized only at column 1, so containers hold none.
-const ContainedLeafKind = Arbitrary.schema(
+const ContainedLeafKindWithoutColumnOneDisplayMath = Arbitrary.schema(
   LeafKinds.pick(["p", "heading", "hr", "pre", "ul", "ol", "table", "youtube"])
 );
 
@@ -183,14 +160,17 @@ const LeafSeed = Arbitrary.all({
 
 type LeafSeed = typeof LeafSeed extends Arbitrary.Arbitrary<infer Seed> ? Seed : never;
 
-// A tight item holds one inline run; a loose item holds paragraphs, and the
-// first one a second paragraph, so blank lines between an item's blocks and
-// between items are both exercised. A list is never half tight, half loose.
-const itemChildren = (seed: LeafSeed, run: ReadonlyArray<Inline>, index: number): Li["children"] =>
+const tightRunOrLooseParagraphsExercisingBlankLinesBetweenItemsAndBlocks = (
+  seed: LeafSeed,
+  run: ReadonlyArray<Inline>,
+  index: number
+): Li["children"] =>
   seed.loose ? [P.make({ children: run }), ...(index === 0 ? [P.make({ children: seed.run })] : [])] : run;
 
 const listItems = (seed: LeafSeed): ReadonlyArray<Li> =>
-  A.map(seed.items, (run, index) => Li.make({ children: itemChildren(seed, run, index) }));
+  A.map(seed.items, (run, index) =>
+    Li.make({ children: tightRunOrLooseParagraphsExercisingBlankLinesBetweenItemsAndBlocks(seed, run, index) })
+  );
 
 const tableRow =
   (width: number) =>
@@ -207,7 +187,10 @@ const leafBuilders: { readonly [Kind in LeafKind]: (seed: LeafSeed) => Block } =
   taskList: (seed) =>
     TaskList.make({
       children: A.map(seed.items, (children, index) =>
-        TaskItem.make({ checked: seed.checks[index] ?? false, children: itemChildren(seed, children, index) })
+        TaskItem.make({
+          checked: seed.checks[index] ?? false,
+          children: tightRunOrLooseParagraphsExercisingBlankLinesBetweenItemsAndBlocks(seed, children, index),
+        })
       ),
     }),
   table: (seed) =>
@@ -226,11 +209,8 @@ const leafBlockOf = (kinds: Arbitrary.Arbitrary<LeafKind>): Arbitrary.Arbitrary<
     Arbitrary.map(([kind, seed]) => leafBuilders[kind](seed))
   );
 
-// Task lists only at the top level: @beep/markdown does not recognize a
-// GFM task-list item inside a blockquote or a nested list (gap
-// `kitNestedTaskList`).
 const topLeafBlock = leafBlockOf(LeafKind);
-const containedLeafBlock = leafBlockOf(ContainedLeafKind);
+const containedLeafBlock = leafBlockOf(ContainedLeafKindWithoutColumnOneDisplayMath);
 
 const ContainerKind = Arbitrary.schema(S.Literals(["leaf", "leaf", "blockquote", "admonition"]));
 
@@ -260,24 +240,24 @@ const nestedBlock = (leaf: Arbitrary.Arbitrary<Block>, inner: Arbitrary.Arbitrar
     })
   );
 
-/**
- * Md documents inside the bridge's invertible writer contract, two
- * container levels deep.
- */
 const Frontmatter = pipe(
-  Arbitrary.all([Arbitrary.schema(S.Boolean), Words, Arbitrary.schema(S.Literals([0, 3, -12])), Arbitrary.array(Word)]),
+  Arbitrary.all([
+    Arbitrary.schema(S.Boolean),
+    Words,
+    Arbitrary.schema(S.Literals([0, 3, -12])),
+    Arbitrary.array(WordWithWriterEscapeShapesAndAlphanumericEdges),
+  ]),
   Arbitrary.map(([present, title, count, tags]) =>
     present ? O.some<S.JsonObject>({ count, draft: false, tags, title }) : O.none()
   )
 );
 
-// A footnote is a referencing paragraph plus its definition, so every
-// generated reference resolves and every definition is referenced once.
 const footnoteBlocks = (identifier: string, body: string): ReadonlyArray<Block> => [
   P.make({ children: [Text.make({ value: "See" }), FootnoteReference.make({ identifier })] }),
   FootnoteDefinition.make({ identifier, children: [P.make({ children: [Text.make({ value: body })] })] }),
 ];
 
+// decision: round-trip-generator-inside-writer-contract
 export const BridgeDocumentArbitrary: Arbitrary.Arbitrary<Document> = pipe(
   Arbitrary.all({
     children: blocksOf(nestedBlock(topLeafBlock, nestedBlock(containedLeafBlock, containedLeafBlock))),
@@ -296,8 +276,6 @@ export const BridgeDocumentArbitrary: Arbitrary.Arbitrary<Document> = pipe(
   )
 );
 
-// A bare `$` inside an inline-math value would end the span, so the writer
-// writes it as TeX's literal dollar `\\$`; an already escaped one is kept.
 const canonicalMathValue = Str.replace(/(?<!\\)((?:\\\\)*)\$/g, "$1\\$");
 
 const mergeText = (inlines: ReadonlyArray<Inline>): ReadonlyArray<Inline> =>
@@ -366,8 +344,6 @@ const isInline = S.is(Inline);
 
 const isBlock = S.is(BlockSchema);
 
-// A tight item holds one inline run and a loose item holds paragraphs; both
-// normalize like the same content outside a list.
 const normalizeItem = (children: Li["children"]): Li["children"] =>
   A.every(children, isInline) ? mergeText(children) : A.map(A.filter(children, isBlock), normalizeBlock);
 

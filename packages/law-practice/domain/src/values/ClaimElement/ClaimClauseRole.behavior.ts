@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as Graph from "effect/Graph";
@@ -897,7 +897,7 @@ const completeClaimCitationWitness = (
  *
  * ```ts
  * import { ClaimCitationWitness, validateClaimCitationWitness } from "@beep/law-practice-domain/values/ClaimElement"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -5433,7 +5433,7 @@ const compileRoles = (claim: PatentClaim, evidence: ClaimLexicalEvidence): O.Opt
  *
  * ```ts
  * import { ClaimNominalSpan, clauseNominalHead } from "@beep/law-practice-domain/values/ClaimElement"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
  * const nominal = ClaimNominalSpan.make({
  *   anchor: TextAnchor.make({ startChar: 0, endChar: 8, quote: "a SENSOR" }),
@@ -5455,7 +5455,7 @@ export const clauseNominalHead = (nominal: ClaimNominalSpan): string => normaliz
  *
  * ```ts
  * import { ClaimLexicalToken, validClaimLexicalTokens } from "@beep/law-practice-domain/values/ClaimElement"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import * as O from "effect/Option"
  *
  * const token = ClaimLexicalToken.make({

@@ -141,8 +141,6 @@ export class RawInlineSegment extends S.Opaque<RawInlineSegment, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link RawInlineSegment}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -263,8 +261,6 @@ export class PreparedInline {
 }
 
 /**
- * A parsed link reference definition, awaiting materialization.
- *
  * **Example** (Validate DefinitionData)
  *
  * ```ts
@@ -302,8 +298,6 @@ export class DefinitionData extends S.Opaque<DefinitionData, { readonly brand: u
 ) {}
 
 /**
- * A GFM footnote definition's label, carried on the block.
- *
  * **Details**
  *
  * The fold happens once, at the block start, so the label map the inline pass
@@ -332,8 +326,6 @@ export class FootnoteData extends S.Opaque<FootnoteData, { readonly brand: uniqu
 ) {}
 
 /**
- * The two list kinds a list marker opens.
- *
  * **Example** (Validate a list kind)
  *
  * ```ts
@@ -595,8 +587,6 @@ export const BlockContinueResult = LiteralKit([0, 1, 2]).pipe(
 export type BlockContinueResult = typeof BlockContinueResult.Type;
 
 /**
- * A block start's verdict.
- *
  * **Details**
  *
  * - `0` — no match.

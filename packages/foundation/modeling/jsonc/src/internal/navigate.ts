@@ -1,12 +1,3 @@
-// Scanner-based path navigation for the modifier. Private implementation.
-//
-// Resolution is structural, through the scanner's tokens, rather than a
-// string search that breaks on keys containing quote characters: the matching
-// property's key offset is captured directly from the key token, never
-// guessed from the source text. `navigate` returns a plain structural result;
-// `JsoncModifier` synthesizes edits and constructs `JsoncModificationError`
-// from it, so this module never imports the facade or the edit vocabulary.
-
 import { $JsoncId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -147,8 +138,6 @@ export const navigate: {
   let currentToken = scanner.scan();
   let depth = 0;
 
-  // Malformed input can route a non-value token here (a value slot may hold a
-  // closer, as in `{"k":}`); the skip helper leaves the cursor untouched then.
   const skipCursor: SkipCursor = {
     getToken: () => currentToken,
     advance: () => {
@@ -176,80 +165,73 @@ export const navigate: {
     });
   });
 
-  // Shared walk state for the container currently being scanned: the end of
-  // the last value seen and the offset of the last separator comma.
-  let lastEnd = 0;
-  let lastComma = O.none<number>();
+  let lastValueEndInContainer = 0;
+  let lastSeparatorComma = O.none<number>();
 
   const isOpen = (closer: SyntaxKind): boolean => currentToken !== closer && currentToken !== "EOF";
 
-  // Consume a separator comma when one is due. A trailing comma before the
-  // closer ends the members (`true`); an insertion then belongs after the last
-  // value, inside the container (upstream-bug fix).
   const closesAfterSeparator = (due: boolean, closer: SyntaxKind): boolean => {
     if (!due || currentToken !== "Comma") return false;
-    lastComma = O.some(scanner.getTokenOffset());
+    lastSeparatorComma = O.some(scanner.getTokenOffset());
     currentToken = scanner.scan();
     return currentToken === closer;
   };
 
-  // Process the object member at the cursor: `Some(keyStart)` when its key is
-  // `segment` (cursor left on the value), otherwise the member is skipped.
-  const scanMember = (segment: string): O.Option<number> => {
+  const scanMemberLeavingCursorOnMatchingValue = (segment: string): O.Option<number> => {
     if (currentToken !== "String") {
       currentToken = scanner.scan();
-      lastEnd = scanner.getTokenOffset();
+      lastValueEndInContainer = scanner.getTokenOffset();
       return O.none();
     }
     const keyStart = scanner.getTokenOffset();
     const key = scanner.getTokenValue();
-    currentToken = scanner.scan(); // skip key
+    currentToken = scanner.scan();
     if (currentToken === "Colon") {
-      currentToken = scanner.scan(); // skip colon
+      currentToken = scanner.scan();
     }
     if (key === segment) {
       return O.some(keyStart);
     }
-    lastEnd = skipValue();
+    lastValueEndInContainer = skipValue();
     return O.none();
   };
 
-  // Walk an object's entries until `segment` is found; the cursor is left on
-  // the matching value, or on the closer when the key is absent.
-  const scanObject = (segment: string) => {
-    currentToken = scanner.scan(); // skip {
-    lastEnd = scanner.getTokenOffset();
-    lastComma = O.none();
+  const scanObjectUntilKeyOrCloser = (segment: string) => {
+    currentToken = scanner.scan();
+    lastValueEndInContainer = scanner.getTokenOffset();
+    lastSeparatorComma = O.none();
     let isFirst = true;
     while (isOpen("CloseBrace") && !closesAfterSeparator(!isFirst, "CloseBrace")) {
-      const keyStart = scanMember(segment);
+      const keyStart = scanMemberLeavingCursorOnMatchingValue(segment);
       if (O.isSome(keyStart)) {
-        return { found: O.some({ keyStart: keyStart.value, commaBefore: lastComma }), lastValueEnd: lastEnd, isFirst };
+        return {
+          found: O.some({ keyStart: keyStart.value, commaBefore: lastSeparatorComma }),
+          lastValueEnd: lastValueEndInContainer,
+          isFirst,
+        };
       }
       isFirst = false;
     }
     return {
       found: O.none<{ readonly keyStart: number; readonly commaBefore: O.Option<number> }>(),
-      lastValueEnd: lastEnd,
+      lastValueEnd: lastValueEndInContainer,
       isFirst,
     };
   };
 
-  // Walk an array's elements until index `segment`; the cursor is left on the
-  // matching value, or on the closer when the array is shorter.
-  const scanArray = (segment: number) => {
-    currentToken = scanner.scan(); // skip [
+  const scanArrayUntilIndexOrCloser = (segment: number) => {
+    currentToken = scanner.scan();
     let index = 0;
-    lastEnd = scanner.getTokenOffset();
-    lastComma = O.none();
+    lastValueEndInContainer = scanner.getTokenOffset();
+    lastSeparatorComma = O.none();
     while (isOpen("CloseBracket") && !closesAfterSeparator(index > 0, "CloseBracket")) {
       if (index === segment) {
-        return { found: true, lastEnd, index, lastComma };
+        return { found: true, lastValueEndInContainer, index, lastSeparatorComma };
       }
-      lastEnd = skipValue();
+      lastValueEndInContainer = skipValue();
       index++;
     }
-    return { found: false, lastEnd, index, lastComma };
+    return { found: false, lastValueEndInContainer, index, lastSeparatorComma };
   };
 
   const mismatch = (segment: JsoncSegment): NavigateResult =>
@@ -258,18 +240,16 @@ export const navigate: {
   const canEnter = (segment: JsoncSegment): boolean =>
     P.isString(segment) === true ? currentToken === "OpenBrace" : currentToken === "OpenBracket";
 
-  // Intermediate segments only need to position the cursor on the next value.
-  // A miss leaves the cursor on the closer, which the next segment reports.
   const descend = (segment: JsoncSegment): void => {
     if (P.isString(segment) === true) {
-      scanObject(segment);
+      scanObjectUntilKeyOrCloser(segment);
     } else {
-      scanArray(segment);
+      scanArrayUntilIndexOrCloser(segment);
     }
   };
 
   const resolveKey = (key: string): NavigateResult => {
-    const { found, lastValueEnd, isFirst } = scanObject(key);
+    const { found, lastValueEnd, isFirst } = scanObjectUntilKeyOrCloser(key);
     return O.match(found, {
       onSome: ({ keyStart, commaBefore }) => located("object", keyStart, commaBefore),
       onNone: () => NavigateResult.cases.Insert.make({ container: "object", at: lastValueEnd, isFirst, depth }),
@@ -277,16 +257,14 @@ export const navigate: {
   };
 
   const resolveIndex = (target: number): NavigateResult => {
-    const scanned = scanArray(target);
+    const scanned = scanArrayUntilIndexOrCloser(target);
     if (scanned.found) {
-      return located("array", scanner.getTokenOffset(), scanned.lastComma);
+      return located("array", scanner.getTokenOffset(), scanned.lastSeparatorComma);
     }
-    // Upstream inserts only while the scanned length has not passed the index;
-    // a negative or fractional index the scan passed resolves to no edit.
     return scanned.index <= target
       ? NavigateResult.cases.Insert.make({
           container: "array",
-          at: scanned.lastEnd,
+          at: scanned.lastValueEndInContainer,
           isFirst: scanned.index === 0,
           depth,
         })

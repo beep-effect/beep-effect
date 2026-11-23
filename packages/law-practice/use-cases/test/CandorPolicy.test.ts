@@ -21,12 +21,12 @@ import {
   CandorRecordReaderShape,
   CandorRecordSnapshot,
 } from "@beep/law-practice-use-cases/CandorPolicy";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";

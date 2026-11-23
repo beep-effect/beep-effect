@@ -6,10 +6,10 @@
  */
 import { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 
 const $I = $EpistemicDomainId.create("entities/EvidenceVerification/EvidenceVerification.model");
 const pg = ProductEntity.pg;

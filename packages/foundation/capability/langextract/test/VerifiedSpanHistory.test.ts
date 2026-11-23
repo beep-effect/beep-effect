@@ -11,10 +11,10 @@ import {
   VerifiedSpanHistory,
   verifyCurrentSpanHistory,
 } from "@beep/langextract/VerifiedSpan";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { expect } from "@effect/vitest";
 import { assertEquals, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

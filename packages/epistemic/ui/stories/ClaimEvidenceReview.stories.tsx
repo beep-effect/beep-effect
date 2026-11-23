@@ -7,11 +7,11 @@ import {
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
 import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import { UserId } from "@beep/shared-domain/identity/Shared";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { Button } from "@beep/ui/components/button";
 import { RegistryProvider, useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";

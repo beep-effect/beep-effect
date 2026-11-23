@@ -114,8 +114,6 @@ export class StreamTheme extends S.Opaque<StreamTheme, { readonly brand: unique 
   }).pipe($I.annoteSchema("StreamTheme", { description: "Plain StreamTheme data." }))
 ) {}
 /**
- * Companion types for {@link StreamTheme}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -137,8 +135,6 @@ export declare namespace StreamTheme {
 }
 
 /**
- * Options for {@link CliTheme.layer}.
- *
  * **Example** (Choose ASCII glyphs)
  *
  * ```ts
@@ -168,8 +164,6 @@ export class CliThemeOptions extends S.Opaque<CliThemeOptions, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link CliThemeOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -192,8 +186,6 @@ export declare namespace CliThemeOptions {
 }
 
 /**
- * Options for {@link CliTheme.layerTest}.
- *
  * **Example** (Fix test colour support)
  *
  * ```ts
@@ -229,8 +221,6 @@ export class CliThemeTestOptions extends S.Opaque<CliThemeTestOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link CliThemeTestOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

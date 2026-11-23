@@ -7,7 +7,7 @@ import {
   PreparedClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";

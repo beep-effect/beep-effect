@@ -21,11 +21,11 @@ import * as S from "effect/Schema";
 import {
   AccountId,
   ActivityId,
+  ArtifactOccurrenceId,
   ContextRef,
   EventId,
   IdentifierId,
   ObservationId,
-  OccurrenceId,
   VoiceId,
 } from "../../Ids.ts";
 import { EvidenceAnchor } from "../../Provenance.ts";
@@ -143,7 +143,7 @@ export class HeaderParticipant extends S.Opaque<HeaderParticipant, { readonly br
 export class MetadataTag extends S.Opaque<MetadataTag, { readonly brand: unique symbol }>()(
   S.TaggedStruct("MetadataTag", {
     ...base,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     namespace: S.NonEmptyString,
     tag: S.NonEmptyString,
     rawValue: S.String,
@@ -188,7 +188,7 @@ export class SignatureBlock extends S.Opaque<SignatureBlock, { readonly brand: u
 export class DirectoryRow extends S.Opaque<DirectoryRow, { readonly brand: unique symbol }>()(
   S.TaggedStruct("DirectoryRow", {
     ...base,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     fields: S.Record(S.String, S.String),
     anchor: EvidenceAnchor,
   }).pipe($I.annoteSchema("DirectoryRow", { description: "DirectoryRow data." }))
@@ -340,7 +340,7 @@ export class Participant extends S.Opaque<Participant, { readonly brand: unique 
 export class CommunicationEvent extends S.Opaque<CommunicationEvent, { readonly brand: unique symbol }>()(
   S.Struct({
     id: EventId,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     channel: LiteralKit(["email", "meeting", "call", "chat"]),
     sentAt: S.OptionFromNullOr(S.DateTimeUtcFromMillis),
     messageId: S.OptionFromNullOr(S.String),
@@ -451,7 +451,7 @@ export const isDelegated = (voice: Voice): boolean =>
 export class RedactedPartySlot extends S.Opaque<RedactedPartySlot, { readonly brand: unique symbol }>()(
   S.Struct({
     placeholder: PartyId,
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     redactionReason: S.NonEmptyString,
   }).pipe($I.annoteSchema("RedactedPartySlot", { description: "Withheld party known to exist." }))
 ) {}

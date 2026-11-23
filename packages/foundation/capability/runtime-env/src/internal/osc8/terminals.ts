@@ -22,8 +22,6 @@ import type { Env } from "../types.ts";
 const $I = $RuntimeEnvId.create("internal/osc8/terminals");
 
 /**
- * The detected terminal program: one literal per allowlist entry.
- *
  * **Example** (Validate a known terminal name)
  *
  * ```ts
@@ -72,8 +70,6 @@ export const KnownTerminal = LiteralKit([
 export type KnownTerminal = typeof KnownTerminal.Type;
 
 /**
- * Describe sub-feature capabilities of the detected terminal.
- *
  * **Details**
  *
  * When the terminal is unknown or unsupported, all fields are `false`.

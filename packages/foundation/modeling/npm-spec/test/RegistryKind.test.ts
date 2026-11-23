@@ -28,10 +28,11 @@ describe("classifyRegistry", () => {
   });
 
   it("does NOT match a lookalike domain", () => {
-    // A bare `endsWith("npmjs.org")` would classify these as the public npm
-    // registry, and that classification decides whether provenance is
-    // requested and which auth path runs. The leading dot is the guard.
-    assert.strictEqual(classifyRegistry("https://evil-npmjs.org"), "custom");
+    assert.strictEqual(
+      classifyRegistry("https://evil-npmjs.org"),
+      "custom",
+      'the leading dot is the guard: a bare endsWith("npmjs.org") would classify this as the public npm registry, which decides whether a token is sent and provenance is requested'
+    );
     assert.strictEqual(classifyRegistry("https://notnpmjs.org/"), "custom");
     assert.strictEqual(classifyRegistry("https://npmjs.org.attacker.test"), "custom");
   });
@@ -55,23 +56,22 @@ describe("registryHost", () => {
     assert.strictEqual(registryHost("https://registry.example.test:4873/"), "registry.example.test:4873");
   });
 
-  // Live elapsed time detects regex backtracking; TestClock would not measure synchronous work.
-  it.live("stays linear on a pathological path, with no regex backtracking", () =>
-    Effect.gen(function* () {
-      // The obvious `.replace(/\/.*$/, "")` is a polynomial-backtracking regex
-      // over a value this package does not control (registry strings come from
-      // npmrc and package.json). CodeQL flagged it on exactly this line. The
-      // scan-based form answers the same thing without the exposure.
-      const pathological = `evil.test/${Str.repeat(20000)("/")}`;
-      const started = yield* Clock.currentTimeMillis;
-      assert.strictEqual(registryHost(pathological), "evil.test");
-      assert.isBelow((yield* Clock.currentTimeMillis) - started, 250, "must not backtrack");
-    })
+  it.live(
+    "stays linear on a pathological path, with no regex backtracking, timed live since TestClock would not measure synchronous work",
+    () =>
+      Effect.gen(function* () {
+        const pathological = `evil.test/${Str.repeat(20000)("/")}`;
+        const started = yield* Clock.currentTimeMillis;
+        assert.strictEqual(registryHost(pathological), "evil.test");
+        assert.isBelow(
+          (yield* Clock.currentTimeMillis) - started,
+          250,
+          'must not backtrack: the obvious .replace(/\\/.*$/, "") is polynomial over registry strings from npmrc and package.json, and CodeQL flagged it'
+        );
+      })
   );
 
   it("strips the scheme and path from a value that does not parse as a URL", () => {
-    // npm config values are written both ways, and a bare host must still
-    // render as a label rather than as the raw string.
     assert.strictEqual(registryHost("registry.example.test/some/path"), "registry.example.test");
   });
 });
@@ -90,26 +90,18 @@ describe("the label projections", () => {
   });
 
   it("falls back to the host for a custom registry — the case a lookup table cannot serve", () => {
-    // This is why the projections are functions over the registry string and
-    // not a RegistryKind -> string map: "custom" has no fixed label.
     assert.strictEqual(registryShortLabel("https://registry.example.test"), "registry.example.test");
     assert.strictEqual(registryDisplayName("https://registry.example.test"), "registry.example.test");
   });
 
   it("treats an absent or empty registry as the public npm registry", () => {
-    // Stated, rather than left to classifyRegistry("") happening to answer npm.
     assert.strictEqual(registryDisplayName(undefined), "npm");
     assert.strictEqual(registryDisplayName(null), "npm");
     assert.strictEqual(registryDisplayName(""), "npm");
-    // registryShortLabel takes a plain string on purpose: its callers always
-    // have a registry, so a nullish value there is a wiring mistake the
-    // compile error should catch rather than a state to absorb.
     assert.strictEqual(registryShortLabel(""), "npm");
   });
 
   it("does not label a look-alike host as a well-known registry", () => {
-    // The projections inherit classifyRegistry's leading-dot guard rather
-    // than matching on their own, so a look-alike cannot borrow a trusted label.
     assert.strictEqual(registryShortLabel("https://evil-npmjs.org"), "evil-npmjs.org");
     assert.strictEqual(registryDisplayName("https://evil-npmjs.org"), "evil-npmjs.org");
   });

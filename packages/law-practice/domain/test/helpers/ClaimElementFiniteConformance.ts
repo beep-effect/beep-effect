@@ -1,7 +1,7 @@
 import { projectClaimFrameLexicalView } from "@beep/law-practice-domain/test";
 import { ClaimElementTree, ClaimTermDeterminer } from "@beep/law-practice-domain/values/ClaimElement";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { Sha256HexFromBytes } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

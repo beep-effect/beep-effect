@@ -7,9 +7,9 @@ import {
 } from "@beep/law-practice-server/internal/Citation/SourceDocument";
 import { CitationVerifiedExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { CitationEngineExtractionResult, CitationExtractionDiagnostics } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";

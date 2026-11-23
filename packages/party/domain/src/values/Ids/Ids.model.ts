@@ -119,28 +119,36 @@ export const ContentId = prefixed("party-sha256").pipe(
 export type ContentId = typeof ContentId.Type;
 
 /**
- * One occurrence of artifact content in a collection (a path, a Bates range, a PST child).
+ * One occurrence of artifact content in a collection (a path, a Bates range, a PST child): the key of an
+ * `ArtifactOccurrence`.
  *
- * **Example** (Decode a slice-owned identifier)
+ * **Details**
+ *
+ * It is not the `@beep/text` `OccurrenceId`, which names one place in one text capture and is a digest. This id
+ * keeps its `party-occ:` prefix and every stored value.
+ *
+ * **Example** (Decode an artifact occurrence id)
  *
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ArtifactOccurrenceId)("party-occ:msg:1")
  * ```
  *
  * @category identifiers
  * @since 0.0.0
  */
-export const OccurrenceId = prefixed("party-occ").pipe(
-  S.brand("OccurrenceId"),
-  $I.annoteSchema("OccurrenceId", { description: "Identifier with the occ: scheme." })
+export const ArtifactOccurrenceId = prefixed("party-occ").pipe(
+  S.brand("ArtifactOccurrenceId"),
+  $I.annoteSchema("ArtifactOccurrenceId", {
+    description: "Identifier of one artifact occurrence, with the party-occ: scheme.",
+  })
 );
 /**
  * @category models
  * @since 0.0.0
  */
-export type OccurrenceId = typeof OccurrenceId.Type;
+export type ArtifactOccurrenceId = typeof ArtifactOccurrenceId.Type;
 
 /**
  * A provenance activity (extraction run, resolver run, human review).

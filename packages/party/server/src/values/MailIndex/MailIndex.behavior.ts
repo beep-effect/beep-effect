@@ -8,7 +8,14 @@ import { $PartyServerId } from "@beep/identity/packages";
 import { SourceAssertion } from "@beep/party-domain/Claim";
 import { CommunicationEvent, HeaderParticipant, Participant, ParticipantRole } from "@beep/party-domain/Communication";
 import { EmailAddress, ExchangeDn, emailAddress, exchangeDn } from "@beep/party-domain/Identifier";
-import { AccountId, AssertionId, EventId, IdentifierId, ObservationId, OccurrenceId } from "@beep/party-domain/Ids";
+import {
+  AccountId,
+  ArtifactOccurrenceId,
+  AssertionId,
+  EventId,
+  IdentifierId,
+  ObservationId,
+} from "@beep/party-domain/Ids";
 import { partyKeyOf } from "@beep/party-domain/PartyKey";
 import { Proposition } from "@beep/party-domain/Proposition";
 import { ArtifactOccurrence, ContainerChild, HeaderField, HeaderNamespace } from "@beep/party-domain/Provenance";
@@ -119,7 +126,7 @@ const mailIdentity = (input: MailIndexInput) => {
   const key = encodeURIComponent(
     `${Str.length(input.content)}:${input.content}${Str.length(record.tree)}:${record.tree}${Str.length(record.messagePath)}:${record.messagePath}`
   );
-  return Tuple.make(key, OccurrenceId.make(`party-occ:mail:${key}`), EventId.make(`party-evt:mail:${key}`));
+  return Tuple.make(key, ArtifactOccurrenceId.make(`party-occ:mail:${key}`), EventId.make(`party-evt:mail:${key}`));
 };
 
 const withName = Effect.fn("PartyMail.withName")(function* (address: string | undefined, name: string | undefined) {
@@ -345,7 +352,7 @@ export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* 
       id: occurrenceId,
       content: input.content,
       locator: ContainerChild.make({
-        parent: OccurrenceId.make(`party-occ:${encodeURIComponent(record.sourceArtifactId)}`),
+        parent: ArtifactOccurrenceId.make(`party-occ:${encodeURIComponent(record.sourceArtifactId)}`),
         path: record.messagePath,
       }),
       side,

@@ -38,6 +38,8 @@ export const TmpfsReapClass = LiteralKit([
   "scoped-temp",
   "vitest-forks-tmp",
   "dangling-worktree-stub",
+  "git-checkout",
+  "git-checkout-parent",
 ]).pipe(
   $I.annoteSchema("TmpfsReapClass", {
     description: "Artifact family recognized by the tmpfs janitor's closed classification policy.",
@@ -99,6 +101,8 @@ export const TmpfsReapSkipReason = LiteralKit([
   "live-fd-ref",
   "live-flock",
   "dirty-worktree",
+  "unpushed-commits",
+  "git-environment-override",
   "too-young",
   "parent-repo-missing-but-refs",
   "wrong-shape",
@@ -106,6 +110,7 @@ export const TmpfsReapSkipReason = LiteralKit([
   "parent-repo-present",
   "contents-present",
   "live-runner",
+  "linked-worktrees-present",
   "unclassified",
 ]).pipe(
   $I.annoteSchema("TmpfsReapSkipReason", {

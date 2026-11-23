@@ -6,8 +6,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as S from "effect/Schema";
 import { ClaimElementPath, ClaimTermRef } from "./ClaimElement.model.ts";
 

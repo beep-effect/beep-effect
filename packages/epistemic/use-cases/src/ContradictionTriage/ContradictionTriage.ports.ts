@@ -21,9 +21,9 @@ import {
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as S from "effect/Schema";
-import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import type { Principal } from "@beep/shared-domain/entity/Principal";
 import type * as Shared from "@beep/shared-domain/identity/Shared";
+import type { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { EdgeAuthorityError } from "../EdgeAuthority/index.ts";

@@ -776,3 +776,78 @@ to the gap between the reference checkout (main) and the pinned release.
   4a watch's launch count used the same expression.
 - **Would have prevented it:** flattening before counting, `length(Reservations[].Instances[?...][])`, as the
   running-instance count already did. The watch script is fixed.
+
+## 2026-11-23: a compound test script ran unsharded in every coverage shard and timed out eight jobs
+
+- **Doing:** waiting on the fleet-watch environment PR (#3510), whose only code sat in `@beep/infra-github`,
+  `@beep/repo-cli` and `@beep/repo-configs`.
+- **Evidence:** all eight `Test Unit (law-practice-N)` jobs on its first head ran into the 20-minute job
+  timeout while still printing passing tests. The affected coverage plan selected five owners and left out
+  `@beep/law-practice-server`, which Turbo's affected set still placed in those partitions. So the partition
+  ran it through one undivided `turbo run …#test -- --coverage … --shard=N/8` step. Its `beep:test` is two
+  Vitest commands joined by `&&`, and `bun run` appended every forwarded argument to the second one only.
+  The main suite ran whole and uncovered in each of the eight shards. PRs whose own diff sent the coverage
+  planner to its full fallback split the script per segment and passed in about four minutes, which hid the
+  defect.
+- **Would have prevented it:** running every package a coverage partition selects through the per-segment
+  invocations the fallback uses, sealing only the planned owners. Also: refusing an undivided compound
+  script before it runs, failing a sharded segment that ran every listed file (its `--shard` never reached
+  it), and checking at the collector that all shards together ran each listed file exactly once. Shard file
+  counts follow each package's sequencer (measured `vitest.shards.json` plans), so no per-shard count is
+  predicted. A mis-sharded run then fails in seconds instead of timing out. The fix PR does all four.
+## 2026-11-23: a post-deploy plan_only overwrote the pre-deploy plan's rows file
+
+- **Doing:** the tksr Lambda deploy at a pinned main head. One plan_only ran before the deploy and one
+  after, to prove 0 code rows remained.
+- **Evidence:** the gate's plan script named its outputs `plan-rows-<head7>.txt` and `plan-only-<head7>.log`.
+  Both plans ran at the same head, so the post-deploy plan replaced the rows file and log the deploy digest
+  was computed from. The driver had already recomputed that digest from the file before its word, and the
+  hosted plan run's log still holds the rows, so no evidence was lost.
+- **Would have prevented it:** naming every plan output by its run id (`plan-rows-<runId>.txt`), never by
+  head, so two plans at one head cannot share a file. The gate's scripts now do that.
+
+## 2026-11-23: earlyoom killed local cheap gates while the host ran out of memory
+
+- **Doing:** publishing a review-fix wave for the missed-event check PR.
+- **Evidence:** memory available fell to about 2 GiB with swap exhausted, and earlyoom sent SIGTERM and SIGKILL
+  to new processes. `yeet publish` cheap gates ended with exit 130 or `terminated by signal SIGKILL`, and
+  even a bare `bun -e` was killed. A 47 GiB image-generation process outside the repo was the largest holder.
+- **Would have prevented it:** a gate runner that reads `MemAvailable` before starting a lane and reports an
+  environment hold instead of a red. The publish went through once memory recovered above 20 GiB with no
+  kills for two minutes.
+
+## 2026-11-23: every Lambda deploy re-applies the role policies and the function URL
+
+- **Doing:** CloudTrail read 1 for the tksr deploy, which updated the code of all 11 fleet functions.
+- **Evidence:** the deploy wrote `iam:PutRolePolicy` 11 times and `iam:AttachRolePolicy` 11 times, and
+  `lambda:CreateFunctionUrlConfig` once, which failed with `ResourceConflictException` and was followed by
+  `lambda:UpdateFunctionUrlConfig`. The d8cba1c deploy on 22 Nov updated 6 functions and wrote the same
+  pattern: 6 of each IAM call. Its window has no URL call because the webhook function was not in it. The
+  provider source, `@alchemy.run/aws` 2.0.0-beta.87 `Lambda/Function.ts`, explains both. Its update path
+  ensures the role and re-puts each binding policy on every update. Its URL step calls create first and
+  falls back to update on a conflict. Both are therefore standing provider behaviour, not drift. In both
+  windows every write stayed on the functions, their `CiRunners-*-prod-*` roles and their log groups, with
+  no `AccessDenied`.
+- **Standing expectation (driver ruling, 2026-11-23):** this extends the 2026-11-20 rule
+  (`decisions/2026-11-20-cirunners-function-updates-re-apply-each-function-role-s-policies.md`), which still
+  holds in full. Every (d) CloudTrail read expects exactly N `iam:PutRolePolicy` and N `iam:AttachRolePolicy`,
+  plus 2N log-group writes (`CreateLogGroup` on an existing group and `PutRetentionPolicy`), for N updated
+  functions. Each `PutRolePolicy` document must match, as canonical JSON, the same role's document in the
+  previous deploy; a changed document is a finding and stops the cutover. The 2026-11-23 addition: when
+  the webhook is updated, the read also expects at most one `CreateFunctionUrlConfig` that fails with
+  `ResourceConflictException`, followed by `UpdateFunctionUrlConfig`. Any IAM write outside that pattern,
+  or on a role whose function had no code row, is a finding.
+- **Would have prevented it:** a CloudTrail read that knows this reconcile shape. It should count one put
+  and one attach per updated function, plus a create→update pair for a function with a URL, as expected,
+  and flag only counts or targets outside that shape.
+
+## 2026-11-23: the pin-bump App re-synced an open, green-pending pin PR on an unrelated main push
+
+- **Doing:** holding the binary pin PR (#3500) at its queued head so it could merge first in the P5 order.
+- **Evidence:** #3500 was queued at `00403f8e`. #3504 merged to main at 08:45:49Z, and at 08:53:03Z the
+  `beep-ci-pin-bump` App merged main into the pin PR, moving its head to `88e0651f`. The PR's own patch was
+  unchanged (`fetch-beep-ci/action.yml` only), yet the new head restarted its full check set, including a heavy
+  cycle at the heavy cap of 2. The pin's Lint Policy wait restarted, about 30 minutes of queue lost.
+- **Would have prevented it (owner: the binary-route lane):** (a) the App re-syncs the pin PR only when it is
+  `CONFLICTING`, or when its base is more than a set number of commits or hours stale; (b) the merge gate holds
+  main merges while a pin PR is green-pending. The orchestrator did (b) by hand that day.

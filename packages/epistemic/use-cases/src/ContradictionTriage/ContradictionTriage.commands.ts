@@ -19,7 +19,6 @@ import {
   makeValidIntervalCheck,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
@@ -27,6 +26,7 @@ import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

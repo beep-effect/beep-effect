@@ -4,8 +4,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -57,7 +57,7 @@ const Relationships = {
 };
 const RuntimeShape = S.Struct({ ...Relationships, mentions: S.Array(CitationMention) });
 const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-document-receipt/v3"),
+  schemaVersion: S.tag("citation-document-receipt/v4"),
   ...Relationships,
   mentions: S.Array(CitationMentionReceipt),
 });

@@ -1,11 +1,3 @@
-// Shared comparison primitives over structural version parts.
-//
-// Every module in the package compares versions through these functions, so
-// SemVer 2.0.0 precedence rules live exactly once. Operating on structural
-// parts (not the `SemVer` class) keeps this module import-cycle-free: the
-// grammar, desugar and normalize pipeline and the `SemVer` class itself all
-// consume it.
-
 import { $SemverId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -176,14 +168,10 @@ export const versionConstructor = <A>(
 
 const sign = (n: number): -1 | 0 | 1 => (n < 0 ? -1 : n > 0 ? 1 : 0);
 
-// Orders two finite numbers.
 const compareNumber = (a: number, b: number): -1 | 0 | 1 => (a === b ? 0 : a > b ? 1 : -1);
 
-// Orders two strings by code unit, as the `<`/`>` operators do.
-const compareText = (a: string, b: string): -1 | 0 | 1 => (a < b ? -1 : a > b ? 1 : 0);
+const compareCodeUnits = (a: string, b: string): -1 | 0 | 1 => (a < b ? -1 : a > b ? 1 : 0);
 
-// Orders two identifier sequences element by element; when every shared
-// position matches, the shorter sequence sorts first.
 const compareSequences = <I>(a: ReadonlyArray<I>, b: ReadonlyArray<I>, compare: (x: I, y: I) => number): -1 | 0 | 1 => {
   const len = Math.min(a.length, b.length);
   for (let i = 0; i < len; i++) {
@@ -193,7 +181,6 @@ const compareSequences = <I>(a: ReadonlyArray<I>, b: ReadonlyArray<I>, compare: 
   return compareNumber(a.length, b.length);
 };
 
-// Orders the `major.minor.patch` core, ignoring prerelease and build.
 const compareCore = (a: typeof VersionParts.Encoded, b: typeof VersionParts.Encoded): -1 | 0 | 1 => {
   const major = compareNumber(a.major, b.major);
   if (major !== 0) return major;
@@ -225,13 +212,10 @@ export const comparePrereleaseIdentifier: {
   (b: string | number): (a: string | number) => number;
   (a: string | number, b: string | number): number;
 } = dual(2, (a: string | number, b: string | number): number => {
-  // Numerics sort before alphanumerics; like kinds compare by value.
   if (P.isNumber(a)) return P.isNumber(b) ? a - b : -1;
-  return P.isString(b) ? compareText(a, b) : 1;
+  return P.isString(b) ? compareCodeUnits(a, b) : 1;
 });
 
-// Orders prerelease sequences: a release (empty sequence) sorts after any
-// prerelease of the same core; otherwise identifiers compare in sequence.
 const comparePrerelease = (a: ReadonlyArray<string | number>, b: ReadonlyArray<string | number>): -1 | 0 | 1 =>
   a.length === 0 || b.length === 0
     ? compareNumber(b.length, a.length)
@@ -288,9 +272,6 @@ export const compareParts: {
 export const compareBuild: {
   (b: ReadonlyArray<string>): (a: ReadonlyArray<string>) => -1 | 0 | 1;
   (a: ReadonlyArray<string>, b: ReadonlyArray<string>): -1 | 0 | 1;
-} = dual(
-  2,
-  // An empty build array is the shortest sequence, so it sorts before any
-  // build metadata without a dedicated presence check.
-  (a: ReadonlyArray<string>, b: ReadonlyArray<string>): -1 | 0 | 1 => compareSequences(a, b, compareText)
+} = dual(2, (a: ReadonlyArray<string>, b: ReadonlyArray<string>): -1 | 0 | 1 =>
+  compareSequences(a, b, compareCodeUnits)
 );

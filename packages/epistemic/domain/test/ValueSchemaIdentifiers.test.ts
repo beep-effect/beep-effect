@@ -14,10 +14,6 @@ import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
-// Every schema identifier the bound value modules emit. The fixture was
-// written before the modules became bindings of @beep/epistemics factories;
-// it must stay byte-identical so persisted or snapshotted identifiers never
-// move.
 const modules: R.ReadonlyRecord<string, R.ReadonlyRecord<string, unknown>> = {
   ClaimEvidenceReview,
   ClaimProjection,
@@ -65,7 +61,8 @@ const listing = pipe(
 );
 
 describe("bound value schema identifiers", () => {
-  it.effect("emits the same identifiers as before the factory extraction", () =>
-    Effect.promise(() => expect(`${listing}\n`).toMatchFileSnapshot("./fixtures/value-schema-identifiers.txt"))
+  it.effect(
+    "emits the same identifiers as before the factory extraction (only a decided package rename regenerates the fixture)",
+    () => Effect.promise(() => expect(`${listing}\n`).toMatchFileSnapshot("./fixtures/value-schema-identifiers.txt"))
   );
 });

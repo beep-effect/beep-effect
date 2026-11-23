@@ -25,10 +25,7 @@ describe("CatalogResolver", () => {
     );
   });
 
-  describe("stub implementation", () => {
-    // A test double resolving a fixed catalog map proves the contract is
-    // implementable and that rangeOf threads packageName + catalog through
-    // correctly — the pattern real consumers (e.g. @beep/repo-workspaces/WorkspaceCatalogs) follow.
+  describe("a stub over a fixed catalog map proves the contract implementable and rangeOf threads packageName and catalog, as real consumers such as @beep/repo-workspaces/WorkspaceCatalogs do", () => {
     const catalogs = HashMap.make(
       ["default", HashMap.make(["effect", "^4.0.0"])],
       ["build", HashMap.make(["typescript", "^5.9.0"])]

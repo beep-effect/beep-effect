@@ -12,10 +12,12 @@ import {
   CoverageRawFile,
   CoverageRegressionBaseline,
   CoverageRuntimeReceipt,
+  CoverageUnsealedRun,
   collectCoverageProducerArtifacts,
   compareCoverageProducerArtifacts,
   discoverCoverageArtifactSources,
   resolveCoverageProducerIdentity,
+  verifyCoverageInvocationRun,
   writeCoverageProducerArtifact,
 } from "@beep/repo-cli/test/Quality";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
@@ -27,9 +29,11 @@ import { assertDefined } from "@effect/vitest/utils";
 import { createInstrumenter } from "@vitest/istanbul-lib-instrument";
 import convertV8 from "ast-v8-to-istanbul";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constant, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -1757,5 +1761,230 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         })
       );
     });
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
+  "verifyCoverageInvocationRun",
+  (it) => {
+    const listed = ["packages/law/test/a.test.ts", "packages/law/test/b.test.ts", "packages/law/test/c.test.ts"];
+    const verify = Effect.fnUntraced(function* (
+      ran: ReadonlyArray<string>,
+      withCoverage: boolean,
+      expectedTestFiles: ReadonlyArray<string> = listed,
+      shard = { index: 1, total: 2 }
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-coverage-run-" });
+      yield* fs.makeDirectory(path.join(root, "packages/law/coverage"), { recursive: true });
+      const results = yield* encode({
+        success: true,
+        numFailedTests: 0,
+        numFailedTestSuites: 0,
+        testResults: A.map(ran, (file) => ({ name: path.join(root, file), status: "passed" })),
+      });
+      yield* fs.writeFileString(path.join(root, "packages/law/coverage/unit-results.json"), results);
+      if (withCoverage) yield* fs.writeFileString(path.join(root, "packages/law/coverage/coverage-final.json"), "{}");
+      const selection = CoverageProducerPackage.make({
+        packageName: "@beep/law",
+        packagePath: "packages/law",
+        expectedTestFiles,
+        testReportPath: "coverage/unit-results.json",
+        testRuntime: "node",
+        testRuntimeVersion: "22.22.3",
+        shard,
+      });
+      const exit = yield* Effect.exit(verifyCoverageInvocationRun(root, selection));
+      return Exit.match(exit, { onSuccess: (run) => `ran ${A.length(run.actualTestFiles)}`, onFailure: Cause.pretty });
+    });
+
+    it.effect("accepts a shard that ran exactly its slice and left coverage data", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(A.take(listed, 2), true);
+        expect(outcome).toBe("ran 2");
+      })
+    );
+
+    it.effect("accepts a shard whose count follows its own sequencer", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(A.take(listed, 1), true);
+        expect(outcome).toBe("ran 1");
+      })
+    );
+
+    it.effect("fails a sharded segment that ran every listed file", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(listed, true, listed, { index: 4, total: 8 });
+        expect(outcome).toContain(
+          "@beep/law segment 0, shard 4/8: ran all 3 listed test files, so its --shard argument never reached this segment."
+        );
+      })
+    );
+
+    it.effect("accepts an empty slice with no files and no coverage data", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify([], false, A.take(listed, 1), { index: 4, total: 8 });
+        expect(outcome).toBe("ran 0");
+      })
+    );
+
+    it.effect("fails a shard that ran its files but left no coverage data", () =>
+      Effect.gen(function* () {
+        const outcome = yield* verify(A.take(listed, 2), false);
+        expect(outcome).toContain("missing required file");
+      })
+    );
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
+  "unsealed shard runs at the collector",
+  (it) => {
+    const listed = ["packages/law/test/a.test.ts", "packages/law/test/b.test.ts", "packages/law/test/c.test.ts"];
+    const collectWithUnsealed = Effect.fnUntraced(function* (
+      ranByShard: ReadonlyArray<ReadonlyArray<string>>,
+      total: number | "unsharded" = A.length(ranByShard),
+      listedByShard: ReadonlyArray<ReadonlyArray<string>> = [],
+      packageName = "@beep/law"
+    ) {
+      const f = yield* fixture();
+      yield* f.write(1);
+      yield* f.write(2);
+      for (const [offset, ran] of A.map(ranByShard, (ran, offset) => [offset, ran] as const)) {
+        const manifestPath = f.path.join(f.root, `.beep/artifacts/shard-${offset + 1}/manifest.json`);
+        const manifest = yield* f.fs.readFileString(manifestPath).pipe(Effect.flatMap(decodeManifest));
+        const selection = CoverageProducerPackage.make({
+          packageName,
+          packagePath: "packages/law",
+          expectedTestFiles: listedByShard[offset] ?? listed,
+          testReportPath: "coverage/unit-results.json",
+          testRuntime: "node",
+          testRuntimeVersion: "22.22.3",
+          ...(total === "unsharded" ? {} : { shard: { index: offset + 1, total } }),
+        });
+        const updated = CoverageProducerManifest.make({
+          ...manifest,
+          unsealedRuns: [CoverageUnsealedRun.make({ selection, actualTestFiles: ran })],
+        });
+        const encodedManifest = yield* encode(updated);
+        yield* f.fs.writeFileString(manifestPath, encodedManifest);
+      }
+      const exit = yield* Effect.exit(collectCoverageProducerArtifacts(f.root, f.options));
+      return Exit.match(exit, { onSuccess: () => "complete", onFailure: Cause.pretty });
+    });
+
+    it.effect("accepts shards that together ran every listed file once", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([A.take(listed, 1), A.drop(listed, 1)]);
+        expect(outcome).toBe("complete");
+      })
+    );
+
+    it.effect("names the file a sequencer dropped from every shard", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([A.take(listed, 1), A.take(A.drop(listed, 1), 1)]);
+        expect(outcome).toContain(
+          "@beep/law segment 0, shards 1,2 of 2: ran 2 distinct of 3 listed test files; missing [packages/law/test/c.test.ts]; extra []; duplicate []."
+        );
+      })
+    );
+
+    it.effect("names a file two shards both ran", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([A.take(listed, 2), A.drop(listed, 1)]);
+        expect(outcome).toContain(
+          "@beep/law segment 0, shards 1,2 of 2: ran 3 distinct of 3 listed test files; missing []; extra []; duplicate [packages/law/test/b.test.ts]."
+        );
+      })
+    );
+
+    it.effect("refuses a shard set with a shard missing", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([A.take(listed, 1)], 2);
+        expect(outcome).toContain("@beep/law segment 0, shards 1 of 2: incomplete or duplicate shard set.");
+      })
+    );
+
+    it.effect("accepts an unsharded run that ran every listed file", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([listed], "unsharded");
+        expect(outcome).toBe("complete");
+      })
+    );
+
+    it.effect("refuses shards that listed different test files", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([A.take(listed, 1), A.drop(listed, 1)], 2, [
+          listed,
+          A.drop(listed, 1),
+        ]);
+        expect(outcome).toContain("@beep/law segment 0, shards 1,2 of 2: the shards listed different test files.");
+      })
+    );
+
+    it.effect("refuses an unsealed run of a package the plan seals", () =>
+      Effect.gen(function* () {
+        const outcome = yield* collectWithUnsealed([listed], "unsharded", [], "@beep/example");
+        expect(outcome).toContain("unsealed run of planned package @beep/example; planned packages must be sealed.");
+      })
+    );
+
+    it.effect("names only the first ten missing files", () =>
+      Effect.gen(function* () {
+        const many = A.map(A.range(10, 22), (index) => `packages/law/test/t${index}.test.ts`);
+        const outcome = yield* collectWithUnsealed([A.take(many, 1), A.take(A.drop(many, 1), 1)], 2, [many, many]);
+        expect(outcome).toContain(
+          `ran 2 distinct of 13 listed test files; missing [${A.join(A.take(A.drop(many, 2), 10), ", ")} and 1 more]`
+        );
+      })
+    );
+
+    it.effect("writes each unsealed run into the producer manifest beside the sealed packages", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const selection = CoverageProducerPackage.make({
+          packageName: "@beep/law",
+          packagePath: "packages/law",
+          expectedTestFiles: listed,
+          testReportPath: "coverage/unit-results.json",
+          testRuntime: "node",
+          testRuntimeVersion: "22.22.3",
+          shard: { index: 1, total: 2 },
+        });
+        yield* writeCoverageProducerArtifact(
+          f.root,
+          CoverageProducerWriteOptions.make({
+            artifactRoot: ".beep/unsealed-only",
+            identity: f.identity,
+            partitionId: "law-practice-1",
+            packages: [],
+            unsealedRuns: [CoverageUnsealedRun.make({ selection, actualTestFiles: A.take(listed, 1) })],
+          })
+        );
+        const manifest = yield* f.fs
+          .readFileString(f.path.join(f.root, ".beep/unsealed-only/manifest.json"))
+          .pipe(Effect.flatMap(decodeManifest));
+        expect(A.map(manifest.unsealedRuns, (run) => run.actualTestFiles)).toEqual([A.take(listed, 1)]);
+        expect(manifest.packages).toEqual([]);
+      })
+    );
+
+    it.effect("decodes a manifest written before unsealed runs existed as having none", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        yield* f.write(1);
+        yield* f.write(2);
+        const manifestPath = f.path.join(f.root, ".beep/artifacts/shard-1/manifest.json");
+        const written = yield* f.fs.readFileString(manifestPath);
+        const older = Str.replace(/,\s*"unsealedRuns":\s*\[\]/u, "")(written);
+        expect(Str.includes("unsealedRuns")(older)).toBe(false);
+        yield* f.fs.writeFileString(manifestPath, older);
+        const manifest = yield* decodeManifest(older);
+        expect(manifest.unsealedRuns).toEqual([]);
+        const snapshots = yield* collectCoverageProducerArtifacts(f.root, f.options);
+        expect(A.length(snapshots)).toBe(1);
+      })
+    );
   }
 );

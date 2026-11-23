@@ -6,8 +6,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Num from "effect/Number";

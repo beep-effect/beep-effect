@@ -126,8 +126,8 @@ const assertPatternParity = (pattern: string, opts: EngineOptionsInput) => {
     O.getOrElse((): false => false)
   );
   assert.strictEqual(actual.makeRe(), re);
-  // Partial-prefix regex support is a deliberate newer-upstream feature.
-  if (opts.partial !== true) assertRegexParity(pattern, re, oracleRe);
+  const partialPrefixRegexIsADeliberateNewerUpstreamFeatureOutsideParity = opts.partial === true;
+  if (!partialPrefixRegexIsADeliberateNewerUpstreamFeatureOutsideParity) assertRegexParity(pattern, re, oracleRe);
 };
 
 const optimizerParts: Array<Array<string>> = [

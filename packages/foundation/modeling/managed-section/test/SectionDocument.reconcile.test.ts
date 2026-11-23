@@ -94,10 +94,10 @@ describe("SectionDocument.reconcile", () => {
     it("reorders its own sections around an unrelated one left in place", () => {
       const before = lines(block("beta", "b-body"), block("foreign", "x"), block("alpha", "a-body"), "");
       const result = run(before, [sectionA, sectionB]);
-      // The foreign block does not move; the two managed slots swap contents.
       assert.strictEqual(
         result.text,
-        lines(block("alpha", "a-body"), block("foreign", "x"), block("beta", "b-body"), "")
+        lines(block("alpha", "a-body"), block("foreign", "x"), block("beta", "b-body"), ""),
+        "the foreign block does not move; the two managed slots swap contents"
       );
     });
 
@@ -154,13 +154,13 @@ describe("SectionDocument.reconcile", () => {
     });
 
     it("does not drift when the CALLER supplies CRLF content", () => {
-      // The declared side is normalized as well as the parsed side; without
-      // that, a caller whose template literal carries CRLF rewrites the file
-      // on every single run while reporting Updated each time.
       const before = lines(block("alpha", "a\nb"), "");
       const result = run(before, [section("alpha", "a\r\nb")]);
       assert.deepStrictEqual(tags(result), ["Unchanged"]);
-      assert.isFalse(result.changed);
+      assert.isFalse(
+        result.changed,
+        "the declared side is normalized as well as the parsed side, or a CRLF template literal rewrites the file every run while reporting Updated"
+      );
     });
 
     it("is idempotent on a CRLF document", () => {

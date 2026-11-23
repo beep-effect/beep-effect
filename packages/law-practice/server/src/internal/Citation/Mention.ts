@@ -14,7 +14,8 @@ import {
   CitationMentionReceipt,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import {
   toTextAnchorVerificationReceipt,
   VerifiedSourceText,
@@ -22,8 +23,7 @@ import {
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -32,7 +32,7 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
 import { captureCitationRestoration } from "./Snapshot.ts";
-import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
+import type { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
 
 const CitationMentionType = S.toType(CitationMention);
@@ -171,7 +171,7 @@ export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionR
   }).pipe(Effect.mapError(identityFailure));
   if (id !== expected) return yield* CitationMentionFailure.make({ reason: "stale-identity" });
   return yield* S.decodeUnknownEffect(CitationMentionReceiptType)({
-    schemaVersion: "citation-mention-receipt/v1",
+    schemaVersion: "citation-mention-receipt/v2",
     ...metadata,
     id,
     anchor,
@@ -191,7 +191,7 @@ export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionR
 export const captureCitationMentionReceiptData = (mention: CitationMention): CitationMentionReceipt =>
   CitationMentionReceipt.make({
     ...mention,
-    schemaVersion: "citation-mention-receipt/v1",
+    schemaVersion: "citation-mention-receipt/v2",
     anchor: toTextAnchorVerificationReceipt(mention.anchor),
     components: A.map(mention.components, (component) =>
       CitationComponentReceipt.make({ name: component.name, anchor: toTextAnchorVerificationReceipt(component.anchor) })
