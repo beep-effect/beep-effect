@@ -7,6 +7,11 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
 
+const typedFailurePreservingTraceAnnotations = (
+  error: InvalidSpdxExpressionError,
+  cause: Cause.Cause<InvalidSpdxExpressionError>
+): Cause.Cause<InvalidSpdxExpressionError> => Cause.annotate(Cause.fail(error), Cause.annotations(cause));
+
 describe("LicenseException", () => {
   it.effect("makes a known exception id", () =>
     Effect.gen(function* () {
@@ -19,17 +24,12 @@ describe("LicenseException", () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(LicenseException.parse("Not-An-Exception"));
       const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-      // Preserve runtime tracing metadata while checking the expected typed failure.
       assertExitFailure(
         exit,
-        Cause.annotate(
-          Cause.fail(InvalidSpdxExpressionError.make({ input: "Not-An-Exception" })),
-          Cause.annotations(cause)
-        )
+        typedFailurePreservingTraceAnnotations(InvalidSpdxExpressionError.make({ input: "Not-An-Exception" }), cause)
       );
-      // the failure is the shared typed error, never a defect
       const error = yield* Effect.flip(LicenseException.parse("Not-An-Exception"));
-      assert.instanceOf(error, InvalidSpdxExpressionError);
+      assert.instanceOf(error, InvalidSpdxExpressionError, "the failure is the shared typed error, never a defect");
       assert.strictEqual(error._tag, "InvalidSpdxExpressionError");
       assert.strictEqual(error.input, "Not-An-Exception");
     })
@@ -38,13 +38,9 @@ describe("LicenseException", () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(LicenseException.parse("LicenseRef-Foo"));
       const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-      // Preserve runtime tracing metadata while checking the expected typed failure.
       assertExitFailure(
         exit,
-        Cause.annotate(
-          Cause.fail(InvalidSpdxExpressionError.make({ input: "LicenseRef-Foo" })),
-          Cause.annotations(cause)
-        )
+        typedFailurePreservingTraceAnnotations(InvalidSpdxExpressionError.make({ input: "LicenseRef-Foo" }), cause)
       );
     })
   );
@@ -71,8 +67,7 @@ describe("LicenseException", () => {
     assert.strictEqual(dep.id, "Nokia-Qt-exception-1.1");
     assert.isTrue(dep.deprecated);
   });
-  it("reuses the shared error from License", () => {
-    // same error class as License, not a parallel type
+  it("reuses the shared error from License, not a parallel type", () => {
     const licErr = License.parseResult("NOT-A-LICENSE");
     const excErr = LicenseException.parseResult("Not-An-Exception");
     assertFailure(licErr, InvalidSpdxExpressionError.make({ input: "NOT-A-LICENSE" }));

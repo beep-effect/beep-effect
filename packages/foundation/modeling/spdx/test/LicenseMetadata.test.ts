@@ -36,7 +36,6 @@ describe("License metadata", () => {
   );
 
   it("distinguishes OSI approval from FSF libre in both directions", () => {
-    // 0BSD is OSI-approved and not FSF-libre; Apache-1.0 is the converse.
     const zeroBsd = License.of("0BSD");
     assert.isTrue(zeroBsd.osiApproved);
     assert.isFalse(zeroBsd.fsfLibre);
@@ -83,8 +82,6 @@ describe("License metadata", () => {
   });
 
   it("leaves the encoded shape and structural equality untouched", () => {
-    // Metadata is resolved by id at access time, never stored on the
-    // instance: storing it would change the class's encoded shape.
     assert.deepStrictEqual({ ...License.of("MIT") }, { id: "MIT", deprecated: false });
   });
 });
