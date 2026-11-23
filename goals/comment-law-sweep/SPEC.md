@@ -30,7 +30,7 @@ Higher sources outrank lower sources when they conflict.
 
 - At zero pending scopes the scanner stays as the gate that rejects any directive silencing the rule; only the delta check and shards retire.
 - Starts only after `comment-law-gate` blocks.
-- Every deletion has two agreeing votes or an AST-checked mechanical rule; labels held at kappa 0.65 and T versus N is the soft boundary.
+- Every strip deletion has two agreeing votes or an AST-checked mechanical rule; the T/G-versus-rest split is held at kappa 0.65 (decision 2026-11-22, hard stop 4) and T versus N is the soft boundary. In an absorption PR every removed row has an author and an independent verifier on a different route, and the verifier cites where the information now lives.
 - A stale comment that is true except for one clause is edited, not deleted; a comment that is right where the code is wrong goes to `comment-census-defects`.
 - A decision becomes a file only if it passes the admission test in the exploration's `research/lanes/adr.md`; about 115 are expected from 1,449.
 - Re-baseline schema-first and effect-vitest inventories, re-pin sealed files, and run Biome after each batch (exploration `research/lanes/consumers.md` section 10).
