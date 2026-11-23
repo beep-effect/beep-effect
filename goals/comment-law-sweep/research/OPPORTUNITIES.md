@@ -18,7 +18,7 @@
 - Evidence: `decisions check` printed `decisions: 0` until the file was `git add`ed.
 - Prevention: say in the delete-comment skill step 3 that the file must be staged before `decisions check` sees it.
 
-## final-check under a systemd user unit resolves the worker profile (2026-11-23)
+## 2026-11-23: a memory-capped systemd unit makes final-check resolve the worker profile
 
 - Doing: running `yeet final-check` inside `systemd-run --user` so a turn end could not kill it.
 - Evidence: the shell reports `beep compute profile` = `workstation`, but the same final-check inside the unit logged `skipped final-check:cheap-gates ... compute-profile=worker`, along with lint-policy, check, docgen and fallow, and printed `final-check pass`. `yeet open` then refused: "the worker profile deferred gates to hosted CI and their check runs could not be read" (the head was not pushed yet). So a "pass" receipt hid five skipped gates, and the first PR body named only the coverage skip.
