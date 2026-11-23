@@ -1,15 +1,9 @@
-// The vendored toml-test corpus as module data. Vite's glob import inlines
-// every fixture's raw UTF-8 text at transform time (no newline
-// normalization: the CRLF and lone-CR cases arrive byte-for-byte), so the
-// corpus suites receive strings without touching a filesystem at test time.
-
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-/** The subset of Vite's `import.meta.glob` signature the corpus loader uses. */
 interface RawGlobOptions {
   readonly eager: true;
   readonly import: "default";
@@ -25,6 +19,7 @@ declare global {
 const VALID_ROOT = "./fixtures/toml-test/valid/";
 const INVALID_ROOT = "./fixtures/toml-test/invalid/";
 
+// decision: raw-corpus-loading
 const validFiles = import.meta.glob<string>("./fixtures/toml-test/valid/**/*.{toml,json}", {
   query: "?raw",
   import: "default",
@@ -36,7 +31,6 @@ const invalidFiles = import.meta.glob<string>("./fixtures/toml-test/invalid/**/*
   eager: true,
 });
 
-/** Sorted `.toml` paths of `files`, relative to `root`. */
 const tomlCases = (files: Record<string, string>, root: string): ReadonlyArray<string> =>
   A.sort(A.map(A.filter(R.keys(files), Str.endsWith(".toml")), Str.slice(root.length)), Order.String);
 

@@ -1,6 +1,5 @@
 import { $TomlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-// Sets keys as own data properties, `__proto__` included (yaml/jsonc precedent).
 import { setOwnProperty } from "@beep/utils/Record";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -10,24 +9,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-
-// The provenance state machine: every defined name records HOW it came
-// to exist (value, inline, static-array, table-explicit, table-implicit,
-// table-dotted, array-tables) and — for dotted-created tables — WHICH
-// document section created it. Each expression either legally extends the
-// tree or throws RawTomlError at the offending key, first violation wins.
-//
-// One corpus-driven refinement of the provenance rules:
-// header navigation PASSES THROUGH `table-dotted` intermediates (the spec's
-// "[table] form can be used to define sub-tables within tables defined via
-// dotted keys" — valid/spec-1.1.0/common-46.toml, valid/table/
-// array-within-dotted.toml); only landing the FINAL header segment on an
-// existing `table-dotted` is an error (invalid/table/redefine-02, -03).
-//
-// Header and dotted-key navigation is ITERATIVE — path depth is data, never
-// recursion. Only value materialization recurses, and inline values are
-// already depth-capped by the parser.
-
 import { RawTomlError } from "./diagnostics.ts";
 import type {
   TomlArrayTableHeader,
@@ -85,7 +66,6 @@ export interface SemanticVisitor {
   readonly onTableStart?: (path: ReadonlyArray<string>, header: TomlTableHeader | undefined) => void;
 }
 
-/** How a defined name came to exist. */
 const Provenance = LiteralKit([
   "value",
   "inline",
@@ -101,7 +81,6 @@ const Provenance = LiteralKit([
 );
 type Provenance = typeof Provenance.Type;
 
-/** One name in the provenance tree. `elements` is used by `array-tables` only; `sectionId` by `table-dotted` only. */
 interface SemNode {
   readonly elements: Array<SemNode>;
   kind: Provenance;
@@ -129,12 +108,10 @@ const raise: {
   throw RawTomlError.make({ code, message, offset: key.offset, length: key.length });
 });
 
-/** Per-analysis counter: document sections and inline-table scopes draw distinct ids from the same sequence. */
 interface Context {
   nextId: number;
 }
 
-/** Element `i` of a key path; the parser never yields a path shorter than the walk requests. */
 const keyAt = <K>(keys: ReadonlyArray<K>, i: number): K => {
   const key = keys[i];
   if (key === undefined) {
@@ -143,7 +120,6 @@ const keyAt = <K>(keys: ReadonlyArray<K>, i: number): K => {
   return key;
 };
 
-/** Key `i` of `keyPath` together with the node it currently names in `node`'s table, if any. */
 const segmentAt = (
   node: SemNode,
   keyPath: ReadonlyArray<TomlKey>,
@@ -153,12 +129,9 @@ const segmentAt = (
   return { existing: O.getOrUndefined(MutableHashMap.get(node.table, key.value)), key };
 };
 
-/**
- * Header navigation (rules 1 and 2, shared prefix): walk every segment but
- * the last, creating `table-implicit` for absent names, passing through
- * tables (dotted included — the corpus deviation) and descending into the
- * last element of an array of tables.
- */
+const lastElementOfArrayTablesSeededBeforePublish = (node: SemNode): SemNode =>
+  A.getUnsafe(node.elements, node.elements.length - 1);
+
 const navigateHeaderPrefix: {
   (root: SemNode, keyPath: ReadonlyArray<TomlKey>): SemNode;
   (keyPath: ReadonlyArray<TomlKey>): (root: SemNode) => SemNode;
@@ -174,8 +147,7 @@ const navigateHeaderPrefix: {
     }
     current = Match.value(existing.kind).pipe(
       Match.whenOr("table-explicit", "table-implicit", "table-dotted", () => existing),
-      // openArrayTable inserts before publishing; later headers only append.
-      Match.when("array-tables", () => A.getUnsafe(existing.elements, existing.elements.length - 1)),
+      Match.when("array-tables", () => lastElementOfArrayTablesSeededBeforePublish(existing)),
       Match.when("inline", () => raise("InlineTableExtended", `inline table "${key.value}" cannot be extended`, key)),
       Match.when("static-array", () =>
         raise("ArrayOfTablesConflict", `"${key.value}" is a static array, not an array of tables`, key)
@@ -187,7 +159,6 @@ const navigateHeaderPrefix: {
   return current;
 });
 
-/** Rule 1, final segment: create `table-explicit`, promote `table-implicit`, or error. */
 const openTable: {
   (root: SemNode, keyPath: ReadonlyArray<TomlKey>): SemNode;
   (keyPath: ReadonlyArray<TomlKey>): (root: SemNode) => SemNode;
@@ -206,7 +177,6 @@ const openTable: {
   return raise("TableRedefined", `table "${key.value}" is already defined`, key);
 });
 
-/** Rule 2, final segment: create the array and its first element, append to an existing one, or error. */
 const openArrayTable: {
   (root: SemNode, keyPath: ReadonlyArray<TomlKey>): { readonly element: SemNode; readonly index: number };
   (keyPath: ReadonlyArray<TomlKey>): (root: SemNode) => { readonly element: SemNode; readonly index: number };
@@ -228,10 +198,6 @@ const openArrayTable: {
   return raise("ArrayOfTablesConflict", `"${key.value}" cannot be redefined as an array of tables`, key);
 });
 
-/**
- * Rule 3, intermediate segment `i`: create an absent `table-dotted`, reuse a
- * `table-dotted` from the same section, or error.
- */
 const descendDotted = (current: SemNode, keyPath: ReadonlyArray<TomlKey>, i: number, sectionId: number): SemNode => {
   const { existing, key } = segmentAt(current, keyPath, i);
   if (existing === undefined) {
@@ -248,11 +214,6 @@ const descendDotted = (current: SemNode, keyPath: ReadonlyArray<TomlKey>, i: num
   return raise("DottedKeyConflict", `dotted key cannot extend "${key.value}"`, key);
 };
 
-/**
- * Rule 3: a (possibly dotted) key assignment scoped to `table` under
- * `sectionId`. Intermediates must be absent (create `table-dotted`) or
- * `table-dotted` from the same section; the final key must be absent.
- */
 const assignEntry: {
   (table: SemNode, sectionId: number, keyPath: ReadonlyArray<TomlKey>, value: TomlValueNode, context: Context): void;
   (
@@ -282,7 +243,6 @@ const assignEntry: {
   }
 );
 
-/** The provenance node for an assigned value; validates inline tables (arrays included) on the way. */
 const nodeForValue: {
   (value: TomlValueNode, context: Context): SemNode;
   (context: Context): (value: TomlValueNode) => SemNode;
@@ -299,7 +259,6 @@ const nodeForValue: {
   return makeNode("value");
 });
 
-/** Inline tables hide anywhere inside a static array; validate them all. Depth is parser-capped. */
 const checkArrayItem: {
   (item: TomlValueNode, context: Context): void;
   (context: Context): (item: TomlValueNode) => void;
@@ -315,11 +274,6 @@ const checkArrayItem: {
   }
 });
 
-/**
- * Rule 4: build an inline table's own scope (dotted keys follow rule 3
- * inside it), then freeze it — the returned node's `inline` kind makes every
- * later navigation through it an `InlineTableExtended` error.
- */
 const inlineNode: {
   (node: TomlInlineTable, context: Context): SemNode;
   (context: Context): (node: TomlInlineTable) => SemNode;
@@ -394,17 +348,11 @@ export const analyze: {
   }
 );
 
-/** Own-property read that never leaks through the prototype chain (`__proto__` included). */
 const getOwnProperty: {
   (target: Record<string, unknown>, key: string): unknown;
   (key: string): (target: Record<string, unknown>) => unknown;
 } = dual(2, (target: Record<string, unknown>, key: string): unknown => (R.has(target, key) ? target[key] : undefined));
 
-/**
- * Navigate `path` in the output tree, creating plain objects for absent names
- * and descending into the LAST element of arrays (mirrors the array-of-tables
- * rule — `analyze` has already proven every step legal). Iterative.
- */
 const navigateOutput: {
   (target: Record<string, unknown>, path: ReadonlyArray<string>): Record<string, unknown>;
   (path: ReadonlyArray<string>): (target: Record<string, unknown>) => Record<string, unknown>;
@@ -427,7 +375,6 @@ const navigateOutput: {
   return current;
 });
 
-/** Materialize a CST value node into a plain value. Recursion is parser-depth-capped. */
 const materialize = (value: TomlValueNode): unknown => {
   if (P.isTagged(value, "TomlArray")) {
     return A.map(value.items, materialize);

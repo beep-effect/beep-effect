@@ -112,11 +112,10 @@ const visitorVariants = S.TaggedUnion({
 export type TomlVisitorEvent = typeof visitorVariants.Type;
 
 const visitorConstructors = Data.taggedEnum<TomlVisitorEvent>();
-// Widen the unused construct signature so a class can extend the union codec.
-const visitorBase: S.Codec<TomlVisitorEvent, typeof visitorVariants.Encoded> =
+const visitorBaseWidenedForClassExtension: S.Codec<TomlVisitorEvent, typeof visitorVariants.Encoded> =
   S.Opaque<TomlVisitorEvent>()(visitorVariants);
 
-class TomlVisitorEventStatics extends visitorBase {
+class TomlVisitorEventStatics extends visitorBaseWidenedForClassExtension {
   static readonly TableStart = visitorConstructors.TableStart;
   static readonly ArrayTableStart = visitorConstructors.ArrayTableStart;
   static readonly KeyValue = visitorConstructors.KeyValue;
@@ -144,22 +143,15 @@ class TomlVisitorEventStatics extends visitorBase {
  */
 export const TomlVisitorEvent = TomlVisitorEventStatics;
 
-/** An event paired with the source offset used to sort it into document order. */
+const ROOT_TABLE_SORT_OFFSET_BEFORE_ANY_COMMENT = -1;
+
 interface PositionedEvent {
   readonly event: TomlVisitorEvent;
   readonly offset: number;
 }
 
-/** Decoded trailing-comment text: the raw text after `#` with one leading space stripped (mirrors internal/parser.ts). */
-const decodeCommentText = (raw: string): string => (Str.startsWith(" ")(raw) ? Str.slice(1)(raw) : raw);
+const stripOneLeadingCommentSpace = (raw: string): string => (Str.startsWith(" ")(raw) ? Str.slice(1)(raw) : raw);
 
-/**
- * Locate the `#` starting a trailing comment already known to exist
- * (`comment !== undefined`). Search begins after the last span that can
- * itself contain a `#` character — the value span for a key-value, the last
- * key span for a header — so the first `#` found is unambiguously the
- * comment marker.
- */
 const trailingCommentOffset: {
   (source: string, expression: TomlKeyValue | TomlTableHeader | TomlArrayTableHeader): number;
   (expression: TomlKeyValue | TomlTableHeader | TomlArrayTableHeader): (source: string) => number;
@@ -176,10 +168,8 @@ const trailingCommentOffset: {
   );
 });
 
-/** The position past the newline at a trivia line's end `i` (EOF stays put). */
-const pastLineEnd = (text: string, i: number): number => (i < text.length ? scanNewline(text, i) : i);
+const pastNewlineOrEof = (text: string, i: number): number => (i < text.length ? scanNewline(text, i) : i);
 
-/** Standalone comments inside a trivia run, each positioned by its `#`'s absolute offset. */
 const collectTriviaComments = (trivia: TomlTrivia): Array<PositionedEvent> => {
   const events: Array<PositionedEvent> = [];
   const text = trivia.text;
@@ -187,33 +177,31 @@ const collectTriviaComments = (trivia: TomlTrivia): Array<PositionedEvent> => {
   while (pos < text.length) {
     const i = scanWhitespace(text, pos);
     if ((text[i] ?? "") !== "#") {
-      // blank line
-      pos = pastLineEnd(text, i);
+      pos = pastNewlineOrEof(text, i);
       continue;
     }
     const scanned = scanComment(text, i);
     const offset = trivia.offset + i;
-    events.push({ offset, event: TomlVisitorEvent.Comment({ text: decodeCommentText(scanned.value), offset }) });
-    pos = pastLineEnd(text, scanned.end);
+    events.push({
+      offset,
+      event: TomlVisitorEvent.Comment({ text: stripOneLeadingCommentSpace(scanned.value), offset }),
+    });
+    pos = pastNewlineOrEof(text, scanned.end);
   }
   return events;
 };
 
-/**
- * Parse, run the semantic pass collecting its callbacks as positioned events,
- * collect comment events from the same expression array, then merge both by
- * offset. Throws the engine's raw carriers on malformed/adversarial input —
- * caught and materialized by the caller, exactly like `Toml.parse`.
- */
+// decision: engine-diagnostic-boundary
 const collectEvents = (text: string): Array<TomlVisitorEvent> => {
   const expressions = parseExpressions(text);
   const positioned: Array<PositionedEvent> = [];
 
   analyze(expressions, {
     onTableStart: (path, header) => {
-      // The root table has no header and must sort before anything else,
-      // including a leading document comment at offset 0.
-      positioned.push({ offset: header?.offset ?? -1, event: TomlVisitorEvent.TableStart({ path }) });
+      positioned.push({
+        offset: header?.offset ?? ROOT_TABLE_SORT_OFFSET_BEFORE_ANY_COMMENT,
+        event: TomlVisitorEvent.TableStart({ path }),
+      });
     },
     onArrayTableStart: (path, index, header) => {
       positioned.push({ offset: header.offset, event: TomlVisitorEvent.ArrayTableStart({ path, index }) });
@@ -241,11 +229,6 @@ const collectEvents = (text: string): Array<TomlVisitorEvent> => {
   return A.map(sorted, (positionedEvent) => positionedEvent.event);
 };
 
-/**
- * Run `collectEvents`, materializing the engine's raw carriers into
- * {@link TomlParseError} exactly like `Toml.parse` — a lex/parse error and a
- * semantic-pass error (e.g. `DuplicateKey`) both fail the same way.
- */
 const collectEventsOrFail = (text: string): Effect.Effect<Array<TomlVisitorEvent>, TomlParseError> =>
   Effect.try({
     try: () => collectEvents(text),

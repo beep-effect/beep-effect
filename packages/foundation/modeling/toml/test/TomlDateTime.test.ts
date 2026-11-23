@@ -56,12 +56,10 @@ describe("TomlDateTime classes", () => {
       TomlLocalDateTime.make({ year: 2021, month: 2, day: 29, hour: 0, minute: 0, second: 0, nanosecond: 0 })
     );
   });
-  it("accepts inclusive upper bounds on date fields", () => {
+  it("accepts inclusive date bounds and rejects the next month to catch off-by-one errors", () => {
     assert.strictEqual(TomlLocalDate.make({ year: 2021, month: 12, day: 31 }).month, 12);
     assert.strictEqual(TomlLocalDate.make({ year: 2021, month: 1, day: 31 }).day, 31);
     assert.strictEqual(TomlLocalDate.make({ year: 9999, month: 1, day: 1 }).year, 9999);
-    // negative spot-check: the upper-bound acceptance above would pass even with
-    // an off-by-one bound unless a value just past it is confirmed to still throw
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 13, day: 1 }));
   });
   it("accepts inclusive upper bounds on time fields", () => {

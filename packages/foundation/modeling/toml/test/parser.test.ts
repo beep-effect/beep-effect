@@ -22,7 +22,6 @@ import * as Str from "effect/String";
 import type { TomlErrorCodeRaw } from "@beep/toml/internal/diagnostics";
 import type { TomlExpression } from "@beep/toml/TomlNode";
 
-/** Parse and assert the span-tiling invariant: the expression slices rebuild the source byte-exactly. */
 function tiles(src: string): ReadonlyArray<TomlExpression> {
   const exprs = parseExpressions(src);
   assert.strictEqual(
@@ -35,7 +34,6 @@ function tiles(src: string): ReadonlyArray<TomlExpression> {
   return exprs;
 }
 
-/** Assert `parseExpressions(src)` throws a RawTomlError with `code` (and `offset`, when given). */
 function assertParseError(src: string, code: TomlErrorCodeRaw, offset?: number): void {
   try {
     parseExpressions(src);
@@ -52,7 +50,6 @@ function assertParseError(src: string, code: TomlErrorCodeRaw, offset?: number):
   assert.fail(`expected RawTomlError with code ${code}, but nothing was thrown`);
 }
 
-/** The parsed key-value at `index`, asserted to be a TomlKeyValue. */
 function keyValueAt(exprs: ReadonlyArray<TomlExpression>, index: number): TomlKeyValue {
   const expr = exprs[index];
   if (!Schema.is(TomlKeyValue)(expr)) {
@@ -61,7 +58,6 @@ function keyValueAt(exprs: ReadonlyArray<TomlExpression>, index: number): TomlKe
   return expr;
 }
 
-/** Validate a parsed node before inspecting its schema-specific fields. */
 function checkedNode<T>(node: unknown, schema: Schema.Schema<T>): T {
   if (!Schema.is(schema)(node)) {
     assert.fail("expected the parsed node to match its schema");
@@ -91,9 +87,11 @@ describe("parser", () => {
         "\n"
       );
       const exprs = tiles(src);
-      // the two comment lines and the following blank line coalesce into ONE trivia
       assert.isTrue(Schema.is(TomlTrivia)(exprs[0]));
-      assert.isFalse(Schema.is(TomlTrivia)(exprs[1]));
+      assert.isFalse(
+        Schema.is(TomlTrivia)(exprs[1]),
+        "the two comment lines and the following blank line coalesce into one trivia"
+      );
       assert.strictEqual(A.filter(exprs, (e) => Schema.is(TomlTrivia)(e)).length, 3);
     });
     it("tiles a CRLF document", () => {
@@ -294,7 +292,6 @@ describe("parser", () => {
       assertParseError("a = {b = 1 c = 2}", "UnterminatedInlineTable");
     });
     it("keeps keyval-sep newline-free inside inline tables: no newline around =", () => {
-      // TOML 1.1 relaxes ws-comment-newline around entries, NOT keyval-sep.
       assertParseError("a = {b\n= 1}", "ExpectedEquals");
       assertParseError("a = {b =\n1}", "ExpectedValue");
     });
