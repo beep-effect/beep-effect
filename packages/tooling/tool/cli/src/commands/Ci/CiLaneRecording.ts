@@ -250,9 +250,6 @@ export const currentCiLaneProcess: Effect.Effect<CiLaneProcess, CiCommandError> 
 );
 
 /**
- * A finished lane child: the lane, its run id and start, how long it ran,
- * its exit code and the run's input fingerprint.
- *
  * **Example** (Describe a passing lane)
  *
  * ```ts

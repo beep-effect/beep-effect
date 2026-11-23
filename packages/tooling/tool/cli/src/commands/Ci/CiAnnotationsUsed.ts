@@ -65,8 +65,6 @@ export const GITHUB_ANNOTATIONS_PER_LEVEL_PER_STEP = 10;
 export const CI_ANNOTATIONS_USED_PATH = ".beep/ci/annotations-used.json";
 
 /**
- * The workflow commands GitHub turns into annotations.
- *
  * **Example** (Check a level)
  *
  * ```ts
@@ -85,8 +83,6 @@ export const WorkflowCommandLevel = LiteralKit(["error", "warning", "notice"]).p
 );
 
 /**
- * Type of {@link WorkflowCommandLevel}.
- *
  * @category models
  * @since 0.0.0
  */
