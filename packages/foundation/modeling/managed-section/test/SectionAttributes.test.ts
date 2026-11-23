@@ -1,8 +1,3 @@
-import { identity } from "effect/Function";
-// Marker attributes: `name="value"` pairs on a BEGIN marker. Metadata, not
-// identity — they participate in equality (an attribute change is real drift)
-// but never in which block a marker names.
-
 import { $ManagedSectionId } from "@beep/identity/packages";
 import { CommentStyle, ManagedSection, SectionDialect, SectionId } from "@beep/managed-section";
 import {
@@ -19,6 +14,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -30,10 +26,8 @@ import type { Section, SectionDocument, SectionRenderError } from "@beep/managed
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** A `#`-style BEGIN marker carrying a raw attribute run. */
 const beginWith = (key: string, run: string) => `# --- BEGIN ${key} MANAGED SECTION ${run} ---`;
 
-/** A rendered block whose BEGIN marker carries a raw attribute run. */
 const blockWith = (key: string, run: string, content: string) => A.join([beginWith(key, run), content, end(key)], "\n");
 
 const expectRender = (result: Result.Result<string, SectionRenderError>): string => {
@@ -58,7 +52,7 @@ const reconcile = (doc: SectionDocument, declared: ReadonlyArray<Section>) => {
   return result.success;
 };
 
-describe("marker attributes", () => {
+describe("marker attributes: BEGIN-marker metadata counted in equality (real drift), never in which block a marker names", () => {
   describe("rendering", () => {
     it("emits attributes on the BEGIN marker in insertion order, END unchanged", () => {
       const text = expectRender(
@@ -90,10 +84,12 @@ describe("marker attributes", () => {
       const found = doc.read(id("example-tool"));
       assertSome(found, O.getOrThrow(found));
       assert.deepStrictEqual(O.getOrThrow(found).attributes, attrs);
-      // The second pass is the byte-identity proof: what was written is
-      // exactly what reads back, so nothing re-renders.
       const second = reconcile(doc, [id("example-tool").section("echo hi", attrs)]);
-      assert.strictEqual(second.text, first.text);
+      assert.strictEqual(
+        second.text,
+        first.text,
+        "byte-identity proof: what was written is exactly what reads back, so nothing re-renders"
+      );
       assert.isFalse(second.changed);
       assert.deepStrictEqual(
         A.map(second.outcomes, (o) => o._tag),
@@ -141,8 +137,10 @@ describe("marker attributes", () => {
       const forward = id("k").section("x", { a: "1", b: "2" });
       const reversed = id("k").section("x", { b: "2", a: "1" });
       assert.isTrue(Equal.equals(forward, reversed));
-      // Discriminating control: a changed value must not compare equal.
-      assert.isFalse(Equal.equals(forward, id("k").section("x", { a: "1", b: "CHANGED" })));
+      assert.isFalse(
+        Equal.equals(forward, id("k").section("x", { a: "1", b: "CHANGED" })),
+        "discriminating control: a changed value must not compare equal"
+      );
     });
 
     it("preserves attributes through withContent", () => {
@@ -231,9 +229,12 @@ describe("marker attributes", () => {
         A.map(first.outcomes, (o) => o._tag),
         ["Unchanged"]
       );
-      // The rewrite renders declared order; the pass after it is a fixed point.
       const second = reconcile(parse(first.text), [reversed]);
-      assert.strictEqual(second.text, first.text);
+      assert.strictEqual(
+        second.text,
+        first.text,
+        "the rewrite renders declared order and the pass after it is a fixed point"
+      );
       assert.isFalse(second.changed);
     });
   });
@@ -266,12 +267,8 @@ describe("marker attributes", () => {
     });
 
     it("treats an adversarial near-miss run as content, at any length", () => {
-      // The backtracking shape a validating regex would melt on: one valid
-      // pair, then a long tail that is almost-but-never a second pair. The
-      // run parser is a single linear walk, so this is just a big line of
-      // prose — the whole document is content, not a marker.
-      const hostile = beginWith("k", `a="v"${Str.repeat(20_000)(" a")}`);
-      assert.strictEqual(parse(lines(hostile, "")).sections.length, 0);
+      const validPairThenRegexBacktrackingNearMissTail = beginWith("k", `a="v"${Str.repeat(20_000)(" a")}`);
+      assert.strictEqual(parse(lines(validPairThenRegexBacktrackingNearMissTail, "")).sections.length, 0);
     });
 
     it("treats an END marker carrying attributes as content, so the section is unterminated", () => {
@@ -285,8 +282,6 @@ describe("marker attributes", () => {
     });
 
     it("allows content carrying a mangled pseudo-marker the scanner reads as prose", () => {
-      // The renderer's refusal mirrors the scanner exactly: what scans as
-      // content renders as content, so the round trip stays verbatim.
       const benign = id("k").section(beginWith("other", 'a="1" ju nk'));
       assertSuccess(SectionDialect.default.render(benign), Result.getOrThrow(SectionDialect.default.render(benign)));
     });
@@ -331,27 +326,25 @@ describe("marker attributes", () => {
   });
 
   describe("properties", () => {
-    // Inline styles, never presets: the properties must exercise structural
-    // identity, the path a consumer defining its own style takes.
-    const styles = {
+    const inlineStylesForStructuralIdentity = {
       "#": CommentStyle.make({ prefix: "#" }),
       "//": CommentStyle.make({ prefix: "//" }),
       "<!--": CommentStyle.make({ prefix: "<!--", suffix: "-->" }),
     };
-    const styleArb = Arbitrary.schema(S.Literals(["#", "//", "<!--"])).pipe(Arbitrary.map((prefix) => styles[prefix]));
+    const styleArb = Arbitrary.schema(S.Literals(["#", "//", "<!--"])).pipe(
+      Arbitrary.map((prefix) => inlineStylesForStructuralIdentity[prefix])
+    );
     const Name = S.Literals(["name", "other", "x1", "a-b", "c_d", "Z"]);
     const Value = S.Literals(["", "v", "1.2.3", "spaced value", "a --- b", "-->"]);
-    // Unique by name, or the pairs would collapse into fewer entries than
-    // were generated and the round trip would compare against the wrong map.
-    const attrsArb = Arbitrary.schema(S.Array(S.Tuple([Name, Value])).check(S.isUniqueKey(), S.isMaxLength(3))).pipe(
-      Arbitrary.map((pairs) => R.fromEntries(pairs))
-    );
+    const attrsUniqueByNameSoFromEntriesCannotCollapse = Arbitrary.schema(
+      S.Array(S.Tuple([Name, Value])).check(S.isUniqueKey(), S.isMaxLength(3))
+    ).pipe(Arbitrary.map((pairs) => R.fromEntries(pairs)));
     const Content = S.Literals(["", "echo hi", "a\nb", "  indented"]);
     const Document = S.Literals(["", "#!/bin/sh\n", "user line\nsecond\n"]);
 
     it.prop(
       "attributes survive a reconcile round trip and reach a fixed point",
-      [Document, styleArb, attrsArb, Content],
+      [Document, styleArb, attrsUniqueByNameSoFromEntriesCannotCollapse, Content],
       ([text, commentStyle, attributes, content]) => {
         const sectionId = SectionId.make({ key: "alpha", commentStyle });
         const declared = sectionId.section(content, attributes);
