@@ -797,3 +797,19 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a gate runner that reads `MemAvailable` before starting a lane and reports an
   environment hold instead of a red. The publish went through once memory recovered above 20 GiB with no
   kills for two minutes.
+
+## 2026-11-23: every Lambda deploy re-applies the role policies and the function URL
+
+- **Doing:** CloudTrail read 1 for the tksr deploy, which updated the code of all 11 fleet functions.
+- **Evidence:** the deploy wrote `iam:PutRolePolicy` 11 times and `iam:AttachRolePolicy` 11 times, and
+  `lambda:CreateFunctionUrlConfig` once, which failed with `ResourceConflictException` and was followed by
+  `lambda:UpdateFunctionUrlConfig`. The d8cba1c deploy on 22 Nov updated 6 functions and wrote the same
+  pattern: 6 of each IAM call. Its window has no URL call because the webhook function was not in it. The
+  provider source, `@alchemy.run/aws` 2.0.0-beta.87 `Lambda/Function.ts`, explains both. Its update path
+  ensures the role and re-puts each binding policy on every update. Its URL step calls create first and
+  falls back to update on a conflict. Both are therefore standing provider behaviour, not drift. In both
+  windows every write stayed on the functions, their `CiRunners-*-prod-*` roles and their log groups, with
+  no `AccessDenied`.
+- **Would have prevented it:** a CloudTrail read that knows this reconcile shape. It should count one put
+  and one attach per updated function, plus a create→update pair for a function with a URL, as expected,
+  and flag only counts or targets outside that shape.
