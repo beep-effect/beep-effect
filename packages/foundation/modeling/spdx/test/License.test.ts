@@ -7,6 +7,11 @@ import * as Exit from "effect/Exit";
 import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 
+const typedFailurePreservingTraceAnnotations = (
+  error: InvalidSpdxExpressionError,
+  cause: Cause.Cause<InvalidSpdxExpressionError>
+): Cause.Cause<InvalidSpdxExpressionError> => Cause.annotate(Cause.fail(error), Cause.annotations(cause));
+
 describe("License", () => {
   it.effect("makes a known license id", () =>
     Effect.gen(function* () {
@@ -39,42 +44,39 @@ describe("License", () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(License.parse("NOT-A-LICENSE"));
       const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-      // Preserve runtime tracing metadata while checking the expected typed failure.
       assertExitFailure(
         exit,
-        Cause.annotate(
-          Cause.fail(InvalidSpdxExpressionError.make({ input: "NOT-A-LICENSE" })),
-          Cause.annotations(cause)
-        )
+        typedFailurePreservingTraceAnnotations(InvalidSpdxExpressionError.make({ input: "NOT-A-LICENSE" }), cause)
       );
-      // the failure is the typed error, never a defect
       const error = yield* Effect.flip(License.parse("NOT-A-LICENSE"));
-      assert.instanceOf(error, InvalidSpdxExpressionError);
+      assert.instanceOf(error, InvalidSpdxExpressionError, "the failure is the typed error, never a defect");
       assert.strictEqual(error._tag, "InvalidSpdxExpressionError");
       assert.strictEqual(error.input, "NOT-A-LICENSE");
     })
   );
-  it.effect("rejects a malformed LicenseRef as a typed failure, never a defect", () =>
-    Effect.gen(function* () {
-      // spaces are not valid idstring characters
-      const exit = yield* Effect.exit(License.parse("LicenseRef-has spaces"));
-      const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-      // Preserve runtime tracing metadata while checking the expected typed failure.
-      assertExitFailure(
-        exit,
-        Cause.annotate(
-          Cause.fail(InvalidSpdxExpressionError.make({ input: "LicenseRef-has spaces" })),
-          Cause.annotations(cause)
-        )
-      );
-    })
+  it.effect(
+    "rejects a malformed LicenseRef (a space is not an idstring character) as a typed failure, never a defect",
+    () =>
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(License.parse("LicenseRef-has spaces"));
+        const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
+        assertExitFailure(
+          exit,
+          typedFailurePreservingTraceAnnotations(
+            InvalidSpdxExpressionError.make({ input: "LicenseRef-has spaces" }),
+            cause
+          )
+        );
+      })
   );
   it("predicates read the catalog synchronously", () => {
     assert.isTrue(License.isKnownId("Apache-2.0"));
     assert.isTrue(License.isDeprecatedId("GPL-3.0"));
     assert.isFalse(License.isKnownId("NOT-A-LICENSE"));
-    // a grammatically valid LicenseRef is not a catalog member
-    assert.isFalse(License.isKnownId("LicenseRef-MyProprietary"));
+    assert.isFalse(
+      License.isKnownId("LicenseRef-MyProprietary"),
+      "a grammatically valid LicenseRef is not a catalog member"
+    );
     assert.isFalse(License.isDeprecatedId("MIT"));
   });
   it("exposes the LicenseRef grammar predicate", () => {

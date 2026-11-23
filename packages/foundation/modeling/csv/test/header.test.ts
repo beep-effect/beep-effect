@@ -1,6 +1,3 @@
-// The header view: headings become own keys (even `__proto__`), an empty or repeated heading fails with its
-// finding, the header is checked once in one pass, and rows written back read back as the same rows.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import { DuplicateHeader, EmptyHeader } from "@beep/csv/CsvDiagnostic.schema";
 import { CsvFixedDelimiter, CsvFixedEncoding, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
@@ -89,10 +86,8 @@ describe("header findings", () => {
     assertTrue(Str.includes('heading 2 repeats "a" from heading 1')(rows.failure.message));
   });
 
-  // A header that counts how often its headings are read: a check that scans the header again per heading reads it
-  // about n²/2 times, where one pass and one map lookup per heading read it a small constant times n.
   const index = /^\d+$/;
-  const counted = (header: CsvRecord) => {
+  const countingHeadingReads = (header: CsvRecord) => {
     let reads = 0;
     const proxy = new Proxy(header, {
       get: (target, key, receiver) => {
@@ -109,9 +104,12 @@ describe("header findings", () => {
     assertTrue(Result.isFailure(decodeRows(`${Str.repeat(99_999)(",")}\n`)), "the read fails");
     const n = 10_000;
     for (const header of [distinct(n), A.replicate("", n), A.replicate("a", n)]) {
-      const { header: watched, reads } = counted(header);
+      const { header: watched, reads } = countingHeadingReads(header);
       checkHeader(watched);
-      assertTrue(reads() <= 4 * n, `checking ${n} headings read them ${reads()} times`);
+      assertTrue(
+        reads() <= 4 * n,
+        `checking ${n} headings read them ${reads()} times; a rescan per heading reads about n²/2, one pass a constant times n`
+      );
     }
   });
 

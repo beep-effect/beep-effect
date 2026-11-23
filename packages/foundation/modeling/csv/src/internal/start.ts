@@ -1,6 +1,3 @@
-// A read's start, shared by whole reads and streams: an optional byte-order mark, then, when the options honour one,
-// an Excel `sep=` line naming the delimiter, then the text; and the delimiter the read settles on and the machine
-// rules it reads by.
 import { $CsvId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -24,10 +21,8 @@ const $I = $CsvId.create("internal/start");
 
 const sepLine = /^sep=([,;\t|])(\r\n|\n|\r)/;
 
-/** A start more input could still turn into a `sep=` line, or change its line break (`sep=;\r` may be `sep=;\r\n`). */
-const openSepLine = /^(?:s|se|sep|sep=|sep=[,;\t|]|sep=[,;\t|]\r)?$/;
+const couldStillBecomeASepLineOrLengthenItsLineBreak = /^(?:s|se|sep|sep=|sep=[,;\t|]|sep=[,;\t|]\r)?$/;
 
-/** A first line such as `sep=;`: the delimiter it names and how many units it spans. */
 const SepLine = S.Struct({
   delimiter: CsvDelimiter.pipe(S.annotateKey({ description: "The delimiter the line names" })),
   length: CsvIndex.pipe(S.annotateKey({ description: "Units the line spans, its line break included" })),
@@ -91,10 +86,10 @@ export const startDecided: {
 } = dual(
   2,
   (input: string, options: CsvReadOptions): boolean =>
-    Str.isNonEmpty(input) && !(options.excelSepHint && openSepLine.test(unmarked(input)))
+    Str.isNonEmpty(input) &&
+    !(options.excelSepHint && couldStillBecomeASepLineOrLengthenItsLineBreak.test(unmarked(input)))
 );
 
-/** The delimiter the options fix, or the one detected from the text's start, or the comma fallback. */
 const settleDelimiter = (text: string, options: CsvReadOptions): CsvDelimiterFound =>
   CsvDelimiterChoice.match(options.delimiter, {
     fixed: ({ delimiter }) => CsvDelimiterGiven.make({ delimiter }),

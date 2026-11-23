@@ -11,9 +11,7 @@ import { assert, describe, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import type { ComparatorOperator } from "@beep/semver/internal/order";
 
-// Parses `<operator>1.2.3-RC.0+007` (bare means `=`) and checks it formats
-// back with `=` elided.
-const assertComparatorRoundTrip = (operator: "" | ComparatorOperator): void => {
+const assertComparatorRoundTripElidingEquals = (operator: "" | ComparatorOperator): void => {
   const value = ComparatorParts.make({
     operator: operator === "" ? "=" : operator,
     version: { major: 1, minor: 2, patch: 3, prerelease: ["RC", 0], build: ["007"] },
@@ -90,7 +88,7 @@ describe("grammar coverage", () => {
       ];
       for (const [input, position] of cases)
         assert.deepStrictEqual(parseComparator(input), { ok: false, input, position });
-      for (const operator of ["", "=", ">", ">=", "<", "<="] as const) assertComparatorRoundTrip(operator);
+      for (const operator of ["", "=", ">", ">=", "<", "<="] as const) assertComparatorRoundTripElidingEquals(operator);
     })
   );
 
@@ -121,7 +119,7 @@ describe("grammar coverage", () => {
     })
   );
 
-  it.effect("rejects unconsumed range text and incomplete alternatives", () =>
+  it.effect("rejects unconsumed range text, incomplete alternatives and a suffix on a wildcard patch", () =>
     Effect.sync(() => {
       const cases: ReadonlyArray<readonly [string, number]> = [
         ["~>1", 1],

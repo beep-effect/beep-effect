@@ -1,43 +1,36 @@
-// From bytes to text. A byte-order mark names UTF-8 or UTF-16; otherwise valid UTF-8 is UTF-8 and anything else is
-// read as Windows-1252, the encoding Excel writes "CSV (Comma delimited)" in, as the app's old reader did. UTF-8 is
-// validated here, so the first invalid byte has an offset; `TextDecoder` with `fatal` would only throw.
+// decision: utf8-validated-with-offset
 import * as O from "effect/Option";
 import { CsvEncodingFallback, CsvEncodingFromBom, CsvEncodingValidUtf8 } from "../CsvRead.schema.ts";
 import type { CsvEncodingName } from "../CsvOptions.schema.ts";
 
-// crispen: kept as loops — it walks the bytes once and stops at the first invalid one, decoding each sequence's code
-// point to refuse overlong forms and surrogates; no Effect module validates UTF-8 with an offset.
+// decision: imperative-engine-loops
 
-/** Continuation bytes after each lead byte; 0 for a byte that cannot lead a multi-byte sequence. */
-const CONTINUATIONS = new Uint8Array(256);
-CONTINUATIONS.fill(1, 0xc2, 0xe0);
-CONTINUATIONS.fill(2, 0xe0, 0xf0);
-CONTINUATIONS.fill(3, 0xf0, 0xf5);
-/** The lead byte's payload bits, by continuation count. */
-const LEAD_MASK = [0, 0x1f, 0x0f, 0x07];
-/** The smallest code point each sequence length may carry; below it the form is overlong. */
-const MIN_CODE = [0, 0x80, 0x800, 0x10000];
+const NOT_A_LEAD_BYTE = 0;
+const CONTINUATIONS_AFTER_LEAD = new Uint8Array(256).fill(NOT_A_LEAD_BYTE);
+CONTINUATIONS_AFTER_LEAD.fill(1, 0xc2, 0xe0);
+CONTINUATIONS_AFTER_LEAD.fill(2, 0xe0, 0xf0);
+CONTINUATIONS_AFTER_LEAD.fill(3, 0xf0, 0xf5);
+const LEAD_PAYLOAD_MASK_BY_CONTINUATIONS = [0, 0x1f, 0x0f, 0x07];
+const OVERLONG_BELOW_BY_CONTINUATIONS = [0, 0x80, 0x800, 0x10000];
+const INVALID_SEQUENCE = -1;
 
-/** The code point of the `need` continuation bytes after a lead at `i`, or -1 when one is not a continuation. */
 const codePointAt = (bytes: Uint8Array, i: number, need: number): number => {
-  let code = (bytes[i] ?? 0) & (LEAD_MASK[need] ?? 0);
+  let code = (bytes[i] ?? 0) & (LEAD_PAYLOAD_MASK_BY_CONTINUATIONS[need] ?? 0);
   for (let k = 1; k <= need; k += 1) {
     const c = bytes[i + k] ?? 0;
-    if ((c & 0xc0) !== 0x80) return -1;
+    if ((c & 0xc0) !== 0x80) return INVALID_SEQUENCE;
     code = (code << 6) | (c & 0x3f);
   }
   return code;
 };
 
-/** Whether `code` is a Unicode scalar value in its shortest form for a sequence of `need` continuations. */
 const isShortestScalar = (code: number, need: number): boolean =>
-  code >= (MIN_CODE[need] ?? 0) && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff);
+  code >= (OVERLONG_BELOW_BY_CONTINUATIONS[need] ?? 0) && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff);
 
-/** Where the multi-byte sequence led at `i` ends, or -1 when it is not valid UTF-8. */
 const sequenceEnd = (bytes: Uint8Array, i: number): number => {
-  const need = CONTINUATIONS[bytes[i] ?? 0] ?? 0;
-  if (need === 0 || i + need >= bytes.length) return -1;
-  return isShortestScalar(codePointAt(bytes, i, need), need) ? i + need + 1 : -1;
+  const need = CONTINUATIONS_AFTER_LEAD[bytes[i] ?? 0] ?? NOT_A_LEAD_BYTE;
+  if (need === NOT_A_LEAD_BYTE || i + need >= bytes.length) return INVALID_SEQUENCE;
+  return isShortestScalar(codePointAt(bytes, i, need), need) ? i + need + 1 : INVALID_SEQUENCE;
 };
 
 /** The offset of the first byte that breaks UTF-8, or none when all of `bytes` is valid UTF-8. */
@@ -45,7 +38,7 @@ export const firstInvalidUtf8 = (bytes: Uint8Array): O.Option<number> => {
   let i = 0;
   while (i < bytes.length) {
     const next = (bytes[i] ?? 0) < 0x80 ? i + 1 : sequenceEnd(bytes, i);
-    if (next < 0) return O.some(i);
+    if (next === INVALID_SEQUENCE) return O.some(i);
     i = next;
   }
   return O.none();

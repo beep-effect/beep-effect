@@ -159,8 +159,7 @@ export type RawExpression =
   | { readonly kind: "and"; readonly left: RawExpression; readonly right: RawExpression }
   | { readonly kind: "or"; readonly left: RawExpression; readonly right: RawExpression };
 
-// Token kinds as plain numeric constants — `const enum` is disallowed under
-// `isolatedModules`, and a runtime `enum` would leak into the emit.
+// decision: parser-undefined-rejection-numeric-tokens
 const TOKEN_OPEN_PAREN = 0;
 const TOKEN_CLOSE_PAREN = 1;
 const TOKEN_PLUS = 2;
@@ -188,48 +187,35 @@ interface Token {
 const DOCUMENT_REF_PREFIX = "DocumentRef-";
 const LICENSE_REF_PREFIX = "LicenseRef-";
 
-// idstring = 1*(ALPHA / DIGIT / "-" / "." ) — the SPDX Appendix IV character
-// class. Reuse one expression for each one-character slice.
-const ID_CHAR = /^[0-9A-Za-z.-]$/;
+const SPDX_IDSTRING_CHAR = /^[0-9A-Za-z.-]$/;
 function isIdChar(char: string): boolean {
-  return ID_CHAR.test(char);
+  return SPDX_IDSTRING_CHAR.test(char);
 }
 
-/**
- * Scan an SPDX expression into a flat token stream.
- *
- * **Details**
- *
- * Iterative — no recursion,
- * so it cannot overflow the stack regardless of input length. Returns
- * `undefined` on the first unexpected character (or a `+` preceded by a space,
- * which SPDX forbids) rather than throwing, so malformed input flows through
- * the caller's typed error channel.
- */
+const ONLY_TOKEN_SEPARATOR_ASCII_SPACE = " ";
+const REJECTED_INDEX = -1;
+
 function scan(source: string): ReadonlyArray<Token> | undefined {
   const tokens: Token[] = [];
   let i = 0;
   const n = source.length;
   while (i < n) {
-    // Whitespace: SPDX permits only the ASCII space between tokens.
-    if (source[i] === " ") {
+    if (source[i] === ONLY_TOKEN_SEPARATOR_ASCII_SPACE) {
       i++;
       continue;
     }
     const next = scanToken(source, i, tokens);
-    if (next < 0) return undefined;
+    if (next === REJECTED_INDEX) return undefined;
     i = next;
   }
   return tokens;
 }
 
-// Shared immutable punctuation tokens — one allocation per kind, not per hit.
 const OPEN_PAREN_TOKEN: Token = { type: TOKEN_OPEN_PAREN, value: "(" };
 const CLOSE_PAREN_TOKEN: Token = { type: TOKEN_CLOSE_PAREN, value: ")" };
 const PLUS_TOKEN: Token = { type: TOKEN_PLUS, value: "+" };
 const COLON_TOKEN: Token = { type: TOKEN_COLON, value: ":" };
 
-// The single-character punctuation token for `char`, if it is one.
 function punctuationToken(char: string): Token | undefined {
   if (char === "(") return OPEN_PAREN_TOKEN;
   if (char === ")") return CLOSE_PAREN_TOKEN;
@@ -238,37 +224,28 @@ function punctuationToken(char: string): Token | undefined {
   return undefined;
 }
 
-// Scan the one non-space token starting at `i`, appending it to `tokens`.
-// Returns the index just past it, or `-1` on an unexpected character or a
-// `+` preceded by a space (a `+` must abut its license id).
 function scanToken(source: string, i: number, tokens: Token[]): number {
   const char = Str.slice(i, i + 1)(source);
-  if (char === "+" && i > 0 && source[i - 1] === " ") return -1;
+  const plusDetachedFromItsId = char === "+" && i > 0 && source[i - 1] === ONLY_TOKEN_SEPARATOR_ASCII_SPACE;
+  if (plusDetachedFromItsId) return REJECTED_INDEX;
   const punctuation = punctuationToken(char);
   if (punctuation !== undefined) {
     tokens.push(punctuation);
     return i + 1;
   }
-  if (!isIdChar(char)) return -1;
-  return scanIdString(source, i, tokens);
+  if (!isIdChar(char)) return REJECTED_INDEX;
+  return scanMaximalIdStringAfterIdChar(source, i, tokens);
 }
 
-// Scan the maximal idstring run starting at `i` (whose first character is
-// already known to be an id character), appending it as an id or keyword
-// token. Returns the index just past the run.
-function scanIdString(source: string, i: number, tokens: Token[]): number {
+function scanMaximalIdStringAfterIdChar(source: string, i: number, tokens: Token[]): number {
   const n = source.length;
   let j = i + 1;
   while (j < n && isIdChar(Str.slice(j, j + 1)(source))) j++;
-  const value = Str.slice(i, j)(source);
-  // AND / OR / WITH are keywords only as whole tokens; a maximal
-  // idstring run means an id merely containing them (e.g. the "or" in
-  // `GPL-2.0-or-later`) is never mistaken for an operator.
-  tokens.push({ type: keywordType(Str.toUpperCase(value)), value });
+  const wholeToken = Str.slice(i, j)(source);
+  tokens.push({ type: keywordType(Str.toUpperCase(wholeToken)), value: wholeToken });
   return j;
 }
 
-// The token kind for an upper-cased idstring: an operator keyword or a plain id.
 function keywordType(upper: string): TokenType {
   if (upper === "AND") return TOKEN_AND;
   if (upper === "OR") return TOKEN_OR;
@@ -276,8 +253,6 @@ function keywordType(upper: string): TokenType {
   return TOKEN_ID;
 }
 
-// The recursive-descent engine; `undefined` is its internal rejection signal,
-// lifted to `Option` at the exported boundary by {@link parse}.
 function parseOrUndefined(input: string): RawExpression | undefined {
   const tokens = scan(input);
   if (tokens === undefined) return undefined;
@@ -331,19 +306,13 @@ function parseOrUndefined(input: string): RawExpression | undefined {
         pos++;
         return inner;
       }
-      return parseLicenseLike();
+      return parseNonRecursiveSimpleOrWithExpression();
     } finally {
       depth--;
     }
   }
 
-  // A simple expression (`LICENSE ["+"]` or a `LicenseRef`/`DocumentRef`
-  // reference), optionally followed by `WITH <exception>` — the ABNF's
-  // `simple-expression` and `with-expression`. Only a cataloged id may carry
-  // the `+` marker; a `+` after a reference is left unconsumed and rejected by
-  // the caller's trailing-token check, matching the oracle. Non-recursive, so
-  // it needs no depth guard of its own.
-  function parseLicenseLike(): RawExpression | undefined {
+  function parseNonRecursiveSimpleOrWithExpression(): RawExpression | undefined {
     const head = peek();
     if (head === undefined || head.type !== TOKEN_ID) return undefined;
     const license = parseSimpleLicense(head.value);
@@ -352,16 +321,14 @@ function parseOrUndefined(input: string): RawExpression | undefined {
     return parseWithException(license);
   }
 
-  // Dispatch the head id to its simple-expression form.
   function parseSimpleLicense(value: string): RawSimpleLicense | undefined {
     if (Str.startsWith(DOCUMENT_REF_PREFIX)(value)) return parseDocumentLicenseRef(value);
     if (Str.startsWith(LICENSE_REF_PREFIX)(value)) return parseBareLicenseRef(value);
     return parseCatalogedLicense(value);
   }
 
-  // DocumentRef-<idstring> ":" LicenseRef-<idstring>
   function parseDocumentLicenseRef(value: string): RawSimpleLicense | undefined {
-    pos++; // consume DocumentRef- idstring
+    pos++;
     if (peek()?.type !== TOKEN_COLON) return undefined;
     pos++;
     const refToken = peek();
@@ -370,7 +337,7 @@ function parseOrUndefined(input: string): RawExpression | undefined {
     }
     const full = `${value}:${refToken.value}`;
     if (!License.isLicenseRef(full)) return undefined;
-    pos++; // consume LicenseRef- idstring
+    pos++;
     return {
       kind: "licenseRef",
       documentRef: Str.slice(DOCUMENT_REF_PREFIX.length)(value),
@@ -378,25 +345,22 @@ function parseOrUndefined(input: string): RawExpression | undefined {
     };
   }
 
-  // Bare LicenseRef-<idstring>
   function parseBareLicenseRef(value: string): RawSimpleLicense | undefined {
     if (!License.isLicenseRef(value)) return undefined;
-    pos++; // consume LicenseRef- idstring
+    pos++;
     return { kind: "licenseRef", documentRef: undefined, ref: Str.slice(LICENSE_REF_PREFIX.length)(value) };
   }
 
-  // A cataloged SPDX license id, optionally `+`.
   function parseCatalogedLicense(value: string): RawSimpleLicense | undefined {
     if (!License.isKnownId(value)) return undefined;
-    pos++; // consume license id
+    pos++;
     const plus = peek()?.type === TOKEN_PLUS;
     if (plus) pos++;
     return { kind: "license", id: value, plus };
   }
 
-  // `WITH <exception>` after a simple expression; the next token is `WITH`.
   function parseWithException(license: RawSimpleLicense): RawExpression | undefined {
-    pos++; // consume WITH
+    pos++;
     const exceptionToken = peek();
     if (
       exceptionToken === undefined ||
@@ -405,13 +369,13 @@ function parseOrUndefined(input: string): RawExpression | undefined {
     ) {
       return undefined;
     }
-    pos++; // consume exception id
+    pos++;
     return { kind: "with", license, exception: exceptionToken.value };
   }
 
   const node = parseOr();
-  // A valid parse consumes every token; leftover tokens mean trailing garbage.
-  if (node === undefined || pos !== tokens.length) return undefined;
+  const trailingTokensLeft = pos !== tokens.length;
+  if (node === undefined || trailingTokensLeft) return undefined;
   return node;
 }
 
