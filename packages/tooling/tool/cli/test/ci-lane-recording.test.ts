@@ -35,6 +35,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as Sink from "effect/Sink";
@@ -169,9 +170,32 @@ const capturedStdout = Effect.gen(function* () {
   return { chunks, layer };
 });
 
-const withRecorder = <A, E, R>(stdio: Layer.Layer<Stdio.Stdio>, effect: Effect.Effect<A, E, R | CiLaneRecorder>) =>
+const failingStdout = Stdio.layerTest({
+  stdout: () =>
+    Sink.forEach(() =>
+      Effect.fail(
+        PlatformError.systemError({ _tag: "Unknown", module: "Stdio", method: "stdout", description: "EPIPE" })
+      )
+    ),
+});
+
+const laneLogAt = (target: string) =>
+  Layer.effect(
+    FileSystem.FileSystem,
+    Effect.map(FileSystem.FileSystem, (fs) => ({
+      ...fs,
+      open: (file: string, options?: Parameters<FileSystem.FileSystem["open"]>[1]) =>
+        fs.open(Str.endsWith("/lane.log")(file) ? target : file, options),
+    }))
+  );
+
+const withRecorder = <A, E, R>(
+  stdio: Layer.Layer<Stdio.Stdio>,
+  effect: Effect.Effect<A, E, R | CiLaneRecorder>,
+  files: Layer.Layer<never> | Layer.Layer<FileSystem.FileSystem, never, FileSystem.FileSystem> = Layer.empty
+) =>
   CiLaneRecorder.layer.pipe(
-    Layer.provide(stdio),
+    Layer.provide(Layer.merge(stdio, files)),
     Layer.build,
     Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
     Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -335,6 +359,84 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("a recorded lane step", 
       );
       const exit = O.getOrThrow(failure);
       deepStrictEqual([exit.exitCode, exit.gate, exit.subject], [2, CI_LANE_GATE, "docs-policy"]);
+    })
+  );
+
+  it.effect("a job log that stops taking output is reported and the step keeps the lane's exit code", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-lane-recording-stdout-" });
+      const root = yield* fs.realPath(temp);
+      const outcome = yield* withRecorder(
+        failingStdout,
+        record(requestFor(root, childScript(["::error::red", "more"], 3))).pipe(
+          Effect.andThen((recording) => Effect.map(TestConsole.errorLines, (lines) => ({ recording, lines })))
+        )
+      );
+      strictEqual(outcome.recording.exitCode, 3);
+      strictEqual(outcome.recording.commands.errors, 1);
+      deepStrictEqual(A.map(outcome.lines, String), [
+        "[ci] lane recording: the job log stopped taking the lane's output; the lane ran to the end.",
+      ]);
+      const found = yield* findJobGateRecords(root);
+      deepStrictEqual(
+        A.map(found, (entry) => entry.report.reason),
+        ["errored"]
+      );
+      const passing = yield* withRecorder(failingStdout, recordCiLaneStep(requestFor(root, childScript(["ok"], 0))));
+      strictEqual(passing, undefined);
+    })
+  );
+
+  it.effect("a lane log that cannot be opened records the lane without one", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-lane-recording-nolog-" });
+      const root = yield* fs.realPath(temp);
+      const stdout = yield* capturedStdout;
+      const outcome = yield* withRecorder(
+        stdout.layer,
+        record(requestFor(root, childScript(["::notice::kept"], 4))).pipe(
+          Effect.andThen((recording) => Effect.map(TestConsole.errorLines, (lines) => ({ recording, lines })))
+        ),
+        laneLogAt("/home/alice/no-such-directory/lane.log")
+      );
+      strictEqual(outcome.recording.exitCode, 4);
+      strictEqual(outcome.recording.commands.notices, 1);
+      deepStrictEqual(A.map(outcome.lines, String), [
+        "[ci] lane recording: the lane log could not be opened; the lane is recorded without one.",
+      ]);
+      const chunks = yield* Ref.get(stdout.chunks);
+      assertTrue(Str.includes("::notice::kept")(A.join(chunks, "")));
+      const found = yield* findJobGateRecords(root);
+      deepStrictEqual(
+        A.map(found, (entry) => entry.report.reason),
+        ["errored"]
+      );
+    })
+  );
+
+  it.effect("a lane log whose writes fail is reported and the step keeps the lane's exit code", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-lane-recording-full-" });
+      const root = yield* fs.realPath(temp);
+      const stdout = yield* capturedStdout;
+      const outcome = yield* withRecorder(
+        stdout.layer,
+        record(requestFor(root, childScript(["::warning::disk", "full"], 0))).pipe(
+          Effect.andThen((recording) => Effect.map(TestConsole.errorLines, (lines) => ({ recording, lines })))
+        ),
+        laneLogAt("/dev/full")
+      );
+      strictEqual(outcome.recording.exitCode, 0);
+      strictEqual(outcome.recording.commands.warnings, 1);
+      deepStrictEqual(A.map(outcome.lines, String), [
+        "[ci] lane recording: the lane log stopped taking the lane's output; the record keeps what it got.",
+      ]);
+      const chunks = yield* Ref.get(stdout.chunks);
+      assertTrue(Str.includes("::warning::disk")(A.join(chunks, "")));
+      assertTrue(outcome.recording.record.pipe(O.isSome));
     })
   );
 });

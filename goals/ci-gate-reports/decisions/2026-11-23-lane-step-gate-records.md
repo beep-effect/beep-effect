@@ -11,7 +11,7 @@ On a GitHub runner, `beep ci lane <id>` records its lane through a child: the CL
 
 **Why a child process.** Lane steps spawn their tools with inherited stdio from more than a dozen call sites (`runLaneProcess`, `Quality/Tasks.ts` step runners, Turbo, partition runners). Re-running the CLI as a child is the one place that sees the whole stream without changing any of them. It costs one extra CLI start per lane step.
 
-**Measurement never decides the step.** Only a failure to start the child fails the step. Searching the checkout, counting annotations and writing the record print one `[ci] lane recording:` line and keep the child's exit code.
+**Measurement never decides the step.** Only a failure to start the child or to read its exit code fails the step. Searching the checkout, counting annotations, opening or writing the scratch log, the job-log tee, reading the output to its end and writing the record each print one `[ci] lane recording:` line on failure and keep the child's exit code. A failed tee or log write stops only that copy: the recorder keeps reading the child's output so the child never blocks, and a record written without a log has an empty one. The scratch directory's removal ignores failures.
 
 **Output that outlives the lane.** The child is detached, so it leads its own process group. Once it exits, the recorder waits at most 5 s (`CI_LANE_DRAIN_GRACE_MS`) for its output to close, then stops reading and stops the group. This bounds the descendant-holding-the-pipe case that `run_lane`'s `setsid` group kill already handles.
 

@@ -30,6 +30,7 @@ import { RunSource } from "@beep/repo-gate-run/GateRecorder";
 import { GateRunRequest, runGate } from "@beep/repo-gate-run/GateRun";
 import { repoPointerTableFor } from "@beep/repo-gate-run/RepoPointers";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -529,13 +530,41 @@ const LANE_LOG = "lane.log";
 const laneConsoleSettings = ConsoleSettings.make({ audience: "ci" });
 
 const reportMeasurementFailure = (error: CiCommandError) =>
-  Console.error(`[ci] lane recording: ${error.message}`).pipe(Effect.as(O.none<never>()));
+  recordingLine(error.message).pipe(Effect.as(O.none<never>()));
 
-const streamLane = Effect.fnUntraced(function* (request: CiLaneRecordingRequest, logFile: string) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+const recordingLine = (message: string) => Console.error(`[ci] lane recording: ${message}`);
+
+const writeUntilStopped = <E>(stopped: Ref.Ref<boolean>, write: Effect.Effect<void, E>) =>
+  write.pipe(
+    Effect.catch(constant(Ref.set(stopped, true))),
+    Effect.when(Ref.get(stopped).pipe(Effect.map(Bool.not))),
+    Effect.asVoid
+  );
+
+const reportStopped = (stopped: Ref.Ref<boolean>, message: string) =>
+  recordingLine(message).pipe(Effect.when(Ref.get(stopped)), Effect.asVoid);
+
+interface LaneLog {
+  readonly file: FileSystem.File;
+  readonly path: string;
+}
+
+const openLaneLog = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scratch = yield* fs.makeTempDirectory({ prefix: "beep-ci-lane-" });
+  yield* Effect.addFinalizer(() => fs.remove(scratch, { recursive: true, force: true }).pipe(Effect.ignore));
+  const logPath = path.join(scratch, LANE_LOG);
+  const file = yield* fs.open(logPath, { flag: "w" });
+  return { path: logPath, file } satisfies LaneLog;
+});
+
+const streamLane = Effect.fnUntraced(function* (request: CiLaneRecordingRequest, laneLog: O.Option<LaneLog>) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const stdio = yield* Stdio.Stdio;
   const scan = yield* Ref.make(WorkflowCommandScan.make({ carry: "", tally: emptyWorkflowCommandTally }));
+  const jobLogStopped = yield* Ref.make(false);
+  const laneLogStopped = yield* Ref.make(false);
   const decoder = new TextDecoder();
   const handle = yield* spawner.spawn(
     ChildProcess.make(request.self.command, request.self.args, {
@@ -546,11 +575,20 @@ const streamLane = Effect.fnUntraced(function* (request: CiLaneRecordingRequest,
   );
   const drain = yield* Effect.forkScoped(
     handle.all.pipe(
-      Stream.tap((chunk) => Stream.run(Stream.make(chunk), stdio.stdout())),
-      Stream.tap((chunk) =>
-        Ref.update(scan, (state) => scanWorkflowCommands(state, decoder.decode(chunk, { stream: true })))
+      Stream.runForEach((chunk) =>
+        Effect.all(
+          [
+            writeUntilStopped(jobLogStopped, Stream.run(Stream.make(chunk), stdio.stdout())),
+            O.match(laneLog, {
+              onNone: constant(Effect.void),
+              onSome: (log) => writeUntilStopped(laneLogStopped, log.file.writeAll(chunk)),
+            }),
+            Ref.update(scan, (state) => scanWorkflowCommands(state, decoder.decode(chunk, { stream: true }))),
+          ],
+          { concurrency: 1, discard: true }
+        )
       ),
-      Stream.run(fs.sink(logFile))
+      Effect.catch(constant(recordingLine("the lane's output could not be read to the end.")))
     )
   );
   const exitCode = yield* handle.exitCode;
@@ -560,11 +598,13 @@ const streamLane = Effect.fnUntraced(function* (request: CiLaneRecordingRequest,
       `[ci] ${request.lane}: the lane exited and its output stayed open ${request.drainGraceMs} ms more; its process group is stopped.`
     );
   }
+  yield* reportStopped(jobLogStopped, "the job log stopped taking the lane's output; the lane ran to the end.");
+  yield* reportStopped(laneLogStopped, "the lane log stopped taking the lane's output; the record keeps what it got.");
   const scanned = yield* Ref.get(scan);
   return { exitCode, commands: finishWorkflowCommandScan(scanned) };
 }, Effect.scoped);
 
-const writeLaneRecord = Effect.fnUntraced(function* (repoRoot: string, run: CiLaneRun, logFile: string) {
+const writeLaneRecord = Effect.fnUntraced(function* (repoRoot: string, run: CiLaneRun, laneLog: O.Option<LaneLog>) {
   const fs = yield* FileSystem.FileSystem;
   const target = ciLaneRecordTarget(run.runId);
   yield* runGate(
@@ -575,23 +615,27 @@ const writeLaneRecord = Effect.fnUntraced(function* (repoRoot: string, run: CiLa
       subject: O.some(run.lane),
       pointers: O.some(repoPointerTableFor(target)),
     }),
-    fs.stream(logFile)
+    O.match(laneLog, { onNone: constant(Stream.empty), onSome: (log) => fs.stream(log.path) })
   ).pipe(withGateServices(GateServicesConfig.make({ repoRoot, settings: laneConsoleSettings })));
   return target;
 });
 
 const recordLane = Effect.fn("CiLaneRecording.recordLane")(function* (request: CiLaneRecordingRequest) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const before = yield* Effect.result(gateRecordStamps(request.repoRoot));
   const runId = yield* makeRunId;
   const fingerprint = yield* inputFingerprint(runId).pipe(Effect.orElseSucceed(constant(`local:${runId}`)));
   const startedAt = yield* DateTime.now;
-  const scratch = yield* fs
-    .makeTempDirectoryScoped({ prefix: "beep-ci-lane-" })
-    .pipe(CiCommandError.mapError("Failed to make the lane log's scratch directory."));
-  const logFile = path.join(scratch, LANE_LOG);
-  const streamed = yield* streamLane(request, logFile).pipe(
+  const laneLog = yield* openLaneLog().pipe(
+    Effect.asSome,
+    Effect.catch(
+      constant(
+        recordingLine("the lane log could not be opened; the lane is recorded without one.").pipe(
+          Effect.as(O.none<LaneLog>())
+        )
+      )
+    )
+  );
+  const streamed = yield* streamLane(request, laneLog).pipe(
     CiCommandError.mapError(`Failed to run ${A.join([request.self.command, ...request.self.args], " ")}.`)
   );
   const finishedAt = yield* DateTime.now;
@@ -611,7 +655,7 @@ const recordLane = Effect.fn("CiLaneRecording.recordLane")(function* (request: C
       Effect.flatMap(gateRecordStamps(request.repoRoot), (after) =>
         stepWroteGateRecords(stamps, after)
           ? Effect.succeedNone
-          : Effect.asSome(writeLaneRecord(request.repoRoot, run, logFile))
+          : Effect.asSome(writeLaneRecord(request.repoRoot, run, laneLog))
       )
     ),
     Effect.catchTag("CiCommandError", reportMeasurementFailure)
