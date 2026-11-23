@@ -112,6 +112,8 @@ export const FleetDeliveryId = S.String.check(S.isPattern(/^\d+$/u)).pipe(
 );
 
 /**
+ * Decimal digits only: delivery ids outgrow a safe JavaScript number, so they stay strings.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -159,6 +161,8 @@ export const FleetCapPhase = LiteralKit(["overlap", "primary"]).pipe(
 );
 
 /**
+ * Selects which of a pool's two caps, `overlap` or `primary`, the check reads.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -260,6 +264,8 @@ export const FleetRunStatus = LiteralKit(["queued", "in_progress"]).pipe(
 );
 
 /**
+ * `queued` or `in_progress`, the two statuses whose runs can hold a waiting job.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -286,6 +292,8 @@ export const FleetRunsQuery = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetRunsQuery", { description: "A workflow-run listing by status or creation time." }));
 
 /**
+ * `ByStatus` lists runs in one status; `CreatedSince` lists runs created after an epoch-millisecond time.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -478,6 +486,8 @@ export const FleetHookSource = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetHookSource", { description: "A repository hook, or no hook source." }));
 
 /**
+ * `RepositoryHook` names the hook whose deliveries are read; `NoHook` reads none.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -564,6 +574,8 @@ export const FleetDeliveryEvidence = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetDeliveryEvidence", { description: "What the hook deliveries say about one job." }));
 
 /**
+ * Five cases: `Delivered` and `DeliveryFailed` with the delivery and its status code, `NotDelivered` with the window searched, `Unreadable` with the reason, and `Gate`.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -595,6 +607,8 @@ export const FleetClassification = LiteralKit(["lost", "unknown", "gate"]).pipe(
 );
 
 /**
+ * One of `lost`, `unknown` or `gate`.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -620,6 +634,8 @@ export const FleetNoLaunchReason = LiteralKit(["launches-cover-rank", "no-progre
 );
 
 /**
+ * One of `launches-cover-rank`, `no-progress` or `queued-two-hours`.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -647,6 +663,8 @@ export const FleetVerdictTag = LiteralKit([
 ]).pipe($I.annoteSchema("FleetVerdictTag", { description: "A verdict tag, in precedence order." }));
 
 /**
+ * Listed with `Stuck` first and `Waiting` last; an earlier tag wins.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -678,6 +696,8 @@ export const FleetVerdict = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetVerdict", { description: "One queued job's verdict." }));
 
 /**
+ * Six cases from `Stuck`, with idle runner ids, to `Waiting`, with launches and rank; `NoLaunch` also names its reason.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -893,6 +913,8 @@ export const FleetPreviousRun = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetPreviousRun", { description: "The previous scheduled run, none, or unreadable." }));
 
 /**
+ * `Found` carries the run id and creation times; `NoneFound` and `Unreadable` say why there is none.
+ *
  * @category models
  * @since 0.0.0
  */
