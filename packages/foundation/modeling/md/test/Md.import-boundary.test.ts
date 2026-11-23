@@ -65,6 +65,7 @@ const NON_BRIDGE_ENTRIES = [
   "Md.model.ts",
   "Md.render.ts",
   "Md.safe.ts",
+  "MdSections.ts",
 ];
 
 const PARSER_PACKAGES = ["@beep/markdown", "@beep/yaml", "@beep/toml", "@beep/jsonc"];

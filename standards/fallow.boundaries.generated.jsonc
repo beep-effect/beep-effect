@@ -4985,7 +4985,6 @@
         "from": "@beep/rdf",
         "allow": [
           "@beep/identity",
-          "@beep/md",
           "@beep/rdf",
           "@beep/schema",
           "@beep/spdx",
@@ -4996,7 +4995,6 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/md",
           "@beep/rdf",
           "@beep/schema",
           "@beep/spdx",

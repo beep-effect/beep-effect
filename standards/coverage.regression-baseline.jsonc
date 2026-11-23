@@ -28502,6 +28502,18 @@
             "functions": 9
           }
         },
+        "packages/foundation/modeling/md/src/MdSections.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/md/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -36648,18 +36660,6 @@
       },
       "files": {
         "packages/foundation/modeling/rdf/src/Adapters/DocumentAnnotation.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

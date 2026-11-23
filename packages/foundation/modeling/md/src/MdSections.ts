@@ -4,16 +4,18 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $RdfId } from "@beep/identity/packages";
-import { Block, Heading, HeadingLevel } from "@beep/md/Md.model";
+import { $MdId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { getPoPattern, PoPattern } from "@beep/schema/PatternOntology";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { DOCO_NAMESPACE } from "../Vocab/Doco.ts";
-import type { Document } from "@beep/md/Md.model";
+import { Block, Heading, HeadingLevel } from "./Md.model.ts";
+import type { Document } from "./Md.model.ts";
 
-const $I = $RdfId.create("Adapters/MdSections");
+const $I = $MdId.create("MdSections");
+
+const docoSection = iri("doco:Section");
 
 /**
  * Source-block path within one immutable Md document revision.
@@ -26,7 +28,7 @@ const $I = $RdfId.create("Adapters/MdSections");
  * **Example** (Validate a source path)
  *
  * ```ts
- * import { MdNodeId } from "@beep/rdf/Adapters/MdSections"
+ * import { MdNodeId } from "@beep/md/MdSections"
  * import * as S from "effect/Schema"
  * console.log(S.is(MdNodeId)("md-v1/b/2"))
  * ```
@@ -58,7 +60,7 @@ export type MdNodeId = typeof MdNodeId.Type;
  * **Example** (Address the third source block)
  *
  * ```ts
- * import { mdNodeId } from "@beep/rdf/Adapters/MdSections"
+ * import { mdNodeId } from "@beep/md/MdSections"
  * console.log(mdNodeId(2)) // "md-v1/b/2"
  * ```
  *
@@ -73,7 +75,7 @@ export const mdNodeId = (index: number): MdNodeId => `md-v1/b/${index}`;
  * **Example** (Retain source syntax)
  *
  * ```ts
- * import { MdSourceBlock, mdNodeId } from "@beep/rdf/Adapters/MdSections"
+ * import { MdSourceBlock, mdNodeId } from "@beep/md/MdSections"
  * import { Heading } from "@beep/md/Md.model"
  * import * as O from "effect/Option"
  * const source = MdSourceBlock.make({ id: mdNodeId(0), node: Heading.make({ level: 1, children: [] }), pattern: O.some("block") })
@@ -97,7 +99,7 @@ export class MdSourceBlock extends S.Opaque<MdSourceBlock, { readonly brand: uni
  * **Example** (Read the empty section tree)
  *
  * ```ts
- * import { foldMdSections } from "@beep/rdf/Adapters/MdSections"
+ * import { foldMdSections } from "@beep/md/MdSections"
  * import { Document } from "@beep/md/Md.model"
  * console.log(foldMdSections(Document.make({ children: [] })).children.length) // 0
  * ```
@@ -108,7 +110,7 @@ export class MdSourceBlock extends S.Opaque<MdSourceBlock, { readonly brand: uni
 export class MdSection extends S.Opaque<MdSection, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("section"),
-    type: S.tag(`${DOCO_NAMESPACE}Section`),
+    type: S.tag(docoSection),
     heading: MdSourceBlock,
     level: HeadingLevel,
     children: S.Array(
@@ -134,7 +136,7 @@ export declare namespace MdSection {
    */
   export type Encoded = {
     readonly kind: "section";
-    readonly type: `${typeof DOCO_NAMESPACE}Section`;
+    readonly type: typeof docoSection;
     readonly heading: typeof MdSourceBlock.Encoded;
     readonly level: HeadingLevel;
     readonly children: ReadonlyArray<Encoded | typeof MdSourceBlock.Encoded>;
@@ -147,7 +149,7 @@ export declare namespace MdSection {
  * **Example** (Describe a skipped level)
  *
  * ```ts
- * import { MdHeadingLevelJump, mdNodeId } from "@beep/rdf/Adapters/MdSections"
+ * import { MdHeadingLevelJump, mdNodeId } from "@beep/md/MdSections"
  * console.log(MdHeadingLevelJump.make({ id: mdNodeId(2), previous: 1, actual: 3 }).actual)
  * ```
  *
@@ -168,7 +170,7 @@ export class MdHeadingLevelJump extends S.Opaque<MdHeadingLevelJump, { readonly 
  * **Example** (Recognize a heading jump)
  *
  * ```ts
- * import { MdFoldDiagnostic, MdHeadingLevelJump, mdNodeId } from "@beep/rdf/Adapters/MdSections"
+ * import { MdFoldDiagnostic, MdHeadingLevelJump, mdNodeId } from "@beep/md/MdSections"
  * console.log(MdFoldDiagnostic.isAnyOf(["heading-level-jump"])(MdHeadingLevelJump.make({ id: mdNodeId(0), previous: 0, actual: 3 })))
  * ```
  *
@@ -192,7 +194,7 @@ export type MdFoldDiagnostic = typeof MdFoldDiagnostic.Type;
  * **Example** (Fold an empty document)
  *
  * ```ts
- * import { foldMdSections } from "@beep/rdf/Adapters/MdSections"
+ * import { foldMdSections } from "@beep/md/MdSections"
  * import { Document } from "@beep/md/Md.model"
  * console.log(foldMdSections(Document.make({ children: [] })).diagnostics.length) // 0
  * ```
@@ -206,14 +208,12 @@ export class MdSectionFold extends S.Opaque<MdSectionFold, { readonly brand: uni
   )
 ) {}
 
-// Find the matching constructor through its derived guard; schema annotations
-// provide context, never rhetoric inferred from a syntax tag.
-const patternOf = (node: Block): O.Option<PoPattern> =>
+const constructorPatternOf = (node: Block): O.Option<PoPattern> =>
   A.findFirst(Block.members, (member) => S.is(member)(node)).pipe(O.flatMap(getPoPattern));
 
 const fold = (document: Document): MdSectionFold => {
   const sources = A.map(document.children, (node, index) =>
-    MdSourceBlock.make({ id: mdNodeId(index), node, pattern: patternOf(node) })
+    MdSourceBlock.make({ id: mdNodeId(index), node, pattern: constructorPatternOf(node) })
   );
   let previous = 0;
   let diagnostics = A.empty<MdHeadingLevelJump>();
@@ -239,7 +239,7 @@ const fold = (document: Document): MdSectionFold => {
         children = A.append(
           children,
           MdSection.make({
-            type: `${DOCO_NAMESPACE}Section`,
+            type: docoSection,
             heading: source,
             level,
             children: nest(body),
@@ -268,7 +268,7 @@ const fold = (document: Document): MdSectionFold => {
  * **Example** (Recover an initial level jump)
  *
  * ```ts
- * import { foldMdSections } from "@beep/rdf/Adapters/MdSections"
+ * import { foldMdSections } from "@beep/md/MdSections"
  * import { Document, Heading } from "@beep/md/Md.model"
  * const tree = foldMdSections(Document.make({ children: [Heading.make({ level: 3, children: [] })] }))
  * console.log(tree.diagnostics.length) // 1

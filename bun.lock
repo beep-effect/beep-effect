@@ -3214,7 +3214,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
-        "@beep/md": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/spdx": "workspace:^",
         "@beep/text": "workspace:^",

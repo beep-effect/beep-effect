@@ -12,12 +12,6 @@
  */
 export * from "./Adapters/DocumentAnnotation.ts";
 /**
- * Md source identities and DOCO section folding.
- * @category folding
- * @since 0.0.0
- */
-export * from "./Adapters/MdSections.ts";
-/**
  * Web Annotation value models.
  *
  * @category models

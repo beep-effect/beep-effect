@@ -47,6 +47,7 @@
     "./Md.render": "./src/Md.render.ts",
     "./Md.safe": "./src/Md.safe.ts",
     "./Md.syntax": "./src/Md.syntax.ts",
+    "./MdSections": "./src/MdSections.ts",
     "./internal/*": "./src/internal/*.ts",
     "./package.json": "./package.json"
   },
@@ -74,6 +75,7 @@
       "./Md.render": "./dist/Md.render.js",
       "./Md.safe": "./dist/Md.safe.js",
       "./Md.syntax": "./dist/Md.syntax.js",
+      "./MdSections": "./dist/MdSections.js",
       "./internal/*": "./dist/internal/*.js",
       "./package.json": "./package.json"
     }

@@ -2612,6 +2612,9 @@
       "@beep/annotation/*": ["./packages/foundation/modeling/annotation/src/*"],
       "@beep/schema/Signal": [
         "./packages/foundation/modeling/schema/src/Signal.ts"
+      ],
+      "@beep/md/MdSections": [
+        "./packages/foundation/modeling/md/src/MdSections.ts"
       ]
     }
   }
