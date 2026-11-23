@@ -1,7 +1,3 @@
-// Receipt of a deep property sweep (BEEP_FC_NUM_RUNS > 0 only; see `propertySweepSelection` in
-// vitest.shared.ts): which property files this Vitest run executed and how many tests of each ran,
-// under `<package>/.beep/property-sweep/`. The unfiltered property lane compares it with the files
-// it expected (`CiPropertySweep` in @beep/repo-cli), so a file that did not run is a failure.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -37,7 +33,17 @@ const writeReceipt = Effect.fnUntraced(function* (modules: ReadonlyArray<TestMod
   yield* fs.writeFileString(path.join(directory, `${process.pid}.json`), text);
 });
 
-/** Vitest reporter of the deep property sweep: writes the receipt when the run ends. */
+/**
+ * Vitest reporter of the deep property sweep: writes the receipt when the run ends.
+ *
+ * **Details**
+ *
+ * The receipt lists which property files this Vitest run executed and how many
+ * tests of each ran, under `<package>/.beep/property-sweep/`. It is written only
+ * when `BEEP_FC_NUM_RUNS > 0` (see `propertySweepSelection` in `vitest.shared.ts`).
+ * The unfiltered property lane compares it with the files it expected
+ * (`CiPropertySweep` in `@beep/repo-cli`), so a file that did not run is a failure.
+ */
 export default class PropertySweepReporter implements Reporter {
   onTestRunEnd(modules: ReadonlyArray<TestModule>): Promise<void> {
     return Effect.runPromise(writeReceipt(modules).pipe(Effect.provide(NodeServices.layer)));

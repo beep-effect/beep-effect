@@ -157,12 +157,11 @@ describe("TermSnapshot", () => {
     assertTrue(decodeSnapshot({ ...encoded, terms: [...encoded.terms, ...encoded.terms] }).pipe(Result.isFailure));
   });
 
-  it("refuses two distinct rows with one key", () => {
+  it("refuses distinct rows with one key even when they separate an exact repeat", () => {
     const rebound = TermBinding.make({ code: hangCode, term: activity, since: v1 });
     assertTrue(
       TermSnapshot.fromRows({ ...baseRows, bindings: [...baseRows.bindings, rebound] }).pipe(Result.isFailure)
     );
-    // A repeat separated by a distinct row of the same key stays refused.
     assertTrue(
       TermSnapshot.fromRows({ ...baseRows, bindings: [...baseRows.bindings, rebound, ...baseRows.bindings] }).pipe(
         Result.isFailure
@@ -261,7 +260,7 @@ describe("snapshotViolations", () => {
     ).toStrictEqual([activity, testHang]);
   });
 
-  it("judges term membership apart from namespace membership", () => {
+  it("still refuses a removed term when its IRI becomes a namespace IRI", () => {
     const previous = snapshot();
     const extraNs = Namespace.make({ prefix: "extra", iri: NamespaceIri.make("https://example.test/extra/") });
     expect(
@@ -313,10 +312,9 @@ describe("snapshotViolations", () => {
   });
 
   it.prop(
-    "additions to the published term set are free",
+    "additions to the published term set are free after excluding PN_LOCAL U+E0000 to U+E0FFF, which RFC 3987 refuses",
     [S.Array(SafePnLocal).check(S.isMaxLength(8))],
     ([locals]) => {
-      // A PN_LOCAL may hold code points RFC 3987 refuses (U+E0000 to U+E0FFF), and Term.of refuses those.
       const added = pipe(
         locals,
         A.filter((local) => S.is(TermIri)(`${vitest.iri}${local}`)),

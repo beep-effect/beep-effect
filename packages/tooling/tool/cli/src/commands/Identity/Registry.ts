@@ -299,24 +299,17 @@ export class IdentityRegistryGeneratorError extends S.TaggedError<
   })
 ) {}
 
-// ---------------------------------------------------------------------------
-// Rendering
-// ---------------------------------------------------------------------------
-
 const quote: (value: string) => string = flow(S.encodeResult(S.fromJsonString(S.String)), Result.getOrThrow);
 
-// A member line of a pretty-printed array of JSON scalars, and the line that closes an array.
 const SCALAR_MEMBER_LINE = /^ *(?:"(?:[^"\\]|\\.)*"|-?\d[\d.eE+-]*|true|false|null),?$/;
 const ARRAY_CLOSE_LINE = /^ *\],?$/;
 
-// `pending` is an opening line ending in `[` followed by its scalar member lines; `close` ends it.
 const inlineArray = (pending: A.NonEmptyReadonlyArray<string>, close: string): string =>
   `${A.headNonEmpty(pending)}${A.join(
     A.map(A.tailNonEmpty(pending), (member) => Str.replace(/,$/, "")(Str.trim(member))),
     ", "
   )}${Str.trim(close)}`;
 
-// The output so far plus the open array, if any: its opening line (ending in `[`) and scalar member lines.
 type CollapseState = { readonly output: ReadonlyArray<string>; readonly pending: ReadonlyArray<string> };
 
 const closeArray = (output: ReadonlyArray<string>, pending: A.NonEmptyReadonlyArray<string>, close: string) => {
@@ -354,7 +347,8 @@ const collapseScalarArrays = (text: string): string => {
  * The value is pretty-printed with one member per line, which Biome keeps for
  * objects. Biome puts an array of scalars on one line when it fits the
  * 80-column JSON line width, so such arrays are collapsed here too. The
- * output ends with a newline.
+ * output ends with a newline. The pending array state keeps its opening line
+ * ending in [ and its scalar member lines until the closing line arrives.
  *
  * **Example** (Render a shard)
  *
@@ -449,7 +443,6 @@ const renderVocabEntry = ([prefix, entry]: readonly [
 
 const renderBindings = (table: RegistryTable): ReadonlyArray<string> => {
   const termByIri = R.fromEntries(A.map(table.terms, (term) => [term.iri, term] as const));
-  // A table binding always names a live term (RegistryTable invariant), so the lookup never misses.
   return A.flatMap(table.bindings, (binding) =>
     pipe(
       R.get(termByIri, binding.term),
@@ -471,7 +464,6 @@ const renderDeprecations = (table: RegistryTable): ReadonlyArray<string> =>
     })
   );
 
-// A TypeScript object literal with one property per line.
 const recordBody = (rows: ReadonlyArray<string>): string =>
   A.isReadonlyArrayEmpty(rows) ? "{}" : A.join(A.flatten([["{"], rows, ["}"]]), "\n");
 
@@ -486,6 +478,10 @@ const recordBody = (rows: ReadonlyArray<string>): string =>
  * `RegistryVocab` (the `VocabShape` view), `RegistryBindings` (code identity
  * to CURIE and IRI) and `RegistryDeprecations` (deprecated IRI to its release
  * and replacement).
+ *
+ * Every table binding names a live term, so term lookups cannot miss. The
+ * authority import is chosen after rendering rows because any rendered IRI
+ * literal under the authority references it.
  *
  * **Example** (Render the data module)
  *
@@ -513,7 +509,6 @@ export const renderRegistryData = (table: RegistryTable): string => {
   const vocab = A.map(sortedEntries(R.toEntries(registryVocabOf(table))), renderVocabEntry);
   const bindings = renderBindings(table);
   const deprecations = renderDeprecations(table);
-  // The import follows the rendered rows: any IRI literal under the authority references it.
   const authority = A.some(A.flatten([vocab, bindings, deprecations]), Str.includes(authorityReference))
     ? `import { IdentityAuthority } from "../../Authority.ts";\n\n`
     : "";
@@ -652,10 +647,6 @@ export const RegistryTerms = ${recordBody(rows)} as const satisfies Readonly<
 >;
 `;
 });
-
-// ---------------------------------------------------------------------------
-// Planning
-// ---------------------------------------------------------------------------
 
 const decodeShard = S.decodeUnknownResult(S.fromJsonString(RegistryShard));
 const decodeSnapshot = S.decodeUnknownResult(S.fromJsonString(TermSnapshot));
@@ -1290,10 +1281,6 @@ export const baseSnapshotIssues: {
       })
     )
 );
-
-// ---------------------------------------------------------------------------
-// Effects
-// ---------------------------------------------------------------------------
 
 const ioError = (message: string) => (cause: unknown) => IdentityRegistryGeneratorError.make({ message, cause });
 

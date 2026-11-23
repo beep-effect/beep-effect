@@ -153,7 +153,6 @@ const SKOS_CONCEPT_SCHEME = "http://www.w3.org/2004/02/skos/core#ConceptScheme";
 const localFromNamespace = (namespace: string, iri: string): O.Option<string> =>
   pipe(iri, Str.startsWith(namespace)) ? O.some(pipe(iri, Str.slice(Str.length(namespace)))) : O.none();
 
-// Only a namespace the Turtle header declares compacts, so every printed prefixed name resolves.
 const compactCore = (iri: string): O.Option<string> =>
   O.filter(contract(iri), (curie) => A.some(coreNamespaces, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
 
@@ -624,7 +623,8 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  * **Details**
  *
  * Owned locals emit as prefixed names only when PN_LOCAL-safe, otherwise the
- * writer falls back to full IRI references; literals are escaped.
+ * writer falls back to full IRI references; literals are escaped. Only namespaces
+ * declared in the Turtle header compact, so every printed prefixed name resolves.
  *
  * **Gotchas**
  *

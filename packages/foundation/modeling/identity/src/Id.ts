@@ -5,6 +5,9 @@
  *
  * Composable, type-safe identity strings and symbols back schema annotations,
  * error tagging, and service identification throughout the Effect codebase.
+ * The composer defaults to the generated registry vocabulary through a type-only
+ * import, so it never loads registry data at runtime.
+ *
  * Identities follow a `@beep/{package}/{path}` convention and are validated at
  * construction time.
  *
@@ -54,8 +57,6 @@ type BeepBase = typeof BeepBase.Type;
 
 type DefaultIdentityAuthority = typeof IdentityAuthority;
 type DefaultIdentityPrefix = "beep";
-// The composer's vocabulary defaults to the generated identity registry. A type-only import, so
-// the composer never loads the registry data at runtime.
 type DefaultVocab = typeof RegistryVocab;
 
 const isBeepNamespace = S.is(BeepNamespace);

@@ -174,7 +174,6 @@ export const versionConstructor = <A>(
     ): A => make({ major, minor, patch, prerelease, build })
   );
 
-// Normalizes a signed difference to an ordering value.
 const sign = (n: number): -1 | 0 | 1 => (n < 0 ? -1 : n > 0 ? 1 : 0);
 
 // Orders two finite numbers.

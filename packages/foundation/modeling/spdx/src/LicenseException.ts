@@ -100,8 +100,6 @@ export class LicenseException extends S.Class<LicenseException, { readonly brand
       "A validated SPDX license-exception identifier: an Effect `Schema.Class` whose `id` is a member of the SPDX exception list. The class doubles as its own schema.",
   })
 ) {
-  // ── Catalog ─────────────────────────────────────────────────────────
-
   /**
    * The full SPDX exception catalog keyed by identifier, holding resolved
    * {@link LicenseException} domain objects for every active and deprecated
@@ -167,8 +165,6 @@ export class LicenseException extends S.Class<LicenseException, { readonly brand
   static isDeprecatedId(id: string): boolean {
     return HashSet.has(DEPRECATED_EXCEPTION_IDS, id);
   }
-
-  // ── Construction ────────────────────────────────────────────────────
 
   /**
    * Validate an exception identifier synchronously, returning a `Result`. The
@@ -259,8 +255,6 @@ export class LicenseException extends S.Class<LicenseException, { readonly brand
     (args) => P.isString(args[0]),
     (id: string, deprecated = false): LicenseException => LicenseException.make({ id, deprecated })
   );
-
-  // ── Display ─────────────────────────────────────────────────────────
 
   /**
    * Returns the SPDX identifier for display without adding expression operators.

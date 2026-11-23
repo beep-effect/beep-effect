@@ -9,6 +9,16 @@
  * successor snapshot breaks it. Collections are strictly ascending arrays, so
  * the committed snapshot is byte-deterministic without a hash set.
  *
+ * **Gotchas**
+ *
+ * Canonicalization uses a stable key sort and drops adjacent exact repeats.
+ * Distinct rows with one key remain for schema refusal, including repeats
+ * separated by a distinct row. Snapshot terms include namespace IRIs;
+ * vocabulary membership excludes those and checks namespaces separately.
+ * Replacement chains end at declared terms. Namespace IRIs are neither
+ * replacements nor binding targets. Release components are unbounded decimal integers, so release
+ * arithmetic uses exact bigint operations.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -817,8 +827,6 @@ export declare namespace TermSnapshot {
 
 const decodeSnapshotType = S.decodeUnknownResult(S.toType(TermSnapshot));
 
-// The sort is stable and groups rows by key, so one linear pass drops exact repeats. Distinct rows
-// with one key stay for the schema to refuse, and so does a repeat they separate.
 const canonicalRows = <Row>(rows: Iterable<Row>, key: (row: Row) => string): ReadonlyArray<Row> =>
   pipe(A.fromIterable(rows), A.sort(Order.mapInput(Order.String, key)), A.dedupeAdjacent);
 
@@ -927,8 +935,6 @@ const Violation = SnapshotViolation.cases;
 const indexBy = <Row, Key>(rows: ReadonlyArray<Row>, key: (row: Row) => Key): HashMap.HashMap<Key, Row> =>
   HashMap.fromIterable(A.map(rows, (row) => [key(row), row] as const));
 
-// `terms` holds namespace IRIs too; a vocabulary term is one that is not a namespace IRI of its
-// snapshot. Namespace membership is judged apart, by `namespaceViolations`.
 const vocabularyTerms = (snapshot: TermSnapshot): ReadonlyArray<TermIri> => {
   const namespaceIris = HashSet.fromIterable(A.map(snapshot.namespaces, (namespace): string => namespace.iri));
   return A.filter(snapshot.terms, (term) => !HashSet.has(namespaceIris, term));

@@ -779,6 +779,12 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 /**
  * Lint command enforcing canonical `@beep/identity` composer registration.
  *
+ * **Details**
+ *
+ * Reports invalid shards, shard conflicts and generated-artifact drift. A fixture
+ * checkout with neither shards nor the generated data module has no term registry.
+ * The --fix mode regenerates artifacts first and never edits a shard.
+ *
  * **Example** (Run the identity-registry lint command)
  *
  * ```ts

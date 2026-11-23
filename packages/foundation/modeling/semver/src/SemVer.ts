@@ -224,8 +224,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
       "A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are validated in-schema (non-negative integer components, well-formed identifiers), so `SemVer.make` only produces valid versions.",
   })
 ) {
-  // ── Schema ──────────────────────────────────────────────────────────
-
   /**
    * Schema transformation between the canonical version string and
    * {@link SemVer}: decoding parses with the strict grammar, encoding
@@ -369,8 +367,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     })
   );
 
-  // ── Construction ────────────────────────────────────────────────────
-
   /**
    * Parse a strict SemVer 2.0.0 version string, synchronously, returning a
    * `Result` instead of an `Effect`.
@@ -445,8 +441,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
    * @since 0.0.0
    */
   static readonly parse = Effect.fn("SemVer.parse")((input: string) => Effect.fromResult(SemVer.parseResult(input)));
-
-  // ── Validation ──────────────────────────────────────────────────────
 
   /**
    * Whether `input` is a valid SemVer 2.0.0 version string, exactly as
@@ -555,8 +549,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     ): (major: number) => SemVer;
   } = versionConstructor((fields): SemVer => SemVer.make(fields));
 
-  // ── Ordering ────────────────────────────────────────────────────────
-
   /**
    * `Order` instance following SemVer 2.0.0 precedence (§11); build
    * metadata is ignored (§10).
@@ -595,8 +587,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     const base = a.compare(b);
     return base !== 0 ? base : compareBuild(a.build, b.build);
   });
-
-  // ── Comparison statics (dual) ───────────────────────────────────────
 
   /**
    * Compare two versions. Returns `-1`, `0`, or `1`. Dual API.
@@ -765,8 +755,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
             build: [],
           })
   );
-
-  // ── Collection statics ──────────────────────────────────────────────
 
   /**
    * Sort versions ascending by SemVer precedence. Returns a new array.
@@ -939,8 +927,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     return latest.pipe(MutableHashMap.values, A.fromIterable);
   }
 
-  // ── Instance: comparison ────────────────────────────────────────────
-
   /**
    * Compare `this` to `that` per SemVer 2.0.0 precedence. Returns `-1`, `0`, or `1`.
    *
@@ -1067,8 +1053,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     return this.compare(that) !== 0;
   }
 
-  // ── Instance: predicates ────────────────────────────────────────────
-
   /**
    * Whether this is a prerelease version.
    *
@@ -1105,8 +1089,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     return this.prerelease.length === 0;
   }
 
-  // ── Instance: bump ──────────────────────────────────────────────────
-
   /**
    * Version bumping operations, grouped for discoverability.
    *
@@ -1124,8 +1106,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
   get bump(): SemVerBump {
     return new SemVerBump(this);
   }
-
-  // ── Equality & hashing ──────────────────────────────────────────────
 
   // Structural equality deliberately ignores build metadata (SemVer §10)
   // while including exact prerelease identifiers (§11). Hash must agree:
@@ -1187,8 +1167,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
       })
     );
   }
-
-  // ── Display ─────────────────────────────────────────────────────────
 
   /**
    * The canonical `major.minor.patch[-prerelease][+build]` string.

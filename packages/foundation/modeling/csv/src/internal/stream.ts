@@ -55,8 +55,6 @@ export const mapAccumToEnd =
       )
     );
 
-// ── text ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
 /** The first text, held until its start is decided: a byte-order mark, and a `sep=` line when one is honoured. */
 interface Opening {
   readonly head: string;
@@ -171,8 +169,6 @@ export const textSteps = (options: CsvReadOptions): ChannelSteps<ReadonlyArray<s
   halt: (pending) => haltPending(pending)(options),
 });
 
-// ── bytes ────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
 /** The detect window, held in pieces until it is full. */
 interface Window {
   readonly phase: "window";
@@ -231,7 +227,6 @@ const incompleteTail = (bytes: Uint8Array): number => {
   return sequenceLength(bytes[bytes.length - back] ?? 0) > back ? back : 0;
 };
 
-/** A decoded piece, when it is not empty. */
 const textOf = (text: string): ReadonlyArray<DecodedText> => (Str.isNonEmpty(text) ? [Result.succeed(text)] : []);
 
 const fixedStep = (decoder: TextDecoder, bytes: Uint8Array): DecodingStep => [

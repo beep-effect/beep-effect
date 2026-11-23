@@ -68,16 +68,15 @@ const issueKinds = (
 ): ReadonlyArray<string> => (Result.isFailure(result) ? A.map(result.failure, (issue) => issue.kind) : []);
 
 describe("renderRegistryJson", () => {
-  it("keeps objects open and puts a scalar array on one line only when it fits 80 columns", () => {
-    // `  "fits": [` plus its member and `],` is exactly 80 columns; one more character breaks it.
-    const fits = Str.repeat(65)("x");
-    const over = Str.repeat(66)("x");
+  it("keeps objects open and collapses a scalar array at exactly 80 columns but not 81", () => {
+    const scalarMemberAt80Columns = Str.repeat(65)("x");
+    const scalarMemberAt81Columns = Str.repeat(66)("x");
     expect(
       renderRegistryJson({
         empty: [],
         none: {},
-        fits: [fits],
-        over: [over],
+        fits: [scalarMemberAt80Columns],
+        over: [scalarMemberAt81Columns],
         mixed: ['a,"b"', 1, true, null],
         row: { prefix: "fabio", terms: ["Report"] },
         nested: [{ a: [] }],
@@ -85,9 +84,9 @@ describe("renderRegistryJson", () => {
     ).toBe(`{
   "empty": [],
   "none": {},
-  "fits": ["${fits}"],
+  "fits": ["${scalarMemberAt80Columns}"],
   "over": [
-    "${over}"
+    "${scalarMemberAt81Columns}"
   ],
   "mixed": ["a,\\"b\\"", 1, true, null],
   "row": {
@@ -135,7 +134,6 @@ describe("renderRegistryData", () => {
   });
 
   it("imports IdentityAuthority when only a bound term or a replacement sits under it", () => {
-    // A namespace above the authority with a multi-segment local puts the term, not the namespace, under it.
     const root = { prefix: "root", iri: "https://beep-effect.com/" };
     assertTrue(
       Str.startsWith(IdentityAuthority)(`${root.iri}ns/Example`) && !Str.startsWith(IdentityAuthority)(root.iri)
