@@ -22,12 +22,17 @@
  * package's composer when it moves the layer.
  *
  * Bodies written as `declare const` are signatures only (the L3 audit and
- * coherence check, grounding verification, dataset canonicalization and
- * isomorphism). The claim log checker and retraction closure have real
- * implementations. Annotation operations and the OA codec live in production.
+ * coherence check, dataset canonicalization and isomorphism). Annotation
+ * operations, the OA codec, claim cores, the claim log checker, retraction
+ * closure, admissions, assessments and the nanopublication codec live in
+ * production.
  *
- * Layer edges used here: L3 -> `@beep/epistemics`; L4 -> `@beep/text`; L5 -> none.
+ * Layer edges used here: L3 -> `@beep/epistemics`; L5 -> none.
  * L2 and the OA codec moved to `@beep/annotation` in P3.
+ * L4 left the design module in P4: `@beep/epistemics` owns `makeClaimCore`,
+ * the claim log and its checker, `Admission`, `makeAssessments`, retraction
+ * closure and the nanopublication codec (`@beep/epistemics/rdf/NanopubCodec`);
+ * the coherent claim-log generators live in its test support.
  * L0 left the design module in P1. The identity layer is `@beep/identity`:
  * term IRIs, code ids, namespaces, terms, bindings, deprecations and the
  * snapshot are `@beep/identity/Term`, and the CURIE codec is
@@ -50,12 +55,8 @@
  * @since 0.0.0
  */
 
-/** Coherent claim-log arbitraries for L4. */
-export * as Generators from "./generators.ts";
 /** L3 taxonomy: SSSOM mapping sets, gUFO audit and coherence signatures. */
 export * as L3 from "./L3.taxonomy.ts";
-/** L4 claims: core, stance, challenge, admission, retraction, assessments, gates, log checker. */
-export * as L4 from "./L4.claims.ts";
 /** L5 operations: operations, activities, composition, provenance wrapper. */
 export * as L5 from "./L5.operations.ts";
 /** L6 interchange: three-case literal, dataset quotient and digest. */
