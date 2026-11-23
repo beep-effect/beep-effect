@@ -2270,6 +2270,8 @@
         "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
         "packages/tooling/tool/cli/src/commands/Laws/CommentLaw.model.ts",
         "packages/tooling/tool/cli/src/commands/Laws/CommentLaw.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/CommentStrip.model.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/CommentStrip.ts",
         "packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
         "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
         "packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.model.ts",

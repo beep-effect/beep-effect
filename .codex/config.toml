@@ -61,6 +61,9 @@
     name = "crispen"
     enabled = true
   [[skills.config]]
+    name = "delete-comment"
+    enabled = true
+  [[skills.config]]
     name = "effect-first-development"
     enabled = true
   [[skills.config]]
