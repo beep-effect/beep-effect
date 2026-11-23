@@ -11,7 +11,7 @@ import { classifySourceFormat, FileProcessingEngineDescriptor } from "@beep/file
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
-import { TIKA_ENGINE_NAME } from "./Tika.config.ts";
+import { TIKA_ENGINE_NAME, TIKA_TEXT_SCAFFOLD_VERSION } from "./Tika.config.ts";
 import { TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE, tikaOperationError } from "./Tika.error-translation.ts";
 import { makeTikaError, TikaErrorOptions } from "./Tika.errors.ts";
 import type {
@@ -40,6 +40,7 @@ import type { TikaError } from "./Tika.errors.ts";
 export const TikaFileProcessingEngineDescriptor = FileProcessingEngineDescriptor.make({
   capabilities: ["detect", "extract-text", "extract-metadata"],
   engine: "tika",
+  version: TIKA_TEXT_SCAFFOLD_VERSION,
   name: TIKA_ENGINE_NAME,
   supportedFormats: [
     "doc",
@@ -134,6 +135,7 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
 
     if (operation.format === "image-metadata") {
       return ExtractionResult.make({
+        engineVersion: TIKA_TEXT_SCAFFOLD_VERSION,
         engine: TikaFileProcessingEngineDescriptor.name,
         format: operation.format,
         metadata: {
@@ -164,6 +166,7 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
     );
 
     return ExtractionResult.make({
+      engineVersion: TIKA_TEXT_SCAFFOLD_VERSION,
       engine: TikaFileProcessingEngineDescriptor.name,
       format: operation.format,
       metadata: {},

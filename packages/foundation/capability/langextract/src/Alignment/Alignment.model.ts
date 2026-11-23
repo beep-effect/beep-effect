@@ -7,17 +7,18 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { AlignmentStatus, ExtractionCandidate, GroundedExtraction } from "@beep/langextract/Extraction";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
-import * as SchemaIssue from "effect/SchemaIssue";
-import { alignCandidate, alignCandidates, spanFromMatch } from "./Alignment.behavior.ts";
+import { alignCandidate, alignCandidates } from "./Alignment.behavior.ts";
 import { DEFAULT_FUZZY_THRESHOLD, DEFAULT_MAX_EXTRACTIONS } from "./Alignment.config.ts";
 import type { LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 
@@ -110,7 +111,7 @@ export type MatchedText = typeof MatchedText.Type;
  * ```ts
  * import * as S from "effect/Schema"
  * import type { ScoredMatch } from "@beep/langextract/Alignment"
- * import { UnitInterval } from "@beep/nlp/Handoff"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  *
  * const scored: ScoredMatch = [S.Natural.make(0), "Acme.", UnitInterval.make(0.8)]
  * console.log(scored[2])
@@ -277,8 +278,8 @@ export class AlignmentSource extends S.Opaque<AlignmentSource, { readonly brand:
  *
  * **Details**
  *
- * Context-dependent transformations ({@link SpanFromMatch} encode,
- * {@link GroundedExtractionFromCandidate}, {@link GroundedExtractionsFromCandidates})
+ * Context-dependent transformations ({@link GroundedExtractionFromCandidate},
+ * {@link GroundedExtractionsFromCandidates})
  * require this service through the schema `DecodingServices`/`EncodingServices`
  * channel; provide it with `Effect.provideService` around `S.decodeEffect`.
  *
@@ -301,16 +302,17 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
 ) {}
 
 /**
- * Codec from a matched slice to a half-open source span.
+ * Codec from a matched slice to the text anchor it covers.
  *
  * **Details**
  *
- * Decoding is pure: `[start, text]` becomes a half-open span covering the
- * matched text's UTF-16 length.
- * Encoding recovers the matched slice from {@link CurrentAlignmentSource} and
- * fails closed when the span exceeds the current source text.
+ * Decoding is pure: `[start, text]` becomes the anchor whose range covers the
+ * matched text's UTF-16 length and whose quote is that text, so the anchor's
+ * width check holds by construction. An empty slice is refused, since an
+ * anchor is never empty. Encoding is pure as well: the anchor carries its own
+ * quote, so `[startChar, quote]` is the matched slice.
  *
- * **Example** (Decode a matched slice into a span)
+ * **Example** (Decode a matched slice into an anchor)
  *
  * ```ts
  * import { SpanFromMatch } from "@beep/langextract/Alignment"
@@ -318,7 +320,7 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  * import * as S from "effect/Schema"
  *
  * Effect.runPromise(S.decodeEffect(SpanFromMatch)([4, "Lovelace"])).then(
- *   (span) => console.log(span.end) // 12
+ *   (anchor) => console.log(anchor.endChar) // 12
  * )
  * ```
  *
@@ -326,26 +328,19 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  * @since 0.0.0
  */
 export const SpanFromMatch = MatchedText.pipe(
-  S.decodeTo(Contract.Span, {
-    decode: SchemaGetter.transform(spanFromMatch),
-    encode: SchemaGetter.transformEffect((span: Contract.Span.Encoded, options) =>
-      CurrentAlignmentSource.use((source) => {
-        if (span.end > Str.length(source.sourceText)) {
-          return Effect.fail(
-            new SchemaIssue.InvalidValue(
-              { message: "Span end exceeds the current alignment source text." },
-              span,
-              options
-            )
-          );
-        }
-        const match: MatchedText = [S.Natural.make(span.start), Str.slice(span.start, span.end)(source.sourceText)];
-        return Effect.succeed(match);
-      })
-    ),
+  S.decodeTo(TextAnchor, {
+    decode: SchemaGetter.transform(([start, text]: MatchedText) => ({
+      endChar: Num.sum(start, Str.length(text)),
+      quote: text,
+      startChar: start,
+    })),
+    encode: SchemaGetter.transform((anchor: typeof TextAnchor.Encoded) => {
+      const match: MatchedText = [S.Natural.make(anchor.startChar), anchor.quote];
+      return match;
+    }),
   }),
   $I.annoteSchema("SpanFromMatch", {
-    description: "Bidirectional codec between matched source slices and half-open UTF-16 spans.",
+    description: "Bidirectional codec between matched source slices and the text anchors they cover.",
   })
 );
 

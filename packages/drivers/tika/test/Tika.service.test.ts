@@ -9,7 +9,14 @@ import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { TikaError, TikaErrorOptions, TikaErrorReason, TikaFileProcessingEngine } from "@beep/tika";
+import {
+  TIKA_TEXT_SCAFFOLD_VERSION,
+  TikaError,
+  TikaErrorOptions,
+  TikaErrorReason,
+  TikaFileProcessingEngine,
+  TikaFileProcessingEngineDescriptor,
+} from "@beep/tika";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -75,6 +82,32 @@ const source = Effect.fn("TikaTest.source")(function* (ids: FixtureIds, extensio
 });
 
 describe("@beep/tika", () => {
+  it.effect(
+    "pins the deterministic scaffold on text and image-metadata results",
+    Effect.fnUntraced(function* () {
+      const ids = yield* fixtureIds;
+      expect(TIKA_TEXT_SCAFFOLD_VERSION).toBe("text-scaffold/1");
+      expect(TikaFileProcessingEngineDescriptor.version).toBe(TIKA_TEXT_SCAFFOLD_VERSION);
+      for (const [extension, format] of [
+        ["txt", "plain-text"],
+        ["png", "image-metadata"],
+      ] as const) {
+        const artifact = yield* source(ids, extension);
+        const result = yield* TikaFileProcessingEngine.extract(
+          ExtractFileOperation.make({
+            operationId: ids.operationId,
+            operationKind: "extract",
+            preference: { engine: "tika" },
+            source: artifact,
+            format,
+          })
+        );
+        expect(result.engine).toBe("apache-tika");
+        expect(result.engineVersion).toBe(TIKA_TEXT_SCAFFOLD_VERSION);
+      }
+    })
+  );
+
   it("keeps Tika error encoded shapes byte-identical", () => {
     expect(encode(TikaErrorOptions, TikaErrorOptions.make({}))).toEqual({});
     expect(encode(TikaErrorOptions, TikaErrorOptions.make({ statusCode: S.Natural.make(503) }))).toEqual({

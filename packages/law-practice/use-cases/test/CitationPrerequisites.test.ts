@@ -1,9 +1,7 @@
 /** Public-import-only prerequisite compatibility probe; no raw artifacts. */
 import {
-  convertTextOffsetRange,
   locateRawText,
   MAX_SOURCE_TEXT_LENGTH,
-  TextOffsetRange,
   VERIFIED_SPAN_NORMALIZATION_VERSION,
 } from "@beep/langextract/VerifiedSpan";
 import {
@@ -14,6 +12,7 @@ import {
   isCurrentCourtReporterArtifactVersion,
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import { it } from "@beep/test-runner";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -24,18 +23,13 @@ import * as Str from "effect/String";
 
 describe("citation engine prerequisite compatibility", () => {
   it.effect("converts Python code points through the canonical public adapter", () =>
-    convertTextOffsetRange(
-      TextOffsetRange.make({
-        start: S.Natural.make(1),
-        end: S.Natural.make(2),
-        unit: "unicode-code-point",
-      }),
-      "A😀B"
+    Effect.fromResult(
+      convertPosition(Position.make({ start: 1, end: 2, unit: "unicode-code-point" }), "utf16-code-unit", "A😀B")
     ).pipe(
       Effect.tap((range) => {
-        expect(range.startChar).toBe(1);
-        expect(range.endChar).toBe(3);
-        expect(Str.slice(range.startChar, range.endChar)("A😀B")).toBe("😀");
+        expect(range.start).toBe(1);
+        expect(range.end).toBe(3);
+        expect(Str.slice(range.start, range.end)("A😀B")).toBe("😀");
         return Effect.void;
       })
     )
@@ -53,7 +47,7 @@ describe("citation engine prerequisite compatibility", () => {
   );
 
   it("keeps a collapsed annotation point outside the verified nonempty range contract", () => {
-    S.decodeResult(TextOffsetRange)({ start: 9, end: 9, unit: "unicode-code-point" }).pipe(
+    S.decodeResult(Position)({ _tag: "Position", start: 9, end: 9, unit: "unicode-code-point" }).pipe(
       Result.isFailure,
       assertTrue
     );

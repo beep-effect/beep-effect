@@ -70,6 +70,7 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/annotation": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
     "@beep/epistemics": "workspace:^",
@@ -88,6 +89,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/semantic-web": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",

@@ -26,6 +26,8 @@
 
 import * as Schema from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
+import { Position } from "@beep/text/OffsetUnit";
+import { Resolution, resolve } from "@beep/text/Resolution";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -74,6 +76,15 @@ const entityCharSpan = (tokens: ReadonlyArray<CharSpan>, tokenRange: ReadonlyArr
     O.flatMap(A.get(tokenRange, 0), (first) => A.get(tokens, first)),
     O.flatMap(A.get(tokenRange, 1), (last) => A.get(tokens, last)),
     (first, last) => ({ end: last.end, start: first.start })
+  );
+
+const entityPosition = (text: string, located: CharSpan, value: string): O.Option<Position> =>
+  O.flatMap(Position.makeOption({ unit: "utf16-code-unit", start: located.start, end: located.end }), (position) =>
+    Resolution.match(resolve(text, position), {
+      Unique: (unique) => (Str.Equivalence(unique.quote, value) ? O.some(unique.position) : O.none()),
+      Ambiguous: O.none<Position>,
+      NotFound: O.none<Position>,
+    })
   );
 
 const makeWinkBackend = Effect.gen(function* () {
@@ -140,35 +151,19 @@ const makeWinkBackend = Effect.gen(function* () {
       const details = doc.entities().out(detailAccessor);
       const tokenRanges: ReadonlyArray<ReadonlyArray<number> | string> = doc.entities().out(spanAccessor);
       const tokens = tokenCharSpans(text, doc.tokens().out());
-      return yield* Effect.forEach(
-        details,
-        (element, index) => {
-          const detail = P.isString(element) ? { type: "UNKNOWN", value: element } : element;
-          const span = O.flatMap(A.get(tokenRanges, index), (tokenRange) =>
-            P.isString(tokenRange) ? O.none() : O.flatMap(tokens, (located) => entityCharSpan(located, tokenRange))
-          ).pipe(O.filter(({ end, start }) => Str.Equivalence(Str.slice(start, end)(text), detail.value)));
-          return O.match(span, {
-            onNone: () =>
-              Effect.fail(
-                toOpError("extractEntities")({
-                  entity: detail.value,
-                  reason: "wink returned no token span that locates the entity text.",
-                })
-              ),
-            onSome: (resolved) =>
-              Effect.succeed(
-                Schema.EntityNode.make({
-                  confidence: 1,
-                  entityType: detail.type,
-                  span: resolved,
-                  text: detail.value,
-                  timestamp,
-                })
-              ),
-          });
-        },
-        { concurrency: 1 }
-      );
+      return A.map(details, (element, index) => {
+        const detail = P.isString(element) ? { type: "UNKNOWN", value: element } : element;
+        const span = O.flatMap(A.get(tokenRanges, index), (tokenRange) =>
+          P.isString(tokenRange) ? O.none() : O.flatMap(tokens, (located) => entityCharSpan(located, tokenRange))
+        ).pipe(O.flatMap((located) => entityPosition(text, located, detail.value)));
+        return Schema.EntityNode.make({
+          confidence: 1,
+          entityType: detail.type,
+          span,
+          text: detail.value,
+          timestamp,
+        });
+      });
     }),
 
     parseDependencies: Effect.fn("WinkBackend.parseDependencies")(function* (_sentence: string) {

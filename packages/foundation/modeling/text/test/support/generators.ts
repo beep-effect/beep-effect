@@ -1,57 +1,24 @@
-import { AlignedSegment } from "@beep/text/LocatorMap";
-import { Anchored } from "@beep/text/Occurrence";
-import { Position } from "@beep/text/OffsetUnit";
 import {
-  SourceTextDigest,
-  SourceTextExtractor,
-  SourceTextIdentity,
-  SourceTextLocator,
-} from "@beep/text/SourceTextIdentity";
-import { TextAnchor } from "@beep/text/TextAnchor";
-import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
+  anchoredOn,
+  rangeIn,
+  scalarRangeIn,
+  sourceFor,
+  wellFormedTextOf,
+  wellFormedTextWith,
+} from "@beep/text/Arbitrary";
+import { AlignedSegment } from "@beep/text/LocatorMap";
+import { Position } from "@beep/text/OffsetUnit";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Hex from "effect/encoding/Hex";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
-import type { OffsetUnit } from "@beep/text/OffsetUnit";
-
-// decision: law-generators-well-formed-text
-const CodePointPick = S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x2fff + 64 }));
-
-const toCodePoint = (pick: number): number => (pick > 0x2fff ? 0x1f600 + (pick - 0x3000) : pick);
-
-const utf16Width = (codePoint: number): number => (codePoint > 0xffff ? 2 : 1);
-
-const utf8Width = (codePoint: number): number =>
-  codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
 
 const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.check(S.isBetween({ minimum, maximum })));
 
 const at = (values: A.NonEmptyReadonlyArray<number>, index: number): number =>
   O.getOrElse(A.get(values, index), () => A.headNonEmpty(values));
-
-const textOf = (codePoints: ReadonlyArray<number>) => ({
-  text: A.join(
-    A.map(codePoints, (codePoint) => String.fromCodePoint(codePoint)),
-    ""
-  ),
-  codePoints,
-  boundaries: {
-    "utf16-code-unit": A.scan(codePoints, 0, (offset, codePoint) => offset + utf16Width(codePoint)),
-    "unicode-code-point": A.scan(codePoints, 0, (offset) => offset + 1),
-    "utf8-byte": A.scan(codePoints, 0, (offset, codePoint) => offset + utf8Width(codePoint)),
-  } satisfies { readonly [Unit in OffsetUnit]: A.NonEmptyReadonlyArray<number> },
-});
-
-/** Generated well-formed text with its scalar boundaries in each unit (offset 0, then the end of each scalar). */
-export const wellFormedTextWith = (options: { readonly minLength: number; readonly maxLength: number }) =>
-  Arbitrary.map(Arbitrary.array(Arbitrary.schema(CodePointPick), options), (picks) =>
-    textOf(A.map(picks, toCodePoint))
-  );
 
 // decision: law-generators-well-formed-text
 const narrowAlphabet: A.NonEmptyReadonlyArray<number> = [0x61, 0x1f600];
@@ -64,7 +31,7 @@ const narrowCodePoints = (options: { readonly minLength: number; readonly maxLen
 
 /** Generated well-formed text over the narrow alphabet `a`, `😀`, with its scalar boundaries in each unit. */
 export const narrowTextWith = (options: { readonly minLength: number; readonly maxLength: number }) =>
-  Arbitrary.map(narrowCodePoints(options), textOf);
+  Arbitrary.map(narrowCodePoints(options), wellFormedTextOf);
 
 /**
  * A passage `border + middle + border` over the narrow alphabet and the text `passage + passage[border.length..]`,
@@ -77,7 +44,10 @@ export const overlappingRepeat = Arbitrary.map(
   }),
   ({ border, middle }) => {
     const passage = A.appendAll(A.appendAll(border, middle), border);
-    return { passage: textOf(passage), text: textOf(A.appendAll(passage, A.drop(passage, border.length))) };
+    return {
+      passage: wellFormedTextOf(passage),
+      text: wellFormedTextOf(A.appendAll(passage, A.drop(passage, border.length))),
+    };
   }
 );
 
@@ -130,20 +100,6 @@ export const normalizationText = Arbitrary.map(
 /** Generated well-formed, non-empty text of at most 80 scalars. */
 export const wellFormedText = wellFormedTextWith({ minLength: 1, maxLength: 80 });
 
-/** A non-empty range of scalar indexes `[first, last]` into a text of `scalars` scalars, with `first < last`. */
-export const scalarRangeIn = (scalars: number) =>
-  Arbitrary.flatMap(between(0, scalars - 1), (first) =>
-    Arbitrary.map(between(first + 1, scalars), (last) => ({ first, last }))
-  );
-
-/** The offsets of a scalar-index range in one unit's boundary list. */
-export const rangeIn =
-  (boundaries: A.NonEmptyReadonlyArray<number>) =>
-  (range: { readonly first: number; readonly last: number }): { readonly start: number; readonly end: number } => ({
-    start: at(boundaries, range.first),
-    end: at(boundaries, range.last),
-  });
-
 const { createHash } = process.getBuiltinModule("node:crypto");
 
 /**
@@ -152,63 +108,10 @@ const { createHash } = process.getBuiltinModule("node:crypto");
  */
 export const sha256: JsoncDigest = (bytes) => new Uint8Array(createHash("sha256").update(bytes).digest());
 
-const utf8 = new TextEncoder();
-
-/** The `sha256:<hex>` digest of a text's UTF-8 bytes, as a capture's `textDigest` records it. */
-export const textDigestOf = (text: string): SourceTextDigest =>
-  SourceTextDigest.make(`sha256:${Hex.encode(sha256(utf8.encode(text)))}`);
-
-const nonEmptyFieldText = Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 12 }), ({ text }) => text);
-
-/** A capture of `text`: generated well-formed fields, a backslash-free locator and the text's own digest. */
-export const sourceFor = (text: string) =>
-  Arbitrary.map(
-    Arbitrary.all({
-      scopeRef: nonEmptyFieldText,
-      sourceRef: nonEmptyFieldText,
-      locator: nonEmptyFieldText,
-      sourceBytes: nonEmptyFieldText,
-      name: nonEmptyFieldText,
-      version: nonEmptyFieldText,
-      normalizationVersion: nonEmptyFieldText,
-    }),
-    (fields) =>
-      SourceTextIdentity.make({
-        scopeRef: fields.scopeRef,
-        sourceRef: fields.sourceRef,
-        locator: SourceTextLocator.make(Str.replaceAll("\\", "/")(fields.locator)),
-        sourceDigest: textDigestOf(fields.sourceBytes),
-        textDigest: textDigestOf(text),
-        extractor: SourceTextExtractor.make({ name: fields.name, version: fields.version }),
-        normalizationVersion: fields.normalizationVersion,
-      })
-  );
-
-type Utf16Range = { readonly start: number; readonly end: number };
-
-/** The anchors row of a UTF-16 range of `text` in `source`; the quote is the slice. */
-export const anchoredOn: {
-  (text: string, range: Utf16Range): (source: SourceTextIdentity) => Anchored;
-  (source: SourceTextIdentity, text: string, range: Utf16Range): Anchored;
-} = dual(
-  3,
-  (source: SourceTextIdentity, text: string, range: Utf16Range): Anchored =>
-    Anchored.make({
-      receipt: TextAnchorVerificationReceipt.make({
-        anchor: TextAnchor.make({
-          startChar: range.start,
-          endChar: range.end,
-          quote: Str.slice(range.start, range.end)(text),
-        }),
-        source,
-      }),
-    })
-);
-
 /** Generated text, a scalar range in it, a capture of the text, and the anchors row of the range. */
 export const anchoredCase = Arbitrary.flatMap(wellFormedText, (generated) =>
   Arbitrary.map(
-    Arbitrary.all([scalarRangeIn(generated.codePoints.length), sourceFor(generated.text)]),
+    Arbitrary.all([scalarRangeIn(generated.codePoints.length), sourceFor(sha256)(generated.text)]),
     ([range, source]) => ({
       ...generated,
       range,

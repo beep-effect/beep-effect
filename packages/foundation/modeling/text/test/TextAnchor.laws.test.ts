@@ -1,5 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { it } from "@beep/test-runner";
+import { rangeIn } from "@beep/text/Arbitrary";
 import { Anchored } from "@beep/text/Occurrence";
 import { convertPosition, OffsetUnit, Position, slicePosition } from "@beep/text/OffsetUnit";
 import { TextAnchor } from "@beep/text/TextAnchor";
@@ -9,7 +10,7 @@ import { assertSuccess } from "@effect/vitest/utils";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
-import { anchoredCase, rangeIn } from "./support/generators.ts";
+import { anchoredCase } from "./support/generators.ts";
 import { citationSource, citationText, firstCitation } from "./support/goldens.ts";
 import type { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 

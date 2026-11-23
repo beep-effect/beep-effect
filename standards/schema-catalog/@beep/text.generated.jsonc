@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/text",
   "entries": [
+    {"file":"packages/foundation/modeling/text/src/Capture.ts","symbol":"CaptureId","kind":"brand","owner":"@beep/text","identity":"CaptureId","description":"Content hash of the whole text capture identity, its scope included."},
     {"file":"packages/foundation/modeling/text/src/LocatorMap.ts","symbol":"AlignedSegment","kind":"tagged-union","owner":"@beep/text","identity":"AlignedSegment","description":"A range of one text and the range of another it became: kept unchanged or rewritten as a whole."},
     {"file":"packages/foundation/modeling/text/src/LocatorMap.ts","symbol":"CaptureMismatch","kind":"tagged-error","owner":"@beep/text","identity":"CaptureMismatch"},
     {"file":"packages/foundation/modeling/text/src/LocatorMap.ts","symbol":"LocatorMap","kind":"struct-const","owner":"@beep/text","identity":"LocatorMap","description":"A recorded map of aligned segments from one text capture to another."},

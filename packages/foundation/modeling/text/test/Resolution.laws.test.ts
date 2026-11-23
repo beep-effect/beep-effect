@@ -1,5 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { it } from "@beep/test-runner";
+import { rangeIn, scalarRangeIn, wellFormedTextWith } from "@beep/text/Arbitrary";
 import { Position } from "@beep/text/OffsetUnit";
 import { Resolution, resolve } from "@beep/text/Resolution";
 import { QuoteSelector, RangeSelector, RefinedSelector } from "@beep/text/Selector";
@@ -7,15 +8,7 @@ import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import {
-  narrowTextWith,
-  oneOf,
-  overlappingRepeat,
-  rangeIn,
-  scalarRangeIn,
-  wellFormedText,
-  wellFormedTextWith,
-} from "./support/generators.ts";
+import { narrowTextWith, oneOf, overlappingRepeat, wellFormedText } from "./support/generators.ts";
 
 const runs = { arbitrary: fcRuns(100) };
 
