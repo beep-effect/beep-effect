@@ -97,8 +97,9 @@ export interface FleetGithubReadsShape {
  *
  * **Details**
  *
- * `runnerReads` holds one runner listing per org-runner read, in order; a
- * read past the last repeats it. Runs list by status from `queuedRuns` and
+ * `runnerReads` holds one runner listing per walk of the org-runner
+ * listing, in order; a walk past the last repeats it. A listing longer than
+ * one page is walked until two walks agree, so such a read is given twice. Runs list by status from `queuedRuns` and
  * `inProgressRuns`, and by creation time from `recentRuns`. `jobs` are
  * served by their `runId`. `deliveries` are newest first and served
  * `pageSize` at a time; `failDeliveryPageAt` fails that page (0-based) and

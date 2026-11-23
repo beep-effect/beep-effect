@@ -740,10 +740,11 @@ export const isFleetAlert = FleetVerdict.isAnyOf(["Stuck", "Wedged", "MissedDeli
  * either read counted at least `cap` registered runners of the pool.
  * `idleRunnerIds` are online and not busy in both reads;
  * `secondReadIdleRunnerIds` are online and not busy in the second read, a
- * runner that just booted included; `notBusyRunnerIds` are not busy in both
- * reads, offline ones included.
+ * runner that just booted included; `notBusyRunnerIds` are not busy in the
+ * second read, offline ones included: `Wedged` sets no two-read condition.
  * `progress` is whether a pool job started on a runner in the last 15
- * minutes.
+ * minutes. `p95QueueToStart` samples the jobs that started in the two-hour
+ * window.
  *
  * **Example** (A heavy pool at cap)
  *
@@ -901,6 +902,11 @@ export class FleetJobFinding extends S.Opaque<FleetJobFinding, { readonly brand:
 /**
  * The check's own previous scheduled run, as far as it could be read.
  *
+ * **Details**
+ *
+ * `Found.currentCreatedAt` is this run's own creation when it is a scheduled
+ * run, so the cadence gap runs from scheduled run to scheduled run.
+ *
  * **Example** (No previous run)
  *
  * ```ts
@@ -913,7 +919,7 @@ export class FleetJobFinding extends S.Opaque<FleetJobFinding, { readonly brand:
  * @since 0.0.0
  */
 export const FleetPreviousRun = S.TaggedUnion({
-  Found: { runId: S.Finite, createdAt: EpochMillis },
+  Found: { runId: S.Finite, createdAt: EpochMillis, currentCreatedAt: S.Option(EpochMillis) },
   NoneFound: {},
   Unreadable: { reason: S.String },
 }).pipe($I.annoteSchema("FleetPreviousRun", { description: "The previous scheduled run, none, or unreadable." }));

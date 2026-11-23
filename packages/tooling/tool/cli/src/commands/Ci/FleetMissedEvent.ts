@@ -176,7 +176,8 @@ export const percentile95 = (values: ReadonlyArray<number>): O.Option<number> =>
  * ```
  *
  * @param input - The pool, the first runner read's time, both runner reads, every job read and the time.
- * @returns The pool's counts, cap state, idle and not-busy runners, and progress.
+ * @returns The pool's counts, cap state, idle runners (both reads), not-busy runners (second read), progress and
+ * the p95 queue-to-start of the jobs that started in the two-hour window.
  * @category use-cases
  * @since 0.0.0
  */
@@ -202,10 +203,15 @@ export const observeFleetPool = (input: {
     atCap: A.length(first) >= input.pool.cap || A.length(second) >= input.pool.cap,
     idleRunnerIds: sortedIds(HashSet.intersection(idsWhere(first, isIdle), idsWhere(second, isIdle))),
     secondReadIdleRunnerIds: sortedIds(idsWhere(second, isIdle)),
-    notBusyRunnerIds: sortedIds(HashSet.intersection(idsWhere(first, isNotBusy), idsWhere(second, isNotBusy))),
+    notBusyRunnerIds: sortedIds(idsWhere(second, isNotBusy)),
     currentNotBusy: A.length(A.filter(second, isNotBusy)),
     progress: A.some(started, (job) => job.startedAt >= input.now - FLEET_THRESHOLDS.progressWindow),
-    p95QueueToStart: percentile95(A.map(started, (job) => job.startedAt - job.createdAt)),
+    p95QueueToStart: percentile95(
+      A.map(
+        A.filter(started, (job) => job.startedAt >= input.now - FLEET_THRESHOLDS.lookback),
+        (job) => job.startedAt - job.createdAt
+      )
+    ),
   });
 };
 
@@ -251,12 +257,14 @@ const isTwoHundred = (statusCode: number): boolean => statusCode >= 200 && statu
  * **Details**
  *
  * The candidates are the `queued` deliveries inside the job's window. A
- * 2xx candidate naming the job is `Delivered`; otherwise a non-2xx one is
- * `DeliveryFailed`. With no match, an unreadable candidate detail, a failed
- * page whose walk did not reach the start of the job's window (its creation
- * minus two minutes), or pages that do not reach it, make the evidence
- * `Unreadable`; only a walk that reached the window's start with every
- * candidate read makes it `NotDelivered`.
+ * 2xx candidate naming the job is `Delivered`, whatever else was read.
+ * Without one, an unreadable candidate detail, or a walk that does not
+ * cover the window's start (its creation minus two minutes), makes the
+ * evidence `Unreadable`: the unread delivery could be the 2xx. A walk
+ * covers the start when it read a delivery older than it, or one at it and
+ * the listing then ended. Only a covered window with every candidate read
+ * gives `DeliveryFailed` (a non-2xx candidate naming the job) or
+ * `NotDelivered`.
  *
  * **Example** (A complete walk with no delivery)
  *
@@ -281,12 +289,13 @@ const isTwoHundred = (statusCode: number): boolean => statusCode >= 200 && statu
  *   deliveries: [],
  *   oldestReached: O.some(0),
  *   walkFailure: O.none(),
+ *   listingEnded: false,
  *   details: HashMap.empty(),
  * })
  * console.log(evidence._tag) // "NotDelivered"
  * ```
  *
- * @param input - The job, its hook, the walk's deliveries, oldest time and failure, and the detail reads.
+ * @param input - The job, its hook, the walk's deliveries, oldest time, failure and end, and the detail reads.
  * @returns The job's evidence.
  * @category use-cases
  * @since 0.0.0
@@ -297,6 +306,7 @@ export const judgeDeliveryEvidence = (input: {
   readonly deliveries: ReadonlyArray<FleetHookDelivery>;
   readonly oldestReached: O.Option<number>;
   readonly walkFailure: O.Option<string>;
+  readonly listingEnded: boolean;
   readonly details: HashMap.HashMap<string, O.Option<FleetDeliveryDetail>>;
 }): FleetDeliveryEvidence => {
   const window = deliveryWindow(input.job);
@@ -312,50 +322,49 @@ export const judgeDeliveryEvidence = (input: {
     O.exists(readOf(delivery), (detail) => O.contains(detail.workflowJobId, `${input.job.id}`))
   );
   const unreadable = A.length(A.filter(candidates, (delivery) => O.isNone(readOf(delivery))));
+  const covered = O.filter(
+    input.oldestReached,
+    (oldest) => oldest < window.start || (oldest === window.start && input.listingEnded)
+  );
+  const unknown = (reason: string) =>
+    FleetDeliveryEvidence.cases.Unreadable.make({ reason, oldestReached: input.oldestReached });
   return pipe(
     A.findFirst(matches, (delivery) => isTwoHundred(delivery.statusCode)),
-    O.map((delivery) =>
-      FleetDeliveryEvidence.cases.Delivered.make({
-        hookId: input.hookId,
-        deliveryId: delivery.id,
-        statusCode: delivery.statusCode,
-      })
-    ),
-    O.orElse(() =>
-      O.map(A.head(matches), (delivery) =>
-        FleetDeliveryEvidence.cases.DeliveryFailed.make({
+    O.match({
+      onSome: (delivery) =>
+        FleetDeliveryEvidence.cases.Delivered.make({
           hookId: input.hookId,
           deliveryId: delivery.id,
           statusCode: delivery.statusCode,
-        })
-      )
-    ),
-    O.getOrElse(() =>
-      unreadable > 0
-        ? FleetDeliveryEvidence.cases.Unreadable.make({
-            reason: `${unreadable} candidate delivery detail(s) unreadable after retries`,
-            oldestReached: input.oldestReached,
-          })
-        : O.match(
-            O.filter(input.oldestReached, (oldest) => oldest <= window.start),
-            {
-              onSome: (oldestReached) =>
-                FleetDeliveryEvidence.cases.NotDelivered.make({
-                  windowStart: window.start,
-                  windowEnd: window.end,
-                  oldestReached,
-                }),
+        }),
+      onNone: () =>
+        unreadable > 0
+          ? unknown(`${unreadable} candidate delivery detail(s) unreadable after retries`)
+          : O.match(covered, {
               onNone: () =>
-                FleetDeliveryEvidence.cases.Unreadable.make({
-                  reason: O.getOrElse(
+                unknown(
+                  O.getOrElse(
                     input.walkFailure,
                     () => "the pages read do not reach back to the job's delivery window start"
-                  ),
-                  oldestReached: input.oldestReached,
+                  )
+                ),
+              onSome: (oldestReached) =>
+                O.match(A.head(matches), {
+                  onSome: (delivery) =>
+                    FleetDeliveryEvidence.cases.DeliveryFailed.make({
+                      hookId: input.hookId,
+                      deliveryId: delivery.id,
+                      statusCode: delivery.statusCode,
+                    }),
+                  onNone: () =>
+                    FleetDeliveryEvidence.cases.NotDelivered.make({
+                      windowStart: window.start,
+                      windowEnd: window.end,
+                      oldestReached,
+                    }),
                 }),
-            }
-          )
-    )
+            }),
+    })
   );
 };
 
@@ -467,8 +476,8 @@ export const needsDeliveryEvidence: {
     now - queued.job.createdAt >= FLEET_THRESHOLDS.missedDeliveryAge
 );
 
-const launchesSince = (job: FleetJob, poolJobs: ReadonlyArray<FleetJob>, observation: FleetPoolObservation) =>
-  A.length(A.filter(poolJobs, (other) => O.exists(startedOnRunner(other), (at) => at >= job.createdAt))) +
+const launchesSince = (job: FleetJob, launchJobs: ReadonlyArray<FleetJob>, observation: FleetPoolObservation) =>
+  A.length(A.filter(launchJobs, (other) => O.exists(startedOnRunner(other), (at) => at >= job.createdAt))) +
   observation.currentNotBusy;
 
 const noLaunchReason = (input: {
@@ -565,10 +574,17 @@ export const decideFleetVerdict = (input: {
  * jobs created at or before it (itself included) and its launches since
  * creation.
  *
+ * **Details**
+ *
+ * Launches count only the started jobs of runs in `lookbackRunIds`, the runs
+ * created in the last two hours: an older active run's start never covers a
+ * newer job's rank.
+ *
  * **Example** (Rank one queued heavy job)
  *
  * ```ts
  * import { FleetJob, FleetPoolCap, FleetPoolObservation, fleetHookSources, queuedFleetJobs } from "@beep/repo-cli/commands/Ci"
+ * import * as HashSet from "effect/HashSet"
  * import * as O from "effect/Option"
  *
  * const observation = FleetPoolObservation.make({
@@ -594,11 +610,17 @@ export const decideFleetVerdict = (input: {
  *   startedAt: O.none(),
  *   runnerName: O.none(),
  * })
- * const queued = queuedFleetJobs({ observations: [observation], jobs: [job], hookSources: fleetHookSources, now: 600000 })
+ * const queued = queuedFleetJobs({
+ *   observations: [observation],
+ *   jobs: [job],
+ *   lookbackRunIds: HashSet.make(3800),
+ *   hookSources: fleetHookSources,
+ *   now: 600000,
+ * })
  * console.log(queued.map((entry) => entry.rank)) // [1]
  * ```
  *
- * @param input - The observations, every job read, the hook sources and the time.
+ * @param input - The observations, every job read, the lookback runs, the hook sources and the time.
  * @returns One entry per queued pool job.
  * @category use-cases
  * @since 0.0.0
@@ -606,11 +628,13 @@ export const decideFleetVerdict = (input: {
 export const queuedFleetJobs = (input: {
   readonly observations: ReadonlyArray<FleetPoolObservation>;
   readonly jobs: ReadonlyArray<FleetJob>;
+  readonly lookbackRunIds: HashSet.HashSet<number>;
   readonly hookSources: FleetHookSources;
   readonly now: number;
 }): ReadonlyArray<FleetQueuedJob> =>
   A.flatMap(input.observations, (observation) => {
     const poolJobs = A.filter(input.jobs, (job) => hasLabel(observation.pool.label)(job.labels));
+    const launchJobs = A.filter(poolJobs, (job) => HashSet.has(input.lookbackRunIds, job.runId));
     const queued = A.filter(poolJobs, (job) => job.status === "queued");
     const oldestQueuedAge = pipe(
       A.map(queued, (job) => input.now - job.createdAt),
@@ -622,7 +646,7 @@ export const queuedFleetJobs = (input: {
         observation,
         age: input.now - job.createdAt,
         rank: A.length(A.filter(queued, (other) => other.createdAt <= job.createdAt)),
-        launches: launchesSince(job, poolJobs, observation),
+        launches: launchesSince(job, launchJobs, observation),
         oldestQueuedAge,
         source: hookSourceAt(input.hookSources, job.createdAt),
       })
@@ -763,9 +787,10 @@ const cancelAndRerun = (repository: string, runId: number): ReadonlyArray<string
  *
  * **Details**
  *
- * A 2xx or failed `queued` delivery prints its redelivery. A job whose
- * delivery was missed and a gate-classified job print the cancel-and-rerun pair, marked as the
- * gate's call because it reruns the whole run. `gh run rerun --failed`
+ * A 2xx or failed `queued` delivery prints its redelivery only. A job with
+ * no delivery in its window and a gate-classified job print the
+ * cancel-and-rerun pair, marked as the gate's call because it reruns the
+ * whole run. `gh run rerun --failed`
  * refuses an in-progress run and is never printed for a queued job.
  *
  * **Example** (Redeliver a delivered job)
@@ -834,7 +859,7 @@ export const fleetRemedies: {
     ? ["gate: run the gate's enrichment and App-redelivery command for this job"]
     : [];
   const rerun =
-    O.exists(finding.evidence, isMissedDeliveryEvidence) ||
+    O.exists(finding.evidence, FleetDeliveryEvidence.guards.NotDelivered) ||
     O.contains(finding.classification, FleetClassification.Enum.gate)
       ? cancelAndRerun(repository, finding.job.runId)
       : [];
@@ -903,12 +928,17 @@ export const fleetAlerts = (report: FleetCheckReport): ReadonlyArray<FleetJobFin
 
 const previousRunLabel = (report: FleetCheckReport): string =>
   FleetPreviousRun.match(report.previousRun, {
-    Found: ({ runId, createdAt }) => {
-      const gap = report.checkedAt - createdAt;
-      const late =
-        gap > Duration.toMillis(Duration.minutes(30)) ? " (more than 30 minutes: a finding for the gate)" : "";
-      return `previous scheduled run ${runId} at ${formatTime(createdAt)}, ${formatAge(gap)} before this check${late}`;
-    },
+    Found: ({ runId, createdAt, currentCreatedAt }) =>
+      O.match(currentCreatedAt, {
+        onNone: () =>
+          `previous scheduled run ${runId} at ${formatTime(createdAt)}, ${formatAge(report.checkedAt - createdAt)} before this check`,
+        onSome: (current) => {
+          const gap = current - createdAt;
+          const late =
+            gap > Duration.toMillis(Duration.minutes(30)) ? " (more than 30 minutes: a finding for the gate)" : "";
+          return `previous scheduled run ${runId} at ${formatTime(createdAt)}, ${formatAge(gap)} before this scheduled run${late}`;
+        },
+      }),
     NoneFound: () => "previous scheduled run: none found",
     Unreadable: ({ reason }) => `previous scheduled run: unreadable (${reason})`,
   });
@@ -1002,6 +1032,12 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
  * The previous scheduled run among the check's recent scheduled runs: the
  * newest that is not this run.
  *
+ * **Details**
+ *
+ * When this run is itself among the scheduled runs, its creation time is
+ * kept, so the summary measures the cadence gap from scheduled run to
+ * scheduled run, not to the end of this run's reads.
+ *
  * **Example** (Skip this run)
  *
  * ```ts
@@ -1031,7 +1067,15 @@ export const previousScheduledRun: {
       A.findFirst(runs, (run) => !O.contains(currentRunId, run.id)),
       O.match({
         onNone: () => FleetPreviousRun.cases.NoneFound.make({}),
-        onSome: (run) => FleetPreviousRun.cases.Found.make({ runId: run.id, createdAt: run.createdAt }),
+        onSome: (run) =>
+          FleetPreviousRun.cases.Found.make({
+            runId: run.id,
+            createdAt: run.createdAt,
+            currentCreatedAt: O.map(
+              A.findFirst(runs, (other) => O.contains(currentRunId, other.id)),
+              (current) => current.createdAt
+            ),
+          }),
       })
     )
 );

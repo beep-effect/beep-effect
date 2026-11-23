@@ -15,6 +15,7 @@ import {
   FleetHookSourceEntry,
   FleetJob,
   FleetJobFinding,
+  FleetJobsPage,
   FleetMissedEventInput,
   FleetPoolCap,
   FleetPoolCapsInput,
@@ -22,6 +23,8 @@ import {
   FleetPreviousRun,
   FleetReadError,
   FleetRunner,
+  FleetRunnersPage,
+  FleetRunsPage,
   FleetRunsQuery,
   FleetScheduledRun,
   FleetSleep,
@@ -66,6 +69,7 @@ import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -142,6 +146,7 @@ const fixtureOf = (input: {
   readonly failDeliveryPageAt?: number;
   readonly scheduledRuns?: O.Option<ReadonlyArray<FleetScheduledRun>>;
   readonly pageSize?: number;
+  readonly recentRuns?: ReadonlyArray<number>;
 }) =>
   FleetGithubFixture.make({
     runnerReads: input.reads,
@@ -153,7 +158,7 @@ const fixtureOf = (input: {
       A.filter(input.jobs, (job) => job.status === "in_progress"),
       (job) => job.runId
     ),
-    recentRuns: A.map(input.jobs, (job) => job.runId),
+    recentRuns: input.recentRuns ?? A.map(input.jobs, (job) => job.runId),
     jobs: input.jobs,
     deliveries: input.deliveries ?? [],
     details: input.details ?? [],
@@ -363,9 +368,26 @@ describe("fleet missed-event check verdicts", () => {
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.DeliveryFailed.makeOption({ hookId: HOOK, deliveryId: id, statusCode: 502 })
       );
-      expect(fleetRemedies(REPOSITORY, finding)).toEqual([
+    })
+  );
+
+  it.effect("a known failed delivery prints its redelivery only; a missed one prints the cancel-and-rerun pair", () =>
+    Effect.gen(function* () {
+      const id = "3855552300210716680";
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(115, ago(12)), queued(116, ago(12))],
+          deliveries: [delivery(id, ago(12) + 1000, 502), delivery("5", ago(30))],
+          details: [detail(id, 115), detail("5", 5)],
+        })
+      );
+      expect([tagOf(report, 115), tagOf(report, 116)]).toEqual(["MissedDelivery", "MissedDelivery"]);
+      expect(fleetRemedies(REPOSITORY, findingOf(report, 115))).toEqual([
         `redeliver: \`gh api -X POST repos/${REPOSITORY}/hooks/${HOOK}/deliveries/${id}/attempts\``,
-        `gate's call (reruns the whole run): \`gh run cancel 3110 --repo ${REPOSITORY}\`, then once the run completes \`gh run rerun 3110 --repo ${REPOSITORY}\``,
+      ]);
+      expect(fleetRemedies(REPOSITORY, findingOf(report, 116))).toEqual([
+        `gate's call (reruns the whole run): \`gh run cancel 3116 --repo ${REPOSITORY}\`, then once the run completes \`gh run rerun 3116 --repo ${REPOSITORY}\``,
       ]);
     })
   );
@@ -652,6 +674,169 @@ describe("fleet missed-event check verdicts", () => {
   );
 });
 
+describe("fleet missed-event check review wave 1", () => {
+  it.effect("launches count only runs created in the last two hours: an older run's start keeps the job Waiting", () =>
+    Effect.gen(function* () {
+      const older = started(220, ago(150), ago(5));
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[runner(1, "busy")], [runner(1, "busy")]],
+          jobs: [older, queued(221, ago(12))],
+          recentRuns: [queued(221, ago(12)).runId],
+        }),
+        { pools: [heavyAt(5)], sources: gateSources }
+      );
+      expect(report.pools[0]?.progress).toBe(true);
+      expect(findingOf(report, 221).verdict).toEqual(FleetVerdict.cases.Waiting.make({ launches: 0, rank: 1 }));
+    })
+  );
+
+  it.effect("the p95 queue-to-start samples only the starts in the two-hour window", () =>
+    Effect.gen(function* () {
+      const jobs = [started(230, ago(200), ago(180)), started(231, ago(30), ago(25)), queued(232, ago(3))];
+      const { report } = yield* runCheck(fixtureOf({ reads: [[runner(1, "busy")], [runner(1, "busy")]], jobs }), {
+        pools: [heavyAt(5)],
+        sources: gateSources,
+      });
+      assertSome(O.flatten(O.fromUndefinedOr(report.pools[0]?.p95QueueToStart)), minutes(5));
+    })
+  );
+
+  it.effect("one verdict time, taken after the job reads, sets age, progress and checkedAt", () =>
+    Effect.gen(function* () {
+      const read = [runner(1, "offline"), runner(2, "offline")];
+      const job = queued(240, ago(14));
+      const { report } = yield* runCheck(fixtureOf({ reads: [read, read], jobs: [job] }), {
+        overrides: {
+          jobsPage: () =>
+            Effect.as(TestClock.adjust(Duration.minutes(2)), FleetJobsPage.make({ jobs: [job], totalCount: 1 })),
+        },
+      });
+      expect(report.checkedAt).toBe(NOW + minutes(2));
+      expect(findingOf(report, 240).age).toBe(minutes(16));
+      expect(findingOf(report, 240).verdict).toEqual(FleetVerdict.cases.Wedged.make({ notBusyRunnerIds: [1, 2] }));
+    })
+  );
+
+  it.effect("an unreadable candidate detail beside a confirmed 502 is unknown, not MissedDelivery", () =>
+    Effect.gen(function* () {
+      const failed = "3855552300210716690";
+      const unread = "3855552300210716691";
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(250, ago(12))],
+          deliveries: [delivery(unread, ago(12) + 2000), delivery(failed, ago(12) + 1000, 502), delivery("6", ago(30))],
+          details: [detail(failed, 250), detail("6", 6)],
+          failingDetails: [unread],
+        })
+      );
+      const finding = findingOf(report, 250);
+      expect(finding.verdict._tag).toBe("NoLaunch");
+      assertSome(finding.classification, "unknown");
+    })
+  );
+
+  it.effect("a page boundary tied at the window start, then a failed page, is unknown, not MissedDelivery", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(260, ago(12))],
+          deliveries: [delivery("71", ago(14)), delivery("72", ago(14))],
+          details: [detail("71", 71), detail("72", 72)],
+          failDeliveryPageAt: 1,
+          pageSize: 1,
+        })
+      );
+      const finding = findingOf(report, 260);
+      expect(finding.verdict._tag).toBe("NoLaunch");
+      assertSome(finding.classification, "unknown");
+    })
+  );
+
+  it.effect("Wedged counts a runner busy in the first read and not busy in the second", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [
+            [runner(1, "busy"), runner(2, "busy")],
+            [runner(1, "busy"), runner(2, "offline")],
+          ],
+          jobs: [queued(270, ago(20))],
+        }),
+        { sources: gateSources }
+      );
+      expect(findingOf(report, 270).verdict).toEqual(FleetVerdict.cases.Wedged.make({ notBusyRunnerIds: [2] }));
+    })
+  );
+
+  it.effect("a run listing whose membership shifts between page reads is walked again until two walks agree", () =>
+    Effect.gen(function* () {
+      const jobs = [queued(281, ago(150)), queued(282, ago(150)), queued(283, ago(150))];
+      const fixture = fixtureOf({ reads: [[], []], jobs, recentRuns: [], pageSize: 1 });
+      const walks = yield* Ref.make(0);
+      const shifted: ReadonlyArray<number> = [3281, 3283, 3284];
+      const listed: ReadonlyArray<number> = [3281, 3282, 3283];
+      const { report } = yield* runCheck(fixture, {
+        sources: gateSources,
+        overrides: {
+          runsPage: Effect.fnUntraced(function* (query, page) {
+            const queuedListing = FleetRunsQuery.guards.ByStatus(query) && query.status === "queued";
+            const walk =
+              queuedListing && page === 1 ? yield* Ref.updateAndGet(walks, (n) => n + 1) : yield* Ref.get(walks);
+            const served = queuedListing ? (walk === 1 ? shifted : listed) : [];
+            return FleetRunsPage.make({ runIds: A.take(A.drop(served, page - 1), 1), totalCount: A.length(served) });
+          }),
+        },
+      });
+      expect(
+        A.sort(
+          A.map(report.findings, (finding) => finding.job.id),
+          Order.Number
+        )
+      ).toEqual([281, 282, 283]);
+      const walkCount = yield* Ref.get(walks);
+      expect(walkCount).toBe(3);
+    })
+  );
+
+  it.effect("fails the run when a run listing changes in every walk", () =>
+    Effect.gen(function* () {
+      const fixture = fixtureOf({ reads: [[], []], jobs: [] });
+      const walks = yield* Ref.make(0);
+      const error = yield* runCheck(fixture, {
+        overrides: {
+          runsPage: Effect.fnUntraced(function* (_query, page) {
+            const walk = page === 1 ? yield* Ref.updateAndGet(walks, (n) => n + 1) : yield* Ref.get(walks);
+            return FleetRunsPage.make({ runIds: [walk * 10 + page], totalCount: 2 });
+          }),
+        },
+      }).pipe(Effect.flip);
+      expect(error.message).toBe("GitHub read runs ByStatus failed: listing changed during its page reads in 3 walks");
+    })
+  );
+
+  it.effect("a runner listing that repeats a runner across its pages is not accepted as complete", () =>
+    Effect.gen(function* () {
+      const walks = yield* Ref.make(0);
+      const listing = [runner(1, "busy"), runner(2, "idle")];
+      const { report } = yield* runCheck(fixtureOf({ reads: [[]], jobs: [] }), {
+        overrides: {
+          runnersPage: Effect.fnUntraced(function* (page) {
+            const walk = page === 1 ? yield* Ref.updateAndGet(walks, (n) => n + 1) : yield* Ref.get(walks);
+            const served = walk === 1 ? [runner(1, "busy"), runner(1, "busy")] : listing;
+            return FleetRunnersPage.make({ runners: A.take(A.drop(served, page - 1), 1), totalCount: 2 });
+          }),
+        },
+      });
+      expect([report.pools[0]?.firstCount, report.pools[0]?.idleRunnerIds]).toEqual([2, [2]]);
+      const walkCount = yield* Ref.get(walks);
+      expect(walkCount).toBe(5);
+    })
+  );
+});
+
 describe("fleet missed-event check precedence", () => {
   it.effect("Stuck before Wedged", () =>
     Effect.gen(function* () {
@@ -811,7 +996,9 @@ describe("fleet missed-event check output", () => {
       expect(summary).toContain("fleet missed-event check: green");
       expect(summary).toContain("1 queued job(s) checked; verdicts: WaitingAtCap 1");
       expect(summary).toContain("p95 queue-to-start: heavy 5m00s");
-      expect(summary).toContain("previous scheduled run 77 at 2026-11-22T21:10:00.000Z, 10m00s before this check");
+      expect(summary).toContain(
+        "previous scheduled run 77 at 2026-11-22T21:10:00.000Z, 10m00s before this scheduled run"
+      );
       expect(report.githubRequests).toBe(9);
       expect(summary).toContain("; 9 GitHub request(s)");
       expect(summaries).toEqual([summary]);
@@ -829,21 +1016,52 @@ describe("fleet missed-event check output", () => {
           jobs: [queued(410, ago(12))],
           deliveries: [delivery(id, ago(12) + 1000, 500), delivery("10", ago(40))],
           details: [detail(id, 410), detail("10", 10)],
-          scheduledRuns: O.some([FleetScheduledRun.make({ id: 76, createdAt: ago(45) })]),
-        })
+          scheduledRuns: O.some([
+            FleetScheduledRun.make({ id: 9002, createdAt: ago(5) }),
+            FleetScheduledRun.make({ id: 76, createdAt: ago(45) }),
+          ]),
+        }),
+        { currentRunId: 9002 }
       );
       const summary = renderFleetCheckSummary(report);
       assertSome(A.head(Str.split(summary, "\n")), "## Fleet missed-event check: 1 alert(s)");
       expect(summary).toContain("checked at 2026-11-22T21:20:00.000Z: 1 queued job(s) checked");
       expect(summary).toContain(`| 410 | 3410 | heavy | 12m00s | MissedDelivery | none | delivery ${id} (500) |`);
       expect(summary).toContain(`gh api -X POST repos/${REPOSITORY}/hooks/${HOOK}/deliveries/${id}/attempts`);
-      expect(summary).toContain("gh run cancel 3410");
-      expect(summary).toContain("gh run rerun 3410");
+      expect(summary).not.toContain("gh run cancel 3410");
       expect(summary).not.toContain("--failed");
       expect(summary).toContain("(more than 30 minutes: a finding for the gate)");
       const exit = yield* Effect.exit(failOnFleetAlerts(report));
       expect(exit._tag).toBe("Failure");
     })
+  );
+
+  it.effect(
+    "measures the cadence gap from scheduled run to scheduled run, and only notes the elapsed time otherwise",
+    () =>
+      Effect.gen(function* () {
+        const runs = O.some([
+          FleetScheduledRun.make({ id: 9003, createdAt: ago(5) }),
+          FleetScheduledRun.make({ id: 78, createdAt: ago(31) }),
+        ]);
+        const scheduled = yield* runCheck(fixtureOf({ reads: [[]], jobs: [], scheduledRuns: runs }), {
+          currentRunId: 9003,
+        });
+        const scheduledSummary = renderFleetCheckSummary(scheduled.report);
+        expect(scheduledSummary).toContain("26m00s before this scheduled run");
+        expect(scheduledSummary).not.toContain("more than 30 minutes");
+        const dispatched = yield* runCheck(
+          fixtureOf({
+            reads: [[]],
+            jobs: [],
+            scheduledRuns: O.some([FleetScheduledRun.make({ id: 79, createdAt: ago(45) })]),
+          }),
+          { currentRunId: 5555 }
+        );
+        const dispatchedSummary = renderFleetCheckSummary(dispatched.report);
+        expect(dispatchedSummary).toContain("45m00s before this check");
+        expect(dispatchedSummary).not.toContain("more than 30 minutes");
+      })
   );
 
   it("renders every verdict and evidence form", () => {
@@ -947,7 +1165,7 @@ describe("fleet missed-event check helpers", () => {
   it("finds the previous scheduled run other than this one", () => {
     const runs = [FleetScheduledRun.make({ id: 2, createdAt: 20 }), FleetScheduledRun.make({ id: 1, createdAt: 10 })];
     expect(previousScheduledRun(runs, O.some(2))).toEqual(
-      FleetPreviousRun.cases.Found.make({ runId: 1, createdAt: 10 })
+      FleetPreviousRun.cases.Found.make({ runId: 1, createdAt: 10, currentCreatedAt: O.some(20) })
     );
     expect(pipe(runs, previousScheduledRun(O.none()))._tag).toBe("Found");
     expect(previousScheduledRun([], O.none())).toEqual(FleetPreviousRun.cases.NoneFound.make({}));
@@ -987,12 +1205,31 @@ describe("fleet missed-event check helpers", () => {
         deliveries,
         oldestReached: O.some(ago(20)),
         walkFailure: O.none(),
+        listingEnded: false,
         details: HashMap.fromIterable(A.map(details, (item) => [item.id, O.some(item)] as const)),
       });
     const both = [delivery("21", ago(11), 200), delivery("22", ago(12), 502)];
     expect(judge(both, [detail("21", 600), detail("22", 600)])._tag).toBe("Delivered");
     expect(judge([delivery("23", ago(11), 200, O.some("completed"))], [detail("23", 600)])._tag).toBe("NotDelivered");
     expect(judge([delivery("24", ago(30))], [])._tag).toBe("NotDelivered");
+  });
+
+  it("needs a confirmed end of the listing at a tied window start, and coverage before a 502", () => {
+    const job = queued(601, ago(12));
+    const judge = (oldestReached: number, listingEnded: boolean, deliveries: ReadonlyArray<FleetHookDelivery>) =>
+      judgeDeliveryEvidence({
+        job,
+        hookId: HOOK,
+        deliveries,
+        oldestReached: O.some(oldestReached),
+        walkFailure: O.none(),
+        listingEnded,
+        details: HashMap.fromIterable(A.map(deliveries, (item) => [item.id, O.some(detail(item.id, 601))] as const)),
+      })._tag;
+    expect(judge(ago(14), false, [])).toBe("Unreadable");
+    expect(judge(ago(14), true, [])).toBe("NotDelivered");
+    expect(judge(ago(13), false, [delivery("25", ago(11), 502)])).toBe("Unreadable");
+    expect(judge(ago(15), false, [delivery("25", ago(11), 502)])).toBe("DeliveryFailed");
   });
 
   it("classifies every evidence form", () => {
@@ -1387,6 +1624,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
             A.filter(P.isObject(inputs) ? R.keys(inputs) : [], Str.startsWith("permission-"))
           ),
           ["permission-actions", "permission-organization-self-hosted-runners", "permission-repository-hooks"]
+        );
+        assertSome(
+          O.map(withInputs, (inputs) => [
+            yamlAt(inputs, ["repositories"]),
+            yamlAt(inputs, ["permission-actions"]),
+            yamlAt(inputs, ["permission-organization-self-hosted-runners"]),
+            yamlAt(inputs, ["permission-repository-hooks"]),
+          ]),
+          ["beep-effect", "read", "read", "read"]
         );
         assertSome(
           O.map(mint, (step) => yamlAt(step, ["uses"])),

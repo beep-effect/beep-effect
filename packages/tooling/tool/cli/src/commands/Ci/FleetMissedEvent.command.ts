@@ -28,7 +28,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -93,17 +93,40 @@ const retried =
     return attempt(1);
   };
 
-const allPages = <A>(
+const MAX_LISTING_WALKS = 3;
+
+interface ListingPage<A> {
+  readonly items: ReadonlyArray<A>;
+  readonly totalCount: number;
+}
+
+interface ListingWalk<A> {
+  readonly consistent: boolean;
+  readonly items: ReadonlyArray<A>;
+  readonly keys: HashSet.HashSet<number>;
+  readonly pages: number;
+}
+
+const walkListing = <A>(
   endpoint: string,
-  readPage: (
-    page: number
-  ) => Effect.Effect<{ readonly items: ReadonlyArray<A>; readonly totalCount: number }, FleetReadError>
-): Effect.Effect<ReadonlyArray<A>, FleetReadError> => {
-  const go = (page: number, collected: ReadonlyArray<A>): Effect.Effect<ReadonlyArray<A>, FleetReadError> =>
+  readPage: (page: number) => Effect.Effect<ListingPage<A>, FleetReadError>,
+  keyOf: (item: A) => number
+): Effect.Effect<ListingWalk<A>, FleetReadError> => {
+  const finish = (items: ReadonlyArray<A>, pages: number, totalsAgree: boolean): ListingWalk<A> => {
+    const keys = HashSet.fromIterable(A.map(items, keyOf));
+    return { items, keys, pages, consistent: totalsAgree && HashSet.size(keys) === A.length(items) };
+  };
+  const go = (
+    page: number,
+    collected: ReadonlyArray<A>,
+    firstTotal: O.Option<number>
+  ): Effect.Effect<ListingWalk<A>, FleetReadError> =>
     Effect.flatMap(readPage(page), ({ items, totalCount }) => {
       const all = A.appendAll(collected, items);
-      return A.length(all) >= totalCount
-        ? Effect.succeed(all)
+      const total = O.getOrElse(firstTotal, () => totalCount);
+      const totalsAgree = total === totalCount;
+      return !totalsAgree || A.length(all) >= totalCount
+        ? Effect.succeed(finish(all, page, totalsAgree))
         : A.isReadonlyArrayEmpty(items)
           ? Effect.fail(
               FleetReadError.make({
@@ -112,12 +135,42 @@ const allPages = <A>(
               })
             )
           : page < MAX_LISTING_PAGES
-            ? go(page + 1, all)
+            ? go(page + 1, all, O.some(total))
             : Effect.fail(
                 FleetReadError.make({ endpoint, message: `listing truncated at ${MAX_LISTING_PAGES} pages` })
               );
     });
-  return go(1, A.empty());
+  return go(1, A.empty(), O.none());
+};
+
+const walksAgree = <A>(previous: O.Option<ListingWalk<A>>, walk: ListingWalk<A>): boolean =>
+  O.exists(
+    previous,
+    (earlier) =>
+      earlier.consistent &&
+      HashSet.size(earlier.keys) === HashSet.size(walk.keys) &&
+      HashSet.isSubset(earlier.keys, walk.keys)
+  );
+
+const allPages = <A>(
+  endpoint: string,
+  readPage: (page: number) => Effect.Effect<ListingPage<A>, FleetReadError>,
+  keyOf: (item: A) => number
+): Effect.Effect<ReadonlyArray<A>, FleetReadError> => {
+  const settle = (previous: O.Option<ListingWalk<A>>, walks: number): Effect.Effect<ReadonlyArray<A>, FleetReadError> =>
+    Effect.flatMap(walkListing(endpoint, readPage, keyOf), (walk) =>
+      walk.consistent && (walk.pages === 1 || walksAgree(previous, walk))
+        ? Effect.succeed(walk.items)
+        : walks >= MAX_LISTING_WALKS
+          ? Effect.fail(
+              FleetReadError.make({
+                endpoint,
+                message: `listing changed during its page reads in ${MAX_LISTING_WALKS} walks`,
+              })
+            )
+          : settle(O.some(walk), walks + 1)
+    );
+  return settle(O.none(), 1);
 };
 
 const asCommandError = (error: FleetReadError): CiCommandError =>
@@ -129,59 +182,72 @@ interface FleetReadContext {
 }
 
 const readRunners = (context: FleetReadContext): Effect.Effect<ReadonlyArray<FleetRunner>, FleetReadError> =>
-  allPages("org runners", (page) =>
-    Effect.map(
-      context.retry(() => context.reads.runnersPage(page)),
-      (read) => ({
-        items: read.runners,
-        totalCount: read.totalCount,
-      })
-    )
+  allPages(
+    "org runners",
+    (page) =>
+      Effect.map(
+        context.retry(() => context.reads.runnersPage(page)),
+        (read) => ({
+          items: read.runners,
+          totalCount: read.totalCount,
+        })
+      ),
+    (runner) => runner.id
   );
 
 const readRunIds = (context: FleetReadContext, query: FleetRunsQuery) =>
-  allPages(`runs ${query._tag}`, (page) =>
-    Effect.map(
-      context.retry(() => context.reads.runsPage(query, page)),
-      (read) => ({
-        items: read.runIds,
-        totalCount: read.totalCount,
-      })
-    )
+  allPages(
+    `runs ${query._tag}`,
+    (page) =>
+      Effect.map(
+        context.retry(() => context.reads.runsPage(query, page)),
+        (read) => ({
+          items: read.runIds,
+          totalCount: read.totalCount,
+        })
+      ),
+    identity
   );
 
 const readRunJobs = (context: FleetReadContext, runId: number) =>
-  allPages(`runs/${runId}/jobs`, (page) =>
-    Effect.map(
-      context.retry(() => context.reads.jobsPage(runId, page)),
-      (read) => ({
-        items: read.jobs,
-        totalCount: read.totalCount,
-      })
-    )
+  allPages(
+    `runs/${runId}/jobs`,
+    (page) =>
+      Effect.map(
+        context.retry(() => context.reads.jobsPage(runId, page)),
+        (read) => ({
+          items: read.jobs,
+          totalCount: read.totalCount,
+        })
+      ),
+    (job) => job.id
   );
 
 const readPoolJobs = Effect.fnUntraced(function* (
   context: FleetReadContext,
   labels: HashSet.HashSet<string>,
-  now: number
+  queryAt: number
 ) {
   const queries = [
     FleetRunsQuery.cases.ByStatus.make({ status: "queued" }),
     FleetRunsQuery.cases.ByStatus.make({ status: "in_progress" }),
-    FleetRunsQuery.cases.CreatedSince.make({ since: now - FLEET_THRESHOLDS.lookback }),
+    FleetRunsQuery.cases.CreatedSince.make({ since: queryAt - FLEET_THRESHOLDS.lookback }),
   ];
   const runIds = yield* Effect.forEach(queries, (query) => readRunIds(context, query), { concurrency: 1 });
   const unique = A.fromIterable(HashSet.fromIterable(A.flatten(runIds)));
   const jobs = yield* Effect.forEach(unique, (runId) => readRunJobs(context, runId), {
     concurrency: JOB_READ_CONCURRENCY,
   });
-  return A.filter(A.flatten(jobs), (job: FleetJob) => A.some(job.labels, (label) => HashSet.has(labels, label)));
+  return {
+    jobs: A.filter(A.flatten(jobs), (job: FleetJob) => A.some(job.labels, (label) => HashSet.has(labels, label))),
+    lookbackRunIds: HashSet.fromIterable(O.getOrElse(A.last(runIds), A.empty<number>)),
+  };
 });
 
 interface DeliveryWalk {
   readonly deliveries: ReadonlyArray<FleetHookDelivery>;
   readonly failure: O.Option<string>;
+  readonly listingEnded: boolean;
   readonly oldestReached: O.Option<number>;
 }
 
@@ -209,7 +275,7 @@ const walkDeliveries = (context: FleetReadContext, hookId: FleetDeliveryId, stop
               failure: O.some(`the delivery walk stopped at ${MAX_DELIVERY_PAGES} pages`),
             };
             return O.match(page.nextCursor, {
-              onNone: () => Effect.succeed(next),
+              onNone: () => Effect.succeed({ ...next, listingEnded: true }),
               onSome: (nextCursor) =>
                 reached
                   ? Effect.succeed(next)
@@ -220,7 +286,7 @@ const walkDeliveries = (context: FleetReadContext, hookId: FleetDeliveryId, stop
           },
         })
       );
-  return go(O.none(), 0, { deliveries: A.empty(), oldestReached: O.none(), failure: O.none() });
+  return go(O.none(), 0, { deliveries: A.empty(), oldestReached: O.none(), failure: O.none(), listingEnded: false });
 };
 
 const candidateIds = (jobs: ReadonlyArray<FleetJob>, deliveries: ReadonlyArray<FleetHookDelivery>) =>
@@ -277,6 +343,7 @@ const hookEvidence = Effect.fnUntraced(function* (
       deliveries: walk.deliveries,
       oldestReached: walk.oldestReached,
       walkFailure: walk.failure,
+      listingEnded: walk.listingEnded,
       details,
     }),
   ]);
@@ -343,13 +410,14 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
   const firstRead = yield* readRunners(context).pipe(Effect.mapError(asCommandError));
   yield* sleep(FLEET_RUNNER_READ_GAP);
   const secondRead = yield* readRunners(context).pipe(Effect.mapError(asCommandError));
-  const now = yield* Clock.currentTimeMillis;
+  const queryAt = yield* Clock.currentTimeMillis;
   const labels = HashSet.fromIterable(A.map(input.pools, (pool) => pool.label));
-  const jobs = yield* readPoolJobs(context, labels, now).pipe(Effect.mapError(asCommandError));
+  const { jobs, lookbackRunIds } = yield* readPoolJobs(context, labels, queryAt).pipe(Effect.mapError(asCommandError));
+  const now = yield* Clock.currentTimeMillis;
   const observations = A.map(input.pools, (pool) =>
     observeFleetPool({ pool, firstReadAt, firstRead, secondRead, jobs, now })
   );
-  const queued = queuedFleetJobs({ observations, jobs, hookSources: input.hookSources, now });
+  const queued = queuedFleetJobs({ observations, jobs, lookbackRunIds, hookSources: input.hookSources, now });
   const evidence = yield* collectEvidence(context, queued, now);
   const previousRun = yield* context
     .retry(() => reads.scheduledRuns(input.workflowFile))
