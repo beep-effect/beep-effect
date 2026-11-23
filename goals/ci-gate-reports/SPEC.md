@@ -340,6 +340,42 @@ Lane goals/ci-gate-reports-p0
 
 Reverse: Upload the gate records as a separate gate-reports artifact per job and read that in the lookup
 
+### ci lane steps count the annotations they stream; append-gate-reports reads the count by default, 2026-11-23
+
+The CI projection keeps GitHub's annotation caps: 10 per level per step and 50 per job. Until now nothing counted the annotations a job's earlier steps had already spent, so `--annotations-used` was always 0. The count now comes from the stream the lane recorder (decision `lane-step-gate-records`) already tees.
+
+**Count.** While it streams the lane child's output, the recorder scans whole lines (`scanWorkflowCommands`, carrying a partial line across chunks). It counts a line as an annotation when, after leading whitespace, it reads `::error`, `::warning` or `::notice` (any case), optionally followed by properties, and closed by `::`. `::group::` and other commands do not count.
+
+**Persist.** Each step caps each level at 10 (`shownAnnotationsOf`), because GitHub drops the rest, and adds the result to `.beep/ci/annotations-used.json`, a `ci-annotations-used/v1` record `{ errors, warnings, notices }`. The file is outside every `.beep/gates` directory, so it is never staged as a gate record.
+
+**Read.** `beep ci append-gate-reports` takes `--annotations-used` when it is given. Otherwise it reads the file's total (`resolveAnnotationsUsed`). No file means 0, and a file that does not decode fails the step, so a broken count is never taken for zero. The gate-reports action needs no change: it already omits the flag.
+
+**Known overcount, on the safe side.** Two lane invocations in one workflow step are capped separately, and commands inside a `::stop-commands::` block are counted. Both can only make the projection write fewer annotations than GitHub would accept, never more. Annotations from steps that are not `ci lane` (actions, raw `bun run` steps) are not counted.
+
+**Rejected:** a `--annotations-used` value computed in workflow YAML (the YAML cannot see earlier steps' output); reading the job log through the API mid-job (the log is not available until the job ends).
+
+Lane goals/ci-gate-reports-lane-records
+
+Reverse: Make --annotations-used default to 0 again in CiGateProjection.ts and drop the addAnnotationsUsed call from CiLaneRecording.ts
+
+### A hosted ci lane step records its lane through a recorded child process, 2026-11-23
+
+On a GitHub runner, `beep ci lane <id>` records its lane through a child: the CLI entry (`GITHUB_ACTIONS=true`, `process.argv[1]` is `packages/tooling/tool/cli/src/bin.ts`, no `BEEP_CI_LANE_RECORDED`) runs itself again with the same argv and `BEEP_CI_LANE_RECORDED=1`, streams the child's merged output through to the job log and into a scratch log, and exits with the child's exit code (`GateToolExit`). The child runs the lane exactly as before. Code: `packages/tooling/tool/cli/src/commands/Ci/CiLaneRecording.ts`.
+
+**Record.** After the child exits, the recorder compares the modification times of the checkout's gate records (`findJobGateRecordTargets`, now in `CiGateRecordSearch.ts`) with a reading taken before the child started. A new or rewritten record, a package `gate run` or a Turbo cache restore, means the step wrote its own record, and the recorder writes nothing. Otherwise it writes a root run of the `lane` gate, `.beep/gates/lane/<run-id>.{json,log}`, through `runGate` with `withGateServices` (`GateRecorder` over `GateRecordStore`, no history) and prints that console. The subject is the lane id and the item kind is `step`. A zero exit is one passed step. Any other exit states no item, so the reducer records an `errored` run whose fault message is the excerpt of the lane's log. `append-gate-reports` then shows a verdict for Docs Policy, Fallow Advisory, JSDoc Ratchet, Nix Shell, SAST, Professional Desktop IPC Stdio, Test Plan, Coverage Regression's compare step and Verify's repo-sanity step.
+
+**Why a child process.** Lane steps spawn their tools with inherited stdio from more than a dozen call sites (`runLaneProcess`, `Quality/Tasks.ts` step runners, Turbo, partition runners). Re-running the CLI as a child is the one place that sees the whole stream without changing any of them. It costs one extra CLI start per lane step.
+
+**Measurement never decides the step.** Only a failure to start the child or to read its exit code fails the step. Searching the checkout, counting annotations, opening or writing the scratch log, the job-log tee, reading the output to its end and writing the record each print one `[ci] lane recording:` line on failure and keep the child's exit code. A failed tee or log write stops only that copy: the recorder keeps reading the child's output so the child never blocks, and a record written without a log has an empty one. The scratch directory's removal ignores failures.
+
+**Output that outlives the lane.** The child is detached, so it leads its own process group. Once it exits, the recorder waits at most 5 s (`CI_LANE_DRAIN_GRACE_MS`) for its output to close, then stops reading and stops the group. This bounds the descendant-holding-the-pipe case that `run_lane`'s `setsid` group kill already handles.
+
+**Off a runner** (developer shells, `beep ci local`, tests calling the command), the lane runs in place as before.
+
+Lane goals/ci-gate-reports-lane-records
+
+Reverse: Delete CiLaneRecording.ts and the ciLaneSelfCommand branch at the top of the ci lane handler; lanes run in place again and record-less jobs print 'no gate records'
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

@@ -66,48 +66,28 @@ const lineSeparatorPattern = /\r\n?|\n/;
 const lineSeparatorGlobalPattern = /\r\n?|\n/g;
 const markdownTitleEscapePattern = /["\\]/g;
 const mathFencePattern = /\$\$/g;
-// A `$` that no backslash escapes yet: an inline-math value is raw TeX, where
-// `\$` already is a literal dollar, so escaping only the bare ones keeps
-// render(parse(render(x))) equal to render(x).
 const unescapedDollarPattern = /(?<!\\)((?:\\\\)*)\$/g;
-// An `&` that opens something shaped like a character reference (`&amp;`,
-// `&#38;`, `&#x26;`), which a parser would decode. Md carries no entity
-// table, so an unknown name such as `&foo;` is escaped too; a bare `&` is not.
-const characterReferencePattern = /&(?=#[0-9]{1,7};|#[xX][0-9A-Fa-f]{1,6};|[A-Za-z][A-Za-z0-9]{0,31};)/g;
-// A `$` that could open inline math under pandoc's rules: one followed by a
-// non-space character, or one that ends the text node (its neighbour is
-// unknown here). Newlines become entities or break tags in writer output,
-// so a dollar before a newline must be escaped too.
-const mathOpenerPattern = /\$(?=[^ \t]|$)/g;
-// The scheme colon of an `http://` or `https://` URL in text, which GFM's
-// autolink-literal extension would turn into a link; `http\://` stays text.
+const characterReferenceShapedAmpersandPattern = /&(?=#[0-9]{1,7};|#[xX][0-9A-Fa-f]{1,6};|[A-Za-z][A-Za-z0-9]{0,31};)/g;
+const pandocMathOpenerOrTextEndDollarPattern = /\$(?=[^ \t]|$)/g;
 const autolinkSchemePattern = /(?<![A-Za-z0-9])(https?):(?=\/\/)/gi;
-// GFM email literals use [A-Za-z0-9.+_-] before `@`, a dotted domain
-// of alphanumerics, `-` and `_`, and an alphabetic final character.
-// Match after escapeMarkdownLiteral: dots, hyphens and underscores already
-// carry backslashes. A domain dot must be followed by an alphanumeric, as
-// in markdown/internal/inlines/autolinkLiteral.ts (EmailCandidate).
-const autolinkEmailAtPattern =
+const autolinkEmailAtPatternAfterLiteralEscape =
   /(?<=[A-Za-z0-9.+_-])@(?=(?:[A-Za-z0-9]|\\[-_])*(?:\\\.[A-Za-z0-9](?:[A-Za-z0-9]|\\[-_])*)+(?<=[A-Za-z])(?![A-Za-z0-9]|\\[-_]|\\\.[A-Za-z0-9]))/g;
 const tableCellPipePattern = /(?<!\\)((?:\\\\)*)\|/g;
 const leadingBlockWhitespacePattern = /^[ \t]+/g;
 const trailingBlockWhitespacePattern = /[ \t]+$/g;
 const titleLineSeparatorPattern = /[\r\n]/g;
 
-// Escapes only what a parser would read back differently: `escapeMarkdownText`
-// covers the block and inline markers, and an `&` that opens a character
-// reference is escaped so it stays literal. For strings no math recognizer
-// reads (titles, alt text, admonition titles).
-const escapeMarkdownLiteral = flow(escapeMarkdownText, Str.replace(characterReferencePattern, "\\&"));
+// decision: writer-escapes-only-reread-differences
+const escapeMathFreeMarkdownLiteral = flow(
+  escapeMarkdownText,
+  Str.replace(characterReferenceShapedAmpersandPattern, "\\&")
+);
 
-// Text in phrasing content, where the bridge's inline-math recognizer runs
-// when math parsing is on and GFM links bare URLs: every `$` that could open
-// math and every URL scheme colon is escaped too.
 const escapeMarkdownPhrasingMarkers = flow(
-  escapeMarkdownLiteral,
-  Str.replace(mathOpenerPattern, "\\$"),
+  escapeMathFreeMarkdownLiteral,
+  Str.replace(pandocMathOpenerOrTextEndDollarPattern, "\\$"),
   Str.replace(autolinkSchemePattern, "$1\\:"),
-  Str.replace(autolinkEmailAtPattern, "\\@")
+  Str.replace(autolinkEmailAtPatternAfterLiteralEscape, "\\@")
 );
 
 const escapeMarkdownTablePhrasing = flow(
@@ -125,9 +105,6 @@ const characterReferenceOf = (char: string): string => `&#${pipe(char, Str.charC
 
 const characterReferencesOf: (run: string) => string = flow(Str.split(""), A.map(characterReferenceOf), joinEmpty);
 
-// A paragraph, heading or cell drops whitespace at its edges, and `joinBlocks`
-// trims each block, so edge spaces and tabs are written as character
-// references, which a parser decodes back into the text.
 const protectBlockEdgeWhitespace: (rendered: string) => string = flow(
   replaceAllWith(leadingBlockWhitespacePattern, characterReferencesOf),
   replaceAllWith(trailingBlockWhitespacePattern, characterReferencesOf)
@@ -135,11 +112,7 @@ const protectBlockEdgeWhitespace: (rendered: string) => string = flow(
 
 type JsonRecord = Readonly<Record<string, S.Json>>;
 
-// JSON frontmatter is the RFC 8785 text of the canonical digest owner,
-// `JsoncFingerprint`. A record it refuses (a key or string with an unpaired
-// surrogate, nesting past its depth cap) throws its typed error, which the
-// `Result` render entry points capture as a `RenderError`.
-const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flow(
+const renderJsonFrontmatterThrowingCanonicalJsonRefusal: (frontmatter: O.Option<JsonRecord>) => string = flow(
   O.filter((metadata) => A.isReadonlyArrayNonEmpty(R.toEntries(metadata))),
   O.map(
     (metadata) => `---json\n${Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(metadata), identity)}\n---`
@@ -230,8 +203,6 @@ export interface EffectRenderAdapter<Output, Error = never, Requirements = never
   readonly render: (document: Document) => Effect.Effect<Output, Error, Requirements>;
 }
 
-// A text node ending in `!` right before a link would turn the link into an
-// image, so that one `!` is escaped.
 const guardImageBang = (rendered: string, inline: Inline, next: O.Option<Inline>): string =>
   inline._tag === "text" && O.exists(next, (sibling) => sibling._tag === "a") && Str.endsWith("!")(rendered)
     ? `${Str.slice(0, -1)(rendered)}\\!`
@@ -241,9 +212,7 @@ const wordCharacterPattern = /[\p{L}\p{N}\p{M}]/u;
 
 const isWordCharacter = (char: string): boolean => wordCharacterPattern.test(char);
 
-// `_` delimiters cannot open after, or close before, a letter or digit, so an
-// emphasis that took them falls back to `*` when a neighbour touches it there.
-const touchesWord = (rendered: ReadonlyArray<string>, index: number): boolean =>
+const touchesWordWhereUnderscoreCannotFlank = (rendered: ReadonlyArray<string>, index: number): boolean =>
   O.exists(A.get(rendered, index - 1), flow(Str.slice(-1), isWordCharacter)) ||
   O.exists(A.get(rendered, index + 1), flow(Str.slice(0, 1), isWordCharacter));
 
@@ -258,13 +227,13 @@ const fitEmphasisDelimiters = (
   renderChildren: (children: ReadonlyArray<Inline>) => string
 ): string => {
   const own = A.get(rendered, index).pipe(O.getOrElse(thunkEmptyStr));
-  return isEmphasis(inline) && Str.startsWith("_")(own) && touchesWord(rendered, index)
+  return isEmphasis(inline) && Str.startsWith("_")(own) && touchesWordWhereUnderscoreCannotFlank(rendered, index)
     ? `${starDelimiter(inline)}${renderChildren(inline.children)}${starDelimiter(inline)}`
     : own;
 };
 
-// Renders an inline sequence, then adjusts each node for its neighbours:
-// emphasis delimiters that would not flank and a `!` that would form an image.
+const leadingDigitAsReferenceSoPandocMathCanClose = replaceAllWith(/^[0-9]/g, characterReferenceOf);
+
 const renderInlineSequence = (
   children: ReadonlyArray<Inline>,
   renderInline: (inline: Inline) => string,
@@ -274,10 +243,8 @@ const renderInlineSequence = (
   return joinEmpty(
     A.map(children, (inline, index) => {
       const own = fitEmphasisDelimiters(inline, rendered, index, renderChildren);
-      // A literal digit prevents pandoc's `$` closer from closing. A
-      // reference keeps the digit's value while allowing the raw closer.
       const guarded = O.exists(A.get(children, index - 1), (previous) => previous._tag === "inlineMath")
-        ? replaceAllWith(/^[0-9]/g, characterReferenceOf)(own)
+        ? leadingDigitAsReferenceSoPandocMathCanClose(own)
         : own;
       return guardImageBang(guarded, inline, A.get(children, index + 1));
     })
@@ -296,8 +263,6 @@ const isInlineChild = S.is(InlineSchema);
 
 const isBlockChild = S.is(BlockSchema);
 
-// One segment per inline run and per block of a list item. A run of blocks
-// is a sibling sequence, so adjacent lists in an item alternate markers too.
 const renderListItemSegments = (
   children: ReadonlyArray<ListItemChild>,
   renderInlineRun: (run: ReadonlyArray<Inline>) => string,
@@ -340,9 +305,6 @@ const renderHtmlTaskItem = (item: TaskItem): string => {
   return `<li><input type="checkbox" disabled${checked} /> ${renderHtmlListItemChildren(item.children)}</li>`;
 };
 
-// `escapeMarkdownText` already writes a text `|` as `\|`, so only a pipe
-// behind an even run of backslashes (code spans, link destinations) still
-// needs its cell escape.
 const renderMarkdownTableCell = (cell: TableCell): string =>
   pipe(
     renderMarkdownInlinesWithPolicy(CompatibilityUrlPolicySpec, cell.children, false, escapeMarkdownTablePhrasing),
@@ -353,11 +315,9 @@ const renderMarkdownTableCell = (cell: TableCell): string =>
 
 const renderMarkdownTableFence = (cells: string): string => `| ${cells} |`;
 
-// A title keeps its line breaks as character references, so the link stays
-// on one line and re-parses to the same title.
 const escapeMarkdownTitle = flow(
   Str.replace(markdownTitleEscapePattern, "\\$&"),
-  Str.replace(characterReferencePattern, "\\&"),
+  Str.replace(characterReferenceShapedAmpersandPattern, "\\&"),
   replaceAllWith(titleLineSeparatorPattern, characterReferenceOf)
 );
 
@@ -371,7 +331,7 @@ const renderMarkdownDestinationWithTitle = (
   title: O.Option<string>,
   policy: UrlPolicySpec
 ): string =>
-  `${pipe(escapeMarkdownDestinationWithPolicy(destination, policy), Str.replace(characterReferencePattern, "\\&"))}${renderMarkdownTitle(title)}`;
+  `${pipe(escapeMarkdownDestinationWithPolicy(destination, policy), Str.replace(characterReferenceShapedAmpersandPattern, "\\&"))}${renderMarkdownTitle(title)}`;
 
 const tableAlignmentAt = (align: ReadonlyArray<TableAlignment>, index: number): TableAlignment =>
   pipe(A.get(align, index), O.getOrElse(constant(TableAlignment.Enum.none)));
@@ -473,7 +433,6 @@ const renderHtmlTable = (block: Table): string =>
 const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;
 const youtubeEmbedUrl = (videoId: string): string => `https://www.youtube-nocookie.com/embed/${videoId}`;
 
-// Built-in adapters keep `rawHtml` escaped by default; trusted passthrough is a custom-adapter concern.
 const renderEscapedRawHtmlAsMarkdown = ({ value }: { readonly value: string }): string => escapeMarkdownPhrasing(value);
 const renderEscapedRawHtmlAsHtml = ({ value }: { readonly value: string }): string => Html.escapeHtml(value);
 
@@ -522,11 +481,6 @@ const renderMarkdownFootnoteDefinition = (block: {
     : `[^${block.identifier}]: ${indentContinuationLines(body, "    ")}`;
 };
 
-// The body starts after a blank quoted line, so the marker line is a
-// paragraph of its own: a table, an ordered list starting above 1 or a bare
-// URL cannot interrupt a paragraph and would merge into the marker line, and
-// inline math in a first paragraph that continued the marker line would sit
-// in a text run spanning the `> ` prefix, which the recognizer skips.
 const admonitionBodySeparator = ">\n";
 
 const renderMarkdownAdmonition = (block: {
@@ -536,7 +490,7 @@ const renderMarkdownAdmonition = (block: {
 }): string => {
   const title = pipe(
     block.title,
-    O.map((value) => ` ${escapeMarkdownLiteral(value)}`),
+    O.map((value) => ` ${escapeMathFreeMarkdownLiteral(value)}`),
     O.getOrElse(thunkEmptyStr)
   );
   const header = `> [!${Str.toUpperCase(block.kind)}]${title}`;
@@ -565,7 +519,7 @@ const renderMarkdownEmbed = (block: {
   const title = embedTitle(block);
   const destination = renderMarkdownDestinationWithTitle(block.src, block.title, CompatibilityUrlPolicySpec);
   const rendered = Match.value(block.kind).pipe(
-    Match.when("image", () => `![${escapeMarkdownLiteral(title)}](${destination})`),
+    Match.when("image", () => `![${escapeMathFreeMarkdownLiteral(title)}](${destination})`),
     Match.orElse(() => `[${escapeMarkdownPhrasing(title)}](${destination})`)
   );
 
@@ -615,10 +569,6 @@ const indentContinuationLines = (text: string, indent: string): string =>
     A.join("\n")
   );
 
-// The list item markers a list renders with. Two adjacent lists of the same
-// family would merge into one list, so the second takes the alternate
-// markers (`+` for bullets, `)` for ordered items). `*` is never a bullet:
-// `* ***` would read as a thematic break.
 class ListMarkers {
   readonly bullet: string;
   readonly ordered: string;
@@ -657,7 +607,6 @@ const nextListRun = (previous: ListRun, block: Block): ListRun => {
   return new ListRun(family, O.isSome(family) && O.contains(previous.family, family.value) && !previous.alternate);
 };
 
-// The markers each block of a sibling sequence renders its list with.
 const listMarkersOf = (blocks: ReadonlyArray<Block>): ReadonlyArray<ListMarkers> =>
   pipe(
     A.scan(blocks, new ListRun(O.none(), false), nextListRun),
@@ -669,9 +618,6 @@ type MarkdownList = Ul | Ol | TaskList;
 
 const isParagraph = (child: ListItemChild): boolean => child._tag === "p";
 
-// Md marks a loose item by paragraph children (a tight item holds inline
-// runs), so a list with any paragraph child renders loose: blank lines
-// between items and between the blocks of an item.
 const isLooseList = (list: MarkdownList): boolean =>
   A.some(list.children, (item: Li | TaskItem) => A.some(item.children, isParagraph));
 
@@ -703,8 +649,6 @@ const renderMarkdownList = (
 const isMarkdownList = (block: Block): block is MarkdownList =>
   block._tag === "ul" || block._tag === "ol" || block._tag === "taskList";
 
-// Renders a sibling sequence, giving each list the markers that keep it apart
-// from an adjacent list of the same family.
 const renderSiblingBlocks = (
   blocks: ReadonlyArray<Block>,
   renderBlock: (block: Block) => string,
@@ -720,9 +664,6 @@ const renderMarkdownSiblings = (
   renderList: (list: MarkdownList, markers: ListMarkers) => string
 ): Markdown => joinBlocks(renderSiblingBlocks(blocks, renderBlock, renderList));
 
-// An emphasis that opens or closes on another emphasis takes `_` delimiters:
-// `**foo**` would read `*` + `*foo*` + `*` as strong, and `***foo***` as
-// emphasis around strong.
 const opensOrClosesOnEm = (children: ReadonlyArray<Inline>): boolean =>
   O.exists(A.head(children), (child) => child._tag === "em") ||
   O.exists(A.last(children), (child) => child._tag === "em");
@@ -740,9 +681,7 @@ const renderMarkdownMarkedItem: {
     `${marker}${indentContinuationLines(content, pipe(" ", Str.repeat(Str.length(marker))))}`
 );
 
-// Pre.language already carries a validated CodeFenceLanguage (or None), so the
-// language reads straight through without re-sanitizing here.
-const languageToMarkdown: (language: O.Option<string>) => string = O.getOrElse(thunkEmptyStr);
+const alreadyValidatedCodeFenceLanguageToMarkdown: (language: O.Option<string>) => string = O.getOrElse(thunkEmptyStr);
 
 const languageToHtmlClass = O.match({
   onNone: thunkEmptyStr,
@@ -776,9 +715,6 @@ const adapterName = (adapter: { readonly name: string }): string =>
     () => "unknown"
   );
 
-// The standalone and link-label Markdown inline matchers differ only in how
-// nested inlines recurse and how a trusted `rawMarkdown` leaf is emitted, so a
-// single factory parameterizes both.
 const makeMarkdownInlineMatcher = (
   renderInlines: (children: ReadonlyArray<Inline>) => string,
   renderRawMarkdown: (node: { readonly value: string }) => string,
@@ -795,7 +731,7 @@ const makeMarkdownInlineMatcher = (
     a: ({ href, children, title }) =>
       `[${renderMarkdownLinkLabelInlines(children)}](${renderMarkdownDestinationWithTitle(href, title, urlPolicy)})`,
     img: ({ src, alt, title }) =>
-      `![${escapeMarkdownLiteral(alt)}](${renderMarkdownDestinationWithTitle(src, title, urlPolicy)})`,
+      `![${escapeMathFreeMarkdownLiteral(alt)}](${renderMarkdownDestinationWithTitle(src, title, urlPolicy)})`,
     br: () => "<br/>",
     inlineMath: ({ value }) => `$${escapeInlineMath(value)}$`,
     footnoteReference: ({ identifier }) => `[^${identifier}]`,
@@ -914,7 +850,7 @@ export const renderMarkdownBlock: (block: Block) => string = Match.typeTags<Bloc
   heading: renderMarkdownHeading,
   p: (block) => protectBlockEdgeWhitespace(renderMarkdownInlines(block.children)),
   blockquote: (block) => pipe(block.children, renderMarkdownBlocks, prefixLines("> ")),
-  pre: (block) => renderFencedCode(block.value, languageToMarkdown(block.language)),
+  pre: (block) => renderFencedCode(block.value, alreadyValidatedCodeFenceLanguageToMarkdown(block.language)),
   ul: (block) => renderMarkdownList(block, primaryListMarkers, renderMarkdownListItemSegments),
   ol: (block) => renderMarkdownList(block, primaryListMarkers, renderMarkdownListItemSegments),
   taskList: (block) => renderMarkdownList(block, primaryListMarkers, renderMarkdownListItemSegments),
@@ -924,9 +860,6 @@ export const renderMarkdownBlock: (block: Block) => string = Match.typeTags<Bloc
   footnoteDefinition: renderMarkdownFootnoteDefinition,
   admonition: renderMarkdownAdmonition,
   embed: renderMarkdownEmbed,
-  // `***` rather than `---`: a leading `---` reads as a frontmatter fence, a
-  // `---` under a paragraph line as a setext underline, and `- ---` as one
-  // thematic break instead of a list item holding one.
   hr: () => "***",
 });
 
@@ -1290,7 +1223,7 @@ const renderMarkdownInlineWithPolicy = (
     Match.tag(
       "img",
       ({ src, alt, title }) =>
-        `![${escapeMarkdownLiteral(alt)}](${renderMarkdownDestinationWithTitle(src, title, policy)})`
+        `![${escapeMathFreeMarkdownLiteral(alt)}](${renderMarkdownDestinationWithTitle(src, title, policy)})`
     ),
     Match.tag("br", () => "<br/>"),
     Match.tag("inlineMath", ({ value }) => `$${escapeInlineMath(value)}$`),
@@ -1419,7 +1352,9 @@ const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): str
     ),
     Match.tag("p", ({ children }) => protectBlockEdgeWhitespace(renderMarkdownInlinesWithPolicy(policy, children))),
     Match.tag("blockquote", ({ children }) => prefixLines(renderMarkdownBlocksWithPolicy(policy, children), "> ")),
-    Match.tag("pre", ({ language, value }) => renderFencedCode(value, languageToMarkdown(language))),
+    Match.tag("pre", ({ language, value }) =>
+      renderFencedCode(value, alreadyValidatedCodeFenceLanguageToMarkdown(language))
+    ),
     Match.tag("ul", "ol", "taskList", (list) =>
       renderMarkdownList(list, primaryListMarkers, renderMarkdownListItemSegmentsWithPolicy(policy))
     ),
@@ -1438,7 +1373,7 @@ const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): str
     Match.tag("admonition", ({ children, kind, title }) => {
       const renderedTitle = pipe(
         title,
-        O.map((value) => ` ${escapeMarkdownLiteral(value)}`),
+        O.map((value) => ` ${escapeMathFreeMarkdownLiteral(value)}`),
         O.getOrElse(thunkEmptyStr)
       );
       const header = `> [!${Str.toUpperCase(kind)}]${renderedTitle}`;
@@ -1453,7 +1388,7 @@ const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): str
       const destination = renderMarkdownDestinationWithTitle(src, title, policy);
       const rendered =
         kind === "image"
-          ? `![${escapeMarkdownLiteral(label)}](${destination})`
+          ? `![${escapeMathFreeMarkdownLiteral(label)}](${destination})`
           : `[${escapeMarkdownPhrasing(label)}](${destination})`;
       return `${rendered}${embedDescriptionMarkdown(description)}`;
     }),
@@ -1560,7 +1495,10 @@ const renderHtmlBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyArray
   );
 
 const renderMarkdownDocumentWithPolicy = (policy: UrlPolicySpec, document: Document): Markdown =>
-  joinBlocks([renderJsonFrontmatter(document.frontmatter), renderMarkdownBlocksWithPolicy(policy, document.children)]);
+  joinBlocks([
+    renderJsonFrontmatterThrowingCanonicalJsonRefusal(document.frontmatter),
+    renderMarkdownBlocksWithPolicy(policy, document.children),
+  ]);
 
 const renderHtmlDocumentWithPolicy = (policy: UrlPolicySpec, document: Document): HtmlFragment =>
   renderHtmlBlocksWithPolicy(policy, document.children);

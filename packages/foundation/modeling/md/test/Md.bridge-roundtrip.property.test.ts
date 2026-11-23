@@ -73,10 +73,14 @@ describe("@beep/md/Md.syntax round trip", () => {
       }
       const values = A.flatMap(documents, valuesOf);
       expect(A.filter(values, (value) => /[\r\0]/.test(value))).toStrictEqual([]);
-      // The writer-escape words reach the property: `$` that would open math
-      // and `&` that would open a character reference.
-      expect(A.some(values, (value) => /\$[a-z]/.test(value))).toBe(true);
-      expect(A.some(values, (value) => /&#?[a-z0-9]+;/.test(value))).toBe(true);
+      expect(
+        A.some(values, (value) => /\$[a-z]/.test(value)),
+        "the writer-escape word `$` that would open math reaches the property"
+      ).toBe(true);
+      expect(
+        A.some(values, (value) => /&#?[a-z0-9]+;/.test(value)),
+        "the writer-escape word `&` that would open a character reference reaches the property"
+      ).toBe(true);
     })
   );
 });
