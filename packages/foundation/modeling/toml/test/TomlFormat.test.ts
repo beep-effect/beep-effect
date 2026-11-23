@@ -1,9 +1,3 @@
-// TomlFormat: the conservative whitespace formatter over the linear CST and
-// the path-addressed modifier over the semantic view. Format never reorders,
-// collapses blank lines or rewrites values, and never touches a byte inside
-// a multi-line string; modify PINS the insertion-placement rules the design
-// left open, and every modified document is proven to reparse cleanly.
-
 import { Toml, TomlParseError } from "@beep/toml/Toml";
 import { TomlFormat, TomlFormattingOptions, TomlModificationError } from "@beep/toml/TomlFormat";
 import { assert, describe, it } from "@effect/vitest";
@@ -15,14 +9,12 @@ import type { TomlPath } from "@beep/toml/TomlEdit";
 const CRLF = TomlFormattingOptions.make({ newline: "\r\n" });
 const LF = TomlFormattingOptions.make({ newline: "\n" });
 
-/** Modify, apply, and prove the invariant: every modified document reparses cleanly. */
 const modified = Effect.fn("modified")(function* (text: string, path: TomlPath, value: unknown) {
   const out = yield* TomlFormat.modifyToString(text, path, value);
   yield* Toml.parse(out);
   return out;
 });
 
-/** Flip a failing modify and assert the failure is the typed modification error. */
 const modifyError = Effect.fn("modifyError")(function* (text: string, path: TomlPath, value: unknown) {
   const error = yield* Effect.flip(TomlFormat.modify(text, path, value));
   assert.instanceOf(error, TomlModificationError);
@@ -38,7 +30,6 @@ const IDEMPOTENCE_DOCS: ReadonlyArray<string> = [
   's = """\nkeep  \n"""\nafter=1',
   '\t# indented\n   \nk = {a = 1, b = "x"}\n',
   "[a.b]\nc.d = 1979-05-27T07:32:00Z\n",
-  // TOML 1.1: an inline table spanning lines, with inner comments and a trailing comma
   "k = {\n\ta = 1, # one\n\tb = [1, 2],\n}\n",
 ];
 
@@ -212,19 +203,15 @@ describe("TomlFormat", () => {
       })
     );
 
-    it.effect("modifies a multi-line inline table in place (TOML 1.1)", () =>
+    it.effect("preserves value spans and splices multiline inline-table gaps, including legal trailing commas", () =>
       Effect.gen(function* () {
         const doc = "t = {\n\ta = 1, # one\n\tb = 2,\n}\n";
-        // replacing an entry value touches only the value span
         const modified14 = yield* modified(doc, ["t", "b"], 3);
         assert.strictEqual(modified14, "t = {\n\ta = 1, # one\n\tb = 3,\n}\n");
-        // deleting a non-last entry takes its trailing gap (comment included)
         const modified15 = yield* modified(doc, ["t", "a"], undefined);
         assert.strictEqual(modified15, "t = {\n\tb = 2,\n}\n");
-        // deleting the last entry leaves the (1.1-legal) trailing comma behind
         const modified16 = yield* modified(doc, ["t", "b"], undefined);
         assert.strictEqual(modified16, "t = {\n\ta = 1,\n}\n");
-        // deleting the only entry collapses the whole interior
         const modified17 = yield* modified("t = {\n\ta = 1,\n}\n", ["t", "a"], undefined);
         assert.strictEqual(modified17, "t = {}\n");
       })

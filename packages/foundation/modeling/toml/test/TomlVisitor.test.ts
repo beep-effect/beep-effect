@@ -1,9 +1,3 @@
-// The SAX-style visitor: events ride the same semantic walk as buildValue, so
-// TableStart/ArrayTableStart/KeyValue land in document order; Comment events
-// (standalone trivia + expression trailing comments) interleave by source
-// offset. Offset semantics pinned here: a Comment's `offset` is the position
-// of its `#` marker in the source text.
-
 import { TomlParseError } from "@beep/toml/Toml";
 import { TomlVisitor, TomlVisitorEvent } from "@beep/toml/TomlVisitor";
 import { assert, describe, it } from "@effect/vitest";
@@ -35,7 +29,6 @@ const MIXED = A.join(
   "\n"
 );
 
-/** Map each event to a small tuple for a readable `deepStrictEqual` pin. */
 function tuple(event: TomlVisitorEvent): unknown {
   switch (event._tag) {
     case "TableStart":
@@ -162,6 +155,20 @@ describe("TomlVisitor", () => {
         ]);
         const comment = O.getOrUndefined(A.findFirst(events, TomlVisitorEvent.$is("Comment")));
         assert.strictEqual(comment?.offset, 4);
+      })
+    );
+
+    it.effect("a # inside a string value or quoted header key never positions a trailing comment", () =>
+      Effect.gen(function* () {
+        const events = yield* Stream.runCollect(TomlVisitor.visit('a = "x#y" # trail\n["k#"] # side\n'));
+        const comments = A.filter(events, TomlVisitorEvent.$is("Comment"));
+        assert.deepStrictEqual(
+          A.map(comments, (comment) => [comment.text, comment.offset] as const),
+          [
+            ["trail", 10],
+            ["side", 25],
+          ]
+        );
       })
     );
 

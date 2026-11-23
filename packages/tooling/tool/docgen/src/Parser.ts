@@ -6,6 +6,7 @@
  */
 
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { derivedLead, jsDocLead } from "@beep/repo-utils/JSDoc/LeadSource";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as doctrine from "doctrine";
 import * as Context from "effect/Context";
@@ -190,6 +191,22 @@ const parseDoc = (text: string) => {
   );
 };
 
+const startsWithSection = Str.startsWith("**");
+
+const withDerivedLead = (doc: Domain.Doc, lead: O.Option<string>): Domain.Doc =>
+  O.match(lead, {
+    onNone: () => doc,
+    onSome: (text) =>
+      doc.description === undefined
+        ? doc.modifyDescription(text)
+        : startsWithSection(doc.description)
+          ? doc.modifyDescription(`${text}\n\n${doc.description}`)
+          : doc,
+  });
+
+const parseDeclarationDoc = (text: string, declaration: ast.Node, name: string): Domain.Doc =>
+  withDerivedLead(parseDoc(text), derivedLead(declaration, name));
+
 const shouldIgnore = (doc: Domain.Doc): boolean => R.has(doc.tags, "internal") || R.has(doc.tags, "ignore");
 
 const parsePosition = Effect.fn("parsePosition")(function* (
@@ -202,7 +219,7 @@ const parsePosition = Effect.fn("parsePosition")(function* (
 });
 
 const parseInterfaceDeclaration = Effect.fn("parseInterfaceDeclaration")(function* (id: ast.InterfaceDeclaration) {
-  const doc = parseDoc(getJSDocText(id.getJsDocs()));
+  const doc = parseDeclarationDoc(getJSDocText(id.getJsDocs()), id, id.getName());
   if (shouldIgnore(doc)) {
     return [];
   }
@@ -294,39 +311,43 @@ const getFunctionDeclarationJSDocs = (fd: ast.FunctionDeclaration): Array<ast.JS
   });
 
 const parseFunctionDeclaration = Effect.fn("parseFunctionDeclaration")(function* (fd: ast.FunctionDeclaration) {
-  const doc = parseDoc(getJSDocText(getFunctionDeclarationJSDocs(fd)));
+  const name = fd.getName() ?? "";
+  const doc = parseDeclarationDoc(getJSDocText(getFunctionDeclarationJSDocs(fd)), fd, name);
   if (shouldIgnore(doc)) {
     return [];
   }
 
-  const name = fd.getName() ?? "";
   const signature = `declare const ${name}: ${parseType(fd)}`;
   const position = yield* parsePosition(fd);
   return [Domain.Function.new(name, doc, SignaturePositionOptions.make({ signature, position }))];
 });
 
-const parseFunctionVariableDeclaration = Effect.fn("parseFunctionVariableDeclaration")(function* (
-  vd: ast.VariableDeclaration
-) {
-  const statement = vd.getParent().getParent();
-  if (!ast.Node.isVariableStatement(statement)) {
-    return [];
-  }
-  const doc = parseDoc(getJSDocText(statement.getJsDocs()));
-  if (shouldIgnore(doc)) {
-    return [];
-  }
+const parseVariableDeclarationWith = <M>(
+  make: (name: string, doc: Domain.Doc, options: SignaturePositionOptions) => M
+) =>
+  Effect.fn("parseVariableDeclaration")(function* (vd: ast.VariableDeclaration) {
+    const statement = vd.getParent().getParent();
+    if (!ast.Node.isVariableStatement(statement)) {
+      return [];
+    }
+    const doc = parseDeclarationDoc(getJSDocText(statement.getJsDocs()), vd, vd.getName());
+    if (shouldIgnore(doc)) {
+      return [];
+    }
 
-  const name = vd.getName();
-  const signature = `declare const ${name}: ${parseType(vd)}`;
-  const position = yield* parsePosition(vd);
-  return [Domain.Function.new(name, doc, SignaturePositionOptions.make({ signature, position }))];
-});
+    const name = vd.getName();
+    const signature = `declare const ${name}: ${parseType(vd)}`;
+    const position = yield* parsePosition(vd);
+    return [make(name, doc, SignaturePositionOptions.make({ signature, position }))];
+  });
 
-const getFunctionDeclarations = Effect.gen(function* () {
-  const source = yield* Source;
-  const functions = A.filter(source.sourceFile.getFunctions(), (fd) => fd.isExported());
-  const arrows = A.filter(source.sourceFile.getVariableDeclarations(), (vd) => {
+const parseFunctionVariableDeclaration = parseVariableDeclarationWith<Domain.Function>(Domain.Function.new);
+
+const exportedVariableDeclarations = (
+  sourceFile: ast.SourceFile,
+  functionLike: boolean
+): ReadonlyArray<ast.VariableDeclaration> =>
+  A.filter(sourceFile.getVariableDeclarations(), (vd) => {
     if (!isVariableDeclarationList(vd.getParent())) {
       return false;
     }
@@ -340,11 +361,16 @@ const getFunctionDeclarations = Effect.gen(function* () {
       statement.isExported() &&
       pipe(
         O.fromNullishOr(vd.getInitializer()),
-        O.filter((expr) => ast.Node.isFunctionLikeDeclaration(expr)),
+        O.filter((expr) => ast.Node.isFunctionLikeDeclaration(expr) === functionLike),
         O.isSome
       )
     );
   });
+
+const getFunctionDeclarations = Effect.gen(function* () {
+  const source = yield* Source;
+  const functions = A.filter(source.sourceFile.getFunctions(), (fd) => fd.isExported());
+  const arrows = exportedVariableDeclarations(source.sourceFile, true);
 
   return { functions, arrows };
 });
@@ -383,7 +409,7 @@ export const parseFunctions = Effect.gen(function* () {
 });
 
 const parseTypeAliasDeclaration = Effect.fn("parseTypeAliasDeclaration")(function* (ta: ast.TypeAliasDeclaration) {
-  const doc = parseDoc(getJSDocText(ta.getJsDocs()));
+  const doc = parseDeclarationDoc(getJSDocText(ta.getJsDocs()), ta, ta.getName());
   if (shouldIgnore(doc)) {
     return [];
   }
@@ -430,23 +456,7 @@ export const parseTypeAliases = Effect.gen(function* () {
   return yield* parseTypeAliasDeclarations(source.sourceFile.getTypeAliases());
 });
 
-const parseConstantVariableDeclaration = Effect.fn("parseConstantVariableDeclaration")(function* (
-  vd: ast.VariableDeclaration
-) {
-  const statement = vd.getParent().getParent();
-  if (!ast.Node.isVariableStatement(statement)) {
-    return [];
-  }
-  const doc = parseDoc(getJSDocText(statement.getJsDocs()));
-  if (shouldIgnore(doc)) {
-    return [];
-  }
-
-  const name = vd.getName();
-  const signature = `declare const ${name}: ${parseType(vd)}`;
-  const position = yield* parsePosition(vd);
-  return [Domain.Constant.new(name, doc, SignaturePositionOptions.make({ signature, position }))];
-});
+const parseConstantVariableDeclaration = parseVariableDeclarationWith<Domain.Constant>(Domain.Constant.new);
 
 /**
  * Parses exported constant declarations from the active source file.
@@ -472,30 +482,29 @@ const parseConstantVariableDeclaration = Effect.fn("parseConstantVariableDeclara
  */
 export const parseConstants = Effect.gen(function* () {
   const source = yield* Source;
-  const declarations = A.filter(source.sourceFile.getVariableDeclarations(), (vd) => {
-    if (!isVariableDeclarationList(vd.getParent())) {
-      return false;
-    }
-
-    const statement = vd.getParent().getParent();
-    if (!ast.Node.isVariableStatement(statement)) {
-      return false;
-    }
-
-    return (
-      statement.isExported() &&
-      pipe(
-        O.fromNullishOr(vd.getInitializer()),
-        O.filter((expr) => !ast.Node.isFunctionLikeDeclaration(expr)),
-        O.isSome
-      )
-    );
-  });
+  const declarations = exportedVariableDeclarations(source.sourceFile, false);
 
   return yield* Effect.forEach(declarations, parseConstantVariableDeclaration, { concurrency: 1 }).pipe(
     Effect.map(A.flatten)
   );
 });
+
+const writtenLead = (commentText: string): O.Option<string> => O.liftPredicate(jsDocLead(commentText), Str.isNonEmpty);
+
+const targetLead = (es: ast.ExportSpecifier): O.Option<string> =>
+  pipe(
+    A.head(es.getLocalTargetDeclarations()),
+    O.flatMap((declaration) => {
+      const written = pipe(
+        O.fromUndefinedOr<ast.Node | undefined>(
+          ast.Node.isVariableDeclaration(declaration) ? declaration.getVariableStatement() : declaration
+        ),
+        O.filter(ast.Node.isJSDocable),
+        O.flatMap((owner) => writtenLead(getJSDocText(owner.getJsDocs())))
+      );
+      return O.orElse(written, () => derivedLead(declaration, es.compilerNode.propertyName?.getText() ?? es.getName()));
+    })
+  );
 
 const parseExportSpecifier = Effect.fn("parseExportSpecifier")(function* (
   es: ast.ExportSpecifier,
@@ -504,7 +513,10 @@ const parseExportSpecifier = Effect.fn("parseExportSpecifier")(function* (
   const name = es.compilerNode.name.text;
   const specifierDocComment = getDocComment(es.getLeadingCommentRanges());
   const docComment = O.isSome(specifierDocComment) ? specifierDocComment : declarationDocComment;
-  const doc = O.isSome(docComment) ? parseDoc(docComment.value.getText()) : parseDoc("");
+  const doc = withDerivedLead(
+    O.isSome(docComment) ? parseDoc(docComment.value.getText()) : parseDoc(""),
+    targetLead(es)
+  );
   const signature = `declare const ${name}: ${parseType(es)}`;
   const position = yield* parsePosition(es);
   return Domain.Export.new(
@@ -589,7 +601,7 @@ export const parseExports = Effect.gen(function* () {
 const parseModuleDeclaration = Effect.fn("parseModuleDeclaration")(function* (
   md: ast.ModuleDeclaration
 ): Effect.fn.Return<Array<Domain.Namespace>, never, Source> {
-  const doc = parseDoc(getJSDocText(md.getJsDocs()));
+  const doc = parseDeclarationDoc(getJSDocText(md.getJsDocs()), md, md.getName());
   if (shouldIgnore(doc)) {
     return [];
   }
@@ -799,7 +811,7 @@ const getClassDeclarationSignature = (c: ast.ClassDeclaration) => {
 };
 
 const parseClass = Effect.fn("parseClass")(function* (c: ast.ClassDeclaration) {
-  const doc = parseDoc(getJSDocText(c.getJsDocs()));
+  const doc = parseDeclarationDoc(getJSDocText(c.getJsDocs()), c, c.getName() ?? "");
   if (shouldIgnore(doc)) {
     return [];
   }
