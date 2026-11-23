@@ -119,17 +119,15 @@ const officeAction = (outlook: Outlook) =>
     hasAttachments: O.some(true),
   });
 
-// One stubbed mailbox with a single message, and one stubbed Box that counts uploads.
-const makeProviders = Effect.fn("MailTaggingServiceTest.makeProviders")(function* (
+const makeOneMessageMailboxAndUploadCountingBox = Effect.fn("MailTaggingServiceTest.makeProviders")(function* (
   answer: (requestBody: BoxUploadBody) => Promise<unknown>
 ) {
   const outlook = yield* Ref.make<Outlook>({ categories: ["Personal"], version: 1 });
-  // The SDK client is promise-based, so its call log is a plain array.
-  const uploads: Array<string> = [];
+  const promiseSdkUploadLog: Array<string> = [];
   const message = Effect.map(Ref.get(outlook), officeAction);
   return {
     outlook,
-    uploads,
+    uploads: promiseSdkUploadLog,
     layer: Layer.merge(
       makeM365Stub({
         getMailFolder: wellKnownFolders,
@@ -157,7 +155,7 @@ const makeProviders = Effect.fn("MailTaggingServiceTest.makeProviders")(function
         downloadMessageAttachment: () => Effect.succeed(M365AttachmentContent.make({ bytes: Uint8Array.of(1, 2, 3) })),
       }),
       makeBoxStub((requestBody) => {
-        uploads.push(`${requestBody.attributes.parent.id}/${requestBody.attributes.name}`);
+        promiseSdkUploadLog.push(`${requestBody.attributes.parent.id}/${requestBody.attributes.name}`);
         return answer(requestBody);
       })
     ),
@@ -196,10 +194,9 @@ const makeWorkspace = Effect.gen(function* () {
 });
 
 type Workspace = Effect.Success<typeof makeWorkspace>;
-type Providers = Effect.Success<ReturnType<typeof makeProviders>>["layer"];
+type Providers = Effect.Success<ReturnType<typeof makeOneMessageMailboxAndUploadCountingBox>>["layer"];
 
-// A run builds the whole service in its own scope and releases it when it ends.
-const serviceOver = (workspace: Workspace, providers: Providers) => (runLabel: string) =>
+const serviceBuiltInTheRunScope = (workspace: Workspace, providers: Providers) => (runLabel: string) =>
   Layer.build(
     MailTaggingServiceLive.pipe(
       Layer.provide(
@@ -219,7 +216,7 @@ const serviceOver = (workspace: Workspace, providers: Providers) => (runLabel: s
 
 const taggingOver = (workspace: Workspace, providers: Providers) => (mode: TaggingMode, runLabel: string) =>
   oneRun(
-    Effect.flatMap(serviceOver(workspace, providers)(runLabel), (services) =>
+    Effect.flatMap(serviceBuiltInTheRunScope(workspace, providers)(runLabel), (services) =>
       Context.get(services, MailTaggingJob).run(
         RunMailTaggingRequest.make({ mode, since, runId: TaggingRunId.make(runLabel) })
       )
@@ -227,11 +224,11 @@ const taggingOver = (workspace: Workspace, providers: Providers) => (mode: Taggi
   );
 
 const intendedName = "2026-07-02 office-action.pdf";
+const sha1OfTheThreeAttachmentBytes = "7037807198c22a7d2b0807371d763779a84fdfcf";
 const encodeFilingRecord = S.encodeEffect(FilingLedgerRecordJsonLine);
 const decodeFilingRecord = S.decodeEffect(FilingLedgerRecordJsonLine);
 
-// The line an earlier run wrote before its upload; that run stopped before its completion line.
-const interruptedIntent = FilingIntent.make({
+const intentLineOfEarlierRunStoppedBeforeCompletion = FilingIntent.make({
   runId: TaggingRunId.make("run-0001"),
   contentSha256: ContentSha256.make("039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81"),
   matterKey: MatterKey.make("1234.10001"),
@@ -256,8 +253,8 @@ describe("MailTagging assembled service", () => {
       "writes nothing on a dry run, tags, files, and meters on apply, is idempotent on rerun, and undoes",
       Effect.fnUntraced(function* () {
         const workspace = yield* makeWorkspace;
-        const providers = yield* makeProviders(() => Promise.resolve(boxFiles("7001")));
-        const serviceFor = serviceOver(workspace, providers.layer);
+        const providers = yield* makeOneMessageMailboxAndUploadCountingBox(() => Promise.resolve(boxFiles("7001")));
+        const serviceFor = serviceBuiltInTheRunScope(workspace, providers.layer);
         const tag = taggingOver(workspace, providers.layer);
         const files = Effect.all(
           {
@@ -324,8 +321,7 @@ describe("MailTagging assembled service", () => {
       "abandons the held name Box identifies by id only and files under the short-hash name, in two metered calls",
       Effect.fnUntraced(function* () {
         const workspace = yield* makeWorkspace;
-        // The earlier upload landed: Box holds the intended name and reports the holder's id, nothing else.
-        const providers = yield* makeProviders((requestBody) =>
+        const providers = yield* makeOneMessageMailboxAndUploadCountingBox((requestBody) =>
           requestBody.attributes.name === intendedName
             ? Promise.reject(
                 boxRejection({
@@ -339,7 +335,10 @@ describe("MailTagging assembled service", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         yield* fs.makeDirectory(path.dirname(workspace.filingLedgerPath), { recursive: true });
-        yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
+        yield* fs.writeFileString(
+          workspace.filingLedgerPath,
+          `${yield* encodeFilingRecord(intentLineOfEarlierRunStoppedBeforeCompletion)}\n`
+        );
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
         const linesOf5 = yield* linesOf(workspace.filingLedgerPath);
@@ -368,16 +367,14 @@ describe("MailTagging assembled service", () => {
       "reconciles the held name when Box reports the holder's size and SHA-1 and they match, in one metered call",
       Effect.fnUntraced(function* () {
         const workspace = yield* makeWorkspace;
-        // The earlier upload landed: Box holds the intended name and reports the holder's id, size, and SHA-1.
-        const providers = yield* makeProviders((requestBody) =>
+        const providers = yield* makeOneMessageMailboxAndUploadCountingBox((requestBody) =>
           requestBody.attributes.name === intendedName
             ? Promise.reject(
                 boxRejection({
                   statusCode: 409,
                   code: "item_name_in_use",
                   contextInfo: {
-                    // The upload conflict shape: one object, with the SHA-1 of the three attachment bytes.
-                    conflicts: { id: "7001", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
+                    conflicts: { id: "7001", type: "file", sha1: sha1OfTheThreeAttachmentBytes, size: 3 },
                   },
                 })
               )
@@ -386,7 +383,10 @@ describe("MailTagging assembled service", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         yield* fs.makeDirectory(path.dirname(workspace.filingLedgerPath), { recursive: true });
-        yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
+        yield* fs.writeFileString(
+          workspace.filingLedgerPath,
+          `${yield* encodeFilingRecord(intentLineOfEarlierRunStoppedBeforeCompletion)}\n`
+        );
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
         const linesOf7 = yield* linesOf(workspace.filingLedgerPath);

@@ -75,9 +75,7 @@ const docket = (seed: DocketSeed) =>
     patentNumbers: seed.patentNumbers ?? [],
   });
 
-// Store format 3: `client_name` is set on the first matter and null on the rest.
-// Two taggable matters, one without a client number, one recycled, and one whose keys are not usable tokens.
-const tables = PracticeKgMatterTables.make({
+const format3MatterTables = PracticeKgMatterTables.make({
   matters: [
     matter({ familyKey: "1234.10001", client: "1234", clientName: "Example Client" }),
     matter({ familyKey: "1234.20002", client: "1234", status: "candidate-unreviewed" }),
@@ -118,7 +116,7 @@ const contact = (seed: ContactSeed) =>
 const link = (contactId: string, familyKey: string | null, source: PracticeKgContactLinkSource = "attorney-answer") =>
   PracticeKgContactClientLinkRow.make({ clientNumber: "1234", contactId, evidence: "fixture", familyKey, source });
 
-const filed = (address: string, isPracticeAddress: boolean) =>
+const filedEmailCorrespondentByMessageCount = (address: string, isPracticeAddress: boolean) =>
   PracticeKgCorrespondentRow.make({
     address,
     ccCount: 0,
@@ -135,8 +133,7 @@ const filed = (address: string, isPracticeAddress: boolean) =>
     toCount: 0,
   });
 
-// Store format 4 correspondents. Only counsel@ and the quoted address resolve `unique`; every other one is a trap.
-const correspondents = PracticeKgCorrespondentTables.make({
+const format4CorrespondentTables = PracticeKgCorrespondentTables.make({
   addresses: [
     contact({ address: "counsel@acme.example.test", contactId: "c-counsel" }),
     contact({ address: "'quoted@acme.example.test'", contactId: "c-quoted" }),
@@ -150,21 +147,15 @@ const correspondents = PracticeKgCorrespondentTables.make({
     contact({ address: "numbered@acme.example.test", contactId: "c-numbered" }),
     contact({ address: "not an address", contactId: "c-broken" }),
     contact({ address: "unlinked@acme.example.test", contactId: "c-unlinked" }),
-    // Spelling traps: the practice flag is filed under the lowercase spelling, and one address owned by two
-    // contacts under two spellings is shared.
     contact({ address: "Cased@Firm.example.test", contactId: "c-cased" }),
     contact({ address: "Twin@acme.example.test", contactId: "c-twin-1" }),
     contact({ address: "'twin@acme.example.test'", contactId: "c-twin-2" }),
-    // One contact under two spellings is still one owner; a quoted practice address that filed mail never
-    // flagged is still the practice's own, by its domain.
     contact({ address: "'Counsel@acme.example.test'", contactId: "c-counsel" }),
     contact({ address: "'paralegal@practice.example.test'", contactId: "c-quoted-practice" }),
-    // The quoted, unflagged spelling sorts first in DuckDB: keeping that row loses the later owner's flag.
     contact({ address: "'Alias@acme.example.test'", contactId: "c-alias-role" }),
     contact({ address: "alias@acme.example.test", contactId: "c-alias-role", roleAddress: true }),
     contact({ address: "'Alias@own.example.test'", contactId: "c-alias-practice" }),
     contact({ address: "alias@own.example.test", contactId: "c-alias-practice", isPracticeAddress: true }),
-    // A flagged practice domain also excludes an unflagged sibling on a nested subdomain.
     contact({ address: "assistant@staff.mail.practice.example.test", contactId: "c-subdomain" }),
   ],
   links: [
@@ -188,11 +179,10 @@ const correspondents = PracticeKgCorrespondentTables.make({
     link("c-alias-practice", "1234.10001"),
     link("c-subdomain", "1234.10001"),
   ],
-  // A candidate by message count, and practice addresses that only filed email marks as such.
   correspondents: [
-    filed("inferred@acme.example.test", false),
-    filed("relay@practice.example.test", true),
-    filed("cased@firm.example.test", true),
+    filedEmailCorrespondentByMessageCount("inferred@acme.example.test", false),
+    filedEmailCorrespondentByMessageCount("relay@practice.example.test", true),
+    filedEmailCorrespondentByMessageCount("cased@firm.example.test", true),
   ],
 });
 
@@ -224,8 +214,8 @@ const seeded = Effect.gen(function* () {
   const path = yield* Path.Path;
   const directory = yield* temporaryDirectory;
   const databasePath = path.join(directory, "practice.duckdb");
-  yield* writeMatterTables(tables).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
-  yield* writePracticeKgCorrespondentTables(correspondents).pipe(
+  yield* writeMatterTables(format3MatterTables).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
+  yield* writePracticeKgCorrespondentTables(format4CorrespondentTables).pipe(
     withDuckDb(DuckDbConnectionOptions.make({ databasePath }))
   );
   return { directory, databasePath };
@@ -395,7 +385,10 @@ describe("MailTagging practice-KG matter directory", () => {
       Effect.fnUntraced(function* () {
         const seeded4 = yield* seeded;
         const contactsOf1 = yield* contactsOf(seeded4);
-        expect(contactsOf1).toStrictEqual([
+        expect(
+          contactsOf1,
+          "only counsel@ and the quoted address resolve unique: one contact under two spellings is one owner, while a practice flag filed under the lowercase spelling, an address two contacts own under two spellings, and a quoted practice address on a flagged domain are traps"
+        ).toStrictEqual([
           ["1234.10001", ["counsel@acme.example.test", "quoted@acme.example.test"], []],
           ["1234.20002", [], []],
         ]);
@@ -409,9 +402,18 @@ describe("MailTagging practice-KG matter directory", () => {
         const index = yield* snapshotOf(seeded2);
         const addresses = A.flatMap(index.entries, (entry) => entry.contactAddresses);
 
-        expect(addresses).not.toContain("alias@acme.example.test");
-        expect(addresses).not.toContain("alias@own.example.test");
-        expect(addresses).not.toContain("assistant@staff.mail.practice.example.test");
+        expect(
+          addresses,
+          "the quoted unflagged spelling sorts first in DuckDB; keeping that row would lose the later owner's role flag"
+        ).not.toContain("alias@acme.example.test");
+        expect(
+          addresses,
+          "the quoted unflagged spelling sorts first in DuckDB; keeping that row would lose the later owner's practice flag"
+        ).not.toContain("alias@own.example.test");
+        expect(
+          addresses,
+          "a flagged practice domain also excludes an unflagged sibling on a nested subdomain"
+        ).not.toContain("assistant@staff.mail.practice.example.test");
         expect(addresses).toContain("counsel@acme.example.test");
       })
     );
@@ -436,7 +438,7 @@ describe("MailTagging practice-KG matter directory", () => {
         const path = yield* Path.Path;
         const directory = yield* temporaryDirectory;
         const databasePath = path.join(directory, "format-3.duckdb");
-        yield* writeMatterTables(tables).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
+        yield* writeMatterTables(format3MatterTables).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
         const error = yield* Effect.flip(snapshotOf({ directory, databasePath }));
 
         assertInstanceOf(error, MailTaggingPortError);

@@ -82,26 +82,32 @@ const treesOf = (value: PublishedClaimInspectionReport) =>
     decomposition.status === "decomposed" ? [decomposition.tree] : []
   );
 
-const verifyCanonicalRecord = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(function* (
-  records: PublishedClaimInspectionReport["source"]["input"]["records"],
-  expected: (typeof Canonical.Type)["claims"][number],
-  familyId: string
-) {
-  const matches = A.filter(records, (record) =>
-    O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
-  );
-  if (matches.length !== 1) {
-    return yield* StructuralEvaluationError.make({
-      message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
-    });
+const verifyEveryRawSourceRecordIncludingFailedNormalization = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(
+  function* (
+    records: PublishedClaimInspectionReport["source"]["input"]["records"],
+    expected: (typeof Canonical.Type)["claims"][number],
+    familyId: string
+  ) {
+    const matches = A.filter(records, (record) =>
+      O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
+    );
+    if (matches.length !== 1) {
+      return yield* StructuralEvaluationError.make({
+        message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
+      });
+    }
+    const actual = O.getOrThrow(A.head(matches));
+    if (
+      actual.kind === "text" &&
+      // decision: canonical-whitespace-is-the-original-normalization-protocol
+      Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText
+    ) {
+      return yield* StructuralEvaluationError.make({
+        message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
+      });
+    }
   }
-  const actual = O.getOrThrow(A.head(matches));
-  if (actual.kind === "text" && Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText) {
-    return yield* StructuralEvaluationError.make({
-      message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
-    });
-  }
-});
+);
 
 const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText")(function* (
   report: PublishedClaimInspectionReport,
@@ -114,10 +120,8 @@ const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText"
       message: `Complete source-record count mismatch: ${familyId}; source=${records.length}, canonical=${canonical.claims.length}`,
     });
   }
-  // Check every raw source text, including records that failed normalization.
-  // Whitespace canonicalization is exactly the original normalization protocol.
   for (const expected of canonical.claims) {
-    yield* verifyCanonicalRecord(records, expected, familyId);
+    yield* verifyEveryRawSourceRecordIncludingFailedNormalization(records, expected, familyId);
   }
 });
 
@@ -147,7 +151,7 @@ const program = Effect.gen(function* () {
     }
     return text;
   });
-  // Verify the entire baseline before any prediction, not just the next family.
+  // decision: evaluation-scripts-verify-whole-freeze-before-prediction
   for (const file of implementation.files) {
     yield* verifiedText(file.path, file.sha256);
   }
@@ -190,8 +194,7 @@ const program = Effect.gen(function* () {
     inputs,
     ({ family, source, gold, canonical, xml }, index) =>
       Effect.gen(function* () {
-        // This URL is an explicit replay alias, never evidence of a live download.
-        const alias = `https://api.uspto.gov/evaluation-replay/${source.applicationNumber}.xml`;
+        const replayAliasNeverLiveDownload = `https://api.uspto.gov/evaluation-replay/${source.applicationNumber}.xml`;
         const metadata = yield* encode({
           patentFileWrapperDataBag: [
             {
@@ -200,7 +203,7 @@ const program = Effect.gen(function* () {
               pgpubDocumentMetaData: {
                 productIdentifier: "APPXML",
                 xmlFileName: "recorded-native-claims.xml",
-                fileLocationURI: alias,
+                fileLocationURI: replayAliasNeverLiveDownload,
               },
             },
           ],
@@ -213,7 +216,7 @@ const program = Effect.gen(function* () {
                 request,
                 Str.includes("/applications/search?")(request.url)
                   ? new Response(metadata)
-                  : request.url === alias
+                  : request.url === replayAliasNeverLiveDownload
                     ? new Response(xml)
                     : new Response("", { status: 404 })
               )
@@ -271,7 +274,7 @@ const program = Effect.gen(function* () {
             determinerGroups: A.dedupe(
               A.flatMap(tree.elements, (element) => A.map(element.terms, (term) => term.determiner))
             ),
-            // Nested means containment below a top-level limitation, not an ordinary root limitation.
+            // decision: nested-score-means-containment-below-top-level-limitation
             nested: A.some(tree.edges, (edge) => edge.kind === "part-of" && edge.parent !== `${tree.claimNumber}`),
             functional: A.some(tree.edges, (edge) => edge.kind === "functional"),
             rules: A.dedupe(A.map(findings, (finding) => finding.rule)),

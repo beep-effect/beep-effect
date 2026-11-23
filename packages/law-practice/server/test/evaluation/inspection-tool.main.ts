@@ -90,10 +90,9 @@ const verifyImplementation = Effect.fn("InspectionEvaluation.verifyImplementatio
   const fs = yield* FileSystem.FileSystem;
   const digest = yield* Digest.Digest;
   yield* verifyRuntimeIdentity(implementation.runtimeClosure);
-  // Runtime closure inputs may be binary; hash their actual bytes before any prediction.
   for (const file of implementation.files) {
-    const bytes = yield* fs.readFile(file.path);
-    const actual = yield* digest.digest(Digest.sha256, bytes);
+    const actualRuntimeClosureBytesPossiblyBinary = yield* fs.readFile(file.path);
+    const actual = yield* digest.digest(Digest.sha256, actualRuntimeClosureBytesPossiblyBinary);
     if (Hex.encode(actual) !== file.sha256) {
       return yield* StructuralEvaluationError.make({ message: `Frozen file hash mismatch: ${file.path}` });
     }
@@ -123,26 +122,32 @@ const treesOf = (value: PublishedClaimInspectionReport) =>
     decomposition.status === "decomposed" ? [decomposition.tree] : []
   );
 
-const verifyCanonicalRecord = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(function* (
-  records: PublishedClaimInspectionReport["source"]["input"]["records"],
-  expected: (typeof Canonical.Type)["claims"][number],
-  familyId: string
-) {
-  const matches = A.filter(records, (record) =>
-    O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
-  );
-  if (matches.length !== 1) {
-    return yield* StructuralEvaluationError.make({
-      message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
-    });
+const verifyEveryRawSourceRecordIncludingFailedNormalization = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(
+  function* (
+    records: PublishedClaimInspectionReport["source"]["input"]["records"],
+    expected: (typeof Canonical.Type)["claims"][number],
+    familyId: string
+  ) {
+    const matches = A.filter(records, (record) =>
+      O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
+    );
+    if (matches.length !== 1) {
+      return yield* StructuralEvaluationError.make({
+        message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
+      });
+    }
+    const actual = O.getOrThrow(A.head(matches));
+    if (
+      actual.kind === "text" &&
+      // decision: canonical-whitespace-is-the-original-normalization-protocol
+      Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText
+    ) {
+      return yield* StructuralEvaluationError.make({
+        message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
+      });
+    }
   }
-  const actual = O.getOrThrow(A.head(matches));
-  if (actual.kind === "text" && Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText) {
-    return yield* StructuralEvaluationError.make({
-      message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
-    });
-  }
-});
+);
 
 const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText")(function* (
   report: PublishedClaimInspectionReport,
@@ -155,10 +160,8 @@ const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText"
       message: `Complete source-record count mismatch: ${familyId}; source=${records.length}, canonical=${canonical.claims.length}`,
     });
   }
-  // Check every raw source text, including records that failed normalization.
-  // Whitespace canonicalization is exactly the original normalization protocol.
   for (const expected of canonical.claims) {
-    yield* verifyCanonicalRecord(records, expected, familyId);
+    yield* verifyEveryRawSourceRecordIncludingFailedNormalization(records, expected, familyId);
   }
 });
 
@@ -351,16 +354,12 @@ const program = Effect.gen(function* () {
     });
   }
   yield* fs.makeDirectory(output, { recursive: true });
-  // The evaluation Scope owns one fixed provider, independently of family
-  // acquisition scopes. A typed failed attempt is reused as the same failure;
-  // the shared enhancement factory retains honest unavailable coverage.
   const inspectionRuntime = yield* makeEvaluationInspectionRuntime();
   const rows = yield* Effect.forEach(
     inputs,
     ({ family, source, gold, canonical, xml }, index) =>
       Effect.gen(function* () {
-        // This URL is an explicit replay alias, never evidence of a live download.
-        const alias = `https://api.uspto.gov/evaluation-replay/${source.applicationNumber}.xml`;
+        const replayAliasNeverLiveDownload = `https://api.uspto.gov/evaluation-replay/${source.applicationNumber}.xml`;
         const metadata = yield* encode({
           patentFileWrapperDataBag: [
             {
@@ -369,12 +368,12 @@ const program = Effect.gen(function* () {
               pgpubDocumentMetaData: {
                 productIdentifier: "APPXML",
                 xmlFileName: "recorded-native-claims.xml",
-                fileLocationURI: alias,
+                fileLocationURI: replayAliasNeverLiveDownload,
               },
             },
           ],
         });
-        const transport = replayTransport(metadata, alias, xml);
+        const transport = replayTransport(metadata, replayAliasNeverLiveDownload, xml);
         const replayInputs = UsptoClaimInputsLive.pipe(
           Layer.provide(BunCrypto.layer),
           Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
@@ -445,7 +444,7 @@ const program = Effect.gen(function* () {
             determinerGroups: A.dedupe(
               A.flatMap(tree.elements, (element) => A.map(element.terms, (term) => term.determiner))
             ),
-            // Nested means containment below a top-level limitation, not an ordinary root limitation.
+            // decision: nested-score-means-containment-below-top-level-limitation
             nested: A.some(tree.edges, (edge) => edge.kind === "part-of" && edge.parent !== `${tree.claimNumber}`),
             functional: A.some(tree.edges, (edge) => edge.kind === "functional"),
             rules: A.dedupe(A.map(findings, (finding) => finding.rule)),
