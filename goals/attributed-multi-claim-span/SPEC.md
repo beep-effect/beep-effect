@@ -29,7 +29,7 @@ confidence, principal/model identity, time, provenance, and gate disposition.
 
 ## Target Surfaces
 
-- `packages/foundation/modeling/provenance/src/TextAnchor.ts` and its verified
+- `packages/foundation/modeling/text/src/TextAnchor.ts` and its verified
   anchor seam.
 - `packages/epistemic/domain/src/values/EvidenceSpan/` and the appropriate
   epistemic annotation/value modules.

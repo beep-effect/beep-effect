@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * The char-offset substrate now lives in `@beep/provenance` (`TextAnchor`) and
+ * The char-offset substrate now lives in `@beep/text` (`TextAnchor`) and
  * the unit-interval primitive in `@beep/schema` (`UnitInterval`); this module is
  * the epistemic value object that wraps the anchor fields and adds an extraction
  * confidence. Keeping the offset shape in foundation lets any slice ground
@@ -13,13 +13,13 @@
  * @since 0.0.0
  */
 import { $EpistemicsId } from "@beep/identity/packages";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   isInternallyConsistent as isTextAnchorInternallyConsistent,
   TextAnchor,
   TextAnchorFields,
   TextAnchorWidthCheck,
-} from "@beep/provenance/TextAnchor";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+} from "@beep/text/TextAnchor";
 import * as Arbitrary from "effect/Arbitrary";
 import { dual, identity } from "effect/Function";
 import * as S from "effect/Schema";
@@ -119,7 +119,7 @@ const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity).check(TextAnch
 /**
  * Char-offset evidence span: the exact quoted source text and its start/end
  * character offsets, with an extraction confidence. Structurally it is a
- * `@beep/provenance` `TextAnchor` (offset fields spread from `TextAnchorFields`)
+ * `@beep/text` `TextAnchor` (offset fields spread from `TextAnchorFields`)
  * plus a `Confidence` — the confidence is the epistemic judgement layered on top
  * of the pure provenance anchor.
  *
@@ -145,7 +145,7 @@ const EvidenceSpanSchema = EvidenceSpanStruct.mapFields(identity).check(TextAnch
 export class EvidenceSpan extends S.Opaque<EvidenceSpan, { readonly brand: unique symbol }>()(
   EvidenceSpanSchema.pipe(
     $I.annoteSchema("EvidenceSpan", {
-      description: "Char-offset evidence span wrapping a @beep/provenance TextAnchor with an extraction confidence.",
+      description: "Char-offset evidence span wrapping a @beep/text TextAnchor with an extraction confidence.",
     })
   )
 ) {

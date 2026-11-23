@@ -1,14 +1,4 @@
-// Recursive-descent JSONC parser: value mode (plain JS values) and tree mode
-// (`JsoncNode` AST). Private implementation.
-//
-// This module owns the single copy of the scan-error to parse-code mapping
-// (`scanErrorToCode`), consumed by both this parser and the visitor. It
-// returns plain results plus raw error records and MUST NOT import from
-// `Jsonc.ts`: the facade maps raw records into `JsoncParseErrorDetail`
-// (computing `line`/`character` from `offset`) and constructs the aggregate
-// `JsoncParseError` itself, so the dependency edge runs facade to parser only.
-//
-// Reference: Microsoft's jsonc-parser parser design (MIT).
+// Ported from microsoft/node-jsonc-parser src/impl/parser.ts (MIT).
 
 import { $JsoncId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -223,8 +213,6 @@ export const scanErrorToCode: (error: ScanError) => O.Option<ParseCode> = Match.
 const isStructuralTrivia = S.is(SyntaxKind.pick(["LineComment", "BlockComment", "Trivia", "LineBreak"]));
 const isComment = S.is(SyntaxKind.pick(["LineComment", "BlockComment"]));
 
-// The node types one token produces: every `JsoncNodeType` but the two
-// containers and the key-value pair, read off the kit so they never drift.
 type LeafNodeType = Exclude<JsoncNodeType, "object" | "array" | "property">;
 
 interface Internal {
@@ -238,22 +226,13 @@ const run: {
   (flags: ParseFlags, buildTree: boolean): (text: string) => Internal;
 } = dual(3, (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
   const scanner = createScanner(text, false);
-  // Local accumulators below grow in place: an immutable append copies the
-  // whole array per element and makes wide containers quadratic.
   const errors: Array<RawParseError> = [];
   let currentToken: SyntaxKind = "Unknown";
-  // Current collection-nesting depth. Guards every recursive-descent surface
-  // (parseArray/parseObject and their tree-mode twins) against stack overflow
-  // on hostile deeply-nested input — see MAX_NESTING_DEPTH.
   let depth = 0;
 
-  // Defeats TS control-flow narrowing — scanNext() mutates currentToken via closure.
-  const token = (): SyntaxKind => currentToken;
+  const currentTokenUnnarrowed = (): SyntaxKind => currentToken;
 
-  // Tight end-of-token offset — captures where the CURRENT token ends, before
-  // scanNext() advances past trailing trivia. Node lengths are computed from
-  // this value so spans never swallow trailing whitespace or comments.
-  const tokenEnd = (): number => scanner.getTokenOffset() + scanner.getTokenLength();
+  const tightTokenEndBeforeTrailingTrivia = (): number => scanner.getTokenOffset() + scanner.getTokenLength();
 
   const record = (code: ParseCode): void => {
     accumulation.append(
@@ -282,20 +261,14 @@ const run: {
     }
   };
 
-  // One fatal, deduped depth diagnostic, anchored at the token that would have
-  // pushed nesting past the cap.
-  const pushDepthError = (): void => {
+  const recordDepthErrorOnceAtCappingToken = (): void => {
     if (!A.some(errors, (e) => e.code === "NestingDepthExceeded")) {
       record("NestingDepthExceeded");
     }
   };
 
-  // Cursor adapter for the shared iterative bracket-balance skip, used at the
-  // depth cap so an over-deep subtree is consumed without adding stack frames.
-  // `advance` is scanNext, so scan errors and comment diagnostics inside a
-  // skipped subtree are still collected.
-  const skipCursor: SkipCursor = {
-    getToken: token,
+  const skipCursorCollectingSkippedSubtreeDiagnostics: SkipCursor = {
+    getToken: currentTokenUnnarrowed,
     advance: () => {
       scanNext();
     },
@@ -304,12 +277,10 @@ const run: {
   };
 
   const skipContainer = (): void => {
-    skipBalancedValue(skipCursor);
+    skipBalancedValue(skipCursorCollectingSkippedSubtreeDiagnostics);
   };
 
-  // Record `code` and resynchronize: advance until one of `skipUntil` is the
-  // current token (left in place) or EOF.
-  const pushError: {
+  const recordThenResyncUntil: {
     (code: ParseCode, skipUntil?: ReadonlyArray<SyntaxKind>): void;
     (skipUntil?: ReadonlyArray<SyntaxKind>): (code: ParseCode) => void;
   } = dual(
@@ -317,7 +288,7 @@ const run: {
     (code: ParseCode, skipUntil: ReadonlyArray<SyntaxKind> = A.empty()): void => {
       record(code);
       if (A.isReadonlyArrayNonEmpty(skipUntil)) {
-        while (token() !== "EOF" && !A.contains(skipUntil, token())) {
+        while (currentTokenUnnarrowed() !== "EOF" && !A.contains(skipUntil, currentTokenUnnarrowed())) {
           scanNext();
         }
       }
@@ -329,7 +300,7 @@ const run: {
     <T>(body: () => T): (placeholder: () => T) => T;
   } = dual(2, <T>(placeholder: () => T, body: () => T): T => {
     if (depth >= MAX_NESTING_DEPTH) {
-      pushDepthError();
+      recordDepthErrorOnceAtCappingToken();
       skipContainer();
       return placeholder();
     }
@@ -341,44 +312,34 @@ const run: {
     }
   });
 
-  // Shared container-loop step: handles the separator before an entry and
-  // reports a missing comma. Returns `false` when a trailing comma closed the
-  // container.
-  const separator: {
+  const separatorFalseWhenTrailingCommaCloses: {
     (closer: SyntaxKind, missingValue: ParseCode, needsComma: boolean): boolean;
     (missingValue: ParseCode, needsComma: boolean): (closer: SyntaxKind) => boolean;
   } = dual(3, (closer: SyntaxKind, missingValue: ParseCode, needsComma: boolean): boolean => {
-    if (token() === "Comma") {
+    if (currentTokenUnnarrowed() === "Comma") {
       if (!needsComma) {
-        pushError(missingValue);
+        recordThenResyncUntil(missingValue);
       }
       scanNext();
-      if (token() === closer && flags.allowTrailingComma) {
+      if (currentTokenUnnarrowed() === closer && flags.allowTrailingComma) {
         return false;
       }
     } else if (needsComma) {
-      pushError("CommaExpected");
+      recordThenResyncUntil("CommaExpected");
     }
     return true;
   });
 
-  // Consume the separator before an object member and report whether its
-  // String key follows. A trailing comma leaves the cursor on the closing
-  // brace and a non-string key records PropertyNameExpected and recovers;
-  // both answer false, and the member loop re-tests its own condition, which
-  // ends it at the brace exactly as a `break` would.
   const atMemberName = (needsComma: boolean): boolean => {
-    if (!separator("CloseBrace", "PropertyNameExpected", needsComma)) {
+    if (!separatorFalseWhenTrailingCommaCloses("CloseBrace", "PropertyNameExpected", needsComma)) {
       return false;
     }
-    if (token() === "String") {
+    if (currentTokenUnnarrowed() === "String") {
       return true;
     }
-    pushError("PropertyNameExpected", ["CloseBrace", "Comma"]);
+    recordThenResyncUntil("PropertyNameExpected", ["CloseBrace", "Comma"]);
     return false;
   };
-
-  // ── Value mode ──────────────────────────────────────────────────────────
 
   const parseLiteral = <T>(value: T): T => {
     scanNext();
@@ -386,7 +347,7 @@ const run: {
   };
 
   const parseValue = (): O.Option<unknown> =>
-    Match.value(token()).pipe(
+    Match.value(currentTokenUnnarrowed()).pipe(
       Match.when("OpenBracket", () => O.some<unknown>(parseArray())),
       Match.when("OpenBrace", () => O.some<unknown>(parseObject())),
       Match.when("String", () => O.some<unknown>(parseLiteral(scanner.getTokenValue()))),
@@ -397,71 +358,64 @@ const run: {
       Match.orElse(O.none<unknown>)
     );
 
-  // Shared array element loop: parse values until the closer, recording
-  // ValueExpected and resynchronizing on a missing value. A trailing comma
-  // ends the loop through `separator`.
   const parseElements = <T>(parse: () => O.Option<T>, items: Array<T>): void => {
     let needsComma = false;
-    while (token() !== "CloseBracket" && token() !== "EOF" && separator("CloseBracket", "ValueExpected", needsComma)) {
+    while (
+      currentTokenUnnarrowed() !== "CloseBracket" &&
+      currentTokenUnnarrowed() !== "EOF" &&
+      separatorFalseWhenTrailingCommaCloses("CloseBracket", "ValueExpected", needsComma)
+    ) {
       const item = parse();
       if (O.isSome(item)) {
         accumulation.append(items, item.value);
       } else {
-        pushError("ValueExpected", ["CloseBracket", "Comma"]);
+        recordThenResyncUntil("ValueExpected", ["CloseBracket", "Comma"]);
       }
       needsComma = true;
     }
   };
 
-  // Shared object member loop. `member` parses one member whose String key is
-  // the current token and answers whether a comma is now required (a missing
-  // colon leaves the requirement unchanged).
-  const parseMembers = (member: () => boolean): void => {
+  const parseMembers = (memberRequiresComma: () => boolean): void => {
     let needsComma = false;
-    while (token() !== "CloseBrace" && token() !== "EOF") {
-      if (atMemberName(needsComma) && member()) {
+    while (currentTokenUnnarrowed() !== "CloseBrace" && currentTokenUnnarrowed() !== "EOF") {
+      if (atMemberName(needsComma) && memberRequiresComma()) {
         needsComma = true;
       }
     }
   };
 
-  // The container end offset: the closer's tight end when present, otherwise
-  // the start of whatever token the recovery stopped on.
   const closeContainer: {
     (closer: SyntaxKind, missing: ParseCode): number;
     (missing: ParseCode): (closer: SyntaxKind) => number;
   } = dual(2, (closer: SyntaxKind, missing: ParseCode): number => {
-    if (token() === closer) {
-      const end = tokenEnd();
+    if (currentTokenUnnarrowed() === closer) {
+      const end = tightTokenEndBeforeTrailingTrivia();
       scanNext();
       return end;
     }
-    pushError(missing);
+    recordThenResyncUntil(missing);
     return scanner.getTokenOffset();
   });
 
   const parseArray = (): ReadonlyArray<unknown> =>
     guardDepth(A.empty<unknown>, () => {
-      scanNext(); // skip [
+      scanNext();
       const items: Array<unknown> = [];
       parseElements(parseValue, items);
       closeContainer("CloseBracket", "CloseBracketExpected");
       return items;
     });
 
-  // One `key: value` member into `obj`.
   const parseMember = (obj: Record<string, unknown>): boolean => {
     const key = scanner.getTokenValue();
     scanNext();
-    if (token() !== "Colon") {
-      pushError("ColonExpected", ["CloseBrace", "Comma"]);
+    if (currentTokenUnnarrowed() !== "Colon") {
+      recordThenResyncUntil("ColonExpected", ["CloseBrace", "Comma"]);
       return false;
     }
     scanNext();
     const value = parseValue();
     if (O.isSome(value)) {
-      // Define as an own data property: plain assignment of `__proto__`
-      // would mutate the object's prototype (JSON.parse semantics).
       Object.defineProperty(obj, key, {
         value: value.value,
         writable: true,
@@ -469,7 +423,7 @@ const run: {
         configurable: true,
       });
     } else {
-      pushError("ValueExpected", ["CloseBrace", "Comma"]);
+      recordThenResyncUntil("ValueExpected", ["CloseBrace", "Comma"]);
     }
     return true;
   };
@@ -478,7 +432,7 @@ const run: {
     guardDepth(
       () => ({}),
       () => {
-        scanNext(); // skip {
+        scanNext();
         const obj: Record<string, unknown> = {};
         parseMembers(() => parseMember(obj));
         closeContainer("CloseBrace", "CloseBraceExpected");
@@ -486,20 +440,18 @@ const run: {
       }
     );
 
-  // ── Tree mode ───────────────────────────────────────────────────────────
-
   const leafTree: {
     (type: LeafNodeType, value: unknown): JsoncNode;
     (value: unknown): (type: LeafNodeType) => JsoncNode;
   } = dual(2, (type: LeafNodeType, value: unknown): JsoncNode => {
     const offset = scanner.getTokenOffset();
-    const end = tokenEnd();
+    const end = tightTokenEndBeforeTrailingTrivia();
     scanNext();
     return makeNodeUnsafe({ type, offset, length: end - offset, value });
   });
 
   const parseValueTree = (): O.Option<JsoncNode> =>
-    Match.value(token()).pipe(
+    Match.value(currentTokenUnnarrowed()).pipe(
       Match.when("OpenBracket", () => O.some(parseArrayTree())),
       Match.when("OpenBrace", () => O.some(parseObjectTree())),
       Match.when("String", () => O.some(leafTree("string", scanner.getTokenValue()))),
@@ -515,7 +467,7 @@ const run: {
     return guardDepth(
       () => makeNodeUnsafe({ type: "array", offset, length: scanner.getTokenOffset() - offset, children: [] }),
       () => {
-        scanNext(); // skip [
+        scanNext();
         const children: Array<JsoncNode> = [];
         parseElements(parseValueTree, children);
         const end = closeContainer("CloseBracket", "CloseBracketExpected");
@@ -524,12 +476,11 @@ const run: {
     );
   };
 
-  // One `key: value` property node into `children`.
   const parseMemberTree = (children: Array<JsoncNode>): boolean => {
     const propOffset = scanner.getTokenOffset();
     const keyNode = leafTree("string", scanner.getTokenValue());
-    if (token() !== "Colon") {
-      pushError("ColonExpected", ["CloseBrace", "Comma"]);
+    if (currentTokenUnnarrowed() !== "Colon") {
+      recordThenResyncUntil("ColonExpected", ["CloseBrace", "Comma"]);
       accumulation.append(
         children,
         makeNodeUnsafe({
@@ -556,7 +507,7 @@ const run: {
         })
       );
     } else {
-      pushError("ValueExpected", ["CloseBrace", "Comma"]);
+      recordThenResyncUntil("ValueExpected", ["CloseBrace", "Comma"]);
       accumulation.append(
         children,
         makeNodeUnsafe({
@@ -576,7 +527,7 @@ const run: {
     return guardDepth(
       () => makeNodeUnsafe({ type: "object", offset, length: scanner.getTokenOffset() - offset, children: [] }),
       () => {
-        scanNext(); // skip {
+        scanNext();
         const children: Array<JsoncNode> = [];
         parseMembers(() => parseMemberTree(children));
         const end = closeContainer("CloseBrace", "CloseBraceExpected");
@@ -585,16 +536,14 @@ const run: {
     );
   };
 
-  // ── Drive ───────────────────────────────────────────────────────────────
-
   scanNext();
 
   const finish = (present: boolean): void => {
-    if (token() !== "EOF") {
-      pushError("EndOfFileExpected");
+    if (currentTokenUnnarrowed() !== "EOF") {
+      recordThenResyncUntil("EndOfFileExpected");
     }
     if (!present && !flags.allowEmptyContent) {
-      pushError("ValueExpected");
+      recordThenResyncUntil("ValueExpected");
     }
   };
 

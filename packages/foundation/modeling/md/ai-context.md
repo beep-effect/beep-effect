@@ -15,7 +15,7 @@ constructs typed Markdown document nodes, while render adapters convert the AST
 to Markdown, HTML fragments, or future resourceful targets. The package root
 is not a Markdown string parser and does not depend on `marked`; `marked` is
 reference material for capability, fixture, and security comparison only.
-Text parsing is a subpath-only bridge (`Md.syntax`, `Md.parse`) over
+Text parsing is a subpath-only bridge (`Md.syntax`, `Md.parse`, `Md.anchors`) over
 `@beep/markdown`; `index.ts` and `Md.ts` never import it.
 
 ## Core Modules
@@ -32,6 +32,7 @@ Text parsing is a subpath-only bridge (`Md.syntax`, `Md.parse`) over
 | `Md.safe.ts` | Branded user-content refinements and path-located trust-boundary issues |
 | `Md.syntax.ts` | Subpath only: folds a `@beep/markdown` `MarkdownDocument` into an `Md.Document`, with losses as data and a pre-order source map |
 | `Md.parse.ts` | Subpath only: parses text (frontmatter capture on) through `Md.syntax`; `Result` primary, `Effect` twins, safe variants |
+| `Md.anchors.ts` | Subpath only: `anchorAt` proves a source-map span as a `@beep/text` `VerifiedTextAnchor` over verified source text |
 
 ## Usage Patterns
 
@@ -85,7 +86,7 @@ is applied inside the recursive render fold.
 
 ## Dependencies
 
-**Internal**: `@beep/html`, `@beep/identity`, `@beep/markdown` (reached only from the `Md.syntax` and `Md.parse` subpaths), `@beep/schema`, `@beep/utils`
+**Internal**: `@beep/html`, `@beep/identity`, `@beep/markdown` (reached only from the `Md.syntax` and `Md.parse` subpaths), `@beep/schema`, `@beep/text` (from `Md.anchors`), `@beep/utils`
 **External**: `effect`
 
 ## Related

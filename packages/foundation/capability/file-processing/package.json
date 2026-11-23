@@ -86,8 +86,8 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
-    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },

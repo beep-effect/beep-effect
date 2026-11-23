@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";

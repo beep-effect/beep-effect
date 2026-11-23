@@ -19,7 +19,7 @@ import { Contact } from "@beep/law-practice-use-cases/DocumentIdentification";
 import { GraphContact } from "@beep/m365/M365.schemas";
 import { ClaimVersion, EvidenceSignals, SourceAssertion } from "@beep/party-domain/Claim";
 import { EmailAddress } from "@beep/party-domain/Identifier";
-import { ActivityId, AssertionId, ClaimVersionId, IdentifierId, OccurrenceId } from "@beep/party-domain/Ids";
+import { ActivityId, AssertionId, ClaimVersionId, IdentifierId, ArtifactOccurrenceId } from "@beep/party-domain/Ids";
 import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
 import { RecordRow } from "@beep/party-domain/Provenance";
 import { ResolutionScope, resolveParties } from "@beep/party-domain/Resolution";
@@ -401,7 +401,7 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
             validity: pageValidity.value,
             producedBy: ActivityId.make("party-act:review-page-import@0.0.0"),
             anchor: RecordRow.make({
-              occurrence: OccurrenceId.make(`party-occ:review-export:${encodeURIComponent(decisionsPath)}`),
+              occurrence: ArtifactOccurrenceId.make(`party-occ:review-export:${encodeURIComponent(decisionsPath)}`),
               rowKey: `record:${index + 1}`,
             }),
           }),

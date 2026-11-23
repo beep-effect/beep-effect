@@ -17,6 +17,7 @@
     {"name":"MarkdownProjector.projectNode","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
     {"name":"MemoryLog.append","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
     {"name":"MemoryLog.heads","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"OccurrenceAnchor.occurrenceId","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
     {"name":"Reranker.passThrough.rerank","owner":"@beep/agent-memory-store","family":"tooling","conforms":false}
   ]
 }

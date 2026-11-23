@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "68784567911739ef5a8cbb7fea92ab3ca0fb325b40f9134a42fadb70258d0dde",
+    "@beep/repo-cli": "3f0a902b684974200657910f9cfcbd0f0a217354e8c0bc3fe3e0c8541ac7174e"
+  },
+  "review": {
+    "reviewer": "GPT-6.1 Sol (P2 text implementation lane)",
+    "reason": "Retain C final cache policy and re-record P2 text graph changes; no qualification granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p2-final-c-merge-cache-review-2026-11-23.md",
+      "sha256": "66a1f29eff36afc9fb0ba53c489212991b5bbc62f465f7ba184dd787b140fda9"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

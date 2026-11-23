@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { VerifiedTextAnchorError } from "@beep/provenance";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { VerifiedTextAnchorError } from "@beep/text";
 import * as S from "effect/Schema";
 import { DegradedKind } from "@/schema/Degraded";
 

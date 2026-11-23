@@ -15,6 +15,9 @@
       "path": "../spdx/tsconfig.json"
     },
     {
+      "path": "../text/tsconfig.json"
+    },
+    {
       "path": "../utils/tsconfig.json"
     },
     {

@@ -7,8 +7,8 @@
 
 import { ClaimEvidenceBasis, ClaimEvidenceReview } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicUseCasesId.create("ClaimEvidenceReview/ClaimEvidenceReview.commands");

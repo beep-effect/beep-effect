@@ -21,10 +21,10 @@
       "path": "../jsonc/tsconfig.json"
     },
     {
-      "path": "../provenance/tsconfig.json"
+      "path": "../schema/tsconfig.json"
     },
     {
-      "path": "../schema/tsconfig.json"
+      "path": "../text/tsconfig.json"
     },
     {
       "path": "../utils/tsconfig.json"

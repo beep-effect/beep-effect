@@ -7,17 +7,17 @@ import {
   UTF8_SOURCE_TEXT_EXTRACTOR_VERSION,
 } from "@beep/file-processing/SourceText";
 import { $WorkspaceServerId } from "@beep/identity";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import {
-  VerifiedSourceText,
-  VerifySourceTextIdentityInput,
-  verifySourceTextIdentity,
-} from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import {
+  VerifiedSourceText,
+  VerifySourceTextIdentityInput,
+  verifySourceTextIdentity,
+} from "@beep/text/VerifiedTextAnchor";
 import { WorkspaceVaultStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Workspace";
 import { WorkspaceSourceTextResolverLayer } from "@beep/workspace-server/SourceText";
 import { Workspace } from "@beep/workspace-use-cases/server";

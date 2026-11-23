@@ -1,13 +1,3 @@
-// The marker scanner: locate every managed section in a document, in order,
-// and refuse any structure that could only be resolved by guessing.
-//
-// Ambiguity is a typed failure rather than a silent choice: skipping an
-// unterminated begin marker or picking the first begin/end pair by `indexOf`
-// are silent wrong answers with a file-corrupting tail — a skipped marker
-// makes the next write append a SECOND copy of the section, and a duplicate
-// means every sync updates the first copy while the stale second lives on
-// disk forever.
-
 import { $ManagedSectionId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
@@ -178,7 +168,6 @@ export const ScanResult = S.Union([ScanSucceeded, ScanFailed]).pipe(
  */
 export type ScanResult = typeof ScanResult.Type;
 
-/** A failed scan at the given marker line. */
 const failedAt = (reason: ScanFailureReason, line: number, key: string): ScanResult =>
   ScanFailed.make({ ok: false, failure: ScanFailure.make({ reason, line, key }) });
 
@@ -226,15 +215,12 @@ export const detectEol = (text: string): Eol => (Str.includes("\r\n")(text) ? "\
  */
 export const normalizeEol = (text: string): string => Str.replace(/\r\n/g, "\n")(text);
 
-/** Strip exactly one line break from the start of a string. */
-const stripLeadingBreak = (text: string): string =>
+const stripOneLeadingBreak = (text: string): string =>
   Str.startsWith("\r\n")(text) ? Str.slice(2)(text) : Str.startsWith("\n")(text) ? Str.slice(1)(text) : text;
 
-/** Strip exactly one line break from the end of a string. */
-const stripTrailingBreak = (text: string): string =>
+const stripOneTrailingBreak = (text: string): string =>
   Str.endsWith("\r\n")(text) ? Str.slice(0, -2)(text) : Str.endsWith("\n")(text) ? Str.slice(0, -1)(text) : text;
 
-/** Offsets at which each 1-based line starts, for O(log n) line lookup. */
 const lineStarts = (text: string): ReadonlyArray<number> => {
   const starts = [0];
   for (let index = 0; index < text.length; index += 1) {
@@ -262,9 +248,7 @@ const lineAt: {
   return low + 1;
 });
 
-/** A raw marker hit, before any structural interpretation. */
 interface MarkerHit {
-  /** The BEGIN marker's parsed attribute pairs, in document order. */
   readonly attributes?: Record<string, string>;
   readonly end: number;
   readonly key: string;
@@ -303,13 +287,12 @@ const collectHits: {
   (dialect: SectionDialect): (text: string) => ReadonlyArray<MarkerHit>;
 } = dual(2, (text: string, dialect: SectionDialect): ReadonlyArray<MarkerHit> => {
   const hits: Array<MarkerHit> = [];
-  const seen = MutableHashSet.empty<number>();
+  const countedMarkerStarts = MutableHashSet.empty<number>();
   for (const [style, match, attributes] of dialect.markerMatches(text)) {
     const start = O.getOrThrow(O.fromUndefinedOr(match.index));
-    // Two styles could in principle match one line; the first wins so a
-    // marker is never counted twice.
-    if (MutableHashSet.has(seen, start)) continue;
-    MutableHashSet.add(seen, start);
+    const alreadyCountedByEarlierStyle = MutableHashSet.has(countedMarkerStarts, start);
+    if (alreadyCountedByEarlierStyle) continue;
+    MutableHashSet.add(countedMarkerStarts, start);
     hits.push({
       kind: match[1] === "BEGIN" ? "BEGIN" : "END",
       key: A.getUnsafe(match, 2),
@@ -325,7 +308,6 @@ const collectHits: {
   );
 });
 
-/** The mutable state of one {@link scan} pass. */
 interface ScanState {
   readonly firstSeenAt: MutableHashMap.MutableHashMap<string, number>;
   open: MarkerHit | undefined;
@@ -334,7 +316,6 @@ interface ScanState {
   readonly text: string;
 }
 
-/** Opens a section at a BEGIN marker; a section already open is `overlappingSections`. */
 const beginSection = (state: ScanState, hit: MarkerHit): ScanResult | undefined => {
   if (state.open !== undefined) {
     return failedAt("overlappingSections", lineAt(state.starts, hit.start), hit.key);
@@ -343,18 +324,15 @@ const beginSection = (state: ScanState, hit: MarkerHit): ScanResult | undefined 
   return undefined;
 };
 
-/** The placed section spanning an open BEGIN marker and its END marker. */
 const placeSection = (state: ScanState, open: MarkerHit, hit: MarkerHit): PlacedSection => {
-  const inner = stripTrailingBreak(stripLeadingBreak(Str.slice(open.end, hit.start)(state.text)));
+  const inner = stripOneTrailingBreak(stripOneLeadingBreak(Str.slice(open.end, hit.start)(state.text)));
+  const attributesOmittedWhenBareSoDefaultFills = O.getSomesStruct({ attributes: O.fromUndefinedOr(open.attributes) });
   return PlacedSection.make({
     section: Section.make({
       key: open.key,
       commentStyle: open.style,
       content: normalizeEol(inner),
-      // Omitted when the marker carries none: the constructor default
-      // fills the canonical empty record, so a bare marker and an
-      // explicit `attributes: {}` are the same section under equality.
-      ...O.getSomesStruct({ attributes: O.fromUndefinedOr(open.attributes) }),
+      ...attributesOmittedWhenBareSoDefaultFills,
     }),
     start: open.start,
     end: hit.end,
@@ -362,13 +340,12 @@ const placeSection = (state: ScanState, open: MarkerHit, hit: MarkerHit): Placed
   });
 };
 
-/** Closes the open section at an END marker, refusing orphans and duplicates. */
+const closesSameKeyAndStyle = (open: MarkerHit, hit: MarkerHit): boolean =>
+  open.key === hit.key && open.style.id === hit.style.id;
+
 const endSection = (state: ScanState, hit: MarkerHit): ScanResult | undefined => {
   const open = state.open;
-  // An end marker must close the section that is actually open — same key
-  // and same comment style. Anything else is a document whose block
-  // boundaries cannot be determined without guessing.
-  if (open === undefined || open.key !== hit.key || open.style.id !== hit.style.id) {
+  if (open === undefined || !closesSameKeyAndStyle(open, hit)) {
     return failedAt("orphanedEnd", lineAt(state.starts, hit.start), hit.key);
   }
   const identity = identityOf(open.key, open.style);
@@ -381,7 +358,6 @@ const endSection = (state: ScanState, hit: MarkerHit): ScanResult | undefined =>
   return undefined;
 };
 
-/** The scan outcome once every marker is consumed; a section still open is `unterminatedSection`. */
 const finishScan = (state: ScanState): ScanResult =>
   state.open === undefined
     ? ScanSucceeded.make({ ok: true, sections: state.sections })

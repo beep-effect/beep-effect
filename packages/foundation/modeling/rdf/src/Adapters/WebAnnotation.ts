@@ -1,28 +1,35 @@
 /**
- * Web Annotation seam DTOs for optional evidence interop.
+ * Web Annotation wire DTOs and the codec between a `TextAnchor` and an
+ * `oa:` target.
+ *
+ * **Details**
+ *
+ * A `TextAnchor` counts UTF-16 code units; Web Annotation position selectors
+ * count code points. The codec converts through `@beep/text` `convertPosition`
+ * over the source text, writes one position and one quote selector, and reads
+ * every selector of a target back, failing closed when they disagree. What it
+ * decodes is a candidate anchor, never a proof: the caller verifies it.
  *
  * @packageDocumentation
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { IRIReference } from "@beep/identity/Iri";
 import { $RdfId } from "@beep/identity/packages";
-import * as O from "@beep/utils/Option";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
+import { Resolution, resolve } from "@beep/text/Resolution";
+import { QuoteSelector } from "@beep/text/Selector";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { constant, constTrue, dual, pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as SchemaGetter from "effect/SchemaGetter";
-import {
-  EvidenceAnchor,
-  EvidenceSelector,
-  EvidenceTarget,
-  FragmentSelector,
-  TextPositionSelector,
-  TextQuoteSelector,
-} from "../Evidence.ts";
+import * as Str from "effect/String";
 import { makeSemanticSchemaMetadata } from "../SemanticSchemaMetadata/index.ts";
+import type { UnitConversionRefused } from "@beep/text/OffsetUnit";
 
 const $I = $RdfId.create("adapters/web-annotation");
 
@@ -190,6 +197,14 @@ export const WebAnnotationSelector = S.Union([
 export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
 
 /**
+ * Web Annotation target DTO with one or more selectors of the same source.
+ *
+ * **Details**
+ *
+ * `selector` decodes one selector object or an array of them to a non-empty
+ * array, and a one-member array encodes back to the bare object, so a
+ * single-selector annotation keeps its wire bytes.
+ *
  * **Example** (Decode annotation target)
  *
  * ```ts import.meta.vitest name="Decode annotation target"
@@ -200,7 +215,8 @@ export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
  *   source: "https://example.org/document",
  *   selector: { type: "FragmentSelector", value: "section-1" }
  * })
- * target.selector.type // => "FragmentSelector"
+ * target.selector.length // => 1
+ * target.selector[0]?.type // => "FragmentSelector"
  * ```
  *
  * @category models
@@ -209,7 +225,7 @@ export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
 export class WebAnnotationTarget extends S.Opaque<WebAnnotationTarget, { readonly brand: unique symbol }>()(
   S.Struct({
     source: IRIReference,
-    selector: WebAnnotationSelector,
+    selector: S.ArrayEnsure(WebAnnotationSelector).check(S.isMinLength(1)),
   }).pipe(
     $I.annoteSchema("WebAnnotationTarget", {
       description: "Web Annotation target DTO.",
@@ -254,438 +270,299 @@ export class WebAnnotation extends S.Opaque<WebAnnotation, { readonly brand: uni
   )
 ) {}
 
-const evidenceSelectorToWebAnnotationSelectorEncoded = (
-  selector: EvidenceSelector
-): typeof WebAnnotationSelector.Encoded =>
-  EvidenceSelector.match(selector, {
-    "text-quote": (value) => ({
-      type: "TextQuoteSelector" as const,
-      exact: value.exact,
-      ...O.getSomesStruct({ prefix: value.prefix, suffix: value.suffix }),
-    }),
-    "text-position": (value) => ({
-      type: "TextPositionSelector" as const,
-      start: value.start,
-      end: value.end,
-    }),
-    fragment: (value) => ({
-      type: "FragmentSelector" as const,
-      value: value.value,
-      ...O.getSomesStruct({ conformsTo: value.conformsTo }),
-    }),
-  });
+/**
+ * **Details**
+ *
+ * `split-boundary`, `out-of-range` and `ill-formed-text` come from the unit
+ * conversion. `empty-range` is a wire position whose start is not before its
+ * end, `selector-conflict` is selectors (or an anchor and its text) that
+ * disagree, `ambiguous` and `not-found` are a quote-only target that does not
+ * resolve to one place, and `no-text-selector` is a target with neither a
+ * position nor a quote selector.
+ *
+ * **Example** (Check a refusal reason)
+ *
+ * ```ts import.meta.vitest name="Check an anchor refusal reason"
+ * import { WebAnnotationAnchorRefusal } from "@beep/rdf/Adapters/WebAnnotation"
+ *
+ * WebAnnotationAnchorRefusal.is["selector-conflict"]("selector-conflict") // => true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const WebAnnotationAnchorRefusal = LiteralKit([
+  "split-boundary",
+  "out-of-range",
+  "ill-formed-text",
+  "empty-range",
+  "selector-conflict",
+  "ambiguous",
+  "not-found",
+  "no-text-selector",
+]).pipe(
+  $I.annoteSchema("WebAnnotationAnchorRefusal", {
+    description: "Reason a TextAnchor and a Web Annotation target could not be mapped.",
+    semanticSchemaMetadata: adapterMetadata(
+      "WebAnnotationAnchorRefusal",
+      "Reason a TextAnchor and a Web Annotation target could not be mapped."
+    ),
+  })
+);
 
-const decodeEvidenceSelector = S.decodeUnknownResult(EvidenceSelector);
-const encodeEvidenceSelector = S.encodeUnknownResult(EvidenceSelector);
+/**
+ * **Example** (Annotate a refusal reason)
+ *
+ * ```ts
+ * import type { WebAnnotationAnchorRefusal } from "@beep/rdf/Adapters/WebAnnotation"
+ *
+ * const reason: WebAnnotationAnchorRefusal = "no-text-selector"
+ * console.log(reason)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type WebAnnotationAnchorRefusal = typeof WebAnnotationAnchorRefusal.Type;
 
-const evidenceSelectorEncodedToWebAnnotationSelectorEncoded = (
-  selector: typeof EvidenceSelector.Encoded
-): typeof WebAnnotationSelector.Encoded =>
-  pipe(decodeEvidenceSelector(selector), Result.map(evidenceSelectorToWebAnnotationSelectorEncoded), Result.getOrThrow);
+/**
+ * Typed refusal of the `TextAnchor` to Web Annotation codec.
+ *
+ * **Example** (Read a refusal)
+ *
+ * ```ts import.meta.vitest name="Read an anchor refusal"
+ * import { WebAnnotationAnchorRefused } from "@beep/rdf/Adapters/WebAnnotation"
+ *
+ * const refused = WebAnnotationAnchorRefused.make({ reason: "ambiguous" })
+ * refused.reason // => "ambiguous"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class WebAnnotationAnchorRefused extends S.TaggedError<
+  WebAnnotationAnchorRefused,
+  { readonly brand: unique symbol }
+>($I`WebAnnotationAnchorRefused`)(
+  "WebAnnotationAnchorRefused",
+  { reason: WebAnnotationAnchorRefusal },
+  $I.annoteError<WebAnnotationAnchorRefused>("WebAnnotationAnchorRefused", {
+    description: "A TextAnchor and a Web Annotation target that could not be mapped onto each other.",
+    semanticSchemaMetadata: adapterMetadata(
+      "WebAnnotationAnchorRefused",
+      "A TextAnchor and a Web Annotation target that could not be mapped onto each other."
+    ),
+  })
+) {}
 
-const webAnnotationSelectorToEvidenceSelectorValue = (selector: WebAnnotationSelector): EvidenceSelector =>
-  WebAnnotationSelector.match(selector, {
-    TextQuoteSelector: (value) =>
-      TextQuoteSelector.make({
-        kind: "text-quote",
-        exact: value.exact,
-        prefix: value.prefix,
-        suffix: value.suffix,
-      }),
-    TextPositionSelector: (value) =>
-      TextPositionSelector.make({
-        kind: "text-position",
-        start: value.start,
-        end: value.end,
-      }),
-    FragmentSelector: (value) =>
-      FragmentSelector.make({
-        kind: "fragment",
-        value: value.value,
-        conformsTo: value.conformsTo,
-      }),
-  });
+const refused = (reason: WebAnnotationAnchorRefusal): WebAnnotationAnchorRefused =>
+  WebAnnotationAnchorRefused.make({ reason });
 
-const decodeWebAnnotationSelector = S.decodeUnknownResult(WebAnnotationSelector);
+const conversionRefused = (refusal: UnitConversionRefused): WebAnnotationAnchorRefused => refused(refusal.reason);
 
-const webAnnotationSelectorEncodedToEvidenceSelectorValue = (
-  selector: typeof WebAnnotationSelector.Encoded
-): EvidenceSelector =>
+const selectorConflict = (): WebAnnotationAnchorRefused => refused("selector-conflict");
+
+const utf16Position = (start: number, end: number): Position => Position.make({ unit: "utf16-code-unit", start, end });
+
+const toCodePointsOverWellFormedPrefix = (
+  range: Position,
+  sourceText: string
+): Result.Result<Position, WebAnnotationAnchorRefused> =>
+  pipe(convertPosition(range, "unicode-code-point", sourceText), Result.mapError(conversionRefused));
+
+const encodeTextAnchor = (
+  anchor: TextAnchor,
+  options: { readonly source: IRIReference; readonly sourceText: string }
+): Result.Result<WebAnnotationTarget, WebAnnotationAnchorRefused> =>
   pipe(
-    decodeWebAnnotationSelector(selector),
-    Result.map(webAnnotationSelectorToEvidenceSelectorValue),
-    Result.getOrThrow
+    toCodePointsOverWellFormedPrefix(utf16Position(anchor.startChar, anchor.endChar), options.sourceText),
+    Result.filterOrFail(
+      () => Str.slice(anchor.startChar, anchor.endChar)(options.sourceText) === anchor.quote,
+      selectorConflict
+    ),
+    Result.map((points) =>
+      WebAnnotationTarget.make({
+        source: options.source,
+        selector: [
+          WebAnnotationTextPositionSelector.make({
+            type: "TextPositionSelector",
+            start: points.start,
+            end: points.end,
+          }),
+          WebAnnotationTextQuoteSelector.make({ type: "TextQuoteSelector", exact: anchor.quote }),
+        ],
+      })
+    )
   );
 
-const webAnnotationSelectorEncodedToEvidenceSelectorEncoded = (
-  selector: typeof WebAnnotationSelector.Encoded
-): typeof EvidenceSelector.Encoded =>
-  pipe(webAnnotationSelectorEncodedToEvidenceSelectorValue(selector), encodeEvidenceSelector, Result.getOrThrow);
+const sameRange =
+  (left: Position) =>
+  (right: Position): boolean =>
+    left.start === right.start && left.end === right.end;
 
-/**
- * **Example** (Decode evidence to selector)
- *
- * ```ts import.meta.vitest name="Decode evidence to selector"
- * import * as S from "effect/Schema"
- * import { WebAnnotationSelectorFromEvidenceSelector } from "@beep/rdf/Adapters/WebAnnotation"
- *
- * const selector = S.decodeUnknownSync(WebAnnotationSelectorFromEvidenceSelector)({
- *   kind: "text-quote",
- *   exact: "quoted text"
- * })
- * selector.type // => "TextQuoteSelector"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSelector).pipe(
-  S.decodeTo(WebAnnotationSelector, {
-    decode: SchemaGetter.transform(evidenceSelectorEncodedToWebAnnotationSelectorEncoded),
-    encode: SchemaGetter.transform(webAnnotationSelectorEncodedToEvidenceSelectorEncoded),
-  }),
-  $I.annoteSchema("WebAnnotationSelectorFromEvidenceSelector", {
-    description: "Codec between package-owned evidence selectors and Web Annotation selector DTOs.",
-    semanticSchemaMetadata: adapterMetadata(
-      "WebAnnotationSelectorFromEvidenceSelector",
-      "Codec between package-owned evidence selectors and Web Annotation selector DTOs."
-    ),
-  })
-);
-
-/**
- * **Example** (Accept codec type)
- *
- * ```ts
- * import type { WebAnnotationSelectorFromEvidenceSelector } from "@beep/rdf/Adapters/WebAnnotation"
- *
- * const acceptWebAnnotationSelector = (value: WebAnnotationSelectorFromEvidenceSelector) => value
- * console.log(acceptWebAnnotationSelector)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type WebAnnotationSelectorFromEvidenceSelector = typeof WebAnnotationSelectorFromEvidenceSelector.Type;
-
-/**
- * Map an evidence selector to a Web Annotation selector DTO.
- *
- * **Example** (Map evidence to selector)
- *
- * ```ts import.meta.vitest name="Map evidence to selector"
- * import * as S from "effect/Schema"
- * import { evidenceSelectorToWebAnnotationSelector } from "@beep/rdf/Adapters/WebAnnotation"
- * import { TextQuoteSelector } from "@beep/rdf/Evidence"
- *
- * const evidenceSelector = S.decodeUnknownSync(TextQuoteSelector)({
- *   kind: "text-quote",
- *   exact: "quoted text"
- * })
- * const selector = evidenceSelectorToWebAnnotationSelector(evidenceSelector)
- * selector.type // => "TextQuoteSelector"
- * ```
- *
- * @param selector - Evidence selector.
- * @returns Web Annotation selector DTO.
- * @category utilities
- * @since 0.0.0
- */
-export const evidenceSelectorToWebAnnotationSelector = (selector: EvidenceSelector): WebAnnotationSelector =>
-  pipe(evidenceSelectorToWebAnnotationSelectorEncoded(selector), decodeWebAnnotationSelector, Result.getOrThrow);
-
-/**
- * Map a Web Annotation selector DTO to an evidence selector.
- *
- * **Example** (Map selector to evidence)
- *
- * ```ts import.meta.vitest name="Map selector to evidence"
- * import * as S from "effect/Schema"
- * import {
- *   WebAnnotationTextPositionSelector,
- *   webAnnotationSelectorToEvidenceSelector
- * } from "@beep/rdf/Adapters/WebAnnotation"
- *
- * const annotationSelector = S.decodeUnknownSync(WebAnnotationTextPositionSelector)({
- *   type: "TextPositionSelector",
- *   start: 0,
- *   end: 5
- * })
- * const selector = webAnnotationSelectorToEvidenceSelector(annotationSelector)
- * selector.kind // => "text-position"
- * ```
- *
- * @param selector - Web Annotation selector DTO.
- * @returns Evidence selector.
- * @category utilities
- * @since 0.0.0
- */
-export const webAnnotationSelectorToEvidenceSelector = (selector: WebAnnotationSelector): EvidenceSelector =>
-  webAnnotationSelectorToEvidenceSelectorValue(selector);
-
-const evidenceTargetToWebAnnotationTargetEncoded = (target: EvidenceTarget): typeof WebAnnotationTarget.Encoded => ({
-  source: target.source,
-  selector: evidenceSelectorToWebAnnotationSelectorEncoded(target.selector),
-});
-
-const decodeEvidenceTarget = S.decodeUnknownResult(EvidenceTarget);
-const encodeEvidenceTarget = S.encodeUnknownResult(EvidenceTarget);
-
-const evidenceTargetEncodedToWebAnnotationTargetEncoded = (
-  target: typeof EvidenceTarget.Encoded
-): typeof WebAnnotationTarget.Encoded =>
-  pipe(decodeEvidenceTarget(target), Result.map(evidenceTargetToWebAnnotationTargetEncoded), Result.getOrThrow);
-
-const webAnnotationTargetToEvidenceTargetValue = (target: WebAnnotationTarget): EvidenceTarget =>
-  EvidenceTarget.make({
-    source: target.source,
-    selector: webAnnotationSelectorToEvidenceSelectorValue(target.selector),
+const agreeingRangeOfOneKind = (
+  ranges: ReadonlyArray<Position>
+): Result.Result<O.Option<Position>, WebAnnotationAnchorRefused> =>
+  A.match(ranges, {
+    onEmpty: () => Result.succeedNone,
+    onNonEmpty: (all) =>
+      pipe(
+        Result.succeed(A.headNonEmpty(all)),
+        Result.filterOrFail((first) => A.every(all, sameRange(first)), selectorConflict),
+        Result.map(O.some)
+      ),
   });
 
-const decodeWebAnnotationTarget = S.decodeUnknownResult(WebAnnotationTarget);
+const positionRange =
+  (sourceText: string) =>
+  (selector: WebAnnotationTextPositionSelector): Result.Result<Position, WebAnnotationAnchorRefused> =>
+    selector.start < selector.end
+      ? pipe(
+          convertPosition(
+            Position.make({ unit: "unicode-code-point", start: selector.start, end: selector.end }),
+            "utf16-code-unit",
+            sourceText
+          ),
+          Result.mapError(conversionRefused)
+        )
+      : Result.fail(refused("empty-range"));
 
-const webAnnotationTargetEncodedToEvidenceTargetValue = (target: typeof WebAnnotationTarget.Encoded): EvidenceTarget =>
-  pipe(decodeWebAnnotationTarget(target), Result.map(webAnnotationTargetToEvidenceTargetValue), Result.getOrThrow);
+const quoteFitsPositionAndContext =
+  (sourceText: string, range: Position) =>
+  (quote: WebAnnotationTextQuoteSelector): boolean =>
+    quote.exact === Str.slice(range.start, range.end)(sourceText) &&
+    O.match(quote.prefix, { onNone: constTrue, onSome: (prefix) => Str.endsWith(prefix, range.start)(sourceText) }) &&
+    O.match(quote.suffix, { onNone: constTrue, onSome: (suffix) => Str.startsWith(suffix, range.end)(sourceText) });
 
-const webAnnotationTargetEncodedToEvidenceTargetEncoded = (
-  target: typeof WebAnnotationTarget.Encoded
-): typeof EvidenceTarget.Encoded =>
-  pipe(webAnnotationTargetEncodedToEvidenceTargetValue(target), encodeEvidenceTarget, Result.getOrThrow);
+const quoteRange =
+  (sourceText: string) =>
+  (quote: WebAnnotationTextQuoteSelector): Result.Result<Position, WebAnnotationAnchorRefused> =>
+    Resolution.match(
+      resolve(sourceText, QuoteSelector.make({ exact: quote.exact, prefix: quote.prefix, suffix: quote.suffix })),
+      {
+        Unique: (unique) => Result.succeed(unique.position),
+        Ambiguous: () => Result.fail(refused("ambiguous")),
+        NotFound: () => Result.fail(refused("not-found")),
+      }
+    );
 
-/**
- * **Example** (Decode evidence to target)
- *
- * ```ts import.meta.vitest name="Decode evidence to target"
- * import * as S from "effect/Schema"
- * import { WebAnnotationTargetFromEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
- *
- * const target = S.decodeUnknownSync(WebAnnotationTargetFromEvidenceTarget)({
- *   source: "https://example.org/document",
- *   selector: { kind: "fragment", value: "section-1" }
- * })
- * target.selector.type // => "FragmentSelector"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget).pipe(
-  S.decodeTo(WebAnnotationTarget, {
-    decode: SchemaGetter.transform(evidenceTargetEncodedToWebAnnotationTargetEncoded),
-    encode: SchemaGetter.transform(webAnnotationTargetEncodedToEvidenceTargetEncoded),
-  }),
-  $I.annoteSchema("WebAnnotationTargetFromEvidenceTarget", {
-    description: "Codec between evidence targets and Web Annotation target DTOs.",
-    semanticSchemaMetadata: adapterMetadata(
-      "WebAnnotationTargetFromEvidenceTarget",
-      "Codec between evidence targets and Web Annotation target DTOs."
+const anchorOver = (sourceText: string, range: Position): TextAnchor =>
+  TextAnchor.make({ startChar: range.start, endChar: range.end, quote: Str.slice(range.start, range.end)(sourceText) });
+
+const fromPosition = (
+  sourceText: string,
+  range: Position,
+  quotes: ReadonlyArray<WebAnnotationTextQuoteSelector>
+): Result.Result<TextAnchor, WebAnnotationAnchorRefused> =>
+  A.every(quotes, quoteFitsPositionAndContext(sourceText, range))
+    ? Result.succeed(anchorOver(sourceText, range))
+    : Result.fail(selectorConflict());
+
+const fromUniqueQuoteThatEncodesAgain = (
+  sourceText: string,
+  quotes: ReadonlyArray<WebAnnotationTextQuoteSelector>
+): Result.Result<TextAnchor, WebAnnotationAnchorRefused> =>
+  pipe(
+    Result.all(A.map(quotes, quoteRange(sourceText))),
+    Result.flatMap(agreeingRangeOfOneKind),
+    Result.flatMap(Result.fromOption(() => refused("no-text-selector"))),
+    Result.flatMap((range) => Result.map(toCodePointsOverWellFormedPrefix(range, sourceText), constant(range))),
+    Result.map((range) => anchorOver(sourceText, range))
+  );
+
+const decodeTarget = (
+  target: WebAnnotationTarget,
+  sourceText: string
+): Result.Result<TextAnchor, WebAnnotationAnchorRefused> => {
+  const quotes = A.filter(target.selector, WebAnnotationSelector.guards.TextQuoteSelector);
+  return pipe(
+    Result.all(
+      A.map(A.filter(target.selector, WebAnnotationSelector.guards.TextPositionSelector), positionRange(sourceText))
     ),
-  })
-);
+    Result.flatMap(agreeingRangeOfOneKind),
+    Result.flatMap(
+      O.match({
+        onNone: () => fromUniqueQuoteThatEncodesAgain(sourceText, quotes),
+        onSome: (range) => fromPosition(sourceText, range, quotes),
+      })
+    )
+  );
+};
 
 /**
- * **Example** (Accept target codec type)
+ * Write a `TextAnchor` as a Web Annotation target over its source text.
  *
- * ```ts
- * import type { WebAnnotationTargetFromEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
+ * **Details**
  *
- * const acceptWebAnnotationTarget = (value: WebAnnotationTargetFromEvidenceTarget) => value
- * console.log(acceptWebAnnotationTarget)
- * ```
+ * The anchor's UTF-16 range is converted to code points over `sourceText`,
+ * the text there must be the anchor's quote, and the target carries a
+ * `TextPositionSelector` and a `TextQuoteSelector`. `source` is the caller's
+ * `oa:hasSource` IRI: a source text identity is not one.
  *
- * @category models
- * @since 0.0.0
- */
-export type WebAnnotationTargetFromEvidenceTarget = typeof WebAnnotationTargetFromEvidenceTarget.Type;
-
-const evidenceAnchorToWebAnnotationEncoded = (anchor: EvidenceAnchor): typeof WebAnnotation.Encoded => ({
-  id: anchor.id,
-  type: "Annotation",
-  ...O.getSomesStruct({ bodyValue: anchor.note }),
-  target: evidenceTargetToWebAnnotationTargetEncoded(anchor.target),
-});
-
-const decodeEvidenceAnchor = S.decodeUnknownResult(EvidenceAnchor);
-const encodeEvidenceAnchor = S.encodeUnknownResult(EvidenceAnchor);
-
-const evidenceAnchorEncodedToWebAnnotationEncoded = (
-  anchor: typeof EvidenceAnchor.Encoded
-): typeof WebAnnotation.Encoded =>
-  pipe(decodeEvidenceAnchor(anchor), Result.map(evidenceAnchorToWebAnnotationEncoded), Result.getOrThrow);
-
-const webAnnotationToEvidenceAnchorValue = (annotation: WebAnnotation): EvidenceAnchor =>
-  EvidenceAnchor.make({
-    id: annotation.id,
-    target: webAnnotationTargetToEvidenceTargetValue(annotation.target),
-    note: annotation.bodyValue,
-  });
-
-const decodeWebAnnotation = S.decodeUnknownResult(WebAnnotation);
-
-const webAnnotationEncodedToEvidenceAnchorValue = (annotation: typeof WebAnnotation.Encoded): EvidenceAnchor =>
-  pipe(decodeWebAnnotation(annotation), Result.map(webAnnotationToEvidenceAnchorValue), Result.getOrThrow);
-
-const webAnnotationEncodedToEvidenceAnchorEncoded = (
-  annotation: typeof WebAnnotation.Encoded
-): typeof EvidenceAnchor.Encoded =>
-  pipe(webAnnotationEncodedToEvidenceAnchorValue(annotation), encodeEvidenceAnchor, Result.getOrThrow);
-
-/**
- * **Example** (Decode evidence to annotation)
+ * **Example** (Encode an anchor after an astral character)
  *
- * ```ts import.meta.vitest name="Decode evidence to annotation"
+ * ```ts import.meta.vitest name="Encode an anchor after an astral character"
  * import * as S from "effect/Schema"
- * import { WebAnnotationFromEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
+ * import * as Result from "effect/Result"
+ * import { IRIReference } from "@beep/identity/Iri"
+ * import { textAnchorToWebAnnotationTarget, WebAnnotationTarget } from "@beep/rdf/Adapters/WebAnnotation"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
- * const annotation = S.decodeUnknownSync(WebAnnotationFromEvidenceAnchor)({
- *   id: "https://example.org/annotation/1",
- *   target: {
- *     source: "https://example.org/document",
- *     selector: { kind: "fragment", value: "section-1" }
- *   }
- * })
- * annotation.type // => "Annotation"
+ * const anchor = TextAnchor.make({ startChar: 3, endChar: 4, quote: "B" })
+ * const source = S.decodeUnknownSync(IRIReference)("https://example.org/document")
+ * const target = Result.getOrThrow(textAnchorToWebAnnotationTarget(anchor, { source, sourceText: "A😀B" }))
+ * const wire = JSON.stringify(S.encodeSync(WebAnnotationTarget)(target).selector)
+ * wire // => '[{"type":"TextPositionSelector","start":2,"end":3},{"type":"TextQuoteSelector","exact":"B"}]'
  * ```
  *
- * @category models
+ * @category mapping
  * @since 0.0.0
  */
-export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
-  S.decodeTo(WebAnnotation, {
-    decode: SchemaGetter.transform(evidenceAnchorEncodedToWebAnnotationEncoded),
-    encode: SchemaGetter.transform(webAnnotationEncodedToEvidenceAnchorEncoded),
-  }),
-  $I.annoteSchema("WebAnnotationFromEvidenceAnchor", {
-    description: "Codec between evidence anchors and Web Annotation DTOs.",
-    semanticSchemaMetadata: adapterMetadata(
-      "WebAnnotationFromEvidenceAnchor",
-      "Codec between evidence anchors and Web Annotation DTOs."
-    ),
-  })
-);
+export const textAnchorToWebAnnotationTarget: {
+  (options: {
+    readonly source: IRIReference;
+    readonly sourceText: string;
+  }): (anchor: TextAnchor) => Result.Result<WebAnnotationTarget, WebAnnotationAnchorRefused>;
+  (
+    anchor: TextAnchor,
+    options: { readonly source: IRIReference; readonly sourceText: string }
+  ): Result.Result<WebAnnotationTarget, WebAnnotationAnchorRefused>;
+} = dual(2, encodeTextAnchor);
 
 /**
- * **Example** (Accept annotation codec type)
+ * Read a Web Annotation target back to a candidate `TextAnchor` over its
+ * source text.
  *
- * ```ts
- * import type { WebAnnotationFromEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
+ * **Details**
  *
- * const acceptWebAnnotation = (value: WebAnnotationFromEvidenceAnchor) => value
- * console.log(acceptWebAnnotation)
- * ```
+ * Every selector is read and all must agree. Position selectors are code
+ * points; each converts to UTF-16, and two of them must give one range. A
+ * quote beside a position must be the text there, with any stated prefix and
+ * suffix matching the text on either side. Without a position, each quote
+ * must resolve to one place (`resolve`) and all to the same one. Fragment
+ * selectors are ignored beside a text selector. The anchor holds no prefix,
+ * suffix or fragment, so re-encoding is stable on the anchor, not on the
+ * target. The result is never a proof: verify it against the source.
  *
- * @category models
- * @since 0.0.0
- */
-export type WebAnnotationFromEvidenceAnchor = typeof WebAnnotationFromEvidenceAnchor.Type;
-
-/**
- * Map an evidence target to a Web Annotation target DTO.
+ * **Example** (Decode a quote-only target)
  *
- * **Example** (Map evidence to target)
- *
- * ```ts import.meta.vitest name="Map evidence to target"
+ * ```ts import.meta.vitest name="Decode a quote-only target"
  * import * as S from "effect/Schema"
- * import { evidenceTargetToWebAnnotationTarget } from "@beep/rdf/Adapters/WebAnnotation"
- * import { EvidenceTarget } from "@beep/rdf/Evidence"
+ * import * as Result from "effect/Result"
+ * import { WebAnnotationTarget, webAnnotationTargetToTextAnchor } from "@beep/rdf/Adapters/WebAnnotation"
  *
- * const evidenceTarget = S.decodeUnknownSync(EvidenceTarget)({
+ * const target = S.decodeUnknownSync(WebAnnotationTarget)({
  *   source: "https://example.org/document",
- *   selector: { kind: "fragment", value: "section-1" }
+ *   selector: { type: "TextQuoteSelector", exact: "B" }
  * })
- * const target = evidenceTargetToWebAnnotationTarget(evidenceTarget)
- * target.selector.type // => "FragmentSelector"
+ * const anchor = Result.getOrThrow(webAnnotationTargetToTextAnchor(target, "A😀B"))
+ * anchor.startChar // => 3
  * ```
  *
- * @param target - Evidence target.
- * @returns Web Annotation target DTO.
- * @category utilities
+ * @category mapping
  * @since 0.0.0
  */
-export const evidenceTargetToWebAnnotationTarget = (target: EvidenceTarget): WebAnnotationTarget =>
-  pipe(evidenceTargetToWebAnnotationTargetEncoded(target), decodeWebAnnotationTarget, Result.getOrThrow);
-
-/**
- * Map a Web Annotation target DTO to an evidence target.
- *
- * **Example** (Map target to evidence)
- *
- * ```ts import.meta.vitest name="Map target to evidence"
- * import * as S from "effect/Schema"
- * import { WebAnnotationTarget, webAnnotationTargetToEvidenceTarget } from "@beep/rdf/Adapters/WebAnnotation"
- *
- * const annotationTarget = S.decodeUnknownSync(WebAnnotationTarget)({
- *   source: "https://example.org/document",
- *   selector: { type: "FragmentSelector", value: "section-1" }
- * })
- * const target = webAnnotationTargetToEvidenceTarget(annotationTarget)
- * target.selector.kind // => "fragment"
- * ```
- *
- * @param target - Web Annotation target DTO.
- * @returns Evidence target.
- * @category utilities
- * @since 0.0.0
- */
-export const webAnnotationTargetToEvidenceTarget = (target: WebAnnotationTarget): EvidenceTarget =>
-  webAnnotationTargetToEvidenceTargetValue(target);
-
-/**
- * Map an evidence anchor to a Web Annotation DTO.
- *
- * **Example** (Map evidence to annotation)
- *
- * ```ts import.meta.vitest name="Map evidence to annotation"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- * import { evidenceAnchorToWebAnnotation } from "@beep/rdf/Adapters/WebAnnotation"
- * import { EvidenceAnchor } from "@beep/rdf/Evidence"
- *
- * const anchor = S.decodeUnknownSync(EvidenceAnchor)({
- *   id: "https://example.org/annotation/1",
- *   note: "supports the claim",
- *   target: {
- *     source: "https://example.org/document",
- *     selector: { kind: "text-quote", exact: "quoted text" }
- *   }
- * })
- * const annotation = evidenceAnchorToWebAnnotation(anchor)
- * O.getOrUndefined(annotation.bodyValue) // => "supports the claim"
- * ```
- *
- * @param anchor - Evidence anchor.
- * @returns Web Annotation DTO.
- * @category utilities
- * @since 0.0.0
- */
-export const evidenceAnchorToWebAnnotation = (anchor: EvidenceAnchor): WebAnnotation =>
-  pipe(evidenceAnchorToWebAnnotationEncoded(anchor), decodeWebAnnotation, Result.getOrThrow);
-
-/**
- * Map a Web Annotation DTO to an evidence anchor.
- *
- * **Example** (Map annotation to evidence)
- *
- * ```ts import.meta.vitest name="Map annotation to evidence"
- * import * as S from "effect/Schema"
- * import { WebAnnotation, webAnnotationToEvidenceAnchor } from "@beep/rdf/Adapters/WebAnnotation"
- *
- * const annotation = S.decodeUnknownSync(WebAnnotation)({
- *   id: "https://example.org/annotation/1",
- *   type: "Annotation",
- *   target: {
- *     source: "https://example.org/document",
- *     selector: { type: "FragmentSelector", value: "section-1" }
- *   }
- * })
- * const anchor = webAnnotationToEvidenceAnchor(annotation)
- * anchor.target.selector.kind // => "fragment"
- * ```
- *
- * @param annotation - Web Annotation DTO.
- * @returns Evidence anchor.
- * @category utilities
- * @since 0.0.0
- */
-export const webAnnotationToEvidenceAnchor = (annotation: WebAnnotation): EvidenceAnchor =>
-  webAnnotationToEvidenceAnchorValue(annotation);
+export const webAnnotationTargetToTextAnchor: {
+  (sourceText: string): (target: WebAnnotationTarget) => Result.Result<TextAnchor, WebAnnotationAnchorRefused>;
+  (target: WebAnnotationTarget, sourceText: string): Result.Result<TextAnchor, WebAnnotationAnchorRefused>;
+} = dual(2, decodeTarget);

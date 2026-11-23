@@ -35,11 +35,7 @@ import {
   SourceTextResolverErrorReason,
 } from "@beep/file-processing/SourceText";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import {
-  TextAnchorVerificationReceipt,
-  VerifyTextAnchorInput,
-  verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
+import { TextAnchorVerificationReceipt, VerifyTextAnchorInput, verifyTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Digest from "effect/crypto/Digest";

@@ -368,19 +368,15 @@ export class JsoncStringifyError extends S.TaggedError<JsoncStringifyError, { re
   }
 }
 
-// ── Internal helpers ────────────────────────────────────────────────────────
-
 const toFlags = (options?: JsoncParseOptions): ParseFlags => ParseFlags.make(options ?? JsoncParseOptions.make({}));
 
-// LS and PS count as line breaks in the scanner; stay aligned so error
-// positions after them are correct.
-const lineGrammar = { unicodeSeparators: true } as const;
+const lineGrammarCountingLsAndPsLikeTheScanner = { unicodeSeparators: true } as const;
 
 const toDetails: {
   (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail>;
   (errors: ReadonlyArray<RawParseError>): (text: string) => ReadonlyArray<JsoncParseErrorDetail>;
 } = dual(2, (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail> => {
-  const position = Text.lineCharacterIndex(text, lineGrammar);
+  const position = Text.lineCharacterIndex(text, lineGrammarCountingLsAndPsLikeTheScanner);
   return A.map(errors, (e) => JsoncParseErrorDetail.make({ ...e, ...position(e.offset) }));
 });
 
@@ -396,9 +392,11 @@ const aggregate: {
       : O.none()
 );
 
-// Element-wise array comparison. A plain index loop (not `A.every`) so holes
-// in a caller-supplied sparse array compare as `undefined`.
-const arraysEqual = (a: ReadonlyArray<unknown>, b: ReadonlyArray<unknown>, depth: number): boolean => {
+const arraysEqualReadingSparseHolesAsUndefined = (
+  a: ReadonlyArray<unknown>,
+  b: ReadonlyArray<unknown>,
+  depth: number
+): boolean => {
   if (a.length !== b.length) {
     return false;
   }
@@ -428,13 +426,11 @@ const deepEqual: {
   if (a === b) {
     return true;
   }
-  // Over-deep comparison (reachable through `equalsValue`, whose value side is
-  // caller-supplied): treat as unequal rather than overflowing the stack.
   if (depth >= MAX_NESTING_DEPTH) {
     return false;
   }
   if (A.isArray(a) || A.isArray(b)) {
-    return A.isArray(a) && A.isArray(b) && arraysEqual(a, b, depth);
+    return A.isArray(a) && A.isArray(b) && arraysEqualReadingSparseHolesAsUndefined(a, b, depth);
   }
   return P.isObject(a) && P.isObject(b) && recordsEqual(a, b, depth);
 });
@@ -446,16 +442,9 @@ const isUnrepresentable = (value: unknown): boolean => P.isUndefined(value) || P
 const topLevelUnrepresentableDetail =
   "the top-level value (undefined, a function or a symbol) has no JSON representation";
 
-// `thisBigIntValue`, the test the engine applies once the replacer has run: it
-// answers for a primitive bigint and for a boxed one (`Object(1n)`), whatever
-// the box's prototype, and throws for every other value. It reads an internal
-// slot, so no code the value owns runs.
-const isBigIntValue = (value: unknown): boolean =>
+const isBigIntByInternalSlotWithoutRunningValueCode = (value: unknown): boolean =>
   Result.isSuccess(Result.try(() => BigInt.prototype.valueOf.call(value)));
 
-// Upstream writes `replaceCh` once per comment code unit and keeps the line
-// breaks. The units are mapped one by one, never through a replacement
-// pattern, so a `$` in `replaceCh` stays a `$`.
 const blankComment: {
   (comment: string, replaceCh: string): string;
   (replaceCh: string): (comment: string) => string;
@@ -465,8 +454,6 @@ const blankComment: {
     Str.empty
   )
 );
-
-// ── Bound codec ─────────────────────────────────────────────────────────────
 
 /**
  * A domain codec pre-bound to its two directions, returned by
@@ -485,8 +472,6 @@ export interface JsoncBoundCodec<T, RD = never, RE = never> {
   /** The composed codec decoding a JSONC `string` straight into `T`. */
   readonly schema: S.Codec<T, string, RD, RE>;
 }
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Static entry points for JSONC parsing, comment stripping, semantic equality
@@ -695,49 +680,37 @@ export abstract class Jsonc {
   static stringifyResult(value: unknown, options?: JsoncStringifyOptions): Result.Result<string, JsoncStringifyError> {
     const resolved = options ?? JsoncStringifyOptions.make({});
     const space = resolved.insertSpaces ? resolved.tabSize : "\t";
-    // The replacer runs ahead of serialization and classifies the failure the
-    // codec is about to report: the codec itself only knows "not JSON".
-    let code: JsoncStringifyErrorCode = JsoncStringifyErrorCode.Enum.SerializationFailed;
-    // The replacer's first call receives the root after any `toJSON`, so it
-    // alone decides whether the output is absent (upstream classifies the
-    // same post-`toJSON` value).
-    let root = true;
-    // The value the replacer handed back last. The engine refuses a bigint,
-    // primitive or boxed, the moment it gets one back, so after a failure this
-    // is the value to test; testing every visited value would cost a caught
-    // throw per object.
-    let last: unknown;
-    // The open containers from the root down to the current holder, popped in
-    // place: each visit costs the cycle scan the engine also makes, not a copy
-    // of the whole stack.
-    const ancestors: Array<object> = [];
+    let codeClassifiedByReplacerAheadOfCodec: JsoncStringifyErrorCode =
+      JsoncStringifyErrorCode.Enum.SerializationFailed;
+    let awaitingRootAfterToJson = true;
+    // decision: stringify-replacer-bookkeeping
+    let lastReplacerResultForBigIntCheck: unknown;
+    const openAncestorsPoppedInPlace: Array<object> = [];
     const noteRoot = (current: unknown): void => {
-      if (!root) {
+      if (!awaitingRootAfterToJson) {
         return;
       }
-      root = false;
+      awaitingRootAfterToJson = false;
       if (isUnrepresentable(current)) {
-        code = JsoncStringifyErrorCode.Enum.TopLevelUnrepresentable;
+        codeClassifiedByReplacerAheadOfCodec = JsoncStringifyErrorCode.Enum.TopLevelUnrepresentable;
       }
     };
-    // Pop back to the holder, flag a cycle when `current` is already open, then
-    // open `current`.
-    const noteContainer = (holder: unknown, current: object): void => {
-      while (A.isArrayNonEmpty(ancestors) && A.lastNonEmpty(ancestors) !== holder) {
-        ancestors.pop();
+    const popToHolderFlagCycleThenOpen = (holder: unknown, current: object): void => {
+      while (A.isArrayNonEmpty(openAncestorsPoppedInPlace) && A.lastNonEmpty(openAncestorsPoppedInPlace) !== holder) {
+        openAncestorsPoppedInPlace.pop();
       }
-      if (A.some(ancestors, (ancestor) => ancestor === current)) {
-        code = JsoncStringifyErrorCode.Enum.CircularReference;
+      if (A.some(openAncestorsPoppedInPlace, (ancestor) => ancestor === current)) {
+        codeClassifiedByReplacerAheadOfCodec = JsoncStringifyErrorCode.Enum.CircularReference;
       }
-      ancestors.push(current);
+      openAncestorsPoppedInPlace.push(current);
     };
     const codec = S.fromJsonString(S.Unknown, {
       space,
       replacer: function (this: unknown, _key: string, current: unknown): unknown {
         noteRoot(current);
-        last = current;
+        lastReplacerResultForBigIntCheck = current;
         if (P.isObjectKeyword(current)) {
-          noteContainer(this, current);
+          popToHolderFlagCycleThenOpen(this, current);
         }
         return current;
       },
@@ -745,8 +718,10 @@ export abstract class Jsonc {
     return S.encodeResult(codec)(value).pipe(
       Result.mapError((error) =>
         JsoncStringifyError.make({
-          code: isBigIntValue(last) ? JsoncStringifyErrorCode.Enum.BigIntValue : code,
-          detail: JsoncStringifyErrorCode.is.TopLevelUnrepresentable(code)
+          code: isBigIntByInternalSlotWithoutRunningValueCode(lastReplacerResultForBigIntCheck)
+            ? JsoncStringifyErrorCode.Enum.BigIntValue
+            : codeClassifiedByReplacerAheadOfCodec,
+          detail: JsoncStringifyErrorCode.is.TopLevelUnrepresentable(codeClassifiedByReplacerAheadOfCodec)
             ? topLevelUnrepresentableDetail
             : error.message,
           value,
@@ -805,8 +780,6 @@ export abstract class Jsonc {
    */
   static stripComments(text: string, replaceCh?: string): string {
     const scanner = createScanner(text);
-    // Pieces grow in place: an immutable append copies every earlier piece per
-    // comment and makes comment-heavy documents quadratic.
     const parts: Array<string> = [];
     let lastOffset = 0;
     let kind = scanner.scan();

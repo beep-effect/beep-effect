@@ -1,6 +1,6 @@
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";

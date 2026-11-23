@@ -23,8 +23,8 @@ import {
   seededNodeIdMinter,
 } from "@beep/agent-memory-store";
 import { alignFile } from "@beep/agent-memory-store/internal/OperationCapture.align";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/provenance";
 import { PosixPath, Sha256Hex } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/text";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";

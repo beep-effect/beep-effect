@@ -12,7 +12,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import type { ClaimElementTree, ClaimTermRef } from "@beep/law-practice-domain/values/ClaimElement";
-import type { TextAnchor } from "@beep/provenance/TextAnchor";
+import type { TextAnchor } from "@beep/text/TextAnchor";
 
 const $I = $LawPracticeServerId.create("test/evaluation/Structural");
 const Count = S.Int.check(S.isGreaterThanOrEqualTo(0));

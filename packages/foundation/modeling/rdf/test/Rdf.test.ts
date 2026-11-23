@@ -1,20 +1,5 @@
-import { AbsoluteIRI, IRI, IRIReference } from "@beep/identity/Iri";
+import { AbsoluteIRI, IRI } from "@beep/identity/Iri";
 import * as RdfRoot from "@beep/rdf";
-import {
-  evidenceAnchorToWebAnnotation,
-  WebAnnotationFromEvidenceAnchor,
-  WebAnnotationSelectorFromEvidenceSelector,
-  WebAnnotationTargetFromEvidenceTarget,
-  webAnnotationToEvidenceAnchor,
-} from "@beep/rdf/Adapters/WebAnnotation";
-import {
-  EvidenceAnchor,
-  EvidenceSelector,
-  EvidenceTarget,
-  FragmentSelector,
-  TextPositionSelector,
-  TextQuoteSelector,
-} from "@beep/rdf/Evidence";
 import {
   JsonLdBlankNodeIdentifier,
   JsonLdContext,
@@ -140,8 +125,6 @@ const ObjectTermDecodeEffect = S.decodeEffect(ObjectTerm);
 const GraphTermEncodeEffect = S.encodeEffect(GraphTerm);
 const GraphTermDecodeEffect = S.decodeEffect(GraphTerm);
 const JsonLdDocumentDecodeEffect = S.decodeEffect(JsonLdDocument);
-const EvidenceAnchorDecodeEffect = S.decodeEffect(EvidenceAnchor);
-const WebAnnotationFromEvidenceAnchorDecodeEffect = S.decodeEffect(WebAnnotationFromEvidenceAnchor);
 const SemanticSchemaMetadataDecodeEffect = S.decodeEffect(SemanticSchemaMetadata);
 const decodeBlankNode = S.decodeUnknownEffect(BlankNode);
 const decodeJsonLdContext = S.decodeUnknownEffect(JsonLdContext);
@@ -153,16 +136,11 @@ const decodeJsonLdTermDefinition = S.decodeUnknownEffect(JsonLdTermDefinition);
 const decodeNamespaceBinding = S.decodeUnknownEffect(NamespaceBinding);
 const decodeSemanticSchemaMetadata = S.decodeUnknownEffect(SemanticSchemaMetadata);
 const decodeUnknownSemanticSchemaMetadata = S.decodeUnknownEffect(SemanticSchemaMetadata);
-const encodeEvidenceAnchor = S.encodeEffect(EvidenceAnchor);
-const encodeEvidenceSelector = S.encodeEffect(EvidenceSelector);
-const encodeEvidenceTarget = S.encodeEffect(EvidenceTarget);
 const encodeJsonLdDocument = S.encodeEffect(JsonLdDocument);
 const encodeJsonLdFrame = S.encodeEffect(JsonLdFrame);
 const encodeLiteral = S.encodeEffect(Literal);
 const encodeProvBundle = S.encodeEffect(ProvBundle);
 const encodeSemanticSchemaSpecification = S.encodeEffect(SemanticSchemaSpecification);
-const encodeTextQuoteSelector = S.encodeEffect(TextQuoteSelector);
-const encodeWebAnnotationFromEvidenceAnchor = S.encodeEffect(WebAnnotationFromEvidenceAnchor);
 const encodeSemanticSchemaMetadata = S.encodeEffect(SemanticSchemaMetadata);
 const isJsonLdKeyword = S.is(JsonLdKeyword);
 const isQuad = S.is(Quad);
@@ -526,16 +504,6 @@ describe("@beep/rdf crispening parity", () => {
     Effect.gen(function* () {
       const datatype = makeNamedNode(XSD_STRING.value);
       const literal = Literal.make({ termType: "Literal", value: "Alice", datatype });
-      const quoteSelector = TextQuoteSelector.make({ kind: "text-quote", exact: "quoted text" });
-      const fragmentSelector = FragmentSelector.make({ kind: "fragment", value: "section-1" });
-      const target = EvidenceTarget.make({
-        source: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/document")),
-        selector: fragmentSelector,
-      });
-      const anchor = EvidenceAnchor.make({
-        id: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/annotation/1")),
-        target,
-      });
       const specification = SemanticSchemaSpecification.make({
         name: "RDF 1.1 Concepts",
         disposition: "informative",
@@ -545,29 +513,12 @@ describe("@beep/rdf crispening parity", () => {
       const bundle = ProvBundle.make({ records: [] });
 
       assertNone(literal.language);
-      assertNone(quoteSelector.prefix);
-      assertNone(quoteSelector.suffix);
-      assertNone(fragmentSelector.conformsTo);
-      assertNone(anchor.note);
 
       const encodedLiteral = yield* encodeLiteral(literal);
       expect(encodedLiteral).toEqual({
         termType: "Literal",
         value: "Alice",
         datatype: { termType: "NamedNode", value: XSD_STRING.value },
-      });
-      const encodedTextQuoteSelector = yield* encodeTextQuoteSelector(quoteSelector);
-      expect(encodedTextQuoteSelector).toEqual({
-        kind: "text-quote",
-        exact: "quoted text",
-      });
-      const encodedEvidenceAnchor = yield* encodeEvidenceAnchor(anchor);
-      expect(encodedEvidenceAnchor).toEqual({
-        id: "https://example.org/annotation/1",
-        target: {
-          source: "https://example.org/document",
-          selector: { kind: "fragment", value: "section-1" },
-        },
       });
       const encodedSemanticSchemaSpecification = yield* encodeSemanticSchemaSpecification(specification);
       expect(encodedSemanticSchemaSpecification).toEqual({
@@ -580,46 +531,6 @@ describe("@beep/rdf crispening parity", () => {
       expect(encodedJsonLdFrame).toEqual({});
       const encodedProvBundle = yield* encodeProvBundle(bundle);
       expect(encodedProvBundle).toEqual({ records: [] });
-    })
-  );
-
-  it.effect("exposes reversible Web Annotation codecs without changing wrapper behavior", () =>
-    Effect.gen(function* () {
-      const selector = TextPositionSelector.make({
-        kind: "text-position",
-        start: S.Natural.make(0),
-        end: S.Natural.make(5),
-      });
-      const target = EvidenceTarget.make({
-        source: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/document")),
-        selector,
-      });
-      const anchor = EvidenceAnchor.make({
-        id: Result.getOrThrow(S.decodeResult(IRIReference)("https://example.org/annotation/1")),
-        target,
-      });
-      const encodedSelector = yield* encodeEvidenceSelector(selector);
-      const encodedTarget = yield* encodeEvidenceTarget(target);
-      const encodedAnchor = yield* encodeEvidenceAnchor(anchor);
-
-      const annotation = Result.getOrThrow(S.decodeResult(WebAnnotationFromEvidenceAnchor)(encodedAnchor));
-
-      expect(Result.getOrThrow(S.decodeResult(WebAnnotationSelectorFromEvidenceSelector)(encodedSelector)).type).toBe(
-        "TextPositionSelector"
-      );
-      expect(
-        Result.getOrThrow(S.decodeResult(WebAnnotationTargetFromEvidenceTarget)(encodedTarget)).selector.type
-      ).toBe("TextPositionSelector");
-      expect(evidenceAnchorToWebAnnotation(anchor)).toEqual(annotation);
-      expect(webAnnotationToEvidenceAnchor(annotation)).toEqual(anchor);
-      const encodedWebAnnotationFromEvidenceAnchor = yield* encodeWebAnnotationFromEvidenceAnchor(annotation);
-      expect(encodedWebAnnotationFromEvidenceAnchor).toEqual({
-        id: "https://example.org/annotation/1",
-        target: {
-          source: "https://example.org/document",
-          selector: { kind: "text-position", start: 0, end: 5 },
-        },
-      });
     })
   );
 
@@ -726,32 +637,6 @@ describe("@beep/rdf crispening parity", () => {
         Effect.gen(function* () {
           const encoded = yield* encodeJsonLdDocument(value);
           const decoded = yield* JsonLdDocumentDecodeEffect(encoded);
-          pipe(Equal.equals(decoded, value), assertTrue);
-
-          return true;
-        }),
-      { arbitrary: fcRuns(25) }
-    );
-    it.effect.prop(
-      "EvidenceAnchor",
-      [Arbitrary.schema(EvidenceAnchor)],
-      ([value]) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeEvidenceAnchor(value);
-          const decoded = yield* EvidenceAnchorDecodeEffect(encoded);
-          pipe(Equal.equals(decoded, value), assertTrue);
-
-          return true;
-        }),
-      { arbitrary: fcRuns(25) }
-    );
-    it.effect.prop(
-      "WebAnnotationFromEvidenceAnchor",
-      [Arbitrary.schema(WebAnnotationFromEvidenceAnchor)],
-      ([value]) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeWebAnnotationFromEvidenceAnchor(value);
-          const decoded = yield* WebAnnotationFromEvidenceAnchorDecodeEffect(encoded);
           pipe(Equal.equals(decoded, value), assertTrue);
 
           return true;

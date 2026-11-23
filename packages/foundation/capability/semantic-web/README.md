@@ -28,7 +28,7 @@ import { ShaclValidationService } from "@beep/semantic-web/services/shacl-valida
 import { CanonicalizationService } from "@beep/semantic-web/services/canonicalization"
 import { entriesToDataset, projectShapes } from "@beep/semantic-web"
 import { IRI } from "@beep/identity/Iri"
-import { ProvBundle, EvidenceAnchor, makeQuad } from "@beep/rdf"
+import { ProvBundle, makeQuad } from "@beep/rdf"
 ```
 
 ## Consumers

@@ -299,30 +299,27 @@ type FormattedModify = Result.Result<
   JsoncStringifyError | JsoncModificationError | JsoncPlacementError
 >;
 
-// The formatted modification is a port of `modify` (`setProperty` and
-// `withFormatting`) of Microsoft's `jsonc-parser` 3.3.1 (MIT): a raw edit
-// with compact JSON content, then a format pass over the lines it touches.
+// Ported from microsoft/node-jsonc-parser src/impl/edit.ts (MIT).
 
 const compactJson = JsoncStringifyOptions.make({ tabSize: 0 });
 const serializeCompact = (value: unknown): Result.Result<string, JsoncStringifyError> =>
   Jsonc.stringifyResult(value, compactJson);
-// Upstream parses with its default flags and ignores every error.
-const treeFlags = ParseFlags.make({ allowTrailingComma: false });
+const upstreamDefaultTreeFlagsWithErrorsIgnored = ParseFlags.make({ allowTrailingComma: false });
 
 const valueOfProperty = (property: JsoncNode): O.Option<JsoncNode> =>
   property.children !== undefined && property.children.length === 2 ? A.get(property.children, 1) : O.none();
 const keyOfProperty = (property: JsoncNode): unknown => property.children?.[0]?.value;
 
-// The first property named `key` that carries a value, as upstream's
-// `findNodeAtLocation` reads an object.
-const propertyIndexOf = (children: ReadonlyArray<JsoncNode>, key: string): O.Option<number> =>
+const firstValuedPropertyIndexOf = (children: ReadonlyArray<JsoncNode>, key: string): O.Option<number> =>
   A.findFirstIndex(children, (property) => O.isSome(valueOfProperty(property)) && keyOfProperty(property) === key);
 
 const childOf = (node: JsoncNode, segment: JsoncSegment): O.Option<JsoncNode> => {
   const children = node.children ?? A.empty<JsoncNode>();
   if (P.isString(segment)) {
     return JsoncNodeType.is.object(node.type)
-      ? O.flatMap(propertyIndexOf(children, segment), (index) => O.flatMap(A.get(children, index), valueOfProperty))
+      ? O.flatMap(firstValuedPropertyIndexOf(children, segment), (index) =>
+          O.flatMap(A.get(children, index), valueOfProperty)
+        )
       : O.none();
   }
   return JsoncNodeType.is.array(node.type) ? A.get(children, segment) : O.none();
@@ -340,7 +337,6 @@ const placementError = (path: JsoncPath, reason: JsoncPlacementFailure) =>
 
 type PlacedEdit = Result.Result<O.Option<JsoncEdit>, JsoncStringifyError | JsoncPlacementError>;
 
-// Remove a property with the comma of the previous property, or of the next one.
 const deleteProperty = (parent: JsoncNode, children: ReadonlyArray<JsoncNode>, index: number): JsoncEdit => {
   const property = children[index] as JsoncNode;
   const removeBegin = index > 0 ? end(children[index - 1] as JsoncNode) : parent.offset + 1;
@@ -365,7 +361,6 @@ const newProperty = (key: string, value: unknown): Result.Result<string, JsoncSt
     Result.map(serializeCompact(value), (content) => `${name}: ${content}`)
   );
 
-// Delete, replace or insert a property of `parent`.
 const objectEdit = (
   parent: JsoncNode,
   children: ReadonlyArray<JsoncNode>,
@@ -374,7 +369,7 @@ const objectEdit = (
   value: unknown,
   insertionIndex: O.Option<number>
 ): PlacedEdit => {
-  const existing = propertyIndexOf(children, key);
+  const existing = firstValuedPropertyIndexOf(children, key);
   if (O.isSome(existing)) {
     if (P.isUndefined(value)) {
       return Result.succeed(O.some(deleteProperty(parent, children, existing.value)));
@@ -393,10 +388,6 @@ const objectEdit = (
     : Result.map(newProperty(key, value), (property) => O.some(insertProperty(parent, children, property, index)));
 };
 
-// Remove an element: the only one, the last one with the comma before it, or
-// any other with the gap up to the next one. The last one's removal ends at the
-// element itself: jsonc-parser ends it two characters before the parent's end,
-// which joins `[1,2]` into `[12]` and cuts a trailing comment.
 const deleteElement = (
   parent: JsoncNode,
   children: ReadonlyArray<JsoncNode>,
@@ -419,7 +410,6 @@ const deleteElement = (
   );
 };
 
-// Replace an element, or insert one before `index` (appending past the end).
 const setElement = (
   parent: JsoncNode,
   children: ReadonlyArray<JsoncNode>,
@@ -452,29 +442,28 @@ const arrayEdit = (
         O.some(setElement(parent, children, index, content, isArrayInsertion))
       );
 
-// Walk up to the deepest existing parent, wrapping the value in the
-// containers the missing segments name.
 const deepestParent = (root: O.Option<JsoncNode>, path: JsoncPath, value: unknown) => {
   let depth = path.length;
-  let wrapped = value;
+  let wrappedInMissingContainers = value;
   let parent = O.none<JsoncNode>();
   while (depth > 0) {
     const segment = path[depth - 1] as JsoncSegment;
     parent = locate(root, A.take(path, depth - 1));
-    if (O.isSome(parent) || P.isUndefined(wrapped)) {
+    if (O.isSome(parent) || P.isUndefined(wrappedInMissingContainers)) {
       break;
     }
-    wrapped = P.isString(segment) ? R.singleton(segment, wrapped) : A.of(wrapped);
+    wrappedInMissingContainers = P.isString(segment)
+      ? R.singleton(segment, wrappedInMissingContainers)
+      : A.of(wrappedInMissingContainers);
     depth--;
   }
-  return { depth, wrapped, parent };
+  return { depth, wrappedInMissingContainers, parent };
 };
 
-// With no parent left, the whole document (or the empty text) is replaced.
-const documentEdit = (root: O.Option<JsoncNode>, path: JsoncPath, wrapped: unknown): PlacedEdit =>
-  P.isUndefined(wrapped)
+const documentEdit = (root: O.Option<JsoncNode>, path: JsoncPath, wrappedInMissingContainers: unknown): PlacedEdit =>
+  P.isUndefined(wrappedInMissingContainers)
     ? placementError(path, "DeleteInEmptyDocument")
-    : Result.map(serializeCompact(wrapped), (content) =>
+    : Result.map(serializeCompact(wrappedInMissingContainers), (content) =>
         O.some(
           O.match(root, {
             onNone: () => rawEdit(0, 0, content),
@@ -487,17 +476,23 @@ const containerEdit = (
   node: JsoncNode,
   path: JsoncPath,
   depth: number,
-  wrapped: unknown,
+  wrappedInMissingContainers: unknown,
   options: JsoncFormattedModifyOptions.Encoded
 ): Result.Result<O.Option<JsoncEdit>, JsoncStringifyError | JsoncModificationError | JsoncPlacementError> => {
   const segment = path[depth - 1] as JsoncSegment;
-  // A scalar parent has no children; it fails below.
   const children = node.children ?? A.empty<JsoncNode>();
   if (JsoncNodeType.is.object(node.type) && P.isString(segment)) {
-    return objectEdit(node, children, path, segment, wrapped, O.fromUndefinedOr(options.insertionIndex));
+    return objectEdit(
+      node,
+      children,
+      path,
+      segment,
+      wrappedInMissingContainers,
+      O.fromUndefinedOr(options.insertionIndex)
+    );
   }
   if (JsoncNodeType.is.array(node.type) && P.isNumber(segment)) {
-    return arrayEdit(node, children, path, segment, wrapped, options.isArrayInsertion === true);
+    return arrayEdit(node, children, path, segment, wrappedInMissingContainers, options.isArrayInsertion === true);
   }
   return Result.fail(JsoncModificationError.make({ path, expected: P.isString(segment) ? "object" : "array", depth }));
 };
@@ -508,24 +503,24 @@ const placeEdit = (
   value: unknown,
   options: JsoncFormattedModifyOptions.Encoded
 ): Result.Result<O.Option<JsoncEdit>, JsoncStringifyError | JsoncModificationError | JsoncPlacementError> => {
-  const root = parseTree(text, treeFlags).root;
-  const { depth, wrapped, parent } = deepestParent(root, path, value);
+  const root = parseTree(text, upstreamDefaultTreeFlagsWithErrorsIgnored).root;
+  const { depth, wrappedInMissingContainers, parent } = deepestParent(root, path, value);
   return O.match(parent, {
-    onNone: () => documentEdit(root, path, wrapped),
-    onSome: (node) => containerEdit(node, path, depth, wrapped, options),
+    onNone: () => documentEdit(root, path, wrappedInMissingContainers),
+    onSome: (node) => containerEdit(node, path, depth, wrappedInMissingContainers, options),
   });
 };
 
 const spliceEdit = (text: string, edit: JsoncEdit): string =>
   Str.substring(0, edit.offset)(text) + edit.content + Str.substring(edit.offset + edit.length)(text);
 
-// Apply `edit`, format the lines it touches, and merge both into one edit.
 const withFormatting = (text: string, edit: JsoncEdit, formatting: JsoncFormattingOptionsLike): JsoncEdit => {
   let next = spliceEdit(text, edit);
   const touched = edit.offset + edit.content.length;
-  // An insertion or a removal formats the whole lines around it.
-  let [begin, finish] =
-    edit.length === 0 || edit.content.length === 0 ? lineSpan(next, edit.offset, touched) : [edit.offset, touched];
+  const isInsertionOrRemovalFormattingWholeLines = edit.length === 0 || edit.content.length === 0;
+  let [begin, finish] = isInsertionOrRemovalFormattingWholeLines
+    ? lineSpan(next, edit.offset, touched)
+    : [edit.offset, touched];
   const formats = JsoncFormatter.format(next, JsoncRange.make({ offset: begin, length: finish - begin }), {
     ...formatting,
     keepLines: false,
@@ -658,10 +653,6 @@ export abstract class JsoncModifier {
               )
             );
           }
-          // Comma positions come from scanner tokens, never from searching the
-          // raw text, so commas inside comments are invisible here. The entry
-          // takes its preceding comma with it, or its following comma when it
-          // is the first entry.
           const removeStart = O.getOrElse(located.commaBefore, () => located.keyStart);
           const removeEnd =
             O.isNone(located.commaBefore) && O.isSome(located.commaAfter)
@@ -683,13 +674,9 @@ export abstract class JsoncModifier {
             : Effect.gen(function* () {
                 const indent = Str.repeat(insert.depth)(indentUnit);
                 const outdent = Str.repeat(insert.depth - 1)(indentUnit);
-                // Generated multi-line values are re-indented to the insertion
-                // depth so a nested object lands at the same column as its siblings.
-                // The value keeps JSON.stringify's own "\n" line breaks (upstream);
-                // `eol` belongs to the wrapper around the entry only.
-                const argument = Str.replaceAll("\n", `\n${indent}`);
+                const reindentLfBreaksToInsertionDepth = Str.replaceAll("\n", `\n${indent}`);
                 const serialize1 = yield* serialize();
-                const serialized = argument(serialize1);
+                const serialized = reindentLfBreaksToInsertionDepth(serialize1);
                 const entry = NavigateContainer.is.object(insert.container)
                   ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}`
                   : serialized;

@@ -13,7 +13,7 @@
 import { ResolveSourceTextRequest, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDispositionLifecycle, PatentReference } from "@beep/law-practice-domain";
-import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
+import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as F from "effect/Function";

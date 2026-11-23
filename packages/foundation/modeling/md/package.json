@@ -37,6 +37,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./Md": "./src/Md.ts",
+    "./Md.anchors": "./src/Md.anchors.ts",
     "./Md.behavior": "./src/Md.behavior.ts",
     "./Md.conformance": "./src/Md.conformance.ts",
     "./Md.escape": "./src/Md.escape.ts",
@@ -63,6 +64,7 @@
     "exports": {
       ".": "./dist/index.js",
       "./Md": "./dist/Md.js",
+      "./Md.anchors": "./dist/Md.anchors.js",
       "./Md.behavior": "./dist/Md.behavior.js",
       "./Md.conformance": "./dist/Md.conformance.js",
       "./Md.escape": "./dist/Md.escape.js",
@@ -82,6 +84,7 @@
     "@beep/jsonc": "workspace:^",
     "@beep/markdown": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },

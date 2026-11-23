@@ -28,8 +28,8 @@ import { captureCitationOperationPolicy, snapshotCitationValue } from "./Snapsho
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import { measureCitationTextWork } from "./TextBudget.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import type { Sha256Hex } from "@beep/schema";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import type { CitationOwned } from "./ConfigurationOwnership.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceResolution");

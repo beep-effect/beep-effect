@@ -7,15 +7,15 @@
  * @since 0.0.0
  */
 
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import type { VerifiedSourceText, VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText, VerifiedTextAnchorError } from "@beep/text/VerifiedTextAnchor";
 
 /**
  * Web Crypto digest and secure-random services for fixture hashing.

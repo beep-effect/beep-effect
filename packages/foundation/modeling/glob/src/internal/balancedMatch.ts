@@ -144,23 +144,21 @@ export const range: {
 } = dual(3, (a: string, b: string, str: string): undefined | [number, number] => {
   const opening = new RegExp(RE.escape(a), "g");
   const closing = new RegExp(RE.escape(b), "g");
-  const ai = delimiterIndex(opening, str, 0);
-  const bi = delimiterIndex(closing, str, ai + 1);
+  const ai = searchReusedDelimiterClampedForEmpty(opening, str, 0);
+  const bi = searchReusedDelimiterClampedForEmpty(closing, str, ai + 1);
   if (ai < 0 || bi <= 0) return undefined;
   if (a === b) return [ai, bi];
   return scanRange(opening, closing, str, ai, bi);
 });
 
-// Reuse each positioned search expression throughout the scan, including empty delimiters.
-const delimiterIndex = (delimiter: RegExp, str: string, from: number): number => {
+const searchReusedDelimiterClampedForEmpty = (delimiter: RegExp, str: string, from: number): number => {
   delimiter.lastIndex = Math.min(from, str.length);
   const match = delimiter.exec(str);
   if (match === null) return -1;
   return match.index;
 };
 
-// Mutable cursor state of one balanced-range scan.
-interface RangeScan {
+interface MutableBalancedRangeCursor {
   ai: number;
   readonly begs: Array<number>;
   bi: number;
@@ -171,17 +169,24 @@ interface RangeScan {
 }
 
 const scanRange = (a: RegExp, b: RegExp, str: string, ai: number, bi: number): undefined | [number, number] => {
-  const scan: RangeScan = { ai, bi, i: ai, left: str.length, right: undefined, result: undefined, begs: [] };
+  const scan: MutableBalancedRangeCursor = {
+    ai,
+    bi,
+    i: ai,
+    left: str.length,
+    right: undefined,
+    result: undefined,
+    begs: [],
+  };
   while (scan.i >= 0 && scan.result === undefined) rangeStep(scan, a, b, str);
   return scan.begs.length !== 0 && scan.right !== undefined ? [scan.left, scan.right] : scan.result;
 };
 
-const rangeStep = (scan: RangeScan, a: RegExp, b: RegExp, str: string): void => {
+const rangeStep = (scan: MutableBalancedRangeCursor, a: RegExp, b: RegExp, str: string): void => {
   if (scan.i === scan.ai) {
     scan.begs.push(scan.i);
-    scan.ai = delimiterIndex(a, str, scan.i + 1);
+    scan.ai = searchReusedDelimiterClampedForEmpty(a, str, scan.i + 1);
   } else if (scan.begs.length === 1) {
-    // This branch has exactly one opening offset.
     for (const r of scan.begs.splice(-1)) scan.result = [r, scan.bi];
   } else {
     closeInnerPair(scan, b, str);
@@ -189,11 +194,11 @@ const rangeStep = (scan: RangeScan, a: RegExp, b: RegExp, str: string): void => 
   scan.i = scan.ai < scan.bi && scan.ai >= 0 ? scan.ai : scan.bi;
 };
 
-const closeInnerPair = (scan: RangeScan, b: RegExp, str: string): void => {
+const closeInnerPair = (scan: MutableBalancedRangeCursor, b: RegExp, str: string): void => {
   const beg = scan.begs.pop();
   if (beg !== undefined && beg < scan.left) {
     scan.left = beg;
     scan.right = scan.bi;
   }
-  scan.bi = delimiterIndex(b, str, scan.i + 1);
+  scan.bi = searchReusedDelimiterClampedForEmpty(b, str, scan.i + 1);
 };

@@ -7,8 +7,8 @@ import {
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
-import { SourceTextExtractor } from "@beep/provenance";
 import { PosixPath } from "@beep/schema";
+import { SourceTextExtractor } from "@beep/text";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";

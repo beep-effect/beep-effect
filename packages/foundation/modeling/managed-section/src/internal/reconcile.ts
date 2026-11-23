@@ -1,15 +1,3 @@
-// The reconciliation algorithm: fit a declared set of sections into a
-// document that already has some of them, in some order, mixed with text and
-// foreign sections that must survive byte-for-byte.
-//
-// Missing-section anchor preprocessing uses two linear passes. Other work,
-// including rendering and constructing output strings, is accounted for separately.
-//
-// Ordering normalization is a CONTRACT, not a side effect: declared sections
-// come back in declared order. That is what lets a consumer say "the preamble
-// must precede the tool block" by listing them in that order and have it be
-// true even in a file a user reordered by hand.
-
 import { $ManagedSectionId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
@@ -93,24 +81,16 @@ export class ReconcileOutput extends S.Opaque<ReconcileOutput, { readonly brand:
   )
 ) {}
 
-/** A document broken into preserved text spans and section placeholders. */
 type Item =
   | { readonly kind: "text"; readonly value: string }
   | { kind: "section"; readonly identity: string; readonly raw: string; render: string | undefined };
 
-/** A declared section's slot placeholder in the broken-up document. */
 type SlotItem = Extract<Item, { kind: "section" }>;
 
-/** Missing-section blocks keyed by the item index of their anchor. */
-type AnchorBlocks = MutableHashMap.MutableHashMap<number, Array<string>>;
+type BlocksByAnchorItemIndex = MutableHashMap.MutableHashMap<number, Array<string>>;
 
 const identityOfSection = (section: Section): string => identityOf(section.key, section.commentStyle);
 
-/**
- * Renders EVERY declared section before touching the document, so a refusal
- * never leaves a half-written file behind. Declaring one identity twice is
- * two intentions for one block; refuse rather than pick.
- */
 const renderDeclared = (
   declared: ReadonlyArray<Section>,
   dialect: SectionDialect,
@@ -124,8 +104,6 @@ const renderDeclared = (
     }
     const result = dialect.render(section, eol);
     if (Result.isFailure(result)) {
-      // Re-wrap rather than returning `result`: its success type is `string`,
-      // not the rendered map, and a Failure does not narrow it.
       return Result.fail(result.failure);
     }
     MutableHashMap.set(rendered, identity, result.success);
@@ -133,7 +111,6 @@ const renderDeclared = (
   return Result.succeed(rendered);
 };
 
-/** One outcome per declared section, in declared order, decided by content. */
 const outcomeFor = (onDisk: MutableHashMap.MutableHashMap<string, PlacedSection>, section: Section): SyncOutcome => {
   const current = MutableHashMap.get(onDisk, identityOfSection(section));
   if (O.isNone(current)) {
@@ -144,7 +121,6 @@ const outcomeFor = (onDisk: MutableHashMap.MutableHashMap<string, PlacedSection>
     : SyncOutcome.Updated({ before: current.value.section, after: section });
 };
 
-/** Breaks the document into preserved spans and placeholders. */
 const splitDocument = (text: string, placed: ReadonlyArray<PlacedSection>): Array<Item> => {
   const items: Array<Item> = [];
   let cursor = 0;
@@ -162,12 +138,6 @@ const splitDocument = (text: string, placed: ReadonlyArray<PlacedSection>): Arra
   return items;
 };
 
-/**
- * Reassigns the declared sections that already exist into the existing slots,
- * declared order over document order. This updates content in place AND
- * normalizes ordering around fixed text and foreign sections. Returns the item
- * index each present declaration now occupies.
- */
 const assignSlots = (
   items: ReadonlyArray<Item>,
   declared: ReadonlyArray<Section>,
@@ -196,12 +166,7 @@ const assignSlots = (
   return itemIndexByDeclared;
 };
 
-/**
- * Caches the strictly preceding (`step` 1) or succeeding (`step` -1) existing
- * anchor of each declaration. Each declaration needs one map lookup per pass,
- * including declarations without any anchor.
- */
-const nearestAnchors = (
+const nearestAnchorsInLinearPassExcludingRenderingAndOutput = (
   count: number,
   itemIndexByDeclared: MutableHashMap.MutableHashMap<number, number>,
   step: 1 | -1
@@ -216,34 +181,28 @@ const nearestAnchors = (
 };
 
 const pushInto: {
-  (map: AnchorBlocks, anchor: number, value: string): void;
-  (anchor: number, value: string): (map: AnchorBlocks) => void;
-} = dual(3, (map: AnchorBlocks, anchor: number, value: string): void => {
+  (map: BlocksByAnchorItemIndex, anchor: number, value: string): void;
+  (anchor: number, value: string): (map: BlocksByAnchorItemIndex) => void;
+} = dual(3, (map: BlocksByAnchorItemIndex, anchor: number, value: string): void => {
   const list = O.getOrElse(MutableHashMap.get(map, anchor), (): Array<string> => []);
   list.push(value);
   MutableHashMap.set(map, anchor, list);
 });
 
-/** Where the sections not yet in the document go. */
 interface Placement {
-  readonly afterAnchor: AnchorBlocks;
+  readonly afterAnchor: BlocksByAnchorItemIndex;
   readonly appended: Array<string>;
-  readonly beforeAnchor: AnchorBlocks;
+  readonly beforeAnchor: BlocksByAnchorItemIndex;
 }
 
-/**
- * Places the sections that are not in the document yet: before the nearest
- * present successor sibling, else after the nearest present predecessor,
- * else append at the end.
- */
 const placeMissing = (
   declared: ReadonlyArray<Section>,
   onDisk: MutableHashMap.MutableHashMap<string, PlacedSection>,
   rendered: MutableHashMap.MutableHashMap<string, string>,
   itemIndexByDeclared: MutableHashMap.MutableHashMap<number, number>
 ): Placement => {
-  const predecessor = nearestAnchors(declared.length, itemIndexByDeclared, 1);
-  const successor = nearestAnchors(declared.length, itemIndexByDeclared, -1);
+  const predecessor = nearestAnchorsInLinearPassExcludingRenderingAndOutput(declared.length, itemIndexByDeclared, 1);
+  const successor = nearestAnchorsInLinearPassExcludingRenderingAndOutput(declared.length, itemIndexByDeclared, -1);
   const placement: Placement = {
     beforeAnchor: MutableHashMap.empty<number, Array<string>>(),
     afterAnchor: MutableHashMap.empty<number, Array<string>>(),
@@ -268,14 +227,9 @@ const placeMissing = (
   return placement;
 };
 
-/** The blocks anchored at an item index, or none. */
-const blocksAt = (map: AnchorBlocks, index: number): ReadonlyArray<string> =>
+const blocksAt = (map: BlocksByAnchorItemIndex, index: number): ReadonlyArray<string> =>
   O.getOrElse(MutableHashMap.get(map, index), (): ReadonlyArray<string> => []);
 
-/**
- * Renders preserved text verbatim, foreign sections from their exact source
- * bytes, declared sections canonically, with anchored missing sections around them.
- */
 const assemble = (items: ReadonlyArray<Item>, placement: Placement, eol: Eol): string => {
   const parts: Array<string> = [];
   A.forEach(items, (item, index) => {
@@ -294,18 +248,16 @@ const assemble = (items: ReadonlyArray<Item>, placement: Placement, eol: Eol): s
   return A.join(parts, "");
 };
 
-/** The line breaks still needed before an appended block for a two-break separator. */
-const missingSeparator = (output: string, eol: Eol): string => {
+const missingTwoBreakSeparator = (output: string, eol: Eol): string => {
   if (O.isSome(Str.match(/(?:\r?\n){2}$/)(output))) {
     return "";
   }
   return Str.endsWith("\n")(output) ? eol : eol + eol;
 };
 
-/** Appends blocks after the assembled document; existing bytes are a preserved prefix, even in a blank document. */
 const appendBlocks = (output: string, appended: ReadonlyArray<string>, eol: Eol): string =>
   A.reduce(appended, output, (text, block) =>
-    text === "" ? `${block}${eol}` : `${text}${missingSeparator(text, eol)}${block}${eol}`
+    text === "" ? `${block}${eol}` : `${text}${missingTwoBreakSeparator(text, eol)}${block}${eol}`
   );
 
 /**

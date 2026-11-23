@@ -62,11 +62,11 @@
     "@beep/identity": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/postgres": "workspace:^",
-    "@beep/provenance": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"

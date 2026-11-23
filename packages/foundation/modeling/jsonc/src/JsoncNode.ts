@@ -355,10 +355,7 @@ const covers: {
   (offset: number): (node: JsoncNode) => boolean;
 } = dual(2, (node: JsoncNode, offset: number): boolean => offset >= node.offset && offset < node.offset + node.length);
 
-// An array index addresses an element only when it is a non-negative integer:
-// upstream reads `children[segment]`, which is `undefined` for `0.5` or `-1`,
-// while `A.get` floors a fractional index onto a real element.
-const isArrayIndex = S.is(S.Natural);
+const isNonNegativeIntegerIndexThatAGetWouldNotFloor = S.is(S.Natural);
 
 const childAt: {
   (node: JsoncNode, segment: JsoncSegment): O.Option<JsoncNode>;
@@ -373,14 +370,10 @@ const childAt: {
         )
       : O.none();
   }
-  return JsoncNodeType.is.array(node.type) && isArrayIndex(segment) ? O.flatMap(children, A.get(segment)) : O.none();
+  return JsoncNodeType.is.array(node.type) && isNonNegativeIntegerIndexThatAGetWouldNotFloor(segment)
+    ? O.flatMap(children, A.get(segment))
+    : O.none();
 });
-
-// Recursive walkers below cap their descent at MAX_NESTING_DEPTH. A tree built
-// by the parser is already bounded (the parser caps at the same depth), but a
-// tree assembled by hand via `JsoncNode.make` can nest arbitrarily deep, so
-// each walker guards independently, returning a bounded placeholder rather
-// than overflowing the stack as a defect.
 
 const findAtOffsetImpl: {
   (node: JsoncNode, offset: number, depth: number): O.Option<JsoncNode>;
@@ -411,17 +404,15 @@ const buildPath: {
       return O.some(currentPath);
     }
     if (JsoncNodeType.is.object(node.type)) {
-      return objectPath(node.children, offset, currentPath, depth);
+      return pathThroughFirstCoveringKeyedProperty(node.children, offset, currentPath, depth);
     }
     return JsoncNodeType.is.array(node.type)
-      ? arrayPath(node.children, offset, currentPath, depth)
+      ? pathThroughFirstCoveringElement(node.children, offset, currentPath, depth)
       : O.some(currentPath);
   }
 );
 
-// The path through the first keyed property covering `offset`: into its value
-// when the value covers the offset too, otherwise the property's own path.
-const objectPath = (
+const pathThroughFirstCoveringKeyedProperty = (
   children: ReadonlyArray<JsoncNode>,
   offset: number,
   currentPath: ReadonlyArray<JsoncSegment>,
@@ -442,8 +433,7 @@ const objectPath = (
   return O.some(currentPath);
 };
 
-// The path through the first element covering `offset`, or `currentPath`.
-const arrayPath = (
+const pathThroughFirstCoveringElement = (
   children: ReadonlyArray<JsoncNode>,
   offset: number,
   currentPath: ReadonlyArray<JsoncSegment>,
@@ -463,8 +453,6 @@ const evaluateNode: {
   (node: JsoncNode, depth: number): unknown;
   (depth: number): (node: JsoncNode) => unknown;
 } = dual(2, (node: JsoncNode, depth: number): unknown => {
-  // Over-deep subtree (only reachable on a hand-built tree): stop descending
-  // and yield a bounded placeholder rather than overflowing the stack.
   if (depth >= MAX_NESTING_DEPTH) {
     return JsoncNodeType.match(node.type, {
       object: R.empty,
@@ -488,8 +476,6 @@ const evaluateNode: {
         const key = propertyKey(prop);
         const valueNode = O.flatMap(O.fromUndefinedOr(prop.children), A.get(1));
         if (O.isSome(key) && O.isSome(valueNode)) {
-          // Own data property, not a prototype mutation: matches the value
-          // parser and JSON.parse semantics for a `__proto__` key.
           Object.defineProperty(obj, `${key.value}`, {
             value: evaluateNode(valueNode.value, depth + 1),
             writable: true,

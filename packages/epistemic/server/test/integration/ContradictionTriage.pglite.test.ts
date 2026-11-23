@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import * as NodeUtil from "node:util";
 import {
   CandidateClaim,
   ContradictionCandidate,
@@ -46,9 +47,6 @@ import {
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
@@ -64,6 +62,9 @@ import {
   TestDatabaseInfo,
   TestDatabaseInfoShape,
 } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -1501,6 +1502,43 @@ if (!shouldRunPgliteIntegration) {
             O.map(unchanged, (edge) => edge.fact.amount),
             "100"
           );
+        }),
+        120_000
+      );
+
+      it.effect(
+        "stores no anchor whose source identity holds an unpaired surrogate escape (jsonb refuses it, so decode may require well-formed text)",
+        Effect.fnUntraced(function* () {
+          const seeded = yield* seedScenario(120);
+          const db = yield* makeDrizzle();
+          const table = DbSchema.evidenceVerification;
+          const stored = yield* insertVerification(120, 1, seeded.evidenceA, 1_300, "workspace:😀");
+          const rows = yield* db.select().from(table).where(eq(table.manifestationKey, stored.manifestationKey));
+          const { id: _id, ...row } = yield* requireHead(rows, "the stored verification");
+          expect(row.verifiedAnchor.source.scopeRef).toBe("workspace:😀");
+
+          const otherKey = yield* sha256Hex("unpaired-surrogate-escape");
+          const insertWithScope = (scopeRef: string) =>
+            db.insert(table).values({
+              ...row,
+              manifestationKey: otherKey,
+              publicId: productEntityFixtureInput("EpistemicEvidenceVerification", 120 * 100 + 2).publicId,
+              verifiedAnchor: {
+                ...row.verifiedAnchor,
+                source: { ...row.verifiedAnchor.source, scopeRef },
+              },
+            });
+          const refusals = yield* Effect.forEach(
+            ["workspace:\ud83d", "workspace:\ude00"],
+            (scopeRef) => insertWithScope(scopeRef).pipe(Effect.flip),
+            { concurrency: 1 }
+          );
+          expect(refusals).toHaveLength(2);
+          A.forEach(refusals, (refusal) => {
+            expect(NodeUtil.inspect(refusal, { depth: 12 })).toContain("invalid input syntax for type json");
+          });
+
+          yield* insertWithScope("workspace:😀");
         }),
         120_000
       );

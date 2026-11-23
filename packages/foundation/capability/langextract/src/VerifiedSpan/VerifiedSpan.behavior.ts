@@ -6,15 +6,15 @@
  */
 
 import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { isUtf16Boundary, TextAnchor } from "@beep/text/TextAnchor";
 import {
   toTextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "@beep/utils/Array";
 import { lazy } from "@beep/utils/Function";
 import * as O from "@beep/utils/Option";
@@ -44,7 +44,7 @@ import {
 } from "./VerifiedSpan.model.ts";
 import { normalizeTextLocator, normalizeWithRawOffsets } from "./VerifiedSpan.normalization.ts";
 import type { GroundedExtraction } from "@beep/langextract/Extraction";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
 import type {
   BeginVerifiedSpanHistoryInput,

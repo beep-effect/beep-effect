@@ -138,12 +138,12 @@ export class SectionId extends S.Class<SectionId, { readonly brand: unique symbo
    * @since 0.0.0
    */
   section(content: string, attributes?: Readonly<Record<string, string>>): Section {
+    const absentAttributesOmittedForDefault = O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) });
     return Section.make({
       key: this.key,
       commentStyle: this.commentStyle,
       content,
-      // An absent optional argument must be OMITTED, not passed as undefined.
-      ...O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) }),
+      ...absentAttributesOmittedForDefault,
     });
   }
 }

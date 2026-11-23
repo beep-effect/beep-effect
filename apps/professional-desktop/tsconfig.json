@@ -52,12 +52,8 @@
         "../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
       ],
       "@beep/postgres": ["../../packages/drivers/postgres/src/index.ts"],
-      "@beep/provenance": [
-        "../../packages/foundation/modeling/provenance/src/index.ts"
-      ],
-      "@beep/provenance/*": [
-        "../../packages/foundation/modeling/provenance/src/*"
-      ],
+      "@beep/text": ["../../packages/foundation/modeling/text/src/index.ts"],
+      "@beep/text/*": ["../../packages/foundation/modeling/text/src/*"],
       "@beep/rdf": ["../../packages/foundation/modeling/rdf/src/index.ts"],
       "@beep/rdf/*": ["../../packages/foundation/modeling/rdf/src/*"],
       "@beep/identity": [
@@ -222,13 +218,13 @@
       "path": "../../packages/foundation/modeling/md/tsconfig.json"
     },
     {
-      "path": "../../packages/foundation/modeling/provenance/tsconfig.json"
-    },
-    {
       "path": "../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/text/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"

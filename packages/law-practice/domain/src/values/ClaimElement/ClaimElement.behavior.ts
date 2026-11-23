@@ -15,8 +15,8 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant, dual, flow, identity, pipe } from "effect/Function";

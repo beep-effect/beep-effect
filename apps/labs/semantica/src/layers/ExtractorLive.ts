@@ -17,8 +17,8 @@ import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@bee
 import { DocumentId as NlpDocumentId } from "@beep/nlp/Core";
 import { UnitInterval } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
-import { TextAnchor } from "@beep/provenance";
 import { Sha256HexFromBytes } from "@beep/schema";
+import { TextAnchor } from "@beep/text";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";

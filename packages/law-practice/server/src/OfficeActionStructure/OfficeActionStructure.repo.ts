@@ -10,7 +10,7 @@ import {
   OfficeActionStructureStorageError,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

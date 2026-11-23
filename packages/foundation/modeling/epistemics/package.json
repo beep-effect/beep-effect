@@ -94,8 +94,8 @@
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/jsonc": "workspace:^",
-    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
     "effect": "catalog:"
