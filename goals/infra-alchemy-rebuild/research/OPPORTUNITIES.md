@@ -810,11 +810,26 @@ to the gap between the reference checkout (main) and the pinned release.
   falls back to update on a conflict. Both are therefore standing provider behaviour, not drift. In both
   windows every write stayed on the functions, their `CiRunners-*-prod-*` roles and their log groups, with
   no `AccessDenied`.
-- **Standing expectation (driver ruling, 2026-11-23):** every (d) CloudTrail read expects exactly N
-  `iam:PutRolePolicy` and N `iam:AttachRolePolicy` for N updated functions. When the webhook is updated, it
-  also expects at most one `CreateFunctionUrlConfig` that fails with `ResourceConflictException`, followed by
-  `UpdateFunctionUrlConfig`. Any IAM write outside that pattern, or on a role whose function had no code
-  row, is a finding.
+- **Standing expectation (driver ruling, 2026-11-23):** this extends the 2026-11-20 rule
+  (`decisions/2026-11-20-cirunners-function-updates-re-apply-each-function-role-s-policies.md`), which still
+  holds in full. Every (d) CloudTrail read expects exactly N `iam:PutRolePolicy` and N `iam:AttachRolePolicy`,
+  plus 2N log-group writes (`CreateLogGroup` on an existing group and `PutRetentionPolicy`), for N updated
+  functions. Each `PutRolePolicy` document must match, as canonical JSON, the same role's document in the
+  previous deploy; a changed document is a finding and stops the cutover. The 2026-11-23 addition: when
+  the webhook is updated, the read also expects at most one `CreateFunctionUrlConfig` that fails with
+  `ResourceConflictException`, followed by `UpdateFunctionUrlConfig`. Any IAM write outside that pattern,
+  or on a role whose function had no code row, is a finding.
 - **Would have prevented it:** a CloudTrail read that knows this reconcile shape. It should count one put
   and one attach per updated function, plus a create→update pair for a function with a URL, as expected,
   and flag only counts or targets outside that shape.
+
+## 2026-11-23: the pin-bump App re-synced an open, green-pending pin PR on an unrelated main push
+
+- **Doing:** holding the binary pin PR (#3500) at its queued head so it could merge first in the P5 order.
+- **Evidence:** #3500 was queued at `00403f8e`. #3504 merged to main at 08:45:49Z, and at 08:53:03Z the
+  `beep-ci-pin-bump` App merged main into the pin PR, moving its head to `88e0651f`. The PR's own patch was
+  unchanged (`fetch-beep-ci/action.yml` only), yet the new head restarted its full check set, including a heavy
+  cycle at the heavy cap of 2. The pin's Lint Policy wait restarted, about 30 minutes of queue lost.
+- **Would have prevented it (owner: the binary-route lane):** (a) the App re-syncs the pin PR only when it is
+  `CONFLICTING`, or when its base is more than a set number of commits or hours stale; (b) the merge gate holds
+  main merges while a pin PR is green-pending. The orchestrator did (b) by hand that day.
