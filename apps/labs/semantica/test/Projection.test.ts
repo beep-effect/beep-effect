@@ -3,15 +3,15 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import { Sha256Hex } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
 import {
   SourceTextDigest,
   SourceTextExtractor,
   SourceTextIdentity,
   TextAnchor,
   TextAnchorVerificationReceipt,
-} from "@beep/provenance";
-import { Sha256Hex } from "@beep/schema";
-import { PosixPath } from "@beep/schema/PosixPath";
+} from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";

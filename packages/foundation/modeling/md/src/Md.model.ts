@@ -29,8 +29,6 @@ const $I = $MdId.create("Md.model");
 const codeFenceLanguagePattern = /^[A-Za-z0-9][A-Za-z0-9_+.-]*$/u;
 const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
-// This check never rejects a document. Effect's arbitrary compiler alone reads
-// the maxLength hint, keeping recursive child-list breadth bounded.
 const MarkdownArbitraryArraySizeHint = S.makeFilter<ReadonlyArray<unknown>>(
   () => true,
   $I.annote("MarkdownArbitraryArraySizeHint", {
@@ -2129,8 +2127,7 @@ export const OrderedListStart = S.Union([S.Literal(0), PosInt]).pipe(
  */
 export type OrderedListStart = typeof OrderedListStart.Type;
 
-// Share the nominal identity without recursing through the class base type.
-interface OlBrand {
+interface OlBrandSharedWithoutClassBaseRecursion {
   readonly brand: unique symbol;
 }
 
@@ -2150,7 +2147,7 @@ const olStartDefault = PosInt.make(1);
  * @category models
  * @since 0.0.0
  */
-export class Ol extends S.Opaque<Ol, OlBrand>()(
+export class Ol extends S.Opaque<Ol, OlBrandSharedWithoutClassBaseRecursion>()(
   S.TaggedStruct("ol", {
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
@@ -2193,7 +2190,7 @@ export declare namespace Ol {
   /**
    * @since 0.0.0
    */
-  export interface Type extends OlBrand {
+  export interface Type extends OlBrandSharedWithoutClassBaseRecursion {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
     readonly start: OrderedListStart;
@@ -2557,12 +2554,6 @@ export declare namespace BlockQuote {
  */
 export class Pre extends S.Opaque<Pre, { readonly brand: unique symbol }>()(
   S.TaggedStruct("pre", {
-    // Encoded form must survive a JSON boundary (jsonb columns, rpc/ndjson
-    // wire): S.Option(S.String) encodes to a real Option instance that does not
-    // round-trip through JSON, so persisted/transported documents stay
-    // `string | null` on the wire. Decoding folds legacy free-form info strings
-    // through CodeFenceLanguage, dropping non-conforming tokens to None so the
-    // rendered language is always a single safe token.
     language: S.OptionFromNullOr(S.String)
       .pipe(
         S.decodeTo(S.Option(CodeFenceLanguage), {
@@ -2571,7 +2562,8 @@ export class Pre extends S.Opaque<Pre, { readonly brand: unique symbol }>()(
         })
       )
       .annotateKey({
-        description: "Optional safe language hint for fenced code rendering.",
+        description:
+          "Optional safe language hint for fenced code rendering, `string | null` on the wire so it survives JSON; decoding drops a legacy info string that is not one CodeFenceLanguage token to None.",
       }),
     value: S.String.annotateKey({
       description: "Literal code block contents.",

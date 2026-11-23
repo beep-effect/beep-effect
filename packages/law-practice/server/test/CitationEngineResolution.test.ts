@@ -19,7 +19,7 @@ import { assertCitationWorkerCompositionReleased } from "./CitationRegexWorker.f
 import { prepareCitationResolutionContext } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "public engine original resolution groups",

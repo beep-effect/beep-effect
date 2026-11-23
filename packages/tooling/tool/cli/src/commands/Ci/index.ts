@@ -39,6 +39,13 @@ export * from "./Ci.errors.ts";
  */
 export * from "./CiAdmission.ts";
 /**
+ * The annotation workflow commands a job's lane steps wrote.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiAnnotationsUsed.ts";
+/**
  * Slim CI binary program export.
  *
  * @category cli-commands
@@ -98,6 +105,13 @@ export * from "./CiFeedArtifact.ts";
  */
 export * from "./CiGateProjection.ts";
 /**
+ * The search for the gate records a job's checkout holds.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiGateRecordSearch.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands
@@ -128,6 +142,13 @@ export * from "./CiLaneJobs.ts";
  * @since 0.0.0
  */
 export * from "./CiLanePartitions.ts";
+/**
+ * The gate record of a hosted `ci lane` step.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiLaneRecording.ts";
 /**
  * The main feed lookup: main's newest gate reports at a merge base.
  *

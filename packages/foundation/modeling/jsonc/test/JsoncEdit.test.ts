@@ -170,8 +170,6 @@ describe("JsoncEdit", () => {
   });
 
   describe("properties", () => {
-    // Any finite span: a zero-length, empty-content edit is the identity, and
-    // a single edit never reports an overlap.
     it.prop(
       "an empty insertion at any finite offset leaves the text unchanged",
       [JsoncRange, S.String],

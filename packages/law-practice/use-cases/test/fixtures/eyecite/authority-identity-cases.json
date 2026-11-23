@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "citation-authority-identity-cases/v1",
+  "schemaVersion": "citation-authority-identity-cases/v2",
   "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
   "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "producerSha256": "0c5d2276b0b18d1162e35a64eafa8b37725224f025d85cda3b8147f3d35678ee",
@@ -51,7 +51,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:89948279c906135a2cfbba97b0967fd1501529aa2fdb30b95892961251297b9b",
+        "mentionId": "cm2:89948279c906135a2cfbba97b0967fd1501529aa2fdb30b95892961251297b9b",
         "selectedEdition": {
           "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
           "shortName": "U.S."
@@ -98,7 +98,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:f23018c425df5b7790950d2457f07bf8941b5e66cdd5ebe1ea86fe5e950a1bdf",
+        "mentionId": "cm2:f23018c425df5b7790950d2457f07bf8941b5e66cdd5ebe1ea86fe5e950a1bdf",
         "selectedEdition": {
           "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
           "shortName": "U.S."
@@ -145,7 +145,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:2dec48be2acb919741eec203e79c3c5746f6d082591dbabeff73ace81978dfb5",
+        "mentionId": "cm2:2dec48be2acb919741eec203e79c3c5746f6d082591dbabeff73ace81978dfb5",
         "selectedEdition": {
           "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
           "shortName": "U.S."
@@ -192,7 +192,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:7349d70bc93751fdb83ad0307794a85401739c6ba7ed2e7f8ab9a485343e860d",
+        "mentionId": "cm2:7349d70bc93751fdb83ad0307794a85401739c6ba7ed2e7f8ab9a485343e860d",
         "selectedEdition": {
           "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
           "shortName": "U.S."
@@ -202,7 +202,7 @@
     {
       "name": "missing-page",
       "text": "1 U.S. ___",
-      "expectedId": "ca1:de783ce3ded113694c3d894a90c10e2b1681ce22ca0c7f892addfeb73c9ba014",
+      "expectedId": "ca1:e9efd70346ecfb564c47394959f05c8c7832e715628c3f813ac95eba974adbf6",
       "input": {
         "citation": {
           "type": "case",
@@ -239,7 +239,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:f1942f7d8f7cd79c68be291ffc190e2fb45cfe71f7ac474726c9f737666248fe",
+        "mentionId": "cm2:f1942f7d8f7cd79c68be291ffc190e2fb45cfe71f7ac474726c9f737666248fe",
         "selectedEdition": {
           "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
           "shortName": "U.S."
@@ -249,7 +249,7 @@
     {
       "name": "missing-page-repeat",
       "text": "1 U.S. ___",
-      "expectedId": "ca1:d353e803e249f1ae468762b85c8139fba679b7a9a55a18510a17a786ffe47059",
+      "expectedId": "ca1:8d2d399b2bae657649b99b6819758a9662785b9ddc5240c50bfb56fc27d1bc41",
       "input": {
         "citation": {
           "type": "case",
@@ -286,7 +286,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:b5ea24f23ffe065f832f4529a3b14fb95c2345adb90e5ecd2b46d2f7fce77610",
+        "mentionId": "cm2:b5ea24f23ffe065f832f4529a3b14fb95c2345adb90e5ecd2b46d2f7fce77610",
         "selectedEdition": {
           "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
           "shortName": "U.S."
@@ -330,7 +330,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:c3549216c584019f80e1eb9b2bdc5da1e5b7b9c16aba833671e71730395e6896",
+        "mentionId": "cm2:c3549216c584019f80e1eb9b2bdc5da1e5b7b9c16aba833671e71730395e6896",
         "selectedEdition": {
           "edition": "994078229124e40665adee77d89b061f2b7b4b3c42fa88caa168a35c679ac123",
           "shortName": "C.I.T."
@@ -374,7 +374,7 @@
             "caseName": null
           }
         },
-        "mentionId": "cm1:7713f3188486f7a669c49a02f4382d1b298cb08ffd992e03d26df9c3b5b4b055",
+        "mentionId": "cm2:7713f3188486f7a669c49a02f4382d1b298cb08ffd992e03d26df9c3b5b4b055",
         "selectedEdition": {
           "edition": "cf888f2a4fabbed7d2682f537276ae4ff90d09b9eb0e58a792b912e06ede85ce",
           "shortName": "Ct. Int'l Trade"
@@ -408,7 +408,7 @@
             "publisher": null
           }
         },
-        "mentionId": "cm1:d85d489c9211958cf89b4f7ea09826a7fe8bc07dbfd03248d423a5bb20158f4f",
+        "mentionId": "cm2:d85d489c9211958cf89b4f7ea09826a7fe8bc07dbfd03248d423a5bb20158f4f",
         "selectedEdition": {
           "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
           "shortName": "U.S.C."
@@ -442,7 +442,7 @@
             "publisher": null
           }
         },
-        "mentionId": "cm1:6890b359d568eeccc4eed34418c3bbf9e1ad394274010617faba99238256efcf",
+        "mentionId": "cm2:6890b359d568eeccc4eed34418c3bbf9e1ad394274010617faba99238256efcf",
         "selectedEdition": {
           "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
           "shortName": "U.S.C."
@@ -476,7 +476,7 @@
             "publisher": null
           }
         },
-        "mentionId": "cm1:2c9302eff1cd7653cbc4361e47c98752767162bf27678357301e565b71a8ac42",
+        "mentionId": "cm2:2c9302eff1cd7653cbc4361e47c98752767162bf27678357301e565b71a8ac42",
         "selectedEdition": {
           "edition": "e6528d7da54cc9b358e645efb285f19fe9da550ed25322acf0312fafd9c7860f",
           "shortName": "U.S.C."
@@ -509,7 +509,7 @@
             "day": null
           }
         },
-        "mentionId": "cm1:f8859230c0145a46d66e197a727bbbc36ad2b940bdd95656a5146cd192d5ea00",
+        "mentionId": "cm2:f8859230c0145a46d66e197a727bbbc36ad2b940bdd95656a5146cd192d5ea00",
         "selectedEdition": {
           "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
           "shortName": "Harv. L. Rev."
@@ -542,7 +542,7 @@
             "day": null
           }
         },
-        "mentionId": "cm1:9a79101d013415ef038c1813be7d2d5ab04aded4a909beb65c4e5b3b3bdffc0f",
+        "mentionId": "cm2:9a79101d013415ef038c1813be7d2d5ab04aded4a909beb65c4e5b3b3bdffc0f",
         "selectedEdition": {
           "edition": "3eeeb820b40ebf4d3269cc9ff796ba24f6c42bf0fd02f1c6c9d3d2c5be526636",
           "shortName": "Harv. L. Rev."

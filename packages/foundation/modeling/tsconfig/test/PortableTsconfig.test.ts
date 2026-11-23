@@ -138,13 +138,7 @@ describe("PortableTsconfig runtime models", () => {
   );
 });
 
-// A "full option zoo" compilerOptions object: at least one representative from
-// every R1 category (enum, live boolean, dead boolean, deprecated boolean,
-// path string, path list, plain string, string list, record, object list,
-// number), plus an unknown passthrough key. The index signature admits the
-// dead/unknown keys alongside the precisely typed known options.
-const fullOptionZoo: CompilerOptions.Type = {
-  // enum family — preserved
+const preservedEnumFamily: CompilerOptions.Type = {
   target: "es2022",
   module: "nodenext",
   moduleResolution: "bundler",
@@ -152,21 +146,21 @@ const fullOptionZoo: CompilerOptions.Type = {
   moduleDetection: "force",
   lib: ["esnext", "dom"],
   ignoreDeprecations: "6.0",
-  // enum, NOT preserved (emit formatting only)
-  newLine: "lf",
-  // strict family — preserved
+};
+const excludedEmitFormattingOnlyEnum: CompilerOptions.Type = { newLine: "lf" };
+const preservedStrictFamily: CompilerOptions.Type = {
   strict: true,
   noUnusedLocals: true,
   exactOptionalPropertyTypes: true,
-  // interop / module-semantics booleans — preserved
+};
+const preservedInteropAndModuleSemanticsBooleans: CompilerOptions.Type = {
   esModuleInterop: true,
   verbatimModuleSyntax: true,
   isolatedModules: true,
   skipLibCheck: true,
-  // jsx plain strings — preserved
-  jsxImportSource: "react",
-  reactNamespace: "React",
-  // emit/path/file-selection — EXCLUDED
+};
+const preservedJsxPlainStrings: CompilerOptions.Type = { jsxImportSource: "react", reactNamespace: "React" };
+const excludedEmitPathAndFileSelection: CompilerOptions.Type = {
   outDir: "./dist",
   outFile: "./out.js",
   rootDir: "./src",
@@ -183,26 +177,35 @@ const fullOptionZoo: CompilerOptions.Type = {
   tsBuildInfoFile: "./tsBuildInfo.json",
   incremental: true,
   composite: true,
-  // forced flags in the input, expected to be overridden
-  noEmit: false,
-  // number option — excluded (obscure checking-depth tuning, not carried)
-  maxNodeModuleJsDepth: 3,
-  // dead option, TS ignores it entirely — should never appear on output
-  charset: "utf8",
-  // unknown passthrough — DROPPED (allow-list, not deny-list)
-  someFutureOption: 42,
+};
+const forcedFlagDeclaredOppositeToBeOverridden: CompilerOptions.Type = { noEmit: false };
+const excludedObscureCheckingDepthNumber: CompilerOptions.Type = { maxNodeModuleJsDepth: 3 };
+const deadOptionTsIgnoresThatNeverHadATypedField: CompilerOptions.Type = { charset: "utf8" };
+const unknownPassthroughDroppedByTheAllowList: CompilerOptions.Type = { someFutureOption: 42 };
+
+const fullOptionZooOneRepresentativePerCategory: CompilerOptions.Type = {
+  ...preservedEnumFamily,
+  ...excludedEmitFormattingOnlyEnum,
+  ...preservedStrictFamily,
+  ...preservedInteropAndModuleSemanticsBooleans,
+  ...preservedJsxPlainStrings,
+  ...excludedEmitPathAndFileSelection,
+  ...forcedFlagDeclaredOppositeToBeOverridden,
+  ...excludedObscureCheckingDepthNumber,
+  ...deadOptionTsIgnoresThatNeverHadATypedField,
+  ...unknownPassthroughDroppedByTheAllowList,
 };
 
 describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
   it("stamps $schema and forces composite:false, noEmit:true", () => {
-    const portable = PortableTsconfig.make(fullOptionZoo);
+    const portable = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.strictEqual(portable.$schema, "https://json.schemastore.org/tsconfig");
     assert.strictEqual(portable.compilerOptions.composite, false);
     assert.strictEqual(portable.compilerOptions.noEmit, true);
   });
 
   it("preserves type-semantics enum options", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.strictEqual(compilerOptions.target, "es2022");
     assert.strictEqual(compilerOptions.module, "nodenext");
     assert.strictEqual(compilerOptions.moduleResolution, "bundler");
@@ -213,7 +216,7 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
   });
 
   it("preserves the strict family and other type-semantics booleans", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.strictEqual(compilerOptions.strict, true);
     assert.strictEqual(compilerOptions.noUnusedLocals, true);
     assert.strictEqual(compilerOptions.exactOptionalPropertyTypes, true);
@@ -224,13 +227,13 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
   });
 
   it("preserves the jsx plain-string family", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.strictEqual(compilerOptions.jsxImportSource, "react");
     assert.strictEqual(compilerOptions.reactNamespace, "React");
   });
 
   it("excludes emit/path/file-selection options", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     for (const key of [
       "outDir",
       "outFile",
@@ -251,39 +254,34 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
     }
   });
 
-  // `types` is portable but resolution-dependent, so it is neither in the
-  // unconditional allow-list nor in the exclusion list above — it is opt-in.
-  // Its default (dropped) and opted-in behavior live in their own describe.
-
   it("excludes an emit-formatting-only enum (newLine)", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.isFalse("newLine" in compilerOptions);
   });
 
   it("excludes the obscure numeric checking-depth option", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.isFalse("maxNodeModuleJsDepth" in compilerOptions);
   });
 
   it("forces composite:false and noEmit:true even when the input disagrees", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
-    // input declared composite: true, noEmit: false — forced flags win
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.strictEqual(compilerOptions.composite, false);
     assert.strictEqual(compilerOptions.noEmit, true);
   });
 
   it("drops dead options that never had a typed field", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.isFalse("charset" in compilerOptions);
   });
 
   it("drops unknown passthrough options (allow-list, not deny-list)", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo);
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     assert.isFalse("someFutureOption" in compilerOptions);
   });
 
   it("output survives a JSON.stringify round-trip", () => {
-    const portable = PortableTsconfig.make(fullOptionZoo);
+    const portable = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory);
     const roundTripped = Result.getOrThrowWith(
       S.decodeResult(UnknownJson)(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(portable), identity)),
       identity
@@ -298,13 +296,7 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
     assert.deepStrictEqual(portable.compilerOptions, { composite: false, noEmit: true });
   });
 
-  it("a passthrough string configPath does NOT misclassify a bare CompilerOptions.Type as a ResolvedTsconfig", () => {
-    // A hostile config file's compilerOptions can carry ANY unrecognized key via
-    // forward tolerance — including one named "configPath". Checking configPath
-    // alone would misread this as a ResolvedTsconfig and read the (nonexistent)
-    // .compilerOptions off it, throwing a TypeError. The extendedPaths check
-    // closes that hole: this bag has no array extendedPaths, so it is filtered
-    // as bare options, not thrown on.
+  it("a hostile passthrough string configPath does NOT misclassify a bare CompilerOptions.Type as a ResolvedTsconfig: checking configPath alone would read the missing compilerOptions and throw a TypeError, so without an array extendedPaths the bag is filtered as bare options", () => {
     const hostile: CompilerOptions.Type = {
       strict: true,
       target: "es2022",
@@ -316,14 +308,7 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
     assert.isFalse("configPath" in portable.compilerOptions);
   });
 
-  it("a bag crafted with BOTH passthrough keys (configPath AND extendedPaths) never throws", () => {
-    // Escalation of the previous case: a hostile bag satisfying both the
-    // string-configPath and array-extendedPaths conjuncts, still without a
-    // compilerOptions object. Before the compilerOptions conjunct, the guard
-    // misclassified this as a ResolvedTsconfig and make() threw a TypeError
-    // indexing the undefined input.compilerOptions. The discrimination is now
-    // total: no compilerOptions object means the bag is filtered as bare
-    // options — sane filtering, no throw.
+  it("a bag crafted with BOTH passthrough keys (configPath AND extendedPaths) but no compilerOptions object never throws: the compilerOptions conjunct makes the discrimination total, so the bag is filtered as bare options instead of indexing an undefined compilerOptions", () => {
     const craftedBoth: CompilerOptions.Type = {
       strict: true,
       target: "es2022",
@@ -335,9 +320,24 @@ describe("PortableTsconfig.make — from a bare CompilerOptions.Type", () => {
     assert.strictEqual(portable.compilerOptions.target, "es2022");
     assert.strictEqual(portable.compilerOptions.composite, false);
     assert.strictEqual(portable.compilerOptions.noEmit, true);
-    // Neither crafted key survives the allow-list.
+    assert.isFalse("configPath" in portable.compilerOptions, "a crafted configPath does not survive the allow-list");
+    assert.isFalse(
+      "extendedPaths" in portable.compilerOptions,
+      "a crafted extendedPaths does not survive the allow-list"
+    );
+  });
+
+  it("a bag faking all three conjuncts is read like a ResolvedTsconfig, so only its compilerOptions object is filtered (the safe outcome)", () => {
+    const craftedAllThree: CompilerOptions.Type = {
+      strict: false,
+      configPath: "/fake/tsconfig.json",
+      extendedPaths: [],
+      compilerOptions: { strict: true, outDir: "/fake/dist" },
+    };
+    const portable = PortableTsconfig.make(craftedAllThree);
+    assert.strictEqual(portable.compilerOptions.strict, true);
+    assert.isFalse("outDir" in portable.compilerOptions);
     assert.isFalse("configPath" in portable.compilerOptions);
-    assert.isFalse("extendedPaths" in portable.compilerOptions);
   });
 });
 
@@ -353,20 +353,23 @@ describe("PortableTsconfig.make — from a ResolvedTsconfig (structural discrimi
     assert.strictEqual(portable.compilerOptions.strict, true);
     assert.strictEqual(portable.compilerOptions.target, "es2022");
     assert.isFalse("outDir" in portable.compilerOptions);
-    // ResolvedTsconfig-only fields never leak onto the portable shape.
-    assert.isFalse("configPath" in portable);
-    assert.isFalse("include" in portable);
+    assert.isFalse("configPath" in portable, "ResolvedTsconfig-only fields never leak onto the portable shape");
+    assert.isFalse("include" in portable, "ResolvedTsconfig-only fields never leak onto the portable shape");
   });
 });
 
 describe("PortableTsconfig.make — the includeTypes opt-in", () => {
   it("carries `types` when opted in", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo, { includeTypes: true });
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory, {
+      includeTypes: true,
+    });
     assert.deepStrictEqual(compilerOptions.types, ["node"]);
   });
 
   it("still drops `typeRoots` when opted in — only `types` is package-name-valued", () => {
-    const { compilerOptions } = PortableTsconfig.make(fullOptionZoo, { includeTypes: true });
+    const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory, {
+      includeTypes: true,
+    });
     assert.isFalse("typeRoots" in compilerOptions);
   });
 
@@ -392,7 +395,7 @@ describe("PortableTsconfig.make — the includeTypes opt-in", () => {
 
   it("drops `types` under every non-opted-in call shape (the default is unchanged)", () => {
     for (const options of [undefined, {}, { includeTypes: false }] as const) {
-      const { compilerOptions } = PortableTsconfig.make(fullOptionZoo, options);
+      const { compilerOptions } = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory, options);
       assert.isFalse(
         "types" in compilerOptions,
         `expected "types" dropped for ${Inspectable.toStringUnknown(options)}`
@@ -412,7 +415,7 @@ describe("PortableTsconfig.make — the includeTypes opt-in", () => {
   });
 
   it("does not let the forced flags or $schema drift when opted in", () => {
-    const portable = PortableTsconfig.make(fullOptionZoo, { includeTypes: true });
+    const portable = PortableTsconfig.make(fullOptionZooOneRepresentativePerCategory, { includeTypes: true });
     assert.strictEqual(portable.$schema, "https://json.schemastore.org/tsconfig");
     assert.strictEqual(portable.compilerOptions.composite, false);
     assert.strictEqual(portable.compilerOptions.noEmit, true);

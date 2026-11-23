@@ -24,7 +24,12 @@ export const OK_RE = /[Ll]ogin successful|[Ll]ogged in as|[Ss]uccessfully (?:log
 export const BAD_RE = /[Ii]nvalid (?:code|grant)|[Aa]uthentication failed|OAuth error|[Ee]rror:/;
 export const PROMPT_RE = /[Pp]aste code/;
 export const ANSI = /\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*\x07|\r/g;
+export const CONNECT_TIMEOUT_SECONDS = 10;
 const log = (host: string, message: string) => console.log(`[${host}] ${message}`);
+export class HostUnreachable extends S.TaggedError<HostUnreachable>()("HostUnreachable", {
+  host: S.String,
+  reason: S.String,
+}) {}
 /** POSIX single-word shell quoting, matching shlex.quote. */
 export const quote = (value: string) =>
   /^[\w@%+=:,./-]+$/.test(value) ? value : `'${value.replaceAll("'", `'"'"'`)}'`;
@@ -32,6 +37,8 @@ export const quote = (value: string) =>
 export function sshArgv(host: string) {
   return [
     `${bin}/${HOSTS[host]?.[0]}`,
+    "-o",
+    `ConnectTimeout=${CONNECT_TIMEOUT_SECONDS}`,
     "-o",
     "ControlMaster=auto",
     "-o",
@@ -43,17 +50,31 @@ export function sshArgv(host: string) {
 /** Quote email only; HOME and PATH expand on the remote host. */
 export const loginCommand = (email: string) => `${REMOTE_PATH} claude auth login --claudeai --email ${quote(email)}`;
 
+const remote = Effect.fn("Auth.remote")(function* (host: string, argv: readonly string[], timeout: number) {
+  const result = yield* runOwned(argv, process.env, timeout).pipe(
+    Effect.mapError(
+      (error) =>
+        new HostUnreachable({
+          host,
+          reason: error._tag === "TimeoutError" ? `no answer within ${timeout} s` : error.message,
+        })
+    )
+  );
+  if (result.status === 255) return yield* new HostUnreachable({ host, reason: "ssh exited 255" });
+  return result;
+});
 const openMaster = Effect.fn("Auth.openMaster")(function* (host: string) {
   if (HOSTS[host]?.[2] === "dankserver-agent" && !Fs.existsSync(`${Os.homedir()}/.ssh/agent-dankserver.sock`))
-    yield* runOwned([`${bin}/ssh-dankserver-yubi`, "-G"], process.env, 60);
+    yield* remote(host, [`${bin}/ssh-dankserver-yubi`, "-G"], 60);
   if (Fs.existsSync(`${Os.homedir()}/.ssh/cm-auth-${host}`)) return;
   if (HOSTS[host]?.[1]) log(host, "touch the YubiKey now");
-  yield* runOwned([...sshArgv(host), "-fN"], process.env, 120);
+  const result = yield* remote(host, [...sshArgv(host), "-fN"], 120);
+  if (result.status !== 0) return yield* new HostUnreachable({ host, reason: `ssh exited ${result.status}` });
 });
 const status = Effect.fn("Auth.status")(function* (host: string) {
   yield* openMaster(host);
+  const result = yield* remote(host, [...sshArgv(host), `${REMOTE_PATH} claude auth status`], 120);
   return yield* Effect.gen(function* () {
-    const result = yield* runOwned([...sshArgv(host), `${REMOTE_PATH} claude auth status`], process.env, 120);
     const text = result.output.toString("utf8");
     const data: unknown = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(
       text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)
@@ -222,8 +243,14 @@ const login = Effect.fn("Auth.login")((host: string, email: string) =>
     })
   )
 );
-const main = Effect.gen(function* () {
-  const args = process.argv.slice(2),
+export interface HostOps<R> {
+  readonly status: (
+    host: string
+  ) => Effect.Effect<{ readonly email: string | undefined; readonly ok: boolean }, HostUnreachable, R>;
+  readonly login: (host: string, email: string) => Effect.Effect<boolean, unknown, R>;
+}
+export const main = Effect.fn("Auth.main")(function* <R>(argv: readonly string[], ops: HostOps<R>) {
+  const args = [...argv],
     action = args.shift();
   if (action !== "status" && action !== "login") {
     console.error("usage: auth_env.ts {status,login} [--email EMAIL] [--force] [HOST ...]");
@@ -249,23 +276,37 @@ const main = Effect.gen(function* () {
     return 1;
   }
   const summary: Record<string, string> = {};
+  const failed: string[] = [];
   for (const host of hosts) {
-    const before = yield* status(host);
-    log(host, `currently ${before.email || "unknown"}${before.ok ? "" : " (not logged in)"}`);
-    if (action === "status") {
-      summary[host] = before.email || "unknown";
-      continue;
-    }
-    if (before.email === email && !force) {
-      summary[host] = `${before.email} (unchanged)`;
-      continue;
-    }
-    yield* login(host, email ?? "");
-    const after = yield* status(host);
-    summary[host] = `${after.email || "unknown"}${after.email === email ? "" : `  <-- expected ${email}`}`;
+    summary[host] = yield* Effect.gen(function* () {
+      const before = yield* ops.status(host);
+      log(host, `currently ${before.email || "unknown"}${before.ok ? "" : " (not logged in)"}`);
+      if (action === "status") return before.email || "unknown";
+      if (before.email === email && !force) return `${before.email} (unchanged)`;
+      yield* ops.login(host, email ?? "");
+      const after = yield* ops.status(host);
+      if (after.email !== email) failed.push(host);
+      return `${after.email || "unknown"}${after.email === email ? "" : `  <-- expected ${email}`}`;
+    }).pipe(
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          failed.push(host);
+          if (error instanceof HostUnreachable) {
+            log(host, `unreachable: ${error.reason}`);
+            return "unreachable";
+          }
+          log(host, `failed: ${String(error)}`);
+          return "failed";
+        })
+      )
+    );
   }
   console.log("\nsummary:");
   for (const [host, line] of Object.entries(summary)) console.log(`  ${host.padEnd(14)} ${line}`);
-  return 0;
+  return failed.length ? 1 : 0;
 });
-if (import.meta.main) process.exitCode = await runAdapter(main.pipe(Effect.provide(BunServices.layer)), 1);
+if (import.meta.main)
+  process.exitCode = await runAdapter(
+    main(process.argv.slice(2), { status, login }).pipe(Effect.provide(BunServices.layer)),
+    1
+  );

@@ -13,8 +13,8 @@ import {
   OfficeActionStructureInput,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
 import { fixtureOcrPage } from "@beep/law-practice-use-cases/test";
-import { SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/provenance/VerifiedTextAnchor";
+import { SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

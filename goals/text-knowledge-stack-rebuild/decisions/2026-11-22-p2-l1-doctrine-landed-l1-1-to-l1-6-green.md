@@ -1,0 +1,9 @@
+---
+title: "P2 L1 doctrine landed and the L1 design module handed off; L1-1 to L1-6 green"
+date: 2026-11-22
+kind: checkpoint
+lane: "goals/text-knowledge-stack-rebuild-p2-text"
+reversal: "Delete this checkpoint file and rerun goals decisions write; P2 status reads in-progress from the phase table either way"
+---
+
+P2 stays `in-progress` until its PR merges. It is one PR stacked on PR C (#3449), built in its lane and not yet opened (decision `2026-11-22-p2-one-pr-stacked-on-pr-c`). Commits 0 to 12 of section 10 of `research/2026-11-20-p2-design.md` are in the lane. Exit criteria met there: `@beep/text` was created through `create-package` and `@beep/provenance` retired with every consumer in the same PR (`rg -l "@beep/provenance" packages apps` is empty); `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring` and unit conversion are exported; the six L1 ledger rows are green by id in `packages/foundation/modeling/text/test`; the citation mention id is minted over `OccurrenceId` and `CitationMentionMigration.test.ts` converts a frozen v3 receipt; `NodeEvent.occurrence.test.ts` reads a frozen node event to its `OccurrenceId`; the `TextAnchor <-> oa:` round trip is tested in `rdf/test/TextAnchorCodec.test.ts` (`P2-OA` titles); `@beep/md/Md.anchors` is the AST source map; census rows f-1 and f-5 (the `TextSpan` case) read `deleted`. Commit 12 deleted `ops/design/L1.text.ts` and its `opsScripts` row and re-pointed L2, L4, the generators and the index at `@beep/text`; both goals tsconfig checks pass. Chapter 16, the glossary and a 2026-11-22 `DECISIONS.md` entry state what P2 delivered. Left before the PR opens: commit 13 (inventories, catalogs, cache baselines, policy fingerprint, check census), one merge of the parent (PR C, then main with both preparatory PRs), a clean `delete-package @beep/provenance --allow-stale-packets --check`, and `yeet final-check`.

@@ -1,9 +1,3 @@
-// Task 6: the GlobSet public module — multi-pattern include/exclude sets with
-// glob-core's SET semantics (a leading bang is an exclusion filter applied
-// after positive matching, distinct from minimatch's whole-pattern negation),
-// the structural accessors serving the future workspaces enumerator, and the
-// inherited glob-core behavioral table with issue #62 INVERTED: ** is real.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GlobPattern, GlobPatternError, GlobSet } from "@beep/glob";
 import { assert, describe, it } from "@effect/vitest";
@@ -100,12 +94,12 @@ describe("GlobSet: the workspaces contract (inherited glob-core table)", () => {
 
   it.effect("9. THE #62 INVERSION: a globstar include matches nested paths", () =>
     Effect.gen(function* () {
-      // glob-core silently rewrote a trailing /** to /* and its test locked
-      // packages/** to NOT match packages/a/b. That degradation is the bug
-      // this package must not carry forward: ** is real here, by design.
       const set = yield* GlobSet.compile(["packages/**"]);
       assert.isTrue(set.matches("packages/a"));
-      assert.isTrue(set.matches("packages/a/b"));
+      assert.isTrue(
+        set.matches("packages/a/b"),
+        "glob-core rewrote a trailing /** to /* and locked packages/** to NOT match packages/a/b; that degradation is not carried forward, ** is real here by design"
+      );
     })
   );
 });
@@ -161,9 +155,9 @@ describe("GlobSet: set semantics truth table", () => {
   it.effect("matches requires some include and no exclude", () =>
     Effect.gen(function* () {
       const set = yield* GlobSet.compile(["a/*", "!a/x"]);
-      assert.isTrue(set.matches("a/y")); // include, not excluded
-      assert.isFalse(set.matches("a/x")); // include, excluded
-      assert.isFalse(set.matches("b/y")); // no include
+      assert.isTrue(set.matches("a/y"), "include, not excluded");
+      assert.isFalse(set.matches("a/x"), "include, excluded");
+      assert.isFalse(set.matches("b/y"), "no include");
     })
   );
 
@@ -188,10 +182,11 @@ describe("GlobSet: set semantics truth table", () => {
       const set = yield* GlobSet.compile(["a/*", "!a/x"]);
       assert.isTrue(set.isExcluded("a/x"));
       assert.isFalse(set.isExcluded("a/y"));
-      // isExcluded consults only excludes — even a non-included candidate
-      // can report excluded.
       const excludeOnly = yield* GlobSet.compile(["!b/*"]);
-      assert.isTrue(excludeOnly.isExcluded("b/z"));
+      assert.isTrue(
+        excludeOnly.isExcluded("b/z"),
+        "isExcluded consults only excludes, so even a non-included candidate reports excluded"
+      );
     })
   );
 
@@ -251,9 +246,6 @@ describe("GlobSet: construction and failure", () => {
   );
 });
 
-// The literal fast-path must key on what the engine actually matches — the
-// unescaped effective path — never the raw member source. An exact-string key
-// cannot represent comments or negation either; those route to the engine.
 describe("GlobSet: literals key on the effective unescaped path", () => {
   it.effect("an escaped-magic literal include matches its unescaped candidate", () =>
     Effect.gen(function* () {
@@ -412,29 +404,29 @@ describe("GlobSet.compileResult", () => {
     })
   );
 
-  // The sync form must never be the reason set semantics drift: same members
-  // in, same matching and same classification out, whichever form built it.
-  it.effect("agrees with compile on matching and on the structural accessors", () =>
-    Effect.gen(function* () {
-      const patterns = ["tools/cli", "{packages/*,apps/*}", "**/*.ts", "!**/*.d.ts"];
-      const sync = GlobSet.compileResult(patterns);
-      const eff = yield* GlobSet.compile(patterns);
-      assertSuccess(sync, Result.getOrThrow(sync));
+  it.effect(
+    "agrees with compile on matching and on the structural accessors, so the sync form never makes set semantics drift",
+    () =>
+      Effect.gen(function* () {
+        const patterns = ["tools/cli", "{packages/*,apps/*}", "**/*.ts", "!**/*.d.ts"];
+        const sync = GlobSet.compileResult(patterns);
+        const eff = yield* GlobSet.compile(patterns);
+        assertSuccess(sync, Result.getOrThrow(sync));
 
-      for (const candidate of ["tools/cli", "packages/a", "apps/b", "src/x.ts", "src/x.d.ts", "nope"]) {
-        assert.strictEqual(sync.success.matches(candidate), eff.matches(candidate), candidate);
-        assert.strictEqual(sync.success.isExcluded(candidate), eff.isExcluded(candidate), candidate);
-      }
-      assert.deepStrictEqual(sync.success.literals, eff.literals);
-      assert.deepStrictEqual(
-        A.map(sync.success.wildcards, (w) => w.source),
-        A.map(eff.wildcards, (w) => w.source)
-      );
-      assert.deepStrictEqual(
-        A.map(sync.success.excludes, (e) => e.source),
-        A.map(eff.excludes, (e) => e.source)
-      );
-    })
+        for (const candidate of ["tools/cli", "packages/a", "apps/b", "src/x.ts", "src/x.d.ts", "nope"]) {
+          assert.strictEqual(sync.success.matches(candidate), eff.matches(candidate), candidate);
+          assert.strictEqual(sync.success.isExcluded(candidate), eff.isExcluded(candidate), candidate);
+        }
+        assert.deepStrictEqual(sync.success.literals, eff.literals);
+        assert.deepStrictEqual(
+          A.map(sync.success.wildcards, (w) => w.source),
+          A.map(eff.wildcards, (w) => w.source)
+        );
+        assert.deepStrictEqual(
+          A.map(sync.success.excludes, (e) => e.source),
+          A.map(eff.excludes, (e) => e.source)
+        );
+      })
   );
 
   it("fails on the FIRST uncompilable member", () => {
@@ -460,22 +452,26 @@ describe("GlobSet round-3 regressions", () => {
     })
   );
 
-  it.effect("fails typed when rounded advancing increments exceed the set's fixed default budget", () =>
-    Effect.gen(function* () {
-      // GlobSet exposes no lowered-budget option. This terminating range has
-      // 100001 actual members, despite a declared-step estimate of 80001.
-      const source = "{18014398509481984..18014398509881984..5}";
-      for (const member of [source, `!${source}`]) {
-        const sync = GlobSet.compileResult([member]);
-        const error = yield* Effect.flip(GlobSet.compile([member]));
-        assertFailure(sync, error);
-        assert.instanceOf(error, GlobPatternError);
-        assert.strictEqual(error.pattern, member);
-        assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
-        assert.strictEqual(error.limit, 100_000);
-        assert.strictEqual(error.actual, 100_001);
-      }
-    })
+  it.effect(
+    "fails typed when rounded advancing increments exceed the set's fixed default budget (GlobSet exposes no lowered-budget option)",
+    () =>
+      Effect.gen(function* () {
+        const source = "{18014398509481984..18014398509881984..5}";
+        for (const member of [source, `!${source}`]) {
+          const sync = GlobSet.compileResult([member]);
+          const error = yield* Effect.flip(GlobSet.compile([member]));
+          assertFailure(sync, error);
+          assert.instanceOf(error, GlobPatternError);
+          assert.strictEqual(error.pattern, member);
+          assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+          assert.strictEqual(error.limit, 100_000);
+          assert.strictEqual(
+            error.actual,
+            100_001,
+            "the terminating range has 100001 actual members despite a declared-step estimate of 80001"
+          );
+        }
+      })
   );
 
   it.effect("matches and excludes overlapping repetition through both public compilation APIs", () =>

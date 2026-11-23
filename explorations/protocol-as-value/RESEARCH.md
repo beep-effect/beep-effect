@@ -42,7 +42,7 @@ document renderer, which is indented by design.
 `ContentDigest` in
 `packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts`
 and `SourceTextDigest` in
-`packages/foundation/modeling/provenance/src/SourceTextIdentity.ts`. PartyKey
+`packages/foundation/modeling/text/src/SourceTextIdentity.ts`. PartyKey
 uses `pk:v1:` plus hex. `Sha256Hex` in `@beep/schema` remains the bare form.
 
 **Effect modules now in use.** The August gap "zero `effect/workflow` or

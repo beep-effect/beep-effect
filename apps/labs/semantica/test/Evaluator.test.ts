@@ -1,17 +1,17 @@
 // @vitest-environment node
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Sha256Hex } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { it } from "@beep/test-runner";
 import {
   SourceTextDigest,
   SourceTextExtractor,
   SourceTextIdentity,
   TextAnchor,
   TextAnchorVerificationReceipt,
-} from "@beep/provenance";
-import { Sha256Hex } from "@beep/schema";
-import { PosixPath } from "@beep/schema/PosixPath";
-import { UnitInterval } from "@beep/schema/UnitInterval";
-import { it } from "@beep/test-runner";
+} from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";

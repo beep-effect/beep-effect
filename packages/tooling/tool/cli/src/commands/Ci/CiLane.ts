@@ -46,6 +46,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
@@ -85,6 +86,13 @@ import {
   PartitionedCiLane as PartitionedCiLaneSchema,
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
+import {
+  CiLaneRecorder,
+  CiLaneRecordingRequest,
+  ciLaneSelfCommand,
+  currentCiLaneProcess,
+  recordCiLaneStep,
+} from "./CiLaneRecording.ts";
 import {
   clearPropertySweepReceipts,
   judgePropertySweep,
@@ -3383,6 +3391,17 @@ export const ciLaneCommand = Command.make(
     validateEnvelopes,
     serial,
   }) {
+    const laneProcess = yield* currentCiLaneProcess.pipe(Effect.catchTag("CiCommandError", reportCiCommandError));
+    const self = ciLaneSelfCommand(laneProcess);
+    if (O.isSome(lane) && O.isSome(self) && !list) {
+      return yield* findRepoRoot().pipe(
+        CiCommandError.mapError("Failed to locate repository root."),
+        Effect.flatMap((repoRoot) =>
+          recordCiLaneStep(CiLaneRecordingRequest.make({ repoRoot, lane: lane.value, self: self.value }))
+        ),
+        Effect.catchTag("CiCommandError", reportCiCommandError)
+      );
+    }
     const decodedShard = yield* O.match(shard, {
       onNone: () => Effect.succeedNone,
       onSome: (raw) =>
@@ -3490,7 +3509,7 @@ export const ciLaneCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Run one check.yml CI lane body exactly as hosted CI does"),
-  Command.provide(CiRunnerOutputsLive)
+  Command.provide(Layer.merge(CiRunnerOutputsLive, CiLaneRecorder.layer))
 );
 
 /**

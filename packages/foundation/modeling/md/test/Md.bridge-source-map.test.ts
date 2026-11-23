@@ -18,11 +18,11 @@ type NodePath = ReadonlyArray<DocumentSafetyPathSegment>;
 const childrenOf = (node: unknown): ReadonlyArray<unknown> =>
   P.hasProperty(node, "children") && A.isArray(node.children) ? node.children : [];
 
-// Every node path of a document in pre-order, so a path's index is its
-// source-map ordinal.
-const preOrderPaths = (node: unknown, path: NodePath): ReadonlyArray<NodePath> => [
+const preOrderPathsIndexedBySourceMapOrdinal = (node: unknown, path: NodePath): ReadonlyArray<NodePath> => [
   path,
-  ...A.flatMap(childrenOf(node), (child, index) => preOrderPaths(child, [...path, "children", index])),
+  ...A.flatMap(childrenOf(node), (child, index) =>
+    preOrderPathsIndexedBySourceMapOrdinal(child, [...path, "children", index])
+  ),
 ];
 
 const BRIDGED: ReadonlyArray<readonly [string, MdFromSyntax]> = A.map(CORPUS_INPUTS, (input) => [
@@ -42,7 +42,7 @@ const withExtraText = (block: Block): Block =>
 describe("@beep/md/Md.syntax source map over the corpus", () => {
   it("resolves every node ordinal to its own entry's kit position", () => {
     for (const [id, bridged] of BRIDGED) {
-      const paths = preOrderPaths(bridged.document, []);
+      const paths = preOrderPathsIndexedBySourceMapOrdinal(bridged.document, []);
       expect([id, paths.length]).toStrictEqual([id, bridged.sourceMap.entries.length]);
       A.forEach(paths, (path, ordinal) => {
         const entry = bridged.sourceMap.entries[ordinal];
@@ -72,7 +72,7 @@ describe("@beep/md/Md.syntax source map over the corpus", () => {
           frontmatter: bridged.document.frontmatter,
           children: A.dropRight(bridged.document.children, 1),
         });
-        const resolved = A.filter(preOrderPaths(transformed, []), (path) =>
+        const resolved = A.filter(preOrderPathsIndexedBySourceMapOrdinal(transformed, []), (path) =>
           O.isSome(positionAt(bridged.sourceMap, transformed, path))
         );
         expect([id, resolved.length]).toStrictEqual([id, 0]);
@@ -115,7 +115,7 @@ const recorded = (bridged: MdFromSyntax, path: NodePath) =>
 describe("@beep/md/Md.syntax source map identity", () => {
   it("resolves every node of an unchanged document and records its tag", () => {
     const bridged = bridgeText("# T\n\n- a\n- b\n- a\n\n> [!NOTE] Title\n> body *x*\n\na\n\nb");
-    const paths = preOrderPaths(bridged.document, []);
+    const paths = preOrderPathsIndexedBySourceMapOrdinal(bridged.document, []);
     A.forEach(paths, (path, ordinal) => {
       const entry = bridged.sourceMap.entries[ordinal];
       assertSome(
@@ -167,8 +167,6 @@ describe("@beep/md/Md.syntax source map identity", () => {
     const lookup = (path: NodePath) => positionAt(bridged.sourceMap, reversed, path);
     assertNone(lookup(["children", 0]));
     assertNone(lookup(["children", 1]));
-    // The documented limit: ancestors are checked by tag and child count, and
-    // the equal `foo` text resolves to the span recorded at its new path.
     assertSome(lookup(["children", 0, "children", 0]), recorded(bridged, ["children", 0, "children", 0]));
   });
 

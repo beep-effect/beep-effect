@@ -69,9 +69,9 @@
   },
   "devDependencies": {
     "@beep/epistemics": "workspace:^",
-    "@beep/provenance": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@beep/text": "workspace:^",
     "@effect/platform-browser": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",

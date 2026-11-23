@@ -37,7 +37,7 @@ import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import { identity, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -46,12 +46,20 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
+import {
+  annotationsUsedTotal,
+  CI_ANNOTATIONS_USED_PATH,
+  GITHUB_ANNOTATIONS_PER_LEVEL_PER_STEP,
+  readAnnotationsUsed,
+} from "./CiAnnotationsUsed.ts";
 import { appendStepSummary, CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { findJobGateRecords, JobGateRecord } from "./CiTaskOutcomes.ts";
 import type { AnnotationOptions, Block } from "@beep/cli-kit/Doc";
 import type { AnnotationLevel } from "@beep/cli-kit/GithubAnnotation";
 import type { FailureEntry } from "@beep/gate-report/ConsoleDocument";
 import type { Item } from "@beep/gate-report/Item";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 const $I = $RepoCliId.create("commands/Ci/CiGateProjection");
 
@@ -108,7 +116,7 @@ export class CiProjectionLimits extends S.Opaque<CiProjectionLimits, { readonly 
  * @since 0.0.0
  */
 export const ciProjectionLimits: CiProjectionLimits = CiProjectionLimits.make({
-  annotationsPerLevelPerStep: 10,
+  annotationsPerLevelPerStep: GITHUB_ANNOTATIONS_PER_LEVEL_PER_STEP,
   annotationsPerJob: 50,
   summaryBudgetBytes: 64 * 1024,
   summaryLimitBytes: 1024 * 1024,
@@ -590,6 +598,48 @@ export const appendGateReports = Effect.fn("CiGateProjection.appendGateReports")
 });
 
 /**
+ * The annotations a job already wrote: the count given on the command line,
+ * or else the count its `ci lane` steps kept.
+ *
+ * **Details**
+ *
+ * Each `ci lane` step adds the annotations its output created to
+ * `.beep/ci/annotations-used.json`; a job whose steps wrote none has no file
+ * and spent none.
+ *
+ * **Example** (Take the given count)
+ *
+ * ```ts
+ * import { resolveAnnotationsUsed } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * console.log(typeof resolveAnnotationsUsed("/home/alice/beep-effect", O.some(3))) // "object"
+ * ```
+ *
+ * @param repoRoot - The job's checkout.
+ * @param given - The `--annotations-used` count, when one was given.
+ * @returns How many annotations the job already wrote.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const resolveAnnotationsUsed: {
+  (
+    given: O.Option<number>
+  ): (repoRoot: string) => Effect.Effect<number, CiCommandError, FileSystem.FileSystem | Path.Path>;
+  (repoRoot: string, given: O.Option<number>): Effect.Effect<number, CiCommandError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  2,
+  (
+    repoRoot: string,
+    given: O.Option<number>
+  ): Effect.Effect<number, CiCommandError, FileSystem.FileSystem | Path.Path> =>
+    O.match(given, {
+      onSome: Effect.succeed,
+      onNone: () => Effect.map(readAnnotationsUsed(repoRoot), annotationsUsedTotal),
+    })
+);
+
+/**
  * `beep ci append-gate-reports --artifact <name> [--annotations-used <n>]`.
  *
  * **Example** (Register the command)
@@ -608,14 +658,20 @@ export const ciAppendGateReportsCommand = Command.make(
   {
     artifact: Flag.String("artifact").pipe(Flag.withDescription("The artifact that uploads this job's gate records")),
     annotationsUsed: Flag.Int("annotations-used").pipe(
-      Flag.withDefault(0),
-      Flag.withDescription("Annotations earlier steps of this job already wrote")
+      Flag.optional,
+      Flag.withDescription(
+        `Annotations earlier steps of this job already wrote (default: the count \`ci lane\` steps kept in ${CI_ANNOTATIONS_USED_PATH})`
+      )
     ),
   },
   ({ artifact, annotationsUsed }) =>
     findRepoRoot().pipe(
       CiCommandError.mapError("Failed to locate repository root."),
-      Effect.flatMap((repoRoot) => appendGateReports(repoRoot, artifact, annotationsUsed)),
+      Effect.flatMap((repoRoot) =>
+        Effect.flatMap(resolveAnnotationsUsed(repoRoot, annotationsUsed), (used) =>
+          appendGateReports(repoRoot, artifact, used)
+        )
+      ),
       Effect.asVoid,
       Effect.catchTag("CiCommandError", reportCiCommandError)
     )

@@ -19,8 +19,8 @@ import {
   validClaimLexicalTokens,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { Tokenization, TokenizationError } from "@beep/nlp-processing/Core/Tokenization";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

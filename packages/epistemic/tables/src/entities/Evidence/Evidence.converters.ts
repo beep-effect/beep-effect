@@ -9,7 +9,7 @@
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
 import { $EpistemicTablesId } from "@beep/identity/packages";
-import { TextAnchorFields } from "@beep/provenance/TextAnchor";
+import { TextAnchorFields } from "@beep/text/TextAnchor";
 import { pipe } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

@@ -1,7 +1,7 @@
 /**
  * Conservative janitor for known temporary artifacts on Linux tmpfs roots.
  *
- * Discovery is closed over six explicit artifact families across `/tmp`, a
+ * Discovery is closed over eight explicit artifact families across `/tmp`, a
  * distinct absolute `TMPDIR`, and the disk-backed beep cache root (head
  * installs under `beep/head-install`, Fallow audit base snapshots under
  * `beep/fallow`). Reaping requires classification, an old-enough idleness
@@ -9,6 +9,16 @@
  * kernel lock. A Fallow snapshot whose recorded owner root no longer exists is
  * abandoned and needs no idle age at all. Linked Git worktrees go through
  * `git worktree remove`; arbitrary directories are never touched.
+ *
+ * Full Git checkouts (an own `.git` directory, or a `gitdir:` file that is not
+ * a linked-worktree registration) are found at depth one or two under a
+ * temporary root, because repository law forbids clones there. A folder whose
+ * entries are only such checkouts plus loose regular files is reaped as one
+ * `git-checkout-parent` row. A checkout that other linked worktrees still
+ * register is never reaped, and neither is one whose status is dirty or
+ * unreadable or whose local refs hold commits no remote ref reaches; a
+ * checkout-only folder inherits any of its clones' refusals. Configured `*-worktrees` roots stay with the
+ * dangling-stub family and are not scanned for checkouts.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -25,7 +35,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { constant, constTrue, pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -329,6 +339,174 @@ const discoverGitWorktree = Effect.fnUntraced(function* (
       };
     })
   );
+});
+
+const constZero = constant(0);
+
+const GIT_REPOSITORY_LOCATION_VARIABLES = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_COMMON_DIR",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+];
+
+const GIT_CHECKOUT_ACTIVITY_MARKERS = ["index", "HEAD", "FETCH_HEAD", "ORIG_HEAD"];
+
+const gitCheckoutDirectory = Effect.fnUntraced(function* (
+  candidatePath: string
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  const gitPath = pathService.join(candidatePath, ".git");
+  const gitLink = yield* readLinkOption(gitPath);
+  if (O.isSome(gitLink)) {
+    return O.none();
+  }
+  const info = yield* fs.stat(gitPath).pipe(Effect.option);
+  if (O.exists(info, (value) => Str.Equivalence(value.type, "Directory"))) {
+    return O.some(gitPath);
+  }
+  const gitDir = yield* gitDirForCandidate(candidatePath);
+  const separateGitDir = O.filter(gitDir, (target) =>
+    O.isNone(parentRepoFromGitDir(pathService, candidatePath, target))
+  );
+  if (O.isNone(separateGitDir)) {
+    return O.none();
+  }
+  const registeredAsLinkedWorktree = yield* fs
+    .exists(pathService.join(separateGitDir.value, "commondir"))
+    .pipe(Effect.orElseSucceed(constTrue));
+  return !registeredAsLinkedWorktree && (yield* isDirectory(separateGitDir.value)) ? separateGitDir : O.none();
+});
+
+const discoverGitCheckout = Effect.fnUntraced(function* (
+  root: string,
+  candidatePath: string,
+  candidateMtimeMillis: number
+): Effect.fn.Return<O.Option<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const pathService = yield* Path.Path;
+  const gitDir = yield* gitCheckoutDirectory(candidatePath);
+  if (O.isNone(gitDir)) {
+    return O.none();
+  }
+  const worktreesPath = pathService.join(gitDir.value, "worktrees");
+  const linkedWorktrees = yield* readDirectoryOption(worktreesPath);
+  const worktreesMissing = O.isNone(linkedWorktrees) ? yield* statIsMissing(worktreesPath) : O.some(false);
+  const registrationsMayExist =
+    O.exists(linkedWorktrees, A.isReadonlyArrayNonEmpty) ||
+    (O.isNone(linkedWorktrees) && !O.contains(worktreesMissing, true));
+  const activity = yield* Effect.forEach(
+    [
+      gitDir.value,
+      pathService.join(gitDir.value, "logs", "HEAD"),
+      ...A.map(GIT_CHECKOUT_ACTIVITY_MARKERS, (marker) => pathService.join(gitDir.value, marker)),
+    ],
+    statMtimeMillis,
+    { concurrency: 4 }
+  );
+  return O.some({
+    root,
+    path: candidatePath,
+    reapClass: "git-checkout",
+    idleSinceMillis: newestMillis(A.append(A.getSomes(activity), candidateMtimeMillis), candidateMtimeMillis),
+    classified: true,
+    shapeSkipReason: skipReasonWhen(registrationsMayExist, "linked-worktrees-present"),
+    parentRepo: O.none(),
+    ownerRoot: O.none(),
+    ownerRootMissing: O.none(),
+  });
+});
+
+type CheckoutContainerEntry =
+  | { readonly _tag: "LooseFile"; readonly mtimeMillis: number }
+  | { readonly _tag: "Checkout"; readonly candidate: DiscoveredCandidate }
+  | { readonly _tag: "Other" };
+
+const checkoutContainerEntry = Effect.fnUntraced(function* (
+  root: string,
+  entryPath: string
+): Effect.fn.Return<CheckoutContainerEntry, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const entryLink = yield* readLinkOption(entryPath);
+  if (O.isSome(entryLink)) {
+    return { _tag: "Other" };
+  }
+  const info = yield* fs.stat(entryPath).pipe(Effect.option);
+  if (O.isNone(info)) {
+    return { _tag: "Other" };
+  }
+  const mtimeMillis = pipe(
+    info.value.mtime,
+    O.map((mtime) => mtime.getTime()),
+    O.getOrElse(constZero)
+  );
+  if (Str.Equivalence(info.value.type, "File")) {
+    return { _tag: "LooseFile", mtimeMillis };
+  }
+  if (!Str.Equivalence(info.value.type, "Directory")) {
+    return { _tag: "Other" };
+  }
+  const checkout = yield* discoverGitCheckout(root, entryPath, mtimeMillis);
+  return O.match(checkout, {
+    onNone: (): CheckoutContainerEntry => ({ _tag: "Other" }),
+    onSome: (candidate): CheckoutContainerEntry => ({ _tag: "Checkout", candidate }),
+  });
+});
+
+const discoverCheckoutContainer = Effect.fnUntraced(function* (
+  root: string,
+  name: string
+): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const pathService = yield* Path.Path;
+  const canonicalPath = yield* canonicalDirectoryWithin(root, pathService.join(root, name));
+  if (O.isNone(canonicalPath)) {
+    return A.empty();
+  }
+  const containerPath = canonicalPath.value;
+  const names = yield* readDirectoryOption(containerPath);
+  if (O.isNone(names)) {
+    return A.empty();
+  }
+  const entries = yield* Effect.forEach(
+    names.value,
+    (entryName) => checkoutContainerEntry(root, pathService.join(containerPath, entryName)),
+    { concurrency: 8 }
+  );
+  const checkouts = A.flatMap(entries, (entry) => (entry._tag === "Checkout" ? A.of(entry.candidate) : A.empty()));
+  const looseFileMtimes = A.flatMap(entries, (entry) =>
+    entry._tag === "LooseFile" ? A.of(entry.mtimeMillis) : A.empty()
+  );
+  const isCheckoutParent =
+    A.isReadonlyArrayNonEmpty(checkouts) &&
+    A.every(entries, (entry) => entry._tag !== "Other") &&
+    A.every(checkouts, (checkout) => O.isNone(checkout.shapeSkipReason));
+  if (!isCheckoutParent) {
+    return checkouts;
+  }
+  const containerMtimeReading = yield* statMtimeMillis(containerPath);
+  const containerMtime = O.getOrElse(containerMtimeReading, constZero);
+  return A.append(checkouts, {
+    root,
+    path: containerPath,
+    reapClass: "git-checkout-parent",
+    idleSinceMillis: newestMillis(
+      A.append(
+        A.appendAll(
+          A.map(checkouts, (checkout) => checkout.idleSinceMillis),
+          looseFileMtimes
+        ),
+        containerMtime
+      ),
+      containerMtime
+    ),
+    classified: true,
+    shapeSkipReason: O.none(),
+    parentRepo: O.none(),
+    ownerRoot: O.none(),
+    ownerRootMissing: O.none(),
+  } satisfies DiscoveredCandidate);
 });
 
 const fallowLastUsedPaths = Effect.fnUntraced(function* (
@@ -642,17 +820,31 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
     });
   }
   const vitest = yield* discoverVitestForksTmp(root, candidatePath, name, candidateMtime);
-  return O.isSome(vitest) ? vitest : yield* discoverGitWorktree(root, candidatePath, candidateMtime);
+  if (O.isSome(vitest)) {
+    return vitest;
+  }
+  const checkout = yield* discoverGitCheckout(root, candidatePath, candidateMtime);
+  return O.isSome(checkout) ? checkout : yield* discoverGitWorktree(root, candidatePath, candidateMtime);
 });
 
 const discoverTopLevel = Effect.fnUntraced(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const names = yield* directoryNames(root);
-  const forEach11 = yield* Effect.forEach(names, (name) => classifyTopLevelDirectory(root, name, names), {
-    concurrency: 16,
-  });
-  const topLevel = A.getSomes(forEach11);
+  const forEach11 = yield* Effect.forEach(
+    names,
+    Effect.fnUntraced(function* (name: string) {
+      const classified = yield* classifyTopLevelDirectory(root, name, names);
+      if (O.isSome(classified)) {
+        return A.of(classified.value);
+      }
+      return Str.endsWith(WORKTREES_ROOT_SUFFIX)(name)
+        ? A.empty<DiscoveredCandidate>()
+        : yield* discoverCheckoutContainer(root, name);
+    }),
+    { concurrency: 16 }
+  );
+  const topLevel = A.flatten(forEach11);
   const discoverWorktreeStubs12 = yield* discoverWorktreeStubs(root, names);
   return A.appendAll(topLevel, discoverWorktreeStubs12);
 });
@@ -860,6 +1052,8 @@ const thresholdFor = (candidate: DiscoveredCandidate): Duration.Duration =>
     "scoped-temp": () => Duration.hours(2),
     "vitest-forks-tmp": () => Duration.hours(24),
     "dangling-worktree-stub": () => Duration.hours(2),
+    "git-checkout": () => Duration.hours(2),
+    "git-checkout-parent": () => Duration.hours(2),
   });
 
 const classificationSkipReason = (
@@ -876,6 +1070,8 @@ const classificationSkipReason = (
       "scoped-temp": O.none<TmpfsReapSkipReason>,
       "vitest-forks-tmp": () => skipReasonWhen(vitestRunning, "live-runner"),
       "dangling-worktree-stub": O.none<TmpfsReapSkipReason>,
+      "git-checkout": O.none<TmpfsReapSkipReason>,
+      "git-checkout-parent": O.none<TmpfsReapSkipReason>,
     }),
   ]);
 
@@ -892,26 +1088,99 @@ const livenessSkipReason = (liveness: CandidateLiveness): O.Option<TmpfsReapSkip
 const stateSkipReason = (
   candidate: DiscoveredCandidate,
   ageHours: number,
-  dirtyWorktree: boolean
-): O.Option<TmpfsReapSkipReason> => {
-  if (dirtyWorktree) {
-    return O.some("dirty-worktree");
-  }
-  return ageHours < Duration.toHours(thresholdFor(candidate)) ? O.some("too-young") : O.none();
-};
+  cleanliness: O.Option<TmpfsReapSkipReason>
+): O.Option<TmpfsReapSkipReason> =>
+  O.firstSomeOf([cleanliness, skipReasonWhen(ageHours < Duration.toHours(thresholdFor(candidate)), "too-young")]);
 
 const skipReasonFor = (
   candidate: DiscoveredCandidate,
   ageHours: number,
   liveness: CandidateLiveness,
-  dirtyWorktree: boolean,
+  cleanliness: O.Option<TmpfsReapSkipReason>,
   vitestRunning: boolean
 ): O.Option<TmpfsReapSkipReason> =>
   O.firstSomeOf([
     classificationSkipReason(candidate, vitestRunning),
     livenessSkipReason(liveness),
-    stateSkipReason(candidate, ageHours, dirtyWorktree),
+    stateSkipReason(candidate, ageHours, cleanliness),
   ]);
+
+const sameCanonicalPath = (left: O.Option<string>, right: O.Option<string>): boolean =>
+  O.isSome(left) && O.isSome(right) && Str.Equivalence(left.value, right.value);
+
+const gitResolvesCheckout = Effect.fnUntraced(function* (
+  checkoutPath: string
+): Effect.fn.Return<
+  boolean,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git | FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const git = yield* Git;
+  const gitDir = yield* gitCheckoutDirectory(checkoutPath);
+  if (O.isNone(gitDir)) {
+    return false;
+  }
+  const [expectedRoot, expectedCommonDir, resolvedRoot, resolvedCommonDir] = yield* Effect.all(
+    [
+      fs.realPath(checkoutPath).pipe(Effect.option),
+      fs.realPath(gitDir.value).pipe(Effect.option),
+      git.repoRoot(checkoutPath).pipe(Effect.flatMap(fs.realPath), Effect.option),
+      git.commonDir(checkoutPath).pipe(Effect.flatMap(fs.realPath), Effect.option),
+    ],
+    { concurrency: 1 }
+  );
+  return sameCanonicalPath(expectedRoot, resolvedRoot) && sameCanonicalPath(expectedCommonDir, resolvedCommonDir);
+});
+
+const gitCheckoutCleanlinessSkip = Effect.fnUntraced(function* (
+  checkoutPath: string
+): Effect.fn.Return<
+  O.Option<TmpfsReapSkipReason>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git | FileSystem.FileSystem | Path.Path
+> {
+  const overrides = yield* Effect.forEach(GIT_REPOSITORY_LOCATION_VARIABLES, configuredPath, { concurrency: 1 });
+  const resolvesCheckout = A.some(overrides, O.isSome) ? false : yield* gitResolvesCheckout(checkoutPath);
+  if (!resolvesCheckout) {
+    return O.some("git-environment-override");
+  }
+  const git = yield* Git;
+  const status = yield* git
+    .status(checkoutPath, { ignoreSubmodules: "none", noRenames: true, untrackedFiles: "all" })
+    .pipe(Effect.option);
+  if (O.isNone(status) || A.isReadonlyArrayNonEmpty(status.value)) {
+    return O.some("dirty-worktree");
+  }
+  const localOnlyCommits = yield* git.localOnlyCommitCount(checkoutPath).pipe(Effect.option);
+  return skipReasonWhen(O.isNone(localOnlyCommits) || localOnlyCommits.value > 0, "unpushed-commits");
+});
+
+const checkoutParentCleanliness = (
+  pathService: Path.Path,
+  parentPath: string,
+  childCleanliness: ReadonlyArray<readonly [string, O.Option<TmpfsReapSkipReason>]>
+): O.Option<TmpfsReapSkipReason> =>
+  O.firstSomeOf(
+    A.map(
+      A.filter(childCleanliness, ([childPath]) => Str.Equivalence(pathService.dirname(childPath), parentPath)),
+      ([, skip]) => skip
+    )
+  );
+
+const gitCheckoutChildCleanliness = Effect.fnUntraced(function* (
+  candidates: ReadonlyArray<DiscoveredCandidate>
+): Effect.fn.Return<
+  ReadonlyArray<readonly [string, O.Option<TmpfsReapSkipReason>]>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git | FileSystem.FileSystem | Path.Path
+> {
+  return yield* Effect.forEach(
+    A.filter(candidates, (candidate) => Str.Equivalence(candidate.reapClass, "git-checkout")),
+    (candidate) => Effect.map(gitCheckoutCleanlinessSkip(candidate.path), (skip) => [candidate.path, skip] as const),
+    { concurrency: 4 }
+  );
+});
 
 const measureBytes = Effect.fnUntraced(function* (
   candidatePath: string
@@ -1121,7 +1390,52 @@ const danglingCandidateIsStillEligible = Effect.fnUntraced(function* (
   const proc = yield* scanProcReferences(processListing);
   const liveness = yield* candidateLiveness(rediscovered, proc, A.empty(), pathService.sep);
   const ageHours = Duration.toHours(Duration.millis(N.max(0, nowMillis - rediscovered.idleSinceMillis)));
-  return O.isNone(skipReasonFor(rediscovered, ageHours, liveness, false, proc.vitestRunning));
+  return O.isNone(skipReasonFor(rediscovered, ageHours, liveness, O.none(), proc.vitestRunning));
+});
+
+const isGitCheckoutClass = (reapClass: TmpfsReapClass): boolean =>
+  Str.Equivalence(reapClass, "git-checkout") || Str.Equivalence(reapClass, "git-checkout-parent");
+
+const rediscoverGitCheckoutRows = Effect.fnUntraced(function* (
+  candidate: DiscoveredCandidate
+): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
+  const pathService = yield* Path.Path;
+  if (Str.Equivalence(candidate.reapClass, "git-checkout-parent")) {
+    return yield* discoverCheckoutContainer(candidate.root, pathService.basename(candidate.path));
+  }
+  const currentMtime = yield* statMtimeMillis(candidate.path);
+  const checkout = O.isNone(currentMtime)
+    ? O.none<DiscoveredCandidate>()
+    : yield* discoverGitCheckout(candidate.root, candidate.path, currentMtime.value);
+  return A.fromOption(checkout);
+});
+
+const gitCheckoutCandidateIsStillEligible = Effect.fnUntraced(function* (
+  candidate: DiscoveredCandidate,
+  processListing: ProcessCommandLineListing,
+  nowMillis: number
+): Effect.fn.Return<
+  boolean,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
+  const pathService = yield* Path.Path;
+  const checkoutRows = yield* rediscoverGitCheckoutRows(candidate);
+  const rediscovered = A.findFirst(
+    checkoutRows,
+    (row) => Str.Equivalence(row.reapClass, candidate.reapClass) && Str.Equivalence(row.path, candidate.path)
+  );
+  if (O.isNone(rediscovered)) {
+    return false;
+  }
+  const childCleanliness = yield* gitCheckoutChildCleanliness(checkoutRows);
+  const cleanliness = Str.Equivalence(rediscovered.value.reapClass, "git-checkout-parent")
+    ? checkoutParentCleanliness(pathService, rediscovered.value.path, childCleanliness)
+    : O.firstSomeOf(A.map(childCleanliness, ([, skip]) => skip));
+  const proc = yield* scanProcReferences(processListing);
+  const liveness = yield* candidateLiveness(rediscovered.value, proc, A.empty(), pathService.sep);
+  const ageHours = Duration.toHours(Duration.millis(N.max(0, nowMillis - rediscovered.value.idleSinceMillis)));
+  return O.isNone(skipReasonFor(rediscovered.value, ageHours, liveness, cleanliness, proc.vitestRunning));
 });
 
 const applyCandidate = Effect.fnUntraced(function* (
@@ -1144,6 +1458,12 @@ const applyCandidate = Effect.fnUntraced(function* (
     !(yield* danglingCandidateIsStillEligible(candidate.discovered, processListing, nowMillis))
   ) {
     return emptyApplyOutcome(`Skipped ${candidate.discovered.path}: dangling-stub eligibility changed before removal.`);
+  }
+  if (
+    isGitCheckoutClass(candidate.discovered.reapClass) &&
+    !(yield* gitCheckoutCandidateIsStillEligible(candidate.discovered, processListing, nowMillis))
+  ) {
+    return emptyApplyOutcome(`Skipped ${candidate.discovered.path}: Git checkout eligibility changed before removal.`);
   }
   if (Str.Equivalence(candidate.discovered.reapClass, "git-worktree")) {
     return yield* removeGitWorktreeCandidate(candidate.discovered);
@@ -1316,10 +1636,8 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
     ? yield* discoverCacheFallowCaches(cacheRoot)
     : A.empty<DiscoveredCandidate>();
   const cacheCandidates = A.appendAll(cacheHeadInstalls, cacheFallowCaches);
-  const discovered = A.filter(
-    A.dedupeWith(A.appendAll(tmpCandidates, cacheCandidates), sameCandidatePath),
-    (candidate) => includeClass(candidate.reapClass)
-  );
+  const unfilteredCandidates = A.dedupeWith(A.appendAll(tmpCandidates, cacheCandidates), sameCandidatePath);
+  const discovered = A.filter(unfilteredCandidates, (candidate) => includeClass(candidate.reapClass));
 
   const processListing: ProcessCommandLineListing = O.getOrElse(
     O.fromUndefinedOr(options.listProcessCommandLines),
@@ -1330,24 +1648,57 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
   const heldLockInodes = lockInodes(readFileString25);
   const nowMillis = yield* Clock.currentTimeMillis;
   const effectiveNowMillis = O.getOrElse(O.fromUndefinedOr(options.nowMillis), () => nowMillis);
-  const measured = yield* Effect.forEach(
+  const childCleanliness = yield* gitCheckoutChildCleanliness(
+    includeClass("git-checkout") || includeClass("git-checkout-parent") ? unfilteredCandidates : A.empty()
+  );
+  const assessed = yield* Effect.forEach(
     discovered,
     Effect.fnUntraced(function* (candidate: DiscoveredCandidate) {
       const liveness = yield* candidateLiveness(candidate, proc, heldLockInodes, pathService.sep);
       const ageHours = Duration.toHours(Duration.millis(N.max(0, effectiveNowMillis - candidate.idleSinceMillis)));
       const dirtyWorktree = yield* worktreeIsDirty(candidate);
-      const skipReason = skipReasonFor(candidate, ageHours, liveness, dirtyWorktree, proc.vitestRunning);
-      const bytes =
-        O.isNone(skipReason) && !Str.Equivalence(candidate.reapClass, "git-worktree")
-          ? yield* measureBytes(candidate.path)
-          : O.none<number>();
+      const cleanliness = O.firstSomeOf([
+        skipReasonWhen(dirtyWorktree, "dirty-worktree"),
+        O.flatMap(
+          A.findFirst(childCleanliness, ([childPath]) => Str.Equivalence(childPath, candidate.path)),
+          ([, skip]) => skip
+        ),
+        Str.Equivalence(candidate.reapClass, "git-checkout-parent")
+          ? checkoutParentCleanliness(pathService, candidate.path, childCleanliness)
+          : O.none<TmpfsReapSkipReason>(),
+      ]);
+      const skipReason = skipReasonFor(candidate, ageHours, liveness, cleanliness, proc.vitestRunning);
       return {
         discovered: candidate,
         ageHours,
-        bytes,
+        bytes: O.none<number>(),
         liveness,
         skipReason,
       } satisfies MeasuredCandidate;
+    }),
+    { concurrency: 8 }
+  );
+  const reapableCheckoutParents = A.map(
+    A.filter(
+      assessed,
+      (candidate) =>
+        Str.Equivalence(candidate.discovered.reapClass, "git-checkout-parent") && O.isNone(candidate.skipReason)
+    ),
+    (candidate) => candidate.discovered.path
+  );
+  const unsubsumed = A.filter(
+    assessed,
+    (candidate) =>
+      !Str.Equivalence(candidate.discovered.reapClass, "git-checkout") ||
+      !A.contains(reapableCheckoutParents, pathService.dirname(candidate.discovered.path))
+  );
+  const measured = yield* Effect.forEach(
+    unsubsumed,
+    Effect.fnUntraced(function* (candidate: MeasuredCandidate) {
+      const measurable = isGitCheckoutClass(candidate.discovered.reapClass)
+        ? !O.contains(candidate.skipReason, "unclassified")
+        : O.isNone(candidate.skipReason) && !Str.Equivalence(candidate.discovered.reapClass, "git-worktree");
+      return measurable ? { ...candidate, bytes: yield* measureBytes(candidate.discovered.path) } : candidate;
     }),
     { concurrency: 8 }
   );

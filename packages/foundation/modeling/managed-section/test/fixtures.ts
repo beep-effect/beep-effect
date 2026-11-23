@@ -64,7 +64,8 @@ export const memoryFsWith = (
           return Effect.fail(systemError("PermissionDenied", "writeFileString", String(path)));
         }
         writeCount += 1;
-        return undefined; // decline: the volume performs the real write
+        const declineSoTheVolumePerformsTheRealWrite = undefined;
+        return declineSoTheVolumePerformsTheRealWrite;
       },
     },
   });

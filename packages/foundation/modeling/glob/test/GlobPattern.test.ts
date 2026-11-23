@@ -1,13 +1,11 @@
-// Task 5: the GlobPattern public module — compile (the fallible boundary),
-// total matching, the enumerator metadata getters, the schema-validated
-// options surface, the FromString codec and the escape statics.
-
 import { GlobPattern, GlobPatternError, GlobPatternOptions } from "@beep/glob";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { minimatch as oracle } from "minimatch";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
@@ -65,7 +63,7 @@ describe("GlobPattern.compile", () => {
       assert.strictEqual(e.reason, "PatternTooLong");
       assert.strictEqual(e.limit, 65_536);
       assert.strictEqual(e.actual, 65_537);
-      assert.isBelow(e.message.length, 250); // the pattern is truncated in the message
+      assert.isBelow(e.message.length, 250, "the pattern is truncated in the message");
     })
   );
 
@@ -87,13 +85,14 @@ describe("GlobPattern.compile", () => {
 
   it.effect("rejects a defaults-rejected pattern typed even under permissive options", () =>
     Effect.gen(function* () {
-      // Decision 4: nobrace masks the bomb from the effective engine, but a
-      // GlobPattern value must always be defaults-compilable — the same typed
-      // error, never a defect.
       const e = yield* Effect.flip(
         GlobPattern.compile(Str.repeat(17)("{a,b}"), GlobPatternOptions.make({ nobrace: true }))
       );
-      assert.instanceOf(e, GlobPatternError);
+      assert.instanceOf(
+        e,
+        GlobPatternError,
+        "nobrace masks the bomb only from the effective engine; a GlobPattern value must stay defaults-compilable, so the same typed error surfaces, never a defect"
+      );
       assert.strictEqual(e.reason, "ExpansionBudgetExceeded");
     })
   );
@@ -234,6 +233,15 @@ describe("GlobPattern construction and schema", () => {
     Effect.gen(function* () {
       const e = yield* Effect.flip(S.decodeEffect(GlobPattern)({ source: Str.repeat(17)("{a,b}") }));
       assert.strictEqual(e._tag, "SchemaError");
+      const guardMessages = SchemaIssue.makeFormatterStandardSchemaV1({
+        checkHook: (filter) =>
+          filter.issue._tag === "InvalidValue" ? String(filter.issue.annotations?.message) : undefined,
+      })(e.issue).issues;
+      assert.include(
+        String(A.map(guardMessages, (issue) => issue.message)),
+        "ExpansionBudgetExceeded",
+        "the guard returns its message so the issue names the exceeded cap; a bare false would keep only the generic filter message"
+      );
     })
   );
 
@@ -435,24 +443,22 @@ describe("GlobPattern.compileResult", () => {
     })
   );
 
-  // The consumer's dotfile-semantics divergence: one package compiled the same
-  // shape of pattern with `dot: true` at one call site and defaults at another,
-  // giving two glob semantics inside one package. Both spellings must agree
-  // exactly, so the sync form is never the reason the semantics drift.
-  it.effect("honours options identically to compile: the dot divergence", () =>
-    Effect.gen(function* () {
-      const withDot = GlobPattern.compileResult("*", GlobPatternOptions.make({ dot: true }));
-      const withDefaults = GlobPattern.compileResult("*");
-      assertSuccess(withDot, Result.getOrThrow(withDot));
-      assertSuccess(withDefaults, Result.getOrThrow(withDefaults));
-      assert.isTrue(withDot.success.matches(".hidden"));
-      assert.isFalse(withDefaults.success.matches(".hidden"));
+  it.effect(
+    "honours options identically to compile: the dot divergence one consumer hit compiling one pattern shape with dot: true and with defaults, so the sync form never makes semantics drift",
+    () =>
+      Effect.gen(function* () {
+        const withDot = GlobPattern.compileResult("*", GlobPatternOptions.make({ dot: true }));
+        const withDefaults = GlobPattern.compileResult("*");
+        assertSuccess(withDot, Result.getOrThrow(withDot));
+        assertSuccess(withDefaults, Result.getOrThrow(withDefaults));
+        assert.isTrue(withDot.success.matches(".hidden"));
+        assert.isFalse(withDefaults.success.matches(".hidden"));
 
-      const effDot = yield* GlobPattern.compile("*", GlobPatternOptions.make({ dot: true }));
-      const effDefaults = yield* GlobPattern.compile("*");
-      assert.strictEqual(withDot.success.matches(".hidden"), effDot.matches(".hidden"));
-      assert.strictEqual(withDefaults.success.matches(".hidden"), effDefaults.matches(".hidden"));
-    })
+        const effDot = yield* GlobPattern.compile("*", GlobPatternOptions.make({ dot: true }));
+        const effDefaults = yield* GlobPattern.compile("*");
+        assert.strictEqual(withDot.success.matches(".hidden"), effDot.matches(".hidden"));
+        assert.strictEqual(withDefaults.success.matches(".hidden"), effDefaults.matches(".hidden"));
+      })
   );
 
   it.effect("agrees with compile on the enumerator getters", () =>

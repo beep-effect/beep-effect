@@ -6,8 +6,6 @@
  */
 
 /**
- * Re-export of all helpers from `effect/Equal`.
- *
  * **Example** (Compare values with equals)
  *
  * ```ts import.meta.vitest name="Compare values with equals"

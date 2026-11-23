@@ -18,9 +18,9 @@ import {
 } from "@beep/file-processing/SourceText";
 import { classifyFormatFromExtension } from "@beep/file-processing/Strategy";
 import { $WorkspaceServerId } from "@beep/identity";
-import { SourceTextDigest, SourceTextExtractor } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { SourceTextDigest, SourceTextExtractor } from "@beep/text/SourceTextIdentity";
 import { O } from "@beep/utils";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
 import * as Cache from "effect/Cache";
@@ -34,7 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
 import type { ResolveSourceTextRequest } from "@beep/file-processing/SourceText";
-import type { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import type { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import type * as Digest from "effect/crypto/Digest";
 
 const $I = $WorkspaceServerId.create("SourceText/WorkspaceSourceTextResolver");

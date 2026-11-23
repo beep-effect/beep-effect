@@ -6,11 +6,11 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
 import { CourtReporterArtifact } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import { CitationInputError, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -24,8 +24,8 @@ import type { EyeciteRecognition } from "@beep/eyecite";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CourtReporterArtifactVersion } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { VerifiedSourceText, VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import type { Sha256Hex } from "@beep/schema";
+import type { VerifiedSourceText, VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SixFormProjection");
 const invalid = () => CitationInputError.make({ operation: "extract" });

@@ -182,8 +182,6 @@ export const getSomesStruct = <const Self extends OptionStruct>(self: Self): Get
   cast<Record<string, unknown>, GetSomesStruct<Self>>(R.getSomes(self));
 
 /**
- * Re-export of all helpers from `effect/Option`.
- *
  * **Example** (Import Option helpers)
  *
  * ```ts

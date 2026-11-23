@@ -19,7 +19,7 @@ const $I = $AgentMemoryStoreId.create("MarkdownPartition.models");
  * **Details**
  *
  * `range` counts UTF-16 code units from the start of the file, the unit
- * `@beep/markdown` `MarkdownRange` and `@beep/provenance` `TextAnchor` use, so
+ * `@beep/markdown` `MarkdownRange` and `@beep/text` `TextAnchor` use, so
  * `text` is always `fileText.slice(range.offset, range.offset + range.length)`.
  * A partition never puts a boundary between the two halves of a surrogate
  * pair, so each node's text encodes to UTF-8 on its own and the concatenated

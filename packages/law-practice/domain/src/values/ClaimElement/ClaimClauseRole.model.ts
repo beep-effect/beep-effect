@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { PosInt } from "../../internal/PosInt.ts";

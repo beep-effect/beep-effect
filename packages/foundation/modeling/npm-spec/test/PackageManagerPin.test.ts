@@ -1,11 +1,3 @@
-// The corepack pin triple `<name>@<version>[+<integrity>]`.
-//
-// The load-bearing case is the `+`-split rule: `pnpm@11.17.0+sha512.abc` must
-// decode as version `11.17.0` plus integrity `sha512.abc`, never as the semver
-// build-metadata reading `11.17.0+sha512.abc` — and a malformed tail after a
-// `+` must fail typed rather than fall back to build-metadata parsing. Both
-// directions of that rule get their own tests.
-
 import { InvalidPackageManagerPinError, PackageManagerPin } from "@beep/npm-spec/PackageManagerPin";
 import { SemVer } from "@beep/semver/SemVer";
 import { assert, describe, it } from "@effect/vitest";
@@ -33,8 +25,7 @@ describe("PackageManagerPin.parse", () => {
       assert.strictEqual(pin.name, "pnpm");
       assert.strictEqual(pin.version.toString(), "11.17.0");
       assert.strictEqual(pin.version.major, 11);
-      // optionalKey: the field is ABSENT, not present-but-undefined.
-      assert.notProperty(pin, "integrity");
+      assert.notProperty(pin, "integrity", "optionalKey: the field is absent, not present-but-undefined");
       assert.strictEqual(pin.toString(), "pnpm@11.17.0");
     })
   );
@@ -65,12 +56,13 @@ describe("PackageManagerPin.parse", () => {
       assert.deepStrictEqual(bare.version.prerelease, ["rc", 1]);
 
       const withIntegrity = yield* PackageManagerPin.parse("pnpm@10.0.0-beta.2+sha512.abc123");
-      // corepack's own transparent default pin for yarn Berry hashes with
-      // sha224 — the exact shape that once failed with reason "integrity".
-      const sha224 = yield* PackageManagerPin.parse(
+      const corepackDefaultYarnBerryPinSha224OnceFailedAsIntegrity = yield* PackageManagerPin.parse(
         "yarn@4.12.0+sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447"
       );
-      assert.strictEqual(sha224.integrity, "sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447");
+      assert.strictEqual(
+        corepackDefaultYarnBerryPinSha224OnceFailedAsIntegrity.integrity,
+        "sha224.877304e3c9e5b53431969ee2ca17ee44f366533b0da5a4ba9c2bd447"
+      );
       assert.strictEqual(withIntegrity.version.toString(), "10.0.0-beta.2");
       assert.strictEqual(withIntegrity.integrity, "sha512.abc123");
     })
@@ -78,74 +70,66 @@ describe("PackageManagerPin.parse", () => {
 });
 
 describe("the +-split rule", () => {
-  // The downstream's exact pain point: the first `+` after the version always
-  // begins the integrity component. Under the wrong (semver build-metadata)
-  // split, the version would be "11.17.0+sha512.abc" and integrity absent —
-  // each assertion here fails under that split.
-  it.effect("the first + begins the integrity, never semver build metadata", () =>
-    Effect.gen(function* () {
-      const pin = yield* PackageManagerPin.parse("pnpm@11.17.0+sha512.abc");
-      assert.strictEqual(pin.version.toString(), "11.17.0");
-      assert.deepStrictEqual(pin.version.build, []);
-      assert.strictEqual(pin.integrity, "sha512.abc");
-    })
+  it.effect(
+    "the first + begins the integrity, never semver build metadata, whose split would read version 11.17.0+sha512.abc with no integrity",
+    () =>
+      Effect.gen(function* () {
+        const pin = yield* PackageManagerPin.parse("pnpm@11.17.0+sha512.abc");
+        assert.strictEqual(pin.version.toString(), "11.17.0");
+        assert.deepStrictEqual(pin.version.build, []);
+        assert.strictEqual(pin.integrity, "sha512.abc");
+      })
   );
 
   it.effect("a malformed tail after + fails typed — no fallback to build-metadata parsing", () =>
     Effect.gen(function* () {
-      // `garbage` IS a syntactically valid semver build identifier, so a
-      // parser that falls back to build-metadata parsing would ACCEPT this
-      // input. It must fail, and it must fail on the integrity component.
       const error = yield* flipParse("pnpm@11.17.0+garbage");
       assert.instanceOf(error, InvalidPackageManagerPinError);
-      assert.strictEqual(error.reason, "integrity");
+      assert.strictEqual(
+        error.reason,
+        "integrity",
+        "`garbage` is a valid semver build identifier, so a build-metadata fallback would accept it: it must fail on the integrity component"
+      );
     })
   );
 
-  it("a version constructed with build metadata is rejected at make", () => {
-    // The grammar cannot express build metadata in the version position, so a
-    // directly-constructed one would encode to a string that re-parses
-    // differently. Construction is a defect (bad wiring, not bad input).
+  it("a version constructed with build metadata is a wiring defect at make: it would encode to a string that re-parses differently", () => {
     assert.throws(() => PackageManagerPin.make({ name: "pnpm", version: SemVer.of(1, 2, 3, [], ["sha"]) }));
-    // The control: the same construction without build metadata succeeds.
     const pin = PackageManagerPin.make({ name: "pnpm", version: SemVer.of(1, 2, 3) });
-    assert.strictEqual(pin.toString(), "pnpm@1.2.3");
+    assert.strictEqual(pin.toString(), "pnpm@1.2.3", "control: the same construction without build metadata succeeds");
   });
 });
 
 describe("PackageManagerPin rejection matrix", () => {
-  const rejects = (input: string, reason: "format" | "name" | "version" | "integrity") =>
-    it.effect(`rejects ${quoteInput(input)} with reason "${reason}"`, () =>
+  const rejects = (input: string, reason: "format" | "name" | "version" | "integrity", because = "") =>
+    it.effect(`rejects ${quoteInput(input)} with reason "${reason}"${because === "" ? "" : `: ${because}`}`, () =>
       Effect.gen(function* () {
         const error = yield* flipParse(input);
         assert.instanceOf(error, InvalidPackageManagerPinError);
         assert.strictEqual(error._tag, "InvalidPackageManagerPinError");
         assert.strictEqual(error.reason, reason);
-        // The Result twin agrees — the two surfaces share one grammar.
-        const result = PackageManagerPin.parseResult(input);
-        assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
+        const resultTwinSharingOneGrammar = PackageManagerPin.parseResult(input);
+        assertFailure(resultTwinSharingOneGrammar, resultTwinSharingOneGrammar.pipe(Result.flip, Result.getOrThrow));
       })
     );
 
-  // Ranges are not pinnable.
-  rejects("pnpm@^9.0.0", "version");
-  rejects("pnpm@~9.0.0", "version");
-  rejects("pnpm@>=9", "version");
-  // Partial versions are not exact versions.
-  rejects("pnpm@9", "version");
-  rejects("pnpm@9.1", "version");
-  // Dist-tags are not versions.
-  rejects("yarn@berry", "version");
-  rejects("pnpm@latest", "version");
+  const rangesAreNotPinnable = "ranges are not pinnable";
+  rejects("pnpm@^9.0.0", "version", rangesAreNotPinnable);
+  rejects("pnpm@~9.0.0", "version", rangesAreNotPinnable);
+  rejects("pnpm@>=9", "version", rangesAreNotPinnable);
+  const partialVersionsAreNotExact = "partial versions are not exact versions";
+  rejects("pnpm@9", "version", partialVersionsAreNotExact);
+  rejects("pnpm@9.1", "version", partialVersionsAreNotExact);
+  const distTagsAreNotVersions = "dist-tags are not versions";
+  rejects("yarn@berry", "version", distTagsAreNotVersions);
+  rejects("pnpm@latest", "version", distTagsAreNotVersions);
   rejects("pnpm@v1.2.3", "version");
   rejects("pnpm@", "version");
-  // Padded versions: the version substring is ruled on by SemVer.isPinnable,
-  // which rejects surrounding whitespace — SemVer.parseResult alone TRIMS, so
-  // a bare-parse implementation silently canonicalizes these instead of
-  // failing typed. These three are what discriminate the two.
-  rejects("pnpm@ 11.17.0", "version");
-  rejects("pnpm@11.17.0 ", "version");
-  rejects("pnpm@ 11.17.0 +sha512.deadbeef", "version");
+  const paddedDiscriminatesIsPinnableFromTrimmingParse =
+    "SemVer.isPinnable rejects the padding SemVer.parseResult alone trims, so a bare-parse implementation would canonicalize it";
+  rejects("pnpm@ 11.17.0", "version", paddedDiscriminatesIsPinnableFromTrimmingParse);
+  rejects("pnpm@11.17.0 ", "version", paddedDiscriminatesIsPinnableFromTrimmingParse);
+  rejects("pnpm@ 11.17.0 +sha512.deadbeef", "version", paddedDiscriminatesIsPinnableFromTrimmingParse);
   rejects("cargo@1.0.0", "name");
   rejects("PNPM@1.0.0", "name");
   rejects("@1.0.0", "name");
