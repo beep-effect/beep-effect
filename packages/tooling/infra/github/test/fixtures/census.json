@@ -447,7 +447,12 @@
           "type": "branch"
         }
       ],
-      "variables": [],
+      "variables": [
+        {
+          "name": "FLEET_WATCH_APP_CLIENT_ID",
+          "value": "Iv23libfygPGvZKKcDb4"
+        }
+      ],
       "secret_names": ["FLEET_WATCH_APP_PRIVATE_KEY"]
     },
     {

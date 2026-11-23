@@ -356,6 +356,86 @@ export class EnvironmentSpec extends S.Opaque<EnvironmentSpec, { readonly brand:
 ) {}
 
 /**
+ * **Example** (Accept a reference)
+ *
+ * ```ts
+ * import { OpReference } from "@beep/infra-github/Config"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(OpReference)("op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpReference = S.String.check(S.isPattern(/^op:\/\/[^/]+\/[^/]+\/[^/]+$/u)).pipe(
+  $I.annoteSchema("OpReference", {
+    description: "A 1Password secret reference, op://<vault>/<item>/<field>; the reference, never the value.",
+  })
+);
+
+/**
+ * Runtime type for {@link OpReference}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpReference = typeof OpReference.Type;
+
+/**
+ * **Example** (Declare the fleet-watch App key)
+ *
+ * ```ts
+ * import { SecretSpec } from "@beep/infra-github/Config"
+ *
+ * const secret = SecretSpec.make({
+ *   environment: "fleet-watch",
+ *   name: "FLEET_WATCH_APP_PRIVATE_KEY",
+ *   reference: "op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key",
+ * })
+ * console.log(secret.environment) // "fleet-watch"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SecretSpec extends S.Opaque<SecretSpec, { readonly brand: unique symbol }>()(
+  S.Struct({
+    environment: Name,
+    name: Name,
+    reference: OpReference,
+  }).pipe(
+    $I.annoteSchema("SecretSpec", {
+      description: "An environment secret and the 1Password reference its value is read from at deploy time.",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Count the declared secrets)
+ *
+ * ```ts
+ * import { productionSecretsConfig } from "@beep/infra-github/Production"
+ *
+ * console.log(productionSecretsConfig.secrets.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SecretsConfig extends S.Opaque<SecretsConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    owner: Name,
+    repository: Name,
+    secrets: S.Array(SecretSpec),
+  }).pipe(
+    $I.annoteSchema("SecretsConfig", {
+      description: "What the workstation-only InfraGithubSecrets stack owns: environment secrets read from 1Password.",
+    })
+  )
+) {}
+
+/**
  * One issue and pull request label. `description` is `None` for a label with
  * no description: the stack writes `""`, which GitHub then returns (it held
  * `null` before the first deploy).

@@ -57,11 +57,18 @@ again.
 
 ## Wiring the environment
 
-- After the mint, the `client_id` is committed as the `FLEET_WATCH_APP_CLIENT_ID` variable of
-  the `fleet-watch` environment in `packages/tooling/infra/github/src/Production.ts`. The
-  value is not secret; `KNOWLEDGE_MINT_APP_CLIENT_ID` follows the same precedent.
-- The private key is a GitHub secret. `@beep/infra-github` deploys from CI, and CI cannot
-  read 1Password: the packet-gate ruling of 2026-11-13 puts no 1Password token into that
-  workflow. The stack therefore lists `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY` as
-  unmanaged until the secret-delivery route is ruled. The route is the one goal
-  `infra-alchemy-rebuild` records for this App.
+- `@beep/infra-github` declares the `fleet-watch` environment, with deployment branch policy
+  `main`, and its variable `FLEET_WATCH_APP_CLIENT_ID` in
+  `packages/tooling/infra/github/src/Production.ts`. The CI deploy creates both on the merge
+  to `main`. The client id is not secret; `KNOWLEDGE_MINT_APP_CLIENT_ID` follows the same
+  precedent.
+- The private key is owned by the workstation-only `InfraGithubSecrets` stack
+  (`packages/tooling/infra/github/secrets.run.ts`). It reads
+  `op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key` through `op run` at deploy
+  time, so no credential that can read 1Password enters CI (packet-gate ruling 2026-11-13).
+  The recipe and its guards are in the package README, under "Secrets from a workstation".
+  The CI stack lists `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY` as unmanaged.
+
+## Provisioned 2026-11-23
+
+App `beep-fleet-watch`, app_id 5883973, client_id `Iv23libfygPGvZKKcDb4`.

@@ -74,6 +74,34 @@ later decision works from. Amended 2026-11-14 for one credential, the deploy ide
 for a one-hour installation token. It is never a repository secret, and the operator mints
 and stores it (decision `2026-11-14-packet-gate-ruling-the-infra-github-app-key-is-the-one-credential-that-enters-ci`).
 
+### Secrets from a workstation: `InfraGithubSecrets`
+
+`secrets.run.ts` is a second stack with its own state. It owns only the environment secrets
+that `productionSecretsConfig` (`src/Production.ts`) declares, and it reads each value from
+1Password at deploy time (decision
+`2026-11-23-environment-secrets-come-from-a-workstation-only-infragithubsecrets-stack`). Today
+that is one secret, `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY`, from the
+`beep-fleet-watch GitHub App` item.
+
+- `secrets.env` holds one `NAME="op://..."` reference per secret and never a value. A test
+  holds it equal to `secretsEnvFile(productionSecretsConfig)`.
+- No workflow references the stack, and a test checks that. The stack refuses to start when
+  `CI` is set, and on `prod` it requires `INFRA_GITHUB_SECRETS_PLANE=workstation`.
+- Values stay `Redacted`, so they never reach logs or state, and the upload is sealed to the
+  environment's public key. `op run` masks values in its output.
+- The CI stack keeps each of these secrets in `unmanaged`, so the two stacks never compete.
+- An apply is an announced live step. Run it from this directory, with the PATH `op` shim
+  (the agent service account can read the item) and the AWS state credentials exported as
+  in the runbook:
+
+  ```sh
+  GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_SECRETS_PLANE=workstation \
+    op run --env-file=secrets.env -- bunx alchemy deploy secrets.run.ts --stage prod --yes --env-file /dev/null
+  ```
+
+  Read back the timestamp only:
+  `gh api repos/beep-effect/beep-effect/environments/fleet-watch/secrets/FLEET_WATCH_APP_PRIVATE_KEY --jq .updated_at`.
+
 ### Credential
 
 The workflow's own `GITHUB_TOKEN` cannot administer rulesets, environments or variables, and
