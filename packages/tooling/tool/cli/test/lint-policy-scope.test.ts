@@ -213,6 +213,7 @@ describe("lint policy plan stages", () => {
       "lint:comment-law",
       "goals:doctor",
       "lint:oxlint",
+      "lint:identity-registry",
       "lint:typos",
       "lint:markdown-fences",
       "lint:retired-effect-paths",

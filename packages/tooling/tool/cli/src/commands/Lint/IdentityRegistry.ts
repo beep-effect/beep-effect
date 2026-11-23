@@ -27,11 +27,34 @@
  * counted on the summary line instead (goals/prunable-product-leaves, seam
  * 1b). Every other registration is checked exactly as before.
  *
+ * The declared-term registry is gated twice (law L0-3): the generated
+ * artifacts must match their source shards, and the snapshot regenerated from
+ * the shards must keep the published term set of a base ref (`--base`, by
+ * default the merge base with `origin/main`), read with `git show` from wherever
+ * the base tree has its `@beep/identity` package, at exactly the release the
+ * change against that base calls for. A term or
+ * namespace IRI the base published leaves only through a deprecation. A term is
+ * retired with `bun run beep identity deprecate`, which takes a live term only;
+ * no command retires a namespace, whose IRI is retired by hand with a
+ * deprecation row in a remaining shard. A checkout with no registry at all
+ * publishes nothing, so deleting the registry is reported as the removal of every
+ * term the base published, and a term snapshot left without its registry is
+ * drift. Moving the package hides no removal.
+ *
+ * **Gotchas**
+ *
+ * A checkout with neither shards nor generated registry data publishes no terms. Every
+ * term published by the base is then removed; a leftover snapshot is drift because
+ * nothing regenerates it. An undecodable base is compared as empty to retain checkout
+ * findings, but prevents fix mode from writing a release that no base backs. Fix mode
+ * regenerates artifacts only; it never edits shards or writes deprecations.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { TermSnapshot } from "@beep/identity/Term";
 import {
   isCheckoutSubjectPruned,
   loadCheckoutInventory,
@@ -59,9 +82,20 @@ import { Node, Project } from "ts-morph";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
-import { checkRegistry, registryPresent, resolveRegistryLayout, writeRegistry } from "../Identity/Registry.ts";
+import {
+  BaseSnapshot,
+  baseSnapshotIssues,
+  checkRegistry,
+  IdentityRegistryIssue,
+  RegistryWrite,
+  registryPresent,
+  resolveRegistryLayout,
+  writeRegistry,
+} from "../Identity/Registry.ts";
+import { baseFlag, readBaseSnapshot } from "../Identity/RegistryBase.ts";
 import type { CallExpression, ImportDeclaration, ImportSpecifier, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
+import type { RegistryLayout } from "../Identity/Registry.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 
@@ -98,10 +132,19 @@ const IdentityRegistryViolationKind = LiteralKit([
   "registry-conflict",
   "registry-snapshot-break",
   "registry-generated-drift",
+  "term-removed-without-deprecation",
+  "namespace-prefix-changed",
+  "deprecation-changed",
+  "term-revived",
+  "binding-changed",
+  "release-regressed",
+  "release-overstated",
+  "since-misstated",
+  "binding-dangling",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, and the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift).",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift, binding codes that name no module), and breaks of the base ref's published term set (terms removed without a deprecation, namespace prefixes changed, deprecations changed, deprecated terms revived, bindings changed, a snapshot release wound back).",
   })
 );
 
@@ -575,27 +618,64 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   return violations;
 });
 
+const regenerateRegistry = Effect.fn("IdentityRegistry.regenerateRegistry")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  base: BaseSnapshot
+) {
+  const regenerated = yield* writeRegistry(repoRoot, layout, base);
+  const { removed, written } = Result.getOrElse(regenerated, () => RegistryWrite.make({ written: [], removed: [] }));
+  for (const artifact of written) {
+    yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
+  }
+  for (const projection of removed) {
+    yield* Console.log(`[lint:identity-registry] removed ${projection}`);
+  }
+});
+
+const absentRegistryIssues = Effect.fn("IdentityRegistry.absentRegistryIssues")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  base: BaseSnapshot
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const orphaned = yield* fs.exists(path.join(repoRoot, layout.snapshot));
+  const snapshotIssues = orphaned
+    ? A.of(
+        IdentityRegistryIssue.make({
+          kind: "registry-generated-drift",
+          subject: layout.snapshot,
+          detail: `The term snapshot has no registry: there is no shard under ${layout.shards} and no ${layout.data}. Restore the registry, or remove the snapshot with it.`,
+        })
+      )
+    : A.empty<IdentityRegistryIssue>();
+  return A.appendAll(baseSnapshotIssues(base, TermSnapshot.empty, layout), snapshotIssues);
+});
+
 const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
   repoRoot: string,
-  fix: boolean
+  fix: boolean,
+  base: O.Option<string>
 ) {
   const layout = yield* resolveRegistryLayout(repoRoot);
 
-  if (!(yield* registryPresent(repoRoot, layout))) {
-    return A.empty<IdentityRegistryViolation>();
+  const present = yield* registryPresent(repoRoot, layout);
+
+  const baseSnapshot = yield* readBaseSnapshot("lint:identity-registry", repoRoot, layout, base);
+  const published = Result.getOrElse(baseSnapshot, () =>
+    BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref: base })
+  );
+  const undecodable = A.fromOption(Result.getFailure(baseSnapshot));
+
+  if (fix && present && Result.isSuccess(baseSnapshot)) {
+    yield* regenerateRegistry(repoRoot, layout, baseSnapshot.success);
   }
 
-  if (fix) {
-    const written = yield* writeRegistry(repoRoot, layout);
-
-    if (Result.isSuccess(written)) {
-      for (const artifact of written.success) {
-        yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
-      }
-    }
-  }
-
-  const issues = yield* checkRegistry(repoRoot, layout);
+  const found = present
+    ? yield* checkRegistry(repoRoot, layout, O.some(published))
+    : yield* absentRegistryIssues(repoRoot, layout, published);
+  const issues = A.appendAll(found, undecodable);
   return A.map(issues, (issue) =>
     IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })
   );
@@ -652,6 +732,7 @@ const withoutPrunedOwners = Effect.fn("IdentityRegistry.withoutPrunedOwners")(fu
 
 const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryLint")(function* (options: {
   readonly fix: boolean;
+  readonly base: O.Option<string>;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -680,7 +761,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     labsSegmentViolations(labsState, identityPackagesFilePath)
   );
   const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
-  const termRegistryViolations = yield* collectTermRegistryViolations(repoRoot, options.fix);
+  const termRegistryViolations = yield* collectTermRegistryViolations(repoRoot, options.fix, options.base);
   const found = A.appendAll(A.appendAll(argument, collectLocalRootViolations1), termRegistryViolations);
   const { skipped, violations } = yield* withoutPrunedOwners(repoRoot, found);
 
@@ -722,10 +803,11 @@ export const lintIdentityRegistryCommand = Command.make(
         "Register missing workspace packages in the identity composer registry and regenerate the declared-term registry artifacts"
       )
     ),
+    base: baseFlag,
   },
   runIdentityRegistryLint
 ).pipe(
   Command.withDescription(
-    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, the registry-free root stays in package leaves, and the declared-term registry artifacts match their shards"
+    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, the registry-free root stays in package leaves, the declared-term registry artifacts match their shards, and the published term set keeps every term of the base ref or deprecates it"
   )
 );

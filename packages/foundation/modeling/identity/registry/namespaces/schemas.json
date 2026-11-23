@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "schemas",
+    "iri": "https://beep-effect.com/ns/schemas/"
+  },
+  "terms": ["qa-judge-input/v1", "qa-judge-settlement/v1"],
+  "bindings": [],
+  "deprecations": []
+}
