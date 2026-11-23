@@ -159,8 +159,6 @@ export class Section extends S.Opaque<Section, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Body of a `Paragraph`: no fields.
- *
  * **Example** (Make a paragraph body)
  *
  * ```ts import.meta.vitest name="Make a paragraph body"
@@ -177,8 +175,6 @@ export class Paragraph extends S.Opaque<Paragraph, { readonly brand: unique symb
 ) {}
 
 /**
- * Body of a `Title`: no fields.
- *
  * **Example** (Make a title body)
  *
  * ```ts import.meta.vitest name="Make a title body"
@@ -217,8 +213,6 @@ export class Figure extends S.Opaque<Figure, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * Body of a `Sentence`: no fields.
- *
  * **Example** (Make a sentence body)
  *
  * ```ts import.meta.vitest name="Make a sentence body"
@@ -235,8 +229,6 @@ export class Sentence extends S.Opaque<Sentence, { readonly brand: unique symbol
 ) {}
 
 /**
- * Body of a `Word`: no fields.
- *
  * **Example** (Make a word body)
  *
  * ```ts import.meta.vitest name="Make a word body"
@@ -451,8 +443,6 @@ export class ExtractionDocument extends S.Opaque<ExtractionDocument, { readonly 
 const TextDocumentParts = makeAnnotationDocument(DocumentKinds);
 
 /**
- * The annotation document over every declared kind.
- *
  * **Example** (Read the capture)
  *
  * ```ts

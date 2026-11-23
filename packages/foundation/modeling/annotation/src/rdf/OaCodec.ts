@@ -106,8 +106,6 @@ export const OaProfileClass = LiteralKit([
 ]).pipe($I.annoteSchema("OaProfileClass", { description: "The classes of the declared OA profile." }));
 
 /**
- * Type for {@link OaProfileClass}.
- *
  * **Example** (Name a profile class)
  *
  * ```ts
@@ -123,8 +121,6 @@ export const OaProfileClass = LiteralKit([
 export type OaProfileClass = typeof OaProfileClass.Type;
 
 /**
- * The properties of the declared OA profile.
- *
  * **Example** (Check a profile property)
  *
  * ```ts import.meta.vitest name="Check a profile property"
@@ -158,8 +154,6 @@ export const OaProfileProperty = LiteralKit([
 ]).pipe($I.annoteSchema("OaProfileProperty", { description: "The properties of the declared OA profile." }));
 
 /**
- * Type for {@link OaProfileProperty}.
- *
  * **Example** (Name a profile property)
  *
  * ```ts
@@ -203,8 +197,6 @@ export const NifExportTerm = LiteralKit([
 ]).pipe($I.annoteSchema("NifExportTerm", { description: "The export-only NIF vocabulary of the OA codec." }));
 
 /**
- * Type for {@link NifExportTerm}.
- *
  * **Example** (Name a NIF export term)
  *
  * ```ts
@@ -254,8 +246,6 @@ export const ImportedActivity = S.TaggedUnion({
 );
 
 /**
- * Type for {@link ImportedActivity}.
- *
  * **Example** (Make an imported activity)
  *
  * ```ts
@@ -417,8 +407,6 @@ export const mintImportActivityId = Effect.fn("ImportActivity.mint")(function* (
 });
 
 /**
- * Why the decoder rejected one third-party annotation.
- *
  * **Details**
  *
  * - `other-source`: a target names another `oa:hasSource`.
@@ -450,8 +438,6 @@ export const OaAnnotationRefusal = LiteralKit([
 ]).pipe($I.annoteSchema("OaAnnotationRefusal", { description: "Why one third-party annotation was rejected." }));
 
 /**
- * Type for {@link OaAnnotationRefusal}.
- *
  * **Example** (Name a rejection reason)
  *
  * ```ts
@@ -494,8 +480,6 @@ export class OaRejection extends S.Opaque<OaRejection, { readonly brand: unique 
 ) {}
 
 /**
- * Why the encoder refused a document.
- *
  * **Details**
  *
  * `capture-mismatch` when the given text is not the document's capture, or
@@ -523,8 +507,6 @@ export const OaEncodeRefusal = LiteralKit([
 ]).pipe($I.annoteSchema("OaEncodeRefusal", { description: "Why the OA encoder refused a document." }));
 
 /**
- * Type for {@link OaEncodeRefusal}.
- *
  * **Example** (Name an encode refusal)
  *
  * ```ts
@@ -540,8 +522,6 @@ export const OaEncodeRefusal = LiteralKit([
 export type OaEncodeRefusal = typeof OaEncodeRefusal.Type;
 
 /**
- * The encoder's refusal.
- *
  * **Example** (Make an encode refusal)
  *
  * ```ts import.meta.vitest name="Make an encode refusal"

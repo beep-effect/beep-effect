@@ -52,8 +52,6 @@ export const AnnotationId = ContentHash.pipe(
 );
 
 /**
- * Type for {@link AnnotationId}.
- *
  * **Example** (Annotate an annotation id)
  *
  * ```ts
@@ -95,8 +93,6 @@ export const RunEntityId = ContentHash.pipe(
 );
 
 /**
- * Type for {@link RunEntityId}.
- *
  * **Example** (Annotate a run-entity id)
  *
  * ```ts

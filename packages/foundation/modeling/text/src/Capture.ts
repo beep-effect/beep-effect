@@ -51,8 +51,6 @@ export const CaptureId = ContentHash.pipe(
 );
 
 /**
- * Type for {@link CaptureId}.
- *
  * **Example** (Annotate a capture id)
  *
  * ```ts

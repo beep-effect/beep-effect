@@ -254,8 +254,6 @@ export const makeAnnotationDocument = <const Kinds extends KindRegistry & Closed
 };
 
 /**
- * The keyed tables of an annotation document.
- *
  * **Example** (Check a table name)
  *
  * ```ts import.meta.vitest name="Check a table name"
@@ -274,8 +272,6 @@ export const DocumentTable = LiteralKit(["anchors", "annotations", "attribution"
 );
 
 /**
- * Type for {@link DocumentTable}.
- *
  * **Example** (Name a table)
  *
  * ```ts
@@ -373,8 +369,6 @@ export const DocumentAssemblyRefusal = LiteralKit([
 );
 
 /**
- * Type for {@link DocumentAssemblyRefusal}.
- *
  * **Example** (Name a refusal)
  *
  * ```ts
