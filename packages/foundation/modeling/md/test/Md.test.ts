@@ -551,7 +551,7 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
     { arbitrary: fcRuns(100) }
   );
 
-  it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire) and decode back identically, with Pre.language, the only Option field, as the canonical regression case", () => {
+  it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire) and decode back identically, with Pre.language, the only OptionFromNullOr field and so the only Option that encodes None as JSON null, as the canonical regression case", () => {
     const doc = Md.make([
       Md.pre("const x = 1", { language: "ts" }),
       Md.pre("flowchart TD\nA-->B", { language: "mermaid" }),
