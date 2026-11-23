@@ -777,6 +777,24 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** flattening before counting, `length(Reservations[].Instances[?...][])`, as the
   running-instance count already did. The watch script is fixed.
 
+## 2026-11-23: a compound test script ran unsharded in every coverage shard and timed out eight jobs
+
+- **Doing:** waiting on the fleet-watch environment PR (#3510), whose only code sat in `@beep/infra-github`,
+  `@beep/repo-cli` and `@beep/repo-configs`.
+- **Evidence:** all eight `Test Unit (law-practice-N)` jobs on its first head ran into the 20-minute job
+  timeout while still printing passing tests. The affected coverage plan selected five owners and left out
+  `@beep/law-practice-server`, which Turbo's affected set still placed in those partitions. So the partition
+  ran it through one undivided `turbo run …#test -- --coverage … --shard=N/8` step. Its `beep:test` is two
+  Vitest commands joined by `&&`, and `bun run` appended every forwarded argument to the second one only.
+  The main suite ran whole and uncovered in each of the eight shards. PRs whose own diff sent the coverage
+  planner to its full fallback split the script per segment and passed in about four minutes, which hid the
+  defect.
+- **Would have prevented it:** running every package a coverage partition selects through the per-segment
+  invocations the fallback uses, sealing only the planned owners. Also: refusing an undivided compound
+  script before it runs, failing a sharded segment that ran every listed file (its `--shard` never reached
+  it), and checking at the collector that all shards together ran each listed file exactly once. Shard file
+  counts follow each package's sequencer (measured `vitest.shards.json` plans), so no per-shard count is
+  predicted. A mis-sharded run then fails in seconds instead of timing out. The fix PR does all four.
 ## 2026-11-23: a post-deploy plan_only overwrote the pre-deploy plan's rows file
 
 - **Doing:** the tksr Lambda deploy at a pinned main head. One plan_only ran before the deploy and one
