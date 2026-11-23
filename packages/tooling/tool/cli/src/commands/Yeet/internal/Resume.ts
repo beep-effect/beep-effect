@@ -73,8 +73,6 @@ export class ClaudeLiveSession extends S.Opaque<ClaudeLiveSession, { readonly br
 ) {}
 
 /**
- * Narrow live Claude session index boundary.
- *
  * @category models
  * @since 0.0.0
  */
@@ -86,8 +84,6 @@ export class ClaudeIndex extends S.Opaque<ClaudeIndex, { readonly brand: unique 
 const decodeClaudeIndex = S.decodeUnknownOption(S.fromJsonString(ClaudeIndex));
 
 /**
- * Narrow Claude transcript PR-link record.
- *
  * @category models
  * @since 0.0.0
  */
@@ -102,8 +98,6 @@ export class PrLink extends S.Opaque<PrLink, { readonly brand: unique symbol }>(
 ) {}
 const decodePrLink = S.decodeUnknownOption(S.fromJsonString(PrLink));
 /**
- * Narrow transcript record carrying the session cwd.
- *
  * @category models
  * @since 0.0.0
  */

@@ -172,9 +172,6 @@ export class AnnotationTally extends S.Opaque<AnnotationTally, { readonly brand:
 ) {}
 
 /**
- * A rendered CI projection: the step summary Markdown, the grouped log with
- * its annotations, and the annotation tally.
- *
  * **Example** (Build a projection)
  *
  * ```ts

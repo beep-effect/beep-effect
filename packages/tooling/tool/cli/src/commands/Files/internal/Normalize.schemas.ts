@@ -46,8 +46,6 @@ export const NormalizeImageFormatInput = LiteralKit(["png", "jpg", "jpeg", "webp
 export type NormalizeImageFormatInput = typeof NormalizeImageFormatInput.Type;
 
 /**
- * Canonical image output format emitted by `files normalize`.
- *
  * **Example** (Validate undefined image format)
  *
  * ```ts
@@ -67,8 +65,6 @@ export const NormalizeImageFormat = LiteralKit(["png", "jpg", "webp"]).pipe(
 );
 
 /**
- * Canonical image output format emitted by `files normalize`.
- *
  * @category models
  * @since 0.0.0
  */
@@ -112,8 +108,6 @@ export const NormalizeSkippedReason = LiteralKit([
 export type NormalizeSkippedReason = typeof NormalizeSkippedReason.Type;
 
 /**
- * Options used by the image normalization operation.
- *
  * **Example** (Validate undefined files options)
  *
  * ```ts
@@ -176,8 +170,6 @@ export class NormalizeManifestOptions extends S.Opaque<NormalizeManifestOptions,
 ) {}
 
 /**
- * Planned source-to-output image transform.
- *
  * **Example** (Validate undefined plan entry)
  *
  * ```ts
@@ -248,8 +240,6 @@ export class NormalizeSkippedEntry extends S.Opaque<NormalizeSkippedEntry, { rea
 ) {}
 
 /**
- * Planned image normalization run.
- *
  * **Example** (Validate undefined normalize plan)
  *
  * ```ts

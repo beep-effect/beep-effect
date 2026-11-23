@@ -242,9 +242,6 @@ export class CriticInkBox extends S.Opaque<CriticInkBox, { readonly brand: uniqu
 ) {}
 
 /**
- * One `<path>` layer of a figure SVG: its id, stroke width, dash pattern,
- * segment count, and drawn length.
- *
  * **Details**
  *
  * Each line, curve, or closing command that draws counts as one segment;

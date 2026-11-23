@@ -61,8 +61,6 @@ export interface DuplicateCheckOptions {
 }
 
 /**
- * Who pulls one resolved instance into the graph.
- *
  * **Details**
  *
  * A tagged union a renderer narrows with `switch (dependent._tag)`:
@@ -114,8 +112,6 @@ const RelationshipKey = S.fromJsonString(S.Tuple([S.String, Dependent])).pipe(
 const encodeRelationshipKey = S.encodeResult(RelationshipKey);
 
 /**
- * One resolved instance of a duplicated version, with everything that pulls it.
- *
  * **Details**
  *
  * `dependents` is deduplicated and in lockfile order: importers first, in the
@@ -159,8 +155,6 @@ export class DuplicateInstance extends S.Opaque<DuplicateInstance, { readonly br
 ) {}
 
 /**
- * Companion types for {@link DuplicateInstance}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -175,8 +169,6 @@ export declare namespace DuplicateInstance {
 }
 
 /**
- * One version a duplicated package resolved at.
- *
  * **Example** (Group instances at one version)
  *
  * ```ts
@@ -206,8 +198,6 @@ export class DuplicatedVersion extends S.Opaque<DuplicatedVersion, { readonly br
 ) {}
 
 /**
- * Companion types for {@link DuplicatedVersion}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -222,8 +212,6 @@ export declare namespace DuplicatedVersion {
 }
 
 /**
- * One package name reached at two or more distinct versions.
- *
  * **Details**
  *
  * `versions` always has at least two entries: a name resolved at one version
@@ -267,8 +255,6 @@ export class DuplicatedPackage extends S.Opaque<DuplicatedPackage, { readonly br
 ) {}
 
 /**
- * Companion types for {@link DuplicatedPackage}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -283,9 +269,6 @@ export declare namespace DuplicatedPackage {
 }
 
 /**
- * The result of checking a lockfile for packages resolved at more than one
- * version.
- *
  * **Details**
  *
  * A report rather than a bare array, for the reason `PeerCheck` is one: an

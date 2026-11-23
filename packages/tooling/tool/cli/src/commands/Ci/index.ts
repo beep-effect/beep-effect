@@ -12,8 +12,6 @@
  */
 
 /**
- * Public certainty scorecard schemas.
- *
  * @category models
  * @since 0.0.0
  */
@@ -49,15 +47,11 @@ export * from "./CiAdmission.ts";
 export * from "./CiBinary.ts";
 export * from "./CiBootstrap.command.ts";
 /**
- * Public local cache observation summary export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./CiCacheLocalSummary.ts";
 /**
- * Public cache pilot literal domain export.
- *
  * @category models
  * @since 0.0.0
  */
@@ -70,8 +64,6 @@ export * from "./CiCachePilot.schemas.ts";
  */
 export * from "./CiCachePilotHost.ts";
 /**
- * Public cache pilot input preparation export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -120,8 +112,6 @@ export * from "./CiGovernance.ts";
  */
 export * from "./CiJobAdapter.ts";
 /**
- * Public CI lane definitions export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -134,8 +124,6 @@ export * from "./CiLane.ts";
  */
 export * from "./CiLaneJobs.ts";
 /**
- * Public CI lane partition definitions export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -190,8 +178,6 @@ export * from "./CiPartitions.service.ts";
  */
 export * from "./CiPropertySweep.ts";
 /**
- * Public runner-loss rerun subcommand export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -281,8 +267,6 @@ export * from "./DependencyReviewSchemas.ts";
  */
 export * from "./DocsPolicy.ts";
 /**
- * Public heavy-admission decision export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -344,8 +328,6 @@ export * from "./RouteCorpus.ts";
  */
 export * from "./RouteFootprints.ts";
 /**
- * Public runner-loss rerun decision export.
- *
  * @category cli-commands
  * @since 0.0.0
  */

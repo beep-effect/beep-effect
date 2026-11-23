@@ -94,7 +94,6 @@ export class ObservationBackupReceipt extends S.Opaque<ObservationBackupReceipt,
   )
 ) {}
 /**
- * Content-free snapshot refusal.
  * **Example** (Inspecting a failure)
  * ```ts
  * import { ObservationBackupError } from "@beep/repo-ai-metrics/observation-backup"

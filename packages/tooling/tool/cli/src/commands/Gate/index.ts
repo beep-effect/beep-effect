@@ -6,15 +6,11 @@
  * @since 0.0.0
  */
 /**
- * The gate command group.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./Gate.command.ts";
 /**
- * The package `check` gate.
- *
  * @category use-cases
  * @since 0.0.0
  */
@@ -53,8 +49,6 @@ export * from "./GateRoot.ts";
  */
 export * from "./GateRuntime.ts";
 /**
- * The package `test` gate.
- *
  * @category use-cases
  * @since 0.0.0
  */

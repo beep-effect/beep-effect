@@ -29,9 +29,6 @@ import { WorkspacePackage } from "./WorkspacePackage.ts";
 const $I = $RepoWorkspacesId.create("DependencyGraph");
 
 /**
- * Raised when the workspace dependency graph cannot be topologically ordered
- * because it contains a cycle.
- *
  * **Details**
  *
  * `cycle` names the actual cycle members — the sorted union of every strongly
@@ -135,9 +132,6 @@ type Edges = typeof Edges.Type;
 // error channel.
 
 /**
- * The directed graph of dependencies **between workspace packages**. External
- * npm dependencies are not nodes.
- *
  * **Details**
  *
  * A pure value over the discovered package list, with the edge indexes built

@@ -34,8 +34,6 @@ const SOURCE_EXTENSIONS: ReadonlyArray<string> = [".ts", ".tsx", ".mts", ".cts"]
 const SOURCE_IMPORT_RULES: ReadonlyArray<BoundaryRule.Encoded> = [{ forbidImports: ["@beep/*"] }];
 
 /**
- * Runtime options for the ecosystem-polarity lint.
- *
  * **Example** (Construct a full-scan option set)
  *
  * ```ts
@@ -59,8 +57,6 @@ export class EcosystemPolarityOptions extends S.Opaque<EcosystemPolarityOptions,
 ) {}
 
 /**
- * A single ecosystem-polarity violation.
- *
  * **Example** (Construct a source-import violation)
  *
  * ```ts
@@ -95,8 +91,6 @@ export class EcosystemPolarityViolation extends S.Opaque<
 ) {}
 
 /**
- * Summary returned by the ecosystem-polarity lint.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

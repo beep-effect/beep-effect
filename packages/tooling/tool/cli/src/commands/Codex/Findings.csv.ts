@@ -119,8 +119,6 @@ export const SECURITY_CLOUD_CSV_COLUMNS = [
 export const CODEX_CSV_PII_COLUMNS = ["author_email", "assignee_name", "assignee_email"] as const;
 
 /**
- * Reversible codec from the export's lowercase severity to the packet domain.
- *
  * **Example** (Decoding a wire severity)
  *
  * ```ts
@@ -153,8 +151,6 @@ export const CodexCsvSeverity = MappedLiteralKit([
 export type CodexCsvSeverity = typeof CodexCsvSeverity.Type;
 
 /**
- * Reversible codec from the export's lowercase status to the packet domain.
- *
  * **Example** (Decoding a wire status)
  *
  * ```ts
@@ -192,8 +188,6 @@ export const CodexCsvStatus = MappedLiteralKit([
 export type CodexCsvStatus = typeof CodexCsvStatus.Type;
 
 /**
- * One finding's unsanitized report body, destined only for ignored evidence.
- *
  * **Gotchas**
  *
  * This shape is deliberately distinct from the tracked finding record, and no

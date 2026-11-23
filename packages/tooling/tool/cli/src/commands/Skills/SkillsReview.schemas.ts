@@ -120,8 +120,6 @@ export const SkillHunkDecisionOrigin = LiteralKit(["review", "ghost"]).pipe(
 export type SkillHunkDecisionOrigin = typeof SkillHunkDecisionOrigin.Type;
 
 /**
- * One append-only row of the hunk ledger.
- *
  * **Details**
  *
  * The key is (`oldRevision`, `newRevision`, `patchSetHash`, `hunkHash`).
@@ -228,8 +226,6 @@ export const SkillReviewItemKind = LiteralKit(["conflict", "classification"]).pi
 export type SkillReviewItemKind = typeof SkillReviewItemKind.Type;
 
 /**
- * One undecided hunk in the review queue.
- *
  * **Details**
  *
  * The key fields match {@link SkillHunkLedgerRow}. `twoStrike` is true when
@@ -274,8 +270,6 @@ export class SkillReviewItem extends S.Opaque<SkillReviewItem, { readonly brand:
 ) {}
 
 /**
- * A reviewer's answer that records a decision.
- *
  * **Example** (Keep a hunk as policy)
  *
  * ```ts
@@ -526,8 +520,6 @@ export class SkillReviewSkill extends S.Opaque<SkillReviewSkill, { readonly bran
 ) {}
 
 /**
- * Why a session stopped.
- *
  * **Details**
  *
  * `listed`: the run only prepared the queue. `queue-empty`: every queued
@@ -552,8 +544,6 @@ export const SkillReviewStop = LiteralKit(["listed", "queue-empty", "budget", "q
 );
 
 /**
- * Why a session stopped.
- *
  * **Example** (Annotate a stop reason)
  *
  * ```ts
@@ -569,8 +559,6 @@ export const SkillReviewStop = LiteralKit(["listed", "queue-empty", "budget", "q
 export type SkillReviewStop = typeof SkillReviewStop.Type;
 
 /**
- * The outcome of one review run.
- *
  * **Details**
  *
  * `recorded` lists the ledger rows this run appended, ghost replays first.
@@ -648,8 +636,6 @@ export class SkillPatchHunk extends S.Opaque<SkillPatchHunk, { readonly brand: u
 ) {}
 
 /**
- * Options for one review run.
- *
  * **Details**
  *
  * `decide: false` only prepares the queue and writes nothing, ghost replays

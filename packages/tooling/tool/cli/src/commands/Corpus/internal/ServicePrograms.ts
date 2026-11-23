@@ -278,8 +278,6 @@ GROUP BY sha256
 ORDER BY sha256, "destPath"`;
 
 /**
- * Aggregate file, byte, and digest totals queried from the corpus catalog.
- *
  * @category models
  * @since 0.0.0
  */
@@ -296,8 +294,6 @@ export class SourceTotalsRow extends S.Opaque<SourceTotalsRow, { readonly brand:
 ) {}
 
 /**
- * Aggregate duplicate-set totals queried from the corpus catalog.
- *
  * @category models
  * @since 0.0.0
  */
@@ -445,8 +441,6 @@ export const decodeProvenanceLinesForTesting = decodeProvenanceLines;
 const baseCatalogRunLabel = "base";
 
 /**
- * A provenance manifest selected for corpus catalog unioning.
- *
  * @category models
  * @since 0.0.0
  */

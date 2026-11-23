@@ -30,8 +30,6 @@ const $I = $RepoGateRecordId.create("GatePaths");
 export const GATES_DIR = ".beep/gates";
 
 /**
- * A gate's name as a path segment: lower case letters, digits and dashes.
- *
  * **Example** (Check a gate name)
  *
  * ```ts
@@ -58,8 +56,6 @@ export const GateName = S.String.check(
 );
 
 /**
- * Type of {@link GateName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -101,8 +97,6 @@ export const RunId = S.String.check(
 );
 
 /**
- * Type of {@link RunId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -113,9 +107,6 @@ const isRelativeDir = (dir: string): boolean =>
   !A.some(Str.split(dir, "/"), (segment) => segment === ".." || segment === "." || segment === "");
 
 /**
- * A package directory relative to the repository root, written with `/`,
- * never climbing out of the repository.
- *
  * **Example** (Check a package directory)
  *
  * ```ts
@@ -143,8 +134,6 @@ export const RepoRelativeDir = S.String.check(
 );
 
 /**
- * Type of {@link RepoRelativeDir}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -176,8 +165,6 @@ export const RecordTarget = S.TaggedUnion({
 );
 
 /**
- * Type of {@link RecordTarget}.
- *
  * @category models
  * @since 0.0.0
  */

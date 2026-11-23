@@ -26,8 +26,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $QaCaptureId.create("QaInventory.schemas");
 
 /**
- * Severity domain of a vision-judge finding.
- *
  * **Details**
  *
  * `P0` blocks the round, `P1` must be fixed before the loop closes, and `P2`
@@ -52,8 +50,6 @@ export const QaSeverity = LiteralKit(["P0", "P1", "P2"]).pipe(
 );
 
 /**
- * Severity of a vision-judge finding.
- *
  * **Example** (Type a severity value)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const QaSeverity = LiteralKit(["P0", "P1", "P2"]).pipe(
 export type QaSeverity = typeof QaSeverity.Type;
 
 /**
- * Review lenses a finding can be attributed to.
- *
  * **Details**
  *
  * The first eight are static lenses answerable from a single screenshot; the
@@ -117,8 +111,6 @@ export const QaLens = LiteralKit([
 );
 
 /**
- * Review lens a finding is attributed to.
- *
  * **Example** (Type a lens value)
  *
  * ```ts
@@ -191,8 +183,6 @@ export const DrawingQaLens = QaLens.pick([
 ]);
 
 /**
- * Artifact kinds a finding can cite as evidence.
- *
  * **Example** (Count evidence kind options)
  *
  * ```ts
@@ -228,8 +218,6 @@ export const QaEvidenceKind = LiteralKit(["clip", "frame", "screenshot", "sheet"
 export type QaEvidenceKind = typeof QaEvidenceKind.Type;
 
 /**
- * Zero-padded two-digit ordinal inside a {@link QaFindingId}.
- *
  * **Example** (Validate zero-padded ordinal)
  *
  * ```ts
@@ -259,8 +247,6 @@ export const QaFindingOrdinal = S.String.check(
 );
 
 /**
- * Branded `R<round>-<nn>` identifier of one vision-judge finding.
- *
  * **Example** (Validate finding id format)
  *
  * ```ts
@@ -282,8 +268,6 @@ export const QaFindingId = S.TemplateLiteral(["R", RoundNumber, "-", QaFindingOr
 );
 
 /**
- * Identifier of one vision-judge finding.
- *
  * **Example** (Make branded finding id)
  *
  * ```ts
@@ -300,8 +284,6 @@ export const QaFindingId = S.TemplateLiteral(["R", RoundNumber, "-", QaFindingOr
 export type QaFindingId = typeof QaFindingId.Type;
 
 /**
- * One artifact a finding points at, with the witness events it correlates to.
- *
  * **Details**
  *
  * `path` is round-relative so an inventory stays valid when the round
@@ -354,8 +336,6 @@ export class QaEvidenceRef extends S.Opaque<QaEvidenceRef, { readonly brand: uni
 ) {}
 
 /**
- * The judge run that produced an inventory.
- *
  * **Example** (Construct judge reference)
  *
  * ```ts
@@ -388,8 +368,6 @@ export class QaJudgeRef extends S.Opaque<QaJudgeRef, { readonly brand: unique sy
 ) {}
 
 /**
- * One vision-judge finding with its evidence, reproduction, and fix.
- *
  * **Example** (Construct a full finding)
  *
  * ```ts
@@ -520,8 +498,6 @@ const RequiredCountCoherenceCheck = S.makeFilter(
 );
 
 /**
- * Schema-validated vision-judge inventory for one QA round.
- *
  * **Example** (Construct empty inventory)
  *
  * ```ts

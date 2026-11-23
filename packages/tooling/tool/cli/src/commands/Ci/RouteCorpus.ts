@@ -165,8 +165,6 @@ export type RouteGhRunner = (
 ) => Effect.Effect<string, RouteError | RouteGhRateLimited>;
 
 /**
- * A `gh` call GitHub refused because the API rate limit was exhausted.
- *
  * **Details**
  *
  * A {@link RouteGhRunner} fails with this error so the corpus can look up the

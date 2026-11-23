@@ -72,8 +72,6 @@ export const AiMetricsSourceStatus = LiteralKit(["available", "missing", "unavai
 );
 
 /**
- * Runtime type for {@link AiMetricsSourceStatus}.
- *
  * **Example** (Assign available status type)
  *
  * ```ts
@@ -88,8 +86,6 @@ export const AiMetricsSourceStatus = LiteralKit(["available", "missing", "unavai
 export type AiMetricsSourceStatus = typeof AiMetricsSourceStatus.Type;
 
 /**
- * Input for local AI metrics source discovery.
- *
  * **Example** (Make discovery input object)
  *
  * ```ts
@@ -191,8 +187,6 @@ export class AiMetricsDiscoveredTranscriptFile extends S.Opaque<
 ) {}
 
 /**
- * Source-level discovery summary.
- *
  * **Example** (Make missing source summary)
  *
  * ```ts
@@ -293,8 +287,6 @@ export class AiMetricsSourceDiscoveryResult extends S.Opaque<
 ) {}
 
 /**
- * Error raised by source discovery.
- *
  * **Example** (Make discovery error instance)
  *
  * ```ts

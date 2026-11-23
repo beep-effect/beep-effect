@@ -52,8 +52,6 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /**
- * Public catalog usage error export.
- *
  * @category errors
  * @since 0.0.0
  */

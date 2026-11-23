@@ -118,8 +118,6 @@ export const LicenseDecision = LiteralKit(["allowed", "denied", "unresolved", "u
 );
 
 /**
- * One license decision.
- *
  * @category models
  * @since 0.0.0
  */

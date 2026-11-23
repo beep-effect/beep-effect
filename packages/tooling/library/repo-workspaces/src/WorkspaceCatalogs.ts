@@ -111,9 +111,6 @@ export const ImporterVersions = S.Record(S.String, S.Record(S.String, S.String))
 export type ImporterVersions = typeof ImporterVersions.Type;
 
 /**
- * An immutable, fully-normalized catalog collection — the one catalog
- * resolution semantic in the package.
- *
  * **Details**
  *
  * `entries` is catalog name → dependency → range, with pnpm's unnamed
@@ -995,8 +992,6 @@ export class WorkspaceCatalogsOptions extends S.Opaque<WorkspaceCatalogsOptions,
 ) {}
 
 /**
- * Companion types for {@link WorkspaceCatalogsOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

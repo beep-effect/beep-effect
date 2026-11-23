@@ -64,8 +64,6 @@ export class SourceLiteral extends S.Opaque<SourceLiteral, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link SourceLiteral}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,8 +125,6 @@ export class LexedSource extends S.Opaque<LexedSource, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link LexedSource}.
- *
  * @category type-level
  * @since 0.0.0
  */

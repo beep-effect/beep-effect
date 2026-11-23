@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
 
 /**
- * Error raised by corpus curation commands.
- *
  * **Example** (Create corpus command error)
  *
  * ```ts

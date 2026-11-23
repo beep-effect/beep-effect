@@ -116,8 +116,6 @@ export const CANONICAL_JSDOC_CATEGORIES = [
 ] as const;
 
 /**
- * Canonical category literal schema used by `@category` JSDoc tags.
- *
  * **Example** (Access validation category enum)
  *
  * ```ts
@@ -136,8 +134,6 @@ export const JSDocCategory = LiteralKit(CANONICAL_JSDOC_CATEGORIES).pipe(
 );
 
 /**
- * Canonical category literal used by `@category` JSDoc tags.
- *
  * **Example** (Annotate category type literal)
  *
  * ```ts
@@ -152,8 +148,6 @@ export const JSDocCategory = LiteralKit(CANONICAL_JSDOC_CATEGORIES).pipe(
 export type JSDocCategory = typeof JSDocCategory.Type;
 
 /**
- * Normalization status for an observed `@category` value.
- *
  * **Example** (Import normalization status value)
  *
  * ```ts
@@ -171,8 +165,6 @@ export const JSDocCategoryNormalizationStatus = LiteralKit(["canonical", "alias"
   })
 );
 /**
- * Normalization status for an observed `@category` value.
- *
  * **Example** (Assign canonical status type)
  *
  * ```ts
@@ -187,8 +179,6 @@ export const JSDocCategoryNormalizationStatus = LiteralKit(["canonical", "alias"
 export type JSDocCategoryNormalizationStatus = typeof JSDocCategoryNormalizationStatus.Type;
 
 /**
- * Normalized interpretation of a single `@category` tag value.
- *
  * **Example** (Normalize DomainModel category)
  *
  * ```ts

@@ -165,8 +165,6 @@ export const FleetHostReadCommand = S.String.check(
 );
 
 /**
- * A read-only remote command line; see {@link FleetHostReadCommand}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -210,8 +208,6 @@ export const fleetHostReadCommand = (entry: FleetHostEntry): FleetHostReadComman
 };
 
 /**
- * One file the remote read printed, held in memory only.
- *
  * **Example** (A printed journal)
  *
  * ```ts

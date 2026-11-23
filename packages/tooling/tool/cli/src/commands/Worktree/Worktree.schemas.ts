@@ -34,8 +34,6 @@ const TrimmedNonEmptyString = S.Trim.check(S.isNonEmpty({ message: "String must 
 const REFS_HEADS_PREFIX = "refs/heads/";
 
 /**
- * One parsed entry from `git worktree list --porcelain`.
- *
  * **Example** (Construct a listing entry)
  *
  * ```ts
@@ -91,8 +89,6 @@ export const WorktreeResidueReason = LiteralKit(["dirty", "unpushed-commits", "d
 );
 
 /**
- * Decoded worktree-residue reason.
- *
  * @see {@link WorktreeResidueReason} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
@@ -135,8 +131,6 @@ export const WorktreePreservationStep = LiteralKit([
 );
 
 /**
- * Decoded worktree-preservation step.
- *
  * @see {@link WorktreePreservationStep} for the runtime schema and literal helpers.
  * @category type-level
  * @since 0.0.0
@@ -186,9 +180,6 @@ export const WorktreeRepositoryHash = S.String.check(
 export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
 
 /**
- * Evidence that settled whether a branch tip was pushed once its configured
- * upstream was pruned.
- *
  * **Details**
  *
  * A pruned upstream leaves no `<ref>..HEAD` range to count, so the verdict
@@ -228,8 +219,6 @@ export const WorktreeUpstreamVerdict = S.TaggedUnion({
 );
 
 /**
- * Decoded upstream-verdict union.
- *
  * @see {@link WorktreeUpstreamVerdict} for the runtime schema.
  * @category type-level
  * @since 0.0.0
@@ -277,8 +266,6 @@ export const WorktreeUpstreamState = S.TaggedUnion({
 );
 
 /**
- * Decoded upstream-state union.
- *
  * @see {@link WorktreeUpstreamState} for the runtime schema.
  * @category type-level
  * @since 0.0.0
@@ -327,8 +314,6 @@ export class WorktreeBeepMaterialEntry extends S.Opaque<WorktreeBeepMaterialEntr
 ) {}
 
 /**
- * Durable receipt for worktree state preserved before archive removal.
- *
  * **Details**
  *
  * `branch` is absent for detached worktrees and `patchPath` is absent when no
@@ -673,8 +658,6 @@ export class WorktreeInotifyWatcher extends S.Opaque<WorktreeInotifyWatcher, { r
 ) {}
 
 /**
- * How long the archive fence waits out an inotify watcher re-walking the fenced tree.
- *
  * **Details**
  *
  * The fence renames the checkout aside, and a recursive watcher (an editor's
@@ -919,8 +902,6 @@ export const FLEET_POLICY_SURFACE = [
 ] as const;
 
 /**
- * Liveness domain for a fleet checkout.
- *
  * **Details**
  *
  * `live` and `dormant` are measured facts; `unknown` is ignorance — a probe
@@ -954,8 +935,6 @@ export const FleetLiveness = LiteralKit(["live", "dormant", "unknown"]).pipe(
 export type FleetLiveness = typeof FleetLiveness.Type;
 
 /**
- * The probe that produced a `live` liveness verdict.
- *
  * **Details**
  *
  * `claude-session` is the session-registry probe: a registry entry under
@@ -1075,16 +1054,12 @@ export const FleetProbeReading = S.Union([
 );
 
 /**
- * Decoded probe-reading union.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type FleetProbeReading = typeof FleetProbeReading.Type;
 
 /**
- * Inputs to the liveness classifier for one checkout.
- *
  * **Details**
  *
  * `processMatches` counts readable processes whose working directory sits
@@ -1237,8 +1212,6 @@ export const FleetConflictStatus = LiteralKit(["clean", "conflict", "unknown"]).
 export type FleetConflictStatus = typeof FleetConflictStatus.Type;
 
 /**
- * Policy-movement domain for a fleet checkout (signal 3).
- *
  * **Details**
  *
  * `moved` means `main` gained commits touching the measured policy surface
@@ -1272,8 +1245,6 @@ export const FleetPolicyMovement = LiteralKit(["moved", "unmoved", "unknown"]).p
 export type FleetPolicyMovement = typeof FleetPolicyMovement.Type;
 
 /**
- * Why a derived fleet field reads `unknown` instead of a measured value.
- *
  * **Example** (Read an unknown-reason member)
  *
  * ```ts
@@ -1305,8 +1276,6 @@ export const FleetUnknownReason = LiteralKit([
 export type FleetUnknownReason = typeof FleetUnknownReason.Type;
 
 /**
- * Whether a fleet checkout is a standalone clone or a linked worktree.
- *
  * **Example** (Read a kind member)
  *
  * ```ts

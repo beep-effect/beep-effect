@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/History/History.errors");
 
 /**
- * The commit-message map could not be read or does not decode.
- *
  * **Example** (Explain an undecodable map)
  *
  * ```ts
@@ -35,8 +33,6 @@ export class HistoryMapError extends S.TaggedError<HistoryMapError, { readonly b
 ) {}
 
 /**
- * A git read the overlay check depends on failed.
- *
  * **Example** (Explain a failed ancestry read)
  *
  * ```ts

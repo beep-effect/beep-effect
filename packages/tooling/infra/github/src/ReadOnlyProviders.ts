@@ -22,8 +22,6 @@ import type { ResourceClass, ResourceLike } from "alchemy/Resource";
 const $I = $InfraGithubId.create("ReadOnlyProviders");
 
 /**
- * A lifecycle operation that writes to GitHub.
- *
  * **Example** (Narrow a mutating operation)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const MutatingOperation = LiteralKit(["precreate", "reconcile", "delete"]
 );
 
 /**
- * Runtime type for {@link MutatingOperation}.
- *
  * @category models
  * @since 0.0.0
  */

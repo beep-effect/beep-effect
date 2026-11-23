@@ -77,8 +77,6 @@ export const PersonMatchComputePolicy = LiteralKit(["auto", "cpu", "rocm"]).pipe
 export type PersonMatchComputePolicy = typeof PersonMatchComputePolicy.Type;
 
 /**
- * Enumerates compute implementations actually selected by the worker.
- *
  * **Example** (Check selected compute)
  *
  * ```ts
@@ -98,8 +96,6 @@ export const PersonMatchActualCompute = LiteralKit(["cpu", "rocm"]).pipe(
 );
 
 /**
- * A compute implementation actually selected by the worker.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,8 +123,6 @@ export const PersonMatchPrecision = LiteralKit(["fp32"]).pipe(
 );
 
 /**
- * A numeric precision used for person-matching inference.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -156,8 +150,6 @@ export const PersonMatchThresholdSource = LiteralKit(["calibrated-default", "exp
 );
 
 /**
- * The origin of the thresholds resolved for a person-matching run.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -433,8 +425,6 @@ export const PersonMatchDisposition = LiteralKit([
 );
 
 /**
- * The image classification assigned by a person-matching run.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -504,16 +494,12 @@ export const PersonMatchReferenceRejectionReason = LiteralKit([
 );
 
 /**
- * A reason a reference image did not contribute an identity embedding.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PersonMatchReferenceRejectionReason = typeof PersonMatchReferenceRejectionReason.Type;
 
 /**
- * Enumerates diagnostic reasons attached to candidate-image entries.
- *
  * **Example** (Check a candidate diagnostic reason)
  *
  * ```ts
@@ -537,8 +523,6 @@ export const PersonMatchEntryReason = LiteralKit([
 );
 
 /**
- * A diagnostic reason attached to a candidate-image entry.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -648,8 +632,6 @@ export const PERSON_MATCH_MAX_REPORT_BYTES = 64 * 1024 * 1024;
 export const PERSON_MATCH_MAX_DIAGNOSTIC_BYTES = 1024 * 1024;
 
 /**
- * Enumerates stable error codes emitted by the local matching worker.
- *
  * **Example** (Check a worker error code)
  *
  * ```ts
@@ -694,8 +676,6 @@ export const PersonMatchWorkerErrorCode = LiteralKit([
 );
 
 /**
- * A stable error code emitted by the local matching worker.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -723,16 +703,12 @@ export const PersonMatchModelArtifactName = LiteralKit(["det_10g.onnx", "w600k_r
 );
 
 /**
- * The filename of a pinned ONNX artifact used by the matching worker.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PersonMatchModelArtifactName = typeof PersonMatchModelArtifactName.Type;
 
 /**
- * Captures a backend's resolved detection, identity, review, and face-area thresholds.
- *
  * **Example** (Create a threshold profile)
  *
  * ```ts
@@ -793,8 +769,6 @@ export const PersonMatchDeviceIndexes = S.UniqueArray(S.Natural).pipe(
 );
 
 /**
- * Duplicate-free GPU indexes selected by a runtime.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -807,8 +781,6 @@ const PersonMatchRequestedDeviceIndexes = S.Tuple([S.Natural]).pipe(
 );
 
 /**
- * Command inputs for a local person-matching run.
- *
  * **Example** (Create command options)
  *
  * ```ts
@@ -866,8 +838,6 @@ export class MatchPersonOptions extends S.Opaque<MatchPersonOptions, { readonly 
 ) {}
 
 /**
- * Describes a checksummed model artifact consumed by the matching worker.
- *
  * **Example** (Validate an artifact record)
  *
  * ```ts
@@ -1058,8 +1028,6 @@ export class PersonMatchPyTorchRuntime extends S.Opaque<PersonMatchPyTorchRuntim
 ) {}
 
 /**
- * Records pinned model and runtime provenance for the InsightFace Buffalo backend.
- *
  * **Example** (Decode Buffalo provenance)
  *
  * ```ts
@@ -1291,8 +1259,6 @@ export class PersonMatchReference extends S.Opaque<PersonMatchReference, { reado
 ) {}
 
 /**
- * Defines an axis-aligned face bounding box in source-image pixel coordinates.
- *
  * **Example** (Validate a face box)
  *
  * ```ts
@@ -1323,8 +1289,6 @@ export class PersonMatchFaceBox extends S.Opaque<PersonMatchFaceBox, { readonly 
 ) {}
 
 /**
- * Captures detection, quality, and identity-match evidence for one detected face.
- *
  * **Example** (Validate face evidence)
  *
  * ```ts
@@ -1465,8 +1429,6 @@ export class PersonMatchSummary extends S.Opaque<PersonMatchSummary, { readonly 
 ) {}
 
 /**
- * Carries a stable worker error code and a human-readable failure message.
- *
  * **Example** (Validate worker error details)
  *
  * ```ts
@@ -1633,8 +1595,6 @@ export class PersonMatchWorkerSuccess extends S.Opaque<PersonMatchWorkerSuccess,
 ) {}
 
 /**
- * Defines a failed response from the local person-matching inference service.
- *
  * **Example** (Validate a worker failure)
  *
  * ```ts
@@ -1720,8 +1680,6 @@ export const PersonMatchWorkerReport = S.Union([PersonMatchWorkerSuccess, Person
 );
 
 /**
- * A decoded success or failure response from the person-matching inference service.
- *
  * @category type-level
  * @since 0.0.0
  */

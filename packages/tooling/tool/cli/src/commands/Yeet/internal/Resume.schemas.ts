@@ -74,8 +74,6 @@ const PrRefInput = S.NonEmptyString.check(
 );
 
 /**
- * Decoded pull-request number and optional URL repository identity.
- *
  * @category models
  * @since 0.0.0
  */

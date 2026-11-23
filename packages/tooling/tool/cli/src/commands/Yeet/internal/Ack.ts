@@ -49,8 +49,6 @@ import type * as Path from "effect/Path";
 const $I = $RepoCliId.create("commands/Yeet/internal/Ack");
 
 /**
- * The resolution kinds an ack receipt can record.
- *
  * **Details**
  *
  * Four permanent closing moves an operator or agent writes (`fix-sha`,
@@ -88,8 +86,6 @@ export const YeetAckResolutionKind = LiteralKit([
 );
 
 /**
- * The resolution kinds an ack receipt can record.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -221,8 +217,6 @@ export class YeetAckThreadResolution extends S.Opaque<YeetAckThreadResolution, {
 ) {}
 
 /**
- * A temporary, attributed waiver for one named shard.
- *
  * **Example** (Build a one-hour waiver)
  *
  * ```ts
@@ -253,8 +247,6 @@ export class YeetAckWaiveResolution extends S.Opaque<YeetAckWaiveResolution, { r
 ) {}
 
 /**
- * Acknowledge an informational row by observation: a proof-job result or a merge-ready announcement.
- *
  * **Details**
  *
  * `yeet inbox ack --observed` accepts only the kinds in `YeetInboxObservedRowKind`
@@ -279,8 +271,6 @@ export class YeetAckObservedResolution extends S.Opaque<YeetAckObservedResolutio
 ) {}
 
 /**
- * The merge loop saw a conflicted head turn mergeable again, without a push.
- *
  * **Details**
  *
  * Only `yeet monitor --until-ready` writes it, for the `base-conflict` row of
@@ -472,8 +462,6 @@ export class YeetAckReceipt extends S.Opaque<YeetAckReceipt, { readonly brand: u
 export const YeetAckReceiptJson = JsonStringCodec(YeetAckReceipt);
 
 /**
- * The typed ack state of one inbox row.
- *
  * **Details**
  *
  * `acked` reports whether the receipt file exists — the enforcement question —

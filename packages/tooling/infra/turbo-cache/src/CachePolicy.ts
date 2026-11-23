@@ -46,8 +46,6 @@ export const TeamSlug = S.String.check(S.isPattern(segmentPattern)).pipe(
 );
 
 /**
- * Runtime type for {@link TeamSlug}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -74,8 +72,6 @@ export const ArtifactHash = S.String.check(S.isPattern(segmentPattern)).pipe(
 );
 
 /**
- * Runtime type for {@link ArtifactHash}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -104,17 +100,12 @@ export const PrincipalName = S.String.check(S.isPattern(/^[a-z0-9][a-z0-9-]*$/u)
 );
 
 /**
- * Runtime type for {@link PrincipalName}.
- *
  * @category models
  * @since 0.0.0
  */
 export type PrincipalName = typeof PrincipalName.Type;
 
 /**
- * The access class of a token: `read` restores artifacts, `write` also
- * uploads them.
- *
  * **Example** (Narrow an access class)
  *
  * ```ts
@@ -131,8 +122,6 @@ export const Access = LiteralKit(["read", "write"]).pipe(
 );
 
 /**
- * Runtime type for {@link Access}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -159,16 +148,12 @@ export const ArtifactOperation = LiteralKit(["status", "events", "query", "downl
 );
 
 /**
- * Runtime type for {@link ArtifactOperation}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ArtifactOperation = typeof ArtifactOperation.Type;
 
 /**
- * One token holder of a team.
- *
  * **Details**
  *
  * `rotation` is part of the token's resource id. Raising it makes the next
@@ -256,8 +241,6 @@ const tokenKeyCollisions = (teams: ReadonlyArray<Team>): true | string => {
 };
 
 /**
- * The whole cache policy: every team the Worker serves.
- *
  * **Example** (Decode a policy)
  *
  * ```ts

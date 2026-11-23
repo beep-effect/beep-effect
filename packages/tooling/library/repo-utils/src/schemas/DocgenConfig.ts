@@ -45,8 +45,6 @@ const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(valu
 export const DEFAULT_DOCGEN_EXCLUDE = ["src/internal/**/*.ts"] as const;
 
 /**
- * Input used to build the canonical repo docgen config for a package.
- *
  * **Example** (Build docgen config input)
  *
  * ```ts
@@ -88,8 +86,6 @@ export class CanonicalDocgenConfigInput extends S.Opaque<
 ) {}
 
 /**
- * Managed TypeScript compiler options used for docgen examples.
- *
  * **Details**
  *
  * This shape intentionally mirrors the strict options docgen writes into each
@@ -171,8 +167,6 @@ export class CanonicalDocgenExamplesCompilerOptions extends S.Opaque<
 ) {}
 
 /**
- * Canonical repo docgen config payload.
- *
  * **Example** (Build canonical docgen config)
  *
  * ```ts
@@ -315,9 +309,6 @@ export const toDocgenExamplesCompilerOptionsJson = (
 });
 
 /**
- * JSON-compatible mirror of {@link CanonicalDocgenConfig}, returned by
- * {@link toCanonicalDocgenConfigJson}.
- *
  * **Example** (Make JSON config shape)
  *
  * ```ts

@@ -172,8 +172,6 @@ const parseErrorLines = (error: JsoncParseError): string =>
  */
 export { testTsgoSyntheticConfigTemplate } from "./internal/TestTsgoSyntheticConfig.ts";
 /**
- * Public quality script command error export.
- *
  * @category errors
  * @since 0.0.0
  */

@@ -44,8 +44,6 @@ export const RuntimeService = LiteralKit(["fs-utils", "ts-morph", "memory-stats"
 );
 
 /**
- * Decoded {@link RuntimeService} value.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -113,8 +111,6 @@ export const DispatchTarget = S.TaggedUnion({
 );
 
 /**
- * Decoded {@link DispatchTarget} value.
- *
  * @internal
  * @category models
  * @since 0.0.0

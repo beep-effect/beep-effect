@@ -312,8 +312,6 @@ export class GoalGraphInputError extends S.TaggedError<GoalGraphInputError, { re
 }
 
 /**
- * Failure that refuses the whole capability-graph projection.
- *
  * **Details**
  *
  * Raised when a manifest cannot be read or decoded, when a manifest id does not
@@ -378,8 +376,6 @@ export const HarvestErrorReason = LiteralKit([
 );
 
 /**
- * Failure class of a harvest ledger operation.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -468,8 +464,6 @@ export const ArchiveErrorReason = LiteralKit([
 );
 
 /**
- * Failure class of a packet archive operation.
- *
  * @category type-level
  * @since 0.0.0
  */

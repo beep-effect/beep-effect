@@ -43,8 +43,6 @@ export const AiSyncAgentId = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiSyncAgentId}.
- *
  * **Example** (Typing agent id string)
  *
  * ```ts
@@ -59,8 +57,6 @@ export const AiSyncAgentId = LiteralKit([
 export type AiSyncAgentId = typeof AiSyncAgentId.Type;
 
 /**
- * V1 configuration domains.
- *
  * **Example** (Logging mcp-servers domain enum)
  *
  * ```ts
@@ -91,8 +87,6 @@ export const AiSyncDomainId = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiSyncDomainId}.
- *
  * **Example** (Typing domain id string)
  *
  * ```ts
@@ -107,8 +101,6 @@ export const AiSyncDomainId = LiteralKit([
 export type AiSyncDomainId = typeof AiSyncDomainId.Type;
 
 /**
- * Source evidence tiers.
- *
  * **Example** (Logging tier_1 source enum)
  *
  * ```ts
@@ -126,8 +118,6 @@ export const AiSyncSourceTier = LiteralKit(["tier_1", "tier_2", "tier_3", "tier_
 );
 
 /**
- * Runtime type for {@link AiSyncSourceTier}.
- *
  * **Example** (Typing source tier string)
  *
  * ```ts
@@ -142,8 +132,6 @@ export const AiSyncSourceTier = LiteralKit(["tier_1", "tier_2", "tier_3", "tier_
 export type AiSyncSourceTier = typeof AiSyncSourceTier.Type;
 
 /**
- * Support state for an agent/domain cell.
- *
  * **Example** (Logging unknown_schema status)
  *
  * ```ts
@@ -161,8 +149,6 @@ export const AiSyncSupportStatus = LiteralKit(["supported", "na", "unknown_schem
 );
 
 /**
- * Runtime type for {@link AiSyncSupportStatus}.
- *
  * **Example** (Typing support status string)
  *
  * ```ts
@@ -203,8 +189,6 @@ export const AiSyncDriftMechanism = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiSyncDriftMechanism}.
- *
  * **Example** (Typing drift mechanism string)
  *
  * ```ts
@@ -219,8 +203,6 @@ export const AiSyncDriftMechanism = LiteralKit([
 export type AiSyncDriftMechanism = typeof AiSyncDriftMechanism.Type;
 
 /**
- * Transform proof status.
- *
  * **Example** (Logging lossless transform status)
  *
  * ```ts
@@ -238,8 +220,6 @@ export const AiSyncTransformStatus = LiteralKit(["lossless", "lossy", "declined"
 );
 
 /**
- * Runtime type for {@link AiSyncTransformStatus}.
- *
  * **Example** (Typing transform status string)
  *
  * ```ts
@@ -280,8 +260,6 @@ export const AiSyncSourceId = S.String.check(
 );
 
 /**
- * Runtime type for {@link AiSyncSourceId}.
- *
  * **Example** (Typing branded source id)
  *
  * ```ts
@@ -298,8 +276,6 @@ export const AiSyncSourceId = S.String.check(
 export type AiSyncSourceId = typeof AiSyncSourceId.Type;
 
 /**
- * HTTP(S) source URL.
- *
  * **Example** (Creating HTTPS source URL)
  *
  * ```ts
@@ -324,8 +300,6 @@ export const AiSyncSourceUrl = S.String.check(
 );
 
 /**
- * Runtime type for {@link AiSyncSourceUrl}.
- *
  * **Example** (Typing branded source URL)
  *
  * ```ts
@@ -342,8 +316,6 @@ export const AiSyncSourceUrl = S.String.check(
 export type AiSyncSourceUrl = typeof AiSyncSourceUrl.Type;
 
 /**
- * Upstream release or schema version pin.
- *
  * **Example** (Creating version pin value)
  *
  * ```ts
@@ -364,8 +336,6 @@ export const AiSyncVersionPin = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link AiSyncVersionPin}.
- *
  * **Example** (Typing branded version pin)
  *
  * ```ts
@@ -382,8 +352,6 @@ export const AiSyncVersionPin = S.NonEmptyString.pipe(
 export type AiSyncVersionPin = typeof AiSyncVersionPin.Type;
 
 /**
- * Source content SHA-256 hash.
- *
  * **Example** (Creating SHA-256 content hash)
  *
  * ```ts
@@ -405,8 +373,6 @@ export const AiSyncContentHash = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link AiSyncContentHash}.
- *
  * **Example** (Typing branded content hash)
  *
  * ```ts
@@ -442,8 +408,6 @@ class AiSyncSourceMetadataIdentity extends S.Opaque<AiSyncSourceMetadataIdentity
 ) {}
 
 /**
- * Metadata for one upstream source.
- *
  * **Example** (Building source metadata object)
  *
  * ```ts
@@ -509,8 +473,6 @@ export class AiSyncSourceMetadata extends S.Opaque<AiSyncSourceMetadata, { reado
 }
 
 /**
- * Support matrix cell.
- *
  * **Example** (Creating support matrix cell)
  *
  * ```ts
@@ -577,8 +539,6 @@ export class AiSyncDriftFinding extends S.Opaque<AiSyncDriftFinding, { readonly 
 ) {}
 
 /**
- * Validated repo-local config path.
- *
  * **Example** (Logging validated config path)
  *
  * ```ts
@@ -603,8 +563,6 @@ export const AiSyncValidatedConfigPath = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiSyncValidatedConfigPath}.
- *
  * **Example** (Typing validated config path)
  *
  * ```ts
@@ -620,8 +578,6 @@ export const AiSyncValidatedConfigPath = LiteralKit([
 export type AiSyncValidatedConfigPath = typeof AiSyncValidatedConfigPath.Type;
 
 /**
- * Validation schema identifiers.
- *
  * **Example** (Logging validation schema id)
  *
  * ```ts
@@ -645,8 +601,6 @@ export const AiSyncValidationSchemaId = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiSyncValidationSchemaId}.
- *
  * **Example** (Typing validation schema id)
  *
  * ```ts
@@ -662,8 +616,6 @@ export const AiSyncValidationSchemaId = LiteralKit([
 export type AiSyncValidationSchemaId = typeof AiSyncValidationSchemaId.Type;
 
 /**
- * Input for the repo config validation contract.
- *
  * **Example** (Building validation input object)
  *
  * ```ts
@@ -691,8 +643,6 @@ export class ValidateRepoConfigInput extends S.Opaque<ValidateRepoConfigInput, {
 ) {}
 
 /**
- * Drift check report.
- *
  * **Example** (Creating empty drift report)
  *
  * ```ts
@@ -752,8 +702,6 @@ export class AiSyncTransformEvidence extends S.Opaque<AiSyncTransformEvidence, {
 ) {}
 
 /**
- * Validation success record for a repo-local config file.
- *
  * **Example** (Creating validation result record)
  *
  * ```ts
@@ -780,8 +728,6 @@ export class AiSyncValidationResult extends S.Opaque<AiSyncValidationResult, { r
 ) {}
 
 /**
- * Typed AI sync operational error.
- *
  * **Example** (Creating typed sync error)
  *
  * ```ts
@@ -812,8 +758,6 @@ export class AiSyncError extends S.TaggedError<AiSyncError, { readonly brand: un
 ) {}
 
 /**
- * Schema contract for {@link validateRepoConfig}.
- *
  * **Example** (Inspecting input schema AST)
  *
  * ```ts
@@ -836,8 +780,6 @@ export const ValidateRepoConfig = Fn({
 );
 
 /**
- * Runtime type for {@link ValidateRepoConfig}.
- *
  * **Example** (Implementing validate function type)
  *
  * ```ts

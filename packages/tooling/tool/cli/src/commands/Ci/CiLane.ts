@@ -145,8 +145,6 @@ const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(valu
 export const CI_LANE_CLASS_VALUES = ["cli-runnable", "workflow-gated", "ci-native"] as const;
 
 /**
- * Parity class for a CI lane.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -165,8 +163,6 @@ export const CiLaneClass = LiteralKit(CI_LANE_CLASS_VALUES).pipe(
 );
 
 /**
- * Parity class for a CI lane.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -198,8 +194,6 @@ export type CiLaneClass = typeof CiLaneClass.Type;
 export const CI_LANE_REPLAY_VALUES = ["exact", "approximate", "none"] as const;
 
 /**
- * Local replay fidelity for a CI lane.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -218,8 +212,6 @@ export const CiLaneReplay = LiteralKit(CI_LANE_REPLAY_VALUES).pipe(
 );
 
 /**
- * Local replay fidelity for a CI lane.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -276,8 +268,6 @@ export const CI_LANE_ID_VALUES = [
 ] as const;
 
 /**
- * Runnable CI lane identifier.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -296,8 +286,6 @@ export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe(
 );
 
 /**
- * Runnable CI lane identifier.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -331,8 +319,6 @@ const isCiLaneId = S.is(CiLaneId);
 export const DOCGEN_LANE_MODE_VALUES = ["auto", "none", "affected", "full"] as const;
 
 /**
- * Docgen lane execution mode.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -351,8 +337,6 @@ export const DocgenLaneMode = LiteralKit(DOCGEN_LANE_MODE_VALUES).pipe(
 );
 
 /**
- * Docgen lane execution mode.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -374,8 +358,6 @@ const CiWorkflow = LiteralKit(["check", "heavy", "storybook"]).pipe(
 const ciLaneJobAliasesDefault: ReadonlyArray<string> = A.empty();
 
 /**
- * Machine-readable descriptor for a hosted workflow lane.
- *
  * **Details**
  *
  * The descriptors are the one map from a lane to the hosted jobs it reports
@@ -740,8 +722,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
 ];
 
 /**
- * Options accepted by {@link runCiLane}.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -962,8 +942,6 @@ const firstDuplicate = (values: ReadonlyArray<string>): O.Option<string> => {
 const NonNegativeTaskCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 /**
- * Proven intersection for one CI lane partition.
- *
  * **Example** (Inspect the selected task count)
  *
  * ```ts
@@ -1543,8 +1521,6 @@ export const ciLanePartitionStepForTesting = (request: CiLanePartitionStepReques
   );
 
 /**
- * Selection and execution argv used by a partitioned CI lane.
- *
  * **Example** (Inspect execution argv)
  *
  * ```ts
@@ -3607,8 +3583,6 @@ const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
 });
 
 /**
- * Resolved shape for planning the local battery's lane dispatch steps.
- *
  * **Example** (Configure a CI lane)
  *
  * ```ts

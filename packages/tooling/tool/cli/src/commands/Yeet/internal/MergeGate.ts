@@ -300,17 +300,12 @@ export const MergeGateCheckState = LiteralKit(["red", "pending", "shadowed"]).pi
 );
 
 /**
- * Whether a check that was not green at an S11 merge was red, still pending,
- * or shadowed.
- *
  * @category models
  * @since 0.0.0
  */
 export type MergeGateCheckState = typeof MergeGateCheckState.Type;
 
 /**
- * One check that was not green when an S11 (`--relaxed`) merge went through.
- *
  * **Details**
  *
  * `required` is membership in the base ruleset's contexts; `attribution` is
@@ -576,8 +571,6 @@ export const MergeGateHoldReason = LiteralKit([
 ]).pipe($I.annoteSchema("MergeGateHoldReason", { description: "The first unmet merge-gate criterion." }));
 
 /**
- * The first unmet merge-gate criterion.
- *
  * @category models
  * @since 0.0.0
  */
@@ -647,8 +640,6 @@ export class MergeGateMerge extends S.Opaque<MergeGateMerge, { readonly brand: u
 ) {}
 
 /**
- * The gate's verdict.
- *
  * **Example** (Check a decision)
  *
  * ```ts
@@ -667,8 +658,6 @@ export const MergeGateDecision = S.Union([MergeGateHold, MergeGateMerge]).pipe(
 );
 
 /**
- * Hold with a routed reason, or merge at a pinned head.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1778,8 +1767,6 @@ const executeMergeGateStack = Effect.fnUntraced(function* (
 });
 
 /**
- * Options for one `yeet merge-gate` run.
- *
  * **Details**
  *
  * `alone` (default false) lets a stack layer with an open layer above it merge

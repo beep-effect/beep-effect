@@ -83,8 +83,6 @@ export * from "./Skills.service.ts";
  */
 export * from "./SkillsLock.write.ts";
 /**
- * `skills materialize` report schemas.
- *
  * @category schemas
  * @since 0.0.0
  */

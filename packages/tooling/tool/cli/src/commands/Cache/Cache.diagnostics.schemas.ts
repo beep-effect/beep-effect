@@ -65,16 +65,12 @@ export const CacheDependencyDiagnosticCode = LiteralKit([
 );
 
 /**
- * Runtime type for {@link CacheDependencyDiagnosticCode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheDependencyDiagnosticCode = typeof CacheDependencyDiagnosticCode.Type;
 
 /**
- * A diagnostic refusal carrying only its fixed code.
- *
  * **Example** (Refuse with a fixed code)
  *
  * ```ts
@@ -169,16 +165,12 @@ export const CacheDependencyDiagnosticGroupRow = S.Tuple([
 );
 
 /**
- * Runtime type for {@link CacheDependencyDiagnosticGroupRow}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheDependencyDiagnosticGroupRow = typeof CacheDependencyDiagnosticGroupRow.Type;
 
 /**
- * Classification of one selected file by suffix.
- *
  * **Example** (Classify bytecode)
  *
  * ```ts
@@ -196,8 +188,6 @@ export const CacheDependencyDiagnosticFileKind = LiteralKit(["python-bytecode", 
 );
 
 /**
- * Runtime type for {@link CacheDependencyDiagnosticFileKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -228,8 +218,6 @@ export const CacheDependencyDiagnosticFileRow = S.Tuple([
 );
 
 /**
- * Runtime type for {@link CacheDependencyDiagnosticFileRow}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -299,8 +287,6 @@ export class CacheDependencyDiagnosticSnapshot extends S.Opaque<
 ) {}
 
 /**
- * The second pass, reduced to its digest and the groups that differ from the first.
- *
  * **Example** (Read the change count field)
  *
  * ```ts
@@ -380,8 +366,6 @@ export const CacheDependencyDiagnosticStatus = LiteralKit(["stable-match", "refu
 );
 
 /**
- * Runtime type for {@link CacheDependencyDiagnosticStatus}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -436,8 +420,6 @@ export class CacheDependencyDiagnosticReport extends S.Opaque<
 ) {}
 
 /**
- * A refused diagnostic, retaining only its fixed code.
- *
  * **Example** (Build a refusal report)
  *
  * ```ts

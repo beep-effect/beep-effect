@@ -159,17 +159,12 @@ export const HistoryCommitMessage = S.String.check(
 );
 
 /**
- * Decoded type of {@link HistoryCommitMessage}.
- *
  * @category models
  * @since 0.0.0
  */
 export type HistoryCommitMessage = typeof HistoryCommitMessage.Type;
 
 /**
- * The tracked commit-message map: full commit SHA on `main` to its corrected
- * conventional message.
- *
  * **Gotchas**
  *
  * A record whose key schema is refined treats a key that fails the
@@ -199,8 +194,6 @@ export const HistoryCommitMessageMap = S.Record(GitCommitSha, HistoryCommitMessa
 );
 
 /**
- * Decoded type of {@link HistoryCommitMessageMap}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -555,8 +548,6 @@ export const HistoryConfigChange = LiteralKit(["added", "present", "removed", "s
 );
 
 /**
- * Decoded type of {@link HistoryConfigChange}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -583,8 +574,6 @@ export const HistoryNotesFetchOutcome = LiteralKit(["fetched", "unpublished", "s
 );
 
 /**
- * Decoded type of {@link HistoryNotesFetchOutcome}.
- *
  * @category models
  * @since 0.0.0
  */

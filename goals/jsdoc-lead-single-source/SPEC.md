@@ -180,6 +180,14 @@ Lane fix/jsdoc-ratchet-restating-lead-main
 
 Reverse: Remove the 32 attributed leads in the last P1 sweep wave (PLAN.md: CI-closure and P5 runner packages last) and lower the baseline with jsdoc-ratchet --write-baseline
 
+### require-description accepts a lead derived from the export's annotation, 2026-11-23
+
+In `packages/tooling/*/*/src` the docs oxlint config runs `beep/require-description` under `--max-warnings=0`. Wave 3 showed it rejecting a type companion (`export type X = typeof X.Type`) whose only lead restated `X`'s `$I.annote*` description: removing the lead left a tags-only block. That is the same restatement the goal removes, so the rule now treats a declaration as described when docgen can derive its lead: it records every `annote`/`annoteSchema`/`annoteClass`/`annoteError`/`annoteHttp` call whose identifier names an enclosing variable or class and whose options carry a literal `description`, and at `Program:exit` it reports only the missing descriptions that no such annotation covers, by the declaration's own name or its enclosing namespace's. This mirrors `derivedLead` in `@beep/repo-utils/JSDoc/LeadSource` (annotated value, same-named type companion, namespace members). Fixture cases cover a companion type and namespace member, an annotated class, an annotation naming another export, and an annotation without a description.
+
+Lane goals/jsdoc-lead-single-source-w4
+
+Reverse: Drop the derived-lead exemption from beep/require-description in policy-pack lint-rules docs.ts and restore the leads the rule then reports
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

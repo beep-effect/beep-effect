@@ -20,8 +20,6 @@ import Handlebars from "handlebars";
 const $I = $RepoCliId.create("commands/CreatePackage/TemplateService");
 
 /**
- * Mapping between template source file and output file path.
- *
  * **Example** (Validate TemplateSpec with Schema)
  *
  * ```ts
@@ -47,8 +45,6 @@ export class TemplateSpec extends S.Opaque<TemplateSpec, { readonly brand: uniqu
 ) {}
 
 /**
- * Mapping between a verbatim template asset and its output file path.
- *
  * **Details**
  *
  * Assets are copied byte-for-byte rather than rendered, because some generated
@@ -82,8 +78,6 @@ export class StaticAssetSpec extends S.Opaque<StaticAssetSpec, { readonly brand:
 ) {}
 
 /**
- * Rendered template output.
- *
  * **Example** (Validate RenderedTemplate with Schema)
  *
  * ```ts
@@ -109,8 +103,6 @@ export class RenderedTemplate extends S.Opaque<RenderedTemplate, { readonly bran
 ) {}
 
 /**
- * Request payload for template rendering.
- *
  * **Example** (Validate TemplateRenderRequest with Schema)
  *
  * ```ts

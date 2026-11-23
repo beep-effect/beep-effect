@@ -52,8 +52,6 @@ export type ParsedCsvRecords = Array<ParsedCsvRecord> & {
 };
 
 /**
- * Raw fetched source with stable hash metadata.
- *
  * @category models
  * @since 0.0.0
  */

@@ -257,8 +257,6 @@ export class ConsumerInput extends S.Opaque<ConsumerInput, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link ConsumerInput}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -463,8 +461,6 @@ export class PackedManifest extends S.Opaque<PackedManifest, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link PackedManifest}.
- *
  * @category type-level
  * @since 0.0.0
  */

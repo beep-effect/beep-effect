@@ -89,8 +89,6 @@ const decodeEventLine = S.decodeUnknownEffect(EventLine);
 const encodeEventLine = S.encodeUnknownEffect(EventLine);
 
 /**
- * TCP port a collector may bind, including `0` for an ephemeral port.
- *
  * **Example** (Make ephemeral bind port)
  *
  * ```ts
@@ -134,8 +132,6 @@ export const CollectorBindPort = S.Int.check(
 );
 
 /**
- * TCP port a collector may bind, including `0` for an ephemeral port.
- *
  * **Example** (Type annotated bind port)
  *
  * ```ts
@@ -152,8 +148,6 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
 
 const collectorServeOptionsAllowedOriginsDefault = ["*"];
 /**
- * Options accepted by {@link Collector} `serve`.
- *
  * **Example** (Make collector serve options)
  *
  * ```ts

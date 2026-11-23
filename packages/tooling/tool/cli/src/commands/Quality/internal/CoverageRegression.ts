@@ -344,8 +344,6 @@ export class CoveragePackageBaseline extends S.Opaque<
 ) {}
 
 /**
- * Repository-wide minimum coverage percentages by metric.
- *
  * @category models
  * @since 0.0.0
  */
@@ -460,8 +458,6 @@ const baselineDecodeError = (cause: unknown): DomainError =>
   coverageConfigurationError(`Failed to parse ${coverageRegressionBaselinePath}.`, cause);
 
 /**
- * Vitest coverage-summary metric payload.
- *
  * @category models
  * @since 0.0.0
  */
@@ -502,8 +498,6 @@ const ValidVitestCoverageMetric = VitestCoverageMetric.check(
 );
 
 /**
- * Total coverage metrics from a Vitest coverage-summary.json file.
- *
  * @category models
  * @since 0.0.0
  */
@@ -727,8 +721,6 @@ const CoverageComparisonFailureFields = {
 };
 
 /**
- * One package or existing-file metric that dropped below its committed baseline.
- *
  * @category models
  * @since 0.0.0
  */
@@ -755,8 +747,6 @@ export class CoverageBaselineDropFailure extends S.Opaque<
 ) {}
 
 /**
- * A newly observed file with uncovered units and no prior file baseline identity.
- *
  * @category models
  * @since 0.0.0
  */
@@ -775,8 +765,6 @@ export class CoverageNewUncoveredFileFailure extends S.Opaque<
 ) {}
 
 /**
- * A baseline row this pull request raised above the base revision's row and beyond what the lane measured.
- *
  * @category models
  * @since 0.0.0
  */
@@ -949,9 +937,6 @@ export class CoverageMeasuredRowProposal extends S.Opaque<
 ) {}
 
 /**
- * Runtime schema for a tagged coverage regression caused by a baseline drop,
- * a newly uncovered file, or a row a pull request raised beyond reach.
- *
  * **Example** (Decode a baseline drop)
  *
  * ```ts
@@ -1739,8 +1724,6 @@ const coverageUnmeasuredPackageNames = (
 };
 
 /**
- * How one coverage baseline write treats measured and unmeasured rows.
- *
  * **Details**
  *
  * `replaceAll` adopts every package the run measured. `carryUnmeasured` marks a

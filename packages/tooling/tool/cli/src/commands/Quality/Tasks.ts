@@ -204,8 +204,6 @@ import type { GithubCheckLaneSpec, GithubCheckLaneWaveSpec, QualityConcurrencyPl
 
 export { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 /**
- * Public quality task error exports.
- *
  * @category errors
  * @since 0.0.0
  */

@@ -30,8 +30,6 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 const $I = $RepoConfigsId.create("cache/Cache.governance.policy");
 
 /**
- * Names the reviewer and the content-addressed basis for a state transition.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -90,8 +88,6 @@ export const CacheQualificationStatus = CacheQualificationState.toTaggedUnion("s
 export type CacheQualificationStatus = typeof CacheQualificationStatus.Type;
 
 /**
- * One explicit assessment; omitted census tuples remain unassessed.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -134,8 +130,6 @@ export class CacheQualificationEvent extends S.Opaque<CacheQualificationEvent, {
 ) {}
 
 /**
- * Single-writer reviewed qualification ledger with optimistic revision checking.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -162,8 +156,6 @@ export class CacheQualificationStore extends S.Opaque<CacheQualificationStore, {
 ) {}
 
 /**
- * Reviewed command and effective configuration for an executable computation.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -190,8 +182,6 @@ export class CachePolicyNode extends S.Opaque<CachePolicyNode, { readonly brand:
 ) {}
 
 /**
- * Configuration source digest retained for root and child drift attribution.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -212,8 +202,6 @@ export class CachePolicySource extends S.Opaque<CachePolicySource, { readonly br
 ) {}
 
 /**
- * Deterministic effective settings, independent of source-value task hashes.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -234,8 +222,6 @@ export class CachePolicyProjection extends S.Opaque<CachePolicyProjection, { rea
 ) {}
 
 /**
- * Workspace package that owns a computation, or the `//` root for root tasks and global settings.
- *
  * **Details**
  *
  * A subject is the review unit of the baseline: every reviewed record names the
@@ -331,8 +317,6 @@ export const cacheBaselineSubjects = (projection: CachePolicyProjection): Readon
   );
 
 /**
- * Explicitly reviewed legacy posture and the currently authorized implementation scope.
- *
  * **Details**
  *
  * `reviews` holds one deliberate review record per subject (see
@@ -367,8 +351,6 @@ export class CachePolicyBaseline extends S.Opaque<CachePolicyBaseline, { readonl
 ) {}
 
 /**
- * One reviewed re-record of the baseline: the review decision and the posture it authorizes.
- *
  * **Details**
  *
  * `subjects`, when present, names the subjects the reviewer deliberately
@@ -401,8 +383,6 @@ export class CachePolicyBaselineReview extends S.Opaque<CachePolicyBaselineRevie
 ) {}
 
 /**
- * Inputs to one baseline re-record: the committed baseline, the observed projection and the review.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -430,8 +410,6 @@ export class CachePolicyBaselineRecordRequest extends S.Opaque<
 ) {}
 
 /**
- * A recorded baseline with the subjects the new review stamped, carried forward or dropped.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -457,8 +435,6 @@ export class CachePolicyBaselineRecord extends S.Opaque<CachePolicyBaselineRecor
 ) {}
 
 /**
- * Why a baseline re-record was refused: changed subjects the review did not name, or named subjects that do not exist.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -482,8 +458,6 @@ export class CachePolicyBaselineRejection extends S.Opaque<
 ) {}
 
 /**
- * Inputs to the read-only audit for one named environment and epoch.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -543,8 +517,6 @@ export const CachePolicyFindingKind = LiteralKit([
 export type CachePolicyFindingKind = typeof CachePolicyFindingKind.Type;
 
 /**
- * An attributable policy finding with its enforcement severity.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts
@@ -565,8 +537,6 @@ export class CachePolicyFinding extends S.Opaque<CachePolicyFinding, { readonly 
 ) {}
 
 /**
- * Blocking findings and honest unassessed legacy population for an audit.
- *
  * **Example** (Inspect the policy contract)
  *
  * ```ts

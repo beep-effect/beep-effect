@@ -68,8 +68,6 @@ const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketEventStore");
 export const PACKET_EVENTS_SEGMENTS = ["ops", "events"] as const;
 
 /**
- * Identity of one packet stream on disk.
- *
  * **Example** (Construct a stream locator)
  *
  * ```ts
@@ -211,8 +209,6 @@ export const withPacketEventLock: {
 );
 
 /**
- * Result of reading one packet stream: verified events plus chain issues.
- *
  * **Example** (Construct an empty listing)
  *
  * ```ts

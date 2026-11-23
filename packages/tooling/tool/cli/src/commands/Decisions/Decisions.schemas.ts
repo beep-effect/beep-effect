@@ -92,16 +92,12 @@ export const CodeDecisionAnchor = S.String.check(
 );
 
 /**
- * Code decision anchor string.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CodeDecisionAnchor = typeof CodeDecisionAnchor.Type;
 
 /**
- * A lint rule that enforces a decision: `lint:<rule>`.
- *
  * **Example** (Validate a lint enforcer)
  *
  * ```ts
@@ -161,8 +157,6 @@ export const CodeDecisionTestEnforcer = S.String.check(
 );
 
 /**
- * Either enforcer form of a code decision.
- *
  * **Details**
  *
  * An enforcer is written only after the stated reversal was made in a scratch
@@ -190,8 +184,6 @@ export const CodeDecisionEnforcer = S.Union([CodeDecisionLintEnforcer, CodeDecis
 );
 
 /**
- * Code decision enforcer string.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -250,8 +242,6 @@ export const CodeDecisionBody = S.String.check(
 );
 
 /**
- * YAML frontmatter of a package code-decision file.
- *
  * **Details**
  *
  * `title`, `date` and `reversal` follow the goal-decision grammar;
@@ -296,8 +286,6 @@ export class CodeDecisionFrontmatter extends S.Opaque<CodeDecisionFrontmatter, {
 ) {}
 
 /**
- * Namespace for {@link CodeDecisionFrontmatter} companion types.
- *
  * **Example** (Name the encoded type)
  *
  * ```ts
@@ -327,8 +315,6 @@ export declare namespace CodeDecisionFrontmatter {
 }
 
 /**
- * One parsed code-decision file.
- *
  * **Details**
  *
  * `file` is repository-relative; `packageRoot` is the repository-relative
@@ -406,8 +392,6 @@ export const CodeDecisionProblemKind = LiteralKit([
 );
 
 /**
- * Code decision problem kind literal.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -445,8 +429,6 @@ export class CodeDecisionProblem extends S.Opaque<CodeDecisionProblem, { readonl
 ) {}
 
 /**
- * The result of `beep decisions check`.
- *
  * **Details**
  *
  * `decisions` counts the files that decode; `unenforced` counts those with an

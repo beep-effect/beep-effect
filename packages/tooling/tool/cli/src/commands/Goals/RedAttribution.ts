@@ -51,8 +51,6 @@ import type { GoalDecision } from "./Decisions.schemas.ts";
 const $I = $RepoCliId.create("commands/Goals/RedAttribution");
 
 /**
- * Which decision files a read of completion claims collects.
- *
  * **Details**
  *
  * - `checkout`: `origin/main`, the checkout's `HEAD` commit and its working
@@ -80,8 +78,6 @@ export const GoalClaimScope = LiteralKit(["checkout", "origin-main"]).pipe(
 );
 
 /**
- * Which decision files a read of completion claims collects.
- *
  * @category type-level
  * @since 0.0.0
  */

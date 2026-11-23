@@ -63,8 +63,6 @@ export const GOALS_DIR = "goals";
 export const TEMPLATE_SLUG = "_template";
 
 /**
- * One scanned goal-packet directory with its raw surface texts.
- *
  * **Details**
  *
  * `manifestText` and `readmeText` are absent when the file does not exist, and `goalMdChars` is

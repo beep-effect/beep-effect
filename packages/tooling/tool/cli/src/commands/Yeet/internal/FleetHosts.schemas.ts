@@ -21,8 +21,6 @@ import { HostLabel } from "../../../internal/github/GithubLedger.schemas.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/FleetHosts.schemas");
 
 /**
- * The existing ordinary workstation SSH wrappers a fleet-host read may use.
- *
  * **Details**
  *
  * These are the routes `.claude/skills/remote-development-agents/references/hosts.md`
@@ -55,8 +53,6 @@ export const FleetHostRoute = LiteralKit([
 );
 
 /**
- * An existing workstation SSH wrapper; see {@link FleetHostRoute}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -67,8 +63,6 @@ export type FleetHostRoute = typeof FleetHostRoute.Type;
 const HOME_RELATIVE_ROOT = /^[A-Za-z0-9_][A-Za-z0-9._-]*(?:\/[A-Za-z0-9_][A-Za-z0-9._-]*)*$/u;
 
 /**
- * A directory on a fleet host, relative to that host's home directory.
- *
  * **Details**
  *
  * A remote command starts in the login's home directory, so a root such as
@@ -112,8 +106,6 @@ export const FleetHostRoot = S.String.check(
 );
 
 /**
- * A home-relative fleet host directory; see {@link FleetHostRoot}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -170,8 +162,6 @@ const hasDistinctHosts = (hosts: ReadonlyArray<FleetHostEntry>): boolean =>
   A.length(A.dedupe(A.map(hosts, (entry) => entry.host))) === A.length(hosts);
 
 /**
- * The authored `hosts.json` document: the fleet hosts economics may read.
- *
  * **Details**
  *
  * Host labels are distinct, so no host is read, or counted, twice.
@@ -213,8 +203,6 @@ export class FleetHostsDocument extends S.Opaque<FleetHostsDocument, { readonly 
 ) {}
 
 /**
- * How one fleet host's read ended.
- *
  * **Details**
  *
  * - `read`: the read command exited 0.
@@ -240,16 +228,12 @@ export const FleetHostReadStatus = LiteralKit(["read", "partial", "unreachable"]
 );
 
 /**
- * How one fleet host's read ended; see {@link FleetHostReadStatus}.
- *
  * @category models
  * @since 0.0.0
  */
 export type FleetHostReadStatus = typeof FleetHostReadStatus.Type;
 
 /**
- * Why a fleet host read nothing.
- *
  * **Details**
  *
  * - `timeout`: the wrapper did not finish in time (a YubiKey touch not given,
@@ -288,8 +272,6 @@ export const FleetHostUnreachableReason = LiteralKit([
 );
 
 /**
- * Why a fleet host read nothing; see {@link FleetHostUnreachableReason}.
- *
  * @category models
  * @since 0.0.0
  */

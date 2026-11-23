@@ -189,8 +189,6 @@ export const SequenceBreakNotificationStage = LiteralKit(["initial", "reminder",
 );
 
 /**
- * Decoded escalation stage.
- *
  * @see {@link SequenceBreakNotificationStage} for the runtime schema and escalation stages.
  * @category type-level
  * @since 0.0.0
@@ -218,8 +216,6 @@ export const SequenceBreakNotificationTransport = LiteralKit(["desktop", "ntfy"]
 );
 
 /**
- * Decoded sequence-break delivery transport.
- *
  * @see {@link SequenceBreakNotificationTransport} for the runtime schema and delivery channels.
  * @category type-level
  * @since 0.0.0
@@ -298,8 +294,6 @@ export const SequenceBreakDeliveryFailureReason = LiteralKit([
 export type SequenceBreakDeliveryFailureReason = typeof SequenceBreakDeliveryFailureReason.Type;
 
 /**
- * A notification transport accepted the content-free delivery request.
- *
  * **Example** (Record a delivered notification)
  *
  * ```ts
@@ -322,8 +316,6 @@ export class SequenceBreakDeliverySent extends S.Opaque<SequenceBreakDeliverySen
 ) {}
 
 /**
- * A notification transport was deliberately skipped for a bounded operational reason.
- *
  * **Example** (Skip delivery while the storm damper is engaged)
  *
  * ```ts
@@ -352,8 +344,6 @@ export class SequenceBreakDeliverySkipped extends S.Opaque<
 ) {}
 
 /**
- * A notification transport failed without retaining response or command content.
- *
  * **Example** (Record a transport timeout without its output)
  *
  * ```ts
@@ -510,8 +500,6 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1, { re
 }
 
 /**
- * Privacy-safe evidence for one sequence-break delivery decision.
- *
  * **Details**
  *
  * The schema has no prompt, command, tool-argument, tool-result, message, path,

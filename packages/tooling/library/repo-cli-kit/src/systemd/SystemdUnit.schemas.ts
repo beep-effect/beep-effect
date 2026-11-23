@@ -139,8 +139,6 @@ export class SystemdUnitDirective extends S.Opaque<SystemdUnitDirective, { reado
 ) {}
 
 /**
- * An installed unit file as the CLI reads it back: its name and directives in file order.
- *
  * **Details**
  *
  * A timer installer records everything a refresh needs (`WorkingDirectory`,

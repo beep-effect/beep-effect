@@ -97,8 +97,6 @@ export const AiMetricsHashSaltStatus = LiteralKit(["provided", "insecure_default
 );
 
 /**
- * Runtime type for {@link AiMetricsHashSaltStatus}.
- *
  * **Example** (Assign provided status type)
  *
  * ```ts
@@ -310,8 +308,6 @@ export class AiMetricsPrivacyCheckResult extends S.Opaque<
 ) {}
 
 /**
- * Error raised by AI metrics privacy helpers.
- *
  * **Example** (Make privacy error)
  *
  * ```ts

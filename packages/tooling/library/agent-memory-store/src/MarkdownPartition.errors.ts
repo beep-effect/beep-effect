@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $AgentMemoryStoreId.create("MarkdownPartition.errors");
 
 /**
- * A node replacement names a run outside the partition it is checked against.
- *
  * **Details**
  *
  * Raised by `checkReplacement` when `start > end` or `end` is past the last

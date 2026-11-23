@@ -116,8 +116,6 @@ export const YeetInboxSeverity = LiteralKit(["P0", "P1", "P2"]).pipe(
 export type YeetInboxSeverity = typeof YeetInboxSeverity.Type;
 
 /**
- * One hosted check failure, described by the failing check's own record.
- *
  * **Details**
  *
  * Everything here comes from the failing check's `gh pr checks` row and the
@@ -168,8 +166,6 @@ export class YeetFailureCapsule extends S.Opaque<YeetFailureCapsule, { readonly 
 ) {}
 
 /**
- * One `check-failed` inbox row: a failure capsule plus routing metadata.
- *
  * **Details**
  *
  * `id` is deterministic over the capsule's (prNumber, headSha, lane) via
@@ -228,8 +224,6 @@ export class YeetCheckFailedRow extends S.Opaque<YeetCheckFailedRow, { readonly 
 ) {}
 
 /**
- * Paths simultaneously claimed by this checkout and a sibling checkout.
- *
  * **Example** (Describe a collision)
  *
  * ```ts
@@ -262,8 +256,6 @@ export class YeetSiblingCollisionCapsule extends S.Opaque<
 ) {}
 
 /**
- * One P0 sibling-checkout collision delivered to the owning checkout.
- *
  * **Example** (Build a collision row)
  *
  * ```ts
@@ -301,8 +293,6 @@ export class YeetSiblingCollisionRow extends S.Opaque<YeetSiblingCollisionRow, {
 ) {}
 
 /**
- * One unresolved review thread observed on the current pull request head.
- *
  * **Example** (Describe a review thread)
  *
  * ```ts
@@ -331,8 +321,6 @@ export class YeetReviewThreadCapsule extends S.Opaque<YeetReviewThreadCapsule, {
 ) {}
 
 /**
- * One P1 review-thread row injected as repair context without denying tools.
- *
  * **Example** (Build a review-thread row)
  *
  * ```ts
@@ -365,8 +353,6 @@ export class YeetReviewThreadRow extends S.Opaque<YeetReviewThreadRow, { readonl
 ) {}
 
 /**
- * Base drift observed for the current pull request head.
- *
  * **Example** (Describe base drift)
  *
  * ```ts
@@ -392,8 +378,6 @@ export class YeetBaseDriftCapsule extends S.Opaque<YeetBaseDriftCapsule, { reado
 ) {}
 
 /**
- * One P2 base-drift row surfaced only at session start.
- *
  * **Example** (Build a base-drift row)
  *
  * ```ts
@@ -426,8 +410,6 @@ export class YeetBaseDriftRow extends S.Opaque<YeetBaseDriftRow, { readonly bran
 ) {}
 
 /**
- * A pull request head that no longer merges into its base.
- *
  * **Details**
  *
  * The merge loop reads the conflict with `yeetBaseConflictFor` from the pull
@@ -537,8 +519,6 @@ export class YeetBaseConflictRow extends S.Opaque<YeetBaseConflictRow, { readonl
 ) {}
 
 /**
- * Which GitHub collection a pull request comment row came from.
- *
  * **Details**
  *
  * `issue` is a conversation comment and `review-body` is the prose a reviewer
@@ -566,17 +546,12 @@ export const YeetPrCommentSource = LiteralKit(["issue", "review-body"]).pipe(
 );
 
 /**
- * Which GitHub collection a pull request comment row came from.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetPrCommentSource = typeof YeetPrCommentSource.Type;
 
 /**
- * One top-level pull request comment from a person other than the acting
- * login, or a bot review body whose findings no review thread carries.
- *
  * **Details**
  *
  * `excerpt` is a bounded, whitespace-collapsed copy of the body (about 200
@@ -625,8 +600,6 @@ export class YeetPrCommentCapsule extends S.Opaque<YeetPrCommentCapsule, { reado
 ) {}
 
 /**
- * One P1 pull request comment row, injected as context without denying tools.
- *
  * **Details**
  *
  * The `--until-ready` merge loop appends one per qualifying comment: a
@@ -676,8 +649,6 @@ export class YeetPrCommentRow extends S.Opaque<YeetPrCommentRow, { readonly bran
 ) {}
 
 /**
- * One named local proof shard that exited unsuccessfully.
- *
  * **Example** (Describe a local shard failure)
  *
  * ```ts
@@ -709,8 +680,6 @@ export class YeetLocalShardFailureCapsule extends S.Opaque<
 ) {}
 
 /**
- * One P0 local-shard poison pill inherited by every session in the checkout.
- *
  * **Example** (Build a local poison row)
  *
  * ```ts
@@ -845,8 +814,6 @@ export class YeetPrMergeReadyRow extends S.Opaque<YeetPrMergeReadyRow, { readonl
 ) {}
 
 /**
- * One informational result from a detached proof job.
- *
  * **Example** (Reference the row schema)
  * ```ts
  * import { YeetProofJobFinishedRow } from "@beep/repo-cli/test/Yeet"
@@ -893,8 +860,6 @@ export class YeetProofJobFinishedRow extends S.Opaque<YeetProofJobFinishedRow, {
 export const yeetProofJobRowId = (capsule: Pick<YeetProofJobCapsule, "jobId">): string => `proof-job-${capsule.jobId}`;
 
 /**
- * One row of the checkout inbox.
- *
  * **Details**
  *
  * Every member carries `schemaVersion`, a discriminating `kind`, a
@@ -924,8 +889,6 @@ export const YeetInboxRow = S.Union([
 );
 
 /**
- * One row of the checkout inbox.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -960,8 +923,6 @@ export const YeetInboxObservedRowKind = LiteralKit(["proof-job-finished", "pr-me
 );
 
 /**
- * The inbox row kinds acknowledged by observation.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1094,8 +1055,6 @@ export const yeetInboxRowIsWaveExempt = (
   isYeetInboxWaveExemptRowKind(row.kind);
 
 /**
- * The P1 inbox row kinds that wake a waiter.
- *
  * **Details**
  *
  * A waiter is `yeet job wait` on a monitor job, or an attached
@@ -1130,8 +1089,6 @@ export const YeetInboxP1WakeRowKind = LiteralKit(["review-thread", "pr-comment"]
 );
 
 /**
- * The P1 inbox row kinds that wake a waiter.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -425,8 +425,6 @@ export const LaneProofRefusalReason = LiteralKit([
 );
 
 /**
- * Type of {@link LaneProofRefusalReason}.
- *
  * @category models
  */
 export type LaneProofRefusalReason = typeof LaneProofRefusalReason.Type;

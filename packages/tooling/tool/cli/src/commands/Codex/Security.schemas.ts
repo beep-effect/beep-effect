@@ -140,8 +140,6 @@ export const RepoRelativePath = S.String.check(
   )
 ).pipe($I.annoteSchema("RepoRelativePath", { description: "Bounded relative path beneath a repository root." }));
 /**
- * Repository-relative path string.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -400,8 +398,6 @@ export const SecurityScanMode = LiteralKit(["preflight", "scan"]).pipe(
   $I.annoteSchema("SecurityScanMode", { description: "Dry-run preflight versus a budgeted scan." })
 );
 /**
- * Scan mode literal.
- *
  * @category type-level
  * @since 0.0.0
  */

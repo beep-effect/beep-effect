@@ -46,8 +46,6 @@ export const JSONC_FORMATTING_OPTIONS: JsoncFormattingOptionsLike = {
 };
 
 /**
- * A comment-preserving JSONC modification request.
- *
  * **Details**
  *
  * `path` is a `@beep/jsonc` path (string keys and natural-number indices);

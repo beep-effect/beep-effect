@@ -29,8 +29,6 @@ const optionalNodeId = S.OptionFromOptionalKey(NodeId).pipe(
 );
 
 /**
- * Failure reading or appending the memory log.
- *
  * **Example** (Wrap a journal failure)
  *
  * ```ts
@@ -113,8 +111,6 @@ export class AdmissionError extends S.TaggedError<AdmissionError, { readonly bra
 }
 
 /**
- * Failure importing, exporting or projecting Markdown memory files.
- *
  * **Example** (Wrap a projection failure)
  *
  * ```ts
@@ -161,8 +157,6 @@ export class ProjectionError extends S.TaggedError<ProjectionError, { readonly b
 }
 
 /**
- * Failure running a recall or one of its stages.
- *
  * **Example** (Wrap a recall failure)
  *
  * ```ts
@@ -201,8 +195,6 @@ export class RecallError extends S.TaggedError<RecallError, { readonly brand: un
 }
 
 /**
- * Failure rebuilding or querying a Layer 2 index projection.
- *
  * **Details**
  *
  * Raised by every `MemoryIndexes` method. A rebuild failure is a projection
@@ -249,8 +241,6 @@ export class MemoryIndexError extends S.TaggedError<MemoryIndexError, { readonly
 }
 
 /**
- * Refusal to append a node event whose parents are not the node's heads.
- *
  * **Details**
  *
  * This is the per-node compare-and-set of the memory log, not an I/O failure.
@@ -292,8 +282,6 @@ export class StaleParentsError extends S.TaggedError<StaleParentsError, { readon
 ) {}
 
 /**
- * Refusal to resolve a hold the log does not hold open.
- *
  * **Details**
  *
  * A `HoldResolved` event lands only while the log holds an unresolved
@@ -327,9 +315,6 @@ export class HoldNotOpenError extends S.TaggedError<HoldNotOpenError, { readonly
 ) {}
 
 /**
- * Refusal to append a `NodeCreated` whose predecessor is not a node of the
- * same file.
- *
  * **Details**
  *
  * Like the per-node compare-and-set, this is checked inside the journal's
@@ -377,8 +362,6 @@ export class UnplacedNodeError extends S.TaggedError<UnplacedNodeError, { readon
 ) {}
 
 /**
- * Refusal to append a second `FolderImported` to a log that already holds one.
- *
  * **Details**
  *
  * Decision `second-import-is-idempotent-on-a-projected-folder`: one log holds
@@ -419,8 +402,6 @@ export class FolderAlreadyImportedError extends S.TaggedError<
 ) {}
 
 /**
- * Refusal to project over a memory folder the log has not imported (AC-8).
- *
  * **Details**
  *
  * This is a typed refusal, not an I/O failure. `exportFolder` raises it when
@@ -468,8 +449,6 @@ export class UnimportedFolderError extends S.TaggedError<UnimportedFolderError, 
 ) {}
 
 /**
- * Refusal to import a folder into a log that already holds a different one.
- *
  * **Details**
  *
  * One log holds one memory folder (decision
@@ -509,8 +488,6 @@ export class ForeignFolderError extends S.TaggedError<ForeignFolderError, { read
 ) {}
 
 /**
- * Refusal to return a node edit that changes how other nodes of its file parse.
- *
  * **Details**
  *
  * `projectNode` runs the reparse check on every edit (decision
@@ -552,8 +529,6 @@ export class ReparseRefusedError extends S.TaggedError<ReparseRefusedError, { re
 ) {}
 
 /**
- * Failure recording or counting observations.
- *
  * **Example** (Wrap an observation failure)
  *
  * ```ts
@@ -594,8 +569,6 @@ export class ObservationError extends S.TaggedError<ObservationError, { readonly
 }
 
 /**
- * Failure resolving a code symbol against a SCIP index.
- *
  * **Example** (Wrap a resolution failure)
  *
  * ```ts

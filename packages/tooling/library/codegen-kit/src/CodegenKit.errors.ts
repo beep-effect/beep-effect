@@ -16,8 +16,6 @@ const FailureFields = {
 };
 
 /**
- * Reading or refreshing a pinned source document failed.
- *
  * **Example** (Create a source failure)
  *
  * ```ts
@@ -41,8 +39,6 @@ export class CodegenFetchError extends S.TaggedError<CodegenFetchError, { readon
 ) {}
 
 /**
- * Applying configured JSON Patch documents failed.
- *
  * **Example** (Create a patch failure)
  *
  * ```ts
@@ -66,8 +62,6 @@ export class CodegenPatchError extends S.TaggedError<CodegenPatchError, { readon
 ) {}
 
 /**
- * The upstream generator could not emit TypeScript from the document.
- *
  * **Example** (Create a generation failure)
  *
  * ```ts
@@ -91,8 +85,6 @@ export class CodegenGenerateError extends S.TaggedError<CodegenGenerateError, { 
 ) {}
 
 /**
- * Generated TypeScript did not match the post-processor contract.
- *
  * **Example** (Create a post-processing failure)
  *
  * ```ts
@@ -116,8 +108,6 @@ export class CodegenPostProcessError extends S.TaggedError<CodegenPostProcessErr
 ) {}
 
 /**
- * The pinned Biome formatter failed for a generated artifact.
- *
  * **Example** (Create a formatting failure)
  *
  * ```ts
@@ -141,8 +131,6 @@ export class CodegenFormatError extends S.TaggedError<CodegenFormatError, { read
 ) {}
 
 /**
- * Check mode found generated output that is absent or out of date.
- *
  * **Example** (Create a drift failure)
  *
  * ```ts
@@ -172,8 +160,6 @@ export class CodegenDriftError extends S.TaggedError<CodegenDriftError, { readon
 ) {}
 
 /**
- * A registered JSON Schema transform met a schema shape it cannot rewrite faithfully.
- *
  * **Details**
  *
  * Transforms run inside the generator's `onEnter` hook, so the generator wraps this failure as the

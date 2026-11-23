@@ -235,8 +235,6 @@ export class RunnerLossHead extends S.Opaque<RunnerLossHead, { readonly brand: u
 
 const runnerLossRunPullRequestsDefault = A.empty<number>();
 /**
- * The fields of a workflow run the rerun decision reads.
- *
  * **Details**
  *
  * Decoded from `gh api repos/{owner}/{repo}/actions/runs/<id>` through a
@@ -329,8 +327,6 @@ export class RunnerLossFailedJob extends S.Opaque<RunnerLossFailedJob, { readonl
 ) {}
 
 /**
- * Everything the rerun decision reads.
- *
  * **Details**
  *
  * `attempt` is the attempt whose jobs were read; it equals `run.run_attempt`
@@ -386,8 +382,6 @@ export class RunnerLossRerunInput extends S.Opaque<RunnerLossRerunInput, { reado
 ) {}
 
 /**
- * The rerun decision for one workflow-run attempt.
- *
  * **Details**
  *
  * `rerun` is true only for reason `runner-loss`, and then `rerunJob` is the
@@ -436,8 +430,6 @@ export class RunnerLossRerunDecision extends S.Opaque<RunnerLossRerunDecision, {
 ) {}
 
 /**
- * A decision together with whether its rerun was only reported.
- *
  * **Example** (A dry run)
  *
  * ```ts

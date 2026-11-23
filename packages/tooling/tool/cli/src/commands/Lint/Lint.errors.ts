@@ -103,9 +103,6 @@ export class LintFileDiscoveryError extends S.TaggedError<LintFileDiscoveryError
 }
 
 /**
- * Failure raised when the test-typecheck blind-spot baseline cannot be read,
- * decoded, or rewritten.
- *
  * **Example** (Create baseline error from cause)
  *
  * ```ts
@@ -150,8 +147,6 @@ export class TestTypecheckBaselineError extends S.TaggedError<
 }
 
 /**
- * Failure raised when the schema-first inventory cannot be read or decoded.
- *
  * **Example** (Create inventory read error)
  *
  * ```ts
@@ -185,9 +180,6 @@ export class SchemaFirstInventoryReadError extends S.TaggedError<
 }
 
 /**
- * Failure raised when a `tsconfig.check.json` overlay cannot be read or parsed
- * as a JSONC object.
- *
  * **Example** (Create overlay read error from cause)
  *
  * ```ts
@@ -530,8 +522,6 @@ export class SchemaParityCodemodError extends S.TaggedError<
 }
 
 /**
- * TypeScript assignment could not be proved for the deprecated-API worker.
- *
  * **Example** (Report an unassigned script)
  *
  * ```ts

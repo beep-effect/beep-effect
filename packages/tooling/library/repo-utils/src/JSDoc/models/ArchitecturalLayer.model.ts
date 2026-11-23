@@ -11,10 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $RepoUtilsId.create("JSDoc/models/ArchitecturalLayer.model");
 
 /**
- * Architectural layer mappings across established patterns.
- * Enables cross-framework queries such as "show me all code in the
- * domain core that depends on infrastructure".
- *
  * **Example** (Assert domain entity layer)
  *
  * ```ts
@@ -44,8 +40,6 @@ export const ArchitecturalLayer = LiteralKit([
 );
 
 /**
- * Inferred type for {@link ArchitecturalLayer}.
- *
  * **Example** (Constrain generic parameter)
  *
  * ```ts

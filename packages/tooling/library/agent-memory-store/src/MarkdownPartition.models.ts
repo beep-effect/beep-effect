@@ -16,9 +16,6 @@ import { NodeKind } from "./NodeIdentity.models.ts";
 const $I = $AgentMemoryStoreId.create("MarkdownPartition.models");
 
 /**
- * One node of a memory file partition: its kind, its exact text and its range
- * in the file.
- *
  * **Details**
  *
  * `range` counts UTF-16 code units from the start of the file, the unit
@@ -60,8 +57,6 @@ export class PartitionNode extends S.Opaque<PartitionNode, { readonly brand: uni
 ) {}
 
 /**
- * How much of a file the partition had to cut coarser than the node model.
- *
  * **Details**
  *
  * - `none`: every block was cut at row and list-item granularity.
@@ -90,16 +85,12 @@ export const PartitionFallback = LiteralKit(["none", "block", "file", "unparsed"
 );
 
 /**
- * Runtime type for {@link PartitionFallback}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PartitionFallback = typeof PartitionFallback.Type;
 
 /**
- * The ordered node partition of one memory file.
- *
  * **Details**
  *
  * Decision `file-is-an-ordered-node-partition`: every UTF-16 code unit of the
@@ -132,8 +123,6 @@ export class MarkdownPartition extends S.Opaque<MarkdownPartition, { readonly br
 ) {}
 
 /**
- * A proposed replacement of a run of partition nodes by new text.
- *
  * **Details**
  *
  * `start` and `end` are node indices into a {@link MarkdownPartition}, `end`
@@ -165,8 +154,6 @@ export class NodeReplacement extends S.Opaque<NodeReplacement, { readonly brand:
 ) {}
 
 /**
- * Result of re-partitioning a file after a proposed node replacement.
- *
  * **Details**
  *
  * The check compares each node outside the replaced run by kind and text with

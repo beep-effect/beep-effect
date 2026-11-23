@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("internal/repo-run/ComputeProfile.schemas");
 
 /**
- * Memory class of the host a `beep` process runs on.
- *
  * **Details**
  *
  * `worker` means the process memory ceiling is below the admission envelope
@@ -44,8 +42,6 @@ export const ComputeProfile = LiteralKit(["workstation", "worker"]).pipe(
 );
 
 /**
- * Memory class of the host a `beep` process runs on.
- *
  * @category models
  * @since 0.0.0
  */
@@ -124,8 +120,6 @@ export class ComputeProfileResolution extends S.Opaque<ComputeProfileResolution,
 ) {}
 
 /**
- * Encoded form of {@link ComputeProfileResolution}.
- *
  * @category models
  * @since 0.0.0
  */

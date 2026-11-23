@@ -23,8 +23,6 @@ import type { SourceFile } from "ts-morph";
 const $I = $RepoUtilsId.create("JSDoc/JSDocSections");
 
 /**
- * Models one raw JSDoc block and its exact source offsets.
- *
  * **Example** (Create a raw span)
  *
  * ```ts
@@ -495,8 +493,6 @@ export class ParseJSDocSectionsOptions extends S.Opaque<ParseJSDocSectionsOption
 ) {}
 
 /**
- * Captures unfenced JSDoc body lines and their parsed canonical sections.
- *
  * **Example** (Create an empty parse result)
  *
  * ```ts

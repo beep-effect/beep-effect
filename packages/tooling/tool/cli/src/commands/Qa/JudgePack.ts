@@ -139,8 +139,6 @@ export const JudgeEvidenceKind = LiteralKit(["frame", "screenshot", "sheet"]).pi
 export type JudgeEvidenceKind = typeof JudgeEvidenceKind.Type;
 
 /**
- * One file the judge is instructed to open.
- *
  * **Example** (Usage)
  * ```ts
  * import { JudgeEvidenceFile } from "@beep/repo-cli/commands/Qa/JudgePack"
@@ -182,8 +180,6 @@ export class JudgeEvidenceFile extends S.Opaque<
 ) {}
 
 /**
- * One file omitted from the bundle, with the budget rule that omitted it.
- *
  * **Example** (Usage)
  * ```ts
  * import { JudgeDroppedFile } from "@beep/repo-cli/commands/Qa/JudgePack"
@@ -320,8 +316,6 @@ export class JudgePromptValues extends S.Opaque<
 ) {}
 
 /**
- * The exact evidence set handed to one judge run.
- *
  * **Example** (Usage)
  * ```ts
  * import { JudgeManifest } from "@beep/repo-cli/commands/Qa/JudgePack"

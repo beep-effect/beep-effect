@@ -75,8 +75,6 @@ export const UnsafeWorkspacePatternReason = LiteralKit(["empty", "absolute", "pa
 );
 
 /**
- * The literal type of {@link UnsafeWorkspacePatternReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -347,8 +345,6 @@ export const workspaceDirectories = Effect.fn("RepoWorkspaces.workspaceDirectori
 });
 
 /**
- * A workspace member's real directory and its strictly decoded manifest.
- *
  * **Details**
  *
  * The manifest's `scripts` field is a `HashMap` that defaults to empty, so

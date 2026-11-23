@@ -13,8 +13,6 @@ import { MediaKind } from "./Media.schemas.ts";
 const $I = $RepoCliId.create("commands/Files/internal/StripMetadata.schemas");
 
 /**
- * Image extension schema supported by metadata stripping.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts
@@ -34,8 +32,6 @@ export const SupportedMetadataImageExtension = LiteralKit(["avif", "jpeg", "jpg"
 );
 
 /**
- * Image extension supported by metadata stripping.
- *
  * @category models
  * @since 0.0.0
  */
@@ -108,8 +104,6 @@ export class StripMetadataSummary extends S.Opaque<StripMetadataSummary, { reado
 ) {}
 
 /**
- * Planned metadata stripping entries plus skipped file counts.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts

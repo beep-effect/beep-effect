@@ -15,8 +15,6 @@ const $I = $RepoAiMetricsId.create("models");
 const OptionalTranscriptString = S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone));
 
 /**
- * Numeric count returned by aggregate DuckDB queries.
- *
  * **Example** (Decode a count row)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const AiMetricsDeployTarget = LiteralKit(["local", "dankserver"]).pipe(
 );
 
 /**
- * Runtime type for {@link AiMetricsDeployTarget}.
- *
  * **Example** (Assign local deploy target)
  *
  * ```ts
@@ -91,8 +87,6 @@ export const AiMetricsTool = LiteralKit(["langfuse", "phoenix", "opik", "posthog
 );
 
 /**
- * Runtime type for {@link AiMetricsTool}.
- *
  * **Example** (Assign phoenix tool type)
  *
  * ```ts
@@ -126,8 +120,6 @@ export const AiMetricsTranscriptSource = LiteralKit(["codex", "claude", "opencla
 );
 
 /**
- * Runtime type for {@link AiMetricsTranscriptSource}.
- *
  * **Example** (Assign codex source type)
  *
  * ```ts
@@ -169,16 +161,12 @@ export const AiMetricsCoverageGap = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiMetricsCoverageGap}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsCoverageGap = typeof AiMetricsCoverageGap.Type;
 
 /**
- * Event names accepted from Codex transcript records.
- *
  * **Example** (Read a Codex event name)
  *
  * ```ts
@@ -205,16 +193,12 @@ export const CodexTranscriptEventName = LiteralKit([
 );
 
 /**
- * Runtime type for {@link CodexTranscriptEventName}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CodexTranscriptEventName = typeof CodexTranscriptEventName.Type;
 
 /**
- * Event names accepted from Claude transcript records.
- *
  * **Example** (Read a Claude event name)
  *
  * ```ts
@@ -241,16 +225,12 @@ export const ClaudeTranscriptEventName = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ClaudeTranscriptEventName}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ClaudeTranscriptEventName = typeof ClaudeTranscriptEventName.Type;
 
 /**
- * Event names accepted from OpenClaw transcript records.
- *
  * **Example** (Read an OpenClaw event name)
  *
  * ```ts
@@ -279,8 +259,6 @@ export const OpenClawTranscriptEventName = LiteralKit([
 );
 
 /**
- * Runtime type for {@link OpenClawTranscriptEventName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -312,8 +290,6 @@ export const AiMetricsTranscriptEventName = S.Union([
 );
 
 /**
- * Runtime type for {@link AiMetricsTranscriptEventName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -339,8 +315,6 @@ export const AiMetricsSourceRole = LiteralKit(["primary", "subagent", "gateway_m
 );
 
 /**
- * Runtime type for {@link AiMetricsSourceRole}.
- *
  * **Example** (Assign primary source role)
  *
  * ```ts
@@ -407,8 +381,6 @@ export const AiMetricsPrivacyMode = LiteralKit(["encrypted_raw_redacted_ui", "ra
 );
 
 /**
- * Runtime type for {@link AiMetricsPrivacyMode}.
- *
  * **Example** (Assign encrypted privacy mode)
  *
  * ```ts
@@ -423,8 +395,6 @@ export const AiMetricsPrivacyMode = LiteralKit(["encrypted_raw_redacted_ui", "ra
 export type AiMetricsPrivacyMode = typeof AiMetricsPrivacyMode.Type;
 
 /**
- * OTLP protocol variants supported by the P3 AI metrics backend contract.
- *
  * **Example** (Log OTLP protocol enum)
  *
  * ```ts
@@ -442,8 +412,6 @@ export const AiMetricsOtlpProtocol = LiteralKit(["http/protobuf"]).pipe(
 );
 
 /**
- * Runtime type for {@link AiMetricsOtlpProtocol}.
- *
  * **Example** (Assign HTTP protobuf protocol)
  *
  * ```ts
@@ -477,8 +445,6 @@ export const AiMetricsOtlpSignalScope = LiteralKit(["traces_only"]).pipe(
 );
 
 /**
- * Runtime type for {@link AiMetricsOtlpSignalScope}.
- *
  * **Example** (Assign traces-only signal scope)
  *
  * ```ts
@@ -493,8 +459,6 @@ export const AiMetricsOtlpSignalScope = LiteralKit(["traces_only"]).pipe(
 export type AiMetricsOtlpSignalScope = typeof AiMetricsOtlpSignalScope.Type;
 
 /**
- * Quality-gate outcome recorded for a labeled task or benchmark run.
- *
  * **Example** (Log quality gate status)
  *
  * ```ts
@@ -512,8 +476,6 @@ export const AiMetricsQualityGateStatus = LiteralKit(["passed", "failed", "not_r
 );
 
 /**
- * Runtime type for {@link AiMetricsQualityGateStatus}.
- *
  * **Example** (Assign passed gate status)
  *
  * ```ts
@@ -558,8 +520,6 @@ export const AiMetricsRating = S.Int.check(
 );
 
 /**
- * Non-negative integer used by AI metrics counts and elapsed durations.
- *
  * **Example** (Decode a non-negative count)
  *
  * ```ts
@@ -1081,8 +1041,6 @@ export class Scorecard extends S.Opaque<Scorecard, { readonly brand: unique symb
 ) {}
 
 /**
- * Summary produced by transcript ingestion.
- *
  * **Example** (Create ingest summary)
  *
  * ```ts

@@ -99,8 +99,6 @@ export class YeetAsyncMergePoll extends S.Opaque<YeetAsyncMergePoll, { readonly 
 export const defaultYeetAsyncMergePoll = YeetAsyncMergePoll.make({ attempts: 60, interval: Duration.seconds(2) });
 
 /**
- * How one Yeet merge ended.
- *
  * **Details**
  *
  * - `Merged`: GitHub merged the pull request as `sha`. `attached` is true when
@@ -144,8 +142,6 @@ export const YeetMergeSettlement = S.TaggedUnion({
 );
 
 /**
- * How one Yeet merge ended.
- *
  * @category models
  * @since 0.0.0
  */

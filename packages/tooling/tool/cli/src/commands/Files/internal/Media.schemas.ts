@@ -19,8 +19,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Files/internal/Media.schemas");
 
 /**
- * Positive media dimension schema.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -57,16 +55,12 @@ export const PositiveMediaDimension = S.Int.check(
 );
 
 /**
- * Positive media dimension value.
- *
  * @category models
  * @since 0.0.0
  */
 export type PositiveMediaDimension = typeof PositiveMediaDimension.Type;
 
 /**
- * SHA-256 hash recorded for normalized file bytes.
- *
  * **Details**
  *
  * The shared `Sha256PrefixedDigest` grammar from `@beep/schema`: `sha256:`
@@ -95,16 +89,12 @@ export const FileSha256Hash = Sha256PrefixedDigest.pipe(
 );
 
 /**
- * SHA-256 hash recorded for normalized file bytes.
- *
  * @category models
  * @since 0.0.0
  */
 export type FileSha256Hash = typeof FileSha256Hash.Type;
 
 /**
- * Non-negative pixel offset schema.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -141,16 +131,12 @@ export const NonNegativePixelOffset = S.Int.check(
 );
 
 /**
- * Non-negative pixel offset value.
- *
  * @category models
  * @since 0.0.0
  */
 export type NonNegativePixelOffset = typeof NonNegativePixelOffset.Type;
 
 /**
- * Media kind schema for selected dataset files.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -170,16 +156,12 @@ export const MediaKind = LiteralKit(["image", "video"]).pipe(
 );
 
 /**
- * Media kind for selected dataset files.
- *
  * @category models
  * @since 0.0.0
  */
 export type MediaKind = typeof MediaKind.Type;
 
 /**
- * Integer RGB channel value.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -224,16 +206,12 @@ export const RgbChannel = S.Int.check(
 );
 
 /**
- * Integer RGB channel value.
- *
  * @category models
  * @since 0.0.0
  */
 export type RgbChannel = typeof RgbChannel.Type;
 
 /**
- * Dimension metadata returned by `image-size`.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -259,8 +237,6 @@ export class ImageSizeMetadata extends S.Opaque<ImageSizeMetadata, { readonly br
 ) {}
 
 /**
- * Side-data entry returned by `ffprobe`.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -284,8 +260,6 @@ export class FfprobeSideData extends S.Opaque<FfprobeSideData, { readonly brand:
 ) {}
 
 /**
- * Video stream metadata returned by `ffprobe`.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -312,8 +286,6 @@ export class FfprobeStream extends S.Opaque<FfprobeStream, { readonly brand: uni
 ) {}
 
 /**
- * JSON document emitted by `ffprobe`.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts
@@ -337,8 +309,6 @@ export class FfprobeOutput extends S.Opaque<FfprobeOutput, { readonly brand: uni
 ) {}
 
 /**
- * Safe generated filename prefix schema.
- *
  * **Example** (Check schema with undefined)
  *
  * ```ts

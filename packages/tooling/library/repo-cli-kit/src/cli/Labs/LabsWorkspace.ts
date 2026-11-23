@@ -108,8 +108,6 @@ export const LABS_TURBO_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
 export const LABS_TURBO_SELECT_FILTER = "--filter=./apps/labs/**";
 
 /**
- * Repo-relative workspace directory below the labs root (`apps/labs/<name>`).
- *
  * **Example** (Validate a lab workspace directory)
  *
  * ```ts
@@ -130,8 +128,6 @@ export const LabsWorkspaceDir = S.String.check(S.isStartingWith(`${LABS_WORKSPAC
 );
 
 /**
- * Decoded {@link LabsWorkspaceDir} type.
- *
  * @category models
  * @since 0.0.0
  */

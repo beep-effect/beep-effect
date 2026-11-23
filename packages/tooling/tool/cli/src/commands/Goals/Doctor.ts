@@ -138,8 +138,6 @@ export const GOAL_MD_MAX_CHARS = 4000;
 const STALE_ACTIVE_DAYS = 21;
 
 /**
- * Finding kinds emitted by `beep goals doctor`.
- *
  * **Example** (Check finding kind membership)
  *
  * ```ts
@@ -198,8 +196,6 @@ export const GoalDoctorFindingKind = LiteralKit([
 );
 
 /**
- * Finding kind emitted by `beep goals doctor`.
- *
  * **Example** (Type a finding kind)
  *
  * ```ts
@@ -221,8 +217,6 @@ const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
 );
 
 /**
- * One goals-doctor finding.
- *
  * **Details**
  *
  * `key` is the stable identity used for baseline membership; it never embeds

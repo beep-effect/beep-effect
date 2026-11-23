@@ -97,8 +97,6 @@ export const SweepStepId = LiteralKit([
 export type SweepStepId = typeof SweepStepId.Type;
 
 /**
- * One git fact the planner observed, paired with whether it holds.
- *
  * **Details**
  *
  * Preconditions are recorded as observations rather than prose so a `--plan`
@@ -175,8 +173,6 @@ export class SweepPlanStep extends S.Opaque<SweepPlanStep, { readonly brand: uni
 ) {}
 
 /**
- * The dry-run document for one workspace sweep.
- *
  * **Example** (Construct an empty sweep plan)
  *
  * ```ts
@@ -208,8 +204,6 @@ export class SweepPlan extends S.Opaque<SweepPlan, { readonly brand: unique symb
 ) {}
 
 /**
- * A sweep step that ran its action.
- *
  * @category models
  * @since 0.0.0
  */
@@ -270,8 +264,6 @@ export class SweepStepNeedsOperator extends S.Opaque<SweepStepNeedsOperator, { r
 ) {}
 
 /**
- * What became of one sweep step: executed, skipped, or handed to the operator.
- *
  * **Example** (Decode a skipped outcome)
  *
  * ```ts
@@ -296,8 +288,6 @@ export const SweepStepOutcome = S.Union([SweepStepExecuted, SweepStepSkipped, Sw
 );
 
 /**
- * What became of one sweep step.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -334,8 +324,6 @@ export class SweepReportStep extends S.Opaque<SweepReportStep, { readonly brand:
 ) {}
 
 /**
- * The result document for one executed workspace sweep.
- *
  * **Details**
  *
  * The plan is echoed in full rather than referenced by path so the report is a

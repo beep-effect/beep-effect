@@ -39,8 +39,6 @@ const $I = $AlchemyAwsExtrasId.create("ComputeOptimizerEnrollment");
 export const ComputeOptimizerEnrollmentType = "BeepAWS.ComputeOptimizer.Enrollment" as const;
 
 /**
- * Props of a {@link ComputeOptimizerEnrollment}.
- *
  * **Details**
  *
  * `status` defaults to `"Active"`; `includeMemberAccounts` defaults to
@@ -74,8 +72,6 @@ export class ComputeOptimizerEnrollmentProps extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link ComputeOptimizerEnrollmentProps}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,8 +86,6 @@ export declare namespace ComputeOptimizerEnrollmentProps {
 }
 
 /**
- * Attributes Compute Optimizer reports for the account enrollment.
- *
  * **Example** (Decode observed attributes)
  *
  * ```ts
@@ -123,8 +117,6 @@ export class ComputeOptimizerEnrollmentAttributes extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link ComputeOptimizerEnrollmentAttributes}.
- *
  * @category models
  * @since 0.0.0
  */

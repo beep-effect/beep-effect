@@ -21,8 +21,6 @@ const DefaultedStringRecord = StringRecord.pipe(
 );
 
 /**
- * Root-manifest surface a catalog usage finding names.
- *
  * **Example** (Check a finding subject)
  *
  * ```ts
@@ -41,16 +39,12 @@ export const CatalogUsageSubject = LiteralKit(["catalog-entry", "root-override"]
 );
 
 /**
- * {@inheritDoc CatalogUsageSubject}
- *
  * @category models
  * @since 0.0.0
  */
 export type CatalogUsageSubject = typeof CatalogUsageSubject.Type;
 
 /**
- * Root `package.json` fields that declare catalog entries and overrides.
- *
  * **Details**
  *
  * `catalog` is the default catalog (`catalog:` and `catalog:default`);
@@ -95,8 +89,6 @@ const manifestDependencyFields = {
 };
 
 /**
- * Dependency fields of one workspace manifest.
- *
  * **Example** (Construct a manifest with one catalog dependency)
  *
  * ```ts

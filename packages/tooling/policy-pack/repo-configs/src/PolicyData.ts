@@ -70,8 +70,6 @@ export const GitHubAppName = LiteralKit(["beep-reviewer", "beep-knowledge-mint",
 );
 
 /**
- * Decoded GitHubAppName value.
- *
  * @category models
  * @since 0.0.0
  */

@@ -42,8 +42,6 @@ import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts"
 import type { ChangesetGraphPackageReference } from "./ChangesetGraph.ts";
 
 /**
- * Public changeset status error export.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -192,16 +190,12 @@ export const ChangesetStatusVerdict = LiteralKit(["lab-exempt", "enforced"]).pip
 );
 
 /**
- * Decoded {@link ChangesetStatusVerdict} type.
- *
  * @category models
  * @since 0.0.0
  */
 export type ChangesetStatusVerdict = typeof ChangesetStatusVerdict.Type;
 
 /**
- * One changed product workspace considered by the in-process changeset check.
- *
  * **Example** (Make a workspace package)
  *
  * ```ts

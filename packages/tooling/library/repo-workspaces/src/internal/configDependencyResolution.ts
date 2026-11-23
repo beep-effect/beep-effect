@@ -111,8 +111,6 @@ export class ResolvedPnpmfile extends S.Opaque<ResolvedPnpmfile, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link ResolvedPnpmfile}.
- *
  * @category type-level
  * @since 0.0.0
  */

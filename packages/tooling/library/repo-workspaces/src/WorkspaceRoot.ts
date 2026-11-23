@@ -123,8 +123,6 @@ export class FindWorkspaceRootOptions extends S.Opaque<FindWorkspaceRootOptions,
 ) {}
 
 /**
- * Companion types for {@link FindWorkspaceRootOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -139,8 +137,6 @@ export declare namespace FindWorkspaceRootOptions {
 }
 
 /**
- * Raised when no workspace root can be found by ascending from a directory.
- *
  * **Details**
  *
  * `markers` records what was probed, so the failure names the contract rather

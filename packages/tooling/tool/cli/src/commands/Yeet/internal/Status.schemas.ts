@@ -25,8 +25,6 @@ import { YeetWatchCheck } from "./WatchStream.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/Status.schemas");
 
 /**
- * Status of an optional Yeet artifact read.
- *
  * **Example** (Check yeet status artifact state membership)
  *
  * ```ts
@@ -45,8 +43,6 @@ export const YeetStatusArtifactState = LiteralKit(["missing", "present", "unread
 );
 
 /**
- * Status of an optional Yeet artifact read.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -74,8 +70,6 @@ export class YeetStatusLaneDigest extends S.Opaque<YeetStatusLaneDigest, { reado
 ) {}
 
 /**
- * Summary for a Yeet artifact read by status.
- *
  * **Details**
  *
  * Closeout summaries carry `reviewedHeadSha` so merge readiness can reject a
@@ -178,8 +172,6 @@ const yeetStatusRemoteChecksDefault = A.empty<YeetWatchCheck>();
 const yeetStatusRemoteLabelsDefault = A.empty<string>();
 
 /**
- * Optional remote pull request summary for `yeet status --remote`.
- *
  * **Example** (Construct a yeet status remote)
  *
  * ```ts

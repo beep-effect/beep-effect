@@ -21,8 +21,6 @@ type CodexCommandErrorOptions =
     };
 
 /**
- * Typed failure for Codex helper commands.
- *
  * **Example** (Construct Codex command error)
  *
  * ```ts

@@ -81,8 +81,6 @@ export const AiMetricsAbsoluteDataRoot = S.make<(typeof FilePath)["Rebuild"]>(Fi
   );
 
 /**
- * Runtime type for {@link AiMetricsAbsoluteDataRoot}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -92,8 +90,6 @@ const withoutTrailingSlash = (value: string): string =>
   pipe(value, Str.replace(/\/+$/u, ""), (trimmed) => (Str.isEmpty(trimmed) ? value : trimmed));
 
 /**
- * Precedence rung that produced a resolved AI metrics data root.
- *
  * **Details**
  *
  * The rung is recorded rather than inferred because the same absolute path can
@@ -196,8 +192,6 @@ export class AiMetricsDataRootInput extends S.Opaque<AiMetricsDataRootInput, { r
 ) {}
 
 /**
- * A resolved AI metrics data root together with the rung that produced it.
- *
  * **Example** (Inspecting a resolved root)
  *
  * ```ts

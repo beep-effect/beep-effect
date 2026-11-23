@@ -12,8 +12,6 @@ import { NodeId } from "./NodeIdentity.models.ts";
 const $I = $AgentMemoryStoreId.create("Dedupe.models");
 
 /**
- * Advisory flag that two nodes are near duplicates.
- *
  * **Details**
  *
  * Decision `dedupe-exact-defer-near-flag`: near duplicates are flagged for

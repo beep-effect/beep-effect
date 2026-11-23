@@ -20,8 +20,6 @@ const defaultHeaderSource = "/(.*)";
 const isFalse = (value: unknown): value is false => Eq.equals(false)(value);
 
 /**
- * A secure HTTP response header emitted through Next.js `headers()`.
- *
  * **Example** (Make secure header instance)
  *
  * ```ts
@@ -96,8 +94,6 @@ const emptySecureHeaders: Array<SecureHeader> = [];
 export const DEFAULT_BEEP_SECURE_HEADERS: ReadonlyArray<SecureHeader> = defaultBeepSecureHeaders;
 
 /**
- * Object form of shared secure-header configuration for the repo Next.js preset.
- *
  * **Details**
  *
  * `source` is the Next.js route source receiving the headers; `additionalHeaders` are appended after
@@ -147,8 +143,6 @@ export class SecureHeadersConfigValue extends S.Opaque<SecureHeadersConfigValue,
 ) {}
 
 /**
- * Shared secure-header configuration for the repo Next.js preset.
- *
  * **Details**
  *
  * `false` disables shared secure headers. An object with `headers` replaces
@@ -183,8 +177,6 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
 );
 
 /**
- * Shared secure-header configuration for the repo Next.js preset.
- *
  * **Example** (Type secure headers config)
  *
  * ```ts
