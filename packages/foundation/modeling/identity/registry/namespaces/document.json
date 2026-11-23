@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "document",
+    "iri": "https://beep-effect.com/ns/document/"
+  },
+  "terms": ["citation", "pattern"],
+  "bindings": [],
+  "deprecations": []
+}

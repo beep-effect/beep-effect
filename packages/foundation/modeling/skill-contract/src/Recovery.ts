@@ -6,6 +6,7 @@
  */
 
 import { $SkillContractId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -337,7 +338,7 @@ export class FailureReceiptPredicate extends S.Opaque<FailureReceiptPredicate, {
  * @category constants
  * @since 0.0.0
  */
-export const FailurePredicateType = EvidencePredicateType.make($SkillContractId.create("evidence/failure/v2").iri);
+export const FailurePredicateType = EvidencePredicateType.make(iri("skill-contract:evidence/failure/v2"));
 
 /**
  * Unsigned digest-bound receipt carrying a coherent terminal failure predicate.

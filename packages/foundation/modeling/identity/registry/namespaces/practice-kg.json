@@ -1,0 +1,17 @@
+{
+  "namespace": {
+    "prefix": "practice-kg",
+    "iri": "https://beep-effect.com/ns/practice-kg/"
+  },
+  "terms": [
+    "application",
+    "client",
+    "docket",
+    "docket_family",
+    "document",
+    "email_archive",
+    "patent"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

@@ -1,5 +1,6 @@
 import { IdentityEntry, IdentityRegistry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import {
@@ -16,14 +17,17 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type { Dataset, Quad } from "@beep/rdf/Rdf";
 
-const entryComposer = $SemanticWebId.create("identity/coverage-entry");
 const labelPath = makeNamedNode($SemanticWebId.create("identity/coverage-fibers/label").iri);
 const binding = IdentityRdfBinding.make({
   identifierPath: makeNamedNode($SemanticWebId.create("identity/coverage-identifier").iri),
   curiePath: makeNamedNode($SemanticWebId.create("identity/coverage-curie").iri),
   fiberPaths: { label: labelPath },
 });
-const entry = IdentityEntry.fromComposer(entryComposer, { label: "Coverage entry" });
+const entry = IdentityEntry.fromBinding(
+  "@beep/test-runner/Vitest/TestHang",
+  { curie: "vitest:TestHang", iri: iri("vitest:TestHang") },
+  { label: "Coverage entry" }
+);
 const RegistryTestLayer = Layer.unwrap(
   entriesToDataset(binding)([entry]).pipe(Effect.map((dataset) => layerDataset(dataset)(binding)))
 );

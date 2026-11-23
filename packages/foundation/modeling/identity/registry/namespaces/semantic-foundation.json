@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "semantic-foundation",
+    "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/"
+  },
+  "terms": [],
+  "bindings": [],
+  "deprecations": []
+}
