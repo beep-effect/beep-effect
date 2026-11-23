@@ -1,11 +1,19 @@
 import * as Test from "@alchemy.run/test/Vitest";
 import { SecretSpec, SecretsConfig } from "@beep/infra-github/Config";
-import { productionConfig, productionSecretsConfig } from "@beep/infra-github/Production";
-import { DuplicateSecretName, declareSecrets, secretLogicalId, secretsEnvFile } from "@beep/infra-github/Secrets";
+import { productionConfig, productionSecretsConfig, productionStage } from "@beep/infra-github/Production";
+import {
+  DuplicateSecretName,
+  declareSecrets,
+  SecretsStageIsNotProd,
+  secretLogicalId,
+  secretsEnvFile,
+  secretsProgram,
+} from "@beep/infra-github/Secrets";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -23,11 +31,53 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const plaintextForTests = "fleet-watch-placeholder-key-never-a-real-secret";
 
-const scenario = <E>(name: string, body: (stack: TypedScratch, fake: FakeRepository) => Effect.Effect<void, E>) => {
+const scenario = <E>(
+  name: string,
+  body: (stack: TypedScratch, fake: FakeRepository) => Effect.Effect<void, E>,
+  stage = "test"
+) => {
   const fake = FakeRepository.fromCensus();
-  const { test } = Test.make({ providers: fakeProviders(fake), stage: "test" });
+  const { test } = Test.make({ providers: fakeProviders(fake), stage });
   test.provider(name, (stack) => body(typed(stack), fake));
 };
+
+const recordingConfig = () => {
+  const loaded: Array<string> = [];
+  const values = ConfigProvider.fromUnknown({
+    INFRA_GITHUB_SECRETS_PLANE: "workstation",
+    FLEET_WATCH_APP_PRIVATE_KEY: plaintextForTests,
+  });
+  const provider = ConfigProvider.make((path) => {
+    loaded.push(A.join(A.map(path, String), "."));
+    return values.load(path);
+  });
+  return { loaded, program: Effect.provideService(secretsProgram, ConfigProvider.ConfigProvider, provider) };
+};
+
+scenario("a stage other than prod dies before any configuration read or request", (stack, fake) =>
+  Effect.gen(function* () {
+    const config = recordingConfig();
+    const exit = yield* Effect.exit(stack.deploy(config.program));
+    const text = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+    expect(text).toContain(SecretsStageIsNotProd.make({ stage: "test" }).message);
+    expect(config.loaded).toEqual([]);
+    expect(fake.calls).toEqual([]);
+  })
+);
+
+scenario(
+  "on prod from a workstation the program reads the key and uploads it once",
+  (stack, fake) =>
+    Effect.gen(function* () {
+      const config = recordingConfig();
+      yield* stack.deploy(config.program);
+      expect(config.loaded).toContain("FLEET_WATCH_APP_PRIVATE_KEY");
+      expect(A.map(fake.writes(), ({ method, path }) => `${method} ${path}`)).toEqual([
+        "PUT /repos/beep-effect/beep-effect/environments/fleet-watch/secrets/FLEET_WATCH_APP_PRIVATE_KEY",
+      ]);
+    }),
+  productionStage
+);
 
 scenario("deploying uploads each secret sealed to its environment's key and never sends the value", (stack, fake) =>
   Effect.gen(function* () {

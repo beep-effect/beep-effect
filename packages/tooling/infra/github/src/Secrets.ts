@@ -11,11 +11,15 @@ import * as GitHub from "@alchemy.run/github";
 import { $InfraGithubId } from "@beep/identity/packages";
 import { adopt } from "alchemy/AdoptPolicy";
 import { retain } from "alchemy/RemovalPolicy";
+import { Stack } from "alchemy/Stack";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { productionSecretsConfig, productionStage } from "./Production.ts";
 import { idFragment } from "./Stack.ts";
 import type * as Redacted from "effect/Redacted";
 import type { SecretSpec, SecretsConfig } from "./Config.ts";
@@ -166,3 +170,77 @@ export const declareSecrets = Effect.fn("InfraGithubSecrets.declareSecrets")(fun
   );
   return { secrets: A.map(config.secrets, secretLogicalId) };
 }, retain());
+
+/**
+ * **Example** (Inspect a refused stage)
+ *
+ * ```ts
+ * import { SecretsStageIsNotProd } from "@beep/infra-github/Secrets"
+ *
+ * const refused = SecretsStageIsNotProd.make({ stage: "preview_x" })
+ * console.log(refused.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class SecretsStageIsNotProd extends S.TaggedError<SecretsStageIsNotProd, { readonly brand: unique symbol }>(
+  $I`SecretsStageIsNotProd`
+)(
+  "SecretsStageIsNotProd",
+  { stage: S.String },
+  $I.annote("SecretsStageIsNotProd", {
+    description:
+      "The secrets stack started on a stage other than prod. Every stage would write the live repository's secrets, so it refuses before reading any value or sending any request.",
+  })
+) {
+  /**
+   * The refusal as one line.
+   *
+   * @returns The rendered refusal.
+   * @since 0.0.0
+   */
+  override get message(): string {
+    return `InfraGithubSecrets runs only on stage ${productionStage}, not ${this.stage}: every stage writes the live repository's secrets, so there is no preview.`;
+  }
+}
+
+/**
+ * The `InfraGithubSecrets` stack program. A stage other than `prod` dies
+ * with {@link SecretsStageIsNotProd} before any configuration read, so no
+ * secret value is loaded and no request is sent. On `prod` it refuses CI,
+ * requires `INFRA_GITHUB_SECRETS_PLANE=workstation`, then reads each value
+ * as `Redacted` and declares the secrets.
+ *
+ * **Example** (Mount the program in a stack)
+ *
+ * ```ts
+ * import { secretsProgram } from "@beep/infra-github/Secrets"
+ *
+ * console.log(typeof secretsProgram) // "object"
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const secretsProgram = Effect.gen(function* () {
+  const stack = yield* Stack;
+  if (stack.stage !== productionStage) {
+    return yield* Effect.die(SecretsStageIsNotProd.make({ stage: stack.stage }));
+  }
+  const ci = yield* Config.option(Config.String("CI"));
+  if (O.isSome(ci) && ci.value !== "") {
+    return yield* Effect.die("InfraGithubSecrets deploys from a workstation under op run, never from CI.");
+  }
+  yield* Config.Literal("workstation", "INFRA_GITHUB_SECRETS_PLANE");
+  const entries = yield* Effect.forEach(
+    productionSecretsConfig.secrets,
+    Effect.fnUntraced(function* (spec) {
+      const value = yield* Config.Redacted(spec.name);
+      return [spec.name, value] as const;
+    }),
+    { concurrency: 1 }
+  );
+  const values = HashMap.fromIterable(entries);
+  return yield* declareSecrets(productionSecretsConfig, (spec) => O.getOrThrow(HashMap.get(values, spec.name)));
+}).pipe(Effect.orDie);

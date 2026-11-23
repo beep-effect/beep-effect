@@ -85,8 +85,11 @@ that is one secret, `fleet-watch/FLEET_WATCH_APP_PRIVATE_KEY`, from the
 
 - `secrets.env` holds one `NAME="op://..."` reference per secret and never a value. A test
   holds it equal to `secretsEnvFile(productionSecretsConfig)`.
-- No workflow references the stack, and a test checks that. The stack refuses to start when
-  `CI` is set, and on `prod` it requires `INFRA_GITHUB_SECRETS_PLANE=workstation`.
+- No workflow references the stack, and a test checks that. Every stage writes the live
+  repository's secrets, so the stack has no preview: any stage other than `prod` dies with
+  `SecretsStageIsNotProd` before it reads configuration or sends a request, and the read-only
+  provider set refuses `Secret` writes too. On `prod` it refuses to start when `CI` is set and
+  requires `INFRA_GITHUB_SECRETS_PLANE=workstation`.
 - Values stay `Redacted`, so they never reach logs or state, and the upload is sealed to the
   environment's public key. `op run` masks values in its output.
 - The CI stack keeps each of these secrets in `unmanaged`, so the two stacks never compete.
