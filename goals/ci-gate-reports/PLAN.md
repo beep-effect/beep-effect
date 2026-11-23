@@ -2,10 +2,12 @@
 
 ## Status
 
-Status: `active`. P0, P1 and P3 are complete (decision `report-carrier` and the P1 and P3
-checkpoints): the `task-outcomes/v2` feed record, the CI projection, `beep ci append-gate-reports`,
-the main-feed lookup, the CI-job adapter and `beep ci failures` are built. P2 (workflow wiring) is
-next and opens after PR 1 merges.
+Status: `active`. P0, P1, P3 and P4 are complete (decision `report-carrier` and the P1, P3 and
+P4 checkpoints): the `task-outcomes/v2` feed record, the CI projection, `beep ci append-gate-reports`,
+the main-feed lookup, the CI-job adapter and `beep ci failures` are built, and the guidance names
+the command. P2 (workflow wiring) is open: its workflow PRs wait for the driver's window. The
+seven-day census runs a week after the guidance merges, once the census rule counts `beep ci
+failures` as a CI-log read (P4 checkpoint).
 
 ## Phases
 
@@ -15,7 +17,7 @@ next and opens after PR 1 merges.
 | P1 Projection and feed record | complete | The CI renderer (summary, grouped log, annotations) from gate reports, the planned CI subcommand that appends it, and the feed record schema. | The renderer, limit and neutralization tests pass. |
 | P2 Workflow wiring | pending | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
 | P3 Lookup, adapter and failing-region command | complete | The main-feed lookup, the CI-job adapter, the extracted log route and the failing-region command. | The lookup, adapter and command fixture tests pass; the monitor's tests pass unchanged; the ledger shows REST only. |
-| P4 Guidance and measurement | pending | Replace the raw `gh api` log recipe in `AGENTS.md` and the yeet skill; record the census or fixture numbers. | `bun run beep skills update --check` passes; the measurement is recorded as a checkpoint. |
+| P4 Guidance and measurement | complete | Replace the raw `gh api` log recipe in `AGENTS.md` and the yeet skill; record the census or fixture numbers. | `bun run beep skills update --check` passes; the measurement is recorded as a checkpoint. |
 | P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
@@ -114,5 +116,19 @@ P3 is complete. `MainFeed` (`Ci/CiMainFeed.ts`) returns main's newest reports, r
 Lane goals/ci-gate-reports-p3
 
 Reverse: Revert the P3 commit; the monitor's private log read returns and the ci failures command is removed
+
+### P4 complete: guidance names `beep ci failures`, census baseline recorded, 2026-11-23
+
+P4 is complete. `AGENTS.md`'s log-read line, `.claude/skills/yeet/references/gh-rest.md`, the yeet skill's `references/failure-handling.md` and the orchestrate skill's red-check row now name `bun run beep ci failures --run <id> | --pr <n>` instead of the raw `gh api ... /logs` recipe; `bun run beep skills update --check` passes.
+
+Census baseline before the guidance merges: `bun run beep ai-metrics census --until 2026-11-23T02:00:00Z --write-baseline` wrote `standards/agent-output-census/runs/2026-11-23T02-00-00Z--census-rules-2026-11-18.json` (window 2026-11-16T02:00Z to 2026-11-23T02:00Z, rules `census-rules/2026-11-18`). CI-log fetches: 464 runs, 3 unfiltered, so 461 (99.4%) piped or redirected (the 2026-11-18 census run: 803 of 805, 99.8%). Turns fetching a CI log: 425 of 7,190 run-verification turns, 5.9% (2026-11-18: 747 of 10,109, 7.4%). Targets: at most 20% filtered and at most 3.7%.
+
+Seven-day window: run `bun run beep ai-metrics census --since <merge time> --until <merge time + 7 days> --write-baseline` once a week has passed after this guidance merges on `main`, and compare its `ci-logs` filter row and `fetch-ci-log` turn row with this file. Gap: the census rule `ci-logs` (`census-rules.ts` in `@beep/repo-ai-metrics`) matches `gh run view --log`, the `/logs` endpoint and `yeet gh ... log`, not `beep ci failures`, so a call of the new command lands in `beep-other` and the share of it piped through `tail`, `head` or `grep` is not counted. The post-merge census needs that rule widened (a new rule version) before its filtered share measures the command.
+
+Fixture stand-in, live and REST only: `bun run beep ci failures --run 45083821617` (Check on `main`, Repo Sanity red) printed a 7,950-character job block and `--run 45056484054` (Check, Heavy / Lint Policy red) a 7,976-character block, each within core's agent budget of 8,000 characters with no line over 240; both named the failing lane (`lint:comment-law`, `lint:policy`), printed the verdict first and last, and saved the record and log under `.beep/gates/run/` (151,414 and 524,854 bytes). Neither job uploaded a gate report, so both took the failing-region route.
+
+Lane goals/ci-gate-reports-p4
+
+Reverse: Revert the P4 commit; the guidance names the raw logs endpoint again and the census baseline file is removed
 
 <!-- beep:decisions:end -->
