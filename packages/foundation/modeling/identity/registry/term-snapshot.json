@@ -1,6 +1,6 @@
 {
   "version": "term-snapshot/v1",
-  "release": "2.1.0",
+  "release": "2.2.0",
   "namespaces": [
     {
       "prefix": "annotation",
@@ -65,6 +65,10 @@
     {
       "prefix": "instance",
       "iri": "https://beep-effect.com/ns/instance/"
+    },
+    {
+      "prefix": "law-practice",
+      "iri": "https://beep-effect.com/ns/law-practice/"
     },
     {
       "prefix": "lejeune",
@@ -561,6 +565,11 @@
     "https://beep-effect.com/ns/epistemic/hasEvidenceQuote",
     "https://beep-effect.com/ns/epistemic/sourceDigest",
     "https://beep-effect.com/ns/instance/",
+    "https://beep-effect.com/ns/law-practice/",
+    "https://beep-effect.com/ns/law-practice/LegalPositionRelator",
+    "https://beep-effect.com/ns/law-practice/Party",
+    "https://beep-effect.com/ns/law-practice/PositionBearer",
+    "https://beep-effect.com/ns/law-practice/PositionCounterparty",
     "https://beep-effect.com/ns/lejeune/ontology/",
     "https://beep-effect.com/ns/lejeune/ontology/delivery_date",
     "https://beep-effect.com/ns/lejeune/ontology/finish",

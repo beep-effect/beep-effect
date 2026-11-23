@@ -54,6 +54,13 @@ export * from "./Fold.models.ts";
  */
 export * from "./Fold.projections.ts";
 /**
+ * gUFO typing of registry terms and the audit of a typed specialization hierarchy.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Gufo.ts";
+/**
  * SKOS mapping predicates and their registry expansion.
  *
  * @category models

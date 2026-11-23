@@ -290,6 +290,15 @@ export const RegistryVocab = {
     iri: `${IdentityAuthority}instance/`,
     terms: [],
   },
+  "law-practice": {
+    iri: `${IdentityAuthority}law-practice/`,
+    terms: [
+      "LegalPositionRelator",
+      "Party",
+      "PositionBearer",
+      "PositionCounterparty",
+    ],
+  },
   lejeune: {
     iri: `${IdentityAuthority}lejeune/ontology/`,
     terms: [
