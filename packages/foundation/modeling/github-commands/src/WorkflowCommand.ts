@@ -22,9 +22,6 @@ import * as Str from "effect/String";
 const $I = $GithubCommandsId.create("WorkflowCommand");
 
 /**
- * The title and source location of a `::notice::`, `::warning::` or `::error::`
- * annotation.
- *
  * **Details**
  *
  * The field names here are the readable ones; GitHub's wire protocol uses
@@ -78,8 +75,6 @@ export class AnnotationProperties extends S.Opaque<AnnotationProperties, { reado
 ) {}
 
 /**
- * Companion types for {@link AnnotationProperties}.
- *
  * @category type-level
  * @since 0.0.0
  */

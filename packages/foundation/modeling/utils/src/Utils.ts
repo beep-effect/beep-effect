@@ -83,8 +83,6 @@ export const structuralRegion = <A>({
 };
 
 /**
- * Re-export of all helpers from `effect/Utils`.
- *
  * @category utilities
  * @since 0.0.0
  */

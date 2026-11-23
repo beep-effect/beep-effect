@@ -62,8 +62,6 @@ export const TermIri = IRI.pipe(
 );
 
 /**
- * Decoded type of {@link TermIri}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -105,8 +103,6 @@ export const CodeId = S.String.check(
 ).pipe(S.brand("CodeId"), $I.annoteSchema("CodeId", { description: "A code-path identity for a kind." }));
 
 /**
- * Decoded type of {@link CodeId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -321,8 +317,6 @@ export const ReleaseVersion = S.String.check(
 );
 
 /**
- * Decoded type of {@link ReleaseVersion}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -365,8 +359,6 @@ export const TermLocal = S.String.check(
 ).pipe(S.brand("TermLocal"), $I.annoteSchema("TermLocal", { description: "The local name of a declared term." }));
 
 /**
- * Decoded type of {@link TermLocal}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -462,8 +454,6 @@ export class Namespace extends S.Opaque<Namespace, { readonly brand: unique symb
 ) {}
 
 /**
- * Encoded representation of {@link Namespace}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -525,8 +515,6 @@ export class Term extends S.Opaque<Term, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Encoded representation of {@link Term}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -577,8 +565,6 @@ export class TermBinding extends S.Opaque<TermBinding, { readonly brand: unique 
 ) {}
 
 /**
- * Encoded representation of {@link TermBinding}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -621,8 +607,6 @@ export class Deprecation extends S.Opaque<Deprecation, { readonly brand: unique 
 ) {}
 
 /**
- * Encoded representation of {@link Deprecation}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -800,8 +784,6 @@ export class TermSnapshot extends S.Opaque<TermSnapshot, { readonly brand: uniqu
 }
 
 /**
- * Encoded representation of {@link TermSnapshot}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -877,8 +859,6 @@ export const SnapshotViolation = S.TaggedUnion({
 }).pipe($I.annoteSchema("SnapshotViolation", { description: "A break of the published term set (L0-3)." }));
 
 /**
- * Decoded type of {@link SnapshotViolation}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1197,8 +1177,6 @@ export const snapshotViolations: {
 );
 
 /**
- * The packages a registry shard may project its rows into.
- *
  * **Details**
  *
  * A package that `@beep/identity` depends on cannot import the registry, so the
@@ -1225,8 +1203,6 @@ export const RegistryProjection = S.Literals(["@beep/test-runner"]).pipe(
 );
 
 /**
- * Decoded type of {@link RegistryProjection}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1260,8 +1236,6 @@ export class ShardBinding extends S.Opaque<ShardBinding, { readonly brand: uniqu
 ) {}
 
 /**
- * Encoded representation of {@link ShardBinding}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1316,8 +1290,6 @@ export class ShardDeprecation extends S.Opaque<ShardDeprecation, { readonly bran
 ) {}
 
 /**
- * Encoded representation of {@link ShardDeprecation}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1408,8 +1380,6 @@ export class RegistryShard extends S.Opaque<RegistryShard, { readonly brand: uni
 ) {}
 
 /**
- * Encoded representation of {@link RegistryShard}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1465,8 +1435,6 @@ export const RegistryConflict = S.TaggedUnion({
 }).pipe($I.annoteSchema("RegistryConflict", { description: "A reason shards do not form one registry table." }));
 
 /**
- * Decoded type of {@link RegistryConflict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1950,8 +1918,6 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
 }
 
 /**
- * Encoded representation of {@link RegistryTable}.
- *
  * @category type-level
  * @since 0.0.0
  */

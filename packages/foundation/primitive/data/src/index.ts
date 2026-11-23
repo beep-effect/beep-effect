@@ -25,8 +25,6 @@
  */
 export * as Blockchain from "./Blockchain.ts";
 /**
- * Calendar constants namespace.
- *
  * **Example** (ISO month value lookup)
  *
  * ```ts import.meta.vitest name="ISO month value lookup"
@@ -55,8 +53,6 @@ export * as Calendar from "./Calendar.ts";
  */
 export * as CurrencyCodes from "./CurrencyCodes.ts";
 /**
- * Keyboard shortcut constants namespace.
- *
  * **Example** (Find copy keyboard shortcut)
  *
  * ```ts import.meta.vitest name="Find copy keyboard shortcut"
