@@ -295,7 +295,7 @@ export * from "./FleetMissedEvent.command.ts";
  */
 export * from "./FleetMissedEvent.live.ts";
 /**
- * Schemas of the fleet missed-event check.
+ * The GitHub shapes, verdicts and run report the missed-event check decodes and emits.
  *
  * @category models
  * @since 0.0.0

@@ -31,8 +31,6 @@ const Cap = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * One pool's label and its cap in each phase.
- *
  * **Example** (Project the production heavy pool)
  *
  * ```ts
@@ -56,8 +54,6 @@ export class FleetPoolCapProjection extends S.Opaque<FleetPoolCapProjection, { r
 ) {}
 
 /**
- * The phase the fleet runs in and every pool's caps.
- *
  * **Example** (Read the projected phase)
  *
  * ```ts

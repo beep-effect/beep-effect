@@ -75,8 +75,6 @@ export const FLEET_THRESHOLDS = {
 } as const;
 
 /**
- * Milliseconds since the Unix epoch.
- *
  * **Example** (Accept a time)
  *
  * ```ts
@@ -89,7 +87,9 @@ export const FLEET_THRESHOLDS = {
  * @category models
  * @since 0.0.0
  */
-export const EpochMillis = S.Finite.pipe($I.annoteSchema("EpochMillis", { description: "Milliseconds since 1970." }));
+export const EpochMillis = S.Finite.pipe(
+  $I.annoteSchema("EpochMillis", { description: "Milliseconds since the Unix epoch." })
+);
 
 /**
  * A webhook delivery id: decimal digits kept as a string, because GitHub's
@@ -112,8 +112,6 @@ export const FleetDeliveryId = S.String.check(S.isPattern(/^\d+$/u)).pipe(
 );
 
 /**
- * Decoded delivery id.
- *
  * @category models
  * @since 0.0.0
  */
@@ -161,8 +159,6 @@ export const FleetCapPhase = LiteralKit(["overlap", "primary"]).pipe(
 );
 
 /**
- * Decoded caps phase.
- *
  * @category models
  * @since 0.0.0
  */
@@ -248,8 +244,6 @@ export class FleetRunnersPage extends S.Opaque<FleetRunnersPage, { readonly bran
 ) {}
 
 /**
- * The run statuses the check lists by status.
- *
  * **Example** (Read the listed statuses)
  *
  * ```ts
@@ -266,8 +260,6 @@ export const FleetRunStatus = LiteralKit(["queued", "in_progress"]).pipe(
 );
 
 /**
- * Decoded run status.
- *
  * @category models
  * @since 0.0.0
  */
@@ -294,16 +286,12 @@ export const FleetRunsQuery = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetRunsQuery", { description: "A workflow-run listing by status or creation time." }));
 
 /**
- * Decoded runs query.
- *
  * @category models
  * @since 0.0.0
  */
 export type FleetRunsQuery = typeof FleetRunsQuery.Type;
 
 /**
- * One page of workflow run ids.
- *
  * **Example** (One queued run)
  *
  * ```ts
@@ -360,8 +348,6 @@ export class FleetJob extends S.Opaque<FleetJob, { readonly brand: unique symbol
 ) {}
 
 /**
- * One page of a run's jobs.
- *
  * **Example** (An empty page)
  *
  * ```ts
@@ -432,8 +418,6 @@ export class FleetHookDeliveriesPage extends S.Opaque<FleetHookDeliveriesPage, {
 ) {}
 
 /**
- * The detail of one delivery: the workflow job id its payload names.
- *
  * **Example** (A detail naming a job)
  *
  * ```ts
@@ -494,8 +478,6 @@ export const FleetHookSource = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetHookSource", { description: "A repository hook, or no hook source." }));
 
 /**
- * Decoded hook source.
- *
  * @category models
  * @since 0.0.0
  */
@@ -552,8 +534,6 @@ export const fleetHookSources: readonly [FleetHookSourceEntry, ...Array<FleetHoo
 ];
 
 /**
- * A job's delivery evidence.
- *
  * **Details**
  *
  * - `Delivered`: a 2xx `queued` delivery for the job.
@@ -584,8 +564,6 @@ export const FleetDeliveryEvidence = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetDeliveryEvidence", { description: "What the hook deliveries say about one job." }));
 
 /**
- * Decoded delivery evidence.
- *
  * @category models
  * @since 0.0.0
  */
@@ -617,8 +595,6 @@ export const FleetClassification = LiteralKit(["lost", "unknown", "gate"]).pipe(
 );
 
 /**
- * Decoded classification.
- *
  * @category models
  * @since 0.0.0
  */
@@ -644,16 +620,12 @@ export const FleetNoLaunchReason = LiteralKit(["launches-cover-rank", "no-progre
 );
 
 /**
- * Decoded NoLaunch reason.
- *
  * @category models
  * @since 0.0.0
  */
 export type FleetNoLaunchReason = typeof FleetNoLaunchReason.Type;
 
 /**
- * The verdict tags in precedence order.
- *
  * **Example** (The first verdict)
  *
  * ```ts
@@ -675,8 +647,6 @@ export const FleetVerdictTag = LiteralKit([
 ]).pipe($I.annoteSchema("FleetVerdictTag", { description: "A verdict tag, in precedence order." }));
 
 /**
- * Decoded verdict tag.
- *
  * @category models
  * @since 0.0.0
  */
@@ -708,8 +678,6 @@ export const FleetVerdict = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetVerdict", { description: "One queued job's verdict." }));
 
 /**
- * Decoded verdict.
- *
  * @category models
  * @since 0.0.0
  */
@@ -925,16 +893,12 @@ export const FleetPreviousRun = S.TaggedUnion({
 }).pipe($I.annoteSchema("FleetPreviousRun", { description: "The previous scheduled run, none, or unreadable." }));
 
 /**
- * Decoded previous run.
- *
  * @category models
  * @since 0.0.0
  */
 export type FleetPreviousRun = typeof FleetPreviousRun.Type;
 
 /**
- * The outcome of one run of the check.
- *
  * **Details**
  *
  * `githubRequests` is the number of GitHub reads the run made, retries

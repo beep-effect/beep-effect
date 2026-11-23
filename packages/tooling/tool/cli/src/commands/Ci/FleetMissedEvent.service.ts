@@ -93,8 +93,6 @@ export interface FleetGithubReadsShape {
 }
 
 /**
- * A recorded GitHub state the fake reads serve.
- *
  * **Details**
  *
  * `runnerReads` holds one runner listing per walk of the org-runner
