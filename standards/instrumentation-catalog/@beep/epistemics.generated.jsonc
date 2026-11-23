@@ -7,6 +7,12 @@
   "instruments": [],
   "spans": [
     {"name":"Assessments.update","owner":"@beep/epistemics","family":"foundation","conforms":true},
+    {"name":"ClaimAdmission.admit","owner":"@beep/epistemics","family":"foundation","conforms":true},
+    {"name":"ClaimAdmission.check","owner":"@beep/epistemics","family":"foundation","conforms":true},
+    {"name":"ClaimAdmission.retractionDigest","owner":"@beep/epistemics","family":"foundation","conforms":true},
+    {"name":"ClaimAdmission.revalidate","owner":"@beep/epistemics","family":"foundation","conforms":true},
+    {"name":"ClaimAdmission.revalidateCurrent","owner":"@beep/epistemics","family":"foundation","conforms":true},
+    {"name":"ClaimAdmission.viewAt","owner":"@beep/epistemics","family":"foundation","conforms":true},
     {"name":"ClaimCore.append","owner":"@beep/epistemics","family":"foundation","conforms":true},
     {"name":"ClaimCore.decodeChecked","owner":"@beep/epistemics","family":"foundation","conforms":true},
     {"name":"ClaimCore.encodeChecked","owner":"@beep/epistemics","family":"foundation","conforms":true},

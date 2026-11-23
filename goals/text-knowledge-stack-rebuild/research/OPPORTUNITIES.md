@@ -3,6 +3,15 @@
 Receipts recorded at the moment the friction happened. Redact secrets, replace
 home paths with `~`, drop session and machine ids.
 
+## 2026-11-23 — P4 historical admission refusal boundaries
+
+- **Doing:** reviewing selected-time admission views before commit 4. **Evidence:**
+  GroundingInvalid occurs before occurrence membership can be established, while stale
+  source resolution occurs after membership. Treating both as historical admitted stance
+  would let a malformed receipt claim a stance it never earned. Remove the former from
+  the stance-preserving refusal set and assert unresolved stance for a malformed receipt.
+  **Would have prevented it:** a refusal-stage distinction in the selected-view test table.
+
 ## 2026-11-08 — packet bootstrap
 
 - **Doing:** scaffolding this packet with `bun run beep goals bootstrap`.

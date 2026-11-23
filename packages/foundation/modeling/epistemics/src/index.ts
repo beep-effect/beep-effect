@@ -6,6 +6,20 @@
  */
 
 /**
+ * Scoped admission verification and historical claim eligibility.
+ *
+ * **Example** (Inspect source resolution cases)
+ *
+ * ```ts
+ * import { SourceResolution } from "@beep/epistemics/Admission"
+ * console.log(SourceResolution.cases.Missing.make({}))
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./Admission.ts";
+/**
  * Total owner coordinates and codec-checked update arrows.
  *
  * **Example** (Inspect a refusal coordinate)

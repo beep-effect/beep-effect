@@ -9,7 +9,10 @@ import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { ActivityId, ContentHash } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { OccurrenceId } from "@beep/text/Occurrence";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
+import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import { ValidTime } from "./Claim/index.ts";
 import type { FieldSchema, IdCodec, SchemaIdentity } from "./Factory/index.ts";
@@ -144,6 +147,8 @@ export const makeClaimCore = <
   const proposition: FieldSchema<P["Type"], P["Encoded"]> = options.proposition;
   const scope: FieldSchema<Scope["Type"], Scope["Encoded"]> = ids.scope;
   const principal: FieldSchema<Principal["Type"], Principal["Encoded"]> = ids.principal;
+  const action: FieldSchema<Action["Type"], Action["Encoded"]> = ids.action;
+  const revision: FieldSchema<Revision["Type"], Revision["Encoded"]> = ids.revision;
   const AgentRef = S.TaggedUnion({
     Person: { principal },
     Organization: { organization: principal },
@@ -185,6 +190,41 @@ export const makeClaimCore = <
       description: "An explicit direct retraction; the immutable claim remains unchanged.",
     })
   );
+  const BindingFields = { actor: principal, scope, action, revision };
+  const HumanAdmissionToken = S.Struct({
+    ...BindingFields,
+    issuedAt: S.DateTimeUtcFromMillis,
+    attestation: Sha256PrefixedDigest,
+  }).pipe(
+    $I.annoteSchema("HumanAdmissionToken", {
+      description: "Powerless serialized human attestation; trusted verification and exact claim binding are separate.",
+    })
+  );
+  const AdmissionFields = S.Struct({
+    claim: ClaimId,
+    ...BindingFields,
+    grounding: S.NonEmptyArray(TextAnchorVerificationReceipt),
+    token: HumanAdmissionToken,
+    at: S.DateTimeUtcFromMillis,
+    clearsRetraction: S.OptionFromOptionalKey(ContentHash),
+  });
+  const Admission = AdmissionFields.check(
+    S.makeFilter(
+      (record: typeof AdmissionFields.Type) =>
+        Eq.equals(record.actor, record.token.actor) &&
+        Eq.equals(record.scope, record.token.scope) &&
+        Eq.equals(record.action, record.token.action) &&
+        Eq.equals(record.revision, record.token.revision),
+      $I.annote("AdmissionTokenBinding", {
+        title: "Admission token binding",
+        description: "Actor, scope, action and exact revision agree with the token; this grants no authority.",
+      })
+    )
+  ).pipe(
+    $I.annoteSchema("Admission", {
+      description: "A successful scoped admission record; decoding repeats no authority verification.",
+    })
+  );
   const StanceRecord = S.TaggedUnion({
     Verbatim: { claim: ClaimId, stance: S.tag("verbatim"), generatedBy: ActivityId, at: S.DateTimeUtcFromMillis },
     Proposed: { claim: ClaimId, stance: S.tag("proposed"), generatedBy: ActivityId, at: S.DateTimeUtcFromMillis },
@@ -202,6 +242,8 @@ export const makeClaimCore = <
     Challenge,
     Retraction,
     StanceRecord,
+    HumanAdmissionToken,
+    Admission,
     logicalKey: ids.logicalKey,
   };
 };
