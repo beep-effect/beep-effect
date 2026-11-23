@@ -209,6 +209,7 @@ describe("Git.makeTest", () => {
         gitDir: () => double.gitDir(cwd),
         mergeTree: () => double.mergeTree(cwd, "main", "HEAD"),
         revListCount: () => double.revListCount(cwd, "main..HEAD"),
+        localOnlyCommitCount: () => double.localOnlyCommitCount(cwd),
         updateRef: () => double.updateRef(cwd, "refs/archive/x", { create: "HEAD" }),
         upstream: () => double.upstream(cwd, "main"),
         notesList: () => double.notesList(cwd, "refs/notes/history"),
