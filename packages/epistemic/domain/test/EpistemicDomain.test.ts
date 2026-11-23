@@ -12,7 +12,11 @@ import {
 } from "@beep/epistemic-domain";
 import { ClaimGateResult, ClaimGateSeverity, ClaimGateViolation } from "@beep/epistemics/ClaimGate";
 import { Confidence } from "@beep/epistemics/Confidence";
-import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH, EvidenceSpan, EvidenceSpanArbitrary } from "@beep/epistemics/EvidenceSpan";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
+
+const evidencePositionArbitrary = Arbitrary.schema(EvidencePosition);
+const evidenceQuoteMaximum = 65_536;
+
 import { $EpistemicId } from "@beep/identity/packages";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
@@ -30,7 +34,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const decodeEvidenceSpanResult = S.decodeResult(EvidenceSpan);
+const decodeEvidencePositionResult = S.decodeResult(EvidencePosition);
 const decodeTextAnchorResult = S.decodeResult(TextAnchor);
 const decodeUnknownCandidateClaim = S.decodeUnknownEffect(CandidateClaim);
 const decodeUnknownTurnFinalizationUsageAppend = S.decodeUnknownEffect(TurnFinalizationUsageAppend);
@@ -86,45 +90,51 @@ describe("@beep/epistemic-domain", () => {
 
   it.effect.prop(
     "rejects inconsistent evidence-span widths and derives only consistent spans",
-    [EvidenceSpanArbitrary],
+    [evidencePositionArbitrary],
     ([span]) =>
       Effect.sync(() => {
         pipe(
-          decodeEvidenceSpanResult({
-            confidence: 0.92,
-            endChar: 13,
-            quote: "a claimed fact",
-            startChar: 12,
+          decodeEvidencePositionResult({
+            version: "evidence-position/v2",
+            position: { endChar: 13, quote: "a claimed fact", startChar: 12 },
+            extractorConfidence: {
+              _tag: "Present",
+              value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+            },
           }),
           Result.isFailure,
           assertTrue
         );
-        const result = EvidenceSpan.isInternallyConsistent(span);
+        const result = TextAnchor.isInternallyConsistent(span.position);
         expect(result).toBe(true);
       }),
     { arbitrary: fcRuns(25) }
   );
 
   it("bounds evidence quotes to one source-text page", () => {
-    const maximumQuote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH)("a");
+    const maximumQuote = Str.repeat(evidenceQuoteMaximum)("a");
     const overLimitQuote = `${maximumQuote}a`;
 
     pipe(
-      decodeEvidenceSpanResult({
-        confidence: 0.92,
-        endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH,
-        quote: maximumQuote,
-        startChar: 0,
+      decodeEvidencePositionResult({
+        version: "evidence-position/v2",
+        position: { endChar: evidenceQuoteMaximum, quote: maximumQuote, startChar: 0 },
+        extractorConfidence: {
+          _tag: "Present",
+          value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+        },
       }),
       Result.isSuccess,
       assertTrue
     );
     pipe(
-      decodeEvidenceSpanResult({
-        confidence: 0.92,
-        endChar: EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1,
-        quote: overLimitQuote,
-        startChar: 0,
+      decodeEvidencePositionResult({
+        version: "evidence-position/v2",
+        position: { endChar: evidenceQuoteMaximum + 1, quote: overLimitQuote, startChar: 0 },
+        extractorConfidence: {
+          _tag: "Present",
+          value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+        },
       }),
       Result.isFailure,
       assertTrue
@@ -133,11 +143,13 @@ describe("@beep/epistemic-domain", () => {
 
   it("matches an evidence span only to its exact provenance anchor", () => {
     const span = Result.getOrThrow(
-      decodeEvidenceSpanResult({
-        confidence: 0.92,
-        endChar: 8,
-        quote: "amount A",
-        startChar: 0,
+      decodeEvidencePositionResult({
+        version: "evidence-position/v2",
+        position: { endChar: 8, quote: "amount A", startChar: 0 },
+        extractorConfidence: {
+          _tag: "Present",
+          value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+        },
       })
     );
     const matching = Result.getOrThrow(
@@ -152,8 +164,8 @@ describe("@beep/epistemic-domain", () => {
       quote: "amount B",
     });
 
-    expect(EvidenceSpan.matchesAnchor(span, matching)).toBe(true);
-    expect(EvidenceSpan.matchesAnchor(span, unrelated)).toBe(false);
+    expect(S.toEquivalence(TextAnchor)(span.position, matching)).toBe(true);
+    expect(S.toEquivalence(TextAnchor)(span.position, unrelated)).toBe(false);
   });
 
   it.effect("decodes and constructs a CandidateClaim row", () =>
@@ -219,10 +231,12 @@ describe("@beep/epistemic-domain", () => {
       ...productEntityFixtureInput("EpistemicEvidence", 4),
       artifactFixtureKey: "artifact.office-action",
       span: {
-        confidence: 0.92,
-        endChar: 57,
-        quote: "a processor configured to receive sensor data",
-        startChar: 12,
+        version: "evidence-position/v2",
+        position: { endChar: 57, quote: "a processor configured to receive sensor data", startChar: 12 },
+        extractorConfidence: {
+          _tag: "Present",
+          value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+        },
       },
       spanFixtureKey: "span.claim-1",
     });
@@ -288,13 +302,13 @@ describe("@beep/epistemic-domain", () => {
       ClaimGateViolation: Arbitrary.schema(ClaimGateViolation),
       ClaimGateResult: Arbitrary.schema(ClaimGateResult),
       ClaimLifecycleError: Arbitrary.schema(ClaimLifecycleError),
-      EvidenceSpan: EvidenceSpanArbitrary,
+      EvidencePosition: evidencePositionArbitrary,
       ClaimProjectionView: Arbitrary.schema(ClaimProjectionView),
       Activity: Arbitrary.schema(Activity),
       CandidateClaim: Arbitrary.schema(CandidateClaim),
       Evidence: Arbitrary.all({
         fields: Arbitrary.schema(S.Struct(Evidence.fields).mapFields(({ span, ...fields }) => fields)),
-        span: EvidenceSpanArbitrary,
+        span: evidencePositionArbitrary,
       }).pipe(Arbitrary.map(({ fields, span }) => Evidence.make({ ...fields, span }))),
       UsageRecord: Arbitrary.schema(UsageRecord),
       TurnFinalizationUsageAppend: Arbitrary.schema(TurnFinalizationUsageAppend),
@@ -307,7 +321,7 @@ describe("@beep/epistemic-domain", () => {
         assertSchemaRoundTrip(ClaimGateViolation, values.ClaimGateViolation, "ClaimGateViolation");
         assertSchemaRoundTrip(ClaimGateResult, values.ClaimGateResult, "ClaimGateResult");
         assertSchemaRoundTrip(ClaimLifecycleError, values.ClaimLifecycleError, "ClaimLifecycleError");
-        assertSchemaRoundTrip(EvidenceSpan, values.EvidenceSpan, "EvidenceSpan");
+        assertSchemaRoundTrip(EvidencePosition, values.EvidencePosition, "EvidencePosition");
         assertSchemaRoundTrip(ClaimProjectionView, values.ClaimProjectionView, "ClaimProjectionView");
         assertSchemaRoundTrip(Activity, values.Activity, "Activity");
         assertSchemaRoundTrip(CandidateClaim, values.CandidateClaim, "CandidateClaim");

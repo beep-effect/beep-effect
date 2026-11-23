@@ -45,6 +45,7 @@ import {
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
 import { Confidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -162,9 +163,9 @@ const insertVerification = Effect.fnUntraced(function* (
     scenario,
     `${ordinal}`,
     TextAnchor.make({
-      endChar: evidence.span.endChar,
-      quote: evidence.span.quote,
-      startChar: evidence.span.startChar,
+      endChar: Result.getOrThrow(decodeCurrentPosition(evidence.span)).position.endChar,
+      quote: Result.getOrThrow(decodeCurrentPosition(evidence.span)).position.quote,
+      startChar: Result.getOrThrow(decodeCurrentPosition(evidence.span)).position.startChar,
     }),
     sourceScopeRef
   );
@@ -240,7 +241,14 @@ const seedScenario = Effect.fnUntraced(function* (
           ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
           artifactFixtureKey: `contradiction.source-${scenario}-a`,
           orgId: organizationId,
-          span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
+          span: {
+            version: "evidence-position/v2",
+            position: { endChar: 8, quote: "amount A", startChar: 0 },
+            extractorConfidence: {
+              _tag: "Present",
+              value: { _tag: "ReportedConfidence", value: 0.95, method: "synthetic-fixture" },
+            },
+          },
           spanFixtureKey: `contradiction.span-${scenario}-a`,
         })
       ),
@@ -249,7 +257,14 @@ const seedScenario = Effect.fnUntraced(function* (
           ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
           artifactFixtureKey: `contradiction.source-${scenario}-b`,
           orgId: organizationId,
-          span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
+          span: {
+            version: "evidence-position/v2",
+            position: { endChar: 8, quote: "amount B", startChar: 0 },
+            extractorConfidence: {
+              _tag: "Present",
+              value: { _tag: "ReportedConfidence", value: 0.94, method: "synthetic-fixture" },
+            },
+          },
           spanFixtureKey: `contradiction.span-${scenario}-b`,
         })
       ),
@@ -803,10 +818,12 @@ if (!shouldRunPgliteIntegration) {
                 artifactFixtureKey: "contradiction.source-105-cross-org",
                 orgId: 2,
                 span: {
-                  confidence: 0.93,
-                  endChar: 8,
-                  quote: "amount C",
-                  startChar: 0,
+                  version: "evidence-position/v2",
+                  position: { endChar: 8, quote: "amount C", startChar: 0 },
+                  extractorConfidence: {
+                    _tag: "Present",
+                    value: { _tag: "ReportedConfidence", value: 0.93, method: "synthetic-fixture" },
+                  },
                 },
                 spanFixtureKey: "contradiction.span-105-cross-org",
               })
@@ -1099,13 +1116,16 @@ if (!shouldRunPgliteIntegration) {
           const madeSubmission19 = yield* makeSubmission(116, seeded);
           const submitted = yield* repository.submit(madeSubmission19);
           const selected = yield* insertVerification(116, 1, seeded.evidenceA, 1_300);
+          const currentEvidence = yield* Effect.fromResult(fromEvidenceRow(seeded.evidenceA));
+          const currentPosition = Result.getOrThrow(decodeCurrentPosition(currentEvidence.span)).position;
 
           yield* db
             .update(DbSchema.evidence)
             .set({
               span: {
-                ...seeded.evidenceA.span,
-                endChar: seeded.evidenceA.span.endChar + 1,
+                ...currentPosition,
+                confidence: 0.95,
+                endChar: currentPosition.endChar + 1,
               },
             })
             .where(eq(DbSchema.evidence.id, seeded.evidenceA.id));
@@ -1637,3 +1657,5 @@ if (!shouldRunPgliteIntegration) {
     });
   });
 }
+
+const decodeCurrentPosition = S.decodeUnknownResult(S.toType(EvidencePosition));

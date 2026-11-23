@@ -52,14 +52,14 @@ SELECT
   doc.client AS client,
   c.snapshot->>'digest' AS digest,
   c.snapshot->>'docket' AS docket,
-  CAST(e.span->>'endChar' AS FLOAT8) AS "endChar",
-  e.span->>'quote' AS "evidenceQuote",
+  CAST(COALESCE(e.span->'position'->>'endChar', e.span->>'endChar') AS FLOAT8) AS "endChar",
+  COALESCE(e.span->'position'->>'quote', e.span->>'quote') AS "evidenceQuote",
   c.snapshot->>'family' AS family,
   CASE WHEN doc.client IS NULL THEN NULL ELSE doc.client || '.' || doc.docket_family END AS "familyKey",
   'candidate — unreviewed' AS label,
   c.snapshot->>'sourceDocumentDigest' AS "sourceDocumentDigest",
   c.snapshot->>'sourceFile' AS "sourceFile",
-  CAST(e.span->>'startChar' AS FLOAT8) AS "startChar"
+  CAST(COALESCE(e.span->'position'->>'startChar', e.span->>'startChar') AS FLOAT8) AS "startChar"
 FROM epistemic_candidate_claim c
 JOIN epistemic_evidence e
   ON e.span_fixture_key = c.snapshot->>'evidenceFixtureKey'

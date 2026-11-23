@@ -108,10 +108,13 @@ export function ClaimEvidenceReviewPanel({
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            <blockquote className="border-l-2 pl-4 text-lg">“{basis.evidence.quote}”</blockquote>
+            <blockquote className="border-l-2 pl-4 text-lg">“{basis.evidence.position.quote}”</blockquote>
             <p className="text-sm text-muted-foreground">
-              Extractor confidence: {basis.evidence.confidence} / 1. This is an extraction score; a matching quote still
-              needs interpretation.
+              Extractor confidence:{" "}
+              {basis.evidence.extractorConfidence._tag === "Present"
+                ? basis.evidence.extractorConfidence.value.value
+                : basis.evidence.extractorConfidence.reason}
+              . A reported value describes extraction; a matching quote still needs interpretation.
             </p>
           </div>
         </CardContent>
@@ -156,8 +159,8 @@ export function ClaimEvidenceReviewPanel({
                 className="h-52"
                 pageText={sourceText}
                 pageStartOffset={0}
-                anchorStartOffset={basis.evidence.startChar}
-                anchorEndOffset={basis.evidence.endChar}
+                anchorStartOffset={basis.evidence.position.startChar}
+                anchorEndOffset={basis.evidence.position.endChar}
                 autoScrollToAnchor={false}
               />
             ) : (
@@ -199,7 +202,7 @@ export function ClaimEvidenceReviewPanel({
                 <div>
                   <dt className="text-muted-foreground">UTF-16 evidence offsets</dt>
                   <dd>
-                    {basis.evidence.startChar}–{basis.evidence.endChar}
+                    {basis.evidence.position.startChar}–{basis.evidence.position.endChar}
                   </dd>
                 </div>
                 <div>

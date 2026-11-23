@@ -6,7 +6,8 @@ import {
   ClaimEvidenceVerification,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { ClaimEvidenceReviewPanel } from "@beep/epistemic-ui";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { ReportedConfidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition, ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
@@ -14,10 +15,12 @@ import { UserId } from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import { constVoid } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -36,11 +39,15 @@ const explanation = ClaimEvidenceExplanation.make({
     claimRef: "claim:fact",
     assertion: "The source states fact.",
     subject: "Example source",
-    evidence: EvidenceSpan.make({
-      startChar: S.Natural.make(0),
-      endChar: S.Natural.make(4),
-      quote: "fact",
-      confidence: UnitInterval.make(0.82),
+    evidence: EvidencePosition.make({
+      position: TextAnchor.make({ startChar: S.Natural.make(0), endChar: S.Natural.make(4), quote: "fact" }),
+      extractorConfidence: ExtractorConfidence.cases.Present.make({
+        value: ReportedConfidence.make({
+          value: UnitInterval.make(0.82),
+          method: "synthetic-fixture",
+          producer: O.none(),
+        }),
+      }),
     }),
     source,
   }),
@@ -54,7 +61,7 @@ const review = ClaimEvidenceReview.make({
   reviewedBy: UserPrincipal.make({ kind: "User", userId: UserId.make(1) }),
   reviewedAt: DateTime.makeUnsafe(0),
 });
-const confidenceArbitrary = Arbitrary.schema(ClaimEvidenceBasis.fields.evidence.fields.confidence);
+const confidenceArbitrary = Arbitrary.schema(ExtractorConfidence);
 
 describe("ClaimEvidenceReviewPanel", () => {
   it.prop(
@@ -65,7 +72,10 @@ describe("ClaimEvidenceReviewPanel", () => {
         ...explanation,
         basis: ClaimEvidenceBasis.make({
           ...explanation.basis,
-          evidence: ClaimEvidenceBasis.fields.evidence.make({ ...explanation.basis.evidence, confidence }),
+          evidence: ClaimEvidenceBasis.fields.evidence.make({
+            ...explanation.basis.evidence,
+            extractorConfidence: confidence,
+          }),
         }),
       });
       const markup = renderToStaticMarkup(<ClaimEvidenceReviewPanel explanation={scored} onApprove={constVoid} />);
@@ -88,7 +98,7 @@ describe("ClaimEvidenceReviewPanel", () => {
     expect(markup).toContain(">fact</mark>");
     expect(markup).toContain("Source verified");
     expect(markup).toContain("Awaiting review");
-    expect(markup).toContain("This is an extraction score");
+    expect(markup).toContain("A reported value describes extraction");
     expect(markup).toContain("Approve this claim");
     expect(markup).not.toContain('disabled=""');
   });

@@ -1395,7 +1395,7 @@ describe("practice KG projections", () => {
           expect(item.text).toContain(claimText);
           expect(item.text).toContain("the shutter");
           expect(item.sourceRefs).toHaveLength(0);
-          expect(mapped.evidence.span.quote).toBe("the shutter");
+          expect(mapped.evidence.span).toMatchObject({ position: { quote: "the shutter" } });
           expect(mapped.candidate.lifecycle).toBe("candidate");
           const callToolText3 = yield* callToolText("kg_candidate_claims", {});
           expect(callToolText3).toBe(before);

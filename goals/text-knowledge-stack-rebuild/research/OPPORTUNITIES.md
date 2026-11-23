@@ -607,3 +607,68 @@ the inventory. A test-file-only discovery recipe would have prevented the interr
   The revised six-test suite fails that mutant (exit 1); deleting prefix validation fails L4-1
   (exit 1); coupling historical stance back to selected verification fails three L4-4 tests
   (exit 1). Each temporary mutation was restored before the final package and coverage runs.
+
+### P4 evidence retirement implementation friction
+
+- Doing: locating package decisions before the evidence retirement wave. Evidence: the requested
+  `beep decisions for` command exits 1 with `Unknown subcommand decisions` on this layer. Read the
+  relevant packet decisions and search package decision paths directly. Prevention: keep the
+  always-loaded command recipe synchronized with the checkout's available commands.
+- Doing: running focused package tests. Evidence: Bun's misplaced `--cwd` form printed script usage
+  with exit 0; an invocation from the repository root entered the root test wrapper instead.
+  The owned root invocation was cancelled with exit 130 before tests ran. Prevention: use the tool's
+  explicit package working directory and require a Vitest test count, not only process exit 0.
+- Doing: migrating evidence fixtures. Evidence: the frozen reader initially changed JSON field order;
+  the domain identifier snapshot also changed as expected. Preserve original field ordering in the
+  private frozen codecs and update only the derived identifier snapshot, never frozen wire fixtures.
+- Gate feedback during row 5: Effect-vitest rejected six boolean Result assertions in new tests.
+  Use assertSuccess/assertFailure so the assertions preserve the library's failure information.
+  No detector baseline or exception row was added. The schema-first writer removed the retired
+  span-generator exception and updated two existing advisory line numbers; its entry count shrank.
+- Broad server proof exposed an introduced indirect consumer omitted by the lexical symbol map:
+  `PracticeKg.queries.ts` projected root span offsets and quote directly from JSON. Three practice-KG
+  tests failed with `Expected number at [0][endChar]` after v2 writes. Apply the same declared
+  legacy/v2 SQL coalescing rule to this reader. Prevention: inventory JSON-path readers alongside
+  symbol importers before retiring a stored shape.
+- The v4 Result assertion helpers compare an expected payload; using them as tag-only assertions
+  failed the first broader foundation run. Replaced them with the established Result predicate
+  piped to assertTrue. A subsequent syntax error in that test edit was corrected before rerunning.
+- Boundary review during row 5 found that decoder fallback could reinterpret a malformed versioned
+  payload as untagged legacy data when both field sets were supplied. Version presence now selects
+  the current decoder exclusively; malformed/unknown versions refuse instead of being repaired.
+  A planted mixed-shape regression covers current-invalid, future and non-string versions.
+- The command tool briefly returned repeated runtime-replacement errors. Before restarting the
+  audit script, checked owned processes and its expected log files; neither existed, so no audit
+  was duplicated. A short retry restored the command route without changing permissions.
+- The first tables audit exposed five introduced test-check errors: widened entity/schema-version
+  fixture literals, nullable insert fields spread into a selected row, and a missed pipeable codec
+  construction. Kept the fixture constrained by EvidenceRow, supplied the required row fields and
+  used the schema's pipe form. The exact check then reported 0 errors/0 warnings and five fixed;
+  all 50 table tests and the corrective lint/check package verification passed.
+- The use-case package audit passed, but docgen exited 130 during example typechecking. The earlyoom
+  journal identifies that exact docgen process at the matching failure time. Standalone docgen passed
+  without edits; the environment-only inbox acknowledgment records that evidence. Do not disable
+  memory protection or restart other agents to make a proof pass.
+- Earlyoom also sent SIGTERM to the epistemic-server integration Vitest process; the package audit
+  returned 143 after its build, check and 34 regular tests had passed. Package lint/docgen passed.
+  The complete integration set passed with one worker (30 tests; two external-Postgres files skipped).
+  The environment-only acknowledgment cites the matching journal evidence. Reduced this proof's own
+  worker count without changing assertions, services, memory protection or another agent's process.
+
+# P4 row 5: desktop audit closure
+
+The complete desktop audit found a sidecar-registration fixture still using the legacy span shape;
+the symbol-only retirement search had not located its inline JSON. Converting that fixture to v2
+restored all 300 regular tests. A first corrective fixture omitted the ReportedConfidence tag;
+the decoder caught it, and the corrected tagged fixture passed. Future migration inventories should
+include inline decoder inputs in the owning package's full suite.
+
+The same audit's integration Vitest process received earlyoom SIGTERM, confirmed by its exact
+command in the journal. Retry the failed integration component with one worker, retaining the
+already successful lint, build, check and docgen results; do not repeat the full package audit.
+
+The law-practice server audit took roughly 29 minutes and completed 92 integration tests before
+reporting six extractDeadline failures in unchanged citation-regex boundary/case-flag batches.
+An exact-case retry in the same Bun runtime passed all six with one worker and unchanged 30-second
+extraction and 60-second operation limits. Preserve the successful audit components and retry only
+failed batches under lower contention; do not weaken production safety deadlines to green a gate.

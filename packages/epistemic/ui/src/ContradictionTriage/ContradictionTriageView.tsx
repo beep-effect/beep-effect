@@ -8,6 +8,7 @@
 
 import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import { $EpistemicUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@beep/ui/components/alert";
@@ -57,6 +58,7 @@ import type { ContradictionCandidateId } from "@beep/shared-domain/identity/Epis
 import type * as RpcClientError from "effect/rpc/RpcClientError";
 import type { JSX } from "react";
 
+const isCurrentPosition = S.is(EvidencePosition);
 const $I = $EpistemicUiId.create("ContradictionTriage/ContradictionTriageView");
 const ContradictionTriageTabBase = LiteralKit(["queue", "comparison", "source"]);
 
@@ -612,7 +614,9 @@ function EvidenceList({
     onNonEmpty: (items) => (
       <div className="grid gap-2">
         {A.map(items, (item) => {
-          const hasVerifiedAnchor = O.isSome(item.verifiedAnchor);
+          const span = item.evidence.span;
+          const currentPosition = isCurrentPosition(span);
+          const hasVerifiedAnchor = currentPosition && O.isSome(item.verifiedAnchor);
           const selected = O.exists(selectedSource, ({ evidenceId }) => Eq.equals(evidenceId, item.evidence.id));
 
           return (
@@ -623,10 +627,16 @@ function EvidenceList({
                   {hasVerifiedAnchor ? "Verified source" : "Source unavailable"}
                 </Badge>
               </div>
-              <blockquote className="border-l-2 pl-3 text-sm leading-relaxed">{item.evidence.span.quote}</blockquote>
+              <blockquote className="border-l-2 pl-3 text-sm leading-relaxed">
+                {currentPosition ? span.position.quote : span.quote}
+              </blockquote>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-muted-foreground">
-                  {confidencePercent(item.evidence.span.confidence)} span confidence
+                  {currentPosition
+                    ? span.extractorConfidence._tag === "Present"
+                      ? `${confidencePercent(span.extractorConfidence.value.value)} reported extraction confidence`
+                      : `Extraction confidence: ${span.extractorConfidence.reason}`
+                    : "Legacy position requires repair"}
                 </span>
                 <Button
                   aria-pressed={selected}

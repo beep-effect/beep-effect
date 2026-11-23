@@ -274,10 +274,13 @@ export const decodeEvidencedCandidate = Effect.fn("ClaimEvidence.decodeEvidenced
     artifactFixtureKey: input.artifactFixtureKey,
     publicId: `${Epistemic.EvidenceId.tableName}_${input.identityKey}`,
     span: {
-      confidence: 1,
-      endChar: Num.sum(input.startChar, Str.length(input.quote)),
-      quote: input.quote,
-      startChar: input.startChar,
+      version: "evidence-position/v2",
+      position: {
+        endChar: Num.sum(input.startChar, Str.length(input.quote)),
+        quote: input.quote,
+        startChar: input.startChar,
+      },
+      extractorConfidence: { _tag: "Absent", reason: "not-assessed" },
     },
     spanFixtureKey: input.evidenceFixtureKey,
   });

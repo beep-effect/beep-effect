@@ -7,8 +7,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-23T04:11:33.615Z",
-  "git_sha": "dfcae072abd16e5cfa4fb4ae3e518396e0a75759",
+  "generated_at": "2026-11-23T05:27:19.988Z",
+  "git_sha": "a38c23485074c4165d9212e755927c23fe81d52b",
   "command": "bun run coverage -- --filter=@beep/epistemics --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
@@ -13041,6 +13041,18 @@
           }
         },
         "packages/foundation/modeling/epistemics/src/Admission.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/EvidencePosition.schema.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

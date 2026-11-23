@@ -79,10 +79,12 @@ const leftEvidenceInput = {
   ...baseEntity("EpistemicEvidence", 3),
   artifactFixtureKey: "artifact:signed-amendment",
   span: {
-    confidence: 0.98,
-    endChar: 20,
-    quote: "signed amendment",
-    startChar: 4,
+    version: "evidence-position/v2",
+    position: { endChar: 20, quote: "signed amendment", startChar: 4 },
+    extractorConfidence: {
+      _tag: "Present",
+      value: { _tag: "ReportedConfidence", value: 0.98, method: "synthetic-fixture" },
+    },
   },
   spanFixtureKey: "span:signed-amendment:4-20",
 };
@@ -91,10 +93,12 @@ const rightEvidenceInput = {
   ...baseEntity("EpistemicEvidence", 4),
   artifactFixtureKey: "artifact:unsigned-draft",
   span: {
-    confidence: 0.72,
-    endChar: 24,
-    quote: "unsigned working draft",
-    startChar: 2,
+    version: "evidence-position/v2",
+    position: { endChar: 24, quote: "unsigned working draft", startChar: 2 },
+    extractorConfidence: {
+      _tag: "Present",
+      value: { _tag: "ReportedConfidence", value: 0.72, method: "synthetic-fixture" },
+    },
   },
   spanFixtureKey: "span:unsigned-draft:2-24",
 };

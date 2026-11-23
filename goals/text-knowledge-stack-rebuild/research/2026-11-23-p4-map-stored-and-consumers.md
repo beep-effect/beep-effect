@@ -161,3 +161,11 @@ project through a private versioned reader. Commit 1 freezes bytes; commit 7 cha
 writer together with ReviewFiles.test.ts reopen, mixed-version and no-op replay tests. Domain
 ReviewVerdict, QuestionLoop and SourceRefQuote tests must be rewritten for the declared v2 encoding.
 No fixture or migration implementation is claimed by this map.
+
+## Row-5 implementation correction: indirect JSON reader
+
+The broad law-practice server proof found `packages/law-practice/server/src/PracticeKg.queries.ts:55`
+projecting evidence span root offsets and quote directly. This site does not name EvidenceSpan and
+was absent from the lexical symbol table. Row 5 migrates its three accessors to coalesce v2 position
+fields with legacy root fields, covered by PracticeKg.projections.test.ts. The frozen source rows
+remain untouched; the query remains a candidate locator projection, not an authority receipt.

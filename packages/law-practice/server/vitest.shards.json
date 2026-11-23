@@ -29,6 +29,7 @@
       "test/CitationXmlWorkerProtocol.test.ts",
       "test/ClaimElement.reference.test.ts",
       "test/PracticeKg.compare.test.ts",
+      "test/PracticeKg.evidence-position.test.ts",
       "test/PracticeKg.families.test.ts",
       "test/UsptoClaims.test.ts",
       "test/vitest-integration-shards.test.ts"

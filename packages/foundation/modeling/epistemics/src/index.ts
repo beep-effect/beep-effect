@@ -226,21 +226,19 @@ export * from "./EdgeEndpoint/index.ts";
  */
 export * from "./EdgeRelation/index.ts";
 /**
- * Evidence span value exports.
+ * Current evidence positions and their independent extraction observations.
  *
- * **Example** (Check an evidence span)
+ * **Example** (Inspect the current format)
  *
  * ```ts
- * import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan"
- * import * as S from "effect/Schema"
- *
- * console.log(S.is(EvidenceSpan)({ startChar: 0, endChar: 4, quote: "text", confidence: 0.88 }))
+ * import { EvidencePosition } from "@beep/epistemics"
+ * console.log(EvidencePosition.fields.version)
  * ```
  *
- * @category value-objects
+ * @category schemas
  * @since 0.0.0
  */
-export * from "./EvidenceSpan/index.ts";
+export * from "./EvidencePosition.schema.ts";
 /**
  * Evidence-verification manifestation schema factory and digest.
  *

@@ -15,6 +15,7 @@
  */
 
 import { ClaimGateViolation } from "@beep/epistemics/ClaimGate";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import { iri } from "@beep/identity/Registry";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
@@ -36,6 +37,7 @@ import type { Dataset } from "@beep/rdf/Rdf";
 import type { ShaclValidationResult, ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation";
 import type { ClaimGateShape } from "./ClaimGate.ports.ts";
 
+const isCurrentPosition = S.is(EvidencePosition);
 const CLAIM_CLASS_IRI = iri("epistemic:Claim");
 const EVIDENCE_QUOTE_IRI = iri("epistemic:hasEvidenceQuote");
 const CLAIM_SUBJECT_PREFIX = `${iri("epistemic:claim")}/`;
@@ -48,7 +50,11 @@ const toDataset = (
   const typeQuad = makeQuad(subject, RDF_TYPE, makeNamedNode(CLAIM_CLASS_IRI));
   const quoteQuads = pipe(
     evidence,
-    A.map((ev) => makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.quote, XSD_STRING.value)))
+    A.flatMap((ev) =>
+      isCurrentPosition(ev.span)
+        ? [makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.position.quote, XSD_STRING.value))]
+        : []
+    )
   );
   return makeDataset([typeQuad, ...quoteQuads]);
 };

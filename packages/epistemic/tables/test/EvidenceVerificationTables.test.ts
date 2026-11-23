@@ -81,8 +81,12 @@ const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
       createdAt: 0,
       id,
       span: {
-        ...anchor,
-        confidence: 0.95,
+        version: "evidence-position/v2",
+        position: { ...anchor },
+        extractorConfidence: {
+          _tag: "Present",
+          value: { _tag: "ReportedConfidence", value: 0.95, method: "synthetic-fixture" },
+        },
       },
       spanFixtureKey: `span:evidence-verification-${id}`,
       updatedAt: 0,

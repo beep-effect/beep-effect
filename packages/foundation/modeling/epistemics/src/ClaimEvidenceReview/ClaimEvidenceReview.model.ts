@@ -12,7 +12,7 @@ import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { EvidenceSpan } from "../EvidenceSpan/index.ts";
+import { EvidencePosition } from "../EvidencePosition.schema.ts";
 import type { SchemaIdentity } from "../Factory/index.ts";
 
 /**
@@ -52,7 +52,7 @@ export const makeClaimEvidenceBasis = <ClaimRef extends S.Top>(config: {
     claimRef,
     assertion: S.NonEmptyString,
     subject: S.NonEmptyString,
-    evidence: EvidenceSpan,
+    evidence: EvidencePosition,
     source: SourceTextIdentity,
   }).pipe(
     $I.annoteSchema("ClaimEvidenceBasis", {

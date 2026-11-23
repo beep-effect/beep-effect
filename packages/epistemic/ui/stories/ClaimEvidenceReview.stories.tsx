@@ -6,12 +6,14 @@ import {
   ExplainClaimEvidence,
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { ReportedConfidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition, ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import { UserId } from "@beep/shared-domain/identity/Shared";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { Button } from "@beep/ui/components/button";
 import { RegistryProvider, useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";
@@ -29,11 +31,19 @@ const exampleBasis = (year: number, digest: SourceTextDigest) =>
     claimRef: "claim:observatory-opening",
     assertion: `North Observatory opened to the public in ${year}.`,
     subject: "North Observatory",
-    evidence: EvidenceSpan.make({
-      startChar: S.Natural.make(46),
-      endChar: S.Natural.make(74),
-      quote: `opened to the public in ${year}`,
-      confidence: UnitInterval.make(0.82),
+    evidence: EvidencePosition.make({
+      position: TextAnchor.make({
+        startChar: S.Natural.make(46),
+        endChar: S.Natural.make(74),
+        quote: `opened to the public in ${year}`,
+      }),
+      extractorConfidence: ExtractorConfidence.cases.Present.make({
+        value: ReportedConfidence.make({
+          value: UnitInterval.make(0.82),
+          method: "synthetic-fixture",
+          producer: O.none(),
+        }),
+      }),
     }),
     source: SourceTextIdentity.make({
       scopeRef: "project:observatory",

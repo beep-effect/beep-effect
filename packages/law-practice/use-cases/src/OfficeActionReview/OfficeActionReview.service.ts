@@ -104,10 +104,9 @@ const evidenceOf = Effect.fnUntraced(function* (law: LawEntities, entitySeed: nu
     ...spikeEntityInput("EpistemicEvidence", entitySeed * 10 + 1),
     artifactFixtureKey: law.officeAction.fixtureKey,
     span: {
-      confidence: 0.9,
-      endChar: law.distinction.anchor.endChar,
-      quote: law.distinction.anchor.quote,
-      startChar: law.distinction.anchor.startChar,
+      version: "evidence-position/v2",
+      position: law.distinction.anchor,
+      extractorConfidence: { _tag: "Absent", reason: "not-assessed" },
     },
     spanFixtureKey: law.distinction.fixtureKey,
   }).pipe(Effect.orDie);

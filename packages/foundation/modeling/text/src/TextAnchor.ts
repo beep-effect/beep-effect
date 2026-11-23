@@ -6,8 +6,7 @@
  * A `TextAnchor` pins a piece of derived knowledge to a half-open character range
  * of a source document, plus the exact quoted substring. It is pure provenance
  * substrate: no confidence, no claim semantics, no judgement — those belong to
- * the consuming slice (e.g. epistemic `EvidenceSpan` wraps a `TextAnchor` and
- * adds a `Confidence`). Char offsets are model-stable and re-sliceable: given the
+ * the consuming slice. Char offsets are model-stable and re-sliceable: given the
  * source text, `text.slice(startChar, endChar)` should reproduce `quote`.
  *
  * @packageDocumentation

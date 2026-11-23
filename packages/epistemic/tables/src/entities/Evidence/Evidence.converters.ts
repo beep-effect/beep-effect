@@ -6,11 +6,13 @@
  * @since 0.0.0
  */
 
-import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { Evidence, LegacyEvidenceUnresolved } from "@beep/epistemic-domain/entities/Evidence";
+import { Confidence, ReportedConfidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition, ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { $EpistemicTablesId } from "@beep/identity/packages";
-import { TextAnchorFields } from "@beep/text/TextAnchor";
-import { pipe } from "effect/Function";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -97,58 +99,58 @@ export type EvidenceRow = typeof Table.$inferSelect;
 export type EvidenceInsert = typeof Table.$inferInsert;
 
 const encodeEvidence = S.encodeResult(Evidence);
+const ReadPosition = S.Union([EvidencePosition, LegacyEvidenceUnresolved]).pipe(
+  $I.annoteSchema("ReadPosition", { description: "Current evidence or explicitly unresolved historical metadata." })
+);
+const encodeReadPosition = S.encodeResult(ReadPosition);
 const decodeEvidenceRow = S.decodeUnknownResult(Evidence);
-class LegacyEvidenceSpan extends S.Opaque<LegacyEvidenceSpan, { readonly brand: unique symbol }>()(
+class FrozenPosition extends S.Opaque<FrozenPosition, { readonly brand: unique symbol }>()(
   S.Struct({
-    confidence: EvidenceSpan.fields.confidence,
-    endChar: EvidenceSpan.fields.endChar,
-    quote: TextAnchorFields.quote,
-    startChar: EvidenceSpan.fields.startChar,
-  }).pipe(
-    $I.annoteSchema("LegacyEvidenceSpan", {
-      description:
-        "Persistence-read compatibility shape for evidence spans written before strict width and quote bounds.",
-    })
-  )
+    confidence: Confidence,
+    endChar: S.Natural,
+    quote: S.String,
+    startChar: S.Natural,
+  }).pipe($I.annoteSchema("FrozenPosition", { description: "Private frozen pre-v2 position payload." }))
 ) {}
-const LegacyEvidence = Evidence.select
-  .mapFields((fields) => ({
-    ...fields,
-    span: LegacyEvidenceSpan,
-  }))
-  .pipe(
-    $I.annoteSchema("LegacyEvidence", {
-      description: "Persistence-read compatibility schema for evidence rows written before strict span checks.",
-    })
-  );
-const decodeLegacyEvidenceRow = S.decodeUnknownResult(LegacyEvidence);
 
-const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.SchemaError> =>
-  pipe(
-    decodeEvidenceRow(row),
-    Result.orElse(() =>
-      Result.flatMap(decodeLegacyEvidenceRow(row), (legacy) => {
-        const endChar = S.Natural.make(legacy.span.startChar + Str.length(legacy.span.quote));
-        return pipe(
-          decodeEvidenceRow({
-            ...row,
-            span: {
-              ...row.span,
-              endChar,
-            },
-          }),
-          Result.orElse(() =>
-            Result.succeed({
-              ...legacy,
-              span: {
-                ...legacy.span,
-                endChar,
-              },
-            })
-          )
+const decodeFrozenPosition = S.decodeUnknownResult(FrozenPosition);
+const validateCurrentPosition = S.decodeUnknownResult(S.toType(EvidencePosition));
+const decodeCurrentPosition = S.decodeUnknownResult(EvidencePosition);
+const decodeAnchor = S.decodeUnknownResult(TextAnchor);
+const decodePersistedPosition = (
+  span: EvidenceRow["span"]
+): Result.Result<EvidencePosition | LegacyEvidenceUnresolved, S.SchemaError> =>
+  P.hasProperty(span, "version")
+    ? decodeCurrentPosition(span)
+    : Result.flatMap(decodeFrozenPosition(span), (raw) => {
+        const anchor = decodeAnchor({
+          startChar: raw.startChar,
+          endChar: raw.startChar + Str.length(raw.quote),
+          quote: raw.quote,
+        });
+        return Result.succeed(
+          Result.match(anchor, {
+            onFailure: () => LegacyEvidenceUnresolved.make(raw),
+            onSuccess: (position) =>
+              O.getOrElse(
+                EvidencePosition.makeOption({
+                  position,
+                  extractorConfidence: ExtractorConfidence.cases.Present.make({
+                    value: ReportedConfidence.make({
+                      value: raw.confidence,
+                      method: "legacy-reported",
+                      producer: O.none(),
+                    }),
+                  }),
+                }),
+                () => LegacyEvidenceUnresolved.make(raw)
+              ),
+          })
         );
-      })
-    )
+      });
+const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.SchemaError> =>
+  Result.flatMap(decodePersistedPosition(row.span), (span) =>
+    Result.flatMap(encodeReadPosition(span), (encoded) => decodeEvidenceRow({ ...row, span: encoded }))
   );
 
 /**
@@ -200,10 +202,13 @@ const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.Sc
  */
 export const toEvidenceInsert = (evidence: Evidence): Result.Result<EvidenceInsert, EvidenceConverterError> =>
   Result.mapError(
-    Result.map(encodeEvidence(evidence), (encoded): EvidenceInsert => {
-      const { id: _id, ...rest } = encoded;
-      return rest as EvidenceInsert;
-    }),
+    Result.map(
+      Result.flatMap(validateCurrentPosition(evidence.span), () => encodeEvidence(evidence)),
+      (encoded): EvidenceInsert => {
+        const { id: _id, ...rest } = encoded;
+        return rest as EvidenceInsert;
+      }
+    ),
     (error) => EvidenceConverterError.fromSchema("toInsert", error)
   );
 
@@ -242,7 +247,7 @@ export const toEvidenceInsert = (evidence: Evidence): Result.Result<EvidenceInse
  * } satisfies EvidenceRow
  *
  * const evidence = Result.getOrThrow(fromEvidenceRow(row))
- * console.log(evidence.span.quote)
+ * console.log(evidence.span)
  * ```
  *
  * @category tables
