@@ -1,6 +1,3 @@
-// What a lenient read goes past and how it reports it, what a strict read refuses, and the record rules (line breaks,
-// ragged records, blank lines, trimming, `sep=` lines, delimiter detection), each with its findings and their spans.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import {
   CsvWarning,
@@ -30,7 +27,6 @@ import type { CsvWarningFinding } from "@beep/csv/CsvDiagnostic.schema";
 const at = (offset: number, length: number, line: number, character: number) =>
   CsvTextSpan.make({ offset, length, line, character });
 
-/** The records and the warnings' findings of a successful read. */
 const readOf = (text: string, options = readWith(",")) =>
   Result.map(Csv.parseResult(text, options), (read) => ({
     records: read.table.records,
@@ -106,9 +102,7 @@ describe("misplaced quotes", () => {
     ]);
   });
 
-  // The machine's paths after a closing quote and its spaces, stated by example: the property tests reach them only
-  // when an arbitrary happens to put a quote, spaces and then text, a line break, a quote or the end side by side.
-  describe("after a closing quote and spaces", () => {
+  describe("after a closing quote and spaces, pinned by example since the properties seldom put a quote, spaces and then text, a line break, a quote or the end side by side", () => {
     const strict = readWithRules(",", { quotes: "strict" });
 
     it("text after the spaces keeps the quote and the spaces, and the field stays quoted", () => {
