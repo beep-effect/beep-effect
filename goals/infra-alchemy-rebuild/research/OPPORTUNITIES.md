@@ -776,3 +776,24 @@ to the gap between the reference checkout (main) and the pinned release.
   4a watch's launch count used the same expression.
 - **Would have prevented it:** flattening before counting, `length(Reservations[].Instances[?...][])`, as the
   running-instance count already did. The watch script is fixed.
+
+## 2026-11-23: a post-deploy plan_only overwrote the pre-deploy plan's rows file
+
+- **Doing:** the tksr Lambda deploy at a pinned main head. One plan_only ran before the deploy and one
+  after, to prove 0 code rows remained.
+- **Evidence:** the gate's plan script named its outputs `plan-rows-<head7>.txt` and `plan-only-<head7>.log`.
+  Both plans ran at the same head, so the post-deploy plan replaced the rows file and log the deploy digest
+  was computed from. The driver had already recomputed that digest from the file before its word, and the
+  hosted plan run's log still holds the rows, so no evidence was lost.
+- **Would have prevented it:** naming every plan output by its run id (`plan-rows-<runId>.txt`), never by
+  head, so two plans at one head cannot share a file. The gate's scripts now do that.
+
+## 2026-11-23: earlyoom killed local cheap gates while the host ran out of memory
+
+- **Doing:** publishing a review-fix wave for the missed-event check PR.
+- **Evidence:** memory available fell to about 2 GiB with swap exhausted, and earlyoom sent SIGTERM and SIGKILL
+  to new processes. `yeet publish` cheap gates ended with exit 130 or `terminated by signal SIGKILL`, and
+  even a bare `bun -e` was killed. A 47 GiB image-generation process outside the repo was the largest holder.
+- **Would have prevented it:** a gate runner that reads `MemAvailable` before starting a lane and reports an
+  environment hold instead of a red. The publish went through once memory recovered above 20 GiB with no
+  kills for two minutes.
