@@ -533,7 +533,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const consumers = [
           Tuple.make(
             "packages/foundation/capability/walker/src/Expand.ts",
-            "27393369d43732e128561717062b07d9a5862e7c21fa82ca10e5f3167bdcb93b"
+            "f1088f173cf33325f8422273cb0d745e2db6e7908ea3c661dbd9a3228e441284"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
@@ -557,7 +557,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/foundation/capability/walker/src/Descend.ts",
-            "0b116dc99e01c10ca9da12beb9862bd04863c1e7f7862c3eef383c145417188d"
+            "3c41d6a2b121e1b810f7b1126a54ac1ad0db207fff2bb5af34a64c2677156b88"
           ),
           Tuple.make(
             "packages/tooling/library/repo-utils/src/FsUtils.ts",
