@@ -679,3 +679,20 @@ they were marked durable. A one-off cleanup removed about 100 GB; the
 `residue-reap` classes in this branch and a daily `--apply --fleet` timer
 would have prevented the accumulation. Evidence: `du` summaries in
 `~/.claude/memory/beep-effect/disk-footprint-audit-2026-09-25.md`.
+
+### The tmpfs janitor never classified full Git clones under /tmp
+
+On 2026-11-23 `/tmp` (a 63 GB RAM-backed tmpfs) reached 53 GB, swap filled and
+earlyoom kept killing lane processes (`tsc`, `vitest`, the schema catalog).
+51 GB of it was one folder, `/tmp/claude-probes`: 47 full clones, each with its
+own `.git` directory, plus loose `.log`/`.bak`/`.txt` files, idle about ten
+hours with no process inside. The dry run of `beep quality tmpfs-reap` listed
+only `vitest-forks-tmp` rows, because its closed class list knew linked
+worktrees (`.git` file) but not clones (`.git` directory), and it only looked
+one level deep. AGENTS.md already forbids clones under `/tmp` and names
+tmpfs-reap as the janitor, so the law had no enforcement. The orchestrator
+removed the folder by hand on the operator's word. The `git-checkout` and
+`git-checkout-parent` classes added in this branch would have flagged it with
+its size on the first hourly timer run after the two-hour idle threshold.
+Prevention: when a law names a janitor, add a fixture of the forbidden shape
+to the janitor's tests in the same change.

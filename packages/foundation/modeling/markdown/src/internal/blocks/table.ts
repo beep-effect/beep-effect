@@ -117,8 +117,6 @@ export class RowSource extends S.Opaque<RowSource, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link RowSource}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -159,8 +157,6 @@ export class RawCell extends S.Opaque<RawCell, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Companion types for {@link RawCell}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -207,8 +203,6 @@ export class ScannedRow extends S.Opaque<ScannedRow, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link ScannedRow}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -448,8 +442,6 @@ export class CellContent extends S.Opaque<CellContent, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link CellContent}.
- *
  * @category type-level
  * @since 0.0.0
  */

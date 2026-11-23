@@ -18,6 +18,12 @@
 - Evidence: `decisions check` printed `decisions: 0` until the file was `git add`ed.
 - Prevention: say in the delete-comment skill step 3 that the file must be staged before `decisions check` sees it.
 
+## 2026-11-23: a memory-capped systemd unit makes final-check resolve the worker profile
+
+- Doing: running `yeet final-check` inside `systemd-run --user` so a turn end could not kill it.
+- Evidence: the shell reports `beep compute profile` = `workstation`, but the same final-check inside the unit logged `skipped final-check:cheap-gates ... compute-profile=worker`, along with lint-policy, check, docgen and fallow, and printed `final-check pass`. `yeet open` then refused: "the worker profile deferred gates to hosted CI and their check runs could not be read" (the head was not pushed yet). So a "pass" receipt hid five skipped gates, and the first PR body named only the coverage skip.
+- Cause: the profile probe reads the process memory ceiling, and the unit carried `MemoryMax=10G`, below the workstation envelope, so `worker` was the correct answer for that process. A heavy-admitted draft cannot then be flipped: the draft never gets the heavy Lint Policy run that `yeet ready` waits for.
+- Would have prevented it: print the resolved profile and its source in the final-check pass line, and have `yeet ready` refuse at once, naming the rerun without a memory cap, instead of waiting on a check a draft never gets.
 ## Turn-end reap kills background proofs (2026-11-23)
 
 - Doing: a background `yeet final-check` (wave 3a) and three sequential Cursor verifier runs (wave 4), both started from an agent shell with run_in_background.

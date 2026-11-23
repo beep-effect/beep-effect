@@ -137,20 +137,22 @@ describe("CompilerOptions", () => {
 });
 
 describe("CompilerOptions round-trip", () => {
-  // Every key optional, so the generator walks subsets of the typed fields.
-  const Subset = S.Struct({
+  const SubsetWithEveryKeyOptionalSoGeneratorWalksSubsets = S.Struct({
     strict: S.optionalKey(S.Boolean),
     target: S.optionalKey(S.Literals(["es5", "es2015", "es2023", "esnext"])),
     maxNodeModuleJsDepth: S.optionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 10 }))),
   });
 
-  it.effect.prop("decode ∘ encode is identity over a generated subset of typed fields", [Subset], ([subset]) =>
-    Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(CompilerOptions)(subset);
-      const encoded = yield* S.encodeUnknownEffect(CompilerOptions)(decoded);
-      const redecoded = yield* S.decodeEffect(CompilerOptions)(encoded);
-      assert.deepStrictEqual(redecoded, decoded);
-    })
+  it.effect.prop(
+    "decode ∘ encode is identity over a generated subset of typed fields",
+    [SubsetWithEveryKeyOptionalSoGeneratorWalksSubsets],
+    ([subset]) =>
+      Effect.gen(function* () {
+        const decoded = yield* S.decodeEffect(CompilerOptions)(subset);
+        const encoded = yield* S.encodeUnknownEffect(CompilerOptions)(decoded);
+        const redecoded = yield* S.decodeEffect(CompilerOptions)(encoded);
+        assert.deepStrictEqual(redecoded, decoded);
+      })
   );
 });
 
@@ -160,11 +162,14 @@ describe("ClosedCompilerOptions", () => {
       SchemaAST.isObjects(ast) ? A.map(ast.propertySignatures, (signature) => signature.name) : [];
     assert.deepStrictEqual(names(ClosedCompilerOptions.ast), names(CompilerOptions.ast));
     assert.isTrue(names(ClosedCompilerOptions.ast).length > 100);
-    // The closed view has no index signature; the passthrough view has one.
     assert.isTrue(
-      SchemaAST.isObjects(ClosedCompilerOptions.ast) && ClosedCompilerOptions.ast.indexSignatures.length === 0
+      SchemaAST.isObjects(ClosedCompilerOptions.ast) && ClosedCompilerOptions.ast.indexSignatures.length === 0,
+      "the closed view has no index signature"
     );
-    assert.isTrue(SchemaAST.isObjects(CompilerOptions.ast) && CompilerOptions.ast.indexSignatures.length === 1);
+    assert.isTrue(
+      SchemaAST.isObjects(CompilerOptions.ast) && CompilerOptions.ast.indexSignatures.length === 1,
+      "the passthrough view has one index signature"
+    );
   });
 
   it.effect("rejects an unknown option under onExcessProperty=error and drops it by default", () =>
@@ -174,9 +179,8 @@ describe("ClosedCompilerOptions", () => {
       assert.include(error.message, '["futureOption"]');
       const dropped = yield* S.decodeEffect(ClosedCompilerOptions)(input);
       assert.deepStrictEqual(dropped, { target: "esnext", strict: true });
-      // The passthrough schema keeps it.
       const kept = yield* S.decodeEffect(CompilerOptions)(input);
-      assert.strictEqual(kept.futureOption, "kept");
+      assert.strictEqual(kept.futureOption, "kept", "the passthrough schema keeps the unknown option");
     })
   );
 

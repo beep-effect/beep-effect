@@ -26,8 +26,6 @@ import type { RuntimeEnv } from "./RuntimeEnv.ts";
 const $I = $RuntimeEnvId.create("Audience");
 
 /**
- * Who the output is for: a person at a terminal, an AI agent, or a CI job.
- *
  * **Example** (Validate an audience literal)
  *
  * ```ts
@@ -55,8 +53,6 @@ export const AudienceKind = LiteralKit(["human", "agent", "ci"]).pipe(
 export type AudienceKind = typeof AudienceKind.Type;
 
 /**
- * What decided the audience: an environment override, detection, or a flag.
- *
  * **Example** (Validate a flag source)
  *
  * ```ts
@@ -85,8 +81,6 @@ export type AudienceSource = typeof AudienceSource.Type;
 const isAudienceKind = S.is(AudienceKind);
 
 /**
- * The shape of the {@link Audience} service: one immutable value.
- *
  * **Example** (Validate an audience snapshot)
  *
  * ```ts
@@ -151,8 +145,6 @@ export class AudienceOptions extends S.Opaque<AudienceOptions, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link AudienceOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

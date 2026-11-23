@@ -90,8 +90,6 @@ export class IssueEntry extends S.Opaque<IssueEntry, { readonly brand: unique sy
   }).pipe($I.annoteSchema("IssueEntry", { description: "Plain IssueEntry data." }))
 ) {}
 /**
- * Companion types for {@link IssueEntry}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -234,8 +232,6 @@ export class IssueTreeNode extends S.Opaque<IssueTreeNode, { readonly brand: uni
   }).pipe($I.annoteSchema("IssueTreeNode", { description: "Plain IssueTreeNode data." }))
 ) {}
 /**
- * Companion types for {@link IssueTreeNode}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

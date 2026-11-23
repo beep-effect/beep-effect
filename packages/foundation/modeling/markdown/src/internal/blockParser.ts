@@ -798,8 +798,6 @@ export class BlockParseOptions extends S.Opaque<BlockParseOptions, { readonly br
 ) {}
 
 /**
- * Companion types for {@link BlockParseOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

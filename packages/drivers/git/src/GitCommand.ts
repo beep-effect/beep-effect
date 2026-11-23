@@ -987,6 +987,8 @@ const revListCount: {
     git(["rev-list", "--count", ...(firstParent === true ? ["--first-parent"] : []), "--end-of-options", range, "--"])
 );
 
+const localOnlyCommitCount = (): GitInvocation => git(["rev-list", "--count", "--all", "--not", "--remotes", "--"]);
+
 // Implementation of GitCommand.notesList; the public contract lives on the static.
 // `--ref=<ref>` is one argv token, so the ref can never be read as a separate option.
 const notesList = (ref: string): GitInvocation => git(["notes", `--ref=${ref}`, "list"]);
@@ -3270,6 +3272,32 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly revListCount = revListCount;
+
+  /**
+   * Builds an invocation to count the commits no remote-tracking ref reaches.
+   *
+   * **Details**
+   *
+   * `git rev-list --count --all --not --remotes --` — the number of commits
+   * reachable from HEAD or any ref under `refs/` (branches, tags, stash,
+   * notes) but from no `refs/remotes/*` ref, printed as one decimal line. It
+   * takes no caller input, an unborn HEAD counts nothing, and the closing
+   * `--` keeps git from reading anything as a path.
+   *
+   * **Example** (Count local-only commits)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.localOnlyCommitCount();
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // rev-list --count --all --not --remotes --
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly localOnlyCommitCount = localOnlyCommitCount;
 
   /**
    * Builds an invocation to list every note on a notes ref.
