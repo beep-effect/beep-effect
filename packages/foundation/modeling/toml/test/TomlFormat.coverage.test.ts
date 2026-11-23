@@ -27,12 +27,7 @@ const rejection = Effect.fn("TomlFormat.coverage.rejection")(function* (
   }
 });
 
-// The invariant defect is asserted structurally rather than through
-// `Cause.pretty`: under Bun the vite module runner's stack-trace source-map
-// interceptor throws on the column-0 frame JSC reports for the `Effect.fn`
-// definition site inside a static class field, so the first `Cause.pretty`
-// of a `TomlFormat.modify` defect crashes instead of rendering.
-const invariantDefectMessage = (cause: Cause.Cause<unknown>): string => {
+const invariantDefectMessageReadStructurallyBecauseBunCausePrettyCrashes = (cause: Cause.Cause<unknown>): string => {
   const defect = Cause.findDefect(cause);
   if (Result.isFailure(defect)) return assert.fail("expected a defect in the cause");
   const error = defect.success;
@@ -42,9 +37,7 @@ const invariantDefectMessage = (cause: Cause.Cause<unknown>): string => {
 };
 
 describe("TomlFormat remaining observable paths", () => {
-  it.effect("descends into the current array-table element when resolving key-value sections", () =>
-    // Array-of-tables nodes are non-empty by construction (`A.NonEmptyArray`), so the descent
-    // always yields the latest element; each key-value must resolve inside its own section.
+  it.effect("resolves each key-value in its own current non-empty array-table section", () =>
     Effect.gen(function* () {
       const source = "[[a]]\nx = 1\n[[a]]\nx = 3\n[[a]]\nx = 5\n";
       const modifyToString1 = yield* TomlFormat.modifyToString(source, ["a", 0, "x"], 2);
@@ -58,7 +51,6 @@ describe("TomlFormat remaining observable paths", () => {
 
   it.effect("retains the typed defect when the semantic visitor navigates an absent table", () =>
     Effect.gen(function* () {
-      // Inject an invalid visitor path to exercise the formatter's defensive boundary.
       const analyzer = vi.spyOn(Semantic, "analyze").mockImplementation(
         dual<
           (visitor?: Semantic.SemanticVisitor) => (expressions: ReadonlyArray<TomlExpression>) => void,
@@ -79,7 +71,7 @@ describe("TomlFormat remaining observable paths", () => {
         if (Exit.isSuccess(exit)) return assert.fail("expected a navigation defect");
         exit.cause.pipe(Cause.hasDies, assertTrue);
         assert.include(
-          invariantDefectMessage(exit.cause),
+          invariantDefectMessageReadStructurallyBecauseBunCausePrettyCrashes(exit.cause),
           "invariant: semantic pass admitted a value where a table was navigated"
         );
       } finally {
@@ -183,7 +175,10 @@ describe("TomlFormat remaining observable paths", () => {
         const exit = yield* Effect.exit(TomlFormat.modify("a = 1\n", path, 2));
         if (Exit.isFailure(exit)) {
           exit.cause.pipe(Cause.hasDies, assertTrue);
-          assert.include(invariantDefectMessage(exit.cause), "missing TOML path segment");
+          assert.include(
+            invariantDefectMessageReadStructurallyBecauseBunCausePrettyCrashes(exit.cause),
+            "missing TOML path segment"
+          );
         } else {
           assert.fail("a sparse path must fail with a defect");
         }

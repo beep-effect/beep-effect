@@ -152,10 +152,6 @@
       "purpose": "P0 design module index: re-exports the L0 to L6 layers and the generator prototype as namespaces."
     },
     {
-      "path": "ops/design/L0.identity.ts",
-      "purpose": "L0 identity design (@beep/identity, effect-only): TermIri, CodeId, ReleaseVersion, Namespace, Term, TermBinding, Deprecation, TermSnapshot."
-    },
-    {
       "path": "ops/design/L1.text.ts",
       "purpose": "L1 design: OffsetUnit, OccurrenceId, QuoteKey, the recursive Selector, Resolution, Reanchoring, Anchored and the occurrence/v1 preimage."
     },

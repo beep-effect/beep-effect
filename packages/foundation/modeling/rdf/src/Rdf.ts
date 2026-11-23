@@ -7,6 +7,7 @@
 
 import { IRI } from "@beep/identity/Iri";
 import { $RdfId } from "@beep/identity/packages";
+import { namespace } from "@beep/identity/Registry";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -17,22 +18,9 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
+import type { RegistryPrefix } from "@beep/identity/Registry";
 
 const $I = $RdfId.create("rdf");
-
-const curieMetadata = makeSemanticSchemaMetadata({
-  kind: "identifier",
-  canonicalName: "Curie",
-  overview: "Compact URI expression used with RDF namespace bindings.",
-  status: "stable",
-  specifications: [
-    {
-      name: "CURIE Syntax 1.0",
-      disposition: "informative",
-    },
-  ],
-  equivalenceBasis: "String equality after explicit prefix expansion.",
-});
 
 const namespaceBindingMetadata = makeSemanticSchemaMetadata({
   kind: "rdfConstruct",
@@ -142,23 +130,6 @@ const PrefixLabelChecks = S.makeFilterGroup(
   $I.annote("PrefixLabelChecks", {
     title: "Prefix Label",
     description: "Checks for RDF prefix labels.",
-  })
-);
-
-const CurieChecks = S.makeFilterGroup(
-  [
-    S.isPattern(
-      /^[A-Za-z][A-Za-z0-9._-]*:[^\\s]+$/,
-      $I.annote("CuriePatternCheck", {
-        title: "CURIE Pattern",
-        description: "A compact URI expression using a prefix label and a local part.",
-        message: "CURIE values must be of the form prefix:suffix without whitespace",
-      })
-    ),
-  ],
-  $I.annote("CurieChecks", {
-    title: "CURIE",
-    description: "Checks for CURIE syntax.",
   })
 );
 
@@ -281,47 +252,6 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
     description: "Checks for RDF prefix map keys.",
   })
 );
-
-/**
- * CURIE-style compact IRI expression.
- *
- * **Example** (Decode compact IRI)
- *
- * ```ts import.meta.vitest name="Decode compact IRI"
- * import * as S from "effect/Schema"
- * import { Curie } from "@beep/rdf/Rdf"
- *
- * const compact = S.decodeUnknownSync(Curie)("schema:name")
- * compact // => "schema:name"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const Curie = S.String.check(CurieChecks).pipe(
-  S.brand("Curie"),
-  $I.annoteSchema("Curie", {
-    description: "CURIE-style compact IRI expression.",
-    semanticSchemaMetadata: curieMetadata,
-  })
-);
-
-/**
- * Type for {@link Curie}.
- *
- * **Example** (Accept Curie type)
- *
- * ```ts
- * import type { Curie } from "@beep/rdf/Rdf"
- *
- * const acceptCurie = (value: Curie) => value
- * console.log(acceptCurie)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Curie = typeof Curie.Type;
 
 /**
  * RDF literal language tag.
@@ -895,6 +825,30 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
  * @since 0.0.0
  */
 export type PrefixMap = typeof PrefixMap.Type;
+
+/**
+ * Build a prefix map from namespaces of the identity registry.
+ *
+ * **When to use**
+ *
+ * Use to give a serializer the prefixes it may print, so every prefix label
+ * and namespace IRI comes from the one registry instead of a local literal.
+ *
+ * **Example** (Build a prefix map from registry namespaces)
+ *
+ * ```ts import.meta.vitest name="Build a prefix map from registry namespaces"
+ * import * as R from "effect/Record"
+ * import { prefixMapFromRegistry } from "@beep/rdf/Rdf"
+ *
+ * const prefixes = prefixMapFromRegistry(["rdf", "xsd"])
+ * R.values(prefixes) // => ["http://www.w3.org/1999/02/22-rdf-syntax-ns#", "http://www.w3.org/2001/XMLSchema#"]
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const prefixMapFromRegistry = (prefixes: ReadonlyArray<RegistryPrefix>): PrefixMap =>
+  R.fromEntries(A.map(prefixes, (prefix) => [PrefixLabel.make(prefix), IRI.make(namespace(prefix).iri)] as const));
 
 /**
  * Build a named node from an IRI string.

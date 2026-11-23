@@ -11,8 +11,8 @@
  * @since 0.0.0
  */
 
-import { CoreVocab, contractOption } from "@beep/identity";
 import { $OntologyId } from "@beep/identity/packages";
+import { contract } from "@beep/identity/Registry";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
@@ -127,7 +127,7 @@ const compactOwnedLabel = (ontology: AssembledOntology, iri: string): O.Option<s
 
 const compactLabel = (ontology: AssembledOntology, iri: string): string =>
   pipe(
-    contractOption(iri, CoreVocab),
+    contract(iri),
     O.orElse(() => compactOwnedLabel(ontology, iri)),
     O.getOrElse(() => iri)
   );

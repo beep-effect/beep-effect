@@ -1,5 +1,5 @@
 import { IdentityInterpolationError, IdentitySegmentCountError } from "@beep/identity";
-import { expand } from "@beep/identity/Curie";
+import { iri } from "@beep/identity/Registry";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { identity } from "effect/Function";
@@ -28,10 +28,10 @@ describe("identity tagged-error declared equivalence", () => {
     expect(Reflect.apply(sameSegmentCount, undefined, [segmentA, interpolationA])).toBe(false);
   });
 
-  it("compares the private CURIE invariant error by its declared value", () => {
-    const a = capture(() => Reflect.apply(expand, undefined, ["missing:value"]));
-    const b = capture(() => Reflect.apply(expand, undefined, ["missing:value"]));
-    const c = capture(() => Reflect.apply(expand, undefined, ["other:value"]));
+  it("compares the private registry invariant error by its declared value", () => {
+    const a = capture(() => Reflect.apply(iri, undefined, ["missing:value"]));
+    const b = capture(() => Reflect.apply(iri, undefined, ["missing:value"]));
+    const c = capture(() => Reflect.apply(iri, undefined, ["other:value"]));
 
     expect(P.isObject(a)).toBe(true);
     const schema = P.isObject(a) ? Reflect.get(a, "constructor") : a;

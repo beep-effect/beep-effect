@@ -1,6 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Rdf from "@beep/rdf/Rdf";
 import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -40,7 +41,6 @@ const BASE = `${$SemanticaId.iri}/` as const;
  */
 export const semanticaOntologyIri = <const Term extends string>(term: Term) => `${BASE}ontology/${term}` as const;
 
-const XSD_STRING = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_TYPE = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
 const RDF_SUBJECT = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#subject");
 const RDF_PREDICATE = Rdf.makeNamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate");
@@ -59,7 +59,7 @@ const failed = (message: string): ProjectionFailed => ProjectionFailed.make({ me
 const claimNode = (id: string) => Rdf.makeNamedNode(`${BASE}claim/${id}`);
 const chunkNode = (id: string) => Rdf.makeNamedNode(`${BASE}chunk/${id}`);
 const graphNode = (id: string) => Rdf.makeNamedNode(`${BASE}provenance/batch/${id}`);
-const stringLiteral = (value: string) => Rdf.makeLiteral(value, XSD_STRING);
+const stringLiteral = (value: string) => Rdf.makeLiteral(value, XSD_STRING.value);
 const quad = (claim: EvidenceClaim, graph: Rdf.NamedNode, predicate: Rdf.NamedNode, object: Rdf.ObjectTerm) =>
   Rdf.makeQuad(claimNode(claim.id), predicate, MakeQuadOptionsInput.make({ graph, object }));
 

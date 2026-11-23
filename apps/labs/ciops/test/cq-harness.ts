@@ -1,6 +1,7 @@
 // Shared Oxigraph harness for the CQ-020 and lane-plan SPARQL checks over the committed goldens.
 // Only provisional term spellings and the episode binding are adapted in memory; the packet CQ,
 // seed, registry and frozen extraction artifacts stay read-only.
+import { iri } from "@beep/identity/Registry";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,7 +14,7 @@ import * as Oxigraph from "oxigraph";
 export const CIOPS = "https://oip.law/ontology/ci-ops#";
 export const PROV = "https://oip.law/ontology/ci-ops-prov#";
 export const RDF_TYPE = Oxigraph.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-const XSD_STRING = Oxigraph.namedNode("http://www.w3.org/2001/XMLSchema#string");
+const XSD_STRING = Oxigraph.namedNode(iri("xsd:string"));
 
 const competencyQuestionsPath =
   "../../../explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml";

@@ -24,8 +24,6 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 
 import { Toml, TomlParseError, TomlStringifyError, TomlStringifyOptions } from "@beep/toml/Toml";
 
-// The plain-value codec is partial over Unknown: TOML excludes null and root scalars.
-// Exercise its representable domain, including nested tables, arrays and bigint integers.
 const Value = S.Struct({
   title: S.String,
   enabled: S.Boolean,

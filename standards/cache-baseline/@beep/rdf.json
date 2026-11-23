@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/rdf",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "Re-record the root and @beep/rdf after merging P1 PR A's final head 7a7b87f0328, which re-recorded them: @beep/rdf keeps PR B's @beep/spdx dependency edge, //#lint:identity-registry keeps the registry shard input glob, and turbo.json carries the regenerated seal-input lists. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p1b-a-merge-cache-review-2026-11-19.md",
+      "sha256": "9c8fc30a3333e6d879b41dbfc8ab2acccdd1b439c8998c16a4925d7f72bd3380"
     }
   },
   "nodes": [
@@ -18,6 +18,7 @@
         "@beep/identity#build",
         "@beep/md#build",
         "@beep/schema#build",
+        "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
         "@beep/utils#build"
@@ -78,6 +79,7 @@
         "@beep/rdf#build",
         "@beep/repo-gate-record#transit",
         "@beep/schema#build",
+        "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
         "@beep/utils#build"
@@ -133,6 +135,7 @@
         "@beep/identity#build",
         "@beep/md#build",
         "@beep/schema#build",
+        "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
         "@beep/utils#build"
@@ -228,6 +231,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",
@@ -317,6 +321,7 @@
         "@beep/md#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit"
@@ -518,6 +523,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit"
@@ -567,6 +573,7 @@
         "@beep/md#transit",
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",
@@ -626,6 +633,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",

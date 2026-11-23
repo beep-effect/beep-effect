@@ -8,10 +8,13 @@ import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec } from "@
 import { fold, toTurtle } from "@beep/ontology";
 import * as Rdf from "@beep/rdf/Rdf";
 import { CITO_NAMESPACE } from "@beep/rdf/Vocab/Cito";
-import { DCAT_DATASET } from "@beep/rdf/Vocab/Dcat";
+import { DCAT_DATASET, DCAT_NAMESPACE } from "@beep/rdf/Vocab/Dcat";
 import { FABIO_NAMESPACE } from "@beep/rdf/Vocab/Fabio";
 import * as Prov from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { SHACL_NAMESPACE } from "@beep/rdf/Vocab/Shacl";
+import { SKOS_NAMESPACE } from "@beep/rdf/Vocab/Skos";
 import { XSD_BOOLEAN, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclNodeShape, ShaclPropertyShape } from "@beep/semantic-web/services/shacl-validation";
 import * as A from "effect/Array";
@@ -30,9 +33,10 @@ import { LibraryError } from "./Library.errors.ts";
 import { LIBRARY_SHAPES_FILE, LIBRARY_TBOX_FILE, libraryOutputAncestor } from "./Library.paths.ts";
 import * as M from "./Library.schemas.ts";
 import type { AssembledClass, AssembledOntology, Triple } from "@beep/ontology";
+import type { SHACL_TERMS } from "@beep/rdf/Vocab/Shacl";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
-const sh = (name: string) => Rdf.makeNamedNode(`http://www.w3.org/ns/shacl#${name}`);
+const sh = (name: (typeof SHACL_TERMS)[number]) => Rdf.makeNamedNode(`${SHACL_NAMESPACE}${name}`);
 const nn = Rdf.makeNamedNode;
 
 /**
@@ -313,8 +317,8 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
         ["maxCount", O.map(property.maxCount, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value))],
         ["datatype", property.datatype],
         ["class", property.class],
-      ] satisfies ReadonlyArray<readonly [string, O.Option<Rdf.ObjectTerm>]>,
-      ([key, value]: readonly [string, O.Option<Rdf.ObjectTerm>]) =>
+      ] satisfies ReadonlyArray<readonly [(typeof SHACL_TERMS)[number], O.Option<Rdf.ObjectTerm>]>,
+      ([key, value]: readonly [(typeof SHACL_TERMS)[number], O.Option<Rdf.ObjectTerm>]) =>
         O.map(value, (v) => quads.push(Rdf.makeQuad(p, sh(key), v)))
     );
     membership(name, property, p);
@@ -366,15 +370,15 @@ export const libraryShapesDataset = (shapes: ReadonlyArray<ShaclNodeShape>): Rdf
 export const libraryShapesTurtle = Effect.fn("Library.shapesTurtle")(function* (shapes: ReadonlyArray<ShaclNodeShape>) {
   const codec = yield* N3TurtleCodec;
   const prefixes = yield* S.decodeEffect(Rdf.PrefixMap)({
-    sh: "http://www.w3.org/ns/shacl#",
+    sh: SHACL_NAMESPACE,
     xsd: XSD_NAMESPACE,
     rdf: RDF_NAMESPACE,
-    rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+    rdfs: RDFS_NAMESPACE,
     prov: Prov.PROV_NAMESPACE,
     cito: CITO_NAMESPACE,
     fabio: FABIO_NAMESPACE,
-    dcat: "http://www.w3.org/ns/dcat#",
-    skos: "http://www.w3.org/2004/02/skos/core#",
+    dcat: DCAT_NAMESPACE,
+    skos: SKOS_NAMESPACE,
     library: `${$I.iri}/`,
   });
   return (yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset: libraryShapesDataset(shapes), prefixes })))
