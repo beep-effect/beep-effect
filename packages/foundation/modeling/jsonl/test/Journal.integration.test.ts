@@ -1,10 +1,4 @@
 // Adapted from upstream integration/Journal.int.test.ts (MIT).
-//
-// These scenarios run against the in-memory filesystem double so the unit
-// suite stays hermetic. Their real-disk counterparts (O_APPEND atomicity under
-// concurrent appends, a foreign writer between appends, a reopen over a BOM'd
-// file, native watch between two layers) live in
-// test/integration/Journal.int.test.ts, which runs on the platform filesystem.
 import { Envelope, Line } from "@beep/jsonl";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { assert, it } from "@effect/vitest";
@@ -27,84 +21,85 @@ const temporary = Effect.gen(function* () {
   const directory = yield* fs.makeTempDirectoryScoped();
   return { fs, path: `${directory}/journal.jsonl` };
 });
-it.layer(MemoryFileSystem.layer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
-  it.effect("concurrent writes remain complete and decode to exactly the written rounds", () =>
-    Effect.gen(function* () {
-      const { fs, path } = yield* temporary;
-      const journal = yield* open(fs, { path });
-      yield* journal.create;
-      const rounds = A.range(0, 39);
-      yield* Effect.forEach(rounds, (round) => journal.append("noted", { round, label: Str.repeat(200)("x") }), {
-        concurrency: 8,
-      });
-      const text = yield* fs.readFileString(path);
-      const lines = Line.split(text);
-      assert.strictEqual(lines.length, rounds.length);
-      assert.isTrue(A.every(lines, (line) => line.terminated));
-      const decoded = Result.all(Envelope.decodeAllResult(text, events));
-      assertSuccess(
-        Result.map(decoded, (rows) =>
-          A.sort(
-            A.map(rows, (row) => (row.event === "noted" ? row.data.round : -1)),
-            Order.Number
-          )
-        ),
-        rounds
-      );
-    })
-  );
-  it.effect("foreign writes between local appends preserve physical offsets", () =>
-    Effect.gen(function* () {
-      const { fs, path } = yield* temporary;
-      const journal = yield* open(fs, { path });
-      yield* journal.create;
-      const one = yield* journal.append("noted", { round: 1, label: "ours" });
-      const handle = yield* fs.open(path, { flag: "a" });
-      yield* handle.writeAll(new TextEncoder().encode(line(2, "theirs")));
-      const three = yield* journal.append("noted", { round: 3, label: "ours" });
-      const rows = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
-      assert.deepStrictEqual(
-        A.map(rows, (row) => row.data.round),
-        [1, 2, 3]
-      );
-      assert.strictEqual(rows[0]?.line.end, one.line.end);
-      assert.strictEqual(rows[2]?.line.offset, three.line.offset);
-      assert.strictEqual(rows[1]?.line.offset, one.line.end);
-      assert.strictEqual(rows[1]?.line.end, three.line.offset);
-    })
-  );
-  it.effect("an independent layer reopens the written tail and BOM offsets are logical", () =>
-    Effect.gen(function* () {
-      const { fs, path } = yield* temporary;
-      yield* fs.writeFileString(path, `\ufeff${line(1)}`);
-      const first = yield* open(fs, { path });
-      assertSome((yield* SubscriptionRef.get(first.latest)).pipe(O.map((row) => row.line.offset)), 0);
-      const appended = yield* first.append("noted", { round: 2, label: "second" });
-      const second = yield* open(fs, { path });
-      const got = yield* SubscriptionRef.get(second.latest);
-      assertSome(got, appended);
-    })
-  );
-  // Filesystem notifications need the live clock for a useful timeout. No sleep
-  // or polling is used: the subscriber awaits the actual event.
-  it.effect(
-    "two journal layers observe each other through filesystem notifications",
-    () =>
+it.layer(MemoryFileSystem.layer, { excludeTestServices: true, timeout: "10 seconds" })(
+  "hermetic in-memory journal scenarios, whose real-disk counterparts run in test/integration/Journal.int.test.ts",
+  (it) => {
+    it.effect("concurrent writes remain complete and decode to exactly the written rounds", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* temporary;
-        const writer = yield* open(fs, { path });
-        yield* writer.create;
-        const reader = yield* open(fs, { path });
-        const observing = yield* reader
-          .changes({ events: ["noted"] })
-          .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
-        yield* writer.append("noted", { round: 1, label: "writer" });
-        const join1 = yield* Fiber.join(observing);
-        assert.deepStrictEqual(
-          A.map(join1, (row) => row.data),
-          [{ round: 1, label: "writer" }]
+        const journal = yield* open(fs, { path });
+        yield* journal.create;
+        const rounds = A.range(0, 39);
+        yield* Effect.forEach(rounds, (round) => journal.append("noted", { round, label: Str.repeat(200)("x") }), {
+          concurrency: 8,
+        });
+        const text = yield* fs.readFileString(path);
+        const lines = Line.split(text);
+        assert.strictEqual(lines.length, rounds.length);
+        assert.isTrue(A.every(lines, (line) => line.terminated));
+        const decoded = Result.all(Envelope.decodeAllResult(text, events));
+        assertSuccess(
+          Result.map(decoded, (rows) =>
+            A.sort(
+              A.map(rows, (row) => (row.event === "noted" ? row.data.round : -1)),
+              Order.Number
+            )
+          ),
+          rounds
         );
-      }).pipe(Effect.timeout(Duration.seconds(10))),
-    15000
-  );
-});
+      })
+    );
+    it.effect("foreign writes between local appends preserve physical offsets", () =>
+      Effect.gen(function* () {
+        const { fs, path } = yield* temporary;
+        const journal = yield* open(fs, { path });
+        yield* journal.create;
+        const one = yield* journal.append("noted", { round: 1, label: "ours" });
+        const handle = yield* fs.open(path, { flag: "a" });
+        yield* handle.writeAll(new TextEncoder().encode(line(2, "theirs")));
+        const three = yield* journal.append("noted", { round: 3, label: "ours" });
+        const rows = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
+        assert.deepStrictEqual(
+          A.map(rows, (row) => row.data.round),
+          [1, 2, 3]
+        );
+        assert.strictEqual(rows[0]?.line.end, one.line.end);
+        assert.strictEqual(rows[2]?.line.offset, three.line.offset);
+        assert.strictEqual(rows[1]?.line.offset, one.line.end);
+        assert.strictEqual(rows[1]?.line.end, three.line.offset);
+      })
+    );
+    it.effect("an independent layer reopens the written tail and BOM offsets are logical", () =>
+      Effect.gen(function* () {
+        const { fs, path } = yield* temporary;
+        yield* fs.writeFileString(path, `\ufeff${line(1)}`);
+        const first = yield* open(fs, { path });
+        assertSome((yield* SubscriptionRef.get(first.latest)).pipe(O.map((row) => row.line.offset)), 0);
+        const appended = yield* first.append("noted", { round: 2, label: "second" });
+        const second = yield* open(fs, { path });
+        const got = yield* SubscriptionRef.get(second.latest);
+        assertSome(got, appended);
+      })
+    );
+    it.effect(
+      "two journal layers observe each other through filesystem notifications, awaited under the live clock with no sleep or polling",
+      () =>
+        Effect.gen(function* () {
+          const { fs, path } = yield* temporary;
+          const writer = yield* open(fs, { path });
+          yield* writer.create;
+          const reader = yield* open(fs, { path });
+          const observing = yield* reader
+            .changes({ events: ["noted"] })
+            .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
+          yield* writer.append("noted", { round: 1, label: "writer" });
+          const join1 = yield* Fiber.join(observing);
+          assert.deepStrictEqual(
+            A.map(join1, (row) => row.data),
+            [{ round: 1, label: "writer" }]
+          );
+        }).pipe(Effect.timeout(Duration.seconds(10))),
+      15000
+    );
+  }
+);

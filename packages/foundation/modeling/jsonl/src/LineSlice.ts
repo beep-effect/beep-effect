@@ -3,8 +3,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// One candidate line of a JSONL journal, located in the source by byte.
-
 import { $JsonlId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
