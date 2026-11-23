@@ -417,8 +417,7 @@ export type Lib = typeof Lib.Type;
 
 const IgnoreDeprecationsVersion = LiteralKit(["5.0", "6.0"]).pipe(
   $I.annoteSchema("IgnoreDeprecations", {
-    description:
-      "The TypeScript version whose deprecations are suppressed: a version string with no case variants, so matched exactly rather than case-insensitively.",
+    description: "The TypeScript version whose deprecations are suppressed, matched case-sensitively.",
   })
 );
 
