@@ -5,7 +5,7 @@ import { it } from "@beep/test-runner";
 import { TextAnchor } from "@beep/text/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
-import { assertEquals, assertSome } from "@effect/vitest/utils";
+import { assertEquals, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
@@ -60,6 +60,7 @@ it.prop(
   }
 );
 
+const AdmissionJson = S.toCodecJson(Claims.Admission);
 const utc = DateTime.makeUnsafe;
 const accepted = (result: typeof flow.AdmissionResult.Type) =>
   O.getOrThrow(O.liftPredicate(flow.AdmissionResult.guards.Admitted)(result)).admission;
@@ -86,6 +87,81 @@ const viewRequest = (options: {
 });
 
 it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim eligibility", (it) => {
+  it.effect("L4-4 selected source denial preserves historically verified admitted stance", () =>
+    Effect.gen(function* () {
+      const value = yield* fixture();
+      const request = requestFor(value);
+      const admitted = yield* flow.admit(request).pipe(Effect.map(accepted));
+      const encoded = yield* S.encodeEffect(AdmissionJson)(admitted);
+      const decoded = yield* S.decodeEffect(AdmissionJson)(encoded);
+      const result = yield* flow.viewAt(
+        viewRequest({
+          value,
+          claim: value.a.claim,
+          records: [value.a],
+          admissions: [decoded],
+          retractions: [],
+          asOf: 50,
+          ports: {
+            ...request.ports,
+            resolveAt: ({ at }) =>
+              DateTime.toEpochMillis(at) === 30
+                ? request.ports.resolveAt({ scope: request.scope, receipt: value.receipt, at })
+                : Effect.succeed(SourceResolution.cases.Denied.make({})),
+          },
+        })
+      );
+      expect(result).toMatchObject({
+        _tag: "Viewed",
+        eligibility: { _tag: "Ineligible", reasons: ["unverified-admission"] },
+      });
+      if (ClaimViewResult.guards.Viewed(result)) assertSome(result.stance, "admitted");
+    })
+  );
+  it.effect(
+    "L4-4 unavailable selected binding preserves verified history but decoded records need historical proof",
+    () =>
+      Effect.gen(function* () {
+        const value = yield* fixture();
+        const request = requestFor(value);
+        const admitted = yield* flow.admit(request).pipe(Effect.map(accepted));
+        const encoded = yield* S.encodeEffect(AdmissionJson)(admitted);
+        const decoded = yield* S.decodeEffect(AdmissionJson)(encoded);
+        const base = viewRequest({
+          value,
+          claim: value.a.claim,
+          records: [value.a],
+          admissions: [decoded],
+          retractions: [],
+          asOf: 50,
+          ports: {
+            ...request.ports,
+            resolveBinding: () => Effect.succeed(TrustedClaimBinding.cases.Unavailable.make({ reason: "stale" })),
+          },
+        });
+        const verifiedHistory = yield* flow.viewAt({ ...base, historicalPorts: request.ports });
+        expect(verifiedHistory).toMatchObject({
+          _tag: "Viewed",
+          eligibility: { _tag: "Unknown", reason: "authorization-unavailable" },
+        });
+        if (ClaimViewResult.guards.Viewed(verifiedHistory)) assertSome(verifiedHistory.stance, "admitted");
+        const historicalUnavailable = yield* flow.viewAt({
+          ...base,
+          ports: request.ports,
+          historicalPorts: base.ports,
+        });
+        expect(historicalUnavailable).toMatchObject({
+          _tag: "Viewed",
+          eligibility: { _tag: "Unknown", reason: "authorization-unavailable" },
+        });
+        const unverifiedHistory = yield* flow.viewAt(base);
+        expect(unverifiedHistory).toMatchObject({
+          _tag: "Viewed",
+          eligibility: { _tag: "Unknown", reason: "authorization-unavailable" },
+        });
+        if (ClaimViewResult.guards.Viewed(unverifiedHistory)) assertNone(unverifiedHistory.stance);
+      })
+  );
   it.effect(
     "L4-4 direct retraction preserves admitted stance, historical time excludes future events and missing snapshots stay unknown",
     () =>
@@ -139,7 +215,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim 
           eligibility: { _tag: "Unknown", reason: "snapshot-unavailable" },
         });
         expect(current).toBe(0);
-        expect(A.every(snapshots, (at) => at === 35)).toBe(true);
+        expect(snapshots).toEqual([30, 35]);
       })
   );
   it.effect(
@@ -220,6 +296,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim 
         const stale = yield* flow.viewAt({
           ...base,
           admissions: [admitted],
+          historicalPorts: request.ports,
           ports: { ...request.ports, resolveAt: () => Effect.succeed(SourceResolution.cases.Stale.make({})) },
         });
         expect(stale).toMatchObject({

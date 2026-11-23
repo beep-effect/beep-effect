@@ -314,7 +314,12 @@ const IneligibleReason = LiteralKit([
     description: "Known reasons an immutable claim cannot qualify for outward use.",
   })
 );
-const UnknownReason = LiteralKit(["snapshot-unavailable", "ambiguous-grounding", "uncertain-retraction"]).pipe(
+const UnknownReason = LiteralKit([
+  "snapshot-unavailable",
+  "ambiguous-grounding",
+  "uncertain-retraction",
+  "authorization-unavailable",
+]).pipe(
   $I.annoteSchema("UnknownReason", {
     description: "Selected-time verification is incomplete and cannot grant eligibility.",
   })
@@ -408,17 +413,19 @@ class StanceObservation extends S.Opaque<StanceObservation, { readonly brand: un
   )
 ) {}
 const sameProjection = S.toEquivalence(ClaimLogEntry);
+const isBindingUnavailable = S.is(BindingUnavailable);
 const F = AdmissionRefused.cases;
 const isUnknown = (refusal: AdmissionRefused): boolean =>
   AdmissionRefused.guards.GroundingUnavailable(refusal) || AdmissionRefused.guards.GroundingAmbiguous(refusal);
-const groundingOnly = AdmissionRefused.isAnyOf([
-  "GroundingStale",
-  "GroundingMissing",
-  "GroundingAmbiguous",
-  "GroundingUnavailable",
-]);
 /**
  * Bind admission, revalidation and selected-time views to actual owner codecs and explicit ports.
+ *
+ * **Details**
+ *
+ * Selected views verify stored admissions at their admission time before observing stance.
+ * Supply historicalPorts when historical authority evidence differs from selected-snapshot ports.
+ * Decoding grants no authority; unavailable historical proof cannot establish admitted stance.
+ * Selected-snapshot authorization and grounding govern eligibility independently.
  *
  * **Example** (Bind scoped admission arrows)
  *
@@ -655,6 +662,7 @@ export const makeAdmissionArrows = <
     readonly retractions: ReadonlyArray<Retraction>;
     readonly validSelection: HashSet.HashSet<ClaimId>;
     readonly asOf: DateTime.Utc;
+    readonly historicalPorts?: AdmissionPorts<Admission, E, R>;
     readonly ports: AdmissionPorts<Admission, E, R>;
   }): Effect.fn.Return<ClaimViewResult, E, R | Digest.Digest> {
     const { claim, log, asOf, ports } = options;
@@ -705,13 +713,24 @@ export const makeAdmissionArrows = <
       const record = O.getOrThrow(HashMap.get(options.records, stored.claim));
       const clears = O.flatMap(stored.clearsRetraction, (digest) => HashMap.get(byDigest, digest));
       const request = { record, admission: stored, clears, ports };
+      const original = yield* revalidateAt({ ...request, ports: options.historicalPorts ?? ports }, O.some(stored.at));
       const verified = yield* revalidateAt(request, O.some(asOf));
       if (Eq.equals(stored.claim, claim)) {
-        if (AdmissionResult.guards.Admitted(verified)) {
+        if (
+          A.some(
+            [original, verified],
+            (result) =>
+              AdmissionResult.guards.Refused(result) &&
+              AdmissionRefused.guards.InvalidBinding(result.refusal) &&
+              isBindingUnavailable(result.refusal.reason)
+          )
+        )
+          unknown = O.some("authorization-unavailable");
+        if (AdmissionResult.guards.Admitted(original))
+          observations = A.append(observations, StanceObservation.make({ at: stored.at, stance: "admitted" }));
+        if (AdmissionResult.guards.Admitted(original) && AdmissionResult.guards.Admitted(verified)) {
           fresh = true;
-          observations = A.append(observations, StanceObservation.make({ at: stored.at, stance: "admitted" }));
-        } else if (groundingOnly(verified.refusal)) {
-          observations = A.append(observations, StanceObservation.make({ at: stored.at, stance: "admitted" }));
+        } else if (AdmissionResult.guards.Refused(verified)) {
           if (isUnknown(verified.refusal))
             unknown = O.some(
               AdmissionRefused.guards.GroundingAmbiguous(verified.refusal)
@@ -721,7 +740,6 @@ export const makeAdmissionArrows = <
         }
       }
       if (O.isSome(stored.clearsRetraction)) {
-        const original = yield* revalidateAt(request, O.some(stored.at));
         if (AdmissionResult.guards.Admitted(original)) cleared = HashSet.add(cleared, stored.clearsRetraction.value);
         else if (isUnknown(original.refusal)) maybeCleared = HashSet.add(maybeCleared, stored.clearsRetraction.value);
       }
@@ -771,8 +789,8 @@ export const makeAdmissionArrows = <
     const maybeDead =
       HashSet.has(possiblyRetracted, claim) || HashSet.has(orphanedDerivations(parents, possiblyRetracted), claim);
     let reasons: ReadonlyArray<typeof IneligibleReason.Type> = [];
-    if (O.isNone(stance)) reasons = A.append(reasons, "unresolved-stance");
-    else if (stance.value !== "admitted") reasons = A.append(reasons, "not-admitted");
+    if (O.isNone(stance) && O.isNone(unknown)) reasons = A.append(reasons, "unresolved-stance");
+    else if (O.isSome(stance) && stance.value !== "admitted") reasons = A.append(reasons, "not-admitted");
     if (directRetraction) reasons = A.append(reasons, "direct-retraction");
     if (orphan) reasons = A.append(reasons, "derived-orphan");
     const eligibility = A.match(reasons, {

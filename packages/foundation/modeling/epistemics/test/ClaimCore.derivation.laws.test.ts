@@ -34,6 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import golden from "./fixtures/claim-core-v1.json" with { type: "json" };
 import { activity, arrows, Claims, Core, coreAt } from "./support/Claims.ts";
+import type { ClaimLogEntry } from "@beep/epistemics/ClaimLog";
 
 const id = (hex: string) => ClaimId.make(`sha256:${Str.repeat(64)(hex)}`);
 const otherActivity = ActivityId.make(id("e"));
@@ -129,15 +130,37 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("immutable claim iden
     ([size]) =>
       Effect.gen(function* () {
         let parents = HashSet.empty<ClaimId>();
+        let log: ReadonlyArray<ClaimLogEntry> = [];
+        const records: Array<typeof Claims.ClaimRecord.Type> = [];
         const claims: Array<ClaimId> = [];
         for (const n of A.range(1, size)) {
-          const claim = yield* arrows.mint(coreAt({ at: n, subject: n, scope: "fixture", parents: parents }));
+          const core = coreAt({ at: n, subject: n, scope: "fixture", parents });
+          const claim = yield* arrows.mint(core);
+          const record = Claims.ClaimRecord.make({ claim, core });
+          const appended = yield* arrows.appendClaim(log, record, { activity, at: DateTime.makeUnsafe(0) });
+          expect(appended._tag).toBe("Appended");
+          log = appended.log;
+          records.push(record);
           claims.push(claim);
           parents = HashSet.make(claim);
         }
         const graph = Graph.directed<ClaimId, string>((graph) => {
-          const nodes = A.map(claims, (claim) => Graph.addNode(graph, claim));
-          A.forEach(A.zip(nodes, A.drop(nodes, 1)), ([from, to]) => Graph.addEdge(graph, from, to, "derived"));
+          const nodes = HashMap.fromIterable(
+            A.map(records, (record): readonly [ClaimId, Graph.NodeIndex] => [
+              record.claim,
+              Graph.addNode(graph, record.claim),
+            ])
+          );
+          A.forEach(records, (record) =>
+            A.forEach(A.fromIterable(record.core.derivedFrom), (parent) =>
+              Graph.addEdge(
+                graph,
+                O.getOrThrow(HashMap.get(nodes, parent)),
+                O.getOrThrow(HashMap.get(nodes, record.claim)),
+                "derived"
+              )
+            )
+          );
         });
         expect(Graph.isAcyclic(graph)).toBe(true);
         const left = O.getOrThrow(A.head(claims));
@@ -155,6 +178,26 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("immutable claim iden
           }).from
         ).toBe(right);
       })
+  );
+  it.effect("L4-3 production appends refuse missing and later derivation parents", () =>
+    Effect.gen(function* () {
+      const parentCore = coreAt({ at: 20, subject: 1 });
+      const parentId = yield* arrows.mint(parentCore);
+      const parent = Claims.ClaimRecord.make({ claim: parentId, core: parentCore });
+      const childCore = coreAt({ at: 10, subject: 2, parents: HashSet.make(parent.claim) });
+      const childId = yield* arrows.mint(childCore);
+      const child = Claims.ClaimRecord.make({ claim: childId, core: childCore });
+      const missing = yield* arrows.appendClaim([], child, { activity, at: DateTime.makeUnsafe(0) });
+      expect(missing._tag).toBe("Refused");
+      if (AppendResult.guards.Refused(missing))
+        expect(A.map(missing.violations, (v) => v._tag)).toContain("ParentMissing");
+      const prefix = yield* arrows.appendClaim([], parent, { activity, at: DateTime.makeUnsafe(0) });
+      const later = yield* arrows.appendClaim(prefix.log, child, { activity, at: DateTime.makeUnsafe(0) });
+      expect(later._tag).toBe("Refused");
+      expect(later.log).toBe(prefix.log);
+      if (AppendResult.guards.Refused(later))
+        expect(A.map(later.violations, (v) => v._tag)).toContain("ParentStartsLater");
+    })
   );
   it.effect(
     "L4-3 promotion checks a document and runtime proofs while allowing unknown annotation generation time",

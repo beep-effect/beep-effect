@@ -2091,6 +2091,16 @@ Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the trusted binding resolver and its refusal tests together without granting schema-decoded authority.
 
+### P4: verify historical admission stance separately from selected eligibility, 2026-11-23
+
+Selected-time views verify each stored admission at its admission time before observing admitted stance. An optional historicalPorts input supplies trusted historical authorization evidence independently of selected-snapshot ports; absent this input the same ports verify both times. Selected source denial or unavailable selected binding does not erase verified historical stance. A decoded admission without verifiable historical evidence stays unresolved. Selected authorization and grounding determine eligibility separately. This preserves stateless foundation arrows and creates no decoded capability.
+
+Unavailable historical or selected binding evidence yields unknown authorization eligibility. It never grants admitted stance without historical verification or grants outward eligibility.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Remove the optional historical ports together with callers and stance regressions; never grant decoded records authority.
+
 ### P4: version admission bindings and verify selected snapshots, 2026-11-23
 
 Use claim-set/v1 for canonical trusted claim-set membership and claim-retraction/v1 for the exact encoded prior Retraction record. Admission ports resolve authenticated principals, immutable action-revision claim bindings, native claim generation and current sources; historical views use a distinct selected-time source resolver. A readmission clearing is verified at its own admission time before closing the named prior retraction, and eligibility separately verifies the selected snapshot. Unavailable historical verification remains unknown and never grants eligibility; direct retractions at the same time as a clearing win.

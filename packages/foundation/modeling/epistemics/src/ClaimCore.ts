@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Anchored, mintOccurrenceId, OccurrenceId } from "@beep/text/Occurrence";
 import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { TextAnchorVerificationReceipt, toTextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -21,7 +22,7 @@ import * as S from "effect/Schema";
 import { ValidTime } from "./Claim/index.ts";
 import { ClaimId, makeClaimRecords } from "./ClaimCore.schema.ts";
 import { ClaimLogEntry, ClaimLogViolation } from "./ClaimLog.schema.ts";
-import { appendProjection } from "./ClaimLog.ts";
+import { appendProjection, checkClaimLog } from "./ClaimLog.ts";
 import type { AnnotationDocumentView } from "@beep/annotation/AnnotationDocument";
 import type { AnnotationId } from "@beep/annotation/AnnotationId";
 import type { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
@@ -180,6 +181,8 @@ export const makeClaimArrows = <
     record: Record,
     generation: { readonly activity: ActivityId; readonly at: DateTime.Utc }
   ) {
+    const violations = checkClaimLog(log);
+    if (A.isReadonlyArrayNonEmpty(violations)) return { _tag: "Refused", log, violations } satisfies AppendResult;
     const claim = yield* mint(record.core);
     if (!Eq.equals(claim, record.claim))
       return {

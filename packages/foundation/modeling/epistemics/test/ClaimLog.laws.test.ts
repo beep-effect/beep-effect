@@ -13,6 +13,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { logOf } from "./support/Admissions.ts";
 import { activity, arrows, Claims, coreAt } from "./support/Claims.ts";
 
 const id = (hex: string) => ClaimId.make(`sha256:${Str.repeat(64)(hex)}`);
@@ -31,6 +32,32 @@ const tags = (result: AppendResult) =>
 const intervals = ValidTime.cases.Interval.make({ validFrom: at(0), validTo: O.none() });
 
 it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("claim append prefixes", (it) => {
+  it.effect("L4-1 refuses reordered, duplicate, missing-predecessor and generation-invalid supplied prefixes", () =>
+    Effect.gen(function* () {
+      const records = yield* Effect.forEach(
+        [10, 20, 30],
+        Effect.fn(function* (at) {
+          const core = coreAt({ at, subject: at });
+          const claim = yield* arrows.mint(core);
+          return Claims.ClaimRecord.make({ claim, core });
+        }),
+        { concurrency: 1 }
+      );
+      const first = O.getOrThrow(A.get(records, 0));
+      const second = O.getOrThrow(A.get(records, 1));
+      const incoming = O.getOrThrow(A.get(records, 2));
+      const missing = ClaimLogEntry.make({ ...O.getOrThrow(A.head(logOf([first]))), supersedes: O.some(second.claim) });
+      const late = ClaimLogEntry.make({ ...O.getOrThrow(A.head(logOf([first]))), generatedAt: at(100) });
+      for (const prefix of [logOf([second, first]), logOf([first, first]), [missing], [late]]) {
+        const violations = checkClaimLog(prefix);
+        expect(violations.length).toBeGreaterThan(0);
+        const result = yield* arrows.appendClaim(prefix, incoming, { activity, at: at(0) });
+        expect(result._tag).toBe("Refused");
+        expect(result.log).toBe(prefix);
+        if (AppendResult.guards.Refused(result)) expect(result.violations).toEqual(violations);
+      }
+    })
+  );
   it("L4-1 detects missing, self, cross-partition and duplicate predecessors before overwriting", () => {
     const first = entry("1");
     const missing = ClaimLogEntry.make({ ...first, supersedes: O.some(id("f")) });

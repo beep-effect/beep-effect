@@ -580,3 +580,30 @@ the inventory. A test-file-only discovery recipe would have prevented the interr
   hash literals fix the examples; the earlier interruption causes remain unknown.
   **Would have prevented it:** preserving subprocess causes and compiling examples
   during the first local edit loop.
+
+### P4 review repair: prefix validation and historical stance proof
+
+- Doing: reproduce the independent review of commits 2–4 and repair all three findings.
+- Evidence: the original L4-3 suite passed all five tests after replacing the production parent
+  traversal with an empty traversal. The revised production-path suite rejects that mutant.
+  New L4-1 and L4-4 regressions reproduced invalid-prefix acceptance and selected-source denial
+  erasing admitted stance. Their corresponding mutants now fail.
+- Prevention: generate graphs from minted records and append through the public arrow; keep
+  historical admission verification separate from selected eligibility. Historical binding
+  evidence requires explicit trusted ports and cannot be reconstructed by schema decoding.
+- Gate friction: the first package audit caught TS2322 because negating the empty-array guard did
+  not narrow violations to a nonempty tuple. Use the positive nonempty guard before constructing
+  the refusal. The inbox rejected `--observed` for that audit row; acknowledge the repaired row
+  with the fix commit after successful package verification.
+- Additional gate feedback: the Effect diagnostic rejected yielded codec calls nested as arguments;
+  named the encoded value first. Oxlint rejected inline admission codec construction; hoisted it
+  to module scope. Effect-vitest rejected checking Option internals; used assertNone. No inventory
+  or allowlist was expanded.
+- Final focused proof: all 85 tests in 12 files passed under Node/V8. ClaimCore.ts and Admission.ts
+  each have 100 percent statements, branches, functions and lines (297 statements, 158 branches,
+  55 functions and 264 lines combined). Full package verification passed lint, audit and docgen;
+  the package-test-typecheck result records exitCode 0 with empty diagnostics.
+- Mutation receipts: the original five-test L4-3 suite survived deleting parent traversal (exit 0).
+  The revised six-test suite fails that mutant (exit 1); deleting prefix validation fails L4-1
+  (exit 1); coupling historical stance back to selected verification fails three L4-4 tests
+  (exit 1). Each temporary mutation was restored before the final package and coverage runs.
