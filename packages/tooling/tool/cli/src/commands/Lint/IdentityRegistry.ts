@@ -575,9 +575,6 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   return violations;
 });
 
-// Declared-term registry rows: invalid shards, shard conflicts and generated-artifact drift. A
-// checkout with neither shards nor the generated data module (a fixture repo) carries no registry.
-// `--fix` regenerates the artifacts first; it never edits a shard.
 const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
   repoRoot: string,
   fix: boolean
@@ -700,6 +697,12 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 
 /**
  * Lint command enforcing canonical `@beep/identity` composer registration.
+ *
+ * **Details**
+ *
+ * Reports invalid shards, shard conflicts and generated-artifact drift. A fixture
+ * checkout with neither shards nor the generated data module has no term registry.
+ * The --fix mode regenerates artifacts first and never edits a shard.
  *
  * **Example** (Run the identity-registry lint command)
  *

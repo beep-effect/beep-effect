@@ -69,7 +69,7 @@ describe("RegistryShard", () => {
     assertSome(projected.projection, "@beep/test-runner");
   });
 
-  it("refuses unsorted collections and locals that do not form an IRI", () => {
+  it("refuses unsorted collections and PN_LOCAL U+E0001, which RFC 3987 refuses in an IRI", () => {
     const decode = S.decodeUnknownResult(RegistryShard);
     const namespace = { prefix: "ex", iri: "https://example.test/" };
     const rows = { namespace, bindings: [], deprecations: [] };
@@ -80,7 +80,6 @@ describe("RegistryShard", () => {
     const bindingB = { code: "@beep/ex/B", local: "b", since: "1.0.0" };
     assertTrue(decode({ ...rows, terms: ["a", "b"], bindings: [bindingA, bindingB] }).pipe(Result.isSuccess));
     assertTrue(decode({ ...rows, terms: ["a", "b"], bindings: [bindingB, bindingA] }).pipe(Result.isFailure));
-    // U+E0001 is a PN_LOCAL character that RFC 3987 refuses in an IRI.
     assertTrue(decode({ ...rows, terms: ["a\u{E0001}"] }).pipe(Result.isFailure));
   });
 });
@@ -229,7 +228,7 @@ describe("RegistryTable.fromShards", () => {
 
 describe("RegistryTable properties", () => {
   it.prop(
-    "a shard of any distinct safe locals forms a table that publishes each of them",
+    "a shard publishes distinct safe locals after refusing PN_LOCAL code points RFC 3987 excludes",
     [S.Array(SafePnLocal).check(S.isMaxLength(6))],
     ([locals]) => {
       const terms = A.sort(A.dedupe(locals), Order.String);
@@ -239,7 +238,6 @@ describe("RegistryTable properties", () => {
         bindings: [],
         deprecations: [],
       });
-      // A PN_LOCAL may hold a code point RFC 3987 refuses in an IRI; the shard check refuses those.
       if (Result.isFailure(decoded)) return;
       const table = Result.getOrThrow(RegistryTable.fromShards([decoded.success]));
       const snapshot = RegistryTable.snapshot(table, TermSnapshot.empty);

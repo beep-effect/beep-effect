@@ -21,8 +21,7 @@ import * as S from "effect/Schema";
 
 const vitestIri = "https://beep-effect.com/ns/vitest/";
 
-// Widen a branded result so it compares with a plain string literal.
-const widen = (value: O.Option<string>): O.Option<string> => value;
+const widenBrandedOptionToString = (value: O.Option<string>): O.Option<string> => value;
 const oldHang = "https://beep-effect.com/ns/test-utils/Vitest/TestHang";
 const olderHang = "https://beep-effect.com/ns/test-utils/TestHang";
 const retired = "https://beep-effect.com/ns/test-utils/Vitest/TestRetired";
@@ -61,17 +60,20 @@ const fixture = viewOf(
 
 describe("Registry view", () => {
   it("looks up namespaces and bound code identities", () => {
-    assertSome(widen(O.map(fixture.namespaceOf("vitest"), iriOf)), vitestIri);
+    assertSome(widenBrandedOptionToString(O.map(fixture.namespaceOf("vitest"), iriOf)), vitestIri);
     assertNone(fixture.namespaceOf("missing"));
-    assertSome(widen(O.map(fixture.bindingOf("@beep/test-runner/Vitest/TestHang"), iriOf)), `${vitestIri}TestHang`);
+    assertSome(
+      widenBrandedOptionToString(O.map(fixture.bindingOf("@beep/test-runner/Vitest/TestHang"), iriOf)),
+      `${vitestIri}TestHang`
+    );
     assertNone(fixture.bindingOf("@beep/test-runner/Vitest/TestFailure"));
   });
 
   it("closes deprecated terms and follows the replacement chain", () => {
     assertNone(fixture.contract(oldHang));
-    assertSome(widen(fixture.replacementOf(oldHang)), `${vitestIri}TestHang`);
+    assertSome(widenBrandedOptionToString(fixture.replacementOf(oldHang)), `${vitestIri}TestHang`);
     assertSome(
-      widen(fixture.replacementOf("https://beep-effect.com/ns/chain/a")),
+      widenBrandedOptionToString(fixture.replacementOf("https://beep-effect.com/ns/chain/a")),
       "https://beep-effect.com/ns/chain/c"
     );
     assertNone(fixture.replacementOf(retired));
@@ -85,7 +87,10 @@ describe("Registry view", () => {
       bindings: [],
       deprecations: [],
     });
-    assertSome(widen(O.map(registry.namespaceOf("practice-kg"), iriOf)), "https://beep-effect.com/ns/practice-kg/");
+    assertSome(
+      widenBrandedOptionToString(O.map(registry.namespaceOf("practice-kg"), iriOf)),
+      "https://beep-effect.com/ns/practice-kg/"
+    );
     assertNone(registry.expand("practice-kg:Matter"));
   });
 });
@@ -98,7 +103,7 @@ describe("generated Registry", () => {
     const skos = namespace("skos");
     expect(skos).toStrictEqual({ prefix: "skos", iri: "http://www.w3.org/2004/02/skos/core#" });
     expectTypeOf(skos.iri).toEqualTypeOf<"http://www.w3.org/2004/02/skos/core#">();
-    assertSome(widen(O.map(namespaceOf("owl"), iriOf)), "http://www.w3.org/2002/07/owl#");
+    assertSome(widenBrandedOptionToString(O.map(namespaceOf("owl"), iriOf)), "http://www.w3.org/2002/07/owl#");
     assertNone(bindingOf("@beep/identity/Registry/Unbound"));
     assertNone(replacementOf("http://www.w3.org/2002/07/owl#Class"));
   });
@@ -108,14 +113,13 @@ describe("generated Registry", () => {
     expect(() => Reflect.apply(mint, undefined, ["unknown", "x"])).toThrow();
   });
 
-  it("mints instance IRIs with the composer segment grammar", () => {
+  it("mints with composer segments but refuses spaces and other non-IRI characters", () => {
     expect(mint("skos:Concept", "legal", "patent")).toBe("http://www.w3.org/2004/02/skos/core#Concept/legal/patent");
     expect(mint("dcterms", "agents", "alice")).toBe("http://purl.org/dc/terms/agents/alice");
     expect(mint("skos:Concept", "a/b")).toBe("http://www.w3.org/2004/02/skos/core#Concept/a/b");
     expect(() => mint("skos:Concept", "")).toThrow();
     expect(() => mint("skos:Concept", "/leading")).toThrow();
     expect(() => mint("skos:Concept", "trailing/")).toThrow();
-    // The segment grammar admits a space; the minted value must still be an IRI.
     expect(() => mint("dcterms", "a b")).toThrow("Schema validation failed");
     expect(() => mint("skos:Concept", "legal", "a\u{E0001}")).toThrow("Schema validation failed");
   });

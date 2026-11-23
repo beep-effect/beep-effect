@@ -18,8 +18,7 @@ import type * as O from "effect/Option";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// Widen a branded result so it compares with a plain string literal.
-const widen = (value: O.Option<string>): O.Option<string> => value;
+const widenBrandedOptionToString = (value: O.Option<string>): O.Option<string> => value;
 
 const decodeNamespace = S.decodeResult(Namespace);
 const decodeLocal = S.decodeResult(TermLocal);
@@ -27,7 +26,6 @@ const decodeShard = S.decodeResult(RegistryShard);
 const decodeCurie = S.decodeResult(CurieFromIri);
 const encodeCurie = S.encodeResult(CurieFromIri);
 
-// Every registered term of the generated registry, as `[curie, iri]`.
 const registeredTerms: ReadonlyArray<readonly [string, string]> = A.flatMap(
   R.toEntries(RegistryVocab),
   ([prefix, entry]) => A.map(entry.terms, (local: string) => [`${prefix}:${local}`, `${entry.iri}${local}`] as const)
@@ -54,7 +52,6 @@ const shardSeedArbitrary = Arbitrary.all({
   locals: Arbitrary.array(localArbitrary, { maxLength: 6 }),
 });
 
-// A shard decodes only when every local forms an IRI under its namespace.
 const shardOf = (namespace: Namespace, locals: ReadonlyArray<string>) =>
   decodeShard({
     namespace: { prefix: namespace.prefix, iri: namespace.iri },
@@ -63,9 +60,6 @@ const shardOf = (namespace: Namespace, locals: ReadonlyArray<string>) =>
     deprecations: [],
   });
 
-// A generated registry built with the production constructors: a parent namespace, up to
-// three others, and one nested under the parent, whose IRI is the parent IRI followed by a
-// segment and "/", so contraction must be exact rather than longest-prefix.
 const registryArbitrary = pipe(
   Arbitrary.all({
     parent: shardSeedArbitrary,
@@ -94,8 +88,8 @@ describe("Curie laws", () => {
   it("L0-1 expand then contract is the identity on every registered term", () => {
     expect(registeredTerms.length).toBe(snapshot.terms.length - snapshot.namespaces.length);
     for (const [curie, iri] of registeredTerms) {
-      assertSome(widen(expand(curie)), iri);
-      assertSome(widen(contract(iri)), curie);
+      assertSome(widenBrandedOptionToString(expand(curie)), iri);
+      assertSome(widenBrandedOptionToString(contract(iri)), curie);
       const decoded = decodeCurie(curie).pipe(Result.getOrThrow);
       expect(decoded).toBe(iri);
       expect(encodeCurie(decoded).pipe(Result.getOrThrow)).toBe(curie);
@@ -124,8 +118,8 @@ describe("Curie laws", () => {
       ["cito:cites", "http://purl.org/spar/cito/cites"],
     ] as const;
     for (const [curie, iri] of accepted) {
-      assertSome(widen(expand(curie)), iri);
-      assertSome(widen(contract(iri)), curie);
+      assertSome(widenBrandedOptionToString(expand(curie)), iri);
+      assertSome(widenBrandedOptionToString(contract(iri)), curie);
     }
   });
 
@@ -139,8 +133,8 @@ describe("Curie laws", () => {
       ["as:generator", "http://www.w3.org/ns/activitystreams#generator"],
     ] as const;
     for (const [curie, iri] of accepted) {
-      assertSome(widen(expand(curie)), iri);
-      assertSome(widen(contract(iri)), curie);
+      assertSome(widenBrandedOptionToString(expand(curie)), iri);
+      assertSome(widenBrandedOptionToString(contract(iri)), curie);
       expect(decodeCurie(curie).pipe(Result.getOrThrow)).toBe(iri);
     }
   });
@@ -161,13 +155,16 @@ describe("Curie laws", () => {
       }),
     ]).pipe(Result.getOrThrow);
     const registry = view(RegistryTable.fromShards(shards).pipe(Result.getOrThrow));
-    assertSome(widen(registry.expand("qa:receipts/accepted/v2")), "https://beep-effect.com/ns/qa/receipts/accepted/v2");
     assertSome(
-      widen(registry.contract("https://beep-effect.com/ns/qa/receipts/accepted/v2")),
+      widenBrandedOptionToString(registry.expand("qa:receipts/accepted/v2")),
+      "https://beep-effect.com/ns/qa/receipts/accepted/v2"
+    );
+    assertSome(
+      widenBrandedOptionToString(registry.contract("https://beep-effect.com/ns/qa/receipts/accepted/v2")),
       "qa:receipts/accepted/v2"
     );
     assertSome(
-      widen(registry.contract("https://beep-effect.com/ns/qa/receipts/delivered/v2")),
+      widenBrandedOptionToString(registry.contract("https://beep-effect.com/ns/qa/receipts/delivered/v2")),
       "receipts:delivered/v2"
     );
     assertNone(registry.expand("qa:receipts/delivered/v2"));
@@ -175,14 +172,14 @@ describe("Curie laws", () => {
   });
 
   it.prop(
-    "L0-1 expand then contract is the identity on every term of a generated registry",
+    "L0-1 production-built parent, nested and up to three other namespaces contract exactly, never by longest prefix",
     [registryArbitrary],
     ([{ table }]) => {
       const registry = view(table);
       for (const term of table.terms) {
         const curie = `${term.namespace}:${term.local}`;
-        assertSome(widen(registry.expand(curie)), term.iri);
-        assertSome(widen(registry.contract(term.iri)), curie);
+        assertSome(widenBrandedOptionToString(registry.expand(curie)), term.iri);
+        assertSome(widenBrandedOptionToString(registry.contract(term.iri)), curie);
       }
     },
     runs
@@ -197,7 +194,7 @@ describe("Curie laws", () => {
         const declared = A.some(table.terms, (term) => term.namespace === namespace.prefix && term.local === stranger);
         const expanded = registry.expand(`${namespace.prefix}:${stranger}`);
         if (declared) {
-          assertSome(widen(expanded), `${namespace.iri}${stranger}`);
+          assertSome(widenBrandedOptionToString(expanded), `${namespace.iri}${stranger}`);
         } else {
           assertNone(expanded);
         }

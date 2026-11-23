@@ -7,10 +7,6 @@ import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
-// D12: @beep/identity keeps a local version pattern and S.Literals literal domains,
-// because it cannot depend on @beep/schema. This cross-check runs here, where the
-// dependency edge schema -> identity is legal.
-
 const runs = { arbitrary: fcRuns(200) };
 const isRelease = S.is(ReleaseVersion);
 const isSemantic = S.is(SemanticVersion);
