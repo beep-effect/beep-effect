@@ -79,8 +79,6 @@ export const CYCLONEDX_BOM_PREDICATE = "https://cyclonedx.org/bom" as const;
 export type PredicateType = string;
 
 /**
- * Raised when a string is not a SHA-256 digest.
- *
  * **Example** (Inspect the invalid digest input)
  *
  * ```ts
@@ -290,8 +288,6 @@ export const Sha256Digest = class extends Sha256DigestBase {
 export type Sha256Digest = string & Brand.Brand<"Sha256Digest">;
 
 /**
- * A content-addressed artifact an attestation is about.
- *
  * **Details**
  *
  * `name` is conventionally a package URL (`pkg:npm/%40scope/name@1.0.0`), but
@@ -356,8 +352,6 @@ export class InTotoSubject extends S.Opaque<InTotoSubject, { readonly brand: uni
 }
 
 /**
- * Companion types for {@link InTotoSubject}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -372,8 +366,6 @@ export declare namespace InTotoSubject {
 }
 
 /**
- * Input to {@link (InTotoStatement:class).of}.
- *
  * **Details**
  *
  * The two predicate members are spelled out here and again on
@@ -416,8 +408,6 @@ export class InTotoStatementInput extends S.Opaque<InTotoStatementInput, { reado
 ) {}
 
 /**
- * Companion types for {@link InTotoStatementInput}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -432,8 +422,6 @@ export declare namespace InTotoStatementInput {
 }
 
 /**
- * Input to {@link (InTotoStatement:class).forSubject}.
- *
  * **Details**
  *
  * A record rather than positional arguments on purpose: `name` and
@@ -478,8 +466,6 @@ export class InTotoSubjectInput extends S.Opaque<InTotoSubjectInput, { readonly 
 ) {}
 
 /**
- * Companion types for {@link InTotoSubjectInput}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -503,8 +489,6 @@ export declare namespace InTotoSubjectInput {
 }
 
 /**
- * An in-toto Statement v1.
- *
  * **Details**
  *
  * `predicate` is `unknown` by design — SLSA provenance, a CycloneDX BOM and a

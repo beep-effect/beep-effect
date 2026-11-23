@@ -23,8 +23,6 @@ import { isErrno } from "./internal/fsProbe.ts";
 const $I = $GithubActionsId.create("DetachedProcess");
 
 /**
- * A spawned detached child did not provide a process id.
- *
  * **Example** (Inspect MissingProcessIdError message)
  *
  * ```ts
@@ -57,8 +55,6 @@ const { spawn: spawnChild } = process.getBuiltinModule("node:child_process");
 const { closeSync, openSync } = process.getBuiltinModule("node:fs");
 
 /**
- * Raised when the log file for a detached child's output cannot be opened.
- *
  * **Example** (Inspect DetachedLogUnavailableError message)
  *
  * ```ts
@@ -123,8 +119,6 @@ export class DetachedLogUnavailableError extends S.TaggedError<
 }
 
 /**
- * Raised when the detached child did not start.
- *
  * **Example** (Inspect DetachedSpawnFailedError message)
  *
  * ```ts
@@ -179,8 +173,6 @@ export class DetachedSpawnFailedError extends S.TaggedError<
 }
 
 /**
- * Raised when a non-positive pid was handed to {@link DetachedProcess.reap}.
- *
  * **Gotchas**
  *
  * See {@link DetachedProcess.reap} for why this is the most important value in
@@ -246,8 +238,6 @@ export class InvalidPidError extends S.TaggedError<
 }
 
 /**
- * Raised when a signal was refused, e.g. the process belongs to another user.
- *
  * **Example** (Inspect DetachedSignalFailedError message)
  *
  * ```ts
@@ -312,8 +302,6 @@ export class DetachedSignalFailedError extends S.TaggedError<
 }
 
 /**
- * Raised when the readiness probe never held.
- *
  * **Example** (Inspect DetachedNotReadyError message)
  *
  * ```ts
@@ -562,8 +550,6 @@ export class DetachedSpawnOptions extends S.Opaque<DetachedSpawnOptions, { reado
 ) {}
 
 /**
- * The launch options type accepted by {@link DetachedSpawnOptions}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -579,8 +565,6 @@ export declare namespace DetachedSpawnOptions {
 }
 
 /**
- * How long to wait for a child to become ready.
- *
  * **Example** (Validate readiness options)
  *
  * ```ts
@@ -612,8 +596,6 @@ export class ReadinessOptions extends S.Opaque<ReadinessOptions, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link ReadinessOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

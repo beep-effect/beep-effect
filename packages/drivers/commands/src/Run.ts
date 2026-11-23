@@ -159,8 +159,6 @@ export const ExitCode = S.Int.pipe($I.annoteSchema("ExitCode", { description: "A
 export type ExitCode = typeof ExitCode.Type;
 
 /**
- * Policy for one run.
- *
  * **Details**
  *
  * Deliberately narrow. Working directory, environment, stdin, shell mode and
@@ -225,8 +223,6 @@ export class RunOptions extends S.Opaque<RunOptions, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link RunOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -266,8 +262,6 @@ export declare namespace RunOptions {
 }
 
 /**
- * What one completed run produced.
- *
  * **Example** (Check a completed run)
  *
  * ```ts
@@ -371,8 +365,6 @@ const tail = (text: string): string => {
 };
 
 /**
- * A command that could not be run, or that ran and failed.
- *
  * **Details**
  *
  * `kind` is the routing surface, never the message: `"nonZero"` (the process
@@ -622,8 +614,6 @@ export class CommandFailedError extends S.TaggedError<CommandFailedError, { read
 }
 
 /**
- * A command ran, but its output could not be used.
- *
  * **Details**
  *
  * Separate from {@link CommandFailedError} because the process itself

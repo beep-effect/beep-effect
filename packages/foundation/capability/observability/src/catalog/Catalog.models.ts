@@ -122,8 +122,6 @@ export class AttributeKey extends S.Opaque<AttributeKey, { readonly brand: uniqu
 ) {}
 
 /**
- * Encoded form of {@link AttributeKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -138,8 +136,6 @@ export declare namespace AttributeKey {
 }
 
 /**
- * Metric instrument declaration.
- *
  * **Details**
  *
  * Histogram `boundaries` are allowed only on `histogram` metrics and must be
@@ -205,8 +201,6 @@ export class MetricInstrument extends S.Opaque<MetricInstrument, { readonly bran
 ) {}
 
 /**
- * Encoded form of {@link MetricInstrument}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -221,9 +215,6 @@ export declare namespace MetricInstrument {
 }
 
 /**
- * Span instrument entry, harvested from a literal span name or declared by
- * hand.
- *
  * **Details**
  *
  * Declared spans must be `protocol: true` to use a {@link ProtocolSpanName};
@@ -303,8 +294,6 @@ export class SpanInstrument extends S.Opaque<SpanInstrument, { readonly brand: u
 ) {}
 
 /**
- * Encoded form of {@link SpanInstrument}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -319,8 +308,6 @@ export declare namespace SpanInstrument {
 }
 
 /**
- * Event instrument declaration.
- *
  * **Example** (Declare an event)
  *
  * ```ts import.meta.vitest name="Declare an event"
@@ -353,8 +340,6 @@ export class EventInstrument extends S.Opaque<EventInstrument, { readonly brand:
 ) {}
 
 /**
- * Encoded form of {@link EventInstrument}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -369,8 +354,6 @@ export declare namespace EventInstrument {
 }
 
 /**
- * Any catalog instrument: a metric, span or event.
- *
  * **Example** (Branch on an instrument)
  *
  * ```ts import.meta.vitest name="Branch on an instrument"
@@ -396,8 +379,6 @@ export const Instrument = S.Union([MetricInstrument, SpanInstrument, EventInstru
 );
 
 /**
- * Runtime type for {@link Instrument}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -462,8 +443,6 @@ export class InstrumentDeclarations extends S.Opaque<InstrumentDeclarations, { r
 ) {}
 
 /**
- * Attribute keys and instruments, before the catalog checks run.
- *
  * **Details**
  *
  * {@link catalogConflicts} inspects this content; {@link InstrumentCatalog}
@@ -637,8 +616,6 @@ export class InstrumentCatalog extends S.Opaque<InstrumentCatalog, { readonly br
 ) {}
 
 /**
- * Encoded form of {@link InstrumentCatalog}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -653,8 +630,6 @@ export declare namespace InstrumentCatalog {
 }
 
 /**
- * Package that owns a span, and that package's family.
- *
  * **Example** (Construct a span owner)
  *
  * ```ts import.meta.vitest name="Construct a span owner"
@@ -679,8 +654,6 @@ export class SpanOwner extends S.Opaque<SpanOwner, { readonly brand: unique symb
 ) {}
 
 /**
- * Developer workstation emitter. Ceiling: `dev-verbose`.
- *
  * **Example** (Describe a workstation)
  *
  * ```ts import.meta.vitest name="Describe a workstation"
@@ -700,8 +673,6 @@ export class Workstation extends S.Opaque<Workstation, { readonly brand: unique 
 ) {}
 
 /**
- * Long-running server emitter. Ceiling: `standard`.
- *
  * **Example** (Describe a server)
  *
  * ```ts import.meta.vitest name="Describe a server"
@@ -721,9 +692,6 @@ export class Server extends S.Opaque<Server, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * Strict-tier desktop emitter. The gateway stamps the host. Ceiling:
- * `shape-only`.
- *
  * **Example** (Describe a strict desktop)
  *
  * ```ts import.meta.vitest name="Describe a strict desktop"
@@ -745,8 +713,6 @@ export class StrictDesktop extends S.Opaque<StrictDesktop, { readonly brand: uni
 ) {}
 
 /**
- * CI runner emitter. Ceiling: `standard`.
- *
  * **Example** (Describe a CI runner)
  *
  * ```ts import.meta.vitest name="Describe a CI runner"
@@ -770,8 +736,6 @@ export class CiRunner extends S.Opaque<CiRunner, { readonly brand: unique symbol
 ) {}
 
 /**
- * Cloud virtual machine emitter. Ceiling: `standard`.
- *
  * **Example** (Describe a cloud VM)
  *
  * ```ts import.meta.vitest name="Describe a cloud VM"
@@ -791,8 +755,6 @@ export class CloudVm extends S.Opaque<CloudVm, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Serverless function emitter. Ceiling: `standard`.
- *
  * **Example** (Describe a serverless function)
  *
  * ```ts import.meta.vitest name="Describe a serverless function"
@@ -820,8 +782,6 @@ export class Serverless extends S.Opaque<Serverless, { readonly brand: unique sy
 ) {}
 
 /**
- * Browser emitter. Ceiling: `shape-only`.
- *
  * **Example** (Describe a browser)
  *
  * ```ts import.meta.vitest name="Describe a browser"
@@ -841,9 +801,6 @@ export class Browser extends S.Opaque<Browser, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Where a telemetry record ran. Each variant carries its identity source and
- * implies a tier ceiling; see `tierCeiling`.
- *
  * **Example** (Decode an emitter context)
  *
  * ```ts import.meta.vitest name="Decode an emitter context"
@@ -873,8 +830,6 @@ export const EmitterContext = S.Union([
 );
 
 /**
- * Runtime type for {@link EmitterContext}.
- *
  * @category models
  * @since 0.0.0
  */

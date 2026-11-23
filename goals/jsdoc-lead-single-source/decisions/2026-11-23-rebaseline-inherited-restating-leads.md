@@ -2,7 +2,7 @@
 title: "Re-baseline restating-lead to 8,758 for the 32 leads two PRs added before #3496 merged"
 date: 2026-11-23
 lane: "fix/jsdoc-ratchet-restating-lead-main"
-reversal: "Remove the 32 attributed leads in the last P1 sweep wave (PLAN.md: CI-closure and P5 runner packages last) and lower the baseline with jsdoc-ratchet --write-baseline"
+reversal: "Wave 3 removes 13 of the 36 added leads; remove the 6 tooling leads in wave 4 and the 17 in identity Term.ts in wave 5, then lower the baseline with jsdoc-ratchet --write-baseline"
 ---
 
 Main at 37f350c4c4d failed `quality:jsdoc-ratchet:regenerated` with `restating-lead: 8758 > 8726 (+32)`.
@@ -30,3 +30,13 @@ packages last". That wave covers `@beep/identity`, `@beep/infra-ci-runners`,
 `@beep/alchemy-github-runners`, `@beep/schema` and the repo-cli `Ci/` closure files, these 32
 rows included. The orchestrator merges it on the CI goals driver's sequencing, and its PR names
 those packages.
+
+**Correction (wave 3).** The CI goals driver checked the rows against both P5 fences. Repo-cli
+`Ci/*` and `Identity/*` are in no runner Lambda bundle and outside the CI closure, and identity
+`src/Registry.ts` is in no handler graph and outside the closure. Of the rows, only
+`identity/src/Term.ts` (17) is fenced, as closure source. The 32 above is net of the 4 leads #3439
+removed, so the PRs added 36 rows: wave 3 removes 13: `rdf/src/NamespacePin.ts` 2, `identity/src/Registry.ts` 1, cli
+`Identity/index.ts` 1, cli `Identity/Registry.ts` 2 of 3, and the four `Ci/` files 7 of 12. Six
+cli leads stay because removing them leaves a tooling export with no description, which
+`beep/require-description` rejects under `--max-warnings=0`; wave 4 teaches that rule to accept a
+lead derived from the annotation and removes them. The 17 `Term.ts` rows wait for wave 5.

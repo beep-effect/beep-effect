@@ -21,8 +21,6 @@ import type * as Effect from "effect/Effect";
 const $I = $CommandsId.create("LocalExec");
 
 /**
- * The package managers whose project-local exec argv this package knows.
- *
  * **Details**
  *
  * Structurally identical to `@effected/workspaces`' `PackageManagerName` and
@@ -116,8 +114,6 @@ const PREFIXES: Readonly<Record<Launcher, LauncherPrefixes>> = {
 };
 
 /**
- * How to run a project-local binary here.
- *
  * **Details**
  *
  * This is the whole of what tool discovery needs from a workspace: argv
@@ -265,8 +261,6 @@ export class ExecContext extends S.Class<ExecContext, { readonly brand: unique s
 }
 
 /**
- * The project-local execution context could not be determined.
- *
  * **Details**
  *
  * A *mechanism* failure — an unreadable manifest, a detection error. "There is

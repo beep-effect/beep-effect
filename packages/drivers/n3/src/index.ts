@@ -6,8 +6,6 @@
  */
 
 /**
- * N3 Turtle codec errors.
- *
  * @since 0.0.0
  * @category errors
  */

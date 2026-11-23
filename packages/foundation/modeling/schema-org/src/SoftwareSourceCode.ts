@@ -14,8 +14,6 @@ import { NodeRef } from "./NodeRef.ts";
 const $I = $SchemaOrgId.create("SoftwareSourceCode");
 
 /**
- * A schema.org `SoftwareSourceCode` — the node describing a package's source.
- *
  * **Details**
  *
  * Note that the version property is `version`, inherited from `CreativeWork`.

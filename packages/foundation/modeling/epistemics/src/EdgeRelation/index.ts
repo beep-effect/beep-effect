@@ -6,8 +6,6 @@
  */
 
 /**
- * Edge relation vocabulary exports.
- *
  * **Example** (Import and log EdgeRelation)
  *
  * ```ts

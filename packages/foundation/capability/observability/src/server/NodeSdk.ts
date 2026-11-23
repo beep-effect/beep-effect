@@ -84,8 +84,6 @@ const nodeSdkServerOptionsLoggerExportIntervalDefault = Duration.seconds(1);
 const nodeSdkServerOptionsMetricsExportIntervalDefault = Duration.seconds(10);
 const nodeSdkServerOptionsShutdownTimeoutDefault = Duration.seconds(3);
 /**
- * Additional controls for the shared Node SDK layer.
- *
  * **Example** (Make options with merge)
  *
  * ```typescript

@@ -41,8 +41,6 @@ const commandContextFields = {
 } satisfies S.Struct.Fields;
 
 /**
- * Failure to start the OpenClaw executable.
- *
  * **Example** (Create command spawn error)
  *
  * ```ts
@@ -262,8 +260,6 @@ export const OpenclawCliError = S.Union([
 );
 
 /**
- * Runtime type for {@link OpenclawCliError}.
- *
  * **Example** (Type annotate CliError value)
  *
  * ```ts

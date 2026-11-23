@@ -22,8 +22,6 @@ const writeErrorLine = (line: string): void => {
 };
 
 /**
- * Options for the console-backed error reporter.
- *
  * **Example** (Make options without cause)
  *
  * ```typescript
@@ -56,8 +54,6 @@ export class ConsoleErrorReporterOptions extends S.Opaque<
 ) {}
 
 /**
- * Options for registering the console-backed error reporter layer.
- *
  * **Example** (Make options without merge)
  *
  * ```typescript

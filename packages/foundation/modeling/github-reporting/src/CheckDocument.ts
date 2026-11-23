@@ -34,9 +34,6 @@ import { ManagedDocument } from "./ManagedDocument.ts";
 const $I = $GithubReportingId.create("CheckDocument");
 
 /**
- * What a run knows about one of its checks: the authoritative state, and the
- * presentation facts a renderer projects into the document.
- *
  * **Details**
  *
  * Only `state` is required. The rest exist because a status table needs them:
@@ -93,8 +90,6 @@ export class CheckReport extends S.Opaque<CheckReport, { readonly brand: unique 
 ) {}
 
 /**
- * An immutable registry snapshot with the order in which checks were first reported.
- *
  * **Details**
  * HashMap iteration has no insertion-order guarantee. Renderers traverse `order`
  * and look up entries in `checks`; replacing a check leaves its position intact.
@@ -143,8 +138,6 @@ const KIND_PROSE = {
 } as const;
 
 /**
- * Raised when the check document cannot be regenerated, read back or written.
- *
  * **Details**
  *
  * `render` — projecting the registry onto the document failed, almost always
@@ -209,9 +202,6 @@ export class CheckDocumentError extends S.TaggedError<CheckDocumentError, { read
 }
 
 /**
- * A run's identity for staleness ordering: when it started and which run it
- * is.
- *
  * **Details**
  * Two delayed workflows can race for one document — a re-run's stale pass
  * must not overwrite a newer run's regions. The ordering is **total**:
@@ -412,8 +402,6 @@ export const CheckFlushOutcome = LiteralKit(["written", "unchanged", "stale"]).p
 );
 
 /**
- * The reconciliation result accepted by {@link CheckFlushOutcome}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

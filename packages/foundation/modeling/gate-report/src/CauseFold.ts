@@ -65,8 +65,6 @@ export const FoldFixes = S.Record(S.String, Text).pipe(
 );
 
 /**
- * Type of {@link FoldFixes}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -101,9 +99,6 @@ export const defaultCauseFolds: A.NonEmptyReadonlyArray<CauseFoldRule> = [
 ];
 
 /**
- * The result of folding: fold lines in table order and the items no rule
- * folded, in their original order.
- *
  * **Example** (Build an empty result)
  *
  * ```ts

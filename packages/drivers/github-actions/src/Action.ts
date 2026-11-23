@@ -257,10 +257,6 @@ const describeError = (error: unknown): string => {
 };
 
 /**
-/**
- * The verdict {@link Action.main} fails with once it has reported a failed
- * program.
- *
  * **Details**
  *
  * It carries the two `effect/Runtime` markers a `runMain` reads off the

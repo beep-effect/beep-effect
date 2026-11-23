@@ -14,8 +14,6 @@ import { AttributeKeyName, InstrumentName, MetricName, PackageName } from "./Cat
 const $I = $ObservabilityId.create("catalog/Catalog.errors");
 
 /**
- * Two instruments of the same signal share a name.
- *
  * **Example** (Construct a duplicate-name conflict)
  *
  * ```ts import.meta.vitest name="Construct a duplicate-name conflict"
@@ -47,8 +45,6 @@ export class DuplicateInstrumentName extends S.TaggedError<DuplicateInstrumentNa
 ) {}
 
 /**
- * Two declarations define the same attribute key.
- *
  * **Example** (Construct a duplicate-key conflict)
  *
  * ```ts import.meta.vitest name="Construct a duplicate-key conflict"
@@ -78,8 +74,6 @@ export class DuplicateAttributeKey extends S.TaggedError<DuplicateAttributeKey, 
 ) {}
 
 /**
- * An instrument references an attribute key no declaration defines.
- *
  * **Example** (Construct a missing-key conflict)
  *
  * ```ts import.meta.vitest name="Construct a missing-key conflict"
@@ -111,8 +105,6 @@ export class MissingAttributeKey extends S.TaggedError<MissingAttributeKey, { re
 ) {}
 
 /**
- * An instrument uses an attribute key that does not allow its signal.
- *
  * **Example** (Construct a signal conflict)
  *
  * ```ts import.meta.vitest name="Construct a signal conflict"
@@ -144,8 +136,6 @@ export class SignalNotAllowed extends S.TaggedError<SignalNotAllowed, { readonly
 ) {}
 
 /**
- * A metric uses an unbounded attribute key as a label.
- *
  * **Example** (Construct an unbounded-label conflict)
  *
  * ```ts import.meta.vitest name="Construct an unbounded-label conflict"
@@ -175,9 +165,6 @@ export class UnboundedMetricLabel extends S.TaggedError<UnboundedMetricLabel, { 
 ) {}
 
 /**
- * An instrument may be emitted at a stricter tier than one of its attributes
- * allows.
- *
  * **Details**
  *
  * `minTier` is the strictest tier allowed to carry an entry. An instrument
@@ -219,8 +206,6 @@ export class TierLooserThanAttribute extends S.TaggedError<TierLooserThanAttribu
 ) {}
 
 /**
- * Any conflict found while merging declarations into a catalog.
- *
  * **Example** (Describe a conflict)
  *
  * ```ts import.meta.vitest name="Describe a conflict"
@@ -251,8 +236,6 @@ export const CatalogConflict = S.Union([
 );
 
 /**
- * Runtime type for {@link CatalogConflict}.
- *
  * @category errors
  * @since 0.0.0
  */

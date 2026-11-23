@@ -52,8 +52,6 @@ export const Confidence = UnitInterval.pipe(
 );
 
 /**
- * Runtime type for {@link Confidence}.
- *
  * **Example** (Typed confidence decode)
  *
  * ```ts

@@ -13,8 +13,6 @@ import { GranuleMetadata } from "../GranuleMetadata/index.ts";
 const $I = $GovinfoId.create("domain/values/GranuleContainer/GranuleContainer.model");
 
 /**
- * Paginated GovInfo granule listing for a package.
- *
  * **Details**
  *
  * Package granule listings expose subsections of a document package and use

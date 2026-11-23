@@ -26,8 +26,6 @@ import { escapesRoot, statIfPresent } from "./internal/fsProbe.ts";
 const $I = $GithubActionsId.create("CacheKey");
 
 /**
- * A digest length outside the sha256 output range was requested.
- *
  * **Example** (Describe an invalid digest length)
  *
  * ```ts
@@ -54,9 +52,6 @@ export class InvalidDigestLengthError extends S.TaggedError<
 ) {}
 
 /**
- * Raised when a file or directory that was going to be hashed could not be
- * read.
- *
  * **Example** (Identify an unreadable lockfile)
  *
  * ```ts
@@ -108,8 +103,6 @@ export class CacheKeyReadError extends S.TaggedError<CacheKeyReadError, { readon
 }
 
 /**
- * Raised when a glob pattern would not compile.
- *
  * **Example** (Identify a rejected pattern)
  *
  * ```ts
@@ -301,8 +294,6 @@ const wildcardMatches = Effect.fnUntraced(function* (
 });
 
 /**
- * A GitHub Actions cache key and the restore-key ladder that goes with it.
- *
  * **Gotchas**
  *
  * The ladder is the part every consumer re-derives and gets subtly wrong. A

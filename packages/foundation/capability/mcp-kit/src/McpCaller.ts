@@ -105,8 +105,6 @@ export const McpDispatchAnchor = S.NonEmptyString.pipe(
 );
 
 /**
- * Branded dispatch anchor value.
- *
  * **Example** (Accept an anchor by type)
  *
  * ```ts

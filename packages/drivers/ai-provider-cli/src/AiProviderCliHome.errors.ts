@@ -26,8 +26,6 @@ const AiProviderCliHomeFsOperationBase = LiteralKit([
 ]);
 
 /**
- * Filesystem operation names performed by shadow-home maintenance.
- *
  * **Example** (Decode symlink operation name)
  *
  * ```ts
@@ -50,8 +48,6 @@ export const AiProviderCliHomeFsOperation = AiProviderCliHomeFsOperationBase.pip
 );
 
 /**
- * Type for a shadow-home filesystem operation name.
- *
  * **Example** (Annotate readLink operation type)
  *
  * ```ts
@@ -68,8 +64,6 @@ export const AiProviderCliHomeFsOperation = AiProviderCliHomeFsOperationBase.pip
 export type AiProviderCliHomeFsOperation = typeof AiProviderCliHomeFsOperation.Type;
 
 /**
- * Filesystem failure raised while maintaining a provider CLI home layout.
- *
  * **Example** (Construct filesystem error)
  *
  * ```ts
@@ -141,8 +135,6 @@ export class AiProviderCliHomeFileSystemError extends S.TaggedError<
 }
 
 /**
- * Failure raised when the shadow home path equals the shared home path.
- *
  * **Example** (Construct path conflict error)
  *
  * ```ts
@@ -182,8 +174,6 @@ export class AiProviderCliHomePathConflictError extends S.TaggedError<
 }
 
 /**
- * Failure raised when a non-symlink entry blocks a required shadow-home link.
- *
  * **Example** (Construct entry conflict error)
  *
  * ```ts
@@ -235,8 +225,6 @@ export class AiProviderCliHomeEntryConflictError extends S.TaggedError<
 }
 
 /**
- * Failure raised when a private credential entry resolves to a symlink.
- *
  * **Example** (Construct private symlink error)
  *
  * ```ts
@@ -284,8 +272,6 @@ export class AiProviderCliHomePrivateEntrySymlinkError extends S.TaggedError<
 }
 
 /**
- * Union of all provider CLI home-layout failures.
- *
  * **Example** (Check membership in error union)
  *
  * ```ts
@@ -315,8 +301,6 @@ export const AiProviderCliHomeError = S.Union([
 );
 
 /**
- * Type for any provider CLI home-layout failure.
- *
  * **Example** (Type annotate home error)
  *
  * ```ts

@@ -79,8 +79,6 @@ export { makeTerminationError } from "./internal/stdio.ts";
 const AcpClientProtocolGenerationBase = LiteralKit(["negotiate", "v1", "v2"]);
 
 /**
- * How the client picks the ACP generation of a connection.
- *
  * **Details**
  *
  * - `negotiate` (the default) sends an initialize request both generations understand and takes
@@ -107,8 +105,6 @@ export const AcpClientProtocolGeneration = AcpClientProtocolGenerationBase.pipe(
 );
 
 /**
- * Type for {@link AcpClientProtocolGeneration}.
- *
  * **Example** (Pin generation 1)
  *
  * ```ts

@@ -178,8 +178,6 @@ const m365ConfigInputGraphBaseUrlDefault = makeNormalizedUrl(GRAPH_API_BASE_URL)
 const m365ConfigInputMaxRetriesDefault = S.Natural.make(DEFAULT_MAX_RETRIES);
 const m365ConfigInputRedirectUriDefault = makeNormalizedUrl(DEFAULT_REDIRECT_URI);
 /**
- * Runtime configuration accepted by the Microsoft 365 driver layers.
- *
  * **Details**
  *
  * Public-client (delegated, auth-code + PKCE) configuration. `tenantId` and
@@ -331,8 +329,6 @@ export const resolveM365Config = (input: M365ConfigInput): ResolvedM365Config =>
   });
 
 /**
- * Certificate credential for the app-only lane: the production credential.
- *
  * **Details**
  *
  * `thumbprintSha256` is the hex SHA-256 thumbprint of the certificate uploaded
@@ -370,8 +366,6 @@ export class M365CertificateCredential extends S.Opaque<M365CertificateCredentia
 ) {}
 
 /**
- * Client-secret credential for the app-only lane: a dev/test fallback only.
- *
  * **Gotchas**
  *
  * Microsoft discourages client secrets for production daemons. Use
@@ -405,8 +399,6 @@ export class M365ClientSecretCredential extends S.Opaque<
 ) {}
 
 /**
- * Credential accepted by the app-only lane.
- *
  * **Example** (Read credential tag)
  *
  * ```ts
@@ -427,8 +419,6 @@ export const M365AppOnlyCredential = S.Union([M365CertificateCredential, M365Cli
 );
 
 /**
- * Type for {@link M365AppOnlyCredential}.
- *
  * **Example** (Type a credential)
  *
  * ```ts
@@ -444,8 +434,6 @@ export const M365AppOnlyCredential = S.Union([M365CertificateCredential, M365Cli
 export type M365AppOnlyCredential = typeof M365AppOnlyCredential.Type;
 
 /**
- * Runtime configuration for the app-only (confidential client) lane.
- *
  * **Details**
  *
  * The lane has no scopes, redirect URI or user token cache: it always requests

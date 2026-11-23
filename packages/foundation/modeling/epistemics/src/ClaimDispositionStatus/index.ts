@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim disposition status exports.
- *
  * **Example** (Import and log rejected status)
  *
  * ```ts

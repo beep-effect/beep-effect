@@ -37,8 +37,6 @@ export class XlsxGeneralFormat extends S.Opaque<XlsxGeneralFormat, { readonly br
 ) {}
 
 /**
- * A format that shows its number as a date or a time.
- *
  * **Example** (Read a date code)
  *
  * ```ts import.meta.vitest name="Read a date code"

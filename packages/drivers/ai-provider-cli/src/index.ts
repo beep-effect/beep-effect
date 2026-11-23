@@ -12,8 +12,6 @@
  */
 
 /**
- * Redacted provider CLI error exports.
- *
  * **Example** (Construct redacted CLI error)
  *
  * ```ts
@@ -88,8 +86,6 @@ export * from "./AiProviderCli.models.ts";
  */
 export * from "./AiProviderCli.service.ts";
 /**
- * Provider CLI home-layout error exports.
- *
  * **Example** (Make home path conflict error)
  *
  * ```ts
@@ -108,8 +104,6 @@ export * from "./AiProviderCli.service.ts";
  */
 export * from "./AiProviderCliHome.errors.ts";
 /**
- * Provider CLI home-layout model exports.
- *
  * **Example** (Make Codex home layout)
  *
  * ```ts

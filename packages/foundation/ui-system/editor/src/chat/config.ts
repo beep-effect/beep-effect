@@ -53,8 +53,6 @@ export const SendOn = LiteralKit(["enter", "modifierEnter"]).pipe(
 );
 
 /**
- * The keystroke that submits the message.
- *
  * **Example** (Assign modifierEnter value)
  *
  * ```ts import.meta.vitest name="Assign modifierEnter value"
@@ -246,8 +244,6 @@ export const SlashItems = S.Array(SlashItem)
   );
 
 /**
- * Companion type for {@link SlashItems}.
- *
  * **Example** (Type empty slash items)
  *
  * ```ts import.meta.vitest name="Type empty slash items"
@@ -343,8 +339,6 @@ export const MentionOptions = S.Array(MentionOption)
   );
 
 /**
- * Companion type for {@link MentionOptions}.
- *
  * **Example** (Type empty mention options)
  *
  * ```ts import.meta.vitest name="Type empty mention options"
@@ -390,8 +384,6 @@ export type MentionSource = (
 const isMentionSource = (u: unknown): u is MentionSource => P.isFunction(u);
 
 /**
- * Schema for {@link MentionSource}.
- *
  * **Example** (Check source against schema)
  *
  * ```ts import.meta.vitest name="Check source against schema"

@@ -11,10 +11,6 @@ import * as S from "effect/Schema";
 const $I = $LockfilesId.create("ConfigDependencyLock");
 
 /**
- * One config dependency a `pnpm-lock.yaml` records, with the integrity pnpm
- * recorded for it — read from the lockfile's env preamble by
- * `PnpmEnvLockfile.configDependencies`.
- *
  * **Details**
  *
  * pnpm 11 and 12 record each `configDependencies` entry of
@@ -79,8 +75,6 @@ export class ConfigDependencyLock extends S.Opaque<ConfigDependencyLock, { reado
 ) {}
 
 /**
- * Companion types for {@link ConfigDependencyLock}.
- *
  * @category type-level
  * @since 0.0.0
  */

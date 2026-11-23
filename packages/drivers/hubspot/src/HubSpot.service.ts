@@ -74,8 +74,6 @@ const HubSpotUpsertStatus = S.NonEmptyString.pipe(
 );
 
 /**
- * HubSpot form field submission value.
- *
  * **Example** (Make email form field)
  *
  * ```ts
@@ -108,8 +106,6 @@ export class HubSpotFormField extends S.Opaque<HubSpotFormField, { readonly bran
 ) {}
 
 /**
- * HubSpot form submission context.
- *
  * **Example** (Create form page context)
  *
  * ```ts
@@ -145,8 +141,6 @@ export class HubSpotFormContext extends S.Opaque<HubSpotFormContext, { readonly 
 ) {}
 
 /**
- * HubSpot form submission request.
- *
  * **Example** (Build form submit request)
  *
  * ```ts
@@ -187,8 +181,6 @@ export class HubSpotSubmitFormRequest extends S.Opaque<HubSpotSubmitFormRequest,
 }
 
 /**
- * HubSpot form submission response.
- *
  * **Example** (Create form submit response)
  *
  * ```ts
@@ -222,8 +214,6 @@ export class HubSpotSubmitFormResponse extends S.Opaque<HubSpotSubmitFormRespons
 }
 
 /**
- * HubSpot contact upsert request using email as the stable identifier.
- *
  * **Example** (Upsert contact by email)
  *
  * ```ts
@@ -266,8 +256,6 @@ export class HubSpotUpsertContactRequest extends S.Opaque<
 }
 
 /**
- * HubSpot contact upsert result.
- *
  * **Example** (Create upsert contact result)
  *
  * ```ts
@@ -299,8 +287,6 @@ export class HubSpotUpsertContactResult extends S.Opaque<
 ) {}
 
 /**
- * HubSpot contact upsert response.
- *
  * **Example** (Create upsert contact response)
  *
  * ```ts

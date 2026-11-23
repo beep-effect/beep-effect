@@ -20,8 +20,6 @@ export * from "./HubSpot.config.ts";
  */
 export * from "./HubSpot.errors.ts";
 /**
- * HubSpot Forms API service.
- *
  * @category services
  * @since 0.0.0
  */

@@ -30,8 +30,6 @@ const RunpodErrorReasonBase = LiteralKit([
 const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decoding", "response status", "transport"]);
 
 /**
- * Numeric HTTP status code emitted by Runpod driver boundaries.
- *
  * **Example** (Checking status code membership)
  *
  * ```ts
@@ -51,8 +49,6 @@ export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maxi
 );
 
 /**
- * Type for {@link RunpodHttpStatusCode}.
- *
  * **Example** (Annotating status code type)
  *
  * ```ts
@@ -68,8 +64,6 @@ export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maxi
 export type RunpodHttpStatusCode = typeof RunpodHttpStatusCode.Type;
 
 /**
- * Technical error reasons emitted by the Runpod REST API v2 driver.
- *
  * **Example** (Inspecting error reason AST)
  *
  * ```ts
@@ -89,8 +83,6 @@ export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link RunpodErrorReason}.
- *
  * **Example** (Assigning transport error reason)
  *
  * ```ts
@@ -106,8 +98,6 @@ export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
 export type RunpodErrorReason = typeof RunpodErrorReason.Type;
 
 /**
- * Technical error reasons emitted by the Runpod documentation index driver.
- *
  * **Example** (Inspecting docs reason AST)
  *
  * ```ts
@@ -127,8 +117,6 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link RunpodDocsErrorReason}.
- *
  * **Example** (Assigning parse error reason)
  *
  * ```ts
@@ -145,8 +133,6 @@ export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
 
 const runpodProblemErrorsDefault = A.empty<string>();
 /**
- * RFC 9457 problem details returned by a failed Runpod REST API v2 request.
- *
  * **Details**
  *
  * Runpod v2 answers every failure with `application/problem+json`: a
@@ -243,8 +229,6 @@ export const RunpodProblemFromProblemDetails = ProblemDetails.Schema.pipe(
 );
 
 /**
- * Technical failure raised by the Runpod REST API driver boundary.
- *
  * **Details**
  *
  * A `response status` failure carries the HTTP status and, when Runpod
@@ -341,8 +325,6 @@ export class RunpodError extends S.TaggedError<RunpodError, { readonly brand: un
 }
 
 /**
- * Technical failure raised by the Runpod documentation index driver boundary.
- *
  * **Example** (Building docs error from reason)
  *
  * ```ts
@@ -419,8 +401,6 @@ export class RunpodErrorOptions extends S.Opaque<RunpodErrorOptions, { readonly 
 ) {}
 
 /**
- * Raw option input accepted by RunpodError constructors before schema-owned normalization.
- *
  * **Example** (Record the HTTP status of a failed operation)
  *
  * ```ts
@@ -518,8 +498,6 @@ export class RunpodDocsErrorOptions extends S.Opaque<RunpodDocsErrorOptions, { r
 ) {}
 
 /**
- * Raw option input accepted by RunpodDocsError constructors before schema-owned normalization.
- *
  * **Example** (Record the URL of a failed docs fetch)
  *
  * ```ts

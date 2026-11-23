@@ -51,8 +51,6 @@ import type { TokenPermissionError } from "./TokenPermissions.ts";
 const $I = $GithubId.create("GitHubApp");
 
 /**
- * A GitHub App call failed.
- *
  * **Details**
  *
  * Distinct from `GitHubError` because "I could not obtain credentials" and "the
@@ -152,8 +150,6 @@ const AppCredentialsFields = {
 };
 
 /**
- * The credentials that identify a GitHub App.
- *
  * **Details**
  *
  * `appId` accepts either the numeric app id or the newer client id — GitHub
@@ -183,8 +179,6 @@ export class AppCredentials extends S.Opaque<AppCredentials, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link AppCredentials}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -199,8 +193,6 @@ export declare namespace AppCredentials {
 }
 
 /**
- * A permission name as GitHub spells it in an installation token request.
- *
  * **Details**
  *
  * Lowercase snake_case, such as `contents`, `pull_requests` or `checks`. Any
@@ -229,8 +221,6 @@ export const PermissionName = S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9_
 );
 
 /**
- * A permission name as GitHub spells it in an installation token request.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -270,8 +260,6 @@ const RequestedPermissions = S.Record(S.String, PermissionLevel)
   );
 
 /**
- * A repository name without its owner, as the `access_tokens` body wants it.
- *
  * **Details**
  *
  * The owner is implied by the installation, so `repositories: ["beep-effect"]`
@@ -299,8 +287,6 @@ export const RepositoryName = S.NonEmptyString.check(S.isPattern(/^[^/\s]+$/u)).
 );
 
 /**
- * A repository name without its owner.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -308,8 +294,6 @@ export const RepositoryName = S.NonEmptyString.check(S.isPattern(/^[^/\s]+$/u)).
 export type RepositoryName = typeof RepositoryName.Type;
 
 /**
- * What to mint an installation token for.
- *
  * **Details**
  *
  * The app credentials plus how to find the installation. Discovery from
@@ -399,8 +383,6 @@ export class TokenRequest extends S.Opaque<TokenRequest, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link TokenRequest}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -415,8 +397,6 @@ export declare namespace TokenRequest {
 }
 
 /**
- * An installation access token and what GitHub said about it.
- *
  * **Details**
  *
  * Encodable on purpose. A GitHub Actions step persists one across the
@@ -611,8 +591,6 @@ const CommitEmail = S.String.check(S.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)).pi
 );
 
 /**
- * Who a bot commits as.
- *
  * **Details**
  *
  * A **pure class**, not a `GitHubApp` service member: a synchronous method on
@@ -720,8 +698,6 @@ export class BotIdentity extends S.Class<BotIdentity, { readonly brand: unique s
 }
 
 /**
- * What GitHub knows about the app itself.
- *
  * **Example** (Construct app identity metadata)
  *
  * ```ts
@@ -772,8 +748,6 @@ export class AppIdentity extends S.Class<AppIdentity, { readonly brand: unique s
 }
 
 /**
- * One installation of the app.
- *
  * **Example** (Identify an installation)
  *
  * ```ts
@@ -802,8 +776,6 @@ export class Installation extends S.Opaque<Installation, { readonly brand: uniqu
 ) {}
 
 /**
- * Transport settings for the app's own API calls.
- *
  * **Details**
  *
  * Service options rather than wire data: `fetch` is a function and `retry` a
@@ -876,8 +848,6 @@ export class GitHubAppOptions extends S.Opaque<GitHubAppOptions, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link GitHubAppOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

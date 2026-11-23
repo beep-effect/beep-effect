@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $PandocAstId.create("Pandoc.report");
 
 /**
- * Direction of a Pandoc compatibility mapping.
- *
  * **Example** (Validate mapping direction)
  *
  * ```ts import.meta.vitest name="Validate mapping direction"
@@ -35,8 +33,6 @@ export const PandocMappingDirection = LiteralKit(["pandoc-to-md", "md-to-pandoc"
 );
 
 /**
- * Runtime type for {@link PandocMappingDirection}.
- *
  * **Example** (Annotate direction variable)
  *
  * ```ts import.meta.vitest name="Annotate direction variable"
@@ -52,8 +48,6 @@ export const PandocMappingDirection = LiteralKit(["pandoc-to-md", "md-to-pandoc"
 export type PandocMappingDirection = typeof PandocMappingDirection.Type;
 
 /**
- * Severity for a mapping issue.
- *
  * **Example** (Validate severity value)
  *
  * ```ts import.meta.vitest name="Validate severity value"
@@ -72,8 +66,6 @@ export const PandocMappingSeverity = LiteralKit(["lossy", "unsupported"]).pipe(
 );
 
 /**
- * Runtime type for {@link PandocMappingSeverity}.
- *
  * **Example** (Annotate severity variable)
  *
  * ```ts import.meta.vitest name="Annotate severity variable"
@@ -89,8 +81,6 @@ export const PandocMappingSeverity = LiteralKit(["lossy", "unsupported"]).pipe(
 export type PandocMappingSeverity = typeof PandocMappingSeverity.Type;
 
 /**
- * Summary profile for a compatibility report.
- *
  * **Example** (Validate profile value)
  *
  * ```ts import.meta.vitest name="Validate profile value"
@@ -109,8 +99,6 @@ export const PandocMappingProfile = LiteralKit(["supported", "gap"]).pipe(
 );
 
 /**
- * Runtime type for {@link PandocMappingProfile}.
- *
  * **Example** (Annotate profile variable)
  *
  * ```ts import.meta.vitest name="Annotate profile variable"
@@ -126,8 +114,6 @@ export const PandocMappingProfile = LiteralKit(["supported", "gap"]).pipe(
 export type PandocMappingProfile = typeof PandocMappingProfile.Type;
 
 /**
- * A single segment in a Pandoc JSON path.
- *
  * **Example** (Build pointer from path)
  *
  * ```ts import.meta.vitest name="Build pointer from path"
@@ -146,8 +132,6 @@ export const JsonPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrE
 );
 
 /**
- * Runtime type for {@link JsonPathSegment}.
- *
  * **Example** (Annotate path segment)
  *
  * ```ts import.meta.vitest name="Annotate path segment"
@@ -169,8 +153,6 @@ const jsonPathToPointer = (path: ReadonlyArray<JsonPathSegment>): string =>
   path.length === 0 ? "" : `/${pipe(path, A.map(escapePointerSegment), A.join("/"))}`;
 
 /**
- * Ordered path to a construct inside Pandoc JSON.
- *
  * **Example** (Convert path via toPointer)
  *
  * ```ts
@@ -192,8 +174,6 @@ export const JsonPath = S.Array(JsonPathSegment).pipe(
 );
 
 /**
- * Runtime type for {@link JsonPath}.
- *
  * **Example** (Annotate JSON path)
  *
  * ```ts import.meta.vitest name="Annotate JSON path"
@@ -225,8 +205,6 @@ export type JsonPath = typeof JsonPath.Type;
 export const jsonPointerFromPath = (path: JsonPath): string => JsonPath.toPointer(path);
 
 /**
- * A single compatibility issue found while mapping between Pandoc and Md.
- *
  * **Example** (Create issue from path)
  *
  * ```ts import.meta.vitest name="Create issue from path"
@@ -287,8 +265,6 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue, { readonly b
 }
 
 /**
- * Companion namespace for {@link PandocMappingIssue}.
- *
  * **Example** (Type issue from path)
  *
  * ```ts import.meta.vitest name="Type issue from path"
@@ -333,8 +309,6 @@ export declare namespace PandocMappingIssue {
 }
 
 /**
- * Compatibility report shared by both mapping directions.
- *
  * **Example** (Create empty compatibility report)
  *
  * ```ts import.meta.vitest name="Create empty compatibility report"
@@ -392,8 +366,6 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
 export const profileFromIssues = PandocCompatibilityReport.profileFromIssues;
 
 /**
- * Companion namespace for {@link PandocCompatibilityReport}.
- *
  * **Example** (Type empty compatibility report)
  *
  * ```ts import.meta.vitest name="Type empty compatibility report"

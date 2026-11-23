@@ -57,8 +57,6 @@ export const ActivityPin = S.TaggedUnion({
 );
 
 /**
- * Decoded type of {@link ActivityPin}.
- *
  * @category models
  * @since 0.0.0
  */

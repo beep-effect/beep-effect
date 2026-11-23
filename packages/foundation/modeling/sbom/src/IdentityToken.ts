@@ -31,8 +31,6 @@ import * as S from "effect/Schema";
 const $I = $SbomId.create("IdentityToken");
 
 /**
- * Raised when an identity token cannot be obtained.
- *
  * **Details**
  *
  * The audience is on the error because "which audience" is the first thing a

@@ -76,8 +76,6 @@ export const UntrustedHtml = S.String.pipe(
 );
 
 /**
- * Decoded type of {@link UntrustedHtml}.
- *
  * **Example** (Decoding untrusted HTML)
  *
  * ```ts
@@ -156,8 +154,6 @@ export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
 );
 
 /**
- * Decoded type of {@link SafeHtml}.
- *
  * **Example** (Producing SafeHtml value)
  *
  * ```ts import.meta.vitest name="Producing SafeHtml value"
@@ -210,8 +206,6 @@ export const HtmlSerializeRule = LiteralKit([
 );
 
 /**
- * Decoded type of {@link HtmlSerializeRule}.
- *
  * **Example** (Decoding serialize rule)
  *
  * ```ts import.meta.vitest name="Decoding serialize rule"

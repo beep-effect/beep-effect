@@ -49,8 +49,6 @@ export class UnknownCapabilityError extends S.TaggedError<UnknownCapabilityError
 }
 
 /**
- * An enabled capability omits one of its explicit dependencies.
- *
  * **Example** (Create a missing dependency failure)
  *
  * ```ts import.meta.vitest name="Create a missing dependency failure"
@@ -87,8 +85,6 @@ export class MissingDependencyError extends S.TaggedError<MissingDependencyError
 }
 
 /**
- * Enabled capability dependencies contain a directed cycle.
- *
  * **Example** (Create a dependency cycle failure)
  *
  * ```ts
@@ -162,8 +158,6 @@ export class CapabilityConflictError extends S.TaggedError<CapabilityConflictErr
 }
 
 /**
- * A production profile attempts to enable a development-only capability.
- *
  * **Example** (Create a development-only failure)
  *
  * ```ts import.meta.vitest name="Create a development-only failure"
@@ -275,8 +269,6 @@ export class UnknownCommandError extends S.TaggedError<UnknownCommandError, { re
 }
 
 /**
- * Multiple resolved commands own the same active platform chord.
- *
  * **Example** (Create a keybinding conflict failure)
  *
  * ```ts
@@ -317,8 +309,6 @@ export class KeybindingConflictError extends S.TaggedError<KeybindingConflictErr
 }
 
 /**
- * Tagged union of every deterministic profile resolution failure.
- *
  * **Example** (Decode a resolution failure)
  *
  * ```ts import.meta.vitest name="Decode a resolution failure"

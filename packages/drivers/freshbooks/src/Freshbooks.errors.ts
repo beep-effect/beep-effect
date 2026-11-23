@@ -51,8 +51,6 @@ type FreshbooksErrorOptions = {
 };
 
 /**
- * Technical error reasons emitted by the FreshBooks driver.
- *
  * **Details**
  *
  * `token refresh` is the single-use refresh-token rotation failure class,
@@ -86,8 +84,6 @@ export const FreshbooksErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link FreshbooksErrorReason}.
- *
  * **Example** (Assign token refresh reason type)
  *
  * ```ts
@@ -103,8 +99,6 @@ export const FreshbooksErrorReason = LiteralKit([
 export type FreshbooksErrorReason = typeof FreshbooksErrorReason.Type;
 
 /**
- * Technical failure raised by the FreshBooks driver boundary.
- *
  * **Example** (Create error with resource context)
  *
  * ```ts

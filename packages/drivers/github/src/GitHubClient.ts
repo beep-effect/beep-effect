@@ -185,8 +185,6 @@ export interface GitHubClientShape {
 }
 
 /**
- * How a client layer is built.
- *
  * **Details**
  *
  * Service options rather than wire data: `fetch` is a function and `token` a
@@ -274,8 +272,6 @@ export class GitHubClientOptions extends S.Opaque<GitHubClientOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link GitHubClientOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -295,9 +291,6 @@ const RecordedCallKind = LiteralKit(["request", "requestDecoded", "paginate", "g
 );
 
 /**
- * One call served by {@link GitHubClient.layerFixture}, as recorded in
- * {@link GitHubFixtures}' `requested`.
- *
  * **Example** (Record a request call)
  *
  * ```ts
@@ -359,8 +352,6 @@ const UnstubbedPolicy = LiteralKit(["die", "fail", "empty"]).pipe(
 );
 
 /**
- * A recorded response table for {@link GitHubClient.layerFixture}.
- *
  * **Details**
  *
  * A test-double table rather than wire data: the route-keyed entries hold
@@ -478,8 +469,6 @@ export class GitHubFixtures extends S.Opaque<GitHubFixtures, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link GitHubFixtures}.
- *
  * @category type-level
  * @since 0.0.0
  */

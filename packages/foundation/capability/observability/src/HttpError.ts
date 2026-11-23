@@ -183,8 +183,6 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError, { readonly b
 }
 
 /**
- * Shared tagged error for 5xx HTTP responses with `Error` severity.
- *
  * **Example** (Create server HTTP error)
  *
  * ```typescript
@@ -224,8 +222,6 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError, { readonly b
 }
 
 /**
- * 400 tagged error.
- *
  * **Example** (Create BadRequestError)
  *
  * ```typescript
@@ -254,8 +250,6 @@ export class BadRequestError extends S.TaggedError<BadRequestError, { readonly b
 }
 
 /**
- * 401 tagged error.
- *
  * **Example** (Create UnauthorizedError)
  *
  * ```typescript
@@ -284,8 +278,6 @@ export class UnauthorizedError extends S.TaggedError<UnauthorizedError, { readon
 }
 
 /**
- * 403 tagged error.
- *
  * **Example** (Create ForbiddenError)
  *
  * ```typescript
@@ -314,8 +306,6 @@ export class ForbiddenError extends S.TaggedError<ForbiddenError, { readonly bra
 }
 
 /**
- * 404 tagged error.
- *
  * **Example** (Create NotFoundError)
  *
  * ```typescript
@@ -342,8 +332,6 @@ export class NotFoundError extends S.TaggedError<NotFoundError, { readonly brand
 }
 
 /**
- * 409 tagged error.
- *
  * **Example** (Create ConflictError)
  *
  * ```typescript
@@ -370,8 +358,6 @@ export class ConflictError extends S.TaggedError<ConflictError, { readonly brand
 }
 
 /**
- * 422 tagged error.
- *
  * **Example** (Create UnprocessableEntityError)
  *
  * ```typescript
@@ -401,8 +387,6 @@ export class UnprocessableEntityError extends S.TaggedError<
 }
 
 /**
- * 429 tagged error.
- *
  * **Example** (Create TooManyRequestsError)
  *
  * ```typescript
@@ -431,8 +415,6 @@ export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError, { 
 }
 
 /**
- * 500 tagged error.
- *
  * **Example** (Create InternalServerErrorError)
  *
  * ```typescript
@@ -462,8 +444,6 @@ export class InternalServerErrorError extends S.TaggedError<
 }
 
 /**
- * 502 tagged error.
- *
  * **Example** (Create BadGatewayError)
  *
  * ```typescript
@@ -492,8 +472,6 @@ export class BadGatewayError extends S.TaggedError<BadGatewayError, { readonly b
 }
 
 /**
- * 503 tagged error.
- *
  * **Example** (Create ServiceUnavailableError)
  *
  * ```typescript
@@ -522,8 +500,6 @@ export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableErr
 }
 
 /**
- * 504 tagged error.
- *
  * **Example** (Create GatewayTimeoutError)
  *
  * ```typescript

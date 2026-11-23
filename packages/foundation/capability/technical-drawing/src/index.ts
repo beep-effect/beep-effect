@@ -57,8 +57,6 @@ export * from "./Geometry.segments.ts";
  */
 export * from "./Manifest.digest.ts";
 /**
- * Render manifest schemas.
- *
  * @since 0.0.0
  * @category models
  */
@@ -86,8 +84,6 @@ export * from "./Shading.rules.ts";
  */
 export * from "./Shading.schemas.ts";
 /**
- * Sheet composition.
- *
  * @since 0.0.0
  * @category models
  */
@@ -100,8 +96,6 @@ export * from "./Sheet.compose.ts";
  */
 export * from "./Sheet.schemas.ts";
 /**
- * Typed errors.
- *
  * @since 0.0.0
  * @category errors
  */

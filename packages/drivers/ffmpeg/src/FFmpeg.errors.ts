@@ -17,8 +17,6 @@ const FFmpegDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalen
 const isFFmpegDefect = S.is(FFmpegDefect);
 
 /**
- * Non-negative integer process exit status.
- *
  * **Example** (Make process exit code)
  *
  * ```ts
@@ -47,8 +45,6 @@ export const ProcessExitCode = S.Int.check(
 );
 
 /**
- * Non-negative integer process exit status.
- *
  * **Example** (Typed ProcessExitCode value)
  *
  * ```ts
@@ -85,8 +81,6 @@ const optionsFromInput = (options: FFmpegErrorContextInput): FFmpegErrorFromUnkn
   });
 
 /**
- * Additional process context captured for an FFmpeg failure.
- *
  * **Example** (Make FFmpeg error context)
  *
  * ```ts
@@ -137,8 +131,6 @@ const existingFfmpegError = (cause: unknown): O.Option<FFmpegError> =>
   FFmpegError.is(cause) ? O.some(cause) : O.none();
 
 /**
- * Options used when normalizing unknown FFmpeg boundary failures.
- *
  * **Example** (Make fromUnknown options)
  *
  * ```ts

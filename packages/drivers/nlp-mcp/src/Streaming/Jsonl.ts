@@ -33,8 +33,6 @@ const $I = $NlpMcpId.create("Streaming/Jsonl");
 const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 /**
- * Structured parse failure for a single JSONL line.
- *
  * **Example** (Construct line parse error)
  *
  * ```ts
@@ -64,8 +62,6 @@ export class JsonlLineError extends S.Opaque<JsonlLineError, { readonly brand: u
 ) {}
 
 /**
- * Aggregate parse statistics for a JSONL file.
- *
  * **Example** (Build aggregate parse stats)
  *
  * ```ts
@@ -98,8 +94,6 @@ export class JsonlStats extends S.Opaque<JsonlStats, { readonly brand: unique sy
 ) {}
 
 /**
- * Options shared by JSONL read and sample helpers.
- *
  * **Example** (Create skip-invalid options)
  *
  * ```ts
@@ -125,8 +119,6 @@ export class JsonlReadOptions extends S.Opaque<JsonlReadOptions, { readonly bran
 ) {}
 
 /**
- * Validation result containing parsed records and collected line errors.
- *
  * **Example** (Build validation result)
  *
  * ```ts

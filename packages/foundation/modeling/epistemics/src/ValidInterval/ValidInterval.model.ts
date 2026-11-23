@@ -100,8 +100,6 @@ export const ValidInterval = S.Struct(ValidIntervalFields)
   );
 
 /**
- * Runtime type for {@link ValidInterval}.
- *
  * **Example** (Type a valid-time interval)
  *
  * ```ts

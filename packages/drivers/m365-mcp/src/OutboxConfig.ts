@@ -63,8 +63,6 @@ export const OUTBOX_ENV = {
 } as const;
 
 /**
- * Failure to assemble the outbox configuration.
- *
  * **Details**
  *
  * The message names the setting at fault and never a value.
@@ -95,8 +93,6 @@ export class OutboxConfigError extends S.TaggedError<OutboxConfigError, { readon
 ) {}
 
 /**
- * Resolved configuration of the outbox server.
- *
  * **Example** (Assemble a configuration by hand)
  *
  * ```ts

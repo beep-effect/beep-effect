@@ -149,8 +149,6 @@ export const PdfStreamCheck = PdfStreamCheckBase.pipe(
 );
 
 /**
- * Type for {@link PdfStreamCheck}.
- *
  * **Example** (Annotate an outcome)
  *
  * ```ts
@@ -318,8 +316,6 @@ const FindingCodeBase = LiteralKit([
 ]);
 
 /**
- * Validator finding codes.
- *
  * **Example** (Read the codes)
  *
  * ```ts
@@ -339,8 +335,6 @@ export const FindingCode = FindingCodeBase.pipe(
 );
 
 /**
- * Type for {@link FindingCode}.
- *
  * **Example** (Annotate a code)
  *
  * ```ts
@@ -388,8 +382,6 @@ export class SheetFinding extends S.Opaque<SheetFinding, { readonly brand: uniqu
 const SheetLabelBase = LiteralKit(["figure", "sheet-number"]);
 
 /**
- * The two labels of a sheet: `FIG. n` and the `n/N` sheet number.
- *
  * **Example** (Read the labels)
  *
  * ```ts
@@ -409,8 +401,6 @@ export const SheetLabel = SheetLabelBase.pipe(
 );
 
 /**
- * Type for {@link SheetLabel}.
- *
  * **Example** (Annotate a label)
  *
  * ```ts

@@ -78,8 +78,6 @@ const provDateTimeChecks = S.makeFilterGroup(
 );
 
 /**
- * PROV object reference encoded as an IRI, CURIE, or local identifier.
- *
  * **Example** (Decode CURIE object ref)
  *
  * ```ts import.meta.vitest name="Decode CURIE object ref"
@@ -110,8 +108,6 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
 );
 
 /**
- * Type for {@link ObjectRef}.
- *
  * **Example** (Accept ObjectRef type)
  *
  * ```ts
@@ -127,8 +123,6 @@ export const ObjectRef = S.String.check(provObjectRefChecks).pipe(
 export type ObjectRef = typeof ObjectRef.Type;
 
 /**
- * Encoded PROV timestamp string.
- *
  * **Example** (Decode encoded timestamp)
  *
  * ```ts import.meta.vitest name="Decode encoded timestamp"
@@ -159,8 +153,6 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
 );
 
 /**
- * Type for {@link ProvDateTimeEncoded}.
- *
  * **Example** (Accept encoded datetime type)
  *
  * ```ts
@@ -176,8 +168,6 @@ export const ProvDateTimeEncoded = S.String.check(provDateTimeChecks).pipe(
 export type ProvDateTimeEncoded = typeof ProvDateTimeEncoded.Type;
 
 /**
- * PROV timestamp decoded to `DateTime.Utc`.
- *
  * **Details**
  *
  * Decoded UTC instants must canonicalize to years 0000 through 9999, matching
@@ -215,8 +205,6 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
 );
 
 /**
- * Type for {@link ProvDateTime}.
- *
  * **Example** (Accept ProvDateTime type)
  *
  * ```ts
@@ -232,8 +220,6 @@ export const ProvDateTime = ProvDateTimeEncoded.pipe(
 export type ProvDateTime = typeof ProvDateTime.Type;
 
 /**
- * Explicit lifecycle time fields retained outside plain PROV activity timestamps.
- *
  * **Example** (Decode observedAt option)
  *
  * ```ts import.meta.vitest name="Decode observedAt option"
@@ -277,8 +263,6 @@ export class LifecycleTimes extends S.Opaque<LifecycleTimes, { readonly brand: u
 ) {}
 
 /**
- * PROV entity.
- *
  * **Example** (Decode PROV entity)
  *
  * ```ts import.meta.vitest name="Decode PROV entity"
@@ -327,8 +311,6 @@ export class Entity extends S.Opaque<Entity, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * PROV activity.
- *
  * **Example** (Decode PROV activity)
  *
  * ```ts import.meta.vitest name="Decode PROV activity"
@@ -370,8 +352,6 @@ export class Activity extends S.Opaque<Activity, { readonly brand: unique symbol
 ) {}
 
 /**
- * PROV agent.
- *
  * **Example** (Decode PROV agent)
  *
  * ```ts import.meta.vitest name="Decode PROV agent"
@@ -410,8 +390,6 @@ export class Agent extends S.Opaque<Agent, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * PROV software agent.
- *
  * **Example** (Decode software agent)
  *
  * ```ts import.meta.vitest name="Decode software agent"
@@ -451,8 +429,6 @@ export class SoftwareAgent extends S.Opaque<SoftwareAgent, { readonly brand: uni
 ) {}
 
 /**
- * PROV plan.
- *
  * **Example** (Decode PROV plan)
  *
  * ```ts import.meta.vitest name="Decode PROV plan"
@@ -492,8 +468,6 @@ export class Plan extends S.Opaque<Plan, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * PROV collection.
- *
  * **Example** (Decode collection members)
  *
  * ```ts import.meta.vitest name="Decode collection members"
@@ -533,8 +507,6 @@ export class Collection extends S.Opaque<Collection, { readonly brand: unique sy
 ) {}
 
 /**
- * PROV person.
- *
  * **Example** (Decode PROV person)
  *
  * ```ts import.meta.vitest name="Decode PROV person"
@@ -574,8 +546,6 @@ export class Person extends S.Opaque<Person, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * PROV organization.
- *
  * **Example** (Decode PROV organization)
  *
  * ```ts import.meta.vitest name="Decode PROV organization"
@@ -626,8 +596,6 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
   });
 
 /**
- * PROV usage relation.
- *
  * **Example** (Decode usage relation)
  *
  * ```ts import.meta.vitest name="Decode usage relation"
@@ -660,8 +628,6 @@ export class Usage extends S.Opaque<Usage, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * PROV generation relation.
- *
  * **Example** (Decode generation relation)
  *
  * ```ts import.meta.vitest name="Decode generation relation"
@@ -694,8 +660,6 @@ export class Generation extends S.Opaque<Generation, { readonly brand: unique sy
 ) {}
 
 /**
- * PROV association relation.
- *
  * **Example** (Decode association with plan)
  *
  * ```ts import.meta.vitest name="Decode association with plan"
@@ -729,8 +693,6 @@ export class Association extends S.Opaque<Association, { readonly brand: unique 
 ) {}
 
 /**
- * PROV attribution relation.
- *
  * **Example** (Decode attribution relation)
  *
  * ```ts import.meta.vitest name="Decode attribution relation"
@@ -762,8 +724,6 @@ export class Attribution extends S.Opaque<Attribution, { readonly brand: unique 
 ) {}
 
 /**
- * PROV delegation relation.
- *
  * **Example** (Decode delegation relation)
  *
  * ```ts import.meta.vitest name="Decode delegation relation"
@@ -797,8 +757,6 @@ export class Delegation extends S.Opaque<Delegation, { readonly brand: unique sy
 ) {}
 
 /**
- * PROV derivation relation.
- *
  * **Example** (Decode derivation relation)
  *
  * ```ts import.meta.vitest name="Decode derivation relation"
@@ -830,8 +788,6 @@ export class Derivation extends S.Opaque<Derivation, { readonly brand: unique sy
 ) {}
 
 /**
- * PROV primary-source relation.
- *
  * **Example** (Decode primary-source relation)
  *
  * ```ts import.meta.vitest name="Decode primary-source relation"
@@ -863,8 +819,6 @@ export class PrimarySource extends S.Opaque<PrimarySource, { readonly brand: uni
 ) {}
 
 /**
- * PROV quotation relation.
- *
  * **Example** (Decode quotation relation)
  *
  * ```ts import.meta.vitest name="Decode quotation relation"
@@ -896,8 +850,6 @@ export class Quotation extends S.Opaque<Quotation, { readonly brand: unique symb
 ) {}
 
 /**
- * PROV revision relation.
- *
  * **Example** (Decode revision relation)
  *
  * ```ts import.meta.vitest name="Decode revision relation"
@@ -929,8 +881,6 @@ export class Revision extends S.Opaque<Revision, { readonly brand: unique symbol
 ) {}
 
 /**
- * PROV start relation.
- *
  * **Example** (Decode start relation)
  *
  * ```ts import.meta.vitest name="Decode start relation"
@@ -964,8 +914,6 @@ export class Start extends S.Opaque<Start, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * PROV end relation.
- *
  * **Example** (Decode end relation)
  *
  * ```ts import.meta.vitest name="Decode end relation"
@@ -999,8 +947,6 @@ export class End extends S.Opaque<End, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * Public PROV record union for the stable semantic-web surface.
- *
  * **Example** (Narrow ProvRecord union)
  *
  * ```ts import.meta.vitest name="Narrow ProvRecord union"
@@ -1054,8 +1000,6 @@ export const ProvRecord = S.Union([
 );
 
 /**
- * Type for {@link ProvRecord}.
- *
  * **Example** (Accept ProvRecord type)
  *
  * ```ts
@@ -1071,8 +1015,6 @@ export const ProvRecord = S.Union([
 export type ProvRecord = typeof ProvRecord.Type;
 
 /**
- * Bounded provenance bundle exported by the semantic-web surface.
- *
  * **Example** (Decode empty ProvBundle)
  *
  * ```ts import.meta.vitest name="Decode empty ProvBundle"
@@ -1113,8 +1055,6 @@ export class ProvBundle extends S.Opaque<ProvBundle, { readonly brand: unique sy
 }
 
 /**
- * Public provenance entrypoint union.
- *
  * **Example** (Narrow ProvO to bundle)
  *
  * ```ts import.meta.vitest name="Narrow ProvO to bundle"
@@ -1146,8 +1086,6 @@ export const ProvO = S.Union([ProvBundle, ProvRecord]).pipe(
 );
 
 /**
- * Type for {@link ProvO}.
- *
  * **Example** (Accept ProvO type)
  *
  * ```ts
