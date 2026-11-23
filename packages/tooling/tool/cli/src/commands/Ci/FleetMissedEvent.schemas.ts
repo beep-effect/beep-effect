@@ -938,7 +938,10 @@ export type FleetPreviousRun = typeof FleetPreviousRun.Type;
  * **Details**
  *
  * `githubRequests` is the number of GitHub reads the run made, retries
- * included, as the reads service counted them.
+ * included, as the reads service counted them. `listingNotes` holds one
+ * `<listing>: listing unstable (N walks)` note for each paged listing whose
+ * walks never agreed and whose union of walks the run used instead. A note
+ * never makes a run red.
  *
  * **Example** (A run with nothing queued)
  *
@@ -953,6 +956,7 @@ export type FleetPreviousRun = typeof FleetPreviousRun.Type;
  *   previousRun: FleetPreviousRun.cases.NoneFound.make({}),
  * })
  * console.log(report.githubRequests) // 0
+ * console.log(report.listingNotes.length) // 0
  * ```
  *
  * @category models
@@ -966,6 +970,7 @@ export class FleetCheckReport extends S.Opaque<FleetCheckReport, { readonly bran
     findings: S.Array(FleetJobFinding),
     previousRun: FleetPreviousRun,
     githubRequests: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0))),
+    listingNotes: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([]))),
   }).pipe($I.annoteSchema("FleetCheckReport", { description: "Every pool observation and job finding of one run." }))
 ) {}
 

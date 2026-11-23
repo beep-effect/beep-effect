@@ -2666,12 +2666,12 @@ The CI goals driver ruled a standing check for runner jobs that GitHub queued an
 
 **What it detects.** The check runs once for each `beep-fleet-*` job that is still `queued`. The trigger reads actions and runners only, so it works the same before and after 6b. Delivery evidence only classifies a trigger, and only before 6b.
 
-A pool makes **progress** when at least one of its jobs started in the last 15 minutes (a `started_at` in that window and a `runner_name`).
+A pool makes **progress** when at least one of its jobs started in the last 15 minutes (a `started_at` in that window and a `runner_name`). Progress counts every run the check reads, older `in_progress` runs included. Launches count only runs created in the last two hours.
 
 | Verdict | Alerts | Condition |
 | --- | --- | --- |
 | `Stuck` | yes | The pool is at cap, a runner of the pool is idle in both runner reads of the run, and the job was created at or before the first runner read. A job created between the reads may simply not have been picked up yet. |
-| `Wedged` | yes | The pool is at cap, at least one counted runner is not busy (offline or idle), a pool job has been queued 15 minutes or more, and the pool made no progress. |
+| `Wedged` | yes | The pool is at cap, at least one counted runner is not busy (offline or idle) in the second runner read, a pool job has been queued 15 minutes or more, and the pool made no progress. |
 | `MissedDelivery` | yes, before 6b | No 2xx `queued` delivery for the job on repository hook 714397446, 5 minutes or more after the job was created. |
 | `NoLaunch` | yes | The job has been queued 10 minutes or more, the pool is below cap counting registered runners, the pool has no idle runner in the second runner read (a runner that just booted counts), and one of three holds. The launches since the job's creation cover its rank (launches ≥ rank, and the job is still queued). Or the pool made no progress. Or the job has been queued 2 hours or more. This is the trigger. |
 | `WaitingAtCap` | no | The pool is at cap, and no `Stuck` or `Wedged` condition holds. All runners busy at cap stays here. |
@@ -2695,7 +2695,7 @@ Not alerts: `WaitingAtCap` and `Waiting`. The p95 queue-to-start of the pool's j
 - **Idle.** A runner is idle only when the same runner id is `online` and not busy in both reads. That holds for 300 seconds or more, with no cross-run state and no launch-time estimate.
 - **Cap.** The cap is read at the first runner read and again at the second. A pool counts as at cap when either read is at cap, and as below cap only when both are. One cycling runner briefly reads below cap, and a single early read misclassified jobs that were waiting at cap (2026-11-22, 21:53Z pass).
 - **Launches since a job's creation.** The pool's jobs with `started_at` at or after that creation and a `runner_name`, plus the pool's currently registered runners that are not busy. A job cancelled or skipped while queued gets a `started_at` without a runner, so it does not count. That trap was measured on 2026-11-22.
-- **Jobs.** Read from the runs and jobs APIs with paging over every page, up to 50 pages per listing (a single `per_page=100` page is not enough). A listing that stops at 50 pages with fewer items than its total count fails the run as a read error, never a silent partial result. The runs are the `queued` and `in_progress` runs plus the runs created in the last two hours, which carry the started jobs for launches and progress. The jobs are the ones carrying a `beep-fleet-*` label.
+- **Jobs.** Read from the runs and jobs APIs with paging over every page, up to 50 pages per listing (a single `per_page=100` page is not enough). A listing that stops at 50 pages with fewer items than its total count fails the run as a read error, never a silent partial result. A listing is accepted when two consecutive walks of it agree. After three walks without agreement the check uses the union of the walks' ids and adds `listing unstable (N walks)` to the summary. That is not a read error: a busy-hour listing must not red like an alert, and a job missed in one run is caught 10 minutes later. A repeated id counts as a disagreement and goes into the union. Real read failures (an HTTP error, a decode failure, a truncation or an empty page short of the total) stay read errors. The runs are the `queued` and `in_progress` runs plus the runs created in the last two hours, which carry the started jobs for launches and progress. The jobs are the ones carrying a `beep-fleet-*` label.
 - **Deliveries, before 6b only.** Read from repository hook 714397446 by cursor paging, newest first, once per run, back to the oldest alerting job's creation minus 2 minutes. Each delivery's detail is fetched once and cached. Delivery ids exceed 2^53 and stay strings end to end.
 
 **Cap source.** Each pool's `maximumCount` has one source of truth: the production configuration in `packages/tooling/infra/ci-runners/src/Config.ts`. A generated input projects it for the check, and a test asserts the projection equals the production configuration for each pool and phase. Nothing in the workflow holds a cap literal, and overflow ON or OFF needs no workflow edit: the toggle changes which jobs carry the overflow label, not a pool's cap. The caps follow `main`, not the live fleet: between a cap change's merge and its deploy, the check reads the merged cap.
@@ -2727,7 +2727,7 @@ The code reads the installation token through the token provider, and the tests 
 
 A run whose window spans the switch classifies each job by the configuration in effect at the job's creation.
 
-**Failures and remedies.** A run fails on any alerting verdict. The step summary names the previous scheduled run and its time. The gate and the green-day watch treat a gap of more than 30 minutes between scheduled runs as a finding. The summary lists each alerting job with:
+**Failures and remedies.** A run fails on any alerting verdict. The step summary names the previous scheduled run and its time. The gap is measured from one scheduled run to the next, and a manual dispatch does not reset it. The gate and the green-day watch treat a gap of more than 30 minutes between scheduled runs as a finding. The summary lists each alerting job with:
 
 - its id, pool, age, verdict and classification;
 - before 6b, its delivery evidence (delivery id and status code, or the window read and the oldest delivery reached);
@@ -2743,6 +2743,7 @@ The check never redelivers, cancels, reruns or writes anything. It files no issu
 - each verdict, each `NoLaunch` classification, and the precedence order;
 - a delivery walk that reaches the job's creation but not its window start, creation minus 2 minutes (`unknown`);
 - a listing stopped at 50 pages with fewer items than its total count (a read error, "listing truncated at 50 pages"; never a silent partial result);
+- a listing whose ids change in every one of three walks (the union of the walks' ids, with `listing unstable (3 walks)` in the summary; not a failure);
 - a delivery walk stopped at 60 pages (`unknown`);
 - a detail read that fails (`unknown`);
 - the rank rule with progress (`Waiting` with 3 launches for rank 4);

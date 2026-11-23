@@ -885,7 +885,7 @@ export const fleetRemedies: {
  * console.log(report.githubRequests) // 7
  * ```
  *
- * @param input - The repository, time, observations, findings, previous run and GitHub request count.
+ * @param input - The repository, time, observations, findings, previous run, GitHub request count and listing notes.
  * @returns The report the summary and the exit code are built from.
  * @category use-cases
  * @since 0.0.0
@@ -897,6 +897,7 @@ export const fleetCheckReport = (input: {
   readonly findings: ReadonlyArray<FleetJobFinding>;
   readonly previousRun: FleetPreviousRun;
   readonly githubRequests: number;
+  readonly listingNotes?: ReadonlyArray<string>;
 }): FleetCheckReport => FleetCheckReport.make(input);
 
 /**
@@ -992,7 +993,8 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
   const alerts = fleetAlerts(report);
   const totals = `${A.length(report.findings)} queued job(s) checked; verdicts: ${verdictCounts(report)}; p95 queue-to-start: ${p95Label(report)}; ${previousRunLabel(report)}; ${report.githubRequests} GitHub request(s)`;
   if (A.isReadonlyArrayEmpty(alerts)) {
-    return `fleet missed-event check: green at ${formatTime(report.checkedAt)}: ${totals}\n`;
+    const noted = A.isReadonlyArrayEmpty(report.listingNotes) ? "" : `; notes: ${A.join(report.listingNotes, "; ")}`;
+    return `fleet missed-event check: green at ${formatTime(report.checkedAt)}: ${totals}${noted}\n`;
   }
   const rows = A.map(
     alerts,
@@ -1013,6 +1015,8 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
     [
       `## Fleet missed-event check: ${A.length(alerts)} alert(s)`,
       "",
+      ...A.map(report.listingNotes, (note) => `- note: ${note}`),
+      ...(A.isReadonlyArrayEmpty(report.listingNotes) ? [] : [""]),
       `checked at ${formatTime(report.checkedAt)}: ${totals}`,
       "",
       "| job | run | pool | age | verdict | classification | delivery evidence |",

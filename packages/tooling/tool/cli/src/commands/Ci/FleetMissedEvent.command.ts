@@ -33,6 +33,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
@@ -152,31 +153,50 @@ const walksAgree = <A>(previous: O.Option<ListingWalk<A>>, walk: ListingWalk<A>)
       HashSet.isSubset(earlier.keys, walk.keys)
   );
 
+interface SettledListing<A> {
+  readonly items: ReadonlyArray<A>;
+  readonly note: O.Option<string>;
+}
+
+const unionOfWalks = <A>(walks: ReadonlyArray<ListingWalk<A>>, keyOf: (item: A) => number): ReadonlyArray<A> => {
+  const items = A.flatMap(walks, (walk) => walk.items);
+  const latest = A.reduce(items, HashMap.empty<number, A>(), (acc, item) => HashMap.set(acc, keyOf(item), item));
+  return A.getSomes(A.map(A.dedupe(A.map(items, keyOf)), (key) => HashMap.get(latest, key)));
+};
+
 const allPages = <A>(
   endpoint: string,
   readPage: (page: number) => Effect.Effect<ListingPage<A>, FleetReadError>,
   keyOf: (item: A) => number
-): Effect.Effect<ReadonlyArray<A>, FleetReadError> => {
-  const settle = (previous: O.Option<ListingWalk<A>>, walks: number): Effect.Effect<ReadonlyArray<A>, FleetReadError> =>
-    Effect.flatMap(walkListing(endpoint, readPage, keyOf), (walk) =>
-      walk.consistent && (walk.pages === 1 || walksAgree(previous, walk))
-        ? Effect.succeed(walk.items)
-        : walks >= MAX_LISTING_WALKS
-          ? Effect.fail(
-              FleetReadError.make({
-                endpoint,
-                message: `listing changed during its page reads in ${MAX_LISTING_WALKS} walks`,
-              })
-            )
-          : settle(O.some(walk), walks + 1)
-    );
-  return settle(O.none(), 1);
+): Effect.Effect<SettledListing<A>, FleetReadError> => {
+  const settle = (walks: ReadonlyArray<ListingWalk<A>>): Effect.Effect<SettledListing<A>, FleetReadError> =>
+    Effect.flatMap(walkListing(endpoint, readPage, keyOf), (walk) => {
+      const walked = A.append(walks, walk);
+      return walk.consistent && (walk.pages === 1 || walksAgree(A.last(walks), walk))
+        ? Effect.succeed({ items: walk.items, note: O.none() })
+        : A.length(walked) >= MAX_LISTING_WALKS
+          ? Effect.succeed({
+              items: unionOfWalks(walked, keyOf),
+              note: O.some(`${endpoint}: listing unstable (${A.length(walked)} walks)`),
+            })
+          : settle(walked);
+    });
+  return settle(A.empty());
 };
+
+const noted =
+  (notes: Ref.Ref<ReadonlyArray<string>>) =>
+  <A>(listing: SettledListing<A>): Effect.Effect<ReadonlyArray<A>> =>
+    Effect.as(
+      Ref.update(notes, (all) => A.appendAll(all, O.toArray(listing.note))),
+      listing.items
+    );
 
 const asCommandError = (error: FleetReadError): CiCommandError =>
   CiCommandError.make({ message: `GitHub read ${error.endpoint} failed: ${error.message}` });
 
 interface FleetReadContext {
+  readonly notes: Ref.Ref<ReadonlyArray<string>>;
   readonly reads: FleetGithubReadsShape;
   readonly retry: <A>(read: () => Effect.Effect<A, FleetReadError>) => Effect.Effect<A, FleetReadError>;
 }
@@ -193,7 +213,7 @@ const readRunners = (context: FleetReadContext): Effect.Effect<ReadonlyArray<Fle
         })
       ),
     (runner) => runner.id
-  );
+  ).pipe(Effect.flatMap(noted(context.notes)));
 
 const readRunIds = (context: FleetReadContext, query: FleetRunsQuery) =>
   allPages(
@@ -207,7 +227,7 @@ const readRunIds = (context: FleetReadContext, query: FleetRunsQuery) =>
         })
       ),
     identity
-  );
+  ).pipe(Effect.flatMap(noted(context.notes)));
 
 const readRunJobs = (context: FleetReadContext, runId: number) =>
   allPages(
@@ -221,7 +241,7 @@ const readRunJobs = (context: FleetReadContext, runId: number) =>
         })
       ),
     (job) => job.id
-  );
+  ).pipe(Effect.flatMap(noted(context.notes)));
 
 const readPoolJobs = Effect.fnUntraced(function* (
   context: FleetReadContext,
@@ -405,7 +425,8 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
 ): Effect.fn.Return<FleetCheckReport, CiCommandError, FleetGithubReads | FleetSleep | ActionOutputs> {
   const reads = yield* FleetGithubReads;
   const { sleep } = yield* FleetSleep;
-  const context: FleetReadContext = { reads, retry: retried(sleep) };
+  const notes = yield* Ref.make<ReadonlyArray<string>>(A.empty());
+  const context: FleetReadContext = { notes, reads, retry: retried(sleep) };
   const firstReadAt = yield* Clock.currentTimeMillis;
   const firstRead = yield* readRunners(context).pipe(Effect.mapError(asCommandError));
   yield* sleep(FLEET_RUNNER_READ_GAP);
@@ -434,6 +455,7 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
     findings: A.map(queued, (entry) => fleetJobFinding(entry, HashMap.get(evidence, entry.job.id))),
     previousRun,
     githubRequests: yield* reads.requestCount,
+    listingNotes: yield* Ref.get(notes),
   });
   const summary = renderFleetCheckSummary(report);
   yield* Console.log(summary);

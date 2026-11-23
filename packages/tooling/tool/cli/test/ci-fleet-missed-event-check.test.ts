@@ -801,19 +801,32 @@ describe("fleet missed-event check review wave 1", () => {
     })
   );
 
-  it.effect("fails the run when a run listing changes in every walk", () =>
+  it.effect("a run listing that changes in every walk uses the union of its walks and notes it", () =>
     Effect.gen(function* () {
       const fixture = fixtureOf({ reads: [[], []], jobs: [] });
       const walks = yield* Ref.make(0);
-      const error = yield* runCheck(fixture, {
+      const jobRuns = yield* Ref.make<ReadonlyArray<number>>([]);
+      const { report } = yield* runCheck(fixture, {
         overrides: {
-          runsPage: Effect.fnUntraced(function* (_query, page) {
+          runsPage: Effect.fnUntraced(function* (query, page) {
+            const queuedListing = FleetRunsQuery.guards.ByStatus(query) && query.status === "queued";
             const walk = page === 1 ? yield* Ref.updateAndGet(walks, (n) => n + 1) : yield* Ref.get(walks);
-            return FleetRunsPage.make({ runIds: [walk * 10 + page], totalCount: 2 });
+            return queuedListing
+              ? FleetRunsPage.make({ runIds: [walk * 10 + page], totalCount: 2 })
+              : FleetRunsPage.make({ runIds: [], totalCount: 0 });
+          }),
+          jobsPage: Effect.fnUntraced(function* (runId) {
+            yield* Ref.update(jobRuns, A.append(runId));
+            return FleetJobsPage.make({ jobs: [], totalCount: 0 });
           }),
         },
-      }).pipe(Effect.flip);
-      expect(error.message).toBe("GitHub read runs ByStatus failed: listing changed during its page reads in 3 walks");
+      });
+      const readRuns = yield* Ref.get(jobRuns);
+      expect(A.sort(readRuns, Order.Number)).toEqual([11, 12, 21, 22, 31, 32]);
+      expect(report.listingNotes).toEqual(["runs ByStatus: listing unstable (3 walks)"]);
+      expect(renderFleetCheckSummary(report)).toContain("fleet missed-event check: green");
+      expect(renderFleetCheckSummary(report)).toContain("notes: runs ByStatus: listing unstable (3 walks)");
+      expect(report.findings).toEqual([]);
     })
   );
 
@@ -1147,6 +1160,35 @@ describe("fleet missed-event check output", () => {
     const summary = renderFleetCheckSummary(report);
     expect(summary).toContain("| 501 | 3501 | heavy | 45s |");
     expect(summary).toContain("### Remedies (printed only; this check never runs them)\n\n- none");
+  });
+
+  it("prints the listing notes under the alert heading", () => {
+    const report = FleetCheckReport.make({
+      repository: REPOSITORY,
+      checkedAt: NOW,
+      pools: [],
+      previousRun: FleetPreviousRun.cases.NoneFound.make({}),
+      listingNotes: ["org runners: listing unstable (3 walks)"],
+      findings: [
+        FleetJobFinding.make({
+          job: queued(502, ago(3)),
+          pool: "heavy",
+          age: 45_000,
+          rank: 1,
+          launches: 0,
+          source: hookSource,
+          verdict: FleetVerdict.cases.Stuck.make({ idleRunnerIds: [1] }),
+          evidence: O.none(),
+          classification: O.none(),
+        }),
+      ],
+    });
+    expect(A.take(Str.split(renderFleetCheckSummary(report), "\n"), 4)).toEqual([
+      "## Fleet missed-event check: 1 alert(s)",
+      "",
+      "- note: org runners: listing unstable (3 walks)",
+      "",
+    ]);
   });
 });
 
