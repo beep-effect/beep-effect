@@ -925,10 +925,8 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
           "grounding is a lineage, not a scalar: one event could not say what let the relation be derived"
         ).toBe(GRANT_EXERCISE);
 
-        assertTrue(
-          O.isNone(byId(relators, ORIGINAL_CLAIM).grounding.foundingExercise),
-          "a norm-founded relation names no earlier exercise, so following the lineage back always halts"
-        );
+        const lineageHaltsAtANormFoundedRelation = byId(relators, ORIGINAL_CLAIM).grounding.foundingExercise;
+        assertNone(lineageHaltsAtANormFoundedRelation);
       })
     );
 
