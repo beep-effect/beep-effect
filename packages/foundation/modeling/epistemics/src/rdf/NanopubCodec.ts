@@ -31,12 +31,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { instanceHash, instanceIri } from "@beep/annotation/rdf/OaCodec";
+
 import { IRI } from "@beep/identity/Iri";
 import { $EpistemicsId } from "@beep/identity/packages";
 import { iri, mint } from "@beep/identity/Registry";
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { definePreimage } from "@beep/jsonc/Mint";
+import { instanceHash, instanceIri } from "@beep/rdf/InstanceIri";
 import * as Rdf from "@beep/rdf/Rdf";
 import { ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -538,9 +539,6 @@ const keyOf = (quads: ReadonlyArray<Rdf.Quad>): HashSet.HashSet<string> =>
 const dedupeQuads = (quads: ReadonlyArray<Rdf.Quad>): ReadonlyArray<Rdf.Quad> =>
   A.dedupeWith(quads, (left, right) => Rdf.serializeQuad(left) === Rdf.serializeQuad(right));
 
-const toDataset = (quads: ReadonlyArray<Rdf.Quad>): Rdf.Dataset =>
-  pipe(dedupeQuads(quads), Rdf.makeDataset, Rdf.sortDatasetQuads, Rdf.makeDataset);
-
 const decodeTime = S.decodeUnknownOption(S.DateTimeUtcFromString);
 const decodeDigest = S.decodeUnknownOption(Sha256PrefixedDigest);
 
@@ -555,7 +553,7 @@ const headQuads = (iris: NanopubIris): ReadonlyArray<Rdf.Quad> => {
 };
 
 const assertionQuad = (iris: NanopubIris, claim: Rdf.NamedNode, coreText: string): Rdf.Quad =>
-  quad(claim, V.coreJson, Rdf.makeLiteral(coreText, json), iris.assertion);
+  quad(claim, V.coreJson, Rdf.Literal.typed(coreText, json), iris.assertion);
 
 const provenanceQuads = (iris: NanopubIris, generatedBy: ActivityId, agent: IRI): ReadonlyArray<Rdf.Quad> => [
   quad(node(iris.assertion), V.wasGeneratedBy, node(instanceIri(generatedBy)), iris.provenance),
@@ -566,9 +564,14 @@ const pubinfoQuads = (iris: NanopubIris, metadata: PublicationMetadata): Readonl
   const publication = node(iris.publication);
   return [
     quad(publication, V.publisher, node(metadata.publisher), iris.pubinfo),
-    quad(publication, V.created, Rdf.makeLiteral(DateTime.formatIso(metadata.publishedAt), xsdDateTime), iris.pubinfo),
+    quad(
+      publication,
+      V.created,
+      Rdf.Literal.typed(DateTime.formatIso(metadata.publishedAt), xsdDateTime),
+      iris.pubinfo
+    ),
     ...A.map(A.fromOption(metadata.sourceDigest), (digest) =>
-      quad(publication, V.sourceDigest, Rdf.makeLiteral(digest, xsdString), iris.pubinfo)
+      quad(publication, V.sourceDigest, Rdf.Literal.typed(digest, xsdString), iris.pubinfo)
     ),
   ];
 };
@@ -699,7 +702,7 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
     const id = yield* mintNanopubId(claim, metadata);
     const iris = nanopubIris(id);
     yield* Effect.annotateCurrentSpan({ "claim.id": claim, "nanopub.publication": iris.publication });
-    return toDataset([
+    return Rdf.makeDataset([
       ...headQuads(iris),
       assertionQuad(iris, node(instanceIri(claim)), text),
       ...provenanceQuads(iris, record.core.generatedBy, agent),
@@ -709,7 +712,7 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
 
   const read = Effect.fnUntraced(function* (input: Rdf.Dataset) {
     const refused = (reason: NanopubRefusal) => NanopubRefused.make({ reason, input });
-    const quads = input.quads;
+    const quads = A.fromIterable(input.quads);
     if (A.some(quads, (q) => isBlank(q.graph))) return refused("blank-graph-name");
     const typed = A.filter(quads, isPublicationType);
     const subject = single(
@@ -792,7 +795,7 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
   });
 
   const decode = Effect.fn("NanopubCodec.decode")(function* (input: Rdf.Dataset) {
-    yield* Effect.annotateCurrentSpan("nanopub.quad_count", A.length(input.quads));
+    yield* Effect.annotateCurrentSpan("nanopub.quad_count", HashSet.size(input.quads));
     const reading = yield* read(input);
     if (reading._tag !== "Read") return reading;
     return NanopubAccepted.make({
@@ -803,10 +806,10 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
   });
 
   const normalize = Effect.fn("NanopubCodec.normalize")(function* (input: Rdf.Dataset) {
-    yield* Effect.annotateCurrentSpan("nanopub.quad_count", A.length(input.quads));
+    yield* Effect.annotateCurrentSpan("nanopub.quad_count", HashSet.size(input.quads));
     const reading = yield* read(input);
     if (reading._tag !== "Read") return reading;
-    return NanopubNormalized.make({ dataset: toDataset(reading.profile), residual: reading.residual });
+    return NanopubNormalized.make({ dataset: Rdf.makeDataset(reading.profile), residual: reading.residual });
   });
 
   return { NanopubPublication, NanopubAccepted, NanopubDecodeResult, encode, decode, normalize };

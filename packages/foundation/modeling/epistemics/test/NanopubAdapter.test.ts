@@ -38,17 +38,19 @@ const generatedDigest = Sha256PrefixedDigest.make(`sha256:${Str.repeat(64)("d")}
 const metadataAt = (at: number, sourceDigest = O.none<Sha256PrefixedDigest>()) =>
   PublicationMetadata.make({ publisher, publishedAt: DateTime.makeUnsafe(at), sourceDigest });
 
+const listOf = (dataset: Rdf.Dataset): ReadonlyArray<Rdf.Quad> => A.fromIterable(dataset.quads);
+
 const quadsOf = (dataset: Rdf.Dataset): ReadonlyArray<string> =>
-  A.map(Rdf.sortDatasetQuads(dataset), Rdf.serializeQuad);
+  A.sort(A.map(listOf(dataset), Rdf.serializeQuad), Str.Order);
 
-const datasetOf = (quads: ReadonlyArray<Rdf.Quad>) => Rdf.makeDataset(quads);
+const datasetOf = (quads: Iterable<Rdf.Quad>) => Rdf.makeDataset(quads);
 
-const withQuads = (dataset: Rdf.Dataset, extra: ReadonlyArray<Rdf.Quad>) => datasetOf([...dataset.quads, ...extra]);
+const withQuads = (dataset: Rdf.Dataset, extra: Iterable<Rdf.Quad>) => datasetOf([...dataset.quads, ...extra]);
 
 const without = (dataset: Rdf.Dataset, predicate: string) =>
-  datasetOf(A.filter(dataset.quads, (q) => q.predicate.value !== predicate));
+  datasetOf(A.filter(listOf(dataset), (q) => q.predicate.value !== predicate));
 
-const mapQuads = (dataset: Rdf.Dataset, f: (quad: Rdf.Quad) => Rdf.Quad) => datasetOf(A.map(dataset.quads, f));
+const mapQuads = (dataset: Rdf.Dataset, f: (quad: Rdf.Quad) => Rdf.Quad) => datasetOf(A.map(listOf(dataset), f));
 
 const renamed = (from: string, to: string) => (value: string) => (value === from ? to : value);
 
@@ -74,7 +76,7 @@ const replaceSubject = (dataset: Rdf.Dataset, predicate: string, subject: Rdf.Su
   mapQuads(dataset, (q) => (q.predicate.value === predicate ? Rdf.Quad.make({ ...q, subject }) : q));
 
 const quadOf = (dataset: Rdf.Dataset, predicate: string) =>
-  O.getOrThrow(A.findFirst(dataset.quads, (q) => q.predicate.value === predicate));
+  O.getOrThrow(A.findFirst(listOf(dataset), (q) => q.predicate.value === predicate));
 
 const P = {
   type: iri("rdf:type"),
@@ -147,16 +149,16 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       const names = [iris.publication, iris.head, iris.assertion, iris.provenance, iris.pubinfo];
       expect(HashSet.size(HashSet.fromIterable(names))).toBe(5);
       expect(iris.publication).toBe(mint("instance", Str.replace("sha256:", "sha256-")(id)));
-      expect(A.dedupe(A.map(dataset.quads, (q) => q.graph.value)).length).toBe(4);
-      expect(A.length(dataset.quads)).toBe(9);
+      expect(A.dedupe(A.map(listOf(dataset), (q) => q.graph.value)).length).toBe(4);
+      expect(HashSet.size(dataset.quads)).toBe(9);
       const core = quadOf(dataset, P.coreJson);
       expect(core.graph.value).toBe(iris.assertion);
-      expect(Rdf.Literal.is(core.object) && core.object.datatype.value).toBe(json);
+      expect(Rdf.Literal.is(core.object) && Rdf.Literal.datatypeOf(core.object).value).toBe(json);
       const provenance = quadOf(dataset, P.wasGeneratedBy);
       expect([provenance.subject.value, provenance.graph.value]).toStrictEqual([iris.assertion, iris.provenance]);
       expect(quadOf(dataset, P.wasAttributedTo).subject.value).toBe(iris.assertion);
       expect(quadOf(dataset, P.publisherTerm).subject.value).toBe(iris.publication);
-      expect(A.some(dataset.quads, (q) => q.predicate.value === P.sourceDigest)).toBe(false);
+      expect(HashSet.some(dataset.quads, (q) => q.predicate.value === P.sourceDigest)).toBe(false);
     })
   );
 
@@ -177,7 +179,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
           const decoded = yield* accepted(dataset);
           expect(S.is(codec.NanopubDecodeResult)(decoded)).toBe(true);
           expect(samePublication(decoded.accepted, publication)).toBe(true);
-          expect(decoded.residual.quads).toStrictEqual([]);
+          expect(HashSet.size(decoded.residual.quads)).toBe(0);
           const reencoded = yield* codec.encode(decoded.accepted);
           const normalized = yield* codec.normalize(dataset);
           expect(normalized._tag).toBe("Normalized");
@@ -201,7 +203,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
         const core = coreAt({ at: 10, subject });
         const digest = withDigest ? O.some(generatedDigest) : O.none();
         const { publication, dataset } = yield* publish(core, metadataAt(at, digest));
-        const decoded = yield* accepted(datasetOf(A.reverse(dataset.quads)));
+        const decoded = yield* accepted(datasetOf(A.reverse(listOf(dataset))));
         expect(samePublication(decoded.accepted, publication)).toBe(true);
         const normalized = yield* codec.normalize(datasetOf([...dataset.quads, ...dataset.quads]));
         expect(normalized._tag === "Normalized" && quadsOf(normalized.dataset)).toStrictEqual(quadsOf(dataset));
@@ -212,12 +214,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
   it.effect("reordered and repeated identical quads decode and normalize to one quad set", () =>
     Effect.gen(function* () {
       const { publication, dataset } = yield* publish(baseCore(), metadataAt(1000));
-      const reordered = datasetOf(A.reverse(dataset.quads));
+      const reordered = datasetOf(A.reverse(listOf(dataset)));
       const repeated = withQuads(dataset, dataset.quads);
       for (const input of [reordered, repeated]) {
         const decoded = yield* accepted(input);
         expect(samePublication(decoded.accepted, publication)).toBe(true);
-        expect(decoded.residual.quads).toStrictEqual([]);
+        expect(HashSet.size(decoded.residual.quads)).toBe(0);
         const normalized = yield* codec.normalize(input);
         expect(normalized._tag === "Normalized" && quadsOf(normalized.dataset)).toStrictEqual(quadsOf(dataset));
       }
@@ -295,13 +297,13 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
         Rdf.Quad.make({
           subject: node(iris.publication),
           predicate: node(iri("rdfs:label")),
-          object: Rdf.makeLiteral("label", xsdString),
+          object: Rdf.Literal.typed("label", xsdString),
           graph: node(iris.pubinfo),
         }),
         Rdf.Quad.make({
           subject: claim,
           predicate: token,
-          object: Rdf.makeLiteral(`sha256:${Str.repeat(64)("e")}`, xsdString),
+          object: Rdf.Literal.typed(`sha256:${Str.repeat(64)("e")}`, xsdString),
           graph: node(iris.assertion),
         }),
         Rdf.Quad.make({
@@ -341,7 +343,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       const input = A.reduce(foreign, dataset, (current, [from, to]) => rename(current, from, to));
       const decoded = yield* codec.decode(input);
       expect(S.is(NanopubForeign)(decoded) && decoded.publication).toBe("https://example.org/np/1");
-      expect(S.is(NanopubForeign)(decoded) && decoded.input.quads).toStrictEqual(input.quads);
+      expect(S.is(NanopubForeign)(decoded) && quadsOf(decoded.input)).toStrictEqual(quadsOf(input));
       const got = yield* outcomes(input);
       expect(got).toStrictEqual(["foreign", "foreign"]);
     })
@@ -354,13 +356,13 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       const timeEdit = replaceObject(
         dataset,
         P.created,
-        Rdf.makeLiteral(DateTime.formatIso(DateTime.makeUnsafe(2000)), iri("xsd:dateTime"))
+        Rdf.Literal.typed(DateTime.formatIso(DateTime.makeUnsafe(2000)), iri("xsd:dateTime"))
       );
       for (const input of [publisherEdit, timeEdit]) {
         const got = yield* outcomes(input);
         expect(got).toStrictEqual(["stale-publication-id", "stale-publication-id"]);
         const decoded = yield* codec.decode(input);
-        expect(S.is(NanopubRefused)(decoded) && decoded.input.quads).toStrictEqual(input.quads);
+        expect(S.is(NanopubRefused)(decoded) && quadsOf(decoded.input)).toStrictEqual(quadsOf(input));
       }
     })
   );
@@ -383,7 +385,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       const wrongCore = replaceObject(
         dataset,
         P.coreJson,
-        Rdf.makeLiteral(Str.replace('"text":"subject 1"', '"text":"subject 1 edited"')(coreText), json)
+        Rdf.Literal.typed(Str.replace('"text":"subject 1"', '"text":"subject 1 edited"')(coreText), json)
       );
       const agent = replaceObject(dataset, P.wasAttributedTo, node("https://example.org/agent/2"));
       const generation = replaceObject(dataset, P.wasGeneratedBy, node("https://example.org/activity/2"));
@@ -417,14 +419,14 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
         [withQuads(dataset, [Rdf.Quad.make({ ...typeQuad, graph: node(iris.assertion) })]), "graph-mixing"],
         [
           datasetOf(
-            A.map(dataset.quads, (q) =>
+            A.map(listOf(dataset), (q) =>
               q.graph.value === iris.head ? Rdf.Quad.make({ ...q, graph: defaultGraph }) : q
             )
           ),
           "default-graph",
         ],
         [
-          withQuads(dataset, [Rdf.makeQuad(node(iris.publication), node(P.type), Rdf.makeLiteral("x", xsdString))]),
+          withQuads(dataset, [Rdf.makeQuad(node(iris.publication), node(P.type), Rdf.Literal.typed("x", xsdString))]),
           "Accepted",
         ],
         [
@@ -434,7 +436,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
           "head-cardinality",
         ],
         [replaceObject(dataset, P.hasAssertion, Rdf.makeBlankNode("assertion")), "blank-graph-name"],
-        [replaceObject(dataset, P.hasAssertion, Rdf.makeLiteral("assertion", xsdString)), "missing-head-edge"],
+        [replaceObject(dataset, P.hasAssertion, Rdf.Literal.typed("assertion", xsdString)), "missing-head-edge"],
         [replaceGraph(dataset, P.wasGeneratedBy, Rdf.makeBlankNode("graph")), "blank-graph-name"],
         [replaceGraph(dataset, P.coreJson, node(iris.provenance)), "graph-mixing"],
         [
@@ -470,22 +472,22 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
         ],
         [replaceSubject(dataset, P.coreJson, Rdf.makeBlankNode("claim")), "invalid-core"],
         [replaceObject(dataset, P.coreJson, node("https://example.org/core")), "invalid-core"],
-        [replaceObject(dataset, P.coreJson, Rdf.makeLiteral("{", json)), "invalid-core"],
-        [replaceObject(dataset, P.coreJson, Rdf.makeLiteral(`${coreText} `, json)), "invalid-core"],
-        [replaceObject(dataset, P.coreJson, Rdf.makeLiteral(coreText, xsdString)), "invalid-core"],
+        [replaceObject(dataset, P.coreJson, Rdf.Literal.typed("{", json)), "invalid-core"],
+        [replaceObject(dataset, P.coreJson, Rdf.Literal.typed(`${coreText} `, json)), "invalid-core"],
+        [replaceObject(dataset, P.coreJson, Rdf.Literal.typed(coreText, xsdString)), "invalid-core"],
         [replaceSubject(dataset, P.coreJson, node("https://example.org/claim/1")), "core-hash-mismatch"],
         [without(dataset, P.publisherTerm), "invalid-publication-metadata"],
         [
-          replaceObject(dataset, P.publisherTerm, Rdf.makeLiteral("publisher", xsdString)),
+          replaceObject(dataset, P.publisherTerm, Rdf.Literal.typed("publisher", xsdString)),
           "invalid-publication-metadata",
         ],
         [replaceObject(dataset, P.created, node("https://example.org/time")), "invalid-publication-metadata"],
         [
-          replaceObject(dataset, P.created, Rdf.makeLiteral("not a time", iri("xsd:dateTime"))),
+          replaceObject(dataset, P.created, Rdf.Literal.typed("not a time", iri("xsd:dateTime"))),
           "invalid-publication-metadata",
         ],
         [
-          replaceObject(dataset, P.created, Rdf.makeLiteral("1970-01-01T00:00:01Z", iri("xsd:dateTime"))),
+          replaceObject(dataset, P.created, Rdf.Literal.typed("1970-01-01T00:00:01Z", iri("xsd:dateTime"))),
           "invalid-publication-metadata",
         ],
         [
@@ -493,7 +495,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
             Rdf.Quad.make({
               ...quadOf(dataset, P.publisherTerm),
               predicate: node(P.sourceDigest),
-              object: Rdf.makeLiteral("sha256:not-a-digest", xsdString),
+              object: Rdf.Literal.typed("sha256:not-a-digest", xsdString),
             }),
           ]),
           "invalid-publication-metadata",
@@ -508,7 +510,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       const doubled = withQuads(twoDigests.dataset, [
         Rdf.Quad.make({
           ...quadOf(twoDigests.dataset, P.sourceDigest),
-          object: Rdf.makeLiteral(`sha256:${Str.repeat(64)("0")}`, xsdString),
+          object: Rdf.Literal.typed(`sha256:${Str.repeat(64)("0")}`, xsdString),
         }),
       ]);
       const doubledOutcome = yield* outcomes(doubled);
