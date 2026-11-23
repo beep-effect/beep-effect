@@ -93,8 +93,6 @@ export const BEEP_QA_XMP_NAMESPACE_PREFIX = "beepQA";
 export const BEEP_QA_XMP_GROUP = `XMP-${BEEP_QA_XMP_NAMESPACE_PREFIX}`;
 
 /**
- * Tag names declared inside the XMP-beepQA namespace.
- *
  * **Example** (Access Options tag name)
  *
  * ```ts
@@ -122,8 +120,6 @@ export const BeepQaTagName = LiteralKit([
 );
 
 /**
- * Tag names declared inside the XMP-beepQA namespace.
- *
  * **Example** (Annotate sessionId tag name)
  *
  * ```ts
@@ -188,8 +184,6 @@ export const XmpNamespacePrefix = S.String.check(
 export type XmpNamespacePrefix = typeof XmpNamespacePrefix.Type;
 
 /**
- * XMP property name usable as a bare Perl hash key in the rendered config.
- *
  * **Example** (Decode sessionId property name)
  *
  * ```ts
@@ -219,8 +213,6 @@ export const XmpPropertyName = S.String.check(
 );
 
 /**
- * XMP property name usable as a bare Perl hash key in the rendered config.
- *
  * **Example** (Type-annotate decoded property)
  *
  * ```ts
@@ -237,8 +229,6 @@ export const XmpPropertyName = S.String.check(
 export type XmpPropertyName = typeof XmpPropertyName.Type;
 
 /**
- * XMP namespace URI safe to inline inside a single-quoted Perl string.
- *
  * **Example** (Decode XMP namespace URI)
  *
  * ```ts
@@ -268,8 +258,6 @@ export const XmpNamespaceUri = S.String.check(
 );
 
 /**
- * XMP namespace URI safe to inline inside a single-quoted Perl string.
- *
  * **Example** (Type-annotate decoded URI)
  *
  * ```ts
@@ -286,8 +274,6 @@ export const XmpNamespaceUri = S.String.check(
 export type XmpNamespaceUri = typeof XmpNamespaceUri.Type;
 
 /**
- * Options for rendering the exiftool user-defined XMP namespace config.
- *
  * **Example** (Make empty render options)
  *
  * ```ts

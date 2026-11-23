@@ -21,8 +21,6 @@ import * as S from "effect/Schema";
 const $I = $McpKitId.create("ToolAnnotations");
 
 /**
- * The four MCP tool-behavior hints as a single record.
- *
  * **Example** (Make four-hint annotations)
  *
  * ```ts

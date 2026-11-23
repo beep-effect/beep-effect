@@ -55,8 +55,6 @@ export const HtmlComputedHeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6, 7, 8, 9]).
 );
 
 /**
- * Type for {@link HtmlComputedHeadingLevel}.
- *
  * **Example** (Annotate a computed heading level)
  *
  * ```ts
@@ -141,8 +139,6 @@ export const HtmlBestPracticeRule = LiteralKit(["headingLevelOne"]).pipe(
 );
 
 /**
- * Type for {@link HtmlBestPracticeRule}.
- *
  * **Example** (Annotate an advisory rule)
  *
  * ```ts
@@ -158,8 +154,6 @@ export const HtmlBestPracticeRule = LiteralKit(["headingLevelOne"]).pipe(
 export type HtmlBestPracticeRule = typeof HtmlBestPracticeRule.Type;
 
 /**
- * One non-fatal HTML authoring recommendation.
- *
  * **Example** (Construct a best-practice issue)
  *
  * ```ts import.meta.vitest name="Construct a best-practice issue"

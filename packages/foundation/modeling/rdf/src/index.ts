@@ -18,8 +18,6 @@ export * from "./Adapters/DocumentAnnotation.ts";
  */
 export * from "./Adapters/MdSections.ts";
 /**
- * Web Annotation value models.
- *
  * @category models
  * @since 0.0.0
  */
@@ -32,15 +30,11 @@ export * as WebAnnotation from "./Adapters/WebAnnotation.ts";
  */
 export * from "./Evidence.ts";
 /**
- * JSON-LD schema models.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./JsonLd.ts";
 /**
- * PROV value models.
- *
  * @category models
  * @since 0.0.0
  */
@@ -53,8 +47,6 @@ export * from "./Prov.ts";
  */
 export * from "./ProvRdf.ts";
 /**
- * RDF/JS schema models.
- *
  * @category models
  * @since 0.0.0
  */

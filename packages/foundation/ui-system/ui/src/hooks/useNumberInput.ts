@@ -574,8 +574,6 @@ export const NumberInputEventType = LiteralKit(["change", "blur"]).pipe(
 );
 
 /**
- * Runtime type for {@link NumberInputEventType}.
- *
  * **Example** (Annotate an event type value)
  *
  * ```ts
@@ -612,8 +610,6 @@ export const NumberInputError = LiteralKit(["exceed-max", "below-min"]).pipe(
 );
 
 /**
- * Runtime type for {@link NumberInputError}.
- *
  * **Example** (Annotate a range error value)
  *
  * ```ts

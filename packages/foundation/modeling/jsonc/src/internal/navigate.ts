@@ -107,8 +107,6 @@ export const NavigateResult = S.TaggedUnion({
 );
 
 /**
- * The decoded shape of {@link NavigateResult}.
- *
  * @see {@link NavigateResult} for the runtime schema and its case helpers.
  * @category type-level
  * @since 0.0.0

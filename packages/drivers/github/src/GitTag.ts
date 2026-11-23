@@ -43,8 +43,6 @@ const TagEntry = S.Struct({ name: S.String, commit: S.Struct({ sha: S.String }) 
 );
 
 /**
- * A tag and the commit it ultimately points at.
- *
  * **Example** (Construct a resolved tag reference)
  *
  * ```ts
@@ -70,8 +68,6 @@ export class TagRef extends S.Opaque<TagRef, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * A tag whose name carries a version.
- *
  * **Example** (Decode a tag with its parsed version)
  *
  * ```ts
@@ -141,8 +137,6 @@ export const versionFromTag: VersionFromTag = (tag) => {
 };
 
 /**
- * How to pick the newest version-shaped tag.
- *
  * **Details**
  *
  * A non-data service option record: `extract` is a function and `page` a
@@ -186,8 +180,6 @@ export class LatestSemverOptions extends S.Opaque<LatestSemverOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link LatestSemverOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

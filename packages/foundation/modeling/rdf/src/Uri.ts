@@ -200,8 +200,6 @@ const absoluteUriChecks = makeNonEmptyReferenceChecks(
 const uriChecks = makeNonEmptyReferenceChecks("URI", "URI", "An RFC 3986 URI.", "Expected a valid RFC 3986 URI", isUri);
 
 /**
- * RFC 3986 `URI-reference` schema, including absolute and relative forms.
- *
  * **Example** (Decode absolute URI reference)
  *
  * ```ts import.meta.vitest name="Decode absolute URI reference"
@@ -224,8 +222,6 @@ export const URIReference = S.String.check(uriReferenceChecks).pipe(
 );
 
 /**
- * Type for {@link URIReference}.
- *
  * **Example** (Accept URIReference type)
  *
  * ```ts
@@ -241,8 +237,6 @@ export const URIReference = S.String.check(uriReferenceChecks).pipe(
 export type URIReference = typeof URIReference.Type;
 
 /**
- * RFC 3986 `relative-ref` schema.
- *
  * **Example** (Decode relative path reference)
  *
  * ```ts import.meta.vitest name="Decode relative path reference"
@@ -265,8 +259,6 @@ export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).p
 );
 
 /**
- * Type for {@link RelativeURIReference}.
- *
  * **Example** (Accept RelativeURIReference type)
  *
  * ```ts
@@ -282,8 +274,6 @@ export const RelativeURIReference = S.String.check(relativeUriReferenceChecks).p
 export type RelativeURIReference = typeof RelativeURIReference.Type;
 
 /**
- * RFC 3986 `absolute-URI` schema without a fragment component.
- *
  * **Example** (Decode absolute URI)
  *
  * ```ts import.meta.vitest name="Decode absolute URI"
@@ -306,8 +296,6 @@ export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
 );
 
 /**
- * Type for {@link AbsoluteURI}.
- *
  * **Example** (Accept AbsoluteURI type)
  *
  * ```ts
@@ -323,8 +311,6 @@ export const AbsoluteURI = S.String.check(absoluteUriChecks).pipe(
 export type AbsoluteURI = typeof AbsoluteURI.Type;
 
 /**
- * RFC 3986 `URI` schema.
- *
  * **Example** (Decode URI with fragment)
  *
  * ```ts import.meta.vitest name="Decode URI with fragment"
@@ -347,8 +333,6 @@ export const URI = S.String.check(uriChecks).pipe(
 );
 
 /**
- * Type for {@link URI}.
- *
  * **Example** (Accept URI type)
  *
  * ```ts

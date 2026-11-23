@@ -84,8 +84,6 @@ export const FRESHBOOKS_API_URL = "https://api.freshbooks.com";
 export const FRESHBOOKS_AUTH_URL = "https://auth.freshbooks.com";
 
 /**
- * FreshBooks-compatible absolute URL string.
- *
  * **Example** (Decode FreshBooks absolute URL)
  *
  * ```ts
@@ -111,8 +109,6 @@ export const FreshbooksUrl = S.NonEmptyString.check(
 );
 
 /**
- * Type for {@link FreshbooksUrl}.
- *
  * **Example** (Assign FreshBooks URL type)
  *
  * ```ts
@@ -128,8 +124,6 @@ export const FreshbooksUrl = S.NonEmptyString.check(
 export type FreshbooksUrl = typeof FreshbooksUrl.Type;
 
 /**
- * FreshBooks API base URL normalized without trailing slashes.
- *
  * **Example** (Normalize trailing slash URL)
  *
  * ```ts
@@ -157,8 +151,6 @@ export const FreshbooksBaseUrl = S.String.pipe(
 );
 
 /**
- * Type for {@link FreshbooksBaseUrl}.
- *
  * **Example** (Type annotated base URL)
  *
  * ```ts
@@ -199,8 +191,6 @@ export const FreshbooksAccountId = S.NonEmptyString.pipe(
 );
 
 /**
- * Type for {@link FreshbooksAccountId}.
- *
  * **Example** (Assign account id type)
  *
  * ```ts
@@ -242,8 +232,6 @@ export const FreshbooksBusinessId = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Type for {@link FreshbooksBusinessId}.
- *
  * **Example** (Assign business id type)
  *
  * ```ts
@@ -261,8 +249,6 @@ export type FreshbooksBusinessId = typeof FreshbooksBusinessId.Type;
 
 const freshbooksConfigInputHeadersDefault = R.empty();
 /**
- * Runtime configuration accepted by {@link Freshbooks.makeLayer}.
- *
  * **Details**
  *
  * The OAuth `clientId` / `clientSecret` and the initial redacted refresh token

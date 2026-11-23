@@ -45,8 +45,6 @@ export {
 const $I = $OcctId.create("Occt.models");
 
 /**
- * Request to project one model through one or more cameras.
- *
  * **Example** (Project a box from the front)
  *
  * ```ts
@@ -96,8 +94,6 @@ export class ProjectionRequest extends S.Opaque<ProjectionRequest, { readonly br
 const KernelVariantBase = LiteralKit(["single-thread"]);
 
 /**
- * Kernel WASM build variant.
- *
  * **Example** (Read the variants)
  *
  * ```ts
@@ -117,8 +113,6 @@ export const KernelVariant = KernelVariantBase.pipe(
 );
 
 /**
- * Type for {@link KernelVariant}.
- *
  * **Example** (Annotate a variant)
  *
  * ```ts

@@ -26,9 +26,6 @@ import type { SectionRenderError } from "./SectionDialect.ts";
 const $I = $ManagedSectionId.create("SectionDocument");
 
 /**
- * Raised when a document's managed-section structure cannot be read without
- * guessing.
- *
  * **Gotchas**
  *
  * Every reason names an ambiguity whose silent resolution corrupts a file.
@@ -184,9 +181,6 @@ export const SectionReconciliation = ReconcileOutput;
 export type SectionReconciliation = typeof SectionReconciliation.Type;
 
 /**
- * A parsed document: its text, the dialect it was read with, and every
- * managed section found in it.
- *
  * **Details**
  *
  * This is the package's pure core. Parsing, inspection, reconciliation and

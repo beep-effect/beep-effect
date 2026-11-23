@@ -30,8 +30,6 @@ import { Repo } from "./Repo.ts";
 const $I = $GithubId.create("RepositorySecret");
 
 /**
- * Which secret store an operation acts on.
- *
  * **Details**
  *
  * Three separate stores on the same repository, each with **its own public
@@ -55,8 +53,6 @@ export const SecretScope = LiteralKit(["actions", "dependabot", "codespaces"]).p
 );
 
 /**
- * The values accepted by {@link SecretScope}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -64,8 +60,6 @@ export const SecretScope = LiteralKit(["actions", "dependabot", "codespaces"]).p
 export type SecretScope = typeof SecretScope.Type;
 
 /**
- * A secret, as listing returns it.
- *
  * **Details**
  *
  * The name only. GitHub never returns a secret's value from any endpoint —

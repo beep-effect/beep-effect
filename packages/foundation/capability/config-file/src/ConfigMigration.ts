@@ -20,8 +20,6 @@ import type { ConfigCodec, ConfigCodecError } from "./ConfigCodec.ts";
 const $I = $ConfigFileId.create("ConfigMigration");
 
 /**
- * Indicates that a versioned config migration failed.
- *
  * **Details**
  *
  * `phase` says where: reading the current version, applying a step, or writing

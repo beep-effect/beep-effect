@@ -127,8 +127,6 @@ const parseCommaParts: {
 });
 
 /**
- * Configures the maximum number of alternatives produced by brace expansion.
- *
  * **Gotchas**
  *
  * An invalid `max` raises a `TypeError`; exhausting a valid budget raises

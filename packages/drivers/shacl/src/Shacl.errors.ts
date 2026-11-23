@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $ShaclId.create("Shacl.errors");
 
 /**
- * shacl-engine driver failure reason.
- *
  * **Example** (Assign validationFailed reason)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const ShaclEngineErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link ShaclEngineErrorReason}.
- *
  * **Example** (Assign importFailed reason)
  *
  * ```ts
@@ -57,8 +53,6 @@ export const ShaclEngineErrorReason = LiteralKit([
 export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
 
 /**
- * Typed shacl-engine driver error.
- *
  * **Example** (Make validationFailed error)
  *
  * ```ts

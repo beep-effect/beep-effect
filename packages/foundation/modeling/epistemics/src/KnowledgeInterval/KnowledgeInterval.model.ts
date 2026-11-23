@@ -100,8 +100,6 @@ export const KnowledgeInterval = S.Struct(KnowledgeIntervalFields)
   );
 
 /**
- * Runtime type for {@link KnowledgeInterval}.
- *
  * **Example** (Type a knowledge interval)
  *
  * ```ts

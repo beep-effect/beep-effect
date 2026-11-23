@@ -86,8 +86,6 @@ export const JsoncCanonicalizeErrorCode = LiteralKit([
 );
 
 /**
- * The union of all canonicalize-error code string literals.
- *
  * @see {@link JsoncCanonicalizeErrorCode} for the runtime kit.
  * @category type-level
  * @since 0.0.0

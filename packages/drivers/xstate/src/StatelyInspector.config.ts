@@ -35,8 +35,6 @@ export const StatelyInspectorLaunch = LiteralKit(["none", "browser"]).pipe(
 );
 
 /**
- * Runtime type decoded by {@link StatelyInspectorLaunch}.
- *
  * @category models
  * @since 0.0.0
  */

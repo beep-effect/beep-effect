@@ -68,8 +68,6 @@ const ExtractionCandidateText = S.NonEmptyString.check(
 );
 
 /**
- * Alignment status assigned to a parsed extraction candidate.
- *
  * **Example** (Check match_exact status)
  *
  * ```ts
@@ -94,7 +92,6 @@ export const AlignmentStatus = LiteralKit([
 );
 
 /**
- * {@inheritDoc AlignmentStatus}
  * @category models
  * @since 0.0.0
  */
@@ -191,8 +188,6 @@ const GroundedExtractionAlignedFields = {
 };
 
 /**
- * Source-grounded extraction aligned by an exact text match.
- *
  * **Example** (Ground a party name found verbatim)
  *
  * ```ts
@@ -229,8 +224,6 @@ export class GroundedExtractionMatchExact extends S.Opaque<
 ) {}
 
 /**
- * Source-grounded extraction aligned by a case-insensitive text match.
- *
  * **Example** (Ground a claim term that differs only in case)
  *
  * ```ts
@@ -267,8 +260,6 @@ export class GroundedExtractionMatchLesser extends S.Opaque<
 ) {}
 
 /**
- * Source-grounded extraction aligned by case folding, whitespace collapse, or end-of-line hyphen folding.
- *
  * **Example** (Ground text split by an end-of-line hyphen)
  *
  * ```ts
@@ -305,8 +296,6 @@ export class GroundedExtractionMatchMinimalFold extends S.Opaque<
 ) {}
 
 /**
- * Source-grounded extraction aligned by a bounded fuzzy text match.
- *
  * **Example** (Ground an OCR-damaged date with model confidence)
  *
  * ```ts
@@ -345,8 +334,6 @@ export class GroundedExtractionMatchFuzzy extends S.Opaque<
 ) {}
 
 /**
- * Extraction candidate for which deterministic source alignment found no match.
- *
  * **Example** (Keep a candidate the source text never mentions)
  *
  * ```ts
@@ -376,8 +363,6 @@ export class GroundedExtractionUnaligned extends S.Opaque<
 ) {}
 
 /**
- * Extraction after deterministic source alignment.
- *
  * **Example** (Create grounded extraction)
  *
  * ```ts
@@ -411,7 +396,6 @@ export const GroundedExtraction = S.Union([
 );
 
 /**
- * {@inheritDoc GroundedExtraction}
  * @category models
  * @since 0.0.0
  */
@@ -436,8 +420,6 @@ export declare namespace GroundedExtraction {
 const langExtractRequestExamplesDefault = A.empty<ExtractionExample>();
 const langExtractRequestOptionsDefault = LangExtractOptions.make({});
 /**
- * Provider-neutral extraction request.
- *
  * **Example** (Build extraction request)
  *
  * ```ts

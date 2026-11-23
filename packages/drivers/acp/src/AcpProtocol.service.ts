@@ -104,8 +104,6 @@ const ACP_STDIO_CLIENT_ID = 0;
 export const RPC_REQUEST_ID_START = 2 ** 30;
 
 /**
- * Identity of an inbound ACP request, passed to request and extension handlers.
- *
  * **Details**
  *
  * `requestId` is the JSON-RPC id exactly as the peer sent it, so the number `1` and the string
@@ -386,8 +384,6 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
 };
 
 /**
- * Structured log event emitted by the ACP protocol adapter.
- *
  * **Details**
  *
  * A `decode_failed` event carries only structural diagnostics (operation, method, request id and
@@ -457,8 +453,6 @@ export const AcpProtocolLogEvent = pipe(
 );
 
 /**
- * Structured log event emitted by the ACP protocol adapter.
- *
  * **Example** (Typed log event value)
  *
  * ```ts
@@ -478,8 +472,6 @@ export const AcpProtocolLogEvent = pipe(
 export type AcpProtocolLogEvent = typeof AcpProtocolLogEvent.Type;
 
 /**
- * Schema-backed ACP protocol logging flags.
- *
  * **Example** (Make logging options)
  *
  * ```ts
@@ -564,8 +556,6 @@ const AcpExtensionNotification = S.TaggedStruct("ExtNotification", {
 });
 
 /**
- * Schema for notifications decoded from the ACP peer stream.
- *
  * **Example** (Decode extension notification)
  *
  * ```ts
@@ -593,8 +583,6 @@ export const AcpIncomingNotification = pipe(
 );
 
 /**
- * Type for {@link AcpIncomingNotification}.
- *
  * **Example** (Extract notification tag)
  *
  * ```ts

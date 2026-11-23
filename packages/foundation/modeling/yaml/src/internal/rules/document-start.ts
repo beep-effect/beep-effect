@@ -23,8 +23,6 @@ import type { YamlToken } from "../../YamlToken.ts";
 const $I = $YamlId.create("internal/rules/document-start");
 
 /**
- * Options for `document-start`: require (`true`, default) or forbid the marker.
- *
  * **Example** (Decode document-start options)
  *
  * ```ts

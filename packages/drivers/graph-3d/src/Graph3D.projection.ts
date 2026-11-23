@@ -133,8 +133,6 @@ const hasCoherentLinkIndices = (projection: Graph3DProjection): boolean => {
 };
 
 /**
- * Options for deterministic synthetic 3D graph generation.
- *
  * **Details**
  *
  * Every field has a constructor default, so an empty input produces the

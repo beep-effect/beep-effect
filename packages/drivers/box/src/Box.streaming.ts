@@ -108,8 +108,6 @@ export type BoxByteInput = typeof BoxByteInputValue.Type;
 export type BoxByteStream = Stream.Stream<Uint8Array, BoxError, never>;
 
 /**
- * Technical accumulator used by the Box chunked-upload reducer helper.
- *
  * **Example** (Make part accumulator)
  *
  * ```ts
@@ -175,8 +173,6 @@ class BoxUploadFileVersionRequestBody extends S.Opaque<
 ) {}
 
 /**
- * Upload-file request body with a runtime byte input.
- *
  * **Example** (Describe an in-memory upload into the root folder)
  *
  * ```ts
@@ -228,8 +224,6 @@ class BoxUploadWithPreflightCheckRequestBody extends S.Opaque<
 ) {}
 
 /**
- * Payload for `avatars.createUserAvatar`.
- *
  * **Example** (Create avatar payload)
  *
  * ```ts
@@ -266,8 +260,6 @@ export class BoxCreateUserAvatarPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `avatars.getUserAvatar`.
- *
  * **Example** (Get avatar payload)
  *
  * ```ts
@@ -292,8 +284,6 @@ export class BoxGetUserAvatarPayload extends S.Opaque<BoxGetUserAvatarPayload, {
 ) {}
 
 /**
- * Payload for `downloads.downloadFile`.
- *
  * **Example** (Download file payload)
  *
  * ```ts
@@ -318,8 +308,6 @@ export class BoxDownloadFilePayload extends S.Opaque<BoxDownloadFilePayload, { r
 ) {}
 
 /**
- * Payload for `files.getFileThumbnailById`.
- *
  * **Example** (Thumbnail by id payload)
  *
  * ```ts
@@ -348,8 +336,6 @@ export class BoxGetFileThumbnailByIdPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `uploads.uploadFileVersion`.
- *
  * **Example** (Upload file version payload)
  *
  * ```ts
@@ -386,8 +372,6 @@ export class BoxUploadFileVersionPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `uploads.uploadFile`.
- *
  * **Example** (Upload file payload)
  *
  * ```ts
@@ -426,8 +410,6 @@ export class BoxUploadFilePayload extends S.Opaque<BoxUploadFilePayload, { reado
 ) {}
 
 /**
- * Payload for `uploads.uploadWithPreflightCheck`.
- *
  * **Example** (Preflight upload payload)
  *
  * ```ts
@@ -470,8 +452,6 @@ export class BoxUploadWithPreflightCheckPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `chunkedUploads.uploadFilePartByUrl`.
- *
  * **Example** (Upload part by URL)
  *
  * ```ts
@@ -509,8 +489,6 @@ export class BoxUploadFilePartByUrlPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `chunkedUploads.uploadFilePart`.
- *
  * **Example** (Upload file part payload)
  *
  * ```ts
@@ -544,8 +522,6 @@ export class BoxUploadFilePartPayload extends S.Opaque<BoxUploadFilePartPayload,
 ) {}
 
 /**
- * Payload for `chunkedUploads.reducer`.
- *
  * **Example** (Chunked upload reducer payload)
  *
  * ```ts
@@ -584,8 +560,6 @@ export class BoxChunkedUploadReducerPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `chunkedUploads.uploadBigFile`.
- *
  * **Example** (Upload big file payload)
  *
  * ```ts
@@ -618,8 +592,6 @@ export class BoxUploadBigFilePayload extends S.Opaque<BoxUploadBigFilePayload, {
 ) {}
 
 /**
- * Payload for `events.getEventStream`.
- *
  * **Example** (Empty event stream payload)
  *
  * ```ts
@@ -644,8 +616,6 @@ export class BoxGetEventStreamPayload extends S.Opaque<BoxGetEventStreamPayload,
 ) {}
 
 /**
- * Payload for `zipDownloads.getZipDownloadContent`.
- *
  * **Example** (Zip download content payload)
  *
  * ```ts
@@ -674,8 +644,6 @@ export class BoxGetZipDownloadContentPayload extends S.Opaque<
 ) {}
 
 /**
- * Payload for `zipDownloads.downloadZip`.
- *
  * **Example** (Download zip payload)
  *
  * ```ts

@@ -15,8 +15,6 @@ import { ItemOutcome } from "./Vocabulary.ts";
 const $I = $GateReportId.create("Item");
 
 /**
- * A position in a source file: the file, a one-based line and column.
- *
  * **Example** (Build a location)
  *
  * ```ts
@@ -78,8 +76,6 @@ export class ItemDetail extends S.Opaque<ItemDetail, { readonly brand: unique sy
 ) {}
 
 /**
- * One result with an outcome.
- *
  * **Details**
  *
  * `unit` names the leaf unit the item hangs off; `path` holds the enclosing

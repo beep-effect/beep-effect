@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $ProvenanceId.create("SourceTextIdentity");
 
 /**
- * Canonical SHA-256 digest encoded as `sha256:<lowercase hex>`.
- *
  * **Example** (Make empty SHA-256 digest)
  *
  * ```ts import.meta.vitest name="Make empty SHA-256 digest"
@@ -35,8 +33,6 @@ export const SourceTextDigest = Sha256PrefixedDigest.pipe(
 );
 
 /**
- * Type for {@link SourceTextDigest}.
- *
  * **Example** (Type annotate SourceTextDigest value)
  *
  * ```ts import.meta.vitest name="Type annotate SourceTextDigest value"
@@ -86,8 +82,6 @@ export class SourceTextExtractor extends S.Opaque<SourceTextExtractor, { readonl
 }
 
 /**
- * Matter-scoped identity for one exact extracted source-text manifestation.
- *
  * **Details**
  *
  * `locator` is interpreted relative to the scope's configured source root.

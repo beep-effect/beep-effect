@@ -28,8 +28,6 @@ import * as Tuple from "effect/Tuple";
 const $I = $NlpId.create("Graph/Schema");
 
 /**
- * Structural text-node kind vocabulary.
- *
  * **Example** (Validate sentence node kind)
  *
  * ```ts import.meta.vitest name="Validate sentence node kind"
@@ -65,8 +63,6 @@ export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "docum
 export type TextNodeType = typeof TextNodeType.Type;
 
 /**
- * Edge-relation vocabulary (structural + linguistic-annotation relations).
- *
  * **Example** (Validate contains edge relation)
  *
  * ```ts import.meta.vitest name="Validate contains edge relation"
@@ -185,8 +181,6 @@ export const TextNode = TextNodeType.mapMembers(
 );
 
 /**
- * Runtime type for text-graph nodes.
- *
  * **Example** (Read TextNode type field)
  *
  * ```ts
@@ -260,8 +254,6 @@ export const TextEdge = TextEdgeRelation.mapMembers(
 );
 
 /**
- * Runtime type for text-graph edges.
- *
  * **Example** (Read TextEdge relation field)
  *
  * ```ts
@@ -311,8 +303,6 @@ export class NLPAnalysis extends S.Opaque<NLPAnalysis, { readonly brand: unique 
 ) {}
 
 /**
- * Part-of-speech annotation for a token (a functor `Token -> POS`).
- *
  * **Example** (Build POS annotation node)
  *
  * ```ts import.meta.vitest name="Build POS annotation node"
@@ -341,8 +331,6 @@ export class POSNode extends S.Opaque<POSNode, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Character span (start/end offsets) within a piece of text.
- *
  * **Example** (Build character span)
  *
  * ```ts import.meta.vitest name="Build character span"
@@ -430,8 +418,6 @@ export class LemmaNode extends S.Opaque<LemmaNode, { readonly brand: unique symb
 ) {}
 
 /**
- * Token reference (text + sentence position) used by dependency-arc endpoints.
- *
  * **Example** (Build dependency token ref)
  *
  * ```ts import.meta.vitest name="Build dependency token ref"
@@ -453,8 +439,6 @@ export class DependencyToken extends S.Opaque<DependencyToken, { readonly brand:
 ) {}
 
 /**
- * Syntactic dependency relation between two tokens.
- *
  * **Example** (Build dependency arc node)
  *
  * ```ts import.meta.vitest name="Build dependency arc node"
@@ -489,8 +473,6 @@ export class DependencyNode extends S.Opaque<DependencyNode, { readonly brand: u
 ) {}
 
 /**
- * Entity participant (text, type, and character span) referenced by a semantic relation.
- *
  * **Example** (Build relation participant)
  *
  * ```ts import.meta.vitest name="Build relation participant"

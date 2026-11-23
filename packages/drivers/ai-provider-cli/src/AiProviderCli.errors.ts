@@ -13,8 +13,6 @@ import { AiProviderCliExitCode, AiProviderCliProvider } from "./AiProviderCli.mo
 const $I = $AiProviderCliId.create("AiProviderCli.errors");
 
 /**
- * Redacted technical failure from a provider CLI status probe.
- *
  * **Gotchas**
  *
  * The error keeps the provider, operation, command, and optional process

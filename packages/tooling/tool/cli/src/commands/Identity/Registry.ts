@@ -56,8 +56,6 @@ const JSON_LINE_WIDTH = 80;
 const WRITE_HINT = "Run `bun run beep identity registry --write` to regenerate.";
 
 /**
- * Closed kind of an identity registry finding.
- *
  * **Example** (Check a finding kind)
  *
  * ```ts
@@ -187,8 +185,6 @@ export class RegistryLayout extends S.Opaque<RegistryLayout, { readonly brand: u
 }
 
 /**
- * The identity registry generator could not read or write its files.
- *
  * **Example** (Make a generator error)
  *
  * ```ts

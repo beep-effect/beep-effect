@@ -56,8 +56,6 @@ export const ViewName = ViewNameBase.pipe(
 );
 
 /**
- * Type for {@link ViewName}.
- *
  * **Example** (Annotate a view)
  *
  * ```ts
@@ -175,8 +173,6 @@ export const PictorialProjection = PictorialProjectionBase.pipe(
 );
 
 /**
- * Type for {@link PictorialProjection}.
- *
  * **Example** (Annotate a projection)
  *
  * ```ts
@@ -215,8 +211,6 @@ export const ElevationView = ElevationViewBase.pipe(
 );
 
 /**
- * Type for {@link ElevationView}.
- *
  * **Example** (Annotate an elevation)
  *
  * ```ts
@@ -497,8 +491,6 @@ const twoPoint = (input: CameraForViewInput, zSign: 1 | -1): Camera => {
 };
 
 /**
- * One claimed figure: a view and the sentence that describes it.
- *
  * **Example** (The front elevation)
  *
  * ```ts
@@ -563,8 +555,6 @@ export const OmissionRelation = OmissionRelationBase.pipe(
 );
 
 /**
- * Type for {@link OmissionRelation}.
- *
  * **Example** (Annotate a relation)
  *
  * ```ts

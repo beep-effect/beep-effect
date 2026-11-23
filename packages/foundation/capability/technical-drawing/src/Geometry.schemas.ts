@@ -22,8 +22,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 const $I = $TechnicalDrawingId.create("Geometry.schemas");
 
 /**
- * Finite 3D vector or point in model units.
- *
  * **Example** (Make a vector)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const Vec3 = S.Tuple([S.Finite, S.Finite, S.Finite]).pipe(
 );
 
 /**
- * Type for {@link Vec3}.
- *
  * **Example** (Annotate a vector)
  *
  * ```ts
@@ -60,8 +56,6 @@ export const Vec3 = S.Tuple([S.Finite, S.Finite, S.Finite]).pipe(
 export type Vec3 = typeof Vec3.Type;
 
 /**
- * Strictly positive finite length.
- *
  * **Example** (Make a length)
  *
  * ```ts
@@ -89,8 +83,6 @@ export const PositiveLength = S.Finite.check(
 );
 
 /**
- * Type for {@link PositiveLength}.
- *
  * **Example** (Annotate a length)
  *
  * ```ts
@@ -106,8 +98,6 @@ export const PositiveLength = S.Finite.check(
 export type PositiveLength = typeof PositiveLength.Type;
 
 /**
- * Rotation of a primitive about an axis through a point, in degrees.
- *
  * **Example** (Rotate 90° about Z through the origin)
  *
  * ```ts
@@ -173,8 +163,6 @@ export const PartLineStyle = PartLineStyleBase.pipe(
 );
 
 /**
- * Type for {@link PartLineStyle}.
- *
  * **Example** (Annotate a style)
  *
  * ```ts
@@ -320,8 +308,6 @@ export class Prism extends S.Opaque<Prism, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * Right circular cylinder from a base point along an axis, then placed.
- *
  * **Details**
  *
  * `lineStyle` works as on {@link Box}: absent, the part's style; `broken` on
@@ -356,8 +342,6 @@ export class Cylinder extends S.Opaque<Cylinder, { readonly brand: unique symbol
 ) {}
 
 /**
- * Solid primitive discriminated on `kind`.
- *
  * **Example** (Branch on a primitive)
  *
  * ```ts
@@ -379,8 +363,6 @@ export const Primitive = S.Union([Box, Prism, Cylinder]).pipe(
 );
 
 /**
- * Type for {@link Primitive}.
- *
  * **Example** (Annotate a primitive)
  *
  * ```ts
@@ -397,8 +379,6 @@ export const Primitive = S.Union([Box, Prism, Cylinder]).pipe(
 export type Primitive = typeof Primitive.Type;
 
 /**
- * One solid of a model: the fusion of its `add` primitives minus its `subtract` primitives.
- *
  * **Details**
  *
  * Parts stay separate solids in the final compound, so edges where two parts
@@ -470,8 +450,6 @@ export class Part extends S.Opaque<Part, { readonly brand: unique symbol }>()(
 const OverlayStyleBase = LiteralKit(["emphasis", "broken"]);
 
 /**
- * Line class of an authored overlay line.
- *
  * **Details**
  *
  * `emphasis` lines are drawn on top of the outlines in the sheet's heavier
@@ -500,8 +478,6 @@ export const OverlayStyle = OverlayStyleBase.pipe(
 );
 
 /**
- * Type for {@link OverlayStyle}.
- *
  * **Example** (Annotate a style)
  *
  * ```ts
@@ -609,8 +585,6 @@ export class OverlayLine extends S.Opaque<OverlayLine, { readonly brand: unique 
 const LengthUnitBase = LiteralKit(["mm", "in"]);
 
 /**
- * Unit of the model's lengths.
- *
  * **Example** (Read the units)
  *
  * ```ts
@@ -630,8 +604,6 @@ export const LengthUnit = LengthUnitBase.pipe(
 );
 
 /**
- * Type for {@link LengthUnit}.
- *
  * **Example** (Annotate a unit)
  *
  * ```ts
@@ -647,8 +619,6 @@ export const LengthUnit = LengthUnitBase.pipe(
 export type LengthUnit = typeof LengthUnit.Type;
 
 /**
- * A model: a compound of named parts, plus authored overlay lines.
- *
  * **Details**
  *
  * `overlays` defaults to none, so a spec written before overlay lines existed
@@ -712,8 +682,6 @@ export class ModelSpec extends S.Opaque<ModelSpec, { readonly brand: unique symb
 const HiddenLinePassAboutBase = LiteralKit(["origin", "target"]);
 
 /**
- * Point a camera's hidden-line pass runs about.
- *
  * **Details**
  *
  * `origin` runs the pass about the model's own origin, as every camera did
@@ -741,8 +709,6 @@ export const HiddenLinePassAbout = HiddenLinePassAboutBase.pipe(
 );
 
 /**
- * Type for {@link HiddenLinePassAbout}.
- *
  * **Example** (Annotate a pass origin)
  *
  * ```ts
@@ -774,8 +740,6 @@ const hiddenLinePassAboutKey = S.optionalKey(HiddenLinePassAbout).pipe(
 );
 
 /**
- * Viewing camera for hidden-line projection.
- *
  * **Details**
  *
  * `eye` points from the target toward the viewer and `up` fixes the roll;
@@ -834,8 +798,6 @@ export class Camera extends S.Opaque<Camera, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * Projected 2D line segment `[x1, y1, x2, y2]` in view-plane model units.
- *
  * **Example** (Make a segment)
  *
  * ```ts
@@ -854,8 +816,6 @@ export const Segment2 = S.Tuple([S.Finite, S.Finite, S.Finite, S.Finite]).pipe(
 );
 
 /**
- * Type for {@link Segment2}.
- *
  * **Example** (Annotate a segment)
  *
  * ```ts
@@ -883,8 +843,6 @@ const ShadingSkipReasonBase = LiteralKit([
 ]);
 
 /**
- * Why a face of a shaded view got no shading lines.
- *
  * **Details**
  *
  * `back-facing`: turned away from the viewer. `curved`: not planar.
@@ -915,8 +873,6 @@ export const ShadingSkipReason = ShadingSkipReasonBase.pipe(
 );
 
 /**
- * Type for {@link ShadingSkipReason}.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts
@@ -959,8 +915,6 @@ export class ShadingSkip extends S.Opaque<ShadingSkip, { readonly brand: unique 
 const ShadingStretchSkipReasonBase = LiteralKit(["narrow", "sliver", "no-room", "ink-order"]);
 
 /**
- * Why a visible stretch of a face given shading lines drew no band.
- *
  * **Details**
  *
  * `narrow`: the rules found room for one line only, and one line beside an
@@ -991,8 +945,6 @@ export const ShadingStretchSkipReason = ShadingStretchSkipReasonBase.pipe(
 );
 
 /**
- * Type for {@link ShadingStretchSkipReason}.
- *
  * **Example** (Annotate a stretch skip reason)
  *
  * ```ts
@@ -1008,9 +960,6 @@ export const ShadingStretchSkipReason = ShadingStretchSkipReasonBase.pipe(
 export type ShadingStretchSkipReason = typeof ShadingStretchSkipReason.Type;
 
 /**
- * Number of visible stretches of one view's shaded faces that drew no band
- * for one reason, and how many of them had measured room for a band.
- *
  * **Details**
  *
  * A stretch has room for a band when the part of it whose visible chord
@@ -1052,8 +1001,6 @@ export class ShadingStretchSkip extends S.Opaque<ShadingStretchSkip, { readonly 
 ) {}
 
 /**
- * Shading coverage of one view: faces given lines and faces skipped by reason.
- *
  * **Details**
  *
  * Counted before hidden-line removal, so a shaded face may still be hidden
@@ -1129,9 +1076,6 @@ export class ShadingCoverage extends S.Opaque<ShadingCoverage, { readonly brand:
 ) {}
 
 /**
- * One visible stretch of a face that drew shading lines: the face it shades
- * and the strokes of its band.
- *
  * **Details**
  *
  * `strokes` index the view's `EdgeSet.shading`, which keeps the one canonical
@@ -1168,8 +1112,6 @@ export class ShadingBand extends S.Opaque<ShadingBand, { readonly brand: unique 
 ) {}
 
 /**
- * Visible and hidden projected edges of one view.
- *
  * **Details**
  *
  * Every edge is sampled to straight segments (one per straight edge, several
@@ -1271,8 +1213,6 @@ export const ShadingStyle = ShadingStyleBase.pipe(
 );
 
 /**
- * Type for {@link ShadingStyle}.
- *
  * **Example** (Annotate a style)
  *
  * ```ts
@@ -1321,8 +1261,6 @@ export const HatchAxis = HatchAxisBase.pipe(
 );
 
 /**
- * Type for {@link HatchAxis}.
- *
  * **Example** (Annotate an axis)
  *
  * ```ts
@@ -1466,8 +1404,6 @@ export class ShadingPlan extends S.Opaque<ShadingPlan, { readonly brand: unique 
 ) {}
 
 /**
- * Axis-aligned bounding box of a solid.
- *
  * **Example** (Make a bounding box)
  *
  * ```ts

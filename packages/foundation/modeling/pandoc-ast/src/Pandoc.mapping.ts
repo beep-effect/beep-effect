@@ -54,8 +54,6 @@ const encodePandocDocument = S.encodeEffect(PandocDocument);
 const $I = $PandocAstId.create("Pandoc.mapping");
 
 /**
- * Typed failure raised when a Pandoc-to-Md projection cannot be completed.
- *
  * **Example** (Catch tagged mapping error)
  *
  * ```ts import.meta.vitest name="Catch tagged mapping error"
@@ -1320,8 +1318,6 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
   );
 
 /**
- * Result of mapping a Pandoc document to `@beep/md`.
- *
  * **Example** (Make document mapping result)
  *
  * ```ts import.meta.vitest name="Make document mapping result"
@@ -1355,8 +1351,6 @@ export class PandocToDocumentResult extends S.Opaque<PandocToDocumentResult, { r
 ) {}
 
 /**
- * Companion namespace for {@link PandocToDocumentResult}.
- *
  * **Example** (Annotate companion result type)
  *
  * ```ts import.meta.vitest name="Annotate companion result type"
@@ -1393,8 +1387,6 @@ export declare namespace PandocToDocumentResult {
 }
 
 /**
- * Result of mapping an `@beep/md` document to Pandoc.
- *
  * **Example** (Make pandoc mapping result)
  *
  * ```ts import.meta.vitest name="Make pandoc mapping result"
@@ -1428,8 +1420,6 @@ export class DocumentToPandocResult extends S.Opaque<DocumentToPandocResult, { r
 ) {}
 
 /**
- * Companion namespace for {@link DocumentToPandocResult}.
- *
  * **Example** (Annotate companion result type)
  *
  * ```ts import.meta.vitest name="Annotate companion result type"

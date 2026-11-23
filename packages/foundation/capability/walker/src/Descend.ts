@@ -158,8 +158,6 @@ const descendOptionFields = {
 };
 
 /**
- * Options for `descend` when it returns a plain array of matches.
- *
  * **Details**
  *
  * `onUnreadable` admits `"fail"` and `"skip"` only. `descend` accepts the
@@ -200,8 +198,6 @@ export class DescendOptions extends S.Opaque<DescendOptions, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link DescendOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -261,8 +257,6 @@ export class DescendRecordOptions extends S.Opaque<DescendRecordOptions, { reado
 ) {}
 
 /**
- * Companion types for {@link DescendRecordOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -324,8 +318,6 @@ export class UnreadableDirectory extends S.Opaque<UnreadableDirectory, { readonl
   )
 ) {}
 /**
- * Companion types for {@link UnreadableDirectory}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -379,8 +371,6 @@ export class DescendResult extends S.Opaque<DescendResult, { readonly brand: uni
   )
 ) {}
 /**
- * Companion types for {@link DescendResult}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -395,11 +385,6 @@ export declare namespace DescendResult {
 }
 
 /**
- * Typed failure raised by `descend`: a directory mid-walk was unreadable
- * (under `onUnreadable: "fail"`), a stat failed under `onStatError: "fail"`,
- * or the walk descended past `maxDepth`. Depth exhaustion is a typed failure, never a truncation — silent truncation
- * silently changes match semantics.
- *
  * **Example** (Report an unreadable directory)
  *
  * ```ts

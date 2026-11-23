@@ -6,8 +6,6 @@
  */
 
 /**
- * Source-text failures.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -20,15 +18,11 @@ export * from "./SourceText.errors.ts";
  */
 export * from "./SourceText.paging.ts";
 /**
- * Source-text schemas.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./SourceText.schema.ts";
 /**
- * Source-text resolver service.
- *
  * @category services
  * @since 0.0.0
  */

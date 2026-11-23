@@ -17,8 +17,6 @@ const GroundedExtractions: S.Codec<
 > = S.Array(GroundedExtraction);
 
 /**
- * Input required to build an NLP handoff document.
- *
  * **Example** (Build handoff document input)
  *
  * ```ts

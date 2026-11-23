@@ -32,8 +32,6 @@ import type * as SchemaAST from "effect/SchemaAST";
 const $I = $NlpId.create("Handoff/Contract");
 
 /**
- * Stable identifier for a {@link TextChunk}.
- *
  * **Example** (Make ChunkId value)
  *
  * ```ts
@@ -51,8 +49,6 @@ export const ChunkId = S.String.pipe(
 );
 
 /**
- * Runtime type of {@link ChunkId}.
- *
  * **Example** (Type a ChunkId)
  *
  * ```ts
@@ -68,8 +64,6 @@ export const ChunkId = S.String.pipe(
 export type ChunkId = typeof ChunkId.Type;
 
 /**
- * Stable identifier for a {@link Mention}.
- *
  * **Example** (Make MentionId value)
  *
  * ```ts
@@ -87,8 +81,6 @@ export const MentionId = S.String.pipe(
 );
 
 /**
- * Runtime type of {@link MentionId}.
- *
  * **Example** (Type a MentionId)
  *
  * ```ts
@@ -104,8 +96,6 @@ export const MentionId = S.String.pipe(
 export type MentionId = typeof MentionId.Type;
 
 /**
- * Stable identifier for an {@link Entity}.
- *
  * **Example** (Make EntityId value)
  *
  * ```ts
@@ -123,8 +113,6 @@ export const EntityId = S.String.pipe(
 );
 
 /**
- * Runtime type of {@link EntityId}.
- *
  * **Example** (Type an EntityId)
  *
  * ```ts
@@ -140,8 +128,6 @@ export const EntityId = S.String.pipe(
 export type EntityId = typeof EntityId.Type;
 
 /**
- * Stable identifier for a {@link Relation}.
- *
  * **Example** (Make RelationId value)
  *
  * ```ts
@@ -159,8 +145,6 @@ export const RelationId = S.String.pipe(
 );
 
 /**
- * Runtime type of {@link RelationId}.
- *
  * **Example** (Type a RelationId)
  *
  * ```ts
@@ -232,8 +216,6 @@ class SpanFields extends S.Class<SpanFields, {}>($I`SpanFields`)(
 ) {}
 
 /**
- * A half-open character span `[start, end)` into the source text.
- *
  * **Example** (Make half-open span)
  *
  * ```ts
@@ -263,8 +245,6 @@ export const Span = SpanFields.check(
 );
 
 /**
- * Runtime type of {@link Span}.
- *
  * **Example** (Compute span length)
  *
  * ```ts import.meta.vitest name="Compute span length"
@@ -281,8 +261,6 @@ export const Span = SpanFields.check(
 export type Span = typeof Span.Type;
 
 /**
- * Encoded companion types for the {@link Span} runtime schema.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -365,9 +343,6 @@ export class TextChunk extends S.Opaque<TextChunk, { readonly brand: unique symb
 ) {}
 
 /**
- * A surface mention occurrence: where a span of text within a chunk refers to
- * something nameable.
- *
  * **Example** (Make surface mention)
  *
  * ```ts import.meta.vitest name="Make surface mention"

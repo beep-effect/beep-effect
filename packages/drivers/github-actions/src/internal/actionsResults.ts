@@ -52,7 +52,6 @@ export class BackendIds extends S.Opaque<BackendIds, { readonly brand: unique sy
 ) {}
 
 /**
- * The plain-object identifiers accepted by {@link BackendIds}.
  * @category type-level
  * @since 0.0.0
  */
@@ -132,7 +131,6 @@ export class ResultsBackend extends S.Opaque<ResultsBackend, { readonly brand: u
 ) {}
 
 /**
- * The plain-object coordinates accepted by {@link ResultsBackend}.
  * @category type-level
  * @since 0.0.0
  */

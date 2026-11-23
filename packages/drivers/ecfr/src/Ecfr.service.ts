@@ -116,8 +116,6 @@ export class EcfrCorrectionsParams extends S.Opaque<EcfrCorrectionsParams, { rea
 ) {}
 
 /**
- * Path parameters identifying one CFR title.
- *
  * **Example** (Make title path params)
  *
  * ```ts
@@ -137,8 +135,6 @@ export class EcfrTitleParams extends S.Opaque<EcfrTitleParams, { readonly brand:
 ) {}
 
 /**
- * Filters and page controls shared by the eCFR search family.
- *
  * **Example** (Make search params with pagination)
  *
  * ```ts
@@ -178,8 +174,6 @@ export class EcfrSearchParams extends S.Opaque<EcfrSearchParams, { readonly bran
 ) {}
 
 /**
- * Path and optional hierarchy parameters for dated eCFR versioner requests.
- *
  * **Example** (Make versioner params with hierarchy)
  *
  * ```ts

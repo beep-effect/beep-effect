@@ -240,7 +240,6 @@ export class CacheHit extends S.Opaque<CacheHit, { readonly brand: unique symbol
 ) {}
 
 /**
- * The plain-object hit accepted by {@link CacheHit}.
  * @category type-level
  * @since 0.0.0
  */

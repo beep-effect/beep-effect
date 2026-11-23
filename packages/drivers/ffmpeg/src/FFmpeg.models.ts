@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $FfmpegId.create("FFmpeg.models");
 
 /**
- * Positive frame extraction rate in frames per second.
- *
  * **Example** (Decode positive frame rate)
  *
  * ```ts
@@ -59,8 +57,6 @@ export const PositiveFrameRate = S.Finite.check(
 );
 
 /**
- * Positive frame extraction rate in frames per second.
- *
  * **Example** (Typed positive frame rate)
  *
  * ```ts
@@ -77,8 +73,6 @@ export const PositiveFrameRate = S.Finite.check(
 export type PositiveFrameRate = typeof PositiveFrameRate.Type;
 
 /**
- * Positive timeout value in milliseconds.
- *
  * **Example** (Decode positive milliseconds)
  *
  * ```ts
@@ -123,8 +117,6 @@ export const PositiveMilliseconds = S.Finite.check(
 );
 
 /**
- * Positive timeout value in milliseconds.
- *
  * **Example** (Typed positive milliseconds)
  *
  * ```ts
@@ -188,8 +180,6 @@ export const SafeFramePrefix = S.String.check(
 );
 
 /**
- * Safe frame filename prefix.
- *
  * **Example** (Typed safe frame prefix)
  *
  * ```ts
@@ -206,8 +196,6 @@ export const SafeFramePrefix = S.String.check(
 export type SafeFramePrefix = typeof SafeFramePrefix.Type;
 
 /**
- * Non-negative finite duration measured in seconds.
- *
  * **Example** (Make non-negative seconds)
  *
  * ```ts
@@ -236,8 +224,6 @@ export const NonNegativeSeconds = S.Finite.check(
 );
 
 /**
- * Non-negative finite duration measured in seconds.
- *
  * **Example** (Typed non-negative seconds)
  *
  * ```ts
@@ -254,8 +240,6 @@ export const NonNegativeSeconds = S.Finite.check(
 export type NonNegativeSeconds = typeof NonNegativeSeconds.Type;
 
 /**
- * Zero-based frame index.
- *
  * **Example** (Make zero-based frame index)
  *
  * ```ts
@@ -284,8 +268,6 @@ export const FrameIndex = S.Int.check(
 );
 
 /**
- * Zero-based frame index.
- *
  * **Example** (Typed zero-based frame index)
  *
  * ```ts
@@ -302,8 +284,6 @@ export const FrameIndex = S.Int.check(
 export type FrameIndex = typeof FrameIndex.Type;
 
 /**
- * Non-negative integer frame count.
- *
  * **Example** (Make non-negative frame count)
  *
  * ```ts
@@ -332,8 +312,6 @@ export const FrameCount = S.Int.check(
 );
 
 /**
- * Non-negative integer frame count.
- *
  * **Example** (Typed non-negative frame count)
  *
  * ```ts
@@ -350,8 +328,6 @@ export const FrameCount = S.Int.check(
 export type FrameCount = typeof FrameCount.Type;
 
 /**
- * Positive integer pixel dimension.
- *
  * **Example** (Make positive pixel dimension)
  *
  * ```ts
@@ -380,8 +356,6 @@ export const VideoDimension = S.Int.check(
 );
 
 /**
- * Positive integer pixel dimension.
- *
  * **Example** (Typed positive pixel dimension)
  *
  * ```ts
@@ -398,8 +372,6 @@ export const VideoDimension = S.Int.check(
 export type VideoDimension = typeof VideoDimension.Type;
 
 /**
- * FFmpeg progress percent in the closed 0-100 range.
- *
  * **Example** (Make progress percent value)
  *
  * ```ts
@@ -444,8 +416,6 @@ export const FFmpegProgressPercent = S.Finite.check(
 );
 
 /**
- * FFmpeg progress percent in the closed 0-100 range.
- *
  * **Example** (Typed progress percent value)
  *
  * ```ts
@@ -462,8 +432,6 @@ export const FFmpegProgressPercent = S.Finite.check(
 export type FFmpegProgressPercent = typeof FFmpegProgressPercent.Type;
 
 /**
- * Minimum filename padding width used for generated frame numbers.
- *
  * **Example** (Make filename padding width)
  *
  * ```ts
@@ -492,8 +460,6 @@ export const FrameFilenamePadding = S.Int.check(
 );
 
 /**
- * Minimum filename padding width used for generated frame numbers.
- *
  * **Example** (Typed filename padding width)
  *
  * ```ts
@@ -510,8 +476,6 @@ export const FrameFilenamePadding = S.Int.check(
 export type FrameFilenamePadding = typeof FrameFilenamePadding.Type;
 
 /**
- * Runtime path overrides for the native FFmpeg binaries.
- *
  * **Example** (Make FFmpeg path overrides)
  *
  * ```ts
@@ -555,8 +519,6 @@ export class FFmpegConfigInput extends S.Opaque<FFmpegConfigInput, { readonly br
 ) {}
 
 /**
- * Resolved runtime configuration for the native FFmpeg driver.
- *
  * **Example** (Make resolved FFmpeg config)
  *
  * ```ts
@@ -598,8 +560,6 @@ export class FFmpegConfig extends S.Opaque<FFmpegConfig, { readonly brand: uniqu
 ) {}
 
 /**
- * Request to probe a video's first video stream.
- *
  * **Example** (Make probe video request)
  *
  * ```ts
@@ -629,8 +589,6 @@ export class ProbeVideoRequest extends S.Opaque<ProbeVideoRequest, { readonly br
 }
 
 /**
- * Video metadata extracted from ffprobe.
- *
  * **Example** (Make video probe metadata)
  *
  * ```ts
@@ -701,8 +659,6 @@ export class VideoProbe extends S.Opaque<VideoProbe, { readonly brand: unique sy
 ) {}
 
 /**
- * Request to extract PNG frames from a video.
- *
  * **Example** (Make extract frames request)
  *
  * ```ts
@@ -771,8 +727,6 @@ export class ExtractFramesRequest extends S.Opaque<ExtractFramesRequest, { reado
 }
 
 /**
- * A frame written by an extract-frames run.
- *
  * **Example** (Make extracted frame record)
  *
  * ```ts
@@ -820,8 +774,6 @@ export class ExtractedFrame extends S.Opaque<ExtractedFrame, { readonly brand: u
 ) {}
 
 /**
- * Options recorded in an extract-frames manifest.
- *
  * **Example** (Make manifest options record)
  *
  * ```ts
@@ -862,8 +814,6 @@ export class ExtractFramesManifestOptions extends S.Opaque<
 ) {}
 
 /**
- * Summary recorded in an extract-frames manifest.
- *
  * **Example** (Make manifest summary record)
  *
  * ```ts
@@ -894,8 +844,6 @@ export class ExtractFramesManifestSummary extends S.Opaque<
 ) {}
 
 /**
- * JSON manifest written by an extract-frames run.
- *
  * **Example** (Make extract frames manifest)
  *
  * ```ts
@@ -969,8 +917,6 @@ export class ExtractFramesManifest extends S.Opaque<ExtractFramesManifest, { rea
 }
 
 /**
- * Result returned after frames have been committed.
- *
  * **Example** (Make extract frames result)
  *
  * ```ts
@@ -1079,8 +1025,6 @@ export class FFmpegStartedEvent extends S.Opaque<FFmpegStartedEvent, { readonly 
 ) {}
 
 /**
- * Event emitted when ffmpeg reports extraction progress.
- *
  * **Example** (Make progress event payload)
  *
  * ```ts
@@ -1143,8 +1087,6 @@ export class FFmpegProgressEvent extends S.Opaque<FFmpegProgressEvent, { readonl
 ) {}
 
 /**
- * Event emitted after frames and manifest are committed.
- *
  * **Example** (Make completed event payload)
  *
  * ```ts
@@ -1192,8 +1134,6 @@ export class FFmpegCompletedEvent extends S.Opaque<FFmpegCompletedEvent, { reado
 ) {}
 
 /**
- * Structured events emitted by extract-frames.
- *
  * **Example** (Read event kind field)
  *
  * ```ts
@@ -1214,8 +1154,6 @@ export const FFmpegEvent = S.Union([FFmpegStartedEvent, FFmpegProgressEvent, FFm
 );
 
 /**
- * Structured events emitted by extract-frames.
- *
  * **Example** (Access event kind field)
  *
  * ```ts

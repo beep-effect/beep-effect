@@ -34,10 +34,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const $I = $GlobId.create("GlobPattern");
 
 /**
- * Typed failure raised when a glob pattern trips a compile-time guard:
- * over-length, brace-expansion budget exhaustion, or nesting past the depth
- * cap.
- *
  * **Details**
  *
  * Malformed input is never a defect — this is the only failure the
@@ -133,9 +129,6 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly
 }
 
 /**
- * Matching options for a glob pattern: the full minimatch options surface,
- * schema-validated.
- *
  * **Details**
  *
  * `platform` is explicit and defaults to `"posix"`: the engine never reads
@@ -444,9 +437,6 @@ const compilesUnderDefaults = (source: string): true | string =>
   );
 
 /**
- * A compiled glob pattern with a total `matches(candidate)` predicate, plus the
- * metadata a directory walker needs.
- *
  * **Details**
  *
  * The schema IS the domain class. One encoded field, `source`; the compiled

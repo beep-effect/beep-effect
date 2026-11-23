@@ -50,8 +50,6 @@ export const JsoncSegment = S.Union([S.String, S.Natural]).pipe(
 );
 
 /**
- * The decoded shape of {@link JsoncSegment}.
- *
  * @see {@link JsoncSegment} for the runtime schema.
  * @category type-level
  * @since 0.0.0
@@ -82,8 +80,6 @@ export const JsoncPath = S.Array(JsoncSegment).pipe(
 );
 
 /**
- * The decoded shape of {@link JsoncPath}.
- *
  * @see {@link JsoncPath} for the runtime schema.
  * @category type-level
  * @since 0.0.0
@@ -122,8 +118,6 @@ export const JsoncNodeType = LiteralKit(["object", "array", "property", "string"
 );
 
 /**
- * The union of all JSONC AST node type string literals.
- *
  * @see {@link JsoncNodeType} for the runtime kit.
  * @category type-level
  * @since 0.0.0

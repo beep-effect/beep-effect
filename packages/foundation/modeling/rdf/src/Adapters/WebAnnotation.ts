@@ -39,8 +39,6 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
   });
 
 /**
- * Web Annotation text-quote selector DTO.
- *
  * **Example** (Decode text-quote selector)
  *
  * ```ts import.meta.vitest name="Decode text-quote selector"
@@ -78,8 +76,6 @@ export class WebAnnotationTextQuoteSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation text-position selector DTO.
- *
  * **Example** (Decode text-position selector)
  *
  * ```ts import.meta.vitest name="Decode text-position selector"
@@ -117,8 +113,6 @@ export class WebAnnotationTextPositionSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation fragment selector DTO.
- *
  * **Example** (Decode fragment selector)
  *
  * ```ts import.meta.vitest name="Decode fragment selector"
@@ -152,8 +146,6 @@ export class WebAnnotationFragmentSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation selector union.
- *
  * **Example** (Decode selector union)
  *
  * ```ts import.meta.vitest name="Decode selector union"
@@ -183,8 +175,6 @@ export const WebAnnotationSelector = S.Union([
 );
 
 /**
- * Type for {@link WebAnnotationSelector}.
- *
  * **Example** (Accept selector type)
  *
  * ```ts
@@ -200,8 +190,6 @@ export const WebAnnotationSelector = S.Union([
 export type WebAnnotationSelector = typeof WebAnnotationSelector.Type;
 
 /**
- * Web Annotation target DTO.
- *
  * **Example** (Decode annotation target)
  *
  * ```ts import.meta.vitest name="Decode annotation target"
@@ -231,8 +219,6 @@ export class WebAnnotationTarget extends S.Opaque<WebAnnotationTarget, { readonl
 ) {}
 
 /**
- * Web Annotation DTO.
- *
  * **Example** (Decode web annotation)
  *
  * ```ts import.meta.vitest name="Decode web annotation"
@@ -337,8 +323,6 @@ const webAnnotationSelectorEncodedToEvidenceSelectorEncoded = (
   pipe(webAnnotationSelectorEncodedToEvidenceSelectorValue(selector), encodeEvidenceSelector, Result.getOrThrow);
 
 /**
- * Codec between package-owned evidence selectors and Web Annotation selector DTOs.
- *
  * **Example** (Decode evidence to selector)
  *
  * ```ts import.meta.vitest name="Decode evidence to selector"
@@ -370,8 +354,6 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
 );
 
 /**
- * Type for {@link WebAnnotationSelectorFromEvidenceSelector}.
- *
  * **Example** (Accept codec type)
  *
  * ```ts
@@ -471,8 +453,6 @@ const webAnnotationTargetEncodedToEvidenceTargetEncoded = (
   pipe(webAnnotationTargetEncodedToEvidenceTargetValue(target), encodeEvidenceTarget, Result.getOrThrow);
 
 /**
- * Codec between evidence targets and Web Annotation target DTOs.
- *
  * **Example** (Decode evidence to target)
  *
  * ```ts import.meta.vitest name="Decode evidence to target"
@@ -504,8 +484,6 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
 );
 
 /**
- * Type for {@link WebAnnotationTargetFromEvidenceTarget}.
- *
  * **Example** (Accept target codec type)
  *
  * ```ts
@@ -553,8 +531,6 @@ const webAnnotationEncodedToEvidenceAnchorEncoded = (
   pipe(webAnnotationEncodedToEvidenceAnchorValue(annotation), encodeEvidenceAnchor, Result.getOrThrow);
 
 /**
- * Codec between evidence anchors and Web Annotation DTOs.
- *
  * **Example** (Decode evidence to annotation)
  *
  * ```ts import.meta.vitest name="Decode evidence to annotation"
@@ -589,8 +565,6 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
 );
 
 /**
- * Type for {@link WebAnnotationFromEvidenceAnchor}.
- *
  * **Example** (Accept annotation codec type)
  *
  * ```ts

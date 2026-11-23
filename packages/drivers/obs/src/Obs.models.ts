@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $ObsId.create("Obs.models");
 
 /**
- * Positive timeout value in milliseconds.
- *
  * **Example** (Make positive milliseconds)
  *
  * ```ts
@@ -59,8 +57,6 @@ export const PositiveMilliseconds = S.Finite.check(
 );
 
 /**
- * Positive timeout value in milliseconds.
- *
  * **Example** (Type-annotated timeout value)
  *
  * ```ts
@@ -77,8 +73,6 @@ export const PositiveMilliseconds = S.Finite.check(
 export type PositiveMilliseconds = typeof PositiveMilliseconds.Type;
 
 /**
- * Network port number in the closed 1-65535 range.
- *
  * **Example** (Make websocket port)
  *
  * ```ts
@@ -123,8 +117,6 @@ export const ObsWebSocketPort = S.Int.check(
 );
 
 /**
- * Network port number in the closed 1-65535 range.
- *
  * **Example** (Type-annotated port value)
  *
  * ```ts
@@ -141,8 +133,6 @@ export const ObsWebSocketPort = S.Int.check(
 export type ObsWebSocketPort = typeof ObsWebSocketPort.Type;
 
 /**
- * Runtime configuration overrides for the OBS driver.
- *
  * **Details**
  *
  * The default `eventSubscriptions` bitmask 79 selects
@@ -237,8 +227,6 @@ export class ObsConfigInput extends S.Opaque<ObsConfigInput, { readonly brand: u
 export type ObsConfigInputOptions = (typeof ObsConfigInput)["~type.make.in"];
 
 /**
- * Resolved runtime configuration for the OBS driver.
- *
  * **Example** (Resolve empty config overrides)
  *
  * ```ts
@@ -315,8 +303,6 @@ export const resolveObsConfig = (input?: ObsConfigInputOptions | undefined): Obs
   ObsConfig.make(ObsConfigInput.make(input ?? {}));
 
 /**
- * Result of verifying the OBS process behind the connected session.
- *
  * **Example** (Make ensure-running result)
  *
  * ```ts
@@ -358,8 +344,6 @@ export class EnsureRunningResult extends S.Opaque<EnsureRunningResult, { readonl
 ) {}
 
 /**
- * Request to provision the idempotent QA capture scene.
- *
  * **Example** (Make empty QA request)
  *
  * ```ts
@@ -403,8 +387,6 @@ export class EnsureQaSceneRequest extends S.Opaque<EnsureQaSceneRequest, { reado
 ) {}
 
 /**
- * Result of provisioning the QA capture scene.
- *
  * **Details**
  *
  * A none `restoreToken` means the PipeWire portal picker has not persisted a
@@ -466,8 +448,6 @@ export class EnsureQaSceneResult extends S.Opaque<EnsureQaSceneResult, { readonl
 ) {}
 
 /**
- * Request to start an OBS recording into a specific directory.
- *
  * **Example** (Start recording request)
  *
  * ```ts
@@ -538,8 +518,6 @@ export class StartRecordingResult extends S.Opaque<StartRecordingResult, { reado
 ) {}
 
 /**
- * Request options for stopping an OBS recording.
- *
  * **Example** (Make stop recording request)
  *
  * ```ts

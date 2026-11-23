@@ -69,8 +69,6 @@ export class SbomInput extends S.Opaque<SbomInput, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link SbomInput}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -124,8 +122,6 @@ export class SbomJsonOptions extends S.Opaque<SbomJsonOptions, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link SbomJsonOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -140,8 +136,6 @@ export declare namespace SbomJsonOptions {
 }
 
 /**
- * Raised when a BOM cannot be written to disk.
- *
  * **Details**
  *
  * The package's **only** error, and it is the filesystem's rather than the

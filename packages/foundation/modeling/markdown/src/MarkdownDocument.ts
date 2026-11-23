@@ -113,10 +113,6 @@ export class DocumentHeading extends S.Opaque<DocumentHeading, { readonly brand:
 ) {}
 
 /**
- * A heading-delimited span from {@link MarkdownDocument.sections}: the
- * heading, its depth, the source `range` the section occupies, the root-level
- * blocks that follow the heading inside it, and the section's source text.
- *
  * **Details**
  *
  * A section runs from its heading's start offset to the start of the next
@@ -241,8 +237,6 @@ export class SectionQueryOptions extends S.Opaque<SectionQueryOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link SectionQueryOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -528,10 +522,6 @@ const headingMatcher = (match: SectionHeadingMatch): ((section: DocumentSection)
 };
 
 /**
- * A parsed markdown document: the original `source`, the mdast-shaped
- * {@link Root} tree, the non-fatal {@link MarkdownDiagnostic}s the parse
- * produced, and the link-reference `definitions` index.
- *
  * **Details**
  *
  * The document is the lossless unit — `source` is retained so offsets on the

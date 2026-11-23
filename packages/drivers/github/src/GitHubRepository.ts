@@ -128,8 +128,6 @@ export const repositoryPatch = (draft: RepositoryPatchDraft): RepositoryPatch =>
 };
 
 /**
- * Whether an account is a user or an organization.
- *
  * **Example** (Validate an owner type)
  *
  * ```ts
@@ -148,8 +146,6 @@ export const OwnerType = LiteralKit(["User", "Organization"]).pipe(
 );
 
 /**
- * The values accepted by {@link OwnerType}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

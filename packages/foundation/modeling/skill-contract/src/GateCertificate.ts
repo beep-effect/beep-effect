@@ -21,8 +21,6 @@ import { EvidencePredicateType, GateId, GateSeverity, IsoDateTimeString } from "
 const $I = $SkillContractId.create("GateCertificate");
 
 /**
- * EARL/ACT outcome vocabulary for one certified check and for the aggregate.
- *
  * **Details**
  *
  * `passed` and `failed` are conclusive. `cantTell` (evaluated without a
@@ -49,8 +47,6 @@ export const CheckOutcome = LiteralKit(["passed", "failed", "cantTell", "unteste
 );
 
 /**
- * Runtime type decoded by {@link CheckOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -78,8 +74,6 @@ export const InconclusiveCheckOutcome = CheckOutcome.pick(["cantTell", "untested
 );
 
 /**
- * Runtime type decoded by {@link InconclusiveCheckOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -114,8 +108,6 @@ export const CertificateReach = LiteralKit(["complete", "incomplete", "unknown"]
 );
 
 /**
- * Runtime type decoded by {@link CertificateReach}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -147,8 +139,6 @@ const PassedCheckEvidence = S.makeFilter(
 );
 
 /**
- * One certified check: its outcome, reach, severity, and evidence.
- *
  * **Example** (Certify an untested check)
  *
  * ```ts import.meta.vitest name="Certify an untested check"
@@ -432,8 +422,6 @@ export const ApplyPlanRefusalReason = LiteralKit(["stale-digest", "unknown-id"])
 );
 
 /**
- * Runtime type decoded by {@link ApplyPlanRefusalReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -470,8 +458,6 @@ export const GateCertificateApplyVerdict = LiteralKit(["applied", "refused"])
   );
 
 /**
- * Runtime type decoded by {@link GateCertificateApplyVerdict}.
- *
  * @category models
  * @since 0.0.0
  */

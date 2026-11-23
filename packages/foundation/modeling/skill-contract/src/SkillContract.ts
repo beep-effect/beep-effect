@@ -17,8 +17,6 @@ import { SchemaReference } from "./SchemaReference.ts";
 const $I = $SkillContractId.create("SkillContract");
 
 /**
- * Stable identity of one versioned skill contract.
- *
  * **Example** (Construct a contract id)
  *
  * ```ts
@@ -38,8 +36,6 @@ export const SkillContractId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type decoded by {@link SkillContractId}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -73,8 +69,6 @@ export class ReceiptTypeBindings extends S.Opaque<ReceiptTypeBindings, { readonl
 ) {}
 
 /**
- * Aggregate root describing one versioned typed skill promise.
- *
  * **Details**
  *
  * Input, output, and conditional applicability persist schema references only.

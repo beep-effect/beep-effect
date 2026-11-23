@@ -45,8 +45,6 @@ const SUMMARY_IDENTIFIER_SEGMENT = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
 const TRAILING_PERIOD = /\.$/;
 
 /**
- * JSON-RPC request id as it appears on the ACP wire: a string or a finite number.
- *
  * **Example** (Check request ids)
  *
  * ```ts
@@ -66,8 +64,6 @@ export const AcpRequestId = S.Union([S.String, S.Finite]).pipe(
 );
 
 /**
- * Type for {@link AcpRequestId}.
- *
  * **Example** (Type a request id)
  *
  * ```ts
@@ -92,8 +88,6 @@ const AcpRequestOperationBase = LiteralKit([
 ]);
 
 /**
- * Request-processing step at which an {@link AcpRequestError} was produced.
- *
  * **Example** (Check a request operation)
  *
  * ```ts
@@ -113,8 +107,6 @@ export const AcpRequestOperation = AcpRequestOperationBase.pipe(
 );
 
 /**
- * Type for {@link AcpRequestOperation}.
- *
  * **Example** (Type a request operation)
  *
  * ```ts
@@ -136,8 +128,6 @@ const AcpProtocolParseOperationBase = LiteralKit([
 ]);
 
 /**
- * Wire step at which an {@link AcpProtocolParseError} was produced.
- *
  * **Example** (Check a parse operation)
  *
  * ```ts
@@ -157,8 +147,6 @@ export const AcpProtocolParseOperation = AcpProtocolParseOperationBase.pipe(
 );
 
 /**
- * Type for {@link AcpProtocolParseOperation}.
- *
  * **Example** (Type a parse operation)
  *
  * ```ts
@@ -176,8 +164,6 @@ export type AcpProtocolParseOperation = typeof AcpProtocolParseOperation.Type;
 const AcpTransportOperationBase = LiteralKit(["call-rpc", "read-input-stream", "read-process-exit-status"]);
 
 /**
- * Transport step at which an {@link AcpTransportError} was produced.
- *
  * **Example** (Check a transport operation)
  *
  * ```ts
@@ -197,8 +183,6 @@ export const AcpTransportOperation = AcpTransportOperationBase.pipe(
 );
 
 /**
- * Type for {@link AcpTransportOperation}.
- *
  * **Example** (Type a transport operation)
  *
  * ```ts
@@ -228,8 +212,6 @@ const AcpSchemaIssueKindBase = LiteralKit([
 ]);
 
 /**
- * Kind of an Effect schema issue node, recorded in value-free error diagnostics.
- *
  * **Example** (Check an issue kind)
  *
  * ```ts
@@ -249,8 +231,6 @@ export const AcpSchemaIssueKind = AcpSchemaIssueKindBase.pipe(
 );
 
 /**
- * Type for {@link AcpSchemaIssueKind}.
- *
  * **Example** (Type an issue kind)
  *
  * ```ts
@@ -268,8 +248,6 @@ export type AcpSchemaIssueKind = typeof AcpSchemaIssueKind.Type;
 const NonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 /**
- * Optional request-correlation diagnostics attached to an {@link AcpRequestError}.
- *
  * **Details**
  *
  * Diagnostics stay in-process: {@link AcpRequestError.toProtocolError} never
@@ -413,8 +391,6 @@ const nonEmptyText = (value: O.Option<string>): O.Option<string> => O.filter(val
 // --- Errors -------------------------------------------------------------------------------------
 
 /**
- * Failure raised when an ACP child process cannot be spawned.
- *
  * **Example** (Make spawn error)
  *
  * ```ts
@@ -455,8 +431,6 @@ export class AcpSpawnError extends S.TaggedError<AcpSpawnError, { readonly brand
 }
 
 /**
- * Failure raised when an ACP process exits before the protocol completes.
- *
  * **Details**
  *
  * The message names the exit signal or code and appends the trimmed `stderr`
@@ -518,8 +492,6 @@ export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError, 
 }
 
 /**
- * Failure raised when ACP wire data cannot be encoded or decoded.
- *
  * **Details**
  *
  * Schema failures carry value-free diagnostics: issue count, issue kinds,
@@ -665,8 +637,6 @@ export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError, 
 }
 
 /**
- * Failure raised by the ACP transport boundary.
- *
  * **Details**
  *
  * The message names the operation, method and authored `detail`; it never
@@ -738,9 +708,6 @@ export class AcpTransportError extends S.TaggedError<AcpTransportError, { readon
 }
 
 /**
- * Failure raised when the ACP peer's input stream ends without a more specific
- * termination error.
- *
  * **Example** (Make input stream ended error)
  *
  * ```ts
@@ -784,8 +751,6 @@ const handlerFailure =
         );
 
 /**
- * JSON-RPC request failure returned by, or sent to, an ACP peer.
- *
  * **Details**
  *
  * Only `code`, `errorMessage` and `data` reach the wire through
@@ -1277,8 +1242,6 @@ export class AcpRequestError extends S.TaggedError<AcpRequestError, { readonly b
 }
 
 /**
- * Union of typed technical failures emitted by the ACP driver.
- *
  * **Example** (Check AcpError membership)
  *
  * ```ts
@@ -1307,8 +1270,6 @@ export const AcpError = pipe(
 );
 
 /**
- * Type for {@link AcpError}.
- *
  * **Example** (Inspect AcpError tag)
  *
  * ```ts

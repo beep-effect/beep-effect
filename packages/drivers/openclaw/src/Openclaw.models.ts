@@ -88,8 +88,6 @@ export const OpenclawExitCode = S.Int.check(S.isBetween({ minimum: 0, maximum: 2
 );
 
 /**
- * Runtime type for {@link OpenclawExitCode}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawExitCode } from "@beep/openclaw/Openclaw.models"
@@ -104,8 +102,6 @@ export const OpenclawExitCode = S.Int.check(S.isBetween({ minimum: 0, maximum: 2
 export type OpenclawExitCode = typeof OpenclawExitCode.Type;
 
 /**
- * Trim-normalized redacted diagnostic text capped at 2000 characters.
- *
  * **Details**
  *
  * Decoding trims surrounding whitespace and truncates oversized text so
@@ -138,8 +134,6 @@ export const OpenclawDiagnosticText = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawDiagnosticText}.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawDiagnosticText } from "@beep/openclaw/Openclaw.models"
@@ -248,8 +242,6 @@ export class OpenclawProcessResult extends S.Opaque<OpenclawProcessResult, { rea
 ) {}
 
 /**
- * Version facts parsed from `openclaw --version` output.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawVersionInfo } from "@beep/openclaw/Openclaw.models"
@@ -309,8 +301,6 @@ export class OpenclawVersionInfo extends S.Opaque<OpenclawVersionInfo, { readonl
 }
 
 /**
- * Successful `openclaw config validate` outcome.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawConfigValid } from "@beep/openclaw/Openclaw.models"
@@ -335,8 +325,6 @@ export class OpenclawConfigValid extends S.Opaque<OpenclawConfigValid, { readonl
 ) {}
 
 /**
- * Failed `openclaw config validate` outcome.
- *
  * **Details**
  *
  * A nonzero validate exit is a decodable result — negative fixtures must be
@@ -395,8 +383,6 @@ export const OpenclawConfigValidation = S.Union([OpenclawConfigValid, OpenclawCo
 );
 
 /**
- * Runtime type for {@link OpenclawConfigValidation}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawConfigValidation } from "@beep/openclaw/Openclaw.models"
@@ -446,8 +432,6 @@ export class OpenclawDoctorReport extends S.Opaque<OpenclawDoctorReport, { reado
 ) {}
 
 /**
- * Wire projection of successful `openclaw secrets reload --json` stdout.
- *
  * **Details**
  *
  * The pinned binary prints exactly `{ "ok": true, "warningCount": 0 }` on
@@ -487,8 +471,6 @@ export class OpenclawSecretsReloadOutput extends S.Opaque<
 ) {}
 
 /**
- * Successful secrets reload outcome.
- *
  * **Example** (Usage)
  * ```ts
  * import * as S from "effect/Schema"
@@ -578,8 +560,6 @@ export const OpenclawSecretsReload = S.Union([OpenclawSecretsReloaded, OpenclawS
 );
 
 /**
- * Runtime type for {@link OpenclawSecretsReload}.
- *
  * **Example** (Usage)
  * ```ts
  * import * as S from "effect/Schema"
@@ -640,8 +620,6 @@ export class OpenclawChannelHealth extends S.Opaque<OpenclawChannelHealth, { rea
 const openclawGatewayHealthChannelsDefault = R.empty();
 const openclawGatewayHealthPluginsLoadedDefault = A.empty();
 /**
- * Normalized projection of `openclaw gateway call health --json`.
- *
  * **Example** (Usage)
  * ```ts
  * import * as S from "effect/Schema"
@@ -690,8 +668,6 @@ export class OpenclawGatewayHealth extends S.Opaque<OpenclawGatewayHealth, { rea
 ) {}
 
 /**
- * Per-account status projected from `openclaw channels status --probe --json`.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawChannelAccountStatus } from "@beep/openclaw/Openclaw.models"
@@ -989,8 +965,6 @@ export class OpenclawLocalModels extends S.Opaque<OpenclawLocalModels, { readonl
 ) {}
 
 /**
- * Acceptance sequence step names.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
@@ -1010,8 +984,6 @@ export const OpenclawLiveAcceptanceStep = OpenclawLiveAcceptanceStepBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawLiveAcceptanceStep}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawLiveAcceptanceStep } from "@beep/openclaw"
@@ -1197,8 +1169,6 @@ export const OpenclawLiveAcceptanceResult = S.Union([OpenclawLiveAcceptancePasse
 );
 
 /**
- * Runtime type for {@link OpenclawLiveAcceptanceResult}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawLiveAcceptanceResult } from "@beep/openclaw"
@@ -1311,8 +1281,6 @@ export const OpenclawSystemdActiveState = OpenclawSystemdActiveStateBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawSystemdActiveState}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawSystemdActiveState } from "@beep/openclaw/Openclaw.models"
@@ -1327,8 +1295,6 @@ export const OpenclawSystemdActiveState = OpenclawSystemdActiveStateBase.pipe(
 export type OpenclawSystemdActiveState = typeof OpenclawSystemdActiveState.Type;
 
 /**
- * Unit facts parsed from `systemctl --user show` key/value output.
- *
  * **Details**
  *
  * `activeState` keeps the raw reported string; {@link OpenclawSystemdUnitState.knownActiveState}
@@ -1398,8 +1364,6 @@ export const OpenclawHttpProbeStatus = OpenclawHttpProbeStatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawHttpProbeStatus}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawHttpProbeStatus } from "@beep/openclaw/Openclaw.models"
@@ -1414,8 +1378,6 @@ export const OpenclawHttpProbeStatus = OpenclawHttpProbeStatusBase.pipe(
 export type OpenclawHttpProbeStatus = typeof OpenclawHttpProbeStatus.Type;
 
 /**
- * Result of probing a gateway HTTP endpoint.
- *
  * **Details**
  *
  * Any 2xx response is `healthy`; transport failures and timeouts collapse to
@@ -1456,8 +1418,6 @@ export class OpenclawHttpProbe extends S.Opaque<OpenclawHttpProbe, { readonly br
 ) {}
 
 /**
- * Reasons a declared extension surface is considered lossy in a schema export.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawSchemaPlaceholderReason } from "@beep/openclaw/Openclaw.models"
@@ -1476,8 +1436,6 @@ export const OpenclawSchemaPlaceholderReason = OpenclawSchemaPlaceholderReasonBa
 );
 
 /**
- * Runtime type for {@link OpenclawSchemaPlaceholderReason}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawSchemaPlaceholderReason } from "@beep/openclaw/Openclaw.models"

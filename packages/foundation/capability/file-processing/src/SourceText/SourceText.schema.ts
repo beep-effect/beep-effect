@@ -82,8 +82,6 @@ export const UTF8_SOURCE_TEXT_EXTRACTOR_NAME = "utf8";
 export const UTF8_SOURCE_TEXT_EXTRACTOR_VERSION = "1";
 
 /**
- * Request to resolve the complete canonical text pinned by a provenance identity.
- *
  * **Example** (Inspect identity field)
  *
  * ```ts
@@ -199,8 +197,6 @@ const SourceTextPageChecks = S.makeFilterGroup([
 const SourceTextPageSchema = SourceTextPageFieldsSchema.check(SourceTextPageChecks);
 
 /**
- * Bounded, surrogate-safe page from a complete canonical source.
- *
  * **Details**
  *
  * Offsets are absolute half-open UTF-16 code-unit offsets into the complete

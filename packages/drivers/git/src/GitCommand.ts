@@ -661,8 +661,6 @@ const log = (
   ]);
 
 /**
- * Which configuration file a read is scoped to.
- *
  * **Gotchas**
  *
  * Omitted, git reads the MERGED configuration — repository-local plus global
@@ -692,8 +690,6 @@ export const GitConfigScope = LiteralKit(["local", "global", "system", "worktree
   $I.annoteSchema("GitConfigScope", { description: "Which Git configuration file a read is scoped to." })
 );
 /**
- * Selects the configuration file used by scoped configuration reads.
- *
  * @see {@link GitConfigScope} for the runtime schema of accepted scope names.
  * @category type-level
  * @since 0.0.0
@@ -735,8 +731,6 @@ export const StatusUntrackedFiles = LiteralKit(["all", "normal", "no"]).pipe(
   $I.annoteSchema("StatusUntrackedFiles", { description: "How `git status` reports untracked paths." })
 );
 /**
- * Selects how `git status` reports untracked paths.
- *
  * @see {@link StatusUntrackedFiles} for the runtime schema of accepted modes.
  * @category type-level
  * @since 0.0.0
@@ -769,8 +763,6 @@ export const StatusIgnoreSubmodules = LiteralKit(["none", "untracked", "dirty", 
   })
 );
 /**
- * Selects which submodule changes `git status` or a `git diff` path list ignores.
- *
  * @see {@link StatusIgnoreSubmodules} for the runtime schema of accepted modes.
  * @category type-level
  * @since 0.0.0

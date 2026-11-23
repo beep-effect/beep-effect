@@ -77,8 +77,6 @@ export const TextKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link TextKind}.
- *
  * **Example** (Assign Sentence kind value)
  *
  * ```ts

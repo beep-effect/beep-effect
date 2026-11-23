@@ -30,8 +30,6 @@ import { GitHubRateLimitResource } from "./Resilience.ts";
 const $I = $GithubId.create("GitHubError");
 
 /**
- * Why a GitHub call failed, as a value you can branch on.
- *
  * **Details**
  *
  * Branch on this discriminant instead of string-matching an error message:
@@ -69,8 +67,6 @@ export const GitHubErrorKind = LiteralKit([
 ]).pipe($I.annoteSchema("GitHubErrorKind", { description: "Why a GitHub call failed, as a value you can branch on." }));
 
 /**
- * The values accepted by {@link GitHubErrorKind}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -78,8 +74,6 @@ export const GitHubErrorKind = LiteralKit([
 export type GitHubErrorKind = typeof GitHubErrorKind.Type;
 
 /**
- * The validation codes GitHub documents for a 422's `errors[].code`.
- *
  * **Details**
  *
  * The complete documented set. Only `already_exists` earns its own
@@ -125,8 +119,6 @@ export const GitHubValidationCode = LiteralKit([
 );
 
 /**
- * The values accepted by {@link GitHubValidationCode}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -134,8 +126,6 @@ export const GitHubValidationCode = LiteralKit([
 export type GitHubValidationCode = typeof GitHubValidationCode.Type;
 
 /**
- * One entry from a failed response's `data.errors` array, as GitHub sent it.
- *
  * **Details**
  *
  * Every field is optional because GitHub's entries vary by endpoint: the
@@ -188,8 +178,6 @@ export class GitHubValidationEntry extends S.Opaque<GitHubValidationEntry, { rea
 ) {}
 
 /**
- * Every REST failure this package produces, from every resource.
- *
  * **Details**
  *
  * One error class, not one per resource: {@link GitHubErrorKind} routes and

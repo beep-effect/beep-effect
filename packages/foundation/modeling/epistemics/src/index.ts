@@ -24,8 +24,6 @@
  */
 export * from "./Claim/index.ts";
 /**
- * Claim disposition status value exports.
- *
  * **Example** (Log rejected disposition status)
  *
  * ```ts
@@ -60,8 +58,6 @@ export * from "./ClaimDispositionStatus/index.ts";
  */
 export * from "./ClaimEvidenceReview/index.ts";
 /**
- * Claim gate verdict value exports.
- *
  * **Example** (Decode gate severity value)
  *
  * ```ts
@@ -141,8 +137,6 @@ export * from "./ContradictionDetection/index.ts";
  */
 export * from "./EdgeEndpoint/index.ts";
 /**
- * Edge relation vocabulary exports.
- *
  * **Example** (Log supports edge relation)
  *
  * ```ts
@@ -156,8 +150,6 @@ export * from "./EdgeEndpoint/index.ts";
  */
 export * from "./EdgeRelation/index.ts";
 /**
- * Evidence span value exports.
- *
  * **Example** (Decode confidence value)
  *
  * ```ts
@@ -234,8 +226,6 @@ export * from "./KnowledgeInterval/index.ts";
  */
 export * from "./LogicalEdgeIdentity/index.ts";
 /**
- * Valid-time interval exports.
- *
  * **Example** (Check whether a fact holds)
  *
  * ```ts

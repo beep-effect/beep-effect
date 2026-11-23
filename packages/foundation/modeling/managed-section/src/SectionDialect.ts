@@ -24,8 +24,6 @@ import type { Section, SectionId } from "./Section.ts";
 const $I = $ManagedSectionId.create("SectionDialect");
 
 /**
- * The line ending a document uses.
- *
  * **Example** (Accepted line endings)
  *
  * ```ts
@@ -44,16 +42,12 @@ export const Eol = LiteralKit(["\n", "\r\n"]).pipe(
   $I.annoteSchema("Eol", { description: "The LF or CRLF line ending used by a document." })
 );
 /**
- * The LF or CRLF literal accepted by the {@link Eol} schema.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type Eol = typeof Eol.Type;
 
 /**
- * Raised when a section cannot be turned into marker-delimited text.
- *
  * **Details**
  *
  * These reasons describe a document this package would be unable to read back
@@ -382,8 +376,6 @@ const MarkerText = S.String.check(
 const canonicalText = (text: string): string => Str.replace(/ +/g, " ")(text);
 
 /**
- * A fixed BEGIN/END marker spelling for one section key.
- *
  * **Details**
  *
  * Some documents carry markers written before this package existed, such as
@@ -506,9 +498,6 @@ const compileLiteralMatchers = (
 };
 
 /**
- * The marker vocabulary: what phrase delimits a managed section, and which
- * comment styles a document is scanned for.
- *
  * **Details**
  *
  * `styles` exists because reconciliation must **recognize sections it does
@@ -978,8 +967,6 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
 }
 
 /**
- * A dialect that adds fixed marker spellings for individual keys.
- *
  * **Details**
  *
  * Every key listed in `markers` is rendered and scanned with its literal

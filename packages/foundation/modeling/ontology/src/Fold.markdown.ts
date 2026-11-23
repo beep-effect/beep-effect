@@ -31,8 +31,6 @@ import type {
 const $I = $OntologyId.create("Fold/markdown");
 
 /**
- * Link rendering modes for the Markdown projection.
- *
  * **Example** (Guard a link mode literal)
  *
  * ```ts import.meta.vitest name="Guard a link mode literal"
@@ -52,8 +50,6 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
 );
 
 /**
- * Runtime type for {@link MarkdownLinkMode}.
- *
  * **Example** (Annotate a link mode value)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
 export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
 
 /**
- * Normalized options accepted by {@link toMarkdown}.
- *
  * **Example** (Construct portable link options)
  *
  * ```ts

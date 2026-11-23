@@ -103,8 +103,6 @@ export class JsoncModificationError extends S.TaggedError<JsoncModificationError
 }
 
 /**
- * Options for `JsoncModifier.modify`: formatting controls for generated text.
- *
  * **Details**
  *
  * `formattingOptions` accepts a {@link JsoncFormattingOptions} instance or a
@@ -137,8 +135,6 @@ export class JsoncModifyOptions extends S.Opaque<JsoncModifyOptions, { readonly 
 ) {}
 
 /**
- * Companion types for {@link JsoncModifyOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -237,8 +233,6 @@ export class JsoncPlacementError extends S.TaggedError<JsoncPlacementError, { re
 }
 
 /**
- * Options for `JsoncModifier.modifyWithFormatting`.
- *
  * **Details**
  *
  * - `formattingOptions`: when present, the edit is followed by a format pass
@@ -283,8 +277,6 @@ export class JsoncFormattedModifyOptions extends S.Opaque<
 ) {}
 
 /**
- * Encoded companion types for {@link JsoncFormattedModifyOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

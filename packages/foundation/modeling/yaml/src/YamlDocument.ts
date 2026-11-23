@@ -40,11 +40,6 @@ const isStringifyDepthExceeded = S.is(StringifyDepthExceeded);
 const $I = $YamlId.create("YamlDocument");
 
 /**
- * A YAML directive appearing before a document (e.g. `%YAML 1.2` or
- * `%TAG ! tag:example.com,2000:`). `"YAML"` and `"TAG"` are the YAML 1.2
- * spec-defined directives; any other name is a reserved directive preserved
- * for round-trip fidelity.
- *
  * **Example** (Construct a YAML version directive)
  *
  * ```ts
@@ -80,11 +75,6 @@ export class YamlDirective extends S.Opaque<YamlDirective, { readonly brand: uni
 ) {}
 
 /**
- * A parsed YAML document: the root {@link (YamlNode:type)} (or `null` when
- * empty), recovered `errors` and `warnings` as {@link YamlDiagnostic} data,
- * the {@link YamlDirective} list, the optional document-level comments and the
- * `---`/`...` framing flags (absent flags read as `false`).
- *
  * **Details**
  *
  * `commentBefore` is a header block sitting AHEAD of a `---` marker; `comment`

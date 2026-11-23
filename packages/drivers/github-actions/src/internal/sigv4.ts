@@ -127,7 +127,6 @@ export declare namespace SigV4Credentials {
 }
 
 /**
- * One request to sign.
  * **Example** (Validate SigV4Request input)
  *
  * ```ts

@@ -24,8 +24,6 @@ const Percent = S.Finite.check(S.isBetween({ minimum: 0, maximum: 100 })).pipe(
 );
 
 /**
- * One policy the run did not meet.
- *
  * **Details**
  *
  * Widens upstream's coverage threshold violations and glob shortfalls
@@ -55,8 +53,6 @@ export const PolicyBreach = S.TaggedUnion({
 );
 
 /**
- * Type of {@link PolicyBreach}.
- *
  * @category models
  * @since 0.0.0
  */

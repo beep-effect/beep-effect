@@ -41,8 +41,6 @@ export const AbsenceReason = LiteralKit(["not-assessed", "unavailable", "not-app
 );
 
 /**
- * Decoded type of {@link AbsenceReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -102,8 +100,6 @@ export const Measurement = S.TaggedUnion({
 }).pipe($I.annoteSchema("Measurement", { description: "Typed measurement; never a blended score." }));
 
 /**
- * Decoded type of {@link Measurement}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -130,8 +126,6 @@ export const BasisDigest = S.String.check(
 ).pipe($I.annoteSchema("BasisDigest", { description: "SHA-256 digest of a sealed evidence basis." }));
 
 /**
- * Decoded type of {@link BasisDigest}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -160,8 +154,6 @@ export const StructuralVerdict = S.TaggedUnion({
 }).pipe($I.annoteSchema("StructuralVerdict", { description: "Shape verdict only." }));
 
 /**
- * Decoded type of {@link StructuralVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -188,8 +180,6 @@ export const ReviewTag = LiteralKit(["Proposed", "Accepted", "Rejected", "Disput
 );
 
 /**
- * Decoded type of {@link ReviewTag}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -230,8 +220,6 @@ export const ValidTime = S.TaggedUnion({
   .pipe($I.annoteSchema("ValidTime", { description: "Valid time: unknown, or a half-open interval." }));
 
 /**
- * Decoded type of {@link ValidTime}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -126,8 +126,6 @@ export const LexicalNodeVersion = S.Literal(1).pipe(
 );
 
 /**
- * Type for {@link LexicalNodeVersion}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -193,8 +191,6 @@ export const TextFormatBit = LiteralKit(A.map(TextFormatBitMapping.Pairs, ([, bi
 );
 
 /**
- * Type for {@link TextFormatBit}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -363,8 +359,6 @@ export const TextDetailBit = LiteralKit(A.map(TextDetailBitMapping.Pairs, ([, bi
 );
 
 /**
- * Type for {@link TextDetailBit}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -448,8 +442,6 @@ export const TextDetailMask = TextDetailMaskBase;
 export type TextDetailMask = typeof TextDetailMask.Type;
 
 /**
- * Non-negative Lexical indentation depth.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -472,8 +464,6 @@ export const LexicalIndentDepth = S.Natural.pipe(
 );
 
 /**
- * Type for {@link LexicalIndentDepth}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -489,8 +479,6 @@ export const LexicalIndentDepth = S.Natural.pipe(
 export type LexicalIndentDepth = typeof LexicalIndentDepth.Type;
 
 /**
- * Lexical table cell header-state bitmask.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -509,8 +497,6 @@ export const TableCellHeaderState = LiteralKit([0, 1, 2, 3]).pipe(
 );
 
 /**
- * Type for {@link TableCellHeaderState}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -550,8 +536,6 @@ export const TableCellSpan = PosInt.pipe(
 );
 
 /**
- * Type for {@link TableCellSpan}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -567,8 +551,6 @@ export const TableCellSpan = PosInt.pipe(
 export type TableCellSpan = typeof TableCellSpan.Type;
 
 /**
- * Non-negative pixel-like table dimension emitted by Lexical table nodes.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -591,8 +573,6 @@ export const TableDimension = S.Natural.pipe(
 );
 
 /**
- * Type for {@link TableDimension}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -608,8 +588,6 @@ export const TableDimension = S.Natural.pipe(
 export type TableDimension = typeof TableDimension.Type;
 
 /**
- * Package-owned artifact reference id used by `artifact-ref` decorator nodes.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -639,8 +617,6 @@ export const ArtifactRefId = S.NonEmptyString.check(
 );
 
 /**
- * Type for {@link ArtifactRefId}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -656,8 +632,6 @@ export const ArtifactRefId = S.NonEmptyString.check(
 export type ArtifactRefId = typeof ArtifactRefId.Type;
 
 /**
- * `ElementFormatType` from lexical.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -677,8 +651,6 @@ export const ElementFormat = LiteralKit(["left", "start", "center", "right", "en
 );
 
 /**
- * Type for {@link ElementFormat}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -694,8 +666,6 @@ export const ElementFormat = LiteralKit(["left", "start", "center", "right", "en
 export type ElementFormat = typeof ElementFormat.Type;
 
 /**
- * Text direction token from lexical.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -714,8 +684,6 @@ export const Direction = LiteralKit(["ltr", "rtl"]).pipe(
 );
 
 /**
- * Type for {@link Direction}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -731,8 +699,6 @@ export const Direction = LiteralKit(["ltr", "rtl"]).pipe(
 export type Direction = typeof Direction.Type;
 
 /**
- * `TextModeType` from lexical.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -751,8 +717,6 @@ export const TextMode = LiteralKit(["normal", "token", "segmented"]).pipe(
 );
 
 /**
- * Type for {@link TextMode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -788,8 +752,6 @@ export const HeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]).pipe(
 );
 
 /**
- * Type for {@link HeadingTag}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -805,8 +767,6 @@ export const HeadingTag = LiteralKit(["h1", "h2", "h3", "h4", "h5", "h6"]).pipe(
 export type HeadingTag = typeof HeadingTag.Type;
 
 /**
- * `ListType` from `@lexical/list`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -825,8 +785,6 @@ export const ListType = LiteralKit(["number", "bullet", "check"]).pipe(
 );
 
 /**
- * Type for {@link ListType}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -842,8 +800,6 @@ export const ListType = LiteralKit(["number", "bullet", "check"]).pipe(
 export type ListType = typeof ListType.Type;
 
 /**
- * `ListNodeTagType` from `@lexical/list`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -862,8 +818,6 @@ export const ListTag = LiteralKit(["ul", "ol"]).pipe(
 );
 
 /**
- * Type for {@link ListTag}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -920,8 +874,6 @@ export const SafeInlineStyle = S.String.pipe(
 );
 
 /**
- * Type for {@link SafeInlineStyle}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -978,8 +930,6 @@ export const SafeStyleValue = S.String.pipe(
 );
 
 /**
- * Type for {@link SafeStyleValue}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1035,8 +985,6 @@ export const SafeUrl = S.String.pipe(
 );
 
 /**
- * Type for {@link SafeUrl}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1089,8 +1037,6 @@ export class BaseNode extends S.Class<BaseNode, {}>($I`BaseNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link BaseNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1205,8 +1151,6 @@ export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link ElementNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1287,8 +1231,6 @@ export class TextBase extends BaseNode.extend<TextBase>($I`TextBase`)(
 ) {}
 
 /**
- * Companion namespace for {@link TextBase}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1336,8 +1278,6 @@ export declare namespace TextBase {
 }
 
 /**
- * Mirrors `SerializedTextNode`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1365,8 +1305,6 @@ export class TextNode extends TextBase.extend<TextNode>($I`TextNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link TextNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1406,8 +1344,6 @@ export declare namespace TextNode {
 }
 
 /**
- * Mirrors `SerializedTabNode`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1440,8 +1376,6 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link TabNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1487,8 +1421,6 @@ export declare namespace TabNode {
 }
 
 /**
- * Mirrors `SerializedLineBreakNode`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1514,8 +1446,6 @@ export class LineBreakNode extends BaseNode.extend<LineBreakNode>($I`LineBreakNo
 ) {}
 
 /**
- * Companion namespace for {@link LineBreakNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1554,8 +1484,6 @@ export declare namespace LineBreakNode {
 }
 
 /**
- * Mirrors `SerializedRootNode`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1578,8 +1506,6 @@ export class RootNode extends ElementNode.extend<RootNode>($I`RootNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link RootNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1618,8 +1544,6 @@ export declare namespace RootNode {
 }
 
 /**
- * Mirrors `SerializedParagraphNode`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1642,8 +1566,6 @@ export class ParagraphNode extends ElementNode.extend<ParagraphNode>($I`Paragrap
 ) {}
 
 /**
- * Companion namespace for {@link ParagraphNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1707,8 +1629,6 @@ export class HeadingNode extends ElementNode.extend<HeadingNode>($I`HeadingNode`
 ) {}
 
 /**
- * Companion namespace for {@link HeadingNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1816,8 +1736,6 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
 }
 
 /**
- * Companion namespace for {@link QuoteNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1885,8 +1803,6 @@ const ListNodeFields = S.Struct({
   );
 
 /**
- * Mirrors `SerializedListNode` from `@lexical/list`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1915,8 +1831,6 @@ export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
 }
 
 /**
- * Companion namespace for {@link ListNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -1964,8 +1878,6 @@ export declare namespace ListNode {
 const ListNodeValueFields = ListNode.mapFields(Struct.omit(["type", "listType", "tag"])).fields;
 
 /**
- * Flat list-node payload variants keyed by their semantic list type.
- *
  * **Details**
  *
  * This additive payload view keeps the existing flat `ListNode` wire and
@@ -2013,8 +1925,6 @@ export const ListNodeValue = ListType.toTaggedUnion("listType")({
 );
 
 /**
- * Runtime payload represented by {@link ListNodeValue}.
- *
  * @see {@link ListNodeValue} for case constructors, guards, and exhaustive matching.
  * @category models
  * @since 0.0.0
@@ -2062,8 +1972,6 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
 }
 
 /**
- * Companion namespace for {@link ListItemNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2107,8 +2015,6 @@ export declare namespace ListItemNode {
 }
 
 /**
- * Mirrors `SerializedLinkNode` from `@lexical/link`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -2144,8 +2050,6 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link LinkNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2228,8 +2132,6 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link CodeNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2310,8 +2212,6 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
 ) {}
 
 /**
- * Companion namespace for {@link ArtifactRefNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2396,8 +2296,6 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link YouTubeNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2441,8 +2339,6 @@ export declare namespace YouTubeNode {
 }
 
 /**
- * Serialized table cell node from `@lexical/table`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -2505,8 +2401,6 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
 }
 
 /**
- * Companion namespace for {@link TableCellNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2558,8 +2452,6 @@ export declare namespace TableCellNode {
 }
 
 /**
- * Serialized table row node from `@lexical/table`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -2595,8 +2487,6 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
 }
 
 /**
- * Companion namespace for {@link TableRowNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2637,8 +2527,6 @@ export declare namespace TableRowNode {
 }
 
 /**
- * Serialized table node from `@lexical/table`.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -2681,8 +2569,6 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
 ) {}
 
 /**
- * Companion namespace for {@link TableNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2795,8 +2681,6 @@ export const LexicalNode = pipe(
 );
 
 /**
- * Decoded type of the strict v1 serialized Lexical node union.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2812,8 +2696,6 @@ export const LexicalNode = pipe(
 export type LexicalNode = typeof LexicalNode.Type;
 
 /**
- * Companion namespace for {@link LexicalNode}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -2969,8 +2851,6 @@ export class SerializedEditorState extends S.Class<SerializedEditorState, {}>($I
 }
 
 /**
- * Companion namespace for {@link SerializedEditorState}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -3017,8 +2897,6 @@ export declare namespace SerializedEditorState {
 }
 
 /**
- * JSON-only wire node that retains unknown node types, versions, and fields.
- *
  * **Details**
  *
  * This is a persistence and migration shape, not a render-safe semantic node.
@@ -3058,8 +2936,6 @@ export const LexicalNodeWire = S.StructWithRest(
 );
 
 /**
- * Runtime type for {@link LexicalNodeWire}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -3075,8 +2951,6 @@ export const LexicalNodeWire = S.StructWithRest(
 export type LexicalNodeWire = typeof LexicalNodeWire.Type;
 
 /**
- * Companion opaque JSON types for {@link LexicalNodeWire}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -3108,8 +2982,6 @@ export declare namespace LexicalNodeWire {
 }
 
 /**
- * Lossless JSON-only editor-state envelope.
- *
  * **Details**
  *
  * This is deliberately an open `StructWithRest`, not a class model. Both the
@@ -3153,8 +3025,6 @@ export const SerializedEditorStateWire = S.StructWithRest(
 );
 
 /**
- * Runtime type for {@link SerializedEditorStateWire}.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -3170,8 +3040,6 @@ export const SerializedEditorStateWire = S.StructWithRest(
 export type SerializedEditorStateWire = typeof SerializedEditorStateWire.Type;
 
 /**
- * Lossless editor-state wire codec over a JSON string.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts
@@ -3226,8 +3094,6 @@ export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError, { read
 ) {}
 
 /**
- * Reason a lossless wire payload cannot be used as a strict semantic state.
- *
  * **Example** (Use the lexical model)
  *
  * ```ts

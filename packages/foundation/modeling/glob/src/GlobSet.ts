@@ -128,9 +128,6 @@ const classifyPattern = (builder: ClassifiedBuilder, pattern: string): void => {
 };
 
 /**
- * A compiled multi-pattern include/exclude set: `matches(candidate)` is true
- * when some include accepts it and no exclude does.
- *
  * **Details**
  *
  * One encoded field, `patterns` — the source text of every member, preserved

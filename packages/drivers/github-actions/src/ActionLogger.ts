@@ -269,8 +269,6 @@ export declare namespace WithBufferOptions {
 }
 
 /**
- * Options for {@link ActionLoggerShape.withStep}.
- *
  * **Example** (Validate WithStepOptions input)
  *
  * ```ts

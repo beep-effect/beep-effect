@@ -46,8 +46,6 @@ export const TextOffsetUnit = LiteralKit(["unicode-code-point", "utf16-code-unit
 );
 
 /**
- * Type for {@link TextOffsetUnit}.
- *
  * **Example** (Annotate offset unit type)
  *
  * ```ts
@@ -90,8 +88,6 @@ const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity).check
 );
 
 /**
- * Half-open incoming offset range with an explicit unit.
- *
  * **Example** (Create half-open offset range)
  *
  * ```ts
@@ -152,8 +148,6 @@ const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity).check(
 );
 
 /**
- * Canonical half-open UTF-16 code-unit range.
- *
  * **Example** (Create UTF-16 text range)
  *
  * ```ts import.meta.vitest name="Create UTF-16 text range"
@@ -190,8 +184,6 @@ export class Utf16TextRange extends S.Class<Utf16TextRange, { readonly brand: un
 ) {}
 
 /**
- * One raw source chunk at an explicit global UTF-16 offset.
- *
  * **Details**
  *
  * Separators are part of `text`; reconstruction never inserts one.
@@ -249,8 +241,6 @@ export const VerifiedSpanAttemptId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptId}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -309,8 +299,6 @@ export const VerifiedSpanAttemptKind = LiteralKit(["verification", "re-anchor"])
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -337,8 +325,6 @@ export const VerifiedSpanAttemptFailureStage = LiteralKit(["source", "location",
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptFailureStage}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -366,8 +352,6 @@ export const VerifiedSpanAttemptFailureReason = S.Union([VerifiedSpanErrorReason
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptFailureReason}.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -547,8 +531,6 @@ export const VerifiedSpanAttemptOutcome = VerifiedSpanAttemptOutcomeStatus.mapMe
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptOutcome}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-22",
+  "generatedOn": "2026-11-23",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -277,7 +277,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 349,
+      "line": 335,
       "owner": "@beep/freshbooks",
       "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
     },
@@ -287,7 +287,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 297,
+      "line": 283,
       "owner": "@beep/freshbooks",
       "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
     },
@@ -307,7 +307,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 99,
+      "line": 93,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -317,7 +317,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 210,
+      "line": 204,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -1075,7 +1075,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 60,
+      "line": 58,
       "owner": "@beep/schema-org",
       "reason": "External protocol: schema.org `email` is a Text property, and node values are copied verbatim from upstream metadata (package manifests, author records) that may carry `mailto:` URIs or non-strict addresses; a strict email schema would reject valid JSON-LD. Surfaced, not introduced, by the exact-optional-keys migration (the detector did not read the previous `S.optional` spelling)."
     },

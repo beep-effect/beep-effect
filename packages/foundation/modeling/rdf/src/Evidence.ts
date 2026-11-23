@@ -16,8 +16,6 @@ import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 const $I = $RdfId.create("evidence");
 
 /**
- * Evidence selector discriminator.
- *
  * **Example** (Validating selector kind values)
  *
  * ```ts import.meta.vitest name="Validating selector kind values"
@@ -38,8 +36,6 @@ export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "
 );
 
 /**
- * Type for {@link EvidenceSelectorKind}.
- *
  * **Example** (Accepting typed selector kind)
  *
  * ```ts
@@ -55,8 +51,6 @@ export const EvidenceSelectorKind = LiteralKit(["text-quote", "text-position", "
 export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
 
 /**
- * Text-quote selector for evidence anchors.
- *
  * **Example** (Decoding text-quote selector)
  *
  * ```ts import.meta.vitest name="Decoding text-quote selector"
@@ -100,8 +94,6 @@ export class TextQuoteSelector extends S.Opaque<TextQuoteSelector, { readonly br
 ) {}
 
 /**
- * Text-position selector for evidence anchors.
- *
  * **Example** (Decoding text-position selector)
  *
  * ```ts import.meta.vitest name="Decoding text-position selector"
@@ -143,8 +135,6 @@ export class TextPositionSelector extends S.Opaque<TextPositionSelector, { reado
 ) {}
 
 /**
- * Fragment selector for evidence anchors.
- *
  * **Example** (Decoding fragment selector)
  *
  * ```ts import.meta.vitest name="Decoding fragment selector"
@@ -183,8 +173,6 @@ export class FragmentSelector extends S.Opaque<FragmentSelector, { readonly bran
 ) {}
 
 /**
- * Evidence selector union.
- *
  * **Example** (Decoding selector union)
  *
  * ```ts import.meta.vitest name="Decoding selector union"
@@ -209,8 +197,6 @@ export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector
 );
 
 /**
- * Type for {@link EvidenceSelector}.
- *
  * **Example** (Accepting typed evidence selector)
  *
  * ```ts
@@ -226,8 +212,6 @@ export const EvidenceSelector = S.Union([TextQuoteSelector, TextPositionSelector
 export type EvidenceSelector = typeof EvidenceSelector.Type;
 
 /**
- * Target resource plus selector pair referenced by an evidence anchor.
- *
  * **Example** (Decoding target with selector)
  *
  * ```ts import.meta.vitest name="Decoding target with selector"
@@ -265,8 +249,6 @@ export class EvidenceTarget extends S.Opaque<EvidenceTarget, { readonly brand: u
 ) {}
 
 /**
- * Evidence anchor value referenced from provenance and verification services.
- *
  * **Example** (Decoding evidence anchor)
  *
  * ```ts import.meta.vitest name="Decoding evidence anchor"
@@ -310,8 +292,6 @@ export class EvidenceAnchor extends S.Opaque<EvidenceAnchor, { readonly brand: u
 ) {}
 
 /**
- * Bounded evidence projection.
- *
  * **Example** (Decoding bounded projection)
  *
  * ```ts import.meta.vitest name="Decoding bounded projection"

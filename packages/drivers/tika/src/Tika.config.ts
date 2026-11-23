@@ -162,8 +162,6 @@ export const BEEP_TIKA_MAX_OUTPUT_BYTES_ENV = "BEEP_TIKA_MAX_OUTPUT_BYTES";
 const tikaServerEngineConfigBaseUrlDefault = URLStr.make(TIKA_SERVER_URL);
 const tikaServerEngineConfigTimeoutMillisDefault = PosInt.make(defaultTimeoutMillis);
 /**
- * Configuration for the Tika Server HTTP engine.
- *
  * **Details**
  *
  * `maxOutputBytes` is the driver-level ceiling on the Tika Server response

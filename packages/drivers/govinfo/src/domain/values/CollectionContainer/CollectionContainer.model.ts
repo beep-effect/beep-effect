@@ -11,8 +11,6 @@ import { PackageInfo } from "../PackageInfo/index.ts";
 const $I = $GovinfoId.create("domain/values/CollectionContainer/CollectionContainer.model");
 
 /**
- * Paginated GovInfo collection response containing package summaries.
- *
  * **Details**
  *
  * GovInfo collection traversal starts with `offsetMark=*`; subsequent cursors

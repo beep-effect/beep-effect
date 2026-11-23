@@ -57,8 +57,6 @@ const $I = $FreshbooksId.create("Freshbooks.token");
 export const FRESHBOOKS_TOKEN_SKEW_MILLIS = 60_000;
 
 /**
- * Decoded FreshBooks OAuth token endpoint response.
- *
  * **Example** (Decode token response)
  *
  * ```ts

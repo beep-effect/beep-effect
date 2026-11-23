@@ -686,8 +686,6 @@ export const CurieFromIri = S.String.pipe(
 );
 
 /**
- * Decoded type of {@link CurieFromIri}: a live term IRI.
- *
  * @category models
  * @since 0.0.0
  */

@@ -59,8 +59,6 @@ import type * as React from "react";
 
 const $I = $UiId.create("themes/theme-provider");
 /**
- * Theme mode export.
- *
  * **Example** (Import ThemeMode value)
  *
  * ```tsx
@@ -79,8 +77,6 @@ export const ThemeMode = LiteralKit(["light", "dark", "system"]).pipe(
 );
 
 /**
- * Type of {@link ThemeMode}.
- *
  * **Example** (Assign system ThemeMode)
  *
  * ```ts
@@ -97,8 +93,6 @@ export const ThemeMode = LiteralKit(["light", "dark", "system"]).pipe(
 export type ThemeMode = typeof ThemeMode.Type;
 
 /**
- * Resolved theme mode export.
- *
  * **Example** (Import ResolvedThemeMode value)
  *
  * ```tsx
@@ -117,8 +111,6 @@ export const ResolvedThemeMode = ThemeMode.pick(["light", "dark"]).pipe(
 );
 
 /**
- * Type of {@link ResolvedThemeMode}.
- *
  * **Example** (Assign dark ResolvedThemeMode)
  *
  * ```ts

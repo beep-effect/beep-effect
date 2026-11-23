@@ -21,8 +21,6 @@ import * as S from "effect/Schema";
 const $I = $ApiTransportId.create("EgressDenied");
 
 /**
- * A governed egress boundary refused the request's destination.
- *
  * **Details**
  *
  * Deliberately field-free: the denial reason is recorded by the policy that

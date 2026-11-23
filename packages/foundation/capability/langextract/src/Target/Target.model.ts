@@ -33,7 +33,6 @@ export const ExtractionTargetKind = LiteralKit(["entity", "relation", "attribute
 );
 
 /**
- * {@inheritDoc ExtractionTargetKind}
  * @category models
  * @since 0.0.0
  */

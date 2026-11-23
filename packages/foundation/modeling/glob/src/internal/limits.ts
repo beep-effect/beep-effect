@@ -155,16 +155,12 @@ export const GuardReason = LiteralKit(["PatternTooLong", "ExpansionBudgetExceede
   })
 );
 /**
- * Identifies a pattern-length, brace-expansion-budget or nesting-depth guard failure.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GuardReason = typeof GuardReason.Type;
 
 /**
- * A finite guard measurement or positive infinity from expansion overflow.
- *
  * **Example** (Recognizing an overflow measurement)
  *
  * ```ts
@@ -197,8 +193,6 @@ export const GuardMeasurement = S.Union([
   })
 );
 /**
- * Represents a finite guard measurement or positive infinity from expansion overflow.
- *
  * @category type-level
  * @since 0.0.0
  */
