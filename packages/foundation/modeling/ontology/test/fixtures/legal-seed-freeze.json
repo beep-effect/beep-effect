@@ -1,0 +1,245 @@
+{
+  "schemes": [
+    {
+      "scheme": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing",
+      "version": "1.0.0",
+      "concepts": [
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/Deadline",
+          "notation": "Deadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/DocketingEvent",
+          "notation": "DocketingEvent"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/StatutoryDueDate",
+          "notation": "StatutoryDueDate"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/SoftDueDate",
+          "notation": "SoftDueDate"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/OfficeActionResponseDeadline",
+          "notation": "OfficeActionResponseDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/MaintenanceFeeDeadline",
+          "notation": "MaintenanceFeeDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/AnnuityDeadline",
+          "notation": "AnnuityDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/IDSDeadline",
+          "notation": "IDSDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/RCEDueDate",
+          "notation": "RCEDueDate"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/AppealDeadline",
+          "notation": "AppealDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/ContinuationDeadline",
+          "notation": "ContinuationDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/NationalStageDeadline",
+          "notation": "NationalStageDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/StatementOfUseDeadline",
+          "notation": "StatementOfUseDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/Section8Deadline",
+          "notation": "Section8Deadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/Section9RenewalDeadline",
+          "notation": "Section9RenewalDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/Section15DeclarationDeadline",
+          "notation": "Section15DeclarationDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/TrademarkOfficeActionResponseDeadline",
+          "notation": "TrademarkOfficeActionResponseDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/OppositionDeadline",
+          "notation": "OppositionDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/TrademarkRenewalDeadline",
+          "notation": "TrademarkRenewalDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/TrademarkApplicationDeadline",
+          "notation": "TrademarkApplicationDeadline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/DeadlineState",
+          "notation": "DeadlineState"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/OpenDeadlineState",
+          "notation": "OpenDeadlineState"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/ExtendedDeadlineState",
+          "notation": "ExtendedDeadlineState"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/FinalDeadlineState",
+          "notation": "FinalDeadlineState"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/docketing/concept/MissedDeadlineState",
+          "notation": "MissedDeadlineState"
+        }
+      ]
+    },
+    {
+      "scheme": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds",
+      "version": "1.0.0",
+      "concepts": [
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds/concept/Party",
+          "notation": "Party"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds/concept/NaturalPersonParty",
+          "notation": "NaturalPersonParty"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds/concept/OrganizationParty",
+          "notation": "OrganizationParty"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds/concept/LawFirm",
+          "notation": "LawFirm"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds/concept/PatentOffice",
+          "notation": "PatentOffice"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/party-kinds/concept/TrademarkOffice",
+          "notation": "TrademarkOffice"
+        }
+      ]
+    },
+    {
+      "scheme": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles",
+      "version": "1.0.0",
+      "concepts": [
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/InventorRole",
+          "notation": "InventorRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/ApplicantRole",
+          "notation": "ApplicantRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/AssigneeRole",
+          "notation": "AssigneeRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/OwnerRole",
+          "notation": "OwnerRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/ExaminerRole",
+          "notation": "ExaminerRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/AttorneyOfRecordRole",
+          "notation": "AttorneyOfRecordRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/CorrespondentRole",
+          "notation": "CorrespondentRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/ClientContactRole",
+          "notation": "ClientContactRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/SignerRole",
+          "notation": "SignerRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/LicenseeRole",
+          "notation": "LicenseeRole"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/vocabulary/legal-roles/concept/LicensorRole",
+          "notation": "LicensorRole"
+        }
+      ]
+    },
+    {
+      "scheme": "https://beep-effect.com/ns/ontology/semantic-foundation/taxonomy/legal-intake",
+      "concepts": [
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/concept/legal-document"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/concept/correspondence"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/concept/email-message"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/document-class/draft"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/document-class/redline"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/document-class/filed"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/document-class/received"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/document-class/privileged"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/document-class/extracted-child"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/filing-root/local-vault"
+        },
+        {
+          "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/filing-root/box-mirror"
+        }
+      ]
+    }
+  ],
+  "files": {
+    "docketing.jsonld": "acf3f27a56b26c4e7661ca336ab8c3efc9c755583568136d8eae9c1f229c4d34",
+    "docketing.ttl": "34aeffab5ef0f9ff6ec8492ce98d57e0fbf7abf21de8f47ba24c9cd9e6103ffa",
+    "legal-intake.jsonld": "cb7105481fa3e069e0e1dd02266cc176337ca93fefdeb8d74b186c59510eece4",
+    "legal-intake.ttl": "d561ec2903f6c87b6b297919d56bb9b3f86956bc9d6bebb5e72b4421059ee3f0",
+    "party-roles.jsonld": "e7dce855154801cbac90c5a910ecd350b85384fbaeb935b150e98e497c21b286",
+    "party-roles.ttl": "0f51bfc1822cb2ddcf756105877be605a68211a2b2dd38a2deda70509319a436"
+  },
+  "turtleParses": {
+    "docketing.ttl": true,
+    "legal-intake.ttl": false,
+    "party-roles.ttl": true
+  },
+  "legalIntakeParity": {
+    "_tag": "Refused",
+    "message": "Unexpected \"beep:taxonomy/legal-intake\" on line 5."
+  }
+}

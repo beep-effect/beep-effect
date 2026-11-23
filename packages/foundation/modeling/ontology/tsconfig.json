@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../../drivers/n3/tsconfig.json"
+    },
+    {
       "path": "../identity/tsconfig.json"
     },
     {

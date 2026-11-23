@@ -4093,6 +4093,7 @@
         "allow": [
           "@beep/identity",
           "@beep/memfs",
+          "@beep/n3",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
@@ -4103,6 +4104,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/memfs",
+          "@beep/n3",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",

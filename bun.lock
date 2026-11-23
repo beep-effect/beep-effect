@@ -3143,6 +3143,7 @@
       },
       "devDependencies": {
         "@beep/memfs": "workspace:^",
+        "@beep/n3": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
