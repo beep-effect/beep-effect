@@ -85,6 +85,20 @@ export * from "./CiCompileBinary.ts";
  */
 export * from "./CiEventBase.ts";
 /**
+ * `beep ci failures`: each failed job's verdict and failures by run or PR.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiFailures.ts";
+/**
+ * The reader of a hosted job's feed artifact: its task-outcome record and gate records.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiFeedArtifact.ts";
+/**
  * The CI projection of gate reports: step summary, grouped log and annotations.
  *
  * @category cli-commands
@@ -98,6 +112,13 @@ export * from "./CiGateProjection.ts";
  * @since 0.0.0
  */
 export * from "./CiGovernance.ts";
+/**
+ * The CI-job adapter: a workflow run read as a gate report.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiJobAdapter.ts";
 /**
  * Public CI lane definitions export.
  *
@@ -119,6 +140,13 @@ export * from "./CiLaneJobs.ts";
  * @since 0.0.0
  */
 export * from "./CiLanePartitions.ts";
+/**
+ * The main feed lookup: main's newest gate reports at a merge base.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiMainFeed.ts";
 /**
  * Operational CI schemas and platform service.
  *

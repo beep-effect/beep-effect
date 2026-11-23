@@ -159,8 +159,6 @@ export type RawExpression =
   | { readonly kind: "and"; readonly left: RawExpression; readonly right: RawExpression }
   | { readonly kind: "or"; readonly left: RawExpression; readonly right: RawExpression };
 
-// ── Scanner ─────────────────────────────────────────────────────────────
-
 // Token kinds as plain numeric constants — `const enum` is disallowed under
 // `isolatedModules`, and a runtime `enum` would leak into the emit.
 const TOKEN_OPEN_PAREN = 0;
@@ -278,8 +276,6 @@ function keywordType(upper: string): TokenType {
   return TOKEN_ID;
 }
 
-// ── Parser ──────────────────────────────────────────────────────────────
-
 // The recursive-descent engine; `undefined` is its internal rejection signal,
 // lifted to `Option` at the exported boundary by {@link parse}.
 function parseOrUndefined(input: string): RawExpression | undefined {
@@ -298,7 +294,7 @@ function parseOrUndefined(input: string): RawExpression | undefined {
       const left = parseAnd();
       if (left === undefined) return undefined;
       if (peek()?.type !== TOKEN_OR) return left;
-      pos++; // consume OR
+      pos++;
       const right = parseOr();
       if (right === undefined) return undefined;
       return { kind: "or", left, right };
@@ -314,7 +310,7 @@ function parseOrUndefined(input: string): RawExpression | undefined {
       const left = parseAtom();
       if (left === undefined) return undefined;
       if (peek()?.type !== TOKEN_AND) return left;
-      pos++; // consume AND
+      pos++;
       const right = parseAnd();
       if (right === undefined) return undefined;
       return { kind: "and", left, right };
@@ -328,11 +324,11 @@ function parseOrUndefined(input: string): RawExpression | undefined {
     depth++;
     try {
       if (peek()?.type === TOKEN_OPEN_PAREN) {
-        pos++; // consume (
+        pos++;
         const inner = parseOr();
         if (inner === undefined) return undefined;
         if (peek()?.type !== TOKEN_CLOSE_PAREN) return undefined;
-        pos++; // consume )
+        pos++;
         return inner;
       }
       return parseLicenseLike();
@@ -367,7 +363,7 @@ function parseOrUndefined(input: string): RawExpression | undefined {
   function parseDocumentLicenseRef(value: string): RawSimpleLicense | undefined {
     pos++; // consume DocumentRef- idstring
     if (peek()?.type !== TOKEN_COLON) return undefined;
-    pos++; // consume :
+    pos++;
     const refToken = peek();
     if (refToken === undefined || refToken.type !== TOKEN_ID || !Str.startsWith(LICENSE_REF_PREFIX)(refToken.value)) {
       return undefined;
@@ -394,7 +390,7 @@ function parseOrUndefined(input: string): RawExpression | undefined {
     if (!License.isKnownId(value)) return undefined;
     pos++; // consume license id
     const plus = peek()?.type === TOKEN_PLUS;
-    if (plus) pos++; // consume +
+    if (plus) pos++;
     return { kind: "license", id: value, plus };
   }
 

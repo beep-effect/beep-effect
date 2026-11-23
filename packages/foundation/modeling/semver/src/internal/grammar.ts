@@ -94,10 +94,6 @@ const accept = (s: ParserState, ch: string): boolean => {
   return true;
 };
 
-// ---------------------------------------------------------------------------
-// Low-level token parsers
-// ---------------------------------------------------------------------------
-
 // Converts an all-digit token that began at `start` into its numeric value,
 // rejecting leading zeros (except "0" itself) and unsafe integers at `start`.
 const toNumericIdentifier = (s: ParserState, start: number, digits: string): number => {
@@ -154,7 +150,7 @@ const parsePreRelease = (s: ParserState): Array<string | number> => {
   identifiers.push(parsePrereleaseIdentifier(s));
 
   while (!atEnd(s) && peek(s) === ".") {
-    advance(s); // consume '.'
+    advance(s);
     identifiers.push(parsePrereleaseIdentifier(s));
   }
 
@@ -167,16 +163,12 @@ const parseBuild = (s: ParserState): Array<string> => {
   identifiers.push(parseBuildIdentifier(s));
 
   while (!atEnd(s) && peek(s) === ".") {
-    advance(s); // consume '.'
+    advance(s);
     identifiers.push(parseBuildIdentifier(s));
   }
 
   return identifiers;
 };
-
-// ---------------------------------------------------------------------------
-// Version entry point
-// ---------------------------------------------------------------------------
 
 // Parses `major.minor.patch[-prerelease][+build]` and requires the input to be
 // fully consumed; shared by the version and comparator entry points.
@@ -186,32 +178,29 @@ const parseVersionBody = (s: ParserState): VersionParts => {
   if (peek(s) !== ".") {
     return fail(s);
   }
-  advance(s); // consume '.'
+  advance(s);
 
   const minor = parseNumericIdentifier(s);
 
   if (peek(s) !== ".") {
     return fail(s);
   }
-  advance(s); // consume '.'
+  advance(s);
 
   const patch = parseNumericIdentifier(s);
 
-  // Optional prerelease
   let prerelease: Array<string | number> = [];
   if (!atEnd(s) && peek(s) === "-") {
-    advance(s); // consume '-'
+    advance(s);
     prerelease = parsePreRelease(s);
   }
 
-  // Optional build
   let build: Array<string> = [];
   if (!atEnd(s) && peek(s) === "+") {
-    advance(s); // consume '+'
+    advance(s);
     build = parseBuild(s);
   }
 
-  // Verify entire input consumed
   if (!atEnd(s)) {
     return fail(s);
   }
@@ -235,7 +224,6 @@ const runParser = <A>(trimmed: string, core: (s: ParserState) => A): ParseResult
 };
 
 const parseVersionCore = (s: ParserState): VersionParts => {
-  // Reject v/V prefix and = prefix
   const first = peek(s);
   if (first === "v" || first === "V" || first === "=") {
     return fail(s, 0);
@@ -279,10 +267,6 @@ export const parseVersion = (raw: string): ParseResult<VersionParts> => {
 
   return runParser(trimmed, parseVersionCore);
 };
-
-// ---------------------------------------------------------------------------
-// Range parsing
-// ---------------------------------------------------------------------------
 
 const parseXR = (s: ParserState): number | null => {
   const ch = peek(s);
@@ -380,7 +364,6 @@ const parseSimple = (s: ParserState): ReadonlyArray<ComparatorParts> => {
   return parsePrimitive(s);
 };
 
-// At the end of input or at a `||` separator.
 const atRangeEnd = (s: ParserState): boolean => atEnd(s) || isOrSeparator(s);
 
 const parseRangeComparators = (s: ParserState): ReadonlyArray<ComparatorParts> => {
@@ -492,10 +475,6 @@ export const parseRange = (raw: string): ParseResult<ReadonlyArray<ReadonlyArray
   });
 };
 
-// ---------------------------------------------------------------------------
-// Comparator entry point
-// ---------------------------------------------------------------------------
-
 const parseComparatorCore = (s: ParserState): ComparatorParts => {
   const operator = parseOperator(s);
 
@@ -546,10 +525,6 @@ export const parseComparator = (raw: string): ParseResult<ComparatorParts> => {
 
   return runParser(trimmed, parseComparatorCore);
 };
-
-// ---------------------------------------------------------------------------
-// Printers (the encode direction of the FromString schemas)
-// ---------------------------------------------------------------------------
 
 /**
  * Prints a version as `major.minor.patch[-prerelease][+build]`.

@@ -251,7 +251,6 @@ describe("CorepackIntegrityHash.FromSri", () => {
       // The independent oracle: the same hex, derived from the base64 bytes
       // here in the test rather than copied from the fixture.
       assert.strictEqual(converted, `sha512.${NodeBuffer.Buffer.from(sriBase64, "base64").toString("hex")}`);
-      // The result is corepack-form and decodes through the shared schema.
       assert.isTrue(IntegrityHash.isCorepack(converted));
       const value14 = yield* S.decodeEffect(CorepackIntegrityHash)(converted);
       assert.strictEqual(value14, converted);
@@ -307,7 +306,6 @@ describe("CorepackIntegrityHash.FromSri", () => {
         // A valid base64 payload that is not a 64-byte digest (the wide brand
         // accepts this spelling; the bridge must not mint a bad pin from it).
         "sha512-YWJj",
-        // Empty payload.
         "sha512-",
         // A length no base64 output has (remainder 1).
         `sha512-${Str.repeat(85)("A")}`,
@@ -316,7 +314,6 @@ describe("CorepackIntegrityHash.FromSri", () => {
         `sha512-${Str.slice(0, -1)(sriBase64)}`,
         // Interior `=`.
         `sha512-${Str.slice(0, -4)(sriBase64)}=${Str.slice(-4)(sriBase64)}`,
-        // A character outside the alphabet.
         "sha512-ab!c",
         // Non-zero trailing bits: `Qx==` decodes to the same byte as `Qw==`
         // under a lenient decoder but is not the canonical spelling npm emits.

@@ -74,7 +74,6 @@ describe("SectionDocument properties", () => {
       A.every(second.outcomes, (outcome) => outcome._tag === "Unchanged"),
       "every section should be Unchanged on the second pass"
     );
-    // A third pass cannot drift either.
     assert.strictEqual(reconcile(second.text, declared).text, first.text);
     return true;
   });
