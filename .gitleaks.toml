@@ -469,3 +469,21 @@ paths = [
   '''^(?:/repo/)?goals/citation-extraction-engine/ops/export-helper-configurations\.py$''',
 ]
 regexes = ['''^86dac62c3e85b1de5327dcafd03f4ff3e241b1d013bda00542df149c6867c0b7$''']
+
+[[allowlists]]
+description = "Frozen P3 semantica baselines (text-knowledge-stack-rebuild commit 1) carry these six public provider-cache keys, SHA-256 digests of cache-entry requests. They are content addresses, not credentials. Only cacheKey, these exact values, these two immutable fixtures and this detector are excepted."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "match"
+paths = [
+  '''^(?:/repo/)?apps/labs/semantica/test/fixtures/hosted\-batch\-v1\.json$''',
+  '''^(?:/repo/)?apps/labs/semantica/test/fixtures/relation\-preview\-report\-v1\.json$''',
+]
+regexes = [
+  '''^cacheKey"\s*:\s*"4b59be808b1bc422a3828d2d4949cfe5035c09d509673177ec19f04626a9db72"$''',
+  '''^cacheKey"\s*:\s*"6d8f749c57a82ca554be9ced96f5ee8c24fd29fe7d1d15f48390de8c3761bb63"$''',
+  '''^cacheKey"\s*:\s*"fe86b0c598f8a5a8dd3cd213979820116cdc95e343de17959a4afe223b2e1d2e"$''',
+  '''^cacheKey"\s*:\s*"0ac6007d473c64776b6cc3dbba277dd11096fa387b857381a9c98b2ba8c827e9"$''',
+  '''^cacheKey"\s*:\s*"5737b31d6d5095afeb0123f9feb8d6e3197f8a284b94096928abce354a0c2955"$''',
+  '''^cacheKey"\s*:\s*"6bbc2bb81a00c859ba81547fc2b04003671a0e6fd731fa9e4c9dbc6e624d3447"$''',
+]

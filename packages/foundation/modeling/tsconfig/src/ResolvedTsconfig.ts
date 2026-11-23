@@ -46,62 +46,69 @@ const $I = $TsconfigId.create("ResolvedTsconfig");
  */
 const ResolvedTsconfigData = S.StructWithRest(
   S.Struct({
-    /** The own (most-derived) config's path — the last of {@link (ResolvedTsconfig:interface).extendedPaths}. */
     configPath: S.String.pipe(
-      $I.annoteKey("ResolvedTsconfigData.configPath", { description: "The own, most-derived config path." })
+      $I.annoteKey("ResolvedTsconfigData.configPath", {
+        description: "The own, most-derived config path: the last entry of extendedPaths.",
+      })
     ),
-    /** The full resolution chain, base-most first and own config last. */
     extendedPaths: S.Array(S.String).pipe(
-      $I.annoteKey("ResolvedTsconfigData.extendedPaths", { description: "The resolution chain, base-most first." })
+      $I.annoteKey("ResolvedTsconfigData.extendedPaths", {
+        description: "The resolution chain, base-most first and own config last.",
+      })
     ),
-    /** The per-key merged compiler options (derived wins; `paths` replaced wholesale). */
     compilerOptions: S.toType(CompilerOptions).pipe(
-      $I.annoteKey("ResolvedTsconfigData.compilerOptions", { description: "Per-key merged compiler options." })
+      $I.annoteKey("ResolvedTsconfigData.compilerOptions", {
+        description: "Per-key merged compiler options: derived wins and paths is replaced wholesale.",
+      })
     ),
-    /** The resolved `files`, if any config in the chain declared it. */
     files: S.String.pipe(
       S.Array,
       S.optionalKey,
-      $I.annoteKey("ResolvedTsconfigData.files", { description: "Resolved files, when declared." })
+      $I.annoteKey("ResolvedTsconfigData.files", {
+        description: "Resolved files, when any config in the chain declared them.",
+      })
     ),
-    /** The resolved `include`, if any config in the chain declared it. */
     include: S.String.pipe(
       S.Array,
       S.optionalKey,
-      $I.annoteKey("ResolvedTsconfigData.include", { description: "Resolved include entries, when declared." })
+      $I.annoteKey("ResolvedTsconfigData.include", {
+        description: "Resolved include entries, when any config in the chain declared them.",
+      })
     ),
-    /** The resolved `exclude`, if any config in the chain declared it. */
     exclude: S.String.pipe(
       S.Array,
       S.optionalKey,
-      $I.annoteKey("ResolvedTsconfigData.exclude", { description: "Resolved exclude entries, when declared." })
+      $I.annoteKey("ResolvedTsconfigData.exclude", {
+        description: "Resolved exclude entries, when any config in the chain declared them.",
+      })
     ),
-    /** The own config's `references` (never inherited). */
     references: Reference.pipe(
       S.toType,
       S.Array,
       S.optionalKey,
-      $I.annoteKey("ResolvedTsconfigData.references", { description: "The own config's references." })
+      $I.annoteKey("ResolvedTsconfigData.references", { description: "The own config's references, never inherited." })
     ),
-    /** The per-key merged `watchOptions`. */
     watchOptions: WatchOptions.pipe(
       S.toType,
       S.optionalKey,
       $I.annoteKey("ResolvedTsconfigData.watchOptions", { description: "Per-key merged watch options." })
     ),
-    /** The own config's `typeAcquisition` (never inherited). */
     typeAcquisition: TypeAcquisition.pipe(
       S.toType,
       S.optionalKey,
-      $I.annoteKey("ResolvedTsconfigData.typeAcquisition", { description: "The own config's type acquisition." })
+      $I.annoteKey("ResolvedTsconfigData.typeAcquisition", {
+        description: "The own config's type acquisition, never inherited.",
+      })
     ),
-    /** `compileOnSave`, inherited only when own is undefined and the inherited value is truthy. */
     compileOnSave: S.optionalKey(S.Boolean).pipe(
-      $I.annoteKey("ResolvedTsconfigData.compileOnSave", { description: "The inherited or own compile-on-save flag." })
+      $I.annoteKey("ResolvedTsconfigData.compileOnSave", {
+        description: "The own compile-on-save flag, else a truthy inherited one.",
+      })
     ),
-    /** The directory of the config that declared `paths`, against which `paths` values resolve. */
     pathsBase: S.optionalKey(S.String).pipe(
-      $I.annoteKey("ResolvedTsconfigData.pathsBase", { description: "The directory of the config declaring paths." })
+      $I.annoteKey("ResolvedTsconfigData.pathsBase", {
+        description: "The directory of the config declaring paths, against which paths values resolve.",
+      })
     ),
   }),
   [S.Record(S.String, S.Unknown)]
@@ -111,20 +118,14 @@ const ResolvedTsconfigData = S.StructWithRest(
   })
 );
 
-// ── The `${configDir}` template ────────────────────────────────────────
-
 const CONFIG_DIR_TEMPLATE = `\${configDir}`;
 const CONFIG_DIR_TEMPLATE_LOWER = Str.toLowerCase(CONFIG_DIR_TEMPLATE);
 
-/** A value is `${configDir}`-prefixed if its leading token matches case-insensitively. */
-const startsWithConfigDir = (value: string): boolean =>
+const startsWithConfigDirIgnoringCase = (value: string): boolean =>
   Str.toLowerCase(Str.slice(0, CONFIG_DIR_TEMPLATE.length)(value)) === CONFIG_DIR_TEMPLATE_LOWER;
-
-// ── Pure path helpers (forward-slash POSIX convention) ──────────────────────
 
 const normalizeSlashes = (p: string): string => Str.replace(/\\/g, "/")(p);
 
-/** POSIX `dirname` over the normalized path; a rootless path yields `"."`. */
 const dirname = (p: string): string => {
   const norm = normalizeSlashes(p);
   const idx = O.getOrElse(Str.lastIndexOf("/")(norm), constant(-1));
@@ -133,7 +134,6 @@ const dirname = (p: string): string => {
   return Str.slice(0, idx)(norm);
 };
 
-/** POSIX relative path from directory `from` to directory `to`. */
 const relative: {
   (from: string, to: string): string;
   (to: string): (from: string) => string;
@@ -146,18 +146,10 @@ const relative: {
   return A.join(segments, "/");
 });
 
-/** True for POSIX-rooted, Windows-drive-rooted, and UNC paths. */
 const isAbsolutePath = (p: string): boolean =>
   Str.startsWith("/")(p) || Str.startsWith("\\\\")(p) || /^[a-zA-Z]:[\\/]/.test(p);
 
-// ── Safe record rebuilding (untrusted keys) ─────────────────────────────────
-
-/**
- * Rebuild a record, mapping each value, using `R.fromEntries` so an own
- * `__proto__` key is written as data rather than triggering the prototype
- * setter. Preserves every own key (forward tolerance) without pollution.
- */
-const rebuildRecord: {
+const rebuildRecordWritingProtoKeyAsData: {
   <Value>(source: Record<string, Value>, mapValue: (key: string, value: Value) => Value): Record<string, Value>;
   <Value>(mapValue: (key: string, value: Value) => Value): (source: Record<string, Value>) => Record<string, Value>;
 } = dual(
@@ -165,8 +157,6 @@ const rebuildRecord: {
   <Value>(source: Record<string, Value>, mapValue: (key: string, value: Value) => Value): Record<string, Value> =>
     R.fromEntries(A.map(R.toEntries(source), ([key, value]) => [key, mapValue(key, value)] as const))
 );
-
-// ── compilerOptions path surfaces ────────────────────────────────────
 
 const PATH_STRING_KEYS = [
   "outFile",
@@ -183,27 +173,19 @@ const PATH_STRING_KEYS = [
 
 const PATH_LIST_KEYS = ["typeRoots", "rootDirs"] as const;
 
-// Map `transform` over the string entries of a path list; non-string entries
-// pass through untouched (forward tolerance).
 const transformPathList = (value: ReadonlyArray<string>, transform: (value: string) => string): ReadonlyArray<string> =>
   A.map<ReadonlyArray<string>, string>(value, (entry) => (P.isString(entry) ? transform(entry) : entry));
 
-// Map `transform` over the `paths` record's array values; a missing or
-// non-record `paths` value (and any non-array entry) passes through untouched.
 const transformPathsValues = (co: CompilerOptions.Type, transform: (value: string) => string): CompilerOptions.Type =>
   P.isObjectKeyword(co.paths) && !P.isFunction(co.paths)
     ? {
         ...co,
-        paths: rebuildRecord(co.paths, (_key, arr) => (A.isArray(arr) ? transformPathList(arr, transform) : arr)),
+        paths: rebuildRecordWritingProtoKeyAsData(co.paths, (_key, arr) =>
+          A.isArray(arr) ? transformPathList(arr, transform) : arr
+        ),
       }
     : co;
 
-/**
- * Apply `transform` to every path-typed compilerOptions surface: the path
- * strings and path lists, and — when `includePathsValues` — the `paths` record's
- * values (the final `${configDir}` phase substitutes those; the parse phase
- * leaves them verbatim). Non-string values pass through untouched (forward tolerance).
- */
 const transformCompilerOptionPaths: {
   (co: CompilerOptions.Type, transform: (value: string) => string, includePathsValues: boolean): CompilerOptions.Type;
   (
@@ -230,21 +212,17 @@ const transformCompilerOptionPaths: {
   }
 );
 
-// Implementation of ResolvedTsconfig.absolutize; the public contract lives on the static.
 const absolutize: {
   (configDir: string, join: (a: string, b: string) => string): (doc: TsconfigJson.Type) => TsconfigJson.Type;
   (doc: TsconfigJson.Type, configDir: string, join: (a: string, b: string) => string): TsconfigJson.Type;
 } = dual(3, (doc: TsconfigJson.Type, configDir: string, join: (a: string, b: string) => string): TsconfigJson.Type => {
   const co = doc.compilerOptions;
   if (co === undefined) return doc;
-  const absolutizeValue = (value: string): string => (startsWithConfigDir(value) ? value : join(configDir, value));
+  const absolutizeValue = (value: string): string =>
+    startsWithConfigDirIgnoringCase(value) ? value : join(configDir, value);
   return { ...doc, compilerOptions: transformCompilerOptionPaths(co, absolutizeValue, false) };
 });
 
-// ── merge per field ────────────────────────────────────────────────────
-
-// Top-level keys consumed by name from a derived `TsconfigJson.Type` — everything
-// else is passthrough. `extends` is consumed and dropped (never data).
 const DERIVED_CONSUMED_KEYS: HashSet.HashSet<string> = HashSet.fromIterable([
   "compilerOptions",
   "extends",
@@ -257,8 +235,6 @@ const DERIVED_CONSUMED_KEYS: HashSet.HashSet<string> = HashSet.fromIterable([
   "compileOnSave",
 ]);
 
-// Structural keys consumed by name from a base `ResolvedTsconfig` when lifting
-// its passthrough — everything else is its accumulated passthrough.
 const RESOLVED_STRUCTURAL_KEYS: HashSet.HashSet<string> = HashSet.fromIterable([
   "configPath",
   "extendedPaths",
@@ -288,20 +264,14 @@ const extractPassthrough: {
     )
 );
 
-/** Re-root one inherited `files`/`include`/`exclude` entry, exempting absolute and `${configDir}` entries. */
 const rerootEntry: {
   (entry: string, prefix: string): string;
   (prefix: string): (entry: string) => string;
 } = dual(2, (entry: string, prefix: string): string => {
-  if (startsWithConfigDir(entry) || isAbsolutePath(entry)) return entry;
+  if (startsWithConfigDirIgnoringCase(entry) || isAbsolutePath(entry)) return entry;
   return prefix === "" ? entry : `${prefix}/${entry}`;
 });
 
-/**
- * `files`/`include`/`exclude`: the derived (own) config declaring the property
- * wins outright — an own empty array beats an inherited value. Otherwise inherit
- * the base's entries, re-rooted with the relative prefix.
- */
 const mergeFileList: {
   (
     baseList: ReadonlyArray<string> | undefined,
@@ -325,7 +295,6 @@ const mergeFileList: {
   }
 );
 
-/** `watchOptions`: per-key shallow merge (derived wins per key). */
 const mergeWatchOptions: {
   (base: WatchOptions.Type | undefined, derived: WatchOptions.Type | undefined): WatchOptions.Type | undefined;
   (derived: WatchOptions.Type | undefined): (base: WatchOptions.Type | undefined) => WatchOptions.Type | undefined;
@@ -338,7 +307,6 @@ const mergeWatchOptions: {
   }
 );
 
-// Implementation of ResolvedTsconfig.merge; the public contract lives on the static.
 const merge: {
   (derived: TsconfigJson.Type, derivedPath: string): (base: ResolvedTsconfig) => ResolvedTsconfig;
   (base: ResolvedTsconfig, derived: TsconfigJson.Type, derivedPath: string): ResolvedTsconfig;
@@ -346,38 +314,30 @@ const merge: {
   const finalDir = dirname(derivedPath);
   const baseDir = dirname(base.configPath);
 
-  // compilerOptions: per-key shallow assign; `paths` is one key, replaced wholesale.
   const compilerOptions: CompilerOptions.Type = { ...base.compilerOptions, ...derived.compilerOptions };
 
-  // pathsBase moves to the derived config's dir only when it redeclares `paths`;
-  // otherwise the earlier declaring config's dir survives later merges.
   const pathsBase = derived.compilerOptions?.paths !== undefined ? finalDir : base.pathsBase;
 
-  // files/include/exclude: own wins; else inherit re-rooted relative to the declaring config.
   const rerootPrefix = relative(finalDir, baseDir);
   const files = mergeFileList(base.files, derived.files, rerootPrefix);
   const include = mergeFileList(base.include, derived.include, rerootPrefix);
   const exclude = mergeFileList(base.exclude, derived.exclude, rerootPrefix);
 
-  // references / typeAcquisition: never inherited — the own config's values only.
   const references = derived.references;
   const typeAcquisition = derived.typeAcquisition;
 
-  // compileOnSave: own wins; else inherit only a truthy value.
   const compileOnSave =
     derived.compileOnSave !== undefined ? derived.compileOnSave : base.compileOnSave === true ? true : undefined;
 
   const watchOptions = mergeWatchOptions(base.watchOptions, derived.watchOptions);
 
-  // Unknown top-level keys: assign semantics, derived wins per key. Spread first
-  // so a stray passthrough key can never clobber a structural field.
-  const passthrough = {
+  const passthroughSpreadFirstSoStructuralFieldsWin = {
     ...extractPassthrough(base, RESOLVED_STRUCTURAL_KEYS),
     ...extractPassthrough(derived, DERIVED_CONSUMED_KEYS),
   };
 
   return ResolvedTsconfig.make({
-    ...passthrough,
+    ...passthroughSpreadFirstSoStructuralFieldsWin,
     configPath: derivedPath,
     extendedPaths: [...base.extendedPaths, derivedPath],
     compilerOptions,
@@ -391,8 +351,6 @@ const merge: {
     ...O.getSomesStruct({ pathsBase: O.fromUndefinedOr(pathsBase) }),
   });
 });
-
-// ── ${configDir} substitution (final phase) ──────────────────────────────
 
 const substituteWatchExcludes: {
   (wo: WatchOptions.Type | undefined, substitute: (value: string) => string): WatchOptions.Type | undefined;
@@ -410,13 +368,12 @@ const substituteWatchExcludes: {
   }
 );
 
-// Implementation of ResolvedTsconfig.substituteConfigDir; the public contract lives on the static.
 const substituteConfigDir: {
   (finalDir: string): (resolved: ResolvedTsconfig) => ResolvedTsconfig;
   (resolved: ResolvedTsconfig, finalDir: string): ResolvedTsconfig;
 } = dual(2, (resolved: ResolvedTsconfig, finalDir: string): ResolvedTsconfig => {
   const substitute = (value: string): string =>
-    startsWithConfigDir(value) ? finalDir + Str.slice(CONFIG_DIR_TEMPLATE.length)(value) : value;
+    startsWithConfigDirIgnoringCase(value) ? finalDir + Str.slice(CONFIG_DIR_TEMPLATE.length)(value) : value;
 
   const compilerOptions = transformCompilerOptionPaths(resolved.compilerOptions, substitute, true);
   const substituteList = (list: ReadonlyArray<string> | undefined): O.Option<ReadonlyArray<string>> =>

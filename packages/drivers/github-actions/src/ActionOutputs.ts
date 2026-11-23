@@ -25,8 +25,6 @@ import { heredocBlock, isUsableName } from "./internal/runnerFile.ts";
 const $I = $GithubActionsId.create("ActionOutputs");
 
 /**
- * Raised when an action cannot publish an output.
- *
  * **Example** (Identify RunnerFileUnavailableError)
  *
  * ```ts
@@ -84,8 +82,6 @@ export class RunnerFileUnavailableError extends S.TaggedError<
 }
 
 /**
- * Raised when a runner file exists but could not be appended to.
- *
  * **Example** (Identify RunnerFileWriteError)
  *
  * ```ts
@@ -140,8 +136,6 @@ export class RunnerFileWriteError extends S.TaggedError<RunnerFileWriteError, { 
 }
 
 /**
- * Raised when a name would corrupt the runner file's block structure.
- *
  * **Example** (Identify InvalidOutputNameError)
  *
  * ```ts
@@ -200,8 +194,6 @@ export class InvalidOutputNameError extends S.TaggedError<InvalidOutputNameError
 }
 
 /**
- * Raised when a value did not satisfy its schema.
- *
  * **Example** (Identify OutputEncodeError)
  *
  * ```ts
@@ -256,9 +248,6 @@ export class OutputEncodeError extends S.TaggedError<OutputEncodeError, { readon
 }
 
 /**
- * Raised when an output member was called under
- * {@link ActionOutputs.layerDetached}.
- *
  * **Example** (Identify DetachedOutputError)
  *
  * ```ts
@@ -414,8 +403,6 @@ const encodeJson: {
 );
 
 /**
- * One call an {@link ActionOutputs.recording} double observed.
- *
  * **Details**
  *
  * `value` is always the string the runner would have seen: for `setJson` that
@@ -460,8 +447,6 @@ export class RecordedOutput extends S.Opaque<RecordedOutput, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link RecordedOutput}.
- *
  * @category type-level
  * @since 0.0.0
  */

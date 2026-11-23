@@ -122,6 +122,7 @@ const operations: ReadonlyArray<readonly [string, (git: GitModule.GitShape) => E
   ["worktreePrune", (git) => git.worktreePrune(cwd)],
   ["lsFiles", (git) => git.lsFiles(cwd)],
   ["revListCount", (git) => git.revListCount(cwd, "main..HEAD")],
+  ["localOnlyCommitCount", (git) => git.localOnlyCommitCount(cwd)],
   ["mergeTree", (git) => git.mergeTree(cwd, "main", "HEAD")],
   ["updateRef", (git) => git.updateRef(cwd, "refs/archive/x", { create: "HEAD" })],
   ["diffPatch", (git) => git.diffPatch(cwd, { base: "main" })],

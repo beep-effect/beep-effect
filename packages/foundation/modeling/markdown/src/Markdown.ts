@@ -39,13 +39,6 @@ import type { GuardExceeded } from "./internal/carriers.ts";
 const $I = $MarkdownId.create("Markdown");
 
 /**
- * The markdown dialects the parser can be pointed at. `"gfm"` — CommonMark
- * 0.31.2 plus the GitHub extensions (tables, strikethrough, autolink
- * literals, task-list items, footnotes, and the tagfilter's output contract)
- * — is the default; `"commonmark"` opts out of every extension. A dialect is
- * a registry composition in the engine, so widening this union is additive
- * and never changes an existing dialect's behavior.
- *
  * **Example** (Validate a supported grammar)
  *
  * ```ts
@@ -68,8 +61,6 @@ export const MarkdownDialect = RawMarkdownDialect.pipe(
 );
 
 /**
- * The union of all markdown dialect string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -77,9 +68,6 @@ export const MarkdownDialect = RawMarkdownDialect.pipe(
 export type MarkdownDialect = typeof MarkdownDialect.Type;
 
 /**
- * Options controlling parse behavior: `dialect` (omitted, `"gfm"`) and
- * `frontmatter` (omitted, `false` — capture is opt-in).
- *
  * **Details**
  *
  * Frontmatter capture is OFF by default because it changes how a document
@@ -129,8 +117,6 @@ export class MarkdownParseOptions extends S.Opaque<MarkdownParseOptions, { reado
 ) {}
 
 /**
- * Companion types for {@link MarkdownParseOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -146,9 +132,6 @@ export declare namespace MarkdownParseOptions {
 }
 
 /**
- * Parse failure: the {@link MarkdownDiagnostic} describing why the document
- * was rejected.
- *
  * **Details**
  *
  * CommonMark has no syntax errors — every string is a valid document — so
@@ -223,9 +206,6 @@ export class MarkdownParseError extends S.TaggedError<MarkdownParseError, { read
 }
 
 /**
- * Stringify failure: the {@link MarkdownDiagnostic} describing why the tree
- * was refused.
- *
  * **Details**
  *
  * Serialization is total over parser-produced trees — the parser cannot

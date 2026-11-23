@@ -11,9 +11,6 @@ import * as S from "effect/Schema";
 const $I = $CliKitId.create("Cancelled");
 
 /**
- * A person backed out of an interactive prompt: they pressed escape, or the
- * prompt was interrupted.
- *
  * **Details**
  *
  * Exits `130`, the conventional status for a run ended by the user, through

@@ -55,8 +55,6 @@ export const DisplayPath = S.declare<(absolute: string) => string>((value): valu
 ).pipe($I.annoteSchema("DisplayPath", { description: "A callback turning an absolute path into its display form." }));
 
 /**
- * The links service value: a mode and a `target` function.
- *
  * **Example** (Reject a record without a target function)
  *
  * ```ts

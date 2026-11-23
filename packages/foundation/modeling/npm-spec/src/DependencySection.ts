@@ -92,7 +92,6 @@ export const DependencyField = LiteralKit([
  */
 export type DependencyField = typeof DependencyField.Type;
 
-// Single source of truth for the kind <-> field correspondence.
 const KIND_TO_FIELD = {
   prod: "dependencies",
   dev: "devDependencies",
@@ -100,8 +99,7 @@ const KIND_TO_FIELD = {
   optional: "optionalDependencies",
 } as const satisfies Record<DependencyKind, DependencyField>;
 
-// Inverse, derived from KIND_TO_FIELD so the mapping is written once.
-const FIELD_TO_KIND = {
+const FIELD_TO_KIND_DERIVED_SO_THE_MAPPING_IS_WRITTEN_ONCE = {
   [KIND_TO_FIELD.prod]: "prod",
   [KIND_TO_FIELD.dev]: "dev",
   [KIND_TO_FIELD.peer]: "peer",
@@ -187,5 +185,6 @@ export abstract class DependencySection {
    *
    * @since 0.0.0
    */
-  static readonly kindOf = (field: DependencyField): DependencyKind => FIELD_TO_KIND[field];
+  static readonly kindOf = (field: DependencyField): DependencyKind =>
+    FIELD_TO_KIND_DERIVED_SO_THE_MAPPING_IS_WRITTEN_ONCE[field];
 }

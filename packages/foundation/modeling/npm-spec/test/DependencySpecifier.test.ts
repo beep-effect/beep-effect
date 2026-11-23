@@ -148,10 +148,7 @@ describe("DependencySpecifier.resolveWorkspace", () => {
     assert.strictEqual(DependencySpecifier.resolveWorkspace("workspace:^2.0.0", "1.2.3"), "^2.0.0");
   });
 
-  // pnpm publish semantics for the alias form: `"bar": "workspace:foo@*"`
-  // publishes as `"bar": "npm:foo@1.5.0"` — the range modifier projects
-  // against the TARGET package's version exactly like the plain form.
-  it("projects an alias form (workspace:pkg@…) to pnpm's npm: publish alias", () => {
+  it("projects an alias form (workspace:pkg@…) to pnpm's npm: publish alias, the modifier projected against the TARGET's version like the plain form", () => {
     assert.strictEqual(DependencySpecifier.resolveWorkspace("workspace:foo@*", "1.2.3"), "npm:foo@1.2.3");
     assert.strictEqual(DependencySpecifier.resolveWorkspace("workspace:foo@^", "1.2.3"), "npm:foo@^1.2.3");
     assert.strictEqual(DependencySpecifier.resolveWorkspace("workspace:foo@~", "1.2.3"), "npm:foo@~1.2.3");
@@ -186,8 +183,8 @@ describe("DependencySpecifier.workspaceTargetOf", () => {
   it("is None for the plain form and for non-workspace input", () => {
     assertNone(DependencySpecifier.workspaceTargetOf("workspace:*"));
     assertNone(DependencySpecifier.workspaceTargetOf("workspace:^1.0.0"));
-    // A lone scoped name has its only `@` at index 0 — not the alias form.
-    assertNone(DependencySpecifier.workspaceTargetOf("workspace:@scope/foo"));
+    const loneScopedNameHasItsOnlyAtAtIndexZero = "workspace:@scope/foo";
+    assertNone(DependencySpecifier.workspaceTargetOf(loneScopedNameHasItsOnlyAtAtIndexZero));
     assertNone(DependencySpecifier.workspaceTargetOf("^1.0.0"));
     assertNone(DependencySpecifier.workspaceTargetOf("catalog:"));
   });
@@ -210,8 +207,11 @@ describe("WorkspaceSpecifier#resolve", () => {
         assert.instanceOf(classified, WorkspaceSpecifier, specifier);
         assert.isTrue(isWorkspaceSpecifier(classified));
         assert.strictEqual(classified.resolve("1.2.3"), expected, specifier);
-        // The static and the instance method share one projection.
-        assert.strictEqual(DependencySpecifier.resolveWorkspace(specifier, "1.2.3"), expected, specifier);
+        assert.strictEqual(
+          DependencySpecifier.resolveWorkspace(specifier, "1.2.3"),
+          expected,
+          `the static and the instance method share one projection: ${specifier}`
+        );
       }
     })
   );

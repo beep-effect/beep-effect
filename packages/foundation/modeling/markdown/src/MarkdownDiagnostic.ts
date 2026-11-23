@@ -25,8 +25,6 @@ import type { RawDiagnostic } from "./internal/carriers.ts";
 const $I = $MarkdownId.create("MarkdownDiagnostic");
 
 /**
- * Error codes `Markdown.parse`/`MarkdownDocument.parse` can fail with.
- *
  * **Details**
  *
  * Currently exactly one, `"NestingDepthExceeded"`, the hardening-guard trip;
@@ -54,8 +52,6 @@ export const MarkdownParseErrorCode = MarkdownParseErrorCodeRaw.pipe(
 );
 
 /**
- * The union of all markdown parse-error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -63,10 +59,6 @@ export const MarkdownParseErrorCode = MarkdownParseErrorCodeRaw.pipe(
 export type MarkdownParseErrorCode = typeof MarkdownParseErrorCode.Type;
 
 /**
- * One structured diagnostic: its {@link (MarkdownParseErrorCode:type)}, a
- * human-readable `message`, and its exact position (`offset`/`length`, plus
- * zero-based `line`/`character`).
- *
  * **Details**
  *
  * The five-field positional core (`code`/`offset`/`length`/`line`/`character`)
