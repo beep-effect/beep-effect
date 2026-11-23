@@ -217,3 +217,13 @@ packages/party/domain/package.json:61:    "@beep/epistemics": "workspace:^",
 packages/foundation/modeling/epistemics/package.json:2:  "name": "@beep/epistemics",
 packages/tooling/library/agent-memory-store/package.json:65:    "@beep/epistemics": "workspace:^",
 ```
+
+## Independent review: consumer closure and early retirement
+
+The package/app import census above does not cover retained design modules. In commit 2, move
+L4.claims.ts:16 AbsenceReason to @beep/schema/Signal and retain only ValidTime from
+@beep/epistemics/Claim; inspect every retained goals/**/ops/design module for retired exports.
+The quote closure continues through SourceRef, ReviewItem and nested QuestionFact to ReviewFiles
+items.jsonl and DocketQuestions.schemas.ts. The remeasured whole-symbol file table in
+2026-11-23-p4-map-stored-and-consumers.md supersedes the narrower quote list. Commit 7 owns that
+entire closure and the reopened-store proof; commit 1 freezes its representative old rows.

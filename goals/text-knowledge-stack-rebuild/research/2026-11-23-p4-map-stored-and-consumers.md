@@ -89,3 +89,75 @@ Command: `rg --files packages apps --glob '*.test.ts'`, exact basename compariso
 `rg -n 'decodePayload|ensureStoredDigest|CREATE TABLE|encodePayload' apps/labs/semantica/src/layers/LedgerLive.ts` located the physical claims/batches tables at :97-98, batch/claim payload writes at :163 and :184, and nested ExtractOutcome read at :226. schema/Evidence.ts:424-431 excludes confidence from ClaimIdPreimage; :579-584 excludes it from BatchIdPreimage. Changing confidence therefore changes stored payload digests without necessarily changing either id. P4 needs a frozen reader for both claims and nested batch payloads, raw-digest verification before transformation, and explicit immutable replay handling. Old scalar 1 may be fabricated; retain its raw metadata and use Absent legacy-unknown unless the frozen provider response proves it was supplied. apps/labs/semantica/src/schema/ProviderCache.ts:46 names provider-cache/v1 and retains raw response bytes.
 
 SQL-byte preservation evidence: packages/_internal/db-admin/drizzle/20260813143745_baseline-functions/migration.sql:47 declares epistemic_claim_disposition_bounded with active/rejected/superseded. P4 keeps this constraint and its literals.
+
+## Independent review: full quote carrier closure
+
+Remeasured at 732979d5b84 with whole-symbol matching to exclude NormSourceReference. Command:
+
+```sh
+rg -n '\b(KbClaim|HoldClaimVersion|DeterministicCheck|SourceQuote|TextQuote|SourceRef|ReviewItem|QuestionFact)\b' packages/tooling/tool/cli/src/commands/Kb packages/tooling/tool/cli/src/commands/Holds packages/law-practice apps/labs/semantica/src --glob '*.ts' --glob '*.tsx'
+```
+
+Measured 315 lexical lines in 47 files. This extended inventory supersedes the
+174-line / 18-file quote/check inventory for migration closure; counts include examples and imports.
+
+| File:first line | Matching lines |
+| --- | ---: |
+| packages/law-practice/domain/src/values/AnswerRow/AnswerRow.model.ts:15 | 1 |
+| packages/law-practice/domain/src/values/Question/Question.model.ts:14 | 14 |
+| packages/law-practice/domain/src/values/ReviewItem/ReviewItem.model.ts:13 | 21 |
+| packages/law-practice/domain/src/values/ReviewItem/index.ts:2 | 5 |
+| packages/law-practice/domain/src/values/SourceRef/SourceRef.model.ts:16 | 17 |
+| packages/law-practice/domain/src/values/SourceRef/TextQuote.model.ts:27 | 12 |
+| packages/law-practice/domain/src/values/SourceRef/index.ts:2 | 6 |
+| packages/law-practice/domain/src/values/VerdictRow/VerdictRow.model.ts:13 | 1 |
+| packages/law-practice/domain/src/values/index.ts:374 | 4 |
+| packages/law-practice/domain/test/QuestionLoop.test.ts:4 | 9 |
+| packages/law-practice/domain/test/ReviewVerdict.test.ts:1 | 14 |
+| packages/law-practice/domain/test/SourceRefQuote.test.ts:1 | 12 |
+| packages/law-practice/server/src/ReviewFiles/ReviewFiles.layer.ts:10 | 4 |
+| packages/law-practice/server/test/NoticeMailbox.test.ts:8 | 2 |
+| packages/law-practice/server/test/ReviewFiles.test.ts:7 | 2 |
+| packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts:8 | 7 |
+| packages/law-practice/use-cases/src/DocketIntake/DocketIntake.schemas.ts:19 | 2 |
+| packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.schemas.ts:10 | 2 |
+| packages/law-practice/use-cases/src/DocketIntake/DocketQuestions.service.ts:11 | 9 |
+| packages/law-practice/use-cases/src/DocketIntake/DocketReview.policy.ts:33 | 19 |
+| packages/law-practice/use-cases/src/DocketIntake/DocketReview.schemas.ts:216 | 6 |
+| packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.schemas.ts:10 | 4 |
+| packages/law-practice/use-cases/src/QuestionQueue/QuestionQueue.service.ts:114 | 2 |
+| packages/law-practice/use-cases/src/ReviewHub/ReviewHub.schemas.ts:10 | 2 |
+| packages/law-practice/use-cases/src/ReviewHub/ReviewHub.service.ts:9 | 4 |
+| packages/law-practice/use-cases/src/ReviewItemStore/ReviewItemStore.ports.ts:12 | 8 |
+| packages/law-practice/use-cases/src/ReviewQueue/ReviewQueue.ports.ts:14 | 2 |
+| packages/law-practice/use-cases/src/ReviewQueue/ReviewQueue.service.ts:8 | 3 |
+| packages/law-practice/use-cases/src/VerdictProjector/VerdictProjector.ports.ts:11 | 4 |
+| packages/law-practice/use-cases/src/VerdictProjector/VerdictProjector.service.ts:9 | 4 |
+| packages/law-practice/use-cases/src/internal/claimEvidence.ts:41 | 10 |
+| packages/law-practice/use-cases/src/internal/logMemory.ts:18 | 5 |
+| packages/law-practice/use-cases/test/ClaimSelfCheck.test.ts:10 | 2 |
+| packages/law-practice/use-cases/test/DailyNotice.test.ts:7 | 2 |
+| packages/law-practice/use-cases/test/DocketQuestions.test.ts:9 | 3 |
+| packages/law-practice/use-cases/test/DocketReview.policy.test.ts:14 | 4 |
+| packages/law-practice/use-cases/test/QuestionLoop.slice.test.ts:8 | 2 |
+| packages/law-practice/use-cases/test/ReviewHub.test.ts:7 | 3 |
+| packages/law-practice/use-cases/test/ReviewVerdict.roundtrip.test.ts:8 | 5 |
+| packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts:16 | 12 |
+| packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts:33 | 15 |
+| packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts:426 | 5 |
+| packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts:26 | 8 |
+| packages/tooling/tool/cli/src/commands/Kb/Kb.projection.ts:14 | 8 |
+| packages/tooling/tool/cli/src/commands/Kb/Kb.schemas.ts:85 | 12 |
+| packages/tooling/tool/cli/src/commands/Kb/Kb.service.ts:24 | 15 |
+| packages/tooling/tool/cli/src/commands/Kb/KbGraph.service.ts:34 | 2 |
+
+ReviewItem.model.ts:106 stores SourceRef arrays and :125 nests QuestionFact;
+Question/Question.model.ts:312 adds another SourceRef array, and
+DocketIntake/DocketQuestions.schemas.ts:96 is a further sourceRefs boundary.
+ReviewFiles/ReviewFiles.layer.ts:86-90 decodes items.jsonl directly with ReviewItem.
+The format is therefore persisted, not an in-memory quote-only change. Freeze old direct and nested
+rows, preserve empty exact as LegacyQuoteUnresolved in LegacyReviewItemImported, and recursively
+project through a private versioned reader. Commit 1 freezes bytes; commit 7 changes the reader and
+writer together with ReviewFiles.test.ts reopen, mixed-version and no-op replay tests. Domain
+ReviewVerdict, QuestionLoop and SourceRefQuote tests must be rewritten for the declared v2 encoding.
+No fixture or migration implementation is claimed by this map.

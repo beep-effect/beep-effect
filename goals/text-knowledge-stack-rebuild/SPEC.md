@@ -1959,9 +1959,29 @@ Reverse: Replace the pin with the real Tika server version when the app/server p
 
 admit validates the core hash, nonempty claim-local grounding, all actor/action/revision/scope token bindings, token authenticity and current source receipts before producing Admission. A schema-valid token alone is powerless. The use-case port checks principal independently of caller input and resolves current text under the same scope. Expected missing, stale, ambiguous, denied or mismatched evidence is an AdmissionRefused value. Typed technical port failures remain failures until translated by the use-case; driver detail dies in adapters with boundary logging. No state is appended on refusal. Rehydrating any stored Admission repeats current verification and never grants a proof from decoding. P6 still owns the complete seven-path MatterAuthority deployment.
 
+Independent review correction: membership in supportAtCreation alone cannot bind approval to a claim. Apply p4-trusted-claim-specific-admission-binding: trusted action/revision state must authorize the exact re-minted claim or trusted claim-set membership. The P0 token fields stay unchanged.
+
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Change the refusal vocabulary and port in one breaking consumer migration; never restore decoder authority.
+
+### P4: select stance and retraction independently at explicit as-of time, 2026-11-23
+
+Design section 3.1 defines explicit core/event/snapshot/asOf inputs. Stance selects latest eligible stance/admission event; missing or conflicting events remain unresolved. Eligibility additionally requires selected core, verified authorization and grounding, no effective direct retraction and no wholly orphaned derivation. Retraction dominates eligibility even when stance remains admitted. Historical views select historical events and snapshot or return unknown. Readmission requires a new authorized action revision, fresh grounding and exact reference to the prior retraction being cleared; ordinary admission does not clear it. Readmission ends only that earlier retraction interval; equal-time retraction wins and later retractions block. Derived orphan clears only with live support. Test direct retraction, derived orphan, historical as-of and readmission.
+
+Admission.clearsRetraction is an optional digest of the exact canonical encoded prior Retraction record. The trusted new action revision authorizes clearing that digest as well as the exact claim. Original events remain append-only.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Version the view and readmission event rules together while retaining immutable prior events.
+
+### P4: decode assessment input before replacing a coordinate, 2026-11-23
+
+updateAssessment accepts encoded input and a declared coordinate key. It decodes through the caller-supplied coordinate codec with S.decodeUnknownEffect before replacing the decoded value or evaluating any gate. Keep encoded and decoded sides distinct and preserve decoding service requirements. Malformed input returns InvalidAssessment with sanitized issue and the original unchanged record, and invokes the gate zero times. L4-6 adds this falsifier alongside totality, commute and owner monotonicity cases. Effect 4.1.5 source: .repos/effect/packages/effect/src/Schema.ts:1536.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Change coordinate codecs and refusal encoding together while preserving original records on failure.
 
 ### P4: evidence keeps position and a separate reported confidence signal, 2026-11-23
 
@@ -1975,9 +1995,19 @@ Reverse: Retain frozen row codecs and source digests so the read projection can 
 
 append validates minted core identity, repeated ids, existing same-partition supersedes, parent-before-child derivation, single supersession, ordered starts, generation start and current valid intervals on every prefix. Duplicate replay is idempotent only for the identical already-recorded core and is not a second append. Keep full-log check as a fold of append validations; do not let a future superseder hide a bad historical prefix. As-of stability is promised after knowledge time has strictly passed t. L4-3 is under content-hash collision resistance and parent ordering; generated graphs use effect/Graph.isAcyclic. L4-5 uses independently declared owner equivalence: party proposition equivalence, complete Kb proposition fields, Holds holdId equivalence. L4-6 tests actual owner gates with owner orders and total coordinates, never lifecycle chronology assumed monotone. Refusal returns unchanged state, unknown never passes. Retraction flags only nonempty wholly dead derivation. No L4 law row is marked green by a design simulation.
 
+Independent review correction: apply p4-as-of-stance-and-retraction-eligibility for explicit selected-time stance and eligibility, and p4-assessment-decode-before-replacement for malformed encoded assessment refusals before any gate. These are required falsifiers, not claims of executed production proof.
+
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Change the checker and law fixtures together while preserving immutable old import records.
+
+### P4: recheck nanopub publication identity on decode, 2026-11-23
+
+Decode rechecks ClaimId and canonical publication metadata, re-mints nanopub/v1 NanopubId and compares the publication plus four derived graph IRIs exactly. Stale publication id after publisher/time edits and wrong derived graph IRI are integrity refusals with original input. Foreign graph/publication names may remain import metadata but are not accepted native-profile publications. Normalization runs only after integrity validation and sorts/deduplicates accepted quads; it cannot rename or repair failed identity. Add both fixtures to NanopubAdapter.test.ts. The exact TTL licensing hold is unchanged.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Version the native profile and identity preimage together; retain refused foreign data with original names.
 
 ### P4: nanopub is a restricted adapter profile and never imports authority, 2026-11-23
 
@@ -1985,15 +2015,35 @@ Reverse: Change the checker and law fixtures together while preserving immutable
 
 Publication identity is separate: NanopubId hashes ClaimId plus canonical publication metadata under nanopub/v1. Five distinct IRIs name publication and graphs. Provenance statements use the assertion graph as subject, and pubinfo uses the nanopublication subject. No Trusty URI or signature compatibility is claimed. The official https://nanopub.net/nschema bytes read during design hash to 1275f6a00121f54248899b9a4c39b2511fdbb65b2925a4dc6f4a13174059f649 and state modified date 2013-10-23, but no license. License attribution for the required NamespacePin remains an explicit implementation blocker for adapter admission; do not invent it.
 
+Independent review correction: apply p4-nanopub-decode-publication-integrity. Recompute publication identity and check all five derived IRIs on decode; normalization never repairs failed integrity.
+
+Reviewer-provided pinned source provenance (recorded here without a new GitHub access):
+
+- [Website deployment workflow](https://github.com/Nanopublication/nanopub-website/blob/b6f41631a89791611f69ce5f7ffc63ad56e4fa08/.github/workflows/deploy.yml) copies Guidelines/nschema.ttl to /nschema.
+- [Pinned TTL](https://github.com/Nanopublication/Guidelines/blob/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.ttl) and served https://nanopub.net/nschema have SHA-256 1275f6a00121f54248899b9a4c39b2511fdbb65b2925a4dc6f4a13174059f649. The TTL has no license notice.
+- [Companion HTML](https://github.com/Nanopublication/Guidelines/blob/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.html), around line 137, grants Creative Commons ShareAlike Attribution 3.0 for "this document", linked as http://creativecommons.org/licenses/sa-by/3.0/.
+
+The HTML notice does not explicitly cover the TTL. The website repository MIT license does not cover imported TTL bytes. Keep the exact TTL unlicensed/unresolved in the design and hold NamespacePin registration and adapter admission until attributable permission is established; neither source provenance nor the companion notice releases that hold.
+
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the declared profile and golden with a new adapter version while retaining rejected input as residual.
+
+### P4: preserve ReviewHub quote imports across selector retirement, 2026-11-23
+
+ReviewHub items.jsonl persists ReviewItem, including SourceRef arrays directly and inside QuestionFact. Freeze representative synthetic v1 rows before migration. A private frozen untagged quote reader preserves exact/prefix/suffix and all locators. Nonempty exact becomes QuoteSelector; empty exact becomes LegacyQuoteUnresolved with raw data and field path. Any unresolved nested quote yields LegacyReviewItemImported, displayed for repair and refused by executable writes/admission. Read old and versioned v2 rows; append only current v2 items and preserve raw old bytes. Migrate SourceRef, ReviewItem, QuestionFact, DocketQuestions and all measured consumers in commit 7 with ReviewFiles.test.ts reopened-store, mixed-version, byte-digest and no-op replay tests.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Replace the private versioned reader and explicit repair path together while preserving old JSONL bytes.
 
 ### P4: missing confidence stays absent and docket unknown is not passed, 2026-11-23
 
 Office-action extraction with no model confidence emits Absent not-assessed; semantica optional confidence uses the same carrier, preserving explicit zero and one. Reported unit-interval confidence is a named reported measurement with producer/method provenance, not ClassifierProbability. DeterministicCheck replaces passed with Passed, Failed or Unknown document-text-unavailable. Check cited passages against available message text first; a demonstrated message match passes even if document text is unavailable. A missing passage with attached unavailable text is unknown, and with complete available text is failed. The gate passes only Passed, and explanation retains unknown separately from contradictions. Urgent tentative entries remain visible. Any stored boolean check reader maps old true to historical Passed with legacy provenance, never to a newly verified current check; rerun before using a live gate. SourceQuote becomes TextAnchor, TextQuote becomes the text quote selector, and SourceRef keeps its legal locator fields with the shared selector.
 
 The extractor signal value schema accepts existing Measurement cases and the tagged ReportedConfidence case, with value, method and optional producer pin. Existing stored Measurement encodings remain readable. Semantica legacy scalar origin may be unprovable because of its old default: keep raw numeric metadata and emit Absent legacy-unknown unless the frozen provider response proves an explicit report. LedgerLive claims and nested batches verify their original raw digests before read projection; a repeat append compares normalized facts or returns an immutable-payload conflict, never overwrites the old payload.
+
+Independent review correction: SourceRef reaches persisted ReviewHub items.jsonl through ReviewItem and nested QuestionFact, plus DocketQuestions.schemas.ts. Apply p4-reviewhub-private-quote-imports; an empty legacy exact remains unresolved import data, never invented nonempty text. Commit 1 freezes rows; commit 7 changes readers/writers with the reopened-store proof.
 
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
@@ -2019,9 +2069,19 @@ Reverse: Keep the frozen source bytes and revert the read projection; reassert a
 
 L4 stays in @beep/epistemics with ClaimCore.schema.ts, ClaimCore.ts, ClaimLog.schema.ts, ClaimLog.ts, Assessments.ts, Admission.ts, Confidence.ts and rdf/NanopubCodec.ts. makeClaimCore takes one options object with caller identity composer, proposition and id codecs, including logicalKey. It returns annotated schema ingredients; callers wrap product records in branded S.Opaque classes. Tagged unions remain annotated schema unions; never extend Opaque over a whole union, which tsrs rejects. makeSignal, AbsenceReason and Measurement move to @beep/schema/Signal with no old aliases; Confidence moves to @beep/epistemics/Confidence. Foundation defines no Context.Service: pure functions and Digest effects use explicit resolver and token-verifier ports. The owning use-case service supplies authority and current-source access. Stance is a view over core and separate records; admitted is never a writable model flag.
 
+Commit 2 must also move the retained ops/design/L4.claims.ts:16 AbsenceReason import to @beep/schema/Signal, leaving only ValidTime at the old Claim leaf. Search all retained goals/**/ops/design modules for retired exports before advancing, not only production package paths.
+
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Restore a service only when a stateful owner or second implementation needs it; retain encoded preimages.
+
+### P4: bind admission actions to exact claims in trusted state, 2026-11-23
+
+Occurrence membership establishes support, not human approval of a proposition. Keep all P0 HumanAdmissionToken fields. A trusted resolver maps authenticated action and exact revision to a re-minted ClaimId or a versioned canonical claim-set digest with trusted immutable membership. The verifier checks the supplied checked ClaimRecord against that binding and all actor/action/revision/scope fields before admission. Caller metadata and a standalone claimed digest cannot establish the binding. Missing, stale or mismatched binding refuses without writes. L4-2 includes two claims A and B sharing occurrence O: a token authorizing A must refuse B.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Replace the trusted binding resolver and its refusal tests together without granting schema-decoded authority.
 
 <!-- beep:decisions:end -->
 
