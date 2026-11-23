@@ -17,8 +17,10 @@ import {
   projectKb,
   validateKb,
 } from "@beep/repo-cli/commands/Kb";
+import { it as p4it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
+import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
@@ -27,10 +29,13 @@ import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
+import * as P4Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as P4FileSystem from "effect/FileSystem";
 import * as FileSystem from "effect/FileSystem";
+import * as P4Layer from "effect/Layer";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -315,7 +320,7 @@ describe("knowledge ledger admission and disclosure", () => {
   );
 });
 
-layer(live)("knowledge ledger filesystem", (it) => {
+layer(live, { timeout: "30 seconds" })("knowledge ledger filesystem", (it) => {
   it.effect("accepts an empty output directory but refuses an empty symbolic-link target", () =>
     Effect.gen(function* () {
       const f = yield* withLedger({ public: true });
@@ -466,7 +471,7 @@ const writeGraphRows = Effect.fnUntraced(function* (
   yield* fs.writeFileString(`${root}/claims.jsonl`, A.join(claimLines, "\n"));
   yield* fs.writeFileString(`${root}/assertions.jsonl`, A.join(assertionLines, "\n"));
 });
-layer(graphLive)("knowledge JSON graph", (it) => {
+layer(graphLive, { timeout: "30 seconds" })("knowledge JSON graph", (it) => {
   it.effect("preserves review states, bounded validity and confidence from pending or rejected evidence", () =>
     Effect.gen(function* () {
       const f = yield* withLedger();
@@ -803,7 +808,8 @@ layer(graphLive)("knowledge JSON graph", (it) => {
 
 const runKb = Command.runWith(kbCommand, { version: "0.0.0" });
 layer(
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(Layer.mergeAll(platform, NodeStdio.layer, NodeTerminal.layer)))
+  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(Layer.mergeAll(platform, NodeStdio.layer, NodeTerminal.layer))),
+  { timeout: "30 seconds" }
 )("knowledge ledger CLI", (it) => {
   it.effect("validates, builds and exports a valid ledger through the command handlers", () =>
     Effect.gen(function* () {
@@ -834,5 +840,75 @@ layer(
       const lines = A.map(logged, (line) => `${line}`);
       expect(A.filter(lines, Str.includes('"valid": false'))).toHaveLength(2);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+});
+
+const p4kbclaimsv1jsonl = S.fromJsonString(KbClaim);
+
+const p4kbassertionsv1jsonl = S.fromJsonString(Assertion);
+
+const p4kbregistryv1jsonl = S.fromJsonString(KbRegistryNode);
+
+p4it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("P4 format freeze: kb-claims-v1.jsonl retains today's codec and raw digest", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/kb-claims-v1.jsonl");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/kb-claims-v1.jsonl`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("fb922e524a5a1e4577b5a0a957c1aa5a0aa5c19ada7345a8f87f852321133efb");
+      const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+      const rows = yield* Effect.forEach(lines, (line) => S.decodeEffect(p4kbclaimsv1jsonl)(line), { concurrency: 1 });
+      const encoded = yield* Effect.forEach(rows, (row) => S.encodeEffect(p4kbclaimsv1jsonl)(row), { concurrency: 1 });
+      expect(encoded).toEqual(lines);
+    })
+  );
+
+  it.effect("P4 format freeze: kb-assertions-v1.jsonl retains today's codec and raw digest", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/kb-assertions-v1.jsonl");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/kb-assertions-v1.jsonl`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("556b7782079623b91326691703452a597d68099afc3d245713c7d583095c3de3");
+      const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+      const rows = yield* Effect.forEach(lines, (line) => S.decodeEffect(p4kbassertionsv1jsonl)(line), {
+        concurrency: 1,
+      });
+      const encoded = yield* Effect.forEach(rows, (row) => S.encodeEffect(p4kbassertionsv1jsonl)(row), {
+        concurrency: 1,
+      });
+      expect(encoded).toEqual(lines);
+    })
+  );
+
+  it.effect("P4 format freeze: kb-registry-v1.jsonl retains today's codec and raw digest", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/kb-registry-v1.jsonl");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/kb-registry-v1.jsonl`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("ce751230fda8a451614295a50b5f217db3ab6f1cd3af9f88740a04c9f812f7bb");
+      const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+      const rows = yield* Effect.forEach(lines, (line) => S.decodeEffect(p4kbregistryv1jsonl)(line), {
+        concurrency: 1,
+      });
+      const encoded = yield* Effect.forEach(rows, (row) => S.encodeEffect(p4kbregistryv1jsonl)(row), {
+        concurrency: 1,
+      });
+      expect(encoded).toEqual(lines);
+    })
   );
 });

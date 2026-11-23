@@ -10,12 +10,16 @@ import { AnswerLog, AnswerLogError } from "@beep/law-practice-use-cases/Question
 import { ReviewItemStore, ReviewItemStoreError } from "@beep/law-practice-use-cases/ReviewItemStore";
 import { VerdictLog, VerdictLogError } from "@beep/law-practice-use-cases/ReviewQueue";
 import { it } from "@beep/test-runner";
+import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as P4Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as P4FileSystem from "effect/FileSystem";
 import * as FileSystem from "effect/FileSystem";
+import * as P4Layer from "effect/Layer";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -200,4 +204,32 @@ describe("@beep/law-practice-server ReviewFiles", () => {
       )
     );
   });
+});
+
+const p4reviewitemsv1jsonl = S.fromJsonString(ReviewItem);
+
+it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("P4 format freeze: review-items-v1.jsonl retains today's codec and raw digest", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/review-items-v1.jsonl");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/review-items-v1.jsonl`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("efb61f17d3037fba9accf6e03980808b377afcce4e625b4fb2596c229c3939bc");
+      const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+      const rows = yield* Effect.forEach(lines, (line) => S.decodeEffect(p4reviewitemsv1jsonl)(line), {
+        concurrency: 1,
+      });
+      const encoded = yield* Effect.forEach(rows, (row) => S.encodeEffect(p4reviewitemsv1jsonl)(row), {
+        concurrency: 1,
+      });
+      expect(encoded).toEqual(lines);
+    })
+  );
 });

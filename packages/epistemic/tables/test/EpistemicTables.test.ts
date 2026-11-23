@@ -9,19 +9,23 @@ import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposit
 import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion";
 import * as Evidence from "@beep/epistemic-tables/entities/Evidence";
 import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord";
-import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH } from "@beep/epistemics/EvidenceSpan";
+import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH, EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
 import { $EpistemicId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
+import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as P4Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as P4FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as P4Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -850,5 +854,86 @@ describe("EpistemicTables", () => {
         expect(converterError.reason).toBe("schema conversion failed");
       })
     )
+  );
+});
+
+const p4CurrentJson = S.fromJsonString(S.Array(EvidenceSpan), { space: 2 });
+
+const p4LegacyJson = S.fromJsonString(
+  S.Array(
+    S.Struct({
+      confidence: EvidenceSpan.fields.confidence,
+      endChar: EvidenceSpan.fields.endChar,
+      quote: S.String,
+      startChar: EvidenceSpan.fields.startChar,
+    })
+  ),
+  { space: 2 }
+);
+
+it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("P4 format freeze: evidence-span-current-v1.json retains raw bytes and current reader behavior", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/evidence-span-current-v1.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/evidence-span-current-v1.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("260d742bda99924b64af8103a9f5f687b3eb94cdb6a7260fb868c8bffed1c4b2");
+      const spans = yield* S.decodeEffect(p4CurrentJson)(text);
+      const encoded = yield* S.encodeEffect(p4CurrentJson)(spans);
+      expect(encoded).toBe(Str.slice(0, -1)(text));
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const decoded = A.map(spans, (span) =>
+        Evidence.fromEvidenceRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          rowVersion: insertedRowVersion(insert.rowVersion),
+          id: 10,
+          span,
+        })
+      );
+      expect(A.map(decoded, Result.isSuccess)).toEqual([true, true]);
+      const accepted = A.getSomes(A.map(decoded, Result.getSuccess));
+      expect(A.map(accepted, ({ span }) => span.endChar)).toEqual([5, 4]);
+    })
+  );
+
+  it.effect("P4 format freeze: evidence-span-legacy-v0.json retains raw bytes and current reader behavior", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/evidence-span-legacy-v0.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/evidence-span-legacy-v0.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("0644f5fd5939478b0493cc8a097db2cc7f6024a4c8b5f4cd0d8831c4f576379d");
+      const spans = yield* S.decodeEffect(p4LegacyJson)(text);
+      const encoded = yield* S.encodeEffect(p4LegacyJson)(spans);
+      expect(encoded).toBe(Str.slice(0, -1)(text));
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const decoded = A.map(spans, (span) =>
+        Evidence.fromEvidenceRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          rowVersion: insertedRowVersion(insert.rowVersion),
+          id: 10,
+          span,
+        })
+      );
+      expect(A.map(decoded, Result.isSuccess)).toEqual([true, false, true]);
+      const accepted = A.getSomes(A.map(decoded, Result.getSuccess));
+      expect(A.map(accepted, ({ span }) => span.endChar)).toEqual([5, 65537]);
+    })
   );
 });

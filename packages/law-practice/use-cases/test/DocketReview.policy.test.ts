@@ -5,6 +5,7 @@
  * Every fixture is synthetic: invented reference numbers and placeholder
  * text. No real mail, sender, matter or client appears here.
  */
+
 import { DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import {
   assessReviewRound,
@@ -41,11 +42,16 @@ import { LocalDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as P4Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
+import * as P4FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as P4Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ParalegalEntry, ReviewField } from "@beep/law-practice-use-cases/DocketIntake";
@@ -720,4 +726,26 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       ["response-period", ["The value of this field does not appear in the text you quoted for it."]],
     ]);
   });
+});
+
+const p4docketchecksv1json = S.fromJsonString(S.Array(DeterministicCheck), { space: 2 });
+
+it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("P4 format freeze: docket-checks-v1.json retains today's codec and raw digest", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/docket-checks-v1.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/docket-checks-v1.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("55f1f403e941d40e483327be62b5eb33180e32d369ab12ba18e5f4373a3bd01e");
+      const rows = yield* S.decodeEffect(p4docketchecksv1json)(text);
+      expect(`${yield* S.encodeEffect(p4docketchecksv1json)(rows)}\n`).toBe(text);
+    })
+  );
 });

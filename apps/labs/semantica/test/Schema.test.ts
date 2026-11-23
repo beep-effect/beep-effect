@@ -14,15 +14,19 @@ import {
   VerifiedTextAnchorError,
 } from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as P4Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
+import * as P4FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as P4Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -1477,4 +1481,26 @@ describe("F1 degraded-kind subset", () => {
     expect(FixtureDegradedKind.literals).toEqual(["invalid-utf8", "truncated", "extraction-failed"]);
     pipe(A.every(FixtureDegradedKind.literals, isDegradedKind), assertTrue);
   });
+});
+
+const p4ledgerevidencev1json = S.fromJsonString(S.Array(ExtractOutcome), { space: 2 });
+
+it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("P4 format freeze: ledger-evidence-v1.json retains today's codec and raw digest", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/ledger-evidence-v1.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/ledger-evidence-v1.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("9ebe3985a277b37cad4a0fe101a876c91b7aa652138e0877cfd04020fd55a431");
+      const rows = yield* S.decodeEffect(p4ledgerevidencev1json)(text);
+      expect(`${yield* S.encodeEffect(p4ledgerevidencev1json)(rows)}\n`).toBe(text);
+    })
+  );
 });

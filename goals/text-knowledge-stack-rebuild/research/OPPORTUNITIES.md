@@ -487,3 +487,60 @@ While enumerating test existence for the P4 maps, the Node child-process default
 refused `rg --files packages apps` with `ENOBUFS`. No data was changed. Restricting the
 search to `--glob '*.test.ts'` and setting an explicit bounded output buffer completed
 the inventory. A test-file-only discovery recipe would have prevented the interruption.
+
+## 2026-11-23 — P4 frozen format construction
+
+- **Doing:** freezing the evidence and ledger encodings with today's codecs before P4 changes.
+  **Evidence:** the current evidence converter rejects an empty quote, repairs a mismatched UTF-16
+  width, and retains an oversized nonempty quote through its legacy fallback. A first fixture
+  assertion incorrectly expected all three reads to succeed. The frozen test now asserts each
+  actual result. **Would have prevented it:** an explicit accepted/refused matrix beside the legacy
+  stored-span schema and fixture generation through the exact encoded-side schema.
+- **Doing:** constructing semantica frozen nested ledger payloads from the existing hosted batches.
+  **Evidence:** decoding a decoded batch as wire input fails at model.dimension because its optional
+  fields are Options in memory. Encoding through EvidenceBatch/ExtractOutcome first preserves the
+  wire shape. **Would have prevented it:** a reusable fixture-writing boundary that takes decoded
+  schema values and always uses their declared codec.
+- **Doing:** running the P4 commit-1 package test gates serially at nice 19.
+  **Evidence:** one use-cases test process ended with exit 143 before reporting results; its direct
+  retry passed 419 tests. No cause is established. Full law-practice server tests then passed
+  298 files (1,719 tests, one skip) plus four boundary tests in about 280 seconds.
+  **Would have prevented it:** durable per-command exit and termination-attribution receipts.
+- **Doing:** running the full semantica test gate after adding the frozen ledger codec test.
+  **Evidence:** 169 tests passed, including the new freeze test; the unchanged C0Slice live-to-replay
+  test hit its 29,750 ms watchdog. Retrying the package at one worker attributes shared-resource
+  contention without changing production code or the test's deadline.
+  **Would have prevented it:** scheduling the native live-to-replay case within a measured worker
+  budget rather than the default package fan-out.
+- **Doing:** applying S31 to the frozen-format test harnesses.
+  **Evidence:** effect-vitest initially reported per-test layer provisions and native filesystem
+  candidates. The tests now share bounded it.layer hooks and assert that each fixture's real path
+  remains inside the owning checkout before hashing its raw bytes. Scoped detection reports
+  introduced=0. Two existing KB filesystem layer hooks also needed explicit timeout budgets.
+  **Would have prevented it:** a canonical frozen-byte fixture test recipe with layer lifetime,
+  package dependency and on-disk provenance assertions included from the start.
+- **Doing:** running the blocking pre-commit comment-law gate on the assigned revised-design base.
+  **Evidence:** `bun run beep laws comments --check --base 6a3805a8767` exits 1 with
+  `Unknown subcommand "comments" for "beep-cli laws"`. No comment-law implementation is present in
+  this lane's Laws command tree. The required introduced=0 receipt cannot be produced on this base.
+  **Would have prevented it:** carrying the comment-law prerequisite into the supplied stack base
+  before assigning a blocking gate. No substitute receipt or gate bypass is claimed.
+  **Owning-lane ruling:** the P3/P2/PR-C base predates the comment-law tool and policy. Use the
+  staged zero-context diff proxy before each P4 commit; it must print no added line comment or
+  non-JSDoc block comment. Do not import the tool. The owning lane runs the authoritative gate
+  after merging main and before publication. The proxy does not claim an authoritative receipt.
+- **Doing:** reading every package test-typecheck result rather than trusting the command exit.
+  **Evidence:** the wrapper returned zero while its JSON receipt recorded exitCode=1, including
+  Effect diagnostics for a node:crypto import, broad S.Number, typed-input unknown decoding and
+  yielding inside an assertion argument. Direct Schema codec callbacks also accepted an optional
+  parser-options argument where Effect.forEach supplies a numeric index. These were corrected to
+  Effect Digest, existing field schemas, typed codecs, bound values and unary callbacks.
+  **Would have prevented it:** making package-test-typecheck propagate its recorded exit code and
+  providing a checked codec/forEach example in the fixture recipe.
+- **Doing:** committing the P4 frozen semantica ledger payloads without changing their source bytes.
+  **Evidence:** the pre-commit secret scanner flagged nine cacheKey occurrences that are the same
+  public content digests already permitted for the P3 frozen baseline. The existing exact-value,
+  exact-field, exact-detector policy now also names the P4 ledger fixture. Its six values stay fixed;
+  a scanner boundary test checks changed values, wrong paths and another token detector.
+  **Would have prevented it:** treating nested frozen ledger payloads as part of the original
+  synthetic cache-digest fixture closure. No standards exception inventory changes.
