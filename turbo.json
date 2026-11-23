@@ -2712,6 +2712,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/CreatePackage/internal/LabIdentitySegment.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Identity/Registry.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Identity/RegistryBase.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts"
       ]
     },
@@ -4135,6 +4136,7 @@
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubCommit.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubContent.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/PullRequest.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Registry.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -4279,6 +4281,7 @@
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubCommit.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubContent.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/PullRequest.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Registry.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -4442,6 +4445,7 @@
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubCommit.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubContent.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/PullRequest.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Registry.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -4586,6 +4590,7 @@
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubCommit.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubContent.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/PullRequest.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Registry.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -4730,6 +4735,7 @@
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubCommit.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubContent.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/PullRequest.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Registry.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -4874,6 +4880,7 @@
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubCommit.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/GitHubContent.ts",
         "$TURBO_ROOT$/packages/drivers/github/src/PullRequest.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Registry.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/package.json",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -6265,7 +6272,7 @@
       ]
     },
     "//#lint:identity-registry": {
-      "cache": true,
+      "cache": false,
       "outputs": [],
       "dependsOn": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-identity-registry"

@@ -6,6 +6,7 @@
  */
 
 import { $SkillContractId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { URLStr } from "@beep/schema/URL";
@@ -381,9 +382,7 @@ export class GateSummary extends S.Opaque<GateSummary, { readonly brand: unique 
  * @category constants
  * @since 0.0.0
  */
-export const GateSummaryPredicateType = EvidencePredicateType.make(
-  $SkillContractId.create("evidence/gate-summary/v2").iri
-);
+export const GateSummaryPredicateType = EvidencePredicateType.make(iri("skill-contract:evidence/gate-summary/v2"));
 
 /**
  * Unsigned digest-bound receipt carrying a coherent {@link GateSummary}.

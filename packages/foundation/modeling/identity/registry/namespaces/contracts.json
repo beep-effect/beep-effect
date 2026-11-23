@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "contracts",
+    "iri": "https://beep-effect.com/ns/contracts/"
+  },
+  "terms": ["qa-inventory/v1"],
+  "bindings": [],
+  "deprecations": []
+}

@@ -254,9 +254,9 @@ export const retiredIriAuthoritiesScope: RetiredIriAuthoritiesScope = RetiredIri
   originTestBasenameMarkers: [".test.", ".spec."],
   originAllowlist: [
     RetiredIriAuthoritiesAllowlistEntry.make({
-      file: "packages/tooling/test-kit/test-runner/src/Vitest.errors.ts",
+      file: "packages/tooling/test-kit/test-runner/src/internal/generated/RegistryTerms.ts",
       reason:
-        "The bootstrap test runner must not depend on @beep/identity, so it pins its schema IRIs; a parity test in @beep/identity guards drift.",
+        "The bootstrap test runner must not depend on @beep/identity, so the registry generator projects its terms as literals; a parity test in @beep/identity guards drift.",
     }),
   ],
 });

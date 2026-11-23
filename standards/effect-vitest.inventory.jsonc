@@ -8273,6 +8273,28 @@
       "reason": "The file's second test spawns the real generate-label-glyphs CLI through the platform ChildProcessSpawner, and the first proves emitLabelGlyphs' on-disk check/replace path in a temp directory; MemoryFileSystem would prove neither. Owner: @beep/technical-drawing. Exit: retire when the CLI check runs through an injected process and filesystem."
     },
     {
+      "id": "EV010:packages/foundation/modeling/jsonl/test/integration/Journal.int.test.ts:2:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/jsonl",
+      "file": "packages/foundation/modeling/jsonl/test/integration/Journal.int.test.ts",
+      "line": 2,
+      "endLine": 2,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The integration suite is the package's real-disk boundary: it proves O_APPEND behaviour under concurrent appends and reopens one realPath-canonicalized path from two layers, which MemoryFileSystem cannot model. Everything provable against a double lives in Journal.test.ts. Owner: @beep/jsonl. Exit: none while the journal promises O_APPEND semantics."
+    },
+    {
       "id": "EV010:packages/foundation/modeling/markdown/test/extract-gfm-corpora.test.ts:6:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
