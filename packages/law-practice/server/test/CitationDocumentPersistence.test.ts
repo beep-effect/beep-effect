@@ -32,17 +32,17 @@ import {
   CitationResourceIdentity,
   makeCitationResourceAuthorityId,
 } from "@beep/law-practice-server/internal/Citation/ResourceIdentity";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   TextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
   VerifyTextAnchorInput,
   verifySourceTextIdentity,
   verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { it } from "@beep/test-runner";
+} from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
@@ -88,7 +88,7 @@ const bindingFor = (
 const text = "😀 1 U.S. 1; 1 U.S. 1; Id.";
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const staleAuthority = CitationAuthorityId.make(`ca1:${Str.repeat(64)("f")}`);
-const staleMention = CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
+const staleMention = CitationMentionId.make(`cm2:${Str.repeat(64)("f")}`);
 const Json = S.fromJsonString(CitationDocumentReceipt);
 const externalIdentity = () =>
   CitationResourceIdentity.cases.External.make({
@@ -629,7 +629,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           )
         )
       );
-      expect(hashes).toBe(6); // One source, three mentions, two resolved full keys.
+      expect(hashes, "one source, three mentions at two digests each, two resolved full keys").toBe(9);
       const citationResult21 = yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions });
       const citationResult22 = yield* S.encodeEffect(Json)(citationResult21);
       expect(citationResult22).toBe(captured);

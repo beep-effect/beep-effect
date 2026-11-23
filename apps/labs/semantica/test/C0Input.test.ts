@@ -1,9 +1,9 @@
 // @vitest-environment node
 
 import { DOC_TEXT_ENGINE_VERSION } from "@beep/doc-text";
-import { isUtf16Boundary, SourceTextExtractor, TextAnchor } from "@beep/provenance";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { isUtf16Boundary, SourceTextExtractor, TextAnchor } from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";

@@ -44,32 +44,8 @@ const $I = $TsconfigId.create("PortableTsconfig");
 
 const TSCONFIG_SCHEMA_URL = "https://json.schemastore.org/tsconfig";
 
-// ── The allow-list ──────────────────────────
-//
-// Preserved = affects what the type checker accepts/reports, independent of
-// any file path or emitted artifact. Excluded = emit destination, absolute/
-// machine-specific paths, file selection, build/project-reference
-// orchestration, or CLI diagnostics formatting — none of which a virtual
-// environment driving its own file set and its own emit (or non-emit) should
-// inherit from the source config.
-//
-// Three groups below are judgment calls: `importHelpers` / `downlevelIteration` /
-// `preserveConstEnums` are carried even though they shape emitted JS, because
-// a Twoslash-style
-// virtual environment can still execute emitted code; `newLine` and
-// `maxNodeModuleJsDepth` are excluded despite touching neither path nor emit
-// destination, because the former is pure output formatting and the latter is
-// an obscure checking-depth tuning knob, not a type-semantics switch a
-// portable config needs to travel with.
-
-/**
- * Boolean `compilerOptions` preserved in a {@link (PortableTsconfig:interface)}: the
- * strict family, module/interop semantics, checking-depth and lib controls,
- * and language-feature switches — every one type-checking behavior, none of
- * them naming a path or producing a build artifact.
- */
+// decision: portable-allow-list-criterion
 const PRESERVED_BOOLEAN_OPTIONS = [
-  // strict family
   "strict",
   "noImplicitAny",
   "strictNullChecks",
@@ -91,7 +67,6 @@ const PRESERVED_BOOLEAN_OPTIONS = [
   "allowUnusedLabels",
   "allowUnreachableCode",
   "noUncheckedSideEffectImports",
-  // module / interop semantics
   "allowJs",
   "checkJs",
   "resolveJsonModule",
@@ -110,26 +85,17 @@ const PRESERVED_BOOLEAN_OPTIONS = [
   "erasableSyntaxOnly",
   "forceConsistentCasingInFileNames",
   "useDefineForClassFields",
-  // checking-depth / lib controls
   "noLib",
   "skipDefaultLibCheck",
   "skipLibCheck",
   "noCheck",
-  // language-feature / decorator semantics
   "experimentalDecorators",
   "emitDecoratorMetadata",
-  // carried for virtual-JS-execution environments (judgment call — see above)
   "importHelpers",
   "downlevelIteration",
   "preserveConstEnums",
 ] as const;
 
-/**
- * Enum-valued `compilerOptions` preserved in a {@link (PortableTsconfig:interface)}: the
- * target/module/moduleResolution/jsx/lib family plus `moduleDetection` and
- * `ignoreDeprecations`. `newLine` is deliberately excluded — pure emit
- * formatting, no bearing on type-checking behavior.
- */
 const PRESERVED_ENUM_OPTIONS = [
   "target",
   "module",
@@ -140,10 +106,6 @@ const PRESERVED_ENUM_OPTIONS = [
   "ignoreDeprecations",
 ] as const;
 
-/**
- * Plain-string `compilerOptions` preserved in a {@link (PortableTsconfig:interface)}: the
- * jsx factory/namespace family. None of these name a filesystem path.
- */
 const PRESERVED_STRING_OPTIONS = ["jsxFactory", "jsxFragmentFactory", "jsxImportSource", "reactNamespace"] as const;
 
 const PRESERVED_OPTIONS = [
@@ -154,49 +116,11 @@ const PRESERVED_OPTIONS = [
 
 type PreservedCompilerOptions = Pick<CompilerOptions.Type, (typeof PRESERVED_OPTIONS)[number]>;
 
-// ── The opt-in tier: portable, but resolution-dependent ────────────────────
-//
-// `types` is the one classified option that is portable by the criterion above
-// — it holds package NAMES, never a path — yet is still not carried by
-// default, because portability and *resolvability* are two different axes and
-// the allow-list above only models the first. Emitting `types: ["node"]` makes
-// tsc DEMAND that `@types/node` be resolvable; in a virtual environment with
-// no `node_modules` that is a hard error, where omitting the key lets TS
-// auto-include whatever `@types` the environment happens to have and never
-// error. Dropping it therefore trades a loud cannot-find-type-definition
-// failure for a silent missing-globals one — better for the environment that
-// materializes nothing, worse for the one that materializes `@types` and needs
-// to know which ones this config's type-checking assumed.
-//
-// Neither default serves both, so the caller picks: `includeTypes` carries the
-// information for consumers that can satisfy it. `typeRoots` stays dropped
-// under the opt-in as well — it names filesystem directories, absolute when
-// they arrive on a `ResolvedTsconfig` and relative to the source config when
-// they arrive on a bare options bag, and meaningful in either form only on the
-// machine and at the config location they came from. It fails the portability
-// criterion outright, opt-in or not.
+// decision: portable-types-opt-in
 const OPT_IN_TYPES_OPTION = "types";
 
-// ── Structural discrimination (ResolvedTsconfig | CompilerOptions.Type) ─────
-
-/**
- * A `ResolvedTsconfig` carries a string `configPath`, an array `extendedPaths`
- * AND an object `compilerOptions`; a bare `CompilerOptions.Type` never carries
- * all three. Every conjunct is required — `CompilerOptions.Type`'s passthrough
- * index signature tolerates any unrecognized key, so a hostile config file can
- * plant a string `configPath` and even an array `extendedPaths` as passthrough
- * keys on a bare options bag (reachable from forward tolerance). The
- * `compilerOptions` conjunct is what makes the discrimination TOTAL: `make`
- * only branches into `input.compilerOptions` when that value is a non-null
- * object it can safely index, so no crafted bag can steer the filter into a
- * `TypeError` at the `source[key]` loop below. (A bag that fakes all three is
- * then read exactly like a `ResolvedTsconfig` — its `compilerOptions` object
- * is filtered, which is the safe outcome.)
- */
 const isResolvedTsconfig = (input: ResolvedTsconfig | CompilerOptions.Type): input is ResolvedTsconfig =>
   P.isString(input.configPath) && A.isArray(input.extendedPaths) && P.isObjectOrArray(input.compilerOptions);
-
-// ── The filter ────────────────────────────────────────────────────────────
 
 const PortableCompilerOptions = S.Struct({
   ...Struct.pick(CompilerOptions.schema.fields, PRESERVED_OPTIONS),
@@ -227,11 +151,11 @@ const PortableCompilerOptions = S.Struct({
  * @public
  */
 const PortableTsconfigData = S.Struct({
-  /** The tsconfig JSON Schema URL, stamped for IDE support. */
   $schema: S.tag(TSCONFIG_SCHEMA_URL).pipe(
-    $I.annoteKey("PortableTsconfigData.$schema", { description: "The tsconfig JSON Schema URL." })
+    $I.annoteKey("PortableTsconfigData.$schema", {
+      description: "The tsconfig JSON Schema URL, stamped for IDE support.",
+    })
   ),
-  /** The allow-listed, forced-flag-applied compiler options. */
   compilerOptions: PortableCompilerOptions.pipe(
     $I.annoteKey("PortableTsconfigData.compilerOptions", {
       description: "Allow-listed options with forced portable flags.",
@@ -307,8 +231,7 @@ export declare namespace PortableTsconfigOptions {
   export type Encoded = typeof PortableTsconfigOptions.Encoded;
 }
 
-// The projection behind PortableTsconfig.make; the public contract lives on the static.
-const project = (
+const projectBehindMake = (
   input: ResolvedTsconfig | CompilerOptions.Type,
   options?: PortableTsconfigOptions.Encoded
 ): typeof PortableTsconfigData.Type => {
@@ -399,9 +322,7 @@ export class PortableTsconfig extends S.Opaque<PortableTsconfig, { readonly bran
   static override readonly make = (
     input: ResolvedTsconfig | CompilerOptions.Type,
     options?: PortableTsconfigOptions.Encoded & S.MakeOptions
-  ): PortableTsconfig => makePortableTsconfig(project(input, options), options);
+  ): PortableTsconfig => inheritedSchemaMakeValidatingProjection(projectBehindMake(input, options), options);
 }
 
-// The schema's own constructor, bound once: the `make` static above replaces the
-// inherited one, so the projection validates its result through this maker.
-const makePortableTsconfig = SchemaParser.make(PortableTsconfig);
+const inheritedSchemaMakeValidatingProjection = SchemaParser.make(PortableTsconfig);

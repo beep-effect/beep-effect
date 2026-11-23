@@ -6,9 +6,9 @@
  */
 
 import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, PosixPath, Sha256Hex } from "@beep/schema";
 import { HttpsUrl } from "@beep/schema/URL";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

@@ -96,7 +96,7 @@ scratchpad/party/
   Party.ts         Party (Person | Organization | CollectiveAgent), Identifier (EmailAddress | PhoneNumber | ExchangeDn |
                    Username | NativeAccountId | ExternalId), Account (Mailbox | SocialAccount | PhoneLine | ChatAccount)
   Provenance.ts    CollectionSide, Locator (Bates | ContainerChild | FilePath | Url), ArtifactOccurrence, Activity,
-                   Producer (Software | Model | Human), EvidenceAnchor (HeaderField | TextSpan | MetadataTag | RecordRow)
+                   Producer (Software | Model | Human), EvidenceAnchor (HeaderField | TextOccurrence | MetadataTag | RecordRow)
   Communication.ts ParticipantRole, EvidenceKind, SpeechAct, Observation (HeaderParticipant | MetadataTag | SignatureBlock |
                    DirectoryRow | MailboxPermission | SpeechActLabel | Absence), CommunicationEvent, Voice, voiceOf,
                    isDelegated, RedactedPartySlot
@@ -135,7 +135,7 @@ scratchpad/party/
   fixtures/acme.ts fully synthetic "Doe Harvesting v. Acme Implement Co." production, encoded and decoded
 ```
 
-Conventions this module follows (operator rulings 2026-10-21): inline tagged unions are `S.TaggedUnion({...})`, and `S.Union + toTaggedUnion` is kept only where a member carries its own `.check` (`TemporalExtent.Interval`, `EvidenceAnchor.TextSpan`, the distinct-role propositions). There are no `as` casts and no `!` assertions. `Admitted` is a nominal class whose constructor requires a module-private mint token. Graph algorithms come from `effect/Graph` and are never hand-rolled.
+Conventions this module follows (operator rulings 2026-10-21): inline tagged unions are `S.TaggedUnion({...})`, and `S.Union + toTaggedUnion` is kept only where a member carries its own `.check` (`TemporalExtent.Interval`, `EvidenceAnchor.TextOccurrence` (its `@beep/text` `Anchored` receipt carries the width check), the distinct-role propositions). There are no `as` casts and no `!` assertions. `Admitted` is a nominal class whose constructor requires a module-private mint token. Graph algorithms come from `effect/Graph` and are never hand-rolled.
 
 Design order was schema → service contract (`PartyLedger`) → implementation (in-memory Layer, pure projections).
 

@@ -6,9 +6,9 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { GroundedExtraction, MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchorVerificationReceipt, VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchorVerificationReceipt, VerifiedTextAnchorErrorReason } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";

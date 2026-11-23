@@ -15,10 +15,10 @@
       "path": "../../../foundation/modeling/markdown/tsconfig.json"
     },
     {
-      "path": "../../../foundation/modeling/provenance/tsconfig.json"
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
     },
     {
-      "path": "../../../foundation/modeling/schema/tsconfig.json"
+      "path": "../../../foundation/modeling/text/tsconfig.json"
     }
   ],
   "compilerOptions": {

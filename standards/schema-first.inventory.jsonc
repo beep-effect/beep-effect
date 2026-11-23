@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-22",
+  "generatedOn": "2026-11-23",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -485,7 +485,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 94,
+      "line": 95,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
@@ -1365,9 +1365,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 37,
+      "line": 43,
       "owner": "@beep/law-practice-server",
-      "reason": "Checks an independently computed cm1 digest vector, source identity and verified-anchor admission, including property-order and cross-context controls. Arbitrary token codec laws live in CitationIdentity.test.ts; this suite tests the actual digest producer and evidence binding. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+      "reason": "Checks the citation-mention/v2 golden beside the pinned, independently computed cm1 vector, source identity and verified-anchor admission, including property-order and cross-context controls. Arbitrary token codec laws live in CitationIdentity.test.ts; this suite tests the actual digest producer and evidence binding. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
       "file": "packages/law-practice/server/test/CitationMixedResourceObjects.test.ts",

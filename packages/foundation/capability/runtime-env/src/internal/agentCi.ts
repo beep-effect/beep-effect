@@ -51,8 +51,6 @@ export const CiName = CiNameBase.pipe(
 );
 
 /**
- * CI provider name accepted by the {@link CiName} schema.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -76,8 +74,6 @@ const AgentEnvKeyBase = LiteralKit([
 ]);
 
 /**
- * Names the environment variables whose presence marks an AI agent in the std-env agent table.
- *
  * **Details**
  *
  * The literals are the table's presence keys in its declared order; a set, non-empty value of any one of them
@@ -106,8 +102,6 @@ export const AgentEnvKey = AgentEnvKeyBase.pipe(
 );
 
 /**
- * Agent presence key accepted by the {@link AgentEnvKey} schema.
- *
  * @category type-level
  * @since 0.0.0
  */

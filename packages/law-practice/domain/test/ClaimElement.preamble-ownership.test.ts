@@ -22,8 +22,8 @@ import {
   prepareClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

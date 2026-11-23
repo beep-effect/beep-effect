@@ -15,13 +15,13 @@ import {
   FullCitation,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import {
   toTextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
   verifySourceTextIdentity,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -347,10 +347,10 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
     resourceBindings: decoded.resourceBindings,
     receipt: {
       ...decoded.document,
-      schemaVersion: "citation-document-receipt/v3",
+      schemaVersion: "citation-document-receipt/v4",
       mentions: A.map(decoded.document.mentions, (mention) => ({
         ...mention,
-        schemaVersion: "citation-mention-receipt/v1",
+        schemaVersion: "citation-mention-receipt/v2",
         anchor: toTextAnchorVerificationReceipt(mention.anchor),
         components: A.map(mention.components, (component) => ({
           name: component.name,

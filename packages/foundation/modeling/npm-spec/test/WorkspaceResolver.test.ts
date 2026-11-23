@@ -19,9 +19,7 @@ describe("WorkspaceResolver", () => {
     );
   });
 
-  describe("stub implementation", () => {
-    // A test double resolving a fixed workspace map proves the contract is
-    // implementable and that versionOf threads packageName through correctly.
+  describe("a stub over a fixed workspace map proves the contract implementable and versionOf threads packageName", () => {
     const versions = HashMap.make(["@effected/semver", "0.1.0"], ["@effected/jsonc", "0.2.0"]);
     const StubWorkspaceResolver = Layer.succeed(WorkspaceResolver, {
       versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
@@ -55,8 +53,7 @@ describe("WorkspaceResolver", () => {
 
       assert.strictEqual(error._tag, "DependencyResolutionError");
       assert.strictEqual(error.specifier, "workspace:*");
-      // cause is kept structured, not folded into a string.
-      assert.deepStrictEqual(error.cause, cause);
+      assert.deepStrictEqual(error.cause, cause, "cause is kept structured, not folded into a string");
       assert.strictEqual(typeof error.message, "string");
       assert.match(error.message, /workspace:\*/);
       assert.isTrue(error instanceof Error);

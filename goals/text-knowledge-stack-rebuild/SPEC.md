@@ -184,11 +184,13 @@ and the phase order is `PLAN.md`), this file is normative.
   stability snapshot, the IRI schemas), with the L0 digest brands over the primitive in
   `packages/foundation/modeling/schema` and canonical JSON plus the one
   minting function in `packages/foundation/modeling/jsonc`.
-- `packages/foundation/modeling/provenance`, becoming `@beep/text` in P2 (L1:
-  `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, unit
-  conversion; `TextAnchor` and `VerifiedTextAnchor` keep their shapes; created
-  through `bun run beep create-package`, the old name retired per chapter 11
-  with every consumer migrated in the same PR).
+- `packages/foundation/modeling/text` (`@beep/text`, L1: `Selector`,
+  `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, `LocatorMap`, the
+  two text normalizations and unit conversion; `TextAnchor` and
+  `VerifiedTextAnchor` keep their shapes). P2 created it through
+  `bun run beep create-package` and retired the former provenance workspace
+  (`@beep/provenance`) per chapter 11, with every consumer migrated in the same PR
+  and no alias.
 - `@beep/annotation`, created in P3 through `bun run beep create-package`
   (L2) once P0 has recorded the specific-home-first routing decision and the
   capability negative-gate clauses (`standards/ARCHITECTURE.md`): pure schemas
@@ -211,8 +213,11 @@ and the phase order is `PLAN.md`), this file is normative.
   `prov:Entity` projection through `src/Prov.ts`, registry-backed `prov:`,
   `oa:`, `nif:`, `xsd:`, `NamespacePin` (source, license, version, digest)
   for every external namespace; the `rdf -> md` edge removed).
-- `packages/foundation/modeling/md`, `pandoc-ast`, `lexical`, `html`: AST
-  source maps that import `@beep/text`.
+- `packages/foundation/modeling/md`: the one AST source map, `@beep/md/Md.anchors`
+  (`anchorAt`, landed in P2), which yields a `VerifiedTextAnchor` for a mapped,
+  non-empty node. `pandoc-ast`, `lexical-schema` and `html` record no text
+  positions; each gains a source map over `@beep/text` when a phase needs one
+  (decision `2026-11-22-p2-ast-source-maps-md-only`).
 - `packages/foundation/modeling/schema-org`: retired whole in P7 (census: no consumer).
 - `packages/foundation/capability/langextract/src/Handoff` (verified receipts
   first, lossless handoff), `apps/labs/semantica/src/layers` (projection and
@@ -347,9 +352,10 @@ decision file) and the law-test ledger:
    while `identity` must stay rdf-free and `@beep/schema` depends on
    `identity`. P0 ruled the home and P1 moved it to
    `packages/foundation/modeling/identity/src/Iri.ts`, before L0 and L1 compile.
-9. `Anchored` is an L1 `S.Opaque` of range, quote and the powerless
-   `TextAnchorVerificationReceipt` (never a `VerifiedTextAnchor`, so decoding a
-   stored document grants no proof); the `anchors` table checks that each key
+9. `Anchored` is an L1 `S.Opaque` that holds the powerless
+   `TextAnchorVerificationReceipt` and reads range and quote from its anchor
+   (never a `VerifiedTextAnchor`, so decoding a stored document grants no proof;
+   landed in P2 as `@beep/text/Occurrence`); the `anchors` table checks that each key
    equals the occurrence hash of its value; `Instant` is
    `S.DateTimeUtcFromMillis` or P0 records why not.
 10. `derivedFrom`: whether it lives in the hashed core or a separate record;
@@ -1166,6 +1172,302 @@ A third review of PR #3449 (13 threads, 5 nitpicks) found ways the registry writ
 Lane tksr-p1c · PR #3449
 
 Reverse: Drop sinceIssues from planRegistryArtifacts, the CodeIdMove disjointness filter and the CodeId dot-segment guard, and restore checkRegistryAgainstBase and the fixed .tmp staging path.
+
+### P2: AlignedSegment lands in commit 5 with TextNormalization; the rest of LocatorMap stays in commit 6, 2026-11-22
+
+Section 1.4 types NormalizedText.segments as S.Array(AlignedSegment) and section 1.2 places AlignedSegment in src/LocatorMap.ts, while section 10 lists TextNormalization in commit 5 and LocatorMap in commit 6. Commit 5 therefore adds src/LocatorMap.ts holding only the AlignedSegment schema and type, exported from the barrel, so the module list of section 1.2 holds at every commit and no schema moves file later. Commit 6 adds the LocatorMap class with its check, the identity and compose statics and CaptureMismatch to the same file. Every byte and identifier is the one the design names; only the commit that first carries the schema changes.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Move AlignedSegment into TextNormalization.ts and re-export it from LocatorMap.ts in commit 6, or land all of LocatorMap.ts in commit 5.
+
+### P2: an Ambiguous count saturates at Number.MAX_SAFE_INTEGER, so a count there is a lower bound, 2026-11-22
+
+Decision p2-selector-resolution-semantics makes a composite with an ambiguous part Ambiguous with the product of the counts, and Resolution.Ambiguous carries that count as S.Int, whose check is Number.isSafeInteger. A Quote count is at most the text length, but a Range multiplies the counts of its two parts and a Range may nest Ranges, so the product grows without bound: a Range of two Ranges of the quote a over ten thousand a counts 10^16 selections, past 2^53, and the Ambiguous constructor threw. Resolution outcomes are values, never errors (SPEC error boundaries), and Selector is a wire-decodable recursive union, so any decoded selector could reach the throw. resolve therefore saturates the product at Number.MAX_SAFE_INTEGER. Both factors are safe integers, so a product at or below the cap is exact and a product above it is finite; a saturated count is a lower bound on the true count. Ambiguity still fails closed, and no caller reads the count as anything but how many selections matched, which a lower bound past 2^53 still answers. A bigint count or a saturation flag would change the encoded shape of Resolution for a case no real selector reaches.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Carry the count as a bigint or a saturation flag in Resolution.Ambiguous, by a decision file before P3 builds on resolve.
+
+### P2: the AST source map of @beep/md yields verified anchors; pandoc-ast, lexical-schema and html have no text positions to re-point, 2026-11-22
+
+PLAN P2 says AST source maps point at @beep/text. Measured: only @beep/md has a source map (MdSourceMap); pandoc-ast locates by JSON path, and lexical-schema and html record no positions and have no consumer asking for them. P2 adds @beep/md/Md.anchors with anchorAt(map, document, path, source), which reads positionAt, keeps the offsets only when they are naturals with start < end, slices the verified text and returns an Option of VerifiedTextAnchor through verifyTextAnchorAgainstVerifiedSource. The module is bridge-side: the package lists its subpaths one by one, so ./Md.anchors is added to exports and publishConfig.exports, it stays out of src/index.ts, imports only Md.syntax and @beep/text at runtime and @beep/markdown as a type, and Md.import-boundary.test.ts classifies it with the bridge modules. A zero-width or synthetic markdown position has no text, so it is None and is never turned into an empty anchor. MdSourceMap and @beep/markdown Position keep their shapes (markdown is outside the amendment's packages and stays untouched). Chapter 16's source-map sentence is corrected to name md as landed and the other three as added when a phase needs them.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Add a positions feature to the named AST package in the phase that needs it; nothing in P2 depends on its absence.
+
+### P2: authority-identity-cases.json is regenerated in place with a bumped schemaVersion; the oracle equality matrix is unchanged, 2026-11-22
+
+The fixture holds an oracle observation (the 13 by 13 equality matrix and the eyecite inputs) and two derived columns minted by this repository's code: mentionId and expectedId. The scoped amendment says identifiers with no stored rows regenerate their fixtures. P2 rewrites the 13 mentionId inputs from cm1: to cm2: over the same synthetic hex, recomputes the expectedId of the two missing-page cases under citation-authority/v2, bumps schemaVersion to citation-authority-identity-cases/v2 and leaves every other byte, producerSha256 and the matrix included, as captured. The other 11 expectedId values must not change, and CitationAuthorityIdentity.test.ts proves it. A frozen copy beside it would keep 400 lines alive for two derived values; the v1 key derivation is pinned by the migration fixture instead. goals/citation-extraction-engine/history evidence that carries cm1 values is not edited; a dated note in that packet's history records the change.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore the v1 file beside a v2 sibling by a decision file; the v1 bytes are in git at the P2 base.
+
+### P2: the biome-256-format-wave hold keeps its dated assertion naming the retired package, 2026-11-22
+
+hold-ledger/claims.jsonl line 8 asserts, as recorded on 2026-10-17, that newer Biome releases reformat the sources of @beep/html and of the package P2 retired. The ledger is append-only and docs/runbooks/hold-ledger.md allows a new version only with fresh evidence (a probe run, or a qa.judge verdict for a Judgement hold), so an edit in place is not allowed and a renewal that only renames a package would be one without evidence. The hold targets nothing by package name: its anchors are the @biomejs/biome catalog entry and syncpack held entry, and its falsifier is a root biome check . count, which reads the moved sources under @beep/text wherever they are. The assertion is therefore left as the dated observation it is; the next renewal or the format wave that ends the hold names @beep/text. The delete-package doctor does not report the ledger as residue.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Append a renewal version of biome-256-format-wave that names @beep/text, with a fresh Biome probe or qa.judge verdict as its evidence.
+
+### P2: the cache-baseline request names @beep/provenance in previous only, not among its subjects, 2026-11-22
+
+Section 3.1 of research/2026-11-20-p2-design.md says the request's subjects name every changed subject, @beep/provenance included. bun run beep cache baseline refuses that request: the retired package is no longer in the task graph, and the command reports it as an unknown subject. The request docs/reports/tksr-p2-l1-move-cache-baseline-request-2026-11-22.json therefore lists the 22 subjects in the graph (the root, 20 consumers and @beep/text) and keeps the retired file's digest in previous. The command then drops standards/cache-baseline/@beep/provenance.json as a subject that left the graph (printed as Dropped), so no baseline file is deleted by hand, which is what the design asked for. bun run beep cache audit and bun run beep quality cache-policy read 0 blocking findings afterwards.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Add @beep/provenance to the request's subjects once beep cache baseline accepts a subject that left the task graph, and re-record.
+
+### P2: commit 13 gates the check census and leaves the re-measure to the final check, 2026-11-22
+
+Section 10 says the census is measured once at the end, on a built tree, after the last merge of the parent branch, and that merge has not happened. Commit 13 therefore runs the gate (bun run beep quality check-census --gate-only on a tree built with bunx turbo run build for the upstream of @beep/repo-cli, @beep/law-practice-domain and @beep/schema) and does not rewrite the baseline. The gate passes: @beep/law-practice-domain and @beep/schema are unchanged, @beep/repo-cli grew by 26602 instantiations (+0.32 percent, inside the 10 percent band) since the baseline of 2026-11-20, and no row failed. The re-measure with --write-baseline runs after the parent merge, before yeet final-check.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Run bun run beep quality check-census --write-baseline on this head and commit the rewritten standards/check-census.regression-baseline.jsonc.
+
+### P2: mention ids are cm2 over a bare-hex digest, only the case-occurrence authority key bumps its tag, and the preimage belongs to law-practice, 2026-11-22
+
+CitationMentionId becomes cm2: plus 64 hex, where the hex is the ContentHash of (citation-mention/v2, engineArtifact, semanticKind, OccurrenceId) without its sha256: prefix. The prefix bump keeps v3 and v4 receipts distinguishable on sight and lets the frozen v3 schema own cm1:. The bare-hex display form is the slice's existing token shape; the digest behind it is the standard one. The preimage is declared with definePreimage in packages/law-practice/server/src/internal/Citation/MentionIdentity.ts, not in @beep/text: citation kinds are legal semantics, which SPEC keeps out of foundation, so the CitationMention* exports of the design module are not moved into the package. Authorities: only the case-occurrence key embeds a mention id, so only that key changes its tag to citation-authority/v2; the case, law, journal and external-resource keys keep citation-authority/v1 and their ids. The ca1:, cl1: and cg1: prefixes stay, because they version the token format and the default-path cl and cg ids are a slice of the authority digest: they change exactly when that digest changes, which is the bumped tag p0-rq4 asks for. cd1 and the session-node cl1 and cg1 ids have no mention id in their preimage and do not change. Side-by-side goldens over the existing test source: cm1:dc70e426b0b9aa61caf21a5e6e0c7274720c7e674ff2b06a8cdfd82ee0346ae9 and cm2:7ece8d5655b197d8063442248a8f630cd05fee535fe5ae550f2b15754425cd44; its case-occurrence authority ca1:7f43ae8777fd804f01172cce2e73b1762c712f9f7e4c8d08bffdb58a49341bf6 (v1) and ca1:4d2adc3d142ce1c3a4b028bde50b9f27253a829404d1f7d773442e6d6ab5ee13 (v2).
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Return to cm1 with a further receipt version step and its own read-time transform; the v1 encoder is kept as a pinned historical encoder.
+
+### P2: a composite rewrite absorbs text the second map inserts inside the first map's rewrite, so Exact through a composite is relative to the composite, 2026-11-22
+
+LocatorMap.compose cuts the middle capture only at edges that are not strictly inside a Rewritten segment of either map (decision p2-reanchoring-shape-and-lax-direction). When the second map inserts text at an offset strictly inside a Rewritten segment of the first, that offset has no preimage in the first capture, so no cut can show the insertion: the piece over the rewrite becomes one Rewritten segment whose target includes the inserted text. Reproducer: ab rewritten to xy as one segment, then _ inserted between x and y (Kept 0..1 to 0..1, Kept 1..2 to 2..3); compose gives Rewritten 0..2 to 0..3; the occurrence 0..2 maps Exact to xy and then Widened to x_y stepwise, and Exact to x_y through the composite, with the same range. The AlignedSegment schema has two cases and a Rewritten segment already means text the step changed as a whole, with a target of any width; the composite is a coarser map, and a whole-rewrite image that lands on its edges is Exact relative to that map. A third segment case or a mark on Rewritten would change the encoded LocatorMap shape for a fact no consumer reads in P2. The laws stay as stated: when both steps and the composite are mapped, the stepwise range is inside the composite range, and Exact then Exact composes to the same Exact. The converse does not hold and is not claimed: Exact through a composite does not imply that every step was Exact. An image that spans text inserted between two segments of one map stays Widened, as before. LocatorMap.test.ts and Reanchoring.laws.test.ts pin the reproducer. Found by the verifier of commits 5 and 6.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Give AlignedSegment a third case that keeps inserted text visible and have compose emit it, by a decision file before P3 records a composite re-anchoring.
+
+### P2: coverage rows written at 100 percent for new files count as registration under S31, 2026-11-22
+
+Commit 13 re-records the coverage rows of @beep/text, @beep/rdf and @beep/md with the scoped writer (bun run coverage -- --filter=... --write-baseline). The writer drops the row of the deleted rdf/src/Evidence.ts and adds one row per file the old rows did not name: the ten new @beep/text modules, md/src/Md.anchors.ts and eleven rdf files that had no row (NamespacePin.ts, the generated NamespacePins.data.ts, the Dcat, Shacl and Void vocabularies and the generated term modules of Dcat, Oa, Prov, Shacl, Void and Xsd; all but the two Dcat files are new since the P0 base). Every added row records 100 percent on lines, statements, branches and functions with zero uncovered units, so it records no debt: it is the same bar the hosted ratchet applies to a file without a row. Under S31 those rows are registration, as S31a treats a re-stamped cache-baseline review for a new package, and the per-file line count of research/consumer-census.md grows by them (provenance and text 4 to 14, rdf 38 to 47, md 17 to 18). Rows below 100 percent are existing rows that the write raised (rdf/src/Rdf.ts, several md modules); no row was lowered.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Re-run bun run coverage -- --filter=@beep/text --filter=@beep/rdf --filter=@beep/md --write-baseline from the P2 base rows and drop the added file rows, leaving the hosted ratchet to judge the files as new.
+
+### P2: webAnnotationTargetToTextAnchor refuses ill-formed text on every path, so a decoded anchor always re-encodes, 2026-11-22
+
+Section 4.1 converts every position selector through convertPosition, which refuses a lone surrogate before the range end as ill-formed-text, but a quote-only target goes through resolve, which reads UTF-16 and accepts such text. The two paths would then disagree: a quote-only target over ill-formed text would decode to a candidate anchor that textAnchorToWebAnnotationTarget refuses, so decoding then encoding would not be total on what decodes. The quote-only path therefore converts its resolved range to code points as the encoder does and returns the same ill-formed-text refusal. Every anchor the decoder returns now encodes again. Text after the range end is not checked on either path, as convertPosition does not check it.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Drop the code-point check on the quote-only path of webAnnotationTargetToTextAnchor by a decision file; quote-only targets over ill-formed text then decode to anchors the encoder refuses.
+
+### P2: the delete-package doctor reads dated records as history, fixed by its own small PR; the move commit is gated on a listed residue, 2026-11-22
+
+delete-package ends with a doctor whose authored-references surface skips only goals/, research/ and .changeset/. Dated records in explorations/ (55 files) and docs/reports/ (15 files), the entries of standards/architecture/DECISIONS.md and the retired-package registry itself therefore count as residue of @beep/provenance, and the post-apply doctor exits 1 for any package a dated record names (checked: delete-package @beep/venice-ai --check, a package deleted weeks ago, exits 1). --acknowledge cannot accept them: standards hits are baseline hits, and docs and explorations are outside the dependents scan. Rewriting dated records would falsify them. The fix is one predicate in RegistrationGeometry.probes.ts that names the historical paths (goals/, research/, .changeset/, explorations/, docs/reports/, standards/architecture/DECISIONS.md, standards/changesets.retired-packages.json), used by the authored-references skip and the historical-records surface, with the surface declaration in RegistrationGeometry.plan.ts and cases in delete-package.test.ts; standards/architecture chapters and the glossary stay live and must be rewritten. The doctor is outside P2's files, so it is a small PR off main, opened before the move commit. The move does not wait for it: the apply runs every writer before the doctor, so a failure that reads post-apply doctor found residue means the writers finished, and the commit 2 gate is that the residue is a subset of the list in section 3.2. The final check requires a clean --check with --allow-stale-packets, which the check needs because it runs the same preflight.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Revert the doctor PR; the residue list of research/2026-11-20-p2-design.md section 3.2 is then the only gate of a package retirement.
+
+### P2: isWellOrdered is deleted; every L1 range is non-empty, 2026-11-22
+
+TextAnchor.isWellOrdered and its alias accept start == end, against TextAnchor, Position and every other L1 range, which require start < end. The map found no consumer outside the owner's tests. P2 deletes both with their tests instead of keeping a predicate that disagrees with the schema beside it. isInternallyConsistent, isUtf16Boundary and the rest of the 21 exports keep their names and behaviour.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore the static and its export from git.
+
+### P2: langextract offset ranges, locate and history, and the law-practice quote projections, move in P3; P2 re-points their imports only, 2026-11-22
+
+The census sends langextract TextOffsetRange and Utf16TextRange, and law-practice TextQuote, SourceRef and SourceQuote, to P2 and P3. The PLAN P2 row names none of them. P3 rewrites the langextract handoff and IrToLaw over the annotation document, so re-expressing their spans in P2 would edit the same code twice and put a behaviour change (refusal types, yield points, the million-unit limit) inside the mechanical package move. P2 changes only import paths in those files; the NFKC cluster defect found in VerifiedSpan.normalization.ts is fixed by its own small PR off main (decision p2-nfkc-clusters-join-on-the-normalized-mark), not inside P2. A P2 test in @beep/langextract asserts that convertTextOffsetRange and convertPosition agree on generated well-formed text and valid ranges for both shared units, so P3 starts from a proved equivalence. GroundedExtraction and the attempt records that embed it stay byte-identical.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Re-express convertTextOffsetRange on convertPosition inside the P2 PR by a decision file; its consumers are langextract, law-practice server OccurrenceProjection and two law-practice tests.
+
+### P2: the agent-memory read-time OccurrenceId lands before feat/agent-memory-store-p3, as a function outside the payload schema, 2026-11-22
+
+Decision p0-rq4 sequences this after that goal's open lane merges. The lane (c93b36cb77a, unpushed, no PR, last commit 2026-11-13) does not touch OccurrenceAnchor, SpanAnchor.models.ts or the anchor field of NodeCreated; its only overlap is the import line. Waiting on it has no end condition, so P2 lands first and the lane merges main. The derivation is occurrenceIdOf(anchor) in SpanAnchor.models.ts: it builds the receipt from source and anchor, maps the stored utf16 literal to utf16-code-unit by matching TextUnit, and calls mintOccurrenceId. It is not a payload transform: an effectful payload schema would put Digest into the event journal's decoding services. The stored literal, the three keys and the encoded field shapes stay, so the SchemaBinary layout is unchanged, and a fixture captured from the code before P2 proves it: frozen bytes decode, derive the golden id sha256:654d949fc9259fd7b3b3d90ef96c270b444cfece9feb03f15dfe29013001a06d and re-encode to the same bytes.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Drop occurrenceIdOf and its fixture test; the stored events and every schema stay as they were.
+
+### P2: an NFKC cluster also joins a letter whose NFKC form starts with a combining mark; langextract's scan gets the same fix in its own PR, 2026-11-22
+
+The joins-cluster scan of @beep/langextract joins a scalar that is a combining mark, or that normalizes differently together with the open cluster. Four letters have an NFKC form that starts with a mark: U+0E33, U+0EB3, U+FF9E and U+FF9F. Such a letter does not join, opens its own cluster, and a mark after it then composes with the previous cluster in the whole text but not in the segments. Measured on this base: normalizeTextLocator of Z, U+FF9E, U+0323 gives Z, U+3099, U+0323 where NFKC gives U+1E92, U+3099. The P2 simulation refuted the rule (84 of 100,000 strings) and the corrected rule passed it on 350,000 strings. @beep/text joins a scalar when its own NFKC form starts with a mark or when the pair normalizes differently. The langextract defect is live on main and outside P2's files, so it is fixed by a small PR off main: the combining-mark test of VerifiedSpan.normalization.ts reads the normalized scalar, with the fixture above and a property over the same alphabet. The old form of a text differs from its NFKC form only by canonical order and composition, so two texts with equal old forms have equal new forms and no persisted association that decoded before should be refused; the PR checks that over the same alphabet against a test-local copy of the old rule before it lands.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Join on the scalar's own category again in @beep/text; Normalization.test.ts then fails on the fixture Z, U+FF9E, U+0323.
+
+### P2: @beep/text defines no Context.Service, 2026-11-22
+
+Every L1 arrow is a pure function of its arguments or needs only core's effect/crypto/Digest service. There is no second implementation, no state, no IO and no policy to swap, so a service would be a name for a function. resolve and convertPosition are synchronous values (Resolution, Result); mintOccurrenceId, mintQuoteKey, reanchor and the verify functions are Effect.fn with Digest in their requirements. The service that resolves a SourceTextIdentity to text already exists as a port in @beep/file-processing with its workspace implementation, and stays there.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Add a service contract in the capability that first needs a replaceable resolver, by a decision file.
+
+### P2: normalizeText takes the text first and the normalization second, the data-first order of every dual in @beep/text, 2026-11-22
+
+Design section 1.7 writes normalizeText(normalization, text): NormalizedText. The implementation is dual(2, (text, normalization) => ...), so the data-first call is normalizeText(text, normalization) and the data-last call is normalizeText(normalization)(text). The repo's dual convention puts the data first, and every other dual of the package does: normalizeQuote(quote, normalization), mintQuoteKey(quote, normalization) (design 1.4), convertPosition(position, unit, sourceText) and slicePosition(position, sourceText) (design 1.5), resolve(sourceText, selector) (design 1.6) and reanchor(anchored, map, target) (design 1.8). The text is the data a normalization acts on, so section 1.7 is read as naming the parameters, not fixing a positional order, and its curried reading normalizeText(normalization)(text) is the data-last form the dual provides. Swapping the order would make normalizeText the one dual in @beep/text whose first argument is not the data, and its data-last form would curry over the text. Found by the verifier of commits 5 and 6.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Swap normalizeText to (normalization, text) data-first and normalization-last curried, by a decision file, updating every caller in one commit.
+
+### P2: OccurrenceId is minted from a receipt through definePreimage with a literal canonical unit; the citation path keeps its proof gate, 2026-11-22
+
+OccurrencePreimage is declared with @beep/jsonc/Mint definePreimage under domain tag occurrence/v1 with a committed golden vector, so a changed preimage fails its golden check unless the tag is bumped. The tuple is the one p0-rq4 fixes. Its unit slot is S.Literal("utf16-code-unit") rather than OffsetUnit: one range in two units would otherwise be two ids for one occurrence. mintOccurrenceId takes Anchored, a powerless receipt, because the id is a function of the receipt's fields and not a claim of proof: the L2 anchors table, the memory read path and the v3 receipt transform all hold receipts. The proof gate stays where it is today: makeCitationMentionId still accepts only a genuine VerifiedTextAnchor, projects it to its receipt and then mints. The error channel is PreimageMintError (schema error or canonicalization error); a quote with a lone surrogate, which TextAnchor admits, fails there. Goldens were checked on this base: the vector over the existing cm1 test source gives occurrence sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48 through the production minting function and through an independent SHA-256 over the JSON text.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Type the unit slot as OffsetUnit again or require a VerifiedTextAnchor in mintOccurrenceId, by a decision file that bumps occurrence/v1 if the bytes change.
+
+### P2: one PR, stacked on PR C, thirteen commits, opened once PR C is merged or on the orchestrator's word, 2026-11-22
+
+P2 ships as one PR from goals/text-knowledge-stack-rebuild-p2-text, a stack layer on PR C (#3449). With B (#3439) and C open that is three open PRs, the packet limit, so no second P2 PR opens. Chapter 11 rule 3 (retire in the PR that migrates the consumers, no alias) makes the package move indivisible; the L1 additions, the citation step, the rdf, party, md and memory changes are separate commits on top of it. The 2026-11-20 P1 checkpoint says P2 opens after PR C merges and the chapter-11 amendment is effective. The amendment is on origin/main (DECISIONS.md, 2026-11-19 scoped amendment). The lane may be built and proved while C is open; the PR itself opens after C merges, or earlier as a stack layer only when the orchestrator and the CI goals driver say so. The commit order is in research/2026-11-20-p2-design.md section 10. Two small PRs off main come first and are not packet PRs: the delete-package doctor and the langextract NFKC cluster rule, both defects found while designing in files P2 does not otherwise own. Every step before the rename only adds fixtures that today's code already satisfies, so byte-stability is proved by tests that are older than the change.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Split the commits at the boundary after the rename (commit 2) into two PRs by a decision file; the commit order already makes that cut clean.
+
+### P2: @beep/text is scaffolded, the three modules move with git mv, and delete-package retires @beep/provenance in the same commit, 2026-11-22
+
+bun run beep create-package text --family foundation --kind modeling --type library --description "Text identity, anchors, selectors and occurrence identity" creates the package and registers $TextId (dry run on this base confirms the path packages/foundation/modeling/text). SourceTextIdentity.ts, TextAnchor.ts and VerifiedTextAnchor.ts and their tests move with git mv and keep their module names, so every importer changes only the package segment (@beep/provenance/X becomes @beep/text/X). When no import, manifest, script or path hit is left, bun run beep delete-package @beep/provenance --allow-stale-packets removes the empty workspace, its identity segment, shape row, coverage rows, catalogs and lockfile entry, and the writers run before its doctor. The doctor cannot read clean on this base for any package a dated record names (docs/reports, explorations, DECISIONS.md and the retired registry are residue), so the gate of the move commit is a residue list no larger than the one in research/2026-11-20-p2-design.md section 3.2, and the clean --check is a gate of the final check, after the doctor fix of decision p2-delete-package-doctor-reads-dated-records-as-history is in the lane. Both calls take --allow-stale-packets because the packet hits are history of other goals and stay frozen. Before the dry run the 18 manifests are edited, the lockfile and config-sync run and the allowlist snapshot is regenerated, because preflight refuses on tsconfig hits and the command's own sync runs after preflight; the dry run must print 0 hard hits. The four ops/design modules are import-prod hits that nothing can acknowledge, so the codemod covers them; --acknowledge is not used, since every file-path hit is rewritten. The name @beep/provenance is added by hand to standards/changesets.retired-packages.json after the deletion, because the CLI's --retire-changesets flag does not write the row. No changeset is written (private workspaces). The scratchpad workspace (three effect-ontology files, its package.json, tsconfig and porting ledger) and packages/shared/domain/README.md are importers the 156-file census does not count; both move in the same commit. Inventory, fallow, allowlist and coverage rows move with their files and count as renames under S31, as in decision p1-s31-rows-move-with-the-file.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Re-create packages/foundation/modeling/provenance from the parent commit and invert the import codemod; no stored bytes name the package.
+
+### P2: the party TextSpan case is deleted and replaced by a TextOccurrence case over Anchored; the party OccurrenceId becomes ArtifactOccurrenceId, 2026-11-22
+
+TextSpan has no producer and no stored row; its one use is a negative decode test. It cannot be minted into an OccurrenceId (no extractor, no normalization version, no prefixed digests, no unit). The union keeps the ability to point at text: TextOccurrence { occurrence: ArtifactOccurrenceId, anchored: Anchored }, where Anchored is the @beep/text receipt. A bare OccurrenceId would name a place without saying where it is, since party has no anchors table, and the SPEC sentence that TextSpan becomes a text occurrence is met with the id derivable from the receipt. The case tag changes, so old TextSpan JSON is refused. HeaderField, MetadataTag and RecordRow are unchanged: they are not text selectors and no fragment specification IRI is invented for them. The party identifier that identifies a record occurrence is renamed ArtifactOccurrenceId, after the ArtifactOccurrence entity it keys; the party-occ prefix and every value stay. The party ActivityId and Digest and the private cli Codex OccurrenceId const share a word with a stack name and no reserved name; P4 decides ActivityId with the claims layer, and the cli const is module-private and stays.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore TextSpan and the old name from git; no row and no producer holds either.
+
+### P2 corrects P0: three stored columns hold an anchor shape, one derived key hashes a receipt, and legal_position_relator.grounding holds none, 2026-11-22
+
+Measured by the P2 provenance map. Stored anchor shapes: epistemic_evidence.span (EvidenceSpan), epistemic_evidence_verification.verified_anchor (a TextAnchorVerificationReceipt; a VerifiedTextAnchor is runtime-only and cannot be stored) and law_practice_patent_citation_event.grounding (a receipt). epistemic_evidence_verification.manifestation_key is a SHA-256 over the canonical JSON of the encoded receipt, so any change to the encoding of TextAnchor, SourceTextIdentity or the receipt would orphan every key. law_practice_legal_position_relator.grounding is a LegalPositionGrounding and holds no anchor. The P0 text that counts four columns and calls verified_anchor a VerifiedTextAnchor (decision p0-rq4, decision p0-census-dispositions, SPEC, census section f, DECISIONS.md) is read with this correction. The rule does not change: their bytes stay. P2 pins one frozen row per anchor column and one golden manifestation key before any code moves.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Edit this file if a re-measurement on origin/main finds another column; SPEC and the census follow it.
+
+### P2: QuoteKey normalizes the quote itself under its own QuoteNormalization version, separate from SourceTextIdentity.normalizationVersion, 2026-11-22
+
+SourceTextIdentity.normalizationVersion is the version of the locator-only normalization contract of one capture; it is occurrence identity. Quote grouping needs a different thing: one fold that makes two spellings of a passage group together. They are two versions, so the design module's mintQuoteKey(normalizationVersion, normalizedQuote) is replaced by mintQuoteKey(quote, normalization) where QuoteNormalization is LiteralKit(["nfkc-dehyphenate/v1"]) and the function applies the fold. A caller can no longer mint a key over text it did not normalize. The preimage is (quote-key/v1, normalization literal, normalized quote). QuoteKey stays explicitly non-injective and is never an identity; L1-4 asserts that three repeated passages share one QuoteKey and have three OccurrenceIds.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Take an already normalized quote and a caller-supplied version string again, as the design module did, and bump quote-key/v1.
+
+### P2: rdf Evidence.ts and its codecs are deleted with no full-union replacement; the trustgraph script gets a local schema, 2026-11-22
+
+EvidenceSelectorKind, the three selectors, EvidenceSelector, EvidenceTarget, EvidenceAnchor, BoundedEvidenceProjection and the nine evidence codecs in Adapters/WebAnnotation.ts go. They have no package or app consumer and every transform throws a defect on bad input. A DTO codec over the whole Selector union is not written: it would need RangeSelector and refinedBy DTOs plus two unregistered oa terms (a term-snapshot release), and the OA profile of p0-item7, which P3 implements, has only the position and quote selectors. The census missed one consumer: goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts decodes a frozen evidence artifact with BoundedEvidenceProjection through a relative path that no typecheck covers and that reference goal's rerun.verify runs. The script gets a local schema for the frozen shape (anchors of text-quote selectors, truncated) so the rerun still works; the artifact is not edited. Census row f-1 records the narrowings: positions are non-empty and unit-tagged, Fragment.conformsTo is required, and EvidenceAnchor id and note have no L1 counterpart (the WebAnnotation DTO keeps id and bodyValue).
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore Evidence.ts from git; the frozen trustgraph artifact decodes with either schema.
+
+### P2: a re-anchored range the target text cannot hold is Unmapped split-boundary, 2026-11-22
+
+Section 1.8 step 6 builds the TextAnchor from the target slice and verifies it, and a refusal is Unmapped split-boundary. A LocatorMap carries no text length, so a map whose target ranges run past the end of the target capture's text passes LocatorMapCheck, and the slice of such a range is shorter than the range: TextAnchor.make would throw on the width check instead of reaching verification. reanchor therefore checks the end of the image against the target text first and returns Unmapped split-boundary, the outcome verification gives for an end past the text (invalid-anchor). No new UnmappedReason is added: the design fixes the four reasons, and a range the target text cannot hold is a range whose boundaries are not boundaries of that text. A kept part that falls past the end is still quote-mismatch, because the kept comparison runs first. The segment lookup that compose and reanchor share is a binary search in src/internal/segments.ts, beside internal/scalars.ts; it is not exported from the package.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Add an UnmappedReason for a target range past the text, or treat it as quote-mismatch, by a decision file before P3 records a re-anchoring.
+
+### P2: Reanchoring carries the target receipt, LocatorMap segments are Kept or Rewritten, and laxity is stepwise below composite, 2026-11-22
+
+DECISIONS.md (2026-11-19) says re-anchoring is a recorded map with its own receipt, but the design module's cases held two ids and no receipt, so a caller could not read the new range. Exact and Widened become { from: OccurrenceId, to: Anchored }; to is produced by verifyTextAnchorAgainstVerifiedSource on the target capture and projected, and its id is minted from it, never stored beside it. LocatorMap segments become a tagged union: Kept (equal width, offsets inside map pointwise) and Rewritten (the segment maps only as a whole), both with UTF-16 positions, ordered and disjoint on both sides; a gap is unmapped. Exact means both boundaries land on a segment edge or inside a Kept segment; Widened means a boundary fell inside a Rewritten segment and the image grew to its edge; Unmapped otherwise. UnmappedReason becomes capture-mismatch, outside-map, split-boundary and quote-mismatch: ambiguous and quote-not-found are removed because no quote search takes part in reanchoring, and quote-mismatch is the refusal when a Kept segment's target text differs from the source quote. A range whose image spans text inserted in the target is Widened. Results are ordered by range inclusion, and the lax comparison runs from the two steps to the composite map: whenever reanchor by f then g and reanchor by compose(f, g) are both mapped, the stepwise range is inside the composite range; when both steps are Exact the composite is Exact with the same range; the identity map gives Exact with the same id. The comparison is not claimed against Unmapped: a first map may insert text that the second does not cover, so the steps can be Unmapped where the composite is not, and the composite may drop a straddling piece the steps kept. On maps without gaps Unmapped does not occur for an in-range occurrence and the comparison is total. compose cuts the middle capture at offsets that are not inside a Rewritten segment of either map and drops a piece that touches a gap. A throwaway simulation of these rules on this base found no counterexample: 400,000 random map pairs with gaps and 300,000 without, with 126,000 and 151,000 Exact pairs composing exactly; it did refute an earlier form of the law that put Unmapped on top of the order. @beep/text owns the two text normalizations L1-3 tests (nfkc and dehyphenate), each returning the text and its segments; the NFKC segmentation is the joins-cluster scan, since grapheme clusters alone are unsound (compatibility jamo compose across them), with the join rule of decision p2-nfkc-clusters-join-on-the-normalized-mark. The dehyphenate segment is the whole context its rule reads: the preceding scalar, the removed run and the following lowercase scalar are one Rewritten segment, and matches that share a scalar merge. With the following letter outside the segment naturality is false: in exam-, line break, ple the range of exam-, line break lands on segment edges and maps Exact to exam, while the normalization of that quote keeps its hyphen. A second simulation checks, for both normalizations, that the segments concatenate to the normalized text and that every Exact scalar-boundary range has the normalization of its quote as target, and the same for dehyphenate after nfkc: 350,000 random strings salted with hyphen breaks and every scalar NFKC changes, 13.9 million ranges, 12.2 million of them Exact, 966,000 composed Exact chains, no counterexample. The same script refutes both earlier segmentations.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Return bare OccurrenceIds and untagged segments again, as the design module did, by a decision file before P3 records a re-anchoring.
+
+### P2: the receipt read functions fail with one sanitized CitationReceiptReadFailure; the codecs keep the reason as an issue message, 2026-11-22
+
+readCitationDocumentReceipt and readCitationMentionReceipt, the only decode path for a receipt from outside the process, map every refusal to CitationReceiptReadFailure, a tagged error with no fields. A schema issue over a receipt can quote source text, and every other citation boundary in the server is sanitized the same way (CitationMentionFailure, CitationDocumentFailure). The reason is not lost for in-process callers: CitationDocumentReceiptRead and CitationMentionReceiptRead fail with InvalidValue issues whose messages name the refusal (a stored cm1 that is not its own recomputation, a mention reference the receipt does not hold, a mention that cannot be minted under citation-mention/v2, a standalone v1 receipt with warnings), and CitationMentionMigration.test.ts asserts each message through the codec and the sanitized failure through the read function. No caller distinguishes the reasons today; the first consumer that must, adds them.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Give CitationReceiptReadFailure a LiteralKit reason per refusal (stale-cm1, dangling-reference, unmintable, not-a-receipt) and map the issue to it.
+
+### P2: v3 citation receipts convert to v4 through a server read codec that checks the stored cm1 and grants no proof, 2026-11-22
+
+The live schemas become citation-document-receipt/v4 and citation-mention-receipt/v2 (the nested receipt's id changes meaning, so its version moves with the document). The read side is CitationDocumentReceiptRead in law-practice server, a union of the live schema and a frozen v3 schema decoded into it with SchemaGetter.transformEffect; encoding v3 is SchemaGetter.forbidden, so writes are always v4. It lives in the server because it needs Digest; the domain schema stays service-free. The frozen v3 schema types only what the step reads or rewrites (version tags, id positions with frozen cm1, ca1, cl1 and cg1 templates, engine artifact, citation.type and the anchor receipt) and passes every other encoded field through; the live v4 schema then decodes the result, so the coherence filter runs on it. Before minting, the pinned v1 encoder recomputes each cm1 and a mismatch is refused: a transform must not turn a stale or tampered id into a fresh one. Case-occurrence authorities are found by recomputing their v1 key, never by looking at the page component. Every reference is rewritten through the old-to-new maps and a dangling reference is refused. The converted receipt is still powerless: restoreCitationDocument re-verifies the source text and the anchors and re-mints every id. Neither restore function has a caller outside the tests and the package exports map ./internal/* to null, so the read codec and restore are both internal; the first consumer that holds a receipt exports their composition (read, then restore) from a public subpath, and until then CitationMentionMigration.test.ts is the only place that composes them. Out-of-band CitationResourceBinding values are adapter expectations that no one stores; adapters re-derive them and receive cm2 ids, so they are not converted. A standalone v1 mention receipt converts through the same mention step (CitationMentionReceiptRead); CitationEngineResolutionInput is a served input with no stored rows and refuses v1 under the amendment.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Delete the read codec and refuse v3 again by a decision file that records that no v3 receipt is held anywhere.
+
+### P2: a Refined selector over a base that is not Unique resolves to the base's outcome, 2026-11-22
+
+Decision p2-selector-resolution-semantics says Refined resolves by inside the segment base selects, and that a composite is NotFound when a part is NotFound and otherwise Ambiguous with the product of the counts. It does not say what by is resolved in when base is Ambiguous: there is no single segment, and Resolution carries a count, not the candidates. resolve therefore does not evaluate by over an ambiguous or absent base; the Refined outcome is the base outcome (Ambiguous with the base count, or NotFound). The product rule stays for Range, whose parts are both resolved over the whole text. The outcome still fails closed exactly when it should: a Refined selector is Unique only when its base is Unique and by is Unique inside it. Counting every by match inside every base candidate would need candidate enumeration, which the design rules out (callers that need candidates search for them explicitly), and a nested Refined would multiply that work.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Resolve by inside every candidate of an ambiguous base and report the summed count, by a decision file before P3 builds on resolve.
+
+### P2: live standards and the cache baselines stop spelling the retired package name; the doctor is not widened, 2026-11-22
+
+The final gate of research/2026-11-20-p2-design.md section 10 needs delete-package --allow-stale-packets --check to print clean. After the doctor fix of preparatory PR a it still found residue in 24 live files, all written by this lane: chapter 16 and the glossary named the retired package, and the review reason of the commit-13 cache request, which bun run beep cache baseline copies into every subject it stamps, spelled it in 22 baseline files. Chapter 16 and the glossary now say the former provenance package; decision p2-delete-package-doctor-reads-dated-records-as-history already holds that these chapters stay live. The baselines are re-stamped through the repo route with docs/reports/tksr-p2-l1-reason-cache-review-2026-11-22.md and its request; the diff touches only the review block of each file, and cache audit and cache-policy read 0 blocking findings. Widening the doctor's history predicate to cache-baseline reason fields was not taken: a baseline file is live configuration, and a predicate that skips part of a live file would hide a real reference there. The --check now prints clean.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore the package name in chapter 16, the glossary and the baseline review reason, and extend the delete-package history predicate to cache-baseline review fields instead.
+
+### P2: schema identifiers follow the package to @beep/text and the epistemic identifier fixture is regenerated, 2026-11-22
+
+packages/epistemic/domain/test/fixtures/value-schema-identifiers.txt pins 20 @beep/provenance/... annotation identifiers, and its test comment says they never move. They move in P2: an identifier is a schema annotation composed from a code path, not a published term (no registry shard or term-snapshot row names provenance, so L0-3 is not involved) and not a stored value (no reader of these strings exists outside the fixture). Keeping the old segment would be an alias for the retired name, which chapter 11 rule 3 forbids. The fixture is regenerated in the rename commit with exactly those 20 lines changed, and the later well-formedness commit adds the WellFormedText lines. The comment in ValueSchemaIdentifiers.test.ts is corrected: the fixture records identifier changes so they are reviewed, and a package rename under a decision is a reviewed change.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Give @beep/text a composer that keeps the provenance segment for the three moved modules and restore the fixture from git, by a decision file.
+
+### P2: selector semantics follow the W3C model: Range ends before the end selector, Refined is relative, Fragment resolves NotFound, 2026-11-22
+
+The design module described Range as the span from the start of from to the end of to. The W3C Web Annotation model (4.2.8) says the selection runs through to the beginning of the ending selector, but not including it, and endSelector is the exclusive end point. The union claims to be the Web Annotation selector algebra, so P2 follows the specification; an empty or inverted result is NotFound. Refined applies by inside the segment base selects, with offsets relative to that segment. Fragment.conformsTo is a required absolute IRI: a fragment without a specification cannot be interpreted, so it is not a selector of this algebra; DocumentAnnotation keeps its fragment as a wire DTO without conformsTo. No fragment specification is interpreted over plain text in P2, so resolve returns NotFound for every Fragment. Position resolves through convertPosition and is NotFound when the conversion refuses. Quote counts every occurrence at scalar boundaries whose context matches, overlapping occurrences included, in one linear scan whose needle is prefix, exact and suffix together: one is Unique, two or more are Ambiguous with the count, and the first hit is never returned. A composite selector whose part is NotFound is NotFound; otherwise any ambiguous part makes it Ambiguous with the product of the counts. Unique always carries a utf16-code-unit position and the slice.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Make Range run to the end of its end selector, or interpret a fragment specification, by a decision file before P3 builds on resolve.
+
+### P2: SourceTextIdentity strings are well-formed on decode; no stored row can hold a lone surrogate except an attempt-log row, which is refused, 2026-11-22
+
+scopeRef, sourceRef, extractor.name, extractor.version and normalizationVersion become @beep/schema/WellFormedText (non-empty, no lone surrogate), and locator becomes the exported SourceTextLocator (PosixPath with a well-formedness filter), which OccurrencePreimage reuses. This is the one narrowing decision p0-census-dispositions already accepts, because RFC 8785 cannot canonicalize a lone surrogate and an identity that cannot be minted is not an identity. The check applies to decode as well as construction. Under the stored-format law that would be an incompatible change if a stored row could hold a lone surrogate. The stores were censused over every field type, S.fromJsonString, text column, TEXT payload and file writer in the importing packages. (1) epistemic_evidence_verification.verified_anchor and law_practice_patent_citation_event.grounding are jsonb, and Postgres refuses an unpaired \ud800 or \udc00 escape at input (measured on PGlite 0.5.16, PostgreSQL 18.6: invalid input syntax for type json; a paired escape is accepted). (2) The agent-memory node events are SchemaBinary bytes written through TextEncoder, which replaces a lone surrogate with U+FFFD, so a decoded event string is always well-formed. (3) The semantica ledger writes TEXT payloads through canonicalJson, which throws on an unpaired surrogate before the insert. (4) The office-action attempt log (OfficeActionStructure.repo.ts, JSON lines) can hold one: JSON.stringify writes the ASCII escape \ud800 and S.fromJsonString reads it back. No such log exists, because officeActionStructureFileStore has no caller outside its test, and the row is refused on purpose: the only total read-time step would replace the surrogate with U+FFFD, which changes scopeRef (the matter-wall input and half of the predecessor-chain key) and can merge two scopes, and a permissive type in one store would be a second source identity. The store already fails closed with OfficeActionStructureStorageError on a row it cannot decode. Well-formed attempt rows stay byte-identical: commit 1 freezes two rows written by today's store and commit 3 adds the refusal case. (5) A v3 citation receipt held as JSON text could in principle spell an escaped lone surrogate; such a receipt has no OccurrenceId under any design, and the read transform refuses it with a schema issue. Two tests keep the first two facts true: a PGlite case in the epistemic server integration tests that inserts an unpaired escape and expects the refusal, and a SchemaBinary case in the agent-memory tests. The well-formed pattern is not re-spelled: VerifiedTextAnchor's private WellFormedSourceText keeps its own schema only because it admits the empty text. effect/String.isWellFormed exists in the reference checkout but not in the installed 4.1.4, so the filter uses the native String.prototype.isWellFormed, as jsonc, csv and markdown already do.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore S.NonEmptyString on the five string fields and drop the locator filter, by a decision file; minting still refuses a lone surrogate with a typed error.
+
+### P2: the TextAnchor to oa: codec is a pair of Result functions over source text, and WebAnnotationTarget.selector becomes one or many selectors, 2026-11-22
+
+textAnchorToWebAnnotationTarget(anchor, { source, sourceText }) and webAnnotationTargetToTextAnchor(target, sourceText) return Result with a typed WebAnnotationAnchorRefused. They cannot be a text-free schema codec, because a code-point start needs the text before it. They take raw text and not VerifiedSourceText: the result is a candidate TextAnchor, never a proof, and the caller verifies it. The oa:hasSource IRI is the caller's argument, since a SourceTextIdentity is not an IRI. Offsets convert through convertPosition. One anchor becomes a position selector and a quote selector, which OA models as several selectors of one target, so WebAnnotationTarget.selector becomes S.ArrayEnsure(WebAnnotationSelector) with at least one member: effect 4.1.4 decodes one object or an array to an array and encodes a one-member array back to the object, so a single-selector annotation keeps its wire bytes (checked on this base). The decoded type changes; the semantic-web test reads the first selector. Decoding fails closed: every selector is read and all must agree, although OA lets a consumer pick one: two positions must give one range, a quote beside a position must equal the slice and its stated prefix and suffix must match the text, and several quotes without a position must each resolve Unique to one range; a quote-only target must resolve Unique, an empty or inverted range is refused, and a target with neither selector is refused. A TextAnchor holds no context and no fragment, so prefix, suffix and fragments of a third-party target are not carried: re-encoding is stable on the anchor, not on the target. The refusal reasons are the named, exported WebAnnotationAnchorRefusal. DocumentAnnotation overrides selector and does not change. The round trip gets no ledger id (it is a PLAN exit criterion); its test titles start with P2-OA in packages/foundation/modeling/rdf/test/TextAnchorCodec.test.ts.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore the single selector field and nest the quote as oa:refinedBy by a decision file before P3 builds the OA document codec.
+
+### P2: unit conversion refuses ill-formed text with its own reason, 2026-11-22
+
+UnitConversionRefusal gains ill-formed-text beside split-boundary and out-of-range. A text with a lone surrogate has no UTF-8 encoding and no agreed code-point count, so the conversion cannot be a bijection on it; returning a number would be a silent wrong answer. verifySourceTextIdentity already refuses such text, so no verified capture reaches this case. langextract's convertTextOffsetRange keeps its own documented behaviour on ill-formed text until P3 re-expresses it.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Drop ill-formed-text from UnitConversionRefusal and let a lone surrogate count as one code point, by a decision file with the L1-2 row.
+
+### P2: the v3 conversion refuses a dangling mention reference itself and leaves dangling authority, group and list references to the live coherence check, 2026-11-22
+
+Step 5 of the read transform rewrites every reference through the old-to-new maps and refuses a dangling one. A mention reference has to be refused in the conversion: an id the mention map does not hold has no cm2 image, so there is nothing to write. Authority, group and list ids are kept unless the case-occurrence step re-keyed them, so a reference that names no node passes through unchanged, and the live CitationDocumentReceipt decode that ends the conversion refuses it with its relationship coherence check (unique ids, closed references, one resolution per mention). Checking those again in the conversion would duplicate the domain filter. The case-occurrence v2 key over a new mention id comes from makeCaseOccurrenceAuthorityId, exported from AuthorityIdentity.ts and shared with makeCitationAuthorityId, so the conversion cannot drift from the live key. Tests: a dangling warning and a dangling member list entry are refused by the conversion, an unknown authority by the coherence check.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Check every authority, group and list reference against the converted receipt inside convertDocumentV3 and refuse with its own issue message.
 
 ### P1 bootstrap identities use generated literals without importing the registry, 2026-11-23
 

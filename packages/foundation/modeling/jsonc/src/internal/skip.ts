@@ -1,10 +1,3 @@
-// The single iterative bracket-balance skip, shared by the parser (depth caps),
-// the modifier's structural navigation and the visitor's depth cap.
-//
-// Counting opener/closer depth over the flat token stream skips any value
-// without recursing, so hostile nesting cannot overflow the stack. Strings
-// tokenize whole, so brackets inside them never affect the count.
-
 import * as S from "effect/Schema";
 import { SyntaxKind } from "./scanner.ts";
 
@@ -88,17 +81,17 @@ export const skipBalancedValue = (cursor: SkipCursor): number => {
   if (isNotAValue(cursor.getToken())) {
     return cursor.tokenStart();
   }
-  let level = 0;
+  let bracketDepthCountedOverWholeTokens = 0;
   let end = tokenEnd(cursor);
   do {
     const t = cursor.getToken();
     if (isOpener(t)) {
-      level++;
+      bracketDepthCountedOverWholeTokens++;
     } else if (isCloser(t)) {
-      level--;
+      bracketDepthCountedOverWholeTokens--;
     }
     end = tokenEnd(cursor);
     cursor.advance();
-  } while (level > 0 && cursor.getToken() !== "EOF");
+  } while (bracketDepthCountedOverWholeTokens > 0 && cursor.getToken() !== "EOF");
   return end;
 };

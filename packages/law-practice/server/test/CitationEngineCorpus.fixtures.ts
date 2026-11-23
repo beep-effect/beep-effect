@@ -4,7 +4,7 @@
 import { ResolvedSourceText, SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationEngineSourcePairInput } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -18,7 +18,7 @@ import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.f
 import { assertCitationSemanticDocument } from "./CitationSemanticExtraction.fixtures.ts";
 import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 
 const sameSource = S.toEquivalence(SourceTextIdentity);
 /** Odd corpus ids whose only difference from the preceding even row is `removeAmbiguous: true`

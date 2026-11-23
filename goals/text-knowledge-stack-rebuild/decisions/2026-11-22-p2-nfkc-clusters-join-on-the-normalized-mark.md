@@ -1,0 +1,8 @@
+---
+title: "P2: an NFKC cluster also joins a letter whose NFKC form starts with a combining mark; langextract's scan gets the same fix in its own PR"
+date: 2026-11-22
+lane: "goals/text-knowledge-stack-rebuild-p2-text"
+reversal: "Join on the scalar's own category again in @beep/text; Normalization.test.ts then fails on the fixture Z, U+FF9E, U+0323."
+---
+
+The joins-cluster scan of @beep/langextract joins a scalar that is a combining mark, or that normalizes differently together with the open cluster. Four letters have an NFKC form that starts with a mark: U+0E33, U+0EB3, U+FF9E and U+FF9F. Such a letter does not join, opens its own cluster, and a mark after it then composes with the previous cluster in the whole text but not in the segments. Measured on this base: normalizeTextLocator of Z, U+FF9E, U+0323 gives Z, U+3099, U+0323 where NFKC gives U+1E92, U+3099. The P2 simulation refuted the rule (84 of 100,000 strings) and the corrected rule passed it on 350,000 strings. @beep/text joins a scalar when its own NFKC form starts with a mark or when the pair normalizes differently. The langextract defect is live on main and outside P2's files, so it is fixed by a small PR off main: the combining-mark test of VerifiedSpan.normalization.ts reads the normalized scalar, with the fixture above and a property over the same alphabet. The old form of a text differs from its NFKC form only by canonical order and composition, so two texts with equal old forms have equal new forms and no persisted association that decoded before should be refused; the PR checks that over the same alphabet against a test-local copy of the old rule before it lands.

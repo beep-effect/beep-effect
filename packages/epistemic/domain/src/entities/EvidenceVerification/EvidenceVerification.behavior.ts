@@ -12,8 +12,8 @@ import {
 } from "@beep/epistemic-domain/values/EvidenceVerification";
 import { dual } from "effect/Function";
 import type { EvidenceVerificationManifestationKey } from "@beep/epistemic-domain/values/EvidenceVerification";
-import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import type * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
+import type { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import type * as Result from "effect/Result";
 import type * as S from "effect/Schema";
 import type { EvidenceVerification } from "./EvidenceVerification.model.ts";

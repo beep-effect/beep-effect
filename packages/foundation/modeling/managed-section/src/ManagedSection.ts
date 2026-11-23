@@ -322,8 +322,6 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
         yield* Effect.annotateCurrentSpan({ path, sections: sections.length });
         const document = yield* load(path);
         const reconciled = yield* Effect.fromResult(document.reconcile(sections));
-        // Writing an identical file churns mtimes and makes every sync look
-        // like a change to anything watching.
         if (reconciled.changed) {
           yield* store(path, reconciled.text);
         }
@@ -353,15 +351,11 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
         })
       ),
 
-      // `sync` IS `syncAll` with one element: with a single declared section
-      // there is nothing to reorder, so the two agree exactly. A second
-      // implementation would be a second ordering rule waiting to drift.
       sync: dual(
         2,
         Effect.fn("ManagedSection.sync")(function* (path: string, section: Section) {
           yield* Effect.annotateCurrentSpan({ path, key: section.key });
           const outcomes = yield* syncAll(path, [section]);
-          // syncAll returns one outcome per declared section.
           return O.getOrThrow(A.head(outcomes));
         })
       ),
@@ -432,7 +426,6 @@ const unimplemented = (member: string): never => {
   });
 };
 
-/** An unstubbed two-argument member: both the data-first and the data-last call die when run. */
 const unstubbed = (
   member: string
 ): {

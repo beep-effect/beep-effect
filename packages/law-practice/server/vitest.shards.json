@@ -2,7 +2,7 @@
   "sourceRun": 43646904138,
   "sourceCommit": "653ca11144866c85e36b616b21bbeadce7357a2d",
   "estimatedMilliseconds": [
-    363879, 363877, 363881, 363880, 363880, 363880, 363879, 363879
+    363879, 364127, 363881, 363880, 363880, 363880, 363879, 363879
   ],
   "shards": [
     [
@@ -50,6 +50,7 @@
       "test/CitationHtmlCleanerStage.test.ts",
       "test/CitationHtmlInput.test.ts",
       "test/CitationHtmlWorkerProtocol.test.ts",
+      "test/CitationMentionMigration.test.ts",
       "test/CitationNativeLaneTransfer.test.ts",
       "test/CitationPostCaseMetadata.test.ts",
       "test/CitationPreCaseMetadata.test.ts",
@@ -455,6 +456,7 @@
     "test/CitationMarkupWorkerCoverage.test.ts": 117,
     "test/CitationMention.test.ts": 181,
     "test/CitationMentionIdentity.test.ts": 15,
+    "test/CitationMentionMigration.test.ts": 250,
     "test/CitationMetadataStrings.test.ts": 6139,
     "test/CitationMetadataYear.test.ts": 1175,
     "test/CitationMixedResourceObjects.test.ts": 931,

@@ -1,9 +1,3 @@
-// The parser bridge must stay behind its own subpaths: importing `@beep/md`
-// or `@beep/md/Md` never loads `@beep/markdown`, and the package root keeps
-// exactly the eight modules it re-exported before the bridge existed. A
-// future `beep codegen barrel` run that adds the bridge to `index.ts` fails
-// here, since no other gate checks barrel drift.
-
 import * as MdRoot from "@beep/md";
 import * as MdNamespace from "@beep/md/Md";
 import * as MdBehavior from "@beep/md/Md.behavior";
@@ -34,14 +28,13 @@ declare global {
   }
 }
 
-// Every package source module's text, keyed by its path under `src/`. Vite
-// inlines the raw text at transform time, so the walk needs no filesystem.
-const SOURCES = ImportGraph.fromGlob(
+const SOURCES_INLINED_BY_VITE_RAW_GLOB_WITHOUT_FILESYSTEM = ImportGraph.fromGlob(
   import.meta.glob<string>("../src/**/*.ts", { query: "?raw", import: "default", eager: true }),
   { prefix: "../src/" }
 );
 
-const runtimeClosure = (entry: string) => ImportGraph.closure({ sources: SOURCES, entry });
+const runtimeClosure = (entry: string) =>
+  ImportGraph.closure({ sources: SOURCES_INLINED_BY_VITE_RAW_GLOB_WITHOUT_FILESYSTEM, entry });
 
 const ROOT_MODULES = [
   "./Md.behavior.ts",
@@ -54,7 +47,6 @@ const ROOT_MODULES = [
   "./Md.ts",
 ];
 
-// Every public entry except the two bridge subpaths.
 const NON_BRIDGE_ENTRIES = [
   "index.ts",
   "Md.ts",
@@ -70,29 +62,30 @@ const NON_BRIDGE_ENTRIES = [
 const PARSER_PACKAGES = ["@beep/markdown", "@beep/yaml", "@beep/toml", "@beep/jsonc"];
 
 const isBridgeModule = (module: string): boolean =>
-  module === "Md.syntax.ts" || module === "Md.parse.ts" || Str.startsWith("internal/syntax/")(module);
+  module === "Md.syntax.ts" ||
+  module === "Md.parse.ts" ||
+  module === "Md.anchors.ts" ||
+  Str.startsWith("internal/syntax/")(module);
 
-// The one exception: `@beep/jsonc/JsoncFingerprint` is that package's
-// canonical-JSON facade, not its parser, and loads no parser module. JSON
-// frontmatter renders through it, the one owner of RFC 8785 bytes (goal
-// canonical-digest-owner, slice C).
-const CANONICAL_JSON_FACADE = "@beep/jsonc/JsoncFingerprint";
+const CANONICAL_JSON_FACADE_LOADING_NO_PARSER = "@beep/jsonc/JsoncFingerprint";
 
 const isParserSpecifier = (specifier: string): boolean =>
-  specifier !== CANONICAL_JSON_FACADE &&
+  specifier !== CANONICAL_JSON_FACADE_LOADING_NO_PARSER &&
   A.some(PARSER_PACKAGES, (name) => specifier === name || Str.startsWith(`${name}/`)(specifier));
 
 const sorted = (values: Iterable<string>): ReadonlyArray<string> => A.sort(A.fromIterable(values), Order.String);
 
-describe("@beep/md import boundary", () => {
-  it.effect("keeps the bridge and every parser package out of the non-bridge entries' runtime closures", () =>
-    Effect.gen(function* () {
-      for (const entry of NON_BRIDGE_ENTRIES) {
-        const closure = yield* runtimeClosure(entry);
-        expect([entry, A.filter(closure.modules, isBridgeModule)]).toStrictEqual([entry, []]);
-        expect([entry, A.filter(closure.packages, isParserSpecifier)]).toStrictEqual([entry, []]);
-      }
-    })
+describe("@beep/md import boundary: the parser bridge stays behind its own subpaths, and no other gate checks barrel drift, so a `beep codegen barrel` run adding the bridge to index.ts fails here", () => {
+  it.effect(
+    "keeps the bridge and every parser package out of the non-bridge entries' runtime closures, exempting only JsoncFingerprint, the RFC 8785 canonical-JSON facade JSON frontmatter renders through",
+    () =>
+      Effect.gen(function* () {
+        for (const entry of NON_BRIDGE_ENTRIES) {
+          const closure = yield* runtimeClosure(entry);
+          expect([entry, A.filter(closure.modules, isBridgeModule)]).toStrictEqual([entry, []]);
+          expect([entry, A.filter(closure.packages, isParserSpecifier)]).toStrictEqual([entry, []]);
+        }
+      })
   );
 
   it.effect("sees the parser packages in the bridge's own closure", () =>
@@ -103,8 +96,16 @@ describe("@beep/md import boundary", () => {
     })
   );
 
+  it.effect("loads the source map and @beep/text in the anchors bridge's own closure", () =>
+    Effect.gen(function* () {
+      const closure = yield* runtimeClosure("Md.anchors.ts");
+      expect(A.contains(closure.modules, "Md.syntax.ts")).toBe(true);
+      expect(A.some(closure.packages, Str.startsWith("@beep/text/"))).toBe(true);
+    })
+  );
+
   it("imports @beep/markdown only from the bridge modules", () => {
-    const importers = SOURCES.pipe(
+    const importers = SOURCES_INLINED_BY_VITE_RAW_GLOB_WITHOUT_FILESYSTEM.pipe(
       HashMap.filter((source) => A.some(ImportGraph.runtimeImportsOf(source), isParserSpecifier)),
       HashMap.keys,
       sorted
@@ -115,7 +116,10 @@ describe("@beep/md import boundary", () => {
 
   it.effect("re-exports exactly the eight pre-bridge modules from the package root", () =>
     Effect.gen(function* () {
-      const moduleImportsOf1 = yield* ImportGraph.moduleImportsOf(SOURCES, "index.ts");
+      const moduleImportsOf1 = yield* ImportGraph.moduleImportsOf(
+        SOURCES_INLINED_BY_VITE_RAW_GLOB_WITHOUT_FILESYSTEM,
+        "index.ts"
+      );
       expect(sorted(moduleImportsOf1)).toStrictEqual(ROOT_MODULES);
       const modules: ReadonlyArray<Readonly<Record<string, unknown>>> = [
         MdBehavior,
@@ -135,8 +139,10 @@ describe("@beep/md import boundary", () => {
   it("publishes the bridge as side-effect-free subpaths with @beep/markdown as a dependency", () => {
     expect(manifest.exports["./Md.syntax"]).toBe("./src/Md.syntax.ts");
     expect(manifest.exports["./Md.parse"]).toBe("./src/Md.parse.ts");
+    expect(manifest.exports["./Md.anchors"]).toBe("./src/Md.anchors.ts");
     expect(manifest.publishConfig.exports["./Md.syntax"]).toBe("./dist/Md.syntax.js");
     expect(manifest.publishConfig.exports["./Md.parse"]).toBe("./dist/Md.parse.js");
+    expect(manifest.publishConfig.exports["./Md.anchors"]).toBe("./dist/Md.anchors.js");
     expect(manifest.exports["./internal/*"]).toBe("./src/internal/*.ts");
     expect(manifest.publishConfig.exports["./internal/*"]).toBe("./dist/internal/*.js");
     expect(manifest.sideEffects).toStrictEqual([]);

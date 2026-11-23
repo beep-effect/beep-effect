@@ -30,7 +30,7 @@ import {
   ClaimSourceTokenOwnership,
 } from "./ClaimClauseRole.model.ts";
 import { sourceLowerBound, sourceSelectionFrameMember } from "./ClaimClauseRole.sourceQuery.ts";
-import type { TextAnchor } from "@beep/provenance/TextAnchor";
+import type { TextAnchor } from "@beep/text/TextAnchor";
 import type {
   ClaimAttachedNominal,
   ClaimCitationWitness,

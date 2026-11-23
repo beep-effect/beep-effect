@@ -25,9 +25,7 @@ describe("SectionId", () => {
       }
     });
 
-    it("refuses a key that would break the marker grammar", () => {
-      // Whitespace would make the scanner's key capture ambiguous; the other
-      // characters cannot appear in a marker the scanner can read back.
+    it("refuses a key that would break the marker grammar: whitespace makes the key capture ambiguous, the rest cannot be read back", () => {
       for (const key of ["", " ", "two words", "-leading", ".leading", "has/slash", "has\nnewline"]) {
         assert.throws(() => SectionId.make({ key, commentStyle: CommentStyle.hash }), undefined, undefined, key);
       }
@@ -76,8 +74,6 @@ describe("Section", () => {
   });
 
   it("treats whitespace as significant, unlike the v3 normalized comparison", () => {
-    // v3 collapsed whitespace before comparing, so an indentation-only
-    // template change reported Unchanged and never reached the file.
     assert.isFalse(Equal.equals(make("a b"), make("a  b")));
     assert.isFalse(Equal.equals(make("body"), make("  body")));
   });

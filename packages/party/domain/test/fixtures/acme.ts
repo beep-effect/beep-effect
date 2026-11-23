@@ -4,12 +4,12 @@ import { ClaimVersion, EvidenceSignals, ReviewState, SourceAssertion } from "@be
 import { CommunicationEvent, Observation, Participant, voiceOf } from "@beep/party-domain/Communication";
 import {
   ActivityId,
+  ArtifactOccurrenceId,
   AssertionId,
   ClaimVersionId,
   EventId,
   IdentifierId,
   ObservationId,
-  OccurrenceId,
   PrincipalId,
 } from "@beep/party-domain/Ids";
 import { Party } from "@beep/party-domain/Party";
@@ -84,7 +84,7 @@ const header = (n: number, role: Participant["role"], name: string) =>
 const event = (n: number, participants: ReadonlyArray<Participant>) =>
   CommunicationEvent.make({
     id: EventId.make(`party-evt:${n}`),
-    occurrence: OccurrenceId.make(`party-occ:msg:${n}`),
+    occurrence: ArtifactOccurrenceId.make(`party-occ:msg:${n}`),
     channel: "email",
     sentAt: O.some(at(100 + n)),
     messageId: O.some(`<${n}@acme.example>`),

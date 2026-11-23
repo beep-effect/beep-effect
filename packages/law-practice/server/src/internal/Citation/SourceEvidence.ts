@@ -8,8 +8,8 @@ import {
   CitationPrerequisiteError,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/provenance/VerifiedTextAnchor";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -17,7 +17,7 @@ import * as Str from "effect/String";
 import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import type { CitationEngineFailure, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceEvidence");
 const SourceJson = SourceTextIdentity.pipe(S.toCodecJson, S.fromJsonString);

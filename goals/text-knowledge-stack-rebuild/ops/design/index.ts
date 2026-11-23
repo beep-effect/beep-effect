@@ -21,16 +21,16 @@
  * under the package each layer moves to, so each phase re-annotates with that
  * package's composer when it moves the layer.
  *
- * Bodies written as `declare const` are signatures only (resolve, reanchor,
- * unit conversion, the L3 audit and coherence check, grounding verification,
- * dataset canonicalization and isomorphism, and the OA codec). Everything
+ * Bodies written as `declare const` are signatures only (the L3 audit and
+ * coherence check, grounding verification, dataset canonicalization and
+ * isomorphism, and the OA codec). Everything
  * else has a real implementation, including merge, restrict, closure,
  * containment, the claim log checker and the retraction closure.
  *
- * Layer edges used here: L1 -> none; L2 -> L1; L3 -> `@beep/epistemics`
+ * Layer edges used here: L2 -> `@beep/text`; L3 -> `@beep/epistemics`
  * (`makeSignal`, `Measurement`), an ontology -> epistemics edge that decision
  * 2026-11-19-p0-census-dispositions removes in P4 by moving them to
- * `@beep/schema`; L4 -> L1; L5 -> none; L6 -> L2.
+ * `@beep/schema`; L4 -> `@beep/text`; L5 -> none; L6 -> L2.
  * L0 left the design module in P1. The identity layer is `@beep/identity`:
  * term IRIs, code ids, namespaces, terms, bindings, deprecations and the
  * snapshot are `@beep/identity/Term`, and the CURIE codec is
@@ -38,6 +38,16 @@
  * text are `@beep/schema` (`ContentHash`, `CanonicalHashSet`,
  * `WellFormedText`), and minting and the activity id are `@beep/jsonc`
  * (`Mint`, `ActivityStart`).
+ * L1 left the design module in P2: `@beep/text` owns `OffsetUnit`,
+ * `Position`, unit conversion, `Selector`, `Resolution` and `resolve`,
+ * `Anchored`, `OccurrenceId` and its `occurrence/v1` preimage, `QuoteKey`,
+ * the two text normalizations, `LocatorMap` and `reanchor`, and the layers
+ * here import them from its subpaths. Two shapes changed on the way: minting
+ * an occurrence fails with `PreimageMintError` (a schema or canonicalization
+ * error) instead of a canonicalization error alone, and `Reanchoring.to` is
+ * the target capture's `Anchored`, not a second id (decision
+ * 2026-11-22-p2-reanchoring-shape-and-lax-direction). The citation mention
+ * preimage went to the law-practice server, not to `@beep/text`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -45,8 +55,6 @@
 
 /** Composed `Arbitrary` prototypes for the annotation document and the claim log. */
 export * as Generators from "./generators.ts";
-/** L1 text: occurrence identity, selectors, resolution, re-anchoring, `Anchored`. */
-export * as L1 from "./L1.text.ts";
 /** L2 annotation: kind registry, document ingredients, merge, restrict, closure, refusals. */
 export * as L2 from "./L2.annotation.ts";
 /** L3 taxonomy: SSSOM mapping sets, gUFO audit and coherence signatures. */

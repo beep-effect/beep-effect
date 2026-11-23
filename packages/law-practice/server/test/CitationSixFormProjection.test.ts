@@ -4,9 +4,9 @@ import { CourtReporterArtifact } from "@beep/law-practice-domain/values/CourtRep
 import { CitationExtractorConfiguration, CitationExtractorLive } from "@beep/law-practice-server/layer";
 import { CitationExtractor, CitationExtractorInput } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
@@ -23,7 +23,7 @@ import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts
 import { makeCitationBundledTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { Citation, CitationDocument, CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
-import type { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 
 const Range = S.Struct({ start: S.Natural, end: S.Natural, quote: S.String });
 const Link = S.Struct({

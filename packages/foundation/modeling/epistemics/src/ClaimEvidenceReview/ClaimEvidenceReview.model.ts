@@ -4,9 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor";
+
 import { LiteralKit } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedTextAnchorErrorReason } from "@beep/text/VerifiedTextAnchor";
 import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";

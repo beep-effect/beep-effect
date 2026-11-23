@@ -65,9 +65,9 @@
     "@beep/epistemics": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/markdown": "workspace:^",
-    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/sqlite": "workspace:^",
+    "@beep/text": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
