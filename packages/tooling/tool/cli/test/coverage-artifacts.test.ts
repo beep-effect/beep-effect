@@ -1844,7 +1844,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     const listed = ["packages/law/test/a.test.ts", "packages/law/test/b.test.ts", "packages/law/test/c.test.ts"];
     const collectWithUnsealed = Effect.fnUntraced(function* (
       ranByShard: ReadonlyArray<ReadonlyArray<string>>,
-      total: number | undefined = A.length(ranByShard),
+      total: number | "unsharded" = A.length(ranByShard),
       listedByShard: ReadonlyArray<ReadonlyArray<string>> = [],
       packageName = "@beep/law"
     ) {
@@ -1861,7 +1861,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           testReportPath: "coverage/unit-results.json",
           testRuntime: "node",
           testRuntimeVersion: "22.22.3",
-          ...(total === undefined ? {} : { shard: { index: offset + 1, total } }),
+          ...(total === "unsharded" ? {} : { shard: { index: offset + 1, total } }),
         });
         const updated = CoverageProducerManifest.make({
           ...manifest,
@@ -1908,7 +1908,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
 
     it.effect("accepts an unsharded run that ran every listed file", () =>
       Effect.gen(function* () {
-        const outcome = yield* collectWithUnsealed([listed], undefined);
+        const outcome = yield* collectWithUnsealed([listed], "unsharded");
         expect(outcome).toBe("complete");
       })
     );
@@ -1925,7 +1925,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
 
     it.effect("refuses an unsealed run of a package the plan seals", () =>
       Effect.gen(function* () {
-        const outcome = yield* collectWithUnsealed([listed], undefined, [], "@beep/example");
+        const outcome = yield* collectWithUnsealed([listed], "unsharded", [], "@beep/example");
         expect(outcome).toContain("unsealed run of planned package @beep/example; planned packages must be sealed.");
       })
     );
@@ -1937,6 +1937,36 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(outcome).toContain(
           `ran 2 distinct of 13 listed test files; missing [${A.join(A.take(A.drop(many, 2), 10), ", ")} and 1 more]`
         );
+      })
+    );
+
+    it.effect("writes each unsealed run into the producer manifest beside the sealed packages", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const selection = CoverageProducerPackage.make({
+          packageName: "@beep/law",
+          packagePath: "packages/law",
+          expectedTestFiles: listed,
+          testReportPath: "coverage/unit-results.json",
+          testRuntime: "node",
+          testRuntimeVersion: "22.22.3",
+          shard: { index: 1, total: 2 },
+        });
+        yield* writeCoverageProducerArtifact(
+          f.root,
+          CoverageProducerWriteOptions.make({
+            artifactRoot: ".beep/unsealed-only",
+            identity: f.identity,
+            partitionId: "law-practice-1",
+            packages: [],
+            unsealedRuns: [CoverageUnsealedRun.make({ selection, actualTestFiles: A.take(listed, 1) })],
+          })
+        );
+        const manifest = yield* f.fs
+          .readFileString(f.path.join(f.root, ".beep/unsealed-only/manifest.json"))
+          .pipe(Effect.flatMap(decodeManifest));
+        expect(A.map(manifest.unsealedRuns, (run) => run.actualTestFiles)).toEqual([A.take(listed, 1)]);
+        expect(manifest.packages).toEqual([]);
       })
     );
 
