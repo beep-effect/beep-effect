@@ -12,7 +12,7 @@ describe("TomlDateTime classes", () => {
   it("rejects impossible calendar dates with the predicate's own text naming the day, which no static message annotation may replace", () => {
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 2, day: 29 }));
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 4, day: 31 }));
-    const february = S.decodeUnknownResult(TomlLocalDate)({ year: 2021, month: 2, day: 29 });
+    const february = S.decodeResult(TomlLocalDate)({ year: 2021, month: 2, day: 29 });
     const reported = Result.match(february, { onFailure: String, onSuccess: () => "decoded" });
     assert.include(reported, "day 29 does not exist in 2021-02 (month has 28 days)");
   });
