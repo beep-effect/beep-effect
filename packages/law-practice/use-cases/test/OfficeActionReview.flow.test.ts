@@ -32,7 +32,7 @@ import * as Model from "effect/ai/Model";
 import * as Response from "effect/ai/Response";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import { flow, identity } from "effect/Function";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -160,7 +160,7 @@ const extractedWith =
   (fields: { readonly engineVersion?: string; readonly text?: string }) =>
   (processed: ProcessFileResult): ProcessFileResult =>
     ProcessFileResult.match(processed, {
-      "archive-exported": identity,
+      "archive-exported": (archive): ProcessFileResult => archive,
       extracted: (extracted) =>
         ExtractedProcessFileResult.make({
           ...extracted,
@@ -174,7 +174,7 @@ const extractedWith =
             ...fields,
           }),
         }),
-      skipped: identity,
+      skipped: (skip): ProcessFileResult => skip,
     });
 const refusedBy = Effect.fn("OfficeActionFlow.refusedBy")(function* (
   reshape: (processed: ProcessFileResult) => ProcessFileResult
@@ -190,7 +190,8 @@ const refusedBy = Effect.fn("OfficeActionFlow.refusedBy")(function* (
     transition: makeClaimTransition(),
     langExtract,
   });
-  return yield* review.review(yield* fixtureInput()).pipe(Effect.flip);
+  const input = yield* fixtureInput();
+  return yield* review.review(input).pipe(Effect.flip);
 });
 
 describe("office-action annotation flow", () => {
@@ -244,7 +245,8 @@ describe("office-action annotation flow", () => {
       Effect.fnUntraced(function* () {
         const refusals = yield* Effect.forEach(
           [skipped, archived, extractedWith({ engineVersion: "1" }), extractedWith({ text })],
-          refusedBy
+          refusedBy,
+          { concurrency: 1 }
         );
         expect(A.map(refusals, (refusal) => refusal._tag)).toStrictEqual(
           A.replicate("FileProcessingOperationError", 4)
