@@ -55,7 +55,7 @@ const unreadable: ReviewItemStoreShape = {
 
 const importedQuestion = LegacyReviewItemImported.make({
   itemId: "question:legacy-1",
-  kind: "question",
+  storedKind: "question",
   text: "Should the synthetic response date stay on November 2?",
   raw: { kind: "question", itemId: "question:legacy-1" },
   unresolved: [

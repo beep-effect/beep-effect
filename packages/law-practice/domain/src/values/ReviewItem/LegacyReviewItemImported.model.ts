@@ -142,7 +142,7 @@ export class LegacyQuoteUnresolved extends S.Opaque<LegacyQuoteUnresolved, { rea
  *
  * const imported = LegacyReviewItemImported.make({
  *   itemId: "kg-answer:1",
- *   kind: "kg-answer",
+ *   storedKind: "kg-answer",
  *   text: "Synthetic answer",
  *   raw: { kind: "kg-answer", itemId: "kg-answer:1" },
  *   unresolved: [
@@ -166,7 +166,10 @@ export class LegacyQuoteUnresolved extends S.Opaque<LegacyQuoteUnresolved, { rea
 export class LegacyReviewItemImported extends S.Opaque<LegacyReviewItemImported, { readonly brand: unique symbol }>()(
   S.TaggedStruct("LegacyReviewItemImported", {
     itemId: ReviewItemId.annotateKey({ description: "Stored item id." }),
-    kind: ReviewItemKind.annotateKey({ description: "Stored item kind." }),
+    storedKind: ReviewItemKind.annotateKey({
+      description:
+        "The stored row's item kind. Named apart from ReviewItem's kind discriminant so a kind check never matches an import.",
+    }),
     text: S.NonEmptyString.annotateKey({ description: "Stored item text, shown with the repair request." }),
     raw: S.JsonObject.annotateKey({ description: "The stored JSON object exactly as read." }),
     unresolved: S.NonEmptyArray(LegacyQuoteUnresolved).annotateKey({
