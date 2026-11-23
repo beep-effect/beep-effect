@@ -137,7 +137,6 @@ describe("PackageManagerPin rejection matrix", () => {
   // Dist-tags are not versions.
   rejects("yarn@berry", "version");
   rejects("pnpm@latest", "version");
-  // v-prefixed and empty versions.
   rejects("pnpm@v1.2.3", "version");
   rejects("pnpm@", "version");
   // Padded versions: the version substring is ruled on by SemVer.isPinnable,
@@ -147,14 +146,11 @@ describe("PackageManagerPin rejection matrix", () => {
   rejects("pnpm@ 11.17.0", "version");
   rejects("pnpm@11.17.0 ", "version");
   rejects("pnpm@ 11.17.0 +sha512.deadbeef", "version");
-  // Unknown or empty manager names.
   rejects("cargo@1.0.0", "name");
   rejects("PNPM@1.0.0", "name");
   rejects("@1.0.0", "name");
-  // No separator at all.
   rejects("pnpm", "format");
   rejects("", "format");
-  // Malformed integrity tails: empty, wrong form (SRI), uppercase hex.
   rejects("pnpm@11.17.0+", "integrity");
   rejects("pnpm@11.17.0+sha512-YWJjZGVm", "integrity");
   rejects("pnpm@11.17.0+sha512.DEADBEEF", "integrity");
