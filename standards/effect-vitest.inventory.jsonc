@@ -1573,15 +1573,15 @@
       "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/execution-authority-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1232:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1237:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1232,
-      "endLine": 1232,
+      "line": 1237,
+      "endLine": 1237,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:9651c7b57d8e4cfbf0dde5d0ff0257dd9a3f56b488af9ec28f81f152d1b14c28",
+      "occurrence": "v2:3bdbab45f544e17187c52312b002e533317e144e927b4200a9a291fc92f2218a",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, \"kg.pglite\") }))",
       "replacement": {
@@ -1595,15 +1595,15 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2037:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2050:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2037,
-      "endLine": 2037,
+      "line": 2050,
+      "endLine": 2050,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:e246edbc3d044db8f8107010a23467e0fa1f9f09a387be7d954e692a678909b6",
+      "occurrence": "v2:d56f2151f988867f823e0657ec789179f845d1ea948daa06f8a3fe5f94e87ce7",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(host)",
       "replacement": {
@@ -1617,13 +1617,13 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2612:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2636:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2612,
-      "endLine": 2612,
+      "line": 2636,
+      "endLine": 2636,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4f8fedf4796dc2cab3e9bcadd1d5905235544ba020d962468eb6e4efc2f1e689",
       "class": "per-test-layer-provide",
@@ -1639,15 +1639,15 @@
       "reason": "A separate empty-input bundle is built within the case; its body-derived PGlite directory and fixture model open for the zero-claims failure and close independently of the populated bundle. Owner: @beep/law-practice-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2737:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2765:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2737,
-      "endLine": 2737,
+      "line": 2765,
+      "endLine": 2765,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:841798a4fc3b5088d955a7afd686ca3de17bb80ce4cb20aeff486bad9233a6b2",
+      "occurrence": "v2:8a3861f5dcf89aba57be413a0e821e6e20962be6a4f9e69a2c7e4a412eb5bcb3",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(brokenBundle, \"kg.pglite\") }))",
       "replacement": {
@@ -1659,28 +1659,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Owner: @beep/law-practice-server. The failure injection writes a carry into brokenBundle, a directory the body creates with a corrupt practice.duckdb after its carry writes over target, and asserts the typed failure. it.layer cannot take a path the body creates mid-test. Exit: retire when the broken-bundle case splits into its own test over a nested it.layer(Layer.unwrap(...)), or when EV002 recognises this shape (#1855 wave 4 register)."
-    },
-    {
-      "id": "EV010:packages/tooling/infra/github/test/Secrets.test.ts:12:@effect/platform-bun/BunServices@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/infra-github",
-      "file": "packages/tooling/infra/github/test/Secrets.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-bun/BunServices",
-      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The committed secrets.env and the checked-in .github/workflows directory are the subject: the tests prove the op run env file matches the configuration and that no workflow references the workstation-only stack, and seeding MemoryFileSystem would fabricate both. Owner: @beep/infra-github. Exit: retire when the workflow check and the env-file comparison move to a repo-level law that reads the checkout."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:112:provideScopedLayer@8#1",
@@ -5684,6 +5662,28 @@
       "reason": "Each subprocess or resource helper scope ends before the test examines files or starts the next invocation. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1902:scoped@8#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "line": 1902,
+      "endLine": 1932,
+      "symbol": "scoped",
+      "occurrence": "v2:9c337fc5f009cad8cb785a254286593f4e6252efc85243817f3224752b50506b",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fixture = yield* makeGitCheckoutFixture(root); const liveClone = path.join(fixtur",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The inner scope releases the child process that holds a cwd reference inside the fixture clone before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:391:scoped@8#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -5768,28 +5768,6 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1902:scoped@8#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 1902,
-      "endLine": 1932,
-      "symbol": "scoped",
-      "occurrence": "v2:9c337fc5f009cad8cb785a254286593f4e6252efc85243817f3224752b50506b",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fixture = yield* makeGitCheckoutFixture(root); const liveClone = path.join(fixtur",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The inner scope releases the child process that holds a cwd reference inside the fixture clone before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:220:scoped@2#1",
@@ -10141,6 +10119,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The test runs the packed post-install loader in a real bash process, which writes its temp file through the native filesystem, so a native platform layer is the subject, not a leak: only BunChildProcessSpawner over BunFileSystem and BunPath is provided, never the whole BunServices bundle. Owner: @beep/infra-ci-runners. Exit: retire if the loader is ever verified without spawning bash."
+    },
+    {
+      "id": "EV010:packages/tooling/infra/github/test/Secrets.test.ts:12:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/infra-github",
+      "file": "packages/tooling/infra/github/test/Secrets.test.ts",
+      "line": 12,
+      "endLine": 12,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The committed secrets.env and the checked-in .github/workflows directory are the subject: the tests prove the op run env file matches the configuration and that no workflow references the workstation-only stack, and seeding MemoryFileSystem would fabricate both. Owner: @beep/infra-github. Exit: retire when the workflow check and the env-file comparison move to a repo-level law that reads the checkout."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts:36:@effect/platform-node@0#1",
