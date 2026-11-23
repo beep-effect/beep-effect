@@ -2,7 +2,7 @@
 title: "Re-baseline restating-lead to 8,758 for the 32 leads two PRs added before #3496 merged"
 date: 2026-11-23
 lane: "fix/jsdoc-ratchet-restating-lead-main"
-reversal: "Remove the 32 attributed leads in the fenced wave and lower the baseline with jsdoc-ratchet --write-baseline"
+reversal: "Remove the 32 attributed leads in the last P1 sweep wave (PLAN.md: CI-closure and P5 runner packages last) and lower the baseline with jsdoc-ratchet --write-baseline"
 ---
 
 Main at 37f350c4c4d failed `quality:jsdoc-ratchet:regenerated` with `restating-lead: 8758 > 8726 (+32)`.
@@ -25,4 +25,8 @@ and #3496's merge and added restating leads that the baseline never saw:
 Net: #3439 +20, #3493 +12, total +32; #3497 added none. Every added row sits in a runner-bundle
 package (`@beep/identity`) or in repo-cli `Ci/` closure source, so this lane may not sweep them
 outside the orchestrator's sequencing. The baseline is rewritten to 8,758 and the 32 rows join the
-fenced sweep wave (W5), which removes them under the CI driver's sequencing.
+last P1 sweep wave, the one the P1 checkpoint in PLAN.md schedules as "CI-closure and P5 runner
+packages last". That wave covers `@beep/identity`, `@beep/infra-ci-runners`,
+`@beep/alchemy-github-runners`, `@beep/schema` and the repo-cli `Ci/` closure files, these 32
+rows included. The orchestrator merges it on the CI goals driver's sequencing, and its PR names
+those packages.
