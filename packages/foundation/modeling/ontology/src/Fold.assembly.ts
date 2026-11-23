@@ -12,8 +12,8 @@
  * @since 0.0.0
  */
 
-import { CoreVocab, expand, expandOption, expandPredicate } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
+import * as Registry from "@beep/identity/Registry";
 import { LanguageTag } from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -37,7 +37,6 @@ import {
   OntologyValidationWarning,
   TripleValue,
 } from "./Fold.models.ts";
-import { registryPrefix } from "./internal/Fold.ts";
 import type { IdentityComposer, SkosClassification as SkosClassificationMarker, VocabShape } from "@beep/identity";
 import type {
   FactObject,
@@ -276,15 +275,15 @@ const appendLocal = (base: string, name: string): string =>
 
 const isIriValue = S.is(IRI);
 
-const isAbsoluteIri = (vocab: VocabShape, value: string): boolean =>
-  O.isNone(registryPrefix(vocab, value)) && isIriValue(value);
+const isAbsoluteIri = (registry: Registry.RegistryView, value: string): boolean =>
+  O.isNone(registry.curieNamespace(value)) && isIriValue(value);
 
 const resolvePredicate = (
-  vocab: VocabShape,
+  registry: Registry.RegistryView,
   term: string
 ): Effect.Effect<{ readonly term: string; readonly iri: IRI; readonly reverse: boolean }, OntologyAssemblyError> =>
   pipe(
-    O.fromUndefinedOr(expandPredicate(term, vocab)),
+    registry.expandPredicate(term),
     O.match({
       onNone: () => fail("unknownTerm", `Unknown predicate CURIE: ${term}`, { term }),
       onSome: ({ inverse, iri }) =>
@@ -295,13 +294,16 @@ const resolvePredicate = (
     })
   );
 
-const resolveStringTerm = (vocab: VocabShape, term: string): Effect.Effect<IRI, OntologyAssemblyError> => {
-  if (isAbsoluteIri(vocab, term)) {
+const resolveStringTerm = (
+  registry: Registry.RegistryView,
+  term: string
+): Effect.Effect<IRI, OntologyAssemblyError> => {
+  if (isAbsoluteIri(registry, term)) {
     return requireIri(term, term);
   }
 
   return pipe(
-    expandOption(term, vocab),
+    registry.expand(term),
     O.match({
       onNone: () => fail("unknownTerm", `Unknown term: ${term}`, { term }),
       onSome: (iri) => requireIri(iri, term),
@@ -322,9 +324,11 @@ const isTypedLiteral = (value: unknown): value is TypedLiteral =>
   P.isObject(value) && P.hasProperty(value, "value") && isLiteralScalar(value.value);
 const decodeLanguageTag = S.decodeUnknownOption(LanguageTag);
 
-const resolveTypedLiteral = Effect.fnUntraced(function* (vocab: VocabShape, literal: TypedLiteral) {
+const resolveTypedLiteral = Effect.fnUntraced(function* (registry: Registry.RegistryView, literal: TypedLiteral) {
   const datatypeIri =
-    literal.datatype === undefined ? O.none<IRI>() : yield* Effect.asSome(resolveStringTerm(vocab, literal.datatype));
+    literal.datatype === undefined
+      ? O.none<IRI>()
+      : yield* Effect.asSome(resolveStringTerm(registry, literal.datatype));
 
   return FactLiteral.make({
     value: literal.value,
@@ -334,7 +338,7 @@ const resolveTypedLiteral = Effect.fnUntraced(function* (vocab: VocabShape, lite
 });
 
 const resolveObject = (
-  vocab: VocabShape,
+  registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   value: TupleObject
 ): Effect.Effect<FactObject, OntologyAssemblyError> => {
@@ -343,18 +347,18 @@ const resolveObject = (
   }
 
   if (P.isString(value)) {
-    return resolveStringTerm(vocab, value);
+    return resolveStringTerm(registry, value);
   }
 
   if (isTypedLiteral(value)) {
-    return resolveTypedLiteral(vocab, value);
+    return resolveTypedLiteral(registry, value);
   }
 
   return fail("invalidTriple", "Object is not a schema handle, term, or typed literal.");
 };
 
 const resolveSubject = (
-  vocab: VocabShape,
+  registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   value: Subject
 ): Effect.Effect<IRI, OntologyAssemblyError> => {
@@ -362,7 +366,7 @@ const resolveSubject = (
     return resolveHandle(classes, value);
   }
 
-  return resolveStringTerm(vocab, value);
+  return resolveStringTerm(registry, value);
 };
 
 const inferPredicateKind = (
@@ -409,7 +413,7 @@ const requireStringFieldName = (property: SchemaAST.PropertySignature): Effect.E
 
 const fieldPredicate = Effect.fnUntraced(function* (
   composer: BoundComposer,
-  vocab: VocabShape,
+  registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   property: SchemaAST.PropertySignature
 ) {
@@ -421,7 +425,7 @@ const fieldPredicate = Effect.fnUntraced(function* (
   const borrowed = annotationString(annotations, "ontologyTerm");
 
   if (O.isSome(borrowed)) {
-    const resolved = yield* resolvePredicate(vocab, borrowed.value);
+    const resolved = yield* resolvePredicate(registry, borrowed.value);
     return AssembledPredicate.make({
       key: field,
       term: borrowed.value,
@@ -448,7 +452,7 @@ const fieldPredicate = Effect.fnUntraced(function* (
 
 const assembleClass = Effect.fnUntraced(function* (
   composer: BoundComposer,
-  vocab: VocabShape,
+  registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   identity: ClassIdentity
 ) {
@@ -464,7 +468,7 @@ const assembleClass = Effect.fnUntraced(function* (
   );
   const predicates = yield* Effect.forEach(
     objectAst.propertySignatures,
-    (property) => fieldPredicate(composer, vocab, classes, property),
+    (property) => fieldPredicate(composer, registry, classes, property),
     { concurrency: 1 }
   );
 
@@ -478,37 +482,40 @@ const assembleClass = Effect.fnUntraced(function* (
   });
 });
 
-const unknownEndpointTerm = (vocab: VocabShape, value: unknown): O.Option<string> =>
+const unknownEndpointTerm = (registry: Registry.RegistryView, value: unknown): O.Option<string> =>
   pipe(
     O.liftPredicate(value, P.isString),
-    O.filter((term) => O.isNone(expandOption(term, vocab)) && !isAbsoluteIri(vocab, term))
+    O.filter((term) => O.isNone(registry.expand(term)) && !isAbsoluteIri(registry, term))
   );
 
-const invalidTripleTerm = (vocab: VocabShape, triple: Triple): O.Option<string> => {
+const invalidTripleTerm = (registry: Registry.RegistryView, triple: Triple): O.Option<string> => {
   const [subject, predicate, object] = triple;
   const unknownPredicate = pipe(
     O.liftPredicate(predicate, P.isString),
-    O.filter((term) => expandPredicate(term, vocab) === undefined)
+    O.filter((term) => O.isNone(registry.expandPredicate(term)))
   );
-  const unknownDatatype = isTypedLiteral(object) ? unknownEndpointTerm(vocab, object.datatype) : O.none<string>();
+  const unknownDatatype = isTypedLiteral(object) ? unknownEndpointTerm(registry, object.datatype) : O.none<string>();
 
   return O.firstSomeOf([
-    unknownEndpointTerm(vocab, subject),
+    unknownEndpointTerm(registry, subject),
     unknownPredicate,
-    unknownEndpointTerm(vocab, object),
+    unknownEndpointTerm(registry, object),
     unknownDatatype,
   ]);
 };
 
 const decodeTripleEffect = S.decodeUnknownEffect(TripleValue);
 
-const validateTriple = (vocab: VocabShape, triple: Triple): Effect.Effect<Triple, OntologyAssemblyError> =>
+const validateTriple = (
+  registry: Registry.RegistryView,
+  triple: Triple
+): Effect.Effect<Triple, OntologyAssemblyError> =>
   pipe(
     decodeTripleEffect(triple),
     Effect.as(triple),
     Effect.mapError(() =>
       pipe(
-        invalidTripleTerm(vocab, triple),
+        invalidTripleTerm(registry, triple),
         O.match({
           onNone: () => assemblyError("invalidTriple", "Invalid ontology triple tuple."),
           onSome: (term) => assemblyError("unknownTerm", `Unknown term in ontology triple: ${term}`, { term }),
@@ -518,14 +525,14 @@ const validateTriple = (vocab: VocabShape, triple: Triple): Effect.Effect<Triple
   );
 
 const assembleFact = Effect.fnUntraced(function* (
-  vocab: VocabShape,
+  registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   triple: Triple
 ) {
-  const [subject, predicate, object] = yield* validateTriple(vocab, triple);
-  const subjectIri = yield* resolveSubject(vocab, classes, subject);
-  const resolvedPredicate = yield* resolvePredicate(vocab, predicate);
-  const resolvedObject = yield* resolveObject(vocab, classes, object);
+  const [subject, predicate, object] = yield* validateTriple(registry, triple);
+  const subjectIri = yield* resolveSubject(registry, classes, subject);
+  const resolvedPredicate = yield* resolvePredicate(registry, predicate);
+  const resolvedObject = yield* resolveObject(registry, classes, object);
 
   if (resolvedPredicate.reverse && isFactLiteral(resolvedObject)) {
     return yield* fail(
@@ -553,13 +560,13 @@ const semanticFact = (fact: AssembledFact): AssembledFact =>
       })
     : fact;
 
-const SKOS_PREF_LABEL = expand("skos:prefLabel");
-const SKOS_ALT_LABEL = expand("skos:altLabel");
-const SKOS_HIDDEN_LABEL = expand("skos:hiddenLabel");
-const SKOS_BROADER = expand("skos:broader");
-const SKOS_NARROWER = expand("skos:narrower");
-const SKOS_RELATED = expand("skos:related");
-const SKOS_IN_SCHEME = expand("skos:inScheme");
+const SKOS_PREF_LABEL = Registry.iri("skos:prefLabel");
+const SKOS_ALT_LABEL = Registry.iri("skos:altLabel");
+const SKOS_HIDDEN_LABEL = Registry.iri("skos:hiddenLabel");
+const SKOS_BROADER = Registry.iri("skos:broader");
+const SKOS_NARROWER = Registry.iri("skos:narrower");
+const SKOS_RELATED = Registry.iri("skos:related");
+const SKOS_IN_SCHEME = Registry.iri("skos:inScheme");
 
 type LabelFact = {
   readonly subjectIri: IRI;
@@ -891,12 +898,13 @@ const composerPrefix = (composer: BoundComposer): string =>
  * @since 0.0.0
  */
 export const fold = Effect.fn("Ontology.fold")(function* (composer: BoundComposer, input: OntologyFoldInput) {
-  const vocab = pipe(
+  const registry = pipe(
     O.fromUndefinedOr(composer.vocabRegistry),
-    O.getOrElse((): VocabShape => CoreVocab)
+    O.getOrElse((): VocabShape => Registry.RegistryVocab),
+    Registry.fromVocab
   );
   const prefix = composerPrefix(composer);
-  if (P.hasProperty(vocab, prefix)) {
+  if (O.isSome(registry.namespaceOf(prefix))) {
     return yield* fail("reservedPrefix", `Owned prefix collides with a registered vocabulary prefix: ${prefix}`, {
       term: prefix,
     });
@@ -910,10 +918,10 @@ export const fold = Effect.fn("Ontology.fold")(function* (composer: BoundCompose
   const classes = yield* Effect.forEach(input.schemas, requireClassIdentity, { concurrency: 1 });
   const assembledClasses = yield* Effect.forEach(
     classes,
-    (identity) => assembleClass(composer, vocab, classes, identity),
+    (identity) => assembleClass(composer, registry, classes, identity),
     { concurrency: 1 }
   );
-  const facts = yield* Effect.forEach(input.triples, (triple) => assembleFact(vocab, classes, triple), {
+  const facts = yield* Effect.forEach(input.triples, (triple) => assembleFact(registry, classes, triple), {
     concurrency: 1,
   });
   const semanticFacts = pipe(facts, A.map(semanticFact));

@@ -92,7 +92,6 @@ const INVALID = [
   "(MIT",
   "MIT OR OR Apache-2.0",
   "",
-  // an unknown exception id after a reference
   "LicenseRef-Foo WITH Bogus-exception",
   // a reference never carries the `+` marker
   "LicenseRef-Foo+ WITH Bison-exception-2.2",

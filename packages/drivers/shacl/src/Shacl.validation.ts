@@ -8,6 +8,20 @@
 
 import * as Rdf from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import {
+  SH_CLASS,
+  SH_DATATYPE,
+  SH_HAS_VALUE,
+  SH_INFO,
+  SH_MAX_COUNT,
+  SH_MIN_COUNT,
+  SH_NODE_SHAPE,
+  SH_PATH,
+  SH_PROPERTY,
+  SH_TARGET_CLASS,
+  SH_TARGET_NODE,
+  SH_WARNING,
+} from "@beep/rdf/Vocab/Shacl";
 import { XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
 import {
   ShaclValidationError,
@@ -47,19 +61,6 @@ type ReportShape = {
   readonly results: ReadonlyArray<unknown>;
 };
 
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = Rdf.makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = Rdf.makeNamedNode(`${SHACL_NAMESPACE}path`);
-const SH_TARGET_CLASS = Rdf.makeNamedNode(`${SHACL_NAMESPACE}targetClass`);
-const SH_TARGET_NODE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
-const SH_MIN_COUNT = Rdf.makeNamedNode(`${SHACL_NAMESPACE}minCount`);
-const SH_MAX_COUNT = Rdf.makeNamedNode(`${SHACL_NAMESPACE}maxCount`);
-const SH_DATATYPE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}datatype`);
-const SH_CLASS = Rdf.makeNamedNode(`${SHACL_NAMESPACE}class`);
-const SH_HAS_VALUE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
-const SH_INFO = `${SHACL_NAMESPACE}Info`;
-const SH_WARNING = `${SHACL_NAMESPACE}Warning`;
 const UNKNOWN_PATH = Rdf.makeNamedNode("urn:beep:shacl:path:unknown");
 
 const unknownMessage = (cause: unknown, fallback: string): string =>
@@ -266,8 +267,14 @@ const severityFromUnknown = (value: unknown): ShaclValidationViolation["severity
     O.flatMap(termValue),
     O.map((severityIri) =>
       Match.value(severityIri).pipe(
-        Match.when(SH_INFO, () => "info" as const),
-        Match.when(SH_WARNING, () => "warning" as const),
+        Match.when(
+          (iri: string) => iri === SH_INFO.value,
+          () => "info" as const
+        ),
+        Match.when(
+          (iri: string) => iri === SH_WARNING.value,
+          () => "warning" as const
+        ),
         Match.orElse(() => "violation" as const)
       )
     ),

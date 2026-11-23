@@ -1,15 +1,17 @@
 /**
- * XSD vocabulary helpers.
+ * XSD vocabulary helpers, built from the pinned `xsd` namespace of the
+ * identity registry (the RDF-compatible XSD datatypes of RDF 1.1 Concepts).
  *
  * @packageDocumentation
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { XSD_NAMESPACE } from "./generated/Xsd.terms.ts";
+import type { XSD_TERMS } from "./generated/Xsd.terms.ts";
 
 /**
- * XSD namespace IRI.
+ * XSD namespace IRI and its registered datatype locals, read from the identity registry.
  *
  * **Example** (Build string datatype IRI)
  *
@@ -24,7 +26,9 @@ import { makeNamedNode } from "../Rdf.ts";
  * @category configuration
  * @since 0.0.0
  */
-export const XSD_NAMESPACE = "http://www.w3.org/2001/XMLSchema#" as const;
+export { XSD_NAMESPACE, XSD_TERMS } from "./generated/Xsd.terms.ts";
+
+const xsdTerm = (local: (typeof XSD_TERMS)[number]) => makeNamedNode(`${XSD_NAMESPACE}${local}`);
 
 /**
  * `xsd:string`
@@ -41,7 +45,7 @@ export const XSD_NAMESPACE = "http://www.w3.org/2001/XMLSchema#" as const;
  * @category constants
  * @since 0.0.0
  */
-export const XSD_STRING = makeNamedNode(`${XSD_NAMESPACE}string`);
+export const XSD_STRING = xsdTerm("string");
 
 /**
  * `xsd:anyURI`
@@ -58,7 +62,7 @@ export const XSD_STRING = makeNamedNode(`${XSD_NAMESPACE}string`);
  * @category constants
  * @since 0.0.0
  */
-export const XSD_ANY_URI = makeNamedNode(`${XSD_NAMESPACE}anyURI`);
+export const XSD_ANY_URI = xsdTerm("anyURI");
 
 /**
  * `xsd:boolean`
@@ -75,7 +79,7 @@ export const XSD_ANY_URI = makeNamedNode(`${XSD_NAMESPACE}anyURI`);
  * @category constants
  * @since 0.0.0
  */
-export const XSD_BOOLEAN = makeNamedNode(`${XSD_NAMESPACE}boolean`);
+export const XSD_BOOLEAN = xsdTerm("boolean");
 
 /**
  * `xsd:integer`
@@ -92,7 +96,7 @@ export const XSD_BOOLEAN = makeNamedNode(`${XSD_NAMESPACE}boolean`);
  * @category constants
  * @since 0.0.0
  */
-export const XSD_INTEGER = makeNamedNode(`${XSD_NAMESPACE}integer`);
+export const XSD_INTEGER = xsdTerm("integer");
 
 /**
  * `xsd:double`
@@ -109,7 +113,7 @@ export const XSD_INTEGER = makeNamedNode(`${XSD_NAMESPACE}integer`);
  * @category constants
  * @since 0.0.0
  */
-export const XSD_DOUBLE = makeNamedNode(`${XSD_NAMESPACE}double`);
+export const XSD_DOUBLE = xsdTerm("double");
 
 /**
  * `xsd:dateTime`.
@@ -125,4 +129,4 @@ export const XSD_DOUBLE = makeNamedNode(`${XSD_NAMESPACE}double`);
  * @category constants
  * @since 0.0.0
  */
-export const XSD_DATE_TIME = makeNamedNode(`${XSD_NAMESPACE}dateTime`);
+export const XSD_DATE_TIME = xsdTerm("dateTime");

@@ -1,4 +1,4 @@
-import { SparVocab } from "@beep/identity";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { CITO_NAMESPACE, CITO_TERMS } from "@beep/rdf/Vocab/Cito";
 import * as Dcat from "@beep/rdf/Vocab/Dcat";
 import { DCAT_NAMESPACE, DCAT_TERMS } from "@beep/rdf/Vocab/Dcat";
@@ -6,11 +6,16 @@ import { DCTERMS_NAMESPACE, DCTERMS_TERMS } from "@beep/rdf/Vocab/Dcterms";
 import { DEO_NAMESPACE, DEO_TERMS } from "@beep/rdf/Vocab/Deo";
 import { DOCO_NAMESPACE, DOCO_TERMS } from "@beep/rdf/Vocab/Doco";
 import { FABIO_NAMESPACE, FABIO_TERMS } from "@beep/rdf/Vocab/Fabio";
+import { OA_NAMESPACE, OA_TERMS } from "@beep/rdf/Vocab/Oa";
 import { OWL_NAMESPACE, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
+import { PROV_NAMESPACE, PROV_TERMS } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TERMS } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE, RDFS_TERMS } from "@beep/rdf/Vocab/Rdfs";
 import { SCHEMA_ORG_NAMESPACE, SCHEMA_ORG_TERMS } from "@beep/rdf/Vocab/SchemaOrg";
+import { SHACL_NAMESPACE, SHACL_TERMS } from "@beep/rdf/Vocab/Shacl";
 import { SKOS_NAMESPACE, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
+import { VOID_NAMESPACE, VOID_TERMS } from "@beep/rdf/Vocab/Void";
+import { XSD_NAMESPACE, XSD_TERMS } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -22,6 +27,11 @@ const vocabCases = [
   { moduleName: "Deo", namespace: DEO_NAMESPACE, prefix: "deo", terms: DEO_TERMS },
   { moduleName: "Fabio", namespace: FABIO_NAMESPACE, prefix: "fabio", terms: FABIO_TERMS },
   { moduleName: "Cito", namespace: CITO_NAMESPACE, prefix: "cito", terms: CITO_TERMS },
+  { moduleName: "Prov", namespace: PROV_NAMESPACE, prefix: "prov", terms: PROV_TERMS },
+  { moduleName: "Oa", namespace: OA_NAMESPACE, prefix: "oa", terms: OA_TERMS },
+  { moduleName: "Xsd", namespace: XSD_NAMESPACE, prefix: "xsd", terms: XSD_TERMS },
+  { moduleName: "Shacl", namespace: SHACL_NAMESPACE, prefix: "sh", terms: SHACL_TERMS },
+  { moduleName: "Void", namespace: VOID_NAMESPACE, prefix: "void", terms: VOID_TERMS },
 
   {
     moduleName: "Rdf",
@@ -88,9 +98,9 @@ describe("@beep/rdf vocabulary drift", () => {
     }
   });
 
-  it("keeps RDF vocabulary namespace and term constants aligned with identity SparVocab", () => {
+  it("keeps RDF vocabulary namespace and term constants aligned with the identity registry", () => {
     for (const current of vocabCases) {
-      const registry = SparVocab[current.prefix];
+      const registry = RegistryVocab[current.prefix];
       const missingInRegistry = difference(current.terms, registry.terms);
       const missingInConstants = difference(registry.terms, current.terms);
       const driftMessage = `${current.prefix} drift against @beep/rdf/Vocab/${current.moduleName}`;

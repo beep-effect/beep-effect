@@ -23,6 +23,7 @@ import {
   serializeTerm,
 } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { SH_NODE_SHAPE, SH_PROPERTY } from "@beep/rdf/Vocab/Shacl";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -34,9 +35,6 @@ import type { Subject } from "@beep/rdf/Rdf";
 const $I = $OntologyDomainId.create("aggregates/Session/Session.model");
 
 const ChangeOperationKind = LiteralKit(["addQuad", "removeQuad"]);
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
 
 type PartitionedQuad = {
   readonly partition: GraphPartition;

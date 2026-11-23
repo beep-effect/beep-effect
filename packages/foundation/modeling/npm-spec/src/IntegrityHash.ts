@@ -466,22 +466,8 @@ export type SriIntegrityHash = typeof SriIntegrityHash.Type;
 // hand-rolls it re-decides the same edge cases (quoted JSON tokens, non-sha512
 // algorithms, sloppy base64), so the bridge lives here, once, as a codec.
 
-// Why this is hand-rolled rather than core's `effect/encoding/Base64`, which this package
-// already uses elsewhere (`PackageTarball`, `RegistryCredential`): the two
-// disagree in both directions, and for an integrity value the disagreement is
-// load-bearing:
 //
-//   Base64.decode("QQ==")     -> [65]
-//   Base64.decode("QR==")     -> [65]   non-zero trailing bits
-//   Base64.decode("QV==")     -> [65]   ditto
-//   Base64.decode("QQ=\r\n=") -> [65]   CRLF stripped silently
-//   Base64.decode("QQ")       -> fail  "Length must be a multiple of 4"
 //
-// Core accepts three spellings of one digest and tolerates embedded CRLF, so
-// two `integrity` strings that differ as text can decode to identical bytes —
-// precisely the ambiguity an integrity check exists to deny. Core is also
-// *stricter* where this codec is deliberately lenient: it rejects the unpadded
-// form. Neither direction is a drop-in. Do not "fix" this to `Base64`.
 //
 // Canonical base64 alphabet; index = 6-bit value.
 const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

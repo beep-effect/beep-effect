@@ -33,7 +33,9 @@ the annotation reference for schemas and the grep reference for multi-file audit
    re-exports as though they were new symbols.
 2. Classify each export as value-level or pure type-level.
 3. Write one lead paragraph that explains purpose rather than restating the
-   signature.
+   signature. Annotated schemas, their same-name type companions and barrel
+   re-exports take their lead from the `$I.annote*` description: write none, and
+   delete one that restates it (the inventory counts it as `restating-lead`).
 4. Add only useful body sections in this order: `**When to use**`, `**Details**`,
    `**Gotchas**`, then titled `**Example** (Title)` blocks.
 5. Require an Example for value-level exports. For pure type-level exports, require
@@ -86,8 +88,8 @@ type companions. Their Example is optional.
 
 ## Post-pass checklist
 
-1. Every owning export has a useful one-paragraph lead, canonical `@category`, and
-   `@since 0.0.0`.
+1. Every owning export has a useful one-paragraph lead (or a derived one that no
+   written lead restates), canonical `@category`, and `@since 0.0.0`.
 2. Every value-level export has a titled, single-fence, observable, compilable
    Example; pure type-level exports have precise prose.
 3. Sections are non-empty, unique, canonical-order, and Example-last; When-to-use

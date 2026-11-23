@@ -1,25 +1,13 @@
-import { dual } from "effect/Function";
-import * as Str from "effect/String";
-
-// The tagged-JSON comparator for the toml-test corpus. Expected files encode
-// leaves as `{"type": T, "value": string}` with T one of the eight tags;
-// containers are plain JSON objects/arrays. `assertMatchesTagged` recurses
-// the two shapes together and throws assert failures carrying the key path.
-//
-// Datetimes compare STRUCTURALLY: the expected string is re-parsed through
-// the scanner's own `classifyValueToken`, so a `T`-vs-space separator or a
-// `Z`-vs-`+00:00` spelling difference cannot cause a false mismatch — same
-// fields means same value.
-
 import { classifyValueToken } from "@beep/toml/internal/scanner";
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "@beep/toml/TomlDateTime";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 
-/** The eight toml-test leaf tags. */
 const LEAF_TAGS = new Set([
   "string",
   "integer",
@@ -36,12 +24,6 @@ interface TaggedLeaf {
   readonly value: string;
 }
 
-/**
- * Whether `candidate` is a tagged leaf: exactly the keys `type` and `value`,
- * both strings, with `type` in the tag set. A genuine TOML table named
- * `{type, value}` cannot collide — its values would themselves be tagged
- * objects, not raw strings.
- */
 function isTaggedLeaf(candidate: unknown): candidate is TaggedLeaf {
   if (!P.isObject(candidate)) {
     return false;
@@ -55,7 +37,6 @@ function isTaggedLeaf(candidate: unknown): candidate is TaggedLeaf {
   );
 }
 
-/** A datetime class widened to what an `instanceof` check needs. */
 type DateTimeClass = (new (...args: never[]) => object) & { readonly name: string };
 
 const DATETIME_CLASSES: Record<"datetime" | "datetime-local" | "date-local" | "time-local", DateTimeClass> = {
@@ -111,7 +92,6 @@ const assertBoolLeaf: LeafAsserter = (actual, expected, path) => {
   assert.strictEqual(actual, expected.value === "true", `${path}: bool mismatch`);
 };
 
-/** Datetimes compare structurally against the scanner's re-parse of the expected spelling. */
 const dateTimeLeafAsserter =
   (cls: DateTimeClass): LeafAsserter =>
   (actual, expected, path) => {

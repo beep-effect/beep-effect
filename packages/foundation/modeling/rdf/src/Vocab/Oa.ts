@@ -1,15 +1,17 @@
 /**
- * Web Annotation vocabulary helpers.
+ * Web Annotation vocabulary helpers, built from the pinned `oa` namespace of
+ * the identity registry.
  *
  * @packageDocumentation
  * @since 0.0.0
- * @packageDocumentation
  */
 
 import { makeNamedNode } from "../Rdf.ts";
+import { OA_NAMESPACE } from "./generated/Oa.terms.ts";
+import type { OA_TERMS } from "./generated/Oa.terms.ts";
 
 /**
- * OA namespace IRI.
+ * OA namespace IRI and its registered term locals, read from the identity registry.
  *
  * **Example** (Build Annotation IRI)
  *
@@ -23,7 +25,9 @@ import { makeNamedNode } from "../Rdf.ts";
  * @category configuration
  * @since 0.0.0
  */
-export const OA_NAMESPACE = "http://www.w3.org/ns/oa#" as const;
+export { OA_NAMESPACE, OA_TERMS } from "./generated/Oa.terms.ts";
+
+const oaTerm = (local: (typeof OA_TERMS)[number]) => makeNamedNode(`${OA_NAMESPACE}${local}`);
 
 /**
  * `oa:Annotation`
@@ -40,7 +44,7 @@ export const OA_NAMESPACE = "http://www.w3.org/ns/oa#" as const;
  * @category constants
  * @since 0.0.0
  */
-export const OA_ANNOTATION = makeNamedNode(`${OA_NAMESPACE}Annotation`);
+export const OA_ANNOTATION = oaTerm("Annotation");
 
 /**
  * `oa:hasTarget`
@@ -57,7 +61,7 @@ export const OA_ANNOTATION = makeNamedNode(`${OA_NAMESPACE}Annotation`);
  * @category constants
  * @since 0.0.0
  */
-export const OA_HAS_TARGET = makeNamedNode(`${OA_NAMESPACE}hasTarget`);
+export const OA_HAS_TARGET = oaTerm("hasTarget");
 
 /**
  * `oa:hasSelector`
@@ -74,4 +78,4 @@ export const OA_HAS_TARGET = makeNamedNode(`${OA_NAMESPACE}hasTarget`);
  * @category constants
  * @since 0.0.0
  */
-export const OA_HAS_SELECTOR = makeNamedNode(`${OA_NAMESPACE}hasSelector`);
+export const OA_HAS_SELECTOR = oaTerm("hasSelector");

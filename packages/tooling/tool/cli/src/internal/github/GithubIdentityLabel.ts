@@ -98,8 +98,25 @@ export interface GithubIdentityLabelInput {
   readonly transport: Omit<GitHubClientOptions.Encoded, "token">;
 }
 
-// gh reads GH_TOKEN, then GITHUB_TOKEN, before its hosts.yml login.
-const ghEnvToken = Effect.gen(function* () {
+/**
+ * The environment token gh would use: `GH_TOKEN`, then `GITHUB_TOKEN`, ignoring empty values.
+ *
+ * **Details**
+ *
+ * gh reads these before its hosts.yml login. The value stays redacted.
+ *
+ * **Example** (Read the environment token)
+ *
+ * ```ts
+ * import { ghEnvToken } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(ghEnvToken)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ghEnvToken = Effect.gen(function* () {
   const ghToken = yield* configStringOption("GH_TOKEN");
   const githubToken = yield* configStringOption("GITHUB_TOKEN");
   return O.map(
