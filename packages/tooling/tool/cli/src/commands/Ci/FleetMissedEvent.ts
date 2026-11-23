@@ -8,9 +8,9 @@
  * Specification:
  * `goals/infra-alchemy-rebuild/decisions/2026-11-23-standing-missed-event-check.md`.
  * Precedence is `Stuck`, `Wedged`, `MissedDelivery`, `NoLaunch`,
- * `WaitingAtCap`, `Waiting`. A job whose delivery evidence is `missed` is
- * therefore `MissedDelivery` (classification `missed`) before any `NoLaunch`
- * condition is read; a `NoLaunch` carries `lost`, `unknown` or `gate`.
+ * `WaitingAtCap`, `Waiting`. A job with no 2xx `queued` delivery is
+ * therefore `MissedDelivery` before any `NoLaunch` condition is read; a
+ * `NoLaunch` carries `lost`, `unknown` or `gate`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -164,16 +164,17 @@ export const percentile95 = (values: ReadonlyArray<number>): O.Option<number> =>
  * import { FleetPoolCap, observeFleetPool } from "@beep/repo-cli/commands/Ci"
  *
  * const pool = FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 })
- * console.log(observeFleetPool({ pool, firstRead: [], secondRead: [], jobs: [], now: 0 }).atCap) // false
+ * console.log(observeFleetPool({ pool, firstReadAt: 0, firstRead: [], secondRead: [], jobs: [], now: 0 }).atCap) // false
  * ```
  *
- * @param input - The pool, both runner reads, every job read and the time.
+ * @param input - The pool, the first runner read's time, both runner reads, every job read and the time.
  * @returns The pool's counts, cap state, idle and not-busy runners, and progress.
  * @category use-cases
  * @since 0.0.0
  */
 export const observeFleetPool = (input: {
   readonly pool: FleetPoolCap;
+  readonly firstReadAt: number;
   readonly firstRead: ReadonlyArray<FleetRunner>;
   readonly secondRead: ReadonlyArray<FleetRunner>;
   readonly jobs: ReadonlyArray<FleetJob>;
@@ -187,10 +188,12 @@ export const observeFleetPool = (input: {
   );
   return FleetPoolObservation.make({
     pool: input.pool,
+    firstReadAt: input.firstReadAt,
     firstCount: A.length(first),
     secondCount: A.length(second),
     atCap: A.length(first) >= input.pool.cap || A.length(second) >= input.pool.cap,
     idleRunnerIds: sortedIds(HashSet.intersection(idsWhere(first, isIdle), idsWhere(second, isIdle))),
+    secondReadIdleRunnerIds: sortedIds(idsWhere(second, isIdle)),
     notBusyRunnerIds: sortedIds(HashSet.intersection(idsWhere(first, isNotBusy), idsWhere(second, isNotBusy))),
     currentNotBusy: A.length(A.filter(second, isNotBusy)),
     progress: A.some(started, (job) => job.startedAt >= input.now - FLEET_THRESHOLDS.progressWindow),
@@ -223,9 +226,10 @@ const isTwoHundred = (statusCode: number): boolean => statusCode >= 200 && statu
  * The candidates are the `queued` deliveries inside the job's window. A
  * 2xx candidate naming the job is `Delivered`; otherwise a non-2xx one is
  * `DeliveryFailed`. With no match, an unreadable candidate detail, a failed
- * page whose walk did not reach the job's creation, or pages that do not
- * reach it, make the evidence `Unreadable`; only a walk that reached past the
- * job's creation with every candidate read makes it `NotDelivered`.
+ * page whose walk did not reach the start of the job's window (its creation
+ * minus two minutes), or pages that do not reach it, make the evidence
+ * `Unreadable`; only a walk that reached the window's start with every
+ * candidate read makes it `NotDelivered`.
  *
  * @param input - The job, its hook, the walk's deliveries, oldest time and failure, and the detail reads.
  * @returns The job's evidence.
@@ -278,7 +282,7 @@ export const judgeDeliveryEvidence = (input: {
             oldestReached: input.oldestReached,
           })
         : O.match(
-            O.filter(input.oldestReached, (oldest) => oldest <= input.job.createdAt),
+            O.filter(input.oldestReached, (oldest) => oldest <= window.start),
             {
               onSome: (oldestReached) =>
                 FleetDeliveryEvidence.cases.NotDelivered.make({
@@ -290,7 +294,7 @@ export const judgeDeliveryEvidence = (input: {
                 FleetDeliveryEvidence.cases.Unreadable.make({
                   reason: O.getOrElse(
                     input.walkFailure,
-                    () => "the pages read do not reach back to the job's creation"
+                    () => "the pages read do not reach back to the job's delivery window start"
                   ),
                   oldestReached: input.oldestReached,
                 }),
@@ -301,7 +305,28 @@ export const judgeDeliveryEvidence = (input: {
 };
 
 /**
- * The classification delivery evidence gives.
+ * Whether delivery evidence shows no 2xx `queued` delivery: a failed
+ * delivery, or none in a window the walk read in full.
+ *
+ * **Example** (A failed delivery is missed)
+ *
+ * ```ts
+ * import { FleetDeliveryEvidence, isMissedDeliveryEvidence } from "@beep/repo-cli/commands/Ci"
+ *
+ * const evidence = FleetDeliveryEvidence.cases.DeliveryFailed.make({ hookId: "1", deliveryId: "2", statusCode: 502 })
+ * console.log(isMissedDeliveryEvidence(evidence)) // true
+ * ```
+ *
+ * @param evidence - The job's delivery evidence.
+ * @returns Whether it makes the job `MissedDelivery`.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isMissedDeliveryEvidence = (evidence: FleetDeliveryEvidence): boolean =>
+  FleetDeliveryEvidence.guards.DeliveryFailed(evidence) || FleetDeliveryEvidence.guards.NotDelivered(evidence);
+
+/**
+ * The classification delivery evidence gives a `NoLaunch`.
  *
  * **Example** (A 2xx delivery and no launch is lost)
  *
@@ -309,21 +334,21 @@ export const judgeDeliveryEvidence = (input: {
  * import { FleetDeliveryEvidence, classifyFleetEvidence } from "@beep/repo-cli/commands/Ci"
  *
  * const evidence = FleetDeliveryEvidence.cases.Delivered.make({ hookId: "1", deliveryId: "2", statusCode: 200 })
- * console.log(classifyFleetEvidence(evidence)) // "lost"
+ * console.log(classifyFleetEvidence(evidence)) // { _id: 'Option', _tag: 'Some', value: 'lost' }
  * ```
  *
  * @param evidence - The job's delivery evidence.
- * @returns `lost`, `missed`, `unknown` or `gate`.
+ * @returns `lost`, `unknown` or `gate`; `None` for a missed delivery, which is the `MissedDelivery` verdict.
  * @category use-cases
  * @since 0.0.0
  */
-export const classifyFleetEvidence = (evidence: FleetDeliveryEvidence): FleetClassification =>
+export const classifyFleetEvidence = (evidence: FleetDeliveryEvidence): O.Option<FleetClassification> =>
   FleetDeliveryEvidence.match(evidence, {
-    Delivered: () => FleetClassification.Enum.lost,
-    DeliveryFailed: () => FleetClassification.Enum.missed,
-    NotDelivered: () => FleetClassification.Enum.missed,
-    Unreadable: () => FleetClassification.Enum.unknown,
-    Gate: () => FleetClassification.Enum.gate,
+    Delivered: () => O.some(FleetClassification.Enum.lost),
+    DeliveryFailed: O.none<FleetClassification>,
+    NotDelivered: O.none<FleetClassification>,
+    Unreadable: () => O.some(FleetClassification.Enum.unknown),
+    Gate: () => O.some(FleetClassification.Enum.gate),
   });
 
 /**
@@ -375,20 +400,30 @@ const noLaunchReason = (input: {
  *
  * const observation = FleetPoolObservation.make({
  *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 5 }),
- *   firstCount: 1, secondCount: 1, atCap: false, idleRunnerIds: [], notBusyRunnerIds: [],
- *   currentNotBusy: 0, progress: true, p95QueueToStart: O.none(),
+ *   firstReadAt: 1000000, firstCount: 1, secondCount: 1, atCap: false, idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [], notBusyRunnerIds: [], currentNotBusy: 0, progress: true, p95QueueToStart: O.none(),
  * })
- * const verdict = decideFleetVerdict({ observation, age: 900000, launches: 3, rank: 4, oldestQueuedAge: 900000, evidence: O.none() })
+ * const verdict = decideFleetVerdict({
+ *   observation, createdAt: 100000, age: 900000, launches: 3, rank: 4, oldestQueuedAge: 900000, evidence: O.none(),
+ * })
  * console.log(verdict._tag) // "Waiting"
  * ```
  *
- * @param input - The pool observation, the job's age, launches, rank and evidence, and the pool's oldest queued age.
+ * **Details**
+ *
+ * `Stuck` holds only for a job created at or before the first runner read:
+ * a job created between the reads may simply not have been picked up yet.
+ * `NoLaunch` needs no runner idle in the second read, so a runner that just
+ * booted keeps the job `Waiting`.
+ *
+ * @param input - The pool observation, the job's creation, age, launches, rank and evidence, and the pool's oldest queued age.
  * @returns The first verdict that holds.
  * @category use-cases
  * @since 0.0.0
  */
 export const decideFleetVerdict = (input: {
   readonly observation: FleetPoolObservation;
+  readonly createdAt: number;
   readonly age: number;
   readonly launches: number;
   readonly rank: number;
@@ -396,7 +431,11 @@ export const decideFleetVerdict = (input: {
   readonly evidence: O.Option<FleetDeliveryEvidence>;
 }): FleetVerdict => {
   const { observation } = input;
-  if (observation.atCap && A.isReadonlyArrayNonEmpty(observation.idleRunnerIds)) {
+  if (
+    observation.atCap &&
+    A.isReadonlyArrayNonEmpty(observation.idleRunnerIds) &&
+    input.createdAt <= observation.firstReadAt
+  ) {
     return FleetVerdict.cases.Stuck.make({ idleRunnerIds: observation.idleRunnerIds });
   }
   if (
@@ -407,14 +446,13 @@ export const decideFleetVerdict = (input: {
   ) {
     return FleetVerdict.cases.Wedged.make({ notBusyRunnerIds: observation.notBusyRunnerIds });
   }
-  if (
-    input.age >= FLEET_THRESHOLDS.missedDeliveryAge &&
-    O.exists(input.evidence, (evidence) => classifyFleetEvidence(evidence) === FleetClassification.Enum.missed)
-  ) {
+  if (input.age >= FLEET_THRESHOLDS.missedDeliveryAge && O.exists(input.evidence, isMissedDeliveryEvidence)) {
     return FleetVerdict.cases.MissedDelivery.make({});
   }
   const reason =
-    !observation.atCap && input.age >= FLEET_THRESHOLDS.noLaunchAge && A.isReadonlyArrayEmpty(observation.idleRunnerIds)
+    !observation.atCap &&
+    input.age >= FLEET_THRESHOLDS.noLaunchAge &&
+    A.isReadonlyArrayEmpty(observation.secondReadIdleRunnerIds)
       ? noLaunchReason({ ...input, progress: observation.progress })
       : O.none();
   return O.match(reason, {
@@ -484,9 +522,9 @@ export const fleetJobFinding: {
       rank: queued.rank,
       launches: queued.launches,
       source: queued.source,
-      verdict: decideFleetVerdict({ ...queued, evidence }),
+      verdict: decideFleetVerdict({ ...queued, createdAt: queued.job.createdAt, evidence }),
       evidence,
-      classification: O.map(evidence, classifyFleetEvidence),
+      classification: O.flatMap(evidence, classifyFleetEvidence),
     })
 );
 
@@ -551,8 +589,8 @@ const cancelAndRerun = (repository: string, runId: number): ReadonlyArray<string
  *
  * **Details**
  *
- * A 2xx or failed `queued` delivery prints its redelivery. A `missed` job
- * and a gate-classified job print the cancel-and-rerun pair, marked as the
+ * A 2xx or failed `queued` delivery prints its redelivery. A job whose
+ * delivery was missed and a gate-classified job print the cancel-and-rerun pair, marked as the
  * gate's call because it reruns the whole run. `gh run rerun --failed`
  * refuses an in-progress run and is never printed for a queued job.
  *
@@ -576,20 +614,18 @@ export const fleetRemedies: {
   const gate = O.contains(finding.classification, FleetClassification.Enum.gate)
     ? ["gate: run the gate's enrichment and App-redelivery command for this job"]
     : [];
-  const rerun = O.exists(
-    finding.classification,
-    (classification) =>
-      classification === FleetClassification.Enum.missed || classification === FleetClassification.Enum.gate
-  )
-    ? cancelAndRerun(repository, finding.job.runId)
-    : [];
+  const rerun =
+    O.exists(finding.evidence, isMissedDeliveryEvidence) ||
+    O.contains(finding.classification, FleetClassification.Enum.gate)
+      ? cancelAndRerun(repository, finding.job.runId)
+      : [];
   return A.appendAll(A.appendAll(O.toArray(redelivery), gate), rerun);
 });
 
 /**
  * Assemble the report of one run.
  *
- * @param input - The repository, time, observations, findings and previous run.
+ * @param input - The repository, time, observations, findings, previous run and GitHub request count.
  * @returns The report the summary and the exit code are built from.
  * @category use-cases
  * @since 0.0.0
@@ -600,6 +636,7 @@ export const fleetCheckReport = (input: {
   readonly pools: ReadonlyArray<FleetPoolObservation>;
   readonly findings: ReadonlyArray<FleetJobFinding>;
   readonly previousRun: FleetPreviousRun;
+  readonly githubRequests: number;
 }): FleetCheckReport => FleetCheckReport.make(input);
 
 /**
@@ -672,7 +709,7 @@ const p95Label = (report: FleetCheckReport): string =>
  */
 export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
   const alerts = fleetAlerts(report);
-  const totals = `${A.length(report.findings)} queued job(s) checked; verdicts: ${verdictCounts(report)}; p95 queue-to-start: ${p95Label(report)}; ${previousRunLabel(report)}`;
+  const totals = `${A.length(report.findings)} queued job(s) checked; verdicts: ${verdictCounts(report)}; p95 queue-to-start: ${p95Label(report)}; ${previousRunLabel(report)}; ${report.githubRequests} GitHub request(s)`;
   if (A.isReadonlyArrayEmpty(alerts)) {
     return `fleet missed-event check: green at ${formatTime(report.checkedAt)}: ${totals}\n`;
   }
@@ -693,9 +730,9 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
   );
   return A.join(
     [
-      `## Fleet missed-event check: ${A.length(alerts)} alert(s) at ${formatTime(report.checkedAt)}`,
+      `## Fleet missed-event check: ${A.length(alerts)} alert(s)`,
       "",
-      totals,
+      `checked at ${formatTime(report.checkedAt)}: ${totals}`,
       "",
       "| job | run | pool | age | verdict | classification | delivery evidence |",
       "| --- | --- | --- | --- | --- | --- | --- |",

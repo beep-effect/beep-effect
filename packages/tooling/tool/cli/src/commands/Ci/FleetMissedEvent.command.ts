@@ -8,7 +8,9 @@
  * reads them again, reads every queued, in-progress and recent run's jobs
  * with full paging, and walks the hook deliveries once (newest first, back to
  * the oldest job that needs them minus two minutes) with one detail read per
- * delivery. It prints the step summary and exits non-zero on any alert. It
+ * delivery. A listing cut at 50 pages short of its total fails the run. It
+ * prints the step summary, with the number of GitHub requests the reads
+ * service counted, and exits non-zero on any alert. It
  * never redelivers, cancels, reruns or writes: the remedies are printed.
  *
  * Specification:
@@ -45,7 +47,7 @@ import {
   FleetRunsQuery,
   fleetHookSources,
 } from "./FleetMissedEvent.schemas.ts";
-import { FleetGithubReads, FleetSleep, FleetWatchToken } from "./FleetMissedEvent.service.ts";
+import { FleetGithubReads, FleetReadError, FleetSleep, FleetWatchToken } from "./FleetMissedEvent.service.ts";
 import {
   deliveryWindow,
   fleetAlerts,
@@ -69,7 +71,7 @@ import type {
   FleetQueuedJob,
   FleetRunner,
 } from "./FleetMissedEvent.schemas.ts";
-import type { FleetGithubReadsShape, FleetReadError } from "./FleetMissedEvent.service.ts";
+import type { FleetGithubReadsShape } from "./FleetMissedEvent.service.ts";
 
 const READ_ATTEMPTS = 3;
 const READ_RETRY_SPACING = Duration.seconds(2);
@@ -92,6 +94,7 @@ const retried =
   };
 
 const allPages = <A>(
+  endpoint: string,
   readPage: (
     page: number
   ) => Effect.Effect<{ readonly items: ReadonlyArray<A>; readonly totalCount: number }, FleetReadError>
@@ -99,9 +102,12 @@ const allPages = <A>(
   const go = (page: number, collected: ReadonlyArray<A>): Effect.Effect<ReadonlyArray<A>, FleetReadError> =>
     Effect.flatMap(readPage(page), ({ items, totalCount }) => {
       const all = A.appendAll(collected, items);
-      return A.isReadonlyArrayNonEmpty(items) && A.length(all) < totalCount && page < MAX_LISTING_PAGES
-        ? go(page + 1, all)
-        : Effect.succeed(all);
+      const incomplete = A.isReadonlyArrayNonEmpty(items) && A.length(all) < totalCount;
+      return !incomplete
+        ? Effect.succeed(all)
+        : page < MAX_LISTING_PAGES
+          ? go(page + 1, all)
+          : Effect.fail(FleetReadError.make({ endpoint, message: `listing truncated at ${MAX_LISTING_PAGES} pages` }));
     });
   return go(1, A.empty());
 };
@@ -115,7 +121,7 @@ interface FleetReadContext {
 }
 
 const readRunners = (context: FleetReadContext): Effect.Effect<ReadonlyArray<FleetRunner>, FleetReadError> =>
-  allPages((page) =>
+  allPages("org runners", (page) =>
     Effect.map(
       context.retry(() => context.reads.runnersPage(page)),
       (read) => ({
@@ -126,7 +132,7 @@ const readRunners = (context: FleetReadContext): Effect.Effect<ReadonlyArray<Fle
   );
 
 const readRunIds = (context: FleetReadContext, query: FleetRunsQuery) =>
-  allPages((page) =>
+  allPages(`runs ${query._tag}`, (page) =>
     Effect.map(
       context.retry(() => context.reads.runsPage(query, page)),
       (read) => ({
@@ -137,7 +143,7 @@ const readRunIds = (context: FleetReadContext, query: FleetRunsQuery) =>
   );
 
 const readRunJobs = (context: FleetReadContext, runId: number) =>
-  allPages((page) =>
+  allPages(`runs/${runId}/jobs`, (page) =>
     Effect.map(
       context.retry(() => context.reads.jobsPage(runId, page)),
       (read) => ({
@@ -188,13 +194,20 @@ const walkDeliveries = (context: FleetReadContext, hookId: FleetDeliveryId, stop
               () => walk.oldestReached
             );
             const next = { ...walk, deliveries: A.appendAll(walk.deliveries, page.deliveries), oldestReached };
-            const done =
-              A.isReadonlyArrayEmpty(page.deliveries) ||
-              O.exists(oldestReached, (oldest) => oldest < stopAt) ||
-              pages + 1 >= MAX_DELIVERY_PAGES;
+            const reached =
+              A.isReadonlyArrayEmpty(page.deliveries) || O.exists(oldestReached, (oldest) => oldest < stopAt);
+            const capped: DeliveryWalk = {
+              ...next,
+              failure: O.some(`the delivery walk stopped at ${MAX_DELIVERY_PAGES} pages`),
+            };
             return O.match(page.nextCursor, {
               onNone: () => Effect.succeed(next),
-              onSome: (nextCursor) => (done ? Effect.succeed(next) : go(O.some(nextCursor), pages + 1, next)),
+              onSome: (nextCursor) =>
+                reached
+                  ? Effect.succeed(next)
+                  : pages + 1 >= MAX_DELIVERY_PAGES
+                    ? Effect.succeed(capped)
+                    : go(O.some(nextCursor), pages + 1, next),
             });
           },
         })
@@ -318,13 +331,16 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
   const reads = yield* FleetGithubReads;
   const { sleep } = yield* FleetSleep;
   const context: FleetReadContext = { reads, retry: retried(sleep) };
+  const firstReadAt = yield* Clock.currentTimeMillis;
   const firstRead = yield* readRunners(context).pipe(Effect.mapError(asCommandError));
   yield* sleep(FLEET_RUNNER_READ_GAP);
   const secondRead = yield* readRunners(context).pipe(Effect.mapError(asCommandError));
   const now = yield* Clock.currentTimeMillis;
   const labels = HashSet.fromIterable(A.map(input.pools, (pool) => pool.label));
   const jobs = yield* readPoolJobs(context, labels, now).pipe(Effect.mapError(asCommandError));
-  const observations = A.map(input.pools, (pool) => observeFleetPool({ pool, firstRead, secondRead, jobs, now }));
+  const observations = A.map(input.pools, (pool) =>
+    observeFleetPool({ pool, firstReadAt, firstRead, secondRead, jobs, now })
+  );
   const queued = queuedFleetJobs({ observations, jobs, hookSources: input.hookSources, now });
   const evidence = yield* collectEvidence(context, queued, now);
   const previousRun = yield* context
@@ -341,6 +357,7 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
     pools: observations,
     findings: A.map(queued, (entry) => fleetJobFinding(entry, HashMap.get(evidence, entry.job.id))),
     previousRun,
+    githubRequests: yield* reads.requestCount,
   });
   const summary = renderFleetCheckSummary(report);
   yield* Console.log(summary);

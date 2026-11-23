@@ -188,6 +188,22 @@ const countingReads = (
     })
   ).pipe(Layer.provide(FleetGithubReads.layerFake(fixture)));
 
+const FIRST_READ_AT = NOW - 300_000;
+
+const advancingSleep = (slept: Ref.Ref<ReadonlyArray<number>>) =>
+  Layer.effect(
+    FleetSleep,
+    Effect.gen(function* () {
+      const base = yield* FleetSleep;
+      return FleetSleep.of({
+        sleep: Effect.fn("FleetSleep.advancing.sleep")(function* (duration: Duration.Duration) {
+          yield* base.sleep(duration);
+          yield* TestClock.adjust(duration);
+        }),
+      });
+    })
+  ).pipe(Layer.provide(FleetSleep.layerFake(slept)));
+
 const inputOf = (options: {
   readonly pools?: ReadonlyArray<FleetPoolCap>;
   readonly sources?: readonly [FleetHookSourceEntry, ...Array<FleetHookSourceEntry>];
@@ -207,13 +223,13 @@ const runCheck = Effect.fnUntraced(function* (
   fixture: FleetGithubFixture,
   options: Parameters<typeof inputOf>[0] & { readonly overrides?: Partial<FleetGithubReadsShape> } = {}
 ) {
-  yield* TestClock.setTime(NOW);
+  yield* TestClock.setTime(FIRST_READ_AT);
   const slept = yield* Ref.make<ReadonlyArray<number>>([]);
   const calls = yield* Ref.make<Calls>({ deliveriesPage: 0, deliveryDetail: 0, jobsPage: 0 });
   const outputs = ActionOutputs.recording();
   const report = yield* runFleetMissedEventCheck(inputOf(options)).pipe(
     provideScopedLayer(
-      Layer.mergeAll(countingReads(fixture, calls, options.overrides), FleetSleep.layerFake(slept), outputs.layer)
+      Layer.mergeAll(countingReads(fixture, calls, options.overrides), advancingSleep(slept), outputs.layer)
     )
   );
   return {
@@ -236,11 +252,39 @@ describe("fleet missed-event check verdicts", () => {
   it.effect("Stuck: an idle runner at cap in both reads while a pool job is queued", () =>
     Effect.gen(function* () {
       const read = [runner(1, "idle"), runner(2, "busy")];
-      const { report, slept } = yield* runCheck(fixtureOf({ reads: [read, read], jobs: [queued(101, ago(3))] }));
+      const { report, slept } = yield* runCheck(fixtureOf({ reads: [read, read], jobs: [queued(101, ago(6))] }), {
+        sources: gateSources,
+      });
       const finding = findingOf(report, 101);
       expect(finding.verdict).toEqual(FleetVerdict.cases.Stuck.make({ idleRunnerIds: [1] }));
-      expect(finding.evidence).toEqual(O.none());
+      expect(finding.evidence).toEqual(FleetDeliveryEvidence.cases.Gate.makeOption({}));
+      expect(report.pools[0]?.firstReadAt).toBe(FIRST_READ_AT);
       expect(slept).toEqual([300_000]);
+    })
+  );
+
+  it.effect("WaitingAtCap, not Stuck: a job created between the two runner reads may not be picked up yet", () =>
+    Effect.gen(function* () {
+      const read = [runner(1, "idle"), runner(2, "busy")];
+      const { report } = yield* runCheck(
+        fixtureOf({ reads: [read, read], jobs: [queued(111, ago(2)), queued(112, ago(6))] }),
+        { sources: gateSources }
+      );
+      expect(findingOf(report, 111).verdict).toEqual(FleetVerdict.cases.WaitingAtCap.make({}));
+      expect(tagOf(report, 112)).toBe("Stuck");
+    })
+  );
+
+  it.effect("Waiting, not NoLaunch: a runner idle only in the second read, below cap, with progress", () =>
+    Effect.gen(function* () {
+      const jobs = [started(210, ago(20), ago(14)), queued(211, ago(12))];
+      const { report } = yield* runCheck(
+        fixtureOf({ reads: [[runner(1, "busy")], [runner(1, "busy"), runner(2, "idle")]], jobs }),
+        { pools: [heavyAt(5)], sources: gateSources }
+      );
+      const pool = report.pools[0];
+      expect([pool?.idleRunnerIds, pool?.secondReadIdleRunnerIds, pool?.progress]).toEqual([[], [2], true]);
+      expect(findingOf(report, 211).verdict).toEqual(FleetVerdict.cases.Waiting.make({ launches: 1, rank: 1 }));
     })
   );
 
@@ -291,7 +335,7 @@ describe("fleet missed-event check verdicts", () => {
       );
       const finding = findingOf(report, 103);
       expect(finding.verdict._tag).toBe("MissedDelivery");
-      expect(finding.classification).toEqual(O.some("missed"));
+      expect(finding.classification).toEqual(O.none());
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.NotDelivered.makeOption({
           windowStart: ago(14),
@@ -368,7 +412,7 @@ describe("fleet missed-event check verdicts", () => {
     })
   );
 
-  it.effect("NoLaunch unknown: delivery pages that do not reach back to the job's creation", () =>
+  it.effect("NoLaunch unknown: delivery pages that do not reach back to the job's window start", () =>
     Effect.gen(function* () {
       const id = "4000000000000000002";
       const { report } = yield* runCheck(
@@ -383,8 +427,48 @@ describe("fleet missed-event check verdicts", () => {
       expect(finding.classification).toEqual(O.some("unknown"));
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.Unreadable.makeOption({
-          reason: "the pages read do not reach back to the job's creation",
+          reason: "the pages read do not reach back to the job's delivery window start",
           oldestReached: O.some(ago(11)),
+        })
+      );
+    })
+  );
+
+  it.effect("NoLaunch unknown: a walk that reaches the job's creation but not its window start", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(220, ago(12))],
+          deliveries: [delivery("4000000000000000220", ago(11)), delivery("4000000000000000221", ago(13))],
+          details: [detail("4000000000000000220", 998), detail("4000000000000000221", 999)],
+        })
+      );
+      const finding = findingOf(report, 220);
+      expect(finding.verdict._tag).toBe("NoLaunch");
+      expect(finding.classification).toEqual(O.some("unknown"));
+      expect(finding.evidence).toEqual(
+        FleetDeliveryEvidence.cases.Unreadable.makeOption({
+          reason: "the pages read do not reach back to the job's delivery window start",
+          oldestReached: O.some(ago(13)),
+        })
+      );
+    })
+  );
+
+  it.effect("NoLaunch unknown: a delivery walk stopped at 60 pages", () =>
+    Effect.gen(function* () {
+      const deliveries = A.map(A.range(1, 61), (n) => delivery(`${9100 + n}`, ago(1)));
+      const { report, calls } = yield* runCheck(
+        fixtureOf({ reads: [[], []], jobs: [queued(230, ago(12))], deliveries, pageSize: 1 })
+      );
+      const finding = findingOf(report, 230);
+      expect(calls.deliveriesPage).toBe(60);
+      expect(finding.classification).toEqual(O.some("unknown"));
+      expect(finding.evidence).toEqual(
+        FleetDeliveryEvidence.cases.Unreadable.makeOption({
+          reason: "the delivery walk stopped at 60 pages",
+          oldestReached: O.some(ago(1)),
         })
       );
     })
@@ -589,7 +673,7 @@ describe("fleet missed-event check precedence", () => {
           details: [detail("9", 9)],
         })
       );
-      expect(findingOf(report, 201).classification).toEqual(O.some("missed"));
+      expect(findingOf(report, 201).classification).toEqual(O.none());
       expect(tagOf(report, 201)).toBe("Wedged");
     })
   );
@@ -607,10 +691,12 @@ describe("fleet missed-event check precedence", () => {
     const observation = (fields: Partial<FleetPoolObservation>) =>
       FleetPoolObservation.make({
         pool: HEAVY,
+        firstReadAt: minutes(20),
         firstCount: 2,
         secondCount: 2,
         atCap: true,
         idleRunnerIds: [],
+        secondReadIdleRunnerIds: [],
         notBusyRunnerIds: [],
         currentNotBusy: 0,
         progress: false,
@@ -622,9 +708,10 @@ describe("fleet missed-event check precedence", () => {
       windowEnd: 1,
       oldestReached: 0,
     });
-    const verdict = (fields: Partial<FleetPoolObservation>, evidence = missed) =>
+    const verdict = (fields: Partial<FleetPoolObservation>, evidence = missed, createdAt = 0) =>
       decideFleetVerdict({
         observation: observation(fields),
+        createdAt,
         age: minutes(20),
         launches: 0,
         rank: 1,
@@ -632,12 +719,14 @@ describe("fleet missed-event check precedence", () => {
         evidence,
       })._tag;
     expect(verdict({ idleRunnerIds: [1], notBusyRunnerIds: [1] })).toBe("Stuck");
+    expect(verdict({ idleRunnerIds: [1] }, O.none(), minutes(20) + 1)).toBe("WaitingAtCap");
     expect(verdict({ notBusyRunnerIds: [1] })).toBe("Wedged");
     expect(verdict({})).toBe("MissedDelivery");
     expect(verdict({ atCap: false })).toBe("MissedDelivery");
     expect(verdict({ atCap: false }, O.none())).toBe("NoLaunch");
     expect(verdict({}, O.none())).toBe("WaitingAtCap");
-    expect(verdict({ atCap: false, idleRunnerIds: [1] }, O.none())).toBe("Waiting");
+    expect(verdict({ atCap: false, secondReadIdleRunnerIds: [1] }, O.none())).toBe("Waiting");
+    expect(verdict({ atCap: false, idleRunnerIds: [1] }, O.none())).toBe("NoLaunch");
   });
 });
 
@@ -668,6 +757,14 @@ describe("fleet missed-event check reads", () => {
       expect(report.pools[0]?.secondCount).toBe(5);
       expect(calls.deliveriesPage).toBe(5);
       expect(calls.deliveryDetail).toBe(4);
+    })
+  );
+
+  it.effect("fails the run when a listing stops at 50 pages short of its total count", () =>
+    Effect.gen(function* () {
+      const read = A.map(A.range(1, 51), (id) => runner(id, "busy"));
+      const error = yield* runCheck(fixtureOf({ reads: [read, read], jobs: [], pageSize: 1 })).pipe(Effect.flip);
+      expect(error.message).toBe("GitHub read org runners failed: listing truncated at 50 pages");
     })
   );
 
@@ -714,6 +811,8 @@ describe("fleet missed-event check output", () => {
       expect(summary).toContain("1 queued job(s) checked; verdicts: WaitingAtCap 1");
       expect(summary).toContain("p95 queue-to-start: heavy 5m00s");
       expect(summary).toContain("previous scheduled run 77 at 2026-11-22T21:10:00.000Z, 10m00s before this check");
+      expect(report.githubRequests).toBe(9);
+      expect(summary).toContain("; 9 GitHub request(s)");
       expect(summaries).toEqual([summary]);
       const exit = yield* Effect.exit(failOnFleetAlerts(report));
       expect(exit._tag).toBe("Success");
@@ -733,8 +832,9 @@ describe("fleet missed-event check output", () => {
         })
       );
       const summary = renderFleetCheckSummary(report);
-      expect(summary).toContain("## Fleet missed-event check: 1 alert(s)");
-      expect(summary).toContain(`| 410 | 3410 | heavy | 12m00s | MissedDelivery | missed | delivery ${id} (500) |`);
+      expect(A.head(Str.split(summary, "\n"))).toEqual(O.some("## Fleet missed-event check: 1 alert(s)"));
+      expect(summary).toContain("checked at 2026-11-22T21:20:00.000Z: 1 queued job(s) checked");
+      expect(summary).toContain(`| 410 | 3410 | heavy | 12m00s | MissedDelivery | none | delivery ${id} (500) |`);
       expect(summary).toContain(`gh api -X POST repos/${REPOSITORY}/hooks/${HOOK}/deliveries/${id}/attempts`);
       expect(summary).toContain("gh run cancel 3410");
       expect(summary).toContain("gh run rerun 3410");
@@ -759,7 +859,7 @@ describe("fleet missed-event check output", () => {
         ...base,
         verdict,
         evidence,
-        classification: O.map(evidence, classifyFleetEvidence),
+        classification: O.flatMap(evidence, classifyFleetEvidence),
       });
     const report = FleetCheckReport.make({
       repository: REPOSITORY,
@@ -906,7 +1006,7 @@ describe("fleet missed-event check helpers", () => {
         ],
         classifyFleetEvidence
       )
-    ).toEqual(["lost", "missed", "missed", "unknown", "gate"]);
+    ).toEqual([O.some("lost"), O.none(), O.none(), O.some("unknown"), O.some("gate")]);
   });
 
   it("reads the remedies pipeably", () => {
@@ -1037,6 +1137,8 @@ describe("fleet missed-event check live reads", () => {
       ]);
       const scheduled = yield* reads.scheduledRuns("fleet-missed-event-check.yml");
       expect(A.map(scheduled, (run) => run.id)).toEqual([5]);
+      const requestCount = yield* reads.requestCount;
+      expect(requestCount).toBe(5);
       const requests = yield* Ref.get(recorded);
       expect(A.every(requests, (request) => request.method === "GET")).toBe(true);
       expect(A.every(requests, (request) => O.contains(request.authorization, "Bearer ghs_test"))).toBe(true);

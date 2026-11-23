@@ -40,7 +40,12 @@ import {
   FleetRunsQuery,
   FleetScheduledRun,
 } from "./FleetMissedEvent.schemas.ts";
-import { FleetGithubReads, FleetReadError, FleetWatchToken } from "./FleetMissedEvent.service.ts";
+import {
+  FleetGithubReads,
+  FleetReadError,
+  FleetWatchToken,
+  withFleetRequestCount,
+} from "./FleetMissedEvent.service.ts";
 
 const $I = $RepoCliId.create("commands/Ci/FleetMissedEvent.live");
 
@@ -185,7 +190,7 @@ const makeLiveReads = Effect.fnUntraced(function* (repository: string) {
   const read = <A>(endpoint: string, schema: S.Codec<A, unknown>) =>
     Effect.flatMap(get(endpoint), ({ text }) => decode(endpoint, schema, text));
 
-  return FleetGithubReads.of({
+  return yield* withFleetRequestCount({
     runnersPage: Effect.fn("FleetGithubReads.runnersPage")((page: number) =>
       read(`orgs/${owner}/actions/runners?per_page=${PER_PAGE}&page=${page}`, RunnersWire).pipe(
         Effect.map((wire) =>

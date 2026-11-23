@@ -70,6 +70,8 @@ export class FleetReadError extends S.TaggedError<FleetReadError, { readonly bra
  *
  * Every member is a read: the check never redelivers, cancels, reruns or
  * writes. Paging is the caller's: it decides when a listing is complete.
+ * `requestCount` is the number of reads made through the service so far,
+ * each retry included; {@link withFleetRequestCount} adds it to every layer.
  *
  * @category services
  * @since 0.0.0
@@ -84,6 +86,7 @@ export interface FleetGithubReadsShape {
     deliveryId: FleetDeliveryId
   ) => Effect.Effect<FleetDeliveryDetail, FleetReadError>;
   readonly jobsPage: (runId: number, page: number) => Effect.Effect<FleetJobsPage, FleetReadError>;
+  readonly requestCount: Effect.Effect<number>;
   readonly runnersPage: (page: number) => Effect.Effect<FleetRunnersPage, FleetReadError>;
   readonly runsPage: (query: FleetRunsQuery, page: number) => Effect.Effect<FleetRunsPage, FleetReadError>;
   readonly scheduledRuns: (workflowFile: string) => Effect.Effect<ReadonlyArray<FleetScheduledRun>, FleetReadError>;
@@ -129,6 +132,65 @@ export class FleetGithubFixture extends S.Opaque<FleetGithubFixture, { readonly 
   }).pipe($I.annoteSchema("FleetGithubFixture", { description: "The GitHub state the fake fleet reads serve." }))
 ) {}
 
+/**
+ * The read members of {@link FleetGithubReadsShape}, before they are counted.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export type FleetGithubReadCalls = Omit<FleetGithubReadsShape, "requestCount">;
+
+/**
+ * Count every read made through a set of read calls, so the run can report
+ * its GitHub request budget without counting at call sites.
+ *
+ * **Example** (Count one read)
+ *
+ * ```ts
+ * import { FleetReadError, withFleetRequestCount } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * const unread = () => Effect.fail(FleetReadError.make({ endpoint: "x", message: "unused" }))
+ * const program = Effect.gen(function* () {
+ *   const reads = yield* withFleetRequestCount({
+ *     deliveriesPage: unread,
+ *     deliveryDetail: unread,
+ *     jobsPage: unread,
+ *     runnersPage: unread,
+ *     runsPage: unread,
+ *     scheduledRuns: unread,
+ *   })
+ *   yield* Effect.ignore(reads.runnersPage(1))
+ *   return yield* reads.requestCount
+ * })
+ * console.log(Effect.runSync(program)) // 1
+ * ```
+ *
+ * @param calls - The uncounted read calls.
+ * @returns The service with each call counted and `requestCount` reading the total.
+ * @category services
+ * @since 0.0.0
+ */
+export const withFleetRequestCount = Effect.fnUntraced(function* (calls: FleetGithubReadCalls) {
+  const count = yield* Ref.make(0);
+  const counted =
+    <Args extends ReadonlyArray<unknown>, A>(read: (...args: Args) => Effect.Effect<A, FleetReadError>) =>
+    (...args: Args): Effect.Effect<A, FleetReadError> =>
+      Effect.andThen(
+        Ref.update(count, (n) => n + 1),
+        Effect.suspend(() => read(...args))
+      );
+  return FleetGithubReads.of({
+    requestCount: Ref.get(count),
+    deliveriesPage: counted(calls.deliveriesPage),
+    deliveryDetail: counted(calls.deliveryDetail),
+    jobsPage: counted(calls.jobsPage),
+    runnersPage: counted(calls.runnersPage),
+    runsPage: counted(calls.runsPage),
+    scheduledRuns: counted(calls.scheduledRuns),
+  });
+});
+
 const pageOf = <A>(items: ReadonlyArray<A>, size: number, page: number): ReadonlyArray<A> =>
   pipe(items, A.drop((page - 1) * size), A.take(size));
 
@@ -156,7 +218,7 @@ const makeFakeReads = Effect.fnUntraced(function* (fixture: FleetGithubFixture) 
     });
   const deliveryPageIndex = (cursor: O.Option<string>): number =>
     O.match(cursor, { onNone: () => 0, onSome: (value) => Number(Str.slice(1)(value)) });
-  return FleetGithubReads.of({
+  return yield* withFleetRequestCount({
     runnersPage,
     runsPage: Effect.fn("FleetGithubReads.fake.runsPage")(function* (query: FleetRunsQuery, page: number) {
       const ids = runIdsOf(query);

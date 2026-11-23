@@ -17,6 +17,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Ci/FleetMissedEvent.schemas");
@@ -488,21 +489,27 @@ export const FleetDeliveryEvidence = S.TaggedUnion({
 export type FleetDeliveryEvidence = typeof FleetDeliveryEvidence.Type;
 
 /**
- * The classification delivery evidence gives an alert: `missed`, `lost`,
- * `unknown`, or `gate` (printed `delivery evidence: gate`).
+ * The classification delivery evidence gives a `NoLaunch`: `lost` (a 2xx
+ * delivery and still no launch), `unknown` (the evidence could not be read
+ * back far enough), or `gate` (printed `delivery evidence: gate`, from 6b).
+ *
+ * **Details**
+ *
+ * A job with no 2xx `queued` delivery is `MissedDelivery`, which ranks above
+ * `NoLaunch`, so a missed delivery is a verdict, never a classification.
  *
  * **Example** (Read the classifications)
  *
  * ```ts
  * import { FleetClassification } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(FleetClassification.literals) // ["missed", "lost", "unknown", "gate"]
+ * console.log(FleetClassification.literals) // ["lost", "unknown", "gate"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const FleetClassification = LiteralKit(["missed", "lost", "unknown", "gate"]).pipe(
+export const FleetClassification = LiteralKit(["lost", "unknown", "gate"]).pipe(
   $I.annoteSchema("FleetClassification", { description: "What a job's delivery evidence classifies it as." })
 );
 
@@ -610,9 +617,12 @@ export const isFleetAlert = FleetVerdict.isAnyOf(["Stuck", "Wedged", "MissedDeli
  *
  * **Details**
  *
- * `atCap` holds when either read counted at least `cap` registered runners
- * of the pool. `idleRunnerIds` are online and not busy in both reads;
- * `notBusyRunnerIds` are not busy in both reads, offline ones included.
+ * `firstReadAt` is the time of the first runner read. `atCap` holds when
+ * either read counted at least `cap` registered runners of the pool.
+ * `idleRunnerIds` are online and not busy in both reads;
+ * `secondReadIdleRunnerIds` are online and not busy in the second read, a
+ * runner that just booted included; `notBusyRunnerIds` are not busy in both
+ * reads, offline ones included.
  * `progress` is whether a pool job started on a runner in the last 15
  * minutes.
  *
@@ -622,10 +632,12 @@ export const isFleetAlert = FleetVerdict.isAnyOf(["Stuck", "Wedged", "MissedDeli
 export class FleetPoolObservation extends S.Opaque<FleetPoolObservation, { readonly brand: unique symbol }>()(
   S.Struct({
     pool: FleetPoolCap,
+    firstReadAt: EpochMillis,
     firstCount: S.Finite,
     secondCount: S.Finite,
     atCap: S.Boolean,
     idleRunnerIds: S.Array(S.Finite),
+    secondReadIdleRunnerIds: S.Array(S.Finite),
     notBusyRunnerIds: S.Array(S.Finite),
     currentNotBusy: S.Finite,
     progress: S.Boolean,
@@ -697,6 +709,11 @@ export type FleetPreviousRun = typeof FleetPreviousRun.Type;
 /**
  * The outcome of one run of the check.
  *
+ * **Details**
+ *
+ * `githubRequests` is the number of GitHub reads the run made, retries
+ * included, as the reads service counted them.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -707,6 +724,7 @@ export class FleetCheckReport extends S.Opaque<FleetCheckReport, { readonly bran
     pools: S.Array(FleetPoolObservation),
     findings: S.Array(FleetJobFinding),
     previousRun: FleetPreviousRun,
+    githubRequests: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0))),
   }).pipe($I.annoteSchema("FleetCheckReport", { description: "Every pool observation and job finding of one run." }))
 ) {}
 
