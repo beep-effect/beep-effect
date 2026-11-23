@@ -113,6 +113,7 @@ export {
   LibraryAccessClass,
   LibraryAccessClassField,
   LibraryAcquireOptions,
+  LibraryAgentLabel,
   LibraryArtifact,
   LibraryCapture,
   LibraryCaptureStatus,
@@ -138,6 +139,9 @@ export {
   LibrarySource,
   LibrarySourceKind,
   LibrarySourceVersion,
+  LibraryTopicId,
+  libraryAgentIri,
+  libraryTopicIri,
 } from "./Library.schemas.ts";
 export { ResearchLibrary, ResearchLibraryLive, type ResearchLibraryRequirements } from "./Library.service.ts";
 export { libraryStatus } from "./Library.status.ts";

@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "epistemic",
+    "iri": "https://beep-effect.com/ns/epistemic/"
+  },
+  "terms": ["Claim", "claim", "hasEvidenceQuote"],
+  "bindings": [],
+  "deprecations": []
+}

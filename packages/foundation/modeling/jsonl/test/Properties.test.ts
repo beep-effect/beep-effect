@@ -1,10 +1,3 @@
-// Property floor (D10) for the jsonl lab: every exported schema and codec gets
-// an encode/decode round trip, and every parser/formatter gets idempotence and
-// fidelity, plus the README's own wire guarantees. Line split/parse laws live in
-// LineProperty.test.ts and are not repeated here.
-//
-// Array form ONLY: the named-record form of it.effect.prop silently discards
-// Schema conversion (see LineProperty.test.ts).
 import { fcRuns } from "@beep/fc-runs";
 import {
   AppendOptions,
@@ -52,17 +45,11 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { Ended, Noted, Reopened } from "./fixtures.ts";
 
+// decision: tests-prop-array-form
 const runs = { arbitrary: fcRuns(100) };
 const encoder = new TextEncoder();
-/** The byte-length oracle: TextEncoder, not the module's own counter. */
-const byteLength = (text: string): number => encoder.encode(text).length;
+const textEncoderByteLength = (text: string): number => encoder.encode(text).length;
 
-/**
- * The D10 codec law for one schema: decoding an encoded value never fails (a
- * failure fails the Effect and so falsifies the property), the decoded value is
- * equivalent to the original under the schema's own equivalence, and
- * re-encoding reproduces the encoded form exactly.
- */
 const roundTrip = <T, E>(schema: S.Codec<T, E>) => {
   const encode = S.encodeEffect(schema);
   const decode = S.decodeEffect(schema);
@@ -77,7 +64,6 @@ const roundTrip = <T, E>(schema: S.Codec<T, E>) => {
   });
 };
 
-/** The codec law for an error class, which also pins the derived message. */
 const errorRoundTrip = <T extends { readonly message: string }, E>(schema: S.Codec<T, E>) => {
   const law = roundTrip(schema);
   return Effect.fnUntraced(function* (error: T) {
@@ -86,25 +72,22 @@ const errorRoundTrip = <T extends { readonly message: string }, E>(schema: S.Cod
   });
 };
 
-/**
- * The codec law for an error carrying `SchemaErrorFromSelf`. That field is a
- * guard-only declaration: it has no equivalence of its own, so the schema
- * equivalence cannot see it, and the law asserts the passthrough identity
- * directly.
- */
 const schemaErrorCarrierRoundTrip = <T extends { readonly message: string; readonly error: S.SchemaError }, E>(
   schema: S.Codec<T, E>
 ) => {
   const law = roundTrip(schema);
   return Effect.fnUntraced(function* (error: T) {
     const decoded = yield* law(error);
-    assert.strictEqual(decoded.error, error.error, "the structured SchemaError passes through by identity");
+    assert.strictEqual(
+      decoded.error,
+      error.error,
+      "the guard-only SchemaErrorFromSelf declaration carries a live issue graph and must pass through by identity"
+    );
     assert.strictEqual(decoded.message, error.message, "the message derives from the carried issue tree");
   });
 };
 
-/** A uniform choice between arbitraries; the native module only unions Schemas. */
-const oneOf = <T>(arbitraries: A.NonEmptyReadonlyArray<Arbitrary.Arbitrary<T>>): Arbitrary.Arbitrary<T> =>
+const oneOfArbitraries = <T>(arbitraries: A.NonEmptyReadonlyArray<Arbitrary.Arbitrary<T>>): Arbitrary.Arbitrary<T> =>
   Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: arbitraries.length - 1 }))).pipe(
     Arbitrary.flatMap((index) =>
       pipe(
@@ -115,39 +98,36 @@ const oneOf = <T>(arbitraries: A.NonEmptyReadonlyArray<Arbitrary.Arbitrary<T>>):
     )
   );
 
-/** One encoded record must split into exactly this slice: terminated, spanning every byte. */
 const terminatedLine = (text: string): LineSlice =>
   LineSlice.make({
     offset: 0,
-    end: byteLength(text),
-    length: byteLength(text) - 1,
+    end: textEncoderByteLength(text),
+    length: textEncoderByteLength(text) - 1,
     text: Str.slice(0, -1)(text),
     terminated: true,
   });
 
-/** Text with no newline is exactly one unterminated slice. */
 const unterminatedLine = (text: string): LineSlice =>
-  LineSlice.make({ offset: 0, end: byteLength(text), length: byteLength(text), text, terminated: false });
+  LineSlice.make({
+    offset: 0,
+    end: textEncoderByteLength(text),
+    length: textEncoderByteLength(text),
+    text,
+    terminated: false,
+  });
 
-// ---------------------------------------------------------------------------
-// Schemas without a derivable arbitrary.
-//
-// `SchemaErrorFromSelf` (InvalidData, InvalidJournalConfig, InvalidSlice) is
-// `S.declare(S.isSchemaError)`: Arbitrary.schema refuses it ("unsupported
-// Declaration"). A real SchemaError comes from rejecting an arbitrary JSON value
-// with `S.Never`, and the remaining fields are derived from their own schemas.
-// ---------------------------------------------------------------------------
 const rejectAll = S.decodeUnknownResult(S.Never);
-const schemaError = Arbitrary.schema(S.Json).pipe(Arbitrary.map(flow(rejectAll, Result.merge)));
-// `InvalidData.make` is called through the class: since effect 4.1.0 a static `make` reads `this`.
+const schemaErrorFromRejectedJson = Arbitrary.schema(S.Json).pipe(Arbitrary.map(flow(rejectAll, Result.merge)));
 const invalidData = Arbitrary.all({
   line: Arbitrary.schema(LineSlice),
   event: S.String.pipe(S.Option, Arbitrary.schema),
-  error: schemaError,
-}).pipe(Arbitrary.map((fields) => InvalidData.make(fields)));
-const invalidJournalConfig = schemaError.pipe(Arbitrary.map((error) => InvalidJournalConfig.make({ error })));
-const invalidSlice = schemaError.pipe(Arbitrary.map((error) => InvalidSlice.make({ error })));
-const jsonlError = oneOf<JsonlError>([
+  error: schemaErrorFromRejectedJson,
+}).pipe(Arbitrary.map(InvalidData.make.bind(InvalidData)));
+const invalidJournalConfig = schemaErrorFromRejectedJson.pipe(
+  Arbitrary.map((error) => InvalidJournalConfig.make({ error }))
+);
+const invalidSlice = schemaErrorFromRejectedJson.pipe(Arbitrary.map((error) => InvalidSlice.make({ error })));
+const jsonlError = oneOfArbitraries<JsonlError>([
   Arbitrary.schema(
     S.Union([
       MalformedLine,
@@ -167,15 +147,10 @@ const jsonlError = oneOf<JsonlError>([
   invalidSlice,
 ]);
 
-// ---------------------------------------------------------------------------
-// The registry under test: the shared fixtures (a struct payload with an
-// optional key, a terminal Null event, a reopen Null event) plus a void payload,
-// which the README promises encodes as JSON null.
-// ---------------------------------------------------------------------------
-const Pinged = JsonlEvent.make("pinged", { data: S.Void });
-const registry = Tuple.make(Noted, Ended, Reopened, Pinged);
-const RegisteredInput = S.Union([Noted.input, Ended.input, Reopened.input, Pinged.input]);
-const RegisteredEnvelope = S.Union([Noted.envelope, Ended.envelope, Reopened.envelope, Pinged.envelope]);
+const VoidPinged = JsonlEvent.make("pinged", { data: S.Void });
+const registry = Tuple.make(Noted, Ended, Reopened, VoidPinged);
+const RegisteredInput = S.Union([Noted.input, Ended.input, Reopened.input, VoidPinged.input]);
+const RegisteredEnvelope = S.Union([Noted.envelope, Ended.envelope, Reopened.envelope, VoidPinged.envelope]);
 const RegisteredTag = S.Literals(["noted", "ended", "reopened", "pinged"]);
 const sameEnvelope = S.toEquivalence(RegisteredEnvelope);
 const sameError = S.toEquivalence(JsonlError);
@@ -190,12 +165,10 @@ const WireRecord = S.Record(S.String, S.Json);
 const decodeWire = S.decodeEffect(S.fromJsonString(WireRecord));
 const decodeWireValue = S.decodeUnknownEffect(WireRecord);
 const sameWire = S.toEquivalence(WireRecord);
-/** A frame whose payload is JSON, so it has a wire form to round-trip. */
-const JsonFrame = S.Struct({ ...EnvelopeFrame.fields, data: S.Json });
-const encodeJsonFrame = S.encodeEffect(S.fromJsonString(JsonFrame));
+const JsonPayloadFrame = S.Struct({ ...EnvelopeFrame.fields, data: S.Json });
+const encodeJsonFrame = S.encodeEffect(S.fromJsonString(JsonPayloadFrame));
 const sameFrame = S.toEquivalence(EnvelopeFrame);
-/** JSON insignificant whitespace a hand-edited line may carry around its value. */
-const Padding = S.Literals(["", " ", "\t", " \t ", "\r"]);
+const HandEditedJsonWhitespace = S.Literals(["", " ", "\t", " \t ", "\r"]);
 const isByteCount = S.is(ByteCount);
 const isResyncReason = S.is(JournalResyncReason);
 const decodeConfig = S.decodeUnknownEffect(JournalConfig);
@@ -242,8 +215,11 @@ describe("jsonl schema round trips", () => {
     [S.Union([S.Finite, ByteCount])],
     ([value]) =>
       Effect.sync(() => {
-        // S.Int is the safe-integer domain: 2 ** 53 is an integer but not a byte count.
-        assert.strictEqual(isByteCount(value), Number.isSafeInteger(value) && value >= 0);
+        assert.strictEqual(
+          isByteCount(value),
+          Number.isSafeInteger(value) && value >= 0,
+          "ByteCount is the safe-integer domain: 2 ** 53 is an integer but not a byte count"
+        );
       }),
     runs
   );
@@ -261,8 +237,11 @@ describe("jsonl schema round trips", () => {
           "rebase(a) then rebase(b) is rebase(a + b)"
         );
         assertTrue(sameLine(LineSlice.rebase(line, 0), line), "rebase(0) is the identity");
-        // strictEqual, not deepStrictEqual: ByteCount admits -0, which equals 0 as an offset.
-        assert.strictEqual(stepwise.offset - line.offset, first + second);
+        assert.strictEqual(
+          stepwise.offset - line.offset,
+          first + second,
+          "strictEqual, not deepStrictEqual: ByteCount admits -0, which equals 0 as an offset"
+        );
         assert.strictEqual(stepwise.end - line.end, first + second);
         assert.strictEqual(stepwise.length, line.length);
         assert.strictEqual(stepwise.text, line.text);
@@ -323,10 +302,8 @@ describe("jsonl schema round trips", () => {
     runs
   );
 
-  // Kept deviation D15 (EF-40): optional keys are exact, so an explicitly
-  // undefined configuration or slice key never decodes.
   it.effect.prop(
-    "optional configuration and slice keys reject an explicit undefined",
+    "optional configuration and slice keys are exact and reject an explicit undefined (kept deviation D15, EF-40)",
     [Arbitrary.schema(JournalConfig), CursoredSlice(RegisteredTag)],
     ([config, slice]) =>
       Effect.gen(function* () {
@@ -365,11 +342,9 @@ describe("jsonl schema round trips", () => {
 describe("JsonlError round trips", () => {
   it.effect.prop("MalformedLine", [MalformedLine], ([error]) => laws.malformedLine(error), runs);
   it.effect.prop("UnknownEvent", [UnknownEvent], ([error]) => laws.unknownEvent(error), runs);
-  // S.Defect derives an arbitrary over JSON-like causes; Error causes are added
-  // explicitly below because the derived space contains none.
   it.effect.prop("UnserializableData", [UnserializableData], ([error]) => laws.unserializableData(error), runs);
   it.effect.prop(
-    "UnserializableData with an Error cause",
+    "UnserializableData with an Error cause, which the derived S.Defect arbitrary never produces",
     [S.String, S.String],
     ([event, message]) => laws.unserializableData(UnserializableData.make({ event, cause: new Error(message) })),
     runs
@@ -387,21 +362,31 @@ describe("JsonlError round trips", () => {
     runs
   );
   it.effect.prop("JournalUnterminated", [JournalUnterminated], ([error]) => laws.journalUnterminated(error), runs);
-  it.effect.prop("InvalidData (explicit generator)", [invalidData], ([error]) => laws.invalidData(error), runs);
   it.effect.prop(
-    "InvalidJournalConfig (explicit generator)",
+    "InvalidData (explicit generator: Arbitrary.schema refuses the SchemaErrorFromSelf declaration)",
+    [invalidData],
+    ([error]) => laws.invalidData(error),
+    runs
+  );
+  it.effect.prop(
+    "InvalidJournalConfig (explicit generator: Arbitrary.schema refuses the SchemaErrorFromSelf declaration)",
     [invalidJournalConfig],
     ([error]) => laws.invalidJournalConfig(error),
     runs
   );
-  it.effect.prop("InvalidSlice (explicit generator)", [invalidSlice], ([error]) => laws.invalidSlice(error), runs);
+  it.effect.prop(
+    "InvalidSlice (explicit generator: Arbitrary.schema refuses the SchemaErrorFromSelf declaration)",
+    [invalidSlice],
+    ([error]) => laws.invalidSlice(error),
+    runs
+  );
   it.effect.prop("the JsonlError union over every member", [jsonlError], ([error]) => laws.jsonlError(error), runs);
 });
 
 describe("Line parser fidelity", () => {
   it.effect.prop(
     "parse(stringify(parse(x))) equals parse(x), stringify is idempotent through parse, and parse recovers the value",
-    [S.Json, Padding, Padding],
+    [S.Json, HandEditedJsonWhitespace, HandEditedJsonWhitespace],
     ([value, before, after]) =>
       Effect.gen(function* () {
         const text = `${before}${yield* stringifyJson(value)}${after}`;
@@ -426,7 +411,7 @@ describe("Line parser fidelity", () => {
 describe("Envelope codec fidelity over a registry", () => {
   it.effect.prop(
     "a JSON frame decodes back to itself before any payload codec runs",
-    [JsonFrame],
+    [JsonPayloadFrame],
     ([frame]) =>
       Effect.gen(function* () {
         const text = yield* encodeJsonFrame(frame);
@@ -479,10 +464,11 @@ describe("Envelope codec fidelity over a registry", () => {
         const encoded4 = yield* Envelope.encode(input, registry);
         const wire = yield* decodeWire(encoded4);
         const encoded = yield* encodeInput(input);
-        // Compared as JSON, where -0 and 0 are one number: the expectation is the
-        // input codec's output with a void payload written as null.
         const expected = yield* decodeWireValue({ ...encoded, data: encoded.data ?? null });
-        assertTrue(sameWire(wire, expected), "the wire record is the encoded input");
+        assertTrue(
+          sameWire(wire, expected),
+          "the wire record is the encoded input with void written as null, compared as JSON where -0 and 0 are one number"
+        );
         assert.strictEqual(R.has(wire, "scope"), P.isNotUndefined(input.scope), "scope is written iff it was given");
         assertTrue(R.has(wire, "data"), "data is always written, as null when void");
       }),
@@ -518,7 +504,7 @@ describe("Envelope codec fidelity over a registry", () => {
         });
         const ends = pipe(
           texts,
-          A.scan(0, (offset, text) => offset + byteLength(text)),
+          A.scan(0, (offset, text) => offset + textEncoderByteLength(text)),
           A.drop(1)
         );
         assert.strictEqual(decoded.length, inputs.length, "no record is dropped or invented");

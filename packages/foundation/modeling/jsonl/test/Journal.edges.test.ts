@@ -261,34 +261,32 @@ it.effect("a file disappearing between the existence check and seed refresh rema
   })
 );
 
-// Storage and metadata are real MemoryFileSystem operations. Only the watch
-// lifecycle is controlled: the first registration ends after its mutation,
-// and the second registration signals that both ingestion passes completed.
 const endingWatch = Effect.fn("JsonlTest.endingWatch")(function* (
   fs: FileSystem.FileSystem,
   mutate: Effect.Effect<void, PlatformError.PlatformError, Scope.Scope>,
   nextTarget = path
 ) {
-  const rearmed = yield* Deferred.make<void>();
-  let watches = 0;
+  const bothIngestionPassesCompleted = yield* Deferred.make<void>();
+  let watchRegistrations = 0;
   const decorated: FileSystem.FileSystem = {
     ...fs,
     watch: (target) =>
       Stream.unwrap(
         Effect.gen(function* () {
-          watches++;
-          if (watches === 1) {
+          watchRegistrations++;
+          const firstRegistrationEndsAfterMutation = watchRegistrations === 1;
+          if (firstRegistrationEndsAfterMutation) {
             yield* mutate;
             return Stream.succeed({ _tag: "Update", path } satisfies FileSystem.WatchEvent);
           }
           assert.strictEqual(target, nextTarget);
-          yield* Deferred.succeed(rearmed, undefined);
+          yield* Deferred.succeed(bothIngestionPassesCompleted, undefined);
           return Stream.never;
         })
       ),
   };
   const journal = yield* open(decorated);
-  yield* Deferred.await(rearmed);
+  yield* Deferred.await(bothIngestionPassesCompleted);
   return journal;
 });
 it.effect("an ending watch ingests foreign blank and corrupt records without advancing latest", () =>
@@ -347,50 +345,50 @@ it.effect("a completed truncation resync clears latest and resumes writes on the
   })
 );
 
-// Review round 1 (R2): after the existence check the journal can vanish at
-// any later seed step. Each is a missing journal, whether the step reports it
-// as JournalNotFound or as a PlatformError whose reason is NotFound. The seed
-// opens the file to sample its BOM width and identity, then the tail read
-// stats the path and opens it again; `opens` and `stats` pick which of those
-// calls finds the file gone.
-const vanishingAt = (fs: FileSystem.FileSystem, opens: number, stats: number): FileSystem.FileSystem => {
+const vanishingAt = (
+  fs: FileSystem.FileSystem,
+  removeBeforeOpenNumber: number,
+  removeBeforeStatNumber: number
+): FileSystem.FileSystem => {
   let opened = 0;
   let sampled = 0;
   return {
     ...fs,
     watch: () => Stream.never,
     open: Effect.fn("JsonlTest.removeBeforeOpen")(function* (target, options) {
-      if (++opened === opens) yield* fs.remove(target);
+      if (++opened === removeBeforeOpenNumber) yield* fs.remove(target);
       return yield* fs.open(target, options);
     }),
     stat: Effect.fn("JsonlTest.removeBeforeStat")(function* (target) {
-      if (++sampled === stats) yield* fs.remove(target);
+      if (++sampled === removeBeforeStatNumber) yield* fs.remove(target);
       return yield* fs.stat(target);
     }),
   };
 };
-for (const [step, opens, stats] of [
-  ["BOM and identity sample", 1, 0],
-  ["tail size sample", 0, 1],
-  ["tail read", 2, 0],
+for (const [seedStep, removeBeforeOpenNumber, removeBeforeStatNumber] of [
+  ["BOM and identity sample open", 1, 0],
+  ["tail size stat", 0, 1],
+  ["tail read open", 2, 0],
 ] as const) {
-  it.effect(`a file disappearing before the seed ${step} remains a missing journal`, () =>
-    Effect.gen(function* () {
-      const fs = yield* memory();
-      yield* fs.writeFileString(path, `\ufeff${line(1)}`);
-      const journal = yield* open(vanishingAt(fs, opens, stats));
-      const exists17 = yield* fs.exists(path);
-      assert.isFalse(exists17, "the journal vanished during the seed");
-      const got18 = yield* SubscriptionRef.get(journal.latest);
-      assertNone(got18);
-      assertFailure(
-        (yield* Effect.result(journal.append("noted", { round: 1, label: "missing" }))).pipe(
-          Result.mapError((error) => error._tag)
-        ),
-        "JournalNotFound"
-      );
-      yield* journal.create;
-      assert.strictEqual((yield* journal.append("noted", { round: 1, label: "recreated" })).line.offset, 0);
-    })
+  it.effect(
+    `a file disappearing after the existence check, before the seed ${seedStep}, remains a missing journal whether the step reports JournalNotFound or a NotFound PlatformError`,
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* memory();
+        yield* fs.writeFileString(path, `\ufeff${line(1)}`);
+        const journal = yield* open(vanishingAt(fs, removeBeforeOpenNumber, removeBeforeStatNumber));
+        const exists17 = yield* fs.exists(path);
+        assert.isFalse(exists17, "the journal vanished during the seed");
+        const got18 = yield* SubscriptionRef.get(journal.latest);
+        assertNone(got18);
+        assertFailure(
+          (yield* Effect.result(journal.append("noted", { round: 1, label: "missing" }))).pipe(
+            Result.mapError((error) => error._tag)
+          ),
+          "JournalNotFound"
+        );
+        yield* journal.create;
+        assert.strictEqual((yield* journal.append("noted", { round: 1, label: "recreated" })).line.offset, 0);
+      })
   );
 }

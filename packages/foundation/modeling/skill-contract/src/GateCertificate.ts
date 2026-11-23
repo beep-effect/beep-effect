@@ -7,6 +7,7 @@
  */
 
 import { $SkillContractId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -332,7 +333,7 @@ export class GateCertificate extends S.Opaque<GateCertificate, { readonly brand:
  * @since 0.0.0
  */
 export const GateCertificatePredicateType = EvidencePredicateType.make(
-  $SkillContractId.create("evidence/gate-certificate/v1").iri
+  iri("skill-contract:evidence/gate-certificate/v1")
 );
 
 /**

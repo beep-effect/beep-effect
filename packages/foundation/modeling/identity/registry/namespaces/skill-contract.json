@@ -1,0 +1,13 @@
+{
+  "namespace": {
+    "prefix": "skill-contract",
+    "iri": "https://beep-effect.com/ns/skill-contract/"
+  },
+  "terms": [
+    "evidence/failure/v2",
+    "evidence/gate-certificate/v1",
+    "evidence/gate-summary/v2"
+  ],
+  "bindings": [],
+  "deprecations": []
+}
