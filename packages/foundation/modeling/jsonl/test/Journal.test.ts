@@ -85,16 +85,12 @@ it.effect("terminal refusal, quiescence and reopening follow the last event", ()
     assert.strictEqual((yield* Stream.runCollect(journal.query())).length, 3);
   })
 );
-// Upstream "two concurrent patches to different fields BOTH survive", gated as
-// upstream gates it: the read-merge-write must all happen under one lock. Read
-// outside it, and both patches see the same base and the second silently
-// reverts the first, which is invisible because each append succeeds.
-it.effect("concurrent partial patches retain both changed and optional fields", () =>
+it.effect("concurrent partial patches read, merge and write under one lock, retaining both changed fields", () =>
   Effect.gen(function* () {
     const fs = yield* memory();
     const entered = yield* Deferred.make<void>();
     const release = yield* Deferred.make<void>();
-    let gate = false;
+    let holdNextWriteInsidePermit = false;
     const gated: FileSystem.FileSystem = {
       ...fs,
       open: (target, options) =>
@@ -110,8 +106,8 @@ it.effect("concurrent partial patches retain both changed and optional fields", 
               write: (buffer) => handle.write(buffer),
               truncate: (length) => handle.truncate(length),
               writeAll: Effect.fn("JsonlTest.holdFirstPatch")(function* (bytes) {
-                if (gate) {
-                  gate = false;
+                if (holdNextWriteInsidePermit) {
+                  holdNextWriteInsidePermit = false;
                   yield* Deferred.succeed(entered, undefined);
                   yield* Deferred.await(release);
                 }
@@ -125,18 +121,16 @@ it.effect("concurrent partial patches retain both changed and optional fields", 
     yield* journal.create;
     yield* journal.append("noted", { round: 1, label: "a", optional: "retained" });
 
-    // Hold the first patch inside the write permit.
-    gate = true;
+    holdNextWriteInsidePermit = true;
     const first = yield* journal.appendPatch("noted", { round: 2 }).pipe(Effect.forkChild({ startImmediately: true }));
     yield* Deferred.await(entered);
     assert.isUndefined(first.pollUnsafe(), "the first patch is genuinely mid-write");
 
-    // The second patch must not have read the base yet.
     const second = yield* journal
       .appendPatch("noted", { label: "b" })
       .pipe(Effect.forkChild({ startImmediately: true }));
     yield* Effect.yieldNow;
-    assert.isUndefined(second.pollUnsafe(), "the second patch waits for the first one's write permit");
+    assert.isUndefined(second.pollUnsafe(), "the second patch waits for the write permit before reading the base");
 
     yield* Deferred.succeed(release, undefined);
     assert.deepStrictEqual((yield* Fiber.join(first)).data, { round: 2, label: "a", optional: "retained" });
@@ -255,9 +249,7 @@ it.effect("full hub bounds shutdown with TestClock while preserving disk writes"
   })
 );
 
-// Restored from upstream Journal.test.ts (MIT): "Journal — appendPatch inherits
-// from a Schema.Class payload". The payload is seeded as JSON text, so the base
-// of the patch is a DECODED class instance, not a plain record.
+// Ported from upstream Journal.test.ts (MIT).
 class Boxed extends S.Class<Boxed, { readonly brand: unique symbol }>($I`Boxed`)({
   round: S.Finite,
   phase: S.String,
@@ -265,7 +257,7 @@ class Boxed extends S.Class<Boxed, { readonly brand: unique symbol }>($I`Boxed`)
 }) {}
 const boxEvents = Tuple.make(JsonlEvent.make("boxed", { data: Boxed }));
 class BoxJournal extends Journal.Service<BoxJournal>()($I`BoxJournal`, { events: boxEvents }) {}
-const openBoxed = Effect.fn("JsonlTest.openBoxed")(function* (data: string) {
+const openBoxedFromJsonText = Effect.fn("JsonlTest.openBoxed")(function* (data: string) {
   const fs = yield* memory();
   yield* fs.writeFileString(path, `{"at":"2026-01-01T00:00:00.000Z","event":"boxed","data":${data}}\n`);
   const context = yield* Layer.build(
@@ -277,7 +269,7 @@ const openBoxed = Effect.fn("JsonlTest.openBoxed")(function* (data: string) {
 describe("Journal — appendPatch inherits from a Schema.Class payload", () => {
   it.effect("a partial patch INHERITS untouched fields from a class-instance base", () =>
     Effect.gen(function* () {
-      const journal = yield* openBoxed('{"round":1,"phase":"keep-me"}');
+      const journal = yield* openBoxedFromJsonText('{"round":1,"phase":"keep-me"}');
       const envelope = yield* journal.appendPatch("boxed", { round: 2 });
       assert.strictEqual(envelope.data.round, 2, "the patched field changed");
       assert.strictEqual(envelope.data.phase, "keep-me", "the untouched field was INHERITED, not dropped");
@@ -285,17 +277,9 @@ describe("Journal — appendPatch inherits from a Schema.Class payload", () => {
     })
   );
 
-  it.effect("an OPTIONAL untouched field is inherited rather than dropped", () =>
+  it.effect("an OPTIONAL untouched field is inherited, where a plain replacement fails the class schema", () =>
     Effect.gen(function* () {
-      // Worth stating precisely, because the failure mode is NOT what it first
-      // looks like: with a `Schema.Class` payload the replacement path produces
-      // a plain object, which the class schema REJECTS, so a guard that misses
-      // the class instance fails loudly (`InvalidData`) rather than silently. A
-      // decoded class payload is not a plain record, and the class schema does
-      // not accept a plain replacement. The defect would therefore be that
-      // `appendPatch` is unusable with the kit's dominant payload idiom, not
-      // that it loses data quietly.
-      const journal = yield* openBoxed('{"round":1,"phase":"p","note":"must-survive"}');
+      const journal = yield* openBoxedFromJsonText('{"round":1,"phase":"p","note":"must-survive"}');
       const envelope = yield* journal.appendPatch("boxed", { round: 2 });
       assert.strictEqual(envelope.data.note, "must-survive", "an optional field must survive a partial patch");
     })
@@ -367,16 +351,17 @@ it.effect("appendPatch preserves transformed class codecs and rejects invalid pa
     assert.strictEqual(failure._tag, "InvalidData");
     const readFileString14 = yield* fs.readFileString(path);
     assert.strictEqual(readFileString14, persisted);
-    // Infinity encodes to the valid wire value "0", but the original decoder
-    // reconstructs Infinity and rejects it through Boxed's finite field check.
     const decodedFailure = yield* Effect.flip(journal.appendPatch("boxed", { round: Number.POSITIVE_INFINITY }));
-    assert.strictEqual(decodedFailure._tag, "InvalidData");
+    assert.strictEqual(
+      decodedFailure._tag,
+      "InvalidData",
+      'Infinity encodes to "0" but decodes back to Infinity, which Boxed\'s finite field rejects'
+    );
     const readFileString15 = yield* fs.readFileString(path);
     assert.strictEqual(readFileString15, persisted);
   })
 );
 
-// Each composed codec must patch the decoded class while retaining its wire transformation.
 const boxedWire = S.Struct({ ...Boxed.fields, round: S.FiniteFromString });
 const boxedWireUnion = S.Union([boxedWire, S.Struct(Boxed.fields)]);
 const boxedFromWire = {
@@ -398,7 +383,7 @@ const composedBoxCases = [
 ] as const;
 
 for (const [name, data, seedRound, encodedRound] of composedBoxCases) {
-  it.effect(`appendPatch preserves ${name} and rejects invalid patches without writing`, () =>
+  it.effect(`appendPatch keeps ${name}'s decoded class and wire codec, rejects invalid patches without writing`, () =>
     Effect.gen(function* () {
       const fs = yield* memory();
       yield* fs.writeFileString(
@@ -474,70 +459,56 @@ for (const [name, data] of [
   );
 }
 
-/** Assert the envelope carries `noted`, then read its round: never a silent skip. */
 const roundOf = (envelope: EnvelopeUnion<typeof events>): number =>
-  envelope.event === "noted" ? envelope.data.round : assert.fail("wrong envelope variant");
+  envelope.event === "noted" ? envelope.data.round : assert.fail("wrong envelope variant: never a silent skip");
 
-// Restored from upstream Journal.test.ts (MIT).
+// Ported from upstream Journal.test.ts (MIT).
 describe("Journal — the terminal Exit never overtakes a completed append", () => {
   it.effect("an outer-scope subscriber sees EVERY completed append before stream end", () =>
     Effect.gen(function* () {
-      // The subscription lives in a scope that OUTLIVES the journal's (here the
-      // test's own), which is the only way to observe what the terminal Exit
-      // did. Once publishing left the write critical section, draining writes
-      // stopped implying draining publishes, so the Exit, which is not on the
-      // baton chain, could be published while an already-completed append's
-      // envelope was still in flight.
       const fs = yield* memory();
       yield* fs.writeFileString(path, "");
       const journalScope = yield* Scope.make();
       const journal = yield* open(fs, { path, capacity: 1, shutdownPublishTimeout: Duration.seconds(30) }).pipe(
         Effect.provideService(Scope.Scope, journalScope)
       );
-      const subscription = yield* PubSub.subscribe(journal.hub);
+      const outerScopeSubscription = yield* PubSub.subscribe(journal.hub);
 
-      // Capacity 1. A is accepted and fills the hub; B's publish then blocks on
-      // capacity; C's blocks on B's BATON. That third append is what makes the
-      // overtake reachable: with the Exit published directly it queues as a
-      // waiting publisher AFTER B but BEFORE C, because C only reaches the hub
-      // once B's baton is passed, so the stream ends between two completed
-      // appends. With two appends the two blocked publishers happen to drain
-      // FIFO in the right order and the bug hides.
       yield* journal.append("noted", { round: 1, label: "a" });
       const second = yield* journal
         .append("noted", { round: 2, label: "b" })
         .pipe(Effect.forkChild({ startImmediately: true }));
       yield* Effect.yieldNow;
-      const third = yield* journal
+      const thirdMakesOvertakeReachable = yield* journal
         .append("noted", { round: 3, label: "c" })
         .pipe(Effect.forkChild({ startImmediately: true }));
       yield* Effect.yieldNow;
-      // `latest` reaches round 3 only once the third write has landed, and no
-      // publish can complete while the subscriber takes nothing, so both
-      // publishes are provably outstanding from here on.
-      yield* SubscriptionRef.changes(journal.latest).pipe(
+      const bothPublishesOutstandingOnceThirdWriteLands = SubscriptionRef.changes(journal.latest).pipe(
         Stream.filter((value) => O.exists(value, (row) => row.event === "noted" && row.data.round === 3)),
         Stream.runHead
       );
+      yield* bothPublishesOutstandingOnceThirdWriteLands;
       const readFileString18 = yield* fs.readFileString(path);
       assert.strictEqual(Line.split(readFileString18).length, 3, "every write landed");
       assert.isUndefined(second.pollUnsafe(), "the second append is blocked in publish");
-      assert.isUndefined(third.pollUnsafe(), "the third append is blocked behind the second one's baton");
+      assert.isUndefined(
+        thirdMakesOvertakeReachable.pollUnsafe(),
+        "the third append is blocked behind the second one's baton"
+      );
 
-      // Close the journal while both publishes are still outstanding.
-      const closing = yield* Scope.close(journalScope, Exit.void).pipe(Effect.forkChild({ startImmediately: true }));
+      const closingWhilePublishesOutstanding = yield* Scope.close(journalScope, Exit.void).pipe(
+        Effect.forkChild({ startImmediately: true })
+      );
       yield* Effect.yieldNow;
 
-      // Draining makes room, letting the queued publishers through in turn.
       const takes = yield* Effect.all(
-        A.makeBy(4, () => PubSub.take(subscription)),
+        A.makeBy(4, () => PubSub.take(outerScopeSubscription)),
         { concurrency: 1 }
       );
       yield* Fiber.join(second);
-      yield* Fiber.join(third);
-      yield* Fiber.join(closing);
+      yield* Fiber.join(thirdMakesOvertakeReachable);
+      yield* Fiber.join(closingWhilePublishesOutstanding);
 
-      // All three completed appends, in order, and only THEN the stream end.
       const [one, two, three, end] = takes;
       assert.isTrue(A.isArray(one), "first take is an envelope chunk");
       assert.isTrue(A.isArray(two), "second take is an envelope chunk");
