@@ -1507,10 +1507,8 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
-        "stores no anchor whose source identity holds an unpaired surrogate escape",
+        "stores no anchor whose source identity holds an unpaired surrogate escape (jsonb refuses it, so decode may require well-formed text)",
         Effect.fnUntraced(function* () {
-          // The jsonb column is why `SourceTextIdentity` could become well-formed on decode: Postgres refuses the
-          // escape that `JSON.stringify` writes for a lone surrogate, so no stored row can hold one.
           const seeded = yield* seedScenario(120);
           const db = yield* makeDrizzle();
           const table = DbSchema.evidenceVerification;
@@ -1540,7 +1538,6 @@ if (!shouldRunPgliteIntegration) {
             expect(NodeUtil.inspect(refusal, { depth: 12 })).toContain("invalid input syntax for type json");
           });
 
-          // The same insert with the pair in order is accepted, so the escape alone was refused.
           yield* insertWithScope("workspace:😀");
         }),
         120_000

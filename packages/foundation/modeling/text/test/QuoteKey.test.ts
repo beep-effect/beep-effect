@@ -30,9 +30,11 @@ it.layer(Digest.layerWebCrypto)("@beep/text QuoteKey minting", (it) => {
       const spellings = yield* Effect.forEach(["final", "ﬁnal", "fi-\nnal", "ﬁ-\r\nnal"], keyOf, { concurrency: 1 });
       expect(HashSet.size(HashSet.fromIterable(spellings))).toBe(1);
       expect(A.every(spellings, S.is(QuoteKey))).toBe(true);
-      // Case is not folded: another passage, another key.
       const capitalized = yield* keyOf("Final");
-      expect(HashSet.has(HashSet.fromIterable(spellings), capitalized)).toBe(false);
+      expect(
+        HashSet.has(HashSet.fromIterable(spellings), capitalized),
+        "case is not folded: another passage, another key"
+      ).toBe(false);
     })
   );
 

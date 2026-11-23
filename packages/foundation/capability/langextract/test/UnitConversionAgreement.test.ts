@@ -10,14 +10,12 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-// Well-formed text by construction: printable BMP scalars below the surrogate block plus 64 astral emoji. The
-// boundaries of each shared unit are computed from the code points, and ranges sit on scalar boundaries.
-const CodePointPick = S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x2fff + 64 }));
+const PrintableBmpOrAstralEmojiPick = S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x2fff + 64 }));
 const toCodePoint = (pick: number): number => (pick > 0x2fff ? 0x1f600 + (pick - 0x3000) : pick);
 const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.check(S.isBetween({ minimum, maximum })));
 
-const caseArbitrary = Arbitrary.flatMap(
-  Arbitrary.array(Arbitrary.schema(CodePointPick), { minLength: 1, maxLength: 80 }),
+const wellFormedTextScalarRangeCase = Arbitrary.flatMap(
+  Arbitrary.array(Arbitrary.schema(PrintableBmpOrAstralEmojiPick), { minLength: 1, maxLength: 80 }),
   (picks) => {
     const codePoints = A.map(picks, toCodePoint);
     return Arbitrary.flatMap(between(0, codePoints.length - 1), (first) =>
@@ -52,8 +50,8 @@ const agreement = Effect.fnUntraced(function* (unit: TextOffsetUnit, start: numb
 
 describe("@beep/langextract unit conversion agreement with @beep/text", () => {
   it.effect.prop(
-    "convertTextOffsetRange and convertPosition agree on the two shared units",
-    { generated: caseArbitrary },
+    "convertTextOffsetRange and convertPosition agree on the two shared units over well-formed text, with boundaries computed from the code points",
+    { generated: wellFormedTextScalarRangeCase },
     ({ generated }) =>
       Effect.gen(function* () {
         const boundaries = generated.boundaries[generated.unit];

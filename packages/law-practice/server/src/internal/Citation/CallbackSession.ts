@@ -863,8 +863,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const citationResult15 = yield* S.encodeEffect(CitationJson)(input).pipe(Effect.mapError(invalid));
     const citation = yield* S.decodeEffect(CitationJson)(citationResult15).pipe(Effect.mapError(invalid));
     if (target._tag === "Mention") {
-      // cm2 includes the semantic discriminant; no stale ID or fake proof.
-      if (citation.type !== current.type) return yield* invalid();
+      const keepsSemanticKindMintedIntoCm2Id = citation.type === current.type;
+      if (!keepsSemanticKindMintedIntoCm2Id) return yield* invalid();
       known = HashMap.set(known, target.mentionId, citation);
     } else {
       const object = CitationDetached.make({ id: target.detachedId, citation });

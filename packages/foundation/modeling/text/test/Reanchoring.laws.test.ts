@@ -54,12 +54,10 @@ const isMapped = (outcome: Reanchoring): outcome is Reanchoring & { readonly to:
 
 const rangeOf = (outcome: Reanchoring & { readonly to: Anchored }) => Anchored.range(outcome.to);
 
-// The UTF-16 offset of each scalar boundary of a text: offset 0, then the end of each scalar.
-const boundariesOf = (text: string): A.NonEmptyReadonlyArray<number> =>
+const utf16ScalarBoundariesOf = (text: string): A.NonEmptyReadonlyArray<number> =>
   A.scan(A.fromIterable(text), 0, (offset, scalar) => offset + scalar.length);
 
-// Three captures and two generated gapped steps between them, with an occurrence in the first.
-const chainCase = Arbitrary.flatMap(wellFormedText, (first) =>
+const occurrenceThroughTwoGappedStepsCase = Arbitrary.flatMap(wellFormedText, (first) =>
   Arbitrary.flatMap(locatorStep(first.text), (f) =>
     Arbitrary.flatMap(locatorStep(f.target), (g) =>
       Arbitrary.map(
@@ -80,10 +78,9 @@ const chainCase = Arbitrary.flatMap(wellFormedText, (first) =>
   )
 );
 
-// Text salted with hyphen breaks and the scalars NFKC rewrites, never empty, with a scalar range in it.
-const normalizationCase = Arbitrary.flatMap(normalizationText, (salted) => {
+const nonEmptySaltedTextWithScalarRangeCase = Arbitrary.flatMap(normalizationText, (salted) => {
   const text = `${salted}a`;
-  const boundaries = boundariesOf(text);
+  const boundaries = utf16ScalarBoundariesOf(text);
   return Arbitrary.map(scalarRangeIn(boundaries.length - 1), (range) => ({ text, range: rangeIn(boundaries)(range) }));
 });
 
@@ -93,7 +90,6 @@ const normalizationMap = (from: SourceTextIdentity, text: string, normalization:
   return { map: LocatorMap.make({ from, to, segments: normalized.segments }), to, text: normalized.text };
 };
 
-// Re-anchors the UTF-16 range `start..end` of `text` through `normalization`.
 const throughNormalization = Effect.fnUntraced(function* (
   text: string,
   normalization: Normalization,
@@ -106,7 +102,6 @@ const throughNormalization = Effect.fnUntraced(function* (
   return yield* reanchor(anchoredOn(from, text, { start, end }), map, target);
 });
 
-// Re-anchors the range `start..end` of `text` through a hand-made map to `targetText`.
 const throughSegments = Effect.fnUntraced(function* (
   text: string,
   targetText: string,
@@ -120,7 +115,6 @@ const throughSegments = Effect.fnUntraced(function* (
   return yield* reanchor(LocatorMap.make({ from, to, segments }), target)(anchoredOn(from, text, { start, end }));
 });
 
-// Every re-anchoring in these tests: it mints with the Digest service and may verify a source first.
 type Outcome = Effect.Effect<Reanchoring, PreimageMintError | VerifiedTextAnchorError, Digest.Digest>;
 
 const expectMapped = (outcome: Outcome, tag: "Exact" | "Widened", quote: string): Outcome =>
@@ -142,7 +136,7 @@ const rewritten = (from: Position, to: Position) => AlignedSegment.cases.Rewritt
 it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchoring laws", (it) => {
   it.effect.prop(
     "L1-3 reanchoring is lax-functorial and exact and natural on Exact under NFKC and de-hyphenation",
-    [chainCase],
+    [occurrenceThroughTwoGappedStepsCase],
     ([{ anchored, f, g, texts }]) =>
       Effect.gen(function* () {
         const b = yield* verifiedOf(f.to, texts.b);
@@ -158,9 +152,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
         const firstTarget = yield* mintOccurrenceId(first.to);
         expect(second.from).toBe(firstTarget);
         if (isMapped(second) && isMapped(direct)) {
-          // The stepwise range is inside the composite range.
-          expect(rangeOf(direct).start).toBeLessThanOrEqual(rangeOf(second).start);
-          expect(rangeOf(second).end).toBeLessThanOrEqual(rangeOf(direct).end);
+          expect(rangeOf(direct).start, "the stepwise range is inside the composite range").toBeLessThanOrEqual(
+            rangeOf(second).start
+          );
+          expect(rangeOf(second).end, "the stepwise range is inside the composite range").toBeLessThanOrEqual(
+            rangeOf(direct).end
+          );
         }
         if (Reanchoring.guards.Exact(first) && Reanchoring.guards.Exact(second)) {
           expect(direct).toEqual(Reanchoring.cases.Exact.make({ from: first.from, to: second.to }));
@@ -188,7 +185,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
 
   it.effect.prop(
     "L1-3 on Exact the target quote is the normalization of the source quote",
-    [normalizationCase],
+    [nonEmptySaltedTextWithScalarRangeCase],
     ([{ text, range }]) =>
       Effect.gen(function* () {
         const from = capture("a", text);
@@ -198,19 +195,17 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
           const { map, to, text: targetText } = normalizationMap(from, text, normalization);
           const target = yield* verifiedOf(to, targetText);
           const outcome = yield* reanchor(anchored, map, target);
-          // A normalization map has no gap, so an occurrence always maps.
-          expect(isMapped(outcome)).toBe(true);
+          expect(isMapped(outcome), "a normalization map has no gap, so an occurrence always maps").toBe(true);
           if (Reanchoring.guards.Exact(outcome)) {
             expect(Anchored.quote(outcome.to)).toBe(normalizeText(quote, normalization).text);
           }
         }
-        // De-hyphenation after NFKC, through the composite map.
         const nfkc = normalizationMap(from, text, "nfkc");
         const dehyphenated = normalizationMap(nfkc.to, nfkc.text, "dehyphenate");
         const composite = Result.getOrThrow(LocatorMap.compose(nfkc.map, dehyphenated.map));
         const target = yield* verifiedOf(dehyphenated.to, dehyphenated.text);
         const outcome = yield* reanchor(anchored, composite, target);
-        expect(isMapped(outcome)).toBe(true);
+        expect(isMapped(outcome), "de-hyphenation after NFKC maps through the composite map").toBe(true);
         if (Reanchoring.guards.Exact(outcome)) {
           expect(Anchored.quote(outcome.to)).toBe(normalizeQuote(quote, "nfkc-dehyphenate/v1"));
         }
@@ -230,11 +225,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
       yield* expectMapped(throughNormalization("é", "nfkc", 0, 1), "Widened", "é");
       yield* expectMapped(throughNormalization("ㄱㅏ", "nfkc", 0, 2), "Exact", "가");
       yield* expectMapped(throughNormalization("ㄱㅏ", "nfkc", 0, 1), "Widened", "가");
-      // 𝒳 is two UTF-16 units and becomes the one unit X.
       const script = yield* expectMapped(throughNormalization("𝒳", "nfkc", 0, 2), "Exact", "X");
-      expect(isMapped(script) && rangeOf(script)).toEqual(at(0, 1));
-      // Z, U+FF9E, U+0323 is one cluster, so a range of the Z alone widens to all of it.
-      yield* expectMapped(throughNormalization("Zﾞ̣", "nfkc", 0, 1), "Widened", "Ẓ゙");
+      expect(isMapped(script) && rangeOf(script), "𝒳 is two UTF-16 units and becomes the one unit X").toEqual(at(0, 1));
+      const zAloneInItsMarkCluster = throughNormalization("Zﾞ̣", "nfkc", 0, 1);
+      yield* expectMapped(zAloneInItsMarkCluster, "Widened", "Ẓ゙");
       yield* expectMapped(throughNormalization("Zﾞ̣", "nfkc", 0, 3), "Exact", "Ẓ゙");
     })
   );
@@ -260,13 +254,11 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
       const gapped = [kept(at(0, 1), at(0, 1))];
       yield* expectUnmapped(throughSegments("ab", "a", gapped, 0, 2), "outside-map");
       yield* expectUnmapped(throughSegments("ab", "a", gapped, 1, 2), "outside-map");
-      // A gap between two segments: the deleted b is outside the map, so a range over it does not map, while the
-      // ranges on either side of it still map exactly.
-      const deleted = [kept(at(0, 1), at(0, 1)), kept(at(2, 3), at(1, 2))];
-      yield* expectUnmapped(throughSegments("abc", "ac", deleted, 0, 3), "outside-map");
-      yield* expectUnmapped(throughSegments("abc", "ac", deleted, 1, 3), "outside-map");
-      yield* expectMapped(throughSegments("abc", "ac", deleted, 0, 1), "Exact", "a");
-      yield* expectMapped(throughSegments("abc", "ac", deleted, 2, 3), "Exact", "c");
+      const gapOverDeletedB = [kept(at(0, 1), at(0, 1)), kept(at(2, 3), at(1, 2))];
+      yield* expectUnmapped(throughSegments("abc", "ac", gapOverDeletedB, 0, 3), "outside-map");
+      yield* expectUnmapped(throughSegments("abc", "ac", gapOverDeletedB, 1, 3), "outside-map");
+      yield* expectMapped(throughSegments("abc", "ac", gapOverDeletedB, 0, 1), "Exact", "a");
+      yield* expectMapped(throughSegments("abc", "ac", gapOverDeletedB, 2, 3), "Exact", "c");
       const tampered = [kept(at(0, 3), at(0, 3))];
       yield* expectUnmapped(throughSegments("abc", "abd", tampered, 0, 3), "quote-mismatch");
       yield* expectMapped(throughSegments("abc", "abd", tampered, 0, 2), "Exact", "ab");
@@ -290,15 +282,16 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
   it.effect(
     "L1-3 a composite rewrite absorbs text the second step inserted inside the first step's rewrite",
     Effect.fnUntraced(function* () {
-      // ab is rewritten to xy as a whole, then _ is inserted between x and y. The middle offset 1 has no preimage
-      // in ab, so the composite is one rewrite of ab to x_y: Exact through it, Widened stepwise, one range.
       const a = capture("a", "ab");
       const b = capture("b", "xy");
       const c = capture("c", "x_y");
       const f = LocatorMap.make({ from: a, to: b, segments: [rewritten(at(0, 2), at(0, 2))] });
       const g = LocatorMap.make({ from: b, to: c, segments: [kept(at(0, 1), at(0, 1)), kept(at(1, 2), at(2, 3))] });
       const composite = Result.getOrThrow(LocatorMap.compose(f, g));
-      expect(composite.segments).toEqual([rewritten(at(0, 2), at(0, 3))]);
+      expect(
+        composite.segments,
+        "ab to xy as a whole, then _ inserted between x and y: offset 1 has no preimage, so one rewrite of ab to x_y"
+      ).toEqual([rewritten(at(0, 2), at(0, 3))]);
       const anchored = anchoredOn(a, "ab", { start: 0, end: 2 });
       const middle = yield* verifiedOf(b, "xy");
       const target = yield* verifiedOf(c, "x_y");

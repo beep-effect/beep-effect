@@ -34,9 +34,7 @@ import type { MdSourceMap } from "./Md.syntax.ts";
 
 const isNatural = S.is(S.Natural);
 
-// The UTF-16 range of a source span, or None when the span has no text: a
-// zero-width or synthetic position, or offsets that are not naturals.
-const textRangeOf = (position: Position): O.Option<readonly [number, number]> => {
+const nonEmptyNaturalUtf16RangeOf = (position: Position): O.Option<readonly [number, number]> => {
   const start = position.start.offset;
   const end = position.end.offset;
   return isNatural(start) && isNatural(end) && start < end ? O.some([start, end]) : O.none();
@@ -48,14 +46,14 @@ const anchorAtImpl = Effect.fn("Md.anchorAt")(function* (
   path: ReadonlyArray<DocumentSafetyPathSegment>,
   source: VerifiedSourceText
 ): Effect.fn.Return<O.Option<VerifiedTextAnchor>, VerifiedTextAnchorError> {
-  const range = O.flatMap(positionAt(map, document, path), textRangeOf);
+  const range = O.flatMap(positionAt(map, document, path), nonEmptyNaturalUtf16RangeOf);
   if (O.isNone(range)) {
     return O.none();
   }
   const [startChar, endChar] = range.value;
   const sourceText = source.sourceText;
-  // A map recorded for a longer text has no slice of the span's width here.
-  if (endChar > Str.length(sourceText)) {
+  const mapRecordedForLongerText = endChar > Str.length(sourceText);
+  if (mapRecordedForLongerText) {
     return yield* VerifiedTextAnchorError.fromReason("invalid-anchor");
   }
   const anchor = TextAnchor.make({ startChar, endChar, quote: Str.slice(startChar, endChar)(sourceText) });

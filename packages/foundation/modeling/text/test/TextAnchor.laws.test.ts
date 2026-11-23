@@ -18,7 +18,6 @@ const runs = { arbitrary: fcRuns(100) };
 const verify = (anchor: TextAnchor, source: SourceTextIdentity, sourceText: string) =>
   verifyTextAnchor(VerifyTextAnchorInput.make({ anchor, expectedSource: source, source, sourceText }));
 
-// A quote of the same UTF-16 width and other text: x repeated, or y repeated when the quote is all x.
 const sameWidthOtherQuote = (quote: string): string => {
   const width = Str.length(quote);
   const xs = Str.repeat(width)("x");
@@ -35,11 +34,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text TextAncho
         expect(verified.anchor).toEqual(anchored.receipt.anchor);
         const quote = Anchored.quote(anchored);
         assertSuccess(slicePosition(Anchored.range(anchored), text), quote);
-        // The same range in every unit, read from the generator's own boundaries, selects the same quote.
         for (const unit of OffsetUnit.literals) {
-          const position = Position.make({ unit, ...rangeIn(boundaries[unit])(range) });
-          assertSuccess(slicePosition(position, text), quote);
-          assertSuccess(convertPosition(Anchored.range(anchored), unit, text), position);
+          const sameRangeFromGeneratorBoundaries = Position.make({ unit, ...rangeIn(boundaries[unit])(range) });
+          assertSuccess(slicePosition(sameRangeFromGeneratorBoundaries, text), quote);
+          assertSuccess(convertPosition(Anchored.range(anchored), unit, text), sameRangeFromGeneratorBoundaries);
         }
       }),
     runs

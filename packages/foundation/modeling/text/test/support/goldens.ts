@@ -1,5 +1,3 @@
-// The golden captures of the P2 design (sections 1.4 and 6). Every hash below was recomputed by hand: a plain
-// SHA-256 over the hand-written RFC 8785 JSON of `[domainTag, ...preimage]`, independently of the minting code.
 import { PosixPath } from "@beep/schema/PosixPath";
 import { OccurrenceId } from "@beep/text/Occurrence";
 import { QuoteKey } from "@beep/text/QuoteKey";
@@ -28,6 +26,9 @@ export const secondCitation = anchoredOn(citationSource, citationText, { start: 
 /**
  * `["occurrence/v1","matter:example","source:example","documents/source.txt","sha256:aaaa…(64)",
  * "sha256:8de1…515f","utf8","1","1","utf16-code-unit",3,11,"1 U.S. 1"]`, and the same with 13, 21.
+ *
+ * Every golden hash of the P2 design (sections 1.4 and 6) in this module was recomputed by hand: a plain SHA-256
+ * over the hand-written RFC 8785 JSON of `[domainTag, ...preimage]`, independently of the minting code.
  */
 export const firstCitationId = OccurrenceId.make(
   "sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48"

@@ -159,12 +159,16 @@ export const LocatorMapCheck = S.makeFilter(
 
 const utf16 = (start: number, end: number): Position => Position.make({ unit: "utf16-code-unit", start, end });
 
-// The image of a cut through one segment: a kept segment maps the offset pointwise, a rewritten one only by its
-// edges. `edge` picks the edge a rewritten segment maps the cut to.
-const imageOf = (segment: AlignedSegment, side: Side, other: Side, offset: number, edge: "start" | "end"): number =>
+const imageOf = (
+  segment: AlignedSegment,
+  side: Side,
+  other: Side,
+  offset: number,
+  rewrittenEdge: "start" | "end"
+): number =>
   AlignedSegment.match(segment, {
     Kept: () => other(segment).start + (offset - side(segment).start),
-    Rewritten: () => other(segment)[edge],
+    Rewritten: () => other(segment)[rewrittenEdge],
   });
 
 const isInsideRewritten = (segments: SegmentList, side: Side, offset: number): boolean =>
@@ -176,9 +180,7 @@ const isInsideRewritten = (segments: SegmentList, side: Side, offset: number): b
 const edgesOn = (segments: SegmentList, side: Side): ReadonlyArray<number> =>
   A.flatMap(segments, (segment) => [side(segment).start, side(segment).end]);
 
-// Performance boundary (composition): one pass over the cuts of the middle capture, each covered by a walk over the
-// segments it overlaps; the cuts are disjoint, so the walks visit each segment of either map a bounded number of
-// times. The pieces are pushed into a local array that becomes the result's segment list.
+// decision: native-scan-hot-paths
 const composeSegments = (first: SegmentList, second: SegmentList): SegmentList => {
   const cuts = A.dedupeAdjacent(
     A.sort(

@@ -54,7 +54,6 @@ const ROOT_MODULES = [
   "./Md.ts",
 ];
 
-// Every public entry except the three bridge subpaths.
 const NON_BRIDGE_ENTRIES = [
   "index.ts",
   "Md.ts",

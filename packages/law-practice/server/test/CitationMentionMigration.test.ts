@@ -77,10 +77,6 @@ import * as Str from "effect/String";
 import cases from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
 import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 
-// `fixtures/citation-document-receipt-v3.json` holds three receipts over one synthetic text, exactly as
-// `projectCitationDocumentReceipt` and the session projector wrote them under citation-document-receipt/v3 and
-// citation-mention-receipt/v1 before mention ids moved to cm2. Receipts held outside the process keep those bytes, so
-// the file is never regenerated and its digest is pinned; `projected` below builds the same scene under v4 today.
 const frozenDigest = "ec3554e18331b56bc4e9758ca33a7065948dc9f92ee89e32548e6a07d1cef90d";
 const frozenText = pipe(
   import.meta.glob<string>("./fixtures/citation-document-receipt-v3.json", {
@@ -137,9 +133,6 @@ const anchorAt = (verifiedSource: VerifiedSourceText, startChar: number, quote: 
     })
   );
 
-// One full case cited twice and by an Id., one missing-page case (its authority key embeds the mention id) cited
-// again by a supra, an ambiguous short form and an unresolved supra; the first mention carries a component and a
-// footnote zone, the fourth an overlap warning, a signal and an evidence confidence.
 const scene = Effect.gen(function* () {
   const digest = SourceTextDigest.make(
     `sha256:${yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(sourceText))}`
@@ -253,8 +246,6 @@ const external = (key: string) =>
     value: null,
   });
 
-// The session projector, with the identity each callback resource already carries as its descriptor: the Hashable branch
-// of `makeCitationRegisteredSessionDescriptors`.
 const projectSession = Effect.fn("CitationMigrationTest.projectSession")(function* (
   state: Effect.Success<ReturnType<typeof runDefaultCitationCallbackSession>>
 ) {
@@ -273,9 +264,9 @@ const projectSession = Effect.fn("CitationMigrationTest.projectSession")(functio
   return yield* projector.project(state);
 });
 
-// A callback session over the first three mentions: one external resource owns every decision, a second one owns a
-// list of one detached citation. Its group, list and detached ids are session nodes.
-const session = Effect.fn("CitationMigrationTest.session")(function* (data: Effect.Success<typeof scene>) {
+const externalResourceSessionOverFirstThreeMentions = Effect.fn("CitationMigrationTest.session")(function* (
+  data: Effect.Success<typeof scene>
+) {
   const prepared = yield* prepareCitationResolution({ ...data.input, mentions: A.take(data.input.mentions, 3) });
   const work = yield* makeCitationResolutionWork(prepared.limits);
   const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
@@ -306,9 +297,6 @@ const session = Effect.fn("CitationMigrationTest.session")(function* (data: Effe
   return yield* projectSession(state);
 });
 
-// The default callback session over the full case, the missing-page case, its supra and the ambiguous short form. Its
-// authorities are the canonical keys of the two cases, so the missing-page key embeds a mention id, while every group
-// and list id is a session node. The short form keeps both authorities as candidates, in the receipt and its bindings.
 const canonicalSession = Effect.fn("CitationMigrationTest.canonicalSession")(function* (
   data: Effect.Success<typeof scene>
 ) {
@@ -317,21 +305,21 @@ const canonicalSession = Effect.fn("CitationMigrationTest.canonicalSession")(fun
   return yield* projectSession(state);
 });
 
-// The three receipts, projected now by the production code: v4 receipts over the same scene. The bundled resolvers leave
-// every resolution confidence empty, so the document gives the projector one on a Resolved and one on the Ambiguous
-// decision, as a producer that fills it would.
+const producerFilledAmbiguousConfidence = UnitInterval.makeOption(0.25);
+const producerFilledResolvedConfidence = UnitInterval.makeOption(0.75);
+
 const projected = Effect.gen(function* () {
   const data = yield* scene;
-  const custom = yield* session(data);
+  const custom = yield* externalResourceSessionOverFirstThreeMentions(data);
   const resolved = yield* resolveSixFormCitationMentions(data.input);
   const canonical = yield* canonicalSession(data);
   const document = CitationDocument.make({
     ...resolved,
     resolutions: A.map(resolved.resolutions, (resolution, index) => {
       if (resolution.status === "Ambiguous")
-        return CitationAmbiguous.make({ ...resolution, confidence: UnitInterval.makeOption(0.25) });
+        return CitationAmbiguous.make({ ...resolution, confidence: producerFilledAmbiguousConfidence });
       return index === 1 && resolution.status === "Resolved"
-        ? CitationResolved.make({ ...resolution, confidence: UnitInterval.makeOption(0.75) })
+        ? CitationResolved.make({ ...resolution, confidence: producerFilledResolvedConfidence })
         : resolution;
     }),
     detachedCitations: custom.document.detachedCitations,
@@ -340,7 +328,6 @@ const projected = Effect.gen(function* () {
   return { document, receipt, custom, canonical };
 }).pipe(Effect.withSpan("CitationMigrationTest.projected"));
 
-// What each v3 receipt stores, read only as far as these tests compare ids.
 const Ids = S.Array(S.Struct({ id: S.String }));
 const StoredIds = S.Struct({
   authorities: Ids,
@@ -370,7 +357,6 @@ const readFrozen = Effect.gen(function* () {
   };
 });
 
-// The frozen document receipt with one stored string replaced everywhere it occurs.
 const frozenDocumentWith = Effect.fn("CitationMigrationTest.frozenDocumentWith")(function* (from: string, to: string) {
   const { frozen } = yield* readFrozen;
   const text = yield* S.encodeEffect(Json)(frozen.document);
@@ -385,8 +371,7 @@ const refusalOf = Effect.fn("CitationMigrationTest.refusalOf")(function* (input:
 });
 
 const staleV1 = `cm1:${Str.repeat(64)("f")}`;
-// The cm2 ids of the seven mentions, minted over their OccurrenceIds.
-const GOLDEN_MENTIONS: ReadonlyArray<string> = [
+const GOLDEN_CM2_IDS_MINTED_OVER_OCCURRENCE_IDS: ReadonlyArray<string> = [
   "cm2:11b7430caeae6d07fcf6df9bf3247b4e5627c4a33f3c1bf7db55108743efaa67",
   "cm2:003220b3c8fbf45b9503157215fff82ff7d2478bb98c0051630bd74f1ce0f97c",
   "cm2:0f7ce6fa1a5c0979947e7adc7f579dbbe2de8230333b439b7dabba6f0b80144b",
@@ -395,8 +380,8 @@ const GOLDEN_MENTIONS: ReadonlyArray<string> = [
   "cm2:16ef9e2ea86c04774e917d9cb6c295008b30aa4f805004fc28993c279714c6ee",
   "cm2:3183d8a8ac57aaea9c0ddfabbc5702c39346a60cd3de046b3f14211f22c124e5",
 ];
-// The citation-authority/v2 case-occurrence key of the missing-page mention.
-const GOLDEN_MISSING_PAGE = "ca1:041eb5451633d193b323b58a49f95ca76d585f3c6d0cfd26d76ae26bf5d38b79";
+const GOLDEN_MISSING_PAGE_CASE_OCCURRENCE_KEY_V2 =
+  "ca1:041eb5451633d193b323b58a49f95ca76d585f3c6d0cfd26d76ae26bf5d38b79";
 
 const coherentReceipt = Arbitrary.schema(
   S.Struct({
@@ -444,49 +429,55 @@ const candidatesOf = (receipt: CitationDocumentReceipt) =>
   );
 
 it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
-  it.effect("is the captured file", () =>
-    Effect.gen(function* () {
-      const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(frozenText));
-      expect(digest).toBe(frozenDigest);
-    })
+  it.effect(
+    "is the captured file: three receipts written under document v3 and mention v1 before cm2, never regenerated",
+    () =>
+      Effect.gen(function* () {
+        const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(frozenText));
+        expect(digest, "receipts held outside the process keep these bytes, so the fixture digest is pinned").toBe(
+          frozenDigest
+        );
+      })
   );
 
   it.effect("converts a frozen v3 receipt on read to the v2 identifiers", () =>
     Effect.gen(function* () {
       const fresh = yield* projected;
       const read = yield* readFrozen;
-      // Every converted receipt is the receipt today's code projects over the same scene.
-      expect(read.document).toEqual(fresh.receipt);
+      expect(read.document, "a converted receipt is the receipt today's code projects over the same scene").toEqual(
+        fresh.receipt
+      );
       expect(read.session).toEqual(fresh.custom.receipt);
       expect(read.canonical).toEqual(fresh.canonical.receipt);
       expect(read.document.schemaVersion).toBe("citation-document-receipt/v4");
       expect(A.map(read.document.mentions, (mention) => mention.schemaVersion)).toEqual(
         A.replicate("citation-mention-receipt/v2", 7)
       );
-      expect(idsOf(read.document.mentions)).toEqual(GOLDEN_MENTIONS);
+      expect(idsOf(read.document.mentions)).toEqual(GOLDEN_CM2_IDS_MINTED_OVER_OCCURRENCE_IDS);
       expect(A.every(idsOf(read.document.mentions), Str.startsWith("cm2:"))).toBe(true);
 
       const { document, session, canonical } = read.stored;
-      // The full case keeps its ca1 and default ids; the missing-page case takes the citation-authority/v2 key and its
-      // default group and list follow it.
       const [fullCase, missingPage] = idsOf(document.authorities);
-      expect(idsOf(read.document.authorities)).toEqual([fullCase, GOLDEN_MISSING_PAGE]);
-      expect(idsOf(read.document.groups)).toEqual([
+      expect(
+        idsOf(read.document.authorities),
+        "the full case keeps its ca1 id; the missing-page case takes the citation-authority/v2 key"
+      ).toEqual([fullCase, GOLDEN_MISSING_PAGE_CASE_OCCURRENCE_KEY_V2]);
+      expect(idsOf(read.document.groups), "the missing-page default group and list follow its new key").toEqual([
         A.getUnsafe(idsOf(document.groups), 0),
-        `cg1:${suffix(GOLDEN_MISSING_PAGE)}`,
+        `cg1:${suffix(GOLDEN_MISSING_PAGE_CASE_OCCURRENCE_KEY_V2)}`,
       ]);
       expect(idsOf(read.document.memberLists)).toEqual([
         A.getUnsafe(idsOf(document.memberLists), 0),
-        `cl1:${suffix(GOLDEN_MISSING_PAGE)}`,
+        `cl1:${suffix(GOLDEN_MISSING_PAGE_CASE_OCCURRENCE_KEY_V2)}`,
       ]);
-      expect(missingPage).not.toBe(GOLDEN_MISSING_PAGE);
-      // Detached ids, external authorities and session-node group and list ids are kept.
-      expect(idsOf(read.document.detachedCitations)).toEqual(idsOf(document.detachedCitations));
-      expect(idsOf(read.session.authorities)).toEqual(idsOf(session.authorities));
-      expect(idsOf(read.session.groups)).toEqual(idsOf(session.groups));
-      expect(idsOf(read.session.memberLists)).toEqual(idsOf(session.memberLists));
-      expect(idsOf(read.session.detachedCitations)).toEqual(idsOf(session.detachedCitations));
-      expect(idsOf(read.canonical.authorities)).toEqual([fullCase, GOLDEN_MISSING_PAGE]);
+      expect(missingPage).not.toBe(GOLDEN_MISSING_PAGE_CASE_OCCURRENCE_KEY_V2);
+      const kept = "detached ids, external authorities and session-node group and list ids are kept";
+      expect(idsOf(read.document.detachedCitations), kept).toEqual(idsOf(document.detachedCitations));
+      expect(idsOf(read.session.authorities), kept).toEqual(idsOf(session.authorities));
+      expect(idsOf(read.session.groups), kept).toEqual(idsOf(session.groups));
+      expect(idsOf(read.session.memberLists), kept).toEqual(idsOf(session.memberLists));
+      expect(idsOf(read.session.detachedCitations), kept).toEqual(idsOf(session.detachedCitations));
+      expect(idsOf(read.canonical.authorities)).toEqual([fullCase, GOLDEN_MISSING_PAGE_CASE_OCCURRENCE_KEY_V2]);
       expect(idsOf(read.canonical.groups)).toEqual(idsOf(canonical.groups));
       expect(idsOf(read.canonical.memberLists)).toEqual(idsOf(canonical.memberLists));
     })
@@ -514,28 +505,30 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
         false,
         false,
       ]);
-      // The conversion carries these optional values over unread; each is present at least once.
-      expect(A.getSomes(A.map(document.mentions, (mention) => mention.signal))).toEqual(["see also"]);
+      expect(
+        A.getSomes(A.map(document.mentions, (mention) => mention.signal)),
+        "the conversion carries optional values over unread; each is present at least once"
+      ).toEqual(["see also"]);
       expect(A.getSomes(A.map(document.mentions, (mention) => mention.evidenceConfidence))).toEqual([0.5]);
       const resolved = A.filter(document.resolutions, CitationResolution.guards.Resolved);
       const ambiguous = A.filter(document.resolutions, CitationResolution.guards.Ambiguous);
       expect(A.getSomes(A.map(resolved, (resolution) => resolution.confidence))).toEqual([0.75]);
       expect(A.getSomes(A.map(ambiguous, (resolution) => resolution.confidence))).toEqual([0.25]);
 
-      // References that follow a rewritten authority.
-      const keys = idsOf(document.authorities);
-      expect(idsOf(canonical.authorities)).toEqual(keys);
-      expect(A.map(document.groups, (group) => group.authorityId)).toEqual(keys);
-      expect(A.map(canonical.groups, (group) => group.authorityId)).toEqual(keys);
-      expect(candidatesOf(document)).toEqual([keys]);
-      expect(candidatesOf(canonical)).toEqual([keys]);
+      const rewrittenAuthorityIds = idsOf(document.authorities);
+      expect(idsOf(canonical.authorities)).toEqual(rewrittenAuthorityIds);
+      expect(A.map(document.groups, (group) => group.authorityId)).toEqual(rewrittenAuthorityIds);
+      expect(A.map(canonical.groups, (group) => group.authorityId)).toEqual(rewrittenAuthorityIds);
+      expect(candidatesOf(document)).toEqual([rewrittenAuthorityIds]);
+      expect(candidatesOf(canonical), "the short form keeps both authorities as candidates").toEqual([
+        rewrittenAuthorityIds,
+      ]);
       expect(candidatesOf(session)).toEqual([]);
 
-      // References that follow a rewritten mention: decisions, warnings, representatives and members.
-      const ids = A.map(document.mentions, (mention) => mention.id);
-      const at = (index: number) => A.getUnsafe(ids, index);
+      const rewrittenMentionIds = A.map(document.mentions, (mention) => mention.id);
+      const at = (index: number) => A.getUnsafe(rewrittenMentionIds, index);
       const mentionAt = (index: number) => CitationGroupMember.cases.Mention.make({ mentionId: at(index) });
-      expect(A.map(document.resolutions, (resolution) => resolution.mentionId)).toEqual(ids);
+      expect(A.map(document.resolutions, (resolution) => resolution.mentionId)).toEqual(rewrittenMentionIds);
       expect(A.map(canonical.resolutions, (resolution) => resolution.mentionId)).toEqual([at(0), at(1), at(2), at(5)]);
       expect(A.flatMap(document.mentions, (mention) => mention.warnings)).toEqual([
         CitationOverlapWarning.make({ previousMentionId: at(2) }),
@@ -574,14 +567,15 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
     })
   );
 
-  it.effect("refuses a v3 mention whose stored cm1 does not match its recomputation", () =>
-    Effect.gen(function* () {
-      const { stored } = yield* readFrozen;
-      // Every reference to the first mention moves with it, so the receipt is coherent apart from that one id.
-      const tampered = yield* frozenDocumentWith(A.getUnsafe(idsOf(stored.document.mentions), 0), staleV1);
-      const tamperedRefusal = yield* refusalOf(tampered);
-      expect(tamperedRefusal).toContain("is not the recomputation of its own receipt");
-    })
+  it.effect(
+    "refuses a v3 mention whose stored cm1 does not match its recomputation, with every reference to it moved along",
+    () =>
+      Effect.gen(function* () {
+        const { stored } = yield* readFrozen;
+        const tampered = yield* frozenDocumentWith(A.getUnsafe(idsOf(stored.document.mentions), 0), staleV1);
+        const tamperedRefusal = yield* refusalOf(tampered);
+        expect(tamperedRefusal).toContain("is not the recomputation of its own receipt");
+      })
   );
 
   it.effect("refuses a dangling v3 reference", () =>
@@ -598,14 +592,15 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
       );
       const memberRefusal = yield* refusalOf(member);
       expect(memberRefusal).toContain("references a mention it does not hold");
-      // An authority reference that names no authority is refused by the live coherence check.
       const [fullCase] = idsOf(stored.document.authorities);
       const authority = yield* frozenDocumentWith(
         `"authorityId":"${fullCase}"`,
         `"authorityId":"ca1:${Str.repeat(64)("e")}"`
       );
       const authorityRefusal = yield* refusalOf(authority);
-      expect(authorityRefusal).toContain("Citation document relationships are incoherent.");
+      expect(authorityRefusal, "a reference naming no authority is refused by the live coherence check").toContain(
+        "Citation document relationships are incoherent."
+      );
     })
   );
 
@@ -643,7 +638,7 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
     })
   );
 
-  it.effect("restores with re-derived bindings", () =>
+  it.effect("restores with re-derived bindings; the v3 bindings the adapter once returned are not converted", () =>
     Effect.gen(function* () {
       const { custom, canonical } = yield* projected;
       const read = yield* readFrozen;
@@ -654,7 +649,6 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
         ],
         Effect.fnUntraced(function* ({ receipt, fresh, stored }) {
           const input = { ...read.restore, receipt };
-          // The adapter re-derives its bindings; the v3 bindings it once returned are not converted.
           const restored = yield* restoreCitationDocument({ ...input, resourceBindings: fresh.resourceBindings });
           expect(restored.authorities).toEqual(fresh.document.authorities);
           expect(restored.resolutions).toEqual(fresh.document.resolutions);
