@@ -415,7 +415,6 @@ const DurationFromInput = DurationInput.pipe(
   )
 );
 
-/** Subscriber hub capacity: a positive integer. */
 const Capacity = S.Int.check(S.isGreaterThan(0)).pipe(
   $I.annoteSchema("JournalCapacity", { description: "A positive integer subscriber hub capacity." })
 );

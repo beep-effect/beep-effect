@@ -129,14 +129,11 @@ const terminatedLine = (text: string): LineSlice =>
 const unterminatedLine = (text: string): LineSlice =>
   LineSlice.make({ offset: 0, end: byteLength(text), length: byteLength(text), text, terminated: false });
 
-// ---------------------------------------------------------------------------
-// Schemas without a derivable arbitrary.
 //
 // `SchemaErrorFromSelf` (InvalidData, InvalidJournalConfig, InvalidSlice) is
 // `S.declare(S.isSchemaError)`: Arbitrary.schema refuses it ("unsupported
 // Declaration"). A real SchemaError comes from rejecting an arbitrary JSON value
 // with `S.Never`, and the remaining fields are derived from their own schemas.
-// ---------------------------------------------------------------------------
 const rejectAll = S.decodeUnknownResult(S.Never);
 const schemaError = Arbitrary.schema(S.Json).pipe(Arbitrary.map(flow(rejectAll, Result.merge)));
 // `InvalidData.make` is called through the class: since effect 4.1.0 a static `make` reads `this`.
@@ -167,11 +164,9 @@ const jsonlError = oneOf<JsonlError>([
   invalidSlice,
 ]);
 
-// ---------------------------------------------------------------------------
 // The registry under test: the shared fixtures (a struct payload with an
 // optional key, a terminal Null event, a reopen Null event) plus a void payload,
 // which the README promises encodes as JSON null.
-// ---------------------------------------------------------------------------
 const Pinged = JsonlEvent.make("pinged", { data: S.Void });
 const registry = Tuple.make(Noted, Ended, Reopened, Pinged);
 const RegisteredInput = S.Union([Noted.input, Ended.input, Reopened.input, Pinged.input]);

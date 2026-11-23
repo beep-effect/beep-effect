@@ -30,8 +30,6 @@ import type * as Stream from "effect/Stream";
 type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 const assertType = <_Expected extends true>(): void => {};
 
-// ── the registry under test ─────────────────────────────────────────────────
-
 const MailReceived = JsonlEvent.make("mail-received", {
   data: S.Struct({ round: S.Finite, from: S.String }),
 });
@@ -56,8 +54,6 @@ const boundIsLoadBearing = (): void => {
   JsonlEvent.make("needs-a-service", { data: NeedsAService });
 };
 
-// ── the derived union ───────────────────────────────────────────────────────
-
 assertType<
   Equals<
     EnvelopeUnion<Registry>,
@@ -81,8 +77,6 @@ assertType<
     EnvelopeType<"mail-received", { readonly round: number; readonly from: string }>
   >
 >();
-
-// ── encodeResult is typed per tag ───────────────────────────────────────────
 
 declare const at: DateTime.Utc;
 
