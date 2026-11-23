@@ -441,6 +441,15 @@ const resolveInput = Effect.fn("Ci.resolveFleetMissedEventInput")(function* (fla
  * The live services of one run: the GitHub reads over the minted token in
  * `GH_TOKEN`, and the real sleep.
  *
+ * **Example** (Build the live layer)
+ *
+ * ```ts
+ * import { layerFleetMissedEventLive } from "@beep/repo-cli/commands/Ci"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(layerFleetMissedEventLive("beep-effect/beep-effect"))) // true
+ * ```
+ *
  * @param repository - The `owner/name` repository.
  * @returns A layer of the reads and the sleep seam.
  * @category layers

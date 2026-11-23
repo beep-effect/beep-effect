@@ -50,6 +50,7 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -335,7 +336,7 @@ describe("fleet missed-event check verdicts", () => {
       );
       const finding = findingOf(report, 103);
       expect(finding.verdict._tag).toBe("MissedDelivery");
-      expect(finding.classification).toEqual(O.none());
+      assertNone(finding.classification);
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.NotDelivered.makeOption({
           windowStart: ago(14),
@@ -384,7 +385,7 @@ describe("fleet missed-event check verdicts", () => {
       expect(finding.verdict).toEqual(
         FleetVerdict.cases.NoLaunch.make({ reason: "no-progress", launches: 0, rank: 1 })
       );
-      expect(finding.classification).toEqual(O.some("lost"));
+      assertSome(finding.classification, "lost");
       expect(fleetRemedies(REPOSITORY, finding)).toEqual([
         `redeliver: \`gh api -X POST repos/${REPOSITORY}/hooks/${HOOK}/deliveries/${id}/attempts\``,
       ]);
@@ -405,7 +406,7 @@ describe("fleet missed-event check verdicts", () => {
       );
       const finding = findingOf(report, 105);
       expect(finding.verdict._tag).toBe("NoLaunch");
-      expect(finding.classification).toEqual(O.some("unknown"));
+      assertSome(finding.classification, "unknown");
       expect(calls.deliveryDetail).toBe(3);
       expect(slept).toEqual([300_000, 2000, 2000]);
       expect(fleetRemedies(REPOSITORY, finding)).toEqual([]);
@@ -424,7 +425,7 @@ describe("fleet missed-event check verdicts", () => {
         })
       );
       const finding = findingOf(report, 106);
-      expect(finding.classification).toEqual(O.some("unknown"));
+      assertSome(finding.classification, "unknown");
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.Unreadable.makeOption({
           reason: "the pages read do not reach back to the job's delivery window start",
@@ -446,7 +447,7 @@ describe("fleet missed-event check verdicts", () => {
       );
       const finding = findingOf(report, 220);
       expect(finding.verdict._tag).toBe("NoLaunch");
-      expect(finding.classification).toEqual(O.some("unknown"));
+      assertSome(finding.classification, "unknown");
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.Unreadable.makeOption({
           reason: "the pages read do not reach back to the job's delivery window start",
@@ -464,7 +465,7 @@ describe("fleet missed-event check verdicts", () => {
       );
       const finding = findingOf(report, 230);
       expect(calls.deliveriesPage).toBe(60);
-      expect(finding.classification).toEqual(O.some("unknown"));
+      assertSome(finding.classification, "unknown");
       expect(finding.evidence).toEqual(
         FleetDeliveryEvidence.cases.Unreadable.makeOption({
           reason: "the delivery walk stopped at 60 pages",
@@ -487,7 +488,7 @@ describe("fleet missed-event check verdicts", () => {
         })
       );
       const finding = findingOf(report, 108);
-      expect(finding.classification).toEqual(O.some("unknown"));
+      assertSome(finding.classification, "unknown");
       expect(
         O.exists(finding.evidence, (evidence) =>
           FleetDeliveryEvidence.guards.Unreadable(evidence)
@@ -505,7 +506,7 @@ describe("fleet missed-event check verdicts", () => {
       });
       const finding = findingOf(report, 107);
       expect(finding.verdict._tag).toBe("NoLaunch");
-      expect(finding.classification).toEqual(O.some("gate"));
+      assertSome(finding.classification, "gate");
       expect(calls.deliveriesPage).toBe(0);
       expect(fleetRemedies(REPOSITORY, finding)).toEqual([
         "gate: run the gate's enrichment and App-redelivery command for this job",
@@ -530,8 +531,8 @@ describe("fleet missed-event check verdicts", () => {
         }),
         { sources }
       );
-      expect(findingOf(report, 120).classification).toEqual(O.some("lost"));
-      expect(findingOf(report, 121).classification).toEqual(O.some("gate"));
+      assertSome(findingOf(report, 120).classification, "lost");
+      assertSome(findingOf(report, 121).classification, "gate");
       expect(findingOf(report, 121).source).toEqual(noHook);
     })
   );
@@ -673,7 +674,7 @@ describe("fleet missed-event check precedence", () => {
           details: [detail("9", 9)],
         })
       );
-      expect(findingOf(report, 201).classification).toEqual(O.none());
+      assertNone(findingOf(report, 201).classification);
       expect(tagOf(report, 201)).toBe("Wedged");
     })
   );
@@ -832,7 +833,7 @@ describe("fleet missed-event check output", () => {
         })
       );
       const summary = renderFleetCheckSummary(report);
-      expect(A.head(Str.split(summary, "\n"))).toEqual(O.some("## Fleet missed-event check: 1 alert(s)"));
+      assertSome(A.head(Str.split(summary, "\n")), "## Fleet missed-event check: 1 alert(s)");
       expect(summary).toContain("checked at 2026-11-22T21:20:00.000Z: 1 queued job(s) checked");
       expect(summary).toContain(`| 410 | 3410 | heavy | 12m00s | MissedDelivery | none | delivery ${id} (500) |`);
       expect(summary).toContain(`gh api -X POST repos/${REPOSITORY}/hooks/${HOOK}/deliveries/${id}/attempts`);
@@ -959,20 +960,20 @@ describe("fleet missed-event check helpers", () => {
     );
   });
 
-  it.effect("fails a fake detail read the fixture does not hold", () =>
-    Effect.gen(function* () {
-      const reads = yield* Effect.service(FleetGithubReads).pipe(
-        provideScopedLayer(FleetGithubReads.layerFake(FleetGithubFixture.make({})))
-      );
-      const error = yield* Effect.flip(reads.deliveryDetail(HOOK, "1"));
-      expect(error.endpoint).toBe(`hooks/${HOOK}/deliveries/1`);
-    })
-  );
+  it.layer(FleetGithubReads.layerFake(FleetGithubFixture.make({})), { timeout: "30 seconds" })((layerIt) => {
+    layerIt.effect("fails a fake detail read the fixture does not hold", () =>
+      Effect.gen(function* () {
+        const reads = yield* FleetGithubReads;
+        const error = yield* Effect.flip(reads.deliveryDetail(HOOK, "1"));
+        expect(error.endpoint).toBe(`hooks/${HOOK}/deliveries/1`);
+      })
+    );
+  });
 
   it("computes the nearest-rank p95", () => {
-    expect(percentile95([])).toEqual(O.none());
-    expect(percentile95([5])).toEqual(O.some(5));
-    expect(percentile95(A.range(1, 20))).toEqual(O.some(19));
+    assertNone(percentile95([]));
+    assertSome(percentile95([5]), 5);
+    assertSome(percentile95(A.range(1, 20)), 19);
   });
 
   it("judges delivery evidence from the walk", () => {
@@ -995,7 +996,7 @@ describe("fleet missed-event check helpers", () => {
   });
 
   it("classifies every evidence form", () => {
-    expect(
+    deepStrictEqual(
       A.map(
         [
           FleetDeliveryEvidence.cases.Delivered.make({ hookId: HOOK, deliveryId: "1", statusCode: 204 }),
@@ -1005,8 +1006,9 @@ describe("fleet missed-event check helpers", () => {
           FleetDeliveryEvidence.cases.Gate.make({}),
         ],
         classifyFleetEvidence
-      )
-    ).toEqual([O.some("lost"), O.none(), O.none(), O.some("unknown"), O.some("gate")]);
+      ),
+      [O.some("lost"), O.none(), O.none(), O.some("unknown"), O.some("gate")]
+    );
   });
 
   it("reads the remedies pipeably", () => {
@@ -1028,12 +1030,13 @@ describe("fleet missed-event check helpers", () => {
     expect(quoteJsonIds('[{"id": 3855552300210716674, "guid": "x", "hook_id": 1}]')).toBe(
       '[{"id":"3855552300210716674", "guid": "x", "hook_id": 1}]'
     );
-    expect(
+    assertSome(
       nextLinkCursor(
         '<https://api.github.com/x?per_page=100&cursor=v1_1>; rel="prev", <https://api.github.com/x?per_page=100&cursor=v1_9>; rel="next"'
-      )
-    ).toEqual(O.some("v1_9"));
-    expect(nextLinkCursor('<https://api.github.com/x?cursor=v1_1>; rel="prev"')).toEqual(O.none());
+      ),
+      "v1_9"
+    );
+    assertNone(nextLinkCursor('<https://api.github.com/x?cursor=v1_1>; rel="prev"'));
   });
 });
 
@@ -1131,17 +1134,20 @@ describe("fleet missed-event check live reads", () => {
       expect(runs.runIds).toEqual([45066910700]);
       yield* reads.runsPage(FleetRunsQuery.cases.CreatedSince.make({ since: NOW }), 2);
       const jobs = yield* reads.jobsPage(45066910700, 1);
-      expect(A.map(jobs.jobs, (job) => [job.id, job.startedAt, job.runnerName])).toEqual([
-        [137354449472, O.none(), O.none()],
-        [2, O.some(DateTime.makeUnsafe("2026-11-22T21:01:00Z").pipe(DateTime.toEpochMillis)), O.some("r1")],
-      ]);
+      deepStrictEqual(
+        A.map(jobs.jobs, (job) => [job.id, job.startedAt, job.runnerName]),
+        [
+          [137354449472, O.none(), O.none()],
+          [2, O.some(DateTime.makeUnsafe("2026-11-22T21:01:00Z").pipe(DateTime.toEpochMillis)), O.some("r1")],
+        ]
+      );
       const scheduled = yield* reads.scheduledRuns("fleet-missed-event-check.yml");
       expect(A.map(scheduled, (run) => run.id)).toEqual([5]);
       const requestCount = yield* reads.requestCount;
       expect(requestCount).toBe(5);
       const requests = yield* Ref.get(recorded);
       expect(A.every(requests, (request) => request.method === "GET")).toBe(true);
-      expect(A.every(requests, (request) => O.contains(request.authorization, "Bearer ghs_test"))).toBe(true);
+      assertTrue(A.every(requests, (request) => O.contains(request.authorization, "Bearer ghs_test")));
       expect(A.map(requests, (request) => request.url)).toContain(
         "https://api.github.com/repos/beep-effect/beep-effect/actions/runs?created=%3E%3D2026-11-22T21%3A20%3A00.000Z&per_page=100&page=2"
       );
@@ -1174,18 +1180,18 @@ describe("fleet missed-event check live reads", () => {
       ]);
       const first = yield* reads.deliveriesPage(HOOK, O.none());
       expect(first.deliveries[0]?.id).toBe("3855552300210716674");
-      expect(first.deliveries[0]?.action).toEqual(O.some("queued"));
-      expect(first.nextCursor).toEqual(O.some("v1_9"));
+      deepStrictEqual(first.deliveries[0]?.action, O.some("queued"));
+      assertSome(first.nextCursor, "v1_9");
       const second = yield* reads.deliveriesPage(HOOK, first.nextCursor);
       expect(second.deliveries[0]?.id).toBe("3855552300210716675");
-      expect(second.deliveries[0]?.action).toEqual(O.none());
-      expect(second.nextCursor).toEqual(O.none());
+      deepStrictEqual(second.deliveries[0]?.action, O.none());
+      assertNone(second.nextCursor);
       const matched = yield* reads.deliveryDetail(HOOK, "3855552300210716674");
       expect(matched).toEqual(
         FleetDeliveryDetail.make({ id: "3855552300210716674", workflowJobId: O.some("137354449472") })
       );
-      expect((yield* reads.deliveryDetail(HOOK, "1")).workflowJobId).toEqual(O.none());
-      expect((yield* reads.deliveryDetail(HOOK, "2")).workflowJobId).toEqual(O.none());
+      assertNone((yield* reads.deliveryDetail(HOOK, "1")).workflowJobId);
+      assertNone((yield* reads.deliveryDetail(HOOK, "2")).workflowJobId);
       const requestsAfter = yield* Ref.get(recorded);
       expect(A.every(requestsAfter, (request) => request.method === "GET")).toBe(true);
     })
@@ -1206,34 +1212,38 @@ describe("fleet missed-event check live reads", () => {
     })
   );
 
-  it.effect("reads the token from GH_TOKEN and fails without it", () =>
-    Effect.gen(function* () {
-      const read = Effect.gen(function* () {
-        const service = yield* FleetWatchToken;
-        return yield* service.token;
-      }).pipe(provideScopedLayer(FleetWatchToken.layerEnv));
-      const token = yield* read.pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GH_TOKEN: "ghs_env" }))
-      );
-      expect(Redacted.value(token)).toBe("ghs_env");
-      const missing = yield* read.pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
-        Effect.flip
-      );
-      expect(missing.message).toBe("GH_TOKEN is not set");
-    })
-  );
+  it.layer(FleetWatchToken.layerEnv, { timeout: "30 seconds" })((layerIt) => {
+    layerIt.effect("reads the token from GH_TOKEN and fails without it", () =>
+      Effect.gen(function* () {
+        const read = Effect.gen(function* () {
+          const service = yield* FleetWatchToken;
+          return yield* service.token;
+        });
+        const token = yield* read.pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ GH_TOKEN: "ghs_env" }))
+        );
+        expect(Redacted.value(token)).toBe("ghs_env");
+        const missing = yield* read.pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+          Effect.flip
+        );
+        expect(missing.message).toBe("GH_TOKEN is not set");
+      })
+    );
+  });
 
-  it.effect("sleeps for real through the live seam", () =>
-    Effect.gen(function* () {
-      const fiber = yield* Effect.gen(function* () {
-        const service = yield* FleetSleep;
-        yield* service.sleep(Duration.seconds(1));
-      }).pipe(provideScopedLayer(FleetSleep.layerLive), Effect.forkChild);
-      yield* TestClock.adjust("1 second");
-      yield* Fiber.join(fiber);
-    })
-  );
+  it.layer(FleetSleep.layerLive, { timeout: "30 seconds" })((layerIt) => {
+    layerIt.effect("sleeps for real through the live seam", () =>
+      Effect.gen(function* () {
+        const fiber = yield* Effect.gen(function* () {
+          const service = yield* FleetSleep;
+          yield* service.sleep(Duration.seconds(1));
+        }).pipe(Effect.forkChild);
+        yield* TestClock.adjust("1 second");
+        yield* Fiber.join(fiber);
+      })
+    );
+  });
 });
 
 const commandEnv = (env: Record<string, string>) =>
@@ -1355,15 +1365,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
           Str.includes("create-github-app-token")(String(yamlAt(step, ["uses"])))
         );
         const withInputs = O.map(mint, (step) => yamlAt(step, ["with"]));
-        expect(
+        assertSome(
           O.map(withInputs, (inputs) =>
             A.filter(P.isObject(inputs) ? R.keys(inputs) : [], Str.startsWith("permission-"))
-          )
-        ).toEqual(
-          O.some(["permission-actions", "permission-organization-self-hosted-runners", "permission-repository-hooks"])
+          ),
+          ["permission-actions", "permission-organization-self-hosted-runners", "permission-repository-hooks"]
         );
-        expect(O.map(mint, (step) => yamlAt(step, ["uses"]))).toEqual(
-          O.some("actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510")
+        assertSome(
+          O.map(mint, (step) => yamlAt(step, ["uses"])),
+          "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
         );
         expect(text).toContain("run: bun run beep ci fleet-missed-event-check");
         expect(text).not.toContain("beep-fleet");

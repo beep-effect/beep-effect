@@ -77,6 +77,15 @@ export const FLEET_THRESHOLDS = {
 /**
  * Milliseconds since the Unix epoch.
  *
+ * **Example** (Accept a time)
+ *
+ * ```ts
+ * import { EpochMillis } from "@beep/repo-cli/commands/Ci"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EpochMillis)(1763845200000)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -136,12 +145,28 @@ export class FleetPoolCap extends S.Opaque<FleetPoolCap, { readonly brand: uniqu
 /**
  * The phases the generated caps projection carries.
  *
+ * **Example** (Read the phases)
+ *
+ * ```ts
+ * import { FleetCapPhase } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetCapPhase.literals) // ["overlap", "primary"]
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export const FleetCapPhase = LiteralKit(["overlap", "primary"]).pipe(
   $I.annoteSchema("FleetCapPhase", { description: "A fleet phase of the caps projection." })
 );
+
+/**
+ * Decoded caps phase.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FleetCapPhase = typeof FleetCapPhase.Type;
 
 /**
  * The generated caps projection's shape, so the check decodes it rather
@@ -163,25 +188,19 @@ export const FleetCapPhase = LiteralKit(["overlap", "primary"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export const FleetPoolCapsInput = S.Struct({
-  phase: FleetCapPhase,
-  pools: S.Array(
-    S.Struct({
-      pool: S.String,
-      label: S.String,
-      overlap: S.Int.check(S.isGreaterThanOrEqualTo(0)),
-      primary: S.Int.check(S.isGreaterThanOrEqualTo(0)),
-    })
-  ),
-}).pipe($I.annoteSchema("FleetPoolCapsInput", { description: "The generated per-phase caps of every pool." }));
-
-/**
- * Decoded caps projection.
- *
- * @category models
- * @since 0.0.0
- */
-export type FleetPoolCapsInput = typeof FleetPoolCapsInput.Type;
+export class FleetPoolCapsInput extends S.Opaque<FleetPoolCapsInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    phase: FleetCapPhase,
+    pools: S.Array(
+      S.Struct({
+        pool: S.String,
+        label: S.String,
+        overlap: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+        primary: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+      })
+    ),
+  }).pipe($I.annoteSchema("FleetPoolCapsInput", { description: "The generated per-phase caps of every pool." }))
+) {}
 
 /**
  * One registered org runner as one read saw it.
@@ -211,6 +230,14 @@ export class FleetRunner extends S.Opaque<FleetRunner, { readonly brand: unique 
 /**
  * One page of the org's self-hosted runners.
  *
+ * **Example** (An empty page)
+ *
+ * ```ts
+ * import { FleetRunnersPage } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetRunnersPage.make({ runners: [], totalCount: 0 }).totalCount) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -222,6 +249,14 @@ export class FleetRunnersPage extends S.Opaque<FleetRunnersPage, { readonly bran
 
 /**
  * The run statuses the check lists by status.
+ *
+ * **Example** (Read the listed statuses)
+ *
+ * ```ts
+ * import { FleetRunStatus } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetRunStatus.literals) // ["queued", "in_progress"]
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -268,6 +303,14 @@ export type FleetRunsQuery = typeof FleetRunsQuery.Type;
 
 /**
  * One page of workflow run ids.
+ *
+ * **Example** (One queued run)
+ *
+ * ```ts
+ * import { FleetRunsPage } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetRunsPage.make({ runIds: [45066910700], totalCount: 1 }).runIds.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -319,6 +362,14 @@ export class FleetJob extends S.Opaque<FleetJob, { readonly brand: unique symbol
 /**
  * One page of a run's jobs.
  *
+ * **Example** (An empty page)
+ *
+ * ```ts
+ * import { FleetJobsPage } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetJobsPage.make({ jobs: [], totalCount: 0 }).jobs.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -330,6 +381,21 @@ export class FleetJobsPage extends S.Opaque<FleetJobsPage, { readonly brand: uni
 
 /**
  * One delivery of a webhook, from the deliveries listing.
+ *
+ * **Example** (A delivered queued event)
+ *
+ * ```ts
+ * import { FleetHookDelivery } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const delivery = FleetHookDelivery.make({
+ *   id: "3855552300210716674",
+ *   deliveredAt: 0,
+ *   statusCode: 200,
+ *   action: O.some("queued"),
+ * })
+ * console.log(delivery.statusCode) // 200
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -346,6 +412,16 @@ export class FleetHookDelivery extends S.Opaque<FleetHookDelivery, { readonly br
 /**
  * One cursor page of a hook's deliveries, newest first.
  *
+ * **Example** (The last page)
+ *
+ * ```ts
+ * import { FleetHookDeliveriesPage } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const page = FleetHookDeliveriesPage.make({ deliveries: [], nextCursor: O.none() })
+ * console.log(O.isNone(page.nextCursor)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -358,6 +434,16 @@ export class FleetHookDeliveriesPage extends S.Opaque<FleetHookDeliveriesPage, {
 /**
  * The detail of one delivery: the workflow job id its payload names.
  *
+ * **Example** (A detail naming a job)
+ *
+ * ```ts
+ * import { FleetDeliveryDetail } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const detail = FleetDeliveryDetail.make({ id: "21", workflowJobId: O.some("137354449472") })
+ * console.log(O.getOrElse(detail.workflowJobId, () => "none")) // "137354449472"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -369,6 +455,14 @@ export class FleetDeliveryDetail extends S.Opaque<FleetDeliveryDetail, { readonl
 
 /**
  * One scheduled run of the check's own workflow.
+ *
+ * **Example** (One scheduled run)
+ *
+ * ```ts
+ * import { FleetScheduledRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetScheduledRun.make({ id: 5, createdAt: 0 }).id) // 5
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -409,6 +503,15 @@ export type FleetHookSource = typeof FleetHookSource.Type;
 
 /**
  * One hook source and the time it takes effect.
+ *
+ * **Example** (The 6b switch)
+ *
+ * ```ts
+ * import { FleetHookSource, FleetHookSourceEntry } from "@beep/repo-cli/commands/Ci"
+ *
+ * const entry = FleetHookSourceEntry.make({ source: FleetHookSource.cases.NoHook.make({}), effectiveFrom: 1000 })
+ * console.log(entry.source._tag) // "NoHook"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -525,6 +628,14 @@ export type FleetClassification = typeof FleetClassification.Type;
  * Which `NoLaunch` condition held: the launches cover the job's rank, the
  * pool made no progress, or the job has been queued two hours or more.
  *
+ * **Example** (Read the reasons)
+ *
+ * ```ts
+ * import { FleetNoLaunchReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetNoLaunchReason.literals) // ["launches-cover-rank", "no-progress", "queued-two-hours"]
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -562,6 +673,14 @@ export const FleetVerdictTag = LiteralKit([
   "WaitingAtCap",
   "Waiting",
 ]).pipe($I.annoteSchema("FleetVerdictTag", { description: "A verdict tag, in precedence order." }));
+
+/**
+ * Decoded verdict tag.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FleetVerdictTag = typeof FleetVerdictTag.Type;
 
 /**
  * A queued job's verdict. `Stuck`, `Wedged`, `MissedDelivery` and `NoLaunch`
@@ -626,6 +745,28 @@ export const isFleetAlert = FleetVerdict.isAnyOf(["Stuck", "Wedged", "MissedDeli
  * `progress` is whether a pool job started on a runner in the last 15
  * minutes.
  *
+ * **Example** (A heavy pool at cap)
+ *
+ * ```ts
+ * import { FleetPoolCap, FleetPoolObservation } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const observation = FleetPoolObservation.make({
+ *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 }),
+ *   firstReadAt: 0,
+ *   firstCount: 2,
+ *   secondCount: 2,
+ *   atCap: true,
+ *   idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [],
+ *   notBusyRunnerIds: [],
+ *   currentNotBusy: 0,
+ *   progress: true,
+ *   p95QueueToStart: O.none(),
+ * })
+ * console.log(observation.atCap) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -651,6 +792,47 @@ export class FleetPoolObservation extends S.Opaque<FleetPoolObservation, { reado
  * included), its launches since creation, the pool's oldest queued age and
  * the hook source at its creation.
  *
+ * **Example** (The first queued heavy job)
+ *
+ * ```ts
+ * import { FleetHookSource, FleetJob, FleetPoolCap, FleetPoolObservation, FleetQueuedJob } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const observation = FleetPoolObservation.make({
+ *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 }),
+ *   firstReadAt: 0,
+ *   firstCount: 2,
+ *   secondCount: 2,
+ *   atCap: true,
+ *   idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [],
+ *   notBusyRunnerIds: [],
+ *   currentNotBusy: 0,
+ *   progress: true,
+ *   p95QueueToStart: O.none(),
+ * })
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 0,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const queued = FleetQueuedJob.make({
+ *   job,
+ *   observation,
+ *   age: 600000,
+ *   rank: 1,
+ *   launches: 0,
+ *   oldestQueuedAge: 600000,
+ *   source: FleetHookSource.cases.RepositoryHook.make({ hookId: "714397446" }),
+ * })
+ * console.log(queued.rank) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -668,6 +850,36 @@ export class FleetQueuedJob extends S.Opaque<FleetQueuedJob, { readonly brand: u
 
 /**
  * One queued job's verdict and the facts behind it.
+ *
+ * **Example** (A missed delivery)
+ *
+ * ```ts
+ * import { FleetHookSource, FleetJob, FleetJobFinding, FleetVerdict } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 0,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const finding = FleetJobFinding.make({
+ *   job,
+ *   pool: "heavy",
+ *   age: 600000,
+ *   rank: 1,
+ *   launches: 0,
+ *   source: FleetHookSource.cases.RepositoryHook.make({ hookId: "714397446" }),
+ *   verdict: FleetVerdict.cases.MissedDelivery.make({}),
+ *   evidence: O.none(),
+ *   classification: O.none(),
+ * })
+ * console.log(finding.verdict._tag) // "MissedDelivery"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -688,6 +900,14 @@ export class FleetJobFinding extends S.Opaque<FleetJobFinding, { readonly brand:
 
 /**
  * The check's own previous scheduled run, as far as it could be read.
+ *
+ * **Example** (No previous run)
+ *
+ * ```ts
+ * import { FleetPreviousRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetPreviousRun.cases.NoneFound.make({})._tag) // "NoneFound"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -713,6 +933,21 @@ export type FleetPreviousRun = typeof FleetPreviousRun.Type;
  *
  * `githubRequests` is the number of GitHub reads the run made, retries
  * included, as the reads service counted them.
+ *
+ * **Example** (A run with nothing queued)
+ *
+ * ```ts
+ * import { FleetCheckReport, FleetPreviousRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * const report = FleetCheckReport.make({
+ *   repository: "beep-effect/beep-effect",
+ *   checkedAt: 0,
+ *   pools: [],
+ *   findings: [],
+ *   previousRun: FleetPreviousRun.cases.NoneFound.make({}),
+ * })
+ * console.log(report.githubRequests) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0

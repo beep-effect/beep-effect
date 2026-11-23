@@ -46,20 +46,14 @@ const Cap = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
  * @category models
  * @since 0.0.0
  */
-export const FleetPoolCapProjection = S.Struct({
-  pool: PoolName,
-  label: S.String,
-  overlap: Cap,
-  primary: Cap,
-}).pipe($I.annoteSchema("FleetPoolCapProjection", { description: "One pool's label and cap in each phase." }));
-
-/**
- * Decoded pool cap projection.
- *
- * @category models
- * @since 0.0.0
- */
-export type FleetPoolCapProjection = typeof FleetPoolCapProjection.Type;
+export class FleetPoolCapProjection extends S.Opaque<FleetPoolCapProjection, { readonly brand: unique symbol }>()(
+  S.Struct({
+    pool: PoolName,
+    label: S.String,
+    overlap: Cap,
+    primary: Cap,
+  }).pipe($I.annoteSchema("FleetPoolCapProjection", { description: "One pool's label and cap in each phase." }))
+) {}
 
 /**
  * The phase the fleet runs in and every pool's caps.
@@ -76,18 +70,12 @@ export type FleetPoolCapProjection = typeof FleetPoolCapProjection.Type;
  * @category models
  * @since 0.0.0
  */
-export const FleetPoolCapsProjection = S.Struct({
-  phase: FleetPhase,
-  pools: S.Array(FleetPoolCapProjection),
-}).pipe($I.annoteSchema("FleetPoolCapsProjection", { description: "The fleet phase and every pool's caps." }));
-
-/**
- * Decoded caps projection.
- *
- * @category models
- * @since 0.0.0
- */
-export type FleetPoolCapsProjection = typeof FleetPoolCapsProjection.Type;
+export class FleetPoolCapsProjection extends S.Opaque<FleetPoolCapsProjection, { readonly brand: unique symbol }>()(
+  S.Struct({
+    phase: FleetPhase,
+    pools: S.Array(FleetPoolCapProjection),
+  }).pipe($I.annoteSchema("FleetPoolCapsProjection", { description: "The fleet phase and every pool's caps." }))
+) {}
 
 /**
  * The repository path of the generated module the check reads.
@@ -122,18 +110,19 @@ export const fleetPoolCapsGeneratedPath = "packages/tooling/tool/cli/src/command
  * @category configuration
  * @since 0.0.0
  */
-export const projectFleetPoolCaps = (config: CiRunnersConfig.Encoded): FleetPoolCapsProjection => ({
-  phase: config.phase,
-  pools: A.map([config.heavy, config.overflow], (encoded) => {
-    const pool = PoolSettings.make(encoded);
-    return {
-      pool: pool.name,
-      label: pool.label,
-      overlap: effectiveCap(pool, "overlap"),
-      primary: effectiveCap(pool, "primary"),
-    };
-  }),
-});
+export const projectFleetPoolCaps = (config: CiRunnersConfig.Encoded): FleetPoolCapsProjection =>
+  FleetPoolCapsProjection.make({
+    phase: config.phase,
+    pools: A.map([config.heavy, config.overflow], (encoded) => {
+      const pool = PoolSettings.make(encoded);
+      return FleetPoolCapProjection.make({
+        pool: pool.name,
+        label: pool.label,
+        overlap: effectiveCap(pool, "overlap"),
+        primary: effectiveCap(pool, "primary"),
+      });
+    }),
+  });
 
 const poolLines = (pool: FleetPoolCapProjection): ReadonlyArray<string> => [
   "    {",

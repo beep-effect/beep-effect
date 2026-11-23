@@ -7,7 +7,9 @@
  * - `--write` renders the module and writes it.
  * - With no flag it checks, and exits non-zero when the committed module differs.
  *
- * Run it from the repository root after changing a pool's cap or label.
+ * Run it after changing a pool's cap or label: `bun run generate` in this
+ * package, or `bun packages/tooling/infra/ci-runners/fleet-pool-caps.ts --write`
+ * from the repository root.
  *
  * @internal
  * @since 0.0.0
@@ -19,6 +21,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import { fleetPoolCapsGeneratedPath, productionFleetPoolCapsModule } from "./src/FleetPoolCaps.ts";
 
 const sync = Command.make(
@@ -28,12 +31,14 @@ const sync = Command.make(
   },
   Effect.fn("CiRunners.fleetPoolCapsCli")(function* ({ write }) {
     const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const target = path.resolve(import.meta.dirname, "../../../..", fleetPoolCapsGeneratedPath);
     const rendered = productionFleetPoolCapsModule();
     if (write) {
-      yield* fs.writeFileString(fleetPoolCapsGeneratedPath, rendered);
+      yield* fs.writeFileString(target, rendered);
       return yield* Console.log(`wrote ${fleetPoolCapsGeneratedPath}`);
     }
-    const committed = yield* fs.readFileString(fleetPoolCapsGeneratedPath);
+    const committed = yield* fs.readFileString(target);
     if (committed !== rendered) {
       return yield* Effect.fail(
         `${fleetPoolCapsGeneratedPath} is stale; run bun packages/tooling/infra/ci-runners/fleet-pool-caps.ts --write`

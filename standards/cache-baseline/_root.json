@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (mcpb-kit output lane, t3/mcpb-kit-output-outside-dist)",
-    "reason": "Record the @beep/mcpb-kit drift from the new @beep/xdg workspace dependency (manifest bytes and the @beep/xdg build and transit edges), and the inherited root turbo.json source digest from #3458. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P5 missed-event check lane, feat/ci-missed-event-check)",
+    "reason": "Re-record @beep/infra-ci-runners after its manifest gained the generate and generate:check scripts that run the fleet pool caps renderer, which changes the scripts digest of every task, and the root subject for the turbo.json source digest inherited from origin/main (#3483). No command, input, output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/mcpb-kit-xdg-cache-review-2026-11-22.md",
-      "sha256": "f68140fcaafa032ec468a609d5f79ab3702bba4b97e380fe4834e76cd81bc0f6"
+      "path": "docs/reports/fleet-pool-caps-generate-cache-review-2026-11-23.md",
+      "sha256": "51402224e31a01e698a8c0b443e19d6783d1205c8955f17970b7bf42c3d96fde"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "1565194a19c724e05b0805b87766c34978f2a1ce6262d02bc1005de487eabb1b"
+      "sha256": "111b3a762f2ac664c187bd41742ba0005ef2748fc110b4ec4bb43e643bc0ee52"
     }
   ],
   "nodes": [

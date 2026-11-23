@@ -71,13 +71,21 @@ type FleetHookSources = readonly [FleetHookSourceEntry, ...Array<FleetHookSource
  * @category configuration
  * @since 0.0.0
  */
-export const fleetPoolCaps = (projection: FleetPoolCapsInput): ReadonlyArray<FleetPoolCap> =>
+export const fleetPoolCaps = (projection: typeof FleetPoolCapsInput.Encoded): ReadonlyArray<FleetPoolCap> =>
   A.map(projection.pools, (pool) =>
     FleetPoolCap.make({ pool: pool.pool, label: pool.label, cap: pool[projection.phase] })
   );
 
 /**
  * The production pools, from the committed generated caps.
+ *
+ * **Example** (The production labels)
+ *
+ * ```ts
+ * import { productionFleetPools } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(productionFleetPools.map((pool) => pool.label)) // ["beep-fleet-heavy", "beep-fleet-overflow"]
+ * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -93,10 +101,10 @@ export const productionFleetPools: ReadonlyArray<FleetPoolCap> = fleetPoolCaps(f
  * ```ts
  * import { FleetHookSource, FleetHookSourceEntry, hookSourceAt } from "@beep/repo-cli/commands/Ci"
  *
- * const sources = [
+ * const sources: readonly [FleetHookSourceEntry, ...Array<FleetHookSourceEntry>] = [
  *   FleetHookSourceEntry.make({ source: FleetHookSource.cases.RepositoryHook.make({ hookId: "714397446" }), effectiveFrom: 0 }),
  *   FleetHookSourceEntry.make({ source: FleetHookSource.cases.NoHook.make({}), effectiveFrom: 1000 }),
- * ] as const
+ * ]
  * console.log(hookSourceAt(sources, 999)._tag, hookSourceAt(sources, 1000)._tag) // RepositoryHook NoHook
  * ```
  *
@@ -205,6 +213,25 @@ export const observeFleetPool = (input: {
  * The window a job's `queued` delivery lands in: from its creation minus
  * two minutes to its creation plus five.
  *
+ * **Example** (A job created at ten minutes)
+ *
+ * ```ts
+ * import { FleetJob, deliveryWindow } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 600000,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * console.log(deliveryWindow(job)) // { start: 480000, end: 900000 }
+ * ```
+ *
  * @param job - The queued job.
  * @returns The window's start and end.
  * @category use-cases
@@ -230,6 +257,34 @@ const isTwoHundred = (statusCode: number): boolean => statusCode >= 200 && statu
  * minus two minutes), or pages that do not reach it, make the evidence
  * `Unreadable`; only a walk that reached the window's start with every
  * candidate read makes it `NotDelivered`.
+ *
+ * **Example** (A complete walk with no delivery)
+ *
+ * ```ts
+ * import { FleetJob, judgeDeliveryEvidence } from "@beep/repo-cli/commands/Ci"
+ * import * as HashMap from "effect/HashMap"
+ * import * as O from "effect/Option"
+ *
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 600000,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const evidence = judgeDeliveryEvidence({
+ *   job,
+ *   hookId: "714397446",
+ *   deliveries: [],
+ *   oldestReached: O.some(0),
+ *   walkFailure: O.none(),
+ *   details: HashMap.empty(),
+ * })
+ * console.log(evidence._tag) // "NotDelivered"
+ * ```
  *
  * @param input - The job, its hook, the walk's deliveries, oldest time and failure, and the detail reads.
  * @returns The job's evidence.
@@ -355,6 +410,47 @@ export const classifyFleetEvidence = (evidence: FleetDeliveryEvidence): O.Option
  * Whether the deliveries must be read for a job: its source at creation is a
  * repository hook and it is old enough for its delivery to be due.
  *
+ * **Example** (Due at five minutes)
+ *
+ * ```ts
+ * import { FleetHookSource, FleetJob, FleetPoolCap, FleetPoolObservation, FleetQueuedJob, needsDeliveryEvidence } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const observation = FleetPoolObservation.make({
+ *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 }),
+ *   firstReadAt: 0,
+ *   firstCount: 2,
+ *   secondCount: 2,
+ *   atCap: true,
+ *   idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [],
+ *   notBusyRunnerIds: [],
+ *   currentNotBusy: 0,
+ *   progress: true,
+ *   p95QueueToStart: O.none(),
+ * })
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 0,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const queued = FleetQueuedJob.make({
+ *   job,
+ *   observation,
+ *   age: 600000,
+ *   rank: 1,
+ *   launches: 0,
+ *   oldestQueuedAge: 600000,
+ *   source: FleetHookSource.cases.RepositoryHook.make({ hookId: "714397446" }),
+ * })
+ * console.log(needsDeliveryEvidence(queued, 299999), needsDeliveryEvidence(queued, 300000)) // false true
+ * ```
+ *
  * @param queued - The queued job with its hook source at creation.
  * @param now - The check's time.
  * @returns Whether the walk must reach this job.
@@ -392,6 +488,13 @@ const noLaunchReason = (input: {
 /**
  * Give one queued job its verdict, in precedence order.
  *
+ * **Details**
+ *
+ * `Stuck` holds only for a job created at or before the first runner read:
+ * a job created between the reads may simply not have been picked up yet.
+ * `NoLaunch` needs no runner idle in the second read, so a runner that just
+ * booted keeps the job `Waiting`.
+ *
  * **Example** (Waiting with three launches for rank four)
  *
  * ```ts
@@ -408,13 +511,6 @@ const noLaunchReason = (input: {
  * })
  * console.log(verdict._tag) // "Waiting"
  * ```
- *
- * **Details**
- *
- * `Stuck` holds only for a job created at or before the first runner read:
- * a job created between the reads may simply not have been picked up yet.
- * `NoLaunch` needs no runner idle in the second read, so a runner that just
- * booted keeps the job `Waiting`.
  *
  * @param input - The pool observation, the job's creation, age, launches, rank and evidence, and the pool's oldest queued age.
  * @returns The first verdict that holds.
@@ -469,6 +565,39 @@ export const decideFleetVerdict = (input: {
  * jobs created at or before it (itself included) and its launches since
  * creation.
  *
+ * **Example** (Rank one queued heavy job)
+ *
+ * ```ts
+ * import { FleetJob, FleetPoolCap, FleetPoolObservation, fleetHookSources, queuedFleetJobs } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const observation = FleetPoolObservation.make({
+ *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 }),
+ *   firstReadAt: 0,
+ *   firstCount: 2,
+ *   secondCount: 2,
+ *   atCap: true,
+ *   idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [],
+ *   notBusyRunnerIds: [],
+ *   currentNotBusy: 0,
+ *   progress: true,
+ *   p95QueueToStart: O.none(),
+ * })
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 0,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const queued = queuedFleetJobs({ observations: [observation], jobs: [job], hookSources: fleetHookSources, now: 600000 })
+ * console.log(queued.map((entry) => entry.rank)) // [1]
+ * ```
+ *
  * @param input - The observations, every job read, the hook sources and the time.
  * @returns One entry per queued pool job.
  * @category use-cases
@@ -502,6 +631,51 @@ export const queuedFleetJobs = (input: {
 
 /**
  * Give a queued job its finding from its delivery evidence.
+ *
+ * **Example** (A delivered job waiting at cap)
+ *
+ * ```ts
+ * import { FleetHookSource, FleetJob, FleetPoolCap, FleetPoolObservation, FleetQueuedJob, FleetDeliveryEvidence, fleetJobFinding } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const observation = FleetPoolObservation.make({
+ *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 }),
+ *   firstReadAt: 0,
+ *   firstCount: 2,
+ *   secondCount: 2,
+ *   atCap: true,
+ *   idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [],
+ *   notBusyRunnerIds: [],
+ *   currentNotBusy: 0,
+ *   progress: true,
+ *   p95QueueToStart: O.none(),
+ * })
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 0,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const queued = FleetQueuedJob.make({
+ *   job,
+ *   observation,
+ *   age: 600000,
+ *   rank: 1,
+ *   launches: 0,
+ *   oldestQueuedAge: 600000,
+ *   source: FleetHookSource.cases.RepositoryHook.make({ hookId: "714397446" }),
+ * })
+ * const finding = fleetJobFinding(
+ *   queued,
+ *   O.some(FleetDeliveryEvidence.cases.Delivered.make({ hookId: "714397446", deliveryId: "21", statusCode: 200 }))
+ * )
+ * console.log(finding.verdict._tag) // "WaitingAtCap"
+ * ```
  *
  * @param queued - The job with its rank, launches and source.
  * @param evidence - Its delivery evidence, when it was read or is the gate's.
@@ -594,6 +768,51 @@ const cancelAndRerun = (repository: string, runId: number): ReadonlyArray<string
  * gate's call because it reruns the whole run. `gh run rerun --failed`
  * refuses an in-progress run and is never printed for a queued job.
  *
+ * **Example** (Redeliver a delivered job)
+ *
+ * ```ts
+ * import { FleetHookSource, FleetJob, FleetPoolCap, FleetPoolObservation, FleetQueuedJob, FleetDeliveryEvidence, fleetJobFinding, fleetRemedies } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const observation = FleetPoolObservation.make({
+ *   pool: FleetPoolCap.make({ pool: "heavy", label: "beep-fleet-heavy", cap: 2 }),
+ *   firstReadAt: 0,
+ *   firstCount: 2,
+ *   secondCount: 2,
+ *   atCap: true,
+ *   idleRunnerIds: [],
+ *   secondReadIdleRunnerIds: [],
+ *   notBusyRunnerIds: [],
+ *   currentNotBusy: 0,
+ *   progress: true,
+ *   p95QueueToStart: O.none(),
+ * })
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 0,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const queued = FleetQueuedJob.make({
+ *   job,
+ *   observation,
+ *   age: 600000,
+ *   rank: 1,
+ *   launches: 0,
+ *   oldestQueuedAge: 600000,
+ *   source: FleetHookSource.cases.RepositoryHook.make({ hookId: "714397446" }),
+ * })
+ * const finding = fleetJobFinding(
+ *   queued,
+ *   O.some(FleetDeliveryEvidence.cases.Delivered.make({ hookId: "714397446", deliveryId: "21", statusCode: 200 }))
+ * )
+ * console.log(fleetRemedies("beep-effect/beep-effect", finding).length) // 1
+ * ```
+ *
  * @param repository - The `owner/name` repository.
  * @param finding - The alerting job's finding.
  * @returns The remedy lines.
@@ -625,6 +844,22 @@ export const fleetRemedies: {
 /**
  * Assemble the report of one run.
  *
+ * **Example** (Count the GitHub reads)
+ *
+ * ```ts
+ * import { FleetPreviousRun, fleetCheckReport } from "@beep/repo-cli/commands/Ci"
+ *
+ * const report = fleetCheckReport({
+ *   repository: "beep-effect/beep-effect",
+ *   checkedAt: 0,
+ *   pools: [],
+ *   findings: [],
+ *   previousRun: FleetPreviousRun.cases.NoneFound.make({}),
+ *   githubRequests: 7,
+ * })
+ * console.log(report.githubRequests) // 7
+ * ```
+ *
  * @param input - The repository, time, observations, findings, previous run and GitHub request count.
  * @returns The report the summary and the exit code are built from.
  * @category use-cases
@@ -641,6 +876,22 @@ export const fleetCheckReport = (input: {
 
 /**
  * The alerting findings of a report.
+ *
+ * **Example** (A quiet run)
+ *
+ * ```ts
+ * import { FleetPreviousRun, fleetAlerts, fleetCheckReport } from "@beep/repo-cli/commands/Ci"
+ *
+ * const report = fleetCheckReport({
+ *   repository: "beep-effect/beep-effect",
+ *   checkedAt: 0,
+ *   pools: [],
+ *   findings: [],
+ *   previousRun: FleetPreviousRun.cases.NoneFound.make({}),
+ *   githubRequests: 0,
+ * })
+ * console.log(fleetAlerts(report).length) // 0
+ * ```
  *
  * @param report - One run's observations, findings and previous scheduled run.
  * @returns Its findings whose verdict alerts.
@@ -750,6 +1001,19 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
 /**
  * The previous scheduled run among the check's recent scheduled runs: the
  * newest that is not this run.
+ *
+ * **Example** (Skip this run)
+ *
+ * ```ts
+ * import { FleetScheduledRun, previousScheduledRun } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const previous = previousScheduledRun(
+ *   [FleetScheduledRun.make({ id: 6, createdAt: 2000 }), FleetScheduledRun.make({ id: 5, createdAt: 1000 })],
+ *   O.some(6)
+ * )
+ * console.log(previous._tag) // "Found"
+ * ```
  *
  * @param runs - The scheduled runs, newest first.
  * @param currentRunId - This run's id, when it runs in Actions.

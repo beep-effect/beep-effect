@@ -8,6 +8,7 @@ import {
 } from "@beep/infra-ci-runners/FleetPoolCaps";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -55,9 +56,15 @@ describe("FleetPoolCaps", () => {
         for (const pool of PoolName.literals) {
           const settings = PoolSettings.make(productionConfig[pool]);
           const projected = A.findFirst(projection.pools, (entry) => entry.pool === pool);
-          expect(O.map(projected, (entry) => entry.label)).toEqual(O.some(settings.label));
+          assertSome(
+            O.map(projected, (entry) => entry.label),
+            settings.label
+          );
           for (const phase of FleetPhase.literals) {
-            expect(O.map(projected, (entry) => entry[phase])).toEqual(O.some(effectiveCap(settings, phase)));
+            assertSome(
+              O.map(projected, (entry) => entry[phase]),
+              effectiveCap(settings, phase)
+            );
           }
         }
         expect(A.length(projection.pools)).toBe(A.length(PoolName.literals));
