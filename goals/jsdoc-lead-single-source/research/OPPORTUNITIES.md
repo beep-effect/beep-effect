@@ -50,6 +50,9 @@ identifiers are redacted.
     went red on the same line.
   - Each PR passed its own gates against its own base. Nothing re-measured the
     new gate against the merge ref at the moment of merge.
+  - The JSDoc ratchet does not run on pushes to main, so main never went red
+    itself. The drift surfaced only on the next PR's merge ref, and every
+    sibling that merged main inherited it.
 - **Would have prevented it:** a PR that adds or tightens a ratcheted total
   re-runs that gate on the up-to-date merge ref inside the merge gate (or a
   merge queue). The PR then lands with a baseline measured on the tree it
