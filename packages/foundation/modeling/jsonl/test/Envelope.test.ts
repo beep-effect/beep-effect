@@ -89,13 +89,9 @@ describe("Envelope boundaries", () => {
       "mailbox"
     );
   });
-  it("does not traverse deeply nested unknown data at the frame boundary", () => {
-    const deep = `${Str.repeat(200_000)("[")}1${Str.repeat(200_000)("]")}`;
-    // Node v24.21.0 parses this depth, but the oracle's parse-then-stringify
-    // fixture raises RangeError: Maximum call stack size exceeded. The Schema
-    // JSON encoder reports Expected a JSON-serializable value. Keep the full
-    // oracle depth in the wire text so the frame boundary still has to parse it.
-    const text = `{"at":"2026-08-03T17:04:11.912Z","event":"mail-received","data":${deep}}`;
+  it("does not traverse deeply nested unknown data at the frame boundary, at the full oracle depth that overflows the oracle's parse-then-stringify", () => {
+    const oracleDepth = `${Str.repeat(200_000)("[")}1${Str.repeat(200_000)("]")}`;
+    const text = `{"at":"2026-08-03T17:04:11.912Z","event":"mail-received","data":${oracleDepth}}`;
     assert.strictEqual(Result.getOrThrow(Envelope.frameResult(line(text))).event, "mail-received");
   });
   it("retains typed error details for malformed lines, foreign events and invalid data", () => {
@@ -235,9 +231,11 @@ describe("Envelope boundaries", () => {
         assert.strictEqual(error._tag, "UnserializableData");
         assert.include(error.message, "unknown");
         assert.notInclude(error.message, "loop");
-        // Adjusts upstream's `cause instanceOf TypeError`: the JSON codec's SchemaError is the cause (D20).
         if (!S.is(UnserializableData)(error)) return assert.fail("expected UnserializableData");
-        if (!S.isSchemaError(error.cause)) return assert.fail("expected the JSON codec's SchemaError as the cause");
+        if (!S.isSchemaError(error.cause))
+          return assert.fail(
+            "expected the JSON codec's SchemaError as the cause, where upstream has a TypeError (D20)"
+          );
         assert.strictEqual(error.cause.message, "Expected a JSON-serializable value");
         assert.strictEqual(
           error.message,

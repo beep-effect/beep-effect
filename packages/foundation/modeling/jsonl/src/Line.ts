@@ -11,12 +11,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-// The pure, synchronous line layer of a JSONL journal.
-//
-// Nothing here touches `FileSystem`, builds an `Effect`, or needs a runtime —
-// a `PreToolUse` hook script reads the current state of a journal with one
-// call. That is a contract, not a convenience: a hook that had to construct an
-// Effect runtime to read one line would not adopt this package.
 import * as Str from "effect/String";
 import { utf8Length } from "./internal/utf8.ts";
 import { MalformedLine } from "./JsonlError.ts";
@@ -72,7 +66,6 @@ export class ParsedLine extends S.Opaque<ParsedLine, { readonly brand: unique sy
   )
 ) {}
 
-/** Whether a line carries nothing but whitespace. */
 const isBlank = (line: LineSlice): boolean => Str.isEmpty(Str.trim(line.text));
 const decodeJson = S.decodeResult(S.fromJsonString(S.Unknown));
 
