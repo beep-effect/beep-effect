@@ -26,7 +26,6 @@ const JsxRuntime = LiteralKit(["automatic", "classic"]).pipe(
 
 const JsxVariants = JsxRuntime.toTaggedUnion("runtime")({
   automatic: {
-    /** The automatic runtime's import source (`jsxImportSource`, defaulted to `"react"`). */
     importSource: S.String.pipe(
       $I.annoteKey("JsxConfig.automatic.importSource", {
         description: "The automatic runtime's required import source.",
@@ -48,10 +47,8 @@ const JsxVariants = JsxRuntime.toTaggedUnion("runtime")({
  */
 export type JsxConfig = typeof JsxVariants.Type;
 
-// TypeScript cannot extend a constructor returning a union. Widen only the
-// static carrier's instance type; the codecs, constructor input and result
-// retain the discriminated union, and Opaque restores its public Type.
-const JsxBase: Omit<typeof JsxVariants, "Type"> & S.Schema<object> = JsxVariants;
+const JsxVariantsWidenedBecauseAClassCannotExtendAUnionConstructor: Omit<typeof JsxVariants, "Type"> &
+  S.Schema<object> = JsxVariants;
 
 /**
  * The JSX transform configuration a `jsx` compiler option implies: which
@@ -76,7 +73,7 @@ export const JsxConfig = class extends S.Opaque<
   {
     readonly brand: unique symbol;
   }
->()(JsxBase) {
+>()(JsxVariantsWidenedBecauseAClassCannotExtendAUnionConstructor) {
   /**
    * Project decoded compiler options to their implied JSX transform
    * configuration. `"react-jsx"` and `"react-jsxdev"` yield the automatic

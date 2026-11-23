@@ -5748,6 +5748,28 @@
       "status": "open"
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:1902:scoped@8#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "line": 1902,
+      "endLine": 1932,
+      "symbol": "scoped",
+      "occurrence": "v2:9c337fc5f009cad8cb785a254286593f4e6252efc85243817f3224752b50506b",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fixture = yield* makeGitCheckoutFixture(root); const liveClone = path.join(fixtur",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The inner scope releases the child process that holds a cwd reference inside the fixture clone before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:220:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",

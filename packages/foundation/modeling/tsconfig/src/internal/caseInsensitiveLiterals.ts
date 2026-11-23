@@ -1,11 +1,3 @@
-// Case-insensitive literal-union codec shared by the compilerOptions and
-// watchOptions enum schemas.
-//
-// tsc lowercases enum-valued option strings before matching them, so
-// "ES2015" and "es2015" decode to the same literal. Alias normalization
-// (es6→es2015, node→node10) is deliberately NOT applied here — it lives in the
-// numeric-enum codec (TsEnumCodec).
-
 import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";

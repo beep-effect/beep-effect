@@ -36,9 +36,7 @@ const GeneratableIntegrity = IntegrityHash.check(
     /^(?:(?:sha1|sha256|sha384|sha512)-[A-Za-z0-9+/]+={0,2}|(?:sha1|sha224|sha256|sha384|sha512)\.[0-9a-f]+|[0-9]+(?:c[0-9]+)?\/[0-9a-f]+)$/
   )
 );
-// FromSri is deliberately partial on the wider CorepackIntegrityHash brand:
-// only a complete SHA-512 digest has an SRI inverse.
-const BridgeDomain = CorepackIntegrityHash.check(S.isPattern(/^sha512\.[0-9a-f]{128}$/));
+const CompleteSha512DigestsTheSriBridgeCanInvert = CorepackIntegrityHash.check(S.isPattern(/^sha512\.[0-9a-f]{128}$/));
 
 describe("IntegrityHash property floor", () => {
   roundTrips("IntegrityAlgorithm", IntegrityAlgorithm);
@@ -47,7 +45,11 @@ describe("IntegrityHash property floor", () => {
   roundTrips("SriIntegrityHash", SriIntegrityHash);
   roundTrips("InvalidSriIntegrityHashError", InvalidSriIntegrityHashError);
   roundTrips("CorepackIntegrityHash", CorepackIntegrityHash);
-  roundTrips("CorepackIntegrityHash.FromSri", CorepackIntegrityHash.FromSri, BridgeDomain);
+  roundTrips(
+    "CorepackIntegrityHash.FromSri",
+    CorepackIntegrityHash.FromSri,
+    CompleteSha512DigestsTheSriBridgeCanInvert
+  );
 });
 
 it.effect.prop(
@@ -67,7 +69,7 @@ it.effect.prop(
 
 it.effect.prop(
   "SHA-512 conversion preserves digest bytes and canonical SRI formatting is idempotent",
-  [Arbitrary.schema(BridgeDomain)],
+  [Arbitrary.schema(CompleteSha512DigestsTheSriBridgeCanInvert)],
   ([hash]) =>
     Effect.gen(function* () {
       const sri = yield* S.encodeEffect(CorepackIntegrityHash.FromSri)(hash);
