@@ -3311,7 +3311,6 @@
     {"file":"packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts","symbol":"decodeGhPrView","kind":"codec","owner":"@beep/repo-cli"},
     {"file":"packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts","symbol":"decodeGhRepoView","kind":"codec","owner":"@beep/repo-cli"},
     {"file":"packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts","symbol":"decodeGhReviewsDocument","kind":"codec","owner":"@beep/repo-cli"},
-    {"file":"packages/tooling/tool/cli/src/internal/claims/ClaimHistory.ts","symbol":"ClaimHistoryRefusal","kind":"literal-kit","owner":"@beep/repo-cli","identity":"ClaimHistoryRefusal","description":"Why a claim history cannot be read or appended."},
     {"file":"packages/tooling/tool/cli/src/internal/claims/ClaimHistory.ts","symbol":"ClaimHistoryRefused","kind":"tagged-error","owner":"@beep/repo-cli","identity":"ClaimHistoryRefused"},
     {"file":"packages/tooling/tool/cli/src/internal/claims/ClaimHistory.ts","symbol":"LineFormat","kind":"struct-const","owner":"@beep/repo-cli","identity":"LineFormat","description":"The key and exact version that identify one stored line format."},
     {"file":"packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts","symbol":"CommandGroupHelp","kind":"struct-const","owner":"@beep/repo-cli","identity":"CommandGroupHelp","description":"Static root-help fields of one top-level beep command group."},

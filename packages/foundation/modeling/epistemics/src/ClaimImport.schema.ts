@@ -35,8 +35,6 @@ export const ClaimImportLedger = LiteralKit(["kb", "holds"]).pipe(
 );
 
 /**
- * Decoded imported-row ledger namespace.
- *
  * @category models
  * @since 0.0.0
  */
@@ -60,8 +58,6 @@ export const MissingClaimCreationFact = LiteralKit(["scope", "generatedBy", "ass
 );
 
 /**
- * Decoded unproved creation fact.
- *
  * @category models
  * @since 0.0.0
  */

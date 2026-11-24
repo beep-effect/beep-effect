@@ -184,8 +184,6 @@ export const ReviewSide = LiteralKit(["extractor", "critic"]).pipe(
 export type ReviewSide = typeof ReviewSide.Type;
 
 /**
- * Why a deterministic check could not be decided.
- *
  * **Example** (Read the unknown reasons)
  *
  * ```ts
@@ -205,8 +203,6 @@ export const DeterministicCheckUnknownReason = LiteralKit(["document-text-unavai
 );
 
 /**
- * Type for {@link DeterministicCheckUnknownReason}.
- *
  * **Example** (Type an unknown reason)
  *
  * ```ts
@@ -318,8 +314,6 @@ export const DeterministicCheckResult = S.Union([
 );
 
 /**
- * Type for {@link DeterministicCheckResult}.
- *
  * **Example** (Type a result)
  *
  * ```ts
@@ -356,8 +350,6 @@ export const DeterministicCheckProvenance = LiteralKit(["current", "docket-check
 );
 
 /**
- * Type for {@link DeterministicCheckProvenance}.
- *
  * **Example** (Type a provenance)
  *
  * ```ts
@@ -473,8 +465,6 @@ export const StoredDeterministicCheck = S.Union([DeterministicCheck, Determinist
 );
 
 /**
- * Type for {@link StoredDeterministicCheck}.
- *
  * **Example** (Type a stored check)
  *
  * ```ts

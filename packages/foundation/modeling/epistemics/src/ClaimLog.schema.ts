@@ -74,8 +74,6 @@ export const ClaimLogViolation = S.TaggedUnion({
 );
 
 /**
- * Decoded append violation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -102,8 +100,6 @@ export const AppendResult = S.TaggedUnion({
 );
 
 /**
- * Decoded append result.
- *
  * @category models
  * @since 0.0.0
  */

@@ -84,9 +84,6 @@ export class ReviewItemStoreError extends S.TaggedError<ReviewItemStoreError, { 
 ) {}
 
 /**
- * A stored item is an unresolved legacy import, so an executable write to it
- * is refused until it is repaired.
- *
  * **Details**
  *
  * The item stays listed as a `LegacyReviewItemImported`. Recording an answer

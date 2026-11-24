@@ -188,7 +188,6 @@ export const ReviewTag = LiteralKit([
 ]).pipe($I.annoteSchema("ReviewTag", { description: "Read-only projection of the review union discriminants." }));
 
 /**
- * A projected review discriminant.
  * @category models
  * @since 0.0.0
  */

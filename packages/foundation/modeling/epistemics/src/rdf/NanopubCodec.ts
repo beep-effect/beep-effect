@@ -62,9 +62,6 @@ import type { SchemaIdentity } from "../Factory/index.ts";
 const $I = $EpistemicsId.create("rdf/NanopubCodec");
 
 /**
- * The `nanopub/v1` content address of one publication: a claim id and its
- * canonical publication metadata.
- *
  * **Example** (Brand a publication digest)
  *
  * ```ts
@@ -85,8 +82,6 @@ export const NanopubId = ContentHash.pipe(
 );
 
 /**
- * Decoded type of {@link NanopubId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -278,8 +273,6 @@ export const nanopubIris = (id: NanopubId): NanopubIris => {
 };
 
 /**
- * The registry terms of the declared nanopublication profile.
- *
  * **Example** (Check a profile term)
  *
  * ```ts
@@ -310,8 +303,6 @@ export const NanopubProfileTerm = LiteralKit([
 ]).pipe($I.annoteSchema("NanopubProfileTerm", { description: "The registry terms of the nanopublication profile." }));
 
 /**
- * Type for {@link NanopubProfileTerm}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -354,8 +345,6 @@ export const NanopubRefusal = LiteralKit([
 );
 
 /**
- * Type for {@link NanopubRefusal}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -448,8 +437,6 @@ export class NanopubNormalized extends S.Opaque<NanopubNormalized, { readonly br
 ) {}
 
 /**
- * A normal form, a foreign publication or a refusal.
- *
  * **Example** (Match a normalize result)
  *
  * ```ts
@@ -474,8 +461,6 @@ export const NanopubNormalizeResult = S.Union([NanopubNormalized, NanopubForeign
 );
 
 /**
- * Type for {@link NanopubNormalizeResult}.
- *
  * @category models
  * @since 0.0.0
  */

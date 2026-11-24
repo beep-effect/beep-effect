@@ -141,17 +141,7 @@ export const portsFor = (options: {
   resolveAt: () => Effect.succeed(options.resolution),
 });
 
-/**
- * One exact-claim action and current synthetic source.
- * **Example** (Inspect exact-claim ports)
- * ```ts
- * import { basePorts } from "./Admissions"
- * console.log(typeof basePorts)
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const basePorts = (value: Fixture) =>
+const basePorts = (value: Fixture) =>
   portsFor({
     fixture: value,
     tokens: [value.token],

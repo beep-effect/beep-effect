@@ -120,8 +120,6 @@ export const latestItems = <Item extends StoredReviewItem>(versions: ReadonlyArr
   A.reduce(versions, A.empty<Item>(), upsertOne);
 
 /**
- * What an upsert or a repair writes, and the ids an upsert holds.
- *
  * **Example** (Read an empty plan)
  *
  * ```ts

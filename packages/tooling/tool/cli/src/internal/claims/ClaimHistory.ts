@@ -32,13 +32,7 @@ import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/claims/ClaimHistory");
 
-/**
- * Reasons a mixed claim history is refused instead of being read short.
- *
- * @category models
- * @since 0.0.0
- */
-export const ClaimHistoryRefusal = LiteralKit([
+const ClaimHistoryRefusal = LiteralKit([
   "duplicate-claim",
   "missing-predecessor",
   "cyclic-predecessor",

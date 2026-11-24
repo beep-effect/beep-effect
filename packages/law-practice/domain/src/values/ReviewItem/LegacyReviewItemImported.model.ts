@@ -16,8 +16,6 @@ import { ReviewItem, ReviewItemId, ReviewItemKind } from "./ReviewItem.model.ts"
 const $I = $LawPracticeDomainId.create("values/ReviewItem/LegacyReviewItemImported.model");
 
 /**
- * Why a stored legacy quote could not become a quote selector.
- *
  * **Example** (Read the unresolved reasons)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const LegacyQuoteUnresolvedReason = LiteralKit(["empty-legacy-quote"]).pi
 );
 
 /**
- * Runtime type for {@link LegacyQuoteUnresolvedReason}.
- *
  * @see {@link LegacyQuoteUnresolvedReason} for the literal domain.
  * @category models
  * @since 0.0.0
@@ -45,8 +41,6 @@ export const LegacyQuoteUnresolvedReason = LiteralKit(["empty-legacy-quote"]).pi
 export type LegacyQuoteUnresolvedReason = typeof LegacyQuoteUnresolvedReason.Type;
 
 /**
- * The legal locator a legacy source reference stated beside its quote.
- *
  * **Example** (Build a legacy locator)
  *
  * ```ts
@@ -77,9 +71,6 @@ export class LegacySourceLocator extends S.Opaque<LegacySourceLocator, { readonl
 ) {}
 
 /**
- * A stored legacy quote that cannot become a quote selector, kept as raw
- * data for repair.
- *
  * **Details**
  *
  * The raw `exact`, `prefix` and `suffix` keep their stored values and
@@ -125,8 +116,6 @@ export class LegacyQuoteUnresolved extends S.Opaque<LegacyQuoteUnresolved, { rea
 ) {}
 
 /**
- * A stored legacy review item with at least one unresolved quote.
- *
  * **Details**
  *
  * Any unresolved quote, at the item level or inside a question fact, puts the
@@ -205,8 +194,6 @@ export const StoredReviewItem = S.Union([LegacyReviewItemImported, ReviewItem]).
 );
 
 /**
- * Runtime type for {@link StoredReviewItem}.
- *
  * @see {@link StoredReviewItem} for the two read cases.
  * @category value-objects
  * @since 0.0.0

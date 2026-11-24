@@ -112,8 +112,6 @@ export const TrustedClaimBinding = S.TaggedUnion({
   })
 );
 /**
- * Decoded TrustedClaimBinding value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -144,8 +142,6 @@ export const SourceResolution = S.TaggedUnion({
   })
 );
 /**
- * Decoded SourceResolution value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -203,8 +199,6 @@ export const AdmissionRefused = S.TaggedUnion({
   })
 );
 /**
- * Decoded AdmissionRefused value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -347,8 +341,6 @@ export const ClaimEligibility = S.TaggedUnion({
   })
 );
 /**
- * Decoded ClaimEligibility value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -384,8 +376,6 @@ export const ClaimViewResult = S.TaggedUnion({
   })
 );
 /**
- * Decoded ClaimViewResult value.
- *
  * @category models
  * @since 0.0.0
  */

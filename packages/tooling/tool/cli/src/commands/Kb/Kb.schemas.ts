@@ -19,7 +19,6 @@ const RegistryId = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._:/@-]*$/)
 );
 
 /**
- * Disclosure audience of a capture and its assertions.
  * **Example** (Recognize public evidence)
  * ```ts
  * import { Audience } from "@beep/repo-cli/commands/Kb"
@@ -38,7 +37,6 @@ export const Audience = LiteralKit(["public", "internal", "personal"]).pipe(
 export type Audience = typeof Audience.Type;
 
 /**
- * Independent basis permitting outward use; none never qualifies.
  * **Example** (Recognize a public basis)
  * ```ts
  * import { DerivationBasis } from "@beep/repo-cli/commands/Kb"
@@ -426,8 +424,6 @@ export const KbClaimEvent = S.Union([
   $I.annoteSchema("KbClaimEvent", { description: "One kb-claim-record/v2 line; old envelopes are never written." })
 );
 /**
- * Decoded kb-claim-record/v2 event.
- *
  * @category models
  * @since 0.0.0
  */

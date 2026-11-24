@@ -40,8 +40,6 @@ export const HoldId = S.String.check(S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).
 );
 
 /**
- * Decoded type of {@link HoldId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -71,8 +69,6 @@ export const HoldKind = LiteralKit([
 ]).pipe($I.annoteSchema("HoldKind", { description: "The config surface that enforces a dependency-shaped hold." }));
 
 /**
- * Decoded type of {@link HoldKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -116,8 +112,6 @@ export const HoldAnchor = S.TaggedUnion({
 );
 
 /**
- * Decoded type of {@link HoldAnchor}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -171,8 +165,6 @@ export const ProbeRuntime = LiteralKit(["bun", "node", "vitest-bun", "vitest-nod
 );
 
 /**
- * Decoded type of {@link ProbeRuntime}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -221,8 +213,6 @@ export const HoldFalsifier = S.TaggedUnion({
 }).pipe($I.annoteSchema("HoldFalsifier", { description: "The probe that would disprove a hold." }));
 
 /**
- * Decoded type of {@link HoldFalsifier}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -250,8 +240,6 @@ export const HoldWatchTarget = S.TaggedUnion({
 }).pipe($I.annoteSchema("HoldWatchTarget", { description: "Upstream signal that wakes a hold re-check." }));
 
 /**
- * Decoded type of {@link HoldWatchTarget}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -278,8 +266,6 @@ export const HoldExitAction = S.TaggedUnion({
 }).pipe($I.annoteSchema("HoldExitAction", { description: "The change made when a hold ends." }));
 
 /**
- * Decoded type of {@link HoldExitAction}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -315,8 +301,6 @@ export const HoldProposition = S.TaggedStruct("Hold", {
 );
 
 /**
- * Decoded type of {@link HoldProposition}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -343,8 +327,6 @@ export const ProbeRunId = S.NonEmptyString.pipe(
 );
 
 /**
- * Decoded type of {@link ProbeRunId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -371,8 +353,6 @@ export const HoldActivityId = S.NonEmptyString.pipe(
 );
 
 /**
- * Identifier of the agent or person responsible for a version.
- *
  * **Example** (Check a principal id)
  *
  * ```ts
@@ -625,8 +605,6 @@ export const HoldClaimEvent = S.Union([
   $I.annoteSchema("HoldClaimEvent", { description: "One hold-claim-record/v2 line; old envelopes are never written." })
 );
 /**
- * Decoded hold-claim-record/v2 event.
- *
  * @category models
  * @since 0.0.0
  */
@@ -794,8 +772,6 @@ export const ProbeOutcome = S.TaggedUnion({
 }).pipe($I.annoteSchema("ProbeOutcome", { description: "Result of one probe command run." }));
 
 /**
- * Decoded type of {@link ProbeOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -820,8 +796,6 @@ export const ProbeRunVerdict = LiteralKit(["still-holds", "candidate-passed", "p
 );
 
 /**
- * Decoded type of {@link ProbeRunVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -889,16 +863,12 @@ export const HoldVerdict = LiteralKit(["StillHolds", "Unconfirmed", "Flipped", "
 );
 
 /**
- * Decoded type of {@link HoldVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
 export type HoldVerdict = typeof HoldVerdict.Type;
 
 /**
- * The hold-shaped config sites found in one checkout.
- *
  * **Details**
  *
  * `required` lists the sites that must each be covered by a live hold record
@@ -958,8 +928,6 @@ export const HoldLintFinding = S.TaggedUnion({
 );
 
 /**
- * Decoded type of {@link HoldLintFinding}.
- *
  * @category models
  * @since 0.0.0
  */

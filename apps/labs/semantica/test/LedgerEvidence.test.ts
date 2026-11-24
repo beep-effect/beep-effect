@@ -31,6 +31,8 @@ import {
   LegacyConfidenceImport,
   readStoredBatch,
   readStoredClaim,
+  StoredBatch,
+  StoredClaim,
   StoredEvidenceRow,
 } from "@/schema/LedgerEvidence";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
@@ -351,6 +353,8 @@ describe("semantica stored evidence readers", () => {
         const row = rowOf(A.getUnsafe(raw.batch.claims, 0));
         const stored = yield* readStoredClaim(row);
 
+        assertTrue(S.is(StoredClaim)(stored));
+
         expect(stored.claim.confidence).toEqual(ExtractorConfidence.cases.Absent.make({ reason: "legacy-unknown" }));
         expect(stored.legacy).toMatchObject([
           { format: "ledger-evidence/v1", rawConfidence: 1, storedDigest: row.digest },
@@ -366,6 +370,7 @@ describe("semantica stored evidence readers", () => {
     it.effect("keep a v1 degraded outcome without legacy metadata and decode a v2 batch payload", () =>
       Effect.gen(function* () {
         const degraded = yield* readStoredBatch(rowOf(degradedV1));
+        assertTrue(S.is(StoredBatch)(degraded));
         expect(degraded.outcome.outcome).toBe("Degraded");
         expect(degraded.legacy).toEqual([]);
         const v2Payload = yield* S.encodeEffect(LedgerBatchPayload)(
