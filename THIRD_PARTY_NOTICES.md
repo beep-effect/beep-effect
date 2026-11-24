@@ -253,9 +253,19 @@ records each pin's digest.
 - **PROV-O** — PROV-O: The PROV Ontology, W3C Recommendation 2013-04-30. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/ns/prov-o-20130430.
 - **SKOS** — SKOS Simple Knowledge Organization System Reference, W3C Recommendation 2009-08-18. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/2009/08/skos-reference/skos.rdf.
 - **XSD datatypes** — RDF 1.1 Concepts and Abstract Syntax, W3C Recommendation 2014-02-25, section 5.1 (RDF-compatible XSD datatypes). Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/.
+- **DCAT 3** — Data Catalog Vocabulary (DCAT) - Version 3, World Wide Web Consortium. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/, as the artifact's `dcterms:license` states. Snapshot of https://www.w3.org/ns/dcat3.ttl retrieved 2026-11-23; version `3`.
+- **DCMI Metadata Terms** — DCMI Metadata Terms. Copyright 2012 Dublin Core Metadata Initiative, http://dublincore.org/about/copyright/. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/. Snapshot of https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl retrieved 2026-11-23; `dcterms:modified` `2012-06-14`.
+- **OWL 2** — The OWL 2 Schema vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/2002/07/owl.ttl retrieved 2026-11-23; version `$Date: 2009/11/15 10:54:12 $`.
+- **RDF** — The RDF Concepts Vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/1999/02/22-rdf-syntax-ns.ttl retrieved 2026-11-23; version `2019-12-16`.
+- **RDFS** — The RDF Schema vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/2000/01/rdf-schema.ttl retrieved 2026-11-23; unversioned.
+- **Schema.org** — Schema.org vocabulary, release 30.1. Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0), https://creativecommons.org/licenses/by-sa/3.0/, under which Schema.org makes its schemas available (https://schema.org/docs/terms.html). Commit `5f2d8cdec99b7329459ef6584e94b6a840f88471`; artifact `data/releases/30.1/schemaorg-current-https.ttl`; version `30.1`. [Pinned artifact](https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-current-https.ttl).
+- **SEMAPV** — Semantic Mapping Vocabulary (SEMAPV), mapping-commons. Creative Commons Zero 1.0 Universal (CC0 1.0), https://creativecommons.org/publicdomain/zero/1.0/, as the artifact's `dcterms:license` states. Commit `0db5676d4ce4854543281a6c983a55fd9a6ef521`; artifact `semapv.owl`; version `2026-06-10`. [Pinned artifact](https://raw.githubusercontent.com/mapping-commons/semantic-mapping-vocabulary/0db5676d4ce4854543281a6c983a55fd9a6ef521/semapv.owl).
+- **SHACL** — W3C Shapes Constraint Language (SHACL) Vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/ns/shacl.ttl retrieved 2026-11-23; unversioned.
+- **VoID** — Describing Linked Datasets with the VoID Vocabulary, W3C Interest Group Note 2011-03-03, section 8 (Index of VoID classes and properties). Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/TR/2011/NOTE-void-20110303/; its RDFS file states no license, so the term index of the Note is pinned instead.
 
-The four W3C artifacts above carry no SPDX-identifiable notice of their own and
-are recorded as `LicenseRef-W3C-Document`: W3C liability, trademark and
+The W3C artifacts above other than Activity Streams 2.0 and DCAT 3 (Web
+Annotation, PROV-O, SKOS, XSD datatypes, OWL 2, RDF, RDFS, SHACL and VoID) carry
+no SPDX-identifiable notice of their own and are recorded as `LicenseRef-W3C-Document`: W3C liability, trademark and
 document use rules apply (https://www.w3.org/Consortium/Legal/2015/doc-license).
 
 ## T3 Tools Inc. (t3code) — MIT material
