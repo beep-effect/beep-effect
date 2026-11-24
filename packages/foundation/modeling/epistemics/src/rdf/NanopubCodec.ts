@@ -833,23 +833,26 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
       Effect.catchIf(isNanopubRefusal, (reason) => Effect.succeed(NanopubRefused.make({ reason, input })))
     );
 
-  const decode = Effect.fn("NanopubCodec.decode")(function* (input: Rdf.Dataset) {
-    yield* Effect.annotateCurrentSpan("nanopub.quad_count", A.length(input.quads));
-    const reading = yield* read(input);
-    if (reading._tag !== "Read") return reading;
-    return NanopubAccepted.make({
+  type ProfileRead = Extract<Effect.Success<ReturnType<typeof read>>, { readonly _tag: "Read" }>;
+
+  const readThen = <B>(span: string, onRead: (reading: ProfileRead) => B) =>
+    Effect.fn(span)(function* (input: Rdf.Dataset) {
+      yield* Effect.annotateCurrentSpan("nanopub.quad_count", A.length(input.quads));
+      const reading = yield* read(input);
+      return reading._tag === "Read" ? onRead(reading) : reading;
+    });
+
+  const decode = readThen("NanopubCodec.decode", (reading) =>
+    NanopubAccepted.make({
       accepted: reading.accepted,
       publication: reading.publication,
       residual: reading.residual,
-    });
-  });
+    })
+  );
 
-  const normalize = Effect.fn("NanopubCodec.normalize")(function* (input: Rdf.Dataset) {
-    yield* Effect.annotateCurrentSpan("nanopub.quad_count", A.length(input.quads));
-    const reading = yield* read(input);
-    if (reading._tag !== "Read") return reading;
-    return NanopubNormalized.make({ dataset: toDataset(reading.profile), residual: reading.residual });
-  });
+  const normalize = readThen("NanopubCodec.normalize", (reading) =>
+    NanopubNormalized.make({ dataset: toDataset(reading.profile), residual: reading.residual })
+  );
 
   return { NanopubPublication, NanopubAccepted, NanopubDecodeResult, encode, decode, normalize };
 };
