@@ -288,6 +288,48 @@ export * from "./DependencyReviewSchemas.ts";
  */
 export * from "./DocsPolicy.ts";
 /**
+ * The standing fleet missed-event check subcommand.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.command.ts";
+/**
+ * The live GitHub reads of the fleet missed-event check.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.live.ts";
+/**
+ * The GitHub shapes, verdicts and run report the missed-event check decodes and emits.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.schemas.ts";
+/**
+ * Service contracts and fakes of the fleet missed-event check.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.service.ts";
+/**
+ * The standing fleet missed-event check: its decisions and summary.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.ts";
+/**
+ * The generated runner pool caps projected from the production fleet configuration.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./FleetPoolCaps.generated.ts";
+/**
  * @category cli-commands
  * @since 0.0.0
  */
