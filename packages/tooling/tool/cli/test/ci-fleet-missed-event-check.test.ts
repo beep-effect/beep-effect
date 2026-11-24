@@ -1097,6 +1097,87 @@ describe("fleet missed-event check precedence", () => {
   });
 });
 
+describe("fleet missed-event check delivery detail budget", () => {
+  const JOB_AT = ago(12);
+  const decoys = (count: number, from: number) =>
+    A.map(A.range(1, count), (n) => delivery(`9100${n}`, JOB_AT + from + n * 1000));
+  const decoyDetails = (count: number) => A.map(A.range(1, count), (n) => detail(`9100${n}`, 900 + n));
+
+  it.effect("stops after the first batch when the nearest candidate is the job's 2xx delivery", () =>
+    Effect.gen(function* () {
+      const { report, calls } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(160, JOB_AT)],
+          deliveries: [delivery("91601", JOB_AT + 200), ...decoys(9, 10_000)],
+          details: [detail("91601", 160), ...decoyDetails(9)],
+        })
+      );
+      expect(findingOf(report, 160).evidence).toEqual(
+        FleetDeliveryEvidence.cases.Delivered.makeOption({ hookId: HOOK, deliveryId: "91601", statusCode: 200 })
+      );
+      expect(calls.deliveryDetail).toBe(4);
+    })
+  );
+
+  it.effect("searches past a nearer non-2xx delivery naming the job to a later 2xx one", () =>
+    Effect.gen(function* () {
+      const { report, calls } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(161, JOB_AT)],
+          deliveries: [delivery("91611", JOB_AT + 100, 502), ...decoys(4, 1000), delivery("91612", JOB_AT + 60_000)],
+          details: [detail("91611", 161), detail("91612", 161), ...decoyDetails(4)],
+        })
+      );
+      expect(findingOf(report, 161).evidence).toEqual(
+        FleetDeliveryEvidence.cases.Delivered.makeOption({ hookId: HOOK, deliveryId: "91612", statusCode: 200 })
+      );
+      expect(calls.deliveryDetail).toBe(6);
+    })
+  );
+
+  it.effect("reads every candidate of a job with no 2xx delivery naming it", () =>
+    Effect.gen(function* () {
+      const { report, calls } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(162, JOB_AT)],
+          deliveries: [...decoys(6, 1000), delivery("91620", ago(40))],
+          details: [...decoyDetails(6), detail("91620", 1)],
+        })
+      );
+      assertSome(
+        O.map(findingOf(report, 162).evidence, (evidence) => evidence._tag),
+        "NotDelivered"
+      );
+      expect(calls.deliveryDetail).toBe(6);
+    })
+  );
+
+  it.effect("reuses a detail one job's search read for the next job", () =>
+    Effect.gen(function* () {
+      const { report, calls } = yield* runCheck(
+        fixtureOf({
+          reads: [[], []],
+          jobs: [queued(163, JOB_AT), queued(164, JOB_AT + 1000)],
+          deliveries: [delivery("91631", JOB_AT + 100), delivery("91641", JOB_AT + 1100), ...decoys(2, 30_000)],
+          details: [detail("91631", 163), detail("91641", 164), ...decoyDetails(2)],
+        })
+      );
+      expect(
+        A.map(report.findings, (finding) =>
+          O.getOrElse(
+            O.map(finding.evidence, (evidence) => evidence._tag),
+            () => "none"
+          )
+        )
+      ).toEqual(["Delivered", "Delivered"]);
+      expect(calls.deliveryDetail).toBe(4);
+    })
+  );
+});
+
 describe("fleet missed-event check reads", () => {
   it.effect("pages every listing in full and walks the deliveries once, stopping past the oldest job", () =>
     Effect.gen(function* () {
