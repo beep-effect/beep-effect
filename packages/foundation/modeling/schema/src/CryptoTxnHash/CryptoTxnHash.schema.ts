@@ -71,8 +71,6 @@ export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
 );
 
 /**
- * Type for {@link CryptoTxnHash}.
- *
  * **Example** (Type annotated hash decode)
  *
  * ```ts
@@ -91,8 +89,6 @@ export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
 export type CryptoTxnHash = typeof CryptoTxnHash.Type;
 
 /**
- * Redacted schema for canonical mainnet blockchain transaction identifiers.
- *
  * **Example** (Make redacted transaction hash)
  *
  * ```ts
@@ -118,8 +114,6 @@ export const CryptoTxnHashRedacted = CryptoTxnHash.pipe(
 );
 
 /**
- * Type for {@link CryptoTxnHashRedacted}.
- *
  * **Example** (Type redacted transaction hash)
  *
  * ```ts

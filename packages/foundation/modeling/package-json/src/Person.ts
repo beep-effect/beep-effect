@@ -135,8 +135,6 @@ export const ManifestEmail = S.String.pipe(
 );
 
 /**
- * The decoded type of {@link ManifestEmail}: a plain string kept verbatim.
- *
  * **Example** (Type a manifest email)
  *
  * ```ts
@@ -176,9 +174,6 @@ const encodePersonObject = (person: Person): { readonly [k: string]: unknown } =
 };
 
 /**
- * A structured person object with `name`, optional `email` / `url`, and a
- * `rest` catch-all preserving any additional keys across a read/write cycle.
- *
  * **Example** (Round-trip an author shorthand)
  * ```ts
  * import { Person } from "@beep/package-json/Person";

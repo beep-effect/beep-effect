@@ -41,11 +41,6 @@ const $I = $PackageJsonId.create("PackageJsonFormat");
 const Json = S.fromJsonString(S.Unknown);
 
 /**
- * Indicates that a text input could not be treated as a package.json document:
- * either it is not valid JSON (`"invalid-json"`, carrying the schema
- * decoding error on `cause`) or it parsed to something other than a JSON object
- * (`"not-an-object"` — an array, a scalar or `null`).
- *
  * **Details**
  *
  * Raised by {@link PackageJsonFormat.formatToString}. This is a *syntactic*
@@ -117,8 +112,6 @@ export class PackageJsonSyntaxError extends S.TaggedError<PackageJsonSyntaxError
 }
 
 /**
- * Options for {@link PackageJsonFormat.formatToString}.
- *
  * **Details**
  *
  * Deliberately not `PackageFormatOptions`: there is no `sourceText` member,
@@ -168,8 +161,6 @@ export class PackageFormatTextOptions extends S.Opaque<PackageFormatTextOptions,
 ) {}
 
 /**
- * Companion types for {@link PackageFormatTextOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -197,12 +188,6 @@ const resolveTextFormatOptions = (source: string, options: PackageFormatTextOpti
 const isJsonObject: (value: unknown) => value is Record<string, unknown> = P.isObject;
 
 /**
- * Indicates that a surgical modification could not be applied: the value on
- * the navigation path is not the container kind the next path segment
- * requires. The underlying `@beep/jsonc` `JsoncModificationError` —
- * which names the expected container and the 1-based depth of the mismatch —
- * is preserved on the structured `cause` field, never stringified.
- *
  * **Details**
  *
  * Raised by {@link PackageJsonFormat.modify} and

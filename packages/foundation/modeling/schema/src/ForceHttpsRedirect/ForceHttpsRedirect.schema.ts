@@ -25,8 +25,6 @@ const headerName = "Strict-Transport-Security" as const;
 const defaultMaxAge = 60 * 60 * 24 * 365 * 2;
 
 /**
- * Configuration for the `Strict-Transport-Security` header.
- *
  * **Example** (Making HSTS config)
  *
  * ```ts
@@ -55,8 +53,6 @@ export class ForceHttpsRedirectConfig extends S.Opaque<ForceHttpsRedirectConfig,
 ) {}
 
 /**
- * Schema for tuple-based enabled `Strict-Transport-Security` configuration.
- *
  * **Example** (Decoding enabled HSTS tuple)
  *
  * ```ts
@@ -80,8 +76,6 @@ export const ForceHttpsRedirectEnabled = S.Tuple([S.Literal(true), ForceHttpsRed
 );
 
 /**
- * Type for tuple-based enabled `Strict-Transport-Security` configuration.
- *
  * **Example** (Typing enabled HSTS tuple)
  *
  * ```ts
@@ -136,8 +130,6 @@ export const ForceHttpsRedirectOption = S.Union([S.Boolean, ForceHttpsRedirectEn
 export type ForceHttpsRedirectOption = typeof ForceHttpsRedirectOption.Type;
 
 /**
- * Model for a rendered `Strict-Transport-Security` response header.
- *
  * **Example** (Making HSTS response header)
  *
  * ```ts
@@ -182,8 +174,6 @@ const formatForceHttpsRedirectValue = (config: ForceHttpsRedirectConfig): string
   );
 
 /**
- * Schema that renders Strict-Transport-Security options into a response header.
- *
  * **Example** (Decoding HSTS header)
  *
  * ```ts
@@ -263,8 +253,6 @@ export const ForceHttpsRedirectHeader = S.Union([ForceHttpsRedirectOption, S.Und
 );
 
 /**
- * Type for rendered `Strict-Transport-Security` response headers.
- *
  * **Example** (Typing HSTS response header)
  *
  * ```ts

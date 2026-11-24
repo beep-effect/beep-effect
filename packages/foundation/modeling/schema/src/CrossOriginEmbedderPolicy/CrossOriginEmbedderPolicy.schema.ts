@@ -27,8 +27,6 @@ const headerName = "Cross-Origin-Embedder-Policy" as const;
 const CoepValueBase = LiteralKit(["unsafe-none", "require-corp", "credentialless"]);
 
 /**
- * Schema for allowed `Cross-Origin-Embedder-Policy` values.
- *
  * **Example** (Validate require-corp value)
  *
  * ```ts import.meta.vitest name="Validate require-corp value"
@@ -49,8 +47,6 @@ export const CoepValue = CoepValueBase.pipe(
 );
 
 /**
- * Type for allowed `Cross-Origin-Embedder-Policy` values.
- *
  * **Example** (Assign require-corp type)
  *
  * ```ts
@@ -108,8 +104,6 @@ export const CrossOriginEmbedderPolicyOption = CrossOriginEmbedderPolicyOptionBa
 export type CrossOriginEmbedderPolicyOption = typeof CrossOriginEmbedderPolicyOption.Type;
 
 /**
- * Schema for the Cross-Origin-Embedder-Policy response header output.
- *
  * **Example** (Make COEP response header)
  *
  * ```ts
@@ -137,9 +131,6 @@ export class COEPResponseHeader extends S.Opaque<COEPResponseHeader, { readonly 
 type COEPResponseHeaderEncoded = typeof COEPResponseHeader.Encoded;
 
 /**
- * Schema for the Cross-Origin-Embedder-Policy response header.
- * Transforms a CrossOriginEmbedderPolicyOption input into a ResponseHeader output.
- *
  * **Details**
  *
  * - `false` → decodes to `{ name: "Cross-Origin-Embedder-Policy", value: undefined }`
@@ -229,8 +220,6 @@ export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolic
 );
 
 /**
- * Type for rendered `Cross-Origin-Embedder-Policy` response headers.
- *
  * **Example** (Construct typed COEP header)
  *
  * ```ts

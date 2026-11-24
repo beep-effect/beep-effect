@@ -29,8 +29,6 @@ const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
 );
 
 /**
- * A textual line that is not valid JSON.
- *
  * **Details**
  *
  * A terminated malformed line is a permanent hole in history and fails through
@@ -86,8 +84,6 @@ export class MalformedLine extends S.TaggedError<MalformedLine, { readonly brand
 }
 
 /**
- * A line whose `event` tag is not in the registry.
- *
  * **Details**
  *
  * Typed rather than a defect on purpose: a journal written by an older or newer
@@ -157,8 +153,6 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent, { readonly brand: 
 }
 
 /**
- * A line whose envelope or payload failed schema validation.
- *
  * **Details**
  *
  * Covers both stages of the two-stage decode, distinguished by `event`: the
@@ -360,8 +354,6 @@ export class JournalNotFound extends S.TaggedError<JournalNotFound, { readonly b
 }
 
 /**
- * A payload that validated against its schema but cannot be serialized to JSON.
- *
  * **Details**
  *
  * A payload codec can accept values that JSON cannot represent, such as a
@@ -436,8 +428,6 @@ export class UnserializableData extends S.TaggedError<UnserializableData, { read
 }
 
 /**
- * An append refused because the journal's scope has closed.
- *
  * **Details**
  *
  * Its own tag rather than a flavour of {@link TerminalViolation}, because the
@@ -492,8 +482,6 @@ export class JournalClosed extends S.TaggedError<JournalClosed, { readonly brand
 }
 
 /**
- * The append-only contract breach that requires reader reconciliation.
- *
  * **Example** (Select a resync reason)
  * ```ts import.meta.vitest name="Select a resync reason"
  * import { JournalResyncReason } from "@beep/jsonl/JsonlError";
@@ -510,15 +498,12 @@ export const JournalResyncReason = LiteralKit(["truncated", "replaced"]).pipe(
 );
 
 /**
- * The schema-derived reason for a journal resync.
  * @category type-level
  * @since 0.0.0
  */
 export type JournalResyncReason = typeof JournalResyncReason.Type;
 
 /**
- * The journal file was truncated or replaced beneath a reader.
- *
  * **Details**
  *
  * The cooperative-writer contract is append-only: a journal only ever grows,
@@ -767,8 +752,6 @@ export class JournalWriteConflict extends S.TaggedError<JournalWriteConflict, { 
 }
 
 /**
- * Bytes in a decoded file range are not valid UTF-8.
- *
  * **Details**
  *
  * The offset is the physical start of the range supplied to the decoder,

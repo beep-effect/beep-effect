@@ -22,8 +22,6 @@ const $I = $PackageJsonId.create("EntryPoint");
 const ConditionsJson = S.fromJsonString(S.Unknown);
 
 /**
- * Controls condition priority when {@link resolveEntryPoint} selects a package's root export.
- *
  * **Details**
  *
  * `conditions` lists the export conditions to honour, in priority order
@@ -73,8 +71,6 @@ export class ResolveEntryPointOptions extends S.Opaque<ResolveEntryPointOptions,
 ) {}
 
 /**
- * Companion types for {@link ResolveEntryPointOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -90,8 +86,6 @@ export declare namespace ResolveEntryPointOptions {
 }
 
 /**
- * Raised when a manifest resolves no root entry point.
- *
  * **Details**
  *
  * The reason is discriminated rather than a bare "not found" because the three
@@ -176,8 +170,6 @@ export class UnresolvedEntryPointError extends S.TaggedError<
 }
 
 /**
- * The manifest fields entry resolution reads.
- *
  * **Details**
  *
  * Deliberately structural rather than the full {@link PackageManifest}, so a
@@ -218,8 +210,6 @@ export class EntryPointManifest extends S.Opaque<EntryPointManifest, { readonly 
 ) {}
 
 /**
- * Companion types for {@link EntryPointManifest}.
- *
  * @category type-level
  * @since 0.0.0
  */

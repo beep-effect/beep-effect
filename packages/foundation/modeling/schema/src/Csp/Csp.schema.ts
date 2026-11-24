@@ -46,8 +46,6 @@ export const DirectiveSource = S.Union([...internal.ArrayOfStrOrStr.members, S.U
 );
 
 /**
- * Runtime type for {@link DirectiveSource}.
- *
  * **Example** (Annotate self source)
  *
  * ```ts
@@ -92,8 +90,6 @@ export const ContentSecurityPolicyHeaderName = ContentSecurityPolicyHeaderNameBa
 );
 
 /**
- * Runtime type for {@link ContentSecurityPolicyHeaderName}.
- *
  * **Example** (Annotate CSP header name)
  *
  * ```ts
@@ -196,8 +192,6 @@ export const createDirectiveValue: {
 );
 
 /**
- * Values accepted by the CSP `plugin-types` directive.
- *
  * **Example** (Decode plugin MIME types)
  *
  * ```ts
@@ -218,8 +212,6 @@ export const PluginTypes = internal.ArrayOfStrOrStr.pipe(
 );
 
 /**
- * Runtime type for {@link PluginTypes}.
- *
  * **Example** (Annotate plugin MIME types)
  *
  * ```ts
@@ -252,8 +244,6 @@ const SandboxBase = LiteralKit([
 ]);
 
 /**
- * Values accepted by the CSP `sandbox` directive.
- *
  * **Example** (Decode sandbox token)
  *
  * ```ts
@@ -275,8 +265,6 @@ export const Sandbox = SandboxBase.pipe(
 );
 
 /**
- * Runtime type for {@link Sandbox}.
- *
  * **Example** (Annotate sandbox token)
  *
  * ```ts
@@ -579,8 +567,6 @@ export const ReportURI = S.Union([...internal.StringOrUrl.members, S.Array(inter
 );
 
 /**
- * Type-level representation of {@link ReportURI}.
- *
  * **Example** (Annotate report URI path)
  *
  * ```ts
@@ -653,8 +639,6 @@ export class ReportingDirective extends S.Opaque<ReportingDirective, { readonly 
 }
 
 /**
- * Complete normalized CSP directive field schema.
- *
  * **Details**
  *
  * This schema describes the full directive field set produced by composing the
@@ -745,8 +729,6 @@ export class ContentSecurityPolicyOptionStruct extends S.Opaque<
 const decodeContentSecurityPolicyOptionStruct = S.decodeEffect(ContentSecurityPolicyOptionStruct);
 
 /**
- * CSP option schema accepting a disabled `false` value or structured directives.
- *
  * **Example** (Decode disabled false option)
  *
  * ```ts
@@ -767,8 +749,6 @@ export const ContentSecurityPolicyOption = S.Union([S.Literal(false), ContentSec
 );
 
 /**
- * Runtime type for {@link ContentSecurityPolicyOption}.
- *
  * **Example** (Annotate disabled false option)
  *
  * ```ts
@@ -819,8 +799,6 @@ export const Option = ContentSecurityPolicyOption;
 export type Option = typeof Option.Type;
 
 /**
- * Serialized Content-Security-Policy response-header model.
- *
  * **Example** (Construct response header model)
  *
  * ```ts
@@ -939,8 +917,6 @@ export const createContentSecurityPolicyOptionHeaderValue = (
 };
 
 /**
- * One-way schema that decodes CSP options into a response header.
- *
  * **Gotchas**
  *
  * This schema is intentionally one-way: it renders policy options into a
@@ -1029,8 +1005,6 @@ export const ContentSecurityPolicyHeader = S.Union([ContentSecurityPolicyOption,
 );
 
 /**
- * Runtime type for {@link ContentSecurityPolicyHeader}.
- *
  * **Example** (Annotate response header type)
  *
  * ```ts

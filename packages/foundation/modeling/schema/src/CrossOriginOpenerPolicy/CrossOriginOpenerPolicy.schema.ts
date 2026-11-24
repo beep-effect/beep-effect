@@ -24,8 +24,6 @@ const headerName = "Cross-Origin-Opener-Policy" as const;
 const CoopValueBase = LiteralKit(["unsafe-none", "same-origin-allow-popups", "same-origin", "same-origin-plus-COEP"]);
 
 /**
- * Schema for supported `Cross-Origin-Opener-Policy` header values.
- *
  * **Example** (Decode same-origin value)
  *
  * ```ts
@@ -47,8 +45,6 @@ export const CoopValue = CoopValueBase.pipe(
 );
 
 /**
- * Type-level representation of {@link CoopValue}.
- *
  * **Example** (Annotate same-origin type)
  *
  * ```ts
@@ -90,8 +86,6 @@ export const CrossOriginOpenerPolicyOption = CrossOriginOpenerPolicyOptionBase.p
 );
 
 /**
- * Type-level representation of {@link CrossOriginOpenerPolicyOption}.
- *
  * **Example** (Annotate false option type)
  *
  * ```ts
@@ -142,8 +136,6 @@ export class CrossOriginOpenerPolicyResponseHeader extends S.Opaque<
 type CrossOriginOpenerPolicyResponseHeaderEncoded = typeof CrossOriginOpenerPolicyResponseHeader.Encoded;
 
 /**
- * One-way schema that decodes COOP options into the `Cross-Origin-Opener-Policy` response header.
- *
  * **Example** (Create header from option)
  *
  * ```ts
@@ -213,8 +205,6 @@ export const CrossOriginOpenerPolicyHeader = S.Union([CrossOriginOpenerPolicyOpt
 );
 
 /**
- * Type-level representation of {@link CrossOriginOpenerPolicyHeader}.
- *
  * **Example** (Annotate header instance type)
  *
  * ```ts

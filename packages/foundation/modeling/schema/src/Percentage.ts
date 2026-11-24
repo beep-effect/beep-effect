@@ -18,8 +18,6 @@ import { $SchemaId } from "./internal/SchemaId.ts";
 const $I = $SchemaId.create("Percentage");
 
 /**
- * Schema for a valid percentage value between 0 and 100 (inclusive).
- *
  * **Example** (Decode percentage value)
  *
  * ```ts import.meta.vitest name="Decode percentage value"
@@ -44,7 +42,6 @@ export const Percentage = S.Finite.check(
 );
 
 /**
- * {@inheritDoc Percentage}
  * @category models
  * @since 0.0.0
  */

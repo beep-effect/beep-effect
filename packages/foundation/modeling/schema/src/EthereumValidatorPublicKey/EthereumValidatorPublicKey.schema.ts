@@ -37,8 +37,6 @@ const EthereumValidatorPublicKeyChecks = S.makeFilterGroup(
 );
 
 /**
- * Branded schema for canonical Ethereum validator public keys.
- *
  * **Example** (Decode validator public key)
  *
  * ```ts
@@ -62,8 +60,6 @@ export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublic
 );
 
 /**
- * Type for {@link EthereumValidatorPublicKey}.
- *
  * **Example** (Type validator public key)
  *
  * ```ts
@@ -82,8 +78,6 @@ export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublic
 export type EthereumValidatorPublicKey = typeof EthereumValidatorPublicKey.Type;
 
 /**
- * Redacted schema for canonical Ethereum validator public keys.
- *
  * **Example** (Make redacted public key)
  *
  * ```ts
@@ -109,8 +103,6 @@ export const EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKey.pip
 );
 
 /**
- * Type for {@link EthereumValidatorPublicKeyRedacted}.
- *
  * **Example** (Type redacted public key)
  *
  * ```ts

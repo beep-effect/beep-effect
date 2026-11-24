@@ -101,8 +101,6 @@ export class CompatibilityUrlPolicy extends S.Opaque<CompatibilityUrlPolicy, { r
 ) {}
 
 /**
- * Explicit allow-list URL policy.
- *
  * **Details**
  *
  * Schemes decode to lowercase once at the schema boundary. Relative,
@@ -168,8 +166,6 @@ export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicy
 );
 
 /**
- * Type for {@link UrlPolicySpec}.
- *
  * **Example** (Assign compatibility policy type)
  *
  * ```ts import.meta.vitest name="Assign compatibility policy type"

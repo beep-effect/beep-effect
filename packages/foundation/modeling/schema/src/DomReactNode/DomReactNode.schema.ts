@@ -41,8 +41,6 @@ export const isReactNode = (u: unknown): u is React.ReactNode => {
 };
 
 /**
- * A React.ReactNode value.
- *
  * **Example** (Decode string as ReactNode)
  *
  * ```ts
@@ -63,8 +61,6 @@ export const DOMReactNode = S.declare(isReactNode).pipe(
 );
 
 /**
- * Type for {@link DOMReactNode}.
- *
  * **Example** (Annotate decoded ReactNode type)
  *
  * ```ts

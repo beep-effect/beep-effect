@@ -20,10 +20,6 @@ import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./int
 const $I = $SpdxId.create("License");
 
 /**
- * Indicates that a string is not a valid SPDX expression fragment: an
- * unrecognized license or exception identifier, or a malformed
- * `LicenseRef-`/`DocumentRef-` reference.
- *
  * **Details**
  *
  * This is the package's single typed error. Both malformed grammar and an
@@ -112,11 +108,6 @@ const LicenseRefId = S.String.check(
 const isLicenseRefId = S.is(LicenseRefId);
 
 /**
- * A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is
- * either a member of the SPDX License List or a well-formed
- * `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema —
- * there is no `*Schema` suffix.
- *
  * **Details**
  *
  * This is the catalog-level model: it validates and resolves an identifier and

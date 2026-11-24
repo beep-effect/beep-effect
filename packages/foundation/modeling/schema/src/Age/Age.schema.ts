@@ -11,8 +11,6 @@ import { $SchemaId } from "../internal/SchemaId.ts";
 const $I = $SchemaId.create("Age");
 
 /**
- * The age of a person in years.
- *
  * **Example** (Decode age value)
  *
  * ```ts
@@ -39,7 +37,6 @@ export const Age = S.Int.check(
 );
 
 /**
- * {@inheritDoc Age}
  * @category validation
  * @since 0.0.0
  */

@@ -24,11 +24,6 @@ import type * as O from "effect/Option";
 const $I = $NpmSpecId.create("WorkspaceResolver");
 
 /**
- * Raised when a `catalog:` or `workspace:` specifier cannot be resolved
- * because the resolution mechanism itself failed — not for an ordinary
- * unmatched specifier, which resolves to `Option.none()` instead. Both
- * {@link CatalogResolver} and {@link WorkspaceResolver} fail with it.
- *
  * **Details**
  *
  * One case sits outside that "mechanism only" reading and belongs here

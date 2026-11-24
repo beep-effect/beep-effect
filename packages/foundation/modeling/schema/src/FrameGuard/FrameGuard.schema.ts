@@ -27,8 +27,6 @@ const defaultValue = "deny" as const;
 const FrameGuardModeBase = LiteralKit(["deny", "sameorigin"]);
 
 /**
- * Schema for direct `X-Frame-Options` policy modes.
- *
  * **Example** (Validate deny mode)
  *
  * ```ts import.meta.vitest name="Validate deny mode"
@@ -49,8 +47,6 @@ export const FrameGuardMode = FrameGuardModeBase.pipe(
 );
 
 /**
- * Type for direct `X-Frame-Options` policy modes.
- *
  * **Example** (Assign deny mode type)
  *
  * ```ts
@@ -66,8 +62,6 @@ export const FrameGuardMode = FrameGuardModeBase.pipe(
 export type FrameGuardMode = typeof FrameGuardMode.Type;
 
 /**
- * Configuration for the deprecated `allow-from` frame guard mode.
- *
  * **Example** (Make allow-from config)
  *
  * ```ts
@@ -171,8 +165,6 @@ export const FrameGuardOption = S.Union([S.Literal(false), FrameGuardMode, Frame
 export type FrameGuardOption = typeof FrameGuardOption.Type;
 
 /**
- * Model for a rendered `X-Frame-Options` response header.
- *
  * **Example** (Make response header)
  *
  * ```ts
@@ -229,8 +221,6 @@ const formatFrameGuardValue = Effect.fn("FrameGuard.formatFrameGuardValue")(func
 });
 
 /**
- * Schema that renders frame guard options into a response header.
- *
  * **Example** (Decode deny header)
  *
  * ```ts
@@ -316,8 +306,6 @@ export const FrameGuardHeader = S.Union([FrameGuardOption, S.Undefined]).pipe(
 );
 
 /**
- * Type for rendered `X-Frame-Options` response headers.
- *
  * **Example** (Type response header)
  *
  * ```ts

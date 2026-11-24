@@ -32,8 +32,6 @@ const PermittedCrossDomainPoliciesValueBase = LiteralKit([
 ]);
 
 /**
- * Schema for allowed `X-Permitted-Cross-Domain-Policies` values.
- *
  * **Example** (Validate none policy value)
  *
  * ```ts import.meta.vitest name="Validate none policy value"
@@ -54,8 +52,6 @@ export const PermittedCrossDomainPoliciesValue = PermittedCrossDomainPoliciesVal
 );
 
 /**
- * Type for allowed `X-Permitted-Cross-Domain-Policies` values.
- *
  * **Example** (Assign none policy type)
  *
  * ```ts
@@ -113,8 +109,6 @@ export const PermittedCrossDomainPoliciesOption = PermittedCrossDomainPoliciesOp
 export type PermittedCrossDomainPoliciesOption = typeof PermittedCrossDomainPoliciesOption.Type;
 
 /**
- * Model for a rendered `X-Permitted-Cross-Domain-Policies` response header.
- *
  * **Example** (Make response header model)
  *
  * ```ts
@@ -148,8 +142,6 @@ export class PermittedCrossDomainPoliciesResponseHeader extends S.Opaque<
 type PermittedCrossDomainPoliciesResponseHeaderEncoded = typeof PermittedCrossDomainPoliciesResponseHeader.Encoded;
 
 /**
- * Schema that renders cross-domain policy options into a response header.
- *
  * **Example** (Decode none into header)
  *
  * ```ts
@@ -226,8 +218,6 @@ export const PermittedCrossDomainPoliciesHeader = S.Union([PermittedCrossDomainP
 );
 
 /**
- * Type for rendered `X-Permitted-Cross-Domain-Policies` response headers.
- *
  * **Example** (Type annotated header value)
  *
  * ```ts

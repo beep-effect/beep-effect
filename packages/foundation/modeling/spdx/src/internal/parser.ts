@@ -66,8 +66,6 @@ const RawOr = S.Struct({
 }).pipe($I.annoteSchema("RawOr", { description: "A plain-object disjunction of two raw expressions." }));
 
 /**
- * The schema for the parser's recursive plain-object expression tree.
- *
  * **Details**
  *
  * Describes the parser-to-facade contract without constructing public AST
@@ -138,8 +136,6 @@ export const MAX_NESTING_DEPTH = 256;
 export type RawSimpleLicense = typeof RawSimpleLicense.Type;
 
 /**
- * The raw expression tree the parser emits.
- *
  * **Details**
  *
  * It is a plain-object mirror of the

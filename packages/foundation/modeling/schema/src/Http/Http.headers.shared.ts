@@ -96,8 +96,6 @@ export const StringOrUrl = S.Union([S.String, S.URL]).pipe(
 export type StringOrUrl = typeof StringOrUrl.Type;
 
 /**
- * Schema for non-negative integer HTTP `max-age` values measured in seconds.
- *
  * **Example** (Decode max-age seconds)
  *
  * ```ts
@@ -118,8 +116,6 @@ export const HeaderMaxAgeSeconds = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe
 );
 
 /**
- * Type for non-negative integer HTTP `max-age` values.
- *
  * **Example** (Annotate max-age seconds)
  *
  * ```ts

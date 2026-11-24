@@ -86,8 +86,6 @@ export class LenientFieldIssue extends S.Opaque<LenientFieldIssue, { readonly br
 ) {}
 
 /**
- * Companion types for {@link LenientFieldIssue}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -234,11 +232,6 @@ const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
 // ── Model ───────────────────────────────────────────────────────────────────
 
 /**
- * The shape-lenient view of a package.json document, for discovery and
- * sniffing — probing a fetched tarball's manifest, walking a `node_modules`
- * tree, listing candidate packages — where the document is other people's
- * data and one malformed field must not fail the read.
- *
  * **Details**
  *
  * **This is the discovery tier, not a validation bypass.** Every field shares

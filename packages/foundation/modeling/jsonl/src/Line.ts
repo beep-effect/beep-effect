@@ -19,8 +19,6 @@ import { LineSlice } from "./LineSlice.ts";
 const $I = $JsonlId.create("Line");
 
 /**
- * A line that parsed as JSON, paired with the slice it came from.
- *
  * **Details**
  *
  * `value` is deliberately `unknown`: this layer knows JSON, not envelopes.

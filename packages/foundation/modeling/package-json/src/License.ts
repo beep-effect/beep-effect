@@ -19,8 +19,6 @@ import type * as O from "effect/Option";
 const $I = $PackageJsonId.create("License");
 
 /**
- * Indicates that a string is not a valid SPDX license identifier or expression.
- *
  * **Details**
  *
  * Raised by {@link Package.setLicense} and the decode direction of

@@ -33,9 +33,6 @@ const Json = S.fromJsonString(S.Unknown);
 // ── Errors ────────────────────────────────────────────────────────────────────
 
 /**
- * Indicates that a package.json file could not be read from the filesystem
- * (a filesystem error other than not-found).
- *
  * **Example** (Inspect PackageJsonReadError details)
  *
  * ```ts
@@ -95,9 +92,6 @@ export class PackageJsonReadError extends S.TaggedError<PackageJsonReadError, { 
 }
 
 /**
- * Indicates that no package.json file exists at the expected path. Carries its
- * own tag for `catchTag` routing.
- *
  * **Example** (Inspect PackageJsonNotFoundError details)
  *
  * ```ts
@@ -152,8 +146,6 @@ export class PackageJsonNotFoundError extends S.TaggedError<
 }
 
 /**
- * Indicates that a package.json file's contents are not valid JSON.
- *
  * **Example** (Inspect PackageJsonParseError details)
  *
  * ```ts
@@ -214,10 +206,6 @@ export class PackageJsonParseError extends S.TaggedError<PackageJsonParseError, 
 }
 
 /**
- * Indicates that a package.json file could not be written to the filesystem.
- * Narrowed to the filesystem-write failure only — never a resolution or encode
- * error.
- *
  * **Example** (Inspect PackageJsonWriteError details)
  *
  * ```ts
@@ -319,8 +307,6 @@ export class PackageFieldEdit extends S.Opaque<PackageFieldEdit, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link PackageFieldEdit}.
- *
  * @category type-level
  * @since 0.0.0
  */

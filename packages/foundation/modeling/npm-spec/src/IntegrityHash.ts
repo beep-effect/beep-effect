@@ -48,8 +48,6 @@ import type * as Brand from "effect/Brand";
 const $I = $NpmSpecId.create("IntegrityHash");
 
 /**
- * A supported integrity hash algorithm.
- *
  * **Details**
  * `sha224` appears only in the corepack form — corepack's own transparent
  * default pins emit it (e.g. `yarn@4.x+sha224.<hex>`) — and never in SRI,
@@ -76,7 +74,6 @@ export const IntegrityAlgorithm = LiteralKit(["sha1", "sha224", "sha256", "sha38
 );
 
 /**
- * The decoded supported integrity algorithm.
  * @category type-level
  * @since 0.0.0
  */
@@ -161,8 +158,6 @@ const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
 };
 
 /**
- * Indicates that a string could not be parsed as a valid integrity hash.
- *
  * **Details**
  *
  * Raised by {@link IntegrityHash.decode}. The offending string is preserved on
@@ -588,9 +583,6 @@ const corepackFromSri: S.Codec<IntegrityHashBrand, string> = S.String.pipe(
 );
 
 /**
- * Indicates that a string could not be converted from npm's SRI form to the
- * corepack integrity form.
- *
  * **Details**
  *
  * Raised by {@link (CorepackIntegrityHash:variable)}'s `fromSri`. The offending

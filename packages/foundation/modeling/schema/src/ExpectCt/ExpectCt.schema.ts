@@ -25,8 +25,6 @@ const headerName = "Expect-CT" as const;
 const defaultMaxAge = 60 * 60 * 24;
 
 /**
- * Configuration for the `Expect-CT` header.
- *
  * **Example** (Making Expect-CT config)
  *
  * ```ts
@@ -55,8 +53,6 @@ export class ExpectCTConfig extends S.Opaque<ExpectCTConfig, { readonly brand: u
 ) {}
 
 /**
- * Schema for tuple-based enabled `Expect-CT` configuration.
- *
  * **Example** (Decoding enabled Expect-CT)
  *
  * ```ts import.meta.vitest name="Decoding enabled Expect-CT"
@@ -77,8 +73,6 @@ export const ExpectCTEnabled = S.Tuple([S.Literal(true), ExpectCTConfig]).pipe(
 );
 
 /**
- * Type for tuple-based enabled `Expect-CT` configuration.
- *
  * **Example** (Typing enabled Expect-CT)
  *
  * ```ts
@@ -133,8 +127,6 @@ export const ExpectCTOption = S.Union([S.Boolean, ExpectCTEnabled]).pipe(
 export type ExpectCTOption = typeof ExpectCTOption.Type;
 
 /**
- * Model for a rendered `Expect-CT` response header.
- *
  * **Example** (Making response header)
  *
  * ```ts
@@ -222,8 +214,6 @@ const decodeExpectCTValue = Effect.fn("ExpectCT.decodeExpectCTValue")(function* 
 });
 
 /**
- * Schema that renders Expect-CT options into a response header.
- *
  * **Example** (Decoding Expect-CT header)
  *
  * ```ts
@@ -295,8 +285,6 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
 );
 
 /**
- * Type for rendered `Expect-CT` response headers.
- *
  * **Example** (Typing Expect-CT header)
  *
  * ```ts

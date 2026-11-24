@@ -34,8 +34,6 @@ export const isCSSProperties = (u: unknown): u is React.CSSProperties => {
 };
 
 /**
- * A React.CSSProperties object.
- *
  * **Example** (Decode CSS properties object)
  *
  * ```ts

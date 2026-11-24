@@ -53,9 +53,6 @@ export const optionalDefectMessage = (description: string) =>
   });
 
 /**
- * The optional cause and message recovered from an unknown failure, in the
- * shape tagged-error constructors spread into their fields.
- *
  * **Example** (Build diagnostics by hand)
  *
  * ```ts

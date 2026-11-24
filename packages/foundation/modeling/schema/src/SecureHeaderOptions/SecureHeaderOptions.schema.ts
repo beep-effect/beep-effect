@@ -43,8 +43,6 @@ type ResolvedHeader = {
 };
 
 /**
- * Aggregate input options for configuring all secure response headers.
- *
  * **Example** (Make SecureHeaderOptions instance)
  *
  * ```ts
@@ -80,8 +78,6 @@ export class SecureHeaderOptions extends S.Opaque<SecureHeaderOptions, { readonl
 ) {}
 
 /**
- * A rendered secure header pair in `{ key, value }` format.
- *
  * **Example** (Make SecureHeaderEntry pair)
  *
  * ```ts

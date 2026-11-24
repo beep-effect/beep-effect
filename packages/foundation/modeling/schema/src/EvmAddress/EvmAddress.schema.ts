@@ -59,8 +59,6 @@ export const EvmAddress = S.NonEmptyString.check(EvmAddressChecks).pipe(
 );
 
 /**
- * Type for {@link EvmAddress}.
- *
  * **Example** (Type annotated EVM address)
  *
  * ```ts
@@ -102,8 +100,6 @@ export const EvmAddressRedacted = EvmAddress.pipe(
 );
 
 /**
- * Type for {@link EvmAddressRedacted}.
- *
  * **Example** (Type redacted EVM address)
  *
  * ```ts

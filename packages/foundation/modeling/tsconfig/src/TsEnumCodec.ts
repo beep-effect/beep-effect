@@ -353,8 +353,6 @@ export const ProgrammaticCompilerOptions = S.StructWithRest(ProgrammaticCompiler
 );
 
 /**
- * Programmatic compiler options with unknown passthrough values.
- *
  * @public
  * @category type-level
  * @since 0.0.0

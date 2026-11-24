@@ -75,8 +75,6 @@ export const Cuid = S.String.pipe(
 );
 
 /**
- * Type for {@link Cuid}.
- *
  * **Example** (Typed CUID decode)
  *
  * ```ts
@@ -111,8 +109,6 @@ export const isCuid: (value: string) => value is Cuid = S.is(Cuid);
 
 // Types
 /**
- * Seed data used to produce a deterministic CUID value.
- *
  * **Example** (Make CUID seed)
  *
  * ```ts
