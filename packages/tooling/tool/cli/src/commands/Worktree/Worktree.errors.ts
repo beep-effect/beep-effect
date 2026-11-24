@@ -85,8 +85,6 @@ export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError, { 
 }
 
 /**
- * Removal refused because the target worktree has uncommitted changes.
- *
  * **Example** (Create dirty worktree error)
  *
  * ```ts
@@ -213,8 +211,6 @@ export class WorktreePreservationError extends S.TaggedError<
 }
 
 /**
- * Creation refused because a worktree directory already exists at the target path.
- *
  * **Example** (Create exists worktree error)
  *
  * ```ts

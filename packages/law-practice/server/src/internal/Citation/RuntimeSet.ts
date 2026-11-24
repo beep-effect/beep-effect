@@ -86,9 +86,9 @@ const createRuntimeSet = Effect.fn("Citation.createRuntimeSet")(function* (
     left: CitationRuntimeDictionaryKey,
     right: CitationRuntimeDictionaryKey
   ) {
-    // Set identity is nested under the cached-hash match, unlike dict.
+    const identityCheckedOnlyAfterCachedHashMatchUnlikeDict = left.objectId === right.objectId;
     if (left.hash !== right.hash) return false;
-    if (left.objectId === right.objectId) return true;
+    if (identityCheckedOnlyAfterCachedHashMatchUnlikeDict) return true;
     return yield* comparison.equal(left.objectId, right.objectId);
   });
   const tryBucket = Effect.fn("Citation.setTryBucket")(function* (key: CitationRuntimeDictionaryKey, bucket: number) {
@@ -125,8 +125,7 @@ const createRuntimeSet = Effect.fn("Citation.createRuntimeSet")(function* (
       )
     )
   );
-  // CPython set_merge pre-sizes before copying, without rehash/comparison.
-  const copyCapacity = Effect.gen(function* () {
+  const presizeLikeSetMergeWithoutRehashOrComparison = Effect.gen(function* () {
     if (sourceUsed * 5 >= (size - 1) * 3) {
       while (size <= sourceUsed * 2) {
         yield* step;
@@ -142,12 +141,11 @@ const createRuntimeSet = Effect.fn("Citation.createRuntimeSet")(function* (
     }
   });
   if (sourceUsed > 0) {
-    yield* copyCapacity;
+    yield* presizeLikeSetMergeWithoutRehashOrComparison;
     if (size === sourceSize) {
       for (let bucket = 0; bucket < sourceSize; bucket++) yield* step;
-      // Persistent Effect storage can share immutable cells; each set keeps
-      // independent roots, semaphore, used count and work state.
-      buckets = sourceBuckets;
+      const sharedImmutableCellsWithIndependentRootsAndState = sourceBuckets;
+      buckets = sharedImmutableCellsWithIndependentRootsAndState;
     } else yield* copyBuckets;
     used = sourceUsed;
   }

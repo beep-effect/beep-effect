@@ -64,8 +64,6 @@ export class AppDirsNamespaceError extends S.TaggedError<AppDirsNamespaceError, 
 ) {}
 
 /**
- * The four directory kinds XDG separates, plus the runtime directory.
- *
  * **Example** (Validate directory kinds)
  *
  * ```ts
@@ -93,8 +91,6 @@ export const AppDirKind = LiteralKit(["config", "data", "cache", "state", "runti
 export type AppDirKind = typeof AppDirKind.Type;
 
 /**
- * Indicates that an application directory could not be created.
- *
  * **Details**
  *
  * The only way `AppDirs` fails. Resolution cannot fail — it happens once, at
@@ -152,8 +148,6 @@ export class AppDirsError extends S.TaggedError<AppDirsError, { readonly brand: 
 }
 
 /**
- * Indicates that a per-kind directory override is not an absolute path.
- *
  * **Details**
  *
  * Like an invalid namespace, a relative override can only come from code, so
@@ -212,8 +206,6 @@ export class AppDirsOverrideError extends S.TaggedError<AppDirsOverrideError, { 
 }
 
 /**
- * The fully resolved, app-namespaced directories.
- *
  * **Example** (Inspect ordered configuration candidates)
  *
  * ```ts
@@ -281,8 +273,6 @@ export class ResolvedAppDirs extends S.Opaque<ResolvedAppDirs, { readonly brand:
 const isAbsoluteOverride = S.is(AbsolutePath);
 
 /**
- * Per-kind directory overrides. Each wins outright over every other rung.
- *
  * **Gotchas**
  *
  * Each path must be absolute (POSIX, a drive root or a UNC share) and is then
@@ -335,8 +325,6 @@ export class AppDirOverrides extends S.Opaque<AppDirOverrides, { readonly brand:
 ) {}
 
 /**
- * Options for {@link AppDirs.layer}.
- *
  * **Details**
  *
  * Plain optional fields, not `Option`s: `Option` is an internal

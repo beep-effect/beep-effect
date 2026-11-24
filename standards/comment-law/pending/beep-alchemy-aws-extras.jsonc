@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/alchemy-aws-extras",
+  "root": "packages/tooling/library/alchemy-aws-extras",
+  "scopes": ["."]
+}

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournalStore.schemas");
 
 /**
- * A checkout's attempt journals filed in the workstation store.
- *
  * **Details**
  *
  * `journals` counts the readable run journals the checkout held. Each of their
@@ -87,8 +85,6 @@ export class AttemptJournalExportUnpartitioned extends S.Opaque<
 ) {}
 
 /**
- * What exporting a checkout's attempt journals did before its removal.
- *
  * **Example** (Match an export)
  *
  * ```ts
@@ -112,16 +108,12 @@ export const AttemptJournalExport = S.Union([AttemptJournalExported, AttemptJour
 );
 
 /**
- * Decoded type of {@link AttemptJournalExport}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AttemptJournalExport = typeof AttemptJournalExport.Type;
 
 /**
- * A store partition validated for one checkout.
- *
  * **Details**
  *
  * `partitioned` names the runs directory the checkout's journals are filed
@@ -154,8 +146,6 @@ export class AttemptJournalStorePartitioned extends S.Opaque<
 ) {}
 
 /**
- * A checkout whose clone names no store partition.
- *
  * **Example** (Describe a checkout with no partition)
  *
  * ```ts
@@ -207,16 +197,12 @@ export const AttemptJournalStoreLocation = S.Union([
 );
 
 /**
- * Decoded type of {@link AttemptJournalStoreLocation}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AttemptJournalStoreLocation = typeof AttemptJournalStoreLocation.Type;
 
 /**
- * A journal the store could not read or write.
- *
  * **Details**
  *
  * Raised for an unreadable runs directory or journal in the checkout, an

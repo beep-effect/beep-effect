@@ -26,16 +26,17 @@
 
 import * as Schema from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
+import { Position } from "@beep/text/OffsetUnit";
 import { Resolution, resolve } from "@beep/text/Resolution";
-import { QuoteSelector } from "@beep/text/Selector";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import { WinkEngine } from "./Wink.service.ts";
-import type { Position } from "@beep/text/OffsetUnit";
 import type { Detail, ItsFunction } from "wink-nlp";
 
 const BACKEND_NAME = "wink-nlp";
@@ -52,10 +53,35 @@ const capabilities: BackendCapabilities = BackendCapabilities.make({
   tokenization: true,
 });
 
-const findSpan = (text: string, value: string): O.Option<Position> =>
-  O.flatMap(QuoteSelector.makeOption({ exact: value, prefix: O.none(), suffix: O.none() }), (selector) =>
-    Resolution.match(resolve(text, selector), {
-      Unique: (unique) => O.some(unique.position),
+type CharSpan = { readonly end: number; readonly start: number };
+
+/**
+ * Character offsets of every wink token, located in the original text with a
+ * cursor that only moves forward; `None` when any token value is not found.
+ *
+ * Offsets are not rebuilt from wink's `precedingSpaces`: wink 2.4 caps a token's
+ * stored preceding spaces at 65,534, so a rebuilt offset drifts after a longer run.
+ */
+const tokenCharSpans = (text: string, values: ReadonlyArray<string>): O.Option<ReadonlyArray<CharSpan>> =>
+  O.all(
+    A.mapAccum(values, O.some(0), (cursor, value) => {
+      const start = O.flatMap(cursor, (from) => O.map(Str.indexOf(value)(Str.slice(from)(text)), N.sum(from)));
+      return [O.map(start, N.sum(value.length)), O.map(start, (at) => ({ end: at + value.length, start: at }))];
+    })[1]
+  );
+
+/** Map a wink `its.span` token range (`[first, last]`, inclusive) onto character offsets. */
+const entityCharSpan = (tokens: ReadonlyArray<CharSpan>, tokenRange: ReadonlyArray<number>): O.Option<CharSpan> =>
+  O.zipWith(
+    O.flatMap(A.get(tokenRange, 0), (first) => A.get(tokens, first)),
+    O.flatMap(A.get(tokenRange, 1), (last) => A.get(tokens, last)),
+    (first, last) => ({ end: last.end, start: first.start })
+  );
+
+const entityPosition = (text: string, located: CharSpan, value: string): O.Option<Position> =>
+  O.flatMap(Position.makeOption({ unit: "utf16-code-unit", start: located.start, end: located.end }), (position) =>
+    Resolution.match(resolve(text, position), {
+      Unique: (unique) => (Str.Equivalence(unique.quote, value) ? O.some(unique.position) : O.none()),
       Ambiguous: O.none<Position>,
       NotFound: O.none<Position>,
     })
@@ -121,13 +147,19 @@ const makeWinkBackend = Effect.gen(function* () {
       const its = yield* Effect.mapError(engine.its, toOpError("extractEntities"));
       const timestamp = yield* Clock.currentTimeMillis;
       const detailAccessor: ItsFunction<Detail> = its.detail;
+      const spanAccessor: ItsFunction<Array<number>> = its.span;
       const details = doc.entities().out(detailAccessor);
-      return A.map(details, (element) => {
+      const tokenRanges: ReadonlyArray<ReadonlyArray<number> | string> = doc.entities().out(spanAccessor);
+      const tokens = tokenCharSpans(text, doc.tokens().out());
+      return A.map(details, (element, index) => {
         const detail = P.isString(element) ? { type: "UNKNOWN", value: element } : element;
+        const span = O.flatMap(A.get(tokenRanges, index), (tokenRange) =>
+          P.isString(tokenRange) ? O.none() : O.flatMap(tokens, (located) => entityCharSpan(located, tokenRange))
+        ).pipe(O.flatMap((located) => entityPosition(text, located, detail.value)));
         return Schema.EntityNode.make({
           confidence: 1,
           entityType: detail.type,
-          span: findSpan(text, detail.value),
+          span,
           text: detail.value,
           timestamp,
         });

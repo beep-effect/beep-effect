@@ -65,7 +65,6 @@ const layout = RegistryLayout.of("packages/identity");
 const PROJECTION_REMEDY =
   "After renaming the package, put its new name in the RegistryProjection literal (`@beep/identity/Term`) and in the shard's `projection`, then move its bindings with `bun run beep identity rebind @beep/<old package> @beep/<new package>`; otherwise drop the shard's `projection`.";
 
-// A term local that forms an IRI under any namespace, so every generated shard decodes.
 const AsciiLocal = TermLocal.check(S.isPattern(/^[A-Za-z][A-Za-z0-9]{0,8}$/));
 
 const shardFile = (shard: RegistryShard.Encoded): RegistrySourceFile =>
@@ -101,7 +100,6 @@ const reasonsOf = (result: Result.Result<unknown, ReadonlyArray<{ readonly reaso
 
 const baseOf = (snapshot: TermSnapshot) => BaseSnapshot.make({ snapshot });
 
-// Every refusal of a plan as `[reason, subject, detail]`.
 const refusalRowsOf = <Planned>(result: Result.Result<Planned, A.NonEmptyReadonlyArray<ShardEditRefusal>>) =>
   Result.mapError(
     result,
@@ -272,14 +270,18 @@ describe("identity deprecate planning", () => {
       ["http://purl.org/spar/fabio/Report", "2.0.0"],
     ]);
     expect(regeneratedSnapshot(tableOf(twice), "keep", afterOnce).release).toBe("2.0.0");
-    // Succeeding the committed snapshot instead counts the second retirement again.
-    expect(regeneratedSnapshot(tableOf(twice), "succeed", afterOnce).release).toBe("3.0.0");
+    expect(
+      regeneratedSnapshot(tableOf(twice), "succeed", afterOnce).release,
+      "Succeeding the committed snapshot instead counts the second retirement again."
+    ).toBe("3.0.0");
     expect(pipe(tableOf(twice), regeneratedSnapshot("keep", afterOnce)).release).toBe("2.0.0");
     expect(releasePolicy(O.some(baseOf(TermSnapshot.empty)))).toBe("keep");
     expect(releasePolicy(O.some(baseOf(previous)))).toBe("succeed");
     expect(releasePolicy(O.none())).toBe("succeed");
-    // A checkout with no base commit says nothing about what is published, so its writers succeed.
-    expect(releasePolicy(BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty, resolved: false }))).toBe("succeed");
+    expect(
+      releasePolicy(BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty, resolved: false })),
+      "A checkout with no base commit says nothing about what is published, so its writers succeed."
+    ).toBe("succeed");
   });
 
   it("keeps the deprecations ascending and rewrites only the shard of the term", () => {
@@ -307,14 +309,12 @@ describe("identity deprecate planning", () => {
       refusalRowsOf(
         planDeprecate(inputOf(files), DeprecateRequest.make({ curie: "fabio:Report", replacement: O.none() }))
       );
-    // The other shard already retired the IRI.
     const elsewhere = shardFile(
       doco({ deprecations: [{ term: "http://purl.org/spar/fabio/Report", since: "1.0.0" }] })
     );
     assertFailure(retire([plain, elsewhere]), [
       ["registry-conflict", layout.shards, "Term http://purl.org/spar/fabio/Report is deprecated more than once."],
     ]);
-    // An earlier retirement names the term as its successor.
     const chained = shardFile({
       ...fabio(["Report"]),
       deprecations: [{ term: "http://purl.org/spar/fabio/Thesis", since: "1.0.0", replacement: "Report" }],
@@ -326,7 +326,6 @@ describe("identity deprecate planning", () => {
         "The replacement chain of http://purl.org/spar/fabio/Thesis reaches http://purl.org/spar/fabio/Report, which is neither a declared term nor deprecated with a successor.",
       ],
     ]);
-    // The same shard lists the term live and retired, so the edited rows repeat a deprecation.
     const repeated = shardFile({
       ...fabio(["Report"]),
       deprecations: [{ term: "http://purl.org/spar/fabio/Report", since: "1.0.0" }],
@@ -339,9 +338,10 @@ describe("identity deprecate planning", () => {
       ),
       [["shard-invalid", repeated.path]]
     );
-    expect(Result.match(refused, { onFailure: (rows) => rows[0][2], onSuccess: () => "" })).toContain(
-      "Expected ShardDeprecation rows strictly ascending by key, with no duplicate."
-    );
+    expect(
+      Result.match(refused, { onFailure: (rows) => rows[0][2], onSuccess: () => "" }),
+      "An earlier retirement names the term as its successor. The same shard lists the term live and retired, so the edited rows repeat a deprecation."
+    ).toContain("Expected ShardDeprecation rows strictly ascending by key, with no duplicate.");
   });
 
   it("refuses the namespace itself as the successor of a retired term", () => {
@@ -359,7 +359,7 @@ describe("identity deprecate planning", () => {
     );
   });
 
-  it("refuses a malformed CURIE, an unknown or bound term, and a replacement it cannot record", () => {
+  it("refuses malformed CURIEs, unknown or bound terms and invalid replacements; dropping a binding permits retirement", () => {
     const refusalOf = (curie: string, replacement: O.Option<string> = O.none()) =>
       reasonsOf(planDeprecate(inputOf([plain]), DeprecateRequest.make({ curie, replacement })));
     const twoShards = [
@@ -403,7 +403,6 @@ describe("identity deprecate planning", () => {
         ],
       ]
     );
-    // The refused remedy: a rebind leaves the term bound under its new code.
     const [rebound] = Result.getOrThrow(
       planRebind(inputOf([bindingFixture]), rebind("@beep/widget/Old", "@beep/widget/New"))
     );
@@ -413,9 +412,9 @@ describe("identity deprecate planning", () => {
           inputOf([rebound ?? bindingFixture]),
           DeprecateRequest.make({ curie: "fabio:Report", replacement: O.none() })
         )
-      )
+      ),
+      "The refused remedy: a rebind leaves the term bound under its new code."
     ).toStrictEqual(["term-bound"]);
-    // The remedy it names: without the binding the term retires.
     assertTrue(
       planDeprecate(
         inputOf([shardFile(fabio(["Note", "Report", "Section"], A.drop(bound, 1)))]),
@@ -450,7 +449,6 @@ describe("identity deprecate planning", () => {
   );
 });
 
-// One step of a change: declare a term, take back one the change declared, or retire one.
 const ChangeStep = S.TaggedUnion({
   Declare: { local: AsciiLocal },
   TakeBack: { index: S.Int.check(S.isBetween({ minimum: 0, maximum: 5 })) },
@@ -462,20 +460,18 @@ describe("a change in many steps", () => {
   const baseFile = shardFile(fabio(published));
   const base = RegistryTable.snapshot(tableOf([baseFile]), TermSnapshot.empty);
 
-  // The shard after one step, as the commands edit it: `deprecate` retires, and a shard edit does the rest.
-  // A step that has nothing to act on leaves the shard as it is.
   const applyStep = (file: RegistrySourceFile, step: typeof ChangeStep.Type): RegistrySourceFile => {
     const shard = decodeShardText(file);
     const withTerms = (terms: ReadonlyArray<string>) =>
       shardFile({ ...Result.getOrThrow(S.encodeResult(RegistryShard)(shard)), terms: A.sort(terms, Order.String) });
     const retired = A.map(shard.deprecations, (row): string => row.term);
     return ChangeStep.match(step, {
-      // A declared local never collides with a published one, which starts with "P", or with a retired IRI.
       Declare: ({ local }) => {
-        const name = `d${local}`;
-        return A.contains(shard.terms, name) || A.contains(retired, `${shard.namespace.iri}${name}`)
+        const unpublishedLocal = `d${local}`;
+        return A.contains(shard.terms, unpublishedLocal) ||
+          A.contains(retired, `${shard.namespace.iri}${unpublishedLocal}`)
           ? file
-          : withTerms([...shard.terms, name]);
+          : withTerms([...shard.terms, unpublishedLocal]);
       },
       TakeBack: ({ index }) => {
         const own = A.filter(shard.terms, Str.startsWith("d"));
@@ -516,9 +512,11 @@ describe("a change in many steps", () => {
             })
           )
         );
-      // Each write is checked before the next one replaces its snapshot, so one wrong step cannot hide.
       const expectRelease = (file: RegistrySourceFile, written: TermSnapshot) => {
-        expect(written.release).toBe(RegistryTable.releaseAfter(tableOf([file]), base));
+        expect(
+          written.release,
+          "Each write is checked before the next one replaces its snapshot, so one wrong step cannot hide."
+        ).toBe(RegistryTable.releaseAfter(tableOf([file]), base));
         const changed = written.terms.length !== base.terms.length || written.deprecations.length > 0;
         expect(written.release).toBe(written.deprecations.length > 0 ? "2.0.0" : changed ? "1.1.0" : "1.0.0");
         expect(baseSnapshotIssues(baseOf(base), written, layout)).toStrictEqual([]);
@@ -530,7 +528,6 @@ describe("a change in many steps", () => {
         expectRelease(edited, written);
         return { file: edited, committed: renderTermSnapshot(written) };
       });
-      // The writer is idempotent, and a hermetic regeneration keeps what it wrote.
       expect(renderTermSnapshot(write(end.file, end.committed).snapshot)).toBe(end.committed);
       const checked = planRegistryArtifacts(
         RegistryPlanInput.make({ layout, shardFiles: [end.file], committed: O.some(end.committed) })
@@ -559,17 +556,18 @@ describe("base snapshot findings", () => {
     expect(A.map(baseSnapshotIssues(baseOf(base), removed, layout), (issue) => issue.kind)).toStrictEqual([
       "term-removed-without-deprecation",
     ]);
-    // A head regenerated from an older base keeps that base's release, which the change outgrew.
     const stale = RegistryTable.snapshot(
       tableOf([shardFile(fabio(["Report", "TechnicalReport", "Thesis"]))]),
       TermSnapshot.empty
     );
     const [understated] = baseSnapshotIssues(baseOf(base), stale, layout);
-    expect(understated?.kind).toBe("release-regressed");
+    expect(
+      understated?.kind,
+      "A head regenerated from an older base keeps that base's release, which the change outgrew."
+    ).toBe("release-regressed");
     expect(understated?.detail).toBe(
       "Against the base ref: The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 1.1.0. Merge origin/main if it is not merged yet, set every `since` reported as since-misstated, then run `bun run beep identity registry --write`."
     );
-    // The same findings with the base applied last.
     expect(baseSnapshotIssues(stale, layout)(baseOf(base))).toStrictEqual([understated]);
     const renamed = RegistryTable.snapshot(
       tableOf([
@@ -698,7 +696,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
         temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          // The shard projects into a package this checkout does not have, which only regeneration checks.
           const shard = { ...fabio(["Note", "Report"]), projection: "@beep/test-runner" } as const;
           yield* writeFixture(shard);
 
@@ -706,7 +703,10 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           expectReportedExit(refused);
           const errors = yield* TestConsole.errorLines;
-          expect(errors).toStrictEqual([
+          expect(
+            errors,
+            "The shard projects into a package this checkout does not have, which only regeneration checks."
+          ).toStrictEqual([
             `${fabioPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have. ${PROJECTION_REMEDY}`,
           ]);
           const logs = yield* TestConsole.logLines;
@@ -724,7 +724,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
         temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          // The edited shard is sound; the vitest shard beside it is the one that cannot regenerate.
           const shard = fabio(["Note", "Report"]);
           yield* writeFixture(shard);
           const vitestPath = `${layout.shards}/vitest.json`;
@@ -741,7 +740,10 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           expectReportedExit(refused);
           const errors = yield* TestConsole.errorLines;
-          expect(errors).toStrictEqual([
+          expect(
+            errors,
+            "The edited shard is sound; the vitest shard beside it is the one that cannot regenerate."
+          ).toStrictEqual([
             `${vitestPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have. ${PROJECTION_REMEDY}`,
           ]);
           const untouched = yield* fs.readFileString(fabioPath);
@@ -754,7 +756,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    // A workspace package with one module for the bindings to name.
     const writePackage = Effect.fn("IdentityShardEditTest.writePackage")(function* (directory: string, name: string) {
       const fs = yield* FileSystem.FileSystem;
       yield* fs.makeDirectory(`packages/${directory}/src`, { recursive: true });
@@ -806,8 +807,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const fs = yield* FileSystem.FileSystem;
           yield* writeFixture(fabio(["Report"]));
           const vitestPath = `${layout.shards}/vitest.json`;
-          // @beep/old-runner becomes the package of the RegistryProjection literal. The shard names its projection by
-          // the new name already, which is the state the remedy's two source edits leave.
           yield* writePackage("test-runner", "@beep/test-runner");
           yield* fs.writeFileString(vitestPath, renderRegistryJson(vitestShard("@beep/old-runner")));
           yield* runIdentityCommand(["registry", "--write"]);
@@ -819,7 +818,10 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           yield* runIdentityCommand(["registry", "--check"]);
           const projected = yield* fs.readFileString("packages/test-runner/src/internal/generated/RegistryTerms.ts");
-          expect(projected).toContain('"@beep/test-runner/Vitest/TestHang"');
+          expect(
+            projected,
+            "@beep/old-runner becomes the package of the RegistryProjection literal. The shard names its projection by the new name already, which is the state the remedy's two source edits leave."
+          ).toContain('"@beep/test-runner/Vitest/TestHang"');
           expect(projected).toContain("https://example.test/vitest/TestHang");
           const after = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
           expect(after.terms).toStrictEqual(before.terms);
@@ -856,7 +858,6 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    // A file system that refuses to put a file in place when its path ends with `name`.
     const refusingRename = Effect.fn("IdentityShardEditTest.refusingRename")(function* (name: string) {
       const fs = yield* FileSystem.FileSystem;
       return FileSystem.FileSystem.of({
@@ -891,17 +892,20 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           });
           const edited = yield* fs.readFileString(fabioPath);
           expect(edited).toContain('"since": "2.0.0"');
-          // The failed file keeps its old bytes, and no staged copy is left beside it.
           const oldSnapshot = yield* fs.readFileString(layout.snapshot);
-          expect(oldSnapshot).toContain('"release": "1.0.0"');
+          expect(oldSnapshot, "The failed file keeps its old bytes, and no staged copy is left beside it.").toContain(
+            '"release": "1.0.0"'
+          );
           const staged = yield* fs.exists(`${layout.snapshot}.tmp`);
           expect(staged).toBe(false);
 
-          // Running the edit again is what the message rules out; the command it names finishes the edit.
           const again = yield* Effect.exit(runIdentityCommand(deprecateNote));
           expectReportedExit(again);
           const errors = yield* TestConsole.errorLines;
-          expect(errors).toContainEqual(expect.stringContaining("fabio:Note [unknown-term]"));
+          expect(
+            errors,
+            "Running the edit again is what the message rules out; the command it names finishes the edit."
+          ).toContainEqual(expect.stringContaining("fabio:Note [unknown-term]"));
           yield* runIdentityCommand(["registry", "--write"]);
           yield* runIdentityCommand(["registry", "--check"]);
           const snapshotText = yield* fs.readFileString(layout.snapshot);

@@ -21,8 +21,6 @@ import * as Str from "effect/String";
 const $I = $GitId.create("Git");
 
 /**
- * One entry of a `git ls-tree` listing.
- *
  * **Example** (Represent a tracked blob)
  *
  * ```ts import.meta.vitest name="Represent a tracked blob"
@@ -68,8 +66,6 @@ const NameStatusCode = LiteralKit([
 ]).pipe($I.annoteSchema("NameStatusCode", { description: "The decoded change kinds in a name-status listing." }));
 
 /**
- * One entry of a `git diff --name-status` listing.
- *
  * **Gotchas**
  *
  * The `status` vocabulary is this package's own decoded spelling:
@@ -128,9 +124,6 @@ export class NameStatusEntry extends S.Opaque<NameStatusEntry, { readonly brand:
 ) {}
 
 /**
- * The metadata of a single commit, read via `git log -1` with NUL-separated
- * `%H` / `%G?` / `%B` placeholders.
- *
  * **Example** (Retain a raw commit message)
  *
  * ```ts import.meta.vitest name="Retain a raw commit message"
@@ -171,9 +164,6 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
 ) {}
 
 /**
- * One commit of a `git log` listing, with its subject and the paths that
- * commit touched.
- *
  * **Gotchas**
  *
  * Both dates are decoded from git's strict-ISO `%aI` / `%cI` into
@@ -302,9 +292,6 @@ const porcelainCode = LiteralKit([" ", "M", "T", "A", "D", "R", "C", "U", "?", "
 );
 
 /**
- * Options for {@link StatusEntry.toLine} / {@link StatusEntry.format}: how a
- * rename/copy entry's path field renders.
- *
  * **Details**
  *
  * The renderers accept the plain {@link StatusRenderOptions.Encoded} shape,
@@ -341,8 +328,6 @@ export class StatusRenderOptions extends S.Opaque<StatusRenderOptions, { readonl
 ) {}
 
 /**
- * Companion namespace for {@link StatusRenderOptions}.
- *
  * **Example** (Type plain render options)
  *
  * ```ts import.meta.vitest name="Type plain render options"
@@ -366,8 +351,6 @@ export declare namespace StatusRenderOptions {
 }
 
 /**
- * One entry of a `git status --porcelain -z` listing.
- *
  * **Example** (Render a renamed entry)
  *
  * ```ts import.meta.vitest name="Render a renamed entry"
@@ -479,8 +462,6 @@ export class StatusEntry extends S.Class<StatusEntry, { readonly brand: unique s
 }
 
 /**
- * One line of a `git submodule status` listing.
- *
  * **Details**
  *
  * The `state` decodes git's one-character prefix: `" "` → `"current"` (the
@@ -531,8 +512,6 @@ export class SubmoduleStatusEntry extends S.Opaque<SubmoduleStatusEntry, { reado
 ) {}
 
 /**
- * One ref a remote advertises, from `git ls-remote`.
- *
  * **Details**
  *
  * `ref` is the FULL refname as advertised (`refs/heads/main`,
@@ -633,8 +612,6 @@ export class LsRemoteEntry extends S.Opaque<LsRemoteEntry, { readonly brand: uni
 }
 
 /**
- * One stash entry, from `git stash list`.
- *
  * **Example** (Represent a stash selector)
  *
  * ```ts import.meta.vitest name="Represent a stash selector"
@@ -668,8 +645,6 @@ export class StashEntry extends S.Opaque<StashEntry, { readonly brand: unique sy
 ) {}
 
 /**
- * One local (or remote-tracking) branch, from `git branch --list`.
- *
  * **Example** (Represent the current branch)
  *
  * ```ts import.meta.vitest name="Represent the current branch"
@@ -705,8 +680,6 @@ export class BranchEntry extends S.Opaque<BranchEntry, { readonly brand: unique 
 ) {}
 
 /**
- * One ref, from `git for-each-ref`.
- *
  * **Example** (Represent an annotated tag object)
  *
  * ```ts import.meta.vitest name="Represent an annotated tag object"
@@ -740,8 +713,6 @@ export class RefEntry extends S.Opaque<RefEntry, { readonly brand: unique symbol
 ) {}
 
 /**
- * One note on a notes ref, from `git notes list`.
- *
  * **Details**
  *
  * `note` is the id of the blob holding the note text; `object` is the id of
@@ -808,9 +779,6 @@ export class NoteWrite extends S.Opaque<NoteWrite, { readonly brand: unique symb
 ) {}
 
 /**
- * The email half of a git identity (`Name <email>`), as git's ident line
- * accepts it.
- *
  * **Details**
  *
  * An external-protocol field, deliberately not `@beep/schema` `Email`: git
@@ -887,8 +855,6 @@ export class NotesCommit extends S.Opaque<NotesCommit, { readonly brand: unique 
 ) {}
 
 /**
- * One configuration entry, from `git config --list`.
- *
  * **Example** (Represent a valueless config key)
  *
  * ```ts import.meta.vitest name="Represent a valueless config key"
@@ -923,8 +889,6 @@ export class ConfigListEntry extends S.Opaque<ConfigListEntry, { readonly brand:
 ) {}
 
 /**
- * One working tree, from `git worktree list --porcelain`.
- *
  * **Example** (Represent a detached worktree)
  *
  * ```ts import.meta.vitest name="Represent a detached worktree"
@@ -982,8 +946,6 @@ export class WorktreeEntry extends S.Opaque<WorktreeEntry, { readonly brand: uni
 ) {}
 
 /**
- * One index (staging area) entry, from `git ls-files --stage`.
- *
  * **Details**
  *
  * The index-side sibling of {@link LsTreeEntry}: this is the ONLY place a
@@ -1092,8 +1054,6 @@ export const MergeTreeResult = S.TaggedUnion({
 );
 
 /**
- * The clean or conflicted answer of `git merge-tree --write-tree`.
- *
  * @see {@link MergeTreeResult} for the runtime schema and its case constructors.
  * @category type-level
  * @since 0.0.0

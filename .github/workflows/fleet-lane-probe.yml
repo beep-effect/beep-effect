@@ -1,9 +1,9 @@
 name: Fleet Lane Probe
 
 # Operator-dispatched validation: runs a REAL verification lane on a chosen
-# runner label. Used before the heavy-lane cutover (target_label
-# beep-ec2-heavy-shadow proves toolbelt parity and cold-start cost on the
-# ephemeral fleet) and after it as a fleet health probe.
+# runner label. The default, beep-fleet-heavy, is the Alchemy fleet's heavy
+# pool; the probe proves toolbelt parity and cold-start cost on an ephemeral
+# worker and doubles as a fleet health probe.
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
         description: Runner label to dispatch the probe onto
         required: false
         type: string
-        default: beep-ec2-heavy
+        default: beep-fleet-heavy
       lane:
         description: "Verification lane id (summarize-capable: lint, check, test-unit, test-integration, coverage)"
         required: false

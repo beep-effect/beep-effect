@@ -25,8 +25,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("internal/repo-run/AgentRunsSlice");
 
 /**
- * One rendered `agent-runs.slice` unit file, relative to the systemd user unit directory.
- *
  * **Example** (Describe a drop-in)
  *
  * ```ts

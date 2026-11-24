@@ -128,8 +128,6 @@ export const encodeCitationRegexSessionJob = makeCitationRegexJobEncoder({
       job.mode
     ),
 });
-// Reject structural amplification before JSON parsing or
-// base64 decoding; punctuation inside quoted strings is not structure.
 /** Decode a complete bounded frame body. Structural and encoded-byte ceilings
  * precede variable decoding allocations; unknown properties are rejected.
  * @internal @category operations @since 0.0.0

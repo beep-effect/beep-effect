@@ -41,8 +41,6 @@ const $I = $RepoWorkspacesId.create("LockfileReader");
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
- * Raised when the workspace's lockfile cannot be read off disk.
- *
  * **Details**
  *
  * Parse failures are `@beep/lockfiles`' `LockfileParseError`, not this —
@@ -167,8 +165,6 @@ export interface LockfileReaderShape {
 }
 
 /**
- * Options for the {@link LockfileReader} layer.
- *
  * **Example** (Decode bounded root-resolution options)
  *
  * ```ts
@@ -224,8 +220,6 @@ export class LockfileReaderOptions extends S.Opaque<LockfileReaderOptions, { rea
 ) {}
 
 /**
- * Companion types for {@link LockfileReaderOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

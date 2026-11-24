@@ -21,8 +21,6 @@ const contactClientBaseUrl = (): string =>
   globalThis.window === undefined ? "http://localhost" : globalThis.window.location.origin;
 
 /**
- * Accepted OIP contact response body.
- *
  * **Example** (Making accepted response body)
  *
  * ```ts
@@ -51,8 +49,6 @@ export class ContactSubmissionAccepted extends S.Opaque<ContactSubmissionAccepte
 ) {}
 
 /**
- * Rejected OIP contact response body.
- *
  * **Example** (Making rejected response body)
  *
  * ```ts
@@ -81,8 +77,6 @@ export class ContactSubmissionRejected extends S.Opaque<ContactSubmissionRejecte
 ) {}
 
 /**
- * Browser wire payload for OIP contact submissions.
- *
  * **Example** (Creating contact submission payload)
  *
  * ```ts
@@ -109,8 +103,6 @@ export const ContactSubmissionPayload = ContactSubmissionFormPayload.pipe(
 );
 
 /**
- * Type for {@link ContactSubmissionPayload}.
- *
  * **Example** (Typing contact submission payload)
  *
  * ```ts

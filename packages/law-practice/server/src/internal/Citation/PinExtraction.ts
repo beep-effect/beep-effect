@@ -114,11 +114,11 @@ export const installCitationPinCiteExtraction = Effect.fn("Citation.installPinEx
     const strings = yield* installedStrings;
     const details = yield* strings.inspectPinCite(pin);
     const parenthetical = yield* strings.parenthetical(capturedParenthetical);
-    // Source reads from_token.end only after matching and parenthetical processing.
     if (selected.kind === "Text") return yield* fail("invalid-token");
+    const fromTokenEndReadOnlyAfterMatchAndParenthetical = request.tokenEnd;
     return {
       pinCite: details.pinCite,
-      pinCiteSpanEnd: request.tokenEnd + details.trailingEnd - prefixLength,
+      pinCiteSpanEnd: fromTokenEndReadOnlyAfterMatchAndParenthetical + details.trailingEnd - prefixLength,
       parenthetical,
     };
   });

@@ -80,7 +80,6 @@ export const ObservationLaunchFact = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link ObservationLaunchFact}.
  * **Example** (Refer to a lifecycle fact)
  * ```ts
  * import type { ObservationLaunchFact } from "@beep/repo-ai-metrics/observation-launch-facts"

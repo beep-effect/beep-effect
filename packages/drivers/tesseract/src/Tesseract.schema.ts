@@ -30,8 +30,6 @@ const scriptPrefix = "Script:";
 const wordLevel = "5";
 
 /**
- * Configuration for the Tesseract command-line engine.
- *
  * **Example** (Default engine configuration)
  *
  * ```ts
@@ -62,8 +60,6 @@ export class TesseractConfig extends S.Opaque<TesseractConfig, { readonly brand:
 ) {}
 
 /**
- * Writing systems Tesseract's orientation and script detection can name and this driver routes.
- *
  * **Example** (Check a detected script)
  *
  * ```ts
@@ -94,8 +90,6 @@ export const TesseractScript = LiteralKit([
 );
 
 /**
- * Type for {@link TesseractScript}.
- *
  * **Example** (Annotate a detected script)
  *
  * ```ts
@@ -261,8 +255,6 @@ export const parseTesseractScript = (output: string): O.Option<TesseractScript> 
   );
 
 /**
- * Text and word statistics read from one page.
- *
  * **Example** (Build a page reading by hand)
  *
  * ```ts

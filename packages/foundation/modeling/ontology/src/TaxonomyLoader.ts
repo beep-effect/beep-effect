@@ -94,8 +94,6 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
 );
 
 /**
- *  Runtime type for {@link VendorLoadStatus}.
- *
  * **Example** (Assign UNVETTED status)
  *
  * ```ts

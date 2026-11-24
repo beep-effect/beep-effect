@@ -49,8 +49,6 @@ import type { GateReport } from "@beep/gate-report/GateReport";
 const $I = $RepoCliId.create("commands/Gate/GateHistoryRuntime");
 
 /**
- * Whether and where a gate run keeps history.
- *
  * **Details**
  *
  * `HistoryAuto` resolves the repository's store file and the checkout's
@@ -84,8 +82,6 @@ export const HistorySetting = S.TaggedUnion({
 );
 
 /**
- * Type of {@link HistorySetting}.
- *
  * @category models
  * @since 0.0.0
  */

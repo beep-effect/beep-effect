@@ -50,8 +50,6 @@ const commitShaPattern = /^[0-9a-f]{40}$/u;
 const originUrlPattern = /\[remote\s+"origin"\][^[]*?^[ \t]*url[ \t]*=[ \t]*([^\n]+)$/mu;
 
 /**
- * Whether a canonical root is a primary clone or a linked git worktree.
- *
  * **Details**
  *
  * The distinction is load-bearing for snapshot bounding: a linked worktree
@@ -143,8 +141,6 @@ export class AiMetricsCanonicalRoot extends S.Opaque<AiMetricsCanonicalRoot, { r
 ) {}
 
 /**
- * A machine, root, and agent-brand triple: the source instance producing transcripts.
- *
  * **Details**
  *
  * Hostname is deliberately absent. Reading it would require a `node:` builtin
@@ -186,8 +182,6 @@ export class AiMetricsSourceInstance extends S.Opaque<AiMetricsSourceInstance, {
 ) {}
 
 /**
- * The persisted registry of canonical roots and source instances.
- *
  * **Details**
  *
  * `hashSaltStatus` and a salted namespace fingerprint are stamped so a store
@@ -235,8 +229,6 @@ export class AiMetricsIdentityRegistry extends S.Opaque<AiMetricsIdentityRegistr
 }
 
 /**
- * Input for deriving one canonical root's identity.
- *
  * **Example** (Deriving identity for the current clone)
  *
  * ```ts
@@ -311,8 +303,6 @@ export class AiMetricsIdentityRegistryUpsertInput extends S.Opaque<
 ) {}
 
 /**
- * Typed failure raised by identity registry helpers.
- *
  * **Example** (Constructing the failure)
  *
  * ```ts

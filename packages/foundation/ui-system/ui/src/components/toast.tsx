@@ -97,8 +97,6 @@ interface ToastRootProps extends Omit<ToastPrimitive.Root.Props, "toast">, Varia
 }
 
 /**
- * Toast variant component.
- *
  * **Example** (Import ToastVariant component)
  *
  * ```tsx
@@ -117,8 +115,6 @@ export const ToastVariant = LiteralKit(["default", "destructive"]).pipe(
 );
 
 /**
- * Toast variant type.
- *
  * **Example** (Assign destructive ToastVariant)
  *
  * ```ts
@@ -135,8 +131,6 @@ export const ToastVariant = LiteralKit(["default", "destructive"]).pipe(
 export type ToastVariant = typeof ToastVariant.Type;
 
 /**
- * Toast data class.
- *
  * **Example** (Import ToastData class)
  *
  * ```tsx

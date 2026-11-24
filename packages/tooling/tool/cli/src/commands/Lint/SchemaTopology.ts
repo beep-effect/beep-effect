@@ -41,8 +41,6 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
 ] as const;
 
 /**
- * Schema topology lint violation.
- *
  * **Example** (Make topology violation)
  *
  * ```ts

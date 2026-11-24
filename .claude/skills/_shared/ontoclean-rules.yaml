@@ -1,7 +1,10 @@
-# OntoClean automated checks over a proposed taxonomy + class meta-properties.
-# These discipline human analysis; assigning meta-properties remains conceptual work.
+# OntoClean checks over a proposed taxonomy + class meta-properties, applied by
+# the adversary seat along each is-a edge. They are a checklist, not automation:
+# the auditor's validator does not read this file or compare meta-properties
+# across `parents` edges. Assigning meta-properties remains conceptual work.
 # Encode class_meta as {rigidity: rigid|anti_rigid|semi_rigid|unresolved,
 # identity: supplies|carries|none|unresolved,
+# unity: unity|anti_unity|non_unity|unresolved   (+U | ~U | -U),
 # dependence: none|relational|intrinsic|unresolved}.
 checks:
   - rule: anti-rigid superclass with rigid subclass
@@ -12,7 +15,7 @@ checks:
     action: BLOCK
   - rule: Phase classified as relationally defined
     action: REVIEW
-  - rule: Kind with no identity provider
+  - rule: sortal with no kind ancestor (itself included) that supplies identity
     action: BLOCK
   - rule: class marked both identity-supplying and identity-free
     action: BLOCK
@@ -20,3 +23,7 @@ checks:
     action: BLOCK
   - rule: subclass edge whose child can leave the parent while persisting
     action: REVIEW   # anti-rigidity smell on the edge itself
+  - rule: anti-unity (~U) superclass with a unity (+U) subclass
+    action: REVIEW
+  - rule: relationally dependent superclass (dependence relational, +D) with a non-dependent subclass (dependence none, -D)
+    action: REVIEW

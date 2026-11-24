@@ -43,8 +43,6 @@ export { ShortcutHelp } from "./shortcut-help.tsx";
  */
 export { CapabilityToolbar } from "./toolbar.tsx";
 /**
- * Capability composer property model.
- *
  * @category models
  * @since 0.0.0
  */

@@ -57,8 +57,6 @@ export const KgEdgePredicate = LiteralKit([
 );
 
 /**
- * Runtime type for {@link KgEdgePredicate}.
- *
  * **Example** (Type document edge predicates)
  *
  * ```ts

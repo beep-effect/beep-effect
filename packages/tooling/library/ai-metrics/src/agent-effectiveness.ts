@@ -134,8 +134,6 @@ const phoenixProjectStatsTimeoutSeconds = 10;
 const phoenixProjectStatsTimeout = Duration.seconds(phoenixProjectStatsTimeoutSeconds);
 
 /**
- * Status emitted by agent-effectiveness reports.
- *
  * **Details**
  *
  * `unavailable` is distinct from `failed`: it means a section had no evidence to
@@ -184,8 +182,6 @@ export const AgentEffectivenessStatus = LiteralKit(["passed", "warning", "failed
 export type AgentEffectivenessStatus = typeof AgentEffectivenessStatus.Type;
 
 /**
- * Optimization directions accepted by planned agent-effectiveness metrics.
- *
  * **Example** (Select a minimizing metric)
  *
  * ```ts
@@ -213,8 +209,6 @@ export const AgentEffectivenessAnnotationOptimization = LiteralKit(["maximize", 
 export type AgentEffectivenessAnnotationOptimization = typeof AgentEffectivenessAnnotationOptimization.Type;
 
 /**
- * Local evidence targets that an annotation plan can describe.
- *
  * **Example** (Select an agent task target)
  *
  * ```ts
@@ -249,8 +243,6 @@ export const AgentEffectivenessAnnotationTargetKind = LiteralKit([
 export type AgentEffectivenessAnnotationTargetKind = typeof AgentEffectivenessAnnotationTargetKind.Type;
 
 /**
- * Repo-owned evidence sources that can produce planned annotations.
- *
  * **Example** (Select AI-metrics evidence)
  *
  * ```ts
@@ -320,8 +312,6 @@ export const AgentEffectivenessMutationPolicy = LiteralKit([
 export type AgentEffectivenessMutationPolicy = typeof AgentEffectivenessMutationPolicy.Type;
 
 /**
- * Stable codes emitted by the annotation privacy and schema check.
- *
  * **Example** (Identify a duplicate annotation)
  *
  * ```ts
@@ -357,8 +347,6 @@ export const AgentEffectivenessAnnotationCheckFindingCode = LiteralKit([
 export type AgentEffectivenessAnnotationCheckFindingCode = typeof AgentEffectivenessAnnotationCheckFindingCode.Type;
 
 /**
- * Compatibility versions recognized for agent-effectiveness JSON artifacts.
- *
  * **Example** (Read the dataset artifact version)
  *
  * ```ts
@@ -438,8 +426,6 @@ export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.
 export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotationValue.Type;
 
 /**
- * Error raised by agent-effectiveness report helpers.
- *
  * **Details**
  *
  * This covers the encode and decode boundaries — rendering a report or plan as
@@ -484,8 +470,6 @@ const agentEffectivenessFailure =
     AgentEffectivenessError.make({ cause, message });
 
 /**
- * Input for the Phase 1 agent-effectiveness doctor.
- *
  * **Gotchas**
  *
  * `dataRoot` is required. The doctor reports on whichever store it is pointed
@@ -939,8 +923,6 @@ export class AgentEffectivenessAiMetricsSection extends S.Opaque<
 
 const agentEffectivenessJsdocWorkerSectionPolicyViolationCodesDefault = A.empty<string>();
 /**
- * JSDoc worker-eval section for the doctor report.
- *
  * **Details**
  *
  * Read-only evidence from the last JSDoc worker-eval run. `selectedPackets`
@@ -1059,8 +1041,6 @@ export class AgentEffectivenessDoctorSummary extends S.Opaque<
 ) {}
 
 /**
- * Phase 1 agent-effectiveness doctor report.
- *
  * **Details**
  *
  * The whole trust gate in one value: three independent evidence sections —
@@ -1228,8 +1208,6 @@ export class AgentEffectivenessPlannedAnnotation extends S.Opaque<
 ) {}
 
 /**
- * Dry-run annotation plan for Phase 1.
- *
  * **Details**
  *
  * The plan carries the doctor report it was derived from, so a reviewer can see
@@ -1399,8 +1377,6 @@ export class AgentEffectivenessAnnotationCheckFinding extends S.Opaque<
 ) {}
 
 /**
- * Report emitted by `agent-effectiveness annotations check`.
- *
  * **Details**
  *
  * The verdict on whether a plan is safe to write: `annotationCount` says how much
@@ -1523,8 +1499,6 @@ export const AGENT_EFFECTIVENESS_PHOENIX_PROJECT = "beep-agent-effectiveness";
 export const AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION = "agent-effectiveness-phoenix-write";
 
 /**
- * Phoenix dataset kinds owned by the agent-effectiveness loop.
- *
  * **Details**
  *
  * A closed set, because these are the datasets the repo creates and keeps
@@ -1574,8 +1548,6 @@ export type AgentEffectivenessDatasetKind = typeof AgentEffectivenessDatasetKind
 const agentEffectivenessDatasetExampleMetadataDefault = {};
 const agentEffectivenessDatasetExampleOutputDefault = {};
 /**
- * One sanitized example destined for a Phoenix dataset.
- *
  * **Details**
  *
  * Examples carry aggregates and statuses, never transcript content: the loop
@@ -1625,8 +1597,6 @@ export class AgentEffectivenessDatasetExample extends S.Opaque<
 ) {}
 
 /**
- * One repo-owned Phoenix dataset specification.
- *
  * **Details**
  *
  * A dataset described in full — identity, prose, and rows — so that syncing is a
@@ -1671,8 +1641,6 @@ export class AgentEffectivenessDatasetSpec extends S.Opaque<
 ) {}
 
 /**
- * Full Phoenix dataset bundle derived from a doctor report.
- *
  * **Details**
  *
  * Every dataset the loop owns, derived in one pass from a single doctor report,
@@ -1723,8 +1691,6 @@ export class AgentEffectivenessDatasetBundle extends S.Opaque<
 }
 
 /**
- * Prompt roles used by repo-owned agent-effectiveness prompt templates.
- *
  * **Details**
  *
  * Only `system` and `user`. The repo authors prompt templates, never transcripts,
@@ -1765,8 +1731,6 @@ export const AgentEffectivenessPromptRole = LiteralKit(["system", "user"]).pipe(
 export type AgentEffectivenessPromptRole = typeof AgentEffectivenessPromptRole.Type;
 
 /**
- * One repo-owned Phoenix prompt message.
- *
  * **Details**
  *
  * `content` is a template rather than a finished prompt: `{{name}}` placeholders
@@ -1802,8 +1766,6 @@ export class AgentEffectivenessPromptMessage extends S.Opaque<
 ) {}
 
 /**
- * Repo-owned Phoenix prompt specification.
- *
  * **Details**
  *
  * The template plus the model it was written against. `modelName` travels with
@@ -1846,8 +1808,6 @@ export class AgentEffectivenessPromptSpec extends S.Opaque<
 ) {}
 
 /**
- * Full repo-owned Phoenix prompt bundle.
- *
  * **Details**
  *
  * Every prompt template the loop owns, generated together so the set stays
@@ -1899,8 +1859,6 @@ export class AgentEffectivenessPromptBundle extends S.Opaque<
 
 const agentEffectivenessExperimentSpecMetadataDefault = {};
 /**
- * Deterministic experiment plan entry.
- *
  * **Details**
  *
  * A readback over an existing dataset: the experiment performs no new model work
@@ -1945,8 +1903,6 @@ export class AgentEffectivenessExperimentSpec extends S.Opaque<
 ) {}
 
 /**
- * Deterministic experiment bundle derived from dataset specs.
- *
  * **Details**
  *
  * One experiment per dataset in the matching dataset bundle, which is why this
@@ -2008,8 +1964,6 @@ type AgentEffectivenessPhoenixSyncNewOptions = {
 };
 
 /**
- * Input for syncing agent-effectiveness evidence to Phoenix.
- *
  * **Gotchas**
  *
  * `annotationPlan` is required all the way down to its doctor input's data
@@ -2073,8 +2027,6 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Opaque<
 }
 
 /**
- * Result from a guarded Phoenix sync attempt.
- *
  * **Details**
  *
  * The counts and the written ids answer different questions. Counts describe

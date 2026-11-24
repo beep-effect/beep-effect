@@ -55,8 +55,6 @@ export class PathPrependEnv extends S.Opaque<PathPrependEnv, { readonly brand: u
 ) {}
 
 /**
- * The environment additions type accepted by {@link PathPrependEnv}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -120,8 +118,6 @@ export class PathPrependOptions extends S.Opaque<PathPrependOptions, { readonly 
 ) {}
 
 /**
- * The options type accepted by {@link PathPrependOptions}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

@@ -18,7 +18,6 @@ import { LibraryHopPolicy, LibraryStringList } from "./Library.hopPolicy.ts";
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 
 /**
- * SourceKind vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibrarySourceKind } from "@beep/repo-cli/commands/Research"
@@ -48,15 +47,12 @@ export const LibrarySourceKind = LiteralKit([
   $I.annoteSchema("LibrarySourceKind", { description: "SourceKind vocabulary for persisted research provenance." })
 );
 /**
- * Runtime type of LibrarySourceKind.
- *
  * @category models
  * @since 0.0.0
  */
 export type LibrarySourceKind = typeof LibrarySourceKind.Type;
 
 /**
- * Ownership vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibraryOwnership } from "@beep/repo-cli/commands/Research"
@@ -70,15 +66,12 @@ export const LibraryOwnership = LiteralKit(["external", "project", "internal", "
   $I.annoteSchema("LibraryOwnership", { description: "Ownership vocabulary for persisted research provenance." })
 );
 /**
- * Runtime type of LibraryOwnership.
- *
  * @category models
  * @since 0.0.0
  */
 export type LibraryOwnership = typeof LibraryOwnership.Type;
 
 /**
- * CaptureStatus vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibraryCaptureStatus } from "@beep/repo-cli/commands/Research"
@@ -103,15 +96,12 @@ export const LibraryCaptureStatus = LiteralKit([
   })
 );
 /**
- * Runtime type of LibraryCaptureStatus.
- *
  * @category models
  * @since 0.0.0
  */
 export type LibraryCaptureStatus = typeof LibraryCaptureStatus.Type;
 
 /**
- * QualificationStatus vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibraryQualificationStatus } from "@beep/repo-cli/commands/Research"
@@ -127,16 +117,12 @@ export const LibraryQualificationStatus = LiteralKit(["verified", "failed"]).pip
   })
 );
 /**
- * Runtime type of LibraryQualificationStatus.
- *
  * @category models
  * @since 0.0.0
  */
 export type LibraryQualificationStatus = typeof LibraryQualificationStatus.Type;
 
 /**
- * Visibility partition of a source or artifact.
- *
  * **Example** (Inspect LibraryAccessClass)
  * ```ts
  * import { LibraryAccessClass } from "@beep/repo-cli/commands/Research"
@@ -150,7 +136,6 @@ export const LibraryAccessClass = LiteralKit(["public", "private"]).pipe(
   $I.annoteSchema("LibraryAccessClass", { description: "Visibility partition of a source or artifact." })
 );
 /**
- * Runtime values of LibraryAccessClass.
  * @category models
  * @since 0.0.0
  */
@@ -190,8 +175,6 @@ export const LibraryAccessClassField = LibraryAccessClass.pipe(
 );
 
 /**
- * Supported persisted catalog contract versions.
- *
  * **Example** (Inspect LibraryCatalogSchemaVersion)
  * ```ts
  * import { LibraryCatalogSchemaVersion } from "@beep/repo-cli/commands/Research"
@@ -205,15 +188,12 @@ export const LibraryCatalogSchemaVersion = LiteralKit(["beep.research.library/v1
   $I.annoteSchema("LibraryCatalogSchemaVersion", { description: "Supported persisted catalog contract versions." })
 );
 /**
- * Runtime values of LibraryCatalogSchemaVersion.
  * @category models
  * @since 0.0.0
  */
 export type LibraryCatalogSchemaVersion = typeof LibraryCatalogSchemaVersion.Type;
 
 /**
- * CiTO relation local names attached to a finding.
- *
  * **Example** (Inspect LibraryCitoRelation)
  * ```ts
  * import { LibraryCitoRelation } from "@beep/repo-cli/commands/Research"
@@ -237,7 +217,6 @@ export const LibraryCitoRelation = LiteralKit([
   "discusses",
 ]).pipe($I.annoteSchema("LibraryCitoRelation", { description: "CiTO relation local names attached to a finding." }));
 /**
- * Runtime values of LibraryCitoRelation.
  * @category models
  * @since 0.0.0
  */
@@ -252,7 +231,6 @@ const topicFields = {
 };
 
 /**
- * Artifact record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryArtifact } from "@beep/repo-cli/commands/Research"
@@ -277,7 +255,6 @@ export class LibraryArtifact extends S.Opaque<LibraryArtifact, { readonly brand:
 ) {}
 
 /**
- * Document record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryDocument } from "@beep/repo-cli/commands/Research"
@@ -315,7 +292,6 @@ export class LibraryDocument extends S.Opaque<LibraryDocument, { readonly brand:
 ) {}
 
 /**
- * Reference record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryReference } from "@beep/repo-cli/commands/Research"
@@ -388,7 +364,6 @@ export class LibrarySourceVersion extends S.Opaque<LibrarySourceVersion, { reado
 ) {}
 
 /**
- * Source record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibrarySource } from "@beep/repo-cli/commands/Research"
@@ -422,7 +397,6 @@ export class LibrarySource extends S.Opaque<LibrarySource, { readonly brand: uni
 ) {}
 
 /**
- * Occurrence record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryOccurrence } from "@beep/repo-cli/commands/Research"
@@ -483,7 +457,6 @@ export class LibraryOccurrence extends S.Opaque<LibraryOccurrence, { readonly br
 ) {}
 
 /**
- * Capture record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryCapture } from "@beep/repo-cli/commands/Research"
@@ -516,7 +489,6 @@ export class LibraryCapture extends S.Opaque<LibraryCapture, { readonly brand: u
 ) {}
 
 /**
- * Qualification record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryQualification } from "@beep/repo-cli/commands/Research"
@@ -546,8 +518,6 @@ export class LibraryQualification extends S.Opaque<LibraryQualification, { reado
 ) {}
 
 /**
- * How an intake census keeps an input's bytes.
- *
  * **Details**
  *
  * `snapshot` copies the bytes under `intakes/<date>/raw/`. `referenced` media
@@ -567,8 +537,6 @@ export const LibraryIntakeRetention = LiteralKit(["snapshot", "referenced"]).pip
   $I.annoteSchema("LibraryIntakeRetention", { description: "How an intake census keeps an input's bytes." })
 );
 /**
- * Runtime type of LibraryIntakeRetention.
- *
  * @category models
  * @since 0.0.0
  */
@@ -683,7 +651,6 @@ export class LibraryManifest extends S.Opaque<LibraryManifest, { readonly brand:
     .annotate($I.class("Manifest", { description: "Portable library layout and creation provenance." }))
 ) {}
 
-// Whether the registry mints the instance IRI, so an invariant below is the minter's own rule.
 const isMintable = (mint: () => string): boolean => Result.isSuccess(Result.try(mint));
 
 /**
@@ -738,7 +705,7 @@ export const LibraryTopicId = S.String.check(
 );
 
 /**
- * Decoded type of {@link LibraryTopicId}.
+ * Groups evidence by packet so readers can follow a goal across captures.
  *
  * @category models
  * @since 0.0.0
@@ -746,8 +713,6 @@ export const LibraryTopicId = S.String.check(
 export type LibraryTopicId = typeof LibraryTopicId.Type;
 
 /**
- * A model or effort label that names an agent under `research-library:SoftwareAgent`.
- *
  * **Details**
  *
  * A label is percent-encoded into one IRI segment, so any text is a label
@@ -779,7 +744,7 @@ export const LibraryAgentLabel = S.String.check(
 );
 
 /**
- * Decoded type of {@link LibraryAgentLabel}.
+ * Attributes recorded findings to the runner configuration that produced them.
  *
  * @category models
  * @since 0.0.0
@@ -787,8 +752,6 @@ export const LibraryAgentLabel = S.String.check(
 export type LibraryAgentLabel = typeof LibraryAgentLabel.Type;
 
 /**
- * A finding bound to a source capture or a hop-0 intake document, with citation semantics and model provenance.
- *
  * **Details**
  *
  * Exactly one binding is present: a source finding carries `sourceId` (and its
@@ -849,8 +812,6 @@ export class LibraryFinding extends S.Opaque<LibraryFinding, { readonly brand: u
 ) {}
 
 /**
- * A derivation edge carrying its non-negative traversal depth.
- *
  * **Example** (Inspect LibraryDerivation)
  * ```ts
  * import { LibraryDerivation } from "@beep/repo-cli/commands/Research"
@@ -884,8 +845,6 @@ export class LibraryDerivation extends S.Opaque<LibraryDerivation, { readonly br
 ) {}
 
 /**
- * Model execution provenance for recorded findings.
- *
  * **Details**
  *
  * `argv` is the exact launch argv of the runner. Rows recorded before the field
@@ -933,7 +892,6 @@ export const libraryAgentIri = ({ effort, model }: Pick<LibraryModelRun, "effort
   Registry.mint("research-library:SoftwareAgent", encodeURIComponent(model), encodeURIComponent(effort));
 
 /**
- * Catalog record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryCatalog } from "@beep/repo-cli/commands/Research"
@@ -979,8 +937,6 @@ export class LibraryCatalog extends S.Opaque<LibraryCatalog, { readonly brand: u
 ) {}
 
 /**
- * InventoryOptions record for persisted research provenance.
- *
  * **Details**
  *
  * `privateInputRoots` are inventoried like `inputRoots`, but their documents and intake
@@ -1016,7 +972,6 @@ export class LibraryInventoryOptions extends S.Opaque<LibraryInventoryOptions, {
 ) {}
 
 /**
- * AcquireOptions record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryAcquireOptions } from "@beep/repo-cli/commands/Research"

@@ -28,7 +28,6 @@ import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.f
 import { citationBunTestExecutable } from "./CitationNativeSpawner.fixtures.ts";
 import { loadCitationUnicodeHistories } from "./CitationUnicodePipeline.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationHtmlWorker = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationHtmlWorker>[0],
   a1: unknown

@@ -18,8 +18,6 @@ import * as Tuple from "effect/Tuple";
 import type { RunMode as RunModeValue } from "@beep/repo-cli-kit/cli/RunMode";
 
 /**
- * Public version-sync error exports.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -32,8 +30,6 @@ const $I = $RepoCliId.create("commands/VersionSync/VersionSync.schemas");
 // ── Report model ────────────────────────────────────────────────────────────
 
 /**
- * A single version pin location with its current and expected values.
- *
  * **Example** (Import VersionDriftItem schema)
  *
  * ```ts
@@ -67,8 +63,6 @@ export class VersionDriftItem extends S.Opaque<VersionDriftItem, { readonly bran
  */
 const VersionCategoryKit = LiteralKit(["bun", "node", "docker", "biome", "effect", "turbo"]);
 /**
- * Version category for grouping drift items.
- *
  * **Example** (Annotate VersionCategory type)
  *
  * ```ts
@@ -102,8 +96,6 @@ export const VersionCategory = VersionCategoryKit.pipe(
  */
 export const VersionCategoryOptions = VersionCategoryKit.literals;
 /**
- * Version category for grouping drift items.
- *
  * **Example** (Annotate VersionCategory type)
  *
  * ```ts
@@ -125,8 +117,6 @@ export type VersionCategory = typeof VersionCategory.Type;
  */
 const VersionCategoryStatusKit = LiteralKit(["ok", "drift", "unpinned", "error"]);
 /**
- * Status of a version category.
- *
  * **Example** (Annotate status type)
  *
  * ```ts
@@ -175,8 +165,6 @@ export const VersionCategoryStatusMatch = VersionCategoryStatusKit.match;
  */
 export const VersionCategoryStatusEnum = VersionCategoryStatusKit.Enum;
 /**
- * Status of a version category.
- *
  * **Example** (Annotate status type)
  *
  * ```ts
@@ -337,8 +325,6 @@ export const VersionCategoryReport = VersionCategory.mapMembers(
 export type VersionCategoryReport = typeof VersionCategoryReport.Type;
 
 /**
- * Full version sync report across all categories.
- *
  * **Example** (Import full sync report)
  *
  * ```ts
@@ -434,8 +420,6 @@ class VersionSyncOptionsCheck extends S.Opaque<VersionSyncOptionsCheck, { readon
 ) {}
 
 /**
- * Resolved option set for write mode.
- *
  * **Example** (Write only the Bun pin)
  *
  * ```ts
@@ -486,8 +470,6 @@ class VersionSyncOptionsDryRun extends S.Opaque<VersionSyncOptionsDryRun, { read
 ) {}
 
 /**
- * Resolved command options after flag parsing.
- *
  * **Example** (Annotate options type)
  *
  * ```ts
@@ -511,8 +493,6 @@ export const VersionSyncOptions = VersionSyncMode.mapMembers(
 );
 
 /**
- * Resolved command options after flag parsing.
- *
  * **Example** (Annotate options type)
  *
  * ```ts
@@ -528,8 +508,6 @@ export const VersionSyncOptions = VersionSyncMode.mapMembers(
 export type VersionSyncOptions = typeof VersionSyncOptions.Type;
 
 /**
- * YAML location to update in write mode.
- *
  * **Example** (Import update location schema)
  *
  * ```ts
@@ -553,8 +531,6 @@ export class VersionSyncUpdateLocation extends S.Opaque<VersionSyncUpdateLocatio
 ) {}
 
 /**
- * Resolver output consumed by reporting and write-mode services.
- *
  * **Example** (Import resolution schema)
  *
  * ```ts

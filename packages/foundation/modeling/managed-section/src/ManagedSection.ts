@@ -24,9 +24,6 @@ import type { CheckOutcome, SyncOutcome } from "./SectionOutcome.ts";
 const $I = $ManagedSectionId.create("ManagedSection");
 
 /**
- * Raised when the file behind a managed-section operation could not be read or
- * written.
- *
  * **Details**
  *
  * The underlying `PlatformError` is preserved structurally in `cause` rather
@@ -220,8 +217,6 @@ export interface ManagedSectionShape {
 }
 
 /**
- * How a `ManagedSection` layer reads and writes markers.
- *
  * **Example** (Configure a layer with the default dialect)
  *
  * ```ts
@@ -322,8 +317,6 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
         yield* Effect.annotateCurrentSpan({ path, sections: sections.length });
         const document = yield* load(path);
         const reconciled = yield* Effect.fromResult(document.reconcile(sections));
-        // Writing an identical file churns mtimes and makes every sync look
-        // like a change to anything watching.
         if (reconciled.changed) {
           yield* store(path, reconciled.text);
         }
@@ -353,15 +346,11 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
         })
       ),
 
-      // `sync` IS `syncAll` with one element: with a single declared section
-      // there is nothing to reorder, so the two agree exactly. A second
-      // implementation would be a second ordering rule waiting to drift.
       sync: dual(
         2,
         Effect.fn("ManagedSection.sync")(function* (path: string, section: Section) {
           yield* Effect.annotateCurrentSpan({ path, key: section.key });
           const outcomes = yield* syncAll(path, [section]);
-          // syncAll returns one outcome per declared section.
           return O.getOrThrow(A.head(outcomes));
         })
       ),
@@ -402,8 +391,6 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
   });
 
 /**
- * A defect raised when a managed-section test double calls an unstubbed member.
- *
  * **Example** (Identify an unstubbed member)
  *
  * ```ts
@@ -432,7 +419,6 @@ const unimplemented = (member: string): never => {
   });
 };
 
-/** An unstubbed two-argument member: both the data-first and the data-last call die when run. */
 const unstubbed = (
   member: string
 ): {

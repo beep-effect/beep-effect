@@ -203,8 +203,6 @@ export const AdmissionEvictionEmission = LiteralKit(["off", "on"]).pipe(
 );
 
 /**
- * Whether current scheduler writers may emit admission eviction events.
- *
  * @category models
  * @since 0.0.0
  */
@@ -238,8 +236,6 @@ export const AdmissionUnitEmission = LiteralKit(["off", "on"]).pipe(
 );
 
 /**
- * Whether current scheduler writers may record admission-unit fields.
- *
  * @category models
  * @since 0.0.0
  */
@@ -274,8 +270,6 @@ export const AdmissionPressureEmission = LiteralKit(["off", "on"]).pipe(
 );
 
 /**
- * Whether current scheduler writers stamp capacity and host pressure on admission rows.
- *
  * @category models
  * @since 0.0.0
  */
@@ -411,8 +405,6 @@ class AdmissionJournalLockReapAdopter extends S.Opaque<
 ) {}
 
 /**
- * Durable transition recorded when a queued ticket becomes an active lease.
- *
  * **Details**
  *
  * The row copies the ticket's admission-unit fields ({@link admissionUnitFields}),
@@ -455,8 +447,6 @@ export class AdmissionJournalAdmitted extends S.Opaque<AdmissionJournalAdmitted,
 ) {}
 
 /**
- * Durable transition recorded when an active admission lease is released.
- *
  * **Example** (Reference a released transition)
  *
  * ```ts
@@ -485,8 +475,6 @@ export class AdmissionJournalReleased extends S.Opaque<AdmissionJournalReleased,
 ) {}
 
 /**
- * Why a dead scheduler lease was evicted from capacity accounting.
- *
  * **Example** (Recognize an owner death)
  *
  * ```ts
@@ -505,8 +493,6 @@ export const AdmissionLeaseEvictionReason = LiteralKit(["owner-dead-or-reused"])
 );
 
 /**
- * Reason a dead admission lease was evicted from scheduler capacity accounting.
- *
  * **Example** (Name an eviction reason)
  *
  * ```ts
@@ -523,8 +509,6 @@ export const AdmissionLeaseEvictionReason = LiteralKit(["owner-dead-or-reused"])
 export type AdmissionLeaseEvictionReason = typeof AdmissionLeaseEvictionReason.Type;
 
 /**
- * Durable transition recorded after the scheduler reaps a verified dead lease.
- *
  * **Example** (Reference an eviction transition)
  *
  * ```ts
@@ -556,8 +540,6 @@ export class AdmissionJournalLeaseEvicted extends S.Opaque<
 ) {}
 
 /**
- * Why a dead scheduler ticket was evicted from the admission queue.
- *
  * **Example** (Recognize a queued submitter death)
  *
  * ```ts
@@ -576,8 +558,6 @@ export const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death
 );
 
 /**
- * Reason a dead admission ticket was evicted from the scheduler queue.
- *
  * **Example** (Name a queued submitter death)
  *
  * ```ts
@@ -593,8 +573,6 @@ export const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death
 export type AdmissionTicketEvictionReason = typeof AdmissionTicketEvictionReason.Type;
 
 /**
- * Durable transition recorded after the scheduler claims a dead queue ticket.
- *
  * **Example** (Reference a ticket eviction transition)
  *
  * ```ts

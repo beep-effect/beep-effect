@@ -50,8 +50,6 @@ export const YeetHeadMoveChange = LiteralKit([
 export type YeetHeadMoveChange = typeof YeetHeadMoveChange.Type;
 
 /**
- * Pinned old head, new head and synchronized base to classify.
- *
  * **Example** (YeetHeadMoveRequest evidence)
  *
  * ```ts
@@ -72,8 +70,6 @@ export class YeetHeadMoveRequest extends S.Opaque<YeetHeadMoveRequest, { readonl
 ) {}
 
 /**
- * A proven GitHub replay with identical non-empty commits.
- *
  * **Example** (YeetHeadMoveUnchanged evidence)
  *
  * ```ts
@@ -98,8 +94,6 @@ export class YeetHeadMoveUnchanged extends S.Opaque<YeetHeadMoveUnchanged, { rea
 ) {}
 
 /**
- * A head move that fails a rewrite invariant.
- *
  * **Example** (YeetHeadMoveChanged evidence)
  *
  * ```ts
@@ -121,8 +115,6 @@ export class YeetHeadMoveChanged extends S.Opaque<YeetHeadMoveChanged, { readonl
 ) {}
 
 /**
- * Unreadable evidence that must never carry proof.
- *
  * **Example** (YeetHeadMoveUnknown evidence)
  *
  * ```ts
@@ -160,9 +152,6 @@ export const YeetHeadMove = S.Union([YeetHeadMoveUnchanged, YeetHeadMoveChanged,
 export type YeetHeadMove = typeof YeetHeadMove.Type;
 
 /**
- * A proven merge of the synchronized base that leaves the pull request's own
- * patch unchanged.
- *
  * **Details**
  *
  * `after` is one two-parent commit whose first parent is `before` and whose

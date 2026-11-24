@@ -23,15 +23,11 @@ export * from "./identity/index.ts";
  */
 export * from "./services/canonicalization.ts";
 /**
- * SHACL validation service contract exports.
- *
  * @category services
  * @since 0.0.0
  */
 export * from "./services/shacl-validation.ts";
 /**
- * SPARQL query service contract exports.
- *
  * @category services
  * @since 0.0.0
  */

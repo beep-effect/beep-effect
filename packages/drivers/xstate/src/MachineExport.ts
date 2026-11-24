@@ -17,8 +17,6 @@ import type { AnyStateMachine, MachineJSON } from "xstate";
 const $I = $XstateId.create("MachineExport");
 
 /**
- * Codec between a serialized machine value and its pretty-printed JSON text.
- *
  * **Example** (Encode a machine value)
  *
  * ```ts

@@ -17,8 +17,6 @@ const $I = $DocumentsDomainId.create("entities/SyncCursor/SyncCursor.model");
 const pg = ProductEntity.pg;
 
 /**
- * Durable remote-event stream cursor enabling drift detection to survive app restarts.
- *
  * **Example** (Decode full SyncCursor entity)
  *
  * ```ts

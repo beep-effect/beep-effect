@@ -9,12 +9,14 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { constTrue } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { smoke } from "@/Smoke";
+import { DocketIntakeSmokeFailed, smoke } from "@/Smoke";
 import { fixtureConfig } from "./support/Config.ts";
 import {
   ambiguous,
@@ -29,6 +31,8 @@ import type { M365Script } from "./support/FakeM365.ts";
 
 const SmokeLayer = Layer.merge(FakeM365Layer, BunCrypto.layer);
 
+const isDocketIntakeSmokeFailed = S.is(DocketIntakeSmokeFailed);
+
 // Run the smoke check against a script; answer how many steps it reported failed, the verbs it
 // called and the lines it printed.
 const runSmoke = Effect.fnUntraced(function* (script: Partial<M365Script>, write: boolean) {
@@ -36,10 +40,9 @@ const runSmoke = Effect.fnUntraced(function* (script: Partial<M365Script>, write
   yield* Ref.set(fake.script, { ...passingScript, ...script });
   const exit = yield* Effect.exit(smoke(fixtureConfig, write));
   const argument = yield* Ref.get(fake.calls);
-  const argument1 = O.map(
-    Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none }),
-    (error) => error.failed
-  );
+  const failure = Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none });
+  expect(O.match(failure, { onNone: constTrue, onSome: isDocketIntakeSmokeFailed })).toBe(true);
+  const argument1 = O.map(failure, (error) => error.failed);
   const logLines1 = yield* TestConsole.logLines;
   return {
     calls: argument,

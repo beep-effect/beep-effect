@@ -123,6 +123,9 @@ extend-exclude = [
   # The SPDX license-id schema vendored for @beep/sbom's CycloneDX oracle:
   # byte-faithful upstream text pinned by sha256 in test/fixtures/VENDORED.md.
   "packages/foundation/modeling/sbom/test/fixtures/spdx.SNAPSHOT.schema.json",
+  # The CC BY-SA 3.0 legal code vendored beside the nanopublication schema:
+  # byte-faithful upstream text, recorded in its VENDORED.md.
+  "packages/foundation/modeling/rdf/data/vocab/nanopub-nschema/LICENSE",
   # The HTML5 named-character-reference table generated for @beep/markdown (entity names).
   "packages/foundation/modeling/markdown/src/internal/entityMap.ts",
   # Licensed GLib source is retained from the upstream crate for a safety backport.
@@ -221,6 +224,15 @@ extend-glob = ["THIRD_PARTY_NOTICES.md"]
 [type.cpython-notice.extend-words]
 Stichting = "Stichting"
 Mathematisch = "Mathematisch"
+
+# Preserve upstream author surnames in vendored-artifact attribution files.
+# This is a proper-name allowlist, not an exclusion of the attribution prose.
+[type.vendored-attribution]
+extend-glob = ["VENDORED.md"]
+
+[type.vendored-attribution.extend-words]
+Groth = "Groth"
+Wich = "Wich"
 
 # Preserve libxml2's exact diagnostic enum in source-audit evidence only.
 [type.citation-html-audit]

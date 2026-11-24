@@ -36,7 +36,7 @@ import type { EngineOptions } from "./types.ts";
  * @category encoding
  * @since 0.0.0
  */
-const escapePattern: {
+const escapeWithoutShadowingGlobalEscape: {
   (options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): (s: string) => string;
   (s: string, options?: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces">): string;
 } = dual(
@@ -48,9 +48,6 @@ const escapePattern: {
       magicalBraces = false,
     }: Pick<EngineOptions, "windowsPathsNoEscape" | "magicalBraces"> = {}
   ): string => {
-    // don't need to escape +@! because we escape the parens
-    // that make those magic, and escaping ! as [!] isn't valid,
-    // because [!]] is a valid glob class meaning not ']'.
     if (magicalBraces) {
       return windowsPathsNoEscape ? Str.replace(/[?*()[\]{}]/g, "[$&]")(s) : Str.replace(/[?*()[\]\\{}]/g, "\\$&")(s);
     }
@@ -58,6 +55,4 @@ const escapePattern: {
   }
 );
 
-// Exported under the upstream name; the internal binding avoids shadowing the
-// deprecated global escape().
-export { escapePattern as escape };
+export { escapeWithoutShadowingGlobalEscape as escape };

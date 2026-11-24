@@ -58,17 +58,12 @@ export const MatterClientKey = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link MatterClientKey}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MatterClientKey = typeof MatterClientKey.Type;
 
 /**
- * Practice-KG docket-family natural key in its client-keyed form,
- * `<client>.<family>`.
- *
  * **Details**
  *
  * Exactly two non-empty dot-separated segments and no whitespace. A bare family
@@ -105,16 +100,12 @@ export const MatterKey = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link MatterKey}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MatterKey = typeof MatterKey.Type;
 
 /**
- * Outlook category name for one matter: `M: <MatterKey>`.
- *
  * **Example** (Guard a matter category name)
  *
  * ```ts
@@ -138,8 +129,6 @@ export const MatterCategoryName = S.TemplateLiteral([matterCategoryPrefix, Matte
 );
 
 /**
- * Type-level brand produced by {@link MatterCategoryName}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -192,8 +181,6 @@ export const matterKeyFromCategoryName: (name: string) => O.Option<MatterKey> = 
 );
 
 /**
- * Closed set of practice-level Outlook categories.
- *
  * **Example** (Guard practice categories)
  *
  * ```ts
@@ -222,17 +209,12 @@ export const PracticeCategory = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeCategory}.
- *
  * @category models
  * @since 0.0.0
  */
 export type PracticeCategory = typeof PracticeCategory.Type;
 
 /**
- * Any Outlook category name owned by mail tagging: a matter category or a
- * practice category.
- *
  * **Example** (Decode an owned category name)
  *
  * ```ts
@@ -254,8 +236,6 @@ export const MailCategoryName = S.Union([MatterCategoryName, PracticeCategory]).
 );
 
 /**
- * Runtime type for {@link MailCategoryName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -286,8 +266,6 @@ export type MailCategoryName = typeof MailCategoryName.Type;
 export const isMailCategoryName = S.is(MailCategoryName);
 
 /**
- * Outlook master-category color presets, `preset0` through `preset24`.
- *
  * **Example** (Guard a color preset)
  *
  * ```ts
@@ -334,16 +312,12 @@ export const OutlookCategoryPreset = LiteralKit([
 );
 
 /**
- * Runtime type for {@link OutlookCategoryPreset}.
- *
  * @category models
  * @since 0.0.0
  */
 export type OutlookCategoryPreset = typeof OutlookCategoryPreset.Type;
 
 /**
- * One master category the applier must ensure exists: display name plus color.
- *
  * **Example** (Describe a master category)
  *
  * ```ts
@@ -482,17 +456,12 @@ export const MailDomain = S.String.check(
 );
 
 /**
- * Type-level brand produced by {@link MailDomain}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MailDomain = typeof MailDomain.Type;
 
 /**
- * Inbox-rule intent: mail from a sender domain is assigned one practice
- * category.
- *
  * **Example** (Describe a sender-domain rule)
  *
  * ```ts
@@ -521,9 +490,6 @@ export class SenderDomainRule extends S.Opaque<SenderDomainRule, { readonly bran
 ) {}
 
 /**
- * Inbox-rule intent: mail from one sender address is assigned one practice
- * category.
- *
  * **Example** (Describe a sender-address rule)
  *
  * ```ts
@@ -557,8 +523,6 @@ export class SenderAddressRule extends S.Opaque<SenderAddressRule, { readonly br
 ) {}
 
 /**
- * An Outlook-native inbox rule expressed as data.
- *
  * **Gotchas**
  *
  * The only action is assigning a practice category. There is no move, delete,
@@ -589,17 +553,12 @@ export const MailRuleIntent = S.Union([SenderDomainRule, SenderAddressRule]).pip
 );
 
 /**
- * Runtime type for {@link MailRuleIntent}.
- *
  * @category models
  * @since 0.0.0
  */
 export type MailRuleIntent = typeof MailRuleIntent.Type;
 
 /**
- * The mail-tagging taxonomy: practice categories, taggable matters, and
- * inbox-rule intents.
- *
  * **Example** (Decode a taxonomy with defaults)
  *
  * ```ts

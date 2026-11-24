@@ -172,25 +172,41 @@ const candidateFixture = (id: number, relators: ReadonlyArray<number>, org = 1) 
     verdictFamily: null,
   });
 
-/**
- * Append one record of each kind, seeded so the five ids are distinguishable in
- * the assertions: `seed`, `seed + 100`, and so on. Exercises and corrections
- * cite the frame appended alongside them.
- */
+const distinguishableIdOffsetPerKind = {
+  candidate: 400,
+  correction: 300,
+  exercise: 200,
+  frame: 100,
+  relator: 0,
+};
+
 const appendEveryKind = Effect.fnUntraced(function* (
   repository: LegalPositionRecordRepositoryShape,
   seed: number,
   org = 1
 ) {
-  const relatorFixture1 = yield* relatorFixture(seed, org);
+  const frameAppendedAlongsideId = seed + distinguishableIdOffsetPerKind.frame;
+  const relatorFixture1 = yield* relatorFixture(seed + distinguishableIdOffsetPerKind.relator, org);
   yield* repository.recordRelator(relatorFixture1);
-  const frameFixture2 = yield* frameFixture(seed + 100, org);
+  const frameFixture2 = yield* frameFixture(frameAppendedAlongsideId, org);
   yield* repository.recordFrame(frameFixture2);
-  const exerciseFixture3 = yield* exerciseFixture(seed + 200, seed + 100, org);
+  const exerciseFixture3 = yield* exerciseFixture(
+    seed + distinguishableIdOffsetPerKind.exercise,
+    frameAppendedAlongsideId,
+    org
+  );
   yield* repository.recordExercise(exerciseFixture3);
-  const correctionFixture4 = yield* correctionFixture(seed + 300, seed + 100, org);
+  const correctionFixture4 = yield* correctionFixture(
+    seed + distinguishableIdOffsetPerKind.correction,
+    frameAppendedAlongsideId,
+    org
+  );
   yield* repository.recordCorrection(correctionFixture4);
-  const candidateFixture5 = yield* candidateFixture(seed + 400, [seed, seed + 1], org);
+  const candidateFixture5 = yield* candidateFixture(
+    seed + distinguishableIdOffsetPerKind.candidate,
+    [seed, seed + 1],
+    org
+  );
   yield* repository.recordOppositionCandidate(candidateFixture5);
 });
 
@@ -205,11 +221,9 @@ const underFrame = (frame: number, org = 1) =>
 describe("@beep/law-practice-server legal position record repository", () => {
   it.layer(Layer.fresh(LegalPositionRecordRepositoryInMemory), { timeout: "10 seconds" })("tenant isolation", (it) => {
     it.effect(
-      "never returns another organization's records",
+      "never merges another organization's records about the same norm and act into one legal picture",
       Effect.fnUntraced(function* () {
         const repository = yield* LegalPositionRecordRepository;
-        // Two tenants recording positions about the same norm and the same act
-        // is the case an unscoped read silently merges into one legal picture.
         yield* appendEveryKind(repository, 1, 1);
         yield* appendEveryKind(repository, 2, 2);
 
@@ -227,12 +241,16 @@ describe("@beep/law-practice-server legal position record repository", () => {
         const listOppositionCandidates11 = yield* repository.listOppositionCandidates(tenant(2));
         expect(ids(listOppositionCandidates11)).toEqual([402]);
 
-        // The frame-keyed reads are tenant-scoped first: tenant 1 asking for
-        // tenant 2's frame gets nothing rather than tenant 2's exercises.
         const listExercises12 = yield* repository.listExercises(underFrame(102, 1));
-        expect(ids(listExercises12)).toEqual([]);
+        expect(
+          ids(listExercises12),
+          "frame-keyed reads are tenant-scoped first: tenant 1 gets nothing for tenant 2's frame"
+        ).toEqual([]);
         const listCorrections13 = yield* repository.listCorrections(underFrame(102, 1));
-        expect(ids(listCorrections13)).toEqual([]);
+        expect(
+          ids(listCorrections13),
+          "frame-keyed reads are tenant-scoped first: tenant 1 gets nothing for tenant 2's frame"
+        ).toEqual([]);
         const listExercises14 = yield* repository.listExercises(underFrame(102, 2));
         expect(ids(listExercises14)).toEqual([202]);
       })
@@ -260,11 +278,14 @@ describe("@beep/law-practice-server legal position record repository", () => {
           expect(ids(corrections)).toEqual([301]);
           expect(ids(candidates)).toEqual([401]);
 
-          // Round-tripping the recorded surface, not just the row count. An
-          // exercise that lost its disposition would be authority laundering, and
-          // a candidate that lost half its pair would name nothing.
-          expect(A.map(exercises, (exercise) => exercise.result.disposition.disposition)).toEqual(["undetermined"]);
-          expect(A.map(candidates, (candidate) => HashSet.size(candidate.candidate.relators))).toEqual([2]);
+          expect(
+            A.map(exercises, (exercise) => exercise.result.disposition.disposition),
+            "an exercise that lost its disposition would launder authority"
+          ).toEqual(["undetermined"]);
+          expect(
+            A.map(candidates, (candidate) => HashSet.size(candidate.candidate.relators)),
+            "a candidate that lost half its pair would name nothing"
+          ).toEqual([2]);
           expect(A.map(frames, (frame) => HashSet.size(frame.derivationKind.kinds))).toEqual([2]);
         })
       );
@@ -291,10 +312,10 @@ describe("@beep/law-practice-server legal position record repository", () => {
           const listCorrections18 = yield* repository.listCorrections(underFrame(102));
           expect(ids(listCorrections18)).toEqual([302]);
 
-          // Both frames belong to the same tenant, so the tenant-wide reads see
-          // both while the frame-keyed reads never mix them.
           const listFrames19 = yield* repository.listFrames(tenant(1));
-          expect(ids(listFrames19)).toEqual([101, 102]);
+          expect(ids(listFrames19), "both frames belong to one tenant, so the tenant-wide read sees both").toEqual([
+            101, 102,
+          ]);
         })
       );
     }
@@ -304,12 +325,10 @@ describe("@beep/law-practice-server legal position record repository", () => {
     "ordering reads of one scope",
     (it) => {
       it.effect(
-        "returns each kind by id ascending whatever order it was appended in",
+        "returns each kind by id ascending when the highest id was appended first, so replaying insertions fails",
         Effect.fnUntraced(function* () {
           const repository = yield* LegalPositionRecordRepository;
 
-          // Appended highest id first, so append order and id order disagree and
-          // a store that simply replayed insertions would fail here.
           yield* appendEveryKind(repository, 3);
           yield* appendEveryKind(repository, 1);
 
@@ -324,14 +343,12 @@ describe("@beep/law-practice-server legal position record repository", () => {
     }
   );
 
-  describe("tenant scoping over arbitrary records", () => {
-    // Schema-derived rather than hand-written, so the tenant split is proved
-    // over organizations and ids nobody chose to make the assertion easy. Each
-    // run builds its own store, which is stricter isolation than a shared
-    // `Layer.fresh` gives across runs of one property.
+  describe("tenant scoping over schema-derived records whose organizations and ids nobody chose", () => {
     const relators = LegalPositionRelator;
 
-    const readPerOrganization = Effect.fnUntraced(function* (recorded: ReadonlyArray<LegalPositionRelator>) {
+    const readPerOrganizationFromAStoreBuiltPerRun = Effect.fnUntraced(function* (
+      recorded: ReadonlyArray<LegalPositionRelator>
+    ) {
       const repository = yield* makeInMemoryLegalPositionRecordRepository();
       yield* Effect.forEach(recorded, (relator) => repository.recordRelator(relator), { concurrency: 1 });
 
@@ -357,7 +374,7 @@ describe("@beep/law-practice-server legal position record repository", () => {
       [S.Array(relators).check(S.isMaxLength(12))],
       ([recorded]) =>
         Effect.gen(function* () {
-          for (const { expected, read } of yield* readPerOrganization(recorded)) {
+          for (const { expected, read } of yield* readPerOrganizationFromAStoreBuiltPerRun(recorded)) {
             expect(read).toEqual(expected);
           }
         }),

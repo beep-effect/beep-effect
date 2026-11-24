@@ -61,8 +61,6 @@ export class CatalogMisconfiguration extends S.Opaque<CatalogMisconfiguration, {
   )
 ) {}
 /**
- * Companion types for {@link CatalogMisconfiguration}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -111,8 +109,6 @@ export class InlineCatalogBlocks extends S.Opaque<InlineCatalogBlocks, { readonl
   )
 ) {}
 /**
- * Companion types for {@link InlineCatalogBlocks}.
- *
  * @category type-level
  * @since 0.0.0
  */

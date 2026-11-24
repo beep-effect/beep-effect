@@ -227,8 +227,6 @@ export { fixtureOcrPage } from "./internal/officeActionFixture.ts";
  */
 export { EntityInput } from "./internal/spikeEntity.ts";
 /**
- * Fixed office-action review spike candidates.
- *
  * **Example** (Log spike candidates length)
  *
  * ```ts

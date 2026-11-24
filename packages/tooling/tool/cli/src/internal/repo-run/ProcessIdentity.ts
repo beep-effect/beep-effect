@@ -30,8 +30,6 @@ class ProcessIdentityOperationError extends S.TaggedError<
 const $I = $RepoCliId.create("internal/repo-run/ProcessIdentity");
 
 /**
- * Process-inspection source encoded into a durable start identity.
- *
  * **Example** (Inspect the supported sources)
  *
  * ```ts
@@ -50,8 +48,6 @@ export const ProcessIdentitySource = LiteralKit(["proc", "ps", "win"]).pipe(
 );
 
 /**
- * Type represented by {@link ProcessIdentitySource}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +75,6 @@ export const ProcessStartIdentity = S.TemplateLiteral([ProcessIdentitySource, ":
 );
 
 /**
- * Type represented by {@link ProcessStartIdentity}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -99,8 +93,6 @@ export const ProcessIdentityStatus = LiteralKit(["alive", "dead", "unknown"]).pi
 );
 
 /**
- * Type represented by {@link ProcessIdentityStatus}.
- *
  * @category models
  * @since 0.0.0
  */

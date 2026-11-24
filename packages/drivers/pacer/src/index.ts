@@ -48,8 +48,6 @@ export * from "./Pacer.layer.ts";
  */
 export * from "./Pacer.mock.ts";
 /**
- * Schema-derived PACER mock data.
- *
  * @category testing
  * @since 0.0.0
  */

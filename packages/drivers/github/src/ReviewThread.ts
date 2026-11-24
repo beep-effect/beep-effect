@@ -33,8 +33,6 @@ import { Repo } from "./Repo.ts";
 const $I = $GithubId.create("ReviewThread");
 
 /**
- * Which side of the diff a review thread is anchored to.
- *
  * **Example** (Validate a diff side)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const DiffSide = LiteralKit(["LEFT", "RIGHT"]).pipe(
 );
 
 /**
- * The values accepted by {@link DiffSide}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -62,8 +58,6 @@ export const DiffSide = LiteralKit(["LEFT", "RIGHT"]).pipe(
 export type DiffSide = typeof DiffSide.Type;
 
 /**
- * Who wrote a review thread comment, and whether that account is a bot.
- *
  * **Details**
  *
  * GraphQL reports the actor's `__typename`; `isBot` is `true` exactly when it is
@@ -97,8 +91,6 @@ export class ReviewThreadActor extends S.Opaque<ReviewThreadActor, { readonly br
 ) {}
 
 /**
- * One comment inside a review thread, carrying both id surfaces.
- *
  * **Details**
  *
  * `id` is the GraphQL node id (`PRRC_...`); `databaseId` is the numeric REST
@@ -245,8 +237,6 @@ export class ReviewThreadNode extends S.Opaque<ReviewThreadNode, { readonly bran
 ) {}
 
 /**
- * Cursor metadata for one page of review threads.
- *
  * **Example** (The last page)
  *
  * ```ts
@@ -273,8 +263,6 @@ export class ReviewThreadPageInfo extends S.Opaque<ReviewThreadPageInfo, { reado
 ) {}
 
 /**
- * One decoded page of a pull request's review threads.
- *
  * **Example** (An empty page)
  *
  * ```ts
@@ -308,8 +296,6 @@ export class ReviewThreadPage extends S.Opaque<ReviewThreadPage, { readonly bran
 ) {}
 
 /**
- * Every review thread on a pull request, plus the pull request's author.
- *
  * **Details**
  *
  * The author rides along because the merge-gate rule ({@link outstanding})

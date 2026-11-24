@@ -32,8 +32,6 @@ const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/NodeResolv
 // ── Types ───────────────────────────────────────────────────────────────────
 
 /**
- * A workflow file location with a `node-version` field.
- *
  * @category models
  * @since 0.0.0
  */
@@ -52,8 +50,6 @@ export class NodeVersionLocation extends S.Opaque<NodeVersionLocation, { readonl
 ) {}
 
 /**
- * Resolved Node version state.
- *
  * @category models
  * @since 0.0.0
  */

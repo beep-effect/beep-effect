@@ -36,8 +36,6 @@ export const PublicOrigin = S.Literal("https://beep-effect.com").pipe(
 );
 
 /**
- * Literal type of the public origin decoded by {@link PublicOrigin}.
- *
  * @category models
  * @since 0.0.0
  */

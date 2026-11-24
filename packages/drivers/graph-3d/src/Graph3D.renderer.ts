@@ -309,8 +309,6 @@ export class Graph3DRenderStats extends S.Opaque<Graph3DRenderStats, { readonly 
 ) {}
 
 /**
- * Mounted 3D graph renderer handle.
- *
  * **Example** (Type a render handle)
  *
  * ```ts

@@ -70,42 +70,6 @@ export class ASTError extends S.TaggedError<ASTError, { readonly brand: unique s
   })
 ) {}
 
-// classes [] are handled by the parseClass method
-// for positive extglobs, we sub-parse the contents, and combine,
-// with the appropriate regexp close.
-// for negative extglobs, we sub-parse the contents, but then
-// have to include the rest of the pattern, then the parent, etc.,
-// as the thing that cannot be because RegExp negative lookaheads
-// are different from globs.
-//
-// So for example:
-// a@(i|w!(x|y)z|j)b => ^a(i|w((!?(x|y)zb).*)z|j)b$
-//   1   2 3   4 5 6      1   2    3   46      5 6
-//
-// Assembling the extglob requires not just the negated patterns themselves,
-// but also anything following the negative patterns up to the boundary
-// of the current pattern, plus anything following in the parent pattern.
-//
-// So, first, we parse the string into an AST of extglobs, without turning
-// anything into regexps yet.
-//
-// ['a', {@ [['i'], ['w', {!['x', 'y']}, 'z'], ['j']]}, 'b']
-//
-// Then, for all the negative extglobs, we append whatever comes after in
-// each parent as their tail
-//
-// ['a', {@ [['i'], ['w', {!['x', 'y'], 'z', 'b'}, 'z'], ['j']]}, 'b']
-//
-// Lastly, we turn each of these pieces into a regexp, and join
-//
-//                                 v----- .* because there's more following,
-//                                 v    v  otherwise, .+ because it must be
-//                                 v    v  *something* there.
-// ['^a', {@ ['i', 'w(?:(!?(?:x|y).*zb$).*)z', 'j' ]}, 'b$']
-//   copy what follows into here--^^^^^
-// ['^a', '(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)', 'b$']
-// ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
-
 /**
  * The five operators that introduce an extended glob expression.
  *
@@ -143,23 +107,7 @@ export type ExtglobType = typeof ExtglobType.Type;
 const isExtglobType = S.is(ExtglobType);
 const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } => isExtglobType(c.type);
 
-// Map of which extglob types can adopt the children of a nested extglob
-//
-// anything but ! can adopt a matching type:
-// +(a|+(b|c)|d) => +(a|b|c|d)
-// *(a|*(b|c)|d) => *(a|b|c|d)
-// @(a|@(b|c)|d) => @(a|b|c|d)
-// ?(a|?(b|c)|d) => ?(a|b|c|d)
-//
-// * can adopt anything, because 0 or repetition is allowed
-// + can adopt @, because 1 or repetition is allowed
-// + and @ CANNOT adopt *, because 0 would be allowed
-// + and @ CANNOT adopt ?, because 0 would be allowed
-// ? can adopt @, because 0 or 1 is allowed
-// ? and @ CANNOT adopt * or +, because >1 would be allowed
-// ! CANNOT adopt ! (nothing else can either)
-// ! can adopt @
-// ! CANNOT adopt *, +, or ?
+// decision: ast-extglob-adoption-tables
 const adoptionMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
   ["!", ["@"]],
   ["?", ["?", "@"]],
@@ -168,16 +116,13 @@ const adoptionMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
   ["+", ["+", "@"]],
 ]);
 
-// nested extglobs that can be adopted in, but with the addition of
-// a blank '' element.
-const adoptionWithSpaceMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
+const adoptionWithEmptyAlternativeMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
   ["!", ["?"]],
   ["@", ["?"]],
   ["+", ["?", "*"]],
 ]);
 
-// union of the previous two maps
-const adoptionAnyMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
+const adoptionOrAdoptionWithEmptyAlternativeMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
   ["!", ["?", "@"]],
   ["?", ["?", "@"]],
   ["@", ["?", "@"]],
@@ -185,10 +130,6 @@ const adoptionAnyMap = HashMap.fromIterable<ExtglobType, Array<ExtglobType>>([
   ["+", ["+", "@", "?", "*"]],
 ]);
 
-// Extglobs that can take over their parent if they are the only child
-// the key is parent, value maps child to resulting extglob parent type
-// '@' is omitted because it's a special case. An `@` extglob with a single
-// member can always be usurped by that subpattern.
 const usurpMap = HashMap.fromIterable<ExtglobType, HashMap.HashMap<ExtglobType, ExtglobType>>([
   ["!", HashMap.fromIterable<ExtglobType, ExtglobType>([["!", "@"]])],
   [
@@ -217,30 +158,18 @@ const usurpMap = HashMap.fromIterable<ExtglobType, HashMap.HashMap<ExtglobType, 
   ],
 ]);
 
-// Patterns that get prepended to bind to the start of either the
-// entire string, or just a single path portion, to prevent dots
-// and/or traversal patterns, when needed.
-// Exts don't need the ^ or / bit, because the root binds that already.
 const startNoTraversal = "(?!(?:^|/)\\.\\.?(?:$|/))";
-const startNoDot = "(?!\\.)";
+const startNoDotUnanchoredSinceRootBindsTheStart = "(?!\\.)";
 
-// characters that indicate a start of pattern needs the "no dots" bit,
-// because a dot *might* be matched. ( is not in the list, because in
-// the case of a child extglob, it will handle the prevention itself.
-const addPatternStart = HashSet.make("[", ".");
-// cases where traversal is A-OK, no dot prevention needed
-const justDots = HashSet.make("..", ".");
+const dotGuardStartCharsParenLeftToChildExtglobs = HashSet.make("[", ".");
+const dotSegmentsMatchOnlyExactly = HashSet.make("..", ".");
 const reSpecials = HashSet.fromIterable("().*{}+?[]^$\\!");
 const regExpEscape = Str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
-// any single thing other than /
 const qmark = "[^/]";
 
-// * => any number of characters
 const star = `${qmark}*?`;
-// use + when we need to ensure that *something* matches, because the * is
-// the only thing in the path portion.
-const starNoEmpty = `${qmark}+?`;
+const starNonEmptyWhenSoleInPortion = `${qmark}+?`;
 
 const guardDepth = (depth: number): void => {
   if (depth > MAX_NESTING_DEPTH) {
@@ -248,15 +177,12 @@ const guardDepth = (depth: number): void => {
   }
 };
 
-// Whether `c` opens an extglob at the scan position (its `(` follows).
 const opensExtglob = (str: string, pos: number, opt: EngineOptionsInput, c: string): c is ExtglobType =>
   opt.noext !== true && isExtglobType(c) && str[pos] === "(";
 
-// A non-empty object child of sequence type (null operator).
 const isSequenceChild = (child?: AST | string): child is AST =>
   child !== undefined && child !== "" && P.isObjectKeyword(child) && !P.isFunction(child) && child.type === null;
 
-// The per-call inputs every #parseAST helper shares.
 interface ParseFrame {
   readonly extDepth: number;
   readonly maxDepth: number;
@@ -265,19 +191,12 @@ interface ParseFrame {
   readonly structDepth: number;
 }
 
-// The extglob scan state: the alternative being built and those closed so far.
 interface ExtglobParse {
   part: AST;
   readonly parts: Array<AST>;
   readonly scan: LiteralScanner;
 }
 
-// The cursor both #parseAST loops share: one per parse call. It accumulates
-// literal text and tracks backslash escapes (still accumulated, but an
-// escaped extglob start is ignored) and `[...]` classes, inside which extglob
-// openers, `|` and `)` are plain text. Iterating appends every such literal
-// character to `acc` and yields each character the parser must inspect; `pos`
-// is then the index after it, and a recursive parse may advance it.
 class LiteralScanner {
   readonly #str: string;
   #escaping = false;
@@ -295,7 +214,7 @@ class LiteralScanner {
   *[Symbol.iterator](): Generator<string, void, undefined> {
     while (this.pos < this.#str.length) {
       const c = String(this.#str[this.pos++]);
-      if (this.#consumes(c)) {
+      if (this.#accumulatesAsLiteralEscapesAndClassBodiesIncluded(c)) {
         this.acc += c;
       } else {
         yield c;
@@ -303,14 +222,13 @@ class LiteralScanner {
     }
   }
 
-  // Returns the accumulated literal text and starts a fresh run.
   take(): string {
     const acc = this.acc;
     this.acc = "";
     return acc;
   }
 
-  #consumes(c: string): boolean {
+  #accumulatesAsLiteralEscapesAndClassBodiesIncluded(c: string): boolean {
     const i = this.pos;
     if (this.#escaping || c === "\\") {
       this.#escaping = !this.#escaping;
@@ -329,8 +247,6 @@ class LiteralScanner {
     return false;
   }
 
-  // One character inside a `[...]` class: a leading `^`/`!` negates it, and a
-  // `]` closes it unless it is the first member of a negated class.
   #scanBrace(c: string, i: number): void {
     if (i === this.#braceStart + 1) {
       if (c === "^" || c === "!") this.#braceNeg = true;
@@ -342,39 +258,30 @@ class LiteralScanner {
 
 type RegExpSourceResult = [re: string, body: string, hasMagic: boolean, uflag: boolean];
 
-// The case-insensitivity flag an engine option bag asks for.
+type ResetByAssigningUndefinedSoNotOptional<A> = A | undefined;
+
 const caseFlags = (options: EngineOptionsInput): string => (options.nocase === true ? "i" : "");
 
-// Whether the start of a regexp source may match `.` or `..` and so needs the
-// no-traversal guard.
 const needsNoTraversal = (src: string, dot: boolean): boolean =>
-  // dots are allowed, and the pattern starts with [ or .
-  (dot && HashSet.has(addPatternStart, Str.slice(0, 1)(src))) ||
-  // the pattern starts with \., and then [ or .
-  (Str.startsWith("\\.")(src) && HashSet.has(addPatternStart, Str.slice(2, 3)(src))) ||
-  // the pattern starts with \.\., and then [ or .
-  (Str.startsWith("\\.\\.")(src) && HashSet.has(addPatternStart, Str.slice(4, 5)(src)));
+  (dot && HashSet.has(dotGuardStartCharsParenLeftToChildExtglobs, Str.slice(0, 1)(src))) ||
+  (Str.startsWith("\\.")(src) && HashSet.has(dotGuardStartCharsParenLeftToChildExtglobs, Str.slice(2, 3)(src))) ||
+  (Str.startsWith("\\.\\.")(src) && HashSet.has(dotGuardStartCharsParenLeftToChildExtglobs, Str.slice(4, 5)(src)));
 
-// check if we have a possibility of matching . or .., and prevent that. no
-// need to prevent dots if it can't match a dot, or if a sub-pattern will be
-// preventing it anyway.
 const startGuard = (src: string, dot: boolean, allowDot: boolean | undefined): string => {
   if (needsNoTraversal(src, dot)) return startNoTraversal;
-  return !dot && allowDot !== true && HashSet.has(addPatternStart, Str.slice(0, 1)(src)) ? startNoDot : "";
+  return !dot && allowDot !== true && HashSet.has(dotGuardStartCharsParenLeftToChildExtglobs, Str.slice(0, 1)(src))
+    ? startNoDotUnanchoredSinceRootBindsTheStart
+    : "";
 };
 
-// The closing group of a non-negated extglob; `dotted` marks a repeat whose
-// dot-allowed body already carries the repetition.
-const extglobCloseFor = (type: ExtglobType, dotted: boolean): string => {
+const extglobCloseFor = (type: ExtglobType, bodyCarriesRepetition: boolean): string => {
   if (type === "@") return ")";
   if (type === "?") return ")?";
-  if (type === "+" && dotted) return ")";
-  if (type === "*" && dotted) return ")?";
+  if (type === "+" && bodyCarriesRepetition) return ")";
+  if (type === "*" && bodyCarriesRepetition) return ")?";
   return `)${type}`;
 };
 
-// Literal-piece scan state for #parseGlob. Multiple stars that aren't
-// globstars coalesce into one *.
 interface GlobPieceScan {
   escaping: boolean;
   readonly glob: string;
@@ -430,7 +337,7 @@ const escapedPieceChar = (c: string): string => (HashSet.has(reSpecials, c) ? "\
 const globPieceStar = (scan: GlobPieceScan): void => {
   if (scan.inStar) return;
   scan.inStar = true;
-  scan.re += scan.noEmpty === true && /^[*]+$/.test(scan.glob) ? starNoEmpty : star;
+  scan.re += scan.noEmpty === true && /^[*]+$/.test(scan.glob) ? starNonEmptyWhenSoleInPortion : star;
   scan.hasMagic = true;
 };
 
@@ -442,7 +349,6 @@ const globPieceBackslash = (scan: GlobPieceScan): void => {
   }
 };
 
-// A `[...]` class at the cursor; false when it does not parse as one.
 const globPieceClass = (scan: GlobPieceScan): boolean => {
   const [src, needUflag, consumed, magic] = parseClass(scan.glob, scan.i);
   if (consumed === 0 || Number.isNaN(consumed)) return false;
@@ -453,7 +359,6 @@ const globPieceClass = (scan: GlobPieceScan): boolean => {
   return true;
 };
 
-// Segment-matcher compilation (see #makeSegmentMatcher).
 type SegmentMemo = MutableHashMap.MutableHashMap<string, ReadonlyArray<number>>;
 
 interface SegmentStep {
@@ -465,8 +370,6 @@ interface SegmentIds {
   next: number;
 }
 
-// One compiled node: its regexp sources and regexps per dot mode, and the
-// compiled steps of its parts.
 interface CompiledSegment {
   readonly branches: ReadonlyArray<readonly [AST, SegmentStep]>;
   readonly children: ReadonlyArray<SegmentStep>;
@@ -478,21 +381,18 @@ interface CompiledSegment {
 
 const segmentRegExp = (options: EngineOptionsInput, [source, , , unicode]: RegExpSourceResult): RegExp =>
   new RegExp(
-    `^(?:${Str.replace(startNoDot, "")(Str.replace(startNoTraversal, "")(source))})$`,
+    `^(?:${Str.replace(startNoDotUnanchoredSinceRootBindsTheStart, "")(Str.replace(startNoTraversal, "")(source))})$`,
     caseFlags(options) + (unicode ? "u" : "")
   );
 
-// Whether the contextual start assertions of `source` reject the candidate
-// tail at `start`.
 const startBlocked = (source: string, candidate: string, start: number): boolean => {
   const tail = Str.slice(start)(candidate);
   return (
-    (Str.startsWith(startNoDot)(source) && Str.startsWith(".")(tail)) ||
+    (Str.startsWith(startNoDotUnanchoredSinceRootBindsTheStart)(source) && Str.startsWith(".")(tail)) ||
     (Str.startsWith(startNoTraversal)(source) && start === 0 && (tail === "." || tail === ".."))
   );
 };
 
-// Every end offset from `start` at which `regexp` matches the slice.
 const scanEnds = (regexp: RegExp, candidate: string, start: number): Array<number> => {
   const ends: Array<number> = [];
   for (let end = start; end <= candidate.length; end++) {
@@ -530,8 +430,6 @@ const followChild = (
   return following;
 };
 
-// Closes the reachable ends of a `*`/`+` extglob under repetition; `*` also
-// matches the empty run.
 const repeatedEnds = (
   type: "*" | "+",
   initial: HashSet.HashSet<number>,
@@ -608,8 +506,6 @@ export class AST {
    */
   readonly #root: AST;
 
-  // #hasMagic and #toString are assigned undefined to reset them, so they are
-  // declared `| undefined` rather than optional (exactOptionalPropertyTypes).
   /**
    * Caches whether this node requires glob-aware regular-expression matching.
    *
@@ -626,7 +522,7 @@ export class AST {
    * @category models
    * @since 0.0.0
    */
-  #hasMagic: boolean | undefined;
+  #hasMagic: ResetByAssigningUndefinedSoNotOptional<boolean>;
   /**
    * Tracks whether generated character-class source requires the Unicode flag.
    *
@@ -756,9 +652,7 @@ export class AST {
    * @category models
    * @since 0.0.0
    */
-  #toString: string | undefined;
-  // set to true if it's an extglob with no children
-  // (which really means one child of '')
+  #toString: ResetByAssigningUndefinedSoNotOptional<string>;
   /**
    * Marks an extglob with no children, representing one empty alternative.
    *
@@ -873,7 +767,6 @@ export class AST {
    */
   constructor(type: ExtglobType | null, parent?: AST, options: EngineOptionsInput = {}) {
     this.type = type;
-    // extglobs are inherently magical
     if (type !== null) this.#hasMagic = true;
     this.#parent = parent;
     this.#root = this.#parent !== undefined ? this.#parent.#root : this;
@@ -914,11 +807,9 @@ export class AST {
         return this.#hasMagic;
       }
     }
-    // note: will be undefined until we generate the regexp src and find out
     return this.#hasMagic;
   }
 
-  // reconstructs the pattern
   /**
    * Reconstructs the glob pattern represented by this node.
    *
@@ -979,7 +870,6 @@ export class AST {
   #fillNegs() {
     if (this.#filledNegs) return this;
 
-    // call toString() once to fill this out
     this.toString();
     this.#filledNegs = true;
     let n: AST | undefined = this.#negs.pop();
@@ -990,8 +880,6 @@ export class AST {
     return this;
   }
 
-  // walk up the tree from this `!` extglob, appending everything that comes
-  // AFTER parentIndex in each sequence ancestor
   #fillNegTail(): void {
     let p: AST = this;
     let pp = p.#parent;
@@ -1106,7 +994,6 @@ export class AST {
     if (this.#root === this) return true;
     if (this.#parent?.isStart() !== true) return false;
     if (this.#parentIndex === 0) return true;
-    // if everything AHEAD of this is a negation, then it's still the "start"
     const p = this.#parent;
     for (let i = 0; i < this.#parentIndex; i++) {
       const pp = p.#parts[i];
@@ -1141,7 +1028,6 @@ export class AST {
     if (this.#parent?.type === "!") return true;
     if (this.#parent?.isEnd() !== true) return false;
     if (this.type === null) return this.#parent?.isEnd();
-    // if not root, it'll always have a parent
     const pl = this.#parent.#parts.length;
     return this.#parentIndex === pl - 1;
   }
@@ -1224,8 +1110,6 @@ export class AST {
   } = dual(
     6,
     (str: string, ast: AST, pos: number, opt: EngineOptionsInput, extDepth: number, structDepth: number): number => {
-      // Structural backstop (port note 1): actual recursion depth, counted on
-      // EVERY descent, unlike extDepth which adoption resets.
       guardDepth(structDepth);
       const frame: ParseFrame = {
         str,
@@ -1238,13 +1122,10 @@ export class AST {
     }
   );
 
-  // outside of a extglob, append until we find a start
   static #parseSequence(ast: AST, pos: number, frame: ParseFrame): number {
     const { str, opt, extDepth, structDepth, maxDepth } = frame;
     const sequence = new LiteralScanner(str, pos);
     for (const c of sequence) {
-      // we don't have to check for adoption here, because that's
-      // done at the other recursion point.
       if (opensExtglob(str, sequence.pos, opt, c) && extDepth <= maxDepth) {
         ast.push(sequence.take());
         const ext = new AST(c, ast);
@@ -1258,24 +1139,22 @@ export class AST {
     return sequence.pos;
   }
 
-  // some kind of extglob, pos is at the (
-  // find the next | or )
   static #parseExtglob(ast: AST, pos: number, frame: ParseFrame): number {
     const state: ExtglobParse = { scan: new LiteralScanner(frame.str, pos + 1), part: new AST(null, ast), parts: [] };
     for (const c of state.scan) {
       if (ast.#extglobStep(state, c, frame)) return state.scan.pos;
     }
 
-    // unfinished extglob
-    // if we got here, it was a malformed extglob! not an extglob, but
-    // maybe something else in there.
-    ast.type = null;
-    ast.#hasMagic = undefined;
-    ast.#parts = [Str.slice(pos - 1)(frame.str)];
+    ast.#demoteUnclosedExtglobToLiteralText(Str.slice(pos - 1)(frame.str));
     return state.scan.pos;
   }
 
-  // One character the extglob scan must inspect; true once `)` closes it.
+  #demoteUnclosedExtglobToLiteralText(text: string): void {
+    this.type = null;
+    this.#hasMagic = undefined;
+    this.#parts = [text];
+  }
+
   #extglobStep(state: ExtglobParse, c: string, frame: ParseFrame): boolean {
     if (
       opensExtglob(frame.str, state.scan.pos, frame.opt, c) &&
@@ -1337,7 +1216,7 @@ export class AST {
    * @since 0.0.0
    */
   #canAdoptWithSpace(child?: AST | string): O.Option<AST & { type: ExtglobType }> {
-    return this.#canAdopt(child, adoptionWithSpaceMap);
+    return this.#canAdopt(child, adoptionWithEmptyAlternativeMap);
   }
 
   /**
@@ -1363,7 +1242,6 @@ export class AST {
     return O.filter(AST.#soleExtglobGrandchild(child), (gc) => this.#canAdoptType(gc.type, map));
   }
 
-  // The extglob wrapped by a sequence child holding exactly one part.
   static #soleExtglobGrandchild(child?: AST | string): O.Option<AST & { type: ExtglobType }> {
     if (!isSequenceChild(child) || child.#parts.length !== 1) return O.none();
     const gc = child.#parts[0];
@@ -1385,7 +1263,10 @@ export class AST {
    * @category predicates
    * @since 0.0.0
    */
-  #canAdoptType(c: string, map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionAnyMap): c is ExtglobType {
+  #canAdoptType(
+    c: string,
+    map: HashMap.HashMap<ExtglobType, Array<ExtglobType>> = adoptionOrAdoptionWithEmptyAlternativeMap
+  ): c is ExtglobType {
     return (
       this.type !== null && isExtglobType(c) && O.exists(HashMap.get(map, this.type), (types) => types.includes(c))
     );
@@ -1556,8 +1437,6 @@ export class AST {
     }
   );
 
-  // returns the regular expression if there's magic, or the unescaped
-  // string if not.
   /**
    * Produces a regular expression for magic patterns or an unescaped literal for plain patterns.
    *
@@ -1582,7 +1461,6 @@ export class AST {
    * @since 0.0.0
    */
   toMMPattern(): MMRegExp | string {
-    // should only be called on root
     if (this !== this.#root) return this.#root.toMMPattern();
     const glob = this.toString();
     const [re, body, hasMagic, uflag] = this.toRegExpSource();
@@ -1592,9 +1470,6 @@ export class AST {
     return this.#compileRoot(re, glob, uflag);
   }
 
-  // if we're in nocase mode, and not nocaseMagicOnly, then we do
-  // still need a regular expression if we have to case-insensitively
-  // match capital/lowercase characters.
   #needsCaseRegExp(glob: string): boolean {
     return (
       this.#options.nocase === true &&
@@ -1661,8 +1536,6 @@ export class AST {
    * @since 0.0.0
    */
   #makeSegmentMatcher(): (candidate: string) => boolean {
-    // Compile once with the regexp owner. Each invocation memoizes node,
-    // offset and dot mode; repeated alternatives visit each offset once.
     const ids: SegmentIds = { next: 0 };
     const step = AST.#compileSegment(this, ids);
     return (candidate) =>
@@ -1723,10 +1596,9 @@ export class AST {
     if (startBlocked(metadata[0], candidate, start)) return HashSet.empty<number>();
     const [, body, magic] = metadata;
     const ends = magic ? scanEndSet(regexp, candidate, start) : fixedEndSet(regexp, candidate, start, body.length);
-    return AST.#restrictNegTail(compiled.node, ends, candidate);
+    return AST.#negTailMustConsumeRest(compiled.node, ends, candidate);
   }
 
-  // Preserve the contextual start assertions generated by the AST.
   static #sequenceEnds(
     compiled: CompiledSegment,
     mode: 0 | 1,
@@ -1738,11 +1610,10 @@ export class AST {
     if (startBlocked(compiled.sources[mode][0], candidate, start)) return HashSet.empty<number>();
     let ends = HashSet.make(start);
     for (const child of compiled.children) ends = followChild(child, ends, candidate, allowDot, memo);
-    return AST.#restrictNegTail(compiled.node, ends, candidate);
+    return AST.#negTailMustConsumeRest(compiled.node, ends, candidate);
   }
 
-  // A sequence that ends a `!` extglob must consume the rest of the candidate.
-  static #restrictNegTail(node: AST, ends: HashSet.HashSet<number>, candidate: string): HashSet.HashSet<number> {
+  static #negTailMustConsumeRest(node: AST, ends: HashSet.HashSet<number>, candidate: string): HashSet.HashSet<number> {
     return node.isEnd() && node.#parent?.type === "!" ? HashSet.filter(ends, (end) => end === candidate.length) : ends;
   }
 
@@ -1817,9 +1688,6 @@ export class AST {
     return this.#options;
   }
 
-  // returns the string match, the regexp source, whether there's magic
-  // in the regexp (so a regular expression is required) and whether or
-  // not the uflag is needed for the regular expression (for posix classes)
   /**
    * Generates regular-expression source and matching metadata for this node.
    *
@@ -1849,8 +1717,6 @@ export class AST {
    * @since 0.0.0
    */
   toRegExpSource(allowDot?: boolean, depth = 0): RegExpSourceResult {
-    // Port note 2: depth guard on the toRegExpSource <-> #partsToRegExp
-    // mutual recursion.
     guardDepth(depth);
     const dot = allowDot ?? this.#options.dot === true;
     if (this.#root === this) {
@@ -1883,26 +1749,18 @@ export class AST {
     return re;
   }
 
-  // The string that will match the start of the pattern, so we need to
-  // protect against dots and such.
   #sequenceStart(src: string, dot: boolean, allowDot: boolean | undefined): string {
     if (!this.isStart()) return "";
     const firstPart = this.#parts[0];
     if (!P.isString(firstPart)) return "";
-    // '.' and '..' cannot match unless the pattern is that exactly,
-    // even if it starts with . or dot:true is set.
-    if (this.#parts.length === 1 && HashSet.has(justDots, firstPart)) return "";
+    if (this.#parts.length === 1 && HashSet.has(dotSegmentsMatchOnlyExactly, firstPart)) return "";
     return startGuard(src, dot, allowDot);
   }
 
-  // append the "end of path portion" pattern to negation tails
   #negTailEnd(): string {
     return this.isEnd() && this.#root.#filledNegs && this.#parent?.type === "!" ? "(?:$|\\/)" : "";
   }
 
-  // We need to calculate the body *twice* if it's a repeat pattern
-  // at the start, once in nodot mode, then again in dot mode, so a
-  // pattern like *(?) can match 'x.y'
   #extglobRegExpSource(
     type: ExtglobType,
     dot: boolean,
@@ -1911,13 +1769,13 @@ export class AST {
   ): RegExpSourceResult {
     let body = this.#partsToRegExp(dot, depth);
 
-    if (this.isStart() && this.isEnd() && body === "" && type !== "!") {
-      // invalid extglob, has to at least be *something* present, if it's
-      // the entire path portion.
+    const emptyNonNegatedExtglobSpanningWholePathPortion =
+      this.isStart() && this.isEnd() && body === "" && type !== "!";
+    if (emptyNonNegatedExtglobSpanningWholePathPortion) {
       return this.#degradeToLiteral();
     }
 
-    const bodyDotAllowed = this.#dotAllowedBody(type, body, dot, allowDot, depth);
+    const bodyDotAllowed = this.#repeatBodyRecompiledInDotMode(type, body, dot, allowDot, depth);
     if (bodyDotAllowed !== "") {
       body = `(?:${body})(?:${bodyDotAllowed})*?`;
     }
@@ -1933,11 +1791,11 @@ export class AST {
     opened: string,
     dot: boolean,
     allowDot: boolean | undefined,
-    dotted: boolean
+    bodyCarriesRepetition: boolean
   ): string {
-    // an empty !() is exactly equivalent to a starNoEmpty
-    if (type === "!" && this.#emptyExt) return (this.isStart() && !dot ? startNoDot : "") + starNoEmpty;
-    return opened + this.#extglobClose(type, dot, allowDot, dotted);
+    if (type === "!" && this.#emptyExt)
+      return (this.isStart() && !dot ? startNoDotUnanchoredSinceRootBindsTheStart : "") + starNonEmptyWhenSoleInPortion;
+    return opened + this.#extglobClose(type, dot, allowDot, bodyCarriesRepetition);
   }
 
   #degradeToLiteral(): RegExpSourceResult {
@@ -1948,17 +1806,28 @@ export class AST {
     return [s, unescapePattern(this.toString()), false, false];
   }
 
-  #dotAllowedBody(type: ExtglobType, body: string, dot: boolean, allowDot: boolean | undefined, depth: number): string {
+  #repeatBodyRecompiledInDotMode(
+    type: ExtglobType,
+    body: string,
+    dot: boolean,
+    allowDot: boolean | undefined,
+    depth: number
+  ): string {
     const repeated = type === "*" || type === "+";
     if (!repeated || allowDot === true || dot) return "";
     const bodyDotAllowed = this.#partsToRegExp(true, depth);
     return bodyDotAllowed === body ? "" : bodyDotAllowed;
   }
 
-  #extglobClose(type: ExtglobType, dot: boolean, allowDot: boolean | undefined, dotted: boolean): string {
-    // !() must match something,but !(x) can match ''
-    if (type === "!") return `))${this.isStart() && !dot && allowDot !== true ? startNoDot : ""}${star})`;
-    return extglobCloseFor(type, dotted);
+  #extglobClose(
+    type: ExtglobType,
+    dot: boolean,
+    allowDot: boolean | undefined,
+    bodyCarriesRepetition: boolean
+  ): string {
+    if (type === "!")
+      return `))${this.isStart() && !dot && allowDot !== true ? startNoDotUnanchoredSinceRootBindsTheStart : ""}${star})`;
+    return extglobCloseFor(type, bodyCarriesRepetition);
   }
 
   /**
@@ -1983,7 +1852,6 @@ export class AST {
    * @since 0.0.0
    */
   #flatten(depth = 0) {
-    // Port note 3: tree-depth guard alongside the kept 10-pass width cap.
     guardDepth(depth);
     if (this.type === null) this.#flattenChildren(depth);
     else this.#flattenExtglob(depth);
@@ -1998,7 +1866,6 @@ export class AST {
     }
   }
 
-  // do up to 10 passes to flatten as much as possible
   #flattenExtglob(depth: number): void {
     let iterations = 0;
     let done = false;
@@ -2007,7 +1874,6 @@ export class AST {
     } while (!done && ++iterations < 10);
   }
 
-  // One flatten pass over the extglob children; true when nothing coalesced.
   #flattenPass(depth: number): boolean {
     let done = true;
     for (let i = 0; i < this.#parts.length; i++) {
@@ -2061,12 +1927,10 @@ export class AST {
     return pipe(
       this.#parts,
       A.map((p) => {
-        // extglob ASTs should only contain parent ASTs
         if (P.isString(p)) {
           throw ASTError.make({ message: "string type in extglob ast??" });
         }
-        // can ignore hasMagic, because extglobs are already always magic
-        const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot, depth + 1);
+        const [re, _, _alwaysMagicAsAnExtglob, uflag] = p.toRegExpSource(dot, depth + 1);
         this.#uflag = this.#uflag || uflag;
         return re;
       }),

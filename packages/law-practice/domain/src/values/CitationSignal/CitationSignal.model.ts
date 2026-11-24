@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $LawPracticeDomainId.create("values/CitationSignal/CitationSignal.model");
 
 /**
- * Introductory signal word classification for citation support level.
- *
  * **Details**
  *
  * Based on Bluebook signal categories (Rule 1.2). The `, e.g.` combined forms

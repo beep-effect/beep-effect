@@ -10,8 +10,6 @@ import { RunScopeCgroupPath } from "./RunScope.schemas.ts";
 const $I = $RepoCliId.create("internal/repo-run/MemoryStats.schemas");
 
 /**
- * Decode a non-negative integral memory-controller byte count.
- *
  * **Example** (Decode a controller reading)
  *
  * ```ts
@@ -33,7 +31,6 @@ export const CgroupBytes = S.NumberFromString.pipe(
 );
 
 /**
- * Byte count represented by {@link CgroupBytes}.
  * @internal
  * @category models
  * @since 0.0.0

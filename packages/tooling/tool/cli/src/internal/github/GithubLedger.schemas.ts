@@ -84,8 +84,6 @@ export const GithubIdentityLabel = S.String.check(
 );
 
 /**
- * Type of {@link GithubIdentityLabel}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -149,8 +147,6 @@ export const HostLabel = S.String.check(
 ).pipe(S.brand("HostLabel"), $I.annoteSchema("HostLabel", { description: "A lowercased short hostname." }));
 
 /**
- * Type of {@link HostLabel}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -212,8 +208,6 @@ export const GithubLedgerCommandLabel = S.String.check(
 );
 
 /**
- * Type of {@link GithubLedgerCommandLabel}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -260,16 +254,12 @@ export const GhSubcommand = S.String.check(
 ).pipe($I.annoteSchema("GhSubcommand", { description: "The first one or two gh argv words." }));
 
 /**
- * Type of {@link GhSubcommand}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GhSubcommand = typeof GhSubcommand.Type;
 
 /**
- * A parameter-free route or GraphQL operation name, after {@link normalizeOperation}.
- *
  * **Example** (Check an operation)
  *
  * ```ts
@@ -287,8 +277,6 @@ export const GithubOperation = S.String.check(S.isMaxLength(120)).pipe(
 );
 
 /**
- * Type of {@link GithubOperation}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -381,8 +369,6 @@ export const normalizeOperation = (raw: string): GithubOperation => {
 };
 
 /**
- * One rate-limit bucket: an identity and the resource it spends.
- *
  * **Example** (Build a bucket key)
  *
  * ```ts
@@ -457,16 +443,12 @@ export const GithubLedgerSource = LiteralKit(["transport", "gh-spawn", "sample",
 );
 
 /**
- * Type of {@link GithubLedgerSource}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GithubLedgerSource = typeof GithubLedgerSource.Type;
 
 /**
- * What triggered a `/rate_limit` sample.
- *
  * **Example** (List the triggers)
  *
  * ```ts
@@ -483,8 +465,6 @@ export const SampleTrigger = LiteralKit(["timer", "manual", "monitor", "monitor-
 );
 
 /**
- * Type of {@link SampleTrigger}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -509,16 +489,12 @@ export const SelfCost = LiteralKit(["confirmed-free", "unconfirmed"]).pipe(
 );
 
 /**
- * Type of {@link SelfCost}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SelfCost = typeof SelfCost.Type;
 
 /**
- * One bucket of a `/rate_limit` body.
- *
  * **Example** (Build a sample bucket)
  *
  * ```ts
@@ -543,8 +519,6 @@ export class SampleBucket extends S.Opaque<SampleBucket, { readonly brand: uniqu
 ) {}
 
 /**
- * One persisted GitHub budget ledger line.
- *
  * **Details**
  *
  * - `Transport`: one in-process HTTP attempt, from its `x-ratelimit-*` headers.
@@ -626,8 +600,6 @@ export const GithubLedgerRow = S.TaggedUnion({
 }).pipe($I.annoteSchema("GithubLedgerRow", { description: "One persisted GitHub budget ledger line." }));
 
 /**
- * Type of {@link GithubLedgerRow}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -742,8 +714,6 @@ export const SampleRowJson = S.fromJsonString(GithubLedgerRow.cases.Sample);
 export const GITHUB_LEDGER_MAX_LINE_BYTES = 4096;
 
 /**
- * One bucket of the `/rate_limit` wire body.
- *
  * **Example** (Build a wire bucket)
  *
  * ```ts
@@ -762,8 +732,6 @@ export class GithubRateLimitWireBucket extends S.Opaque<GithubRateLimitWireBucke
 ) {}
 
 /**
- * The `/rate_limit` wire body.
- *
  * **Details**
  *
  * `core` and `graphql` are required. Every other bucket is kept as unknown and
@@ -792,8 +760,6 @@ export const GithubRateLimitWire = S.Struct({
 }).pipe($I.annoteSchema("GithubRateLimitWire", { description: "The GET /rate_limit response body." }));
 
 /**
- * Type of {@link GithubRateLimitWire}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -869,8 +835,6 @@ export const ReadingBasis = LiteralKit(["transport", "sample"]).pipe(
 );
 
 /**
- * Type of {@link ReadingBasis}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1001,16 +965,12 @@ export const GithubCallPriority = LiteralKit(["background", "interactive", "merg
 );
 
 /**
- * Type of {@link GithubCallPriority}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GithubCallPriority = typeof GithubCallPriority.Type;
 
 /**
- * Why a reserve state is unknown.
- *
  * **Example** (List the reasons)
  *
  * ```ts
@@ -1027,16 +987,12 @@ export const ReserveUnknownReason = LiteralKit(["no-reading", "stale", "window-r
 );
 
 /**
- * Type of {@link ReserveUnknownReason}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ReserveUnknownReason = typeof ReserveUnknownReason.Type;
 
 /**
- * A bucket's position against its reserve floor.
- *
  * **Example** (Build an unknown state)
  *
  * ```ts
@@ -1070,16 +1026,12 @@ export const ReserveState = S.TaggedUnion({
 }).pipe($I.annoteSchema("ReserveState", { description: "A bucket's position against its reserve floor." }));
 
 /**
- * Type of {@link ReserveState}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ReserveState = typeof ReserveState.Type;
 
 /**
- * The reserve signal of one bucket.
- *
  * **Details**
  *
  * The bucket is below its reserve while `state` is `Below`. Background callers
@@ -1109,8 +1061,6 @@ export class ReserveSignal extends S.Opaque<ReserveSignal, { readonly brand: uni
 ) {}
 
 /**
- * One configured identity of `identities.json`.
- *
  * **Details**
  *
  * `GhCli` is this host's `gh` login. `OpRef` needs `login`, so its label is
@@ -1135,8 +1085,6 @@ export const ConfiguredGithubIdentity = S.TaggedUnion({
 }).pipe($I.annoteSchema("ConfiguredGithubIdentity", { description: "One configured GitHub identity." }));
 
 /**
- * Type of {@link ConfiguredGithubIdentity}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1311,8 +1259,6 @@ export const canonicalIdentity =
     O.getOrElse(R.get(aliases.aliases, label), () => label);
 
 /**
- * A time range `(from, to]`.
- *
  * **Example** (Build a range)
  *
  * ```ts
@@ -1372,8 +1318,6 @@ export class RetentionCutoffs extends S.Opaque<RetentionCutoffs, { readonly bran
 ) {}
 
 /**
- * What the two ends of a window are.
- *
  * **Example** (List the anchors)
  *
  * ```ts
@@ -1390,16 +1334,12 @@ export const WindowAnchor = LiteralKit(["sample", "transport"]).pipe(
 );
 
 /**
- * Type of {@link WindowAnchor}.
- *
  * @category models
  * @since 0.0.0
  */
 export type WindowAnchor = typeof WindowAnchor.Type;
 
 /**
- * One reading of a bucket's fleet-wide `used` and reset.
- *
  * **Example** (Build an anchor)
  *
  * ```ts
@@ -1424,8 +1364,6 @@ export class LedgerAnchor extends S.Opaque<LedgerAnchor, { readonly brand: uniqu
 ) {}
 
 /**
- * The span between two consecutive anchors of one lane of a bucket.
- *
  * **Details**
  *
  * A lane is one physical bucket. One key can hold several concurrent lanes,
@@ -1489,8 +1427,6 @@ export class LedgerWindow extends S.Opaque<LedgerWindow, { readonly brand: uniqu
 export const LedgerWindowJson = S.fromJsonString(LedgerWindow);
 
 /**
- * What one command spent.
- *
  * **Example** (Build a spend)
  *
  * ```ts
@@ -1514,8 +1450,6 @@ export class CommandSpend extends S.Opaque<CommandSpend, { readonly brand: uniqu
 ) {}
 
 /**
- * One bucket's usage and attribution in one hour.
- *
  * **Details**
  *
  * `lanesInferred` discloses that at least one contributing window used reset
@@ -1589,8 +1523,6 @@ export class LedgerHourCell extends S.Opaque<LedgerHourCell, { readonly brand: u
 ) {}
 
 /**
- * The estimated point cost of one operation.
- *
  * **Example** (Build an operation cost)
  *
  * ```ts
@@ -1672,8 +1604,6 @@ export const LegacyLedgerRollupVersion = LiteralKit(["github-ledger-rollup/v1", 
 );
 
 /**
- * Type of {@link LegacyLedgerRollupVersion}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1893,8 +1823,6 @@ export class LedgerSummary extends S.Opaque<LedgerSummary, { readonly brand: uni
 export const LedgerSummaryJson = S.fromJsonString(LedgerSummary);
 
 /**
- * Why a sampler skipped an identity.
- *
  * **Example** (List the skip reasons)
  *
  * ```ts
@@ -1911,16 +1839,12 @@ export const SampleSkipReason = LiteralKit(["not-due", "lease-held", "app-needs-
 );
 
 /**
- * Type of {@link SampleSkipReason}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SampleSkipReason = typeof SampleSkipReason.Type;
 
 /**
- * What one sampling attempt did for one identity.
- *
  * **Example** (Build a skipped outcome)
  *
  * ```ts
@@ -1944,16 +1868,12 @@ export const SampleOutcome = S.TaggedUnion({
 }).pipe($I.annoteSchema("SampleOutcome", { description: "What one sampling attempt did for one identity." }));
 
 /**
- * Type of {@link SampleOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SampleOutcome = typeof SampleOutcome.Type;
 
 /**
- * Which ledger step failed.
- *
  * **Example** (List the reasons)
  *
  * ```ts
@@ -1970,8 +1890,6 @@ export const GithubLedgerErrorReason = LiteralKit(["state-dir", "read", "write",
 );
 
 /**
- * Type of {@link GithubLedgerErrorReason}.
- *
  * @category models
  * @since 0.0.0
  */

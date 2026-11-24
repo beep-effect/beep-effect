@@ -27,8 +27,11 @@ import {
   joinKbClaims,
   planKbAppend,
 } from "@beep/repo-cli/commands/Kb/internal/KbStore";
+import { fcRuns } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
@@ -52,7 +55,8 @@ const envelopeKeys = ["id", "claimId", "supersedes", "logicalKey", "holdVersionI
 
 const fixtureLines = Effect.fnUntraced(function* (name: string) {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(`test/fixtures/${name}`);
+  const path = yield* fs.realPath(`test/fixtures/${name}`);
+  const text = yield* fs.readFileString(path);
   return A.filter(Str.split(text, "\n"), Str.isNonEmpty);
 });
 
@@ -113,8 +117,8 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         expect(source.proposition.text).toBe("Synthetic guide published.");
         expect(source.supportRefs).toEqual(["assertion/1"]);
         expect(source.challengeRefs).toEqual([]);
-        expect(O.isNone(source.predecessor)).toBe(true);
-        expect(O.isNone(source.originalKnowledge.expiredAt)).toBe(true);
+        assertNone(source.predecessor);
+        assertNone(source.originalKnowledge.expiredAt);
         expect(source.review._tag).toBe("Accepted");
         expect(claim.review._tag).toBe("Accepted");
         expect(HashSet.size(source.missingFacts)).toBeGreaterThan(0);
@@ -123,7 +127,7 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         expect(source.signals.extractorConfidence._tag).toBe("Present");
         expect(source.signals.validator._tag).toBe("Present");
         expect(source.signals.reviewer._tag).toBe("Present");
-        expect(O.isSome(claim.signals)).toBe(true);
+        claim.signals.pipe(O.isSome, assertTrue);
         expect(claim.reference).toEqual(ClaimReference.cases.Imported.make({ ledger: "kb", oldId: "claim/1" }));
         const assertionLines = yield* fixtureLines("kb-assertions-v1.jsonl");
         const assertions = yield* Effect.forEach(
@@ -149,7 +153,7 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         ]);
         const [first, second] = claims;
         if (first === undefined || second === undefined) return yield* Effect.die("short hold fixture");
-        expect(O.map(first.knowledge.end, DateTime.toEpochMillis)).toEqual(O.some(5));
+        assertSome(O.map(first.knowledge.end, DateTime.toEpochMillis), 5);
         expect(DateTime.toEpochMillis(first.knowledge.start)).toBe(1);
         expect(first.valid).toMatchObject({ _tag: "Interval" });
         expect(second.predecessor).toEqual(
@@ -216,10 +220,10 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         const native = after.claims[2];
         if (native === undefined) return yield* Effect.die("missing renewal");
         expect(native.reference).toEqual(ClaimReference.cases.Native.make({ claim: renewal.claim }));
-        expect(native.predecessor).toEqual(O.some(predecessor.reference));
+        assertSome(native.predecessor, predecessor.reference);
         expect(native.logicalKey).toBe(predecessor.logicalKey);
         expect(native.review._tag).toBe("Proposed");
-        expect(O.map(after.claims[1]?.knowledge.end ?? O.none(), DateTime.toEpochMillis)).toEqual(O.some(7));
+        assertSome(O.map(after.claims[1]?.knowledge.end ?? O.none(), DateTime.toEpochMillis), 7);
         const again = yield* readHolds(mixed);
         const firstRead = yield* encodeHoldViews(after.claims);
         const secondRead = yield* encodeHoldViews(again.claims);
@@ -313,7 +317,7 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
       })
     );
 
-    it.effect("refuses a tampered native core, an unmintable core and a forged activity", () =>
+    it.effect("refuses a tampered native core, a malformed native assertion and a forged activity", () =>
       Effect.gen(function* () {
         const { lines, before, head, renew } = yield* holdHistory();
         const renewal = yield* renew(head);
@@ -325,12 +329,31 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         const unmintable = yield* read(
           replaceOnce(core, '"assertion":"Synthetic dependency remains pinned."', '"assertion":"\\ud800"')
         );
-        expect(unmintable).toMatchObject({ reason: "claim-key-mismatch" });
+        strictEqual(unmintable._tag, "SchemaError");
         const forged = yield* read(replaceOnce(core, '"started":6', '"started":5'));
         expect(forged).toMatchObject({ reason: "activity-mismatch" });
         const early = yield* renew(head, { generatedAt: 5 });
         const premature = yield* Effect.flip(planHoldAppend(before.decoded, early.events));
         expect(premature).toMatchObject({ reason: "activity-mismatch" });
+      })
+    );
+
+    it.effect("keeps reading a v1 hold with a lone surrogate but refuses to renew it as a native core", () =>
+      Effect.gen(function* () {
+        const { lines, renew } = yield* holdHistory();
+        const [first, ...rest] = lines;
+        if (first === undefined) return yield* Effect.die("empty hold fixture");
+        const malformed = replaceOnce(
+          first,
+          '"assertion":"Synthetic dependency remains pinned."',
+          '"assertion":"\\ud800"'
+        );
+        const { claims } = yield* readHolds([malformed, ...rest]);
+        const imported = claims[0];
+        if (imported === undefined) return yield* Effect.die("short hold fixture");
+        strictEqual(holdProposition(imported).assertion, "\uD800");
+        const refused = yield* Effect.flip(renew(imported));
+        strictEqual(refused._tag, "SchemaError");
       })
     );
 
@@ -348,12 +371,15 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         const secondLines = yield* planHoldAppend(middle.decoded, second.events);
         expect(secondLines).toHaveLength(1);
         const full = yield* readHolds([...lines, ...firstLines, ...secondLines]);
-        expect(A.map(full.claims, (claim) => O.map(claim.predecessor, claimReferenceKey))).toEqual([
-          O.none(),
-          O.some("imported:holds:synthetic-hold@1"),
-          O.some("imported:holds:synthetic-hold@2"),
-          O.some(holdClaimKey(nativeHead)),
-        ]);
+        deepStrictEqual(
+          A.map(full.claims, (claim) => O.map(claim.predecessor, claimReferenceKey)),
+          [
+            O.none(),
+            O.some("imported:holds:synthetic-hold@1"),
+            O.some("imported:holds:synthetic-hold@2"),
+            O.some(holdClaimKey(nativeHead)),
+          ]
+        );
         const gap = yield* Effect.flip(readHolds([...lines, ...secondLines]));
         expect(gap).toMatchObject({ reason: "log-violation", claim: "native-log" });
         const refused = yield* Effect.flip(planHoldAppend(before.decoded, second.events));
@@ -410,10 +436,27 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         });
         const appended = yield* planKbAppend(before.decoded, [event]);
         const after = yield* readKb([...lines, ...appended]);
-        expect(O.map(after.claims[0]?.signals ?? O.none(), (s) => s.sourceTrust)).toEqual(
-          O.some({ _tag: "Present", value: "low" })
+        assertSome(
+          O.map(after.claims[0]?.signals ?? O.none(), (s) => s.sourceTrust),
+          { _tag: "Present", value: "low" }
         );
       })
     );
   }
 );
+
+describe("claim-record/v2 event properties", () => {
+  const json = S.fromJsonString(HoldClaimEvent);
+  const equivalent = S.toEquivalence(HoldClaimEvent);
+  it.effect.prop(
+    "every generated hold claim event survives its JSON codec unchanged",
+    [Arbitrary.schema(HoldClaimEvent)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(json)(value);
+        const decoded = yield* S.decodeEffect(json)(encoded);
+        assertTrue(equivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(30) }
+  );
+});

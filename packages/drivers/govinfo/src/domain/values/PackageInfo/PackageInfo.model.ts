@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $GovinfoId.create("domain/values/PackageInfo/PackageInfo.model");
 
 /**
- * GovInfo package metadata returned by collection and published listings.
- *
  * **Details**
  *
  * GovInfo packages group the content files and metadata needed to understand a

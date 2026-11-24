@@ -121,9 +121,6 @@ class WorkspaceDiscoveryCause extends S.TaggedError<WorkspaceDiscoveryCause, { r
 ) {}
 
 /**
- * Raised when a workspace member's `package.json` cannot be read, parsed, or
- * used — it is missing, malformed, or lacks a `name`.
- *
  * **Details**
  *
  * `kind` is the discriminant a caller branches on; `cause` preserves the
@@ -197,10 +194,6 @@ export class WorkspaceDiscoveryError extends S.TaggedError<WorkspaceDiscoveryErr
 }
 
 /**
- * Raised when a `packages:` pattern cannot be enumerated: its base directory is
- * absent (usually a typo), the descent exceeded its depth cap, or the visit
- * budget was exhausted.
- *
  * **Example** (Report a missing pattern base)
  *
  * ```ts
@@ -267,8 +260,6 @@ export class WorkspacePatternError extends S.TaggedError<WorkspacePatternError, 
 }
 
 /**
- * Raised when a workspace package is requested by a name no member carries.
- *
  * **Details**
  *
  * `available` lists every known member, which is what makes the error
@@ -327,9 +318,6 @@ export class PackageNotFoundError extends S.TaggedError<PackageNotFoundError, { 
 }
 
 /**
- * Top-level facts about a workspace: where it is, what manages it, and the
- * patterns that define its membership.
- *
  * **Example** (Inspect workspace membership patterns)
  *
  * ```ts
@@ -360,8 +348,6 @@ export class WorkspaceInfo extends S.Opaque<WorkspaceInfo, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link WorkspaceInfo}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -404,8 +390,6 @@ const DiscoveryDepth = S.declare(P.isNumber).pipe(
 );
 
 /**
- * Options for the {@link WorkspaceDiscovery} layer.
- *
  * **Example** (Validate an optional discovery root)
  *
  * ```ts
@@ -543,8 +527,6 @@ export class WorkspaceDiscoveryOptions extends S.Opaque<WorkspaceDiscoveryOption
 ) {}
 
 /**
- * Companion types for {@link WorkspaceDiscoveryOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

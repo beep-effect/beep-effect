@@ -232,8 +232,6 @@ export class SyncDirectoryEntry extends S.Opaque<SyncDirectoryEntry, { readonly 
   )
 ) {}
 /**
- * Companion types for {@link SyncDirectoryEntry}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -647,8 +645,6 @@ export class SyncRootCeiling extends S.Opaque<SyncRootCeiling, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link SyncRootCeiling}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -908,8 +904,6 @@ export class SyncEnumerationBound extends S.Opaque<SyncEnumerationBound, { reado
 ) {}
 
 /**
- * Companion types for {@link SyncEnumerationBound}.
- *
  * @category type-level
  * @since 0.0.0
  */

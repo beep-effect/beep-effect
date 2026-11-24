@@ -30,8 +30,6 @@ const PositiveInteger = S.Int.check(S.isGreaterThan(0));
 const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "removePunctuation", "trim", "uppercase"]);
 
 /**
- * Identifier of a supported, pure line transform stage.
- *
  * **Example** (Parse stage from string)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const PipelineStage = PipelineStageBase.pipe(
 );
 
 /**
- * Type for {@link PipelineStage}.
- *
  * **Example** (Type array of stages)
  *
  * ```ts
@@ -73,8 +69,6 @@ export const PipelineStage = PipelineStageBase.pipe(
 export type PipelineStage = typeof PipelineStage.Type;
 
 /**
- * A single pipeline failure entry describing the item, message, and stage.
- *
  * **Example** (Construct pipeline error)
  *
  * ```ts
@@ -106,8 +100,6 @@ export class PipelineError extends S.Opaque<PipelineError, { readonly brand: uni
 ) {}
 
 /**
- * Outcome of running a line-transform pipeline over a file.
- *
  * **Example** (Construct pipeline result)
  *
  * ```ts
@@ -155,8 +147,6 @@ export class PipelineResult extends S.Opaque<PipelineResult, { readonly brand: u
 ) {}
 
 /**
- * Options for running a line-transform pipeline.
- *
  * **Example** (Construct process options)
  *
  * ```ts

@@ -122,8 +122,6 @@ export const MatterContactsJson = MatterContacts.pipe(
 );
 
 /**
- * Runtime type for {@link MatterContactsJson}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -186,12 +184,10 @@ type Bundle = {
   readonly contacts: Record<string, MatterContacts>;
 };
 
-// A row may carry a list column as null, or not at all, when the list is empty.
 const splitList = (value: string | null | undefined): ReadonlyArray<string> =>
   A.filter(A.flatMap(O.toArray(O.fromNullishOr(value)), Str.split(listSeparator)), Str.isNonEmpty);
 
-// A value the domain schema rejects is dropped: one malformed number must not hide a matter.
-const decoded =
+const decodedDroppingMalformedSoNoMatterHides =
   <Value>(decode: (input: unknown) => O.Option<Value>) =>
   (values: ReadonlyArray<string>): ReadonlyArray<Value> =>
     A.getSomes(A.map(A.dedupe(values), decode));
@@ -213,16 +209,19 @@ const contactsByFamily = (rows: ReadonlyArray<MatterContacts>): Record<string, M
 const identifiersOf = (bundle: Bundle, matter: MatterRow) => {
   const dockets = O.getOrElse(R.get(bundle.dockets, matter.familyKey), (): ReadonlyArray<MatterDocketRow> => []);
   return {
-    docketNumbers: decoded(decodeDocketNumber)(A.flatMap(dockets, (docket) => [docket.docket, docket.docketKey])),
-    applicationNumbers: decoded(decodeApplicationNumber)(
+    docketNumbers: decodedDroppingMalformedSoNoMatterHides(decodeDocketNumber)(
+      A.flatMap(dockets, (docket) => [docket.docket, docket.docketKey])
+    ),
+    applicationNumbers: decodedDroppingMalformedSoNoMatterHides(decodeApplicationNumber)(
       A.flatMap(dockets, (docket) => splitList(docket.applicationNumbers))
     ),
-    patentNumbers: decoded(decodePatentNumber)(A.flatMap(dockets, (docket) => splitList(docket.patentNumbers))),
+    patentNumbers: decodedDroppingMalformedSoNoMatterHides(decodePatentNumber)(
+      A.flatMap(dockets, (docket) => splitList(docket.patentNumbers))
+    ),
   };
 };
 
-// D-11: a matter is a tag target only with a client number and a verified family.
-const taggableKeys = (matter: MatterRow): O.Option<TaggableKeys> =>
+const taggableKeysWithClientNumberAndVerifiedFamily = (matter: MatterRow): O.Option<TaggableKeys> =>
   O.filter(
     O.all({
       matterKey: decodeMatterKey(matter.familyKey),
@@ -234,7 +233,7 @@ const taggableKeys = (matter: MatterRow): O.Option<TaggableKeys> =>
 const entryOf =
   (bundle: Bundle) =>
   (matter: MatterRow): O.Option<MatterIndexEntry> =>
-    O.map(taggableKeys(matter), (keys) =>
+    O.map(taggableKeysWithClientNumberAndVerifiedFamily(matter), (keys) =>
       MatterIndexEntry.make({
         ...keys,
         ...identifiersOf(bundle, matter),
@@ -248,14 +247,14 @@ const unattributedOf =
   (matter: MatterRow): UnattributedMatter =>
     UnattributedMatter.make({
       ...identifiersOf(bundle, matter),
-      familyKeys: decoded(decodeDocketNumber)([matter.familyKey]),
+      familyKeys: decodedDroppingMalformedSoNoMatterHides(decodeDocketNumber)([matter.familyKey]),
     });
 
 const indexOf = (bundle: Bundle, matters: ReadonlyArray<MatterRow>, builtAt: DateTime.Utc): MatterIndex =>
   MatterIndex.make({
     entries: A.getSomes(A.map(matters, entryOf(bundle))),
     unattributed: A.map(
-      A.filter(matters, (matter) => O.isNone(taggableKeys(matter))),
+      A.filter(matters, (matter) => O.isNone(taggableKeysWithClientNumberAndVerifiedFamily(matter))),
       unattributedOf(bundle)
     ),
     builtAt,
@@ -286,7 +285,6 @@ const makeMatterDirectory = Effect.gen(function* () {
   const usesContacts = MatterContactEvidence.is.kg(evidence);
   const overlay = usesContacts ? yield* readOverlay : [];
 
-  // The graph's unique addresses come first; the overlay adds to them.
   const contactsOf = (matters: ReadonlyArray<MatterRow>) =>
     usesContacts
       ? uniqueMatterCorrespondents(A.map(matters, familyKeyOf)).pipe(

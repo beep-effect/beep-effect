@@ -21,8 +21,6 @@ export * from "./PracticeSetup.policy.ts";
  */
 export * from "./PracticeSetup.ports.ts";
 /**
- * Setup doctor service.
- *
  * @category services
  * @since 0.0.0
  */

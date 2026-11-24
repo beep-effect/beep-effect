@@ -76,7 +76,6 @@ export class GenerationTimeConflict extends S.TaggedError<GenerationTimeConflict
   })
 ) {}
 
-// Captures in the order of their eight fields, so a refusal names them the same way in either argument order.
 const captureOrder: Order.Order<SourceTextIdentity> = Order.mapInput(
   Order.Array(Order.String),
   (capture: SourceTextIdentity) => [
@@ -91,7 +90,6 @@ const captureOrder: Order.Order<SourceTextIdentity> = Order.mapInput(
   ]
 );
 
-// Stated times, `None` first.
 const timeOrder: Order.Order<O.Option<DateTime.Utc>> = O.makeOrder(DateTime.Order);
 
 const conflictOrder: Order.Order<GenerationTimeConflict> = Order.mapInput(
@@ -99,8 +97,7 @@ const conflictOrder: Order.Order<GenerationTimeConflict> = Order.mapInput(
   (conflict: GenerationTimeConflict) => [conflict.annotation, conflict.activity]
 );
 
-// The conflicts of one attribution row: each activity with two or more generations, which differ only in time.
-const conflictsOf = (generations: HashSet.HashSet<Generation>, annotation: AnnotationId) =>
+const conflictsOfAttributionRow = (generations: HashSet.HashSet<Generation>, annotation: AnnotationId) =>
   A.flatMap(
     R.values(A.groupBy(generations, (generation) => generation.activity)),
     (group): ReadonlyArray<GenerationTimeConflict> =>
@@ -122,7 +119,6 @@ const conflictsOf = (generations: HashSet.HashSet<Generation>, annotation: Annot
 
 type Attribution = AnnotationDocumentView["attribution"];
 
-// Per-annotation union of the generation sets.
 const unionAttribution = (self: Attribution, that: Attribution): Attribution =>
   HashMap.reduce(that, self, (merged, generations, id) =>
     HashMap.set(
@@ -183,7 +179,9 @@ export const merge: {
       );
     }
     const attribution = unionAttribution(self.attribution, that.attribution);
-    const conflicts = A.flatMap(HashMap.toEntries(attribution), ([id, generations]) => conflictsOf(generations, id));
+    const conflicts = A.flatMap(HashMap.toEntries(attribution), ([id, generations]) =>
+      conflictsOfAttributionRow(generations, id)
+    );
     return A.match(conflicts, {
       onEmpty: () =>
         Result.succeed({

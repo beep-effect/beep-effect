@@ -60,8 +60,6 @@ export const AiMetricsDerivedTable = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiMetricsDerivedTable}.
- *
  * **Example** (Type a derived table name)
  *
  * ```ts
@@ -77,8 +75,6 @@ export const AiMetricsDerivedTable = LiteralKit([
 export type AiMetricsDerivedTable = typeof AiMetricsDerivedTable.Type;
 
 /**
- * Parquet export behavior for one derived AI metrics write.
- *
  * **Example** (Read a parquet export mode)
  *
  * ```ts
@@ -96,8 +92,6 @@ export const AiMetricsParquetExportMode = LiteralKit(["none", "latest", "snapsho
 );
 
 /**
- * Runtime type for {@link AiMetricsParquetExportMode}.
- *
  * **Example** (Type a parquet export mode)
  *
  * ```ts
@@ -797,8 +791,6 @@ const derivedStorageMigrations = [
 ] as const satisfies ReadonlyArray<DerivedStorageMigration>;
 
 /**
- * Error raised by the DuckDB derived storage projection.
- *
  * **Example** (Construct a projection error)
  *
  * ```ts
@@ -828,8 +820,6 @@ export class AiMetricsDerivedStorageError extends S.TaggedError<
 ) {}
 
 /**
- * Storage completeness of the hook and refusal evidence behind one session stamp verdict.
- *
  * **Details**
  *
  * `complete` means every hook shard and refusal record was read and decoded.
@@ -856,8 +846,6 @@ export const AiMetricsSessionStampCompleteness = LiteralKit(["complete", "partia
 );
 
 /**
- * Runtime type for {@link AiMetricsSessionStampCompleteness}.
- *
  * **Example** (Type a completeness value)
  *
  * ```ts
@@ -912,8 +900,6 @@ export const AiMetricsSessionStampQualification = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiMetricsSessionStampQualification}.
- *
  * **Example** (Type a qualification value)
  *
  * ```ts
@@ -954,8 +940,6 @@ export const aiMetricsSessionStampCompletenessFor: {
 );
 
 /**
- * Outcome of joining one transcript against the hook and gap evidence of one run.
- *
  * **Details**
  *
  * `retained` means a stamp passed every gate. `contradicted` means the
@@ -986,8 +970,6 @@ export const AiMetricsSessionStampJoin = LiteralKit(["retained", "contradicted",
 );
 
 /**
- * Runtime type for {@link AiMetricsSessionStampJoin}.
- *
  * **Example** (Type a join outcome)
  *
  * ```ts
@@ -1128,8 +1110,6 @@ export class AiMetricsDerivedTranscriptRecord extends S.Opaque<
 ) {}
 
 /**
- * Input for a derived DuckDB storage write.
- *
  * **Example** (Assemble a derived write input)
  *
  * ```ts
@@ -1189,8 +1169,6 @@ export class AiMetricsDerivedStorageWriteInput extends S.Opaque<
 ) {}
 
 /**
- * Result of a derived DuckDB storage write.
- *
  * **Example** (Inspect a derived write result)
  *
  * ```ts

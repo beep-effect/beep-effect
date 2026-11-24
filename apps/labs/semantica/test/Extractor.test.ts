@@ -325,17 +325,16 @@ const hostedBatch = Effect.fn("ExtractorTest.hostedBatch")(function* (hosted: (t
   return FrozenHostedBatch.make({ batch: outcome.batch, name: hosted.name });
 });
 
-describe("C0 hosted extractor frozen batch", () => {
+it.layer(BunFileSystem.layer, { timeout: 60_000 })("C0 hosted extractor frozen batch", (it) => {
   it.effect(
     "keeps the bytes of the hosted evidence batches over this file's model outputs",
     () =>
       Effect.gen(function* () {
         const batches = yield* Effect.forEach(hostedCases, hostedBatch, { concurrency: 1 });
         const json = yield* S.encodeEffect(FrozenHostedBatchesJson)(batches);
-        const v1Text = yield* FileSystem.FileSystem.pipe(
-          Effect.flatMap((fs) => fs.readFileString("test/fixtures/hosted-batch-v1.json")),
-          provideScopedLayer(BunFileSystem.layer)
-        );
+        const fs = yield* FileSystem.FileSystem;
+        const v1Path = yield* fs.realPath("test/fixtures/hosted-batch-v1.json");
+        const v1Text = yield* fs.readFileString(v1Path);
         const v1 = yield* S.decodeEffect(V1HostedBatchesJson)(v1Text);
         const fresh = yield* S.decodeEffect(FreshHostedBatchesJson)(`${json}\n`);
         expect(withoutConfidence(fresh)).toEqual(withoutConfidence(v1));

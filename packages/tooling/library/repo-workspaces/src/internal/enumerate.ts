@@ -68,8 +68,6 @@ export class EnumeratedDirectory extends S.Opaque<EnumeratedDirectory, { readonl
   )
 ) {}
 /**
- * Companion types for {@link EnumeratedDirectory}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -114,8 +112,6 @@ export const EnumerationFailureKind = LiteralKit([
   })
 );
 /**
- * The caller-visible reason recorded when workspace enumeration fails.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -224,8 +220,6 @@ export class EnumerateOptions extends S.Opaque<EnumerateOptions, { readonly bran
   )
 ) {}
 /**
- * Companion types for {@link EnumerateOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

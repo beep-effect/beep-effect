@@ -14,8 +14,6 @@ const $I = $WorkspaceDomainId.create("entities/CandidateProject/CandidateProject
 const pg = ProductEntity.pg;
 
 /**
- * Candidate project proposed by an agent.
- *
  * **Example** (Log entity type)
  *
  * ```ts

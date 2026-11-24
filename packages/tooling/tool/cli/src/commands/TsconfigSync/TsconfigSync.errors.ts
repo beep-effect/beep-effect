@@ -62,8 +62,6 @@ export class TsconfigSyncDriftError extends S.TaggedError<TsconfigSyncDriftError
 }
 
 /**
- * Cycle error raised when workspace dependency cycles are detected.
- *
  * **Example** (Make workspace cycle error)
  *
  * ```ts
@@ -112,8 +110,6 @@ export class TsconfigSyncCycleError extends S.TaggedError<TsconfigSyncCycleError
 }
 
 /**
- * Filter error raised when `--filter` does not match any workspace package.
- *
  * **Example** (Make filter match error)
  *
  * ```ts

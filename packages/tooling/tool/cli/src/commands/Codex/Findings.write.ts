@@ -66,8 +66,6 @@ export const PacketScanPolicy = LiteralKit(["reject", "report"]).pipe(
 export type PacketScanPolicy = typeof PacketScanPolicy.Type;
 
 /**
- * One document destined for a generated packet.
- *
  * **Details**
  *
  * `path` is always relative to the packet directory, never to the repository

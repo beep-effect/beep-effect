@@ -57,8 +57,6 @@ export const CriticRoute = CriticRouteBase.pipe(
 );
 
 /**
- * The CLI a reviewer runs on.
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,8 +88,6 @@ export const CriticScope = CriticScopeBase.pipe(
 );
 
 /**
- * Which pack a reviewer may see.
- *
  * @category models
  * @since 0.0.0
  */
@@ -216,8 +212,6 @@ const CriticCategoryBase = LiteralKit([
 ]);
 
 /**
- * The convention family a finding belongs to.
- *
  * **Example** (Category literals)
  *
  * ```ts
@@ -607,9 +601,6 @@ export const encodeCriticPackManifest = (manifest: CriticPackManifest) => encode
 const CriticSeatUnavailableReasonBase = LiteralKit(["sandbox-deny-path-unresolved", "time-limit", "output-limit"]);
 
 /**
- * Why a reviewer's seat ended without a report: it could not start on this
- * host, or it stopped at a limit.
- *
  * **Details**
  *
  * `sandbox-deny-path-unresolved`: the Grok CLI refused to start because its
@@ -647,9 +638,6 @@ export const CriticSeatUnavailableReason = CriticSeatUnavailableReasonBase.pipe(
 const CriticSeatLimitUnitBase = LiteralKit(["minutes", "output-tokens"]);
 
 /**
- * The unit of a seat limit: minutes of run time, or output tokens in one
- * response.
- *
  * **Example** (Unit literals)
  *
  * ```ts
@@ -669,8 +657,6 @@ export const CriticSeatLimitUnit = CriticSeatLimitUnitBase.pipe(
 );
 
 /**
- * The limit a seat reached: an amount and its unit.
- *
  * **Example** (The 90-minute seat limit)
  *
  * ```ts
@@ -998,8 +984,6 @@ export const CriticReportSource = CriticReportSourceKind.toTaggedUnion("kind")({
 );
 
 /**
- * Type for {@link CriticReportSource}.
- *
  * **Example** (Annotate a stdout source)
  *
  * ```ts

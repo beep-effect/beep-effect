@@ -154,8 +154,6 @@ const bodyContentTypeFor = Match.type<string>().pipe(
 );
 
 /**
- * pffexport item export mode.
- *
  * **Example** (Usage)
  * ```ts
  * import { PffexportMode } from "@beep/libpff"
@@ -173,8 +171,6 @@ export const PffexportMode = PffexportModeBase.pipe(
 );
 
 /**
- * Type for {@link PffexportMode}.
- *
  * **Example** (Usage)
  * ```ts
  * import { PffexportMode } from "@beep/libpff"
@@ -189,8 +185,6 @@ export const PffexportMode = PffexportModeBase.pipe(
 export type PffexportMode = typeof PffexportMode.Type;
 
 /**
- * pffexport message body export format.
- *
  * **Example** (Usage)
  * ```ts
  * import { PffexportFormat } from "@beep/libpff"
@@ -208,8 +202,6 @@ export const PffexportFormat = PffexportFormatBase.pipe(
 );
 
 /**
- * Type for {@link PffexportFormat}.
- *
  * **Example** (Usage)
  * ```ts
  * import { PffexportFormat } from "@beep/libpff"
@@ -245,8 +237,6 @@ export const PffexportExistingExportPolicy = PffexportExistingExportPolicyBase.p
 );
 
 /**
- * Type for {@link PffexportExistingExportPolicy}.
- *
  * **Example** (Usage)
  * ```ts
  * import { PffexportExistingExportPolicy } from "@beep/libpff"
@@ -261,8 +251,6 @@ export const PffexportExistingExportPolicy = PffexportExistingExportPolicyBase.p
 export type PffexportExistingExportPolicy = typeof PffexportExistingExportPolicy.Type;
 
 /**
- * Configuration for the pffexport subprocess engine.
- *
  * **Example** (Usage)
  * ```ts
  * import { PffexportEngineConfig } from "@beep/libpff"

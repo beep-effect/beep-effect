@@ -109,8 +109,6 @@ export const MarkdownVisitorEvent = S.TaggedUnion({
 );
 
 /**
- * The union of the three visitor event shapes.
- *
  * @public
  * @category type-level
  * @since 0.0.0

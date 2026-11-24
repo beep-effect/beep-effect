@@ -90,8 +90,6 @@ export class PatentClaimCandidateInput extends S.Opaque<PatentClaimCandidateInpu
 ) {}
 
 /**
- * Failure mapping a normalized patent claim into epistemic entities.
- *
  * **Example** (Construct an alignment error)
  *
  * ```ts

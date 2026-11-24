@@ -221,6 +221,9 @@
       "path": "../../../library/repo-workspaces/tsconfig.json"
     },
     {
+      "path": "../../../policy-pack/lint-rules/tsconfig.json"
+    },
+    {
       "path": "../../../policy-pack/repo-configs/tsconfig.json"
     },
     {

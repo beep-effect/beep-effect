@@ -88,7 +88,6 @@ export const PracticeContactRecord = S.Union([Contact, LegacyContactKgRow]).pipe
   $I.annoteSchema("PracticeContactRecord", { description: "Current or legacy practice contact." })
 );
 /**
- * Decoded practice contact record.
  * @category models
  * @since 0.0.0
  */

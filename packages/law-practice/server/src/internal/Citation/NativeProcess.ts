@@ -325,14 +325,16 @@ export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProc
               }).pipe(Effect.withSpan("Citation.retireNativeProcess")),
             };
             yield* Ref.update(owned, (records) => A.append(records, resource));
-            // Owner-side waits precede this synchronous check and method hand-off.
-            // The platform's returned Effect may still yield before OS birth.
-            const child = yield* Effect.suspend(() =>
+            const syncFenceCheckAfterOwnerWaitsThenSpawnMayYieldBeforeOsBirth = Effect.suspend(() =>
               O.match(fence(), {
                 onNone: () => spawner.spawn(command).pipe(Effect.mapError(() => fail("spawn-failed"))),
                 onSome: Effect.fail,
               })
-            ).pipe(Effect.provideService(Scope.Scope, scope), Effect.exit);
+            );
+            const child = yield* syncFenceCheckAfterOwnerWaitsThenSpawnMayYieldBeforeOsBirth.pipe(
+              Effect.provideService(Scope.Scope, scope),
+              Effect.exit
+            );
             if (Exit.isSuccess(child)) {
               yield* Ref.set(handle, O.some(child.value));
               yield* Ref.set(phase, "running");

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Goals/Migration/Migration.schemas");
 
 /**
- * Finding severity used by fleet-lint reports.
- *
  * **Example** (Distinguish blocking findings)
  *
  * ```ts
@@ -32,16 +30,12 @@ export const MigrationSeverity = LiteralKit(["violation", "warning"]).pipe(
 );
 
 /**
- * Migration finding severity.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MigrationSeverity = typeof MigrationSeverity.Type;
 
 /**
- * Fleet graph finding kinds.
- *
  * **Example** (Recognize a dependency cycle)
  *
  * ```ts
@@ -61,16 +55,12 @@ export const FleetLintFindingKind = LiteralKit([
 ]).pipe($I.annoteSchema("FleetLintFindingKind", { description: "Cross-packet graph integrity finding kinds." }));
 
 /**
- * Cross-packet fleet-lint finding kind.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type FleetLintFindingKind = typeof FleetLintFindingKind.Type;
 
 /**
- * One cross-packet fleet-lint finding.
- *
  * **Example** (Record a dangling packet reference)
  *
  * ```ts

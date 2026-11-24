@@ -14,8 +14,6 @@
  */
 export * as Thread from "./aggregates/Thread/index.ts";
 /**
- * Workspace vault exports.
- *
  * @category repositories
  * @since 0.0.0
  */

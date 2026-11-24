@@ -15,8 +15,6 @@ import * as Str from "effect/String";
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageEnvironment");
 
 /**
- * Child-process environment overrides for a coverage run.
- *
  * **Details**
  *
  * Each entry is spread over the inherited environment at spawn time. A string
@@ -43,8 +41,6 @@ export const CoverageEnvironment = S.Record(S.String, S.UndefinedOr(S.String)).p
 );
 
 /**
- * Decoded {@link CoverageEnvironment} value.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -66,8 +62,10 @@ const coverageNodeOptions = (): string =>
   );
 
 // Coverage compares instrumentation metrics across runs, so its default seed
-// is reproducible. Callers can override it for additional exploration, while
-// the unseeded nightly property-law sweep remains responsible for breadth.
+// is reproducible: vitest.setup.ts makes it the seed of every property. Callers
+// can override it for additional exploration. Breadth is the nightly
+// property-law sweep's, which runs every property file with a new seed each
+// night (CiPropertySweep.ts) and opens or updates a tracking issue when red.
 const coverageFastCheckSeed = (): string =>
   pipe(
     O.fromUndefinedOr(Bun.env.BEEP_FC_SEED),

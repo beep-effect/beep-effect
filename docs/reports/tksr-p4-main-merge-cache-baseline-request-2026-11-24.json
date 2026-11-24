@@ -1,0 +1,19 @@
+{
+  "previous": {
+    "//": "59e908a03dcaa5aec87148c8dfb84dbb64a2b5d354c1c44c8edb01b55ce115fc",
+    "@beep/epistemics": "20b3edfe8b4abcfafffe92992195748db2cf247b8e1a2ad37db10ec0d7e2e60c",
+    "@beep/party-server": "b5d865c015cb41b7f91483b64514e3cce6f454b443c56c9ce498b1e8c8e645c8"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P4 claims lane)",
+    "reason": "Re-record the root, @beep/epistemics and @beep/party-server after the P4 main merges: manifest dependency edges and the regenerated turbo.json root projection changed; no qualification granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p4-main-merge-cache-review-2026-11-24.md",
+      "sha256": "6f9bffb14ffbbb76ca40e85421903f641578edd12dc0fe760d4b8f2c2585ea44"
+    }
+  },
+  "subjects": ["//", "@beep/epistemics", "@beep/party-server"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

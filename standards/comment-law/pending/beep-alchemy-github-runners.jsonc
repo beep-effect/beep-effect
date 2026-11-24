@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/alchemy-github-runners",
+  "root": "packages/tooling/library/alchemy-github-runners",
+  "scopes": ["."]
+}

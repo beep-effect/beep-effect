@@ -18,8 +18,6 @@ const $I = $DocumentsDomainId.create("entities/SyncConflict/SyncConflict.model")
 const pg = ProductEntity.pg;
 
 /**
- * Remote-drift record surfaced for review; v1 never auto-merges or mutates local vault content (SPEC D4).
- *
  * **Example** (Decode SyncConflict entity)
  *
  * ```ts

@@ -1741,7 +1741,7 @@ Reverse: Return the first conflict found and restrict L2-1 commutativity to comp
 
 ### P3: the nlp Handoff and Ontology subpaths are deleted; UnitInterval consumers import @beep/schema/UnitInterval, 2026-11-22
 
-The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so `packages/foundation/modeling/nlp/src/Handoff`, its test and the `./Handoff` exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
+The census b dispositions for the Handoff contract are executed: `AnnotatedDocument`, `Mention` and `TextChunk` are replaced by the annotation document and its kinds, and `Span`, `Provenance`, `Entity` and `Relation` are deleted, so the `@beep/nlp` Handoff module, its test and the package's Handoff exports go. The `UnitInterval` re-export's consumers (8 files, covered) import `@beep/schema/UnitInterval`.
 
 Ontology `Kind` (0 consumers) was to fold into the kind registry. The structure kinds' containment levels replace its poset, and its `Document`, `Token` and `Character` kinds have no annotation kind and no consumer, so it is deleted rather than ported. Semantic-loss row: those three kinds. The sums are re-measured in the census at the P3 base.
 
@@ -1963,6 +1963,30 @@ Lane p5
 
 Reverse: Admit archive-entry and tree units for taxonomy-loader rows, drop the cpc tree rule and ConceptSchemeNotLoaded, and restore the XML parser tests' direct readFileString interception by a decision file
 
+### P1 bootstrap identities use generated literals without importing the registry, 2026-11-23
+
+The test runner is a bootstrap dependency and cannot import @beep/identity. The registry generator projects the vitest shard into the runner as literals; parity tests verify the annotations against the registry. Rejected: a runtime dependency from the runner to identity, which would reverse the bootstrap dependency boundary.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Move the runner above identity in the dependency graph and replace the generated literals with registry lookups.
+
+### P1 registry boundary and projection choices survive comment absorption, 2026-11-23
+
+Identity keeps its local release-version pattern and S.Literals domains because it cannot depend on schema. Parity tests live in schema, where schema to identity is legal. Reject importing schema into identity because it creates a dependency cycle. External dcat, dcterms, owl, rdf, rdfs, schema, sh and void remain unpinned until the P5 exit test requires every external namespace pin, retaining P1 ruling 3. Reject expanding P1 acquisition scope ahead of that phase. nif, gufo and as remain registry-only until a consumer needs named nodes; reject generating unused RDF modules. ActivityStreams uses the HTTP namespace bound by Web Annotation anno.jsonld even though its AS2 acquisition artifact writes HTTPS; reject changing identity bytes to match that artifact.
+
+Lane goals/text-knowledge-stack-rebuild-p1b-registry
+
+Reverse: Replace local parity models and curated projection scope only with dependency-safe equivalents and update their tests
+
+### P1 term stability runs uncached over git state, 2026-11-23
+
+The identity registry gate compares the published term snapshot against the merge base with origin/main. Turbo inputs do not hash that git state, so the gate runs uncached and unscoped under law L0-3. Rejected: caching the gate by source files alone, which could replay a verdict against a different published base.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Add certified git base inputs to the cache key before admitting the term stability gate to a cached scoped graph.
+
 ### P4: admission returns refusals and authenticates before writing, 2026-11-23
 
 admit validates the core hash, nonempty claim-local grounding, all actor/action/revision/scope token bindings, token authenticity and current source receipts before producing Admission. A schema-valid token alone is powerless. The use-case port checks principal independently of caller input and resolves current text under the same scope. Expected missing, stale, ambiguous, denied or mismatched evidence is an AdmissionRefused value. Typed technical port failures remain failures until translated by the use-case; driver detail dies in adapters with boundary logging. No state is appended on refusal. Rehydrating any stored Admission repeats current verification and never grants a proof from decoding. P6 still owns the complete seven-path MatterAuthority deployment.
@@ -1998,6 +2022,22 @@ Schema factories return annotated ingredients for caller-owned Opaque wrappers. 
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the binding factories with explicit codec arguments while migrating callers and retaining the versioned encoded preimages.
+
+### P4: every breaking change lands in private workspaces and is recorded here, with no changeset, 2026-11-23
+
+Every workspace P4 changes is private (package.json private true), so per 2026-11-19-p1-no-changesets-for-private-workspaces no changeset is written and each breaking change is recorded here. @beep/schema: makeSignal, AbsenceReason and Measurement ship from @beep/schema/Signal and left @beep/epistemics (row 2, 3002e3add48). @beep/epistemics: Confidence moved to @beep/epistemics/Confidence (row 2); EvidenceSpan and its subpath were deleted for EvidencePosition (row 5, b61b79aa79f); makeClaimEnvelope, ClaimVersion, StructuralVerdict, BitemporalVersion and versionsAt were deleted, makeClaimReview replaces the envelope's review vocabulary and ReviewTag derives from the ReviewState cases (row 6, 2ced3e0a632); ClaimImport.schema, ClaimCore, ClaimLog, Admission, Assessments and rdf/NanopubCodec are new subpaths. @beep/epistemic-domain, -tables, -use-cases, -server, -ui and @beep/professional-desktop: evidence spans became EvidencePosition with a stored EvidenceRow reader (row 5). @beep/party-domain, -use-cases, -server: ClaimVersionId and the envelope claim model were replaced by ClaimCore, ClaimRecord and separate generation, evidence, review, signal, challenge, retraction, admission and stance records, and the ledger port changed accordingly (row 6). @beep/repo-cli: Kb and Holds claim types and helpers were renamed (HoldClaimVersion to HoldClaim, liveHoldVersions to liveHoldClaims), HoldProbeRunV1Row and KbAssertionV1Row became Opaque classes and declaresFormat takes a LineFormat (row 10); a native hold core asserts well-formed Unicode only, so renewing a v1 hold whose assertion has a lone surrogate fails with a SchemaError while the v1 reader still reads it and new appends are kb-claim-record/v2 and hold-claim-record/v2 events (row 6). @beep/law-practice-domain: TextQuote was deleted for @beep/text QuoteSelector and ReviewItem reads as a union with LegacyReviewItemImported, whose stored item kind is the storedKind field so a kind check never matches an import; @beep/law-practice-use-cases: DeterministicCheck.passed became result (Passed, Failed, Unknown) and ReviewItemStore.upsert returns held ids beside a new repair method, and planReviewItemWrite takes one ReviewItemWriteRequest (row 10); @beep/law-practice-server: items.jsonl writes review-item/v2 (row 7, 960b792a314). @beep/semantica: EvidenceClaim.confidence is an ExtractorConfidence signal and the ledger writes ledger-evidence/v2 (row 7). @beep/docket-intake reads only current review items (row 7). @beep/identity and @beep/rdf only gained terms and the np pin (row 8, 97b2de8a43b). Stored bytes are never rewritten; each old format has a frozen reader proved by a frozen fixture.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Make a touched package public by a decision file and write its major changeset from this record in the PR that publishes it.
+
+### Claim-event union cases are private annotated structs, 2026-11-23
+
+The non-core cases of the v2 Holds and Kb claim-event unions (Evidence, Review, Signals, Succession) are private annotated S.Struct schemas rather than exported Opaque classes. The public surface stays the union plus its .cases accessor, and the decoded case types stay structural, which the ClaimHistory generic constraints (Native extends NativeFacts, CoreEventFacts) rely on. The v1 row codecs HoldProbeRunV1Row and KbAssertionV1Row became branded S.Opaque classes over unchanged structs, so the frozen v1 fixtures and their digests are untouched.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Export each case as a branded Opaque class and widen the ClaimHistory SideRecord constraints to match.
 
 ### P4: CLI native cores link imported predecessors through a separate succession record, 2026-11-23
 
@@ -2100,6 +2140,14 @@ The HTML notice does not explicitly cover the TTL. The website repository MIT li
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Replace the declared profile and golden with a new adapter version while retaining rejected input as residual.
+
+### P4: nschema.ttl is vendored under CC BY-SA 3.0 and the np pin carries that license, 2026-11-23
+
+Operator ruling 2026-11-23, an AskUserQuestion answer relayed by the orchestrator: "Treat the nschema.html CC BY-SA 3.0 notice as covering the TTL. Vendor it with attribution and the license text, and record a decision file." nschema.ttl from Nanopublication/Guidelines at commit 8388dd90795b is vendored byte-for-byte at packages/foundation/modeling/rdf/data/vocab/nanopub-nschema/nschema.ttl (sha256 1275f6a0..., the digest the np pin already records), with the CC BY-SA 3.0 legal code as LICENSE and an attribution file VENDORED.md naming the source repository, path, commit, the editors and authors listed in nschema.html, its license notice, and the share-alike scope. The np NamespacePin records license CC-BY-SA-3.0, and its attribution cites the source, the nschema.html notice and this ruling, and says the vendored file and anything derived from it stay under CC BY-SA 3.0; the pin data was regenerated through the pinned-vocabularies target. Share-alike scope: the vendored file and any derivative of its content (a term list generated from it, a fixture built from its triples) stay CC BY-SA 3.0 inside that directory, apart from the MIT source. The repository's own code that only names the np term IRIs (the curated term list, the identity registry shard np.json, the generated @beep/rdf term constants and the nanopublication codec) is not a derivative: it refers to published identifiers. The synthetic nanopublication fixtures are unchanged. Lints: the verbatim legal code contains the upstream spelling MERCHANTIBILITY, so its path joins the typos extend-exclude list of byte-faithful vendored text, and the two upstream author surnames Groth and Wich are accepted only in VENDORED.md files. This supersedes 2026-11-23-p4-nanopub-pin-records-an-unstated-license, whose reversal trigger (an operator ruling that the notice covers the TTL) has fired; that file stays as history because decision files carry no supersession field.
+
+Lane goals/text-knowledge-stack-rebuild-p4-claims
+
+Reverse: Remove the vendored TTL and model the terms ourselves.
 
 ### P4: party corrections across a logical key retract and reassert instead of superseding, 2026-11-23
 

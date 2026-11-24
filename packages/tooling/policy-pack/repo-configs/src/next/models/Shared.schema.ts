@@ -16,8 +16,6 @@ const FileSizeScale = LiteralKit(["k", "K", "m", "M", "g", "G", "t", "T", "p", "
 const FileSizeByte = LiteralKit(["b", "B"]);
 
 /**
- * File-size suffix accepted by Next.js size limit strings.
- *
  * **Example** (Decode mb file suffix)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const FileSizeSuffix = S.TemplateLiteral([FileSizeScale, FileSizeByte]).p
 );
 
 /**
- * File-size suffix accepted by Next.js size limit strings.
- *
  * **Example** (Type-check MB suffix)
  *
  * ```ts
@@ -74,8 +70,6 @@ const SizeLimitText = S.TemplateLiteral([S.Finite, FileSizeSuffix]).check(
 );
 
 /**
- * Non-negative numeric or suffixed string size limit accepted by Next.js.
- *
  * **Example** (Decode 2mb size limit)
  *
  * ```ts
@@ -98,8 +92,6 @@ export const SizeLimit = S.Union([NonNegativeSizeLimitNumber, SizeLimitText]).pi
 );
 
 /**
- * Non-negative numeric or suffixed string size limit accepted by Next.js.
- *
  * **Example** (Type-check 2mb size limit)
  *
  * ```ts

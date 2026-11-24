@@ -33,8 +33,6 @@ export const LedgerState = LiteralKit(["open", "blocked", "done"]).pipe(
 );
 
 /**
- * Runtime type for {@link LedgerState}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -190,8 +188,6 @@ export const ChangeSource = LiteralKit(["ledger", "inbox"]).pipe(
 );
 
 /**
- * Runtime type for {@link ChangeSource}.
- *
  * @category models
  * @since 0.0.0
  */

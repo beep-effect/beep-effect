@@ -213,8 +213,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 const mergeLoopPollInterval = Duration.seconds(90);
 
 /**
- * Environment-only failure signatures the merge loop is allowed to rerun.
- *
  * **Details**
  *
  * Every member is an evidence-backed class, not a guess. `ts2589-no-location`
@@ -274,8 +272,6 @@ export const YeetMonitorFlakeClass = LiteralKit([
 );
 
 /**
- * Environment-only failure signatures the merge loop is allowed to rerun.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -643,8 +639,6 @@ export class YeetMonitorAwaitingRun extends S.Opaque<YeetMonitorAwaitingRun, { r
 ) {}
 
 /**
- * What the merge loop decided about one red job.
- *
  * **Example** (Decode a needs-code-fix decision)
  *
  * ```ts
@@ -676,8 +670,6 @@ export const YeetMonitorJobDecision = S.Union([
 );
 
 /**
- * What the merge loop decided about one red job.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1025,7 +1017,53 @@ const jobEndpointLogMaxChars = 64 * 1024 * 1024;
 const unreadableJobLog = { exitCode: 1, output: Str.empty, truncated: false };
 
 /**
- * Read a failed job's failing-step log, normalized for the flake classifier.
+ * How a failed job's failing-step log was read.
+ *
+ * **Details**
+ *
+ * `LogFailed` is `gh run view --job <id> --log-failed`'s answer: `output` is
+ * its text with the GitHub decoration stripped and `raw` the text as served.
+ * `EndpointRegion` is the per-job logs endpoint's whole-job log (`raw`) with
+ * its failing step cut out (`region`); `truncated` says the region overruns
+ * the repo-run capture bound. `EndpointUnbounded` is an endpoint log whose
+ * failing step could not be bounded. `Unreadable` is a refused `gh` read whose
+ * endpoint read failed or overran 64 MiB.
+ *
+ * **Example** (Read an unbounded log)
+ *
+ * ```ts
+ * import { YeetJobLogRead } from "@beep/repo-cli/test/Yeet"
+ *
+ * const read = YeetJobLogRead.cases.EndpointUnbounded.make({ raw: "no error marker" })
+ * console.log(read._tag) // "EndpointUnbounded"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetJobLogRead = S.TaggedUnion({
+  LogFailed: { exitCode: S.Int, output: S.String, truncated: S.Boolean, raw: S.String },
+  EndpointRegion: { region: S.String, truncated: S.Boolean, raw: S.String },
+  EndpointUnbounded: { raw: S.String },
+  Unreadable: {},
+}).pipe(
+  $I.annoteSchema("YeetJobLogRead", {
+    description:
+      "A failed job's log as gh --log-failed or the per-job logs endpoint served it, or why it was not read.",
+  })
+);
+
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetJobLogRead = typeof YeetJobLogRead.Type;
+
+/**
+ * Read a failed job's failing-step log: `gh --log-failed` first, then the
+ * per-job logs endpoint.
+ *
+ * **Details**
  *
  * `gh run view --job <id> --log-failed` is asked first and keeps its existing
  * reading (KEEP: gh slices the failing steps out of the run's log archive, a
@@ -1033,17 +1071,33 @@ const unreadableJobLog = { exitCode: 1, output: Str.empty, truncated: false };
  * is still in progress ("run … is still in progress; logs will be available
  * when it is complete") — a `gh` restriction, not a GitHub one — so any
  * failure falls back to the per-job endpoint
- * (`GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`), which serves a
- * completed job's log mid-run. A failed fallback, or a log whose failing step
- * cannot be bounded, reads as an unreadable log, so a job whose log has not
- * materialized yet still reads as pending mid-run and as "needs code fix" once
- * the run has concluded.
+ * (`GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`) through
+ * `GitHubClient`, which serves a completed job's log mid-run. The endpoint's
+ * failing step is cut out by {@link isolateYeetMonitorJobLogFailure} and held
+ * to the primary read's bound, so a job reads the same mid-run as it will
+ * after. The merge loop and `beep ci failures` both read logs through this
+ * route.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { readYeetFailedJobLog } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readYeetFailedJobLog(".", 991))) // true
+ * ```
+ *
+ * @param repoRoot - The checkout `gh` runs in.
+ * @param jobDatabaseId - GitHub's numeric id for the failed job, as the jobs listing gives it.
+ * @returns How the log was read.
+ * @category use-cases
+ * @since 0.0.0
  */
-const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function* (
-  context: RepoRunContext,
+export const readYeetFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function* (
+  repoRoot: string,
   jobDatabaseId: number
 ): Effect.fn.Return<
-  { readonly exitCode: number; readonly output: string; readonly truncated: boolean },
+  YeetJobLogRead,
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | MonitorGithub
 > {
@@ -1052,12 +1106,17 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
   const primary = yield* runRepoCommandCaptureSplit(
     "gh",
     ["run", "view", "--job", `${jobDatabaseId}`, "--log-failed"],
-    context.repoRoot
+    repoRoot
   ).pipe(Effect.orElseSucceed(() => unreadableJobLog));
   // Only the exit code says `gh` refused: a successful body may itself contain
   // "is still in progress" on some log line.
   if (primary.exitCode === 0 || primary.truncated) {
-    return { ...primary, output: stripYeetMonitorLogDecoration(primary.output) };
+    return YeetJobLogRead.cases.LogFailed.make({
+      exitCode: primary.exitCode,
+      output: stripYeetMonitorLogDecoration(primary.output),
+      truncated: primary.truncated,
+      raw: primary.output,
+    });
   }
   const client = yield* GitHubClient;
   const { owner, repo } = yield* Repo;
@@ -1069,15 +1128,29 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
     )
     .pipe(Effect.option);
   if (O.isNone(fallback) || fallback.value.length > jobEndpointLogMaxChars) {
-    return unreadableJobLog;
+    return YeetJobLogRead.cases.Unreadable.make({});
   }
-  // An unbounded failing step reads as unreadable, so it stays pending until
-  // `--log-failed` answers after the run. The bounded step is held to the
-  // primary read's bound, so a job reads the same mid-run as it will then.
-  return O.match(isolateYeetMonitorJobLogFailure(fallback.value), {
-    onNone: () => unreadableJobLog,
-    onSome: (region) => ({ exitCode: 0, output: region, truncated: region.length > repoRunOutputBound.maxChars }),
+  const raw = fallback.value;
+  return O.match(isolateYeetMonitorJobLogFailure(raw), {
+    onNone: () => YeetJobLogRead.cases.EndpointUnbounded.make({ raw }),
+    onSome: (region) =>
+      YeetJobLogRead.cases.EndpointRegion.make({
+        region,
+        truncated: region.length > repoRunOutputBound.maxChars,
+        raw,
+      }),
   });
+});
+
+const monitorJobLogOf: (read: YeetJobLogRead) => {
+  readonly exitCode: number;
+  readonly output: string;
+  readonly truncated: boolean;
+} = YeetJobLogRead.match({
+  LogFailed: ({ exitCode, output, truncated }) => ({ exitCode, output, truncated }),
+  EndpointRegion: ({ region, truncated }) => ({ exitCode: 0, output: region, truncated }),
+  EndpointUnbounded: () => unreadableJobLog,
+  Unreadable: () => unreadableJobLog,
 });
 
 /**
@@ -1115,7 +1188,8 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
       runCompleted,
     });
   }
-  const result = yield* readFailedJobLog(context, job.databaseId);
+  const read = yield* readYeetFailedJobLog(context.repoRoot, job.databaseId);
+  const result = monitorJobLogOf(read);
   const logUnavailable = result.exitCode !== 0 || result.truncated;
   const flakeClass = logUnavailable ? O.none<YeetMonitorFlakeClass>() : classifyNormalizedLog(result.output);
   return YeetMonitorFailedJob.make({

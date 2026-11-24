@@ -6,8 +6,6 @@
  */
 
 /**
- * CandidateDraft table exports.
- *
  * **Example** (Log CandidateDraft entity type)
  *
  * ```ts

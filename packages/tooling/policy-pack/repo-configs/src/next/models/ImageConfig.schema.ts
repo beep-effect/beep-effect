@@ -83,8 +83,6 @@ export class ImageLoaderProps extends S.Opaque<ImageLoaderProps, { readonly bran
 ) {}
 
 /**
- * Next.js local image matching pattern.
- *
  * **Example** (Make local pathname pattern)
  *
  * ```ts
@@ -123,8 +121,6 @@ export class LocalPattern extends S.Opaque<LocalPattern, { readonly brand: uniqu
 ) {}
 
 /**
- * Next.js remote image matching pattern.
- *
  * **Example** (Make remote hostname pattern)
  *
  * ```ts
@@ -224,8 +220,6 @@ export const ImageFormat = LiteralKit(["image/avif", "image/webp"]).pipe(
 export type ImageFormat = typeof ImageFormat.Type;
 
 /**
- * Image configurations
- *
  * **Example** (Import complete image config)
  *
  * ```ts
@@ -384,8 +378,6 @@ export class ImageConfigComplete extends S.Opaque<ImageConfigComplete, { readonl
 ) {}
 
 /**
- * Partial Next.js image configuration with repo-default statics.
- *
  * **Example** (Import ImageConfig schema)
  *
  * ```ts
@@ -432,8 +424,6 @@ export const ImageConfig = ImageConfigComplete.mapFields(Struct.map(S.optionalKe
 );
 
 /**
- * Partial Next.js image configuration.
- *
  * **Example** (Satisfy empty image config)
  *
  * ```ts

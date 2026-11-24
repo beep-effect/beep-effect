@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Accounts/Accounts.errors");
 
 /**
- * Failure category for account usage operations.
- *
  * **Example** (Narrow a reason)
  *
  * ```ts
@@ -30,8 +28,6 @@ export const AccountsErrorReason = LiteralKit(["io", "decode", "denied", "http",
 );
 
 /**
- * Failure category for account usage operations.
- *
  * **Details**
  *
  * `login` means the stored login is missing or the provider no longer accepts
@@ -43,8 +39,6 @@ export const AccountsErrorReason = LiteralKit(["io", "decode", "denied", "http",
 export type AccountsErrorReason = typeof AccountsErrorReason.Type;
 
 /**
- * An account usage operation failed.
- *
  * **Example** (Construct an error)
  *
  * ```ts

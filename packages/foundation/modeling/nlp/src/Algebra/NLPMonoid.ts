@@ -293,8 +293,6 @@ export const SentenceArray: Monoid.Monoid<ReadonlyArray<string>> = Monoid.ArrayC
 export const DocumentText: Monoid.Monoid<string> = Monoid.StringJoin("\n\n");
 
 /**
- * Document statistics carrier.
- *
  * **Example** (Create document statistics)
  *
  * ```ts
@@ -396,8 +394,6 @@ export const AnnotationMap = <K, V>(): Monoid.Monoid<MutableHashMap.MutableHashM
 });
 
 /**
- * Named entity carrier.
- *
  * **Example** (Create named entity)
  *
  * ```ts
@@ -644,8 +640,6 @@ export const NGramFrequency: Monoid.Monoid<TermNumberMap> = {
 // =============================================================================
 
 /**
- * Combined text analysis carrier (bag-of-words + entities + sentence count + vocabulary).
- *
  * **Example** (Create text analysis)
  *
  * ```ts

@@ -37,8 +37,6 @@ export const OcctErrorReason = OcctErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link OcctErrorReason}.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts

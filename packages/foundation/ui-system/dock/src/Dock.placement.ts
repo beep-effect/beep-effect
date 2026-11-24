@@ -14,8 +14,6 @@ import { GroupId, SplitId, SplitRatio } from "./Dock.ids.ts";
 const $I = $DockId.create("Dock.placement");
 
 /**
- * Root placement that creates the first tab group.
- *
  * **Example** (Create first tab group)
  *
  * ```ts
@@ -41,8 +39,6 @@ export class RootPlacement extends S.Opaque<RootPlacement, { readonly brand: uni
 ) {}
 
 /**
- * Placement that inserts a panel into an existing tab group.
- *
  * **Example** (Insert into tab group)
  *
  * ```ts
@@ -70,8 +66,6 @@ export class TabPlacement extends S.Opaque<TabPlacement, { readonly brand: uniqu
 ) {}
 
 /**
- * Codec for the semantic side of an inserted group.
- *
  * **Example** (Make docking side)
  *
  * ```ts
@@ -90,8 +84,6 @@ export const DockSide = LiteralKit(["left", "right", "top", "bottom"]).pipe(
   })
 );
 /**
- * Decoded semantic docking side.
- *
  * **Example** (Type docking side)
  *
  * ```ts
@@ -138,8 +130,6 @@ export class SplitPlacement extends S.Opaque<SplitPlacement, { readonly brand: u
 ) {}
 
 /**
- * Placement that inserts a new group against an existing docked workspace root.
- *
  * **Details**
  *
  * This placement requires an existing docked root. Use {@link RootPlacement}
@@ -173,8 +163,6 @@ export class RootSplitPlacement extends S.Opaque<RootSplitPlacement, { readonly 
 ) {}
 
 /**
- * Placement that relocates a group beside another group.
- *
  * **Example** (Relocate group beside group)
  *
  * ```ts
@@ -203,8 +191,6 @@ export class GroupSplitPlacement extends S.Opaque<GroupSplitPlacement, { readonl
 ) {}
 
 /**
- * Placement that relocates a group against the workspace root.
- *
  * **Example** (Relocate group to root)
  *
  * ```ts

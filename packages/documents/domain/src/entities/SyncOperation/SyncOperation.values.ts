@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $DocumentsDomainId.create("entities/SyncOperation/SyncOperation.values");
 
 /**
- * Kind of one-way push performed against the DMS mirror.
- *
  * **Example** (Check upload operation)
  *
  * ```ts
@@ -37,16 +35,12 @@ export const SyncOperationType = LiteralKit([
 );
 
 /**
- * Runtime type for {@link SyncOperationType}.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export type SyncOperationType = typeof SyncOperationType.Type;
 
 /**
- * Outbox lifecycle status for a queued push operation.
- *
  * **Example** (Check queued status)
  *
  * ```ts
@@ -65,8 +59,6 @@ export const SyncOperationStatus = LiteralKit(["queued", "leased", "succeeded", 
 );
 
 /**
- * Runtime type for {@link SyncOperationStatus}.
- *
  * @category value-objects
  * @since 0.0.0
  */

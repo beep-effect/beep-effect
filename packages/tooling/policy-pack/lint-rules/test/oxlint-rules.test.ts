@@ -1,9 +1,11 @@
-import plugin from "@beep/lint-rules/oxlint";
+import plugin, { MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE } from "@beep/lint-rules/oxlint";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -148,4 +150,28 @@ describe("oxlint rules", () => {
       });
     });
   }
+});
+
+// Staleness guard for the `no-manual-effect-runtime-in-tests` legacy baseline: every row must
+// name an existing repo file whose live manual-runner count equals the row's count, because a row
+// above the live count silently admits new violations in that file. Each file is linted under its
+// bare basename in a temp dir, where no baseline row matches, so every runner reports.
+describe("no-manual-effect-runtime-in-tests legacy baseline", () => {
+  it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) =>
+    it.effect("matches each listed file's live violation count", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
+        for (const [repoPath, count] of MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE) {
+          const absolutePath = path.join(repoRoot, repoPath);
+          const exists = yield* fs.exists(absolutePath);
+          expect(exists, `${repoPath} is listed but missing`).toBe(true);
+          const source = yield* fs.readFileString(absolutePath);
+          const findings = yield* runOxlintRule("no-manual-effect-runtime-in-tests", source, path.basename(repoPath));
+          expect(findings.length, `${repoPath} live count`).toBe(count);
+        }
+      })
+    )
+  );
 });

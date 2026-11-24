@@ -54,8 +54,6 @@ export const ParcelItem = S.Union([
 );
 
 /**
- * Runtime type for {@link ParcelItem}.
- *
  * @category models
  * @since 0.0.0
  */

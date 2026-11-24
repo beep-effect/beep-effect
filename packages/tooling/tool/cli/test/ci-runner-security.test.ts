@@ -1590,10 +1590,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const laneRun = stepRun(verifySteps, "Run verification lane");
       assert.include(
         laneRun,
-        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --changeset-status --skip-skills-lock'
+        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --event-base --changeset-status --skip-skills-lock'
       );
       // A push never passes the skip.
-      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity\n    fi");
+      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity --event-base\n    fi");
       // Codegen and Ecosystem read their path gates from the change-profile pattern data.
       assert.include(verifyGate, "'.lanes[$lane] // empty'");
       assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
@@ -2698,6 +2698,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Prod deploy of the CiRunners Alchemy stack; environment-gated and disarmed by a variable.
         "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+        "fleet-missed-event-check.yml:Fleet Missed-Event Check",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",
@@ -3852,6 +3853,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         A.join("\n")
       );
       expect(code).not.toContain("secrets.");
+      expect(code).not.toContain("beep-fleet-heavy");
       expect(code).not.toContain("beep-ec2-heavy");
       // An uncertified report must fail the run, and the captured corpus names branches.
       expect(code).not.toContain("--preview");
@@ -4116,7 +4118,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           " "
         )
       );
-      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "env"])).toEqual({
@@ -4259,7 +4261,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           " "
         )
       );
-      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "timeout-minutes"])).toBe(20);
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "environment"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "secrets"])).toBeUndefined();
@@ -4984,7 +4986,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "local_pilot_observation", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "environment"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "timeout-minutes"])).toBe(20);
-      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "if"])).toContain(
         "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'"
       );

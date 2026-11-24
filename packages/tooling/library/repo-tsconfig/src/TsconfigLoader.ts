@@ -80,8 +80,6 @@ export const ExtendsFailureReason = LiteralKit(["not-found", "cycle", "depth", "
 );
 
 /**
- * The schema-derived `extends` failure reason.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -89,10 +87,6 @@ export const ExtendsFailureReason = LiteralKit(["not-found", "cycle", "depth", "
 export type ExtendsFailureReason = typeof ExtendsFailureReason.Type;
 
 /**
- * Raised when a config's `extends` chain cannot be resolved: an unresolvable
- * target (`"not-found"`), a re-entrant chain (`"cycle"`), a chain deeper than
- * `MAX_EXTENDS_DEPTH` (`"depth"`), or an empty target string (`"empty"`).
- *
  * **Details**
  *
  * `path` is the config whose `extends` failed, `target` is what it tried to

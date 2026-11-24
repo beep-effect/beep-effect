@@ -82,8 +82,6 @@ export const SafeHtmlAttributes = readonlyStruct({
 });
 
 /**
- * Safe global-attribute object schema.
- *
  * **Example** (Make empty attributes object)
  *
  * ```ts import.meta.vitest name="Make empty attributes object"
@@ -208,8 +206,6 @@ export const SafeHtmlElement = LiteralKit([
 );
 
 /**
- * Decoded type of {@link SafeHtmlElement}.
- *
  * **Example** (Typed safe element tag)
  *
  * ```ts import.meta.vitest name="Typed safe element tag"
@@ -229,13 +225,14 @@ const hasScheme = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
 const hasAllowedLinkScheme = /^(?:https|mailto|tel):/iu;
 const hasAllowedImageScheme = /^https:/iu;
 
+const hasNoSurroundingUnicodeWhitespaceWhileMicrosyntaxStaysAsciiOnly = (value: string): boolean =>
+  value === Str.trim(value);
+
 const isSafeUrlAttributeWith =
   (allowedScheme: RegExp) =>
   (value: string): boolean =>
     Str.isNonEmpty(value) &&
-    // The safe-output policy deliberately rejects surrounding Unicode
-    // whitespace; HTML microsyntax tokenization elsewhere remains ASCII-only.
-    value === Str.trim(value) &&
+    hasNoSurroundingUnicodeWhitespaceWhileMicrosyntaxStaysAsciiOnly(value) &&
     !hasForbiddenUrlCodePoint.test(value) &&
     !Str.startsWith("//")(value) &&
     !Str.includes("\\")(value) &&
@@ -283,8 +280,6 @@ export const SafeUrlAttribute = S.String.check(
 );
 
 /**
- * Decoded type of {@link SafeUrlAttribute}.
- *
  * **Example** (Typed relative URL value)
  *
  * ```ts import.meta.vitest name="Typed relative URL value"
@@ -332,8 +327,6 @@ export const SafeImageUrlAttribute = S.String.check(
 );
 
 /**
- * Decoded type of {@link SafeImageUrlAttribute}.
- *
  * **Example** (Decode HTTPS image URL)
  *
  * ```ts
@@ -381,8 +374,6 @@ export const HtmlPolicyRule = LiteralKit([
 );
 
 /**
- * Decoded type of {@link HtmlPolicyRule}.
- *
  * **Example** (Decode unsafeUrl rule value)
  *
  * ```ts import.meta.vitest name="Decode unsafeUrl rule value"
@@ -403,8 +394,6 @@ export const HtmlPolicyRule = LiteralKit([
 export type HtmlPolicyRule = typeof HtmlPolicyRule.Type;
 
 /**
- * One path-addressed safe-HTML policy violation.
- *
  * **Example** (Make path-addressed issue)
  *
  * ```ts import.meta.vitest name="Make path-addressed issue"
@@ -520,8 +509,6 @@ export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
 );
 
 /**
- * Decoded type of {@link SafeHtmlAst}.
- *
  * **Example** (Typed frozen safe proof)
  *
  * ```ts import.meta.vitest name="Typed frozen safe proof"

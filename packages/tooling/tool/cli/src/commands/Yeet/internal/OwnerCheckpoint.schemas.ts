@@ -29,8 +29,6 @@ export const OwnerCheckpointHead = S.String.check(S.isPattern(/^[a-f0-9]{40}$/u)
 );
 
 /**
- * PR-specific owner binding independent of a SHA-scoped GitHub check.
- *
  * **Example** (Inspect OwnerCheckpointBinding)
  * ```ts
  * import { OwnerCheckpointBinding } from "@beep/repo-cli/test/Yeet"
@@ -62,8 +60,6 @@ const BaseProvenance = S.Struct({
 );
 
 /**
- * Finite owner and merge lifecycle; uncertainty never authorizes another dispatch.
- *
  * **Example** (Inspect OwnerCheckpointState)
  * ```ts
  * import { OwnerCheckpointState } from "@beep/repo-cli/test/Yeet"
@@ -84,15 +80,12 @@ export const OwnerCheckpointState = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link OwnerCheckpointState}.
  * @category type-level
  * @since 0.0.0
  */
 export type OwnerCheckpointState = typeof OwnerCheckpointState.Type;
 
 /**
- * Durable compare-and-set owner state.
- *
  * **Example** (Inspect OwnerCheckpointRecord)
  * ```ts
  * import { OwnerCheckpointRecord } from "@beep/repo-cli/test/Yeet"
@@ -172,8 +165,6 @@ export class OwnerCheckpointClassicStatus extends S.Opaque<
 ) {}
 
 /**
- * The sole App-bound check excluded from its own prerequisite gate.
- *
  * **Example** (Inspect OwnerCheckpointSelfCheck)
  * ```ts
  * import { OwnerCheckpointSelfCheck } from "@beep/repo-cli/test/Yeet"
@@ -195,8 +186,6 @@ export class OwnerCheckpointSelfCheck extends S.Opaque<OwnerCheckpointSelfCheck,
 ) {}
 
 /**
- * Fresh upstream PR snapshot including classic statuses and the own-check identity.
- *
  * **Example** (Inspect OwnerCheckpointSnapshot)
  * ```ts
  * import { OwnerCheckpointSnapshot } from "@beep/repo-cli/test/Yeet"
@@ -221,8 +210,6 @@ export class OwnerCheckpointSnapshot extends S.Opaque<OwnerCheckpointSnapshot, {
 ) {}
 
 /**
- * Finalized upstream-only observer evidence; never a fabricated full merge-ready receipt.
- *
  * **Example** (Inspect OwnerCheckpointObserver)
  * ```ts
  * import { OwnerCheckpointObserver } from "@beep/repo-cli/test/Yeet"
@@ -247,8 +234,6 @@ export class OwnerCheckpointObserver extends S.Opaque<OwnerCheckpointObserver, {
 ) {}
 
 /**
- * Decoded prerequisite metadata supplied by a future trusted receipt verifier.
- *
  * **Example** (Inspect OwnerCheckpointEvidence)
  * ```ts
  * import { OwnerCheckpointEvidence } from "@beep/repo-cli/test/Yeet"
@@ -271,8 +256,6 @@ export class OwnerCheckpointEvidence extends S.Opaque<OwnerCheckpointEvidence, {
 ) {}
 
 /**
- * Finite owner-check identity and freshness policy without a disable switch.
- *
  * **Example** (Inspect OwnerCheckpointPolicy)
  * ```ts
  * import { OwnerCheckpointPolicy } from "@beep/repo-cli/test/Yeet"
@@ -294,8 +277,6 @@ export class OwnerCheckpointPolicy extends S.Opaque<OwnerCheckpointPolicy, { rea
 ) {}
 
 /**
- * Explicit domain transitions; no generic runtime dispatcher or implicit merge retry.
- *
  * **Example** (Inspect OwnerCheckpointCommand)
  * ```ts
  * import { OwnerCheckpointCommand } from "@beep/repo-cli/test/Yeet"
@@ -317,15 +298,12 @@ export const OwnerCheckpointCommand = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link OwnerCheckpointCommand}.
  * @category type-level
  * @since 0.0.0
  */
 export type OwnerCheckpointCommand = typeof OwnerCheckpointCommand.Type;
 
 /**
- * Exact generation and revision assertions for one owner transition.
- *
  * **Example** (Inspect OwnerCheckpointRequest)
  * ```ts
  * import { OwnerCheckpointRequest } from "@beep/repo-cli/test/Yeet"
@@ -347,8 +325,6 @@ export class OwnerCheckpointRequest extends S.Opaque<OwnerCheckpointRequest, { r
 ) {}
 
 /**
- * Transactionally committed external metadata or merge intent.
- *
  * **Example** (Inspect OwnerCheckpointIntent)
  * ```ts
  * import { OwnerCheckpointIntent } from "@beep/repo-cli/test/Yeet"
@@ -367,15 +343,12 @@ export const OwnerCheckpointIntent = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link OwnerCheckpointIntent}.
  * @category type-level
  * @since 0.0.0
  */
 export type OwnerCheckpointIntent = typeof OwnerCheckpointIntent.Type;
 
 /**
- * Outbox publication or dispatch state; pending intent is not execution.
- *
  * **Example** (Inspect OwnerCheckpointDelivery)
  * ```ts
  * import { OwnerCheckpointDelivery } from "@beep/repo-cli/test/Yeet"
@@ -396,15 +369,12 @@ export const OwnerCheckpointDelivery = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link OwnerCheckpointDelivery}.
  * @category type-level
  * @since 0.0.0
  */
 export type OwnerCheckpointDelivery = typeof OwnerCheckpointDelivery.Type;
 
 /**
- * Durable intent in the same transaction as the owner state change.
- *
  * **Example** (Inspect OwnerCheckpointOutbox)
  * ```ts
  * import { OwnerCheckpointOutbox } from "@beep/repo-cli/test/Yeet"
@@ -427,8 +397,6 @@ export class OwnerCheckpointOutbox extends S.Opaque<OwnerCheckpointOutbox, { rea
 ) {}
 
 /**
- * One indivisible owner-record and outbox mutation.
- *
  * **Example** (Inspect OwnerCheckpointMutation)
  * ```ts
  * import { OwnerCheckpointMutation } from "@beep/repo-cli/test/Yeet"
@@ -480,7 +448,6 @@ export class OwnerCheckpointError extends S.TaggedError<OwnerCheckpointError, { 
   })
 ) {}
 /**
- * Native merge observation separated from durable recording success.
  * **Example** (Inspect the outcome constructors)
  * ```ts
  * import { OwnerCheckpointMergeOutcome } from "@beep/repo-cli/test/Yeet"
@@ -498,7 +465,6 @@ export const OwnerCheckpointMergeOutcome = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link OwnerCheckpointMergeOutcome}.
  * @category type-level
  * @since 0.0.0
  */

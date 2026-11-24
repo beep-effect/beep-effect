@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim projection contract exports.
- *
  * **Example** (Project empty claims)
  *
  * ```ts

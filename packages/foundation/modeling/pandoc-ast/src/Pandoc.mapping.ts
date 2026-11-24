@@ -54,8 +54,6 @@ const encodePandocDocument = S.encodeEffect(PandocDocument);
 const $I = $PandocAstId.create("Pandoc.mapping");
 
 /**
- * Typed failure raised when a Pandoc-to-Md projection cannot be completed.
- *
  * **Example** (Catch tagged mapping error)
  *
  * ```ts import.meta.vitest name="Catch tagged mapping error"
@@ -114,9 +112,12 @@ const hasOrderedListMarkerLoss = (node: OrderedList.Type): boolean =>
 
 const optionalNonEmpty = (value: string): O.Option<string> => (value.length === 0 ? O.none() : O.some(value));
 
+const firstArbitraryClassAsFenceLanguageOrNoneLikePreInsteadOfThrowing = (
+  classes: ReadonlyArray<string>
+): O.Option<Md.CodeFenceLanguage> => O.flatMap(O.fromUndefinedOr(classes[0]), S.decodeOption(Md.CodeFenceLanguage));
+
 const appendIndex = (path: JsonPath, key: string, index: number): JsonPath => [...path, key, index];
 
-// Projects each value in order under `path[key][index]`, merging every issue.
 const projectEach = <Input, Output>(
   values: ReadonlyArray<Input>,
   path: JsonPath,
@@ -848,10 +849,7 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
             ]
           : [],
         value: Md.Pre.make({
-          // Pandoc code-block classes are arbitrary external tokens; fold the
-          // first class through CodeFenceLanguage so non-conforming hints drop
-          // to None (matching the Pre codec) instead of throwing on construction.
-          language: O.flatMap(O.fromUndefinedOr(node.attr.classes[0]), S.decodeOption(Md.CodeFenceLanguage)),
+          language: firstArbitraryClassAsFenceLanguageOrNoneLikePreInsteadOfThrowing(node.attr.classes),
           value: node.text,
         }),
       })
@@ -1320,8 +1318,6 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
   );
 
 /**
- * Result of mapping a Pandoc document to `@beep/md`.
- *
  * **Example** (Make document mapping result)
  *
  * ```ts import.meta.vitest name="Make document mapping result"
@@ -1355,8 +1351,6 @@ export class PandocToDocumentResult extends S.Opaque<PandocToDocumentResult, { r
 ) {}
 
 /**
- * Companion namespace for {@link PandocToDocumentResult}.
- *
  * **Example** (Annotate companion result type)
  *
  * ```ts import.meta.vitest name="Annotate companion result type"
@@ -1393,8 +1387,6 @@ export declare namespace PandocToDocumentResult {
 }
 
 /**
- * Result of mapping an `@beep/md` document to Pandoc.
- *
  * **Example** (Make pandoc mapping result)
  *
  * ```ts import.meta.vitest name="Make pandoc mapping result"
@@ -1428,8 +1420,6 @@ export class DocumentToPandocResult extends S.Opaque<DocumentToPandocResult, { r
 ) {}
 
 /**
- * Companion namespace for {@link DocumentToPandocResult}.
- *
  * **Example** (Annotate companion result type)
  *
  * ```ts import.meta.vitest name="Annotate companion result type"

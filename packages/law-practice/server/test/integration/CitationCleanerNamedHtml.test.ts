@@ -7,12 +7,11 @@ import * as Layer from "effect/Layer";
 import { replayNamedCleanerScenes } from "../CitationCleanerNamedReplay.fixtures.ts";
 import { CitationNativeExitCounts, makeCitationObservedSpawner } from "../CitationNativeSpawner.fixtures.ts";
 
-// Real HTML bodies run in hosted integration; declaration rejection stays before spawn.
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })(
   "native named cleaner source sequences",
   (it) => {
     it.effect(
-      "matches all 504 HTML sequences, builtin boundaries, failure categories, identities and final bindings",
+      "matches all 504 HTML sequences, builtin boundaries, failure categories, identities and final bindings; hosted integration runs real HTML bodies and encoding-declaration rejection stays before spawn",
       () =>
         Effect.gen(function* () {
           const native = yield* makeCitationObservedSpawner();

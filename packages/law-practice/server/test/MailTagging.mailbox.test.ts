@@ -372,7 +372,6 @@ describe("MailTagging M365 mailbox", () => {
             O.contains(request.changeKey, "ck-1") ? Effect.fail(status(412)) : Effect.succeed(full)
           ),
       });
-      // The attorney dropped "Docket - unverified" and added "Follow up" after the job read the message.
       yield* mailbox.setCategories(
         SetCategoriesRequest.make({
           messageId,
@@ -381,7 +380,6 @@ describe("MailTagging M365 mailbox", () => {
           changeKey: O.some("ck-1"),
         })
       );
-      // An undo that removes its own tag keeps "Urgent", which the attorney added meanwhile.
       yield* Ref.set(
         fresh,
         GraphMessage.make({
@@ -404,7 +402,10 @@ describe("MailTagging M365 mailbox", () => {
       );
 
       const got8 = yield* Ref.get(writes);
-      expect(A.filter(got8, ([, changeKey]) => changeKey !== "ck-1")).toStrictEqual([
+      expect(
+        A.filter(got8, ([, changeKey]) => changeKey !== "ck-1"),
+        "the edit replays over the attorney's interim drop of Docket - unverified and added Follow up; the undo keeps the attorney's Urgent"
+      ).toStrictEqual([
         [["Personal", "Follow up", "M: acme.10001"], "ck-2"],
         [["Personal", "Follow up", "Urgent"], "ck-3"],
         [["P: USPTO"], "ck-4"],

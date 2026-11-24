@@ -15,8 +15,6 @@ const RegExpArray = S.RegExp.pipe(S.Array, S.mutable);
 const StringOrStringArray = S.Union([S.String, StringArray]);
 
 /**
- * Locale-specific domain routing entry for Next.js internationalization.
- *
  * **Example** (Make domain locale entry)
  *
  * ```ts
@@ -49,8 +47,6 @@ export class DomainLocale extends S.Opaque<DomainLocale, { readonly brand: uniqu
 ) {}
 
 /**
- * Internationalization configuration for a Next.js app.
- *
  * **Example** (Make i18n configuration)
  *
  * ```ts
@@ -90,8 +86,6 @@ export class I18NConfig extends S.Opaque<I18NConfig, { readonly brand: unique sy
 ) {}
 
 /**
- * Next.js TypeScript configuration block.
- *
  * **Example** (Make TypeScript config path)
  *
  * ```ts
@@ -122,8 +116,6 @@ export class TypeScriptConfig extends S.Opaque<TypeScriptConfig, { readonly bran
 ) {}
 
 /**
- * Route export path map entry query parameters.
- *
  * **Example** (Make query with slug)
  *
  * ```ts
@@ -142,8 +134,6 @@ export const NextParsedUrlQuery = S.Record(S.String, StringOrStringArray).pipe(
 );
 
 /**
- * Route export path map entry query parameters.
- *
  * **Example** (Type query parameters object)
  *
  * ```ts
@@ -158,8 +148,6 @@ export const NextParsedUrlQuery = S.Record(S.String, StringOrStringArray).pipe(
 export type NextParsedUrlQuery = typeof NextParsedUrlQuery.Type;
 
 /**
- * Public export path map entry returned by next.config.js exportPathMap.
- *
  * **Example** (Export a dynamic patent page as a static path)
  *
  * ```ts
@@ -186,8 +174,6 @@ export class ExportPathMapEntry extends S.Opaque<ExportPathMapEntry, { readonly 
 ) {}
 
 /**
- * Public export path map returned by `next.config.js` `exportPathMap`.
- *
  * **Example** (Make export path map)
  *
  * ```ts
@@ -208,8 +194,6 @@ export const ExportPathMap = S.Record(S.String, ExportPathMapEntry).pipe(
 );
 
 /**
- * Public export path map returned by `next.config.js` `exportPathMap`.
- *
  * **Example** (Type export path map)
  *
  * ```ts
@@ -284,8 +268,6 @@ export class IncomingRequestLoggingConfig extends S.Opaque<
 ) {}
 
 /**
- * Fetch logging configuration used by Next.js.
- *
  * **Example** (Make fetch logging config)
  *
  * ```ts
@@ -321,8 +303,6 @@ export class LoggingConfig extends S.Opaque<LoggingConfig, { readonly brand: uni
 ) {}
 
 /**
- * Lightning CSS feature name accepted by Next.js.
- *
  * **Example** (Select nesting feature enum)
  *
  * ```ts
@@ -366,8 +346,6 @@ export const LightningCssFeature = LiteralKit([
 );
 
 /**
- * Lightning CSS feature name accepted by Next.js.
- *
  * **Example** (Satisfy nesting feature type)
  *
  * ```ts
@@ -382,8 +360,6 @@ export const LightningCssFeature = LiteralKit([
 export type LightningCssFeature = typeof LightningCssFeature.Type;
 
 /**
- * Lightning CSS include/exclude feature configuration.
- *
  * **Example** (Make features include nesting)
  *
  * ```ts

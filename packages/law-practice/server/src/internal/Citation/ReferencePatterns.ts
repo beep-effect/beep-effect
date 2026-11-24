@@ -95,8 +95,7 @@ export class CitationReferencePattern extends S.Opaque<CitationReferencePattern,
 ) {}
 const fail = (reason: typeof Reason.Type) => CitationReferencePatternFailure.make({ reason });
 const safety = () => CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
-// Exhaustive CPython 3.11.15 re.escape single-point capture, not JavaScript escaping.
-const escapes = HashSet.fromIterable([
+const cpython31115ReEscapeSinglePointsNotJsEscaping = HashSet.fromIterable([
   9, 10, 11, 12, 13, 32, 35, 36, 38, 40, 41, 42, 43, 45, 46, 63, 91, 92, 93, 94, 123, 124, 125, 126,
 ]);
 type Range = { readonly source: CitationPythonUnicodeStorage; readonly start: number; readonly end: number };
@@ -143,8 +142,7 @@ export const installCitationReferencePatterns = Effect.fn("Citation.installRefer
   verified: CitationReferencePatternConfiguration
 ) {
   const patterns = verified.patterns;
-  // The rejection fingerprint depends only on installed configuration: compute it
-  // once per installed call site and replay it where every request computed it.
+  // decision: citation-stage-install-once-exit-replay
   const rejectionSha256 = yield* Effect.exit(
     fingerprintCitationMetadataPattern(patterns.rejection, () => fail("invalid-configuration"))
   );
@@ -175,7 +173,8 @@ export const installCitationReferencePatterns = Effect.fn("Citation.installRefer
       let cursor = source.start;
       for (let index = source.start; index < source.end; index++) {
         if (index % 256 === 0) yield* Effect.yieldNow;
-        if (!HashSet.has(escapes, citationPythonPointAt(source.source, index))) continue;
+        if (!HashSet.has(cpython31115ReEscapeSinglePointsNotJsEscaping, citationPythonPointAt(source.source, index)))
+          continue;
         if (cursor < index) parts.push(range(source.source, cursor, index));
         parts.push(range(slash));
         cursor = index;

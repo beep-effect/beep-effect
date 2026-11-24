@@ -69,8 +69,6 @@ const ANNOTATIONS_MAX_PAGES = 10;
 const JOBS_MAX_PAGES = 34;
 
 /**
- * The resolved inputs of one `ci rerun-runner-loss` invocation.
- *
  * **Details**
  *
  * `attempt` is `None` to evaluate the run's latest attempt; the workflow

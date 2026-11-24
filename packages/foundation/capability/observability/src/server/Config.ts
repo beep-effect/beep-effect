@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $ObservabilityId.create("server/Config");
 
 /**
- * Server-only observability configuration.
- *
  * **Example** (Creating server observability config)
  *
  * ```typescript

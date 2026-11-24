@@ -134,8 +134,6 @@ export class PatentFigure extends S.Opaque<PatentFigure, { readonly brand: uniqu
 ) {}
 
 /**
- * Patent assignee metadata.
- *
  * **Example** (Create named patent assignee)
  *
  * ```ts
@@ -227,8 +225,6 @@ export class PatentReference extends S.Opaque<PatentReference, { readonly brand:
 }
 
 /**
- * Jurisdiction-aware patent metadata.
- *
  * **Example** (Create jurisdiction patent metadata)
  *
  * ```ts
@@ -364,8 +360,6 @@ export const PatentOfficeCode = LiteralKit(["US", "EP", "WO"]).pipe(
 );
 
 /**
- * Type-level literal union produced by {@link PatentOfficeCode}.
- *
  * **Example** (Type EP office literal)
  *
  * ```ts
@@ -385,8 +379,6 @@ export type PatentOfficeCode = typeof PatentOfficeCode.Type;
 const toPatentOfficeCodeOption = flow(toUpperTrimmed, S.decodeUnknownOption(PatentOfficeCode));
 
 /**
- * Patent document status derived from WIPO ST.16 kind codes.
- *
  * **Example** (Check granted patent status)
  *
  * ```ts
@@ -416,8 +408,6 @@ export const PatentStatus = LiteralKit([
 );
 
 /**
- * Type-level literal union produced by {@link PatentStatus}.
- *
  * **Example** (Type application status literal)
  *
  * ```ts
@@ -435,8 +425,6 @@ export const PatentStatus = LiteralKit([
 export type PatentStatus = typeof PatentStatus.Type;
 
 /**
- * Office presentation metadata for patent UI surfaces.
- *
  * **Example** (Create USPTO office metadata)
  *
  * ```ts
@@ -530,8 +518,6 @@ export const PATENT_OFFICES = {
 };
 
 /**
- * Metadata accepted by {@link getPatentDisplay}.
- *
  * **Example** (Create mixed display metadata)
  *
  * ```ts
@@ -567,8 +553,6 @@ export class PatentDisplayMetadata extends S.Opaque<PatentDisplayMetadata, { rea
 ) {}
 
 /**
- * Companion namespace for {@link PatentDisplayMetadata}.
- *
  * **Example** (Encode display metadata shape)
  *
  * ```ts
@@ -647,8 +631,6 @@ export class PatentDisplay extends S.Opaque<PatentDisplay, { readonly brand: uni
 const patentClassificationsIpcDefault = A.empty<string>();
 const patentClassificationsCpcDefault = A.empty<string>();
 /**
- * Extracted IPC and CPC classification symbols.
- *
  * **Example** (Create IPC CPC classifications)
  *
  * ```ts
@@ -707,8 +689,6 @@ export const PatentSectionKind = LiteralKit(["abstract", "claims", "description"
 );
 
 /**
- * Type-level literal union produced by {@link PatentSectionKind}.
- *
  * **Example** (Type abstract section literal)
  *
  * ```ts
@@ -726,8 +706,6 @@ export const PatentSectionKind = LiteralKit(["abstract", "claims", "description"
 export type PatentSectionKind = typeof PatentSectionKind.Type;
 
 /**
- * Parsed patent content sections.
- *
  * **Example** (Create sections with abstract)
  *
  * ```ts

@@ -40,10 +40,9 @@ export const citationHtmlWorkerTestRuntime = Effect.fn("NativeSourceTest.htmlRun
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bundle-" });
-    // Keep the unchanged worker's relative WASM asset lookup inside this scope.
-    const cwd = path.join(root, "src", "internal", "Citation");
+    const cwdKeepingRelativeWasmLookupInsideRoot = path.join(root, "src", "internal", "Citation");
     const assets = path.join(root, "assets", "citation-html");
-    yield* fs.makeDirectory(cwd, { recursive: true });
+    yield* fs.makeDirectory(cwdKeepingRelativeWasmLookupInsideRoot, { recursive: true });
     yield* fs.makeDirectory(assets, { recursive: true });
     yield* fs.copyFile(
       NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)),
@@ -52,7 +51,7 @@ export const citationHtmlWorkerTestRuntime = Effect.fn("NativeSourceTest.htmlRun
     return yield* makeCitationBundledTestRuntime(
       "bun",
       NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
-      cwd
+      cwdKeepingRelativeWasmLookupInsideRoot
     );
   }).pipe(Effect.provideContext(context));
 });

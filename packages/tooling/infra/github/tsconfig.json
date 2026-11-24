@@ -1,7 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src", "alchemy.run.ts", "ruleset-guard.ts"],
+  "include": [
+    "src",
+    "alchemy.run.ts",
+    "ruleset-guard.ts",
+    "secrets.alchemy.run.ts"
+  ],
   "compilerOptions": {
     "types": ["node"],
     "outDir": "dist",

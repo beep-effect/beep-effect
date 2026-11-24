@@ -53,8 +53,6 @@ export class EvidenceDigest extends S.Opaque<EvidenceDigest, { readonly brand: u
 ) {}
 
 /**
- * Named, digest-bound subject of an evidence receipt.
- *
  * **Example** (Describe a receipt subject)
  *
  * ```ts
@@ -170,8 +168,6 @@ export class AttestationResource extends S.Opaque<AttestationResource, { readonl
 ) {}
 
 /**
- * Identity and component versions of the gate-summary verifier.
- *
  * **Example** (Inspect verifier fields)
  *
  * ```ts import.meta.vitest name="Inspect verifier fields"
@@ -215,8 +211,6 @@ export const GateVerificationResult = LiteralKit(["PASSED", "FAILED"]).pipe(
 );
 
 /**
- * Runtime type decoded by {@link GateVerificationResult}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -243,8 +237,6 @@ export const GateVerifiedLevel = LiteralKit(["BEEP_SKILL_CONTRACT_BLOCKING_GATES
 );
 
 /**
- * Runtime type decoded by {@link GateVerifiedLevel}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -270,8 +262,6 @@ const AllowedGateEvidenceCheck = S.makeFilter(
 );
 
 /**
- * Normalized common evidence for one evaluated gate.
- *
  * **Example** (Inspect gate result fields)
  *
  * ```ts import.meta.vitest name="Inspect gate result fields"

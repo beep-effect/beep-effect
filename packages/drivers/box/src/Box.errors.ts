@@ -32,8 +32,6 @@ const BoxErrorReasonBase = LiteralKit([
 ]);
 
 /**
- * Technical error reasons emitted by the Box driver.
- *
  * **Example** (Check transport reason match)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const BoxErrorReason = BoxErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link BoxErrorReason}.
- *
  * **Example** (Assign reason type value)
  *
  * ```ts
@@ -171,8 +167,6 @@ const BoxApiFailureContextValues = S.Struct({
 );
 
 /**
- * Sanitized context copied from Box API failures.
- *
  * **Details**
  *
  * `conflicts` is always an array: a single-object `context_info.conflicts`
@@ -319,8 +313,6 @@ const BoxErrorContextFields = {
 } satisfies S.Struct.Fields;
 
 /**
- * Options used when constructing Box driver errors.
- *
  * **Example** (Make options with method)
  *
  * ```ts
@@ -346,8 +338,6 @@ export class BoxErrorOptions extends S.Opaque<BoxErrorOptions, { readonly brand:
 ) {}
 
 /**
- * Raw option input accepted by BoxError.fromReason before schema-owned normalization.
- *
  * **Example** (Attach request details to a rate-limit failure)
  *
  * ```ts
@@ -418,8 +408,6 @@ export class BoxErrorDiagnostic extends S.Opaque<BoxErrorDiagnostic, { readonly 
 ) {}
 
 /**
- * Technical failure raised by the Box driver boundary.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

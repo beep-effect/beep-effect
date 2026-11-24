@@ -1,5 +1,3 @@
-// Shared guard leaf; it never imports the glob engine or facades.
-
 import { $GlobId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as N from "@beep/utils/Number";
@@ -155,16 +153,12 @@ export const GuardReason = LiteralKit(["PatternTooLong", "ExpansionBudgetExceede
   })
 );
 /**
- * Identifies a pattern-length, brace-expansion-budget or nesting-depth guard failure.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GuardReason = typeof GuardReason.Type;
 
 /**
- * A finite guard measurement or positive infinity from expansion overflow.
- *
  * **Example** (Recognizing an overflow measurement)
  *
  * ```ts
@@ -197,8 +191,6 @@ export const GuardMeasurement = S.Union([
   })
 );
 /**
- * Represents a finite guard measurement or positive infinity from expansion overflow.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -240,7 +232,6 @@ export class GuardExceeded extends S.TaggedError<GuardExceeded, { readonly brand
     limit: S.Finite.pipe(
       $I.annoteKey("GuardExceeded.limit", { description: "The finite cap enforced by the compile-time guard." })
     ),
-    // Expansion arithmetic intentionally overflows to Infinity; retain the oracle measurement.
     actual: GuardMeasurement.pipe(
       $I.annoteKey("GuardExceeded.actual", {
         description: "The measured value, including Infinity when an expansion count overflows.",

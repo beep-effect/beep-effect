@@ -55,8 +55,6 @@ export {
  */
 export { inspectEditorStateConformance, LexicalConformanceResult } from "./Lexical.conformance.ts";
 /**
- * Schema-first models of Lexical's serialized editor state.
- *
  * **Example** (Decode linebreak node)
  *
  * ```ts import.meta.vitest name="Decode linebreak node"

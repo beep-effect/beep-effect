@@ -40,8 +40,7 @@ type PublicationSource = Extract<UsptoClaimSource, { readonly kind: "publication
 
 const CLAIMS_DOCUMENT_CODE = "CLM";
 
-// Only explicitly labelled XML representations qualify; PDF/OCR is never a fallback.
-const xmlDownloadUrl = (document: UsptoDocumentReference): O.Option<string> =>
+const explicitlyXmlLabelledDownloadUrlNeverPdfFallback = (document: UsptoDocumentReference): O.Option<string> =>
   O.fromUndefinedOr(document.downloadOptions).pipe(
     O.flatMap((options) =>
       A.findFirst(options, ({ mimeTypeIdentifier }) =>
@@ -54,15 +53,13 @@ const xmlDownloadUrl = (document: UsptoDocumentReference): O.Option<string> =>
     O.map(({ downloadUrl }) => downloadUrl)
   );
 
-// A `<claim>` element (not `<claims>` or `<claim-text>`), its attributes and its markup.
-const claimElementPattern = /<claim(?=[\s>])([^>]*)>([\s\S]*?)<\/claim>/gu;
+const claimElementNotClaimsOrClaimTextPattern = /<claim(?=[\s>])([^>]*)>([\s\S]*?)<\/claim>/gu;
 const claimNumberAttributePattern = /\bnum="([0-9]+)"/u;
 const claimTextTagPattern = /<\/?claim-text\b[^>]*>/gu;
 const anyTagPattern = /<[^>]*>/gu;
 const leadingClaimNumberPattern = /^\s*[0-9]+\s*[.:]\s*/u;
 
-// The flattened claim text is wrapped in one element so the shared XML decoder resolves its entities.
-const decodeClaimText = decodeXmlTextAs(S.Struct({ "claim-text": S.String }));
+const decodeEntitiesOfClaimTextWrappedInOneElement = decodeXmlTextAs(S.Struct({ "claim-text": S.String }));
 
 const portError =
   (reason: UsptoClaimsFailureReason) =>
@@ -81,8 +78,7 @@ const latestFirst = Order.flip(
   )
 );
 
-// The named claims document, or the latest one by official date.
-const claimsDocumentOf = (
+const namedOrLatestClaimsDocumentOf = (
   documents: ReadonlyArray<UsptoDocumentReference>,
   documentIdentifier: O.Option<string>
 ): O.Option<UsptoDocumentReference> => {
@@ -100,7 +96,6 @@ const utf8Text = (bytes: Uint8Array): Effect.Effect<string, UsptoClaimsError> =>
       portError("no-full-text-claims")("The claims document is not UTF-8 text, so it has no full-text claims."),
   });
 
-// Nested `<claim-text>` boundaries become spaces; inline markup such as `<claim-ref>` is dropped.
 const numberedClaim = Effect.fnUntraced(function* ([
   ,
   attributes = "",
@@ -111,16 +106,20 @@ const numberedClaim = Effect.fnUntraced(function* ([
     () => portError("malformed-claims")("A claim element has no numeric num attribute.")
   );
   const flattened = pipe(markup, Str.replace(claimTextTagPattern, " "), Str.replace(anyTagPattern, ""));
-  const decoded = yield* decodeClaimText(`<claim-text>${flattened}</claim-text>`).pipe(
+  const decoded = yield* decodeEntitiesOfClaimTextWrappedInOneElement(`<claim-text>${flattened}</claim-text>`).pipe(
     Effect.mapError(() => portError("malformed-claims")(`Claim ${claimNumber} is not well-formed XML text.`))
   );
   return [claimNumber, Str.replace(leadingClaimNumberPattern, "")(decoded["claim-text"])];
 });
 
 const claimsFromXml = Effect.fn("UsptoClaims.claimsFromXml")(function* (xml: string) {
-  const numbered = yield* Effect.forEach(A.fromIterable(Str.matchAll(claimElementPattern)(xml)), numberedClaim, {
-    concurrency: 1,
-  });
+  const numbered = yield* Effect.forEach(
+    A.fromIterable(Str.matchAll(claimElementNotClaimsOrClaimTextPattern)(xml)),
+    numberedClaim,
+    {
+      concurrency: 1,
+    }
+  );
   if (A.isReadonlyArrayEmpty(numbered)) {
     return yield* portError("no-full-text-claims")(
       "The claims document has no XML claim elements; OCR text is not read."
@@ -137,10 +136,10 @@ const applicationDocument = Effect.fn("UsptoClaims.applicationDocument")(functio
 ) {
   const documents = yield* uspto.getDocuments(source.applicationNumber).pipe(Effect.mapError(fromDriver));
   const document = yield* Effect.fromOption(
-    claimsDocumentOf(documents, O.fromUndefinedOr(source.documentIdentifier)),
+    namedOrLatestClaimsDocumentOf(documents, O.fromUndefinedOr(source.documentIdentifier)),
     () => portError("not-found")(`Application ${source.applicationNumber} has no matching claims document.`)
   );
-  const downloadUrl = yield* Effect.fromOption(xmlDownloadUrl(document), () =>
+  const downloadUrl = yield* Effect.fromOption(explicitlyXmlLabelledDownloadUrlNeverPdfFallback(document), () =>
     portError("no-full-text-claims")(`Claims document ${document.documentIdentifier} has no XML download.`)
   );
   const bytes = yield* uspto.downloadDocument(downloadUrl).pipe(Effect.mapError(fromDriver));
@@ -206,9 +205,7 @@ const publicationClaims = Effect.fn("UsptoClaims.publicationClaims")(function* (
 const inputAttributePattern = /([^\s=]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/gu;
 const protectedXmlBlockPattern =
   /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|<!(?:"[^"]*"|'[^']*'|[^'">])*>/gu;
-// Empty USPTO subsets carry no declarations; nonempty or incomplete subsets
-// still cannot establish an unambiguous lexical inventory.
-const internalSubsetPattern = /<!DOCTYPE(?:"[^"]*"|'[^']*'|[^'">])*\[(?!\s*\]\s*>)/u;
+const nonEmptyOrIncompleteInternalSubsetPattern = /<!DOCTYPE(?:"[^"]*"|'[^']*'|[^'">])*\[(?!\s*\]\s*>)/u;
 const claimMarkupPattern = /<\/?claims?(?=[\s/>])/u;
 const decodeSourceDigest = S.decodeEffect(Sha256HexFromBytes);
 const validateInputNode = decodeXmlTextAs(S.Unknown);
@@ -336,7 +333,9 @@ const inputRecord = Effect.fn("UsptoClaims.inputRecord")(function* (
   if (A.length(numberAttributes) > 1)
     return ClaimInputRecord.cases.unavailable.make({ ...record, reason: "invalid-text" });
   return yield* validateInputNode(xmlRecord.sourceText).pipe(
-    Effect.flatMap(() => decodeClaimText(`<claim-text>${flattenInputMarkup(markup)}</claim-text>`)),
+    Effect.flatMap(() =>
+      decodeEntitiesOfClaimTextWrappedInOneElement(`<claim-text>${flattenInputMarkup(markup)}</claim-text>`)
+    ),
     Effect.map((decoded): ClaimInputRecord => {
       const canonicalText = Str.replace(leadingClaimNumberPattern, "")(decoded["claim-text"]);
       return Str.isEmpty(Str.trim(canonicalText))
@@ -352,7 +351,7 @@ const inputRecord = Effect.fn("UsptoClaims.inputRecord")(function* (
 const sourceRecords = Effect.fn("UsptoClaims.sourceRecords")(function* (xml: string) {
   if (Str.includes("OCRConfidenceData")(xml))
     return yield* portError("no-full-text-claims")("OCR-derived claims are excluded from source inspection.");
-  if (O.isSome(Str.match(internalSubsetPattern)(xml))) {
+  if (O.isSome(Str.match(nonEmptyOrIncompleteInternalSubsetPattern)(xml))) {
     return yield* portError("malformed-claims")(
       "Internal XML declaration subsets cannot establish an unambiguous source record inventory."
     );

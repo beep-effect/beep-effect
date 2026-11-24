@@ -23,8 +23,6 @@ const $I = $LawPracticeServerId.create("MailTagging/MailTagging.metering");
 const defaultRunLabel = "practice-mail-tagging";
 
 /**
- * Provider whose API calls are metered against a shared budget.
- *
  * **Example** (Guard a metered provider)
  *
  * ```ts
@@ -44,16 +42,12 @@ export const MeteredProvider = LiteralKit(["box"]).pipe(
 );
 
 /**
- * Runtime type for {@link MeteredProvider}.
- *
  * @category models
  * @since 0.0.0
  */
 export type MeteredProvider = typeof MeteredProvider.Type;
 
 /**
- * A number of API calls just made to one provider.
- *
  * **Example** (Record one upload call)
  *
  * ```ts
@@ -127,8 +121,6 @@ export class ProviderCallLedgerLine extends S.Opaque<ProviderCallLedgerLine, { r
 ) {}
 
 /**
- * JSON codec of one Box API-call ledger line.
- *
  * **Example** (Guard a decoded line)
  *
  * ```ts
@@ -148,8 +140,6 @@ export const ProviderCallLedgerJsonLine = S.fromJsonString(ProviderCallLedgerLin
 );
 
 /**
- * Runtime type for {@link ProviderCallLedgerJsonLine}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -255,8 +245,7 @@ const makeBoxCallMeter = Effect.gen(function* () {
     yield* ledger.append(`${line}\n`);
   });
 
-  // The count is the diagnostic: a failed flush is logged with it, never with the path.
-  const flush = Effect.flatMap(Ref.get(total), (calls) =>
+  const flushLoggingCountNeverPath = Effect.flatMap(Ref.get(total), (calls) =>
     calls > 0
       ? append(calls).pipe(
           Effect.catchCause(() =>
@@ -268,7 +257,7 @@ const makeBoxCallMeter = Effect.gen(function* () {
       : Effect.void
   );
 
-  yield* Effect.addFinalizer(() => flush);
+  yield* Effect.addFinalizer(() => flushLoggingCountNeverPath);
 
   return ProviderCallMeter.of({
     record: Effect.fn("ProviderCallMeter.record")((calls: ProviderCalls) =>

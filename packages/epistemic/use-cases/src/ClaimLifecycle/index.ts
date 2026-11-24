@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim lifecycle transition service exports.
- *
  * **Example** (Assert makeClaimTransition is function)
  *
  * ```ts

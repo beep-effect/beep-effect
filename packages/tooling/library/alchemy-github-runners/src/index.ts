@@ -29,8 +29,6 @@ export * from "./Ec2Events.models.ts";
  */
 export * from "./Ec2Fleet.models.ts";
 /**
- * EC2 fleet service contract.
- *
  * @category services
  * @since 0.0.0
  */
@@ -50,15 +48,11 @@ export * from "./GitHubApp.layer.ts";
  */
 export * from "./GitHubApp.service.ts";
 /**
- * GitHub-side runner models.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./GitHubRunners.models.ts";
 /**
- * Job-retry Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */
@@ -78,22 +72,16 @@ export * from "./MessageQueue.service.ts";
  */
 export * from "./RunnerBinaries.service.ts";
 /**
- * Runner-binaries syncer Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */
 export * from "./RunnerBinariesSyncer.program.ts";
 /**
- * Typed errors.
- *
  * @category errors
  * @since 0.0.0
  */
 export * from "./RunnerFleet.errors.ts";
 /**
- * The runner fleet composite.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -113,15 +101,11 @@ export * from "./RunnerFleetNames.ts";
  */
 export * from "./RunnerInstance.models.ts";
 /**
- * Queue message models.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./RunnerMessages.models.ts";
 /**
- * Runner pool configuration models.
- *
  * @category models
  * @since 0.0.0
  */
@@ -141,36 +125,26 @@ export * from "./RunnerRuntime.models.ts";
  */
 export * from "./RunnerSweep.ts";
 /**
- * Runner instance user data.
- *
  * @category constructors
  * @since 0.0.0
  */
 export * from "./RunnerUserData.ts";
 /**
- * Scale-down Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */
 export * from "./ScaleDown.program.ts";
 /**
- * Scale-up Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */
 export * from "./ScaleUp.program.ts";
 /**
- * SSM housekeeper Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */
 export * from "./SsmHousekeeper.program.ts";
 /**
- * SSM parameter layout models.
- *
  * @category models
  * @since 0.0.0
  */
@@ -183,8 +157,6 @@ export * from "./SsmParameters.models.ts";
  */
 export * from "./SsmStore.service.ts";
 /**
- * Termination watcher Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */
@@ -197,8 +169,6 @@ export * from "./TerminationWatcher.program.ts";
  */
 export * from "./WebCrypto.ts";
 /**
- * Webhook Lambda program.
- *
  * @category use-cases
  * @since 0.0.0
  */

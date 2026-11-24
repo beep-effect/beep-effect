@@ -120,10 +120,8 @@ const nonNullCaseHash = Effect.fn("Citation.hashNonNullCase")(function* (
   const reporterJson = yield* jsonValue(reporter);
   const volume = R.get(groups, "volume");
   const volumeJson = O.isSome(volume) ? `, "volume": ${yield* jsonValue(volume.value)}` : "";
-  // Snapshot the complete preimage before the first asynchronous digest.
-  return yield* numericHash(
-    `{"class": "FullCaseCitation", "page": ${pageJson}, "reporter": ${reporterJson}${volumeJson}}`
-  );
+  const completePreimageBeforeAsyncDigest = `{"class": "FullCaseCitation", "page": ${pageJson}, "reporter": ${reporterJson}${volumeJson}}`;
+  return yield* numericHash(completePreimageBeforeAsyncDigest);
 });
 /**
  * Hash the current case fields with source JSON spacing, ASCII escaping and

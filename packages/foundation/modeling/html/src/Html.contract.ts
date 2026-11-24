@@ -105,8 +105,6 @@ export const HtmlDocumentChild = DocumentChild.pipe(S.revealCodec);
 export type HtmlDocumentChild = typeof HtmlDocumentChild.Type;
 
 /**
- * Canonical HTML document root schema.
- *
  * **Details**
  *
  * Unlike the broad generated `Document` model used for lossless decoding and

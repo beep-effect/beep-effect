@@ -49,7 +49,7 @@ Higher sources outrank lower sources when they conflict.
   its tests).
 - `packages/foundation/modeling/schema` (the prefixed digest grammar beside
   `Sha256Hex`).
-- `packages/foundation/modeling/provenance` and
+- `packages/foundation/modeling/text` and
   `packages/foundation/capability/file-processing` (`SourceTextDigest` and
   `ContentDigest` derive from the shared grammar).
 - `packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts`.

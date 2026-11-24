@@ -244,7 +244,6 @@ export const defineKind = <const Name extends string, Body extends KindBody, con
   case: S.TaggedStruct(spec.name, { targets: AnnotationTargets, body: spec.body }),
 });
 
-// The kind-independent shape every content case of every registry has.
 type AnnotationShape = {
   readonly _tag: string;
   readonly targets: HashSet.HashSet<OccurrenceId>;
@@ -295,7 +294,6 @@ type AnnotationShape = {
  * @since 0.0.0
  */
 export const mintAnnotationId = (kinds: KindRegistry) => {
-  // One JSON body encoder per kind, compiled once per registry.
   const encoders = R.map(kinds, (kind) => ({
     iri: kind.iri,
     encode: S.encodeUnknownEffect(S.toCodecJson(kind.body)),

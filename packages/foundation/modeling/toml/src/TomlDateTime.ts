@@ -22,20 +22,17 @@ import * as Str from "effect/String";
 
 const $I = $TomlId.create("TomlDateTime");
 
-/** Zero-pad `value` to `width` digits (never truncates a wider value). */
 const pad: {
   (value: number, width: number): string;
   (width: number): (value: number) => string;
 } = dual(2, (value: number, width: number): string => Str.padStart(width, "0")(String(value)));
 
-/** Whether `year` is a Gregorian leap year (div-4, except centuries unless div-400). */
 function isLeapYear(year: number): boolean {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
 const MONTH_LENGTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-/** The number of days in `month` (1-12) of `year`, accounting for leap years. */
 const daysInMonth: {
   (year: number, month: number): number;
   (month: number): (year: number) => number;
@@ -46,14 +43,11 @@ const daysInMonth: {
   return A.getUnsafe(MONTH_LENGTHS, month - 1);
 });
 
-/** Class-level filter shared by every class carrying a `{ year, month, day }` triple. */
 const isRealCalendarDate = S.makeFilter(
   ({ year, month, day }: { readonly year: number; readonly month: number; readonly day: number }) => {
     const max = daysInMonth(year, month);
     return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
   },
-  // The predicate names the offending day, so no static `message` annotation:
-  // under effect 4.0.6 a `message` annotation would replace that text.
   $I.annote("isRealCalendarDate", {
     title: "a real calendar date",
     description: "The day must exist in the given Gregorian month and year, accounting for leap years.",
@@ -113,7 +107,6 @@ const timeFields = {
       })
     )
   ).pipe($I.annoteKey("timeFields.minute", { description: "Minute of the local time from 0 through 59." })),
-  // 60 tolerates the RFC 3339 leap second; TOML does not itself validate it.
   second: S.Int.check(
     S.isBetween(
       { minimum: 0, maximum: 60 },
@@ -141,15 +134,10 @@ const timeFields = {
   ),
 };
 
-/** `YYYY-MM-DD`. */
 function formatDate(date: { readonly year: number; readonly month: number; readonly day: number }): string {
   return `${pad(date.year, 4)}-${pad(date.month, 2)}-${pad(date.day, 2)}`;
 }
 
-/**
- * `HH:MM:SS[.fraction]` — the fractional part is present only when
- * `nanosecond > 0`, trimmed to the shortest exact representation.
- */
 function formatTime(time: {
   readonly hour: number;
   readonly minute: number;
@@ -164,7 +152,6 @@ function formatTime(time: {
   return `${base}.${fraction}`;
 }
 
-/** `Z` for a zero offset, else `+hh:mm` / `-hh:mm`. */
 function formatOffset(offsetMinutes: number): string {
   if (offsetMinutes === 0) {
     return "Z";
@@ -177,9 +164,6 @@ function formatOffset(offsetMinutes: number): string {
 }
 
 /**
- * A TOML local date: `year`-`month`-`day` with no time-of-day or offset,
- * validated against the real Gregorian calendar.
- *
  * **Example** (Format a leap-day date)
  *
  * ```ts
@@ -221,9 +205,6 @@ export class TomlLocalDate extends S.Class<TomlLocalDate, { readonly brand: uniq
 }
 
 /**
- * A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or
- * offset. `second` tolerates the RFC 3339 leap second (0-60).
- *
  * **Example** (Format fractional local seconds)
  *
  * ```ts
@@ -265,9 +246,6 @@ export class TomlLocalTime extends S.Class<TomlLocalTime, { readonly brand: uniq
 }
 
 /**
- * A TOML local date-time: a {@link TomlLocalDate} and a {@link TomlLocalTime}
- * combined, with no offset.
- *
  * **Example** (Format a date-time without an offset)
  *
  * ```ts
@@ -310,10 +288,6 @@ export class TomlLocalDateTime extends S.Class<TomlLocalDateTime, { readonly bra
 }
 
 /**
- * A TOML offset date-time: a {@link TomlLocalDateTime} plus `offsetMinutes`
- * (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction;
- * this class only bounds the combined minute count.
- *
  * **Example** (Format a negative UTC offset)
  *
  * ```ts

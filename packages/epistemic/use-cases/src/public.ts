@@ -30,8 +30,6 @@ export * from "./ClaimEvidenceReview/index.ts";
  */
 export * as ClaimProjection from "./ClaimProjection/index.ts";
 /**
- * Contradiction-triage public contracts.
- *
  * **Example** (Log ReviewContradictionCandidate export)
  *
  * ```ts

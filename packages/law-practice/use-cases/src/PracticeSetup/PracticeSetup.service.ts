@@ -32,8 +32,6 @@ const RepairRefusalBase = LiteralKit([
 ]);
 
 /**
- * Why the doctor refused to run a repair.
- *
  * **Example** (Check a refusal reason)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const RepairRefusal = RepairRefusalBase.pipe(
 );
 
 /**
- * Decoded type of {@link RepairRefusal}.
- *
  * **Example** (Type a refusal)
  *
  * ```ts
@@ -70,8 +66,6 @@ export const RepairRefusal = RepairRefusalBase.pipe(
 export type RepairRefusal = typeof RepairRefusal.Type;
 
 /**
- * The doctor did not run the requested repair.
- *
  * **Example** (Refuse a repair the lawyer declined)
  *
  * ```ts
@@ -104,8 +98,6 @@ export class SetupRepairRefused extends S.TaggedError<SetupRepairRefused, { read
 ) {}
 
 /**
- * Service shape of the setup doctor.
- *
  * **Example** (Stub a doctor that reports nothing)
  *
  * ```ts

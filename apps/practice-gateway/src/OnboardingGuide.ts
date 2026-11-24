@@ -113,8 +113,6 @@ export const ONBOARDING_GUIDE_DESCRIPTION =
   "Call first when the lawyer asks to set up this computer, or when setup is incomplete; returns the onboarding steps to follow.";
 
 /**
- * The guide text a gateway serves.
- *
  * **Example** (Wrap a guide)
  *
  * ```ts

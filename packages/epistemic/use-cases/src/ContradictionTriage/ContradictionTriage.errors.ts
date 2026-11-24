@@ -17,8 +17,6 @@ const $I = $EpistemicUseCasesId.create("ContradictionTriage/ContradictionTriage.
 const ContradictionTriageOperationBase = LiteralKit(["submit", "list", "get", "review"]);
 
 /**
- * Bounded contradiction repository operations.
- *
  * **Example** (Log review enum member)
  *
  * ```ts
@@ -38,8 +36,6 @@ export const ContradictionTriageOperation = ContradictionTriageOperationBase.pip
 );
 
 /**
- * Runtime type for {@link ContradictionTriageOperation}.
- *
  * **Example** (Assign submit operation type)
  *
  * ```ts
@@ -151,8 +147,6 @@ export const ContradictionReviewConflictReason = ContradictionReviewConflictReas
 );
 
 /**
- * Runtime type for {@link ContradictionReviewConflictReason}.
- *
  * **Example** (Assign not-found reason type)
  *
  * ```ts
@@ -233,8 +227,6 @@ export const ContradictionSubmissionConflictReason = ContradictionSubmissionConf
 );
 
 /**
- * Runtime type for {@link ContradictionSubmissionConflictReason}.
- *
  * **Example** (Type and guard reused key)
  *
  * ```ts

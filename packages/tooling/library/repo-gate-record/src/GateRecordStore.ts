@@ -32,8 +32,6 @@ import type { RecordFiles } from "./internal/files.ts";
 const $I = $RepoGateRecordId.create("GateRecordStore");
 
 /**
- * A file the store wrote: its repository-relative path and its size in bytes.
- *
  * **Example** (Build a written file)
  *
  * ```ts

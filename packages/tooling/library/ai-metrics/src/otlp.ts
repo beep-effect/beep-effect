@@ -46,8 +46,6 @@ const $I = $RepoAiMetricsId.create("otlp");
 type ReadableSpan = Parameters<OTLPTraceExporter["export"]>[0][number];
 
 /**
- * OTLP attributes approved for redacted AI metrics span export.
- *
  * **Example** (Use AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST)
  *
  * ```ts
@@ -95,8 +93,6 @@ export const AiMetricsOtlpAttributeKey = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiMetricsOtlpAttributeKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -150,8 +146,6 @@ export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolea
 );
 
 /**
- * Runtime type for {@link AiMetricsOtlpAttributeValue}.
- *
  * **Example** (Type a value as AiMetricsOtlpAttributeValue)
  *
  * ```ts
@@ -166,8 +160,6 @@ export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolea
 export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Type;
 
 /**
- * Error raised by AI metrics OTLP projection or export.
- *
  * **Example** (Construct AiMetricsOtlpExportError)
  *
  * ```ts
@@ -300,8 +292,6 @@ export class AiMetricsOtlpSpanProjection extends S.Opaque<
 }
 
 /**
- * Span projections for every derived turn still awaiting OTLP export.
- *
  * **Example** (Construct AiMetricsOtlpSpanProjectionBatch)
  *
  * ```ts
@@ -351,8 +341,6 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Opaque<
 ) {}
 
 /**
- * Result of a redacted AI metrics OTLP export attempt.
- *
  * **Example** (Construct AiMetricsOtlpExportResult)
  *
  * ```ts

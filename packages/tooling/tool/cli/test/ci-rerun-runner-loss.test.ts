@@ -931,6 +931,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       );
       expect(code).not.toContain("secrets.");
       expect(code).not.toContain("workflow_run.head_");
+      expect(code).not.toContain("beep-fleet-heavy");
       expect(code).not.toContain("beep-ec2-heavy");
     })
   );

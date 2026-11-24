@@ -83,8 +83,6 @@ export class GithubLedgerTimerOptions extends S.Opaque<GithubLedgerTimerOptions,
 ) {}
 
 /**
- * One rendered systemd unit file.
- *
  * **Example** (Build a unit file)
  *
  * ```ts

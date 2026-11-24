@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $RuntimeEnvId.create("internal/types");
 
 /**
- * A plain environment record: variable name to value, where `undefined` reads as unset.
- *
  * **Example** (Validate an environment record)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const Env = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
 );
 
 /**
- * A plain environment record: variable name to value.
- *
  * @category type-level
  * @since 0.0.0
  */

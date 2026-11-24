@@ -147,8 +147,6 @@ export const HeavyAdmissionVerdict = LiteralKit(["run", "skip-satisfied", "hold"
 export type HeavyAdmissionVerdict = typeof HeavyAdmissionVerdict.Type;
 
 /**
- * The GitHub event names admission understands.
- *
  * **Example** (Check an event name)
  *
  * ```ts
@@ -168,8 +166,6 @@ export const HeavyAdmissionEventName = LiteralKit(["pull_request", "push", "merg
 );
 
 /**
- * The GitHub event names admission understands.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -178,8 +174,6 @@ export type HeavyAdmissionEventName = typeof HeavyAdmissionEventName.Type;
 const heavyAdmissionEventLabelsDefault = A.empty<string>();
 const heavyAdmissionEventChangedPathsDefault = A.empty<string>();
 /**
- * Typed view of what the admission decision reads.
- *
  * **Details**
  *
  * Built from the GitHub event payload in CI and from `gh pr view` plus

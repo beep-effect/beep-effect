@@ -17,8 +17,6 @@ import { YeetHeadMoveUnchanged } from "./HeadMove.schemas.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/FinalCheckRefresh.schemas");
 
 /**
- * Why a lane-owned path may change after the receipt without a new final-check.
- *
  * **Details**
  *
  * `standards-inventory` covers the tool-regenerated inventories a main merge
@@ -44,16 +42,12 @@ export const FinalCheckRefreshAllowance = LiteralKit(["standards-inventory", "go
 );
 
 /**
- * Why a lane-owned path may change after the receipt without a new final-check.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type FinalCheckRefreshAllowance = typeof FinalCheckRefreshAllowance.Type;
 
 /**
- * Why the refresh rule refused a later head.
- *
  * **Details**
  *
  * `own-change-outside-allowlist`: the lane changed code, tests or config after
@@ -92,8 +86,6 @@ export const FinalCheckRefreshRefusalReason = LiteralKit([
 );
 
 /**
- * Why the refresh rule refused a later head.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -134,9 +126,6 @@ export class FinalCheckRefreshOwnChange extends S.Opaque<
 ) {}
 
 /**
- * One effect-vitest finding status whose lane-owned count changed between the
- * receipt head and the final head.
- *
  * **Details**
  *
  * `atReceipt` is the count at R minus the count at R's merge base with `main`;

@@ -2624,6 +2624,12 @@
       ],
       "@beep/law-practice-domain/values/LibrarianLoop": [
         "./packages/law-practice/domain/src/values/LibrarianLoop/index.ts"
+      ],
+      "@beep/lint-rules/comment-grammar": [
+        "./packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts"
+      ],
+      "@beep/repo-cli/commands/Decisions": [
+        "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
       ]
     }
   }

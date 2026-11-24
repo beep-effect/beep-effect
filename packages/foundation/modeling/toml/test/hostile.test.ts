@@ -1,25 +1,3 @@
-// The hostile-input suite: the hardening verdict across every public surface.
-// Every case asserts a TYPED failure or a correct benign result — a defect,
-// stack overflow or hang from any row is an engine bug, not a test problem.
-//
-// Rows carried by earlier suites (not duplicated here):
-// - parse depth, balanced 300-deep array → Toml.test.ts ("surfaces the
-//   nesting-depth guard as a typed parse error") and TomlDocument.test.ts
-//   ("a nesting-depth bomb fails typed").
-// - parser-internal guard boundary (255/256 parse, 257 trips, combined
-//   array+inline counter) → parser.test.ts "depth".
-// - visitor depth bomb (10_000 open brackets) → TomlVisitor.test.ts ("an
-//   adversarial nesting-depth bomb fails the stream typed").
-// - modify 300-segment path → TomlFormat.test.ts "modify — depth".
-// - stringify direct self-reference cycle → Toml.test.ts ("fails typed on a
-//   circular reference").
-// - scanner-level control/escape/numeric/datetime rejection → scanner.test.ts
-//   (this suite re-asserts those rows through the PUBLIC parse surface, which
-//   is a different claim: the wiring from scan error to typed diagnostic).
-// - "__proto__" own-property semantics at the internal builder → semantic
-//   .test.ts (this suite asserts them through Toml.parse and additionally
-//   proves Object.prototype stays unpolluted).
-
 import { Toml, TomlParseError, TomlStringifyError } from "@beep/toml/Toml";
 import { TomlDocument } from "@beep/toml/TomlDocument";
 import { TomlFormat, TomlModificationError } from "@beep/toml/TomlFormat";
@@ -36,27 +14,17 @@ import * as Str from "effect/String";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
 import { expectFailure } from "./expectFailure.ts";
 
-/**
- * Elapsed-time ceiling for the scale and path-depth rows. The bound is a
- * hang/quadratic-blowup guard, not a performance target: linear behavior was
- * verified out of band (12.5k->126ms through 100k->762ms key-values locally),
- * and a quadratic parse at these sizes would take minutes. 30s tolerates
- * shared CI runners, which measured ~4x slower than local (5,955ms for the
- * 2MB document that takes ~1.4s here) and flaked the previous 5s bound.
- */
+// decision: hostile-elapsed-bound
 const ELAPSED_BOUND_MS = 30_000;
 
-/** Assert a failing parse and hand back the typed error. */
 const parseError = Effect.fn("parseError")(function* (text: string) {
   const error = yield* expectFailure(Toml.parse(text));
   assert.instanceOf(error, TomlParseError);
   return error;
 });
 
-/** The first diagnostic code of a parse error. */
 const codeOf = (error: TomlParseError): string | undefined => error.diagnostics[0]?.code;
 
-/** Prove Object.prototype picked up nothing from a hostile parse. */
 const assertPrototypeUnpolluted = (): void => {
   const probe: Record<string, unknown> = {};
   assert.strictEqual(probe.x, undefined);
@@ -64,7 +32,6 @@ const assertPrototypeUnpolluted = (): void => {
   assert.isFalse("x" in {});
 };
 
-/** Assert that a parsed value is a table before inspecting its properties. */
 const checkedTable = (value: unknown): Record<string, unknown> => {
   if (!P.isObject(value)) {
     assert.fail("expected a TOML table");
@@ -72,7 +39,7 @@ const checkedTable = (value: unknown): Record<string, unknown> => {
   return value;
 };
 
-describe("hostile input", () => {
+describe("hostile input fails typed or succeeds benign; a defect, stack overflow or hang is an engine bug", () => {
   describe("parse — depth bombs", () => {
     it.effect("10_000 unbalanced open brackets fail typed, never a stack overflow", () =>
       Effect.gen(function* () {
@@ -99,9 +66,6 @@ describe("hostile input", () => {
   describe("stringify — depth bombs", () => {
     it.effect("a 10_000-deep nested OBJECT trips the emitTable guard typed", () =>
       Effect.gen(function* () {
-        // Distinct recursion surface from the array bomb below: nested plain
-        // objects render as [table] sections through emitTable, not through
-        // renderInline.
         let value: Record<string, unknown> = {};
         for (let i = 0; i < 10_000; i++) {
           value = { a: value };
@@ -124,12 +88,8 @@ describe("hostile input", () => {
       })
     );
 
-    it.effect("a value parsed at exactly the depth bound round-trips through stringify", () =>
+    it.effect("256 containers with a non-empty scalar leaf round-trip because only container descent counts", () =>
       Effect.gen(function* () {
-        // Parse guards container descent only, so 256 nested arrays with a
-        // non-empty leaf parse; stringify must count the same way — a guard
-        // that also checked the scalar leaf would see depth 257 and give
-        // stringify a one-level tighter bound than parse (PR #31 review).
         const doc = `a = ${Str.repeat(256)("[")}1${Str.repeat(256)("]")}\n`;
         const value = yield* Toml.parse(doc);
         const text = yield* Toml.stringify(value);
@@ -140,8 +100,6 @@ describe("hostile input", () => {
   });
 
   describe("stringify — cycles", () => {
-    // The direct self-reference row lives in Toml.test.ts; this pins the
-    // multi-hop case the ancestor-Set detector must also catch.
     it.effect("a 3-hop cycle across tables fails typed as CircularReference", () =>
       Effect.gen(function* () {
         const a: Record<string, unknown> = {};
@@ -170,9 +128,6 @@ describe("hostile input", () => {
   });
 
   describe("defect passthrough", () => {
-    // The typed-error firewall must materialize ONLY the engine's raw
-    // carriers; any other throw is a genuine defect and must die, never be
-    // swallowed into a typed TOML error.
     it.effect("stringify lets a throwing getter die instead of masking it as TomlStringifyError", () =>
       Effect.gen(function* () {
         const evil = {
@@ -199,11 +154,6 @@ describe("hostile input", () => {
       })
     );
 
-    // No TOML *string* can make the parse engine throw anything but its raw
-    // carriers (the full toml-test corpus pins that), so the natural
-    // non-engine defect is misuse-shaped input: a non-string reaching the
-    // scanner throws a plain TypeError, which must die, not become a
-    // TomlParseError.
     it.effect("parse lets a non-engine TypeError die instead of masking it as TomlParseError", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(Toml.parse(deliberatelyInvalid<string>(42)));
@@ -222,8 +172,6 @@ describe("hostile input", () => {
   });
 
   describe("facade surfaces on deep input", () => {
-    // TomlVisitor.visit against this exact bomb is pinned in
-    // TomlVisitor.test.ts; the remaining facade surfaces ride here.
     const bomb = `a = ${Str.repeat(10_000)("[")}`;
 
     it.effect("TomlDocument.parse fails typed on the 10_000-bracket bomb", () =>
@@ -246,8 +194,6 @@ describe("hostile input", () => {
     );
 
     it("TomlFormat.format yields no edits on the bomb instead of overflowing", () => {
-      // format is pure and total: malformed input (a tripped guard included)
-      // produces zero edits rather than corrupting the document.
       assert.deepStrictEqual(TomlFormat.format(bomb), []);
       assert.strictEqual(TomlFormat.formatToString(bomb), bomb);
     });
@@ -281,11 +227,7 @@ describe("hostile input", () => {
     );
   });
 
-  // Every row asserting against ELAPSED_BOUND_MS also passes it as the
-  // Vitest test timeout: the default 5s ceiling would abort the test before
-  // the elapsed assertion runs, turning the bound into dead code on a slow
-  // CI runner (this exact document measured ~5,955ms there).
-  describe("scale", () => {
+  describe("scale with the elapsed bound also used as the test timeout for slow CI", () => {
     it.effect(
       "a 2MB document of 50_000 key-values parses under the timeout",
       () =>
@@ -385,9 +327,6 @@ describe("hostile input", () => {
 
     it.effect('"constructor.prototype.x = 1" builds own tables all the way down', () =>
       Effect.gen(function* () {
-        // The dotted path defines nested tables NAMED "constructor" and
-        // "prototype" — they must be own plain-object properties, never a
-        // walk up the real constructor/prototype chain.
         const parsed6 = yield* Toml.parse("constructor.prototype.x = 1\n");
         const value = checkedTable(parsed6);
         assert.isTrue(R.has(value, "constructor"));
@@ -403,7 +342,7 @@ describe("hostile input", () => {
     );
   });
 
-  describe("control characters and encoding", () => {
+  describe("control characters and encoding through the public parse surface, not only the scanner", () => {
     it.effect("NUL in the document body fails typed", () =>
       Effect.gen(function* () {
         const error = yield* parseError("a = 1\u0000\n");
@@ -530,9 +469,6 @@ describe("hostile input", () => {
 
     it.effect("a 5_001-segment dotted header is DATA — no depth guard, no overflow", () =>
       Effect.gen(function* () {
-        // Header/key nesting builds the semantic tree ITERATIVELY; only VALUE
-        // nesting (arrays/inline tables) is recursive and guarded. This must
-        // parse and materialize a 5_001-deep table.
         const segments = 5_001;
         const doc = `[${A.join(
           Array.from({ length: segments }, () => "a"),

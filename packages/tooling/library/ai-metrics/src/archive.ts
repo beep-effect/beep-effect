@@ -192,16 +192,12 @@ export const AiMetricsArchiveAlgorithm = LiteralKit(["AES-256-GCM"]).pipe(
 );
 
 /**
- * Runtime type for {@link AiMetricsArchiveAlgorithm}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsArchiveAlgorithm = typeof AiMetricsArchiveAlgorithm.Type;
 
 /**
- * Error raised by AI metrics encrypted archive helpers.
- *
  * **Example** (Make archive error instance)
  *
  * ```ts
@@ -320,8 +316,6 @@ export class AiMetricsRawArchiveObject extends S.Opaque<AiMetricsRawArchiveObjec
 ) {}
 
 /**
- * Redacted base64 AES-256-GCM key used for raw archive encryption.
- *
  * **Example** (Create redacted archive key)
  *
  * ```ts
@@ -342,8 +336,6 @@ export const AiMetricsRawArchiveKey = Aes256KeyBase64.pipe(
 );
 
 /**
- * Type for {@link AiMetricsRawArchiveKey}.
- *
  * **Example** (Type redacted archive key)
  *
  * ```ts

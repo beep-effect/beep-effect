@@ -19,8 +19,6 @@ const portOfServer = (server: HttpServer.HttpServer["Service"]): number =>
     Match.orElse(() => 0)
   );
 
-// One layer owns the ephemeral-port server and the client for the whole file;
-// `it.layer` builds and releases it, so no test provides layers mid-pipeline.
 const TestLayer = Layer.mergeAll(
   FetchHttpClient.layer,
   HttpRouter.serve(ApiLive, { disableListenLog: true, disableLogger: true }).pipe(

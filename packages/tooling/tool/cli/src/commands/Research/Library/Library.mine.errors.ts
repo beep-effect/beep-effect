@@ -11,8 +11,6 @@ import { LibraryMineProfileId } from "./Library.mine.schemas.ts";
 const $I = $RepoCliId.create("commands/Research/Library/Library.mine.errors");
 
 /**
- * A private-partition artifact was planned for an external runner lane.
- *
  * **Example** (Make a refusal)
  * ```ts
  * import { LibraryMinePrivateRouteError } from "@beep/repo-cli/commands/Research"
@@ -39,8 +37,6 @@ export class LibraryMinePrivateRouteError extends S.TaggedError<
 ) {}
 
 /**
- * A finding's span is not a verbatim substring of its bound capture text.
- *
  * **Example** (Make a span rejection)
  * ```ts
  * import { LibraryMineSpanError } from "@beep/repo-cli/commands/Research"

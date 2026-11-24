@@ -122,8 +122,6 @@ export class WorkerRepositoryUnavailable extends S.TaggedError<
 ) {}
 
 /**
- * Worker repository failure schema.
- *
  * **Example** (Check repository error membership)
  *
  * ```ts
@@ -155,8 +153,6 @@ export const WorkerRepositoryError = S.Union([
 );
 
 /**
- * Runtime type for {@link WorkerRepositoryError}.
- *
  * **Example** (Type a repository error)
  *
  * ```ts

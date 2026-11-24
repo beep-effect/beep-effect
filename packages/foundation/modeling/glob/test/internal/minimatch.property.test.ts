@@ -23,9 +23,7 @@ const patterns = S.Literals(["a", "b", "*", "**", "?", "[ab]", ".a", ""]).pipe(
   Arbitrary.map(A.join("/"))
 );
 
-// Serialize a compiled segment using its retained source. Literal segments
-// need escaping, while regex segments retain the glob spelling in _glob.
-const stringifySegment = (parsed: ParseReturn): string => {
+const serializeSegmentEscapingLiteralsElseRetainedGlobSpelling = (parsed: ParseReturn): string => {
   if (parsed === false) return assert.fail("a generated valid segment must compile");
   if (parsed === GLOBSTAR) return "**";
   if (P.isString(parsed)) return escape(parsed);
@@ -88,9 +86,9 @@ describe("minimatch property floor", () => {
       Effect.sync(() => {
         const matcher = new Minimatch(pattern);
         const parsed = matcher.parse(pattern);
-        const formatted = stringifySegment(parsed);
+        const formatted = serializeSegmentEscapingLiteralsElseRetainedGlobSpelling(parsed);
         const reparsed = matcher.parse(formatted);
-        assert.strictEqual(stringifySegment(reparsed), formatted);
+        assert.strictEqual(serializeSegmentEscapingLiteralsElseRetainedGlobSpelling(reparsed), formatted);
         assert.deepStrictEqual(reparsed, parsed);
         assert.strictEqual(new Minimatch(formatted).match(path), matcher.match(path));
         const re = matcher.makeRe();

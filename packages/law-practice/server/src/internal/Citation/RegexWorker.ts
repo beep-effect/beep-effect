@@ -109,13 +109,11 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
           : failSafety(error)
       )
     );
-  // Request-generated patterns (generated references) bind their own descriptors
-  // per call; the registry is request state, every other constant is shared.
   const bindDescriptors = Effect.fn("Citation.bindRegexDescriptors")(function* (
     descriptors: ReadonlyArray<CitationRegexPatternDescriptor>
   ) {
-    const generated = yield* makeRegistry(descriptors);
-    return { evaluate: evaluateWith(generated) };
+    const perCallRequestStateRegistry = yield* makeRegistry(descriptors);
+    return { evaluate: evaluateWith(perCallRequestStateRegistry) };
   });
   return { evaluate: evaluateWith(registry), bindDescriptors };
 });

@@ -147,8 +147,6 @@ export class ArchiveWorkspace extends Context.Service<ArchiveWorkspace, ArchiveW
 ) {}
 
 /**
- * One packet's archive-side verification result.
- *
  * **Example** (Construct a verdict)
  *
  * ```ts
@@ -579,8 +577,6 @@ export const makeArchiveStore = Effect.map(captureContext, (context) =>
 export const ArchiveStoreLive = Layer.effect(ArchiveStore, makeArchiveStore);
 
 /**
- * Inputs of a tombstone README stub.
- *
  * **Example** (Construct stub inputs)
  *
  * ```ts

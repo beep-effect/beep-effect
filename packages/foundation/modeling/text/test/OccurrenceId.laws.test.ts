@@ -38,8 +38,7 @@ const idsOf = (rows: ReadonlyArray<Anchored>) => Effect.forEach(rows, mintOccurr
 const keysOf = (rows: ReadonlyArray<Anchored>) =>
   Effect.forEach(rows, (row) => mintQuoteKey(Anchored.quote(row), "nfkc-dehyphenate/v1"), { concurrency: 1 });
 
-// A boilerplate passage repeated three times in one capture, with generated filler between the copies.
-const boilerplateCase = Arbitrary.flatMap(
+const boilerplateThriceWithFillerCase = Arbitrary.flatMap(
   Arbitrary.all({
     passage: wellFormedText,
     first: wellFormedTextWith({ minLength: 0, maxLength: 20 }),
@@ -72,9 +71,9 @@ const withFields = (
 const withExtractor = (anchored: Anchored, extractor: { readonly name: string; readonly version: string }) =>
   withFields(anchored, { extractor: SourceTextExtractor.make(extractor) });
 
-// Each field the preimage reads that can change alone in a valid row, and a change that differs by construction:
-// the salt is non-empty, so appending it always gives another value.
-const fieldChanges: ReadonlyArray<readonly [string, (anchored: Anchored, salt: string) => Anchored]> = [
+const singleFieldChangesUnderNonEmptySalt: ReadonlyArray<
+  readonly [string, (anchored: Anchored, salt: string) => Anchored]
+> = [
   ["scopeRef", (a, salt) => withFields(a, { scopeRef: `${a.receipt.source.scopeRef}${salt}` })],
   ["sourceRef", (a, salt) => withFields(a, { sourceRef: `${a.receipt.source.sourceRef}${salt}` })],
   [
@@ -137,12 +136,12 @@ const fieldChanges: ReadonlyArray<readonly [string, (anchored: Anchored, salt: s
   ],
 ];
 
-const saltArbitrary = Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 6 }), ({ text }) => text);
+const nonEmptySaltArbitrary = Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 6 }), ({ text }) => text);
 
 it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text OccurrenceId laws", (it) => {
   it.effect.prop(
     "L1-4 occurrence ids differ across repeated boilerplate and survive serialization",
-    [boilerplateCase],
+    [boilerplateThriceWithFillerCase],
     ([{ quote, rows }]) =>
       Effect.gen(function* () {
         const ids = yield* idsOf(rows);
@@ -162,11 +161,11 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text Occurrenc
 
   it.effect.prop(
     "L1-4 changing any one preimage field changes the id",
-    [anchoredCase, saltArbitrary],
+    [anchoredCase, nonEmptySaltArbitrary],
     ([{ anchored }, salt]) =>
       Effect.gen(function* () {
         const id = yield* mintOccurrenceId(anchored);
-        for (const [field, change] of fieldChanges) {
+        for (const [field, change] of singleFieldChangesUnderNonEmptySalt) {
           const changed = yield* mintOccurrenceId(change(anchored, salt));
           expect(changed, field).not.toBe(id);
         }
@@ -182,11 +181,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text Occurrenc
       const id = Result.getOrThrow(mintSync(anchored));
       const mint = mintContentHashResult(sha256);
       assertSuccess(mint(OccurrencePreimage.domainTag, encoded), id);
-      // The range slots alone cannot change in a valid row (the width check binds them to the quote), so each is
-      // changed in the encoded preimage itself.
       for (const slot of [9, 10]) {
         const shifted = O.getOrThrow(A.modify(encoded, slot, (value) => Number(value) + 1));
-        expect(Result.getOrThrow(mint(OccurrencePreimage.domainTag, shifted))).not.toBe(id);
+        expect(
+          Result.getOrThrow(mint(OccurrencePreimage.domainTag, shifted)),
+          `range slot ${slot} shifted in the encoded preimage (a valid row binds it to the quote width)`
+        ).not.toBe(id);
       }
     },
     runs
@@ -213,9 +213,8 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text Occurrenc
     "L1-4 examiner boilerplate repeated three times is three occurrences and one quote key",
     Effect.fnUntraced(function* () {
       const boilerplate = "The examiner maintains the rejection.";
-      // The third copy is broken across a line, so one quote key needs the normalization, not equal bytes.
-      const broken = "The exam-\niner maintains the rejection.";
-      const copies = [boilerplate, boilerplate, broken];
+      const brokenAcrossALine = "The exam-\niner maintains the rejection.";
+      const copies = [boilerplate, boilerplate, brokenAcrossALine];
       const text = A.join(copies, " Claim. ");
       const source = withFields(firstCitation, { textDigest: textDigestOf(sha256)(text) }).receipt.source;
       const starts = A.scan(A.dropRight(copies, 1), 0, (start, copy) => start + Str.length(copy) + 8);
@@ -226,7 +225,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text Occurrenc
       const ids = yield* idsOf(rows);
       expect(HashSet.size(HashSet.fromIterable(ids))).toBe(3);
       const keys = yield* keysOf(rows);
-      expect(HashSet.size(HashSet.fromIterable(keys))).toBe(1);
+      expect(
+        HashSet.size(HashSet.fromIterable(keys)),
+        "the copy broken across a line shares the quote key through normalization, not equal bytes"
+      ).toBe(1);
     })
   );
 });

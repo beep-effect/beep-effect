@@ -13,9 +13,6 @@ const $I = $EpistemicTablesId.create("entities/ClaimDisposition/ClaimDisposition
 const ClaimDispositionConverterOperation = LiteralKit(["toInsert", "fromRow"]);
 
 /**
- * Schema conversion failed while projecting a ClaimDisposition across the
- * persistence boundary.
- *
  * **Example** (Construct converter error)
  *
  * ```ts

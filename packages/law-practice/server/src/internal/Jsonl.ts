@@ -24,7 +24,6 @@ import * as Str from "effect/String";
 
 const lineBreakPattern = /\r?\n/u;
 
-// Decode every non-blank line with its one-based number, counting every line, in order.
 const decodeNumberedLines = <Row, E>(
   lines: ReadonlyArray<string>,
   decodeLine: (content: string, lineNumber: number) => Effect.Effect<Row, E>

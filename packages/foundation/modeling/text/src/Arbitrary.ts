@@ -31,7 +31,7 @@ import { TextAnchorVerificationReceipt } from "./VerifiedTextAnchor.ts";
 import type { JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
 import type { OffsetUnit } from "./OffsetUnit.ts";
 
-// Picks above 0x2fff map onto 64 astral emoji from U+1F600.
+// decision: law-generators-well-formed-text
 const CodePointPick = S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x2fff + 64 }));
 
 const toCodePoint = (pick: number): number => (pick > 0x2fff ? 0x1f600 + (pick - 0x3000) : pick);
@@ -173,17 +173,16 @@ export const textDigestOf =
   (text: string): SourceTextDigest =>
     SourceTextDigest.make(`sha256:${Hex.encode(digest(utf8.encode(text)))}`);
 
-// A short well-formed field value, non-empty by construction.
-const fieldText = Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 12 }), ({ text }) => text);
+const nonEmptyFieldText = Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 12 }), ({ text }) => text);
 
 const CaptureFields = Arbitrary.all({
-  scopeRef: fieldText,
-  sourceRef: fieldText,
-  locator: fieldText,
-  sourceBytes: fieldText,
-  name: fieldText,
-  version: fieldText,
-  normalizationVersion: fieldText,
+  scopeRef: nonEmptyFieldText,
+  sourceRef: nonEmptyFieldText,
+  locator: nonEmptyFieldText,
+  sourceBytes: nonEmptyFieldText,
+  name: nonEmptyFieldText,
+  version: nonEmptyFieldText,
+  normalizationVersion: nonEmptyFieldText,
 });
 
 /**

@@ -114,8 +114,6 @@ export const YEET_PR_WAVE_LEDGER_NAMESPACE = "pr-wave/notification-events";
 export const YEET_PR_WAVE_DESCRIPTOR_SCHEMA_VERSION = "yeet-pr-wave-descriptor/v1";
 
 /**
- * Why a wave's owner counts as live or dead.
- *
  * **Details**
  *
  * `claude-session-live` is the only live reason. Every other reason escalates:
@@ -150,16 +148,12 @@ export const YeetPrWaveOwnerReason = LiteralKit([
 );
 
 /**
- * Why a wave's owner counts as live or dead.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetPrWaveOwnerReason = typeof YeetPrWaveOwnerReason.Type;
 
 /**
- * The liveness verdict for a pull request's owner sessions.
- *
  * **Example** (A Codex owner is dead)
  *
  * ```ts
@@ -208,8 +202,6 @@ export const YeetPrWaveUrgency = LiteralKit(["critical", "normal"]).pipe(
 );
 
 /**
- * Desktop urgency for a wave.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -294,8 +286,6 @@ export class YeetPrWaveDescriptor extends S.Opaque<YeetPrWaveDescriptor, { reado
 export const YeetPrWaveDescriptorJson = JsonStringCodec(YeetPrWaveDescriptor);
 
 /**
- * What one escalation attempt did.
- *
  * **Details**
  *
  * `owner-live` spawned nothing: the inbox hook carries the wave.
@@ -321,16 +311,12 @@ export const YeetPrWaveEscalationOutcome = LiteralKit([
 ]).pipe($I.annoteSchema("YeetPrWaveEscalationOutcome", { description: "What one dead-owner escalation attempt did." }));
 
 /**
- * What one escalation attempt did.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetPrWaveEscalationOutcome = typeof YeetPrWaveEscalationOutcome.Type;
 
 /**
- * The result of one escalation attempt.
- *
  * **Example** (A live owner spawns nothing)
  *
  * ```ts

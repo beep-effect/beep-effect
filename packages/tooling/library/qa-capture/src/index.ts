@@ -9,15 +9,11 @@
  */
 
 /**
- * Witness action-event model exports.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./ActionEvent.models.ts";
 /**
- * Clock correlator service exports.
- *
  * @category services
  * @since 0.0.0
  */
@@ -30,29 +26,21 @@ export * from "./ClockCorrelator.service.ts";
  */
 export * from "./Collector.api.ts";
 /**
- * Collector service exports.
- *
  * @category services
  * @since 0.0.0
  */
 export * from "./Collector.service.ts";
 /**
- * Extraction plan model exports.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./ExtractionPlan.models.ts";
 /**
- * Extraction planner exports.
- *
  * @category utilities
  * @since 0.0.0
  */
 export * from "./ExtractionPlanner.ts";
 /**
- * QA capture error exports.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -65,15 +53,11 @@ export * from "./QaCapture.errors.ts";
  */
 export * from "./QaCapture.models.ts";
 /**
- * Session directory store exports.
- *
  * @category services
  * @since 0.0.0
  */
 export * from "./SessionStore.service.ts";
 /**
- * Witness bundling service exports.
- *
  * @category services
  * @since 0.0.0
  */

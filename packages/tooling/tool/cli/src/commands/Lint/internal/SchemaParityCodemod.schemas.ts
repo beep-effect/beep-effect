@@ -17,8 +17,6 @@ import type { SourceFile } from "ts-morph";
 const $I = $RepoCliId.create("commands/Lint/internal/SchemaParityCodemod.schemas");
 
 /**
- * Registered codemod rule identifiers.
- *
  * **Details**
  *
  * Each identifier names one entry in the engine's rule registry. P2 of
@@ -48,16 +46,12 @@ export const SchemaParityCodemodRuleId = LiteralKit([
 );
 
 /**
- * Identifier of a registered schema-parity codemod rule.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type SchemaParityCodemodRuleId = typeof SchemaParityCodemodRuleId.Type;
 
 /**
- * Whether a codemod run only reports or also writes files.
- *
  * **Example** (Check a run mode)
  *
  * ```ts
@@ -76,8 +70,6 @@ export const SchemaParityCodemodMode = LiteralKit(["dry-run", "write"]).pipe(
 );
 
 /**
- * Whether a schema-parity codemod run only reports or also writes files.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -102,8 +94,6 @@ const SiteCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * One text replacement planned against a file's original text.
- *
  * **Details**
  *
  * `start === end` is an insertion. Edits planned for one file must not
@@ -135,8 +125,6 @@ export class SchemaParityCodemodEdit extends S.Opaque<SchemaParityCodemodEdit, {
 ) {}
 
 /**
- * Import a rewrite needs the file to carry.
- *
  * **Details**
  *
  * `NamespaceImport` adds `import * as <alias> from "<moduleSpecifier>"`.
@@ -176,8 +164,6 @@ export const SchemaParityCodemodImport = S.TaggedUnion({
 );
 
 /**
- * Import a codemod rewrite needs the rewritten file to carry.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -223,8 +209,6 @@ export class SchemaParityCodemodSite extends S.Opaque<SchemaParityCodemodSite, {
 ) {}
 
 /**
- * An occurrence a rule matched but cannot rewrite mechanically.
- *
  * **Details**
  *
  * Residue leaves the rest of the file's rewrites intact and names the site for
@@ -271,8 +255,6 @@ export class SchemaParityCodemodResidue extends S.Opaque<
 ) {}
 
 /**
- * A file the engine refused to write.
- *
  * **Details**
  *
  * Quarantine is per file: planning threw, edits overlapped, or the rewritten
@@ -308,8 +290,6 @@ export class SchemaParityCodemodQuarantine extends S.Opaque<
 ) {}
 
 /**
- * Everything one rule planned for one file.
- *
  * **Example** (Build an empty plan)
  *
  * ```ts
@@ -347,8 +327,6 @@ export class SchemaParityCodemodRulePlan extends S.Opaque<
 ) {}
 
 /**
- * Planning outcome for one candidate file.
- *
  * **Details**
  *
  * `Planned` carries the fully rendered next text (edits applied, imports
@@ -387,16 +365,12 @@ export const SchemaParityCodemodFileOutcome = S.TaggedUnion({
 );
 
 /**
- * Planning outcome of the schema-parity codemod for one candidate file.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type SchemaParityCodemodFileOutcome = typeof SchemaParityCodemodFileOutcome.Type;
 
 /**
- * Options accepted by a codemod run.
- *
  * **Details**
  *
  * `paths` are repo-relative roots scanned for `*.ts` / `*.tsx` sources. A run
@@ -439,8 +413,6 @@ export class SchemaParityCodemodOptions extends S.Opaque<
 ) {}
 
 /**
- * Rewritten-site count for one rule facet.
- *
  * **Example** (Count Options rewrites)
  *
  * ```ts
@@ -469,8 +441,6 @@ export class SchemaParityCodemodFacetCount extends S.Opaque<
 ) {}
 
 /**
- * Result of one codemod run.
- *
  * **Example** (Build an empty report)
  *
  * ```ts
@@ -514,8 +484,6 @@ export class SchemaParityCodemodReport extends S.Opaque<SchemaParityCodemodRepor
 ) {}
 
 /**
- * Per-file context a rule receives while planning.
- *
  * **Example** (Build a rule context)
  *
  * ```ts
@@ -555,8 +523,6 @@ const SchemaParityCodemodPlannerFunction = S.declare((input: unknown): input is 
 );
 
 /**
- * A registered codemod rule: identity, text prefilter and planner.
- *
  * **Details**
  *
  * `candidatePattern` is a cheap text prefilter: files whose text does not

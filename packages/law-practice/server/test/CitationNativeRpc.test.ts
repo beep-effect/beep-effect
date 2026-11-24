@@ -128,10 +128,11 @@ it.layer(jobHandlers, { timeout: 10_000 })("in-process native RPC jobs", (it) =>
       assertExitSuccess(failed.outcome, undefined);
       expect(failed.exits).toHaveLength(1);
       assertSome(failureOf(A.getUnsafe(failed.exits, 0)), "negative");
-      // Streamed chunks precede the terminal Exit and never complete the job.
       const streamed = yield* runJob(citationNativeRpcRequest<JobRpc>("Count", undefined));
       assertExitSuccess(streamed.outcome, undefined);
-      expect(streamed.exits).toHaveLength(1);
+      expect(streamed.exits, "streamed chunks precede the one terminal Exit and never complete the job").toHaveLength(
+        1
+      );
       assertTrue(A.getUnsafe(streamed.exits, 0).pipe(Exit.isSuccess));
     })
   );

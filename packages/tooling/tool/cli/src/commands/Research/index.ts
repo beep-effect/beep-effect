@@ -28,8 +28,6 @@ export * from "./Research.command.ts";
  */
 export * from "./Research.errors.ts";
 /**
- * Public Research render export.
- *
  * @category formatting
  * @since 0.0.0
  */

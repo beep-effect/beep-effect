@@ -194,9 +194,7 @@ export class JsoncEditOverlapError extends S.TaggedError<JsoncEditOverlapError, 
   }
 }
 
-// Latest offset first; at one offset the longer edit first, so an insertion
-// lands before a replacement that starts there (jsonc-parser's applyEdits order).
-const byOffsetDescending = Order.flip(
+const byOffsetThenLengthDescendingLikeJsoncParserApplyEdits = Order.flip(
   Order.combine(
     Order.mapInput(Order.Number, (edit: JsoncEdit) => edit.offset),
     Order.mapInput(Order.Number, (edit: JsoncEdit) => edit.length)
@@ -263,7 +261,7 @@ export class JsoncEdit extends S.Opaque<JsoncEdit, { readonly brand: unique symb
     (text: string, edits: ReadonlyArray<JsoncEdit>): Result.Result<string, JsoncEditOverlapError>;
     (edits: ReadonlyArray<JsoncEdit>): (text: string) => Result.Result<string, JsoncEditOverlapError>;
   } = dual(2, (text: string, edits: ReadonlyArray<JsoncEdit>): Result.Result<string, JsoncEditOverlapError> => {
-    const sorted = A.sort(edits, byOffsetDescending);
+    const sorted = A.sort(edits, byOffsetThenLengthDescendingLikeJsoncParserApplyEdits);
     const overlap = A.findFirst(
       A.zip(sorted, A.drop(sorted, 1)),
       ([upper, lower]) => lower.offset + lower.length > upper.offset

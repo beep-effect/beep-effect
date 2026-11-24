@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Image/Image.errors");
 
 /**
- * Error raised by image curation commands.
- *
  * **Example** (Create ImageCommandError instance)
  *
  * ```ts

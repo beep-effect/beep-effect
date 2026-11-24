@@ -23,8 +23,6 @@ type Dual2<Self, That, Result> = {
 };
 
 /**
- * Codec for finite non-negative pixel coordinates and extents.
- *
  * **Example** (Read constructed box width)
  *
  * ```ts
@@ -42,8 +40,6 @@ export const Extent = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * Finite non-negative rectangle in host pixel coordinates.
- *
  * **Details**
  *
  * Missing constructor fields default to zero, representing an
@@ -71,8 +67,6 @@ export class DockBox extends S.Opaque<DockBox, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Projected rectangle for one tab group.
- *
  * **Example** (Create group geometry)
  *
  * ```ts
@@ -115,8 +109,6 @@ export class SashGeometry extends S.Opaque<SashGeometry, { readonly brand: uniqu
 ) {}
 
 /**
- * Geometry for one floating subtree in z-order.
- *
  * **Example** (Create empty floating geometry)
  *
  * ```ts

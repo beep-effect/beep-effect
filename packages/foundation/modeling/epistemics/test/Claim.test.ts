@@ -1,7 +1,9 @@
 import { makeClaimReview, ReviewTag, ValidTime, validAt } from "@beep/epistemics/Claim";
 import { $EpistemicsId } from "@beep/identity/packages";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -107,5 +109,21 @@ describe("ValidTime", () => {
       assertTrue(validAt(interval, DateTime.makeUnsafe(10)));
       assertFalse(validAt(DateTime.makeUnsafe(20))(interval));
     })
+  );
+});
+
+describe("Claim review vocabulary properties", () => {
+  const json = S.fromJsonString(review.EvidenceSignals);
+  const equivalent = S.toEquivalence(review.EvidenceSignals);
+  it.effect.prop(
+    "every generated evidence-signal set survives its JSON codec unchanged",
+    [Arbitrary.schema(review.EvidenceSignals)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(json)(value);
+        const decoded = yield* S.decodeEffect(json)(encoded);
+        assertTrue(equivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });

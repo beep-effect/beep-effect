@@ -25,8 +25,6 @@ import { SourceNormRef } from "../SourceNormRef/index.ts";
 const $I = $LawPracticeDomainId.create("values/NormSourceReference/NormSourceReference.model");
 
 /**
- * Verbatim fragment of norm text an element was read from.
- *
  * **Details**
  *
  * The fragment is quoted exactly as the recorder transcribed it. Nothing
@@ -51,8 +49,6 @@ export const NormTextFragment = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link NormTextFragment}.
- *
  * @see {@link NormTextFragment} for the runtime schema and its evidential status.
  * @category models
  * @since 0.0.0
@@ -60,8 +56,6 @@ export const NormTextFragment = S.NonEmptyString.pipe(
 export type NormTextFragment = typeof NormTextFragment.Type;
 
 /**
- * The norm text one recorded element rests on.
- *
  * **When to use**
  *
  * Use as the norm pointer on every element of a recorded interpretation — each

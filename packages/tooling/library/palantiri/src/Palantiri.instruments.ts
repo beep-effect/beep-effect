@@ -59,8 +59,6 @@ export const ParcelFreshnessState = LiteralKit(["fresh", "unknown"]).pipe(
 );
 
 /**
- * Runtime type for {@link ParcelFreshnessState}.
- *
  * @category models
  * @since 0.0.0
  */

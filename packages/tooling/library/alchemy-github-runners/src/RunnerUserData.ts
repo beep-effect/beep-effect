@@ -24,8 +24,6 @@ import { RunnerTag } from "./RunnerInstance.models.ts";
 const $I = $AlchemyGithubRunnersId.create("RunnerUserData");
 
 /**
- * What a pool's user data needs.
- *
  * **Details**
  *
  * `runnerTarballS3Url` is `s3://<bucket>/<key>` of the syncer's mirror.

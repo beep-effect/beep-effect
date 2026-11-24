@@ -28,8 +28,6 @@ import { PrRepository } from "../Yeet/internal/Provenance.ts";
 const $I = $RepoCliId.create("commands/Session/Rulings.schemas");
 
 /**
- * Whether a ruling still governs work.
- *
  * **Example** (Narrow a state)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const RulingState = LiteralKit(["in-force", "superseded"]).pipe(
 );
 
 /**
- * Whether a ruling still governs work.
- *
  * @category models
  * @since 0.0.0
  */
@@ -167,8 +163,6 @@ export class RulingRow extends S.Opaque<RulingRow, { readonly brand: unique symb
 export const RulingRowJson = JsonStringCodec(RulingRow);
 
 /**
- * The rulings a successor reads: the newest row per ruling, newest date first.
- *
  * **Example** (An empty report)
  *
  * ```ts
@@ -288,8 +282,6 @@ export const renderRulingsMarkdown = (rows: ReadonlyArray<RulingRow>): string =>
   );
 
 /**
- * Input for one ruling append before provenance is stamped.
- *
  * **Example** (Describe an append)
  *
  * ```ts

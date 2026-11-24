@@ -46,7 +46,6 @@ class ExplorationPacket extends S.Opaque<ExplorationPacket, { readonly brand: un
 
 const PacketJson = S.fromJsonString(S.Union([GoalPacket, ExplorationPacket]));
 
-// A packet directory whose name forms no topic IRI is no topic.
 const packetTopic = (kind: string, slug: string, packet: GoalPacket | ExplorationPacket): O.Option<LibraryTopic> =>
   LibraryTopic.makeOption(
     "initiative" in packet

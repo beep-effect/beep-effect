@@ -69,8 +69,6 @@ const ContactMessage = TrimmedContactText.check(
 const ContactSubmissionStatusBase = LiteralKit(["accepted", "rejected"]);
 
 /**
- * Public contact submission status.
- *
  * **Example** (Accessing accepted enum value)
  *
  * ```ts
@@ -91,8 +89,6 @@ export const ContactSubmissionStatus = ContactSubmissionStatusBase.pipe(
 );
 
 /**
- * Type for {@link ContactSubmissionStatus}.
- *
  * **Example** (Typing accepted status string)
  *
  * ```ts
@@ -108,8 +104,6 @@ export const ContactSubmissionStatus = ContactSubmissionStatusBase.pipe(
 export type ContactSubmissionStatus = typeof ContactSubmissionStatus.Type;
 
 /**
- * Non-empty public contact response message text.
- *
  * **Example** (Assigning received message text)
  *
  * ```ts
@@ -129,8 +123,6 @@ export const ContactResponseMessage = S.NonEmptyString.pipe(
 );
 
 /**
- * Type for {@link ContactResponseMessage}.
- *
  * **Example** (Typing rejection message string)
  *
  * ```ts
@@ -146,8 +138,6 @@ export const ContactResponseMessage = S.NonEmptyString.pipe(
 export type ContactResponseMessage = typeof ContactResponseMessage.Type;
 
 /**
- * Browser-submitted OIP contact form payload.
- *
  * **Example** (Decoding form submission payload)
  *
  * ```ts
@@ -205,8 +195,6 @@ const ContactSubmissionFormSubmittedAt = S.Union([S.Natural, ContactSubmissionFo
 );
 
 /**
- * Normalized browser form payload before the contact domain schema decodes it.
- *
  * **Example** (Making normalized form payload)
  *
  * ```ts
@@ -342,8 +330,6 @@ export const contactSubmissionPayloadFromFormData = (formData: FormData): Contac
   );
 
 /**
- * Public contact submission response.
- *
  * **Example** (Creating accepted response object)
  *
  * ```ts

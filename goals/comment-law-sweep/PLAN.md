@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -54,6 +54,12 @@ git diff --check -- goals/comment-law-sweep
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug comment-law-sweep`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### Hold new Opus author launches while the only Claude account with quota sits at its 50% floor, 2026-11-23
+
+On 2026-11-23 benjamintoppold read 50% left with every other Claude account's week used up, Codex Sol has no admissible account until 11-24 13:41, and Cursor's Opus pool is empty, so no author route exists. The parent ruled: no new Opus children (the yaml lexer.ts pilot included); Grok classifier-B and verifier work, the lane owner's own proofs, merge-gate work and PR opens continue.
+
+Lane goals/comment-law-sweep-w9a
+
+Reverse: Lift when any other Claude account resets (first boppold, about 2026-11-26 02:00Z) or benjamintoppold reads above 50% left in beep accounts status.
 
 <!-- beep:decisions:end -->

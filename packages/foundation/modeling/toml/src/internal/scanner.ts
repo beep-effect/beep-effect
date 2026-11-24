@@ -2,17 +2,6 @@ import { constant, dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-// The character-level heart of the engine: position-based scan functions over
-// the source string, plus value-token classification. Every scan function is
-// pure and stateless — `(source, pos)` in, `ScanResult` out — and every
-// malformed input throws RawTomlError with the offset of the offending
-// character. The parser drives these; nothing here recurses.
-//
-// The classification regexes are the TOML ABNF literal grammars, copied
-// verbatim. Datetime range validation happens BEFORE constructing the
-// TomlDateTime classes so the diagnostic carries the token's offset instead
-// of a schema check message.
-
 import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } from "../TomlDateTime.ts";
 import { raise } from "./diagnostics.ts";
 
@@ -59,14 +48,11 @@ const LOWER_U = "u";
 const UPPER_U = "U";
 const LOWER_X = "x";
 
-/** `U+XXXX` display form of a char code. */
 const codeLabel = (code: number): string => `U+${pipe(code.toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`;
 
-/** TOML control characters (tab excluded): U+0000-U+0008, U+000A-U+001F, U+007F. */
 const isControlChar = (code: string | undefined): boolean =>
   code !== undefined && (code <= "\u0008" || (code >= "\n" && code <= "\u001f") || code === "\u007f");
 
-/** Lex error for the control character at `i`, which the message places in `where`. */
 const raiseControlChar = (source: string, i: number, where: string): never =>
   raise(
     "ControlCharacterInString",
@@ -75,11 +61,6 @@ const raiseControlChar = (source: string, i: number, where: string): never =>
     1
   );
 
-/**
- * Advance past one character of a single-line string body. Newlines end the
- * line before the string closes, and bare carriage returns and control
- * characters are lex errors; `form` names the string form in messages.
- */
 const stepSingleLineChar = (source: string, i: number, pos: number, form: "basic" | "literal"): number => {
   const code = source[i];
   if (code === LF || (code === CR && source[i + 1] === LF)) {
@@ -94,7 +75,6 @@ const stepSingleLineChar = (source: string, i: number, pos: number, form: "basic
   return i + 1;
 };
 
-/** Advance past the newline at `i` (`\n` or `\r\n`); a bare `\r` is a lex error. */
 const pastNewline = (source: string, i: number): number => {
   if (source[i] === LF) {
     return i + 1;
@@ -105,11 +85,6 @@ const pastNewline = (source: string, i: number): number => {
   return raise("BareCarriageReturn", "carriage return not followed by a line feed", i, 1);
 };
 
-/**
- * Advance past one character of a multiline string body: newlines pass
- * (a bare `\r` does not), control characters are lex errors; `form` names
- * the string form in messages.
- */
 const stepMultilineChar = (source: string, i: number, form: "basic" | "literal"): number => {
   const code = source[i];
   if (code === LF || code === CR) {
@@ -121,11 +96,6 @@ const stepMultilineChar = (source: string, i: number, form: "basic" | "literal")
   return i + 1;
 };
 
-/**
- * Index of the first character at or after `start` whose code satisfies
- * `isEnd`, or the source length; every character passed over goes through
- * `step`, which validates it and returns the next index.
- */
 const scanUntil = (
   source: string,
   start: number,
@@ -139,7 +109,6 @@ const scanUntil = (
   return i;
 };
 
-/** End of the run of `delimiter` characters starting at `i`. */
 const delimiterRunEnd = (source: string, i: number, delimiter: string): number => {
   let runEnd = i;
   while (runEnd < source.length && source[runEnd] === delimiter) {
@@ -150,7 +119,6 @@ const delimiterRunEnd = (source: string, i: number, delimiter: string): number =
 
 const isDigit = (code: string | undefined): boolean => code !== undefined && code >= "0" && code <= "9";
 
-/** The one bare-key character class, shared by `isBareKeyChar` and `scanBareKey`. */
 const BARE_KEY_CHARACTER = /^[A-Za-z0-9_-]$/;
 
 /**
@@ -358,7 +326,6 @@ export const scanBareKey: {
   return { value: Str.slice(pos, i)(source), end: i };
 });
 
-/** The decoded character for a simple escape code, or undefined. */
 const simpleEscape = Match.type<string | undefined>().pipe(
   Match.when("b", () => "\b"),
   Match.when("t", () => "\t"),
@@ -375,13 +342,6 @@ const HEX_DIGITS = /^[0-9A-Fa-f]+$/;
 
 const ESCAPE_LETTERS = { 2: "x", 4: "u", 8: "U" } as const;
 
-/**
- * Decode a `\xHH` / `\uXXXX` / `\UXXXXXXXX` escape at `backslash`. The code
- * point must be a Unicode scalar value: surrogates and values above U+10FFFF
- * are errors. `\xHH` (TOML 1.1) covers U+0000–U+00FF — the escape is a
- * grammar-sibling of `basic-unescaped`, so the decoded character bypasses the
- * control-character ban by design.
- */
 const decodeUnicodeEscape: {
   (source: string, backslash: number, width: 2 | 4 | 8): { readonly codePoint: number; readonly end: number };
   (backslash: number, width: 2 | 4 | 8): (source: string) => { readonly codePoint: number; readonly end: number };
@@ -411,11 +371,9 @@ const decodeUnicodeEscape: {
   }
 );
 
-/** The escape width for a unicode-style escape letter, or undefined. */
 const unicodeEscapeWidth = (code: string | undefined): 2 | 4 | 8 | undefined =>
   code === LOWER_X ? 2 : code === LOWER_U ? 4 : code === UPPER_U ? 8 : undefined;
 
-/** The decoded text and end of a simple or unicode escape at `backslash`, or undefined for neither. */
 const decodeEscape = (source: string, backslash: number): ScanResult<string> | undefined => {
   const next = source[backslash + 1];
   const mapped = simpleEscape(next);
@@ -430,7 +388,6 @@ const decodeEscape = (source: string, backslash: number): ScanResult<string> | u
   return { value: String.fromCodePoint(decoded.codePoint), end: decoded.end };
 };
 
-/** A single-line basic string escape at `backslash`; anything but a simple or unicode escape is a lex error. */
 const requireBasicEscape = (source: string, backslash: number): ScanResult<string> =>
   decodeEscape(source, backslash) ??
   raise("InvalidEscape", `invalid escape sequence \\${source[backslash + 1]}`, backslash, 2);
@@ -510,7 +467,6 @@ export const scanLiteralString: {
   return raise("UnterminatedString", "unterminated literal string", pos, source.length - pos);
 });
 
-/** Skip a newline immediately after a multiline opening delimiter. */
 const skipLeadingNewline: {
   (source: string, pos: number): number;
   (pos: number): (source: string) => number;
@@ -524,7 +480,6 @@ const skipLeadingNewline: {
   return pos;
 });
 
-/** Skip whitespace and newlines after a line-ending backslash's newline. */
 const skipLineEndingTrim: {
   (source: string, pos: number): number;
   (pos: number): (source: string) => number;
@@ -548,22 +503,12 @@ const skipLineEndingTrim: {
 const raiseUnterminatedMultilineBasic = (source: string, pos: number): never =>
   raise("UnterminatedString", "unterminated multiline basic string", pos, source.length - pos);
 
-/**
- * Close a multiline basic string at the quote run starting at `runStart`
- * (three or more quotes). The delimiter is greedy: up to two quotes
- * immediately before it are content, appended to `prefix`.
- */
 const closeMultilineBasic = (source: string, prefix: string, runStart: number): ScanResult<string> => {
   const runEnd = delimiterRunEnd(source, runStart, QUOTE);
   const contentQuotes = Math.min(runEnd - runStart - 3, 2);
   return { value: prefix + Str.slice(runStart, runStart + contentQuotes)(source), end: runStart + contentQuotes + 3 };
 };
 
-/**
- * A line-ending backslash at `backslash`: only whitespace may sit between it
- * and the newline, and the escape swallows all following whitespace and
- * newlines. Decodes to the empty string.
- */
 const lineEndingBackslash = (source: string, backslash: number, pos: number): ScanResult<string> => {
   const probe = scanWhitespace(source, backslash + 1);
   if (probe >= source.length) {
@@ -601,7 +546,6 @@ export const scanMultilineBasicString: {
   let chunkStart = i;
   while (i < source.length) {
     const code = source[i];
-    // one or two quotes are content and step like any other character
     if (code === QUOTE && delimiterRunEnd(source, i, QUOTE) - i >= 3) {
       return closeMultilineBasic(source, out + Str.slice(chunkStart, i)(source), i);
     }
@@ -656,15 +600,12 @@ export const scanMultilineLiteralString: {
   return raise("UnterminatedString", "unterminated multiline literal string", pos, source.length - pos);
 });
 
-/** Whitespace and newlines end a raw value token. */
 const isTokenSpace = (code: string | undefined): boolean =>
   code === SPACE || code === TAB || code === LF || code === CR;
 
-/** Characters that end a raw value token: whitespace, newlines, `,`, `]`, `}` and `#`. */
 const isTokenTerminator = (code: string | undefined): boolean =>
   isTokenSpace(code) || code === COMMA || code === RIGHT_BRACKET || code === RIGHT_BRACE || code === HASH;
 
-/** Scan one raw token span; NUL anywhere is a lex error. */
 const scanTokenSpan: {
   (source: string, pos: number): number;
   (pos: number): (source: string) => number;
@@ -683,11 +624,6 @@ const scanTokenSpan: {
   return i;
 });
 
-// Classification regexes (anchored). TOML 1.1 makes seconds optional:
-// `partial-time = time-hour ":" time-minute [ ":" time-second [ time-secfrac ] ]`
-// — time-secfrac nests INSIDE the optional seconds group, so `07:32` is valid
-// but `07:32.5` is not. The regexes nest accordingly; they must never chain
-// the seconds and fraction groups as independent optionals.
 const OFFSET_DATE_TIME =
   /^([0-9]{4})-([0-9]{2})-([0-9]{2})[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?([Zz]|[+-][0-9]{2}:[0-9]{2})$/;
 const LOCAL_DATE_TIME = /^([0-9]{4})-([0-9]{2})-([0-9]{2})[Tt ]([0-9]{2}):([0-9]{2})(?::([0-9]{2})(?:\.([0-9]+))?)?$/;
@@ -728,7 +664,6 @@ export const scanValueToken: {
   return { value: Str.slice(pos, end)(source), end };
 });
 
-// Classification regexes (anchored, copied verbatim from the TOML ABNF).
 const INTEGER_DEC = /^[+-]?(?:0|[1-9](?:_?[0-9])*)$/;
 const INTEGER_HEX = /^0x[0-9A-Fa-f](?:_?[0-9A-Fa-f])*$/;
 const INTEGER_OCT = /^0o[0-7](?:_?[0-7])*$/;
@@ -737,14 +672,12 @@ const FLOAT =
   /^[+-]?(?:0|[1-9](?:_?[0-9])*)(?:\.[0-9](?:_?[0-9])*(?:[eE][+-]?[0-9](?:_?[0-9])*)?|[eE][+-]?[0-9](?:_?[0-9])*)$/;
 const FLOAT_SPECIAL = /^[+-]?(?:inf|nan)$/;
 
-/** A token that starts number-shaped fails as InvalidNumber, not InvalidValue. */
 const NUMERIC_LOOKING = /^[+-]?[0-9.]/;
 
 const INT64_MIN = -(BigInt(2) ** BigInt(63));
 const INT64_MAX = BigInt(2) ** BigInt(63) - BigInt(1);
 const MAX_SAFE_BIG = BigInt(2) ** BigInt(53) - BigInt(1);
 
-/** Range-check against int64 and narrow to number when within 2^53-1. */
 const narrowInteger: {
   (big: bigint, token: string, offset: number): number | bigint;
   (token: string, offset: number): (big: bigint) => number | bigint;
@@ -775,6 +708,9 @@ const decodePrefixedInteger: {
 
 const isLeapYear = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
+const daysInNonFebruaryMonthAlternatingWithParityFlipAtAugust = (month: number): number =>
+  30 + ((month + Math.floor(month / 8)) % 2);
+
 const validateDate: {
   (year: number, month: number, day: number, offset: number, length: number): void;
   (month: number, day: number, offset: number, length: number): (year: number) => void;
@@ -782,8 +718,8 @@ const validateDate: {
   if (month < 1 || month > 12) {
     raise("InvalidDateTime", `month ${month} is out of range 1-12`, offset, length);
   }
-  // Validated months alternate 31/30 days, with the parity switching at August.
-  const max = month === 2 ? (isLeapYear(year) ? 29 : 28) : 30 + ((month + Math.floor(month / 8)) % 2);
+  const max =
+    month === 2 ? (isLeapYear(year) ? 29 : 28) : daysInNonFebruaryMonthAlternatingWithParityFlipAtAugust(month);
   if (day < 1 || day > max) {
     raise("InvalidDateTime", `day ${day} does not exist in month ${month} of ${year}`, offset, length);
   }
@@ -804,16 +740,9 @@ const validateTime: {
   }
 });
 
-/** Right-pad or truncate fractional-second digits to exactly nine → nanoseconds. */
 const decodeNanosecond = (fraction: string | undefined): number =>
   fraction === undefined ? 0 : Number(Str.slice(0, 9)(`${fraction}000000000`));
 
-/**
- * Validated date and time fields from capture groups 1-7
- * (`year month day hour minute second? fraction?`) shared by the offset and local date-time
- * patterns. TOML 1.1 optional seconds: an absent seconds group materializes
- * as 0.
- */
 const localDateTimeFields = (
   match: RegExpExecArray,
   offset: number,
@@ -839,7 +768,6 @@ const localDateTimeFields = (
   return { year, month, day, hour, minute, second, nanosecond: decodeNanosecond(fraction) };
 };
 
-/** Decode `Z` / `z` / `[+-]hh:mm` to signed minutes, validating hh and mm. */
 const decodeOffsetMinutes: {
   (text: string, offset: number, length: number): number;
   (offset: number, length: number): (text: string) => number;
@@ -862,14 +790,12 @@ const decodeOffsetMinutes: {
   return text[0] === HYPHEN ? -total : total;
 });
 
-/** An offset date-time from OFFSET_DATE_TIME capture groups (offset in group 8). */
 const decodeOffsetDateTime = (match: RegExpExecArray, offset: number, length: number): TomlOffsetDateTime => {
   const fields = localDateTimeFields(match, offset, length);
   const offsetMinutes = decodeOffsetMinutes(match[8] ?? "", offset, length);
   return TomlOffsetDateTime.make({ ...fields, offsetMinutes });
 };
 
-/** A calendar-validated local date from LOCAL_DATE capture groups. */
 const decodeLocalDate = (match: RegExpExecArray, offset: number, length: number): TomlLocalDate => {
   const [, y = "", mo = "", d = ""] = match;
   const year = Number(y);
@@ -879,7 +805,6 @@ const decodeLocalDate = (match: RegExpExecArray, offset: number, length: number)
   return TomlLocalDate.make({ year, month, day });
 };
 
-/** A clock-validated local time from LOCAL_TIME capture groups; absent seconds materialize as 0. */
 const decodeLocalTime = (match: RegExpExecArray, offset: number, length: number): TomlLocalTime => {
   const [, h = "", mi = "", s, fraction] = match;
   const hour = Number(h);
@@ -889,7 +814,6 @@ const decodeLocalTime = (match: RegExpExecArray, offset: number, length: number)
   return TomlLocalTime.make({ hour, minute, second, nanosecond: decodeNanosecond(fraction) });
 };
 
-/** The four datetime shapes, tried most specific first; undefined when the token is none of them. */
 const classifyDateTime = (token: string, offset: number, length: number): ScalarValue | undefined => {
   const offsetDateTime = OFFSET_DATE_TIME.exec(token);
   if (offsetDateTime !== null) {
@@ -907,7 +831,6 @@ const classifyDateTime = (token: string, offset: number, length: number): Scalar
   return localTime === null ? undefined : decodeLocalTime(localTime, offset, length);
 };
 
-/** `inf` / `nan` with an optional sign. */
 const decodeSpecialFloat = (token: string): number => {
   if (Str.endsWith("nan")(token)) {
     return Number.NaN;
@@ -915,7 +838,6 @@ const decodeSpecialFloat = (token: string): number => {
   return token[0] === HYPHEN ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
 };
 
-/** Integers across four radixes and floats; anything else is InvalidNumber or InvalidValue. */
 const classifyNumber = (token: string, offset: number, length: number): number | bigint => {
   if (INTEGER_DEC.test(token)) {
     return decodeDecimalInteger(token, offset);

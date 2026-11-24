@@ -10,7 +10,6 @@
  */
 export * from "./Handoff.behavior.ts";
 /**
- * Handoff wire codecs.
  * @category codecs
  * @since 0.0.0
  */

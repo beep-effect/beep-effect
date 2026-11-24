@@ -1,8 +1,3 @@
-// Pins for the JsonlError rows of the D9 deviation review (section 14 of the lab
-// port goal, last held at
-// bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/EFFECTED_PORT_GOAL.md). Each block names the review entry it pins and says whether the
-// lab matches upstream or deviates from it, and why.
-
 import { fcRuns } from "@beep/fc-runs";
 import {
   InvalidData,
@@ -38,8 +33,10 @@ import * as Str from "effect/String";
 const slice = LineSlice.make({ offset: 12, end: 20, length: 7, text: '{"a":1}', terminated: true });
 const encodedSlice = { offset: 12, end: 20, length: 7, text: '{"a":1}', terminated: true };
 
-/** A real `SchemaError`, obtained the way the package obtains one. */
-const schemaError = S.decodeUnknownResult(S.Struct({ n: S.Finite }))({ n: "no" }).pipe(Result.getFailure, O.getOrThrow);
+const decodedSchemaError = S.decodeUnknownResult(S.Struct({ n: S.Finite }))({ n: "no" }).pipe(
+  Result.getFailure,
+  O.getOrThrow
+);
 
 describe("D23: UnknownEvent.known and InvalidData.event are required, as upstream", () => {
   it("UnknownEvent refuses construction without known", () => {
@@ -55,7 +52,7 @@ describe("D23: UnknownEvent.known and InvalidData.event are required, as upstrea
     assert.throws(
       () =>
         // @ts-expect-error -- `event` is required; upstream has no default for it. Owner: @beep/jsonl. Exit: remove if the API is meant to accept this.
-        InvalidData.make({ line: slice, error: schemaError }),
+        InvalidData.make({ line: slice, error: decodedSchemaError }),
       /Schema validation failed/
     );
   });
@@ -84,8 +81,8 @@ describe("D23: UnknownEvent.known and InvalidData.event are required, as upstrea
 
   it("InvalidData decoding requires event", () => {
     const decode = S.decodeUnknownResult(InvalidData);
-    decode({ _tag: "InvalidData", line: encodedSlice, error: schemaError }).pipe(Result.isFailure, assertTrue);
-    const decoded = decode({ _tag: "InvalidData", line: encodedSlice, event: O.none(), error: schemaError });
+    decode({ _tag: "InvalidData", line: encodedSlice, error: decodedSchemaError }).pipe(Result.isFailure, assertTrue);
+    const decoded = decode({ _tag: "InvalidData", line: encodedSlice, event: O.none(), error: decodedSchemaError });
     decoded.pipe(Result.isSuccess, assertTrue);
     assertSuccess(decoded.pipe(Result.map((error) => error.event)), O.none());
   });
@@ -123,13 +120,13 @@ describe("D25: message is an own field on every member (upstream-bug: Bun prepar
     },
     {
       tag: "InvalidData",
-      error: InvalidData.make({ line: slice, event: O.some("noted"), error: schemaError }),
-      message: `invalid JSONL payload for event "noted" at byte offset 12: ${schemaError.message}`,
+      error: InvalidData.make({ line: slice, event: O.some("noted"), error: decodedSchemaError }),
+      message: `invalid JSONL payload for event "noted" at byte offset 12: ${decodedSchemaError.message}`,
     },
     {
       tag: "InvalidData",
-      error: InvalidData.make({ line: slice, event: O.none(), error: schemaError }),
-      message: `invalid JSONL envelope at byte offset 12: ${schemaError.message}`,
+      error: InvalidData.make({ line: slice, event: O.none(), error: decodedSchemaError }),
+      message: `invalid JSONL envelope at byte offset 12: ${decodedSchemaError.message}`,
     },
     {
       tag: "UnserializableData",
@@ -163,12 +160,12 @@ describe("D25: message is an own field on every member (upstream-bug: Bun prepar
     },
     {
       tag: "InvalidJournalConfig",
-      error: InvalidJournalConfig.make({ error: schemaError }),
+      error: InvalidJournalConfig.make({ error: decodedSchemaError }),
       message: "invalid journal configuration",
     },
     {
       tag: "InvalidSlice",
-      error: InvalidSlice.make({ error: schemaError }),
+      error: InvalidSlice.make({ error: decodedSchemaError }),
       message: "invalid journal selection",
     },
     {

@@ -46,8 +46,6 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
   });
 
 /**
- * Web Annotation text-quote selector DTO.
- *
  * **Example** (Decode text-quote selector)
  *
  * ```ts import.meta.vitest name="Decode text-quote selector"
@@ -85,8 +83,6 @@ export class WebAnnotationTextQuoteSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation text-position selector DTO.
- *
  * **Example** (Decode text-position selector)
  *
  * ```ts import.meta.vitest name="Decode text-position selector"
@@ -124,8 +120,6 @@ export class WebAnnotationTextPositionSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation fragment selector DTO.
- *
  * **Example** (Decode fragment selector)
  *
  * ```ts import.meta.vitest name="Decode fragment selector"
@@ -159,8 +153,6 @@ export class WebAnnotationFragmentSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation selector union.
- *
  * **Example** (Decode selector union)
  *
  * ```ts import.meta.vitest name="Decode selector union"
@@ -190,8 +182,6 @@ export const WebAnnotationSelector = S.Union([
 );
 
 /**
- * Type for {@link WebAnnotationSelector}.
- *
  * **Example** (Accept selector type)
  *
  * ```ts
@@ -245,8 +235,6 @@ export class WebAnnotationTarget extends S.Opaque<WebAnnotationTarget, { readonl
 ) {}
 
 /**
- * Web Annotation DTO.
- *
  * **Example** (Decode web annotation)
  *
  * ```ts import.meta.vitest name="Decode web annotation"
@@ -283,8 +271,6 @@ export class WebAnnotation extends S.Opaque<WebAnnotation, { readonly brand: uni
 ) {}
 
 /**
- * Why a `TextAnchor` and a Web Annotation target could not be mapped.
- *
  * **Details**
  *
  * `split-boundary`, `out-of-range` and `ill-formed-text` come from the unit
@@ -325,8 +311,6 @@ export const WebAnnotationAnchorRefusal = LiteralKit([
 );
 
 /**
- * Type for {@link WebAnnotationAnchorRefusal}.
- *
  * **Example** (Annotate a refusal reason)
  *
  * ```ts
@@ -380,8 +364,10 @@ const selectorConflict = (): WebAnnotationAnchorRefused => refused("selector-con
 
 const utf16Position = (start: number, end: number): Position => Position.make({ unit: "utf16-code-unit", start, end });
 
-// The code-point position of a UTF-16 range, which also proves the text before the range end is well formed.
-const toCodePoints = (range: Position, sourceText: string): Result.Result<Position, WebAnnotationAnchorRefused> =>
+const toCodePointsOverWellFormedPrefix = (
+  range: Position,
+  sourceText: string
+): Result.Result<Position, WebAnnotationAnchorRefused> =>
   pipe(convertPosition(range, "unicode-code-point", sourceText), Result.mapError(conversionRefused));
 
 const encodeTextAnchor = (
@@ -389,7 +375,7 @@ const encodeTextAnchor = (
   options: { readonly source: IRIReference; readonly sourceText: string }
 ): Result.Result<WebAnnotationTarget, WebAnnotationAnchorRefused> =>
   pipe(
-    toCodePoints(utf16Position(anchor.startChar, anchor.endChar), options.sourceText),
+    toCodePointsOverWellFormedPrefix(utf16Position(anchor.startChar, anchor.endChar), options.sourceText),
     Result.filterOrFail(
       () => Str.slice(anchor.startChar, anchor.endChar)(options.sourceText) === anchor.quote,
       selectorConflict
@@ -414,8 +400,9 @@ const sameRange =
   (right: Position): boolean =>
     left.start === right.start && left.end === right.end;
 
-// Every selector of one kind must give the same range; no selector of the kind gives none.
-const agreeing = (ranges: ReadonlyArray<Position>): Result.Result<O.Option<Position>, WebAnnotationAnchorRefused> =>
+const agreeingRangeOfOneKind = (
+  ranges: ReadonlyArray<Position>
+): Result.Result<O.Option<Position>, WebAnnotationAnchorRefused> =>
   A.match(ranges, {
     onEmpty: () => Result.succeedNone,
     onNonEmpty: (all) =>
@@ -440,8 +427,7 @@ const positionRange =
         )
       : Result.fail(refused("empty-range"));
 
-// A quote beside a position must be the text the position selects, with its stated context on either side.
-const quoteFits =
+const quoteFitsPositionAndContext =
   (sourceText: string, range: Position) =>
   (quote: WebAnnotationTextQuoteSelector): boolean =>
     quote.exact === Str.slice(range.start, range.end)(sourceText) &&
@@ -468,21 +454,19 @@ const fromPosition = (
   range: Position,
   quotes: ReadonlyArray<WebAnnotationTextQuoteSelector>
 ): Result.Result<TextAnchor, WebAnnotationAnchorRefused> =>
-  A.every(quotes, quoteFits(sourceText, range))
+  A.every(quotes, quoteFitsPositionAndContext(sourceText, range))
     ? Result.succeed(anchorOver(sourceText, range))
     : Result.fail(selectorConflict());
 
-// A quote-only target must resolve to one range, and that range must convert to code points as an encoded anchor
-// does, so every decoded anchor encodes again.
-const fromQuotes = (
+const fromUniqueQuoteThatEncodesAgain = (
   sourceText: string,
   quotes: ReadonlyArray<WebAnnotationTextQuoteSelector>
 ): Result.Result<TextAnchor, WebAnnotationAnchorRefused> =>
   pipe(
     Result.all(A.map(quotes, quoteRange(sourceText))),
-    Result.flatMap(agreeing),
+    Result.flatMap(agreeingRangeOfOneKind),
     Result.flatMap(Result.fromOption(() => refused("no-text-selector"))),
-    Result.flatMap((range) => Result.map(toCodePoints(range, sourceText), constant(range))),
+    Result.flatMap((range) => Result.map(toCodePointsOverWellFormedPrefix(range, sourceText), constant(range))),
     Result.map((range) => anchorOver(sourceText, range))
   );
 
@@ -495,10 +479,10 @@ const decodeTarget = (
     Result.all(
       A.map(A.filter(target.selector, WebAnnotationSelector.guards.TextPositionSelector), positionRange(sourceText))
     ),
-    Result.flatMap(agreeing),
+    Result.flatMap(agreeingRangeOfOneKind),
     Result.flatMap(
       O.match({
-        onNone: () => fromQuotes(sourceText, quotes),
+        onNone: () => fromUniqueQuoteThatEncodesAgain(sourceText, quotes),
         onSome: (range) => fromPosition(sourceText, range, quotes),
       })
     )

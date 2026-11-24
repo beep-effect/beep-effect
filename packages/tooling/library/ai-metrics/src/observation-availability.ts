@@ -39,7 +39,6 @@ export const ObservationAvailabilityReport = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of the source report.
  * @category type-level
  * @since 0.0.0
  */

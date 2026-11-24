@@ -204,8 +204,6 @@ export const withFallback: {
 const cachingOptionsCapacityDefault = PosInt.make(1024);
 const cachingOptionsTimeToLiveDefault = Duration.minutes(10);
 /**
- * Cache settings for memoized backend composition.
- *
  * **Example** (Caching options capacity TTL)
  *
  * ```ts import.meta.vitest name="Caching options capacity TTL"

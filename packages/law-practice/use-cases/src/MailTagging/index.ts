@@ -16,8 +16,6 @@ export * from "./MailTagging.errors.ts";
  */
 export * from "./MailTagging.filer.ts";
 /**
- * Mail-tagging job constructor.
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -44,8 +42,6 @@ export * from "./MailTagging.ports.ts";
  */
 export * from "./MailTagging.tagger.ts";
 /**
- * Mail-tagging undo constructor.
- *
  * @category constructors
  * @since 0.0.0
  */

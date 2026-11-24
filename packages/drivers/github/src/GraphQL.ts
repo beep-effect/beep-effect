@@ -27,8 +27,6 @@ import type * as Effect from "effect/Effect";
 const $I = $GithubId.create("GraphQL");
 
 /**
- * One entry from a GraphQL response's `errors` array.
- *
  * **Example** (Retain a GitHub error classification)
  *
  * ```ts
@@ -56,8 +54,6 @@ export class GraphQLErrorEntry extends S.Opaque<GraphQLErrorEntry, { readonly br
 ) {}
 
 /**
- * A GraphQL call failed.
- *
  * **Details**
  *
  * Separate from `GitHubError` because GraphQL genuinely answers differently:

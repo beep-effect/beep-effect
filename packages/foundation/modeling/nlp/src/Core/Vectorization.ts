@@ -132,8 +132,6 @@ export const DefaultBM25Config = BM25Config.make({
 });
 
 /**
- * Dense vector representation for a document or query.
- *
  * **Example** (Create DocumentVector instance)
  *
  * ```ts
@@ -165,8 +163,6 @@ export class DocumentVector extends S.Opaque<DocumentVector, { readonly brand: u
 ) {}
 
 /**
- * Bag-of-words term-frequency representation for a document or query.
- *
  * **Example** (Create BagOfWords instance)
  *
  * ```ts

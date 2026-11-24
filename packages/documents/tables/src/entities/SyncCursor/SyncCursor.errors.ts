@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $DocumentsTablesId.create("entities/SyncCursor/SyncCursor.errors");
 
 /**
- * Failure converting a SyncCursor persistence row or insert.
- *
  * **Example** (Construct a converter failure)
  *
  * ```ts

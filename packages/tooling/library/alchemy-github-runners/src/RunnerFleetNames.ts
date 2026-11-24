@@ -69,8 +69,6 @@ export const FleetNamePrefix = S.String.check(
 );
 
 /**
- * Pinned names of one pool's resources.
- *
  * **Example** (The heavy pool of beep-fleet-prod)
  *
  * ```ts
@@ -99,8 +97,6 @@ export class PoolResourceNames extends S.Opaque<PoolResourceNames, { readonly br
 ) {}
 
 /**
- * Pinned names of the fleet-wide resources.
- *
  * **Example** (The webhook of beep-fleet-prod)
  *
  * ```ts

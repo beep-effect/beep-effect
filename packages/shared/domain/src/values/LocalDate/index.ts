@@ -21,8 +21,6 @@
  */
 export * from "./LocalDate.behavior.ts";
 /**
- * LocalDate model schema.
- *
  * **Example** (Inspecting Model schema)
  *
  * ```ts

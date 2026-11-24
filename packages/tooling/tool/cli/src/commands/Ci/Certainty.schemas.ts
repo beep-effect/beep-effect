@@ -60,8 +60,6 @@ export const CiCertaintyHeadState = LiteralKit(["green", "red", "cancelled", "he
 );
 
 /**
- * State of one pull-request head over the required contexts.
- *
  * **Example** (Type one head state)
  *
  * ```ts
@@ -202,8 +200,6 @@ export const CiCertaintyProducer = LiteralKit(["check.yml", "heavy-admit.yml"]).
 export type CiCertaintyProducer = typeof CiCertaintyProducer.Type;
 
 /**
- * State of one required context on one head.
- *
  * **Example** (List the context states)
  *
  * ```ts
@@ -222,8 +218,6 @@ export const CiCertaintyContextState = LiteralKit(["green", "red", "cancelled", 
 );
 
 /**
- * State of one required context on one head.
- *
  * **Example** (Type one context state)
  *
  * ```ts
@@ -239,8 +233,6 @@ export const CiCertaintyContextState = LiteralKit(["green", "red", "cancelled", 
 export type CiCertaintyContextState = typeof CiCertaintyContextState.Type;
 
 /**
- * Verdict a main first-parent commit received from check.yml push runs.
- *
  * **Details**
  *
  * `success` and `failure` are completed verdicts. `cancelled` means every run
@@ -267,8 +259,6 @@ export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancell
 );
 
 /**
- * Verdict a main first-parent commit received from check.yml push runs.
- *
  * **Example** (Type one main verdict)
  *
  * ```ts
@@ -284,8 +274,6 @@ export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancell
 export type CiCertaintyMainVerdict = typeof CiCertaintyMainVerdict.Type;
 
 /**
- * Reason a scorecard is refused certification.
- *
  * **Details**
  *
  * `api-partial` means at least one head or the main run listing could not be
@@ -311,8 +299,6 @@ export const CiCertaintyRefusal = LiteralKit(["api-partial", "empty-population"]
 );
 
 /**
- * Reason a scorecard is refused certification.
- *
  * **Example** (Type one refusal)
  *
  * ```ts
@@ -328,8 +314,6 @@ export const CiCertaintyRefusal = LiteralKit(["api-partial", "empty-population"]
 export type CiCertaintyRefusal = typeof CiCertaintyRefusal.Type;
 
 /**
- * Whether a percentile was reached, not reached, or had no population.
- *
  * **Details**
  *
  * The SLO statistic counts misses as unbounded latencies, so its p95 is
@@ -354,8 +338,6 @@ export const CiCertaintyPercentileStatus = LiteralKit(["attained", "not-attained
 );
 
 /**
- * Whether a percentile was reached, not reached, or had no population.
- *
  * **Example** (Type one percentile status)
  *
  * ```ts
@@ -415,8 +397,6 @@ export class CiCertaintyRun extends S.Opaque<CiCertaintyRun, { readonly brand: u
 ) {}
 
 /**
- * One main first-parent commit with the check.yml push runs read for it.
- *
  * **Example** (Describe a main commit without a run)
  *
  * ```ts
@@ -449,8 +429,6 @@ export class CiCertaintyMainCommit extends S.Opaque<CiCertaintyMainCommit, { rea
 ) {}
 
 /**
- * Everything one scorecard is computed from.
- *
  * **Details**
  *
  * The live reader captures this shape and `--write-corpus` saves it, so a
@@ -503,8 +481,6 @@ export class CiCertaintyCorpus extends S.Opaque<CiCertaintyCorpus, { readonly br
 ) {}
 
 /**
- * The latest check for one required context on one head.
- *
  * **Example** (Describe a green context)
  *
  * ```ts
@@ -539,8 +515,6 @@ export class CiCertaintyContextRow extends S.Opaque<CiCertaintyContextRow, { rea
 ) {}
 
 /**
- * Raw runner-minutes split by runner pool.
- *
  * **Example** (Describe a run's runner-minutes)
  *
  * ```ts
@@ -560,14 +534,13 @@ export class CiCertaintyRunnerMinutes extends S.Opaque<CiCertaintyRunnerMinutes,
     unknown: NonNegativeMinutes,
   }).pipe(
     $I.annoteSchema("CiCertaintyRunnerMinutes", {
-      description: "Raw runner-minutes split into GitHub-hosted, managed (beep-ec2-heavy) and unclassified runners.",
+      description:
+        "Raw runner-minutes split into GitHub-hosted, managed (self-hosted beep-* pools) and unclassified runners.",
     })
   )
 ) {}
 
 /**
- * One judged pull-request head.
- *
  * **Details**
  *
  * `t0` is the `created_at` of the head's first check.yml pull_request run (see
@@ -612,8 +585,6 @@ export class CiCertaintyHeadRow extends S.Opaque<CiCertaintyHeadRow, { readonly 
 ) {}
 
 /**
- * One main first-parent commit's verdict row.
- *
  * **Example** (Read a commit row's verdict)
  *
  * ```ts
@@ -641,8 +612,6 @@ export class CiCertaintyMainRow extends S.Opaque<CiCertaintyMainRow, { readonly 
 ) {}
 
 /**
- * Latency percentiles with misses counted and censoring reported.
- *
  * **Details**
  *
  * `n` is the counted population (terminal, uncensored heads). A miss is a
@@ -695,14 +664,11 @@ export class CiCertaintyLatencyStat extends S.Opaque<CiCertaintyLatencyStat, { r
 ) {}
 
 /**
- * Runner-minutes per head attempt: one check.yml run with the admitted
- * heavy-admit.yml runs of its head.
- *
  * **Details**
  *
  * A heavy-admit.yml run joins the latest check.yml run of its head created at
  * or before it, so a head admitted by the `ready-for-heavy` label carries its
- * beep-ec2-heavy minutes just as one admitted inside check.yml does. A
+ * heavy-pool minutes just as one admitted inside check.yml does. A
  * heavy-admit.yml run whose Heavy Admission was skipped is not counted. `runs`
  * counts head attempts; the green code-run percentiles cover the attempts of
  * code heads whose check.yml run succeeded.
@@ -834,7 +800,7 @@ export class CiCertaintyTestUnitConversion extends S.Opaque<
  * **Details**
  *
  * Each check.yml or heavy-admit.yml run pairs its own Heavy Admission start
- * with its first executed job on the heavy pool (beep-ec2-heavy runner
+ * with its first executed job on the heavy pool (managed `beep-` runner
  * labels). Hosted jobs named `Heavy / ...`, such as the Test Integration
  * aggregate, are not heavy-pool pickup and never count.
  *
@@ -863,8 +829,6 @@ export class CiCertaintyAdmissionStat extends S.Opaque<CiCertaintyAdmissionStat,
 ) {}
 
 /**
- * One head-level certainty scorecard.
- *
  * **Details**
  *
  * `slo` is the headline: p95 push to every required context green over code

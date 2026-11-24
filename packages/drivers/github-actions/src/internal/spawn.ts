@@ -63,7 +63,6 @@ export class SpawnOnceResult extends S.Opaque<SpawnOnceResult, { readonly brand:
 ) {}
 
 /**
- * The plain-object result accepted by {@link SpawnOnceResult}.
  * @category type-level
  * @since 0.0.0
  */

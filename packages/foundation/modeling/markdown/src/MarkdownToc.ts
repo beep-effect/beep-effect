@@ -148,8 +148,6 @@ export class TocOptions extends S.Opaque<TocOptions, { readonly brand: unique sy
 ) {}
 
 /**
- * The plain input shape of {@link TocOptions}.
- *
  * @category models
  * @since 0.0.0
  */

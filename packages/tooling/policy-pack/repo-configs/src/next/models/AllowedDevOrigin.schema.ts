@@ -13,8 +13,6 @@ const allowedDevOriginPattern =
   /^(?:\*\.)?(?:localhost|[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$/;
 
 /**
- * A hostname or leading-wildcard hostname entry for Next.js `allowedDevOrigins`.
- *
  * **Example** (Decode wildcard dev origin)
  *
  * ```ts

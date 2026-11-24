@@ -12,8 +12,6 @@ import * as V from "./Values.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/SyncDestination.command");
 /**
- * DestinationState vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { DestinationState } from "@beep/documents-domain/aggregates/VaultSync";
@@ -38,8 +36,6 @@ export const DestinationState = S.Union([
   }),
 ]).pipe($I.annoteSchema("DestinationState", { description: "DestinationState persisted vault sync value." }));
 /**
- * Runtime value accepted by {@link DestinationState}.
- *
  * @category aggregates
  * @since 0.0.0
  */

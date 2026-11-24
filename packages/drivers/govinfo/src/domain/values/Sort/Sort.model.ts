@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $GovinfoId.create("domain/values/Sort/Sort.model");
 
 /**
- * Shared GovInfo search sort field.
- *
  * **Details**
  *
  * GovInfo currently documents `score`, `publishdate`, `lastModified`, and
@@ -86,8 +84,6 @@ export declare namespace SortBase {
 }
 
 /**
- * Ascending GovInfo search sort directive.
- *
  * **Example** (Decode ascending sort)
  *
  * ```ts
@@ -158,8 +154,6 @@ export declare namespace SortASC {
 }
 
 /**
- * Descending GovInfo search sort directive.
- *
  * **Gotchas**
  *
  * GovInfo relevance sorting uses `field: "score"` with `sortOrder: "DESC"`;
@@ -235,8 +229,6 @@ export declare namespace SortDESC {
 }
 
 /**
- * GovInfo search sort directive tagged by `sortOrder`.
- *
  * **Example** (Decode tagged sort order)
  *
  * ```ts
@@ -262,8 +254,6 @@ export const Sort = S.Union([SortASC, SortDESC]).pipe(
 );
 
 /**
- * Type for {@link Sort}.
- *
  * **Example** (Type Sort decode)
  *
  * ```ts

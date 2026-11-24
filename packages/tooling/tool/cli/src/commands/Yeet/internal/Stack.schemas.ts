@@ -44,8 +44,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Stack");
 export const YEET_STACK_LAYER_CAP = 2;
 
 /**
- * Whether the trunk's required checks are green.
- *
  * **Details**
  *
  * A stack is opened only on a green trunk, because a bypass reaches only the
@@ -82,8 +80,6 @@ export const YeetTrunkHealth = S.TaggedUnion({
 );
 
 /**
- * Whether the trunk's required checks are green.
- *
  * @category models
  * @since 0.0.0
  */
@@ -114,8 +110,6 @@ export class YeetTrunkCommitChecks extends S.Opaque<YeetTrunkCommitChecks, { rea
 ) {}
 
 /**
- * Why a lane may not publish a layer on the parent it named.
- *
  * **Details**
  *
  * - `parent-is-self`: the parent pull request is this branch's own.
@@ -155,8 +149,6 @@ export const YeetStackPublishRefusal = LiteralKit([
 ]).pipe($I.annoteSchema("YeetStackPublishRefusal", { description: "Why a lane may not publish a layer on a parent." }));
 
 /**
- * Why a lane may not publish a layer on the parent it named.
- *
  * @category models
  * @since 0.0.0
  */
@@ -275,8 +267,6 @@ export class YeetStackLayer extends S.Opaque<YeetStackLayer, { readonly brand: u
 ) {}
 
 /**
- * What one merge request for a pull request would merge.
- *
  * **Details**
  *
  * `PUT pulls/{n}/merge-async` on a stacked pull request merges every open
@@ -321,8 +311,6 @@ export const YeetStackMergeScope = S.TaggedUnion({
 );
 
 /**
- * What one merge request for a pull request would merge.
- *
  * @category models
  * @since 0.0.0
  */

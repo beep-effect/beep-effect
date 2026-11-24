@@ -13,8 +13,7 @@ import { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import type { installCitationHtmlGeometry } from "./HtmlGeometryPreparation.ts";
 
-// JavaScript's UTF-16 lexical order is not Python's native code-point order.
-const nativeOrder = Order.make<CitationPythonUnicodeStorage>((left, right) => {
+const pythonCodePointOrderNotUtf16 = Order.make<CitationPythonUnicodeStorage>((left, right) => {
   const leftLength = left.bytes.length / left.width;
   const rightLength = right.bytes.length / right.width;
   const common = Num.min(leftLength, rightLength);
@@ -25,7 +24,7 @@ const nativeOrder = Order.make<CitationPythonUnicodeStorage>((left, right) => {
   return Num.Order(leftLength, rightLength);
 });
 const tupleOrder = Order.mapInput(
-  Order.Tuple([Num.Order, Num.Order, nativeOrder, nativeOrder]),
+  Order.Tuple([Num.Order, Num.Order, pythonCodePointOrderNotUtf16, pythonCodePointOrderNotUtf16]),
   (row: CitationAnnotationReplacement) => [row.start, row.end, row.before, row.after] as const
 );
 /** Prepare trusted immutable primitive tuples in original sorted order before

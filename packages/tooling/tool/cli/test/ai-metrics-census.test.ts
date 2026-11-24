@@ -135,7 +135,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
           const first = yield* runCensus(home, input);
           expect(first.exit._tag).toBe("Success");
           const files = yield* fs.readDirectory(directory);
-          expect(files).toEqual(["2026-11-18T00-00-00Z--census-rules-2026-11-18.json"]);
+          expect(files).toEqual(["2026-11-18T00-00-00Z--census-rules-2026-11-23.json"]);
           expect(Str.includes(`Census baseline written: ${files[0]}`)(first.err)).toBe(true);
           const text = yield* fs.readFileString(path.join(directory, files[0] ?? ""));
           const baseline = yield* decodeBaseline(text);
@@ -180,7 +180,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
             options(corpus.window, { writeBaseline: true, repoRoot: O.some(checkout) })
           );
           expect(inside.exit._tag).toBe("Success");
-          const shown = "standards/agent-output-census/runs/2026-11-18T00-00-00Z--census-rules-2026-11-18.json";
+          const shown = "standards/agent-output-census/runs/2026-11-18T00-00-00Z--census-rules-2026-11-23.json";
           expect(Str.includes(`Census baseline written: ${shown}`)(inside.err)).toBe(true);
           const written = yield* fs.exists(path.join(checkout, shown));
           expect(written).toBe(true);
@@ -200,7 +200,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
           );
           expect(explicit.exit._tag).toBe("Success");
           expect(
-            Str.includes("Census baseline written: 2026-11-18T00-00-00Z--census-rules-2026-11-18.json")(explicit.err)
+            Str.includes("Census baseline written: 2026-11-18T00-00-00Z--census-rules-2026-11-23.json")(explicit.err)
           ).toBe(true);
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );

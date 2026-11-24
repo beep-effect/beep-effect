@@ -7,8 +7,6 @@
  */
 
 /**
- * Worker table namespace.
- *
  * @category tables
  * @since 0.0.0
  */

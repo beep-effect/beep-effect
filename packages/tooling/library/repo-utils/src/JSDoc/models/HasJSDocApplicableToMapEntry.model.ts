@@ -19,8 +19,6 @@ const $I = $RepoUtilsId.create("JSDoc/models/HasJSDocApplicableToMapEntry.model"
  */
 const fields = { member: S.String } as const;
 /**
- * JSDoc model export.
- *
  * **Example** (Make applicable map entry)
  *
  * ```ts

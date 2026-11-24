@@ -54,8 +54,6 @@ export class JwtSegmentsFailure extends S.Opaque<JwtSegmentsFailure, { readonly 
 ) {}
 
 /**
- * Companion types for {@link JwtSegmentsFailure}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -101,8 +99,6 @@ export class JwtCodecFailure extends S.Opaque<JwtCodecFailure, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link JwtCodecFailure}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0

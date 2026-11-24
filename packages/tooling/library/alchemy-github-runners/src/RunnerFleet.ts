@@ -98,8 +98,6 @@ export type RunnerFleetLaunchTemplate = Pick<
 >;
 
 /**
- * Props of {@link RunnerFleet}.
- *
  * **Details**
  *
  * `name` prefixes every pool's `ghr:environment` (`<name>-<pool>`) and is

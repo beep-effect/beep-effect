@@ -22,8 +22,6 @@ import { ConfiguredFleetRoots } from "./FleetRoots.schemas.ts";
 const $I = $RepoCliId.create("commands/Worktree/internal/FleetRegistry.schemas");
 
 /**
- * Workload-named seat roles.
- *
  * **Details**
  *
  * `main` is the operator's editor seat, `ops` runs timers, and `review`,
@@ -50,16 +48,12 @@ export const FleetSeatRole = LiteralKit(["main", "ops", "review", "research", "i
 );
 
 /**
- * Workload-named role of a fleet checkout.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type FleetSeatRole = typeof FleetSeatRole.Type;
 
 /**
- * Drain lifecycle of a checkout.
- *
  * **Example** (The default status)
  *
  * ```ts
@@ -78,8 +72,6 @@ export const FleetDrainStatus = LiteralKit(["active", "draining", "retired"]).pi
 );
 
 /**
- * Drain lifecycle of a checkout.
- *
  * @category type-level
  * @since 0.0.0
  */

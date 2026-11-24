@@ -7,7 +7,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
-// An identity entry is built only from a registry binding, never from a composer path.
 const boundCode = "@beep/test-runner/Vitest/TestHang";
 const boundTerm = { curie: "vitest:TestHang", iri: iri("vitest:TestHang") } as const;
 const entry = IdentityEntry.fromBinding(boundCode, boundTerm, { label: "Registry test" });

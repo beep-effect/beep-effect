@@ -6,8 +6,6 @@
  */
 export * as WorkItem from "./aggregates/WorkItem/index.ts";
 /**
- * Public Worker use-case exports.
- *
  * @category use-cases
  * @since 0.0.0
  */

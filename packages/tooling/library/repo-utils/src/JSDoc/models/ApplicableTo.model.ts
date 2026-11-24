@@ -10,8 +10,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $RepoUtilsId.create("JSDoc/models/ApplicableTo.model");
 
 /**
- * AST-level attachment surface for a documentation tag.
- *
  * **Example** (Assert function target)
  *
  * ```ts

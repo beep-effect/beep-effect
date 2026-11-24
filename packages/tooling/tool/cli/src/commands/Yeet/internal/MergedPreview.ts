@@ -110,8 +110,6 @@ export const YEET_MERGED_PREVIEW_DIR_NAME = `merged-preview-${process.pid}`;
 export const YEET_MERGED_PREVIEW_COMMIT_MESSAGE = "chore(yeet): verify merged preview";
 
 /**
- * A merge preview whose tree merged cleanly.
- *
  * @category models
  * @since 0.0.0
  */
@@ -151,8 +149,6 @@ export class YeetMergeTreeConflicted extends S.Opaque<YeetMergeTreeConflicted, {
 ) {}
 
 /**
- * A merge preview git refused to attempt at all.
- *
  * @category models
  * @since 0.0.0
  */

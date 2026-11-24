@@ -29,8 +29,6 @@ import { Repo } from "./Repo.ts";
 const $I = $GithubId.create("GitCommit");
 
 /**
- * A blob's file mode, as the Git Database API spells it.
- *
  * **Example** (Decode an executable file mode)
  *
  * ```ts
@@ -49,8 +47,6 @@ export const FileMode = LiteralKit(["100644", "100755", "120000"]).pipe(
 );
 
 /**
- * The values accepted by {@link FileMode}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -58,8 +54,6 @@ export const FileMode = LiteralKit(["100644", "100755", "120000"]).pipe(
 export type FileMode = typeof FileMode.Type;
 
 /**
- * A file to write in a commit.
- *
  * **Example** (Prepare a notes file)
  *
  * ```ts
@@ -87,8 +81,6 @@ export class FileContent extends S.Opaque<FileContent, { readonly brand: unique 
 ) {}
 
 /**
- * A file to remove in a commit.
- *
  * **Example** (Prepare a file removal)
  *
  * ```ts
@@ -110,8 +102,6 @@ export class FileDeletion extends S.Opaque<FileDeletion, { readonly brand: uniqu
 ) {}
 
 /**
- * One change in a commit.
- *
  * **Example** (Decode a file deletion)
  *
  * ```ts
@@ -131,8 +121,6 @@ export const FileChange = S.Union([FileContent, FileDeletion]).pipe(
 );
 
 /**
- * One change in a commit.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -140,8 +128,6 @@ export const FileChange = S.Union([FileContent, FileDeletion]).pipe(
 export type FileChange = FileContent | FileDeletion;
 
 /**
- * A commit, projected to the three fields callers actually use.
- *
  * **Details**
  *
  * `treeSha` is here because the Git Data API's `base_tree` wants a tree SHA,

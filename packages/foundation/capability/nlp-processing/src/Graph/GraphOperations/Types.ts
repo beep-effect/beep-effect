@@ -119,8 +119,6 @@ export const ExecutionStrategy = S.TaggedUnion({
 );
 
 /**
- * Runtime type represented by {@link ExecutionStrategy}.
- *
  * **Example** (Annotate sequential strategy type)
  *
  * ```ts import.meta.vitest name="Annotate sequential strategy type"
@@ -140,8 +138,6 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
 // =============================================================================
 
 /**
- * Metrics accumulated while applying an operation to graph leaves.
- *
  * **Details**
  *
  * Metrics form a monoid: `empty` is the identity and `combine` adds counters
@@ -234,8 +230,6 @@ export const Complexity = LiteralKit(["O(1)", "O(n)", "O(n log n)", "O(n^2)"]).p
 );
 
 /**
- * Runtime type represented by {@link Complexity}.
- *
  * **Example** (Assign linearithmic complexity type)
  *
  * ```ts
@@ -486,8 +480,6 @@ export const OperationCost = Complexity.mapMembers(
 );
 
 /**
- * Companion type for {@link OperationCost}.
- *
  * **Example** (Type constant operation cost)
  *
  * ```ts import.meta.vitest name="Type constant operation cost"
@@ -604,8 +596,6 @@ export const OperationCategory = LiteralKit([
 );
 
 /**
- * Runtime type represented by {@link OperationCategory}.
- *
  * **Example** (Assign transformation category type)
  *
  * ```ts
@@ -711,8 +701,6 @@ export const ExecutionId = S.String.pipe(
 );
 
 /**
- * Runtime type represented by {@link ExecutionId}.
- *
  * **Example** (Type branded execution id)
  *
  * ```ts

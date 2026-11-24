@@ -140,14 +140,12 @@ it.layer(TestCrypto, { timeout: "10 seconds" })("office-action exact paired extr
         fuzzy("shortened-statutory-period", raw.periodAnchor),
       ]);
       expect(fromExtractions2).toMatchObject({ code: "rule-not-covered" });
-      // An empty span cannot become an aligned extraction: the anchor refuses it before the rule runs.
-      assertNone(
-        TextAnchor.makeOption({
-          startChar: raw.periodAnchor.startChar,
-          endChar: raw.periodAnchor.startChar,
-          quote: raw.periodAnchor.quote,
-        })
-      );
+      const emptySpanAnchorRefusedBeforeTheRule = TextAnchor.makeOption({
+        startChar: raw.periodAnchor.startChar,
+        endChar: raw.periodAnchor.startChar,
+        quote: raw.periodAnchor.quote,
+      });
+      assertNone(emptySpanAnchorRefusedBeforeTheRule);
       const otherQuote = "A";
       const other = GroundedExtraction.cases.match_exact.make({
         label: "action-finality",

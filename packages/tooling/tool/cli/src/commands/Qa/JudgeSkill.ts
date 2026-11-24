@@ -19,8 +19,6 @@ import { QaJudgeContract } from "./JudgeContract.ts";
 const $I = $RepoCliId.create("commands/Qa/JudgeSkill");
 
 /**
- * Options accepted by `qa judge-skill`.
- *
  * **Example** (Target a file instead of stdout)
  *
  * ```ts

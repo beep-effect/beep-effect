@@ -61,8 +61,6 @@ export const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]).
 );
 
 /**
- * Runtime type for {@link AiMetricsRetentionMutationMode}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -308,8 +306,6 @@ const validateRawArchivePath = (
 };
 
 /**
- * Typed failure raised by retention inventory, delete, compaction, and restore-drill workflows.
- *
  * **Details**
  *
  * The retention surface deletes data, so it fails rather than degrades: a path
@@ -347,8 +343,6 @@ export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionErr
 ) {}
 
 /**
- * Time-window selector for AI metrics retention commands.
- *
  * **Gotchas**
  *
  * `dataRoot` is required. A default here would let a destructive retention run
@@ -619,8 +613,6 @@ export class AiMetricsRetentionMutationResult extends S.Opaque<
 const AiMetricsRetentionMutationResultFromJsonString = S.fromJsonString(AiMetricsRetentionMutationResult);
 
 /**
- * Policy for preventive local AI metrics retention enforcement.
- *
  * **Gotchas**
  *
  * `dataRoot` is required for the same reason it is on

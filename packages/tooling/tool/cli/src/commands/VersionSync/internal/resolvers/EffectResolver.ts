@@ -71,9 +71,6 @@ class EffectCatalogPackage extends S.Opaque<EffectCatalogPackage, { readonly bra
 ) {}
 
 /**
- * The root `package.json` `config.effectSource` provenance pin: the published
- * Effect version and the release commit its `effect@<version>` tag points to.
- *
  * **Example** (Build the 4.1.1 pin)
  *
  * ```ts

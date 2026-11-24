@@ -30,3 +30,8 @@ Rules:
 7. status: proposed. You cannot accept, and consensus is not acceptance.
 8. Fewer, well-warranted proposals beat coverage. Completion does not mean
    every symbol became a term.
+9. An enumeration's members are values of a controlled vocabulary by default:
+   propose the enumeration as `owl_entity_kind: skos_concept_scheme` and its
+   members as `skos_concept`, not as subclasses or individuals, unless the
+   foundational analysis assigns the members another category (phase,
+   subkind, individual), in which case propose what the analysis decided.

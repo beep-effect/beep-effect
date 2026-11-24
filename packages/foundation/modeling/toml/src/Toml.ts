@@ -32,9 +32,6 @@ import { TomlDiagnostic } from "./TomlDiagnostic.ts";
 const $I = $TomlId.create("Toml");
 
 /**
- * Options controlling stringify behavior. The only knob is `newline` —
- * omitted, it resolves to `"\n"`.
- *
  * **Details**
  *
  * Stringify deliberately emits only TOML 1.0.0 spellings — seconds always
@@ -72,11 +69,6 @@ export class TomlStringifyOptions extends S.Opaque<TomlStringifyOptions, { reado
 ) {}
 
 /**
- * Parse failure: the {@link TomlDiagnostic} entries describing why the
- * document was rejected (first violation wins, so there is one today; the
- * array shape matches `@beep/yaml`'s aggregate contract). Raised by
- * {@link Toml.parse} and the decode direction of the schema factories.
- *
  * **Details**
  *
  * The `message` renders the first diagnostic's position 1-based
@@ -181,11 +173,6 @@ export class TomlParseError extends S.TaggedError<TomlParseError, { readonly bra
 }
 
 /**
- * Stringification failure: an unsupported value, an out-of-range integer, a
- * circular reference or a tripped depth guard, as one structured
- * {@link TomlDiagnostic} (offset `0` — there is no source text). Raised by
- * {@link Toml.stringify} and the encode direction of the schema factories.
- *
  * **Example** (Inspect unsupported null values)
  *
  * ```ts
@@ -241,16 +228,7 @@ export class TomlStringifyError extends S.TaggedError<TomlStringifyError, { read
   }
 }
 
-// ── Internal helpers ────────────────────────────────────────────────────────
-
-/**
- * Run the parser and semantic pass, materializing the engine's raw carriers
- * into the typed error: `RawTomlError` becomes a positioned diagnostic and a
- * `GuardExceeded` depth trip becomes a `NestingDepthExceeded` diagnostic
- * (never an unhandled defect). Anything else is a genuine defect and rethrows
- * — synchronously to a `Result` caller, and as a `Die` through the `Effect`
- * forms, which evaluate this inside the effect.
- */
+// decision: engine-diagnostic-boundary
 const parseToResult = (text: string): Result.Result<unknown, TomlParseError> =>
   Result.try({
     try: () => buildValue(parseExpressions(text)),
@@ -277,8 +255,6 @@ const stringifyToResult = (value: unknown, options?: TomlStringifyOptions): Resu
       throw defect;
     },
   });
-
-// ── Bound codec ─────────────────────────────────────────────────────────────
 
 /**
  * A domain codec pre-bound to its two directions, returned by
@@ -310,8 +286,6 @@ export interface TomlBoundCodec<T, RD = never, RE = never> {
    */
   readonly schema: S.Codec<T, string, RD, RE>;
 }
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Static entry points for TOML parsing, stringification and the schema

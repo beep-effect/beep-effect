@@ -86,8 +86,6 @@ export const JsoncCanonicalizeErrorCode = LiteralKit([
 );
 
 /**
- * The union of all canonicalize-error code string literals.
- *
  * @see {@link JsoncCanonicalizeErrorCode} for the runtime kit.
  * @category type-level
  * @since 0.0.0
@@ -247,12 +245,8 @@ export class JsoncTextHashOptions extends S.Opaque<JsoncTextHashOptions, { reado
  */
 export type JsoncDigest = (bytes: Uint8Array) => Uint8Array;
 
-// ── Internal: the JCS emitter ───────────────────────────────────────────────
-
 type Emit = Result.Result<string, JsoncCanonicalizeError>;
 
-// What one walk carries down: the nesting depth, and whether an object member
-// read as `undefined` is left out instead of refused.
 type Walk = { readonly depth: number; readonly omitUndefinedMembers: boolean };
 
 const startWalk = (options?: JsoncCanonicalizeOptions): Walk => ({
@@ -273,19 +267,11 @@ const fail: {
     Result.fail(JsoncCanonicalizeError.make({ code, path, detail }))
 );
 
-// RFC 8785 string and number serialization match `JSON.stringify` exactly:
-// the two-character escapes, lowercase `\u00xx` escapes for the remaining
-// control characters, and ECMAScript shortest round-trip numbers. The codec
-// is total for the finite, well-formed scalars `emit` feeds it, so the
-// failure side is an invariant violation rather than a reachable path.
 const encodeScalar = S.encodeResult(S.fromJsonString(S.Union([S.String, S.Finite, S.Boolean, S.Null])));
 
-const emitScalar = (value: string | number | boolean | null): string =>
+const emitScalarTotalOnFiniteWellFormedInput = (value: string | number | boolean | null): string =>
   Result.getOrThrowWith(encodeScalar(value), identity);
 
-// Member and element reads go through this guard. An accessor property is
-// invoked, matching `JSON.stringify` semantics, but a getter that throws must
-// not escape as a raw exception through the `canonicalizeResult` boundary.
 const readProperty: {
   (container: object, key: string | number, path: string): Result.Result<unknown, JsoncCanonicalizeError>;
   (key: string | number, path: string): (container: object) => Result.Result<unknown, JsoncCanonicalizeError>;
@@ -308,8 +294,6 @@ const isPlainObject = (value: object): boolean => {
   return prototype === Object.prototype || prototype === null;
 };
 
-// One array element: read it through the getter guard, then canonicalize the
-// value it produced one level deeper.
 const emitElement: {
   (container: object, index: number, elementPath: string, walk: Walk): Emit;
   (index: number, elementPath: string, walk: Walk): (container: object) => Emit;
@@ -319,10 +303,6 @@ const emitElement: {
     readProperty(container, index, elementPath).pipe(Result.flatMap(emit(elementPath, descend(walk))))
 );
 
-// One object member, as its `"key":value` text. The value is read once,
-// through the getter guard. Under `omitUndefinedMembers` a value read as
-// `undefined` yields no text, so a getter decides once whether its member
-// exists; anything else canonicalizes one level deeper.
 const emitMember: {
   (
     container: object,
@@ -347,14 +327,13 @@ const emitMember: {
       Result.flatMap((read) =>
         walk.omitUndefinedMembers && P.isUndefined(read)
           ? Result.succeed(O.none())
-          : emit(read, memberPath, descend(walk)).pipe(Result.map((item) => O.some(`${emitScalar(key)}:${item}`)))
+          : emit(read, memberPath, descend(walk)).pipe(
+              Result.map((item) => O.some(`${emitScalarTotalOnFiniteWellFormedInput(key)}:${item}`))
+            )
       )
     )
 );
 
-// Members are produced lazily and `Result.all` stops pulling at the first
-// failure, as upstream's throw carrier stops its walk: after a member fails no
-// later getter runs, and no later exception can replace the typed failure.
 const emitMembers: {
   <K, A>(
     keys: Iterable<K>,
@@ -371,10 +350,6 @@ const emitMembers: {
   ): Result.Result<Array<A>, JsoncCanonicalizeError> => Result.all(I.map(keys, member))
 );
 
-// The indices of an array, counted here and compared against `length` before
-// every step, as upstream's indexed loop does. The array's own `keys`,
-// `values`, `entries` and iterator are never read: they are the input's to
-// override, and one that names other indices or throws must change nothing.
 const indices = (value: ReadonlyArray<unknown>): Iterable<number> =>
   I.takeWhile(I.range(0), (index) => index < value.length);
 
@@ -384,9 +359,6 @@ const emitArray: {
 } = dual(
   3,
   (value: ReadonlyArray<unknown>, path: string, walk: Walk): Emit =>
-    // Indexed reads, never `map`: `map` skips holes, which must instead read as
-    // `undefined` and fail typed at the hole's index. `omitUndefinedMembers`
-    // does not reach here: leaving an element out would shift every later one.
     emitMembers(indices(value), (index: number) => emitElement(value, index, `${path}/${index}`, walk)).pipe(
       Result.map((items) => `[${A.join(items, ",")}]`)
     )
@@ -403,15 +375,10 @@ const emitRecord: {
       "only arrays and plain objects canonicalize; encode domain values to plain JSON first"
     );
   }
-  // Sorting by `<` compares UTF-16 code units, the order RFC 8785 mandates.
   return emitMembers(A.sort(R.keys(value), Order.String), (key) => {
     const memberPath = `${path}/${escapePointerSegment(key)}`;
-    // Member keys are strings too: an unpaired surrogate in a key is the same
-    // RFC 8785 I-JSON violation as one in a value. The key is checked just
-    // before its own member is read (upstream order), so an earlier member's
-    // failure wins over a later ill-formed key. The check also comes before
-    // `omitUndefinedMembers` can leave the member out.
-    return key.isWellFormed()
+    const wellFormedKeyCheckedBeforeItsMemberIsReadOrOmitted = key.isWellFormed();
+    return wellFormedKeyCheckedBeforeItsMemberIsReadOrOmitted
       ? emitMember(value, key, memberPath, walk)
       : Result.fail(
           JsoncCanonicalizeError.make({
@@ -427,18 +394,17 @@ const isFiniteNumber = S.is(S.Finite);
 
 const emitNumber = (value: number, path: string): Emit =>
   isFiniteNumber(value)
-    ? Result.succeed(emitScalar(value))
+    ? Result.succeed(emitScalarTotalOnFiniteWellFormedInput(value))
     : fail("NonFiniteNumber", path, `${String(value)} has no canonical JSON representation`);
 
 const emitString = (value: string, path: string): Emit =>
   value.isWellFormed()
-    ? Result.succeed(emitScalar(value))
+    ? Result.succeed(emitScalarTotalOnFiniteWellFormedInput(value))
     : fail("LoneSurrogate", path, "string contains an unpaired surrogate; RFC 8785 requires well-formed Unicode");
 
-// Every non-container value: JSON scalars emit, everything else fails typed.
 const emitPrimitive = (value: unknown, path: string): Emit => {
   if (P.isNull(value) || P.isBoolean(value)) {
-    return Result.succeed(emitScalar(value));
+    return Result.succeed(emitScalarTotalOnFiniteWellFormedInput(value));
   }
   if (P.isNumber(value)) {
     return emitNumber(value, path);
@@ -467,9 +433,6 @@ const emitContainer = (
   return A.isArray(value) ? emitArray(value, path, walk) : emitRecord(value, path, walk);
 };
 
-// Inspect each container inside its own boundary: Proxy metadata traps can
-// throw before member reads, including Array.isArray on a revoked Proxy. Keep
-// the current path and preserve an existing typed failure from a nested emit.
 const emit: {
   (value: unknown, path: string, walk: Walk): Emit;
   (path: string, walk: Walk): (value: unknown) => Emit;
@@ -491,9 +454,9 @@ const emit: {
 
 const encoder = new TextEncoder();
 
-// SHA-256 produces 32 bytes. The `Digest.Digest` path cannot return anything
-// else; the caller-supplied `JsoncDigest` can, so the sync twins check it.
 const SHA256_DIGEST_BYTES = 32;
+
+const isDataFirstSinceOnlyTheDigestFunctionCanSitSecond = (args: IArguments): boolean => P.isFunction(args[1]);
 
 const digestHexResult: {
   (text: string, digest: JsoncDigest): Result.Result<string, JsoncCanonicalizeError>;
@@ -538,8 +501,6 @@ const prepareText: {
   (text: string, options?: JsoncTextHashOptions): string =>
     (options ?? JsoncTextHashOptions.make({})).normalizeEol ? normalizeEol(text) : text
 );
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Static entry points for canonical JSON serialization (RFC 8785) and
@@ -749,9 +710,7 @@ export abstract class JsoncFingerprint {
       options?: JsoncCanonicalizeOptions
     ): (value: unknown) => Result.Result<string, JsoncCanonicalizeError>;
   } = dual(
-    // The digest is the only function among the arguments that can sit second:
-    // data-last calls put it first and follow it with options or nothing.
-    (args) => P.isFunction(args[1]),
+    isDataFirstSinceOnlyTheDigestFunctionCanSitSecond,
     (
       value: unknown,
       digest: JsoncDigest,

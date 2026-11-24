@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/walker",
+  "root": "packages/foundation/capability/walker",
+  "scopes": ["."]
+}

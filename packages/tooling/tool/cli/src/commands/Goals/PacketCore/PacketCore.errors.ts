@@ -11,9 +11,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketCore.errors");
 
 /**
- * Failure raised when a packet event stream cannot be read, decoded, or
- * safely appended to.
- *
  * **Details**
  *
  * The read path never raises this — unreadable or invalid events surface as

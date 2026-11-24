@@ -13,8 +13,6 @@ import { BoxProviderId } from "./BoxProvisioningObserved.ts";
 const $I = $BoxProvisioningId.create("BoxProvisioningErrors");
 
 /**
- * Sanitized failure decoding a reconciliation boundary schema.
- *
  * **Gotchas**
  *
  * The underlying schema issue is deliberately excluded because it may quote a

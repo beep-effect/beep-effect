@@ -30,8 +30,6 @@ export const CandidateLifecycle = LiteralKit(["candidate"]).pipe(
 );
 
 /**
- * Runtime type for {@link CandidateLifecycle}.
- *
  * **Example** (Type candidate lifecycle value)
  *
  * ```ts

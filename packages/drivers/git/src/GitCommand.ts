@@ -661,8 +661,6 @@ const log = (
   ]);
 
 /**
- * Which configuration file a read is scoped to.
- *
  * **Gotchas**
  *
  * Omitted, git reads the MERGED configuration — repository-local plus global
@@ -692,8 +690,6 @@ export const GitConfigScope = LiteralKit(["local", "global", "system", "worktree
   $I.annoteSchema("GitConfigScope", { description: "Which Git configuration file a read is scoped to." })
 );
 /**
- * Selects the configuration file used by scoped configuration reads.
- *
  * @see {@link GitConfigScope} for the runtime schema of accepted scope names.
  * @category type-level
  * @since 0.0.0
@@ -735,8 +731,6 @@ export const StatusUntrackedFiles = LiteralKit(["all", "normal", "no"]).pipe(
   $I.annoteSchema("StatusUntrackedFiles", { description: "How `git status` reports untracked paths." })
 );
 /**
- * Selects how `git status` reports untracked paths.
- *
  * @see {@link StatusUntrackedFiles} for the runtime schema of accepted modes.
  * @category type-level
  * @since 0.0.0
@@ -769,8 +763,6 @@ export const StatusIgnoreSubmodules = LiteralKit(["none", "untracked", "dirty", 
   })
 );
 /**
- * Selects which submodule changes `git status` or a `git diff` path list ignores.
- *
  * @see {@link StatusIgnoreSubmodules} for the runtime schema of accepted modes.
  * @category type-level
  * @since 0.0.0
@@ -994,6 +986,8 @@ const revListCount: {
   (range: string, firstParent?: boolean): GitInvocation =>
     git(["rev-list", "--count", ...(firstParent === true ? ["--first-parent"] : []), "--end-of-options", range, "--"])
 );
+
+const localOnlyCommitCount = (): GitInvocation => git(["rev-list", "--count", "--all", "--not", "--remotes", "--"]);
 
 // Implementation of GitCommand.notesList; the public contract lives on the static.
 // `--ref=<ref>` is one argv token, so the ref can never be read as a separate option.
@@ -3278,6 +3272,32 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly revListCount = revListCount;
+
+  /**
+   * Builds an invocation to count the commits no remote-tracking ref reaches.
+   *
+   * **Details**
+   *
+   * `git rev-list --count --all --not --remotes --` — the number of commits
+   * reachable from HEAD or any ref under `refs/` (branches, tags, stash,
+   * notes) but from no `refs/remotes/*` ref, printed as one decimal line. It
+   * takes no caller input, an unborn HEAD counts nothing, and the closing
+   * `--` keeps git from reading anything as a path.
+   *
+   * **Example** (Count local-only commits)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.localOnlyCommitCount();
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // rev-list --count --all --not --remotes --
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly localOnlyCommitCount = localOnlyCommitCount;
 
   /**
    * Builds an invocation to list every note on a notes ref.

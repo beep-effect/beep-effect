@@ -34,8 +34,6 @@ import { StatusLifecycle, StatusTransition, StatusValue } from "./StatusLifecycl
 const $I = $AgentMemoryStoreId.create("StatusField.models");
 
 /**
- * The status lifecycles one admission layer applies, one per field.
- *
  * **Details**
  *
  * A `setStatus` operation names its field in its transition; admission looks

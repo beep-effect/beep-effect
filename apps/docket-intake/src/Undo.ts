@@ -28,9 +28,6 @@ import type { DocketIntakeAppConfig } from "./Config.ts";
 const $I = $DocketIntakeId.create("Undo");
 
 /**
- * The run an undo is for: a run id, or `latest` for the newest run in the
- * journal.
- *
  * **Example** (Check run selectors)
  *
  * ```ts
@@ -51,8 +48,6 @@ export const DocketRunSelector = S.Union([S.Literal("latest"), DocketRunId]).pip
 );
 
 /**
- * Type of {@link DocketRunSelector}.
- *
  * **Example** (Type a selector)
  *
  * ```ts

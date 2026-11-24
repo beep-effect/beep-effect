@@ -68,8 +68,6 @@ export const ModelsLocatorRefusal = LiteralKit([
 );
 
 /**
- * Runtime type of {@link ModelsLocatorRefusal}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -278,8 +276,6 @@ export class ModelsExchangeProbeError extends S.TaggedError<
 }
 
 /**
- * One atomic pathname exchange was refused by the host.
- *
  * **Details**
  *
  * `reason` is the errno the exchange returned, mapped onto
@@ -314,8 +310,6 @@ export class ModelsExchangeFault extends S.TaggedError<ModelsExchangeFault, { re
 ) {}
 
 /**
- * The exchange primitive could not be run, so the host gave no verdict.
- *
  * **Details**
  *
  * Raised when `mv --exchange` cannot be spawned, its output cannot be

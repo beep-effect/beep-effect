@@ -17,8 +17,6 @@ const $I = $SharedDomainId.create("entities/Organization/Organization.model");
 const pg = ProductEntity.pg;
 
 /**
- * Shared-kernel Organization entity schema.
- *
  * **Example** (Access organization table name)
  *
  * ```ts

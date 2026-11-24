@@ -72,8 +72,6 @@ export type BackgroundStyleName = BackgroundColorName;
 export type { StyleName } from "./ChalkSchema.ts";
 
 /**
- * Open and close ANSI escape sequences for a style.
- *
  * **Example** (Create open close styler entry)
  *
  * ```ts

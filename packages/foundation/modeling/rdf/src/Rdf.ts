@@ -182,8 +182,6 @@ const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
 );
 
 /**
- * Prefix label used by RDF namespace bindings.
- *
  * **Example** (Decode prefix labels)
  *
  * ```ts import.meta.vitest name="Decode prefix labels"
@@ -220,8 +218,6 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
 );
 
 /**
- * Type for {@link PrefixLabel}.
- *
  * **Example** (Accept PrefixLabel type)
  *
  * ```ts
@@ -256,8 +252,6 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
 );
 
 /**
- * RDF literal language tag.
- *
  * **Example** (Decode language tag)
  *
  * ```ts import.meta.vitest name="Decode language tag"
@@ -301,8 +295,6 @@ export const LanguageTag = S.String.pipe(
 );
 
 /**
- * Type for {@link LanguageTag}.
- *
  * **Example** (Accept LanguageTag type)
  *
  * ```ts
@@ -318,8 +310,6 @@ export const LanguageTag = S.String.pipe(
 export type LanguageTag = typeof LanguageTag.Type;
 
 /**
- * RDF named node value.
- *
  * **Example** (Decode named node)
  *
  * ```ts import.meta.vitest name="Decode named node"
@@ -355,8 +345,6 @@ export class NamedNode extends S.Opaque<NamedNode, { readonly brand: unique symb
 }
 
 /**
- * RDF blank node value.
- *
  * **Example** (Decode blank node)
  *
  * ```ts import.meta.vitest name="Decode blank node"
@@ -683,8 +671,6 @@ const formOfParts = (parts: typeof LiteralParts.Encoded): Result.Result<LiteralF
 const noLanguage = constant(O.none<LanguageTag>());
 
 /**
- * RDF literal value with one of three forms.
- *
  * **Example** (Decode RDF literal)
  *
  * ```ts import.meta.vitest name="Decode RDF literal"
@@ -750,8 +736,6 @@ export class Literal extends S.Opaque<Literal, { readonly brand: unique symbol }
 }
 
 /**
- * RDF default graph term.
- *
  * **Example** (Decode default graph)
  *
  * ```ts import.meta.vitest name="Decode default graph"
@@ -987,8 +971,6 @@ export const GraphTerm = GraphTermUntagged.pipe(S.toTaggedUnion("termType"));
 export type GraphTerm = typeof GraphTerm.Type;
 
 /**
- * RDF quad value aligned with RDF/JS.
- *
  * **Example** (Decode RDF quad)
  *
  * ```ts import.meta.vitest name="Decode RDF quad"
@@ -1043,8 +1025,6 @@ const QuadSet = Quad.pipe(
 );
 
 /**
- * Dataset of RDF quads, a set whose wire form is canonical.
- *
  * **Example** (Build dataset from quads)
  *
  * ```ts import.meta.vitest name="Build dataset from quads"
@@ -1083,8 +1063,6 @@ export class Dataset extends S.Opaque<Dataset, { readonly brand: unique symbol }
 }
 
 /**
- * Prefix-to-namespace binding for RDF compaction and expansion.
- *
  * **Example** (Decode namespace binding)
  *
  * ```ts import.meta.vitest name="Decode namespace binding"
@@ -1114,8 +1092,6 @@ export class NamespaceBinding extends S.Opaque<NamespaceBinding, { readonly bran
 ) {}
 
 /**
- * Prefix map keyed by {@link PrefixLabel}.
- *
  * **Example** (Decode prefix map)
  *
  * ```ts import.meta.vitest name="Decode prefix map"
@@ -1154,8 +1130,6 @@ export const PrefixMap = S.Record(S.String, IRI).pipe(
 );
 
 /**
- * Type for {@link PrefixMap}.
- *
  * **Example** (Accept PrefixMap type)
  *
  * ```ts
@@ -1272,8 +1246,6 @@ export const makeLiteral = (value: string): Literal =>
   Literal.make({ termType: "Literal", value, form: { _tag: "Simple" } });
 
 /**
- * Object and optional graph settings for {@link makeQuad}.
- *
  * **Example** (Accept MakeQuadOptions type)
  *
  * ```ts
@@ -1298,8 +1270,6 @@ export class MakeQuadOptions extends S.Opaque<MakeQuadOptions, { readonly brand:
 ) {}
 
 /**
- * Constructor input accepted by {@link makeQuad}.
- *
  * **Example** (Type quad options input)
  *
  * ```ts

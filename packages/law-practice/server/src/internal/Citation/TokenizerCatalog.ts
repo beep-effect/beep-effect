@@ -113,7 +113,6 @@ export const makeCitationCanonicalTokenizerCatalog = Effect.fn("Citation.makeCan
     const extractors = yield* Effect.forEach(
       source,
       Effect.fn("Citation.prepareCanonicalExtractor")(function* (row, index) {
-        // Source and decoded metadata arrays each contain exactly 6805 entries.
         const recipe = A.getUnsafe(metadata.recipes, index);
         const [hash, equalityClass] = A.getUnsafe(metadata.hashes, index);
         if (recipe.id !== index || recipe.flags !== row.fields.flags) return yield* fail("metadata-mismatch");

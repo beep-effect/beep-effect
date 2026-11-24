@@ -42,8 +42,6 @@ const $I = $AlchemyAwsExtrasId.create("CostAllocationTag");
 export const CostAllocationTagType = "BeepAWS.CostExplorer.CostAllocationTag" as const;
 
 /**
- * Activation status of a cost allocation tag.
- *
  * **Example** (Read the active status literal)
  *
  * ```ts
@@ -62,16 +60,12 @@ export const CostAllocationTagStatus = LiteralKit(["Active", "Inactive"]).pipe(
 );
 
 /**
- * Decoded cost-allocation-tag status.
- *
  * @category models
  * @since 0.0.0
  */
 export type CostAllocationTagStatus = typeof CostAllocationTagStatus.Type;
 
 /**
- * Props of a {@link CostAllocationTag}.
- *
  * **Details**
  *
  * `tagKey` is the identity: changing it replaces the resource. `status`
@@ -102,8 +96,6 @@ export class CostAllocationTagProps extends S.Opaque<CostAllocationTagProps, { r
 ) {}
 
 /**
- * Companion types for {@link CostAllocationTagProps}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -153,8 +145,6 @@ export class CostAllocationTagAttributes extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link CostAllocationTagAttributes}.
- *
  * @category models
  * @since 0.0.0
  */

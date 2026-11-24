@@ -9,10 +9,8 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
   "original distinct citation ranges",
   (it) => {
     for (const kind of ["bun", "node"] as const) {
-      // Original builtin input 11 has primary [20,29], full [4,54], and
-      // pin-inclusive [20,38]. The replay reads these from the sealed capture.
       it.effect(
-        `retains different primary full and pin-cite ranges on ${kind}`,
+        `retains original builtin input 11 primary [20,29], full [4,54] and pin-inclusive [20,38] ranges from the sealed capture on ${kind}`,
         () => withCitationTestInvocation(replayCitationCanonicalExtraction(kind, 10, 1)),
         { timeout: 180000 }
       );

@@ -14,8 +14,6 @@ const $I = $SharedDomainId.create("entities/Organization/Organization.values");
 const LicenseTierBase = LiteralKit(["solo", "team", "enterprise"]);
 
 /**
- * Commercial license tier assigned to an organization.
- *
  * **Example** (Decode enterprise license tier)
  *
  * ```ts
@@ -41,8 +39,6 @@ export const LicenseTier = LicenseTierBase.pipe(
 );
 
 /**
- * Runtime type for {@link LicenseTier}.
- *
  * **Example** (Type a LicenseTier value)
  *
  * ```ts
@@ -58,8 +54,6 @@ export const LicenseTier = LicenseTierBase.pipe(
 export type LicenseTier = typeof LicenseTier.Type;
 
 /**
- * Compliance and automation settings owned by an organization.
- *
  * **Example** (Decode organization settings)
  *
  * ```ts

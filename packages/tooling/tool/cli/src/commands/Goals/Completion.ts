@@ -1410,8 +1410,6 @@ const refreshClosesFinal = (receipt: GoalCompletionReceipt, claims: GoalClaimSet
 };
 
 /**
- * One update to a packet's closeout inbox rows in a checkout.
- *
  * **Details**
  *
  * `boundFinal` is the final the packet binds now, if any. `exitCode` is what

@@ -23,8 +23,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/MarkdownFences.model");
 
 /**
- * TypeScript language word that opens a typechecked fence.
- *
  * **Example** (Recognize a tsx fence)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const MarkdownFenceLanguage = LiteralKit(["ts", "tsx", "typescript", "mts
 );
 
 /**
- * Type-level member of {@link MarkdownFenceLanguage}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -78,16 +74,12 @@ export const MarkdownFenceDisposition = LiteralKit(["checked", "opt-out", "gener
 );
 
 /**
- * Type-level member of {@link MarkdownFenceDisposition}.
- *
  * @category models
  * @since 0.0.0
  */
 export type MarkdownFenceDisposition = typeof MarkdownFenceDisposition.Type;
 
 /**
- * One TypeScript fence of a guidance Markdown file.
- *
  * **Details**
  *
  * `line` is the 1-based line of the opening fence, so body line `n` is
@@ -129,8 +121,6 @@ export class TypecheckFence extends S.Opaque<TypecheckFence, { readonly brand: u
 ) {}
 
 /**
- * One compiler diagnostic mapped back to its Markdown location.
- *
  * **Example** (Describe a missing-name diagnostic)
  *
  * ```ts
@@ -165,8 +155,6 @@ export class MarkdownFenceDiagnostic extends S.Opaque<MarkdownFenceDiagnostic, {
 ) {}
 
 /**
- * Check verdict for one fence.
- *
  * **Details**
  *
  * `passed` and `failed` verdicts belong to `checked` fences; `skipped`
@@ -204,16 +192,12 @@ export const MarkdownFenceVerdict = S.TaggedUnion({
 );
 
 /**
- * Type-level member of {@link MarkdownFenceVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
 export type MarkdownFenceVerdict = typeof MarkdownFenceVerdict.Type;
 
 /**
- * Runner options for the Markdown fence typecheck law.
- *
  * **Details**
  *
  * `pathPrefix` narrows the run to surface files whose repository-relative
@@ -249,8 +233,6 @@ export class MarkdownFencesOptions extends S.Opaque<MarkdownFencesOptions, { rea
 ) {}
 
 /**
- * Result of one Markdown fence typecheck run.
- *
  * **Details**
  *
  * `fences` counts every TypeScript fence on the guidance surface; it equals

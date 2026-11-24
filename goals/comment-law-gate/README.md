@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -24,18 +24,18 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth.
-3. [`PLAN.md`](./PLAN.md) - active execution plan.
+3. [`PLAN.md`](./PLAN.md) - execution plan.
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/`](./research/) - supporting research, if present.
 6. [`history/`](./history/) - evidence and closeouts, if present.
 
 ## Current Phase
 
-P0 Research — not started.
+P4 Close. #3467 (scanner, lock, oxlint rule, advisory) and #3468 (package decisions home) landed; the final PR adds the strip and /delete-comment, template and law-text changes, the AGENTS line and turns the law blocking.
 
 ## Latest Evidence
 
-Not started.
+[`history/2026-11-22-scanner-replay-and-parity.md`](./history/2026-11-22-scanner-replay-and-parity.md): the oxlint rule and the scanner agree on 57,854 of 57,854 findings; 67 of the last 72 in-scope main commits would fail, with no false positive on a directive, licence or exported JSDoc.
 
 ## Notes
 

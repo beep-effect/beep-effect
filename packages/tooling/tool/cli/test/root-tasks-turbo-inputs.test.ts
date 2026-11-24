@@ -207,6 +207,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
   ...trackedDiscoveryTasks.literals,
   "knowledge:semantic-delta",
   "knowledge:refs-check",
+  "lint:comment-law",
   "lint:identity-registry",
   "lint:oxlint",
   "lint:shadcn",
@@ -238,6 +239,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:private-home-paths": "apps/fixture/c3-probe.log",
   "lint:tracked-shell-allowlist": "tools/fixture/c3-probe.sh",
   "lint:no-tracked-python": "tools/fixture/c3-probe.py",
+  "lint:comment-law": "packages/fixture/src/c3-comment-probe.ts",
   "lint:schema-tag-idioms": "scratchpad/fixture/c3-probe.cts",
   "lint:holds": "hold-ledger/claims.jsonl",
   "lint:tsgo-rules": "tooling/c3-probe.cts",
@@ -324,7 +326,12 @@ const expectRootTaskContract = (id: string, task: RootTask, scripts: Readonly<Re
     Match.orElse(() => [])
   );
   expect(task.env, id).toEqual(environment);
-  expect(task.passThroughEnv, id).toEqual(id === "//#knowledge:semantic-delta" ? ["GITHUB_EVENT_PATH"] : []);
+  const passThroughEnvironment = Match.value(id).pipe(
+    Match.when("//#knowledge:semantic-delta", () => ["GITHUB_EVENT_PATH"]),
+    Match.when("//#lint:comment-law", () => ["BEEP_PROOF_BASE"]),
+    Match.orElse(() => [])
+  );
+  expect(task.passThroughEnv, id).toEqual(passThroughEnvironment);
   expect(task.outputs, id).toEqual(expectedOutputs(id, name));
 };
 
@@ -526,11 +533,11 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const consumers = [
           Tuple.make(
             "packages/foundation/capability/walker/src/Expand.ts",
-            "27393369d43732e128561717062b07d9a5862e7c21fa82ca10e5f3167bdcb93b"
+            "f1088f173cf33325f8422273cb0d745e2db6e7908ea3c661dbd9a3228e441284"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "425978eb4ba243dab83125442e4c871065464455c310dcab5373d42493158227"
+            "08fb622c8ef78771b1501bba5cea9c083dc31e1c384f2462d0e25b974244f696"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
@@ -538,7 +545,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
-            "4afd585ac7a7494f692d4e5a941957c8130ba49ae7d0c4c73a481025fee35d96"
+            "1431ba10e3b3d306d95b078a7a47421b6549232a2bd26b1baab9d646aab43471"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
@@ -550,7 +557,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/foundation/capability/walker/src/Descend.ts",
-            "0b116dc99e01c10ca9da12beb9862bd04863c1e7f7862c3eef383c145417188d"
+            "3c41d6a2b121e1b810f7b1126a54ac1ad0db207fff2bb5af34a64c2677156b88"
           ),
           Tuple.make(
             "packages/tooling/library/repo-utils/src/FsUtils.ts",
@@ -701,7 +708,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("b4a060fdf3b0728eca6cadd1f0e8ba3c329993a6695cfd8e94ed1414ac899bd2");
+        expect(Hex.encode(bytes)).toBe("f034d502e1c49b20b3538c81b5b381a4ace59d1f3333c6017f8e145e338b27e4");
       })
     );
   });

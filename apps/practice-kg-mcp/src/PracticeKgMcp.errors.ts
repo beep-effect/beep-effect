@@ -102,8 +102,6 @@ export class SelfCheckFailure extends S.TaggedError<SelfCheckFailure, { readonly
 }
 
 /**
- * The telemetry root key could not be wrapped, unwrapped or stored.
- *
  * **Details**
  *
  * `message` is a fixed sentence; it never carries key bytes, a wrapped blob

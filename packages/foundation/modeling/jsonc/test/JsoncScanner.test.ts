@@ -5,7 +5,6 @@ import { pipe } from "effect/Function";
 import * as Str from "effect/String";
 import type { Scanner } from "@beep/jsonc/internal/scanner";
 
-// Scan every token of `text`, pairing each kind with its decoded value and error.
 const tokens = (scanner: Scanner): ReadonlyArray<readonly [SyntaxKind, string, ScanError]> => {
   const out: Array<readonly [SyntaxKind, string, ScanError]> = [];
   for (let kind = scanner.scan(); kind !== "EOF"; kind = scanner.scan()) {

@@ -201,8 +201,6 @@ export class DocumentAnnotation extends S.Opaque<DocumentAnnotation, { readonly 
 ) {}
 
 /**
- * Wire companions derived from the document annotation schema.
- *
  * @category type-level
  * @since 0.0.0
  */

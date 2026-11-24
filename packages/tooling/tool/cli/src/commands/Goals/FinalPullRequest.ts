@@ -34,8 +34,6 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 const $I = $RepoCliId.create("commands/Goals/FinalPullRequest");
 
 /**
- * GitHub's pull request state as `gh pr view --json state` reports it.
- *
  * **Example** (Guard a merged state)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const GoalFinalPullRequestState = LiteralKit(["OPEN", "MERGED", "CLOSED"]
 );
 
 /**
- * GitHub's pull request state as `gh pr view --json state` reports it.
- *
  * @category type-level
  * @since 0.0.0
  */

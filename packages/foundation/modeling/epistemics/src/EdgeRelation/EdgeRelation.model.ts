@@ -37,8 +37,6 @@ export const EdgeRelation = EdgeRelationBase.pipe(
 );
 
 /**
- * Runtime type for {@link EdgeRelation}.
- *
  * **Example** (Satisfy EdgeRelation type)
  *
  * ```ts
@@ -82,8 +80,6 @@ export const SymmetricEdgeRelation = SymmetricEdgeRelationBase.pipe(
 );
 
 /**
- * Runtime type for {@link SymmetricEdgeRelation}.
- *
  * **Example** (Satisfy SymmetricEdgeRelation type)
  *
  * ```ts

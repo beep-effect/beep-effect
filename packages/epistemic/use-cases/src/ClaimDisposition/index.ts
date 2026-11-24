@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim disposition boundary command exports.
- *
  * **Example** (Check appendClaimDisposition export)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./ClaimDisposition.commands.ts";
 /**
- * Claim disposition repository port exports.
- *
  * **Example** (Check ClaimDispositionRepository export)
  *
  * ```ts

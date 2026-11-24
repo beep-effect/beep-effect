@@ -33,8 +33,6 @@ import * as Tuple from "effect/Tuple";
 const $I = $RepoCliKitId.create("cli/TurboCache");
 
 /**
- * Cache postures this CLI is willing to hand to Turbo.
- *
  * **Details**
  *
  * `local:rw` is the fail-closed default. `local:rw,remote:r` is the only
@@ -59,16 +57,12 @@ export const TurboCacheMode = LiteralKit(["local:rw", "local:rw,remote:r", "loca
 );
 
 /**
- * Cache postures this CLI is willing to hand to Turbo.
- *
  * @category models
  * @since 0.0.0
  */
 export type TurboCacheMode = typeof TurboCacheMode.Type;
 
 /**
- * The environment variable names that together enable remote cache reads.
- *
  * **Example** (List the remote-read quad)
  *
  * ```ts
@@ -87,8 +81,6 @@ export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_
 );
 
 /**
- * The environment variable names that together enable remote cache reads.
- *
  * @category models
  * @since 0.0.0
  */
@@ -163,9 +155,6 @@ const TurboEnvironmentVariableName = S.String.check(
 );
 
 /**
- * A checkout `.env` variable whose 1Password reference failed the separate
- * environment-health check.
- *
  * **Details**
  *
  * The warning deliberately carries only the variable name. The unresolved
@@ -234,8 +223,6 @@ export const turboCachePullRequestPosture = {
 } satisfies Readonly<Record<TurboCacheEnvName | TurboCacheSecretEnvName, string | undefined>>;
 
 /**
- * Turbo credential environment variables whose `op://` references a secret session may resolve.
- *
  * **Details**
  *
  * `TURBO_CACHE` is deliberately absent because it is a non-secret posture, not
@@ -264,8 +251,6 @@ export const TurboCacheSecretEnvName = LiteralKit([
 );
 
 /**
- * Turbo credential environment variables whose `op://` references a secret session may resolve.
- *
  * @category models
  * @since 0.0.0
  */
@@ -302,8 +287,6 @@ export const TurboCacheValueSource = LiteralKit(["literal", "secret-reference"])
 export type TurboCacheValueSource = typeof TurboCacheValueSource.Type;
 
 /**
- * Why the caller, not this CLI, owns the cache flags for an invocation.
- *
  * **Example** (Check the CI reason)
  *
  * ```ts
@@ -322,16 +305,12 @@ export const TurboCacheCallerReason = LiteralKit(["ci", "explicit-cache-arg"]).p
 );
 
 /**
- * Why the caller, not this CLI, owns the cache flags for an invocation.
- *
  * @category models
  * @since 0.0.0
  */
 export type TurboCacheCallerReason = typeof TurboCacheCallerReason.Type;
 
 /**
- * Why a checkout fell back to the local-only cache posture.
- *
  * **Example** (Check the incomplete-config reason)
  *
  * ```ts
@@ -350,16 +329,12 @@ export const TurboCacheFallbackReason = LiteralKit(["incomplete-remote-config", 
 );
 
 /**
- * Why a checkout fell back to the local-only cache posture.
- *
  * @category models
  * @since 0.0.0
  */
 export type TurboCacheFallbackReason = typeof TurboCacheFallbackReason.Type;
 
 /**
- * The remote-read configuration a checkout actually carries.
- *
  * **Details**
  *
  * `api`, `token`, and `team` are modeled as value *sources* rather than values:
@@ -404,8 +379,6 @@ export class TurboCacheEnvironment extends S.Opaque<TurboCacheEnvironment, { rea
 ) {}
 
 /**
- * Tags of the resolved cache plan.
- *
  * **Example** (List the plan tags)
  *
  * ```ts
@@ -424,16 +397,12 @@ export const TurboCachePlanTag = LiteralKit(["caller-controlled", "local-only", 
 );
 
 /**
- * Tags of the resolved cache plan.
- *
  * @category models
  * @since 0.0.0
  */
 export type TurboCachePlanTag = typeof TurboCachePlanTag.Type;
 
 /**
- * The caller already controls caching, so the CLI injects nothing.
- *
  * **Example** (Describe a caller-controlled plan)
  *
  * ```ts
@@ -461,8 +430,6 @@ export class CallerControlledTurboCache extends S.Opaque<
 ) {}
 
 /**
- * The checkout is not provably configured for remote reads, so it stays local.
- *
  * **Example** (Describe an incomplete configuration)
  *
  * ```ts
@@ -488,8 +455,6 @@ export class LocalOnlyTurboCache extends S.Opaque<LocalOnlyTurboCache, { readonl
 ) {}
 
 /**
- * The checkout carries a complete, sanctioned remote-read configuration.
- *
  * **Details**
  *
  * `requiresSecretSession` is true when at least one member of the quad is still
@@ -524,8 +489,6 @@ export class RemoteReadTurboCache extends S.Opaque<RemoteReadTurboCache, { reado
 ) {}
 
 /**
- * An explicitly enrolled host may read and populate the shared cache.
- *
  * **Details**
  *
  * The opt-in selects client behavior; the host's separate bucket-scoped
@@ -556,8 +519,6 @@ export class RemoteWriteTurboCache extends S.Opaque<RemoteWriteTurboCache, { rea
 ) {}
 
 /**
- * The resolved cache decision for one Turbo invocation.
- *
  * **Example** (Decode a local-only plan)
  *
  * ```ts
@@ -590,8 +551,6 @@ export const TurboCachePlan = TurboCachePlanTag.mapMembers(
 );
 
 /**
- * The resolved cache decision for one Turbo invocation.
- *
  * @category models
  * @since 0.0.0
  */

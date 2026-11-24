@@ -15,8 +15,6 @@ const PatentCitationActorBase = LiteralKit(["Examiner", "Applicant", "ThirdParty
 const PatentCitationQuarantineReasonBase = LiteralKit(["unknown-code", "malformed-record"]);
 
 /**
- * Party recorded as having cited a reference in the observed source.
- *
  * **When to use**
  *
  * Use to record who the observed source attributes the citation act to, as
@@ -54,8 +52,6 @@ export const PatentCitationActor = PatentCitationActorBase.pipe(
 );
 
 /**
- * Runtime type for {@link PatentCitationActor}.
- *
  * @see {@link PatentCitationActor} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -63,8 +59,6 @@ export const PatentCitationActor = PatentCitationActorBase.pipe(
 export type PatentCitationActor = typeof PatentCitationActor.Type;
 
 /**
- * Discovery provenance for an occurrence observed in a prosecution document.
- *
  * **Example** (Record an examiner-observed occurrence)
  *
  * ```ts
@@ -90,8 +84,6 @@ export class ExaminerObservedDiscovery extends S.Opaque<ExaminerObservedDiscover
 ) {}
 
 /**
- * Named and versioned model credited with an AI-discovered occurrence.
- *
  * **Example** (Attribute a finding to an exact model build)
  *
  * ```ts
@@ -120,8 +112,6 @@ export class DiscoveryModel extends S.Opaque<DiscoveryModel, { readonly brand: u
 ) {}
 
 /**
- * Discovery provenance for an occurrence surfaced by a model.
- *
  * **Details**
  *
  * Recording the model name and version keeps the finding attributable to an
@@ -160,8 +150,6 @@ export class AiDiscovery extends S.Opaque<AiDiscovery, { readonly brand: unique 
 ) {}
 
 /**
- * How an occurrence of a patent reference came to be recorded.
- *
  * **When to use**
  *
  * Use as the durable record of how an event entered the system. It does not
@@ -198,8 +186,6 @@ export const PatentCitationDiscovery = S.Union([ExaminerObservedDiscovery, AiDis
 );
 
 /**
- * Runtime type for {@link PatentCitationDiscovery}.
- *
  * @see {@link PatentCitationDiscovery} for the runtime schema and gating rules.
  * @category models
  * @since 0.0.0
@@ -207,8 +193,6 @@ export const PatentCitationDiscovery = S.Union([ExaminerObservedDiscovery, AiDis
 export type PatentCitationDiscovery = typeof PatentCitationDiscovery.Type;
 
 /**
- * Machine-readable reason an observation could not be trusted as recorded.
- *
  * **Details**
  *
  * The vocabulary is intentionally small because no live producer exists yet:
@@ -235,8 +219,6 @@ export const PatentCitationQuarantineReason = PatentCitationQuarantineReasonBase
 );
 
 /**
- * Runtime type for {@link PatentCitationQuarantineReason}.
- *
  * @see {@link PatentCitationQuarantineReason} for the runtime schema and vocabulary policy.
  * @category models
  * @since 0.0.0
@@ -244,8 +226,6 @@ export const PatentCitationQuarantineReason = PatentCitationQuarantineReasonBase
 export type PatentCitationQuarantineReason = typeof PatentCitationQuarantineReason.Type;
 
 /**
- * Explicit quarantine marker attached to an observation.
- *
  * **When to use**
  *
  * Use when an observation was ingested but cannot be trusted as recorded, and

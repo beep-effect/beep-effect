@@ -83,8 +83,8 @@ export const qualityProfileConfigForTesting = (profile: QualityHardwareProfile):
         // concurrency (~10) stacking multi-GB tsgo processes on the smallest hosted
         // machines (instantiation census §5, archived with goals/quality-speedup in
         // beep-effect/beep-effect-goals-archive). The heavy lanes now run on
-        // beep-ec2-heavy fleet workers (64 GiB, 8 or 16 vCPU; see
-        // infra/src/CiFleetController.ts), so the cap is tuned for the 8-vCPU shapes;
+        // beep-fleet-heavy fleet workers (64 GiB, 8 or 16 vCPU; see
+        // packages/tooling/infra/ci-runners/src/Config.ts), so the cap is tuned for the 8-vCPU shapes;
         // the hosted 16GB Lint and Test Unit lanes keep their own cap in Ci/CiLane.ts.
         turboConcurrency: 4,
         policyLintConcurrency: 4,

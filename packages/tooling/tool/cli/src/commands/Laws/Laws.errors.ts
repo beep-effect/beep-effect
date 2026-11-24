@@ -397,6 +397,40 @@ export class NoTrackedPythonExecutionError extends S.TaggedError<
 }
 
 /**
+ * Failure raised when the comment law cannot read the policy, the shards, git or a source file.
+ *
+ * **Example** (Read a comment law execution error)
+ *
+ * ```ts
+ * import { CommentLawExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = CommentLawExecutionError.new("No merge base.")
+ * console.log(error.message) // "No merge base."
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CommentLawExecutionError extends S.TaggedError<
+  CommentLawExecutionError,
+  { readonly brand: unique symbol }
+>($I`CommentLawExecutionError`)(
+  "CommentLawExecutionError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<CommentLawExecutionError>("CommentLawExecutionError", {
+    description: "The comment law could not read its policy, its shards, git or a source file.",
+  })
+) {
+  static readonly new = (message: string): CommentLawExecutionError => CommentLawExecutionError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<CommentLawExecutionError, [message: string]>((cause, message) =>
+    CommentLawExecutionError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
  * Failure raised when the Markdown fence typecheck law cannot list, read, stage or compile the fences.
  *
  * **Example** (Read a Markdown fences execution error)
@@ -432,8 +466,6 @@ export class MarkdownFencesExecutionError extends S.TaggedError<
 }
 
 /**
- * Why the Markdown fence compiler run cannot be trusted as a verdict.
- *
  * **Details**
  *
  * `exit-without-diagnostics`: `tsrs` exited nonzero but printed no
@@ -462,8 +494,6 @@ export const MarkdownFencesCompilerFailureReason = LiteralKit([
 );
 
 /**
- * Type-level member of {@link MarkdownFencesCompilerFailureReason}.
- *
  * @category errors
  * @since 0.0.0
  */

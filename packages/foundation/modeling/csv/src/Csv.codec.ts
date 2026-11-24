@@ -57,22 +57,17 @@ import type { CsvRecord, CsvRecordSlice } from "./CsvTable.schema.ts";
 import type { MachineConfig } from "./internal/machine.ts";
 import type { Prepared } from "./internal/start.ts";
 
-// ── reading ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-
 type ReadOptions = CsvCodecOptions["read"];
 type WriteOptions = CsvCodecOptions["write"];
 
-/** Told after each piece how many records and characters are done, out of how many characters. */
-type OnPiece = (records: number, charsRead: number, charsTotal: number) => void;
+type OnPiece = (recordsDone: number, charsRead: number, charsTotal: number) => void;
 
 interface Ran {
   readonly diagnostics: ReadonlyArray<CsvDiagnostic>;
   readonly records: ReadonlyArray<CsvRecord>;
 }
 
-// crispen: kept as a loop — it drives the push machine piece by piece and stops at the first fatal finding; a fold
-// would visit every remaining piece, and recursion would overflow on one-character pieces.
-/** Runs the machine over the text in pieces of `pieceChars` characters. */
+// decision: imperative-engine-loops
 const run = (text: string, config: MachineConfig, pieceChars: number, onPiece: OnPiece): Ran => {
   const records: Array<CsvRecord> = [];
   const diagnostics: Array<CsvDiagnostic> = [];
@@ -131,7 +126,6 @@ const fatal = (finding: InvalidUtf8 | TooManyBytes): CsvParseError => parseError
 
 const byteSizeOf = (bytes: Uint8Array): ByteSize.ByteSize => ByteSize.bytes(BigInt(bytes.length));
 
-/** Bytes in the encoding the options fix; fixed UTF-8 must be valid. */
 const decodeFixed = (bytes: Uint8Array, encoding: CsvEncodingName): Result.Result<Decoded, CsvParseError> =>
   O.match(encoding === "utf-8" ? firstInvalidUtf8(bytes) : O.none(), {
     onSome: (byteOffset): Result.Result<Decoded, CsvParseError> => Result.fail(fatal(InvalidUtf8.make({ byteOffset }))),
@@ -142,7 +136,6 @@ const decodeFixed = (bytes: Uint8Array, encoding: CsvEncodingName): Result.Resul
       }),
   });
 
-/** The bytes in the encoding `detectEncoding` finds for them. */
 const decodeDetected = (bytes: Uint8Array): Decoded => {
   const encoding = detectEncoding({ bytes });
   return { text: decodeBytes({ bytes, encoding: encoding.encoding }), encoding };
@@ -151,7 +144,6 @@ const decodeDetected = (bytes: Uint8Array): Decoded => {
 const tooManyBytes = (actual: ByteSize.ByteSize, options: ReadOptions): CsvParseError =>
   fatal(TooManyBytes.make({ maximum: options.limits.maxInputBytes, actual }));
 
-/** Bytes to text, under the byte cap and the encoding rule. */
 const decodeInput = (bytes: Uint8Array, options: ReadOptions): Result.Result<Decoded, CsvParseError> => {
   const size = byteSizeOf(bytes);
   return ByteSize.isGreaterThan(size, options.limits.maxInputBytes)
@@ -187,12 +179,9 @@ const readBytes = (
 
 const WHOLE = Number.MAX_SAFE_INTEGER;
 
-// ── schema plumbing ──────────────────────────────────────────────────────────────────────────────────────────────────
-
 const issue = (error: CsvParseError, input: unknown): SchemaIssue.Issue =>
   new SchemaIssue.InvalidValue({ message: error.message }, input);
 
-/** A read's table, or its error as the issue a Schema codec fails with. */
 const tableOf = (read: Result.Result<CsvRead, CsvParseError>, input: unknown) =>
   Effect.mapBoth(Effect.fromResult(read), {
     onSuccess: (done) => done.table,
@@ -202,11 +191,9 @@ const tableOf = (read: Result.Result<CsvRead, CsvParseError>, input: unknown) =>
 const writeRecords = (records: ReadonlyArray<CsvRecord>, options: WriteOptions, opensText = true): string =>
   writeTable({ table: { records }, options, opensText });
 
-/** A header row's cells in the header's order; a missing heading is an empty cell. */
 const rowCells = (header: CsvRecord, row: CsvHeaderRow): CsvRecord =>
   A.map(header, (name) => O.getOrElse(R.get(row, name), () => ""));
 
-/** The header of rows to write: the first row's keys, which must be non-empty, and hold every later row's keys. */
 const headerOf = (rows: A.NonEmptyReadonlyArray<CsvHeaderRow>): Result.Result<CsvRecord, string> =>
   Result.flatMap(
     A.match(R.keys(A.headNonEmpty(rows)), {
@@ -238,15 +225,12 @@ const headerOf = (rows: A.NonEmptyReadonlyArray<CsvHeaderRow>): Result.Result<Cs
     }
   );
 
-/** The header rows as records, the header first; refused when the rows cannot be written and read back. */
 const headerRecords = (rows: ReadonlyArray<CsvHeaderRow>): Result.Result<ReadonlyArray<CsvRecord>, string> =>
   A.match(rows, {
     onEmpty: () => Result.succeed(A.empty()),
     onNonEmpty: (nonEmpty) =>
       Result.map(headerOf(nonEmpty), (header) => [header, ...A.map(nonEmpty, (row) => rowCells(header, row))]),
   });
-
-// ── streaming ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 const decodeStringChannel = <IE, Done>(
   options: ReadOptions
@@ -278,10 +262,8 @@ const bytesToText = <IE, Done>(
     Channel.mapEffect(flow(Result.mapBoth({ onSuccess: A.of, onFailure: parseError }), Effect.fromResult))
   );
 
-/** What closes written text: a BOM alone when no record came, as `stringify` writes an empty table, else the final
- * terminator when asked. */
-const ending = (first: boolean, options: WriteOptions): ReadonlyArray<string> => {
-  if (first) return options.bom ? ["\uFEFF"] : [];
+const ending = (noRecordWritten: boolean, options: WriteOptions): ReadonlyArray<string> => {
+  if (noRecordWritten) return options.bom ? ["\uFEFF"] : [];
   return options.finalTerminator ? [recordEndText(options.terminator)] : [];
 };
 
@@ -305,19 +287,17 @@ const encodeStringChannel = <IE, Done>(
     Channel.map(A.of)
   );
 
-/** The header-view rows of a stream's batch, or the error about its header. */
 type RowsEmitted = Result.Result<ReadonlyArray<CsvHeaderRow>, CsvParseError>;
 
 const cellsOf = (slice: CsvRecordSlice): CsvRecord => slice.cells;
 
-/** A batch of records against the header: the first batch names and checks it, once; later ones only use it. */
 const stepRows = (
-  seen: O.Option<CsvRecord>,
+  headerCheckedOnFirstBatch: O.Option<CsvRecord>,
   slices: A.NonEmptyReadonlyArray<CsvRecordSlice>
 ): readonly [O.Option<CsvRecord>, ReadonlyArray<RowsEmitted>] =>
-  O.match(seen, {
+  O.match(headerCheckedOnFirstBatch, {
     onSome: (header): readonly [O.Option<CsvRecord>, ReadonlyArray<RowsEmitted>] => [
-      seen,
+      headerCheckedOnFirstBatch,
       [Result.succeed(rowsOf(header, A.map(slices, cellsOf)))],
     ],
     onNone: () => {
@@ -335,8 +315,6 @@ const stepRows = (
       });
     },
   });
-
-// ── the facade ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Static entry points for reading and writing CSV. Not instantiable.

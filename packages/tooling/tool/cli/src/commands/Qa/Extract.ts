@@ -353,8 +353,6 @@ const probeDuration = Effect.fn("QaExtract.probeDuration")(function* (videoPath:
 });
 
 /**
- * A round's video prepared for frame-accurate extraction.
- *
  * **Details**
  *
  * Playwright's live-muxed webm carries no container duration, which makes
@@ -599,8 +597,6 @@ const embedProvenance = Effect.fn("QaExtract.embedProvenance")(function* (
 });
 
 /**
- * Artifacts produced by one extraction run, plus everything that went wrong.
- *
  * **Details**
  *
  * Driver and provenance failures are collected instead of raised so a partial

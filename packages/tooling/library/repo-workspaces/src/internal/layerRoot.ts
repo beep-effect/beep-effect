@@ -49,8 +49,6 @@ export class LayerRootOptions extends S.Opaque<LayerRootOptions, { readonly bran
   )
 ) {}
 /**
- * Companion types for {@link LayerRootOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

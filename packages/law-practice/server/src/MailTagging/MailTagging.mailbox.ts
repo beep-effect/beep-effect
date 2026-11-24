@@ -58,15 +58,12 @@ import type { EmailString } from "@beep/schema/Email";
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.mailbox");
 
 const defaultPageSize = 50;
-// Graph well-known folder names of the folders that are never tagged (D-12); drafts are filtered by `isDraft`.
-const outOfScopeFolders = ["deleteditems", "junkemail"];
+const neverTaggedWellKnownFolderNames = ["deleteditems", "junkemail"];
 const fileAttachmentType = "#microsoft.graph.fileAttachment";
 const preconditionFailed = 412;
 const notFound = 404;
 
 /**
- * Configuration of the `@beep/m365` mailbox adapter.
- *
  * **Details**
  *
  * `userId` is the mailbox address or object id; every driver request carries
@@ -145,8 +142,7 @@ const decodeConversationId = S.decodeUnknownOption(MailConversationId);
 const decodeAttachmentId = S.decodeUnknownOption(MailAttachmentId);
 const decodeCursor = S.decodeUnknownOption(MailPageCursor);
 
-// A request the driver's own schema rejects never reaches Graph; it fails the way the driver reports it.
-const encoded =
+const checkedByDriverSchemaBeforeGraph =
   <Request>(decode: (input: unknown) => Effect.Effect<Request, S.SchemaError>) =>
   (input: unknown): Effect.Effect<Request, M365Error> =>
     Effect.mapError(decode(input), () => M365Error.fromReason("request encoding", { resource: "messages" }));
@@ -157,8 +153,7 @@ const statusText = (error: M365Error): string =>
     onSome: (status) => `${error.reason} ${status}`,
   });
 
-// Reason and status only: a driver error also carries the request URL, which names the mailbox.
-const portFailure =
+const portFailureWithoutMailboxNamingUrl =
   (operation: string) =>
   (error: M365Error): MailTaggingPortError =>
     M365ErrorReason.is.throttled(error.reason)
@@ -237,8 +232,10 @@ const attachmentMetaOf = (attachment: GraphAttachment): O.Option<MailAttachmentM
     })
   );
 
-// The caller's edit, replayed on what the message carries now: its removals leave, its additions join.
-const replayed = (fresh: ReadonlyArray<string>, request: SetCategoriesRequest): ReadonlyArray<string> =>
+const replayCallerEditOnCurrentCategories = (
+  fresh: ReadonlyArray<string>,
+  request: SetCategoriesRequest
+): ReadonlyArray<string> =>
   A.union(
     A.difference(fresh, A.difference(request.expected, request.categories)),
     A.difference(request.categories, request.expected)
@@ -248,16 +245,16 @@ const makeMailbox = Effect.gen(function* () {
   const m365 = yield* M365;
   const options = yield* MailboxM365Options;
   const userId = options.userId;
-  // Resolved once per layer build; a failed lookup fails the build, so nothing is scanned with an unknown exclusion set.
-  const resolved = yield* Effect.forEach(
-    outOfScopeFolders,
-    (folder) => Effect.flatMap(encoded(decodeFolderRequest)({ userId, folder }), m365.getMailFolder),
+  const excludedFoldersResolvedOnceOrBuildFails = yield* Effect.forEach(
+    neverTaggedWellKnownFolderNames,
+    (folder) =>
+      Effect.flatMap(checkedByDriverSchemaBeforeGraph(decodeFolderRequest)({ userId, folder }), m365.getMailFolder),
     { concurrency: 1 }
-  ).pipe(Effect.mapError(portFailure("resolveExcludedFolders")));
+  ).pipe(Effect.mapError(portFailureWithoutMailboxNamingUrl("resolveExcludedFolders")));
   const inScope = isInScope(
     HashSet.fromIterable(
       A.appendAll(
-        A.map(resolved, (folder) => folder.id),
+        A.map(excludedFoldersResolvedOnceOrBuildFails, (folder) => folder.id),
         options.excludedFolderIds
       )
     )
@@ -276,11 +273,14 @@ const makeMailbox = Effect.gen(function* () {
     });
 
   const getMessage = (messageId: MailMessageId) =>
-    Effect.flatMap(encoded(decodeGetRequest)({ userId, messageId, bodyContentType: "text" }), m365.getMessage);
+    Effect.flatMap(
+      checkedByDriverSchemaBeforeGraph(decodeGetRequest)({ userId, messageId, bodyContentType: "text" }),
+      m365.getMessage
+    );
 
   const writeCategories = (messageId: MailMessageId, categories: ReadonlyArray<string>, changeKey: O.Option<string>) =>
     Effect.flatMap(
-      encoded(decodeUpdateRequest)({
+      checkedByDriverSchemaBeforeGraph(decodeUpdateRequest)({
         userId,
         messageId,
         categories: A.filter(categories, Str.isNonEmpty),
@@ -293,7 +293,7 @@ const makeMailbox = Effect.gen(function* () {
     const fresh = yield* getMessage(request.messageId);
     return yield* writeCategories(
       request.messageId,
-      replayed(
+      replayCallerEditOnCurrentCategories(
         O.getOrElse(fresh.categories, (): ReadonlyArray<string> => []),
         request
       ),
@@ -303,9 +303,10 @@ const makeMailbox = Effect.gen(function* () {
 
   return MailboxShape.make({
     listMessagesSince: Effect.fn("MailboxM365.listMessagesSince")(function* (request: ListMessagesSinceRequest) {
-      const page = yield* Effect.flatMap(encoded(decodeListRequest)(listRequest(request)), m365.listMessages).pipe(
-        Effect.mapError(portFailure("listMessagesSince"))
-      );
+      const page = yield* Effect.flatMap(
+        checkedByDriverSchemaBeforeGraph(decodeListRequest)(listRequest(request)),
+        m365.listMessages
+      ).pipe(Effect.mapError(portFailureWithoutMailboxNamingUrl("listMessagesSince")));
       return MailPage.make({
         envelopes: A.getSomes(A.map(A.filter(page.value, inScope), envelopeOf)),
         next: O.flatMap(page["@odata.nextLink"], decodeCursor),
@@ -315,39 +316,51 @@ const makeMailbox = Effect.gen(function* () {
       getMessage(messageId).pipe(
         Effect.map(envelopeOf),
         Effect.catchIf(isMissing, () => Effect.succeedNone),
-        Effect.mapError(portFailure("getEnvelope"))
+        Effect.mapError(portFailureWithoutMailboxNamingUrl("getEnvelope"))
       ),
     setCategories: (request: SetCategoriesRequest) =>
       writeCategories(request.messageId, request.categories, request.changeKey).pipe(
         Effect.catchIf(isStale, () => rewriteOnFresh(request)),
-        Effect.mapError(portFailure("setCategories")),
+        Effect.mapError(portFailureWithoutMailboxNamingUrl("setCategories")),
         Effect.asVoid
       ),
     ensureMasterCategories: (intents: ReadonlyArray<MasterCategoryIntent>) =>
       Effect.flatMap(
-        encoded(decodeEnsureRequest)({
+        checkedByDriverSchemaBeforeGraph(decodeEnsureRequest)({
           userId,
           categories: A.map(intents, (intent) => ({ displayName: intent.displayName, color: intent.color })),
         }),
         m365.ensureMasterCategories
       ).pipe(
         Effect.mapBoth({
-          onFailure: portFailure("ensureMasterCategories"),
+          onFailure: portFailureWithoutMailboxNamingUrl("ensureMasterCategories"),
           onSuccess: (ensured) => ensured.created.length,
         })
       ),
     listAttachments: (messageId: MailMessageId) =>
-      Effect.flatMap(encoded(decodeAttachmentsRequest)({ userId, messageId }), m365.listMessageAttachments).pipe(
+      Effect.flatMap(
+        checkedByDriverSchemaBeforeGraph(decodeAttachmentsRequest)({ userId, messageId }),
+        m365.listMessageAttachments
+      ).pipe(
         Effect.mapBoth({
-          onFailure: portFailure("listAttachments"),
+          onFailure: portFailureWithoutMailboxNamingUrl("listAttachments"),
           onSuccess: (attachments) => A.getSomes(A.map(attachments.value, attachmentMetaOf)),
         })
       ),
     downloadAttachment: (request: DownloadAttachmentRequest) =>
       Effect.flatMap(
-        encoded(decodeDownloadRequest)({ userId, messageId: request.messageId, attachmentId: request.attachmentId }),
+        checkedByDriverSchemaBeforeGraph(decodeDownloadRequest)({
+          userId,
+          messageId: request.messageId,
+          attachmentId: request.attachmentId,
+        }),
         m365.downloadMessageAttachment
-      ).pipe(Effect.mapBoth({ onFailure: portFailure("downloadAttachment"), onSuccess: (content) => content.bytes })),
+      ).pipe(
+        Effect.mapBoth({
+          onFailure: portFailureWithoutMailboxNamingUrl("downloadAttachment"),
+          onSuccess: (content) => content.bytes,
+        })
+      ),
   });
 });
 

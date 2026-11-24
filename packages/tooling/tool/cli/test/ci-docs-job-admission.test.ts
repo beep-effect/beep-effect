@@ -670,8 +670,8 @@ it.effect(
         file: "check.yml",
         shortcut: O.some(docsOnlyFromThisRepository),
         docsIndex: 0,
-        setupIndex: 2,
-        decideIndex: 3,
+        setupIndex: 1,
+        decideIndex: 2,
         stepGuard: undefined,
         profile: "needs.change-profile.outputs.docs_only",
         guard: "",
@@ -680,9 +680,9 @@ it.effect(
       {
         file: "heavy-admit.yml",
         shortcut: O.none<string>(),
-        docsIndex: 5,
-        setupIndex: 6,
-        decideIndex: 7,
+        docsIndex: 4,
+        setupIndex: 5,
+        decideIndex: 6,
         stepGuard: "env.ADMISSION_LABEL_EVENT == 'true' && steps.docs.outputs.verdict != 'skip-satisfied'",
         profile: "steps.profile.outputs.docs_only",
         guard: "env.ADMISSION_LABEL_EVENT == 'true' && ",
@@ -1512,7 +1512,7 @@ it.effect(
         assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "timeout-minutes"]), contract.timeout);
         assert.strictEqual(
           yamlAt(workflow, ["jobs", contract.job, "runs-on"]),
-          file === "heavy.yml" ? "beep-ec2-heavy" : "ubuntu-24.04"
+          file === "heavy.yml" ? "beep-fleet-heavy" : "ubuntu-24.04"
         );
         assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "permissions"]), { contents: "read" });
         assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "steps"]), steps);

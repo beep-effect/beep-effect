@@ -42,17 +42,21 @@ const loadVocabulary = Effect.fnUntraced(function* () {
     NodeURL.fileURLToPath(new URL("../assets/citation/semantic-editions.json", import.meta.url))
   );
 });
-// The original "eyecite" shortcut is a complete raw outcome without native
-// tokenizer work, so its semantic meaning comes from the real projection stage.
 const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimits> = {}) {
   const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
   const vocabulary = yield* loadVocabulary();
-  const semantic = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
-    editions: [],
-    vocabulary,
-  }).pipe(Effect.provideContext(setup.provided));
+  const realProjectionGivingTokenizerFreeShortcutItsMeaning = yield* makeCitationSemanticProjection(
+    setup.limits,
+    setup.runtime,
+    {
+      editions: [],
+      vocabulary,
+    }
+  ).pipe(Effect.provideContext(setup.provided));
   const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
-  const citations = yield* Effect.forEach(models, semantic.project, { concurrency: 1 });
+  const citations = yield* Effect.forEach(models, realProjectionGivingTokenizerFreeShortcutItsMeaning.project, {
+    concurrency: 1,
+  });
   const stage = yield* makeCitationOccurrenceProjection({ ...setup.limits, ...narrow }, setup.runtime, {
     engineArtifact: artifact,
   }).pipe(Effect.provideContext(setup.provided));
@@ -110,14 +114,17 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("occurrence 
         deepStrictEqual(refusal(mismatch), { _tag: "CitationOccurrenceProjectionFailure", detail: "source-mismatch" });
         const missing = yield* stage.project({ source: eyecite, result: shortcut(models, []) }).pipe(Effect.flip);
         deepStrictEqual(refusal(missing), { _tag: "CitationOccurrenceProjectionFailure", detail: "invalid-input" });
-        // A shortcut binds one original model id; a second row has no id to claim.
         const doubled = yield* stage
           .project({
             source: eyecite,
             result: shortcut(A.appendAll(models, models), A.appendAll(citations, citations)),
           })
           .pipe(Effect.flip);
-        deepStrictEqual(refusal(doubled), { _tag: "CitationOccurrenceProjectionFailure", detail: "invalid-input" });
+        deepStrictEqual(
+          refusal(doubled),
+          { _tag: "CitationOccurrenceProjectionFailure", detail: "invalid-input" },
+          "a shortcut binds one original model id; a second row has no id to claim"
+        );
       })
     )
   );

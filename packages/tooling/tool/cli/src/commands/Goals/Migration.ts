@@ -174,8 +174,6 @@ export const COMPLETION_GATE_STATEMENT =
   "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).";
 
 /**
- * One recorded backfill decision for a manifest-less packet.
- *
  * **Example** (Make backfill decision record)
  *
  * ```ts
@@ -327,8 +325,6 @@ export const buildBackfillManifestText: {
 });
 
 /**
- * Planned migration outcome for one goal packet.
- *
  * **Details**
  *
  * `manifestText`/`readmeText` are present only when the surface changes;

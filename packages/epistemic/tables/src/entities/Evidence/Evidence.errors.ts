@@ -13,9 +13,6 @@ const $I = $EpistemicTablesId.create("entities/Evidence/Evidence.errors");
 const EvidenceConverterOperation = LiteralKit(["toInsert", "fromRow"]);
 
 /**
- * Schema conversion failed while projecting an Evidence across the persistence
- * boundary.
- *
  * **Example** (Construct converter error)
  *
  * ```ts

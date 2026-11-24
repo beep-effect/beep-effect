@@ -15,6 +15,7 @@ import {
   checkAppend,
   declaresFormat,
   eventLine,
+  LineFormat,
   legacyMissingFacts,
   lineDigest,
   readClaimHistory,
@@ -57,19 +58,21 @@ export const KbClaimsV1Row = frozen.ClaimsV1Row;
  * @category schemas
  * @since 0.0.0
  */
-export const KbAssertionV1Row = S.Struct({
-  id: fields.id,
-  claimId: fields.id,
-  captureId: fields.captureId,
-  sourceRef: fields.sourceRef,
-  selector: fields.selector,
-  quote: fields.quote,
-  quoteDigest: fields.quoteDigest,
-  audience: fields.audience,
-  derivation: fields.derivation,
-  review: fields.review,
-  outcome: fields.outcome,
-}).pipe($I.annoteSchema("KbAssertionV1Row", { description: "One frozen untagged kb assertion/v1 line." }));
+export class KbAssertionV1Row extends S.Opaque<KbAssertionV1Row, { readonly brand: unique symbol }>()(
+  S.Struct({
+    id: fields.id,
+    claimId: fields.id,
+    captureId: fields.captureId,
+    sourceRef: fields.sourceRef,
+    selector: fields.selector,
+    quote: fields.quote,
+    quoteDigest: fields.quoteDigest,
+    audience: fields.audience,
+    derivation: fields.derivation,
+    review: fields.review,
+    outcome: fields.outcome,
+  }).pipe($I.annoteSchema("KbAssertionV1Row", { description: "One frozen untagged kb assertion/v1 line." }))
+) {}
 
 /**
  * Content-addressed arrows bound to the knowledge claim core.
@@ -87,8 +90,8 @@ export const kbArrows = makeClaimArrows({ $I, ClaimCore: KbClaimCore });
  */
 export type KbClaimLine = ClaimLine<KbLegacyImported, KbCoreEvent, KbReviewState, KbEvidenceSignals>;
 
-const isClaimEvent = declaresFormat({ key: "version", version: "kb-claim-record/v2" });
-const isAssertionV2 = declaresFormat({ key: "version", version: "kb-assertion/v2" });
+const isClaimEvent = declaresFormat(LineFormat.make({ key: "version", version: "kb-claim-record/v2" }));
+const isAssertionV2 = declaresFormat(LineFormat.make({ key: "version", version: "kb-assertion/v2" }));
 const decodeEvent = S.decodeUnknownEffect(KbClaimEvent);
 const decodeV1 = S.decodeUnknownEffect(KbClaimsV1Row);
 const decodeAssertion = S.decodeUnknownEffect(Assertion);

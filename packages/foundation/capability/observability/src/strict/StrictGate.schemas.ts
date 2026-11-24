@@ -26,8 +26,6 @@ import { TelemetryDurationBucket, TelemetryRefusalTag } from "../Observability.i
 const $I = $ObservabilityId.create("strict/StrictGate.schemas");
 
 /**
- * One switch of the strict gate, one per kind of data it drops or rewrites.
- *
  * **Details**
  *
  * Production runs with every rule on. A rule exists as a switch only so a
@@ -65,16 +63,12 @@ export const GateRule = LiteralKit([
 );
 
 /**
- * Runtime type for {@link GateRule}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GateRule = typeof GateRule.Type;
 
 /**
- * Whether each {@link GateRule} is on.
- *
  * **Example** (Decode a rule table)
  *
  * ```ts import.meta.vitest name="Decode a rule table"
@@ -94,8 +88,6 @@ export const GateRules = S.Record(GateRule, S.Boolean).pipe(
 );
 
 /**
- * Runtime type for {@link GateRules}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -283,8 +275,6 @@ export const HmacTraceId = S.String.check(
 );
 
 /**
- * Runtime type for {@link HmacTraceId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -323,8 +313,6 @@ export const HmacSpanId = S.String.check(
 );
 
 /**
- * Runtime type for {@link HmacSpanId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -476,8 +464,6 @@ export const RefusalLedger = S.HashMap(TelemetryRefusalTag, S.Natural).pipe(
 );
 
 /**
- * Runtime type for {@link RefusalLedger}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -504,8 +490,6 @@ export const StrictSignal = LiteralKit(["traces", "metrics", "logs"]).pipe(
 );
 
 /**
- * Runtime type for {@link StrictSignal}.
- *
  * @category models
  * @since 0.0.0
  */

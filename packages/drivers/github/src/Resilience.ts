@@ -46,7 +46,6 @@ export const CredentialFingerprint = S.String.check(S.isPattern(/^[0-9a-f]{12}$/
 );
 
 /**
- * Type of {@link CredentialFingerprint}.
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +78,6 @@ export const credentialFingerprint = Effect.fn("Resilience.credentialFingerprint
 }, Effect.scoped);
 
 /**
- * The GitHub rate-limit bucket a request counted against.
- *
  * **Details**
  *
  * The literal set is the `GET /rate_limit` `resources` keys GitHub documents,
@@ -125,8 +122,6 @@ export const GitHubRateLimitResource = LiteralKit([
 );
 
 /**
- * The values accepted by {@link GitHubRateLimitResource}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -134,8 +129,6 @@ export const GitHubRateLimitResource = LiteralKit([
 export type GitHubRateLimitResource = typeof GitHubRateLimitResource.Type;
 
 /**
- * What GitHub's rate-limit headers said on the most recent REST response.
- *
  * **Details**
  *
  * Every REST response carries `x-ratelimit-remaining`, `x-ratelimit-limit` and
@@ -237,8 +230,6 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot, { readonly bra
 }
 
 /**
- * Whether an observed request went to REST or GraphQL.
- *
  * **Example** (Recognise a GraphQL observation)
  *
  * ```ts
@@ -258,8 +249,6 @@ export const RateLimitRequestKind = LiteralKit(["rest", "graphql"]).pipe(
 );
 
 /**
- * The values accepted by {@link RateLimitRequestKind}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -293,8 +282,6 @@ export const RateLimitOutcome = LiteralKit(["ok", "not-modified", "rate-limited"
 );
 
 /**
- * The values accepted by {@link RateLimitOutcome}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -302,8 +289,6 @@ export const RateLimitOutcome = LiteralKit(["ok", "not-modified", "rate-limited"
 export type RateLimitOutcome = typeof RateLimitOutcome.Type;
 
 /**
- * The kind of credential an observed request carried.
- *
  * **Details**
  *
  * `token` is a bearer token (a personal, OAuth or installation token),
@@ -327,8 +312,6 @@ export const RateLimitCredential = LiteralKit(["token", "app-jwt", "unauthentica
 );
 
 /**
- * The values accepted by {@link RateLimitCredential}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -336,8 +319,6 @@ export const RateLimitCredential = LiteralKit(["token", "app-jwt", "unauthentica
 export type RateLimitCredential = typeof RateLimitCredential.Type;
 
 /**
- * One GitHub response's rate-limit headers, with the context the transport knows.
- *
  * **Details**
  *
  * The transport emits one observation per HTTP attempt to the
@@ -479,8 +460,6 @@ export const RateLimitSink: Context.Reference<RateLimitSinkShape> = Context.Refe
 );
 
 /**
- * The shape {@link RetryPolicy} needs from a failure to decide anything.
- *
  * **Details**
  *
  * Declared structurally so this module imports no error class. That keeps the
@@ -523,8 +502,6 @@ export class RetryableFailure extends S.Opaque<RetryableFailure, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link RetryableFailure}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -540,8 +517,6 @@ export declare namespace RetryableFailure {
 }
 
 /**
- * How the client retries a failed request.
- *
  * **Details**
  *
  * There is exactly **one** retry policy in this package, and it is wired into

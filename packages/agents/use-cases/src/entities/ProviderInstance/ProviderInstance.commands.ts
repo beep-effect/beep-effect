@@ -22,8 +22,6 @@ const configurationFields = {
 };
 
 /**
- * Adds one provider instance.
- *
  * **Example** (Make add provider command)
  *
  * ```ts
@@ -53,8 +51,6 @@ export class AddProviderInstanceCommand extends S.Opaque<
 ) {}
 
 /**
- * Updates one provider instance's configuration.
- *
  * **Example** (Make update provider command)
  *
  * ```ts
@@ -88,8 +84,6 @@ export class UpdateProviderInstanceCommand extends S.Opaque<
 ) {}
 
 /**
- * Removes one provider instance.
- *
  * **Example** (Make remove provider command)
  *
  * ```ts
@@ -134,8 +128,6 @@ export class ProbeProviderInstanceCommand extends S.Opaque<
 ) {}
 
 /**
- * Loads one provider instance by id.
- *
  * **Example** (Make get provider query)
  *
  * ```ts
@@ -154,8 +146,6 @@ export class GetProviderInstanceQuery extends S.Opaque<GetProviderInstanceQuery,
 ) {}
 
 /**
- * Lists all provider instances.
- *
  * **Example** (Make list providers query)
  *
  * ```ts

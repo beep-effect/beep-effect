@@ -49,8 +49,6 @@ const MONTH_PREFIX_LENGTH = 7;
 const textEncoder = new TextEncoder();
 
 /**
- * How a send ended.
- *
  * **Details**
  *
  * `sent`: Graph accepted the send. `refused`: nothing was sent, because the
@@ -74,8 +72,6 @@ export const OutboxSendOutcome = LiteralKit(["sent", "refused", "unknown"]).pipe
 );
 
 /**
- * Type for {@link OutboxSendOutcome}.
- *
  * **Example** (Type a send outcome)
  *
  * ```ts
@@ -99,8 +95,6 @@ const stamp = {
 const addresses = (description: string) => S.Array(S.String).annotateKey({ description });
 
 /**
- * Audit record of a draft the server created.
- *
  * **Details**
  *
  * Its existence is what lets `send_draft` send the draft and `delete_draft`
@@ -155,8 +149,6 @@ export class OutboxDraftCreatedRecord extends S.Opaque<OutboxDraftCreatedRecord,
 ) {}
 
 /**
- * Audit record of a draft the server deleted.
- *
  * **Example** (Record a deleted draft)
  *
  * ```ts
@@ -227,8 +219,6 @@ export class OutboxSendIntentRecord extends S.Opaque<OutboxSendIntentRecord, { r
 ) {}
 
 /**
- * Audit record of how a send ended.
- *
  * **Example** (Record a refused send)
  *
  * ```ts
@@ -266,8 +256,6 @@ export class OutboxSendOutcomeRecord extends S.Opaque<OutboxSendOutcomeRecord, {
 ) {}
 
 /**
- * Audit record of a calendar event the server created.
- *
  * **Details**
  *
  * Its existence is what lets `update_event` change the event later.
@@ -301,8 +289,6 @@ export class OutboxEventCreatedRecord extends S.Opaque<OutboxEventCreatedRecord,
 ) {}
 
 /**
- * Audit record of a calendar event the server updated.
- *
  * **Example** (Record an updated event)
  *
  * ```ts
@@ -333,8 +319,6 @@ export class OutboxEventUpdatedRecord extends S.Opaque<OutboxEventUpdatedRecord,
 ) {}
 
 /**
- * Why `check_drafts` retired a draft.
- *
  * **Details**
  *
  * `sent`: the message is no longer a draft, because a person sent it from
@@ -357,8 +341,6 @@ export const OutboxDraftClosedReason = LiteralKit(["sent", "missing"]).pipe(
 );
 
 /**
- * Type for {@link OutboxDraftClosedReason}.
- *
  * **Example** (Type a closing reason)
  *
  * ```ts
@@ -374,8 +356,6 @@ export const OutboxDraftClosedReason = LiteralKit(["sent", "missing"]).pipe(
 export type OutboxDraftClosedReason = typeof OutboxDraftClosedReason.Type;
 
 /**
- * Audit record of the stale-basis category being set on a draft.
- *
  * **Details**
  *
  * Its existence, as the latest mark or clear record of the draft, is how the
@@ -420,8 +400,6 @@ export class OutboxDraftBasisMarkedRecord extends S.Opaque<
 ) {}
 
 /**
- * Audit record of the stale-basis category being removed from a draft.
- *
  * **Example** (Record a clear)
  *
  * ```ts
@@ -455,9 +433,6 @@ export class OutboxDraftBasisClearedRecord extends S.Opaque<
 ) {}
 
 /**
- * Audit record of `check_drafts` retiring a draft that was sent or is
- * missing.
- *
  * **Details**
  *
  * A closed draft is no longer checked. The attorney sends drafts from
@@ -539,8 +514,6 @@ export class OutboxDraftIdentifiedRecord extends S.Opaque<
 ) {}
 
 /**
- * One line of the outbox audit log.
- *
  * **Example** (Match a record by tag)
  *
  * ```ts
@@ -575,8 +548,6 @@ export const OutboxAuditRecord = S.Union([
 );
 
 /**
- * Type for {@link OutboxAuditRecord}.
- *
  * **Example** (Read a record's tag)
  *
  * ```ts
@@ -716,8 +687,6 @@ export const openOutboxDrafts = (records: ReadonlyArray<OutboxAuditRecord>): Rea
 };
 
 /**
- * Which audit log step failed.
- *
  * **Example** (Guard an audit failure reason)
  *
  * ```ts
@@ -735,8 +704,6 @@ export const OutboxAuditErrorReason = LiteralKit(["directory", "append", "read"]
 );
 
 /**
- * Type for {@link OutboxAuditErrorReason}.
- *
  * **Example** (Type an audit failure reason)
  *
  * ```ts
@@ -752,8 +719,6 @@ export const OutboxAuditErrorReason = LiteralKit(["directory", "append", "read"]
 export type OutboxAuditErrorReason = typeof OutboxAuditErrorReason.Type;
 
 /**
- * Typed failure of the outbox audit log.
- *
  * **Example** (Construct an audit failure)
  *
  * ```ts

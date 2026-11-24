@@ -73,15 +73,12 @@ export const Coverage = LiteralKit(["collected-custodian", "appears-only"]).pipe
   $I.annoteSchema("Coverage", { description: "Whether a party's mailbox was collected." })
 );
 /**
- * Decoded Coverage type.
  * @category models
  * @since 0.0.0
  */
 export type Coverage = typeof Coverage.Type;
 
 /**
- * A derived operational assessment.
- *
  * **Example** (Decode OperationalAssessment)
  * ```ts
  * import { OperationalAssessment } from "@beep/party-domain/Hierarchy"
@@ -180,8 +177,6 @@ export class CoverageGap extends S.Opaque<CoverageGap, { readonly brand: unique 
   )
 ) {}
 /**
- * Divergence public schema for the hierarchy model.
- *
  * **Example** (Decode Divergence)
  * ```ts
  * import { Divergence } from "@beep/party-domain/Hierarchy"
@@ -196,7 +191,6 @@ export const Divergence = S.Union([InvertedAuthority, ShadowGate, PhantomManager
   $I.annoteSchema("Divergence", { description: "Declared vs operational lead." })
 );
 /**
- * Decoded Divergence type.
  * @category models
  * @since 0.0.0
  */

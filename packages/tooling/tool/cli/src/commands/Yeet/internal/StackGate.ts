@@ -36,8 +36,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/StackGate");
 const sha10 = Str.slice(0, 10);
 
 /**
- * Why the merge gate holds on a stack layout before it decides any layer.
- *
  * **Details**
  *
  * - `stack-unknown`: the stack read failed, the stack does not list the pull
@@ -72,8 +70,6 @@ export const YeetStackGateHoldReason = LiteralKit([
 );
 
 /**
- * Why the merge gate holds on a stack layout before it decides any layer.
- *
  * @category models
  * @since 0.0.0
  */
@@ -330,8 +326,6 @@ export const readYeetStackContainment = Effect.fn("Yeet.readStackContainment")(f
 });
 
 /**
- * One layer a stack merge landed, with its own squash commit.
- *
  * **Example** (The lower layer of a merged stack)
  *
  * ```ts

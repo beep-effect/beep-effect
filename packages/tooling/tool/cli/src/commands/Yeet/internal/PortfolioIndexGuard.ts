@@ -90,8 +90,6 @@ export const PortfolioIndexPublishDisposition = LiteralKit([
 );
 
 /**
- * Type-level union of derived goals-index publish dispositions.
- *
  * **Example** (Annotate a value as PortfolioIndexPublishDisposition)
  *
  * ```ts

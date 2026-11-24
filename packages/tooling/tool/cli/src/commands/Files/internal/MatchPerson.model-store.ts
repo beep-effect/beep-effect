@@ -184,8 +184,6 @@ class InstalledArtifactExpectation extends S.Opaque<InstalledArtifactExpectation
 ) {}
 
 /**
- * Canonical paths prepared for the AdaFace worker.
- *
  * **Example** (Describe prepared paths)
  *
  * ```ts

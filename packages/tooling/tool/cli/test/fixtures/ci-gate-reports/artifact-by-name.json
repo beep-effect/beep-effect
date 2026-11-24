@@ -1,0 +1,14 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 14763290472,
+      "node_id": "MDg6QXJ0aWZhY3QxNDc2MzI5MDQ3Mg==",
+      "name": "task-outcomes-45042229032-2-test-unit-shard-unit-e",
+      "size_in_bytes": 2310,
+      "expired": false,
+      "created_at": "2026-11-22T11:09:41Z",
+      "expires_at": "2026-12-22T11:09:41Z"
+    }
+  ]
+}

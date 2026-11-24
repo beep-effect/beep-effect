@@ -21,19 +21,21 @@ const Keyword = LiteralKit(["eyecite"]).pipe(
   })
 );
 const isKeyword = S.is(Keyword);
-// Every literal below is ASCII in the authenticated upstream initializer. This
-// is static data encoding, never conversion of arbitrary source Unicode.
-const ascii = (literal: string) =>
+const staticUpstreamAsciiLiteralNotSourceUnicode = (literal: string) =>
   CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(literal) });
 const joke: ReadonlyArray<CitationFullExtractionResult> = [
   CitationFullExtractionResult.make({
     index: 0,
     token: CitationTokenSeed.make({
       kind: "CitationToken",
-      data: ascii("1 FLP 1"),
+      data: staticUpstreamAsciiLiteralNotSourceUnicode("1 FLP 1"),
       start: 0,
       end: 99,
-      groups: { volume: ascii("1"), reporter: ascii("FLP"), page: ascii("1") },
+      groups: {
+        volume: staticUpstreamAsciiLiteralNotSourceUnicode("1"),
+        reporter: staticUpstreamAsciiLiteralNotSourceUnicode("FLP"),
+        page: staticUpstreamAsciiLiteralNotSourceUnicode("1"),
+      },
       exact: [],
       variation: [],
       short: false,
@@ -41,8 +43,8 @@ const joke: ReadonlyArray<CitationFullExtractionResult> = [
     outcome: CitationFullExtractionOutcome.cases.FullCaseCitation.make({
       metadata: CitationCaseMetadataFields.make({
         ...makeCitationEmptyCaseMetadata(),
-        year: ascii("2021"),
-        extra: ascii("Eyecite is a collaborative community effort."),
+        year: staticUpstreamAsciiLiteralNotSourceUnicode("2021"),
+        extra: staticUpstreamAsciiLiteralNotSourceUnicode("Eyecite is a collaborative community effort."),
       }),
       year: null,
       editionGuess: null,

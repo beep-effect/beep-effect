@@ -98,8 +98,6 @@ import type { McpCallerIdentity, TierGateSettlement, ToolCallRequest } from "@be
 const $I = $ExecutionAuthorityServerId.create("GovernedTierGate/GovernedTierGate.gate");
 
 /**
- * Session-static inputs the composition root supplies to the governed gate.
- *
  * **Details**
  *
  * The gate cannot name the tools it governs — that would be a slice-to-slice

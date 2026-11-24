@@ -94,9 +94,6 @@ export class DpapiPort extends Context.Service<
 >()($I`DpapiPort`) {}
 
 /**
- * The stored telemetry root key: its epoch, the path that wrapped it, and
- * the wrapped bytes.
- *
  * **Example** (Describe a key file)
  *
  * ```ts

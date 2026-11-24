@@ -47,7 +47,7 @@ export const ownCitationSourceExtraction = Effect.fn("Citation.ownSourceExtracti
 ) {
   const source = yield* makeCitationSourceRequestAdapter(limits);
   const semantic = yield* ownCitationSemanticExtraction(limits, ownedField(config, "extraction"));
-  // Installed once; an install failure surfaces where each request used to install it.
+  // decision: citation-stage-install-once-exit-replay
   const extraction = yield* Effect.exit(
     makeCitationVerifiedExtraction(limits, runtime, config).pipe(Effect.provideContext(semantic.children))
   );

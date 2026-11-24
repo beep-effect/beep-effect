@@ -69,8 +69,6 @@ const eventInput = {
   supersedes: null,
 };
 
-// One stored row, exactly as `toPatentCitationEventInsert` wrote `eventInput` before the anchor schemas changed
-// package. Rows on disk keep these bytes: the literal is never regenerated.
 const frozenEventRow =
   '{"createdAt":1,"rowVersion":1,"updatedAt":2,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"actor":"Applicant","citingApplication":{"applicationNumber":"16138242","kind":"UsptoNormalized"},"discovery":{"kind":"AiDiscovered","model":{"name":"reference-extractor","version":"3"}},"grounding":{"anchor":{"startChar":0,"endChar":4,"quote":"fact"},"source":{"scopeRef":"matter:candor","sourceRef":"source:office-action","locator":"office-action.txt","sourceDigest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","textDigest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","extractor":{"name":"utf8","version":"1"},"normalizationVersion":"1"}},"observedAt":1,"possibleDuplicateOf":null,"quarantine":null,"reference":{"number":"7654321"},"supersedes":null,"entityType":"LawPracticePatentCitationEvent","publicId":"law_practice_patent_citation_event_a1","id":1}';
 const RowJson = S.fromJsonString(S.Unknown);
@@ -193,7 +191,7 @@ describe("PatentCitationEvent converters", () => {
   );
 
   it.effect(
-    "reads and rewrites the frozen grounding row without changing a byte",
+    "reads and rewrites the frozen grounding row without changing a byte (written by toPatentCitationEventInsert before the anchor schemas moved package; never regenerated)",
     Effect.fnUntraced(function* () {
       const event = yield* Effect.fromResult(fromPatentCitationEventRow(eventInput));
       const insert = yield* Effect.fromResult(toPatentCitationEventInsert(event));

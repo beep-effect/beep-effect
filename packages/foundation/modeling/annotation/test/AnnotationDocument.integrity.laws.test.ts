@@ -43,12 +43,10 @@ const closed = closure(DocumentKinds);
 
 const JsonText = S.fromJsonString(S.Unknown);
 
-// A JSON value read as unknown, the type the forging helpers take.
 const json = (value: unknown): unknown => value;
 
 const fake = ContentHash.make(`sha256:${Str.repeat(64)("f")}`);
 
-// Replace every occurrence of one string anywhere in a JSON value.
 const replaceEverywhere = (value: unknown, from: string, to: string): unknown =>
   S.encodeResult(JsonText)(value).pipe(
     Result.map(Str.replaceAll(from, to)),
@@ -58,8 +56,6 @@ const replaceEverywhere = (value: unknown, from: string, to: string): unknown =>
 
 const structureNames: ReadonlyArray<string> = R.keys(StructureKinds);
 
-// Every target has an anchors row, every body reference names an annotation of an allowed kind, the document passes
-// its schema, and its keys survive the checked codec.
 const expectIntegrity = Effect.fnUntraced(function* (document: TextDocument) {
   for (const annotation of HashMap.values(document.annotations)) {
     for (const target of annotation.targets) {
@@ -115,8 +111,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/annotation ref
     ([{ document }]) =>
       Effect.gen(function* () {
         const encoded = yield* codec.encode(document);
-        // The least structure annotation: no body references it, so its key is the only one that stops matching.
-        const forgedKey = document.annotations.pipe(
+        const leastUnreferencedStructureKey = document.annotations.pipe(
           HashMap.filter((annotation) => A.contains(structureNames, annotation._tag)),
           HashMap.keys,
           A.fromIterable,
@@ -124,23 +119,27 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/annotation ref
           A.head,
           O.getOrThrow
         );
-        // Its key, its attribution key and each generation's content replaced, and each run re-minted for the fake.
-        const generations = document.attribution.pipe(HashMap.get(forgedKey), O.getOrThrow, A.fromIterable);
+        const generations = document.attribution.pipe(
+          HashMap.get(leastUnreferencedStructureKey),
+          O.getOrThrow,
+          A.fromIterable
+        );
         const forged = replaceEverywhere(
           A.reduce(generations, json(encoded), (json, { run, activity }) =>
             replaceEverywhere(json, run, runOf({ content: AnnotationId.make(fake), activity }))
           ),
-          forgedKey,
+          leastUnreferencedStructureKey,
           fake
         );
         yield* decodeBare(forged);
         const refused = yield* Effect.flip(codec.decode(forged));
         expect(refused).toEqual(DocumentKeyMismatch.make({ table: "annotations", key: fake }));
-        // A repeated annotation key, which the bare schema would collapse.
         const head = O.getOrThrow(A.head(encoded.annotations));
         const repeated = { ...encoded, annotations: A.append(encoded.annotations, head) };
         const refusedRepeat = yield* Effect.flip(codec.decode(repeated));
-        expect(refusedRepeat).toEqual(DocumentKeyRepeated.make({ table: "annotations", key: head[0] }));
+        expect(refusedRepeat, "a repeated annotation key, which the bare schema would collapse, is refused").toEqual(
+          DocumentKeyRepeated.make({ table: "annotations", key: head[0] })
+        );
       }),
     runs
   );

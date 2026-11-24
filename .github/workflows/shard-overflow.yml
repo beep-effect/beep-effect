@@ -4,9 +4,10 @@ name: Shard Overflow
 # (goals/ci-lane-economics, research/shard-overflow-routing-2026-11-13.md).
 # check.yml calls this workflow once per routed partition; the job is the
 # hosted `Test Unit (<partition>)` shard with `runs-on` swapped for the
-# overflow label, and ci-runner-security.test.ts fails when the two drift
-# apart. The organization runner group `beep-shard-overflow` admits only this
-# file at refs/heads/main, so a pull request cannot replace the definition,
+# overflow label (`beep-fleet-overflow`), and ci-runner-security.test.ts fails
+# when the two drift apart. The organization runner group `beep-shard-overflow`
+# (the group keeps its name; the label moved) admits only this file at
+# refs/heads/main, so a pull request cannot replace the definition,
 # and the job condition below refuses a fork's pull request even if a caller
 # routes one. Secrets reach the job the way they reach the hosted shard:
 # write credentials only on a push through the `turbo-cache-write`
@@ -44,7 +45,7 @@ jobs:
   test-unit-shard:
     name: Overflow
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: beep-shard-overflow
+    runs-on: beep-fleet-overflow
     timeout-minutes: 20
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
@@ -56,12 +57,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate

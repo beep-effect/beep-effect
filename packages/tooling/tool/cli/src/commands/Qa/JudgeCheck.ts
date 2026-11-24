@@ -44,8 +44,6 @@ import type { QaEventLog } from "./Qa.session.ts";
 const $I = $RepoCliId.create("commands/Qa/JudgeCheck");
 
 /**
- * Everything an inventory cited that the round cannot back up.
- *
  * **Example** (Usage)
  * ```ts
  * import { EvidenceCrossCheck } from "@beep/repo-cli/commands/Qa/JudgeCheck"

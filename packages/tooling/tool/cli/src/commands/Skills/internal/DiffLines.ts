@@ -15,8 +15,6 @@ import * as Str from "effect/String";
 const $I = $RepoCliId.create("commands/Skills/internal/DiffLines");
 
 /**
- * One text line and whether a newline ends it.
- *
  * **Details**
  *
  * Only the last line of a file can lack its newline. Comparing the flag as

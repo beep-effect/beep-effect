@@ -80,8 +80,6 @@ export const ContinuityVerdict = LiteralKit(["verified", "unsatisfied", "unknown
   })
 );
 /**
- * Metadata census outcome.
- *
  * @category models
  * @since 0.0.0
  */

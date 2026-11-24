@@ -47,9 +47,6 @@ const goalsDoctorDetail = (finding: GoalDoctorFinding): string =>
   pipe(Str.slice(Str.length(`${finding.slug} ${finding.kind}`))(finding.key), Str.trimStart);
 
 /**
- * One goals-doctor finding as the knowledge doctor lists it: a delegated candidate, its severity, and
- * its cause key.
- *
  * **Example** (Read a delegated row's severity)
  *
  * ```ts

@@ -101,8 +101,6 @@ export * from "./Models.paths.ts";
 // ── Check orchestration ─────────────────────────────────────────────────────
 
 /**
- * Options one `beep models check` run executes under.
- *
  * **Example** (Describe one check run)
  *
  * ```ts

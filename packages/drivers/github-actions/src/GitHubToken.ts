@@ -28,8 +28,6 @@ import type { ActionStateError } from "./ActionState.ts";
 const $I = $GithubActionsId.create("GitHubToken");
 
 /**
- * Raised when the token an earlier phase persisted cannot be used.
- *
  * **Example** (Identify an expired persisted token)
  *
  * ```ts
@@ -91,8 +89,6 @@ export class GitHubTokenError extends S.TaggedError<GitHubTokenError, { readonly
 const DEFAULT_KEY = "githubToken";
 
 /**
- * What to mint a token for.
- *
  * **Example** (Validate ProvisionOptions input)
  *
  * ```ts
@@ -167,8 +163,6 @@ export declare namespace ProvisionOptions {
 }
 
 /**
- * Where to read a persisted token from.
- *
  * **Example** (Validate ReadOptions input)
  *
  * ```ts
@@ -225,8 +219,6 @@ const FetchFunction = S.declare<typeof globalThis.fetch>((input): input is typeo
 ).pipe($I.annoteSchema("FetchFunction", { description: "A fetch implementation." }));
 
 /**
- * How to build a client from a persisted token.
- *
  * **Example** (Validate client options)
  *
  * ```ts
@@ -265,8 +257,6 @@ export class ClientLayerOptions extends S.Opaque<ClientLayerOptions, { readonly 
 ) {}
 
 /**
- * Companion types for {@link ClientLayerOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

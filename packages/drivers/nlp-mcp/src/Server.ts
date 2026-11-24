@@ -38,8 +38,6 @@ import type { Stdio } from "effect/Stdio";
 const $I = $NlpMcpId.create("Server");
 
 /**
- * Configuration for the MCP server identity advertised to clients.
- *
  * **Example** (Creating server identity config)
  *
  * ```ts

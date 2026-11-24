@@ -33,8 +33,6 @@ const PrefixMapWithEmptyDefault = Rdf.PrefixMap.pipe(
 );
 
 /**
- * N3 Turtle parse request.
- *
  * **Example** (Make turtle parse request)
  *
  * ```ts
@@ -62,8 +60,6 @@ export class N3ParseTurtleRequest extends S.Opaque<N3ParseTurtleRequest, { reado
 ) {}
 
 /**
- * N3 Turtle parse result.
- *
  * **Example** (Make turtle parse result)
  *
  * ```ts
@@ -93,8 +89,6 @@ export class N3ParseTurtleResult extends S.Opaque<N3ParseTurtleResult, { readonl
 ) {}
 
 /**
- * N3 Turtle serialize request.
- *
  * **Example** (Make turtle serialize request)
  *
  * ```ts
@@ -124,8 +118,6 @@ export class N3SerializeTurtleRequest extends S.Opaque<N3SerializeTurtleRequest,
 ) {}
 
 /**
- * N3 Turtle serialize result.
- *
  * **Example** (Make turtle serialize result)
  *
  * ```ts
