@@ -3103,6 +3103,14 @@ Lane p6
 
 Reverse: Restore goals/text-knowledge-stack-rebuild/ops/design from the P6 head before the exit row, with its manifest verificationCommand and opsScripts entries
 
+### P6: the gUFO lint audits the subjects of the batch's added quads, in the use case every save runs through, 2026-11-24
+
+The gUFO audit runs over the named subjects of the batch delta added quads, against the typings the whole post-apply asserted partition states, so a batch is judged on the terms it touches with the context the ontology already holds. Terms the batch does not touch are not audited, so a pre-existing violation elsewhere never blocks an unrelated batch. Both lints run in OntologyToolService.applyAndSave, the session use case every mutation saves through, rather than in the MCP handler, so ontology_repair is linted too and the handler stays a TierGate wrapper. The refusal joins OntologyToolFailure, so the MCP tool returns it as a value. @beep/ontology-use-cases takes @beep/ontology as a dependency; @beep/ontology-server takes it as a devDependency because only its handler test reads OntoViolation.
+
+Lane p6
+
+Reverse: Move the lint into OntologyToolHandlers.ts or audit every typed term of the session
+
 ### P6: the langextract handoff keeps its hand-minted Extract activity; the flow records it as an ActivityRecord, 2026-11-24
 
 Which runs P6 wraps in withActivity is open (map O question O12). The langextract handoff mints its own operation:Extract activity at start (langextract/src/Handoff/Handoff.behavior.ts:69) and carries it inside the handoff value, and semantica pins the service output through HOSTED_EXTRACTION_ARTIFACT_HASH (apps/labs/semantica/src/layers/ExtractorLive.ts:244). Wrapping it would mint a second activity for the same run or move the id out of the handoff and break that pin. P6 therefore wraps the office-action law steps (MapToLaw, ProposeClaim) and the claim_propose handler, and the flow records the handoff's activity as an ActivityRecord built from handoff.activity (id, start), the annotation ids it generated and an ended read when extract returns, clamped to be no earlier than any generation time. Assessment is a pure update of an owner record and is not an activity. Answers O12.
@@ -3165,6 +3173,14 @@ Lane p6
 
 Reverse: Remove the authorize call from review and wall only the store append.
 
+### P6: the pre-save SHACL lint refuses a batch that raises the violation count, not one that leaves it non-conforming, 2026-11-24
+
+Row 12 measured that proposeChangeBatch (OntologyToolService.applyAndSave) saved a batch without running SHACL validation. The lint now validates the session before and after the batch and refuses when the count of violation-severity findings rises, or when the after-run is truncated and the before-run was not. It does not require the result to conform: the ontology_repair path saves through the same applyAndSave and a repair may reduce violations without clearing them, and an ontology that already fails SHACL must still accept batches that fix or leave its violations alone. When both runs are truncated the counts are capped at the validation budget and the batch passes. A finding-identity diff was rejected because property shapes are blank nodes whose labels are not stable across runs. The refusal is OntologyProposedTermRefusal with lint ShaclWorsened {before, after, truncated}.
+
+Lane p6
+
+Reverse: Replace ensureShaclNotWorsened in OntologyToolService.ts with a conformance check, or delete it
+
 ### The test claim store serializes partitions and refuses a knowledge-start regression, 2026-11-24
 
 The use-cases test double for `LawClaimProposals` runs every `withPartition` body under one permit and refuses an append whose knowledge start is earlier than the latest stored in its scope, the refusal the claim log makes as `KnowledgeStartRegression`. Property (f) of the write-tools test therefore fails if `ClaimProposal` stops flooring its activity at the partition's last knowledge start, which it would not with a store that accepts any order.
@@ -3190,6 +3206,14 @@ Amended after independent review by decision `2026-11-24-p6-the-two-matter-test-
 Lane p6
 
 Reverse: Add the PGlite repositories to the test layer and move the file to the integration shard, amending server/vitest.shards.json
+
+### P6: typingsFromDataset types a term only on one stated class type and reads mediations over the subclass closure, 2026-11-24
+
+typingsFromDataset types a named non-gUFO subject only when it states exactly one rdf:type gufo:<ClassType>; none or several leaves it untyped, so the audit stays silent rather than guessing (the L3-3 contract). Its instance category is the first of gufo:Relator, gufo:Quality and gufo:Event that its rdfs:subClassOf closure reaches, otherwise Object, because a gUFO class type such as Kind does not fix the category and Object is the endurant default. Mediations are the owl:onProperty gufo:mediates restrictions stated anywhere in the closure, so a relator subkind inherits its supertype mediations: owl:someValuesFrom reads as cardinality 1 and owl:qualifiedCardinality or owl:minQualifiedCardinality with owl:onClass as its value, the largest per mediated type winning. specializes keeps only named non-gUFO superclasses, since a gUFO upper class as an untyped supertype would wrongly exempt a role from RoleWithoutKind. A relator stated with no mediation cannot be a GufoTyping (its check requires one), so StatedTypings lists it in unmediated and auditStated reports it as RelatorUndermediated. The namespace IRIs come from the identity registry rows; the owl restriction terms are not registry terms, so they are spelled against the owl namespace row.
+
+Lane p6
+
+Reverse: Change classTypeOf, instanceCategoryOf and mediationsOf in @beep/ontology Gufo.ts
 
 ### Use-cases tests run on a test-double claim store, 2026-11-24
 

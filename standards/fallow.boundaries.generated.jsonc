@@ -4198,6 +4198,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
+          "@beep/ontology",
           "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -4217,6 +4218,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
+          "@beep/ontology",
           "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -4259,6 +4261,7 @@
         "allow": [
           "@beep/identity",
           "@beep/mcp-kit",
+          "@beep/ontology",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",
@@ -4272,6 +4275,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcp-kit",
+          "@beep/ontology",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",

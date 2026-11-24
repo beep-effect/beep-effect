@@ -3860,6 +3860,7 @@
       },
       "devDependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/ontology": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/semantic-web": "workspace:^",
         "@beep/test-runner": "workspace:^",
@@ -3902,6 +3903,7 @@
       "dependencies": {
         "@beep/identity": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
+        "@beep/ontology": "workspace:^",
         "@beep/ontology-domain": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
