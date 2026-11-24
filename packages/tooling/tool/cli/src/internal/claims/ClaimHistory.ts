@@ -545,10 +545,16 @@ const isOrderedKnowledge = S.is(ClaimKnowledgeInterval);
 
 const checkKnowledgeOrder = <Imported, Native, Review, Signals>(
   ledger: ClaimImportLedger,
-  joined: ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>
+  joined: ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>,
+  successorStart: (key: string) => O.Option<DateTime.Utc>
 ): Result.Result<ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>, ClaimHistoryRefused> =>
   O.match(
-    A.findFirst(joined, (claim) => !isOrderedKnowledge(claim.knowledge)),
+    A.findFirst(
+      joined,
+      (claim) =>
+        !isOrderedKnowledge(claim.knowledge) ||
+        O.exists(successorStart(claimReferenceKey(claim.reference)), DateTime.isLessThan(claim.knowledge.start))
+    ),
     {
       onNone: () => Result.succeed(joined),
       onSome: (claim) => Result.fail(refuse(ledger, claim.reference, "inverted-knowledge")),
@@ -591,6 +597,8 @@ const joinClaimHistory = <
         (row) => [claimReferenceKey(nativeReference(row.record.claim)), row.record.core.knowledgeStart] as const
       )
     );
+    const successorStart = (key: string) =>
+      O.flatMap(O.flatMap(HashMap.get(successors, key), A.head), (successor) => HashMap.get(nativeStart, successor));
     const joined = A.map(
       entries,
       joinEntry<Imported, Native, Review, Signals>({
@@ -599,14 +607,11 @@ const joinClaimHistory = <
         evidence: evidenceByClaim(recordsOf(records, "Evidence")),
         reviews: latestBy(recordsOf(records, "Review"), (record) => claimReferenceKey(record.claim)),
         signals: latestBy(recordsOf(records, "Signals"), (record) => claimReferenceKey(record.claim)),
-        successorStart: (key) =>
-          O.flatMap(O.flatMap(HashMap.get(successors, key), A.head), (successor) =>
-            HashMap.get(nativeStart, successor)
-          ),
+        successorStart,
         proposed: options.proposed,
       })
     );
-    return yield* checkKnowledgeOrder(ledger, joined);
+    return yield* checkKnowledgeOrder(ledger, joined, successorStart);
   });
 
 /**
@@ -614,9 +619,9 @@ const joinClaimHistory = <
  *
  * **Details**
  * Imported knowledge keeps its original expiry; a native successor closes an open imported
- * interval at its own knowledge start. A joined interval whose end precedes its start, such as
- * a successor that starts before its imported predecessor was recorded, is refused as
- * `inverted-knowledge` before any interval is built. The latest review or signal record replaces the stored
+ * interval at its own knowledge start. A successor that starts before its predecessor was
+ * recorded, whatever the predecessor's own expiry, and any joined interval whose end precedes
+ * its start are refused as `inverted-knowledge` before any interval is built. The latest review or signal record replaces the stored
  * one; native claims without a review record are proposed.
  *
  * @category projections
