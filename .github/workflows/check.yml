@@ -419,7 +419,7 @@ jobs:
       # decision report-carrier), uploaded red or green. A measurement: it never decides
       # the job, so it continues on error.
       - name: Report gate records
-        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        if: always() && (steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true')
         continue-on-error: true
         uses: ./.github/actions/gate-reports
         with:
@@ -427,7 +427,7 @@ jobs:
           artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
 
       - name: Upload gate reports and task outcomes
-        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        if: always() && (steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true')
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
