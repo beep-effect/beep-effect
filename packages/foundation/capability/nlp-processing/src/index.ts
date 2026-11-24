@@ -34,6 +34,13 @@ export * as Graph from "./Graph/index.ts";
  */
 export * as NLPService from "./NLPService.ts";
 /**
+ * The named effectful arrow and its Kleisli combinators.
+ *
+ * @since 0.0.0
+ * @category combinators
+ */
+export * as Operation from "./Operation.ts";
+/**
  * NLP AI tool schemas and export adapters.
  *
  * @since 0.0.0

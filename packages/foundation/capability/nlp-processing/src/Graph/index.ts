@@ -40,10 +40,3 @@ export * as Schema from "./Schema.ts";
  * @category services
  */
 export * as TextGraph from "./TextGraph.ts";
-/**
- * Categorical type classes for effectful text operations on graphs.
- *
- * @since 0.0.0
- * @category services
- */
-export * as TypeClass from "./TypeClass.ts";

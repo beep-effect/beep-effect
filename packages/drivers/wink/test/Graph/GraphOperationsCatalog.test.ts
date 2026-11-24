@@ -25,7 +25,7 @@ describe("Catalog backend-backed operations", () => {
       "sentencize produces a child node per sentence",
       Effect.fnUntraced(function* () {
         const root = yield* EG.makeNode("Hello world. How are you?");
-        const children = yield* Catalog.sentencize.apply(root);
+        const children = yield* Catalog.sentencize.operation.run(root);
         expect(children.length).toBe(2);
         expect(A.every(children, (c) => typeof c.data === "string")).toBe(true);
       })
@@ -37,7 +37,7 @@ describe("Catalog backend-backed operations", () => {
       "tokenize produces a child node per token",
       Effect.fnUntraced(function* () {
         const root = yield* EG.makeNode("dogs run fast");
-        const children = yield* Catalog.tokenize.apply(root);
+        const children = yield* Catalog.tokenize.operation.run(root);
         expect(children.length).toBeGreaterThanOrEqual(3);
       })
     );
@@ -48,7 +48,7 @@ describe("Catalog backend-backed operations", () => {
       "posTag produces POS annotation nodes",
       Effect.fnUntraced(function* () {
         const root = yield* EG.makeNode("dogs run");
-        const children = yield* Catalog.posTag.apply(root);
+        const children = yield* Catalog.posTag.operation.run(root);
         expect(children.length).toBe(2);
         expect(typeof children[0]?.data.tag).toBe("string");
       })
@@ -60,7 +60,7 @@ describe("Catalog backend-backed operations", () => {
       "lemmatize produces lemma annotation nodes",
       Effect.fnUntraced(function* () {
         const root = yield* EG.makeNode("running dogs");
-        const children = yield* Catalog.lemmatize.apply(root);
+        const children = yield* Catalog.lemmatize.operation.run(root);
         expect(children.length).toBe(2);
         expect(typeof children[0]?.data.lemma).toBe("string");
       })
@@ -74,9 +74,9 @@ describe("Catalog backend-backed operations", () => {
         "each backend op records its operation name on the produced nodes",
         Effect.fnUntraced(function* () {
           const root = yield* EG.makeNode("hello world");
-          const children = yield* Catalog.tokenize.apply(root);
+          const children = yield* Catalog.tokenize.operation.run(root);
           const first = children[0];
-          assertSome(first?.metadata.operation ?? O.none(), "tokenize");
+          assertSome(first?.metadata.operation ?? O.none(), "https://beep-effect.com/ns/operation/Tokenize");
         })
       );
     }
@@ -88,7 +88,7 @@ describe("Catalog pure operations", () => {
     "toLowerCase transforms node data",
     Effect.fnUntraced(function* () {
       const root = yield* EG.makeNode("HELLO");
-      const [child] = yield* Catalog.toLowerCase.apply(root);
+      const [child] = yield* Catalog.toLowerCase.operation.run(root);
       expect(child?.data).toBe("hello");
     })
   );
@@ -97,7 +97,7 @@ describe("Catalog pure operations", () => {
     "toUpperCase transforms node data",
     Effect.fnUntraced(function* () {
       const root = yield* EG.makeNode("hello");
-      const [child] = yield* Catalog.toUpperCase.apply(root);
+      const [child] = yield* Catalog.toUpperCase.operation.run(root);
       expect(child?.data).toBe("HELLO");
     })
   );
@@ -106,7 +106,7 @@ describe("Catalog pure operations", () => {
     "trim removes surrounding whitespace",
     Effect.fnUntraced(function* () {
       const root = yield* EG.makeNode("  spaced  ");
-      const [child] = yield* Catalog.trim.apply(root);
+      const [child] = yield* Catalog.trim.operation.run(root);
       expect(child?.data).toBe("spaced");
     })
   );

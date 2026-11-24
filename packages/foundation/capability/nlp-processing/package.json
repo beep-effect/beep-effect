@@ -46,6 +46,7 @@
     "./Graph/*": "./src/Graph/*.ts",
     "./internal/*": null,
     "./NLPService": "./src/NLPService.ts",
+    "./Operation": "./src/Operation.ts",
     "./package.json": "./package.json",
     "./Tools": "./src/Tools/index.ts",
     "./Tools/*": "./src/Tools/*.ts"
@@ -73,6 +74,7 @@
       "./Graph/*": "./dist/Graph/*.js",
       "./internal/*": null,
       "./NLPService": "./dist/NLPService.js",
+      "./Operation": "./dist/Operation.js",
       "./package.json": "./package.json",
       "./Tools": "./dist/Tools/index.js",
       "./Tools/*": "./dist/Tools/*.js"

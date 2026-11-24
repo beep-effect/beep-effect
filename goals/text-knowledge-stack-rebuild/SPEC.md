@@ -2764,6 +2764,26 @@ Lane p6
 
 Reverse: Keep GraphOperation.name as a plain string beside the carried Operation and name its Operation with a parent term
 
+### P6: graph operations drop identity, map, flatMap and the description field, 2026-11-24
+
+Row 4 makes a graph operation an `Operation` over nodes named by its registry
+term (design section 2, `GraphOperation` row). The old constructors
+`identity()`, `map(f)` and `flatMap(f)` minted the fixed names
+`"identity"`, `"map"` and `"flatMap"`, which have no declared term, and
+`identity` re-emits a node under a fresh id, the same unlawful identity the
+census removed with `TypeClass.identityOperation`. None has a consumer outside
+the package's own tests and doc examples, and `transform` and `expand` cover
+`map` and `flatMap` once a name is required. They are deleted.
+
+The `description` field leaves `GraphOperation` and its constructors: the
+design's field list is `{ operation, category, estimateCost, validate }`, the
+term names the step, and the catalog's JSDoc keeps the prose. No reader of
+`description` exists in the repository.
+
+Lane goals/text-knowledge-stack-rebuild-p6-operations
+
+Reverse: Restore the identity, map and flatMap constructors and the description field in np/src/Graph/GraphOperations/Operation.ts, each taking a TermIri name.
+
 ### P6: law claims are held in a LawClaimStore port with only a memory layer; no stored format in P6, 2026-11-24
 
 Proposed law claims, generation facts, activity records and admissions need somewhere to live for the flow, the claim toolkit, admission and provenance traversal. No host persists them in P6 (the toolkit is not hosted, decision 2026-11-24-p6-the-claim-toolkit-is-defined-in-law-practice-and-not-yet-hosted), so a table now would be a stored format nobody reads. LawClaimStore is a use-cases port (append, get, openAdmission, binding, generation, admissions) with a typed LawClaimStoreError, and the server ships LawClaimStore.memory.ts only. A persistent store is versioned from its first row when a host adds it, which keeps the stored-format law simple: no row exists that would need a read-side converter. Answers A2 and F6.
