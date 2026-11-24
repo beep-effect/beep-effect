@@ -2706,6 +2706,14 @@ Lane p6
 
 Reverse: Hold one append-ordered claim log for every scope and drop the partition semaphore and floor
 
+### Claim proposal checks support before promote, so its refusals are defects, 2026-11-24
+
+`ClaimProposal.propose` re-verifies the support itself before it calls `promote`: the checked document decode guarantees every candidate target has an anchor row, the request names only annotations of the document (an absent one is refused as `SupportUnverified`), and every supporting anchor is verified against the text the authorized resolver returns. Every refusal `promote` can raise is therefore checked before it runs, so a `promote` refusal is a defect, as are a claim store failure and a mint failure. The service error channel is `ClaimProposalRefused` only, matching section 2 of the design, and the new files carry no unreachable refusal branch.
+
+Lane p6
+
+Reverse: Catch ClaimCoreInvalid from promote and map it to SupportUnverified again, and restore the anchor lookup as an Option match.
+
 ### P6: claim_propose is idempotent by lookup: an unsuperseded proposed claim for the same scope, logical key and support is returned, not re-minted, 2026-11-24
 
 Independent review of the P6 design. The first draft declared claim_propose idempotent, but the claim/v1 preimage hashes generatedBy and knowledgeStart (epistemics/src/ClaimCore.ts:78-95), and both are fresh per call (generatedBy is the activity id minted over started), so a retry minted a second claim id and was either appended as a duplicate proposition or refused as ValidTimeOverlap within the same partition (epistemics/src/ClaimLog.ts:99-100). An agent retries tool calls, so the hint should be true and honest. Inside the partition's permit, the handler first calls LawClaimProposals.findProposed({ scope, logicalKey, supportAtCreation }); an unsuperseded proposed claim found there is returned as it is, with no new activity, mint or append. Property (d) of the write-tools test asserts that two identical dispatches return the same claim id, leave one claim and one activity record, and record no activity on the second.
@@ -2713,6 +2721,14 @@ Independent review of the P6 design. The first draft declared claim_propose idem
 Lane p6
 
 Reverse: Declare claim_propose idempotent: false and let a retry mint a new claim or be refused
+
+### claim_propose is strict and returns the gate refusal as a value, 2026-11-24
+
+`claim_propose` is annotated `Tool.Strict`, so a host that mounts it through `sanitizedToolkit` decodes its parameters with `onExcessProperty: "error"` and an extra field (such as a smuggled admission token) is refused before the handler runs. The tool failure schema is `ClaimProposeFailure`: the three `ClaimProposalRefused` cases plus `TierGateRefused { reason }`, the audit reason of a refused dispatch, so a refused call returns a value the agent can read instead of failing the stream.
+
+Lane p6
+
+Reverse: Drop the Tool.Strict annotation and fail the handler with the gate refusal instead of returning ClaimProposeFailure.
 
 ### P6: claim_provenance answers Missing for a claim the principal may not traverse, the same value an absent id gets, 2026-11-24
 
@@ -3124,6 +3140,14 @@ Reverse: Return MatterScope to bare docket families and filter on docket_family
 Lane p6
 
 Reverse: Remove the authorize call from review and wall only the store append.
+
+### The test claim store serializes partitions and refuses a knowledge-start regression, 2026-11-24
+
+The use-cases test double for `LawClaimProposals` runs every `withPartition` body under one permit and refuses an append whose knowledge start is earlier than the latest stored in its scope, the refusal the claim log makes as `KnowledgeStartRegression`. Property (f) of the write-tools test therefore fails if `ClaimProposal` stops flooring its activity at the partition's last knowledge start, which it would not with a store that accepts any order.
+
+Lane p6
+
+Reverse: Restore the unserialized test double; property (f) then only checks that both appends return.
 
 ### P6: MatterWall.two-matter.test.ts composes a PGlite graph store built by the test and fails rather than skips without it, 2026-11-24
 

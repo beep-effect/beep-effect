@@ -12,7 +12,7 @@ import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/So
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { allowRemoteExtractionPolicyLayer, LangExtractService, layer } from "@beep/langextract/Service";
 import { LawHumanAdmissionToken, LawPrincipalId, LawRevision } from "@beep/law-practice-domain/values/LawClaim";
-import { LawClaimAdmissions, LawClaimProposals } from "@beep/law-practice-use-cases/ClaimStore";
+import { LawClaimAdmissions, LawClaimProposals, LawClaimStoreError } from "@beep/law-practice-use-cases/ClaimStore";
 import { makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw";
 import { AttorneyAttestation, LawAdmission, LawAdmissionLayer } from "@beep/law-practice-use-cases/LawAdmission";
 import { GrantedScopes, LawPrincipal, MatterAccess, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
@@ -36,6 +36,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { text } from "./fixture.ts";
@@ -162,12 +163,30 @@ export const makeMemoryClaimStore = Effect.fn("OfficeActionFlow.memoryClaimStore
   const entries = yield* Ref.make(HashMap.empty<ClaimId, ProposedClaimEntry>());
   const bindings = yield* Ref.make<ReadonlyArray<AdmissionBinding>>([]);
   const admitted = yield* Ref.make<ReadonlyArray<LawAdmissionRecord>>([]);
+  const permit = yield* Semaphore.make(1);
+  const stored = Effect.map(Ref.get(entries), (map) => map.pipe(HashMap.values, A.fromIterable));
+  const latestIn = (scope: ScopeRef) =>
+    Effect.map(stored, (all) =>
+      pipe(
+        all,
+        A.filter((entry) => Eq.equals(entry.record.core.scope, scope)),
+        A.map((entry) => entry.record.core.knowledgeStart),
+        A.reduce(O.none<DateTime.Utc>(), (latest, at) =>
+          O.some(O.match(latest, { onNone: () => at, onSome: DateTime.max(at) }))
+        )
+      )
+    );
   const proposals: LawClaimProposalsShape = {
     activities: (claim) =>
       Effect.map(Ref.get(entries), (map) =>
         O.match(HashMap.get(map, claim), { onNone: HashSet.empty, onSome: (entry) => entry.activities })
       ),
-    appendProposed: (entry) => Ref.update(entries, HashMap.set(entry.record.claim, entry)),
+    appendProposed: Effect.fn("OfficeActionFlow.appendProposed")(function* (entry: ProposedClaimEntry) {
+      const latest = yield* latestIn(entry.record.core.scope);
+      if (O.exists(latest, (at) => DateTime.isLessThan(entry.record.core.knowledgeStart, at)))
+        return yield* LawClaimStoreError.make({ operation: "append-proposed" });
+      yield* Ref.update(entries, HashMap.set(entry.record.claim, entry));
+    }),
     findProposed: (lookup) =>
       Effect.map(Ref.get(entries), (map) =>
         map.pipe(
@@ -192,20 +211,7 @@ export const makeMemoryClaimStore = Effect.fn("OfficeActionFlow.memoryClaimStore
         )
       ),
     get: (claim) => Effect.map(Ref.get(entries), (map) => O.map(HashMap.get(map, claim), (entry) => entry.record)),
-    withPartition: (scope, body) =>
-      Effect.flatMap(Ref.get(entries), (map) =>
-        body(
-          map.pipe(
-            HashMap.values,
-            A.fromIterable,
-            A.filter((entry) => Eq.equals(entry.record.core.scope, scope)),
-            A.map((entry) => entry.record.core.knowledgeStart),
-            A.reduce(O.none<DateTime.Utc>(), (latest, at) =>
-              O.some(O.match(latest, { onNone: () => at, onSome: DateTime.max(at) }))
-            )
-          )
-        )
-      ),
+    withPartition: (scope, body) => Semaphore.withPermits(permit, 1, Effect.flatMap(latestIn(scope), body)),
   };
   const admissions: LawClaimAdmissionsShape = {
     admissions: (claim) =>
@@ -234,7 +240,7 @@ export const makeMemoryClaimStore = Effect.fn("OfficeActionFlow.memoryClaimStore
       ),
     openAdmission: (binding) => Ref.update(bindings, A.append(binding)),
   };
-  return { proposals, admissions };
+  return { proposals, admissions, stored, opened: Ref.get(bindings), admitted: Ref.get(admitted) };
 });
 
 export const serviceOf =
