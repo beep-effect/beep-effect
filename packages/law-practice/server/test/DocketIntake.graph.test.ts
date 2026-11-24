@@ -72,12 +72,10 @@ type TestRespond = (
 ) => Effect.Effect<Response, HttpClientError.HttpClientError>;
 
 type GraphTestHttpShape = {
-  /** Requests made after the layer was built (the master-category setup is not included). */
-  readonly calls: Effect.Effect<ReadonlyArray<CapturedRequest>>;
+  readonly callsAfterSetup: Effect.Effect<ReadonlyArray<CapturedRequest>>;
   readonly handle: (
     request: HttpClientRequest.HttpClientRequest
   ) => Effect.Effect<Response, HttpClientError.HttpClientError>;
-  /** Make every folder lookup answer 503 from now on. */
   readonly failFolderLookups: Effect.Effect<void>;
   readonly respondWith: (respond: TestRespond) => Effect.Effect<void>;
   readonly setup: Effect.Effect<ReadonlyArray<CapturedRequest>>;
@@ -106,7 +104,6 @@ const isCategorySetup = (capture: CapturedRequest): boolean => Str.includes("/ou
 const isFolderSetup = (capture: CapturedRequest): boolean => Str.includes("/mailFolders/")(capture.url);
 const isSetup = (capture: CapturedRequest): boolean => isCategorySetup(capture) || isFolderSetup(capture);
 
-// A well-known folder name resolves to a synthetic id: `sentitems` is `folder-sentitems`.
 const folderResponse = (capture: CapturedRequest, down: boolean): Response =>
   down
     ? jsonResponse({}, 503)
@@ -128,7 +125,6 @@ const displayNameOf = (capture: CapturedRequest): string =>
     O.getOrElse(() => "")
   );
 
-// The mailbox starts with no docket categories, so building the layer creates all six.
 const categoryResponse = (capture: CapturedRequest): Response =>
   capture.method === "GET"
     ? jsonResponse({ value: [] })
@@ -146,7 +142,7 @@ const GraphTestHttpLayer = Layer.effect(
     const calls = Ref.get(capturesRef).pipe(Effect.map(A.filter((capture) => !isSetup(capture))));
 
     return GraphTestHttp.of({
-      calls,
+      callsAfterSetup: calls,
       failFolderLookups: Ref.set(foldersDownRef, true),
       handle: Effect.fn("GraphTestHttp.handle")(function* (request) {
         const capture: CapturedRequest = {
@@ -291,8 +287,6 @@ const attachments = {
 
 const MAILBOX_ID = "00000000-0000-4000-8000-000000000001";
 
-// One listing page for a mailbox addressed by id: only where a message sits can tell that the
-// mailbox's own sent mail is not inbound.
 const folderPage = {
   value: [
     { from: fromSelf, id: "sent-by-id", parentFolderId: "folder-sentitems", receivedDateTime: "2030-01-10T12:00:00Z" },
@@ -400,16 +394,15 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         const messages = yield* mailbox.receivedSince(O.none());
         yield* mailbox.receivedSince(O.some("2030-01-09T08:00:00.000Z"));
-        const calls = yield* testHttp.calls;
+        const calls = yield* testHttp.callsAfterSetup;
         const first = A.get(calls, 0);
         const firstUrl = O.map(first, (capture) => new URL(capture.url));
 
         expect(A.map(messages, (received) => received.messageId)).toStrictEqual(["m1", "m2"]);
-        // 03:30 UTC on the 10th is still the evening of the 9th in Chicago.
-        expect(A.map(messages, (received) => received.receivedDate.toISOString())).toStrictEqual([
-          "2030-01-09",
-          "2030-01-10",
-        ]);
+        expect(
+          A.map(messages, (received) => received.receivedDate.toISOString()),
+          "03:30 UTC on the 10th is still the evening of the 9th in Chicago"
+        ).toStrictEqual(["2030-01-09", "2030-01-10"]);
         expect(A.map(messages, (received) => received.receivedAt)).toStrictEqual([
           "2030-01-10T03:30:00.000Z",
           "2030-01-10T12:00:00.000Z",
@@ -461,7 +454,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
   it.layer(graphLayer({ mailbox: MAILBOX_ID }), { timeout: "5 seconds" })((it) => {
     it.effect(
-      "drops mail in Sent Items, Drafts and Outbox by folder, and hands over Junk Email and Deleted Items mail marked with its folder",
+      "drops Sent Items, Drafts and Outbox mail by folder even for a mailbox addressed by id, and marks Junk Email and Deleted Items mail with its folder",
       Effect.fnUntraced(function* () {
         const testHttp = yield* GraphTestHttp;
         const mailbox = yield* DocketMailbox;
@@ -498,12 +491,10 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
   it.layer(graphLayer({ maxDocumentBytes: 120, maxTotalDocumentBytes: 250 }), { timeout: "5 seconds" })((it) => {
     it.effect(
-      "keeps source documents within the total budget and drops a download larger than it claimed",
+      "keeps source documents that fit the remaining budget, skips one that does not for later smaller ones, and drops a download larger than it claimed",
       Effect.fnUntraced(function* () {
         const testHttp = yield* GraphTestHttp;
         const mailbox = yield* DocketMailbox;
-        // pdf-a, pdf-b and pdf-d fit 250 bytes by their listed sizes; pdf-c does not. pdf-b then
-        // downloads at 130 bytes, over the 120-byte cap, and is dropped.
         yield* testHttp.respondWith((capture, index) =>
           succeed(
             index === 0
@@ -513,12 +504,18 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         );
 
         const documents = yield* mailbox.sourceDocuments(message("m1"));
-        const calls = yield* testHttp.calls;
+        const calls = yield* testHttp.callsAfterSetup;
 
-        expect(A.map(A.drop(calls, 1), (capture) => capture.url)).toStrictEqual(
+        expect(
+          A.map(A.drop(calls, 1), (capture) => capture.url),
+          "pdf-c misses the 250-byte budget by its listed size; pdf-a, pdf-b and pdf-d fit"
+        ).toStrictEqual(
           A.map(["pdf-a", "pdf-b", "pdf-d"], (id) => `${MAILBOX_URL}/messages/m1/attachments/${id}/$value`)
         );
-        expect(A.map(documents, (document) => document.bytes.length)).toStrictEqual([40, 40]);
+        expect(
+          A.map(documents, (document) => document.bytes.length),
+          "pdf-b downloads at 130 bytes, over the 120-byte cap, and is dropped"
+        ).toStrictEqual([40, 40]);
       })
     );
   });
@@ -543,7 +540,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         );
 
         yield* mailbox.markEntered(message("m1"));
-        const calls = yield* testHttp.calls;
+        const calls = yield* testHttp.callsAfterSetup;
         const patch = A.get(calls, 1);
 
         expect(A.map(calls, describeCall)).toStrictEqual([
@@ -576,7 +573,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         yield* mailbox.markEntered(message("m1"));
 
-        const calls2 = yield* testHttp.calls;
+        const calls2 = yield* testHttp.callsAfterSetup;
         expect(A.map(calls2, (capture) => capture.method)).toStrictEqual(["GET"]);
       })
     );
@@ -597,7 +594,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         );
 
         yield* mailbox.markEntered(message("m1"));
-        const calls = yield* testHttp.calls;
+        const calls = yield* testHttp.callsAfterSetup;
 
         expect(A.map(calls, (capture) => capture.method)).toStrictEqual(["GET", "PATCH", "GET", "PATCH"]);
         expect(A.map(calls, (capture) => capture.headers["if-match"])).toStrictEqual([
@@ -626,7 +623,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         const failure = yield* failureOf(mailbox.markEntered(message("m1")));
 
-        const calls3 = yield* testHttp.calls;
+        const calls3 = yield* testHttp.callsAfterSetup;
         expect(calls3).toHaveLength(4);
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause, error.ambiguousWrite]),
@@ -647,7 +644,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         );
 
         const documents = yield* mailbox.sourceDocuments(message("m1"));
-        const calls = yield* testHttp.calls;
+        const calls = yield* testHttp.callsAfterSetup;
 
         expect(A.map(A.drop(calls, 1), (capture) => capture.url)).toStrictEqual([
           `${MAILBOX_URL}/messages/m1/attachments/pdf-1/$value`,
@@ -682,7 +679,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           O.map(failure, (error) => [error.stage, error.cause]),
           ["calendar", "all-day-date-out-of-range"]
         );
-        const calls4 = yield* testHttp.calls;
+        const calls4 = yield* testHttp.callsAfterSetup;
         expect(calls4).toStrictEqual([]);
       })
     );
@@ -703,7 +700,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         const written = yield* calendar.create(calendarEntry(true));
         yield* calendar.create(calendarEntry(false));
         const found = yield* calendar.findByKey(KEY);
-        const calls = yield* testHttp.calls;
+        const calls = yield* testHttp.callsAfterSetup;
 
         expect(written.eventId).toBe("event-1");
         assertSome(written.webLink, "https://outlook.fixture.invalid/calendar/event-1");
@@ -755,7 +752,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           ["calendar", "ambiguous write", true]
         );
         assertNone(found);
-        const calls5 = yield* testHttp.calls;
+        const calls5 = yield* testHttp.callsAfterSetup;
         expect(A.filter(calls5, (capture) => capture.method === "POST")).toHaveLength(1);
       })
     );
@@ -811,13 +808,14 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         );
         expect(listed).toStrictEqual([]);
         assertNone(found);
-        const calls7 = yield* testHttp.calls;
+        const calls7 = yield* testHttp.callsAfterSetup;
         expect(A.map(calls7, (capture) => capture.method)).toStrictEqual(["GET", "GET"]);
       })
     );
   });
 
   it("names a message by its subject, sender, practice day and link, leaving out what it lacks", () => {
+    const LATE_ON_9_JANUARY_IN_CHICAGO = "2030-01-10T03:30:00Z";
     const chicago = DateTime.zoneMakeNamedUnsafe("America/Chicago");
     const email = docketQuestionEmailOf(chicago)(
       GraphMessage.make({
@@ -825,8 +823,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           emailAddress: GraphEmailAddress.makeOption({ address: O.some("sender@fixture.invalid") }),
         }),
         id: "message-1",
-        // Late on 9 January in Chicago, already 10 January in UTC.
-        receivedDateTime: O.some("2030-01-10T03:30:00Z"),
+        receivedDateTime: O.some(LATE_ON_9_JANUARY_IN_CHICAGO),
         subject: O.some("Fixture notice"),
         webLink: O.some("https://outlook.fixture.invalid/mail/message-1"),
       })

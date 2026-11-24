@@ -37,8 +37,6 @@ const $I = $LawPracticeServerId.create("DocketIntake/DocketIntake.undo");
 const ENTERED_CATEGORY: DocketCategory = "Docket - entered";
 const NOT_FOUND = 404;
 
-// The categories the service puts on an entry it has not been told is right. An entry the attorney
-// moved to `Docket - verified`, or to any category of their own, is theirs and is kept.
 const isProvisional = S.is(
   DocketCategory.pick(["Docket - unverified", "Docket - needs review", "Docket - reminder", "Docket - digest"])
 );
@@ -231,7 +229,6 @@ const graphError =
   (error: M365Error): DocketIntakeError =>
     DocketIntakeError.make({ cause: error.reason, stage });
 
-// Succeed with `onGone` when the item no longer exists; fail on any other Graph error.
 const orGone = <A, B>(effect: Effect.Effect<A, M365Error>, onGone: B, stage: DocketIntakeStage) =>
   effect.pipe(
     Effect.catchIf(isNotFound, () => Effect.succeed(onGone)),
@@ -241,8 +238,6 @@ const orGone = <A, B>(effect: Effect.Effect<A, M365Error>, onGone: B, stage: Doc
 const linesOf = (entries: ReadonlyArray<DocketJournalEntry>, runId: DocketRunId, kind: DocketJournalKind) =>
   A.filter(entries, (entry) => entry.runId === runId && entry.kind === kind);
 
-// Only an event every category of which is the service's own is deleted: Outlook adds categories,
-// so one the attorney also put in a category of their own (or verified) is theirs.
 const eventAction = (categories: ReadonlyArray<string>): DocketUndoEventAction =>
   A.isReadonlyArrayNonEmpty(categories) && A.every(categories, isProvisional) ? "delete" : "keep";
 
@@ -270,7 +265,6 @@ const planMessage = Effect.fnUntraced(function* (m365: M365Shape, userId: O.Opti
   return DocketUndoMessage.make({ action, messageId: marked.messageId, receivedAt: marked.receivedAt });
 });
 
-// Reuse never transfers event ownership: undo only reaches created/adopted entries.
 const isEventWrite = (line: DocketJournalEntry) =>
   line.kind === DocketJournalKind.Enum["event-created"] || line.kind === DocketJournalKind.Enum["event-adopted"];
 
@@ -347,7 +341,6 @@ export const planDocketUndo: (input: {
     A.getSomes(A.map(linesOf(input.entries, input.runId, "message-marked"), markedMessage)),
     (left, right) => left.messageId === right.messageId
   );
-  // The first later run that marked the message again, if any.
   const markedLaterBy = (messageId: string) =>
     O.map(
       A.findFirst(
@@ -359,7 +352,6 @@ export const planDocketUndo: (input: {
       ),
       (entry) => entry.runId
     );
-  // A message a later run marked again keeps its ledger record, so every event that record names stays too.
   const keptEvents = HashSet.fromIterable(
     A.flatMap(marked, (line) =>
       O.isSome(markedLaterBy(line.messageId))
@@ -536,7 +528,6 @@ export const dryRunDocketUndo: {
     })
 );
 
-// The `undo-` line an action records; an item already undone, or kept for a later run, records none.
 const eventLineKind = DocketUndoEventAction.match({
   delete: () => O.some(DocketJournalKind.Enum["undo-event-deleted"]),
   gone: () => O.some(DocketJournalKind.Enum["undo-event-gone"]),
@@ -602,9 +593,7 @@ export const applyDocketUndo: (input: {
     yield* journal.append([DocketJournalEntry.make({ ...fields, at, kind: kind.value, runId: plan.runId })]);
   });
 
-  const deleteIfStillProvisional = Effect.fnUntraced(function* (eventId: string) {
-    // Recheck eligibility immediately before deletion, and bind the delete
-    // to that version so a later Outlook edit fails closed.
+  const deleteIfStillProvisionalAtRecheckedVersion = Effect.fnUntraced(function* (eventId: string) {
     const current = yield* orGone(m365.getEvent(M365GetEventRequest.make({ eventId, userId })), null, "calendar").pipe(
       Effect.map(O.fromNullishOr)
     );
@@ -612,11 +601,11 @@ export const applyDocketUndo: (input: {
     if (eventAction(O.getOrElse(current.value.categories, A.empty<string>)) !== "delete") {
       return DocketUndoEventAction.Enum.keep;
     }
-    const changeKey = O.filter(current.value.changeKey, Str.isNonEmpty);
-    if (O.isNone(changeKey)) return DocketUndoEventAction.Enum.keep;
+    const recheckedVersion = O.filter(current.value.changeKey, Str.isNonEmpty);
+    if (O.isNone(recheckedVersion)) return DocketUndoEventAction.Enum.keep;
     return yield* orGone(
       m365
-        .deleteEvent(M365DeleteEventRequest.make({ changeKey, eventId, userId }))
+        .deleteEvent(M365DeleteEventRequest.make({ changeKey: recheckedVersion, eventId, userId }))
         .pipe(Effect.as(DocketUndoEventAction.Enum.delete)),
       DocketUndoEventAction.Enum.gone,
       "calendar"
@@ -626,7 +615,8 @@ export const applyDocketUndo: (input: {
   const eventActions = yield* Effect.forEach(
     plan.events,
     Effect.fnUntraced(function* (target) {
-      const action = target.action === "delete" ? yield* deleteIfStillProvisional(target.eventId) : target.action;
+      const action =
+        target.action === "delete" ? yield* deleteIfStillProvisionalAtRecheckedVersion(target.eventId) : target.action;
       yield* record(eventLineKind(action), { eventId: O.some(target.eventId) });
       return action;
     }),

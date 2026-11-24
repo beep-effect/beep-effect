@@ -75,12 +75,9 @@ const markFailure = DocketIntakeError.make({ cause: "transport", stage: "mailbox
 const ambiguous = DocketIntakeError.make({ ambiguousWrite: true, cause: "ambiguous write", stage: "calendar" });
 
 type InnerPortsShape = {
-  /** What the next create does. */
-  readonly create: Ref.Ref<Effect.Effect<DocketWrittenEntry, DocketIntakeError>>;
-  /** What a lookup by key finds. */
-  readonly found: Ref.Ref<O.Option<DocketWrittenEntry>>;
-  /** What the next mark does. */
-  readonly mark: Ref.Ref<Effect.Effect<void, DocketIntakeError>>;
+  readonly nextCreate: Ref.Ref<Effect.Effect<DocketWrittenEntry, DocketIntakeError>>;
+  readonly foundByKey: Ref.Ref<O.Option<DocketWrittenEntry>>;
+  readonly nextMark: Ref.Ref<Effect.Effect<void, DocketIntakeError>>;
 };
 
 class InnerPorts extends Context.Service<InnerPorts, InnerPortsShape>()(
@@ -92,19 +89,19 @@ const written = DocketWrittenEntry.make({ eventId: "event-1" });
 const InnerPortsLayer = Layer.effectContext(
   Effect.gen(function* () {
     const inner = InnerPorts.of({
-      create: yield* Ref.make<Effect.Effect<DocketWrittenEntry, DocketIntakeError>>(Effect.succeed(written)),
-      found: yield* Ref.make(O.none<DocketWrittenEntry>()),
-      mark: yield* Ref.make<Effect.Effect<void, DocketIntakeError>>(Effect.void),
+      nextCreate: yield* Ref.make<Effect.Effect<DocketWrittenEntry, DocketIntakeError>>(Effect.succeed(written)),
+      foundByKey: yield* Ref.make(O.none<DocketWrittenEntry>()),
+      nextMark: yield* Ref.make<Effect.Effect<void, DocketIntakeError>>(Effect.void),
     });
     return Context.make(InnerPorts, inner).pipe(
       Context.add(
         DocketCalendar,
         DocketCalendar.of({
           create: Effect.fnUntraced(function* () {
-            return yield* inner.create.pipe(Ref.get, Effect.flatten);
+            return yield* inner.nextCreate.pipe(Ref.get, Effect.flatten);
           }),
           findByKey: Effect.fnUntraced(function* () {
-            return yield* Ref.get(inner.found);
+            return yield* Ref.get(inner.foundByKey);
           }),
         })
       ),
@@ -112,7 +109,7 @@ const InnerPortsLayer = Layer.effectContext(
         DocketMailbox,
         DocketMailbox.of({
           markEntered: Effect.fnUntraced(function* () {
-            yield* inner.mark.pipe(Ref.get, Effect.flatten);
+            yield* inner.nextMark.pipe(Ref.get, Effect.flatten);
           }),
           receivedSince: Effect.fnUntraced(function* () {
             return yield* Effect.succeed([message]);
@@ -212,11 +209,9 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
       Effect.fnUntraced(function* () {
         const journal = yield* DocketIntakeJournal;
         const fs = yield* FileSystem.FileSystem;
-        // A line as the journal wrote it before run-completed existed.
-        yield* fs.writeFileString(
-          JOURNAL,
-          '{"runId":"run-19691231T235959000Z","kind":"event-created","at":"1969-12-31T23:59:59.000Z","eventId":"event-old"}\n'
-        );
+        const lineWrittenBeforeRunCompletedExisted =
+          '{"runId":"run-19691231T235959000Z","kind":"event-created","at":"1969-12-31T23:59:59.000Z","eventId":"event-old"}\n';
+        yield* fs.writeFileString(JOURNAL, lineWrittenBeforeRunCompletedExisted);
         const runId = yield* journal.beginRun;
 
         yield* recordDocketRunCompleted(
@@ -274,12 +269,14 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
           makeDocketFileJournalLayer(DocketFileStoreOptions.make({ directory: DIRECTORY }))
         ).pipe(Effect.map(Context.get(DocketIntakeJournal)));
 
-        // Opening the journal after the crash is what repairs it; opening an intact one changes nothing.
         yield* (yield* openJournal).append([line(RUN, "message-marked", 1)]);
         yield* (yield* openJournal).append([line(RUN, "undo-event-kept", 2)]);
         const lines = yield* journalLines;
 
-        expect(kinds(lines)).toStrictEqual(["event-created", "message-marked", "undo-event-kept"]);
+        expect(
+          kinds(lines),
+          "opening after the crash repairs the tail; opening an intact journal changes nothing"
+        ).toStrictEqual(["event-created", "message-marked", "undo-event-kept"]);
         const argument = Str.endsWith("\n");
         const readFileString1 = yield* fs.readFileString(JOURNAL);
         expect(argument(readFileString1)).toBe(true);
@@ -300,8 +297,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         const failure = yield* failureOf(journal.append([line(RUN, "event-created")]));
         const unreadable = yield* failureOf(journalLines);
 
-        // The test clock stands at the Unix epoch.
-        expect([begun, current]).toStrictEqual([RUN, RUN]);
+        expect([begun, current], "the test clock stands at the Unix epoch").toStrictEqual([RUN, RUN]);
         assertSome(
           O.map(failure, (error) => error.cause),
           "journal-write"
@@ -321,8 +317,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
 
         const created = yield* calendar.create(entry);
         yield* mailbox.markEntered(message);
-        yield* Ref.set(inner.create, Effect.fail(portFailure));
-        yield* Ref.set(inner.mark, Effect.fail(markFailure));
+        yield* Ref.set(inner.nextCreate, Effect.fail(portFailure));
+        yield* Ref.set(inner.nextMark, Effect.fail(markFailure));
         const failedCreate = yield* failureOf(calendar.create(entry));
         const failedMark = yield* failureOf(mailbox.markEntered(message));
         const lines = yield* journalLines;
@@ -344,9 +340,8 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
           [RUN, "event-1", "docket:0f3a", "Docket - unverified", null, null],
           [RUN, null, null, null, "m1", "2030-01-09T10:00:00.000Z"],
         ]);
-        // Reads pass through to the ports below.
         const receivedSince3 = yield* mailbox.receivedSince(O.none());
-        expect(receivedSince3).toStrictEqual([message]);
+        expect(receivedSince3, "reads pass through to the ports below").toStrictEqual([message]);
         const sourceDocuments4 = yield* mailbox.sourceDocuments(message);
         expect(sourceDocuments4).toStrictEqual([]);
         const foundByKey = yield* calendar.findByKey(entry.key);
@@ -361,10 +356,10 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
       Effect.fnUntraced(function* () {
         const calendar = yield* DocketCalendar;
         const inner = yield* InnerPorts;
-        yield* Ref.set(inner.create, Effect.fail(ambiguous));
+        yield* Ref.set(inner.nextCreate, Effect.fail(ambiguous));
 
         const lost = yield* failureOf(calendar.create(entry));
-        yield* Ref.set(inner.found, O.some(written));
+        yield* Ref.set(inner.foundByKey, O.some(written));
         const recovered = yield* calendar.create(entry);
 
         assertSome(lost, ambiguous);
@@ -382,17 +377,16 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         const calendar = yield* DocketCalendar;
         const inner = yield* InnerPorts;
         const fs = yield* FileSystem.FileSystem;
-        // The create reaches the calendar, then the process dies before the line is written.
         yield* fs.remove(DIRECTORY, { recursive: true });
-        const crashed = yield* Effect.exit(calendar.create(entry));
+        const diedAfterCreateBeforeJournalLine = yield* Effect.exit(calendar.create(entry));
         yield* fs.makeDirectory(DIRECTORY, { recursive: true });
-        yield* Ref.set(inner.found, O.some(written));
+        yield* Ref.set(inner.foundByKey, O.some(written));
 
         const found = yield* calendar.findByKey(entry.key);
         yield* calendar.findByKey(entry.key);
         const lines = yield* journalLines;
 
-        crashed.pipe(Exit.hasDies, assertTrue);
+        diedAfterCreateBeforeJournalLine.pipe(Exit.hasDies, assertTrue);
         assertSome(found, written);
         expect(
           A.map(lines, (line) => [line.kind, line.runId, O.getOrNull(line.eventId), O.getOrNull(line.idempotencyKey)])
@@ -408,7 +402,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         const calendar = yield* DocketCalendar;
         const inner = yield* InnerPorts;
         yield* calendar.create(entry);
-        yield* Ref.set(inner.found, O.some(written));
+        yield* Ref.set(inner.foundByKey, O.some(written));
 
         yield* calendar.findByKey(entry.key);
 
@@ -425,12 +419,9 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
         const calendar = yield* DocketCalendar;
         const inner = yield* InnerPorts;
         const fs = yield* FileSystem.FileSystem;
-        // An earlier run, as a previous process wrote it, already created the event.
-        yield* fs.writeFileString(
-          JOURNAL,
-          `{"runId":"run-19691231T235959000Z","kind":"event-created","at":"1969-12-31T23:59:59.000Z","eventId":"event-1","idempotencyKey":"${entry.key}"}\n`
-        );
-        yield* Ref.set(inner.found, O.some(written));
+        const earlierRunCreatedEventLine = `{"runId":"run-19691231T235959000Z","kind":"event-created","at":"1969-12-31T23:59:59.000Z","eventId":"event-1","idempotencyKey":"${entry.key}"}\n`;
+        yield* fs.writeFileString(JOURNAL, earlierRunCreatedEventLine);
+        yield* Ref.set(inner.foundByKey, O.some(written));
         yield* calendar.findByKey(entry.key);
         yield* calendar.findByKey(entry.key);
         const journalLines7 = yield* journalLines;

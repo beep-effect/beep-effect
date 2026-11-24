@@ -52,8 +52,7 @@ export class DocketTrackedDatesCsvOptions extends S.Opaque<
   )
 ) {}
 
-// The sheet's own words for each kind of date, compared without case; anything else is `other`.
-const SHEET_DATE_TYPES: Readonly<Record<string, TrackedDateType>> = {
+const LOWERCASE_SHEET_DATE_TYPES: Readonly<Record<string, TrackedDateType>> = {
   due: "due-date",
   "due date": "due-date",
   "final date": "final-date",
@@ -61,7 +60,7 @@ const SHEET_DATE_TYPES: Readonly<Record<string, TrackedDateType>> = {
 };
 
 const sheetDateType = (text: string): TrackedDateType =>
-  O.getOrElse(R.get(SHEET_DATE_TYPES, Str.toLowerCase(Str.trim(text))), (): TrackedDateType => "other");
+  O.getOrElse(R.get(LOWERCASE_SHEET_DATE_TYPES, Str.toLowerCase(Str.trim(text))), (): TrackedDateType => "other");
 
 const MONTH_NUMBERS: Readonly<Record<string, string>> = {
   apr: "04",
@@ -83,24 +82,20 @@ const twoDigits = Str.padStart(2, "0");
 const isSlashDate = S.is(S.String.check(S.isPattern(/^\d{1,2}\/\d{1,2}\/\d{4}$/u)));
 const isMonthNameDate = S.is(S.String.check(S.isPattern(/^\d{4}-[a-z]{3}-\d{1,2}$/iu)));
 
-// The ISO form of a tracked date: `4/1/2030` is month, day, year, so rotating the year to the
-// front gives the ISO order; in `2030-Apr-01` the month name becomes its number.
+const monthDayYearRotatedYearFirst = (text: string): string =>
+  A.join(A.rotate(A.map(Str.split(text, "/"), twoDigits), 1), "-");
+
+const monthNameAsNumber = (part: string): string =>
+  twoDigits(O.getOrElse(R.get(MONTH_NUMBERS, Str.toLowerCase(part)), () => part));
+
 const isoFormOf: (text: string) => string = Match.type<string>().pipe(
-  Match.when(isSlashDate, (text) => A.join(A.rotate(A.map(Str.split(text, "/"), twoDigits), 1), "-")),
-  Match.when(isMonthNameDate, (text) =>
-    A.join(
-      A.map(Str.split(text, "-"), (part) =>
-        twoDigits(O.getOrElse(R.get(MONTH_NUMBERS, Str.toLowerCase(part)), () => part))
-      ),
-      "-"
-    )
-  ),
+  Match.when(isSlashDate, monthDayYearRotatedYearFirst),
+  Match.when(isMonthNameDate, (text) => A.join(A.map(Str.split(text, "-"), monthNameAsNumber), "-")),
   Match.orElse(identity<string>)
 );
 
 const decodeLocalDate = S.decodeUnknownOption(LocalDateFromString);
 
-// `YYYY-MM-DD`, `M/D/YYYY` or `YYYY-Mon-DD`, and a real calendar day; anything else is not a date.
 const sheetDate = (text: string): O.Option<LocalDate> => decodeLocalDate(isoFormOf(Str.trim(text)));
 
 const FILE_NUMBER = "File #";
@@ -122,25 +117,21 @@ class DocketSheetRow extends S.Opaque<DocketSheetRow, { readonly brand: unique s
 
 const decodeSheetRows = S.decodeUnknownEffect(S.Array(DocketSheetRow));
 
-// One dated row of the sheet with every docket form it answers to.
 type SheetEntry = {
   readonly date: LocalDate;
   readonly dateType: TrackedDateType;
-  readonly keys: ReadonlyArray<string>;
+  readonly docketFormsAnswered: ReadonlyArray<string>;
   readonly name: string;
 };
 
 type ParsedSheet = { readonly entries: ReadonlyArray<SheetEntry>; readonly unparsedDates: number };
 
-// A row of only blank cells (a spreadsheet's empty line) carries nothing to cross-check.
-const hasContent = (cells: ReadonlyArray<string>): boolean => A.some(cells, flow(Str.trim, Str.isNonEmpty));
+const hasNonBlankCell = (cells: ReadonlyArray<string>): boolean => A.some(cells, flow(Str.trim, Str.isNonEmpty));
 
-// Dockets compare without case or spaces.
-const normalizedDocket = (value: string): string => Str.toUpperCase(Str.replaceAll(" ", "")(Str.trim(value)));
+const caseAndSpaceFreeDocket = (value: string): string => Str.toUpperCase(Str.replaceAll(" ", "")(Str.trim(value)));
 
-// `File #` is the docket, or a foreign agent's reference followed by ` / <our docket>`; either part answers.
-const docketKeys = (fileNumber: string): ReadonlyArray<string> =>
-  A.dedupe(A.filter(A.map([fileNumber, ...Str.split(fileNumber, "/")], normalizedDocket), Str.isNonEmpty));
+const docketFormsOfFileNumber = (fileNumber: string): ReadonlyArray<string> =>
+  A.dedupe(A.filter(A.map([fileNumber, ...Str.split(fileNumber, "/")], caseAndSpaceFreeDocket), Str.isNonEmpty));
 
 const sheetFailure = (cause: string) => () => DocketIntakeError.make({ cause, stage: "tracked-dates" });
 
@@ -153,16 +144,15 @@ const entryOf = (row: DocketSheetRow): O.Option<SheetEntry> =>
   O.map(sheetDate(row[TRACKED_DATE]), (date) => ({
     date,
     dateType: sheetDateType(row[DATE_TYPE]),
-    keys: docketKeys(row[FILE_NUMBER]),
+    docketFormsAnswered: docketFormsOfFileNumber(row[FILE_NUMBER]),
     name: Str.trim(row[DATE_NAME]),
   }));
 
 const parseSheet = Effect.fnUntraced(function* (text: string): Effect.fn.Return<ParsedSheet, DocketIntakeError> {
-  // The comma-fixed lenient read drops a spreadsheet's "CSV UTF-8" byte-order mark itself.
   const read = yield* Csv.parse(text, CsvCodecOptions.default.read).pipe(
     Effect.mapError(sheetFailure("docket-sheet-invalid"))
   );
-  const rows = A.filter(read.table.records, hasContent);
+  const rows = A.filter(read.table.records, hasNonBlankCell);
   const [header, ...data] = A.match(rows, {
     onEmpty: (): A.NonEmptyReadonlyArray<ReadonlyArray<string>> => [[]],
     onNonEmpty: (nonEmpty) => nonEmpty,
@@ -245,7 +235,7 @@ export const makeDocketTrackedDatesCsvLayer = (
           const sheet = yield* currentSheet();
           const found = A.flatMap(dockets, (docket) =>
             pipe(
-              A.filter(sheet.entries, (entry) => A.contains(entry.keys, normalizedDocket(docket))),
+              A.filter(sheet.entries, (entry) => A.contains(entry.docketFormsAnswered, caseAndSpaceFreeDocket(docket))),
               A.map((entry) =>
                 TrackedDate.make({ date: entry.date, dateType: entry.dateType, docket, name: entry.name })
               )

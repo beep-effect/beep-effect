@@ -58,9 +58,7 @@ const exerciseTable = DbSchema.powerExercise;
 const frameTable = DbSchema.actFrame;
 const relatorTable = DbSchema.legalPositionRelator;
 
-// Named per operation rather than per adapter so a dropped driver failure says
-// which physical table refused the request, whichever direction it was going.
-const tableNameFor: Record<LegalPositionRecordOperation, string> = {
+const refusingPhysicalTableByOperation: Record<LegalPositionRecordOperation, string> = {
   listCorrections: "law_practice_correction_delta",
   listExercises: "law_practice_power_exercise",
   listFrames: "law_practice_act_frame",
@@ -84,27 +82,22 @@ const repositoryUnavailable =
           Effect.annotateLogs({
             cause,
             operation,
-            table: tableNameFor[operation],
+            table: refusingPhysicalTableByOperation[operation],
           })
         )
       ),
       Effect.mapError((cause) =>
         LegalPositionRecordRepositoryUnavailable.during(
           operation,
-          `${operation} failed against ${tableNameFor[operation]}`,
+          `${operation} failed against ${refusingPhysicalTableByOperation[operation]}`,
           cause
         )
       )
     );
 
-// Both decoders are shared with the candor record adapter, which reads rows back
-// with identical semantics; only the combinator above is this repository's own.
 const { decodeAppended, decodeRows } = makeRowDecoders(repositoryUnavailable);
 
-// A read is scoped by organization first, always. Two tenants can record
-// positions about the same norm and the same act, so an unscoped read would
-// merge two legal pictures into one.
-const heldBy = <Entity extends { readonly id: number; readonly orgId: number }>(
+const scopedToOrganizationFirst = <Entity extends { readonly id: number; readonly orgId: number }>(
   records: ReadonlyArray<Entity>,
   scope: LegalPositionRecordScope
 ): ReadonlyArray<Entity> =>
@@ -118,10 +111,7 @@ const heldBy = <Entity extends { readonly id: number; readonly orgId: number }>(
     sortByIdAscending
   );
 
-// The two frame-keyed reads narrow the tenant scope by the frame the records
-// cite, so an exercise attempted under one reading is never returned for
-// another.
-const citingFrame = <
+const scopedToOrganizationThenCitedFrame = <
   Entity extends {
     readonly frame: number;
     readonly id: number;
@@ -188,25 +178,25 @@ export const makeInMemoryLegalPositionRecordRepository = Effect.fn("LegalPositio
   return LegalPositionRecordRepositoryShape.make({
     listCorrections: Effect.fn("LegalPositionRecord.listCorrections")(function* (scope: ActFrameRecordScope) {
       const got = yield* Ref.get(corrections);
-      return citingFrame(got, scope);
+      return scopedToOrganizationThenCitedFrame(got, scope);
     }),
     listExercises: Effect.fn("LegalPositionRecord.listExercises")(function* (scope: ActFrameRecordScope) {
       const got1 = yield* Ref.get(exercises);
-      return citingFrame(got1, scope);
+      return scopedToOrganizationThenCitedFrame(got1, scope);
     }),
     listFrames: Effect.fn("LegalPositionRecord.listFrames")(function* (scope: LegalPositionRecordScope) {
       const got2 = yield* Ref.get(frames);
-      return heldBy(got2, scope);
+      return scopedToOrganizationFirst(got2, scope);
     }),
     listOppositionCandidates: Effect.fn("LegalPositionRecord.listOppositionCandidates")(function* (
       scope: LegalPositionRecordScope
     ) {
       const got3 = yield* Ref.get(candidates);
-      return heldBy(got3, scope);
+      return scopedToOrganizationFirst(got3, scope);
     }),
     listRelators: Effect.fn("LegalPositionRecord.listRelators")(function* (scope: LegalPositionRecordScope) {
       const got4 = yield* Ref.get(relators);
-      return heldBy(got4, scope);
+      return scopedToOrganizationFirst(got4, scope);
     }),
     recordCorrection: Effect.fn("LegalPositionRecord.recordCorrection")(function* (correction: CorrectionDelta) {
       yield* Ref.update(corrections, A.append(correction));

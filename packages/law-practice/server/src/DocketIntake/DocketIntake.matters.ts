@@ -132,25 +132,16 @@ class MentionRow extends S.Opaque<MentionRow, { readonly brand: unique symbol }>
 
 const decodeMentionRows = S.decodeUnknownEffect(S.Array(MentionRow));
 
-const applicationTokenPattern = "\\b([0-9]{2}/[0-9]{3},?[0-9]{3})\\b";
-const patentTokenPattern = "\\b(?:US[ -]?)?([0-9]{1,2},[0-9]{3},[0-9]{3}|[0-9]{7,8})(?:\\s?[ABU][0-9])?\\b";
+const bundleBuildApplicationTokenPattern = "\\b([0-9]{2}/[0-9]{3},?[0-9]{3})\\b";
+const bundleBuildPatentTokenPattern = "\\b(?:US[ -]?)?([0-9]{1,2},[0-9]{3},[0-9]{3}|[0-9]{7,8})(?:\\s?[ABU][0-9])?\\b";
 
-/*
- * Read-only query over the bundle's `matters`, `documents` and `document_text`
- * tables. The number is read out of the reference with the same token patterns
- * the bundle build uses to find number mentions in docket documents, so a
- * reference and a document name a number the same way. A docket document
- * belongs to the family key its catalog row gives it (`<client>.<family>`, or
- * the bare family without a client); only families that are matters are
- * returned. Nothing is scanned when the reference holds no number.
- */
 const mentionsSql = `
 WITH wanted AS (
   SELECT DISTINCT regexp_replace(token, '[^0-9]', '', 'g') AS number
   FROM (
-    SELECT UNNEST(regexp_extract_all($1, '${applicationTokenPattern}', 1)) AS token
+    SELECT UNNEST(regexp_extract_all($1, '${bundleBuildApplicationTokenPattern}', 1)) AS token
     UNION ALL
-    SELECT UNNEST(regexp_extract_all($1, '${patentTokenPattern}', 1)) AS token
+    SELECT UNNEST(regexp_extract_all($1, '${bundleBuildPatentTokenPattern}', 1)) AS token
   )
 ),
 docket_docs AS (
@@ -166,9 +157,9 @@ sources AS (
   SELECT family_key, name_text AS content FROM docket_docs
 ),
 tokens AS (
-  SELECT family_key, UNNEST(regexp_extract_all(content, '${applicationTokenPattern}', 1)) AS token FROM sources
+  SELECT family_key, UNNEST(regexp_extract_all(content, '${bundleBuildApplicationTokenPattern}', 1)) AS token FROM sources
   UNION ALL
-  SELECT family_key, UNNEST(regexp_extract_all(content, '${patentTokenPattern}', 1)) AS token FROM sources
+  SELECT family_key, UNNEST(regexp_extract_all(content, '${bundleBuildPatentTokenPattern}', 1)) AS token FROM sources
 )
 SELECT DISTINCT m.family_key AS "familyKey"
 FROM tokens t
@@ -225,19 +216,15 @@ export const DocketMatterMentionsLive: Layer.Layer<DocketMatterMentions, never, 
   })
 );
 
-// The attorney's own `<client>.<0NNNN>` matter number names no docket family; it is never looked up.
 const isAttorneyMatterNumber = (reference: string): boolean =>
   A.isReadonlyArrayNonEmpty(extractPracticeKgPathEvidence(reference).attorneyMatterNumbers);
 
-// What is looked up for one verbatim reference: the forms the practice KG's extraction reads in it,
-// or the reference itself when it reads none (a family key, a bare number).
 const lookupForms = (reference: string): ReadonlyArray<string> =>
   A.match(extractPracticeKgReferences(reference), {
     onEmpty: () => (Str.isEmpty(reference) || isAttorneyMatterNumber(reference) ? [] : [reference]),
     onNonEmpty: (forms) => forms,
   });
 
-// A client number names every matter of the client, not one matter.
 const namesMatter = (matter: PracticeKgMatter): boolean =>
   !A.every(matter.matchedOn, PracticeKgMatterMatchedOn.is.client);
 
@@ -248,15 +235,11 @@ const familyKeysOf = (matters: ReadonlyArray<PracticeKgMatter>): ReadonlyArray<s
 
 const sortedKeys = (keys: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(A.dedupe(keys), Order.String);
 
-// A match on the bare family number alone does not tell clients apart.
-const isBareFamily = (matchedOn: ReadonlyArray<PracticeKgMatterMatchedOn>): boolean =>
+const isBareFamilyMatchBlindToClient = (matchedOn: ReadonlyArray<PracticeKgMatterMatchedOn>): boolean =>
   A.every(matchedOn, PracticeKgMatterMatchedOn.is.family);
 
-// A match through an application or patent number filed from one of the matter's dockets.
-const isNumberMatch = S.is(PracticeKgMatterMatchedOn.pick(["application", "patent"]));
+const isFiledNumberMatch = S.is(PracticeKgMatterMatchedOn.pick(["application", "patent"]));
 
-// The contract's "needs attorney" rule: no client, a recycle-bin stub, a bare family match, or a
-// membership the practice KG only inferred from where most citing documents sit.
 const uniqueMatter = (matches: A.NonEmptyReadonlyArray<PracticeKgMatter>): MatterUnique => {
   const matter = A.headNonEmpty(matches);
   const dockets = matter.dockets;
@@ -279,18 +262,17 @@ const uniqueMatter = (matches: A.NonEmptyReadonlyArray<PracticeKgMatter>): Matte
       matter.client !== null &&
       !PracticeKgEpistemicStatus.is["recycled-unverified"](matter.epistemicStatus) &&
       !KgAttributionSource.is["mention-dominance"](matter.attributionSource) &&
-      !isBareFamily(A.flatMap(matches, (match) => match.matchedOn)),
+      !isBareFamilyMatchBlindToClient(A.flatMap(matches, (match) => match.matchedOn)),
   });
 };
 
-// What the references resolve to, and the number references whose membership still has to be
-// checked: a verified matter found only through application or patent numbers.
-type NumberMembership = { readonly forms: ReadonlyArray<string>; readonly unique: MatterUnique };
+type VerifiedNumberOnlyMembership = { readonly forms: ReadonlyArray<string>; readonly unique: MatterUnique };
 
-type Resolved = { readonly answer: MatterLookupResult; readonly membership: O.Option<NumberMembership> };
+type Resolved = {
+  readonly answer: MatterLookupResult;
+  readonly membershipToCheck: O.Option<VerifiedNumberOnlyMembership>;
+};
 
-// One matter is the answer only when every reference that resolved uniquely names it and every
-// reference that resolved to several matters includes it. Any other spread is ambiguous.
 const combine = (results: ReadonlyArray<FormResult>): O.Option<Resolved> => {
   const resolvedOnce: ReadonlyArray<FormResult> = A.filter(results, (result) => A.length(result.matters) === 1);
   const uniqueMatches: ReadonlyArray<PracticeKgMatter> = A.flatMap(resolvedOnce, (result) => result.matters);
@@ -307,11 +289,11 @@ const combine = (results: ReadonlyArray<FormResult>): O.Option<Resolved> => {
       const unique = uniqueMatter(matches);
       const numberOnly = A.every(
         A.flatMap(matches, (match) => match.matchedOn),
-        isNumberMatch
+        isFiledNumberMatch
       );
       return {
         answer: unique,
-        membership: O.liftPredicate(
+        membershipToCheck: O.liftPredicate(
           { forms: A.map(resolvedOnce, (result) => result.form), unique },
           () => unique.verified && numberOnly
         ),
@@ -323,19 +305,16 @@ const combine = (results: ReadonlyArray<FormResult>): O.Option<Resolved> => {
           sortedKeys(A.flatMap(results, (result) => familyKeysOf(result.matters))),
           A.isReadonlyArrayNonEmpty
         ),
-        (familyKeys): Resolved => ({ answer: MatterAmbiguous.make({ familyKeys }), membership: O.none() })
+        (familyKeys): Resolved => ({ answer: MatterAmbiguous.make({ familyKeys }), membershipToCheck: O.none() })
       )
   );
 };
 
-// A membership the bundle took from where most citing documents sit (`mention-dominance`) is not
-// labelled in the lookup result, so it is recognised the way the build decides it: documents of
-// another matter cite the number too. Such a matter needs the attorney.
-const checkMembership = (
+const unverifyUnlabelledMentionDominance = (
   mentions: DocketMatterMentionsShape,
   resolved: Resolved
 ): Effect.Effect<MatterLookupResult, DocketIntakeError> =>
-  O.match(resolved.membership, {
+  O.match(resolved.membershipToCheck, {
     onNone: () => Effect.succeed(resolved.answer),
     onSome: ({ forms, unique }) =>
       Effect.map(Effect.forEach(forms, mentions.familiesMentioning, { concurrency: 1 }), (mentioned) =>
@@ -364,8 +343,6 @@ const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketM
         ),
       { concurrency: 1 }
     );
-    // Only when no reference names a matter are the documents searched for mentions: a number
-    // that no matter owns is offered with the matters that cite it, never as an answer.
     const answer = yield* O.match(combine(results), {
       onNone: () =>
         Effect.forEach(forms, mentions.familiesMentioning, { concurrency: 1 }).pipe(
@@ -377,7 +354,7 @@ const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketM
               })
           )
         ),
-      onSome: (resolved) => checkMembership(mentions, resolved),
+      onSome: (resolved) => unverifyUnlabelledMentionDominance(mentions, resolved),
     });
     yield* Effect.annotateCurrentSpan({
       docket_lookup_form_count: A.length(forms),
@@ -489,7 +466,6 @@ const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleMa
 
 const MANIFEST_FILE = "bundle.manifest.json";
 const DATABASE_FILE = "practice.duckdb";
-// The DuckDB store format the practice-KG code in this package reads and writes.
 const SUPPORTED_DUCKDB_FORMAT: string = PracticeKgSchemaVersions.make({}).duckdb;
 
 const bundleError = (message: string) => (cause: unknown) => DocketKgBundleError.make({ cause, message });
