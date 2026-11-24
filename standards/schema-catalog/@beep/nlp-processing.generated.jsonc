@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/nlp-processing",
   "entries": [
+    {"file":"packages/foundation/capability/nlp-processing/src/Activity.ts","symbol":"ActivityFacts","kind":"struct-const","owner":"@beep/nlp-processing","identity":"ActivityFacts","description":"The start-time facts an attributed run states."},
     {"file":"packages/foundation/capability/nlp-processing/src/Backend/Composition.ts","symbol":"CachingOptions","kind":"struct-const","owner":"@beep/nlp-processing","identity":"CachingOptions","description":"Cache settings for memoized backend composition."},
     {"file":"packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts","symbol":"BackendCapabilities","kind":"struct-const","owner":"@beep/nlp-processing","identity":"BackendCapabilities","description":"Capabilities of an NLP backend service."},
     {"file":"packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts","symbol":"BackendInitError","kind":"tagged-error","owner":"@beep/nlp-processing","identity":"BackendInitError"},

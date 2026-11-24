@@ -207,7 +207,7 @@ Digests are always exactly 64 lowercase hexadecimal characters, with no `sha256:
 
 `Mint` is the one minting function of every content-addressed identifier the text and knowledge layers mint. `mintContentHash(domainTag, preimage)` hashes the RFC 8785 form of `[domainTag, ...preimage]` and returns a `ContentHash` (`sha256:` plus 64 lowercase hex, from `@beep/schema/ContentHash`); `mintContentHashResult(digest)` is its synchronous twin over a caller-supplied SHA-256. Canonical JSON sorts object keys but never arrays, so each identifier domain declares its preimage with `definePreimage({ domainTag, schema, golden })`. The schema encodes the record, set-valued fields through `@beep/schema/CanonicalHashSet`, which encodes them ascending. The required golden vector records one encoded preimage and the hash it mints, so a changed preimage fails its golden and needs a new domain tag in the same change. `PreimageRegistry.make` refuses a domain tag declared twice. It does not check the goldens: run `registry.verifyGoldens()` or `registry.verifyGoldensResult(digest)` after a successful `make`, which is where a wrong golden hash fails.
 
-`ActivityStart` declares the first preimage, `activity/v1`: the operation IRI, the model or engine pin, the prompt digest or `null`, the ascending used ids and the start time in epoch milliseconds. `mintActivityId` mints an `ActivityId` from those start-time facts only, so the outputs of a run can name it.
+`ActivityStart` declares the first preimage, `activity/v1`: the operation IRI, the model or engine pin, the prompt digest or `null`, the ascending used ids and the start time in epoch milliseconds. `mintActivityId` mints an `ActivityId` from those start-time facts only, so the outputs of a run can name it. `ActivityRecord` is the completed record beside it: the id, the start, the generated ids, the end time and an `ActivityOutcome` (`completed` or `failed`, and a failed run generated nothing); `verifyActivityRecord` re-mints the id from the start and refuses a mismatch.
 
 ## Pinned encoders
 
@@ -282,6 +282,7 @@ Facets widened from upstream (upstream exports a type only; this package exports
 - `JsoncSegment`: upstream `string | number`; here `S.Union([S.String, S.Natural])`, so the schema admits only natural-number indices.
 
 - `Mint` (`mintContentHash`, `mintContentHashResult`, `definePreimage`, `Preimage`, `PreimageRegistry`, `PreimageGoldenMismatch`, `DuplicateDomainTag`) and `ActivityStart` (`ActivityPin`, `ActivityStart`, `ActivityStartFields`, `ActivityPreimage`, `mintActivityId`, `mintActivityIdResult`): the L0 minting function of the text-knowledge stack rebuild (P1).
+- `ActivityRecord` (`ActivityRecord`, `ActivityOutcome`, `ActivityRecordInvalid`, `ActivityRecordInvalidReason`, `verifyActivityRecord`): the completed `prov:Activity` record of one attributed run (P6).
 
 New members on existing exports (not index exports): the static `JsoncEdit.applyAllResult`, `JsoncFingerprint.canonicalizeSchemaResult`, and the `SerializationFailed` member of `JsoncStringifyErrorCode`.
 

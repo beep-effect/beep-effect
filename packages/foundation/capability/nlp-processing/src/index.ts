@@ -6,6 +6,13 @@
  */
 
 /**
+ * Attributed operation runs recorded as prov activities.
+ *
+ * @since 0.0.0
+ * @category combinators
+ */
+export * as Activity from "./Activity.ts";
+/**
  * Pluggable NLP backend interface, capabilities, and failures.
  *
  * @since 0.0.0

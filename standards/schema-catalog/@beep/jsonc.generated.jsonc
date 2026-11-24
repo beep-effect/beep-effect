@@ -4,6 +4,10 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/jsonc",
   "entries": [
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityRecord.ts","symbol":"ActivityOutcome","kind":"literal-kit","owner":"@beep/jsonc","identity":"ActivityOutcome","description":"How an attributed activity run ended."},
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityRecord.ts","symbol":"ActivityRecord","kind":"struct-const","owner":"@beep/jsonc","identity":"ActivityRecord","description":"The completed record of one activity run."},
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityRecord.ts","symbol":"ActivityRecordInvalid","kind":"tagged-error","owner":"@beep/jsonc"},
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityRecord.ts","symbol":"ActivityRecordInvalidReason","kind":"literal-kit","owner":"@beep/jsonc","identity":"ActivityRecordInvalidReason","description":"Why an activity record failed verification."},
     {"file":"packages/foundation/modeling/jsonc/src/ActivityStart.ts","symbol":"ActivityPin","kind":"tagged-union","owner":"@beep/jsonc","identity":"ActivityPin","description":"The model pin or engine edition an activity run was associated with."},
     {"file":"packages/foundation/modeling/jsonc/src/ActivityStart.ts","symbol":"ActivityPreimage","kind":"schema-const","owner":"@beep/jsonc"},
     {"file":"packages/foundation/modeling/jsonc/src/ActivityStart.ts","symbol":"ActivityStart","kind":"struct-const","owner":"@beep/jsonc","identity":"ActivityStart","description":"The start-time facts of one activity run."},

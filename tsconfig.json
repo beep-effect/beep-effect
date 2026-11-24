@@ -2604,6 +2604,12 @@
       ],
       "@beep/law-practice-domain/values/LibrarianLoop": [
         "./packages/law-practice/domain/src/values/LibrarianLoop/index.ts"
+      ],
+      "@beep/nlp-processing/Activity": [
+        "./packages/foundation/capability/nlp-processing/src/Activity.ts"
+      ],
+      "@beep/nlp-processing/Operation": [
+        "./packages/foundation/capability/nlp-processing/src/Operation.ts"
       ]
     }
   }

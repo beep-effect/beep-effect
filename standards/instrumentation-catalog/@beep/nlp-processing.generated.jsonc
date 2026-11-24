@@ -42,6 +42,7 @@
     {"name":"Nlp.Core.Tokenization.tokenCount","owner":"@beep/nlp-processing","family":"foundation","conforms":true},
     {"name":"Nlp.Core.Tokenization.tokenize","owner":"@beep/nlp-processing","family":"foundation","conforms":true},
     {"name":"Nlp.Core.Tokenization.tokenizeToDocument","owner":"@beep/nlp-processing","family":"foundation","conforms":true},
+    {"name":"Operation.run","owner":"@beep/nlp-processing","family":"foundation","conforms":true},
     {"name":"ResultStore.delete","owner":"@beep/nlp-processing","family":"foundation","conforms":true},
     {"name":"ResultStore.gc","owner":"@beep/nlp-processing","family":"foundation","conforms":true},
     {"name":"ResultStore.get","owner":"@beep/nlp-processing","family":"foundation","conforms":true},

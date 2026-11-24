@@ -36,6 +36,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./Activity": "./src/Activity.ts",
     "./Backend": "./src/Backend/index.ts",
     "./Backend/*": "./src/Backend/*.ts",
     "./Core": "./src/Core/index.ts",
@@ -64,6 +65,7 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./Activity": "./dist/Activity.js",
       "./Backend": "./dist/Backend/index.js",
       "./Backend/*": "./dist/Backend/*.js",
       "./Core": "./dist/Core/index.js",
@@ -82,6 +84,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

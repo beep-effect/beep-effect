@@ -3941,6 +3941,7 @@
         "from": "@beep/nlp-processing",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
@@ -3951,6 +3952,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
