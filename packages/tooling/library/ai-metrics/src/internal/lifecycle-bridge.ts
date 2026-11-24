@@ -56,10 +56,10 @@ const qualifySource = Effect.fnUntraced(function* (
   if ((yield* hashObservationPayload(new TextEncoder().encode(helperSource))) !== policy.helperSha256)
     return yield* failure("enrollment");
 });
-const qualifyInterpreter = Effect.fnUntraced(function* (policy: CursorLifecyclePolicy) {
+const qualifyCanonicalRootOwnedInterpreterSoThisUidCannotReplaceIt = Effect.fnUntraced(function* (
+  policy: CursorLifecyclePolicy
+) {
   const fs = yield* FileSystem.FileSystem;
-  // The fixed Python interpreter is root-owned and not writable by this UID.
-  // Canonicality and a root-owned nonwritable parent chain prevent same-UID replacement.
   if ((yield* fs.realPath(policy.pythonExecutable)) !== policy.pythonExecutable) return yield* failure("enrollment");
   yield* qualifyInterpreterAncestors(policy.pythonExecutable);
   const python = yield* fs.open(policy.pythonExecutable, { noFollow: true });
@@ -96,12 +96,14 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-lifecycle-" });
     const socketPath = socketPathOverride ?? `${directory}/s`;
+    const fixedSocketPathNeedsSigtermSinceSigkillLeavesItBehind = socketPathOverride !== undefined;
     const ready = yield* Deferred.make<void, CursorLifecycleError>();
+    const qualificationAndStartupBoundSeparateFromTheReceiveBudgetMillis = 10000;
     const work = Effect.scoped(
       Effect.gen(function* () {
         const { child, next, input } = yield* Effect.gen(function* () {
           yield* qualifySource(policy, sourceContract, helperSource);
-          yield* qualifyInterpreter(policy);
+          yield* qualifyCanonicalRootOwnedInterpreterSoThisUidCannotReplaceIt(policy);
           const input = yield* Queue.unbounded<Uint8Array>();
           const encodedPolicy = yield* encodeJsonValue(publicPolicy);
           yield* Queue.offer(input, new TextEncoder().encode(`${encodedPolicy}\n`));
@@ -112,9 +114,8 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
               extendEnv: false,
               stdin: Stream.fromQueue(input),
               stderr: "ignore",
-              killSignal: socketPathOverride === undefined ? "SIGKILL" : "SIGTERM",
-              // SIGKILL leaves a fixed-path socket behind, and the next listener refuses an existing path.
-              forceKillAfter: socketPathOverride === undefined ? undefined : 2000,
+              killSignal: fixedSocketPathNeedsSigtermSinceSigkillLeavesItBehind ? "SIGTERM" : "SIGKILL",
+              forceKillAfter: fixedSocketPathNeedsSigtermSinceSigkillLeavesItBehind ? 2000 : undefined,
             }
           );
           let outputBytes = 0;
@@ -131,9 +132,12 @@ export const makeLifecycleBridge = Effect.fn("AiMetrics.lifecycle.bridge")(funct
           const readiness = yield* next;
           yield* decodeReady(readiness[0]).pipe(Effect.mapError(() => failure("kernel-binding")));
           return { child, next, input };
-        }).pipe(Effect.timeoutOrElse({ duration: 10000, orElse: () => Effect.fail(failure("transport")) }));
-        // Qualification and helper startup have their own bound. The full receive/commit
-        // budget starts only after readiness, so hashing cannot shorten the listen window.
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: qualificationAndStartupBoundSeparateFromTheReceiveBudgetMillis,
+            orElse: () => Effect.fail(failure("transport")),
+          })
+        );
         return yield* Effect.gen(function* () {
           yield* Deferred.succeed(ready, undefined);
           const message = yield* next;

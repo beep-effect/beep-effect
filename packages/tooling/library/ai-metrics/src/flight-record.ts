@@ -670,10 +670,9 @@ const FlightRecordSemanticArbitrary = Arbitrary.schema(S.Struct(FlightRecordSema
   )
 );
 
-// Constructive terminal reconciliation: rejection-filtering random
-// state/outcome/provenance triples exhausts the discard budget under seed
-// rotation, so the generator makes each triple consistent instead.
-const FlightRecordMechanicalArbitrary = Arbitrary.schema(S.Struct(FlightRecordMechanical.fields)).pipe(
+const FlightRecordMechanicalArbitraryReconciledConstructivelySinceFilteringExhaustsDiscards = Arbitrary.schema(
+  S.Struct(FlightRecordMechanical.fields)
+).pipe(
   Arbitrary.map((value) => {
     const isTerminal = LifecycleState.is.terminal(value.lifecycleState);
     return FlightRecordMechanical.make({
@@ -713,7 +712,7 @@ export const FlightRecordCompositionInputArbitrary = Arbitrary.all([
     S.Struct({ ...FlightRecordCompositionInput.fields, semantic: S.Undefined, mechanical: S.Undefined })
   ),
   FlightRecordSemanticArbitrary,
-  FlightRecordMechanicalArbitrary,
+  FlightRecordMechanicalArbitraryReconciledConstructivelySinceFilteringExhaustsDiscards,
 ]).pipe(
   Arbitrary.map(([base, semantic, mechanical]) => FlightRecordCompositionInput.make({ ...base, semantic, mechanical }))
 );

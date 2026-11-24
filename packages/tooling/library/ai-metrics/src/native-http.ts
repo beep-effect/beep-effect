@@ -284,10 +284,12 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
     request: HttpServerRequest.HttpServerRequest,
     encoding: typeof NativeContentEncoding.Type
   ) {
-    // The public Web adapter preserves an absent body as null. Some platform
-    // request.stream implementations otherwise reject valid empty protobuf.
-    const webRequest = yield* HttpServerRequest.toWeb(request).pipe(Effect.mapError(() => bodyFailure("malformed")));
-    const incoming = O.fromNullishOr(webRequest.body).pipe(
+    const webAdapterKeepingAnAbsentBodyNullSinceSomeRequestStreamsRejectEmptyProtobuf = yield* HttpServerRequest.toWeb(
+      request
+    ).pipe(Effect.mapError(() => bodyFailure("malformed")));
+    const incoming = O.fromNullishOr(
+      webAdapterKeepingAnAbsentBodyNullSinceSomeRequestStreamsRejectEmptyProtobuf.body
+    ).pipe(
       O.map((body) => Stream.fromReadableStream({ evaluate: () => body, onError: () => bodyFailure("malformed") })),
       O.getOrElse(() => Stream.empty)
     );

@@ -44,8 +44,10 @@ const project = Effect.fnUntraced(function* (policy: CoworkLifecyclePolicy, mess
   );
   const session = yield* hash(`cowork-session/v1:${native.session_id}`);
   const occurrence = yield* hash(`cowork-occurrence/v1:${policy.enrollmentId}:${envelope.occurrenceId}`);
-  // Same occurrence ID keeps one event identity, so conflicting payloads cannot become another event.
-  const eventId = yield* hash(`cowork-event/v1:${runtime}:${occurrence}`);
+  const eventIdFromRuntimeAndOccurrenceSoTheSameOccurrenceIdKeepsOneEventAndConflictingPayloadsCannotBecomeAnother =
+    yield* hash(`cowork-event/v1:${runtime}:${occurrence}`);
+  const eventId =
+    eventIdFromRuntimeAndOccurrenceSoTheSameOccurrenceIdKeepsOneEventAndConflictingPayloadsCannotBecomeAnother;
   const lifecycle = ClaudeCoworkLifecycleMetadata.make({
     kind: native.hook_event_name === "SessionStart" ? "sessionStart" : "sessionEnd",
     occurrenceHash: occurrence,

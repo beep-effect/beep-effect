@@ -99,9 +99,7 @@ const expectedSpan = S.Struct({
 const wire = S.Struct({
   resourceSpans: S.Array(S.Struct({ scopeSpans: S.Array(S.Struct({ spans: S.Array(expectedSpan) })) })),
 });
-// Include optional managed keys even when absent in the encoded request, so
-// unexpected totals/provider/session metadata cannot pass a subset comparison.
-const optionalKeys = [
+const optionalManagedKeysComparedEvenWhenAbsentSoExtraMetadataFailsSubsetChecks = [
   "ai_metrics.producer_origin",
   "ai_metrics.launch_id",
   "ai_metrics.launch_route_id",
@@ -150,10 +148,7 @@ const micros = (value: string) =>
     O.filter(parseSourceEventTime(value), (time) => time.nanoseconds % 1000 === 0),
     (time) => BigInt(time.seconds) * BigInt(1_000_000) + BigInt(Math.floor(time.nanoseconds / 1000))
   );
-// Phoenix converts integer nanoseconds through floating-point seconds into a
-// microsecond datetime. Permit only the adjacent representable floor/ceil bucket;
-// exact source nanosecond attributes are still checked independently below.
-const microsecondMatches = (stored: O.Option<bigint>, sourceNano: string) =>
+const withinPhoenixAdjacentFloatMicrosecondBucket = (stored: O.Option<bigint>, sourceNano: string) =>
   O.isSome(stored) &&
   stored.value * BigInt(1000) > BigInt(sourceNano) - BigInt(1000) &&
   stored.value * BigInt(1000) < BigInt(sourceNano) + BigInt(1000);
@@ -197,7 +192,10 @@ const timestampsMatch = (stored: PhoenixStoredSpan, expected: typeof expectedSpa
   if (O.isNone(start) || O.isNone(end)) return false;
   if (end.value < start.value) return false;
   if (expected.startTimeUnixNano === expected.endTimeUnixNano && start.value !== end.value) return false;
-  return microsecondMatches(start, expected.startTimeUnixNano) && microsecondMatches(end, expected.endTimeUnixNano);
+  return (
+    withinPhoenixAdjacentFloatMicrosecondBucket(start, expected.startTimeUnixNano) &&
+    withinPhoenixAdjacentFloatMicrosecondBucket(end, expected.endTimeUnixNano)
+  );
 };
 const storedMatches = (
   stored: PhoenixStoredSpan,
@@ -291,7 +289,10 @@ export const makeNativeReadback = Effect.fn("AiMetrics.makeNativeReadback")(func
             project: policy.project,
             traceId: Hex.encode(expected.traceId),
             spanId: Hex.encode(expected.spanId),
-            attributeKeys: A.dedupe([...R.keys(attributes), ...optionalKeys]),
+            attributeKeys: A.dedupe([
+              ...R.keys(attributes),
+              ...optionalManagedKeysComparedEvenWhenAbsentSoExtraMetadataFailsSubsetChecks,
+            ]),
           })
         );
         if (O.isNone(lookup)) return NativeReadbackResult.cases.Missing.make({ eventId });

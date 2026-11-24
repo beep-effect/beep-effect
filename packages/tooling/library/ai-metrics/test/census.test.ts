@@ -49,12 +49,18 @@ const turn = (report: CensusReport, turnClass: TurnClass) =>
     O.getOrThrow
   );
 
-// Hand-computed from the synthetic corpus (see the census-corpus fixture's record order).
 const gate = length(texts.gateTable);
 const help = length(texts.help);
 const persisted = length(texts.persisted);
-const slope = 0.505; // through (4000 chars, 1990 tokens) and (6000 chars, 3000 tokens)
-const contextTokens = 5115 + 5021; // session m1..m5 plus subagent s1..s7
+const calibrationPoint = (chars: number, tokens: number) => ({ chars, tokens });
+const lowerCorpusCalibrationPoint = calibrationPoint(4000, 1990);
+const upperCorpusCalibrationPoint = calibrationPoint(6000, 3000);
+const slope =
+  (upperCorpusCalibrationPoint.tokens - lowerCorpusCalibrationPoint.tokens) /
+  (upperCorpusCalibrationPoint.chars - lowerCorpusCalibrationPoint.chars);
+const corpusSessionM1ToM5ContextTokens = 5115;
+const corpusSubagentS1ToS7ContextTokens = 5021;
+const contextTokens = corpusSessionM1ToM5ContextTokens + corpusSubagentS1ToS7ContextTokens;
 
 it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
   describe("census over the synthetic corpus", () => {
@@ -188,17 +194,16 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         const { fixture } = yield* corpus();
         const report = yield* census(fixture);
-        const habits = (kind: string) =>
+        const runsThenTailHeadGrepUnfilteredRedirect = (kind: string) =>
           pipe(
             A.findFirst(report.filterHabits.rows, (entry) => entry.kind === kind),
             O.map((entry) => [entry.runs, ...A.map(entry.habits, (habit) => habit.runs)]),
             O.getOrThrow
           );
-        // runs, tail, head, grep, unfiltered, redirect
-        expect(habits("check")).toEqual([3, 1, 0, 0, 1, 1]);
-        expect(habits("yeet")).toEqual([2, 0, 0, 0, 2, 0]);
-        expect(habits("test")).toEqual([1, 0, 0, 1, 0, 0]);
-        expect(habits("ci-logs")).toEqual([1, 0, 0, 0, 0, 1]);
+        expect(runsThenTailHeadGrepUnfilteredRedirect("check")).toEqual([3, 1, 0, 0, 1, 1]);
+        expect(runsThenTailHeadGrepUnfilteredRedirect("yeet")).toEqual([2, 0, 0, 0, 2, 0]);
+        expect(runsThenTailHeadGrepUnfilteredRedirect("test")).toEqual([1, 0, 0, 1, 0, 0]);
+        expect(runsThenTailHeadGrepUnfilteredRedirect("ci-logs")).toEqual([1, 0, 0, 0, 0, 1]);
         expect(report.filterHabits.allRuns).toBe(7);
         expect(O.getOrThrow(report.headline.filteredRunShare)).toBeCloseTo(4 / 7, 12);
         const check = pipe(
@@ -322,47 +327,62 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         yield* fs.makeDirectory(project, { recursive: true });
         yield* fs.makeDirectory(codexRoot, { recursive: true });
         const at = (time: string) => `"timestamp":"2026-11-12T${time}Z"`;
-        const session = [
+        const openingCallAndResult = [
           `{"type":"assistant",${at("10:00:00")},"message":{"id":"a0","usage":{"input_tokens":3},"content":[{"type":"tool_use","id":"e1","name":"Bash","input":{"command":"ls"}}]}}`,
           `{"type":"user",${at("10:00:01")},"message":{"content":[{"type":"tool_result","tool_use_id":"e1","content":"four"}]}}`,
-          // One API call in two records: the first carries no usage.
+        ];
+        const oneApiCallInTwoRecordsFirstWithoutUsage = [
           `{"type":"assistant",${at("10:00:02")},"message":{"id":"a1","content":[]}}`,
           `{"type":"assistant",${at("10:00:03")},"message":{"id":"a1","usage":{"input_tokens":5},"content":[]}}`,
-          // A single large result followed by a smaller context is not a calibration sample.
+        ];
+        const largeResultThenSmallerContextIsNoCalibrationSample = [
           `{"type":"assistant",${at("10:00:04")},"message":{"id":"a2","usage":{"input_tokens":7},"content":[{"type":"tool_use","id":"e2","name":"Bash","input":{"command":"true"}}]}}`,
           `{"type":"user",${at("10:00:05")},"message":{"content":[{"type":"tool_result","tool_use_id":"e2","content":"${Str.repeat(3001)("x")}"}]}}`,
           `{"type":"assistant",${at("10:00:06")},"message":{"id":"a3","usage":{"input_tokens":1},"content":[]}}`,
-          // A user record whose content is neither text nor a block list contributes nothing.
-          `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`,
-          // A call with no usage on any record is still one API call.
-          `{"type":"assistant",${at("10:00:08")},"message":{"id":"a4","content":[]}}`,
-          // Usage that arrives on a call's second record still makes a calibration sample of the result before it.
+        ];
+        const userContentNeitherTextNorBlocksContributesNothing = `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`;
+        const callWithoutUsageOnAnyRecordIsStillOneApiCall = `{"type":"assistant",${at("10:00:08")},"message":{"id":"a4","content":[]}}`;
+        const usageOnSecondRecordStillCalibratesPrecedingResult = [
           `{"type":"assistant",${at("10:00:08")},"message":{"id":"b0","usage":{"input_tokens":10},"content":[{"type":"tool_use","id":"e3","name":"Bash","input":{"command":"true"}}]}}`,
           `{"type":"user",${at("10:00:08")},"message":{"content":[{"type":"tool_result","tool_use_id":"e3","content":"${Str.repeat(3001)("y")}"}]}}`,
           `{"type":"assistant",${at("10:00:08")},"message":{"id":"b1","content":[]}}`,
           `{"type":"assistant",${at("10:00:08")},"message":{"id":"b1","usage":{"input_tokens":2000},"content":[]}}`,
-          // Two boundary records in a row are two compactions; the summary after them is not a third.
+        ];
+        const twoBoundariesThenSummaryAreTwoCompactions = [
           `{"type":"system","subtype":"compact_boundary",${at("10:00:09")}}`,
           `{"type":"system","subtype":"compact_boundary",${at("10:00:10")}}`,
           `{"type":"user","isCompactSummary":true,${at("10:00:11")},"message":{"content":"summary"}}`,
-          // A record of the same call after the window end must not drop it, nor add its tool call to the turn.
-          '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"a1","usage":{"input_tokens":900},"content":[{"type":"tool_use","id":"late","name":"Bash","input":{"command":"bun run check"}}]}}',
         ];
-        // Opened by modification time, but its only timestamp is after the window: nothing in it counts.
-        const excluded = [
+        const sameCallAfterWindowEndKeepsCallButAddsNoToolToTurn =
+          '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"a1","usage":{"input_tokens":900},"content":[{"type":"tool_use","id":"late","name":"Bash","input":{"command":"bun run check"}}]}}';
+        const session = [
+          ...openingCallAndResult,
+          ...oneApiCallInTwoRecordsFirstWithoutUsage,
+          ...largeResultThenSmallerContextIsNoCalibrationSample,
+          userContentNeitherTextNorBlocksContributesNothing,
+          callWithoutUsageOnAnyRecordIsStillOneApiCall,
+          ...usageOnSecondRecordStillCalibratesPrecedingResult,
+          ...twoBoundariesThenSummaryAreTwoCompactions,
+          sameCallAfterWindowEndKeepsCallButAddsNoToolToTurn,
+        ];
+        const openedByMtimeButOnlyTimestampAfterWindowCountsNothing = [
           '{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"none","content":"leak"}]}}',
           '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"x","usage":{"input_tokens":1},"content":[]}}',
         ];
         yield* fs.writeFileString(path.join(project, "a.jsonl"), A.join(session, "\n"));
-        yield* fs.writeFileString(path.join(project, "b.jsonl"), A.join(excluded, "\n"));
-        // Not a transcript, a transcript that cannot be inspected, and a directory that cannot be listed.
-        yield* fs.writeFileString(path.join(project, "notes.txt"), "not a transcript");
-        // An ordinary file whose name contains the repository name is not a project directory.
-        yield* fs.writeFileString(path.join(claudeRoot, "beep-effect-notes.txt"), "not a project");
-        yield* fs.symlink(path.join(project, "missing-target"), path.join(project, "dangling.jsonl"));
-        const locked = path.join(project, "locked");
-        yield* fs.makeDirectory(locked);
-        yield* fs.chmod(locked, 0o000);
+        yield* fs.writeFileString(
+          path.join(project, "b.jsonl"),
+          A.join(openedByMtimeButOnlyTimestampAfterWindowCountsNothing, "\n")
+        );
+        const nonTranscriptFile = path.join(project, "notes.txt");
+        const uninspectableDanglingTranscript = path.join(project, "dangling.jsonl");
+        const unlistableDirectory = path.join(project, "locked");
+        const fileNamedLikeRepositoryIsNoProjectDirectory = path.join(claudeRoot, "beep-effect-notes.txt");
+        yield* fs.writeFileString(nonTranscriptFile, "not a transcript");
+        yield* fs.writeFileString(fileNamedLikeRepositoryIsNoProjectDirectory, "not a project");
+        yield* fs.symlink(path.join(project, "missing-target"), uninspectableDanglingTranscript);
+        yield* fs.makeDirectory(unlistableDirectory);
+        yield* fs.chmod(unlistableDirectory, 0o000);
         const window = CensusWindow.make({
           since: DateTime.makeUnsafe("2026-11-11T00:00:00Z"),
           until: DateTime.makeUnsafe("2026-11-18T00:00:00Z"),
@@ -371,7 +391,7 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         const report = yield* service.report(
           CensusRequest.make({ claudeRoot, codexRoot, repository: "beep-effect", window })
         );
-        yield* fs.chmod(locked, 0o700);
+        yield* fs.chmod(unlistableDirectory, 0o700);
         const sessions = O.getOrThrow(report.totals.claudeSessions);
         expect([sessions.apiCalls, sessions.inputTokens]).toEqual([7, 2026]);
         expect(report.corpus.claude).toMatchObject({ compactionBoundaries: 2 });
@@ -382,7 +402,6 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         expect(report.corpus.claude).toMatchObject({ unreadableFiles: 2 });
         expect(row(report, "unmatched-result").claude).toMatchObject({ results: 0, chars: 0 });
         expect(report.corpus.claude).toMatchObject({ filesScanned: 1, contextsActive: 1 });
-        // A root that is a file is an error, not an absent harness.
         const error = yield* service
           .report(
             CensusRequest.make({
@@ -393,8 +412,7 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
             })
           )
           .pipe(Effect.flip);
-        expect(error.reason).toBe("unreadable-root");
-        // A root that exists but cannot be inspected is an error too.
+        expect(error.reason, "a root that is a file is an error, not an absent harness").toBe("unreadable-root");
         const sealed = path.join(home, "sealed");
         yield* fs.makeDirectory(path.join(sealed, "root"), { recursive: true });
         yield* fs.chmod(sealed, 0o000);
@@ -404,7 +422,7 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
           )
           .pipe(Effect.flip);
         yield* fs.chmod(sealed, 0o700);
-        expect(denied.reason).toBe("unreadable-root");
+        expect(denied.reason, "a root that exists but cannot be inspected is an error too").toBe("unreadable-root");
       })
     );
 
@@ -494,8 +512,10 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
           })
         );
         expect(report.repository).toBe("other");
-        // b.jsonl has no timestamped record, so it never touches the window and is not scanned.
-        expect(report.corpus.claude).toMatchObject({ filesScanned: 1, compactionBoundaries: 1, oversizedLines: 0 });
+        expect(
+          report.corpus.claude,
+          "b.jsonl has no timestamped record, so it never touches the window and is not scanned"
+        ).toMatchObject({ filesScanned: 1, compactionBoundaries: 1, oversizedLines: 0 });
         expect(report.corpus.codex).toMatchObject({ filesScanned: 1, sessions: 1 });
         expect(report.turns.digFollowUp).toMatchObject({ runs: 3, zero: 1, two: 1, threeOrMore: 1, max: 3 });
         expect([report.turns.rerunsNoEdit, report.turns.rerunsSameCommand]).toEqual([1, 1]);

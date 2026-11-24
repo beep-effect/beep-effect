@@ -91,9 +91,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const reserve = journal.reserveSources(TranscriptScheduleInput.make({ candidates: ids, limit: 3 }));
       const reserve1 = yield* reserve;
       expect(reserve1).toEqual(ids);
-      // An interrupted sweep that never attempted a source leaves the schedule in place.
       const reserve2 = yield* reserve;
-      expect(reserve2).toEqual(ids);
+      expect(reserve2, "an interrupted sweep that never attempted a source leaves the schedule in place").toEqual(ids);
       yield* journal.recordAttempt(a);
       const reserve3 = yield* reserve;
       expect(reserve3).toEqual([b, c, a]);

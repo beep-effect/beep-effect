@@ -7,42 +7,56 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 
-// Every path in a schema's decoded side that can hold free text, or whose node is not known to be text-free.
-// Literal domains, version tags and declarations without text parameters (DateTime) hold none.
 const keyOf = (name: PropertyKey) => (P.isString(name) ? name : "<symbol>");
 
-const textFreeDeclarations: ReadonlyArray<string> = ["DateTime.Utc", "Option"];
-const textFreeLeaves: ReadonlyArray<string> = ["Number", "Boolean", "Literal", "Null", "Undefined", "Enum"];
+const textFreeDeclarationsTheCensusUsesUtcInstantsAndOptions: ReadonlyArray<string> = ["DateTime.Utc", "Option"];
+const textFreeLeavesAnyOtherNodeFailsClosed: ReadonlyArray<string> = [
+  "Number",
+  "Boolean",
+  "Literal",
+  "Null",
+  "Undefined",
+  "Enum",
+];
 
-const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> =>
+const decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree = (
+  ast: SchemaAST.AST,
+  path: string
+): ReadonlyArray<string> =>
   Match.value(ast).pipe(
     Match.tag("String", "TemplateLiteral", () => [path]),
     Match.tag("Objects", (objects) => [
       ...A.flatMap(objects.propertySignatures, (property) =>
-        freeTextPaths(property.type, `${path}.${keyOf(property.name)}`)
+        decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(property.type, `${path}.${keyOf(property.name)}`)
       ),
       ...A.flatMap(objects.indexSignatures, (index) => [
-        ...freeTextPaths(index.parameter, `${path}[key]`),
-        ...freeTextPaths(index.type, `${path}[value]`),
+        ...decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(index.parameter, `${path}[key]`),
+        ...decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(index.type, `${path}[value]`),
       ]),
     ]),
     Match.tag("Arrays", (arrays) =>
-      A.flatMap([...arrays.elements, ...arrays.rest], (element) => freeTextPaths(element, `${path}[]`))
+      A.flatMap([...arrays.elements, ...arrays.rest], (element) =>
+        decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(element, `${path}[]`)
+      )
     ),
-    Match.tag("Union", (union) => A.flatMap(union.types, (member) => freeTextPaths(member, path))),
-    // A declaration passes only by name: the census uses UTC instants and options. Any other one is unverified.
+    Match.tag("Union", (union) =>
+      A.flatMap(union.types, (member) => decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(member, path))
+    ),
     Match.tag("Declaration", (declaration) => {
       const expected = String(declaration.annotations?.expected);
-      return A.contains(textFreeDeclarations, expected)
-        ? A.flatMap(declaration.typeParameters, (parameter) => freeTextPaths(parameter, `${path}<>`))
+      return A.contains(textFreeDeclarationsTheCensusUsesUtcInstantsAndOptions, expected)
+        ? A.flatMap(declaration.typeParameters, (parameter) =>
+            decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(parameter, `${path}<>`)
+          )
         : [`${path}:Declaration(${expected})`];
     }),
-    Match.tag("Suspend", (suspend) => freeTextPaths(suspend.thunk(), path)),
-    // Leaves that cannot hold text pass by name; any other node (unknown, any, object, symbol) fails closed.
-    Match.orElse((leaf) => (A.contains(textFreeLeaves, leaf._tag) ? [] : [`${path}:${leaf._tag}`]))
+    Match.tag("Suspend", (suspend) => decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(suspend.thunk(), path)),
+    Match.orElse((leaf) =>
+      A.contains(textFreeLeavesAnyOtherNodeFailsClosed, leaf._tag) ? [] : [`${path}:${leaf._tag}`]
+    )
   );
 
-const walk = (schema: S.Top) => freeTextPaths(SchemaAST.toType(schema.ast), "$");
+const walk = (schema: S.Top) => decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(SchemaAST.toType(schema.ast), "$");
 
 describe("census report schema (AC1)", () => {
   it("holds no free-text string anywhere in the report", () => {
@@ -62,8 +76,7 @@ describe("census report schema (AC1)", () => {
       later: S.suspend(() => S.String),
       loose: S.Unknown,
       link: S.URL,
-      // A declaration whose name only starts like an allowed one is still unverified.
-      secret: S.URL.annotate({ expected: "OptionSecret" }),
+      declarationNamedLikeAnAllowedOneIsStillUnverified: S.URL.annotate({ expected: "OptionSecret" }),
       count: S.Finite,
     });
     expect(walk(leaky)).toEqual([
@@ -73,7 +86,7 @@ describe("census report schema (AC1)", () => {
       "$.later",
       "$.loose:Unknown",
       "$.link:Declaration(URL)",
-      "$.secret:Declaration(OptionSecret)",
+      "$.declarationNamedLikeAnAllowedOneIsStillUnverified:Declaration(OptionSecret)",
     ]);
   });
 

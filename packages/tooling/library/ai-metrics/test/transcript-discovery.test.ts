@@ -284,9 +284,8 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         A.map(page.sources, (source) => source.path);
       const first = yield* d.next;
       expect(first.sources).toHaveLength(2);
-      // The sweep for the first page never recorded its reads (an interrupted cycle).
-      const next4 = yield* d.next;
-      expect(paths(next4)).toEqual(paths(first));
+      const afterAnInterruptedCycleThatNeverRecordedItsReads = yield* d.next;
+      expect(paths(afterAnInterruptedCycleThatNeverRecordedItsReads)).toEqual(paths(first));
       const recorded = yield* runDiscoveredTranscriptSweep(f.config, d, policy);
       expect(recorded.sweep.outcomes).toHaveLength(2);
       const later = yield* d.next;
@@ -300,9 +299,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const f = yield* fixture();
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const handles = yield* Ref.make<ReadonlyArray<ChildProcessSpawner.ChildProcessHandle>>([]);
-      // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather than
-      // wraps.
-      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14): decorates the real platform spawner, which ScriptedSpawner replaces
       const tracked = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(Effect.tap((handle) => Ref.update(handles, A.append(handle))))
       );
@@ -359,9 +356,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const reading = yield* Deferred.make<void>();
       const handles = yield* Ref.make<ReadonlyArray<ChildProcessSpawner.ChildProcessHandle>>([]);
-      // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather than
-      // wraps.
-      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14): decorates the real platform spawner, which ScriptedSpawner replaces
       const stalled = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(
           Effect.map((handle) => {
@@ -409,8 +404,11 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       }
       expect(sawPartial && completed).toBe(true);
       const raw = yield* scanner.next;
-      // An unrecorded page is not silently declared assessed.
-      if (raw.sources.length > 0) expect(raw.report.roots[0]?.read.pending).toBeGreaterThan(0);
+      if (raw.sources.length > 0)
+        expect(
+          raw.report.roots[0]?.read.pending,
+          "an unrecorded page is not silently declared assessed"
+        ).toBeGreaterThan(0);
       expect((yield* (yield* makeTranscriptIntakeJournal(f.config)).stats).pages).toBe(0);
     })
   )

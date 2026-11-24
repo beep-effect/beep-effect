@@ -30,7 +30,7 @@ class RuntimeFixtureError extends S.TaggedError<RuntimeFixtureError, { readonly 
 const failure = (reason: RuntimeFixtureError["reason"]) => RuntimeFixtureError.make({ reason });
 /**
  * Observe terminal completion and require the exact owned process handle to be stopped.
- * A scoped signal is not represented as a successful zero exit status.
+ * A native command-bearing error is never exposed. A scoped signal is an exit observation, not a successful zero exit.
  * **Example** (Inspect the process observation helper)
  * ```ts
  * import { observeFixtureProcessStopped } from "@beep/repo-ai-metrics/test/sealed-runtime"
@@ -47,8 +47,6 @@ export const observeFixtureProcessStopped = Effect.fn("NativeBoundaryTest.proces
   },
   Effect.mapError(() => failure("runtime"))
 );
-// One real process serves serial fixture callbacks, preserving runtime PID/start-ticks for replay.
-// Only bounded ACK text leaves stdout; the input channel keeps lost-ACK peers alive until teardown.
 /**
  * Fixed synthetic socket peer program shared by private runtime ancestry fixtures.
  * **Example** (Inspect the fixture program without launching it)
@@ -87,7 +85,6 @@ const sealRuntimeCopy = Effect.fnUntraced(function* () {
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "sealed-runtime-" });
   yield* fs.chmod(directory, 0o700);
   const executable = `${directory}/runtime`;
-  // Fresh exclusive directory + copyFile creates distinct bytes/inode, never a hardlink.
   yield* fs.copyFile(source, executable);
   yield* fs.chmod(executable, 0o500);
   const copied = yield* fs.stat(executable);
@@ -123,7 +120,8 @@ const sealRuntimeCopy = Effect.fnUntraced(function* () {
 
 /**
  * Copy and seal the actual test executable, then launch that same byte-identical copy as a peer.
- * Source/system/cache permissions are never changed and no hardlink is created.
+ * A fresh exclusive directory and copyFile create a separate byte copy and inode, never a hardlink.
+ * Source, system, and cache permissions are never changed.
  * **Example** (Inspect the private fixture factory)
  * ```ts
  * import { makeSealedRuntimeFixture } from "@beep/repo-ai-metrics/test/sealed-runtime"
@@ -139,20 +137,23 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
   return yield* Effect.gen(function* () {
     const sealed = yield* sealRuntimeCopy();
     const { executable } = sealed;
-    const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
-    const semaphore = yield* Semaphore.make(1);
+    const inputChannelKeepingLostAckPeersAliveUntilTeardown = yield* Effect.acquireRelease(
+      Queue.bounded<Uint8Array>(1),
+      Queue.shutdown
+    );
+    const oneRealProcessServesCallbacksSeriallyKeepingItsPidAndStartTicks = yield* Semaphore.make(1);
     const child = yield* ChildProcess.make(executable, ["--eval", sealedRuntimeSocketPeerSource], {
       extendEnv: false,
       cwd: process.cwd(),
-      stdin: Stream.fromQueue(commands),
+      stdin: Stream.fromQueue(inputChannelKeepingLostAckPeersAliveUntilTeardown),
       stderr: "ignore",
       killSignal: "SIGKILL",
     });
-    let count = 0;
+    let boundedAckTextBytes = 0;
     const next = yield* child.stdout.pipe(
       Stream.mapEffect((chunk) => {
-        count += chunk.byteLength;
-        return count <= 1024 ? Effect.succeed(chunk) : Effect.fail(failure("transport"));
+        boundedAckTextBytes += chunk.byteLength;
+        return boundedAckTextBytes <= 1024 ? Effect.succeed(chunk) : Effect.fail(failure("transport"));
       }),
       Stream.decodeText(),
       Stream.splitLines,
@@ -167,8 +168,11 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
           new TextEncoder().encode(body).byteLength > 8192
         )
           return yield* failure("transport");
-        count = 0;
-        yield* Queue.offer(commands, new TextEncoder().encode(`${drop ? "drop" : "ack"}|${socketPath}\n${body}\n`));
+        boundedAckTextBytes = 0;
+        yield* Queue.offer(
+          inputChannelKeepingLostAckPeersAliveUntilTeardown,
+          new TextEncoder().encode(`${drop ? "drop" : "ack"}|${socketPath}\n${body}\n`)
+        );
         const line = yield* next;
         const reply = `${line[0]}\n`;
         if (drop) {
@@ -176,13 +180,11 @@ export const makeSealedRuntimeFixture = Effect.fn("NativeBoundaryTest.sealedRunt
         }
         return reply;
       },
-      semaphore.withPermit,
+      oneRealProcessServesCallbacksSeriallyKeepingItsPidAndStartTicks.withPermit,
       Effect.onInterrupt(() => close),
       Effect.timeoutOrElse({ duration: "6 seconds", orElse: () => Effect.fail(failure("transport")) }),
       Effect.mapError(() => failure("transport"))
     );
-    // A scope-owned SIGKILL is an exit observation, not an expected zero exit code.
-    // Require the exact handle to report stopped; never expose the native command-bearing error.
     const closed = observeFixtureProcessStopped(child);
     return { ...sealed, send, close, closed };
   }).pipe(
