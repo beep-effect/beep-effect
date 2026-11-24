@@ -21,36 +21,32 @@ import { makeM365Stub } from "./MailTagging.adapters.fixture.ts";
 export const DIRECTORY = "/fixture/state/docket-intake";
 export const MAILBOX = "docket@fixture.invalid";
 
-// The store names its temporary files after the process, which it reads from `/proc/self`.
-// The app's test support has the same layer; neither can import the other's test files.
+const PID_THE_STORE_NAMES_TEMP_FILES_AFTER = "4242";
+
 // fallow-ignore-next-line code-duplication -- test-only Linux-shaped memory file system; the app test support has the same layer and neither may import the other's test files. Owner: @beep/law-practice-server. Exit: import it from @beep/test-utils once it ships a memory FileSystem layer.
 const LinuxFileSystemLayer = Layer.effect(
   FileSystem.FileSystem,
   Effect.gen(function* () {
     const memory = yield* MemoryFileSystem.make;
     yield* memory.makeDirectory("/proc", { recursive: true });
-    yield* memory.symlink("4242", "/proc/self");
+    yield* memory.symlink(PID_THE_STORE_NAMES_TEMP_FILES_AFTER, "/proc/self");
     return memory;
   }).pipe(Effect.orDie)
 );
 
-/** An in-memory file system that looks like Linux, and POSIX paths. */
-const FilesLayer = Layer.merge(LinuxFileSystemLayer, Path.layer);
+const LinuxMemoryFilesAndPosixPathsLayer = Layer.merge(LinuxFileSystemLayer, Path.layer);
 
 /** The file store of the fixture directory over the in-memory file system. */
 export const StoreLayer = makeDocketFileStoreLayer(DocketFileStoreOptions.make({ directory: DIRECTORY })).pipe(
-  Layer.provideMerge(FilesLayer)
+  Layer.provideMerge(LinuxMemoryFilesAndPosixPathsLayer)
 );
 
 type FakeGraphShape = {
-  /** Verbs called, in order, with the id they were called for. */
   readonly calls: Ref.Ref<ReadonlyArray<string>>;
   readonly events: Ref.Ref<HashMap.HashMap<string, GraphEvent>>;
-  /** A verb that fails with this error from now on, by verb name. */
-  readonly failing: Ref.Ref<HashMap.HashMap<string, M365Error>>;
+  readonly failingFromNowOnByVerb: Ref.Ref<HashMap.HashMap<string, M365Error>>;
   readonly messages: Ref.Ref<HashMap.HashMap<string, GraphMessage>>;
-  /** How many category writes still answer 412 before one goes through. */
-  readonly staleWrites: Ref.Ref<number>;
+  readonly staleCategoryWritesLeft: Ref.Ref<number>;
 };
 
 export class FakeGraph extends Context.Service<FakeGraph, FakeGraphShape>()(
@@ -79,9 +75,9 @@ const FakeGraphStateLayer = Layer.effect(
     return FakeGraph.of({
       calls: yield* Ref.make<ReadonlyArray<string>>([]),
       events: yield* Ref.make(HashMap.empty<string, GraphEvent>()),
-      failing: yield* Ref.make(HashMap.empty<string, M365Error>()),
+      failingFromNowOnByVerb: yield* Ref.make(HashMap.empty<string, M365Error>()),
       messages: yield* Ref.make(HashMap.empty<string, GraphMessage>()),
-      staleWrites: yield* Ref.make(0),
+      staleCategoryWritesLeft: yield* Ref.make(0),
     });
   })
 );
@@ -92,7 +88,7 @@ export const FakeGraphLayer = Layer.unwrap(
     const fake = yield* FakeGraph;
     const call = Effect.fnUntraced(function* (verb: string, id: string) {
       yield* Ref.update(fake.calls, A.append(`${verb} ${id}`));
-      const got = yield* Ref.get(fake.failing);
+      const got = yield* Ref.get(fake.failingFromNowOnByVerb);
       const failure = HashMap.get(got, verb);
       if (O.isSome(failure)) {
         return yield* failure.value;
@@ -125,20 +121,14 @@ export const FakeGraphLayer = Layer.unwrap(
         yield* call("updateMessageCategories", request.messageId);
         const got4 = yield* Ref.get(fake.messages);
         const current = yield* found(HashMap.get(got4, request.messageId));
-        const stale = yield* Ref.getAndUpdate(fake.staleWrites, (count) => count - 1);
+        const stale = yield* Ref.getAndUpdate(fake.staleCategoryWritesLeft, (count) => count - 1);
         if (stale > 0) {
-          // Someone else changed the message in between: its change key moves on.
-          yield* Ref.update(
-            fake.messages,
-            HashMap.set(
-              request.messageId,
-              mailMessage({
-                categories: O.getOrElse(current.categories, A.empty),
-                changeKey: "ck-2",
-                id: request.messageId,
-              })
-            )
-          );
+          const changedBySomeoneElseInBetween = mailMessage({
+            categories: O.getOrElse(current.categories, A.empty),
+            changeKey: "ck-2",
+            id: request.messageId,
+          });
+          yield* Ref.update(fake.messages, HashMap.set(request.messageId, changedBySomeoneElseInBetween));
           return yield* preconditionFailed;
         }
         yield* Ref.update(

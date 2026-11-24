@@ -1517,7 +1517,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 560,
+      "line": 504,
       "owner": "@beep/law-practice-server",
       "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },
