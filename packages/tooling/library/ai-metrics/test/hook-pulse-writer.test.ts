@@ -34,7 +34,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
@@ -56,40 +56,21 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-// `Git` rides over the platform spawner: the snapshot reads the index through the kit (W2b).
-const GitNodeServices = Layer.provideMerge(Git.layer, NodeServices.layer);
+const GitKitOverNodeSpawner = Layer.provideMerge(Git.layer, NodeServices.layer);
 
-// The writer is shell, so the only honest conformance test spawns the real
-// script and decodes what it wrote. `HookPulseV1` carries the
-// `HookPulseWaitReasonInvariant` filter, so a jq derivation that ever drifts
-// from the TypeScript `deriveWaitReason` fails the decode rather than silently
-// producing a wrong ledger.
-// `fileURLToPath`, not `URL.pathname`: the latter is percent-encoded, so a
-// checkout path containing a space or `#` would yield an unspawnable writer path.
-const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
+const fileURLToPathPercentDecodesSoASpaceOrHashStaysSpawnable = NodeURL.fileURLToPath;
+const repoRoot = fileURLToPathPercentDecodesSoASpaceOrHashStaysSpawnable(new URL("../../../../../", import.meta.url));
 const decodeHookPulseRefusalJson = S.decodeEffect(S.fromJsonString(HookPulseRefusal));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
-// The Cursor adapter renames camelCase events into the ledger vocabulary, tags rows
-// `cursor-cli`, and — unlike the Claude writer — MUST print a permission decision, because
-// Cursor treats an empty stdout on a permission hook as malformed JSON and blocks the tool.
 const cursorWriterPath = `${repoRoot}.cursor/hooks/hook-pulse.sh`;
 const notifierPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
-// The operator half of the same instrument: the switch writes the sentinel the
-// writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
 
-// Module scope: the compiled guard is built once, as the oxlint hoist rule requires.
 const isHookPulseAgentKind = S.is(HookPulseAgentKind);
 
-// Two guards exit before the writer reads stdin: the kill switch and an agent kind
-// outside `HookPulseAgentKind`. Ignoring the pipe in those cases avoids racing a payload
-// write against the child's intentional exit. With the pipe attached, the parent's write
-// can land on a reader that has already gone, and Bun's fs-backed stdin stream reports
-// that EPIPE from its post-`finish` destroy — after the sink has released its error
-// listener — as an unhandled error that fails the run with every test passing (hosted
-// Property Laws on this branch; main's nightly sweep of 2026-09-20).
-const writerStdinFor = (
+// decision: hook-pulse-writer-test-spawns-through-effect-child-process
+const stdinOrIgnoredWhenAGuardExitsBeforeReading = (
   stdin: string,
   options: { readonly agentKind?: string | undefined; readonly disarmSentinel?: string | undefined }
 ) =>
@@ -98,44 +79,15 @@ const writerStdinFor = (
     ? ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true } as const)
     : ("ignore" as const);
 
-// A distinctive marker planted in every content-bearing raw key measured by the
-// P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
-// in the clear *or* hashed. A raw leak is the obvious failure, but a writer that
-// decided to pseudonymize a content field instead of dropping it would still
-// have put content-derived material in the ledger, so both forms are asserted.
 const CANARY = "CANARY-SECRET-VALUE";
 
-// A salt no clone would have configured, used to prove the salt actually enters
-// the preimage. Every default-salt assertion in this file also passes for a
-// writer that ignored the operator salt entirely, because the fallback constant
-// is what such a writer would have used anyway.
 const OPERATOR_SALT = "hook-pulse-writer-operator-salt";
 
-// The cross-implementation oracle. `sessionId`, `cwd`, and `transcriptPath` are
-// `Sha256Hex` on the schema side, so no assertion can compare against a raw
-// value any more — and a shape assertion alone is worthless here, because the
-// most likely way to get this wrong produces a perfectly well-formed digest.
-// Bash cannot hold a NUL in a variable and strips it from a heredoc, so a writer
-// that assembles `salt<NUL>value` as a shell value hashes `saltvalue` instead
-// and emits 64 lowercase hex characters that decode cleanly and are simply
-// wrong. Recomputing the expected digest with the same `hashPrivateIdentifier`
-// the codecs use is what makes the two halves provably agree, exactly as the
-// `HookPulseWaitReasonInvariant` filter does for the wait derivation.
-const privateDigest = (value: string) => hashPrivateIdentifier(value, O.none());
+const typeScriptOraclePrivateDigest = (value: string) => hashPrivateIdentifier(value, O.none());
 
-// One salt for the writer child and the codec provider alike, so a parity case
-// reads as "both halves were told the same thing" rather than as two constants
-// that happen to match.
-const CODEC_PARITY_SALT = "hook-pulse-writer-codec-parity-salt";
+const SALT_SHARED_BY_WRITER_AND_CODEC = "hook-pulse-writer-codec-parity-salt";
 
-// The workstation that owns this instrument exports a real operator salt into
-// the environment vitest inherits, so a codec decode that read the ambient
-// provider would assert one thing here and another in CI — and would print that
-// salt into a failure diff. Every parity case pins its own provider, the cleared
-// one included. Mutating `process.env` is not an alternative: `fromEnv`
-// snapshots the environment once per process and `Context.Reference` memoizes
-// its default, so the first read freezes it.
-const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
+const withPinnedSaltProviderNotAmbientEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
 
 const decodeHookPulseFromRaw = S.decodeUnknownEffect(HookPulseV1FromRawEvent);
@@ -143,18 +95,9 @@ const decodeHookPulseRow = HookPulseV1.decodeJsonEffect;
 const decodeRowKeys = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
 const decodeRowString = S.decodeUnknownEffect(S.String);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
-// Fixture payloads are raw harness shapes, not a schema this package owns, so the
-// unknown-shaped encoder is the right rung: it renders stdin without pretending the
-// content-bearing keys we deliberately never model are part of the contract.
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeRawHarnessJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-// Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
-// a leak or a drift, whichever it turns out to be. Stated by hand so the leak
-// assertion below reads as an allowlist rather than as a tautology against the
-// schema — and asserted set-equal to `HookPulseV1.fields` by
-// "declares exactly the canonical HookPulseV1 encoded surface", so adding a name
-// here that no schema field carries cannot quietly license a real leak.
-const canonicalRowKeys = [
+const handStatedCanonicalRowKeys = [
   "schemaVersion",
   "ts",
   "sessionId",
@@ -181,14 +124,7 @@ const canonicalRowKeys = [
   "agentId",
 ];
 
-// Pulls a `def <name>: [ "a", "b" ];` allowlist back out of the writer. The
-// script hand-duplicates two literal domains that only the schema really owns,
-// and nothing in shell can detect a typo in them: a mistyped event name drops
-// 100% of that event's rows while every example fixture for the other events
-// stays green. Reading the definitions back turns that duplication into a
-// checked one. A failed extraction yields an empty list, which fails the
-// set-equality assertion rather than passing vacuously.
-const jqAllowlist = (source: string, definition: string): ReadonlyArray<string> =>
+const jqAllowlistOrEmptyWhenExtractionFails = (source: string, definition: string): ReadonlyArray<string> =>
   O.match(O.fromNullishOr(new RegExp(`def ${definition}:\\s*\\[([^\\]]*)\\];`).exec(source)?.[1]), {
     onNone: () => A.empty<string>(),
     onSome: (body) =>
@@ -204,7 +140,6 @@ interface WriterRun {
   readonly stdout: string;
 }
 
-// Assertion messages survive TestConsole capture and include zero-row failures.
 const assertAdapterStamp = Effect.fnUntraced(function* (
   run: WriterRun,
   agentKind: HookPulseAgentKind,
@@ -212,27 +147,21 @@ const assertAdapterStamp = Effect.fnUntraced(function* (
   harnessHash: string
 ) {
   const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row), { concurrency: 1 });
-  const diagnostics = yield* encodeJson({
+  const diagnostics = yield* encodeRawHarnessJson({
     agentKind,
     exitCode: run.exitCode,
     stderr: run.stderr,
     refusalReasons: A.map(refusals, (refusal) => refusal.reason),
   });
-  const message = `${agentKind} stamp diagnostics: ${diagnostics}`;
-  expect(run.stdout, message).toBe(stdout);
-  expect(run.rows, message).toHaveLength(1);
+  const diagnosticsSurvivingTestConsoleCapture = `${agentKind} stamp diagnostics: ${diagnostics}`;
+  expect(run.stdout, diagnosticsSurvivingTestConsoleCapture).toBe(stdout);
+  expect(run.rows, diagnosticsSurvivingTestConsoleCapture).toHaveLength(1);
   const decoded = yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow));
-  expect(O.isSome(decoded.harnessHash), message).toBe(true);
+  expect(O.isSome(decoded.harnessHash), diagnosticsSurvivingTestConsoleCapture).toBe(true);
   assertSome(decoded.harnessHash, harnessHash);
-  expect(decoded.agentKind, message).toBe(agentKind);
+  expect(decoded.agentKind, diagnosticsSurvivingTestConsoleCapture).toBe(agentKind);
 });
 
-// Runs the real hook against an isolated evidence root so the live ledger — which
-// already holds the committed 2026-08-01 spike corpus — can never receive a
-// synthetic fixture row. The expected output location is derived from the
-// exported path helpers rather than restated, so the shell writer and the
-// TypeScript reader fail this test the moment they disagree about where the
-// ledger lives.
 const readWriterLines = Effect.fnUntraced(function* (directory: string, files: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -246,6 +175,8 @@ const readWriterLines = Effect.fnUntraced(function* (directory: string, files: R
   );
   return A.flatten(forEach1);
 });
+
+const UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT = "";
 
 type WriterOptions = {
   readonly agentKind?: string;
@@ -262,63 +193,37 @@ type WriterOptions = {
   readonly writerArgs?: ReadonlyArray<string>;
   readonly attemptUtc?: string;
   readonly executablePath?: string;
-  // Host and notifier knobs for the D3 host-guard cases; spread last so a case
-  // can opt into the desktop notifier revision the legacy fixtures pin off.
-  readonly extraEnv?: Readonly<Record<string, string>>;
+  readonly lastSpreadEnvOverrides?: Readonly<Record<string, string>>;
 };
 
-// Every salt rung is cleared unless a case sets one, so a developer who
-// exports a real ai-metrics salt cannot change what these digests are.
-// Cleared, they exercise the insecure-default fallback that keeps an
-// unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
-// The later rungs are settable so the codec-parity cases can prove both
-// halves walk the *same* chain rather than only its first link. The projection
-// rung sits between the two variables: cleared, the writer falls to its XDG
-// default under the temp HOME, where no projection exists, so an applied
-// workstation projection can never leak into these digests; a case that
-// exercises the rung names its fixture file explicitly.
-const saltEnvironment = (stateHome: string, options: WriterOptions) => ({
-  BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
-  BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
-  BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: options.namespaceProjection ?? "",
+const saltEnvironmentClearedUnlessACaseSetsIt = (stateHome: string, options: WriterOptions) => ({
+  BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
+  BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
+  BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: options.namespaceProjection ?? UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
   XDG_CACHE_HOME: `${stateHome}/.cache`,
 });
+const LOG_ONLY_NOTIFIER_REV_PINNED_FOR_LEGACY_FIXTURES = "log-only-0";
+const CURSOR_WRITER_CAP_LIFTED_FROM_3S_FOR_LOADED_HOSTS = "60s";
+const writerFallbackCwdPinnedOverInheritedPwd = repoRoot;
 
 const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => ({
   HOME: stateHome,
   XDG_STATE_HOME: stateHome,
   XDG_CONFIG_HOME: `${stateHome}/.config`,
-  // The writer reads `$PWD` as its `fallbackCwd`, and `cwd` above does not rewrite
-  // the inherited `PWD` — bash would correct it at startup, but the correction is
-  // not this test's to assume now that the environment is inherited rather than
-  // rebuilt.
-  PWD: repoRoot,
-  // Empty values fall through to the writer's own `:-` defaults, so ambient
-  // developer configuration cannot change what this test asserts. Clearing
-  // BEEP_AGENT_EVIDENCE_ROOT exercises the XDG_STATE_HOME fallback rung of
-  // the precedence chain and must resolve to the same place.
-  BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? "" : evidenceRoot,
-  BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
-  // The production fallback is now the post-baseline notifier revision.
-  // Legacy writer fixtures pin log-only explicitly so their assertion stays
-  // about projection semantics rather than the current intervention state.
-  BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
-  BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
-  // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
-  // empty falls through to the writer's `claude-code` default.
-  BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
-  // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
-  // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
-  BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
+  PWD: writerFallbackCwdPinnedOverInheritedPwd,
+  BEEP_AGENT_EVIDENCE_ROOT: options.viaXdgFallback === true ? UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT : evidenceRoot,
+  BEEP_HOOK_PULSE_DISARM_SENTINEL: UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
+  BEEP_HOOK_PULSE_NOTIFIER_REV: LOG_ONLY_NOTIFIER_REV_PINNED_FOR_LEGACY_FIXTURES,
+  BEEP_HOOK_PULSE_INSTRUMENT_CLASS: UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
+  BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
+  BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: CURSOR_WRITER_CAP_LIFTED_FROM_3S_FOR_LOADED_HOSTS,
   BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
   BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
-  ...saltEnvironment(stateHome, options),
-  BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
-  // Cleared so an ambient cloud container's `BEEP_AGENT_HOST=cloud` cannot
-  // change which writer branch a case exercises.
-  BEEP_AGENT_HOST: "",
+  ...saltEnvironmentClearedUnlessACaseSetsIt(stateHome, options),
+  BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
+  BEEP_AGENT_HOST: UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
   ...(options.executablePath !== undefined ? { PATH: options.executablePath } : {}),
-  ...options.extraEnv,
+  ...options.lastSpreadEnvOverrides,
 });
 
 const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOptions = {}) {
@@ -326,8 +231,8 @@ const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOpt
   const stateHome = yield* fs.makeTempDirectoryScoped({
     prefix: "beep-hook-pulse-",
   });
-  const evidenceRoot = agentEvidenceRoot(stateHome);
-  const storeDir = hookPulseLedgerDir(evidenceRoot);
+  const isolatedEvidenceRoot = agentEvidenceRoot(stateHome);
+  const ledgerDirFromExportedPathHelpers = hookPulseLedgerDir(isolatedEvidenceRoot);
   if (options.defaultProjectionDocument !== undefined) {
     const projectionDir = `${stateHome}/.cache/beep/telemetry`;
     yield* fs.makeDirectory(projectionDir, { recursive: true });
@@ -335,57 +240,26 @@ const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOpt
   }
 
   if (O.isSome(O.fromUndefinedOr(options.disarmSentinel))) {
-    yield* fs.makeDirectory(evidenceRoot, { recursive: true });
-    yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
+    yield* fs.makeDirectory(isolatedEvidenceRoot, { recursive: true });
+    yield* fs.writeFileString(hookPulseDisarmSentinelPath(isolatedEvidenceRoot), `${options.disarmSentinel}\n`);
   }
 
-  const childStdin = writerStdinFor(stdin, options);
+  const childStdin = stdinOrIgnoredWhenAGuardExitsBeforeReading(stdin, options);
 
-  // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
-  // `node:child_process`. Measured: inside a vitest worker under the coverage script
-  // (`bunx vitest run --coverage`, a different runtime from `bunx --bun vitest run`),
-  // Bun's spawn does not deliver stdin from a TypedArray at all — a `cat` probe echoed
-  // "". Its async form additionally never closed stdin, so the writer's
-  // `payload="$(cat)"` blocked on EOF forever: that is the 40-minute CI hang, reaped as
-  // 8 orphan `bash` + 8 orphan `cat`. `yeet verify` runs each package's `test` script
-  // and never the `coverage` one, so no local proof could reach it. The spawner behind
-  // `ChildProcess` delivers stdin and closes it under both runtimes, and it is what the
-  // repo's `nodeBuiltinImport` law names as the replacement for `node:child_process`.
+  // decision: hook-pulse-writer-test-spawns-through-effect-child-process
   const handle = yield* ChildProcess.make(
     options.writerPath ?? writerPath,
     options.writerArgs ?? (options.registeredEvent !== undefined ? ["--event", options.registeredEvent] : []),
     {
       cwd: repoRoot,
-      // Inherited, not restated. The writer shells out to `jq`, `sha256sum`, `date`, and
-      // `cat`, so it needs `PATH`, and without `extendEnv` a provided `env` *replaces* the
-      // child environment rather than extending it. Letting the spawner inherit also keeps
-      // a `process.env` read out of this file, which the repo's `processEnvInEffect` law
-      // forbids.
-      //
-      // Note for anyone debugging a future empty-store failure: an earlier revision here
-      // blamed a dropped `PATH` for exactly that symptom. That was wrong. `extendEnv` is
-      // implemented as `{ ...globalThis.process.env, ...options.env }`
-      // (`NodeChildProcessSpawner`) — the very spread the old comment accused — and it
-      // works. The real cause was that Bun's spawn never delivered stdin in this worker at
-      // all, so the writer parsed nothing and took its fail-open exit. Empty store means
-      // "the writer bailed"; it does not tell you which guard bailed. Instrument before
-      // concluding — a two-minute `cat`-echo probe settled it after two wrong theories.
       extendEnv: true,
-      env: writerEnvironment(stateHome, evidenceRoot, options),
-      // `endOnDone` is stated rather than left to its `true` default: closing stdin once
-      // the payload is written is the whole reason this run terminates, so it is part of
-      // what the helper promises and not an incidental default someone may retune.
+      env: writerEnvironment(stateHome, isolatedEvidenceRoot, options),
       stdin: childStdin,
       stdout: "pipe",
       stderr: "pipe",
     }
   );
 
-  // Drained concurrently with the exit wait, never after it: a child that filled a pipe
-  // buffer while the parent sat blocked on `exitCode` is the other shape of the same
-  // hang. A signal death fails `handle.exitCode` with a `PlatformError` naming the
-  // signal instead of yielding a code, which for this always-exits-0 writer is itself
-  // the bug worth failing on, so it is left to propagate rather than coerced to success.
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
       handle.stdout.pipe(Stream.decodeText, Stream.mkString),
@@ -395,15 +269,15 @@ const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOpt
     { concurrency: "unbounded" }
   );
 
-  const files = yield* fs.readDirectory(storeDir).pipe(Effect.orElseSucceed(A.empty<string>));
-  const rows = yield* readWriterLines(storeDir, files);
+  const files = yield* fs.readDirectory(ledgerDirFromExportedPathHelpers).pipe(Effect.orElseSucceed(A.empty<string>));
+  const rows = yield* readWriterLines(ledgerDirFromExportedPathHelpers, files);
   const refusalFiles = yield* fs
-    .readDirectory(evidenceRoot)
+    .readDirectory(isolatedEvidenceRoot)
     .pipe(
       Effect.orElseSucceed(A.empty<string>),
       Effect.map(A.filter((name) => Str.startsWith("hook-pulse-refusals-")(name)))
     );
-  const refusals = yield* readWriterLines(evidenceRoot, refusalFiles);
+  const refusals = yield* readWriterLines(isolatedEvidenceRoot, refusalFiles);
   return { exitCode, files, stderr, stdout, rows, refusals, refusalFiles, stateHome };
 });
 
@@ -415,9 +289,6 @@ const baseFields = {
   transcript_path: "/tmp/claude/session-writer.jsonl",
 };
 
-// Raw key sets below are the measured 2.1.220 ground truth from
-// `goals/coding-agent-effectiveness-evidence-loop/research/2026-08-01-p1-hook-semantics-spike.md`,
-// with every content-bearing key filled with the canary.
 const preToolUsePayload = {
   ...baseFields,
   hook_event_name: HookPulseEvent.Enum.PreToolUse,
@@ -445,9 +316,7 @@ const permissionRequestToolPayload = {
   tool_name: "Bash",
 };
 
-// `PermissionRequest` with no `tool_name` was never measured, but the codec
-// derives `unknown` for it, so the writer must agree rather than guess.
-const permissionRequestToollessPayload = {
+const unmeasuredToollessPermissionRequestPayload = {
   ...baseFields,
   hook_event_name: HookPulseEvent.Enum.PermissionRequest,
   permission_mode: "default",
@@ -465,9 +334,6 @@ const postToolUsePayload = {
   tool_use_id: "toolu_writer_1",
 };
 
-// Verified against the 2.1.223 bundle's zod schema for this event:
-// `{...base, hook_event_name, tool_name, tool_input, tool_use_id, error,
-//   is_interrupt?, duration_ms?}`. `error` is content and must never be read.
 const postToolUseFailurePayload = (isInterrupt: boolean) => ({
   ...baseFields,
   duration_ms: 12,
@@ -480,10 +346,7 @@ const postToolUseFailurePayload = (isInterrupt: boolean) => ({
   tool_use_id: "toolu_writer_1",
 });
 
-// The terminal of a denied-permission wait: without a row here the two-hop join
-// can never close the bracket a `PermissionRequest` opened when the human said
-// no, so a denial is indistinguishable from a session that simply stopped.
-const permissionDeniedPayload = {
+const permissionDeniedClosingDeniedWaitPayload = {
   ...baseFields,
   hook_event_name: HookPulseEvent.Enum.PermissionDenied,
   permission_mode: "default",
@@ -494,12 +357,8 @@ const permissionDeniedPayload = {
   tool_use_id: "toolu_writer_1",
 };
 
-// `1e400` cannot survive a JavaScript round-trip: it *is* `Infinity` in JS, and
-// `JSON.stringify` renders that as `null`. The harness on the other end of this
-// pipe is not JavaScript, so the literal is spliced into the stdin text directly
-// — which is exactly how an out-of-range duration would actually arrive.
-const nonFiniteDurationStdin = Effect.map(
-  encodeJson(R.remove(postToolUsePayload, "duration_ms")),
+const nonFiniteDurationSplicedIntoRawStdinText = Effect.map(
+  encodeRawHarnessJson(R.remove(postToolUsePayload, "duration_ms")),
   (json) => `{"duration_ms":1e400,${Str.slice(1)(json)}`
 );
 
@@ -513,8 +372,6 @@ const notificationPayload = (notificationType: O.Option<string>) => ({
   }),
 });
 
-// Hoisted so the call sites stay one level deep; nesting them under `encodeJson`
-// trips `missedPipeableOpportunity`.
 const idleNotificationPayload = notificationPayload(O.some(HookPulseNotificationType.Enum.idle_prompt));
 const permissionPromptNotificationPayload = notificationPayload(
   O.some(HookPulseNotificationType.Enum.permission_prompt)
@@ -545,9 +402,6 @@ const sessionEndPayload = {
   reason: "prompt_input_exit",
 };
 
-// `permissionMode` is stated per payload rather than derived from it: the
-// harness omits `permission_mode` on `Notification` and `SessionEnd`, and a
-// writer that invented one — or dropped every real one — would otherwise pass.
 const measuredPayloads = [
   {
     label: "PreToolUse",
@@ -569,7 +423,7 @@ const measuredPayloads = [
   },
   {
     label: "PermissionRequest{no tool_name}",
-    payload: permissionRequestToollessPayload,
+    payload: unmeasuredToollessPermissionRequestPayload,
     permissionMode: O.some("default"),
     waitReason: HookPulseWaitReason.Enum.unknown,
   },
@@ -593,7 +447,7 @@ const measuredPayloads = [
   },
   {
     label: "PermissionDenied",
-    payload: permissionDeniedPayload,
+    payload: permissionDeniedClosingDeniedWaitPayload,
     permissionMode: O.some("default"),
     waitReason: HookPulseWaitReason.Enum.none,
   },
@@ -644,36 +498,29 @@ const measuredPayloads = [
 const expectSingleRow = (run: WriterRun): string => {
   expect(run.exitCode).toBe(0);
   expect(run.stderr).toBe("");
-  // `PermissionRequest` is a decision hook: the harness reads hook stdout into
-  // the permission outcome. Anything on stdout risks auto-approving a tool call,
-  // which would both bypass gating and record a zero-length human wait.
-  expect(run.stdout).toBe("");
+  expect(
+    run.stdout,
+    "PermissionRequest reads hook stdout as its decision, so any output risks auto-approving the tool call"
+  ).toBe("");
   expect(run.rows).toHaveLength(1);
   const [row] = run.rows;
   expect(row).toBeDefined();
   return `${row}`;
 };
 
-// The same stdout guarantee on the paths where nothing is written at all. These
-// are exactly where a stray `echo` gets added during debugging, and the negative
-// tests would otherwise pass on `rows: []` alone while the decision hook leaked.
 const expectSilentRefusal = (run: WriterRun): void => {
   expect(run.exitCode).toBe(0);
-  expect(run.stdout).toBe("");
+  expect(run.stdout, "a no-row path must keep the decision hook's stdout silent too").toBe("");
   expect(run.rows).toEqual([]);
 };
 
-// The notifier knobs a D3 case varies. Foreground keeps the stub call synchronous,
-// so the call log is complete when the writer exits instead of racing `setsid -f`.
-const notifierHostEnv = (host: string, notifierRev: string) => ({
+const notifierHostEnvWithSynchronousStubCalls = (host: string, notifierRev: string) => ({
   BEEP_AGENT_HOST: host,
   BEEP_HOOK_PULSE_NOTIFIER_REV: notifierRev,
   BEEP_SEQUENCE_BREAK_FOREGROUND: "1",
 });
 
-// A temp copy of the real writer beside a stub `sequence-break-notifier.sh` that
-// appends one line per call to a log in the same scoped directory.
-const makeNotifierStubWriter = Effect.fnUntraced(function* () {
+const makeWriterCopyBesideCallLoggingNotifierStub = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-notifier-stub-" });
@@ -684,21 +531,13 @@ const makeNotifierStubWriter = Effect.fnUntraced(function* () {
   yield* fs.writeFileString(stubNotifierPath, `#!/usr/bin/env bash\nprintf 'call %s\\n' "$#" >>'${callLog}'\n`);
   yield* fs.chmod(stubWriterPath, 0o755);
   yield* fs.chmod(stubNotifierPath, 0o755);
-  // An absent log means no call; any other read failure fails the case.
-  const calls = Effect.gen(function* () {
+  const callsOrEmptyWhenLogAbsent = Effect.gen(function* () {
     return (yield* fs.exists(callLog)) ? yield* readWriterLines(directory, ["notifier-calls.log"]) : A.empty<string>();
   });
-  return { calls, writerPath: stubWriterPath };
+  return { calls: callsOrEmptyWhenLogAbsent, writerPath: stubWriterPath };
 });
 
-// A repo root shaped to hit every rule the shell harness-hash walk mirrors from
-// `makeAiMetricsConfigSnapshot`: a root `AGENTS.md` with `CLAUDE.md` symlinked to
-// it, a nested agent doc the root walk reaches, both session-scope and
-// baseline-scope config files, a nested git root under `.claude` and another
-// under `packages` (both must drop out with everything beneath them), excluded
-// directory names, a non-UTF-8 binary, and a byte-order-marked script (both
-// hashed through the decoder TypeScript's `readFileString` applies).
-const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
+const makeHarnessFixtureRootHittingEveryMirroredWalkRule = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-harness-" });
@@ -747,9 +586,7 @@ const makeHarnessFixtureRoot = Effect.fnUntraced(function* () {
   return root;
 });
 
-// The TypeScript oracle for the shell stamp: the same snapshot the harness ledger
-// fingerprints, reduced to the harness hash.
-const typescriptHarnessHash = Effect.fnUntraced(function* (root: string) {
+const typescriptOracleHarnessHash = Effect.fnUntraced(function* (root: string) {
   const snapshot = yield* makeAiMetricsConfigSnapshot(AiMetricsConfigSnapshotInput.make({ repoRoot: root }));
   const madeHarnessFingerprint = yield* makeHarnessFingerprint(HarnessFingerprintInput.make({ snapshot }));
   return {
@@ -766,10 +603,10 @@ const sessionStartPayload = (cwd: string) => ({
   source: "startup",
 });
 
-it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
+it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
-      const encodedJson = yield* encodeJson(preToolUsePayload);
+      const encodedJson = yield* encodeRawHarnessJson(preToolUsePayload);
       const run = yield* runWriter(encodedJson, { writerPath: codexWriterPath });
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
@@ -777,36 +614,35 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
     })
   );
 
-  it.effect("tags Cursor hook rows as cursor-cli and answers the permission protocol", () =>
-    Effect.gen(function* () {
-      // Cursor's stdin: the same snake_case keys, a camelCase event name.
-      const cursorPayload = {
-        ...preToolUsePayload,
-        conversation_id: "cursor-conversation-writer-1",
-        cursor_version: "2026.09.10",
-        generation_id: "cursor-generation-writer-1",
-        hook_event_name: "preToolUse",
-        model: "composer-2.5",
-        workspace_roots: [baseFields.cwd],
-      };
-      const encodedJson3 = yield* encodeJson(cursorPayload);
-      const run = yield* runWriter(encodedJson3, { writerPath: cursorWriterPath });
+  it.effect(
+    "tags Cursor hook rows as cursor-cli and prints a permission decision, since Cursor blocks the tool on an empty stdout",
+    () =>
+      Effect.gen(function* () {
+        const cursorSnakeCasePayloadWithCamelCaseEvent = {
+          ...preToolUsePayload,
+          conversation_id: "cursor-conversation-writer-1",
+          cursor_version: "2026.09.10",
+          generation_id: "cursor-generation-writer-1",
+          hook_event_name: "preToolUse",
+          model: "composer-2.5",
+          workspace_roots: [baseFields.cwd],
+        };
+        const encodedJson3 = yield* encodeRawHarnessJson(cursorSnakeCasePayloadWithCamelCaseEvent);
+        const run = yield* runWriter(encodedJson3, { writerPath: cursorWriterPath });
 
-      expect(run.exitCode).toBe(0);
-      expect(run.stderr).toBe("");
-      expect(run.stdout).toBe('{"permission":"allow"}\n');
-      expect(run.rows).toHaveLength(1);
-      const [row] = run.rows;
-      expect(row).toBeDefined();
-      const decoded = yield* decodeHookPulseRow(`${row}`);
+        expect(run.exitCode).toBe(0);
+        expect(run.stderr).toBe("");
+        expect(run.stdout).toBe('{"permission":"allow"}\n');
+        expect(run.rows).toHaveLength(1);
+        const [row] = run.rows;
+        expect(row).toBeDefined();
+        const decoded = yield* decodeHookPulseRow(`${row}`);
 
-      expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["cursor-cli"]);
-      expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
-    })
+        expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["cursor-cli"]);
+        expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
+      })
   );
 
-  // The writer's `$sessionRole` jq table and the codec's `deriveSessionRole` are
-  // two implementations of one rule; each case runs both and compares them.
   const claudeRootTranscript = "/home/dev/.claude/projects/repo/12345678-1234-1234-1234-123456789abc.jsonl";
   const codexRolloutTranscript =
     "/home/dev/.codex/sessions/2026/11/06/rollout-2026-11-06T12-00-00-12345678-1234-1234-1234-123456789abc.jsonl";
@@ -854,43 +690,43 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
     },
   ];
   A.forEach(roleCases, ({ label, agentKind, writer, payload, role }) => {
-    it.effect(`derives the codec's session role for ${label}`, () =>
-      Effect.gen(function* () {
-        const stdin = yield* encodeJson(payload);
-        const run = yield* runWriter(stdin, { writerPath: writer });
-        // Cursor answers its permission protocol on stdout, so read the row directly.
-        expect(run.rows).toHaveLength(1);
-        const line = pipe(A.head(run.rows), O.getOrThrow);
-        const writerRow = yield* decodeHookPulseRow(line);
-        const codecRow = yield* withSaltEnv(
-          {},
-          decodeHookPulseFromRaw({
-            event: { ...payload, hook_event_name: HookPulseEvent.Enum.PreToolUse },
-            notifierRev: "log-only-0",
-            instrumentClass: HookPulseInstrumentClass.Enum.production,
-            agentKind,
-            evidenceTier: HookPulseEvidenceTier.Enum.derived,
-            ts: "2026-08-01T06:40:07.000Z",
-          })
-        );
+    it.effect(
+      `derives the same session role in the writer's jq table and the codec's deriveSessionRole for ${label}`,
+      () =>
+        Effect.gen(function* () {
+          const stdin = yield* encodeRawHarnessJson(payload);
+          const run = yield* runWriter(stdin, { writerPath: writer });
+          expect(run.rows, "read the row directly: Cursor answers its permission protocol on stdout").toHaveLength(1);
+          const line = pipe(A.head(run.rows), O.getOrThrow);
+          const writerRow = yield* decodeHookPulseRow(line);
+          const codecRow = yield* withPinnedSaltProviderNotAmbientEnv(
+            {},
+            decodeHookPulseFromRaw({
+              event: { ...payload, hook_event_name: HookPulseEvent.Enum.PreToolUse },
+              notifierRev: "log-only-0",
+              instrumentClass: HookPulseInstrumentClass.Enum.production,
+              agentKind,
+              evidenceTier: HookPulseEvidenceTier.Enum.derived,
+              ts: "2026-08-01T06:40:07.000Z",
+            })
+          );
 
-        expect(writerRow.sessionRole).toEqual(role);
-        expect(codecRow.sessionRole).toEqual(writerRow.sessionRole);
-        expect(codecRow.agentId).toEqual(writerRow.agentId);
-        // The raw agent id is a private identifier: only its salted digest is written.
-        const raw = O.filter(O.fromNullishOr(payload.agent_id), P.isString);
-        const expectedAgentId = yield* Effect.transposeOption(O.map(raw, privateDigest));
-        expect(writerRow.agentId).toEqual(expectedAgentId);
-        A.forEach(A.getSomes([raw]), (agentId) => expect(line).not.toContain(agentId));
-      })
+          expect(writerRow.sessionRole).toEqual(role);
+          expect(codecRow.sessionRole).toEqual(writerRow.sessionRole);
+          expect(codecRow.agentId).toEqual(writerRow.agentId);
+          const raw = O.filter(O.fromNullishOr(payload.agent_id), P.isString);
+          const expectedAgentId = yield* Effect.transposeOption(O.map(raw, typeScriptOraclePrivateDigest));
+          expect(writerRow.agentId).toEqual(expectedAgentId);
+          A.forEach(A.getSomes([raw]), (agentId) =>
+            expect(line, "only the salted digest of the private raw agent id is written").not.toContain(agentId)
+          );
+        })
     );
   });
 
   it.effect("drops a Cursor event delivered through the Claude hook entry without a claude-code refusal", () =>
     Effect.gen(function* () {
-      // Cursor's Claude-compatibility loader runs `.claude/settings.json` hooks too, so the
-      // Claude entry sees each Cursor event a second time. The Cursor adapter owns that event.
-      const cursorStdin = yield* encodeJson({
+      const cursorStdin = yield* encodeRawHarnessJson({
         ...preToolUsePayload,
         conversation_id: "cursor-conversation-writer-2",
         cursor_version: "2026.11.05",
@@ -898,18 +734,26 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       });
       const run = yield* runWriter(cursorStdin);
       expect(run.exitCode).toBe(0);
-      expect(run.rows).toHaveLength(0);
+      expect(
+        run.rows,
+        "Cursor's Claude-compatibility loader replays each event through the Claude entry; the Cursor adapter owns it"
+      ).toHaveLength(0);
       expect(run.refusals).toHaveLength(0);
-      // A Claude payload that merely mentions the key inside content is still recorded.
-      const claudeStdin = yield* encodeJson({ ...preToolUsePayload, tool_input: { command: '"cursor_version"' } });
+      const claudeStdin = yield* encodeRawHarnessJson({
+        ...preToolUsePayload,
+        tool_input: { command: '"cursor_version"' },
+      });
       const claude = yield* runWriter(claudeStdin);
-      expect(claude.rows).toHaveLength(1);
+      expect(
+        claude.rows,
+        "a Claude payload that only mentions cursor_version inside content is still recorded"
+      ).toHaveLength(1);
     })
   );
 
   it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
     Effect.gen(function* () {
-      const encodedJson4 = yield* encodeJson(preToolUsePayload);
+      const encodedJson4 = yield* encodeRawHarnessJson(preToolUsePayload);
       const run = yield* runWriter(encodedJson4, { agentKind: "other" });
       expectSilentRefusal(run);
       expect(run.refusals).toHaveLength(1);
@@ -922,8 +766,6 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
 
   it.effect("keeps the writer's agent-kind guard set-equal to HookPulseAgentKind", () =>
     Effect.gen(function* () {
-      // The writer copies `BEEP_HOOK_PULSE_AGENT_KIND` into every row, so its guard `case`
-      // is the only thing keeping an undecodable kind out of the ledger.
       const fs = yield* FileSystem.FileSystem;
       const source = yield* fs.readFileString(writerPath);
       const arm = O.fromNullishOr(/case "\$\{agent_kind\}" in\s*\n\s*([^)\n]+)\)\s*;;/.exec(source)?.[1]);
@@ -932,18 +774,15 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         onSome: (body) => A.map(Str.split("|")(body), (kind) => Str.trim(kind)),
       });
 
-      expect(A.difference(admitted, HookPulseAgentKind.literals)).toEqual([]);
-      expect(A.difference(HookPulseAgentKind.literals, admitted)).toEqual([]);
+      const guardAdmitsExactlySchemaKinds =
+        "the writer copies BEEP_HOOK_PULSE_AGENT_KIND into every row, so its case guard must admit exactly the schema kinds";
+      expect(A.difference(admitted, HookPulseAgentKind.literals), guardAdmitsExactlySchemaKinds).toEqual([]);
+      expect(A.difference(HookPulseAgentKind.literals, admitted), guardAdmitsExactlySchemaKinds).toEqual([]);
     })
   );
 
   it.effect("keeps the sequence-break notifier agent-kind allowlist and title map in lockstep", () =>
     Effect.gen(function* () {
-      // `HookPulseAgentKind` is the schema; the notifier hand-duplicates it twice — the
-      // admission `case` arm and the desktop title map. Without this check a new kind
-      // (as `cursor-cli` was) reaches the ledger but is silently dropped by the notifier,
-      // or is admitted with an empty title (" needs your input"). Same drift class the
-      // `hook_events` allowlist sync above protects against, so the same set-equality.
       const fs = yield* FileSystem.FileSystem;
       const source = yield* fs.readFileString(notifierPath);
       const arm = O.fromNullishOr(/case "\$\{agent_kind\}" in\s*\n\s*([^)\n]+)\)\s*;;/.exec(source)?.[1]);
@@ -951,12 +790,10 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         onNone: () => A.empty<string>(),
         onSome: (body) => A.map(Str.split("|")(body), (kind) => Str.trim(kind)),
       });
-      // Anchored to the agent-kind title `case`: the target `case` below it also has
-      // `<name>) title="..." ;;` arms (human-input, plan-approval, tool-permission).
-      const titleArm = O.fromNullishOr(
+      const agentKindTitleArmNotTheTargetTitleArm = O.fromNullishOr(
         /case "\$\{agent_kind\}" in((?:\s*[a-z-]+\) title="[^"]+" ;;)+)\s*esac/.exec(source)?.[1]
       );
-      const titled = O.match(titleArm, {
+      const titled = O.match(agentKindTitleArmNotTheTargetTitleArm, {
         onNone: () => A.empty<string>(),
         onSome: (body) =>
           A.getSomes(
@@ -965,17 +802,27 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       });
       const schemaKinds = HookPulseAgentKind.literals;
 
-      expect(A.difference(admitted, schemaKinds)).toEqual([]);
-      expect(A.difference(schemaKinds, admitted)).toEqual([]);
-      expect(A.difference(titled, schemaKinds)).toEqual([]);
-      expect(A.difference(schemaKinds, titled)).toEqual([]);
+      expect(
+        A.difference(admitted, schemaKinds),
+        "the notifier admission arm hand-duplicates HookPulseAgentKind"
+      ).toEqual([]);
+      expect(A.difference(schemaKinds, admitted), "a kind missing from the admission arm is silently dropped").toEqual(
+        []
+      );
+      expect(A.difference(titled, schemaKinds), "the notifier title map hand-duplicates HookPulseAgentKind").toEqual(
+        []
+      );
+      expect(
+        A.difference(schemaKinds, titled),
+        "a kind missing from the title map is admitted with an empty title"
+      ).toEqual([]);
     })
   );
 
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {
-    it.effect(`emits one HookPulseV1 row for ${label}`, () =>
+    it.effect(`emits one HookPulseV1 row for the measured 2.1.220 ${label} payload`, () =>
       Effect.gen(function* () {
-        const encodedJson5 = yield* encodeJson(payload);
+        const encodedJson5 = yield* encodeRawHarnessJson(payload);
         const run = yield* runWriter(encodedJson5);
         const row = expectSingleRow(run);
         const decoded = yield* decodeHookPulseRow(row);
@@ -984,59 +831,54 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         expect(decoded.schemaVersion).toBe(HookPulseSchemaVersion.Enum["hook-pulse/v1"]);
         expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["claude-code"]);
         expect(decoded.instrumentClass).toBe(HookPulseInstrumentClass.Enum.production);
-        // Pseudonymized, not raw: these three carry `Sha256Hex`, so the
-        // expectation is the oracle digest rather than the identifier itself.
-        const expectation1 = expect(decoded.sessionId);
-        const privateDigest1 = yield* privateDigest(session);
+        const pseudonymizedNotRaw =
+          "sessionId, cwd and transcriptPath are Sha256Hex oracle digests, never the raw value";
+        const expectation1 = expect(decoded.sessionId, pseudonymizedNotRaw);
+        const privateDigest1 = yield* typeScriptOraclePrivateDigest(session);
         expectation1.toBe(privateDigest1);
-        const expectation2 = expect(decoded.cwd);
-        const privateDigest2 = yield* privateDigest(baseFields.cwd);
+        const expectation2 = expect(decoded.cwd, pseudonymizedNotRaw);
+        const privateDigest2 = yield* typeScriptOraclePrivateDigest(baseFields.cwd);
         expectation2.toBe(privateDigest2);
         expect(decoded.notifierRev).toBe("log-only-0");
         expect(decoded.waitReason).toBe(waitReason);
-        // `transcriptPath` is the one forwarded field the codec cannot do
-        // without: `HookPulseRawEvent.transcript_path` is required, so a row
-        // missing it still decodes but can never be re-encoded — a replay
-        // break that only surfaces in P4, long after the evidence is gone.
-        const privateDigest6 = yield* privateDigest(baseFields.transcript_path);
-        assertSome(decoded.transcriptPath, privateDigest6);
+        const privateDigest6 = yield* typeScriptOraclePrivateDigest(baseFields.transcript_path);
+        expect(
+          decoded.transcriptPath,
+          "transcriptPath must be forwarded: HookPulseRawEvent requires it, so a row without it cannot be re-encoded for replay"
+        ).toEqual(O.some(privateDigest6));
         assertSome(decoded.promptId, baseFields.prompt_id);
-        expect(decoded.permissionMode).toEqual(permissionMode);
-        // Weakest-link: `waitReason` is derived, and the codec's
-        // `clampDerivedEvidenceTier` maps `observed` to `derived`. A writer
-        // stamping `observed` would make P4's replay-twice-diff disagree.
-        expect(decoded.evidenceTier).toBe(HookPulseEvidenceTier.Enum.derived);
+        expect(
+          decoded.permissionMode,
+          "permissionMode is stated per payload: the harness omits it on Notification and SessionEnd"
+        ).toEqual(permissionMode);
+        expect(
+          decoded.evidenceTier,
+          "waitReason is derived and clampDerivedEvidenceTier maps observed to derived, so the writer stamps derived"
+        ).toBe(HookPulseEvidenceTier.Enum.derived);
       })
     );
 
-    it.effect(`writes no measured content for ${label}`, () =>
+    it.effect(`writes no measured content, raw or hashed, for ${label}`, () =>
       Effect.gen(function* () {
-        const encodedJson7 = yield* encodeJson(payload);
+        const encodedJson7 = yield* encodeRawHarnessJson(payload);
         const run = yield* runWriter(encodedJson7);
         const row = expectSingleRow(run);
 
         expect(row).not.toContain(CANARY);
-        // Hashing is what the writer now does to the identifiers it cannot
-        // drop, which makes "hash it instead" a newly plausible way to keep a
-        // content field. A digest of the canary is still derived from content
-        // and still belongs nowhere in the ledger.
-        const argument = expect(row).not;
-        const privateDigest3 = yield* privateDigest(CANARY);
+        const argument = expect(row, "a digest of a content field is still content-derived").not;
+        const privateDigest3 = yield* typeScriptOraclePrivateDigest(CANARY);
         argument.toContain(privateDigest3);
         const decodedRowKeys = yield* decodeRowKeys(row);
-        expect(A.difference(R.keys(decodedRowKeys), canonicalRowKeys)).toEqual([]);
+        expect(A.difference(R.keys(decodedRowKeys), handStatedCanonicalRowKeys)).toEqual([]);
       })
     );
   });
 
-  it("declares exactly the canonical HookPulseV1 encoded surface", () => {
-    // Without this the allowlist is a claim, not a check: a name added to
-    // `canonicalRowKeys` that no schema field carries would license a real leak
-    // of exactly that name, and every content assertion above would still pass.
+  it("declares exactly the canonical HookPulseV1 encoded surface, so the hand-stated allowlist cannot license a leak", () => {
     const schemaKeys = R.keys(HookPulseV1.fields);
 
-    expect(A.difference(canonicalRowKeys, schemaKeys)).toEqual([]);
-    expect(A.difference(schemaKeys, canonicalRowKeys)).toEqual([]);
+    expect(A.difference(handStatedCanonicalRowKeys, schemaKeys)).toEqual([]);
+    expect(A.difference(schemaKeys, handStatedCanonicalRowKeys)).toEqual([]);
   });
 
   it.effect.prop(
@@ -1049,85 +891,67 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
 
       const decoded = yield* HookPulseV1.decodeJsonEffect(line);
 
-      expect(A.difference(R.keys(keys), canonicalRowKeys)).toEqual([]);
+      expect(A.difference(R.keys(keys), handStatedCanonicalRowKeys)).toEqual([]);
 
       pipe(hookPulseEquivalent(decoded, value), assertTrue);
     }),
     { arbitrary: fcRuns(50) }
   );
 
-  it.effect("keeps the jq allowlists set-equal to the schema literal domains", () =>
+  it.effect("keeps the hand-duplicated jq allowlists set-equal to the schema literal domains", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const source = yield* fs.readFileString(writerPath);
-      const events = jqAllowlist(source, "hook_events");
-      const notificationTypes = jqAllowlist(source, "notification_types");
+      const events = jqAllowlistOrEmptyWhenExtractionFails(source, "hook_events");
+      const notificationTypes = jqAllowlistOrEmptyWhenExtractionFails(source, "notification_types");
 
-      // A name only in the schema is an event the writer silently drops
-      // wholesale; a name only in jq is an event that reaches the ledger and
-      // then fails to decode. Neither shows up in any example fixture, because
-      // fixtures only ever exercise names both halves already agree on.
-      expect(A.difference(events, HookPulseEvent.literals)).toEqual([]);
-      expect(A.difference(HookPulseEvent.literals, events)).toEqual([]);
-      expect(A.difference(notificationTypes, HookPulseNotificationType.literals)).toEqual([]);
-      expect(A.difference(HookPulseNotificationType.literals, notificationTypes)).toEqual([]);
+      const jqOnlyFailsDecode = "a name only in jq reaches the ledger and then fails to decode";
+      const schemaOnlyIsDropped = "a name only in the schema is silently dropped wholesale by the writer";
+      expect(A.difference(events, HookPulseEvent.literals), jqOnlyFailsDecode).toEqual([]);
+      expect(A.difference(HookPulseEvent.literals, events), schemaOnlyIsDropped).toEqual([]);
+      expect(A.difference(notificationTypes, HookPulseNotificationType.literals), jqOnlyFailsDecode).toEqual([]);
+      expect(A.difference(HookPulseNotificationType.literals, notificationTypes), schemaOnlyIsDropped).toEqual([]);
     })
   );
 
   it.effect("shards the ledger by UTC day and hashed session id", () =>
     Effect.gen(function* () {
-      // The script claims per-session sharding makes cross-session
-      // interleaving structurally impossible. The runner globs the whole
-      // directory, so dropping the session suffix would keep every other test
-      // green while quietly restoring that hazard. The suffix is the digest,
-      // not the raw session id: a filename is as readable as a row, so a
-      // ledger whose rows are pseudonymized while its directory listing spells
-      // out every session UUID has pseudonymized nothing.
-      const encodedJson8 = yield* encodeJson(preToolUsePayload);
+      const encodedJson8 = yield* encodeRawHarnessJson(preToolUsePayload);
       const run = yield* runWriter(encodedJson8);
       const row = expectSingleRow(run);
       const keys = yield* decodeRowKeys(row);
       const ts = yield* decodeRowString(keys.ts);
-      const sessionDigest = yield* privateDigest(session);
+      const sessionDigest = yield* typeScriptOraclePrivateDigest(session);
 
-      // Exact equality against the oracle digest, so the raw session id cannot
-      // reappear in the name under any spelling.
-      expect(run.files).toEqual([`hook-pulse-${Str.slice(0, 10)(ts)}-${sessionDigest}.ndjson`]);
+      expect(
+        run.files,
+        "per-session shards keep sessions from interleaving, and the exact digest keeps raw session ids out of file names"
+      ).toEqual([`hook-pulse-${Str.slice(0, 10)(ts)}-${sessionDigest}.ndjson`]);
     })
   );
 
-  it.effect("hashes private identifiers to the digests the TypeScript oracle computes", () =>
-    Effect.gen(function* () {
-      // The shell writer and `hashPrivateIdentifier` are two implementations
-      // of one contract, and every other assertion in this file is satisfied
-      // by any 64-hex string. This is the only one that fails when the shell
-      // hashes the right value the wrong way — the NUL-through-a-variable trap
-      // described above being the way it actually happens.
-      const encodedJson9 = yield* encodeJson(preToolUsePayload);
-      const run = yield* runWriter(encodedJson9);
-      const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+  it.effect(
+    "hashes private identifiers to the TypeScript oracle digests, so a shell preimage that loses the salt-value NUL fails",
+    () =>
+      Effect.gen(function* () {
+        const encodedJson9 = yield* encodeRawHarnessJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson9);
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      const expectation3 = expect(decoded.sessionId);
-      const privateDigest4 = yield* privateDigest(session);
-      expectation3.toBe(privateDigest4);
-      const expectation4 = expect(decoded.cwd);
-      const privateDigest5 = yield* privateDigest(baseFields.cwd);
-      expectation4.toBe(privateDigest5);
-      const privateDigest10 = yield* privateDigest(baseFields.transcript_path);
-      assertSome(decoded.transcriptPath, privateDigest10);
-    })
+        const expectation3 = expect(decoded.sessionId);
+        const privateDigest4 = yield* typeScriptOraclePrivateDigest(session);
+        expectation3.toBe(privateDigest4);
+        const expectation4 = expect(decoded.cwd);
+        const privateDigest5 = yield* typeScriptOraclePrivateDigest(baseFields.cwd);
+        expectation4.toBe(privateDigest5);
+        const privateDigest10 = yield* typeScriptOraclePrivateDigest(baseFields.transcript_path);
+        assertSome(decoded.transcriptPath, privateDigest10);
+      })
   );
 
   it.effect("hashes context surfaces to the digests the TypeScript codec derives", () =>
     Effect.gen(function* () {
-      // The shell `surface_program` and `hookPulseContextSurfaceKey` are two
-      // implementations of one classification. Each payload runs through both,
-      // and each digest is also pinned to its expected key, so a rule that
-      // drifted on both sides the same way still fails. The skill name and the
-      // hook file name are the canary: only their digest may reach the row.
-      // The fixture cwd does not exist on disk, so the writer's root walk
-      // finds nothing and falls back to cwd, which is also the codec default.
-      const surfacePayload = (toolName: string, toolInput: unknown) => ({
+      const surfacePayloadAtCwdAbsentOnDisk = (toolName: string, toolInput: unknown) => ({
         ...baseFields,
         duration_ms: 3,
         hook_event_name: HookPulseEvent.Enum.PostToolUse,
@@ -1138,31 +962,50 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
         tool_use_id: "toolu_writer_surface",
       });
       const cases = [
-        { payload: surfacePayload("Skill", { skill: `/${CANARY}` }), key: O.some(`skill:${CANARY}`) },
-        { payload: surfacePayload("mcp__notion__search", { query: CANARY }), key: O.some("mcp-server:notion") },
         {
-          payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh` }),
+          payload: surfacePayloadAtCwdAbsentOnDisk("Skill", { skill: `/${CANARY}` }),
+          key: O.some(`skill:${CANARY}`),
+        },
+        {
+          payload: surfacePayloadAtCwdAbsentOnDisk("mcp__notion__search", { query: CANARY }),
+          key: O.some("mcp-server:notion"),
+        },
+        {
+          payload: surfacePayloadAtCwdAbsentOnDisk("Read", {
+            file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh`,
+          }),
           key: O.some(`hook:${CANARY}.sh`),
         },
         ...A.map([".agents", ".codex", ".cursor"], (root) => ({
-          payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/${root}/skills/${CANARY}/SKILL.md` }),
+          payload: surfacePayloadAtCwdAbsentOnDisk("Read", {
+            file_path: `${baseFields.cwd}/${root}/skills/${CANARY}/SKILL.md`,
+          }),
           key: O.some(`skill:${CANARY}`),
         })),
-        { payload: surfacePayload("Read", { file_path: "packages/foo/src/x.ts" }), key: O.none<string>() },
-        { payload: surfacePayload("mcp__notion__search", { path: ["a", "b"] }), key: O.some("mcp-server:notion") },
         {
-          payload: surfacePayload("mcp__notion__search", { path: { nested: true } }),
+          payload: surfacePayloadAtCwdAbsentOnDisk("Read", { file_path: "packages/foo/src/x.ts" }),
+          key: O.none<string>(),
+        },
+        {
+          payload: surfacePayloadAtCwdAbsentOnDisk("mcp__notion__search", { path: ["a", "b"] }),
           key: O.some("mcp-server:notion"),
         },
-        { payload: surfacePayload("mcp__notion__search", 7), key: O.some("mcp-server:notion") },
-        { payload: surfacePayload("Read", null), key: O.none<string>() },
-        { payload: surfacePayload("Read", ["path"]), key: O.none<string>() },
         {
-          payload: surfacePayload("Read", { file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh`, path: ["a"] }),
+          payload: surfacePayloadAtCwdAbsentOnDisk("mcp__notion__search", { path: { nested: true } }),
+          key: O.some("mcp-server:notion"),
+        },
+        { payload: surfacePayloadAtCwdAbsentOnDisk("mcp__notion__search", 7), key: O.some("mcp-server:notion") },
+        { payload: surfacePayloadAtCwdAbsentOnDisk("Read", null), key: O.none<string>() },
+        { payload: surfacePayloadAtCwdAbsentOnDisk("Read", ["path"]), key: O.none<string>() },
+        {
+          payload: surfacePayloadAtCwdAbsentOnDisk("Read", {
+            file_path: `${baseFields.cwd}/.claude/hooks/${CANARY}.sh`,
+            path: ["a"],
+          }),
           key: O.some(`hook:${CANARY}.sh`),
         },
         ...A.map([".", "repo", "repo/subdir"], (cwd) => ({
-          payload: { ...surfacePayload("Read", { file_path: ".claude/hooks/pulse.sh" }), cwd },
+          payload: { ...surfacePayloadAtCwdAbsentOnDisk("Read", { file_path: ".claude/hooks/pulse.sh" }), cwd },
           key: O.none<string>(),
         })),
       ];
@@ -1170,11 +1013,11 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       yield* Effect.forEach(
         cases,
         Effect.fnUntraced(function* ({ payload, key }) {
-          const encodedJson11 = yield* encodeJson(payload);
+          const encodedJson11 = yield* encodeRawHarnessJson(payload);
           const run = yield* runWriter(encodedJson11);
           const row = expectSingleRow(run);
           const writerRow = yield* decodeHookPulseRow(row);
-          const codecRow = yield* withSaltEnv(
+          const codecRow = yield* withPinnedSaltProviderNotAmbientEnv(
             {},
             decodeHookPulseFromRaw({
               event: payload,
@@ -1190,17 +1033,15 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
             onSome: (value) => Effect.asSome(hashPublicTextSha256(value)),
           });
 
-          expect(writerRow.surface).toEqual(expected);
-          expect(codecRow.surface).toEqual(expected);
-          expect(row).not.toContain(CANARY);
+          expect(writerRow.surface, "the shell surface_program must match the pinned key's digest").toEqual(expected);
+          expect(codecRow.surface, "hookPulseContextSurfaceKey must match the pinned key's digest").toEqual(expected);
+          expect(row, "the raw skill or hook name never reaches the row").not.toContain(CANARY);
         }),
         { concurrency: 1, discard: true }
       );
     })
   );
 
-  // Keep adapters as separate cases so a hosted failure identifies its boundary.
-  // Both use the synthetic indexed harness and runWriter's empty temporary HOME.
   for (const adapter of [
     {
       writerPath: codexWriterPath,
@@ -1219,9 +1060,12 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
   ]) {
     it.effect(`${adapter.agentKind} SessionStart adapter preserves the shared stamp`, () =>
       Effect.gen(function* () {
-        const root = yield* makeHarnessFixtureRoot();
-        const oracle = yield* typescriptHarnessHash(root);
-        const encodedJson12 = yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent });
+        const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
+        const oracle = yield* typescriptOracleHarnessHash(root);
+        const encodedJson12 = yield* encodeRawHarnessJson({
+          ...sessionStartPayload(root),
+          hook_event_name: adapter.hookEvent,
+        });
         const run = yield* runWriter(encodedJson12, {
           writerPath: adapter.writerPath,
           ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
@@ -1234,20 +1078,18 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* makeHarnessFixtureRoot();
-        const oracle = yield* typescriptHarnessHash(root);
+        const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
+        const oracle = yield* typescriptOracleHarnessHash(root);
         const bin = yield* fs.makeTempDirectoryScoped();
-        const date = path.join(bin, "date");
-        // Pin the counterexample without sleeping or depending on runner load:
-        // the body starts at 1000ms and reaches the stamp gate at 4000ms.
+        const fakeDateJumping1000To4000Ms = path.join(bin, "date");
         yield* fs.writeFileString(
-          date,
+          fakeDateJumping1000To4000Ms,
           `#!/usr/bin/env bash
 if [ "$*" = '+%s%3N' ]; then
-  if [ -e "${date}.started" ]; then
+  if [ -e "${fakeDateJumping1000To4000Ms}.started" ]; then
     printf '4000\\n'
   else
-    touch "${date}.started"
+    touch "${fakeDateJumping1000To4000Ms}.started"
     printf '1000\\n'
   fi
 else
@@ -1255,11 +1097,14 @@ else
 fi
 `
         );
-        yield* fs.chmod(date, 0o755);
+        yield* fs.chmod(fakeDateJumping1000To4000Ms, 0o755);
         const executablePath = `${bin}:${yield* Config.String("PATH")}`;
         for (const stampCap of ["60s", ""]) {
-          yield* fs.remove(`${date}.started`, { force: true });
-          const encodedJson13 = yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent });
+          yield* fs.remove(`${fakeDateJumping1000To4000Ms}.started`, { force: true });
+          const encodedJson13 = yield* encodeRawHarnessJson({
+            ...sessionStartPayload(root),
+            hook_event_name: adapter.hookEvent,
+          });
           const run = yield* runWriter(encodedJson13, {
             writerPath: adapter.writerPath,
             ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
@@ -1283,14 +1128,20 @@ fi
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* makeHarnessFixtureRoot();
-        const oracle = yield* typescriptHarnessHash(root);
-        // An indexed symlink loop deterministically refuses the stamp, even as root.
+        const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
+        const oracle = yield* typescriptOracleHarnessHash(root);
         yield* fs.symlink("loop.md", path.join(root, ".claude/loop.md"));
-        const addLoop = yield* ChildProcess.make("git", ["add", ".claude/loop.md"], { cwd: root });
-        const exitCode14 = yield* addLoop.exitCode;
+        const indexSymlinkLoopThatRefusesTheStampEvenAsRoot = yield* ChildProcess.make(
+          "git",
+          ["add", ".claude/loop.md"],
+          { cwd: root }
+        );
+        const exitCode14 = yield* indexSymlinkLoopThatRefusesTheStampEvenAsRoot.exitCode;
         expect(exitCode14).toBe(0);
-        const encodedJson15 = yield* encodeJson({ ...sessionStartPayload(root), hook_event_name: adapter.hookEvent });
+        const encodedJson15 = yield* encodeRawHarnessJson({
+          ...sessionStartPayload(root),
+          hook_event_name: adapter.hookEvent,
+        });
         const run = yield* runWriter(encodedJson15, {
           writerPath: adapter.writerPath,
           ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
@@ -1374,10 +1225,10 @@ fi
       expect(exitCode17).toBe(0);
       yield* fs.remove(path.join(root, ".codex/deleted.toml"));
       yield* fs.remove(path.join(root, ".claude/naïve.md"));
-      const encodedJson86 = yield* encodeJson(sessionStartPayload(root));
+      const encodedJson86 = yield* encodeRawHarnessJson(sessionStartPayload(root));
       const resultWriter = yield* runWriter(encodedJson86);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(resultWriter));
-      const oracle = yield* typescriptHarnessHash(root);
+      const oracle = yield* typescriptOracleHarnessHash(root);
       assertSome(decoded.harnessHash, oracle.harnessHash);
       expect(oracle.snapshot.bounds.excludedNestedRootPaths).toContain("packages/nested");
       expect(A.map(oracle.snapshot.files, (file) => file.relativePath)).not.toContain("packages/nested/AGENTS.md");
@@ -1393,7 +1244,7 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* makeHarnessFixtureRoot();
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       const blocked = path.join(root, ".claude/zz-blocked");
       yield* fs.makeDirectory(blocked);
       yield* fs.writeFileString(path.join(blocked, "config.json"), "{}\n");
@@ -1401,7 +1252,7 @@ fi
       const exitCode18 = yield* add.exitCode;
       expect(exitCode18).toBe(0);
       yield* fs.chmod(blocked, 0o000);
-      const encodedJson19 = yield* encodeJson(sessionStartPayload(root));
+      const encodedJson19 = yield* encodeRawHarnessJson(sessionStartPayload(root));
       const run = yield* runWriter(encodedJson19).pipe(Effect.ensuring(fs.chmod(blocked, 0o755).pipe(Effect.orDie)));
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
       expect(
@@ -1414,22 +1265,22 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* makeHarnessFixtureRoot();
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       yield* fs.symlink("missing.md", path.join(root, ".claude/dangling.md"));
       const addDangling = yield* ChildProcess.make("git", ["add", ".claude/dangling.md"], { cwd: root });
       const exitCode20 = yield* addDangling.exitCode;
       expect(exitCode20).toBe(0);
-      const encodedJson21 = yield* encodeJson(sessionStartPayload(root));
+      const encodedJson21 = yield* encodeRawHarnessJson(sessionStartPayload(root));
       const dangling = yield* runWriter(encodedJson21);
       assertSome(
         (yield* decodeHookPulseRow(expectSingleRow(dangling))).harnessHash,
-        (yield* typescriptHarnessHash(root)).harnessHash
+        (yield* typescriptOracleHarnessHash(root)).harnessHash
       );
       yield* fs.symlink("loop.md", path.join(root, ".claude/loop.md"));
       const addLoop = yield* ChildProcess.make("git", ["add", ".claude/loop.md"], { cwd: root });
       const exitCode22 = yield* addLoop.exitCode;
       expect(exitCode22).toBe(0);
-      const encodedJson23 = yield* encodeJson(sessionStartPayload(root));
+      const encodedJson23 = yield* encodeRawHarnessJson(sessionStartPayload(root));
       const loop = yield* runWriter(encodedJson23);
       assertNone((yield* decodeHookPulseRow(expectSingleRow(loop))).harnessHash);
       expect(
@@ -1440,7 +1291,7 @@ fi
 
   it.effect("records a timeout refusal before the harness deadline", () =>
     Effect.gen(function* () {
-      const encodedJson24 = yield* encodeJson(preToolUsePayload);
+      const encodedJson24 = yield* encodeRawHarnessJson(preToolUsePayload);
       const run = yield* runWriter(encodedJson24, { writerCap: "0.001s" });
       expect(run.exitCode).toBe(0);
       expect(run.stdout).toBe("");
@@ -1471,7 +1322,7 @@ fi
 
   it.effect("preserves an unstamped startup when its fingerprint deadline expires", () =>
     Effect.gen(function* () {
-      const encodedJson25 = yield* encodeJson(sessionStartPayload(repoRoot));
+      const encodedJson25 = yield* encodeRawHarnessJson(sessionStartPayload(repoRoot));
       const run = yield* runWriter(encodedJson25, { stampCap: "0.001s" });
       const row = yield* decodeHookPulseRow(expectSingleRow(run));
       assertNone(row.harnessHash);
@@ -1488,7 +1339,7 @@ fi
       const payload = { ...preToolUsePayload, source: 42 };
       const raw = yield* HookPulseRawEvent.decodeEffect(payload);
       assertNone(raw.source);
-      const encodedJson87 = yield* encodeJson(payload);
+      const encodedJson87 = yield* encodeRawHarnessJson(payload);
       const resultWriter26 = yield* runWriter(encodedJson87);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(resultWriter26));
       expect(decoded.hookEvent).toBe("PreToolUse");
@@ -1498,14 +1349,16 @@ fi
 
   it.effect("stamps SessionStart with the harness hash the TypeScript snapshot derives", () =>
     Effect.gen(function* () {
-      const root = yield* makeHarnessFixtureRoot();
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       const path = yield* Path.Path;
-      // A cwd below the root: the writer walks up to the nearest AGENTS.md + .git.
-      const encodedJson27 = yield* encodeJson(sessionStartPayload(path.join(root, "packages", "foo")));
+      const cwdBelowRootWalkedUpToNearestAgentsMdAndGit = path.join(root, "packages", "foo");
+      const encodedJson27 = yield* encodeRawHarnessJson(
+        sessionStartPayload(cwdBelowRootWalkedUpToNearestAgentsMdAndGit)
+      );
       const run = yield* runWriter(encodedJson27);
       const row = expectSingleRow(run);
       const decoded = yield* decodeHookPulseRow(row);
-      const oracle = yield* typescriptHarnessHash(root);
+      const oracle = yield* typescriptOracleHarnessHash(root);
       const relativePaths = A.map(oracle.snapshot.files, (file) => file.relativePath);
 
       expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.SessionStart);
@@ -1513,11 +1366,11 @@ fi
       expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum.none);
       assertSome(decoded.harnessHash, oracle.harnessHash);
       expect(row).not.toContain(CANARY);
-      // The fixture exercises what it claims to: both nested roots are excluded,
-      // the symlinked CLAUDE.md, the binary, and the BOM file are all hashed, and
-      // both scopes are populated.
-      expect(oracle.snapshot.bounds.excludedNestedRootPaths).toEqual([".claude/worktrees/wt1", "packages/bar"]);
-      expect(relativePaths).toEqual([
+      expect(oracle.snapshot.bounds.excludedNestedRootPaths, "the fixture excludes both nested roots").toEqual([
+        ".claude/worktrees/wt1",
+        "packages/bar",
+      ]);
+      expect(relativePaths, "the fixture hashes the symlinked CLAUDE.md, the binary and the BOM file").toEqual([
         ".claude/hooks/pulse.sh",
         ".claude/settings.json",
         ".claude/skills/alpha/SKILL.md",
@@ -1527,7 +1380,9 @@ fi
         "CLAUDE.md",
         "packages/foo/AGENTS.md",
       ]);
-      expect(A.dedupe(A.map(oracle.snapshot.files, (file) => file.scope))).toEqual(["baseline", "session"]);
+      expect(A.dedupe(A.map(oracle.snapshot.files, (file) => file.scope)), "the fixture populates both scopes").toEqual(
+        ["baseline", "session"]
+      );
     })
   );
 
@@ -1535,22 +1390,18 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* makeHarnessFixtureRoot();
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       const stampOf = Effect.fnUntraced(function* (payload: unknown) {
-        const encodedJson28 = yield* encodeJson(payload);
+        const encodedJson28 = yield* encodeRawHarnessJson(payload);
         const run = yield* runWriter(encodedJson28);
         return (yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash;
       });
 
-      // Owned by SessionStart: the same root on any other event carries no stamp.
-      const stampOf29 = yield* stampOf({ ...preToolUsePayload, cwd: root });
-      assertNone(stampOf29);
-      // No repo root above cwd: no fallback root, no stamp, but still a row.
-      const stampOf30 = yield* stampOf(sessionStartPayload(baseFields.cwd));
-      assertNone(stampOf30);
+      const nonSessionStartEventStamp = yield* stampOf({ ...preToolUsePayload, cwd: root });
+      assertNone(nonSessionStartEventStamp);
+      const stampWithNoRepoRootAboveCwdButStillARow = yield* stampOf(sessionStartPayload(baseFields.cwd));
+      assertNone(stampWithNoRepoRootAboveCwdButStillARow);
 
-      // A path outside printable ASCII: JS and C sort orders may disagree, so the
-      // shell refuses even though TypeScript can hash it.
       yield* fs.makeDirectory(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
       yield* fs.writeFileString(path.join(root, ".claude", "skills", "caf\u00e9", "SKILL.md"), "# cafe\n");
       const indexed1 = yield* ChildProcess.make("git", ["add", "--", ".claude/skills/café/SKILL.md"], {
@@ -1560,13 +1411,11 @@ fi
       });
       const exitCode31 = yield* indexed1.exitCode;
       expect(exitCode31).toBe(0);
-      yield* typescriptHarnessHash(root);
-      const stampOf32 = yield* stampOf(sessionStartPayload(root));
-      assertNone(stampOf32);
+      yield* typescriptOracleHarnessHash(root);
+      const nonAsciiPathStampRefusedSinceJsAndCSortOrdersMayDisagree = yield* stampOf(sessionStartPayload(root));
+      assertNone(nonAsciiPathStampRefusedSinceJsAndCSortOrdersMayDisagree);
       yield* fs.remove(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
 
-      // The file budget: TypeScript truncates at 1000 collected files, so the
-      // shell refuses rather than guess which files the truncation kept.
       yield* fs.makeDirectory(path.join(root, ".claude", "bulk"), { recursive: true });
       yield* Effect.forEach(
         A.makeBy(1000, (index) => index),
@@ -1580,9 +1429,9 @@ fi
       });
       const exitCode33 = yield* indexed2.exitCode;
       expect(exitCode33).toBe(0);
-      pipe((yield* typescriptHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
-      const stampOf34 = yield* stampOf(sessionStartPayload(root));
-      assertNone(stampOf34);
+      pipe((yield* typescriptOracleHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
+      const stampRefusedRatherThanGuessingTheTypeScript1000FileTruncation = yield* stampOf(sessionStartPayload(root));
+      assertNone(stampRefusedRatherThanGuessingTheTypeScript1000FileTruncation);
     })
   );
 
@@ -1590,7 +1439,7 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* makeHarnessFixtureRoot();
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       const invalidRoot = path.join(root, "broken\n");
       yield* fs.makeDirectory(path.join(invalidRoot, ".git"), { recursive: true });
       yield* fs.writeFileString(path.join(invalidRoot, ".git/HEAD"), "ref: refs/heads/main\n");
@@ -1598,9 +1447,9 @@ fi
       const aliasRoot = yield* fs.makeTempDirectoryScoped();
       const alias = path.join(aliasRoot, "scan");
       yield* fs.symlink(invalidRoot, alias);
-      const failure = yield* typescriptHarnessHash(alias).pipe(Effect.flip);
+      const failure = yield* typescriptOracleHarnessHash(alias).pipe(Effect.flip);
       expect(failure.message).toContain("Git");
-      const encodedJson35 = yield* encodeJson(sessionStartPayload(alias));
+      const encodedJson35 = yield* encodeRawHarnessJson(sessionStartPayload(alias));
       const run = yield* runWriter(encodedJson35);
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
@@ -1610,13 +1459,13 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const root = yield* makeHarnessFixtureRoot();
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       const parent = yield* fs.makeTempDirectoryScoped();
       const renamed = path.join(parent, "checkout\r");
       yield* fs.rename(root, renamed);
       yield* Effect.gen(function* () {
-        const oracle = yield* typescriptHarnessHash(renamed);
-        const encodedJson36 = yield* encodeJson(sessionStartPayload(renamed));
+        const oracle = yield* typescriptOracleHarnessHash(renamed);
+        const encodedJson36 = yield* encodeRawHarnessJson(sessionStartPayload(renamed));
         const run = yield* runWriter(encodedJson36);
         assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
       }).pipe(Effect.ensuring(fs.rename(renamed, root).pipe(Effect.orDie)));
@@ -1627,15 +1476,15 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const outer = yield* makeHarnessFixtureRoot();
-      const inner = yield* makeHarnessFixtureRoot();
+      const outer = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
+      const inner = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       yield* fs.writeFileString(path.join(inner, ".claude/settings.local.json"), '{"model":"inner-fixture"}');
       const subdirectory = path.join(inner, "nested\n");
       yield* fs.makeDirectory(subdirectory);
       const alias = path.join(outer, "alias");
       yield* fs.symlink(subdirectory, alias);
-      const oracle = yield* typescriptHarnessHash(inner);
-      const encodedJson37 = yield* encodeJson(sessionStartPayload(alias));
+      const oracle = yield* typescriptOracleHarnessHash(inner);
+      const encodedJson37 = yield* encodeRawHarnessJson(sessionStartPayload(alias));
       const run = yield* runWriter(encodedJson37);
       assertSome((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash, oracle.harnessHash);
     })
@@ -1645,10 +1494,10 @@ fi
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const outer = yield* makeHarnessFixtureRoot();
+      const outer = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
       const inner = path.join(outer, "nearer");
       yield* fs.makeDirectory(path.join(inner, ".git"), { recursive: true });
-      const encodedJson38 = yield* encodeJson(sessionStartPayload(inner));
+      const encodedJson38 = yield* encodeRawHarnessJson(sessionStartPayload(inner));
       const run = yield* runWriter(encodedJson38);
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
@@ -1656,7 +1505,10 @@ fi
 
   it.effect("rejects an invalid inherited refusal date and partitions valid dates by the attempt", () =>
     Effect.gen(function* () {
-      const invalid = yield* runWriter("", { writerArgs: ["--refuse", "timeout"], attemptUtc: "2026-02-30T00:00:00Z" });
+      const invalid = yield* runWriter("", {
+        writerArgs: ["--refuse", "timeout"],
+        attemptUtc: "2026-02-30T00:00:00Z",
+      });
       expect(invalid.refusals).toHaveLength(1);
       const row = yield* decodeHookPulseRefusalJson(A.getUnsafe(invalid.refusals, 0));
       expect(DateTime.formatIso(row.ts)).not.toBe("2026-03-02T00:00:00.000Z");
@@ -1673,8 +1525,8 @@ fi
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const root = yield* makeHarnessFixtureRoot();
-      const failure = yield* typescriptHarnessHash(root).pipe(
+      const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
+      const failure = yield* typescriptOracleHarnessHash(root).pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, {
           ...spawner,
           string: () => Effect.succeed("\n"),
@@ -1690,64 +1542,58 @@ fi
       );
       yield* fs.chmod(git, 0o755);
       const executablePath = `${bin}:${yield* Config.String("PATH")}`;
-      const encodedJson39 = yield* encodeJson(sessionStartPayload(root));
+      const encodedJson39 = yield* encodeRawHarnessJson(sessionStartPayload(root));
       const run = yield* runWriter(encodedJson39, { executablePath });
       assertNone((yield* decodeHookPulseRow(expectSingleRow(run))).harnessHash);
     })
   );
 
-  it.effect("carries an operator salt into every private digest", () =>
-    Effect.gen(function* () {
-      // The oracle above still passes for a writer that never reads the salt
-      // at all, because the insecure default is what such a writer would have
-      // used anyway. Only a run under an operator salt separates "resolves the
-      // salt" from "hardcodes the fallback".
-      const encodedJson40 = yield* encodeJson(preToolUsePayload);
-      const run = yield* runWriter(encodedJson40, {
-        hashSalt: OPERATOR_SALT,
-      });
-      const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+  it.effect(
+    "carries an operator salt into every private digest, which no default-salt case can tell from a hardcoded fallback",
+    () =>
+      Effect.gen(function* () {
+        const encodedJson40 = yield* encodeRawHarnessJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson40, {
+          hashSalt: OPERATOR_SALT,
+        });
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      const expectation5 = expect(decoded.sessionId);
-      const hashPrivateIdentifier6 = yield* hashPrivateIdentifier(session, O.some(OPERATOR_SALT));
-      expectation5.toBe(hashPrivateIdentifier6);
-      const expectation6 = expect(decoded.cwd);
-      const hashPrivateIdentifier7 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(OPERATOR_SALT));
-      expectation6.toBe(hashPrivateIdentifier7);
-      const argument1 = expect(decoded.sessionId).not;
-      const privateDigest8 = yield* privateDigest(session);
-      argument1.toBe(privateDigest8);
-    })
+        const expectation5 = expect(decoded.sessionId);
+        const hashPrivateIdentifier6 = yield* hashPrivateIdentifier(session, O.some(OPERATOR_SALT));
+        expectation5.toBe(hashPrivateIdentifier6);
+        const expectation6 = expect(decoded.cwd);
+        const hashPrivateIdentifier7 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(OPERATOR_SALT));
+        expectation6.toBe(hashPrivateIdentifier7);
+        const argument1 = expect(decoded.sessionId).not;
+        const privateDigest8 = yield* typeScriptOraclePrivateDigest(session);
+        argument1.toBe(privateDigest8);
+      })
   );
 
   it.effect("treats a whitespace-only salt as unset, exactly as resolveAiMetricsHashSaltValue does", () =>
     Effect.gen(function* () {
-      // `${VAR:-default}` accepts `"   "` as a value while
-      // `resolveAiMetricsHashSaltValue` trims first and falls back. That lone
-      // input is where the two halves can disagree with both looking correct,
-      // so the shell trims too and this pins it.
-      const encodedJson41 = yield* encodeJson(preToolUsePayload);
+      const encodedJson41 = yield* encodeRawHarnessJson(preToolUsePayload);
       const run = yield* runWriter(encodedJson41, {
         hashSalt: "   ",
       });
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
       const expectation7 = expect(decoded.sessionId);
-      const privateDigest9 = yield* privateDigest(session);
+      const privateDigest9 = yield* typeScriptOraclePrivateDigest(session);
       expectation7.toBe(privateDigest9);
     })
   );
 
   it.effect("omits notificationType when the raw value is outside the enum", () =>
     Effect.gen(function* () {
-      const encodedJson42 = yield* encodeJson(futureNotificationPayload);
+      const encodedJson42 = yield* encodeRawHarnessJson(futureNotificationPayload);
       const run = yield* runWriter(encodedJson42);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      // The spike's jq `capture()` defect dropped exactly this row while still
-      // exiting 0. A no-match must omit the optional key, never annihilate the
-      // object.
-      expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.Notification);
+      expect(
+        decoded.hookEvent,
+        "a jq capture() no-match must omit the optional key, never drop the row as the spike writer did"
+      ).toBe(HookPulseEvent.Enum.Notification);
       assertNone(decoded.notificationType);
       expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum.unknown);
     })
@@ -1755,7 +1601,7 @@ fi
 
   it.effect("keeps notificationType when the raw value is inside the enum", () =>
     Effect.gen(function* () {
-      const encodedJson43 = yield* encodeJson(permissionPromptNotificationPayload);
+      const encodedJson43 = yield* encodeRawHarnessJson(permissionPromptNotificationPayload);
       const run = yield* runWriter(encodedJson43);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
@@ -1765,11 +1611,11 @@ fi
 
   it.effect("carries sessionEndReason only on SessionEnd", () =>
     Effect.gen(function* () {
-      const encodedJson44 = yield* encodeJson(sessionEndPayload);
+      const encodedJson44 = yield* encodeRawHarnessJson(sessionEndPayload);
       const ended = yield* runWriter(encodedJson44);
-      const encodedJson45 = yield* encodeJson(stopPayload);
+      const encodedJson45 = yield* encodeRawHarnessJson(stopPayload);
       const stopped = yield* runWriter(encodedJson45);
-      const encodedJson46 = yield* encodeJson(permissionDeniedPayload);
+      const encodedJson46 = yield* encodeRawHarnessJson(permissionDeniedClosingDeniedWaitPayload);
       const denied = yield* runWriter(encodedJson46);
       const decodedEnd = yield* decodeHookPulseRow(expectSingleRow(ended));
       const decodedStop = yield* decodeHookPulseRow(expectSingleRow(stopped));
@@ -1777,14 +1623,16 @@ fi
 
       assertSome(decodedEnd.sessionEndReason, "prompt_input_exit");
       assertNone(decodedStop.sessionEndReason);
-      // `PermissionDenied` carries its own `reason`, and it is content.
-      assertNone(decodedDenied.sessionEndReason);
+      expect(
+        decodedDenied.sessionEndReason,
+        "PermissionDenied's own reason is content, not a sessionEndReason"
+      ).toEqual(O.none());
     })
   );
 
   it.effect("carries durationMs from PostToolUse and pairs tool ids", () =>
     Effect.gen(function* () {
-      const encodedJson47 = yield* encodeJson(postToolUsePayload);
+      const encodedJson47 = yield* encodeRawHarnessJson(postToolUsePayload);
       const run = yield* runWriter(encodedJson47);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
@@ -1793,28 +1641,25 @@ fi
     })
   );
 
-  it.effect("drops a non-finite durationMs rather than writing an undecodable row", () =>
-    Effect.gen(function* () {
-      // jq carries `1e400` through as `1E+400`, which parses back to
-      // `Infinity` and fails `NonNegNum`'s `S.Finite`. Keeping it would put an
-      // undecodable line in a shard, which poisons replay for every row that
-      // shard holds — strictly worse than dropping one optional field.
-      const nonFiniteDurationStdin48 = yield* nonFiniteDurationStdin;
-      const run = yield* runWriter(nonFiniteDurationStdin48);
-      const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+  it.effect(
+    "drops a non-finite durationMs rather than writing an undecodable row that poisons replay of its shard",
+    () =>
+      Effect.gen(function* () {
+        const nonFiniteDurationStdin48 = yield* nonFiniteDurationSplicedIntoRawStdinText;
+        const run = yield* runWriter(nonFiniteDurationStdin48);
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      assertNone(decoded.durationMs);
-      expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
-    })
+        assertNone(decoded.durationMs);
+        expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
+      })
   );
 
-  it.effect("invents no toolUseId for PermissionRequest", () =>
+  it.effect("invents no toolUseId for PermissionRequest, since the P4 two-hop join relies on its absence", () =>
     Effect.gen(function* () {
-      const encodedJson49 = yield* encodeJson(permissionRequestPlanPayload);
+      const encodedJson49 = yield* encodeRawHarnessJson(permissionRequestPlanPayload);
       const run = yield* runWriter(encodedJson49);
       const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      // The two-hop join in P4 depends on this absence being real.
       assertNone(decoded.toolUseId);
       assertSome(decoded.toolName, "ExitPlanMode");
     })
@@ -1822,7 +1667,7 @@ fi
 
   it.effect("writes nothing and exits 0 when the kill-switch sentinel exists", () =>
     Effect.gen(function* () {
-      const encodedJson50 = yield* encodeJson(permissionRequestPlanPayload);
+      const encodedJson50 = yield* encodeRawHarnessJson(permissionRequestPlanPayload);
       const run = yield* runWriter(encodedJson50, {
         disarmSentinel: '{"disarmedAt":"2026-08-05T00:00:00Z","reason":"test","evidenceTier":"unknown"}',
       });
@@ -1834,12 +1679,6 @@ fi
     })
   );
 
-  // cloud-agent-readiness D3: `BEEP_AGENT_HOST=cloud` suppresses only the desktop
-  // notifier; the privacy-safe row still lands. The writer resolves the notifier as
-  // its own sibling, so each case runs a temp copy of the real writer beside a stub
-  // that records each call and touches nothing else: no notification, no network.
-  // The non-cloud cases are the controls that prove the stub is reachable, so a
-  // silent stub under cloud means the guard held rather than that nothing ran.
   A.forEach(
     [
       { label: "cloud host, desktop notifier", host: "cloud", notifierRev: "desktop-ntfy-1", notified: false },
@@ -1849,13 +1688,13 @@ fi
       { label: "unset host, log-only opt-out", host: "", notifierRev: "log-only-0", notified: false },
     ],
     ({ label, host, notifierRev, notified }) => {
-      it.effect(`writes one row and ${notified ? "runs" : "skips"} the notifier for ${label}`, () =>
+      it.effect(`writes one row and ${notified ? "runs" : "skips"} the stub desktop notifier for ${label}`, () =>
         Effect.gen(function* () {
-          const stub = yield* makeNotifierStubWriter();
-          const encodedJson51 = yield* encodeJson(permissionRequestToolPayload);
+          const stub = yield* makeWriterCopyBesideCallLoggingNotifierStub();
+          const encodedJson51 = yield* encodeRawHarnessJson(permissionRequestToolPayload);
           const run = yield* runWriter(encodedJson51, {
             writerPath: stub.writerPath,
-            extraEnv: notifierHostEnv(host, notifierRev),
+            lastSpreadEnvOverrides: notifierHostEnvWithSynchronousStubCalls(host, notifierRev),
           });
 
           const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
@@ -1873,7 +1712,7 @@ fi
     [
       {
         label: "a disarmed writer",
-        stdin: encodeJson(permissionRequestToolPayload),
+        stdin: encodeRawHarnessJson(permissionRequestToolPayload),
         disarmed: true,
         reason: "disabled",
       },
@@ -1887,11 +1726,11 @@ fi
     ({ label, stdin, disarmed, reason }) => {
       it.effect(`writes no row and never notifies under the cloud host for ${label}`, () =>
         Effect.gen(function* () {
-          const stub = yield* makeNotifierStubWriter();
+          const stub = yield* makeWriterCopyBesideCallLoggingNotifierStub();
           const stdin53 = yield* stdin;
           const run = yield* runWriter(stdin53, {
             writerPath: stub.writerPath,
-            extraEnv: notifierHostEnv("cloud", "desktop-ntfy-1"),
+            lastSpreadEnvOverrides: notifierHostEnvWithSynchronousStubCalls("cloud", "desktop-ntfy-1"),
             ...(disarmed
               ? { disarmSentinel: '{"disarmedAt":"2026-11-01T00:00:00Z","reason":"test","evidenceTier":"unknown"}' }
               : {}),
@@ -1899,13 +1738,15 @@ fi
 
           expectSilentRefusal(run);
           expect(run.stderr).toBe("");
-          // The payload-free refusal row is the only trace either path leaves.
           const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row), {
             concurrency: 1,
           });
-          expect(A.map(refusals, (refusal) => refusal.reason)).toEqual([reason]);
+          expect(
+            A.map(refusals, (refusal) => refusal.reason),
+            "each path leaves a payload-free refusal row"
+          ).toEqual([reason]);
           const calls54 = yield* stub.calls;
-          expect(calls54).toHaveLength(0);
+          expect(calls54, "the payload-free refusal row is the only trace either path leaves").toHaveLength(0);
         })
       );
     }
@@ -1917,11 +1758,11 @@ fi
       { label: "empty stdin", stdin: Effect.succeed("") },
       {
         label: "a payload with no session_id",
-        stdin: encodeJson({ ...stopPayload, session_id: undefined }),
+        stdin: encodeRawHarnessJson({ ...stopPayload, session_id: undefined }),
       },
       {
         label: "a payload with an unknown hook_event_name",
-        stdin: encodeJson({
+        stdin: encodeRawHarnessJson({
           ...stopPayload,
           hook_event_name: "SomeFutureEvent",
         }),
@@ -1939,47 +1780,43 @@ fi
     }
   );
 
-  // Amendment 8: a tool call ends in PostToolUse OR PostToolUseFailure, never
-  // both, so a bracket that only closes on PostToolUse drops every
-  // approved-then-failed wait — a biased loss, since failures are where retry
-  // storms live. The closing evidence P4 needs is tool_use_id + durationMs.
-  it.effect("carries bracket-closing evidence and isInterrupt on PostToolUseFailure", () =>
-    Effect.gen(function* () {
-      const encodedJson56 = yield* encodeJson(postToolUseFailurePayload(true));
-      const interrupted = yield* runWriter(encodedJson56);
-      const encodedJson57 = yield* encodeJson(postToolUseFailurePayload(false));
-      const errored = yield* runWriter(encodedJson57);
-      const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
-      const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
+  it.effect(
+    "carries the bracket-closing toolUseId, durationMs and isInterrupt on PostToolUseFailure, which ends a call in place of PostToolUse",
+    () =>
+      Effect.gen(function* () {
+        const encodedJson56 = yield* encodeRawHarnessJson(postToolUseFailurePayload(true));
+        const interrupted = yield* runWriter(encodedJson56);
+        const encodedJson57 = yield* encodeRawHarnessJson(postToolUseFailurePayload(false));
+        const errored = yield* runWriter(encodedJson57);
+        const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
+        const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
 
-      assertSome(decodedInterrupted.toolUseId, "toolu_writer_1");
-      assertSome(decodedInterrupted.durationMs, 12);
-      // `false` is a value, not an absence — omitting it would erase the
-      // distinction between "the tool errored" and "the human hit escape".
-      assertSome(decodedInterrupted.isInterrupt, true);
-      assertSome(decodedErrored.isInterrupt, false);
-    })
+        assertSome(decodedInterrupted.toolUseId, "toolu_writer_1");
+        assertSome(decodedInterrupted.durationMs, 12);
+        assertSome(decodedInterrupted.isInterrupt, true);
+        expect(
+          decodedErrored.isInterrupt,
+          "false is a value: the tool errored rather than the human hitting escape"
+        ).toEqual(O.some(false));
+      })
   );
 
-  it.effect("carries isInterrupt only on PostToolUseFailure", () =>
-    Effect.gen(function* () {
-      // `is_interrupt` on a foreign event is owned by PostToolUseFailure, so
-      // emitting it would fail HookPulseEventOwnedFieldInvariant on decode.
-      const encodedJson58 = yield* encodeJson({ ...postToolUsePayload, is_interrupt: true });
-      const run = yield* runWriter(encodedJson58);
-      const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+  it.effect(
+    "carries isInterrupt only on PostToolUseFailure, since HookPulseEventOwnedFieldInvariant rejects it elsewhere",
+    () =>
+      Effect.gen(function* () {
+        const encodedJson58 = yield* encodeRawHarnessJson({ ...postToolUsePayload, is_interrupt: true });
+        const run = yield* runWriter(encodedJson58);
+        const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
-      expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
-      assertNone(decoded.isInterrupt);
-    })
+        expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
+        assertNone(decoded.isInterrupt);
+      })
   );
 
-  it.effect("resolves the ledger path through the XDG fallback rung too", () =>
+  it.effect("resolves the ledger path through the XDG fallback rung to the directory hookPulseLedgerDir derives", () =>
     Effect.gen(function* () {
-      // With BEEP_AGENT_EVIDENCE_ROOT cleared, the writer must land in the
-      // same directory `agentEvidenceRoot`/`hookPulseLedgerDir` compute — the
-      // runner reads back from exactly that derived path.
-      const encodedJson59 = yield* encodeJson(permissionRequestPlanPayload);
+      const encodedJson59 = yield* encodeRawHarnessJson(permissionRequestPlanPayload);
       const run = yield* runWriter(encodedJson59, {
         viaXdgFallback: true,
       });
@@ -1989,12 +1826,6 @@ fi
     })
   );
 
-  // The writer is shell and the codec is TypeScript, so the only honest parity
-  // proof runs the real script and derives a row from the same raw payload under
-  // the matching `ConfigProvider`, then compares digests rather than shapes.
-  // Every other assertion in this file is satisfied by any 64-hex string, and
-  // the two halves used to disagree on exactly these three fields whenever
-  // either salt was exported.
   const codecParityCases: ReadonlyArray<{
     readonly label: string;
     readonly writerOptions: {
@@ -2012,28 +1843,26 @@ fi
     },
     {
       label: "the hook-pulse rung",
-      writerOptions: { hashSalt: CODEC_PARITY_SALT },
-      codecEnv: { BEEP_HOOK_PULSE_HASH_SALT: CODEC_PARITY_SALT },
-      expectedSalt: CODEC_PARITY_SALT,
+      writerOptions: { hashSalt: SALT_SHARED_BY_WRITER_AND_CODEC },
+      codecEnv: { BEEP_HOOK_PULSE_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
+      expectedSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
     },
     {
       label: "the ai-metrics rung",
-      writerOptions: { aiMetricsHashSalt: CODEC_PARITY_SALT },
-      codecEnv: { BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
-      expectedSalt: CODEC_PARITY_SALT,
+      writerOptions: { aiMetricsHashSalt: SALT_SHARED_BY_WRITER_AND_CODEC },
+      codecEnv: { BEEP_AI_METRICS_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
+      expectedSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
     },
   ];
 
   A.forEach(codecParityCases, ({ codecEnv, expectedSalt, label, writerOptions }) => {
-    it.effect(`reproduces the writer's private digests through ${label}`, () =>
+    it.effect(`reproduces the shell writer's private digests in the TypeScript codec through ${label}`, () =>
       Effect.gen(function* () {
-        const encodedJson60 = yield* encodeJson(preToolUsePayload);
+        const encodedJson60 = yield* encodeRawHarnessJson(preToolUsePayload);
         const run = yield* runWriter(encodedJson60, writerOptions);
         const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
-        // `ts`, `notifierRev`, `instrumentClass`, `agentKind`, and
-        // `evidenceTier` enter no digest, so a literal `ts` here avoids
-        // re-encoding the writer's own `DateTimeUtc` for no gain.
-        const codecRow = yield* withSaltEnv(
+        const tsThatEntersNoDigest = "2026-08-01T06:40:07.000Z";
+        const codecRow = yield* withPinnedSaltProviderNotAmbientEnv(
           codecEnv,
           decodeHookPulseFromRaw({
             event: preToolUsePayload,
@@ -2041,19 +1870,17 @@ fi
             instrumentClass: HookPulseInstrumentClass.Enum.production,
             agentKind: HookPulseAgentKind.Enum["claude-code"],
             evidenceTier: HookPulseEvidenceTier.Enum.derived,
-            ts: "2026-08-01T06:40:07.000Z",
+            ts: tsThatEntersNoDigest,
           })
         );
 
         expect(codecRow.sessionId).toBe(writerRow.sessionId);
         expect(codecRow.cwd).toBe(writerRow.cwd);
         expect(codecRow.transcriptPath).toEqual(writerRow.transcriptPath);
-        // Non-vacuity: two halves that both ignored the salt would agree
-        // too — on the fallback constant. Naming the rung's own digest is
-        // what separates "reproduces the writer" from "both hardcode the
-        // default", and it fails on the salted rows if either half stops
-        // reading its variable.
-        const expectation8 = expect(codecRow.sessionId);
+        const expectation8 = expect(
+          codecRow.sessionId,
+          "the rung's own digest separates reproducing the writer from both halves hardcoding the fallback"
+        );
         const hashPrivateIdentifier10 = yield* hashPrivateIdentifier(session, O.fromUndefinedOr(expectedSalt));
         expectation8.toBe(hashPrivateIdentifier10);
         const expectation9 = expect(codecRow.cwd);
@@ -2063,9 +1890,6 @@ fi
     );
   });
 
-  // The global projection (issue #1865) is the writer's second rung. It must beat
-  // the repo-wide ai-metrics variable and lose only to the instrument override,
-  // and `hookPulseNamespace` must resolve the same salt from the same file.
   const PROJECTION_SALT = "hook-pulse-writer-projection-salt";
   const writeProjection = Effect.fnUntraced(function* (text: string) {
     const fs = yield* FileSystem.FileSystem;
@@ -2081,47 +1905,48 @@ fi
     hashSalt: PROJECTION_SALT,
     previousRegime: "library-default",
   };
-  const projectionDocument = encodeJson(projectionFields);
+  const projectionDocument = encodeRawHarnessJson(projectionFields);
 
-  it.effect("reproduces the writer's private digests through the projection rung, above the ai-metrics rung", () =>
-    Effect.gen(function* () {
-      const projectionDocument61 = yield* projectionDocument;
-      const { file } = yield* writeProjection(projectionDocument61);
-      const encodedJson62 = yield* encodeJson(preToolUsePayload);
-      const run = yield* runWriter(encodedJson62, {
-        namespaceProjection: file,
-        aiMetricsHashSalt: CODEC_PARITY_SALT,
-      });
-      const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
-      const expectation10 = expect(writerRow.sessionId);
-      const hashPrivateIdentifier12 = yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT));
-      expectation10.toBe(hashPrivateIdentifier12);
-      const expectation11 = expect(writerRow.cwd);
-      const hashPrivateIdentifier13 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT));
-      expectation11.toBe(hashPrivateIdentifier13);
-      const namespace = yield* withSaltEnv(
-        { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
-        hookPulseNamespace
-      );
-      expect(namespace.source).toBe("projection");
-      const hashPrivateIdentifier63 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
-      expect(hashPrivateIdentifier63).toBe(writerRow.sessionId);
-      // The instrument override still wins over the projection on both halves.
-      const encodedJson64 = yield* encodeJson(preToolUsePayload);
-      const overridden = yield* runWriter(encodedJson64, {
-        namespaceProjection: file,
-        hashSalt: CODEC_PARITY_SALT,
-      });
-      const overriddenRow = yield* decodeHookPulseRow(expectSingleRow(overridden));
-      const expectation12 = expect(overriddenRow.sessionId);
-      const hashPrivateIdentifier14 = yield* hashPrivateIdentifier(session, O.some(CODEC_PARITY_SALT));
-      expectation12.toBe(hashPrivateIdentifier14);
-      const overriddenNamespace = yield* withSaltEnv(
-        { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: CODEC_PARITY_SALT },
-        hookPulseNamespace
-      );
-      expect(overriddenNamespace.source).toBe("hook-pulse-env");
-    })
+  it.effect(
+    "reproduces the writer's private digests through the projection rung, above the ai-metrics rung and below the instrument override",
+    () =>
+      Effect.gen(function* () {
+        const projectionDocument61 = yield* projectionDocument;
+        const { file } = yield* writeProjection(projectionDocument61);
+        const encodedJson62 = yield* encodeRawHarnessJson(preToolUsePayload);
+        const run = yield* runWriter(encodedJson62, {
+          namespaceProjection: file,
+          aiMetricsHashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
+        });
+        const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
+        const expectation10 = expect(writerRow.sessionId);
+        const hashPrivateIdentifier12 = yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT));
+        expectation10.toBe(hashPrivateIdentifier12);
+        const expectation11 = expect(writerRow.cwd);
+        const hashPrivateIdentifier13 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT));
+        expectation11.toBe(hashPrivateIdentifier13);
+        const namespace = yield* withPinnedSaltProviderNotAmbientEnv(
+          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
+          hookPulseNamespace
+        );
+        expect(namespace.source).toBe("projection");
+        const hashPrivateIdentifier63 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
+        expect(hashPrivateIdentifier63).toBe(writerRow.sessionId);
+        const encodedJson64 = yield* encodeRawHarnessJson(preToolUsePayload);
+        const overridden = yield* runWriter(encodedJson64, {
+          namespaceProjection: file,
+          hashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
+        });
+        const overriddenRow = yield* decodeHookPulseRow(expectSingleRow(overridden));
+        const expectation12 = expect(overriddenRow.sessionId, "the instrument override wins over the projection");
+        const hashPrivateIdentifier14 = yield* hashPrivateIdentifier(session, O.some(SALT_SHARED_BY_WRITER_AND_CODEC));
+        expectation12.toBe(hashPrivateIdentifier14);
+        const overriddenNamespace = yield* withPinnedSaltProviderNotAmbientEnv(
+          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
+          hookPulseNamespace
+        );
+        expect(overriddenNamespace.source).toBe("hook-pulse-env");
+      })
   );
 
   it.effect("matches accepted projection salts byte for byte, including significant spaces and extra keys", () =>
@@ -2132,12 +1957,15 @@ fi
         { ...projectionFields, extra: "ignored forward-compatible metadata" },
         { ...projectionFields, hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT },
       ]) {
-        const encodedJson65 = yield* encodeJson(fields);
+        const encodedJson65 = yield* encodeRawHarnessJson(fields);
         const { file } = yield* writeProjection(encodedJson65);
-        const encodedJson66 = yield* encodeJson(preToolUsePayload);
+        const encodedJson66 = yield* encodeRawHarnessJson(preToolUsePayload);
         const run = yield* runWriter(encodedJson66, { namespaceProjection: file });
         const row = yield* decodeHookPulseRow(expectSingleRow(run));
-        const namespace = yield* withSaltEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace);
+        const namespace = yield* withPinnedSaltProviderNotAmbientEnv(
+          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file },
+          hookPulseNamespace
+        );
         const expectation13 = expect(row.sessionId);
         const hashPrivateIdentifier15 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
         expectation13.toBe(hashPrivateIdentifier15);
@@ -2156,11 +1984,13 @@ fi
           { name: "BEEP_HOOK_PULSE_HASH_SALT", options: { hashSalt: salt } },
           { name: "BEEP_AI_METRICS_HASH_SALT", options: { aiMetricsHashSalt: salt } },
         ]) {
-          const encodedJson67 = yield* encodeJson(preToolUsePayload);
+          const encodedJson67 = yield* encodeRawHarnessJson(preToolUsePayload);
           const run = yield* runWriter(encodedJson67, rung.options);
           expect(run.rows).toHaveLength(0);
           expect(run.refusals).toHaveLength(1);
-          const error = yield* withSaltEnv({ [rung.name]: salt }, hookPulseNamespace).pipe(Effect.flip);
+          const error = yield* withPinnedSaltProviderNotAmbientEnv({ [rung.name]: salt }, hookPulseNamespace).pipe(
+            Effect.flip
+          );
           expect(error._tag).toBe("HookPulseNamespaceError");
         }
       }
@@ -2170,13 +2000,13 @@ fi
   it.effect("uses the same temporary XDG and HOME default projection paths", () =>
     Effect.gen(function* () {
       for (const cacheOverride of [undefined, ""]) {
-        const encodedJson68 = yield* encodeJson(preToolUsePayload);
+        const encodedJson68 = yield* encodeRawHarnessJson(preToolUsePayload);
         const run = yield* runWriter(encodedJson68, {
           defaultProjectionDocument: yield* projectionDocument,
-          ...(cacheOverride === undefined ? {} : { extraEnv: { XDG_CACHE_HOME: cacheOverride } }),
+          ...(cacheOverride === undefined ? {} : { lastSpreadEnvOverrides: { XDG_CACHE_HOME: cacheOverride } }),
         });
         const row = yield* decodeHookPulseRow(expectSingleRow(run));
-        const namespace = yield* withSaltEnv(
+        const namespace = yield* withPinnedSaltProviderNotAmbientEnv(
           {
             HOME: run.stateHome,
             XDG_CACHE_HOME: cacheOverride ?? `${run.stateHome}/.cache`,
@@ -2212,19 +2042,22 @@ fi
           (hashSalt) => ({ ...projectionFields, hashSalt })
         ),
       ];
-      const invalidDocuments = yield* Effect.forEach(invalidFields, (fields) => encodeJson(fields), { concurrency: 1 });
+      const invalidDocuments = yield* Effect.forEach(invalidFields, (fields) => encodeRawHarnessJson(fields), {
+        concurrency: 1,
+      });
       const validDocument = yield* projectionDocument;
       for (const text of [...invalidDocuments, `${validDocument}\n${validDocument}`, "null", "[]"]) {
         const { file } = yield* writeProjection(text);
-        const encodedJson69 = yield* encodeJson(preToolUsePayload);
+        const encodedJson69 = yield* encodeRawHarnessJson(preToolUsePayload);
         const run = yield* runWriter(encodedJson69, { namespaceProjection: file });
         expect(run.rows).toHaveLength(0);
         expect(run.refusals).toHaveLength(1);
         const refusal = yield* decodeHookPulseRefusalJson(A.getUnsafe(run.refusals, 0));
         expect(refusal.reason).toBe("namespace-projection-invalid");
-        const error = yield* withSaltEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace).pipe(
-          Effect.flip
-        );
+        const error = yield* withPinnedSaltProviderNotAmbientEnv(
+          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file },
+          hookPulseNamespace
+        ).pipe(Effect.flip);
         expect(error._tag).toBe("HookPulseNamespaceError");
       }
     })
@@ -2237,14 +2070,14 @@ fi
         const { dir, file } = yield* writeProjection("{broken");
         const cases: ReadonlyArray<WriterOptions> = [
           { namespaceProjection: file, hashSalt: "  explicit override  " },
-          { namespaceProjection: `${dir}/absent.json`, aiMetricsHashSalt: CODEC_PARITY_SALT },
+          { namespaceProjection: `${dir}/absent.json`, aiMetricsHashSalt: SALT_SHARED_BY_WRITER_AND_CODEC },
           { namespaceProjection: `${dir}/absent.json` },
         ];
         for (const options of cases) {
-          const encodedJson70 = yield* encodeJson(preToolUsePayload);
+          const encodedJson70 = yield* encodeRawHarnessJson(preToolUsePayload);
           const run = yield* runWriter(encodedJson70, options);
           const row = yield* decodeHookPulseRow(expectSingleRow(run));
-          const namespace = yield* withSaltEnv(
+          const namespace = yield* withPinnedSaltProviderNotAmbientEnv(
             {
               BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: options.namespaceProjection ?? "",
               BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
@@ -2264,9 +2097,9 @@ fi
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const malformed = yield* writeProjection("{not json");
-      const encodedJson71 = yield* encodeJson({ version: 1, hashSalt: "   " });
+      const encodedJson71 = yield* encodeRawHarnessJson({ version: 1, hashSalt: "   " });
       const blank = yield* writeProjection(encodedJson71);
-      const encodedJson72 = yield* encodeJson({ version: 2, hashSalt: PROJECTION_SALT });
+      const encodedJson72 = yield* encodeRawHarnessJson({ version: 2, hashSalt: PROJECTION_SALT });
       const wrongVersion = yield* writeProjection(encodedJson72);
       const projectionDocument73 = yield* projectionDocument;
       const linked = yield* writeProjection(projectionDocument73);
@@ -2275,18 +2108,21 @@ fi
       const dangling = path.join(linked.dir, "dangling.json");
       yield* fs.symlink(path.join(linked.dir, "missing.json"), dangling);
       for (const projection of [malformed.file, blank.file, wrongVersion.file, link, dangling, linked.dir]) {
-        const encodedJson74 = yield* encodeJson(preToolUsePayload);
+        const encodedJson74 = yield* encodeRawHarnessJson(preToolUsePayload);
         const run = yield* runWriter(encodedJson74, {
           namespaceProjection: projection,
-          aiMetricsHashSalt: CODEC_PARITY_SALT,
+          aiMetricsHashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
         });
         expect(run.exitCode).toBe(0);
         expect(run.rows).toHaveLength(0);
         expect(run.refusals).toHaveLength(1);
         const refusal = yield* decodeHookPulseRefusalJson(A.getUnsafe(run.refusals, 0));
         expect(refusal.reason).toBe("namespace-projection-invalid");
-        const resolved = yield* withSaltEnv(
-          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: projection, BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
+        const resolved = yield* withPinnedSaltProviderNotAmbientEnv(
+          {
+            BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: projection,
+            BEEP_AI_METRICS_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC,
+          },
           hookPulseNamespace
         ).pipe(Effect.flip);
         expect(resolved._tag).toBe("HookPulseNamespaceError");
@@ -2295,20 +2131,10 @@ fi
   );
 });
 
-// The switch's two artifacts, stated as schemas rather than as inline object
-// shapes so a field it stops emitting fails the decode instead of passing an
-// assertion that never looked for it. Neither is a `HookPulseV1` row and neither
-// belongs under `hook-events/`: `HookPulseEvent` has no member for "the
-// instrument was off", so representing a disarm window in the canonical ledger
-// would mean inventing a hook event. Keeping the window in a sibling file is
-// what lets P4 replay treat `hook-events/` as exactly one schema.
 const decodeDisarmSentinel = HookPulseDisarmSentinel.decodeJsonEffect;
 const decodeDisarmWindow = HookPulseDisarmWindow.decodeJsonEffect;
 
-// An ISO-8601 UTC instant at second resolution, which is all `date -u
-// +%Y-%m-%dT%H:%M:%SZ` can express. Asserted on `rearmedAt` so a window closed
-// with an empty or malformed stamp fails here rather than decoding as a string.
-const isoSecond = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+const isoUtcSecondAsDateUPrintsIt = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
 interface SwitchRun {
   readonly exitCode: number;
@@ -2323,11 +2149,7 @@ interface SwitchStore {
   readonly windowsPath: string;
 }
 
-// One isolated evidence root shared by every invocation in a case. The
-// regression this file pins only exists *across* invocations — `disarm`,
-// `disarm`, `arm` is the whole shape of it — so a helper that minted a fresh
-// temp root per call, as `runWriter` does, could not express it at all.
-const makeSwitchStore = Effect.fnUntraced(function* () {
+const makeSwitchStoreSharedAcrossInvocations = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const stateHome = yield* fs.makeTempDirectoryScoped({
     prefix: "beep-hook-pulse-switch-",
@@ -2342,26 +2164,16 @@ const makeSwitchStore = Effect.fnUntraced(function* () {
   };
 });
 
-// Same `ChildProcess` wiring as `runWriter`, with one difference that matters:
-// the switch is argv-driven and reads no stdin, so its stdin is `"ignore"`
-// rather than a stream. Leaving a pipe open for a process that never reads it is
-// how the writer test hung for 40 minutes; `"ignore"` cannot reproduce that.
+// decision: hook-pulse-writer-test-spawns-through-effect-child-process
 const runSwitch = Effect.fnUntraced(function* (store: SwitchStore, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make(switchPath, args, {
     cwd: repoRoot,
-    // As in `runWriter`: inherited so `jq` and `date` stay on `PATH` without this
-    // file reading `process.env`, which the `processEnvInEffect` law forbids.
     extendEnv: true,
     env: {
       HOME: store.stateHome,
       XDG_STATE_HOME: store.stateHome,
       BEEP_AGENT_EVIDENCE_ROOT: store.evidenceRoot,
-      // Cleared so the switch derives the sentinel path from the evidence root
-      // through the same rung `hook-pulse.sh` uses. An override here would let
-      // the two scripts disagree about the path while this suite stayed green,
-      // which is precisely the failure the sentinel cannot afford: the writer
-      // would keep writing against a switch that thinks it is disarmed.
-      BEEP_HOOK_PULSE_DISARM_SENTINEL: "",
+      BEEP_HOOK_PULSE_DISARM_SENTINEL: UNSET_FALLS_THROUGH_TO_WRITER_DEFAULT,
     },
     stdin: "ignore",
     stdout: "pipe",
@@ -2401,18 +2213,15 @@ const seedSentinel = Effect.fnUntraced(function* (store: SwitchStore, contents: 
   yield* fs.writeFileString(store.sentinelPath, contents);
 });
 
-// A sentinel stamped at an instant no test run can collide with. `date -u` has
-// one-second resolution, so two disarms inside the same second produce equal
-// timestamps and a naive "the timestamp did not change" assertion passes against
-// the bug. Seeding an unmistakably older start removes that race outright —
-// preferable to sleeping past a second boundary, which would both slow the suite
-// and put a wall-clock wait inside `it.effect`, whose clock is the `TestClock`.
-const SEEDED_DISARM = {
+const SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND = {
   disarmedAt: "2026-08-05T00:00:00Z",
   evidenceTier: HookPulseEvidenceTier.Enum.unknown,
   reason: "seeded-first-window",
 };
-const seededSentinelJson = Effect.map(encodeJson(SEEDED_DISARM), (json) => `${json}\n`);
+const seededSentinelJson = Effect.map(
+  encodeRawHarnessJson(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND),
+  (json) => `${json}\n`
+);
 
 const expectSingleWindow = (rows: ReadonlyArray<string>): string => {
   expect(rows).toHaveLength(1);
@@ -2421,23 +2230,18 @@ const expectSingleWindow = (rows: ReadonlyArray<string>): string => {
   return `${row}`;
 };
 
-// Every command below is expected to succeed silently on stderr, so the pair is
-// asserted through one helper: the interesting half of each case is what it did
-// to the sentinel and the ledger, not that it exited.
 const expectSwitchOk = (run: SwitchRun): void => {
   expect(run.exitCode).toBe(0);
-  expect(run.stderr).toBe("");
+  expect(
+    run.stderr,
+    "every success path stays silent on stderr; the interesting half is the sentinel and the ledger"
+  ).toBe("");
 };
 
-// The switch is an operator command rather than a hook, so — unlike the writer —
-// its stdout is a feature and is asserted for content instead of for silence.
-// stderr is still expected empty on every success path: `jq` failing to parse a
-// hand-mangled sentinel is handled, and letting its diagnostics through would
-// train operators to ignore the one channel that reports real trouble.
-it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch conformance", (it) => {
+it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse kill-switch conformance", (it) => {
   it.effect("keeps the first disarm's window start and reason when disarm runs again", () =>
     Effect.gen(function* () {
-      const store = yield* makeSwitchStore();
+      const store = yield* makeSwitchStoreSharedAcrossInvocations();
       const first = yield* runSwitch(store, ["disarm", "first-reason"]);
       const afterFirst = yield* readSentinel(store);
       const second = yield* runSwitch(store, ["disarm", "second-reason"]);
@@ -2445,39 +2249,37 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
 
       expectSwitchOk(first);
       expectSwitchOk(second);
-      // Byte-identity, because the timestamps alone cannot separate "preserved"
-      // from "rewritten within the same second". The reason changes on the
-      // second call, so a `disarm` that overwrites moves these two apart even
-      // when the clock does not.
-      expect(afterSecond).toEqual(afterFirst);
+      expect(
+        afterSecond,
+        "byte-identity: the reason changes on the second call, so an overwrite shows even within one clock second"
+      ).toEqual(afterFirst);
 
       const decoded = yield* afterSecond.pipe(O.getOrThrow, decodeDisarmSentinel);
 
       expect(decoded.reason).toBe("first-reason");
       expect(decoded.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
-      // Reported back to the operator, not silently swallowed: re-running
-      // `disarm` has to say which window it is still inside, or the human has
-      // no way to notice the instrument went down earlier than they think.
-      expect(second.stdout).toContain(`already disarmed since ${decoded.disarmedAt}`);
+      expect(
+        second.stdout,
+        "the switch is an operator command, so stdout is a status line rather than hook silence; re-running disarm reports which window it is still inside"
+      ).toContain(`already disarmed since ${decoded.disarmedAt}`);
     })
   );
 
   it.effect("never moves an existing window start forward, across any elapsed time", () =>
     Effect.gen(function* () {
-      const store = yield* makeSwitchStore();
+      const store = yield* makeSwitchStoreSharedAcrossInvocations();
       const seededSentinelJson75 = yield* seededSentinelJson;
       yield* seedSentinel(store, seededSentinelJson75);
 
       const run = yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
 
       expectSwitchOk(run);
-      // Byte-identical to what was seeded: not the reason, not the timestamp,
-      // not the trailing newline. The seeded start is far enough in the past
-      // that an overwrite is unambiguous rather than clock-resolution noise.
       const readSentinel76 = yield* readSentinel(store);
       const seededSentinelJson88 = yield* seededSentinelJson;
-      assertSome(readSentinel76, seededSentinelJson88);
-      expect(run.stdout).toContain(SEEDED_DISARM.disarmedAt);
+      expect(readSentinel76, "byte-identical to the seed: reason, timestamp and trailing newline").toEqual(
+        O.some(seededSentinelJson88)
+      );
+      expect(run.stdout).toContain(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt);
     })
   );
 
@@ -2485,7 +2287,7 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const store = yield* makeSwitchStore();
+      const store = yield* makeSwitchStoreSharedAcrossInvocations();
       yield* fs.makeDirectory(store.evidenceRoot, { recursive: true });
       yield* fs.symlink(path.join(store.evidenceRoot, "missing-sentinel-target"), store.sentinelPath);
 
@@ -2497,39 +2299,34 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
     })
   );
 
-  it.effect("closes the ledger window at the FIRST disarm, not the latest", () =>
-    Effect.gen(function* () {
-      // This is the assertion that encodes why the overwrite mattered. `arm`
-      // copies the sentinel's `disarmedAt` into the append-only window ledger,
-      // so a re-disarm that moved it forward recorded a *shorter* gap than
-      // actually occurred — silently reclassifying uninstrumented time as
-      // covered. Nothing downstream can detect that: the ledger still looks
-      // complete, and the window it describes is simply wrong.
-      const store = yield* makeSwitchStore();
-      const seededSentinelJson77 = yield* seededSentinelJson;
-      yield* seedSentinel(store, seededSentinelJson77);
-      yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
+  it.effect(
+    "closes the ledger window at the FIRST disarm, not the latest, so a re-disarm cannot shorten the recorded gap",
+    () =>
+      Effect.gen(function* () {
+        const store = yield* makeSwitchStoreSharedAcrossInvocations();
+        const seededSentinelJson77 = yield* seededSentinelJson;
+        yield* seedSentinel(store, seededSentinelJson77);
+        yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
 
-      const armed = yield* runSwitch(store, ["arm"]);
-      const readWindowRows78 = yield* readWindowRows(store);
-      const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows78));
+        const armed = yield* runSwitch(store, ["arm"]);
+        const readWindowRows78 = yield* readWindowRows(store);
+        const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows78));
 
-      expectSwitchOk(armed);
-      expect(window.schemaVersion).toBe(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"]);
-      assertSome(window.disarmedAt, SEEDED_DISARM.disarmedAt);
-      assertSome(window.reason, SEEDED_DISARM.reason);
-      // Self-labelled `unknown`: no hook rows exist for the window, so anything
-      // computed across it is uninstrumented by construction.
-      expect(window.evidenceTier).toBe(HookPulseEvidenceTier.Enum.unknown);
-      expect(window.rearmedAt).toMatch(isoSecond);
-      // ISO-8601 UTC at fixed width sorts lexicographically, so this is a real
-      // ordering check: a window that closes before it opens is not a window.
-      pipe(window.rearmedAt > SEEDED_DISARM.disarmedAt, assertTrue);
-      // The switch is armed again only if the sentinel is actually gone — the
-      // writer tests for its existence and nothing else.
-      const readSentinel79 = yield* readSentinel(store);
-      assertNone(readSentinel79);
-    })
+        expectSwitchOk(armed);
+        expect(window.schemaVersion).toBe(HookPulseDisarmWindowSchemaVersion.Enum["hook-pulse-disarm-window/v1"]);
+        assertSome(window.disarmedAt, SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt);
+        assertSome(window.reason, SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.reason);
+        expect(window.evidenceTier, "no hook rows exist for the window, so it is uninstrumented by construction").toBe(
+          HookPulseEvidenceTier.Enum.unknown
+        );
+        expect(window.rearmedAt).toMatch(isoUtcSecondAsDateUPrintsIt);
+        expect(
+          window.rearmedAt > SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt,
+          "fixed-width ISO UTC sorts lexicographically, so a window must close after it opens"
+        ).toBe(true);
+        const readSentinel79 = yield* readSentinel(store);
+        expect(readSentinel79, "armed means the sentinel the writer tests for is gone").toEqual(O.none());
+      })
   );
 
   A.forEach(
@@ -2538,36 +2335,33 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       { contents: "{not json", label: "a sentinel holding invalid JSON" },
     ],
     ({ contents, label }) => {
-      it.effect(`records an unknown window start for ${label}`, () =>
+      it.effect(`records an unknown window start for ${label}, which a jq // alternative cannot rescue`, () =>
         Effect.gen(function* () {
-          // `touch`ing the sentinel path is a documented manual disarm, so both
-          // of these are reachable in production. jq's `//` cannot rescue them:
-          // on empty input jq emits nothing and still exits 0, so neither the
-          // alternative nor `||` fires — the same empty-output trap that made
-          // the writer's `capture()` drop whole rows.
-          const store = yield* makeSwitchStore();
+          const store = yield* makeSwitchStoreSharedAcrossInvocations();
           yield* seedSentinel(store, contents);
 
           const disarmed = yield* runSwitch(store, ["disarm", "later-reason"]);
 
           expectSwitchOk(disarmed);
-          // Idempotent here too: a sentinel it cannot parse is still a
-          // sentinel, and stamping a fresh timestamp onto it would invent a
-          // window start where the honest answer is that there isn't one.
+          expect(
+            disarmed.stderr,
+            "jq diagnostics on a mangled sentinel are handled and never reach stderr, so operators are not trained to ignore the channel that reports real trouble"
+          ).toBe("");
           const readSentinel80 = yield* readSentinel(store);
-          assertSome(readSentinel80, contents);
+          expect(readSentinel80, "an unparseable sentinel is still a sentinel and gets no invented start").toEqual(
+            O.some(contents)
+          );
 
           const armed = yield* runSwitch(store, ["arm"]);
           const readWindowRows81 = yield* readWindowRows(store);
           const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows81));
 
           expectSwitchOk(armed);
-          // `null`, never the rearm instant: a window whose start defaulted to
-          // "now" would read as a zero-length gap, which is worse than an
-          // admitted unknown because it looks like coverage.
-          assertNone(window.disarmedAt);
+          expect(window.disarmedAt, "null, never the rearm instant, which would read as zero-length coverage").toEqual(
+            O.none()
+          );
           assertNone(window.reason);
-          expect(window.rearmedAt).toMatch(isoSecond);
+          expect(window.rearmedAt).toMatch(isoUtcSecondAsDateUPrintsIt);
           const readSentinel82 = yield* readSentinel(store);
           assertNone(readSentinel82);
         })
@@ -2578,29 +2372,25 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
   it.effect("appends nothing when arm runs while already armed", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const store = yield* makeSwitchStore();
+      const store = yield* makeSwitchStoreSharedAcrossInvocations();
 
       const run = yield* runSwitch(store, ["arm"]);
 
       expectSwitchOk(run);
       expect(run.stdout).toContain("already armed");
-      // The ledger is append-only, so a no-op that appended anything would be
-      // permanent: a phantom window nothing can retract. Not creating the file
-      // at all also keeps "no windows yet" distinguishable from "a window whose
-      // fields all came out empty".
       const readWindowRows83 = yield* readWindowRows(store);
-      expect(readWindowRows83).toEqual([]);
+      expect(
+        readWindowRows83,
+        "the window ledger is append-only, so a phantom window could never be retracted"
+      ).toEqual([]);
       const exists84 = yield* fs.exists(store.windowsPath);
-      pipe(exists84, assertFalse);
+      expect(exists84, "no file keeps 'no windows yet' apart from a window with empty fields").toBe(false);
     })
   );
 
-  it.effect("reports the sentinel document on status and stops reporting it once armed", () =>
+  it.effect("reports the sentinel document the writer tests for on status and stops reporting it once armed", () =>
     Effect.gen(function* () {
-      // `status` is how an operator answers "is the instrument recording right
-      // now", so it has to read the same sentinel the writer tests for rather
-      // than a second opinion about it.
-      const store = yield* makeSwitchStore();
+      const store = yield* makeSwitchStoreSharedAcrossInvocations();
       const seededSentinelJson85 = yield* seededSentinelJson;
       yield* seedSentinel(store, seededSentinelJson85);
 
@@ -2611,27 +2401,22 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch con
       expectSwitchOk(disarmed);
       expectSwitchOk(armed);
       expect(disarmed.stdout).toContain(store.sentinelPath);
-      expect(disarmed.stdout).toContain(SEEDED_DISARM.disarmedAt);
-      expect(disarmed.stdout).toContain(SEEDED_DISARM.reason);
+      expect(disarmed.stdout).toContain(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt);
+      expect(disarmed.stdout).toContain(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.reason);
       expect(armed.stdout).toContain("armed (no sentinel");
-      expect(armed.stdout).not.toContain(SEEDED_DISARM.disarmedAt);
+      expect(armed.stdout).not.toContain(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt);
     })
   );
 
-  it.effect("exits 2 with usage on an unknown subcommand", () =>
+  it.effect("exits 2 with usage on an unknown subcommand, the non-zero anchor for every exit-0 case", () =>
     Effect.gen(function* () {
-      // Also the non-vacuity anchor for every `exitCode` assertion above: they
-      // all expect 0, so without one case that does not, a `runSwitch` that
-      // silently reported success would satisfy the whole block.
-      const store = yield* makeSwitchStore();
+      const store = yield* makeSwitchStoreSharedAcrossInvocations();
 
       const run = yield* runSwitch(store, ["bogus"]);
 
       expect(run.exitCode).toBe(2);
       expect(run.stderr).toContain("usage:");
-      // Diagnostics on stderr, so a caller piping stdout cannot mistake a
-      // usage error for a status line.
-      expect(run.stdout).toBe("");
+      expect(run.stdout, "usage goes to stderr so a stdout pipe never reads it as a status line").toBe("");
     })
   );
 });
