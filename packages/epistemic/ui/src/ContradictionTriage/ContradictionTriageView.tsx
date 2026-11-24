@@ -8,7 +8,7 @@
 
 import { CONTRADICTION_REVIEW_REASON_MAX_LENGTH } from "@beep/epistemic-domain/values/Contradiction";
 import { ContradictionTriage } from "@beep/epistemic-use-cases/public";
-import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
+import { EvidencePosition, ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { $EpistemicUiId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@beep/ui/components/alert";
@@ -59,6 +59,10 @@ import type * as RpcClientError from "effect/rpc/RpcClientError";
 import type { JSX } from "react";
 
 const isCurrentPosition = S.is(EvidencePosition);
+const extractorConfidenceLabel = ExtractorConfidence.match({
+  Present: ({ value }) => `${confidencePercent(value.value)} reported extraction confidence`,
+  Absent: ({ reason }) => `Extraction confidence: ${reason}`,
+});
 const $I = $EpistemicUiId.create("ContradictionTriage/ContradictionTriageView");
 const ContradictionTriageTabBase = LiteralKit(["queue", "comparison", "source"]);
 
@@ -629,9 +633,7 @@ function EvidenceList({
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-muted-foreground">
                   {currentPosition
-                    ? span.extractorConfidence._tag === "Present"
-                      ? `${confidencePercent(span.extractorConfidence.value.value)} reported extraction confidence`
-                      : `Extraction confidence: ${span.extractorConfidence.reason}`
+                    ? extractorConfidenceLabel(span.extractorConfidence)
                     : "Legacy position requires repair"}
                 </span>
                 <Button

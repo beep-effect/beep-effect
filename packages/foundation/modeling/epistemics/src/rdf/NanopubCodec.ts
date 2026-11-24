@@ -604,6 +604,102 @@ const headEdge = (headEdges: ReadonlyArray<Rdf.Quad>, predicate: Rdf.NamedNode):
   });
 };
 
+const refusal = <A = never>(reason: NanopubRefusal): Result.Result<A, NanopubRefusal> => Result.fail(reason);
+
+const refuseUnless = (ok: boolean, reason: NanopubRefusal): Result.Result<void, NanopubRefusal> =>
+  ok ? Result.succeed(undefined) : refusal(reason);
+
+const namedOr = (term: Rdf.Term, reason: NanopubRefusal): Result.Result<Rdf.NamedNode, NanopubRefusal> =>
+  Rdf.NamedNode.is(term) ? Result.succeed(term) : refusal(reason);
+
+const singleOr = <A>(values: ReadonlyArray<A>, reason: NanopubRefusal): Result.Result<A, NanopubRefusal> =>
+  Result.fromOption(single(values), () => reason);
+
+const isNanopubRefusal = S.is(NanopubRefusal);
+
+const locateIris = (quads: ReadonlyArray<Rdf.Quad>): Result.Result<NanopubIris, NanopubRefusal> =>
+  Result.gen(function* () {
+    yield* refuseUnless(!A.some(quads, (q) => isBlank(q.graph)), "blank-graph-name");
+    const typed = A.filter(quads, isPublicationType);
+    const subject = yield* singleOr(
+      A.dedupeWith(
+        A.map(typed, (q) => q.subject),
+        sameTerm
+      ),
+      "publication-count"
+    );
+    const publication = yield* namedOr(subject, "blank-publication");
+    const headGraph = yield* singleOr(
+      A.dedupeWith(
+        A.map(typed, (q) => q.graph),
+        sameTerm
+      ),
+      "graph-mixing"
+    );
+    const head = (yield* namedOr(headGraph, "default-graph")).value;
+    const headEdges = A.filter(quads, (q) => q.graph.value === head && q.subject.value === publication.value);
+    const edges = yield* Result.all({
+      assertion: headEdge(headEdges, V.hasAssertion),
+      provenance: headEdge(headEdges, V.hasProvenance),
+      pubinfo: headEdge(headEdges, V.hasPublicationInfo),
+    });
+    const iris = NanopubIris.make({ publication: publication.value, head, ...edges });
+    const names = [iris.publication, iris.head, iris.assertion, iris.provenance, iris.pubinfo];
+    yield* refuseUnless(HashSet.size(HashSet.fromIterable(names)) === A.length(names), "graph-collision");
+    return iris;
+  });
+
+const graphRoles = (iris: NanopubIris): HashMap.HashMap<string, GraphRole> =>
+  HashMap.make(
+    [iris.head, GraphRole.Enum.head],
+    [iris.assertion, GraphRole.Enum.assertion],
+    [iris.provenance, GraphRole.Enum.provenance],
+    [iris.pubinfo, GraphRole.Enum.pubinfo]
+  );
+
+const placeProfile = (
+  quads: ReadonlyArray<Rdf.Quad>,
+  iris: NanopubIris
+): Result.Result<
+  { readonly profile: ReadonlyArray<Rdf.Quad>; readonly inRole: (role: GraphRole) => ReadonlyArray<Rdf.Quad> },
+  NanopubRefusal
+> =>
+  Result.gen(function* () {
+    const roles = graphRoles(iris);
+    const placed = A.getSomes(
+      A.map(quads, (q) =>
+        O.map(O.all([HashMap.get(roles, q.graph.value), profileHome(q)]), ([role, home]) => ({ quad: q, role, home }))
+      )
+    );
+    yield* refuseUnless(!A.some(placed, ({ role, home }) => role !== home), "graph-mixing");
+    const profile = dedupeQuads(A.map(placed, ({ quad }) => quad));
+    const inRole = (role: GraphRole) => A.filter(profile, (q) => O.contains(HashMap.get(roles, q.graph.value), role));
+    yield* refuseUnless(Eq.equals(keyOf(inRole("head")), keyOf(headQuads(iris))), "head-cardinality");
+    return { profile, inRole };
+  });
+
+const claimAssertion = (
+  assertions: ReadonlyArray<Rdf.Quad>
+): Result.Result<{ readonly quad: Rdf.Quad; readonly node: Rdf.NamedNode; readonly text: string }, NanopubRefusal> =>
+  Result.gen(function* () {
+    const claimQuad = yield* singleOr(assertions, "invalid-core");
+    const claimNode = yield* namedOr(claimQuad.subject, "invalid-core");
+    const text = yield* Result.fromOption(literalValue(claimQuad.object), (): NanopubRefusal => "invalid-core");
+    return { quad: claimQuad, node: claimNode, text };
+  });
+
+const publicationMetadata = (
+  iris: NanopubIris,
+  pubinfo: ReadonlyArray<Rdf.Quad>
+): Result.Result<PublicationMetadata, NanopubRefusal> =>
+  Result.flatMap(
+    Result.fromOption(readMetadata(pubinfo), (): NanopubRefusal => "invalid-publication-metadata"),
+    (metadata) =>
+      Eq.equals(keyOf(pubinfo), keyOf(pubinfoQuads(iris, metadata)))
+        ? Result.succeed(metadata)
+        : refusal("invalid-publication-metadata")
+  );
+
 const AssertedByJson = S.Struct({ assertedBy: S.Json });
 const decodeAssertedBy = S.decodeUnknownEffect(AssertedByJson);
 
@@ -692,89 +788,50 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
     ]);
   });
 
-  const read = Effect.fnUntraced(function* (input: Rdf.Dataset) {
-    const refused = (reason: NanopubRefusal) => NanopubRefused.make({ reason, input });
+  const readProfile = Effect.fnUntraced(function* (input: Rdf.Dataset) {
     const quads = input.quads;
-    if (A.some(quads, (q) => isBlank(q.graph))) return refused("blank-graph-name");
-    const typed = A.filter(quads, isPublicationType);
-    const subject = single(
-      A.dedupeWith(
-        A.map(typed, (q) => q.subject),
-        sameTerm
-      )
-    );
-    if (O.isNone(subject)) return refused("publication-count");
-    if (!Rdf.NamedNode.is(subject.value)) return refused("blank-publication");
-    const publication = subject.value;
-    const headGraph = single(
-      A.dedupeWith(
-        A.map(typed, (q) => q.graph),
-        sameTerm
-      )
-    );
-    if (O.isNone(headGraph)) return refused("graph-mixing");
-    if (!Rdf.NamedNode.is(headGraph.value)) return refused("default-graph");
-    const head = headGraph.value.value;
-    const headEdges = A.filter(quads, (q) => q.graph.value === head && q.subject.value === publication.value);
-    const edges = Result.all({
-      assertion: headEdge(headEdges, V.hasAssertion),
-      provenance: headEdge(headEdges, V.hasProvenance),
-      pubinfo: headEdge(headEdges, V.hasPublicationInfo),
-    });
-    if (Result.isFailure(edges)) return refused(edges.failure);
-    const iris = NanopubIris.make({ publication: publication.value, head, ...edges.success });
-    const names = [iris.publication, iris.head, iris.assertion, iris.provenance, iris.pubinfo];
-    if (HashSet.size(HashSet.fromIterable(names)) !== A.length(names)) return refused("graph-collision");
+    const iris = yield* Effect.fromResult(locateIris(quads));
     const native = instanceHash(iris.publication);
     if (O.isNone(native)) return NanopubForeign.make({ publication: iris.publication, input });
     const publicationId = NanopubId.make(native.value);
-    if (!sameIris(iris, nanopubIris(publicationId))) return refused("wrong-derived-iri");
-    const roles: HashMap.HashMap<string, GraphRole> = HashMap.make(
-      [iris.head, GraphRole.Enum.head],
-      [iris.assertion, GraphRole.Enum.assertion],
-      [iris.provenance, GraphRole.Enum.provenance],
-      [iris.pubinfo, GraphRole.Enum.pubinfo]
-    );
-    const placed = A.getSomes(
-      A.map(quads, (q) =>
-        O.map(O.all([HashMap.get(roles, q.graph.value), profileHome(q)]), ([role, home]) => ({ quad: q, role, home }))
+    yield* Effect.fromResult(refuseUnless(sameIris(iris, nanopubIris(publicationId)), "wrong-derived-iri"));
+    const { profile, inRole } = yield* Effect.fromResult(placeProfile(quads, iris));
+    const assertion = yield* Effect.fromResult(claimAssertion(inRole("assertion")));
+    const core = yield* decodeCoreText(assertion.text).pipe(Effect.mapError((): NanopubRefusal => "invalid-core"));
+    const checked = yield* canonical(core);
+    yield* Effect.fromResult(
+      refuseUnless(
+        Rdf.serializeQuad(assertionQuad(iris, assertion.node, checked.text)) === Rdf.serializeQuad(assertion.quad),
+        "invalid-core"
       )
     );
-    if (A.some(placed, ({ role, home }) => role !== home)) return refused("graph-mixing");
-    const profile = dedupeQuads(A.map(placed, ({ quad }) => quad));
-    const inRole = (role: GraphRole) => A.filter(profile, (q) => O.contains(HashMap.get(roles, q.graph.value), role));
-    if (!Eq.equals(keyOf(inRole("head")), keyOf(headQuads(iris)))) return refused("head-cardinality");
-    const claimQuad = single(inRole("assertion"));
-    if (O.isNone(claimQuad) || !Rdf.NamedNode.is(claimQuad.value.subject)) return refused("invalid-core");
-    const claimNode = claimQuad.value.subject;
-    const coreText = literalValue(claimQuad.value.object);
-    if (O.isNone(coreText)) return refused("invalid-core");
-    const core = yield* Effect.option(decodeCoreText(coreText.value));
-    if (O.isNone(core)) return refused("invalid-core");
-    const checked = yield* canonical(core.value);
-    if (Rdf.serializeQuad(assertionQuad(iris, claimNode, checked.text)) !== Rdf.serializeQuad(claimQuad.value))
-      return refused("invalid-core");
-    if (!O.contains(instanceHash(claimNode.value), checked.claim)) return refused("core-hash-mismatch");
-    const expectedProvenance = provenanceQuads(iris, core.value.generatedBy, checked.agent);
-    if (!Eq.equals(keyOf(inRole("provenance")), keyOf(expectedProvenance))) return refused("provenance-mismatch");
-    const pubinfoProfile = inRole("pubinfo");
-    const metadata = readMetadata(pubinfoProfile);
-    if (O.isNone(metadata) || !Eq.equals(keyOf(pubinfoProfile), keyOf(pubinfoQuads(iris, metadata.value))))
-      return refused("invalid-publication-metadata");
-    const recomputed = yield* mintNanopubId(checked.claim, metadata.value);
-    if (!Eq.equals(recomputed, publicationId)) return refused("stale-publication-id");
+    yield* Effect.fromResult(
+      refuseUnless(O.contains(instanceHash(assertion.node.value), checked.claim), "core-hash-mismatch")
+    );
+    const expectedProvenance = provenanceQuads(iris, core.generatedBy, checked.agent);
+    yield* Effect.fromResult(
+      refuseUnless(Eq.equals(keyOf(inRole("provenance")), keyOf(expectedProvenance)), "provenance-mismatch")
+    );
+    const metadata = yield* Effect.fromResult(publicationMetadata(iris, inRole("pubinfo")));
+    const recomputed = yield* mintNanopubId(checked.claim, metadata);
+    yield* Effect.fromResult(refuseUnless(Eq.equals(recomputed, publicationId), "stale-publication-id"));
     const consumed = keyOf(profile);
     return {
       _tag: "Read" as const,
       accepted: NanopubPublication.make({
-        record: ClaimRecord.make({ claim: checked.claim, core: core.value }),
-        metadata: metadata.value,
+        record: ClaimRecord.make({ claim: checked.claim, core }),
+        metadata,
       }),
       publication: publicationId,
       profile,
       residual: Rdf.makeDataset(A.filter(quads, (q) => !HashSet.has(consumed, Rdf.serializeQuad(q)))),
     };
   });
+
+  const read = (input: Rdf.Dataset) =>
+    readProfile(input).pipe(
+      Effect.catchIf(isNanopubRefusal, (reason) => Effect.succeed(NanopubRefused.make({ reason, input })))
+    );
 
   const decode = Effect.fn("NanopubCodec.decode")(function* (input: Rdf.Dataset) {
     yield* Effect.annotateCurrentSpan("nanopub.quad_count", A.length(input.quads));

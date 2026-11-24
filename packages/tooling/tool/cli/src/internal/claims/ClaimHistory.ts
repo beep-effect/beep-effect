@@ -332,6 +332,191 @@ const verifyNativeCore = Effect.fnUntraced(function* <Native extends NativeFacts
 const latestBy = <T>(records: ReadonlyArray<T>, key: (record: T) => string): HashMap.HashMap<string, T> =>
   A.reduce(records, HashMap.empty<string, T>(), (map, record) => HashMap.set(map, key(record), record));
 
+type Succession = Extract<SideRecord<unknown, unknown>, { readonly event: "Succession" }>;
+type AnyEntry = ClaimEntry<ImportedFacts<unknown, unknown>, NativeFacts>;
+
+const recordTarget = (record: SideRecord<unknown, unknown>): ClaimReference =>
+  record.event === "Succession" ? nativeReference(record.claim) : record.claim;
+
+const checkTargets = (
+  ledger: ClaimImportLedger,
+  records: ReadonlyArray<SideRecord<unknown, unknown>>,
+  known: (target: ClaimReference) => boolean
+): Result.Result<void, ClaimHistoryRefused> =>
+  O.match(
+    A.findFirst(A.map(records, recordTarget), (target) => !known(target)),
+    {
+      onNone: () => Result.succeed(undefined),
+      onSome: (target) => Result.fail(refuse(ledger, target, "unknown-target")),
+    }
+  );
+
+const storedPredecessor =
+  (ledger: ClaimImportLedger) =>
+  (entry: AnyEntry): O.Option<ClaimReference> =>
+    entry._tag === "Imported"
+      ? O.map(entry.row.predecessor, (oldId) => importedReference(ledger, oldId))
+      : O.map(entry.row.record.core.supersedes, nativeReference);
+
+const storedPredecessors = (
+  ledger: ClaimImportLedger,
+  entries: ReadonlyArray<AnyEntry>
+): HashMap.HashMap<string, ClaimReference> => {
+  const reference = entryReference(ledger);
+  const predecessorOf = storedPredecessor(ledger);
+  return HashMap.fromIterable(
+    A.flatMap(entries, (entry) =>
+      A.map(
+        O.toArray(predecessorOf(entry)),
+        (predecessor) => [claimReferenceKey(reference(entry)), predecessor] as const
+      )
+    )
+  );
+};
+
+const addSuccession =
+  (ledger: ClaimImportLedger, known: (target: ClaimReference) => boolean) =>
+  (
+    predecessors: HashMap.HashMap<string, ClaimReference>,
+    succession: Succession
+  ): Result.Result<HashMap.HashMap<string, ClaimReference>, ClaimHistoryRefused> => {
+    const own = nativeReference(succession.claim);
+    if (HashMap.has(predecessors, claimReferenceKey(own)) || succession.predecessor._tag !== "Imported")
+      return Result.fail(refuse(ledger, own, "conflicting-predecessor"));
+    if (!known(succession.predecessor))
+      return Result.fail(refuse(ledger, succession.predecessor, "missing-predecessor"));
+    return Result.succeed(HashMap.set(predecessors, claimReferenceKey(own), succession.predecessor));
+  };
+
+const addSuccessions = (
+  ledger: ClaimImportLedger,
+  known: (target: ClaimReference) => boolean,
+  stored: HashMap.HashMap<string, ClaimReference>,
+  successions: ReadonlyArray<Succession>
+): Result.Result<HashMap.HashMap<string, ClaimReference>, ClaimHistoryRefused> => {
+  const start: Result.Result<HashMap.HashMap<string, ClaimReference>, ClaimHistoryRefused> = Result.succeed(stored);
+  return A.reduce(successions, start, (acc, succession) =>
+    Result.flatMap(acc, (predecessors) => addSuccession(ledger, known)(predecessors, succession))
+  );
+};
+
+const successorIndex = (
+  predecessors: HashMap.HashMap<string, ClaimReference>
+): HashMap.HashMap<string, ReadonlyArray<string>> =>
+  A.reduce(
+    HashMap.toEntries(predecessors),
+    HashMap.empty<string, ReadonlyArray<string>>(),
+    (map, [successor, predecessor]) =>
+      HashMap.set(
+        map,
+        claimReferenceKey(predecessor),
+        A.append(O.getOrElse(HashMap.get(map, claimReferenceKey(predecessor)), A.empty<string>), successor)
+      )
+  );
+
+const checkForks = (
+  ledger: ClaimImportLedger,
+  successors: HashMap.HashMap<string, ReadonlyArray<string>>
+): Result.Result<void, ClaimHistoryRefused> =>
+  O.match(
+    A.findFirst(HashMap.toEntries(successors), ([, list]) => A.length(list) > 1),
+    {
+      onNone: () => Result.succeed(undefined),
+      onSome: ([claim]) => Result.fail(ClaimHistoryRefused.make({ ledger, claim, reason: "supersession-fork" })),
+    }
+  );
+
+const entryLogicalKey = (entry: AnyEntry): string =>
+  entry._tag === "Imported" ? entry.row.logicalKey : entry.row.record.core.logicalKey;
+
+const checkSuccessionKeys = (
+  ledger: ClaimImportLedger,
+  byKey: HashMap.HashMap<string, AnyEntry>,
+  successions: ReadonlyArray<Succession>
+): Result.Result<void, ClaimHistoryRefused> => {
+  const keyAt = (target: ClaimReference) => O.map(HashMap.get(byKey, claimReferenceKey(target)), entryLogicalKey);
+  return O.match(
+    A.findFirst(
+      successions,
+      (succession) => !Eq.equals(keyAt(succession.predecessor), keyAt(nativeReference(succession.claim)))
+    ),
+    {
+      onNone: () => Result.succeed(undefined),
+      onSome: (succession) => Result.fail(refuse(ledger, succession.predecessor, "predecessor-key-mismatch")),
+    }
+  );
+};
+
+const checkNativeLog = (
+  ledger: ClaimImportLedger,
+  natives: ReadonlyArray<NativeFacts>
+): Result.Result<void, ClaimHistoryRefused> =>
+  A.isReadonlyArrayNonEmpty(checkClaimLog(A.map(natives, toLogEntry)))
+    ? Result.fail(ClaimHistoryRefused.make({ ledger, claim: "native-log", reason: "log-violation" }))
+    : Result.succeed(undefined);
+
+const recordsOf = <Review, Signals, Event extends SideRecord<Review, Signals>["event"]>(
+  records: ReadonlyArray<SideRecord<Review, Signals>>,
+  event: Event
+): ReadonlyArray<Extract<SideRecord<Review, Signals>, { readonly event: Event }>> =>
+  A.filter(
+    records,
+    (record): record is Extract<SideRecord<Review, Signals>, { readonly event: Event }> => record.event === event
+  );
+
+interface JoinContext<Review, Signals> {
+  readonly evidence: ReadonlyArray<Extract<SideRecord<Review, Signals>, { readonly event: "Evidence" }>>;
+  readonly predecessors: HashMap.HashMap<string, ClaimReference>;
+  readonly proposed: Review;
+  readonly reference: (entry: AnyEntry) => ClaimReference;
+  readonly reviews: HashMap.HashMap<string, Extract<SideRecord<Review, Signals>, { readonly event: "Review" }>>;
+  readonly signals: HashMap.HashMap<string, Extract<SideRecord<Review, Signals>, { readonly event: "Signals" }>>;
+  readonly successorStart: (key: string) => O.Option<DateTime.Utc>;
+}
+
+const joinEntry =
+  <Imported extends ImportedFacts<Review, Signals>, Native extends NativeFacts, Review, Signals>(
+    context: JoinContext<Review, Signals>
+  ) =>
+  (entry: ClaimEntry<Imported, Native>): JoinedClaim<Imported, Native, Review, Signals> => {
+    const own = context.reference(entry);
+    const key = claimReferenceKey(own);
+    const linked = A.filter(context.evidence, (record) => claimReferenceKey(record.claim) === key);
+    const extraSupport = A.flatMap(linked, (record) => record.supportedBy);
+    const extraChallenge = A.flatMap(linked, (record) => record.challengedBy);
+    const reviewed = O.map(HashMap.get(context.reviews, key), (record) => record.review);
+    const observed = O.map(HashMap.get(context.signals, key), (record) => record.signals);
+    const shared = { entry, reference: own, predecessor: HashMap.get(context.predecessors, key) };
+    if (entry._tag === "Imported") {
+      const row = entry.row;
+      return {
+        ...shared,
+        logicalKey: row.logicalKey,
+        knowledge: {
+          start: row.originalKnowledge.recordedAt,
+          end: O.orElse(row.originalKnowledge.expiredAt, () => context.successorStart(key)),
+        },
+        valid: row.validTime,
+        evidence: {
+          supportedBy: A.dedupe(A.appendAll(row.supportRefs, extraSupport)),
+          challengedBy: A.dedupe(A.appendAll(row.challengeRefs, extraChallenge)),
+        },
+        review: O.getOrElse(reviewed, () => row.review),
+        signals: O.orElse(observed, () => O.some(row.signals)),
+      };
+    }
+    const core = entry.row.record.core;
+    return {
+      ...shared,
+      logicalKey: core.logicalKey,
+      knowledge: { start: core.knowledgeStart, end: context.successorStart(key) },
+      valid: core.valid,
+      evidence: { supportedBy: A.dedupe(extraSupport), challengedBy: A.dedupe(extraChallenge) },
+      review: O.getOrElse(reviewed, () => context.proposed),
+      signals: observed,
+    };
+  };
+
 const joinClaimHistory = <
   Imported extends ImportedFacts<Review, Signals>,
   Native extends NativeFacts,
@@ -342,125 +527,48 @@ const joinClaimHistory = <
   readonly entries: ReadonlyArray<ClaimEntry<Imported, Native>>;
   readonly records: ReadonlyArray<SideRecord<Review, Signals>>;
   readonly proposed: Review;
-}): Result.Result<ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>, ClaimHistoryRefused> => {
-  const { ledger, entries, records } = options;
-  const reference = entryReference(ledger);
-  const imported = A.flatMap(entries, (entry) => (entry._tag === "Imported" ? [entry.row] : []));
-  const natives = nativesOf(entries);
-  const chains = checkImportedChains(ledger, imported);
-  if (Result.isFailure(chains)) return Result.fail(chains.failure);
-  if (A.isReadonlyArrayNonEmpty(checkClaimLog(A.map(natives, toLogEntry))))
-    return Result.fail(ClaimHistoryRefused.make({ ledger, claim: "native-log", reason: "log-violation" }));
-  const byKey = HashMap.fromIterable(A.map(entries, (entry) => [claimReferenceKey(reference(entry)), entry] as const));
-  const known = (target: ClaimReference) => HashMap.has(byKey, claimReferenceKey(target));
-  const successions = A.flatMap(records, (record) => (record.event === "Succession" ? [record] : []));
-  for (const record of records) {
-    const target = record.event === "Succession" ? nativeReference(record.claim) : record.claim;
-    if (!known(target)) return Result.fail(refuse(ledger, target, "unknown-target"));
-  }
-  let predecessors = HashMap.empty<string, ClaimReference>();
-  for (const entry of entries) {
-    const own = reference(entry);
-    const stored: O.Option<ClaimReference> =
-      entry._tag === "Imported"
-        ? O.map(entry.row.predecessor, (oldId) => importedReference(ledger, oldId))
-        : O.map(entry.row.record.core.supersedes, nativeReference);
-    predecessors = O.match(stored, {
-      onNone: () => predecessors,
-      onSome: (predecessor) => HashMap.set(predecessors, claimReferenceKey(own), predecessor),
-    });
-  }
-  for (const succession of successions) {
-    const own = nativeReference(succession.claim);
-    if (HashMap.has(predecessors, claimReferenceKey(own)) || succession.predecessor._tag !== "Imported")
-      return Result.fail(refuse(ledger, own, "conflicting-predecessor"));
-    if (!known(succession.predecessor))
-      return Result.fail(refuse(ledger, succession.predecessor, "missing-predecessor"));
-    predecessors = HashMap.set(predecessors, claimReferenceKey(own), succession.predecessor);
-  }
-  const successors = A.reduce(
-    HashMap.toEntries(predecessors),
-    HashMap.empty<string, ReadonlyArray<string>>(),
-    (map, [successor, predecessor]) =>
-      HashMap.set(
-        map,
-        claimReferenceKey(predecessor),
-        A.append(O.getOrElse(HashMap.get(map, claimReferenceKey(predecessor)), A.empty<string>), successor)
+}): Result.Result<ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>, ClaimHistoryRefused> =>
+  Result.gen(function* () {
+    const { ledger, entries, records } = options;
+    const reference = entryReference(ledger);
+    const natives = nativesOf(entries);
+    yield* checkImportedChains(
+      ledger,
+      A.flatMap(entries, (entry) => (entry._tag === "Imported" ? [entry.row] : []))
+    );
+    yield* checkNativeLog(ledger, natives);
+    const byKey = HashMap.fromIterable(
+      A.map(entries, (entry) => [claimReferenceKey(reference(entry)), entry] as const)
+    );
+    const known = (target: ClaimReference) => HashMap.has(byKey, claimReferenceKey(target));
+    const successions = recordsOf(records, "Succession");
+    yield* checkTargets(ledger, records, known);
+    const predecessors = yield* addSuccessions(ledger, known, storedPredecessors(ledger, entries), successions);
+    const successors = successorIndex(predecessors);
+    yield* checkForks(ledger, successors);
+    yield* checkSuccessionKeys(ledger, byKey, successions);
+    const nativeStart = HashMap.fromIterable(
+      A.map(
+        natives,
+        (row) => [claimReferenceKey(nativeReference(row.record.claim)), row.record.core.knowledgeStart] as const
       )
-  );
-  const forked = A.findFirst(HashMap.toEntries(successors), ([, list]) => A.length(list) > 1);
-  if (O.isSome(forked))
-    return Result.fail(ClaimHistoryRefused.make({ ledger, claim: forked.value[0], reason: "supersession-fork" }));
-  const keyOf = (entry: ClaimEntry<Imported, Native>) =>
-    entry._tag === "Imported" ? entry.row.logicalKey : entry.row.record.core.logicalKey;
-  for (const succession of successions) {
-    const before = O.map(HashMap.get(byKey, claimReferenceKey(succession.predecessor)), keyOf);
-    const after = O.map(HashMap.get(byKey, claimReferenceKey(nativeReference(succession.claim))), keyOf);
-    if (!Eq.equals(before, after))
-      return Result.fail(refuse(ledger, succession.predecessor, "predecessor-key-mismatch"));
-  }
-  const reviews = latestBy(
-    A.flatMap(records, (record) => (record.event === "Review" ? [record] : [])),
-    (record) => claimReferenceKey(record.claim)
-  );
-  const signals = latestBy(
-    A.flatMap(records, (record) => (record.event === "Signals" ? [record] : [])),
-    (record) => claimReferenceKey(record.claim)
-  );
-  const evidence = A.flatMap(records, (record) => (record.event === "Evidence" ? [record] : []));
-  const nativeStart = HashMap.fromIterable(
-    A.map(
-      natives,
-      (row) => [claimReferenceKey(nativeReference(row.record.claim)), row.record.core.knowledgeStart] as const
-    )
-  );
-  const successorStart = (key: string): O.Option<DateTime.Utc> =>
-    O.flatMap(O.flatMap(HashMap.get(successors, key), A.head), (successor) => HashMap.get(nativeStart, successor));
-  return Result.succeed(
-    A.map(entries, (entry): JoinedClaim<Imported, Native, Review, Signals> => {
-      const own = reference(entry);
-      const key = claimReferenceKey(own);
-      const linked = A.filter(evidence, (record) => claimReferenceKey(record.claim) === key);
-      const extraSupport = A.flatMap(linked, (record) => record.supportedBy);
-      const extraChallenge = A.flatMap(linked, (record) => record.challengedBy);
-      const reviewed = O.map(HashMap.get(reviews, key), (record) => record.review);
-      const observed = O.map(HashMap.get(signals, key), (record) => record.signals);
-      const predecessor = HashMap.get(predecessors, key);
-      if (entry._tag === "Imported") {
-        const row = entry.row;
-        return {
-          entry,
-          reference: own,
-          predecessor,
-          logicalKey: row.logicalKey,
-          knowledge: {
-            start: row.originalKnowledge.recordedAt,
-            end: O.orElse(row.originalKnowledge.expiredAt, () => successorStart(key)),
-          },
-          valid: row.validTime,
-          evidence: {
-            supportedBy: A.dedupe(A.appendAll(row.supportRefs, extraSupport)),
-            challengedBy: A.dedupe(A.appendAll(row.challengeRefs, extraChallenge)),
-          },
-          review: O.getOrElse(reviewed, () => row.review),
-          signals: O.orElse(observed, () => O.some(row.signals)),
-        };
-      }
-      const core = entry.row.record.core;
-      return {
-        entry,
-        reference: own,
-        predecessor,
-        logicalKey: core.logicalKey,
-        knowledge: { start: core.knowledgeStart, end: successorStart(key) },
-        valid: core.valid,
-        evidence: { supportedBy: A.dedupe(extraSupport), challengedBy: A.dedupe(extraChallenge) },
-        review: O.getOrElse(reviewed, () => options.proposed),
-        signals: observed,
-      };
-    })
-  );
-};
+    );
+    return A.map(
+      entries,
+      joinEntry<Imported, Native, Review, Signals>({
+        reference,
+        predecessors,
+        evidence: recordsOf(records, "Evidence"),
+        reviews: latestBy(recordsOf(records, "Review"), (record) => claimReferenceKey(record.claim)),
+        signals: latestBy(recordsOf(records, "Signals"), (record) => claimReferenceKey(record.claim)),
+        successorStart: (key) =>
+          O.flatMap(O.flatMap(HashMap.get(successors, key), A.head), (successor) =>
+            HashMap.get(nativeStart, successor)
+          ),
+        proposed: options.proposed,
+      })
+    );
+  });
 
 /**
  * Verify every native core, resolve the whole history and join each claim with its records.
