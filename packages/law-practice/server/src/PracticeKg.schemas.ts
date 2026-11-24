@@ -27,13 +27,7 @@ const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
 
-/*
- * Constructor-only default: these projection classes are written exclusively
- * by the deterministic spine (SPEC D-2a), so the settled label is the
- * invariant, not a guess — candidate rows live in the epistemic tables and
- * must never be written through kg_node/kg_edge.
- */
-const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
+const settledStatusDefaultForDeterministicSpineOnlyWrites = PracticeKgEpistemicStatus.pipe(
   S.withConstructorDefault(Effect.succeed<PracticeKgEpistemicStatus>("derived-from-official-records"))
 );
 
@@ -325,7 +319,7 @@ export class PracticeKgNodeRow extends S.Opaque<PracticeKgNodeRow, { readonly br
     attributionSource: KgAttributionSource,
     client: S.optionalKey(S.String),
     docketFamily: S.optionalKey(S.String),
-    epistemicStatus: spineEpistemicStatus,
+    epistemicStatus: settledStatusDefaultForDeterministicSpineOnlyWrites,
     iri: S.NonEmptyString,
     kind: KgNodeKind,
     label: S.String,
@@ -370,7 +364,7 @@ export class PracticeKgNodeRow extends S.Opaque<PracticeKgNodeRow, { readonly br
  */
 export class PracticeKgEdgeRow extends S.Opaque<PracticeKgEdgeRow, { readonly brand: unique symbol }>()(
   S.Struct({
-    epistemicStatus: spineEpistemicStatus,
+    epistemicStatus: settledStatusDefaultForDeterministicSpineOnlyWrites,
     objectIri: S.NonEmptyString,
     predicate: KgEdgePredicate,
     provenanceKind: PracticeKgProvenanceKind,
