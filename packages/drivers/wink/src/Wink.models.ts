@@ -6,7 +6,7 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { MarkRange } from "@beep/nlp/Core/Pattern";
+import { MarkRange } from "@beep/nlp-processing/Core/Pattern";
 import { A } from "@beep/utils";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
@@ -16,7 +16,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
+import type { Pattern, PatternElement } from "@beep/nlp-processing/Core/Pattern";
 
 const $I = $WinkId.create("Wink/WinkPattern");
 

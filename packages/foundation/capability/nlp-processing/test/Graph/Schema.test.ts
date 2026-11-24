@@ -1,4 +1,4 @@
-import * as GraphSchema from "@beep/nlp/Graph/Schema";
+import * as GraphSchema from "@beep/nlp-processing/Graph/Schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Position } from "@beep/text/OffsetUnit";

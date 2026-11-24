@@ -6,10 +6,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { MarkRange } from "@beep/nlp/Core/Pattern";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Tool from "effect/ai/Tool";
 import * as S from "effect/Schema";
+import { MarkRange } from "../Core/Pattern.ts";
 import { AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/LearnCustomEntities");

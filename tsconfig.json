@@ -141,9 +141,6 @@
       "@beep/md/Md.render": [
         "./packages/foundation/modeling/md/src/Md.render.ts"
       ],
-      "@beep/nlp/Core": [
-        "./packages/foundation/modeling/nlp/src/Core/index.ts"
-      ],
       "@beep/nlp/IdentifierText": [
         "./packages/foundation/modeling/nlp/src/IdentifierText.ts"
       ],
@@ -1349,7 +1346,6 @@
       "@beep/nlp/Algebra/*": [
         "./packages/foundation/modeling/nlp/src/Algebra/*"
       ],
-      "@beep/nlp/Core/*": ["./packages/foundation/modeling/nlp/src/Core/*"],
       "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
       "@beep/nlp/Operations/*": [
         "./packages/foundation/modeling/nlp/src/Operations/*"

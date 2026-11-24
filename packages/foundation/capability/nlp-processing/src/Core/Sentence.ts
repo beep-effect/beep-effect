@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 import { Str } from "@beep/utils";
 import * as Brand from "effect/Brand";
 import * as Chunk from "effect/Chunk";
@@ -16,7 +16,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Token, TokenIndex } from "./Token.ts";
 
-const $I = $NlpId.create("Core/Sentence");
+const $I = $NlpProcessingId.create("Core/Sentence");
 const getRangeEnd = (options: { readonly end: number } | number): number =>
   P.isNumber(options) ? options : options.end;
 
@@ -26,7 +26,7 @@ const getRangeEnd = (options: { readonly end: number } | number): number =>
  * **Example** (Type-safe index increment)
  *
  * ```ts import.meta.vitest name="Type-safe index increment"
- * import type { SentenceIndex } from "@beep/nlp/Core/Sentence"
+ * import type { SentenceIndex } from "@beep/nlp-processing/Core/Sentence"
  *
  * const next = (index: SentenceIndex): number => index + 1
  * typeof next // => "function"
@@ -43,7 +43,7 @@ export type SentenceIndex = Brand.Branded<number, "SentenceIndex">;
  * **Example** (Construct zero sentence index)
  *
  * ```ts import.meta.vitest name="Construct zero sentence index"
- * import { sentenceIndex } from "@beep/nlp/Core/Sentence"
+ * import { sentenceIndex } from "@beep/nlp-processing/Core/Sentence"
  *
  * const first = sentenceIndex(0)
  * first // => 0
@@ -62,7 +62,7 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
  * **Example** (Decode non-negative index)
  *
  * ```ts import.meta.vitest name="Decode non-negative index"
- * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
+ * import { SentenceIndex } from "@beep/nlp-processing/Core/Sentence"
  *
  * const index = SentenceIndex.make(1)
  * index // => 1
@@ -92,8 +92,8 @@ export const SentenceIndex = S.Natural.pipe(
  * ```ts import.meta.vitest name="Construct empty sentence model"
  * import * as Chunk from "effect/Chunk";
  * import * as O from "effect/Option"
- * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
- * import { TokenIndex } from "@beep/nlp/Core/Token"
+ * import { Sentence, SentenceIndex } from "@beep/nlp-processing/Core/Sentence"
+ * import { TokenIndex } from "@beep/nlp-processing/Core/Token"
  *
  * const sentence = Sentence.make({
  *   text: "Effect works.",

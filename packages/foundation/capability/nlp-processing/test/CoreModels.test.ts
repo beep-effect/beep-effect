@@ -1,10 +1,11 @@
-import { Document, DocumentId } from "@beep/nlp/Core/Document";
-import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence";
-import { SimilarityScore } from "@beep/nlp/Core/Similarity";
-import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
+import { Document, DocumentId } from "@beep/nlp-processing/Core/Document";
+import { Sentence, SentenceIndex } from "@beep/nlp-processing/Core/Sentence";
+import { SimilarityScore } from "@beep/nlp-processing/Core/Similarity";
+import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { Position } from "@beep/text/OffsetUnit";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -14,6 +15,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { documentArbitrary, sentenceArbitrary, tokenArbitrary } from "./support/spanArbitraries.ts";
 
 const decodeDocument = S.decodeEffect(Document);
 const decodeSentence = S.decodeEffect(Sentence);
@@ -28,9 +30,6 @@ const encodeUnknownSentence = S.encodeUnknownEffect(Sentence);
 const encodeUnknownSimilarityScore = S.encodeUnknownEffect(SimilarityScore);
 const encodeUnknownToken = S.encodeUnknownEffect(Token);
 
-const TokenArbitrary = Arbitrary.schema(Token);
-const SentenceArbitrary = Arbitrary.schema(Sentence);
-const DocumentArbitrary = Arbitrary.schema(Document);
 const SimilarityScoreArbitrary = Arbitrary.schema(SimilarityScore);
 
 const makeToken = (index: number, text: string, start: number, end: number): Token =>
@@ -38,7 +37,6 @@ const makeToken = (index: number, text: string, start: number, end: number): Tok
     abbrevFlag: O.none(),
     case: O.none(),
     contractionFlag: O.none(),
-    end: CharPosition.make(end),
     index: TokenIndex.make(index),
     lemma: O.none(),
     negationFlag: O.none(),
@@ -47,7 +45,7 @@ const makeToken = (index: number, text: string, start: number, end: number): Tok
     prefix: O.none(),
     precedingSpaces: O.none(),
     shape: O.none(),
-    start: CharPosition.make(start),
+    span: Position.make({ unit: "utf16-code-unit", start, end }),
     stem: O.none(),
     stopWordFlag: O.none(),
     suffix: O.none(),
@@ -91,9 +89,8 @@ describe("Core models", () => {
   it.effect("keeps constructor-defaulted optional fields absent in encoded core wire shapes", () =>
     Effect.gen(function* () {
       const token = Token.make({
-        end: CharPosition.make(6),
         index: TokenIndex.make(0),
-        start: CharPosition.make(0),
+        span: Position.make({ unit: "utf16-code-unit", start: 0, end: 6 }),
         tags: [],
         text: "Effect",
       });
@@ -119,9 +116,8 @@ describe("Core models", () => {
 
       const encodedUnknownToken = yield* encodeUnknownToken(token);
       expect(encodedUnknownToken).toEqual({
-        end: 6,
         index: 0,
-        start: 0,
+        span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 6 },
         tags: [],
         text: "Effect",
       });
@@ -135,9 +131,8 @@ describe("Core models", () => {
       });
       expect(Chunk.toReadonlyArray(encodedSentence.tokens)).toEqual([
         {
-          end: 6,
           index: 0,
-          start: 0,
+          span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 6 },
           tags: [],
           text: "Effect",
         },
@@ -153,9 +148,8 @@ describe("Core models", () => {
       expect(Chunk.toReadonlyArray(encodedDocument.sentences)).toEqual([encodedSentence]);
       expect(Chunk.toReadonlyArray(encodedDocument.tokens)).toEqual([
         {
-          end: 6,
           index: 0,
-          start: 0,
+          span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 6 },
           tags: [],
           text: "Effect",
         },
@@ -172,7 +166,7 @@ describe("Core models", () => {
 
   it.effect.prop(
     "round-trips schema-derived core model values",
-    [TokenArbitrary, SentenceArbitrary, DocumentArbitrary, SimilarityScoreArbitrary],
+    [tokenArbitrary, sentenceArbitrary, documentArbitrary, SimilarityScoreArbitrary],
     ([token, sentence, document, similarity]) =>
       Effect.gen(function* () {
         const encodedToken = yield* encodeToken(token);

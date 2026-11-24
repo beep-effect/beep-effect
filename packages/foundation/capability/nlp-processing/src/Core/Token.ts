@@ -5,7 +5,8 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
+import { Position } from "@beep/text/OffsetUnit";
 import { thunkFalse, thunkTrue } from "@beep/utils";
 import * as Brand from "effect/Brand";
 import * as Effect from "effect/Effect";
@@ -13,7 +14,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const $I = $NlpId.create("Core/Token");
+const $I = $NlpProcessingId.create("Core/Token");
 
 /**
  * Zero-based position of a token within its document token stream.
@@ -26,7 +27,7 @@ const $I = $NlpId.create("Core/Token");
  * **Example** (Accept branded token index)
  *
  * ```ts import.meta.vitest name="Accept branded token index"
- * import type { TokenIndex } from "@beep/nlp/Core/Token"
+ * import type { TokenIndex } from "@beep/nlp-processing/Core/Token"
  *
  * const next = (index: TokenIndex): number => index + 1
  * typeof next // => "function"
@@ -43,7 +44,7 @@ export type TokenIndex = Brand.Branded<number, "TokenIndex">;
  * **Example** (Reject negative token index)
  *
  * ```ts import.meta.vitest name="Reject negative token index"
- * import { isTokenIndex } from "@beep/nlp/Core/Token"
+ * import { isTokenIndex } from "@beep/nlp-processing/Core/Token"
  *
  * isTokenIndex(0) // => true
  * isTokenIndex(-1) // => false
@@ -60,7 +61,7 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => S.is(TokenIndex)(u)
  * **Example** (Construct zero token index)
  *
  * ```ts import.meta.vitest name="Construct zero token index"
- * import { tokenIndex } from "@beep/nlp/Core/Token"
+ * import { tokenIndex } from "@beep/nlp-processing/Core/Token"
  *
  * const first = tokenIndex(0)
  * first // => 0
@@ -77,7 +78,7 @@ export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>
  * **Example** (Make schema token index)
  *
  * ```ts import.meta.vitest name="Make schema token index"
- * import { TokenIndex } from "@beep/nlp/Core/Token"
+ * import { TokenIndex } from "@beep/nlp-processing/Core/Token"
  *
  * const index = TokenIndex.make(2)
  * index // => 2
@@ -94,102 +95,25 @@ export const TokenIndex = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).p
 );
 
 /**
- * Zero-based character offset into the original source text.
- *
- * **Details**
- *
- * Token spans use half-open ranges: `start` is included and `end` is excluded.
- *
- * **Example** (Compute half-open span length)
- *
- * ```ts import.meta.vitest name="Compute half-open span length"
- * import type { CharPosition } from "@beep/nlp/Core/Token"
- *
- * const spanLength = (start: CharPosition, end: CharPosition): number => end - start
- * typeof spanLength // => "function"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CharPosition = Brand.Branded<number, "CharPosition">;
-
-/**
- * Narrow an unknown value to a non-negative character offset.
- *
- * **Example** (Reject negative char offset)
- *
- * ```ts import.meta.vitest name="Reject negative char offset"
- * import { isCharPosition } from "@beep/nlp/Core/Token"
- *
- * isCharPosition(12) // => true
- * isCharPosition(-1) // => false
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const isCharPosition = (u: unknown): u is CharPosition => S.is(CharPosition)(u);
-
-/**
- * Construct a branded character offset after validating it is non-negative.
- *
- * **Example** (Construct character offset)
- *
- * ```ts import.meta.vitest name="Construct character offset"
- * import { charPosition } from "@beep/nlp/Core/Token"
- *
- * const offset = charPosition(4)
- * offset // => 4
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPosition>(S.makeFilter(S.is(S.Natural)));
-
-/**
- * Schema that decodes non-negative numbers into {@link CharPosition} values.
- *
- * **Example** (Make schema char position)
- *
- * ```ts import.meta.vitest name="Make schema char position"
- * import { CharPosition } from "@beep/nlp/Core/Token"
- *
- * const offset = CharPosition.make(7)
- * offset // => 7
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const CharPosition = S.make<(typeof S.Natural)["Rebuild"]>(S.Natural.ast).pipe(
-  S.brand("CharPosition"),
-  $I.annoteSchema("CharPosition", {
-    description: "Non-negative character offset in source NLP text.",
-  })
-);
-
-/**
  * Immutable token with lexical text, source offsets, and optional NLP metadata.
  *
  * **Details**
  *
- * `index` identifies the token in document order, while `start` and `end`
- * retain the token's half-open character span in the source text. Optional
+ * `index` identifies the token in document order, while `span` retains the
+ * token's non-empty half-open UTF-16 code-unit range in the source text. Optional
  * fields mirror annotations commonly produced by wink-nlp.
  *
  * **Example** (Create token check position)
  *
  * ```ts import.meta.vitest name="Create token check position"
  * import * as O from "effect/Option"
- * import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token"
+ * import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token"
+ * import { Position } from "@beep/text/OffsetUnit"
  *
  * const token = Token.make({
  *   text: "Effect",
  *   index: TokenIndex.make(0),
- *   start: CharPosition.make(0),
- *   end: CharPosition.make(6),
+ *   span: Position.make({ unit: "utf16-code-unit", start: 0, end: 6 }),
  *   pos: O.none(),
  *   lemma: O.none(),
  *   stem: O.none(),
@@ -216,8 +140,7 @@ export class Token extends S.Class<Token, { readonly brand: unique symbol }>($I`
   {
     text: S.String,
     index: TokenIndex,
-    start: CharPosition,
-    end: CharPosition,
+    span: Position,
     pos: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     lemma: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     stem: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
@@ -239,19 +162,19 @@ export class Token extends S.Class<Token, { readonly brand: unique symbol }>($I`
   })
 ) {
   /**
-   * Number of characters spanned by the token.
+   * Number of UTF-16 code units spanned by the token.
    */
   get length(): number {
-    return this.end - this.start;
+    return this.span.end - this.span.start;
   }
 
   /**
-   * Whether a character position falls inside the token range.
+   * Whether a UTF-16 code-unit offset falls inside the token span.
    */
   static readonly containsPosition: {
     (token: Token, pos: number): boolean;
     (pos: number): (token: Token) => boolean;
-  } = dual(2, (token: Token, pos: number): boolean => pos >= token.start && pos < token.end);
+  } = dual(2, (token: Token, pos: number): boolean => pos >= token.span.start && pos < token.span.end);
 
   /**
    * Whether the token represents punctuation.

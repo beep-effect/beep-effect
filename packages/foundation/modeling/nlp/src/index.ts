@@ -22,29 +22,14 @@
  */
 export * as Algebra from "./Algebra/index.ts";
 /**
- * Core NLP models, tokenization, and pattern utilities.
+ * Generic categorical operations over `effect/Graph` directed graphs.
  *
- * **Example** (Make document identifier)
- *
- * ```ts
- * import * as Core from "@beep/nlp/Core"
- *
- * console.log(Core.DocumentId.make("doc-a"))
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * as Core from "./Core/index.ts";
-/**
- * Text-graph IR: linguistic node and edge schema classes.
- *
- * **Example** (Log text node schema)
+ * **Example** (Create empty typed graph)
  *
  * ```ts
  * import * as Graph from "@beep/nlp/Graph"
  *
- * console.log(Graph.Schema.TextNode)
+ * console.log(Graph.GraphOps.empty<string, number>())
  * ```
  *
  * @category models

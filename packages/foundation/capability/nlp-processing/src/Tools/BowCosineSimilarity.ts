@@ -6,10 +6,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Tool from "effect/ai/Tool";
 import * as S from "effect/Schema";
+import { SimilarityMethod } from "../Core/Similarity.ts";
 import { AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/BowCosineSimilarity");

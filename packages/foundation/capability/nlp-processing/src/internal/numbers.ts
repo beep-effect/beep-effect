@@ -5,13 +5,13 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 
 export { UnitInterval } from "@beep/schema/UnitInterval";
 
 import * as S from "effect/Schema";
 
-const $I = $NlpId.create("internal/numbers");
+const $I = $NlpProcessingId.create("internal/numbers");
 
 /**
  * Strictly positive numeric value.

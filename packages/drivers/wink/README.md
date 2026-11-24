@@ -11,13 +11,13 @@ bun add @beep/wink
 ## Surface
 
 - `WinkEngine` and `WinkEngineLive` wrap `wink-nlp` with the English lite web model.
-- `WinkTokenizationLive` implements `@beep/nlp/Core` tokenization.
+- `WinkTokenizationLive` implements `@beep/nlp-processing/Core` tokenization.
 - `WinkBackendLive` implements `@beep/nlp-processing/Backend/NLPBackend`.
 - `WinkNlpToolkitLive` implements `@beep/nlp-processing/Tools/NlpToolkit`.
 - `WinkCorpusManager`, `WinkVectorizer`, `WinkSimilarity`, and `WinkUtils` expose wink-backed retrieval and utility services.
 - `observeWinkWorkflow`, `observeWinkTool`, and `mapWinkToolError` provide package-standard tracing, metrics, and AI-tool failure mapping.
 
-Shared BM25, vector, bag-of-words, and similarity schemas are canonical in `@beep/nlp/Core`.
+Shared BM25, vector, bag-of-words, and similarity schemas are canonical in `@beep/nlp-processing/Core`.
 
 ## Observability
 

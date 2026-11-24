@@ -66,9 +66,6 @@
       "path": "../../foundation/modeling/md/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/nlp/tsconfig.json"
-    },
-    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {

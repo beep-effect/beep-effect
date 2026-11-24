@@ -32,6 +32,15 @@ import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import {
+  aiAnalysisArbitrary,
+  aiEntityArbitrary,
+  aiSentenceArbitrary,
+  aiTokenArbitrary,
+  extractEntitiesSuccessArbitrary,
+  sentencesSuccessArbitrary,
+  tokenizeSuccessArbitrary,
+} from "../support/spanArbitraries.ts";
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
@@ -45,13 +54,13 @@ describe("AI tool shared schemas", () => {
   it.effect.prop(
     "round-trips schema-derived shared result models",
     {
-      AiToken: Arbitrary.schema(AiToken),
-      AiAnalysis: Arbitrary.schema(AiAnalysis),
-      AiSentence: Arbitrary.schema(AiSentence),
+      AiToken: aiTokenArbitrary,
+      AiAnalysis: aiAnalysisArbitrary,
+      AiSentence: aiSentenceArbitrary,
       AiDocumentStats: Arbitrary.schema(AiDocumentStats),
       AiSentenceChunk: Arbitrary.schema(AiSentenceChunk),
       AiRankedText: Arbitrary.schema(AiRankedText),
-      AiEntity: Arbitrary.schema(AiEntity),
+      AiEntity: aiEntityArbitrary,
       AiNGram: Arbitrary.schema(AiNGram),
       AiPhoneticMatch: Arbitrary.schema(AiPhoneticMatch),
       AiCorpusSummary: Arbitrary.schema(AiCorpusSummary),
@@ -84,15 +93,15 @@ describe("AI tool success schemas", () => {
     "round-trips schema-derived success payloads",
     {
       WordCount: Arbitrary.schema(WordCount.successSchema),
-      Tokenize: Arbitrary.schema(Tokenize.successSchema),
+      Tokenize: tokenizeSuccessArbitrary,
       Stem: Arbitrary.schema(Stem.successSchema),
-      Sentences: Arbitrary.schema(Sentences.successSchema),
+      Sentences: sentencesSuccessArbitrary,
       RemoveStopWords: Arbitrary.schema(RemoveStopWords.successSchema),
       Paragraphize: Arbitrary.schema(Paragraphize.successSchema),
       BagOfWords: Arbitrary.schema(BagOfWords.successSchema),
       NGrams: Arbitrary.schema(NGrams.successSchema),
       LearnCustomEntities: Arbitrary.schema(LearnCustomEntities.successSchema),
-      ExtractEntities: Arbitrary.schema(ExtractEntities.successSchema),
+      ExtractEntities: extractEntitiesSuccessArbitrary,
       ChunkBySentences: Arbitrary.schema(ChunkBySentences.successSchema),
       QueryCorpus: Arbitrary.schema(QueryCorpus.successSchema),
       RankByRelevance: Arbitrary.schema(RankByRelevance.successSchema),

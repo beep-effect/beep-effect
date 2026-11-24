@@ -1,7 +1,7 @@
 import * as NodeModule from "node:module";
 import * as O from "effect/Option";
-import type { Token } from "@beep/nlp/Core/Token";
-import type { BM25Norm } from "@beep/nlp/Core/Vectorization";
+import type { Token } from "@beep/nlp-processing/Core/Token";
+import type { BM25Norm } from "@beep/nlp-processing/Core/Vectorization";
 
 const require = NodeModule.createRequire(import.meta.url);
 

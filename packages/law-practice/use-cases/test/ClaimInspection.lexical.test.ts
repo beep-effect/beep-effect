@@ -10,9 +10,10 @@ import {
   UsptoClaimInputs,
   UsptoClaimsError,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
-import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
+import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token";
 import { Tokenization, TokenizationError } from "@beep/nlp-processing/Core/Tokenization";
 import { it } from "@beep/test-runner";
+import { Position } from "@beep/text/OffsetUnit";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -48,8 +49,7 @@ const tokensOf = (text: string): ReadonlyArray<Token> =>
     return Token.make({
       text: spelling,
       index: TokenIndex.make(index),
-      start: CharPosition.make(start),
-      end: CharPosition.make(start + spelling.length),
+      span: Position.make({ unit: "utf16-code-unit", start, end: start + spelling.length }),
       tags: [],
       pos: O.some(pos),
       lemma: O.some(lower),

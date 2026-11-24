@@ -5,13 +5,13 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { PositiveNumber, UnitInterval } from "../internal/numbers.ts";
 import { DocumentId } from "./Document.ts";
 
-const $I = $NlpId.create("Core/Vectorization");
+const $I = $NlpProcessingId.create("Core/Vectorization");
 
 /**
  * Strictly positive numeric value shared by BM25 hyperparameters.
@@ -19,7 +19,7 @@ const $I = $NlpId.create("Core/Vectorization");
  * **Example** (Import PositiveNumber schema)
  *
  * ```ts
- * import { PositiveNumber } from "@beep/nlp/Core/Vectorization"
+ * import { PositiveNumber } from "@beep/nlp-processing/Core/Vectorization"
  *
  * console.log(PositiveNumber)
  * ```
@@ -42,7 +42,7 @@ const BM25NormKit = LiteralKit(["none", "l1", "l2"]).pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { BM25Norm } from "@beep/nlp/Core/Vectorization"
+ * import { BM25Norm } from "@beep/nlp-processing/Core/Vectorization"
  *
  * const norm = S.decodeSync(BM25Norm)("l2")
  * console.log(norm)
@@ -64,7 +64,7 @@ export const BM25Norm = BM25NormKit.pipe(
  * **Example** (Type annotate BM25Norm)
  *
  * ```ts
- * import type { BM25Norm } from "@beep/nlp/Core/Vectorization"
+ * import type { BM25Norm } from "@beep/nlp-processing/Core/Vectorization"
  *
  * const norm: BM25Norm = "l2"
  * console.log(norm)
@@ -82,7 +82,7 @@ export type BM25Norm = typeof BM25Norm.Type;
  *
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { BM25Config } from "@beep/nlp/Core/Vectorization"
+ * import { BM25Config } from "@beep/nlp-processing/Core/Vectorization"
  *
  * const config = BM25Config.make({
  *   b: UnitInterval.make(0.75),
@@ -116,7 +116,7 @@ export class BM25Config extends S.Opaque<BM25Config, { readonly brand: unique sy
  * **Example** (Inspect default BM25 config)
  *
  * ```ts
- * import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization"
+ * import { DefaultBM25Config } from "@beep/nlp-processing/Core/Vectorization"
  *
  * console.log(DefaultBM25Config.norm)
  * ```
@@ -137,8 +137,8 @@ export const DefaultBM25Config = BM25Config.make({
  * **Example** (Create DocumentVector instance)
  *
  * ```ts
- * import { DocumentId } from "@beep/nlp/Core/Document"
- * import { DocumentVector } from "@beep/nlp/Core/Vectorization"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { DocumentVector } from "@beep/nlp-processing/Core/Vectorization"
  *
  * const vector = DocumentVector.make({
  *   documentId: DocumentId.make("doc-a"),
@@ -170,8 +170,8 @@ export class DocumentVector extends S.Opaque<DocumentVector, { readonly brand: u
  * **Example** (Create BagOfWords instance)
  *
  * ```ts
- * import { DocumentId } from "@beep/nlp/Core/Document"
- * import { BagOfWords } from "@beep/nlp/Core/Vectorization"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { BagOfWords } from "@beep/nlp-processing/Core/Vectorization"
  *
  * const bow = BagOfWords.make({
  *   bow: { effect: 2, schema: 1 },
@@ -201,7 +201,7 @@ export class BagOfWords extends S.Opaque<BagOfWords, { readonly brand: unique sy
  * **Example** (Create TermFrequency entry)
  *
  * ```ts
- * import { TermFrequency } from "@beep/nlp/Core/Vectorization"
+ * import { TermFrequency } from "@beep/nlp-processing/Core/Vectorization"
  *
  * const tf = TermFrequency.make({
  *   frequency: 3,

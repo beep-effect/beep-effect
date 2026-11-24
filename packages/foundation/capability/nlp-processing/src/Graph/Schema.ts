@@ -20,13 +20,13 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Position } from "@beep/text/OffsetUnit";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 
-const $I = $NlpId.create("Graph/Schema");
+const $I = $NlpProcessingId.create("Graph/Schema");
 
 /**
  * Structural text-node kind vocabulary.
@@ -34,7 +34,7 @@ const $I = $NlpId.create("Graph/Schema");
  * **Example** (Validate sentence node kind)
  *
  * ```ts import.meta.vitest name="Validate sentence node kind"
- * import { TextNodeType } from "@beep/nlp/Graph/Schema"
+ * import { TextNodeType } from "@beep/nlp-processing/Graph/Schema"
  *
  * TextNodeType.is.sentence("sentence") // => true
  * ```
@@ -54,7 +54,7 @@ export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "docum
  * **Example** (Assign TextNodeType union)
  *
  * ```ts
- * import type { TextNodeType } from "@beep/nlp/Graph/Schema"
+ * import type { TextNodeType } from "@beep/nlp-processing/Graph/Schema"
  *
  * const kind: TextNodeType = "sentence"
  * console.log(kind)
@@ -71,7 +71,7 @@ export type TextNodeType = typeof TextNodeType.Type;
  * **Example** (Validate contains edge relation)
  *
  * ```ts import.meta.vitest name="Validate contains edge relation"
- * import { TextEdgeRelation } from "@beep/nlp/Graph/Schema"
+ * import { TextEdgeRelation } from "@beep/nlp-processing/Graph/Schema"
  *
  * TextEdgeRelation.is.contains("contains") // => true
  * ```
@@ -104,7 +104,7 @@ export const TextEdgeRelation = LiteralKit([
  * **Example** (Assign TextEdgeRelation union)
  *
  * ```ts
- * import type { TextEdgeRelation } from "@beep/nlp/Graph/Schema"
+ * import type { TextEdgeRelation } from "@beep/nlp-processing/Graph/Schema"
  *
  * const relation: TextEdgeRelation = "contains"
  * console.log(relation)
@@ -130,7 +130,7 @@ const textNodeFields = <T extends TextNodeType>(literal: S.Literal<T>) => ({
  *
  * ```ts import.meta.vitest name="Decode TextNode schema"
  * import * as S from "effect/Schema"
- * import { TextNode } from "@beep/nlp/Graph/Schema"
+ * import { TextNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = S.decodeUnknownSync(TextNode)({
  *   text: "Hello world.",
@@ -191,7 +191,7 @@ export const TextNode = TextNodeType.mapMembers(
  * **Example** (Read TextNode type field)
  *
  * ```ts
- * import type { TextNode } from "@beep/nlp/Graph/Schema"
+ * import type { TextNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const typeName = (node: TextNode) => node.type
  * console.log(typeName)
@@ -218,7 +218,7 @@ const textEdgeMember = <T extends TextEdgeRelation>(literal: S.Literal<T>, name:
  *
  * ```ts import.meta.vitest name="Decode TextEdge schema"
  * import * as S from "effect/Schema"
- * import { TextEdge } from "@beep/nlp/Graph/Schema"
+ * import { TextEdge } from "@beep/nlp-processing/Graph/Schema"
  *
  * const edge = S.decodeUnknownSync(TextEdge)({ relation: "contains", weight: 1 })
  * edge.relation // => "contains"
@@ -266,7 +266,7 @@ export const TextEdge = TextEdgeRelation.mapMembers(
  * **Example** (Read TextEdge relation field)
  *
  * ```ts
- * import type { TextEdge } from "@beep/nlp/Graph/Schema"
+ * import type { TextEdge } from "@beep/nlp-processing/Graph/Schema"
  *
  * const relation = (edge: TextEdge) => edge.relation
  * console.log(relation)
@@ -283,7 +283,7 @@ export type TextEdge = typeof TextEdge.Type;
  * **Example** (Build NLPAnalysis summary)
  *
  * ```ts import.meta.vitest name="Build NLPAnalysis summary"
- * import { NLPAnalysis } from "@beep/nlp/Graph/Schema"
+ * import { NLPAnalysis } from "@beep/nlp-processing/Graph/Schema"
  *
  * const analysis = NLPAnalysis.make({
  *   sentences: ["Hello world."],
@@ -317,7 +317,7 @@ export class NLPAnalysis extends S.Opaque<NLPAnalysis, { readonly brand: unique 
  * **Example** (Build POS annotation node)
  *
  * ```ts import.meta.vitest name="Build POS annotation node"
- * import { POSNode } from "@beep/nlp/Graph/Schema"
+ * import { POSNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = POSNode.make({ position: 1, tag: "NOUN", text: "brief", timestamp: 0 })
  * node.tag // => "NOUN"
@@ -347,7 +347,7 @@ export class POSNode extends S.Opaque<POSNode, { readonly brand: unique symbol }
  * **Example** (Build named entity node)
  *
  * ```ts import.meta.vitest name="Build named entity node"
- * import { EntityNode } from "@beep/nlp/Graph/Schema"
+ * import { EntityNode } from "@beep/nlp-processing/Graph/Schema"
  * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = EntityNode.make({
@@ -384,7 +384,7 @@ export class EntityNode extends S.Opaque<EntityNode, { readonly brand: unique sy
  * **Example** (Build lemma annotation node)
  *
  * ```ts import.meta.vitest name="Build lemma annotation node"
- * import { LemmaNode } from "@beep/nlp/Graph/Schema"
+ * import { LemmaNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = LemmaNode.make({ lemma: "run", position: 3, token: "running", timestamp: 0 })
  * node.lemma // => "run"
@@ -414,7 +414,7 @@ export class LemmaNode extends S.Opaque<LemmaNode, { readonly brand: unique symb
  * **Example** (Build dependency token ref)
  *
  * ```ts import.meta.vitest name="Build dependency token ref"
- * import { DependencyToken } from "@beep/nlp/Graph/Schema"
+ * import { DependencyToken } from "@beep/nlp-processing/Graph/Schema"
  *
  * const token = DependencyToken.make({ text: "arrived", position: 2 })
  * token.position // => 2
@@ -437,7 +437,7 @@ export class DependencyToken extends S.Opaque<DependencyToken, { readonly brand:
  * **Example** (Build dependency arc node)
  *
  * ```ts import.meta.vitest name="Build dependency arc node"
- * import { DependencyNode } from "@beep/nlp/Graph/Schema"
+ * import { DependencyNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = DependencyNode.make({
  *   dependent: { position: 1, text: "brief" },
@@ -473,7 +473,7 @@ export class DependencyNode extends S.Opaque<DependencyNode, { readonly brand: u
  * **Example** (Build relation participant)
  *
  * ```ts import.meta.vitest name="Build relation participant"
- * import { RelationParticipant } from "@beep/nlp/Graph/Schema"
+ * import { RelationParticipant } from "@beep/nlp-processing/Graph/Schema"
  * import { Position } from "@beep/text/OffsetUnit"
  *
  * const participant = RelationParticipant.make({
@@ -501,7 +501,7 @@ export class RelationParticipant extends S.Opaque<RelationParticipant, { readonl
  * **Example** (Build semantic relation node)
  *
  * ```ts import.meta.vitest name="Build semantic relation node"
- * import { RelationNode } from "@beep/nlp/Graph/Schema"
+ * import { RelationNode } from "@beep/nlp-processing/Graph/Schema"
  * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = RelationNode.make({

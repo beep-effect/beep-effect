@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 import { A, Str } from "@beep/utils";
 import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
@@ -32,7 +32,7 @@ const isEntityPatternOption = S.is(EntityPatternOption);
 const isLiteralPatternOption = S.is(LiteralPatternOption);
 const isPOSPatternOption = S.is(POSPatternOption);
 
-const $I = $NlpId.create("Core/PatternParsers");
+const $I = $NlpProcessingId.create("Core/PatternParsers");
 type NonEmptyChoices<A> = readonly [A, ...A[]];
 
 const invalidBracketString = (message: string): SchemaIssue.InvalidValue => new SchemaIssue.InvalidValue({ message });
@@ -97,7 +97,7 @@ const decodePatternElement = (input: string) =>
  *
  * ```ts import.meta.vitest name="Decode POS alternatives"
  * import * as S from "effect/Schema"
- * import { BracketStringToPOSPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import { BracketStringToPOSPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * const element = S.decodeUnknownSync(BracketStringToPOSPatternElement)("[ADJ|NOUN]")
  * element.value // => ["ADJ", "NOUN"]
@@ -126,7 +126,7 @@ export const BracketStringToPOSPatternElement = S.String.pipe(
  * **Example** (POS element type alias)
  *
  * ```ts import.meta.vitest name="POS element type alias"
- * import type { BracketStringToPOSPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import type { BracketStringToPOSPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * type Example = BracketStringToPOSPatternElement
  * ```
@@ -143,7 +143,7 @@ export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternE
  *
  * ```ts import.meta.vitest name="Decode entity alternatives"
  * import * as S from "effect/Schema"
- * import { BracketStringToEntityPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import { BracketStringToEntityPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * const element = S.decodeUnknownSync(BracketStringToEntityPatternElement)("[EMAIL|URL]")
  * element._tag // => "EntityPatternElement"
@@ -172,7 +172,7 @@ export const BracketStringToEntityPatternElement = S.String.pipe(
  * **Example** (Entity element type alias)
  *
  * ```ts import.meta.vitest name="Entity element type alias"
- * import type { BracketStringToEntityPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import type { BracketStringToEntityPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * type Example = BracketStringToEntityPatternElement
  * ```
@@ -189,7 +189,7 @@ export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPa
  *
  * ```ts import.meta.vitest name="Decode literal alternatives"
  * import * as S from "effect/Schema"
- * import { BracketStringToLiteralPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import { BracketStringToLiteralPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * const element = S.decodeUnknownSync(BracketStringToLiteralPatternElement)("[Effect|Schema]")
  * element.value[0] // => "Effect"
@@ -218,7 +218,7 @@ export const BracketStringToLiteralPatternElement = S.String.pipe(
  * **Example** (Literal element type alias)
  *
  * ```ts import.meta.vitest name="Literal element type alias"
- * import type { BracketStringToLiteralPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import type { BracketStringToLiteralPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * type Example = BracketStringToLiteralPatternElement
  * ```
@@ -235,7 +235,7 @@ export type BracketStringToLiteralPatternElement = typeof BracketStringToLiteral
  *
  * ```ts import.meta.vitest name="Decode any bracket element"
  * import * as S from "effect/Schema"
- * import { BracketStringToPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import { BracketStringToPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * const element = S.decodeUnknownSync(BracketStringToPatternElement)("[NOUN]")
  * element._tag // => "POSPatternElement"
@@ -260,7 +260,7 @@ export const BracketStringToPatternElement = S.String.pipe(
  * **Example** (Pattern element type alias)
  *
  * ```ts import.meta.vitest name="Pattern element type alias"
- * import type { BracketStringToPatternElement } from "@beep/nlp/Core/PatternParsers"
+ * import type { BracketStringToPatternElement } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * type Example = BracketStringToPatternElement
  * ```
@@ -276,7 +276,7 @@ export type BracketStringToPatternElement = typeof BracketStringToPatternElement
  * **Example** (Parse string array elements)
  *
  * ```ts import.meta.vitest name="Parse string array elements"
- * import { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
+ * import { PatternElementsFromString } from "@beep/nlp-processing/Core/PatternParsers"
  * import * as S from "effect/Schema"
  *
  * const elements = S.decodeUnknownSync(PatternElementsFromString)(["[NOUN]"])
@@ -298,7 +298,7 @@ export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternE
  * **Example** (Elements from string type)
  *
  * ```ts import.meta.vitest name="Elements from string type"
- * import type { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
+ * import type { PatternElementsFromString } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * type Example = PatternElementsFromString
  * ```
@@ -314,7 +314,7 @@ export type PatternElementsFromString = typeof PatternElementsFromString.Type;
  * **Example** (Decode mixed bracket patterns)
  *
  * ```ts import.meta.vitest name="Decode mixed bracket patterns"
- * import { PatternFromString } from "@beep/nlp/Core/PatternParsers"
+ * import { PatternFromString } from "@beep/nlp-processing/Core/PatternParsers"
  *
  * const elements = PatternFromString(["[ADJ]", "[Effect]"])
  * elements[1]?._tag // => "LiteralPatternElement"

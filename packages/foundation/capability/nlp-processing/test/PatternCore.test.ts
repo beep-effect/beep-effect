@@ -34,7 +34,7 @@ import {
   take,
   withId,
   withMark,
-} from "@beep/nlp/Core/index";
+} from "@beep/nlp-processing/Core/index";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
@@ -48,7 +48,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Schema from "effect/Schema";
-import type { PatternElement } from "@beep/nlp/Core/index";
+import type { PatternElement } from "@beep/nlp-processing/Core/index";
 
 const decodeBracketStringToEntityPatternElement = Schema.decodeEffect(BracketStringToEntityPatternElement);
 const decodeBracketStringToLiteralPatternElement = Schema.decodeEffect(BracketStringToLiteralPatternElement);

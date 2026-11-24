@@ -6,14 +6,14 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { BracketStringToPatternElement } from "@beep/nlp/Core";
-import { DocumentId } from "@beep/nlp/Core/Document";
-import { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity";
-import { BagOfWords } from "@beep/nlp/Core/Vectorization";
-import { Tokenization } from "@beep/nlp-processing/Core";
+import { BracketStringToPatternElement, Tokenization } from "@beep/nlp-processing/Core";
+import { DocumentId } from "@beep/nlp-processing/Core/Document";
+import { DocumentTermSet, TverskyParams } from "@beep/nlp-processing/Core/Similarity";
+import { BagOfWords } from "@beep/nlp-processing/Core/Vectorization";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, Str, thunk0, thunkEmptyReadonlyArray, thunkEmptyStr, thunkFalse } from "@beep/utils";
+import { Position } from "@beep/text/OffsetUnit";
+import { A, Str, thunk0, thunkEmptyReadonlyArray, thunkEmptyStr, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
@@ -25,6 +25,7 @@ import * as Match from "effect/Match";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ascendingNumber, ascendingString, descendingNumber } from "./internal/order.ts";
 import { WinkEngineError } from "./Wink.errors.ts";
@@ -37,8 +38,8 @@ import { observeWinkTool, textLengthAttribute } from "./WinkObservability.ts";
 import { SimilarityError, WinkSimilarity } from "./WinkSimilarity.service.ts";
 import { WinkUtils, WinkUtilsError } from "./WinkUtils.service.ts";
 import { VectorizerError, WinkVectorizer } from "./WinkVectorizer.service.ts";
-import type { Token } from "@beep/nlp/Core/Token";
-import type { BM25Norm } from "@beep/nlp/Core/Vectorization";
+import type { Token } from "@beep/nlp-processing/Core/Token";
+import type { BM25Norm } from "@beep/nlp-processing/Core/Vectorization";
 import type { AiToolError } from "@beep/nlp-processing/Tools";
 import type * as Tool from "effect/ai/Tool";
 
@@ -129,12 +130,11 @@ const tokenBagOfWords: (tokens: ReadonlyArray<Token>) => Record<string, number> 
 );
 
 const tokenToAi = (token: Token) => ({
-  end: token.end,
   isPunctuation: isPunctuationToken(token),
   isStopWord: O.getOrElse(token.stopWordFlag, thunkFalse),
   lemma: unwrapOptionString(token.lemma),
   pos: unwrapOptionString(token.pos),
-  start: token.start,
+  span: token.span,
   stem: unwrapOptionString(token.stem),
   text: token.text,
 });
@@ -280,18 +280,22 @@ const mapEntityOutput = (
   tokens: ReadonlyArray<Token>,
   source: "builtin" | "custom"
 ) =>
-  A.map(details, (detail, index) => ({
-    end:
-      tokens[resolveTokenEndIndex(spans[index], resolveTokenIndex(spans[index], 0, tokens), tokens)]?.end ??
-      tokens[resolveTokenIndex(spans[index], 0, tokens)]?.end ??
-      Str.length(renderEntityValue(detail.value)),
-    endTokenIndex: resolveTokenEndIndex(spans[index], resolveTokenIndex(spans[index], 0, tokens), tokens),
-    source,
-    start: tokens[resolveTokenIndex(spans[index], 0, tokens)]?.start ?? 0,
-    startTokenIndex: resolveTokenIndex(spans[index], 0, tokens),
-    type: renderEntityValue(detail.type),
-    value: renderEntityValue(detail.value),
-  }));
+  A.filterMap(details, (detail, index) => {
+    const startTokenIndex = resolveTokenIndex(spans[index], 0, tokens);
+    const endTokenIndex = resolveTokenEndIndex(spans[index], startTokenIndex, tokens);
+    return pipe(
+      O.all([A.get(tokens, startTokenIndex), A.get(tokens, endTokenIndex)]),
+      O.map(([first, last]) => ({
+        endTokenIndex,
+        source,
+        span: Position.make({ unit: "utf16-code-unit", start: first.span.start, end: last.span.end }),
+        startTokenIndex,
+        type: renderEntityValue(detail.type),
+        value: renderEntityValue(detail.value),
+      })),
+      Result.fromOption(thunkUndefined)
+    );
+  });
 
 const TransformOperationKit = LiteralKit([
   "lowercase",
@@ -636,8 +640,8 @@ export const WinkNlpToolkitLive: Layer.Layer<
             builtinEntities,
             A.appendAll(customEntities),
             A.sortBy(
-              ascendingNumber((entity) => entity.start),
-              ascendingNumber((entity) => entity.end),
+              ascendingNumber((entity) => entity.span.start),
+              ascendingNumber((entity) => entity.span.end),
               ascendingNumber((entity) => entity.startTokenIndex)
             )
           );
@@ -979,24 +983,19 @@ export const WinkNlpToolkitLive: Layer.Layer<
           const document = yield* tokenization.document(text, "sentences");
           const sentences = pipe(
             Chunk.toReadonlyArray(document.sentences),
-            A.map((sentence) => {
+            A.filterMap((sentence) => {
               const tokens = Chunk.toReadonlyArray(sentence.tokens);
 
-              return {
-                end: pipe(
-                  A.last(tokens),
-                  O.map((token) => token.end),
-                  O.getOrElse(thunk0)
-                ),
-                index: sentence.index,
-                start: pipe(
-                  A.head(tokens),
-                  O.map((token) => token.start),
-                  O.getOrElse(thunk0)
-                ),
-                text: sentence.text,
-                tokenCount: A.length(tokens),
-              };
+              return pipe(
+                O.all([A.head(tokens), A.last(tokens)]),
+                O.map(([first, last]) => ({
+                  index: sentence.index,
+                  span: Position.make({ unit: "utf16-code-unit", start: first.span.start, end: last.span.end }),
+                  text: sentence.text,
+                  tokenCount: A.length(tokens),
+                })),
+                Result.fromOption(thunkUndefined)
+              );
             })
           );
 

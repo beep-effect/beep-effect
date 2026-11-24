@@ -32,7 +32,7 @@ import * as Struct from "effect/Struct";
 import * as Backend from "../../Backend/NLPBackend.ts";
 import { makeNode } from "../EffectGraph.ts";
 import * as Op from "./Operation.ts";
-import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } from "@beep/nlp/Graph/Schema";
+import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } from "../Schema.ts";
 
 /**
  * Backend-backed operation that splits document text into sentence children.

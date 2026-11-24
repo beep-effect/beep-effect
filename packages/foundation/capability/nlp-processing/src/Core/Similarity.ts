@@ -5,14 +5,14 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { UnitInterval } from "../internal/numbers.ts";
 import { DocumentId } from "./Document.ts";
 
-const $I = $NlpId.create("Core/Similarity");
+const $I = $NlpProcessingId.create("Core/Similarity");
 
 const SimilarityMethodKit = LiteralKit(["vector.cosine", "set.tversky", "bow.cosine"]).pipe(
   $I.annoteSchema("SimilarityMethodKit", {
@@ -26,7 +26,7 @@ const SimilarityMethodKit = LiteralKit(["vector.cosine", "set.tversky", "bow.cos
  * **Example** (Check vector cosine method)
  *
  * ```ts
- * import { SimilarityMethod } from "@beep/nlp/Core/Similarity"
+ * import { SimilarityMethod } from "@beep/nlp-processing/Core/Similarity"
  *
  * console.log(SimilarityMethod.is["vector.cosine"]("vector.cosine"))
  * ```
@@ -47,7 +47,7 @@ export const SimilarityMethod = SimilarityMethodKit.pipe(
  * **Example** (Assign cosine method literal)
  *
  * ```ts
- * import type { SimilarityMethod } from "@beep/nlp/Core/Similarity"
+ * import type { SimilarityMethod } from "@beep/nlp-processing/Core/Similarity"
  *
  * const method: SimilarityMethod = "vector.cosine"
  * console.log(method)
@@ -65,7 +65,7 @@ export type SimilarityMethod = typeof SimilarityMethod.Type;
  *
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { TverskyParams } from "@beep/nlp/Core/Similarity"
+ * import { TverskyParams } from "@beep/nlp-processing/Core/Similarity"
  *
  * const params = TverskyParams.make({
  *   alpha: UnitInterval.make(0.7),
@@ -94,8 +94,8 @@ export class TverskyParams extends S.Opaque<TverskyParams, { readonly brand: uni
  * **Example** (Build document term set)
  *
  * ```ts
- * import { DocumentId } from "@beep/nlp/Core/Document"
- * import { DocumentTermSet } from "@beep/nlp/Core/Similarity"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { DocumentTermSet } from "@beep/nlp-processing/Core/Similarity"
  *
  * const terms = DocumentTermSet.make({
  *   documentId: DocumentId.make("doc-a"),
@@ -127,8 +127,8 @@ export class DocumentTermSet extends S.Opaque<DocumentTermSet, { readonly brand:
  * ```ts
  * import * as O from "effect/Option"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { DocumentId } from "@beep/nlp/Core/Document"
- * import { SimilarityScore } from "@beep/nlp/Core/Similarity"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { SimilarityScore } from "@beep/nlp-processing/Core/Similarity"
  *
  * const score = SimilarityScore.make({
  *   document1Id: DocumentId.make("doc-a"),

@@ -6,7 +6,7 @@
  * Service-dependent tests run against the package's WinkTokenization layer.
  */
 
-import { TextNode } from "@beep/nlp/Graph/Schema";
+import { TextNode } from "@beep/nlp-processing/Graph/Schema";
 import * as TG from "@beep/nlp-processing/Graph/TextGraph";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";

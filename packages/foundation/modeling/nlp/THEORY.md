@@ -32,9 +32,9 @@ typed strata; the arrows are the operations that move between them.
 
 A document is not a list of passes' outputs but a single **annotated text
 graph**: nodes are typed text fragments, edges are typed relations (dependency,
-mention, coreference, semantic relation). `src/Graph/` holds the graph itself
-(`Schema.ts` for the carriers, `GraphOps.ts`/`Operation.ts` for the graph-level
-operations, `index.ts` for the public surface). Effect v4 ships a built-in
+mention, coreference, semantic relation). The carriers live in
+`@beep/nlp-processing` (`src/Graph/Schema.ts`, moved in P6); `src/Graph/` here holds
+`GraphOps.ts` for the graph-level operations and `index.ts` for the public surface. Effect v4 ships a built-in
 `Graph` module (topological sort, acyclicity, BFS/DFS, SCC), so the port leans
 on the platform for the graph theory instead of re-deriving it.
 

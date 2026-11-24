@@ -106,7 +106,6 @@
   "devDependencies": {
     "@beep/md": "workspace:^",
     "@beep/memfs": "workspace:^",
-    "@beep/nlp": "workspace:^",
     "@beep/repo-utils": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/test-runner": "workspace:^",

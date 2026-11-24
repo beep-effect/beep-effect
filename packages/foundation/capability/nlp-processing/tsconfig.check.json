@@ -9,9 +9,6 @@
       "path": "../../modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../modeling/nlp/tsconfig.json"
-    },
-    {
       "path": "../../modeling/schema/tsconfig.json"
     },
     {

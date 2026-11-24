@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 
-import { $NlpId } from "@beep/identity";
+import { $NlpProcessingId } from "@beep/identity";
 import { A, Str } from "@beep/utils";
 import * as Brand from "effect/Brand";
 import * as Chunk from "effect/Chunk";
@@ -20,7 +20,7 @@ import type * as O from "effect/Option";
 import type { SentenceIndex } from "./Sentence.ts";
 import type { TokenIndex } from "./Token.ts";
 
-const $I = $NlpId.create("Core/Document");
+const $I = $NlpProcessingId.create("Core/Document");
 const getRangeEnd = (
   options:
     | {
@@ -35,7 +35,7 @@ const getRangeEnd = (
  * **Example** (Make a DocumentId)
  *
  * ```ts import.meta.vitest name="Make a DocumentId"
- * import { DocumentId } from "@beep/nlp/Core/Document"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
  *
  * const id = DocumentId.make("doc-001")
  * id // => "doc-001"
@@ -57,7 +57,7 @@ export const DocumentId = S.NonEmptyString.pipe(
  * **Example** (Type a DocumentId parameter)
  *
  * ```ts import.meta.vitest name="Type a DocumentId parameter"
- * import type { DocumentId } from "@beep/nlp/Core/Document"
+ * import type { DocumentId } from "@beep/nlp-processing/Core/Document"
  *
  * const label = (id: DocumentId): string => `document:${id}`
  * typeof label // => "function"
@@ -74,7 +74,7 @@ export type DocumentId = typeof DocumentId.Type;
  * **Example** (Advance a DocumentIndex)
  *
  * ```ts import.meta.vitest name="Advance a DocumentIndex"
- * import type { DocumentIndex } from "@beep/nlp/Core/Document"
+ * import type { DocumentIndex } from "@beep/nlp-processing/Core/Document"
  *
  * const next = (index: DocumentIndex): number => index + 1
  * typeof next // => "function"
@@ -91,7 +91,7 @@ export type DocumentIndex = Brand.Branded<number, "DocumentIndex">;
  * **Example** (Validate non-negative index)
  *
  * ```ts import.meta.vitest name="Validate non-negative index"
- * import { documentIndex } from "@beep/nlp/Core/Document"
+ * import { documentIndex } from "@beep/nlp-processing/Core/Document"
  *
  * const first = documentIndex(0)
  * first // => 0
@@ -110,7 +110,7 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
  * **Example** (Decode index via schema)
  *
  * ```ts import.meta.vitest name="Decode index via schema"
- * import { DocumentIndex } from "@beep/nlp/Core/Document"
+ * import { DocumentIndex } from "@beep/nlp-processing/Core/Document"
  *
  * const index = DocumentIndex.make(3)
  * index // => 3
@@ -184,7 +184,7 @@ const filterDocument = (document: Document, predicate: (token: Token) => boolean
  * ```ts import.meta.vitest name="Construct empty Document"
  * import * as Chunk from "effect/Chunk";
  * import * as O from "effect/Option"
- * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
+ * import { Document as NLPDocument, DocumentId } from "@beep/nlp-processing/Core/Document"
  *
  * const document = NLPDocument.make({
  *   id: DocumentId.make("doc-001"),
@@ -267,7 +267,7 @@ export class Document extends S.Class<Document, { readonly brand: unique symbol 
       }
     ): Chunk.Chunk<Token> => {
       const end = getRangeEnd(options);
-      return Chunk.filter(document.tokens, (token) => token.start < end && token.end > start);
+      return Chunk.filter(document.tokens, (token) => token.span.start < end && token.span.end > start);
     }
   );
 

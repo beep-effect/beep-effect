@@ -76,7 +76,7 @@ const isMakeDataFirstArgs = (
  * **Example** (Create multi-tag POS element)
  *
  * ```ts import.meta.vitest name="Create multi-tag POS element"
- * import { pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const element = pos("ADJ", "NOUN")
  * element.value // => ["ADJ", "NOUN"]
@@ -103,7 +103,7 @@ export function pos(
  * **Example** (Create multi-type entity element)
  *
  * ```ts import.meta.vitest name="Create multi-type entity element"
- * import { entity } from "@beep/nlp/Core/PatternBuilders"
+ * import { entity } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const element = entity("EMAIL", "URL")
  * element._tag // => "EntityPatternElement"
@@ -130,7 +130,7 @@ export function entity(
  * **Example** (Create multi-value literal element)
  *
  * ```ts import.meta.vitest name="Create multi-value literal element"
- * import { literal } from "@beep/nlp/Core/PatternBuilders"
+ * import { literal } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const element = literal("Effect", "Schema")
  * element.value[0] // => "Effect"
@@ -154,7 +154,7 @@ export function literal(firstOrValues: string | ReadonlyArray<string>, ...rest: 
  * **Example** (Create optional POS element)
  *
  * ```ts import.meta.vitest name="Create optional POS element"
- * import { optionalPos } from "@beep/nlp/Core/PatternBuilders"
+ * import { optionalPos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const element = optionalPos("ADJ")
  * element.value[0] // => ""
@@ -181,7 +181,7 @@ export function optionalPos(
  * **Example** (Create optional entity element)
  *
  * ```ts import.meta.vitest name="Create optional entity element"
- * import { optionalEntity } from "@beep/nlp/Core/PatternBuilders"
+ * import { optionalEntity } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const element = optionalEntity("EMAIL")
  * element.value // => ["", "EMAIL"]
@@ -208,7 +208,7 @@ export function optionalEntity(
  * **Example** (Create optional literal element)
  *
  * ```ts import.meta.vitest name="Create optional literal element"
- * import { optionalLiteral } from "@beep/nlp/Core/PatternBuilders"
+ * import { optionalLiteral } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const element = optionalLiteral("Inc.")
  * element.value // => ["", "Inc."]
@@ -238,7 +238,7 @@ export function optionalLiteral(
  * **Example** (Build pattern with id)
  *
  * ```ts import.meta.vitest name="Build pattern with id"
- * import { literal, make } from "@beep/nlp/Core/PatternBuilders"
+ * import { literal, make } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("company-suffix", [literal("Inc.")])
  * pattern.id // => "company-suffix"
@@ -263,7 +263,7 @@ export const make: {
  *
  * ```ts import.meta.vitest name="Add mark range to pattern"
  * import * as S from "effect/Schema"
- * import { hasMark, literal, make, withMark } from "@beep/nlp/Core/PatternBuilders"
+ * import { hasMark, literal, make, withMark } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("marked-company", [literal("Acme"), literal("Inc.")])
  * const marked = withMark(pattern, [S.Natural.make(0), S.Natural.make(1)])
@@ -285,7 +285,7 @@ export const withMark: PatternDual<MarkRange> = dual(
  *
  * ```ts import.meta.vitest name="Remove mark from pattern"
  * import * as S from "effect/Schema"
- * import { hasMark, literal, make, withMark, withoutMark } from "@beep/nlp/Core/PatternBuilders"
+ * import { hasMark, literal, make, withMark, withoutMark } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = withMark(make("marked-company", [literal("Acme")]), [
  *   S.Natural.make(0),
@@ -311,7 +311,7 @@ export const withoutMark: {
  * **Example** (Append elements to pattern)
  *
  * ```ts import.meta.vitest name="Append elements to pattern"
- * import { addElements, elements, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { addElements, elements, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("noun-phrase", [pos("ADJ")])
  * const expanded = addElements(pattern, [literal("portfolio")])
@@ -335,7 +335,7 @@ export const addElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
  * **Example** (Prepend elements to pattern)
  *
  * ```ts import.meta.vitest name="Prepend elements to pattern"
- * import { elements, literal, make, pos, prependElements } from "@beep/nlp/Core/PatternBuilders"
+ * import { elements, literal, make, pos, prependElements } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("suffix", [literal("Inc.")])
  * const expanded = prependElements(pattern, [pos("PROPN")])
@@ -359,7 +359,7 @@ export const prependElements: PatternDual<ReadonlyArray<PatternElement>> = dual(
  * **Example** (Replace pattern identifier)
  *
  * ```ts import.meta.vitest name="Replace pattern identifier"
- * import { literal, make, withId } from "@beep/nlp/Core/PatternBuilders"
+ * import { literal, make, withId } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("old-id", [literal("Effect")])
  * withId(pattern, "new-id").id // => "new-id"
@@ -379,7 +379,7 @@ export const withId: PatternDual<string> = dual(
  * **Example** (Detect unmarked pattern)
  *
  * ```ts import.meta.vitest name="Detect unmarked pattern"
- * import { literal, make, hasMark } from "@beep/nlp/Core/PatternBuilders"
+ * import { literal, make, hasMark } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("unmarked", [literal("Effect")])
  * hasMark(pattern) // => false
@@ -398,7 +398,7 @@ export const hasMark = (pattern: Pattern): boolean => O.isSome(pattern.mark);
  * ```ts import.meta.vitest name="Read mark range option"
  * import * as S from "effect/Schema"
  * import * as O from "effect/Option"
- * import { getMark, literal, make, withMark } from "@beep/nlp/Core/PatternBuilders"
+ * import { getMark, literal, make, withMark } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = withMark(make("marked", [literal("Effect")]), [
  *   S.Natural.make(0),
@@ -418,7 +418,7 @@ export const getMark = (pattern: Pattern): O.Option<MarkRange> => pattern.mark;
  * **Example** (Count pattern element slots)
  *
  * ```ts import.meta.vitest name="Count pattern element slots"
- * import { length, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { length, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("two-slots", [pos("ADJ"), literal("brief")])
  * length(pattern) // => 2
@@ -435,7 +435,7 @@ export const length = (pattern: Pattern): number => Chunk.size(pattern.elements)
  * **Example** (Materialize elements as array)
  *
  * ```ts import.meta.vitest name="Materialize elements as array"
- * import { elements, literal, make } from "@beep/nlp/Core/PatternBuilders"
+ * import { elements, literal, make } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("literal-only", [literal("Effect")])
  * elements(pattern)[0]?._tag // => "LiteralPatternElement"
@@ -453,7 +453,7 @@ export const elements = (pattern: Pattern): ReadonlyArray<PatternElement> => toE
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { elementAt, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { elementAt, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("phrase", [pos("ADJ"), literal("brief")])
  * console.log(O.map(elementAt(pattern, 1), (element) => element._tag)) // some("LiteralPatternElement")
@@ -476,7 +476,7 @@ export const elementAt: {
  * **Example** (Detect empty pattern)
  *
  * ```ts import.meta.vitest name="Detect empty pattern"
- * import { isEmpty, make } from "@beep/nlp/Core/PatternBuilders"
+ * import { isEmpty, make } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("empty-pattern", [])
  * isEmpty(pattern) // => true
@@ -494,7 +494,7 @@ export const isEmpty = (pattern: Pattern): boolean => Chunk.isEmpty(pattern.elem
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { head, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("phrase", [pos("ADJ"), literal("brief")])
  * console.log(O.map(head(pattern), (element) => element._tag)) // some("POSPatternElement")
@@ -512,7 +512,7 @@ export const head = elementAt(0);
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { last, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { last, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("phrase", [pos("ADJ"), literal("brief")])
  * console.log(O.map(last(pattern), (element) => element._tag)) // some("LiteralPatternElement")
@@ -530,7 +530,7 @@ export const last = (pattern: Pattern): O.Option<PatternElement> => elementAt(pa
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { elementAt, literal, make, mapElements } from "@beep/nlp/Core/PatternBuilders"
+ * import { elementAt, literal, make, mapElements } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("company", [literal("Acme")])
  * const mapped = mapElements(pattern, () => literal("Globex"))
@@ -554,7 +554,7 @@ export const mapElements: PatternDual<(element: PatternElement, index: number) =
  * **Example** (Keep only literal elements)
  *
  * ```ts import.meta.vitest name="Keep only literal elements"
- * import { filterElements, length, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { filterElements, length, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("phrase", [pos("ADJ"), literal("brief")])
  * const literalsOnly = filterElements(pattern, (element) => element._tag === "LiteralPatternElement")
@@ -578,7 +578,7 @@ export const filterElements: PatternDual<(element: PatternElement, index: number
  * **Example** (Take first N elements)
  *
  * ```ts import.meta.vitest name="Take first N elements"
- * import { length, literal, make, pos, take } from "@beep/nlp/Core/PatternBuilders"
+ * import { length, literal, make, pos, take } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("phrase", [pos("ADJ"), literal("brief")])
  * length(take(pattern, 1)) // => 1
@@ -602,7 +602,7 @@ export const take: PatternDual<number> = dual(
  *
  * ```ts import.meta.vitest name="Drop first N elements"
  * import * as O from "effect/Option"
- * import { drop, head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { drop, head, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("phrase", [pos("ADJ"), literal("brief")])
  * O.getOrThrow(head(drop(pattern, 1))).value[0] // => "brief"
@@ -625,7 +625,7 @@ export const drop: PatternDual<number> = dual(
  * **Example** (Merge patterns under new id)
  *
  * ```ts import.meta.vitest name="Merge patterns under new id"
- * import { combine, length, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { combine, length, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const left = make("modifier", [pos("ADJ")])
  * const right = make("head", [literal("brief")])
@@ -650,7 +650,7 @@ export const combine: {
  * **Example** (Reference PatternPatch type)
  *
  * ```ts import.meta.vitest name="Reference PatternPatch type"
- * import type { PatternPatch } from "@beep/nlp/Core/PatternBuilders"
+ * import type { PatternPatch } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * type Example = PatternPatch
  * ```
@@ -666,7 +666,7 @@ export type PatternPatch = (pattern: Pattern) => Pattern;
  * **Example** (Apply withId patch)
  *
  * ```ts import.meta.vitest name="Apply withId patch"
- * import { applyPatch, literal, make, withId } from "@beep/nlp/Core/PatternBuilders"
+ * import { applyPatch, literal, make, withId } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("draft", [literal("Effect")])
  * const patched = applyPatch(pattern, withId("published"))
@@ -687,7 +687,7 @@ export const applyPatch: PatternDual<PatternPatch> = dual(
  * **Example** (Compose patches left-to-right)
  *
  * ```ts import.meta.vitest name="Compose patches left-to-right"
- * import { composePatches, literal, make, withId } from "@beep/nlp/Core/PatternBuilders"
+ * import { composePatches, literal, make, withId } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const patch = composePatches(withId("first"), withId("second"))
  * patch(make("draft", [literal("Effect")])).id // => "second"
@@ -706,7 +706,7 @@ export const composePatches = (...patches: ReadonlyArray<PatternPatch>): Pattern
  *
  * ```ts import.meta.vitest name="Replace literal at index"
  * import * as O from "effect/Option"
- * import { applyPatch, elementAt, literal, make, patchReplaceLiteralAt } from "@beep/nlp/Core/PatternBuilders"
+ * import { applyPatch, elementAt, literal, make, patchReplaceLiteralAt } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("company", [literal("Acme"), literal("Inc.")])
  * const patched = applyPatch(pattern, patchReplaceLiteralAt(1, () => literal("LLC")))
@@ -737,7 +737,7 @@ export const patchReplaceLiteralAt: {
  * **Example** (Lowercase all literal values)
  *
  * ```ts import.meta.vitest name="Lowercase all literal values"
- * import { applyPatch, elements, literal, make, patchReplaceAllLiterals } from "@beep/nlp/Core/PatternBuilders"
+ * import { applyPatch, elements, literal, make, patchReplaceAllLiterals } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("aliases", [literal("Acme"), literal("Globex")])
  * const patched = applyPatch(pattern, patchReplaceAllLiterals((values) => literal(values[0]?.toLowerCase() ?? "")))
@@ -764,7 +764,7 @@ const toLiteralReplacer = (replacement: PatternElement | LiteralReplacer): Liter
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { generalizeLiterals, head, literal, make, pos } from "@beep/nlp/Core/PatternBuilders"
+ * import { generalizeLiterals, head, literal, make, pos } from "@beep/nlp-processing/Core/PatternBuilders"
  *
  * const pattern = make("specific", [literal("agreement")])
  * const generalized = generalizeLiterals(pattern, pos("NOUN"))

@@ -21,7 +21,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -34,6 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tok from "../Core/Tokenization.ts";
 import * as Obs from "../internal/observability.ts";
+import { TextEdge, TextNode } from "./Schema.ts";
 
 const $I = $NlpProcessingId.create("Graph/TextGraph");
 
@@ -176,9 +176,9 @@ export const singleton: {
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
- * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
- * import { TokenIndex } from "@beep/nlp/Core/Token"
+ * import { Document as NLPDocument, DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { Sentence, SentenceIndex } from "@beep/nlp-processing/Core/Sentence"
+ * import { TokenIndex } from "@beep/nlp-processing/Core/Token"
  * import { Tokenization } from "@beep/nlp-processing/Core/Tokenization"
  * import { fromDocument, nodeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
@@ -272,7 +272,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  * ```ts import.meta.vitest name="Add child under root"
  * import * as Effect from "effect/Effect";
  * import { addChildren, getRoots, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
- * import { TextNode } from "@beep/nlp/Graph/Schema"
+ * import { TextNode } from "@beep/nlp-processing/Graph/Schema"
  * import * as A from "effect/Array"
  * import * as O from "effect/Option"
  *
@@ -348,8 +348,9 @@ export const addChildren: {
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
- * import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token"
+ * import { Document as NLPDocument, DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token"
+ * import { Position } from "@beep/text/OffsetUnit"
  * import { Tokenization } from "@beep/nlp-processing/Core/Tokenization"
  * import { nodeCount, singleton, tokenizeNodes } from "@beep/nlp-processing/Graph/TextGraph"
  *
@@ -357,8 +358,7 @@ export const addChildren: {
  *   Token.make({
  *     text,
  *     index: TokenIndex.make(index),
- *     start: CharPosition.make(start),
- *     end: CharPosition.make(end),
+ *     span: Position.make({ unit: "utf16-code-unit", start, end }),
  *     pos: O.none(),
  *     lemma: O.none(),
  *     stem: O.none(),

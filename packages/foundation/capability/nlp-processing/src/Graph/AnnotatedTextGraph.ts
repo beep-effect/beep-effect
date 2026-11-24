@@ -27,15 +27,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import {
-  DependencyNode,
-  EntityNode,
-  LemmaNode,
-  POSNode,
-  RelationNode,
-  TextEdge,
-  TextNode,
-} from "@beep/nlp/Graph/Schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -45,6 +36,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Backend from "../Backend/NLPBackend.ts";
 import * as Obs from "../internal/observability.ts";
+import { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode, TextEdge, TextNode } from "./Schema.ts";
 
 const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
 
@@ -58,7 +50,7 @@ const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
  * **Example** (Create TextNode as AnnotatedNode)
  *
  * ```ts import.meta.vitest name="Create TextNode as AnnotatedNode"
- * import { TextNode } from "@beep/nlp/Graph/Schema"
+ * import { TextNode } from "@beep/nlp-processing/Graph/Schema"
  * import type { AnnotatedNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  *
  * const node: AnnotatedNode = TextNode.make({
@@ -85,7 +77,7 @@ export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, 
  * **Example** (Validate POSNode with Schema)
  *
  * ```ts import.meta.vitest name="Validate POSNode with Schema"
- * import { POSNode } from "@beep/nlp/Graph/Schema"
+ * import { POSNode } from "@beep/nlp-processing/Graph/Schema"
  * import type { AnnotatedNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
  * import * as S from "effect/Schema"
  *
@@ -111,7 +103,7 @@ export type AnnotatedNode = typeof AnnotatedNode.Type;
  *
  * ```ts import.meta.vitest name="Check node is TextNode"
  * import { isTextNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
- * import { TextNode } from "@beep/nlp/Graph/Schema"
+ * import { TextNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = TextNode.make({ text: "Hello.", type: "sentence", timestamp: 0 })
  * isTextNode(node) // => true
@@ -131,7 +123,7 @@ export const isTextNode: (node: AnnotatedNode) => node is TextNode = S.is(TextNo
  *
  * ```ts import.meta.vitest name="Check node is POSNode"
  * import { isPOSNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
- * import { POSNode } from "@beep/nlp/Graph/Schema"
+ * import { POSNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = POSNode.make({ text: "runs", tag: "VBZ", position: 0, timestamp: 0 })
  * isPOSNode(node) // => true
@@ -151,7 +143,7 @@ export const isPOSNode: (node: AnnotatedNode) => node is POSNode = S.is(POSNode)
  *
  * ```ts import.meta.vitest name="Check node is EntityNode"
  * import { isEntityNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
- * import { EntityNode } from "@beep/nlp/Graph/Schema"
+ * import { EntityNode } from "@beep/nlp-processing/Graph/Schema"
  * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = EntityNode.make({
@@ -178,7 +170,7 @@ export const isEntityNode: (node: AnnotatedNode) => node is EntityNode = S.is(En
  *
  * ```ts import.meta.vitest name="Check node is LemmaNode"
  * import { isLemmaNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
- * import { LemmaNode } from "@beep/nlp/Graph/Schema"
+ * import { LemmaNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = LemmaNode.make({ token: "running", lemma: "run", position: 0, timestamp: 0 })
  * isLemmaNode(node) // => true
@@ -196,7 +188,7 @@ export const isLemmaNode: (node: AnnotatedNode) => node is LemmaNode = S.is(Lemm
  *
  * ```ts import.meta.vitest name="Check node is DependencyNode"
  * import { isDependencyNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
- * import { DependencyNode } from "@beep/nlp/Graph/Schema"
+ * import { DependencyNode } from "@beep/nlp-processing/Graph/Schema"
  *
  * const node = DependencyNode.make({
  *   relation: "root",
@@ -221,7 +213,7 @@ export const isDependencyNode: (node: AnnotatedNode) => node is DependencyNode =
  *
  * ```ts import.meta.vitest name="Check node is RelationNode"
  * import { isRelationNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
- * import { RelationNode } from "@beep/nlp/Graph/Schema"
+ * import { RelationNode } from "@beep/nlp-processing/Graph/Schema"
  * import { Position } from "@beep/text/OffsetUnit"
  *
  * const node = RelationNode.make({

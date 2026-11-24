@@ -1,5 +1,5 @@
 /**
- * Text-graph IR: node/edge schemas (and, in later increments, the graph engine).
+ * Generic graph operations over `effect/Graph`.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -21,18 +21,3 @@
  * @since 0.0.0
  */
 export * as GraphOps from "./GraphOps.ts";
-/**
- * Graph node & edge schema classes (the handoff-contract basis).
- *
- * **Example** (Access TextNode schema)
- *
- * ```ts
- * import { Schema } from "@beep/nlp/Graph"
- *
- * console.log(Schema.TextNode)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * as Schema from "./Schema.ts";

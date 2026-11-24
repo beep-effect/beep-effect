@@ -80,19 +80,18 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
-    "@beep/nlp": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "@beep/text": "workspace:^"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
-    "@types/node": "catalog:",
-    "@beep/text": "workspace:^"
+    "@types/node": "catalog:"
   },
   "beep": {
     "family": "foundation",
