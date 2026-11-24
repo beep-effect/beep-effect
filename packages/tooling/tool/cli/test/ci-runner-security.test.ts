@@ -2698,6 +2698,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Prod deploy of the CiRunners Alchemy stack; environment-gated and disarmed by a variable.
         "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+        "fleet-missed-event-check.yml:Fleet Missed-Event Check",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",

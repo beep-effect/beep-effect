@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/infra-ci-runners",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P5 missed-event check lane, feat/ci-missed-event-check)",
+    "reason": "Re-record @beep/infra-ci-runners after its manifest gained the generate and generate:check scripts that run the fleet pool caps renderer, which changes the scripts digest of every task, and the root subject for the turbo.json source digest inherited from origin/main (#3483). No command, input, output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/fleet-pool-caps-generate-cache-review-2026-11-23.md",
+      "sha256": "51402224e31a01e698a8c0b443e19d6783d1205c8955f17970b7bf42c3d96fde"
     }
   },
   "nodes": [
     {
       "computation": "@beep/infra-ci-runners#build",
       "command": "bun run beep:build",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#build",
         "@beep/alchemy-github-runners#build",
@@ -69,7 +69,7 @@
     {
       "computation": "@beep/infra-ci-runners#check",
       "command": "beep-cli gate run check",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#build",
         "@beep/alchemy-github-runners#build",
@@ -124,7 +124,7 @@
     {
       "computation": "@beep/infra-ci-runners#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#build",
         "@beep/alchemy-github-runners#build",
@@ -177,7 +177,7 @@
     {
       "computation": "@beep/infra-ci-runners#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/infra-ci-runners#transit",
         "@beep/repo-docgen#transit"
@@ -217,7 +217,7 @@
     {
       "computation": "@beep/infra-ci-runners#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -251,7 +251,7 @@
     {
       "computation": "@beep/infra-ci-runners#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#transit",
         "@beep/alchemy-github-runners#transit",
@@ -319,7 +319,7 @@
     {
       "computation": "@beep/infra-ci-runners#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -349,7 +349,7 @@
     {
       "computation": "@beep/infra-ci-runners#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -405,7 +405,7 @@
     {
       "computation": "@beep/infra-ci-runners#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -451,7 +451,7 @@
     {
       "computation": "@beep/infra-ci-runners#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#transit",
         "@beep/alchemy-github-runners#transit",
@@ -497,7 +497,7 @@
     {
       "computation": "@beep/infra-ci-runners#test",
       "command": "bun run beep:test",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#transit",
         "@beep/alchemy-github-runners#transit",
@@ -555,7 +555,7 @@
     {
       "computation": "@beep/infra-ci-runners#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "d2bb1111ab24b6e534f1dc50caedb9a3fa9a639f09e661c53485e81046b62cc0",
       "dependencies": [
         "@beep/alchemy-aws-extras#build",
         "@beep/alchemy-github-runners#build",
