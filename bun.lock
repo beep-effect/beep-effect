@@ -3663,7 +3663,9 @@
       "name": "@beep/law-practice-domain",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/epistemics": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/md": "workspace:^",
         "@beep/ontology": "workspace:^",
         "@beep/schema": "workspace:^",

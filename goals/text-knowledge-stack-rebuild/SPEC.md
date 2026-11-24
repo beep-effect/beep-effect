@@ -2722,6 +2722,16 @@ Lane p6
 
 Reverse: git mv np/src/Core moved files and np/src/Graph/Schema.ts back to nlp/src, restore CharPosition on Token, restore the nlp edges of wink, semantica, law-practice and scratchpad
 
+### P6: the distinction ground is the statute section and the law principal codec is rebuilt from the user id value, 2026-11-24
+
+The design names the proposition ground `RejectionGround`, but that union carries fixture keys: the 102 case has `referenceFixtureKey` and the 103 case has `referenceFixtureKeys` (`entities/Rejection/Rejection.values.ts`). The same design says the proposition carries no fixture key, so that it is stable across runs. `DistinctionProposition.ground` is therefore the statute section alone, `RejectionStatute`, which `Rejection.values.ts` now exports. The cited reference is already named by `referenceDocument`, the document number.
+
+The design also names the principal `Shared.UserId` and asks row 7 to check it against the factory's `IdCodec` bound. The check fails: `EntityId` declares its schema as `S.Codec<…, number>`, whose `~type.make` is `unknown`, so `makeClaimCore` refuses it. `LawPrincipalId` rebuilds the codec from `EntityIdValue` with the same `SharedUserId` brand. Its decoded type is `Shared.UserId`'s, and `LawClaim.identity.test.ts` assigns one to the other. `MatterGrant.principal` keeps `Shared.UserId` itself, because no factory bound applies there.
+
+Lane p6
+
+Reverse: Put RejectionGround back as DistinctionProposition.ground and Shared.UserId as the core principal once EntityId's declared make type satisfies IdCodec; bump law-distinction to v2
+
 ### P6: ProvenanceTraversal walks the law claim store authorized at each step (the draft-assembly half is superseded after review), 2026-11-24
 
 Two wall paths had no owning code shape. Draft assembly: before createDraftMessage (server/src/NoticeMailbox/NoticeMailbox.layer.ts:303), authorize draft-assembly on the draft's matter and on the scope of every quoted or attached item; a draft carrying material outside its matter is refused and the fake mailbox records nothing. Provenance traversal: no law claim provenance read exists. ProvenanceTraversal.fromClaim walks LawClaimStore (claim, generation fact, activity records, used captures, admissions), authorizing provenance-traversal on the claim's scope and on every capture reached, and returns Found { ClaimProvenance }, Denied or Missing; it is exposed as claim_provenance. kg_provenance is walled as part of the graph-query path, not replaced. CandorRecord and LegalPositionRecord filter by a caller orgId, which is tenant isolation, a separate axis; candor reaches matter text only through source retrieval, which is walled. Answers A11, A12 and A13.
@@ -2793,6 +2803,14 @@ Amended after independent review. The single `LawClaimStore` port splits into `L
 Lane p6
 
 Reverse: Add a persistent LawClaimStore layer with a versioned table and migrate the memory layer's callers to it
+
+### P6: the law-practice value concepts are hand-authored after an architecture dry-run, 2026-11-24
+
+The touch table routes new concepts through `bun run beep architecture`. For `law-practice` the only route is `architecture add concept law-practice <Concept> --domain-kind values`, which targets the legacy seven-package shape. Its dry-run plan for `LawClaim` writes placeholder `WorkPriority` model, behavior and test files (a `low`/`normal`/`high` literal kit). It also rewrites `src/values/index.ts` to a single `WorkPriority` export, and it removes `packages/fixture-lab/specimen` and two CLI fixture paths. Applying the plan would replace the real values barrel and add content unrelated to the concept. The row ran the dry-run only, as evidence. It hand-authored `values/LawClaim` and `values/MatterScope` in the package's existing `values/<Concept>/{index,<Concept>.model}.ts` layout, with the two subpath exports the plan names (`./values/LawClaim`, `./values/MatterScope`).
+
+Lane p6
+
+Reverse: Apply the architecture plan once its law-practice values template stops writing placeholder content and rewriting the values barrel, and diff it against the hand-authored files
 
 ### P6: one MatterAuthority port over a host-provided LawPrincipal; MatterScope binds existing scope keys to a matter, 2026-11-24
 

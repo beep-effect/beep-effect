@@ -2418,5 +2418,11 @@
   ],
   "@beep/nlp-processing/NlpProcessing.instruments": [
     "./packages/foundation/capability/nlp-processing/src/NlpProcessing.instruments.ts"
+  ],
+  "@beep/law-practice-domain/values/LawClaim": [
+    "./packages/law-practice/domain/src/values/LawClaim/index.ts"
+  ],
+  "@beep/law-practice-domain/values/MatterScope": [
+    "./packages/law-practice/domain/src/values/MatterScope/index.ts"
   ]
 }

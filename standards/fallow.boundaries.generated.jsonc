@@ -3404,7 +3404,9 @@
       {
         "from": "@beep/law-practice-domain",
         "allow": [
+          "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/law-practice-domain",
           "@beep/md",
           "@beep/ontology",
@@ -3416,7 +3418,9 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/law-practice-domain",
           "@beep/md",
           "@beep/ontology",
