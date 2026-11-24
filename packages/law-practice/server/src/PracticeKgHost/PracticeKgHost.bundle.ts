@@ -12,12 +12,11 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { PracticeKgBundleContext } from "../PracticeKg.host.ts";
-import { PracticeKgBundleManifest } from "../PracticeKg.schemas.ts";
+import { PracticeKgBundleManifest, PracticeKgSchemaVersions } from "../PracticeKg.schemas.ts";
 import { PracticeKgHostError } from "./PracticeKgHost.errors.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-// Mirrors `PracticeKgSchemaVersions`; bumped with every breaking kg_node/kg_edge or DuckDB table layout change.
-const supportedStoreVersions = { duckdb: "4", pglite: "4" } as const;
+const supportedStoreVersions = PracticeKgSchemaVersions.make({});
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );
@@ -61,11 +60,6 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
       })
     )
   );
-  // An older bundle lacks columns the tools read (format 1 keys families on
-  // the bare docket number; format 2 has no `matters.client_name`; format 3
-  // has no correspondent tables), so it is
-  // refused by store version before the strict decode can report it as merely
-  // "invalid".
   const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
   if (
     O.isSome(storeVersion) &&

@@ -49,7 +49,7 @@ export * from "./PracticeKg.correspondents.ts";
 export * from "./PracticeKg.errors.ts";
 export * from "./PracticeKg.families.ts";
 /** DuckDB projection builder. @category use-cases @since 0.0.0 */
-export { buildDuckDb } from "./PracticeKg.fts.ts";
+export { buildDuckDb, GraphTextSourceSpec, indexDuckDbDocuments } from "./PracticeKg.fts.ts";
 /**
  * @category services
  * @since 0.0.0
@@ -93,6 +93,7 @@ export * from "./PracticeKg.schemas.ts";
  */
 export * from "./PracticeKg.tool-handlers.ts";
 export * from "./PracticeKg.verify.ts";
+export * from "./PracticeKg.wall.ts";
 /**
  * @category tools
  * @since 0.0.0

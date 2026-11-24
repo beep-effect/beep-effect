@@ -2874,6 +2874,14 @@ Lane goals/text-knowledge-stack-rebuild-p6-operations
 
 Reverse: Restore the identity, map and flatMap constructors and the description field in np/src/Graph/GraphOperations/Operation.ts, each taking a TermIri name.
 
+### P6: kg_provenance by natural_key also matches document nodes by digest, 2026-11-24
+
+After documents key as digest@docket, a caller that passes a bare digest as natural_key would match only an unfiled document. The provenance query also matches kind = 'document' rows whose provenance_ref equals the value, under the same granted-family filter, so the answer is each granted matter's document node for those bytes and never another matter's. The digest parameter keeps reading the DuckDB documents rows.
+
+Lane p6
+
+Reverse: Match kg_provenance natural_key against kg_node.natural_key only
+
 ### LawAdmission stays out of the host layer in P6, 2026-11-24
 
 The design lists `LawAdmission` in `LawPracticeServerLive`'s output, but `LawAdmissionLayer` needs a `SourceTextResolver` and an `AttorneyAttestation`. The server ships neither for production (P6 ships a test attestation only and no host admits in P6), and adding them would grow the layer's requirement beyond `LawPrincipal` and `MatterAuthority`. `LawPracticeServerLive` therefore outputs `OfficeActionReview`, `IrToLaw`, `LawClaimProposals` and `LawClaimAdmissions`; a host that admits composes `LawAdmissionLayer` over them with its own resolver and attestation. Code: `server/src/Layer.ts`.
@@ -3040,6 +3048,38 @@ Amended after independent review. Ten further `operation:` terms are declared fo
 Lane p6
 
 Reverse: Remove the two terms from identity/registry/namespaces/operation.json, regenerate the registry and snapshot with --base origin/main, and name the steps with existing terms
+
+### P6: kg_clients and correspondents return only rows reached through a granted family; the unattributed clients row is dropped, 2026-11-24
+
+kg_clients inner-joins the client nodes to granted docket_family nodes, so a client appears only with at least one granted family, and the former unattributed row (documents with no client) is dropped because no client-qualified key can grant it. Correspondent links that carry a family_key are visible when that key is granted; a link with only a client (no family) is visible when the client owns a granted family, because a client-level correspondent is shared by that client's matters. Contacts, candidates and linked matters are returned only through such a link or a granted candidate, never as a free directory read. Candidate claims join their document node by provenance_ref = sourceDocumentDigest and, when the digest is filed in more than one docket, by the snapshot docket, then filter by the granted family key; the join stays a LEFT JOIN so a claim whose document node is absent keeps its row under an Unwalled read.
+
+Lane p6
+
+Reverse: Return every client and correspondent row again and restore the unattributed kg_clients row
+
+### P6: Practice KG documents key as digest@docket (or digest@family) once attributed; text stays keyed by digest; BM25 is computed per query, 2026-11-24
+
+Row 14 implements decision 2026-11-24-p6-the-practice-kg-is-walled-by-docket-family-and-keys-documents-by-digest-and-docket. The document key is practiceKgDocumentKey (PracticeKg.families.ts): digest@<client-qualified docket key> for a docket document, digest@<family key> for a family-level document, which has no docket, and the bare digest for a document filed nowhere. The design's 'document:' || digest || ':' || docket spelling cannot name a family-level document, so the FTS doc id is 'document:' || document_key; the @ cannot occur in a digest or a docket key. The same key is the PGlite document node's natural key and IRI and the has_document, family_document and archived_in edge targets; provenance_ref stays the digest and the node payload carries digest and docket. Attribution needs the staged documents and their text, so buildDuckDb stages documents by catalog ordinal (row_ord) and indexDuckDbDocuments re-keys them from the attributions (QUALIFY ROW_NUMBER() OVER (PARTITION BY document_key ORDER BY row_ord) = 1), then builds the FTS tables over the keyed rows. document_text stays keyed by digest: the text is a property of the bytes, identical in both matters. fts_docstats gains family_key (NULL when the document has no client). The fts_bm25 view is deleted because it scored over the whole corpus; searchText computes BM25 over the granted docs in its own CTEs (decision 2026-11-24-p6-search-scores-over-the-granted-subset-and-doc-ids-carry-the-docket), and the practice-kg-mcp startup refusal case now drops fts_docstats instead of the view.
+
+Lane p6
+
+Reverse: Key documents and the FTS doc ids by digest alone again, restore the fts_bm25 view and build FTS inside buildDuckDb
+
+### P6: practice-kg-mcp and practice-gateway provide MatterWallLive beside the bundle resources, 2026-11-24
+
+PracticeKgToolkitLayer and makePracticeKgServerLayer now require LawPrincipal and MatterAuthority. apps/practice-kg-mcp provides MatterWallLive next to makePracticeKgHostResourcesLayer in makePracticeKgHostServerLayer (src/runtime/Host.ts); apps/practice-gateway loads MatterWallLive with the other Practice KG modules through its dynamic import, so the gateway still starts without the DuckDB sidecar, and provides it in PracticeKgProviderLayer. Both read the principal and grants from the environment; the grants configuration of the operational hosts is the operator's input and part of the row 14 HOLD, and until it exists each host denies every walled path.
+
+Lane p6
+
+Reverse: Remove MatterWallLive from both hosts' layers and drop the requirement from PracticeKgToolkitLayer
+
+### P6: every Practice KG query takes a PracticeKgReadScope, Walled for a principal and Unwalled only for named system readers, 2026-11-24
+
+PracticeKgReadScope (PracticeKg.wall.ts) is a tagged union: Walled { familyKeys, mailFolders } is built from the principal's GrantedScopes by practiceKgReadScopeOf, in a stable sort; Unwalled is a system read. The tool handlers always read through LawPrincipal and MatterAuthority.grantedScopes, so a host without a configured principal gets the empty grant and every walled tool answers nothing (decision p6-an-unconfigured-principal-gets-the-empty-authority). Two readers are system reads and take Unwalled: PracticeKgMatterLookupLive, which docket intake uses to resolve a reference before any principal is involved, and the host self-check, which proves the bundle answers the tools' queries. Neither answers a principal's request; the kg_matter_lookup tool reads through the walled scope. The filters are SQL fragments built inside each query (practiceKgFamilyKeyFilter, practiceKgClientFilter, practiceKgMailFolderFilter) with sqlStringLiteral IN-lists rather than extra bind parameters: the values are decoded PracticeKgFamilyKey and MailFolderBinding fields, every query keeps its parameter list, and an empty grant is the literal FALSE, so a query cannot widen by an unbound parameter.
+
+Lane p6
+
+Reverse: Pass GrantedScopes to each query directly and delete PracticeKgReadScope; give the matter lookup service and the self-check a granted scope
 
 ### Proposed claim entries record capture identities so traversal can authorize each capture, 2026-11-24
 

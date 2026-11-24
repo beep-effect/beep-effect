@@ -159,6 +159,7 @@
       "test/ClaimStore.memory.test.ts",
       "test/ProvenanceTraversal.test.ts",
       "test/CitationCache.scope.test.ts",
+      "test/PracticeKg.wall.test.ts",
       "test/ReviewFiles.test.ts"
     ],
     [

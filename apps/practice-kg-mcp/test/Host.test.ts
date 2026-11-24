@@ -159,7 +159,7 @@ const manifest = PracticeKgBundleManifest.make({
     emails: S.Natural.make(1),
     nodes: S.Natural.make(4),
   }),
-  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
+  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" }),
   sourceRuns: PracticeKgSourceRuns.make({
     base: "included",
     includedRuns: ["2026-10-working-files"],
@@ -187,7 +187,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           expect(lines).toHaveLength(1);
           const line = lines[0] ?? "";
           expect(line).toMatch(
-            /^\{"ok":true,"extensionVersion":"[^"]+","bundleVersion":"[^"]+","schemaVersion":\{"duckdb":"4","pglite":"4"\},"nodes":\d+,"matters":\d+,"tools":\d+\}$/
+            /^\{"ok":true,"extensionVersion":"[^"]+","bundleVersion":"[^"]+","schemaVersion":\{"duckdb":"5","pglite":"5"\},"nodes":\d+,"matters":\d+,"tools":\d+\}$/
           );
           const report = yield* decodeReportLine(line);
           expect(report.extensionVersion).toBe(PRACTICE_KG_EXTENSION_VERSION);
@@ -374,7 +374,7 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
 
   for (const [kind, table] of [
     ["TABLE", "document_text"],
-    ["VIEW", "fts_bm25"],
+    ["TABLE", "fts_docstats"],
   ]) {
     describe(`practice KG startup without ${table}`, () => {
       const fixtureLayer = Layer.effect(

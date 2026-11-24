@@ -46,3 +46,17 @@ export const matterWallGrantingEveryScopeLayer = Layer.mergeAll(
   Layer.succeed(MatterAuthority, matterAuthorityGrantingEveryScope),
   Layer.succeed(LawPrincipal, { principal: fixturePrincipal })
 );
+
+export const matterWallGrantingLayer = (granted: GrantedScopes) =>
+  Layer.mergeAll(
+    Layer.succeed(
+      MatterAuthority,
+      MatterAuthority.of({
+        ...matterAuthorityGrantingEveryScope,
+        grantedScopes: Effect.fn("MatterWallFixture.grantedScopesOf")(function* () {
+          return granted;
+        }),
+      })
+    ),
+    Layer.succeed(LawPrincipal, { principal: fixturePrincipal })
+  );

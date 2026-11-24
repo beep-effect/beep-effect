@@ -1136,6 +1136,7 @@
     {"name":"PracticeKg.buildDuckDb","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKg.buildFromService","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKg.existingSourceSpecs","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"PracticeKg.indexDuckDbDocuments","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKg.lookupCorrespondents","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKg.lookupMatters","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKg.readCatalog","owner":"@beep/law-practice-server","family":"slice","conforms":true},
