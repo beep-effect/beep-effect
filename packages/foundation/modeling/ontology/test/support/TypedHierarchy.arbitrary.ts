@@ -14,7 +14,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-export const testTerms = A.makeBy(10, (index) => TermIri.make(`https://example.test/gufo/t${index}`));
+const testTerms = A.makeBy(10, (index) => TermIri.make(`https://example.test/gufo/t${index}`));
 
 const TermCount = S.Literals([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 const TermIndex = S.Literals([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);

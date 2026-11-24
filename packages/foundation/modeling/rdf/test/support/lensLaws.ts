@@ -14,7 +14,7 @@ const byLine: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
 
 const withQuad = (quads: ReadonlyArray<Quad>, added: Quad): Dataset => makeDataset(A.append(quads, added));
 
-export const perturbations = (view: Dataset): ReadonlyArray<Dataset> => {
+const perturbations = (view: Dataset): ReadonlyArray<Dataset> => {
   const quads = A.sort(A.fromIterable(view.quads), byLine);
   return A.flatMap(quads, (quad) => [
     makeDataset(A.filter(quads, (kept) => kept !== quad)),
