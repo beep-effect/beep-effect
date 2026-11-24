@@ -18,6 +18,6 @@ export const prepareCoworkCallback = Effect.fn("AiMetrics.coworkLifecycle.prepar
   const projected = yield* CoworkLifecycleCodecs.encodeEnvelope(
     CoworkLifecycleCodecs.makeEnvelope({ callback, occurrenceId })
   ).pipe(Effect.mapError(callbackFailure));
-  // The prepared send retains this occurrence identity for explicit transport retry/readback; never a model retry.
-  return { send: exchangeLifecycle(socketPath, projected, 1200) };
+  const sendKeepingOccurrenceIdentityForTransportRetryNeverAModelRetry = exchangeLifecycle(socketPath, projected, 1200);
+  return { send: sendKeepingOccurrenceIdentityForTransportRetryNeverAModelRetry };
 });

@@ -423,6 +423,20 @@ const waitReasonForTarget = SequenceBreakTarget.match({
 const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
 const isGreaterThanOrEqualToNumber = Order.isGreaterThanOrEqualTo(Num.Order);
 
+const dampingArbitraryOrderingEndpointsConstructivelyWhileDecodeStillChecksTheInvariant = (): SchemaAST.Link =>
+  S.link<SequenceBreakDampingV1>()(
+    S.Struct(SequenceBreakDampingV1.fields),
+    SchemaTransformation.transform({
+      decode: (value) =>
+        SequenceBreakDampingV1.make({
+          ...value,
+          claimedEpochMs: S.Natural.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
+          expiresEpochMs: S.Natural.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
+        }),
+      encode: identity,
+    })
+  );
+
 /**
  * Atomic storm-damping claim shared by every clone and worktree.
  *
@@ -473,20 +487,7 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1, { re
   ),
   $I.annote("SequenceBreakDampingV1", {
     description: "Content-free shared claim that damps duplicate sequence-break notifications.",
-    // Generate ordered endpoints constructively; decoding still checks the original invariant.
-    toCodecArbitrary: (): SchemaAST.Link =>
-      S.link<SequenceBreakDampingV1>()(
-        S.Struct(SequenceBreakDampingV1.fields),
-        SchemaTransformation.transform({
-          decode: (value) =>
-            SequenceBreakDampingV1.make({
-              ...value,
-              claimedEpochMs: S.Natural.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
-              expiresEpochMs: S.Natural.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
-            }),
-          encode: identity,
-        })
-      ),
+    toCodecArbitrary: dampingArbitraryOrderingEndpointsConstructivelyWhileDecodeStillChecksTheInvariant,
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(SequenceBreakDampingV1);
@@ -498,6 +499,15 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1, { re
   static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(SequenceBreakDampingV1));
   static readonly encodeJsonResult = S.encodeResult(S.fromJsonString(SequenceBreakDampingV1));
 }
+
+const notificationArbitraryDerivingTheDependentWaitReasonInsteadOfDiscardingMismatches = (): SchemaAST.Link =>
+  S.link<SequenceBreakNotificationV1>()(
+    S.Struct(SequenceBreakNotificationV1.fields),
+    SchemaTransformation.transform({
+      decode: (value) => SequenceBreakNotificationV1.make({ ...value, waitReason: waitReasonForTarget(value.target) }),
+      encode: identity,
+    })
+  );
 
 /**
  * **Details**
@@ -560,16 +570,7 @@ export class SequenceBreakNotificationV1 extends S.Class<
   ),
   $I.annote("SequenceBreakNotificationV1", {
     description: "Privacy-safe delivery evidence for one time-based sequence-break notification stage.",
-    // Derive the dependent reason instead of discarding independently generated mismatches.
-    toCodecArbitrary: (): SchemaAST.Link =>
-      S.link<SequenceBreakNotificationV1>()(
-        S.Struct(SequenceBreakNotificationV1.fields),
-        SchemaTransformation.transform({
-          decode: (value) =>
-            SequenceBreakNotificationV1.make({ ...value, waitReason: waitReasonForTarget(value.target) }),
-          encode: identity,
-        })
-      ),
+    toCodecArbitrary: notificationArbitraryDerivingTheDependentWaitReasonInsteadOfDiscardingMismatches,
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(SequenceBreakNotificationV1);

@@ -288,8 +288,6 @@ export class TranscriptPageError extends S.TaggedError<TranscriptPageError, { re
   }
 }
 
-// Decode only fields used by the positive projection. Source payloads and text
-// are not included, even temporarily, in any returned or persisted schema.
 const Text = S.String.check(S.isMaxLength(4096));
 const RawUsage = S.Struct({
   input_tokens: S.optionalKey(TokenCount),
@@ -325,9 +323,7 @@ const safeTime = (value: string | undefined) =>
   );
 const failure = (reason: TranscriptPageError["reason"]) => TranscriptPageError.make({ reason });
 
-// Preserve source precedence: an envelope's own session/message type wins over
-// a nested payload type. Unrecognized records remain explicit "other" metadata.
-const recordKind = Match.type<typeof RawRecord.Type>().pipe(
+const recordKindPreferringTheEnvelopeTypeOverANestedPayloadType = Match.type<typeof RawRecord.Type>().pipe(
   Match.when({ type: "session_meta" }, (): TranscriptMetadata["kind"] => "session"),
   Match.when({ type: Match.is("assistant", "user") }, (): TranscriptMetadata["kind"] => "message"),
   Match.when({ payload: { type: "message" } }, (): TranscriptMetadata["kind"] => "message"),
@@ -399,7 +395,7 @@ const project = Effect.fn("AiMetrics.projectTranscriptRecord")(function* (
   const hashOptional1 = yield* hashOptional(id);
   const nextSession = mergeSession(session, hashOptional1);
   return TranscriptMetadata.make({
-    kind: recordKind(row),
+    kind: recordKindPreferringTheEnvelopeTypeOverANestedPayloadType(row),
     session: nextSession,
     sourceTime: safeTime(row.timestamp),
     usage: recordUsage(row, source),
@@ -459,7 +455,7 @@ const parseRecord = (text: string) => {
  *
  * **Details**
  *
- * The call requests a ten-second cooperative timeout; its owning worker must enforce a hard process limit for uninterruptible platform I/O. Reads use at most 1 MiB per sampled page, re-read once for stability, plus at most 1281 anchor/boundary bytes, and at most 4096 frames. A cursor mismatch fails rather than adopting another source. Source bytes are never archived or returned. The caller must journal frames and cursor together before advancing; retries with the same cursor reproduce occurrence IDs.
+ * The call requests a ten-second cooperative timeout; its owning worker must enforce a hard wall-clock limit for uninterruptible platform I/O. Reads use at most 1 MiB per sampled page, re-read once for stability, plus at most 1281 anchor/boundary bytes, and at most 4096 frames. A cursor mismatch fails rather than adopting another source. The positive projection decodes only the fields it uses, so prompt and tool text never appear, even temporarily, on a returned or persisted schema. Source bytes are never archived or returned. The caller must journal frames and cursor together before advancing; retries with the same cursor reproduce occurrence IDs.
  *
  * **Example** (Inspect the bounded transcript-page reader)
  *
@@ -590,11 +586,10 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
       });
       yield* requireSourceBinding();
       const openPinnedSource = Effect.fnUntraced(function* () {
-        // Refuse obvious special files before open; noFollow closes the final
-        // symlink race on supported platforms. The owning worker still needs a
-        // hard wall-clock limit for uninterruptible platform I/O.
-        if ((yield* fs.stat(resolvedPath)).type !== "File") return yield* failure("identity-unavailable");
-        const handle = yield* fs.open(resolvedPath, { flag: "r", noFollow: true });
+        const specialFileRefusedBeforeOpen = (yield* fs.stat(resolvedPath)).type !== "File";
+        if (specialFileRefusedBeforeOpen) return yield* failure("identity-unavailable");
+        const noFollowClosingTheSymlinkRaceOnSupportedPlatforms = { flag: "r" as const, noFollow: true };
+        const handle = yield* fs.open(resolvedPath, noFollowClosingTheSymlinkRaceOnSupportedPlatforms);
         const info = yield* handle.stat;
         if (info.type !== "File" || O.isNone(info.ino) || info.size > BigInt(Number.MAX_SAFE_INTEGER))
           return yield* failure("identity-unavailable");
@@ -652,8 +647,6 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
       const scanned = yield* scanPage(resumed, start, bytes, generationId);
       const { offset, lineNumber, discarding, discardStart, session, frames, waitingForPartialLine } = scanned;
       const verifySample = Effect.fnUntraced(function* () {
-        // Re-read this bounded page and prefix before returning. A source mutation
-        // during the read is refused; the caller keeps its previous durable cursor.
         const again = yield* readAt(start, bytes.length);
         if (
           (yield* hashBytes(again)) !== (yield* hashBytes(bytes)) ||

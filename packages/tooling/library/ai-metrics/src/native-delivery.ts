@@ -278,8 +278,8 @@ export const makeNativeDelivery = Effect.fn("AiMetrics.makeNativeDelivery")(func
                     : contentType === "application/x-protobuf"
                       ? "application/x-protobuf"
                       : "other";
-                // Non-200 responses carry only status evidence. Do not buffer their private error bodies.
-                if (response.status !== 200)
+                const non200CarriesStatusEvidenceOnlyWithItsPrivateBodyUnbuffered = response.status !== 200;
+                if (non200CarriesStatusEvidenceOnlyWithItsPrivateBodyUnbuffered)
                   return yield* interpretDeliveryHttpReply(
                     DeliveryHttpReply.make({
                       status: response.status,

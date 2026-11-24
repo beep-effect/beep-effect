@@ -468,6 +468,8 @@ export const harnessFingerprintFromParts = Effect.fn("AiMetrics.harnessFingerpri
   });
 });
 
+const AiMetricsConfigSnapshotResultHashSubset = S.Struct({ baselineHash: S.String, sessionHash: S.String });
+
 /**
  * **Details**
  *
@@ -491,9 +493,7 @@ export class HarnessFingerprintInput extends S.Opaque<HarnessFingerprintInput, {
   S.Struct({
     modelId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reasoningEffort: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    // Structural subset of `AiMetricsConfigSnapshotResult`, so a snapshot result
-    // is passed as-is without coupling this schema to the whole manifest.
-    snapshot: S.Struct({ baselineHash: S.String, sessionHash: S.String }),
+    snapshot: AiMetricsConfigSnapshotResultHashSubset,
   }).pipe(
     $I.annoteSchema("HarnessFingerprintInput", {
       description: "Config-snapshot hashes plus the optionally observed model id and reasoning effort.",
@@ -1182,10 +1182,10 @@ export const annealedEditBudget = ({
   if (round >= totalRounds) return Math.ceil(bMin);
   const raw = bMin + (bMax - bMin) * 0.5 * (1 + Math.cos(Math.PI * (round / totalRounds)));
   const nearest = Num.round(raw, 0);
-  // Only interior results within four relative machine epsilons of an integer
-  // are treated as floating-point noise. Never scale raw by a decimal factor.
-  const tolerance = Number.EPSILON * Math.abs(raw) * 4;
-  const nearInteger =
-    Math.abs(raw - nearest) <= tolerance && nearest >= Num.min(bMin, bMax) && nearest <= Num.max(bMin, bMax);
-  return Math.ceil(nearInteger ? nearest : raw);
+  const floatingPointNoiseWithinFourRelativeEpsilonsNeverADecimalRescale = Number.EPSILON * Math.abs(raw) * 4;
+  const interiorIntegerWithinNoise =
+    Math.abs(raw - nearest) <= floatingPointNoiseWithinFourRelativeEpsilonsNeverADecimalRescale &&
+    nearest >= Num.min(bMin, bMax) &&
+    nearest <= Num.max(bMin, bMax);
+  return Math.ceil(interiorIntegerWithinNoise ? nearest : raw);
 };

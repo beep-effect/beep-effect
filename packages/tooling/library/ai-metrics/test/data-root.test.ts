@@ -119,10 +119,7 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
     })
   );
 
-  // Resolution carries a relative value through untouched rather than absolutizing it against an
-  // ambient directory. `requireAbsoluteAiMetricsDataRoot` is where such a root gets refused, and
-  // that refusal is only possible if it is still recognisably relative here.
-  it("returns a relative flag value unchanged instead of absolutizing it", () => {
+  it("returns a relative flag value unchanged so requireAbsoluteAiMetricsDataRoot can still refuse it", () => {
     const resolved = resolveRoot(
       makeDataRootInput({
         flagDataRoot: O.some("./store/ai-metrics"),
@@ -149,14 +146,17 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
         assertNone(aiMetricsStateHome(AiMetricsStateHomeInput.make(input)));
       }
 
-      // The dankserver rung and an explicit XDG_STATE_HOME still resolve without a home.
       const decodedDataRootInput1 = yield* decodeDataRootInput({ homeDir: "", stateHome: "/custom/state" });
-      expect(resolveRoot(decodedDataRootInput1).path).toBe("/custom/state/beep/ai-metrics");
+      expect(resolveRoot(decodedDataRootInput1).path, "an explicit XDG_STATE_HOME still resolves without a home").toBe(
+        "/custom/state/beep/ai-metrics"
+      );
       const decodedDataRootInput2 = yield* decodeDataRootInput({
         homeDir: "",
         target: AiMetricsDeployTarget.Enum.dankserver,
       });
-      expect(resolveRoot(decodedDataRootInput2).path).toBe("/srv/data/ai-metrics");
+      expect(resolveRoot(decodedDataRootInput2).path, "the dankserver rung still resolves without a home").toBe(
+        "/srv/data/ai-metrics"
+      );
     })
   );
 
