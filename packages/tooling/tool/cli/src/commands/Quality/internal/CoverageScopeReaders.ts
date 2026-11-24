@@ -381,6 +381,7 @@ const COVERAGE_READER_SOURCE_IGNORES = [
   "**/build/**",
   "**/.turbo/**",
   "**/coverage/**",
+  "**/tmp/**",
 ] as const;
 
 /**
