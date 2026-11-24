@@ -6554,8 +6554,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Races real concurrent upserts against one data root on the real filesystem: two runs that each read the pre-merge snapshot and rename last would discard the earlier writer's roots (several clones, or a forwarder timer racing a manual run), and that race exists only against real file IO. Owner: @beep/repo-ai-metrics. Exit: retire when the registry lock takes its backoff schedule from the caller's Clock, so the test can drive it with TestClock (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:788:it.live@2#1",
@@ -6577,7 +6576,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "This is the native filesystem atomic-lock test: it keeps real concurrent-writer backoff or the bounded stale-lock failure with the original deadlines (a dead holder must not hang later runs, and a skipped upsert would leave provenance that does not match the data), and virtual time would change the external-resource subject. Owner: @beep/repo-ai-metrics. Exit: retire when the registry lock takes its backoff schedule from the caller's Clock, so the test can drive it with TestClock (#1855 wave 8 register)."
+      "reason": "This is the native filesystem atomic-lock test: it keeps real concurrent-writer backoff or the bounded stale-lock failure with the original deadlines, and virtual time would change the external-resource subject. Owner: @beep/repo-ai-metrics. Exit: retire when the registry lock takes its backoff schedule from the caller's Clock, so the test can drive it with TestClock (#1855 wave 8 register)."
     },
     {
       "id": "EV009:packages/tooling/test-kit/test-runner/test/Vitest.test.ts:448:it.live@0#1",
