@@ -17,8 +17,6 @@ const ObservabilityCoreConfigFields = {
 };
 
 /**
- * Browser-safe shared observability configuration.
- *
  * **Details**
  *
  * Carries service identity, environment, and minimum log level for both
@@ -52,8 +50,6 @@ export const ObservabilityCoreConfig = S.Struct({
 );
 
 /**
- * Type of {@link ObservabilityCoreConfig}
- *
  * **Example** (Typing a config parameter)
  *
  * ```typescript

@@ -96,8 +96,6 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link VerifiedTextAnchorErrorReason}.
- *
  * **Example** (Assign typed error reason)
  *
  * ```ts
@@ -113,8 +111,6 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
 export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason.Type;
 
 /**
- * Sanitized failure emitted by verified-anchor construction.
- *
  * **Example** (Create error from reason)
  *
  * ```ts import.meta.vitest name="Create error from reason"
@@ -222,8 +218,6 @@ const issueVerifiedSourceText = (source: SourceTextIdentity, sourceText: string)
 };
 
 /**
- * Opaque runtime proof that raw text matches one exact authorized source.
- *
  * **Details**
  *
  * The proof retains the already-hashed raw text so multiple anchors can be
@@ -246,8 +240,6 @@ const issueVerifiedSourceText = (source: SourceTextIdentity, sourceText: string)
 export type VerifiedSourceText = VerifiedSourceTextValue;
 
 /**
- * From-self schema for an opaque verified-source runtime proof.
- *
  * **Example** (Reject structural source data)
  *
  * ```ts import.meta.vitest name="Reject structural source data"
@@ -432,8 +424,6 @@ const issueVerifiedTextAnchor = (anchor: TextAnchor, source: SourceTextIdentity)
 export type VerifiedTextAnchor = VerifiedTextAnchorValue;
 
 /**
- * From-self schema for the opaque runtime verified-anchor proof.
- *
  * **Details**
  *
  * Decoding structural wire data is intentionally rejected because

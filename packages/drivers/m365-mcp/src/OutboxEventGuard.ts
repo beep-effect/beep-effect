@@ -25,8 +25,6 @@ import * as S from "effect/Schema";
 const $I = $M365McpId.create("OutboxEventGuard");
 
 /**
- * Why an event update is refused.
- *
  * **Details**
  *
  * `not-created-here`: this server has no record of creating the event.
@@ -50,8 +48,6 @@ export const OutboxEventUpdateRefusalReason = LiteralKit(["not-created-here", "h
 );
 
 /**
- * Type for {@link OutboxEventUpdateRefusalReason}.
- *
  * **Example** (Type a refusal reason)
  *
  * ```ts
@@ -67,8 +63,6 @@ export const OutboxEventUpdateRefusalReason = LiteralKit(["not-created-here", "h
 export type OutboxEventUpdateRefusalReason = typeof OutboxEventUpdateRefusalReason.Type;
 
 /**
- * The guard's refusal of an event update.
- *
  * **Example** (Construct a refusal)
  *
  * ```ts

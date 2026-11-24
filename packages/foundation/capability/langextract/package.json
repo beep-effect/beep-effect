@@ -75,8 +75,9 @@
     }
   },
   "dependencies": {
+    "@beep/annotation": "workspace:^",
     "@beep/identity": "workspace:^",
-    "@beep/nlp": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",

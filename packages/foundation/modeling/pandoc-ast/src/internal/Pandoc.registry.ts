@@ -141,8 +141,6 @@ const PandocCurrentStructuralConstructorName = LiteralKit([
 );
 
 /**
- * Pandoc table-alignment constructor names.
- *
  * **Example** (Check AlignDefault constructor name)
  *
  * ```ts
@@ -184,8 +182,6 @@ export const PandocMathType = LiteralKit(["InlineMath", "DisplayMath"]).pipe(
 );
 
 /**
- * Pandoc ordered-list numbering-style constructor names.
- *
  * @category models
  * @since 0.0.0
  */
@@ -204,8 +200,6 @@ export const PandocListNumberStyle = LiteralKit([
 );
 
 /**
- * Pandoc ordered-list delimiter constructor names.
- *
  * @category models
  * @since 0.0.0
  */

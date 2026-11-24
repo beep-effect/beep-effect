@@ -245,13 +245,7 @@ export class PracticeKgNumberMentionRow extends S.Opaque<
   )
 ) {}
 
-/**
- * Provide a scoped layer around an effect, closing the scope when it ends.
- *
- * Module-private on purpose: `@beep/test-utils` exports the canonical copy for
- * tests, and server source cannot import tooling — this stays the one
- * production-side copy, consumed only by {@link withDuckDb}.
- */
+// decision: server-keeps-private-provide-scoped-layer
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R0>(effect: Effect.Effect<A, E, R0>): Effect.Effect<A, E | E2, RIn | Exclude<R0, ROut>> =>

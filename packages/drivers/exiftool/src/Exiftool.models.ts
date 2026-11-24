@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $ExiftoolId.create("Exiftool.models");
 
 /**
- * Positive timeout value in milliseconds.
- *
  * **Example** (Decode positive timeout)
  *
  * ```ts
@@ -63,8 +61,6 @@ export const PositiveMilliseconds = S.Finite.check(
 );
 
 /**
- * Positive timeout value in milliseconds.
- *
  * **Example** (Typed positive timeout)
  *
  * ```ts
@@ -81,8 +77,6 @@ export const PositiveMilliseconds = S.Finite.check(
 export type PositiveMilliseconds = typeof PositiveMilliseconds.Type;
 
 /**
- * Non-negative epoch timestamp measured in milliseconds.
- *
  * **Example** (Make epoch milliseconds)
  *
  * ```ts
@@ -111,8 +105,6 @@ export const EpochMilliseconds = S.Finite.check(
 );
 
 /**
- * Non-negative epoch timestamp measured in milliseconds.
- *
  * **Example** (Typed epoch milliseconds)
  *
  * ```ts
@@ -129,8 +121,6 @@ export const EpochMilliseconds = S.Finite.check(
 export type EpochMilliseconds = typeof EpochMilliseconds.Type;
 
 /**
- * Non-negative integer count of tag assignments.
- *
  * **Example** (Make tag count)
  *
  * ```ts
@@ -159,8 +149,6 @@ export const TagCount = S.Int.check(
 );
 
 /**
- * Non-negative integer count of tag assignments.
- *
  * **Example** (Typed tag count)
  *
  * ```ts
@@ -247,8 +235,6 @@ export const SafeTagName = S.String.check(
 export type SafeTagName = typeof SafeTagName.Type;
 
 /**
- * File extensions the native ExifTool binary can write metadata into.
- *
  * **Details**
  *
  * WebM/Matroska containers are read-only for exiftool; their provenance goes
@@ -272,8 +258,6 @@ export const ExiftoolWritableExtension = LiteralKit(["png", "jpg", "jpeg", "gif"
 );
 
 /**
- * File extensions the native ExifTool binary can write metadata into.
- *
  * **Example** (Typed writable extension)
  *
  * ```ts
@@ -289,8 +273,6 @@ export const ExiftoolWritableExtension = LiteralKit(["png", "jpg", "jpeg", "gif"
 export type ExiftoolWritableExtension = typeof ExiftoolWritableExtension.Type;
 
 /**
- * Runtime path overrides for the native ExifTool binary.
- *
  * **Example** (Make config input)
  *
  * ```ts
@@ -327,8 +309,6 @@ export class ExiftoolConfigInput extends S.Opaque<ExiftoolConfigInput, { readonl
 ) {}
 
 /**
- * Resolved runtime configuration for the native ExifTool driver.
- *
  * **Example** (Make resolved config)
  *
  * ```ts
@@ -492,8 +472,6 @@ export class ExifMetadata extends S.Opaque<ExifMetadata, { readonly brand: uniqu
 ) {}
 
 /**
- * Request to read tags from a file with exiftool.
- *
  * **Example** (Make read-tags request)
  *
  * ```ts
@@ -530,8 +508,6 @@ export class ReadTagsRequest extends S.Opaque<ReadTagsRequest, { readonly brand:
 }
 
 /**
- * Result of reading tags from a file with exiftool.
- *
  * **Example** (Make read-tags result)
  *
  * ```ts
@@ -567,8 +543,6 @@ export class ReadTagsResult extends S.Opaque<ReadTagsResult, { readonly brand: u
 ) {}
 
 /**
- * A single `-TAG=VALUE` exiftool tag assignment.
- *
  * **Example** (Make tag assignment)
  *
  * ```ts
@@ -601,8 +575,6 @@ export class TagAssignment extends S.Opaque<TagAssignment, { readonly brand: uni
 ) {}
 
 /**
- * Request to write tag assignments into a file with exiftool.
- *
  * **Example** (Make write-tags request)
  *
  * ```ts
@@ -640,8 +612,6 @@ export class WriteTagsRequest extends S.Opaque<WriteTagsRequest, { readonly bran
 }
 
 /**
- * Result of committing tag assignments into a file.
- *
  * **Example** (Make write-tags result)
  *
  * ```ts
@@ -674,8 +644,6 @@ export class WriteTagsResult extends S.Opaque<WriteTagsResult, { readonly brand:
 ) {}
 
 /**
- * Capture provenance embedded into QA artifacts under the `XMP-beepQA` namespace.
- *
  * **Example** (Make QA provenance)
  *
  * ```ts
@@ -747,8 +715,6 @@ export class BeepQaProvenance extends S.Opaque<BeepQaProvenance, { readonly bran
 ) {}
 
 /**
- * Request to embed a `BeepQaProvenance` XMP packet into an image artifact.
- *
  * **Example** (Make XMP packet request)
  *
  * ```ts

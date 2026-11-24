@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $AnthropicId.create("Anthropic.errors");
 
 /**
- * Recoverable technical failure raised while running an Anthropic repair helper.
- *
  * **Details**
  *
  * Provider, retry-plan, and configuration failures are normalized into this

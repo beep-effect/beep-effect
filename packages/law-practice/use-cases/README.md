@@ -1,8 +1,8 @@
 # @beep/law-practice-use-cases
 
 Application-tier service-port contracts for the law-practice slice: the
-`IrToLaw` port (which maps the generic `@beep/nlp` Handoff IR into law-practice
-domain entities) and the `OfficeActionReview` loop orchestrator port (which
+`IrToLaw` port (which maps the verified `@beep/annotation` extraction document and
+its per-candidate readings into law-practice domain entities) and the `OfficeActionReview` loop orchestrator port (which
 ingests an office action's source text and returns an epistemic
 `ClaimProjectionView`).
 

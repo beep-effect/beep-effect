@@ -11,8 +11,6 @@ import { SummaryItem } from "../SummaryItem/index.ts";
 const $I = $GovinfoId.create("domain/values/CollectionSummary/CollectionSummary.model");
 
 /**
- * List of GovInfo collections and their package/granule counts.
- *
  * **Example** (Decode collection summary array)
  *
  * ```ts

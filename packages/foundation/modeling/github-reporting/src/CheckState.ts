@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $GithubReportingId.create("CheckState");
 
 /**
- * A check state outside the vocabulary was projected.
- *
  * **Example** (Construct a vocabulary projection error)
  *
  * ```ts
@@ -41,8 +39,6 @@ export class UnhandledCheckStateError extends S.TaggedError<
 ) {}
 
 /**
- * The kit's check-state vocabulary.
- *
  * **Details**
  *
  * Deliberately **wider than GitHub's own check-run conclusions**: `running` is
@@ -81,8 +77,6 @@ export const CheckState = LiteralKit([
 ]).pipe($I.annoteSchema("CheckState", { description: "The kit's check-state vocabulary." }));
 
 /**
- * The type of `CheckState`.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -90,8 +84,6 @@ export const CheckState = LiteralKit([
 export type CheckState = typeof CheckState.Type;
 
 /**
- * The check-run conclusions the kit vocabulary can produce.
- *
  * **Details**
  *
  * A subset of GitHub's conclusion set, spelled structurally so a pure
@@ -127,8 +119,6 @@ export const CheckRunConclusion = LiteralKit([
 );
 
 /**
- * The conclusion type accepted by {@link CheckRunConclusion}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -236,8 +226,6 @@ export const CheckRunProjection = S.Union([CheckRunInProgress, CheckRunCompleted
 );
 
 /**
- * The wire projection type accepted by {@link CheckRunProjection}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

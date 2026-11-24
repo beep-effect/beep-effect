@@ -78,6 +78,7 @@ import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Model from "effect/ai/Model";
 import * as Response from "effect/ai/Response";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -218,24 +219,28 @@ const fixtureUsage = Response.Usage.make({
   inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },
   outputTokens: { reasoning: undefined, text: 0, total: 0 },
 });
-const fixtureLanguageModel = Layer.effect(
-  LanguageModel.LanguageModel,
-  LanguageModel.make({
-    generateText: (options) =>
-      Effect.succeed([
-        Response.makePart("text", {
-          text: options.prompt.pipe(
-            S.encodeUnknownResult(UnknownJson),
-            Result.getOrThrowWith(identity),
-            Str.includes("without office action rejections")
-          )
-            ? fixtureRejectionlessOutput
-            : fixtureModelOutput,
-        }),
-        Response.makePart("finish", { reason: "stop", response: undefined, usage: fixtureUsage }),
-      ]),
-    streamText: () => Stream.empty,
-  })
+const fixtureLanguageModel = Model.make(
+  "test",
+  "stub-model",
+  Layer.effect(
+    LanguageModel.LanguageModel,
+    LanguageModel.make({
+      generateText: (options) =>
+        Effect.succeed([
+          Response.makePart("text", {
+            text: options.prompt.pipe(
+              S.encodeUnknownResult(UnknownJson),
+              Result.getOrThrowWith(identity),
+              Str.includes("without office action rejections")
+            )
+              ? fixtureRejectionlessOutput
+              : fixtureModelOutput,
+          }),
+          Response.makePart("finish", { reason: "stop", response: undefined, usage: fixtureUsage }),
+        ]),
+      streamText: () => Stream.empty,
+    })
+  )
 );
 
 const normalizedPatentFixture = Md.make([
@@ -353,11 +358,9 @@ const makeFixtureCatalog = Effect.fn("PracticeKgTest.makeFixtureCatalog")(functi
       "INSERT INTO corpus_organized VALUES ($1, 'fixture-source', $2, 'email-export', NULL, NULL, NULL, NULL, 'exported-message.txt', FALSE)",
       [fixtureDigests.email, `artifact:${Str.repeat(64)("c")}.export/Inbox/Message00001/Message.txt`]
     );
-    // `docket_families` is the mention-derived fan-out the projection must ignore:
-    // 87654321 claims two families here but is only ever mentioned by alpha's docket.
-    yield* db.run(
-      "INSERT INTO corpus_enrichment VALUES ('87654321', 'resolved', '87654321', '12345678', 'Fixture implement', 'Fixture applicant', 'Fixture inventor', '20001 | 30002', '76543210')"
-    );
+    const mentionDerivedDocketFamiliesFanOutProjectionMustIgnore =
+      "INSERT INTO corpus_enrichment VALUES ('87654321', 'resolved', '87654321', '12345678', 'Fixture implement', 'Fixture applicant', 'Fixture inventor', '20001 | 30002', '76543210')";
+    yield* db.run(mentionDerivedDocketFamiliesFanOutProjectionMustIgnore);
     yield* db.run(
       "INSERT INTO corpus_enrichment VALUES ('12345678', 'resolved', '87654321', '12345678', NULL, NULL, 'Fixture inventor', '20001', '')"
     );
@@ -501,17 +504,19 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
   yield* fs.makeDirectory(path.join(archiveCollectionRoot, "not-an-artifact"));
 });
 
-// A later source run the organizer never saw, laid out like the attorney's
-// working folders. Every name and number here is invented.
-const workingRun = "2026-10-working-files";
+const inventedWorkingFoldersRunOrganizerNeverSaw = "2026-10-working-files";
 const workingDigests = {
   ambiguous: `sha256:${Str.repeat(64)("2")}`,
   keyed: `sha256:${Str.repeat(64)("9")}`,
   newMatter: `sha256:${Str.repeat(64)("8")}`,
-  registered: `sha256:${Str.repeat(64)("6")}`,
+  registerMaySpeakNoPathTextOrFamilyClient: `sha256:${Str.repeat(64)("6")}`,
   textKeyed: `sha256:${Str.repeat(64)("7")}`,
 };
 const workingClients = { register: "33333", text: "44444" } as const;
+const secondCopyOfOrganizedFileAddsNoDocumentNorTakesOverRunSizeOrDate = [
+  fixtureDigests.family,
+  "Loose files/family-notes copy.txt",
+] as const;
 const workingFiles = [
   [
     workingDigests.keyed,
@@ -522,11 +527,9 @@ const workingFiles = [
     `Clients/Second Client ${fixtureClients.beta}/30002BR01 - ${fixtureClients.beta}.00003/Annuity notice.txt`,
   ],
   [workingDigests.textKeyed, "Loose files/40004ZA01/Notice.txt"],
-  // no client in the path or the text, and no other document in its family: the register may speak
-  [workingDigests.registered, "Loose files/50005US01/Letter.txt"],
+  [workingDigests.registerMaySpeakNoPathTextOrFamilyClient, "Loose files/50005US01/Letter.txt"],
   [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
-  // a second copy of an organized file adds no document and does not take over its run, size, or date
-  [fixtureDigests.family, "Loose files/family-notes copy.txt"],
+  secondCopyOfOrganizedFileAddsNoDocumentNorTakesOverRunSizeOrDate,
 ] as const;
 
 const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(function* (corpusRoot: string) {
@@ -538,19 +541,27 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
       workingFiles,
       ([digest, relativePath], index) =>
         db.run(
-          `INSERT INTO corpus_source_files VALUES ('${workingRun}', 'source-b', $1, $2, '2026-01-02T03:04:07.000Z', $3)`,
+          `INSERT INTO corpus_source_files VALUES ('${inventedWorkingFoldersRunOrganizerNeverSaw}', 'source-b', $1, $2, '2026-01-02T03:04:07.000Z', $3)`,
           [relativePath, index + 30, digest]
         ),
       { concurrency: 1, discard: true }
     );
   }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
-  const extractRoot = path.join(corpusRoot, "staging", `extract-${workingRun}`);
+  const extractRoot = path.join(corpusRoot, "staging", `extract-${inventedWorkingFoldersRunOrganizerNeverSaw}`);
   yield* fs.makeDirectory(path.join(extractRoot, "text"), { recursive: true });
+  const textNamesOtherClientForFolderDocketFolderWins = [
+    "keyed",
+    workingDigests.keyed,
+    `filing receipt for ${fixtureClients.beta}.20001US01`,
+  ] as const;
+  const onlyTextNamesClientUnderCountryStageOldScanMissed = [
+    "text",
+    workingDigests.textKeyed,
+    `notice for ${workingClients.text}.40004ZA01`,
+  ] as const;
   const texts = [
-    // the text names another client for the folder's docket: the folder wins
-    ["keyed", workingDigests.keyed, `filing receipt for ${fixtureClients.beta}.20001US01`],
-    // only the text names a client, under a country stage the old scan did not know
-    ["text", workingDigests.textKeyed, `notice for ${workingClients.text}.40004ZA01`],
+    textNamesOtherClientForFolderDocketFolderWins,
+    onlyTextNamesClientUnderCountryStageOldScanMissed,
   ] as const;
   const sourceLines = yield* Effect.forEach(
     texts,
@@ -576,13 +587,13 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
     { concurrency: 1, discard: true }
   );
   const registerPath = path.join(corpusRoot, "docket-register.jsonl");
+  const registerListsOtherClientForBetaDocketItMustNotMove = `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`;
   yield* fs.writeFileString(
     registerPath,
     A.join(
       [
         `{"client":"${fixtureClients.alpha}","docket":"20001US09","clientName":"Example Client"}`,
-        // the beta document's own text names its client; the register must not move it
-        `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`,
+        registerListsOtherClientForBetaDocketItMustNotMove,
         `{"client":"${workingClients.register}","docket":"50005US01","clientName":"Register Client"}`,
         `{"client":"${fixtureClients.beta}","docket":"30002BR01","clientName":"Second Client"}`,
         `{"client":"${fixtureClients.beta}","docket":"30002BR02","clientName":"Second Client LLC"}`,
@@ -593,10 +604,7 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
   return registerPath;
 });
 
-// A later run holding the attorney's filed email, plus three more alpha docket
-// letters citing the application that beta's response also cites. Every name,
-// number, and address here is invented.
-const mailRun = "2026-10-mail";
+const inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication = "2026-10-mail";
 const mailDigests = {
   answer: `sha256:${Str.repeat(64)("4")}`,
   dominantOne: `sha256:${Str.repeat(64)("3")}`,
@@ -622,7 +630,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
       ] as const,
       ([digest, relativePath], index) =>
         db.run(
-          `INSERT INTO corpus_source_files VALUES ('${mailRun}', 'source-b', $1, $2, '2026-01-02T03:04:08.000Z', $3)`,
+          `INSERT INTO corpus_source_files VALUES ('${inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication}', 'source-b', $1, $2, '2026-01-02T03:04:08.000Z', $3)`,
           [relativePath, index + 50, digest]
         ),
       { concurrency: 1, discard: true }
@@ -682,7 +690,11 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
     { concurrency: 1, discard: true }
   );
 
-  const mailRoot = path.join(corpusRoot, "staging", `extract-${mailRun}`);
+  const mailRoot = path.join(
+    corpusRoot,
+    "staging",
+    `extract-${inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication}`
+  );
   yield* fs.makeDirectory(path.join(mailRoot, "metadata"), { recursive: true });
   yield* fs.makeDirectory(path.join(mailRoot, "text"), { recursive: true });
   yield* fs.writeFileString(path.join(mailRoot, "text", "operation:op-mail-filing.txt"), "filing receipt attached");
@@ -718,8 +730,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
     "dcterms:created": "2026-02-01T10:00:00Z",
   });
   yield* fs.writeFileString(argument, json1);
-  // Recursive Tika output: an array whose first object is the message itself.
-  const argument1 = path.join(mailRoot, "metadata", "operation:op-mail-answer.json");
+  const recursiveTikaArrayFirstObjectIsMessagePath = path.join(mailRoot, "metadata", "operation:op-mail-answer.json");
   const json2 = yield* json([
     {
       "Message-From": "Sam Other",
@@ -729,7 +740,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
     },
     { "Content-Type": "application/pdf" },
   ]);
-  yield* fs.writeFileString(argument1, json2);
+  yield* fs.writeFileString(recursiveTikaArrayFirstObjectIsMessagePath, json2);
 
   const contactsPath = path.join(corpusRoot, "contacts.jsonl");
   const contact = (
@@ -752,6 +763,12 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
       organization: null,
       sources: ["csv"],
     });
+  const attorneyOwnDottedMatterNumberIsNoMatter = contact("c_dddddddddddd", "Lee Example", "lee@example.com", false, [
+    [fixtureClients.alpha, `${fixtureClients.alpha}.00012`, "attorney-answer"],
+  ]);
+  const familyKeyKeyedToAnotherClientThanTheLink = contact("c_eeeeeeeeeeee", "Kim Example", "kim@example.com", false, [
+    [fixtureClients.beta, `${fixtureClients.alpha}.20001`, "attorney-answer"],
+  ]);
   const contactLines = yield* Effect.all(
     [
       contact("c_aaaaaaaaaaaa", "Pat Example", "pat@example.com", false, [
@@ -759,14 +776,8 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
         [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
         [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
       ]),
-      // The attorney's own matter number has the dotted shape of a family key but is no matter (D-20).
-      contact("c_dddddddddddd", "Lee Example", "lee@example.com", false, [
-        [fixtureClients.alpha, `${fixtureClients.alpha}.00012`, "attorney-answer"],
-      ]),
-      // A family key keyed to another client than the link's own.
-      contact("c_eeeeeeeeeeee", "Kim Example", "kim@example.com", false, [
-        [fixtureClients.beta, `${fixtureClients.alpha}.20001`, "attorney-answer"],
-      ]),
+      attorneyOwnDottedMatterNumberIsNoMatter,
+      familyKeyKeyedToAnotherClientThanTheLink,
       contact("c_bbbbbbbbbbbb", "Example Docketing", "docketing@example.com", true, [
         [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
       ]),
@@ -866,13 +877,9 @@ const runBuild = Effect.fn("runBuild")(function* (options: PracticeKgOptions, bu
   );
 });
 
-// `McpServer.callTool` resolves the calling client from context; in production
-// the transport's own middleware provides it per request. This fixture stands in
-// for that middleware so the call dispatches instead of dying on a missing
-// service.
 const stubClientInfo = { name: "practice-kg-projections-test", version: "0.0.0" };
 
-const stubMcpClient = McpServerClient.of({
+const callingClientStandInForTransportMiddleware = McpServerClient.of({
   clientId: 1,
   protocolVersion: "2025-06-18",
   clientCapabilities: {},
@@ -892,7 +899,7 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
   const server = yield* McpServer.McpServer;
   const result = yield* server
     .callTool({ name, arguments: args })
-    .pipe(Effect.provideService(McpServerClient, stubMcpClient));
+    .pipe(Effect.provideService(McpServerClient, callingClientStandInForTransportMiddleware));
   const decoded = yield* decodeToolTextResult(result);
   return A.headNonEmpty(decoded.content).text;
 });
@@ -927,11 +934,12 @@ describe("practice KG projections", () => {
   });
 
   it("answers the handshake Claude Desktop opens with, and keeps the stateless protocol first", () => {
-    // Regression: a stateless-only list made the installed extension fail with
-    // "initialize is not supported by the configured MCP protocols (requested '2025-11-25')".
     const versions = A.map(practiceKgMcpProtocols, (protocol) => protocol.protocolVersion);
     expect(A.headNonEmpty(versions)).toBe("2026-07-28");
-    expect(versions).toContain("2025-11-25");
+    expect(
+      versions,
+      "a stateless-only list made the installed extension fail with \"initialize is not supported by the configured MCP protocols (requested '2025-11-25')\""
+    ).toContain("2025-11-25");
     expect(versions).toContain("2025-06-18");
   });
 
@@ -1089,10 +1097,12 @@ describe("practice KG projections", () => {
 
         expect(firstDuckDump).toBe(secondDuckDump);
         expect(firstPgliteDump).toBe(secondPgliteDump);
-        // `builtAt` is wall clock by design; every other manifest field must match.
         const firstDecodedManifest = yield* decodeManifestJson(firstManifest);
         const secondDecodedManifest = yield* decodeManifestJson(secondManifest);
-        expect({ ...firstDecodedManifest, builtAt: "" }).toStrictEqual({ ...secondDecodedManifest, builtAt: "" });
+        expect(
+          { ...firstDecodedManifest, builtAt: "" },
+          "builtAt is wall clock by design; every other manifest field must match"
+        ).toStrictEqual({ ...secondDecodedManifest, builtAt: "" });
         expect(first.counts).toStrictEqual(second.counts);
         expect(first.counts.documents).toBe(6);
         expect(refresh.counts.documents).toBe(7);
@@ -1156,16 +1166,16 @@ describe("practice KG projections", () => {
             "https://beep-effect.com/ns/practice-kg/document/sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
           ]);
 
-          // P6 graph-integrity contract: families key on <client>.<family>, the
-          // bare family survives only for unattributed documents, recycle stubs
-          // are labelled, and anchors join a family through a unique mention.
           const attributionLines = yield* sql
             .unsafe(
               "SELECT row_to_json(x)::text AS line FROM (SELECT kind, natural_key, client, docket_family, attribution_source, epistemic_status FROM kg_node WHERE kind IN ('client', 'docket_family', 'docket', 'application', 'patent') OR natural_key IN ($1, $2, $3, $4) ORDER BY kind, natural_key) x",
               [fixtureDigests.docket, fixtureDigests.family, fixtureDigests.beta, fixtureDigests.recycle]
             )
             .pipe(Effect.flatMap(decodeDumpLines));
-          expect(A.map(attributionLines, (row) => row.line)).toStrictEqual([
+          expect(
+            A.map(attributionLines, (row) => row.line),
+            "P6 graph integrity: families key on <client>.<family>, a bare family only for unattributed documents, recycle stubs labelled, anchors joined through a unique mention"
+          ).toStrictEqual([
             '{"kind":"application","natural_key":"11223344","client":null,"docket_family":null,"attribution_source":"mention","epistemic_status":"derived-from-official-records"}',
             '{"kind":"application","natural_key":"55667788","client":null,"docket_family":null,"attribution_source":"mention","epistemic_status":"derived-from-official-records"}',
             '{"kind":"application","natural_key":"76543210","client":null,"docket_family":null,"attribution_source":"official-record","epistemic_status":"derived-from-official-records"}',
@@ -1429,8 +1439,7 @@ describe("practice KG projections", () => {
           expect(searchRow.digest).toBe(fixtureDigests.docket);
           expect(searchRow.matchOffset).toBe(1);
 
-          // Matter lookup: the stable contract other services build against.
-          const lookupRows = (reference: string) =>
+          const stableMatterLookupContractRows = (reference: string) =>
             callToolText("kg_matter_lookup", { budgetBytes: 20_000, reference }).pipe(
               Effect.flatMap(decodeToolResultJson),
               Effect.map((result) => ({
@@ -1438,37 +1447,37 @@ describe("practice KG projections", () => {
                 rows: A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))),
               }))
             );
-          const keyedDocket = yield* lookupRows(`${fixtureClients.alpha}.20001US01`);
+          const keyedDocket = yield* stableMatterLookupContractRows(`${fixtureClients.alpha}.20001US01`);
           expect(A.map(keyedDocket.rows, (row) => [row.resolution, row.familyKey, row.docketMatched])).toStrictEqual([
             ["unique", `${fixtureClients.alpha}.20001`, true],
           ]);
-          const bareDocket = yield* lookupRows("20001us01");
+          const bareDocket = yield* stableMatterLookupContractRows("20001us01");
           expect(A.map(bareDocket.rows, (row) => [row.resolution, row.docketKey, row.matchedOn])).toStrictEqual([
             ["unique", `${fixtureClients.alpha}.20001US01`, ["docket"]],
           ]);
-          const byApplication = yield* lookupRows("87/654,321");
+          const byApplication = yield* stableMatterLookupContractRows("87/654,321");
           expect(
             A.map(byApplication.rows, (row) => [row.resolution, row.client, row.matchedOn, row.patents])
           ).toStrictEqual([["unique", fixtureClients.alpha, ["application"], "12345678"]]);
-          const byPatent = yield* lookupRows("US 12,345,678 B2");
+          const byPatent = yield* stableMatterLookupContractRows("US 12,345,678 B2");
           expect(A.map(byPatent.rows, (row) => [row.resolution, row.matchedOn])).toStrictEqual([
             ["unique", ["patent"]],
           ]);
-          const bareFamily = yield* lookupRows("20001");
+          const bareFamily = yield* stableMatterLookupContractRows("20001");
           expect(A.dedupe(A.map(bareFamily.rows, (row) => row.resolution))).toStrictEqual(["ambiguous"]);
           expect(A.dedupe(A.map(bareFamily.rows, (row) => row.familyKey))).toStrictEqual([
             `${fixtureClients.alpha}.20001`,
             "20001",
             `${fixtureClients.beta}.20001`,
           ]);
-          const newCountryStage = yield* lookupRows(`${fixtureClients.beta}.20001EP07`);
+          const newCountryStage = yield* stableMatterLookupContractRows(`${fixtureClients.beta}.20001EP07`);
           expect(
             A.map(newCountryStage.rows, (row) => [row.resolution, row.familyKey, row.docketMatched])
           ).toStrictEqual([["unique", `${fixtureClients.beta}.20001`, false]]);
-          const unknownReference = yield* lookupRows("99999US01");
+          const unknownReference = yield* stableMatterLookupContractRows("99999US01");
           expect(unknownReference.rows).toStrictEqual([]);
           expect(unknownReference.note).toContain("resolution: none");
-          const mentionOnly = yield* lookupRows("11/223,344");
+          const mentionOnly = yield* stableMatterLookupContractRows("11/223,344");
           expect(mentionOnly.rows).toStrictEqual([]);
 
           const service = yield* PracticeKgMatterLookup;
@@ -1487,8 +1496,6 @@ describe("practice KG projections", () => {
             20, 20, 3, 3,
           ]);
 
-          // Remaining request shapes: lookups by application number and by docket,
-          // a document read by organized path, and a digest nobody has.
           const byApplicationNumber = yield* callToolText("kg_application_lookup", {
             application_number: "87654321",
           }).pipe(Effect.flatMap(decodeToolResultJson));
@@ -1508,8 +1515,6 @@ describe("practice KG projections", () => {
             O.getOrThrow(O.fromNullishOr(missingDigest.note)),
           ]);
           expect(missingDigest.note).toContain("No graph node or document");
-          // Some budget between "everything fits" and "nothing fits" lands on the
-          // balanced tier, which must name what it left out.
           const budgeted = yield* Effect.forEach(
             A.range(2, 14),
             (step) =>
@@ -1518,9 +1523,14 @@ describe("practice KG projections", () => {
               ),
             { concurrency: 1 }
           );
-          const balanced = O.getOrThrow(A.findFirst(budgeted, (result) => result.tier === "balanced"));
-          pipe(balanced.truncated, assertFalse);
-          expect(balanced.withheld_columns).toContain("documentDigest");
+          const balancedTierBetweenAllAndNothingFits = O.getOrThrow(
+            A.findFirst(budgeted, (result) => result.tier === "balanced")
+          );
+          pipe(balancedTierBetweenAllAndNothingFits.truncated, assertFalse);
+          expect(
+            balancedTierBetweenAllAndNothingFits.withheld_columns,
+            "the balanced tier must name what it left out"
+          ).toContain("documentDigest");
 
           const missingProvenance = yield* callToolText("kg_provenance", { natural_key: "no-such-key" }).pipe(
             Effect.flatMap(decodeToolResultJson)
@@ -1568,13 +1578,15 @@ describe("practice KG projections", () => {
 
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           yield* sql.unsafe("DROP TABLE kg_node CASCADE");
-          // A failure below the tool layer is still reported as a typed store fault.
           const duckdb = yield* DuckDb;
           yield* duckdb.run("DROP TABLE matter_dockets");
-          const lookupFailure = yield* callToolText("kg_matter_lookup", { reference: "20001" }).pipe(
-            Effect.flatMap(decodeToolErrorJson)
-          );
-          expect([lookupFailure.tool, lookupFailure.reason]).toStrictEqual(["kg_matter_lookup", "store-query-failed"]);
+          const belowToolLayerFailureStillTypedStoreFault = yield* callToolText("kg_matter_lookup", {
+            reference: "20001",
+          }).pipe(Effect.flatMap(decodeToolErrorJson));
+          expect([
+            belowToolLayerFailureStillTypedStoreFault.tool,
+            belowToolLayerFailureStillTypedStoreFault.reason,
+          ]).toStrictEqual(["kg_matter_lookup", "store-query-failed"]);
           const failure = yield* callToolText("kg_clients", {}).pipe(Effect.flatMap(decodeToolErrorJson));
           expect(failure.tool).toBe("kg_clients");
           expect(failure.reason).toBe("store-query-failed");
@@ -1659,7 +1671,7 @@ describe("practice KG projections", () => {
             PracticeKgOptions.make({
               ...graphOptions(corpusRoot, bundleOut),
               contactsPath,
-              includeRuns: [mailRun],
+              includeRuns: [inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication],
               practiceDomains: [practiceDomain],
               skipEmails: true,
             }),
@@ -1717,11 +1729,11 @@ describe("practice KG projections", () => {
               Effect.flatMap(decodeToolResultJson),
               Effect.map((result) => A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))))
             );
-          // 4 of the 5 citing documents are alpha's: the application now joins alpha's matter (D-23).
           const byApplication = yield* toolRows("kg_matter_lookup", { reference: "11/223,344" });
-          expect(A.map(byApplication, (row) => [row.resolution, row.familyKey, row.matchedOn])).toStrictEqual([
-            ["unique", `${fixtureClients.alpha}.20001`, ["application"]],
-          ]);
+          expect(
+            A.map(byApplication, (row) => [row.resolution, row.familyKey, row.matchedOn]),
+            "4 of the 5 citing documents are alpha's, so the application joins alpha's matter (D-23)"
+          ).toStrictEqual([["unique", `${fixtureClients.alpha}.20001`, ["application"]]]);
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           const anchorLines = yield* sql
             .unsafe(
@@ -1747,8 +1759,7 @@ describe("practice KG projections", () => {
                 ])
               )
             );
-          // Only the decided row says unique, and it leads; header-entry input works too.
-          const patRows = [
+          const onlyDecidedRowSaysUniqueAndLeads = [
             [
               "unique",
               `${fixtureClients.alpha}.20001`,
@@ -1760,11 +1771,9 @@ describe("practice KG projections", () => {
             ["candidate", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
           ];
           const correspondent6 = yield* correspondent(" Pat@Example.com ");
-          expect(correspondent6).toStrictEqual(patRows);
+          expect(correspondent6).toStrictEqual(onlyDecidedRowSaysUniqueAndLeads);
           const correspondent7 = yield* correspondent("Pat Example <pat@example.com>");
-          expect(correspondent7).toStrictEqual(patRows);
-          // Under a budget that keeps one minimal row, the kept row is the decided one,
-          // and the minimal tier still says decided; with room for two, the other is a candidate.
+          expect(correspondent7, "header-entry input works too").toStrictEqual(onlyDecidedRowSaysUniqueAndLeads);
           const budgeted = (budgetBytes: number) =>
             callToolText("kg_correspondent_lookup", { address: "pat@example.com", budgetBytes }).pipe(
               Effect.flatMap(decodeToolResultJson),
@@ -1777,19 +1786,22 @@ describe("practice KG projections", () => {
             );
           const oneRow = yield* budgeted(200);
           expect([oneRow.tier, oneRow.truncated]).toStrictEqual(["minimal", true]);
-          expect(A.map(oneRow.rows, (row) => [row.familyKey, row.decided, row.resolution])).toStrictEqual([
-            [`${fixtureClients.alpha}.20001`, true, "unique"],
-          ]);
+          expect(
+            A.map(oneRow.rows, (row) => [row.familyKey, row.decided, row.resolution]),
+            "a budget that keeps one minimal row keeps the decided one, and the minimal tier still says decided"
+          ).toStrictEqual([[`${fixtureClients.alpha}.20001`, true, "unique"]]);
           expect(oneRow.note).toContain(`decided matter: ${fixtureClients.alpha}.20001.`);
           const twoRows = yield* budgeted(250);
           expect([twoRows.tier, twoRows.truncated]).toStrictEqual(["minimal", false]);
-          expect(A.map(twoRows.rows, (row) => [row.familyKey, row.decided, row.resolution])).toStrictEqual([
+          expect(
+            A.map(twoRows.rows, (row) => [row.familyKey, row.decided, row.resolution]),
+            "with room for two rows, the other one is a candidate"
+          ).toStrictEqual([
             [`${fixtureClients.alpha}.20001`, true, "unique"],
             [`${fixtureClients.beta}.20001`, false, "candidate"],
           ]);
-          // A family key that is no matter, or is keyed to another client, never decides.
-          const correspondent8 = yield* correspondent("lee@example.com");
-          expect(correspondent8).toStrictEqual([
+          const familyKeyNoMatterOrOtherClientNeverDecides = yield* correspondent("lee@example.com");
+          expect(familyKeyNoMatterOrOtherClientNeverDecides).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.00012`, fixtureClients.alpha, 0, "attorney-answer", false],
           ]);
           const correspondent9 = yield* correspondent("kim@example.com");
@@ -1817,14 +1829,12 @@ describe("practice KG projections", () => {
             "invalid-input",
             "Expected one email address; the input holds 2.",
           ]);
-          // A role mailbox never resolves, however clear its link.
-          const correspondent10 = yield* correspondent("docketing@example.com");
-          expect(correspondent10).toStrictEqual([
+          const roleMailboxNeverResolvesHoweverClearItsLink = yield* correspondent("docketing@example.com");
+          expect(roleMailboxNeverResolvesHoweverClearItsLink).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 1, "attorney-pc-folder", false],
           ]);
-          // Inferred links rank candidates; they never decide.
-          const correspondent11 = yield* correspondent("sam@other.test");
-          expect(correspondent11).toStrictEqual([
+          const inferredLinksRankCandidatesNeverDecide = yield* correspondent("sam@other.test");
+          expect(inferredLinksRankCandidatesNeverDecide).toStrictEqual([
             ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 2, "email-subject-ref", false],
             ["ambiguous", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
             ["ambiguous", null, fixtureClients.beta, 0, "org-name-match", false],
@@ -1842,13 +1852,15 @@ describe("practice KG projections", () => {
             verified.correspondentsWithoutMatter,
             verified.contactLinksWithoutMatter,
           ]).toStrictEqual([true, 4, 0, 1]);
-          // A store that cannot answer is reported as a typed store fault.
           const duckdb = yield* DuckDb;
           yield* duckdb.run("DROP TABLE contact_addresses");
           const failure = yield* callToolText("kg_correspondent_lookup", { address: "pat@example.com" }).pipe(
             Effect.flatMap(decodeToolErrorJson)
           );
-          expect([failure.tool, failure.reason]).toStrictEqual(["kg_correspondent_lookup", "store-query-failed"]);
+          expect(
+            [failure.tool, failure.reason],
+            "a store that cannot answer is reported as a typed store fault"
+          ).toStrictEqual(["kg_correspondent_lookup", "store-query-failed"]);
         }),
         { timeout: 120_000 }
       );
@@ -1866,12 +1878,14 @@ describe("practice KG projections", () => {
         const baseOut = path.join(corpusRoot, "bundle-base");
         const bundleOut = path.join(corpusRoot, "bundle-working");
 
-        // Left out, the run changes nothing: not the documents, not their origin chains.
         const base = yield* runBuild(
           PracticeKgOptions.make({ ...graphOptions(corpusRoot, baseOut), skipEmails: true }),
           baseOut
         );
-        expect([base.counts.documents, base.baseDigests, base.includedRuns]).toStrictEqual([6, 6, []]);
+        expect(
+          [base.counts.documents, base.baseDigests, base.includedRuns],
+          "left out, the run changes nothing: not the documents, not their origin chains"
+        ).toStrictEqual([6, 6, []]);
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
           const originLines = yield* db
@@ -1890,13 +1904,13 @@ describe("practice KG projections", () => {
             ...graphOptions(corpusRoot, bundleOut),
             docketRegisterPath: registerPath,
             bundleVersion: "2026-10-06-09",
-            includeRuns: [workingRun],
+            includeRuns: [inventedWorkingFoldersRunOrganizerNeverSaw],
             skipEmails: true,
           }),
           bundleOut
         );
         expect([summary.counts.documents, summary.baseDigests, summary.includeRefresh]).toStrictEqual([11, 6, false]);
-        expect(summary.includedRuns).toStrictEqual([workingRun]);
+        expect(summary.includedRuns).toStrictEqual([inventedWorkingFoldersRunOrganizerNeverSaw]);
         const manifest = yield* fs
           .readFileString(path.join(bundleOut, "bundle.manifest.json"))
           .pipe(Effect.flatMap(decodeManifestJson));
@@ -1909,25 +1923,25 @@ describe("practice KG projections", () => {
           manifest.sourceRuns.base,
           manifest.sourceRuns.includedRuns,
           manifest.sourceRuns.refresh202607,
-        ]).toStrictEqual(["included", [workingRun], "excluded"]);
+        ]).toStrictEqual(["included", [inventedWorkingFoldersRunOrganizerNeverSaw], "excluded"]);
 
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
           const lines = (statement: string) =>
             db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
-          // An organized file that the included run also holds still reports the organizer's
-          // copy; the origin chain is where both runs show.
           const lines14 = yield* lines(
             `SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, size_bytes, mtime_iso, source_origin_chain FROM documents WHERE digest = '${fixtureDigests.family}') x`
           );
-          expect(lines14).toStrictEqual([
-            `{"run_label":"base","size_bytes":11,"mtime_iso":"2026-01-02T03:04:05.000Z","source_origin_chain":"${workingRun}:source-b:Loose files/family-notes copy.txt <- base:fixture-source:family-notes.txt"}`,
+          expect(
+            lines14,
+            "an organized file the included run also holds still reports the organizer's copy; the origin chain shows both runs"
+          ).toStrictEqual([
+            `{"run_label":"base","size_bytes":11,"mtime_iso":"2026-01-02T03:04:05.000Z","source_origin_chain":"${inventedWorkingFoldersRunOrganizerNeverSaw}:source-b:Loose files/family-notes copy.txt <- base:fixture-source:family-notes.txt"}`,
           ]);
-          // One docket in the path files the row under it; two leave it unsorted.
           const lines15 = yield* lines(
-            `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' ORDER BY digest) x`
+            `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${inventedWorkingFoldersRunOrganizerNeverSaw}' ORDER BY digest) x`
           );
-          expect(lines15).toStrictEqual([
+          expect(lines15, "one docket in the path files the row under it; two leave it unsorted").toStrictEqual([
             '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',
             '{"category":"docket","docket":"50005US01","docket_family":"50005","effective_name":"Letter.txt"}',
             '{"category":"docket","docket":"40004ZA01","docket_family":"40004","effective_name":"Notice.txt"}',
@@ -1941,10 +1955,12 @@ describe("practice KG projections", () => {
           const lines17 = yield* lines(
             "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, client, client_name, attribution_source, document_count FROM matters ORDER BY family_key) x"
           );
-          expect(lines17).toStrictEqual([
+          expect(
+            lines17,
+            "beta's text-referenced family stands although the register lists another client for 20001US02 and names beta two ways"
+          ).toStrictEqual([
             `{"family_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","client_name":"Example Client","attribution_source":"folder-path","document_count":2}`,
             '{"family_key":"20001","client":null,"client_name":null,"attribution_source":"filename","document_count":2}',
-            // the register lists another client for 20001US02, and names this client two ways
             `{"family_key":"${fixtureClients.beta}.20001","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
             `{"family_key":"${fixtureClients.beta}.30002","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"folder-path","document_count":1}`,
             `{"family_key":"${workingClients.register}.50005","client":"${workingClients.register}","client_name":"Register Client","attribution_source":"docket-register","document_count":1}`,
@@ -1967,7 +1983,7 @@ describe("practice KG projections", () => {
             .unsafe(
               "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND natural_key IN ($1, $2, $3, $4, $5, $6) ORDER BY natural_key) x",
               [
-                workingDigests.registered,
+                workingDigests.registerMaySpeakNoPathTextOrFamilyClient,
                 workingDigests.ambiguous,
                 workingDigests.textKeyed,
                 workingDigests.newMatter,
@@ -1987,7 +2003,9 @@ describe("practice KG projections", () => {
           const buildLines = yield* sql
             .unsafe("SELECT row_to_json(x)::text AS line FROM (SELECT built_from_runs FROM kg_build) x")
             .pipe(Effect.flatMap(decodeDumpLines));
-          expect(A.map(buildLines, (row) => row.line)).toStrictEqual([`{"built_from_runs":"base | ${workingRun}"}`]);
+          expect(A.map(buildLines, (row) => row.line)).toStrictEqual([
+            `{"built_from_runs":"base | ${inventedWorkingFoldersRunOrganizerNeverSaw}"}`,
+          ]);
 
           const toolRows = (name: string, args: Readonly<Record<string, unknown>>) =>
             callToolText(name, { budgetBytes: 20_000, ...args }).pipe(
@@ -2003,10 +2021,10 @@ describe("practice KG projections", () => {
             ["unique", `${fixtureClients.beta}.20001`],
           ]);
           const newStage = yield* toolRows("kg_matter_lookup", { reference: "30002BR01" });
-          // null cells are stripped before the envelope is built, so an all-null column is absent
-          expect(A.map(newStage, (row) => [row.resolution, row.docketKey, row.clientName ?? null])).toStrictEqual([
-            ["unique", `${fixtureClients.beta}.30002BR01`, null],
-          ]);
+          expect(
+            A.map(newStage, (row) => [row.resolution, row.docketKey, row.clientName ?? null]),
+            "null cells are stripped before the envelope is built, so an all-null column is absent"
+          ).toStrictEqual([["unique", `${fixtureClients.beta}.30002BR01`, null]]);
           const clients = yield* toolRows("kg_clients", {});
           expect(
             A.map(
@@ -2080,9 +2098,7 @@ describe("practice KG projections", () => {
   });
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
-    // Tests run concurrently (`sequence.concurrent`), so each block below gets its own bundle,
-    // claims store and read-only reader: claims one block writes never reach another block's counts.
-    const claimsReaderLayer = (bundleName: string) =>
+    const ownBundleClaimsStoreAndReaderPerConcurrentBlock = (bundleName: string) =>
       Layer.unwrap(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -2132,14 +2148,18 @@ describe("practice KG projections", () => {
         })
       );
 
-    it.layer(claimsReaderLayer("bundle-concurrent-claims-readers"), { timeout: "120 seconds" })((it) => {
+    it.layer(ownBundleClaimsStoreAndReaderPerConcurrentBlock("bundle-concurrent-claims-readers"), {
+      timeout: "120 seconds",
+    })((it) => {
       it.effect(
         "resolves standalone claims while an independent cached read-only connection remains open",
         Effect.fnUntraced(function* () {
           const reader = yield* ConcurrentClaimsReader;
           const options = yield* ConcurrentClaimsOptions;
-          // Opening is lazy: establish the independent reader before the standalone lookup.
-          yield* reader.query("SELECT digest FROM documents ORDER BY digest");
+          const openLazyIndependentReaderBeforeStandaloneLookup = reader.query(
+            "SELECT digest FROM documents ORDER BY digest"
+          );
+          yield* openLazyIndependentReaderBeforeStandaloneLookup;
           const [summary, rows] = yield* Effect.all(
             [runPracticeKgClaimsBatch(options), reader.query("SELECT digest FROM documents ORDER BY digest")],
             { concurrency: 2 }
@@ -2153,17 +2173,21 @@ describe("practice KG projections", () => {
       );
     });
 
-    it.layer(claimsReaderLayer("bundle-shared-claims-reader"), { timeout: "120 seconds" })((it) => {
+    it.layer(ownBundleClaimsStoreAndReaderPerConcurrentBlock("bundle-shared-claims-reader"), {
+      timeout: "120 seconds",
+    })((it) => {
       it.effect(
         "resolves claims through a DuckDb connection the caller already holds",
         Effect.fnUntraced(function* () {
           const reader = yield* ConcurrentClaimsReader;
           const options = yield* ConcurrentClaimsOptions;
 
-          // No catalogued document has the `20001US05-patent` stem: the lookup takes its not-found path.
           const summary = yield* runPracticeKgClaimsBatch(options).pipe(Effect.provideService(DuckDb, reader));
 
-          expect(summary).toMatchObject({ failedFiles: 0, files: 1 });
+          expect(
+            summary,
+            "no catalogued document has the `20001US05-patent` stem, so the lookup takes its not-found path"
+          ).toMatchObject({ failedFiles: 0, files: 1 });
         }),
         { timeout: 120_000 }
       );
@@ -2174,8 +2198,7 @@ describe("practice KG projections", () => {
           const reader = yield* ConcurrentClaimsReader;
           const options = yield* ConcurrentClaimsOptions;
           const document = yield* normalizePatentApplicationDocument(normalizedPatentFixture);
-          // The docket fixture is catalogued as `Response OA - 20001US01.txt`.
-          const matched = PracticeKgClaimsOptions.make({
+          const matchedToDocketFixtureCataloguedAsResponseOa = PracticeKgClaimsOptions.make({
             bundleOut: options.bundleOut,
             inputs: options.inputs,
             patentDocuments: [
@@ -2187,7 +2210,9 @@ describe("practice KG projections", () => {
             ],
           });
 
-          const summary = yield* runPracticeKgClaimsBatch(matched).pipe(Effect.provideService(DuckDb, reader));
+          const summary = yield* runPracticeKgClaimsBatch(matchedToDocketFixtureCataloguedAsResponseOa).pipe(
+            Effect.provideService(DuckDb, reader)
+          );
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           const unsafe19 = yield* sql.unsafe(PracticeKgQueries.candidateClaims, [
             null,
@@ -2256,12 +2281,12 @@ describe("practice KG projections", () => {
 
         expect(summary).toMatchObject({ claims: 6, failedFiles: 0, files: 2 });
 
-        // A bundle directory with no DuckDB store yet still accepts claims; they
-        // simply carry no catalogued source document.
-        const bareBundle = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-patent-bare-" });
-        const bareSummary = yield* runPracticeKgClaimsBatch(
+        const bundleDirWithoutDuckDbStoreYet = yield* fs.makeTempDirectoryScoped({
+          prefix: "practice-kg-patent-bare-",
+        });
+        const acceptedClaimsCarryingNoCataloguedSource = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({
-            bundleOut: bareBundle,
+            bundleOut: bundleDirWithoutDuckDbStoreYet,
             inputs,
             patentDocuments: [
               PracticeKgPatentDocumentInput.make({ docket: "20001US05", document, sourceFile: "20001US05-patent.md" }),
@@ -2271,11 +2296,11 @@ describe("practice KG projections", () => {
           provideScopedLayer(
             Layer.mergeAll(
               Layer.succeed(OfficeActionReview, forbiddenReview),
-              Pglite.makeLayer({ dataDir: path.join(bareBundle, "kg.pglite") })
+              Pglite.makeLayer({ dataDir: path.join(bundleDirWithoutDuckDbStoreYet, "kg.pglite") })
             )
           )
         );
-        expect(bareSummary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
+        expect(acceptedClaimsCarryingNoCataloguedSource).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
         const missingDuckDbSummary = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({
             bundleOut,
@@ -2340,8 +2365,7 @@ describe("practice KG projections", () => {
           assertTrue
         );
 
-        // A missing catalog remains a supported batch input even when the filesystem probe fails.
-        const unavailableCatalog = yield* runPracticeKgClaimsBatch(
+        const missingCatalogSupportedEvenWhenProbeFails = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({ bundleOut, inputs })
         ).pipe(
           Effect.provideService(FileSystem.FileSystem, {
@@ -2350,11 +2374,14 @@ describe("practice KG projections", () => {
           }),
           provideScopedLayer(claimsLayer)
         );
-        expect(unavailableCatalog).toMatchObject({ files: 0, failedFiles: 0, claims: missingDuckDbSummary.claims });
+        expect(missingCatalogSupportedEvenWhenProbeFails).toMatchObject({
+          files: 0,
+          failedFiles: 0,
+          claims: missingDuckDbSummary.claims,
+        });
 
-        // An existing corrupt catalog must report source resolution failure instead of losing provenance.
         yield* fs.writeFileString(path.join(bundleOut, "practice.duckdb"), "not a DuckDB database");
-        const catalogFailure = yield* runPracticeKgClaimsBatch(
+        const corruptCatalogReportsSourceResolutionNotLostProvenance = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({
             bundleOut,
             inputs,
@@ -2367,7 +2394,9 @@ describe("practice KG projections", () => {
             ],
           })
         ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
-        expect(catalogFailure.message).toContain("Failed resolving the source document");
+        expect(corruptCatalogReportsSourceResolutionNotLostProvenance.message).toContain(
+          "Failed resolving the source document"
+        );
         yield* fs.remove(path.join(bundleOut, "practice.duckdb"));
 
         const oversizedDocument = PatentApplicationDocument.make({
@@ -2457,8 +2486,6 @@ describe("practice KG projections", () => {
         expect(summary.files).toBe(2);
         expect(summary.failedFiles).toBe(2);
 
-        // Carry: a rebuilt bundle starts with no claims; lifting them from the old
-        // store must reproduce them without calling the model again.
         const carriedOut = path.join(corpusRoot, "bundle-claims-carried");
         yield* runBuild(graphOptions(corpusRoot, carriedOut), carriedOut);
         const carry = yield* readPracticeKgClaimsCarry.pipe(
@@ -2468,7 +2495,10 @@ describe("practice KG projections", () => {
         const carried = yield* writePracticeKgClaimsCarry(carryWrite).pipe(
           provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(carriedOut, "kg.pglite") }))
         );
-        expect([carried.claims, carried.evidence, carried.withSourceDocument]).toStrictEqual([2, 2, 1]);
+        expect(
+          [carried.claims, carried.evidence, carried.withSourceDocument],
+          "a rebuilt bundle starts with no claims; lifting them from the old store reproduces them without the model"
+        ).toStrictEqual([2, 2, 1]);
         const recarried = yield* Effect.gen(function* () {
           yield* writePracticeKgClaimsCarry(carryWrite);
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -2545,9 +2575,8 @@ describe("practice KG projections", () => {
         expect(oversizedClaimsFailure.message).toContain("not a bounded regular file");
         yield* fs.remove(oversizedClaimsPath);
 
-        // The file can grow between stat and read; the byte guard must reject the actual payload.
         yield* fs.writeFileString(oversizedClaimsPath, "bounded at stat time");
-        const grownClaimsFailure = yield* runPracticeKgClaimsBatch(
+        const grownBetweenStatAndReadRejectedOnActualPayload = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({ bundleOut, inputs })
         ).pipe(
           Effect.flip,
@@ -2558,7 +2587,7 @@ describe("practice KG projections", () => {
           }),
           provideScopedLayer(claimsLayer)
         );
-        expect(grownClaimsFailure.message).toContain("Claims input exceeds 2097152 bytes");
+        expect(grownBetweenStatAndReadRejectedOnActualPayload.message).toContain("Claims input exceeds 2097152 bytes");
         yield* fs.remove(oversizedClaimsPath);
 
         const insideClaimsTarget = path.join(inputs, "inside-claims-target.txt");
@@ -2649,9 +2678,7 @@ describe("practice KG projections", () => {
           Effect.flatMap(decodeToolResultJson),
           provideScopedLayer(host)
         );
-        // Family and digest filters reach the same claim, and a claims-bearing
-        // bundle still passes the acceptance sweep.
-        const filtered = yield* Effect.gen(function* () {
+        const familyAndDigestFiltersAndClaimsBearingAcceptanceSweep = yield* Effect.gen(function* () {
           const byFamily = yield* callToolText("kg_candidate_claims", {
             family: `${fixtureClients.alpha}.20001`,
           }).pipe(Effect.flatMap(decodeToolResultJson));
@@ -2661,11 +2688,14 @@ describe("practice KG projections", () => {
           const verified = yield* verifyPracticeKgBundle;
           return { byDigest: byDigest.total, byFamily: byFamily.total, verified };
         }).pipe(provideScopedLayer(host));
-        expect([filtered.byFamily, filtered.byDigest]).toStrictEqual([1, 0]);
         expect([
-          filtered.verified.ok,
-          filtered.verified.claims,
-          filtered.verified.claimsWithSourceDocument,
+          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.byFamily,
+          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.byDigest,
+        ]).toStrictEqual([1, 0]);
+        expect([
+          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.verified.ok,
+          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.verified.claims,
+          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.verified.claimsWithSourceDocument,
         ]).toStrictEqual([true, 2, 1]);
         expect(result.epistemic_status).toBe("candidate-unreviewed");
         expect(result.total).toBe(1);
@@ -2693,9 +2723,12 @@ describe("practice KG projections", () => {
         yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
         const target = Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") });
 
-        // A bundle that never had claims cannot be a carry source.
-        const noClaims = yield* Effect.flip(readPracticeKgClaimsCarry.pipe(provideScopedLayer(target)));
-        expect(noClaims.message).toBe("Failed reading candidate claims from the source bundle.");
+        const neverHadClaimsCannotBeCarrySource = yield* Effect.flip(
+          readPracticeKgClaimsCarry.pipe(provideScopedLayer(target))
+        );
+        expect(neverHadClaimsCannotBeCarrySource.message).toBe(
+          "Failed reading candidate claims from the source bundle."
+        );
 
         const snapshot = '{"claimText":"x","docket":"20001US01","evidenceFixtureKey":"e1","family":"20001"}';
         const unnamed = yield* decodeClaimsCarry({
@@ -2707,19 +2740,19 @@ describe("practice KG projections", () => {
         ).pipe(provideScopedLayer(target));
         expect([unnamedSummary.claims, unnamedSummary.withSourceDocument]).toStrictEqual([1, 0]);
 
-        // A store-level failure is reported as a carry failure, not leaked raw.
         const malformed = yield* decodeClaimsCarry({
           candidates: [carriedCandidate("claim_malformed", "not-json", null)],
           evidence: [],
         });
-        const malformedFailure = yield* Effect.flip(
+        const storeLevelFailureReportedAsCarryFailureNotRaw = yield* Effect.flip(
           writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut, carry: malformed })).pipe(
             provideScopedLayer(target)
           )
         );
-        expect(malformedFailure.message).toBe("Failed carrying candidate claims into the bundle.");
+        expect(storeLevelFailureReportedAsCarryFailureNotRaw.message).toBe(
+          "Failed carrying candidate claims into the bundle."
+        );
 
-        // An unreadable DuckDB store names the file whose document could not be resolved.
         const brokenBundle = path.join(corpusRoot, "bundle-carry-broken");
         yield* fs.makeDirectory(brokenBundle, { recursive: true });
         yield* fs.writeFileString(path.join(brokenBundle, "practice.duckdb"), "this is not a duckdb file");
@@ -2727,12 +2760,12 @@ describe("practice KG projections", () => {
           candidates: [carriedCandidate("claim_named", snapshot, "1_Response OA - 20001US01.txt")],
           evidence: [],
         });
-        const brokenFailure = yield* Effect.flip(
+        const unreadableDuckDbNamesFileWhoseDocumentFailed = yield* Effect.flip(
           writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut: brokenBundle, carry: named })).pipe(
             provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(brokenBundle, "kg.pglite") }))
           )
         );
-        expect(brokenFailure.message).toContain("Failed resolving the source document");
+        expect(unreadableDuckDbNamesFileWhoseDocumentFailed.message).toContain("Failed resolving the source document");
       }),
       { timeout: 120_000 }
     );
@@ -2780,10 +2813,9 @@ describe("practice KG projections", () => {
   });
 });
 
-// The public conformance layer owns one native bundle across all transport arms.
-// The harness accepts registrations rather than a scoped test API, so this
-// fixture-only reference bridges that context and is cleared by its finalizer.
-const conformanceBundle = MutableRef.make<O.Option<PracticeKgBundleContext>>(O.none());
+const registrationOnlyHarnessBundleBridgeClearedByFinalizer = MutableRef.make<O.Option<PracticeKgBundleContext>>(
+  O.none()
+);
 
 const buildConformanceBundle = Effect.fn("PracticeKgTest.buildConformanceBundle")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -2801,18 +2833,16 @@ const ConformanceBundleLive = Layer.effectDiscard(
   Effect.gen(function* () {
     const context = yield* buildConformanceBundle();
     yield* Effect.acquireRelease(
-      Effect.sync(() => MutableRef.set(conformanceBundle, O.some(context))),
-      () => Effect.sync(() => MutableRef.set(conformanceBundle, O.none()))
+      Effect.sync(() => MutableRef.set(registrationOnlyHarnessBundleBridgeClearedByFinalizer, O.some(context))),
+      () => Effect.sync(() => MutableRef.set(registrationOnlyHarnessBundleBridgeClearedByFinalizer, O.none()))
     );
   })
 ).pipe(Layer.provide(testLayer));
 
-// Registrations only: the toolkit over the shared bundle's PGlite and DuckDB
-// resources, with the transport left to the runner.
-const practiceKgConformanceRegistrations = Layer.unwrap(
+const practiceKgToolkitRegistrationsTransportLeftToRunner = Layer.unwrap(
   Effect.gen(function* () {
     const path = yield* Path.Path;
-    const bundle = yield* O.match(MutableRef.get(conformanceBundle), {
+    const bundle = yield* O.match(MutableRef.get(registrationOnlyHarnessBundleBridgeClearedByFinalizer), {
       onNone: () => Effect.die("the public conformance layer must own the bundle"),
       onSome: Effect.succeed,
     });
@@ -2833,7 +2863,7 @@ it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bu
     name: "beep-practice-kg-test",
     version: "0.0.0",
     instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
-    registrations: practiceKgConformanceRegistrations,
+    registrations: practiceKgToolkitRegistrationsTransportLeftToRunner,
     tool: {
       name: "corpus_search_text",
       arguments: { query: "alpha" },
@@ -2966,13 +2996,12 @@ describe("patent-only filename anchors", () => {
   });
 });
 
-// Native fixture construction belongs to resource acquisition, whose existing
-// two-minute budget covers PGlite/DuckDB initialization on shared CI runners.
-// The assertion body retains its normal watchdog and owns a different on-disk
-// cluster from the conformance host; it never copies or mutates that host's store.
-it.layer(Layer.effect(PracticeKgBundle, buildConformanceBundle()).pipe(Layer.provideMerge(testLayer)), {
+const nativeFixtureBuiltInLayerAcquisitionBudget = Layer.effect(PracticeKgBundle, buildConformanceBundle()).pipe(
+  Layer.provideMerge(testLayer)
+);
+it.layer(nativeFixtureBuiltInLayerAcquisitionBudget, {
   timeout: "2 minutes",
-})("self-check schema mismatch", (it) => {
+})("self-check schema mismatch on its own cluster, never the conformance host's store", (it) => {
   it.effect("checks both stores and refuses missing tool columns after a successful read", () =>
     Effect.gen(function* () {
       const context = yield* PracticeKgBundle;

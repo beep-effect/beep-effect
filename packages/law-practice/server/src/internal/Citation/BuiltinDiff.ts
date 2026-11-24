@@ -34,7 +34,7 @@ const invalid = () => CitationDiffKernelFailure.make({ reason: "invalid-input" }
 const safety = (limit: "diffInputUtf16" | "diffSteps" | "processMessageBytes") =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 
-const extendMatch = (
+const extendMatchWithoutJunkOrPopularFiltering = (
   before: CitationDiffKernelRequest["before"],
   after: CitationDiffKernelRequest["after"],
   range: typeof Range.Type,
@@ -44,7 +44,6 @@ const extendMatch = (
   let [bestA, bestB, size] = block;
   const pointA = (index: number) => citationPythonPointAt(before, index);
   const pointB = (index: number) => citationPythonPointAt(after, index);
-  // No junk or popular-element filtering is installed in this source profile.
   while (bestA > beforeStart && bestB > afterStart && pointA(bestA - 1) === pointB(bestB - 1)) {
     bestA--;
     bestB--;
@@ -83,13 +82,15 @@ const emitBuiltinOpcodes = Effect.fnUntraced(function* (
     if (8 * (steps.length + 1) > request.maximumOutputBytes) return yield* safety("processMessageBytes");
     steps.push(CitationSpanDiffStep.make({ operation, amount }));
   });
+  const appendReplaceAsDeletionThenInsertion = Effect.fnUntraced(function* (deleted: number, inserted: number) {
+    if (deleted > 0) yield* append("-", deleted);
+    if (inserted > 0) yield* append("+", inserted);
+  });
   let a = 0;
   let b = 0;
   for (const [i, j, length] of joined) {
     yield* Effect.yieldNow;
-    // CPython get_opcodes emits replace as deletion followed by insertion.
-    if (a < i) yield* append("-", i - a);
-    if (b < j) yield* append("+", j - b);
+    yield* appendReplaceAsDeletionThenInsertion(i - a, j - b);
     if (length > 0) yield* append("=", length);
     a = i + length;
     b = j + length;
@@ -174,7 +175,7 @@ const matchingBlocks = Effect.fnUntraced(function* (request: CitationDiffKernelR
       previous = row.next;
       best = row.best;
     }
-    return extendMatch(before, after, range, best);
+    return extendMatchWithoutJunkOrPopularFiltering(before, after, range, best);
   });
   const pending: Array<typeof Range.Type> = [[0, aLength, 0, bLength]];
   const matches = A.empty<typeof Block.Type>();

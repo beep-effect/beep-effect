@@ -11,8 +11,6 @@ import { RawDiagnostic } from "./diagnostics.ts";
 const $I = $YamlId.create("internal/raw-document");
 
 /**
- * A YAML directive as raw name/parameter strings (e.g. `%YAML 1.2`).
- *
  * **Example** (Represent a version directive)
  *
  * ```ts

@@ -33,7 +33,6 @@ import { loadCitationMetadataStrings } from "./CitationMetadataStrings.fixtures.
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationMetadataStrings = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationMetadataStrings>[0],
   a1: unknown,
@@ -198,7 +197,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
     () =>
       Effect.gen(function* () {
         const setup = yield* setupCitationRegexRuntime("bun", 24);
-        // Retain the fixture's controlled regex deadline in the shared invocation.
+        const fixtureLimitsKeepingControlledRegexDeadline = setup.limits;
         yield* withCitationTestInvocation(
           Effect.gen(function* () {
             const corpus = yield* loadCitationMetadataStrings();
@@ -227,7 +226,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
             const observed = yield* setup.observed.snapshot;
             expect(observed).toEqual({ spawned: 1, confirmed: 0 });
           }),
-          setup.limits
+          fixtureLimitsKeepingControlledRegexDeadline
         ).pipe(Effect.provideContext(setup.context));
         const retired = yield* setup.observed.snapshot;
         expect(retired).toEqual({ spawned: 1, confirmed: 1 });

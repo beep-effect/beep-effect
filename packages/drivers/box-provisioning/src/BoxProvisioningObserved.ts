@@ -38,8 +38,6 @@ export const BoxProviderId = S.String.check(
 ).pipe(S.brand("BoxProviderId"), $I.annoteSchema("BoxProviderId", { description: "Opaque Box resource identifier." }));
 
 /**
- * Runtime type for {@link BoxProviderId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -76,8 +74,6 @@ export const BoxProviderRevision = S.String.check(
 );
 
 /**
- * Runtime type for {@link BoxProviderRevision}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -104,16 +100,12 @@ export const BoxDiscoveryKind = LiteralKit(["metadata", "retention", "signReques
 );
 
 /**
- * Runtime type for {@link BoxDiscoveryKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type BoxDiscoveryKind = typeof BoxDiscoveryKind.Type;
 
 /**
- * Successful read-only discovery of one Box capability family.
- *
  * **Example** (Record available metadata discovery)
  *
  * ```ts
@@ -219,8 +211,6 @@ export const BoxDiscovery = S.Union([BoxDiscoveryAvailable, BoxDiscoveryBlocked,
 );
 
 /**
- * Runtime type for {@link BoxDiscovery}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -261,8 +251,6 @@ export class BoxObservedFolder extends S.Opaque<BoxObservedFolder, { readonly br
 ) {}
 
 /**
- * Normalized collaboration observed on a Box folder.
- *
  * **Gotchas**
  *
  * The principal remains secure-runner state and must never be serialized into

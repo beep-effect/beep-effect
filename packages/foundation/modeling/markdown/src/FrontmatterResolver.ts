@@ -48,9 +48,6 @@ class SchemaRegistryError extends S.TaggedError<SchemaRegistryError, { readonly 
 ) {}
 
 /**
- * A `$schema` declaration referencing a schema by URL — any string containing
- * `://`.
- *
  * **Details**
  *
  * Carried as data, never resolved in-package: the pure tier does no IO. An
@@ -88,9 +85,6 @@ export class SchemaDeclarationByUrl extends S.Opaque<SchemaDeclarationByUrl, { r
 ) {}
 
 /**
- * A `$schema` declaration referencing a schema by path — any string starting
- * `./`, `../` or `/` (a bundle- or file-relative reference).
- *
  * **Details**
  *
  * Carried as data, never resolved in-package: the pure tier does no IO.
@@ -127,9 +121,6 @@ export class SchemaDeclarationByPath extends S.Opaque<SchemaDeclarationByPath, {
 ) {}
 
 /**
- * A `$schema` declaration carrying an inline JSON-Schema-like document — the
- * declaration value is itself a mapping.
- *
  * **Details**
  *
  * Carried as data: the kit deliberately ships no JSON Schema engine
@@ -171,9 +162,6 @@ export class SchemaDeclarationInline extends S.Opaque<SchemaDeclarationInline, {
 ) {}
 
 /**
- * A `$schema` declaration referencing a registered schema by name — any other
- * string, with the committed `name[@version]` grammar.
- *
  * **Details**
  *
  * The string splits at the **last** `@`, so a leading npm-style scope
@@ -226,9 +214,6 @@ export class SchemaDeclarationByName extends S.Opaque<SchemaDeclarationByName, {
 ) {}
 
 /**
- * The classified `$schema` declaration union — the full grammar contract for
- * how a frontmatter block may self-describe its schema.
- *
  * **Example** (Recognize a classified declaration)
  *
  * ```ts
@@ -255,8 +240,6 @@ export const SchemaDeclaration = S.Union([
 );
 
 /**
- * The union of all classified `$schema` declaration shapes.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -268,10 +251,6 @@ export type SchemaDeclaration =
   | SchemaDeclarationByName;
 
 /**
- * Indicates that a `$schema` value does not classify: not a string or a
- * mapping, an empty string, or a name whose version segment falls outside the
- * committed `X[.Y[.Z]]` grammar.
- *
  * **Example** (Describe an empty declaration)
  *
  * ```ts
@@ -336,10 +315,6 @@ export class SchemaDeclarationInvalidError extends S.TaggedError<
 }
 
 /**
- * Indicates that frontmatter data carries no `$schema` declaration where one
- * is required — the `requireDeclaration` strictness knob, or a registry
- * resolver that has nothing to dispatch on.
- *
  * **Example** (Describe a missing declaration)
  *
  * ```ts
@@ -383,10 +358,6 @@ export class SchemaDeclarationMissingError extends S.TaggedError<
 }
 
 /**
- * Indicates that a declaration named a schema the resolver does not know —
- * an unregistered name, or a URL/path/inline declaration handed to the
- * name-keyed registry resolver.
- *
  * **Example** (Describe an unregistered schema name)
  *
  * ```ts
@@ -442,12 +413,6 @@ export class SchemaNameUnknownError extends S.TaggedError<SchemaNameUnknownError
 }
 
 /**
- * Indicates that a declaration's name is registered but its version segments
- * match no registration exactly — distinct from {@link SchemaNameUnknownError}
- * by design, so a legal-but-unsatisfied partial version (`skill@2` against a
- * `skill@2.1.0` registration) is diagnosable as a version problem, not an
- * unknown schema.
- *
  * **Example** (Describe an unmatched partial version)
  *
  * ```ts

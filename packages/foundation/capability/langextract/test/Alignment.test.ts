@@ -13,9 +13,10 @@ import {
   spanFromMatch,
 } from "@beep/langextract/Alignment";
 import { ExtractionCandidate, GroundedExtraction, LangExtractOptions } from "@beep/langextract/Extraction";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
@@ -58,7 +59,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_exact",
-      span: { end: 5, start: 0 },
+      anchor: { endChar: 5, startChar: 0 },
     });
   });
 
@@ -85,7 +86,7 @@ describe("alignCandidate", () => {
       sourceOf("Alice founded Acme.")
     );
 
-    expect(extraction).toMatchObject({ alignmentStatus: "match_lesser", matchedText: "Acme" });
+    expect(extraction).toMatchObject({ alignmentStatus: "match_lesser", anchor: { quote: "Acme" } });
   });
 
   it("leaves repeated case-insensitive candidate text unaligned", () => {
@@ -105,8 +106,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_lesser",
-      matchedText: "Alice",
-      span: { end: 8, start: 3 },
+      anchor: { endChar: 8, quote: "Alice", startChar: 3 },
     });
   });
 
@@ -118,8 +118,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_lesser",
-      matchedText: "i̇",
-      span: { end: 2, start: 0 },
+      anchor: { endChar: 2, quote: "i̇", startChar: 0 },
     });
   });
 
@@ -132,8 +131,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_minimal_fold",
-      matchedText: sourceText,
-      span: { end: Str.length(sourceText), start: 0 },
+      anchor: { endChar: Str.length(sourceText), quote: sourceText, startChar: 0 },
     });
   });
 
@@ -146,8 +144,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_minimal_fold",
-      matchedText: sourceText,
-      span: { end: Str.length(sourceText), start: 0 },
+      anchor: { endChar: Str.length(sourceText), quote: sourceText, startChar: 0 },
     });
   });
 
@@ -160,8 +157,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_minimal_fold",
-      matchedText: sourceText,
-      span: { end: Str.length(sourceText), start: 0 },
+      anchor: { endChar: Str.length(sourceText), quote: sourceText, startChar: 0 },
     });
   });
 
@@ -174,8 +170,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_minimal_fold",
-      matchedText: sourceText,
-      span: { end: Str.length(sourceText), start: 0 },
+      anchor: { endChar: Str.length(sourceText), quote: sourceText, startChar: 0 },
     });
   });
 
@@ -188,8 +183,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_minimal_fold",
-      matchedText: sourceText,
-      span: { end: Str.length(sourceText), start: 0 },
+      anchor: { endChar: Str.length(sourceText), quote: sourceText, startChar: 0 },
     });
   });
 
@@ -198,8 +192,7 @@ describe("alignCandidate", () => {
 
     expect(extraction).toMatchObject({
       alignmentStatus: "match_minimal_fold",
-      matchedText: "-",
-      span: { end: 1, start: 0 },
+      anchor: { endChar: 1, quote: "-", startChar: 0 },
     });
   });
 
@@ -281,7 +274,7 @@ describe("alignCandidate", () => {
       AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(0.75), sourceText: "Alice founded Acme." })
     );
 
-    expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", matchedText: "Acme." });
+    expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", anchor: { quote: "Acme." } });
   });
 
   it("retains the earlier fuzzy window when a later candidate does not score higher", () => {
@@ -293,7 +286,7 @@ describe("alignCandidate", () => {
       })
     );
 
-    expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", matchedText: "Alpha betta." });
+    expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", anchor: { quote: "Alpha betta." } });
   });
 
   it("skips fuzzy work when the caller requests exact similarity", () => {
@@ -334,9 +327,11 @@ describe("alignCandidate", () => {
       if (
         GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"])(extraction)
       ) {
-        expect(extraction.span.start).toBeGreaterThanOrEqual(0);
-        expect(extraction.span.end).toBeLessThanOrEqual(Str.length(sourceText));
-        expect(extraction.matchedText).toBe(Str.slice(extraction.span.start, extraction.span.end)(sourceText));
+        expect(extraction.anchor.startChar).toBeGreaterThanOrEqual(0);
+        expect(extraction.anchor.endChar).toBeLessThanOrEqual(Str.length(sourceText));
+        expect(extraction.anchor.quote).toBe(
+          Str.slice(extraction.anchor.startChar, extraction.anchor.endChar)(sourceText)
+        );
       }
     },
     { arbitrary: fcRuns(50) }
@@ -389,36 +384,31 @@ describe("alignCandidate", () => {
 });
 
 describe("SpanFromMatch", () => {
-  it.effect("decodes a matched slice into a half-open span", () =>
+  it.effect("decodes a matched slice into the anchor it covers", () =>
     Effect.gen(function* () {
-      const span = yield* decodeSpanFromMatch([4, "Lovelace"]);
+      const anchor = yield* decodeSpanFromMatch([4, "Lovelace"]);
 
-      expect(span.start).toBe(4);
-      expect(span.end).toBe(12);
-      expect(span).toStrictEqual(spanFromMatch([S.Natural.make(4), "Lovelace"]));
+      expect(anchor.startChar).toBe(4);
+      expect(anchor.endChar).toBe(12);
+      expect(anchor.quote).toBe("Lovelace");
+      expect(anchor).toStrictEqual(spanFromMatch([S.Natural.make(4), "Lovelace"]));
     })
   );
 
   it.effect(
-    "encodes a span back to its matched slice through the current alignment source",
+    "encodes an anchor back to its matched slice from its own quote",
     Effect.fnUntraced(function* () {
-      const span = Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(4) });
-      const match = yield* encodeSpanFromMatch(span).pipe(
-        Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes."))
-      );
+      const anchor = TextAnchor.make({ endChar: S.Natural.make(12), quote: "Lovelace", startChar: S.Natural.make(4) });
+      const match = yield* encodeSpanFromMatch(anchor);
 
       expect(match).toStrictEqual([4, "Lovelace"]);
     })
   );
 
   it.effect(
-    "fails closed when a span exceeds the current alignment source",
+    "refuses an empty matched slice, since an anchor is never empty",
     Effect.fnUntraced(function* () {
-      const span = Contract.Span.make({ end: S.Natural.make(99), start: S.Natural.make(4) });
-      const error = yield* encodeSpanFromMatch(span).pipe(
-        Effect.provideService(CurrentAlignmentSource, sourceOf("Ada")),
-        Effect.flip
-      );
+      const error = yield* decodeSpanFromMatch([4, ""]).pipe(Effect.flip);
 
       expect(error._tag).toBe("SchemaError");
     })
@@ -467,8 +457,7 @@ describe("GroundedExtractionFromCandidate", () => {
 
       expect(grounded).toMatchObject({
         alignmentStatus: "match_exact",
-        matchedText: "Ada Lovelace",
-        span: { end: 12, start: 0 },
+        anchor: { endChar: 12, quote: "Ada Lovelace", startChar: 0 },
       });
     })
   );

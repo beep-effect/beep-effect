@@ -275,8 +275,6 @@ const SubjectValue = S.Union([SchemaHandleValue, TermString]);
 const ObjectValue = S.Union([SchemaHandleValue, TermString, TypedLiteralValue]);
 
 /**
- * Runtime schema for one relational fact tuple.
- *
  * **Details**
  *
  * The tuple grammar is itself schema-validated — the ontology definition is
@@ -301,8 +299,6 @@ export const TripleValue = S.Tuple([SubjectValue, PredicateString, ObjectValue])
 );
 
 /**
- * Runtime type for {@link TripleValue}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { TripleValue } from "@beep/ontology/Fold.models"
@@ -337,8 +333,6 @@ export const SkosClassification = LiteralKit(["concept", "conceptScheme"]).pipe(
 );
 
 /**
- * Runtime type for {@link SkosClassification}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { SkosClassification } from "@beep/ontology/Fold.models"
@@ -378,8 +372,6 @@ export const AssembledPredicateKind = LiteralKit(["datatype", "object"]).pipe(
 );
 
 /**
- * Runtime type for {@link AssembledPredicateKind}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { AssembledPredicateKind } from "@beep/ontology/Fold.models"
@@ -394,8 +386,6 @@ export const AssembledPredicateKind = LiteralKit(["datatype", "object"]).pipe(
 export type AssembledPredicateKind = typeof AssembledPredicateKind.Type;
 
 /**
- * Resolved literal payload carried by an assembled fact object.
- *
  * **Example** (Usage)
  * ```ts
  * import { FactLiteral } from "@beep/ontology/Fold.models"
@@ -441,8 +431,6 @@ export const FactObject = S.Union([IRI, FactLiteral]).pipe(
 );
 
 /**
- * Runtime type for {@link FactObject}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { FactObject } from "@beep/ontology/Fold.models"
@@ -498,8 +486,6 @@ export class AssembledFact extends S.Opaque<AssembledFact, { readonly brand: uni
 ) {}
 
 /**
- * One assembled field predicate with its inferred kind.
- *
  * **Example** (Usage)
  * ```ts
  * import { AssembledPredicate } from "@beep/ontology/Fold.models"
@@ -535,8 +521,6 @@ export class AssembledPredicate extends S.Opaque<AssembledPredicate, { readonly 
 ) {}
 
 /**
- * One assembled ontology class with its field predicates.
- *
  * **Example** (Usage)
  * ```ts
  * import { $I } from "@beep/identity/packages"
@@ -571,8 +555,6 @@ export class AssembledClass extends S.Opaque<AssembledClass, { readonly brand: u
 ) {}
 
 /**
- * Warning codes surfaced by the SKOS integrity gate.
- *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
  * import { OntologyWarningCode } from "@beep/ontology/Fold.models"
@@ -595,8 +577,6 @@ export const OntologyWarningCode = LiteralKit([
 );
 
 /**
- * Runtime type for {@link OntologyWarningCode}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OntologyWarningCode } from "@beep/ontology/Fold.models"
@@ -611,8 +591,6 @@ export const OntologyWarningCode = LiteralKit([
 export type OntologyWarningCode = typeof OntologyWarningCode.Type;
 
 /**
- * Observable warning attached to an assembled ontology.
- *
  * **Details**
  *
  * Warnings never fail the fold; hard SKOS integrity violations become typed
@@ -732,8 +710,6 @@ export const OntologyAssemblyErrorReason = LiteralKit([
 );
 
 /**
- * Runtime type for {@link OntologyAssemblyErrorReason}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OntologyAssemblyErrorReason } from "@beep/ontology/Fold.models"

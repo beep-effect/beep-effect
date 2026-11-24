@@ -147,8 +147,6 @@ export type TomlErrorCodeRaw =
 const $I = $TomlId.create("internal/diagnostics");
 
 /**
- * Models the engine's diagnostic record, from which public modules derive line and character positions.
- *
  * **Example** (Decode a raw diagnostic)
  *
  * ```ts

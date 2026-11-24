@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $PhoenixId.create("Phoenix.errors");
 
 /**
- * Driver operation names surfaced in {@link PhoenixError} diagnostics.
- *
  * **Example** (Log createDataset enum value)
  *
  * ```ts
@@ -49,8 +47,6 @@ export const PhoenixOperation = LiteralKit([
 );
 
 /**
- * Type for {@link PhoenixOperation}.
- *
  * **Example** (Type-check createDataset operation)
  *
  * ```ts
@@ -68,8 +64,6 @@ export type PhoenixOperation = typeof PhoenixOperation.Type;
 const isPhoenixOperation = S.is(PhoenixOperation);
 
 /**
- * Technical error reasons emitted by the Phoenix driver.
- *
  * **Example** (Log transport reason enum)
  *
  * ```ts
@@ -88,8 +82,6 @@ export const PhoenixErrorReason = LiteralKit(["config", "response decoding", "tr
 );
 
 /**
- * Type for {@link PhoenixErrorReason}.
- *
  * **Example** (Type-check transport reason)
  *
  * ```ts
@@ -150,8 +142,6 @@ class PhoenixErrorOperationOptionsInput extends S.Opaque<
 ) {}
 
 /**
- * Technical failure raised by the Phoenix driver boundary.
- *
  * **Example** (Create operation-scoped error)
  *
  * ```ts

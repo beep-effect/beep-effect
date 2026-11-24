@@ -73,8 +73,6 @@ export const M365EnvPrefix = S.String.check(
 );
 
 /**
- * Type for {@link M365EnvPrefix}.
- *
  * **Example** (Type a prefix)
  *
  * ```ts

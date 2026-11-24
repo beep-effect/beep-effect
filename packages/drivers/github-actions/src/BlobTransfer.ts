@@ -12,8 +12,6 @@ import type * as Effect from "effect/Effect";
 const $I = $GithubActionsId.create("BlobTransfer");
 
 /**
- * Raised when bytes could not be moved to or from a signed blob url.
- *
  * **Example** (Identify a failed upload)
  *
  * ```ts

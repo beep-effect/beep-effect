@@ -27,9 +27,6 @@ const OverrideValue: S.Codec<OverrideValue> = S.Union([
 );
 
 /**
- * Extension data specific to bun lockfiles, attached to `Lockfile.extension`
- * when the format is `"bun"`.
- *
  * **Details**
  * - `catalog` — the default (unnamed) catalog.
  * - `catalogs` — named catalog definitions.
@@ -83,8 +80,6 @@ export class BunExtension extends S.Opaque<BunExtension, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link BunExtension}.
- *
  * @category type-level
  * @since 0.0.0
  */

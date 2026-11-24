@@ -11,10 +11,6 @@ import * as S from "effect/Schema";
 const $I = $LockfilesId.create("PackageManagerLock");
 
 /**
- * The package manager a `pnpm-lock.yaml` pins, with the integrity pnpm
- * recorded for it — read from the lockfile's env preamble by
- * `PnpmEnvLockfile.packageManager`.
- *
  * **Details**
  *
  * pnpm records the package manager a workspace declares in
@@ -89,8 +85,6 @@ export class PackageManagerLock extends S.Opaque<PackageManagerLock, { readonly 
 ) {}
 
 /**
- * Companion types for {@link PackageManagerLock}.
- *
  * @category type-level
  * @since 0.0.0
  */

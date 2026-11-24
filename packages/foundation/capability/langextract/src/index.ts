@@ -20,7 +20,7 @@ export * as Alignment from "./Alignment/index.ts";
  */
 export * as Extraction from "./Extraction/index.ts";
 /**
- * Adapters into `@beep/nlp/Handoff`.
+ * Verified annotation handoff into `@beep/annotation`.
  *
  * @category interop
  * @since 0.0.0

@@ -23,7 +23,6 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 import type { CitationSpanDiffStep } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
 import type { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationDiffWorker = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationDiffWorker>[0],
   a1: unknown,

@@ -46,8 +46,6 @@ const adapterMetadata = (canonicalName: string, overview: string) =>
   });
 
 /**
- * Web Annotation text-quote selector DTO.
- *
  * **Example** (Decode text-quote selector)
  *
  * ```ts import.meta.vitest name="Decode text-quote selector"
@@ -85,8 +83,6 @@ export class WebAnnotationTextQuoteSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation text-position selector DTO.
- *
  * **Example** (Decode text-position selector)
  *
  * ```ts import.meta.vitest name="Decode text-position selector"
@@ -124,8 +120,6 @@ export class WebAnnotationTextPositionSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation fragment selector DTO.
- *
  * **Example** (Decode fragment selector)
  *
  * ```ts import.meta.vitest name="Decode fragment selector"
@@ -159,8 +153,6 @@ export class WebAnnotationFragmentSelector extends S.Opaque<
 ) {}
 
 /**
- * Web Annotation selector union.
- *
  * **Example** (Decode selector union)
  *
  * ```ts import.meta.vitest name="Decode selector union"
@@ -190,8 +182,6 @@ export const WebAnnotationSelector = S.Union([
 );
 
 /**
- * Type for {@link WebAnnotationSelector}.
- *
  * **Example** (Accept selector type)
  *
  * ```ts
@@ -245,8 +235,6 @@ export class WebAnnotationTarget extends S.Opaque<WebAnnotationTarget, { readonl
 ) {}
 
 /**
- * Web Annotation DTO.
- *
  * **Example** (Decode web annotation)
  *
  * ```ts import.meta.vitest name="Decode web annotation"
@@ -283,8 +271,6 @@ export class WebAnnotation extends S.Opaque<WebAnnotation, { readonly brand: uni
 ) {}
 
 /**
- * Why a `TextAnchor` and a Web Annotation target could not be mapped.
- *
  * **Details**
  *
  * `split-boundary`, `out-of-range` and `ill-formed-text` come from the unit
@@ -325,8 +311,6 @@ export const WebAnnotationAnchorRefusal = LiteralKit([
 );
 
 /**
- * Type for {@link WebAnnotationAnchorRefusal}.
- *
  * **Example** (Annotate a refusal reason)
  *
  * ```ts

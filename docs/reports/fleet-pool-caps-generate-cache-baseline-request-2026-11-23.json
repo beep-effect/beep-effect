@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "ed1f745d9cb0c66f0995c1741b92a283c84dbf7b989cc399c7a8d3e43d7909cb",
+    "@beep/infra-ci-runners": "967c084f15dbe7e096a76040314d5d09a7bbb3eca15b7fbada1444ec326202c4"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P5 missed-event check lane, feat/ci-missed-event-check)",
+    "reason": "Re-record @beep/infra-ci-runners after its manifest gained the generate and generate:check scripts that run the fleet pool caps renderer, which changes the scripts digest of every task, and the root subject for the turbo.json source digest inherited from origin/main (#3483). No command, input, output, environment entry or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/fleet-pool-caps-generate-cache-review-2026-11-23.md",
+      "sha256": "51402224e31a01e698a8c0b443e19d6783d1205c8955f17970b7bf42c3d96fde"
+    }
+  },
+  "subjects": ["//", "@beep/infra-ci-runners"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

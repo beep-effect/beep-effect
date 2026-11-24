@@ -24,8 +24,6 @@ import { Repo } from "./Repo.ts";
 const $I = $GithubId.create("DeploymentEnvironment");
 
 /**
- * A deployment environment, as listing returns it.
- *
  * **Example** (Decode a listed environment)
  *
  * ```ts

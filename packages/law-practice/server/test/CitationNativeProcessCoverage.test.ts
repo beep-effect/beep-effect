@@ -111,13 +111,13 @@ it.effect("quarantines an exited child whose scope finalizer fails, then recover
     );
     const held = yield* admission.snapshot;
     expect(held).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
-    // The failed scope is already closed; the retry acknowledges exit and releases.
     finalizerFails = false;
     yield* started.process.retire(true);
     const releasedOwner = yield* owner.snapshot;
     deepStrictEqual(
       releasedOwner,
-      CitationNativeProcessOwnerSnapshot.make({ processes: 0, quarantined: 0, closed: false })
+      CitationNativeProcessOwnerSnapshot.make({ processes: 0, quarantined: 0, closed: false }),
+      "the failed scope is already closed; the retry acknowledges exit and releases"
     );
     const released = yield* admission.snapshot;
     expect(released).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });

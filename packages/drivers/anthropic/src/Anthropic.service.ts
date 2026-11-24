@@ -85,13 +85,12 @@ export const AnthropicLive: Layer.Layer<AnthropicClient.AnthropicClient, Config.
 export const makeAnthropicLanguageModelLayer = (
   options: AnthropicLanguageModelOptions = AnthropicLanguageModelOptions.make({})
 ) =>
-  AnthropicLanguageModel.layer({
-    config:
-      options.temperature === undefined
-        ? { max_tokens: options.maxTokens }
-        : { max_tokens: options.maxTokens, temperature: options.temperature },
-    model: options.model,
-  }).pipe(Layer.provide(AnthropicLive));
+  AnthropicLanguageModel.model(
+    options.model,
+    options.temperature === undefined
+      ? { max_tokens: options.maxTokens }
+      : { max_tokens: options.maxTokens, temperature: options.temperature }
+  ).pipe(Layer.provide(AnthropicLive));
 
 /**
  * Live language-model layer for the configured Anthropic model, with request settings.

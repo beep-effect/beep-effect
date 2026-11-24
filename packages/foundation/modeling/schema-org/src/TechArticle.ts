@@ -64,8 +64,6 @@ export const TechArticleFields = {
 } as const;
 
 /**
- * A schema.org `TechArticle` — a piece of technical documentation.
- *
  * **Example** (Link a technical article to package source code)
  *
  * ```ts

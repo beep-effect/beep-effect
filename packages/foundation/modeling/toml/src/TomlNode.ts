@@ -23,9 +23,6 @@ import { TomlLocalDate, TomlLocalDateTime, TomlLocalTime, TomlOffsetDateTime } f
 const $I = $TomlId.create("TomlNode");
 
 /**
- * The three simple-key spellings: `bare`, `basic` (`"..."`) and `literal`
- * (`'...'`).
- *
  * **Example** (Validate a quoted key kind)
  *
  * ```ts
@@ -46,8 +43,6 @@ export const TomlKeyKind = LiteralKit(["bare", "basic", "literal"]).pipe(
 );
 
 /**
- * The union of all key-kind string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -55,8 +50,6 @@ export const TomlKeyKind = LiteralKit(["bare", "basic", "literal"]).pipe(
 export type TomlKeyKind = typeof TomlKeyKind.Type;
 
 /**
- * One simple key within a (possibly dotted) key path.
- *
  * **Details**
  *
  * - `value` — the decoded key text (escapes resolved, quotes stripped).
@@ -103,8 +96,6 @@ export class TomlKey extends S.Opaque<TomlKey, { readonly brand: unique symbol }
 ) {}
 
 /**
- * The four TOML string forms.
- *
  * **Example** (Validate a multiline string style)
  *
  * ```ts
@@ -123,8 +114,6 @@ export const TomlStringStyle = LiteralKit(["basic", "literal", "multiline-basic"
 );
 
 /**
- * The union of all string-style literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -132,9 +121,6 @@ export const TomlStringStyle = LiteralKit(["basic", "literal", "multiline-basic"
 export type TomlStringStyle = typeof TomlStringStyle.Type;
 
 /**
- * A string value node. `value` is the decoded text; the raw spelling lives in
- * the source span.
- *
  * **Example** (Read decoded string text)
  *
  * ```ts
@@ -178,9 +164,6 @@ export class TomlString extends S.Opaque<TomlString, { readonly brand: unique sy
 ) {}
 
 /**
- * An integer value node. Decodes to `number` when the magnitude fits in
- * 2^53 - 1, else `bigint` (TOML integers span the full signed 64-bit range).
- *
  * **Example** (Preserve an integer beyond safe precision)
  *
  * ```ts
@@ -222,8 +205,6 @@ export class TomlInteger extends S.Opaque<TomlInteger, { readonly brand: unique 
 ) {}
 
 /**
- * A float value node, including the special spellings (`inf`, `nan`).
- *
  * **Example** (Represent positive infinity)
  *
  * ```ts
@@ -261,8 +242,6 @@ export class TomlFloat extends S.Opaque<TomlFloat, { readonly brand: unique symb
 ) {}
 
 /**
- * A boolean value node.
- *
  * **Example** (Read a boolean literal)
  *
  * ```ts
@@ -293,8 +272,6 @@ export class TomlBoolean extends S.Opaque<TomlBoolean, { readonly brand: unique 
 ) {}
 
 /**
- * A date-time value node wrapping one of the four TOML date-time classes.
- *
  * **Example** (Wrap a local calendar date)
  *
  * ```ts
@@ -340,9 +317,6 @@ export class TomlDateTimeLiteral extends S.Opaque<TomlDateTimeLiteral, { readonl
 ) {}
 
 /**
- * An array value node. Heterogeneous per TOML; may span multiple lines
- * (the span covers brackets, inner newlines and inner comments).
- *
  * **Example** (Keep mixed array values in source order)
  *
  * ```ts
@@ -391,8 +365,6 @@ export class TomlArray extends S.Opaque<TomlArray, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion namespace for {@link TomlArray}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -412,9 +384,6 @@ export declare namespace TomlArray {
 }
 
 /**
- * One `key = value` entry inside an inline table. `keyPath` has more than one
- * element for dotted keys (`{a.b = 1}`).
- *
  * **Example** (Represent a dotted inline key)
  *
  * ```ts
@@ -467,8 +436,6 @@ export class TomlInlineEntry extends S.Opaque<TomlInlineEntry, { readonly brand:
 ) {}
 
 /**
- * Companion namespace for {@link TomlInlineEntry}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -489,9 +456,6 @@ export declare namespace TomlInlineEntry {
 }
 
 /**
- * An inline table value node (`{ k = v, ... }`). May span multiple lines
- * since TOML 1.1 (the span covers braces, inner newlines and inner comments).
- *
  * **Example** (Construct an empty inline table)
  *
  * ```ts
@@ -533,8 +497,6 @@ export class TomlInlineTable extends S.Opaque<TomlInlineTable, { readonly brand:
 ) {}
 
 /**
- * Companion namespace for {@link TomlInlineTable}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -589,8 +551,6 @@ export const TomlValueNode: S.Codec<TomlValueNode, TomlValueNode.Encoded> = S.su
 );
 
 /**
- * The union of all TOML value node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -605,8 +565,6 @@ export type TomlValueNode =
   | TomlInlineTable;
 
 /**
- * Companion namespace for {@link TomlValueNode}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -629,11 +587,6 @@ export declare namespace TomlValueNode {
 }
 
 /**
- * A `key = value` expression. The span starts at the first character of the
- * line's leading whitespace and ends after the terminating newline (or at
- * EOF); multi-line values extend it. `comment` holds the decoded trailing
- * comment (without `#`, one leading space stripped) when present.
- *
  * **Example** (Retain an assignment comment)
  *
  * ```ts
@@ -690,8 +643,6 @@ export class TomlKeyValue extends S.Opaque<TomlKeyValue, { readonly brand: uniqu
 ) {}
 
 /**
- * A `[table]` header expression. Span contract as in {@link TomlKeyValue}.
- *
  * **Example** (Locate a named table)
  *
  * ```ts
@@ -741,9 +692,6 @@ export class TomlTableHeader extends S.Opaque<TomlTableHeader, { readonly brand:
 ) {}
 
 /**
- * A `[[array-of-tables]]` header expression. Span contract as in
- * {@link TomlKeyValue}.
- *
  * **Example** (Locate an array of tables)
  *
  * ```ts
@@ -794,9 +742,6 @@ export class TomlArrayTableHeader extends S.Opaque<TomlArrayTableHeader, { reado
 ) {}
 
 /**
- * A run of consecutive blank and comment-only lines, coalesced into one
- * expression. `text` is the raw source slice, newlines included.
- *
  * **Example** (Retain comment and blank lines)
  *
  * ```ts
@@ -837,9 +782,6 @@ export class TomlTrivia extends S.Opaque<TomlTrivia, { readonly brand: unique sy
 ) {}
 
 /**
- * The union schema of the four expression types making up a document's
- * linear CST.
- *
  * **Example** (Recognize a trivia expression)
  *
  * ```ts
@@ -861,8 +803,6 @@ export const TomlExpression = S.Union([TomlKeyValue, TomlTableHeader, TomlArrayT
 );
 
 /**
- * The union of all expression node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0

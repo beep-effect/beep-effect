@@ -220,9 +220,48 @@ packages last". That wave covers `@beep/identity`, `@beep/infra-ci-runners`,
 rows included. The orchestrator merges it on the CI goals driver's sequencing, and its PR names
 those packages.
 
+**Correction (wave 3).** The CI goals driver checked the rows against both P5 fences. Repo-cli
+`Ci/*` and `Identity/*` are in no runner Lambda bundle and outside the CI closure, and identity
+`src/Registry.ts` is in no handler graph and outside the closure. Of the rows, only
+`identity/src/Term.ts` (17) is fenced, as closure source. The 32 above is net of the 4 leads #3439
+removed, so the PRs added 36 rows: wave 3 removes 13: `rdf/src/NamespacePin.ts` 2, `identity/src/Registry.ts` 1, cli
+`Identity/index.ts` 1, cli `Identity/Registry.ts` 2 of 3, and the four `Ci/` files 7 of 12. Six
+cli leads stay because removing them leaves a tooling export with no description, which
+`beep/require-description` rejects under `--max-warnings=0`; wave 4 teaches that rule to accept a
+lead derived from the annotation and removes them. The 17 `Term.ts` rows wait for wave 5.
+
 Lane fix/jsdoc-ratchet-restating-lead-main
 
-Reverse: Remove the 32 attributed leads in the last P1 sweep wave (PLAN.md: CI-closure and P5 runner packages last) and lower the baseline with jsdoc-ratchet --write-baseline
+Reverse: Wave 3 removes 13 of the 36 added leads; remove the 6 tooling leads in wave 4 and the 17 in identity Term.ts in wave 5, then lower the baseline with jsdoc-ratchet --write-baseline
+
+### Sweep waves skip both P5 cutover fences, file by file: the CI binary closure and the runner handler graphs, 2026-11-23
+
+The P5 cutover has two fences. Both are file fences, not package fences, and the sweep waves leave
+every file behind either one untouched:
+
+- **CI binary closure** (`beep ci binary-closure --list`): any byte change starts a binary build and
+  release cycle that the CI goals driver sequences.
+- **Runner handler graphs**: Alchemy hashes each runner Lambda's zip including its source map, whose
+  `sourcesContent` embeds every loaded module's full text, so a JSDoc-only edit in a handler-graph
+  file changes the code hash. The fenced files are the five identity sources
+  `HandlerBundles.test.ts` pins (`Authority.ts`, `Id.ts`, `Root.ts`, `internal/Segment.ts`,
+  `internal/schemaStatics.ts`), ci-runners `src/internal/lambda/**` and everything it imports, the
+  alchemy-github-runners handler graphs, and any `@beep/schema`, `@beep/data` or `@beep/utils`
+  module those graphs load. When a file is in doubt, a HandlerBundles-style before/after build that
+  compares map sources decides.
+
+Wave 3 swept 653 files in foundation, drivers and six repo-cli files, then reverted the 64 that are
+closure source: drivers/github-actions (3), capability cli-kit (22), runtime-env (10), walker (1),
+modeling github-commands (1), github-reporting (1), identity `Iri.ts` (1), markdown (12), utils
+(12) and primitive/data (1). The CI goals driver ruled in writing that identity `Registry.ts` and
+repo-cli `Ci/*` and `Identity/*` are behind neither fence, so wave 3 keeps them. Wave 4 (tooling)
+applies both checks. The fenced files join wave 5 with identity `Term.ts`. Wave 5 runs only on the
+orchestrator's slot, after tksr C's cumulative pin (#3500) merges, and its release gets the driver's
+read.
+
+Lane goals/jsdoc-lead-single-source-w3
+
+Reverse: Sweep the fenced files in wave 5, on the orchestrator's slot, once it says in writing that the P5 fence has lifted
 
 <!-- beep:decisions:end -->
 

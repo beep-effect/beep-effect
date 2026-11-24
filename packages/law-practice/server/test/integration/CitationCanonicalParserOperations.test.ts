@@ -9,12 +9,7 @@ import {
 } from "../CitationCanonicalParserOperations.fixtures.ts";
 import { citationTokenizerTestLayer } from "../CitationTokenizer.fixtures.ts";
 
-// Bun only since 2026-11-09 (deletion addendum G7); integration/CitationEngineCorpus.test.ts and
-// integration/CitationCanonicalTokenizer.test.ts carry the node coverage of the engine. The replay
-// groups are split into contiguous ranges, one integration file per range, so no file exceeds a
-// hosted integration partition's budget (goals/citation-extraction-engine, 2026-11-09);
-// test/CitationCanonicalExtractionRanges.test.ts asserts the ranges are disjoint and their union
-// is every group.
+// decision: citation-integration-replay-files
 const RANGE = 0;
 
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(

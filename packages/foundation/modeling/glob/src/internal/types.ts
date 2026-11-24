@@ -51,8 +51,6 @@ export const Platform = LiteralKit([
   })
 );
 /**
- * Describes an accepted target platform for glob matching.
- *
  * @see {@link Platform} for the runtime schema of accepted platform names.
  * @category type-level
  * @since 0.0.0
@@ -68,8 +66,6 @@ const optionalPositiveIntCapLikeAssertCap = (key: string, description: string) =
   );
 
 /**
- * The engine option bag — upstream MinimatchOptions minus the dropped fields.
- *
  * **Details**
  *
  * The schema states the option domain. Engine entry points take the plain

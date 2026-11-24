@@ -19,8 +19,6 @@ const $I = $PublicSiteId.create("HostedUrl");
 const LAB_HOST_SUFFIX = /\.labs\.beep(?:\.localhost)?$/u;
 
 /**
- * Schema for a path nested below a reserved route.
- *
  * **Details**
  *
  * The path is relative to the route: one or more non-empty `/`-separated
@@ -134,8 +132,6 @@ export const LabLabel = S.String.pipe(
 export type LabLabel = typeof LabLabel.Type;
 
 /**
- * Schema decoding a portless lab name into its {@link LabLabel}.
- *
  * **Details**
  *
  * Accepts the portless host `<label>.labs.beep.localhost`, the portless name
@@ -168,8 +164,6 @@ export const LabPortlessName = S.String.pipe(
 );
 
 /**
- * Lab label decoded by {@link LabPortlessName}.
- *
  * @category models
  * @since 0.0.0
  */

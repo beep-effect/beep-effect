@@ -39,8 +39,6 @@ class ScriptedPipelineError extends S.TaggedError<ScriptedPipelineError, { reado
 ) {}
 
 /**
- * One scripted completed run: optional output, exit code and hang flag.
- *
  * **Details**
  *
  * `stdout` and `stderr` default to empty and `exit` to `0`, so `{}` scripts a
@@ -118,8 +116,6 @@ export const ScriptResult = S.Union([S.instanceOf(PlatformError.PlatformError), 
 export type ScriptResult = typeof ScriptResult.Type;
 
 /**
- * Type-level companions of {@link (ScriptResult:variable)}.
- *
  * @category type-level
  * @since 0.0.0
  */

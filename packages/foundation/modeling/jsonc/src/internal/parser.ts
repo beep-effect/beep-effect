@@ -61,8 +61,6 @@ export const ParseCode = LiteralKit([
 );
 
 /**
- * The union of parse-error code literals.
- *
  * @see {@link ParseCode} for the runtime kit.
  * @category type-level
  * @since 0.0.0

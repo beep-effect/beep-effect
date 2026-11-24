@@ -52,15 +52,13 @@ export const citationRecognizerWorkerProgram = Effect.gen(function* () {
   const serialization = yield* Layer.build(
     RpcSerialization.layerSchemaBinary({ maxFrameSize: maximum, fingerprintPayloads: true })
   );
-  // Construct the supplied stdio protocol on this program's live fiber. Its
-  // EOF writer finalizer then ends this one-shot process after pending replies.
-  const protocol = yield* RpcServer.makeProtocolStdio.pipe(
+  const protocolOnLiveFiberWhoseEofFinalizerEndsProcess = yield* RpcServer.makeProtocolStdio.pipe(
     Effect.provideService(Stdio.Stdio, guarded),
     Effect.provideContext(serialization)
   );
   const handlers = yield* Layer.build(EyeciteRpcs.toLayer({ Recognize: recognizeEyecite }));
   return yield* RpcServer.make(EyeciteRpcs).pipe(
-    Effect.provideService(RpcServer.Protocol, protocol),
+    Effect.provideService(RpcServer.Protocol, protocolOnLiveFiberWhoseEofFinalizerEndsProcess),
     Effect.provideContext(handlers)
   );
 }).pipe(Effect.withSpan("Citation.recognizerWorkerProgram"));

@@ -38,7 +38,6 @@
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/langextract": "workspace:^",
-    "@beep/nlp": "workspace:^",
     "@beep/oxigraph": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/rdf": "workspace:^",

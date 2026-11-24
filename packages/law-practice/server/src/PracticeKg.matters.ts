@@ -186,8 +186,7 @@ const valuesAt = <Value>(
 
 const sortedUnique = (values: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(A.dedupe(values), Order.String);
 
-// A client-keyed docket is `<client>.<docket>`; an unattributed one is the bare code.
-const bareDocketOf = (node: PracticeKgNodeRow): string =>
+const bareDocketFromClientDotDocketOrBareKey = (node: PracticeKgNodeRow): string =>
   pipe(
     O.fromNullishOr(node.client),
     O.match({
@@ -249,7 +248,7 @@ export const buildMatterTables = (graph: PracticeKgMatterGraph): PracticeKgMatte
     );
     return PracticeKgMatterDocketRow.make({
       applicationNumbers: sortedUnique(A.map(applications, (application) => application.naturalKey)),
-      docket: bareDocketOf(docket),
+      docket: bareDocketFromClientDotDocketOrBareKey(docket),
       docketKey: docket.naturalKey,
       documentCount: targetCount("has_document", docket.iri),
       epistemicStatus: docket.epistemicStatus,
@@ -472,23 +471,23 @@ const nonDigitPattern = /[^0-9]/gu;
 const usptoNumberPattern = /^[0-9]{2}\/[0-9]{3},?[0-9]{3}$|^[0-9]{1,2},[0-9]{3},[0-9]{3}$|^[0-9]{7,8}$/u;
 const docketFamilyPattern = /^(?:([0-9]{4,6})\.)?([0-9]{5,6})[A-Z]/u;
 
-/*
- * `compact` is the reference upper-cased with whitespace removed, which is how
- * docket and family keys are stored. `digits` is set only when the reference is
- * shaped like a USPTO application or patent number, so a docket code's digits
- * are never mistaken for one.
- */
 const normalizeReference = (
   reference: string
 ): { readonly compact: string; readonly digits: string; readonly family: string; readonly familyKey: string } => {
-  const compact = Str.toUpperCase(Str.replace(whitespacePattern, "")(reference));
-  const numberLike = Str.replace(kindCodePattern, "")(Str.replace(usPrefixPattern, "")(compact));
-  const docketFamily = docketFamilyPattern.exec(compact);
+  const upperCasedWhitespaceFreeLikeStoredKeys = Str.toUpperCase(Str.replace(whitespacePattern, "")(reference));
+  const numberLike = Str.replace(
+    kindCodePattern,
+    ""
+  )(Str.replace(usPrefixPattern, "")(upperCasedWhitespaceFreeLikeStoredKeys));
+  const digitsOnlyWhenUsptoShapedNeverDocketDigits = usptoNumberPattern.test(numberLike)
+    ? Str.replace(nonDigitPattern, "")(numberLike)
+    : "";
+  const docketFamily = docketFamilyPattern.exec(upperCasedWhitespaceFreeLikeStoredKeys);
   const client = docketFamily?.[1];
   const family = docketFamily?.[2] ?? "";
   return {
-    compact,
-    digits: usptoNumberPattern.test(numberLike) ? Str.replace(nonDigitPattern, "")(numberLike) : "",
+    compact: upperCasedWhitespaceFreeLikeStoredKeys,
+    digits: digitsOnlyWhenUsptoShapedNeverDocketDigits,
     family,
     familyKey: client === undefined || family === "" ? "" : `${client}.${family}`,
   };
@@ -764,10 +763,11 @@ const digitsOf = (value: string): string =>
 const familyKeysByValue = (
   entries: ReadonlyArray<readonly [string, string]>
 ): MutableHashMap.MutableHashMap<string, ReadonlyArray<string>> => {
-  // An empty value (a number with no digits) is stored and never read: every lookup key is non-empty.
-  const map = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  A.forEach(entries, ([value, familyKey]) => appendTo(map, value, familyKey));
-  return map;
+  const familyKeysByValueKeepingUnreadEmptyDigitlessKeys = MutableHashMap.empty<string, ReadonlyArray<string>>();
+  A.forEach(entries, ([value, familyKey]) =>
+    appendTo(familyKeysByValueKeepingUnreadEmptyDigitlessKeys, value, familyKey)
+  );
+  return familyKeysByValueKeepingUnreadEmptyDigitlessKeys;
 };
 
 const hitsAt = (

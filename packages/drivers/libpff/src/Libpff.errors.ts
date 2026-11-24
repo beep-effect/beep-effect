@@ -21,8 +21,6 @@ const LibpffProcessClassification = LiteralKit(["codepage", "corrupt", "password
 );
 
 /**
- * Technical libpff failure reasons.
- *
  * **Example** (Log available error reasons)
  *
  * ```ts
@@ -42,8 +40,6 @@ export const LibpffErrorReason = LibpffErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link LibpffErrorReason}.
- *
  * **Example** (Assign a typed reason)
  *
  * ```ts
@@ -59,8 +55,6 @@ export const LibpffErrorReason = LibpffErrorReasonBase.pipe(
 export type LibpffErrorReason = typeof LibpffErrorReason.Type;
 
 /**
- * Options used when constructing {@link LibpffError} instances.
- *
  * **Example** (Make options with exitCode)
  *
  * ```ts
@@ -93,8 +87,6 @@ export class LibpffErrorOptions extends S.Opaque<LibpffErrorOptions, { readonly 
 ) {}
 
 /**
- * Technical failure raised inside the libpff driver boundary.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

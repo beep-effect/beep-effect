@@ -1,5 +1,3 @@
-// The widening-table test: each upstream fixture value (vitest-agent 1cf1ab94,
-// SPEC "The widening table") maps to its widened type in the model.
 import { classifyOutcome, classifyShape } from "@beep/gate-report/Classify";
 import { FailureEntry, GatePointers, PointerTable } from "@beep/gate-report/ConsoleDocument";
 import { GateEvent } from "@beep/gate-report/GateEvent";
@@ -26,7 +24,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { epoch, makeReport } from "./support/builders.ts";
 
-describe("widening table", () => {
+describe("widening table (SPEC): each vitest-agent 1cf1ab94 fixture value maps to its widened model type", () => {
   it("TestState -> ItemOutcome adds warned; pending folds into skipped", () => {
     assert.deepStrictEqual(A.map(UpstreamTestState.literals, itemOutcomeFromTestState), [
       "passed",

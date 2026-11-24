@@ -26,8 +26,6 @@ import type * as Rest from "./Rest.ts";
 const $I = $GithubId.create("RepositoryVariable");
 
 /**
- * A variable's name and value, as listing returns it.
- *
  * **Details**
  *
  * Unlike a secret this carries its **value**: variables are readable, so a

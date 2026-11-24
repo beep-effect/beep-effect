@@ -22,8 +22,6 @@ import { BoxProviderId } from "./BoxProvisioningObserved.ts";
 const $I = $BoxProvisioningId.create("BoxProvisioningIntent");
 
 /**
- * Stable opaque key used to relate desired Box resources without provider ids.
- *
  * **Example** (Create a logical key)
  *
  * ```ts
@@ -44,8 +42,6 @@ export const BoxLogicalKey = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link BoxLogicalKey}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -72,8 +68,6 @@ export const BoxAdoptionResourceKind = LiteralKit(["folder"]).pipe(
 );
 
 /**
- * Runtime type for {@link BoxAdoptionResourceKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -149,8 +143,6 @@ export const BoxFolderName = S.String.check(BoxFolderNameChecks).pipe(
 );
 
 /**
- * Runtime type for {@link BoxFolderName}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -249,8 +241,6 @@ export class BoxAdoption extends S.Opaque<BoxAdoption, { readonly brand: unique 
 
 const boxAdoptionsEntriesDefault = A.empty<BoxAdoption>();
 /**
- * Versioned ownership bindings for adopted or reconciler-created Box folders.
- *
  * **Example** (Declare an empty adoption allowlist)
  *
  * ```ts
@@ -333,16 +323,12 @@ export const BoxEntitlementAvailability = LiteralKit(["available", "unavailable"
 );
 
 /**
- * Runtime type for {@link BoxEntitlementAvailability}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type BoxEntitlementAvailability = typeof BoxEntitlementAvailability.Type;
 
 /**
- * Closed Box commercial plans supported by desired-state version 1.
- *
  * **Example** (Check the Business plan)
  *
  * ```ts
@@ -361,8 +347,6 @@ export const BoxPlanName = LiteralKit(["Business", "BusinessPlus", "Enterprise",
 );
 
 /**
- * Runtime type for {@link BoxPlanName}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -399,8 +383,6 @@ export const BoxSourceRevision = S.String.check(
 );
 
 /**
- * Runtime type for {@link BoxSourceRevision}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -837,8 +819,6 @@ export const BoxDesiredState = BoxDesiredStateFields.pipe(
 );
 
 /**
- * Runtime type for {@link BoxDesiredState}.
- *
  * @category type-level
  * @since 0.0.0
  */

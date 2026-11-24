@@ -7,6 +7,7 @@
 import { DocStructureRuleFamily } from "@beep/law-practice-domain";
 import {
   OfficeActionStructureAttempt,
+  OfficeActionStructureAttemptRead,
   OfficeActionStructureStorageError,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
@@ -23,6 +24,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const storageError = (message: string) => OfficeActionStructureStorageError.make({ message });
+const JsonAttemptRead = S.fromJsonString(OfficeActionStructureAttemptRead);
 const JsonAttempt = S.fromJsonString(OfficeActionStructureAttempt);
 const DocumentKey = S.fromJsonString(S.Struct({ scope: S.String, document: S.String }));
 const documentKey = Effect.fn("OfficeActionStructureStore.documentKey")((row: OfficeActionStructureAttempt) =>
@@ -84,7 +86,7 @@ export const officeActionStructureFileStore = (filename: string) =>
         if (!Str.endsWith("\n")(text)) return yield* storageError("Incomplete attempt log.");
         const rows = yield* Effect.forEach(
           Str.split(Str.slice(0, -1)(text), "\n"),
-          (line) => S.decodeEffect(JsonAttempt)(line),
+          (line) => S.decodeEffect(JsonAttemptRead)(line),
           {
             concurrency: 1,
           }

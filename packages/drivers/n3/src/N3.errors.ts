@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $N3Id.create("N3.errors");
 
 /**
- * N3 Turtle codec failure reason.
- *
  * **Example** (Decode serializeFailed reason)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const N3TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFai
 );
 
 /**
- * Type for {@link N3TurtleCodecErrorReason}.
- *
  * **Example** (Annotate unsupportedGraph reason)
  *
  * ```ts
@@ -53,8 +49,6 @@ export const N3TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFai
 export type N3TurtleCodecErrorReason = typeof N3TurtleCodecErrorReason.Type;
 
 /**
- * Typed N3 Turtle codec error.
- *
  * **Example** (Create parseFailed codec error)
  *
  * ```ts

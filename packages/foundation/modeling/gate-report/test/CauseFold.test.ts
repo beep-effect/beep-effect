@@ -1,7 +1,3 @@
-// AC-L7: the TS6305 cascade folds to one line with the count, the cause and the
-// supplied fix command, and the whole projection is at most five lines. The
-// diagnostic list is synthetic; the repository-generated fixture arrives with
-// the type-checker adapter.
 import { CauseFoldRule, defaultCauseFolds, FoldInput, foldCauses } from "@beep/gate-report/CauseFold";
 import { Totals } from "@beep/gate-report/GateReport";
 import { Item, ItemDetail, Location } from "@beep/gate-report/Item";
@@ -35,7 +31,7 @@ const diagnostic = (index: number, code: string, message: string): Item => {
   });
 };
 
-const cascade = A.makeBy(701, (index) =>
+const syntheticTs6305Cascade = A.makeBy(701, (index) =>
   diagnostic(
     index,
     "TS6305",
@@ -50,13 +46,13 @@ describe("cause folding", () => {
     assert.strictEqual(defaultCauseFolds[0].code, "TS6305");
   });
 
-  it("folds the TS6305 cascade to one line, and the projection is at most five lines (AC-L7)", () => {
+  it("folds the TS6305 cascade to one line with its count, cause and supplied fix command, and the projection is at most five lines (AC-L7); the list is synthetic and the repository-generated fixture arrives with the type-checker adapter", () => {
     const report = makeReport({
       gate: "check",
       itemKind: "diagnostic",
       reason: "failed",
       outcome: "some-fail",
-      items: cascade,
+      items: syntheticTs6305Cascade,
       totals: Totals.make({ collected: 40, failed: 701 }),
     });
     const lines = projectWith({ report, fixes: { TS6305: FIX } });
@@ -91,7 +87,7 @@ describe("cause folding", () => {
     const other = diagnostic(1, "TS2322", "Type 'a' is not assignable to type 'b'.");
     const result = foldCauses(
       FoldInput.make({
-        items: [cascade[0] ?? other, other, cascade[1] ?? other],
+        items: [syntheticTs6305Cascade[0] ?? other, other, syntheticTs6305Cascade[1] ?? other],
         rules: defaultCauseFolds,
         fixes: {},
       })
@@ -115,7 +111,7 @@ describe("cause folding", () => {
       CauseFoldRule.make({ code: "TS6305", cause: "upstream declarations are not built" }),
       CauseFoldRule.make({ code: "TS2307", cause: "a duplicate rule" }),
     ];
-    const items = [...A.take(cascade, 1), diagnostic(3, "TS2307", "Cannot find module 'x'.")];
+    const items = [...A.take(syntheticTs6305Cascade, 1), diagnostic(3, "TS2307", "Cannot find module 'x'.")];
     const result = foldCauses(FoldInput.make({ items, rules, fixes: { TS2307: "bun install" } }));
     assert.deepStrictEqual(
       A.map(result.folds, (fold) => [fold.code, fold.cause, fold.count]),

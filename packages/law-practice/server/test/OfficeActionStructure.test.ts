@@ -11,11 +11,13 @@ import {
   OfficeActionEvidenceConsumer,
   OfficeActionStoredOutcome,
   OfficeActionStructureAttempt,
+  OfficeActionStructureAttemptRead,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
 import { fixtureOcrPage } from "@beep/law-practice-use-cases/test";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { VerifySourceTextIdentityInput } from "@beep/text/VerifiedTextAnchor";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -33,7 +35,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureText, frozenAttemptLog } from "./officeActionFixtures.ts";
+import { fixtureText, frozenAttemptLog, frozenAttemptLogV2 } from "./officeActionFixtures.ts";
 
 const document = DocStructureDocument.make({
   documentId: "fixture",
@@ -139,15 +141,14 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
         if (!GroundedExtraction.guards.match_exact(firstExtraction)) {
           return yield* Effect.die("Expected retained exact extraction.");
         }
-        const badQuote = Str.repeat(Str.length(firstExtraction.matchedText))("x");
+        const badQuote = Str.repeat(Str.length(firstExtraction.anchor.quote))("x");
         const tamperedExtractions = OfficeActionStructureAttempt.make({
           ...first,
           extractions: [
             GroundedExtraction.cases.match_exact.make({
               label: firstExtraction.label,
               text: badQuote,
-              matchedText: badQuote,
-              span: firstExtraction.span,
+              anchor: TextAnchor.make({ ...firstExtraction.anchor, quote: badQuote }),
             }),
             ...A.drop(first.extractions, 1),
           ],
@@ -296,7 +297,7 @@ it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeo
   "frozen attempt log",
   (it) => {
     it.effect(
-      "writes the frozen rows byte for byte (one recognized and one failed row, written before the source identity moved package; never regenerated)",
+      "writes v2 rows byte for byte (the same recognized and failed attempts as the frozen v1 log, which is never regenerated, with each aligned extraction's span and matchedText stored as one anchor)",
       () =>
         Effect.gen(function* () {
           const state = yield* TestState;
@@ -323,11 +324,11 @@ it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeo
             .pipe(Effect.flip);
           expect(refused._tag).toBe("VerifiedTextAnchorError");
           const written = yield* fs.readFileString(writtenLog);
-          expect(written).toBe(frozenAttemptLog);
+          expect(written).toBe(frozenAttemptLogV2);
         })
     );
 
-    it.effect("reads the frozen rows and re-encodes every one to the same line", () =>
+    it.effect("reads every frozen v1 row to its v2 form", () =>
       Effect.gen(function* () {
         const state = yield* TestState;
         const intake = yield* OfficeActionDocketIntake;
@@ -337,16 +338,75 @@ it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeo
         yield* fs.writeFileString(frozenFile, frozenAttemptLog);
         const rows = yield* Context.get(context, OfficeActionStructureStore).read;
         expect(A.map(rows, (row) => row.outcome.status)).toEqual(["recognized", "failed"]);
+        const first = yield* Effect.fromOption(A.head(rows), () => "missing recognized row");
+        expect(
+          A.map(first.extractions, (extraction) =>
+            GroundedExtraction.guards.match_exact(extraction)
+              ? [extraction.anchor.startChar, extraction.anchor.endChar]
+              : []
+          )
+        ).toEqual([
+          [0, 25],
+          [176, 303],
+        ]);
         const lines = yield* Effect.forEach(rows, (row) => S.encodeEffect(AttemptJson)(row), { concurrency: 1 });
         expect(
           A.join(
             A.map(lines, (line) => `${line}\n`),
             ""
           )
-        ).toBe(frozenAttemptLog);
-        const first = yield* Effect.fromOption(A.head(rows), () => "missing recognized row");
+        ).toBe(frozenAttemptLogV2);
+        const v2Rows = yield* Effect.forEach(
+          Str.split(Str.trimEnd(frozenAttemptLogV2), "\n"),
+          (line) => S.decodeEffect(AttemptReadJson)(line),
+          { concurrency: 1 }
+        );
+        expect(v2Rows).toEqual(rows);
         const replayed = yield* intake.replay(first, state.verification);
         expect(replayed.status).toBe("recognized");
+      })
+    );
+
+    it.effect("never encodes v1: the read codec writes v2 and a v1 log grows by v2 rows", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const file = "/never-v1/attempts.jsonl";
+        const context = yield* Layer.build(officeActionStructureFileStore(file));
+        const store = Context.get(context, OfficeActionStructureStore);
+        yield* fs.writeFileString(file, frozenAttemptLog);
+        const rows = yield* store.read;
+        const encoded = yield* Effect.forEach(rows, (row) => S.encodeEffect(AttemptReadJson)(row), {
+          concurrency: 1,
+        });
+        expect(
+          A.join(
+            A.map(encoded, (line) => `${line}\n`),
+            ""
+          )
+        ).toBe(frozenAttemptLogV2);
+        const last = yield* Effect.fromOption(A.last(rows), () => "missing failed row");
+        yield* store.append(
+          OfficeActionStructureAttempt.make({ ...last, attemptId: "a-3", previousAttemptId: O.some("a-2") })
+        );
+        const grown = yield* fs.readFileString(file);
+        expect(Str.startsWith(frozenAttemptLog)(grown)).toBe(true);
+        const appended = Str.slice(Str.length(frozenAttemptLog))(grown);
+        expect(Str.startsWith('{"schemaVersion":"2"')(appended)).toBe(true);
+      })
+    );
+
+    it.effect("refuses a v1 row whose span is empty", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const file = "/empty-span/attempts.jsonl";
+        const context = yield* Layer.build(officeActionStructureFileStore(file));
+        const store = Context.get(context, OfficeActionStructureStore);
+        const emptySpan = Str.replace('"span":{"end":25,"start":0}', '"span":{"end":0,"start":0}')(frozenAttemptLog);
+        expect(emptySpan).not.toBe(frozenAttemptLog);
+        yield* fs.writeFileString(file, emptySpan);
+        const refused = yield* store.read.pipe(Effect.flip);
+        expect(refused._tag).toBe("OfficeActionStructureStorageError");
+        expect(refused.message).toBe("Cannot decode complete attempt history.");
       })
     );
 
@@ -424,7 +484,7 @@ it.layer(StateLive, { timeout: "10 seconds" })("storage failures remain typed", 
         method: "writeFileString",
       });
       const attempt = OfficeActionStructureAttempt.make({
-        schemaVersion: "1",
+        schemaVersion: "2",
         attemptId: "storage-failure",
         document,
         expectedSource: state.verification.expectedSource,
@@ -470,3 +530,4 @@ it.effect.prop(
     })
 );
 const AttemptJson = S.fromJsonString(OfficeActionStructureAttempt);
+const AttemptReadJson = S.fromJsonString(OfficeActionStructureAttemptRead);

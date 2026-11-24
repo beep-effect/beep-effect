@@ -22,8 +22,6 @@ import { AbsolutePath, isAbsolutePosix, isAbsoluteWin32 } from "./Absolute.ts";
 const $I = $XdgId.create("Xdg");
 
 /**
- * The operating system the path decisions are taken against.
- *
  * **Details**
  *
  * The members are Node's `process.platform` values, modeled as a schema rather
@@ -99,8 +97,6 @@ export const currentPlatform: Effect.Effect<XdgPlatform> = Effect.map(
 );
 
 /**
- * Indicates that the environment cannot satisfy XDG directory resolution.
- *
  * **Details**
  *
  * Raised only for `HOME`, when it is unset, empty or relative: every other XDG
@@ -159,8 +155,6 @@ export class XdgEnvError extends S.TaggedError<XdgEnvError, { readonly brand: un
 }
 
 /**
- * The XDG Base Directory environment, resolved.
- *
  * **Details**
  *
  * Every field but `home` is optional because the corresponding variable is:

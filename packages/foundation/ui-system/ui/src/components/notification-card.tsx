@@ -27,8 +27,6 @@ const NotificationStatus = LiteralKit(["unread", "read", "archived"]).pipe(
 );
 
 /**
- * Notification status type.
- *
  * **Example** (Assign unread status)
  *
  * ```ts
@@ -45,8 +43,6 @@ const NotificationStatus = LiteralKit(["unread", "read", "archived"]).pipe(
 export type NotificationStatus = typeof NotificationStatus.Type;
 
 /**
- * Action type component.
- *
  * **Example** (Log ActionType value)
  *
  * ```tsx
@@ -65,8 +61,6 @@ export const ActionType = LiteralKit(["redirect", "api_call", "workflow", "modal
 );
 
 /**
- * Action type type.
- *
  * **Example** (Assign redirect action)
  *
  * ```ts
@@ -83,8 +77,6 @@ export const ActionType = LiteralKit(["redirect", "api_call", "workflow", "modal
 export type ActionType = typeof ActionType.Type;
 
 /**
- * Action style theme value.
- *
  * **Example** (Log ActionStyle value)
  *
  * ```tsx
@@ -102,8 +94,6 @@ export const ActionStyle = LiteralKit(["primary", "danger", "default"]).pipe(
   })
 );
 /**
- * Action style type.
- *
  * **Example** (Assign primary style)
  *
  * ```ts
@@ -156,8 +146,6 @@ const NotificationActionFields = {
 };
 
 /**
- * Notification action component.
- *
  * **Example** (Log NotificationAction value)
  *
  * ```tsx
@@ -181,8 +169,6 @@ export const NotificationAction = ActionType.toTaggedUnion("type")({
 );
 
 /**
- * Notification action type.
- *
  * **Example** (Extract action type field)
  *
  * ```ts

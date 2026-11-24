@@ -24,7 +24,6 @@ const makeCitationExtractionEntry = installCitationOwnedTestStage({
 });
 
 type SourceRow = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>["corpus"]["cases"][number];
-/** Convert an authenticated source row into primitive request data for entry compositions. */
 const citationExtractionRawRequest = Effect.fn("ExtractionEntryTest.request")(function* (
   unicode: Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>,
   row: SourceRow

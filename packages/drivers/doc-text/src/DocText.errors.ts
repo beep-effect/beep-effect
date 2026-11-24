@@ -22,8 +22,6 @@ const DocTextErrorReasonBase = LiteralKit([
 ]);
 
 /**
- * Technical failure reasons emitted by the document text driver.
- *
  * **Example** (Check empty-text-layer membership)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const DocTextErrorReason = DocTextErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link DocTextErrorReason}.
- *
  * **Example** (Type an extraction reason)
  *
  * ```ts
@@ -62,8 +58,6 @@ export type DocTextErrorReason = typeof DocTextErrorReason.Type;
 const isDocTextErrorReason = S.is(DocTextErrorReason);
 
 /**
- * Options used when constructing {@link DocTextError} instances.
- *
  * **Example** (Make options with cause)
  *
  * ```ts
@@ -89,8 +83,6 @@ export class DocTextErrorOptions extends S.Opaque<DocTextErrorOptions, { readonl
 ) {}
 
 /**
- * Technical failure raised inside the document text driver boundary.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

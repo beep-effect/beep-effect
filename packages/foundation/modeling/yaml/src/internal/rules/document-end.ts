@@ -24,8 +24,6 @@ import type { YamlToken } from "../../YamlToken.ts";
 const $I = $YamlId.create("internal/rules/document-end");
 
 /**
- * Options for `document-end`: require (`true`, default) or forbid the marker.
- *
  * **Example** (Decode document-end options)
  *
  * ```ts

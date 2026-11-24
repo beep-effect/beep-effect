@@ -47,8 +47,6 @@ export const YamlTokenKind = LiteralKit([
   "error",
 ]).pipe($I.annoteSchema("YamlTokenKind", { description: "Lexical categories shared by raw and public YAML tokens." }));
 /**
- * The lexical category of a YAML token, inferred from the token-kind schema.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -106,8 +104,6 @@ export class YamlToken extends S.Opaque<YamlToken, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion namespace for {@link YamlToken}.
- *
  * **Example** (Type a lexer token)
  *
  * ```ts

@@ -77,8 +77,6 @@ const IdentityRdfPredicatePathsDistinct = S.makeFilter<typeof IdentityRdfBinding
 const CheckedIdentityRdfBindingFields = IdentityRdfBindingFields.pipe(S.check(IdentityRdfPredicatePathsDistinct));
 
 /**
- * Explicit predicate binding for identity registry fields and named fibers.
- *
  * **Example** (Bind one identity fiber)
  *
  * ```ts
@@ -148,8 +146,6 @@ export const DefaultIdentityRdfBinding: IdentityRdfBinding = IdentityRdfBinding.
 });
 
 /**
- * Failure returned when an identity fiber has no explicitly bound RDF predicate.
- *
  * **Example** (Identify an unmapped fiber)
  *
  * ```ts import.meta.vitest name="Identify an unmapped fiber"

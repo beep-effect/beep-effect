@@ -59,8 +59,6 @@ export const OutlookItemRef = S.Union([
 );
 
 /**
- * Type for {@link OutlookItemRef}.
- *
  * **Example** (Type a reference)
  *
  * ```ts
@@ -166,8 +164,6 @@ const decodeInput = (input: string): Effect.Effect<OutlookItemRef, SchemaIssue.I
 };
 
 /**
- * Decode a pasted Outlook web link or raw id into an {@link OutlookItemRef}.
- *
  * **Details**
  *
  * Accepts `https://outlook.cloud.microsoft/mail/.../id/<id>` and the
@@ -204,8 +200,6 @@ export const OutlookItemRefFromInput = S.String.pipe(
 );
 
 /**
- * Type for {@link OutlookItemRefFromInput}.
- *
  * **Example** (Annotate a decoded Outlook item reference)
  *
  * ```ts

@@ -45,9 +45,6 @@ class CiphertextTooShortError extends S.TaggedError<CiphertextTooShortError, { r
 ) {}
 
 /**
- * Indicates that an encryption, decryption, key-derivation or base64 step
- * failed.
- *
  * **Details**
  *
  * Its own error rather than a value on the generic `ConfigCodecError.operation`

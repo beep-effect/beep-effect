@@ -28,8 +28,6 @@ const dottedIdCheck = S.isPattern(
 );
 
 /**
- * Stable identifier for a catalog capability.
- *
  * **Example** (Create a capability identifier)
  *
  * ```ts import.meta.vitest name="Create a capability identifier"
@@ -58,8 +56,6 @@ export const CapabilityId = S.NonEmptyString.check(dottedIdCheck).pipe(
 export type CapabilityId = typeof CapabilityId.Type;
 
 /**
- * Stable identifier for an executable editor command.
- *
  * **Example** (Create a command identifier)
  *
  * ```ts import.meta.vitest name="Create a command identifier"
@@ -88,8 +84,6 @@ export const CommandId = S.NonEmptyString.check(dottedIdCheck).pipe(
 export type CommandId = typeof CommandId.Type;
 
 /**
- * Stable identifier for an app-owned editor profile.
- *
  * **Example** (Create a profile identifier)
  *
  * ```ts import.meta.vitest name="Create a profile identifier"
@@ -118,8 +112,6 @@ export const ProfileId = S.NonEmptyString.pipe(
 export type ProfileId = typeof ProfileId.Type;
 
 /**
- * Atlas taxonomy represented by the P1 capability catalog.
- *
  * **Example** (Check a node category)
  *
  * ```ts import.meta.vitest name="Check a node category"
@@ -146,8 +138,6 @@ export const CapabilityCategory = LiteralKit([
 );
 
 /**
- * Decoded atlas category represented by {@link CapabilityCategory}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -204,8 +194,6 @@ export const CanonicalCompatibility = LiteralKit(["lossless", "lossy", "unsuppor
 );
 
 /**
- * Decoded compatibility represented by {@link CanonicalCompatibility}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -291,8 +279,6 @@ export const Platform = LiteralKit(["windows-linux", "apple"]).pipe(
 );
 
 /**
- * Decoded platform represented by {@link Platform}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -320,8 +306,6 @@ export const Modifier = LiteralKit(["control", "meta", "alt", "shift"]).pipe(
 );
 
 /**
- * Decoded modifier represented by {@link Modifier}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -536,16 +520,12 @@ export const NodeRegistrationKey = LiteralKit([
 );
 
 /**
- * Decoded node key represented by {@link NodeRegistrationKey}.
- *
  * @category models
  * @since 0.0.0
  */
 export type NodeRegistrationKey = typeof NodeRegistrationKey.Type;
 
 /**
- * Runtime extension keys owned by capability descriptors.
- *
  * **Example** (Check history extension)
  *
  * ```ts import.meta.vitest name="Check history extension"
@@ -574,16 +554,12 @@ export const ExtensionKey = LiteralKit([
 );
 
 /**
- * Decoded extension key represented by {@link ExtensionKey}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ExtensionKey = typeof ExtensionKey.Type;
 
 /**
- * Markdown transformer keys owned by capability descriptors.
- *
  * **Example** (Check heading transformer)
  *
  * ```ts import.meta.vitest name="Check heading transformer"
@@ -620,8 +596,6 @@ export const TransformerKey = LiteralKit([
 );
 
 /**
- * Decoded transformer key represented by {@link TransformerKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -739,8 +713,6 @@ export class CommandDefinition extends S.Opaque<CommandDefinition, { readonly br
 ) {}
 
 /**
- * Atlas classification attached to a capability descriptor.
- *
  * **Example** (Create a classification)
  *
  * ```ts import.meta.vitest name="Create a classification"
@@ -946,8 +918,6 @@ export const CapabilityCatalog = S.Array(CapabilityDescriptor)
 export type CapabilityCatalog = typeof CapabilityCatalog.Type;
 
 /**
- * Ownership class of an editor profile.
- *
  * **Example** (Check production profile kind)
  *
  * ```ts import.meta.vitest name="Check production profile kind"
@@ -967,16 +937,12 @@ export const ProfileKind = LiteralKit(["production", "development-reference"]).p
 );
 
 /**
- * Decoded ownership class represented by {@link ProfileKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ProfileKind = typeof ProfileKind.Type;
 
 /**
- * Replacement keybindings for one resolved command.
- *
  * **Example** (Unbind a command)
  *
  * ```ts import.meta.vitest name="Unbind a command"

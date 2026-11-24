@@ -35,8 +35,6 @@ export const FileProcessingOperationKind = LiteralKit(["detect", "extract", "exp
 );
 
 /**
- * Type for {@link FileProcessingOperationKind}.
- *
  * **Example** (Type process kind guard)
  *
  * ```ts import.meta.vitest name="Type process kind guard"
@@ -72,8 +70,6 @@ export const FileProcessingEngineFamily = LiteralKit(["auto", "tika", "libpff", 
 );
 
 /**
- * Type for {@link FileProcessingEngineFamily}.
- *
  * **Example** (Type tika engine guard)
  *
  * ```ts import.meta.vitest name="Type tika engine guard"
@@ -89,8 +85,6 @@ export const FileProcessingEngineFamily = LiteralKit(["auto", "tika", "libpff", 
 export type FileProcessingEngineFamily = typeof FileProcessingEngineFamily.Type;
 
 /**
- * V1 file format families recognized by the capability.
- *
  * **Example** (Check pdf-text-layer option)
  *
  * ```ts import.meta.vitest name="Check pdf-text-layer option"
@@ -153,8 +147,6 @@ export const FileFormatFamily = LiteralKit([
 );
 
 /**
- * Type for {@link FileFormatFamily}.
- *
  * **Example** (Type format family guard)
  *
  * ```ts import.meta.vitest name="Type format family guard"
@@ -170,8 +162,6 @@ export const FileFormatFamily = LiteralKit([
 export type FileFormatFamily = typeof FileFormatFamily.Type;
 
 /**
- * Processing capability advertised by an engine.
- *
  * **Example** (Check export-children option)
  *
  * ```ts import.meta.vitest name="Check export-children option"
@@ -195,8 +185,6 @@ export const FileProcessingCapability = LiteralKit([
 );
 
 /**
- * Type for {@link FileProcessingCapability}.
- *
  * **Example** (Type capability guard)
  *
  * ```ts import.meta.vitest name="Type capability guard"
@@ -232,8 +220,6 @@ export const FileProcessingSupportDisposition = LiteralKit(["supported", "deferr
 );
 
 /**
- * Type for {@link FileProcessingSupportDisposition}.
- *
  * **Example** (Type deferred disposition guard)
  *
  * ```ts import.meta.vitest name="Type deferred disposition guard"
@@ -278,8 +264,6 @@ export const FileProcessingSkipReason = LiteralKit([
 );
 
 /**
- * Type for {@link FileProcessingSkipReason}.
- *
  * **Example** (Type skip reason guard)
  *
  * ```ts import.meta.vitest name="Type skip reason guard"
@@ -320,8 +304,6 @@ export class StrategyPreference extends S.Opaque<StrategyPreference, { readonly 
 ) {}
 
 /**
- * Strategy selected when an operation is supported.
- *
  * **Example** (Make supported selected strategy)
  *
  * ```ts import.meta.vitest name="Make supported selected strategy"
@@ -354,8 +336,6 @@ export class SupportedSelectedStrategy extends S.Opaque<SupportedSelectedStrateg
 ) {}
 
 /**
- * Strategy selected when an operation is intentionally deferred.
- *
  * **Example** (Make deferred selected strategy)
  *
  * ```ts import.meta.vitest name="Make deferred selected strategy"
@@ -390,8 +370,6 @@ export class DeferredSelectedStrategy extends S.Opaque<DeferredSelectedStrategy,
 ) {}
 
 /**
- * Strategy selected when an operation is unsupported.
- *
  * **Example** (Make unsupported selected strategy)
  *
  * ```ts import.meta.vitest name="Make unsupported selected strategy"
@@ -429,8 +407,6 @@ export class UnsupportedSelectedStrategy extends S.Opaque<
 ) {}
 
 /**
- * Strategy selected for a concrete operation.
- *
  * **Example** (Decode deferred selected strategy)
  *
  * ```ts
@@ -464,8 +440,6 @@ export const SelectedStrategy = S.Union([
 );
 
 /**
- * Type for {@link SelectedStrategy}.
- *
  * **Example** (Typed decode selected strategy)
  *
  * ```ts import.meta.vitest name="Typed decode selected strategy"
@@ -493,8 +467,6 @@ export const SelectedStrategy = S.Union([
 export type SelectedStrategy = typeof SelectedStrategy.Type;
 
 /**
- * Runtime-neutral engine descriptor.
- *
  * **Example** (Make engine descriptor)
  *
  * ```ts import.meta.vitest name="Make engine descriptor"

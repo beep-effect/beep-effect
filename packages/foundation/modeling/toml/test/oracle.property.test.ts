@@ -158,16 +158,7 @@ const canon = (value: unknown): unknown => {
 
 const oracle = (text: string): unknown => oracleParse(text, { integersAsBigInt: true });
 
-// Recursive TOML-representable plain values, bounded at depth 4 and width 5.
-// Array form ONLY for it.effect.prop: the named-record form silently discards
-// Schema conversion in @effect/vitest 4.0.0-beta.94.
-//
-// The native Arbitrary module has no weighted choice and no array-of-Arbitrary
-// combinator (only Schema-derived collections), so the two helpers below build
-// them from `flatMap` over a Schema-generated ticket or length. Both shrink the
-// way fast-check did: a weighted pick shrinks toward its first branch, a
-// collection shrinks its length before its elements.
-
+// decision: oracle-arbitrary-combinators
 function weighted<A>(
   first: readonly [weight: number, arbitrary: Arbitrary.Arbitrary<A>],
   ...rest: ReadonlyArray<readonly [weight: number, arbitrary: Arbitrary.Arbitrary<A>]>
@@ -255,14 +246,14 @@ function tableArb(depth: number): Arbitrary.Arbitrary<Record<string, unknown>> {
   );
 }
 
-const documentArb = tableArb(3);
+const documentBoundedAtFourNestedTablesAndWidthFive = tableArb(3);
 
 const REPRODUCIBLE_ORACLE_CHECK_OPTIONS: Arbitrary.CheckOptions = { runs: 250, seed: 20260710 };
 
 describe("smol-toml differential oracle", () => {
   it.effect.prop(
     "our stringify parses identically under both parsers",
-    [documentArb],
+    [documentBoundedAtFourNestedTablesAndWidthFive],
     ([document]) =>
       Effect.gen(function* () {
         const text = yield* Toml.stringify(document);
@@ -274,7 +265,7 @@ describe("smol-toml differential oracle", () => {
 
   it.effect.prop(
     "the oracle's stringify parses identically under both parsers",
-    [documentArb],
+    [documentBoundedAtFourNestedTablesAndWidthFive],
     ([document]) =>
       Effect.gen(function* () {
         const text = oracleStringify(document);

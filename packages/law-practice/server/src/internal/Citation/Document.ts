@@ -190,10 +190,7 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
     ),
     (candidate) => candidate.authorityId
   );
-  // Out-of-band bindings are trusted adapter expectations, never receipt data.
-  // Each binding fixes decision ownership separately from optional group/list
-  // data. Only explicitly bound decisions may override a full default key.
-  let custom = HashMap.empty<
+  let trustedOutOfBandDecisionBindingsNotReceiptData = HashMap.empty<
     CitationDocumentReceipt["authorities"][number]["id"],
     HashSet.HashSet<CitationDocumentReceipt["mentions"][number]["id"]>
   >();
@@ -252,24 +249,28 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   });
   const recordBinding = Effect.fn("Citation.verifyResourceBinding")(function* (binding: CitationResourceBinding) {
     const id = yield* makeCitationResourceAuthorityId(binding.identity).pipe(Effect.mapError(identityFailure));
-    if (HashMap.has(custom, id)) return yield* invalid();
+    if (HashMap.has(trustedOutOfBandDecisionBindingsNotReceiptData, id)) return yield* invalid();
     if (!A.some(snapshot.receipt.authorities, (authority) => authority.id === id))
       return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
     const members = HashSet.fromIterable(binding.decisions);
     yield* Effect.forEach(binding.decisions, (member) => verifyDecision(id, member), { concurrency: 1, discard: true });
     yield* verifyCandidates(id, binding);
     yield* verifyGroups(id, binding);
-    custom = HashMap.set(custom, id, members);
+    trustedOutOfBandDecisionBindingsNotReceiptData = HashMap.set(
+      trustedOutOfBandDecisionBindingsNotReceiptData,
+      id,
+      members
+    );
   });
   yield* Effect.forEach(snapshot.resourceBindings, recordBinding, { concurrency: 1, discard: true });
-  let verified = custom.pipe(HashMap.keys, HashSet.fromIterable);
+  let verified = trustedOutOfBandDecisionBindingsNotReceiptData.pipe(HashMap.keys, HashSet.fromIterable);
   yield* Effect.forEach(
     snapshot.receipt.mentions,
     Effect.fnUntraced(function* (mention) {
       const citation = mention.citation;
       const resolution = HashMap.get(resolutions, mention.id);
       if (O.isNone(resolution) || resolution.value.status !== "Resolved") return;
-      const binding = HashMap.get(custom, resolution.value.authorityId);
+      const binding = HashMap.get(trustedOutOfBandDecisionBindingsNotReceiptData, resolution.value.authorityId);
       if (O.isSome(binding)) {
         if (!HashSet.has(binding.value, mention.id))
           return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
@@ -288,43 +289,41 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   );
   if (!A.every(snapshot.receipt.authorities, (authority) => HashSet.has(verified, authority.id)))
     return yield* CitationDocumentFailure.make({ reason: "authority-key-unavailable" });
-  // Unbound default groups must exactly reflect decisions in occurrence order.
-  // A callback-produced order, multiplicity, empty group or alias requires a binding.
-  const verifyDefaultGroup = Effect.fn("Citation.verifyDefaultAuthorityGroup")(function* (
-    authority: CitationDocumentReceipt["authorities"][number]
-  ) {
-    if (HashMap.has(custom, authority.id)) return;
-    const expected = A.map(
-      A.filter(snapshot.receipt.mentions, (mention) =>
-        O.exists(
-          HashMap.get(resolutions, mention.id),
-          (resolution) => resolution.status === "Resolved" && resolution.authorityId === authority.id
-        )
-      ),
-      (mention) => CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
-    );
-    const actual = groupsFor(authority.id);
-    const group = A.head(actual);
-    const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
-    const expectedListId = CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`);
-    const expectedGroupId = CitationResourceGroupId.make(`cg1:${Str.slice(4)(authority.id)}`);
-    if (
-      A.length(actual) > 1 ||
-      (O.isSome(group) && group.value.id !== expectedGroupId) ||
-      (A.isArrayEmpty(expected)
-        ? O.isSome(group)
-        : O.isNone(list) || list.value.id !== expectedListId || !memberEquivalent(list.value.members, expected))
-    )
-      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+  const verifyUnboundGroupMirrorsDecisionsInOccurrenceOrder = Effect.fn("Citation.verifyDefaultAuthorityGroup")(
+    function* (authority: CitationDocumentReceipt["authorities"][number]) {
+      if (HashMap.has(trustedOutOfBandDecisionBindingsNotReceiptData, authority.id)) return;
+      const expected = A.map(
+        A.filter(snapshot.receipt.mentions, (mention) =>
+          O.exists(
+            HashMap.get(resolutions, mention.id),
+            (resolution) => resolution.status === "Resolved" && resolution.authorityId === authority.id
+          )
+        ),
+        (mention) => CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
+      );
+      const actual = groupsFor(authority.id);
+      const group = A.head(actual);
+      const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
+      const expectedListId = CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`);
+      const expectedGroupId = CitationResourceGroupId.make(`cg1:${Str.slice(4)(authority.id)}`);
+      if (
+        A.length(actual) > 1 ||
+        (O.isSome(group) && group.value.id !== expectedGroupId) ||
+        (A.isArrayEmpty(expected)
+          ? O.isSome(group)
+          : O.isNone(list) || list.value.id !== expectedListId || !memberEquivalent(list.value.members, expected))
+      )
+        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    }
+  );
+  yield* Effect.forEach(snapshot.receipt.authorities, verifyUnboundGroupMirrorsDecisionsInOccurrenceOrder, {
+    concurrency: 1,
+    discard: true,
   });
-  yield* Effect.forEach(snapshot.receipt.authorities, verifyDefaultGroup, { concurrency: 1, discard: true });
-  // Every persisted list must be attached to a verified or bound group.
-  if (
-    !A.every(snapshot.receipt.memberLists, (list) =>
-      A.some(snapshot.receipt.groups, (group) => group.memberListId === list.id)
-    )
-  )
-    return yield* invalid();
+  const everyPersistedListAttachedToGroup = A.every(snapshot.receipt.memberLists, (list) =>
+    A.some(snapshot.receipt.groups, (group) => group.memberListId === list.id)
+  );
+  if (!everyPersistedListAttachedToGroup) return yield* invalid();
 });
 
 /**

@@ -50,8 +50,6 @@ export const ObservedError = S.ErrorInstance().pipe(
 );
 
 /**
- * Runtime type for {@link ObservedError}.
- *
  * **Example** (Access ObservedError message)
  *
  * ```typescript
@@ -67,8 +65,6 @@ export const ObservedError = S.ErrorInstance().pipe(
 export type ObservedError = typeof ObservedError.Type;
 
 /**
- * A transport-safe schema for expected errors that preserves stacks.
- *
  * **Example** (Decode error preserving stack)
  *
  * ```ts import.meta.vitest name="Decode error preserving stack"
@@ -90,8 +86,6 @@ export const ObservedErrorWithStack = S.ErrorInstance({ includeStack: true }).pi
 );
 
 /**
- * Runtime type for {@link ObservedErrorWithStack}.
- *
  * **Example** (Access error stack property)
  *
  * ```typescript
@@ -107,8 +101,6 @@ export const ObservedErrorWithStack = S.ErrorInstance({ includeStack: true }).pi
 export type ObservedErrorWithStack = typeof ObservedErrorWithStack.Type;
 
 /**
- * A transport-safe schema for defects.
- *
  * **Example** (Decode string defect value)
  *
  * ```typescript
@@ -130,8 +122,6 @@ export const ObservedDefect = S.Defect().pipe(
 );
 
 /**
- * Runtime type for {@link ObservedDefect}.
- *
  * **Example** (Pass through ObservedDefect)
  *
  * ```typescript
@@ -147,8 +137,6 @@ export const ObservedDefect = S.Defect().pipe(
 export type ObservedDefect = typeof ObservedDefect.Type;
 
 /**
- * A transport-safe schema for defects that preserves stacks when possible.
- *
  * **Example** (Encode an Error with its stack)
  *
  * ```typescript
@@ -170,8 +158,6 @@ export const ObservedDefectWithStack = S.Defect({ includeStack: true }).pipe(
 );
 
 /**
- * Runtime type for {@link ObservedDefectWithStack}.
- *
  * **Example** (Pass through stacked defect)
  *
  * ```typescript
@@ -187,8 +173,6 @@ export const ObservedDefectWithStack = S.Defect({ includeStack: true }).pipe(
 export type ObservedDefectWithStack = typeof ObservedDefectWithStack.Type;
 
 /**
- * One serialized failure reason from a Cause.
- *
  * **Example** (Decode Cause failure reasons)
  *
  * ```ts import.meta.vitest name="Decode Cause failure reasons"
@@ -212,8 +196,6 @@ export const ObservedCauseReason = S.CauseReason(ObservedErrorWithStack, Observe
 );
 
 /**
- * Runtime type for {@link ObservedCauseReason}.
- *
  * **Example** (Pass through cause reason)
  *
  * ```typescript
@@ -229,8 +211,6 @@ export const ObservedCauseReason = S.CauseReason(ObservedErrorWithStack, Observe
 export type ObservedCauseReason = typeof ObservedCauseReason.Type;
 
 /**
- * A transport-safe schema for full Effect causes.
- *
  * **Example** (Decode full Effect cause)
  *
  * ```ts import.meta.vitest name="Decode full Effect cause"
@@ -252,8 +232,6 @@ export const ObservedCause = S.Cause(ObservedErrorWithStack, ObservedDefectWithS
 );
 
 /**
- * Runtime type for {@link ObservedCause}.
- *
  * **Example** (Pass through ObservedCause)
  *
  * ```typescript
@@ -269,8 +247,6 @@ export const ObservedCause = S.Cause(ObservedErrorWithStack, ObservedDefectWithS
 export type ObservedCause = typeof ObservedCause.Type;
 
 /**
- * A transport-safe schema for exits carrying unknown success values.
- *
  * **Example** (Decode failed Exit value)
  *
  * ```ts import.meta.vitest name="Decode failed Exit value"
@@ -292,8 +268,6 @@ export const ObservedExit = S.Exit(S.Unknown, ObservedErrorWithStack, ObservedDe
 );
 
 /**
- * Runtime type for {@link ObservedExit}.
- *
  * **Example** (Pass through ObservedExit)
  *
  * ```typescript

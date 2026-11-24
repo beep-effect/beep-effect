@@ -19,12 +19,13 @@ const $I = $LangExtractId.create("Service");
  *
  * ```ts
  * import { LangExtractService } from "@beep/langextract/Service"
- * import type { LangExtractServiceShape } from "@beep/langextract/Service"
- * import * as Effect from "effect/Effect";
- * const shape: LangExtractServiceShape = {
- *   extract: (request) => Effect.die(`unimplemented: ${request.documentId}`),
- * }
- * console.log(LangExtractService.of(shape))
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * const unavailable = Layer.succeed(LangExtractService, LangExtractService.of({
+ *   extract: (request) => Effect.die(`No model configured for ${request.source.sourceRef}`)
+ * }))
+ * console.log(Layer.isLayer(unavailable))
  * ```
  *
  * @category services
@@ -62,62 +63,14 @@ export interface LangExtractRemotePolicyShape {
  * **Example** (Mock service extract layer)
  *
  * ```ts
- * import * as S from "effect/Schema"
  * import { LangExtractService } from "@beep/langextract/Service"
- * import { LangExtractDiagnostics, LangExtractRequest, LangExtractResult } from "@beep/langextract/Extraction"
- * import { ExtractionTarget } from "@beep/langextract/Target"
- * import { DocumentId } from "@beep/nlp/Core"
- * import { Contract } from "@beep/nlp/Handoff"
- * import * as Effect from "effect/Effect";
- * import * as Layer from "effect/Layer";
- * import * as Str from "effect/String"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
- * const documentId = DocumentId.make("doc-1")
- * const provenance = Contract.Provenance.make({
- *   generatedBy: "@beep/langextract:test",
- *   source: documentId,
- *   timestamp: 0
- * })
- * const annotatedDocument = Contract.AnnotatedDocument.make({
- *   chunks: [],
- *   entities: [],
- *   mentions: [],
- *   provenance,
- *   relations: [],
- *   version: "nlp-ir/1.1"
- * })
- * const TestLangExtract = Layer.succeed(
- *   LangExtractService,
- *   LangExtractService.of({
- *     extract: (request) =>
- *       Effect.succeed(
- *         LangExtractResult.make({
- *           annotatedDocument,
- *           diagnostics: LangExtractDiagnostics.make({
- *             alignedCount: S.Natural.make(0),
- *             candidateCount: S.Natural.make(0),
- *             promptChars: S.Natural.make(Str.length(request.text)),
- *             unalignedCount: S.Natural.make(0)
- *           }),
- *           documentId: request.documentId,
- *           extractions: [],
- *           text: request.text
- *         })
- *       )
- *   })
- * )
- * const request = LangExtractRequest.make({
- *   documentId,
- *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
- *   text: "Ada Lovelace wrote notes."
- * })
- *
- * const program = Effect.gen(function* () {
- *   const service = yield* LangExtractService
- *   return yield* service.extract(request)
- * }).pipe(Effect.provide(TestLangExtract))
- *
- * Effect.runPromise(program).then((result) => console.log(result.documentId))
+ * const unavailable = Layer.succeed(LangExtractService, LangExtractService.of({
+ *   extract: (request) => Effect.die(`No model configured for ${request.source.sourceRef}`)
+ * }))
+ * console.log(Layer.isLayer(unavailable))
  * ```
  *
  * @category services

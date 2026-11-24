@@ -62,8 +62,6 @@ export const SourceAuthGate = LiteralKit(["none", "soft", "hard"]).pipe(
 );
 
 /**
- * Runtime type for {@link SourceAuthGate}.
- *
  * **Example** (Hard gate type satisfaction)
  *
  * ```ts
@@ -79,8 +77,6 @@ export const SourceAuthGate = LiteralKit(["none", "soft", "hard"]).pipe(
 export type SourceAuthGate = typeof SourceAuthGate.Type;
 
 /**
- * Schema-first per-source credential-gate registration.
- *
  * **Example** (Soft registration construction)
  *
  * ```ts

@@ -79,9 +79,6 @@ export const MAIN_FEED_WORKFLOW = "check.yml";
 export const MAIN_FEED_ANCESTOR_LIMIT = 100;
 
 /**
- * A job's artifact key: the `<job>-<partition>` suffix of its
- * `task-outcomes-<run>-<attempt>-<job>-<partition>` artifact.
- *
  * **Example** (Accept a key)
  *
  * ```ts

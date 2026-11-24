@@ -19,8 +19,6 @@ import {
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
-// Native ownership is external to a caller's retryable work. Public operations
-// must commit independently; only the owner's internal claim/retry steps compose.
 /** Commit native ownership coordination independently of a caller transaction.
  * @internal @category combinators @since 0.0.0
  */
@@ -108,9 +106,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   const { limits, queueDeadline } = yield* prepareCitationAdmissionPolicy(policy);
   const clock = yield* Clock.Clock;
   const scope = yield* Scope.Scope;
-  // Transactions commit lease flags and both capacity counters together.
-  // Retry watches this state directly; no parallel notification protocol exists.
-  const state = yield* TxRef.make(
+  const leaseFlagsAndCountersTxRefRetryWatches = yield* TxRef.make(
     CitationNativeAdmissionSnapshot.make({
       active: 0,
       regexActive: 0,
@@ -121,15 +117,15 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   );
   const fail = (reason: CitationAdmissionFailure["reason"]) => CitationAdmissionFailure.make({ reason });
   const ensureOpen = Effect.gen(function* () {
-    const current = yield* TxRef.get(state);
+    const current = yield* TxRef.get(leaseFlagsAndCountersTxRefRetryWatches);
     if (current.closed) return yield* fail("closed");
     if (current.quarantined > 0) return yield* fail("quarantined");
   });
   yield* Scope.addFinalizer(
     scope,
-    TxRef.update(state, (current) => CitationNativeAdmissionSnapshot.make({ ...current, closed: true })).pipe(
-      outsideCallerTransaction
-    )
+    TxRef.update(leaseFlagsAndCountersTxRefRetryWatches, (current) =>
+      CitationNativeAdmissionSnapshot.make({ ...current, closed: true })
+    ).pipe(outsideCallerTransaction)
   );
   const acquireKind = Effect.fn("Citation.acquireNativeProcessKind")(
     function* (operation: CitationSafetyLimitExceeded["operation"], regex: boolean) {
@@ -140,7 +136,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
           const release = Effect.gen(function* () {
             if (!(yield* TxRef.modify(claimed, (current) => [current, false]))) return;
             const quarantined = yield* TxRef.modify(isolated, (current) => [current, false]);
-            yield* TxRef.update(state, (current) =>
+            yield* TxRef.update(leaseFlagsAndCountersTxRefRetryWatches, (current) =>
               CitationNativeAdmissionSnapshot.make({
                 ...current,
                 active: current.active - 1,
@@ -151,14 +147,14 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
           }).pipe(Effect.tx, Effect.uninterruptible, outsideCallerTransaction);
           const claim = Effect.gen(function* () {
             yield* ensureOpen;
-            const current = yield* TxRef.get(state);
+            const current = yield* TxRef.get(leaseFlagsAndCountersTxRefRetryWatches);
             if (
               current.active >= limits.concurrentOperations ||
               (regex && current.regexActive >= limits.concurrentRegexProcesses)
             )
               return false;
             yield* TxRef.set(
-              state,
+              leaseFlagsAndCountersTxRefRetryWatches,
               CitationNativeAdmissionSnapshot.make({
                 ...current,
                 active: current.active + 1,
@@ -172,11 +168,11 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
             if (!(yield* claim))
               yield* Effect.acquireUseRelease(
                 Effect.gen(function* () {
-                  const current = yield* TxRef.get(state);
+                  const current = yield* TxRef.get(leaseFlagsAndCountersTxRefRetryWatches);
                   if (current.queued >= limits.queuedOperations)
                     return yield* CitationSafetyLimitExceeded.make({ operation, limit: "queuedOperations" });
                   yield* TxRef.set(
-                    state,
+                    leaseFlagsAndCountersTxRefRetryWatches,
                     CitationNativeAdmissionSnapshot.make({ ...current, queued: current.queued + 1 })
                   );
                 }).pipe(Effect.tx),
@@ -193,7 +189,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
                     Effect.interruptible
                   ),
                 () =>
-                  TxRef.update(state, (current) =>
+                  TxRef.update(leaseFlagsAndCountersTxRefRetryWatches, (current) =>
                     CitationNativeAdmissionSnapshot.make({ ...current, queued: current.queued - 1 })
                   )
               );
@@ -203,7 +199,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
               quarantine: Effect.gen(function* () {
                 if (!(yield* TxRef.get(claimed)) || (yield* TxRef.modify(isolated, (current) => [current, true])))
                   return;
-                yield* TxRef.update(state, (current) =>
+                yield* TxRef.update(leaseFlagsAndCountersTxRefRetryWatches, (current) =>
                   CitationNativeAdmissionSnapshot.make({
                     ...current,
                     quarantined: current.quarantined + 1,
@@ -221,7 +217,7 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
   return CitationNativeProcessAdmission.of({
     acquire: Effect.fn("Citation.acquireNativeProcess")((operation) => acquireKind(operation, false)),
     acquireRegex: Effect.fn("Citation.acquireRegexProcess")((operation) => acquireKind(operation, true)),
-    snapshot: TxRef.get(state).pipe(
+    snapshot: TxRef.get(leaseFlagsAndCountersTxRefRetryWatches).pipe(
       Effect.map((current) => CitationNativeAdmissionSnapshot.make({ ...current })),
       outsideCallerTransaction
     ),

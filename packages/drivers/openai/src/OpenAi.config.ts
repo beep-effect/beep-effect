@@ -115,8 +115,6 @@ export const OPENAI_DEFAULT_MODEL = "gpt-4o-mini" satisfies OpenAiLanguageModel.
 export const OPENAI_DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small" satisfies OpenAiEmbeddingModel.Model;
 
 /**
- * Schema-backed options accepted by the OpenAI language-model Layer factory.
- *
  * **Details**
  *
  * Omitting `model` applies {@link OPENAI_DEFAULT_MODEL} at construction and
@@ -155,8 +153,6 @@ export class OpenAiLanguageModelOptions extends S.Opaque<
 ) {}
 
 /**
- * Schema-backed options accepted by the OpenAI embedding-model Layer factory.
- *
  * **Gotchas**
  *
  * Callers must always choose `dimensions`. The driver deliberately has no

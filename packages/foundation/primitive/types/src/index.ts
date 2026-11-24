@@ -24,8 +24,6 @@
  */
 
 /**
- * Array utility types.
- *
  * **Example** (Extract tuple element type)
  *
  * ```ts
@@ -42,8 +40,6 @@
  */
 export type * as TArray from "./TArray.types.ts";
 /**
- * String utility types.
- *
  * **Example** (Brand non-empty string type)
  *
  * ```ts

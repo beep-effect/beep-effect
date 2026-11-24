@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $XstateId.create("Xstate.errors");
 
 /**
- * Stately inspector operations that can raise a driver failure.
- *
  * **Example** (Inspect the operation vocabulary)
  *
  * ```ts
@@ -32,8 +30,6 @@ export const StatelyInspectorOperation = LiteralKit(["connect", "attach"]).pipe(
 );
 
 /**
- * Runtime type decoded by {@link StatelyInspectorOperation}.
- *
  * @category models
  * @since 0.0.0
  */

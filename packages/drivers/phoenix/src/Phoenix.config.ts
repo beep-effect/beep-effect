@@ -58,8 +58,6 @@ export const PHOENIX_API_URL = "http://localhost:6006";
 const phoenixConfigInputBaseUrlDefault = makePhoenixBaseUrl(PHOENIX_API_URL);
 const phoenixConfigInputHeadersDefault = R.empty();
 /**
- * Runtime configuration accepted by {@link Phoenix.makeLayer}.
- *
  * **Example** (Create config with make)
  *
  * ```ts

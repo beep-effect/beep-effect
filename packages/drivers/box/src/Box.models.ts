@@ -6,8 +6,6 @@
  */
 
 /**
- * Generated Box SDK model exports.
- *
  * **Example** (Import and log payload AST)
  *
  * ```ts

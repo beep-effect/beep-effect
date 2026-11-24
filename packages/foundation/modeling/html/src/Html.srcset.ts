@@ -190,8 +190,6 @@ const registerDescriptor = (
 };
 
 /**
- * Descriptor profile represented by a conforming `srcset` value.
- *
  * **Example** (Width profile membership check)
  *
  * ```ts import.meta.vitest name="Width profile membership check"
@@ -210,8 +208,6 @@ export const SrcsetProfile = LiteralKit(["width", "density"]).pipe(
 );
 
 /**
- * Decoded type of {@link SrcsetProfile}.
- *
  * **Example** (Density profile type assignment)
  *
  * ```ts

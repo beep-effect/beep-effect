@@ -24,6 +24,7 @@ import { CitationCleanerValues } from "./CleanerValues.ts";
 import { CitationDocumentInputFailure, CitationDocumentInputProtocols } from "./InputDocument.ts";
 import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
+const hasPythonPointsWithoutStorageCopyOrSurrogateNormalization = Str.isNonEmpty;
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentCleanerProtocols");
 const GeneratorState = S.Struct({
   position: S.Natural,
@@ -165,9 +166,8 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
       const entry = yield* entryOf(value);
       if (O.isSome(entry)) return entry.value.kind === "generator" || entry.value.names.length !== 0;
       const text = yield* values.getText(value);
-      // Empty projection iff the owned native string has zero Python points;
-      // this test needs no native-storage copy or surrogate normalization.
-      if (O.isSome(text) && text.value.subtype === "plain") return Str.isNonEmpty(text.value.text);
+      if (O.isSome(text) && text.value.subtype === "plain")
+        return hasPythonPointsWithoutStorageCopyOrSurrogateNormalization(text.value.text);
       const host = yield* values.getHost(value);
       if (O.isSome(host) && host.value === null) return false;
       if (O.isSome(hostDocument)) return yield* hostDocument.value.truth(value);
@@ -181,9 +181,11 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
     }),
     insertSourceHtml: Effect.fn("Citation.documentDefaultInsertHtml")(function* (value) {
       const entry = yield* entryOf(value);
-      // The pinned source passes ("html", 0), so exact lists reject the
-      // index before mutation and tuples have no insert attribute.
-      if (O.isSome(entry)) return yield* sourceFailure(entry.value.kind === "list" ? "TypeError" : "AttributeError");
+      if (O.isSome(entry)) {
+        const pinnedInsertHtmlAtZeroListRejectsIndexTupleLacksInsert =
+          entry.value.kind === "list" ? "TypeError" : "AttributeError";
+        return yield* sourceFailure(pinnedInsertHtmlAtZeroListRejectsIndexTupleLacksInsert);
+      }
       if (O.isSome(hostDocument)) return yield* hostDocument.value.insertSourceHtml(value);
       return yield* sourceFailure("AttributeError");
     }),

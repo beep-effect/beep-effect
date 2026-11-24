@@ -36,8 +36,6 @@ const OpenclawConfidentialityPolicyBase = LiteralKit(["advisory"]);
 const OpenclawClientDataPolicyBase = LiteralKit(["synthetic-only"]);
 
 /**
- * Driver-local 1Password secret reference (`op://vault/item/field`).
- *
  * **Details**
  *
  * Extra path segments after the field are allowed (section-qualified
@@ -70,8 +68,6 @@ export const OpenclawSecretReference = S.String.check(
 );
 
 /**
- * Runtime type for {@link OpenclawSecretReference}.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawSecretReference } from "@beep/openclaw/OpenclawIntent.models"
@@ -112,8 +108,6 @@ export const OpenclawTargetVersion = OpenclawTargetVersionBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawTargetVersion}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawTargetVersion } from "@beep/openclaw/OpenclawIntent.models"
@@ -155,8 +149,6 @@ export const OpenclawAbsolutePath = S.String.check(
 );
 
 /**
- * Runtime type for {@link OpenclawAbsolutePath}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawAbsolutePath } from "@beep/openclaw/OpenclawIntent.models"
@@ -191,8 +183,6 @@ export const OpenclawGatewayPort = S.Int.check(S.isBetween({ minimum: 1024, maxi
 );
 
 /**
- * Runtime type for {@link OpenclawGatewayPort}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawGatewayPort } from "@beep/openclaw/OpenclawIntent.models"
@@ -227,8 +217,6 @@ export const OpenclawGatewayBind = OpenclawGatewayBindBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawGatewayBind}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawGatewayBind } from "@beep/openclaw/OpenclawIntent.models"
@@ -243,8 +231,6 @@ export const OpenclawGatewayBind = OpenclawGatewayBindBase.pipe(
 export type OpenclawGatewayBind = typeof OpenclawGatewayBind.Type;
 
 /**
- * Desired gateway configuration for an OpenClaw deployment.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawGatewayIntent, OpenclawSecretReference } from "@beep/openclaw/OpenclawIntent.models"
@@ -301,8 +287,6 @@ export const OpenclawConfidentialityPolicy = OpenclawConfidentialityPolicyBase.p
 );
 
 /**
- * Runtime type for {@link OpenclawConfidentialityPolicy}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawConfidentialityPolicy } from "@beep/openclaw"
@@ -337,8 +321,6 @@ export const OpenclawClientDataPolicy = OpenclawClientDataPolicyBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawClientDataPolicy}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawClientDataPolicy } from "@beep/openclaw"
@@ -411,8 +393,6 @@ export class OpenclawControlUiIntent extends S.Opaque<OpenclawControlUiIntent, {
 ) {}
 
 /**
- * Desired agent registration for an OpenClaw deployment.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawAgentIntent } from "@beep/openclaw/OpenclawIntent.models"
@@ -478,8 +458,6 @@ export const OpenclawProviderApi = OpenclawProviderApiBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawProviderApi}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawProviderApi } from "@beep/openclaw/OpenclawIntent.models"
@@ -494,8 +472,6 @@ export const OpenclawProviderApi = OpenclawProviderApiBase.pipe(
 export type OpenclawProviderApi = typeof OpenclawProviderApi.Type;
 
 /**
- * Input modality a declared model accepts.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawModelInputKind } from "@beep/openclaw/OpenclawIntent.models"
@@ -514,8 +490,6 @@ export const OpenclawModelInputKind = OpenclawModelInputKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawModelInputKind}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawModelInputKind } from "@beep/openclaw/OpenclawIntent.models"
@@ -530,8 +504,6 @@ export const OpenclawModelInputKind = OpenclawModelInputKindBase.pipe(
 export type OpenclawModelInputKind = typeof OpenclawModelInputKind.Type;
 
 /**
- * Provider API key sourced from a 1Password secret reference.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawProviderApiKeySecretRef, OpenclawSecretReference } from "@beep/openclaw/OpenclawIntent.models"
@@ -616,8 +588,6 @@ export const OpenclawProviderApiKey = S.Union([
 );
 
 /**
- * Runtime type for {@link OpenclawProviderApiKey}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawProviderApiKey } from "@beep/openclaw/OpenclawIntent.models"
@@ -636,8 +606,6 @@ export const OpenclawProviderApiKey = S.Union([
 export type OpenclawProviderApiKey = typeof OpenclawProviderApiKey.Type;
 
 /**
- * Optional provider tuning parameters.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawModelProviderParams } from "@beep/openclaw/OpenclawIntent.models"
@@ -666,8 +634,6 @@ export class OpenclawModelProviderParams extends S.Opaque<
 ) {}
 
 /**
- * A model declared under a provider.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawModelDeclaration } from "@beep/openclaw/OpenclawIntent.models"
@@ -698,8 +664,6 @@ export class OpenclawModelDeclaration extends S.Opaque<OpenclawModelDeclaration,
 ) {}
 
 /**
- * Desired model provider entry for an OpenClaw deployment.
- *
  * **Example** (Usage)
  * ```ts
  * import {
@@ -795,8 +759,6 @@ export const OpenclawAuthProfileMode = OpenclawAuthProfileModeBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawAuthProfileMode}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawAuthProfileMode } from "@beep/openclaw/OpenclawIntent.models"
@@ -811,8 +773,6 @@ export const OpenclawAuthProfileMode = OpenclawAuthProfileModeBase.pipe(
 export type OpenclawAuthProfileMode = typeof OpenclawAuthProfileMode.Type;
 
 /**
- * Non-secret auth profile metadata rendered into `auth.profiles`.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawAuthProfileIntent } from "@beep/openclaw/OpenclawIntent.models"
@@ -847,8 +807,6 @@ export class OpenclawAuthProfileIntent extends S.Opaque<OpenclawAuthProfileInten
 ) {}
 
 /**
- * Telegram direct-message policy.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawTelegramDmPolicy } from "@beep/openclaw/OpenclawIntent.models"
@@ -867,8 +825,6 @@ export const OpenclawTelegramDmPolicy = OpenclawTelegramDmPolicyBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawTelegramDmPolicy}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawTelegramDmPolicy } from "@beep/openclaw/OpenclawIntent.models"
@@ -883,8 +839,6 @@ export const OpenclawTelegramDmPolicy = OpenclawTelegramDmPolicyBase.pipe(
 export type OpenclawTelegramDmPolicy = typeof OpenclawTelegramDmPolicy.Type;
 
 /**
- * Telegram group policy.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawTelegramGroupPolicy } from "@beep/openclaw/OpenclawIntent.models"
@@ -903,8 +857,6 @@ export const OpenclawTelegramGroupPolicy = OpenclawTelegramGroupPolicyBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenclawTelegramGroupPolicy}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { OpenclawTelegramGroupPolicy } from "@beep/openclaw/OpenclawIntent.models"
@@ -919,8 +871,6 @@ export const OpenclawTelegramGroupPolicy = OpenclawTelegramGroupPolicyBase.pipe(
 export type OpenclawTelegramGroupPolicy = typeof OpenclawTelegramGroupPolicy.Type;
 
 /**
- * Per-group Telegram channel behavior.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawTelegramGroupIntent } from "@beep/openclaw/OpenclawIntent.models"
@@ -955,8 +905,6 @@ export class OpenclawTelegramGroupIntent extends S.Opaque<
 
 const openclawTelegramIntentGroupsDefault = R.empty();
 /**
- * Desired Telegram channel configuration.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawSecretReference, OpenclawTelegramIntent } from "@beep/openclaw/OpenclawIntent.models"
@@ -1005,8 +953,6 @@ export class OpenclawTelegramIntent extends S.Opaque<OpenclawTelegramIntent, { r
 
 const openclawSecretsResolverIntentPassEnvDefault = ["OP_SERVICE_ACCOUNT_TOKEN", "PATH"];
 /**
- * Exec-provider secret resolver wiring for op:// references.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawSecretsResolverIntent } from "@beep/openclaw/OpenclawIntent.models"
@@ -1129,8 +1075,6 @@ export class OpenclawSkillPin extends S.Opaque<OpenclawSkillPin, { readonly bran
 ) {}
 
 /**
- * Desired gateway log file location.
- *
  * **Example** (Usage)
  * ```ts
  * import { OpenclawLoggingIntent } from "@beep/openclaw/OpenclawIntent.models"
@@ -1158,8 +1102,6 @@ const openclawDeploymentIntentAuthProfilesDefault = A.empty();
 const openclawDeploymentIntentGuardrailsDefault = OpenclawGuardrailsIntent.make({});
 const openclawDeploymentIntentSkillsDefault = A.empty();
 /**
- * Root desired-intent document for one OpenClaw deployment.
- *
  * **Details**
  *
  * The render adapter (versioned on `openclawVersion`) turns this intent into

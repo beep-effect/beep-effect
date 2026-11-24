@@ -86,8 +86,6 @@ export class CompileAndExpandOptions extends S.Opaque<CompileAndExpandOptions, {
 ) {}
 
 /**
- * Companion types for {@link CompileAndExpandOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -102,10 +100,6 @@ export declare namespace CompileAndExpandOptions {
 }
 
 /**
- * Typed failure raised by {@link compileAndExpand}: the single error the
- * compile+expand recipe fails with, so a caller catches one tag rather than
- * folding two error channels by hand.
- *
  * **Details**
  *
  * One tag, two genuinely different causes — "your pattern is malformed" and

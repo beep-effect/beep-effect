@@ -17,8 +17,6 @@ const ObsDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(
 const isObsDefect = S.is(ObsDefect);
 
 /**
- * Non-negative integer obs-websocket `RequestStatus` code.
- *
  * **Example** (Make request status code)
  *
  * ```ts
@@ -47,8 +45,6 @@ export const ObsRequestStatusCode = S.Int.check(
 );
 
 /**
- * Non-negative integer obs-websocket `RequestStatus` code.
- *
  * **Example** (Type-annotate status code)
  *
  * ```ts
@@ -65,8 +61,6 @@ export const ObsRequestStatusCode = S.Int.check(
 export type ObsRequestStatusCode = typeof ObsRequestStatusCode.Type;
 
 /**
- * Non-negative integer WebSocket close code.
- *
  * **Example** (Make WebSocket close code)
  *
  * ```ts
@@ -95,8 +89,6 @@ export const ObsWebSocketCloseCode = S.Int.check(
 );
 
 /**
- * Non-negative integer WebSocket close code.
- *
  * **Example** (Type-annotate close code)
  *
  * ```ts

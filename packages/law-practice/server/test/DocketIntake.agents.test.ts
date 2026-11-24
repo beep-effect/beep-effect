@@ -47,13 +47,10 @@ type ScriptedResponse = Effect.Effect<string, AiError.AiError>;
 
 type ScriptedModelShape = {
   readonly prompts: Effect.Effect<ReadonlyArray<Prompt.Prompt>>;
-  /** Answer the next calls with these responses in turn; the last one repeats. */
-  readonly respondInTurn: (responses: A.NonEmptyReadonlyArray<ScriptedResponse>) => Effect.Effect<void>;
+  readonly respondInTurnThenRepeatLast: (responses: A.NonEmptyReadonlyArray<ScriptedResponse>) => Effect.Effect<void>;
   readonly respondWith: (response: ScriptedResponse) => Effect.Effect<void>;
   readonly responsesRef: Ref.Ref<A.NonEmptyReadonlyArray<ScriptedResponse>>;
-  /** Property names of the answer schema each call handed to the provider. */
   readonly answerFields: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>;
-  /** How many shared definitions (`$defs`) each answer schema needed. */
   readonly answerDefinitions: Ref.Ref<ReadonlyArray<number>>;
   readonly seen: Ref.Ref<ReadonlyArray<Prompt.Prompt>>;
 };
@@ -71,13 +68,10 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const json = (value: unknown): Effect.Effect<string> => Effect.orDie(encodeJson(value));
 
 const JsonObjectSchema = S.Struct({ schema: S.Struct({ properties: S.Record(S.String, S.Unknown) }) });
-// How many shared definitions the JSON schema of a structured call carries. Provider
-// structured-output modes reject them, so every wire schema has to come out flat.
-const answerDefinitionsOf = (format: LanguageModel.ProviderOptions["responseFormat"]): number =>
+const sharedDefinitionCountOf = (format: LanguageModel.ProviderOptions["responseFormat"]): number =>
   format.type === "json" ? A.length(R.keys(S.toJsonSchemaDocument(format.schema).definitions)) : -1;
 
-// The property names of the JSON schema a structured call asks the provider to answer in.
-const answerFieldsOf = (format: LanguageModel.ProviderOptions["responseFormat"]): ReadonlyArray<string> =>
+const answerSchemaPropertyNamesOf = (format: LanguageModel.ProviderOptions["responseFormat"]): ReadonlyArray<string> =>
   format.type === "json"
     ? pipe(
         S.toJsonSchemaDocument(format.schema),
@@ -96,7 +90,7 @@ const ScriptedModelLayer = Layer.effect(
       answerDefinitions: yield* Ref.make<ReadonlyArray<number>>([]),
       answerFields: yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]),
       prompts: Ref.get(seen),
-      respondInTurn: Effect.fn("ScriptedModel.respondInTurn")(function* (responses) {
+      respondInTurnThenRepeatLast: Effect.fn("ScriptedModel.respondInTurnThenRepeatLast")(function* (responses) {
         yield* Ref.set(responsesRef, responses);
       }),
       respondWith: Effect.fn("ScriptedModel.respondWith")(function* (response) {
@@ -115,8 +109,8 @@ const LanguageModelLayer = Layer.effect(
     return yield* LanguageModel.make({
       generateText: Effect.fnUntraced(function* (options) {
         yield* Ref.update(scripted.seen, A.append(options.prompt));
-        yield* Ref.update(scripted.answerFields, A.append(answerFieldsOf(options.responseFormat)));
-        yield* Ref.update(scripted.answerDefinitions, A.append(answerDefinitionsOf(options.responseFormat)));
+        yield* Ref.update(scripted.answerFields, A.append(answerSchemaPropertyNamesOf(options.responseFormat)));
+        yield* Ref.update(scripted.answerDefinitions, A.append(sharedDefinitionCountOf(options.responseFormat)));
         const text = yield* yield* Ref.modify(scripted.responsesRef, (responses) => [
           A.headNonEmpty(responses),
           A.match(A.tailNonEmpty(responses), { onEmpty: () => responses, onNonEmpty: (rest) => rest }),
@@ -144,7 +138,13 @@ const agentsLayer = makeDocketAgentsLayer().pipe(
   Layer.provide(LanguageModelLayer),
   Layer.provideMerge(ScriptedModelLayer)
 );
-const fastRetryLayer = makeAgentsLayer(DocketAgentsOptions.make({ retryBaseDelay: Duration.millis(1) }));
+const realClockOneMillisecondRetryLayer = makeAgentsLayer(
+  DocketAgentsOptions.make({ retryBaseDelay: Duration.millis(1) })
+);
+
+const realClockTinyTimeoutLayer = makeAgentsLayer(
+  DocketAgentsOptions.make({ paralegalTimeout: Duration.millis(20), secretaryTimeout: Duration.millis(40) })
+);
 
 const failureOf = <A>(effect: Effect.Effect<A, DocketIntakeError>): Effect.Effect<O.Option<DocketIntakeError>> =>
   Effect.exit(effect).pipe(Effect.map(Exit.match({ onFailure: Cause.findErrorOption, onSuccess: O.none })));
@@ -380,10 +380,9 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  // Unusable output counts as retryable, so this block runs on the real clock with a tiny delay.
-  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+  it.layer(realClockOneMillisecondRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
-      "maps provider failures and unusable output to the stage that called the model",
+      "maps provider failures and unusable output, which is retried, to the stage that called the model",
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const paralegal = yield* DocketParalegal;
@@ -417,13 +416,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     ]).toStrictEqual([60, 120, 500]);
   });
 
-  // Real clock, tiny limits: the scripted model never answers, so each call can only end by timing out.
-  it.layer(
-    makeAgentsLayer(
-      DocketAgentsOptions.make({ paralegalTimeout: Duration.millis(20), secretaryTimeout: Duration.millis(40) })
-    ),
-    { excludeTestServices: true, timeout: "10 seconds" }
-  )((it) => {
+  it.layer(realClockTinyTimeoutLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
       "times a call out at its limit and reports the stage",
       Effect.fnUntraced(function* () {
@@ -467,12 +460,12 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(review.responsePeriod, (period) => [period.amount, period.unit]),
           [3, "months"]
         );
-        // The schema the provider answers in takes a due date the source states and has nowhere to
-        // put a computed one.
         const got3 = yield* Ref.get(scripted.answerFields);
-        expect(got3).toStrictEqual([SECRETARY_FIELDS]);
+        expect(got3, "the answer schema takes a stated due date and has nowhere to put a computed one").toStrictEqual([
+          SECRETARY_FIELDS,
+        ]);
         const got4 = yield* Ref.get(scripted.answerDefinitions);
-        expect(got4).toStrictEqual([0]);
+        expect(got4, "providers reject $defs, so every wire schema comes out flat").toStrictEqual([0]);
         expect(R.keys(review)).not.toContain("dueDate");
         assertSome(iso(review.statedDueDate), "2030-04-08");
         assertSome(review.citedText, "Mailed January 8, 2030. A response is due within three months");
@@ -491,7 +484,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
-        yield* scripted.respondWith(json(secretaryWire({ citedText: " ", mailDate: "", responsePeriod: null })));
+        const blankCitationIsNoCitation = " ";
+        yield* scripted.respondWith(
+          json(secretaryWire({ citedText: blankCitationIsNoCitation, mailDate: "", responsePeriod: null }))
+        );
 
         const review = yield* secretary.review({ documents: [], entry: paralegalEntry, message });
         const prompts5 = yield* scripted.prompts;
@@ -500,7 +496,6 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         expect(review.readFromSourceDocument).toBe(false);
         assertNone(review.mailDate);
         assertNone(review.responsePeriod);
-        // The fixture states no due date and the blank citation is no citation.
         assertNone(review.statedDueDate);
         assertNone(review.citedText);
         assertTrue(O.exists(prompt, mentions("No source document is attached.")));
@@ -537,8 +532,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         assertTrue(O.exists(prompt, mentions("The paralegal found nothing to docket in this message.")));
         assertTrue(O.exists(prompt, mentions("Rationale: Fixture newsletter.")));
         assertTrue(!O.exists(prompt, mentions("Title:")));
-        // A message with no sender or subject says so instead of leaving the line blank.
-        assertTrue(O.exists(prompt, mentions("From: (not given)")));
+        assertTrue(
+          O.exists(prompt, mentions("From: (not given)")),
+          "a message with no sender or subject says so instead of leaving the line blank"
+        );
         assertTrue(O.exists(prompt, mentions("Subject: (not given)")));
       })
     );
@@ -568,14 +565,13 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  // Real clock and a one-millisecond base, so the retry delays elapse on their own.
-  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+  it.layer(realClockOneMillisecondRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
       "tries a retryable model failure again and returns the entry from the second call",
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const paralegal = yield* DocketParalegal;
-        yield* scripted.respondInTurn([rateLimited, json(paralegalWire())]);
+        yield* scripted.respondInTurnThenRepeatLast([rateLimited, json(paralegalWire())]);
 
         const entry = yield* paralegal.enter(message);
 
@@ -589,7 +585,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+  it.layer(realClockOneMillisecondRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
       "gives up after three retries of a failure that keeps coming back",
       Effect.fnUntraced(function* () {
@@ -609,13 +605,13 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+  it.layer(realClockOneMillisecondRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
       "fails at once on a failure that is not retryable",
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
-        yield* scripted.respondInTurn([rejected, json(secretaryWire())]);
+        yield* scripted.respondInTurnThenRepeatLast([rejected, json(secretaryWire())]);
 
         const failure = yield* failureOf(secretary.review({ documents: [], entry: paralegalEntry, message }));
 
@@ -635,14 +631,16 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
-        yield* scripted.respondInTurn([rejected, json(secretaryWire())]);
+        yield* scripted.respondInTurnThenRepeatLast([rejected, json(secretaryWire())]);
 
         const review = yield* secretary.review({ documents: [pdf], entry: paralegalEntry, message });
         const prompts = yield* scripted.prompts;
 
         expect(review.isDocketItem).toBe(true);
-        // The model still answers "read from the source document"; with nothing attached that cannot be so.
-        expect(review.readFromSourceDocument).toBe(false);
+        expect(
+          review.readFromSourceDocument,
+          "the model still claims a source-document read; with nothing attached that cannot be so"
+        ).toBe(false);
         expect(A.map(A.map(prompts, fileParts), A.length)).toStrictEqual([1, 0]);
         assertTrue(O.exists(A.last(prompts), mentions("No source document is attached.")));
       })
@@ -692,8 +690,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           ["response-period", "revised"],
           ["mail-date", "defended"],
         ]);
-        // A blank quotation is no quotation.
-        expect(A.map(revision.responses, (response) => O.isSome(response.citedText))).toStrictEqual([true, false]);
+        expect(
+          A.map(revision.responses, (response) => O.isSome(response.citedText)),
+          "a blank quotation is no quotation"
+        ).toStrictEqual([true, false]);
         assertSome(revision.selfReportedConfidence, UnitInterval.make(0.8));
         for (const fragment of [
           "You entered this message as a docket item.",
@@ -821,7 +821,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const unexplained = yield* failureOf(secretary.critique({ documents: [], entry: paralegalEntry, message }));
         const prompts17 = yield* scripted.prompts;
         const before = A.length(prompts17);
-        yield* scripted.respondInTurn([rejected, json({ findings: [] })]);
+        yield* scripted.respondInTurnThenRepeatLast([rejected, json({ findings: [] })]);
         const retried = yield* secretary.critique({ documents: [pdf], entry: paralegalEntry, message });
         const prompts18 = yield* scripted.prompts;
         const prompts = A.drop(prompts18, before);
@@ -874,13 +874,14 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         ]) {
           assertTrue(O.exists(prompt, mentions(fragment)));
         }
-        // The paralegal's quoted text is checked in code and never shown to the critic.
-        assertTrue(!O.exists(prompt, mentions("within two months")));
+        assertTrue(
+          !O.exists(prompt, mentions("within two months")),
+          "the paralegal's quoted text is checked in code and never shown to the critic"
+        );
         assertTrue(!O.exists(prompt, mentions("relies on")));
         expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
-        // The same answer shape as the first reading.
         const got20 = yield* Ref.get(scripted.answerFields);
-        expect(got20).toStrictEqual([SECRETARY_FIELDS]);
+        expect(got20, "the same answer shape as the first reading").toStrictEqual([SECRETARY_FIELDS]);
         assertSome(iso(reading.statedDueDate), "2030-04-15");
       })
     );
@@ -893,7 +894,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
 
-        yield* scripted.respondInTurn([rejected, json(secretaryWire())]);
+        yield* scripted.respondInTurnThenRepeatLast([rejected, json(secretaryWire())]);
         const reading = yield* secretary.reread(rereadInput([pdf]));
         const prompts = yield* scripted.prompts;
         yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
@@ -902,8 +903,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const noFindings = A.last(prompts21);
 
         assertTrue(O.exists(noFindings, mentions("- none; the two readings differed or a check failed")));
-        // With nothing attached, the reading cannot have come from a source document.
-        expect(reading.readFromSourceDocument).toBe(false);
+        expect(
+          reading.readFromSourceDocument,
+          "with nothing attached, the reading cannot have come from a source document"
+        ).toBe(false);
         expect(A.map(A.map(prompts, fileParts), A.length)).toStrictEqual([1, 0]);
         assertSome(
           O.map(badDate, (error) => [error.stage, error.cause]),
@@ -913,8 +916,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  // Real clock and a one-millisecond base, so the retry delays elapse on their own.
-  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+  it.layer(realClockOneMillisecondRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
       "retries a retryable failure of each loop call, and reports one that is not retryable at its stage",
       Effect.fnUntraced(function* () {
@@ -922,11 +924,11 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const paralegal = yield* DocketParalegal;
         const secretary = yield* DocketSecretary;
 
-        yield* scripted.respondInTurn([rateLimited, json(revisionWire())]);
+        yield* scripted.respondInTurnThenRepeatLast([rateLimited, json(revisionWire())]);
         const revision = yield* paralegal.revise({ disputes, message, previous: datedEntry });
-        yield* scripted.respondInTurn([rateLimited, json({ findings: [] })]);
+        yield* scripted.respondInTurnThenRepeatLast([rateLimited, json({ findings: [] })]);
         const findings = yield* secretary.critique({ documents: [], entry: paralegalEntry, message });
-        yield* scripted.respondInTurn([rateLimited, json(secretaryWire())]);
+        yield* scripted.respondInTurnThenRepeatLast([rateLimited, json(secretaryWire())]);
         const reading = yield* secretary.reread(rereadInput([]));
         const prompts22 = yield* scripted.prompts;
         const asked = A.length(prompts22);

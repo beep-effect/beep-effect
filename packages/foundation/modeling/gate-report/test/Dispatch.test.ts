@@ -1,6 +1,4 @@
-// Retargets upstream packages/ui/__test__/dispatch.test.ts and
-// packages/ui/__test__/footer.test.ts (vitest-agent 1cf1ab94), and holds the
-// model-level AC-L5, AC-L6 and AC-L9 tests and the twenty-cell test.
+// Ported from vitest-agent 1cf1ab94 packages/ui/__test__/dispatch.test.ts and packages/ui/__test__/footer.test.ts (MIT).
 import { FoldResult } from "@beep/gate-report/CauseFold";
 import { classifyShape } from "@beep/gate-report/Classify";
 import { FailureEntry, GatePointers, NoteEntry, RunDelta } from "@beep/gate-report/ConsoleDocument";
@@ -52,8 +50,7 @@ const labelled = (label: HistoryLabel) =>
     ],
   });
 
-/** The subset of Vite's `import.meta.glob` signature the AC-L9 scan uses. */
-interface RawGlobOptions {
+interface ViteRawEagerGlobOptionsSubset {
   readonly eager: true;
   readonly import: "default";
   readonly query: "?raw";
@@ -61,12 +58,11 @@ interface RawGlobOptions {
 
 declare global {
   interface ImportMeta {
-    glob<T>(pattern: string, options: RawGlobOptions): Record<string, T>;
+    glob<T>(pattern: string, options: ViteRawEagerGlobOptionsSubset): Record<string, T>;
   }
 }
 
-// Built from parts so this file does not itself match the AC-L9 grep.
-const UPSTREAM_MCP_TOOLS = new RegExp(
+const UPSTREAM_MCP_TOOLS_BUILT_FROM_PARTS_SO_THIS_FILE_NEVER_MATCHES = new RegExp(
   A.join(
     A.map(
       [
@@ -425,7 +421,7 @@ describe("pointers come only from the supplied table (AC-L9)", () => {
     const sources = import.meta.glob<string>("../src/**/*.ts", { eager: true, import: "default", query: "?raw" });
     assert.isAbove(R.keys(sources).length, 10);
     for (const [file, text] of R.toEntries(sources)) {
-      assert.notMatch(text, UPSTREAM_MCP_TOOLS, file);
+      assert.notMatch(text, UPSTREAM_MCP_TOOLS_BUILT_FROM_PARTS_SO_THIS_FILE_NEVER_MATCHES, file);
     }
   });
 });

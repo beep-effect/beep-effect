@@ -65,8 +65,6 @@ export const SourceProcessingStatus = LiteralKit(["succeeded", "skipped", "faile
 );
 
 /**
- * Type for {@link SourceProcessingStatus}.
- *
  * **Example** (Type succeeded status value)
  *
  * ```ts import.meta.vitest name="Type succeeded status value"
@@ -82,8 +80,6 @@ export const SourceProcessingStatus = LiteralKit(["succeeded", "skipped", "faile
 export type SourceProcessingStatus = typeof SourceProcessingStatus.Type;
 
 /**
- * Materialized text artifact reference.
- *
  * **Example** (Decode text artifact reference)
  *
  * ```ts
@@ -163,8 +159,6 @@ export const TextSpan = TextSpanBase.check(
 export type TextSpan = InstanceType<typeof TextSpanBase>;
 
 /**
- * Text and metadata extraction result.
- *
  * **Example** (Decode extraction result)
  *
  * ```ts
@@ -207,8 +201,6 @@ export class ExtractionResult extends S.Opaque<ExtractionResult, { readonly bran
 ) {}
 
 /**
- * Archive export result.
- *
  * **Example** (Decode archive export result)
  *
  * ```ts
@@ -363,8 +355,6 @@ export class ArchiveExportProcessFileResult extends S.Opaque<
 ) {}
 
 /**
- * Intentional skip result of a full source processing operation.
- *
  * **Example** (Make skipped process result)
  *
  * ```ts import.meta.vitest name="Make skipped process result"
@@ -412,8 +402,6 @@ export class SkippedProcessFileResult extends S.Opaque<SkippedProcessFileResult,
 ) {}
 
 /**
- * Result of a full source processing operation.
- *
  * **Example** (Decode skipped process result)
  *
  * ```ts
@@ -455,8 +443,6 @@ export const ProcessFileResult = S.Union([
 );
 
 /**
- * Type for {@link ProcessFileResult}.
- *
  * **Example** (Type process file result)
  *
  * ```ts import.meta.vitest name="Type process file result"

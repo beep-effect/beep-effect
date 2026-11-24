@@ -7,10 +7,6 @@ import {
 } from "./CitationExtractionLoop.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-// The 36-case corpus replays in bounded slices so one slow runner cannot push a
-// single case past its budget; the package default timeout applies. Bun replays
-// the whole corpus; node replays the boundary plus the first slice, which holds
-// case 2 (the producedTextUtf16 refusal) so the node refusal path stays proven.
 const sliceCases = 3;
 const kinds = ["bun", "node"] as const;
 
@@ -25,12 +21,13 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
     for (const slice of A.range(0, Math.ceil(citationExtractionLoopCases / sliceCases) - 1)) {
       const from = slice * sliceCases;
       it.effect(
-        `preserves original pre-filter and returned state on bun for cases ${from}-${from + sliceCases - 1}`,
+        `preserves original pre-filter and returned state on bun for cases ${from}-${from + sliceCases - 1}, sliced so one slow runner cannot push a case past its budget`,
         () => replayCitationExtractionLoop("bun", from, sliceCases)
       );
     }
-    it.effect(`preserves original identities and state on node for cases 0-${sliceCases - 1}`, () =>
-      replayCitationExtractionLoop("node", 0, sliceCases)
+    it.effect(
+      `preserves original identities and state on node for cases 0-${sliceCases - 1}, holding the case 2 producedTextUtf16 refusal`,
+      () => replayCitationExtractionLoop("node", 0, sliceCases)
     );
   }
 );

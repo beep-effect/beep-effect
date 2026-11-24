@@ -167,6 +167,11 @@ export const OfficeActionStoredOutcome = S.Union([RecognizedReceipt, DocStructur
  */
 export type OfficeActionStoredOutcome = typeof OfficeActionStoredOutcome.Type;
 /**
+ * **Details**
+ *
+ * Schema version 2 stores each aligned extraction with its `anchor`. A version 1 row, which stored `span` and
+ * `matchedText`, is read through {@link OfficeActionStructureAttemptRead} and never written.
+ *
  * **Example** (Inspect OfficeActionStructureAttempt)
  *
  * ```ts
@@ -183,7 +188,7 @@ export class OfficeActionStructureAttempt extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    schemaVersion: S.tag("1"),
+    schemaVersion: S.tag("2"),
     attemptId: S.NonEmptyString,
     previousAttemptId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     document: DocStructureDocument,

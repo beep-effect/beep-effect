@@ -67,9 +67,7 @@ const contract = SkillContract.make({
 
 const renderFixture = () => Result.getOrThrow(renderSkillMarkdown(contract));
 
-// The JSON frontmatter is RFC 8785 text from the canonical digest owner, which
-// refuses a string with an unpaired surrogate; the render error says so.
-const loneSurrogateRefusal = /Canonical JSON serialization failed: LoneSurrogate at "\/contract\//;
+const rfc8785FrontmatterLoneSurrogateRefusal = /Canonical JSON serialization failed: LoneSurrogate at "\/contract\//;
 
 describe("@beep/skill-contract SkillProjection", () => {
   it.effect("renders and decodes the exact projection frontmatter", () =>
@@ -221,14 +219,21 @@ describe("@beep/skill-contract SkillProjection", () => {
       const rendered = renderFixture();
       const frontmatter = Str.slice(Str.length("---json\n"))(rendered);
 
-      // A closed non-JSON block is not the projection frontmatter.
-      expect(reasons("---\nprojection: skill-contract/skill-md/v1\n---\n")).toEqual(["frontmatter-missing"]);
-      // The closing fence line is exactly `---`: a `----` line is value text, so the block never closes.
-      expect(reasons(`---json\n{}\n----\n`)).toEqual(["frontmatter-missing"]);
-      // An empty closed block exists and fails JSON decode.
-      expect(reasons("---json\n---\n")).toEqual(["frontmatter-decode-failed"]);
-      // CRLF fence lines close the block as LF ones do.
-      expect(reasons(`---json\r\n${Str.replaceAll("\n", "\r\n")(frontmatter)}`)).toEqual([]);
+      expect(
+        reasons("---\nprojection: skill-contract/skill-md/v1\n---\n"),
+        "a closed non-JSON block is not the projection frontmatter"
+      ).toEqual(["frontmatter-missing"]);
+      expect(
+        reasons(`---json\n{}\n----\n`),
+        "the closing fence line is exactly ---: a ---- line is value text, so the block never closes"
+      ).toEqual(["frontmatter-missing"]);
+      expect(reasons("---json\n---\n"), "an empty closed block exists and fails JSON decode").toEqual([
+        "frontmatter-decode-failed",
+      ]);
+      expect(
+        reasons(`---json\r\n${Str.replaceAll("\n", "\r\n")(frontmatter)}`),
+        "CRLF fence lines close the block as LF ones do"
+      ).toEqual([]);
     })
   );
 
@@ -267,15 +272,13 @@ describe("@beep/skill-contract SkillProjection", () => {
   );
 
   it.effect.prop(
-    "allows every schema-derived contract after render and verification, unless it cannot render",
+    "allows every schema-derived contract after render and verification, unless a derived string holds an unpaired surrogate the canonical JSON frontmatter refuses",
     [Arbitrary.schema(SkillContract)],
     ([candidate]) =>
       Result.match(renderSkillMarkdown(candidate), {
-        // Schema-derived strings hold an unpaired surrogate now and then, which
-        // the canonical JSON frontmatter refuses (pinned in the next test).
         onFailure: (error) =>
           Effect.sync(() => {
-            expect(error.message).toMatch(loneSurrogateRefusal);
+            expect(error.message).toMatch(rfc8785FrontmatterLoneSurrogateRefusal);
           }),
         onSuccess: Effect.fnUntraced(function* (committed) {
           const verdict = yield* verifySkillArtifact(VerifySkillArtifactInput.make({ committed, contract: candidate }));
@@ -286,26 +289,28 @@ describe("@beep/skill-contract SkillProjection", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.effect("denies a contract whose projection cannot be rendered", () =>
-    Effect.gen(function* () {
-      const unrenderable = SkillContract.make({ ...contract, promise: "Validate one QA inventory \ud800." });
-      const verdict = yield* verifySkillArtifact(
-        VerifySkillArtifactInput.make({ committed: renderFixture(), contract: unrenderable })
-      );
+  it.effect(
+    "denies a well-typed contract when Md.render's adapter throws: canonical RFC 8785 JSON frontmatter refuses an unpaired surrogate",
+    () =>
+      Effect.gen(function* () {
+        const unrenderable = SkillContract.make({ ...contract, promise: "Validate one QA inventory \ud800." });
+        const verdict = yield* verifySkillArtifact(
+          VerifySkillArtifactInput.make({ committed: renderFixture(), contract: unrenderable })
+        );
 
-      expect(verdict.verdict).toBe("denied");
-      expect(
-        SkillArtifactVerdict.match(verdict, {
-          allowed: () => [],
-          denied: ({ reasons }) => reasons,
-        })
-      ).toContain("rerender-mismatch");
-      expect(
-        SkillArtifactVerdict.match(verdict, {
-          allowed: () => "",
-          denied: ({ checks }) => checks[0].detail,
-        })
-      ).toMatch(loneSurrogateRefusal);
-    })
+        expect(verdict.verdict).toBe("denied");
+        expect(
+          SkillArtifactVerdict.match(verdict, {
+            allowed: () => [],
+            denied: ({ reasons }) => reasons,
+          })
+        ).toContain("rerender-mismatch");
+        expect(
+          SkillArtifactVerdict.match(verdict, {
+            allowed: () => "",
+            denied: ({ checks }) => checks[0].detail,
+          })
+        ).toMatch(rfc8785FrontmatterLoneSurrogateRefusal);
+      })
   );
 });

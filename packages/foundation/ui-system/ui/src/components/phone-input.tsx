@@ -77,8 +77,6 @@ export const phoneCountryCodes: ReadonlyArray<PhoneCountryCode> = getCountries()
 export const phoneCountryOptions = A.filter(countryOptions, (option) => isSupportedCountry(option.code));
 
 /**
- * E.164 phone number value schema used by {@link PhoneInput}.
- *
  * **Example** (Parse unknown to E.164)
  *
  * ```ts
@@ -125,8 +123,6 @@ export const PhoneNumberE164 = S.String.check(
 );
 
 /**
- * Runtime type for {@link PhoneNumberE164}.
- *
  * **Example** (Annotate E.164 string type)
  *
  * ```ts

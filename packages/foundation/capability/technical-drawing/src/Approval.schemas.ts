@@ -116,8 +116,6 @@ export class EmailConfirmation extends S.Opaque<EmailConfirmation, { readonly br
 ) {}
 
 /**
- * A PDF confirmation: one page the approver initialed.
- *
  * **Example** (An initialed page)
  *
  * ```ts
@@ -184,8 +182,6 @@ export const Confirmation = S.Union([EmailConfirmation, PdfConfirmation]).pipe(
 );
 
 /**
- * Type for {@link Confirmation}.
- *
  * **Example** (Annotate a confirmation)
  *
  * ```ts
@@ -231,8 +227,6 @@ export const ApprovalRefusalReason = ApprovalRefusalReasonBase.pipe(
 );
 
 /**
- * Type for {@link ApprovalRefusalReason}.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts
@@ -248,8 +242,6 @@ export const ApprovalRefusalReason = ApprovalRefusalReasonBase.pipe(
 export type ApprovalRefusalReason = typeof ApprovalRefusalReason.Type;
 
 /**
- * A recorded approval of one sheet set.
- *
  * **Details**
  *
  * `by` is descriptive metadata about who ran the command, never proof. The

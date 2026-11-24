@@ -140,8 +140,6 @@ export const TraversalOrder = LiteralKit(["dfs", "bfs", "topo"]).pipe(
 );
 
 /**
- * Runtime type for graph traversal order values.
- *
  * **Example** (Assign dfs traversal order)
  *
  * ```ts
@@ -163,9 +161,6 @@ const NodeIndexSchema = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * Traversal-start options shared by graph-walking helpers: which node indices
- * to begin from and which traversal order to use.
- *
  * **Example** (Create dfs start options)
  *
  * ```ts

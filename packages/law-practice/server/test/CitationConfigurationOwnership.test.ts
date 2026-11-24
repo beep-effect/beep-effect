@@ -87,7 +87,6 @@ it.effect("derives an owned value from an owned input without another detach", (
   })
 );
 
-// Every object (including arrays and buffers) reachable from a value, in visit order.
 const reachableObjects = (root: unknown): ReadonlyArray<object> => {
   const seen: Array<object> = [];
   const visit = (value: unknown): void => {
@@ -99,7 +98,6 @@ const reachableObjects = (root: unknown): ReadonlyArray<object> => {
   visit(root);
   return seen;
 };
-// Owning a valid configuration keeps no object or buffer the caller can reach.
 const expectDetached = Effect.fnUntraced(function* <Schema extends S.Codec<unknown, unknown>>(
   schema: Schema,
   raw: unknown
@@ -107,7 +105,7 @@ const expectDetached = Effect.fnUntraced(function* <Schema extends S.Codec<unkno
   const owned = yield* ownCitationConfiguration(schema, raw, refused);
   const caller = reachableObjects(raw);
   const shared = A.filter(reachableObjects(owned), (value) => caller.includes(value));
-  expect(shared).toEqual([]);
+  expect(shared, "owning a valid configuration keeps no object or buffer the caller can reach").toEqual([]);
 });
 it.effect("keeps a pass-through leaf by reference, which is why boundary schemas have none", () =>
   Effect.gen(function* () {

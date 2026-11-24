@@ -1,11 +1,8 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { iri } from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
 import { AlignmentSource, alignCandidate } from "@beep/langextract/Alignment";
-import {
-  ExtractionCandidate,
-  GroundedExtraction,
-  LangExtractOptions,
-  LangExtractRequest,
-} from "@beep/langextract/Extraction";
+import { ExtractionCandidate, LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 import {
   allowRemoteExtractionPolicyLayer,
   buildPrompt,
@@ -13,12 +10,17 @@ import {
   LangExtractService,
   layer as LangExtractServiceLive,
 } from "@beep/langextract/Service";
-import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@beep/langextract/Target";
-import { DocumentId as NlpDocumentId } from "@beep/nlp/Core";
-import { UnitInterval } from "@beep/nlp/Handoff";
+import { ExtractionExample, ExtractionExampleItem, ExtractionTarget, TargetAnnotation } from "@beep/langextract/Target";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256HexFromBytes } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { TextAnchor } from "@beep/text";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  SourceTextLocator,
+} from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -52,6 +54,7 @@ import { Canonicalizer } from "@/services/Canonicalizer";
 import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import type { LangExtractError } from "@beep/langextract/Extraction";
+import type { ExtractionHandoff, ExtractionReading, ResidualCandidate } from "@beep/langextract/Handoff";
 import type { EntityNode } from "@beep/nlp/Graph/Schema";
 import type { Sha256Hex } from "@beep/schema";
 import type {
@@ -72,16 +75,38 @@ const RELATION_CONTRACT_SCHEMA = "semantica-relation-evidence/v1";
 const RELATION_ENDPOINT_POLICY = "evidence-scoped-unique/v1";
 const RELATION_ALIGNMENT_TIERS = ["match_exact", "match_lesser", "match_minimal_fold"] as const;
 
+const relationTerms = {
+  "affiliated with": TermIri.make(iri("semantica:affiliatedWith")),
+  "authored by": TermIri.make(iri("semantica:authoredBy")),
+  "located in": TermIri.make(iri("semantica:locatedIn")),
+  "re-evaluates claim due to": TermIri.make(iri("semantica:reEvaluatesClaimDueTo")),
+  selected: TermIri.make(iri("semantica:selected")),
+  shows: TermIri.make(iri("semantica:shows")),
+};
+const mentionTerms = {
+  person: TermIri.make(iri("semantica:person")),
+  organization: TermIri.make(iri("semantica:organization")),
+  method: TermIri.make(iri("semantica:method")),
+  title: TermIri.make(iri("semantica:title")),
+  abstract: TermIri.make(iri("semantica:abstract")),
+  section: TermIri.make(iri("semantica:section")),
+  reference: TermIri.make(iri("semantica:reference")),
+};
 const HOSTED_TARGETS: A.NonEmptyReadonlyArray<ExtractionTarget> = [
   ExtractionTarget.make({
     kind: "entity",
     name: "person",
+    annotates: TargetAnnotation.cases.Mention.make({ class: mentionTerms.person, coreference: O.some("cluster") }),
     attributes: ["cluster"],
     description: O.some("A named person. Reuse cluster for coreferring mentions; use a distinct cluster otherwise."),
   }),
   ExtractionTarget.make({
     kind: "entity",
     name: "organization",
+    annotates: TargetAnnotation.cases.Mention.make({
+      class: mentionTerms.organization,
+      coreference: O.some("cluster"),
+    }),
     attributes: ["cluster"],
     description: O.some(
       "A named organization. Reuse cluster for coreferring mentions; use a distinct cluster otherwise."
@@ -90,18 +115,46 @@ const HOSTED_TARGETS: A.NonEmptyReadonlyArray<ExtractionTarget> = [
   ExtractionTarget.make({
     kind: "entity",
     name: "method",
+    annotates: TargetAnnotation.cases.Mention.make({ class: mentionTerms.method, coreference: O.some("cluster") }),
     attributes: ["cluster"],
     description: O.some(
       "A named research method or system. Reuse cluster for coreferring mentions; use a distinct cluster otherwise."
     ),
   }),
-  ExtractionTarget.make({ kind: "custom", name: "title", attributes: ["depth"] }),
-  ExtractionTarget.make({ kind: "custom", name: "abstract", attributes: ["depth"] }),
-  ExtractionTarget.make({ kind: "custom", name: "section", attributes: ["depth"] }),
-  ExtractionTarget.make({ kind: "custom", name: "reference", attributes: ["depth"] }),
+  ExtractionTarget.make({
+    annotates: TargetAnnotation.cases.Mention.make({ class: mentionTerms.title }),
+    kind: "custom",
+    name: "title",
+    attributes: ["depth"],
+  }),
+  ExtractionTarget.make({
+    annotates: TargetAnnotation.cases.Mention.make({ class: mentionTerms.abstract }),
+    kind: "custom",
+    name: "abstract",
+    attributes: ["depth"],
+  }),
+  ExtractionTarget.make({
+    annotates: TargetAnnotation.cases.Mention.make({ class: mentionTerms.section }),
+    kind: "custom",
+    name: "section",
+    attributes: ["depth"],
+  }),
+  ExtractionTarget.make({
+    annotates: TargetAnnotation.cases.Mention.make({ class: mentionTerms.reference }),
+    kind: "custom",
+    name: "reference",
+    attributes: ["depth"],
+  }),
   ExtractionTarget.make({
     kind: "relation",
     name: "relation",
+    annotates: TargetAnnotation.cases.Relation.make({
+      subject: "subject",
+      object: "object",
+      predicate: "predicate",
+      predicates: relationTerms,
+      endpoint: TermIri.make(iri("semantica:relation-endpoint")),
+    }),
     attributes: ["predicate", "subject", "object"],
     description: O.some(
       `A relation explicitly stated in the source. Copy one verbatim contiguous source span as the extraction text; never paraphrase or synthesize it. Copy subject and object as exact entity surface strings from that span. Predicate must be exactly one of: ${A.join(FrozenRelationPredicate.literals, ", ")}.`
@@ -143,7 +196,15 @@ const HOSTED_EXAMPLES = [
 ];
 
 const HOSTED_ARTIFACT_REQUEST = LangExtractRequest.make({
-  documentId: NlpDocumentId.make("semantica-hosted-artifact"),
+  source: SourceTextIdentity.make({
+    scopeRef: "semantica-hosted-artifact",
+    sourceRef: "semantica-hosted-artifact",
+    locator: SourceTextLocator.make("artifact.txt"),
+    sourceDigest: SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+    textDigest: SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+    extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
+    normalizationVersion: "raw/1",
+  }),
   examples: HOSTED_EXAMPLES,
   targets: HOSTED_TARGETS,
   text: Str.empty,
@@ -208,7 +269,7 @@ export const PATTERN_MODEL_IDENTITY = ModelIdentity.make({
   artifactHash: sha256CanonicalSync({
     backend: "wink-nlp",
     losses: A.sort(
-      A.fromIterable(HashMap.get(declaredLosses, "pattern-wink").pipe(O.getOrElse(() => []))),
+      A.fromIterable(HashMap.get(declaredLosses, "pattern-wink").pipe(O.getOrElse(A.empty))),
       Order.String
     ),
     schemaVersion: "semantica-pattern-extraction/v1",
@@ -280,9 +341,7 @@ const makeBatch = (
       degraded,
       id,
       lossy: A.sort(
-        A.fromIterable(
-          HashMap.get(declaredLosses, method).pipe(O.getOrElse(() => [] as ReadonlyArray<LossDeclaration>))
-        ),
+        A.fromIterable(HashMap.get(declaredLosses, method).pipe(O.getOrElse(A.empty<LossDeclaration>))),
         Order.String
       ),
     }),
@@ -320,7 +379,7 @@ const langExtractDegradedKind = (error: LangExtractError): "provider-unavailable
  */
 export const makeHostedExtractionRequest = (canonical: CanonicalText): LangExtractRequest =>
   LangExtractRequest.make({
-    documentId: NlpDocumentId.make(canonical.identity.sourceRef),
+    source: canonical.identity,
     examples: HOSTED_EXAMPLES,
     options: LangExtractOptions.make({ fuzzyThreshold: UnitInterval.makeOption(1) }),
     targets: HOSTED_TARGETS,
@@ -340,7 +399,7 @@ const hostedCacheKey = Effect.fn("Extractor.hostedCacheKey")(function* (
 
 const isStructureRole = S.is(StructureRole);
 
-const structureDepth = (extraction: GroundedExtraction): number =>
+const structureDepth = (extraction: ExtractionReading | ResidualCandidate): number =>
   extraction.attributes.pipe(
     O.flatMap((attributes) => R.get(attributes, "depth")),
     O.flatMap(N.parse),
@@ -349,13 +408,13 @@ const structureDepth = (extraction: GroundedExtraction): number =>
     O.getOrElse(() => S.Natural.make(0))
   );
 
-const extractionAttribute = (extraction: GroundedExtraction, name: string): O.Option<string> =>
+const extractionAttribute = (extraction: ExtractionReading | ResidualCandidate, name: string): O.Option<string> =>
   extraction.attributes.pipe(
     O.flatMap((attributes) => R.get(attributes, name)),
     O.filter(Str.isNonEmpty)
   );
 
-const nonRelationBody = (extraction: GroundedExtraction, anchor: TextAnchor): ClaimBody =>
+const nonRelationBody = (extraction: ExtractionReading | ResidualCandidate, anchor: TextAnchor): ClaimBody =>
   isStructureRole(extraction.label)
     ? ClaimBody.cases.Structure.make({
         ...anchor,
@@ -378,39 +437,8 @@ const entityAnchorOf = (claim: EvidenceClaimValue): O.Option<TextAnchor> =>
     Structure: O.none<TextAnchor>,
   });
 
-type AlignedGroundedExtraction = Exclude<GroundedExtraction, { readonly alignmentStatus: "unaligned" }>;
-type LocatedExtraction = readonly [extraction: GroundedExtraction, anchor: TextAnchor];
-
-const alignedExtraction = (extraction: AlignedGroundedExtraction): Result.Result<LocatedExtraction, void> =>
-  Result.succeed([
-    extraction,
-    TextAnchor.make({
-      endChar: extraction.span.end,
-      quote: extraction.matchedText,
-      startChar: extraction.span.start,
-    }),
-  ]);
-
-const locateExtraction = (extraction: GroundedExtraction): Result.Result<LocatedExtraction, void> =>
-  GroundedExtraction.match(extraction, {
-    match_exact: alignedExtraction,
-    match_fuzzy: alignedExtraction,
-    match_lesser: alignedExtraction,
-    match_minimal_fold: alignedExtraction,
-    unaligned: () => Result.failVoid,
-  });
-
-const locateRelationEvidence = (extraction: GroundedExtraction): Result.Result<LocatedExtraction, void> =>
-  GroundedExtraction.match(extraction, {
-    match_exact: alignedExtraction,
-    match_fuzzy: () => Result.failVoid,
-    match_lesser: alignedExtraction,
-    match_minimal_fold: alignedExtraction,
-    unaligned: () => Result.failVoid,
-  });
-
 const decodeRelationCandidate = (
-  extraction: GroundedExtraction
+  extraction: ExtractionReading | ResidualCandidate
 ): Result.Result<RelationExtractionCandidate, S.SchemaError> =>
   decodeUnknownRelationExtractionCandidateResult({
     evidenceQuote: extraction.text,
@@ -419,19 +447,29 @@ const decodeRelationCandidate = (
     subject: O.getOrUndefined(extractionAttribute(extraction, "subject")),
   });
 
-const scopedEndpointAnchor = (evidence: TextAnchor, surface: string): Result.Result<TextAnchor, void> => {
-  const aligned = alignCandidate(
-    ExtractionCandidate.make({ label: "relation-endpoint", text: surface }),
-    AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(1), sourceText: evidence.quote })
-  );
-  return locateRelationEvidence(aligned).pipe(
-    Result.map(([, anchor]) =>
-      TextAnchor.make({
-        endChar: S.Natural.make(N.sum(evidence.startChar, anchor.endChar)),
-        quote: anchor.quote,
-        startChar: S.Natural.make(N.sum(evidence.startChar, anchor.startChar)),
-      })
-    )
+const replayPreVocabularyE5RelationEndpoints = (
+  candidate: ResidualCandidate
+): O.Option<readonly [TextAnchor, TextAnchor, string]> => {
+  if (candidate.reason !== "unmapped-predicate" || O.isNone(candidate.anchor)) return O.none();
+  const decoded = decodeRelationCandidate(candidate);
+  if (Result.isFailure(decoded)) return O.none();
+  const evidence = candidate.anchor.value;
+  const locate = (surface: string): O.Option<TextAnchor> => {
+    const endpoint = ExtractionCandidate.make({ label: "relation-endpoint", text: surface });
+    const aligned = alignCandidate(
+      endpoint,
+      AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(1), sourceText: evidence.quote })
+    );
+    if (aligned.alignmentStatus === "unaligned" || aligned.alignmentStatus === "match_fuzzy") return O.none();
+    return TextAnchor.makeOption({
+      startChar: S.Natural.make(evidence.startChar + aligned.anchor.startChar),
+      endChar: S.Natural.make(evidence.startChar + aligned.anchor.endChar),
+      quote: aligned.anchor.quote,
+    });
+  };
+  return O.map(
+    O.all([locate(decoded.success.subject), locate(decoded.success.object)]),
+    ([subject, object]) => [subject, object, decoded.success.predicate] as const
   );
 };
 
@@ -495,7 +533,9 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
   canonical: CanonicalText,
   chunks: A.NonEmptyReadonlyArray<Chunk>,
   baseClaims: ReadonlyArray<EvidenceClaimValue>,
-  extraction: GroundedExtraction,
+  extraction: ExtractionReading | ResidualCandidate,
+  evidence: O.Option<TextAnchor>,
+  endpoints: O.Option<readonly [TextAnchor, TextAnchor, string]>,
   model: ModelIdentity,
   cacheKey: O.Option<Sha256Hex>
 ) {
@@ -510,8 +550,7 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
       )
     );
   }
-  const located = locateRelationEvidence(extraction);
-  if (Result.isFailure(located)) {
+  if (extraction.alignment === "unaligned" || extraction.alignment === "match_fuzzy" || O.isNone(evidence)) {
     return Result.fail(
       relationDegradation(
         chunks,
@@ -521,14 +560,11 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
       )
     );
   }
-  const [, evidence] = located.success;
-  const subjectAnchor = scopedEndpointAnchor(evidence, decoded.success.subject);
-  const objectAnchor = scopedEndpointAnchor(evidence, decoded.success.object);
-  if (Result.isFailure(subjectAnchor) || Result.isFailure(objectAnchor)) {
+  if (O.isNone(endpoints)) {
     return Result.fail(
       relationDegradation(
         chunks,
-        O.some(evidence),
+        evidence,
         "relation-unresolved",
         "A relation endpoint did not align uniquely inside its evidence quote."
       )
@@ -540,7 +576,7 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
     canonical,
     chunks,
     baseClaims,
-    subjectAnchor.success,
+    endpoints.value[0],
     confidence,
     model,
     cacheKey
@@ -550,7 +586,7 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
     canonical,
     chunks,
     baseClaims,
-    objectAnchor.success,
+    endpoints.value[1],
     confidence,
     model,
     cacheKey
@@ -560,10 +596,10 @@ const groundRelation = Effect.fn("Extractor.groundRelation")(function* (
     canonical,
     chunks,
     ClaimBody.cases.Relation.make({
-      ...evidence,
+      ...evidence.value,
       kind: "Relation",
       object: object.id,
-      predicate: decoded.success.predicate,
+      predicate: endpoints.value[2],
       subject: subject.id,
     }),
     confidence,
@@ -594,47 +630,124 @@ const unalignedExtraction = (chunks: A.NonEmptyReadonlyArray<Chunk>): DegradedCl
  * **Example** (Inspect the grounding boundary)
  *
  * ```ts
- * import { groundHostedExtractions } from "@/layers/ExtractorLive"
+ * import { groundHostedHandoff } from "@/layers/ExtractorLive"
  *
- * console.log(typeof groundHostedExtractions) // "function"
+ * console.log(typeof groundHostedHandoff) // "function"
  * ```
  *
  * @internal
  * @category mapping
  * @since 0.0.0
  */
-export const groundHostedExtractions = Effect.fn("Extractor.groundHostedExtractions")(function* (
+export const groundHostedHandoff = Effect.fn("Extractor.groundHostedHandoff")(function* (
   canonicalizer: CanonicalizerShape,
   canonical: CanonicalText,
   chunks: A.NonEmptyReadonlyArray<Chunk>,
-  extractions: ReadonlyArray<GroundedExtraction>,
+  handoff: ExtractionHandoff,
   model: ModelIdentity,
   cacheKey: O.Option<Sha256Hex>
 ) {
-  const relationExtractions = A.filter(extractions, (extraction) => Str.Equivalence(extraction.label, "relation"));
-  const nonRelationExtractions = A.filter(extractions, (extraction) => !Str.Equivalence(extraction.label, "relation"));
-  const basePairs = A.filterMap(nonRelationExtractions, locateExtraction);
-  const unaligned = A.map(A.filter(nonRelationExtractions, GroundedExtraction.guards.unaligned), () =>
-    unalignedExtraction(chunks)
+  const anchorOf = (
+    annotation: ExtractionHandoff["document"]["annotations"] extends HashMap.HashMap<infer _K, infer V> ? V : never
+  ) =>
+    HashMap.getUnsafe(handoff.document.anchors, annotation.targets.pipe(A.fromIterable, A.head, O.getOrThrow)).receipt
+      .anchor;
+  const entries = A.sort(
+    A.flatMap(HashMap.toEntries(handoff.readings), ([id, readings]) =>
+      A.map(readings, (reading) => ({ reading, annotation: HashMap.getUnsafe(handoff.document.annotations, id) }))
+    ),
+    Order.mapInput(
+      Order.Number,
+      (row: { readonly reading: ExtractionReading | ResidualCandidate }) => row.reading.candidate
+    )
+  );
+  const nonRelations = A.sort(
+    A.appendAll(
+      A.filterMap(entries, (entry) => {
+        if (entry.annotation._tag !== "Mention") return Result.failVoid;
+        const mentionClass = entry.annotation.body.class;
+        const term = O.getOrThrow(A.findFirst(R.toEntries(mentionTerms), (pair) => pair[1] === mentionClass));
+        return Result.succeed({
+          reading: { ...entry.reading, label: term[0] },
+          anchor: O.some(anchorOf(entry.annotation)),
+        });
+      }),
+      A.map(
+        A.filter(handoff.residual, (candidate) => candidate.label !== "relation"),
+        (candidate) => ({
+          reading: candidate,
+          anchor: candidate.reason === "unmapped-label" ? candidate.anchor : O.none<TextAnchor>(),
+        })
+      )
+    ),
+    Order.mapInput(
+      Order.Number,
+      (row: { readonly reading: ExtractionReading | ResidualCandidate }) => row.reading.candidate
+    )
   );
   const baseClaims = yield* Effect.forEach(
-    basePairs,
-    ([extraction, anchor]) =>
+    A.filterMap(nonRelations, (row) =>
+      O.match(row.anchor, {
+        onNone: () => Result.failVoid,
+        onSome: (anchor) => Result.succeed({ reading: row.reading, anchor }),
+      })
+    ),
+    (row) =>
       makeClaim(
         canonicalizer,
         canonical,
         chunks,
-        nonRelationBody(extraction, anchor),
-        evidenceConfidence(extraction.confidence),
+        nonRelationBody(row.reading, row.anchor),
+        evidenceConfidence(row.reading.confidence),
         "hosted-langextract",
         model,
         cacheKey
       ),
     { concurrency: 1 }
   );
+  const unaligned = A.map(
+    A.filter(nonRelations, (row) => O.isNone(row.anchor)),
+    () => unalignedExtraction(chunks)
+  );
+  const relationRows = A.sort(
+    A.appendAll(
+      A.filterMap(entries, (entry) => {
+        if (entry.annotation._tag !== "RelationCandidate") return Result.failVoid;
+        const body = entry.annotation.body;
+        const subject = HashMap.getUnsafe(handoff.document.annotations, body.subject);
+        const object = HashMap.getUnsafe(handoff.document.annotations, body.object);
+        const predicate = A.findFirst(R.toEntries(relationTerms), (pair) => pair[1] === body.predicate);
+        const endpoints = O.map(predicate, (pair) => [anchorOf(subject), anchorOf(object), pair[0]] as const);
+        return Result.succeed({ reading: entry.reading, anchor: O.some(anchorOf(entry.annotation)), endpoints });
+      }),
+      A.map(
+        A.filter(handoff.residual, (candidate) => candidate.label === "relation"),
+        (candidate) => ({
+          reading: candidate,
+          anchor: candidate.anchor,
+          endpoints: replayPreVocabularyE5RelationEndpoints(candidate),
+        })
+      )
+    ),
+    Order.mapInput(
+      Order.Number,
+      (row: { readonly reading: ExtractionReading | ResidualCandidate }) => row.reading.candidate
+    )
+  );
   const relations = yield* Effect.forEach(
-    relationExtractions,
-    (extraction) => groundRelation(canonicalizer, canonical, chunks, baseClaims, extraction, model, cacheKey),
+    relationRows,
+    (row) =>
+      groundRelation(
+        canonicalizer,
+        canonical,
+        chunks,
+        baseClaims,
+        row.reading,
+        row.anchor,
+        row.endpoints,
+        model,
+        cacheKey
+      ),
     { concurrency: 1 }
   );
   return makeBatch(
@@ -668,14 +781,7 @@ const makeHostedExtractor = Effect.gen(function* () {
 
       const pipe1 = yield* hostedCacheKey(request, model).pipe(Effect.orDie);
       const cacheKey = O.some(pipe1);
-      return yield* groundHostedExtractions(
-        canonicalizer,
-        canonical,
-        chunks,
-        extracted.success.extractions,
-        model,
-        cacheKey
-      );
+      return yield* groundHostedHandoff(canonicalizer, canonical, chunks, extracted.success.handoff, model, cacheKey);
     }),
   });
 });
@@ -687,24 +793,33 @@ const fabricatedSpan = (chunks: A.NonEmptyReadonlyArray<Chunk>): DegradedClaim =
     kind: "fabricated-span",
   });
 
+const patternQuoteMatches = (start: number, end: number, quote: string, entity: EntityNode): boolean =>
+  Str.isNonEmpty(entity.text) &&
+  N.Equivalence(N.subtract(end, start), Str.length(entity.text)) &&
+  Str.Equivalence(quote, entity.text);
+
+const verifiedPatternSpan = (canonical: CanonicalText, entity: EntityNode) => {
+  if (O.isNone(entity.span) || entity.span.value.unit !== "utf16-code-unit") {
+    return O.none();
+  }
+  const start = entity.span.value.start;
+  const end = entity.span.value.end;
+  const quote = Str.slice(start, end)(canonical.text);
+  if (!patternQuoteMatches(start, end, quote, entity)) {
+    return O.none();
+  }
+  return O.some({ start, end, quote });
+};
+
 const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
   canonicalizer: CanonicalizerShape,
   canonical: CanonicalText,
   chunks: A.NonEmptyReadonlyArray<Chunk>,
   entity: EntityNode
 ) {
-  const start = entity.span.start;
-  const end = entity.span.end;
-  const validOffsets = isNatural(start) && isNatural(end) && start < end;
-  const quote = validOffsets ? Str.slice(start, end)(canonical.text) : Str.empty;
-  if (
-    !validOffsets ||
-    !Str.isNonEmpty(entity.text) ||
-    !N.Equivalence(N.subtract(end, start), Str.length(entity.text)) ||
-    !Str.Equivalence(quote, entity.text)
-  ) {
-    return Result.fail(fabricatedSpan(chunks));
-  }
+  const span = verifiedPatternSpan(canonical, entity);
+  if (O.isNone(span)) return Result.fail(fabricatedSpan(chunks));
+  const { start, end, quote } = span.value;
   const body = ClaimBody.cases.Entity.make({
     cluster: O.none(),
     endChar: S.Natural.make(end),

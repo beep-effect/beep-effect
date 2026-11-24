@@ -33,7 +33,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical s
       const parent = yield* citationFixtureSourceProof("<p>Visible</p>");
       const unicode = yield* makeCitationPythonUnicode(setup.limits);
       const changed = yield* unicode.fromText("Visible");
-      // The data-last form captures every argument except limits.
       const derive = (parentInput: unknown, modesInput: unknown) =>
         deriveCitationCanonicalSource(
           artifact,

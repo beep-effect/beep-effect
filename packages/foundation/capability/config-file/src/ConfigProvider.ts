@@ -85,8 +85,6 @@ export const asConfigProvider = <A>(
   Effect.map(service.load, (value) => ConfigProvider.fromUnknown(value));
 
 /**
- * Options for {@link layerConfigProvider}.
- *
  * **Example** (Make the file the primary source)
  *
  * ```ts

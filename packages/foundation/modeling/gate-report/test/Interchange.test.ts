@@ -1,6 +1,3 @@
-// The CTRF and SARIF table test: every item maps to a CTRF status and to a
-// SARIF level, rule id, region and partial fingerprint, and maps back to an
-// equal item. A property extends the table to generated items.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { CtrfTest, fromCtrf, fromSarif, toCtrf, toSarif } from "@beep/gate-report/Interchange";
 import { Item, ItemDetail, Location } from "@beep/gate-report/Item";
@@ -82,7 +79,7 @@ const rows: ReadonlyArray<
   ],
 ];
 
-describe("CTRF and SARIF table", () => {
+describe("CTRF and SARIF table: status, level, rule id, region and partial fingerprint back to an equal item, extended to generated items by a property", () => {
   for (const [name, item, ctrf, level, kind, ruleId] of rows) {
     it(`${name}: maps to CTRF ${ctrf} and SARIF ${level}/${kind}, and back to an equal item`, () => {
       const test = toCtrf(item);

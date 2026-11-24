@@ -29,7 +29,6 @@ export const SecretCoverage = LiteralKit(["known", "unknown"]).pipe(
   })
 );
 /**
- * Runtime coverage type.
  * **Example** (Type coverage)
  * ```ts import.meta.vitest name="Type coverage"
  * import type * as SecretScrub from "@beep/file-processing/SecretScrub"
@@ -56,7 +55,6 @@ export const SecretResidue = LiteralKit(["clear", "present", "unresolved"]).pipe
   })
 );
 /**
- * Runtime residue type.
  * **Example** (Type residue)
  * ```ts import.meta.vitest name="Type residue"
  * import type * as SecretScrub from "@beep/file-processing/SecretScrub"
@@ -83,7 +81,6 @@ export const SecretRetentionClass = LiteralKit(["transient-raw", "scrub-proof", 
   })
 );
 /**
- * Runtime retention class type.
  * **Example** (Type retention)
  * ```ts import.meta.vitest name="Type retention"
  * import type * as SecretScrub from "@beep/file-processing/SecretScrub"

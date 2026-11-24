@@ -36,8 +36,6 @@ export const StrictContextSource = LiteralKit(["tagged", "fail-closed"]).pipe(
 );
 
 /**
- * Runtime type for {@link StrictContextSource}.
- *
  * @category models
  * @since 0.0.0
  */

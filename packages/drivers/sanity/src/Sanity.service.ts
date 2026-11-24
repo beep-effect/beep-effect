@@ -27,8 +27,6 @@ import type * as RedactedType from "effect/Redacted";
 const $I = $SanityId.create("Sanity.service");
 
 /**
- * Scalar JSON value accepted in Sanity query params.
- *
  * **Example** (Scalar param value check)
  *
  * ```ts
@@ -49,8 +47,6 @@ export const SanityQueryParamValue = S.Union([S.Boolean, S.Finite, S.String]).pi
 );
 
 /**
- * Type for {@link SanityQueryParamValue}.
- *
  * **Example** (Typed query params record)
  *
  * ```ts
@@ -72,8 +68,6 @@ export type SanityQueryParamValue = typeof SanityQueryParamValue.Type;
 
 const sanityQueryRequestParamsDefault = R.empty();
 /**
- * Sanity GROQ query request.
- *
  * **Example** (Make GROQ query request)
  *
  * ```ts
@@ -113,8 +107,6 @@ export class SanityQueryRequest extends S.Opaque<SanityQueryRequest, { readonly 
 }
 
 /**
- * Sanity query response.
- *
  * **Example** (Make query response)
  *
  * ```ts

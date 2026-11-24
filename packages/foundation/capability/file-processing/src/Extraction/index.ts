@@ -13,8 +13,6 @@
  */
 export * from "./Extraction.codec.ts";
 /**
- * Manifest schemas and records.
- *
  * @category models
  * @since 0.0.0
  */

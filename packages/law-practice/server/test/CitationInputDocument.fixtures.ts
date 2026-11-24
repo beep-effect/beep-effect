@@ -287,11 +287,11 @@ const checkSuccess = Effect.fn("InputDocumentTest.checkSuccess")(function* (
   expect(result.steps).toBe(steps);
   expect(O.isSome(result.geometry)).toBe(row.hasForward && row.hasBackward);
   if (row.stepsKind === "generator-empty") {
-    // A truthy plan with no steps returns the issued input. Its text is settled in the
-    // cleaner ledger only, because the enclosing operation owns the source reservation.
     const native = yield* h.values.getUnicode(result.plain);
-    expect(result.cleanerTextUtf16).toBe(O.getOrThrow(native).utf16Units);
-    expect(result.reservedUnits).toBe(0);
+    expect(result.cleanerTextUtf16, "a truthy plan with no steps settles the issued input in the cleaner ledger").toBe(
+      O.getOrThrow(native).utf16Units
+    );
+    expect(result.reservedUnits, "the enclosing operation owns the source reservation").toBe(0);
   } else if (O.isNone(result.geometry)) expect(result.reservedUnits).toBe(result.cleanerTextUtf16);
   else expect(result.reservedUnits).toBeGreaterThanOrEqual(result.cleanerTextUtf16);
   if (O.isSome(result.geometry)) expect(result.geometry.value.tags).toEqual(row.emphasis);

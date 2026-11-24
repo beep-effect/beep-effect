@@ -105,8 +105,6 @@ export const documentIndex: Brand.Constructor<DocumentIndex> = Brand.check<Docum
 );
 
 /**
- * Schema that decodes non-negative numbers into {@link DocumentIndex} values.
- *
  * **Example** (Decode index via schema)
  *
  * ```ts import.meta.vitest name="Decode index via schema"

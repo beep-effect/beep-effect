@@ -59,8 +59,6 @@ export class PinnedSource extends S.Opaque<PinnedSource, { readonly brand: uniqu
 ) {}
 
 /**
- * The pin of one external registry namespace.
- *
  * **Details**
  *
  * `digest` is the SHA-256 of the artifact bytes. `termsDigest` is the SHA-256
@@ -148,8 +146,6 @@ export const NamespacePins = S.Array(NamespacePin)
   );
 
 /**
- * Decoded type of {@link NamespacePins}.
- *
  * @category models
  * @since 0.0.0
  */

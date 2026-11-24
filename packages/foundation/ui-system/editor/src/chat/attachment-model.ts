@@ -78,8 +78,6 @@ export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
 );
 
 /**
- * Companion type for {@link ImageAttachmentMimeType}.
- *
  * **Example** (Assigning image MIME type)
  *
  * ```ts import.meta.vitest name="Assigning image MIME type"
@@ -159,8 +157,6 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
   Result.getOrElse(decodeAttachmentCaptureLimitBytesResult(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
 
 /**
- * A captured file rejected because it exceeds the (clamped) byte budget.
- *
  * **Example** (Creating oversized file rejection)
  *
  * ```ts import.meta.vitest name="Creating oversized file rejection"
@@ -193,9 +189,6 @@ export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge, { read
 ) {}
 
 /**
- * A captured file rejected because its `file.type` is empty or not a recognized
- * {@link MimeType}.
- *
  * **Example** (Creating invalid MIME rejection)
  *
  * ```ts import.meta.vitest name="Creating invalid MIME rejection"
@@ -263,11 +256,6 @@ export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed, { 
 ) {}
 
 /**
- * Why {@link ComposerAttachment.fromFile} declined to capture a file. A tagged
- * union so the capture pipeline can distinguish — and surface — an over-budget
- * file from one with an unrecognized MIME type, rather than collapsing both into
- * an opaque `O.none()`.
- *
  * **Example** (Typing a capture rejection)
  *
  * ```ts import.meta.vitest name="Typing a capture rejection"
@@ -293,8 +281,6 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
 );
 
 /**
- * Companion type for {@link AttachmentRejection}.
- *
  * **Example** (Assigning rejection union type)
  *
  * ```ts import.meta.vitest name="Assigning rejection union type"
@@ -339,8 +325,6 @@ export const AttachmentFailure = S.Union([AttachmentTooLarge, AttachmentInvalidM
 );
 
 /**
- * Companion type for {@link AttachmentFailure}.
- *
  * **Example** (Making attachment failure value)
  *
  * ```ts import.meta.vitest name="Making attachment failure value"

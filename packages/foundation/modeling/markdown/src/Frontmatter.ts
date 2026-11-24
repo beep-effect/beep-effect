@@ -31,9 +31,6 @@ import type { Frontmatter as FrontmatterNode } from "./MarkdownNode.ts";
 const $I = $MarkdownId.create("Frontmatter");
 
 /**
- * Indicates that a frontmatter codec was handed a capture of a different
- * format — a yaml codec applied to a `+++` toml capture, for example.
- *
  * **Details**
  *
  * The mismatch is detected before any parsing happens, so `cause`-free: the
@@ -96,9 +93,6 @@ export class FrontmatterFormatMismatchError extends S.TaggedError<
 }
 
 /**
- * Indicates that a frontmatter capture's content failed to parse in its
- * declared format.
- *
  * **Details**
  *
  * The underlying format package's failure is preserved structurally in
@@ -160,8 +154,6 @@ export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError
 }
 
 /**
- * Indicates that frontmatter data failed to serialize in a codec's format.
- *
  * **Details**
  *
  * The exact mirror of {@link FrontmatterDecodeError} on the write side: the
@@ -224,8 +216,6 @@ export class FrontmatterEncodeError extends S.TaggedError<FrontmatterEncodeError
 }
 
 /**
- * Why a parsed frontmatter capture has no faithful JSON-object reading.
- *
  * **Details**
  *
  * `"DuplicateKey"` — one object names the same key twice in the JSON source,
@@ -256,8 +246,6 @@ export const FrontmatterKeyIssue = LiteralKit(["DuplicateKey", "ComplexKey", "Se
 );
 
 /**
- * Why a parsed frontmatter capture has no faithful JSON-object reading.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -265,9 +253,6 @@ export const FrontmatterKeyIssue = LiteralKit(["DuplicateKey", "ComplexKey", "Se
 export type FrontmatterKeyIssue = typeof FrontmatterKeyIssue.Type;
 
 /**
- * Indicates that a frontmatter capture parsed, but its keys have no faithful
- * JSON-object reading.
- *
  * **Details**
  *
  * Carried as the `cause` of a {@link FrontmatterDecodeError}, the same place
@@ -496,8 +481,6 @@ export class FrontmatterCodec {
 }
 
 /**
- * Why a frontmatter decoder found no capture on a document.
- *
  * **Details**
  *
  * `"absent"` — the source genuinely has no frontmatter block.
@@ -526,8 +509,6 @@ export const FrontmatterMissingReason = LiteralKit(["absent", "captureDisabled"]
 );
 
 /**
- * Why a frontmatter decoder found no capture on a document.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -535,9 +516,6 @@ export const FrontmatterMissingReason = LiteralKit(["absent", "captureDisabled"]
 export type FrontmatterMissingReason = typeof FrontmatterMissingReason.Type;
 
 /**
- * Indicates that a document handed to a frontmatter decoder carries no
- * frontmatter capture.
- *
  * **Details**
  *
  * `reason` distinguishes the two ways this happens: `"absent"` when the
@@ -605,9 +583,6 @@ export class FrontmatterMissingError extends S.TaggedError<FrontmatterMissingErr
 }
 
 /**
- * Indicates that decoded frontmatter data did not satisfy the consumer's
- * schema.
- *
  * **Details**
  *
  * `issue` carries the **structured** schema failure — at runtime a
