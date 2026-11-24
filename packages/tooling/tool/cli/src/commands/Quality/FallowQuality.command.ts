@@ -318,7 +318,7 @@ const FallowHealthRawReport = S.Struct({
     files_analyzed: S.Finite,
     functions_analyzed: S.Finite,
     functions_above_threshold: S.Finite,
-    average_maintainability: S.Finite,
+    average_maintainability: S.optionalKey(S.Finite),
     severity_critical_count: S.Finite,
     severity_high_count: S.Finite,
     severity_moderate_count: S.Finite,

@@ -49,9 +49,6 @@ import type { LineClassRule, OffenderRule, ShellClass } from "../census-rules.ts
 
 const $I = $RepoAiMetricsId.create("internal/census-projection");
 
-// ---------------------------------------------------------------------------
-// Window
-
 /**
  * @category models
  * @since 0.0.0
@@ -69,33 +66,25 @@ const timeOf = (value: unknown): O.Option<number> =>
     O.map((time) => time.seconds * 1000 + Math.floor(time.nanoseconds / 1_000_000))
   );
 
-/**
- * Record time with the untimestamped-record rule: a record with no timestamp takes the time of the record
- * before it in the same file, and a leading record with no earlier time counts as inside the window.
- *
- * A file touches the window when one of its own timestamps falls inside it: the files the reference run
- * selected by modification time are exactly those whose last record before the window end was inside it.
- */
-const makeClock = (window: CensusWindowMillis) => {
-  let last = O.none<number>();
+const leadingUntimestampedRecordCountsInsideWindow = { inWindow: true, beforeEnd: true };
+
+const makeClockWhereUntimestampedRecordTakesPreviousRecordTime = (window: CensusWindowMillis) => {
+  let previousRecordTimeInFile = O.none<number>();
   let first = O.none<number>();
-  let touched = false;
+  let ownTimestampFellInsideWindow = false;
   const within = (time: number) => time >= window.since && time <= window.until;
   const observe = (timestamp: unknown) => {
     const own = timeOf(timestamp);
-    last = O.orElse(own, () => last);
+    previousRecordTimeInFile = O.orElse(own, () => previousRecordTimeInFile);
     first = O.orElse(first, () => own);
-    touched = touched || O.exists(own, within);
-    return O.match(last, {
-      onNone: () => ({ inWindow: true, beforeEnd: true }),
+    ownTimestampFellInsideWindow = ownTimestampFellInsideWindow || O.exists(own, within);
+    return O.match(previousRecordTimeInFile, {
+      onNone: () => leadingUntimestampedRecordCountsInsideWindow,
       onSome: (time) => ({ inWindow: within(time), beforeEnd: time <= window.until }),
     });
   };
-  return { observe, firstTime: () => first, touchedWindow: () => touched };
+  return { observe, firstTime: () => first, touchedWindow: () => ownTimestampFellInsideWindow };
 };
-
-// ---------------------------------------------------------------------------
-// Command classification
 
 const classifyShellCommand = (command: string): ShellClass =>
   pipe(
@@ -181,9 +170,6 @@ const unmatchedCall = CallFacts.make({
   asksForHelp: false,
 });
 
-// ---------------------------------------------------------------------------
-// Result text
-
 const textOfBlock = (block: unknown): string => {
   if (P.isString(block)) return block;
   if (!P.isObject(block)) return "";
@@ -198,7 +184,6 @@ const textOf = (content: unknown): string => {
   return P.isObject(content) && P.hasProperty(content, "text") && P.isString(content.text) ? content.text : "";
 };
 
-// The turn pass measures a result as its string, or the sum of its blocks' text lengths.
 const turnCharsOf = (content: unknown): number => {
   if (P.isString(content)) return Str.length(content);
   if (!A.isArray(content)) return 0;
@@ -209,9 +194,6 @@ const turnCharsOf = (content: unknown): number => {
 
 const isPersistedOutput = (text: string) =>
   CensusSelectionRules.persistedOutputPattern.test(Str.slice(0, CensusSelectionRules.persistedOutputProbeChars)(text));
-
-// ---------------------------------------------------------------------------
-// Verification output line classes and offenders
 
 /**
  * @category models
@@ -254,11 +236,14 @@ const lineClassOf = (line: string, seen: MutableHashSet.MutableHashSet<string>):
 const ansiChars = (text: string): number =>
   A.reduce(A.fromIterable(Str.matchAll(AnsiSequencePattern)(text)), 0, (total, found) => total + Str.length(found[0]));
 
-// A row the pattern claims is remembered for the rest of the context; it is a repeat once seen before.
-const repeatedRow = (pattern: RegExp, line: string, rows: MutableHashSet.MutableHashSet<string>): boolean => {
+const repeatOfRowClaimedEarlierInContext = (
+  pattern: RegExp,
+  line: string,
+  rowsClaimedForRestOfContext: MutableHashSet.MutableHashSet<string>
+): boolean => {
   if (!pattern.test(line)) return false;
-  const repeat = MutableHashSet.has(rows, line);
-  MutableHashSet.add(rows, line);
+  const repeat = MutableHashSet.has(rowsClaimedForRestOfContext, line);
+  MutableHashSet.add(rowsClaimedForRestOfContext, line);
   return repeat;
 };
 
@@ -267,7 +252,6 @@ interface OffenderState {
   inHelpSection: boolean;
 }
 
-// The header line opens a help section and the next blank line closes it.
 const inHelpSection = (header: RegExp, line: string, state: OffenderState, asksForHelp: boolean): boolean => {
   if (!asksForHelp) return false;
   if (header.test(line)) state.inHelpSection = true;
@@ -278,7 +262,7 @@ const inHelpSection = (header: RegExp, line: string, state: OffenderState, asksF
 const offenderMatches = (rule: OffenderRule, line: string, state: OffenderState, asksForHelp: boolean): boolean =>
   OffenderMatch.match(rule.match, {
     Pattern: ({ pattern }) => pattern.test(line),
-    RepeatInContext: ({ pattern }) => repeatedRow(pattern, line, state.gateRows),
+    RepeatInContext: ({ pattern }) => repeatOfRowClaimedEarlierInContext(pattern, line, state.gateRows),
     HelpSection: ({ header }) => inHelpSection(header, line, state, asksForHelp),
   });
 
@@ -370,9 +354,6 @@ const resultFacts = (
     turnMessage,
   });
 
-// ---------------------------------------------------------------------------
-// Turn accounting (Claude)
-
 /**
  * @category models
  * @since 0.0.0
@@ -442,9 +423,6 @@ const makeTurnState = () => {
   };
   return { decide };
 };
-
-// ---------------------------------------------------------------------------
-// Claude records
 
 const UsageCount = S.optionalKey(S.Unknown);
 const ClaudeUsage = S.Struct({
@@ -603,7 +581,7 @@ const contributes = (facts: TurnToolFacts) => facts.kind === "run" || facts.kind
  * @since 0.0.0
  */
 export const makeClaudeProjector = (window: CensusWindowMillis) => {
-  const clock = makeClock(window);
+  const clock = makeClockWhereUntimestampedRecordTakesPreviousRecordTime(window);
   const calls = MutableHashMap.empty<string, ClaudeCall>();
   const turnWindow = MutableHashMap.empty<string, boolean>();
   const gateRows = MutableHashSet.empty<string>();
@@ -623,8 +601,7 @@ export const makeClaudeProjector = (window: CensusWindowMillis) => {
 
   const assistant = (message: typeof ClaudeMessage.Type, uuid: unknown, inWindow: boolean): AssistantFacts => {
     const messageId = P.isString(message.id) ? message.id : stringOf(uuid);
-    // A turn's window membership is its first record's.
-    const turnInWindow = O.getOrElse(MutableHashMap.get(turnWindow, messageId), () => {
+    const turnInWindowAsItsFirstRecordWas = O.getOrElse(MutableHashMap.get(turnWindow, messageId), () => {
       MutableHashMap.set(turnWindow, messageId, inWindow);
       return inWindow;
     });
@@ -632,11 +609,13 @@ export const makeClaudeProjector = (window: CensusWindowMillis) => {
       ? A.flatMap(message.content, (block) => A.fromOption(decodeClaudeBlock(block)))
       : [];
     const uses = A.flatMap(blocks, (block) => (block.type === "tool_use" ? [block] : []));
-    const turnTools = A.flatMap(uses, (block) => A.fromOption(toolUse(block, messageId, turnInWindow)));
+    const turnTools = A.flatMap(uses, (block) =>
+      A.fromOption(toolUse(block, messageId, turnInWindowAsItsFirstRecordWas))
+    );
     return AssistantFacts.make({
       messageId,
       usage: usageOf(message.usage),
-      turnInWindow,
+      turnInWindow: turnInWindowAsItsFirstRecordWas,
       toolCalls: A.length(uses),
       turnTools,
     });
@@ -693,9 +672,6 @@ export const makeClaudeProjector = (window: CensusWindowMillis) => {
   };
 };
 
-// ---------------------------------------------------------------------------
-// Codex records
-
 const CodexRecord = S.Struct({
   type: S.optionalKey(S.Unknown),
   timestamp: S.optionalKey(S.Unknown),
@@ -727,8 +703,7 @@ const decodeCodexTokenUsage = S.decodeUnknownOption(CodexTokenUsage);
 const decodeJson = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
 const encodeJson = S.encodeUnknownOption(S.fromJsonString(S.Unknown));
 
-// Every value here came from decoded JSON, so encoding it back cannot fail.
-const jsonText = (value: unknown): string => O.getOrElse(encodeJson(value), thunkEmptyStr);
+const reencodeDecodedJsonThatCannotFail = (value: unknown): string => O.getOrElse(encodeJson(value), thunkEmptyStr);
 
 /**
  * @category models
@@ -766,15 +741,17 @@ const metaMatches = (payload: unknown, repository: string): boolean =>
     })
   );
 
-// A command argument is its text; an argument list is its elements joined by commas, as string coercion does.
+const arrayStringCoercionSeparator = ",";
+
 const commandText = (value: unknown): string => {
   if (P.isString(value)) return value;
   if (P.isNumber(value)) return `${value}`;
-  return A.isArray(value) ? A.join(A.map(value, commandText), ",") : "";
+  return A.isArray(value) ? A.join(A.map(value, commandText), arrayStringCoercionSeparator) : "";
 };
 
 const functionCommand = (argumentsValue: unknown): string => {
-  if (!P.isString(argumentsValue)) return argumentsValue === undefined ? "" : jsonText(argumentsValue);
+  if (!P.isString(argumentsValue))
+    return argumentsValue === undefined ? "" : reencodeDecodedJsonThatCannotFail(argumentsValue);
   return pipe(
     decodeJson(argumentsValue),
     O.match({
@@ -799,14 +776,14 @@ const codexCallCommand = (payload: typeof CodexPayload.Type): string =>
     ? functionCommand(payload.arguments)
     : P.isNotNullish(payload.input)
       ? commandText(payload.input)
-      : jsonText(payload.action ?? "");
+      : reencodeDecodedJsonThatCannotFail(payload.action ?? "");
 
 const codexOutputText = (output: unknown): string => {
   if (P.isString(output)) return output;
   const content =
     P.isObject(output) && P.hasProperty(output, "content") && P.isNotNullish(output.content) ? output.content : output;
   const text = textOf(content);
-  return Str.isEmpty(text) ? jsonText(output ?? "") : text;
+  return Str.isEmpty(text) ? reencodeDecodedJsonThatCannotFail(output ?? "") : text;
 };
 
 const isCodexCall = (type: unknown) =>
@@ -847,7 +824,7 @@ export class CodexProjectorOptions extends S.Opaque<CodexProjectorOptions, { rea
  * @since 0.0.0
  */
 export const makeCodexProjector = ({ window, repository }: CodexProjectorOptions) => {
-  const clock = makeClock(window);
+  const clock = makeClockWhereUntimestampedRecordTakesPreviousRecordTime(window);
   const calls = MutableHashMap.empty<string, CallFacts>();
   const gateRows = MutableHashSet.empty<string>();
   let phase: "prelude" | "matched" = "prelude";

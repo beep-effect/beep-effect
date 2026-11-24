@@ -310,12 +310,11 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
     })
   );
   yield* readCursor;
-  // One tick is a bounded pass: a page verified once is reused by its later selections and
-  // candidate reads, instead of re-reading and re-hashing every event for each claimed event.
-  let passPages = O.none<MutableHashMap.MutableHashMap<Sha256Hex, Effect.Success<ReturnType<typeof pages.read>>>>();
+  let pagesVerifiedOncePerTickPass =
+    O.none<MutableHashMap.MutableHashMap<Sha256Hex, Effect.Success<ReturnType<typeof pages.read>>>>();
   const readPage = Effect.fnUntraced(function* (receiptId: Sha256Hex) {
-    if (O.isNone(passPages)) return yield* pages.read(receiptId);
-    const cache = passPages.value;
+    if (O.isNone(pagesVerifiedOncePerTickPass)) return yield* pages.read(receiptId);
+    const cache = pagesVerifiedOncePerTickPass.value;
     const cached = MutableHashMap.get(cache, receiptId);
     if (O.isSome(cached)) return cached.value;
     const page = yield* pages.read(receiptId);
@@ -331,20 +330,19 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
     cursor: typeof Cursor.Type,
     ref: typeof PageRef.Type | undefined
   ) {
-    // Inspect at most one further page; empty/rejected-only pages still advance.
-    let refs =
+    let atMostOneFurtherPageEvenIfEmptyOrRejectedOnly =
       yield* sql`SELECT receipt_id AS "receiptId",sequence FROM observation_intake_pages WHERE sequence>${ref?.sequence ?? cursor.sequence} ORDER BY sequence LIMIT 1`.pipe(
         Effect.flatMap(decodePageRefRows)
       );
     let wrapped = false;
-    if (refs.length === 0) {
+    if (atMostOneFurtherPageEvenIfEmptyOrRejectedOnly.length === 0) {
       wrapped = cursor.sequence !== 0 || ref !== undefined;
-      refs =
+      atMostOneFurtherPageEvenIfEmptyOrRejectedOnly =
         yield* sql`SELECT receipt_id AS "receiptId",sequence FROM observation_intake_pages ORDER BY sequence LIMIT 1`.pipe(
           Effect.flatMap(decodePageRefRows)
         );
     }
-    return { ...(yield* readSelectedPage(refs[0])), wrapped, index: 0 };
+    return { ...(yield* readSelectedPage(atMostOneFurtherPageEvenIfEmptyOrRejectedOnly[0])), wrapped, index: 0 };
   });
   const claimSelection = Effect.fnUntraced(function* (
     selection: Effect.Success<ReturnType<typeof readSelectedPage>>,
@@ -450,7 +448,6 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
   ) {
     const attempt = yield* ledger.attempt(prior.attemptId);
     if (O.isNone(attempt)) return yield* failure("storage");
-    // Ledger ID sets are canonicalized; reconstruct the contiguous source order.
     const first = A.findFirstIndex(ids, (id) => A.contains(attempt.value.eventIds, id));
     if (O.isNone(first)) return yield* failure("storage");
     const selected = A.take(A.drop(ids, first.value), attempt.value.eventIds.length);
@@ -490,7 +487,6 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
         eventId: candidate.eventId,
         result: reconciliation.success,
       });
-    // Historical acceptance/ambiguity never overrides a latest permanent refusal.
     const latestOutcome = yield* ledger.readOutcome(prior.value.attemptId);
     if (O.isSome(latestOutcome) && latestOutcome.value._tag === "Rejected")
       return O.some(held(candidate.eventId, "permanent-refusal"));
@@ -545,14 +541,12 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
   const tick = Effect.gen(function* () {
     const admitted = yield* permit.withPermitsIfAvailable(1)(
       Effect.gen(function* () {
-        passPages = O.some(MutableHashMap.empty());
+        pagesVerifiedOncePerTickPass = O.some(MutableHashMap.empty());
         let outcomes: ReadonlyArray<typeof NativeScheduleOutcome.Type> = [];
         let ages: ReadonlyArray<typeof AgeSample.Type> = [];
         let wrapped = false;
         const visited = MutableHashSet.empty<string>();
         for (let index = 0; index < policy.maxEvents; index++) {
-          // Claim only the next event before I/O. Reserving a whole batch here
-          // would repeatedly skip its tail when the first event times out.
           const selected = yield* select;
           wrapped = wrapped || selected.wrapped;
           const candidate = selected.candidates[0];
@@ -571,7 +565,7 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
       }).pipe(
         Effect.ensuring(
           Effect.sync(() => {
-            passPages = O.none();
+            pagesVerifiedOncePerTickPass = O.none();
           })
         ),
         Effect.timeoutOption(policy.tickTimeoutMillis)

@@ -9,15 +9,17 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 
-// The memory filesystem models the owner, mode and link metadata these checks read.
-const TestFileSystem = Layer.merge(MemoryFileSystem.layer, Path.layer);
+const MemoryFileSystemModelingTheOwnerModeAndLinkMetadataTheseChecksRead = Layer.merge(
+  MemoryFileSystem.layer,
+  Path.layer
+);
 
 const errors = {
   readFailed: ObservationLaunchError.make({ reason: "directory" }),
   oversize: ObservationLaunchError.make({ reason: "configuration" }),
   encodingFailed: ObservationLaunchError.make({ reason: "namespace" }),
 };
-it.layer(TestFileSystem, { timeout: "20 seconds" })((it) => {
+it.layer(MemoryFileSystemModelingTheOwnerModeAndLinkMetadataTheseChecksRead, { timeout: "20 seconds" })((it) => {
   it.effect("enforces the byte ceiling before decoding and preserves each caller-owned refusal", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

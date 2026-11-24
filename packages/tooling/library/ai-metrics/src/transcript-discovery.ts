@@ -188,8 +188,7 @@ const openRoot = Effect.fn("AiMetrics.discovery.openRoot")(function* (
   }
   return result.success;
 });
-// Runtime process capabilities, not persisted domain data.
-interface RootRuntime {
+interface RootRuntimeProcessCapabilitiesNotPersistedDomainData {
   candidates: number;
   cycle: number;
   entries: number;
@@ -201,11 +200,16 @@ interface RootRuntime {
   readonly source: TranscriptPageInput["source"];
   state: TranscriptDiscoveryReport["roots"][number]["state"];
 }
-const closeRoot = Effect.fn("AiMetrics.discovery.closeRoot")(function* (root: RootRuntime) {
+const closeRoot = Effect.fn("AiMetrics.discovery.closeRoot")(function* (
+  root: RootRuntimeProcessCapabilitiesNotPersistedDomainData
+) {
   if (O.isSome(root.handle)) yield* Scope.close(root.handle.value.scope, Exit.void);
   root.handle = O.none();
 });
-const recordReadOutcome = (read: RootRuntime["read"], outcome: TranscriptSweepReport["outcomes"][number]) => {
+const recordReadOutcome = (
+  read: RootRuntimeProcessCapabilitiesNotPersistedDomainData["read"],
+  outcome: TranscriptSweepReport["outcomes"][number]
+) => {
   read.assessed += 1;
   TranscriptSweepOutcome.match({
     Accepted: (accepted) => {
@@ -260,7 +264,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     )
   )
     return yield* failure("configuration");
-  const roots: ReadonlyArray<RootRuntime> = yield* Effect.forEach(
+  const roots: ReadonlyArray<RootRuntimeProcessCapabilitiesNotPersistedDomainData> = yield* Effect.forEach(
     input.roots,
     Effect.fnUntraced(function* (root) {
       const resolved = path.resolve(root.path);
@@ -279,7 +283,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
         read: { assessed: 0, accepted: 0, idle: 0, partial: 0, backlogged: 0, failed: 0 },
         excludedLinks: 0,
         handle: O.none(),
-      } satisfies RootRuntime;
+      } satisfies RootRuntimeProcessCapabilitiesNotPersistedDomainData;
     }),
     { concurrency: 1 }
   );
@@ -320,7 +324,10 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
         read: { ...root.read, pending: root.candidates - root.read.assessed },
       })),
     });
-  const candidateFromFile = Effect.fnUntraced(function* (root: RootRuntime, relative: string) {
+  const candidateFromFile = Effect.fnUntraced(function* (
+    root: RootRuntimeProcessCapabilitiesNotPersistedDomainData,
+    relative: string
+  ) {
     const candidate = path.resolve(root.path, relative);
     if (!Str.startsWith(`${root.path}${path.sep}`)(candidate)) return yield* failure("changed");
     const name = path.basename(candidate);
@@ -339,7 +346,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     };
     return O.some({ observation, source: { path: candidate, source: root.source, retired: false } });
   });
-  const startCycle = Effect.fnUntraced(function* (root: RootRuntime) {
+  const startCycle = Effect.fnUntraced(function* (root: RootRuntimeProcessCapabilitiesNotPersistedDomainData) {
     root.cycle += 1;
     root.entries = 0;
     root.candidates = 0;
@@ -349,7 +356,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     root.handle = O.some(openRoot2);
     root.state = "scanning";
   }, Effect.uninterruptible);
-  const advanceRoot = Effect.fnUntraced(function* (root: RootRuntime) {
+  const advanceRoot = Effect.fnUntraced(function* (root: RootRuntimeProcessCapabilitiesNotPersistedDomainData) {
     if (root.state !== "scanning") {
       yield* startCycle(root);
       return O.none();
@@ -371,12 +378,12 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     let finished: ReadonlyArray<Sha256Hex> = [];
     let sources: ReadonlyArray<{ path: string; source: TranscriptPageInput["source"]; retired: boolean }> = [];
     let observations: ReadonlyArray<{
-      readonly root: RootRuntime;
+      readonly root: RootRuntimeProcessCapabilitiesNotPersistedDomainData;
       readonly cycle: number;
       readonly sourceId: Sha256Hex;
     }> = [];
     let operations = 0;
-    const visitRoot = Effect.fnUntraced(function* (root: RootRuntime) {
+    const visitRoot = Effect.fnUntraced(function* (root: RootRuntimeProcessCapabilitiesNotPersistedDomainData) {
       const result = yield* Effect.result(advanceRoot(root));
       if (Result.isFailure(result)) {
         root.state = result.failure.reason === "changed" ? "changed" : "unavailable";
@@ -401,6 +408,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     const releaseOwnPage = () => {
       if (O.exists(unrecorded, (page) => page.recordReads === recordReads)) unrecorded = O.none();
     };
+    const inconsistentPageIsNeverReofferedTheNextTraversalRediscoversIt = "changed";
     const recordReads = Effect.fn("AiMetrics.discovery.recordReads")(
       function* (sweep: TranscriptSweepReport) {
         if (
@@ -414,9 +422,8 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
               A.filter(sweep.outcomes, (result) => result.sourceId === o.sourceId).length !== 1
           )
         ) {
-          // An inconsistent page is never re-offered; the next traversal rediscovers it.
           releaseOwnPage();
-          return yield* failure("changed");
+          return yield* failure(inconsistentPageIsNeverReofferedTheNextTraversalRediscoversIt);
         }
         for (const observation of observations) {
           const outcome = A.findFirst(sweep.outcomes, (r) => r.sourceId === observation.sourceId);
@@ -443,9 +450,6 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
       })
     )
   );
-  // A page whose reads were never recorded (its sweep was interrupted or failed) is offered
-  // again before discovery advances, so its unattempted candidates are not dropped. The
-  // per-attempt schedule cursor then resumes after the file that consumed the last cycle.
   let unrecorded: O.Option<Effect.Success<typeof nextPage>> = O.none();
   const next = Effect.suspend(() => {
     if (closed) return Effect.fail(failure("closed"));

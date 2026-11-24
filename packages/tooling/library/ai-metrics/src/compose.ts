@@ -17,9 +17,12 @@ import type { AiMetricsInstallSpec, AiMetricsServiceSpec } from "./install.ts";
 const composeFailure = (message: string, cause: unknown): AiMetricsInstallConfigurationError =>
   AiMetricsInstallConfigurationError.make({ cause, message });
 
-// The `yaml` npm writer's layout: sequences indented under their key, quotes
-// chosen per value as that package chooses them, no folding.
-const composeYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" });
+const orDieSinceAFixedStringDocumentCannotFailToStringify = Effect.orDie;
+
+const composeYamlOptionsMatchingTheYamlNpmWriterLayout = YamlStringifyOptions.make({
+  indentSequences: true,
+  quoteStyle: "auto",
+});
 
 const phoenixService = (spec: AiMetricsInstallSpec): O.Option<AiMetricsServiceSpec> =>
   pipe(
@@ -82,8 +85,6 @@ export const renderAiMetricsLocalPhoenixCompose: (
         phoenix_data: {},
       },
     },
-    composeYamlOptions
-    // A fixed document of strings has no cycle and no deep nesting, so the
-    // kit's stringify error cannot occur here; it would be a defect.
-  ).pipe(Effect.orDie);
+    composeYamlOptionsMatchingTheYamlNpmWriterLayout
+  ).pipe(orDieSinceAFixedStringDocumentCannotFailToStringify);
 });
