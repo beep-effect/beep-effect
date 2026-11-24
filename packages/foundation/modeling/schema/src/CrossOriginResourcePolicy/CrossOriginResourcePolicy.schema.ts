@@ -24,6 +24,8 @@ const headerName = "Cross-Origin-Resource-Policy" as const;
 const CorpValueBase = LiteralKit(["same-site", "same-origin", "cross-origin"]);
 
 /**
+ * Schema for allowed `Cross-Origin-Resource-Policy` values.
+ *
  * **Example** (Validate same-origin CORP value)
  *
  * ```ts import.meta.vitest name="Validate same-origin CORP value"
@@ -44,6 +46,8 @@ export const CorpValue = CorpValueBase.pipe(
 );
 
 /**
+ * Type for allowed `Cross-Origin-Resource-Policy` values.
+ *
  * **Example** (Assign same-origin CorpValue type)
  *
  * ```ts
@@ -101,6 +105,8 @@ export const CrossOriginResourcePolicyOption = CrossOriginResourcePolicyOptionBa
 export type CrossOriginResourcePolicyOption = typeof CrossOriginResourcePolicyOption.Type;
 
 /**
+ * Model for a rendered `Cross-Origin-Resource-Policy` response header.
+ *
  * **Example** (Make CORP response header)
  *
  * ```ts
@@ -134,6 +140,8 @@ export class CrossOriginResourcePolicyResponseHeader extends S.Opaque<
 type CrossOriginResourcePolicyResponseHeaderEncoded = typeof CrossOriginResourcePolicyResponseHeader.Encoded;
 
 /**
+ * Schema that renders CORP options into a response header.
+ *
  * **Example** (Decode CORP into header)
  *
  * ```ts
@@ -202,6 +210,8 @@ export const CrossOriginResourcePolicyHeader = S.Union([CrossOriginResourcePolic
 );
 
 /**
+ * Type for rendered `Cross-Origin-Resource-Policy` response headers.
+ *
  * **Example** (Type rendered CORP header)
  *
  * ```ts

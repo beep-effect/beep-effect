@@ -34,6 +34,8 @@ const ReferrerPolicyValueBase = LiteralKit([
 ]);
 
 /**
+ * Schema for allowed `Referrer-Policy` values.
+ *
  * **Example** (Validate strict-origin value)
  *
  * ```ts import.meta.vitest name="Validate strict-origin value"
@@ -54,6 +56,8 @@ export const ReferrerPolicyValue = ReferrerPolicyValueBase.pipe(
 );
 
 /**
+ * Type for allowed `Referrer-Policy` values.
+ *
  * **Example** (Assign typed policy value)
  *
  * ```ts
@@ -70,6 +74,8 @@ export type ReferrerPolicyValue = typeof ReferrerPolicyValue.Type;
 const isReferrerPolicyValue = S.is(ReferrerPolicyValue);
 
 /**
+ * Schema for fallback lists of `Referrer-Policy` values.
+ *
  * **Example** (Decode policy value list)
  *
  * ```ts
@@ -90,6 +96,8 @@ export const ReferrerPolicyValueList = S.Array(ReferrerPolicyValue).pipe(
 );
 
 /**
+ * Type for fallback lists of `Referrer-Policy` values.
+ *
  * **Example** (Type policy value list)
  *
  * ```ts
@@ -143,6 +151,8 @@ export const ReferrerPolicyOption = S.Union([S.Literal(false), ReferrerPolicyVal
 export type ReferrerPolicyOption = typeof ReferrerPolicyOption.Type;
 
 /**
+ * Model for a rendered `Referrer-Policy` response header.
+ *
  * **Example** (Make response header model)
  *
  * ```ts
@@ -195,6 +205,8 @@ const formatReferrerPolicyValue = Effect.fn("ReferrerPolicy.formatReferrerPolicy
 });
 
 /**
+ * Schema that renders referrer policy options into a response header.
+ *
  * **Example** (Decode into response header)
  *
  * ```ts
@@ -272,6 +284,8 @@ export const ReferrerPolicyHeader = S.Union([ReferrerPolicyOption, S.Undefined])
 );
 
 /**
+ * Type for rendered `Referrer-Policy` response headers.
+ *
  * **Example** (Type rendered header value)
  *
  * ```ts

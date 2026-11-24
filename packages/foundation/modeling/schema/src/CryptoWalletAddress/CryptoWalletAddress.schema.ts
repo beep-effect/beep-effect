@@ -146,6 +146,8 @@ export const CryptoWalletAddress = S.NonEmptyString.check(CryptoWalletAddressChe
 );
 
 /**
+ * Type for {@link CryptoWalletAddress}.
+ *
  * **Example** (Type annotated address decode)
  *
  * ```ts

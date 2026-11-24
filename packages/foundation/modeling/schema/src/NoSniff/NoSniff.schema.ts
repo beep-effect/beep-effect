@@ -26,6 +26,8 @@ const defaultValue = "nosniff" as const;
 const NoSniffValueBase = LiteralKit([defaultValue]);
 
 /**
+ * Schema for supported `X-Content-Type-Options` header values.
+ *
  * **Example** (Decode nosniff value)
  *
  * ```ts
@@ -47,6 +49,8 @@ export const NoSniffValue = NoSniffValueBase.pipe(
 );
 
 /**
+ * Type-level representation of {@link NoSniffValue}.
+ *
  * **Example** (Annotate nosniff type)
  *
  * ```ts
@@ -88,6 +92,8 @@ export const NoSniffOption = NoSniffOptionBase.pipe(
 );
 
 /**
+ * Type-level representation of {@link NoSniffOption}.
+ *
  * **Example** (Annotate false option)
  *
  * ```ts
@@ -132,6 +138,8 @@ export class NoSniffResponseHeader extends S.Opaque<NoSniffResponseHeader, { rea
 type NoSniffResponseHeaderEncoded = typeof NoSniffResponseHeader.Encoded;
 
 /**
+ * One-way schema that decodes `X-Content-Type-Options` options into the response header.
+ *
  * **Example** (Create default header)
  *
  * ```ts
@@ -206,6 +214,8 @@ export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
 );
 
 /**
+ * Type-level representation of {@link NoSniffHeader}.
+ *
  * **Example** (Assign response header type)
  *
  * ```ts

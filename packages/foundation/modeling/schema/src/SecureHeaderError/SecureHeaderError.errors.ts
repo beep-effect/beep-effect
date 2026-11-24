@@ -366,6 +366,8 @@ export class CoreError extends S.TaggedError<CoreError, { readonly brand: unique
 ) {}
 
 /**
+ * Tagged union schema for all secure-header errors.
+ *
  * **Example** (Check SecureHeaderError membership)
  *
  * ```ts import.meta.vitest name="Check SecureHeaderError membership"
@@ -405,6 +407,8 @@ export const SecureHeaderError = SecureHeader.mapMembers(
 );
 
 /**
+ * Type for all secure-header errors.
+ *
  * **Example** (Handle SecureHeaderError type)
  *
  * ```ts import.meta.vitest name="Handle SecureHeaderError type"

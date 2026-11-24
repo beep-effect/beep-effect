@@ -26,6 +26,8 @@ const headerName = "X-XSS-Protection" as const;
 const XSSProtectionModeBase = LiteralKit(["sanitize", "block-rendering"]);
 
 /**
+ * Schema for direct `X-XSS-Protection` policy modes.
+ *
  * **Example** (Validate block-rendering mode)
  *
  * ```ts import.meta.vitest name="Validate block-rendering mode"
@@ -46,6 +48,8 @@ export const XSSProtectionMode = XSSProtectionModeBase.pipe(
 );
 
 /**
+ * Type for direct `X-XSS-Protection` policy modes.
+ *
  * **Example** (Assign block-rendering mode)
  *
  * ```ts
@@ -61,6 +65,8 @@ export const XSSProtectionMode = XSSProtectionModeBase.pipe(
 export type XSSProtectionMode = typeof XSSProtectionMode.Type;
 
 /**
+ * Configuration for `X-XSS-Protection` report mode.
+ *
  * **Example** (Make report config)
  *
  * ```ts
@@ -164,6 +170,8 @@ export const XSSProtectionOption = S.Union([S.Literal(false), XSSProtectionMode,
 export type XSSProtectionOption = typeof XSSProtectionOption.Type;
 
 /**
+ * Model for a rendered `X-XSS-Protection` response header.
+ *
  * **Example** (Make response header)
  *
  * ```ts
@@ -231,6 +239,8 @@ const formatXSSProtectionValue = Effect.fn("XSSProtection.formatXSSProtectionVal
 });
 
 /**
+ * Schema that renders XSS protection options into a response header.
+ *
  * **Example** (Decode block-rendering header)
  *
  * ```ts
@@ -295,6 +305,8 @@ export const XSSProtectionHeader = S.Union([XSSProtectionOption, S.Undefined]).p
 );
 
 /**
+ * Type for rendered `X-XSS-Protection` response headers.
+ *
  * **Example** (Assign response header type)
  *
  * ```ts

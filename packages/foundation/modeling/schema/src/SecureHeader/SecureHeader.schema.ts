@@ -27,6 +27,8 @@ const SecureHeaderBase = LiteralKit([
 ]);
 
 /**
+ * Secure header literal schema.
+ *
  * **Example** (Check Options membership)
  *
  * ```ts
@@ -46,6 +48,8 @@ export const SecureHeader = SecureHeaderBase.pipe(
 );
 
 /**
+ * Runtime type for secure header identifiers.
+ *
  * **Example** (Type a header identifier)
  *
  * ```ts

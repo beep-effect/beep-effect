@@ -57,6 +57,8 @@ const PermissionsPolicyDirectiveBase = LiteralKit([
 ]);
 
 /**
+ * Schema for supported `Permissions-Policy` directive names.
+ *
  * **Example** (Validate camera directive name)
  *
  * ```ts import.meta.vitest name="Validate camera directive name"
@@ -77,6 +79,8 @@ export const PermissionsPolicyDirective = PermissionsPolicyDirectiveBase.pipe(
 );
 
 /**
+ * Type for supported `Permissions-Policy` directive names.
+ *
  * **Example** (Assign camera directive type)
  *
  * ```ts
@@ -92,6 +96,8 @@ export const PermissionsPolicyDirective = PermissionsPolicyDirectiveBase.pipe(
 export type PermissionsPolicyDirective = typeof PermissionsPolicyDirective.Type;
 
 /**
+ * Schema for record keys accepted by `PermissionsPolicyDirectives`.
+ *
  * **Example** (Decode fullscreen directive key)
  *
  * ```ts
@@ -118,6 +124,8 @@ export const PermissionsPolicyDirectiveKey = S.String.check(
 );
 
 /**
+ * Type for record keys accepted by `PermissionsPolicyDirectives`.
+ *
  * **Example** (Assign fullscreen key type)
  *
  * ```ts
@@ -179,6 +187,8 @@ export type QuotedOrigin = typeof QuotedOrigin.Type;
 const PermissionsPolicyDirectiveValueSingleBase = LiteralKit(["*", "self", "none"]);
 
 /**
+ * Schema for single-token directive allowlist values.
+ *
  * **Example** (Validate self allowlist token)
  *
  * ```ts import.meta.vitest name="Validate self allowlist token"
@@ -199,6 +209,8 @@ export const PermissionsPolicyDirectiveValueSingle = PermissionsPolicyDirectiveV
 );
 
 /**
+ * Type for single-token directive allowlist values.
+ *
  * **Example** (Assign self value type)
  *
  * ```ts
@@ -348,6 +360,8 @@ export const PermissionsPolicyDirectives = PermissionsPolicyDirectivesInput.pipe
 export type PermissionsPolicyDirectives = typeof PermissionsPolicyDirectives.Type;
 
 /**
+ * Structured configuration for the `Permissions-Policy` header.
+ *
  * **Example** (Make camera none option struct)
  *
  * ```ts
@@ -413,6 +427,8 @@ export const PermissionsPolicyOption = S.Union([S.Literal(false), PermissionsPol
 export type PermissionsPolicyOption = typeof PermissionsPolicyOption.Type;
 
 /**
+ * Model for the rendered `Permissions-Policy` response header.
+ *
  * **Example** (Make camera empty header)
  *
  * ```ts
@@ -473,6 +489,8 @@ const buildHeaderValue = (directives: PermissionsPolicyDirectives): O.Option<str
   );
 
 /**
+ * Schema that renders options into a `Permissions-Policy` response header.
+ *
  * **Example** (Decode camera none header)
  *
  * ```ts
@@ -544,6 +562,8 @@ export const PermissionsPolicyHeader = S.Union([PermissionsPolicyOption, S.Undef
 );
 
 /**
+ * Type for rendered `Permissions-Policy` response headers.
+ *
  * **Example** (Assign rendered header type)
  *
  * ```ts

@@ -41,6 +41,9 @@ const EthAmountInput = S.Finite.pipe(
 );
 
 /**
+ * ETH-denominated amount decoded from a non-negative JSON number into Effect
+ * `BigDecimal`.
+ *
  * **Example** (Decode ETH amount value)
  *
  * ```ts
@@ -65,6 +68,8 @@ export const EthAmount = EthAmountInput.pipe(
 );
 
 /**
+ * Type for {@link EthAmount}.
+ *
  * **Example** (Type decoded ETH amount)
  *
  * ```ts

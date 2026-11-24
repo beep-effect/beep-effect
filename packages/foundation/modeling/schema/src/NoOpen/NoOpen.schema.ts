@@ -26,6 +26,8 @@ const defaultValue = "noopen" as const;
 const NoOpenValueBase = LiteralKit([defaultValue]);
 
 /**
+ * Schema for the `X-Download-Options` header value.
+ *
  * **Example** (Validate noopen header value)
  *
  * ```ts import.meta.vitest name="Validate noopen header value"
@@ -46,6 +48,8 @@ export const NoOpenValue = NoOpenValueBase.pipe(
 );
 
 /**
+ * Type for the `X-Download-Options` header value.
+ *
  * **Example** (Assign noopen type value)
  *
  * ```ts
@@ -104,6 +108,8 @@ export const NoOpenOption = NoOpenOptionBase.pipe(
 export type NoOpenOption = typeof NoOpenOption.Type;
 
 /**
+ * Model for a rendered `X-Download-Options` response header.
+ *
  * **Example** (Make response header model)
  *
  * ```ts
@@ -131,6 +137,8 @@ export class NoOpenResponseHeader extends S.Opaque<NoOpenResponseHeader, { reado
 type NoOpenResponseHeaderEncoded = typeof NoOpenResponseHeader.Encoded;
 
 /**
+ * Schema that renders X-Download-Options options into a response header.
+ *
  * **Example** (Decode into response header)
  *
  * ```ts
@@ -204,6 +212,8 @@ export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
 );
 
 /**
+ * Type for rendered `X-Download-Options` response headers.
+ *
  * **Example** (Type decoded response header)
  *
  * ```ts
