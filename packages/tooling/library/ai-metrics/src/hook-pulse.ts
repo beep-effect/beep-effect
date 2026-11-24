@@ -871,21 +871,13 @@ export class HookPulseRawEvent extends S.Opaque<HookPulseRawEvent, { readonly br
     session_id: S.NonEmptyString,
     hook_event_name: HookPulseEvent,
     cwd: S.String,
-    // Non-empty rather than merely present: the shell writer maps `""` to an
-    // absent `tool_name` and therefore derives `unknown` for a `PermissionRequest`,
-    // while `derivePermissionWaitReason` reads `O.some("")` as a real tool and
-    // derives `tool-permission`. Neither the wait-reason nor the owned-field
-    // invariant can catch that divergence, because each half is internally
-    // consistent. An empty tool name means nothing, so refusing it is the only
-    // reading both halves can share.
     tool_name: S.OptionFromOptionalKey(S.NonEmptyString),
     tool_use_id: S.OptionFromOptionalKey(S.String),
     prompt_id: S.OptionFromOptionalKey(S.String),
     transcript_path: S.String,
-    // Native subagent identifier. Claude Code and Codex send it only on hooks
-    // fired from inside a child agent, so its presence is the child signal. It
-    // is a private identifier: rows carry only its salted digest.
-    agent_id: S.OptionFromOptionalKey(S.String),
+    agent_id: S.OptionFromOptionalKey(S.String).annotateKey({
+      description: "Private native subagent identifier, sent only on hooks fired inside a child agent.",
+    }),
     source: S.OptionFromOptionalKey(S.String).pipe(
       S.catchDecoding(() => Effect.succeedSome(O.none())),
       S.withConstructorDefault(Effect.succeedNone)
@@ -917,20 +909,16 @@ class HookPulseRawEventInput extends S.Opaque<HookPulseRawEventInput, { readonly
     agentKind: HookPulseAgentKind,
     evidenceTier: HookPulseEvidenceTier,
     ts: S.String,
-    // The writer finds the repo root on disk (the nearest ancestor of `cwd`
-    // holding both `AGENTS.md` and `.git`); a pure codec cannot, so the writer
-    // stamps it and absence falls back to `cwd`, exactly as the shell does when
-    // its walk finds nothing.
-    repoRoot: S.OptionFromOptionalKey(S.String),
-    // An already-derived surface digest. Encode stamps it because a digest cannot
-    // be turned back into the `tool_input` it came from; decode prefers it over
-    // re-deriving, the same passthrough `privateReference` gives a 64-hex id.
-    surface: S.OptionFromOptionalKey(Sha256Hex),
-    // The harness hash the writer computed from the repo's agent-facing config at
-    // SessionStart. Unlike `surface` there is nothing to re-derive it from: the
-    // codec has no repo root to walk, so decode passes the stamp through (owned by
-    // SessionStart, dropped on every other event) and absence stays absence.
-    harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    repoRoot: S.OptionFromOptionalKey(S.String).annotateKey({
+      description:
+        "Repository root the writer found on disk, the nearest ancestor of cwd holding both AGENTS.md and .git; absent means cwd.",
+    }),
+    surface: S.OptionFromOptionalKey(Sha256Hex).annotateKey({
+      description: "Context-surface digest the writer already derived for this event.",
+    }),
+    harnessHash: S.OptionFromOptionalKey(Sha256Hex).annotateKey({
+      description: "Harness hash the writer computed at SessionStart from the repository's agent-facing config.",
+    }),
     sessionRole: S.OptionFromOptionalKey(HookPulseSessionRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("HookPulseRawEventInput", {
@@ -941,16 +929,10 @@ class HookPulseRawEventInput extends S.Opaque<HookPulseRawEventInput, { readonly
 
 const ChildTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)(?:subagents|workflow)(?:\/|$)/));
 const PrimaryTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)[0-9a-f-]{36}\.jsonl$/));
-// Codex names a session's rollout `rollout-<timestamp>-<thread uuid>.jsonl`.
 const CodexRolloutTranscriptPath = S.String.check(S.isPattern(/(?:^|\/)rollout-[^/]*[0-9a-f-]{36}\.jsonl$/));
 const isChildTranscriptPath = S.is(ChildTranscriptPath);
 const isPrimaryTranscriptPath = S.is(PrimaryTranscriptPath);
 const isCodexRolloutTranscriptPath = S.is(CodexRolloutTranscriptPath);
-// The shell writer mirrors this table in its `$sessionRole` jq expression, and
-// the writer conformance test compares both halves. A native `agent_id` wins:
-// Claude Code fires a subagent's hooks with the ROOT transcript path, so the
-// path alone would call the child a root. Cursor sends no ancestry signal, so
-// its rows say `unknown` rather than leaving the role silently absent.
 const deriveSessionRole = (
   agentKind: HookPulseAgentKind,
   transcriptPath: O.Option<string>,
@@ -974,11 +956,6 @@ const deriveSessionRole = (
     "cursor-cli": () => O.some(HookPulseSessionRole.Enum.unknown),
   });
 
-// Canonical context-surface keys are `${kind}:${name}` with no trailing newline,
-// hashed UNSALTED: surfaces are public repo names, and the digest must join
-// with `contextSurfaceId(kind, name)` and with the shell writer's
-// `printf '%s' "$key" | sha256sum`. The kind domain here is private to the
-// hook-pulse derivation; the published `ContextSurface` domain owns the name.
 const HookPulseContextSurfaceKind = LiteralKit([
   "agents-md",
   "skill",
@@ -1012,9 +989,7 @@ const contextSurfaceKey = (kind: HookPulseContextSurfaceKind, name: string): str
 const isSettingsFileName = (name: string | undefined): name is string =>
   P.isString(name) && settingsFileNamePattern.test(name);
 
-// Lexical, never filesystem: `..` pops, `.` and empty segments vanish. The jq
-// `segments` definition in `.claude/hooks/hook-pulse.sh` is the same fold.
-const normalizedPathSegments = (path: string): ReadonlyArray<string> =>
+const lexicallyFoldedPathSegments = (path: string): ReadonlyArray<string> =>
   A.reduce(Str.split(path, "/"), A.empty<string>(), (segments, segment) =>
     Match.value(segment).pipe(
       Match.whenOr("", ".", () => segments),
@@ -1024,14 +999,14 @@ const normalizedPathSegments = (path: string): ReadonlyArray<string> =>
   );
 
 const repoRelativeSegments = (path: string, cwd: string, repoRoot: string): O.Option<ReadonlyArray<string>> => {
-  const root = normalizedPathSegments(repoRoot);
+  const root = lexicallyFoldedPathSegments(repoRoot);
   const absolutePath = Bool.match(isAbsolutePath(path), {
     onTrue: () => O.some(path),
     onFalse: () => O.map(O.liftPredicate(cwd, isAbsolutePath), (base) => `${base}/${path}`),
   });
 
   return O.flatMap(absolutePath, (value) => {
-    const absolute = normalizedPathSegments(value);
+    const absolute = lexicallyFoldedPathSegments(value);
     return O.liftPredicate(
       A.drop(absolute, root.length),
       (relative) =>
@@ -1105,10 +1080,8 @@ const fileSurfaceKey = (event: HookPulseRawEvent, repoRoot: string): O.Option<st
     )
   );
 
-// Mirrors the jq `surface_program` in `.claude/hooks/hook-pulse.sh` rule for
-// rule; `hook-pulse-writer.test.ts` runs the real writer and compares digests.
-// A key carrying a newline is refused on both sides because shell command
-// substitution would strip a trailing one before hashing.
+const withoutANewlineShellSubstitutionWouldStrip = P.not(Str.includes("\n"));
+
 const hookPulseContextSurfaceKey = (event: HookPulseRawEvent, repoRoot: string): O.Option<string> =>
   O.filter(
     O.flatMap(event.tool_name, (toolName) =>
@@ -1119,7 +1092,7 @@ const hookPulseContextSurfaceKey = (event: HookPulseRawEvent, repoRoot: string):
         Match.orElse(O.none<string>)
       )
     ),
-    P.not(Str.includes("\n"))
+    withoutANewlineShellSubstitutionWouldStrip
   );
 
 const derivePermissionWaitReason = (toolName: O.Option<string>): HookPulseWaitReason =>
@@ -1141,8 +1114,6 @@ const deriveWaitReason = (
     PreToolUse: F.constant(HookPulseWaitReason.Enum.none),
     PermissionRequest: () => derivePermissionWaitReason(toolName),
     PostToolUse: F.constant(HookPulseWaitReason.Enum.none),
-    // A bracket *end*, not a human wait: the harness emits either PostToolUse or
-    // PostToolUseFailure for a tool call, never both.
     PostToolUseFailure: F.constant(HookPulseWaitReason.Enum.none),
     Notification: () =>
       Bool.match(O.exists(notificationType, HookPulseNotificationType.is.idle_prompt), {
@@ -1237,31 +1208,23 @@ export const hookPulseHashSalt: Config.Config<O.Option<string>> = Config.String(
 const privateReference = (value: string, hashSalt: O.Option<string>) =>
   isSha256Hex(value) ? Effect.succeed(value) : hashPrivateIdentifier(value, hashSalt).pipe(Effect.map(Sha256Hex.make));
 
-// The salt is a per-decode constant, not a per-field one, so it is resolved once
-// here and threaded down. `.claude/hooks/hook-pulse.sh` walks the identical
-// precedence, and `hook-pulse-writer.test.ts` proves the two halves agree by
-// running the real writer under a test salt and recomputing its digests here.
-// A `ConfigError` is folded into the caller's hashing-failure issue: with
-// `fromEnv` it is unreachable (all lookups are synchronous and absence is
-// absorbed by `withDefault`), and a second issue message would claim a
-// distinction the codec cannot actually observe.
 const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
   readonly cwd: string;
   readonly sessionId: string;
   readonly transcriptPath: O.Option<string>;
   readonly agentId: O.Option<string>;
 }) {
-  const hashSalt = yield* hookPulseHashSalt;
+  const saltResolvedOncePerDecode = yield* hookPulseHashSalt;
   const optionalReference = (value: O.Option<string>) =>
     O.match(value, {
       onNone: () => Effect.succeed(O.none<Sha256Hex>()),
-      onSome: (present) => privateReference(present, hashSalt).pipe(Effect.asSome),
+      onSome: (present) => privateReference(present, saltResolvedOncePerDecode).pipe(Effect.asSome),
     });
 
   return yield* Effect.all(
     {
-      sessionId: privateReference(input.sessionId, hashSalt),
-      cwd: privateReference(input.cwd, hashSalt),
+      sessionId: privateReference(input.sessionId, saltResolvedOncePerDecode),
+      cwd: privateReference(input.cwd, saltResolvedOncePerDecode),
       transcriptPath: optionalReference(input.transcriptPath),
       agentId: optionalReference(input.agentId),
     },
@@ -1269,12 +1232,6 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
   );
 });
 
-// Only fields semantically bound to exactly one event belong here. `toolName`,
-// `toolUseId`, and `durationMs` are deliberately left unconstrained: their
-// presence varies by harness version — a measured `PermissionRequest` carries
-// `tool_name` but no `tool_use_id`, while `PreToolUse` and `PostToolUse` carry
-// both — so binding them to an event would reject legitimate future rows, and
-// rejecting rows costs real telemetry.
 const NativeSessionStartSource = LiteralKit(["startup", "resume", "clear", "compact"]);
 const decodeSessionStartSource = S.decodeUnknownOption(NativeSessionStartSource);
 
@@ -1296,11 +1253,7 @@ const hookPulseEventOwningField = HookPulseEventOwnedField.match({
   notificationType: F.constant(HookPulseEvent.Enum.Notification),
   sessionEndReason: F.constant(HookPulseEvent.Enum.SessionEnd),
   isInterrupt: F.constant(HookPulseEvent.Enum.PostToolUseFailure),
-  // A surface counts as touched only once its tool call succeeded, so the
-  // completion event owns it; PreToolUse would count denied and failed calls.
   surface: F.constant(HookPulseEvent.Enum.PostToolUse),
-  // The harness a session runs under is decided when it starts; a mid-session
-  // stamp would describe a regime the session did not start in.
   harnessHash: F.constant(HookPulseEvent.Enum.SessionStart),
   sessionStartSource: F.constant(HookPulseEvent.Enum.SessionStart),
 });
@@ -1314,23 +1267,16 @@ const filterHookPulseEventOwnedField = <A>(
   value: O.Option<A>
 ): O.Option<A> => O.filter(value, () => doesHookPulseEventOwnField(field, hookEvent));
 
-// Owned fields no longer share one payload type — `isInterrupt` is boolean while
-// its siblings are strings — so indexing by a union key yields a union of
-// `Option`s that will not unify. The invariant below only asks whether a value is
-// present, so it reads through this presence-only accessor rather than widening
-// the union at each call site.
-type HookPulseEventOwnedFieldValues = {
+type OwnedFieldPresenceAcrossBooleanAndStringPayloads = {
   readonly [Field in HookPulseEventOwnedField]: O.Option<unknown>;
 };
 
-const hookPulseEventOwnedFieldValue = (
-  input: HookPulseEventOwnedFieldValues,
+const presenceOnlyOwnedFieldValue = (
+  input: OwnedFieldPresenceAcrossBooleanAndStringPayloads,
   field: HookPulseEventOwnedField
 ): O.Option<unknown> => input[field];
 
-// Only the owning event derives a surface, so no other event pays for a digest.
-// A stamped digest wins over re-derivation; both pass the ownership filter.
-const hookPulseSurfaceReference = (input: HookPulseRawEventInput) =>
+const ownedSurfaceStampElseDigestDerivedOnlyForTheOwningEvent = (input: HookPulseRawEventInput) =>
   O.getOrElse(
     O.map(
       filterHookPulseEventOwnedField(HookPulseEventOwnedField.Enum.surface, input.event.hook_event_name, input.surface),
@@ -1431,10 +1377,6 @@ export class HookPulseV1 extends S.Opaque<HookPulseV1, { readonly brand: unique 
     instrumentClass: HookPulseInstrumentClass,
     evidenceTier: HookPulseEvidenceTier,
     waitReason: HookPulseWaitReason,
-    // Non-empty for the same reason `HookPulseRawEvent.tool_name` is, and it has
-    // to be non-empty on *both* sides: a canonical row carrying `O.some("")`
-    // decodes fine yet can never be encoded back to a raw event, so the drift
-    // would reappear as a replay break instead of a decode failure.
     toolName: S.OptionFromOptionalKey(S.NonEmptyString),
     toolUseId: S.OptionFromOptionalKey(S.String),
     promptId: S.OptionFromOptionalKey(S.String),
@@ -1443,26 +1385,26 @@ export class HookPulseV1 extends S.Opaque<HookPulseV1, { readonly brand: unique 
     notificationType: S.OptionFromOptionalKey(HookPulseNotificationType),
     durationMs: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
     sessionEndReason: S.OptionFromOptionalKey(S.String),
-    // Separates "the human hit escape" from "the tool errored". The first is a
-    // human action and belongs in a human-wait instrument; the raw `error`
-    // string is content and is never represented here.
-    isInterrupt: S.OptionFromOptionalKey(S.Boolean),
-    // Unsalted SHA-256 of the context-surface key `${kind}:${name}` (a skill, a
-    // hook, AGENTS.md, an MCP server) the tool call touched. Only the digest is
-    // representable; the skill name or file path it came from never is.
-    surface: S.OptionFromOptionalKey(Sha256Hex),
-    // SHA-256 of the harness regime the session started under (see
-    // `deriveHarnessHash`), stamped by the writer on SessionStart only. Rows
-    // written before the stamp existed simply lack it.
-    harnessHash: S.OptionFromOptionalKey(Sha256Hex),
+    isInterrupt: S.OptionFromOptionalKey(S.Boolean).annotateKey({
+      description: "True when a human interrupted the failed tool call, false when the tool errored on its own.",
+    }),
+    surface: S.OptionFromOptionalKey(Sha256Hex).annotateKey({
+      description:
+        "Unsalted SHA-256 of the `kind:name` context-surface key (a skill, a hook, AGENTS.md, an MCP server) the tool call touched.",
+    }),
+    harnessHash: S.OptionFromOptionalKey(Sha256Hex).annotateKey({
+      description:
+        "SHA-256 of the harness regime the session started under, present on SessionStart rows written after the stamp existed.",
+    }),
     sessionStartSource: S.OptionFromOptionalKey(NativeSessionStartSource).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
     sessionRole: S.OptionFromOptionalKey(HookPulseSessionRole).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    // Salted digest of the native subagent `agent_id`, present only on child
-    // rows. It keys each child apart from its root, which shares the root's
-    // session id and transcript path on Claude Code.
-    agentId: S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    agentId: S.OptionFromOptionalKey(Sha256Hex)
+      .annotateKey({
+        description: "Salted digest of the native subagent agent_id, present only on child rows.",
+      })
+      .pipe(S.withConstructorDefault(Effect.succeedNone)),
   })
     .check(
       S.makeFilterGroup(
@@ -1471,7 +1413,7 @@ export class HookPulseV1 extends S.Opaque<HookPulseV1, { readonly brand: unique 
             (input) =>
               A.getSomes(
                 A.map(HookPulseEventOwnedField.literals, (field) =>
-                  O.match(hookPulseEventOwnedFieldValue(input, field), {
+                  O.match(presenceOnlyOwnedFieldValue(input, field), {
                     onNone: O.none,
                     onSome: () =>
                       Bool.match(doesHookPulseEventOwnField(field, input.hookEvent), {
@@ -1576,17 +1518,7 @@ export const HookPulseV1Arbitrary = Arbitrary.schema(S.Struct(HookPulseV1.fields
   })
 );
 
-// Deliberately without `isInterrupt`, `surface`, or `harnessHash`, and the omission is a dating argument
-// rather than an oversight. "Legacy" here means exactly one thing: a row written
-// before private identifiers were pseudonymized. `isInterrupt` and its only
-// owning event `PostToolUseFailure` were both added *after* that change (and
-// `surface` and `harnessHash` later still), so no
-// row can be legacy-shaped and carry the field — declaring it would model a
-// combination that cannot exist and would give a future reader the false
-// impression that some legacy corpus distinguishes an interrupt from an error.
-// The raw-identifier fields below stay raw for the mirror-image reason: raw is
-// what a pre-pseudonymization row actually contains, and this codec exists to
-// hash them on the way in.
+// decision: legacy-hook-pulse-record-omits-later-fields
 const HookPulseLegacyV1Record = S.Struct({
   schemaVersion: S.tag(HookPulseSchemaVersion.Enum["hook-pulse/v1"]),
   ts: S.String,
@@ -1762,7 +1694,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                   })
               )
             ),
-            surface: hookPulseSurfaceReference(input),
+            surface: ownedSurfaceStampElseDigestDerivedOnlyForTheOwningEvent(input),
           },
           { concurrency: 1 }
         ).pipe(
@@ -1781,11 +1713,6 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               input.event.tool_name,
               input.event.notification_type
             ),
-            // All three event-owned fields route through the ownership table so it is
-            // the single source of truth in both directions. `notificationType`
-            // previously carried only the enum filter, so a `notification_type` on a
-            // non-Notification event failed the whole decode while its siblings
-            // dropped the field — the codec's two directions disagreed.
             ...O.getSomesStruct({
               toolName: input.event.tool_name,
               toolUseId: input.event.tool_use_id,
@@ -1835,8 +1762,6 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
               })
             ),
           onSome: (transcriptPath) => {
-            // toolName, toolUseId, and durationMs stay event-agnostic because harness versions emit them
-            // inconsistently; tightening their ownership would risk rejecting legitimate telemetry rows.
             const event = HookPulseRawEvent.make({
               session_id: input.sessionId,
               hook_event_name: input.hookEvent,
@@ -1864,8 +1789,6 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                 input.hookEvent,
                 O.fromUndefinedOr(input.isInterrupt)
               ),
-              // A digest cannot be inverted into the `tool_input` it came from,
-              // so the surface rides back as a writer stamp instead.
               tool_input: O.none(),
             });
 
