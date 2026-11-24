@@ -533,7 +533,6 @@ describe("PackageManagerDetector — a malformed corepack field", () => {
   });
 });
 
-// ── devEngines.packageManager ──────────────────────────────────────────────
 //
 // Corepack reads BOTH the top-level `packageManager` and `devEngines.packageManager`,
 // and they are not interchangeable:

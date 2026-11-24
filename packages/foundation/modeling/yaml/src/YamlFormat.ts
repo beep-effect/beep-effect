@@ -278,8 +278,6 @@ export class YamlModificationError extends S.TaggedError<YamlModificationError, 
   }
 }
 
-// ── Internal: navigation failure ────────────────────────────────────────────
-
 /** Categories raised by AST navigation and replacement conversion. */
 const ModifyFailureCode = LiteralKit([
   "EmptyDocument",
@@ -328,8 +326,6 @@ class ModifyFailure extends S.TaggedError<ModifyFailure, { readonly brand: uniqu
 
 const isModifyFailure = S.is(ModifyFailure);
 
-// ── Internal: options bridging ──────────────────────────────────────────────
-
 /** Normalize a `format`-positional range and the options-bag fallback into one plain shape (or `undefined`). */
 const resolveRange: {
   (
@@ -359,8 +355,6 @@ function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T>
   }
   return out;
 }
-
-// ── format: opt-in re-quoting ────────────────────────────────────────
 
 /**
  * Walk a composed AST and flip the `style` of every scalar the shared
@@ -427,8 +421,6 @@ const requoteDocument: {
   if (options?.requoteScalars !== true || doc.contents === null) return doc;
   return { ...doc, contents: requoteNode(doc.contents, text, options.quoteStyle ?? "single") };
 });
-
-// ── format ───────────────────────────────────────────────────────────────────
 
 /** Rebuild a composed document for re-emission, stripping comments when asked. */
 const toOutputDocument: {
@@ -557,8 +549,6 @@ const formatStream: {
     return A.join(parts, "");
   }
 );
-
-// ── modify: pure AST navigation ─────────────────────────────────────────────
 
 /**
  * Lower a plain JavaScript value into synthetic AST nodes (offset/length are
@@ -855,8 +845,6 @@ const rebuildSeq: {
     })
 );
 
-// ── modify: region-confined scalar replacement ───────────────────────
-
 /**
  * Whether a value carries characters single-quoted style cannot express (it
  * escapes only `'`): C0 controls — newline, carriage return, tab among them —
@@ -1082,8 +1070,6 @@ const tryRegionalScalarEdit: {
   }
 );
 
-// ── modify: directive prologue ───────────────────────────────────────
-
 /**
  * Directive, comment and blank lines up to and including the `---` marker that
  * ends them. A CRLF line's `\r` has one match path (the line body, or the lone
@@ -1131,8 +1117,6 @@ const bodyAfterPrologue = (doc: RawYamlDocument, contents: YamlNode | null): Raw
   const { commentBefore: _commentBefore, ...framing } = doc;
   return { ...framing, contents, hasDocumentStart: false, hasDocumentStartTab: false };
 };
-
-// ── modify: declared YAML version ────────────────────────────────────
 
 /** The version a `%YAML` directive declares, or none without one. */
 const declaredYamlVersion = (directives: ReadonlyArray<RawDirective>): O.Option<string> =>
@@ -1193,8 +1177,6 @@ const quoteFreshYaml11 = (node: YamlNode, quoteStyle: QuoteStyle): YamlNode =>
     YamlAlias: identity,
   });
 
-// ── modify: whole-document pipeline ──────────────────────────────────
-
 /** A typed `modify` refusal carrying one diagnostic at the start of `text`. */
 const modifyRefusal = (
   text: string,
@@ -1208,7 +1190,6 @@ const modifyRefusal = (
     diagnostics: [YamlDiagnostic.fromRaw({ code, message, offset: 0, length: 0 }, text, index)],
   });
 
-/** The inputs of {@link rewriteWholeDocument}: the composed source and the requested edit. */
 type WholeDocumentEdit = {
   readonly text: string;
   readonly index: ReturnType<typeof YamlDiagnostic.positionIndex>;
@@ -1285,8 +1266,6 @@ const rewriteWholeDocument = Effect.fnUntraced(function* ({
   });
   return A.map(computeEdits(text, withSourceBom(text, formatted)), (e) => YamlEdit.make(e));
 });
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Formats YAML text and modifies values at a path as byte-minimal edits that

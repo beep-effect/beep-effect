@@ -32,10 +32,6 @@ import type { TestCase } from "./support/suite.ts";
 
 const allCases = loadAllTestCases();
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function shouldSkipAssertion(id: string, assertion: string): boolean {
   return SKIP_ASSERTIONS[id]?.includes(assertion) ?? false;
 }
@@ -115,7 +111,6 @@ const assertStringifyRoundtrip = Effect.fn(function* (tc: TestCase) {
 });
 
 function registerErrorCase(tc: TestCase): void {
-  // ----- Error tests: YAML should be rejected -----
   it.effect("should reject invalid YAML", () =>
     Effect.gen(function* () {
       const result = yield* parse(tc.yaml, parseOptions()).pipe(Effect.asVoid, Effect.exit);
@@ -125,7 +120,6 @@ function registerErrorCase(tc: TestCase): void {
 }
 
 function registerValidCase(tc: TestCase): void {
-  // 4a. Parse success
   it.effect("should parse successfully", () =>
     Effect.gen(function* () {
       const result = yield* parse(tc.yaml, parseOptions()).pipe(Effect.asVoid, Effect.exit);
@@ -133,12 +127,10 @@ function registerValidCase(tc: TestCase): void {
     })
   );
 
-  // 4b. JSON match
   if (tc.json !== undefined && !shouldSkipAssertion(tc.id, "json")) {
     it.effect("should match expected JSON output", () => assertJsonMatch(tc));
   }
 
-  // 4c. Canonical output match (out.yaml)
   if (tc.outYaml !== undefined && !shouldSkipAssertion(tc.id, "output")) {
     const expected = tc.outYaml;
     it.effect("should match canonical output", () =>
@@ -149,19 +141,13 @@ function registerValidCase(tc: TestCase): void {
     );
   }
 
-  // 4d. Stringify roundtrip
   if (!shouldSkipAssertion(tc.id, "roundtrip")) {
     it.effect("should survive stringify roundtrip", () => assertStringifyRoundtrip(tc));
   }
 }
 
-// ---------------------------------------------------------------------------
-// Test runner
-// ---------------------------------------------------------------------------
-
 describe("yaml-test-suite compliance", () => {
   for (const tc of allCases) {
-    // Skip entirely if in SKIP map
     if (SKIP[tc.id] !== undefined && SKIP[tc.id] !== "") {
       it.skip(`[${tc.id}] ${tc.name} (SKIP: ${SKIP[tc.id]})`, () => {});
       continue;
