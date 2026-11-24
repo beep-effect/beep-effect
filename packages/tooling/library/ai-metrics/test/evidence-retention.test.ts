@@ -226,14 +226,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         );
         return DeliveryVisibility.make({ eventId, attemptId, payloadDigest: id("e"), observedAt: 0 });
       });
-      yield* register("1"); // Pending: admitted without a delivery attempt.
+      yield* register("1");
       const accepted = yield* prepare("2");
       yield* f.ledger.recordOutcome(accepted.attemptId, DeliveryOutcome.cases.Accepted.make({}));
       const visible = yield* prepare("3");
       yield* f.ledger.recordVisibility(visible);
       const rejected = yield* prepare("4");
       yield* f.ledger.recordOutcome(rejected.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
-      yield* prepare("5"); // Unresolved: prepared without a terminal outcome.
+      yield* prepare("5");
       yield* TestClock.adjust("24 hours");
       const sql = yield* SqlClient.SqlClient;
       const pages = yield* sql`SELECT receipt_id AS id FROM observation_intake_pages`.pipe(
@@ -243,7 +243,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         yield* f.reclaimer.expire(page.id);
       }
       const seal10 = yield* f.retention.seal(0);
-      expect(seal10).toMatchObject({
+      expect(
+        seal10,
+        "pending means admitted with no delivery attempt; unresolved means prepared with no terminal outcome"
+      ).toMatchObject({
         _tag: "Some",
         value: {
           record: {
@@ -471,8 +474,6 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* f.reclaimer.reclaim(receipt.page.receiptId);
       const before = yield* f.retention.window;
       const sql = yield* SqlClient.SqlClient;
-      // Retention must preserve auxiliary query reservations in its logical
-      // recovery snapshot, then release their capacity with the retired epoch.
       const eventId = O.getOrThrow(A.head(batch.spans)).eventId;
       yield* sql`INSERT INTO observation_delivery_queries(event_id,attempt_id,query_count,recorded_at,digest) VALUES(${eventId},${attempt.attemptId},3,100,${id("f")})`;
       const queries = yield* sql`SELECT * FROM observation_delivery_queries`;
@@ -484,12 +485,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const seal24 = yield* f.retention.seal(0);
       const sealed = O.getOrThrow(seal24);
       const value25 = yield* sql`SELECT * FROM observation_delivery_queries`;
-      expect(value25).toHaveLength(0);
+      expect(value25, "retirement releases query-reservation capacity with the retired epoch").toHaveLength(0);
       const reopened = yield* makeEvidenceRetention(f.intakeConfig, f.ledgerConfig, f.retentionPolicy);
       const restore26 = yield* reopened.restore(sealed.digest);
       expect(restore26).toBe("restored");
       const value27 = yield* sql`SELECT * FROM observation_delivery_queries`;
-      expect(value27).toEqual(queries);
+      expect(value27, "the logical recovery snapshot preserved the auxiliary query reservations").toEqual(queries);
       const window28 = yield* reopened.window;
       expect(window28).toEqual(before);
       const receipt29 = yield* f.native.receipt(receipt.page.receiptId);
@@ -543,11 +544,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       expect(window42).toMatchObject({ epoch: 1 });
       const sql = yield* SqlClient.SqlClient;
       const snapshot = yield* sql`SELECT payload,digest FROM observation_evidence_recovery`;
-      // Even absent current facts cannot conceal an intervening accepted page.
       yield* sql`DELETE FROM observation_intake_pages`;
       yield* sql`DELETE FROM observation_native_events`;
       yield* sql`DELETE FROM observation_native_receipts`;
-      expect((yield* f.retention.restore(sealed.digest).pipe(Effect.flip)).reason).toBe("conflict");
+      expect(
+        (yield* f.retention.restore(sealed.digest).pipe(Effect.flip)).reason,
+        "even absent current facts cannot conceal an intervening accepted page"
+      ).toBe("conflict");
       const value43 = yield* sql`SELECT payload,digest FROM observation_evidence_recovery`;
       expect(value43).toEqual(snapshot);
     })
@@ -723,10 +726,13 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         yield* f.reclaimer.expire(receipt.page.receiptId);
       }
       const sql = yield* SqlClient.SqlClient;
-      // Remove free pages and inject a physical allocation ceiling at current size.
       yield* sql`VACUUM`;
-      const count = yield* sql`PRAGMA page_count`.pipe(Effect.flatMap(decodeArguments));
-      yield* sql.unsafe(`PRAGMA max_page_count = ${count[0].page_count}`);
+      const pageCountWithoutFreePagesAsThePhysicalAllocationCeiling = yield* sql`PRAGMA page_count`.pipe(
+        Effect.flatMap(decodeArguments)
+      );
+      yield* sql.unsafe(
+        `PRAGMA max_page_count = ${pageCountWithoutFreePagesAsThePhysicalAllocationCeiling[0].page_count}`
+      );
       expect((yield* f.retention.seal(0).pipe(Effect.flip)).reason).toBe("storage");
       const window65 = yield* f.retention.window;
       expect(window65).toMatchObject({ epoch: 0 });
@@ -1052,8 +1058,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         _tag: "Some",
         value: { unenrolledReferences: 32, unenrolledNativeOwnership: { count: 32 } },
       });
-      // One registration lookup and one independent cached-page integrity lookup.
-      expect(registrationReads).toBe(2);
+      expect(registrationReads, "one registration lookup plus one independent cached-page integrity lookup").toBe(2);
     })
   )
 );

@@ -95,19 +95,7 @@ query AgentEffectivenessPhoenixInventory {
 }
 `;
 
-/**
- * Per-project aggregates, split out of the inventory query on purpose.
- *
- * `hasTraces`, `recordCount` and `traceCount` are aggregates over the spans
- * table. On a large store they do not return: measured against a 20 GiB
- * phoenix.db they exceeded 55s while the identity-only query above answered in
- * ~7ms. Because they were in the same document, one slow field took the whole
- * doctor's Phoenix section down to `unavailable` — the tool built to read
- * Phoenix could not read Phoenix precisely when there was most to read.
- *
- * Keeping them in a second, separately-timed request means a store too big to
- * aggregate degrades to "counts unavailable" instead of "Phoenix unavailable".
- */
+// decision: phoenix-aggregate-counts-separate-request
 const phoenixProjectStatsQuery = `
 query AgentEffectivenessPhoenixProjectStats {
   projects(first: 20) {
@@ -123,12 +111,6 @@ query AgentEffectivenessPhoenixProjectStats {
 }
 `;
 
-/**
- * Ceiling on the per-project aggregate query, in seconds.
- *
- * Deliberately short: these numbers are advisory, and the doctor is more useful
- * fast-and-partial than slow-and-complete.
- */
 const phoenixProjectStatsTimeoutSeconds = 10;
 
 const phoenixProjectStatsTimeout = Duration.seconds(phoenixProjectStatsTimeoutSeconds);
@@ -2811,17 +2793,11 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     return buildPhoenixUnavailable(input, inventory.message);
   }
 
-  // Aggregates run as their own bounded request. A store too large to aggregate
-  // must still yield a reachable, readable inventory, so every failure mode here
-  // -- encode, transport, non-2xx, decode, timeout -- degrades the counts to
-  // unmeasured rather than reporting Phoenix as down. Each mode carries its own
-  // operator-facing reason: a single "timed out" label would send an operator
-  // hunting store size when Phoenix actually rejected the query or was
-  // unreachable.
-  const stats = yield* queryPhoenixProjectStats(client, input.phoenixBaseUrl);
+  // decision: phoenix-aggregate-counts-separate-request
+  const statsOrPerModeUnmeasuredReason = yield* queryPhoenixProjectStats(client, input.phoenixBaseUrl);
 
   const statsByProjectName = pipe(
-    stats,
+    statsOrPerModeUnmeasuredReason,
     Result.getSuccess,
     O.map((resolved) =>
       pipe(
@@ -2861,7 +2837,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
       });
     })
   );
-  const statsUnmeasuredReason = Result.getFailure(stats);
+  const statsUnmeasuredReason = Result.getFailure(statsOrPerModeUnmeasuredReason);
   const hasTraceBearingProject = pipe(
     projectsList,
     A.some((project) =>
@@ -3038,6 +3014,8 @@ const buildAiMetricsSection = Effect.fn("AiMetrics.agentEffectiveness.buildAiMet
   );
 });
 
+const stripTerminalControlsFromUntrustedReportText = Fmt.stripControls;
+
 const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsdocWorkerSection")(function* (
   input: AgentEffectivenessDoctorInput
 ) {
@@ -3070,9 +3048,7 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
         A.flatMap((packet) => packet.policyViolationCodes)
       ),
     ],
-    // Untrusted report strings: strip terminal control sequences before they are
-    // joined into the human-readable message or echoed to any terminal/JSON sink.
-    A.map(Fmt.stripControls),
+    A.map(stripTerminalControlsFromUntrustedReportText),
     A.dedupe
   );
   const hasFailures = summary.failed > 0 || summary.timedOut > 0;
@@ -3916,12 +3892,13 @@ const datasetSelectorFor = (dataset: AgentEffectivenessDatasetSpec): PhoenixData
   PhoenixDatasetSelector.make({ kind: "dataset-name", value: dataset.name });
 
 const phoenixNotFoundStatusPattern = /\b404\b/u;
+const phoenixSdkDatasetWithNameNotFoundPhrase = "not found";
 
 const isDatasetNotFoundCause = (cause: string): boolean => {
   const normalized = Str.toLowerCase(cause);
-  // Matches Phoenix SDK dataset miss messages (`Dataset with name ... not found`)
-  // plus HTTP status messages such as `URL: 404 Not Found`.
-  return Str.contains(normalized, "not found") || phoenixNotFoundStatusPattern.test(normalized);
+  return (
+    Str.contains(normalized, phoenixSdkDatasetWithNameNotFoundPhrase) || phoenixNotFoundStatusPattern.test(normalized)
+  );
 };
 
 const isDatasetNotFoundError = (error: PhoenixError): boolean =>
@@ -4244,25 +4221,24 @@ export const syncAgentEffectivenessPhoenix: (
   });
 });
 
-const forbiddenPatterns = [
-  // Private home/user paths across platforms. Each leaks the local username (and
-  // often project/customer directory names) and must be blocked before a dataset
-  // is written to a remote Phoenix endpoint. Covers POSIX `/home/<user>`, macOS
-  // `/Users/<user>`, Windows `<Drive>:\Users\<user>` (and forward-slash form),
-  // tilde home (`~/` or `~user/`), and the `%USERPROFILE%`/`%HOMEPATH%` env refs.
+const homePathsLeakingTheUsernameIntoARemotePhoenixDataset = [
   { code: "private-home-path", pattern: /\/home\/[A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /\/Users\/[A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /[A-Za-z]:[\\/]Users[\\/][A-Za-z0-9_.-]+/u },
   { code: "private-home-path", pattern: /(?:^|[\s"'`(=:])~[\\/]/u },
   { code: "private-home-path", pattern: /(?:^|[\s"'`(=:])~[A-Za-z0-9_.-]+[\\/]/u },
   { code: "private-home-path", pattern: /%(?:USERPROFILE|HOMEPATH|HOMEDRIVE)%/iu },
+] as const;
+
+const secretAssignmentOrKeyPrefixSoBareTokenWordsLikeProviderModelTokenCostPass = {
+  code: "secret-shaped-value",
+  pattern: /(?:\b(?:SECRET|TOKEN|API[_-]?KEY)\b\s*[=:]|sk-[A-Za-z0-9_-]{12,})/iu,
+} as const;
+
+const forbiddenPatterns = [
+  ...homePathsLeakingTheUsernameIntoARemotePhoenixDataset,
   { code: "onepassword-ref", pattern: /op:\/\//u },
-  // Deliberately require assignment-shaped labels or key-like values here. Standalone words like TOKEN can appear
-  // in benign policy/status labels, and broader matching produced false positives on metrics such as provider_model_token_cost.
-  {
-    code: "secret-shaped-value",
-    pattern: /(?:\b(?:SECRET|TOKEN|API[_-]?KEY)\b\s*[=:]|sk-[A-Za-z0-9_-]{12,})/iu,
-  },
+  secretAssignmentOrKeyPrefixSoBareTokenWordsLikeProviderModelTokenCostPass,
   { code: "raw-worker-draft", pattern: /draftJsDoc|@example|```ts/u },
 ] as const;
 

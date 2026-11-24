@@ -304,11 +304,7 @@ const migrationColumns = [
     tableName: "ai_metrics_source_files",
   },
   {
-    // Explicit OTLP export state. Previously the exporter inferred this from
-    // `ingest_run_id`, which only worked because every run re-minted its rows. Once
-    // ingestion became idempotent that inference broke: a run that committed turns
-    // and then died before exporting left them attached to a run the exporter would
-    // never look at again, so they could never reach Phoenix.
+    // decision: otlp-export-drains-an-explicit-watermark
     columnDefinition: "otlp_exported_at_epoch_ms DOUBLE",
     columnName: "otlp_exported_at_epoch_ms",
     tableName: "ai_metrics_turns",
@@ -508,21 +504,22 @@ const sessionStampEvidenceTables = ["ai_metrics_sessions", "ai_metrics_source_fi
 
 const sessionStampEvidenceColumns = ["session_stamp_completeness", "session_stamp_qualification"] as const;
 
-// Historical rows keep the documented `unknown` default for both fields. The single exact
-// translation is the round-2 marker: it was written true only for a retained stamp with
-// complete hook and refusal collection, so true maps to complete and qualified. A false or
-// missing marker conflated both questions and stays unknown; absence never becomes
-// unqualified, and neither field is inferred from the other.
-const sessionStampEvidenceMigrationStatements = A.flatMap(sessionStampEvidenceTables, (table) => [
-  `UPDATE ${table} SET session_stamp_completeness = 'unknown' WHERE session_stamp_completeness IS NULL`,
-  `UPDATE ${table} SET session_stamp_qualification = 'unknown' WHERE session_stamp_qualification IS NULL`,
-  `UPDATE ${table}
+const sessionStampEvidenceMigrationStatements = A.flatMap(sessionStampEvidenceTables, (table) => {
+  const historicalRowsDefaultToUnknownForBothFields = [
+    `UPDATE ${table} SET session_stamp_completeness = 'unknown' WHERE session_stamp_completeness IS NULL`,
+    `UPDATE ${table} SET session_stamp_qualification = 'unknown' WHERE session_stamp_qualification IS NULL`,
+  ];
+  const onlyATrueRound2MarkerWithAStampTranslatesToCompleteAndQualifiedWhileAFalseOrMissingMarkerStaysUnknownSoAbsenceNeverBecomesUnqualifiedAndNeitherFieldIsInferredFromTheOther = `UPDATE ${table}
    SET session_stamp_completeness = 'complete', session_stamp_qualification = 'qualified'
    WHERE session_stamp_collection_complete = TRUE
      AND session_harness_hash IS NOT NULL
      AND session_stamp_completeness = 'unknown'
-     AND session_stamp_qualification = 'unknown'`,
-]);
+     AND session_stamp_qualification = 'unknown'`;
+  return [
+    ...historicalRowsDefaultToUnknownForBothFields,
+    onlyATrueRound2MarkerWithAStampTranslatesToCompleteAndQualifiedWhileAFalseOrMissingMarkerStaysUnknownSoAbsenceNeverBecomesUnqualifiedAndNeitherFieldIsInferredFromTheOther,
+  ];
+});
 
 const sessionStampEvidenceMigrationId = "ai-metrics-session-stamp-evidence-v1";
 
@@ -532,40 +529,20 @@ const legacyAgentTaskIdExpression = (tableAlias: string): string =>
 const currentAgentTaskIdExpression = (tableAlias: string): string =>
   `concat('agent-task-', sha256(concat('agent-task', chr(0), ${tableAlias}.config_snapshot_id, chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_role, chr(0), ${tableAlias}.source_path_hash)))`;
 
-// Deliberately two parts, not three. `turn_id` keys on
-// [sourceKind, sourcePathHash, lineNumber, rawEventHash] and turns are INSERT OR IGNORE,
-// so a turn's session pointer freezes at the first run that saw that line. The session key
-// therefore has to be the file-identifying prefix of the turn key and nothing more.
-//
-// `source_role` is excluded for that reason: it is derived from transcript content, not
-// from the file, so a transcript that later reveals subagent metadata flips role. Were role
-// part of the key, that flip would mint a second session row while the already-ingested
-// turns kept pointing at the first -- reintroducing exactly the fragmentation this removes,
-// only rarer and harder to see. Under a two-part key a role flip just rewrites the row's
-// descriptive `source_role` column, which is what it should do.
 const legacyAgentSessionIdExpression = (tableAlias: string): string =>
   `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.ingest_run_id, chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
 
+// decision: ingest-run-is-lineage-not-identity
 const currentAgentSessionIdExpression = (tableAlias: string): string =>
   `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
 
-// Order is load-bearing. Turns are repointed while the legacy session rows still exist,
-// because the mapping is computed from those rows' columns; only then can the duplicates be
-// dropped. Reversing it would strand every turn behind the exporter's INNER JOIN on
-// `ai_metrics_sessions`, which drops unmatched turns silently and without a watermark.
-const legacyAgentSessionIdMigrationStatements = [
-  `UPDATE ai_metrics_turns AS turns
+const repointTurnsWhileTheLegacySessionRowsTheyMapThroughStillExist = `UPDATE ai_metrics_turns AS turns
    SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
    FROM ai_metrics_sessions AS sessions
    WHERE turns.agent_session_id = sessions.agent_session_id
-     AND sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`,
-  // Unlike the agent-task rewrite above, this collapse is many-to-one: the legacy key
-  // embeds `ingest_run_id`, so one transcript owns one row per run and they all map onto a
-  // single content-addressed id. Without dropping the losers first, the rewrite below would
-  // violate the primary key on any store that ingested a transcript twice -- which is every
-  // real store. The tiebreak keeps the greatest legacy digest: deterministic, and it does
-  // not consult `ai_metrics_ingest_runs`, which retention may already have pruned.
-  `DELETE FROM ai_metrics_sessions AS legacy
+     AND sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`;
+
+const dropPerRunDuplicatesBeforeRekeyingKeepingTheGreatestLegacyDigest = `DELETE FROM ai_metrics_sessions AS legacy
    WHERE legacy.agent_session_id = ${legacyAgentSessionIdExpression("legacy")}
      AND EXISTS (
        SELECT 1
@@ -580,10 +557,17 @@ const legacyAgentSessionIdMigrationStatements = [
              AND keeper.agent_session_id > legacy.agent_session_id
            )
          )
-     )`,
-  `UPDATE ai_metrics_sessions AS sessions
+     )`;
+
+const rekeySurvivingLegacySessionsToTheirContentId = `UPDATE ai_metrics_sessions AS sessions
    SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
-   WHERE sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`,
+   WHERE sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`;
+
+// decision: ingest-run-is-lineage-not-identity
+const legacyAgentSessionIdMigrationStatements = [
+  repointTurnsWhileTheLegacySessionRowsTheyMapThroughStillExist,
+  dropPerRunDuplicatesBeforeRekeyingKeepingTheGreatestLegacyDigest,
+  rekeySurvivingLegacySessionsToTheirContentId,
 ] as const;
 
 const legacyAgentTaskIdMigrationStatements = [
@@ -629,41 +613,24 @@ type DerivedStorageMigration = {
   readonly transactional?: boolean;
 };
 
+const everyColumnTheWatermarkBackfillTouchesIncludingIngestRunIdBecauseVeryOldStoresPredateThatColumnAndAnUnguardedReferenceFailsSchemaEnsure =
+  [
+    { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
+    { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
+    { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
+    { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
+  ] as const;
+
+const demoteTheOldWritersOwnCheckoutRootToCollectorRootNeverOrigin = `UPDATE ai_metrics_agent_tasks
+       SET collector_root_hash = COALESCE(collector_root_hash, repo_root_hash),
+           repo_root_hash = NULL`;
+
 const derivedStorageMigrations = [
   {
-    // One-time only, and it must stay that way. Existing stores were written under
-    // the old duplicating scheme, so their rows have already been exported, usually
-    // many times over. Left entirely un-backfilled, the first run after the watermark
-    // lands would see millions of NULLs and flush the whole history to Phoenix in one
-    // burst -- the exact backpressure collapse this work exists to prevent.
-    //
-    // The newest ingest run is excluded. Under the old scheme a run that committed turns
-    // and then died before exporting was rescued by the next run, which re-minted those
-    // rows under a fresh id and exported them -- so the content did reach Phoenix even
-    // though the original rows never did. The one case with no such rescue is the final
-    // run before this migration: if it crashed before exporting, nothing came after it.
-    //
-    // This SQL is WRONG -- it should have excluded the newest run that actually committed
-    // turns -- and it is preserved verbatim anyway. It shipped in #578, and the ledger
-    // records a migration id, not its text, so any store that already applied it will
-    // never re-run it no matter what this string says. Editing it in place therefore
-    // fixes nothing on the stores that need fixing while silently changing behaviour on
-    // fresh ones. `ai-metrics-otlp-export-watermark-v2` below carries the correction.
-    // Shipped migrations are immutable; treat this one as a historical record.
-    //
-    // The `ai_metrics_schema_migrations` ledger guarantees this runs once, and it is
-    // applied before the run's inserts, so genuinely new turns are never swept up.
+    // decision: shipped-migrations-are-immutable
     migrationId: "ai-metrics-otlp-export-watermark-v1",
-    // Every column the statement touches, including the ingest-run lookup. Very old
-    // stores predate `ingest_run_id` on turns entirely, and the statement must not be
-    // attempted against them -- an unguarded reference fails schema-ensure outright.
-    // A skipped migration is not recorded, so it applies later once the shape catches up.
-    requiredColumns: [
-      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
-      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
-      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
-      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
-    ],
+    requiredColumns:
+      everyColumnTheWatermarkBackfillTouchesIncludingIngestRunIdBecauseVeryOldStoresPredateThatColumnAndAnUnguardedReferenceFailsSchemaEnsure,
     statements: [
       `UPDATE ai_metrics_turns
        SET otlp_exported_at_epoch_ms = 0
@@ -676,30 +643,9 @@ const derivedStorageMigrations = [
     transactional: true,
   },
   {
-    // Corrects v1 above, which excluded the newest ingest run outright. A later zero-turn
-    // run -- a discovery pass that found nothing new -- shadowed the newest run that had
-    // actually committed turns, so exactly the rows most likely to be unexported were the
-    // ones marked. Those turns can never be exported again: the watermark reads as closed
-    // and nothing reopens it.
-    //
-    // The backfill sentinel is what makes this recoverable. v1 writes the literal `0`,
-    // while a real export writes the wall-clock epoch, and rows ingested after v1 ran are
-    // NULL rather than `0`. So `otlp_exported_at_epoch_ms = 0` identifies the backfilled
-    // rows exactly, and among those the newest run by `started_at_epoch_ms` is precisely
-    // the run v1 should have spared -- every run newer than it at v1 time had no turns,
-    // which is the bug condition.
-    //
-    // Runs after v1 on every store, so the two converge: on a store that already applied
-    // the buggy v1 this reopens the buried run, and on a fresh store v1 buries it and
-    // this immediately reopens it. Worst case is one run's worth of re-sent spans, which
-    // carry content-addressed ids the collector deduplicates.
     migrationId: "ai-metrics-otlp-export-watermark-v2",
-    requiredColumns: [
-      { columnName: "otlp_exported_at_epoch_ms", tableName: "ai_metrics_turns" },
-      { columnName: "ingest_run_id", tableName: "ai_metrics_turns" },
-      { columnName: "ingest_run_id", tableName: "ai_metrics_ingest_runs" },
-      { columnName: "started_at_epoch_ms", tableName: "ai_metrics_ingest_runs" },
-    ],
+    requiredColumns:
+      everyColumnTheWatermarkBackfillTouchesIncludingIngestRunIdBecauseVeryOldStoresPredateThatColumnAndAnUnguardedReferenceFailsSchemaEnsure,
     statements: [
       `UPDATE ai_metrics_turns
        SET otlp_exported_at_epoch_ms = NULL
@@ -735,9 +681,7 @@ const derivedStorageMigrations = [
     transactional: true,
   },
   {
-    // Existing turns are INSERT OR IGNORE, so they keep the per-run session id written by
-    // the first run that saw them. Nothing self-heals; without this migration a store stays
-    // fragmented forever no matter how the id is minted going forward.
+    // decision: ingest-run-is-lineage-not-identity
     migrationId: "ai-metrics-agent-session-id-v2",
     requiredColumns: [
       { columnName: "agent_session_id", tableName: "ai_metrics_sessions" },
@@ -781,11 +725,7 @@ const derivedStorageMigrations = [
     transactional: true,
     statements: [
       "ALTER TABLE ai_metrics_agent_tasks ALTER COLUMN repo_root_hash DROP NOT NULL",
-      // The old writer always populated this from its own checkout, never from
-      // source evidence. Preserve that context without promoting it to origin.
-      `UPDATE ai_metrics_agent_tasks
-       SET collector_root_hash = COALESCE(collector_root_hash, repo_root_hash),
-           repo_root_hash = NULL`,
+      demoteTheOldWritersOwnCheckoutRootToCollectorRootNeverOrigin,
     ],
   },
 ] as const satisfies ReadonlyArray<DerivedStorageMigration>;
@@ -1278,7 +1218,9 @@ const runDerivedStorageMigrationOnce: (migration: DerivedStorageMigration) => Ef
     }
 
     const hasRequiredColumns = yield* migrationHasRequiredColumns(migration);
-    if (!hasRequiredColumns) {
+    const skippedBecauseAMissingRequiredColumnWouldFailSchemaEnsureAndAnUnrecordedSkipAppliesOnceTheShapeCatchesUp =
+      !hasRequiredColumns;
+    if (skippedBecauseAMissingRequiredColumnWouldFailSchemaEnsureAndAnUnrecordedSkipAppliesOnceTheShapeCatchesUp) {
       return;
     }
 
@@ -1413,25 +1355,23 @@ const prepareParquetExportDir = Effect.fn("AiMetrics.derivedStorage.prepareParqu
   exportDir: string
 ) {
   const fs = yield* FileSystem.FileSystem;
-  // Fail closed before any destructive removal: the export directory is built by
-  // joining the Parquet root with a possibly-untrusted ingestRunId, so confirm
-  // it canonicalizes to a path strictly contained by the Parquet root. This
-  // guards against `..` traversal escaping the root into an unrelated tree that
-  // the recursive remove below would otherwise destroy.
-  const safeExportDir = yield* PathSafety.resolvePathWithinRoot({ root: parquetRoot, candidate: exportDir }).pipe(
+  const exportDirConfinedToParquetRootBeforeRecursiveRemove = yield* PathSafety.resolvePathWithinRoot({
+    root: parquetRoot,
+    candidate: exportDir,
+  }).pipe(
     Effect.mapError((cause) =>
       derivedFailure("Refused to prepare AI metrics Parquet export directory outside the Parquet root.", cause)
     )
   );
   yield* fs
-    .remove(safeExportDir, { force: true, recursive: true })
+    .remove(exportDirConfinedToParquetRootBeforeRecursiveRemove, { force: true, recursive: true })
     .pipe(
       Effect.mapError((cause) =>
         derivedFailure("Failed to remove existing AI metrics Parquet export directory.", cause)
       )
     );
   yield* fs
-    .makeDirectory(safeExportDir, { recursive: true })
+    .makeDirectory(exportDirConfinedToParquetRootBeforeRecursiveRemove, { recursive: true })
     .pipe(Effect.mapError((cause) => derivedFailure("Failed to create AI metrics Parquet export directory.", cause)));
 });
 
@@ -1566,14 +1506,16 @@ const upsertAgentTask = Effect.fn("AiMetrics.derivedStorage.upsertAgentTask")(fu
   return agentTaskId;
 });
 
-// The legacy round-2 marker is written only as a compatibility projection of both fields,
-// so code that predates the split keeps reading the same conservative value. Current
-// readers never consult it.
+const legacyRound2MarkerProjectedFromBothVerdictsForPreSplitReadersThatCurrentReadersNeverConsult = (
+  record: AiMetricsDerivedTranscriptRecord
+) =>
+  record.sessionStampCompleteness === AiMetricsSessionStampCompleteness.Enum.complete &&
+  record.sessionStampQualification === AiMetricsSessionStampQualification.Enum.qualified;
+
 const sessionStampParams = (record: AiMetricsDerivedTranscriptRecord) => ({
   sessionHarnessHash: O.getOrNull(record.sessionHarnessHash),
   sessionStampCollectionComplete:
-    record.sessionStampCompleteness === AiMetricsSessionStampCompleteness.Enum.complete &&
-    record.sessionStampQualification === AiMetricsSessionStampQualification.Enum.qualified,
+    legacyRound2MarkerProjectedFromBothVerdictsForPreSplitReadersThatCurrentReadersNeverConsult(record),
   sessionStampCompleteness: record.sessionStampCompleteness,
   sessionStampQualification: record.sessionStampQualification,
 });
@@ -1601,15 +1543,7 @@ const sessionReplacedColumnsSql = A.join(
   ",\n      "
 );
 
-// Session rows are content-addressed and rewritten by every run, so the stamp verdict is
-// resolved here rather than replaced. Only a run whose own verdict is `unknown` (partial
-// collection, and this session's evidence neither retained nor contradicted a stamp)
-// leaves a stored stamp in place: the stored hash, completeness, qualification and legacy
-// marker stay together. Any run that reaches a verdict writes it, so complete collection
-// that finds no stamp, or this session's own contradicting evidence under any
-// completeness, clears a stored stamp. A partial run is never enough to keep a stamp its
-// own evidence disqualifies.
-const preserveStoredSessionStampSql = `EXCLUDED.session_stamp_qualification = 'unknown'
+const onlyARunWithAnUnknownVerdictKeepsTheStoredHashCompletenessQualificationAndLegacyMarkerTogetherWhileAReachedVerdictWritesAndClearsSoAPartialRunNeverKeepsAStampItsOwnEvidenceDisqualifies = `EXCLUDED.session_stamp_qualification = 'unknown'
         AND ai_metrics_sessions.session_harness_hash IS NOT NULL`;
 
 const sessionStampVerdictColumnsSql = A.join(
@@ -1621,7 +1555,7 @@ const sessionStampVerdictColumnsSql = A.join(
       "session_stamp_collection_complete",
     ],
     (column) =>
-      `${column} = CASE WHEN ${preserveStoredSessionStampSql} THEN ai_metrics_sessions.${column} ELSE EXCLUDED.${column} END`
+      `${column} = CASE WHEN ${onlyARunWithAnUnknownVerdictKeepsTheStoredHashCompletenessQualificationAndLegacyMarkerTogetherWhileAReachedVerdictWritesAndClearsSoAPartialRunNeverKeepsAStampItsOwnEvidenceDisqualifies} THEN ai_metrics_sessions.${column} ELSE EXCLUDED.${column} END`
   ),
   ",\n      "
 );
@@ -1763,10 +1697,7 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
 ) {
   const duckdb = yield* DuckDb;
   const sanitized = record.privacy.sanitized;
-  // Content-addressed, like `turn_id` and for the same reason: an ingest run is lineage,
-  // never identity. With the run id in this key a transcript that grew between runs minted
-  // a fresh session row every run, so one conversation accumulated one row per run and its
-  // turns scattered across all of them.
+  // decision: ingest-run-is-lineage-not-identity
   const agentSessionId = yield* rowId("session", [sanitized.sourceKind, sanitized.sourcePathHash]);
   yield* duckdb.run(
     `INSERT INTO ai_metrics_sessions (
@@ -1836,23 +1767,12 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
   yield* Effect.forEach(
     sanitized.rawEventEnvelopes,
     Effect.fnUntraced(function* (envelope) {
-      // Content-addressed, deliberately excluding input.ingestRunId. With the run id
-      // in the key every run minted a fresh turn_id for identical content, so
-      // INSERT OR REPLACE never collided and the table accumulated one copy per run
-      // (measured: 5.43M rows collapsing to ~516K distinct raw_event_hash across
-      // 1,222 runs). Per the packet's identity rule, ingest runs are lineage, never
-      // identity.
       const turnId = yield* rowId("turn", [
         envelope.sourceKind,
         envelope.sourcePathHash,
         envelope.lineNumber,
         envelope.rawEventHash,
       ]);
-      // OR IGNORE, not OR REPLACE. REPLACE would rewrite ingest_run_id to the
-      // current run, and the OTLP export selects `WHERE ingest_run_id = <this run>`
-      // -- so every previously-seen turn would be re-exported to Phoenix on every
-      // run even though the table itself had stopped growing. Retaining the
-      // first-seen run id is what makes that export incremental.
       yield* duckdb.run(
         `INSERT OR IGNORE INTO ai_metrics_turns (
           turn_id,
@@ -1974,11 +1894,10 @@ export const writeAiMetricsDerivedStorage = Effect.fn("AiMetrics.writeAiMetricsD
       .makeDirectory(pathApi.dirname(input.storage.duckDbPath), { recursive: true })
       .pipe(Effect.mapError((cause) => derivedFailure("Failed to create AI metrics DuckDB storage directory.", cause)));
     if (O.isSome(parquetExportDir)) {
-      // Ensure the Parquet root exists so it can be canonicalized as the
-      // confinement boundary before the export directory is prepared.
-      yield* fs
+      const ensureParquetRootExistsSoItCanBeCanonicalizedAsTheConfinementBoundary = fs
         .makeDirectory(input.storage.parquetDir, { recursive: true })
         .pipe(Effect.mapError((cause) => derivedFailure("Failed to create AI metrics Parquet root directory.", cause)));
+      yield* ensureParquetRootExistsSoItCanBeCanonicalizedAsTheConfinementBoundary;
       yield* prepareParquetExportDir(input.storage.parquetDir, parquetExportDir.value);
     }
     const completedAtEpochMillis = yield* Clock.currentTimeMillis;

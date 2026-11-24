@@ -19,7 +19,6 @@ import * as Str from "effect/String";
 import { ruleSourcePaths, sourceText } from "./fixture-text.ts";
 import type { LintContext } from "@beep/yaml/YamlLintRule";
 
-/** A rule flagging every scalar token `TODO` with a fix rewriting it to `DONE`. */
 const todoRule = YamlRule.make({
   id: "no-todo",
   check: dual(
