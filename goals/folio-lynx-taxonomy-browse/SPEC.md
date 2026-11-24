@@ -21,7 +21,7 @@ DECISIONS/SOURCES for `lkg.ttl`, this SPEC, PLAN, then GOAL.
 
 ## Target Surfaces
 
-- `packages/foundation/modeling/ontology/src/SemanticFoundation.models.ts`
+- `packages/foundation/modeling/ontology/src/Classification.models.ts`
 - `TaxonomyLoader.ts` and `TaxonomyRegistry.ts`
 - `packages/ontology/use-cases/src/tools/OntologyToolkit.ts`
 - `packages/ontology/server/src/tools/OntologyToolHandlers.ts`

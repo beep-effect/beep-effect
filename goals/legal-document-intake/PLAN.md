@@ -63,8 +63,8 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
 - Extraction: `@beep/file-processing`, `@beep/langextract`
   (span-aligned `GroundedExtraction[]`, `Handoff` IR), `@beep/nlp-processing`.
 - Ontology: `@beep/rdf`, `@beep/ontology`, `@beep/semantic-web` (bounded SHACL
-  validator), FOLIO OpenAPI models in
-  `packages/foundation/modeling/ontology/src/Ontology.models.ts`.
+  validator). The FOLIO OpenAPI models were retired by the
+  text-knowledge-stack-rebuild P5 phase.
 - Loop precedents: `agents/server/AssistantTurn/BlockRepair.ts` (2-turn repair
   loop to generalize), epistemic claim lifecycle.
 - Sync primitives: file watch + `DrainableWorker` in
