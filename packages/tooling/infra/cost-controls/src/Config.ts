@@ -46,8 +46,6 @@ export const AccountId = S.String.check(
 ).pipe($I.annoteSchema("AccountId", { description: "The AWS account the cost controls belong to." }));
 
 /**
- * A finite positive amount in US dollars.
- *
  * **Example** (Decode a dollar threshold)
  *
  * ```ts
@@ -85,8 +83,6 @@ export const CostControlsRegion = LiteralKit(["us-east-1"]).pipe(
 );
 
 /**
- * Decoded region.
- *
  * @category models
  * @since 0.0.0
  */
@@ -122,8 +118,6 @@ export const NotificationPhase = LiteralKit(["silent", "live"]).pipe(
 );
 
 /**
- * Decoded notification phase.
- *
  * @category models
  * @since 0.0.0
  */
@@ -154,16 +148,12 @@ export const CostAllocationTagKey = LiteralKit([
 ]).pipe($I.annoteSchema("CostAllocationTagKey", { description: "A cost allocation tag key the account activates." }));
 
 /**
- * Decoded cost allocation tag key.
- *
  * @category models
  * @since 0.0.0
  */
 export type CostAllocationTagKey = typeof CostAllocationTagKey.Type;
 
 /**
- * Configuration of one stage of the `CostControls` stack.
- *
  * **Details**
  *
  * Every field is tracked source: the account id is already public in the
@@ -204,8 +194,6 @@ export class CostControlsConfig extends S.Opaque<CostControlsConfig, { readonly 
 ) {}
 
 /**
- * Companion types for {@link CostControlsConfig}.
- *
  * @category configuration
  * @since 0.0.0
  */

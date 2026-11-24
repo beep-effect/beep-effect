@@ -16,8 +16,6 @@ import noManualEffectRuntimeInTests from "./no-manual-effect-runtime-in-tests.ts
 import noOpaqueInstanceFields from "./no-opaque-instance-fields.ts";
 
 /**
- * Re-exported legacy manual-runner baseline of `no-manual-effect-runtime-in-tests`.
- *
  * **Example** (Look up one file's allowance)
  *
  * ```ts

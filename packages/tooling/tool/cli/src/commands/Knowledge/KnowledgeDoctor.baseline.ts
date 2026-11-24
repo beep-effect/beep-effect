@@ -172,8 +172,6 @@ export const KnowledgeBaselineGroup = LiteralKit([
 );
 
 /**
- * Named groups of the sealed baseline.
- *
  * @category models
  * @since 0.0.0
  */
@@ -204,16 +202,12 @@ export const KnowledgeSealableSpanClass = KnowledgeSpanClass.pick([
 );
 
 /**
- * The span classes a sealed entry may carry.
- *
  * @category models
  * @since 0.0.0
  */
 export type KnowledgeSealableSpanClass = typeof KnowledgeSealableSpanClass.Type;
 
 /**
- * One sealed baseline entry: an inherited finding's key and the fields that describe it.
- *
  * **Details**
  *
  * `document` is the document's path at `mintedAt` and `owners` its CODEOWNERS owners there. A
@@ -1405,8 +1399,6 @@ export class KnowledgeMintAcceptance extends S.Opaque<KnowledgeMintAcceptance, {
 ) {}
 
 /**
- * The inputs of the seal guard.
- *
  * **Details**
  *
  * `acceptMint` is present only when CI passed `--accept-mint` for the mint App's branch;

@@ -618,8 +618,6 @@ export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCo
 });
 
 /**
- * Coverage plan that falls back to the complete workspace because a global or unknown input changed.
- *
  * @category models
  * @since 0.0.0
  */
@@ -632,8 +630,6 @@ export class CoverageFullScope extends S.Opaque<CoverageFullScope, { readonly br
 ) {}
 
 /**
- * Coverage plan containing every coverage owner to measure: the directly changed owners plus the coverage-bearing workspace dependents listed in dependentPackageNames.
- *
  * @category models
  * @since 0.0.0
  */
@@ -650,8 +646,6 @@ export class CoverageSelectedScope extends S.Opaque<CoverageSelectedScope, { rea
 ) {}
 
 /**
- * Coverage plan for a change set with no coverage-bearing or global inputs.
- *
  * @category models
  * @since 0.0.0
  */
@@ -726,8 +720,6 @@ export const CoverageScopeMode = LiteralKit(["affected", "full", "explicit"]).pi
 );
 
 /**
- * Scope mode a root coverage invocation resolved.
- *
  * **Example** (Type a mode)
  *
  * ```ts
@@ -1180,8 +1172,6 @@ export const dependentSeedOwners: {
 );
 
 /**
- * The package owns a file the change set touched, so the change set could have moved its rows.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1197,8 +1187,6 @@ export class CoverageSelfJudgeChangedFileExclusion extends S.Opaque<
 ) {}
 
 /**
- * The package depends on a workspace package the change set touched.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1214,8 +1202,6 @@ export class CoverageSelfJudgeDependentExclusion extends S.Opaque<
 ) {}
 
 /**
- * A changed path that forces the full run, which can move every measured row.
- *
  * @category models
  * @since 0.0.0
  */

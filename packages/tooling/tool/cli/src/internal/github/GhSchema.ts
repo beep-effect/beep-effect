@@ -19,8 +19,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("internal/github/GhSchema");
 
 /**
- * GitHub actor (author) metadata returned by `gh`.
- *
  * **Details**
  *
  * `__typename` is present only when the GraphQL selection asked for it. It is
@@ -59,8 +57,6 @@ export class GhActor extends S.Opaque<GhActor, { readonly brand: unique symbol }
 ) {}
 
 /**
- * GitHub GraphQL connection pagination metadata.
- *
  * **Example** (Make page info fields)
  *
  * ```ts
@@ -84,8 +80,6 @@ export class GhPageInfo extends S.Opaque<GhPageInfo, { readonly brand: unique sy
 ) {}
 
 /**
- * A pull request comment returned by GitHub GraphQL.
- *
  * **Example** (Make comment with author)
  *
  * ```ts
@@ -118,8 +112,6 @@ export class GhComment extends S.Opaque<GhComment, { readonly brand: unique symb
 ) {}
 
 /**
- * Unified `gh pr view` metadata.
- *
  * **Details**
  *
  * Decodes both `gh pr view` shapes used across Yeet: the monitor view

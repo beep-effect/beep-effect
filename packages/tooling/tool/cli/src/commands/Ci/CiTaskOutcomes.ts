@@ -156,8 +156,6 @@ export class GateFeedEntry extends S.Opaque<GateFeedEntry, { readonly brand: uni
 ) {}
 
 /**
- * One hosted job's per-task outcomes and the gate records it wrote.
- *
  * **Details**
  *
  * The `task-outcomes/v2` record widens {@link TaskOutcomeRecord} with
@@ -240,8 +238,6 @@ export const AnyTaskOutcomeRecord = S.Union([TaskOutcomeRecord, TaskOutcomeRecor
 );
 
 /**
- * Type of {@link AnyTaskOutcomeRecord}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -24,8 +24,6 @@ import type { Providers } from "./Providers.ts";
 const $I = $AlchemyVercelId.create("Domain");
 
 /**
- * HTTP status a redirecting domain answers with.
- *
  * **Example** (Permanent redirect)
  *
  * ```ts
@@ -45,16 +43,12 @@ export const RedirectStatusCode = LiteralKit([301, 302, 307, 308]).pipe(
 );
 
 /**
- * Type-level member of {@link RedirectStatusCode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RedirectStatusCode = typeof RedirectStatusCode.Type;
 
 /**
- * Props of {@link Domain}.
- *
  * **Details**
  *
  * `project` may change: the domain then moves to the new project with
@@ -102,8 +96,6 @@ export const DomainProps = S.Struct({
 );
 
 /**
- * Type-level member of {@link DomainProps}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -144,8 +136,6 @@ export class DomainVerification extends S.Opaque<DomainVerification, { readonly 
 ) {}
 
 /**
- * Attributes of a deployed {@link Domain}.
- *
  * **Example** (Decode attributes)
  *
  * ```ts

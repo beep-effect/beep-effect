@@ -60,16 +60,12 @@ export const GateRouteId = LiteralKit([
 );
 
 /**
- * A gate family or catalog pre-commit hook routed by compute profile.
- *
  * @category models
  * @since 0.0.0
  */
 export type GateRouteId = typeof GateRouteId.Type;
 
 /**
- * Whether a gate may run locally or must defer to hosted CI.
- *
  * **Example** (Recognize a hosted-only route)
  *
  * ```ts
@@ -88,16 +84,12 @@ export const GateRouteMode = LiteralKit(["local", "hosted-only"]).pipe(
 );
 
 /**
- * Whether a gate may run locally or must defer to hosted CI.
- *
  * @category models
  * @since 0.0.0
  */
 export type GateRouteMode = typeof GateRouteMode.Type;
 
 /**
- * Route of one gate on each compute profile.
- *
  * **Example** (Construct a hosted-only-on-worker route)
  *
  * ```ts
@@ -204,8 +196,6 @@ export const gateRouteFor: {
 );
 
 /**
- * How `--force-local` runs a gate that is hosted-only on the `worker` profile.
- *
  * **Details**
  *
  * `Serial` runs the gate one task at a time (concurrency 1). `Refused` keeps
@@ -235,8 +225,6 @@ export const WorkerForcedRoute = S.TaggedUnion({
 );
 
 /**
- * How `--force-local` runs a gate that is hosted-only on the `worker` profile.
- *
  * @category models
  * @since 0.0.0
  */

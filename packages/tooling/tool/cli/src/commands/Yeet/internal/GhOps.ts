@@ -143,8 +143,6 @@ export const YEET_GH_REVIEW_WINDOW = Duration.minutes(20);
 export const YEET_GH_EXIT_HOLD = 75;
 
 /**
- * Why the merge gate holds or refuses.
- *
  * **Example** (List the reasons)
  *
  * ```ts
@@ -175,8 +173,6 @@ export const YeetGhGateReason = LiteralKit([
 ]).pipe($I.annoteSchema("YeetGhGateReason", { description: "Why the REST merge gate holds or refuses." }));
 
 /**
- * Type of {@link YeetGhGateReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -191,8 +187,6 @@ const holdReasons = HashSet.make<ReadonlyArray<YeetGhGateReason>>(
 );
 
 /**
- * One reason the gate is not met, with its detail.
- *
  * @category models
  * @since 0.0.0
  */
@@ -592,8 +586,6 @@ export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict
 };
 
 /**
- * Options shared by every `yeet gh` subcommand.
- *
  * @category models
  * @since 0.0.0
  */

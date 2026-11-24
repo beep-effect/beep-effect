@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $AlchemyAwsExtrasId.create("Errors");
 
 /**
- * Resource props that failed schema validation before any AWS call.
- *
  * **Example** (Report an invalid tag key)
  *
  * ```ts

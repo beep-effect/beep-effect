@@ -99,16 +99,12 @@ export const CodexPacketWriteFailureReason = LiteralKit([
 );
 
 /**
- * Reason a packet write failed.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CodexPacketWriteFailureReason = typeof CodexPacketWriteFailureReason.Type;
 
 /**
- * Failure raised while reading or decoding a capture payload.
- *
  * **Example** (Constructing an ingest failure)
  *
  * ```ts
@@ -201,8 +197,6 @@ export class CodexFindingsIngestError extends S.TaggedError<
 }
 
 /**
- * Failure raised when captured content carries secret-shaped or private material.
- *
  * **Gotchas**
  *
  * `surfaces` holds logical field addresses such as `findings[3].title`, paired
@@ -243,8 +237,6 @@ export class CodexFindingsRedactionError extends S.TaggedError<
 }
 
 /**
- * Failure raised while staging or committing a generated packet.
- *
  * **Example** (Refusing to clobber an existing packet)
  *
  * ```ts

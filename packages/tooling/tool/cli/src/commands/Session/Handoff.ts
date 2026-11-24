@@ -65,8 +65,6 @@ export const HandoffSectionKey = LiteralKit([
 ]).pipe($I.annoteSchema("HandoffSectionKey", { description: "One section of the orchestrator HANDOFF.md." }));
 
 /**
- * One section of the orchestrator `HANDOFF.md`.
- *
  * @category models
  * @since 0.0.0
  */

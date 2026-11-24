@@ -49,7 +49,6 @@ export const ObservationMaintenanceCommand = S.TaggedUnion({
   RestoreEvidence: { digest: Sha256Hex },
 }).pipe($I.annoteSchema("ObservationMaintenanceCommand", { description: "Bounded private maintenance operations." }));
 /**
- * Decoded private maintenance operation.
  * @category models
  * @since 0.0.0
  */

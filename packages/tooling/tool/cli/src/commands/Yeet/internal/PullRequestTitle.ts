@@ -39,8 +39,6 @@ const MERGE_COMMIT_SUBJECT_PATTERN = /^Merge (?:branch(?:es)? |remote-tracking b
 const SINGLE_LINE_PATTERN = /^[^\r\n]*$/u;
 
 /**
- * A pull request title: one trimmed, non-empty line.
- *
  * **Example** (Decode a padded title)
  *
  * ```ts
@@ -63,8 +61,6 @@ export const YeetPullRequestTitle = S.Trim.check(
 );
 
 /**
- * Decoded type of {@link YeetPullRequestTitle}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -92,8 +88,6 @@ export const YeetPullRequestTitleSource = LiteralKit(["message", "first-non-merg
 );
 
 /**
- * Type-level union of {@link YeetPullRequestTitleSource}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -150,8 +144,6 @@ export const YeetPullRequestTitleSyncStatus = LiteralKit(["kept", "updated", "fa
 );
 
 /**
- * Type-level union of {@link YeetPullRequestTitleSyncStatus}.
- *
  * @category models
  * @since 0.0.0
  */

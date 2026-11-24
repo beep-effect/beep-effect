@@ -160,8 +160,6 @@ export class ConsoleRequest extends S.Opaque<ConsoleRequest, { readonly brand: u
 ) {}
 
 /**
- * A rendered console: which projection, and the text to write.
- *
  * **Example** (Build an output)
  *
  * ```ts

@@ -69,8 +69,6 @@ import type { RepoWorkspacesError } from "./RepoWorkspaces.ts";
 const $I = $RepoCliKitId.create("CheckoutSubject");
 
 /**
- * The repository directories that hold goal and exploration packets.
- *
  * **Example** (List the packet parents)
  *
  * ```ts
@@ -89,16 +87,12 @@ export const PacketParent = LiteralKit(["goals", "explorations"]).pipe(
 );
 
 /**
- * A repository directory whose child directories are packets.
- *
  * @category models
  * @since 0.0.0
  */
 export type PacketParent = typeof PacketParent.Type;
 
 /**
- * A packet root: `goals/<slug>` or `explorations/<slug>`.
- *
  * **Example** (Recognize a packet root)
  *
  * ```ts
@@ -121,8 +115,6 @@ export const PacketRoot = S.String.check(S.isPattern(/^(?:goals|explorations)\/[
 );
 
 /**
- * A packet root: `goals/<slug>` or `explorations/<slug>`.
- *
  * @category models
  * @since 0.0.0
  */
@@ -177,8 +169,6 @@ export const CheckoutSubject = S.TaggedUnion({
 export type CheckoutSubject = typeof CheckoutSubject.Type;
 
 /**
- * A workspace package a checkout may remove, with the directory it lives in.
- *
  * **Details**
  *
  * The directory is what tells pruning from renaming: a package whose name is
@@ -237,9 +227,6 @@ export class PrunableLeaves extends S.Opaque<PrunableLeaves, { readonly brand: u
 ) {}
 
 /**
- * The packets and workspace packages one checkout holds, and the declared
- * prunable subjects it removed.
- *
  * **Details**
  *
  * `workspaces` maps each present package name to its repository-relative

@@ -98,8 +98,6 @@ export * from "./CompletionReceiptStore.service.ts";
  */
 export * from "./Decisions.projection.ts";
 /**
- * Decision file schemas.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -140,8 +138,6 @@ export * from "./FinalPullRequest.ts";
  */
 export * from "./Goals.command.ts";
 /**
- * Goals tagged errors.
- *
  * @category errors
  * @since 0.0.0
  */

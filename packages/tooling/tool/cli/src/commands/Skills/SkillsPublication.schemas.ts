@@ -29,8 +29,6 @@ import {
 const $I = $RepoCliId.create("commands/Skills/SkillsPublication.schemas");
 
 /**
- * Whether a skill publication replaces a file or a directory.
- *
  * **Example** (Guard a kind)
  *
  * ```ts
@@ -49,16 +47,12 @@ export const SkillPublicationKind = LiteralKit(["file", "directory"]).pipe(
 );
 
 /**
- * Runtime type of {@link SkillPublicationKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type SkillPublicationKind = typeof SkillPublicationKind.Type;
 
 /**
- * The kind of one entry in a skill directory tree.
- *
  * **Example** (Guard an entry kind)
  *
  * ```ts
@@ -78,8 +72,6 @@ export const SkillTreeEntryKind = LiteralKit(["directory", "file", "symlink"]).p
 );
 
 /**
- * Runtime type of {@link SkillTreeEntryKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -152,8 +144,6 @@ export const SkillContentDigest = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link SkillContentDigest}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -247,8 +237,6 @@ export class SkillLegacyPublication extends S.Opaque<SkillLegacyPublication, { r
 ) {}
 
 /**
- * A skill journal's publication: tracked, or legacy.
- *
  * **Example** (Guard a publication)
  *
  * ```ts
@@ -268,8 +256,6 @@ export const SkillPublication = S.Union([SkillLegacyPublication, SkillTrackedPub
 );
 
 /**
- * Runtime type of {@link SkillPublication}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -311,8 +297,6 @@ export class SkillPublicationJournal extends S.Opaque<SkillPublicationJournal, {
 ) {}
 
 /**
- * Which journals a skills recovery sweep reconciles.
- *
  * **Details**
  *
  * `pending` reconciles interrupted publications only; it is what
@@ -338,8 +322,6 @@ export const SkillRecoveryScope = LiteralKit(["pending", "retry"]).pipe(
 );
 
 /**
- * Runtime type of {@link SkillRecoveryScope}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -382,8 +364,6 @@ export const SkillRecoveryResult = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link SkillRecoveryResult}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -419,8 +399,6 @@ export class SkillRecoveryReport extends S.Opaque<SkillRecoveryReport, { readonl
 ) {}
 
 /**
- * Why a skill publication or its recovery refused.
- *
  * **Details**
  *
  * `exchange-unsupported` and `exchange-probe-failed` refuse an existing target
@@ -457,16 +435,12 @@ export const SkillPublicationRefusal = LiteralKit([
 );
 
 /**
- * Runtime type of {@link SkillPublicationRefusal}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type SkillPublicationRefusal = typeof SkillPublicationRefusal.Type;
 
 /**
- * One file of a directory publication, relative to the directory root.
- *
  * **Example** (Describe a file)
  *
  * ```ts

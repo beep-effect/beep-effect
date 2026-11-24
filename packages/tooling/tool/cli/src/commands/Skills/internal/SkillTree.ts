@@ -28,8 +28,6 @@ const textEncoder = new TextEncoder();
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 
 /**
- * Binary-safe skill file paired with its canonical content digest.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -48,8 +46,6 @@ export class HashedSkillFile extends S.Opaque<HashedSkillFile, { readonly brand:
 ) {}
 
 /**
- * Ordered mode-aware manifest of one skill tree plus its aggregate tree and manifest hashes.
- *
  * @internal
  * @category models
  * @since 0.0.0

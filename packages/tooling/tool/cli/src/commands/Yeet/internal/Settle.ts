@@ -229,8 +229,6 @@ export const yeetGatedFamiliesFor = (expected: YeetRulesetRequiredContexts): Rea
 const isRequiredStatusChecksRule = (rule: GhBranchRule): boolean => rule.type === "required_status_checks";
 
 /**
- * The decoded branch-rules payload with the coordinates of its read.
- *
  * **Example** (Construct a payload)
  *
  * ```ts
@@ -782,9 +780,6 @@ export const rememberRegistered: {
 });
 
 /**
- * Input to {@link matchExpectedContexts}: the expected contexts and the
- * reported checks of one poll.
- *
  * @category models
  * @since 0.0.0
  */

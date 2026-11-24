@@ -380,8 +380,6 @@ const readTasks = Effect.fn("SkillProbe.readTasks")(function* (archiveRoot: stri
 });
 
 /**
- * Options for staging the probe suite.
- *
  * @category models
  * @since 0.0.0
  */
@@ -680,8 +678,6 @@ export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
 });
 
 /**
- * Options for scoring one harness invocation into run records.
- *
  * @category models
  * @since 0.0.0
  */

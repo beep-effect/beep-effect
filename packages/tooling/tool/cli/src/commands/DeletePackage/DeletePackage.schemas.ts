@@ -144,8 +144,6 @@ export class DeletePackageAcknowledgements extends S.Opaque<
 ) {}
 
 /**
- * Decoded delete-package flags and preflight facts.
- *
  * **Details**
  *
  * `acknowledgements` holds the decoded `--acknowledge` file and defaults to
@@ -209,8 +207,6 @@ export class DeletePackagePolicy extends S.Opaque<DeletePackagePolicy, { readonl
 ) {}
 
 /**
- * Closed schema for delete-package refusal reasons.
- *
  * **Example** (Guard a refusal kind)
  *
  * ```ts
@@ -242,8 +238,6 @@ export const DeletePackageRefusalKind = LiteralKit([
   })
 );
 /**
- * Type represented by {@link DeletePackageRefusalKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -301,8 +295,6 @@ export const DeletePackageRefusal = LiteralKit(["hard", "soft"])
     })
   );
 /**
- * Type represented by {@link DeletePackageRefusal}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -336,8 +328,6 @@ export class DeletePackageManifest extends S.Opaque<DeletePackageManifest, { rea
 ) {}
 
 /**
- * Closed exit policy for one delete-package baseline writer step.
- *
  * **Details**
  *
  * `zero-only` fails on any nonzero exit. `tolerate-finding-exit` additionally
@@ -363,16 +353,12 @@ export const BaselineWriterExitPolicy = LiteralKit(["zero-only", "tolerate-findi
   })
 );
 /**
- * Type represented by {@link BaselineWriterExitPolicy}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BaselineWriterExitPolicy = typeof BaselineWriterExitPolicy.Type;
 
 /**
- * Closed outcome of one baseline writer invocation.
- *
  * **Example** (Guard an outcome)
  *
  * ```ts
@@ -391,16 +377,12 @@ export const BaselineStepOutcome = LiteralKit(["ok", "tolerated", "failed"]).pip
   })
 );
 /**
- * Type represented by {@link BaselineStepOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BaselineStepOutcome = typeof BaselineStepOutcome.Type;
 
 /**
- * `(mtime, size)` stamp of a baseline output file proving a write happened.
- *
  * **Details**
  *
  * Comparing stamps instead of mtime alone keeps the write proof honest on
@@ -431,9 +413,6 @@ export class BaselineOutputStamp extends S.Opaque<BaselineOutputStamp, { readonl
 ) {}
 
 /**
- * One delete-package baseline writer step with its exit policy and optional
- * verified output file.
- *
  * **Details**
  *
  * `exitPolicy` defaults to `zero-only` and `verifiedOutput` to `Option.none()`

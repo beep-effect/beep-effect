@@ -48,8 +48,6 @@ const $I = $RepoCliId.create("commands/Qa/Doctor");
 export const OBS_WEBSOCKET_PORT = 4455;
 
 /**
- * Outcome domain of one environment probe.
- *
  * **Example** (Count status domain options)
  *
  * ```ts
@@ -68,8 +66,6 @@ export const QaProbeStatus = LiteralKit(["fail", "pass", "warn"]).pipe(
 );
 
 /**
- * Outcome of one environment probe.
- *
  * **Example** (Assign pass status value)
  *
  * ```ts
@@ -85,8 +81,6 @@ export const QaProbeStatus = LiteralKit(["fail", "pass", "warn"]).pipe(
 export type QaProbeStatus = typeof QaProbeStatus.Type;
 
 /**
- * Result of probing one tool the recorded-QA pipeline depends on.
- *
  * **Example** (Make ffmpeg probe result)
  *
  * ```ts

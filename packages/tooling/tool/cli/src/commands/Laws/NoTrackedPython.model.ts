@@ -47,16 +47,12 @@ export const TrackedPythonExtension = LiteralKit([".py", ".pyi", ".pyw", ".ipynb
 );
 
 /**
- * Type-level member of {@link TrackedPythonExtension}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TrackedPythonExtension = typeof TrackedPythonExtension.Type;
 
 /**
- * One tracked Python file.
- *
  * **Example** (Describe a finding)
  *
  * ```ts
@@ -81,8 +77,6 @@ export class NoTrackedPythonFinding extends S.Opaque<NoTrackedPythonFinding, { r
 ) {}
 
 /**
- * Runtime options for the no-tracked-python law.
- *
  * **Example** (Configure a strict scan)
  *
  * ```ts
@@ -111,8 +105,6 @@ export class NoTrackedPythonOptions extends S.Opaque<NoTrackedPythonOptions, { r
 ) {}
 
 /**
- * Result of one no-tracked-python law run.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

@@ -80,8 +80,6 @@ export class VendoredSkillLockEntry extends S.Opaque<VendoredSkillLockEntry, { r
 ) {}
 
 /**
- * A skill with no ratified upstream: its installed targets.
- *
  * **Details**
  *
  * A repo-authored skill's entry holds no content hash. Its files are tracked
@@ -124,8 +122,6 @@ export class LocalSkillLockEntry extends S.Opaque<LocalSkillLockEntry, { readonl
 ) {}
 
 /**
- * One `skills-lock/v2` entry: vendored or local.
- *
  * **Example** (Narrow an entry)
  *
  * ```ts
@@ -145,8 +141,6 @@ export const SkillsLockEntry = S.Union([VendoredSkillLockEntry, LocalSkillLockEn
 );
 
 /**
- * One `skills-lock/v2` entry: vendored or local.
- *
  * **Example** (Annotate an entry)
  *
  * ```ts
@@ -343,8 +337,6 @@ export class MatchesNoExaminedRevisionDrift extends S.Opaque<
 ) {}
 
 /**
- * One drifted path of a vendored skill, classified against its path history.
- *
  * **Example** (Narrow a drift row)
  *
  * ```ts
@@ -364,8 +356,6 @@ export const SkillDriftRow = S.Union([MatchesUpstreamRevisionDrift, MatchesNoExa
 );
 
 /**
- * One drifted path of a vendored skill, classified against its path history.
- *
  * **Example** (Annotate a drift row)
  *
  * ```ts
@@ -381,8 +371,6 @@ export const SkillDriftRow = S.Union([MatchesUpstreamRevisionDrift, MatchesNoExa
 export type SkillDriftRow = typeof SkillDriftRow.Type;
 
 /**
- * The upstream path history a vendored row was classified against.
- *
  * **Details**
  *
  * `head` is the newest commit touching the skill's tree path at
@@ -423,8 +411,6 @@ export class SkillPathHistoryWindow extends S.Opaque<SkillPathHistoryWindow, { r
 ) {}
 
 /**
- * The installed tree equals the upstream tree at `revision`: pin it there.
- *
  * **Details**
  *
  * `revision` is the newest examined path revision whose complete mode-aware
@@ -460,8 +446,6 @@ export class PristineAtRevisionPin extends S.Opaque<PristineAtRevisionPin, { rea
 ) {}
 
 /**
- * No examined revision makes the installed tree pristine: keep the baseline pin.
- *
  * **Details**
  *
  * The baseline is the lock's own pin for an entry that is already vendored,
@@ -537,8 +521,6 @@ export const SkillPinProposal = S.Union([PristineAtRevisionPin, KeepSeedPin]).pi
 export type SkillPinProposal = typeof SkillPinProposal.Type;
 
 /**
- * A skill with a ratified seed: its warehouse entry, pin proposal, and classified drift.
- *
  * **Details**
  *
  * `drift` is classified against the baseline pin: the lock's own pin for an
@@ -607,8 +589,6 @@ export class LocalMigrationRow extends S.Opaque<LocalMigrationRow, { readonly br
 ) {}
 
 /**
- * Why a skill's migration row is unresolved.
- *
  * **Details**
  *
  * `no-ratified-seed`: a v1 `github` entry with no ratified resolution; it is
@@ -642,8 +622,6 @@ export const SkillUnresolvedCause = LiteralKit([
 );
 
 /**
- * Why a skill's migration row is unresolved.
- *
  * **Example** (Annotate a cause)
  *
  * ```ts
@@ -734,8 +712,6 @@ export const SkillMigrationRow = S.Union([VendoredMigrationRow, LocalMigrationRo
 export type SkillMigrationRow = typeof SkillMigrationRow.Type;
 
 /**
- * `skills-lock-migration-plan/v3`: the v1-to-v2 lock migration report.
- *
  * **Details**
  *
  * `planDigest` is the SHA-256 of the compact canonical JSON of the encoded
@@ -775,8 +751,6 @@ export class SkillsLockMigrationPlan extends S.Opaque<SkillsLockMigrationPlan, {
 ) {}
 
 /**
- * One generated patch file: its repository path and bytes.
- *
  * **Example** (Hold a generated patch)
  *
  * ```ts

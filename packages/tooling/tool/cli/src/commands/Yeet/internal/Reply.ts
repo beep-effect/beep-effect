@@ -196,8 +196,6 @@ export class ReplyThreadComment extends S.Opaque<ReplyThreadComment, { readonly 
 ) {}
 
 /**
- * Paginated comments nested under a live review thread.
- *
  * **Example** (Describe an empty comment page)
  *
  * ```ts

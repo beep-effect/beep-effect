@@ -88,8 +88,6 @@ const OnBeforeDeferredEntries = S.declare<NonNullable<ExperimentalConfigFromNext
 );
 
 /**
- * Cache life timing profile for a named cache strategy.
- *
  * **Example** (Define an hourly cache profile)
  *
  * ```ts
@@ -118,8 +116,6 @@ export class CacheLifeProfile extends S.Opaque<CacheLifeProfile, { readonly bran
 const CacheLife = S.Record(S.String, CacheLifeProfile);
 
 /**
- * Prefetch inlining size limits.
- *
  * **Example** (Cap inlined prefetch payloads)
  *
  * ```ts
@@ -147,8 +143,6 @@ export class PrefetchInliningOptions extends S.Opaque<PrefetchInliningOptions, {
 const PrefetchInlining = S.Union([S.Boolean, PrefetchInliningOptions]);
 
 /**
- * Stale time settings, in seconds, for dynamic and static routes.
- *
  * **Details**
  *
  * The static stale time must be at least 30 seconds.
@@ -191,8 +185,6 @@ export class StaleTimes extends S.Opaque<StaleTimes, { readonly brand: unique sy
 ) {}
 
 /**
- * SWC environment transform options.
- *
  * **Example** (Polyfill by usage for older browsers)
  *
  * ```ts
@@ -225,8 +217,6 @@ export class SwcEnvOptions extends S.Opaque<SwcEnvOptions, { readonly brand: uni
 ) {}
 
 /**
- * Subresource integrity configuration.
- *
  * **Example** (Emit SHA-384 subresource integrity hashes)
  *
  * ```ts
@@ -251,8 +241,6 @@ export class SriConfig extends S.Opaque<SriConfig, { readonly brand: unique symb
 ) {}
 
 /**
- * Rust MDX compiler configuration.
- *
  * **Example** (Compile GitHub-flavored MDX with the Rust compiler)
  *
  * ```ts
@@ -282,8 +270,6 @@ export class MdxRsConfig extends S.Opaque<MdxRsConfig, { readonly brand: unique 
 ) {}
 
 /**
- * Server Actions configuration.
- *
  * **Example** (Allow larger form uploads from one origin)
  *
  * ```ts
@@ -337,8 +323,6 @@ export class SlowModuleDetection extends S.Opaque<SlowModuleDetection, { readonl
 ) {}
 
 /**
- * Browser debug output controls for terminal rendering.
- *
  * **Example** (Forward browser warnings to the dev terminal)
  *
  * ```ts
@@ -373,8 +357,6 @@ const BrowserDebugInfoInTerminal = S.Union([S.Boolean, BrowserDebugLevel, Browse
 const SwcPlugins = S.Tuple([S.String, UnknownRecord]).pipe(S.mutable, S.Array, S.mutable);
 
 /**
- * Public experimental configuration accepted by Next.js.
- *
  * **Example** (Creating ExperimentalConfig with options)
  *
  * ```ts

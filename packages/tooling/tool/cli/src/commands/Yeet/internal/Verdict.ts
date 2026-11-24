@@ -49,8 +49,6 @@ const NullableInputDigest = S.OptionFromNullOr(S.String).pipe(
 );
 
 /**
- * Execution status of one planned yeet lane.
- *
  * **Example** (List the lane status options)
  *
  * ```ts
@@ -77,16 +75,12 @@ export const YeetLaneStatus = LiteralKit([
 );
 
 /**
- * Execution status of one planned yeet lane.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetLaneStatus = typeof YeetLaneStatus.Type;
 
 /**
- * Recorded stash identity for staged-only publish residue.
- *
  * **Example** (Construct a yeet stash state)
  *
  * ```ts
@@ -116,8 +110,6 @@ export class YeetStashState extends S.Opaque<YeetStashState, { readonly brand: u
 ) {}
 
 /**
- * Divergence assessment between the publish branch and its refreshed base.
- *
  * **Example** (Construct a yeet base freshness)
  *
  * ```ts
@@ -147,8 +139,6 @@ export class YeetBaseFreshness extends S.Opaque<YeetBaseFreshness, { readonly br
 ) {}
 
 /**
- * One planned lane with its execution status and repair command.
- *
  * **Example** (Construct a yeet verdict lane)
  *
  * ```ts
@@ -190,8 +180,6 @@ export class YeetVerdictLane extends S.Opaque<YeetVerdictLane, { readonly brand:
 ) {}
 
 /**
- * Terminal outcome for one yeet run.
- *
  * @category models
  * @since 0.0.0
  */
@@ -265,16 +253,12 @@ export const YeetMergeReadyCriterion = LiteralKit([
 );
 
 /**
- * One hard criterion of the merge protocol.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
 
 /**
- * The observed state of each merge-protocol criterion.
- *
  * **Example** (Construct merge-ready criteria)
  *
  * ```ts
@@ -544,8 +528,6 @@ export class YeetMergeReady extends S.Class<YeetMergeReady, { readonly brand: un
 ) {}
 
 /**
- * Merge-readiness codec that admits legacy v2 verdict artifacts.
- *
  * **Details**
  *
  * Artifacts written before `closeoutRun` existed carry a two-field
@@ -588,8 +570,6 @@ export const YeetMergeReadyFromEncoded = YeetMergeReadyEncoded.pipe(
 );
 
 /**
- * Machine-readable verdict for one yeet run.
- *
  * **Gotchas**
  *
  * Attempt identity, attempt input facts (`resolvedHeadSha`,
@@ -727,8 +707,6 @@ export class YeetVerdict extends S.Opaque<YeetVerdict, { readonly brand: unique 
 export const YeetVerdictJson = JsonStringCodec(YeetVerdict);
 
 /**
- * One executed plan step paired with its run result.
- *
  * **Example** (Inspect the executed step schema)
  *
  * ```ts
@@ -864,8 +842,6 @@ const innerLanesForWrapper = (
 };
 
 /**
- * Run identity, outcome, planned steps, and executed results used to build the run verdict.
- *
  * @category models
  * @since 0.0.0
  */

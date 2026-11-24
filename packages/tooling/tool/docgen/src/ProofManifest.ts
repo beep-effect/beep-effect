@@ -27,8 +27,6 @@ import type * as Digest from "effect/crypto/Digest";
 const $I = $RepoDocgenId.create("ProofManifest");
 
 /**
- * Literal marker written into proof manifests to identify the document format.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -47,8 +45,6 @@ export const DocgenProofManifestStandard = LiteralKit(["docgen-proof-manifest"])
 );
 
 /**
- * Type-level representation of the proof manifest format marker.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -64,8 +60,6 @@ export const DocgenProofManifestStandard = LiteralKit(["docgen-proof-manifest"])
 export type DocgenProofManifestStandard = typeof DocgenProofManifestStandard.Type;
 
 /**
- * Literal schema version written into proof manifests.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -84,8 +78,6 @@ export const DocgenProofManifestSchemaVersion = LiteralKit(["1"]).pipe(
 );
 
 /**
- * Type-level representation of the proof manifest schema version.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -101,8 +93,6 @@ export const DocgenProofManifestSchemaVersion = LiteralKit(["1"]).pipe(
 export type DocgenProofManifestSchemaVersion = typeof DocgenProofManifestSchemaVersion.Type;
 
 /**
- * Verification status for a package-local docgen proof manifest.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -121,8 +111,6 @@ export const DocgenProofManifestStatus = LiteralKit(["current", "missing", "stal
 );
 
 /**
- * Verification status for a package-local docgen proof manifest.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -138,8 +126,6 @@ export const DocgenProofManifestStatus = LiteralKit(["current", "missing", "stal
 export type DocgenProofManifestStatus = typeof DocgenProofManifestStatus.Type;
 
 /**
- * File-level SHA-256 digest included in a docgen proof manifest.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -172,8 +158,6 @@ export class DocgenProofManifestFile extends S.Opaque<DocgenProofManifestFile, {
 ) {}
 
 /**
- * Package input and generated-docs fingerprint for docgen reuse.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts
@@ -215,8 +199,6 @@ export class DocgenProofManifestFingerprint extends S.Opaque<
 ) {}
 
 /**
- * Package-local docgen proof manifest written after successful generation.
- *
  * **Details**
  *
  * The manifest is a reuse proof, not a published API contract. Verification
@@ -284,8 +266,6 @@ export class DocgenProofManifest extends S.Opaque<DocgenProofManifest, { readonl
 }
 
 /**
- * Result of checking a package-local docgen proof manifest.
- *
  * **Example** (Use docgen proof manifests)
  *
  * ```ts

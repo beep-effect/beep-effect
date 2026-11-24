@@ -50,8 +50,6 @@ export const LiteralKitMatchRenameFacet = LiteralKit(["$match", "pick-rewrap"]).
 );
 
 /**
- * A facet name of the `literal-kit-match-rename` rule.
- *
  * @category type-level
  * @since 0.0.0
  */

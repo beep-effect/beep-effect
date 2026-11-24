@@ -30,8 +30,6 @@ const flightRecordSchemaVersion = "telemetry-v2/flight-record/v1";
 const FlightObjectiveStatus = LiteralKit(["known", "unknown"]);
 
 /**
- * Content-addressed objective supplied by the semantic flight-record channel.
- *
  * **Example** (Reference an objective by its content hash)
  *
  * ```ts
@@ -63,8 +61,6 @@ export class KnownFlightObjective extends S.Opaque<KnownFlightObjective, { reado
 ) {}
 
 /**
- * Explicit absence of an attributable objective, without a guessed or free-text replacement.
- *
  * **Example** (Admit that no objective was attributable)
  *
  * ```ts
@@ -103,8 +99,6 @@ const FlightObjective = S.Union([KnownFlightObjective, UnknownFlightObjective]).
 );
 
 /**
- * Content-free semantic labels supplied for one turn, with no mechanical timing or count fields.
- *
  * **Example** (Label one turn without recording its content)
  *
  * ```ts
@@ -142,8 +136,6 @@ export class FlightSemanticTurn extends S.Opaque<FlightSemanticTurn, { readonly 
 ) {}
 
 /**
- * Agent-authored half of a flight record.
- *
  * **Details**
  *
  * This contract has no timestamps, durations, event counts, tool counts, or
@@ -202,8 +194,6 @@ export class FlightRecordSemantic extends S.Opaque<FlightRecordSemantic, { reado
 const FlightWaitStatus = LiteralKit(["open", "closed", "tombstoned"]);
 
 /**
- * Mechanically observed wait bracket that has not received terminal evidence.
- *
  * **Example** (Keep a pending permission wait open without a duration)
  *
  * ```ts
@@ -240,8 +230,6 @@ export class OpenFlightWait extends S.Opaque<OpenFlightWait, { readonly brand: u
 ) {}
 
 /**
- * Mechanically closed wait bracket with a computed non-negative duration.
- *
  * **Example** (Close a wait with its measured duration)
  *
  * ```ts
@@ -281,8 +269,6 @@ export class ClosedFlightWait extends S.Opaque<ClosedFlightWait, { readonly bran
 ) {}
 
 /**
- * Unclosed wait bracket retained with explicit tombstone provenance instead of a guessed close.
- *
  * **Example** (Retire a wait that never closed)
  *
  * ```ts
@@ -349,8 +335,6 @@ export const FlightWaitSpan = S.Union([OpenFlightWait, ClosedFlightWait, Tombsto
 );
 
 /**
- * Decoded flight-record wait span.
- *
  * @see {@link FlightWaitSpan} for the runtime tagged union.
  * @category models
  * @since 0.0.0
@@ -463,8 +447,6 @@ export class FlightRecordMechanical extends S.Opaque<FlightRecordMechanical, { r
 const FlightConfigStatus = LiteralKit(["observed", "last-known", "unknown"]);
 
 /**
- * Configuration fingerprint observed for the represented session.
- *
  * **Example** (Attribute a session to its observed config fingerprint)
  *
  * ```ts
@@ -496,8 +478,6 @@ export class ObservedFlightConfig extends S.Opaque<ObservedFlightConfig, { reado
 ) {}
 
 /**
- * Last-known configuration fingerprint retained as explicitly heuristic evidence.
- *
  * **Example** (Reject a last-known fingerprint claimed as observed)
  *
  * ```ts
@@ -528,8 +508,6 @@ export class LastKnownFlightConfig extends S.Opaque<LastKnownFlightConfig, { rea
 ) {}
 
 /**
- * Explicit absence of a session configuration fingerprint.
- *
  * **Example** (Record that no config fingerprint exists)
  *
  * ```ts
@@ -562,8 +540,6 @@ const FlightConfigAttribution = S.Union([ObservedFlightConfig, LastKnownFlightCo
 );
 
 /**
- * Canonical root and source-instance attribution for a flight record.
- *
  * **Example** (Reference registry identities without embedding paths)
  *
  * ```ts
@@ -841,8 +817,6 @@ const AttributionFailureReason = LiteralKit(["missing-identity", "ambiguous-iden
 const FlightRecordWriteStatus = LiteralKit(["accepted", "invalid", "quarantined"]);
 
 /**
- * Accepted telemetry-v2 flight record ready for durable append.
- *
  * **Example** (Tell an accepted write apart from a receipt)
  *
  * ```ts
@@ -875,8 +849,6 @@ export class AcceptedFlightRecordWrite extends S.Opaque<AcceptedFlightRecordWrit
 ) {}
 
 /**
- * Content-free receipt for a rejected flight-record candidate.
- *
  * **Example** (Receipt a rejected candidate by digest only)
  *
  * ```ts
@@ -912,8 +884,6 @@ export class InvalidFlightRecordWrite extends S.Opaque<InvalidFlightRecordWrite,
 ) {}
 
 /**
- * Content-free receipt for a candidate whose canonical identity could not be resolved without guessing.
- *
  * **Example** (Quarantine a candidate with ambiguous identity)
  *
  * ```ts

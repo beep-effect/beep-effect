@@ -312,8 +312,6 @@ const renderIssuePath = (path: StandardSchemaV1.Issue["path"]): ReadonlyArray<st
   pipe(O.fromNullishOr(path), O.map(flow(A.map(renderIssuePathSegment))), O.getOrElse(A.empty<string>));
 
 /**
- * Structured package.json validation issue.
- *
  * **Example** (Create validation issue)
  *
  * ```ts

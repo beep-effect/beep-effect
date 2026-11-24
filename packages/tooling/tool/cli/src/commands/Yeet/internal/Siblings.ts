@@ -72,8 +72,6 @@ export const PacketSiblingProbe = LiteralKit(["clean", "conflict", "unavailable"
 );
 
 /**
- * The decoded probe outcome literal.
- *
  * @category models
  * @since 0.0.0
  */
@@ -130,8 +128,6 @@ export type PacketSiblingPlace = typeof PacketSiblingPlace.Type;
 const trunkPlace: PacketSiblingPlace = PacketSiblingPlace.cases.Trunk.make({});
 
 /**
- * One open pull request that shares a goal packet with the subject pull request.
- *
  * **Example** (A sibling with one predicted conflict)
  *
  * ```ts
@@ -172,8 +168,6 @@ export class PacketSibling extends S.Opaque<PacketSibling, { readonly brand: uni
 ) {}
 
 /**
- * The siblings report for one pull request.
- *
  * **Example** (A pull request outside every packet)
  *
  * ```ts
@@ -248,8 +242,6 @@ const backticked = (text: string): string => `\`${text}\``;
 const listOf = (items: ReadonlyArray<string>): string => A.join(A.map(items, backticked), ", ");
 
 /**
- * What one sibling broadcast says: the merged pull request, its squash commit, the probed base and the sibling told.
- *
  * **Example** (Describe one broadcast)
  *
  * ```ts

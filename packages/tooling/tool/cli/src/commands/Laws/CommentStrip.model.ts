@@ -49,16 +49,12 @@ export const CommentVoteCode = LiteralKit(["T", "S", "X", "D", "H", "N", "G", "L
 );
 
 /**
- * Type-level member of {@link CommentVoteCode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CommentVoteCode = typeof CommentVoteCode.Type;
 
 /**
- * Why `apply` left a ledger row in place.
- *
  * **Details**
  *
  * `stale-cid` means the row no longer matches the tree, or an identical
@@ -104,8 +100,6 @@ export const CommentRefusalReason = LiteralKit([
 ]).pipe($I.annoteSchema("CommentRefusalReason", { description: "Why the strip left one ledger row in place." }));
 
 /**
- * Type-level member of {@link CommentRefusalReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -117,9 +111,6 @@ const isRepoRelativeFile = (file: string): boolean =>
   !A.some(Str.split(file, "/"), (segment) => segment === ".." || segment === "." || segment === "");
 
 /**
- * A file path relative to the repository root, written with `/`, that cannot
- * leave the repository.
- *
  * **Details**
  *
  * An absolute path, a backslash, and an empty, `.` or `..` segment are
@@ -155,16 +146,12 @@ export const CommentRepoPath = S.String.check(
 );
 
 /**
- * Type of {@link CommentRepoPath}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CommentRepoPath = typeof CommentRepoPath.Type;
 
 /**
- * One banned comment in a strip ledger.
- *
  * **Details**
  *
  * `cid` is the first 16 hex characters of a SHA-256 over the file, the
@@ -301,8 +288,6 @@ export class CommentLedgerSummary extends S.Opaque<CommentLedgerSummary, { reado
 ) {}
 
 /**
- * Inputs of one strip `apply` run.
- *
  * **Example** (Apply two vote files)
  *
  * ```ts
@@ -329,8 +314,6 @@ export class CommentApplyOptions extends S.Opaque<CommentApplyOptions, { readonl
 ) {}
 
 /**
- * Result of one strip `apply` run.
- *
  * **Details**
  *
  * `deleted` counts removed comments; `filesTouched` lists the files written,

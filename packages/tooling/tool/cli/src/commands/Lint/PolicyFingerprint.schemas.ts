@@ -58,8 +58,6 @@ export const PolicyFingerprintKey = S.String.check(S.isPattern(/^[a-z0-9]+(?:-[a
 );
 
 /**
- * Decoded {@link PolicyFingerprintKey} value.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -252,8 +250,6 @@ export class PolicyRootFileRoute extends S.Opaque<PolicyRootFileRoute, { readonl
 ) {}
 
 /**
- * The fixed entry points of the CLI being fingerprinted.
- *
  * **Example** (Describe the repo CLI layout)
  *
  * ```ts
@@ -318,8 +314,6 @@ export class PolicyCommandNode extends S.Opaque<PolicyCommandNode, { readonly br
 ) {}
 
 /**
- * The modules a fingerprint key reaches.
- *
  * **Example** (Describe an empty closure)
  *
  * ```ts

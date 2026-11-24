@@ -415,8 +415,6 @@ const INPUT_REMEDIATION: Readonly<Record<KnowledgeDoctorInputReason, string>> = 
 };
 
 /**
- * A gating input of the knowledge doctor that is absent, shallow, or undecodable.
- *
  * **Details**
  *
  * The gate fails closed on these (contract 13 and C4): they are never findings and never skips.

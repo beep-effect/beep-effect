@@ -18,8 +18,6 @@ import { CorpusExtractOcrCounts } from "./Ocr.schemas.ts";
 const $I = $RepoCliId.create("commands/Corpus/internal/Extract.schemas");
 
 /**
- * Validated options used by `corpus extract`.
- *
  * **Details**
  *
  * A run against an existing output tree resumes: sources that already carry a
@@ -72,8 +70,6 @@ export class CorpusExtractOptions extends S.Opaque<CorpusExtractOptions, { reado
 ) {}
 
 /**
- * Summary counts returned by `corpus extract`.
- *
  * **Details**
  *
  * `alreadyCompleteCount` counts sources reused from a settled outcome on

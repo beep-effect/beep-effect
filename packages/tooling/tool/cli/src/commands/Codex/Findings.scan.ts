@@ -27,8 +27,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Codex/Findings.scan");
 
 /**
- * Classes of content refused on the way into a generated packet.
- *
  * **Example** (Naming a rule)
  *
  * ```ts

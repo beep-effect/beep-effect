@@ -46,8 +46,6 @@ class EmotionImportMapEntry extends S.Opaque<EmotionImportMapEntry, { readonly b
 ) {}
 
 /**
- * Emotion compiler transform configuration.
- *
  * **Example** (Make EmotionConfig with sourceMap)
  *
  * ```ts
@@ -73,8 +71,6 @@ export class EmotionConfig extends S.Opaque<EmotionConfig, { readonly brand: uni
 ) {}
 
 /**
- * Styled Components compiler transform configuration.
- *
  * **Example** (Make StyledComponentsConfig with ssr)
  *
  * ```ts
@@ -106,8 +102,6 @@ export class StyledComponentsConfig extends S.Opaque<StyledComponentsConfig, { r
 ) {}
 
 /**
- * React Compiler options supported by Next.js.
- *
  * **Example** (Make ReactCompilerOptions with infer)
  *
  * ```ts
@@ -175,8 +169,6 @@ class StyledJsxConfig extends S.Opaque<StyledJsxConfig, { readonly brand: unique
 ) {}
 
 /**
- * Next.js compiler configuration block.
- *
  * **Example** (Make CompilerConfig removeConsole)
  *
  * ```ts
@@ -215,8 +207,6 @@ export class CompilerConfig extends S.Opaque<CompilerConfig, { readonly brand: u
 ) {}
 
 /**
- * Sass options passed through to Next.js.
- *
  * **Example** (Decode SassOptions with Schema)
  *
  * ```ts
@@ -240,8 +230,6 @@ export const SassOptions = S.declare<SassOptionsFromNext>(isSassOptions, {
 );
 
 /**
- * Sass options passed through to Next.js.
- *
  * **Example** (Type annotate SassOptions value)
  *
  * ```ts

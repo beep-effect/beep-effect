@@ -43,8 +43,6 @@ export const AccountWindowKind = LiteralKit(["session", "weekly", "weekly-scoped
 );
 
 /**
- * Runtime type for {@link AccountWindowKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,16 +77,12 @@ export const AccountProviderName = S.String.check(
 ).pipe($I.annoteSchema("AccountProviderName", { description: "Subscription provider name on an accounts report." }));
 
 /**
- * Runtime type for {@link AccountProviderName}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AccountProviderName = typeof AccountProviderName.Type;
 
 /**
- * One plan-limit window as the accounts report carries it.
- *
  * **Example** (Decode a report window)
  *
  * ```ts
@@ -153,8 +147,6 @@ export const AccountsReportOutcome = S.TaggedUnion({
 );
 
 /**
- * Runtime type for {@link AccountsReportOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -182,8 +174,6 @@ export class AccountsReportAccount extends S.Opaque<AccountsReportAccount, { rea
 ) {}
 
 /**
- * One ranked row of the accounts report.
- *
  * **Example** (Make a report row)
  *
  * ```ts
@@ -211,8 +201,6 @@ export class AccountsReportRow extends S.Opaque<AccountsReportRow, { readonly br
 ) {}
 
 /**
- * One provider panel of the accounts report.
- *
  * **Example** (Make an empty panel)
  *
  * ```ts
@@ -328,8 +316,6 @@ export class AccountHeadroomInput extends S.Opaque<AccountHeadroomInput, { reado
 ) {}
 
 /**
- * Whether an account's poll produced usage, needs a fresh login, or failed.
- *
  * **Example** (Narrow an account state)
  *
  * ```ts
@@ -348,8 +334,6 @@ export const AccountState = LiteralKit(["ok", "needs-login", "failed"]).pipe(
 );
 
 /**
- * Runtime type for {@link AccountState}.
- *
  * @category models
  * @since 0.0.0
  */

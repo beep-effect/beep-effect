@@ -52,8 +52,6 @@ export class LibraryVidbeeBinding extends S.Opaque<LibraryVidbeeBinding, { reado
 ) {}
 
 /**
- * Binding of alphaXiv full text to one arXiv identifier and version.
- *
  * **Example** (Inspect binding fields)
  *
  * ```ts

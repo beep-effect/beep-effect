@@ -4204,8 +4204,6 @@ const splitComponents = (path: string): ReadonlyArray<string> =>
 const declareFunction = <F>() => S.declare((u: unknown): u is F => P.isFunction(u));
 
 /**
- * Couples the effectful file system with synchronous inspection of committed state.
- *
  * **Details**
  *
  * Inspection reads the live volume at call time rather than a copy taken at

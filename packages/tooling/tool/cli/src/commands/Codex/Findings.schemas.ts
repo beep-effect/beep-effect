@@ -77,8 +77,6 @@ export const CodexRecordId = S.String.check(
 export type CodexRecordId = typeof CodexRecordId.Type;
 
 /**
- * Packet directory name under `goals/`.
- *
  * **Gotchas**
  *
  * The pattern admits no dot, slash, or leading hyphen, so a slug can never
@@ -115,8 +113,6 @@ export const CodexPacketSlug = S.String.check(
 );
 
 /**
- * Directory name of a generated packet.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -154,16 +150,12 @@ export const CodexPacketBranch = S.String.check(
 );
 
 /**
- * Remediation branch declared by a packet.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CodexPacketBranch = typeof CodexPacketBranch.Type;
 
 /**
- * One captured finding after stable identity assignment.
- *
  * **Details**
  *
  * These six fields are exactly what a capture can prove. Renderers accept this
@@ -354,8 +346,6 @@ export class CodexPacketPlan extends S.Opaque<CodexPacketPlan, { readonly brand:
 ) {}
 
 /**
- * Validated options accepted by `beep codex findings ingest`.
- *
  * **Details**
  *
  * `date`, `slug`, and `branch` are overrides; when absent they are derived from

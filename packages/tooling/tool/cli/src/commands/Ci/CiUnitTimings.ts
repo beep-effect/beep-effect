@@ -88,8 +88,6 @@ const ProjectionJson = S.fromJsonString(UnitTimingProjection);
 const encodeProjection = S.encodeEffect(ProjectionJson);
 
 /**
- * Options of one projection.
- *
  * **Example** (Project a local partition)
  *
  * ```ts

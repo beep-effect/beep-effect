@@ -135,8 +135,6 @@ export class JSDocTagDefinition extends S.Class<JSDocTagDefinition, { readonly b
 ) {}
 
 /**
- * JSDoc model export.
- *
  * **Example** (Encode param tag definition)
  *
  * ```ts

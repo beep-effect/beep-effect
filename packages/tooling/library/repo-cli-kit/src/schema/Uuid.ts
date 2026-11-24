@@ -49,8 +49,6 @@ export const UUID = S.Trim.check(S.isNonEmpty({ message: "String must not be emp
 );
 
 /**
- * Decoded type of {@link UUID}.
- *
  * @category models
  * @since 0.0.0
  */

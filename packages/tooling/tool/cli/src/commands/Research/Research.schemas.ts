@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Research/Research.schemas");
 
 /**
- * Source kind recorded on a knowledge card.
- *
  * **Example** (Validate article and link)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const CardSourceType = LiteralKit(["repo", "article", "x-post", "link"]).
 );
 
 /**
- * Source kind type recorded on a knowledge card.
- *
  * **Example** (Assign article source type)
  *
  * ```ts
@@ -53,8 +49,6 @@ export const CardSourceType = LiteralKit(["repo", "article", "x-post", "link"]).
 export type CardSourceType = typeof CardSourceType.Type;
 
 /**
- * Triage status recorded on a knowledge card.
- *
  * **Example** (Validate inbox status)
  *
  * ```ts
@@ -75,8 +69,6 @@ export const CardStatus = LiteralKit(["inbox", "triaged", "integrated"]).pipe(
 );
 
 /**
- * Triage status type recorded on a knowledge card.
- *
  * **Example** (Assign inbox status)
  *
  * ```ts
@@ -131,8 +123,6 @@ export const CardVia = LiteralKit(["history-sift", "capture", "repo-card", "noti
 export type CardVia = typeof CardVia.Type;
 
 /**
- * YAML frontmatter carried by every knowledge card in the vault.
- *
  * **Details**
  *
  * The `id` is stable for the card's lifetime and doubles as the Cognee
@@ -222,8 +212,6 @@ export const BrowserKind = LiteralKit(["brave", "chrome", "all"]).pipe(
 export type BrowserKind = typeof BrowserKind.Type;
 
 /**
- * Validated options used by `research history-sift`.
- *
  * **Example** (Make history-sift options)
  *
  * ```ts
@@ -257,8 +245,6 @@ export class ResearchHistorySiftOptions extends S.Opaque<
 ) {}
 
 /**
- * Summary returned by `research history-sift`.
- *
  * **Example** (Make history-sift summary)
  *
  * ```ts
@@ -296,8 +282,6 @@ export class ResearchHistorySiftSummary extends S.Opaque<
 ) {}
 
 /**
- * Validated options used by `research repo-card`.
- *
  * **Example** (Make repo-card options)
  *
  * ```ts
@@ -330,8 +314,6 @@ export class ResearchRepoCardOptions extends S.Opaque<ResearchRepoCardOptions, {
 ) {}
 
 /**
- * Summary returned by `research repo-card`.
- *
  * **Example** (Make repo-card summary)
  *
  * ```ts
@@ -364,8 +346,6 @@ export class ResearchRepoCardSummary extends S.Opaque<ResearchRepoCardSummary, {
 ) {}
 
 /**
- * Validated options used by `research notion-pull`.
- *
  * **Example** (Make notion-pull options)
  *
  * ```ts
@@ -396,8 +376,6 @@ export class ResearchNotionPullOptions extends S.Opaque<ResearchNotionPullOption
 ) {}
 
 /**
- * Summary returned by `research notion-pull`.
- *
  * **Example** (Make notion-pull summary)
  *
  * ```ts
@@ -428,8 +406,6 @@ export class ResearchNotionPullSummary extends S.Opaque<ResearchNotionPullSummar
 ) {}
 
 /**
- * Validated options used by `research daily`.
- *
  * **Example** (Make daily options)
  *
  * ```ts
@@ -463,8 +439,6 @@ export class ResearchDailyOptions extends S.Opaque<ResearchDailyOptions, { reado
 ) {}
 
 /**
- * Summary returned by `research daily`.
- *
  * **Example** (Make daily summary)
  *
  * ```ts
@@ -490,8 +464,6 @@ export class ResearchDailySummary extends S.Opaque<ResearchDailySummary, { reado
 ) {}
 
 /**
- * Validated options used by `research cognify`.
- *
  * **Example** (Make cognify options)
  *
  * ```ts
@@ -516,8 +488,6 @@ export class ResearchCognifyOptions extends S.Opaque<ResearchCognifyOptions, { r
 ) {}
 
 /**
- * Summary returned by `research cognify`.
- *
  * **Example** (Make cognify summary)
  *
  * ```ts
@@ -548,8 +518,6 @@ export class ResearchCognifySummary extends S.Opaque<ResearchCognifySummary, { r
 ) {}
 
 /**
- * Validated options used by `research digest`.
- *
  * **Example** (Make digest options)
  *
  * ```ts
@@ -574,8 +542,6 @@ export class ResearchDigestOptions extends S.Opaque<ResearchDigestOptions, { rea
 ) {}
 
 /**
- * Summary returned by `research digest`.
- *
  * **Example** (Make digest summary)
  *
  * ```ts
@@ -606,8 +572,6 @@ export class ResearchDigestSummary extends S.Opaque<ResearchDigestSummary, { rea
 ) {}
 
 /**
- * Validated options used by `research status`.
- *
  * **Example** (Make status options)
  *
  * ```ts
@@ -658,8 +622,6 @@ export class ResearchSourceTypeCount extends S.Opaque<ResearchSourceTypeCount, {
 ) {}
 
 /**
- * Summary returned by `research status`.
- *
  * **Example** (Make status summary)
  *
  * ```ts
@@ -694,8 +656,6 @@ export class ResearchStatusSummary extends S.Opaque<ResearchStatusSummary, { rea
 ) {}
 
 /**
- * A bare Notion page id as the research timer units embed it.
- *
  * **Details**
  *
  * systemd splits `ExecStart` on whitespace with no shell involved, so the page
@@ -725,8 +685,6 @@ export const ResearchNotionPageId = S.String.check(S.isPattern(/^[A-Za-z0-9-]+$/
 );
 
 /**
- * Bare Notion page id type as the research timer units embed it.
- *
  * **Example** (Assign a page id)
  *
  * ```ts
@@ -742,8 +700,6 @@ export const ResearchNotionPageId = S.String.check(S.isPattern(/^[A-Za-z0-9-]+$/
 export type ResearchNotionPageId = typeof ResearchNotionPageId.Type;
 
 /**
- * Validated options used by `research install-timers` to write the units.
- *
  * **Details**
  *
  * Removing the timers takes none of these: an uninstall reads only `HOME`.

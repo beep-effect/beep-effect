@@ -285,8 +285,6 @@ export const ModelsCatalogSourcesLive: Layer.Layer<
 // ── Catalog ─────────────────────────────────────────────────────────────────
 
 /**
- * Options one catalog assembly runs under.
- *
  * **Example** (Assemble from local overlays alone)
  *
  * ```ts

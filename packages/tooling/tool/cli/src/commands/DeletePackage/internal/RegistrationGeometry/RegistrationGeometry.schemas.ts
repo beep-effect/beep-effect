@@ -54,8 +54,6 @@ export const RegistrationSurfaceKind = LiteralKit([
   })
 );
 /**
- * Decoded literal union of the registration surface kinds.
- *
  * @category models
  * @since 0.0.0
  */
@@ -366,8 +364,6 @@ export const DeletionNotePolicy = LiteralKit(["emit-empty-note", "labs-exempt", 
   })
 );
 /**
- * Decoded literal union of deletion changeset policies.
- *
  * @category models
  * @since 0.0.0
  */
@@ -678,8 +674,6 @@ export const RegistrationOperationKind = LiteralKit(["write", "remove", "rebuild
   })
 );
 /**
- * Decoded literal union of registration plan operation kinds.
- *
  * @category models
  * @since 0.0.0
  */
@@ -863,8 +857,6 @@ export const DependentHitKind = LiteralKit([
   })
 );
 /**
- * Decoded literal union of reverse-dependency hit kinds.
- *
  * @category models
  * @since 0.0.0
  */

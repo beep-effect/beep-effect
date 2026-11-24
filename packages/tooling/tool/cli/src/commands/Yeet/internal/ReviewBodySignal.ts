@@ -82,8 +82,6 @@ import { parseScore } from "./closeout/GreptileSignal.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewBodySignal");
 
 /**
- * The fix-prompt section a CodeRabbit finding is listed under.
- *
  * **Details**
  *
  * The "Prompt to fix all issues" block groups its findings under headings:
@@ -111,16 +109,12 @@ export const YeetReviewBodyItemSection = LiteralKit(["inline", "nitpick", "outsi
 );
 
 /**
- * The fix-prompt section a CodeRabbit finding is listed under.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetReviewBodyItemSection = typeof YeetReviewBodyItemSection.Type;
 
 /**
- * The structural evidence that a CodeRabbit body carries findings.
- *
  * **Details**
  *
  * `fix-prompt` is a per-finding "Prompt for AI Agents" block, a fix-prompt
@@ -148,8 +142,6 @@ export const YeetReviewBodyFindingsEvidence = LiteralKit(["fix-prompt", "finding
 );
 
 /**
- * The structural evidence that a CodeRabbit body carries findings.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -195,8 +187,6 @@ export class YeetReviewBodyItem extends S.Opaque<YeetReviewBodyItem, { readonly 
 ) {}
 
 /**
- * Severity tallies for the findings a Greptile-format body reports as new.
- *
  * **Example** (Read a clean round)
  *
  * ```ts
@@ -306,8 +296,6 @@ export class ReviewBodyGreptile extends S.Opaque<ReviewBodyGreptile, { readonly 
 ) {}
 
 /**
- * A review body with no recognised structure.
- *
  * **Details**
  *
  * The honest default: a body yeet cannot read is still printed, and it
@@ -327,8 +315,6 @@ export class ReviewBodyPlain extends S.Opaque<ReviewBodyPlain, { readonly brand:
 ) {}
 
 /**
- * What one pull request review body reports.
- *
  * **Example** (Decode a plain body signal)
  *
  * ```ts
@@ -355,8 +341,6 @@ export const YeetReviewBodySignal = S.Union([
 );
 
 /**
- * What one pull request review body reports.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -432,8 +416,6 @@ export class YeetReviewBodyThreadLocation extends S.Opaque<
 ) {}
 
 /**
- * The logins CodeRabbit submits review bodies under.
- *
  * **Details**
  *
  * Two spellings for one reviewer: GitHub reports `coderabbitai` as a comment
@@ -463,8 +445,6 @@ export const YeetCoderabbitLogin = LiteralKit(["coderabbitai", "coderabbitai[bot
 );
 
 /**
- * The logins CodeRabbit submits review bodies under.
- *
  * @category type-level
  * @since 0.0.0
  */

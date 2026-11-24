@@ -59,8 +59,6 @@ export const LabDisposition = LiteralKit(["active", "promote", "expired"]).pipe(
 );
 
 /**
- * Decoded {@link LabDisposition} type.
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,8 +88,6 @@ export const LabPostgresSchemaName = S.String.check(S.isPattern(/^lab_[a-z][a-z0
 );
 
 /**
- * Decoded {@link LabPostgresSchemaName} type.
- *
  * @category models
  * @since 0.0.0
  */

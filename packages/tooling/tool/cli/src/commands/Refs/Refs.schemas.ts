@@ -173,8 +173,6 @@ export const MemberRefreshOutcome = LiteralKit([
   "pull-failed",
 ]).pipe($I.annoteSchema("MemberRefreshOutcome", { description: "Result of refreshing one upstream member." }));
 /**
- * Terminal member outcome.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -214,8 +212,6 @@ export const MemberRefreshDetail = S.String.check(S.isMaxLength(MEMBER_REFRESH_D
   $I.annoteSchema("MemberRefreshDetail", { description: "Bounded tail of a failed step's output." })
 );
 /**
- * Bounded member failure detail.
- *
  * @category type-level
  * @since 0.0.0
  */

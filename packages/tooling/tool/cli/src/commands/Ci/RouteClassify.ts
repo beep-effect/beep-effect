@@ -57,8 +57,6 @@ import type { ClassifyInput } from "./Route.service.ts";
 const $I = $RepoCliId.create("commands/Ci/RouteClassify");
 
 /**
- * A git name-status letter for one changed path.
- *
  * **Details**
  *
  * The git shell asks for `--no-renames`, and the parser splits any rename it
@@ -84,16 +82,12 @@ export const ChangedPathStatus = LiteralKit(["A", "D", "M", "T", "U", "X", "B"])
 );
 
 /**
- * Type of {@link ChangedPathStatus}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ChangedPathStatus = typeof ChangedPathStatus.Type;
 
 /**
- * One repository-relative changed path and its git name-status letter.
- *
  * **Example** (A modified markdown file)
  *
  * ```ts import.meta.vitest name="A modified markdown file"

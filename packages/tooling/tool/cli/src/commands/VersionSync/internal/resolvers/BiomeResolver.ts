@@ -99,8 +99,6 @@ class BiomeJsoncDocument extends S.Opaque<BiomeJsoncDocument, { readonly brand: 
 // ── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Resolved Biome schema state.
- *
  * @category models
  * @since 0.0.0
  */

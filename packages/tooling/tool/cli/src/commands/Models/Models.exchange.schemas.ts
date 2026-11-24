@@ -26,8 +26,6 @@ const $I = $RepoCliId.create("commands/Models/Models.exchange.schemas");
 const ModelsExchangeUnsupportedReasonKit = LiteralKit(["exdev", "einval", "eperm", "enosys", "unknown"]);
 
 /**
- * Why a target filesystem cannot exchange two pathnames atomically.
- *
  * **Details**
  *
  * The first four reasons are the errno values `renameat2(RENAME_EXCHANGE)`
@@ -58,8 +56,6 @@ export const ModelsExchangeUnsupportedReason = ModelsExchangeUnsupportedReasonKi
 );
 
 /**
- * Runtime type of {@link ModelsExchangeUnsupportedReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -200,8 +196,6 @@ export const ModelsExchangeCapability = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link ModelsExchangeCapability}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -291,8 +285,6 @@ export const ModelsPublicationStep = LiteralKit([
 );
 
 /**
- * Runtime type of {@link ModelsPublicationStep}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -326,8 +318,6 @@ export const ModelsRecoveryOutcome = LiteralKit(["preimage", "intended"]).pipe(
 );
 
 /**
- * Runtime type of {@link ModelsRecoveryOutcome}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -370,16 +360,12 @@ export const ModelsRecoveryRefusal = LiteralKit([
 );
 
 /**
- * Runtime type of {@link ModelsRecoveryRefusal}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ModelsRecoveryRefusal = typeof ModelsRecoveryRefusal.Type;
 
 /**
- * The durable state of one native publication.
- *
  * **Details**
  *
  * The six forward steps are listed under {@link ModelsPublicationStep}.
@@ -428,16 +414,12 @@ export const ModelsPublicationState = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link ModelsPublicationState}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ModelsPublicationState = typeof ModelsPublicationState.Type;
 
 /**
- * The process that last wrote a publication's state.
- *
  * **Details**
  *
  * `bootId` is the kernel boot id, `pid` the process id and `startTicks` the
@@ -556,8 +538,6 @@ export class ModelsLegacyPublication extends S.Opaque<ModelsLegacyPublication, {
 ) {}
 
 /**
- * A journal's publication: tracked, or legacy for journals that predate tracking.
- *
  * **Example** (Guard a publication)
  *
  * ```ts
@@ -577,16 +557,12 @@ export const ModelsPublication = S.Union([ModelsLegacyPublication, ModelsTracked
 );
 
 /**
- * Runtime type of {@link ModelsPublication}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ModelsPublication = typeof ModelsPublication.Type;
 
 /**
- * Which publication of a journal a recovery report is about.
- *
  * **Details**
  *
  * `publication` is the apply that wrote the journal. `restoration` is the undo
@@ -611,8 +587,6 @@ export const ModelsPublicationRole = LiteralKit(["publication", "restoration"]).
 );
 
 /**
- * Runtime type of {@link ModelsPublicationRole}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -647,8 +621,6 @@ export const ModelsRecoverySkip = LiteralKit(["legacy", "owner-alive", "lock-hel
 );
 
 /**
- * Runtime type of {@link ModelsRecoverySkip}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -680,8 +652,6 @@ export const ModelsRecoveryResult = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link ModelsRecoveryResult}.
- *
  * @category type-level
  * @since 0.0.0
  */

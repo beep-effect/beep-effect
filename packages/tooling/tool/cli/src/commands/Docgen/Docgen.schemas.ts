@@ -18,8 +18,6 @@ import type * as Ordering from "effect/Ordering";
 const $I = $RepoCliId.create("commands/Docgen/Docgen.schemas");
 
 /**
- * Options for resolving a workspace package selector.
- *
  * **Example** (Make resolve options)
  *
  * ```ts
@@ -46,8 +44,6 @@ export class ResolveDocgenWorkspacePackageOptions extends S.Opaque<
 ) {}
 
 /**
- * Workspace docgen status derived from config and generated output presence.
- *
  * **Example** (Check status membership)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const DocgenPackageStatus = LiteralKit([
   })
 );
 /**
- * Workspace docgen status derived from config and generated output presence.
- *
  * **Example** (Assign status type)
  *
  * ```ts
@@ -92,8 +86,6 @@ const DocgenJsonObject = S.Json.pipe(
 
 const docgenConfigDocumentExcludeDefault = A.empty<string>();
 /**
- * Parsed `docgen.json` document used by the command suite.
- *
  * **Example** (Make config document)
  *
  * ```ts
@@ -140,8 +132,6 @@ export class DocgenConfigDocument extends S.Opaque<DocgenConfigDocument, { reado
 ) {}
 
 /**
- * Workspace package metadata used by docgen commands.
- *
  * **Example** (Make workspace package)
  *
  * ```ts
@@ -182,8 +172,6 @@ export class DocgenWorkspacePackage extends S.Opaque<DocgenWorkspacePackage, { r
 ) {}
 
 /**
- * Issue priority used by analysis findings.
- *
  * **Example** (Check priority membership)
  *
  * ```ts
@@ -200,8 +188,6 @@ export const DocgenIssuePriority = LiteralKit(["high", "medium", "low"]).pipe(
   })
 );
 /**
- * Issue priority used by analysis findings.
- *
  * **Example** (Assign priority type)
  *
  * ```ts
@@ -216,8 +202,6 @@ export const DocgenIssuePriority = LiteralKit(["high", "medium", "low"]).pipe(
 export type DocgenIssuePriority = typeof DocgenIssuePriority.Type;
 
 /**
- * Export kind surfaced by analysis.
- *
  * **Example** (Check export kind)
  *
  * ```ts
@@ -244,8 +228,6 @@ export const DocgenExportKind = LiteralKit([
   })
 );
 /**
- * Export kind surfaced by analysis.
- *
  * **Example** (Assign export kind)
  *
  * ```ts
@@ -260,8 +242,6 @@ export const DocgenExportKind = LiteralKit([
 export type DocgenExportKind = typeof DocgenExportKind.Type;
 
 /**
- * Analysis finding for a single export or module-level doc requirement.
- *
  * **Example** (Make export analysis)
  *
  * ```ts
@@ -307,8 +287,6 @@ export class DocgenExportAnalysis extends S.Opaque<DocgenExportAnalysis, { reado
 ) {}
 
 /**
- * Summary counts for a package analysis run.
- *
  * **Example** (Make analysis summary)
  *
  * ```ts
@@ -345,8 +323,6 @@ export class DocgenAnalysisSummary extends S.Opaque<DocgenAnalysisSummary, { rea
 ) {}
 
 /**
- * Package-level analysis document written by `docgen analyze`.
- *
  * **Example** (Make package analysis)
  *
  * ```ts
@@ -390,8 +366,6 @@ export class DocgenPackageAnalysis extends S.Opaque<DocgenPackageAnalysis, { rea
 ) {}
 
 /**
- * Per-package docgen generation result.
- *
  * **Example** (Make generation result)
  *
  * ```ts

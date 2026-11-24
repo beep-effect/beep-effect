@@ -19,8 +19,6 @@
  */
 export * from "./Holds.command.ts";
 /**
- * Public hold ledger errors.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -35,8 +33,6 @@ export * from "./Holds.inventory.ts";
 export * from "./Holds.program.ts";
 export * from "./Holds.schemas.ts";
 /**
- * Public hold ledger services.
- *
  * @category services
  * @since 0.0.0
  */

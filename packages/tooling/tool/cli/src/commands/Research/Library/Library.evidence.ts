@@ -36,7 +36,6 @@ import type { LibraryCatalog, LibraryQualification, LibrarySource } from "./Libr
 const $I = $RepoCliId.create("commands/Research/Library/Library.evidence");
 
 /**
- * Source-bound probe evidence.
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { LibraryProbeEvidence } from "@beep/repo-cli/commands/Research"
@@ -1456,7 +1455,6 @@ const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (
 });
 
 /**
- * Validated current claim for one requested revision.
  * **Example** (Inspect the selection shape)
  * ```ts
  * import { LibraryEffectiveCapture } from "@beep/repo-cli/test/ResearchLibrary"

@@ -466,8 +466,6 @@ export class MarkdownFencesExecutionError extends S.TaggedError<
 }
 
 /**
- * Why the Markdown fence compiler run cannot be trusted as a verdict.
- *
  * **Details**
  *
  * `exit-without-diagnostics`: `tsrs` exited nonzero but printed no
@@ -496,8 +494,6 @@ export const MarkdownFencesCompilerFailureReason = LiteralKit([
 );
 
 /**
- * Type-level member of {@link MarkdownFencesCompilerFailureReason}.
- *
  * @category errors
  * @since 0.0.0
  */

@@ -143,8 +143,6 @@ export class FetchRequest extends S.Opaque<FetchRequest, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link FetchRequest}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -231,8 +229,6 @@ export class FetchFailure extends S.Opaque<FetchFailure, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link FetchFailure}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -404,8 +400,6 @@ export class RegistrySettings extends S.Opaque<RegistrySettings, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link RegistrySettings}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -71,8 +71,6 @@ const DEFAULT_MAX_FILE_BYTES = 512 * 1024;
 const DEFAULT_MAX_TOTAL_BYTES = 8 * 1024 * 1024;
 
 /**
- * Whether a snapshotted file is per-root baseline guidance or session-effective configuration.
- *
  * **Details**
  *
  * Session scope is the small fixed set an agent session actually runs under at
@@ -183,8 +181,6 @@ export class AiMetricsConfigSnapshotStageTiming extends S.Opaque<
 ) {}
 
 /**
- * Hard bounds applied to a config snapshot walk.
- *
  * **Details**
  *
  * The defaults sit at roughly four times the measured legitimate surface of a
@@ -237,8 +233,6 @@ export class AiMetricsConfigSnapshotBudget extends S.Opaque<
 const defaultConfigSnapshotBudget = AiMetricsConfigSnapshotBudget.make({});
 
 /**
- * Why a config snapshot walk stopped short of the full tree.
- *
  * **Example** (Naming the bound that fired)
  *
  * ```ts

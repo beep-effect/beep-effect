@@ -105,8 +105,6 @@ const symbolKindOptions = TSSyntaxKind.pick([
 ] as const).literals;
 
 /**
- * Repository root directory path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -126,8 +124,6 @@ export const RepoRootPath = FilePath.pipe(
 );
 
 /**
- * Branded repository root directory path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -141,8 +137,6 @@ export const RepoRootPath = FilePath.pipe(
 export type RepoRootPath = typeof RepoRootPath.Type;
 
 /**
- * Workspace directory path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -162,8 +156,6 @@ export const WorkspaceDirectoryPath = FilePath.pipe(
 );
 
 /**
- * Branded workspace directory path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -177,8 +169,6 @@ export const WorkspaceDirectoryPath = FilePath.pipe(
 export type WorkspaceDirectoryPath = typeof WorkspaceDirectoryPath.Type;
 
 /**
- * `tsconfig*.json` file path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -200,8 +190,6 @@ export const TsConfigFilePath = S.make<(typeof FilePath)["Rebuild"]>(FilePath.as
   );
 
 /**
- * Branded `tsconfig*.json` file path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -215,8 +203,6 @@ export const TsConfigFilePath = S.make<(typeof FilePath)["Rebuild"]>(FilePath.as
 export type TsConfigFilePath = typeof TsConfigFilePath.Type;
 
 /**
- * TypeScript implementation file path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -238,8 +224,6 @@ export const TypeScriptImplementationFilePath = S.make<(typeof FilePath)["Rebuil
   );
 
 /**
- * Branded TypeScript implementation file path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -253,8 +237,6 @@ export const TypeScriptImplementationFilePath = S.make<(typeof FilePath)["Rebuil
 export type TypeScriptImplementationFilePath = typeof TypeScriptImplementationFilePath.Type;
 
 /**
- * TypeScript declaration file path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -274,8 +256,6 @@ export const TypeScriptDeclarationFilePath = FilePath.check(typeScriptDeclaratio
 );
 
 /**
- * Branded TypeScript declaration file path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -289,8 +269,6 @@ export const TypeScriptDeclarationFilePath = FilePath.check(typeScriptDeclaratio
 export type TypeScriptDeclarationFilePath = typeof TypeScriptDeclarationFilePath.Type;
 
 /**
- * TypeScript source file path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -309,8 +287,6 @@ export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, Typ
 );
 
 /**
- * Branded TypeScript source file path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -327,8 +303,6 @@ const isTsConfigFilePath: (input: string) => input is TsConfigFilePath = S.is(Ts
 const isTypeScriptFilePath: (input: string) => input is TypeScriptFilePath = S.is(TypeScriptFilePath);
 
 /**
- * Symbol-safe implementation file path schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -348,8 +322,6 @@ export const SymbolFilePath = TypeScriptImplementationFilePath.check(symbolIdSaf
 );
 
 /**
- * Branded symbol-safe implementation file path.
- *
  * **Example** (Use branded path type)
  *
  * ```ts
@@ -363,8 +335,6 @@ export const SymbolFilePath = TypeScriptImplementationFilePath.check(symbolIdSaf
 export type SymbolFilePath = typeof SymbolFilePath.Type;
 
 /**
- * Single segment schema for a symbol name.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -384,8 +354,6 @@ export const SymbolNameSegment = S.String.check(S.isPattern(SYMBOL_NAME_SEGMENT_
 );
 
 /**
- * Branded single symbol name segment.
- *
  * **Example** (Use branded segment type)
  *
  * ```ts
@@ -399,8 +367,6 @@ export const SymbolNameSegment = S.String.check(S.isPattern(SYMBOL_NAME_SEGMENT_
 export type SymbolNameSegment = typeof SymbolNameSegment.Type;
 
 /**
- * Qualified symbol name schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -420,8 +386,6 @@ export const SymbolQualifiedName = S.String.check(S.isPattern(SYMBOL_QUALIFIED_N
 );
 
 /**
- * Branded qualified symbol name.
- *
  * **Example** (Use branded name type)
  *
  * ```ts
@@ -435,8 +399,6 @@ export const SymbolQualifiedName = S.String.check(S.isPattern(SYMBOL_QUALIFIED_N
 export type SymbolQualifiedName = typeof SymbolQualifiedName.Type;
 
 /**
- * Supported TypeScript declaration kinds for normalized symbols.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -455,8 +417,6 @@ export const SymbolKind = LiteralKit(symbolKindOptions).pipe(
 );
 
 /**
- * Literal union of supported TypeScript declaration kinds.
- *
  * **Example** (Use kind union type)
  *
  * ```ts
@@ -470,8 +430,6 @@ export const SymbolKind = LiteralKit(symbolKindOptions).pipe(
 export type SymbolKind = typeof SymbolKind.Type;
 
 /**
- * Coarse symbol categories used by the TSMorph models.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -490,8 +448,6 @@ export const SymbolCategory = LiteralKit(["function", "class", "member", "type"]
 );
 
 /**
- * Literal union of coarse TSMorph symbol categories.
- *
  * **Example** (Use category union type)
  *
  * ```ts
@@ -532,8 +488,6 @@ export const symbolCategoryFromKind = SymbolKind.match({
 });
 
 /**
- * Schema transformation from declaration kind to coarse symbol category.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -573,8 +527,6 @@ export const SymbolKindToCategory = SymbolKind.pipe(
 export type SymbolKindToCategory = typeof SymbolKindToCategory.Type;
 
 /**
- * Non-empty source text schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -594,8 +546,6 @@ export const SourceText = S.NonEmptyString.pipe(
 );
 
 /**
- * Branded non-empty source text.
- *
  * **Example** (Use branded text type)
  *
  * ```ts
@@ -609,8 +559,6 @@ export const SourceText = S.NonEmptyString.pipe(
 export type SourceText = typeof SourceText.Type;
 
 /**
- * Positive 1-based line number schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -630,8 +578,6 @@ export const LineNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Branded positive 1-based line number.
- *
  * **Example** (Use branded line type)
  *
  * ```ts
@@ -645,8 +591,6 @@ export const LineNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 export type LineNumber = typeof LineNumber.Type;
 
 /**
- * Positive 1-based column number schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -666,8 +610,6 @@ export const ColumnNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Branded positive 1-based column number.
- *
  * **Example** (Use branded column type)
  *
  * ```ts
@@ -681,8 +623,6 @@ export const ColumnNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 export type ColumnNumber = typeof ColumnNumber.Type;
 
 /**
- * Non-negative byte offset schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -702,8 +642,6 @@ export const ByteOffset = S.Natural.pipe(
 );
 
 /**
- * Branded non-negative byte offset.
- *
  * **Example** (Use branded offset type)
  *
  * ```ts
@@ -717,8 +655,6 @@ export const ByteOffset = S.Natural.pipe(
 export type ByteOffset = typeof ByteOffset.Type;
 
 /**
- * Non-negative byte length schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -738,8 +674,6 @@ export const ByteLength = S.Natural.pipe(
 );
 
 /**
- * Branded non-negative byte length.
- *
  * **Example** (Use branded length type)
  *
  * ```ts
@@ -753,8 +687,6 @@ export const ByteLength = S.Natural.pipe(
 export type ByteLength = typeof ByteLength.Type;
 
 /**
- * SHA-256 content hash schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -774,8 +706,6 @@ export const ContentHash = Sha256Hex.pipe(
 );
 
 /**
- * Branded SHA-256 content hash.
- *
  * **Example** (Use branded hash type)
  *
  * ```ts
@@ -789,8 +719,6 @@ export const ContentHash = Sha256Hex.pipe(
 export type ContentHash = typeof ContentHash.Type;
 
 /**
- * Supported ts-morph project scope modes.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -809,8 +737,6 @@ export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]).pipe(
 );
 
 /**
- * Literal union of ts-morph project scope modes.
- *
  * **Example** (Use scope mode type)
  *
  * ```ts
@@ -824,8 +750,6 @@ export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]).pipe(
 export type TsMorphScopeMode = typeof TsMorphScopeMode.Type;
 
 /**
- * Reference traversal policies for ts-morph scope resolution.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -844,8 +768,6 @@ export const TsMorphReferencePolicy = LiteralKit(["workspaceOnly", "followRefere
 );
 
 /**
- * Literal union of ts-morph reference traversal policies.
- *
  * **Example** (Use reference policy type)
  *
  * ```ts
@@ -905,8 +827,6 @@ const withProjectIdentityStatics = <Schema extends S.ConstraintDecoder<string, n
 };
 
 /**
- * Stable identity schema for a resolved ts-morph project scope.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -927,8 +847,6 @@ export const ProjectScopeId = resolvedProjectIdentity.pipe(
 );
 
 /**
- * Branded stable identity for a resolved ts-morph project scope.
- *
  * **Example** (Use branded scope id)
  *
  * ```ts
@@ -942,8 +860,6 @@ export const ProjectScopeId = resolvedProjectIdentity.pipe(
 export type ProjectScopeId = typeof ProjectScopeId.Type;
 
 /**
- * Parsed components of a `ProjectScopeId`.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -968,8 +884,6 @@ export const ProjectScopeIdParts = S.TemplateLiteralParser([
 );
 
 /**
- * Cache key schema for memoized ts-morph projects.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -990,8 +904,6 @@ export const ProjectCacheKey = resolvedProjectIdentity.pipe(
 );
 
 /**
- * Branded cache key for memoized ts-morph projects.
- *
  * **Example** (Use branded cache key)
  *
  * ```ts
@@ -1008,8 +920,6 @@ export type ProjectCacheKey = typeof ProjectCacheKey.Type;
 const symbolIdentity = S.TemplateLiteral([SymbolFilePath, "::", SymbolQualifiedName, "#", SymbolKind]);
 
 /**
- * Stable symbol identity schema.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1040,8 +950,6 @@ export const SymbolId = symbolIdentity.pipe(
 );
 
 /**
- * Branded stable symbol identity.
- *
  * **Example** (Use branded symbol id)
  *
  * ```ts
@@ -1055,8 +963,6 @@ export const SymbolId = symbolIdentity.pipe(
 export type SymbolId = typeof SymbolId.Type;
 
 /**
- * Parsed components of a `SymbolId`.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1102,8 +1008,6 @@ export class SymbolIdentityParts extends S.Opaque<SymbolIdentityParts, { readonl
 ) {}
 
 /**
- * Schema transformation from a generic file path to a `TsConfigFilePath`.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1126,8 +1030,6 @@ export const FilePathToTsConfigFilePath = FilePath.pipe(
 );
 
 /**
- * Schema transformation from a generic file path to a TypeScript implementation file path.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1150,8 +1052,6 @@ export const FilePathToTypeScriptImplementationFilePath = FilePath.pipe(
 );
 
 /**
- * Schema transformation from a generic file path to a TypeScript declaration file path.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1174,8 +1074,6 @@ export const FilePathToTypeScriptDeclarationFilePath = FilePath.pipe(
 );
 
 /**
- * Schema transformation from a generic file path to a TypeScript source file path.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1198,8 +1096,6 @@ export const FilePathToTypeScriptFilePath = FilePath.pipe(
 );
 
 /**
- * Schema transformation from a TypeScript implementation file path to a symbol-safe file path.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1224,8 +1120,6 @@ export const TypeScriptImplementationFilePathToSymbolFilePath = TypeScriptImplem
 const decodeSha256HexFromBytesEffect = S.decodeUnknownEffect(Sha256HexFromBytes);
 
 /**
- * Effectful one-way schema transformation from source bytes to a canonical content hash.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1257,8 +1151,6 @@ export const ContentHashFromBytes = S.Uint8Array.pipe(
 const textEncoder = new TextEncoder();
 
 /**
- * Effectful one-way schema transformation from source text to a canonical content hash.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1306,8 +1198,6 @@ export const InternalTsMorphProject = S.instanceOf(Project).pipe(
 );
 
 /**
- * Internal runtime schema for a live ts-morph SourceFile instance.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1328,8 +1218,6 @@ export const InternalTsMorphSourceFile = S.declare<SourceFile>(
 );
 
 /**
- * Internal runtime schema for a live ts-morph Node instance.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1350,8 +1238,6 @@ export const InternalTsMorphNode = S.declare<TsMorphNode>(
 );
 
 /**
- * TS-native symbol record with strict identity, kind, and source-location metadata.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1469,8 +1355,6 @@ export declare namespace Symbol {
 }
 
 /**
- * Input shape for constructing a normalized `Symbol`.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1676,8 +1560,6 @@ class TsMorphScopeEntrypointTsConfig extends S.Opaque<
 }
 
 /**
- * Scope entrypoint that resolves an owning tsconfig from a TypeScript file path.
- *
  * **Example** (Resolve a scope from a source file path)
  *
  * ```ts
@@ -1758,8 +1640,6 @@ export const TsMorphScopeEntrypoint = S.Union([TsMorphScopeEntrypointTsConfig, T
 export type TsMorphScopeEntrypoint = typeof TsMorphScopeEntrypoint.Type;
 
 /**
- * Request schema for resolving a ts-morph project scope.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1854,8 +1734,6 @@ export class TsMorphProjectInspectionRequest extends S.Opaque<
 const decodePackageProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
 
 /**
- * Resolved ts-morph project scope payload.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1884,8 +1762,6 @@ export class TsMorphProjectScope extends S.Opaque<TsMorphProjectScope, { readonl
 ) {}
 
 /**
- * Request schema for extracting a file outline.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1909,8 +1785,6 @@ export class TsMorphFileOutlineRequest extends S.Opaque<TsMorphFileOutlineReques
 ) {}
 
 /**
- * File outline payload for a TypeScript source file.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1935,8 +1809,6 @@ export class TsMorphFileOutline extends S.Opaque<TsMorphFileOutline, { readonly 
 ) {}
 
 /**
- * Request schema for reading file source text.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1959,8 +1831,6 @@ export class TsMorphSourceTextRequest extends S.Opaque<TsMorphSourceTextRequest,
 ) {}
 
 /**
- * Source text payload for a TypeScript file.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -1985,8 +1855,6 @@ export class TsMorphSourceTextResult extends S.Opaque<TsMorphSourceTextResult, {
 ) {}
 
 /**
- * Request schema for symbol lookup by stable identifier.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2013,8 +1881,6 @@ export class TsMorphSymbolLookupRequest extends S.Opaque<
 ) {}
 
 /**
- * Symbol lookup result payload.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2038,8 +1904,6 @@ export class TsMorphSymbolLookupResult extends S.Opaque<TsMorphSymbolLookupResul
 ) {}
 
 /**
- * Positive result-limit schema for ts-morph search.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2059,8 +1923,6 @@ export const TsMorphSearchLimit = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Branded positive result limit for ts-morph search.
- *
  * **Example** (Use branded limit type)
  *
  * ```ts
@@ -2074,8 +1936,6 @@ export const TsMorphSearchLimit = S.Int.check(S.isGreaterThan(0)).pipe(
 export type TsMorphSearchLimit = typeof TsMorphSearchLimit.Type;
 
 /**
- * Request schema for symbol search within a resolved scope.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2115,8 +1975,6 @@ export class TsMorphSymbolSearchRequest extends S.Opaque<
 ) {}
 
 /**
- * Symbol search result payload.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2153,8 +2011,6 @@ export class TsMorphSymbolSearchResult extends S.Opaque<TsMorphSymbolSearchResul
 ) {}
 
 /**
- * Request schema for reading symbol source text.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2181,8 +2037,6 @@ export class TsMorphSymbolSourceRequest extends S.Opaque<
 ) {}
 
 /**
- * Symbol source payload including extracted text.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2208,8 +2062,6 @@ export class TsMorphSymbolSourceResult extends S.Opaque<TsMorphSymbolSourceResul
 ) {}
 
 /**
- * Supported normalized diagnostic categories.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2228,8 +2080,6 @@ export const TsMorphDiagnosticCategory = LiteralKit(["error", "warning", "sugges
 );
 
 /**
- * Literal union of normalized diagnostic categories.
- *
  * **Example** (Use category union type)
  *
  * ```ts
@@ -2302,8 +2152,6 @@ class TsMorphDiagnosticMessage extends TsMorphDiagnosticBase.extend<TsMorphDiagn
 ) {}
 
 /**
- * Tagged union schema for normalized TypeScript diagnostics.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2331,8 +2179,6 @@ export const TsMorphDiagnostic = TsMorphDiagnosticCategory.mapMembers(
 );
 
 /**
- * Decoded normalized TypeScript diagnostic union.
- *
  * **Example** (Use diagnostic union type)
  *
  * ```ts
@@ -2346,8 +2192,6 @@ export const TsMorphDiagnostic = TsMorphDiagnosticCategory.mapMembers(
 export type TsMorphDiagnostic = typeof TsMorphDiagnostic.Type;
 
 /**
- * Request schema for TypeScript diagnostics in a resolved scope.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts
@@ -2371,8 +2215,6 @@ export class TsMorphDiagnosticsRequest extends S.Opaque<TsMorphDiagnosticsReques
 ) {}
 
 /**
- * Diagnostics payload for a TypeScript file.
- *
  * **Example** (Access schema identifier)
  *
  * ```ts

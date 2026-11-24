@@ -9,8 +9,6 @@ import { LiteralKit } from "@beep/schema";
 
 const $I = $RepoUtilsId.create("JSDoc/models/ASTDerivability.model");
 /**
- * Whether this tag's content can be deterministically derived from the TypeScript AST.
- *
  * **Details**
  *
  * This is the KEY field for the knowledge graph pipeline:

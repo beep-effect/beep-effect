@@ -24,8 +24,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/EntityKitFreeze.model");
 
 /**
- * Rule that produced an entity kit freeze finding.
- *
  * **Details**
  *
  * `new-importer` is a scanned file that imports a frozen specifier and is not
@@ -50,8 +48,6 @@ export const EntityKitFreezeRule = LiteralKit(["new-importer", "stale-baseline"]
 );
 
 /**
- * Type-level member of {@link EntityKitFreezeRule}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -232,8 +228,6 @@ export class EntityKitImport extends S.Opaque<EntityKitImport, { readonly brand:
 ) {}
 
 /**
- * The frozen-kit imports of one scanned file.
- *
  * **Example** (Construct a file's imports)
  *
  * ```ts
@@ -262,8 +256,6 @@ export class EntityKitImporter extends S.Opaque<EntityKitImporter, { readonly br
 ) {}
 
 /**
- * One entity kit freeze finding.
- *
  * **Example** (Construct a stale-baseline finding)
  *
  * ```ts
@@ -290,8 +282,6 @@ export class EntityKitFreezeFinding extends S.Opaque<EntityKitFreezeFinding, { r
 ) {}
 
 /**
- * The committed baseline of files allowed to keep importing the frozen kit.
- *
  * **Example** (Construct a baseline)
  *
  * ```ts
@@ -324,8 +314,6 @@ export class EntityKitFreezeBaseline extends S.Opaque<EntityKitFreezeBaseline, {
 ) {}
 
 /**
- * Runtime options for the entity kit freeze law.
- *
  * **Example** (Configure a strict scan)
  *
  * ```ts
@@ -358,8 +346,6 @@ export class EntityKitFreezeOptions extends S.Opaque<EntityKitFreezeOptions, { r
 ) {}
 
 /**
- * Result of one entity kit freeze law run.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

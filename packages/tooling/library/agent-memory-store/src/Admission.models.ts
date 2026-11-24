@@ -28,8 +28,6 @@ const $I = $AgentMemoryStoreId.create("Admission.models");
 export { ClaimGateSeverity, ClaimGateViolation } from "@beep/epistemics/ClaimGate";
 
 /**
- * Store-specific violation codes layered on the claim gate findings.
- *
  * **Details**
  *
  * Decision `findings-reuse-epistemics-gate`: one finding vocabulary serves
@@ -80,8 +78,6 @@ export const MemoryViolationCode = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MemoryViolationCode}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -123,8 +119,6 @@ export class MemoryGateViolation extends S.Opaque<MemoryGateViolation, { readonl
 ) {}
 
 /**
- * Store-minted identifier of one held write.
- *
  * **Details**
  *
  * Decision `held-writes-are-log-events`: a hold is keyed on its own id, not
@@ -150,8 +144,6 @@ export const HoldId = S.String.check(S.isUUID()).pipe(
 );
 
 /**
- * Runtime type for {@link HoldId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -164,8 +156,6 @@ const AdmissionOutcomeKind = LiteralKit(["landed", "deferred", "held", "rejected
 );
 
 /**
- * Result of admitting one node operation, discriminated on `outcome`.
- *
  * **Details**
  *
  * - `landed`: the write is in the log at `revisionId`. `flags` lists the
@@ -240,8 +230,6 @@ export const AdmissionOutcome = AdmissionOutcomeKind.toTaggedUnion("outcome")({
 );
 
 /**
- * Runtime type for {@link AdmissionOutcome}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -287,8 +275,6 @@ export const toClaimGateResult: (outcome: AdmissionOutcome) => ClaimGateResult =
 });
 
 /**
- * A held write on the operator review list.
- *
  * **Details**
  *
  * This is the read model of one unresolved `WriteHeld` event. `operation` is
@@ -342,8 +328,6 @@ const ConflictChoice = LiteralKit(["ours", "theirs", "merged"]).pipe(
 );
 
 /**
- * Operator decision for a held conflict, discriminated on `choice`.
- *
  * **Details**
  *
  * `ours` keeps what the log holds and writes no revision; it is also how a
@@ -399,8 +383,6 @@ export const ConflictResolution = ConflictChoice.toTaggedUnion("choice")({
 );
 
 /**
- * Runtime type for {@link ConflictResolution}.
- *
  * @category type-level
  * @since 0.0.0
  */

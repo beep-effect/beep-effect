@@ -69,8 +69,6 @@ const GROUP_TITLES: Readonly<Record<GoalStatus, string>> = {
 };
 
 /**
- * One rendered row of the goals index.
- *
  * **Example** (Build a row for an active packet)
  *
  * ```ts

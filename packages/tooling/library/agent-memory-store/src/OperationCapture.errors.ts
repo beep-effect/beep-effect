@@ -13,8 +13,6 @@ import { ApplyRefusal, CaptureBaseRefusal, CaptureEditRefusal } from "./Operatio
 const $I = $AgentMemoryStoreId.create("OperationCapture.errors");
 
 /**
- * Capture refused one of the file edits it was handed.
- *
  * **Example** (Describe a refused edit)
  *
  * ```ts
@@ -110,8 +108,6 @@ export class CaptureBaseRefusedError extends S.TaggedError<CaptureBaseRefusedErr
 }
 
 /**
- * The node id minter returned an id the base or the batch already holds.
- *
  * **Example** (Describe a colliding minted id)
  *
  * ```ts
@@ -167,8 +163,6 @@ export class MintedNodeIdCollisionError extends S.TaggedError<
 export type OperationCaptureError = CaptureEditRefusedError | CaptureBaseRefusedError | MintedNodeIdCollisionError;
 
 /**
- * The apply helper refused an operation of a batch.
- *
  * **Example** (Describe a refused operation)
  *
  * ```ts

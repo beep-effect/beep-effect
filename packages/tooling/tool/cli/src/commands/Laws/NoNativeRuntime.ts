@@ -139,8 +139,6 @@ export const RepoRelativeDirectoryPrefix = S.String.check(
 export const isRepoRelativeDirectoryPrefix = S.is(RepoRelativeDirectoryPrefix);
 
 /**
- * Runtime options for repo-local native runtime checks.
- *
  * **Example** (Configure native-runtime scanning)
  * ```ts
  * console.log("NoNativeRuntimeRulesOptions")
@@ -168,8 +166,6 @@ export class NoNativeRuntimeRulesOptions extends S.Opaque<
 const NoNativeRuntimeSeverity = LiteralKit(["warn", "error"]);
 
 /**
- * Single repo-local native runtime diagnostic.
- *
  * **Example** (Reference the native-runtime diagnostic)
  *
  * ```ts
@@ -195,8 +191,6 @@ export class NoNativeRuntimeDiagnostic extends S.Opaque<NoNativeRuntimeDiagnosti
 ) {}
 
 /**
- * Namespace for {@link NoNativeRuntimeDiagnostic} companion types.
- *
  * **Example** (Reference the native-runtime diagnostic)
  *
  * ```ts
@@ -223,8 +217,6 @@ export declare namespace NoNativeRuntimeDiagnostic {
 }
 
 /**
- * Summary of repo-local native runtime checks.
- *
  * **Example** (Reference the native-runtime rules summary)
  *
  * ```ts
@@ -259,8 +251,6 @@ export class NoNativeRuntimeRulesSummary extends S.Opaque<
 ) {}
 
 /**
- * Options for collecting native-runtime allowlist lookup keys.
- *
  * **Example** (Reference the violation-key options)
  *
  * ```ts

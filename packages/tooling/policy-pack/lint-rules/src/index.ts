@@ -156,8 +156,6 @@ class RuleMetadataSchema extends S.Opaque<RuleMetadataSchema, { readonly brand: 
 type RuleMetadata = RuleMetadataSchema;
 
 /**
- * Schema for the finite rule registry keyed by rule slug.
- *
  * **Example** (Encode rule registry)
  *
  * ```ts

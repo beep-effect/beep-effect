@@ -43,8 +43,6 @@ export const IngestSubjectKind = LiteralKit([
 );
 
 /**
- * Decoded telemetry-v2 ingest-subject kind.
- *
  * @see {@link IngestSubjectKind} for the runtime schema.
  * @category models
  * @since 0.0.0
@@ -218,8 +216,6 @@ const IngestUnemittableReason = LiteralKit([
 ]);
 
 /**
- * Successfully read subject with positive record count and content-addressed evidence.
- *
  * **Example** (Account for a transcript that was read)
  *
  * ```ts
@@ -257,8 +253,6 @@ export class ReadIngestDisposition extends S.Opaque<ReadIngestDisposition, { rea
 ) {}
 
 /**
- * Enumerated-but-recordless subject recovered as an explicit reconstructed tombstone.
- *
  * **Example** (Keep an empty session directory as a tombstone)
  *
  * ```ts
@@ -295,8 +289,6 @@ export class TombstonedIngestDisposition extends S.Opaque<
 ) {}
 
 /**
- * Explicitly unreachable subject with bounded failure class and content-addressed evidence.
- *
  * **Example** (Record a transcript the ingest could not open)
  *
  * ```ts
@@ -335,8 +327,6 @@ export class UnreachableIngestDisposition extends S.Opaque<
 ) {}
 
 /**
- * Intentionally skipped subject carrying a required bounded policy reason.
- *
  * **Example** (Skip every subject during a dry run)
  *
  * ```ts
@@ -371,8 +361,6 @@ export class SkippedIngestDisposition extends S.Opaque<SkippedIngestDisposition,
 ) {}
 
 /**
- * Enumerated source class that cannot yet emit telemetry-v2 flight records.
- *
  * **Example** (Count a source that has no emitter yet)
  *
  * ```ts
@@ -457,8 +445,6 @@ export const IngestDisposition = S.Union([
 export type IngestDisposition = typeof IngestDisposition.Type;
 
 /**
- * Disposition partition for a complete telemetry-v2 ingest denominator.
- *
  * **Example** (Partition an ingest denominator by disposition)
  *
  * ```ts

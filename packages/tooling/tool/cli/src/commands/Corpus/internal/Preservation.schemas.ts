@@ -175,8 +175,6 @@ export class StreamingHashResult extends S.Opaque<StreamingHashResult, { readonl
 ) {}
 
 /**
- * A fresh full copy streamed once while hashing, with matching pre and post source stats.
- *
  * @category models
  * @since 0.0.0
  */
@@ -195,8 +193,6 @@ export class CopiedOutcome extends S.Opaque<CopiedOutcome, { readonly brand: uni
 ) {}
 
 /**
- * An existing partial destination whose bytes re-hashed as a valid prefix and whose remainder streamed to completion.
- *
  * @category models
  * @since 0.0.0
  */
@@ -217,8 +213,6 @@ export class ResumeCompletedOutcome extends S.Opaque<ResumeCompletedOutcome, { r
 ) {}
 
 /**
- * An existing full-length destination whose digest matched two stable source reads bracketed by source stats.
- *
  * @category models
  * @since 0.0.0
  */
@@ -238,8 +232,6 @@ export class AlreadyCompleteOutcome extends S.Opaque<AlreadyCompleteOutcome, { r
 ) {}
 
 /**
- * Existing destination bytes failed the prefix re-hash and were truncated to zero; a fresh attempt follows. Never terminal.
- *
  * @category models
  * @since 0.0.0
  */
@@ -256,8 +248,6 @@ export class ResumeDiscardedOutcome extends S.Opaque<ResumeDiscardedOutcome, { r
 ) {}
 
 /**
- * The pre/post re-stat pair diverged around the copy; the attempt is terminal and the object is re-copied from its stable state. Never a PASS row.
- *
  * @category models
  * @since 0.0.0
  */
@@ -275,8 +265,6 @@ export class ChangedDuringCopyOutcome extends S.Opaque<ChangedDuringCopyOutcome,
 ) {}
 
 /**
- * The source could not be read; carries the platform error text with no corpus content.
- *
  * @category models
  * @since 0.0.0
  */
@@ -292,8 +280,6 @@ export class UnreadableOutcome extends S.Opaque<UnreadableOutcome, { readonly br
 ) {}
 
 /**
- * Attempt-outcome kinds recorded by the preservation archive runner.
- *
  * **Example** (Enumerate outcome kinds)
  *
  * ```ts
@@ -320,8 +306,6 @@ export const PreservationAttemptKind = LiteralKit([
 );
 
 /**
- * Attempt-outcome kind type recorded by the preservation archive runner.
- *
  * **Example** (Assign a typed kind)
  *
  * ```ts
@@ -370,8 +354,6 @@ export const PreservationPassKind = PreservationAttemptKind.pick([
 );
 
 /**
- * Approved terminal kind type for preservation manifest rows.
- *
  * **Example** (Assign a typed pass kind)
  *
  * ```ts
@@ -387,8 +369,6 @@ export const PreservationPassKind = PreservationAttemptKind.pick([
 export type PreservationPassKind = typeof PreservationPassKind.Type;
 
 /**
- * Outcome of one streaming archive attempt.
- *
  * **Example** (Construct a copied outcome)
  *
  * ```ts
@@ -444,8 +424,6 @@ export const PreservationAttemptOutcome = PreservationAttemptKind.mapMembers(
 export type PreservationAttemptOutcome = typeof PreservationAttemptOutcome.Type;
 
 /**
- * One append-only manifest row for one archive attempt over one object.
- *
  * **Details**
  *
  * Rows append per attempt; the manifest's final row per occurrence identity is
@@ -564,8 +542,6 @@ export const InheritedLossClass = LiteralKit([
 export type InheritedLossClass = typeof InheritedLossClass.Type;
 
 /**
- * One inherited-loss opening-balance row.
- *
  * **Example** (Seed a loss row)
  *
  * ```ts
@@ -728,8 +704,6 @@ export class T7PreservationOptions extends S.Opaque<T7PreservationOptions, { rea
 ) {}
 
 /**
- * A capacity preflight awaiting an approved ceiling; the archive runner refuses this state.
- *
  * @category models
  * @since 0.0.0
  */
@@ -745,8 +719,6 @@ export class PreflightProposed extends S.Opaque<PreflightProposed, { readonly br
 ) {}
 
 /**
- * An operator-approved disk ceiling over a recorded measurement; required before any archive run.
- *
  * @category models
  * @since 0.0.0
  */
@@ -805,8 +777,6 @@ export const CapacityPreflight = CapacityPreflightKind.mapMembers(
 );
 
 /**
- * Decoded capacity preflight state.
- *
  * **Example** (Branch on preflight state)
  *
  * ```ts
@@ -867,8 +837,6 @@ export class PreservationRunSummary extends S.Opaque<PreservationRunSummary, { r
 ) {}
 
 /**
- * Destination bytes re-hashed to the manifest digest in a fresh process.
- *
  * @category models
  * @since 0.0.0
  */
@@ -884,8 +852,6 @@ export class VerifiedOutcome extends S.Opaque<VerifiedOutcome, { readonly brand:
 ) {}
 
 /**
- * A terminal manifest row references a destination that does not exist.
- *
  * @category models
  * @since 0.0.0
  */
@@ -900,8 +866,6 @@ export class MissingDestinationOutcome extends S.Opaque<MissingDestinationOutcom
 ) {}
 
 /**
- * Destination length diverged from the manifest row before hashing.
- *
  * @category models
  * @since 0.0.0
  */
@@ -918,8 +882,6 @@ export class SizeMismatchOutcome extends S.Opaque<SizeMismatchOutcome, { readonl
 ) {}
 
 /**
- * Destination bytes re-hashed to a different digest than the manifest row.
- *
  * @category models
  * @since 0.0.0
  */
@@ -972,8 +934,6 @@ export const PreservationVerificationOutcome = VerificationOutcomeKind.mapMember
 );
 
 /**
- * Decoded verification outcome for one terminal manifest row.
- *
  * **Example** (Branch on a verification outcome)
  *
  * ```ts
@@ -1187,8 +1147,6 @@ export const CorpusLedgerRecord = S.Union([T7ArchiveProvenanceRecord, CorpusProv
 );
 
 /**
- * Decoded corpus provenance ledger record.
- *
  * **Example** (Accept either ledger generation)
  *
  * ```ts

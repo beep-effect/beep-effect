@@ -79,8 +79,6 @@ export const BeepCiReleaseTag = S.String.check(
 );
 
 /**
- * Type for {@link BeepCiReleaseTag}.
- *
  * @category models
  * @since 0.0.0
  */

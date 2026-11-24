@@ -6,15 +6,11 @@
  */
 
 /**
- * Harness ledger CLI commands.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./HarnessLedger.command.ts";
 /**
- * Harness ledger tagged errors.
- *
  * @category errors
  * @since 0.0.0
  */

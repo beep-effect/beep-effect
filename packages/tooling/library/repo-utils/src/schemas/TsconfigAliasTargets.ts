@@ -41,8 +41,6 @@ export const RootAliasTarget = S.String.check(S.isPattern(rootAliasTargetPattern
 );
 
 /**
- * Runtime type for {@link RootAliasTarget}.
- *
  * **Example** (Accept RootAliasTarget type)
  *
  * ```ts
@@ -78,8 +76,6 @@ export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTarge
 );
 
 /**
- * Runtime type for {@link WildcardAliasTarget}.
- *
  * **Example** (Accept WildcardAliasTarget type)
  *
  * ```ts
@@ -94,8 +90,6 @@ export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTarge
 export type WildcardAliasTarget = typeof WildcardAliasTarget.Type;
 
 /**
- * Canonical alias targets derived for a package root export.
- *
  * **Example** (Make canonical alias targets)
  *
  * ```ts

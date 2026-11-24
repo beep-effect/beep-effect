@@ -6,8 +6,6 @@
  */
 
 /**
- * Compute-profile commands.
- *
  * @category cli-commands
  * @since 0.0.0
  */

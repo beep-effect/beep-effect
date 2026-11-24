@@ -33,8 +33,6 @@ import type {
 const $I = $RepoCliId.create("commands/Files/Files.plan");
 
 /**
- * Inputs used to build a generated target filename for a sortable file.
- *
  * **Example** (Name a probed photo by index and size)
  *
  * ```ts
@@ -92,8 +90,6 @@ class StripMetadataTempEntry extends S.Opaque<StripMetadataTempEntry, { readonly
 ) {}
 
 /**
- * Hard thresholds used to assess image candidate quality.
- *
  * **Example** (Archive a thumbnail below the short-edge floor)
  *
  * ```ts

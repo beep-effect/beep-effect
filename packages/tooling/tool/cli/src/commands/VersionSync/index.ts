@@ -5,8 +5,6 @@
  * @since 0.0.0
  */
 /**
- * Public version-sync command export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -19,16 +17,12 @@ export * from "./VersionSync.command.ts";
  */
 export * from "./VersionSync.errors.ts";
 /**
- * Public version-sync rendering service export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./VersionSync.render.ts";
 export * from "./VersionSync.runtime.ts";
 /**
- * Public version-sync schemas export.
- *
  * @category cli-commands
  * @since 0.0.0
  */

@@ -84,8 +84,6 @@ export const ContextSurfaceKind = LiteralKit([
 );
 
 /**
- * Decoded context surface kind.
- *
  * @category models
  * @since 0.0.0
  */
@@ -121,8 +119,6 @@ export const ContextSurfaceId = Sha256Hex.pipe(
 );
 
 /**
- * Decoded context surface id.
- *
  * @category models
  * @since 0.0.0
  */
@@ -166,8 +162,6 @@ export const contextSurfaceKey: {
 } = dual(2, (kind: ContextSurfaceKind, name: string): string => `${kind}:${name}`);
 
 /**
- * Typed failure raised while deriving harness ledger identities.
- *
  * **Example** (Constructing the failure)
  *
  * ```ts
@@ -261,16 +255,12 @@ export const MechanismClass = LiteralKit([
 );
 
 /**
- * Decoded mechanism class.
- *
  * @category models
  * @since 0.0.0
  */
 export type MechanismClass = typeof MechanismClass.Type;
 
 /**
- * Disposition of a harness ledger row.
- *
  * **Details**
  *
  * `proposed` rows come from the loop; every other disposition is a human
@@ -301,8 +291,6 @@ export const LedgerDisposition = LiteralKit([
 );
 
 /**
- * Decoded ledger disposition.
- *
  * @category models
  * @since 0.0.0
  */
@@ -481,8 +469,6 @@ export const harnessFingerprintFromParts = Effect.fn("AiMetrics.harnessFingerpri
 });
 
 /**
- * Inputs for {@link makeHarnessFingerprint}.
- *
  * **Details**
  *
  * `modelId` and `reasoningEffort` are optional because not every caller can
@@ -600,8 +586,6 @@ export const HarnessHash = Sha256Hex.pipe(
 );
 
 /**
- * Decoded harness hash.
- *
  * @category models
  * @since 0.0.0
  */
@@ -686,8 +670,6 @@ export const HarnessEditRefKind = LiteralKit(["commit", "diff-digest", "pending"
 export type HarnessEditRefKind = typeof HarnessEditRefKind.Type;
 
 /**
- * Edit recorded as a git commit id.
- *
  * **Example** (Point a ledger row at a commit)
  *
  * ```ts
@@ -714,8 +696,6 @@ export class HarnessCommitEditRef extends S.Opaque<HarnessCommitEditRef, { reado
 ) {}
 
 /**
- * Uncommitted edit recorded as the SHA-256 hex digest of its diff.
- *
  * **Example** (Point a ledger row at an uncommitted diff)
  *
  * ```ts
@@ -742,8 +722,6 @@ export class HarnessDiffDigestEditRef extends S.Opaque<HarnessDiffDigestEditRef,
 ) {}
 
 /**
- * Edit proposed but not yet made.
- *
  * **Example** (Record an edit that has not been made yet)
  *
  * ```ts
@@ -802,8 +780,6 @@ export const HarnessEditRef = S.Union([HarnessCommitEditRef, HarnessDiffDigestEd
 );
 
 /**
- * Decoded edit reference.
- *
  * @category models
  * @since 0.0.0
  */
@@ -841,8 +817,6 @@ export class BehavioralClaim extends S.Opaque<BehavioralClaim, { readonly brand:
 ) {}
 
 /**
- * Measured score and cost delta of a harness edit.
- *
  * **Example** (Constructing a delta)
  *
  * ```ts
@@ -866,8 +840,6 @@ export class HarnessLedgerDelta extends S.Opaque<HarnessLedgerDelta, { readonly 
 ) {}
 
 /**
- * Ledger row id: `hl-<yyyymmdd>-<8 lowercase hex>`.
- *
  * **Example** (Validating a row id)
  *
  * ```ts
@@ -888,8 +860,6 @@ export const HarnessLedgerRowId = S.NonEmptyString.check(S.isPattern(/^hl-\d{8}-
 );
 
 /**
- * Decoded ledger row id.
- *
  * @category models
  * @since 0.0.0
  */
@@ -933,8 +903,6 @@ export const makeHarnessLedgerRowId = Effect.fn("AiMetrics.makeHarnessLedgerRowI
 
 const harnessLedgerRowTouchedDefault = HashSet.empty<ContextSurfaceId>();
 /**
- * One immutable harness evidence ledger row.
- *
  * **Details**
  *
  * `touched` is the observed set of {@link ContextSurfaceId}s and may be empty
@@ -1152,8 +1120,6 @@ export const isWarmRestart: {
 );
 
 /**
- * Inputs to {@link annealedEditBudget}.
- *
  * **Example** (Describing a four-to-one schedule)
  *
  * ```ts

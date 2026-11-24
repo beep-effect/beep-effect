@@ -86,8 +86,6 @@ export type CaptureSource = "all" | "merge" | "stdout";
 export { BoundedOutput, boundedChunkReducer, emptyBoundedOutput, OutputBound } from "./OutputBound.ts";
 
 /**
- * Combined captured subprocess result.
- *
  * **Example** (Read a captured exit code)
  *
  * ```ts
@@ -113,8 +111,6 @@ export class CapturedStep extends S.Opaque<CapturedStep, { readonly brand: uniqu
 ) {}
 
 /**
- * Captured subprocess result with stdout and stderr kept separate.
- *
  * **Example** (Read stdout without stderr noise)
  *
  * ```ts
@@ -142,8 +138,6 @@ export class CapturedStreams extends S.Opaque<CapturedStreams, { readonly brand:
 ) {}
 
 /**
- * Flake-quarantine policy a quality step may opt into.
- *
  * **Details**
  *
  * A policy names one established environment-only failure signature. When a
@@ -169,16 +163,12 @@ export const StepFlakeQuarantinePolicy = LiteralKit(["ts2589-no-location"]).pipe
 );
 
 /**
- * Flake-quarantine policy a quality step may opt into.
- *
  * @category models
  * @since 0.0.0
  */
 export type StepFlakeQuarantinePolicy = typeof StepFlakeQuarantinePolicy.Type;
 
 /**
- * Planned subprocess invocation shared by repo-quality command families.
- *
  * **Details**
  *
  * This is the sanctioned home for the quality step model. Quality task
@@ -401,8 +391,6 @@ const AdmissionWorkloadState = S.Union([
 const AdmissionWorkloadJson = JsonStringCodec(AdmissionWorkloadState);
 
 /**
- * Fiber-local admission generation inherited by every subprocess spawn in one governed operation.
- *
  * **Example** (Describe an admission lease)
  *
  * ```ts
@@ -429,8 +417,6 @@ export class AdmissionWorkloadBinding extends S.Opaque<AdmissionWorkloadBinding,
 const AdmissionWorkloadOwnership = LiteralKit(["owned", "inherited"]);
 
 /**
- * Admission workload binding plus whether this process owns its detached process-group registration.
- *
  * **Example** (Describe an admission lease)
  *
  * ```ts

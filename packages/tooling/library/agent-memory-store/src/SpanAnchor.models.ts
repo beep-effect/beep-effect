@@ -19,8 +19,6 @@ import type * as Digest from "effect/crypto/Digest";
 const $I = $AgentMemoryStoreId.create("SpanAnchor.models");
 
 /**
- * Unit the anchor offsets count in.
- *
  * **Details**
  *
  * Only `utf16` exists in P0: `@beep/markdown` `MarkdownRange` and
@@ -44,16 +42,12 @@ export const TextUnit = LiteralKit(["utf16"]).pipe(
 );
 
 /**
- * Runtime type for {@link TextUnit}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TextUnit = typeof TextUnit.Type;
 
 /**
- * Occurrence preimage of a node span: source identity, unit, range and quote.
- *
  * **Details**
  *
  * This is the occurrence shape of `text-knowledge-stack-rebuild`, built from

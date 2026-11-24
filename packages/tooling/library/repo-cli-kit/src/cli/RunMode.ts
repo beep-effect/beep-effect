@@ -26,8 +26,6 @@ const $I = $RepoCliKitId.create("cli/RunMode");
 const RunModeKit = LiteralKit(["check", "write", "dry-run"]);
 
 /**
- * Command execution mode shared by check/write/dry-run style commands.
- *
  * **Example** (Decode dry-run mode)
  *
  * ```ts
@@ -111,8 +109,6 @@ export const RunModeEnum = RunModeKit.Enum;
 export const RunModeIs = RunModeKit.is;
 
 /**
- * Command execution mode: check, write, or dry-run.
- *
  * @category models
  * @since 0.0.0
  */

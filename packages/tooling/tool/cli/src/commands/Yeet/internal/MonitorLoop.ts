@@ -213,8 +213,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 const mergeLoopPollInterval = Duration.seconds(90);
 
 /**
- * Environment-only failure signatures the merge loop is allowed to rerun.
- *
  * **Details**
  *
  * Every member is an evidence-backed class, not a guess. `ts2589-no-location`
@@ -274,8 +272,6 @@ export const YeetMonitorFlakeClass = LiteralKit([
 );
 
 /**
- * Environment-only failure signatures the merge loop is allowed to rerun.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -643,8 +639,6 @@ export class YeetMonitorAwaitingRun extends S.Opaque<YeetMonitorAwaitingRun, { r
 ) {}
 
 /**
- * What the merge loop decided about one red job.
- *
  * **Example** (Decode a needs-code-fix decision)
  *
  * ```ts
@@ -676,8 +670,6 @@ export const YeetMonitorJobDecision = S.Union([
 );
 
 /**
- * What the merge loop decided about one red job.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1062,8 +1054,6 @@ export const YeetJobLogRead = S.TaggedUnion({
 );
 
 /**
- * Type of {@link YeetJobLogRead}.
- *
  * @category models
  * @since 0.0.0
  */

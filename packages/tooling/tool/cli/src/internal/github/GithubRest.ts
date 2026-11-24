@@ -43,8 +43,6 @@ import * as Str from "effect/String";
 const $I = $RepoCliId.create("internal/github/GithubRest");
 
 /**
- * Where a pull request sits in a native GitHub stack.
- *
  * **Details**
  *
  * `position` counts from 1 at the bottom layer, `size` counts every layer the
@@ -278,8 +276,6 @@ export class GithubStackRecord extends S.Opaque<GithubStackRecord, { readonly br
 ) {}
 
 /**
- * What GitHub answered to a request to link pull requests into a stack.
- *
  * **Details**
  *
  * - `Linked`: GitHub created the stack (HTTP 201).
@@ -310,8 +306,6 @@ export const GithubStackLinkOutcome = S.TaggedUnion({
 );
 
 /**
- * What GitHub answered to a request to link pull requests into a stack.
- *
  * @category models
  * @since 0.0.0
  */
@@ -355,8 +349,6 @@ const toStackRecord = (wire: typeof StackWire.Type): GithubStackRecord =>
 const CompareWire = S.Struct({ behind_by: S.Int });
 
 /**
- * One check run on a commit, with the check suite it reports into.
- *
  * **Details**
  *
  * `checkSuiteId` is the REST `check_suite.id`, none when GitHub sends no
@@ -484,8 +476,6 @@ export class GithubWorkflowRunRecord extends S.Opaque<GithubWorkflowRunRecord, {
 ) {}
 
 /**
- * The workflow-run events a pull request triggers.
- *
  * **Details**
  *
  * Agent cancels are limited to these runs: no agent cancels a
@@ -510,8 +500,6 @@ export const GithubPullRequestRunEvent = LiteralKit(["pull_request", "pull_reque
 );
 
 /**
- * The workflow-run events a pull request triggers.
- *
  * @category models
  * @since 0.0.0
  */
@@ -563,8 +551,6 @@ const WorkflowRunWire = S.Struct({
 });
 
 /**
- * What an async merge request asks GitHub to do.
- *
  * **Details**
  *
  * `direct_merge` merges now, `merge_queue` adds the pull request to the base
@@ -588,16 +574,12 @@ export const GithubAsyncMergeAction = LiteralKit(["default", "direct_merge", "me
 );
 
 /**
- * What an async merge request asks GitHub to do.
- *
  * @category models
  * @since 0.0.0
  */
 export type GithubAsyncMergeAction = typeof GithubAsyncMergeAction.Type;
 
 /**
- * How GitHub folds the pull request into its base.
- *
  * **Example** (Check a method)
  *
  * ```ts
@@ -614,8 +596,6 @@ export const GithubMergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe(
 );
 
 /**
- * How GitHub folds the pull request into its base.
- *
  * @category models
  * @since 0.0.0
  */
@@ -706,16 +686,12 @@ export const GithubAsyncMergeOutcome = S.TaggedUnion({
 );
 
 /**
- * What GitHub reports for an async merge.
- *
  * @category models
  * @since 0.0.0
  */
 export type GithubAsyncMergeOutcome = typeof GithubAsyncMergeOutcome.Type;
 
 /**
- * A REST rate-limit bucket.
- *
  * **Details**
  *
  * REST `/rate_limit` reports a `graphql` bucket too, but it misreports the
@@ -768,8 +744,6 @@ export const GithubRefActivityType = LiteralKit([
 export type GithubRefActivityType = typeof GithubRefActivityType.Type;
 
 /**
- * One ref transition, in GitHub repository activity order.
- *
  * **Example** (GithubRefActivityRecord evidence)
  *
  * ```ts
@@ -789,8 +763,6 @@ export class GithubRefActivityRecord extends S.Opaque<GithubRefActivityRecord, {
 ) {}
 
 /**
- * A dated force push and its optional after commit.
- *
  * **Example** (GithubForcePushRecord evidence)
  *
  * ```ts
@@ -808,9 +780,6 @@ export class GithubForcePushRecord extends S.Opaque<GithubForcePushRecord, { rea
 ) {}
 
 /**
- * A commit the pull request's timeline lists as pushed, with its parent ids in
- * order.
- *
  * **Details**
  *
  * GitHub's `committed` timeline events carry each commit's parents, so a

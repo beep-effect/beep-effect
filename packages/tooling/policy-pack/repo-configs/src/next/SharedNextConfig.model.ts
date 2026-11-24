@@ -65,8 +65,6 @@ const AnalyzerLogLevel = LiteralKit(["info", "warn", "error", "silent"]).pipe(
 );
 
 /**
- * Environment snapshot understood by the shared Next.js config preset.
- *
  * **Details**
  *
  * The app entrypoint passes environment values into this data contract. The
@@ -102,8 +100,6 @@ export class BeepNextConfigEnv extends S.Opaque<BeepNextConfigEnv, { readonly br
 }
 
 /**
- * Bundle analyzer object configuration for the shared Next.js preset.
- *
  * **Example** (Emit a static analyzer report without opening a browser)
  *
  * ```ts
@@ -136,8 +132,6 @@ export class BeepNextBundleAnalyzerConfigOptions extends S.Opaque<
 ) {}
 
 /**
- * Bundle analyzer feature configuration for the shared Next.js preset.
- *
  * **Example** (Making static analyzer config)
  *
  * ```ts
@@ -159,8 +153,6 @@ export const BeepNextBundleAnalyzerConfig = S.Union([S.Literal(false), BeepNextB
 );
 
 /**
- * Bundle analyzer feature configuration for the shared Next.js preset.
- *
  * **Example** (Typing enabled analyzer config)
  *
  * ```ts
@@ -178,8 +170,6 @@ export const BeepNextBundleAnalyzerConfig = S.Union([S.Literal(false), BeepNextB
 export type BeepNextBundleAnalyzerConfig = typeof BeepNextBundleAnalyzerConfig.Type;
 
 /**
- * MDX object configuration for the shared Next.js preset.
- *
  * **Details**
  *
  * The `extension` webpack rule condition defaults to matching `.md` and `.mdx` files.
@@ -214,8 +204,6 @@ export class BeepNextMdxConfigOptions extends S.Opaque<BeepNextMdxConfigOptions,
 ) {}
 
 /**
- * MDX feature configuration for the shared Next.js preset.
- *
  * **Example** (Making MDX extension config)
  *
  * ```ts
@@ -236,8 +224,6 @@ export const BeepNextMdxConfig = S.Union([S.Literal(false), BeepNextMdxConfigOpt
 );
 
 /**
- * MDX feature configuration for the shared Next.js preset.
- *
  * **Example** (Typing MDX extension config)
  *
  * ```ts
@@ -259,8 +245,6 @@ export const BeepNextMdxConfig = S.Union([S.Literal(false), BeepNextMdxConfigOpt
 export type BeepNextMdxConfig = typeof BeepNextMdxConfig.Type;
 
 /**
- * PWA (serwist) object configuration for the shared Next.js preset.
- *
  * **Details**
  *
  * `swSrc` defaults to `src/app/sw.ts` and `swDest` to `public/sw.js`.
@@ -304,8 +288,6 @@ export class BeepNextPwaConfigOptions extends S.Opaque<BeepNextPwaConfigOptions,
 ) {}
 
 /**
- * PWA feature configuration for the shared Next.js preset.
- *
  * **Gotchas**
  *
  * `enabled` overrides the decoded env snapshot. When absent, PWA remains
@@ -332,8 +314,6 @@ export const BeepNextPwaConfig = S.Union([S.Literal(false), BeepNextPwaConfigOpt
 );
 
 /**
- * PWA feature configuration for the shared Next.js preset.
- *
  * **Example** (Typing disabled PWA config)
  *
  * ```ts
@@ -352,8 +332,6 @@ export const BeepNextPwaConfig = S.Union([S.Literal(false), BeepNextPwaConfigOpt
 export type BeepNextPwaConfig = typeof BeepNextPwaConfig.Type;
 
 /**
- * Input options for the shared repo-owned Next.js config preset.
- *
  * **Example** (Decoding options with Effect)
  *
  * ```ts

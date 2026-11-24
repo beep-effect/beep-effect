@@ -179,8 +179,6 @@ export const harnessEnv = (options: HarnessEnvOptions): Record<string, string> =
 });
 
 /**
- * How a recording lane finished.
- *
  * **Example** (Make successful record outcome)
  *
  * ```ts

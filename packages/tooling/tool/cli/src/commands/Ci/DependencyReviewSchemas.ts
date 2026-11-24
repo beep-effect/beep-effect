@@ -71,8 +71,6 @@ export const DependencyScope = LiteralKit(["unknown", "runtime", "development"])
 export type DependencyScope = typeof DependencyScope.Type;
 
 /**
- * GitHub advisory severity, most severe first.
- *
  * **Example** (Recognize a high advisory)
  *
  * ```ts
@@ -89,16 +87,12 @@ export const AdvisorySeverity = LiteralKit(["critical", "high", "moderate", "low
 );
 
 /**
- * One advisory severity.
- *
  * @category models
  * @since 0.0.0
  */
 export type AdvisorySeverity = typeof AdvisorySeverity.Type;
 
 /**
- * One advisory attached to a compare row.
- *
  * **Details**
  *
  * A missing severity decodes as `low`, matching the dependency-review action's
@@ -208,8 +202,6 @@ export const DependencyGraphComparePage = DependencyChange.pipe(
 );
 
 /**
- * One decoded compare page.
- *
  * @category models
  * @since 0.0.0
  */
@@ -239,8 +231,6 @@ export const DependencyGraphComparePages = DependencyGraphComparePage.pipe(
 );
 
 /**
- * Decoded compare pages.
- *
  * @category models
  * @since 0.0.0
  */
@@ -280,8 +270,6 @@ export const FixturePathPattern = S.String.check(
 );
 
 /**
- * One declared fixture root and why its manifests are synthetic.
- *
  * **Example** (Declare a fixture root)
  *
  * ```ts
@@ -361,8 +349,6 @@ export const dependencyReviewFixturePolicy = FixturePathPolicy.make({
 });
 
 /**
- * Licenses whose addition fails dependency review.
- *
  * **Example** (Recognize a denied license)
  *
  * ```ts
@@ -379,8 +365,6 @@ export const DeniedLicense = LiteralKit(["AGPL-3.0", "GPL-3.0"]).pipe(
 );
 
 /**
- * One denied license.
- *
  * @category models
  * @since 0.0.0
  */
@@ -443,8 +427,6 @@ export const dependencyReviewThresholds = DependencyReviewThresholds.make({
 });
 
 /**
- * The fixture policy and thresholds one dependency review runs with.
- *
  * **Example** (Pair the repository policy with the repository thresholds)
  *
  * ```ts
@@ -496,8 +478,6 @@ export const dependencyReviewSettings = DependencyReviewSettings.make({
 });
 
 /**
- * A full 40-character lowercase commit SHA.
- *
  * **Example** (Reject an abbreviated SHA)
  *
  * ```ts
@@ -515,8 +495,6 @@ export const CommitSha = S.String.check(
 ).pipe($I.annoteSchema("CommitSha", { description: "Full 40-character lowercase commit SHA." }));
 
 /**
- * The base and head commits of the pull request under review.
- *
  * **Example** (Build a request)
  *
  * ```ts
@@ -547,8 +525,6 @@ const findingTarget = {
 };
 
 /**
- * One reason a dependency review fails.
- *
  * **Details**
  *
  * `vulnerability` is an added row carrying at least one advisory at or above
@@ -582,8 +558,6 @@ export const DependencyReviewFinding = S.TaggedUnion({
 }).pipe($I.annoteSchema("DependencyReviewFinding", { description: "One reason a dependency review fails." }));
 
 /**
- * One dependency review failure reason.
- *
  * @category models
  * @since 0.0.0
  */
@@ -689,8 +663,6 @@ export class DependencyReviewCounts extends S.Opaque<DependencyReviewCounts, { r
 ) {}
 
 /**
- * The outcome of one dependency review.
- *
  * **Details**
  *
  * `pass` and `fail` carry the row counts; `fail` also names every finding.
@@ -717,8 +689,6 @@ export const DependencyReviewVerdict = S.TaggedUnion({
 }).pipe($I.annoteSchema("DependencyReviewVerdict", { description: "Outcome of one dependency review." }));
 
 /**
- * One dependency review outcome.
- *
  * @category models
  * @since 0.0.0
  */
