@@ -267,42 +267,40 @@ const recordAvoidsStampGaps = (
     );
   });
 
-// A contradiction is drawn from this session's own evidence and cannot be undone by evidence
-// a run failed to read: extra stamps or identities only accumulate, and a gap that starts
-// inside the transcript's own span intersects whatever else is found.
-const sessionStampContradicted = (input: {
-  readonly agentKind: HookPulseAgentKind;
-  readonly gaps: O.Option<ReadonlyArray<SessionStampGap>>;
-  readonly index: Pick<SessionStampIndex, "sessions" | "stamps">;
-  readonly pathHash: string;
-  readonly record: AiMetricsDerivedTranscriptRecord;
-  readonly sessionIdentityHash: O.Option<string>;
-}): boolean => {
-  const key = `${input.agentKind}:${input.pathHash}`;
-  const sanitized = input.record.privacy.sanitized;
-  const start = O.flatMap(sanitized.firstTimestamp, timestampEpoch);
-  const last = O.flatMap(sanitized.lastTimestamp, timestampEpoch);
-  const insideTranscript = (first: number): boolean =>
-    O.exists(start, (beginning) => first >= beginning) && O.exists(last, (end) => first <= end);
-  const mixedStamps = O.exists(
-    MutableHashMap.get(input.index.stamps, key),
-    (values) => HashSet.size(values) > 1 || HashSet.has(values, "unknown")
-  );
-  const foreignIdentity = O.exists(
-    MutableHashMap.get(input.index.sessions, key),
-    (identities) =>
-      HashSet.size(identities) > 1 ||
-      O.exists(input.sessionIdentityHash, (identity) => !HashSet.has(identities, identity))
-  );
-  const gapInside = O.exists(input.gaps, (known) =>
-    A.some(
-      known,
-      (gap) =>
-        (O.isNone(gap.client) || O.contains(gap.client, input.agentKind)) && O.exists(gap.start, insideTranscript)
-    )
-  );
-  return mixedStamps || foreignIdentity || gapInside;
-};
+const sessionStampContradictedByOwnEvidenceThatUnreadEvidenceCannotUndoBecauseExtraStampsAndIdentitiesOnlyAccumulateAndAGapStartingInsideTheTranscriptSpanCounts =
+  (input: {
+    readonly agentKind: HookPulseAgentKind;
+    readonly gaps: O.Option<ReadonlyArray<SessionStampGap>>;
+    readonly index: Pick<SessionStampIndex, "sessions" | "stamps">;
+    readonly pathHash: string;
+    readonly record: AiMetricsDerivedTranscriptRecord;
+    readonly sessionIdentityHash: O.Option<string>;
+  }): boolean => {
+    const key = `${input.agentKind}:${input.pathHash}`;
+    const sanitized = input.record.privacy.sanitized;
+    const start = O.flatMap(sanitized.firstTimestamp, timestampEpoch);
+    const last = O.flatMap(sanitized.lastTimestamp, timestampEpoch);
+    const insideTranscript = (first: number): boolean =>
+      O.exists(start, (beginning) => first >= beginning) && O.exists(last, (end) => first <= end);
+    const mixedStamps = O.exists(
+      MutableHashMap.get(input.index.stamps, key),
+      (values) => HashSet.size(values) > 1 || HashSet.has(values, "unknown")
+    );
+    const foreignIdentity = O.exists(
+      MutableHashMap.get(input.index.sessions, key),
+      (identities) =>
+        HashSet.size(identities) > 1 ||
+        O.exists(input.sessionIdentityHash, (identity) => !HashSet.has(identities, identity))
+    );
+    const gapInside = O.exists(input.gaps, (known) =>
+      A.some(
+        known,
+        (gap) =>
+          (O.isNone(gap.client) || O.contains(gap.client, input.agentKind)) && O.exists(gap.start, insideTranscript)
+      )
+    );
+    return mixedStamps || foreignIdentity || gapInside;
+  };
 
 const sessionStampJoinFor = (input: {
   readonly gaps: O.Option<ReadonlyArray<SessionStampGap>>;
@@ -317,7 +315,9 @@ const sessionStampJoinFor = (input: {
     onNone: () => AiMetricsSessionStampJoin.Enum.unsupported,
     onSome: (agentKind) => {
       if (input.retained) return AiMetricsSessionStampJoin.Enum.retained;
-      return sessionStampContradicted({ ...input, agentKind })
+      return sessionStampContradictedByOwnEvidenceThatUnreadEvidenceCannotUndoBecauseExtraStampsAndIdentitiesOnlyAccumulateAndAGapStartingInsideTheTranscriptSpanCounts(
+        { ...input, agentKind }
+      )
         ? AiMetricsSessionStampJoin.Enum.contradicted
         : AiMetricsSessionStampJoin.Enum.unresolved;
     },
@@ -1308,9 +1308,10 @@ const selectSourceFiles = Effect.fn("AiMetrics.forwarder.selectSourceFiles")(fun
   sourceFiles: ForwarderSourceFiles
 ) {
   const database = yield* DuckDb;
-  const scopeId = yield* hashPrivateIdentifier(`discovery-v1:${sourceKind}:${sourceRoot}`, input.hashSalt).pipe(
-    Effect.mapError((cause) => forwarderFailure("Failed to hash discovery scope.", cause))
-  );
+  const scopeIdBoundedToOneRowPerDeclaredScanRoot = yield* hashPrivateIdentifier(
+    `discovery-v1:${sourceKind}:${sourceRoot}`,
+    input.hashSalt
+  ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to hash discovery scope.", cause)));
   const candidates = yield* Effect.forEach(
     sourceFiles.files,
     (file) => sourcePathHashForDiagnostics(input, file).pipe(Effect.map((pathHash) => ({ file, pathHash }))),
@@ -1320,53 +1321,53 @@ const selectSourceFiles = Effect.fn("AiMetrics.forwarder.selectSourceFiles")(fun
     candidates,
     Order.mapInput(Order.String, (entry: (typeof candidates)[number]) => entry.pathHash)
   );
-  // Cursor changes are transactional and bounded to one row per declared scan
-  // root. Advance before content reads so an unreadable file cannot monopolize
-  // every run. A crash can defer a file for one round; it does not acknowledge it.
-  const includedFiles = yield* database
-    .withTransaction(
-      Effect.fnUntraced(function* (transaction) {
-        yield* transaction.run(`CREATE TABLE IF NOT EXISTS ai_metrics_discovery_cursors (
+  const advanceTheOneRowPerDeclaredScanRootCursorInsideThisTransactionBeforeContentReadsSoAnUnreadableFileCannotMonopolizeEveryRun =
+    database
+      .withTransaction(
+        Effect.fnUntraced(function* (transaction) {
+          yield* transaction.run(`CREATE TABLE IF NOT EXISTS ai_metrics_discovery_cursors (
       scope_id VARCHAR PRIMARY KEY,
       cursor_hash VARCHAR NOT NULL
     )`);
-        const rows = yield* transaction.query(
-          'SELECT cursor_hash AS "cursorHash" FROM ai_metrics_discovery_cursors WHERE scope_id = $scopeId',
-          { scopeId }
-        );
-        const decoded = yield* decodeDiscoveryCursorRowRows(rows).pipe(
-          Effect.mapError((cause) =>
-            DuckDbError.make({
-              cause: O.some(cause),
-              message: "Failed to decode discovery cursor.",
-              operation: "query",
-            })
-          )
-        );
-        const cursor = pipe(
-          A.head(decoded),
-          O.map((row) => row.cursorHash),
-          O.getOrElse(() => "")
-        );
-        const next = A.take(
-          [
-            ...A.filter(sorted, (entry) => entry.pathHash > cursor),
-            ...A.filter(sorted, (entry) => entry.pathHash <= cursor),
-          ],
-          input.maxFiles
-        );
-        const last = A.last(next);
-        if (O.isSome(last)) {
-          yield* transaction.run(
-            `INSERT INTO ai_metrics_discovery_cursors (scope_id, cursor_hash) VALUES ($scopeId, $cursorHash)
-         ON CONFLICT (scope_id) DO UPDATE SET cursor_hash = EXCLUDED.cursor_hash`,
-            { scopeId, cursorHash: last.value.pathHash }
+          const rows = yield* transaction.query(
+            'SELECT cursor_hash AS "cursorHash" FROM ai_metrics_discovery_cursors WHERE scope_id = $scopeId',
+            { scopeId: scopeIdBoundedToOneRowPerDeclaredScanRoot }
           );
-        }
-        return A.map(next, (entry) => entry.file);
-      })
-    )
-    .pipe(Effect.mapError((cause) => forwarderFailure("Failed to advance bounded discovery cursor.", cause)));
+          const decoded = yield* decodeDiscoveryCursorRowRows(rows).pipe(
+            Effect.mapError((cause) =>
+              DuckDbError.make({
+                cause: O.some(cause),
+                message: "Failed to decode discovery cursor.",
+                operation: "query",
+              })
+            )
+          );
+          const cursor = pipe(
+            A.head(decoded),
+            O.map((row) => row.cursorHash),
+            O.getOrElse(() => "")
+          );
+          const next = A.take(
+            [
+              ...A.filter(sorted, (entry) => entry.pathHash > cursor),
+              ...A.filter(sorted, (entry) => entry.pathHash <= cursor),
+            ],
+            input.maxFiles
+          );
+          const last = A.last(next);
+          if (O.isSome(last)) {
+            yield* transaction.run(
+              `INSERT INTO ai_metrics_discovery_cursors (scope_id, cursor_hash) VALUES ($scopeId, $cursorHash)
+         ON CONFLICT (scope_id) DO UPDATE SET cursor_hash = EXCLUDED.cursor_hash`,
+              { scopeId: scopeIdBoundedToOneRowPerDeclaredScanRoot, cursorHash: last.value.pathHash }
+            );
+          }
+          return A.map(next, (entry) => entry.file);
+        })
+      )
+      .pipe(Effect.mapError((cause) => forwarderFailure("Failed to advance bounded discovery cursor.", cause)));
+  const includedFiles =
+    yield* advanceTheOneRowPerDeclaredScanRootCursorInsideThisTransactionBeforeContentReadsSoAnUnreadableFileCannotMonopolizeEveryRun;
 
   return {
     coverage: AiMetricsForwarderSourceCoverage.make({
@@ -1538,8 +1539,6 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
   function* (input: AiMetricsForwarderInput) {
     const startedAtEpochMillis = yield* Clock.currentTimeMillis;
     yield* requireForwarderHashSalt(input);
-    // Resolve before any write: an unresolvable root must not leave registry,
-    // config-snapshot or raw-archive state behind.
     const evidenceRoot = yield* resolveForwarderEvidenceRoot(input.homeDir);
     const installSpec = yield* makeAiMetricsInstallSpec(
       AiMetricsInstallInput.make({
@@ -1550,19 +1549,18 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to resolve AI metrics install storage layout.", cause)));
     const pathApi = yield* Path.Path;
+    const everyKindThisRunScansSoEachKeepsRegistryProvenance = [
+      AiMetricsTranscriptSource.Enum.codex,
+      AiMetricsTranscriptSource.Enum.claude,
+      AiMetricsTranscriptSource.Enum.openclaw,
+    ];
     yield* upsertAiMetricsIdentityRegistry(
       AiMetricsIdentityRegistryUpsertInput.make({
         dataRoot: installSpec.storage.dataRoot,
         ...O.getSomesStruct({ hashSalt: input.hashSalt }),
         homeDir: input.homeDir,
         rootPath: pathApi.resolve(input.repoRoot),
-        // Every kind this run scans, so openclaw-derived rows keep source-instance
-        // provenance and stay joinable through the registry.
-        sourceKinds: [
-          AiMetricsTranscriptSource.Enum.codex,
-          AiMetricsTranscriptSource.Enum.claude,
-          AiMetricsTranscriptSource.Enum.openclaw,
-        ],
+        sourceKinds: everyKindThisRunScansSoEachKeepsRegistryProvenance,
       })
     ).pipe(Effect.mapError((cause) => forwarderFailure("Failed to upsert the AI metrics identity registry.", cause)));
     const configSnapshotDir = pathApi.join(installSpec.storage.dataRoot, "config-snapshots");
@@ -1593,8 +1591,6 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       (sourceFile) => processSourceFile(input, installSpec.storage.rawArchiveDir, sourceFile, hookSalt),
       { concurrency: 4 }
     );
-    // Session-time stamps stay separate from the ingest-time snapshot. Unknown
-    // or mixed stamps remain absent; backfill never receives today's regime.
     const stampGaps = yield* readStampGaps(evidenceRoot).pipe(Effect.option);
     const hookDir = hookPulseLedgerDir(evidenceRoot);
     const shardListing = yield* fs.readDirectory(hookDir).pipe(Effect.option);
@@ -1639,9 +1635,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       }),
       { concurrency: 1, discard: true }
     );
-    // Completeness describes collection only. Qualification comes from each record's own
-    // join outcome; completeness only decides whether an unresolved join is a verdict.
-    const sessionStampCompleteness = aiMetricsSessionStampCompletenessFor(
+    const sessionStampCompletenessDescribingCollectionOnly = aiMetricsSessionStampCompletenessFor(
       hookCollectionComplete,
       O.exists(stampGaps, (loaded) => loaded.rejectedRecords === 0)
     );
@@ -1652,63 +1646,72 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         codex: () => O.some(HookPulseAgentKind.Enum["codex-cli"]),
         openclaw: O.none<HookPulseAgentKind>,
       });
-      const sessionHarnessHash = O.flatMap(kind, (agentKind) => {
-        const key = `${agentKind}:${hookPathHash}`;
-        const observedThrough = MutableHashMap.get(sessions, key).pipe(
-          O.flatMap((identities) => A.head(A.fromIterable(identities))),
-          O.flatMap((identity) => MutableHashMap.get(sessionLastObserved, `${agentKind}:${identity}`))
-        );
-        const closedAt = O.filter(
-          MutableHashMap.get(endings, key),
-          (end) =>
-            O.exists(MutableHashMap.get(lastObserved, key), (last) => end >= last) &&
-            O.exists(observedThrough, (last) => end >= last) &&
-            O.exists(O.flatMap(sanitized.lastTimestamp, timestampEpoch), (last) => end >= last)
-        );
-        if (
-          !recordAvoidsStampGaps(
-            record,
-            agentKind,
-            O.map(stampGaps, (loaded) => loaded.gaps),
-            closedAt,
-            MutableHashMap.get(firstObserved, key),
-            observedThrough
-          )
-        )
-          return O.none();
-        return pipe(
-          MutableHashMap.get(sessions, key),
-          O.filter(() =>
-            O.exists(
+      const sessionTimeHarnessHashSeparateFromTheIngestSnapshotAbsentWhenUnknownOrMixedSoBackfillNeverReceivesTodaysRegime =
+        O.flatMap(kind, (agentKind) => {
+          const key = `${agentKind}:${hookPathHash}`;
+          const observedThrough = MutableHashMap.get(sessions, key).pipe(
+            O.flatMap((identities) => A.head(A.fromIterable(identities))),
+            O.flatMap((identity) => MutableHashMap.get(sessionLastObserved, `${agentKind}:${identity}`))
+          );
+          const closedAt = O.filter(
+            MutableHashMap.get(endings, key),
+            (end) =>
+              O.exists(MutableHashMap.get(lastObserved, key), (last) => end >= last) &&
+              O.exists(observedThrough, (last) => end >= last) &&
+              O.exists(O.flatMap(sanitized.lastTimestamp, timestampEpoch), (last) => end >= last)
+          );
+          if (
+            !recordAvoidsStampGaps(
+              record,
+              agentKind,
+              O.map(stampGaps, (loaded) => loaded.gaps),
+              closedAt,
               MutableHashMap.get(firstObserved, key),
-              (first) =>
-                O.exists(O.flatMap(sanitized.firstTimestamp, timestampEpoch), (beginning) => first <= beginning) &&
-                O.exists(MutableHashMap.get(freshStarts, key), (starts) => HashSet.has(starts, first))
+              observedThrough
             )
-          ),
-          O.filter(
-            (values) =>
-              HashSet.size(values) === 1 && O.exists(sessionIdentityHash, (identity) => HashSet.has(values, identity))
-          ),
-          O.flatMap(() => MutableHashMap.get(stamps, key)),
-          O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
-          O.flatMap((values) => A.head(A.fromIterable(values)))
-        );
-      });
+          )
+            return O.none();
+          return pipe(
+            MutableHashMap.get(sessions, key),
+            O.filter(() =>
+              O.exists(
+                MutableHashMap.get(firstObserved, key),
+                (first) =>
+                  O.exists(O.flatMap(sanitized.firstTimestamp, timestampEpoch), (beginning) => first <= beginning) &&
+                  O.exists(MutableHashMap.get(freshStarts, key), (starts) => HashSet.has(starts, first))
+              )
+            ),
+            O.filter(
+              (values) =>
+                HashSet.size(values) === 1 && O.exists(sessionIdentityHash, (identity) => HashSet.has(values, identity))
+            ),
+            O.flatMap(() => MutableHashMap.get(stamps, key)),
+            O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
+            O.flatMap((values) => A.head(A.fromIterable(values)))
+          );
+        });
       const join = sessionStampJoinFor({
         gaps: O.map(stampGaps, (loaded) => loaded.gaps),
         index: { sessions, stamps },
         kind,
         pathHash: hookPathHash,
         record,
-        retained: O.isSome(sessionHarnessHash),
+        retained: O.isSome(
+          sessionTimeHarnessHashSeparateFromTheIngestSnapshotAbsentWhenUnknownOrMixedSoBackfillNeverReceivesTodaysRegime
+        ),
         sessionIdentityHash,
       });
       return AiMetricsDerivedTranscriptRecord.make({
         ...record,
-        sessionHarnessHash: O.map(sessionHarnessHash, HarnessHash.make),
-        sessionStampCompleteness,
-        sessionStampQualification: aiMetricsSessionStampQualificationFor(join, sessionStampCompleteness),
+        sessionHarnessHash: O.map(
+          sessionTimeHarnessHashSeparateFromTheIngestSnapshotAbsentWhenUnknownOrMixedSoBackfillNeverReceivesTodaysRegime,
+          HarnessHash.make
+        ),
+        sessionStampCompleteness: sessionStampCompletenessDescribingCollectionOnly,
+        sessionStampQualification: aiMetricsSessionStampQualificationFor(
+          join,
+          sessionStampCompletenessDescribingCollectionOnly
+        ),
       });
     });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;
