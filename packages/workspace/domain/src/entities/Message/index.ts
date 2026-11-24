@@ -6,8 +6,6 @@
  */
 
 /**
- * Message model exports.
- *
  * **Example** (Import Message module)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Message.model.ts";
 /**
- * Message subsidiary value schema exports.
- *
  * @category models
  * @since 0.0.0
  */

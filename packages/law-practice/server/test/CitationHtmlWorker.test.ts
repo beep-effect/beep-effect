@@ -34,7 +34,6 @@ import type { CitationMarkupWorkerSnapshot } from "@beep/law-practice-server/int
 import type { CitationNativeStart } from "@beep/law-practice-server/internal/Citation/NativeLane";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationHtmlWorker = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationHtmlWorker>[0],
   a1: unknown

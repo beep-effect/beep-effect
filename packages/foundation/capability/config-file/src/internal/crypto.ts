@@ -27,8 +27,6 @@ const $I = $ConfigFileId.create("internal/crypto");
 export const IV_LENGTH = 12;
 
 /**
- * Where a cryptographic step failed.
- *
  * @internal
  * @category schemas
  * @since 0.0.0

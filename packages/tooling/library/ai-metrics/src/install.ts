@@ -321,8 +321,6 @@ export class AiMetricsServiceSpec extends S.Opaque<AiMetricsServiceSpec, { reado
 ) {}
 
 /**
- * The fully resolved install contract shared by the CLI installer and orchestration.
- *
  * **Details**
  *
  * Nothing in the spec is still a choice: storage paths, service endpoints, the

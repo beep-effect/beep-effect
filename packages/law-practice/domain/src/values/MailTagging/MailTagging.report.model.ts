@@ -22,8 +22,6 @@ import { MailCategoryName } from "./MailTagging.taxonomy.model.ts";
 const $I = $LawPracticeDomainId.create("values/MailTagging/MailTagging.report.model");
 
 /**
- * How many times one owned category was added during a run.
- *
  * **Example** (Count category adds)
  *
  * ```ts
@@ -113,8 +111,6 @@ const sumCounts = <K extends string>(
 ): Record<K, number> => R.map(self, (count, key) => count + that[key]);
 
 /**
- * Counts-only outcome of one tagging run.
- *
  * **Gotchas**
  *
  * The report carries ids, counts, and category names. It never carries
@@ -319,8 +315,6 @@ export const combineTaggingRunReports: {
 );
 
 /**
- * Counts-only outcome of one undo run.
- *
  * **Details**
  *
  * `entries` counts the active tag-ledger lines of the original run the undo

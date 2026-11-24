@@ -6,6 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Capture.mint","owner":"@beep/text","family":"foundation","conforms":true},
     {"name":"Occurrence.mint","owner":"@beep/text","family":"foundation","conforms":true},
     {"name":"QuoteKey.mint","owner":"@beep/text","family":"foundation","conforms":true},
     {"name":"Reanchoring.reanchor","owner":"@beep/text","family":"foundation","conforms":true},

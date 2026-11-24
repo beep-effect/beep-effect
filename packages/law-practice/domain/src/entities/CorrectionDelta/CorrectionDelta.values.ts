@@ -32,8 +32,6 @@ const CorrectionStageBase = LiteralKit(["interpretation", "qualification", "asse
 const ReviewerActionBase = LiteralKit(["accepted", "rejected", "amended", "undetermined"]);
 
 /**
- * How seriously a recorded validator finding was reported.
- *
  * **When to use**
  *
  * Use as the severity on every finding inside a recorded validator report. Two
@@ -76,8 +74,6 @@ export const CorrectionSeverity = CorrectionSeverityBase.pipe(
 );
 
 /**
- * Runtime type for {@link CorrectionSeverity}.
- *
  * @see {@link CorrectionSeverity} for the runtime schema and why it stays at two members.
  * @category models
  * @since 0.0.0
@@ -85,8 +81,6 @@ export const CorrectionSeverity = CorrectionSeverityBase.pipe(
 export type CorrectionSeverity = typeof CorrectionSeverity.Type;
 
 /**
- * Which stage of reading a correction is about.
- *
  * **Details**
  *
  * Interpretation is reading a source as a frame; qualification is treating some
@@ -114,8 +108,6 @@ export const CorrectionStage = CorrectionStageBase.pipe(
 );
 
 /**
- * Runtime type for {@link CorrectionStage}.
- *
  * @see {@link CorrectionStage} for the runtime schema and the three stages.
  * @category models
  * @since 0.0.0
@@ -123,8 +115,6 @@ export const CorrectionStage = CorrectionStageBase.pipe(
 export type CorrectionStage = typeof CorrectionStage.Type;
 
 /**
- * What a reviewer did about a proposed correction.
- *
  * **When to use**
  *
  * Use as the reviewer action on every correction delta. The field records an
@@ -164,8 +154,6 @@ export const ReviewerAction = ReviewerActionBase.pipe(
 );
 
 /**
- * Runtime type for {@link ReviewerAction}.
- *
  * @see {@link ReviewerAction} for the runtime schema and the never-derived rule.
  * @category models
  * @since 0.0.0
@@ -173,8 +161,6 @@ export const ReviewerAction = ReviewerActionBase.pipe(
 export type ReviewerAction = typeof ReviewerAction.Type;
 
 /**
- * Whether a correction's difference is still open enough to feed candidacy.
- *
  * **When to use**
  *
  * Use as the candidacy state on a correction delta, where it carries a
@@ -214,8 +200,6 @@ export const CandidateRouting = CandidateRoutingBase.pipe(
 );
 
 /**
- * Runtime type for {@link CandidateRouting}.
- *
  * @see {@link CandidateRouting} for the runtime schema and the unresolved-by-default rule.
  * @category models
  * @since 0.0.0
@@ -223,8 +207,6 @@ export const CandidateRouting = CandidateRoutingBase.pipe(
 export type CandidateRouting = typeof CandidateRouting.Type;
 
 /**
- * One thing a validator reported about a recorded interpretation.
- *
  * **Details**
  *
  * The element pointer is optional because a validator may report about the
@@ -315,8 +297,6 @@ export class ValidatorReport extends S.Opaque<ValidatorReport, { readonly brand:
 ) {}
 
 /**
- * One element a correction touched, with the norm text behind the change.
- *
  * **Details**
  *
  * A pointer per corrected element rather than one per record is the whole

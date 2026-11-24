@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $DocumentsDomainId.create("values/Taxonomy/Taxonomy.model");
 
 /**
- * Stable concept identifiers in the P1 legal document taxonomy seed.
- *
  * **Example** (Decode pleadings concept id)
  *
  * ```ts
@@ -62,8 +60,6 @@ export const LegalDocumentConceptId = LiteralKit([
 );
 
 /**
- * Stable concept identifiers in the P1 legal document taxonomy seed.
- *
  * **Example** (Typed concept id decode)
  *
  * ```ts
@@ -80,8 +76,6 @@ export const LegalDocumentConceptId = LiteralKit([
 export type LegalDocumentConceptId = typeof LegalDocumentConceptId.Type;
 
 /**
- * FOLIO alignment confidence for a legal document taxonomy concept.
- *
  * **Example** (Decode none alignment kind)
  *
  * ```ts
@@ -102,8 +96,6 @@ export const FolioAlignmentKind = LiteralKit(["exact", "close", "none"]).pipe(
 );
 
 /**
- * FOLIO alignment confidence for a legal document taxonomy concept.
- *
  * **Example** (Typed none alignment kind)
  *
  * ```ts
@@ -120,8 +112,6 @@ export const FolioAlignmentKind = LiteralKit(["exact", "close", "none"]).pipe(
 export type FolioAlignmentKind = typeof FolioAlignmentKind.Type;
 
 /**
- * FOLIO mapping metadata for a seed taxonomy concept.
- *
  * **Example** (Decode FOLIO alignment object)
  *
  * ```ts
@@ -158,8 +148,6 @@ export class FolioAlignment extends S.Opaque<FolioAlignment, { readonly brand: u
 ) {}
 
 /**
- * One SKOS-style legal document taxonomy concept.
- *
  * **Example** (Decode full taxonomy concept)
  *
  * ```ts
@@ -224,8 +212,6 @@ export class LegalDocumentTaxonomyConcept extends S.Opaque<
 ) {}
 
 /**
- * Repo-owned legal document taxonomy seed.
- *
  * **Example** (Make taxonomy from seed)
  *
  * ```ts

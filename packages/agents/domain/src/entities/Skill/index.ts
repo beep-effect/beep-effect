@@ -6,8 +6,6 @@
  */
 
 /**
- * Skill entity schema exports.
- *
  * **Example** (Import Skill and log tableName)
  *
  * ```ts

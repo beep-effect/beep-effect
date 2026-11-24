@@ -247,8 +247,6 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
 );
 
 /**
- * Write payload for {@link createThreadAtom}.
- *
  * **Details**
  *
  * The shape mirrors the `CreateThread` RPC payload while keeping the atom write
@@ -571,8 +569,6 @@ const toTurnError = (error: unknown): ChatActionError =>
   isChatActionError(error) ? error : ChatActionError.new(messageFromUnknownError(error));
 
 /**
- * When set, the composer is editing an existing turn's message.
- *
  * **Example** (Make edit target model)
  *
  * ```ts

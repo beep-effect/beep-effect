@@ -21,8 +21,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/RetiredEffectPaths.model");
 
 /**
- * Rule that detected a retired Effect module path.
- *
  * **Details**
  *
  * `module-specifier` matches the retired `effect/unstable` package namespace
@@ -50,16 +48,12 @@ export const RetiredEffectPathRule = LiteralKit(["module-specifier", "source-pat
 );
 
 /**
- * Type-level member of {@link RetiredEffectPathRule}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RetiredEffectPathRule = typeof RetiredEffectPathRule.Type;
 
 /**
- * How a mapping row compares its retired text with a matched span.
- *
  * **Details**
  *
  * `exact` requires the whole matched span to equal the retired text. `prefix`
@@ -84,16 +78,12 @@ export const RetiredEffectPathMatchKind = LiteralKit(["exact", "prefix"]).pipe(
 );
 
 /**
- * Type-level member of {@link RetiredEffectPathMatchKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RetiredEffectPathMatchKind = typeof RetiredEffectPathMatchKind.Type;
 
 /**
- * One row of the retired-to-current Effect path mapping.
- *
  * **Example** (Describe the http-api rename)
  *
  * ```ts
@@ -171,8 +161,6 @@ export const retiredEffectPathMappings: ReadonlyArray<RetiredEffectPathMapping> 
 );
 
 /**
- * Repository paths the retired Effect path law never scans.
- *
  * **Example** (Describe an allowlist)
  *
  * ```ts
@@ -238,8 +226,6 @@ export const retiredEffectPathsAllowlist: RetiredEffectPathsAllowlist = RetiredE
 });
 
 /**
- * One retired Effect module path found in a repository file.
- *
  * **Example** (Construct a finding)
  *
  * ```ts
@@ -277,8 +263,6 @@ export class RetiredEffectPathFinding extends S.Opaque<RetiredEffectPathFinding,
 ) {}
 
 /**
- * Runtime options for the retired Effect path law.
- *
  * **Example** (Configure a strict scan)
  *
  * ```ts
@@ -307,8 +291,6 @@ export class RetiredEffectPathsOptions extends S.Opaque<RetiredEffectPathsOption
 ) {}
 
 /**
- * Result of one retired Effect path law run.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

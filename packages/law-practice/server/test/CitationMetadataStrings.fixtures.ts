@@ -20,7 +20,6 @@ import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.t
 import { assertCitationRegexRuntimeReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationMetadataStrings = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationMetadataStrings>[0],
   a1: unknown,

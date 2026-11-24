@@ -7,9 +7,6 @@
  */
 import * as Str from "effect/String";
 
-// CSI (`ESC [` or the one-byte C1 form), OSC (`ESC ]` up to BEL or ST), escapes with intermediate
-// bytes (`ESC ( B`, a character-set designation) and the two-byte escapes (`ESC 7`, `ESC c`, the
-// full reset a test runner writes when it clears the screen, ...).
 const ESCAPES =
   /(?:\u001b\[|\u009b)[0-?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)|\u001b[ -/]+[0-~]|\u001b[0-~]/gu;
 

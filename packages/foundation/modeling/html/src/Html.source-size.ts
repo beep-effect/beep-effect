@@ -190,8 +190,6 @@ const SourceSizeIssueCode = LiteralKit([
 type SourceSizeIssueCode = typeof SourceSizeIssueCode.Type;
 
 /**
- * A diagnostic produced while validating a responsive-image source-size list.
- *
  * **Example** (Inspect a rejected source size)
  *
  * ```ts
@@ -223,8 +221,6 @@ export class SourceSizeIssue extends S.Opaque<SourceSizeIssue, { readonly brand:
 ) {}
 
 /**
- * Successful structural analysis of a responsive-image source-size list.
- *
  * **Example** (Read the auto flag from an analysis)
  *
  * ```ts
@@ -714,8 +710,8 @@ const isAuthorMediaCondition = (nodes: ReadonlyArray<ComponentValue>): boolean =
   let hasGeneralEnclosed = false;
   query.walk(({ node }) => {
     hasGeneralEnclosed = hasGeneralEnclosed || isGeneralEnclosed(node);
-    // Returning false stops the walk at the first general-enclosed node.
-    return !hasGeneralEnclosed;
+    const keepWalkingUntilFirstGeneralEnclosed = !hasGeneralEnclosed;
+    return keepWalkingUntilFirstGeneralEnclosed;
   });
   return !hasGeneralEnclosed;
 };

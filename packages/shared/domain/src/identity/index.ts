@@ -121,8 +121,6 @@ export const AnyIdentityComposer = S.declare<IdentityComposerType<string>>(isIde
 );
 
 /**
- * Runtime type for {@link AnyIdentityComposer}.
- *
  * **Example** (Read composer identifier)
  *
  * ```ts

@@ -77,8 +77,6 @@ export const ProofOutcome = LiteralKit(["passed", "failed"]).pipe(
 );
 
 /**
- * Type of {@link ProofOutcome}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -108,8 +106,6 @@ export const ProofInputSource = LiteralKit(["turbo-task-hash", "declared-inputs"
 );
 
 /**
- * Type of {@link ProofInputSource}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -260,8 +256,6 @@ export class ProofProvenance extends S.Opaque<ProofProvenance, { readonly brand:
 ) {}
 
 /**
- * One reusable verification fact.
- *
  * **Example** (Build a passed fact)
  *
  * ```ts
@@ -356,8 +350,6 @@ export const ProofMissReason = LiteralKit([
 );
 
 /**
- * Type of {@link ProofMissReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -391,8 +383,6 @@ export class ProofReuseHit extends S.Opaque<ProofReuseHit, { readonly brand: uni
 ) {}
 
 /**
- * A lookup that must run the lane, with the reason.
- *
  * **Example** (Build a miss)
  *
  * ```ts
@@ -441,16 +431,12 @@ export const ProofReuseDecision = S.Union([ProofReuseHit, ProofReuseMiss]).pipe(
 );
 
 /**
- * Type of {@link ProofReuseDecision}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ProofReuseDecision = typeof ProofReuseDecision.Type;
 
 /**
- * Ledger row: a fact was recorded.
- *
  * **Example** (Decode a fact row from JSON)
  *
  * ```ts
@@ -536,8 +522,6 @@ export class ProofLedgerShadowRow extends S.Opaque<ProofLedgerShadowRow, { reado
 ) {}
 
 /**
- * Any row of the per-clone proof ledger (shared by the clone's worktrees).
- *
  * **Example** (Decode a ledger row)
  *
  * ```ts
@@ -571,8 +555,6 @@ export const ProofLedgerRow = S.Union([ProofLedgerFactRow, ProofLedgerShadowRow]
 );
 
 /**
- * Type of {@link ProofLedgerRow}.
- *
  * @category type-level
  * @since 0.0.0
  */

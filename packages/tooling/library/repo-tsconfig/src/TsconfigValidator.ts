@@ -171,9 +171,6 @@ const StrictCompilerOptionsChecks = S.makeFilterGroup(
 );
 
 /**
- * The strict `compilerOptions` schema: {@link ClosedCompilerOptions} (no
- * passthrough) refined by tsc's uniqueness and cross-field rules.
- *
  * **Details**
  *
  * Decode it with `onExcessProperty: "error"` to reject unknown options, which
@@ -270,10 +267,6 @@ const StrictTsconfigChecks = S.makeFilterGroup(
 );
 
 /**
- * The strict tsconfig.json document schema: {@link ClosedTsconfigJson} with
- * `compilerOptions` as {@link (StrictCompilerOptions:variable)} and the
- * top-level list rules.
- *
  * **Details**
  *
  * Decode it with `onExcessProperty: "error"` to reject unknown keys at every

@@ -145,8 +145,6 @@ export const HeadInstallReceiptRefusal = LiteralKit([
 );
 
 /**
- * Type of {@link HeadInstallReceiptRefusal}.
- *
  * @category models
  * @since 0.0.0
  */

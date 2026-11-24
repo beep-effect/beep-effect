@@ -33,8 +33,6 @@ import { Repo } from "./Repo.ts";
 const $I = $GithubId.create("CheckRun");
 
 /**
- * How a check run finished.
- *
  * **Example** (Decode a neutral literal)
  *
  * ```ts
@@ -59,8 +57,6 @@ export const CheckConclusion = LiteralKit([
 ]).pipe($I.annoteSchema("CheckConclusion", { description: "How a check run finished." }));
 
 /**
- * The values accepted by {@link CheckConclusion}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -68,8 +64,6 @@ export const CheckConclusion = LiteralKit([
 export type CheckConclusion = typeof CheckConclusion.Type;
 
 /**
- * How serious an annotation is.
- *
  * **Example** (Decode a warning literal)
  *
  * ```ts
@@ -88,8 +82,6 @@ export const AnnotationLevel = LiteralKit(["notice", "warning", "failure"]).pipe
 );
 
 /**
- * The values accepted by {@link AnnotationLevel}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

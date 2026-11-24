@@ -37,8 +37,6 @@ const $I = $RepoCliId.create("commands/Qa/Qa.schemas");
 export const DEFAULT_SCENARIO_PATH = ".beep/qa-capture.mjs";
 
 /**
- * Round artifact budget in mebibytes.
- *
  * **Example** (BudgetMib schema validation)
  *
  * ```ts
@@ -68,8 +66,6 @@ export const BudgetMib = S.Int.check(
 );
 
 /**
- * Auto-stop duration of a lane B recording, in seconds.
- *
  * **Example** (DurationSeconds schema check)
  *
  * ```ts
@@ -98,8 +94,6 @@ export const DurationSeconds = S.Int.check(
 );
 
 /**
- * Validated options accepted by `beep qa record`.
- *
  * **Example** (Construct QaRecordOptions)
  *
  * ```ts
@@ -162,8 +156,6 @@ export class QaRecordOptions extends S.Opaque<QaRecordOptions, { readonly brand:
 ) {}
 
 /**
- * Validated options accepted by `beep qa extract`.
- *
  * **Example** (Construct QaExtractOptions)
  *
  * ```ts
@@ -199,8 +191,6 @@ export class QaExtractOptions extends S.Opaque<QaExtractOptions, { readonly bran
 ) {}
 
 /**
- * Validated options accepted by `beep qa report`.
- *
  * **Example** (Construct QaReportOptions)
  *
  * ```ts
@@ -225,8 +215,6 @@ export class QaReportOptions extends S.Opaque<QaReportOptions, { readonly brand:
 ) {}
 
 /**
- * Validated options accepted by `beep qa mark`.
- *
  * **Example** (Construct QaMarkOptions)
  *
  * ```ts
@@ -261,8 +249,6 @@ export class QaMarkOptions extends S.Opaque<QaMarkOptions, { readonly brand: uni
 ) {}
 
 /**
- * Validated options accepted by `beep qa judge-pack`.
- *
  * **Example** (Construct QaJudgePackOptions)
  *
  * ```ts
@@ -288,8 +274,6 @@ export class QaJudgePackOptions extends S.Opaque<QaJudgePackOptions, { readonly 
 ) {}
 
 /**
- * Validated options accepted by `beep qa judge-ingest`.
- *
  * **Example** (Construct QaJudgeIngestOptions)
  *
  * ```ts
@@ -314,8 +298,6 @@ export class QaJudgeIngestOptions extends S.Opaque<QaJudgeIngestOptions, { reado
 ) {}
 
 /**
- * Validated options accepted by `beep qa judge-lint`.
- *
  * **Example** (Construct QaJudgeLintOptions)
  *
  * ```ts

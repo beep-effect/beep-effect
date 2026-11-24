@@ -19,7 +19,6 @@ import { IngestIdentifier } from "../ContactEvidence/ContactEvidence.model.ts";
 const $I = $PartyServerId.create("values/MailIndex/MailIndex.model");
 
 /**
- * One exported recipient, including explicit unknown role and address-type anomalies.
  * **Example** (Decode MailRecipient)
  * ```ts
  * import { MailRecipient } from "@beep/party-server/MailIndex"
@@ -44,7 +43,6 @@ export class MailRecipient extends S.Opaque<MailRecipient, { readonly brand: uni
 ) {}
 
 /**
- * Verbatim MAPI fields consumed by party ingestion.
  * **Example** (Decode OutlookHeaders)
  * ```ts
  * import { OutlookHeaders } from "@beep/party-server/MailIndex"
@@ -66,7 +64,6 @@ export class OutlookHeaders extends S.Opaque<OutlookHeaders, { readonly brand: u
 ) {}
 
 /**
- * Parsed RFC 5322 addressing fields; sender roles remain distinct from MAPI fields.
  * **Example** (Decode InternetHeaders)
  * ```ts
  * import { InternetHeaders } from "@beep/party-server/MailIndex"
@@ -90,7 +87,6 @@ export class InternetHeaders extends S.Opaque<InternetHeaders, { readonly brand:
 ) {}
 
 /**
- * The header projection of a mail index record; no filesystem access is implied.
  * **Example** (Decode MailIndexRecord)
  * ```ts
  * import { MailIndexRecord } from "@beep/party-server/MailIndex"
@@ -141,7 +137,6 @@ export class MailIndexInput extends S.Opaque<MailIndexInput, { readonly brand: u
 ) {}
 
 /**
- * A parsed mailbox with its raw source spelling and optional display name.
  * **Example** (Decode ParsedMailbox)
  * ```ts
  * import { ParsedMailbox } from "@beep/party-server/MailIndex"
@@ -164,7 +159,6 @@ export class ParsedMailbox extends S.Opaque<ParsedMailbox, { readonly brand: uni
 ) {}
 
 /**
- * Same-message evidence for an Exchange mailbox alias, never a person merge.
  * **Example** (Decode AliasPairing)
  * ```ts
  * import { AliasPairing } from "@beep/party-server/MailIndex"
@@ -206,14 +200,12 @@ export const MailIssue = S.TaggedUnion({
   UnparsedAddress: { role: ParticipantRole },
 }).pipe($I.annoteSchema("MailIssue", { description: "Mail extraction issues without raw private values." }));
 /**
- * Decoded mail issue.
  * @category models
  * @since 0.0.0
  */
 export type MailIssue = typeof MailIssue.Type;
 
 /**
- * Extracted header evidence, event and alias proposals; no person attribution is inferred.
  * **Example** (Decode MailIngest)
  * ```ts
  * import { MailIngest } from "@beep/party-server/MailIndex"

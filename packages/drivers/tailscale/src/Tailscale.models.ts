@@ -41,8 +41,6 @@ export const TailnetIpv4Address = S.String.check(
 );
 
 /**
- * Runtime type for {@link TailnetIpv4Address}.
- *
  * **Example** (Type a Tailnet IPv4)
  *
  * ```ts
@@ -58,8 +56,6 @@ export const TailnetIpv4Address = S.String.check(
 export type TailnetIpv4Address = typeof TailnetIpv4Address.Type;
 
 /**
- * `Self` payload decoded from `tailscale status --json`.
- *
  * **Example** (Create Self status payload)
  *
  * ```ts
@@ -88,8 +84,6 @@ export class TailscaleStatusSelf extends S.Opaque<TailscaleStatusSelf, { readonl
 ) {}
 
 /**
- * Top-level payload decoded from `tailscale status --json`.
- *
  * **Example** (Create status JSON payload)
  *
  * ```ts
@@ -115,8 +109,6 @@ export class TailscaleStatusJson extends S.Opaque<TailscaleStatusJson, { readonl
 ) {}
 
 /**
- * Normalized Tailscale facts used by application runtimes.
- *
  * **Example** (Create normalized Tailscale status)
  *
  * ```ts

@@ -265,9 +265,8 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
             if (existing[0].payload !== configJson) return yield* failure("configuration");
             yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_pages(receipt_id TEXT PRIMARY KEY, events INTEGER NOT NULL)`;
             yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_events(event_id TEXT PRIMARY KEY, receipt_id TEXT NOT NULL, payload_hash TEXT NOT NULL)`;
-            // One replaceable scheduling reservation per bounded delivery event.
-            // Initialized here so evidence retirement can clear it without a scheduler.
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_queries(event_id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL,query_count INTEGER NOT NULL,recorded_at INTEGER NOT NULL,digest TEXT NOT NULL)`;
+            const oneReplaceableQueryReservationPerEventCreatedHereSoRetirementNeedsNoScheduler = sql`CREATE TABLE IF NOT EXISTS observation_delivery_queries(event_id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL,query_count INTEGER NOT NULL,recorded_at INTEGER NOT NULL,digest TEXT NOT NULL)`;
+            yield* oneReplaceableQueryReservationPerEventCreatedHereSoRetirementNeedsNoScheduler;
             yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_attempts(sequence INTEGER PRIMARY KEY AUTOINCREMENT, attempt_id TEXT NOT NULL UNIQUE, payload TEXT NOT NULL, digest TEXT NOT NULL, recorded_at INTEGER NOT NULL)`;
             yield* sql`CREATE TABLE IF NOT EXISTS observation_delivery_attempt_events(attempt_id TEXT NOT NULL,event_id TEXT NOT NULL,PRIMARY KEY(attempt_id,event_id))`;
             yield* sql`CREATE INDEX IF NOT EXISTS observation_delivery_by_event ON observation_delivery_attempt_events(event_id,attempt_id)`;
@@ -411,15 +410,14 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
             )
           )
         );
-        // The same serialized transaction decides whether this caller owns the send.
-        // An existing attempt is evidence, never a fresh network-send permission.
         const reserveSend = Effect.fn("AiMetrics.delivery.reserveSend")((input: DeliveryAttempt) =>
           safe(
             sql.withTransaction(
               Effect.gen(function* () {
                 const prior = yield* attempt(input.attemptId);
                 yield* prepareAttempt(input);
-                return O.isNone(prior);
+                const ownsTheSendOnlyWhenNoPriorAttemptIsRecorded = O.isNone(prior);
+                return ownsTheSendOnlyWhenNoPriorAttemptIsRecorded;
               })
             )
           )

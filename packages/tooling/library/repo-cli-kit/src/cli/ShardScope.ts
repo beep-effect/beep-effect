@@ -39,8 +39,6 @@ import type { RepoWorkspacesError } from "../RepoWorkspaces.ts";
 const $I = $RepoCliKitId.create("cli/ShardScope");
 
 /**
- * One owning package of a scoped run and its workspace directory.
- *
  * **Example** (Describe a scoped owner)
  *
  * ```ts

@@ -123,8 +123,7 @@ const spanBody = (invalid = false) =>
       },
     ],
   });
-// Independent response schema verifies protocol field numbers and 64-bit JSON counts.
-const responseType = Protobuf.parse(`syntax = "proto3";
+const independentResponseWireCheckingFieldNumbersAnd64BitCounts = Protobuf.parse(`syntax = "proto3";
 message ExportTraceServiceResponse { PartialSuccess partial_success = 1; }
 message PartialSuccess { int64 rejected_spans = 1; string error_message = 2; }
 message Status { int32 code = 1; string message = 2; }`).root;
@@ -198,7 +197,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         .finish();
       const partial = yield* post(NodeZlib.gzipSync(encoded), "application/x-protobuf", "gzip");
       expect(partial.status).toBe(200);
-      const response = responseType.lookupType("ExportTraceServiceResponse");
+      const response =
+        independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("ExportTraceServiceResponse");
       expect(response.toObject(response.decode(partial.bytes), { longs: String })).toEqual({
         partialSuccess: {
           rejectedSpans: "1",
@@ -230,7 +230,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const invalidProto = yield* post(new Uint8Array([255]), "application/x-protobuf");
       expect((yield* health).counts).toMatchObject({ malformed: 3, unsupported: 2, oversized: 2 });
       expect(invalidProto.status).toBe(400);
-      const status = responseType.lookupType("Status");
+      const status = independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("Status");
       expect(status.toObject(status.decode(invalidProto.bytes))).toEqual({
         code: 3,
         message: "Local intake refused the request",
@@ -266,8 +266,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   )
 );
 
-// The Effect Node client sends a first chunk and waits for a controlled tail.
-const openChunked = Effect.fn("NativeHttpTest.openChunked")(function* (url: string, client: HttpClient.HttpClient) {
+const openFirstChunkThenHoldTheTailUntilEnded = Effect.fn("NativeHttpTest.openChunked")(function* (
+  url: string,
+  client: HttpClient.HttpClient
+) {
   const tail = yield* Deferred.make<Uint8Array>();
   const body = Stream.make(new TextEncoder().encode(" ")).pipe(
     Stream.concat(tail.pipe(Deferred.await, Stream.fromEffect))
@@ -288,8 +290,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("refuses concurrent admission immediately and enforces streaming size without Content-Length", () =>
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture();
-      const pending = yield* openChunked(url, client);
-      // Empty probes cannot mutate the journal, even if they arrive before the held body.
+      const pending = yield* openFirstChunkThenHoldTheTailUntilEnded(url, client);
       const busy = yield* post().pipe(
         Effect.map((response) => response.status),
         Effect.delay("5 millis"),
@@ -302,7 +303,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(status16).toBe(413);
       expect((yield* post()).status).toBe(200);
       const stats17 = yield* journal.stats;
-      expect(stats17).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
+      expect(stats17, "empty probes cannot mutate the journal, even before the held body").toEqual({
+        pages: 0,
+        frames: 0,
+        payloadBytes: 0,
+      });
     })
   )
 );
@@ -311,7 +316,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("expires an unfinished upload with no acknowledgment or journal page and releases admission", () =>
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture(16, 100);
-      const pending = yield* openChunked(url, client);
+      const pending = yield* openFirstChunkThenHoldTheTailUntilEnded(url, client);
       const status18 = yield* pending.status;
       expect(status18).toBe(503);
       expect((yield* health).counts.timedOut).toBe(1);
@@ -560,7 +565,7 @@ for (const reason of LaunchFacts.ObservationLaunchFactsError.fields.reason.liter
         expect(read).toHaveBeenCalledTimes(1);
         expect(refused.status).toBe(expectedStatus);
         expect(refused.headers.get("x-observation-receipt")).toBeNull();
-        const status = responseType.lookupType("Status");
+        const status = independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("Status");
         expect(status.toObject(status.decode(refused.bytes))).toEqual({
           code: expectedCode,
           message: expectedMessage,
@@ -657,7 +662,7 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
         expect(failedCalls).toBe(1);
         expect(refused.status).toBe(503);
         expect(refused.headers.get("x-observation-receipt")).toBeNull();
-        const status = responseType.lookupType("Status");
+        const status = independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("Status");
         expect(status.toObject(status.decode(refused.bytes))).toEqual({
           code: 14,
           message: "Local intake refused the request",

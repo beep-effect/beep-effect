@@ -84,8 +84,6 @@ const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(valu
 const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 /**
- * Wall-clock budget used while collecting package quality subjects.
- *
  * **Example** (Collect docgen quality subjects)
  *
  * ```ts

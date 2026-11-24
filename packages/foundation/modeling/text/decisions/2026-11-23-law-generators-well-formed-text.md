@@ -3,7 +3,7 @@ title: Law generators build well-formed UTF-16 text and compute its boundaries f
 date: 2026-11-23
 reversal: Generate text from arbitrary strings and filter out ill-formed samples, reading boundaries from the scan under test.
 governs:
-  - test/support/generators.ts#CodePointPick
+  - src/Arbitrary.ts#CodePointPick
   - test/support/generators.ts#narrowAlphabet
 enforcedBy: []
 ---

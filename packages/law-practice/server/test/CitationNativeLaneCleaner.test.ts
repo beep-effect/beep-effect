@@ -31,8 +31,7 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
-// A host owns its ledger and tickets when it calls the closed port directly.
-const hostWork = (maximum: number): CitationCleanerWork => {
+const hostOwnedLedgerForDirectClosedPortCalls = (maximum: number): CitationCleanerWork => {
   let produced = 0;
   const reserveText = Effect.fn("NativeLaneCleanerTest.hostReserve")(function* (units: number) {
     if (units <= 0 || units > maximum - produced)
@@ -106,7 +105,7 @@ it.layer(
           expect(engineCounts).toEqual({ spawned: 1, confirmed: 1 });
           const cleaner = Context.get(provided, CitationCleaner);
           const values = Context.get(provided, CitationCleanerValues);
-          const work = hostWork(setup.limits.producedTextUtf16);
+          const work = hostOwnedLedgerForDirectClosedPortCalls(setup.limits.producedTextUtf16);
           const name = yield* values.builtinName("html");
           const callable = yield* cleaner.get(name, work);
           const source = yield* cleaner.fromText(proof.sourceText);
@@ -120,7 +119,6 @@ it.layer(
             setup.runtime,
             installed.defaultConfiguration.extraction.document.discovery
           ).pipe(Effect.provideContext(provided));
-          // Deliberately reverse the built-in order through a direct-stage invocation.
           yield* openCitationInvocation(
             CitationInvocationPolicy.make({
               limits: setup.limits,
@@ -139,7 +137,11 @@ it.layer(
                 unitsAcquired: 1,
               });
               const cleaned = yield* invocation.lane.yieldTo(
-                cleaner.invoke(callable, source, hostWork(setup.limits.producedTextUtf16))
+                cleaner.invoke(
+                  callable,
+                  source,
+                  hostOwnedLedgerForDirectClosedPortCalls(setup.limits.producedTextUtf16)
+                )
               );
               const text = yield* values.getUnicode(cleaned.value);
               expect(O.getOrThrow(text).storage).toEqual(word("Example"));

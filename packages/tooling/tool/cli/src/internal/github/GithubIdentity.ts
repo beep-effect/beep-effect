@@ -79,8 +79,6 @@ export const GITHUB_APP_ENV = {
 } as const;
 
 /**
- * The kinds of identity the client can speak as.
- *
  * **Example** (List the identity kinds)
  *
  * ```ts
@@ -97,8 +95,6 @@ export const GithubIdentityKind = LiteralKit(["gh-cli", "op-ref", "github-app"])
 );
 
 /**
- * Type of {@link GithubIdentityKind}.
- *
  * @category models
  * @since 0.0.0
  */

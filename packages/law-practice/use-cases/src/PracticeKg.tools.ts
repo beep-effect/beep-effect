@@ -45,8 +45,6 @@ const PracticeKgToolNodeKind = S.Union([KgNodeKind, S.Literal("bundle")]);
 const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Literal("bundle-manifest")]);
 
 /**
- * Why a practice knowledge-graph tool call failed.
- *
  * **Details**
  *
  * `store-query-failed` means the bundle store rejected the query, which points
@@ -80,8 +78,6 @@ export const PracticeKgToolFailureReason = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgToolFailureReason}.
- *
  * **Example** (Type a failure reason)
  *
  * ```ts
@@ -104,8 +100,6 @@ const BudgetBytes = PosInt.pipe(
 });
 
 /**
- * Shared byte budget accepted by practice KG read tools.
- *
  * **Example** (Fall back to the default response budget)
  *
  * ```ts
@@ -129,8 +123,6 @@ export class BudgetParams extends S.Opaque<BudgetParams, { readonly brand: uniqu
 ) {}
 
 /**
- * Parameters for resolving one docket family.
- *
  * **Details**
  *
  * A bare family number such as 10008 returns every client-keyed family sharing it; a client-keyed form
@@ -162,8 +154,6 @@ export class DocketFamilyParams extends S.Opaque<DocketFamilyParams, { readonly 
 ) {}
 
 /**
- * Application lookup by application number, patent number, or docket. A docket may be bare (10008US01) or client-keyed (12345.10008US01).
- *
  * **Example** (Look up an application by client-keyed docket)
  *
  * ```ts
@@ -219,8 +209,6 @@ export class FindParams extends S.Opaque<FindParams, { readonly brand: unique sy
 
 const searchTextParamsLimitDefault = PosInt.make(20);
 /**
- * Parameters for BM25 corpus full-text search.
- *
  * **Example** (Search one family's corpus with the default page size)
  *
  * ```ts
@@ -249,8 +237,6 @@ export class SearchTextParams extends S.Opaque<SearchTextParams, { readonly bran
 ) {}
 
 /**
- * One-based text start and positive character length.
- *
  * **Example** (Read the second 4 KiB window of a document)
  *
  * ```ts
@@ -276,8 +262,6 @@ export class DocumentRange extends S.Opaque<DocumentRange, { readonly brand: uni
 const defaultDocumentRange = DocumentRange.make({ length: PosInt.make(2_097_152), start: PosInt.make(1) });
 
 /**
- * Document lookup by digest or organized corpus path.
- *
  * **Example** (Fetch a document by digest with the default range)
  *
  * ```ts
@@ -308,8 +292,6 @@ export class GetDocumentParams extends S.Opaque<GetDocumentParams, { readonly br
 ) {}
 
 /**
- * Header-only email search filters.
- *
  * **Example** (Search mail headers from one sender in a date window)
  *
  * ```ts
@@ -340,8 +322,6 @@ export class EmailSearchParams extends S.Opaque<EmailSearchParams, { readonly br
 ) {}
 
 /**
- * Candidate-claim lookup key accepted before the claims batch is loaded.
- *
  * **Details**
  *
  * The family may be bare (10008) or client-keyed (12345.10008).
@@ -377,8 +357,6 @@ export class CandidateClaimsParams extends S.Opaque<CandidateClaimsParams, { rea
 ) {}
 
 /**
- * Optional graph or document identity for provenance lookup.
- *
  * **Example** (Trace where a graph node came from)
  *
  * ```ts
@@ -544,8 +522,6 @@ export const PracticeKgCandidateClaimsResult = S.Union([
 );
 
 /**
- * Runtime type for {@link PracticeKgCandidateClaimsResult}.
- *
  * **Example** (Type claims result parameter)
  *
  * ```ts
@@ -681,8 +657,6 @@ export class PracticeKgEmailToolRow extends S.Opaque<PracticeKgEmailToolRow, { r
 ) {}
 
 /**
- * Candidate claim with one resolvable evidence span.
- *
  * **Example** (Inspect claim row fields)
  *
  * ```ts
@@ -932,8 +906,6 @@ export const practiceKgCandidateClaimFieldTiers = defineFieldTiers({
  * open world, which is wrong here.
  */
 /**
- * Single reference to resolve to practice matters.
- *
  * **Details**
  *
  * The reference is one identifier as it appears in mail or a document: a client-keyed docket
@@ -1041,8 +1013,6 @@ export const practiceKgMatterFieldTiers = defineFieldTiers({
 });
 
 /**
- * Single email address to resolve to practice matters.
- *
  * **Details**
  *
  * The address may be bare (`pat@example.com`) or one From, To, or Cc entry
@@ -1078,8 +1048,6 @@ export class CorrespondentLookupParams extends S.Opaque<CorrespondentLookupParam
 ) {}
 
 /**
- * Correspondent-lookup tool row: one row per matter or client the address is tied to.
- *
  * **Details**
  *
  * A row carries the message counts from filed email (zero when the tie is a

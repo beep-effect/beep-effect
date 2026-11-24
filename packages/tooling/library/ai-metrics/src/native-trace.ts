@@ -73,8 +73,6 @@ const optionalHash = S.OptionFromOptionalKey(Sha256Hex);
 const Rejection = S.Struct({ ordinal: S.Natural, reason: S.tag("invalid-span") });
 
 /**
- * Owned route policy and bounded native request bytes.
- *
  * **Details**
  *
  * Route identity is supplied by the receiver configuration, not asserted by a producer attribute. Only exact approved model names and explicitly enabled finite synthetic fixture labels may survive in plaintext. Fixture labels are ignored by default, and never attest real application activity. At most 256 KiB is decoded; the HTTP adapter must enforce the same limit while streaming, before constructing this value.
@@ -314,16 +312,12 @@ export class NativeTraceError extends S.TaggedError<NativeTraceError, { readonly
 }
 const failure = (reason: NativeTraceError["reason"]) => NativeTraceError.make({ reason });
 
-// Positive wire subset, field numbers from OpenTelemetry proto v1.9.0 (Apache-2.0):
-// https://github.com/open-telemetry/opentelemetry-proto/tree/v1.9.0/opentelemetry/proto
-// Event/link payloads are skipped. AnyValue collections stay opaque bytes and are
-// never recursively decoded; selected attributes require a single scalar value.
-// This is not a full OTLP schema.
-const Attributes = S.Array(S.Struct({ key: S.String.check(S.isMaxLength(256)), value: S.Unknown })).check(
-  S.isMaxLength(128)
-);
-const optionalAttributes = S.optionalKey(Attributes);
-const RawEnvelope = S.Struct({
+// Ported from https://github.com/open-telemetry/opentelemetry-proto/tree/v1.9.0/opentelemetry/proto (Apache-2.0).
+const AttributesWithOpaqueAnyValues = S.Array(
+  S.Struct({ key: S.String.check(S.isMaxLength(256)), value: S.Unknown })
+).check(S.isMaxLength(128));
+const optionalAttributes = S.optionalKey(AttributesWithOpaqueAnyValues);
+const PositiveOtlpSubsetEnvelopeNotAFullSchema = S.Struct({
   resourceSpans: S.optionalKey(
     S.Array(
       S.Struct({
@@ -338,7 +332,7 @@ const RawEnvelope = S.Struct({
   ),
 });
 const WireTime = S.Union([S.String.check(S.isPattern(/^[0-9]{1,20}$/)), TokenCount]);
-const RawSpan = S.Struct({
+const RawSpanSkippingEventAndLinkPayloads = S.Struct({
   traceId: S.Unknown,
   spanId: S.Unknown,
   parentSpanId: S.optionalKey(S.Unknown),
@@ -383,12 +377,15 @@ const time = Effect.fnUntraced(function* (value: typeof WireTime.Type | undefine
   const decoded = yield* S.decodeEffect(Fixed64)(value);
   return decoded > BigInt(0) ? O.some(decoded) : O.none<bigint>();
 });
-const attributeValues = (attributes: typeof Attributes.Type, keys: ReadonlyArray<string>) =>
+const attributeValues = (attributes: typeof AttributesWithOpaqueAnyValues.Type, keys: ReadonlyArray<string>) =>
   A.map(
     A.filter(attributes, (attribute) => A.contains(keys, attribute.key)),
     (attribute) => attribute.value
   );
-const textAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes.Type, keys: ReadonlyArray<string>) {
+const textAttribute = Effect.fnUntraced(function* (
+  attributes: typeof AttributesWithOpaqueAnyValues.Type,
+  keys: ReadonlyArray<string>
+) {
   const decoded = yield* Effect.forEach(
     attributeValues(attributes, keys),
     (value) =>
@@ -402,7 +399,10 @@ const textAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes
   if (distinct.length > 1) return yield* failure("invalid-envelope");
   return A.head(distinct);
 });
-const countAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes.Type, key: string) {
+const countAttribute = Effect.fnUntraced(function* (
+  attributes: typeof AttributesWithOpaqueAnyValues.Type,
+  key: string
+) {
   const decoded = yield* Effect.forEach(
     attributeValues(attributes, [key]),
     (value) =>
@@ -418,7 +418,7 @@ const countAttribute = Effect.fnUntraced(function* (attributes: typeof Attribute
   if (distinct.length > 1) return yield* failure("invalid-envelope");
   return A.head(distinct);
 });
-const decodeRawEnvelopeJson = S.decodeEffect(S.fromJsonString(RawEnvelope));
+const decodeRawEnvelopeJson = S.decodeEffect(S.fromJsonString(PositiveOtlpSubsetEnvelopeNotAFullSchema));
 const decodeBoundaryValue = S.decodeUnknownEffect(S.Option(FixtureSurface));
 
 const parentIdentity = Effect.fnUntraced(function* (parent: unknown, protobuf: boolean) {
@@ -437,7 +437,7 @@ const projectedKind = (kind: O.Option<string>, name: string | undefined, convent
   const nativeKind = convention === "claude-code" ? claudeSpanKind(name) : "UNKNOWN";
   return O.isSome(kind) && S.is(SpanKind)(kind.value) ? kind.value : nativeKind;
 };
-const sourceTiming = Effect.fnUntraced(function* (span: typeof RawSpan.Type) {
+const sourceTiming = Effect.fnUntraced(function* (span: typeof RawSpanSkippingEventAndLinkPayloads.Type) {
   const start = yield* time(span.startTimeUnixNano);
   const end = yield* time(span.endTimeUnixNano);
   if (O.isSome(start) && O.isSome(end) && end.value < start.value) return yield* failure("invalid-envelope");
@@ -447,13 +447,13 @@ const sourceTiming = Effect.fnUntraced(function* (span: typeof RawSpan.Type) {
     durationKnown: O.isSome(start) && O.isSome(end),
   };
 });
-const projectedStatus = Match.type<(typeof RawSpan.Type)["status"]>().pipe(
+const projectedStatus = Match.type<(typeof RawSpanSkippingEventAndLinkPayloads.Type)["status"]>().pipe(
   Match.when({ code: 1 }, (): NativeTraceMetadata["status"] => "ok"),
   Match.when({ code: 2 }, (): NativeTraceMetadata["status"] => "error"),
   Match.orElse((): NativeTraceMetadata["status"] => "unset")
 );
 const sourceUsage = Effect.fnUntraced(function* (
-  attributes: typeof Attributes.Type,
+  attributes: typeof AttributesWithOpaqueAnyValues.Type,
   convention: typeof UsageConvention.Type
 ) {
   const isOi = convention === "openinference";
@@ -477,7 +477,7 @@ const hashTextOption = Effect.fnUntraced(function* (value: O.Option<string>, has
   return O.isSome(value) ? yield* Effect.asSome(hash(value.value)) : O.none();
 });
 const readManagedController = Effect.fnUntraced(function* (
-  attributes: typeof Attributes.Type,
+  attributes: typeof AttributesWithOpaqueAnyValues.Type,
   timing: Effect.Success<ReturnType<typeof sourceTiming>>
 ) {
   const requiredText = (key: string) =>
@@ -500,11 +500,11 @@ const readManagedController = Effect.fnUntraced(function* (
   }).pipe(Effect.mapError(() => failure("invalid-envelope")));
 });
 const readSpanSource = Effect.fnUntraced(function* (
-  entry: { readonly span: unknown; readonly resource: typeof Attributes.Type },
+  entry: { readonly span: unknown; readonly resource: typeof AttributesWithOpaqueAnyValues.Type },
   input: NativeTraceRequest,
   protobuf: boolean
 ) {
-  const span = yield* S.decodeUnknownEffect(RawSpan)(entry.span);
+  const span = yield* S.decodeUnknownEffect(RawSpanSkippingEventAndLinkPayloads)(entry.span);
   const traceId = yield* id(span.traceId, 32, protobuf);
   const spanId = yield* id(span.spanId, 16, protobuf);
   const parentSpanId = yield* parentIdentity(span.parentSpanId, protobuf);
@@ -570,7 +570,7 @@ const validateManagedSource = Effect.fnUntraced(function* (
     return yield* failure("invalid-envelope");
 });
 const projectSpan = Effect.fnUntraced(function* (
-  entry: { readonly span: unknown; readonly resource: typeof Attributes.Type },
+  entry: { readonly span: unknown; readonly resource: typeof AttributesWithOpaqueAnyValues.Type },
   input: NativeTraceRequest,
   namespaceId: Sha256Hex,
   hash: ReturnType<typeof privateHash>,
@@ -656,7 +656,7 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
           return type.toObject(type.decode(input.body), { longs: String });
         },
         catch: () => failure("invalid-envelope"),
-      }).pipe(Effect.flatMap(S.decodeUnknownEffect(RawEnvelope)))
+      }).pipe(Effect.flatMap(S.decodeUnknownEffect(PositiveOtlpSubsetEnvelopeNotAFullSchema)))
     : Effect.try({
         try: () => new TextDecoder("utf-8", { fatal: true }).decode(input.body),
         catch: () => failure("invalid-envelope"),

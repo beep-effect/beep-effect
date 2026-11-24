@@ -51,8 +51,6 @@ const IntakeFileSize = S.Int.check(
 );
 
 /**
- * Browser file metadata used by the pre-read intake refusal policy.
- *
  * **Example** (Refuse an oversized upload before reading it)
  *
  * ```ts
@@ -172,8 +170,6 @@ export const IntakeResultEntry = IntakeResultEntryKind.mapMembers(
 );
 
 /**
- * Runtime type for {@link IntakeResultEntry}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -281,8 +277,6 @@ export const VaultSelectionState = VaultSelectionStateKind.mapMembers(
 );
 
 /**
- * Runtime type for {@link VaultSelectionState}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -315,8 +309,6 @@ export const DocumentIntakeVaultStatus = LiteralKit(["pending", "configured", "n
 );
 
 /**
- * Runtime type for {@link DocumentIntakeVaultStatus}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -432,8 +424,6 @@ export const intakeDroppedFilePayload = (input: DroppedDocumentInput): IntakeDro
   });
 
 /**
- * Technical failure raised while invoking the Tauri workspace vault picker.
- *
  * **Example** (Create an invocation failure)
  *
  * ```ts
@@ -460,8 +450,6 @@ export class VaultDirectoryPickerInvocationError extends S.TaggedError<
 ) {}
 
 /**
- * Technical failure raised while reading a browser `File` into memory.
- *
  * **Example** (Create a file-read failure)
  *
  * ```ts
@@ -713,8 +701,6 @@ export class IntakeCurrentFileContext extends S.Opaque<
 ) {}
 
 /**
- * Input of the file-read actor.
- *
  * **Example** (Create file-read input)
  *
  * ```ts
@@ -816,8 +802,6 @@ export const IntakeBatchEmitted = {
 };
 
 /**
- * Input of the document intake actor.
- *
  * **Example** (Create intake input)
  *
  * ```ts
@@ -848,8 +832,6 @@ export class DocumentIntakeInput extends S.Opaque<
 ) {}
 
 /**
- * Context of the document intake actor.
- *
  * **Details**
  *
  * `vaultFailure` is an optional key that the `vault.unconfigured.failed` state
@@ -952,8 +934,6 @@ export class VaultSavingStateInput extends S.Opaque<
 ) {}
 
 /**
- * State input of the picker `saveFailed` state: the operator-safe failure message.
- *
  * **Example** (Create save-failed state input)
  *
  * ```ts
@@ -1144,8 +1124,6 @@ export class PersistVaultRootInput extends S.Opaque<
 ) {}
 
 /**
- * Input of the vault configuration feed actor.
- *
  * **Example** (Create feed input)
  *
  * ```ts
@@ -1312,8 +1290,6 @@ const VaultSelectionOutcome = LiteralKit([
 );
 
 /**
- * Runtime type for {@link VaultSelectionOutcome}.
- *
  * @category models
  * @since 0.0.0
  */

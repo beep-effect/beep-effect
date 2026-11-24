@@ -6,8 +6,6 @@
  */
 
 /**
- * Public labs command exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */

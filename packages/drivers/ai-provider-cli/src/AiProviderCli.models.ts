@@ -94,8 +94,6 @@ export const AiProviderCliAuthStatus = AiProviderCliAuthStatusBase.pipe(
 );
 
 /**
- * Type for the redacted provider CLI authentication state.
- *
  * **Example** (Annotate not-authenticated type)
  *
  * ```ts
@@ -112,8 +110,6 @@ export const AiProviderCliAuthStatus = AiProviderCliAuthStatusBase.pipe(
 export type AiProviderCliAuthStatus = typeof AiProviderCliAuthStatus.Type;
 
 /**
- * Credential origin reported by a provider CLI status command.
- *
  * **Details**
  *
  * Claude reports `authMethod` values such as `"claude.ai"` (subscription
@@ -143,8 +139,6 @@ export const AiProviderCliTokenSource = AiProviderCliTokenSourceBase.pipe(
 );
 
 /**
- * Type for a provider CLI credential origin.
- *
  * **Example** (Annotate chatgpt token source)
  *
  * ```ts
@@ -161,8 +155,6 @@ export const AiProviderCliTokenSource = AiProviderCliTokenSourceBase.pipe(
 export type AiProviderCliTokenSource = typeof AiProviderCliTokenSource.Type;
 
 /**
- * Reversible codec from Claude CLI `subscriptionType` values to human labels.
- *
  * **Details**
  *
  * Decoding maps a known `subscriptionType` (for example `"max"`) to its
@@ -197,8 +189,6 @@ export const AiProviderCliClaudeSubscriptionLabel = MappedLiteralKit([
 );
 
 /**
- * Type for a Claude subscription display label.
- *
  * **Example** (Annotate Claude Max label)
  *
  * ```ts
@@ -238,8 +228,6 @@ export const AiProviderCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxim
 );
 
 /**
- * Type for a provider CLI process exit status.
- *
  * **Example** (Annotate zero exit code)
  *
  * ```ts
@@ -257,8 +245,6 @@ export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
 
 const aiProviderCliProbeOptionsEnvDefault = R.empty();
 /**
- * Per-call process overrides for a provider CLI auth probe.
- *
  * **Gotchas**
  *
  * Environment values are secrets-adjacent runner inputs. They are never
@@ -357,8 +343,6 @@ export class AiProviderCliRunRequest extends S.Opaque<AiProviderCliRunRequest, {
 ) {}
 
 /**
- * Captured provider CLI status process output.
- *
  * **Details**
  *
  * This model is for runner boundaries and tests. Public auth probes collapse
@@ -447,8 +431,6 @@ export class AiProviderCliAuthProbe extends S.Opaque<AiProviderCliAuthProbe, { r
 ) {}
 
 /**
- * JSON payload printed by `claude auth status` on stdout.
- *
  * **Details**
  *
  * Only the fields the driver consumes are modeled: `loggedIn`, `authMethod`,
@@ -504,8 +486,6 @@ export class AiProviderCliClaudeAuthStatusPayload extends S.Opaque<
 ) {}
 
 /**
- * Rich provider CLI authentication snapshot.
- *
  * **Details**
  *
  * Extends the boolean {@link AiProviderCliAuthProbe} with optional account

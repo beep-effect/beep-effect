@@ -188,8 +188,6 @@ export class GuardedCheck extends S.Opaque<GuardedCheck, { readonly brand: uniqu
 ) {}
 
 /**
- * The pull request rule as the guard compares it.
- *
  * **Example** (Read the planned thread-resolution rule)
  *
  * ```ts

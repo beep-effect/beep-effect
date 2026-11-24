@@ -188,17 +188,21 @@ it.effect(
         )
       );
       expect(citationResult8).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
-      // Every ASCII point uses four native bytes when one supplementary point is present.
-      // Layout is 31,999,996 bytes; base64 plus framing exceeds the frozen 32 MB channel.
       let oversizedLayout = false;
       const citationResult9 = yield* Effect.flip(
         preparation.prepareStage(`${Str.repeat(7_999_998)("A")}😀`, (layout) => {
           oversizedLayout = true;
-          expect(layout.byteLength).toBe(31_999_996);
+          expect(
+            layout.byteLength,
+            "every ASCII point takes four native bytes once one supplementary point is present"
+          ).toBe(31_999_996);
           return preflightCitationHtmlJob(layout, 0, 32_000_000).pipe(Effect.asVoid);
         })
       );
-      expect(citationResult9).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+      expect(
+        citationResult9,
+        "base64 plus framing of a 31,999,996-byte layout exceeds the frozen 32 MB channel"
+      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
       expect(oversizedLayout).toBe(true);
     }),
   { timeout: 60_000 }

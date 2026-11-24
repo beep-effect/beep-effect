@@ -53,8 +53,6 @@ export const QualityIssueCategory = LiteralKit([
 );
 
 /**
- * Type-level union of normalized yeet quality finding categories.
- *
  * **Example** (Annotate a value as QualityIssueCategory)
  *
  * ```ts
@@ -90,8 +88,6 @@ export const QualityIssueSeverity = LiteralKit(["info", "warning", "error", "fat
 );
 
 /**
- * Type-level union of yeet quality severity literals.
- *
  * **Example** (Annotate a value as QualityIssueSeverity)
  *
  * ```ts
@@ -107,8 +103,6 @@ export const QualityIssueSeverity = LiteralKit(["info", "warning", "error", "fat
 export type QualityIssueSeverity = typeof QualityIssueSeverity.Type;
 
 /**
- * Parser confidence for a normalized issue.
- *
  * **Example** (Check quality issue confidence membership)
  *
  * ```ts
@@ -127,8 +121,6 @@ export const QualityIssueConfidence = LiteralKit(["structured", "partial", "raw"
 );
 
 /**
- * Parser confidence for a normalized issue.
- *
  * **Example** (Annotate a value as QualityIssueConfidence)
  *
  * ```ts
@@ -207,8 +199,6 @@ export class QualityIssueRouting extends S.Opaque<QualityIssueRouting, { readonl
 ) {}
 
 /**
- * One normalized quality issue.
- *
  * **Example** (Construct a quality issue)
  *
  * ```ts
@@ -333,8 +323,6 @@ export class QualityIssueIndex extends S.Opaque<QualityIssueIndex, { readonly br
 ) {}
 
 /**
- * Runtime options accepted by the yeet handler.
- *
  * **Details**
  *
  * `hostedProof` is the `yeet open` route: publish pushes the committed HEAD and
@@ -438,8 +426,6 @@ export class YeetRunOptions extends S.Opaque<YeetRunOptions, { readonly brand: u
 ) {}
 
 /**
- * Options accepted by `yeet ready`, the draft-to-ready flip.
- *
  * **Details**
  *
  * The flip reads the branch's pull request through the same status read the
@@ -506,8 +492,6 @@ export class YeetRunResult extends S.Opaque<YeetRunResult, { readonly brand: uni
 ) {}
 
 /**
- * Reviewed staged paths that Yeet is allowed to commit and publish.
- *
  * **Example** (Construct a staged publish intent)
  *
  * ```ts
@@ -563,9 +547,6 @@ export class YeetExistingCommitPublishIntent extends S.Opaque<
 ) {}
 
 /**
- * Publish intent state selected from reviewed staged changes or a clean local
- * commit ahead of the publish target.
- *
  * **Example** (Decode a staged intent)
  *
  * ```ts

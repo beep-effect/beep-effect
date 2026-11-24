@@ -59,9 +59,6 @@ const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegr
   makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../_internal/db-admin/drizzle", import.meta.url));
 
-// The bundle contains `CREATE EXTENSION btree_gist` (the epistemic edge
-// migration), which the shared external pglite-socket lane cannot load, so this
-// proof is pinned to the in-process lane with the bundled extension registered.
 const makeCandorRepositoryLayer = () =>
   CandorRecordRepositoryLive.pipe(
     Layer.provideMerge(makeDrizzleLayer()),
@@ -81,8 +78,6 @@ const migrateCandorTables = Effect.fnUntraced(function* () {
   yield* migrate(db, { migrationsFolder, migrationsSchema });
 });
 
-// Two representations rather than two numbers: scoping a read to one of them
-// also holds the port's rule that nothing matches across representations.
 const FILING_A: CitingApplicationIdentity.Encoded = { applicationNumber: "16138242", kind: "UsptoNormalized" };
 const FILING_A_JSON = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow)(FILING_A);
 const FILING_B: CitingApplicationIdentity.Encoded = {
@@ -104,8 +99,7 @@ describe("law-practice candor repository schema laws", () => {
   );
 });
 
-/** Scope a filing to one tenant; every read the repository serves takes one. */
-const scopeFor = (citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
+const tenantFilingScope = (citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
   decodeScope({ citingApplication, orgId });
 
 const eventFixture = (seed: number, citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>
@@ -181,8 +175,7 @@ const submissionFactFixture = (seed: number, citingApplication: CitingApplicatio
     submissionKind: "initial",
   });
 
-/** Append one record of each kind for a filing under one tenant. */
-const appendFiling = Effect.fnUntraced(function* (
+const appendOneOfEachKindForTenantFiling = Effect.fnUntraced(function* (
   repository: CandorRecordRepositoryShape,
   citingApplication: CitingApplicationIdentity.Encoded,
   seed: number,
@@ -293,14 +286,7 @@ const explainFilingRead = Effect.fnUntraced(function* (table: string) {
   return document === undefined ? [] : collectPlanNodes(document.Plan);
 });
 
-/**
- * Rewind every candor table's id sequence so the next append receives `nextId`.
- *
- * Postgres hands a freshly-appended heap back in insertion order, so on a table
- * that only ever grows, append order and id order agree and an ordering
- * assertion proves nothing. Moving the sequence is what makes them disagree.
- */
-const setNextRowId = Effect.fnUntraced(function* (nextId: number) {
+const rewindIdSequencesSoNextAppendReceives = Effect.fnUntraced(function* (nextId: number) {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
   yield* Effect.forEach(
@@ -310,22 +296,16 @@ const setNextRowId = Effect.fnUntraced(function* (nextId: number) {
   );
 });
 
-/**
- * Make the planner read the heap directly for the rest of the session.
- *
- * The tenant filter is served by the `(org_id, id)` unique index, which already
- * hands rows back in id order — so with that index available the repository's
- * `ORDER BY id ASC` is unobservable and an ordering assertion cannot fail.
- * Forcing sequential scans is what makes the clause the only thing standing
- * between the caller and heap order.
- */
-const forceSequentialScans = Effect.fnUntraced(function* () {
+const forceSessionHeapScansPastIdOrderedTenantIndex = Effect.fnUntraced(function* () {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
   yield* sql`SET enable_indexscan = off`;
   yield* sql`SET enable_indexonlyscan = off`;
   yield* sql`SET enable_bitmapscan = off`;
 });
+
+const DRIZZLE_CANDOR_INTEGRATION_TITLE =
+  "law-practice Drizzle candor record repository PgLite integration (in-process lane: the migration bundle's btree_gist extension cannot load over pglite-socket)";
 
 const ids = <Entity extends { readonly id: number }>(records: ReadonlyArray<Entity>): ReadonlyArray<number> =>
   A.map(records, (record) => record.id);
@@ -334,40 +314,40 @@ const orgIds = <Entity extends { readonly orgId: number }>(records: ReadonlyArra
   A.map(records, (record) => record.orgId);
 
 if (!shouldRunPgliteIntegration) {
-  describe.skip("law-practice Drizzle candor record repository PgLite integration", () => {});
+  describe.skip(DRIZZLE_CANDOR_INTEGRATION_TITLE, () => {});
 } else {
-  describe("law-practice Drizzle candor record repository PgLite integration", { concurrent: false }, () => {
+  describe(DRIZZLE_CANDOR_INTEGRATION_TITLE, { concurrent: false }, () => {
     it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("appending and reading each record kind", (it) => {
       it.effect(
-        "reads every appended kind back out of Postgres scoped to the filing it was recorded for",
+        "reads each kind back out of Postgres scoped to its filing: jsonb equality alone separates a same-tenant filing of another representation",
         Effect.fnUntraced(function* () {
           yield* migrateCandorTables();
           const repository = yield* CandorRecordRepository;
 
-          const filed = yield* appendFiling(repository, FILING_A, 1, 1);
-          // A second filing under the same tenant: the jsonb equality filter is
-          // the only thing keeping these apart.
-          const other = yield* appendFiling(repository, FILING_B, 2, 1);
+          const filed = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 1, 1);
+          const other = yield* appendOneOfEachKindForTenantFiling(repository, FILING_B, 2, 1);
 
-          const filingA = yield* scopeFor(FILING_A, 1);
-          const filingB = yield* scopeFor(FILING_B, 1);
+          const filingA = yield* tenantFilingScope(FILING_A, 1);
+          const filingB = yield* tenantFilingScope(FILING_B, 1);
 
           const events = yield* repository.listEvents(filingA);
           const dispositions = yield* repository.listDispositions(filingA);
           const submissionFacts = yield* repository.listSubmissionFacts(filingA);
           const snapshot = yield* repository.readSnapshot(filingA);
 
-          // The database, not the fixture, assigned these ids; the append
-          // returned the stored row, so the read must match it exactly.
-          expect(ids(events)).toEqual([filed.event.id]);
+          expect(
+            ids(events),
+            "the read returns the database-assigned ids of the stored rows the append returned"
+          ).toEqual([filed.event.id]);
           expect(ids(dispositions)).toEqual([filed.disposition.id]);
           expect(ids(submissionFacts)).toEqual([filed.submissionFact.id]);
           expect(ids(snapshot.events)).toEqual([filed.event.id]);
           expect(ids(snapshot.dispositions)).toEqual([filed.disposition.id]);
 
-          // Round-tripping the recorded surface, not just the row count: what
-          // came back out of jsonb must still be the observation that went in.
-          expect(A.map(events, (event) => event.grounding.source.textDigest)).toEqual([digest]);
+          expect(
+            A.map(events, (event) => event.grounding.source.textDigest),
+            "the jsonb round trip returns the observation that went in"
+          ).toEqual([digest]);
           expect(A.map(dispositions, (disposition) => disposition.disposes.textDigest)).toEqual([digest]);
           expect(A.map(submissionFacts, (fact) => fact.submissionKind)).toEqual(["initial"]);
 
@@ -389,21 +369,21 @@ if (!shouldRunPgliteIntegration) {
           yield* migrateCandorTables();
           const repository = yield* CandorRecordRepository;
 
-          // Interleaved so each tenant's rows are non-contiguous in the table:
-          // org 1 holds ids 1 and 3, org 2 holds id 2, for every kind.
-          const first = yield* appendFiling(repository, FILING_A, 1, 1);
-          const foreign = yield* appendFiling(repository, FILING_A, 2, 2);
-          const third = yield* appendFiling(repository, FILING_A, 3, 1);
+          const first = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 1, 1);
+          const foreign = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 2, 2);
+          const third = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 3, 1);
 
-          const tenantOne = yield* scopeFor(FILING_A, 1);
-          const tenantTwo = yield* scopeFor(FILING_A, 2);
+          const tenantOne = yield* tenantFilingScope(FILING_A, 1);
+          const tenantTwo = yield* tenantFilingScope(FILING_A, 2);
 
           const tenantOneEvents = yield* repository.listEvents(tenantOne);
           const tenantOneDispositions = yield* repository.listDispositions(tenantOne);
           const tenantOneFacts = yield* repository.listSubmissionFacts(tenantOne);
 
-          // Ordered by id ascending across a gap the other tenant owns.
-          expect(ids(tenantOneEvents)).toEqual([first.event.id, third.event.id]);
+          expect(
+            ids(tenantOneEvents),
+            "tenant one's rows come by id ascending across the interleaved id the other tenant owns"
+          ).toEqual([first.event.id, third.event.id]);
           expect(ids(tenantOneDispositions)).toEqual([first.disposition.id, third.disposition.id]);
           expect(ids(tenantOneFacts)).toEqual([first.submissionFact.id, third.submissionFact.id]);
           expect(orgIds(tenantOneEvents)).toEqual([1, 1]);
@@ -429,27 +409,32 @@ if (!shouldRunPgliteIntegration) {
 
     it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("ordering reads of one filing", (it) => {
       it.effect(
-        "returns each kind by id ascending whatever order it was appended in",
+        "returns each kind by id ascending when the highest id is appended first, so heap order and id order disagree",
         Effect.fnUntraced(function* () {
           yield* migrateCandorTables();
           const repository = yield* CandorRecordRepository;
 
-          // Highest id appended first, so heap order and id order disagree.
-          yield* setNextRowId(101);
-          const later = yield* appendFiling(repository, FILING_A, 1, 1);
-          yield* setNextRowId(1);
-          const earlier = yield* appendFiling(repository, FILING_A, 2, 1);
+          yield* rewindIdSequencesSoNextAppendReceives(101);
+          const later = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 1, 1);
+          yield* rewindIdSequencesSoNextAppendReceives(1);
+          const earlier = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 2, 1);
 
-          // The setup itself is asserted: without the rewind the two appends
-          // would land in ascending order and prove nothing below.
-          expect(later.event.id).toBe(101);
-          expect(earlier.event.id).toBe(1);
+          expect(later.event.id, "setup: without the rewind these appends land ascending and prove nothing below").toBe(
+            101
+          );
+          expect(
+            earlier.event.id,
+            "setup: without the rewind these appends land ascending and prove nothing below"
+          ).toBe(1);
 
-          yield* forceSequentialScans();
-          const filing = yield* scopeFor(FILING_A, 1);
+          yield* forceSessionHeapScansPastIdOrderedTenantIndex();
+          const filing = yield* tenantFilingScope(FILING_A, 1);
 
           const listEvents13 = yield* repository.listEvents(filing);
-          expect(ids(listEvents13)).toEqual([earlier.event.id, later.event.id]);
+          expect(ids(listEvents13), "ORDER BY id, not the (org_id, id) index, orders the rows").toEqual([
+            earlier.event.id,
+            later.event.id,
+          ]);
           const listDispositions14 = yield* repository.listDispositions(filing);
           expect(ids(listDispositions14)).toEqual([earlier.disposition.id, later.disposition.id]);
           const listSubmissionFacts15 = yield* repository.listSubmissionFacts(filing);
@@ -465,7 +450,7 @@ if (!shouldRunPgliteIntegration) {
         Effect.fnUntraced(function* () {
           yield* migrateCandorTables();
           const repository = yield* CandorRecordRepository;
-          const seed = yield* appendFiling(repository, FILING_A, 1, 1);
+          const seed = yield* appendOneOfEachKindForTenantFiling(repository, FILING_A, 1, 1);
 
           yield* seedRepresentativePlannerVolume([seed.disposition.id, seed.submissionFact.id, seed.event.id]);
 
@@ -487,25 +472,25 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    // Its own database: the read below is expected to fail, and an implicit
-    // transaction pglite host rolls the whole session chain back afterwards.
-    it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("driver failures", (it) => {
-      it.effect(
-        "reports an unreadable table as a typed repository failure naming that table",
-        Effect.fnUntraced(function* () {
-          const repository = yield* CandorRecordRepository;
-          const filing = yield* scopeFor(FILING_A, 1);
+    it.layer(makeCandorRepositoryLayer(), {
+      timeout: "5 minutes",
+    })(
+      "driver failures, in their own database because a failed read rolls back the pglite host's whole session chain",
+      (it) => {
+        it.effect(
+          "reports an unmigrated table as a typed repository failure naming that table, never as a not-blocked empty read",
+          Effect.fnUntraced(function* () {
+            const repository = yield* CandorRecordRepository;
+            const filing = yield* tenantFilingScope(FILING_A, 1);
 
-          // Intentional failure last: no migration has run in this database, so
-          // the physical table does not exist. A read that swallowed this would
-          // let the gate report "not blocked" for a filing it never checked.
-          const failure = yield* Effect.flip(repository.readSnapshot(filing));
+            const failure = yield* Effect.flip(repository.readSnapshot(filing));
 
-          expect(failure.operation).toBe("readSnapshot");
-          expect(failure.reason).toContain("law_practice_patent_citation_event");
-        }),
-        PgliteIntegrationTimeout
-      );
-    });
+            expect(failure.operation).toBe("readSnapshot");
+            expect(failure.reason).toContain("law_practice_patent_citation_event");
+          }),
+          PgliteIntegrationTimeout
+        );
+      }
+    );
   });
 }

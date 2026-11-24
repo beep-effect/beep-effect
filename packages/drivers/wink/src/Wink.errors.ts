@@ -206,8 +206,6 @@ export const WinkError = S.Union([WinkEngineError, WinkEntityError, WinkTokeniza
 );
 
 /**
- * Type-level companion for the {@link WinkError} schema union.
- *
  * **Example** (Assign WinkError schema type)
  *
  * ```ts

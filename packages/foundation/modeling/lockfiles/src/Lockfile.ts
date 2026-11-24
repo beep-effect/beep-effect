@@ -36,9 +36,6 @@ const $I = $LockfilesId.create("Lockfile");
 const EMPTY_IMPORTERS: ReadonlyArray<LockfileImporter> = [];
 
 /**
- * Failure of `Lockfile.parse`: the given content is not a valid lockfile of
- * the requested format.
- *
  * **Details**
  *
  * - `format` — which format was being parsed.
@@ -115,9 +112,6 @@ export class LockfileParseError extends S.TaggedError<LockfileParseError, { read
 }
 
 /**
- * Failure of `Lockfile.parse`: the content parsed as text, but no single
- * lockfile document could be located in it.
- *
  * **Details**
  *
  * `pnpm-lock.yaml` is a YAML **stream**. pnpm writes an env preamble document
@@ -269,8 +263,6 @@ const lookupName = (names: HashMap.HashMap<string, string>, key: string): O.Opti
   O.filter(HashMap.get(names, key), Str.isNonEmpty);
 
 /**
- * The unified lockfile model all four formats normalize into.
- *
  * **Details**
  *
  * - `format` — which lockfile format produced the data.

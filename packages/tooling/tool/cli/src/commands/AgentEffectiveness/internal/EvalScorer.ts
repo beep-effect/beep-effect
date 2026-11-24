@@ -229,8 +229,6 @@ const environmentFailureSummary = (report: AgentEffectivenessEvalScoreReport): s
   );
 
 /**
- * Options for running an agent effectiveness eval score; the data root is only present when recording.
- *
  * @category models
  * @since 0.0.0
  */

@@ -20,8 +20,6 @@ import * as S from "effect/Schema";
 const $I = $PacerId.create("pacer/auth/CsoAuth.models");
 
 /**
- * `cso-auth` login request body.
- *
  * **Details**
  *
  * `clientCode` is optional billing/matter attribution; `otpCode` is required
@@ -56,8 +54,6 @@ export class CsoAuthRequest extends S.Opaque<CsoAuthRequest, { readonly brand: u
 ) {}
 
 /**
- * `cso-auth` login response body.
- *
  * **Details**
  *
  * `loginResult` `"0"` means a token was issued; `nextGenCSO` is empty on
@@ -115,8 +111,6 @@ export class CsoLogoutRequest extends S.Opaque<CsoLogoutRequest, { readonly bran
 ) {}
 
 /**
- * `cso-logout` response body.
- *
  * **Example** (Construct logout response body)
  *
  * ```ts

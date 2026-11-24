@@ -88,8 +88,6 @@ class ReflectionFinding extends S.Opaque<ReflectionFinding, { readonly brand: un
 ) {}
 
 /**
- * Schema-validated YAML frontmatter of a goal-packet reflection artifact.
- *
  * **Example** (Decode a minimal frontmatter value)
  *
  * ```ts
@@ -127,8 +125,6 @@ export class ReflectionFrontmatter extends S.Opaque<ReflectionFrontmatter, { rea
 ) {}
 
 /**
- * Namespace for {@link ReflectionFinding} companion types.
- *
  * **Example** (Log ReflectionFinding string)
  *
  * ```ts

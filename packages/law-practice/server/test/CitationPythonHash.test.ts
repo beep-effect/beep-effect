@@ -65,10 +65,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("frozen Python primi
           expect(citationResult6, row.name).toBe(row.hash);
           direct++;
         } else {
-          // JavaScript text merges a paired surrogate representation into a
-          // scalar; explicit native storage is the faithful source path.
           const citationResult7 = yield* hash.text(row.value);
-          expect(citationResult7, row.name).not.toBe(row.hash);
+          expect(
+            citationResult7,
+            `${row.name}: JavaScript text merges a paired surrogate representation into a scalar; explicit native storage is the faithful path`
+          ).not.toBe(row.hash);
           explicit++;
         }
       }

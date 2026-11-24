@@ -45,8 +45,6 @@ const $I = $GithubActionsId.create("Artifact");
 const Json = S.fromJsonString(S.Unknown);
 
 /**
- * Raised when an artifact cannot be uploaded, listed, downloaded or deleted.
- *
  * **Example** (Describe a missing artifact)
  *
  * ```ts
@@ -151,8 +149,6 @@ export class ArtifactError extends S.TaggedError<ArtifactError, { readonly brand
 }
 
 /**
- * One artifact, as the backend describes it.
- *
  * **Example** (Decode an artifact listing row)
  *
  * ```ts
@@ -324,8 +320,6 @@ export declare namespace UploadResult {
 }
 
 /**
- * Where a download should land.
- *
  * **Example** (Validate a download destination)
  *
  * ```ts
@@ -414,8 +408,6 @@ export declare namespace DownloadResult {
 }
 
 /**
- * The database id of an artifact that `delete` removed.
- *
  * **Example** (Admit a deletion result)
  *
  * ```ts

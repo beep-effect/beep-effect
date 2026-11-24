@@ -25,8 +25,6 @@ const RecallFilterKind = LiteralKit(["path", "kind", "status", "symbol"]).pipe(
 );
 
 /**
- * Authoritative recall filter, discriminated on `filter`.
- *
  * **Details**
  *
  * Filters run before fusion and narrow the candidate pool exactly: recall
@@ -66,16 +64,12 @@ export const RecallFilter = RecallFilterKind.toTaggedUnion("filter")({
 );
 
 /**
- * Runtime type for {@link RecallFilter}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type RecallFilter = typeof RecallFilter.Type;
 
 /**
- * Size limits applied at the end of recall.
- *
  * **Details**
  *
  * `maxCandidates` defaults to 50 and `maxAccepted` to 5 when omitted, both at
@@ -153,8 +147,6 @@ export class IndexSearch extends S.Opaque<IndexSearch, { readonly brand: unique 
 ) {}
 
 /**
- * One hit from a single index, with that index's own score.
- *
  * **Details**
  *
  * A hit is what one index knows: fusion has not run, so it carries no fused
@@ -192,8 +184,6 @@ export class IndexHit extends S.Opaque<IndexHit, { readonly brand: unique symbol
 ) {}
 
 /**
- * Name of the embedding model a vector was produced by.
- *
  * **Example** (Brand an embedding model name)
  *
  * ```ts
@@ -213,16 +203,12 @@ export const EmbeddingModel = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link EmbeddingModel}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type EmbeddingModel = typeof EmbeddingModel.Type;
 
 /**
- * One embedding vector with the model that produced it.
- *
  * **Details**
  *
  * Vectors from different models are not comparable, so the model name travels
@@ -259,8 +245,6 @@ const FUSION_WEIGHT_TOLERANCE = 1e-9;
 const sumsToOne = Num.between({ minimum: 1 - FUSION_WEIGHT_TOLERANCE, maximum: 1 + FUSION_WEIGHT_TOLERANCE });
 
 /**
- * Convex fusion weights for BM25 and vector scores.
- *
  * **Details**
  *
  * The two weights must sum to 1. See {@link defaultFusionWeights} for the
@@ -327,8 +311,6 @@ export const defaultFusionWeights: FusionWeights = FusionWeights.make({
 });
 
 /**
- * A recall request: query text, authoritative filters and budgets.
- *
  * **Example** (Ask for list items about a decision)
  *
  * ```ts
@@ -358,8 +340,6 @@ export class RecallQuery extends S.Opaque<RecallQuery, { readonly brand: unique 
 ) {}
 
 /**
- * One recall candidate with the score from each stage that saw it.
- *
  * **Details**
  *
  * `bm25` and `vector` are absent when that index did not return the node;
@@ -411,8 +391,6 @@ const RecallResultKind = LiteralKit(["answered", "abstained"]).pipe(
 );
 
 /**
- * Outcome of one recall, discriminated on `result`.
- *
  * **Details**
  *
  * - `answered`: the admissibility gate accepted at least one candidate;
@@ -452,8 +430,6 @@ export const RecallResult = RecallResultKind.toTaggedUnion("result")({
 );
 
 /**
- * Runtime type for {@link RecallResult}.
- *
  * @category type-level
  * @since 0.0.0
  */

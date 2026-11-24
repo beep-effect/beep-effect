@@ -27,9 +27,11 @@ const fixture = Effect.fnUntraced(function* (name: string) {
   return yield* (yield* FileSystem.FileSystem).readFileString(filename);
 });
 
-// Replay only the public claims subtree and the metadata needed to locate it.
-// No network, credentials, party names or complete file-wrapper records.
-const nativePublicationClient = (application: string, publication: string, xml: ReturnType<typeof fixture>) =>
+const offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly = (
+  application: string,
+  publication: string,
+  xml: ReturnType<typeof fixture>
+) =>
   Layer.effect(
     HttpClient.HttpClient,
     Effect.gen(function* () {
@@ -56,14 +58,18 @@ const nativePublicationClient = (application: string, publication: string, xml: 
     })
   );
 
-const checkerFor = (transport: ReturnType<typeof nativePublicationClient>) =>
+const checkerFor = (transport: ReturnType<typeof offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly>) =>
   ClaimSelfCheckLive.pipe(
     Layer.provide(UsptoClaimsLive),
     Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
     Layer.provide(transport)
   );
 const checker = checkerFor(
-  nativePublicationClient("16287736", "US20200109732A1", fixture("US20200109732A1.claims.xml"))
+  offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly(
+    "16287736",
+    "US20200109732A1",
+    fixture("US20200109732A1.claims.xml")
+  )
 );
 
 const patentClaimsJson = S.fromJsonString(PatentClaims);
@@ -86,25 +92,25 @@ describe("Public USPTO antecedent slice", () => {
             UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("20200109732") })
           )
         );
-        // Preserve the immutable legacy file; only its old wrapper boundary is
-        // projected to the corrected canonical preamble, never its source text.
         assert.deepStrictEqual(
           result.claimSet.claims,
           A.map(expectedClaims, (claim) => ({
             ...claim,
             preamble: Str.trim(Str.replace(/,?\s+further$/iu, "")(claim.preamble)),
-          }))
+          })),
+          "the immutable legacy file is kept; only its old wrapper boundary is projected to the corrected preamble"
         );
         assert.deepStrictEqual(result.report.undecomposed, []);
-        // This immutable first-slice fixture predates functional/bare-mention support.
-        // Keep its exact source spans, terms and edges as a subset, not current gold.
-        // The independent 538-claim evaluator still uses unprojected strict equality.
         const actualTree = yield* Effect.fromOption(A.head(result.report.trees));
         for (const expected of expectedTree.elements) {
           const actual = yield* Effect.fromOption(
             A.findFirst(actualTree.elements, (element) => element.path === expected.path)
           );
-          assert.deepStrictEqual(actual.anchor, expected.anchor);
+          assert.deepStrictEqual(
+            actual.anchor,
+            expected.anchor,
+            "the first-slice fixture predates functional and bare-mention support: a subset, not current gold"
+          );
           for (const term of expected.terms)
             assert.isTrue(
               A.some(
@@ -119,7 +125,10 @@ describe("Public USPTO antecedent slice", () => {
             );
         }
         for (const edge of expectedTree.edges)
-          assert.isTrue(A.some(actualTree.edges, (candidate) => Equal.equals(candidate, edge)));
+          assert.isTrue(
+            A.some(actualTree.edges, (candidate) => Equal.equals(candidate, edge)),
+            "subset check only; the 538-claim evaluator still uses unprojected strict equality"
+          );
         assert.isTrue(A.some(actualTree.edges, (edge) => edge.kind === "functional"));
         assert.isTrue(
           A.some(
@@ -148,9 +157,6 @@ describe("Public USPTO antecedent slice", () => {
   });
 });
 
-// This witness uses an existing pre-prediction reference, selected after the
-// measurement solely to restore current full-tree vertical-slice evidence.
-// It is not a new label, extra benchmark claim or held-out accuracy result.
 const brushFixture = Effect.fnUntraced(function* (name: string) {
   const path = yield* Path.Path;
   const filename = yield* path.fromFileUrl(
@@ -159,7 +165,11 @@ const brushFixture = Effect.fnUntraced(function* (name: string) {
   return yield* (yield* FileSystem.FileSystem).readFileString(filename);
 });
 const brushChecker = checkerFor(
-  nativePublicationClient("12838228", "US20110074901A1", brushFixture("source.claims.xml"))
+  offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly(
+    "12838228",
+    "US20110074901A1",
+    brushFixture("source.claims.xml")
+  )
 );
 const referenceTreesJson = ClaimElementTree.pipe(S.Array, S.fromJsonString);
 const canonicalClaimsJson = S.fromJsonString(
@@ -173,7 +183,7 @@ const publicProvenanceJson = S.fromJsonString(
   })
 );
 
-describe("Current strict public claim slice", () => {
+describe("Current strict public claim slice over a pre-prediction reference witness, not a new label, benchmark claim or held-out result", () => {
   it.layer(brushChecker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))), {
     timeout: "30 seconds",
   })((it) => {

@@ -7,8 +7,6 @@
  */
 
 /**
- * Citation-signal model exports.
- *
  * **Example** (Import CitationSignal)
  *
  * ```ts

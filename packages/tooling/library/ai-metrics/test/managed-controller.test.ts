@@ -27,8 +27,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Protobuf from "protobufjs";
 
-// Independent OTLP v1.9.0 fixture codec: tests do not import a private production encoder.
-const wire = Protobuf.parse(`syntax="proto3";
+const independentOtlpFixtureWire = Protobuf.parse(`syntax="proto3";
 message Value { oneof value { string string_value=1; bool bool_value=2; int64 int_value=3; } }
 message Attribute { string key=1; Value value=2; }
 message Resource { repeated Attribute attributes=1; }
@@ -84,7 +83,9 @@ const decoded = S.Struct({
   ),
 });
 const read = (bytes: Uint8Array) =>
-  S.decodeUnknownEffect(decoded)(wire.toObject(wire.decode(bytes), { longs: String }));
+  S.decodeUnknownEffect(decoded)(
+    independentOtlpFixtureWire.toObject(independentOtlpFixtureWire.decode(bytes), { longs: String })
+  );
 
 it.layer(NodeCrypto.layer)((it) => {
   it.effect.prop(
@@ -228,20 +229,19 @@ it.layer(NodeCrypto.layer)((it) => {
         { key: "llm.provider", value: { stringValue: "invented-provider" } },
         { key: "openinference.span.kind", value: { stringValue: "LLM" } },
       ]) {
-        const raw = wire.toObject(wire.decode(body), { longs: String });
+        const raw = independentOtlpFixtureWire.toObject(independentOtlpFixtureWire.decode(body), { longs: String });
         const value = yield* S.decodeUnknownEffect(decoded)(raw);
         const original = O.getOrThrow(
           A.head(O.getOrThrow(A.head(O.getOrThrow(A.head(value.resourceSpans)).scopeSpans)).spans)
         );
-        // Mutation is confined to a synthetic decoded transport, never a real source body.
-        const changed = wire
+        const mutatedSyntheticDecodedTransportNeverARealSourceBody = independentOtlpFixtureWire
           .encode({
             resourceSpans: [
               { scopeSpans: [{ spans: [{ ...original, attributes: [...original.attributes, attribute] }] }] },
             ],
           })
           .finish();
-        const batch = yield* projectNativeTraceRequest(request(changed));
+        const batch = yield* projectNativeTraceRequest(request(mutatedSyntheticDecodedTransportNeverARealSourceBody));
         expect(batch.spans).toHaveLength(0);
         expect(batch.rejections).toHaveLength(1);
       }
@@ -278,7 +278,7 @@ it.layer(NodeCrypto.layer)((it) => {
       ]) {
         for (const malformed of [false, true]) {
           const attributes = A.filter(original.attributes, (attribute) => attribute.key !== key);
-          const changed = wire
+          const changed = independentOtlpFixtureWire
             .encode({
               resourceSpans: [
                 {
@@ -323,7 +323,9 @@ it.layer(NodeCrypto.layer)((it) => {
         { ...original, endTimeUnixNano: "0" },
         { ...original, status: { code: 2 } },
       ]) {
-        const changed = wire.encode({ resourceSpans: [{ scopeSpans: [{ spans: [changedSpan] }] }] }).finish();
+        const changed = independentOtlpFixtureWire
+          .encode({ resourceSpans: [{ scopeSpans: [{ spans: [changedSpan] }] }] })
+          .finish();
         const batch = yield* projectNativeTraceRequest(request(changed));
         expect(batch.spans).toEqual([]);
         expect(batch.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
@@ -422,9 +424,10 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
         const other = ManagedControllerObservation.make({ ...observation, launchId: id("6") });
         const first = yield* encodeManagedControllerObservation(observation);
         const second = yield* encodeManagedControllerObservation(other);
-        // Protobuf concatenation merges repeated resourceSpans into one two-span request.
-        const mixed = new Uint8Array([...first, ...second]);
-        const healthy = yield* projectNativeTraceRequest(request(mixed));
+        const concatenationMergesRepeatedResourceSpansIntoOneTwoSpanRequest = new Uint8Array([...first, ...second]);
+        const healthy = yield* projectNativeTraceRequest(
+          request(concatenationMergesRepeatedResourceSpansIntoOneTwoSpanRequest)
+        );
         expect(healthy.spans).toHaveLength(2);
         const digest = globalThis.crypto.subtle.digest.bind(globalThis.crypto.subtle);
         let failedCalls = 0;
@@ -440,7 +443,9 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
           ),
           (mock) => Effect.sync(() => mock.mockRestore())
         );
-        const error = yield* Effect.flip(projectNativeTraceRequest(request(mixed)));
+        const error = yield* Effect.flip(
+          projectNativeTraceRequest(request(concatenationMergesRepeatedResourceSpansIntoOneTwoSpanRequest))
+        );
         expect(error).toEqual(NativeTraceError.make({ reason: "hash-failure" }));
         expect(failedCalls).toBe(1);
         expect(String(error)).not.toContain("PRIVATE_CRYPTO_FAILURE");

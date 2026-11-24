@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Github/Github.errors");
 
 /**
- * A GitHub command could not read its policy data or start its loopback server.
- *
  * **Details**
  *
  * The message never carries credential material; secrets stay inside the

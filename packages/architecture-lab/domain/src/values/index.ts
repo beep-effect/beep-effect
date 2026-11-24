@@ -7,8 +7,6 @@
  */
 
 /**
- * WorkPriority value-object namespace.
- *
  * @category value-objects
  * @since 0.0.0
  */

@@ -76,7 +76,7 @@ const program = Effect.gen(function* () {
       message: "Frozen allowed sample has inconsistent counts or duplicate patents.",
     });
   }
-  // Verify the entire source and implementation before emitting any prediction.
+  // decision: evaluation-scripts-verify-whole-freeze-before-prediction
   for (const file of implementation.files) {
     yield* verifiedText(file.path, file.sha256);
   }

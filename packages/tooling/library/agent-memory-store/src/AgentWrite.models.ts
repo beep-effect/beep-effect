@@ -14,8 +14,6 @@ import { BaseExport, OperationBatch } from "./Operation.models.ts";
 const $I = $AgentMemoryStoreId.create("AgentWrite.models");
 
 /**
- * One agent edit as admission judged it.
- *
  * **Details**
  *
  * `batch` is the operation batch op capture submitted for the edit, absent
@@ -49,9 +47,6 @@ export class AdmittedWrite extends S.Opaque<AdmittedWrite, { readonly brand: uni
 ) {}
 
 /**
- * One agent edit as admission judged it, with the export that projected the
- * log afterwards.
- *
  * **Details**
  *
  * `exported` is a {@link BaseExport} as it is, with no key annotation: a key

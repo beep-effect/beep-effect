@@ -6,8 +6,6 @@
  */
 
 /**
- * Edge authority command exports.
- *
  * **Example** (RecordEdgeFact command export)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./EdgeAuthority.commands.ts";
 /**
- * Edge authority typed error exports.
- *
  * **Example** (SupersessionConflict error export)
  *
  * ```ts
@@ -38,8 +34,6 @@ export * from "./EdgeAuthority.commands.ts";
  */
 export * from "./EdgeAuthority.errors.ts";
 /**
- * Edge authority repository port exports.
- *
  * **Example** (EdgeAuthorityRepository port export)
  *
  * ```ts

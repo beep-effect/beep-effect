@@ -32,8 +32,6 @@ const AiProviderCliCodexPrivateEntryBase = LiteralKit(["auth.json", "models_cach
 const AiProviderCliCodexLocalEntryBase = LiteralKit(["log", "memories", "tmp"]);
 
 /**
- * Home-layout mode for a provider CLI instance.
- *
  * **Details**
  *
  * `direct` runs the CLI against the shared home directory as-is.
@@ -62,8 +60,6 @@ export const AiProviderCliHomeMode = AiProviderCliHomeModeBase.pipe(
 );
 
 /**
- * Type for a provider CLI home-layout mode.
- *
  * **Example** (Annotate direct mode)
  *
  * ```ts
@@ -107,8 +103,6 @@ export const AiProviderCliCodexSharedDirectory = AiProviderCliCodexSharedDirecto
 );
 
 /**
- * Type for a shared Codex home directory name.
- *
  * **Example** (Annotate sessions directory)
  *
  * ```ts
@@ -152,8 +146,6 @@ export const AiProviderCliCodexPrivateEntry = AiProviderCliCodexPrivateEntryBase
 );
 
 /**
- * Type for a private Codex home entry name.
- *
  * **Example** (Annotate auth.json entry)
  *
  * ```ts
@@ -170,8 +162,6 @@ export const AiProviderCliCodexPrivateEntry = AiProviderCliCodexPrivateEntryBase
 export type AiProviderCliCodexPrivateEntry = typeof AiProviderCliCodexPrivateEntry.Type;
 
 /**
- * Codex home entries left local to each home and never linked or shared.
- *
  * **Example** (List local entry options)
  *
  * ```ts
@@ -191,8 +181,6 @@ export const AiProviderCliCodexLocalEntry = AiProviderCliCodexLocalEntryBase.pip
 );
 
 /**
- * Type for a local-only Codex home entry name.
- *
  * **Example** (Annotate tmp entry)
  *
  * ```ts
@@ -209,8 +197,6 @@ export const AiProviderCliCodexLocalEntry = AiProviderCliCodexLocalEntryBase.pip
 export type AiProviderCliCodexLocalEntry = typeof AiProviderCliCodexLocalEntry.Type;
 
 /**
- * Resolved Codex home layout for a provider CLI instance.
- *
  * **Details**
  *
  * `sharedHomePath` is always the resolved shared Codex home. In `direct`

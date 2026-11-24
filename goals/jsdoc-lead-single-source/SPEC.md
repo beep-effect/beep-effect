@@ -161,6 +161,37 @@ Lane goals/jsdoc-lead-single-source-p0 · PR #3496
 
 Reverse: Widen leadRestates or derivedLead sources in @beep/repo-utils/JSDoc/LeadSource and rewrite the jsdoc ratchet baseline
 
+### Double-classify paraphrase leads in law-practice/domain, then stop the pass at 23% yield, 2026-11-23
+
+The lexical `restating-lead` rule finds leads that repeat their `$I.annote` description word for
+word. A second class restates it in other words: an annotated schema whose lead is a paraphrase
+of its annotation. Wave 2 ran a double-classification pass on that class for its first package,
+`@beep/law-practice-domain`, and stops the pass there.
+
+- **Candidates:** 254 exports in `packages/law-practice/domain` whose lead shares words with the
+  annotation but is not flagged by the lexical rule.
+- **Classifier A:** an Opus 5.5 medium Agent child, given only the rows (file, export, lead,
+  annotation), labelled each row `delete` (the lead says nothing the annotation does not) or
+  `keep`.
+- **Classifier B:** Cursor `claude-opus-5-5-medium` in a separate session with no author context:
+  `cursor-agent -p --trust --mode ask --sandbox enabled --model claude-opus-5-5-medium
+  --output-format text <prompt>`. Cursor's sandbox failed to mount its tool environment
+  ("Mount count limit reached"), so the session ran with no tools and the rows in the prompt;
+  the sandbox stayed enabled.
+- **Result:** A and B agreed on 240 of 254 rows; 59 rows are `delete` on both sides (23%
+  yield). Only those 59 leads are removed. An earlier pairing of two Opus Agent children agreed
+  on 64; it is superseded because the second classifier must be a separate provider session.
+- **Stop:** the brief stops the pass when the first package yields under about 30%. At 23%, a
+  paraphrase lead is more often a different sentence than a restatement, and the cost is two
+  classifier sessions per package. Later waves remove lexical restatements only.
+
+Paraphrase removals are reported apart from the lexical count: they do not move the
+`restating-lead` total, which counts only lexical restatements.
+
+Lane goals/jsdoc-lead-single-source-p1
+
+Reverse: Restore the 59 leads from the W2 merge base and resume the pass in later waves with the same two-classifier route
+
 ### Re-baseline restating-lead to 8,758 for the 32 leads two PRs added before #3496 merged, 2026-11-23
 
 Main at 37f350c4c4d failed `quality:jsdoc-ratchet:regenerated` with `restating-lead: 8758 > 8726 (+32)`.
@@ -189,9 +220,56 @@ packages last". That wave covers `@beep/identity`, `@beep/infra-ci-runners`,
 rows included. The orchestrator merges it on the CI goals driver's sequencing, and its PR names
 those packages.
 
+**Correction (wave 3).** The CI goals driver checked the rows against both P5 fences. Repo-cli
+`Ci/*` and `Identity/*` are in no runner Lambda bundle and outside the CI closure, and identity
+`src/Registry.ts` is in no handler graph and outside the closure. Of the rows, only
+`identity/src/Term.ts` (17) is fenced, as closure source. The 32 above is net of the 4 leads #3439
+removed, so the PRs added 36 rows: wave 3 removes 13: `rdf/src/NamespacePin.ts` 2, `identity/src/Registry.ts` 1, cli
+`Identity/index.ts` 1, cli `Identity/Registry.ts` 2 of 3, and the four `Ci/` files 7 of 12. Six
+cli leads stay because removing them leaves a tooling export with no description, which
+`beep/require-description` rejects under `--max-warnings=0`; wave 4 teaches that rule to accept a
+lead derived from the annotation and removes them. The 17 `Term.ts` rows wait for wave 5.
+
 Lane fix/jsdoc-ratchet-restating-lead-main
 
-Reverse: Remove the 32 attributed leads in the last P1 sweep wave (PLAN.md: CI-closure and P5 runner packages last) and lower the baseline with jsdoc-ratchet --write-baseline
+Reverse: Wave 3 removes 13 of the 36 added leads; remove the 6 tooling leads in wave 4 and the 17 in identity Term.ts in wave 5, then lower the baseline with jsdoc-ratchet --write-baseline
+
+### require-description accepts a lead derived from the export's annotation, 2026-11-23
+
+In `packages/tooling/*/*/src` the docs oxlint config runs `beep/require-description` under `--max-warnings=0`. Wave 3 showed it rejecting a type companion (`export type X = typeof X.Type`) whose only lead restated `X`'s `$I.annote*` description: removing the lead left a tags-only block. That is the same restatement the goal removes, so the rule now treats a declaration as described when docgen can derive its lead: it records every `annote`/`annoteSchema`/`annoteClass`/`annoteError`/`annoteHttp` call whose identifier names an enclosing variable or class and whose options carry a literal `description`, and at `Program:exit` it reports only the missing descriptions that no such annotation covers, by the declaration's own name or its enclosing namespace's. This mirrors `derivedLead` in `@beep/repo-utils/JSDoc/LeadSource` (annotated value, same-named type companion, namespace members). Fixture cases cover a companion type and namespace member, an annotated class, an annotation naming another export, and an annotation without a description.
+
+Lane goals/jsdoc-lead-single-source-w4
+
+Reverse: Drop the derived-lead exemption from beep/require-description in policy-pack lint-rules docs.ts and restore the leads the rule then reports
+
+### Sweep waves skip both P5 cutover fences, file by file: the CI binary closure and the runner handler graphs, 2026-11-23
+
+The P5 cutover has two fences. Both are file fences, not package fences, and the sweep waves leave
+every file behind either one untouched:
+
+- **CI binary closure** (`beep ci binary-closure --list`): any byte change starts a binary build and
+  release cycle that the CI goals driver sequences.
+- **Runner handler graphs**: Alchemy hashes each runner Lambda's zip including its source map, whose
+  `sourcesContent` embeds every loaded module's full text, so a JSDoc-only edit in a handler-graph
+  file changes the code hash. The fenced files are the five identity sources
+  `HandlerBundles.test.ts` pins (`Authority.ts`, `Id.ts`, `Root.ts`, `internal/Segment.ts`,
+  `internal/schemaStatics.ts`), ci-runners `src/internal/lambda/**` and everything it imports, the
+  alchemy-github-runners handler graphs, and any `@beep/schema`, `@beep/data` or `@beep/utils`
+  module those graphs load. When a file is in doubt, a HandlerBundles-style before/after build that
+  compares map sources decides.
+
+Wave 3 swept 653 files in foundation, drivers and six repo-cli files, then reverted the 64 that are
+closure source: drivers/github-actions (3), capability cli-kit (22), runtime-env (10), walker (1),
+modeling github-commands (1), github-reporting (1), identity `Iri.ts` (1), markdown (12), utils
+(12) and primitive/data (1). The CI goals driver ruled in writing that identity `Registry.ts` and
+repo-cli `Ci/*` and `Identity/*` are behind neither fence, so wave 3 keeps them. Wave 4 (tooling)
+applies both checks. The fenced files join wave 5 with identity `Term.ts`. Wave 5 runs only on the
+orchestrator's slot, after tksr C's cumulative pin (#3500) merges, and its release gets the driver's
+read.
+
+Lane goals/jsdoc-lead-single-source-w3
+
+Reverse: Sweep the fenced files in wave 5, on the orchestrator's slot, once it says in writing that the P5 fence has lifted
 
 <!-- beep:decisions:end -->
 

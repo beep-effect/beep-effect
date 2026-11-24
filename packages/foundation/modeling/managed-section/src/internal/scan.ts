@@ -118,8 +118,6 @@ export class ScanSucceeded extends S.Opaque<ScanSucceeded, { readonly brand: uni
 ) {}
 
 /**
- * The failed variant of {@link ScanResult}: the first structural ambiguity.
- *
  * **Example** (Construct a failed scan)
  *
  * ```ts

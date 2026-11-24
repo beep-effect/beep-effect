@@ -17,8 +17,6 @@ import { SecretStoreOperation, SecretTarget } from "./WindowsSecrets.models.ts";
 const $I = $WindowsSecretsId.create("WindowsSecrets.errors");
 
 /**
- * Credential Manager or DPAPI call that returned failure.
- *
  * **Details**
  *
  * `code` is the Win32 `GetLastError` value read right after the failing call.

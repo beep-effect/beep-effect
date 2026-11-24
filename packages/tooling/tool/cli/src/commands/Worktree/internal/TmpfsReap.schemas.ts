@@ -47,16 +47,12 @@ export const TmpfsReapClass = LiteralKit([
 );
 
 /**
- * Artifact family recognized by the tmpfs janitor.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TmpfsReapClass = typeof TmpfsReapClass.Type;
 
 /**
- * Filesystem or Git operation selected for one janitor candidate.
- *
  * **Example** (Inspect the removal actions)
  *
  * ```ts
@@ -75,16 +71,12 @@ export const TmpfsReapAction = LiteralKit(["worktree-remove", "remove-dir", "ski
 );
 
 /**
- * Filesystem or Git operation selected for one janitor candidate.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TmpfsReapAction = typeof TmpfsReapAction.Type;
 
 /**
- * Conjunctive safety condition that prevented a candidate from being reaped.
- *
  * **Example** (Recognize an age refusal)
  *
  * ```ts
@@ -119,8 +111,6 @@ export const TmpfsReapSkipReason = LiteralKit([
 );
 
 /**
- * Safety condition that prevented a candidate from being reaped.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -169,8 +159,6 @@ export class TmpfsReapCandidate extends S.Opaque<TmpfsReapCandidate, { readonly 
 ) {}
 
 /**
- * Auditable result of one dry-run or applied tmpfs janitor pass.
- *
  * **Example** (Construct an empty dry-run report)
  *
  * ```ts

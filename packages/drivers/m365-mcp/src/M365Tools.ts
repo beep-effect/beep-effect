@@ -45,8 +45,6 @@ import * as S from "effect/Schema";
 const $I = $M365McpId.create("M365Tools");
 
 /**
- * Structured failure returned by Microsoft 365 MCP tools.
- *
  * **Example** (Constructing a tool error)
  *
  * ```ts

@@ -7,8 +7,6 @@
  */
 
 /**
- * VerdictRow model exports.
- *
  * **Example** (Import VerdictRow)
  *
  * ```ts

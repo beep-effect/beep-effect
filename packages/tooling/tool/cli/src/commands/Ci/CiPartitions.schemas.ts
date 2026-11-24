@@ -260,8 +260,6 @@ export const CI_SHARDED_PARTITION_SOURCES: ReadonlyArray<CiShardedPartitionSourc
 ];
 
 /**
- * One test file's measured duration inside a hosted Test Unit shard.
- *
  * **Example** (Record a file timing)
  *
  * ```ts
@@ -291,8 +289,6 @@ export class CiPartitionFileTiming extends S.Opaque<CiPartitionFileTiming, { rea
 ) {}
 
 /**
- * One package's measured Vitest wall inside a hosted Test Unit bin.
- *
  * **Example** (Record a package timing)
  *
  * ```ts
@@ -350,8 +346,6 @@ export class CiPartitionRunTimings extends S.Opaque<CiPartitionRunTimings, { rea
 ) {}
 
 /**
- * File and package timings read from one hosted Test Unit job log.
- *
  * **Example** (An empty parse)
  *
  * ```ts
@@ -375,8 +369,6 @@ export class ParsedHostedTestUnitLog extends S.Opaque<ParsedHostedTestUnitLog, {
 ) {}
 
 /**
- * Inputs of a shard-plan build: measured timings, the table's shard count and the run's provenance.
- *
  * **Example** (Describe a two-shard build)
  *
  * ```ts
@@ -437,8 +429,6 @@ export const CiPartitionBudgetStatus = LiteralKit(["within", "over", "stale-weig
 );
 
 /**
- * Budget verdict of one hosted Test Unit partition.
- *
  * **Example** (Type a verdict)
  *
  * ```ts

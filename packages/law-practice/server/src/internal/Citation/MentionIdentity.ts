@@ -20,8 +20,7 @@ import type { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAncho
 import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/MentionIdentity");
-// Preserve the prerequisite public type name in declaration output.
-const AnchorProof: S.Codec<VerifiedTextAnchor> = VerifiedTextAnchor;
+const AnchorProofKeepingPublicTypeName: S.Codec<VerifiedTextAnchor> = VerifiedTextAnchor;
 /**
  * Bounded semantic discriminant hashed into a mention id.
  *
@@ -35,15 +34,13 @@ export const SemanticKind = S.NonEmptyString.check(S.isMaxLength(128)).pipe(
   })
 );
 
-// This is a schema field descriptor, not an independent data model. Naming the
-// descriptor retains the prerequisite's opaque public type in declarations.
-type IdentityFields = {
+type IdentityFieldDescriptorsKeepingPublicTypeNames = {
   readonly anchor: S.Codec<VerifiedTextAnchor>;
   readonly engineArtifact: typeof Sha256Hex;
   readonly semanticKind: typeof SemanticKind;
 };
-const IdentityFields: IdentityFields = {
-  anchor: AnchorProof,
+const IdentityFieldDescriptorsKeepingPublicTypeNames: IdentityFieldDescriptorsKeepingPublicTypeNames = {
+  anchor: AnchorProofKeepingPublicTypeName,
   engineArtifact: Sha256Hex,
   semanticKind: SemanticKind,
 };
@@ -59,7 +56,7 @@ export class CitationMentionIdentityInput extends S.Opaque<
   CitationMentionIdentityInput,
   { readonly brand: unique symbol }
 >()(
-  S.Struct(IdentityFields).pipe(
+  S.Struct(IdentityFieldDescriptorsKeepingPublicTypeNames).pipe(
     $I.annoteSchema("CitationMentionIdentityInput", {
       description: "Verified occurrence, content-addressed engine artifact and semantic union discriminant.",
     })

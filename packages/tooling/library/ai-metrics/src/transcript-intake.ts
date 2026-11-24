@@ -604,8 +604,6 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
             )
           )
         );
-        // Advance the fair schedule only as each source is attempted, so an interrupted
-        // sweep resumes after the last attempted file instead of skipping untried ones.
         const recordAttempt = Effect.fn("AiMetrics.intake.recordAttempt")((sourceId: Sha256Hex) =>
           safe(
             sql`INSERT INTO observation_schedule_cursor(singleton,source_id) VALUES(1,${sourceId})

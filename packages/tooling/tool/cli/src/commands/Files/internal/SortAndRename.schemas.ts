@@ -110,8 +110,6 @@ export class RenamePlanEntry extends S.Opaque<RenamePlanEntry, { readonly brand:
 ) {}
 
 /**
- * Summary returned by `sortAndRenameFiles`.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts
@@ -140,8 +138,6 @@ export class SortAndRenameSummary extends S.Opaque<SortAndRenameSummary, { reado
 ) {}
 
 /**
- * Files selected for rename planning plus skipped file counts.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts
@@ -166,8 +162,6 @@ export class SortableFileCollection extends S.Opaque<SortableFileCollection, { r
 ) {}
 
 /**
- * Planned rename entries plus skipped file counts.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts

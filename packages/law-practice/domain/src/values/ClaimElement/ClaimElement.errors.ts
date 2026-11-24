@@ -49,16 +49,12 @@ export const ClaimDecompositionReason = LiteralKit([
 );
 
 /**
- * Runtime reason type produced by {@link ClaimDecompositionReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ClaimDecompositionReason = typeof ClaimDecompositionReason.Type;
 
 /**
- * Typed failure raised while decomposing one patent claim into a claim-element tree.
- *
  * **Example** (Construct a missing-context failure)
  *
  * ```ts

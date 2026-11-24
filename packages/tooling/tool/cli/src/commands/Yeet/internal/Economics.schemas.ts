@@ -149,8 +149,6 @@ const EmptyByDefault = <Item extends S.Top>(item: Item) =>
   S.Array(item).pipe(S.withConstructorDefault(Effect.succeed(A.empty<Item["Type"]>())));
 
 /**
- * One key of a count mix and how many observations carried it.
- *
  * **Details**
  *
  * Every mix in the report is an array of these rows sorted by count
@@ -232,8 +230,6 @@ export const EconomicsLaneKind = LiteralKit(["wrapper", "inner"]).pipe(
 );
 
 /**
- * Lane population: an outer wrapper lane or an inner lane.
- *
  * @category models
  * @since 0.0.0
  */
@@ -382,16 +378,12 @@ export const EconomicsAttemptClass = LiteralKit(["green", "red", "terminated", "
 );
 
 /**
- * How an attempt counts in the economics fold: green, red, terminated, or monitor.
- *
  * @category models
  * @since 0.0.0
  */
 export type EconomicsAttemptClass = typeof EconomicsAttemptClass.Type;
 
 /**
- * Outcome, attempt-class, mode and failure-kind mixes over a set of attempts.
- *
  * **Details**
  *
  * A missing outcome, mode or failure kind counts as `unknown`. `classMix`
@@ -433,8 +425,6 @@ export class EconomicsAttemptMix extends S.Opaque<EconomicsAttemptMix, { readonl
 ) {}
 
 /**
- * Attempt mixes over every attempt and over the comparable subset.
- *
  * **Details**
  *
  * An attempt is comparable when its mode is `verify`, `repair` or `publish`
@@ -832,9 +822,6 @@ export const EconomicsFingerprintClassification = LiteralKit(["measured", "unmea
 export type EconomicsFingerprintClassification = typeof EconomicsFingerprintClassification.Type;
 
 /**
- * The fingerprint-repeat proxy for M4: verdict-bearing red attempts whose
- * next comparable attempt went green on the same diff fingerprint.
- *
  * **Details**
  *
  * Pairs are consecutive attempts of the comparable sequence red-to-green uses
@@ -988,8 +975,6 @@ export class EconomicsDiagnostics extends EconomicsJournalDiagnostics.extend<Eco
 ) {}
 
 /**
- * The attempt window, loader diagnostics, and the estimator the report used.
- *
  * **Example** (Data quality of an empty scope)
  *
  * ```ts
@@ -1041,9 +1026,6 @@ export class EconomicsDataQuality extends S.Opaque<EconomicsDataQuality, { reado
 ) {}
 
 /**
- * Which journals a report read: the current checkout, one branch's run, or
- * the fleet of sibling checkouts.
- *
  * **Example** (Recognise the fleet scope)
  *
  * ```ts
@@ -1070,9 +1052,6 @@ export const EconomicsScopeKind = LiteralKit(["checkout", "branch", "fleet"]).pi
 export type EconomicsScopeKind = typeof EconomicsScopeKind.Type;
 
 /**
- * The scope a report covers: its kind, the checkout labels it read (paths
- * relative to the projects root), and the branch it narrowed to.
- *
  * **Details**
  *
  * A checkout outside the projects root, such as a T3 Code lane under a
@@ -1305,9 +1284,6 @@ export class EconomicsReviewLaneLedgerQuality extends S.Opaque<
 ) {}
 
 /**
- * The review lane as a verification lane (ruling 81): rounds to ready and
- * reviewer precision, measured from the review lane ledger.
- *
  * **Details**
  *
  * A section beside the wrapper and inner lane populations, never summed with
@@ -1443,8 +1419,6 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
 export const YeetEconomicsReportJson = JsonStringCodec(YeetEconomicsReport);
 
 /**
- * Parsed `yeet economics` flags.
- *
  * **Details**
  *
  * `packetDir` is the Yeet packet directory whose `runs` directory holds the

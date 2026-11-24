@@ -182,9 +182,7 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { timeout: "30 se
 );
 
 const probeSpawner = (stdout: Stream.Stream<Uint8Array>, released: Ref.Ref<number>, started: Deferred.Deferred<void>) =>
-  // Own double (D-14): a release finalizer and a `started` Deferred, with an oversized never-ending stdout
-  // that has no `ScriptCompletion` shape.
-  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14): release finalizer, started Deferred, endless oversized stdout
   ChildProcessSpawner.make(() =>
     Effect.acquireRelease(
       Effect.succeed(

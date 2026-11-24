@@ -6,8 +6,6 @@
  */
 
 /**
- * Page OCR failures.
- *
  * @category errors
  * @since 0.0.0
  */

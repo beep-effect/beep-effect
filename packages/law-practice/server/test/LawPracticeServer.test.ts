@@ -4,20 +4,34 @@ import {
   LangExtractService,
   remoteExtractionPolicyFromConfig,
 } from "@beep/langextract/Service";
-import { Distinction, DistinctionDetail } from "@beep/law-practice-domain";
+import {
+  Claim,
+  Distinction,
+  DistinctionDetail,
+  OfficeAction,
+  PriorArtReference,
+  Rejection,
+} from "@beep/law-practice-domain";
 import { LawPracticeServerLive } from "@beep/law-practice-server/layer";
 import { IrToLaw, IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, officeActionExtractionTargets } from "@beep/law-practice-use-cases/OfficeActionReview";
-import { DocumentId } from "@beep/nlp/Core";
 import { it } from "@beep/test-runner";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  SourceTextLocator,
+} from "@beep/text/SourceTextIdentity";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Model from "effect/ai/Model";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -31,6 +45,16 @@ import {
 } from "./fixture.ts";
 
 const isIrToLawExtractionError = S.is(IrToLawExtractionError);
+const LawEntitiesJson = S.fromJsonString(
+  S.Struct({
+    claim: Claim,
+    distinction: Distinction,
+    officeAction: OfficeAction,
+    priorArtReference: PriorArtReference,
+    rejection: Rejection,
+  }),
+  { space: 2 }
+);
 
 const OFFICE_ACTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling the lid to the base"}]}`;
 
@@ -40,19 +64,36 @@ const UNALIGNED_DISTINCTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_act
 
 const MISSING_DISTINCTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"}]}`;
 
+const fixtureDigest = SourceTextDigest.make(
+  `sha256:${process.getBuiltinModule("node:crypto").createHash("sha256").update(OFFICE_ACTION_FIXTURE).digest("hex")}`
+);
 const makeExtractionRequest = (): LangExtractRequest =>
   LangExtractRequest.make({
-    documentId: DocumentId.make("office-action-review-test"),
+    source: SourceTextIdentity.make({
+      scopeRef: "matter.spike",
+      sourceRef: "office-action-review-test",
+      locator: SourceTextLocator.make("office-action.txt"),
+      sourceDigest: fixtureDigest,
+      textDigest: fixtureDigest,
+      extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
+      normalizationVersion: "raw/1",
+    }),
     targets: officeActionExtractionTargets,
     text: OFFICE_ACTION_FIXTURE,
   });
 
-const makeLanguageModelLayer = (text: string): Layer.Layer<LanguageModel.LanguageModel> =>
-  Layer.succeed(LanguageModel.LanguageModel, {
-    generateObject: () => Effect.die("generateObject is not used by law-practice tests") as never,
-    generateText: () => Effect.succeed({ text }) as never,
-    streamText: () => Stream.empty as never,
-  } as unknown as LanguageModel.LanguageModel);
+const makeLanguageModelLayer = (
+  text: string
+): Layer.Layer<LanguageModel.LanguageModel | Model.ProviderName | Model.ModelName> =>
+  Model.make(
+    "test",
+    "stub-model",
+    Layer.succeed(LanguageModel.LanguageModel, {
+      generateObject: () => Effect.die("generateObject is not used by law-practice tests") as never,
+      generateText: () => Effect.succeed({ text }) as never,
+      streamText: () => Stream.empty as never,
+    } as unknown as LanguageModel.LanguageModel)
+  );
 
 const TestLangExtractLayer = LangExtractLayer.pipe(Layer.provide(remoteExtractionPolicyFromConfig));
 
@@ -85,41 +126,54 @@ describe("@beep/law-practice-server", () => {
     "office-action review loop over service-backed extraction",
     (it) => {
       it.effect(
-        "IrToLaw grounds exactly one distinction to its source anchor",
+        "IrToLaw grounds exactly one distinction to its source anchor through case-insensitive match_lesser alignment, never an unaligned fallback",
         Effect.fnUntraced(function* () {
           const langExtract = yield* LangExtractService;
           const irToLaw = yield* IrToLaw;
           const extractionResult = yield* langExtract.extract(makeExtractionRequest());
-          const extractions = extractionResult.extractions;
+          const extractions = extractionResult.handoff.readings.pipe(HashMap.toValues, A.flatten);
 
-          // The distinction candidate is lower case vs the Title-Case source, so
-          // alignment MUST take the case-insensitive `match_lesser` path (not a
-          // trivial `match_exact`). This is what makes the re-slice below a real
-          // grounding proof, and it rules out the fabricated span-undefined anchor
-          // fallback in IrToLaw (which would yield `unaligned`/no span).
-          const distinctionExtraction = A.findFirst(extractions, (e) => e.label === "distinction");
+          const lowerCaseCandidateOfTitleCaseSource = A.findFirst(extractions, (e) => e.label === "distinction");
           assertSome(
-            O.map(distinctionExtraction, (e) => e.alignmentStatus),
+            O.map(lowerCaseCandidateOfTitleCaseSource, (e) => e.alignment),
             "match_lesser"
           );
 
-          const law = yield* irToLaw.toLaw(extractions);
+          const law = yield* irToLaw.toLaw(extractionResult.handoff);
 
-          // (a) exactly one Distinction, well-formed.
-          expect(law.distinction).toBeInstanceOf(Distinction);
+          expect(law.distinction, "exactly one well-formed Distinction").toBeInstanceOf(Distinction);
           const distinctionDetail = law.distinction.detail;
           pipe(DistinctionDetail.guards.missing_limitation(distinctionDetail), assertTrue);
 
-          // (b) the anchor re-slices the source to its own quote, and that quote is
-          // the original-case substring recovered via the case-insensitive match.
           const { endChar, quote, startChar } = law.distinction.anchor;
-          expect(Str.slice(startChar, endChar)(OFFICE_ACTION_FIXTURE)).toBe(quote);
-          expect(quote).toBe(EXPECTED_DISTINCTION_QUOTE);
+          expect(
+            Str.slice(startChar, endChar)(OFFICE_ACTION_FIXTURE),
+            "the anchor re-slices the source to its own quote"
+          ).toBe(quote);
+          expect(quote, "the original-case substring recovered by the case-insensitive match").toBe(
+            EXPECTED_DISTINCTION_QUOTE
+          );
 
-          // (d) the distinction's answer: missing limitation + recovered anchor quote.
           DistinctionDetail.match(distinctionDetail, {
-            missing_limitation: (detail) => expect(detail.limitation).toBe(EXPECTED_DISTINCTION_LIMITATION),
+            missing_limitation: (detail) =>
+              expect(detail.limitation, "the distinction answers with its missing limitation").toBe(
+                EXPECTED_DISTINCTION_LIMITATION
+              ),
           });
+        })
+      );
+
+      it.effect("IrToLaw keeps the bytes of the frozen v1 law entities for the server fixture", (context) =>
+        Effect.gen(function* () {
+          const langExtract = yield* LangExtractService;
+          const irToLaw = yield* IrToLaw;
+          const extractionResult = yield* langExtract.extract(makeExtractionRequest());
+          const law = yield* irToLaw.toLaw(extractionResult.handoff);
+          const json = yield* S.encodeEffect(LawEntitiesJson)(law);
+
+          yield* Effect.promise(() =>
+            context.expect(`${json}\n`).toMatchFileSnapshot("./fixtures/ir-to-law-entities-v1.json")
+          );
         })
       );
 
@@ -131,14 +185,13 @@ describe("@beep/law-practice-server", () => {
 
           const view = yield* review.review(input);
 
-          // (c) gate admits -> transition advances candidate -> shape_valid. The
-          // claim ends at "shape_valid" (NOT lifecycle "admitted"), so admittedKeys
-          // is empty — per SPEC "gate admits, lifecycle reaches shape_valid".
           expect(view.total).toBe(1);
-          expect(view.counts.shape_valid).toBe(1);
+          expect(view.counts.shape_valid, "the gate admits and the transition advances candidate to shape_valid").toBe(
+            1
+          );
           expect(view.counts.candidate).toBe(0);
-          expect(view.counts.admitted).toBe(0);
-          expect([...view.admittedKeys]).toEqual([]);
+          expect(view.counts.admitted, "per SPEC the lifecycle reaches shape_valid, not admitted").toBe(0);
+          expect([...view.admittedKeys], "no lifecycle-admitted claim, so no admitted key").toEqual([]);
         })
       );
     }
@@ -154,16 +207,16 @@ describe("@beep/law-practice-server", () => {
           const irToLaw = yield* IrToLaw;
           const extractionResult = yield* langExtract.extract(makeExtractionRequest());
           const distinctionExtraction = A.findFirst(
-            extractionResult.extractions,
+            extractionResult.handoff.readings.pipe(HashMap.toValues, A.flatten),
             (extraction) => extraction.label === "distinction"
           );
 
           assertSome(
-            O.map(distinctionExtraction, (extraction) => extraction.alignmentStatus),
+            O.map(distinctionExtraction, (extraction) => extraction.alignment),
             "match_minimal_fold"
           );
 
-          const law = yield* irToLaw.toLaw(extractionResult.extractions);
+          const law = yield* irToLaw.toLaw(extractionResult.handoff);
 
           expect(law.distinction.anchor.quote).toBe(EXPECTED_DISTINCTION_QUOTE);
           expect(

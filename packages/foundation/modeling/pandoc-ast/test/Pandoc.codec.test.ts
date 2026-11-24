@@ -221,21 +221,21 @@ const captionPlainTextFromWire = Effect.fnUntraced(function* (caption: unknown) 
 });
 
 describe("Pandoc.codec", { concurrent: false }, () => {
-  it.effect("derives semantic documents without arbitrary warnings", () =>
-    Effect.gen(function* () {
-      // Observe real derivation and sampling; restore the passthrough observer
-      // even when compilation, generation or an assertion fails.
-      const warnings = yield* Effect.acquireRelease(
-        Effect.sync(() => vi.spyOn(console, "warn")),
-        (spy) => Effect.sync(() => spy.mockRestore())
-      );
-      const { runs, seed } = fcRuns(50);
-      const arbitrary = yield* Effect.sync(() => Arbitrary.schema(PandocDocument));
-      const documents = yield* Arbitrary.sampleEffect(arbitrary, { count: runs, seed });
-      expect(documents).toHaveLength(runs);
-      assertTrue(A.every(documents, isPandocDocument));
-      expect(warnings).not.toHaveBeenCalled();
-    })
+  it.effect(
+    "observes real derivation and sampling of semantic documents, and restores the passthrough observer even when compilation, generation or an assertion fails",
+    () =>
+      Effect.gen(function* () {
+        const passthroughWarnSpyRestoredOnAnyFailure = yield* Effect.acquireRelease(
+          Effect.sync(() => vi.spyOn(console, "warn")),
+          (spy) => Effect.sync(() => spy.mockRestore())
+        );
+        const { runs, seed } = fcRuns(50);
+        const arbitrary = yield* Effect.sync(() => Arbitrary.schema(PandocDocument));
+        const documents = yield* Arbitrary.sampleEffect(arbitrary, { count: runs, seed });
+        expect(documents).toHaveLength(runs);
+        assertTrue(A.every(documents, isPandocDocument));
+        expect(passthroughWarnSpyRestoredOnAnyFailure).not.toHaveBeenCalled();
+      })
   );
 
   it("preserves public model schema identities after centralizing constructor registries", () => {
@@ -1609,9 +1609,8 @@ describe("Pandoc.codec", { concurrent: false }, () => {
   );
 });
 
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
 it.effect.prop(
-  "encodes Table through its generation link",
+  "encodes Table through its generation link: the arbitrary compiler consumes that link's decode only, so the advertised encoding is verified separately",
   { value: Arbitrary.schema(Table) },
   Effect.fnUntraced(function* ({ value }) {
     const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(Table.ast).annotations;

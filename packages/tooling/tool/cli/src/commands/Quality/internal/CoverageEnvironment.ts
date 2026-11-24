@@ -15,8 +15,6 @@ import * as Str from "effect/String";
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageEnvironment");
 
 /**
- * Child-process environment overrides for a coverage run.
- *
  * **Details**
  *
  * Each entry is spread over the inherited environment at spawn time. A string
@@ -43,8 +41,6 @@ export const CoverageEnvironment = S.Record(S.String, S.UndefinedOr(S.String)).p
 );
 
 /**
- * Decoded {@link CoverageEnvironment} value.
- *
  * @internal
  * @category type-level
  * @since 0.0.0

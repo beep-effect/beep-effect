@@ -12,8 +12,6 @@ import { CommandId } from "./Dock.ids.ts";
 const $I = $DockId.create("Dock.errors");
 
 /**
- * Business reason for rejecting a dock command.
- *
  * **Example** (Make panel-not-found reason)
  *
  * ```ts
@@ -47,8 +45,6 @@ export const DockRejectionReason = LiteralKit([
   })
 );
 /**
- * Decoded business reason for rejecting a dock command.
- *
  * **Example** (Annotate rejection reason type)
  *
  * ```ts
@@ -64,8 +60,6 @@ export const DockRejectionReason = LiteralKit([
 export type DockRejectionReason = typeof DockRejectionReason.Type;
 
 /**
- * Typed expected command rejection that leaves state untouched.
- *
  * **Example** (Make rejected command error)
  *
  * ```ts
@@ -94,8 +88,6 @@ export class DockCommandRejected extends S.TaggedError<DockCommandRejected, { re
 ) {}
 
 /**
- * Workspace invariant failure reason.
- *
  * **Example** (Make duplicate-panel-id reason)
  *
  * ```ts
@@ -121,8 +113,6 @@ export const DockInvariantReason = LiteralKit([
   })
 );
 /**
- * Decoded workspace invariant failure reason.
- *
  * **Example** (Annotate invariant reason type)
  *
  * ```ts
@@ -166,8 +156,6 @@ export class DockInvariantViolation extends S.TaggedError<DockInvariantViolation
 ) {}
 
 /**
- * External schema boundary for rejected unknown input.
- *
  * **Example** (Make command boundary value)
  *
  * ```ts
@@ -186,8 +174,6 @@ export const DockInputBoundary = LiteralKit(["command", "snapshot"]).pipe(
   })
 );
 /**
- * Decoded external schema boundary for rejected unknown input.
- *
  * **Example** (Annotate input boundary type)
  *
  * ```ts
@@ -203,8 +189,6 @@ export const DockInputBoundary = LiteralKit(["command", "snapshot"]).pipe(
 export type DockInputBoundary = typeof DockInputBoundary.Type;
 
 /**
- * Typed decoding failure at a public input boundary.
- *
  * **Example** (Make snapshot input error)
  *
  * ```ts
@@ -231,8 +215,6 @@ export class DockInputError extends S.TaggedError<DockInputError, { readonly bra
 ) {}
 
 /**
- * Snapshot-store operation that may fail.
- *
  * **Example** (Make save operation value)
  *
  * ```ts
@@ -251,8 +233,6 @@ export const DockPersistenceOperation = LiteralKit(["load", "save"]).pipe(
   })
 );
 /**
- * Decoded snapshot-store operation that may fail.
- *
  * **Example** (Annotate persistence operation type)
  *
  * ```ts

@@ -133,7 +133,6 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
               ),
           })
         );
-        // UTF-32 input is 4,000,008 bytes, exceeding the retired raw-source ABI cap.
         const units = 1_000_003;
         const h = owned(worker, units, () => `${Str.repeat(1_000_001)("A")}😀`);
         const pipeline = yield* makeCitationCleanerPipeline(policy).pipe(
@@ -148,7 +147,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const citationResult2 = yield* h.read(result.value);
         expect(Str.length(citationResult2)).toBe(units);
         const citationResult3 = yield* h.read(result.value);
-        expect(citationResult3).toBe(`${Str.repeat(1_000_001)("A")}😀`);
+        expect(
+          citationResult3,
+          "a 4,000,008-byte UTF-32 input, beyond the retired raw-source ABI cap, still cleans"
+        ).toBe(`${Str.repeat(1_000_001)("A")}😀`);
         expect(result.producedTextUtf16).toBe(units * 2);
         expect(exits).toBe(1);
         const zeroUnits = 1_000_028;

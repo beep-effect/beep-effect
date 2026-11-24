@@ -6,8 +6,6 @@
  */
 
 /**
- * ApprovalDecision value exports.
- *
  * **Example** (Import ApprovalDecision exports)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./ApprovalDecision/index.ts";
 /**
- * CandidateLifecycle value exports.
- *
  * **Example** (Import CandidateLifecycle exports)
  *
  * ```ts

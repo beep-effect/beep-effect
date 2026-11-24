@@ -41,8 +41,6 @@ const EndpointProtocol = LiteralKit(["http:", "https:"]).pipe(
 );
 
 /**
- * Raised when a blob cannot be stored or retrieved.
- *
  * **Example** (Describe a refused blob write)
  *
  * ```ts
@@ -178,8 +176,6 @@ export interface BlobStoreShape {
 }
 
 /**
- * How to reach an S3-compatible object store.
- *
  * **Example** (Validate an S3 configuration)
  *
  * ```ts

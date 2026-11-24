@@ -30,8 +30,6 @@ type QualityScriptCommandErrorOptions =
     };
 
 /**
- * Failure raised while validating changeset package references.
- *
  * **Example** (Raise a changeset graph error)
  *
  * ```ts
@@ -83,8 +81,6 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError, { re
 }
 
 /**
- * Failure raised while checking root catalog entries and overrides for consumers.
- *
  * **Example** (Raise a catalog usage error)
  *
  * ```ts
@@ -134,8 +130,6 @@ export class CatalogUsageError extends S.TaggedError<CatalogUsageError, { readon
 }
 
 /**
- * Failure raised while running the path-aware changeset status wrapper.
- *
  * **Example** (Raise a changeset status error)
  *
  * ```ts
@@ -187,8 +181,6 @@ export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError, { 
 }
 
 /**
- * Typed failure for repo operational commands.
- *
  * **Example** (Raise a quality script command error)
  *
  * ```ts

@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $McpbKitId.create("McpbKit.models");
 
 /**
- * A platform an `.mcpb` bundle is built for.
- *
  * **Example** (Check a target)
  *
  * ```ts
@@ -33,8 +31,6 @@ export const McpbTarget = LiteralKit(["linux-x64", "windows-x64"]).pipe(
 );
 
 /**
- * Decoded type of {@link McpbTarget}.
- *
  * **Example** (Type a target)
  *
  * ```ts
@@ -50,8 +46,6 @@ export const McpbTarget = LiteralKit(["linux-x64", "windows-x64"]).pipe(
 export type McpbTarget = typeof McpbTarget.Type;
 
 /**
- * The `--target` choice of a packaging command: one platform, or `all`.
- *
  * **Example** (Check a selection)
  *
  * ```ts
@@ -70,8 +64,6 @@ export const McpbTargetSelection = LiteralKit(["all", "linux-x64", "windows-x64"
 );
 
 /**
- * Decoded type of {@link McpbTargetSelection}.
- *
  * **Example** (Type a selection)
  *
  * ```ts
@@ -87,8 +79,6 @@ export const McpbTargetSelection = LiteralKit(["all", "linux-x64", "windows-x64"
 export type McpbTargetSelection = typeof McpbTargetSelection.Type;
 
 /**
- * The Node platform name an `.mcpb` manifest declares compatibility with.
- *
  * **Example** (Check a platform)
  *
  * ```ts
@@ -107,8 +97,6 @@ export const McpbPlatform = LiteralKit(["linux", "win32"]).pipe(
 );
 
 /**
- * Decoded type of {@link McpbPlatform}.
- *
  * **Example** (Type a platform)
  *
  * ```ts
@@ -124,8 +112,6 @@ export const McpbPlatform = LiteralKit(["linux", "win32"]).pipe(
 export type McpbPlatform = typeof McpbPlatform.Type;
 
 /**
- * A pinned official Bun release archive and the runtime executable inside it.
- *
  * **Details**
  *
  * The release archive is `<asset>.zip` and holds the runtime at
@@ -172,8 +158,6 @@ export class McpbRuntimePin extends S.Opaque<McpbRuntimePin, { readonly brand: u
 ) {}
 
 /**
- * The ways a bundle starts its server.
- *
  * **Details**
  *
  * `compiled` ships one `bun build --compile` executable. `runtime-script`
@@ -198,8 +182,6 @@ export const McpbLaunchKind = LiteralKit(["compiled", "runtime-script"]).pipe(
 );
 
 /**
- * Decoded type of {@link McpbLaunchKind}.
- *
  * **Example** (Type a launch kind)
  *
  * ```ts
@@ -215,8 +197,6 @@ export const McpbLaunchKind = LiteralKit(["compiled", "runtime-script"]).pipe(
 export type McpbLaunchKind = typeof McpbLaunchKind.Type;
 
 /**
- * What a bundle ships to start its server, and how the manifest starts it.
- *
  * **Details**
  *
  * A `compiled` launch runs `executable` with no arguments. A `runtime-script`
@@ -261,8 +241,6 @@ export const McpbLaunch = McpbLaunchKind.toTaggedUnion("kind")({
 );
 
 /**
- * Decoded type of {@link McpbLaunch}.
- *
  * **Example** (Type a compiled launch)
  *
  * ```ts
@@ -296,8 +274,6 @@ export type McpbLaunch = typeof McpbLaunch.Type;
 export type McpbCompiledLaunch = typeof McpbLaunch.cases.compiled.Type;
 
 /**
- * What one target ships: its launch, native bindings and platform.
- *
  * **Example** (Describe the Linux target)
  *
  * ```ts
@@ -331,8 +307,6 @@ export class McpbTargetSpec extends S.Opaque<McpbTargetSpec, { readonly brand: u
 ) {}
 
 /**
- * The kind of value a Claude Desktop extension setting holds.
- *
  * **Example** (Check a setting type)
  *
  * ```ts
@@ -351,8 +325,6 @@ export const McpbUserConfigType = LiteralKit(["string", "number", "boolean", "di
 );
 
 /**
- * Decoded type of {@link McpbUserConfigType}.
- *
  * **Example** (Type a setting type)
  *
  * ```ts
@@ -368,8 +340,6 @@ export const McpbUserConfigType = LiteralKit(["string", "number", "boolean", "di
 export type McpbUserConfigType = typeof McpbUserConfigType.Type;
 
 /**
- * One extension setting the user fills in when installing the bundle.
- *
  * **Example** (Declare an optional folder setting)
  *
  * ```ts
@@ -401,8 +371,6 @@ export class McpbUserConfigField extends S.Opaque<McpbUserConfigField, { readonl
 ) {}
 
 /**
- * One tool the bundle's server declares in its manifest.
- *
  * **Example** (Declare a tool)
  *
  * ```ts
@@ -427,8 +395,6 @@ export class McpbTool extends S.Opaque<McpbTool, { readonly brand: unique symbol
 ) {}
 
 /**
- * One prompt template the bundle declares in its manifest (MCPB `prompts`).
- *
  * **Example** (Declare a prompt)
  *
  * ```ts
@@ -454,8 +420,6 @@ export class McpbPrompt extends S.Opaque<McpbPrompt, { readonly brand: unique sy
 ) {}
 
 /**
- * The app-specific fields of an `.mcpb` `manifest.json`.
- *
  * **Details**
  *
  * The kit fills in the rest: manifest version `0.3`, author, repository,
@@ -509,8 +473,6 @@ export class McpbManifestFields extends S.Opaque<McpbManifestFields, { readonly 
 ) {}
 
 /**
- * The per-app part of an `.mcpb` packaging command.
- *
  * **Details**
  *
  * `appName` names the app directory under `apps/`, the Linux executable, the
@@ -573,8 +535,6 @@ export class McpbPackageSpec extends S.Opaque<McpbPackageSpec, { readonly brand:
 ) {}
 
 /**
- * A complete `.mcpb` `manifest.json`, in the field order the kit writes it.
- *
  * **Details**
  *
  * `server.mcp_config.args` is written only for a launch that passes

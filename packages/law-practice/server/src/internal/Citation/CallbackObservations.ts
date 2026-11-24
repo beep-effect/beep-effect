@@ -42,7 +42,6 @@ export const CitationDefaultObservation = S.TaggedUnion({
   })
 );
 /**
- * Schema-derived default branch observation.
  * @internal
  * @category models
  * @since 0.0.0

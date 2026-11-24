@@ -298,7 +298,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/text VerifiedTextAnch
   );
 
   it.effect(
-    "sanitizes a malformed source-text digest",
+    "sanitizes a malformed source-text digest: the digest succeeds, and its truncated hex fails Sha256Hex decoding",
     Effect.fnUntraced(
       function* () {
         const source = identity({ textDigest: factDigest });

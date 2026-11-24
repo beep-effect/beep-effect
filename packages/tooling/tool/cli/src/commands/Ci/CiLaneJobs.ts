@@ -169,8 +169,6 @@ export const CiSupportJobName = LiteralKit([
 );
 
 /**
- * A hosted job outside every CI lane.
- *
  * **Example** (Type a support job name)
  *
  * ```ts

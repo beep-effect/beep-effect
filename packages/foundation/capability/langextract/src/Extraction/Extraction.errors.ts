@@ -30,6 +30,7 @@ const $I = $LangExtractId.create("Extraction");
  */
 export const LangExtractErrorReason = LiteralKit([
   "remote-policy-denied",
+  "source-text-mismatch",
   "model-generation-failed",
   "model-generation-timeout",
   "prompt-encoding-failed",
@@ -47,7 +48,6 @@ type FromReasonOptions = {
 };
 
 /**
- * {@inheritDoc LangExtractErrorReason}
  * @category errors
  * @since 0.0.0
  */
@@ -59,8 +59,6 @@ type LangExtractErrorFromReason = {
 };
 
 /**
- * Sanitized LangExtract capability error.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

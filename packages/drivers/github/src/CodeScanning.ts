@@ -25,8 +25,6 @@ import type { GitHubError } from "./GitHubError.ts";
 const $I = $GithubId.create("CodeScanning");
 
 /**
- * A CodeQL default-setup configuration.
- *
  * **Gotchas**
  *
  * Every field is optional and an **omitted field means "leave it alone"**, which
@@ -90,8 +88,6 @@ export class CodeScanningSetup extends S.Opaque<CodeScanningSetup, { readonly br
 ) {}
 
 /**
- * Companion types for {@link CodeScanningSetup}.
- *
  * @category type-level
  * @since 0.0.0
  */

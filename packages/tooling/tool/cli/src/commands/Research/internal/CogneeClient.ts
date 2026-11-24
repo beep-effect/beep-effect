@@ -154,8 +154,6 @@ export const CogneeApiUrl = S.String.check(filterCogneeApiUrl);
 const decodeCogneeApiUrl = S.decodeUnknownEffect(CogneeApiUrl);
 
 /**
- * One markdown card queued for a Cognee dataset.
- *
  * @internal
  * @category models
  */
@@ -208,8 +206,6 @@ export class CogneeSettings extends S.Opaque<CogneeSettings, { readonly brand: u
 ) {}
 
 /**
- * Resolved Cognee connection settings.
- *
  * @internal
  * @category models
  */

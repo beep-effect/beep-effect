@@ -80,7 +80,6 @@ const noticeAttachment = MailAttachmentMeta.make({
   isFile: true,
 });
 
-/** The one mailbox message and the upload log of a test. */
 class Inbox extends Context.Service<
   Inbox,
   { readonly message: Ref.Ref<MailEnvelope>; readonly uploads: Ref.Ref<ReadonlyArray<string>> }

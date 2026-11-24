@@ -2180,8 +2180,6 @@ const resolveDoctorRefs = Effect.fn("KnowledgeDoctor.resolveRefs")(function* (ba
 });
 
 /**
- * Options of the gating check.
- *
  * **Details**
  *
  * `acceptMint` is CI-only: it admits a mint-App baseline change when the C8 conditions hold.
@@ -2481,8 +2479,6 @@ const verifyMintLive = Effect.scoped(
 ).pipe(Effect.withSpan("KnowledgeDoctor.verifyMintLive"));
 
 /**
- * Options of one mint run.
- *
  * **Details**
  *
  * `at` is the commit-ish to mint (default `HEAD`); `baseRef` the local ref that must contain it for
@@ -2592,8 +2588,6 @@ const ciModeLive = Effect.fn("KnowledgeDoctor.ciModeLive")(function* (baseRef: s
 });
 
 /**
- * Options of the lease listing.
- *
  * **Details**
  *
  * `baseRef` names the local ref whose merge-base CODEOWNERS and leases anchor the owner and `issued`

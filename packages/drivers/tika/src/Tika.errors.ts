@@ -24,8 +24,6 @@ const TikaErrorReasonBase = LiteralKit([
 ]);
 
 /**
- * Technical Tika failure reasons.
- *
  * **Example** (Log TikaErrorReason object)
  *
  * ```ts
@@ -45,8 +43,6 @@ export const TikaErrorReason = TikaErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link TikaErrorReason}.
- *
  * **Example** (Assign typed error reason)
  *
  * ```ts
@@ -62,8 +58,6 @@ export const TikaErrorReason = TikaErrorReasonBase.pipe(
 export type TikaErrorReason = typeof TikaErrorReason.Type;
 
 /**
- * Options used when constructing {@link TikaError} instances.
- *
  * **Example** (Make options with status)
  *
  * ```ts
@@ -93,8 +87,6 @@ export class TikaErrorOptions extends S.Opaque<TikaErrorOptions, { readonly bran
 ) {}
 
 /**
- * Technical failure raised inside the Tika driver boundary.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

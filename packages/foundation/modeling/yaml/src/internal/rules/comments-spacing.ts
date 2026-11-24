@@ -20,10 +20,6 @@ import type { YamlToken } from "../../YamlToken.ts";
 const $I = $YamlId.create("internal/rules/comments-spacing");
 
 /**
- * Options for `comments-spacing`: `minSpacesBefore` between content and a
- * trailing `#` (default 1 — the kit's own emission spelling) and
- * `requireSpaceAfter` the `#` (default `true`).
- *
  * **Example** (Decode comments-spacing options)
  *
  * ```ts

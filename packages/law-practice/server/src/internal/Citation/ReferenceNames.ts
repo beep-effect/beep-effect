@@ -94,7 +94,7 @@ export const makeCitationReferenceNames = Effect.fn("Citation.makeReferenceNames
   namesInput: ReadonlyArray<string>
 ) {
   const names = yield* copyCitationReferenceExclusions(namesInput);
-  const disallowed = HashSet.fromIterable(names);
+  const sealedBmpOnlyDisallowedNamesCannotAlias = HashSet.fromIterable(names);
   const characters = yield* makeCitationPythonCharacters();
   const lower = yield* makeCitationPythonLower(limits);
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
@@ -107,11 +107,9 @@ export const makeCitationReferenceNames = Effect.fn("Citation.makeReferenceNames
     if (!characters.upper(citationPythonPointAt(source.storage, 0))) return false;
     if (citationPythonPointAt(source.storage, source.pythonLength - 1) === 46) return false;
     if (yield* onlyDigits(source)) return false;
-    const lowered = yield* lower.lowerReserved(source.storage, reserve);
-    const prepared = yield* input.prepareUnicode(lowered, () => Effect.void);
-    // The sealed list contains no surrogate or non-BMP characters, so native
-    // projection ambiguity cannot alias an entry. Lowercase remains Python-native.
-    return !HashSet.has(disallowed, prepared.value.text);
+    const pythonNativeLowered = yield* lower.lowerReserved(source.storage, reserve);
+    const prepared = yield* input.prepareUnicode(pythonNativeLowered, () => Effect.void);
+    return !HashSet.has(sealedBmpOnlyDisallowedNamesCannotAlias, prepared.value.text);
   }, timing.timed);
   const collect = Effect.fn("Citation.collectReferenceNames")(function* (metadata: CitationCaseMetadataFields) {
     const candidates = [

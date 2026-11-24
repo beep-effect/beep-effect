@@ -1,6 +1,3 @@
-// Builders shared by the gate report tests: items, reports, events, the agent
-// budget, a pointer table and a one-call projection.
-
 import { ConsoleBudget, GatePointers, RecordPaths } from "@beep/gate-report/ConsoleDocument";
 import { ConsoleInput, dispatch } from "@beep/gate-report/Dispatch";
 import { GateEvent } from "@beep/gate-report/GateEvent";

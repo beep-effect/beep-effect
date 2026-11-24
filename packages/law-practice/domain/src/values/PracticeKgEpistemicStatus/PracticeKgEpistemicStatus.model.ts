@@ -51,8 +51,6 @@ export const PracticeKgEpistemicStatus = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgEpistemicStatus}.
- *
  * **Example** (Check settled status)
  *
  * ```ts

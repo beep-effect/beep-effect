@@ -225,8 +225,6 @@ export class OrgNode extends S.Opaque<OrgNode, { readonly brand: unique symbol }
   )
 ) {}
 /**
- * OrgEdge public schema for the projection model.
- *
  * **Example** (Decode OrgEdge)
  * ```ts
  * import { OrgEdge } from "@beep/party-domain/Projection"

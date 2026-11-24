@@ -223,7 +223,6 @@ export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest
   const corpus = yield* loadCitationLawMetadataFixtures();
   const setup = yield* setupCitationMetadataRuntime("bun");
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const [policy, runtime, configuration] of [
     [setup.limits, setup.runtime, { ...corpus.configuration, lawPattern: changedPattern }],
   ] as const) {
@@ -235,7 +234,10 @@ export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest
       Effect.provideContext(setup.provided),
       Effect.flip
     );
-    expect(failed).toMatchObject({ reason: "invalid-configuration" });
+    expect(
+      failed,
+      "an owned configuration whose fixed pattern fails authentication is refused by the stage"
+    ).toMatchObject({ reason: "invalid-configuration" });
   }
   const observed = yield* setup.observed.snapshot;
   expect(observed).toEqual({ spawned: 0, confirmed: 0 });

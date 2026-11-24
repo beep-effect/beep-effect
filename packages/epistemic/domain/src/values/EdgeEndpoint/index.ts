@@ -6,8 +6,6 @@
  */
 
 /**
- * Edge endpoint value exports.
- *
  * **Example** (Decoding an EdgeEndpoint)
  *
  * ```ts

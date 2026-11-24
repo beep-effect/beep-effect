@@ -20,15 +20,9 @@ const $I = $LawPracticeServerId.create("PracticeKg.references");
 const decodeDocketReferenceRows = S.decodeUnknownEffect(S.Array(PracticeKgDocketReferenceRow));
 const decodeNumberMentionRows = S.decodeUnknownEffect(S.Array(PracticeKgNumberMentionRow));
 
-/*
- * The practice writes its own matter references as `<client>.<docket><country><seq>`
- * (five-digit client number, five- or six-digit family, ISO country or PCT, stage).
- * The preceding-character guard keeps `1.23456US` style decimals and dotted
- * version strings out of the match. The country stages are the one list the
- * reference extractor uses, so the scan and the lookup recognise the same
- * dockets.
- */
-const docketCountryAlternation = A.join(practiceKgDocketCountryCodes, "|");
+const referenceExtractorDocketCountryAlternation = A.join(practiceKgDocketCountryCodes, "|");
+const notAfterDigitOrDotSoDecimalsAndVersionsMiss = "(?:^|[^0-9.])";
+const clientDotFamilyCountryStagePattern = `([0-9]{4,6}\\.[0-9]{5,6}(?:${referenceExtractorDocketCountryAlternation})[0-9]{0,3})`;
 
 const docketReferencesSql = `
 WITH docket_text AS (
@@ -38,7 +32,7 @@ WITH docket_text AS (
   WHERE d.category = 'docket' AND d.docket_family IS NOT NULL
 ),
 tokens AS (
-  SELECT digest, UNNEST(regexp_extract_all(text, '(?:^|[^0-9.])([0-9]{4,6}\\.[0-9]{5,6}(?:${docketCountryAlternation})[0-9]{0,3})', 1)) AS token
+  SELECT digest, UNNEST(regexp_extract_all(text, '${notAfterDigitOrDotSoDecimalsAndVersionsMiss}${clientDotFamilyCountryStagePattern}', 1)) AS token
   FROM docket_text
 )
 SELECT DISTINCT
@@ -49,12 +43,7 @@ SELECT DISTINCT
 FROM tokens
 ORDER BY digest, client, docket, family`;
 
-/*
- * Application numbers appear as `14/783,547`; patent numbers as `10,252,356`,
- * `US 10252356 B2`, or bare seven/eight digit runs. Both normalize to digits so
- * they compare directly with the enrichment rows.
- */
-const numberMentionsSql = `
+const applicationAndPatentNumberMentionsAsDigitsSql = `
 WITH docket_docs AS (
   SELECT digest, effective_name || ' ' || source_relative_path AS name_text
   FROM documents
@@ -143,7 +132,7 @@ export const readReferenceScans = Effect.fn("PracticeKg.readReferenceScans")(fun
         PracticeKgProjectionError.mapError("Graph docket-reference rows failed schema validation.")
       );
     const numberMentions = yield* db
-      .query(numberMentionsSql)
+      .query(applicationAndPatentNumberMentionsAsDigitsSql)
       .pipe(
         Effect.flatMap(decodeNumberMentionRows),
         PracticeKgProjectionError.mapError("Graph number-mention rows failed schema validation.")

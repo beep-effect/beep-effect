@@ -28,10 +28,6 @@ import { FrontmatterFormat } from "./MarkdownNode.ts";
 const $I = $MarkdownId.create("FrontmatterSource");
 
 /**
- * The three line-terminator spellings a fence line may end with. Recorded by
- * {@link FrontmatterSource.split} as fidelity — what the source's fence
- * lines actually used — and consumed by {@link FrontmatterSource.join}.
- *
  * **Example** (Validate a CRLF fence terminator)
  *
  * ```ts
@@ -53,8 +49,6 @@ export const FrontmatterNewline = RawNewline.pipe(
 );
 
 /**
- * The union of all fence line-terminator literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -62,9 +56,6 @@ export const FrontmatterNewline = RawNewline.pipe(
 export type FrontmatterNewline = typeof FrontmatterNewline.Type;
 
 /**
- * A frontmatter block at string level: the format its fence declared, the
- * exact bytes between the fence lines, and the fence lines' terminator.
- *
  * **Details**
  *
  * `value` is the exact source slice strictly between the opening fence line
@@ -122,9 +113,6 @@ export class FrontmatterSourceBlock extends S.Opaque<FrontmatterSourceBlock, { r
 ) {}
 
 /**
- * The result of {@link FrontmatterSource.split}: the frontmatter block when
- * one exists, the exact body remainder, and the body's byte offset.
- *
  * **Details**
  *
  * `body` is exactly `source.slice(bodyOffset)` — the string and the offset

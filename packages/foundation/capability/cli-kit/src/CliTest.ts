@@ -53,8 +53,6 @@ export class Sandbox extends S.Opaque<Sandbox, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Companion types for {@link Sandbox}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -129,8 +127,6 @@ export class RunOptions extends S.Opaque<RunOptions, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link RunOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -188,8 +184,6 @@ export class RunResult extends S.Opaque<RunResult, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link RunResult}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

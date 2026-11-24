@@ -13,8 +13,6 @@ export * as Thread from "./aggregates/Thread/index.ts";
  */
 export * as Workspace from "./aggregates/Workspace/index.ts";
 /**
- * Workspace vault RPC exports.
- *
  * @category protocols
  * @since 0.0.0
  */

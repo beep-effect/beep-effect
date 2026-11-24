@@ -55,8 +55,6 @@ export const FilingSegment = S.NonEmptyString.check(
 );
 
 /**
- * Runtime type for {@link FilingSegment}.
- *
  * **Example** (Type a filing segment)
  *
  * ```ts
@@ -115,8 +113,6 @@ export const DocumentClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link DocumentClass}.
- *
  * **Example** (Type a document class)
  *
  * ```ts
@@ -152,8 +148,6 @@ export const SkosMappingKind = LiteralKit(["exactMatch", "closeMatch"]).pipe(
 );
 
 /**
- * Runtime type for {@link SkosMappingKind}.
- *
  * **Example** (Type a mapping kind)
  *
  * ```ts
@@ -169,8 +163,6 @@ export const SkosMappingKind = LiteralKit(["exactMatch", "closeMatch"]).pipe(
 export type SkosMappingKind = typeof SkosMappingKind.Type;
 
 /**
- * Vetted external mapping attached to a repo-owned SKOS concept.
- *
  * **Example** (Make concept alignment)
  *
  * ```ts
@@ -258,8 +250,6 @@ export const FilingRootKind = LiteralKit(["local-vault", "box-mirror"]).pipe(
 );
 
 /**
- *  Runtime type for {@link FilingRootKind}.
- *
  * **Example** (Type a filing root kind)
  *
  * ```ts

@@ -78,8 +78,6 @@ export const GitHubSquashTitleDefault = LiteralKit(["PR_TITLE", "COMMIT_OR_PR_TI
 );
 
 /**
- * The repository's `squash_merge_commit_title` setting.
- *
  * @category models
  * @since 0.0.0
  */
@@ -107,8 +105,6 @@ export const GitHubSquashMessageDefault = LiteralKit(["PR_BODY", "COMMIT_MESSAGE
 );
 
 /**
- * The repository's `squash_merge_commit_message` setting.
- *
  * @category models
  * @since 0.0.0
  */
@@ -467,8 +463,6 @@ export const squashTitleDrift: {
 );
 
 /**
- * One line of the predicted message that is longer than the commitlint limit.
- *
  * **Example** (Describe a long bullet)
  *
  * ```ts
@@ -493,8 +487,6 @@ export class SquashCommitlintOffendingLine extends S.Opaque<
 ) {}
 
 /**
- * Commitlint accepted the predicted message.
- *
  * **Example** (A pass)
  *
  * ```ts
@@ -513,9 +505,6 @@ export class SquashCommitlintPass extends S.Opaque<SquashCommitlintPass, { reado
 ) {}
 
 /**
- * Commitlint refused the predicted message: the rules it named and the lines
- * over the limit.
- *
  * **Example** (The ep47 failure)
  *
  * ```ts
@@ -603,8 +592,6 @@ export const SquashCommitlintVerdict = S.Union([
 export type SquashCommitlintVerdict = typeof SquashCommitlintVerdict.Type;
 
 /**
- * The predicted message together with commitlint's verdict on it.
- *
  * **Example** (A passing report)
  *
  * ```ts
@@ -927,8 +914,6 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
 ) {}
 
 /**
- * Which squash message {@link readSquashCommitlint} lints.
- *
  * **Details**
  *
  * - `merge-request`: the message the merge gate sends, the title pinned to
@@ -957,8 +942,6 @@ export const SquashCommitlintTarget = LiteralKit(["merge-request", "github-defau
 );
 
 /**
- * Which squash message {@link readSquashCommitlint} lints.
- *
  * @category models
  * @since 0.0.0
  */

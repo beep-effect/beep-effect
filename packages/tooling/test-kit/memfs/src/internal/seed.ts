@@ -164,8 +164,6 @@ export const MemoryFileSystemSeedEntry = S.Union([
   $Facade.annoteSchema("MemoryFileSystemSeedEntry", { description: "File contents or a tagged upstream seed entry." })
 );
 /**
- * Decoded representation of {@link MemoryFileSystemSeedEntry}.
- *
  * @see {@link MemoryFileSystemSeedEntry} for the runtime schema and accepted values.
  * @category type-level
  * @since 0.0.0
@@ -204,8 +202,6 @@ export const MemoryFileSystemSeed = S.Record(S.String, MemoryFileSystemSeedEntry
   $Facade.annoteSchema("MemoryFileSystemSeed", { description: "Paths mapped to seed entries in application order." })
 );
 /**
- * Decoded representation of {@link MemoryFileSystemSeed}.
- *
  * @see {@link MemoryFileSystemSeed} for the runtime schema and accepted values.
  * @category type-level
  * @since 0.0.0

@@ -25,8 +25,6 @@ const AiEntitySourceKit = LiteralKit(["builtin", "custom"]).pipe(
   })
 );
 /**
- * LiteralKit backing schema for AI phonetic algorithm values.
- *
  * **Example** (Validating soundex membership)
  *
  * ```ts import.meta.vitest name="Validating soundex membership"
@@ -45,8 +43,6 @@ export const AiPhoneticAlgorithmKit = LiteralKit(["soundex", "phonetize"]).pipe(
 );
 
 /**
- * Type for {@link AiPhoneticAlgorithmKit}.
- *
  * **Example** (Typing a phonetic algorithm)
  *
  * ```ts
@@ -69,8 +65,6 @@ const AiEntitySource = AiEntitySourceKit.pipe(
 );
 
 /**
- * Phonetic encoding algorithm used to compare text.
- *
  * **Example** (Validating phonetize membership)
  *
  * ```ts import.meta.vitest name="Validating phonetize membership"
@@ -140,8 +134,6 @@ export class AiToken extends S.Opaque<AiToken, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Output schema for a composite linguistic analysis of a text.
- *
  * **Details**
  *
  * The model bundles document-level counts, detected sentence texts, and the
@@ -274,8 +266,6 @@ export class AiKeyword extends S.Opaque<AiKeyword, { readonly brand: unique symb
 ) {}
 
 /**
- * Output schema for high-level document statistics.
- *
  * **Details**
  *
  * The counts are intended for routing and sizing decisions, such as deciding
@@ -314,8 +304,6 @@ export class AiDocumentStats extends S.Opaque<AiDocumentStats, { readonly brand:
 ) {}
 
 /**
- * Output schema for a sentence-aligned text chunk.
- *
  * **Details**
  *
  * Chunk boundaries are expressed in sentence indexes so callers can preserve
@@ -559,8 +547,6 @@ export class AiToolError extends S.Opaque<AiToolError, { readonly brand: unique 
 ) {}
 
 /**
- * Output schema for the resolved BM25 configuration of a managed corpus.
- *
  * **Details**
  *
  * The values reflect the configuration actually used by the corpus after
@@ -599,8 +585,6 @@ export class AiCorpusConfig extends S.Opaque<AiCorpusConfig, { readonly brand: u
 ) {}
 
 /**
- * Output schema for a managed corpus session summary.
- *
  * **Details**
  *
  * Returned by corpus creation and useful for confirming the stable corpus id,
@@ -681,8 +665,6 @@ export class AiCorpusRankedDocument extends S.Opaque<AiCorpusRankedDocument, { r
 ) {}
 
 /**
- * Output schema for an inverse document frequency value in a corpus.
- *
  * **Details**
  *
  * IDF entries help explain why specific terms influence retrieval scores.

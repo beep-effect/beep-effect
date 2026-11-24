@@ -136,12 +136,12 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
       expect(counts.confirmed).toBe(counts.spawned);
     })
   );
+  const buildOneMoreIdenticalEngineInScopeForCounts = Effect.asVoid(build);
   return {
     extract,
     annotate,
     assertRetired,
-    // Builds one more identical engine in the same scope, for construction-time counts.
-    construct: Effect.asVoid(build),
+    construct: buildOneMoreIdenticalEngineInScopeForCounts,
     native: installed.setup.observed.snapshot,
     limits: installed.setup.limits,
   };

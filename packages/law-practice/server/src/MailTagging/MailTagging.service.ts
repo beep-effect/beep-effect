@@ -41,8 +41,6 @@ const defaultPageSize = 50;
 const defaultRunLabel = "practice-mail-tagging";
 
 /**
- * Every setting of one mail-tagging run, in one value.
- *
  * **Details**
  *
  * The paths are private operator state and are never tracked. `runLabel`

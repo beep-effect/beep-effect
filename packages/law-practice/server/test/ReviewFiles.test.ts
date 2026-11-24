@@ -35,8 +35,7 @@ const verdict = VerdictRow.make({
 const answer = AnswerRow.cases.decided.make({ itemId: "question:1", optionId: "keep-date", revision: 1, recordedAt });
 const item = (itemId: string, text: string) => ReviewItem.cases["kg-answer"].make({ itemId, text, sourceRefs: [] });
 
-// The three stores over a data directory inside a fresh temporary directory.
-const storesIn = Effect.fnUntraced(function* (subdirectory: string) {
+const storesOverDataDirectoryInFreshTemporaryDirectory = Effect.fnUntraced(function* (subdirectory: string) {
   const path = yield* Path.Path;
   const temporaryDirectory1 = yield* temporaryDirectory;
   const dataDirectory = path.join(temporaryDirectory1, subdirectory);
@@ -67,7 +66,9 @@ describe("@beep/law-practice-server ReviewFiles", () => {
               Effect.suspend(() => (denyWrite ? Effect.fail(denied) : fs.open(path, options)))
             ),
           });
-          const { stores } = yield* storesIn("faults").pipe(Effect.provideService(FileSystem.FileSystem, faulty));
+          const { stores } = yield* storesOverDataDirectoryInFreshTemporaryDirectory("faults").pipe(
+            Effect.provideService(FileSystem.FileSystem, faulty)
+          );
           const verdicts = Context.get(stores, VerdictLog);
           const answers = Context.get(stores, AnswerLog);
           const items = Context.get(stores, ReviewItemStore);
@@ -101,7 +102,7 @@ describe("@beep/law-practice-server ReviewFiles", () => {
     it.effect("appends rows and reads them back, creating the directory", () =>
       oneRun(
         Effect.gen(function* () {
-          const { dataDirectory, stores } = yield* storesIn("hub");
+          const { dataDirectory, stores } = yield* storesOverDataDirectoryInFreshTemporaryDirectory("hub");
           const verdicts = Context.get(stores, VerdictLog);
           const answers = Context.get(stores, AnswerLog);
 
@@ -129,16 +130,15 @@ describe("@beep/law-practice-server ReviewFiles", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const { dataDirectory, stores } = yield* storesIn("in-progress");
+          const { dataDirectory, stores } = yield* storesOverDataDirectoryInFreshTemporaryDirectory("in-progress");
           const verdicts = Context.get(stores, VerdictLog);
           const file = path.join(dataDirectory, "verdicts.jsonl");
           yield* verdicts.append(verdict);
           yield* verdicts.append(verdict);
-          // Half of a third row, with no line break yet: another process is still appending it.
           const argument = Str.slice(0, 30);
           const readFileString1 = yield* fs.readFileString(file);
-          const halfRow = argument(readFileString1);
-          yield* fs.writeFileString(file, halfRow, { flag: "a" });
+          const halfThirdRowStillBeingAppendedWithoutLineBreak = argument(readFileString1);
+          yield* fs.writeFileString(file, halfThirdRowStillBeingAppendedWithoutLineBreak, { flag: "a" });
 
           const rows6 = yield* verdicts.rows;
           expect(rows6).toStrictEqual([verdict, verdict]);
@@ -151,7 +151,7 @@ describe("@beep/law-practice-server ReviewFiles", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const { dataDirectory, stores } = yield* storesIn("corrupt");
+          const { dataDirectory, stores } = yield* storesOverDataDirectoryInFreshTemporaryDirectory("corrupt");
           yield* Context.get(stores, VerdictLog).append(verdict);
           yield* fs.writeFileString(path.join(dataDirectory, "verdicts.jsonl"), '{"itemId":"kg-answer:1"}\n', {
             flag: "a",
@@ -178,7 +178,7 @@ describe("@beep/law-practice-server ReviewFiles", () => {
       oneRun(
         Effect.gen(function* () {
           const path = yield* Path.Path;
-          const { dataDirectory, stores } = yield* storesIn("items");
+          const { dataDirectory, stores } = yield* storesOverDataDirectoryInFreshTemporaryDirectory("items");
           const store = Context.get(stores, ReviewItemStore);
           const file = path.join(dataDirectory, "items.jsonl");
 

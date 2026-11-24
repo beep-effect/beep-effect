@@ -17,8 +17,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Files/internal/ArchivePoorCandidates.schemas");
 
 /**
- * Dataset profile used by candidate-quality triage.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -38,8 +36,6 @@ export const CandidateAssessmentProfile = LiteralKit(["character-lora"]).pipe(
 );
 
 /**
- * Dataset profile used by candidate-quality triage.
- *
  * @category models
  * @since 0.0.0
  */
@@ -75,8 +71,6 @@ export const CandidateAssessmentDecision = LiteralKit(["archive", "keep"]).pipe(
 export type CandidateAssessmentDecision = typeof CandidateAssessmentDecision.Type;
 
 /**
- * Hard-threshold reason that can cause an image to be archived.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -100,8 +94,6 @@ export const CandidateAssessmentReason = LiteralKit([
 );
 
 /**
- * Hard-threshold reason that can cause an image to be archived.
- *
  * @category models
  * @since 0.0.0
  */
@@ -183,8 +175,6 @@ export const CandidateRatioThreshold = S.Finite.check(
 export type CandidateRatioThreshold = typeof CandidateRatioThreshold.Type;
 
 /**
- * Options used by poor-candidate archival.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -221,8 +211,6 @@ export class ArchivePoorCandidatesOptions extends S.Opaque<
 ) {}
 
 /**
- * JSON-safe options recorded in a poor-candidate archive manifest.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -355,8 +343,6 @@ export class ArchivePoorCandidatesEntry extends S.Opaque<
 ) {}
 
 /**
- * Source entry skipped by poor-candidate archival.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -387,8 +373,6 @@ export class ArchivePoorCandidatesSkippedEntry extends S.Opaque<
 ) {}
 
 /**
- * Planned poor-candidate archive run.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -417,8 +401,6 @@ export class ArchivePoorCandidatesPlan extends S.Opaque<ArchivePoorCandidatesPla
 ) {}
 
 /**
- * Summary counts returned by poor-candidate archival.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -454,8 +436,6 @@ export class ArchivePoorCandidatesSummary extends S.Opaque<
 ) {}
 
 /**
- * JSON-safe summary recorded by poor-candidate archival.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts

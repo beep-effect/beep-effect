@@ -90,8 +90,6 @@ const isT7ArchiveProvenanceRecord = S.is(T7ArchiveProvenanceRecord);
 type Sha256State = ReturnType<typeof sha256.create>;
 
 /**
- * Minimal decoded collector-ledger row used to reconcile successful destinations and inherited failures.
- *
  * @category models
  * @since 0.0.0
  */
@@ -109,8 +107,6 @@ export class CollectorManifestRecord extends S.Opaque<CollectorManifestRecord, {
 ) {}
 
 /**
- * Aggregate collector-manifest reconciliation without corpus filenames or other client-bearing evidence.
- *
  * @category models
  * @since 0.0.0
  */

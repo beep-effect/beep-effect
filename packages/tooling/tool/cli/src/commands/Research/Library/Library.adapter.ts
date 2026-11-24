@@ -20,7 +20,6 @@ const LibraryCaptureJson = S.fromJsonString(LibraryCapture);
 const $I = $RepoCliId.create("commands/Research/Library/Library.adapter");
 
 /**
- * Adapter result.
  * **Example** (Inspect a blocked acquisition)
  * ```ts
  * import { LibraryAdapterResult } from "@beep/repo-cli/test/ResearchLibrary"

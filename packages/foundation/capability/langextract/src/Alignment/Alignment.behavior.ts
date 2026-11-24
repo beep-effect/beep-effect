@@ -6,7 +6,8 @@
  */
 
 import { GroundedExtraction } from "@beep/langextract/Extraction";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -58,24 +59,32 @@ const findUniqueMatch = (
   );
 
 /**
- * Convert a matched slice into its half-open source span.
+ * Convert a matched slice into the text anchor it covers.
  *
- * **Example** (Span from a matched slice)
+ * **Details**
  *
- * ```ts import.meta.vitest name="Span from a matched slice"
+ * The quote is the matched slice itself, so the anchor's width check holds by
+ * construction. Every tier of the aligner matches a non-empty slice; an empty
+ * one is a defect and throws.
+ *
+ * **Example** (Anchor from a matched slice)
+ *
+ * ```ts import.meta.vitest name="Anchor from a matched slice"
  * import * as S from "effect/Schema"
  * import { spanFromMatch } from "@beep/langextract/Alignment"
  *
- * spanFromMatch([S.Natural.make(4), "Lovelace"]).end // => 12
+ * spanFromMatch([S.Natural.make(4), "Lovelace"]).endChar // => 12
+ * spanFromMatch([S.Natural.make(4), "Lovelace"]).quote // => "Lovelace"
  * ```
  *
  * @category mapping
  * @since 0.0.0
  */
-export const spanFromMatch = ([start, text]: MatchedText): Contract.Span =>
-  Contract.Span.make({
-    end: S.Natural.make(Num.sum(start, Str.length(text))),
-    start,
+export const spanFromMatch = ([start, text]: MatchedText): TextAnchor =>
+  TextAnchor.make({
+    endChar: S.Natural.make(Num.sum(start, Str.length(text))),
+    quote: text,
+    startChar: start,
   });
 
 const findExact = (sourceText: string, query: string): UniqueMatchSearch =>
@@ -503,29 +512,25 @@ const alignPreparedCandidate = (
         Match.when("match_exact", () =>
           GroundedExtraction.cases.match_exact.make({
             ...candidateFields(candidate),
-            matchedText: text,
-            span: spanFromMatch([start, text]),
+            anchor: spanFromMatch([start, text]),
           })
         ),
         Match.when("match_lesser", () =>
           GroundedExtraction.cases.match_lesser.make({
             ...candidateFields(candidate),
-            matchedText: text,
-            span: spanFromMatch([start, text]),
+            anchor: spanFromMatch([start, text]),
           })
         ),
         Match.when("match_minimal_fold", () =>
           GroundedExtraction.cases.match_minimal_fold.make({
             ...candidateFields(candidate),
-            matchedText: text,
-            span: spanFromMatch([start, text]),
+            anchor: spanFromMatch([start, text]),
           })
         ),
         Match.when("match_fuzzy", () =>
           GroundedExtraction.cases.match_fuzzy.make({
             ...candidateFields(candidate),
-            matchedText: text,
-            span: spanFromMatch([start, text]),
+            anchor: spanFromMatch([start, text]),
           })
         ),
         Match.exhaustive

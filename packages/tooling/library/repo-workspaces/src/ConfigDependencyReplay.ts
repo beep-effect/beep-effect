@@ -45,8 +45,6 @@ export const HookReplaySource = LiteralKit(["installed", "store", "fetched", "su
 );
 
 /**
- * The resolution rung supplying a replayed version.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -110,8 +108,6 @@ export class HookReplayContext extends S.Opaque<HookReplayContext, { readonly br
 ) {}
 
 /**
- * Companion types for {@link HookReplayContext}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -171,8 +167,6 @@ export class HookReplay extends S.Opaque<HookReplay, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link HookReplay}.
- *
  * @category type-level
  * @since 0.0.0
  */

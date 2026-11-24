@@ -59,8 +59,6 @@ export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link UsptoToolErrorReason}.
- *
  * **Example** (Type-checking transport reason)
  *
  * ```ts
@@ -145,8 +143,6 @@ export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).
 );
 
 /**
- * Type for {@link UsptoMcpFailure}.
- *
  * **Example** (Typing a tool error)
  *
  * ```ts

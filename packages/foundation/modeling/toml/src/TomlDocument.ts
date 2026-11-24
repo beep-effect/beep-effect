@@ -32,11 +32,6 @@ import { TomlExpression } from "./TomlNode.ts";
 const $I = $TomlId.create("TomlDocument");
 
 /**
- * A parsed TOML document that never loses a byte: the `source` text, the
- * linear {@link (TomlExpression:type)} CST whose spans tile the source
- * exactly, and
- * any semantic violations as {@link TomlDiagnostic} data.
- *
  * **Details**
  *
  * `parse` fails typed only on lex/parse errors; a syntactically valid but

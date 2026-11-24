@@ -94,8 +94,6 @@ export const YeetThreadDisposition = LiteralKit(["fixed", "rejected", "intention
 );
 
 /**
- * How the pull request author disposed of one review thread.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,8 +125,6 @@ export const YeetReviewDisposition = YeetThreadDisposition.omit(["unknown"]).pip
 );
 
 /**
- * A disposition a reply draft declares.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -163,8 +159,6 @@ export const YeetReviewerKind = LiteralKit(["beep-reviewer", "greptile", "codera
 );
 
 /**
- * Which reviewer a review came from.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -208,8 +202,6 @@ const reviewLaneRowFields = {
 } satisfies S.Struct.Fields;
 
 /**
- * How a pull request became ready for review.
- *
  * **Details**
  *
  * `flip` is `yeet ready` on a draft. `open` is a publish that opened the pull
@@ -235,16 +227,12 @@ export const ReviewLaneReadyTransition = LiteralKit(["flip", "open"]).pipe(
 );
 
 /**
- * How a pull request became ready for review.
- *
  * @category models
  * @since 0.0.0
  */
 export type ReviewLaneReadyTransition = typeof ReviewLaneReadyTransition.Type;
 
 /**
- * `yeet ready` flipped the pull request from draft to ready.
- *
  * **Details**
  *
  * The flip starts the rounds-to-ready window. `headSha` is the head the gate
@@ -298,8 +286,6 @@ export class ReviewLaneFlipRow extends S.Opaque<ReviewLaneFlipRow, { readonly br
 ) {}
 
 /**
- * A monitor observed a new pull request head.
- *
  * **Details**
  *
  * `pushedAt` is the head commit's committer date when GitHub could name it;
@@ -391,8 +377,6 @@ export class ReviewLaneReviewRow extends S.Opaque<ReviewLaneReviewRow, { readonl
 ) {}
 
 /**
- * A monitor announced `merge-ready: yes` for a head.
- *
  * **Details**
  *
  * The first announcement after the flip closes the rounds-to-ready window.
@@ -474,8 +458,6 @@ export class ReviewLaneDispositionRow extends S.Opaque<ReviewLaneDispositionRow,
 ) {}
 
 /**
- * One append-only row of the review lane ledger.
- *
  * **Example** (Decode a flip row)
  *
  * ```ts
@@ -512,8 +494,6 @@ export const ReviewLaneRow = S.Union([
 );
 
 /**
- * One append-only row of the review lane ledger.
- *
  * @see {@link ReviewLaneRow} for the runtime schema and its variants.
  * @category models
  * @since 0.0.0

@@ -161,8 +161,6 @@ export const CheckCensusBandRow = LiteralKit(["@beep/repo-cli", "@beep/law-pract
 );
 
 /**
- * Runtime type of {@link CheckCensusBandRow}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -197,8 +195,6 @@ export const CheckCensusRowClass = LiteralKit(["strict", "band"]).pipe(
 );
 
 /**
- * Runtime type of {@link CheckCensusRowClass}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -368,9 +364,6 @@ export class CheckCensusTargets extends S.Opaque<CheckCensusTargets, { readonly 
 ) {}
 
 /**
- * One single-checker `--extendedDiagnostics` sample: instantiations, types,
- * and check time in milliseconds.
- *
  * **Example** (Build a sample)
  *
  * ```ts
@@ -392,8 +385,6 @@ export class CheckCensusSample extends S.Opaque<CheckCensusSample, { readonly br
 ) {}
 
 /**
- * One baselined program with its committed single-checker sample.
- *
  * **Example** (Describe a baseline row)
  *
  * ```ts
@@ -473,8 +464,6 @@ export class CheckCensusBaseline extends S.Opaque<CheckCensusBaseline, { readonl
 ) {}
 
 /**
- * The `--extendedDiagnostics` labels the gate reads.
- *
  * **Example** (Guard a label)
  *
  * ```ts
@@ -493,8 +482,6 @@ export const CheckCensusMetricLabel = LiteralKit(["Instantiations", "Types", "Ch
 );
 
 /**
- * Runtime type of {@link CheckCensusMetricLabel}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -529,8 +516,6 @@ export const CheckCensusInstantiationVerdict = LiteralKit(["increase", "within-b
 );
 
 /**
- * Runtime type of {@link CheckCensusInstantiationVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -557,8 +542,6 @@ export const CheckCensusCheckTimeVerdict = LiteralKit(["within-band", "slower", 
 );
 
 /**
- * Runtime type of {@link CheckCensusCheckTimeVerdict}.
- *
  * @category models
  * @since 0.0.0
  */

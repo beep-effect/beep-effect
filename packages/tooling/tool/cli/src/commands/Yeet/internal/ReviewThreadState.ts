@@ -51,8 +51,6 @@ import type { ReviewThreadActor, ReviewThreadNode } from "@beep/github/ReviewThr
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewThreadState");
 
 /**
- * Whether the newest comment on a review thread came from a person or a bot.
- *
  * **Details**
  *
  * Derived from GraphQL `author { __typename }`: GitHub reports `Bot` for an
@@ -81,8 +79,6 @@ export const YeetReviewCommentAuthorKind = LiteralKit(["user", "bot"]).pipe(
 );
 
 /**
- * Whether the newest comment on a review thread came from a person or a bot.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -459,8 +455,6 @@ export class ThreadResolvedAnswered extends S.Opaque<ThreadResolvedAnswered, { r
 ) {}
 
 /**
- * A thread the author resolved that a human reviewer has since spoken on.
- *
  * **Details**
  *
  * The state the whole module exists for, and the only resolved state that
@@ -488,8 +482,6 @@ export class ThreadResolvedFollowUp extends S.Opaque<ThreadResolvedFollowUp, { r
 ) {}
 
 /**
- * A thread the author resolved that a review bot has since confirmed on.
- *
  * **Details**
  *
  * Review bots post a confirmation onto threads they never re-open, so their
@@ -519,8 +511,6 @@ export class ThreadResolvedAcknowledged extends S.Opaque<
 ) {}
 
 /**
- * What one pull request review thread still owes.
- *
  * **Example** (Decode an unresolved thread state)
  *
  * ```ts
@@ -551,16 +541,12 @@ export const YeetReviewThreadState = S.Union([
 );
 
 /**
- * What one pull request review thread still owes.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetReviewThreadState = typeof YeetReviewThreadState.Type;
 
 /**
- * The tag alone of a classified review thread state.
- *
  * **Details**
  *
  * Surfaces that carry a thread's classification without carrying the thread —
@@ -595,8 +581,6 @@ export const YeetReviewThreadStateTag = LiteralKit([
 );
 
 /**
- * The tag alone of a classified review thread state.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -62,8 +62,6 @@ export * from "./Citation.membership.ts";
  */
 export * from "./Citation.mention.ts";
 /**
- * Citation model exports.
- *
  * **Example** (Import Citation module)
  *
  * ```ts

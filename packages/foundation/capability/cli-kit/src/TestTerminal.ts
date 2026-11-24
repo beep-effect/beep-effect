@@ -18,8 +18,6 @@ import type * as Cause from "effect/Cause";
 const $I = $CliKitId.create("TestTerminal");
 
 /**
- * One key press for {@link TestTerminal}.
- *
  * **Details**
  *
  * `name` is any string, so a test can send a key the prompts do not know. Each modifier may be omitted;
@@ -69,8 +67,6 @@ export class KeyInput extends S.Opaque<KeyInput, { readonly brand: unique symbol
   }).pipe($I.annoteSchema("KeyInput", { description: "One scripted key press queued into a TestTerminal." }))
 ) {}
 /**
- * Companion types for {@link KeyInput}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

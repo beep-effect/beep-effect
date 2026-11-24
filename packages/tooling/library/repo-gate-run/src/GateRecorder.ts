@@ -40,9 +40,6 @@ import type { GateRecordStoreShape, WrittenFile } from "@beep/repo-gate-record/G
 const $I = $RepoGateRunId.create("GateRecorder");
 
 /**
- * What a gate run produced: the events its adapter emitted, or a report it
- * already finished.
- *
  * **Example** (Wrap events)
  *
  * ```ts
@@ -64,8 +61,6 @@ export const RunSource = S.TaggedUnion({
 );
 
 /**
- * Type of {@link RunSource}.
- *
  * @category models
  * @since 0.0.0
  */

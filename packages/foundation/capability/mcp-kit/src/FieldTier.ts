@@ -34,8 +34,6 @@ const UnknownRecord = S.Record(S.String, S.Unknown);
 const $I = $McpKitId.create("FieldTier");
 
 /**
- * Named progressive-disclosure field tier.
- *
  * **Example** (Access minimal enum value)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const FieldTierName = LiteralKit(["minimal", "balanced", "complete"]).pip
 );
 
 /**
- * Runtime type for {@link FieldTierName}.
- *
  * **Example** (Satisfy FieldTierName type)
  *
  * ```ts
@@ -361,8 +357,6 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
   );
 
 /**
- * Inline or fetchable outcome of projecting a payload within a caller's size budget.
- *
  * **Example** (Type FieldProjectionOutcome value)
  *
  * ```ts

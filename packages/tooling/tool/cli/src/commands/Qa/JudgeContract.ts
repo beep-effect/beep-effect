@@ -77,8 +77,6 @@ const alwaysBlockingGate = (id: QaJudgeGateId, predicateType: EvidencePredicateT
   });
 
 /**
- * Ordered event citations and witness ids consumed by the event-existence gate.
- *
  * **Example** (Create event gate input)
  *
  * ```ts
@@ -217,8 +215,6 @@ export const evaluateCitedEventIdExists: GateEvaluator<CitedEventIdExistsInput, 
 });
 
 /**
- * Requested and declared round numbers consumed by the coherence gate.
- *
  * **Example** (Create round-coherence input)
  *
  * ```ts
@@ -352,8 +348,6 @@ export const evaluateDeclaredRoundCoherent: GateEvaluator<DeclaredRoundCoherentI
   });
 
 /**
- * Artifact and event leaf verdicts consumed by the aggregate consistency gate.
- *
  * **Example** (Inspect aggregate input fields)
  *
  * ```ts
@@ -576,8 +570,6 @@ class JudgeOutputInventoryDecodesAllowed extends S.Opaque<
 ) {}
 
 /**
- * Decode stage that denies a judge-output inventory candidate.
- *
  * **Details**
  *
  * Adapters match on this domain to restore their flow-specific operator
@@ -605,8 +597,6 @@ export const JudgeOutputDecodeFailure = LiteralKit(["malformed-json", "inventory
 );
 
 /**
- * Runtime type decoded by {@link JudgeOutputDecodeFailure}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -851,8 +841,6 @@ export const QaJudgeContract = SkillContract.make({
 });
 
 /**
- * Artifact, event, and aggregate verdicts of one round cross-check.
- *
  * **Example** (Inspect settlement fields)
  *
  * ```ts
@@ -877,8 +865,6 @@ export class RoundCrossCheckSettlement extends S.Opaque<RoundCrossCheckSettlemen
 ) {}
 
 /**
- * Leaf and aggregate verdicts of one QA judge settlement, bound to the judged inventory.
- *
  * **Details**
  *
  * Each verdict is optional because the flows stop early: a denied output
@@ -1024,8 +1010,6 @@ export const certifyQaJudgeSettlement = Effect.fn("QaJudgeContract.certifyQaJudg
 });
 
 /**
- * A written QA judge certificate and the subject bound to its exact bytes.
- *
  * **Details**
  *
  * `subject` is the SHA-256 of the encoded `gate-certificate.json` bytes the

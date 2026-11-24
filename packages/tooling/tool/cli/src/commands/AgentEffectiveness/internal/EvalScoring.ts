@@ -25,8 +25,6 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScoring")
 const SCORE_FORMAT_DIGITS = 6;
 
 /**
- * Scores for one eval task, one law lane.
- *
  * @category models
  * @since 0.0.0
  */

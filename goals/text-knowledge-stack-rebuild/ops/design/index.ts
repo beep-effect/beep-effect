@@ -1,7 +1,7 @@
 /**
  * P0 design module of the text-knowledge stack rebuild: the section 4
  * sketches of `research/2026-11-08-rebuild-report.md` as compiling Effect v4
- * schemas, checked against the installed effect 4.1.4.
+ * schemas, checked against the installed effect 4.1.5.
  *
  * This is a design artifact, not package code. Each phase moves its layer
  * into the owning package and deletes it here in the same PR, so the
@@ -23,14 +23,11 @@
  *
  * Bodies written as `declare const` are signatures only (the L3 audit and
  * coherence check, grounding verification, dataset canonicalization and
- * isomorphism, and the OA codec). Everything
- * else has a real implementation, including merge, restrict, closure,
- * containment, the claim log checker and the retraction closure.
+ * isomorphism). The claim log checker and retraction closure have real
+ * implementations. Annotation operations and the OA codec live in production.
  *
- * Layer edges used here: L2 -> `@beep/text`; L3 -> `@beep/epistemics`
- * (`makeSignal`, `Measurement`), an ontology -> epistemics edge that decision
- * 2026-11-19-p0-census-dispositions removes in P4 by moving them to
- * `@beep/schema`; L4 -> `@beep/text`; L5 -> none; L6 -> L2.
+ * Layer edges used here: L3 -> `@beep/epistemics`; L4 -> `@beep/text`; L5 -> none.
+ * L2 and the OA codec moved to `@beep/annotation` in P3.
  * L0 left the design module in P1. The identity layer is `@beep/identity`:
  * term IRIs, code ids, namespaces, terms, bindings, deprecations and the
  * snapshot are `@beep/identity/Term`, and the CURIE codec is
@@ -53,15 +50,13 @@
  * @since 0.0.0
  */
 
-/** Composed `Arbitrary` prototypes for the annotation document and the claim log. */
+/** Coherent claim-log arbitraries for L4. */
 export * as Generators from "./generators.ts";
-/** L2 annotation: kind registry, document ingredients, merge, restrict, closure, refusals. */
-export * as L2 from "./L2.annotation.ts";
 /** L3 taxonomy: SSSOM mapping sets, gUFO audit and coherence signatures. */
 export * as L3 from "./L3.taxonomy.ts";
 /** L4 claims: core, stance, challenge, admission, retraction, assessments, gates, log checker. */
 export * as L4 from "./L4.claims.ts";
 /** L5 operations: operations, activities, composition, provenance wrapper. */
 export * as L5 from "./L5.operations.ts";
-/** L6 interchange: three-case literal, dataset quotient and digest, OA profile and import result. */
+/** L6 interchange: three-case literal, dataset quotient and digest. */
 export * as L6 from "./L6.interchange.ts";

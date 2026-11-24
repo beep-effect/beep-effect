@@ -98,8 +98,6 @@ export class PublishConfig extends S.Opaque<PublishConfig, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link PublishConfig}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -168,8 +166,6 @@ export class DependencyDiff extends S.Opaque<DependencyDiff, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link DependencyDiff}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -184,9 +180,6 @@ export declare namespace DependencyDiff {
 }
 
 /**
- * Raised when a workspace member's `package.json` cannot be read or decoded
- * into the strict `@beep/package-json` `Package` model.
- *
  * **Details**
  *
  * Discovery itself never raises this — it uses the tolerant projection. Only
@@ -265,9 +258,6 @@ export class WorkspaceManifestError extends S.TaggedError<WorkspaceManifestError
 }
 
 /**
- * A single package inside a workspace: the discovery-relevant slice of its
- * `package.json` plus its filesystem location.
- *
  * **Details**
  *
  * Produced by `WorkspaceDiscovery` for every directory the `packages:` patterns

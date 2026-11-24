@@ -81,8 +81,6 @@ const baselineHeader = `// Regenerate with: ${regenerationCommand}
 `;
 
 /**
- * Shape of a package test-typecheck blind spot.
- *
  * **Example** (Usage)
  * ```ts
  * import { TestTypecheckBlindSpotKind } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
@@ -101,8 +99,6 @@ export const TestTypecheckBlindSpotKind = LiteralKit(["missing-test-tsconfig", "
 );
 
 /**
- * Shape of a package test-typecheck blind spot.
- *
  * **Example** (Usage)
  * ```ts
  * import type { TestTypecheckBlindSpotKind } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"
@@ -459,8 +455,6 @@ const renderFindingLines = (findings: ReadonlyArray<TestTypecheckBlindSpot>): Re
   renderTruncatedLines({ items: findings, render: renderFinding, limit: 25 });
 
 /**
- * Options accepted by {@link runPackageTestTypecheckLint}.
- *
  * **Example** (Usage)
  * ```ts
  * import { PackageTestTypecheckOptions } from "@beep/repo-cli/commands/Lint/PackageTestTypecheck"

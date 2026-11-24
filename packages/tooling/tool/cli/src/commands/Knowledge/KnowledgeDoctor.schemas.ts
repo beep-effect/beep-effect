@@ -64,8 +64,6 @@ export const KnowledgeSpanClass = LiteralKit([
 export type KnowledgeSpanClass = typeof KnowledgeSpanClass.Type;
 
 /**
- * The syntactic form a span was extracted from.
- *
  * **Details**
  *
  * `path` is an inline code span naming a governed repository path, `path-assertion` a
@@ -106,8 +104,6 @@ export const KnowledgeSpanForm = LiteralKit([
 );
 
 /**
- * The syntactic form a span was extracted from.
- *
  * @category models
  * @since 0.0.0
  */
@@ -319,8 +315,6 @@ export class KnowledgeProducerOutput extends S.Opaque<KnowledgeProducerOutput, {
 ) {}
 
 /**
- * Witness that a tracked tree entry, or a tracked directory, exists.
- *
  * **Details**
  *
  * `path` is the normalized repository path the span resolved to. When it names a directory, the
@@ -376,8 +370,6 @@ export class CommandNodeWitness extends S.Opaque<CommandNodeWitness, { readonly 
 ) {}
 
 /**
- * Witness that a registered producer owns an untracked derived path.
- *
  * **Example** (Witness the goals index projection)
  *
  * ```ts
@@ -429,8 +421,6 @@ export class ManifestFieldWitness extends S.Opaque<ManifestFieldWitness, { reado
 ) {}
 
 /**
- * Witness that a workspace file exposes one export.
- *
  * **Details**
  *
  * For a package manifest the export is an `exports` map key (`.` or `./Sub`); for the root
@@ -523,8 +513,6 @@ export const ResolutionWitness = S.Union([
 export type ResolutionWitness = typeof ResolutionWitness.Type;
 
 /**
- * Whether a goal packet's manifest is present and decodes.
- *
  * **Example** (Recognize a decoded manifest)
  *
  * ```ts
@@ -543,8 +531,6 @@ export const KnowledgePacketManifestState = LiteralKit(["decoded", "missing", "i
 );
 
 /**
- * Whether a goal packet's manifest is present and decodes.
- *
  * @category models
  * @since 0.0.0
  */
@@ -866,8 +852,6 @@ export class EvaluationResolved extends S.Opaque<EvaluationResolved, { readonly 
 ) {}
 
 /**
- * A span that failed, carrying one or more failures.
- *
  * **Example** (Check the failed tag)
  *
  * ```ts
@@ -905,8 +889,6 @@ export class EvaluationFailed extends S.Opaque<EvaluationFailed, { readonly bran
 ) {}
 
 /**
- * The outcome of evaluating one span.
- *
  * **Example** (Discriminate an outcome)
  *
  * ```ts
@@ -932,16 +914,12 @@ export const KnowledgeEvaluationOutcome = S.Union([EvaluationResolved, Evaluatio
 );
 
 /**
- * The outcome of evaluating one span.
- *
  * @category models
  * @since 0.0.0
  */
 export type KnowledgeEvaluationOutcome = typeof KnowledgeEvaluationOutcome.Type;
 
 /**
- * The spans and historical markers extracted from one document.
- *
  * **Example** (An empty extraction)
  *
  * ```ts
@@ -1276,8 +1254,6 @@ export class KnowledgePathRemovalQuery extends S.Opaque<KnowledgePathRemovalQuer
 ) {}
 
 /**
- * The authoring commit of a cause group's root: the commit that removed the missing target.
- *
  * **Details**
  *
  * `removedPath` is the path the commit removed, which is the target itself or, for a directory
@@ -1428,8 +1404,6 @@ export const KnowledgeDoctorMode = LiteralKit(["report", "check"]).pipe(
 export type KnowledgeDoctorMode = typeof KnowledgeDoctorMode.Type;
 
 /**
- * The durable identity of one baselineable finding in the sealed baseline.
- *
  * **Details**
  *
  * The digest covers the length-prefixed key version, kind, durable document identity, NFC subject,
@@ -1455,16 +1429,12 @@ export const KnowledgeBaselineKey = S.TemplateLiteral(["knowledge-doctor/v1:", S
 );
 
 /**
- * The durable identity of one baselineable finding in the sealed baseline.
- *
  * @category models
  * @since 0.0.0
  */
 export type KnowledgeBaselineKey = typeof KnowledgeBaselineKey.Type;
 
 /**
- * One finding of the scanned tree with its baseline key.
- *
  * **Example** (Pair a finding with its key)
  *
  * ```ts

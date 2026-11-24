@@ -38,8 +38,6 @@ export const ClaimDispositionStatus = ClaimDispositionStatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link ClaimDispositionStatus}.
- *
  * **Example** (Satisfy active status type)
  *
  * ```ts

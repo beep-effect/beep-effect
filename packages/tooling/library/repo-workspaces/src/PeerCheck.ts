@@ -45,8 +45,6 @@ import type { ImporterRoots, InstanceIndex } from "./internal/roots.ts";
 const $I = $RepoWorkspacesId.create("PeerCheck");
 
 /**
- * Why a report is not a complete answer.
- *
  * **Details**
  *
  * Closed at exactly four:
@@ -127,8 +125,6 @@ export const UnverifiedReason = LiteralKit([
 export type UnverifiedReason = typeof UnverifiedReason.Type;
 
 /**
- * Options for {@link PeerCheck.run}.
- *
  * **Gotchas**
  *
  * **Presence of `peerDependencyRules` is the assertion; its contents are the
@@ -237,8 +233,6 @@ export class PeerCheckOptions extends S.Opaque<PeerCheckOptions, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link PeerCheckOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -261,9 +255,6 @@ export declare namespace PeerCheckOptions {
 }
 
 /**
- * One link in the chain from an importer to the package that declared an
- * unsatisfied peer.
- *
  * **Details**
  *
  * Mirrors the shape `pnpm peers check --json` reports, so the two can be
@@ -301,8 +292,6 @@ export class PeerParent extends S.Opaque<PeerParent, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link PeerParent}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -317,8 +306,6 @@ export declare namespace PeerParent {
 }
 
 /**
- * One peer dependency that is declared but not satisfied.
- *
  * **Details**
  *
  * `found` carries the version that actually resolved, or `null` when nothing
@@ -403,8 +390,6 @@ export class UnsatisfiedPeer extends S.Opaque<UnsatisfiedPeer, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link UnsatisfiedPeer}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1040,8 +1025,6 @@ interface Policy {
 }
 
 /**
- * The result of checking a lockfile for unsatisfied peer dependencies.
- *
  * **Details**
  *
  * A report rather than a bare array, because an empty array is the most
@@ -1563,9 +1546,6 @@ interface RunScope {
    * The classified `link:` edges.
    */
   readonly links: LinkScan;
-  /**
-   * The lockfile being checked.
-   */
   readonly lockfile: Lockfile;
   /**
    * The supplied manifests by package directory.
@@ -1751,13 +1731,7 @@ interface Declaration {
    * The declaring package's name, which a rule key's parent is matched against.
    */
   readonly declaring: string;
-  /**
-   * Whether the declaration marks a peer optional.
-   */
   readonly isOptional: (peer: string) => boolean;
-  /**
-   * The verdict for one declared peer.
-   */
   readonly verdictOf: (peer: string, wanted: string, optional: boolean) => JoinedVerdict;
 }
 

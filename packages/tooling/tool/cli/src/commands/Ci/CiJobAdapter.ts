@@ -54,8 +54,6 @@ const $I = $RepoCliId.create("commands/Ci/CiJobAdapter");
 export const CI_RUN_GATE = "run";
 
 /**
- * One step of a job, as the REST job list returns it.
- *
  * **Example** (A failed step)
  *
  * ```ts
@@ -79,8 +77,6 @@ export class CiRunStep extends S.Opaque<CiRunStep, { readonly brand: unique symb
 ) {}
 
 /**
- * One job of a workflow run, as the REST job list returns it.
- *
  * **Details**
  *
  * `steps` is absent or `null` for a job the runner never started; both decode
@@ -218,8 +214,6 @@ export class CiWorkflowRun extends S.Opaque<CiWorkflowRun, { readonly brand: uni
 ) {}
 
 /**
- * One page of a workflow run listing.
- *
  * **Example** (An empty page)
  *
  * ```ts

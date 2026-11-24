@@ -101,8 +101,6 @@ export class ForbidImportsRule extends S.Opaque<ForbidImportsRule, { readonly br
 ) {}
 
 /**
- * Companion types for {@link ForbidImportsRule}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -142,8 +140,6 @@ export class ForbidTokensRule extends S.Opaque<ForbidTokensRule, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link ForbidTokensRule}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -158,8 +154,6 @@ export declare namespace ForbidTokensRule {
 }
 
 /**
- * One rule a source file must keep.
- *
  * **Details**
  *
  * `"process"` forbids a read of the global `process`. `"node:process"` forbids
@@ -221,8 +215,6 @@ export const BoundaryRule = S.Union([GlobalRule, ForbidImportsRule, ForbidTokens
 export type BoundaryRule = typeof BoundaryRule.Type;
 
 /**
- * Companion types for {@link BoundaryRule}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -276,8 +268,6 @@ export class ReferenceOptions extends S.Opaque<ReferenceOptions, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link ReferenceOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -292,8 +282,6 @@ export declare namespace ReferenceOptions {
 }
 
 /**
- * A snippet with the verdict one rule must reach on it.
- *
  * **Example** (Validate a scanner control snippet)
  *
  * ```ts
@@ -319,8 +307,6 @@ export class BoundaryFixture extends S.Opaque<BoundaryFixture, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link BoundaryFixture}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -373,8 +359,6 @@ export const OffenceRule = LiteralKit([
 export type OffenceRule = typeof OffenceRule.Type;
 
 /**
- * One place a source file breaks a {@link BoundaryRule}.
- *
  * **Example** (Format a boundary offence)
  *
  * ```ts
@@ -431,8 +415,6 @@ export class Offence extends S.Class<Offence, { readonly brand: unique symbol }>
 }
 
 /**
- * What a scan read and found.
- *
  * **Example** (Inspect a clean scan)
  *
  * ```ts
@@ -570,8 +552,6 @@ export class ScanOptions extends S.Opaque<ScanOptions, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link ScanOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

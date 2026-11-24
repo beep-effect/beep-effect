@@ -6,8 +6,6 @@
  */
 
 /**
- * Execution grant model exports.
- *
  * **Example** (Access SinkClass enum value)
  *
  * ```ts

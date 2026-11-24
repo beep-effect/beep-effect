@@ -46,8 +46,6 @@ import type { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-us
 const $I = $LawPracticeServerId.create("PracticeKg.correspondents");
 
 /**
- * Header an address appeared in.
- *
  * **Example** (Decode a participant role)
  *
  * ```ts
@@ -65,8 +63,6 @@ export const PracticeKgEmailParticipantRole = LiteralKit(["from", "to", "cc"]).p
 );
 
 /**
- * Runtime type for {@link PracticeKgEmailParticipantRole}.
- *
  * **Example** (Type a participant role)
  *
  * ```ts
@@ -171,8 +167,7 @@ const messageIdBracketsPattern = /^<|>$/gu;
 export const normalizePracticeKgMessageId = (raw: string): O.Option<string> =>
   pipe(Str.trim(raw), Str.replace(messageIdBracketsPattern, ""), Str.trim, O.liftPredicate(Str.isNonEmpty));
 
-// One message is its Message-ID when it has one, else the digest of the copy at hand.
-const identityOf = (message: PracticeKgEmailMessage): string =>
+const messageIdElseCopyDigestIdentity = (message: PracticeKgEmailMessage): string =>
   pipe(
     O.fromUndefinedOr(message.messageId),
     O.flatMap(normalizePracticeKgMessageId),
@@ -342,8 +337,6 @@ export class PracticeKgCorrespondentTables extends S.Opaque<
 ) {}
 
 /**
- * Input to {@link buildPracticeKgCorrespondentTables}.
- *
  * **Example** (Make an empty input)
  *
  * ```ts
@@ -378,8 +371,6 @@ export class PracticeKgCorrespondentTablesInput extends S.Opaque<
 ) {}
 
 /**
- * Input to {@link readPracticeKgEmailMessages}.
- *
  * **Example** (Make a read input)
  *
  * ```ts
@@ -439,8 +430,7 @@ export const isPracticeKgPracticeAddress =
 const namedAddressPattern = /^([^<>]*)<([^<>\s]+@[^<>\s]+)>$/u;
 const bareAddressPattern = /^[^\s,<>";]+@[^\s,<>"';]+$/u;
 const surroundingQuotesPattern = /^['"\s]+|['"\s]+$/gu;
-// A bare address wrapped in single quotes: the pattern keeps the opening quote and stops at the closing one.
-const bareAddressQuotePattern = /^'|'$/gu;
+const singleQuotesWrappingBareAddressPattern = /^'|'$/gu;
 const maxAddressHeaderLength = 16_384;
 
 const cleanName = (raw: string | null | undefined): string | null =>
@@ -471,7 +461,7 @@ const participantsOf = (
     A.map(addressEntries(header), (entry) => {
       const named = Str.match(namedAddressPattern)(entry);
       const address = O.match(named, {
-        onNone: () => Str.replace(bareAddressQuotePattern, "")(entry),
+        onNone: () => Str.replace(singleQuotesWrappingBareAddressPattern, "")(entry),
         onSome: (match) => match[2] ?? "",
       });
       if (!O.isSome(named) && !bareAddressPattern.test(address)) return O.none<PracticeKgEmailParticipant>();
@@ -531,8 +521,9 @@ type TikaRecord = typeof TikaRecord.Type;
 const isTikaRecordList = S.is(S.NonEmptyArray(TikaRecord));
 const isTikaValue = S.is(TikaValue);
 
-// Tika writes a single object, or with recursive parsing an array whose first object is the container.
-const decodeTikaRecords = S.decodeUnknownEffect(S.fromJsonString(S.Union([S.NonEmptyArray(TikaRecord), TikaRecord])));
+const decodeTikaSingleOrRecursiveRecords = S.decodeUnknownEffect(
+  S.fromJsonString(S.Union([S.NonEmptyArray(TikaRecord), TikaRecord]))
+);
 const decodeTikaEmailFields = S.decodeUnknownEffect(TikaEmailFields);
 
 const asList = (value: typeof TikaValue.Type): ReadonlyArray<string> => (P.isString(value) ? [value] : value);
@@ -543,29 +534,31 @@ const joined = (value: typeof TikaValue.Type | undefined): string =>
 const firstValue = (value: typeof TikaValue.Type | undefined): string | null =>
   pipe(O.fromNullishOr(value), O.flatMap(flow(asList, A.head)), O.map(Str.trim), O.filter(Str.isNonEmpty), O.getOrNull);
 
-// `Message-From` usually carries `Name <address>`; when it carries a name only,
-// the address comes from `Message:From-Email` and the name from `Message-From`.
+const nameOnlyMessageFromWithFromEmailAddress = (fields: TikaEmailFields): ReadonlyArray<PracticeKgEmailParticipant> =>
+  A.map(participantsOf(joined(fields["Message:From-Email"]), "from"), (participant) =>
+    PracticeKgEmailParticipant.make({ ...participant, name: cleanName(firstValue(fields["Message-From"])) })
+  );
+
 const senderOf = (fields: TikaEmailFields): ReadonlyArray<PracticeKgEmailParticipant> => {
-  const parsed = participantsOf(joined(fields["Message-From"]), "from");
-  return A.isReadonlyArrayNonEmpty(parsed)
-    ? parsed
-    : A.map(participantsOf(joined(fields["Message:From-Email"]), "from"), (participant) =>
-        PracticeKgEmailParticipant.make({ ...participant, name: cleanName(firstValue(fields["Message-From"])) })
-      );
+  const nameAndAddressFromMessageFrom = participantsOf(joined(fields["Message-From"]), "from");
+  return A.isReadonlyArrayNonEmpty(nameAndAddressFromMessageFrom)
+    ? nameAndAddressFromMessageFrom
+    : nameOnlyMessageFromWithFromEmailAddress(fields);
 };
 
-const messageIdMetadataKey = "message:raw-header:message-id";
+const lowerCasedMessageIdRawHeaderKey = "message:raw-header:message-id";
+const isRfc5322CaseInsensitiveMessageIdKey = (tikaKeyAsSpelledByMessage: string) =>
+  Str.toLowerCase(tikaKeyAsSpelledByMessage) === lowerCasedMessageIdRawHeaderKey;
+const firstValueHoldingAnIdSkippingEmptyEntries = (value: typeof TikaValue.Type): O.Option<string> =>
+  A.head(A.getSomes(A.map(asList(value), normalizePracticeKgMessageId)));
 
-// Tika names a raw header as the message spelled it, and RFC 5322 field names are
-// case-insensitive (`Message-ID`, `Message-Id`, `Message-id`), so the key is matched without regard to case.
 const messageIdOf = (record: TikaRecord): O.Option<string> =>
   pipe(
     R.toEntries(record),
-    A.findFirst(([key]) => Str.toLowerCase(key) === messageIdMetadataKey),
+    A.findFirst(([key]) => isRfc5322CaseInsensitiveMessageIdKey(key)),
     O.map(([, value]) => value),
     O.filter(isTikaValue),
-    // The first value that holds an id: a list may open with an empty entry.
-    O.flatMap((value) => A.head(A.getSomes(A.map(asList(value), normalizePracticeKgMessageId))))
+    O.flatMap(firstValueHoldingAnIdSkippingEmptyEntries)
   );
 
 const messageFrom = (digest: string, fields: TikaEmailFields, messageId: O.Option<string>): PracticeKgEmailMessage =>
@@ -590,9 +583,9 @@ class EmailSourceRow extends S.Opaque<EmailSourceRow, { readonly brand: unique s
 
 const decodeEmailSourceRows = S.decodeUnknownEffect(S.Array(EmailSourceRow));
 
-// The extension decides what is an email; the sources manifest names the
-// operation whose metadata JSON carries its headers.
-const emailSourcesSql = (sources: ReadonlyArray<{ readonly metadataDir: string; readonly sourcesPath: string }>) => `
+const emailsByExtensionWithManifestHeaderOperationSql = (
+  sources: ReadonlyArray<{ readonly metadataDir: string; readonly sourcesPath: string }>
+) => `
 WITH sources AS (
   ${A.join(
     A.map(
@@ -611,7 +604,7 @@ WHERE lower(d.effective_name) LIKE '%.eml' OR lower(d.effective_name) LIKE '%.ms
 QUALIFY ROW_NUMBER() OVER (PARTITION BY d.digest ORDER BY s.ordinal, s.operationId) = 1
 ORDER BY d.digest`;
 
-const containerOf = (decoded: TikaRecord | A.NonEmptyReadonlyArray<TikaRecord>): TikaRecord =>
+const recursiveListHeadIsContainer = (decoded: TikaRecord | A.NonEmptyReadonlyArray<TikaRecord>): TikaRecord =>
   isTikaRecordList(decoded) ? A.headNonEmpty(decoded) : decoded;
 
 const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: EmailSourceRow) {
@@ -619,8 +612,8 @@ const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: 
   const path = yield* Path.Path;
   const metadataPath = path.join(source.metadataDir, `${source.operationId}.json`);
   return yield* fs.readFileString(metadataPath).pipe(
-    Effect.flatMap(decodeTikaRecords),
-    Effect.map(containerOf),
+    Effect.flatMap(decodeTikaSingleOrRecursiveRecords),
+    Effect.map(recursiveListHeadIsContainer),
     Effect.flatMap((container) =>
       Effect.map(decodeTikaEmailFields(container), (fields) =>
         messageFrom(source.digest, fields, messageIdOf(container))
@@ -681,7 +674,9 @@ export const readPracticeKgEmailMessages = Effect.fn("PracticeKg.readEmailMessag
   }));
   const emailSources = yield* Effect.gen(function* () {
     const db = yield* DuckDb;
-    return yield* db.query(emailSourcesSql(sources)).pipe(Effect.flatMap(decodeEmailSourceRows));
+    return yield* db
+      .query(emailsByExtensionWithManifestHeaderOperationSql(sources))
+      .pipe(Effect.flatMap(decodeEmailSourceRows));
   }).pipe(PracticeKgProjectionError.mapError("Failed listing email documents."));
   const read = yield* Effect.forEach(emailSources, readMessage, { concurrency: 1 });
   const missing = A.length(read) - A.length(A.getSomes(read));
@@ -724,14 +719,14 @@ const latest = extremeOf((values) => A.max(values, Order.String));
 const tallied = (tally: Tally, message: PracticeKgEmailMessage, participant: PracticeKgEmailParticipant): Tally => ({
   ...tally,
   ...PracticeKgEmailParticipantRole.match(participant.role, {
-    cc: () => ({ cc: HashSet.add(tally.cc, identityOf(message)) }),
-    from: () => ({ from: HashSet.add(tally.from, identityOf(message)) }),
-    to: () => ({ to: HashSet.add(tally.to, identityOf(message)) }),
+    cc: () => ({ cc: HashSet.add(tally.cc, messageIdElseCopyDigestIdentity(message)) }),
+    from: () => ({ from: HashSet.add(tally.from, messageIdElseCopyDigestIdentity(message)) }),
+    to: () => ({ to: HashSet.add(tally.to, messageIdElseCopyDigestIdentity(message)) }),
   }),
   firstAt: earliest(tally.firstAt, message.createdAt),
   headerName: O.orElse(tally.headerName, () => O.fromNullishOr(participant.name)),
   lastAt: latest(tally.lastAt, message.createdAt),
-  messages: HashSet.add(tally.messages, identityOf(message)),
+  messages: HashSet.add(tally.messages, messageIdElseCopyDigestIdentity(message)),
 });
 
 const tallyKey = (familyKey: string, address: string): string => `${familyKey}\u0000${address}`;
@@ -746,21 +741,20 @@ const contactsByAddress = (
     contacts,
     Order.mapInput(Order.String, (contact: PracticeKgContact) => contact.contactId)
   );
-  // One owner per contact: a contact listing an address twice (case variants)
-  // is one owner, a role mailbox if either listing says so.
   A.forEach(sorted, (contact) =>
     A.forEach(contact.emails, (email) => {
-      const address = normalizeAddress(email.address);
-      const owners = pipe(MutableHashMap.get(index, address), O.getOrElse(A.empty<AddressContact>));
+      const caseFoldedAddress = normalizeAddress(email.address);
+      const owners = pipe(MutableHashMap.get(index, caseFoldedAddress), O.getOrElse(A.empty<AddressContact>));
       const isSame = (owner: AddressContact) => owner.contact.contactId === contact.contactId;
+      const roleMailboxIfEitherListingSays = email.role || A.some(owners, (owner) => isSame(owner) && owner.role);
       MutableHashMap.set(
         index,
-        address,
+        caseFoldedAddress,
         A.append(
           A.filter(owners, (owner) => !isSame(owner)),
           {
             contact,
-            role: email.role || A.some(owners, (owner) => isSame(owner) && owner.role),
+            role: roleMailboxIfEitherListingSays,
           }
         )
       );
@@ -1054,8 +1048,7 @@ const practiceAddressSql = `
 SELECT EXISTS (SELECT 1 FROM matter_correspondents WHERE address = $1 AND is_practice_address)
   OR EXISTS (SELECT 1 FROM contact_addresses WHERE address = $1 AND is_practice_address) AS "practiceAddress"`;
 
-// Family keys the address's contacts link to that are matters of this bundle.
-const linkedMattersSql = `
+const bundleMatterFamilyKeysLinkedToAddressContactsSql = `
 SELECT DISTINCT m.family_key AS "familyKey"
 FROM contact_client_links l JOIN matters m ON m.family_key = l.family_key
 WHERE l.contact_id IN (SELECT contact_id FROM contact_addresses WHERE address = $1)
@@ -1163,7 +1156,7 @@ export const lookupPracticeKgCorrespondents = Effect.fn("PracticeKg.lookupCorres
   const argument = yield* read(candidatesSql, decodeCandidates);
   const argument1 = yield* read(contactsSql, decodeContacts);
   const argument2 = yield* read(linksSql, decodeLinks);
-  const read1 = yield* read(linkedMattersSql, decodeFamilyKeys);
+  const read1 = yield* read(bundleMatterFamilyKeysLinkedToAddressContactsSql, decodeFamilyKeys);
   const argument3 = A.map(read1, (row) => row.familyKey);
   const read2 = yield* read(practiceAddressSql, decodePracticeAddress);
   const evidence = PracticeKgCorrespondentEvidence.make({

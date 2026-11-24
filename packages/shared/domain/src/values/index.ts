@@ -21,8 +21,6 @@
  */
 export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";
 /**
- * LocalDate - Value object representing a local date.
- *
  * **Example** (Print today's local date)
  *
  * ```ts
@@ -51,8 +49,6 @@ export * as LocalDate from "./LocalDate/index.ts";
  */
 export * as OnePasswordReference from "./OnePasswordReference/index.ts";
 /**
- * Rule effect value object exports.
- *
  * **Example** (Import Rule and log AST)
  *
  * ```ts

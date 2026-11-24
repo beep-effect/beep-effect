@@ -25,8 +25,6 @@ import { detailText, statusText } from "./internal/messageText.ts";
 const $I = $GithubActionsId.create("OidcTokenIssuer");
 
 /**
- * Raised when an OIDC token cannot be issued or read.
- *
  * **Example** (Inspect an unavailable token service)
  *
  * ```ts
@@ -107,8 +105,6 @@ export class OidcTokenError extends S.TaggedError<OidcTokenError, { readonly bra
 }
 
 /**
- * The claims a GitHub Actions OIDC token carries about the workflow that ran.
- *
  * **Details**
  *
  * The field names are GitHub's own JWT claim names, kept verbatim rather than
@@ -195,8 +191,6 @@ export class OidcClaims extends S.Opaque<OidcClaims, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link OidcClaims}.
- *
  * @category type-level
  * @since 0.0.0
  */

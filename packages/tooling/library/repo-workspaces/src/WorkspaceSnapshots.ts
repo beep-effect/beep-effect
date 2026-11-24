@@ -193,8 +193,6 @@ export class WorkspaceSnapshotsOptions extends S.Opaque<WorkspaceSnapshotsOption
 ) {}
 
 /**
- * Companion types for {@link WorkspaceSnapshotsOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

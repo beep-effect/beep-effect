@@ -32,8 +32,6 @@ const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
 );
 
 /**
- * One Markdown documentation link parsed from Runpod's `llms.txt` index.
- *
  * **Example** (Make index entry)
  *
  * ```ts
@@ -64,8 +62,6 @@ export class RunpodDocsIndexEntry extends S.Opaque<RunpodDocsIndexEntry, { reado
 ) {}
 
 /**
- * Parsed Runpod documentation index.
- *
  * **Example** (Make docs index)
  *
  * ```ts
@@ -235,8 +231,6 @@ const parseLine = (state: DocsParseState, rawLine: string): DocsParseState => {
 };
 
 /**
- * Schema contract for parsing Runpod's `llms.txt` Markdown index.
- *
  * **Example** (Inspect parser schema)
  *
  * ```ts

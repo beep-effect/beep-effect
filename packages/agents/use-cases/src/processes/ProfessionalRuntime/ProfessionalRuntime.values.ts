@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.values");
 
 /**
- * Fixture scenario ids supported by the deterministic professional runtime proof.
- *
  * **Example** (Validate fixture scenario id)
  *
  * ```ts
@@ -33,8 +31,6 @@ export const RuntimeFixtureScenarioId = LiteralKit(["law-patent-intake", "wealth
 );
 
 /**
- * Runtime type for {@link RuntimeFixtureScenarioId}.
- *
  * **Example** (Type scenario id value)
  *
  * ```ts
@@ -50,8 +46,6 @@ export const RuntimeFixtureScenarioId = LiteralKit(["law-patent-intake", "wealth
 export type RuntimeFixtureScenarioId = typeof RuntimeFixtureScenarioId.Type;
 
 /**
- * Candidate lifecycle vocabulary used by runtime output sections.
- *
  * **Example** (Validate candidate lifecycle)
  *
  * ```ts
@@ -72,8 +66,6 @@ export const RuntimeCandidateLifecycle = LiteralKit(["candidate"]).pipe(
 );
 
 /**
- * Runtime type for {@link RuntimeCandidateLifecycle}.
- *
  * **Example** (Type lifecycle value)
  *
  * ```ts
@@ -89,8 +81,6 @@ export const RuntimeCandidateLifecycle = LiteralKit(["candidate"]).pipe(
 export type RuntimeCandidateLifecycle = typeof RuntimeCandidateLifecycle.Type;
 
 /**
- * Confidence vocabulary for candidate claims.
- *
  * **Example** (Validate claim confidence)
  *
  * ```ts
@@ -111,8 +101,6 @@ export const RuntimeClaimConfidence = LiteralKit(["high", "medium", "low"]).pipe
 );
 
 /**
- * Runtime type for {@link RuntimeClaimConfidence}.
- *
  * **Example** (Type confidence value)
  *
  * ```ts
@@ -128,8 +116,6 @@ export const RuntimeClaimConfidence = LiteralKit(["high", "medium", "low"]).pipe
 export type RuntimeClaimConfidence = typeof RuntimeClaimConfidence.Type;
 
 /**
- * Approval decision vocabulary for candidate approval gates.
- *
  * **Example** (Validate approval decision)
  *
  * ```ts
@@ -150,8 +136,6 @@ export const RuntimeApprovalDecision = LiteralKit(["pending"]).pipe(
 );
 
 /**
- * Runtime type for {@link RuntimeApprovalDecision}.
- *
  * **Example** (Type decision value)
  *
  * ```ts
@@ -167,8 +151,6 @@ export const RuntimeApprovalDecision = LiteralKit(["pending"]).pipe(
 export type RuntimeApprovalDecision = typeof RuntimeApprovalDecision.Type;
 
 /**
- * Runtime request kinds represented in context packets.
- *
  * **Example** (Validate request kind)
  *
  * ```ts
@@ -189,8 +171,6 @@ export const RuntimeRequestKind = LiteralKit(["email_to_candidate_work"]).pipe(
 );
 
 /**
- * Runtime type for {@link RuntimeRequestKind}.
- *
  * **Example** (Type request kind value)
  *
  * ```ts
@@ -206,8 +186,6 @@ export const RuntimeRequestKind = LiteralKit(["email_to_candidate_work"]).pipe(
 export type RuntimeRequestKind = typeof RuntimeRequestKind.Type;
 
 /**
- * Source artifact kinds represented in context packets.
- *
  * **Example** (Validate source kind)
  *
  * ```ts
@@ -228,8 +206,6 @@ export const RuntimeSourceKind = LiteralKit(["email"]).pipe(
 );
 
 /**
- * Runtime type for {@link RuntimeSourceKind}.
- *
  * **Example** (Type source kind value)
  *
  * ```ts
@@ -245,8 +221,6 @@ export const RuntimeSourceKind = LiteralKit(["email"]).pipe(
 export type RuntimeSourceKind = typeof RuntimeSourceKind.Type;
 
 /**
- * Activity types emitted by deterministic runtime fixtures.
- *
  * **Example** (Validate activity type)
  *
  * ```ts
@@ -267,8 +241,6 @@ export const RuntimeActivityType = LiteralKit(["artifact_ingested", "candidate_w
 );
 
 /**
- * Runtime type for {@link RuntimeActivityType}.
- *
  * **Example** (Type activity type value)
  *
  * ```ts
@@ -284,8 +256,6 @@ export const RuntimeActivityType = LiteralKit(["artifact_ingested", "candidate_w
 export type RuntimeActivityType = typeof RuntimeActivityType.Type;
 
 /**
- * Usage modes emitted by deterministic runtime fixtures.
- *
  * **Example** (Validate usage mode)
  *
  * ```ts
@@ -306,8 +276,6 @@ export const RuntimeUsageMode = LiteralKit(["deterministic_fixture"]).pipe(
 );
 
 /**
- * Runtime type for {@link RuntimeUsageMode}.
- *
  * **Example** (Type usage mode value)
  *
  * ```ts

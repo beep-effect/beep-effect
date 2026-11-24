@@ -20,8 +20,6 @@ export * from "./Architecture.plan.ts";
  */
 export * from "./Architecture.schemas.ts";
 /**
- * Architecture operation-plan execution exports.
- *
  * @category utilities
  * @since 0.0.0
  */

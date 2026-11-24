@@ -79,9 +79,8 @@ export const makeCitationMetadataYear = Effect.fn("Citation.makeMetadataYear")(f
   const currentYear = yield* S.decodeEffect(SourceDateYear)(DateTime.getPart(now, "year")).pipe(
     Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-clock" }))
   );
-  // The computed ceiling is data, not configuration: its range is checked here.
-  const bound = yield* S.decodeEffect(CitationMetadataYearBound)(currentYear + 1).pipe(
+  const computedCeilingRangeCheckedAsData = yield* S.decodeEffect(CitationMetadataYearBound)(currentYear + 1).pipe(
     Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-bound" }))
   );
-  return yield* makeCitationMetadataYearFromBound(limits, bound);
+  return yield* makeCitationMetadataYearFromBound(limits, computedCeilingRangeCheckedAsData);
 });

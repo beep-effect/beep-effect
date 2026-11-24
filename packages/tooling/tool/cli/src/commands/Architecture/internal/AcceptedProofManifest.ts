@@ -16,8 +16,6 @@ import { ArchitecturePlanStage, ArchitectureSliceRole, ArchitectureWriterKind } 
 const $I = $RepoCliId.create("commands/Architecture/internal/AcceptedProofManifest");
 
 /**
- * Static descriptor for an accepted architecture proof file.
- *
  * **Example** (Use accepted proof manifests)
  *
  * ```ts

@@ -33,8 +33,6 @@ import type { CollectorHandle, SessionManifest } from "./QaCapture.models.ts";
 const $I = $QaCaptureId.create("SessionStore.service");
 
 /**
- * Directory name of one QA round (`round-N`).
- *
  * **Example** (Make round directory name)
  *
  * ```ts
@@ -62,8 +60,6 @@ export const RoundDirName = S.String.check(
 );
 
 /**
- * Directory name of one QA round (`round-N`).
- *
  * **Example** (Type a RoundDirName value)
  *
  * ```ts
@@ -81,8 +77,6 @@ export type RoundDirName = typeof RoundDirName.Type;
 const isRoundDirName = S.is(RoundDirName);
 
 /**
- * Resolved file-system layout of one QA round directory.
- *
  * **Example** (Construct full round layout)
  *
  * ```ts

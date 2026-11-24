@@ -82,8 +82,6 @@ export const PromotionBlockReason = S.Trim.check(S.isNonEmpty({ message: "String
 );
 
 /**
- * Type-level value produced by {@link PromotionBlockReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -111,8 +109,6 @@ export const PromotionTenantRef = S.NonEmptyString.pipe(
 );
 
 /**
- * Type-level value produced by {@link PromotionTenantRef}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -156,8 +152,6 @@ export class PromotionGateRequest extends S.Opaque<PromotionGateRequest, { reado
 const PromotionGateOutcome = LiteralKit(["clear", "blocked"]);
 
 /**
- * Total clear/blocked verdict returned by a promotion gate.
- *
  * **Example** (Construct a clear verdict)
  *
  * ```ts
@@ -180,8 +174,6 @@ export const PromotionGateVerdict = PromotionGateOutcome.toTaggedUnion("outcome"
 );
 
 /**
- * Runtime type for {@link PromotionGateVerdict}.
- *
  * @category models
  * @since 0.0.0
  */

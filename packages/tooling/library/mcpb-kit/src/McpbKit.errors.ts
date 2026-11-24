@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $McpbKitId.create("McpbKit.errors");
 
 /**
- * Sanitized failure from compiling or assembling an `.mcpb` artifact.
- *
  * **Details**
  *
  * The `cause` is ignored by equivalence, so two failures with the same message

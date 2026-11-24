@@ -21,8 +21,6 @@ import { isWellFormedText, NodeId } from "./NodeIdentity.models.ts";
 const $I = $AgentMemoryStoreId.create("Observation.events");
 
 /**
- * What an observer did with a node.
- *
  * **Example** (Check an observation kind)
  *
  * ```ts
@@ -41,16 +39,12 @@ export const ObservationKind = LiteralKit(["read", "write", "restate", "update"]
 );
 
 /**
- * Runtime type for {@link ObservationKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ObservationKind = typeof ObservationKind.Type;
 
 /**
- * Session or agent lineage that made an observation.
- *
  * **Example** (Brand a lineage id)
  *
  * ```ts
@@ -70,16 +64,12 @@ export const LineageId = S.NonEmptyString.check(isWellFormedText).pipe(
 );
 
 /**
- * Runtime type for {@link LineageId}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type LineageId = typeof LineageId.Type;
 
 /**
- * One observation of a node by a lineage.
- *
  * **Details**
  *
  * Consumers read observations only as distinct-lineage counts during

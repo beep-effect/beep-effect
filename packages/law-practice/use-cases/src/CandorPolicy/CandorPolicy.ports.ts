@@ -58,8 +58,6 @@ export class CandorRecordSnapshot extends S.Opaque<CandorRecordSnapshot, { reado
 ) {}
 
 /**
- * Service shape for reading the recorded candor material of one filing.
- *
  * **When to use**
  *
  * Use as the seam between the derived predicate and wherever citation events
@@ -164,8 +162,6 @@ export class CandorRecordReader extends Context.Service<CandorRecordReader, Cand
 ) {}
 
 /**
- * Service shape for the derived, fail-closed candor gate.
- *
  * **Details**
  *
  * The requirement channel is deliberately explicit. `CandorRecordReader` is the

@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("entities/LawPracticeEntity.fields");
 
 /**
- * Stable non-empty fixture key used to link law-practice proof entities.
- *
  * **Example** (Make fixture key from string)
  *
  * ```ts
@@ -32,8 +30,6 @@ export const LawPracticeFixtureKey = S.NonEmptyString.pipe(
 );
 
 /**
- * Type-level string accepted by {@link LawPracticeFixtureKey}.
- *
  * **Example** (Annotate typed fixture key)
  *
  * ```ts
@@ -49,8 +45,6 @@ export const LawPracticeFixtureKey = S.NonEmptyString.pipe(
 export type LawPracticeFixtureKey = typeof LawPracticeFixtureKey.Type;
 
 /**
- * Non-empty legal text stored on law-practice proof entities.
- *
  * **Example** (Make non-empty legal text)
  *
  * ```ts
@@ -70,8 +64,6 @@ export const LawPracticeText = S.NonEmptyString.pipe(
 );
 
 /**
- * Type-level string accepted by {@link LawPracticeText}.
- *
  * **Example** (Annotate typed legal text)
  *
  * ```ts
@@ -87,8 +79,6 @@ export const LawPracticeText = S.NonEmptyString.pipe(
 export type LawPracticeText = typeof LawPracticeText.Type;
 
 /**
- * One-based patent claim number.
- *
  * **Example** (Make one-based claim number)
  *
  * ```ts
@@ -113,8 +103,6 @@ export const ClaimNumber = S.Natural.check(
 );
 
 /**
- * Type-level number accepted by {@link ClaimNumber}.
- *
  * **Example** (Annotate typed claim number)
  *
  * ```ts

@@ -6,8 +6,6 @@
  */
 
 /**
- * CandidateProject table exports.
- *
  * **Example** (Log CandidateProject entity type)
  *
  * ```ts

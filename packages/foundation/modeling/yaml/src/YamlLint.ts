@@ -39,13 +39,7 @@ import type { StyleObservation, YamlLintSeverity, YamlRule } from "./YamlLintRul
 
 const $I = $YamlId.create("YamlLint");
 
-// ── Config ──────────────────────────────────────────────────────────────────
-
 /**
- * One entry of the config `rules` map: a bare severity literal (the common
- * case), `"off"` to disable, or a typed per-rule options object (the tuning
- * case; may carry its own `severity`).
- *
  * **Example** (Decode a disabled rule)
  *
  * ```ts
@@ -70,8 +64,6 @@ export const YamlLintRuleSetting = S.Union([
 );
 
 /**
- * The union type of one `rules`-map entry.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -118,9 +110,6 @@ const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting })
 };
 
 /**
- * The lint configuration: a `rules` map keying rule ids (built-in or custom)
- * to a severity literal or a typed per-rule options object.
- *
  * **Details**
  *
  * Validation is rule-aware for the built-in catalog — a mistyped option on a
@@ -228,8 +217,6 @@ export class YamlLintConfig extends S.Opaque<YamlLintConfig, { readonly brand: u
   });
 }
 
-// ── Context construction ────────────────────────────────────────────────────
-
 /**
  * Split `text` into positioned lines. Line text excludes the terminator
  * whole — for CRLF input the `\r` is part of the terminator and is stripped
@@ -284,8 +271,6 @@ const buildContext = (text: string): LintContext => {
   });
 };
 
-// ── Style evidence ───────────────────────────────────────────────────
-
 const StyleCandidateValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("StyleCandidateValue", {
     description: "String, finite-number, or boolean option choice observed by a lint rule",
@@ -295,11 +280,6 @@ const StyleCandidateValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
 const encodeStyleCandidateJson = S.encodeResult(S.fromJsonString(StyleCandidateValue));
 
 /**
- * An accumulated tally of one {@link StyleVote} spelling: how many times a
- * `value` was voted for a `(rule, dimension)` pair, and the position of the
- * FIRST occurrence seen (merging keeps the left operand's position, so on a
- * multi-file merge the first file that exhibited the spelling names it).
- *
  * **Example** (Retain a spelling count and first position)
  *
  * ```ts
@@ -365,11 +345,6 @@ export class StyleVoteTally extends S.Opaque<StyleVoteTally, { readonly brand: u
 ) {}
 
 /**
- * An accumulated {@link StyleFloor} for a `(rule, dimension)` pair: the
- * largest value the observed sources prove the limit is AT LEAST. Merging
- * takes the maximum. Floors are informational — never resolved into config
- * options (see {@link StyleFloor}).
- *
  * **Example** (Record a measured lower bound)
  *
  * ```ts
@@ -516,10 +491,6 @@ const byVoteOrder = Order.combine(
 const byDescendingCount = Order.mapInput(Order.flip(Order.Number), (tally: StyleVoteTally) => tally.count);
 
 /**
- * Per-dimension style evidence: what the observed sources say about
- * each inferable `(rule, dimension)` — vote histograms with first-seen
- * positions, and measured floors.
- *
  * **Details**
  *
  * Evidence is a MONOID: {@link StyleEvidence.empty} is the identity and
@@ -648,10 +619,6 @@ export class StyleEvidence extends S.Opaque<StyleEvidence, { readonly brand: uni
 }
 
 /**
- * One strict-resolution conflict: a `(rule, dimension)` whose observed
- * spellings disagree. `candidates` carries every spelling with its count and
- * first-seen position, ordered by count descending (dominant first).
- *
  * **Example** (Inspect a conflicting dimension)
  *
  * ```ts
@@ -693,13 +660,6 @@ export class StyleConflict extends S.Opaque<StyleConflict, { readonly brand: uni
 ) {}
 
 /**
- * Raised by strict config inference when observed evidence is not unanimous:
- * carries every conflicting `(rule, dimension)` as a structured
- * {@link StyleConflict} — dimension, all spellings, counts and positions —
- * never a collapsed `reason` string (the structure-preserving-errors house
- * rule). Unobserved dimensions never conflict: they fall back to the base
- * config's defaults.
- *
  * **Details**
  *
  * The `message` renders each candidate's first-seen position 1-based
@@ -833,7 +793,6 @@ const mergeRuleEntry = (
   return merged;
 };
 
-/** Record one rule dimension's pick. */
 const setPick = (
   picks: MutableHashMap.MutableHashMap<string, MutableHashMap.MutableHashMap<string, string | number | boolean>>,
   ruleId: string,
@@ -944,9 +903,6 @@ export class YamlLintInference extends S.Opaque<YamlLintInference, { readonly br
   )
 ) {}
 
-// ── Facade ──────────────────────────────────────────────────────────────────
-
-/** Resolve the effective severity of a configured entry. */
 const resolveSeverity = (entry: Exclude<YamlLintRuleSetting, "off">): YamlLintSeverity => {
   if (entry === "error" || entry === "warning") return entry;
   const severity = O.getOrUndefined(R.get(entry, "severity"));

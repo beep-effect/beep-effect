@@ -79,8 +79,6 @@ export const PhaseOutcome = LiteralKit(["completed", "failed", "interrupted"]).p
 );
 
 /**
- * Runtime type for {@link PhaseOutcome}.
- *
  * **Example** (Annotate outcome type)
  *
  * ```typescript

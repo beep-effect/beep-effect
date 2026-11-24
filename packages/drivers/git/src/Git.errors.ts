@@ -17,10 +17,6 @@ import * as S from "effect/Schema";
 const $I = $GitId.create("Git");
 
 /**
- * git ran and failed in a way that is not one of the recognized domain cases
- * ({@link NotARepositoryError} / {@link UnknownRefError}), or the spawn itself
- * failed before git could run at all.
- *
  * **Details**
  *
  * `exitCode` and `stderr` are populated when git actually ran. `detail`
@@ -146,8 +142,6 @@ export class GitCommandError extends S.TaggedError<GitCommandError, { readonly b
 }
 
 /**
- * `cwd` is not inside a git work tree.
- *
  * **Example** (Identify a directory outside a repository)
  *
  * ```ts import.meta.vitest name="Identify a directory outside a repository"
@@ -193,8 +187,6 @@ export class NotARepositoryError extends S.TaggedError<NotARepositoryError, { re
 }
 
 /**
- * `ref` does not resolve to an object in the repository at `cwd`.
- *
  * **Example** (Identify an unresolved ref)
  *
  * ```ts import.meta.vitest name="Identify an unresolved ref"
@@ -246,10 +238,6 @@ export class UnknownRefError extends S.TaggedError<UnknownRefError, { readonly b
 }
 
 /**
- * A `git push` was rejected because the remote ref has moved: the classic
- * non-fast-forward rejection (`fetch first` / `non-fast-forward`), or a
- * `--force-with-lease` lease failure (`stale info`).
- *
  * **Details**
  *
  * The typed signal a fetch-then-retry (or rebase-then-retry) fallback
@@ -312,9 +300,6 @@ export class NonFastForwardError extends S.TaggedError<NonFastForwardError, { re
 }
 
 /**
- * A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with
- * conflict markers in the working tree.
- *
  * **Gotchas**
  *
  * The typed signal a resolve-or-abort recovery branches on. The conflicted
@@ -371,10 +356,6 @@ export class MergeConflictError extends S.TaggedError<MergeConflictError, { read
 }
 
 /**
- * A merge-shaped operation refused to start because local modifications would
- * be overwritten — git's refusal reads
- * `Your local changes ... would be overwritten by merge`.
- *
  * **Details**
  *
  * The typed "commit or stash first" signal. Unlike {@link MergeConflictError}
@@ -432,8 +413,6 @@ export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError, { read
 }
 
 /**
- * A test double invoked a Git method without an explicit stub.
- *
  * **Example** (Identify an unstubbed method defect)
  *
  * ```ts import.meta.vitest name="Identify an unstubbed method defect"

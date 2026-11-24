@@ -17,8 +17,6 @@ import { StatusTransition } from "./StatusLifecycle.models.ts";
 const $I = $AgentMemoryStoreId.create("Operation.models");
 
 /**
- * One node as it appeared in an exported memory file.
- *
  * **Example** (Read the fields of an exported node)
  *
  * ```ts
@@ -43,8 +41,6 @@ export class BaseNode extends S.Opaque<BaseNode, { readonly brand: unique symbol
 ) {}
 
 /**
- * One exported memory file with its digest and nodes.
- *
  * **Example** (Construct an empty exported file)
  *
  * ```ts
@@ -75,8 +71,6 @@ export class BaseFile extends S.Opaque<BaseFile, { readonly brand: unique symbol
 ) {}
 
 /**
- * The exported base an agent edited against.
- *
  * **Details**
  *
  * Admission compares each operation's expected revision with the log, so the
@@ -113,8 +107,6 @@ export class BaseExport extends S.Opaque<BaseExport, { readonly brand: unique sy
 ) {}
 
 /**
- * Where a new node goes in its file.
- *
  * **Details**
  *
  * The node follows `afterNodeId`, or opens the file when it is absent. A
@@ -153,8 +145,6 @@ const NodeOperationKind = LiteralKit(["replace", "insert", "delete", "setStatus"
 );
 
 /**
- * One per-node write submitted by an agent, discriminated on `op`.
- *
  * **Details**
  *
  * `replace`, `delete` and `setStatus` carry the revision the agent saw; the
@@ -220,16 +210,12 @@ export const NodeOperation = NodeOperationKind.toTaggedUnion("op")({
 );
 
 /**
- * Runtime type for {@link NodeOperation}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type NodeOperation = typeof NodeOperation.Type;
 
 /**
- * A batch of node operations written against one exported base.
- *
  * **Example** (Read the fields of an operation batch)
  *
  * ```ts

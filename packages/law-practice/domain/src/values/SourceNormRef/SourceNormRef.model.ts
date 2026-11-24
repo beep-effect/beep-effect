@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("values/SourceNormRef/SourceNormRef.model");
 
 /**
- * Verbatim designation of a norm, exactly as the recorder wrote it.
- *
  * **Example** (Record a norm designation)
  *
  * ```ts
@@ -30,8 +28,6 @@ export const SourceNormDesignation = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link SourceNormDesignation}.
- *
  * @see {@link SourceNormDesignation} for the runtime schema and its opacity rule.
  * @category models
  * @since 0.0.0
@@ -39,8 +35,6 @@ export const SourceNormDesignation = S.NonEmptyString.pipe(
 export type SourceNormDesignation = typeof SourceNormDesignation.Type;
 
 /**
- * Opaque reference to the norm that prescribes a legal position or role.
- *
  * **When to use**
  *
  * Use when a record must name the norm it rests on. Every stored position

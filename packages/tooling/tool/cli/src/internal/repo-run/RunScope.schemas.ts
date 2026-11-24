@@ -40,15 +40,12 @@ export const RunScopeCgroupPath = S.String.pipe(
 );
 
 /**
- * Path represented by {@link RunScopeCgroupPath}.
  * @category models
  * @since 0.0.0
  */
 export type RunScopeCgroupPath = typeof RunScopeCgroupPath.Type;
 
 /**
- * Availability state for systemd user-manager run scopes.
- *
  * **Example** (Recognize active support)
  *
  * ```ts
@@ -67,8 +64,6 @@ export const RunScopeSupport = LiteralKit(["active", "unsupported", "disabled", 
 );
 
 /**
- * Availability state for systemd user-manager run scopes.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -103,8 +98,6 @@ export const RunScopeStopOutcome = LiteralKit(["stopped", "absent", "spawn-faile
 export type RunScopeStopOutcome = typeof RunScopeStopOutcome.Type;
 
 /**
- * Optional accounting values read from one systemd run scope.
- *
  * **Example** (Construct a telemetry sample)
  *
  * ```ts
@@ -129,8 +122,6 @@ export class RunScopeTelemetry extends S.Opaque<RunScopeTelemetry, { readonly br
 ) {}
 
 /**
- * Scope attachment and accounting state retained on an admission lease.
- *
  * **Example** (Construct an active scope record)
  *
  * ```ts

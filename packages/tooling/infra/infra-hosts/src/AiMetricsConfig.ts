@@ -121,8 +121,6 @@ export const PinnedImage = S.NonEmptyString.check(
 ).pipe($I.annoteSchema("PinnedImage", { description: "A container image pinned by tag (not latest) or digest." }));
 
 /**
- * The Phoenix container and its data.
- *
  * **Example** (Defaults match the Compose deployment)
  * ```ts
  * import { PhoenixContainerConfig } from "@beep/infra-hosts/AiMetricsConfig"
@@ -173,8 +171,6 @@ export class PhoenixContainerConfig extends S.Opaque<PhoenixContainerConfig, { r
 ) {}
 
 /**
- * Tailscale Serve front for Phoenix.
- *
  * **Example** (Build the tailnet front)
  * ```ts
  * import { TailnetServeConfig } from "@beep/infra-hosts/AiMetricsConfig"
@@ -266,8 +262,6 @@ export class AiMetricsSecretRefs extends S.Opaque<AiMetricsSecretRefs, { readonl
 ) {}
 
 /**
- * The whole AI metrics host stack configuration.
- *
  * **Example** (Decode a config file body)
  * ```ts
  * import { AiMetricsHostConfig } from "@beep/infra-hosts/AiMetricsConfig"

@@ -1,11 +1,17 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { AlignmentSource, alignCandidates } from "@beep/langextract/Alignment";
 import { parseModelOutput } from "@beep/langextract/Extraction";
+import { handoff, startExtraction } from "@beep/langextract/Handoff";
+import { buildPrompt } from "@beep/langextract/Service";
 import { Sha256Hex } from "@beep/schema";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
+import * as Model from "effect/ai/Model";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -14,7 +20,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { loadDocumentSelection } from "@/layers/DocumentSourceLive";
-import { groundHostedExtractions, makeHostedExtractionRequest } from "@/layers/ExtractorLive";
+import { groundHostedHandoff, makeHostedExtractionRequest } from "@/layers/ExtractorLive";
 import { LabConfig } from "@/runtime/Config";
 import { Origin } from "@/schema/Document";
 import { RelationPreviewFailed } from "@/schema/Errors";
@@ -24,6 +30,8 @@ import { Chunker } from "@/services/Chunker";
 import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
 import type { SourceDocument } from "@/schema/Document";
+import type { ModelIdentity } from "@/schema/Model";
+import type { CanonicalText } from "@/schema/Text";
 
 const $I = $SemanticaId.create("canary/RelationPreview");
 
@@ -184,32 +192,81 @@ const readCacheEntry = Effect.fn("RelationPreview.readCacheEntry")(function* (ca
   return entry;
 });
 
+/**
+ * Replays a cached response into a lossless handoff while bounding alignment work.
+ *
+ * **Example** (Build an offline replay)
+ * ```ts
+ * import { replayRelationHandoff } from "@/canary/RelationPreview"
+ * console.log(typeof replayRelationHandoff) // "function"
+ * ```
+ * @category workflows
+ * @since 0.0.0
+ */
+export const replayRelationHandoff = Effect.fn("RelationPreview.replayHandoff")(function* (
+  canonical: CanonicalText,
+  response: string,
+  model: ModelIdentity
+) {
+  const candidates = yield* parseModelOutput(response).pipe(
+    Effect.mapError(() => failed("response-invalid", "An E5 cached response did not decode as LangExtract output."))
+  );
+  const extractions = alignCandidates(candidates, AlignmentSource.fromRequest(makeHostedExtractionRequest(canonical)));
+  const request = makeHostedExtractionRequest(canonical);
+  const verified = yield* verifySourceTextIdentity(
+    VerifySourceTextIdentityInput.make({
+      expectedSource: request.source,
+      source: request.source,
+      sourceText: request.text,
+    })
+  ).pipe(Effect.orDie);
+  const activity = yield* startExtraction({
+    prompt: yield* buildPrompt(request),
+    source: request.source,
+    started: 0,
+  }).pipe(
+    Effect.provideService(Model.ProviderName, model.provider),
+    Effect.provideService(Model.ModelName, model.name),
+    Effect.orDie
+  );
+  return yield* handoff({
+    targets: request.targets,
+    verified,
+    candidates: extractions,
+    overCap: A.drop(candidates, extractions.length),
+    activity,
+    at: DateTime.makeUnsafe(0),
+  });
+});
+
 const previewCase = Effect.fn("RelationPreview.previewCase")(function* (
   manifestPath: string,
   preview: RelationPreviewCase
 ) {
   const entry = yield* readCacheEntry(preview.cacheDigest);
   const { canonical, canonicalizer, chunks } = yield* loadCanonicalPaper(manifestPath, preview.paperId);
-  const candidates = yield* parseModelOutput(entry.response).pipe(
-    Effect.mapError(() => failed("response-invalid", "An E5 cached response did not decode as LangExtract output."))
-  );
-  const extractions = alignCandidates(candidates, AlignmentSource.fromRequest(makeHostedExtractionRequest(canonical)));
-  const outcome = yield* groundHostedExtractions(
+  const extractionHandoff = yield* replayRelationHandoff(canonical, entry.response, entry.key.model);
+  const outcome = yield* groundHostedHandoff(
     canonicalizer,
     canonical,
     chunks,
-    extractions,
+    extractionHandoff,
     entry.key.model,
     O.some(entry.cacheKey)
   );
   if (outcome.outcome === "Degraded") {
     return yield* failed("response-invalid", "The E5 cached response did not produce an extracted evidence batch.");
   }
-  const relationCandidates = A.length(A.filter(extractions, (item) => Str.Equivalence(item.label, "relation")));
+  const relationCandidates = A.length(
+    A.filter(
+      A.appendAll(extractionHandoff.readings.pipe(HashMap.toValues, A.flatten), extractionHandoff.residual),
+      (item) => Str.Equivalence(item.label, "relation")
+    )
+  );
   const groundedRelations = A.length(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation"));
   return RelationPreviewCaseResult.make({
     cacheKey: preview.cacheDigest,
-    candidateCount: S.Natural.make(A.length(extractions)),
+    candidateCount: extractionHandoff.candidateCount,
     degradedRelations: S.Natural.make(N.subtract(relationCandidates, groundedRelations)),
     groundedRelations: S.Natural.make(groundedRelations),
     paperId: preview.paperId,

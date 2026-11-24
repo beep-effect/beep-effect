@@ -24,8 +24,6 @@ import type * as FileSystem from "effect/FileSystem";
 const $I = $LawPracticeServerId.create("ReviewFiles/ReviewFiles.layer");
 
 /**
- * The directory that holds the review hub's store files.
- *
  * **Example** (Decode a store config)
  *
  * ```ts
@@ -96,11 +94,13 @@ const reviewItemStore = (file: string) =>
       const list = Effect.map(log.rows, latestItems);
       return ReviewItemStore.of({
         list: list.pipe(Effect.withSpan("ReviewFiles.listItems")),
-        // Only items that differ from their stored version are appended, so
-        // storing the same items again leaves the file as it is.
         upsert: Effect.fn("ReviewFiles.upsertItems")(function* (items: ReadonlyArray<ReviewItem>) {
           const stored = yield* list;
-          yield* log.append(A.filter(items, (item) => !A.some(stored, (current) => sameItem(current, item))));
+          const changedSinceStoredSoRepeatsLeaveFileAsIs = A.filter(
+            items,
+            (item) => !A.some(stored, (current) => sameItem(current, item))
+          );
+          yield* log.append(changedSinceStoredSoRepeatsLeaveFileAsIs);
         }, log.serialized),
       });
     }

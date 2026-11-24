@@ -31,8 +31,6 @@ import { CapabilitySlug, GoalCloseoutView, GoalStatus } from "./Goals.schemas.ts
 const $I = $RepoCliId.create("commands/Goals/Graph.schemas");
 
 /**
- * Readiness basis of a graph report.
- *
  * **Details**
  *
  * v1 has one member: `nominal`, readiness derived from manifest status alone.
@@ -58,8 +56,6 @@ export const CapabilityReadiness = LiteralKit(["nominal"]).pipe(
 );
 
 /**
- * Readiness basis of a graph report.
- *
  * **Example** (Annotate a readiness value)
  *
  * ```ts
@@ -75,8 +71,6 @@ export const CapabilityReadiness = LiteralKit(["nominal"]).pipe(
 export type CapabilityReadiness = typeof CapabilityReadiness.Type;
 
 /**
- * Which manifest array a duplicate capability declaration came from.
- *
  * **Example** (Narrow an edge kind)
  *
  * ```ts
@@ -95,8 +89,6 @@ export const CapabilityEdgeKind = LiteralKit(["provides", "requires"]).pipe(
 );
 
 /**
- * Which manifest array a duplicate capability declaration came from.
- *
  * **Example** (Annotate an edge kind)
  *
  * ```ts
@@ -112,8 +104,6 @@ export const CapabilityEdgeKind = LiteralKit(["provides", "requires"]).pipe(
 export type CapabilityEdgeKind = typeof CapabilityEdgeKind.Type;
 
 /**
- * One packet row in the capability projection.
- *
  * **Details**
  *
  * `packetId` is the manifest's `initiative.id`. A missing `executionCapable`
@@ -152,8 +142,6 @@ export class GraphPacketRow extends S.Opaque<GraphPacketRow, { readonly brand: u
 ) {}
 
 /**
- * One deduplicated capability edge between a packet and a capability.
- *
  * **Example** (Construct a provides edge)
  *
  * ```ts
@@ -178,8 +166,6 @@ export class GraphCapabilityEdge extends S.Opaque<GraphCapabilityEdge, { readonl
 ) {}
 
 /**
- * A capability a packet listed more than once in one manifest array (D5).
- *
  * **Details**
  *
  * The projection keeps one edge per pair; the repeat is recorded here so the
@@ -227,8 +213,6 @@ const UniquePacketIdsCheck = S.makeFilter(
 );
 
 /**
- * The normalized capability projection compiled from decoded manifests.
- *
  * **Details**
  *
  * Every array is sorted and duplicate-free: `packets` by id, `capabilities`
@@ -273,8 +257,6 @@ export class CapabilityProjection extends S.Opaque<CapabilityProjection, { reado
 ) {}
 
 /**
- * One packet reached by an unlock walk, at its minimum depth.
- *
  * **Example** (Construct an unlock depth)
  *
  * ```ts
@@ -325,8 +307,6 @@ export class PacketUnlockWalk extends S.Opaque<PacketUnlockWalk, { readonly bran
 ) {}
 
 /**
- * Engine-neutral answers to the capability-graph questions.
- *
  * **Details**
  *
  * - `available`: capabilities with at least one `completed-retained` provider.
@@ -589,8 +569,6 @@ export class GoalExplainReport extends S.Opaque<GoalExplainReport, { readonly br
 ) {}
 
 /**
- * One capability in the generated catalog.
- *
  * **Details**
  *
  * - `collision`: more than one provider (informational, D4).

@@ -46,8 +46,6 @@ export class CanonicalJSDocSourceMetadata extends S.Opaque<
 ) {}
 
 /**
- * Runtime codec companion types for {@link CanonicalJSDocSourceMetadata}.
- *
  * **Example** (Declare encoded metadata)
  *
  * ```ts

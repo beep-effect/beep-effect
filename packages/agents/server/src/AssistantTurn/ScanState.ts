@@ -22,8 +22,6 @@ const NonNegativeScanDepth = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * The carry state of the incremental block extractor between chunks.
- *
  * **Example** (Assigning initial scan state)
  *
  * ```ts
@@ -79,8 +77,6 @@ export class ScanState extends S.Opaque<ScanState, { readonly brand: unique symb
 }
 
 /**
- * Schema-backed input for one incremental scanner transition.
- *
  * **Example** (Building chunk input value)
  *
  * ```ts
@@ -105,8 +101,6 @@ export class ScanChunkInput extends S.Opaque<ScanChunkInput, { readonly brand: u
 ) {}
 
 /**
- * Schema-backed result for one incremental scanner transition.
- *
  * **Example** (Building chunk result value)
  *
  * ```ts

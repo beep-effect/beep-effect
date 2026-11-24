@@ -7,8 +7,6 @@
  */
 
 /**
- * Assistant-turn DTO contracts.
- *
  * **Example** (Decode turn history item)
  *
  * ```ts
@@ -24,8 +22,6 @@
  */
 export * from "./AssistantTurn.contracts.ts";
 /**
- * Assistant-turn public errors.
- *
  * **Example** (Make turn generation error)
  *
  * ```ts

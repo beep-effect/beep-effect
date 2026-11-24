@@ -27,8 +27,6 @@ import * as Str from "effect/String";
 const $I = $LintRulesId.create("rules/comment-grammar");
 
 /**
- * Syntactic class of one source comment under the comment law.
- *
  * **Details**
  *
  * `prose`, `jsdoc-local`, `law-disable` and `bad-suppression` are banned
@@ -73,16 +71,12 @@ export const CommentKind = LiteralKit([
 );
 
 /**
- * Type-level member of {@link CommentKind}.
- *
  * @category models
  * @since 0.1.0
  */
 export type CommentKind = typeof CommentKind.Type;
 
 /**
- * Comment kinds the comment law bans.
- *
  * **Example** (Check a banned kind)
  *
  * ```ts
@@ -101,8 +95,6 @@ export const BannedCommentKind = LiteralKit(["prose", "jsdoc-local", "law-disabl
 );
 
 /**
- * Type-level member of {@link BannedCommentKind}.
- *
  * @category models
  * @since 0.1.0
  */
@@ -125,8 +117,6 @@ export type BannedCommentKind = typeof BannedCommentKind.Type;
 export const isBannedCommentKind: (kind: CommentKind) => kind is BannedCommentKind = S.is(BannedCommentKind);
 
 /**
- * Parser comment syntax.
- *
  * **Example** (Recognize a line comment)
  *
  * ```ts
@@ -143,8 +133,6 @@ export const CommentSyntax = LiteralKit(["Line", "Block", "Shebang"]).pipe(
 );
 
 /**
- * Type-level member of {@link CommentSyntax}.
- *
  * @category models
  * @since 0.1.0
  */
@@ -180,8 +168,6 @@ export class SourceComment extends S.Opaque<SourceComment, { readonly brand: uni
 ) {}
 
 /**
- * One comment with its law kind and whitespace-normalized text.
- *
  * **Example** (Read a classified comment)
  *
  * ```ts
@@ -217,8 +203,6 @@ const GrammarNodeShape = S.Struct({
 });
 
 /**
- * Structural ESTree node accepted by the grammar.
- *
  * **Details**
  *
  * The oxc parser and the oxlint plugin runtime both give every node `type`,
@@ -247,8 +231,6 @@ export const GrammarNode = GrammarNodeShape.pipe(
 );
 
 /**
- * Type-level member of {@link GrammarNode}.
- *
  * **Details**
  *
  * The type stays structural, so a parser node with more fields is accepted.
@@ -259,8 +241,6 @@ export const GrammarNode = GrammarNodeShape.pipe(
 export type GrammarNode = typeof GrammarNode.Type;
 
 /**
- * AST node types that put a JSDoc block in export context.
- *
  * **Example** (Recognize an export node)
  *
  * ```ts
@@ -282,16 +262,12 @@ export const ExportNodeType = LiteralKit([
 ]).pipe($I.annoteSchema("ExportNodeType", { description: "AST node types that put a JSDoc block in export context." }));
 
 /**
- * Type-level member of {@link ExportNodeType}.
- *
  * @category models
  * @since 0.1.0
  */
 export type ExportNodeType = typeof ExportNodeType.Type;
 
 /**
- * Top-level declaration types an export specifier can name.
- *
  * **Example** (Recognize a declaration)
  *
  * ```ts
@@ -316,16 +292,12 @@ export const DeclarationNodeType = LiteralKit([
 );
 
 /**
- * Type-level member of {@link DeclarationNodeType}.
- *
  * @category models
  * @since 0.1.0
  */
 export type DeclarationNodeType = typeof DeclarationNodeType.Type;
 
 /**
- * Member node types whose JSDoc follows the export status of their owner.
- *
  * **Example** (Recognize a member)
  *
  * ```ts
@@ -358,8 +330,6 @@ export const MemberNodeType = LiteralKit([
 );
 
 /**
- * Type-level member of {@link MemberNodeType}.
- *
  * @category models
  * @since 0.1.0
  */
@@ -739,8 +709,6 @@ const leadingRuns = (
 };
 
 /**
- * Input to {@link classifyComments}: one parsed file.
- *
  * **Details**
  *
  * `attachment` is optional; without it the program is walked with

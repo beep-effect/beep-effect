@@ -113,8 +113,6 @@ export class SkillPatchAddReceipt extends S.Opaque<SkillPatchAddReceipt, { reado
 ) {}
 
 /**
- * One patch whose lock label the ledger moves.
- *
  * **Example** (Record a relabel)
  *
  * ```ts

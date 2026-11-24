@@ -180,8 +180,6 @@ const sessionLeaseEventFields = {
 const SessionLeaseEventKind = LiteralKit(["session-start", "activity", "wait-opened", "wait-closed", "session-end"]);
 
 /**
- * First liveness observation that creates an active session lease.
- *
  * **Example** (Open a lease from SessionStart)
  *
  * ```ts
@@ -222,8 +220,6 @@ export class SessionLeaseStarted extends S.Opaque<SessionLeaseStarted, { readonl
 ) {}
 
 /**
- * Content-free hook activity that renews an existing session lease.
- *
  * **Example** (Renew a lease on hook activity)
  *
  * ```ts
@@ -273,8 +269,6 @@ export class SessionLeaseActivity extends S.Opaque<SessionLeaseActivity, { reado
 ) {}
 
 /**
- * Strictly attributed PermissionRequest observation that opens a pending wait.
- *
  * **Details**
  *
  * The wait-open timestamp must equal the PermissionRequest observation timestamp.
@@ -342,8 +336,6 @@ export class SessionLeaseWaitOpened extends S.Opaque<SessionLeaseWaitOpened, { r
 ) {}
 
 /**
- * Exact-ID terminal decision observation that closes at most one pending wait.
- *
  * **Example** (Ignore a close for a wait the lease never opened)
  *
  * ```ts
@@ -395,8 +387,6 @@ export class SessionLeaseWaitClosed extends S.Opaque<SessionLeaseWaitClosed, { r
 ) {}
 
 /**
- * Observed harness terminal event that retires an active lease.
- *
  * **Example** (Retire a lease on the harness end event)
  *
  * ```ts
@@ -523,8 +513,6 @@ const SessionLeaseTransitionFailure = LiteralKit([
 ]);
 
 /**
- * Accepted lease transition that leaves the session active.
- *
  * **Example** (Read the fresh lease from a start transition)
  *
  * ```ts
@@ -570,8 +558,6 @@ export class ActiveSessionLeaseTransition extends S.Opaque<
 ) {}
 
 /**
- * Observed session end carrying the final lease for flight-record composition.
- *
  * **Example** (Hand the final lease to flight-record composition)
  *
  * ```ts
@@ -628,8 +614,6 @@ export class EndedSessionLeaseTransition extends S.Opaque<
 ) {}
 
 /**
- * Content-free refusal of a lease transition whose identity or ordering cannot be trusted.
- *
  * **Example** (Quarantine activity that arrives before SessionStart)
  *
  * ```ts
@@ -1038,8 +1022,6 @@ const SessionLeaseReconciliationDeferral = LiteralKit([
 ]);
 
 /**
- * Content-free refusal to synthesize a tombstone while any required gate is unresolved.
- *
  * **Example** (Defer a tombstone while a wait is still open)
  *
  * ```ts
@@ -1077,8 +1059,6 @@ export class DeferredSessionLeaseReconciliation extends S.Opaque<
 ) {}
 
 /**
- * Reconstructed terminal marker produced after lease and source evidence agree.
- *
  * **Example** (Tombstone an expired lease with an honest unknown outcome)
  *
  * ```ts

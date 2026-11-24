@@ -87,16 +87,12 @@ export const EffectSchemaInventoryPin = S.String.check(S.isPattern(/^[0-9a-f]{40
 );
 
 /**
- * Decoded inventory pin.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type EffectSchemaInventoryPin = typeof EffectSchemaInventoryPin.Type;
 
 /**
- * Declaration-facet kinds recorded by `schema-inventory/v1`.
- *
  * **Details**
  *
  * `method`, `property`, `accessor`, `call`, and `constructor` are one-level members of an
@@ -133,16 +129,12 @@ export const EffectSchemaInventoryKind = LiteralKit([
 );
 
 /**
- * Decoded row kind.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type EffectSchemaInventoryKind = typeof EffectSchemaInventoryKind.Type;
 
 /**
- * Effect import path of an inventoried module, such as `effect/Schema`.
- *
  * **Example** (Accept an Effect module path)
  *
  * ```ts
@@ -162,8 +154,6 @@ export const EffectSchemaInventoryModuleName = S.String.check(S.isStartingWith("
 );
 
 /**
- * Decoded module import path.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -201,8 +191,6 @@ const EffectSchemaInventorySummary = S.String.check(S.isMaxLength(400), singleLi
 );
 
 /**
- * One `schema-inventory/v1` row: a declaration facet of an Effect module at the pin.
- *
  * **Details**
  *
  * Identity is `(module, symbol, kind)`. Field order is the committed JSONL key order, so
@@ -659,8 +647,6 @@ export const EffectSchemaInventoryRequest = S.TaggedUnion({
 );
 
 /**
- * Decoded command request.
- *
  * @category type-level
  * @since 0.0.0
  */

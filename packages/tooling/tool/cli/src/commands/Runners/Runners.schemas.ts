@@ -66,8 +66,6 @@ export const BakeMode = LiteralKit(["bake", "check", "plan"]).pipe(
 );
 
 /**
- * Runtime type for {@link BakeMode}.
- *
  * **Example** (Use a bake mode type)
  *
  * ```ts

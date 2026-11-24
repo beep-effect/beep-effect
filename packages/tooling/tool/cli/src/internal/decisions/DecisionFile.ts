@@ -64,8 +64,6 @@ export const DecisionDate = S.String.check(
 );
 
 /**
- * Decision date string.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -104,8 +102,6 @@ export const DecisionFileName = S.String.check(
 );
 
 /**
- * Decision file name string.
- *
  * @category type-level
  * @since 0.0.0
  */

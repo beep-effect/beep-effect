@@ -38,8 +38,6 @@ const assertDies = (exit: Exit.Exit<unknown, unknown>, fragment: string): void =
   }
 };
 
-// ── WorkspaceCatalogs ───────────────────────────────────────────────────────
-
 // Bound to a const — layers memoize by reference.
 const UnstubbedCatalogs = WorkspaceCatalogs.layerTest();
 
@@ -113,8 +111,6 @@ describe("WorkspaceCatalogs.makeTest — resolveSpecifier derives from a supplie
   );
 });
 
-// ── WorkspaceSnapshots ──────────────────────────────────────────────────────
-
 const EMPTY_SNAPSHOT = WorkspaceStateSnapshot.make({
   packages: [],
   catalogs: CatalogSet.empty(),
@@ -165,8 +161,6 @@ describe("WorkspaceSnapshots.layerTest — provides the service", () => {
     );
   });
 });
-
-// ── LockfileReader ──────────────────────────────────────────────────────────
 
 // Bound to a const — layers memoize by reference.
 const UnstubbedLockfiles = LockfileReader.layerTest();

@@ -40,8 +40,6 @@ const OpReference = S.String.check(
 );
 
 /**
- * A 1Password reference to a GitHub token.
- *
  * **Details**
  *
  * Follows 1Password's secret reference syntax: `op://vault/item/[section/]field`,
@@ -67,16 +65,12 @@ export const GithubTokenRef = OpReference.pipe(
 );
 
 /**
- * Type of {@link GithubTokenRef}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GithubTokenRef = typeof GithubTokenRef.Type;
 
 /**
- * A 1Password reference to a GitHub App private key.
- *
  * **Example** (Accept a key reference)
  *
  * ```ts
@@ -94,8 +88,6 @@ export const GithubPrivateKeyRef = OpReference.pipe(
 );
 
 /**
- * Type of {@link GithubPrivateKeyRef}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -119,16 +111,12 @@ export type GithubPrivateKeyRef = typeof GithubPrivateKeyRef.Type;
 export const GithubAppId = S.NonEmptyString.pipe($I.annoteSchema("GithubAppId", { description: "A GitHub App id." }));
 
 /**
- * Type of {@link GithubAppId}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GithubAppId = typeof GithubAppId.Type;
 
 /**
- * A GitHub App installation id.
- *
  * **Example** (Accept an installation id)
  *
  * ```ts
@@ -146,8 +134,6 @@ export const GithubInstallationId = S.Int.pipe(
 );
 
 /**
- * Type of {@link GithubInstallationId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -179,8 +165,6 @@ export const GithubLogin = S.String.check(
 ).pipe($I.annoteSchema("GithubLogin", { description: "A GitHub user login." }));
 
 /**
- * Type of {@link GithubLogin}.
- *
  * @category models
  * @since 0.0.0
  */

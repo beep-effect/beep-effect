@@ -84,8 +84,6 @@ export const MAX_FORMULA_CHARS = 8192;
 export const MAX_FORMAT_CHARS = 255;
 
 /**
- * An error a cell can hold in place of a value.
- *
  * **Example** (Known error codes)
  *
  * ```ts import.meta.vitest name="Known error codes"
@@ -201,8 +199,6 @@ export class XlsxBlank extends S.Opaque<XlsxBlank, { readonly brand: unique symb
 ) {}
 
 /**
- * Text, as written.
- *
  * **Example** (Text keeps its spaces)
  *
  * ```ts import.meta.vitest name="Text keeps its spaces"
@@ -245,8 +241,6 @@ export class XlsxNumber extends S.Opaque<XlsxNumber, { readonly brand: unique sy
 ) {}
 
 /**
- * TRUE or FALSE.
- *
  * **Example** (A boolean value)
  *
  * ```ts import.meta.vitest name="A boolean value"
@@ -268,8 +262,6 @@ export class XlsxBoolean extends S.Opaque<XlsxBoolean, { readonly brand: unique 
 ) {}
 
 /**
- * An error in place of a value.
- *
  * **Example** (A division error)
  *
  * ```ts import.meta.vitest name="A division error"
@@ -347,8 +339,6 @@ export class XlsxUnreadable extends S.Opaque<XlsxUnreadable, { readonly brand: u
 ) {}
 
 /**
- * What a cell holds.
- *
  * **Example** (Decode and test a value)
  *
  * ```ts import.meta.vitest name="Decode and test a value"

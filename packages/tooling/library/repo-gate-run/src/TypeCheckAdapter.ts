@@ -66,9 +66,6 @@ export class CheckRun extends S.Opaque<CheckRun, { readonly brand: unique symbol
 ) {}
 
 /**
- * A finished compiler run: the run, the compiler's exit code and output,
- * and how many units it checked.
- *
  * **Example** (Describe a clean compiler run)
  *
  * ```ts

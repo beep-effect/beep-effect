@@ -42,18 +42,15 @@ import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 
-// A nested directory that does not exist yet: building the store has to create it.
-const DIRECTORY = "/fixture/state/docket-intake";
-const STATE_PATH = `${DIRECTORY}/state.json`;
-const LOCK_PATH = `${DIRECTORY}/state.lock`;
+const UNCREATED_NESTED_DIRECTORY = "/fixture/state/docket-intake";
+const STATE_PATH = `${UNCREATED_NESTED_DIRECTORY}/state.json`;
+const LOCK_PATH = `${UNCREATED_NESTED_DIRECTORY}/state.lock`;
 const OWN_PID = "4242";
 const BOOT_ID = "boot-a";
 
 type OpenedFilesShape = {
-  /** Every path the store opened for writing, in order. */
-  readonly opened: Ref.Ref<ReadonlyArray<string>>;
-  /** Every path written in one call, in order. */
-  readonly written: Ref.Ref<ReadonlyArray<string>>;
+  readonly openedForWritingInOrder: Ref.Ref<ReadonlyArray<string>>;
+  readonly writtenInOneCallInOrder: Ref.Ref<ReadonlyArray<string>>;
 };
 
 class OpenedFiles extends Context.Service<OpenedFiles, OpenedFilesShape>()(
@@ -64,35 +61,29 @@ const OpenedFilesLayer = Layer.effect(
   OpenedFiles,
   Effect.gen(function* () {
     return OpenedFiles.of({
-      opened: yield* Ref.make<ReadonlyArray<string>>([]),
-      written: yield* Ref.make<ReadonlyArray<string>>([]),
+      openedForWritingInOrder: yield* Ref.make<ReadonlyArray<string>>([]),
+      writtenInOneCallInOrder: yield* Ref.make<ReadonlyArray<string>>([]),
     });
   })
 );
 
 const OWN_START = "1000";
 
-// A `/proc/<pid>/stat` line. The command name holds spaces and parentheses on purpose: the start
-// time is the twentieth field after the last closing parenthesis.
-const statLine = (pid: string, startTime: string): string =>
+const statLineWithSpacedParenthesizedCommand = (pid: string, startTime: string): string =>
   `${pid} (docket) intake (x) S 1 1 1 0 -1 4194560 100 0 0 0 1 1 0 0 20 0 1 0 ${startTime} 1000 200\n`;
 
-// Make a process look as if it is running.
-const addProcess = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, pid: string, startTime: string) {
+const addRunningProcess = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, pid: string, startTime: string) {
   yield* fs.makeDirectory(`/proc/${pid}`, { recursive: true });
-  yield* fs.writeFileString(`/proc/${pid}/stat`, statLine(pid, startTime));
+  yield* fs.writeFileString(`/proc/${pid}/stat`, statLineWithSpacedParenthesizedCommand(pid, startTime));
 });
 
-// An in-memory file system that looks like Linux to the store: `/proc/self` names this process,
-// `/proc/<pid>/stat` exists for a running process, and the kernel reports a boot id. It also
-// records which files are opened or written, so temporary file names are visible.
-const fileSystemLayer = (bootId: O.Option<string>) =>
+const linuxLikeRecordingFileSystemLayer = (bootId: O.Option<string>) =>
   Layer.effect(
     FileSystem.FileSystem,
     Effect.gen(function* () {
       const memory = yield* MemoryFileSystem.make;
       const record = yield* OpenedFiles;
-      yield* addProcess(memory, OWN_PID, OWN_START);
+      yield* addRunningProcess(memory, OWN_PID, OWN_START);
       yield* memory.symlink(OWN_PID, "/proc/self");
       yield* memory.makeDirectory("/proc/sys/kernel/random", { recursive: true });
       yield* Effect.forEach(
@@ -103,19 +94,21 @@ const fileSystemLayer = (bootId: O.Option<string>) =>
       return {
         ...memory,
         open: (path, options) =>
-          Ref.update(record.opened, A.append(path)).pipe(Effect.andThen(memory.open(path, options))),
+          Ref.update(record.openedForWritingInOrder, A.append(path)).pipe(Effect.andThen(memory.open(path, options))),
         writeFileString: (path, data, options) =>
-          Ref.update(record.written, A.append(path)).pipe(Effect.andThen(memory.writeFileString(path, data, options))),
+          Ref.update(record.writtenInOneCallInOrder, A.append(path)).pipe(
+            Effect.andThen(memory.writeFileString(path, data, options))
+          ),
       } satisfies FileSystem.FileSystem;
     }).pipe(Effect.orDie)
   );
 
-const FilesLayer = fileSystemLayer(O.some(BOOT_ID)).pipe(
+const FilesLayer = linuxLikeRecordingFileSystemLayer(O.some(BOOT_ID)).pipe(
   Layer.provideMerge(OpenedFilesLayer),
   Layer.provideMerge(Path.layer)
 );
 
-const storeOptions = DocketFileStoreOptions.make({ directory: DIRECTORY });
+const storeOptions = DocketFileStoreOptions.make({ directory: UNCREATED_NESTED_DIRECTORY });
 
 const storeLayer = makeDocketFileStoreLayer(storeOptions).pipe(Layer.provideMerge(FilesLayer));
 
@@ -129,10 +122,9 @@ type Holder = { readonly bootId: string; readonly pid: string; readonly startTim
 
 const lockText = (holder: Holder) => Effect.orDie(encodeLockFile({ ...holder, startedAt: "2030-01-09T10:00:00.000Z" }));
 
-// Put a lock in place as another process would have left it.
-const leaveLock = Effect.fnUntraced(function* (holder: Holder) {
+const leaveLockBehind = Effect.fnUntraced(function* (holder: Holder) {
   const fs = yield* FileSystem.FileSystem;
-  yield* fs.makeDirectory(DIRECTORY, { recursive: true });
+  yield* fs.makeDirectory(UNCREATED_NESTED_DIRECTORY, { recursive: true });
   yield* fs.remove(LOCK_PATH, { force: true });
   const lockText1 = yield* lockText(holder);
   yield* fs.writeFileString(LOCK_PATH, lockText1);
@@ -148,16 +140,13 @@ const OWN_HOLDER = [OWN_PID, BOOT_ID, OWN_START];
 const OTHER: Holder = { bootId: BOOT_ID, pid: "777", startTime: "2000" };
 const OTHER_HOLDER = [OTHER.pid, OTHER.bootId, OTHER.startTime];
 
-// Files a lock attempt may leave beside the lock if it does not clean up.
-const leftovers = Effect.gen(function* () {
+const uncleanedTmpOrStaleFiles = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const readDirectory3 = yield* fs.readDirectory(DIRECTORY);
+  const readDirectory3 = yield* fs.readDirectory(UNCREATED_NESTED_DIRECTORY);
   return A.filter(readDirectory3, (name) => Str.endsWith(".tmp")(name) || Str.endsWith(".stale")(name));
 });
 
-// Open the store in a scope of its own, hand back who holds the lock while it is open, and close
-// the scope again.
-const openAndClose = Effect.gen(function* () {
+const openInOwnScopeThenClose = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const scope = yield* Scope.make();
   const context = yield* Layer.buildWithScope(makeDocketFileStoreLayer(storeOptions), scope);
@@ -168,24 +157,19 @@ const openAndClose = Effect.gen(function* () {
 });
 
 type RenameHooks = {
-  /** Runs when the store renames the lock, before the rename happens. */
-  readonly before?: Effect.Effect<void>;
-  /** Runs right after the store renamed the lock. */
-  readonly after?: Effect.Effect<void>;
-  /** Make the rename of the lock fail, as if another starter had already moved it. */
-  readonly fail?: boolean;
+  readonly beforeLockRename?: Effect.Effect<void>;
+  readonly afterLockRename?: Effect.Effect<void>;
+  readonly lockAlreadyMovedByOtherStarter?: boolean;
 };
 
-// The file system as another process sees it: the same files, its own process id, and hooks that
-// let a test act at the exact moment the store moves a stale lock aside.
-const processView = Effect.fnUntraced(function* (pid: string, hooks: RenameHooks = {}) {
+const sharedFilesAsProcessWithLockRenameHooks = Effect.fnUntraced(function* (pid: string, hooks: RenameHooks = {}) {
   const fs = yield* FileSystem.FileSystem;
   const renameLock = (oldPath: string, newPath: string) =>
-    hooks.fail === true
+    hooks.lockAlreadyMovedByOtherStarter === true
       ? fs.rename(`${oldPath}.already-moved`, newPath)
-      : (hooks.before ?? Effect.void).pipe(
+      : (hooks.beforeLockRename ?? Effect.void).pipe(
           Effect.andThen(fs.rename(oldPath, newPath)),
-          Effect.andThen(hooks.after ?? Effect.void)
+          Effect.andThen(hooks.afterLockRename ?? Effect.void)
         );
   return {
     ...fs,
@@ -194,9 +178,7 @@ const processView = Effect.fnUntraced(function* (pid: string, hooks: RenameHooks
   } satisfies FileSystem.FileSystem;
 });
 
-// Try to open the store as the process behind a view; the scope stays open so a winner keeps
-// its lock.
-const openAs = Effect.fnUntraced(function* (scope: Scope.Scope, view: FileSystem.FileSystem) {
+const tryOpenAsProcessKeepingScopeOpen = Effect.fnUntraced(function* (scope: Scope.Scope, view: FileSystem.FileSystem) {
   return yield* failureOf(
     Layer.buildWithScope(
       makeDocketFileStoreLayer(storeOptions).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, view))),
@@ -205,9 +187,7 @@ const openAs = Effect.fnUntraced(function* (scope: Scope.Scope, view: FileSystem
   );
 });
 
-// A state directory that takes no hard link, as a read-only or full one would not. `from` is the
-// number of the first link call that fails; earlier ones reach the real file system.
-const refusingLinks = Effect.fnUntraced(function* (from: number) {
+const refusingLinksFromCall = Effect.fnUntraced(function* (firstRefusedLinkCall: number) {
   const fs = yield* FileSystem.FileSystem;
   const calls = yield* Ref.make(0);
   return {
@@ -215,7 +195,7 @@ const refusingLinks = Effect.fnUntraced(function* (from: number) {
     link: (fromPath, toPath) =>
       Ref.updateAndGet(calls, (count) => count + 1).pipe(
         Effect.flatMap((call) =>
-          call < from
+          call < firstRefusedLinkCall
             ? fs.link(fromPath, toPath)
             : Effect.fail(
                 PlatformError.systemError({
@@ -230,8 +210,7 @@ const refusingLinks = Effect.fnUntraced(function* (from: number) {
   } satisfies FileSystem.FileSystem;
 });
 
-// Another starter's complete lock appears at the lock path.
-const otherTakesLock = (fs: FileSystem.FileSystem): Effect.Effect<void> =>
+const otherStarterPlacesCompleteLock = (fs: FileSystem.FileSystem): Effect.Effect<void> =>
   Effect.gen(function* () {
     yield* fs.remove(LOCK_PATH, { force: true });
     const lockText4 = yield* lockText(OTHER);
@@ -285,7 +264,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         const initial = yield* store.load;
         yield* store.save(state);
         const loaded = yield* store.load;
-        const files = yield* fs.readDirectory(DIRECTORY);
+        const files = yield* fs.readDirectory(UNCREATED_NESTED_DIRECTORY);
 
         assertNone(initial.cursor);
         expect(R.keys(initial.ledger)).toStrictEqual([]);
@@ -297,16 +276,18 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           "IntakeFailed",
         ]);
         expect(A.sort(files, Str.Order)).toStrictEqual(["state.json", "state.lock"]);
-        expect((yield* fs.stat(DIRECTORY)).mode & 0o077).toBe(0);
+        expect((yield* fs.stat(UNCREATED_NESTED_DIRECTORY)).mode & 0o077).toBe(0);
         expect((yield* fs.stat(STATE_PATH)).mode & 0o077).toBe(0);
-        // The lock is complete from the moment it exists: it is linked into place, never written there.
         const lockHolder5 = yield* lockHolder;
         assertSome(lockHolder5, OWN_HOLDER);
-        const got = yield* Ref.get(record.written);
-        expect(A.filter(got, (path) => path === LOCK_PATH)).toStrictEqual([]);
-        const leftovers6 = yield* leftovers;
+        const got = yield* Ref.get(record.writtenInOneCallInOrder);
+        expect(
+          A.filter(got, (path) => path === LOCK_PATH),
+          "the lock is complete from the moment it exists: linked into place, never written there"
+        ).toStrictEqual([]);
+        const leftovers6 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers6).toStrictEqual([]);
-        const got7 = yield* Ref.get(record.opened);
+        const got7 = yield* Ref.get(record.openedForWritingInOrder);
         expect(got7).toHaveLength(1);
       })
     );
@@ -320,7 +301,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
 
         const empty = yield* readDocketStateFile("/fixture/state/elsewhere");
         yield* store.save(state);
-        const read = yield* readDocketStateFile(DIRECTORY);
+        const read = yield* readDocketStateFile(UNCREATED_NESTED_DIRECTORY);
 
         expect(R.keys(empty.ledger)).toStrictEqual([]);
         assertTrue(sameState(read, state));
@@ -364,7 +345,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const directory = DIRECTORY;
+        const directory = UNCREATED_NESTED_DIRECTORY;
 
         const file = yield* writeDigestFile({ day, directory, text: "Docket intake digest for 2030-01-09." });
         yield* writeDigestFile({ day, directory, text: "Docket intake digest for 2030-01-09, rewritten." });
@@ -385,7 +366,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         const store = yield* DocketIntakeStore;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const statePath = path.join(DIRECTORY, "state.json");
+        const statePath = path.join(UNCREATED_NESTED_DIRECTORY, "state.json");
         yield* fs.writeFileString(statePath, '{"ledger":{"m1":{"attempts":"many"}}');
 
         const failure = yield* failureOf(store.load);
@@ -410,14 +391,14 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
 
         yield* store.save(state);
         yield* store.save(DocketIntakeState.make({}));
-        const opened = yield* Ref.get(record.opened);
+        const opened = yield* Ref.get(record.openedForWritingInOrder);
 
         expect(opened).toHaveLength(2);
         expect(A.dedupe(opened)).toHaveLength(2);
         assertTrue(
           A.every(opened, (name) => Str.startsWith(`${STATE_PATH}.${OWN_PID}.`)(name) && Str.endsWith(".tmp")(name))
         );
-        const readDirectory12 = yield* fs.readDirectory(DIRECTORY);
+        const readDirectory12 = yield* fs.readDirectory(UNCREATED_NESTED_DIRECTORY);
         expect(A.filter(readDirectory12, Str.endsWith(".tmp"))).toStrictEqual([]);
         assertNone((yield* store.load).cursor);
       })
@@ -429,8 +410,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
       "refuses to open while another live process holds the lock, and leaves that lock alone",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* addProcess(fs, OTHER.pid, OTHER.startTime);
-        yield* leaveLock(OTHER);
+        yield* addRunningProcess(fs, OTHER.pid, OTHER.startTime);
+        yield* leaveLockBehind(OTHER);
 
         const failure = yield* makeDocketFileStoreLayer(storeOptions).pipe(Layer.launch, failureOf);
 
@@ -440,7 +421,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         );
         const lockHolder13 = yield* lockHolder;
         assertSome(lockHolder13, OTHER_HOLDER);
-        const leftovers14 = yield* leftovers;
+        const leftovers14 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers14).toStrictEqual([]);
       })
     );
@@ -452,46 +433,50 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
 
-        // The holder's process no longer exists.
-        yield* leaveLock({ bootId: BOOT_ID, pid: "888", startTime: "2000" });
-        const afterDeadProcess = yield* openAndClose;
-        // The holder's process id is running with the same start time, but the lock is from before
-        // the last boot.
-        yield* addProcess(fs, "999", "2000");
-        yield* leaveLock({ bootId: "boot-before", pid: "999", startTime: "2000" });
-        const afterReboot = yield* openAndClose;
-        // The holder's process id is running, but the kernel started that process at another time:
-        // the id was reused.
-        yield* addProcess(fs, "666", "3000");
-        yield* leaveLock({ bootId: BOOT_ID, pid: "666", startTime: "2999" });
-        const afterPidReuse = yield* openAndClose;
-        // The lock names this very process id and start time, as after a restart in a fresh
-        // process namespace.
-        yield* leaveLock({ bootId: BOOT_ID, pid: OWN_PID, startTime: OWN_START });
-        const afterOwnPid = yield* openAndClose;
-        // The lock file is not a lock at all.
+        yield* leaveLockBehind({ bootId: BOOT_ID, pid: "888", startTime: "2000" });
+        const afterDeadProcess = yield* openInOwnScopeThenClose;
+        yield* addRunningProcess(fs, "999", "2000");
+        yield* leaveLockBehind({ bootId: "boot-before", pid: "999", startTime: "2000" });
+        const afterRebootSamePidAndStartTime = yield* openInOwnScopeThenClose;
+        yield* addRunningProcess(fs, "666", "3000");
+        yield* leaveLockBehind({ bootId: BOOT_ID, pid: "666", startTime: "2999" });
+        const afterPidReusedWithOtherStartTime = yield* openInOwnScopeThenClose;
+        yield* leaveLockBehind({ bootId: BOOT_ID, pid: OWN_PID, startTime: OWN_START });
+        const afterOwnPidInFreshProcessNamespace = yield* openInOwnScopeThenClose;
         yield* fs.remove(LOCK_PATH, { force: true });
         yield* fs.writeFileString(LOCK_PATH, "not a lock");
-        const afterGarbage = yield* openAndClose;
+        const afterLockFileThatIsNoLock = yield* openInOwnScopeThenClose;
 
-        for (const opened of [afterDeadProcess, afterReboot, afterPidReuse, afterOwnPid, afterGarbage]) {
+        for (const opened of [
+          afterDeadProcess,
+          afterRebootSamePidAndStartTime,
+          afterPidReusedWithOtherStartTime,
+          afterOwnPidInFreshProcessNamespace,
+          afterLockFileThatIsNoLock,
+        ]) {
           assertSome(opened.holder, OWN_HOLDER);
           assertNone(opened.empty.cursor);
           expect(opened.lockedAfterClose).toBe(false);
         }
-        const leftovers15 = yield* leftovers;
+        const leftovers15 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers15).toStrictEqual([]);
       })
     );
   });
 
-  it.layer(fileSystemLayer(O.none()).pipe(Layer.provideMerge(OpenedFilesLayer), Layer.provideMerge(Path.layer)), {
-    timeout: "10 seconds",
-  })((it) => {
+  it.layer(
+    linuxLikeRecordingFileSystemLayer(O.none()).pipe(
+      Layer.provideMerge(OpenedFilesLayer),
+      Layer.provideMerge(Path.layer)
+    ),
+    {
+      timeout: "10 seconds",
+    }
+  )((it) => {
     it.effect(
       "still locks on a system that reports no boot id",
       Effect.fnUntraced(function* () {
-        const opened = yield* openAndClose;
+        const opened = yield* openInOwnScopeThenClose;
 
         assertSome(opened.holder, [OWN_PID, "", OWN_START]);
         expect(opened.lockedAfterClose).toBe(false);
@@ -505,26 +490,29 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const scope = yield* Scope.make();
-        yield* addProcess(fs, "5151", "5000");
-        yield* leaveLock({ bootId: BOOT_ID, pid: "888", startTime: "2000" });
-        const first = yield* processView(OWN_PID);
-        const second = yield* processView("5151");
+        yield* addRunningProcess(fs, "5151", "5000");
+        yield* leaveLockBehind({ bootId: BOOT_ID, pid: "888", startTime: "2000" });
+        const first = yield* sharedFilesAsProcessWithLockRenameHooks(OWN_PID);
+        const second = yield* sharedFilesAsProcessWithLockRenameHooks("5151");
 
-        const [firstFailure, secondFailure] = yield* Effect.all([openAs(scope, first), openAs(scope, second)], {
-          concurrency: 2,
-        });
+        const [firstFailure, secondFailure] = yield* Effect.all(
+          [tryOpenAsProcessKeepingScopeOpen(scope, first), tryOpenAsProcessKeepingScopeOpen(scope, second)],
+          {
+            concurrency: 2,
+          }
+        );
         const holder = yield* lockHolder;
         yield* Scope.close(scope, Exit.void);
 
         expect(A.map(A.getSomes([firstFailure, secondFailure]), (error) => [error.stage, error.cause])).toStrictEqual([
           ["store", "state-locked"],
         ]);
-        // The lock names whichever process did not fail.
+        const processThatDidNotFail = O.isSome(firstFailure) ? "5151" : OWN_PID;
         assertSome(
           O.map(holder, (held) => held[0]),
-          O.isSome(firstFailure) ? "5151" : OWN_PID
+          processThatDidNotFail
         );
-        const leftovers16 = yield* leftovers;
+        const leftovers16 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers16).toStrictEqual([]);
       })
     );
@@ -537,34 +525,40 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         const fs = yield* FileSystem.FileSystem;
         const scope = yield* Scope.make();
         const stale: Holder = { bootId: BOOT_ID, pid: "888", startTime: "2000" };
-        yield* addProcess(fs, OTHER.pid, OTHER.startTime);
+        yield* addRunningProcess(fs, OTHER.pid, OTHER.startTime);
 
-        // Another starter already moved the stale lock away.
-        yield* leaveLock(stale);
-        const processView17 = yield* processView(OWN_PID, { fail: true });
-        const moved = yield* openAs(scope, processView17);
-        // Another starter replaced the stale lock with its own just before this one moved it:
-        // what was moved is not what was judged, so the other lock is put back.
-        yield* leaveLock(stale);
-        const processView18 = yield* processView(OWN_PID, { before: otherTakesLock(fs) });
-        const replaced = yield* openAs(scope, processView18);
-        const afterReplaced = yield* lockHolder;
-        // Another starter took the lock right after this one moved the stale lock away.
-        yield* leaveLock(stale);
-        const processView19 = yield* processView(OWN_PID, { after: otherTakesLock(fs) });
-        const retaken = yield* openAs(scope, processView19);
+        yield* leaveLockBehind(stale);
+        const processView17 = yield* sharedFilesAsProcessWithLockRenameHooks(OWN_PID, {
+          lockAlreadyMovedByOtherStarter: true,
+        });
+        const alreadyMovedByOtherStarter = yield* tryOpenAsProcessKeepingScopeOpen(scope, processView17);
+        yield* leaveLockBehind(stale);
+        const processView18 = yield* sharedFilesAsProcessWithLockRenameHooks(OWN_PID, {
+          beforeLockRename: otherStarterPlacesCompleteLock(fs),
+        });
+        const replacedBeforeMoveSoOtherLockPutBack = yield* tryOpenAsProcessKeepingScopeOpen(scope, processView18);
+        const afterReplacedLockPutBack = yield* lockHolder;
+        yield* leaveLockBehind(stale);
+        const processView19 = yield* sharedFilesAsProcessWithLockRenameHooks(OWN_PID, {
+          afterLockRename: otherStarterPlacesCompleteLock(fs),
+        });
+        const retakenRightAfterMove = yield* tryOpenAsProcessKeepingScopeOpen(scope, processView19);
         const afterRetaken = yield* lockHolder;
         yield* Scope.close(scope, Exit.void);
 
-        for (const failure of [moved, replaced, retaken]) {
+        for (const failure of [
+          alreadyMovedByOtherStarter,
+          replacedBeforeMoveSoOtherLockPutBack,
+          retakenRightAfterMove,
+        ]) {
           assertSome(
             O.map(failure, (error) => [error.stage, error.cause]),
             ["store", "state-locked"]
           );
         }
-        assertSome(afterReplaced, OTHER_HOLDER);
+        assertSome(afterReplacedLockPutBack, OTHER_HOLDER);
         assertSome(afterRetaken, OTHER_HOLDER);
-        const leftovers20 = yield* leftovers;
+        const leftovers20 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers20).toStrictEqual([]);
       })
     );
@@ -577,9 +571,8 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         const fs = yield* FileSystem.FileSystem;
         const scope = yield* Scope.make();
 
-        // No lock exists: the link fails for another reason.
-        const refusingLinks21 = yield* refusingLinks(1);
-        const failure = yield* openAs(scope, refusingLinks21);
+        const noLockYetFirstLinkRefused = yield* refusingLinksFromCall(1);
+        const failure = yield* tryOpenAsProcessKeepingScopeOpen(scope, noLockYetFirstLinkRefused);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),
@@ -587,7 +580,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         );
         const exists22 = yield* fs.exists(LOCK_PATH);
         expect(exists22).toBe(false);
-        const leftovers23 = yield* leftovers;
+        const leftovers23 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers23).toStrictEqual([]);
         yield* Scope.close(scope, Exit.void);
       })
@@ -599,17 +592,16 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
       "reports the same failure when the lock cannot be written after a stale one was moved aside",
       Effect.fnUntraced(function* () {
         const scope = yield* Scope.make();
-        yield* leaveLock(OTHER);
+        yield* leaveLockBehind(OTHER);
 
-        // The first link fails because the stale lock exists; the second, in the takeover, cannot be written.
-        const refusingLinks24 = yield* refusingLinks(2);
-        const failure = yield* openAs(scope, refusingLinks24);
+        const staleLockExistsThenTakeoverLinkRefused = yield* refusingLinksFromCall(2);
+        const failure = yield* tryOpenAsProcessKeepingScopeOpen(scope, staleLockExistsThenTakeoverLinkRefused);
 
         assertSome(
           O.map(failure, (error) => [error.stage, error.cause]),
           ["store", "lock"]
         );
-        const leftovers25 = yield* leftovers;
+        const leftovers25 = yield* uncleanedTmpOrStaleFiles;
         expect(leftovers25).toStrictEqual([]);
         yield* Scope.close(scope, Exit.void);
       })

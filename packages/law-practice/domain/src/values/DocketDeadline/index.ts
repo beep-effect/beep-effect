@@ -7,8 +7,6 @@
  */
 
 /**
- * DocketDeadline model exports.
- *
  * **Example** (Import the docket deadline policy)
  *
  * ```ts

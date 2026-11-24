@@ -66,8 +66,6 @@ export const CodexDisposition = LiteralKit([
 );
 
 /**
- * Disposition recorded for one finding.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -102,8 +100,6 @@ export const CodexVerdict = LiteralKit([
 );
 
 /**
- * Validation verdict recorded for one finding.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -138,8 +134,6 @@ export const CodexWorkStatus = LiteralKit(["pending", "in-progress", "implemente
 export type CodexWorkStatus = typeof CodexWorkStatus.Type;
 
 /**
- * Confidence a triage agent attached to its verdict.
- *
  * **Example** (Naming a confidence level)
  *
  * ```ts
@@ -158,8 +152,6 @@ export const CodexConfidence = LiteralKit(["high", "medium", "low"]).pipe(
 );
 
 /**
- * Confidence attached to a verdict.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -198,16 +190,12 @@ export const CodexCaptureMethod = LiteralKit([
 );
 
 /**
- * Mechanism that produced a batch.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CodexCaptureMethod = typeof CodexCaptureMethod.Type;
 
 /**
- * Identifier of one remediation lane.
- *
  * **Example** (Validating a lane identifier)
  *
  * ```ts
@@ -236,16 +224,12 @@ export const CodexLaneId = S.String.check(
 );
 
 /**
- * Identifier of a remediation lane.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CodexLaneId = typeof CodexLaneId.Type;
 
 /**
- * Current-HEAD validation state of one finding.
- *
  * **Example** (Constructing capture-time validation state)
  *
  * ```ts
@@ -270,8 +254,6 @@ export class CodexTriageValidation extends S.Opaque<CodexTriageValidation, { rea
 ) {}
 
 /**
- * Remediation state of one finding.
- *
  * **Example** (Constructing capture-time remediation state)
  *
  * ```ts
@@ -303,8 +285,6 @@ export class CodexTriageRemediation extends S.Opaque<CodexTriageRemediation, { r
 ) {}
 
 /**
- * One finding's full ledger entry.
- *
  * **Gotchas**
  *
  * `ownerArea`, `verdict`, and `lane` are optional because a generated ledger
@@ -364,8 +344,6 @@ export class CodexTriageFinding extends S.Opaque<CodexTriageFinding, { readonly 
 ) {}
 
 /**
- * One remediation lane grouping findings that share a root cause.
- *
  * **Example** (Constructing a lane)
  *
  * ```ts
@@ -392,8 +370,6 @@ export class CodexTriageLane extends S.Opaque<CodexTriageLane, { readonly brand:
 ) {}
 
 /**
- * Provenance header of the ledger.
- *
  * **Example** (Constructing ledger provenance)
  *
  * ```ts
@@ -435,8 +411,6 @@ export class CodexTriageMeta extends S.Opaque<CodexTriageMeta, { readonly brand:
 ) {}
 
 /**
- * The complete `codex-triage/v1` ledger.
- *
  * **When to use**
  *
  * Use to encode a freshly captured ledger, and to decode an existing one before

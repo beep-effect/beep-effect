@@ -32,8 +32,6 @@ export const EnrollmentStatus = LiteralKit(["Active", "Inactive"]).pipe(
 );
 
 /**
- * Decoded {@link EnrollmentStatus}.
- *
  * @category models
  * @since 0.0.0
  */

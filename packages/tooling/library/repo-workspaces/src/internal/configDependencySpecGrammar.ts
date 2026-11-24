@@ -62,8 +62,6 @@ export class ConfigDependencySpecParts extends S.Opaque<ConfigDependencySpecPart
 ) {}
 
 /**
- * Companion types for {@link ConfigDependencySpecParts}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -17,8 +17,6 @@ import type * as EffectType from "effect/Effect";
 const $I = $WorkspaceUseCasesId.create("aggregates/Workspace/WorkspaceVault");
 
 /**
- * Workspace vault configuration read model.
- *
  * **Example** (Make workspace vault config)
  *
  * ```ts
@@ -55,8 +53,6 @@ export class WorkspaceVaultConfig extends S.Opaque<WorkspaceVaultConfig, { reado
 ) {}
 
 /**
- * Input accepted when persisting a workspace vault root.
- *
  * **Example** (Make set vault input)
  *
  * ```ts
@@ -151,8 +147,6 @@ export class WorkspaceVaultRootInvalid extends S.TaggedError<
 ) {}
 
 /**
- * Internal typed workspace vault store failure.
- *
  * **Example** (Decode vault store error)
  *
  * ```ts
@@ -179,15 +173,12 @@ export const WorkspaceVaultStoreError = S.Union([WorkspaceVaultStoreUnavailable,
 );
 
 /**
- * {@inheritDoc WorkspaceVaultStoreError}
  * @category errors
  * @since 0.0.0
  */
 export type WorkspaceVaultStoreError = typeof WorkspaceVaultStoreError.Type;
 
 /**
- * Client-safe workspace vault configuration failure.
- *
  * **Example** (Create action error message)
  *
  * ```ts

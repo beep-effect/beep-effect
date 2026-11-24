@@ -14,8 +14,6 @@ const $I = $WorkspaceDomainId.create("entities/Thread/Thread.model");
 const pg = ProductEntity.pg;
 
 /**
- * Durable workspace conversation thread.
- *
  * **Example** (Log Thread table name)
  *
  * ```ts

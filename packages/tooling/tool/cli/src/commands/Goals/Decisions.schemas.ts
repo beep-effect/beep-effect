@@ -62,8 +62,6 @@ export const GoalDecisionKind = LiteralKit(["decision", "checkpoint"]).pipe(
 );
 
 /**
- * Decision kind literal.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -138,8 +136,6 @@ const GoalDecisionClaimKind = S.makeFilter(
 );
 
 /**
- * YAML frontmatter of a decision file.
- *
  * **Details**
  *
  * `title` and `date` make the rendered heading (`### <title>, <date>`);
@@ -212,8 +208,6 @@ export class GoalDecisionFrontmatter extends S.Opaque<GoalDecisionFrontmatter, {
 ) {}
 
 /**
- * Namespace for {@link GoalDecisionFrontmatter} companion types.
- *
  * **Example** (Name the encoded type)
  *
  * ```ts

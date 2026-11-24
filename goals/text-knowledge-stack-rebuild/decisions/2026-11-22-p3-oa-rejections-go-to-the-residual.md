@@ -1,0 +1,8 @@
+---
+title: "P3: a third-party annotation the profile cannot take is rejected into the residual with its reason; no whole input is refused"
+date: 2026-11-22
+lane: "goals/text-knowledge-stack-rebuild-p3-annotation"
+reversal: "Refuse the whole input on the first rejected annotation, by a decision file with the L2-6 row"
+---
+
+Amends decision `p0-item7-oa-profile`, which refused a whole input for one bad annotation. A third-party annotation is rejected, with its triples sent to the residual and an `OaRejection { subject, reason }` returned, when its target names another `oa:hasSource` (`other-source`), its kind IRI is not in the registry (`unknown-kind`), its body is not one its kind reads (`body-refused`), its selectors do not decode to one verified anchor (`target-refused`), or its times conflict (`time-conflict`): one subject, the annotation or one of its runs, states two different times, or the annotation gives one (content, activity) pair a time that another of its statements, or another annotation of equal content, contradicts (`None` against `Some` included). Every annotation contributing to such a pair is rejected, and `normalize` leaves out the same annotations. Multi-capture input therefore splits: the annotations on the given source decode and the others are `other-source`. Triples outside the profile go to the residual as before; nothing is dropped silently. The decoder mints each `importedActivities` key through `imported-activity/v1` and every other key from content, so it verifies nothing it reads. `decode` refuses no whole input; its error channel holds only `PreimageMintError`.

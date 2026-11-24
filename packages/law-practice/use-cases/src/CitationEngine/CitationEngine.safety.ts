@@ -31,7 +31,6 @@ export const CitationSafetyBudget = LiteralKit([
   })
 );
 /**
- * Schema-derived safety resource name.
  * @category models
  * @since 0.0.0
  */

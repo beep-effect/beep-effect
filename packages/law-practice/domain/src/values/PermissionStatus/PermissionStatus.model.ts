@@ -12,8 +12,6 @@ const $I = $LawPracticeDomainId.create("values/PermissionStatus/PermissionStatus
 const PermissionStatusBase = LiteralKit(["permitted", "violative"]);
 
 /**
- * Whether an act was recorded as permitted or as violating a duty.
- *
  * **When to use**
  *
  * Use as one of the two independent recorded axes an attempted act carries. The
@@ -57,8 +55,6 @@ export const PermissionStatus = PermissionStatusBase.pipe(
 );
 
 /**
- * Runtime type for {@link PermissionStatus}.
- *
  * @see {@link PermissionStatus} for the runtime schema and the two-axis rule.
  * @category models
  * @since 0.0.0

@@ -40,9 +40,6 @@ const DOMHtmlVideoElement = S.declare(isHTMLVideoElement).pipe(
 );
 
 /**
- * A single rotating hero background clip: an optimized poster plus its background
- * video sources.
- *
  * **Example** (Describe one rotating hero clip)
  *
  * ```ts

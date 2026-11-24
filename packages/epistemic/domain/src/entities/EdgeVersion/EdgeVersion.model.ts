@@ -48,8 +48,6 @@ const $I = $EpistemicDomainId.create("entities/EdgeVersion/EdgeVersion.model");
 const pg = ProductEntity.pg;
 
 /**
- * One immutable version of one logical epistemic edge.
- *
  * **Details**
  *
  * The organization scope is the inherited `orgId` — there is no separate

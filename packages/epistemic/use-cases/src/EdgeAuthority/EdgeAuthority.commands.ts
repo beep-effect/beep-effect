@@ -116,8 +116,6 @@ const RecordEdgeFactFields = S.Struct({
 }).pipe(S.check(OrgScopeAgreementCheck));
 
 /**
- * Assert a fact about a logical edge over a known valid-time interval.
- *
  * **Details**
  *
  * `validFrom` is required, not optional-with-a-default: the donor's null

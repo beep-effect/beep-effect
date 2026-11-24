@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $GithubActionsId.create("BlobEnvelope");
 
 /**
- * Raised when bytes cannot be read as an envelope.
- *
  * **Example** (Inspect the NotABlobEnvelopeError message)
  *
  * ```ts
@@ -63,8 +61,6 @@ export class NotABlobEnvelopeError extends S.TaggedError<NotABlobEnvelopeError, 
 }
 
 /**
- * Raised when the frame ends mid-header or mid-metadata.
- *
  * **Example** (Inspect the TruncatedBlobEnvelopeError message)
  *
  * ```ts
@@ -116,8 +112,6 @@ export class TruncatedBlobEnvelopeError extends S.TaggedError<
 }
 
 /**
- * Raised when the envelope came from a newer revision of the format.
- *
  * **Example** (Inspect the UnsupportedBlobEnvelopeVersionError message)
  *
  * ```ts
@@ -173,8 +167,6 @@ export class UnsupportedBlobEnvelopeVersionError extends S.TaggedError<
 }
 
 /**
- * Raised when well-framed metadata does not satisfy the caller's schema.
- *
  * **Example** (Inspect the BlobMetadataDecodeError message)
  *
  * ```ts
@@ -223,8 +215,6 @@ export class BlobMetadataDecodeError extends S.TaggedError<BlobMetadataDecodeErr
 }
 
 /**
- * Raised when the value being stored does not satisfy its schema.
- *
  * **Example** (Inspect the BlobMetadataEncodeError message)
  *
  * ```ts

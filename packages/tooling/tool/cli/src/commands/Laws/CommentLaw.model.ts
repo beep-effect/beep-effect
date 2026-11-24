@@ -23,8 +23,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/CommentLaw.model");
 
 /**
- * Whether comment-law findings fail the check.
- *
  * **Example** (Read the advisory literal)
  *
  * ```ts
@@ -41,16 +39,12 @@ export const CommentLawEnforcement = LiteralKit(["advisory", "blocking"]).pipe(
 );
 
 /**
- * Type-level member of {@link CommentLawEnforcement}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CommentLawEnforcement = typeof CommentLawEnforcement.Type;
 
 /**
- * Rule that produced a comment-law finding.
- *
  * **Details**
  *
  * `introduced-comment` is the growth check. `locked-scope-comment` is a
@@ -80,8 +74,6 @@ export const CommentLawRule = LiteralKit([
 ]).pipe($I.annoteSchema("CommentLawRule", { description: "Rule that produced a comment-law finding." }));
 
 /**
- * Type-level member of {@link CommentLawRule}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -152,8 +144,6 @@ export class CommentLawPending extends S.Opaque<CommentLawPending, { readonly br
 ) {}
 
 /**
- * One comment-law finding.
- *
  * **Details**
  *
  * `file` and `line` locate the finding for a reader; neither enters the
@@ -249,8 +239,6 @@ export class CommentDelta extends S.Opaque<CommentDelta, { readonly brand: uniqu
 ) {}
 
 /**
- * Inputs to the pending-scope lock evaluation.
- *
  * **Details**
  *
  * `bannedCounts` maps every in-scope file of the checked tree to its banned
@@ -330,8 +318,6 @@ export class CommentLockResult extends S.Opaque<CommentLockResult, { readonly br
 ) {}
 
 /**
- * Runtime options for one comment-law check.
- *
  * **Details**
  *
  * `base` names the ref to diff against; the check uses its merge base with
@@ -370,8 +356,6 @@ export class CommentLawOptions extends S.Opaque<CommentLawOptions, { readonly br
 ) {}
 
 /**
- * Result of one comment-law check.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

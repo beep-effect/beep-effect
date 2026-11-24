@@ -1,5 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { it } from "@beep/test-runner";
+import { rangeIn, scalarRangeIn } from "@beep/text/Arbitrary";
 import { convertPosition, OffsetUnit, Position, slicePosition, UnitConversionRefused } from "@beep/text/OffsetUnit";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
@@ -8,7 +9,7 @@ import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { rangeIn, scalarRangeIn, wellFormedText } from "./support/generators.ts";
+import { wellFormedText } from "./support/generators.ts";
 import type { UnitConversionRefusal } from "@beep/text/OffsetUnit";
 
 const runs = { arbitrary: fcRuns(100) };

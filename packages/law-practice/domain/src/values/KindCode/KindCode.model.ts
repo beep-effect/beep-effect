@@ -12,8 +12,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $LawPracticeDomainId.create("values/KindCode/KindCode");
 
 /**
- * WIPO ST.16 patent document kind code.
- *
  * **Details**
  *
  * The set includes the ST.16 letter codes and each letter code supplemented by
@@ -242,8 +240,6 @@ export const KindCode = LiteralKit([
 );
 
 /**
- * Type-level literal union produced by {@link KindCode}.
- *
  * **Example** (Satisfy KindCode type literal)
  *
  * ```ts

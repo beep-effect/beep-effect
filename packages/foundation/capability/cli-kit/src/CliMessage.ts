@@ -20,8 +20,6 @@ import { Status } from "./Status.ts";
 const $I = $CliKitId.create("CliMessage");
 
 /**
- * Options for {@link CliMessage.status}.
- *
  * **Example** (Send a status line to stderr)
  *
  * ```ts
@@ -48,8 +46,6 @@ export class CliMessageOptions extends S.Opaque<CliMessageOptions, { readonly br
 ) {}
 
 /**
- * Companion types for {@link CliMessageOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

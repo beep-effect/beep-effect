@@ -40,8 +40,6 @@ export const CensusRuleVersion = LiteralKit(["census-rules/2026-11-18", "census-
 );
 
 /**
- * Runtime type for {@link CensusRuleVersion}.
- *
  * **Example** (Type a rule version)
  *
  * ```ts
@@ -90,8 +88,6 @@ export const CensusHarness = LiteralKit(["claude-session", "claude-subagent", "c
 );
 
 /**
- * Runtime type for {@link CensusHarness}.
- *
  * **Example** (Type a harness population)
  *
  * ```ts
@@ -106,8 +102,6 @@ export const CensusHarness = LiteralKit(["claude-session", "claude-subagent", "c
 export type CensusHarness = typeof CensusHarness.Type;
 
 /**
- * Classes a shell command lands in, in first-match order; `other-shell` is the remainder.
- *
  * **Example** (Check a shell class)
  *
  * ```ts
@@ -142,8 +136,6 @@ export const ShellClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ShellClass}.
- *
  * **Example** (Type a shell class)
  *
  * ```ts
@@ -189,8 +181,6 @@ export const ToolOutputClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ToolOutputClass}.
- *
  * **Example** (Type a tool-output class)
  *
  * ```ts
@@ -205,8 +195,6 @@ export const ToolOutputClass = LiteralKit([
 export type ToolOutputClass = typeof ToolOutputClass.Type;
 
 /**
- * The shell classes that count as verification output.
- *
  * **Example** (Check a verification kind)
  *
  * ```ts
@@ -236,8 +224,6 @@ export const VerificationKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link VerificationKind}.
- *
  * **Example** (Type a verification kind)
  *
  * ```ts
@@ -368,8 +354,6 @@ export const YeetSubcommand = LiteralKit([
 );
 
 /**
- * Runtime type for {@link YeetSubcommand}.
- *
  * **Example** (Type a Yeet sub-command)
  *
  * ```ts
@@ -424,8 +408,6 @@ export const FilterHabit = LiteralKit(["tail", "head", "grep", "unfiltered", "re
 );
 
 /**
- * Runtime type for {@link FilterHabit}.
- *
  * **Example** (Type a filter habit)
  *
  * ```ts
@@ -527,8 +509,6 @@ export const TurnClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link TurnClass}.
- *
  * **Example** (Type a turn class)
  *
  * ```ts
@@ -562,8 +542,6 @@ export const EditToolName = LiteralKit(["Edit", "Write", "NotebookEdit", "Agent"
 );
 
 /**
- * Runtime type for {@link EditToolName}.
- *
  * **Example** (Type an edit tool)
  *
  * ```ts
@@ -609,8 +587,6 @@ export const TurnCommandPatterns = {
 } as const;
 
 /**
- * Classes of one line of verification output.
- *
  * **Details**
  *
  * `turbo-prefix` (a Turbo task prefix, measured then stripped) and `ansi` (escape sequences) are measured
@@ -650,8 +626,6 @@ export const LineClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link LineClass}.
- *
  * **Example** (Type a line class)
  *
  * ```ts
@@ -690,8 +664,6 @@ export const LineMatch = S.TaggedUnion({
 }).pipe($I.annoteSchema("LineMatch", { description: "One line-class matching rule." }));
 
 /**
- * Runtime type for {@link LineMatch}.
- *
  * **Example** (Type a line rule)
  *
  * ```ts
@@ -706,8 +678,6 @@ export const LineMatch = S.TaggedUnion({
 export type LineMatch = typeof LineMatch.Type;
 
 /**
- * A line class and the rule that claims a line for it.
- *
  * **Example** (Read the first line rule)
  *
  * ```ts
@@ -826,8 +796,6 @@ export const CensusOffender = LiteralKit([
 );
 
 /**
- * Runtime type for {@link CensusOffender}.
- *
  * **Example** (Type an offender)
  *
  * ```ts
@@ -867,8 +835,6 @@ export const OffenderMatch = S.TaggedUnion({
 }).pipe($I.annoteSchema("OffenderMatch", { description: "One offender matching rule." }));
 
 /**
- * Runtime type for {@link OffenderMatch}.
- *
  * **Example** (Type an offender rule)
  *
  * ```ts
@@ -961,8 +927,6 @@ export const CalibrationBin = LiteralKit(["3k-6k", "6k-12k", "12k-20k", "20k-plu
 );
 
 /**
- * Runtime type for {@link CalibrationBin}.
- *
  * **Example** (Type a calibration bin)
  *
  * ```ts

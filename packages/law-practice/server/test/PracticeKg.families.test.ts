@@ -75,8 +75,7 @@ const attribute = (
 const registerRow = (client: string, docket: string, clientName: string | null = null): PracticeKgDocketRegisterRow =>
   PracticeKgDocketRegisterRow.make({ client, clientName, docket });
 
-// A row as the catalog query returns it for a folded-in run: unsorted, no docket, no family.
-const runRow = (digest: string, path: string): PracticeKgCatalogRow =>
+const foldedInRunRowAsCatalogQueryReturnsIt = (digest: string, path: string): PracticeKgCatalogRow =>
   PracticeKgCatalogRow.make({
     ...catalogRow(digest, { path }),
     category: "unsorted",
@@ -101,14 +100,16 @@ describe("practice KG family attribution", () => {
       catalogRow("consensus", { docket: "20001US03" }),
       catalogRow("restored", { docket: "20001US04", restored: true }),
     ];
+    const ignoredOtherFamilyAndUnknownDigestReferences = [
+      reference("own", "99999", "40004US01", "40004"),
+      reference("unknown-digest", "99999", "20001US01"),
+    ];
     const attributions = attribute(
       [...rows, PracticeKgCatalogRow.make({ ...catalogRow("lonely", { docket: "30002US01" }), docketFamily: "30002" })],
       [
         reference("own", "11111", "20001US01"),
         reference("family-level", "11111", "20001EP09"),
-        // a reference to another family, and one from a digest the catalog does not hold, are ignored
-        reference("own", "99999", "40004US01", "40004"),
-        reference("unknown-digest", "99999", "20001US01"),
+        ...ignoredOtherFamilyAndUnknownDigestReferences,
       ]
     );
     expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
@@ -132,46 +133,65 @@ describe("practice KG family attribution", () => {
 
   it("reads one docket and one client from a folded-in run row's folder path", () => {
     const rows = applyPracticeKgPathEvidence([
-      runRow("keyed", "Clients/Example Client 11111/20001US01 - 11111.00012/Filing receipt.txt"),
-      runRow("no-client", "Loose files/40004ZA01/Notice.txt"),
-      runRow("cited-elsewhere", "Clients/Example Client 11111/20001US01 - 11111.00012/re 22222.30002US01.txt"),
-      runRow("two-dockets", "Clients/Example Client 11111/20001US01 and 20001US02/Combined.txt"),
-      runRow("no-docket", "Clients/Example Client 11111/General/Engagement letter.txt"),
+      foldedInRunRowAsCatalogQueryReturnsIt(
+        "keyed",
+        "Clients/Example Client 11111/20001US01 - 11111.00012/Filing receipt.txt"
+      ),
+      foldedInRunRowAsCatalogQueryReturnsIt("no-client", "Loose files/40004ZA01/Notice.txt"),
+      foldedInRunRowAsCatalogQueryReturnsIt(
+        "cites-other-client-folder-docket-stands-no-client",
+        "Clients/Example Client 11111/20001US01 - 11111.00012/re 22222.30002US01.txt"
+      ),
+      foldedInRunRowAsCatalogQueryReturnsIt(
+        "two-dockets-ambiguous-left-unchanged",
+        "Clients/Example Client 11111/20001US01 and 20001US02/Combined.txt"
+      ),
+      foldedInRunRowAsCatalogQueryReturnsIt("no-docket", "Clients/Example Client 11111/General/Engagement letter.txt"),
     ]);
     expect(
       A.map(rows, (row) => [row.digest, row.category, row.docket, row.docketFamily, row.folderClient])
     ).toStrictEqual([
       ["keyed", "docket", "20001US01", "20001", "11111"],
       ["no-client", "docket", "40004ZA01", "40004", null],
-      // the file name cites another client's matter: the folder's docket stands, no client is taken
-      ["cited-elsewhere", "docket", "20001US01", "20001", null],
-      // ambiguous paths are left exactly as they were
-      ["two-dockets", "unsorted", null, null, null],
+      ["cites-other-client-folder-docket-stands-no-client", "docket", "20001US01", "20001", null],
+      ["two-dockets-ambiguous-left-unchanged", "unsorted", null, null, null],
       ["no-docket", "unsorted", null, null, null],
     ]);
   });
 
   it("leaves organizer rows and rows that already carry a docket or family untouched", () => {
     const path = "Clients/Example Client 11111/20001US01 - 11111.00012/Filing receipt.txt";
-    const organized = PracticeKgCatalogRow.make({ ...runRow("organized", path), runFolded: false });
-    const docketed = PracticeKgCatalogRow.make({ ...runRow("docketed", path), docket: "30002US01" });
-    const familied = PracticeKgCatalogRow.make({ ...runRow("familied", path), docketFamily: "30002" });
+    const organized = PracticeKgCatalogRow.make({
+      ...foldedInRunRowAsCatalogQueryReturnsIt("organized", path),
+      runFolded: false,
+    });
+    const docketed = PracticeKgCatalogRow.make({
+      ...foldedInRunRowAsCatalogQueryReturnsIt("docketed", path),
+      docket: "30002US01",
+    });
+    const familied = PracticeKgCatalogRow.make({
+      ...foldedInRunRowAsCatalogQueryReturnsIt("familied", path),
+      docketFamily: "30002",
+    });
     expect(applyPracticeKgPathEvidence([organized, docketed, familied])).toStrictEqual([organized, docketed, familied]);
   });
 
   it("ranks the folder path over text references, and keeps the register for families nobody has named", () => {
     const inFamily = (digest: string, docket: string, family: string, folderClient: string | null = null) =>
       PracticeKgCatalogRow.make({ ...catalogRow(digest, { docket }), docketFamily: family, folderClient });
+    const docketListedUnderTwoClientsRegisterCannotDecide = [
+      registerRow("11111", "30002US04"),
+      registerRow("55555", "30002US04"),
+    ];
+    const registerNotConsultedWhereFamilyHasConsensus = registerRow("77777", "40004US02");
     const attributions = attribute(
       [
         inFamily("folder-wins", "20001US02", "20001", "22222"),
-        // the register may only speak for a family with no folder or text client at all
-        inFamily("register-applies", "30002US01", "30002"),
+        inFamily("register-applies-no-folder-or-text-client", "30002US01", "30002"),
         inFamily("register-national-stage", "30002WO05-US1", "30002"),
         inFamily("register-shared", "30002US04", "30002"),
         inFamily("register-unlisted", "30002US09", "30002"),
-        // a family-level document has no docket for the register to name
-        PracticeKgCatalogRow.make({ ...catalogRow("family-level"), docketFamily: "50005" }),
+        PracticeKgCatalogRow.make({ ...catalogRow("family-level-no-docket-for-register"), docketFamily: "50005" }),
         inFamily("consensus", "40004US02", "40004"),
         inFamily("consensus-voter", "40004US01", "40004", "44444"),
       ],
@@ -179,29 +199,23 @@ describe("practice KG family attribution", () => {
       [
         registerRow("11111", "30002us01 "),
         registerRow("66666", "30002WO05"),
-        // listed under two clients: the register cannot decide this docket
-        registerRow("11111", "30002US04"),
-        registerRow("55555", "30002US04"),
-        // the register is not consulted where the family already has a consensus
-        registerRow("77777", "40004US02"),
+        ...docketListedUnderTwoClientsRegisterCannotDecide,
+        registerNotConsultedWhereFamilyHasConsensus,
       ]
     );
     expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
       ["consensus", "family-consensus", "44444.40004"],
       ["consensus-voter", "folder-path", "44444.40004"],
-      ["family-level", "filename", "50005"],
+      ["family-level-no-docket-for-register", "filename", "50005"],
       ["folder-wins", "folder-path", "22222.20001"],
-      ["register-applies", "docket-register", "11111.30002"],
+      ["register-applies-no-folder-or-text-client", "docket-register", "11111.30002"],
       ["register-national-stage", "docket-register", "66666.30002"],
       ["register-shared", "filename", "30002"],
       ["register-unlisted", "filename", "30002"],
     ]);
   });
 
-  it("never lets the register override or outvote a document's own client evidence", () => {
-    // Regression: bare docket codes are reused across clients and the register
-    // lists only current dockets. Register-first moved an older document whose
-    // text names 33333 for 20001US01 onto 11111, the code's current holder.
+  it("never lets the register, which lists only a reused code's current holder, override or outvote a document's own client evidence", () => {
     const register = [registerRow("11111", "20001US01"), registerRow("11111", "20001US07")];
     const attributions = attribute(
       [
@@ -212,15 +226,16 @@ describe("practice KG family attribution", () => {
       [reference("own-text", "33333", "20001US01")],
       register
     );
-    expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
-      // the family's one vote is 33333, so its other documents follow that vote, never the register
+    expect(
+      A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey]),
+      "the family's one vote is 33333, so its other documents follow that vote, never the register"
+    ).toStrictEqual([
       ["other-docket-no-evidence", "family-consensus", "33333.20001"],
       ["own-text", "text-reference", "33333.20001"],
       ["same-docket-no-evidence", "family-consensus", "33333.20001"],
     ]);
 
-    // Two clients vote in the family: no consensus, and still no register.
-    const contested = attribute(
+    const twoClientVotesNoConsensusStillNoRegister = attribute(
       [
         catalogRow("own-text", { docket: "20001US01" }),
         catalogRow("second-client", { docket: "20001US02" }),
@@ -229,7 +244,9 @@ describe("practice KG family attribution", () => {
       [reference("own-text", "33333", "20001US01"), reference("second-client", "44444", "20001US02")],
       register
     );
-    expect(A.map(contested, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
+    expect(
+      A.map(twoClientVotesNoConsensusStillNoRegister, (row) => [row.digest, row.attributionSource, row.familyKey])
+    ).toStrictEqual([
       ["own-text", "text-reference", "33333.20001"],
       ["same-docket-no-evidence", "filename", "20001"],
       ["second-client", "text-reference", "44444.20001"],
@@ -308,15 +325,14 @@ describe("practice KG family attribution", () => {
 });
 
 describe("practice KG anchor membership by dominance", () => {
-  // `count` documents in a family, all mentioning the anchor's application number in their text.
-  type FamilyMentions = {
+  type FamilyOfCountDocumentsAllMentioningAnchorApplication = {
     readonly client: string | null;
     readonly count: number;
     readonly family: string;
     readonly filename?: boolean;
     readonly patentToo?: boolean;
   };
-  const resolveOne = (families: ReadonlyArray<FamilyMentions>) => {
+  const resolveOne = (families: ReadonlyArray<FamilyOfCountDocumentsAllMentioningAnchorApplication>) => {
     const documents = A.flatMap(families, ({ client, count, family, filename, patentToo }) =>
       A.map(A.range(1, count), (index) => ({
         attribution: PracticeKgDocumentAttribution.make({
@@ -370,12 +386,12 @@ describe("practice KG anchor membership by dominance", () => {
   });
 
   it("counts documents, not mentions", () => {
-    // 4 of 5 documents (80%); the outside document also names the patent, so mentions are only 4 of 6.
     expect(
       resolveOne([
         { client: "11111", count: 4, family: "20001" },
         { client: "22222", count: 1, family: "30002", patentToo: true },
-      ])[0]
+      ])[0],
+      "4 of 5 documents (80%) dominate although the outside patent mention leaves mentions at 4 of 6"
     ).toBe("mention-dominance");
   });
 
@@ -454,6 +470,10 @@ describe("practice KG matter tables", () => {
     const patent = node("patent", "12345678");
     const directPatent = node("patent", "55555555");
     const document = node("document", "sha256:a");
+    const oneClientNumberUnderTwoNamesLeftUnnamedNotGuessed = [
+      registerRow("22222", "20001US04", "Second Client"),
+      registerRow("22222", "20001US05", "Second Client LLC"),
+    ];
     const tables = buildMatterTables(
       PracticeKgMatterGraph.make({
         edges: [
@@ -483,9 +503,7 @@ describe("practice KG matter tables", () => {
           registerRow("11111", "20001US01", " Example Client "),
           registerRow("11111", "20001US02", "Example Client"),
           registerRow("11111", "20001US03"),
-          // one client number under two names is left unnamed rather than guessed
-          registerRow("22222", "20001US04", "Second Client"),
-          registerRow("22222", "20001US05", "Second Client LLC"),
+          ...oneClientNumberUnderTwoNamesLeftUnnamedNotGuessed,
           registerRow("33333", "20001US06", "  "),
         ],
       })

@@ -47,8 +47,6 @@ export const DependencyMap = DependencyBlock.pipe(
 );
 
 /**
- * A model's four dependency records.
- *
  * **Example** (Check a model's dependency records)
  *
  * ```ts
@@ -79,8 +77,6 @@ export class DependencyBlocks extends S.Opaque<DependencyBlocks, { readonly bran
   }).pipe($I.annoteSchema("DependencyBlocks", { description: "A model's four dependency records." }))
 ) {}
 /**
- * Companion types for {@link DependencyBlocks}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -95,9 +91,6 @@ export declare namespace DependencyBlocks {
 }
 
 /**
- * The dependency records a manifest carries with the expected shape; a
- * malformed or absent block is omitted.
- *
  * **Example** (Check a partial set of dependency records)
  *
  * ```ts
@@ -133,8 +126,6 @@ export class PresentDependencyBlocks extends S.Opaque<PresentDependencyBlocks, {
   )
 ) {}
 /**
- * Companion types for {@link PresentDependencyBlocks}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -56,8 +56,6 @@ const $I = $RepoCliId.create("internal/quality/SchemaFirstPolicyFinding");
 export const SchemaFirstPolicyIssuePrefix = "[schema-first:issue] " as const;
 
 /**
- * Severity vocabulary for schema-first policy findings.
- *
  * **Details**
  *
  * Represents both spellings observed across the quality lanes: the

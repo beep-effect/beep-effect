@@ -6,8 +6,6 @@
  */
 
 /**
- * Claim lifecycle error exports.
- *
  * **Example** (Create invalid transition error)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./ClaimLifecycle.errors.ts";
 /**
- * Claim lifecycle model exports.
- *
  * **Example** (Access lifecycle enum value)
  *
  * ```ts

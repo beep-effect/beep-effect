@@ -228,8 +228,6 @@ const slugify = (title: string): string =>
 const yamlScalar = (value: string): string => `"${pipe(value, Str.replace(/\\/g, "\\\\"), Str.replace(/"/g, '\\"'))}"`;
 
 /**
- * Input of `beep goals decisions add`, as parsed from the command line.
- *
  * **Details**
  *
  * `final`, `attributeRed` and `operatorRuling` write the completion-claim

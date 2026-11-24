@@ -30,8 +30,6 @@ const OpposedRelators = LawPractice.LegalPositionRelatorId.pipe(S.HashSet, S.toC
 );
 
 /**
- * Two stored relations that overlap in scope and are prima facie opposed.
- *
  * **When to use**
  *
  * Use as the whole output of the scope-overlap-and-opposition check, and as the

@@ -17,8 +17,7 @@ const integrationShards: ReadonlyArray<ReadonlyArray<string>> = integrationPlan.
 const unitShards: ReadonlyArray<ReadonlyArray<string>> = unitPlan.shards;
 const plannedSeconds: Readonly<Record<string, number>> = integrationPlan.fileSeconds;
 
-// One-based shard that names `relative` in `shards`; none when the plan does not list the file.
-const plannedShard = (shards: ReadonlyArray<ReadonlyArray<string>>, relative: string): O.Option<number> =>
+const oneBasedPlannedShard = (shards: ReadonlyArray<ReadonlyArray<string>>, relative: string): O.Option<number> =>
   O.map(
     A.findFirstIndex(shards, (entries) => A.contains(entries, relative)),
     (index) => index + 1
@@ -55,14 +54,12 @@ export class LawPracticeSequencer extends BaseSequencer {
     );
   }
 
-  // The files `shards` plans for shard `index`, then the files no plan names, hash-sharded by
-  // Vitest over that unknown set alone so each of them still runs in exactly one shard.
   private placeByPlan(
     files: TestSpecification[],
     shards: ReadonlyArray<ReadonlyArray<string>>,
     index: number
   ): Promise<TestSpecification[]> {
-    const assignment = (file: TestSpecification) => plannedShard(shards, this.relativePath(file));
+    const assignment = (file: TestSpecification) => oneBasedPlannedShard(shards, this.relativePath(file));
     const planned = A.filter(files, (file) => O.contains(assignment(file), index));
     const unknown = A.filter(files, (file) => O.isNone(assignment(file)));
     return super.shard(unknown).then((rest) => A.appendAll(planned, rest));
@@ -78,9 +75,8 @@ export class LawPracticeSequencer extends BaseSequencer {
 
   override sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     if (!this.integrationPlanApplies(files)) return super.sort(files);
-    // Unknown files first (unmeasured, treated as heavy), then measured files heaviest first.
-    const weight = (file: TestSpecification): number =>
+    const heaviestFirstUnmeasuredAsHeaviest = (file: TestSpecification): number =>
       -O.getOrElse(R.get(plannedSeconds, this.relativePath(file)), () => Number.POSITIVE_INFINITY);
-    return Promise.resolve(A.sort(files, Order.mapInput(Order.Number, weight)));
+    return Promise.resolve(A.sort(files, Order.mapInput(Order.Number, heaviestFirstUnmeasuredAsHeaviest)));
   }
 }

@@ -1,0 +1,33 @@
+{
+  "previous": {
+    "//": "28167d7aecafce0b8faab0a91e3f39c31c96c90535e5673cb7e6f618af9bdfc6",
+    "@beep/langextract": "b96a6ef3976ebffaddeedbaa59eea381f35d1f558ed36d0be987c6d816e8b1cc",
+    "@beep/law-practice-use-cases": "cfc29bb755e85592cec55b14752f3ce077177f70b3a97391c7d43cf70e2c6b18",
+    "@beep/nlp": "587e8507fbf1f00a63a42c7338807ab6086dd23747dab77760183e7de5d4fc89",
+    "@beep/nlp-processing": "5b9e7e1a3d294ba1e0f764b91ef7c691cae64b8780f31d8c96af65f67d4c4fb3",
+    "@beep/semantica": "dcfb35d75302f692553da1401966bd2d5bfa41fdb60e2032275f847ce4166e9e",
+    "@beep/wink": "6585bb9ae21ec7eb4dab62d171566924a2fe4407ca91e42f5f3d6eed4cdfeb79",
+    "@beep/annotation": "40ef2e72de0fbb7bba8762d8f5b3cab317b0f173135958796cb7ea5d8b20aa93"
+  },
+  "review": {
+    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
+    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
+      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/annotation",
+    "@beep/langextract",
+    "@beep/law-practice-use-cases",
+    "@beep/nlp",
+    "@beep/nlp-processing",
+    "@beep/semantica",
+    "@beep/wink"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

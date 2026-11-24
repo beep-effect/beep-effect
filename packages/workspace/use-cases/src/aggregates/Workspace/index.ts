@@ -6,8 +6,6 @@
  */
 
 /**
- * Workspace vault RPC exports.
- *
  * @category protocols
  * @since 0.0.0
  */

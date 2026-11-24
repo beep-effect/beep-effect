@@ -7,6 +7,7 @@
 import { DocStructureRuleFamily } from "@beep/law-practice-domain";
 import {
   OfficeActionStructureAttempt,
+  OfficeActionStructureAttemptRead,
   OfficeActionStructureStorageError,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
@@ -23,6 +24,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const storageError = (message: string) => OfficeActionStructureStorageError.make({ message });
+const JsonAttemptRead = S.fromJsonString(OfficeActionStructureAttemptRead);
 const JsonAttempt = S.fromJsonString(OfficeActionStructureAttempt);
 const DocumentKey = S.fromJsonString(S.Struct({ scope: S.String, document: S.String }));
 const documentKey = Effect.fn("OfficeActionStructureStore.documentKey")((row: OfficeActionStructureAttempt) =>
@@ -84,7 +86,7 @@ export const officeActionStructureFileStore = (filename: string) =>
         if (!Str.endsWith("\n")(text)) return yield* storageError("Incomplete attempt log.");
         const rows = yield* Effect.forEach(
           Str.split(Str.slice(0, -1)(text), "\n"),
-          (line) => S.decodeEffect(JsonAttempt)(line),
+          (line) => S.decodeEffect(JsonAttemptRead)(line),
           {
             concurrency: 1,
           }
@@ -108,10 +110,9 @@ export const officeActionStructureFileStore = (filename: string) =>
         const expected = O.map(preceding, (row) => row.attemptId);
         if (!O.makeEquivalence(Str.Equivalence)(expected, attempt.previousAttemptId))
           return yield* storageError("Attempt predecessor must name the latest document attempt.");
-        // Schema-valid receipts contain only JSON-safe fields; an encoder failure is an invariant defect.
-        const encoded = yield* S.encodeEffect(JsonAttempt)(attempt).pipe(Effect.orDie);
+        const jsonSafeSchemaValidReceipt = yield* S.encodeEffect(JsonAttempt)(attempt).pipe(Effect.orDie);
         yield* fs
-          .writeFileString(filename, `${encoded}\n`, { flag: "a" })
+          .writeFileString(filename, `${jsonSafeSchemaValidReceipt}\n`, { flag: "a" })
           .pipe(Effect.mapError(() => storageError("Cannot append attempt receipt.")));
       });
       return OfficeActionStructureStore.of({

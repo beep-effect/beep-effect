@@ -27,8 +27,6 @@ import type { PageOptions } from "./Rest.ts";
 const $I = $GithubId.create("GitHubRelease");
 
 /**
- * A release, projected to the fields callers read.
- *
  * **Example** (Construct release metadata)
  *
  * ```ts
@@ -84,8 +82,6 @@ export class ReleaseInfo extends S.Opaque<ReleaseInfo, { readonly brand: unique 
 ) {}
 
 /**
- * A file attached to a release.
- *
  * **Example** (Construct a release asset)
  *
  * ```ts

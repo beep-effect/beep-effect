@@ -20,8 +20,6 @@ import type * as PlatformError from "effect/PlatformError";
 const $I = $RepoCliId.create("internal/state/WorkstationState");
 
 /**
- * The repository identity a state file is partitioned by.
- *
  * **Example** (Check a state repository)
  *
  * ```ts

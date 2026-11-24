@@ -67,8 +67,6 @@ export const EbsVolumeType = LiteralKit(["gp2", "gp3", "io1", "io2", "st1", "sc1
 );
 
 /**
- * Decoded {@link EbsVolumeType}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +77,6 @@ const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * EBS settings of one launch-template block device.
- *
  * **Example** (Decode a gp3 root volume)
  *
  * ```ts
@@ -108,8 +104,6 @@ export class LaunchTemplateEbs extends S.Opaque<LaunchTemplateEbs, { readonly br
 ) {}
 
 /**
- * Companion types for {@link LaunchTemplateEbs}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -124,8 +118,6 @@ export declare namespace LaunchTemplateEbs {
 }
 
 /**
- * One block device mapping of the launch template.
- *
  * **Example** (Decode an AL2023 root mapping)
  *
  * ```ts
@@ -150,8 +142,6 @@ export class LaunchTemplateBlockDevice extends S.Opaque<LaunchTemplateBlockDevic
 ) {}
 
 /**
- * Companion types for {@link LaunchTemplateBlockDevice}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -184,8 +174,6 @@ export const SpotInstanceType = LiteralKit(["one-time", "persistent"]).pipe(
 );
 
 /**
- * Decoded {@link SpotInstanceType}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -210,16 +198,12 @@ export const SpotInterruptionBehavior = LiteralKit(["hibernate", "stop", "termin
 );
 
 /**
- * Decoded {@link SpotInterruptionBehavior}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SpotInterruptionBehavior = typeof SpotInterruptionBehavior.Type;
 
 /**
- * Spot market options of the launch template.
- *
  * **Example** (Decode one-time Spot options)
  *
  * ```ts
@@ -255,8 +239,6 @@ export class LaunchTemplateMarketOptions extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link LaunchTemplateMarketOptions}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -271,8 +253,6 @@ export declare namespace LaunchTemplateMarketOptions {
 }
 
 /**
- * An `enabled` / `disabled` switch.
- *
  * **Example** (Read one literal)
  *
  * ```ts
@@ -289,8 +269,6 @@ export const EnabledState = LiteralKit(["enabled", "disabled"]).pipe(
 );
 
 /**
- * Decoded {@link EnabledState}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -315,8 +293,6 @@ export const ShutdownBehavior = LiteralKit(["stop", "terminate"]).pipe(
 );
 
 /**
- * Decoded {@link ShutdownBehavior}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -341,16 +317,12 @@ export const HttpTokensState = LiteralKit(["optional", "required"]).pipe(
 );
 
 /**
- * Decoded {@link HttpTokensState}.
- *
  * @category models
  * @since 0.0.0
  */
 export type HttpTokensState = typeof HttpTokensState.Type;
 
 /**
- * Instance metadata service options of the launch template.
- *
  * **Example** (Decode IMDSv2 with instance tags)
  *
  * ```ts
@@ -383,8 +355,6 @@ export class LaunchTemplateMetadataOptions extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link LaunchTemplateMetadataOptions}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -399,8 +369,6 @@ export declare namespace LaunchTemplateMetadataOptions {
 }
 
 /**
- * Resources a launch template may tag at launch.
- *
  * **Example** (Read one literal)
  *
  * ```ts
@@ -422,8 +390,6 @@ export const LaunchTagResourceType = LiteralKit([
 );
 
 /**
- * Decoded {@link LaunchTagResourceType}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -460,8 +426,6 @@ export class LaunchTagSpecification extends S.Opaque<LaunchTagSpecification, { r
 ) {}
 
 /**
- * Companion types for {@link LaunchTagSpecification}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -476,8 +440,6 @@ export declare namespace LaunchTagSpecification {
 }
 
 /**
- * Props of a {@link RunnerLaunchTemplate}.
- *
  * **Details**
  *
  * `imageId` takes an AMI id or an SSM parameter reference in EC2's
@@ -527,8 +489,6 @@ export class RunnerLaunchTemplateProps extends S.Opaque<RunnerLaunchTemplateProp
 ) {}
 
 /**
- * Companion types for {@link RunnerLaunchTemplateProps}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -543,8 +503,6 @@ export declare namespace RunnerLaunchTemplateProps {
 }
 
 /**
- * Attributes EC2 reports for the launch template.
- *
  * **Example** (Decode observed attributes)
  *
  * ```ts
@@ -582,8 +540,6 @@ export class RunnerLaunchTemplateAttributes extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link RunnerLaunchTemplateAttributes}.
- *
  * @category models
  * @since 0.0.0
  */

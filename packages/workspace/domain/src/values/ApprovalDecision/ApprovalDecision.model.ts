@@ -10,8 +10,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $WorkspaceDomainId.create("values/ApprovalDecision/ApprovalDecision.model");
 
 /**
- * Review decision vocabulary for approval gates.
- *
  * **Example** (Check pending decision)
  *
  * ```ts
@@ -30,8 +28,6 @@ export const ApprovalDecision = LiteralKit(["pending"]).pipe(
 );
 
 /**
- * Runtime type for {@link ApprovalDecision}.
- *
  * **Example** (Type pending decision value)
  *
  * ```ts

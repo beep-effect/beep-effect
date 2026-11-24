@@ -189,8 +189,6 @@ export const SequenceBreakNotificationStage = LiteralKit(["initial", "reminder",
 );
 
 /**
- * Decoded escalation stage.
- *
  * @see {@link SequenceBreakNotificationStage} for the runtime schema and escalation stages.
  * @category type-level
  * @since 0.0.0
@@ -218,8 +216,6 @@ export const SequenceBreakNotificationTransport = LiteralKit(["desktop", "ntfy"]
 );
 
 /**
- * Decoded sequence-break delivery transport.
- *
  * @see {@link SequenceBreakNotificationTransport} for the runtime schema and delivery channels.
  * @category type-level
  * @since 0.0.0
@@ -298,8 +294,6 @@ export const SequenceBreakDeliveryFailureReason = LiteralKit([
 export type SequenceBreakDeliveryFailureReason = typeof SequenceBreakDeliveryFailureReason.Type;
 
 /**
- * A notification transport accepted the content-free delivery request.
- *
  * **Example** (Record a delivered notification)
  *
  * ```ts
@@ -322,8 +316,6 @@ export class SequenceBreakDeliverySent extends S.Opaque<SequenceBreakDeliverySen
 ) {}
 
 /**
- * A notification transport was deliberately skipped for a bounded operational reason.
- *
  * **Example** (Skip delivery while the storm damper is engaged)
  *
  * ```ts
@@ -352,8 +344,6 @@ export class SequenceBreakDeliverySkipped extends S.Opaque<
 ) {}
 
 /**
- * A notification transport failed without retaining response or command content.
- *
  * **Example** (Record a transport timeout without its output)
  *
  * ```ts
@@ -433,6 +423,20 @@ const waitReasonForTarget = SequenceBreakTarget.match({
 const areHookPulseWaitReasonsEquivalent = S.toEquivalence(HookPulseWaitReason);
 const isGreaterThanOrEqualToNumber = Order.isGreaterThanOrEqualTo(Num.Order);
 
+const dampingArbitraryOrderingEndpointsConstructivelyWhileDecodeStillChecksTheInvariant = (): SchemaAST.Link =>
+  S.link<SequenceBreakDampingV1>()(
+    S.Struct(SequenceBreakDampingV1.fields),
+    SchemaTransformation.transform({
+      decode: (value) =>
+        SequenceBreakDampingV1.make({
+          ...value,
+          claimedEpochMs: S.Natural.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
+          expiresEpochMs: S.Natural.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
+        }),
+      encode: identity,
+    })
+  );
+
 /**
  * Atomic storm-damping claim shared by every clone and worktree.
  *
@@ -483,20 +487,7 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1, { re
   ),
   $I.annote("SequenceBreakDampingV1", {
     description: "Content-free shared claim that damps duplicate sequence-break notifications.",
-    // Generate ordered endpoints constructively; decoding still checks the original invariant.
-    toCodecArbitrary: (): SchemaAST.Link =>
-      S.link<SequenceBreakDampingV1>()(
-        S.Struct(SequenceBreakDampingV1.fields),
-        SchemaTransformation.transform({
-          decode: (value) =>
-            SequenceBreakDampingV1.make({
-              ...value,
-              claimedEpochMs: S.Natural.make(Num.min(value.claimedEpochMs, value.expiresEpochMs)),
-              expiresEpochMs: S.Natural.make(Num.max(value.claimedEpochMs, value.expiresEpochMs)),
-            }),
-          encode: identity,
-        })
-      ),
+    toCodecArbitrary: dampingArbitraryOrderingEndpointsConstructivelyWhileDecodeStillChecksTheInvariant,
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(SequenceBreakDampingV1);
@@ -509,9 +500,16 @@ export class SequenceBreakDampingV1 extends S.Class<SequenceBreakDampingV1, { re
   static readonly encodeJsonResult = S.encodeResult(S.fromJsonString(SequenceBreakDampingV1));
 }
 
+const notificationArbitraryDerivingTheDependentWaitReasonInsteadOfDiscardingMismatches = (): SchemaAST.Link =>
+  S.link<SequenceBreakNotificationV1>()(
+    S.Struct(SequenceBreakNotificationV1.fields),
+    SchemaTransformation.transform({
+      decode: (value) => SequenceBreakNotificationV1.make({ ...value, waitReason: waitReasonForTarget(value.target) }),
+      encode: identity,
+    })
+  );
+
 /**
- * Privacy-safe evidence for one sequence-break delivery decision.
- *
  * **Details**
  *
  * The schema has no prompt, command, tool-argument, tool-result, message, path,
@@ -572,16 +570,7 @@ export class SequenceBreakNotificationV1 extends S.Class<
   ),
   $I.annote("SequenceBreakNotificationV1", {
     description: "Privacy-safe delivery evidence for one time-based sequence-break notification stage.",
-    // Derive the dependent reason instead of discarding independently generated mismatches.
-    toCodecArbitrary: (): SchemaAST.Link =>
-      S.link<SequenceBreakNotificationV1>()(
-        S.Struct(SequenceBreakNotificationV1.fields),
-        SchemaTransformation.transform({
-          decode: (value) =>
-            SequenceBreakNotificationV1.make({ ...value, waitReason: waitReasonForTarget(value.target) }),
-          encode: identity,
-        })
-      ),
+    toCodecArbitrary: notificationArbitraryDerivingTheDependentWaitReasonInsteadOfDiscardingMismatches,
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(SequenceBreakNotificationV1);

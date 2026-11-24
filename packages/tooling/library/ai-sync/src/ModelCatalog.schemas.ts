@@ -62,8 +62,6 @@ export const ModelId = S.NonEmptyString.pipe(
 );
 
 /**
- * Bare upstream model identifier without an effort suffix.
- *
  * @see {@link ModelId} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -104,8 +102,6 @@ export const EffortLevel = EffortLevelKit.pipe(
 );
 
 /**
- * Reasoning-effort level accepted by at least one routing surface.
- *
  * @see {@link EffortLevel} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -162,8 +158,6 @@ const ProviderSectionKit = LiteralKit([
 ]);
 
 /**
- * Known top-level provider section of the upstream model manifest.
- *
  * **Details**
  *
  * These are the thirteen keys observed live on 2026-09-22. `gemini-cli` is
@@ -193,8 +187,6 @@ export const ProviderSection = ProviderSectionKit.pipe(
 );
 
 /**
- * Known top-level provider section of the upstream model manifest.
- *
  * @see {@link ProviderSection} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -220,8 +212,6 @@ export const ProviderSectionOptions = ProviderSectionKit.literals;
 const CatalogSourceKit = LiteralKit(["router-for-me", "codex-cache", "grok-cache", "cursor-agent", "proxy-v1-models"]);
 
 /**
- * One layer of the assembled catalog.
- *
  * **Details**
  *
  * `router-for-me` supplies existence and effort ladders; the other four are
@@ -254,8 +244,6 @@ export const CatalogSource = CatalogSourceKit.pipe(
 );
 
 /**
- * One layer of the assembled model catalog.
- *
  * @see {@link CatalogSource} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -296,8 +284,6 @@ const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.Nu
 // ── Upstream manifest (models.router-for.me) ────────────────────────────────
 
 /**
- * Upstream `thinking` block describing a model's reasoning support.
- *
  * **Details**
  *
  * Every field is optional because the three observed variants are disjoint: a
@@ -337,8 +323,6 @@ export class UpstreamThinkingSupport extends S.Opaque<UpstreamThinkingSupport, {
 ) {}
 
 /**
- * One model entry inside an upstream provider section.
- *
  * **Details**
  *
  * `id` is the only required field. Unknown fields survive decoding and
@@ -390,8 +374,6 @@ export class UpstreamModelEntry extends S.Opaque<UpstreamModelEntry, { readonly 
 ) {}
 
 /**
- * The whole upstream manifest: provider section to model entries.
- *
  * **Details**
  *
  * The key stays an open `string` rather than {@link ProviderSection} so a new
@@ -417,8 +399,6 @@ export const UpstreamCatalog = S.Record(S.String, S.Array(UpstreamModelEntry)).p
 );
 
 /**
- * Upstream model manifest keyed by provider section.
- *
  * @see {@link UpstreamCatalog} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -457,8 +437,6 @@ export const CodexVisibility = CodexVisibilityKit.pipe(
 );
 
 /**
- * Whether the Codex CLI lists or hides a cached model slug.
- *
  * @see {@link CodexVisibility} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -483,8 +461,6 @@ export type CodexVisibility = typeof CodexVisibility.Type;
 export const CodexVisibilityIs = CodexVisibilityKit.is;
 
 /**
- * One rung of a Codex slug's reasoning ladder.
- *
  * **Details**
  *
  * `effort` stays a raw string for the same reason {@link
@@ -519,8 +495,6 @@ export class CodexReasoningLevel extends S.Opaque<CodexReasoningLevel, { readonl
 ) {}
 
 /**
- * One model slug in the Codex CLI's cached model list.
- *
  * **Details**
  *
  * The cache keys models by `slug`, not `id` — its `id` field is `null` on
@@ -558,8 +532,6 @@ export class CodexCacheEntry extends S.Opaque<CodexCacheEntry, { readonly brand:
 ) {}
 
 /**
- * The Codex CLI model cache at `$HOME/.codex/models_cache.json`.
- *
  * **Details**
  *
  * Known routing fields are validated; every other cache field is retained
@@ -597,8 +569,6 @@ export class CodexModelsCache extends S.Opaque<CodexModelsCache, { readonly bran
 // ── Cursor seat overlay ─────────────────────────────────────────────────────
 
 /**
- * A Cursor seat identifier, with effort and speed tier baked into the id.
- *
  * **Details**
  *
  * `cursor-agent models` prints `<id> - <label>` per line; the id alone is what
@@ -626,8 +596,6 @@ export const CursorModelId = S.NonEmptyString.pipe(
 );
 
 /**
- * Cursor seat identifier with effort and speed tier baked into the id.
- *
  * @see {@link CursorModelId} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -656,8 +624,6 @@ export const CursorModelList = S.Array(CursorModelId).pipe(
 );
 
 /**
- * Seat ids parsed from the cursor-agent model listing.
- *
  * @see {@link CursorModelList} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -667,8 +633,6 @@ export type CursorModelList = typeof CursorModelList.Type;
 // ── Grok CLI model cache overlay ────────────────────────────────────────────
 
 /**
- * One rung of a Grok model's reasoning ladder.
- *
  * **Details**
  *
  * The Grok cache spells a rung as an object rather than a bare string, with
@@ -703,8 +667,6 @@ export class GrokReasoningEffort extends S.Opaque<GrokReasoningEffort, { readonl
 ) {}
 
 /**
- * The `info` block describing one cached Grok model.
- *
  * **Example** (Read a cached Grok model)
  *
  * ```ts
@@ -738,8 +700,6 @@ export class GrokModelInfo extends S.Opaque<GrokModelInfo, { readonly brand: uni
 ) {}
 
 /**
- * One entry of the Grok CLI model cache.
- *
  * **Details**
  *
  * The entry wraps its `info` block alongside per-model credential overrides
@@ -769,8 +729,6 @@ export class GrokCacheEntry extends S.Opaque<GrokCacheEntry, { readonly brand: u
 ) {}
 
 /**
- * The Grok CLI model cache at `$HOME/.grok/models_cache.json`.
- *
  * **Details**
  *
  * Unlike the Codex cache, `models` is an *object keyed by model id*
@@ -976,8 +934,6 @@ export class CatalogModel extends S.Opaque<CatalogModel, { readonly brand: uniqu
 ) {}
 
 /**
- * Provenance of one dated catalog snapshot.
- *
  * **Details**
  *
  * `sources` records which overlays actually answered, so a check run can say
@@ -1017,8 +973,6 @@ export class CatalogSnapshotSummary extends S.Opaque<CatalogSnapshotSummary, { r
 ) {}
 
 /**
- * A dated catalog snapshot written to the home ledger.
- *
  * **Details**
  *
  * `models` stays an ordered array in the encoded form so a snapshot file
@@ -1058,8 +1012,6 @@ export class CatalogSnapshot extends S.Opaque<CatalogSnapshot, { readonly brand:
 ) {}
 
 /**
- * A model whose effort ladder moved between two snapshots.
- *
  * **Example** (Record a ladder change)
  *
  * ```ts

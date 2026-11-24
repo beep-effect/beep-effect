@@ -64,8 +64,6 @@ export const ConfirmationSource = S.Union([
 );
 
 /**
- * Type for {@link ConfirmationSource}.
- *
  * **Example** (Annotate a source)
  *
  * ```ts

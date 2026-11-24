@@ -28,8 +28,6 @@ import type { ThreadTimeline } from "./ThreadTimeline.ts";
 const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadStore");
 
 /**
- * Input accepted by {@link ThreadStoreShape.createThread}.
- *
  * **Example** (Make create-thread input)
  *
  * ```ts
@@ -66,8 +64,6 @@ export class CreateThreadInput extends S.Opaque<CreateThreadInput, { readonly br
 ) {}
 
 /**
- * Input accepted by {@link ThreadStoreShape.appendTurn}.
- *
  * **Example** (Make append-turn input)
  *
  * ```ts
@@ -116,8 +112,6 @@ export class AppendTurnInput extends S.Opaque<AppendTurnInput, { readonly brand:
 ) {}
 
 /**
- * Result returned by {@link ThreadStoreShape.appendTurn}.
- *
  * **Example** (List result field keys)
  *
  * ```ts
@@ -148,8 +142,6 @@ export class AppendTurnResult extends S.Opaque<AppendTurnResult, { readonly bran
 ) {}
 
 /**
- * Input accepted by {@link ThreadStoreShape.setTitleIfEmpty}.
- *
  * **Example** (Make set-title input)
  *
  * ```ts

@@ -35,7 +35,6 @@ const registerBlockScalarContentCases = (): void => {
   }
 };
 
-/** Document markers terminate quoted and block scalars under every separator. */
 const registerDocumentBoundaryCases = (): void => {
   for (const marker of ["---", "..."]) {
     for (const suffix of ["", " ", "\t", "\n", "\r"]) {
@@ -54,7 +53,6 @@ const registerDocumentBoundaryCases = (): void => {
   }
 };
 
-/** Tab indentation before nested block syntax, across prefixes, indicators and separators. */
 const registerTabIndentationCases = (): void => {
   for (const prefix of ["-", "key:"]) {
     for (const indicator of ["-", "?"]) {

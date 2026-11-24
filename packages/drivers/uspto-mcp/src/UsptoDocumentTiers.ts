@@ -142,8 +142,6 @@ export const DocumentsProjectionOutput = S.make<(typeof DocumentsProjectionOutpu
 );
 
 /**
- * Type for {@link DocumentsProjectionOutput}.
- *
  * **Example** (Type annotated Inline result)
  *
  * ```ts
@@ -199,8 +197,6 @@ export const MintFetchableHandle = Fn({
 );
 
 /**
- * Type for {@link MintFetchableHandle}.
- *
  * **Example** (Satisfy mint handle type)
  *
  * ```ts
@@ -223,8 +219,6 @@ export const MintFetchableHandle = Fn({
 export type MintFetchableHandle = typeof MintFetchableHandle.Type;
 
 /**
- * Options for {@link projectDocumentsWithinBudget}.
- *
  * **Example** (Make budget options object)
  *
  * ```ts

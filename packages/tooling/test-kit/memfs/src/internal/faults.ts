@@ -22,8 +22,6 @@ import type {
 const $I = $MemfsId.create("internal/faults");
 
 /**
- * Reports a fault key that does not name a function-valued filesystem member.
- *
  * **Example** (Inspect an unknown fault key)
  *
  * ```ts

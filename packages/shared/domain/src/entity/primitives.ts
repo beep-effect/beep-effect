@@ -85,8 +85,6 @@ export const Sha256 = Sha256Hex;
 export type Sha256 = Sha256HexType;
 
 /**
- * Ed25519 signature encoded as base64url text.
- *
  * **Example** (Decode base64url signature)
  *
  * ```ts
@@ -112,8 +110,6 @@ export const Ed25519Signature = Base64UrlToken.pipe(
 );
 
 /**
- * Runtime type for {@link Ed25519Signature}.
- *
  * **Example** (Type an Ed25519 signature)
  *
  * ```ts
@@ -129,8 +125,6 @@ export const Ed25519Signature = Base64UrlToken.pipe(
 export type Ed25519Signature = typeof Ed25519Signature.Type;
 
 /**
- * Stable encryption-key identifier.
- *
  * **Example** (Decode encryption key id)
  *
  * ```ts
@@ -156,8 +150,6 @@ export const EncryptionKeyId = StableToken.pipe(
 );
 
 /**
- * Runtime type for {@link EncryptionKeyId}.
- *
  * **Example** (Type an encryption key id)
  *
  * ```ts
@@ -173,8 +165,6 @@ export const EncryptionKeyId = StableToken.pipe(
 export type EncryptionKeyId = typeof EncryptionKeyId.Type;
 
 /**
- * Hybrid logical clock token.
- *
  * **Example** (Decode hybrid logical clock)
  *
  * ```ts
@@ -200,8 +190,6 @@ export const HybridLogicalClock = StableToken.pipe(
 );
 
 /**
- * Runtime type for {@link HybridLogicalClock}.
- *
  * **Example** (Type a hybrid logical clock)
  *
  * ```ts
@@ -244,8 +232,6 @@ export const VectorClock = S.Record(S.NonEmptyString, S.Natural).pipe(
 );
 
 /**
- * Runtime type for {@link VectorClock}.
- *
  * **Example** (Type a vector clock)
  *
  * ```ts

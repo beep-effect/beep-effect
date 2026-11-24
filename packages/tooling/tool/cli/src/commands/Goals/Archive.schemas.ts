@@ -27,8 +27,6 @@ import { PacketRoot, PacketSlug, PacketStatusToken } from "./PacketCore/PacketCo
 const $I = $RepoCliId.create("commands/Goals/Archive.schemas");
 
 /**
- * GitHub `owner/repo` reference of the archive repository.
- *
  * **Example** (Validate repository references)
  *
  * ```ts
@@ -58,8 +56,6 @@ export const ArchiveRepoRef = S.String.check(
 );
 
 /**
- * GitHub `owner/repo` reference of the archive repository.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -87,8 +83,6 @@ export const TreeHash = GitCommitSha.pipe(
 );
 
 /**
- * Git tree object name of a packet directory.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -156,8 +150,6 @@ export const RetentionReason = S.NonEmptyString.pipe(
 );
 
 /**
- * Why a terminal packet keeps its full evidence on `main`.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -320,8 +312,6 @@ export const InboundLinkForm = LiteralKit(["link", "code-span"]).pipe(
 );
 
 /**
- * Runtime type of {@link InboundLinkForm}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -405,8 +395,6 @@ export class ArchivePlanEntry extends S.Opaque<ArchivePlanEntry, { readonly bran
 ) {}
 
 /**
- * A reviewable, content-addressed archive plan.
- *
  * **Details**
  *
  * `planId` is the sha-256 of the canonical JSON of the encoded plan without
@@ -445,8 +433,6 @@ export class ArchivePlan extends S.Opaque<ArchivePlan, { readonly brand: unique 
 ) {}
 
 /**
- * One packet's outcome in an archive receipt.
- *
  * **Example** (Construct a verified entry)
  *
  * ```ts
@@ -485,8 +471,6 @@ export class ArchiveReceiptEntry extends S.Opaque<ArchiveReceiptEntry, { readonl
 ) {}
 
 /**
- * Receipt of an executed archive plan.
- *
  * **Example** (Construct an empty receipt)
  *
  * ```ts
@@ -518,8 +502,6 @@ export class ArchiveReceipt extends S.Opaque<ArchiveReceipt, { readonly brand: u
 ) {}
 
 /**
- * One row of the archive repository's `ARCHIVE-INDEX.md`.
- *
  * **Example** (Construct an index row)
  *
  * ```ts

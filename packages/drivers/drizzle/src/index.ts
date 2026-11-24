@@ -13,15 +13,11 @@
  */
 
 /**
- * Public Drizzle driver error exports.
- *
  * @since 0.0.0
  * @category errors
  */
 export * from "./Drizzle.errors.ts";
 /**
- * Public Drizzle driver service exports.
- *
  * @since 0.0.0
  * @category services
  */

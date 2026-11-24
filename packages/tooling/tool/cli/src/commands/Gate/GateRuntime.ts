@@ -85,8 +85,6 @@ export class GateToolExit extends S.TaggedError<GateToolExit, { readonly brand: 
 }
 
 /**
- * The directory a gate was asked to run in is not a package of a repository.
- *
  * **Example** (Name the directory)
  *
  * ```ts

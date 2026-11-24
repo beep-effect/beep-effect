@@ -240,8 +240,6 @@ export const AnchoredBox = S.Union([
   $I.annoteSchema("AnchoredBox", { description: "A legacy-tolerant anchored floating box." })
 );
 /**
- * Decoded anchored floating-box value.
- *
  * **Example** (Type a top-left box)
  *
  * ```ts import.meta.vitest name="Type a top-left box"

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-23",
+  "generatedOn": "2026-11-24",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -277,7 +277,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 349,
+      "line": 335,
       "owner": "@beep/freshbooks",
       "reason": "FreshBooks client records carry free-text email addresses populated from the account holder client database; this decode boundary must accept whatever the API returns rather than reject a client on a malformed address."
     },
@@ -287,7 +287,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 297,
+      "line": 283,
       "owner": "@beep/freshbooks",
       "reason": "The FreshBooks identity (/me) email is external free-text returned by the API; this decode boundary must accept it verbatim rather than fail identity resolution on a non-strict address."
     },
@@ -307,7 +307,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 99,
+      "line": 93,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -317,7 +317,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 210,
+      "line": 204,
       "owner": "@beep/hubspot",
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
@@ -684,14 +684,6 @@
       "status": "exception",
       "owner": "@beep/lexical-schema",
       "reason": "Lossless editor-state envelope whose root and nested nodes admit arbitrary future extension keys. S.StructWithRest preserves those keys exactly; an S.Class would close the envelope and violate the property-tested wire identity contract."
-    },
-    {
-      "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
-      "symbol": "SpanFields",
-      "kind": "unbranded-schema-class",
-      "status": "exception",
-      "owner": "@beep/nlp",
-      "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Private span shape behind the exported Contract.Span refinement; nested `span: { start, end }` literals are built across langextract, file-processing, law-practice and semantica and the class is not nameable outside nlp. Follow-up: export a Span constructor and brand it. Follow-up: brand nominally once the blocker above is removed."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/Fold.models.ts",
@@ -1075,7 +1067,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-precision-audit",
-      "line": 60,
+      "line": 58,
       "owner": "@beep/schema-org",
       "reason": "External protocol: schema.org `email` is a Text property, and node values are copied verbatim from upstream metadata (package manifests, author records) that may carry `mailto:` URIs or non-strict addresses; a strict email schema would reject valid JSON-LD. Surfaced, not introduced, by the exact-optional-keys migration (the detector did not read the previous `S.optional` spelling)."
     },
@@ -1155,7 +1147,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1336,
+      "line": 1314,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory parser over optional API image maps and Markdown content; it normalizes directly into the schema-backed PatentFigure model and neither decodes nor persists the transient option bag."
     },
@@ -1165,7 +1157,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1499,
+      "line": 1477,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure in-memory text parser whose required content and optional title are already strings; the transient option bag is call-site ergonomics and never crosses a decode or persistence boundary."
     },
@@ -1175,7 +1167,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 932,
+      "line": 910,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory office and kind-code strings; it returns Effect Option and the transient option bag is never decoded or persisted."
     },
@@ -1185,7 +1177,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1092,
+      "line": 1070,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure projection from optional API metadata and content into the schema-backed PatentDisplay model; the transient option bag is assembled in-process and never decoded or persisted."
     },
@@ -1195,7 +1187,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 849,
+      "line": 827,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure lookup over optional in-memory country text and an Effect Option kind code; it returns the schema-backed PatentStatus literal and the transient option bag is never decoded or persisted."
     },
@@ -1205,7 +1197,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1427,
+      "line": 1405,
       "owner": "@beep/law-practice-domain",
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
@@ -1325,7 +1317,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 220,
+      "line": 221,
       "owner": "@beep/law-practice-server",
       "reason": "Replays owned host-origin and deceptive-presentation scenes through real host ports, preserving identity, dispatch and source events. Host capabilities are not schema-generatable fixture data. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
@@ -1445,7 +1437,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 107,
+      "line": 106,
       "owner": "@beep/law-practice-server",
       "reason": "Checks all 38 source events through current semantic fields, owned runtime objects and exact native hashes. The fixture codec does not manufacture the actual identity-bearing owner/table capabilities. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
@@ -1485,7 +1477,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 117,
+      "line": 115,
       "owner": "@beep/law-practice-server",
       "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
     },
@@ -1515,7 +1507,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 78,
+      "line": 84,
       "owner": "@beep/law-practice-server",
       "reason": "Owner: @beep/law-practice-server. Fixed public USPTO integration witnesses verify native XML, exact operative-source text, recorded office-action identifiers/date/rejection phrases, and full frozen-tree equality. Generated arbitrary payloads cannot establish those real-record facts. This is intentionally golden/source-integrity coverage, not a new codec-law suite. Exit: retire when the detector recognizes native public-slice regression subjects or equivalent source-integrity property coverage becomes meaningful."
     },
@@ -1525,7 +1517,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 560,
+      "line": 504,
       "owner": "@beep/law-practice-server",
       "reason": "Competency-question acceptance fixtures assert recorded and derived answers over one deliberately seeded practice; the questions are donor-fixed golden coverage, and schema-derived arbitrary coverage for the underlying entities lives with the law-practice domain model tests."
     },
@@ -1545,7 +1537,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 64,
+      "line": 63,
       "owner": "@beep/law-practice-server",
       "reason": "Independent pinned-source golden replay and corruption/resource controls, not a target schema law suite. Fixture schemas authenticate exact oracle versions, hashes, counts and source observations; generated random fixture records would lose that source authority. Native representation properties are separately covered in CitationRegexInput.test.ts. Owner: @beep/law-practice-server. Exit: revisit if this file gains target schema laws beyond fixture authentication. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-capture-binding.md."
     },
@@ -1613,7 +1605,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 218,
+      "line": 212,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"assessOperational\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1623,7 +1615,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 373,
+      "line": 367,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"divergences\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1633,7 +1625,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 572,
+      "line": 558,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1653,7 +1645,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 324,
+      "line": 322,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"chainOfCommand\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1683,7 +1675,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 256,
+      "line": 254,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"orgGraph\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1693,7 +1685,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 376,
+      "line": 374,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"orgMermaid\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1703,7 +1695,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 479,
+      "line": 477,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"selectorReach\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -2455,7 +2447,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 606,
+      "line": 602,
       "owner": "@beep/repo-cli",
       "reason": "Test service factory consumes already modeled ProcessTableEntry rows and returns filesystem-compatible Effect operations; its output is a live service implementation, not a serialized data boundary."
     },
@@ -2465,7 +2457,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 669,
+      "line": 665,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
     },

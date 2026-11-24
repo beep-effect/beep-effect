@@ -22,8 +22,6 @@ const ReviewMaxRoundsFromString = S.FiniteFromString.pipe(S.decodeTo(ReviewMaxRo
 const UnitIntervalFromString = S.FiniteFromString.pipe(S.decodeTo(UnitInterval));
 
 /**
- * Resolved settings of the docket intake service.
- *
  * **Example** (Read the schema fields)
  *
  * ```ts

@@ -18,8 +18,6 @@ import type * as O from "effect/Option";
 const $I = $RepoTsconfigId.create("TsconfigDiscovery");
 
 /**
- * Options for {@link TsconfigDiscovery.findNearest}.
- *
  * **Example** (Choose a discovery filename)
  *
  * ```ts
@@ -51,8 +49,6 @@ export class FindNearestOptions extends S.Opaque<FindNearestOptions, { readonly 
 ) {}
 
 /**
- * Companion types for {@link FindNearestOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -3,6 +3,7 @@ import { BackendCapabilities, NLPBackend } from "@beep/nlp-processing/Backend/NL
 import * as ATG from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
 import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { Position } from "@beep/text/OffsetUnit";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -61,7 +62,14 @@ const StubBackend = Layer.succeed(
       return pipe(
         words(text),
         A.filter((w) => w.length > 0 && w[0] === O.getOrUndefined(O.map(O.fromUndefinedOr(w[0]), Str.toUpperCase))),
-        A.map((w) => EntityNode.make({ text: w, entityType: "MISC", span: { start: 0, end: w.length }, timestamp: 0 }))
+        A.map((w) =>
+          EntityNode.make({
+            text: w,
+            entityType: "MISC",
+            span: Position.makeOption({ unit: "utf16-code-unit", start: 0, end: w.length }),
+            timestamp: 0,
+          })
+        )
       );
     }),
     parseDependencies: Effect.fn("StubBackend.parseDependencies")(function* () {

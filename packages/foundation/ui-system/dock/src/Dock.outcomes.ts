@@ -15,8 +15,6 @@ import { DockWorkspace } from "./Dock.tree.ts";
 const $I = $DockId.create("Dock.outcomes");
 
 /**
- * Reason a valid dock intent produces no change.
- *
  * **Example** (Make unchanged reason value)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const DockUnchangedReason = LiteralKit([
   })
 );
 /**
- * Decoded reason a valid dock intent produces no change.
- *
  * **Example** (Type annotated unchanged reason)
  *
  * ```ts

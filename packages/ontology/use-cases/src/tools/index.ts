@@ -12,8 +12,6 @@
  */
 
 /**
- *  Ontology toolkit schemas and declarations.
- *
  * **Example** (Count registered toolkit tools)
  *
  * ```ts
@@ -26,8 +24,6 @@
  */
 export * from "./OntologyToolkit.ts";
 /**
- *  Stateless ontology tool service exports.
- *
  * **Example** (Import ontology tool service)
  *
  * ```ts

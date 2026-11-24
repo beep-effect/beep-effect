@@ -38,8 +38,6 @@ export const SessionLedgerState = LiteralKit(["open", "blocked", "done"]).pipe(
 );
 
 /**
- * Lifecycle of one session's work in a checkout.
- *
  * @category models
  * @since 0.0.0
  */
@@ -65,8 +63,6 @@ export const SessionRole = LiteralKit(["orchestrator", "member"]).pipe(
 );
 
 /**
- * Fleet role a harness session holds for the repository.
- *
  * @category models
  * @since 0.0.0
  */

@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeUseCasesId.create("DailyNotice/DailyNotice.schemas");
 
 /**
- * The notice email: a subject and a plain body that give only the count.
- *
  * **Details**
  *
  * It carries no question text and no client data: it only says how many
@@ -53,8 +51,6 @@ const DailyNoticeStatus = LiteralKit(["sent", "nothing-waiting", "already-sent"]
 );
 
 /**
- * What one daily notice run did, discriminated on `status`.
- *
  * **Details**
  *
  * - `sent`: the notice went out on `sentOn`;
@@ -90,8 +86,6 @@ export const DailyNoticeOutcome = DailyNoticeStatus.toTaggedUnion("status")({
 );
 
 /**
- * Runtime type for {@link DailyNoticeOutcome}.
- *
  * @see {@link DailyNoticeOutcome} for the statuses.
  * @category models
  * @since 0.0.0

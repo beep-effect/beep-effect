@@ -99,19 +99,21 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     const ensureOpen = Ref.get(state).pipe(
       Effect.flatMap((value) => (value.closed ? Effect.fail(fail("closed-work")) : Effect.void))
     );
-    // Callers pass amounts already decoded as positive integers (ReservationUnits/Units).
-    const reserveUnlocked = Effect.fn("Citation.reserveCleanerText")(function* (amount: number) {
+    const reserveUnlocked = Effect.fn("Citation.reserveCleanerText")(function* (decodedPositiveAmount: number) {
       return yield* Ref.modify(
         state,
         (current): readonly [Effect.Effect<CitationCleanerTextCharge, Failure>, CitationCleanerWorkSnapshot] => {
           if (current.closed) return [Effect.fail(fail("closed-work")), current];
-          if (amount > limits.producedTextUtf16 - current.producedTextUtf16)
+          if (decodedPositiveAmount > limits.producedTextUtf16 - current.producedTextUtf16)
             return [Effect.fail(safety("producedTextUtf16")), current];
-          const ticket = CitationCleanerTextCharge.make({ units: amount });
-          issued.set(ticket, amount);
+          const ticket = CitationCleanerTextCharge.make({ units: decodedPositiveAmount });
+          issued.set(ticket, decodedPositiveAmount);
           return [
             Effect.succeed(ticket),
-            CitationCleanerWorkSnapshot.make({ producedTextUtf16: current.producedTextUtf16 + amount, closed: false }),
+            CitationCleanerWorkSnapshot.make({
+              producedTextUtf16: current.producedTextUtf16 + decodedPositiveAmount,
+              closed: false,
+            }),
           ];
         }
       ).pipe(Effect.flatten);
@@ -127,21 +129,17 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
           )
         )
       );
-    // The parent ledger has no refund, so the cleaner commits atomically first and
-    // is rolled back if the parent refuses or the wait for it is interrupted.
+    const commitCleanerFirstRollBackIfRefundlessParentRefuses = (amount: number) =>
+      Effect.uninterruptibleMask((restore) =>
+        reserveUnlocked(amount).pipe(
+          Effect.tap((ticket) => restore(parent.reserve(amount)).pipe(Effect.onError(() => releaseUnlocked(ticket))))
+        )
+      );
     const reserveText = (units: number) =>
       exclusive(
         S.decodeEffect(ReservationUnits)(units).pipe(
           Effect.mapError(() => fail("invalid-reservation")),
-          Effect.flatMap((amount) =>
-            Effect.uninterruptibleMask((restore) =>
-              reserveUnlocked(amount).pipe(
-                Effect.tap((ticket) =>
-                  restore(parent.reserve(amount)).pipe(Effect.onError(() => releaseUnlocked(ticket)))
-                )
-              )
-            )
-          )
+          Effect.flatMap(commitCleanerFirstRollBackIfRefundlessParentRefuses)
         )
       );
     const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>

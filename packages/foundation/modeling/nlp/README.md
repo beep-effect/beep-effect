@@ -10,10 +10,9 @@ runtime graph execution.
 ## Modules
 
 - `@beep/nlp/Core` exposes document, sentence, token, pattern, vectorization, and similarity models.
-- `@beep/nlp/Ontology` exposes the stratified text ontology.
 - `@beep/nlp/Graph` exposes graph schema classes and pure graph operations.
 - `@beep/nlp/Operations` exposes pure composable operation models.
-- `@beep/nlp/Handoff` exposes the product-neutral annotated document handoff contract.
+- `@beep/annotation` owns standoff annotation documents and their kinds.
 - `@beep/nlp/IdentifierText`, `@beep/nlp/PathText`, `@beep/nlp/QueryText`, and `@beep/nlp/VariantText` expose deterministic text helpers.
 
 Processing services and AI tool contracts live in `@beep/nlp-processing`.

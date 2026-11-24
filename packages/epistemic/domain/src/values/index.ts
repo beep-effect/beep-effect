@@ -13,8 +13,6 @@
  */
 export * from "./ClaimEvidenceReview/index.ts";
 /**
- * Claim lifecycle value exports.
- *
  * **Example** (Log admitted lifecycle status)
  *
  * ```ts
@@ -28,8 +26,6 @@ export * from "./ClaimEvidenceReview/index.ts";
  */
 export * from "./ClaimLifecycle/index.ts";
 /**
- * Claim projection read-model exports.
- *
  * **Example** (Decode claim state counts)
  *
  * ```ts
@@ -64,8 +60,6 @@ export * from "./Contradiction/index.ts";
  */
 export * from "./ContradictionDetection/index.ts";
 /**
- * Edge endpoint value exports.
- *
  * **Example** (Decode claim edge endpoint)
  *
  * ```ts
@@ -81,8 +75,6 @@ export * from "./ContradictionDetection/index.ts";
  */
 export * from "./EdgeEndpoint/index.ts";
 /**
- * Epistemic fixture-key value exports.
- *
  * **Example** (Create epistemic fixture key)
  *
  * ```ts
@@ -96,8 +88,6 @@ export * from "./EdgeEndpoint/index.ts";
  */
 export * from "./EpistemicFixtureKey/index.ts";
 /**
- * Evidence-verification manifestation value exports.
- *
  * **Example** (Validate manifestation key length)
  *
  * ```ts
@@ -112,8 +102,6 @@ export * from "./EpistemicFixtureKey/index.ts";
  */
 export * from "./EvidenceVerification/index.ts";
 /**
- * Logical edge identity and digest exports.
- *
  * **Example** (Decode logical edge identity)
  *
  * ```ts

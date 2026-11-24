@@ -6,8 +6,6 @@
  */
 
 /**
- * Edge authority repository layer exports.
- *
  * **Example** (Repository layer export check)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./EdgeAuthority.layer.ts";
 /**
- * Edge authority repository adapter exports.
- *
  * **Example** (Adapter factory export check)
  *
  * ```ts

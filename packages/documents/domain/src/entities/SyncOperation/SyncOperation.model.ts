@@ -19,8 +19,6 @@ const $I = $DocumentsDomainId.create("entities/SyncOperation/SyncOperation.model
 const pg = ProductEntity.pg;
 
 /**
- * Durable one-way push outbox operation from the local vault to the DMS mirror.
- *
  * **Example** (Decode SyncOperation entity)
  *
  * ```ts

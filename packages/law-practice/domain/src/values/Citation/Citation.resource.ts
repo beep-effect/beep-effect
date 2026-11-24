@@ -37,7 +37,6 @@ export const CitationEditionRef = Sha256Hex.pipe(
   })
 );
 /**
- * Schema-derived edition artifact reference.
  * @category models
  * @since 0.0.0
  */
@@ -74,7 +73,6 @@ export const CitationComponents = S.Record(S.NonEmptyString, S.OptionFromNullOr(
   })
 );
 /**
- * Schema-derived legal locator component map.
  * @category models
  * @since 0.0.0
  */

@@ -47,8 +47,6 @@ import type { GoalManifestFormatterShape } from "./Manifest.service.ts";
 const $I = $RepoCliId.create("commands/Goals/Manifest");
 
 /**
- * One packet whose manifest needs the projection rewritten.
- *
  * **Example** (Construct a row)
  *
  * ```ts

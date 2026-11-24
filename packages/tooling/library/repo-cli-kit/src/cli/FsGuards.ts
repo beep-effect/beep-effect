@@ -52,8 +52,6 @@ const FsGuardFailureReason = LiteralKit([
 );
 
 /**
- * Resolved root, parent, and target paths for one contained filesystem operation.
- *
  * **Example** (Describe a contained target)
  *
  * ```ts

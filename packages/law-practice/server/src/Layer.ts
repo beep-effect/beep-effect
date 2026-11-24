@@ -27,11 +27,12 @@ import {
 import { IrToLaw, makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw";
 import { makeOfficeActionReview, OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { TikaFileProcessingEngine } from "@beep/tika";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as LanguageModel from "effect/ai/LanguageModel";
+import type * as Model from "effect/ai/Model";
 import type * as Config from "effect/Config";
-import type * as Digest from "effect/crypto/Digest";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));
 const FileProcessingLayer = makeFileProcessingServiceLayer([TikaFileProcessingEngine]);
@@ -42,12 +43,18 @@ const OfficeActionReviewLayer = Layer.effect(
   Effect.gen(function* () {
     const fileProcessing = yield* FileProcessingService;
     const irToLaw = yield* IrToLaw;
+    const digest = yield* Digest.Digest;
     const langExtract = yield* LangExtractService;
     const gate = yield* ClaimGate;
     const transition = yield* ClaimTransition;
-    return OfficeActionReview.of(makeOfficeActionReview({ fileProcessing, gate, irToLaw, langExtract, transition }));
+    return OfficeActionReview.of(
+      makeOfficeActionReview({ digest, fileProcessing, gate, irToLaw, langExtract, transition })
+    );
   })
 );
+
+// decision: provide-merge-keeps-ir-to-law-without-racing
+const reviewLoopWithIrToLawProvidedAndKeptInOutput = OfficeActionReviewLayer.pipe(Layer.provideMerge(IrToLawLayer));
 
 /**
  * Live law-practice server layer providing the IR-to-law mapping and the
@@ -77,14 +84,8 @@ const OfficeActionReviewLayer = Layer.effect(
 export const LawPracticeServerLive: Layer.Layer<
   OfficeActionReview | IrToLaw,
   Config.ConfigError,
-  LanguageModel.LanguageModel | Digest.Digest
-> = OfficeActionReviewLayer.pipe(
-  // `provideMerge` satisfies the loop's `IrToLaw` dependency while keeping
-  // `IrToLaw` in the output surface (a sibling `mergeAll` would race the
-  // provider against the consumer); the file-processing capability supplies
-  // extracted source text, LangExtract supplies grounded source spans, and the
-  // epistemic server supplies the gate + transition the loop also requires.
-  Layer.provideMerge(IrToLawLayer),
+  LanguageModel.LanguageModel | Model.ProviderName | Model.ModelName | Digest.Digest
+> = reviewLoopWithIrToLawProvidedAndKeptInOutput.pipe(
   Layer.provide(FileProcessingLayer),
   Layer.provide(GuardedLangExtractLayer),
   Layer.provide(EpistemicServerLive)
