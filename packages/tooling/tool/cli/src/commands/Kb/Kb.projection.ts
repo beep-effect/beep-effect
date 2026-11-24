@@ -26,8 +26,7 @@ const quad = (subject: string, predicate: string, object: string, graph: string)
 
 type Selector = Assertion["selector"];
 
-// A claim enters the current graph only when accepted, unexpired, not superseded and backed by captured evidence.
-const isCurrent = (c: KbClaim, claims: ReadonlyArray<KbClaim>, evidence: ReadonlyArray<Assertion>): boolean =>
+const entersCurrentGraph = (c: KbClaim, claims: ReadonlyArray<KbClaim>, evidence: ReadonlyArray<Assertion>): boolean =>
   c.review._tag === "Accepted" &&
   c.knowledge.expiredAt._tag === "None" &&
   !A.some(claims, (candidate) => O.exists(candidate.supersedes, (id) => id === c.id)) &&
@@ -50,7 +49,7 @@ const claimQuads = (
     quad(id, "assertsPredicate", term(p._tag), "claims"),
     quad(id, "assertsObject", iri(p.object), "claims"),
   ];
-  return isCurrent(c, claims, evidence)
+  return entersCurrentGraph(c, claims, evidence)
     ? A.appendAll(base, [
         `${iri(p.subject)} ${term(p._tag)} ${iri(p.object)} ${term("graph:current")} .`,
         quad(id, "authorizedBy", id, "current"),
