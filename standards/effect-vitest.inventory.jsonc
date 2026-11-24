@@ -6536,15 +6536,15 @@
       "reason": "Real registry runtime scheduling and native worker, watchdog or action acknowledgements need live time; the bounded retry waits and assertions are unchanged, and only the two cases that share the Worker global are serialized. Owner: @beep/ontology-client. Exit: retire when the session atoms run their worker watchdog and retries on the test's TestClock (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:724:it.live@2#1",
+      "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:722:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/repo-ai-metrics",
       "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
-      "line": 724,
-      "endLine": 757,
+      "line": 722,
+      "endLine": 754,
       "symbol": "it.live",
-      "occurrence": "v2:5740ab99433b015f58bb5a2e4c2503b0a4b3276cc330830e26bafa545d9422ef",
+      "occurrence": "v2:58e60a67f8995ae921590e82e09735b882067fc1121b6fc4bacf05c4baa4a17c",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"keeps every concurrent writer's root instead of letting the last rename win\", () => withTempDirectory( Effect.fnUntraced(function* (tmpDir) { const pathApi = yield* Path.Path; const dataRoot",
       "replacement": {
@@ -6558,15 +6558,15 @@
       "reason": "Races real concurrent upserts against one data root on the real filesystem: two runs that each read the pre-merge snapshot and rename last would discard the earlier writer's roots (several clones, or a forwarder timer racing a manual run), and that race exists only against real file IO. Owner: @beep/repo-ai-metrics. Exit: retire when the registry lock takes its backoff schedule from the caller's Clock, so the test can drive it with TestClock (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:795:it.live@2#1",
+      "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:788:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/repo-ai-metrics",
       "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
-      "line": 795,
-      "endLine": 816,
+      "line": 788,
+      "endLine": 808,
       "symbol": "it.live",
-      "occurrence": "v2:74947d8eba127b91406203e737ffa366735c50202790798949800265730a7f13",
+      "occurrence": "v2:3b4cb7aac64f2338909574219ece1fe46a5e28e87e5f06675b60a4cefb88857d",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"fails loudly rather than hanging when a stale lock is never released\", () => withTempDirectory( Effect.fnUntraced(function* (tmpDir) { const fs = yield* FileSystem.FileSystem; const pathApi =",
       "replacement": {
