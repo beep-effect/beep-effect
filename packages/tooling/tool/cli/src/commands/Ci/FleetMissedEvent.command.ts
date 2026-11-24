@@ -7,8 +7,11 @@
  * One run reads the org runners, waits 300 seconds through {@link FleetSleep},
  * reads them again, reads every queued, in-progress and recent run's jobs
  * with full paging, and walks the hook deliveries once (newest first, back to
- * the oldest job that needs them minus two minutes) with one detail read per
- * delivery. A listing cut at 50 pages short of its total fails the run. It
+ * the oldest job that needs them minus two minutes). For each job it reads
+ * its window's `queued` delivery details nearest the job's creation first,
+ * four at a time, and stops at the first 2xx delivery naming the job; only a
+ * job without one reads every candidate. A listing cut at 50 pages short of
+ * its total fails the run. It
  * prints the step summary, with the number of GitHub requests the reads
  * service counted, and exits non-zero on any alert. It
  * never redelivers, cancels, reruns or writes: the remedies are printed.
@@ -33,6 +36,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
@@ -50,10 +54,11 @@ import {
 } from "./FleetMissedEvent.schemas.ts";
 import { FleetGithubReads, FleetReadError, FleetSleep, FleetWatchToken } from "./FleetMissedEvent.service.ts";
 import {
-  deliveryWindow,
+  deliveryCandidates,
   fleetAlerts,
   fleetCheckReport,
   fleetJobFinding,
+  isSuccessfulDelivery,
   judgeDeliveryEvidence,
   needsDeliveryEvidence,
   observeFleetPool,
@@ -310,41 +315,63 @@ const walkDeliveries = (context: FleetReadContext, hookId: FleetDeliveryId, stop
   return go(O.none(), 0, { deliveries: A.empty(), oldestReached: O.none(), failure: O.none(), listingEnded: false });
 };
 
-const candidateIds = (jobs: ReadonlyArray<FleetJob>, deliveries: ReadonlyArray<FleetHookDelivery>) =>
-  HashSet.fromIterable(
-    A.flatMap(jobs, (job) => {
-      const window = deliveryWindow(job);
-      return A.map(
-        A.filter(
-          deliveries,
-          (delivery) =>
-            O.contains(delivery.action, "queued") &&
-            delivery.deliveredAt >= window.start &&
-            delivery.deliveredAt <= window.end
-        ),
-        (delivery) => delivery.id
-      );
-    })
-  );
+type DetailReads = HashMap.HashMap<string, O.Option<FleetDeliveryDetail>>;
 
-const readDetails = Effect.fnUntraced(function* (
+const nearestCreationFirst = (job: FleetJob): Order.Order<FleetHookDelivery> =>
+  Order.mapInput(Order.Number, (delivery: FleetHookDelivery) => Math.abs(delivery.deliveredAt - job.createdAt));
+
+const deliversJob = (job: FleetJob, details: DetailReads) => (delivery: FleetHookDelivery) =>
+  isSuccessfulDelivery(delivery) &&
+  O.exists(O.flatten(HashMap.get(details, delivery.id)), (detail) => O.contains(detail.workflowJobId, `${job.id}`));
+
+const searchJobDetails = (
   context: FleetReadContext,
   hookId: FleetDeliveryId,
-  ids: HashSet.HashSet<string>
-) {
-  const reads = yield* Effect.forEach(
-    A.fromIterable(ids),
-    (id) =>
-      context
-        .retry(() => context.reads.deliveryDetail(hookId, id))
-        .pipe(
-          Effect.option,
-          Effect.map((detail): readonly [string, O.Option<FleetDeliveryDetail>] => [id, detail])
-        ),
-    { concurrency: JOB_READ_CONCURRENCY }
+  job: FleetJob,
+  candidates: ReadonlyArray<FleetHookDelivery>,
+  details: DetailReads
+): Effect.Effect<DetailReads> => {
+  const unread = A.filter(candidates, (delivery) => !HashMap.has(details, delivery.id));
+  return A.some(candidates, deliversJob(job, details)) || A.isReadonlyArrayEmpty(unread)
+    ? Effect.succeed(details)
+    : Effect.forEach(
+        A.take(unread, JOB_READ_CONCURRENCY),
+        (delivery) =>
+          context
+            .retry(() => context.reads.deliveryDetail(hookId, delivery.id))
+            .pipe(
+              Effect.option,
+              Effect.map((detail): readonly [string, O.Option<FleetDeliveryDetail>] => [delivery.id, detail])
+            ),
+        { concurrency: JOB_READ_CONCURRENCY }
+      ).pipe(
+        Effect.flatMap((reads) =>
+          searchJobDetails(
+            context,
+            hookId,
+            job,
+            candidates,
+            A.reduce(reads, details, (acc, [id, detail]) => HashMap.set(acc, id, detail))
+          )
+        )
+      );
+};
+
+const readDetails = (
+  context: FleetReadContext,
+  hookId: FleetDeliveryId,
+  jobs: ReadonlyArray<FleetJob>,
+  deliveries: ReadonlyArray<FleetHookDelivery>
+): Effect.Effect<DetailReads> =>
+  Effect.reduce(jobs, HashMap.empty<string, O.Option<FleetDeliveryDetail>>, (details, job) =>
+    searchJobDetails(
+      context,
+      hookId,
+      job,
+      A.sort(deliveryCandidates(job, deliveries), nearestCreationFirst(job)),
+      details
+    )
   );
-  return HashMap.fromIterable(reads);
-});
 
 const hookEvidence = Effect.fnUntraced(function* (
   context: FleetReadContext,
@@ -355,7 +382,7 @@ const hookEvidence = Effect.fnUntraced(function* (
     A.reduce(jobs, Number.POSITIVE_INFINITY, (oldest, job) => Math.min(oldest, job.createdAt)) -
     FLEET_THRESHOLDS.deliveryLead;
   const walk = yield* walkDeliveries(context, hookId, stopAt);
-  const details = yield* readDetails(context, hookId, candidateIds(jobs, walk.deliveries));
+  const details = yield* readDetails(context, hookId, jobs, walk.deliveries);
   return A.map(jobs, (job): readonly [number, FleetDeliveryEvidence] => [
     job.id,
     judgeDeliveryEvidence({
