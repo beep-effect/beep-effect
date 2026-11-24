@@ -569,6 +569,32 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
       })
     );
 
+    it.effect("refuses a hold renewal that starts before an expired imported predecessor was recorded", () =>
+      Effect.gen(function* () {
+        const { lines, renew } = yield* holdHistory();
+        const [first, second] = lines;
+        if (first === undefined || second === undefined) return yield* Effect.die("short hold fixture");
+        const expiresLate = [
+          first,
+          replaceOnce(second, '"expiredAt":null,"recordedAt":5', '"expiredAt":30,"recordedAt":20'),
+        ];
+        const before = yield* readHolds(expiresLate);
+        const head = before.claims[1];
+        if (head === undefined) return yield* Effect.die("short hold fixture");
+        const early = yield* renew(head);
+        const expected = {
+          _tag: "ClaimHistoryRefused",
+          reason: "inverted-knowledge",
+          claim: "imported:holds:synthetic-hold@2",
+        };
+        const appendRefused = yield* Effect.flip(planHoldAppend(before.decoded, early.events));
+        expect(appendRefused).toMatchObject(expected);
+        const stored = yield* Effect.forEach(early.events, (event) => encodeHoldEvent(event), { concurrency: 1 });
+        const readRefused = yield* Effect.flip(readHolds(A.appendAll(expiresLate, stored)));
+        expect(readRefused).toMatchObject(expected);
+      })
+    );
+
     it.effect("replaces imported kb signals with a later signals record", () =>
       Effect.gen(function* () {
         const lines = yield* fixtureLines("kb-claims-v1.jsonl");
