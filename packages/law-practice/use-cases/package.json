@@ -47,6 +47,7 @@
     "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
     "./DocumentIdentification": "./src/DocumentIdentification/index.ts",
     "./MailTagging": "./src/MailTagging/index.ts",
+    "./MatterWall": "./src/MatterWall/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
     "./PracticeSetup": "./src/PracticeSetup/index.ts",

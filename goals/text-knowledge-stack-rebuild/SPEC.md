@@ -2812,6 +2812,33 @@ Lane p6
 
 Reverse: Apply the architecture plan once its law-practice values template stops writing placeholder content and rewriting the values barrel, and diff it against the hand-authored files
 
+### Matter authority reads one JSON variable and a denied anchor resolution looks like absent evidence, 2026-11-24
+
+## Context
+
+Row 8 adds `MatterAuthorityLive`, `AuthorizedSourceTextResolver` and the anchor-resolution check in
+citation `SourceResolution`. The design names `MatterAuthorityConfig` as a `Config` decode with the
+empty configuration as the default, and the resolution's "refusal value" for path 2, without naming
+the variable or the value.
+
+## Decision
+
+- `MatterAuthorityLive` reads `BEEP_LAW_PRACTICE_MATTER_AUTHORITY` as JSON through
+  `Config.schema(S.fromJsonString(MatterAuthorityConfig))` with `EmptyMatterAuthorityConfig` as the
+  default. `MatterAuthorityLayer(config)` takes an explicit configuration for hosts that read their
+  own profile (rows 9 and 14) and for tests.
+- A denied anchor resolution fails with `CitationPrerequisiteError { dependency: "source-evidence" }`,
+  the value an unresolvable source already gets, before any source read. A denial and an absent
+  source are indistinguishable to the caller; the access kind and reason go to the
+  `MatterAuthority.authorize` span only.
+- Citation tests that are not about the wall provide a principal and an authority that grants every
+  scope (`test/MatterWall.fixtures.ts`); the wall itself is proved with the real
+  `MatterAuthorityLayer` in `MatterAuthority.test.ts` and `CitationResolverBoundary.test.ts`.
+
+Lane p6
+
+Reverse: Rename the variable or map Denied to a distinct citation error; the empty default and the span attributes stay.
+
 ### P6: one MatterAuthority port over a host-provided LawPrincipal; MatterScope binds existing scope keys to a matter, 2026-11-24
 
 2026-11-19-p0-item11-matter-wall-test-shape names one MatterAuthority port; it does not say who the principal is or how scopes map to matters. McpCallerIdentity carries transport facts only (mcp-kit/src/McpCaller.ts:44-61), and ContradictionReviewScope (epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.ports.ts:86-92) is the precedent for a host-provided scope. P6: LawPrincipal is a host-provided Context.Service { principal: Shared.UserId }, never a request field. MatterAuthority.authorize({ principal, scope: ScopeRef, access: MatterAccessKind }) returns MatterAccess Granted { matter } or Denied { reason: unbound-scope | not-staffed }; authorizeFamily does the same for a docket family and grantedScopes returns the scope refs and families a bulk read filters by. MatterAccessKind is a LiteralKit of the seven SPEC paths plus claim-proposal and claim-admission. The domain MatterScope { matter, scopeRefs, docketFamilies } binds existing spellings (workspace:<id>, fixture keys, docket families) to one MatterId; an unbound scope fails closed, and a config with a scope bound to two matters is refused at load. scopeRef bytes are never re-spelled, because they are hashed into CaptureId and OccurrenceId. Grants are configuration in P6; the stdio host apps/practice-kg-mcp names its principal and grants in configuration. Answers A7, A8 and F13.

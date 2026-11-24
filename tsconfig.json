@@ -2619,6 +2619,12 @@
       ],
       "@beep/law-practice-domain/values/MatterScope": [
         "./packages/law-practice/domain/src/values/MatterScope/index.ts"
+      ],
+      "@beep/law-practice-server/MatterAuthority": [
+        "./packages/law-practice/server/src/MatterAuthority/index.ts"
+      ],
+      "@beep/law-practice-use-cases/MatterWall": [
+        "./packages/law-practice/use-cases/src/MatterWall/index.ts"
       ]
     }
   }

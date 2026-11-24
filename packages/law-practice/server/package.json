@@ -46,6 +46,7 @@
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./DocumentIdentification": "./src/DocumentIdentification/index.ts",
     "./MailTagging": "./src/MailTagging/index.ts",
+    "./MatterAuthority": "./src/MatterAuthority/index.ts",
     "./NoticeMailbox": "./src/NoticeMailbox/index.ts",
     "./internal/*": null,
     "./PracticeKgHost": "./src/PracticeKgHost/index.ts",
