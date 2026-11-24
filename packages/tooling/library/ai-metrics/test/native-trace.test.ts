@@ -308,8 +308,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
 
   it.effect("decodes real protobuf field numbers and skips nested content-bearing fields", () =>
     Effect.gen(function* () {
-      // Independent full-content fixture schema includes fields omitted by the positive decoder.
-      const type = Protobuf.parse(`syntax = "proto3";
+      const independentFullContentTypeWithFieldsThePositiveDecoderOmits = Protobuf.parse(`syntax = "proto3";
       message Value { string string_value=1; int64 int_value=3; ArrayValue array_value=5; }
       message ArrayValue { repeated Value values=1; }
       message Attribute { string key=1; Value value=2; }
@@ -330,7 +329,9 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
           { key: "private-recursive", value: { arrayValue: { values: [{ stringValue: "private-nested" }] } } },
         ],
       };
-      const bytes = type.encode(type.fromObject(envelope([native]))).finish();
+      const bytes = independentFullContentTypeWithFieldsThePositiveDecoderOmits
+        .encode(independentFullContentTypeWithFieldsThePositiveDecoderOmits.fromObject(envelope([native])))
+        .finish();
       const binary = yield* projectNativeTraceRequest(request(bytes, "application/x-protobuf"));
       const jsonRequest8 = yield* jsonRequest(envelope([span]));
       const json = yield* projectNativeTraceRequest(jsonRequest8);

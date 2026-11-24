@@ -1119,19 +1119,7 @@ const deleteIngestRunRows = Effect.fn("AiMetrics.retention.deleteIngestRunRows")
     (statement) => duckdb.run(statement),
     { concurrency: 1, discard: true }
   );
-  // Sessions are pruned last, and keyed on neither the prune set nor the run column.
-  // A session row is content-addressed and upserted OR REPLACE, so its `ingest_run_id`
-  // names the run that LAST saw the transcript, not the one that created it -- pruning by
-  // that column would delete a row whose turns from other runs survive, and the exporter
-  // joins sessions INNER, so those turns would leave every future export silently.
-  //
-  // Scoping it to the prune set instead leaks the mirror image: a row kept because it
-  // still had turns is tagged with an already-pruned run, so when the last of its turns
-  // goes in a later prune, no predicate matches it again and the empty row lives forever
-  // -- pinning its agent task alive through the GC below. Running after the ingest-run
-  // delete lets this ask the only two questions that matter: are there turns left, and
-  // does the run this row points at still exist. That also sweeps up rows already leaked
-  // by an earlier prune.
+  // decision: retention-prunes-sessions-by-surviving-turns
   yield* duckdb.run(`DELETE
 	                   FROM ai_metrics_sessions
 	                   WHERE NOT EXISTS (

@@ -15,10 +15,7 @@ class NativeTraceWireOperationError extends S.TaggedError<
   { description: "A failed external operation in native-trace-wire.ts." }
 ) {}
 
-// Selective OTLP proto v1.9.0 wire shape. Recursive AnyValue bodies stay opaque.
-// AnyValue keeps the upstream `oneof`: it gives `false`, `0` and "" explicit
-// presence, which protobufjs 8 otherwise drops on encode and decode.
-const wireSchema = `syntax = "proto3";
+const selectiveOtlpV190WireKeepingTheAnyValueOneofSoFalseZeroAndEmptyKeepPresence = `syntax = "proto3";
 message AnyValue { oneof value { string string_value = 1; bool bool_value = 2; int64 int_value = 3;
   double double_value = 4; bytes array_value = 5; bytes kvlist_value = 6; bytes bytes_value = 7; } }
 message KeyValue { string key = 1; AnyValue value = 2; }
@@ -31,7 +28,9 @@ message ScopeSpans { Scope scope = 1; repeated Span spans = 2; }
 message ResourceSpans { Resource resource = 1; repeated ScopeSpans scope_spans = 2; }
 message ExportTraceServiceRequest { repeated ResourceSpans resource_spans = 1; }`;
 
-export const nativeTraceWire = Protobuf.parse(wireSchema).root.lookupType("ExportTraceServiceRequest");
+export const nativeTraceWire = Protobuf.parse(
+  selectiveOtlpV190WireKeepingTheAnyValueOneofSoFalseZeroAndEmptyKeepPresence
+).root.lookupType("ExportTraceServiceRequest");
 
 const stringAttribute = (key: string, stringValue: string) => ({ key, value: { stringValue } });
 const integerAttribute = (key: string, value: number) => ({ key, value: { intValue: `${value}` } });
