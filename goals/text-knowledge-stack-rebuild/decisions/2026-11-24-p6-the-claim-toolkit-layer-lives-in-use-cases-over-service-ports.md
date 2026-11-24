@@ -1,0 +1,8 @@
+---
+title: "P6: LawClaimToolkit.toLayer lives in law-practice use-cases over the TierGate, ClaimProposal and ProvenanceTraversal ports; other toolkits are compared without mounting"
+date: 2026-11-24
+lane: "p6"
+reversal: "Move the handler layer to the server and the write-tools test to the server tests by a decision amending the P0 routing"
+---
+
+Independent review of the P6 design. The P0 routing decision puts the write-tools-emit-proposed test in the law-practice use-cases tests, but the first draft put the handler layer in law-practice server, which use-cases cannot depend on (the server depends on use-cases, server/package.json:86), so properties (b), (c) and (e) could not exercise production handlers. LawClaimToolkit.toLayer is defined in use-cases ClaimProposal.tools.ts over the TierGate, ClaimProposal and (from the provenance row) ProvenanceTraversal service ports, which use-cases reaches through @beep/mcp-kit (use-cases/package.json:81); the server supplies only the service implementations. The test supplies in-memory store ports, a MatterAuthority stub and a LawPrincipal from use-cases test support and mounts the toolkit through the mcp-kit conformance kit. PracticeKgToolkit, ReviewHubToolkit and NlpToolkit have handler layers outside use-cases (server/src/PracticeKg.tool-handlers.ts:385, apps/practice-review-hub/src/runtime/Layer.ts:69, drivers/wink/src/WinkTools.service.ts:385), so property (e) for them compares toolJsonSchema(tool) with the domain schemas directly; the NlpToolkit case runs in np's tests. The server's memory store, admission ports and authority get their own server tests so each new server file is covered in its own package. Amends 2026-11-24-p6-write-tools-emit-proposed-test-covers-every-law-practice-write-tool.

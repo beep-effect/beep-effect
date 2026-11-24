@@ -1,0 +1,8 @@
+---
+title: "P6: no outbound draft carries matter material today; path 6 is a structural proof on NoticeMessage"
+date: 2026-11-24
+lane: "p6"
+reversal: "Add a draft-assembly guard to NoticeMailbox.send that authorizes the draft's matter"
+---
+
+Independent review of the P6 design, two findings. The only outbound draft in law-practice is the daily notice: NoticeMailbox.send builds it from NoticeMessage.subject and body and addresses it to the configured mailbox (server/src/NoticeMailbox/NoticeMailbox.layer.ts:300-317), and NoticeMessage is { subject, body }, 'the count only, never question text' (use-cases/src/DailyNotice/DailyNotice.schemas.ts:38-47). createDraftMessage has no other caller; MailTagging.mailbox.ts and DocketIntake.graph.ts read and categorize inbound mail and download attachments (DocketIntake.graph.ts:340-349,441-499) but assemble no draft. A guard on the notice would have no matter and no quoted item to authorize, and the fake mailbox would record no B content with or without it. MatterAuthority also authorizes a ScopeRef or a family key, not a MatterId. P6 adds no guard. The invariant is asserted structurally: NoticeMessage has exactly the fields subject and body, neither is a ScopeRef, anchor or scoped text payload, and its encoded schema has no other key. A draft that carries matter material, when one is added, takes an input of scoped items, each with its ScopeRef, and authorizes each through authorize with draft-assembly. The two-matter test therefore does not compose the notice mailbox, and apps/practice-review-hub (src/Notice.ts:146) needs no change. Supersedes the draft-assembly half of 2026-11-24-p6-draft-assembly-and-provenance-traversal-under-the-wall. Answers A11 as amended.

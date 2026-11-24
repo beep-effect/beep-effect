@@ -1,0 +1,8 @@
+---
+title: "P6: Pure is a brand only pure sets, commute is the production interchange it witnesses, combinators suspend their components, and the observation is total"
+date: 2026-11-24
+lane: "p6"
+reversal: "Drop the Pure brand and commute, restate L5-2 as a test of Effect sequencing only, and observe with Effect.exit(op.run(x))"
+---
+
+Independent review of the P6 design. The report requires a commutes witness to claim interchange and defines Pure as Effect.succeed(f(a)) with total f (research/2026-11-08-rebuild-report.md:286-288); the first draft had neither, so no production code could treat a throwing sync as pure and L5-2 tested only Effect's sequencing. pure returns Pure<A, B>, an Operation<A, B, never, never> with a brand only pure sets, and runs Effect.sync(() => f(a)), observationally the live flow(f, Effect.succeed) for a total f. commute(p: Pure, q) runs q before p and returns the pair in product order; it is the only production interchange, and L5-2 states observe(product(p, q)) = observe(commute(p, q)) = observe(swap ∘ product(q, p)), so the law tests that the witness is sound. A non-Pure operation cannot be passed to commute (a @ts-expect-error case). The sketch's compose and the live product call self.run(a) eagerly (ops/design/L5.operations.ts:57-77, nlp/src/Operations/Composable.ts:238); every combinator now suspends its components' run (Effect.suspend, effect/Effect.ts:1220), and the observation is Effect.exit(Effect.suspend(() => op.run(x))), so an operation that throws when called is observed as Died rather than escaping the test. Cases: a composite over a component that throws when called is Died; pure over a throwing f is Died. Amends 2026-11-24-p6-the-declared-observation-and-the-l5-2-restatement.
