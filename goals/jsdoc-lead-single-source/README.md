@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,9 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — wave 1 (tooling and law text) in review; package sweeps follow.
+P4 Close — six waves merged or final (#3496, #3506, #3512, #3514, #3532, #3535); the closeout rides #3535.
 
 ## Latest Evidence
+
+After wave 6 (#3535) the inventory measures 507 restating leads, down from 8,726. The remainder sits in CI binary closure and runner handler files, `infra/src`, `@beep/text` and guard-kept rows (`decisions/2026-11-24-wave-6-deferred-packages.md`). Reflection: [`history/reflections/2026-11-24-claude.md`](./history/reflections/2026-11-24-claude.md).
 
 Before any sweep the JSDoc inventory measures 8,726 restating leads
 (`restating-lead` in `standards/jsdoc-totals.regression-baseline.jsonc`): 3,283 on
