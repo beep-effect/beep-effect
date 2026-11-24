@@ -265,7 +265,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
     Effect.gen(function* () {
       const { limits, table } = yield* install();
       const captured = { ...limits, sourceUtf16: 3 };
-      // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
       const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, captured);
       const parser = yield* makeCitationCourtLookup(owned, table.payload).pipe(
         Effect.zipWith(makeCitationTestScaffoldBinding(captured), (stage, bind) => ({
@@ -275,7 +274,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       );
       captured.sourceUtf16 = 100;
       const sourceRefused = yield* parser.lookup(native("S.C.")).pipe(Effect.flip);
-      expect(sourceRefused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+      expect(sourceRefused, "the installed limits ignore a later mutation of the caller's copy").toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        limit: "sourceUtf16",
+      });
       const malformed = yield* parser.lookup({ width: 2, bytes: new Uint8Array([1]) }).pipe(Effect.flip);
       expect(malformed).toMatchObject({ _tag: "CitationPythonUnicodeFailure", reason: "invalid-input" });
       const expanded = yield* install(7);

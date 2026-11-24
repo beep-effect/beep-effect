@@ -169,9 +169,10 @@ const Corpus = S.fromJsonString(
 );
 const bad = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 
-// Deliberately controlled adapter: normalized hashes are actual Python observations,
-// not a claimed general implementation of Python's numeric/object protocol.
-const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Readonly<Record<string, string>>) => {
+const controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol = (
+  initial: ReadonlyArray<typeof HostState.Type>,
+  normalized: Readonly<Record<string, string>>
+) => {
   const states = A.map(initial, (state) => ({ ...state }));
   const handles = A.map(states, (_, slot) => CitationHostResource.make({ slot }));
   let trace = A.empty<S.Json>();
@@ -343,7 +344,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       const corpus = yield* load();
       const row = A.getUnsafe(corpus.callbacks, 0);
       const prepared = yield* prepare("host-output-boundary");
-      const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol([row.host], {
+        [row.host.hashRaw]: row.host.hashRaw,
+      });
       const { bundle } = yield* loadCitationFrozenEditionFixtures();
       const frozen = yield* makeCitationFrozenEditions(bundle);
       const invalidHandle = CitationHostResource.make({ slot: 0 });
@@ -381,7 +384,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       expect(A.map(origins, (origin) => origin._tag)).toEqual(["Host"]);
       yield* index.close;
 
-      const secondHost = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const secondHost = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol([row.host], {
+        [row.host.hashRaw]: row.host.hashRaw,
+      });
       const nonFullAdapter = CitationHostResourceAdapterFactory.of({
         build: Effect.fn("HostNonFullTest.build")(function* (canonical) {
           const adapter = yield* secondHost.factory.build(canonical);
@@ -417,7 +422,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       const row = A.getUnsafe(corpus.callbacks, 0);
       const base = yield* prepare("historical-authority-limit", ["case", "case"]);
       const prepared = { ...base, limits: { ...base.limits, authorities: 1 } };
-      const host = harness(
+      const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol(
         [
           { ...row.host, token: "historical-first" },
           { ...row.host, token: "historical-second" },
@@ -478,7 +483,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       const corpus = yield* load();
       const row = A.getUnsafe(corpus.callbacks, 0);
       const prepared = yield* prepare("host-canonical-slot-boundary");
-      const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol([row.host], {
+        [row.host.hashRaw]: row.host.hashRaw,
+      });
       const adapterFactory = CitationHostResourceAdapterFactory.of({
         build: Effect.fn("HostTest.wrongCanonicalSlot")(function* (canonical) {
           const adapter = yield* host.factory.build(canonical);
@@ -525,7 +532,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       const citationResult6 = yield* load();
       const row = A.getUnsafe(citationResult6.callbacks, 0);
       const prepared = yield* prepare("deceptive-default-presentation");
-      const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol([row.host], {
+        [row.host.hashRaw]: row.host.hashRaw,
+      });
       const deceptive = CitationHostResourceAdapterFactory.of({
         build: Effect.fn("DescriptorOriginTest.build")(function* (canonical) {
           const adapter = yield* host.factory.build(canonical);
@@ -606,7 +615,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       yield* Effect.forEach(
         corpus.cases,
         Effect.fnUntraced(function* (row) {
-          const host = harness(row.hosts, { "7": "7" });
+          const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol(row.hosts, { "7": "7" });
           const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
             Effect.provideService(CitationFrozenEditions, frozen),
             Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
@@ -860,7 +869,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       yield* Effect.forEach(
         corpus.callbacks,
         Effect.fnUntraced(function* (row) {
-          const host = harness([row.host], corpus.normalizedHashes);
+          const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol(
+            [row.host],
+            corpus.normalizedHashes
+          );
           const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
             Effect.provideService(CitationFrozenEditions, frozen),
             Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
@@ -919,7 +931,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       yield* Effect.forEach(
         corpus.callbacks,
         Effect.fnUntraced(function* (row) {
-          const host = harness(row.hosts, { "7": "7" });
+          const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol(row.hosts, { "7": "7" });
           const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
             Effect.provideService(CitationFrozenEditions, frozen),
             Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
@@ -1014,7 +1026,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       yield* Effect.forEach(
         corpus.cases,
         Effect.fnUntraced(function* (row) {
-          const host = harness(row.hosts, corpus.normalizedHashes);
+          const host = controlledAdapterWithObservedPythonHashesNotAGeneralNumericProtocol(
+            row.hosts,
+            corpus.normalizedHashes
+          );
           const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
             Effect.provideService(CitationFrozenEditions, frozen),
             Effect.provideService(CitationHostResourceAdapterFactory, host.factory)

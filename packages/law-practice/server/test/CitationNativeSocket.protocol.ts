@@ -3,8 +3,6 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as S from "effect/Schema";
 
-// The provided JSON transform preserves isolated UTF-16 surrogates before
-// SchemaBinary's UTF-8 string encoding; no private string or frame codec.
 const $I = $LawPracticeServerId.create("test/CitationNativeSocket.protocol");
 const Text = S.fromJsonString(S.String.check(S.isMaxLength(32_768))).pipe(
   $I.annoteSchema("Text", {

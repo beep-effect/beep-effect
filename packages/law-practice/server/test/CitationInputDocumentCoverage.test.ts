@@ -51,9 +51,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Docum
       Effect.gen(function* () {
         const { setup, provided, configuration, values, adapter } =
           yield* installCitationDocumentExtractionFixture("bun");
-        // One pattern is too few for the two discovery descriptors: the discovery evaluator
-        // install refuses, while every check that runs when the stage is installed passes.
-        const limits = { ...setup.limits, patterns: 1 };
+        const tooFewPatternsForTwoDiscoveryDescriptors = 1;
+        const limits = { ...setup.limits, patterns: tooFewPatternsForTwoDiscoveryDescriptors };
         const initializer = yield* makeCitationInputDocument(limits, setup.runtime, configuration.document).pipe(
           Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
             ...stage,
@@ -65,8 +64,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Docum
         const none = yield* values.retainHost(null);
         const noSteps = yield* adapter.create({ kind: "list", names: [] });
         const initialized = yield* initializer.initialize({ plain, markup: none, steps: noSteps });
-        expect(initialized.plain).toBe(plain);
-        expect(initialized.geometry._tag).toBe("None");
+        expect(initialized.plain, "every check that runs when the stage is installed passes").toBe(plain);
+        expect(initialized.geometry._tag, "every check that runs when the stage is installed passes").toBe("None");
         const empty = yield* values.sourceText("");
         const markup = yield* values.sourceText("<i>A</i> 1 U.S. 1");
         const htmlSteps = yield* adapter.create({ kind: "list", names: ["html"] });

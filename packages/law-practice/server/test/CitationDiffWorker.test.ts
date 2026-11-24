@@ -40,7 +40,6 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationDiffWorker = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationDiffWorker>[0],
   a1: unknown,

@@ -55,16 +55,19 @@ const runtime = Effect.gen(function* () {
 });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
 
+const hosted1097CaseReplayPastTenMinuteWatchdogWithPerRequestDeadlinesKept = 1_200_000;
 it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification", (it) => {
   it.effect("smoke-tests the actual worker entrypoint for parser errors and successful text", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const admission = yield* makeCitationNativeProcessAdmission(limits);
       const citationResult2 = yield* runtime;
+      const directSourceEntrypointControlBesideBundledReplays = NodeURL.fileURLToPath(
+        new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)
+      );
       const worker = yield* makeCitationHtmlWorker(limits, {
         ...citationResult2,
-        // Keep a direct source-entrypoint control alongside the bundled corpus replays.
-        workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+        workerFile: directSourceEntrypointControlBesideBundledReplays,
       }).pipe(Effect.provideService(CitationNativeProcessAdmission, admission));
       const citationResult3 = yield* worker.clean("").pipe(Effect.flip);
       expect(citationResult3).toMatchObject({
@@ -187,9 +190,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         const citationResult12 = yield* worker.snapshot;
         expect(citationResult12).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
-    // The hosted 1,097-case replay exceeded the previous ten-minute suite watchdog.
-    // Per-request clean/operation/cleanup deadlines and every exit assertion remain enforced.
-    { timeout: 1_200_000 }
+    { timeout: hosted1097CaseReplayPastTenMinuteWatchdogWithPerRequestDeadlinesKept }
   );
   it.effect(
     "preserves the absolute source ceiling and exact request/reply boundaries without partial output",

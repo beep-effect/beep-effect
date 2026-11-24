@@ -10,8 +10,6 @@ import { CitationNativeSocketTestRpcs } from "./CitationNativeSocket.protocol.ts
 
 const handlers = CitationNativeSocketTestRpcs.toLayer({
   Echo: ({ text }) => Effect.succeed(text),
-  // Deliberate non-cooperative child work: only physical process termination
-  // can stop it. This is a qualification control, never production behavior.
   Busy: Effect.fn("SocketFixture.busy")(function* () {
     const stdio = yield* Stdio.Stdio;
     yield* Stream.make("busy").pipe(Stream.run(stdio.stderr({ endOnDone: false })), Effect.orDie);

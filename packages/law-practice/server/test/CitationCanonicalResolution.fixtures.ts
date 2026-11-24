@@ -98,9 +98,8 @@ const formatDocument = Effect.fn("CanonicalResolutionTest.formatDocument")(funct
     }),
     { concurrency: 1 }
   );
-  // Python dict-comprehension overwrites duplicate matched-text keys. The source
-  // assertion compares this view; exact group membership is checked separately.
-  return R.fromEntries(entries);
+  const lastDuplicateMatchedTextWinsAsInPythonDictComprehension = R.fromEntries(entries);
+  return lastDuplicateMatchedTextWinsAsInPythonDictComprehension;
 });
 const referenceIndices = Effect.fn("CanonicalResolutionTest.referenceIndices")(function* (
   models: ReadonlyArray<S.JsonObject>,
@@ -108,11 +107,11 @@ const referenceIndices = Effect.fn("CanonicalResolutionTest.referenceIndices")(f
   id: string
 ) {
   const views = yield* S.decodeUnknownEffect(Views)(models);
-  // These seven original scenes have unique labels and identical corrected/raw
-  // citation strings. Check that condition instead of assuming a general getter law.
   const labels = A.map(views, (model) => model.matchedText);
-  expect(labels, id).toEqual(A.map(views, (model) => model.correctedCitation));
-  expect(A.dedupe(labels), id).toHaveLength(labels.length);
+  expect(labels, `${id}: these original scenes have identical corrected and raw citation strings`).toEqual(
+    A.map(views, (model) => model.correctedCitation)
+  );
+  expect(A.dedupe(labels), `${id}: these original scenes have unique labels`).toHaveLength(labels.length);
   const indices = R.fromEntries(A.map(labels, (label, index) => Tuple.make(label, index)));
   return yield* Effect.forEach(
     R.values(formatted),
@@ -123,6 +122,10 @@ const referenceIndices = Effect.fn("CanonicalResolutionTest.referenceIndices")(f
 /** Bind every original resolve operation to its exact assertion and input models.
  * Verified witness quotes represent the original matched-text labels only; this
  * does not qualify upstream extraction, native hashes or general model getters.
+ *
+ * **Gotchas**
+ *
+ * Exact group membership is checked by the caller, separately from this matched-text view.
  * @internal @category testing @since 0.0.0
  */
 export const makeCitationCanonicalResolutionComparison = Effect.fn("CanonicalResolutionTest.makeComparison")(
@@ -145,11 +148,11 @@ export const makeCitationCanonicalResolutionComparison = Effect.fn("CanonicalRes
       const models = yield* S.decodeUnknownEffect(SourceModels)(rawModels);
       expect(models, id).toEqual(assertion.criterion.context.values.citations);
       const sourceGroups = yield* S.decodeUnknownEffect(SourceGroups)(rawGroups);
-      // Every one of these 45 default source groups retains its resource citation
-      // as the first member. Validate the whole model before using that finite law;
-      // the public optional authority example is not a resource-key capability.
       for (const group of sourceGroups) {
-        expect(group.resource.fields.citation, id).toEqual(A.getUnsafe(models, A.getUnsafe(group.members, 0)));
+        expect(
+          group.resource.fields.citation,
+          `${id}: each default source group keeps its resource citation first, a finite law of this validated model and not a resource-key capability`
+        ).toEqual(A.getUnsafe(models, A.getUnsafe(group.members, 0)));
       }
       const formatted = yield* formatDocument(document);
       if (assertion.kind === "formatted") expect(formatted, id).toEqual(assertion.criterion.operands[1].value);
