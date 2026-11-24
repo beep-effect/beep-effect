@@ -17,23 +17,19 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("test/CitationExtractionEntryCoverage");
 
-/** One complete-catalog document installation shared by the refusal tests. */
 class InstalledDocumentExtraction extends Context.Service<
   InstalledDocumentExtraction,
   Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>
 >()($I`InstalledDocumentExtraction`) {}
 
-// Owning the complete catalog costs seconds per installation, and the native
-// runtimes live for the layer's scope. Installing it once per block keeps each
-// refusal test well inside its watchdog on contended Turbo runs.
-const installedDocumentExtractionLayer = Layer.effect(
+const completeCatalogInstalledOncePerBlockLayer = Layer.effect(
   InstalledDocumentExtraction,
   installCitationDocumentExtractionFixture("bun")
 );
 
-// The shared configuration is already owned by the fixture, so the entry stage
-// installs from it directly instead of owning the complete catalog again.
-const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimits> = {}) {
+const installEntryFromAlreadyOwnedConfiguration = Effect.fnUntraced(function* (
+  narrow: Partial<CitationEngineLimits> = {}
+) {
   const installed = yield* InstalledDocumentExtraction;
   const limits = { ...installed.setup.limits, ...narrow };
   const provided = Context.add(installed.provided, CitationDocumentStepContainers, {
@@ -53,13 +49,12 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true, timeout: "30 seconds" })(
   "primitive extraction entry refusals",
   (it) => {
-    // Sequential: both tests read the shared spawn and admission counters.
-    it.layer(installedDocumentExtractionLayer, { concurrent: false, timeout: "120 seconds" })(
-      "over one complete-catalog installation",
+    it.layer(completeCatalogInstalledOncePerBlockLayer, { concurrent: false, timeout: "120 seconds" })(
+      "over one complete-catalog installation, installed once because owning the catalog costs seconds and the refusal stays inside the contended Turbo watchdog; sequential because both tests read its spawn and admission counters",
       (it) => {
         it.effect("rejects ordinary oversized source text before launching native extraction", () =>
           Effect.gen(function* () {
-            const { entry, setup } = yield* install({ sourceUtf16: 3 });
+            const { entry, setup } = yield* installEntryFromAlreadyOwnedConfiguration({ sourceUtf16: 3 });
             const before = yield* setup.observed.snapshot;
             const failure = yield* entry.extract({ plain: "abcd", markup: null, cleanSteps: [] }).pipe(Effect.flip);
             expect(failure).toMatchObject({
@@ -78,7 +73,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, timeout: "30 s
 
         it.effect("refuses a named cleaner plan when no resolver was captured", () =>
           Effect.gen(function* () {
-            const { entry, setup } = yield* install();
+            const { entry, setup } = yield* installEntryFromAlreadyOwnedConfiguration();
             const before = yield* setup.observed.snapshot;
             const failure = yield* entry
               .extract({

@@ -241,9 +241,11 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   const mutex = yield* Semaphore.make(1);
   let steps = 0;
   let owner = O.none<number>();
-  // Direct callback recursion keeps the same owner. Other fibers still wait;
-  // acquireUseRelease clears ownership on success, failure and interruption.
-  const serial = <A, E, R>(body: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+  const clearOwnershipOnSuccessFailureAndInterruption = () =>
+    Effect.sync(() => {
+      owner = O.none();
+    });
+  const serialReentrantForOwningFiberCallbacks = <A, E, R>(body: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
     Effect.withFiber((fiber) =>
       Effect.suspend(() =>
         O.isSome(owner) && owner.value === fiber.id
@@ -255,10 +257,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
                   owner = O.some(fiber.id);
                 }),
                 () => body,
-                () =>
-                  Effect.sync(() => {
-                    owner = O.none();
-                  })
+                clearOwnershipOnSuccessFailureAndInterruption
               )
             )
       )
@@ -357,11 +356,10 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   });
   const lookup = Effect.fn("Citation.runtimeDictionaryLookup")(function* (key: CitationRuntimeDictionaryKey) {
     const text = yield* exactText(key.objectId);
-    // CPython's DKIX_KEY_CHANGED retries with the original caller-supplied hash.
-    // Value replacement and unrelated deletion do not restart the probe.
+    const originalCallerHashForEveryKeyChangedRetry = key;
     while (true) {
       if (capacity === 0) return O.none<typeof Hit.Type>();
-      const decision = yield* probeEpoch(key, text);
+      const decision = yield* probeEpoch(originalCallerHashForEveryKeyChangedRetry, text);
       if (decision._tag === "Missing") return O.none<typeof Hit.Type>();
       if (decision._tag === "Match") return Hit.makeOption({ entryId: decision.entryId, bucket: decision.bucket });
     }
@@ -420,9 +418,9 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   ) {
     const key = yield* keySnapshot(inputKey);
     const decodedValue = yield* S.decodeEffect(S.Natural)(value).pipe(Effect.mapError(invalid));
-    // insertdict converts before lookup even when rich comparison will hit
-    // an existing string or fail. Publish the rebuilt key table before calls.
-    if (unicode && (yield* exactText(key.objectId).pipe(Effect.map(O.isNone)))) {
+    const insertdictConvertsTableBeforeAnyComparisonCall =
+      unicode && (yield* exactText(key.objectId).pipe(Effect.map(O.isNone)));
+    if (insertdictConvertsTableBeforeAnyComparisonCall) {
       const converted = yield* prepareInsertion(true);
       capacity = converted.capacity;
       usable = converted.usable;
@@ -443,11 +441,11 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     }
     if (O.isSome(hit)) {
       const entry = yield* Effect.fromOption(HashMap.get(entries, hit.value.entryId), invalid);
-      entries = HashMap.set(
-        entries,
-        entry.entryId,
-        CitationRuntimeDictionaryEntry.make({ ...entry, value: decodedValue })
-      );
+      const valueReplacementDoesNotRestartTheProbe = CitationRuntimeDictionaryEntry.make({
+        ...entry,
+        value: decodedValue,
+      });
+      entries = HashMap.set(entries, entry.entryId, valueReplacementDoesNotRestartTheProbe);
       const citationResult2 = yield* Effect.fromOption(HashMap.get(entries, entry.entryId), invalid);
       return copyEntry(citationResult2);
     }
@@ -470,7 +468,9 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     nextEntry += 1;
     return copyEntry(entry);
   });
-  const remove = Effect.fn("Citation.runtimeDictionaryRemove")(function* (inputKey: CitationRuntimeDictionaryKey) {
+  const unrelatedDeletionDoesNotRestartTheProbe = Effect.fn("Citation.runtimeDictionaryRemove")(function* (
+    inputKey: CitationRuntimeDictionaryKey
+  ) {
     const key = yield* keySnapshot(inputKey);
     yield* step;
     const hit = yield* lookup(key);
@@ -497,14 +497,16 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     )
   );
   return CitationRuntimeDictionary.of({
-    get: Effect.fn("Citation.serialRuntimeDictionaryGet")((key: CitationRuntimeDictionaryKey) => serial(get(key))),
+    get: Effect.fn("Citation.serialRuntimeDictionaryGet")((key: CitationRuntimeDictionaryKey) =>
+      serialReentrantForOwningFiberCallbacks(get(key))
+    ),
     set: Effect.fn("Citation.serialRuntimeDictionarySet")((key: CitationRuntimeDictionaryKey, value: number) =>
-      serial(set(key, value))
+      serialReentrantForOwningFiberCallbacks(set(key, value))
     ),
     remove: Effect.fn("Citation.serialRuntimeDictionaryRemove")((key: CitationRuntimeDictionaryKey) =>
-      serial(remove(key))
+      serialReentrantForOwningFiberCallbacks(unrelatedDeletionDoesNotRestartTheProbe(key))
     ),
-    clear: serial(clear),
-    read: serial(read),
+    clear: serialReentrantForOwningFiberCallbacks(clear),
+    read: serialReentrantForOwningFiberCallbacks(read),
   });
 });

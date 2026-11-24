@@ -44,15 +44,19 @@ const scalar = (value: CitationTokenSeed["groups"][string] | number): CitationDu
  * or derived min/max anchors. This adapter issues no proof or model identity.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(function* (policy: unknown, raw: unknown) {
+export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(function* (
+  separatelyCallableRawPolicy: unknown,
+  raw: unknown
+) {
   const text = yield* S.decodeUnknownEffect(ProfileText)(raw).pipe(Effect.mapError(configuration));
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text)).pipe(
     Effect.mapError(configuration)
   );
   if (digest !== "9054c6bfa1d5095991daf5c5644858db3715e1cedfef96a931c561e9e88e7944") return yield* configuration();
   const profile = yield* S.decodeEffect(Profile)(text).pipe(Effect.mapError(configuration));
-  // A separately callable raw entry point: decode its policy here.
-  const limits = yield* decodeCitationRegexPolicy(policy, () => CitationDumpFailure.make({ reason: "invalid-policy" }));
+  const limits = yield* decodeCitationRegexPolicy(separatelyCallableRawPolicy, () =>
+    CitationDumpFailure.make({ reason: "invalid-policy" })
+  );
   const context = yield* makeCitationNativeRendering(limits);
   const { timing, unicode } = context;
 

@@ -243,8 +243,6 @@ export const SourceProcessingRecord = S.Union([
 );
 
 /**
- * Type for {@link SourceProcessingRecord}.
- *
  * **Example** (Type source processing record)
  *
  * ```ts import.meta.vitest name="Type source processing record"
@@ -274,8 +272,6 @@ export const SourceProcessingRecord = S.Union([
 export type SourceProcessingRecord = typeof SourceProcessingRecord.Type;
 
 /**
- * Machine-readable failure row reason.
- *
  * **Example** (Decode failure reason value)
  *
  * ```ts import.meta.vitest name="Decode failure reason value"
@@ -298,8 +294,6 @@ export const FileProcessingFailureReason = S.Union([FileProcessingOperationError
 );
 
 /**
- * Type for {@link FileProcessingFailureReason}.
- *
  * **Example** (Type failure reason value)
  *
  * ```ts import.meta.vitest name="Type failure reason value"
@@ -459,8 +453,6 @@ export const FileProcessingFailureRecord = S.Union([
 );
 
 /**
- * Type for {@link FileProcessingFailureRecord}.
- *
  * **Example** (Type failure record)
  *
  * ```ts import.meta.vitest name="Type failure record"

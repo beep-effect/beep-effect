@@ -155,8 +155,6 @@ export const resolveLocalPath: (
 const TextEncodingBase = LiteralKit(["ascii", "latin1", "utf-8"]);
 
 /**
- * Text decoding labels accepted by the streaming text helpers.
- *
  * **Example** (Parse encoding from unknown)
  *
  * ```ts
@@ -181,8 +179,6 @@ export const TextEncoding = TextEncodingBase.pipe(
 );
 
 /**
- * Type for {@link TextEncoding}.
- *
  * **Example** (Annotate latin1 encoding value)
  *
  * ```ts
@@ -200,8 +196,6 @@ export type TextEncoding = typeof TextEncoding.Type;
 const DEFAULT_ENCODING: TextEncoding = "utf-8";
 
 /**
- * Per-line processing options shared by the read-oriented helpers.
- *
  * **Example** (Make skipEmpty trim options)
  *
  * ```ts
@@ -236,8 +230,6 @@ export class TextReadOptions extends S.Opaque<TextReadOptions, { readonly brand:
 ) {}
 
 /**
- * Streaming options that extend {@link TextReadOptions} with windowing controls.
- *
  * **Example** (Make maxLines skip options)
  *
  * ```ts
@@ -273,8 +265,6 @@ export class TextStreamOptions extends S.Opaque<TextStreamOptions, { readonly br
 ) {}
 
 /**
- * Aggregate line-length and byte statistics computed for a text file.
- *
  * **Example** (Construct aggregate line stats)
  *
  * ```ts

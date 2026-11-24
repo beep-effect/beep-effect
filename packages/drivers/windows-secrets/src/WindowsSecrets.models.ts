@@ -53,8 +53,6 @@ export const SecretTarget = S.String.check(
 );
 
 /**
- * Runtime type for {@link SecretTarget}.
- *
  * **Example** (Annotate a target)
  *
  * ```ts
@@ -92,8 +90,6 @@ export const SecretStoreOperation = SecretStoreOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link SecretStoreOperation}.
- *
  * **Example** (Annotate an operation)
  *
  * ```ts

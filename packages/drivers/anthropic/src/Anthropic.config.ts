@@ -159,8 +159,6 @@ export const ANTHROPIC_DEFAULT_RETRY_ATTEMPTS = 4 as const;
 export const ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS = 250 as const;
 
 /**
- * Static model-price row used for approximate usage attribution.
- *
  * **Details**
  *
  * Values are intentionally marked approximate; `UsageRecord` rows should use
@@ -226,8 +224,6 @@ export const ANTHROPIC_DEFAULT_APPROXIMATE_PRICE = AnthropicApproximatePrice.mak
 
 const anthropicLanguageModelOptionsMaxTokensDefault = PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS);
 /**
- * Schema-backed options accepted by Anthropic language-model layer helpers.
- *
  * **Details**
  *
  * Missing fields are normalized by schema defaults before callers build the

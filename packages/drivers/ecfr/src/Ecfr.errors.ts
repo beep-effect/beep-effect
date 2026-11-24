@@ -22,8 +22,6 @@ const EcfrErrorReasonBase = LiteralKit([
 ]);
 
 /**
- * Technical error reasons emitted by the eCFR REST API driver.
- *
  * **Example** (Log AST error reason)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link EcfrErrorReason}.
- *
  * **Example** (Assign transport reason type)
  *
  * ```ts
@@ -60,8 +56,6 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
 export type EcfrErrorReason = typeof EcfrErrorReason.Type;
 
 /**
- * Options used when constructing {@link EcfrError} instances.
- *
  * **Example** (Make options with status)
  *
  * ```ts
@@ -100,8 +94,6 @@ export class EcfrErrorOptions extends S.Opaque<EcfrErrorOptions, { readonly bran
 ) {}
 
 /**
- * Technical failure raised by the eCFR REST API driver boundary.
- *
  * **Example** (Create transport EcfrError)
  *
  * ```ts

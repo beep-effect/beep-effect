@@ -87,11 +87,6 @@ class TomlFormatInvariantError extends S.TaggedError<TomlFormatInvariantError, {
 export type TomlRangeLike = TomlRange | { readonly offset: number; readonly length: number };
 
 /**
- * Options controlling formatting and modification behavior. The only knob is
- * `newline`: for `format` it normalizes every newline outside multi-line
- * strings; for `modify` it overrides the dominant newline inherited by
- * inserted lines.
- *
  * **Example** (Select CRLF formatting)
  *
  * ```ts
@@ -122,12 +117,6 @@ export class TomlFormattingOptions extends S.Opaque<TomlFormattingOptions, { rea
 ) {}
 
 /**
- * Raised when `TomlFormat.modify` cannot resolve the requested path against
- * the document's semantic view, when the insertion target refuses (an inline
- * table or an implicitly created table), or when the replacement value
- * cannot render as TOML. Carries one structured {@link TomlDiagnostic} —
- * never a collapsed `reason` string.
- *
  * **Example** (Construct a structured modification failure)
  *
  * ```ts

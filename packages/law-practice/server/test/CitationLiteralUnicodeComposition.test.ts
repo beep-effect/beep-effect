@@ -88,9 +88,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
         const work = yield* Effect.fromOption(citationResult10);
         const snapshot = yield* work.snapshot;
         expect(snapshot.closed).toBe(true);
-        // A failed stage may have reserved a prefix, but cannot publish a value.
-        // The bound does not depend on how a producer partitions its slices.
-        expect(snapshot.producedTextUtf16).toBeLessThanOrEqual(input.budget);
+        expect(
+          snapshot.producedTextUtf16,
+          "a failed stage may reserve a prefix but publishes no value, however a producer partitions its slices"
+        ).toBeLessThanOrEqual(input.budget);
         expect(snapshot.producedTextUtf16).toBeGreaterThanOrEqual(Math.min(affordable, input.repetitions) * 2);
       },
       (effect) => withCitationTestInvocation(effect)

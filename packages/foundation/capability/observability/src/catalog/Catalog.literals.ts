@@ -17,8 +17,6 @@ import * as Order from "effect/Order";
 const $I = $ObservabilityId.create("catalog/Catalog.literals");
 
 /**
- * Privacy tier a telemetry record is emitted at, ordered strictest first.
- *
  * **Details**
  *
  * `shape-only` carries record shape and no content, `standard` carries bounded
@@ -45,8 +43,6 @@ export const TelemetryTier = LiteralKit(["shape-only", "standard", "dev-verbose"
 );
 
 /**
- * Runtime type for {@link TelemetryTier}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -126,8 +122,6 @@ export const PackageFamily = LiteralKit(["slice", "foundation", "driver", "tooli
 );
 
 /**
- * Runtime type for {@link PackageFamily}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -155,16 +149,12 @@ export const SignalKind = LiteralKit(["span", "metric", "event", "log"]).pipe(
 );
 
 /**
- * Runtime type for {@link SignalKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SignalKind = typeof SignalKind.Type;
 
 /**
- * Cardinality class of an attribute key's value space.
- *
  * **Details**
  *
  * Metric labels accept only `static` and `bounded` keys; `unbounded` keys are
@@ -188,16 +178,12 @@ export const CardinalityClass = LiteralKit(["static", "bounded", "unbounded"]).p
 );
 
 /**
- * Runtime type for {@link CardinalityClass}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CardinalityClass = typeof CardinalityClass.Type;
 
 /**
- * Value type an attribute key carries on the wire.
- *
  * **Example** (Read an attribute value type)
  *
  * ```ts import.meta.vitest name="Read an attribute value type"
@@ -216,16 +202,12 @@ export const AttributeValueType = LiteralKit(["string", "boolean", "int", "doubl
 );
 
 /**
- * Runtime type for {@link AttributeValueType}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AttributeValueType = typeof AttributeValueType.Type;
 
 /**
- * Metric instrument kind.
- *
  * **Example** (Read a metric kind)
  *
  * ```ts import.meta.vitest name="Read a metric kind"
@@ -244,16 +226,12 @@ export const MetricKind = LiteralKit(["counter", "up-down-counter", "gauge", "hi
 );
 
 /**
- * Runtime type for {@link MetricKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type MetricKind = typeof MetricKind.Type;
 
 /**
- * OpenTelemetry span kind.
- *
  * **Example** (Read a span kind)
  *
  * ```ts import.meta.vitest name="Read a span kind"
@@ -272,8 +250,6 @@ export const SpanKind = LiteralKit(["internal", "server", "client", "producer", 
 );
 
 /**
- * Runtime type for {@link SpanKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -305,8 +281,6 @@ export const IdentitySource = LiteralKit(["vouched", "self-claimed"]).pipe(
 );
 
 /**
- * Runtime type for {@link IdentitySource}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -339,8 +313,6 @@ export const InstrumentOrigin = LiteralKit(["harvested", "declared"]).pipe(
 );
 
 /**
- * Runtime type for {@link InstrumentOrigin}.
- *
  * @category models
  * @since 0.0.0
  */

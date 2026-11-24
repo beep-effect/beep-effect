@@ -78,8 +78,6 @@ export class DispatchUnknownDockCommand extends S.Opaque<
 ) {}
 
 /**
- * Operation that persists the current live workspace.
- *
  * **Example** (Make save snapshot operation)
  *
  * ```ts
@@ -316,8 +314,6 @@ export const DockAtomOperationOutcome = DockAtomOperationOutcomeKind.mapMembers(
 export type DockAtomOperationOutcome = typeof DockAtomOperationOutcome.Type;
 
 /**
- * Tagged union of failures produced by a built Atom session.
- *
  * **Example** (Make snapshot missing error)
  *
  * ```ts
@@ -390,8 +386,6 @@ export class DockAtomFeedSuccess extends S.Opaque<DockAtomFeedSuccess, { readonl
 ) {}
 
 /**
- * Ordered feed entry for one typed session failure.
- *
  * **Example** (Make feed failure entry)
  *
  * ```ts

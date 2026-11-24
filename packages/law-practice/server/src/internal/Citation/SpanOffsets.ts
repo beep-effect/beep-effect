@@ -143,8 +143,8 @@ const bisectOffsetEntries = (
     if (side === "left" ? key < position : key <= position) lower = middle + 1;
     else upper = middle;
   }
-  // Python index -1 deliberately chooses the final source updater.
-  return lower === 0 ? count - 1 : lower - 1;
+  const pythonIndexMinusOneChoosesFinalUpdater = count - 1;
+  return lower === 0 ? pythonIndexMinusOneChoosesFinalUpdater : lower - 1;
 };
 /** Build only from prepared steps/layouts. UTF-16 and step checks precede packed
  * index allocation. The enclosing HTML/annotation operation owns its deadline;

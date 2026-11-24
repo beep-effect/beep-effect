@@ -42,8 +42,6 @@ export const KeywordFamily = LiteralKit(["close", "fix", "resolve", "ref"]).pipe
 );
 
 /**
- * Tense-collapsed stem used to categorize closing and reference keywords.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -6,8 +6,6 @@
  */
 
 /**
- * Edge endpoint schema factory.
- *
  * @category constructors
  * @since 0.0.0
  */

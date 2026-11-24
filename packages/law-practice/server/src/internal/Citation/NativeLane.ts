@@ -115,14 +115,10 @@ export class CitationNativeLane extends Context.Service<
     ) => Effect.Effect<A, E | CitationNativeLaneFailure | CitationSafetyLimitExceeded, R>;
   }
 >()($I`CitationNativeLane`) {}
-// Callback context follows child fibers, without tying ownership to fiber identity.
-const LaneUses = Context.Reference<ReadonlyArray<{ readonly lock: Semaphore.Semaphore; readonly live: () => boolean }>>(
-  $I`LaneUses`,
-  { defaultValue: A.empty }
-);
-// A physical owner's Scope may confirm death independently of the job fiber.
-// Late confirmation must also settle the job's private admission bookkeeping.
-const makeRetirementNotification = () => {
+const LaneUsesFollowingChildFibersNotFiberIdentity = Context.Reference<
+  ReadonlyArray<{ readonly lock: Semaphore.Semaphore; readonly live: () => boolean }>
+>($I`LaneUses`, { defaultValue: A.empty });
+const makeRetirementNotificationSettlingLateOwnerScopeDeath = () => {
   let retired = false;
   let listeners = A.empty<Effect.Effect<void>>();
   return {
@@ -278,25 +274,26 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
         yield* retire;
         const lease = yield* acquire(authorized);
         returning = false;
-        const notification = makeRetirementNotification();
+        const notification = makeRetirementNotificationSettlingLateOwnerScopeDeath();
         let spawned = false;
         let acknowledged = false;
+        const lateConfirmationAlsoSettlesPrivateAdmission = Effect.gen(function* () {
+          if (!acknowledged) {
+            acknowledged = true;
+            if (spawned) confirmed++;
+          }
+          if (returning || closed) {
+            yield* lease.release;
+            if (O.isSome(permit) && permit.value === lease) permit = O.none();
+          }
+          yield* notification.confirm;
+        });
         const record = yield* owner
           .start(
             command,
             {
               quarantine: lease.quarantine,
-              release: Effect.gen(function* () {
-                if (!acknowledged) {
-                  acknowledged = true;
-                  if (spawned) confirmed++;
-                }
-                if (returning || closed) {
-                  yield* lease.release;
-                  if (O.isSome(permit) && permit.value === lease) permit = O.none();
-                }
-                yield* notification.confirm;
-              }),
+              release: lateConfirmationAlsoSettlesPrivateAdmission,
             },
             () => refused(authorized)
           )
@@ -330,7 +327,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     spawner: nativeSpawner,
     start,
     withUse: Effect.fn("Citation.useNativeLane")(function* (body) {
-      const parents = yield* LaneUses;
+      const parents = yield* LaneUsesFollowingChildFibersNotFiberIdentity;
       if (A.some(parents, (use) => use.lock === lock && use.live()))
         return yield* CitationNativeLaneFailure.make({ reason: "invalid-runtime" });
       return yield* lock.withPermit(
@@ -344,14 +341,12 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
             const guard = <A, E, R>(operation: Effect.Effect<A, E, R>, bound: Duration.Duration) =>
               Effect.uninterruptibleMask(
                 Effect.fnUntraced(function* (restore) {
-                  // The detached task retains ownership if its caller stops waiting.
-                  const task = yield* admitted
+                  const detachedTaskKeepsOwnershipIfCallerStopsWaiting = yield* admitted
                     .withPermit(
                       Effect.suspend((): Effect.Effect<A, E | CitationNativeLaneFailure, R> => {
                         if (!live) return Effect.fail(CitationNativeLaneFailure.make({ reason: "closed" }));
-                        // Admission publication and revocation share one synchronous turn.
-                        const done = Deferred.makeUnsafe<void>();
-                        pending = O.some({ done, bound });
+                        const publicationAndRevocationShareThisSyncTurn = Deferred.makeUnsafe<void>();
+                        pending = O.some({ done: publicationAndRevocationShareThisSyncTurn, bound });
                         outstanding++;
                         return operation.pipe(
                           Effect.ensuring(
@@ -365,24 +360,26 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
                               outstanding--;
                               pending = O.none();
                               yield* closeOwner;
-                              yield* Deferred.succeed(done, undefined);
+                              yield* Deferred.succeed(publicationAndRevocationShareThisSyncTurn, undefined);
                             })
                           )
                         );
                       })
                     )
                     .pipe(Effect.forkDetach);
-                  return yield* restore(Fiber.join(task));
+                  return yield* restore(Fiber.join(detachedTaskKeepsOwnershipIfCallerStopsWaiting));
                 })
               );
             const admissionBound = limits.queueDeadline;
             const retirementBound = limits.cleanupDeadline;
-            // Start can retire one occupant, claim admission, then transfer a spawn.
-            const startBound = Duration.sum(admissionBound, Duration.times(retirementBound, 2));
+            const retireOneOccupantClaimAdmissionTransferSpawnBound = Duration.sum(
+              admissionBound,
+              Duration.times(retirementBound, 2)
+            );
             const start: CitationNativeStart = (kind, command, onRetiring) =>
               guard(
                 startUnlocked(kind, command, onRetiring, () => live),
-                startBound
+                retireOneOccupantClaimAdmissionTransferSpawnBound
               );
             const outcome = yield* Effect.exit(
               restore(
@@ -399,7 +396,12 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
                     ),
                     guard(release.pipe(Effect.uninterruptible), retirementBound)
                   )
-                ).pipe(Effect.provideService(LaneUses, A.append(parents, { lock, live: () => live })))
+                ).pipe(
+                  Effect.provideService(
+                    LaneUsesFollowingChildFibersNotFiberIdentity,
+                    A.append(parents, { lock, live: () => live })
+                  )
+                )
               )
             );
             live = false;
@@ -449,8 +451,6 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     yieldTo: Effect.fn("Citation.yieldNativeLane")(function* (body) {
       return yield* Effect.uninterruptibleMask(
         Effect.fnUntraced(function* (restore) {
-          // Serialize only entry/exit with start. Cleaner work can fork nested
-          // plans; its logical ownership is the depth, never a fiber-held lock.
           yield* lock.withPermit(
             Effect.gen(function* () {
               if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
@@ -534,7 +534,7 @@ export const makeCitationStandaloneNativeStarter = Effect.fn("Citation.makeStand
         const lease = yield* acquireCitationNativeLease(admission, operation, false, (reason) =>
           CitationNativeLaneFailure.make({ reason })
         );
-        const notification = makeRetirementNotification();
+        const notification = makeRetirementNotificationSettlingLateOwnerScopeDeath();
         const record = yield* owner
           .start(command, {
             quarantine: lease.quarantine,

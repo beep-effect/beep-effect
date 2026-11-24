@@ -89,9 +89,6 @@ export const MarkdownSegment = S.Union([S.String, S.Finite]).pipe(
 export type MarkdownSegment = typeof MarkdownSegment.Type;
 
 /**
- * An ordered sequence of {@link MarkdownSegment} values describing a location
- * within a markdown document tree.
- *
  * **Example** (Validate a child-index path)
  *
  * ```ts
@@ -112,8 +109,6 @@ export const MarkdownPath = S.Array(MarkdownSegment).pipe(
 );
 
 /**
- * A location within a markdown document tree.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -121,10 +116,6 @@ export const MarkdownPath = S.Array(MarkdownSegment).pipe(
 export type MarkdownPath = typeof MarkdownPath.Type;
 
 /**
- * A range within a markdown document, expressed as a zero-based character
- * `offset` and a `length` in UTF-16 code units. Pass to `MarkdownFormat.format`
- * to restrict formatting to a region.
- *
  * **Example** (Select a source region)
  *
  * ```ts
@@ -159,9 +150,6 @@ export class MarkdownRange extends S.Opaque<MarkdownRange, { readonly brand: uni
 ) {}
 
 /**
- * A non-mutating text edit: replace the span `[offset, offset + length)` with
- * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
- *
  * **Details**
  *
  * Structurally identical to `@beep/jsonc`'s, `@beep/yaml`'s and

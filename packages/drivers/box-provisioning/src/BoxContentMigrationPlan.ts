@@ -39,8 +39,6 @@ export const BoxContentUploadTransport = LiteralKit(["single", "chunked"]).pipe(
 );
 
 /**
- * Runtime type for {@link BoxContentUploadTransport}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -130,8 +128,6 @@ export const BoxContentFolderAction = S.Union([BoxContentFolderExists, BoxConten
 );
 
 /**
- * Runtime type for {@link BoxContentFolderAction}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -325,8 +321,6 @@ export const BoxContentFileAction = S.Union([
 );
 
 /**
- * Runtime type for {@link BoxContentFileAction}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -361,8 +355,6 @@ export class BoxContentRuleUploadCount extends S.Opaque<BoxContentRuleUploadCoun
 ) {}
 
 /**
- * Counts, byte totals, and provider-call estimates for one content-migration plan.
- *
  * **Details**
  *
  * `planProviderCalls` is the number of Box calls this dry run made.

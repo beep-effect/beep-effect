@@ -85,8 +85,6 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
 );
 
 /**
- * Request-time tuning options shared by OpenAI-compatible language-model adapters.
- *
  * **Example** (Set max tokens and temperature)
  *
  * ```ts
@@ -194,8 +192,6 @@ export type OpenAiCompatLanguageModelOptions = Omit<OpenAiCompatLanguageModelCli
 };
 
 /**
- * Options accepted by the default OpenAI-compatible language-model constructor.
- *
  * **Example** (Select a model by name)
  *
  * ```ts

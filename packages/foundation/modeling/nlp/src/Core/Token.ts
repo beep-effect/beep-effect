@@ -72,8 +72,6 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => S.is(TokenIndex)(u)
 export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>(S.makeFilter(S.is(S.Natural)));
 
 /**
- * Schema that decodes non-negative numbers into {@link TokenIndex} values.
- *
  * **Example** (Make schema token index)
  *
  * ```ts import.meta.vitest name="Make schema token index"
@@ -149,8 +147,6 @@ export const isCharPosition = (u: unknown): u is CharPosition => S.is(CharPositi
 export const charPosition: Brand.Constructor<CharPosition> = Brand.check<CharPosition>(S.makeFilter(S.is(S.Natural)));
 
 /**
- * Schema that decodes non-negative numbers into {@link CharPosition} values.
- *
  * **Example** (Make schema char position)
  *
  * ```ts import.meta.vitest name="Make schema char position"

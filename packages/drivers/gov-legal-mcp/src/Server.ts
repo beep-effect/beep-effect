@@ -29,8 +29,6 @@ import type { Stdio } from "effect/Stdio";
 const $I = $GovLegalMcpId.create("Server");
 
 /**
- * Identity advertised by the gov-legal MCP stdio server.
- *
  * **Example** (Making a server config)
  *
  * ```ts

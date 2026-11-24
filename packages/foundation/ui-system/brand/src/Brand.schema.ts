@@ -45,8 +45,6 @@ export const PrintableText = S.NonEmptyString.check(
 );
 
 /**
- * Decoded {@link PrintableText} value.
- *
  * **Example** (Annotate printable text)
  *
  * ```ts
@@ -62,8 +60,6 @@ export const PrintableText = S.NonEmptyString.check(
 export type PrintableText = typeof PrintableText.Type;
 
 /**
- * Tint step of a ten-stop brand color scale, lightest first.
- *
  * **Example** (Enumerate scale steps)
  *
  * ```ts
@@ -80,8 +76,6 @@ export const ScaleStep = LiteralKit(["50", "100", "200", "300", "400", "500", "6
 );
 
 /**
- * Decoded {@link ScaleStep} literal.
- *
  * **Example** (Annotate a scale step)
  *
  * ```ts
@@ -97,8 +91,6 @@ export const ScaleStep = LiteralKit(["50", "100", "200", "300", "400", "500", "6
 export type ScaleStep = typeof ScaleStep.Type;
 
 /**
- * Elevation step of a surface scale, base first.
- *
  * **Example** (Enumerate surface steps)
  *
  * ```ts
@@ -115,8 +107,6 @@ export const SurfaceStep = LiteralKit(["0", "50", "100", "200", "300", "400"]).p
 );
 
 /**
- * Decoded {@link SurfaceStep} literal.
- *
  * **Example** (Annotate a surface step)
  *
  * ```ts
@@ -132,8 +122,6 @@ export const SurfaceStep = LiteralKit(["0", "50", "100", "200", "300", "400"]).p
 export type SurfaceStep = typeof SurfaceStep.Type;
 
 /**
- * Ten-stop hex color scale keyed by {@link ScaleStep}.
- *
  * **Example** (Read the accent step)
  *
  * ```ts
@@ -161,8 +149,6 @@ export class ColorScale extends S.Opaque<ColorScale, { readonly brand: unique sy
 ) {}
 
 /**
- * Six-stop surface (background) scale keyed by {@link SurfaceStep}.
- *
  * **Example** (Read the page background)
  *
  * ```ts
@@ -186,8 +172,6 @@ export class SurfaceScale extends S.Opaque<SurfaceScale, { readonly brand: uniqu
 ) {}
 
 /**
- * Foreground text colors at three emphasis levels.
- *
  * **Example** (Read muted text color)
  *
  * ```ts
@@ -208,8 +192,6 @@ export class Foreground extends S.Opaque<Foreground, { readonly brand: unique sy
 ) {}
 
 /**
- * Border colors at rest and on hover.
- *
  * **Example** (Read the resting border)
  *
  * ```ts
@@ -229,8 +211,6 @@ export class Border extends S.Opaque<Border, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * Semantic status colors.
- *
  * **Example** (Read the error color)
  *
  * ```ts
@@ -251,8 +231,6 @@ export class Semantic extends S.Opaque<Semantic, { readonly brand: unique symbol
 ) {}
 
 /**
- * Opacity in the closed unit interval.
- *
  * **Example** (Construct an alpha)
  *
  * ```ts
@@ -270,8 +248,6 @@ export const Alpha = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pip
 );
 
 /**
- * Decoded {@link Alpha} value.
- *
  * **Example** (Annotate an alpha)
  *
  * ```ts
@@ -376,8 +352,6 @@ export class ColorScheme extends S.Opaque<ColorScheme, { readonly nominal: uniqu
 ) {}
 
 /**
- * Appearance name of a color scheme.
- *
  * **Example** (Guard a scheme name)
  *
  * ```ts
@@ -394,8 +368,6 @@ export const SchemeName = LiteralKit(["light", "dark"]).pipe(
 );
 
 /**
- * Decoded {@link SchemeName} literal.
- *
  * **Example** (Annotate a scheme name)
  *
  * ```ts
@@ -411,8 +383,6 @@ export const SchemeName = LiteralKit(["light", "dark"]).pipe(
 export type SchemeName = typeof SchemeName.Type;
 
 /**
- * A font family with its ordered fallbacks.
- *
  * **Example** (Read the sans family)
  *
  * ```ts
@@ -434,8 +404,6 @@ export class FontStack extends S.Opaque<FontStack, { readonly brand: unique symb
 ) {}
 
 /**
- * Brand typography: the sans and mono stacks.
- *
  * **Example** (Read the mono family)
  *
  * ```ts
@@ -455,8 +423,6 @@ export class Typography extends S.Opaque<Typography, { readonly brand: unique sy
 ) {}
 
 /**
- * SVG path data beginning with a move-to command.
- *
  * **Example** (Construct path data)
  *
  * ```ts
@@ -491,8 +457,6 @@ export const SvgPathData = S.String.check(
 );
 
 /**
- * Decoded {@link SvgPathData} value.
- *
  * **Example** (Annotate path data)
  *
  * ```ts
@@ -508,8 +472,6 @@ export const SvgPathData = S.String.check(
 export type SvgPathData = typeof SvgPathData.Type;
 
 /**
- * A point in mark user units.
- *
  * **Example** (Construct a point)
  *
  * ```ts
@@ -529,8 +491,6 @@ export class MarkPoint extends S.Opaque<MarkPoint, { readonly brand: unique symb
 ) {}
 
 /**
- * A rotation in degrees about an origin.
- *
  * **Example** (Construct a rotation)
  *
  * ```ts
@@ -550,8 +510,6 @@ export class MarkRotation extends S.Opaque<MarkRotation, { readonly brand: uniqu
 ) {}
 
 /**
- * The tilted pixel glasses worn by the lambda: placement transform plus frame and lens paths.
- *
  * **Example** (Count the lenses)
  *
  * ```ts
@@ -606,8 +564,6 @@ export class BrandMark extends S.Opaque<BrandMark, { readonly brand: unique symb
 ) {}
 
 /**
- * The whole brand identity: both color schemes, typography, and the mark.
- *
  * **Example** (Read the brand name)
  *
  * ```ts
@@ -634,8 +590,6 @@ export class BrandIdentity extends S.Opaque<BrandIdentity, { readonly brand: uni
 ) {}
 
 /**
- * SVG paint for a stroke: a hex color or the inherited `currentColor`.
- *
  * **Example** (Inherit the text color)
  *
  * ```ts
@@ -653,8 +607,6 @@ export const SvgPaint = S.Union([HexColor, S.Literal("currentColor")]).pipe(
 );
 
 /**
- * Decoded {@link SvgPaint} value.
- *
  * **Example** (Annotate a paint)
  *
  * ```ts
@@ -718,8 +670,6 @@ export class MarkGround extends S.Opaque<MarkGround, { readonly brand: unique sy
 ) {}
 
 /**
- * Request to render the mark as a standalone SVG document.
- *
  * **Example** (Render request for the 24-unit mark)
  *
  * ```ts
@@ -753,8 +703,6 @@ export class MarkSvgRequest extends S.Opaque<MarkSvgRequest, { readonly brand: u
 ) {}
 
 /**
- * Request to render the mark beside the brand name as a wordmark SVG.
- *
  * **Example** (Wordmark request for dark surfaces)
  *
  * ```ts

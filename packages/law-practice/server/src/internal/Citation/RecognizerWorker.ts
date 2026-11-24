@@ -34,6 +34,7 @@ import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
+const STDIO_PROTOCOL_EOF_INTERRUPT_TEARDOWN_EXIT_CODE = 130;
 const $I = $LawPracticeServerId.create("internal/Citation/RecognizerWorker");
 const Reason = LiteralKit([
   ...CitationNativeProcessFailureReason.literals,
@@ -140,9 +141,8 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
               })
             ).pipe(Effect.raceFirst(Fiber.join(diagnostics).pipe(Effect.andThen(Effect.never))));
             const exitCode = yield* child.exitCode;
-            // The supplied stdio protocol interrupts its root after flushing EOF.
-            // Runtime.defaultTeardown uses130 for that interruption-only exit.
-            if (exitCode !== 0 && exitCode !== 130) return yield* fail("channel-failed");
+            if (exitCode !== 0 && exitCode !== STDIO_PROTOCOL_EOF_INTERRUPT_TEARDOWN_EXIT_CODE)
+              return yield* fail("channel-failed");
             yield* Fiber.join(diagnostics);
             return output;
           })

@@ -46,8 +46,6 @@ export const GateId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type decoded by {@link GateId}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -107,8 +105,6 @@ export const GateSeverity = LiteralKit(["blocking", "advisory"]).pipe(
 );
 
 /**
- * Runtime type decoded by {@link GateSeverity}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -135,16 +131,12 @@ export const GateApplicabilityKind = LiteralKit(["always", "conditional"]).pipe(
 );
 
 /**
- * Runtime type decoded by {@link GateApplicabilityKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GateApplicabilityKind = typeof GateApplicabilityKind.Type;
 
 /**
- * Applicability value for a gate that always runs.
- *
  * **Example** (Construct unconditional applicability)
  *
  * ```ts import.meta.vitest name="Construct unconditional applicability"
@@ -233,16 +225,12 @@ export const GateApplicability = GateApplicabilityKind.mapMembers(
 );
 
 /**
- * Runtime type decoded by {@link GateApplicability}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GateApplicability = typeof GateApplicability.Type;
 
 /**
- * Stable, versioned identity of a typed evidence predicate.
- *
  * **Example** (Construct a predicate type)
  *
  * ```ts
@@ -263,8 +251,6 @@ export const EvidencePredicateType = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type decoded by {@link EvidencePredicateType}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -300,8 +286,6 @@ export class GateEvidenceRequirement extends S.Opaque<GateEvidenceRequirement, {
 ) {}
 
 /**
- * Persistable declaration of a gate's identity, policy, and evidence contract.
- *
  * **Example** (Declare a blocking gate)
  *
  * ```ts
@@ -411,8 +395,6 @@ export const GateOutcome = LiteralKit(["allowed", "denied"]).pipe(
 );
 
 /**
- * Runtime type decoded by {@link GateOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -424,8 +406,6 @@ const parseBasedDaysThrough28SoGenerationDoesNotRejectionSampleArbitraryStrings 
 };
 
 /**
- * Trimmed, non-empty datetime string that `DateTime.make` parses, kept verbatim on the wire.
- *
  * **Details**
  *
  * Receipt and audit timestamps are serialized strings, so this schema validates
@@ -465,8 +445,6 @@ export const IsoDateTimeString = S.Trim.check(
 );
 
 /**
- * Runtime type decoded by {@link IsoDateTimeString}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -19,8 +19,6 @@ const ExiftoolDefect = S.Defect({ includeStack: true }).pipe(S.overrideToEquival
 const isExiftoolDefect = S.is(ExiftoolDefect);
 
 /**
- * Non-negative integer process exit status.
- *
  * **Example** (Making a process exit code)
  *
  * ```ts
@@ -49,8 +47,6 @@ export const ProcessExitCode = S.Int.check(
 );
 
 /**
- * Non-negative integer process exit status.
- *
  * **Example** (Using ProcessExitCode type)
  *
  * ```ts
@@ -89,8 +85,6 @@ const optionsFromInput = (options: ExiftoolErrorContextInput): ExiftoolErrorFrom
   });
 
 /**
- * Additional process context captured for an ExifTool failure.
- *
  * **Example** (Building error context)
  *
  * ```ts
@@ -141,8 +135,6 @@ const existingExiftoolError = (cause: unknown): O.Option<ExiftoolError> =>
   ExiftoolError.is(cause) ? O.some(cause) : O.none();
 
 /**
- * Options used when normalizing unknown ExifTool boundary failures.
- *
  * **Example** (Building from-unknown options)
  *
  * ```ts

@@ -164,9 +164,6 @@ function formatOffset(offsetMinutes: number): string {
 }
 
 /**
- * A TOML local date: `year`-`month`-`day` with no time-of-day or offset,
- * validated against the real Gregorian calendar.
- *
  * **Example** (Format a leap-day date)
  *
  * ```ts
@@ -208,9 +205,6 @@ export class TomlLocalDate extends S.Class<TomlLocalDate, { readonly brand: uniq
 }
 
 /**
- * A TOML local time: `hour`:`minute`:`second`[.`nanosecond`] with no date or
- * offset. `second` tolerates the RFC 3339 leap second (0-60).
- *
  * **Example** (Format fractional local seconds)
  *
  * ```ts
@@ -252,9 +246,6 @@ export class TomlLocalTime extends S.Class<TomlLocalTime, { readonly brand: uniq
 }
 
 /**
- * A TOML local date-time: a {@link TomlLocalDate} and a {@link TomlLocalTime}
- * combined, with no offset.
- *
  * **Example** (Format a date-time without an offset)
  *
  * ```ts
@@ -297,10 +288,6 @@ export class TomlLocalDateTime extends S.Class<TomlLocalDateTime, { readonly bra
 }
 
 /**
- * A TOML offset date-time: a {@link TomlLocalDateTime} plus `offsetMinutes`
- * (-1439-1439). Parsing enforces `hh <= 23` / `mm <= 59` before construction;
- * this class only bounds the combined minute count.
- *
  * **Example** (Format a negative UTC offset)
  *
  * ```ts

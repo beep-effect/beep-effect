@@ -41,8 +41,6 @@ const resolveHttpApiStatus = (ast: SchemaAST.AST): number | undefined => {
 };
 
 /**
- * HTTP response status code in the standard three-digit range from 100 through 599.
- *
  * **Details**
  *
  * Accepts extension codes inside the range as well as the named codes that
@@ -69,8 +67,6 @@ export const HttpStatusCode = S.Natural.check(S.isBetween({ minimum: 100, maximu
 );
 
 /**
- * Runtime value accepted by {@link HttpStatusCode}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -98,8 +94,6 @@ class HttpApiStatusField extends S.Opaque<HttpApiStatusField, { readonly brand: 
 }
 
 /**
- * Shared HTTP API telemetry descriptor.
- *
  * **Example** (Make telemetry descriptor)
  *
  * ```typescript

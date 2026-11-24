@@ -24,9 +24,6 @@ import type { CheckOutcome, SyncOutcome } from "./SectionOutcome.ts";
 const $I = $ManagedSectionId.create("ManagedSection");
 
 /**
- * Raised when the file behind a managed-section operation could not be read or
- * written.
- *
  * **Details**
  *
  * The underlying `PlatformError` is preserved structurally in `cause` rather
@@ -220,8 +217,6 @@ export interface ManagedSectionShape {
 }
 
 /**
- * How a `ManagedSection` layer reads and writes markers.
- *
  * **Example** (Configure a layer with the default dialect)
  *
  * ```ts
@@ -396,8 +391,6 @@ const make: (options?: ManagedSectionOptions) => Effect.Effect<ManagedSectionSha
   });
 
 /**
- * A defect raised when a managed-section test double calls an unstubbed member.
- *
  * **Example** (Identify an unstubbed member)
  *
  * ```ts

@@ -27,7 +27,6 @@ import * as Tuple from "effect/Tuple";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationTokenDispatch = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationTokenDispatch>[0],
   a1: unknown

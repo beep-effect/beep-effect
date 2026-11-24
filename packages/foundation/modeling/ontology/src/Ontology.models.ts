@@ -33,8 +33,6 @@ const FolioIriToken = S.NonEmptyString.pipe(
 );
 
 /**
- * Source type of the loaded FOLIO ontology.
- *
  * **Example** (Checking github source type)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const SourceType = LiteralKit(["http", "github"]).pipe(
 );
 
 /**
- * Runtime type for {@link SourceType}.
- *
  * **Example** (Assigning github source type)
  *
  * ```ts
@@ -109,8 +105,6 @@ export const HttpUrl = HttpUrlDefinition.pipe(
 );
 
 /**
- * Runtime type for {@link HttpUrl}.
- *
  * **Example** (Assigning ontology HTTP URL)
  *
  * ```ts
@@ -126,8 +120,6 @@ export const HttpUrl = HttpUrlDefinition.pipe(
 export type HttpUrl = typeof HttpUrl.Type;
 
 /**
- * Information about the loaded FOLIO ontology graph.
- *
  * **Example** (Inspecting GraphInfo schema AST)
  *
  * ```ts
@@ -226,8 +218,6 @@ export class GraphInfo extends S.Opaque<GraphInfo, { readonly brand: unique symb
 ) {}
 
 /**
- * Health status of the FOLIO API.
- *
  * **Example** (Checking healthy status value)
  *
  * ```ts
@@ -246,8 +236,6 @@ export const HealthStatus = LiteralKit(["healthy", "unhealthy"]).pipe(
 );
 
 /**
- * Runtime type for {@link HealthStatus}.
- *
  * **Example** (Assigning healthy status value)
  *
  * ```ts
@@ -263,8 +251,6 @@ export const HealthStatus = LiteralKit(["healthy", "unhealthy"]).pipe(
 export type HealthStatus = typeof HealthStatus.Type;
 
 /**
- * Response model for the health check endpoint.
- *
  * **Example** (Inspecting HealthResponse schema AST)
  *
  * ```ts
@@ -295,8 +281,6 @@ export class HealthResponse extends S.Opaque<HealthResponse, { readonly brand: u
 ) {}
 
 /**
- * OWL class model for the FOLIO ontology.
- *
  * **Example** (Inspecting OWLClass schema AST)
  *
  * ```ts
@@ -497,8 +481,6 @@ export class OWLClass extends S.Opaque<OWLClass, { readonly brand: unique symbol
 ) {}
 
 /**
- * OWL object property model for the FOLIO ontology.
- *
  * **Example** (Inspecting OWLObjectProperty schema AST)
  *
  * ```ts
@@ -601,8 +583,6 @@ export class OWLObjectProperty extends S.Opaque<OWLObjectProperty, { readonly br
 ) {}
 
 /**
- * A collection of OWL class objects from the FOLIO ontology.
- *
  * **Example** (Inspecting OWLClassList schema AST)
  *
  * ```ts
@@ -647,8 +627,6 @@ export class OWLClassList extends S.Opaque<OWLClassList, { readonly brand: uniqu
 ) {}
 
 /**
- * A collection of OWL object properties from the FOLIO ontology.
- *
  * **Example** (Inspecting OWLObjectPropertyList schema AST)
  *
  * ```ts
@@ -684,8 +662,6 @@ export class OWLObjectPropertyList extends S.Opaque<OWLObjectPropertyList, { rea
 ) {}
 
 /**
- * Relevance score attached to an OWL search result.
- *
  * **Example** (Inspecting OWLSearchScore schema AST)
  *
  * ```ts
@@ -704,8 +680,6 @@ export const OWLSearchScore = S.Finite.pipe(
 );
 
 /**
- * Runtime type for {@link OWLSearchScore}.
- *
  * **Example** (Assigning search relevance score)
  *
  * ```ts
@@ -721,8 +695,6 @@ export const OWLSearchScore = S.Finite.pipe(
 export type OWLSearchScore = typeof OWLSearchScore.Type;
 
 /**
- * Tuple containing an OWL class and its relevance score.
- *
  * **Example** (Inspecting OWLSearchResult schema AST)
  *
  * ```ts
@@ -741,8 +713,6 @@ export const OWLSearchResult = S.Tuple([OWLClass, OWLSearchScore]).pipe(
 );
 
 /**
- * Runtime type for {@link OWLSearchResult}.
- *
  * **Example** (Referencing OWLSearchResult type)
  *
  * ```ts import.meta.vitest name="Referencing OWLSearchResult type"
@@ -757,8 +727,6 @@ export const OWLSearchResult = S.Tuple([OWLClass, OWLSearchScore]).pipe(
 export type OWLSearchResult = typeof OWLSearchResult.Type;
 
 /**
- * Search results containing FOLIO ontology classes with relevance scores.
- *
  * **Example** (Inspecting OWLSearchResults schema AST)
  *
  * ```ts
@@ -797,8 +765,6 @@ export class OWLSearchResults extends S.Opaque<OWLSearchResults, { readonly bran
 ) {}
 
 /**
- * Location segment in a validation error.
- *
  * **Example** (Inspecting location segment schema AST)
  *
  * ```ts
@@ -817,8 +783,6 @@ export const ValidationErrorLocationSegment = S.Union([S.String, S.Int]).pipe(
 );
 
 /**
- * Runtime type for {@link ValidationErrorLocationSegment}.
- *
  * **Example** (Assigning body location segment)
  *
  * ```ts
@@ -834,8 +798,6 @@ export const ValidationErrorLocationSegment = S.Union([S.String, S.Int]).pipe(
 export type ValidationErrorLocationSegment = typeof ValidationErrorLocationSegment.Type;
 
 /**
- * Validation error detail emitted by the API.
- *
  * **Example** (Inspecting ValidationError schema AST)
  *
  * ```ts
@@ -880,8 +842,6 @@ export class ValidationError extends S.Opaque<ValidationError, { readonly brand:
 ) {}
 
 /**
- * HTTP validation error response emitted by the API.
- *
  * **Example** (Inspecting HTTPValidationError schema AST)
  *
  * ```ts

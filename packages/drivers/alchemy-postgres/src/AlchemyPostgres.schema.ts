@@ -29,8 +29,6 @@ import type { AlchemyPostgresConfig } from "./AlchemyPostgres.config.ts";
 const $I = $AlchemyPostgresId.create("AlchemyPostgres.schema");
 
 /**
- * Lifecycle of a scheduled command row.
- *
  * **Example** (Guard a schedule status)
  *
  * ```ts
@@ -50,16 +48,12 @@ export const ScheduleStatus = LiteralKit(["pending", "executed", "rejected", "ca
 );
 
 /**
- * Type-level member of {@link ScheduleStatus}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ScheduleStatus = typeof ScheduleStatus.Type;
 
 /**
- * Lifecycle of an outbox delivery row.
- *
  * **Example** (Guard a delivery status)
  *
  * ```ts
@@ -78,8 +72,6 @@ export const DeliveryStatus = LiteralKit(["pending", "delivered"]).pipe(
 );
 
 /**
- * Type-level member of {@link DeliveryStatus}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -166,9 +158,6 @@ const Int8FromBigInt = S.BigInt.pipe(
 const Int8 = S.Union([S.Int, S.NumberFromString.check(S.isInt()), Int8FromBigInt]);
 
 /**
- * Row of the aggregate instance table: the stored state, version and catch-up
- * cursors of one instance.
- *
  * **Example** (Decode an instance row)
  *
  * ```ts
@@ -232,8 +221,6 @@ export class EventRow extends S.Opaque<EventRow, { readonly brand: unique symbol
 ) {}
 
 /**
- * The stored receipt of an accepted command, as the kernel's `SendResult`.
- *
  * **Example** (Decode a receipt)
  *
  * ```ts
@@ -265,16 +252,12 @@ export const AcceptedResult = S.TaggedStruct("Accepted", {
 );
 
 /**
- * Type-level member of {@link AcceptedResult}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AcceptedResult = typeof AcceptedResult.Type;
 
 /**
- * The send metadata a scheduled command fires with, as stored.
- *
  * **Example** (Decode stored metadata)
  *
  * ```ts
@@ -470,8 +453,6 @@ export class ViewSnapshotJson extends S.Opaque<ViewSnapshotJson, { readonly bran
 ) {}
 
 /**
- * One entry a view key emitted, with the key's state after it.
- *
  * **Example** (Decode a view entry)
  *
  * ```ts
@@ -535,8 +516,6 @@ export class StreamMetaJson extends S.Opaque<StreamMetaJson, { readonly brand: u
 ) {}
 
 /**
- * One entry appended to a stream key.
- *
  * **Example** (Decode a stream entry)
  *
  * ```ts

@@ -64,16 +64,12 @@ export const StrictKeyProtection = LiteralKit(["dpapi-ffi", "dpapi-powershell", 
 );
 
 /**
- * Runtime type for {@link StrictKeyProtection}.
- *
  * @category models
  * @since 0.0.0
  */
 export type StrictKeyProtection = typeof StrictKeyProtection.Type;
 
 /**
- * Encryption algorithm of a spool segment.
- *
  * **Example** (Read the algorithm)
  *
  * ```ts import.meta.vitest name="Read the algorithm"
@@ -92,8 +88,6 @@ export const StrictSpoolAlgorithm = LiteralKit(["AES-256-GCM"]).pipe(
 );
 
 /**
- * Runtime type for {@link StrictSpoolAlgorithm}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -261,17 +255,12 @@ export const StrictSpoolOutcome = S.TaggedUnion({
 );
 
 /**
- * Runtime type for {@link StrictSpoolOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
 export type StrictSpoolOutcome = typeof StrictSpoolOutcome.Type;
 
 /**
- * One spool segment as a survey reads it: when it was sealed, its size on
- * disk, and its outcome.
- *
  * **Details**
  *
  * `sealedAtMillis` comes from the segment's file name, so a segment whose
@@ -307,9 +296,6 @@ export class StrictSpoolSurveyEntry extends S.Opaque<StrictSpoolSurveyEntry, { r
 ) {}
 
 /**
- * Every segment in a spool directory, oldest first, as a read-only survey
- * finds it.
- *
  * **Example** (An empty survey)
  *
  * ```ts import.meta.vitest name="An empty survey"

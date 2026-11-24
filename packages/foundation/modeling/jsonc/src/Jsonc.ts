@@ -70,8 +70,6 @@ export const JsoncParseErrorCode = LiteralKit(ParseCode.literals).pipe(
 );
 
 /**
- * The union of all JSONC parse-error code string literals.
- *
  * @see {@link JsoncParseErrorCode} for the runtime kit.
  * @category type-level
  * @since 0.0.0
@@ -264,8 +262,6 @@ export const JsoncStringifyErrorCode = LiteralKit([
 );
 
 /**
- * The union of all JSONC stringify-error code string literals.
- *
  * @see {@link JsoncStringifyErrorCode} for the runtime kit.
  * @category type-level
  * @since 0.0.0

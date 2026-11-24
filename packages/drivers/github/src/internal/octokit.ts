@@ -55,8 +55,6 @@ const RequestMethod = LiteralKit(["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT
 );
 
 /**
- * A replacement for the global `fetch`, kept as the function it is.
- *
  * **Example** (Accept the global fetch)
  *
  * ```ts
@@ -101,8 +99,6 @@ export const RetryPolicySchema = RetryPolicy.pipe(
 );
 
 /**
- * Configures transport authentication, retry behavior and HTTP overrides.
- *
  * **Details**
  *
  * Service options rather than wire data: every field's encoded side equals
@@ -179,8 +175,6 @@ export class TransportOptions extends S.Opaque<TransportOptions, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link TransportOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

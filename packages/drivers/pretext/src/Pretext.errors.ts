@@ -18,8 +18,6 @@ import * as S from "effect/Schema";
 const $I = $PretextId.create("Pretext.errors");
 
 /**
- * Reason a runtime cannot capture font metrics.
- *
  * **Example** (Schema-decode unavailable reason)
  *
  * ```ts
@@ -41,8 +39,6 @@ export const PretextMeasurementUnavailableReason = LiteralKit(["missingCanvas2d"
 );
 
 /**
- * Type for {@link PretextMeasurementUnavailableReason}.
- *
  * **Example** (Typed reason assignment)
  *
  * ```ts
@@ -129,8 +125,6 @@ export class PretextUnsupportedFontError extends S.TaggedError<
 ) {}
 
 /**
- * Font-metrics snapshot codec operation.
- *
  * **Example** (Schema-decode codec operation)
  *
  * ```ts
@@ -152,8 +146,6 @@ export const PretextSnapshotCodecOperation = LiteralKit(["decode", "encode"]).pi
 );
 
 /**
- * Type for {@link PretextSnapshotCodecOperation}.
- *
  * **Example** (Typed codec operation)
  *
  * ```ts
@@ -170,9 +162,6 @@ export const PretextSnapshotCodecOperation = LiteralKit(["decode", "encode"]).pi
 export type PretextSnapshotCodecOperation = typeof PretextSnapshotCodecOperation.Type;
 
 /**
- * A font-metrics snapshot failed to decode or encode against the versioned
- * contract.
- *
  * **Example** (Create snapshot codec error)
  *
  * ```ts
@@ -204,8 +193,6 @@ export class PretextSnapshotCodecError extends S.TaggedError<
 ) {}
 
 /**
- * Measurement operation that can fail.
- *
  * **Example** (Schema-decode measurement operation)
  *
  * ```ts
@@ -227,8 +214,6 @@ export const PretextMeasurementOperation = LiteralKit(["measureText", "fixtureCa
 );
 
 /**
- * Type for {@link PretextMeasurementOperation}.
- *
  * **Example** (Typed measurement operation)
  *
  * ```ts

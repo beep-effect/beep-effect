@@ -208,8 +208,6 @@ export const collectToolParamsJson = <Tools extends Record<string, Tool.Any>, E,
   );
 
 /**
- * Tool-parameter JSON plus provider-reported usage from one Anthropic repair call.
- *
  * **Example** (Make tool JSON response)
  *
  * ```ts

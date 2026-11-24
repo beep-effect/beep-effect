@@ -160,12 +160,7 @@ export const makeCitationCanonicalAttributeAssertion = Effect.fn("CanonicalAttri
   >
 ) {
   const { setup, provided, defaultConfiguration } = installed;
-  // Every kernel captures the installation's Clock, as the engine's own owners do. On the default
-  // Clock the year kernel's 997 ms extract budget ran in real time and failed hosted replays
-  // (PR #3013 lps-int-12: `extractDeadline` from `getMetadataYear`). On the installation's manual
-  // clock that 997 ms wait never fires here and these assertions run after `engine.extract`, so a
-  // hung kernel is bounded only by the Vitest timeout; CitationMetadataYear.test.ts keeps the
-  // `extractDeadline` expiry coverage.
+  // decision: canonical-attribute-kernels-on-installation-clock
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const correction = yield* makeCitationResourceCorrection(setup.limits).pipe(
     Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({

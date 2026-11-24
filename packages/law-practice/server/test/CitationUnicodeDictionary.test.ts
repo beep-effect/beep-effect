@@ -163,7 +163,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
               trace = A.append(trace, { kind: "set", key: 6, value: 106 });
             }
           });
-          const comparison = CitationRuntimeDictionaryComparison.of({
+          const reflectedHostSubclassRichCompareAdapter = CitationRuntimeDictionaryComparison.of({
             step: Effect.void,
             exactUnicode: Effect.fn("UnicodeDictionaryTest.exact")((id) =>
               state(id).pipe(Effect.map((value) => (value.kind === "text" ? O.some(value.text) : O.none())))
@@ -171,8 +171,6 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
             equal: Effect.fn("UnicodeDictionaryTest.equal")(function* (left, right) {
               const l = yield* state(left);
               const r = yield* state(right);
-              // This controlled rich-compare adapter models Python's reflected
-              // host/subclass dispatch. The table supplies stored/query order.
               if (l.kind === "text" && r.kind === "text") {
                 return l.text === r.text;
               }
@@ -186,7 +184,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
             }),
           });
           const current = yield* makeCitationRuntimeDictionary({ entries: 64, iterations: 20_000 }).pipe(
-            Effect.provideService(CitationRuntimeDictionaryComparison, comparison)
+            Effect.provideService(CitationRuntimeDictionaryComparison, reflectedHostSubclassRichCompareAdapter)
           );
           table = O.some(current);
           yield* Effect.forEach(

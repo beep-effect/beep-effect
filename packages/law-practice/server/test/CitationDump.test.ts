@@ -36,9 +36,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             "803ef80f613730fad97a1744434263092f7d952ece80090efcbd9036f4477f18"
           );
           const corpus = yield* S.decodeEffect(CitationDumpCorpus)(text);
-          // The Python producer was removed with the repository's Python (goal python-free-repo). Its
-          // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
-          // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-dump.py`.
+          // decision: python-oracle-producers-pinned-by-digest
           for (const [i, row] of corpus.cases.entries()) {
             const actual = yield* dump.render(row.input);
             expect(actual, `dump source observation ${i}`).toEqual(row.output);

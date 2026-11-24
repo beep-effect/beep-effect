@@ -1,0 +1,51 @@
+name: Fleet Missed-Event Check
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: fleet-missed-event-check
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check:
+    name: Fleet Missed-Event Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: fleet-watch
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Mint the fleet-watch App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.FLEET_WATCH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FLEET_WATCH_APP_PRIVATE_KEY }}
+          owner: beep-effect
+          repositories: beep-effect
+          permission-actions: read
+          permission-organization-self-hosted-runners: read
+          permission-repository-hooks: read
+
+      - name: Check for missed fleet events
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bun run beep ci fleet-missed-event-check

@@ -24,8 +24,6 @@ const HubSpotHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.isLessTha
 );
 
 /**
- * Technical error reasons emitted by the HubSpot driver.
- *
  * **Example** (Decode transport reason)
  *
  * ```ts
@@ -52,8 +50,6 @@ export const HubSpotErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link HubSpotErrorReason}.
- *
  * **Example** (Assign response status type)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const HubSpotErrorReason = LiteralKit([
 export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
 
 /**
- * Technical failure raised by the HubSpot driver boundary.
- *
  * **Example** (Create error with form context)
  *
  * ```ts

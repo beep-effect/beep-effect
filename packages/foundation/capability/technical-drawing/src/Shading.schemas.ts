@@ -50,8 +50,6 @@ export const SurfaceClass = SurfaceClassBase.pipe(
 );
 
 /**
- * Type for {@link SurfaceClass}.
- *
  * **Example** (Annotate a class)
  *
  * ```ts
@@ -96,8 +94,6 @@ export const FaceAspect = FaceAspectBase.pipe(
 );
 
 /**
- * Type for {@link FaceAspect}.
- *
  * **Example** (Annotate an aspect)
  *
  * ```ts
@@ -142,8 +138,6 @@ export const ShadingTone = ShadingToneBase.pipe(
 );
 
 /**
- * Type for {@link ShadingTone}.
- *
  * **Example** (Annotate a tone)
  *
  * ```ts
@@ -228,8 +222,6 @@ export class FaceFacts extends S.Opaque<FaceFacts, { readonly brand: unique symb
 ) {}
 
 /**
- * Sheet frame of one view and its 1.84(m) light, in model coordinates.
- *
  * **Details**
  *
  * `eye` points toward the viewer, `right` and `up` span the sheet, and
@@ -576,8 +568,6 @@ export const BandTaper = BandTaperBase.pipe(
 );
 
 /**
- * Type for {@link BandTaper}.
- *
  * **Example** (Annotate a taper)
  *
  * ```ts
@@ -593,9 +583,6 @@ export const BandTaper = BandTaperBase.pipe(
 export type BandTaper = typeof BandTaper.Type;
 
 /**
- * The planned ink of one banded face in one view: the face, its exposure to
- * the 1.84(m) light, and its ink density.
- *
  * **Details**
  *
  * `density` is the planned strokes' total length on the view plane times the
@@ -752,8 +739,6 @@ export const FaceTreatment = S.Union([ShadingLines, ShadingSkipped]).pipe(
 );
 
 /**
- * Type for {@link FaceTreatment}.
- *
  * **Example** (Annotate a treatment)
  *
  * ```ts

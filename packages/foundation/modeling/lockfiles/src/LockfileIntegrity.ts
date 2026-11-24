@@ -22,9 +22,6 @@ import type { Lockfile } from "./Lockfile.ts";
 const $I = $LockfilesId.create("LockfileIntegrity");
 
 /**
- * The minimal manifest shape {@link LockfileIntegrity.compare} checks a
- * lockfile against: a package name plus the four optional dependency maps.
- *
  * **Details**
  *
  * Deliberately *not* a `@effected/package-json` type — this package takes
@@ -80,8 +77,6 @@ export class WorkspaceManifest extends S.Opaque<WorkspaceManifest, { readonly br
 ) {}
 
 /**
- * Companion types for {@link WorkspaceManifest}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -99,9 +94,6 @@ const decodeRange = S.decodeUnknownExit(Range.FromString);
 const decodeSemVer = S.decodeUnknownExit(SemVer.FromString);
 
 /**
- * Result of checking a parsed lockfile against the workspace's declared
- * manifests.
- *
  * **Details**
  *
  * A data type, not an error: it reports *what* mismatches exist without
@@ -276,8 +268,6 @@ const isUnsatisfied = (constraint: string, candidates: ReadonlyArray<string>): b
 };
 
 /**
- * Companion types for {@link LockfileIntegrity}.
- *
  * @category type-level
  * @since 0.0.0
  */

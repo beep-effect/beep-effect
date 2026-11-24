@@ -226,7 +226,6 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
   const editions = yield* makeCitationFrozenEditions(bundle);
   const installed = Context.add(setup.provided, CitationFrozenEditions, editions);
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const [policy, runtime, configuration] of [
     [setup.limits, setup.runtime, { ...corpus.configuration, journalPattern: changedPattern }],
   ] as const) {
@@ -239,7 +238,10 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
       DateTime.withCurrentZoneOffset(0),
       Effect.flip
     );
-    expect(failed).toMatchObject({ reason: "invalid-configuration" });
+    expect(
+      failed,
+      "an owned configuration whose fixed pattern fails authentication is refused by the stage"
+    ).toMatchObject({ reason: "invalid-configuration" });
   }
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.inputs, 11).request;

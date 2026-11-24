@@ -42,8 +42,6 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 });
 
 /**
- * Why a draft's stored attachments could not be summarized.
- *
  * **Example** (Guard a stored attachment failure reason)
  *
  * ```ts
@@ -68,8 +66,6 @@ export const OutboxStoredAttachmentErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link OutboxStoredAttachmentErrorReason}.
- *
  * **Example** (Type a stored attachment failure reason)
  *
  * ```ts
@@ -85,8 +81,6 @@ export const OutboxStoredAttachmentErrorReason = LiteralKit([
 export type OutboxStoredAttachmentErrorReason = typeof OutboxStoredAttachmentErrorReason.Type;
 
 /**
- * Typed failure to summarize a draft's stored attachments.
- *
  * **Details**
  *
  * `count` is the number of attachments at fault. The message never names a

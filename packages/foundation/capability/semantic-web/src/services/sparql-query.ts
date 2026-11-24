@@ -28,8 +28,6 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
   });
 
 /**
- * Minimal v1 SPARQL profile.
- *
  * **Example** (Decode ask profile)
  *
  * ```ts
@@ -51,8 +49,6 @@ export const SparqlQueryProfile = LiteralKit(["select", "ask", "construct"]).pip
 );
 
 /**
- * Type for {@link SparqlQueryProfile}.
- *
  * **Example** (Check ask profile type)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const SparqlQueryProfile = LiteralKit(["select", "ask", "construct"]).pip
 export type SparqlQueryProfile = typeof SparqlQueryProfile.Type;
 
 /**
- * SPARQL query request.
- *
  * **Example** (Decode SPARQL request)
  *
  * ```ts
@@ -104,8 +98,6 @@ export class SparqlQueryRequest extends S.Opaque<SparqlQueryRequest, { readonly 
 ) {}
 
 /**
- * SPARQL select result.
- *
  * **Example** (Make empty select result)
  *
  * ```ts
@@ -132,8 +124,6 @@ export class SparqlSelectResult extends S.Opaque<SparqlSelectResult, { readonly 
 ) {}
 
 /**
- * SPARQL ask result.
- *
  * **Example** (Make true ask result)
  *
  * ```ts
@@ -160,8 +150,6 @@ export class SparqlAskResult extends S.Opaque<SparqlAskResult, { readonly brand:
 ) {}
 
 /**
- * SPARQL construct result.
- *
  * **Example** (Decode construct result)
  *
  * ```ts
@@ -192,8 +180,6 @@ export class SparqlConstructResult extends S.Opaque<SparqlConstructResult, { rea
 ) {}
 
 /**
- * SPARQL result union.
- *
  * **Example** (Decode ask result union)
  *
  * ```ts
@@ -216,8 +202,6 @@ export const SparqlQueryResult = S.Union([SparqlSelectResult, SparqlAskResult, S
 );
 
 /**
- * Type for {@link SparqlQueryResult}.
- *
  * **Example** (Accept result union type)
  *
  * ```ts
@@ -233,8 +217,6 @@ export const SparqlQueryResult = S.Union([SparqlSelectResult, SparqlAskResult, S
 export type SparqlQueryResult = typeof SparqlQueryResult.Type;
 
 /**
- * SPARQL query error reason.
- *
  * **Example** (Decode unsupported profile reason)
  *
  * ```ts
@@ -257,8 +239,6 @@ export const SparqlQueryErrorReason = LiteralKit(["unsupportedProfile", "unimple
 );
 
 /**
- * Type for {@link SparqlQueryErrorReason}.
- *
  * **Example** (Check unsupported profile reason)
  *
  * ```ts
@@ -275,8 +255,6 @@ export const SparqlQueryErrorReason = LiteralKit(["unsupportedProfile", "unimple
 export type SparqlQueryErrorReason = typeof SparqlQueryErrorReason.Type;
 
 /**
- * Typed SPARQL query error.
- *
  * **Example** (Make unsupported profile error)
  *
  * ```ts

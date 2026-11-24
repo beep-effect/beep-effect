@@ -17,8 +17,6 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $RdfId.create("semantic-schema-metadata");
 /**
- * Closed v1 metadata kind domain for semantic-web schemas.
- *
  * **Example** (Validate kind membership)
  *
  * ```ts import.meta.vitest name="Validate kind membership"
@@ -48,8 +46,6 @@ export const SemanticSchemaMetadataKind = LiteralKit([
 );
 
 /**
- * Type for {@link SemanticSchemaMetadataKind}.
- *
  * **Example** (Type-check kind values)
  *
  * ```ts
@@ -65,8 +61,6 @@ export const SemanticSchemaMetadataKind = LiteralKit([
 export type SemanticSchemaMetadataKind = typeof SemanticSchemaMetadataKind.Type;
 
 /**
- * Stability classification for semantic-web schema metadata.
- *
  * **Example** (Validate status membership)
  *
  * ```ts import.meta.vitest name="Validate status membership"
@@ -87,8 +81,6 @@ export const SemanticSchemaStatus = LiteralKit(["experimental", "stable", "depre
 );
 
 /**
- * Type for {@link SemanticSchemaStatus}.
- *
  * **Example** (Type-check status values)
  *
  * ```ts
@@ -104,8 +96,6 @@ export const SemanticSchemaStatus = LiteralKit(["experimental", "stable", "depre
 export type SemanticSchemaStatus = typeof SemanticSchemaStatus.Type;
 
 /**
- * Specification disposition attached to a semantic schema reference.
- *
  * **Example** (Decode disposition value)
  *
  * ```ts import.meta.vitest name="Decode disposition value"
@@ -126,8 +116,6 @@ export const SemanticSchemaSpecificationDisposition = LiteralKit(["normative", "
 );
 
 /**
- * Type for {@link SemanticSchemaSpecificationDisposition}.
- *
  * **Example** (Type-check disposition values)
  *
  * ```ts
@@ -143,8 +131,6 @@ export const SemanticSchemaSpecificationDisposition = LiteralKit(["normative", "
 export type SemanticSchemaSpecificationDisposition = typeof SemanticSchemaSpecificationDisposition.Type;
 
 /**
- * Representation label for semantic-web values.
- *
  * **Example** (Validate representation kind)
  *
  * ```ts import.meta.vitest name="Validate representation kind"
@@ -172,8 +158,6 @@ export const SemanticRepresentationKind = LiteralKit([
 );
 
 /**
- * Type for {@link SemanticRepresentationKind}.
- *
  * **Example** (Type-check representation kinds)
  *
  * ```ts
@@ -189,8 +173,6 @@ export const SemanticRepresentationKind = LiteralKit([
 export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
 
 /**
- * Single specification reference attached to public semantic-web schemas.
- *
  * **Example** (Decode specification reference)
  *
  * ```ts import.meta.vitest name="Decode specification reference"
@@ -236,8 +218,6 @@ export class SemanticSchemaSpecification extends S.Opaque<
 ) {}
 
 /**
- * Single representation note attached to semantic-web schemas.
- *
  * **Example** (Decode representation note)
  *
  * ```ts import.meta.vitest name="Decode representation note"
@@ -266,8 +246,6 @@ export class SemanticRepresentation extends S.Opaque<SemanticRepresentation, { r
 ) {}
 
 /**
- * Typed metadata payload stored in the `semanticSchemaMetadata` annotation key.
- *
  * **Example** (Decode full metadata payload)
  *
  * ```ts import.meta.vitest name="Decode full metadata payload"

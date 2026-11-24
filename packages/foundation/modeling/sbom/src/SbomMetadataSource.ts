@@ -77,8 +77,6 @@ const npmPurl = (name: string, version?: string): string => {
 };
 
 /**
- * What a manifest cannot supply, and the two places an explicit value wins.
- *
  * **Gotchas**
  *
  * A `package.json` says who wrote the software. It never says which
@@ -149,8 +147,6 @@ export class SbomMetadataOptions extends S.Opaque<SbomMetadataOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link SbomMetadataOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -165,8 +161,6 @@ export declare namespace SbomMetadataOptions {
 }
 
 /**
- * The fields a dependency contributes to its component entry.
- *
  * **Example** (Validate a dependency without a resolved version)
  *
  * ```ts
@@ -212,8 +206,6 @@ export class ComponentInput extends S.Opaque<ComponentInput, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link ComponentInput}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -228,8 +220,6 @@ export declare namespace ComponentInput {
 }
 
 /**
- * The years a copyright statement spans.
- *
  * **Example** (Validate an explicit year range)
  *
  * ```ts
@@ -261,8 +251,6 @@ export class CopyrightYears extends S.Opaque<CopyrightYears, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link CopyrightYears}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -50,7 +50,6 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const installCitationRegexEvaluator = Effect.fnUntraced(function* (
   a0: Parameters<typeof installOwnedCitationRegexEvaluator>[0],
   a1: unknown,
@@ -483,9 +482,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           expect(firstMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
           const clockMismatch = yield* foreignClock.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
           expect(clockMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
-          // An out-of-range quota fails after the request's owner exists, before any child.
           const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
-          expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+          expect(
+            invalidQuota,
+            "an out-of-range quota fails after the request's owner exists, before any child"
+          ).toMatchObject({
+            reason: "invalid-runtime",
+          });
           const invocation = yield* CitationInvocation;
           const session = yield* invocation.regex.snapshot;
           expect(session).toMatchObject({ state: "absent", jobs: 0 });

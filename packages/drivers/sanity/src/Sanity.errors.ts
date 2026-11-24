@@ -59,8 +59,6 @@ const SanityErrorReasonBase = LiteralKit([
 ]);
 
 /**
- * Technical error reasons emitted by the Sanity driver.
- *
  * **Example** (Decode known reason values)
  *
  * ```ts
@@ -83,8 +81,6 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link SanityErrorReason}.
- *
  * **Example** (Annotate typed reason value)
  *
  * ```ts
@@ -101,8 +97,6 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
 export type SanityErrorReason = typeof SanityErrorReason.Type;
 
 /**
- * Technical failure raised by the Sanity driver boundary.
- *
  * **Example** (Create status-based error)
  *
  * ```ts

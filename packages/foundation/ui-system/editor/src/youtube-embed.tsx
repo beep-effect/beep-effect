@@ -67,8 +67,6 @@ const canonicalYouTubeWatchUrl = S.makeFilter<string>(
 );
 
 /**
- * Exact canonical watch URL for a schema-validated YouTube video id.
- *
  * **Example** (Schema validates watch URL)
  *
  * ```ts
@@ -88,8 +86,6 @@ export const YouTubeWatchUrl = S.String.check(canonicalYouTubeWatchUrl).pipe(
 );
 
 /**
- * Type for {@link YouTubeWatchUrl}.
- *
  * **Example** (Typed watch URL value)
  *
  * ```ts

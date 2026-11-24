@@ -56,8 +56,6 @@ export class ValidationError extends S.TaggedError<ValidationError, { readonly b
 ) {}
 
 /**
- * Failure raised when an operation exceeds its configured timeout.
- *
  * **Example** (Construct TimeoutError instance)
  *
  * ```ts import.meta.vitest name="Construct TimeoutError instance"
@@ -130,8 +128,6 @@ export class OperationError extends S.TaggedError<OperationError, { readonly bra
 ) {}
 
 /**
- * Failure raised when graph structure is invalid for an operation.
- *
  * **Example** (Construct GraphError instance)
  *
  * ```ts import.meta.vitest name="Construct GraphError instance"
@@ -268,8 +264,6 @@ export const GraphOperationError = S.Union([
 );
 
 /**
- * Runtime type represented by {@link GraphOperationError}.
- *
  * **Example** (Assign GraphOperationError type)
  *
  * ```ts import.meta.vitest name="Assign GraphOperationError type"

@@ -25,8 +25,6 @@ import type { RunOutcome, RunShape } from "./Vocabulary.ts";
 const $I = $GateReportId.create("Classify");
 
 /**
- * The total an item counts toward.
- *
  * **Example** (Read the buckets)
  *
  * ```ts
@@ -55,8 +53,6 @@ export const TallyBucket = LiteralKit([
 );
 
 /**
- * Type of {@link TallyBucket}.
- *
  * @category models
  * @since 0.0.0
  */

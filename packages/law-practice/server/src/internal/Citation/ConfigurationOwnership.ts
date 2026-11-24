@@ -21,9 +21,6 @@ import type * as Brand from "effect/Brand";
  */
 export type CitationOwned<A> = A & Brand.Brand<"CitationOwned">;
 
-// Module-private: a value becomes owned only through the boundary detach or a
-// projection of an already owned value.
-// The brand is type-level only (as `Brand.nominal` is), so minting is a type assertion.
 const mint = <A>(value: A) => value as CitationOwned<A>;
 
 /** Decode caller configuration and detach it once through its JSON codec.
@@ -127,9 +124,7 @@ export const ownedStruct: {
   2,
   <F, A>(schema: OwnedConstructor<F, A>, fields: OwnedFields<F>): CitationOwned<A> => mint(schema.make(fields))
 );
-// A schema (`S.Struct` or `S.Opaque` class) and its constructor, never a free function.
 type OwnedConstructor<F, A> = { readonly fields: S.Struct.Fields; readonly make: (fields: F) => A } & S.Top;
-// Owned fields only, and at least one: an empty record would mint from nothing.
 type OwnedFields<F> = [keyof F] extends [never] ? never : { readonly [K in keyof F]: CitationOwned<F[K]> };
 
 /** Derive an owned value from an owned input by engine computation.

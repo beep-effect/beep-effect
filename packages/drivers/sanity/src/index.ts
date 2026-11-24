@@ -20,8 +20,6 @@ export * from "./Sanity.config.ts";
  */
 export * from "./Sanity.errors.ts";
 /**
- * Sanity content API service.
- *
  * @category services
  * @since 0.0.0
  */

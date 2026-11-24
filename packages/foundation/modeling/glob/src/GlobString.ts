@@ -102,8 +102,6 @@ export const GlobString = S.String.check(GlobStringChecks).pipe(
 );
 
 /**
- * Type of {@link GlobString}: a `string` branded `GlobString`.
- *
  * **Example** (Annotate a decoded glob string)
  *
  * ```ts

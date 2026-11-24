@@ -41,8 +41,6 @@ const PipelineErrorOutput = PipelineError.mapFields((fields) => fields).pipe(
 );
 
 /**
- * Output schema for line-returning streaming tools.
- *
  * **Example** (Decode lines output schema)
  *
  * ```ts
@@ -84,8 +82,6 @@ export const LinesOutput = S.Class<{
   );
 
 /**
- * Type for {@link LinesOutput}.
- *
  * **Example** (Annotate lines output value)
  *
  * ```ts
@@ -101,8 +97,6 @@ export const LinesOutput = S.Class<{
 export type LinesOutput = typeof LinesOutput.Type;
 
 /**
- * Output schema for file existence and size metadata.
- *
  * **Example** (Decode file info schema)
  *
  * ```ts
@@ -144,8 +138,6 @@ export const FileInfoOutput = S.Class<{
   );
 
 /**
- * Type for {@link FileInfoOutput}.
- *
  * **Example** (Annotate file info value)
  *
  * ```ts
@@ -161,8 +153,6 @@ export const FileInfoOutput = S.Class<{
 export type FileInfoOutput = typeof FileInfoOutput.Type;
 
 /**
- * Output schema for aggregate text statistics.
- *
  * **Example** (Decode text stats schema)
  *
  * ```ts
@@ -190,8 +180,6 @@ export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pip
 );
 
 /**
- * Type for {@link TextStatsOutput}.
- *
  * **Example** (Annotate text stats value)
  *
  * ```ts
@@ -261,8 +249,6 @@ export const JsonlOutput = S.Class<{
   );
 
 /**
- * Type for {@link JsonlOutput}.
- *
  * **Example** (Annotate JSONL output value)
  *
  * ```ts
@@ -278,8 +264,6 @@ export const JsonlOutput = S.Class<{
 export type JsonlOutput = typeof JsonlOutput.Type;
 
 /**
- * Output schema for JSONL parse statistics.
- *
  * **Example** (Decode JSONL stats schema)
  *
  * ```ts
@@ -305,8 +289,6 @@ export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pi
 );
 
 /**
- * Type for {@link JsonlStatsOutput}.
- *
  * **Example** (Annotate JSONL stats value)
  *
  * ```ts
@@ -327,8 +309,6 @@ export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pi
 export type JsonlStatsOutput = typeof JsonlStatsOutput.Type;
 
 /**
- * Output schema for dataset provenance metadata.
- *
  * **Example** (Decode dataset meta schema)
  *
  * ```ts
@@ -354,8 +334,6 @@ export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
 );
 
 /**
- * Type for {@link DatasetMetaOutput}.
- *
  * **Example** (Annotate dataset meta value)
  *
  * ```ts
@@ -378,8 +356,6 @@ export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
 export type DatasetMetaOutput = typeof DatasetMetaOutput.Type;
 
 /**
- * Output schema pairing loaded data with its {@link DatasetMetaOutput}.
- *
  * **Example** (Decode data with meta)
  *
  * ```ts
@@ -420,8 +396,6 @@ export const DataOutput = S.Class<{
   );
 
 /**
- * Type for {@link DataOutput}.
- *
  * **Example** (Annotate data output value)
  *
  * ```ts
@@ -441,8 +415,6 @@ export const DataOutput = S.Class<{
 export type DataOutput = typeof DataOutput.Type;
 
 /**
- * Output schema for line-transform pipeline runs.
- *
  * **Example** (Decode pipeline output schema)
  *
  * ```ts
@@ -473,8 +445,6 @@ export const PipelineOutput = PipelineResult.mapFields((fields) => ({
 );
 
 /**
- * Type for {@link PipelineOutput}.
- *
  * **Example** (Annotate pipeline output value)
  *
  * ```ts
@@ -536,8 +506,6 @@ const CountWithErrorsOutput = S.Class<{ readonly count: number; readonly errors?
   );
 
 /**
- * Optional windowing, encoding, and trimming controls for {@link ReadLines}.
- *
  * **Example** (Make maxLines options)
  *
  * ```ts
@@ -578,8 +546,6 @@ export const ReadLinesOptions = S.Class<{
   );
 
 /**
- * Type for {@link ReadLinesOptions}.
- *
  * **Example** (Type windowed read options)
  *
  * ```ts
@@ -617,8 +583,6 @@ const FileInfoParameters = S.Class<{ readonly path: string }>($I`FileInfoParamet
   .pipe($I.annoteSchema("FileInfoParameters", { description: "Inputs for inspecting a text file." }));
 
 /**
- * Optional line-normalization controls for {@link TextStats}.
- *
  * **Example** (Make trim stats options)
  *
  * ```ts
@@ -649,8 +613,6 @@ export const TextStatsOptions = S.Class<{
   );
 
 /**
- * Type for {@link TextStatsOptions}.
- *
  * **Example** (Type normalized stats options)
  *
  * ```ts
@@ -679,8 +641,6 @@ const TextStatsParameters = S.Class<{
   .pipe($I.annoteSchema("TextStatsParameters", { description: "Inputs for computing text statistics." }));
 
 /**
- * Optional line-normalization controls for {@link SampleLines}.
- *
  * **Example** (Make sample trim options)
  *
  * ```ts
@@ -711,8 +671,6 @@ export const SampleLinesOptions = S.Class<{
   );
 
 /**
- * Type for {@link SampleLinesOptions}.
- *
  * **Example** (Type sampled lines options)
  *
  * ```ts
@@ -743,8 +701,6 @@ const SampleLinesParameters = S.Class<{
   .pipe($I.annoteSchema("SampleLinesParameters", { description: "Inputs for randomly sampling text lines." }));
 
 /**
- * Optional controls for {@link ReadJsonl}.
- *
  * **Example** (Make skipInvalid options)
  *
  * ```ts
@@ -773,8 +729,6 @@ export const ReadJsonlOptions = S.Class<{
   .pipe($I.annoteSchema("ReadJsonlOptions", { description: "Optional controls for reading JSONL records." }));
 
 /**
- * Type for {@link ReadJsonlOptions}.
- *
  * **Example** (Type lenient JSONL options)
  *
  * ```ts
@@ -812,8 +766,6 @@ const JsonlStatsParameters = S.Class<{ readonly path: string }>($I`JsonlStatsPar
   .pipe($I.annoteSchema("JsonlStatsParameters", { description: "Inputs for computing JSONL statistics." }));
 
 /**
- * Optional caps for {@link ValidateJsonl}.
- *
  * **Example** (Make maxErrors options)
  *
  * ```ts
@@ -840,8 +792,6 @@ export const ValidateJsonlOptions = S.Class<{
   .pipe($I.annoteSchema("ValidateJsonlOptions", { description: "Optional caps for validating a JSONL file." }));
 
 /**
- * Type for {@link ValidateJsonlOptions}.
- *
  * **Example** (Type capped error options)
  *
  * ```ts
@@ -870,8 +820,6 @@ const ValidateJsonlParameters = S.Class<{
   .pipe($I.annoteSchema("ValidateJsonlParameters", { description: "Inputs for validating a JSONL file." }));
 
 /**
- * Optional controls for {@link SampleJsonl}.
- *
  * **Example** (Make sample JSONL options)
  *
  * ```ts
@@ -896,8 +844,6 @@ export const SampleJsonlOptions = S.Class<{
   .pipe($I.annoteSchema("SampleJsonlOptions", { description: "Optional controls for sampling JSONL records." }));
 
 /**
- * Type for {@link SampleJsonlOptions}.
- *
  * **Example** (Type sampled JSONL options)
  *
  * ```ts
@@ -928,8 +874,6 @@ const SampleJsonlParameters = S.Class<{
   .pipe($I.annoteSchema("SampleJsonlParameters", { description: "Inputs for randomly sampling JSONL records." }));
 
 /**
- * Optional controls for {@link LoadText}.
- *
  * **Example** (Make encoding load options)
  *
  * ```ts
@@ -956,8 +900,6 @@ export const LoadTextOptions = S.Class<{
   .pipe($I.annoteSchema("LoadTextOptions", { description: "Optional controls for loading text from a file or URL." }));
 
 /**
- * Type for {@link LoadTextOptions}.
- *
  * **Example** (Type load text options)
  *
  * ```ts
@@ -986,8 +928,6 @@ const LoadTextParameters = S.Class<{
   .pipe($I.annoteSchema("LoadTextParameters", { description: "Inputs for loading text from a file or URL." }));
 
 /**
- * Optional controls for {@link LoadLines}.
- *
  * **Example** (Make skipEmpty options)
  *
  * ```ts
@@ -1020,8 +960,6 @@ export const LoadLinesOptions = S.Class<{
   );
 
 /**
- * Type for {@link LoadLinesOptions}.
- *
  * **Example** (Type load lines options)
  *
  * ```ts
@@ -1050,8 +988,6 @@ const LoadLinesParameters = S.Class<{
   .pipe($I.annoteSchema("LoadLinesParameters", { description: "Inputs for loading lines from a file or URL." }));
 
 /**
- * Optional controls for {@link LoadJsonl}.
- *
  * **Example** (Make load JSONL options)
  *
  * ```ts
@@ -1082,8 +1018,6 @@ export const LoadJsonlOptions = S.Class<{
   );
 
 /**
- * Type for {@link LoadJsonlOptions}.
- *
  * **Example** (Type load JSONL options)
  *
  * ```ts
@@ -1112,8 +1046,6 @@ const LoadJsonlParameters = S.Class<{
   .pipe($I.annoteSchema("LoadJsonlParameters", { description: "Inputs for loading JSONL from a file or URL." }));
 
 /**
- * Optional controls for {@link LoadJson}.
- *
  * **Example** (Make timeout load options)
  *
  * ```ts
@@ -1138,8 +1070,6 @@ export const LoadJsonOptions = S.Class<{
   .pipe($I.annoteSchema("LoadJsonOptions", { description: "Optional controls for loading JSON from a file or URL." }));
 
 /**
- * Type for {@link LoadJsonOptions}.
- *
  * **Example** (Type load JSON options)
  *
  * ```ts
@@ -1168,8 +1098,6 @@ const LoadJsonParameters = S.Class<{
   .pipe($I.annoteSchema("LoadJsonParameters", { description: "Inputs for loading JSON from a file or URL." }));
 
 /**
- * Optional controls for {@link ProcessFile}.
- *
  * **Example** (Make process file options)
  *
  * ```ts
@@ -1203,8 +1131,6 @@ export const ProcessFileOptions = S.Class<{
   );
 
 /**
- * Type for {@link ProcessFileOptions}.
- *
  * **Example** (Type process pipeline options)
  *
  * ```ts
@@ -1235,8 +1161,6 @@ const ProcessFileParameters = S.Class<{
   .pipe($I.annoteSchema("ProcessFileParameters", { description: "Inputs for running a line-transform pipeline." }));
 
 /**
- * Optional controls for {@link FilterLines}.
- *
  * **Example** (Make invert filter options)
  *
  * ```ts
@@ -1267,8 +1191,6 @@ export const FilterLinesOptions = S.Class<{
   );
 
 /**
- * Type for {@link FilterLinesOptions}.
- *
  * **Example** (Type inverted filter options)
  *
  * ```ts
@@ -1299,8 +1221,6 @@ const FilterLinesParameters = S.Class<{
   .pipe($I.annoteSchema("FilterLinesParameters", { description: "Inputs for filtering lines by a regex pattern." }));
 
 /**
- * Optional controls for {@link ExtractMatches}.
- *
  * **Example** (Make fullLines options)
  *
  * ```ts
@@ -1333,8 +1253,6 @@ export const ExtractMatchesOptions = S.Class<{
   );
 
 /**
- * Type for {@link ExtractMatchesOptions}.
- *
  * **Example** (Type extract matches options)
  *
  * ```ts
@@ -1367,8 +1285,6 @@ const ExtractMatchesParameters = S.Class<{
   );
 
 /**
- * Optional controls for {@link CountLines}.
- *
  * **Example** (Make count lines options)
  *
  * ```ts
@@ -1393,8 +1309,6 @@ export const CountLinesOptions = S.Class<{
   .pipe($I.annoteSchema("CountLinesOptions", { description: "Optional controls for counting lines in a file." }));
 
 /**
- * Type for {@link CountLinesOptions}.
- *
  * **Example** (Type count lines options)
  *
  * ```ts
@@ -1423,8 +1337,6 @@ const CountLinesParameters = S.Class<{
   .pipe($I.annoteSchema("CountLinesParameters", { description: "Inputs for counting lines in a file." }));
 
 /**
- * Optional controls for {@link CountJsonl}.
- *
  * **Example** (Make count JSONL options)
  *
  * ```ts
@@ -1451,8 +1363,6 @@ export const CountJsonlOptions = S.Class<{
   );
 
 /**
- * Type for {@link CountJsonlOptions}.
- *
  * **Example** (Type count JSONL options)
  *
  * ```ts

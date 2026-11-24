@@ -33,8 +33,6 @@ import * as Str from "effect/String";
 const $I = $GlobId.create("internal/balancedMatch");
 
 /**
- * Describes the balanced section found by {@link balanced}.
- *
  * **Details**
  *
  * Delimiter offsets identify the opening and closing delimiters; `pre`, `body`,

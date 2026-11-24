@@ -84,8 +84,6 @@ import type { Doctype } from "./Html.nodes.ts";
 const $I = $HtmlId.create("Html.conformance");
 
 /**
- * Conformance contracts re-exported from the internal registry.
- *
  * @category validation
  * @since 0.0.0
  */
@@ -94,8 +92,6 @@ export {
   HtmlConformanceRule,
 } from "./internal/conformance/Html.conformance-contracts.ts";
 /**
- * Heading-level conformance rules re-exported from the internal registry.
- *
  * @category validation
  * @since 0.0.0
  */
@@ -186,8 +182,6 @@ export const ConformantHtml = S.declare(ConformantHtmlValue.is).pipe(
 );
 
 /**
- * Decoded type of {@link ConformantHtml}.
- *
  * **Example** (Annotate a `ConformantHtml` value)
  *
  * ```ts import.meta.vitest name="Annotate a ConformantHtml value"

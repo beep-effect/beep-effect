@@ -60,8 +60,6 @@ export const BoxApplyAttemptId = S.String.check(
 );
 
 /**
- * Runtime type for {@link BoxApplyAttemptId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -196,8 +194,6 @@ export const BoxApplyJournalEntry = S.Union([
 );
 
 /**
- * Runtime type for {@link BoxApplyJournalEntry}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -425,8 +421,6 @@ export const BoxApplyOutcome = S.Union([BoxActionApplied, BoxActionSkipped, BoxA
 );
 
 /**
- * Runtime type for {@link BoxApplyOutcome}.
- *
  * @category type-level
  * @since 0.0.0
  */

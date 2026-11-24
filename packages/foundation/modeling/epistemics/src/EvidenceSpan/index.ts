@@ -6,8 +6,6 @@
  */
 
 /**
- * Evidence span model exports.
- *
  * **Example** (Decode EvidenceSpan with Schema)
  *
  * ```ts

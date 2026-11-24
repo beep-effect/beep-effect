@@ -17,8 +17,7 @@ import {
   widenCitationReplaySleep,
 } from "./CitationReplayBudget.ts";
 
-/** The canonical replay's declared limits (`setupCitationMetadataRuntime(kind, _, _, true)` on the shared policy). */
-const replayLimits = Effect.gen(function* () {
+const canonicalReplayDeclaredLimits = Effect.gen(function* () {
   const defaults = (yield* defaultCitationEnginePolicy).limits;
   return {
     ...defaults,
@@ -30,7 +29,7 @@ const replayLimits = Effect.gen(function* () {
 
 it.effect("widens the declared operationDeadline and passes every other replay deadline through", () =>
   Effect.gen(function* () {
-    const limits = yield* replayLimits;
+    const limits = yield* canonicalReplayDeclaredLimits;
     const widen = widenCitationReplaySleep(limits.operationDeadline);
     expect(Duration.toMillis(widen(limits.operationDeadline))).toBe(Duration.toMillis(citationReplayOperationBudget));
     const others = A.filter(
@@ -43,15 +42,17 @@ it.effect("widens the declared operationDeadline and passes every other replay d
       expect([name, Duration.equals(widen(value), value)]).toEqual([name, true]);
       expect([name, Duration.equals(value, limits.operationDeadline)]).toEqual([name, false]);
     }
-    // The widening never shortens a declared limit above the budget.
     const longer = Duration.seconds(400);
-    expect(Duration.toMillis(widenCitationReplaySleep(longer)(longer))).toBe(400_000);
+    expect(
+      longer.pipe(widenCitationReplaySleep(longer), Duration.toMillis),
+      "the widening never shortens a declared limit above the budget"
+    ).toBe(400_000);
   })
 );
 
 it.effect("refuses a policy whose other limit equals operationDeadline", () =>
   Effect.gen(function* () {
-    const limits = yield* replayLimits;
+    const limits = yield* canonicalReplayDeclaredLimits;
     const inner = yield* Clock.Clock;
     const exit = yield* makeCitationReplayBudgetClock(
       { ...limits, cleanDeadline: limits.operationDeadline },
@@ -63,11 +64,10 @@ it.effect("refuses a policy whose other limit equals operationDeadline", () =>
 
 it.effect("keeps an admitted extract alive past the declared operationDeadline until the replay budget", () =>
   Effect.gen(function* () {
-    const limits = yield* replayLimits;
+    const limits = yield* canonicalReplayDeclaredLimits;
     const inner = yield* Clock.Clock;
     const requested = yield* Ref.make(A.empty<number>());
-    // TestClock keeps its time reads on the prototype, so delegate them instead of spreading.
-    const spy = {
+    const spyDelegatingTestClockPrototypeReads = {
       currentTimeMillisUnsafe: () => inner.currentTimeMillisUnsafe(),
       currentTimeNanosUnsafe: () => inner.currentTimeNanosUnsafe(),
       currentTimeMillis: inner.currentTimeMillis,
@@ -77,14 +77,15 @@ it.effect("keeps an admitted extract alive past the declared operationDeadline u
       sleep: (duration: Duration.Duration) =>
         Ref.update(requested, A.append(Duration.toMillis(duration))).pipe(Effect.andThen(inner.sleep(duration))),
     } satisfies Clock.Clock;
-    const clock = yield* makeCitationReplayBudgetClock(limits, spy);
+    const clock = yield* makeCitationReplayBudgetClock(limits, spyDelegatingTestClockPrototypeReads);
     const admission = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock));
     const fiber = yield* admission.run("extract", Effect.never).pipe(Effect.forkChild);
     yield* TestClock.adjust(Duration.zero);
-    // The spy sits under the widening: a 150 s wait reaches it only from a sleep for exactly the
-    // declared 50 s, so the admission's own timeout is the sleep the replay clock matches.
     const sleeps = yield* Ref.get(requested);
-    expect(sleeps).toContain(Duration.toMillis(citationReplayOperationBudget));
+    expect(
+      sleeps,
+      "the spy sits under the widening: a 150 s sleep reaches it only from the admission timeout for the declared 50 s"
+    ).toContain(Duration.toMillis(citationReplayOperationBudget));
     yield* TestClock.adjust(limits.operationDeadline);
     const pending = yield* admission.snapshot;
     expect(pending).toMatchObject({ active: 1 });

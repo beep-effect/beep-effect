@@ -43,11 +43,8 @@ import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.f
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
-// One engine at a time: each case runs real extractions on real native workers against the
-// declared 50 s `operationDeadline` on a real clock. Four engines at once on a 4-vCPU hosted
-// runner pushed one extraction past it (`CitationSafetyLimitExceeded`, `operationDeadline`).
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
-  "four-operation engine Layer",
+  "four-operation engine Layer, one engine at a time so real native extractions stay inside the real-clock 50 s operationDeadline",
   (it) => {
     for (const [kind, assembly] of [
       ["bun", "captured"],
@@ -179,8 +176,6 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               const htmlFailure = yield* built.build(valid).pipe(
                 Effect.provideService(Path.Path, {
                   ...path,
-                  // Keep ordinary asset resolution intact; the HTML worker receives
-                  // the platform's real BadArgument for a non-file URL.
                   fromFileUrl: Effect.fn("EngineLayerTest.htmlPath")((url: URL) =>
                     path.fromFileUrl(
                       Str.includes("/citation-html/")(url.pathname)
@@ -191,7 +186,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                 }),
                 Effect.flip
               );
-              expect(htmlFailure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+              expect(
+                htmlFailure,
+                "only the HTML worker asset resolves to a non-file URL, so it gets the platform's real BadArgument"
+              ).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
               const after = yield* setup.observed.snapshot;
               expect(after).toEqual(before);
               expect(sourceCalls).toBe(4);

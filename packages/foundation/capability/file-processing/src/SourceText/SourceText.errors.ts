@@ -43,8 +43,6 @@ export const SourceTextResolverErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link SourceTextResolverErrorReason}.
- *
  * **Example** (Type a failure reason)
  *
  * ```ts
@@ -60,8 +58,6 @@ export const SourceTextResolverErrorReason = LiteralKit([
 export type SourceTextResolverErrorReason = typeof SourceTextResolverErrorReason.Type;
 
 /**
- * Typed, fail-closed source-text resolution failure.
- *
  * **Example** (Create source-unavailable error)
  *
  * ```ts import.meta.vitest name="Create source-unavailable error"

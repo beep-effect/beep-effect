@@ -96,13 +96,6 @@ class YamlFormatInvariantFailure extends S.TaggedError<YamlFormatInvariantFailur
 export type YamlRangeLike = YamlRange | { readonly offset: number; readonly length: number };
 
 /**
- * Options controlling formatting behavior: every {@link YamlStringifyOptions}
- * field (derived, not hand-duplicated — including `indentSequences`,
- * `quoteStyle` and `quoteCompat`) plus
- * `preserveComments` (default `true`), `range` (restrict edits to a
- * region; the positional `range` argument of {@link YamlFormat.format} takes
- * precedence over this field) and `requoteScalars` (default `false`).
- *
  * **Details**
  *
  * `requoteScalars` makes `quoteStyle` apply to scalars **already quoted in
@@ -211,15 +204,6 @@ const echoErrorPath = (path: YamlPath) =>
   );
 
 /**
- * Raised when `YamlFormat.modify` cannot navigate the requested path against
- * the composed AST (a structural mismatch), the source fails to parse, the
- * source is a multi-document stream (`MultiDocumentStream` — a path names no
- * particular document of a stream, so modify refuses rather than guessing),
- * or the document's directives end in a `---` line that carries content
- * (`DirectiveCarryingDocument` — modify keeps the `%YAML`/`%TAG` prologue
- * verbatim only up to a bare or commented `---` marker, and dropping a `%TAG`
- * would orphan the shorthand tags that depend on it).
- *
  * **Details**
  *
  * Carries structured {@link YamlDiagnostic} entries — never a collapsed

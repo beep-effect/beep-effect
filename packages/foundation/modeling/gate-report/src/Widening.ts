@@ -13,8 +13,6 @@ import type { HistoryLabel, ItemOutcome, RunOutcome, RunReason, RunShape } from 
 const $I = $GateReportId.create("Widening");
 
 /**
- * Upstream `TestState`, the test states a test runner reports.
- *
  * **Example** (Guard a test state)
  *
  * ```ts
@@ -33,8 +31,6 @@ export const UpstreamTestState = LiteralKit(["passed", "failed", "skipped", "pen
 );
 
 /**
- * Type of {@link UpstreamTestState}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -62,8 +58,6 @@ export const itemOutcomeFromTestState: (state: UpstreamTestState) => ItemOutcome
 });
 
 /**
- * Upstream `TestRunReason`, why a test runner says a run ended.
- *
  * **Example** (Guard a run reason)
  *
  * ```ts
@@ -82,8 +76,6 @@ export const UpstreamRunReason = LiteralKit(["passed", "failed", "interrupted"])
 );
 
 /**
- * Type of {@link UpstreamRunReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -111,8 +103,6 @@ export const runReasonFromUpstream: (reason: UpstreamRunReason) => RunReason = U
 });
 
 /**
- * Upstream `RunShape`.
- *
  * **Example** (Read the upstream shapes)
  *
  * ```ts
@@ -131,8 +121,6 @@ export const UpstreamRunShape = LiteralKit(["single-test", "single-file", "singl
 );
 
 /**
- * Type of {@link UpstreamRunShape}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -160,8 +148,6 @@ export const runShapeFromUpstream: (shape: UpstreamRunShape) => RunShape = Upstr
 });
 
 /**
- * Upstream `RunOutcome`.
- *
  * **Example** (Read the upstream outcomes)
  *
  * ```ts
@@ -180,8 +166,6 @@ export const UpstreamRunOutcome = LiteralKit(["all-pass", "some-fail", "threshol
 );
 
 /**
- * Type of {@link UpstreamRunOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -209,8 +193,6 @@ export const runOutcomeFromUpstream: (outcome: UpstreamRunOutcome) => RunOutcome
 });
 
 /**
- * Upstream `TestClassification`.
- *
  * **Example** (Guard a classification)
  *
  * ```ts
@@ -229,8 +211,6 @@ export const UpstreamClassification = LiteralKit(["stable", "new-failure", "pers
 );
 
 /**
- * Type of {@link UpstreamClassification}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -75,8 +75,6 @@ const WindowsShimTarget = S.String.check(
 const isWindowsShimTarget = S.is(WindowsShimTarget);
 
 /**
- * Raised when a package manager cannot be provisioned on the runner.
- *
  * **Example** (Inspect an integrity requirement failure)
  *
  * ```ts
@@ -398,9 +396,6 @@ export declare namespace PackageManagerInstallOptions {
 }
 
 /**
- * A package manager the runner's own toolchain already had: nothing was
- * downloaded and nothing was cached, so there is no directory to publish.
- *
  * **Details**
  *
  * `bins` values are bare command names (`npm`, `npx`) resolved through the
@@ -454,8 +449,6 @@ export class AmbientPackageManager extends S.Opaque<AmbientPackageManager, { rea
 ) {}
 
 /**
- * Companion types for {@link AmbientPackageManager}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -470,9 +463,6 @@ export declare namespace AmbientPackageManager {
 }
 
 /**
- * A package manager living in the runner's tool cache — found there, or
- * installed into it by this call.
- *
  * **Details**
  *
  * `binDir` is the directory a consumer hands to `ActionOutputs.addPath` to
@@ -553,8 +543,6 @@ export class CachedPackageManager extends S.Opaque<CachedPackageManager, { reado
 ) {}
 
 /**
- * Companion types for {@link CachedPackageManager}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -569,11 +557,6 @@ export declare namespace CachedPackageManager {
 }
 
 /**
- * An installed package manager, discriminated by `source`: `ambient` carries
- * no directory, `tool-cache` carries the cached `directory` and the
- * `addPath`-able `binDir`. The union is a `Schema`, so the record round-trips
- * through `ActionState` for a later phase to read back.
- *
  * **Gotchas**
  *
  * **Construct the variant classes, never the union.** The union's inherited
@@ -609,9 +592,6 @@ export const InstalledPackageManager = S.Union([AmbientPackageManager, CachedPac
 );
 
 /**
- * The decoded type of {@link (InstalledPackageManager:variable)}:
- * {@link AmbientPackageManager} `|` {@link CachedPackageManager}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

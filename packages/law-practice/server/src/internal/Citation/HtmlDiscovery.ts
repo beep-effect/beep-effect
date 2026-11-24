@@ -179,7 +179,7 @@ const discover = Effect.fn("Citation.prepareHtmlDiscovery")(function* (
   >,
   raw: unknown
 ) {
-  // Installed once; its outcome surfaces where each call built the runner.
+  // decision: citation-stage-install-once-exit-replay
   const runner = yield* installedRunner;
   const masked = yield* runner.placeholder(raw);
   const tags = yield* runner.emphasis(masked.source.value.storage);

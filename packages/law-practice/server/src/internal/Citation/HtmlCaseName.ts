@@ -266,12 +266,10 @@ export const installCitationHtmlCaseName = Effect.fn("Citation.installHtmlCaseNa
       const left = yield* geometry.find(start - length(index - 2, index));
       const right = yield* geometry.find(start + length(index, index + 2));
       if (left.length !== 1 || right.length !== 1) return unchanged;
-      // A unique lookup of the same original interval returns the same tuple.
-      if (
+      const uniqueLookupsOfSameOriginalInterval =
         A.getUnsafe(left, 0).start === A.getUnsafe(right, 0).start &&
-        A.getUnsafe(left, 0).end === A.getUnsafe(right, 0).end
-      )
-        return yield* single(left);
+        A.getUnsafe(left, 0).end === A.getUnsafe(right, 0).end;
+      if (uniqueLookupsOfSameOriginalInterval) return yield* single(left);
       const plaintiff = yield* geometry.convert(left);
       const defendant = yield* geometry.convert(right);
       return yield* parties(plaintiff.text, defendant.text, plaintiff.start);

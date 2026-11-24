@@ -64,8 +64,6 @@ export const HeadingSlug = S.String.pipe(
 );
 
 /**
- * The slug string type.
- *
  * @public
  * @category type-level
  * @since 0.0.0

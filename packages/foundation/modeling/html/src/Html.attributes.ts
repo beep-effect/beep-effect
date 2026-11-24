@@ -141,8 +141,6 @@ export const Dir = makeAsciiCaseInsensitiveEnumerated(["ltr", "rtl", "auto"]).pi
   $I.annoteSchema("Dir", { description: "Text directionality." })
 );
 /**
- * Decoded type of {@link Dir}.
- *
  * **Example** (Annotate a `Dir` value)
  *
  * ```ts
@@ -185,8 +183,6 @@ export const Translate = TranslateInput.pipe(
   $I.annoteSchema("Translate", { description: "Whether to translate the element's contents." })
 );
 /**
- * Decoded type of {@link Translate}.
- *
  * **Example** (Annotate a `Translate` value)
  *
  * ```ts
@@ -229,8 +225,6 @@ export const ContentEditable = ContentEditableInput.pipe(
   $I.annoteSchema("ContentEditable", { description: "Whether the element is editable." })
 );
 /**
- * Decoded type of {@link ContentEditable}.
- *
  * **Example** (Annotate a `ContentEditable` value)
  *
  * ```ts
@@ -262,8 +256,6 @@ export const Draggable = makeAsciiCaseInsensitiveEnumerated(["true", "false"]).p
   $I.annoteSchema("Draggable", { description: "Whether the element is draggable." })
 );
 /**
- * Decoded type of {@link Draggable}.
- *
  * **Example** (Annotate a `Draggable` value)
  *
  * ```ts
@@ -306,8 +298,6 @@ export const SpellCheck = SpellCheckInput.pipe(
   $I.annoteSchema("SpellCheck", { description: "Whether spellchecking is enabled." })
 );
 /**
- * Decoded type of {@link SpellCheck}.
- *
  * **Example** (Annotate a `SpellCheck` value)
  *
  * ```ts
@@ -350,8 +340,6 @@ export const WritingSuggestions = WritingSuggestionsInput.pipe(
   $I.annoteSchema("WritingSuggestions", { description: "Whether writing suggestions are enabled." })
 );
 /**
- * Decoded type of {@link WritingSuggestions}.
- *
  * **Example** (Annotate a `WritingSuggestions` value)
  *
  * ```ts
@@ -388,8 +376,6 @@ export const AutoCapitalize = makeAsciiCaseInsensitiveEnumerated([
   "characters",
 ]).pipe($I.annoteSchema("AutoCapitalize", { description: "Autocapitalization behavior." }));
 /**
- * Decoded type of {@link AutoCapitalize}.
- *
  * **Example** (Annotate a `AutoCapitalize` value)
  *
  * ```ts
@@ -432,8 +418,6 @@ export const AutoCorrect = AutoCorrectInput.pipe(
   $I.annoteSchema("AutoCorrect", { description: "Autocorrection behavior." })
 );
 /**
- * Decoded type of {@link AutoCorrect}.
- *
  * **Example** (Annotate a `AutoCorrect` value)
  *
  * ```ts
@@ -472,8 +456,6 @@ export const InputMode = makeAsciiCaseInsensitiveEnumerated([
   "search",
 ]).pipe($I.annoteSchema("InputMode", { description: "Virtual keyboard input mode hint." }));
 /**
- * Decoded type of {@link InputMode}.
- *
  * **Example** (Annotate a `InputMode` value)
  *
  * ```ts
@@ -511,8 +493,6 @@ export const EnterKeyHint = makeAsciiCaseInsensitiveEnumerated([
   "send",
 ]).pipe($I.annoteSchema("EnterKeyHint", { description: "Enter-key action hint." }));
 /**
- * Decoded type of {@link EnterKeyHint}.
- *
  * **Example** (Annotate a `EnterKeyHint` value)
  *
  * ```ts
@@ -555,8 +535,6 @@ export const Hidden = HiddenInput.pipe(
   $I.annoteSchema("Hidden", { description: "Hidden state of the element." })
 );
 /**
- * Decoded type of {@link Hidden}.
- *
  * **Example** (Annotate a `Hidden` value)
  *
  * ```ts
@@ -599,8 +577,6 @@ export const Popover = PopoverInput.pipe(
   SchemaUtils.withLiteralKitStatics(PopoverBase)
 );
 /**
- * Decoded type of {@link Popover}.
- *
  * **Example** (Annotate a `Popover` value)
  *
  * ```ts
@@ -632,8 +608,6 @@ export const PopoverTargetAction = makeAsciiCaseInsensitiveEnumerated(["toggle",
   $I.annoteSchema("PopoverTargetAction", { description: "Action a popover invoker performs." })
 );
 /**
- * Decoded type of {@link PopoverTargetAction}.
- *
  * **Example** (Annotate a `PopoverTargetAction` value)
  *
  * ```ts
@@ -648,8 +622,6 @@ export const PopoverTargetAction = makeAsciiCaseInsensitiveEnumerated(["toggle",
  */
 export type PopoverTargetAction = typeof PopoverTargetAction.Type;
 /**
- * An HTML boolean attribute presence value.
- *
  * **Details**
  *
  * HTML boolean attributes are true by presence. The literal `false` is not a
@@ -672,8 +644,6 @@ export const BooleanAttribute = S.Literals([true, ""]).pipe(
   $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute presence (`true` or empty string)." })
 );
 /**
- * Decoded type of {@link BooleanAttribute}.
- *
  * **Example** (Annotate a `BooleanAttribute` value)
  *
  * ```ts
@@ -721,8 +691,6 @@ export const CrossOrigin = CrossOriginInput.pipe(
 );
 
 /**
- * Decoded type of {@link CrossOrigin}.
- *
  * **Example** (Annotate a `CrossOrigin` value)
  *
  * ```ts
@@ -765,8 +733,6 @@ export const ReferrerPolicy = makeAsciiCaseInsensitiveEnumerated([
 ]).pipe($I.annoteSchema("ReferrerPolicy", { description: "Canonical HTML referrer-policy keyword." }));
 
 /**
- * Decoded type of {@link ReferrerPolicy}.
- *
  * **Example** (Annotate a `ReferrerPolicy` value)
  *
  * ```ts
@@ -804,8 +770,6 @@ export const Utf8Charset = makeAsciiCaseInsensitiveEnumerated(["utf-8"]).pipe(
 );
 
 /**
- * Decoded type of {@link Utf8Charset}.
- *
  * **Example** (Annotate a `Utf8Charset` value)
  *
  * ```ts
@@ -843,8 +807,6 @@ export const FormAutocomplete = makeAsciiCaseInsensitiveEnumerated(["on", "off"]
 );
 
 /**
- * Decoded type of {@link FormAutocomplete}.
- *
  * **Example** (Annotate a `FormAutocomplete` value)
  *
  * ```ts
@@ -900,8 +862,6 @@ export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]
 );
 
 /**
- * Decoded type of {@link ButtonCommand}.
- *
  * **Example** (Annotate a `ButtonCommand` value)
  *
  * ```ts
@@ -917,8 +877,6 @@ export const ButtonCommand = S.Union([BuiltInButtonCommand, CustomButtonCommand]
 export type ButtonCommand = typeof ButtonCommand.Type;
 
 /**
- * Integer accepted by the `headingoffset` global attribute.
- *
  * **Example** (Call `HeadingOffset`)
  *
  * ```ts import.meta.vitest name="Call HeadingOffset"
@@ -946,8 +904,6 @@ export const HeadingOffset = S.Int.check(
 );
 
 /**
- * Decoded type of {@link HeadingOffset}.
- *
  * **Example** (Annotate a `HeadingOffset` value)
  *
  * ```ts
@@ -963,8 +919,6 @@ export const HeadingOffset = S.Int.check(
 export type HeadingOffset = typeof HeadingOffset.Type;
 
 /**
- * An HTML non-negative integer microsyntax.
- *
  * **Example** (Call `HtmlNonNegativeInteger`)
  *
  * ```ts import.meta.vitest name="Call HtmlNonNegativeInteger"
@@ -993,8 +947,6 @@ export const HtmlNonNegativeInteger = S.Int.check(
 );
 
 /**
- * Decoded type of {@link HtmlNonNegativeInteger}.
- *
  * **Example** (Annotate a `HtmlNonNegativeInteger` value)
  *
  * ```ts
@@ -1010,8 +962,6 @@ export const HtmlNonNegativeInteger = S.Int.check(
 export type HtmlNonNegativeInteger = typeof HtmlNonNegativeInteger.Type;
 
 /**
- * An HTML positive integer microsyntax.
- *
  * **Example** (Call `HtmlPositiveInteger`)
  *
  * ```ts import.meta.vitest name="Call HtmlPositiveInteger"
@@ -1040,8 +990,6 @@ export const HtmlPositiveInteger = S.Int.check(
 );
 
 /**
- * Decoded type of {@link HtmlPositiveInteger}.
- *
  * **Example** (Annotate a `HtmlPositiveInteger` value)
  *
  * ```ts
@@ -1057,8 +1005,6 @@ export const HtmlPositiveInteger = S.Int.check(
 export type HtmlPositiveInteger = typeof HtmlPositiveInteger.Type;
 
 /**
- * A finite number accepted by the HTML floating-point microsyntax.
- *
  * **Example** (Call `HtmlFiniteNumber`)
  *
  * ```ts import.meta.vitest name="Call HtmlFiniteNumber"
@@ -1079,8 +1025,6 @@ export const HtmlFiniteNumber = S.Finite.pipe(
 );
 
 /**
- * Decoded type of {@link HtmlFiniteNumber}.
- *
  * **Example** (Annotate a `HtmlFiniteNumber` value)
  *
  * ```ts
@@ -1096,8 +1040,6 @@ export const HtmlFiniteNumber = S.Finite.pipe(
 export type HtmlFiniteNumber = typeof HtmlFiniteNumber.Type;
 
 /**
- * A non-negative finite HTML number.
- *
  * **Example** (Call `HtmlNonNegativeNumber`)
  *
  * ```ts import.meta.vitest name="Call HtmlNonNegativeNumber"
@@ -1127,8 +1069,6 @@ export const HtmlNonNegativeNumber = HtmlFiniteNumber.check(
 );
 
 /**
- * Decoded type of {@link HtmlNonNegativeNumber}.
- *
  * **Example** (Annotate a `HtmlNonNegativeNumber` value)
  *
  * ```ts
@@ -1144,8 +1084,6 @@ export const HtmlNonNegativeNumber = HtmlFiniteNumber.check(
 export type HtmlNonNegativeNumber = typeof HtmlNonNegativeNumber.Type;
 
 /**
- * A positive finite HTML number.
- *
  * **Example** (Call `HtmlPositiveNumber`)
  *
  * ```ts import.meta.vitest name="Call HtmlPositiveNumber"
@@ -1175,8 +1113,6 @@ export const HtmlPositiveNumber = HtmlFiniteNumber.check(
 );
 
 /**
- * Decoded type of {@link HtmlPositiveNumber}.
- *
  * **Example** (Annotate a `HtmlPositiveNumber` value)
  *
  * ```ts
@@ -1214,8 +1150,6 @@ export const HtmlStep = S.Union([makeAsciiCaseInsensitiveEnumerated(["any"]), Ht
 );
 
 /**
- * Decoded type of {@link HtmlStep}.
- *
  * **Example** (Annotate a `HtmlStep` value)
  *
  * ```ts
@@ -1423,8 +1357,6 @@ export const HtmlRelationList = makeOpenSpaceSeparatedTokenList(true, undefined,
 );
 
 /**
- * Decoded type of {@link HtmlRelationList}.
- *
  * **Example** (Annotate a `HtmlRelationList` value)
  *
  * ```ts
@@ -1477,8 +1409,6 @@ export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
 );
 
 /**
- * Decoded type of {@link LinkRelationList}.
- *
  * **Example** (Annotate a `LinkRelationList` value)
  *
  * ```ts
@@ -1494,8 +1424,6 @@ export const LinkRelationList = makeOpenSpaceSeparatedTokenList(
 export type LinkRelationList = typeof LinkRelationList.Type;
 
 /**
- * Case-preserving unique HTML ID-reference token list.
- *
  * **Example** (Validate with `HtmlIdReferenceList`)
  *
  * ```ts
@@ -1517,8 +1445,6 @@ export const HtmlIdReferenceList = makeOpenSpaceSeparatedTokenList(false).pipe(
 );
 
 /**
- * Decoded type of {@link HtmlIdReferenceList}.
- *
  * **Example** (Annotate a `HtmlIdReferenceList` value)
  *
  * ```ts
@@ -1555,8 +1481,6 @@ const CanonicalMetadataName = MetadataNameInput.check(
 );
 
 /**
- * Open metadata name for `meta[name]`.
- *
  * **Details**
  *
  * HTML permits arbitrary extension metadata names; decoding normalizes their
@@ -1588,8 +1512,6 @@ export const MetadataName = MetadataNameInput.pipe(
 );
 
 /**
- * Decoded type of {@link MetadataName}.
- *
  * **Example** (Annotate a `MetadataName` value)
  *
  * ```ts
@@ -1636,8 +1558,6 @@ const CanonicalAutocompleteAttribute = S.String.check(
 );
 
 /**
- * Ordered token-list microsyntax used by the HTML `autocomplete` attribute.
- *
  * **Details**
  *
  * Decoding canonicalizes ASCII case and whitespace. Direct construction
@@ -1673,8 +1593,6 @@ export const AutocompleteAttribute = AutocompleteAttributeInput.pipe(
 );
 
 /**
- * Decoded type of {@link AutocompleteAttribute}.
- *
  * **Example** (Annotate a `AutocompleteAttribute` value)
  *
  * ```ts
@@ -1721,8 +1639,6 @@ export const ForeignElementName = S.String.check(
 );
 
 /**
- * Decoded type of {@link ForeignElementName}.
- *
  * **Example** (Annotate a `ForeignElementName` value)
  *
  * ```ts
@@ -1738,8 +1654,6 @@ export const ForeignElementName = S.String.check(
 export type ForeignElementName = typeof ForeignElementName.Type;
 
 /**
- * Name of an attribute on an SVG or MathML foreign element.
- *
  * **Example** (Call `ForeignAttributeName`)
  *
  * ```ts import.meta.vitest name="Call ForeignAttributeName"
@@ -1768,8 +1682,6 @@ export const ForeignAttributeName = S.String.check(
 );
 
 /**
- * Decoded type of {@link ForeignAttributeName}.
- *
  * **Example** (Annotate a `ForeignAttributeName` value)
  *
  * ```ts
@@ -1821,8 +1733,6 @@ export const HtmlIdValue = S.String.check(
 );
 
 /**
- * Decoded type of {@link HtmlIdValue}.
- *
  * **Example** (Annotate a `HtmlIdValue` value)
  *
  * ```ts
@@ -1920,8 +1830,6 @@ export const StandardGlobalAttributes = readonlyStruct({
 });
 
 /**
- * Key inside the AST's `dataset` attribute bag.
- *
  * **Details**
  *
  * The ASCII-case-fixed key is appended to `data-` by the serializer. Rejecting
@@ -1956,8 +1864,6 @@ export const DatasetKey = S.String.check(
 );
 
 /**
- * Decoded type of {@link DatasetKey}.
- *
  * **Example** (Annotate a `DatasetKey` value)
  *
  * ```ts import.meta.vitest name="Annotate a DatasetKey value"
@@ -2217,8 +2123,6 @@ export const GlobalAttributesStruct = S.Struct(GlobalAttributes).pipe(
   $I.annoteSchema("GlobalAttributesStruct", { description: "Struct schema over the shared HTML global attributes." })
 );
 /**
- * Decoded type of {@link GlobalAttributesStruct}.
- *
  * **Example** (Annotate a `GlobalAttributesStruct` value)
  *
  * ```ts import.meta.vitest name="Annotate a GlobalAttributesStruct value"

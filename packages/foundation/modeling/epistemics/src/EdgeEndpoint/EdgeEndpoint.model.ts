@@ -117,9 +117,6 @@ const EdgeEndpointShapeBase = LiteralKit(["claim", "evidence", "entity", "observ
 });
 
 /**
- * Structural view of any bound edge endpoint, read by
- * {@link encodeEdgeEndpointKey}: string or number ids and plain string refs.
- *
  * **Example** (Check an evidence endpoint shape)
  *
  * ```ts
@@ -140,8 +137,6 @@ export const EdgeEndpointShape = EdgeEndpointShapeBase.pipe(
 );
 
 /**
- * Runtime type for {@link EdgeEndpointShape}.
- *
  * **Example** (Type an evidence endpoint)
  *
  * ```ts
