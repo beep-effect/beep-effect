@@ -1,7 +1,7 @@
 import { commute, compose, map, product, pure, traverse } from "@beep/nlp-processing/Operation";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -16,7 +16,7 @@ import {
   SmallInput,
 } from "./support/OperationDescriptor.ts";
 import { appendEvent, observe, Trace } from "./support/OperationObservation.ts";
-import type { Operation } from "@beep/nlp-processing/Operation";
+import type { Operation, Pure } from "@beep/nlp-processing/Operation";
 
 type LawOperation = Operation<number, number, OperationFailure, Trace>;
 
@@ -130,8 +130,8 @@ describe("Operation", () => {
       expect(sFirst).toEqual({ exit: { _tag: "Died" }, trace: [] });
       expect(qFirst).toEqual({ exit: { _tag: "Died" }, trace: [7] });
       expect(qFails).toEqual({ exit: { _tag: "Failed", error: OperationFailure.make({ code: 7 }) }, trace: [7] });
-      // @ts-expect-error an effectful arrow is not a Pure witness, so commute refuses it
-      commute(s, q, lawTerm);
+      expectTypeOf(s).not.toExtend<Pure<number, number>>();
+      expectTypeOf(id).toExtend<Pure<number, number>>();
     })
   );
 
