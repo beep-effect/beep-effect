@@ -160,6 +160,7 @@
       "test/ProvenanceTraversal.test.ts",
       "test/CitationCache.scope.test.ts",
       "test/PracticeKg.wall.test.ts",
+      "test/MatterWall.two-matter.test.ts",
       "test/ReviewFiles.test.ts"
     ],
     [

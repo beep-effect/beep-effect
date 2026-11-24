@@ -3277,6 +3277,14 @@ Lane p6
 
 Reverse: Drop the PGlite graph store from the test layer and assert path 3 only on the DuckDB matter store tools
 
+### P6: the two-matter test builds real bundles from a two-matter corpus and composes each path's production layer per principal, 2026-11-24
+
+MatterWall.two-matter.test.ts follows section 8.3 with these choices. The Practice KG paths (3 and 4) read bundles built by buildPracticeKgBundle from a two-matter fixture corpus in a scoped temporary directory on the node file system, not MemoryFileSystem: PGlite and DuckDB need real files, and building the bundle exercises the (digest, docket) keys end to end. The corpus files identical bytes under 11111.20001US01 and 22222.20001US02 (two clients sharing the bare family 20001), one document only in each matter, and one mail archive with a folder per matter; a second bundle without matter B gives the with-and-without-B score comparison. The candidate-claim tables are seeded into the built graph store, so kg_candidate_claims returns the loaded result. Path 2 reuses the citation callback observation fixture, whose source scope is bound to matter B, because anchor resolution needs mentions captured against a verified source. Path 7 builds LawPracticeServerLive per principal with a stub language model and seeds its claim store. Paths 1 and 5 compose AuthorizedSourceTextResolver over identical office-action bytes; path 6 is the NoticeMessage structural case. Each walled case asserts the denial and the granted control. A mutation that replaces the walled family filter with TRUE fails paths 3 and 4.
+
+Lane p6
+
+Reverse: Replace the built bundles with hand-written PGlite and DuckDB rows and the per-path layers with test doubles
+
 ### P6: MatterWall.two-matter.test.ts composes no PGlite repositories and runs in the server unit shard, 2026-11-24
 
 2026-11-19-p0-item11-matter-wall-test-shape lists PGlite repositories in the widened server test layer. The only repositories in law-practice server are CandorRecord and LegalPositionRecord, which filter by orgId (CandorRecord.repo.ts:99-109, LegalPositionRecord.repo.ts:107-138): tenant isolation, outside the seven matter paths. Composing them would add PGlite to the test without exercising a path, and a gated skip on a host without PGlite would let the exit go green without running. This amends the P0 layer list: the test composes LawPracticeServerLive widened with the Practice KG host over MemoryFileSystem and an in-memory DuckDB bundle, the citation engine, the notice mailbox over the fake mailbox, MatterAuthorityLive over a test config and a test LawPrincipal. Fixture: the synthetic office-action text captured under two scope references bound to matters A and B; principal pA staffed on A, pAB on both; one it.layer case per path. The file joins server/vitest.shards.json in the unit shard and is reweighted with bun run beep ci partitions rebalance --write --run <id> after the first hosted run. Answers A15 and F14.
