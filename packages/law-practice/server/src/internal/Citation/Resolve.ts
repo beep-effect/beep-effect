@@ -213,15 +213,15 @@ const resolveMentions = Effect.fn("Citation.resolveMentions")(function* (
     guess: string
   ) {
     if (profile === "six-form" && Str.isEmpty(guess)) return Chunk.empty<typeof Entry.Type>();
-    // Escape the literal antecedent; Unicode token edges exclude substring and
-    // combining-mark matches without fuzzy or nearest-authority tie breaking.
-    const pattern = new RegExp.RegExp(
+    const escapedAntecedentBetweenUnicodeTokenEdgesNoFuzzyTieBreak = new RegExp.RegExp(
       `(?:^|[^\\p{L}\\p{M}\\p{N}_])${RegExp.escape(guess)}(?=$|[^\\p{L}\\p{M}\\p{N}_])`,
       "u"
     );
     const matches = (party: string) =>
       Str.isNonEmpty(party) &&
-      (profile === "six-form" ? O.isSome(Str.match(pattern)(party)) : Str.includes(guess)(party));
+      (profile === "six-form"
+        ? O.isSome(Str.match(escapedAntecedentBetweenUnicodeTokenEdgesNoFuzzyTieBreak)(party))
+        : Str.includes(guess)(party));
     let found = Chunk.empty<typeof Entry.Type>();
     for (const entry of entries) {
       yield* step;

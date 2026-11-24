@@ -94,7 +94,7 @@ const own = Effect.fn("Citation.ownTokenizedExtraction")(function* (
   runtime: CitationNativeProcessRuntime
 ) {
   const children = yield* captureCitationExtractionChildren();
-  // Installed once; an install failure surfaces where each request used to install it.
+  // decision: citation-stage-install-once-exit-replay
   const tokenizer = yield* Effect.exit(makeCitationTokenizer(limits, runtime, ownedField(config, "tokenizer")));
   const loop = yield* Effect.exit(
     makeCitationExtractionLoop(limits, runtime, ownedField(config, "loop")).pipe(Effect.provideContext(children))
@@ -157,8 +157,10 @@ export const makeCitationTokenizedExtraction = makeCitationMetadataStage({
   prepare,
   project: (result, reservedUnits) => {
     const completed = CitationTokenizedExtractionResult.make({ ...result, reservedUnits });
-    // Retain the loop's proved cross-list identity after structural validation.
-    const restored: CitationTokenizedExtractionResult = { ...completed, extraction: result.extraction };
-    return restored;
+    const keepingLoopProvedCrossListIdentity: CitationTokenizedExtractionResult = {
+      ...completed,
+      extraction: result.extraction,
+    };
+    return keepingLoopProvedCrossListIdentity;
   },
 });

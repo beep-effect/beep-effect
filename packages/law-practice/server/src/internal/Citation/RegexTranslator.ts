@@ -124,11 +124,12 @@ export const makeCitationRegexTranslator = Effect.fn("Citation.makeRegexTranslat
       if (inside) yield* emit(body);
       else yield* emitBuild(Str.length(body) + (escaped === 83 ? 3 : 2), () => `[${escaped === 83 ? "^" : ""}${body}]`);
     });
+    const isCapturedEscapedAsciiPunctuationLiteral = (escaped: number) =>
+      escaped < 128 && !asciiLetter(escaped) && !asciiDigit(escaped);
     const emitEscapeLiteral = Effect.fnUntraced(function* (escaped: number) {
       if (escaped === 110) yield* emit("\\x0a");
       else if (escaped === 92) yield* emit("\\\\");
-      else if (escaped < 128 && !asciiLetter(escaped) && !asciiDigit(escaped)) {
-        // All escaped punctuation in the captured source is an ASCII literal.
+      else if (isCapturedEscapedAsciiPunctuationLiteral(escaped)) {
         yield* emitBuild(4, () => `\\x${escaped < 16 ? "0" : ""}${escaped.toString(16)}`);
       } else return yield* fail("unsupported-syntax");
     });

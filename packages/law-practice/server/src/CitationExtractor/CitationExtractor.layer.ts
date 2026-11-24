@@ -72,7 +72,6 @@ const normalize = Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
 });
 const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
   const invalid = () => CitationInputError.make({ operation: "extract" });
-  // Configuration crosses from a caller into the extractor here: one detach.
   const configuration = yield* ownCitationConfiguration(CitationExtractorConfiguration, raw, invalid);
   const { installation, runtime } = configuration;
   const { limits } = installation;
@@ -118,14 +117,15 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
             : invalidObservation()
         )
       );
-      // A fresh copy of the installed policy goes into the returned report, so a
-      // caller mutating the report cannot change what the extractor installed
-      // (the per-request report snapshot the four engine operations take).
-      const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalidObservation);
+      const freshPolicyCopySoReportMutationCannotReachInstall = yield* captureCitationOperationPolicy(
+        limits,
+        engineArtifact,
+        invalidObservation
+      );
       const report = CitationExtractorReport.make({
         engineArtifact,
         vocabularyVersion: projection.vocabularyVersion,
-        limits: reportPolicy.limits,
+        limits: freshPolicyCopySoReportMutationCannotReachInstall.limits,
         recognizedMentions: A.length(mentions),
         outsideProfile: output.outsideProfile,
       });

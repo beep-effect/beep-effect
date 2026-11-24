@@ -196,15 +196,14 @@ const installPrepare = Effect.fn("Citation.installReferenceToken")(function* (
       const variation = yield* resolve(token.variation);
       const year = O.getOrNull(names.patch.numericYear);
       const candidates = yield* prepareCitationEditionInferenceInput(limits, { exact, variation, year, prior: null });
-      // The short source constructor guesses edition before court.
-      const editionGuess = yield* inference.guess(candidates);
+      const editionGuessedBeforeCourt = yield* inference.guess(candidates);
       const court = yield* guessCitationCaseCourt(limits, owner, candidates, null);
       return CitationReferenceTokenOutcome.cases.ShortCaseCitation.make({
         spanEnd,
         fullSpanStart: O.getOrNull(names.patch.fullSpanStart),
         fullSpanEnd: spanEnd > token.end ? spanEnd : token.end,
         year,
-        editionGuess,
+        editionGuess: editionGuessedBeforeCourt,
         metadata: {
           ...pinMetadata(extracted.pinCite, extracted.parenthetical),
           ...O.getSomesStruct({ plaintiff: names.patch.plaintiff }),
@@ -264,10 +263,8 @@ const installPrepare = Effect.fn("Citation.installReferenceToken")(function* (
       ),
       Match.orElse(() => Effect.fail(fail("not-reference-token")))
     );
-    // Short-form pin extraction consumes the original page prefix before the
-    // CitationBase constructor normalizes missing-page model groups.
-    const modelToken = yield* normalizeCitationModelPage(token);
-    return { index: request.index, token: modelToken, outcome };
+    const normalizedAfterShortPinConsumedOriginalPagePrefix = yield* normalizeCitationModelPage(token);
+    return { index: request.index, token: normalizedAfterShortPinConsumedOriginalPagePrefix, outcome };
   });
 });
 /** Preserve the original four constructor branches under one operation, Scope,

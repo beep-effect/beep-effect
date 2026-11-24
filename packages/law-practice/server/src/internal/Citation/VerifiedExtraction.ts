@@ -99,7 +99,7 @@ const own = Effect.fn("Citation.ownVerifiedExtraction")(function* (
 ) {
   const extracted = yield* ownCitationSemanticExtraction(limits, ownedField(configuration, "extraction"));
   return yield* Effect.gen(function* () {
-    // Installed once; an install failure surfaces where each request used to install it.
+    // decision: citation-stage-install-once-exit-replay
     const stage = yield* Effect.exit(makeCitationSemanticExtraction(limits, runtime, extracted.config));
     const projection = yield* Effect.exit(
       makeCitationOccurrenceProjection(
@@ -123,9 +123,10 @@ const identitiesFor = (sources: ReturnType<typeof sourcesFor>) => ({
   plain: sources.plain === null ? null : sources.plain.source,
   markup: sources.markup === null ? null : sources.markup.source,
 });
-// Original Both branch uses markup as Document.source, while tokenizer text
-// remains the supplied plain value. Empty markup instead selects Plain.
-const parentFor = (sources: ReturnType<typeof sourcesFor>, fallback: VerifiedSourceText) =>
+const documentSourceIsNonEmptyMarkupElsePlainTokenizerKeepsPlain = (
+  sources: ReturnType<typeof sourcesFor>,
+  fallback: VerifiedSourceText
+) =>
   sources.markup !== null && !Str.isEmpty(sources.markup.sourceText) ? sources.markup : (sources.plain ?? fallback);
 const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
   limits: CitationEngineLimits,
@@ -154,7 +155,7 @@ const prepare = Effect.fn("Citation.extractVerifiedPrimitiveSource")(function* (
     }
     const input = modes.value;
     const sources = sourcesFor(identity.source, identity.role, input.companion ?? null);
-    const parent = parentFor(sources, identity.source);
+    const parent = documentSourceIsNonEmptyMarkupElsePlainTokenizerKeepsPlain(sources, identity.source);
     const companion = parent === identity.source ? input.companion : identity.source;
     const role = parent === sources.markup ? "markup" : "plain";
     const semantic = yield* stage.extract({
