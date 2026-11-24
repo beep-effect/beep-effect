@@ -157,6 +157,8 @@
       "test/MailTagging.matters.test.ts",
       "test/MatterAuthority.test.ts",
       "test/ClaimStore.memory.test.ts",
+      "test/ProvenanceTraversal.test.ts",
+      "test/CitationCache.scope.test.ts",
       "test/ReviewFiles.test.ts"
     ],
     [

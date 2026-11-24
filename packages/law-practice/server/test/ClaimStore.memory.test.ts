@@ -73,6 +73,7 @@ const entryIn = Effect.fn("ClaimStoreMemoryTest.entryIn")(function* (
     record: LawProposedClaimRecord.make({ claim, core, stance: "proposed" }),
     generation: GenerationFact.make({ activity, at: DateTime.makeUnsafe(knowledgeStart) }),
     activities: HashSet.empty(),
+    captures: HashSet.empty(),
   });
 });
 

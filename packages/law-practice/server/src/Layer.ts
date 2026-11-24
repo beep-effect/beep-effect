@@ -29,7 +29,9 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { LawClaimStoreMemory } from "./ClaimStore/index.ts";
+import { ProvenanceTraversalLive } from "./ProvenanceTraversal/index.ts";
 import type { LawClaimAdmissions } from "@beep/law-practice-use-cases/ClaimStore";
+import type { ProvenanceTraversal } from "@beep/law-practice-use-cases/ProvenanceTraversal";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as Model from "effect/ai/Model";
 import type * as Config from "effect/Config";
@@ -56,8 +58,8 @@ const OfficeActionReviewLayer = Layer.effect(
 
 /**
  * Live law-practice server layer providing the IR-to-law mapping, the
- * in-memory law claim store and the office-action review loop over
- * provider-neutral extraction.
+ * in-memory law claim store, the office-action review loop over
+ * provider-neutral extraction and the walled claim provenance traversal.
  *
  * **Details**
  *
@@ -81,10 +83,10 @@ const OfficeActionReviewLayer = Layer.effect(
  * @since 0.0.0
  */
 export const LawPracticeServerLive: Layer.Layer<
-  OfficeActionReview | IrToLaw | LawClaimProposals | LawClaimAdmissions,
+  OfficeActionReview | ProvenanceTraversal | IrToLaw | LawClaimProposals | LawClaimAdmissions,
   Config.ConfigError,
   LanguageModel.LanguageModel | Model.ProviderName | Model.ModelName | Digest.Digest | MatterAuthority | LawPrincipal
-> = OfficeActionReviewLayer.pipe(
+> = Layer.merge(OfficeActionReviewLayer, ProvenanceTraversalLive).pipe(
   Layer.provideMerge(IrToLawLayer),
   Layer.provideMerge(LawClaimStoreMemory),
   Layer.provide(FileProcessingLayer),

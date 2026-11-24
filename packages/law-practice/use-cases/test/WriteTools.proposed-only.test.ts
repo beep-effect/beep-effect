@@ -22,6 +22,12 @@ import { LawClaimProposals } from "@beep/law-practice-use-cases/ClaimStore";
 import { requiredExtraction } from "@beep/law-practice-use-cases/IrToLaw";
 import { LawPrincipal, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
+import {
+  ClaimProvenance,
+  ClaimProvenanceMissing,
+  ProvenanceResult,
+  ProvenanceTraversal,
+} from "@beep/law-practice-use-cases/ProvenanceTraversal";
 import { RecordVerdictInput } from "@beep/law-practice-use-cases/ReviewQueue";
 import {
   ApplicationLookupParams,
@@ -98,7 +104,7 @@ import {
   reviewScenario,
   unstaffedPrincipal,
 } from "./fixtures/office-action-review/support.ts";
-import type { LawClaimAdmissions } from "@beep/law-practice-use-cases/ClaimStore";
+import type { LawClaimAdmissions, LawClaimProposalsShape } from "@beep/law-practice-use-cases/ClaimStore";
 import type { AttorneyAttestation, LawAdmission } from "@beep/law-practice-use-cases/LawAdmission";
 import type { ContentHash } from "@beep/schema/ContentHash";
 
@@ -174,6 +180,21 @@ const writeTools = pipe(
   A.filter((tool: Tool.Any) => Context.get(tool.annotations, Tool.Readonly) !== true)
 );
 
+const storedTraversal = (proposals: LawClaimProposalsShape) =>
+  ProvenanceTraversal.of({
+    fromClaim: Effect.fn("WriteTools.fromClaim")(function* (claim) {
+      const stored = yield* proposals.get(claim);
+      const activities = yield* proposals.activities(claim);
+      return O.match(stored, {
+        onNone: () => ProvenanceResult.cases.Missing.make({}),
+        onSome: () =>
+          ProvenanceResult.cases.Found.make({
+            provenance: ClaimProvenance.make({ claim, activities, captures: HashSet.empty(), admissions: [] }),
+          }),
+      });
+    }, Effect.orDie),
+  });
+
 const proposalScenario = Effect.fn("WriteTools.proposalScenario")(function* (options: {
   readonly principal: typeof fixturePrincipal;
   readonly current: string;
@@ -199,7 +220,13 @@ const proposalScenario = Effect.fn("WriteTools.proposalScenario")(function* (opt
   );
   const proposalLayer = ClaimProposalLayer.pipe(Layer.provide(services));
   const handlers = LawClaimToolkitLayer.pipe(
-    Layer.provide(Layer.merge(proposalLayer, Layer.succeed(TierGate, gateApproving(options.gate))))
+    Layer.provide(
+      Layer.mergeAll(
+        proposalLayer,
+        Layer.succeed(TierGate, gateApproving(options.gate)),
+        Layer.succeed(ProvenanceTraversal, storedTraversal(store.proposals))
+      )
+    )
   );
   const built = yield* Layer.build(handlers);
   const toolkit = yield* Effect.provideContext(LawClaimToolkit, built);
@@ -232,7 +259,11 @@ const proposalScenario = Effect.fn("WriteTools.proposalScenario")(function* (opt
     const result = yield* propose(request);
     return yield* proposedOf(result);
   });
-  return { call, otherClaimA, propose, proposeRecord, requestA, requestB, store, supportA, supportB };
+  const provenance = (claim: string) =>
+    toolkit
+      .handle("claim_provenance", { claim }, undefined, strictDecode)
+      .pipe(Stream.unwrap, Stream.run(Sink.last()), Effect.flatMap(Effect.fromOption));
+  return { call, otherClaimA, propose, proposeRecord, provenance, requestA, requestB, store, supportA, supportB };
 });
 
 describe("write tools emit proposed records only", () => {
@@ -255,7 +286,9 @@ describe("write tools emit proposed records only", () => {
     type Forbidden = LawAdmission | LawClaimAdmissions | AttorneyAttestation;
     expectTypeOf<Extract<Layer.Services<typeof ClaimProposalLayer>, Forbidden>>().toEqualTypeOf<never>();
     expectTypeOf<Extract<Layer.Services<typeof LawClaimToolkitLayer>, Forbidden>>().toEqualTypeOf<never>();
-    expectTypeOf<Layer.Services<typeof LawClaimToolkitLayer>>().toEqualTypeOf<TierGate | ClaimProposal>();
+    expectTypeOf<Layer.Services<typeof LawClaimToolkitLayer>>().toEqualTypeOf<
+      TierGate | ClaimProposal | ProvenanceTraversal
+    >();
   });
 
   it.layer(makeLayer(modelOutput), { timeout: "20 seconds" })("dispatch", (it) => {
@@ -444,6 +477,24 @@ describe("write tools emit proposed records only", () => {
       })
     );
 
+    it.effect("claim_provenance reads a stored claim and answers Missing for an absent one", () =>
+      Effect.gen(function* () {
+        const scenario = yield* proposalScenario({
+          principal: fixturePrincipal,
+          current: text,
+          gate: ["claim_propose"],
+        });
+        const record = yield* scenario.proposeRecord(scenario.requestA);
+        const found = yield* scenario.provenance(record.claim);
+        const absent = yield* scenario.provenance(`sha256:${Str.repeat(64)("0")}`);
+        const foundClaim = S.is(ClaimProvenance)(found.result) ? O.some(found.result.claim) : O.none();
+        expect(found.isFailure).toBe(false);
+        expect(foundClaim).toEqual(O.some(record.claim));
+        expect(absent.isFailure).toBe(true);
+        expect(S.is(ClaimProvenanceMissing)(absent.result)).toBe(true);
+      })
+    );
+
     it.effect("write tools emit proposed records only: (g) the ProposeClaim descriptor generates the claim id", () =>
       Effect.gen(function* () {
         const scenario = yield* proposalScenario({
@@ -477,6 +528,12 @@ const ReferenceProposeTool = Tool.make("claim_propose_reference", {
 
 const ReferenceToolkit = Toolkit.make(ReferenceProposeTool);
 
+const unusedTraversal = ProvenanceTraversal.of({
+  fromClaim: Effect.fn("WriteTools.unusedFromClaim")(function* () {
+    return yield* Effect.die("the listing test never dispatches");
+  }),
+});
+
 const unusedProposal = ClaimProposal.of({
   propose: Effect.fn("WriteTools.unusedPropose")(function* () {
     return yield* Effect.die("the listing test never dispatches");
@@ -487,6 +544,7 @@ const listingRegistrations = Layer.mergeAll(
   sanitizedToolkit(LawClaimToolkit).pipe(
     Layer.provide(LawClaimToolkitLayer),
     Layer.provide(Layer.succeed(ClaimProposal, unusedProposal)),
+    Layer.provide(Layer.succeed(ProvenanceTraversal, unusedTraversal)),
     Layer.provide(Layer.succeed(TierGate, gateApproving([])))
   ),
   sanitizedToolkit(ReferenceToolkit).pipe(

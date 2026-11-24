@@ -17,6 +17,10 @@ log.
   admits in P6.
 - `@beep/law-practice-use-cases/MatterWall` — `LawPrincipal`,
   `MatterAuthority` and the access answers every walled path asks for.
+- `@beep/law-practice-use-cases/ProvenanceTraversal` — the
+  `ProvenanceTraversal` port behind `claim_provenance`: a claim's traversable
+  activity records, captures and admissions, or `Missing` for an absent or
+  denied claim.
 
 Live Layers that resolve the ingestion (`@beep/file-processing` +
 `@beep/langextract`), the `IrToLaw` mapping, the claim store and the matter

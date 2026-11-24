@@ -18,6 +18,7 @@ import {
   ScopeRef,
 } from "@beep/law-practice-domain/values/LawClaim";
 import { OccurrenceId } from "@beep/text/Occurrence";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type { TrustedClaimBinding } from "@beep/epistemics/Admission";
@@ -32,15 +33,20 @@ import type { LawClaimStoreError } from "./ClaimStore.errors.ts";
 const $I = $LawPracticeUseCasesId.create("ClaimStore/ClaimStore.ports");
 
 /**
- * One proposal append: the proposed record, its generation fact and the
- * activity records that produced it.
+ * One proposal append: the proposed record, its generation fact, the
+ * activity records that produced it and the capture identities they used.
+ *
+ * **Details**
+ *
+ * `captures` names the source text identity of every capture an activity
+ * used, so a traversal can authorize each capture on its own scope.
  *
  * **Example** (Name the entry fields)
  *
  * ```ts
  * import { ProposedClaimEntry } from "@beep/law-practice-use-cases/ClaimStore"
  *
- * console.log(Object.keys(ProposedClaimEntry.fields)) // ["record", "generation", "activities"]
+ * console.log(Object.keys(ProposedClaimEntry.fields)) // ["record", "generation", "activities", "captures"]
  * ```
  *
  * @category models
@@ -51,9 +57,10 @@ export class ProposedClaimEntry extends S.Opaque<ProposedClaimEntry, { readonly 
     record: LawProposedClaimRecord,
     generation: GenerationFact,
     activities: S.HashSet(ActivityRecord),
+    captures: S.HashSet(SourceTextIdentity),
   }).pipe(
     $I.annoteSchema("ProposedClaimEntry", {
-      description: "A proposed record with its generation fact and producing activity records.",
+      description: "A proposed record with its generation fact, producing activity records and the captures they used.",
     })
   )
 ) {}
@@ -139,6 +146,8 @@ export interface LawClaimProposalsShape {
   readonly activities: (claim: ClaimId) => Effect.Effect<HashSet.HashSet<ActivityRecord>, LawClaimStoreError>;
   /** Append one proposal to its scope's log. */
   readonly appendProposed: (entry: ProposedClaimEntry) => Effect.Effect<void, LawClaimStoreError>;
+  /** The capture identities stored with the claim's proposal. */
+  readonly captures: (claim: ClaimId) => Effect.Effect<HashSet.HashSet<SourceTextIdentity>, LawClaimStoreError>;
   /** The proposal with this scope, logical key and creation support, if one is stored. */
   readonly findProposed: (
     lookup: ProposedClaimLookup

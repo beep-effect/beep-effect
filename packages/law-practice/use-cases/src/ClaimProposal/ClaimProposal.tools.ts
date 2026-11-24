@@ -1,6 +1,6 @@
 /**
- * Law claim MCP tools: the agent surface that proposes claims and never admits
- * them.
+ * Law claim MCP tools: the agent surface that proposes claims, reads their
+ * provenance and never admits them.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -15,6 +15,13 @@ import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import {
+  ClaimProvenance,
+  ClaimProvenanceMissing,
+  ClaimProvenanceRequest,
+  ProvenanceResult,
+  ProvenanceTraversal,
+} from "../ProvenanceTraversal/index.ts";
 import { ClaimProposalRefused } from "./ClaimProposal.errors.ts";
 import { ClaimProposal } from "./ClaimProposal.ports.ts";
 import { ClaimProposalRequest } from "./ClaimProposal.values.ts";
@@ -110,6 +117,44 @@ export const ClaimProposeTool = annotateFourHints(
   proposeHints
 );
 
+const provenanceHints = FourHintAnnotations.make({
+  destructive: false,
+  idempotent: true,
+  openWorld: false,
+  readOnly: true,
+});
+
+/**
+ * Reads the provenance of one law claim the principal may traverse.
+ *
+ * **Details**
+ *
+ * A claim that is absent or outside the principal's grants returns
+ * `Missing`, so the answer never reveals that a denied claim exists.
+ *
+ * **Example** (Read the tool name)
+ *
+ * ```ts
+ * import { ClaimProvenanceTool } from "@beep/law-practice-use-cases/ClaimProposal"
+ *
+ * console.log(ClaimProvenanceTool.name) // "claim_provenance"
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const ClaimProvenanceTool = annotateFourHints(
+  Tool.make("claim_provenance", {
+    description:
+      "Read a law claim's provenance: the activity records, captures and admissions the principal may traverse. Returns Missing for an absent or untraversable claim.",
+    failure: ClaimProvenanceMissing,
+    failureMode: "return",
+    parameters: ClaimProvenanceRequest,
+    success: ClaimProvenance,
+  }).annotate(Tool.Strict, true),
+  provenanceHints
+);
+
 /**
  * The law claim toolkit.
  *
@@ -124,22 +169,24 @@ export const ClaimProposeTool = annotateFourHints(
  * ```ts
  * import { LawClaimToolkit } from "@beep/law-practice-use-cases/ClaimProposal"
  *
- * console.log(Object.keys(LawClaimToolkit.tools)) // ["claim_propose"]
+ * console.log(Object.keys(LawClaimToolkit.tools)) // ["claim_propose", "claim_provenance"]
  * ```
  *
  * @category tools
  * @since 0.0.0
  */
-export const LawClaimToolkit = Toolkit.make(ClaimProposeTool);
+export const LawClaimToolkit = Toolkit.make(ClaimProposeTool, ClaimProvenanceTool);
 
 /**
- * The law claim toolkit's handlers over the tier gate and the proposal
- * service.
+ * The law claim toolkit's handlers over the tier gate, the proposal service
+ * and the provenance traversal.
  *
  * **Details**
  *
- * Every call dispatches through the tier gate; a refusal returns
- * `TierGateRefused` and runs nothing. The layer requires no admission port.
+ * `claim_propose` dispatches through the tier gate; a refusal returns
+ * `TierGateRefused` and runs nothing. `claim_provenance` is a read over
+ * `ProvenanceTraversal` and answers `Missing` for an absent or untraversable
+ * claim. The layer requires no admission port.
  *
  * **Example** (Reference the handler layer)
  *
@@ -156,13 +203,14 @@ export const LawClaimToolkit = Toolkit.make(ClaimProposeTool);
 export const LawClaimToolkitLayer: Layer.Layer<
   Tool.HandlersFor<typeof LawClaimToolkit.tools>,
   never,
-  TierGate | ClaimProposal
+  TierGate | ClaimProposal | ProvenanceTraversal
 > = LawClaimToolkit.toLayer(
   Effect.gen(function* () {
     const gate = yield* TierGate;
     const proposal = yield* ClaimProposal;
+    const traversal = yield* ProvenanceTraversal;
     return LawClaimToolkit.of({
-      claim_propose: Effect.fn("LawClaimToolkit.claim_propose")(function* (request) {
+      claim_propose: Effect.fn("LawClaimToolkit.claimPropose")(function* (request) {
         const dispatch = yield* dispatchWithTierGate(
           { tool: ClaimProposeTool, toolCallId: O.none() },
           proposal.propose(request)
@@ -170,6 +218,13 @@ export const LawClaimToolkitLayer: Layer.Layer<
         return yield* TierGateDispatchResult.$match(dispatch, {
           Dispatched: ({ value }) => Effect.succeed(value),
           Refused: ({ audit }) => Effect.fail(ClaimToolGateRefused.make({ reason: audit.reason })),
+        });
+      }),
+      claim_provenance: Effect.fn("LawClaimToolkit.claimProvenance")(function* (request) {
+        const result = yield* traversal.fromClaim(request.claim);
+        return yield* ProvenanceResult.match(result, {
+          Found: ({ provenance }) => Effect.succeed(provenance),
+          Missing: () => Effect.fail(ClaimProvenanceMissing.make({})),
         });
       }),
     });

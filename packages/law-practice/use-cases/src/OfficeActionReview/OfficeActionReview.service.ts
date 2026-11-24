@@ -500,6 +500,7 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
                   record: result.value.record,
                   generation: result.value.generation,
                   activities: result.activities,
+                  captures: HashSet.make(request.source),
                 })
               )
             )

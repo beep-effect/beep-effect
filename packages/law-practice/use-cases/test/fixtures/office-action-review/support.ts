@@ -181,6 +181,10 @@ export const makeMemoryClaimStore = Effect.fn("OfficeActionFlow.memoryClaimStore
       Effect.map(Ref.get(entries), (map) =>
         O.match(HashMap.get(map, claim), { onNone: HashSet.empty, onSome: (entry) => entry.activities })
       ),
+    captures: (claim) =>
+      Effect.map(Ref.get(entries), (map) =>
+        O.match(HashMap.get(map, claim), { onNone: HashSet.empty, onSome: (entry) => entry.captures })
+      ),
     appendProposed: Effect.fn("OfficeActionFlow.appendProposed")(function* (entry: ProposedClaimEntry) {
       const latest = yield* latestIn(entry.record.core.scope);
       if (O.exists(latest, (at) => DateTime.isLessThan(entry.record.core.knowledgeStart, at)))

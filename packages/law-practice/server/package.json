@@ -51,6 +51,7 @@
     "./NoticeMailbox": "./src/NoticeMailbox/index.ts",
     "./internal/*": null,
     "./PracticeKgHost": "./src/PracticeKgHost/index.ts",
+    "./ProvenanceTraversal": "./src/ProvenanceTraversal/index.ts",
     "./OfficeActionStructure": "./src/OfficeActionStructure/index.ts",
     "./QuestionCalendar": "./src/QuestionCalendar/index.ts",
     "./ReviewFiles": "./src/ReviewFiles/index.ts",

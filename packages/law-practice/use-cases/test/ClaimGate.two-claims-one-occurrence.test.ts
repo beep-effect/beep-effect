@@ -68,7 +68,12 @@ it.layer(makeLayer(modelOutput), { timeout: "10 seconds" })("law claims at a sha
       });
       const second = LawProposedClaimRecord.make(promoted);
       yield* scenario.store.proposals.appendProposed(
-        ProposedClaimEntry.make({ record: second, generation, activities: first.activities })
+        ProposedClaimEntry.make({
+          record: second,
+          generation,
+          activities: first.activities,
+          captures: HashSet.make(handoff.document.text),
+        })
       );
       expect(second.claim).not.toBe(first.proposed.claim);
       expect(A.fromIterable(second.core.supportAtCreation)).toEqual([occurrence]);

@@ -53,6 +53,7 @@
     "./MatterWall": "./src/MatterWall/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
+    "./ProvenanceTraversal": "./src/ProvenanceTraversal/index.ts",
     "./PracticeSetup": "./src/PracticeSetup/index.ts",
     "./QuestionQueue": "./src/QuestionQueue/index.ts",
     "./QuestionWrites": "./src/QuestionWrites/index.ts",

@@ -61,6 +61,10 @@ const makeMemoryLawClaimStore = Effect.fnUntraced(function* () {
       const map = yield* Ref.get(entries);
       return O.match(HashMap.get(map, claim), { onNone: HashSet.empty, onSome: (entry) => entry.activities });
     }),
+    captures: Effect.fn("LawClaimStore.captures")(function* (claim: ClaimId) {
+      const map = yield* Ref.get(entries);
+      return O.match(HashMap.get(map, claim), { onNone: HashSet.empty, onSome: (entry) => entry.captures });
+    }),
     appendProposed: Effect.fn("LawClaimStore.appendProposed")(function* (entry: ProposedClaimEntry) {
       yield* Effect.annotateCurrentSpan(LawClaimStoreOperationAttribute, "append-proposed");
       const map = yield* Ref.get(entries);

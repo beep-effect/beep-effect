@@ -2680,6 +2680,14 @@ Lane p6
 
 Reverse: Add Box path prefixes to MatterScope and authorize box_list and box_read through MatterAuthority
 
+### The cache path is proved by the walled resolver and a static module-cache guard, 2026-11-24
+
+Design path 5 asks that identical bytes under two matters never share a cache entry. The composed citation engine needs native runtimes the server shard does not load, and mention receipts already embed the source identity. The proof is two-part: AuthorizedSourceTextResolver resolves identical bytes under matter A and then matter B for a principal granted both, and each identity keeps its own scopeRef; a static guard scans src/internal/Citation for module-level Map, Set, MutableHashMap, MutableRef, Ref.makeUnsafe or Cache declarations and for Cache.make, ScopedCache, cachedWithTTL, cachedFunction and Effect.cached outside NativeLane.ts. Module-level WeakMaps keyed by request objects are allowed.
+
+Lane p6
+
+Reverse: Replace CitationCache.scope.test.ts with an end-to-end citation engine run under two matters once the native lanes run in the server test shard.
+
 ### Candidate claims status and label take the full domain status kit, 2026-11-24
 
 The not-loaded `epistemic_status` and the candidate row `label` of kg_candidate_claims are the domain PracticeKgEpistemicStatus, the full literal kit, rather than a one-member subset, so the published definition equals the domain definition byte for byte. The server still emits only `candidate-unreviewed` for both, and the tool description now names that label in the same spelling.
@@ -2746,6 +2754,14 @@ Lane p6
 
 Reverse: Export a testing seam for toolJsonSchema from mcp-kit and compare against it directly.
 
+### Claim provenance returns admissions as an append-order array, 2026-11-24
+
+LawAdmission has no id of its own, and two admissions of one claim can differ only in time and token. ClaimProvenance.admissions is therefore S.Array(LawAdmission) in store append order, while activities are a set encoded as an id-sorted array and captures a canonical set of CaptureId.
+
+Lane p6
+
+Reverse: Add an admission id to LawAdmission and return a set keyed by it.
+
 ### P6: claim_provenance answers Missing for a claim the principal may not traverse, the same value an absent id gets, 2026-11-24
 
 Independent review of the P6 design. Path 1 deliberately hides a scope's existence behind scope-unavailable, but the first draft's claim_provenance returned Denied for an existing B claim and Missing for an absent id, and claim ids appear in span attributes, so a principal staffed only on A could test whether a B claim exists. ProvenanceResult is Found { provenance } or Missing; ProvenanceTraversal folds a denial into Missing at the use-case boundary, and the tool's failure schema has only Missing. The denial reason is kept in the span (as an access kind and reason attribute, never the scope text). An activity or capture reached through used that the principal may not traverse is omitted from the provenance. Path 7 of the two-matter test expects Missing for a B claim under pA, identical to the response for a non-existent id. Amends the traversal half of 2026-11-24-p6-draft-assembly-and-provenance-traversal-under-the-wall.
@@ -2754,6 +2770,14 @@ Lane p6
 
 Reverse: Return Denied for a denied claim and Missing for an absent one
 
+### claim_provenance is a read-only tool that answers Missing and skips the tier gate, 2026-11-24
+
+claim_provenance writes nothing, so it carries readOnly true, idempotent true, destructive false and openWorld false and runs without an approval. Its only failure is Missing, returned for an absent claim and for a claim whose scope the principal may not traverse, so the answer never reveals that a denied claim exists. The matter wall is enforced inside ProvenanceTraversal, not by the tool layer. The toolkit spans are renamed to LawClaimToolkit.claimPropose and LawClaimToolkit.claimProvenance so both conform to the span naming law.
+
+Lane p6
+
+Reverse: Dispatch claim_provenance through dispatchWithTierGate like claim_propose.
+
 ### P6: nlp Core and Graph Schema move into nlp-processing; CharPosition becomes a text Position, 2026-11-24
 
 The PLAN P6 row names only Operations and Algebra, but 2026-11-19-p0-census-dispositions moves nlp Core to nlp-processing in P6 and 2026-11-22-p3-graph-span-becomes-an-optional-position moves Graph Schema with Core in P6. The routing preference for modeling packages is outweighed here: the linguistic engine contract already lives in nlp-processing (np/src/Core/Tokenization), every Core consumer (wink 8 src and 2 test files, semantica 3 files, the law-practice use-cases test ClaimInspection.lexical.test.ts:13, scratchpad effect-ontology/Service/Nlp.ts:15-16) already depends on nlp-processing, and P7 retires @beep/nlp. P6 moves Core, Graph/Schema.ts and internal/numbers.ts by git mv, re-annotates identifiers under $NlpProcessingId (the P2 precedent), deletes CharPosition (nlp/src/Core/Token.ts:115-170) and gives Token a span typed as @beep/text OffsetUnit Position in utf16-code-unit, since wink computes offsets from JavaScript string lengths (drivers/wink/src/WinkTokenization.service.ts:157-158). The unused @beep/nlp devDependency of the law-practice server leaves. The four text helpers (IdentifierText, PathText, QueryText, VariantText) stay in nlp until P7. Coverage, gitleaks and lint-rule allowance rows move by rename (S31). The PLAN row wording is amended in the exit row. Answers O7, F1 and F17.
@@ -2761,6 +2785,14 @@ The PLAN P6 row names only Operations and Algebra, but 2026-11-19-p0-census-disp
 Lane p6
 
 Reverse: git mv np/src/Core moved files and np/src/Graph/Schema.ts back to nlp/src, restore CharPosition on Token, restore the nlp edges of wink, semantica, law-practice and scratchpad
+
+### The DailyNotice draft-path test is a new schema test, 2026-11-24
+
+Design path 7 names a DailyNotice schema test to edit, but none existed on this head. DailyNotice.schemas.test.ts is new: the encoded NoticeMessage definition has exactly the subject and body fields, both required strings, so a draft can carry no matter or client field. The definition allows additional properties, which is the schema encoder's default, so the test does not assert a closed object.
+
+Lane p6
+
+Reverse: Fold the assertions into an existing DailyNotice test file if one is added.
 
 ### P6: the distinction ground is the statute section and the law principal codec is rebuilt from the user id value, 2026-11-24
 
@@ -3008,6 +3040,14 @@ Amended after independent review. Ten further `operation:` terms are declared fo
 Lane p6
 
 Reverse: Remove the two terms from identity/registry/namespaces/operation.json, regenerate the registry and snapshot with --base origin/main, and name the steps with existing terms
+
+### Proposed claim entries record capture identities so traversal can authorize each capture, 2026-11-24
+
+ActivityRecord.used names capture ids without their scope, so a traversal cannot decide whether a principal may see a capture from the activity record. ProposedClaimEntry now carries captures, a HashSet of the SourceTextIdentity values the proposal read; the claim proposal and office-action review writers fill it. ProvenanceTraversal mints each identity's CaptureId and authorizes the identity's scopeRef with provenance-traversal. An activity that used a denied capture is omitted, and only granted captures used by kept activities are returned. A capture id with no recorded identity is not treated as a capture.
+
+Lane p6
+
+Reverse: Drop ProposedClaimEntry.captures and LawClaimProposals.captures, and authorize captures by the claim scope alone.
 
 ### P6: Pure is a brand only pure sets, commute is the production interchange it witnesses, combinators suspend their components, and the observation is total, 2026-11-24
 

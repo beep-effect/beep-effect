@@ -209,6 +209,7 @@ export const ClaimProposalLayer: Layer.Layer<
                           record: logged.value.record,
                           generation: logged.value.generation,
                           activities: logged.activities,
+                          captures: HashSet.make(supported.document.text),
                         })
                       )
                     ),
