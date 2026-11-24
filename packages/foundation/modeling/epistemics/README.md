@@ -1,6 +1,6 @@
 # @beep/epistemics
 
-Tenant-free epistemic vocabulary: evidence spans, claim gates, edge identity, contradictions, intervals and claim envelopes.
+Tenant-free epistemic vocabulary: evidence positions, claim records, claim gates, edge identity, contradictions and intervals.
 
 ## Installation
 

@@ -4,7 +4,7 @@
  * @since 0.0.0
  */
 import { ValidTime } from "@beep/epistemics/Claim";
-import { EvidenceSignals, mergeClaimLedgers } from "@beep/party-domain/Claim";
+import { EvidenceSignals, mergeClaimLedgers, SourceAssertion } from "@beep/party-domain/Claim";
 import { Proposition } from "@beep/party-domain/Proposition";
 import { LedgerConflict } from "@beep/party-use-cases/Ledger";
 import * as A from "effect/Array";
@@ -17,6 +17,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { projectPartyClaim } from "../../internal/claimFromAssertion.ts";
 import {
@@ -28,7 +29,7 @@ import {
   MailboxGroupInput,
   PairingSupport,
 } from "./IdentityEvidence.model.ts";
-import type { AccountId, IdentifierId } from "@beep/party-domain/Ids";
+import type { AccountId, AssertionId, IdentifierId } from "@beep/party-domain/Ids";
 import type { PartyId } from "@beep/shared-domain/identity/Party";
 import type {
   CardIdentifier,
@@ -272,8 +273,10 @@ export const aggregatePairings = (input: PairingAggregationInput): ReadonlyArray
  * @category constructors
  * @since 0.0.0
  */
-export const observedSpan = (support: PairingSupport): ValidTime =>
-  O.match(O.all([support.firstSeen, support.lastSeen]), {
+export const observedSpan = (support: PairingSupport): ValidTime => spanOf(support.firstSeen, support.lastSeen);
+
+const spanOf = (firstSeen: O.Option<DateTime.Utc>, lastSeen: O.Option<DateTime.Utc>): ValidTime =>
+  O.match(O.all([firstSeen, lastSeen]), {
     onNone: () => ValidTime.cases.Unknown.make({}),
     onSome: ([first, last]) =>
       ValidTime.cases.Interval.make({
@@ -282,12 +285,75 @@ export const observedSpan = (support: PairingSupport): ValidTime =>
       }),
   });
 
+const sameSourceAssertion = S.toEquivalence(SourceAssertion);
+const sameProposition = S.toEquivalence(Proposition);
+
+const indexAssertions = Effect.fnUntraced(function* (assertions: ReadonlyArray<SourceAssertion>) {
+  let index = HashMap.empty<AssertionId, SourceAssertion>();
+  for (const assertion of assertions) {
+    const existing = HashMap.get(index, assertion.id);
+    if (O.isNone(existing)) index = HashMap.set(index, assertion.id, assertion);
+    else if (!sameSourceAssertion(existing.value, assertion))
+      return yield* LedgerConflict.make({ recordId: assertion.id, reason: "conflicting-assertion" });
+  }
+  return index;
+});
+
+const pairingKey = (support: PairingSupport) =>
+  `${support.mailbox.length}:${support.mailbox}${support.smtp.length}:${support.smtp}`;
+
+const byAssertionId: Order.Order<AssertionId> = Order.String;
+
+const observationWindows = (
+  supports: A.NonEmptyReadonlyArray<PairingSupport>
+): ReadonlyArray<{ readonly validTime: ValidTime; readonly assertions: ReadonlyArray<AssertionId> }> => {
+  const dated = A.sort(
+    A.flatMap(supports, (support: PairingSupport) =>
+      O.toArray(
+        O.map(O.all([support.firstSeen, support.lastSeen]), ([first, last]) => ({
+          first,
+          last,
+          assertions: support.assertions,
+        }))
+      )
+    ),
+    Order.mapInput(DateTime.Order, (row: { readonly first: DateTime.Utc }) => row.first)
+  );
+  const coalesced = A.reduce(dated, A.empty<(typeof dated)[number]>(), (windows, row) =>
+    O.match(A.last(windows), {
+      onNone: () => [row],
+      onSome: (previous) =>
+        DateTime.isLessThanOrEqualTo(row.first, previous.last)
+          ? A.append(A.dropRight(windows, 1), {
+              first: previous.first,
+              last: DateTime.max(previous.last, row.last),
+              assertions: A.appendAll(previous.assertions, row.assertions),
+            })
+          : A.append(windows, row),
+    })
+  );
+  const undated = A.flatMap(supports, (support: PairingSupport) =>
+    O.isNone(O.all([support.firstSeen, support.lastSeen])) ? support.assertions : []
+  );
+  return A.appendAll(
+    A.map(coalesced, (window) => ({
+      validTime: spanOf(O.some(window.first), O.some(window.last)),
+      assertions: window.assertions,
+    })),
+    A.isReadonlyArrayNonEmpty(undated) ? [{ validTime: ValidTime.cases.Unknown.make({}), assertions: undated }] : []
+  );
+};
+
 /**
  * Propose account-identifier claims backed by sampled source assertions.
  * **Details**
  * Empty evidence produces no claim. Claims remain Proposed and never merge
  * people. Native core identity includes explicit creation facts and text occurrences; source assertion
  * references remain separate evidence links, and missing source payloads refuse projection.
+ * Supports for one mailbox and identifier, whatever their Exchange DN, yield one
+ * claim per maximal overlapping observation window plus one undated claim, so a
+ * batch never holds two overlapping claims for one proposition. Every referenced
+ * assertion must assert that proposition, and one assertion id must carry one payload.
  * **Example** (Build pairing proposals)
  * ```ts
  * import { pairingClaims } from "@beep/party-server/IdentityEvidence"
@@ -305,23 +371,44 @@ export const pairingClaims = Effect.fn("PartyIdentity.pairingClaims")(function* 
     validator: absent,
     reviewer: absent,
   });
+  const index = yield* indexAssertions(input.sourceAssertions);
+  const groups = A.sort(
+    R.values(
+      A.groupBy(
+        A.filter(input.supports, (support) => A.isReadonlyArrayNonEmpty(support.assertions)),
+        pairingKey
+      )
+    ),
+    Order.mapInput(Order.String, (group: A.NonEmptyReadonlyArray<PairingSupport>) => pairingKey(A.headNonEmpty(group)))
+  );
   const batches = yield* Effect.forEach(
-    A.filter(input.supports, (support) => A.isReadonlyArrayNonEmpty(support.assertions)),
-    Effect.fnUntraced(function* (support) {
-      const references = A.sort(A.dedupe(support.assertions), Order.String);
+    A.flatMap(groups, (group) => {
+      const first = A.headNonEmpty(group);
+      const proposition = Proposition.cases.AccountIdentifier.make({ account: first.mailbox, identifier: first.smtp });
+      return A.map(observationWindows(group), (window) => ({ ...window, proposition }));
+    }),
+    Effect.fnUntraced(function* (window: {
+      readonly validTime: ValidTime;
+      readonly assertions: ReadonlyArray<AssertionId>;
+      readonly proposition: Proposition;
+    }) {
+      const references = A.sort(A.dedupe(window.assertions), byAssertionId);
       const assertions = yield* Effect.forEach(
         references,
-        (reference) =>
-          Effect.fromOption(
-            A.findFirst(input.sourceAssertions, (assertion) => assertion.id === reference),
-            () => LedgerConflict.make({ recordId: reference, reason: "source-assertion-missing" })
-          ),
+        Effect.fnUntraced(function* (reference: AssertionId) {
+          const assertion = yield* Effect.fromOption(HashMap.get(index, reference), () =>
+            LedgerConflict.make({ recordId: reference, reason: "source-assertion-missing" })
+          );
+          if (assertion.stance !== "asserts" || !sameProposition(assertion.proposition, window.proposition))
+            return yield* LedgerConflict.make({ recordId: reference, reason: "source-assertion-mismatch" });
+          return assertion;
+        }),
         { concurrency: 1 }
       );
       return yield* projectPartyClaim({
-        proposition: Proposition.cases.AccountIdentifier.make({ account: support.mailbox, identifier: support.smtp }),
+        proposition: window.proposition,
         assertions,
-        validTime: observedSpan(support),
+        validTime: window.validTime,
         review: { _tag: "Proposed" },
         signals,
         creation: input.creation,

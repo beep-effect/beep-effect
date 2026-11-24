@@ -406,6 +406,8 @@ layer(
 
   it.effect("tombstones the orphan and regenerates the held list with --write", () =>
     Effect.gen(function* () {
+      const fs0 = yield* FileSystem.FileSystem;
+      const original = yield* fs0.readFileString(`${root}/hold-ledger/claims.jsonl`);
       const lines = yield* runHoldsLint(true);
       expect(lines).toEqual([
         "[holds] tombstoned glob-hold@1: glob-hold",
@@ -420,8 +422,8 @@ layer(
         expect(retired.value.source.version).toBe("legacy-claim-import/v1");
       }
       expect(A.length(all)).toBe(A.length(coveringHolds));
-      const fs0 = yield* FileSystem.FileSystem;
       const stored = yield* fs0.readFileString(`${root}/hold-ledger/claims.jsonl`);
+      expect(Str.startsWith(original)(stored)).toBe(true);
       const appended = A.filter(Str.split(stored, "\n"), Str.includes("hold-claim-record/v2"));
       expect(A.length(appended)).toBe(1);
       expect(appended[0]).not.toContain('"supersedes"');

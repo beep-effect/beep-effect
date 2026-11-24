@@ -784,6 +784,35 @@ layer(layerFor(ledgerFiles), { timeout: "30 seconds" })("appending claim events"
     })
   );
 
+  it.effect("refuses an append while a live append holds the claims lock and reclaims a dead one", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const ledger = yield* HoldLedger;
+      const claimsFile = `${root}/hold-ledger/claims.jsonl`;
+      const lockFile = `${claimsFile}.lock`;
+      const before = yield* fs.readFileString(claimsFile);
+      const review = HoldClaimEvent.cases.Review.make({
+        claim: statelyaiImported,
+        review: HoldReviewState.cases.Proposed.make({}),
+        at: DateTime.makeUnsafe(1),
+      });
+      yield* fs.writeFileString(lockFile, `${process.pid}:live-append`);
+      const locked = yield* Effect.flip(ledger.appendEvents([review]));
+      expect(locked.reason).toBe("io");
+      expect(locked.message).toBe(`${claimsFile} is locked by another running append; retry once it finishes.`);
+      const afterLocked = yield* fs.readFileString(claimsFile);
+      expect(afterLocked).toBe(before);
+      const heldLock = yield* fs.readFileString(lockFile);
+      expect(heldLock).toBe(`${process.pid}:live-append`);
+      yield* fs.writeFileString(lockFile, "2147483646:killed-append");
+      yield* ledger.appendEvents([review]);
+      const after = yield* fs.readFileString(claimsFile);
+      expect(Str.startsWith(before)(after)).toBe(true);
+      const lockLeft = yield* fs.exists(lockFile);
+      expect(lockLeft).toBe(false);
+    }).pipe(TestClock.withLive)
+  );
+
   it.effect("appends nothing for an empty batch", () =>
     Effect.gen(function* () {
       const ledger = yield* HoldLedger;

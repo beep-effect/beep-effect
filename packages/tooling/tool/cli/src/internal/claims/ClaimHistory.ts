@@ -14,6 +14,7 @@ import {
   MissingClaimCreationFact,
 } from "@beep/epistemics/ClaimImport.schema";
 import { ClaimLogEntry, checkClaimLog } from "@beep/epistemics/ClaimLog";
+import { ClaimKnowledgeInterval } from "@beep/epistemics/ClaimLog.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActivityStartFields, mintActivityId } from "@beep/jsonc/ActivityStart";
 import { ActivityId, ContentHash } from "@beep/schema/ContentHash";
@@ -43,6 +44,7 @@ const ClaimHistoryRefusal = LiteralKit([
   "activity-mismatch",
   "log-violation",
   "unknown-target",
+  "inverted-knowledge",
 ]).pipe($I.annoteSchema("ClaimHistoryRefusal", { description: "Why a claim history cannot be read or appended." }));
 
 /**
@@ -115,6 +117,20 @@ export class LineFormat extends S.Opaque<LineFormat, { readonly brand: unique sy
  */
 export const declaresFormat = (format: LineFormat): ((json: unknown) => boolean) =>
   S.is(S.Struct({ [format.key]: S.tag(format.version) }));
+
+/**
+ * Whether a parsed line names any format under a key, whatever version it carries.
+ *
+ * **Details**
+ * A frozen untagged row never carries the key, so a line that names it must decode under the
+ * exact current version and an unsupported version is refused instead of read as untagged.
+ *
+ * @param key - Property that names the stored format.
+ * @returns A guard over parsed JSON lines.
+ * @category guards
+ * @since 0.0.0
+ */
+export const namesFormat = (key: string): ((json: unknown) => boolean) => S.is(S.Struct({ [key]: S.Unknown }));
 
 /**
  * Historical facts the join reads from an imported row.
@@ -317,10 +333,8 @@ const verifyNativeCore = Effect.fnUntraced(function* <Native extends NativeFacts
   mint: (core: Native["record"]["core"]) => Effect.Effect<ClaimId, E, R>
 ) {
   const reference = nativeReference(native.record.claim);
-  const claim = yield* mint(native.record.core).pipe(
-    Effect.mapError(() => refuse(ledger, reference, "claim-key-mismatch"))
-  );
-  if (!Eq.equals(claim, native.record.claim)) return yield* refuse(ledger, reference, "claim-key-mismatch");
+  const claim = yield* Effect.option(mint(native.record.core));
+  if (!O.contains(claim, native.record.claim)) return yield* refuse(ledger, reference, "claim-key-mismatch");
   const activity = yield* Effect.orDie(mintActivityId(native.activity));
   if (
     !Eq.equals(activity, native.record.core.generatedBy) ||
@@ -464,8 +478,18 @@ const recordsOf = <Review, Signals, Event extends SideRecord<Review, Signals>["e
     (record): record is Extract<SideRecord<Review, Signals>, { readonly event: Event }> => record.event === event
   );
 
+type EvidenceRecord<Review, Signals> = Extract<SideRecord<Review, Signals>, { readonly event: "Evidence" }>;
+
+const evidenceByClaim = <Review, Signals>(
+  records: ReadonlyArray<EvidenceRecord<Review, Signals>>
+): HashMap.HashMap<string, ReadonlyArray<EvidenceRecord<Review, Signals>>> =>
+  A.reduce(records, HashMap.empty<string, ReadonlyArray<EvidenceRecord<Review, Signals>>>(), (map, record) => {
+    const key = claimReferenceKey(record.claim);
+    return HashMap.set(map, key, A.append(O.getOrElse(HashMap.get(map, key), A.empty), record));
+  });
+
 interface JoinContext<Review, Signals> {
-  readonly evidence: ReadonlyArray<Extract<SideRecord<Review, Signals>, { readonly event: "Evidence" }>>;
+  readonly evidence: HashMap.HashMap<string, ReadonlyArray<EvidenceRecord<Review, Signals>>>;
   readonly predecessors: HashMap.HashMap<string, ClaimReference>;
   readonly proposed: Review;
   readonly reference: (entry: AnyEntry) => ClaimReference;
@@ -481,7 +505,7 @@ const joinEntry =
   (entry: ClaimEntry<Imported, Native>): JoinedClaim<Imported, Native, Review, Signals> => {
     const own = context.reference(entry);
     const key = claimReferenceKey(own);
-    const linked = A.filter(context.evidence, (record) => claimReferenceKey(record.claim) === key);
+    const linked = O.getOrElse(HashMap.get(context.evidence, key), A.empty);
     const extraSupport = A.flatMap(linked, (record) => record.supportedBy);
     const extraChallenge = A.flatMap(linked, (record) => record.challengedBy);
     const reviewed = O.map(HashMap.get(context.reviews, key), (record) => record.review);
@@ -516,6 +540,20 @@ const joinEntry =
       signals: observed,
     };
   };
+
+const isOrderedKnowledge = S.is(ClaimKnowledgeInterval);
+
+const checkKnowledgeOrder = <Imported, Native, Review, Signals>(
+  ledger: ClaimImportLedger,
+  joined: ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>
+): Result.Result<ReadonlyArray<JoinedClaim<Imported, Native, Review, Signals>>, ClaimHistoryRefused> =>
+  O.match(
+    A.findFirst(joined, (claim) => !isOrderedKnowledge(claim.knowledge)),
+    {
+      onNone: () => Result.succeed(joined),
+      onSome: (claim) => Result.fail(refuse(ledger, claim.reference, "inverted-knowledge")),
+    }
+  );
 
 const joinClaimHistory = <
   Imported extends ImportedFacts<Review, Signals>,
@@ -553,12 +591,12 @@ const joinClaimHistory = <
         (row) => [claimReferenceKey(nativeReference(row.record.claim)), row.record.core.knowledgeStart] as const
       )
     );
-    return A.map(
+    const joined = A.map(
       entries,
       joinEntry<Imported, Native, Review, Signals>({
         reference,
         predecessors,
-        evidence: recordsOf(records, "Evidence"),
+        evidence: evidenceByClaim(recordsOf(records, "Evidence")),
         reviews: latestBy(recordsOf(records, "Review"), (record) => claimReferenceKey(record.claim)),
         signals: latestBy(recordsOf(records, "Signals"), (record) => claimReferenceKey(record.claim)),
         successorStart: (key) =>
@@ -568,6 +606,7 @@ const joinClaimHistory = <
         proposed: options.proposed,
       })
     );
+    return yield* checkKnowledgeOrder(ledger, joined);
   });
 
 /**
@@ -575,7 +614,9 @@ const joinClaimHistory = <
  *
  * **Details**
  * Imported knowledge keeps its original expiry; a native successor closes an open imported
- * interval at its own knowledge start. The latest review or signal record replaces the stored
+ * interval at its own knowledge start. A joined interval whose end precedes its start, such as
+ * a successor that starts before its imported predecessor was recorded, is refused as
+ * `inverted-knowledge` before any interval is built. The latest review or signal record replaces the stored
  * one; native claims without a review record are proposed.
  *
  * @category projections
@@ -607,8 +648,9 @@ export const readClaimHistory = Effect.fnUntraced(function* <
  * Check v2 events against the whole existing history before any line is written.
  *
  * **Details**
- * Each new core is verified and folded through the owner's append law in order; the extended
- * history must then join under the same rules a later read applies.
+ * Every existing native core is verified as a later read would verify it, so an append never
+ * succeeds onto a history that read refuses. Each new core is verified and folded through the
+ * owner's append law in order; the extended history must then join under the same rules.
  *
  * @category validation
  * @since 0.0.0
@@ -637,6 +679,10 @@ export const checkAppend = Effect.fnUntraced(function* <
   const { ledger, proposed } = options;
   const existing = partitionLines(options.existing);
   const added = partitionLines(options.added);
+  yield* Effect.forEach(nativesOf(existing.entries), (native) => verifyNativeCore(ledger, native, options.mint), {
+    concurrency: 1,
+    discard: true,
+  });
   let log: ReadonlyArray<ClaimLogEntry> = A.map(nativesOf(existing.entries), toLogEntry);
   for (const native of nativesOf(added.entries)) {
     yield* verifyNativeCore(ledger, native, options.mint);

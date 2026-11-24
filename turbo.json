@@ -1151,6 +1151,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Holds/internal/HoldStore.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/internal/claims/AppendLock.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/internal/claims/ClaimHistory.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/internal/claims/ClaimRowV1.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts",

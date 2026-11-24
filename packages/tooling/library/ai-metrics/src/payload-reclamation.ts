@@ -222,8 +222,8 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
         const nativeEventIds = Effect.fnUntraced(function* (receiptId: Sha256Hex) {
           const receipt = yield* native.receipt(receiptId);
           const batch = yield* native.readBatch(receiptId);
-          // Revalidate the canonical index even for previously registered pages.
-          yield* native.readNewEvents(receiptId);
+          const revalidateTheCanonicalIndexEvenForAPreviouslyRegisteredPage = native.readNewEvents(receiptId);
+          yield* revalidateTheCanonicalIndexEvenForAPreviouslyRegisteredPage;
           if (O.isNone(receipt) || O.isNone(batch)) return yield* failure("storage");
           for (const [index, span] of batch.value.spans.entries()) {
             if (A.contains(receipt.value.conflictIndices, index) || A.contains(receipt.value.expiredIndices, index))
@@ -398,53 +398,51 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
                 });
           const payload = yield* encodePageDispositionJson(disposition);
           const digest = yield* hashPublicTextSha256(payload);
-          // Delete first to allow internal page reuse at the physical ceiling.
-          // A disposition failure rolls both statements back.
-          yield* sql`DELETE FROM observation_intake_pages WHERE receipt_id=${receiptId}`;
+          const deleteFirstSoTheDispositionCanReusePagesAtThePhysicalCeiling = sql`DELETE FROM observation_intake_pages WHERE receipt_id=${receiptId}`;
+          yield* deleteFirstSoTheDispositionCanReusePagesAtThePhysicalCeiling;
           yield* sql`INSERT INTO observation_page_dispositions(receipt_id,payload,digest) VALUES(${receiptId},${payload},${digest})`;
           return O.some(disposition);
         });
-        const dispose = Effect.fn("AiMetrics.reclamation.dispose")((receiptId: Sha256Hex, mode: ReclamationMode) =>
-          safe(
-            sql.withTransaction(
-              Effect.gen(function* () {
-                if (mode === "expiry" && O.isNone(policy.expireAfterMillis)) return yield* failure("configuration");
-                const prior = yield* base.readDisposition(receiptId);
-                if (O.isSome(prior)) return prior;
-                const rows =
-                  yield* sql`SELECT receipt_id AS "receiptId",sequence,accepted_at AS "acceptedAt",payload_bytes AS "payloadBytes",frames,evidence_epoch AS "evidenceEpoch",source_key AS "sourceKey",substr(payload,1,4194305) AS payload FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
-                    Effect.flatMap(decodeValueSourceKeyRecordRows)
-                  );
-                const row = rows[0];
-                if (row === undefined) return yield* failure("unknown-page");
-                const now = yield* Clock.currentTimeMillis;
-                const minAge =
-                  mode === "expiry"
-                    ? O.getOrElse(policy.expireAfterMillis, () => policy.minAgeMillis)
-                    : policy.minAgeMillis;
-                if (now - row.acceptedAt < minAge) return O.none<PageDisposition>();
-                yield* enroll(receiptId, mode === "expiry");
-                const registeredPages =
-                  yield* sql`SELECT events FROM observation_delivery_pages WHERE receipt_id=${receiptId}`.pipe(
-                    Effect.flatMap(decodeEventsRecordRows)
-                  );
-
-                const nativeSource = Str.startsWith("native:")(row.sourceKey);
-                const eventIds = yield* nativeSource ? nativeEventIds(receiptId) : transcriptEventIds(receiptId, row);
-                const population = yield* assessPopulation(
-                  receiptId,
-                  eventIds,
-                  mode,
-                  nativeSource,
-                  registeredPages.length > 0,
-                  now
+        const dispose = Effect.fn("AiMetrics.reclamation.dispose")((receiptId: Sha256Hex, mode: ReclamationMode) => {
+          const dispositionFailureRollsBothStatementsBack = sql.withTransaction(
+            Effect.gen(function* () {
+              if (mode === "expiry" && O.isNone(policy.expireAfterMillis)) return yield* failure("configuration");
+              const prior = yield* base.readDisposition(receiptId);
+              if (O.isSome(prior)) return prior;
+              const rows =
+                yield* sql`SELECT receipt_id AS "receiptId",sequence,accepted_at AS "acceptedAt",payload_bytes AS "payloadBytes",frames,evidence_epoch AS "evidenceEpoch",source_key AS "sourceKey",substr(payload,1,4194305) AS payload FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
+                  Effect.flatMap(decodeValueSourceKeyRecordRows)
                 );
-                if (O.isNone(population)) return O.none<PageDisposition>();
-                return yield* commitDisposition(row, mode, now, registeredPages.length > 0, population.value);
-              })
-            )
-          )
-        );
+              const row = rows[0];
+              if (row === undefined) return yield* failure("unknown-page");
+              const now = yield* Clock.currentTimeMillis;
+              const minAge =
+                mode === "expiry"
+                  ? O.getOrElse(policy.expireAfterMillis, () => policy.minAgeMillis)
+                  : policy.minAgeMillis;
+              if (now - row.acceptedAt < minAge) return O.none<PageDisposition>();
+              yield* enroll(receiptId, mode === "expiry");
+              const registeredPages =
+                yield* sql`SELECT events FROM observation_delivery_pages WHERE receipt_id=${receiptId}`.pipe(
+                  Effect.flatMap(decodeEventsRecordRows)
+                );
+
+              const nativeSource = Str.startsWith("native:")(row.sourceKey);
+              const eventIds = yield* nativeSource ? nativeEventIds(receiptId) : transcriptEventIds(receiptId, row);
+              const population = yield* assessPopulation(
+                receiptId,
+                eventIds,
+                mode,
+                nativeSource,
+                registeredPages.length > 0,
+                now
+              );
+              if (O.isNone(population)) return O.none<PageDisposition>();
+              return yield* commitDisposition(row, mode, now, registeredPages.length > 0, population.value);
+            })
+          );
+          return safe(dispositionFailureRollsBothStatementsBack);
+        });
         return {
           reclaim: (receiptId: Sha256Hex) => dispose(receiptId, "verified"),
           expire: (receiptId: Sha256Hex) => dispose(receiptId, "expiry"),

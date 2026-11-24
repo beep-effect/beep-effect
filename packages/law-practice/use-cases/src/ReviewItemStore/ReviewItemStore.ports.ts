@@ -187,12 +187,32 @@ export class ReviewItemWriteRequest extends S.Opaque<ReviewItemWriteRequest, { r
  * **Example** (Hold an item over an unresolved import)
  *
  * ```ts
- * import { ReviewItem } from "@beep/law-practice-domain"
+ * import { LegacyQuoteUnresolved, LegacyReviewItemImported, LegacySourceLocator, ReviewItem } from "@beep/law-practice-domain"
  * import { planReviewItemWrite, ReviewItemWriteRequest } from "@beep/law-practice-use-cases/ReviewItemStore"
+ * import * as O from "effect/Option"
  *
- * const item = ReviewItem.cases["kg-answer"].make({ itemId: "a", text: "Answer", sourceRefs: [] })
- * const request = ReviewItemWriteRequest.make({ stored: [item], items: [item], repair: false })
- * console.log(planReviewItemWrite(request).write.length) // 0
+ * const imported = LegacyReviewItemImported.make({
+ *   itemId: "kg-answer:1",
+ *   storedKind: "kg-answer",
+ *   text: "A synthetic answer.",
+ *   raw: { kind: "kg-answer", itemId: "kg-answer:1" },
+ *   unresolved: [
+ *     LegacyQuoteUnresolved.make({
+ *       reason: "empty-legacy-quote",
+ *       itemId: "kg-answer:1",
+ *       fieldPath: "sourceRefs[0].quote",
+ *       exact: "",
+ *       prefix: O.none(),
+ *       suffix: O.none(),
+ *       locator: LegacySourceLocator.make({ boxFileId: "1234567890", page: O.none(), crop: O.none() }),
+ *     }),
+ *   ],
+ * })
+ * const item = ReviewItem.cases["kg-answer"].make({ itemId: "kg-answer:1", text: "A synthetic answer.", sourceRefs: [] })
+ * const upsert = planReviewItemWrite(ReviewItemWriteRequest.make({ stored: [imported], items: [item], repair: false }))
+ * console.log([upsert.held.length, upsert.write.length]) // [1, 0]
+ * const repair = planReviewItemWrite(ReviewItemWriteRequest.make({ stored: [imported], items: [item], repair: true }))
+ * console.log(repair.write.length) // 1
  * ```
  *
  * @param input - The latest stored version of each id, the items to store, and whether the write is an explicit repair.

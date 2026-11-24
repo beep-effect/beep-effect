@@ -1,7 +1,7 @@
 {
   "name": "@beep/epistemics",
   "version": "0.0.0",
-  "description": "Tenant-free epistemic vocabulary: evidence spans, claim gates, edge identity, contradictions, intervals and claim envelopes.",
+  "description": "Tenant-free epistemic vocabulary: evidence positions, claim records, claim gates, edge identity, contradictions and intervals.",
   "license": "MIT",
   "private": true,
   "type": "module",

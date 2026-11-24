@@ -124,16 +124,34 @@ export const AnswerLogMemory: Layer.Layer<AnswerLog> = Layer.effect(
  * **Example** (Start from an imported item)
  *
  * ```ts
- * import { ReviewItem } from "@beep/law-practice-domain"
+ * import { LegacyQuoteUnresolved, LegacyReviewItemImported, LegacySourceLocator, ReviewItem } from "@beep/law-practice-domain"
  * import { ReviewItemStore } from "@beep/law-practice-use-cases/ReviewItemStore"
  * import { reviewItemStoreMemoryFrom } from "@beep/law-practice-use-cases/test"
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  *
+ * const imported = LegacyReviewItemImported.make({
+ *   itemId: "kg-answer:1",
+ *   storedKind: "kg-answer",
+ *   text: "A synthetic answer.",
+ *   raw: { kind: "kg-answer", itemId: "kg-answer:1" },
+ *   unresolved: [
+ *     LegacyQuoteUnresolved.make({
+ *       reason: "empty-legacy-quote",
+ *       itemId: "kg-answer:1",
+ *       fieldPath: "sourceRefs[0].quote",
+ *       exact: "",
+ *       prefix: O.none(),
+ *       suffix: O.none(),
+ *       locator: LegacySourceLocator.make({ boxFileId: "1234567890", page: O.none(), crop: O.none() }),
+ *     }),
+ *   ],
+ * })
  * const item = ReviewItem.cases["kg-answer"].make({ itemId: "kg-answer:1", text: "A synthetic answer.", sourceRefs: [] })
  * const program = Effect.gen(function* () {
  *   const store = yield* ReviewItemStore
- *   console.log((yield* store.list).length) // 1
- * }).pipe(Effect.provide(reviewItemStoreMemoryFrom([item])))
+ *   console.log(yield* store.upsert([item])) // ["kg-answer:1"]
+ * }).pipe(Effect.provide(reviewItemStoreMemoryFrom([imported])))
  * ```
  *
  * @param stored - The stored versions the store starts from, in write order.

@@ -51,10 +51,9 @@ const scenario = Effect.fn("TranscriptIntakeCrashTest.scenario")(function* () {
       }
     );
     if (mode === "before-commit" || mode === "after-commit") {
-      // A bounded live-clock wait proves the child reached the intended boundary.
       while (!(yield* fs.exists(marker))) {
         const isRunning1 = yield* child.isRunning;
-        expect(isRunning1).toBe(true);
+        expect(isRunning1, "a bounded live-clock wait proves the child reaches the intended boundary").toBe(true);
         yield* Effect.sleep("10 millis");
       }
       const evidence = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));

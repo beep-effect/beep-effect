@@ -21,6 +21,7 @@ import {
   LineFormat,
   legacyMissingFacts,
   lineDigest,
+  namesFormat,
   readClaimHistory,
 } from "../../../internal/claims/ClaimHistory.ts";
 import { makeClaimsV1Row } from "../../../internal/claims/ClaimRowV1.ts";
@@ -102,7 +103,7 @@ export const holdArrows = makeClaimArrows({ $I, ClaimCore: HoldClaimCore });
  */
 export type HoldClaimLine = ClaimLine<HoldLegacyImported, HoldCoreEvent, HoldReviewState, HoldEvidenceSignals>;
 
-const isClaimEvent = declaresFormat(LineFormat.make({ key: "version", version: "hold-claim-record/v2" }));
+const isVersioned = namesFormat("version");
 const isRunV1 = declaresFormat(LineFormat.make({ key: "schemaVersion", version: "hold-probe-run/v1" }));
 const decodeEvent = S.decodeUnknownEffect(HoldClaimEvent);
 const decodeV1 = S.decodeUnknownEffect(HoldClaimsV1Row);
@@ -138,14 +139,14 @@ export const importHoldClaimRow = Effect.fnUntraced(function* (line: string, row
 });
 
 /**
- * Decode one claims.jsonl line by its declared format: v2 events by tag, untagged rows as frozen v1.
+ * Decode one claims.jsonl line by its declared format: versioned lines as exact v2 events, untagged rows as frozen v1.
  *
  * @category parsing
  * @since 0.0.0
  */
 export const decodeHoldClaimLine = Effect.fnUntraced(function* (line: string) {
   const json = yield* decodeJson(line);
-  if (isClaimEvent(json)) {
+  if (isVersioned(json)) {
     const event = yield* decodeEvent(json);
     return eventLine<HoldLegacyImported, HoldCoreEvent, HoldReviewState, HoldEvidenceSignals>(event);
   }

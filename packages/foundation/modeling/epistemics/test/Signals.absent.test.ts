@@ -69,6 +69,18 @@ describe("L4-7 absent signals stay absent", () => {
           reviewer: wire,
         };
         const decodedSignals = yield* decodeSignals(signals);
+        expect(
+          A.map(
+            [
+              decodedSignals.sourceTrust,
+              decodedSignals.sourceAssertedConfidence,
+              decodedSignals.extractorConfidence,
+              decodedSignals.validator,
+              decodedSignals.reviewer,
+            ],
+            (field) => (field._tag === "Absent" ? O.some(field.reason) : O.none())
+          )
+        ).toStrictEqual(A.replicate(O.some(reason), 5));
         const encodedSignals = yield* encodeSignals(decodedSignals);
         expect(encodedSignals).toEqual(signals);
       }),

@@ -43,7 +43,7 @@ export interface ReviewHubShape {
   readonly openItems: (request: OpenItemsRequest) => Effect.Effect<OpenItems, ReviewHubToolError>;
   /** Look up the stored question, then record the answer; `not-found`, `repair-required` or `unknown-option` when it does not fit. */
   readonly recordAnswer: (request: RecordAnswerRequest) => Effect.Effect<AnswerRow, ReviewHubToolError>;
-  /** Record a verdict as the item's next revision in the batch; `locked` when the batch is locked. */
+  /** Record a verdict as the item's next revision in the batch; `repair-required` for an unrepaired legacy import, `locked` when the batch is locked. */
   readonly recordVerdict: (input: RecordVerdictInput) => Effect.Effect<VerdictRow, ReviewHubToolError>;
 }
 

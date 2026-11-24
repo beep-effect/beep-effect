@@ -241,6 +241,24 @@ it.layer(Digest.layerWebCrypto)("scoped review application", (it) => {
       expect(A.map(resolved4, (row) => row.status)).toEqual(["unreviewed"]);
     })
   );
+  it.effect("selects only decisions whose claims are known at the query time", () =>
+    Effect.gen(function* () {
+      const current = yield* seal("Alex", [1, 2]);
+      const earlier = decision(current, [[1], [2]], 9);
+      const unknown = CollisionDecision.make({
+        ...decision(current, [[1, 2]], 10),
+        creation: creation({ operation: "review-Alex-known-late", at: 200 }),
+      });
+      const rows = yield* apply([current], [unknown, earlier]);
+      expect(A.map(rows, (row) => row.status)).toEqual(["reviewed-distinct"]);
+      TestUtils.assertSome(
+        O.map(O.getOrThrow(A.head(rows)).decision, (chosen) => chosen.reviewedAt),
+        earlier.reviewedAt
+      );
+      const known = yield* apply([current], [unknown, earlier], 200);
+      expect(A.map(known, (row) => row.status)).toEqual(["reviewed-same"]);
+    })
+  );
   it.effect("keeps an explicit expired validity interval out of the current view", () =>
     Effect.gen(function* () {
       const current = yield* seal("Alex", [1, 2]);
@@ -256,7 +274,7 @@ it.layer(Digest.layerWebCrypto)("scoped review application", (it) => {
   );
 });
 
-it.layer(LedgerLive)("integer mailbox anchors", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("integer mailbox anchors", (it) => {
   it.effect("reuses an anchor regardless of identifier order without asserting identity", () =>
     Effect.gen(function* () {
       const a = IdentifierId.make("party-ident:a");

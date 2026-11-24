@@ -13,11 +13,10 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
   checkAppend,
-  declaresFormat,
   eventLine,
-  LineFormat,
   legacyMissingFacts,
   lineDigest,
+  namesFormat,
   readClaimHistory,
 } from "../../../internal/claims/ClaimHistory.ts";
 import { makeClaimsV1Row } from "../../../internal/claims/ClaimRowV1.ts";
@@ -90,8 +89,7 @@ export const kbArrows = makeClaimArrows({ $I, ClaimCore: KbClaimCore });
  */
 export type KbClaimLine = ClaimLine<KbLegacyImported, KbCoreEvent, KbReviewState, KbEvidenceSignals>;
 
-const isClaimEvent = declaresFormat(LineFormat.make({ key: "version", version: "kb-claim-record/v2" }));
-const isAssertionV2 = declaresFormat(LineFormat.make({ key: "version", version: "kb-assertion/v2" }));
+const isVersioned = namesFormat("version");
 const decodeEvent = S.decodeUnknownEffect(KbClaimEvent);
 const decodeV1 = S.decodeUnknownEffect(KbClaimsV1Row);
 const decodeAssertion = S.decodeUnknownEffect(Assertion);
@@ -125,13 +123,13 @@ export const importKbClaimRow = Effect.fnUntraced(function* (line: string, row: 
 });
 
 /**
- * Decode one claims.jsonl line by its declared format: v2 events by tag, untagged rows as frozen v1.
+ * Decode one claims.jsonl line by its declared format: versioned lines as exact v2 events, untagged rows as frozen v1.
  *
  * @category parsing
  * @since 0.0.0
  */
 export const decodeKbClaimLine = Effect.fnUntraced(function* (line: string, json: unknown) {
-  if (isClaimEvent(json)) {
+  if (isVersioned(json)) {
     const event = yield* decodeEvent(json);
     return eventLine<KbLegacyImported, KbCoreEvent, KbReviewState, KbEvidenceSignals>(event);
   }
@@ -141,13 +139,13 @@ export const decodeKbClaimLine = Effect.fnUntraced(function* (line: string, json
 });
 
 /**
- * Decode one assertions.jsonl line; a v1 claimId becomes an explicit imported kb reference.
+ * Decode one assertions.jsonl line; a versioned line must be exact v2, an untagged v1 claimId becomes an imported kb reference.
  *
  * @category parsing
  * @since 0.0.0
  */
 export const decodeKbAssertionLine = Effect.fnUntraced(function* (json: unknown) {
-  if (isAssertionV2(json)) return yield* decodeAssertion(json);
+  if (isVersioned(json)) return yield* decodeAssertion(json);
   const { claimId, ...row } = yield* decodeAssertionV1(json);
   return Assertion.make({ ...row, claim: ClaimReference.cases.Imported.make({ ledger: "kb", oldId: claimId }) });
 });

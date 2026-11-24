@@ -393,7 +393,7 @@ for (const scenario of [
   },
 ]) {
   it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
-    it.effect(`synthetic lifecycle timing: ${scenario.name}`, () =>
+    it.effect(`synthetic lifecycle timing oracle, separate from the real-peer cleanup tests: ${scenario.name}`, () =>
       Effect.gen(function* () {
         const f = yield* fixture();
         const spawning = yield* Deferred.make<void>();
@@ -415,9 +415,7 @@ for (const scenario of [
             )
           )
         );
-        // Own double: a scoped handle whose exit waits on the durable ACK it reads from stdin, counting
-        // releases; per-spawn behaviour `ScriptedSpawner` cannot express.
-        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: a scoped handle whose exit waits on the durable ACK read from stdin, counting releases
         const spawner = ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
             yield* Effect.acquireRelease(Effect.void, () =>
@@ -443,10 +441,13 @@ for (const scenario of [
                 return Deferred.succeed(policySeen, undefined);
               })
             );
+            const successfulExitOnlyAfterConsumingTheDurableAck = ackSeen.pipe(
+              Deferred.await,
+              Effect.as(ChildProcessSpawner.ExitCode(0))
+            );
             return ChildProcessSpawner.makeHandle({
               ...syntheticHandle(output, Sink.drain, false),
-              // A synthetic successful child cannot exit before actually consuming its durable ACK.
-              exitCode: ackSeen.pipe(Deferred.await, Effect.as(ChildProcessSpawner.ExitCode(0))),
+              exitCode: successfulExitOnlyAfterConsumingTheDurableAck,
             });
           })
         );
@@ -483,7 +484,6 @@ for (const scenario of [
         expect(acknowledgements).toBe(expectedTimingCount(scenario.success));
         expect((yield* f.journal.stats).pages).toBe(expectedTimingCount(scenario.success));
         expect(releases).toBe(1);
-        // These are synthetic protocol/clock oracles, separate from the retained real-peer cleanup tests.
       })
     )
   );
@@ -628,9 +628,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             Stream.drain,
             Stream.concat(output)
           );
-          // Own double: reads the helper's stdin stream to release the scripted output only after the policy
-          // frame; `ScriptedSpawner` answers statically.
-          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: releases scripted output only after the policy frame arrives on the helper's stdin
           const synthetic = ChildProcessSpawner.make((command) =>
             Effect.gen(function* () {
               const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -763,12 +761,17 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { memoMap: Layer.
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const absent = yield* fs.makeTempDirectoryScoped({ prefix: "missing-ack-" });
-      // The Node socket opens an actual OS path, including on hosts whose temporary root is an alias.
-      const canonical = yield* fs.realPath(absent);
+      const actualOsPathEvenWhereTheTempRootIsAnAlias = yield* fs.realPath(absent);
       const body = yield* encode(start);
-      const connectionError = yield* forwardCursorLifecycleHook(`${canonical}/s`, body).pipe(Effect.flip);
+      const connectionError = yield* forwardCursorLifecycleHook(
+        `${actualOsPathEvenWhereTheTempRootIsAnAlias}/s`,
+        body
+      ).pipe(Effect.flip);
       expect(connectionError.reason).toBe("transport");
-      const oversized = yield* forwardCursorLifecycleHook(`${canonical}/s`, Str.repeat(8193)("x")).pipe(Effect.flip);
+      const oversized = yield* forwardCursorLifecycleHook(
+        `${actualOsPathEvenWhereTheTempRootIsAnAlias}/s`,
+        Str.repeat(8193)("x")
+      ).pipe(Effect.flip);
       expect(oversized.reason).toBe("callback");
     })
   );
@@ -789,9 +792,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
             Stream.fromEffect(Deferred.succeed(requested, undefined)).pipe(Stream.drain),
             output
           );
-          // Own double: a scoped handle that signals when its output is requested and counts its release;
-          // `ScriptedSpawner` answers statically.
-          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: a scoped handle that signals when its output is requested and counts its release
           const spawner = ChildProcessSpawner.make(() =>
             Effect.acquireRelease(Effect.succeed(syntheticHandle(observedOutput, Sink.drain, false)), () =>
               Effect.sync(() => {
@@ -1124,9 +1125,8 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         { helperSha256: id },
         { sourcePins: A.map(f.policy.sourcePins, (pin) => ({ ...pin, sha256: id })) },
       ]) {
-        // This is deliberately invalid enrollment, not a caller-supplied authority DTO.
-        const policy = CursorLifecyclePolicy.make({ ...f.policy, ...change });
-        const result = yield* f.deliver(start, policy);
+        const deliberatelyInvalidEnrollmentNotACallerAuthority = CursorLifecyclePolicy.make({ ...f.policy, ...change });
+        const result = yield* f.deliver(start, deliberatelyInvalidEnrollmentNotACallerAuthority);
         expect(result.result._tag).toBe("Failure");
         expect(result.reply._tag).toBe("Failure");
       }
@@ -1294,17 +1294,29 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
     Effect.gen(function* () {
       const f = yield* fixture();
       const observed = yield* inspectSyntheticPeer(f.policy, f.runtime);
-      const message = yield* diagnosticContext(observed);
-      // This schema-closed metadata has no paths, PIDs, argv, environment, callback body or stderr.
-      yield* Effect.logInfo(message);
-      expect(observed.report.sourceHashMatches, message).toBe(true);
-      expect(observed.report.predicateAstPreserved, message).toBe(true);
-      expect(observed.report.shortCircuitOrderPreserved, message).toBe(true);
-      expect(observed.report.projectedPrintSuppressed, message).toBe(true);
-      expect(observed.report.ok, message).toBe(true);
-      expect(observed.diagnosticAckObserved, message).toBe(true);
-      expect(observed.helperExitZero, message).toBe(true);
-      expect((yield* f.journal.stats).pages, message).toBe(0);
+      const schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr = yield* diagnosticContext(observed);
+      yield* Effect.logInfo(schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr);
+      expect(observed.report.sourceHashMatches, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(
+        true
+      );
+      expect(
+        observed.report.predicateAstPreserved,
+        schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr
+      ).toBe(true);
+      expect(
+        observed.report.shortCircuitOrderPreserved,
+        schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr
+      ).toBe(true);
+      expect(
+        observed.report.projectedPrintSuppressed,
+        schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr
+      ).toBe(true);
+      expect(observed.report.ok, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(true);
+      expect(observed.diagnosticAckObserved, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(
+        true
+      );
+      expect(observed.helperExitZero, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(true);
+      expect((yield* f.journal.stats).pages, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(0);
     })
   )
 );
