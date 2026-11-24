@@ -749,6 +749,16 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       ["response-period", ["The value of this field does not appear in the text you quoted for it."]],
     ]);
   });
+
+  it.effect("refuses to write a check back in the docket-check/v1 form", () =>
+    Effect.gen(function* () {
+      const [, fromV1] = StoredDeterministicCheck.members;
+      const historical = yield* S.decodeEffect(fromV1)({ check: "cited-span-exists", passed: true });
+      strictEqual(historical.provenance, "docket-check/v1");
+      const refusal = yield* Effect.flip(S.encodeEffect(fromV1)(historical));
+      expect(Str.includes("docket-check/v1 is read only")(refusal.message)).toBe(true);
+    })
+  );
 });
 
 const p4docketchecksv1json = S.fromJsonString(S.Array(StoredDeterministicCheck), { space: 2 });

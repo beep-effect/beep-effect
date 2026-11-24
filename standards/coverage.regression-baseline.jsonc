@@ -12776,30 +12776,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/epistemics/src/EvidenceSpan/EvidenceSpan.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/epistemics/src/EvidenceSpan/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/epistemics/src/EvidenceVerification/EvidenceVerification.model.ts": {
           "lines": 100,
           "statements": 100,
@@ -20442,18 +20418,6 @@
           }
         },
         "packages/law-practice/domain/src/values/SourceRef/SourceRef.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/domain/src/values/SourceRef/TextQuote.model.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
