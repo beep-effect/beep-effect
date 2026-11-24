@@ -393,8 +393,6 @@ export class YamlDocument extends S.Class<YamlDocument, { readonly brand: unique
   }
 }
 
-// ── Raw-document bridging ───────────────────────────────────────────────────
-
 /**
  * Materialize a raw engine document into the public class — including
  * documents whose diagnostics are fatal, which `YamlDocument.parse` refuses.
@@ -423,7 +421,6 @@ export const documentFromRaw: {
   (text: string): (raw: RawYamlDocument) => YamlDocument;
 } = dual(2, (raw: RawYamlDocument, text: string): YamlDocument => fromRawDocument(raw, text));
 
-/** Materialize a raw engine document into the public class. */
 const fromRawDocument: {
   (text: string, index?: ReturnType<typeof YamlDiagnostic.positionIndex>): (raw: RawYamlDocument) => YamlDocument;
   (raw: RawYamlDocument, text: string, index?: ReturnType<typeof YamlDiagnostic.positionIndex>): YamlDocument;

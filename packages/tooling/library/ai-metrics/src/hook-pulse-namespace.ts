@@ -111,15 +111,16 @@ const ProjectionHashSalt = SupportedSaltText.check(S.isPattern(/\S/)).pipe(
   })
 );
 
-// Restrict the wire instant before DateTime's permissive parser can normalize
-// impossible calendar dates. The shell validates this same UTC wire format.
+const utcWireFormatTheShellAlsoValidates = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 const ProjectionCutover = S.String.check(
-  S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/),
+  S.isPattern(utcWireFormatTheShellAlsoValidates),
   S.makeFilter(
     (text) =>
       O.exists(
         DateTime.make(text),
-        (instant) => DateTime.formatIso(instant) === (Str.length(text) === 20 ? `${Str.slice(0, -1)(text)}.000Z` : text)
+        (instantAfterPermissiveParse) =>
+          DateTime.formatIso(instantAfterPermissiveParse) ===
+          (Str.length(text) === 20 ? `${Str.slice(0, -1)(text)}.000Z` : text)
       ),
     $I.annote("ProjectionCutoverCalendar", {
       title: "Valid UTC cutover",
@@ -298,9 +299,8 @@ export const readHookPulseNamespaceProjection: Effect.Effect<
     Effect.mapError(HookPulseNamespaceError.wrap("Cannot resolve the hook-pulse namespace projection path."))
   );
   if (O.isNone(file)) return O.none<HookPulseNamespaceProjection>();
-  // Inspect links before exists(), which follows targets and hides dangling links.
-  const link = yield* fs.readLink(file.value).pipe(Effect.option);
-  if (O.isSome(link)) {
+  const linkReadBeforeExistsFollowsAndHidesADanglingOne = yield* fs.readLink(file.value).pipe(Effect.option);
+  if (O.isSome(linkReadBeforeExistsFollowsAndHidesADanglingOne)) {
     return yield* HookPulseNamespaceError.new("Hook-pulse namespace projection must not be a symlink.", {
       kind: "symlink",
     });

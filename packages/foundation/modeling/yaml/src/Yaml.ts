@@ -449,8 +449,6 @@ export class YamlStringifyError extends S.TaggedError<YamlStringifyError, { read
   }
 }
 
-// ── Internal helpers ────────────────────────────────────────────────────────
-
 const toDiagnostics: {
   (text: string, records: ReadonlyArray<RawDiagnostic>): ReadonlyArray<YamlDiagnostic>;
   (records: ReadonlyArray<RawDiagnostic>): (text: string) => ReadonlyArray<YamlDiagnostic>;
@@ -652,8 +650,6 @@ const stringifyOrFail = (value: unknown, options?: YamlStringifyOptions): Effect
     },
   });
 
-// ── Bound codec ─────────────────────────────────────────────────────────────
-
 /**
  * A domain codec pre-bound to its two directions, returned by
  * {@link Yaml.bind}: the composed `schema` (what {@link Yaml.schema} returns)
@@ -686,8 +682,6 @@ export interface YamlBoundCodec<T, RD = never, RE = never> {
    */
   readonly schema: S.Codec<T, string, RD, RE>;
 }
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /** A source span removed by {@link Yaml.stripComments}. */
 type CommentSpan = { readonly offset: number; readonly length: number };
@@ -1302,8 +1296,6 @@ export class Yaml {
     };
   }
 }
-
-// ── Equality internals ──────────────────────────────────────────────────────
 
 /**
  * Parse for `equals`/`equalsValue`: any recorded error — fatal or not — or a

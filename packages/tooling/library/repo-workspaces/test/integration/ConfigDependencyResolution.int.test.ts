@@ -547,8 +547,6 @@ it.layer(Fixture, { timeout: "30 seconds" })((it) => {
     });
   });
 
-  // ── layerFrom: the hermetic seam ────────────────────────────────────────────
-
   describe("ConfigDependencyHooks.layerFrom — replays caller-supplied files, resolving nothing", () => {
     const ONE = join(FIXTURES, "hook-pnpmfile.mjs");
     const TWO = join(FIXTURES, "hook-pnpmfile.cjs");
