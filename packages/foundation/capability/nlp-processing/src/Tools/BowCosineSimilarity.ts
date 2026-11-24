@@ -82,4 +82,8 @@ export const BowCosineSimilarity = Tool.make("BowCosineSimilarity", {
   failureMode: "return",
   parameters: BowCosineSimilarityParameters,
   success: S.toEncoded(BowCosineSimilaritySuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

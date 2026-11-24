@@ -56,7 +56,7 @@ SELECT
   COALESCE(e.span->'position'->>'quote', e.span->>'quote') AS "evidenceQuote",
   c.snapshot->>'family' AS family,
   CASE WHEN doc.client IS NULL THEN NULL ELSE doc.client || '.' || doc.docket_family END AS "familyKey",
-  'candidate — unreviewed' AS label,
+  'candidate-unreviewed' AS label,
   c.snapshot->>'sourceDocumentDigest' AS "sourceDocumentDigest",
   c.snapshot->>'sourceFile' AS "sourceFile",
   CAST(COALESCE(e.span->'position'->>'startChar', e.span->>'startChar') AS FLOAT8) AS "startChar"

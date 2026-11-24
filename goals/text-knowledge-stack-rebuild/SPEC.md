@@ -2680,6 +2680,14 @@ Lane p6
 
 Reverse: Add Box path prefixes to MatterScope and authorize box_list and box_read through MatterAuthority
 
+### Candidate claims status and label take the full domain status kit, 2026-11-24
+
+The not-loaded `epistemic_status` and the candidate row `label` of kg_candidate_claims are the domain PracticeKgEpistemicStatus, the full literal kit, rather than a one-member subset, so the published definition equals the domain definition byte for byte. The server still emits only `candidate-unreviewed` for both, and the tool description now names that label in the same spelling.
+
+Lane p6
+
+Reverse: Narrow both fields to a one-member pick of PracticeKgEpistemicStatus and assert the pick instead.
+
 ### P6: chapter 16 pending-P6 agent-surface notes close as delivered or scoped; prompt bytes stay, 2026-11-24
 
 Chapter 16 section 12 carries pending-P6 notes that are not map questions: prompts render from schema annotations, and an attorney-facing invariant. Prompt rendering stays out of P6: buildPrompt's bytes key semantica's hosted artifact hash (apps/labs/semantica/src/layers/ExtractorLive.ts:244) and every handoff's promptDigest (langextract/src/Handoff/Handoff.behavior.ts:78-84), so a change needs a measured re-pin, which is its own work with no P6 acceptance attached. The attorney-facing invariant is delivered as admission bound to the opened revision through LawAdmission, with the gate checked first; drafting invariants wait for a drafting surface. The exit row rewrites each pending note to the delivered state or this scope.
@@ -2729,6 +2737,14 @@ Reverse: Declare claim_propose idempotent: false and let a retry mint a new clai
 Lane p6
 
 Reverse: Drop the Tool.Strict annotation and fail the handler with the gate refusal instead of returning ClaimProposeFailure.
+
+### claim_propose same-schemas is proved against a reference tool on the wire, 2026-11-24
+
+Property (e) for claim_propose mounts LawClaimToolkit through the mcp-kit Conformance harness beside a reference tool declared directly over ClaimProposalRequest, LawProposedClaimRecord and ClaimProposeFailure, and asserts the two listed inputSchema and outputSchema values are equal. The wire conversion (`toolJsonSchema` in SanitizedSpan.ts) is module-private, so the reference tool runs the same conversion without exporting a testing seam from mcp-kit. The unmounted law-practice tools compare `S.toJsonSchemaDocument` of their parameter and success schemas with the domain schemas they are declared over, in one table that must cover every PracticeKg and ReviewHub tool.
+
+Lane p6
+
+Reverse: Export a testing seam for toolJsonSchema from mcp-kit and compare against it directly.
 
 ### P6: claim_provenance answers Missing for a claim the principal may not traverse, the same value an absent id gets, 2026-11-24
 
@@ -2920,6 +2936,14 @@ PLAN P6 says nlp-processing absorbs nlp/Operations and nlp/Algebra after a Combi
 Lane p6
 
 Reverse: Restore nlp/src/Operations and nlp/src/Algebra from the P5 head, git mv them into nlp-processing, and add law rows for each moved instance
+
+### NLP same-schemas is stated over the stack types the tools expose, 2026-11-24
+
+The NLP tools declare their parameters and success shapes as module-private schemas, so the np case of property (e) is stated over the stack types they expose: every JSON Schema definition a tool publishes is either local to that tool (its own module or nlp-processing internals) or equal to the definition its stack type (the _schemas exports, Position, UnitInterval, BM25Norm, MarkRange) publishes on its own; the tools that expose spans are exactly those that publish Position. Exporting 45 tool-local schemas only for a test would add public API with no consumer.
+
+Lane p6
+
+Reverse: Export every NLP tool's parameter and success schema and compare each tool against them in a table.
 
 ### P6: no outbound draft carries matter material today; path 6 is a structural proof on NoticeMessage, 2026-11-24
 

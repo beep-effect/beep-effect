@@ -102,4 +102,8 @@ export const TverskySimilarity = Tool.make("TverskySimilarity", {
   failureMode: "return",
   parameters: TverskySimilarityParameters,
   success: S.toEncoded(TverskySimilaritySuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

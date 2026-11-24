@@ -2,14 +2,18 @@ import { ExtractionDocument } from "@beep/annotation/Kinds";
 import { SourceTextResolver } from "@beep/file-processing/SourceText";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import { AnswerRow, VerdictRow } from "@beep/law-practice-domain";
+import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   DistinctionProposition,
   LawHumanAdmissionToken,
   LawProposedClaimRecord,
 } from "@beep/law-practice-domain/values/LawClaim";
 import {
+  ClaimProposal,
   ClaimProposalLayer,
   ClaimProposalRequest,
+  ClaimProposeFailure,
   ClaimProposeTool,
   LawClaimToolkit,
   LawClaimToolkitLayer,
@@ -18,13 +22,51 @@ import { LawClaimProposals } from "@beep/law-practice-use-cases/ClaimStore";
 import { requiredExtraction } from "@beep/law-practice-use-cases/IrToLaw";
 import { LawPrincipal, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
-import { ReviewHubToolkit } from "@beep/law-practice-use-cases/ReviewHub";
+import { RecordVerdictInput } from "@beep/law-practice-use-cases/ReviewQueue";
+import {
+  ApplicationLookupParams,
+  BudgetParams,
+  CandidateClaimsParams,
+  ClaimInspectionTool,
+  ClaimSelfCheck,
+  ClaimSelfCheckReviewRequest,
+  ClaimSelfCheckReviewResult,
+  ClaimSelfCheckTool,
+  CorpusGetDocumentTool,
+  CorpusSearchTextTool,
+  CorrespondentLookupParams,
+  DocketFamilyParams,
+  EmailSearchParams,
+  EmailSearchTool,
+  FindParams,
+  GetDocumentParams,
+  KgApplicationLookupTool,
+  KgCandidateClaimsTool,
+  KgClientsTool,
+  KgCorrespondentLookupTool,
+  KgDocketFamilyTool,
+  KgFindTool,
+  KgMatterLookupTool,
+  KgProvenanceTool,
+  MatterLookupParams,
+  PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgCandidateClaimsResult,
+  PracticeKgCandidateClaimToolRow,
+  PracticeKgToolkit,
+  PracticeKgToolResult,
+  ProvenanceParams,
+  ReviewHub,
+  SearchTextParams,
+} from "@beep/law-practice-use-cases/server";
+import { sanitizedToolkit } from "@beep/mcp-kit/SanitizedSpan";
 import { fromApprovedToolsPolicy, TierGate, TierGatePolicy } from "@beep/mcp-kit/TierGate";
+import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { it } from "@beep/test-runner";
 import { mintCaptureId } from "@beep/text/Capture";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Tool from "effect/ai/Tool";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -43,6 +85,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import { modelOutput, text } from "./fixtures/office-action-review/fixture.ts";
 import {
   authorityStaffing,
@@ -55,7 +98,6 @@ import {
   reviewScenario,
   unstaffedPrincipal,
 } from "./fixtures/office-action-review/support.ts";
-import type { ClaimProposal } from "@beep/law-practice-use-cases/ClaimProposal";
 import type { LawClaimAdmissions } from "@beep/law-practice-use-cases/ClaimStore";
 import type { AttorneyAttestation, LawAdmission } from "@beep/law-practice-use-cases/LawAdmission";
 import type { ContentHash } from "@beep/schema/ContentHash";
@@ -128,7 +170,7 @@ const stanceSchemasUnder = (value: unknown): ReadonlyArray<unknown> =>
       : [];
 
 const writeTools = pipe(
-  [...R.values(ReviewHubToolkit.tools), ...R.values(LawClaimToolkit.tools)],
+  [...R.values(ReviewHub.ReviewHubToolkit.tools), ...R.values(LawClaimToolkit.tools)],
   A.filter((tool: Tool.Any) => Context.get(tool.annotations, Tool.Readonly) !== true)
 );
 
@@ -423,4 +465,104 @@ describe("write tools emit proposed records only", () => {
       })
     );
   });
+});
+
+const ReferenceProposeTool = Tool.make("claim_propose_reference", {
+  description: "Reference tool declared over the domain schemas claim_propose exposes.",
+  failure: ClaimProposeFailure,
+  failureMode: "return",
+  parameters: ClaimProposalRequest,
+  success: LawProposedClaimRecord,
+}).annotate(Tool.Strict, true);
+
+const ReferenceToolkit = Toolkit.make(ReferenceProposeTool);
+
+const unusedProposal = ClaimProposal.of({
+  propose: Effect.fn("WriteTools.unusedPropose")(function* () {
+    return yield* Effect.die("the listing test never dispatches");
+  }),
+});
+
+const listingRegistrations = Layer.mergeAll(
+  sanitizedToolkit(LawClaimToolkit).pipe(
+    Layer.provide(LawClaimToolkitLayer),
+    Layer.provide(Layer.succeed(ClaimProposal, unusedProposal)),
+    Layer.provide(Layer.succeed(TierGate, gateApproving([])))
+  ),
+  sanitizedToolkit(ReferenceToolkit).pipe(
+    Layer.provide(
+      ReferenceToolkit.toLayer({ claim_propose_reference: () => Effect.die("the listing test never dispatches") })
+    )
+  )
+);
+
+const declaredSchemas: ReadonlyArray<readonly [Tool.Any, S.Top, S.Top]> = [
+  [KgClientsTool, BudgetParams, PracticeKgToolResult],
+  [KgDocketFamilyTool, DocketFamilyParams, PracticeKgToolResult],
+  [KgApplicationLookupTool, ApplicationLookupParams, PracticeKgToolResult],
+  [KgFindTool, FindParams, PracticeKgToolResult],
+  [CorpusSearchTextTool, SearchTextParams, PracticeKgToolResult],
+  [CorpusGetDocumentTool, GetDocumentParams, PracticeKgToolResult],
+  [EmailSearchTool, EmailSearchParams, PracticeKgToolResult],
+  [KgCandidateClaimsTool, CandidateClaimsParams, PracticeKgCandidateClaimsResult],
+  [KgMatterLookupTool, MatterLookupParams, PracticeKgToolResult],
+  [KgCorrespondentLookupTool, CorrespondentLookupParams, PracticeKgToolResult],
+  [KgProvenanceTool, ProvenanceParams, PracticeKgToolResult],
+  [ClaimInspectionTool, ClaimSelfCheck.ClaimInspectionPageRequest, ClaimSelfCheck.ClaimInspectionPage],
+  [ClaimSelfCheckTool, ClaimSelfCheckReviewRequest, ClaimSelfCheckReviewResult],
+  [ReviewHub.OpenItemsTool, ReviewHub.OpenItemsRequest, ReviewHub.OpenItems],
+  [ReviewHub.RecordVerdictTool, RecordVerdictInput, VerdictRow],
+  [ReviewHub.LockBatchTool, ReviewHub.LockBatchRequest, VerdictRow],
+  [ReviewHub.RecordAnswerTool, ReviewHub.RecordAnswerRequest, AnswerRow],
+];
+
+const statusIdentifier = (definitions: R.ReadonlyRecord<string, unknown>): ReadonlyArray<string> =>
+  A.filter(R.keys(definitions), (identifier) => Str.endsWith("/PracticeKgEpistemicStatus")(identifier));
+
+describe("write tools emit proposed records only: (e) same schemas", () => {
+  it("write tools emit proposed records only: (e) every law-practice tool publishes its declared domain schemas", () => {
+    const listed = A.map(declaredSchemas, ([tool]) => tool.name);
+    expect(A.sort(listed, Str.Order)).toEqual(
+      A.sort([...R.keys(PracticeKgToolkit.tools), ...R.keys(ReviewHub.ReviewHubToolkit.tools)], Str.Order)
+    );
+    for (const [tool, parameters, success] of declaredSchemas) {
+      expect(S.toJsonSchemaDocument(tool.parametersSchema)).toEqual(S.toJsonSchemaDocument(parameters));
+      expect(S.toJsonSchemaDocument(tool.successSchema)).toEqual(S.toJsonSchemaDocument(success));
+    }
+  });
+
+  it("write tools emit proposed records only: (e) kg_candidate_claims states its status and label as the domain status", () => {
+    const domain = S.toJsonSchemaDocument(PracticeKgEpistemicStatus);
+    const published = S.toJsonSchemaDocument(KgCandidateClaimsTool.successSchema).definitions;
+    const row = S.toJsonSchemaDocument(PracticeKgCandidateClaimToolRow).definitions;
+    const notLoaded = S.toJsonSchemaDocument(PracticeKgCandidateClaimsNotLoadedResult).definitions;
+    const [identifier] = statusIdentifier(domain.definitions);
+    expect(identifier).toBeDefined();
+    for (const definitions of [published, row, notLoaded]) {
+      expect(statusIdentifier(definitions)).toEqual([identifier]);
+      expect(definitions[identifier ?? ""]).toEqual(domain.definitions[identifier ?? ""]);
+    }
+  });
+
+  it.effect(
+    "write tools emit proposed records only: (e) claim_propose lists the JSON Schema of its domain schemas",
+    () =>
+      Effect.gen(function* () {
+        const harness = layerConformanceHttp({
+          name: "law-claim-toolkit-listing",
+          version: "0.0.0",
+          registrations: listingRegistrations,
+          tool: { name: "claim_propose", arguments: {}, invalidArguments: {} },
+        });
+        const context = yield* Layer.build(harness);
+        const { rpc } = yield* connectHttp().pipe(Effect.provideContext(context));
+        const { tools } = yield* rpc["tools/list"]({});
+        const byName = (name: string) => O.getOrThrow(A.findFirst(tools, (tool) => tool.name === name));
+        const proposeListing = byName("claim_propose");
+        const reference = byName("claim_propose_reference");
+        expect(proposeListing.inputSchema).toEqual(reference.inputSchema);
+        expect(proposeListing.outputSchema).toEqual(reference.outputSchema);
+        expect(proposeListing.annotations).toMatchObject({ readOnlyHint: false, idempotentHint: true });
+      })
+  );
 });

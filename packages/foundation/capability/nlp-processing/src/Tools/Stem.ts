@@ -67,4 +67,8 @@ export const Stem = Tool.make("Stem", {
   failureMode: "return",
   parameters: StemParameters,
   success: S.toEncoded(StemSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

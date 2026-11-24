@@ -2678,7 +2678,7 @@ describe("practice KG projections", () => {
         expect(result.epistemic_status).toBe("candidate-unreviewed");
         expect(result.total).toBe(1);
         const row = R.fromEntries(A.zip(result.data.columns, O.getOrThrow(A.head(result.data.rows))));
-        expect(row.label).toBe("candidate — unreviewed");
+        expect(row.label).toBe("candidate-unreviewed");
         expect(row.claimText).toBe("A widget comprising a lid and a base.");
         expect(row.evidenceQuote).toBe("A Hinge Coupling The Lid To The Base");
         expect(row.sourceFile).toBe("1_Response OA - 20001US01.txt");

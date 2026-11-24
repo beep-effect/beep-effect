@@ -58,4 +58,8 @@ export const DocumentStats = Tool.make("DocumentStats", {
   failureMode: "return",
   parameters: DocumentStatsParameters,
   success: S.toEncoded(AiDocumentStats),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);
