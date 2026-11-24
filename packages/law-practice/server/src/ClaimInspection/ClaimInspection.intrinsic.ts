@@ -76,7 +76,6 @@ const translateResult = Effect.fn("ClaimInspection.translateIntrinsicResult")(fu
       remainingWork: result.remainingWork,
     });
   }
-  // The producer's reservation is paid before these exact-form/identity joins.
   if (!validKnownResponse(identity, request, result))
     return yield* paidProtocolFailure(request, "membership identity/form/debit mismatch");
   return ClaimLexicalMembershipResult.cases.known.make({

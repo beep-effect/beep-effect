@@ -25,9 +25,6 @@ class PrefetchInliningConfigComplex extends S.Opaque<
 ) {}
 
 /**
- * Resolved form of the prefetchInlining config after normalization in
- * config.ts. User input (true, partial objects) is converted to this shape.
- *
  * **Example** (Import and log schema)
  *
  * ```ts
@@ -47,8 +44,6 @@ export const PrefetchInliningConfig = S.Union([S.Literal(false), PrefetchInlinin
 );
 
 /**
- * Companion type for {@link PrefetchInliningConfig} schema
- *
  * **Example** (Type-check false config)
  *
  * ```ts

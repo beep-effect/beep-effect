@@ -55,8 +55,6 @@ export * from "./EntityKitFreeze.ts";
  */
 export { LawScanProject } from "./internal/LawScan.ts";
 /**
- * Public laws command export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -139,8 +137,6 @@ export * from "./RetiredIriAuthorities.model.ts";
  */
 export * from "./RetiredIriAuthorities.ts";
 /**
- * Schema tag idiom law schemas.
- *
  * @category models
  * @since 0.0.0
  */

@@ -564,8 +564,6 @@ const FaultsOption = S.declare(
 );
 
 /**
- * Options shared by every seeded constructor.
- *
  * **Details**
  *
  * Constructors accept the plain {@link MemoryFileSystemOptionsInput} shape;

@@ -68,8 +68,6 @@ export const LiteralKitRetiredFacet = LiteralKit(["Options", "pickOptions", "omi
 );
 
 /**
- * LiteralKit facet retired in favor of an upstream effect/Schema or effect member.
- *
  * @category type-level
  * @since 0.0.0
  */

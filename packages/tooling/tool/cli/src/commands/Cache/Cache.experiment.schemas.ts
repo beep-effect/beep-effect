@@ -27,8 +27,6 @@ export const CacheLocalOrigin = LiteralKit(["fresh", "local-hit"]).pipe(
   $I.annoteSchema("CacheLocalOrigin", { description: "Fresh execution or an observed local artifact replay." })
 );
 /**
- * Observed local execution or artifact-replay origin.
- *
  * @category models
  * @since 0.0.0
  */

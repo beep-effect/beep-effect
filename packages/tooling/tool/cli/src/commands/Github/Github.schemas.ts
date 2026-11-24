@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Github/Github.schemas");
 
 /**
- * The webhook block of a GitHub App manifest.
- *
  * **Example** (Describe a disabled webhook)
  *
  * ```ts
@@ -32,8 +30,6 @@ export class GitHubAppManifestHook extends S.Opaque<GitHubAppManifestHook, { rea
 ) {}
 
 /**
- * A repository permission level granted by a GitHub App manifest.
- *
  * **Example** (Recognize a read grant)
  *
  * ```ts
@@ -53,16 +49,12 @@ export const GitHubAppPermissionLevel = S.Literals(["read", "write"]).pipe(
 );
 
 /**
- * Decoded GitHubAppPermissionLevel value.
- *
  * @category models
  * @since 0.0.0
  */
 export type GitHubAppPermissionLevel = typeof GitHubAppPermissionLevel.Type;
 
 /**
- * The GitHub App manifest posted to the organization registration page.
- *
  * **Details**
  *
  * The checked-in manifest JSON is decoded against this schema before it is
@@ -109,8 +101,6 @@ export class GitHubAppManifest extends S.Opaque<GitHubAppManifest, { readonly br
 ) {}
 
 /**
- * The credential payload GitHub returns when a manifest code is converted.
- *
  * **Details**
  *
  * `pem` decodes into a `Redacted` value so the private key never renders. `slug`
@@ -176,16 +166,12 @@ export const GitHubAppRegistrationOutcome = S.TaggedUnion({
 );
 
 /**
- * Decoded GitHubAppRegistrationOutcome value.
- *
  * @category models
  * @since 0.0.0
  */
 export type GitHubAppRegistrationOutcome = typeof GitHubAppRegistrationOutcome.Type;
 
 /**
- * Where the 1Password CLI that stores a minted App's credentials came from.
- *
  * **Details**
  *
  * `override` is the operator's `--op-cli` flag, `op-human` is the operator's
@@ -210,16 +196,12 @@ export const GitHubAppVaultWriterSource = LiteralKit(["override", "op-human", "o
 );
 
 /**
- * Where the 1Password CLI that stores a minted App's credentials came from.
- *
  * @category models
  * @since 0.0.0
  */
 export type GitHubAppVaultWriterSource = typeof GitHubAppVaultWriterSource.Type;
 
 /**
- * The 1Password CLI the mint writes credentials with, and why it was chosen.
- *
  * **Example** (Name an explicit writer)
  *
  * ```ts

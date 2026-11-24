@@ -154,8 +154,7 @@ export class MatterFolderMapLocation extends Context.Service<MatterFolderMapLoca
 
 const decodeFolderMap = S.decodeUnknownEffect(MatterFolderMapJson);
 
-// The destination names a column of the map; no folder name or path exists in code.
-const folderOf: (destination: FilingDestination) => (folders: MatterFolders) => DocumentFolderId =
+const folderColumnOf: (destination: FilingDestination) => (folders: MatterFolders) => DocumentFolderId =
   FilingDestination.match({
     "uspto-incoming": () => (folders: MatterFolders) => folders.usptoIncomingFolderId,
     "from-client": () => (folders: MatterFolders) => folders.fromClientFolderId,
@@ -172,7 +171,7 @@ const makeMatterFolderDirectory = Effect.gen(function* () {
 
   return MatterFolderDirectoryShape.make({
     folderFor: (request: MatterFolderRequest) =>
-      Effect.succeed(O.map(HashMap.get(byFamily, request.matterKey), folderOf(request.destination))),
+      Effect.succeed(O.map(HashMap.get(byFamily, request.matterKey), folderColumnOf(request.destination))),
   });
 });
 

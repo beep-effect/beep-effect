@@ -82,8 +82,6 @@ export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
 };
 
 /**
- * Where an importer's walk starts.
- *
  * **Details**
  *
  * - `"own"` — the lockfile records a workspace row for the importer. The row

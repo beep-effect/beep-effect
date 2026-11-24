@@ -85,8 +85,6 @@ const SymlinkTargetPath = RelativePlanPath.pipe(
 );
 
 /**
- * A file write operation.
- *
  * **Example** (Validate PlannedFile candidate)
  *
  * ```ts
@@ -112,8 +110,6 @@ export class PlannedFile extends S.Opaque<PlannedFile, { readonly brand: unique 
 ) {}
 
 /**
- * A verbatim asset copy operation.
- *
  * **Details**
  *
  * `sourcePath` points outside the output directory, at the template asset on
@@ -145,8 +141,6 @@ export class PlannedAsset extends S.Opaque<PlannedAsset, { readonly brand: uniqu
 ) {}
 
 /**
- * A symlink operation.
- *
  * **Example** (Validate PlannedSymlink candidate)
  *
  * ```ts
@@ -174,8 +168,6 @@ export class PlannedSymlink extends S.Opaque<PlannedSymlink, { readonly brand: u
 const fileGenerationPlanInputAssetsDefault = A.empty<PlannedAsset>();
 const fileGenerationPlanInputSymlinksDefault = A.empty<PlannedSymlink>();
 /**
- * Input payload used to create a generation pla.
- *
  * **Example** (Validate plan input payload)
  *
  * ```ts
@@ -212,8 +204,6 @@ export class FileGenerationPlanInput extends S.Opaque<FileGenerationPlanInput, {
 ) {}
 
 /**
- * Planned action kinds.
- *
  * **Example** (Check mkdir action kind)
  *
  * ```ts
@@ -233,8 +223,6 @@ export const GenerationActionKind = LiteralKit(["mkdir", "write-file", "copy-ass
   })
 );
 /**
- * Planned generation action.
- *
  * @category models
  * @since 0.0.0
  */
@@ -288,8 +276,6 @@ class GenerationActionSymlink extends S.Opaque<GenerationActionSymlink, { readon
 ) {}
 
 /**
- * Planned generation action schema.
- *
  * **Example** (Validate generation action value)
  *
  * ```ts
@@ -326,16 +312,12 @@ export const GenerationAction = S.Union([
   }))
 );
 /**
- * Planned generation action.
- *
  * @category models
  * @since 0.0.0
  */
 export type GenerationAction = typeof GenerationAction.Type;
 
 /**
- * Deterministic generation plan.
- *
  * **Example** (Validate empty generation plan)
  *
  * ```ts
@@ -361,8 +343,6 @@ export class FileGenerationPlan extends S.Opaque<FileGenerationPlan, { readonly 
 ) {}
 
 /**
- * Execution report for a plan run.
- *
  * **Example** (Validate empty execution result)
  *
  * ```ts

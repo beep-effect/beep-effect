@@ -11,8 +11,6 @@ import { ParcelId } from "./Parcel.models.ts";
 const $I = $PalantiriId.create("Parcels.errors");
 
 /**
- * A read named a parcel Palantiri does not serve.
- *
  * **Example** (Construct an unknown-parcel error)
  *
  * ```ts
@@ -32,8 +30,6 @@ export class UnknownParcel extends S.TaggedError<UnknownParcel, { readonly brand
 ) {}
 
 /**
- * A parcel's source port could not produce a reading.
- *
  * **Details**
  *
  * `detail` is short and non-identifying: it never carries a path, a label or
@@ -59,8 +55,6 @@ export class SourceFailed extends S.TaggedError<SourceFailed, { readonly brand: 
 ) {}
 
 /**
- * Any parcel failure.
- *
  * **Example** (Guard a parcel failure)
  *
  * ```ts
@@ -78,8 +72,6 @@ export const ParcelError = S.Union([UnknownParcel, SourceFailed]).pipe(
 );
 
 /**
- * Runtime type for {@link ParcelError}.
- *
  * @category errors
  * @since 0.0.0
  */

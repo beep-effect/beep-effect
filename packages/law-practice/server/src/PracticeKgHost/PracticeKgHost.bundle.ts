@@ -14,10 +14,13 @@ import * as S from "effect/Schema";
 import { PracticeKgBundleContext } from "../PracticeKg.host.ts";
 import { PracticeKgBundleManifest } from "../PracticeKg.schemas.ts";
 import { PracticeKgHostError } from "./PracticeKgHost.errors.ts";
+import type { PracticeKgSchemaVersions } from "../PracticeKg.schemas.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-// Mirrors `PracticeKgSchemaVersions`; bumped with every breaking kg_node/kg_edge or DuckDB table layout change.
-const supportedStoreVersions = { duckdb: "4", pglite: "4" } as const;
+const storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout = {
+  duckdb: "4",
+  pglite: "4",
+} as const satisfies typeof PracticeKgSchemaVersions.Encoded;
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );
@@ -61,20 +64,15 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
       })
     )
   );
-  // An older bundle lacks columns the tools read (format 1 keys families on
-  // the bare docket number; format 2 has no `matters.client_name`; format 3
-  // has no correspondent tables), so it is
-  // refused by store version before the strict decode can report it as merely
-  // "invalid".
   const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
   if (
     O.isSome(storeVersion) &&
-    (storeVersion.value.schemaVersion.pglite !== supportedStoreVersions.pglite ||
-      storeVersion.value.schemaVersion.duckdb !== supportedStoreVersions.duckdb)
+    (storeVersion.value.schemaVersion.pglite !== storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.pglite ||
+      storeVersion.value.schemaVersion.duckdb !== storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.duckdb)
   ) {
     const found = storeVersion.value.schemaVersion;
     return yield* PracticeKgHostError.make({
-      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${supportedStoreVersions.pglite} / duckdb ${supportedStoreVersions.duckdb}. Install the rebuilt bundle that matches this server.`,
+      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.pglite} / duckdb ${storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.duckdb}. Install the rebuilt bundle that matches this server.`,
     });
   }
   const manifest = yield* decodeManifest(manifestText).pipe(

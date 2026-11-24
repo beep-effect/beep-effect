@@ -73,7 +73,6 @@ export const makeJsonlLog = Effect.fnUntraced(function* <
   const name = path.basename(options.file);
   const unreadable = (cause: unknown) => options.readFailure(`${name} cannot be read`, cause);
 
-  // A last line without a line break is an append still in progress, so it is left for the next read.
   const rows: Effect.Effect<ReadonlyArray<Row["Type"]>, E> = Effect.flatMap(
     Effect.mapError(fs.exists(options.file), unreadable),
     (exists) =>

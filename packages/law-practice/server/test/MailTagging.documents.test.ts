@@ -65,8 +65,7 @@ const outcomeOf: (result: DocumentUploadResult) => string = DocumentUploadResult
     }),
 });
 
-// The outcome of one upload Box refuses with a name conflict, and how many calls were metered.
-const taken = Effect.fn("MailTaggingDocumentsTest.taken")(function* (conflict: {
+const nameConflictOutcomeAndMeteredCalls = Effect.fn("MailTaggingDocumentsTest.taken")(function* (conflict: {
   readonly contextInfo?: { readonly conflicts: unknown };
 }) {
   const calls = yield* Ref.make(0);
@@ -160,7 +159,7 @@ describe("MailTagging Box document store", () => {
       const made2 = yield* Ref.make(0);
       const uncoded = yield* storeOver(made2, () => Promise.reject(boxRejection({ statusCode: 409 })));
 
-      const taken3 = yield* taken({
+      const taken3 = yield* nameConflictOutcomeAndMeteredCalls({
         contextInfo: {
           conflicts: [
             { id: "8000", type: "folder" },
@@ -169,19 +168,27 @@ describe("MailTagging Box document store", () => {
         },
       });
       expect(taken3).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
-      // Box reports the holder's size and SHA-1 for a file; both reach the outcome when well formed.
-      const taken4 = yield* taken({
+      const taken4 = yield* nameConflictOutcomeAndMeteredCalls({
         contextInfo: {
           conflicts: { id: "8002", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
         },
       });
-      expect(taken4).toStrictEqual(["name taken by 8002 size=3 sha1=7037807198c22a7d2b0807371d763779a84fdfcf", 1]);
-      const taken5 = yield* taken({ contextInfo: { conflicts: [{ id: "8000", type: "folder" }] } });
+      expect(taken4, "Box reports the holder's size and SHA-1 for a file; both reach the outcome").toStrictEqual([
+        "name taken by 8002 size=3 sha1=7037807198c22a7d2b0807371d763779a84fdfcf",
+        1,
+      ]);
+      const taken5 = yield* nameConflictOutcomeAndMeteredCalls({
+        contextInfo: { conflicts: [{ id: "8000", type: "folder" }] },
+      });
       expect(taken5).toStrictEqual(["name taken", 1]);
-      // The upload shape: Box sends one conflict object, which the driver normalizes to a list.
-      const taken6 = yield* taken({ contextInfo: { conflicts: { id: "8001", type: "file" } } });
-      expect(taken6).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
-      const taken7 = yield* taken({});
+      const taken6 = yield* nameConflictOutcomeAndMeteredCalls({
+        contextInfo: { conflicts: { id: "8001", type: "file" } },
+      });
+      expect(taken6, "the upload shape: one conflict object, which the driver normalizes to a list").toStrictEqual([
+        "name taken by 8001 size=null sha1=null",
+        1,
+      ]);
+      const taken7 = yield* nameConflictOutcomeAndMeteredCalls({});
       expect(taken7).toStrictEqual(["name taken", 1]);
       const upload8 = yield* uncoded.upload(pdf);
       expect(outcomeOf(upload8)).toBe("name taken");

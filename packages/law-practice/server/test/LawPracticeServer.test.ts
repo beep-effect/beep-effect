@@ -126,40 +126,39 @@ describe("@beep/law-practice-server", () => {
     "office-action review loop over service-backed extraction",
     (it) => {
       it.effect(
-        "IrToLaw grounds exactly one distinction to its source anchor",
+        "IrToLaw grounds exactly one distinction to its source anchor through case-insensitive match_lesser alignment, never an unaligned fallback",
         Effect.fnUntraced(function* () {
           const langExtract = yield* LangExtractService;
           const irToLaw = yield* IrToLaw;
           const extractionResult = yield* langExtract.extract(makeExtractionRequest());
           const extractions = extractionResult.handoff.readings.pipe(HashMap.toValues, A.flatten);
 
-          // The distinction candidate is lower case vs the Title-Case source, so
-          // alignment MUST take the case-insensitive `match_lesser` path (not a
-          // trivial `match_exact`). This is what makes the re-slice below a real
-          // grounding proof, and it rules out the fabricated span-undefined anchor
-          // fallback in IrToLaw (which would yield `unaligned`/no span).
-          const distinctionExtraction = A.findFirst(extractions, (e) => e.label === "distinction");
+          const lowerCaseCandidateOfTitleCaseSource = A.findFirst(extractions, (e) => e.label === "distinction");
           assertSome(
-            O.map(distinctionExtraction, (e) => e.alignment),
+            O.map(lowerCaseCandidateOfTitleCaseSource, (e) => e.alignment),
             "match_lesser"
           );
 
           const law = yield* irToLaw.toLaw(extractionResult.handoff);
 
-          // (a) exactly one Distinction, well-formed.
-          expect(law.distinction).toBeInstanceOf(Distinction);
+          expect(law.distinction, "exactly one well-formed Distinction").toBeInstanceOf(Distinction);
           const distinctionDetail = law.distinction.detail;
           pipe(DistinctionDetail.guards.missing_limitation(distinctionDetail), assertTrue);
 
-          // (b) the anchor re-slices the source to its own quote, and that quote is
-          // the original-case substring recovered via the case-insensitive match.
           const { endChar, quote, startChar } = law.distinction.anchor;
-          expect(Str.slice(startChar, endChar)(OFFICE_ACTION_FIXTURE)).toBe(quote);
-          expect(quote).toBe(EXPECTED_DISTINCTION_QUOTE);
+          expect(
+            Str.slice(startChar, endChar)(OFFICE_ACTION_FIXTURE),
+            "the anchor re-slices the source to its own quote"
+          ).toBe(quote);
+          expect(quote, "the original-case substring recovered by the case-insensitive match").toBe(
+            EXPECTED_DISTINCTION_QUOTE
+          );
 
-          // (d) the distinction's answer: missing limitation + recovered anchor quote.
           DistinctionDetail.match(distinctionDetail, {
-            missing_limitation: (detail) => expect(detail.limitation).toBe(EXPECTED_DISTINCTION_LIMITATION),
+            missing_limitation: (detail) =>
+              expect(detail.limitation, "the distinction answers with its missing limitation").toBe(
+                EXPECTED_DISTINCTION_LIMITATION
+              ),
           });
         })
       );
@@ -186,14 +185,13 @@ describe("@beep/law-practice-server", () => {
 
           const view = yield* review.review(input);
 
-          // (c) gate admits -> transition advances candidate -> shape_valid. The
-          // claim ends at "shape_valid" (NOT lifecycle "admitted"), so admittedKeys
-          // is empty — per SPEC "gate admits, lifecycle reaches shape_valid".
           expect(view.total).toBe(1);
-          expect(view.counts.shape_valid).toBe(1);
+          expect(view.counts.shape_valid, "the gate admits and the transition advances candidate to shape_valid").toBe(
+            1
+          );
           expect(view.counts.candidate).toBe(0);
-          expect(view.counts.admitted).toBe(0);
-          expect([...view.admittedKeys]).toEqual([]);
+          expect(view.counts.admitted, "per SPEC the lifecycle reaches shape_valid, not admitted").toBe(0);
+          expect([...view.admittedKeys], "no lifecycle-admitted claim, so no admitted key").toEqual([]);
         })
       );
     }

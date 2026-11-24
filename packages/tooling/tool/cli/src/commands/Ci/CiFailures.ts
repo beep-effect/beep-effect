@@ -107,8 +107,6 @@ export const CiFailuresTarget = S.TaggedUnion({
 );
 
 /**
- * Type of {@link CiFailuresTarget}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -313,8 +311,6 @@ export const CiJobReading = S.TaggedUnion({
 );
 
 /**
- * Type of {@link CiJobReading}.
- *
  * @category models
  * @since 0.0.0
  */

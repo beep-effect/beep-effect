@@ -40,8 +40,6 @@ export const DocsRuleId = LiteralKit([
 ]).pipe($I.annoteSchema("DocsRuleId", { description: "Repo-owned documentation rule identifiers." }));
 
 /**
- * Identifier of a documentation rule.
- *
  * **Example** (Choose a rule)
  * ```ts
  * import type { DocsRuleId } from "@beep/lint-rules/oxlint-docs"

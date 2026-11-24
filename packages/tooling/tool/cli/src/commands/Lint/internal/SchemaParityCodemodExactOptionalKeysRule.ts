@@ -29,8 +29,6 @@ const $I = $RepoCliId.create("commands/Lint/internal/SchemaParityCodemodExactOpt
 const RULE_ID = "exact-optional-keys" as const;
 
 /**
- * `effect/Schema` members that admit a present key holding `undefined`.
- *
  * **Details**
  *
  * `optional` is `optionalKey(UndefinedOr(X))`; `withDecodingDefault` and
@@ -61,8 +59,6 @@ export const ExactOptionalKeysRetiredMember = LiteralKit([
 );
 
 /**
- * effect/Schema optionality member that admits a present key holding undefined.
- *
  * @category type-level
  * @since 0.0.0
  */

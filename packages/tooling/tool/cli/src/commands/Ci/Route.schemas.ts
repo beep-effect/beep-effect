@@ -76,8 +76,6 @@ export const CHANGE_ATOM_KIND_VALUES = [
 ] as const;
 
 /**
- * The kind of one classified unit of a diff.
- *
  * **Details**
  *
  * Semantic kinds (`pkg:*`) come from field-level diffs of structured files;
@@ -102,8 +100,6 @@ export const ChangeAtomKind = LiteralKit(CHANGE_ATOM_KIND_VALUES).pipe(
 );
 
 /**
- * Type of {@link ChangeAtomKind}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -147,8 +143,6 @@ export class ChangeAtom extends S.Opaque<ChangeAtom, { readonly brand: unique sy
 ) {}
 
 /**
- * The classified diff of one head against its merge base.
- *
  * **Example** (An empty change set)
  *
  * ```ts import.meta.vitest name="An empty change set"
@@ -197,8 +191,6 @@ export const FootprintPropagation = LiteralKit(["none", "reverse-deps", "covered
 );
 
 /**
- * Type of {@link FootprintPropagation}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -287,8 +279,6 @@ export const RouteRefinementMode = LiteralKit(["shadow", "enforced"]).pipe(
 );
 
 /**
- * Type of {@link RouteRefinementMode}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -372,16 +362,12 @@ export const RouteDecision = LiteralKit(["selected", "skipped", "shadow-skipped"
 );
 
 /**
- * Type of {@link RouteDecision}.
- *
  * @category schemas
  * @since 0.0.0
  */
 export type RouteDecision = typeof RouteDecision.Type;
 
 /**
- * One lane's route decision and the refinements responsible for a skip.
- *
  * **Example** (A selected lane)
  *
  * ```ts import.meta.vitest name="A selected lane"
@@ -564,8 +550,6 @@ export const RouteTaskOutcome = LiteralKit(["pass", "fail", "not-run", "unknown"
 );
 
 /**
- * Type of {@link RouteTaskOutcome}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -642,8 +626,6 @@ export class HostedJob extends S.Opaque<HostedJob, { readonly brand: unique symb
 ) {}
 
 /**
- * One captured hosted workflow run with its jobs, keyed by head sha.
- *
  * **Example** (A pull-request run with no jobs)
  *
  * ```ts import.meta.vitest name="A pull-request run with no jobs"
@@ -766,8 +748,6 @@ export const RouteJobClass = LiteralKit(["lane", "support", "unknown"]).pipe(
 );
 
 /**
- * Type of {@link RouteJobClass}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -802,8 +782,6 @@ export const RouteStepClass = LiteralKit(["setup", "aggregate", "task"]).pipe(
 );
 
 /**
- * Type of {@link RouteStepClass}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -841,8 +819,6 @@ export const RouteRedOrigin = LiteralKit(["task", "aggregate", "setup", "harness
 );
 
 /**
- * Type of {@link RouteRedOrigin}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -949,8 +925,6 @@ export const RouteCostBasis = LiteralKit(["gate-order-seed", "hosted-median", "n
 );
 
 /**
- * Type of {@link RouteCostBasis}.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -1205,8 +1179,6 @@ export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique 
 ) {}
 
 /**
- * Why a route operation failed.
- *
  * **Example** (Guard an error reason)
  *
  * ```ts import.meta.vitest name="Guard an error reason"
@@ -1232,16 +1204,12 @@ export const RouteErrorReason = LiteralKit([
 );
 
 /**
- * Type of {@link RouteErrorReason}.
- *
  * @category schemas
  * @since 0.0.0
  */
 export type RouteErrorReason = typeof RouteErrorReason.Type;
 
 /**
- * Typed failure of the verification route.
- *
  * **Example** (Construct a route error)
  *
  * ```ts import.meta.vitest name="Construct a route error"

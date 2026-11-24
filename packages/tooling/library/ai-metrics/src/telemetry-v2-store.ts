@@ -31,8 +31,6 @@ const artifactReceiptSchemaVersion = "telemetry-v2/artifact-receipt/v1";
 const flightRecordSchemaVersion = "telemetry-v2/flight-record/v1";
 
 /**
- * Durable telemetry-v2 artifact family.
- *
  * **Example** (Select the pre-read denominator family)
  *
  * ```ts
@@ -57,8 +55,6 @@ export const TelemetryV2ArtifactKind = LiteralKit([
 );
 
 /**
- * Decoded telemetry-v2 artifact family.
- *
  * @see {@link TelemetryV2ArtifactKind} for the runtime schema.
  * @category type-level
  * @since 0.0.0

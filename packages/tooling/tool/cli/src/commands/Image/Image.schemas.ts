@@ -104,8 +104,6 @@ export class ExtractFramesDirOptions extends S.Opaque<ExtractFramesDirOptions, {
 ) {}
 
 /**
- * Direct video selected by `image extract-frames-dir`.
- *
  * **Example** (Construct directory video entry)
  *
  * ```ts
@@ -177,8 +175,6 @@ export class ExtractFramesDirSuccess extends S.Opaque<ExtractFramesDirSuccess, {
 ) {}
 
 /**
- * Failed video from a folder-based frame extraction run.
- *
  * **Example** (Construct failed dir outcome)
  *
  * ```ts

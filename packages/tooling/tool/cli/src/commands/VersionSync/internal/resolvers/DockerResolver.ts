@@ -122,8 +122,6 @@ class DockerComposeDocument extends S.Opaque<DockerComposeDocument, { readonly b
 
 const decodeDockerComposeDocument = decodeYamlTextWith(S.decodeUnknownEffect(DockerComposeDocument));
 /**
- * Resolved Docker image state.
- *
  * @category models
  * @since 0.0.0
  */

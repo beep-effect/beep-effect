@@ -21,8 +21,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $QaCaptureId.create("QaCapture.models");
 
 /**
- * Recording lanes a capture session can run on.
- *
  * **Example** (Log playwright enum value)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const CaptureLane = LiteralKit(["obs", "playwright"]).pipe(
 );
 
 /**
- * Recording lanes a capture session can run on.
- *
  * **Example** (Type annotated lane value)
  *
  * ```ts
@@ -57,8 +53,6 @@ export const CaptureLane = LiteralKit(["obs", "playwright"]).pipe(
 export type CaptureLane = typeof CaptureLane.Type;
 
 /**
- * Methods a clock synchronization can be derived from.
- *
  * **Example** (Log beacon enum value)
  *
  * ```ts
@@ -76,8 +70,6 @@ export const ClockSyncMethod = LiteralKit(["assumed-start", "beacon", "obs-recor
 );
 
 /**
- * Methods a clock synchronization can be derived from.
- *
  * **Example** (Type annotated method value)
  *
  * ```ts
@@ -93,8 +85,6 @@ export const ClockSyncMethod = LiteralKit(["assumed-start", "beacon", "obs-recor
 export type ClockSyncMethod = typeof ClockSyncMethod.Type;
 
 /**
- * Confidence levels attached to a clock synchronization.
- *
  * **Example** (Log high confidence enum)
  *
  * ```ts
@@ -112,8 +102,6 @@ export const ClockConfidence = LiteralKit(["high", "low", "medium"]).pipe(
 );
 
 /**
- * Confidence levels attached to a clock synchronization.
- *
  * **Example** (Type annotated confidence value)
  *
  * ```ts
@@ -129,8 +117,6 @@ export const ClockConfidence = LiteralKit(["high", "low", "medium"]).pipe(
 export type ClockConfidence = typeof ClockConfidence.Type;
 
 /**
- * Kinds of artifacts a capture round can commit.
- *
  * **Example** (Log gif kind enum)
  *
  * ```ts
@@ -148,8 +134,6 @@ export const CaptureArtifactKind = LiteralKit(["clip", "frame", "gif", "sheet", 
 );
 
 /**
- * Kinds of artifacts a capture round can commit.
- *
  * **Example** (Type annotated kind value)
  *
  * ```ts
@@ -165,8 +149,6 @@ export const CaptureArtifactKind = LiteralKit(["clip", "frame", "gif", "sheet", 
 export type CaptureArtifactKind = typeof CaptureArtifactKind.Type;
 
 /**
- * Non-empty QA capture session identifier.
- *
  * **Example** (Make session identifier)
  *
  * ```ts
@@ -194,8 +176,6 @@ export const SessionId = S.String.check(
 );
 
 /**
- * Non-empty QA capture session identifier.
- *
  * **Example** (Type annotated session id)
  *
  * ```ts
@@ -211,8 +191,6 @@ export const SessionId = S.String.check(
 export type SessionId = typeof SessionId.Type;
 
 /**
- * One-based QA round number (`.beep/qa/round-N`).
- *
  * **Example** (Make first round number)
  *
  * ```ts
@@ -240,8 +218,6 @@ export const RoundNumber = S.Int.check(
 );
 
 /**
- * One-based QA round number (`.beep/qa/round-N`).
- *
  * **Example** (Type annotated round number)
  *
  * ```ts
@@ -257,8 +233,6 @@ export const RoundNumber = S.Int.check(
 export type RoundNumber = typeof RoundNumber.Type;
 
 /**
- * Positive integer pixel dimension for viewports.
- *
  * **Example** (Make viewport width)
  *
  * ```ts
@@ -286,8 +260,6 @@ export const ViewportDimension = S.Int.check(
 );
 
 /**
- * Positive integer pixel dimension for viewports.
- *
  * **Example** (Type annotated dimension)
  *
  * ```ts
@@ -303,8 +275,6 @@ export const ViewportDimension = S.Int.check(
 export type ViewportDimension = typeof ViewportDimension.Type;
 
 /**
- * Loopback TCP port a collector can listen on.
- *
  * **Example** (Make collector port)
  *
  * ```ts
@@ -348,8 +318,6 @@ export const CollectorPort = S.Int.check(
 );
 
 /**
- * Loopback TCP port a collector can listen on.
- *
  * **Example** (Type annotated port)
  *
  * ```ts
@@ -365,8 +333,6 @@ export const CollectorPort = S.Int.check(
 export type CollectorPort = typeof CollectorPort.Type;
 
 /**
- * Tool name to version string record captured for reproducibility.
- *
  * **Example** (Record tool versions)
  *
  * ```ts
@@ -385,8 +351,6 @@ export const ToolVersions = S.Record(S.String, S.String).pipe(
 );
 
 /**
- * Tool name to version string record captured for reproducibility.
- *
  * **Example** (Type tool versions record)
  *
  * ```ts
@@ -401,8 +365,6 @@ export const ToolVersions = S.Record(S.String, S.String).pipe(
 export type ToolVersions = typeof ToolVersions.Type;
 
 /**
- * Browser viewport size recorded for a capture session.
- *
  * **Example** (Make viewport dimensions)
  *
  * ```ts
@@ -434,8 +396,6 @@ export class Viewport extends S.Opaque<Viewport, { readonly brand: unique symbol
 ) {}
 
 /**
- * Identity and environment of one QA capture session.
- *
  * **Example** (Construct capture session)
  *
  * ```ts
@@ -520,8 +480,6 @@ export class CaptureSession extends S.Opaque<CaptureSession, { readonly brand: u
 ) {}
 
 /**
- * Mapping from witness wall-clock time to video time.
- *
  * **Details**
  *
  * `videoTimeMs = slope * tEpochMs + offsetMs`; slope stays fixed at 1.0 for
@@ -597,8 +555,6 @@ export class ClockSync extends S.Opaque<ClockSync, { readonly brand: unique symb
 ) {}
 
 /**
- * Provenance payload embedded into every committed artifact.
- *
  * **Details**
  *
  * This is the single schema encoded into each artifact's native metadata
@@ -685,8 +641,6 @@ export class CaptureProvenance extends S.Opaque<CaptureProvenance, { readonly br
 ) {}
 
 /**
- * One committed artifact of a capture round.
- *
  * **Example** (Make gif artifact)
  *
  * ```ts
@@ -746,8 +700,6 @@ export class CaptureArtifact extends S.Opaque<CaptureArtifact, { readonly brand:
 ) {}
 
 /**
- * Canonical `session.json` payload for one capture round.
- *
  * **Example** (Make session manifest)
  *
  * ```ts

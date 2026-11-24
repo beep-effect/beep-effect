@@ -6,22 +6,16 @@
  */
 
 /**
- * Public runner command exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export { resolveBakeMode, runBakeCommandForTesting, runnersCommand } from "./Runners.command.ts";
 /**
- * Public runner error export.
- *
  * @category errors
  * @since 0.0.0
  */
 export { RunnersCommandError } from "./Runners.errors.ts";
 /**
- * Public runner schema exports.
- *
  * @category models
  * @since 0.0.0
  */
@@ -46,8 +40,6 @@ export {
   RUNNER_AMI_PIN_PARAMETER,
 } from "./Runners.schemas.ts";
 /**
- * Public runner service exports.
- *
  * @category services
  * @since 0.0.0
  */
@@ -62,8 +54,6 @@ export {
   writeBakeReportForTesting,
 } from "./Runners.service.ts";
 /**
- * Public runner service type exports.
- *
  * @category type-level
  * @since 0.0.0
  */

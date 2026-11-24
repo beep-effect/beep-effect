@@ -20,8 +20,6 @@ import { PACKAGE_CHECK_GATE_COMMAND, PACKAGE_CHECK_GATE_SCRIPT } from "./CheckGa
 
 const $I = $RepoCliKitId.create("package-scripts/PackageScripts.schemas");
 /**
- * Version selecting the canonical task binding contract.
- *
  * **Example** (Inspect PackageScriptsRuleVersion)
  *
  * ```ts
@@ -39,16 +37,12 @@ export const PackageScriptsRuleVersion = S.Literal("package-scripts-rules/v1").p
   })
 );
 /**
- * Decoded PackageScriptsRuleVersion value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PackageScriptsRuleVersion = typeof PackageScriptsRuleVersion.Type;
 
 /**
- * Workspace classifications selecting task presence.
- *
  * **Example** (Inspect PackageKind)
  *
  * ```ts
@@ -64,16 +58,12 @@ export const PackageKind = LiteralKit(["library", "tool", "ecosystem", "app", "l
   $I.annoteSchema("PackageKind", { description: "Workspace classifications selecting task presence." })
 );
 /**
- * Decoded PackageKind value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PackageKind = typeof PackageKind.Type;
 
 /**
- * Task-facing keys governed by strict bindings.
- *
  * **Example** (Inspect TaskScriptName)
  *
  * ```ts
@@ -104,16 +94,12 @@ export const TaskScriptName = LiteralKit([
   "doctest",
 ]).pipe($I.annoteSchema("TaskScriptName", { description: "Task-facing keys governed by strict bindings." }));
 /**
- * Decoded TaskScriptName value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TaskScriptName = typeof TaskScriptName.Type;
 
 /**
- * Package-owned implementation keys whose values remain free.
- *
  * **Example** (Inspect ImplScriptName)
  *
  * ```ts
@@ -139,16 +125,12 @@ export const ImplScriptName = LiteralKit([
   $I.annoteSchema("ImplScriptName", { description: "Package-owned implementation keys whose values remain free." })
 );
 /**
- * Decoded ImplScriptName value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ImplScriptName = typeof ImplScriptName.Type;
 
 /**
- * Binding from a task to an implementation, CLI command, or package-owned text.
- *
  * **Example** (Inspect TaskScriptBinding)
  *
  * ```ts
@@ -171,8 +153,6 @@ export const TaskScriptBinding = S.TaggedUnion({
   })
 );
 /**
- * Decoded TaskScriptBinding value.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -215,8 +195,6 @@ export const renderTaskScriptBinding = (binding: Exclude<TaskScriptBinding, { re
       );
 
 /**
- * Required, optional, forbidden, or evidence-derived task presence.
- *
  * **Example** (Inspect TaskScriptPresence)
  *
  * ```ts
@@ -239,16 +217,12 @@ export const TaskScriptPresence = S.TaggedUnion({
   })
 );
 /**
- * Decoded TaskScriptPresence value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TaskScriptPresence = typeof TaskScriptPresence.Type;
 
 /**
- * One task binding and presence rule for one workspace kind.
- *
  * **Example** (Inspect TaskScriptRule)
  *
  * ```ts
@@ -266,8 +240,6 @@ export class TaskScriptRule extends S.Opaque<TaskScriptRule, { readonly brand: u
 ) {}
 
 /**
- * Implementation text stamped only when the key is missing.
- *
  * **Example** (Inspect ImplScriptDefault)
  *
  * ```ts
@@ -357,8 +329,6 @@ export const isDeclarationOnlyBuild = (build: string): boolean =>
   A.contains(commandSegments(build), DECLARATION_ONLY_BUILD_COMMAND);
 
 /**
- * Script keys the policy no longer generates; the gate rejects them and `--write` removes them.
- *
  * **Example** (Recognise the retired Babel script)
  *
  * ```ts
@@ -376,16 +346,12 @@ export const RetiredScriptName = LiteralKit(["babel"]).pipe(
   })
 );
 /**
- * Decoded RetiredScriptName value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type RetiredScriptName = typeof RetiredScriptName.Type;
 
 /**
- * Implementation text the policy once generated, with the text `--write` puts in its place.
- *
  * **Details**
  *
  * Implementation values are package-owned, so the policy rewrites one only when
@@ -416,8 +382,6 @@ export class RetiredImplScript extends S.Opaque<RetiredImplScript, { readonly br
 ) {}
 
 /**
- * Reviewed permission for one package's `beep:build` to keep emitting JavaScript.
- *
  * **Details**
  *
  * Generated builds emit declarations only. A package with a real reader of its
@@ -472,9 +436,6 @@ export class JavaScriptBuildOverride extends S.Opaque<JavaScriptBuildOverride, {
 export const OWN_SOURCE_CHECK_COMMAND = "tsrs -p tsconfig.check.json";
 
 /**
- * Leading `beep:check` segment that a package's build program now serves, with
- * the build command `--write` puts in its place.
- *
  * **Details**
  *
  * The rewrite applies to a package whose `beep:build` runs `replacement` as one
@@ -507,9 +468,6 @@ export class RetiredCheckSegment extends S.Opaque<RetiredCheckSegment, { readonl
 ) {}
 
 /**
- * Reviewed permission for one declaration-only package's `beep:check` to keep
- * the no-emit own-source check.
- *
  * **Details**
  *
  * A declaration-only package's check leads with its build program, which
@@ -556,8 +514,6 @@ const ExtraScriptName = S.String.check(
   )
 );
 /**
- * Disjoint task, implementation, and extra tiers of a manifest scripts record.
- *
  * **Example** (Inspect ScriptsBlock)
  *
  * ```ts
@@ -599,8 +555,6 @@ export declare namespace ScriptsBlock {
 }
 
 /**
- * Flat JSON scripts record at the manifest boundary.
- *
  * **Example** (Inspect ScriptsRecord)
  *
  * ```ts
@@ -616,8 +570,6 @@ export const ScriptsRecord = S.Record(S.String, S.String).pipe(
   $I.annoteSchema("ScriptsRecord", { description: "Flat JSON scripts record at the manifest boundary." })
 );
 /**
- * Decoded ScriptsRecord value.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -668,8 +620,6 @@ export const scriptsBlockFromRecord = (kind: PackageKind) =>
   );
 
 /**
- * TypeScript checkers a type-check or build script may invoke; `tsrs` is canonical.
- *
  * **Example** (Inspect TypeScriptChecker)
  *
  * ```ts
@@ -686,16 +636,12 @@ export const TypeScriptChecker = LiteralKit(["tsrs", "tsgo", "tsc"]).pipe(
   })
 );
 /**
- * Decoded TypeScriptChecker value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type TypeScriptChecker = typeof TypeScriptChecker.Type;
 
 /**
- * TypeScript checkers that fail the gate unless a manifest script carries an exemption.
- *
  * **Example** (Inspect NonCanonicalChecker)
  *
  * ```ts
@@ -713,16 +659,12 @@ export const NonCanonicalChecker = TypeScriptChecker.omit(["tsrs"]).pipe(
   })
 );
 /**
- * Decoded NonCanonicalChecker value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type NonCanonicalChecker = typeof NonCanonicalChecker.Type;
 
 /**
- * Script keys whose commands must type-check with `tsrs`: `beep:build`, `beep:check`, `beep:check:*`.
- *
  * **Example** (Inspect CheckerScriptName)
  *
  * ```ts
@@ -740,16 +682,12 @@ export const CheckerScriptName = S.String.check(S.isPattern(/^beep:(?:build|chec
   })
 );
 /**
- * Decoded CheckerScriptName value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CheckerScriptName = typeof CheckerScriptName.Type;
 
 /**
- * Nine actionable deviations from the canonical scripts contract.
- *
  * **Example** (Inspect PackageScriptsDrift)
  *
  * ```ts
@@ -777,8 +715,6 @@ export const PackageScriptsDrift = S.TaggedUnion({
   })
 );
 /**
- * Decoded PackageScriptsDrift value.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -807,8 +743,6 @@ export class ImplScriptDrift extends S.Opaque<ImplScriptDrift, { readonly brand:
 ) {}
 
 /**
- * Reviewed permission for one manifest script to run a non-canonical TypeScript checker.
- *
  * **Details**
  *
  * The package-scripts gate fails a `beep:build`, `beep:check`, or `beep:check:*` script that runs
@@ -860,8 +794,6 @@ export class CheckerEngineExemption extends S.Opaque<CheckerEngineExemption, { r
 export const checkerEngineExemptions: ReadonlyArray<CheckerEngineExemption> = [];
 
 /**
- * Non-negative number of workspace manifests examined.
- *
  * **Example** (Inspect ManifestCount)
  *
  * ```ts
@@ -877,16 +809,12 @@ export const ManifestCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("ManifestCount", { description: "Non-negative number of workspace manifests examined." })
 );
 /**
- * Decoded ManifestCount value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ManifestCount = typeof ManifestCount.Type;
 
 /**
- * JSON report of checked manifests, drift, and written paths.
- *
  * **Example** (Inspect PackageScriptsReportWire)
  *
  * ```ts
@@ -914,8 +842,6 @@ export class PackageScriptsReportWire extends S.Opaque<PackageScriptsReportWire,
 ) {}
 
 /**
- * Collection view of a scripts policy report.
- *
  * **Example** (Inspect PackageScriptsReport)
  *
  * ```ts
@@ -940,8 +866,6 @@ export class PackageScriptsReport extends S.Opaque<PackageScriptsReport, { reado
 ) {}
 
 /**
- * Bidirectional codec between JSON-compatible reports and Effect collections.
- *
  * **Example** (Inspect PackageScriptsReportFromWire)
  *
  * ```ts
@@ -991,16 +915,12 @@ export const PackageScriptsReportFromWire = PackageScriptsReportWire.pipe(
   })
 );
 /**
- * Decoded PackageScriptsReportFromWire value.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PackageScriptsReportFromWire = typeof PackageScriptsReportFromWire.Type;
 
 /**
- * Explicit generator registry independent of current manifest script presence.
- *
  * **Example** (Inspect CodegenGeneratorPackage)
  *
  * ```ts
@@ -1028,8 +948,6 @@ export const CodegenGeneratorPackage = LiteralKit([
   })
 );
 /**
- * Decoded CodegenGeneratorPackage value.
- *
  * @category type-level
  * @since 0.0.0
  */

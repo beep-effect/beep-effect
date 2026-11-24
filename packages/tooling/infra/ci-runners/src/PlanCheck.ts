@@ -41,8 +41,6 @@ export const PlanAction = LiteralKit(["adopted", "create", "delete", "noop", "or
 );
 
 /**
- * Decoded plan action.
- *
  * @category models
  * @since 0.0.0
  */
@@ -118,8 +116,6 @@ export const PlanViolation = S.TaggedUnion({
 }).pipe($I.annoteSchema("PlanViolation", { description: "One reason the pre-deploy gate refuses a plan." }));
 
 /**
- * Decoded violation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -147,8 +143,6 @@ export class PlanReading extends S.Opaque<PlanReading, { readonly brand: unique 
 ) {}
 
 /**
- * The gate refused the plan.
- *
  * **Example** (Construct the refusal)
  *
  * ```ts

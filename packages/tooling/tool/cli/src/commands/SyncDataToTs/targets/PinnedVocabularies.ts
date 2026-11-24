@@ -84,8 +84,6 @@ export const VocabularyDeclaration = S.TaggedUnion({
 );
 
 /**
- * Decoded type of {@link VocabularyDeclaration}.
- *
  * @category models
  * @since 0.0.0
  */

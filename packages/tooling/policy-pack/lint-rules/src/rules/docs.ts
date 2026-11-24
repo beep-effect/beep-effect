@@ -338,13 +338,85 @@ const requireCategoryTag = (context: Context): Visitor =>
       message: `Exported symbol '${A.head(namesOf(node)).pipe(O.getOrElse(() => "exported symbol"))}' must include a @category tag in its JSDoc block.`,
     });
   });
-const requireDescription = (context: Context): Visitor =>
-  declarationVisitor((node) => {
-    if (!exported(node) || Str.includes("/tag-values/")(context.filename)) return;
-    const comments = node.type === "VariableDeclaration" ? commentsBefore(context, node) : docsFor(context, node);
-    if (A.isReadonlyArrayNonEmpty(comments) && !A.some(comments, hasDescription))
-      context.report({ node, message: "Missing JSDoc block description." });
-  });
+const annotationMethodNames = HashSet.make("annote", "annoteSchema", "annoteClass", "annoteError", "annoteHttp");
+const literalText = (node: ESTree.Node | null | undefined): O.Option<string> =>
+  O.flatMap(O.fromNullishOr(node), (value) =>
+    Match.value(value).pipe(
+      Match.discriminators("type")({
+        Literal: (literal) => (P.isString(literal.value) ? O.some(literal.value) : O.none()),
+        TemplateLiteral: (template) =>
+          A.isReadonlyArrayEmpty(template.expressions)
+            ? A.head(template.quasis).pipe(O.flatMap((quasi) => O.fromNullishOr(quasi.value.cooked)))
+            : O.none(),
+      }),
+      Match.orElse(() => O.none())
+    )
+  );
+const propertyKeyText = (key: ESTree.Node): O.Option<string> =>
+  key.type === "Identifier" ? O.some(key.name) : literalText(key);
+const hasDescriptionOption = (options: ESTree.Node | undefined): boolean =>
+  options?.type === "ObjectExpression" &&
+  A.some(
+    options.properties,
+    (property) =>
+      property.type === "Property" &&
+      O.contains(propertyKeyText(property.key), "description") &&
+      O.isSome(literalText(property.value))
+  );
+const isAnnotationMethod = (callee: ESTree.Node): boolean =>
+  callee.type === "MemberExpression" &&
+  !callee.computed &&
+  callee.property.type === "Identifier" &&
+  HashSet.has(annotationMethodNames, callee.property.name);
+const describesName =
+  (call: ESTree.CallExpression) =>
+  (name: string): boolean =>
+    isAnnotationMethod(call.callee) &&
+    O.exists(
+      literalText(call.arguments[0]),
+      (identifier) => identifier === name || Str.endsWith(`/${name}`)(identifier)
+    ) &&
+    hasDescriptionOption(call.arguments[1]);
+const ancestors = (node: ESTree.Node): ReadonlyArray<ESTree.Node> =>
+  O.match(parentOf(node), { onNone: () => [], onSome: (parent) => [parent, ...ancestors(parent)] });
+const enclosingDeclarationNames = (node: ESTree.Node): ReadonlyArray<string> =>
+  A.flatMap(
+    A.filter(
+      ancestors(node),
+      (ancestor) => ancestor.type === "VariableDeclarator" || ancestor.type === "ClassDeclaration"
+    ),
+    declarationNames
+  );
+const enclosingNamespaceNames = (node: ESTree.Node): ReadonlyArray<string> =>
+  A.flatMap(
+    A.filter(ancestors(node), (ancestor) => ancestor.type === "TSModuleDeclaration"),
+    declarationNames
+  );
+const requireDescription = (context: Context): Visitor => {
+  let derivedLeadNames = HashSet.empty<string>();
+  let missing: ReadonlyArray<ESTree.Node> = [];
+  const hasDerivedLead = (node: ESTree.Node): boolean =>
+    A.some([...namesOf(node), ...enclosingNamespaceNames(node)], (name) => HashSet.has(derivedLeadNames, name));
+  return {
+    CallExpression(call) {
+      derivedLeadNames = HashSet.union(
+        derivedLeadNames,
+        HashSet.fromIterable(A.filter(enclosingDeclarationNames(call), describesName(call)))
+      );
+    },
+    ...declarationVisitor((node) => {
+      if (!exported(node) || Str.includes("/tag-values/")(context.filename)) return;
+      const comments = node.type === "VariableDeclaration" ? commentsBefore(context, node) : docsFor(context, node);
+      if (A.isReadonlyArrayNonEmpty(comments) && !A.some(comments, hasDescription)) missing = A.append(missing, node);
+    }),
+    "Program:exit"() {
+      A.forEach(
+        A.filter(missing, (candidate) => !hasDerivedLead(candidate)),
+        (node) => context.report({ node, message: "Missing JSDoc block description." })
+      );
+    },
+  };
+};
 const requireJsdoc = (context: Context): Visitor =>
   publicVisitor((node) => {
     if (!hasPublicDocumentation(context, node)) context.report({ node, message: "Missing JSDoc comment." });

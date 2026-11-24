@@ -86,8 +86,6 @@ export class SkillsCommandError extends S.TaggedError<SkillsCommandError, { read
 }
 
 /**
- * Drift detected while running skills update in check mode.
- *
  * **Example** (Make skills drift error)
  *
  * ```ts
@@ -209,8 +207,6 @@ export class SkillInstallStateError extends S.TaggedError<SkillInstallStateError
 ) {}
 
 /**
- * Why an upstream skill read failed.
- *
  * **Details**
  *
  * `path-absent`: the request succeeded, but the revision has no file under the
@@ -237,8 +233,6 @@ export const SkillUpstreamContentErrorReason = LiteralKit(["unavailable", "path-
 );
 
 /**
- * Why an upstream skill read failed.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts
@@ -294,8 +288,6 @@ export class SkillUpstreamContentError extends S.TaggedError<
 ) {}
 
 /**
- * Why `skills lock-plan --write` refused to write.
- *
  * **Details**
  *
  * `missing-expect`: `--write` ran without `--expect <planDigest>`.
@@ -329,8 +321,6 @@ export const SkillsLockWriteRefusalReason = LiteralKit([
 );
 
 /**
- * Why `skills lock-plan --write` refused to write.
- *
  * **Example** (Annotate a refusal reason)
  *
  * ```ts
@@ -475,8 +465,6 @@ export class SkillFrontmatterError extends S.TaggedError<SkillFrontmatterError, 
 }
 
 /**
- * Why a strict unified-diff apply refused a patch.
- *
  * **Details**
  *
  * `malformed-patch`: the text is not a Git unified diff (bad header, hunk
@@ -516,8 +504,6 @@ export const SkillPatchApplyReason = LiteralKit([
 );
 
 /**
- * Why a strict unified-diff apply refused a patch.
- *
  * **Example** (Annotate an apply reason)
  *
  * ```ts
@@ -860,8 +846,6 @@ export class SkillPatchRefusal extends S.TaggedError<SkillPatchRefusal, { readon
 ) {}
 
 /**
- * Why `skills review` refused to record a decision.
- *
  * **Details**
  *
  * `invalid-decision`: the answer does not fit the item (a classification
@@ -888,8 +872,6 @@ export const SkillReviewRefusalReason = LiteralKit(["invalid-decision", "unknown
 );
 
 /**
- * Why `skills review` refused to record a decision.
- *
  * **Example** (Annotate a refusal reason)
  *
  * ```ts
@@ -943,8 +925,6 @@ export class SkillReviewRefusal extends S.TaggedError<SkillReviewRefusal, { read
 ) {}
 
 /**
- * A skill file or directory publication, or its recovery, failed.
- *
  * **Details**
  *
  * `reason` is set when the refusal has a typed cause (see

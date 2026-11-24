@@ -53,8 +53,6 @@ const $I = $RepoAiMetricsId.create("internal/census-projection");
 // Window
 
 /**
- * Inclusive record-time bounds in epoch milliseconds.
- *
  * @category models
  * @since 0.0.0
  */
@@ -142,8 +140,6 @@ const coreCommand = (command: string): string =>
   );
 
 /**
- * Classified facts about one tool call: no command text.
- *
  * @category models
  * @since 0.0.0
  */
@@ -218,8 +214,6 @@ const isPersistedOutput = (text: string) =>
 // Verification output line classes and offenders
 
 /**
- * Measured line classes, offenders and filter habits of one verification result.
- *
  * @category models
  * @since 0.0.0
  */
@@ -340,8 +334,6 @@ const verificationFacts = (
   );
 
 /**
- * Measured facts about one tool result: sizes and classes, no text.
- *
  * @category models
  * @since 0.0.0
  */
@@ -382,8 +374,6 @@ const resultFacts = (
 // Turn accounting (Claude)
 
 /**
- * What one tool call did in its turn.
- *
  * @category models
  * @since 0.0.0
  */
@@ -501,8 +491,6 @@ const stringOf = (value: unknown): string => (P.isString(value) ? value : "");
 const countOf = (value: unknown): number => (P.isNumber(value) && Number.isFinite(value) && value > 0 ? value : 0);
 
 /**
- * Token usage of one Claude API call.
- *
  * @category models
  * @since 0.0.0
  */
@@ -530,8 +518,6 @@ const usageOf = (value: unknown): O.Option<UsageFacts> =>
   );
 
 /**
- * One Claude API call record: its message, usage, and the turn facts of its tool calls.
- *
  * @category models
  * @since 0.0.0
  */
@@ -548,8 +534,6 @@ export class AssistantFacts extends S.Opaque<AssistantFacts, { readonly brand: u
 ) {}
 
 /**
- * One entry of a Claude user record: a text block or a tool result.
- *
  * @category models
  * @since 0.0.0
  */
@@ -558,16 +542,12 @@ export const UserEntry = S.Union([S.TaggedStruct("Text", {}), S.TaggedStruct("Re
 );
 
 /**
- * Type of {@link UserEntry}.
- *
  * @category models
  * @since 0.0.0
  */
 export type UserEntry = typeof UserEntry.Type;
 
 /**
- * The facts one Claude record contributes.
- *
  * **Details**
  *
  * `marker` is `boundary` for a compaction boundary record (which contributes nothing else) and
@@ -751,8 +731,6 @@ const encodeJson = S.encodeUnknownOption(S.fromJsonString(S.Unknown));
 const jsonText = (value: unknown): string => O.getOrElse(encodeJson(value), thunkEmptyStr);
 
 /**
- * Cumulative token usage of one Codex session.
- *
  * @category models
  * @since 0.0.0
  */
@@ -850,8 +828,6 @@ const tokenFacts = (info: unknown): O.Option<CodexTokenFacts> =>
   );
 
 /**
- * Inputs of a Codex projector.
- *
  * @category models
  * @since 0.0.0
  */

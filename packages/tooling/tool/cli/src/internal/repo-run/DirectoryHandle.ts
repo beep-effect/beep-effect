@@ -150,9 +150,6 @@ const closeQuietly = (fd: number): Effect.Effect<void> =>
   Effect.ignore(attempt("close", heldPath(fd), () => nodeFs().closeSync(fd)));
 
 /**
- * Device and inode numbers naming one directory independently of every path
- * that reaches it.
- *
  * **Example** (Compare two identities)
  *
  * ```ts
@@ -232,9 +229,6 @@ export const directoryIdentity = (info: FileSystem.File.Info): O.Option<Director
   O.map(info.ino, (ino) => DirectoryIdentity.make({ dev: Number(info.dev), ino: Number(ino) }));
 
 /**
- * An open descriptor on a directory together with the identity it was bound to
- * when opened. It is valid only inside the scope that opened it.
- *
  * **Example** (Construct a handle value)
  *
  * ```ts
@@ -322,8 +316,6 @@ const emptyHeldDirectory: (fd: number) => Effect.Effect<void, DirectoryHandleErr
 });
 
 /**
- * Outcome of a removal bound to an inode.
- *
  * **Example** (Recognize a completed removal)
  *
  * ```ts
@@ -343,8 +335,6 @@ export const BoundRemovalOutcome = LiteralKit(["removed", "identity-changed", "r
 );
 
 /**
- * Outcome family of the inode-bound removals.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -480,8 +470,6 @@ export const unlinkBoundFile = Effect.fnUntraced(function* (
 });
 
 /**
- * Outcomes of an inode-bound archive move, including durability and destination refusals.
- *
  * **Example** (Recognize a durable move)
  *
  * ```ts
@@ -505,8 +493,6 @@ export const BoundMoveOutcome = LiteralKit([
 );
 
 /**
- * Outcome family of inode-bound archive moves.
- *
  * @category type-level
  * @since 0.0.0
  */

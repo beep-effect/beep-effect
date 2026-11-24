@@ -211,8 +211,6 @@ export class CorpusDuplicateSetRecord extends S.Opaque<CorpusDuplicateSetRecord,
 export const encodeCorpusDuplicateSetReportJson = JsonStringCodec(CorpusDuplicateSetRecord.pipe(S.Array)).encode;
 
 /**
- * Validated options used by `corpus catalog`.
- *
  * **Example** (Make catalog options)
  *
  * ```ts
@@ -236,8 +234,6 @@ export class CorpusCatalogOptions extends S.Opaque<CorpusCatalogOptions, { reado
 ) {}
 
 /**
- * Per-run counts included in the corpus catalog summary.
- *
  * **Example** (Make run summary counts)
  *
  * ```ts
@@ -271,8 +267,6 @@ export class CorpusCatalogRunSummary extends S.Opaque<CorpusCatalogRunSummary, {
 ) {}
 
 /**
- * Summary counts returned by `corpus catalog`.
- *
  * **Example** (Make catalog summary)
  *
  * ```ts

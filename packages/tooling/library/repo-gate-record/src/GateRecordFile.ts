@@ -46,8 +46,6 @@ export const GateRecordFile = S.fromJsonString(GateRecord, { space: 2 }).pipe(
 );
 
 /**
- * Writing a record or a raw log failed.
- *
  * **Example** (Build the error)
  *
  * ```ts
@@ -96,8 +94,6 @@ export const RecordReadFailure = LiteralKit(["missing", "unreadable", "invalid"]
 );
 
 /**
- * Type of {@link RecordReadFailure}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -155,8 +151,6 @@ export const RecordProvenance = LiteralKit(["fresh", "replay"]).pipe(
 );
 
 /**
- * Type of {@link RecordProvenance}.
- *
  * @category models
  * @since 0.0.0
  */

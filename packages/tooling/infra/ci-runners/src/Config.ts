@@ -24,8 +24,6 @@ import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 const $I = $InfraCiRunnersId.create("Config");
 
 /**
- * The region the fleet runs in.
- *
  * **Example** (Read the pinned region)
  *
  * ```ts
@@ -42,8 +40,6 @@ export const FleetRegion = LiteralKit(["us-east-1"]).pipe(
 );
 
 /**
- * Decoded region.
- *
  * @category models
  * @since 0.0.0
  */
@@ -82,8 +78,6 @@ export const RunnerInstanceType = LiteralKit([
 ]).pipe($I.annoteSchema("RunnerInstanceType", { description: "An EC2 instance type a runner pool may launch." }));
 
 /**
- * Decoded instance type.
- *
  * @category models
  * @since 0.0.0
  */
@@ -142,16 +136,12 @@ export const FleetPhase = LiteralKit(["overlap", "primary"]).pipe(
 );
 
 /**
- * Decoded phase.
- *
  * @category models
  * @since 0.0.0
  */
 export type FleetPhase = typeof FleetPhase.Type;
 
 /**
- * The two pools of the fleet.
- *
  * **Example** (Read the pool names)
  *
  * ```ts
@@ -168,8 +158,6 @@ export const PoolName = LiteralKit(["heavy", "overflow"]).pipe(
 );
 
 /**
- * Decoded pool name.
- *
  * @category models
  * @since 0.0.0
  */
@@ -317,8 +305,6 @@ export class NetworkSettings extends S.Opaque<NetworkSettings, { readonly brand:
 ) {}
 
 /**
- * The runner image and its root disk.
- *
  * **Details**
  *
  * `amiId` is the baked Amazon Linux 2023 image `beep runners bake` last
@@ -503,8 +489,6 @@ export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number 
   FleetPhase.match(config.phase, { overlap: () => config.liveFleetReserveVcpu, primary: () => 0 });
 
 /**
- * Configuration of one stage of the `CiRunners` stack.
- *
  * **Details**
  *
  * Every field is tracked source. App credentials are not here; see
@@ -558,8 +542,6 @@ export class CiRunnersConfig extends S.Opaque<CiRunnersConfig, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link CiRunnersConfig}.
- *
  * @category configuration
  * @since 0.0.0
  */

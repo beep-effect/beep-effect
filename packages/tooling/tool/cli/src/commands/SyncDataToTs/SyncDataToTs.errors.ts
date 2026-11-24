@@ -77,8 +77,6 @@ export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError, { readon
 }
 
 /**
- * Drift detected in check mode.
- *
  * **Example** (Make sync drift error)
  *
  * ```ts

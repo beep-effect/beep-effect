@@ -62,8 +62,6 @@ export const RefusedChange = LiteralKit(["create", "replace", "delete"]).pipe(
 );
 
 /**
- * Decoded refused change.
- *
  * @category models
  * @since 0.0.0
  */

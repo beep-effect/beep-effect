@@ -41,8 +41,6 @@ export const CacheConformanceDimension = LiteralKit([
   })
 );
 /**
- * One conformance verdict dimension.
- *
  * @category models
  * @since 0.0.0
  */
@@ -105,8 +103,6 @@ export const CacheConformanceCaseClass = LiteralKit([
   })
 );
 /**
- * Plan class of one corpus case.
- *
  * @category models
  * @since 0.0.0
  */
@@ -137,16 +133,12 @@ export const CacheConformanceOperationId = LiteralKit([
   })
 );
 /**
- * OpenAPI operationId of one Remote Cache route.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheConformanceOperationId = typeof CacheConformanceOperationId.Type;
 
 /**
- * HTTP methods used by the Remote Cache surface.
- *
  * **Example** (Accept an upload method)
  * ```ts
  * import { CacheConformanceMethod } from "@beep/repo-cli/commands/Cache"
@@ -160,8 +152,6 @@ export const CacheConformanceMethod = LiteralKit(["GET", "HEAD", "PUT", "POST"])
   $I.annoteSchema("CacheConformanceMethod", { description: "HTTP method of one Remote Cache exchange." })
 );
 /**
- * HTTP method of one Remote Cache exchange.
- *
  * @category models
  * @since 0.0.0
  */
@@ -190,8 +180,6 @@ export const CacheConformanceRoute = LiteralKit([
   })
 );
 /**
- * Mounted Remote Cache route template.
- *
  * @category models
  * @since 0.0.0
  */
@@ -252,8 +240,6 @@ export class CacheConformanceOperation extends S.Opaque<CacheConformanceOperatio
 ) {}
 
 /**
- * Corpus case identifier `RC-NNN` from the conformance plan.
- *
  * **Example** (Accept a plan case id)
  * ```ts
  * import { CacheConformanceCaseId } from "@beep/repo-cli/commands/Cache"
@@ -268,16 +254,12 @@ export const CacheConformanceCaseId = S.String.check(S.isPattern(/^RC-\d{3}$/)).
   $I.annoteSchema("CacheConformanceCaseId", { description: "Plan case identifier RC-NNN." })
 );
 /**
- * Plan case identifier RC-NNN.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheConformanceCaseId = typeof CacheConformanceCaseId.Type;
 
 /**
- * Whether a case is generated from the OpenAPI blob or hand-authored.
- *
  * **Example** (Read a generated origin)
  * ```ts
  * import { CacheConformanceOrigin } from "@beep/repo-cli/commands/Cache"
@@ -374,8 +356,6 @@ export class CacheConformanceCorpus extends S.Opaque<CacheConformanceCorpus, { r
 ) {}
 
 /**
- * Verdict literals for one (case, dimension) pair.
- *
  * **Example** (Recognise a non-execution)
  * ```ts
  * import { CacheConformanceVerdictKind } from "@beep/repo-cli/commands/Cache"
@@ -397,16 +377,12 @@ export const CacheConformanceVerdictKind = LiteralKit([
   })
 );
 /**
- * Verdict literal for one (case, dimension) pair.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheConformanceVerdictKind = typeof CacheConformanceVerdictKind.Type;
 
 /**
- * Verdict with its expectation id or reason.
- *
  * **Example** (Decode a failed expectation)
  * ```ts
  * import { CacheConformanceVerdict } from "@beep/repo-cli/commands/Cache"
@@ -429,8 +405,6 @@ export const CacheConformanceVerdict = CacheConformanceVerdictKind.toTaggedUnion
   })
 );
 /**
- * Verdict for one (case, dimension) pair.
- *
  * @category models
  * @since 0.0.0
  */
@@ -512,8 +486,6 @@ export const CacheConformanceTopology = LiteralKit([
   "owned-fixture",
 ]).pipe($I.annoteSchema("CacheConformanceTopology", { description: "Named backend topology under test." }));
 /**
- * Named backend topology under test.
- *
  * @category models
  * @since 0.0.0
  */
@@ -538,8 +510,6 @@ export const CacheConformanceEnvName = S.String.check(S.isPattern(/^[A-Z_][A-Z0-
   })
 );
 /**
- * Environment variable name holding a bearer.
- *
  * @category models
  * @since 0.0.0
  */
@@ -619,8 +589,6 @@ export class CacheConformanceBearers extends S.Opaque<CacheConformanceBearers, {
 ) {}
 
 /**
- * Credential presented by one exchange.
- *
  * **Example** (Name a missing bearer)
  * ```ts
  * import { CacheConformanceCredentialRole } from "@beep/repo-cli/commands/Cache"
@@ -643,8 +611,6 @@ export const CacheConformanceCredentialRole = LiteralKit([
   })
 );
 /**
- * Credential class presented by one exchange.
- *
  * @category models
  * @since 0.0.0
  */
@@ -678,8 +644,6 @@ export const CacheConformanceSelectorShape = LiteralKit([
   })
 );
 /**
- * Namespace selector shape.
- *
  * @category models
  * @since 0.0.0
  */
@@ -711,8 +675,6 @@ export const CacheConformanceHashShape = LiteralKit([
   })
 );
 /**
- * Artifact hash segment shape.
- *
  * @category models
  * @since 0.0.0
  */
@@ -795,8 +757,6 @@ export const CacheConformanceBackendResult = LiteralKit([
   })
 );
 /**
- * A bounded adapter-result observation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1052,8 +1012,6 @@ export class CacheConformanceCaseResult extends S.Opaque<
 ) {}
 
 /**
- * Verdict counts for one dimension.
- *
  * **Example** (Inspect summary counts)
  * ```ts
  * import { CacheConformanceVerdictCounts } from "@beep/repo-cli/commands/Cache"

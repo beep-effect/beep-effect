@@ -7,8 +7,6 @@
  */
 
 /**
- * Command definitions for corpus curation.
- *
  * @category commands
  * @since 0.0.0
  */
@@ -28,8 +26,6 @@ export * from "./Corpus.errors.ts";
  */
 export * from "./Corpus.recyclebin.ts";
 /**
- * Schema models for corpus curation.
- *
  * @category schemas
  * @since 0.0.0
  */

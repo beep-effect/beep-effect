@@ -296,8 +296,6 @@ export class TsMorphUnsupportedFileError extends S.TaggedError<
 ) {}
 
 /**
- * Tagged union of all recoverable service errors emitted by `TSMorphService`.
- *
  * **Example** (Access service error identifier)
  *
  * ```ts
@@ -324,8 +322,6 @@ export const TSMorphServiceError = S.Union([
 );
 
 /**
- * Tagged union type for all ts-morph service errors.
- *
  * **Example** (Import error union type)
  *
  * ```ts

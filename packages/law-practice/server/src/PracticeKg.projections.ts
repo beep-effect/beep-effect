@@ -102,21 +102,6 @@ const decodeCatalogRows = S.decodeUnknownEffect(S.Array(PracticeKgCatalogRow));
 const decodeEnrichmentRows = S.decodeUnknownEffect(S.Array(PracticeKgEnrichmentRow));
 const decodeReconciliationRows = S.decodeUnknownEffect(S.Array(GraphReconciliationRow));
 
-/*
- * `$1` is the folded-in run labels joined by `runListSeparator`.
- *
- * A run is optional when it holds at least one file the organizer never saw
- * (a digest with no `corpus_organized` row). An optional run that is not
- * included is skipped whole, so its copies of organized files do not change
- * those files' size, date, or origin chain. An included run adds each of its
- * unorganized files once, flagged `runFolded`.
- *
- * An organized file reports the run, size, and date of the organizer's copy.
- * When an included run holds the same file, that copy is ranked after every
- * copy from a run that is not included, so it never takes the row over; it is
- * the reported copy only when no other exists. The origin chain still lists
- * every run and path, and is the relation to read for "which runs hold this".
- */
 const catalogRowsSql = `
 WITH included_runs AS (
   SELECT UNNEST(string_split($1, '${runListSeparator}')) AS run_label
@@ -212,7 +197,7 @@ SELECT
 FROM corpus_enrichment
 ORDER BY candidate`;
 
-// Base digests are those of the runs the organizer covered in full; see `catalogRowsSql`.
+// decision: base-digests-count-runs-the-organizer-covered-in-full
 const reconciliationSql = `
 WITH optional_runs AS (
   SELECT DISTINCT f.run_label
@@ -232,14 +217,7 @@ SELECT
     AS "familyAnchors",
   COALESCE((SELECT MAX(mtime_iso) FROM corpus_source_files), '1970-01-01T00:00:00.000Z') AS "snapshotIso"`;
 
-/*
- * Raw DDL, not drizzle-kit migrations: the bundle PGlite store is disposable
- * and rebuilt whole on every run through the injected SqlClient, so there is
- * no migration history to manage. The Drizzle declarations in
- * `@beep/law-practice-tables` remain the schema authority; the projections
- * test asserts column-set equality between this DDL and those declarations
- * (ExecutionRecord.table.ts precedent: invariant by test, not comment).
- */
+// decision: bundle-kg-store-raw-ddl-not-migrations
 const createKgTables = [
   `CREATE TABLE ${KG_NODE_TABLE_NAME} (
   iri TEXT PRIMARY KEY,
@@ -300,8 +278,9 @@ const readCatalog = Effect.fn("PracticeKg.readCatalog")(function* (
 ) {
   return yield* Effect.gen(function* () {
     const db = yield* DuckDb;
+    const foldedInRunLabelsParam = A.join(includedRuns, runListSeparator);
     const catalogRows = yield* db
-      .query(catalogRowsSql, [A.join(includedRuns, runListSeparator)])
+      .query(catalogRowsSql, [foldedInRunLabelsParam])
       .pipe(
         Effect.flatMap(decodeCatalogRows),
         PracticeKgProjectionError.mapError("Graph catalog rows failed schema validation.")
@@ -383,21 +362,18 @@ const recycledStatus = (attribution: PracticeKgDocumentAttribution): PracticeKgE
 
 type GraphSink = {
   readonly addEdge: (edge: PracticeKgEdgeRow) => void;
-  /** The docket register's name for a client number, or the number itself. */
-  readonly clientLabel: (client: string) => string;
-  /** First write wins: spine nodes are minted once per key, stubs never replace a node. */
-  readonly addNode: (node: PracticeKgNodeRow) => void;
-  /** Whether at least one non-recycled document backs this spine key. */
-  readonly isVerified: (kind: "client" | "docket" | "family", key: string) => boolean;
-  /** Last write wins: an anchor's own record replaces a parent stub minted earlier. */
-  readonly putNode: (node: PracticeKgNodeRow) => void;
+  readonly registerNameElseClientNumber: (client: string) => string;
+  readonly addNodeFirstWriteWins: (node: PracticeKgNodeRow) => void;
+  readonly isBackedByNonRecycledDocument: (kind: "client" | "docket" | "family", key: string) => boolean;
+  readonly putAnchorsOwnRecordOverEarlierParentStub: (node: PracticeKgNodeRow) => void;
 };
 
 const spineStatus = (
   sink: GraphSink,
   kind: "client" | "docket" | "family",
   key: string
-): PracticeKgEpistemicStatus | undefined => (sink.isVerified(kind, key) ? undefined : "recycled-unverified");
+): PracticeKgEpistemicStatus | undefined =>
+  sink.isBackedByNonRecycledDocument(kind, key) ? undefined : "recycled-unverified";
 
 const projectDocumentNode = (
   sink: GraphSink,
@@ -405,7 +381,7 @@ const projectDocumentNode = (
   attribution: PracticeKgDocumentAttribution
 ) => {
   const status = recycledStatus(attribution);
-  sink.addNode(
+  sink.addNodeFirstWriteWins(
     createNode("document", row.digest, row.effectiveName, "catalog-digest", row.digest, attribution.attributionSource, {
       client: attribution.client,
       docketFamily: attribution.family,
@@ -419,7 +395,7 @@ const projectDocumentNode = (
     })
   );
   if (row.category === "email-archive") {
-    sink.addNode(
+    sink.addNodeFirstWriteWins(
       createNode("email_archive", row.digest, row.effectiveName, "catalog-digest", row.digest, "filename", {
         client: attribution.client,
         docketFamily: attribution.family,
@@ -434,7 +410,7 @@ const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
     return;
   }
   const status = recycledStatus(attribution);
-  sink.addNode(
+  sink.addNodeFirstWriteWins(
     createNode(
       "docket_family",
       familyKey,
@@ -464,7 +440,7 @@ const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
     );
     return;
   }
-  sink.addNode(
+  sink.addNodeFirstWriteWins(
     createNode("docket", docketKey, docketKey, "organize-row", row.sourceRelativePath, attribution.attributionSource, {
       client,
       docketFamily: family,
@@ -484,11 +460,11 @@ const projectClientSpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
   }
   const [provenanceKind, provenanceRef]: readonly [PracticeKgProvenanceKind, string] =
     attribution.attributionSource === "client-map" ? ["organize-row", row.sourceLabel] : ["catalog-digest", row.digest];
-  sink.addNode(
+  sink.addNodeFirstWriteWins(
     createNode(
       "client",
       client,
-      sink.clientLabel(client),
+      sink.registerNameElseClientNumber(client),
       provenanceKind,
       provenanceRef,
       attribution.attributionSource,
@@ -523,7 +499,7 @@ const projectApplicationNode = (
   placement: AnchorPlacement
 ) => {
   const { anchor } = resolution;
-  sink.putNode(
+  sink.putAnchorsOwnRecordOverEarlierParentStub(
     createNode(
       "application",
       application,
@@ -545,7 +521,9 @@ const projectApplicationNode = (
     )
   );
   A.forEach(anchor.parentApplicationNumbers, (parent) => {
-    sink.addNode(createNode("application", parent, parent, "uspto-anchor", application, "official-record"));
+    sink.addNodeFirstWriteWins(
+      createNode("application", parent, parent, "uspto-anchor", application, "official-record")
+    );
     sink.addEdge(
       createEdge("application", application, "continuation_of", "application", parent, "uspto-anchor", application)
     );
@@ -561,7 +539,7 @@ const projectPatentNode = (
   const { anchor } = resolution;
   const attributionSource: KgAttributionSource =
     anchor.applicationNumber === null ? resolution.attributionSource : "official-record";
-  sink.putNode(
+  sink.putAnchorsOwnRecordOverEarlierParentStub(
     createNode("patent", patent, anchor.inventionTitle ?? patent, "uspto-anchor", patent, attributionSource, {
       client: placement.client,
       docketFamily: placement.docketFamily,
@@ -651,14 +629,7 @@ const projectArchiveLinks = (
   });
 };
 
-/*
- * Family, docket, and client nodes are minted from the attributed catalog rows
- * only. Enrichment never creates a family: the `docket_families` fan-out it
- * carries is mention-derived (prior-art citations included), which is the
- * cartesian defect the first gauntlet surfaced. Anchors join the spine through
- * `files_as` only when their number resolves to exactly one keyed family, and
- * otherwise hang off the families that mention them.
- */
+// decision: spine-minted-from-attributed-catalog-rows-only
 const buildGraphRows = (
   catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
   attributions: ReadonlyArray<PracticeKgDocumentAttribution>,
@@ -689,14 +660,14 @@ const buildGraphRows = (
     addEdge: (edge) => {
       MutableHashMap.set(edges, edgeKey(edge), edge);
     },
-    clientLabel: (client) => O.getOrElse(clientNameOf(client), () => client),
-    addNode: (node) => {
+    registerNameElseClientNumber: (client) => O.getOrElse(clientNameOf(client), () => client),
+    addNodeFirstWriteWins: (node) => {
       if (!MutableHashMap.has(nodes, node.iri)) {
         MutableHashMap.set(nodes, node.iri, node);
       }
     },
-    isVerified: (kind, key) => HashSet.has(verifiedKeys, `${kind}:${key}`),
-    putNode: (node) => {
+    isBackedByNonRecycledDocument: (kind, key) => HashSet.has(verifiedKeys, `${kind}:${key}`),
+    putAnchorsOwnRecordOverEarlierParentStub: (node) => {
       MutableHashMap.set(nodes, node.iri, node);
     },
   };
@@ -711,12 +682,10 @@ const buildGraphRows = (
     row,
   }));
   A.forEach(attributed, ({ attribution, row }) => projectDocumentNode(sink, row, attribution));
-  // Spine nodes are first-write-wins, so verified documents go first: a shared
-  // family or docket takes its attribution source from a live file whenever one
-  // exists, and from a recycle stub only when nothing else backs it.
   const verified = A.filter(attributed, ({ attribution }) => !attribution.recycled);
   const recycled = A.filter(attributed, ({ attribution }) => attribution.recycled);
-  A.forEach(A.appendAll(verified, recycled), ({ attribution, row }) => {
+  const liveFilesBeforeRecycleStubsSoFirstWriteWinsTakesLiveSource = A.appendAll(verified, recycled);
+  A.forEach(liveFilesBeforeRecycleStubsSoFirstWriteWinsTakesLiveSource, ({ attribution, row }) => {
     projectFamilySpine(sink, row, attribution);
     projectClientSpine(sink, row, attribution);
   });
@@ -948,25 +917,27 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   const contacts = yield* readContactRows(options);
   const catalog = yield* readCatalog(catalogPath, includedRuns);
   const { enrichmentRows, reconciliation } = catalog;
-  // Folder-path evidence goes in before the DuckDB store is written, so the
-  // reference scans read a working file under the docket its folder names.
-  const catalogRows = applyPracticeKgPathEvidence(catalog.catalogRows);
+  const catalogRowsFiledUnderFolderDocketBeforeDuckDbWrite = applyPracticeKgPathEvidence(catalog.catalogRows);
   const sourceSpecs = yield* existingSourceSpecs(options.corpusRoot, includedRuns);
   const emailRows = options.skipEmails
     ? A.empty<PracticeKgEmailHeaderRow>()
     : yield* readEmailRows(path.join(options.corpusRoot, "staging", "extract", "children"));
   const duckDbPath = path.join(bundleOut, "practice.duckdb");
   const { duckCounts, graph } = yield* Effect.gen(function* () {
-    const duckCounts = yield* buildDuckDb(catalogRows, enrichmentRows, emailRows, sourceSpecs, options.maxTextBytes);
+    const duckCounts = yield* buildDuckDb(
+      catalogRowsFiledUnderFolderDocketBeforeDuckDbWrite,
+      enrichmentRows,
+      emailRows,
+      sourceSpecs,
+      options.maxTextBytes
+    );
     const scans = yield* readReferenceScans();
-    const graph = projectGraph(catalogRows, enrichmentRows, scans, registerRows);
+    const graph = projectGraph(catalogRowsFiledUnderFolderDocketBeforeDuckDbWrite, enrichmentRows, scans, registerRows);
     const matterTables = buildMatterTables(
       PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows })
     );
     yield* writeMatterTables(matterTables);
     const messages = yield* readPracticeKgEmailMessages(PracticeKgEmailMessagesInput.make({ sourceSpecs }));
-    // Archive mail joins by the docket references in its subjects (D-26),
-    // resolved against the matter tables just written.
     const mailIndex = yield* readPracticeKgMailIndex(
       PracticeKgMailIndexInput.make({ paths: options.mailIndexPaths, tables: matterTables })
     );

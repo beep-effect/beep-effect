@@ -53,8 +53,6 @@ export const UnitTimingOutcome = LiteralKit(["passed", "failed", "missing", "unr
 );
 
 /**
- * Type of {@link UnitTimingOutcome}.
- *
  * @category models
  * @since 0.0.0
  */

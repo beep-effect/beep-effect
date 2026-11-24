@@ -34,8 +34,6 @@ const $I = $RepoCliId.create("commands/Ci/CiLanePartitions");
 export const CI_LANE_PARTITION_TABLE_PATH = "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts";
 
 /**
- * CI lanes that support deterministic package partitions.
- *
  * **Example** (Recognize a partitioned lane)
  *
  * ```ts
@@ -54,8 +52,6 @@ export const PartitionedCiLane = LiteralKit(["lint", "test-unit", "test-integrat
 );
 
 /**
- * CI lane that supports deterministic package partitions.
- *
  * **Example** (Type a partitioned lane)
  *
  * ```ts
@@ -71,8 +67,6 @@ export const PartitionedCiLane = LiteralKit(["lint", "test-unit", "test-integrat
 export type PartitionedCiLane = typeof PartitionedCiLane.Type;
 
 /**
- * Stable identifiers for the hosted lint, unit-test and integration-test partitions.
- *
  * **Details**
  *
  * `repo-cli-1` to `repo-cli-9` and `law-practice-1` to `law-practice-8` are
@@ -147,8 +141,6 @@ export const CiLanePartitionId = LiteralKit([
 );
 
 /**
- * Stable identifier for one hosted CI lane partition.
- *
  * **Example** (Type a unit partition)
  *
  * ```ts
@@ -164,8 +156,6 @@ export const CiLanePartitionId = LiteralKit([
 export type CiLanePartitionId = typeof CiLanePartitionId.Type;
 
 /**
- * Vitest `--shard=<index>/<total>` slice carried by one CI lane partition.
- *
  * **Details**
  *
  * Vitest hashes each spec path and slices the sorted list into `total`
@@ -208,8 +198,6 @@ export class CiLanePartitionShard extends S.Opaque<CiLanePartitionShard, { reado
 ) {}
 
 /**
- * Schema-backed assignment and measured weight for one CI lane partition.
- *
  * **Details**
  *
  * A partition that carries `shard` runs a Vitest slice of its single package

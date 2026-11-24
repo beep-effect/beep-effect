@@ -62,7 +62,6 @@ export const HookPulseNamespaceRegime = LiteralKit(["library-default"]).pipe(
   })
 );
 /**
- * Decoded HookPulseNamespaceRegime value.
  * @category models
  * @since 0.0.0
  */
@@ -94,7 +93,6 @@ export const HookPulseNamespaceSource = LiteralKit([
   })
 );
 /**
- * Decoded HookPulseNamespaceSource value.
  * @category models
  * @since 0.0.0
  */

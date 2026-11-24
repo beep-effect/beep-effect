@@ -121,7 +121,6 @@ class PracticeAddressRow extends S.Opaque<PracticeAddressRow, { readonly brand: 
   )
 ) {}
 
-// The same columns the correspondent lookup reads for one address, for every address at once.
 const contactsSql = `
 SELECT address, contact_id AS "contactId", display_name AS "displayName", organization,
   role_address AS "roleAddress", is_practice_address AS "isPracticeAddress"
@@ -149,9 +148,6 @@ type AddressTables = {
   readonly matterKeys: HashSet.HashSet<string>;
 };
 
-// Every table is keyed by the normalized address, as the bundle lookup normalizes a queried address before it
-// reads the rows: a differently cased or quoted copy of one address is one address, and a row whose address
-// is not a mail address is no address at all.
 const keyedRow = <Row extends { readonly address: string }>(row: Row): O.Option<readonly [EmailString, Row]> =>
   O.map(mailAddressOf(row.address), (address) => [address, row] as const);
 
@@ -166,10 +162,9 @@ const byNormalizedAddress = <Row extends { readonly address: string }>(
 const normalizedAddresses = (rows: ReadonlyArray<{ readonly address: string }>): ReadonlyArray<EmailString> =>
   A.getSomes(A.map(rows, (row) => mailAddressOf(row.address)));
 
-// One contact that lists two spellings of an address is one owner, and its links are one set of links: the
-// bundle builder trims and lowercases a contact's addresses but keeps their quotes, so the same contact can
-// hold two `contact_addresses` rows that normalize to one address.
-const oneOwnerEach = (rows: ReadonlyArray<AddressContactRow>): ReadonlyArray<AddressContactRow> =>
+const oneOwnerPerContactAcrossQuotedSpellings = (
+  rows: ReadonlyArray<AddressContactRow>
+): ReadonlyArray<AddressContactRow> =>
   A.map(
     A.dedupeWith(rows, (left, right) => left.contactId === right.contactId),
     (owner) =>
@@ -193,10 +188,7 @@ const oneLinkEach = (rows: ReadonlyArray<AddressLinkRow>): ReadonlyArray<Address
 
 const domainOf = (address: EmailString): string => A.lastNonEmpty(Str.split("@")(address));
 
-// The builder marks an address as the practice's own by its domain, after trimming and lowercasing only, so
-// a quoted spelling of a practice address can reach the bundle unflagged. The guard therefore also holds the
-// domains of the flagged addresses and applies the builder's rule to the normalized address.
-const isPracticeAddress = (tables: AddressTables, address: EmailString): boolean => {
+const isPracticeAddressOrOnFlaggedPracticeDomain = (tables: AddressTables, address: EmailString): boolean => {
   const domain = domainOf(address);
   return (
     HashSet.has(tables.practiceAddresses, address) ||
@@ -207,9 +199,8 @@ const isPracticeAddress = (tables: AddressTables, address: EmailString): boolean
 const rowsAt = <Row>(byAddress: Record<string, ReadonlyArray<Row>>, address: string): ReadonlyArray<Row> =>
   O.getOrElse(R.get(byAddress, address), (): ReadonlyArray<Row> => []);
 
-// Message-count candidates only separate `ambiguous` from `none`; a unique answer never reads them.
 const evidenceAt = (tables: AddressTables, address: EmailString): PracticeKgCorrespondentEvidence => {
-  const owners = oneOwnerEach(rowsAt(tables.contacts, address));
+  const owners = oneOwnerPerContactAcrossQuotedSpellings(rowsAt(tables.contacts, address));
   const links = A.map(oneLinkEach(rowsAt(tables.links, address)), (row) => PracticeKgCorrespondentLink.make(row));
   return PracticeKgCorrespondentEvidence.make({
     candidates: [],
@@ -220,7 +211,8 @@ const evidenceAt = (tables: AddressTables, address: EmailString): PracticeKgCorr
         HashSet.has(tables.matterKeys, familyKey)
       )
     ),
-    practiceAddress: A.some(owners, (row) => row.isPracticeAddress) || isPracticeAddress(tables, address),
+    practiceAddress:
+      A.some(owners, (row) => row.isPracticeAddress) || isPracticeAddressOrOnFlaggedPracticeDomain(tables, address),
   });
 };
 

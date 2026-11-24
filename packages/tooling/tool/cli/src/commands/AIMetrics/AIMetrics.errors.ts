@@ -27,8 +27,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
 
 /**
- * Error raised by the AI metrics CLI.
- *
  * **Example** (Create metrics command error)
  *
  * ```ts
@@ -58,8 +56,6 @@ export class AiMetricsCommandError extends S.TaggedError<AiMetricsCommandError, 
 ) {}
 
 /**
- * Silent non-zero status used after the status command has already rendered output.
- *
  * **Example** (Create status exit error)
  *
  * ```ts
@@ -95,8 +91,6 @@ export class AiMetricsStatusExit extends S.TaggedError<AiMetricsStatusExit, { re
 }
 
 /**
- * Unified typed failure channel for AI metrics command programs.
- *
  * **Example** (Validate program error schema)
  *
  * ```ts
@@ -132,8 +126,6 @@ export const AiMetricsProgramError = S.Union([
 );
 
 /**
- * Unified typed failure channel for AI metrics command programs.
- *
  * **Example** (Type program error variable)
  *
  * ```ts

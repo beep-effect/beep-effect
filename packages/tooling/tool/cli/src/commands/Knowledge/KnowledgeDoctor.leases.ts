@@ -124,8 +124,6 @@ export const KNOWLEDGE_LEASES_PER_DOCUMENT = 2;
 export const KNOWLEDGE_LEASES_PER_REPO = 20;
 
 /**
- * One debt lease: a time-boxed, owned suppression of one introduced finding.
- *
  * **Details**
  *
  * `key` is the leased finding's baseline key and `document` the repository path of the document the
@@ -256,8 +254,6 @@ export const KnowledgeLeaseViolation = LiteralKit([
 );
 
 /**
- * The lease rules a lease can break.
- *
  * @category models
  * @since 0.0.0
  */
@@ -429,8 +425,6 @@ export const resolveKnowledgeCodeowners: {
  * ---------------------------------------------------------------------------------------------- */
 
 /**
- * The inputs of one lease evaluation.
- *
  * **Details**
  *
  * `baseLeases` are the merge-base rows, which pin `issued`; `codeowners` is the merge-base

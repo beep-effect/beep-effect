@@ -242,8 +242,6 @@ export const SessionCheckoutFacts = S.Struct({
 }).pipe($I.annoteSchema("SessionCheckoutFacts", { description: "Repository and checkout facts probed from Git." }));
 
 /**
- * Repository and checkout facts probed from Git.
- *
  * @category models
  * @since 0.0.0
  */
@@ -355,8 +353,6 @@ export const SessionNoteInput = S.Struct({
 );
 
 /**
- * Session note input before checkout provenance is stamped.
- *
  * @category models
  * @since 0.0.0
  */

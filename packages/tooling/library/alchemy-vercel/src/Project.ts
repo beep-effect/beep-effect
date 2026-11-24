@@ -28,8 +28,6 @@ import type { Providers } from "./Providers.ts";
 const $I = $AlchemyVercelId.create("Project");
 
 /**
- * Git provider of a project's linked repository.
- *
  * **Example** (Guard a git provider)
  *
  * ```ts
@@ -48,8 +46,6 @@ export const GitProvider = LiteralKit(["github", "gitlab", "bitbucket"]).pipe(
 );
 
 /**
- * Type-level member of {@link GitProvider}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -91,8 +87,6 @@ export const DeploymentProtection = LiteralKit([
 );
 
 /**
- * Type-level member of {@link DeploymentProtection}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -119,16 +113,12 @@ export const NodeVersion = LiteralKit(["24.x", "22.x", "20.x", "18.x"]).pipe(
 );
 
 /**
- * Type-level member of {@link NodeVersion}.
- *
  * @category models
  * @since 0.0.0
  */
 export type NodeVersion = typeof NodeVersion.Type;
 
 /**
- * The git repository a project deploys from.
- *
  * **Example** (A GitHub repository)
  *
  * ```ts
@@ -152,16 +142,12 @@ export const ProjectGitRepository = S.Struct({
 );
 
 /**
- * Type-level member of {@link ProjectGitRepository}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ProjectGitRepository = typeof ProjectGitRepository.Type;
 
 /**
- * Props of {@link Project}.
- *
  * **Details**
  *
  * Every setting except `name` is optional; an omitted setting is left to
@@ -213,16 +199,12 @@ export const ProjectProps = S.Struct({
 );
 
 /**
- * Type-level member of {@link ProjectProps}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ProjectProps = typeof ProjectProps.Type;
 
 /**
- * The repository link Vercel reports for a project.
- *
  * **Example** (A reported link)
  *
  * ```ts
@@ -249,8 +231,6 @@ export class ProjectLink extends S.Opaque<ProjectLink, { readonly brand: unique 
 ) {}
 
 /**
- * Attributes of a deployed {@link Project}.
- *
  * **Example** (Decode attributes)
  *
  * ```ts

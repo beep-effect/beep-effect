@@ -20,8 +20,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/SchemaTagIdioms.model");
 
 /**
- * Rule that detected a non-idiomatic schema tag form.
- *
  * **Details**
  *
  * `struct-tag` matches `S.Struct({ _tag: <fixed tag>, ... })`, which must be
@@ -58,16 +56,12 @@ export const SchemaTagIdiomRule = LiteralKit([
 );
 
 /**
- * Type-level member of {@link SchemaTagIdiomRule}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SchemaTagIdiomRule = typeof SchemaTagIdiomRule.Type;
 
 /**
- * One non-idiomatic schema tag form found in a repository file.
- *
  * **Example** (Describe a single-literal field finding)
  *
  * ```ts
@@ -105,8 +99,6 @@ export class SchemaTagIdiomFinding extends S.Opaque<SchemaTagIdiomFinding, { rea
 ) {}
 
 /**
- * Runtime options for the schema tag idiom law.
- *
  * **Example** (Configure a strict scan)
  *
  * ```ts
@@ -135,8 +127,6 @@ export class SchemaTagIdiomsOptions extends S.Opaque<SchemaTagIdiomsOptions, { r
 ) {}
 
 /**
- * Result of one schema tag idiom law run.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

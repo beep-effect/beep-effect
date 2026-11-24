@@ -233,8 +233,6 @@ export const CachePilotOutcome = S.TaggedUnion({
 export type CachePilotOutcome = typeof CachePilotOutcome.Type;
 
 /**
- * Same-host native timestamps for the selected task's execution interval.
- *
  * **Details**
  * Missing timing cannot prove concurrency. Receipt validation requires positive
  * duration and a positive intersection between independent fresh executions.

@@ -186,8 +186,6 @@ export {
  */
 export { EffectSchemaInventorySource } from "./internal/EffectSchemaInventorySource.ts";
 /**
- * Fixture persistence.
- *
  * @category resources
  * @since 0.0.0
  */

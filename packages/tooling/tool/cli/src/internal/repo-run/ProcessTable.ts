@@ -46,8 +46,6 @@ const INOTIFY_LINK_TARGET = "anon_inode:inotify";
 const HEX_RADIX = 16;
 
 /**
- * A running process id as `/proc` names it.
- *
  * **Example** (Validate a pid)
  *
  * ```ts
@@ -68,8 +66,6 @@ export const ProcessPid = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Process id type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -685,8 +681,6 @@ export const processTableWithLineage = ({
 };
 
 /**
- * The command names that head an agent session.
- *
  * **Details**
  *
  * The nearest ancestor with one of these names is the invoking session's
@@ -735,8 +729,6 @@ export const ProcessManagerCommand = LiteralKit(["systemd"]).pipe(
 );
 
 /**
- * Which rule chose a session root.
- *
  * **Example** (Read the rule literals)
  *
  * ```ts
@@ -1019,8 +1011,6 @@ export const DesktopTerminalShellState = LiteralKit(["idle", "busy"]).pipe(
 );
 
 /**
- * Desktop Terminal panel shell state type.
- *
  * @category type-level
  * @since 0.0.0
  */

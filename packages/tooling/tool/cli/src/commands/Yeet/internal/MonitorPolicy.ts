@@ -152,9 +152,6 @@ export const YeetMonitorTerminalState = LiteralKit([
 export type YeetMonitorTerminalState = typeof YeetMonitorTerminalState.Type;
 
 /**
- * Whether a merge loop runs attached to the operator's command or detached
- * inside a proof job.
- *
  * **Details**
  *
  * The porcelain decides it from `BEEP_YEET_JOB_ID`, which only a job's unit
@@ -181,8 +178,6 @@ export const YeetMonitorAttachment = LiteralKit(["attached", "detached"]).pipe(
 );
 
 /**
- * Whether a merge loop runs attached or detached.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -532,8 +527,6 @@ export class YeetHeadTimeline extends S.Opaque<YeetHeadTimeline, { readonly bran
 ) {}
 
 /**
- * The required red that stamps a head's red: which check, and when.
- *
  * **Details**
  *
  * `lane` is the failing required check's name, the same string its P0
@@ -775,8 +768,6 @@ export const YeetPushToAckStage = LiteralKit(["pushed", "red", "row", "injected"
 );
 
 /**
- * The stages of one head's push → row → ack timeline.
- *
  * @category type-level
  * @since 0.0.0
  */

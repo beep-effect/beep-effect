@@ -47,8 +47,6 @@ export class OpaqueRoundtripFinding extends S.Opaque<OpaqueRoundtripFinding, { r
 ) {}
 
 /**
- * Opaque roundtrip source discovery or compiler failure.
- *
  * **Example** (Describe a scan failure)
  * ```ts
  * import { OpaqueRoundtripsError } from "@beep/repo-cli/commands/Lint/OpaqueRoundtrips"

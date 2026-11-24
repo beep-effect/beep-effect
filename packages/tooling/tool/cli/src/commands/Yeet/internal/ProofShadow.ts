@@ -422,8 +422,6 @@ export class ProofChangedPackagesKnown extends S.Opaque<ProofChangedPackagesKnow
 ) {}
 
 /**
- * The attempt's changed packages could not be read.
- *
  * **Example** (A failed workspace read)
  *
  * ```ts
@@ -492,8 +490,6 @@ export const ProofChangedPackages = S.Union([ProofChangedPackagesKnown, ProofCha
 );
 
 /**
- * {@inheritDoc ProofChangedPackages}
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1298,8 +1294,6 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
 };
 
 /**
- * Options for `yeet proof-report`.
- *
  * **Details**
  *
  * `since` bounds the enforcement sample to rows recorded at or after it

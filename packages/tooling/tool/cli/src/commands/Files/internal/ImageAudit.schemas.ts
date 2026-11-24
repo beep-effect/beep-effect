@@ -16,8 +16,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Files/internal/ImageAudit.schemas");
 
 /**
- * Options used by `files audit-images`.
- *
  * @category models
  * @since 0.0.0
  */
@@ -58,8 +56,6 @@ export class ImageAuditMetadataPresence extends S.Opaque<
 ) {}
 
 /**
- * Advisory technical-quality measurements for an audited image.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +75,6 @@ export class ImageAuditQualityMetrics extends S.Opaque<ImageAuditQualityMetrics,
 ) {}
 
 /**
- * One successfully audited source image.
- *
  * @category models
  * @since 0.0.0
  */
@@ -108,8 +102,6 @@ export class ImageAuditEntry extends S.Opaque<ImageAuditEntry, { readonly brand:
 ) {}
 
 /**
- * A source entry skipped by the image audit.
- *
  * @category models
  * @since 0.0.0
  */
@@ -162,8 +154,6 @@ export class ImageAuditCluster extends S.Opaque<ImageAuditCluster, { readonly br
 ) {}
 
 /**
- * Summary counts for an image audit.
- *
  * @category models
  * @since 0.0.0
  */

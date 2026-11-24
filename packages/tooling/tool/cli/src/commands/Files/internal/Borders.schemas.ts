@@ -111,8 +111,6 @@ export const DetectBordersSkippedReason = LiteralKit([
 export type DetectBordersSkippedReason = typeof DetectBordersSkippedReason.Type;
 
 /**
- * Percentage threshold used by border detection options.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -157,16 +155,12 @@ export const BorderDetectionPercentage = S.Finite.check(
 );
 
 /**
- * Percentage threshold used by border detection options.
- *
  * @category models
  * @since 0.0.0
  */
 export type BorderDetectionPercentage = typeof BorderDetectionPercentage.Type;
 
 /**
- * Maximum scan percentage accepted by border detection.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -211,16 +205,12 @@ export const BorderDetectionMaxScanPercentage = S.Finite.check(
 );
 
 /**
- * Maximum scan percentage accepted by border detection.
- *
  * @category models
  * @since 0.0.0
  */
 export type BorderDetectionMaxScanPercentage = typeof BorderDetectionMaxScanPercentage.Type;
 
 /**
- * RGB channel tolerance accepted by border detection.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -265,16 +255,12 @@ export const BorderDetectionTolerance = S.Finite.check(
 );
 
 /**
- * RGB channel tolerance accepted by border detection.
- *
  * @category models
  * @since 0.0.0
  */
 export type BorderDetectionTolerance = typeof BorderDetectionTolerance.Type;
 
 /**
- * Options used by the image border detection operation.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -333,8 +319,6 @@ export class CropBordersOptions extends S.Opaque<CropBordersOptions, { readonly 
 ) {}
 
 /**
- * RGB color sampled from a detected image border.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -360,8 +344,6 @@ export class RgbColor extends S.Opaque<RgbColor, { readonly brand: unique symbol
 ) {}
 
 /**
- * Measurement for one scanned image side.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -394,8 +376,6 @@ export class DetectBorderSideMeasurement extends S.Opaque<
 ) {}
 
 /**
- * Image entry analyzed by `files detect-borders`.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -515,8 +495,6 @@ export class DetectBordersReport extends S.Opaque<DetectBordersReport, { readonl
 ) {}
 
 /**
- * Planned crop for an image with detected solid borders.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts
@@ -580,8 +558,6 @@ export class CropBordersPlan extends S.Opaque<CropBordersPlan, { readonly brand:
 ) {}
 
 /**
- * Summary returned by `cropBordersFiles`.
- *
  * **Example** (Schema accepts undefined)
  *
  * ```ts

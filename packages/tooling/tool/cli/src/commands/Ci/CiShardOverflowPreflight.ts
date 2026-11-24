@@ -50,8 +50,6 @@ import type { GitHubClient } from "@beep/github/GitHubClient";
 const $I = $RepoCliId.create("commands/Ci/CiShardOverflowPreflight");
 
 /**
- * Why the overflow pool is not safe, or not ready, to switch on.
- *
  * **Details**
  *
  * - `missing-group`: no organization runner group is named `beep-shard-overflow`.
@@ -93,8 +91,6 @@ export const ShardOverflowPreflightProblem = LiteralKit([
 );
 
 /**
- * Why the overflow pool is not safe, or not ready, to switch on.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -61,8 +61,6 @@ export class ConfigUpdateResult extends S.Opaque<ConfigUpdateResult, { readonly 
 ) {}
 
 /**
- * Config update target for a package that should be registered in root tsconfig files.
- *
  * **Example** (Update package configuration)
  *
  * ```ts
@@ -90,8 +88,6 @@ export class ConfigUpdateTarget extends S.Opaque<ConfigUpdateTarget, { readonly 
 ) {}
 
 /**
- * Per-target config update summary.
- *
  * **Example** (Update package configuration)
  *
  * ```ts

@@ -27,8 +27,6 @@ const mirrorSchemaVersion = "beep.ai_metrics.mirror_bundle.v1";
 const mirrorStatusSchemaVersion = "beep.ai_metrics.mirror_status.v1";
 
 /**
- * Version identifiers accepted by persisted mirror contracts.
- *
  * **Example** (Read the bundle version)
  *
  * ```ts
@@ -47,16 +45,12 @@ export const AiMetricsMirrorSchemaVersion = LiteralKit([mirrorSchemaVersion, mir
 );
 
 /**
- * Decoded version identifier for a persisted mirror contract.
- *
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsMirrorSchemaVersion = typeof AiMetricsMirrorSchemaVersion.Type;
 
 /**
- * Synchronization states persisted beside a mirror bundle.
- *
  * **Example** (Read the initial sync status)
  *
  * ```ts
@@ -75,16 +69,12 @@ export const AiMetricsMirrorSyncStatus = LiteralKit(["not_synced"]).pipe(
 );
 
 /**
- * Decoded synchronization state for a mirror bundle.
- *
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsMirrorSyncStatus = typeof AiMetricsMirrorSyncStatus.Type;
 
 /**
- * Source data class accepted by deploy-safe mirror manifests.
- *
  * **Example** (Read the source data class)
  *
  * ```ts
@@ -111,8 +101,6 @@ export const AiMetricsMirrorSourceDataClass = LiteralKit(["workstation_local_san
 export type AiMetricsMirrorSourceDataClass = typeof AiMetricsMirrorSourceDataClass.Type;
 
 /**
- * Sensitive data classes deliberately omitted from mirror bundles.
- *
  * **Example** (Check an omitted data class)
  *
  * ```ts
@@ -139,8 +127,6 @@ export const AiMetricsMirrorOmittedDataClass = LiteralKit([
 );
 
 /**
- * Decoded sensitive data class omitted from a mirror bundle.
- *
  * @category models
  * @since 0.0.0
  */
@@ -416,8 +402,6 @@ export class AiMetricsMirrorError extends S.TaggedError<AiMetricsMirrorError, { 
 ) {}
 
 /**
- * Local pointer to the latest sanitized mirror bundle.
- *
  * **Example** (Create a latest-bundle pointer)
  *
  * ```ts
@@ -448,8 +432,6 @@ export class AiMetricsMirrorLatestPointer extends S.Opaque<
 }
 
 /**
- * Input for building a sanitized P7 mirror bundle.
- *
  * **Gotchas**
  *
  * `dataRoot` is required. A default here would let a mirror build read a store
@@ -590,8 +572,6 @@ export class AiMetricsMirrorPrivacyProof extends S.Opaque<
 ) {}
 
 /**
- * Persisted synchronization status for one sanitized mirror bundle.
- *
  * **Example** (Create mirror status)
  *
  * ```ts
@@ -710,8 +690,6 @@ export class AiMetricsMirrorBundleManifest extends S.Opaque<
 }
 
 /**
- * Result of building a sanitized P7 mirror bundle.
- *
  * **Details**
  *
  * This is the local, build-side view of a bundle and the only place the

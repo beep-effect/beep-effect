@@ -39,8 +39,6 @@ type BrowserProfileKind = Exclude<BrowserKind, "all">;
 const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
 
 /**
- * One discovered browser profile history database.
- *
  * @internal
  * @category models
  */
@@ -58,8 +56,6 @@ export class BrowserProfile extends S.Opaque<BrowserProfile, { readonly brand: u
 ) {}
 
 /**
- * One history row surviving the time cutoff.
- *
  * @internal
  * @category models
  */

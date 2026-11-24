@@ -309,8 +309,6 @@ export const LibraryBoxAuthMode = LiteralKit(["ccg-user", "ccg-enterprise", "dev
 );
 
 /**
- * Runtime type of {@link LibraryBoxAuthMode}.
- *
  * @internal
  * @category models
  * @since 0.0.0

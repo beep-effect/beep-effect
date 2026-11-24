@@ -37,8 +37,6 @@ type EffectFnRecommendation = typeof EffectFnRecommendation.Type;
 type EffectFnOwner = ArrowFunction | FunctionDeclaration | FunctionExpression | MethodDeclaration;
 
 /**
- * Runtime options for the Effect.fn supplemental law.
- *
  * **Example** (Configure Effect.fn scanning)
  * ```ts
  * import { EffectFnRulesOptions } from "@beep/repo-cli/commands/Laws/EffectFn"
@@ -107,8 +105,6 @@ export class EffectFnDiagnostic extends S.Opaque<EffectFnDiagnostic, { readonly 
 ) {}
 
 /**
- * Summary of Effect.fn supplemental law results.
- *
  * **Example** (Construct an effect fn rules summary)
  *
  * ```ts

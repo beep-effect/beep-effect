@@ -33,8 +33,6 @@ export const DeployPolicyVersion = LiteralKit(["v1", "v2"]).pipe(
 );
 
 /**
- * Decoded {@link DeployPolicyVersion}.
- *
  * @category models
  * @since 0.0.0
  */

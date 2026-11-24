@@ -54,8 +54,6 @@ export const ProcessHandleKind = LiteralKit(["cwd", "descriptor"]).pipe(
 );
 
 /**
- * Handle attachment kind type.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -118,8 +118,6 @@ export const IdentityRegistryIssueKind = LiteralKit([
 );
 
 /**
- * Decoded type of {@link IdentityRegistryIssueKind}.
- *
  * @category models
  * @since 0.0.0
  */

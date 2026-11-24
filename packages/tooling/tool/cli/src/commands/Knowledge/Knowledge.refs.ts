@@ -107,8 +107,6 @@ export type KnowledgeRefKind = typeof KnowledgeRefKind.Type;
 export const isKnowledgeRefKind = S.is(KnowledgeRefKind);
 
 /**
- * Lexical anchor that made a span machine-local.
- *
  * **Details**
  *
  * The five members reproduce the clone-agnosticism baseline exactly: absolute home prefixes,
@@ -167,8 +165,6 @@ export type KnowledgeHostAnchor = typeof KnowledgeHostAnchor.Type;
 export const isKnowledgeHostAnchor = S.is(KnowledgeHostAnchor);
 
 /**
- * Corpus disposition of the document that contains an observation.
- *
  * **Details**
  *
  * Stage-1 enforcement excludes archival directories; the census includes them and labels them
@@ -220,8 +216,6 @@ export type KnowledgeRefSurface = typeof KnowledgeRefSurface.Type;
 export const isKnowledgeRefSurface = S.is(KnowledgeRefSurface);
 
 /**
- * The surface selector a census listing can be narrowed to.
- *
  * **Details**
  *
  * `all` is the default and the only value that shows the whole corpus. The filter narrows the
@@ -248,8 +242,6 @@ export const KnowledgeRefSurfaceFilter = LiteralKit(["all", "live", "archival"])
 );
 
 /**
- * Which surfaces a census listing shows.
- *
  * @see {@link KnowledgeRefSurfaceFilter} for the runtime schema and the counts-stay-whole rule.
  * @category type-level
  * @since 0.0.0
@@ -257,8 +249,6 @@ export const KnowledgeRefSurfaceFilter = LiteralKit(["all", "live", "archival"])
 export type KnowledgeRefSurfaceFilter = typeof KnowledgeRefSurfaceFilter.Type;
 
 /**
- * Deterministic triage class assigned to one reference observation.
- *
  * **Details**
  *
  * The twelve classes are computed by a total rule table, never hand-labelled — phase 0 exists to
@@ -299,8 +289,6 @@ export const KnowledgeRefClassification = LiteralKit([
 );
 
 /**
- * One deterministic triage class.
- *
  * @see {@link KnowledgeRefClassification} for the runtime schema and the rule-table discipline.
  * @category type-level
  * @since 0.0.0
@@ -423,8 +411,6 @@ export const KnowledgeRefResolutionStatus = LiteralKit([
 );
 
 /**
- * The tag of one reference resolution.
- *
  * @see {@link KnowledgeRefResolutionStatus} for the runtime schema and the not-applicable rule.
  * @category type-level
  * @since 0.0.0
@@ -523,8 +509,6 @@ export const KnowledgeCommitSha = S.String.check(
 );
 
 /**
- * A forty-character lowercase hexadecimal Git commit object name.
- *
  * @see {@link KnowledgeCommitSha} for the runtime schema and the SHA-1-versus-SHA-256 distinction.
  * @category type-level
  * @since 0.0.0
@@ -532,8 +516,6 @@ export const KnowledgeCommitSha = S.String.check(
 export type KnowledgeCommitSha = typeof KnowledgeCommitSha.Type;
 
 /**
- * Versioned SHA-256 identity of one normalized reference instance.
- *
  * **Details**
  *
  * The digest covers the length-prefixed normalization version, kind, document id, normalized
@@ -574,8 +556,6 @@ export const KnowledgeRefId = S.TemplateLiteral(["knowledge-ref/v1:", Sha256Hex]
 export type KnowledgeRefId = typeof KnowledgeRefId.Type;
 
 /**
- * A repository-root-relative target after governed normalization.
- *
  * **Gotchas**
  *
  * `normalized` carries a resolved repository path only when the spelling was governed. For an
@@ -636,8 +616,6 @@ export class KnowledgeHostPathRef extends S.Opaque<KnowledgeHostPathRef, { reado
 ) {}
 
 /**
- * A `repo://goal/<slug>` identity plus the display path it was paired with.
- *
  * **Details**
  *
  * `displayPath` is absent for a heading-scope `beep:ref` and for an ambiguous pairing, because the
@@ -673,8 +651,6 @@ export class KnowledgeGoalUriRef extends S.Opaque<KnowledgeGoalUriRef, { readonl
 ) {}
 
 /**
- * One recognised reference across the typed buses.
- *
  * **Example** (Accept any emitted reference member)
  *
  * ```ts
@@ -746,8 +722,6 @@ export class KnowledgeRefResolved extends S.Opaque<KnowledgeRefResolved, { reado
 ) {}
 
 /**
- * A reference whose target is absent from the scanned tree.
- *
  * **Example** (Record a missing target)
  *
  * ```ts
@@ -805,8 +779,6 @@ export class KnowledgeRefIdentityMismatch extends S.Opaque<
 ) {}
 
 /**
- * A missing target that a registered producer regenerates.
- *
  * **Details**
  *
  * The registry exists so the report says "run this" rather than "broken". v1 registers exactly one
@@ -937,8 +909,6 @@ export class KnowledgeSkippedBlob extends S.Opaque<KnowledgeSkippedBlob, { reado
 ) {}
 
 /**
- * One resolved, classified reference occurrence.
- *
  * **Details**
  *
  * Observations are not findings. They live in a separate identity space on purpose: the census
@@ -996,8 +966,6 @@ export class KnowledgeRefObservation extends S.Opaque<KnowledgeRefObservation, {
 ) {}
 
 /**
- * Versioned reference census for one Git tree.
- *
  * **Details**
  *
  * `observations` is sorted by document path, line, column, kind, and subject, and `skipped` is

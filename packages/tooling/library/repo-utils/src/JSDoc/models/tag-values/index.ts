@@ -383,8 +383,6 @@ export const TagValue = S.Union([
 );
 
 /**
- * Static type represented by the `TagValue` tagged union schema.
- *
  * **Example** (Typing a TagValue instance)
  *
  * ```ts

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Worktree/Reap.schemas");
 
 /**
- * Pull-request classification for one registered worktree.
- *
  * **Details**
  *
  * `unknown` represents incomplete evidence. It never aliases `no-pr`, because
@@ -37,8 +35,6 @@ export const WorktreeReapClass = LiteralKit(["merged-pr", "open-pr", "no-pr", "u
 );
 
 /**
- * Pull-request classification for one registered worktree.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -90,16 +86,12 @@ export const WorktreeReapSkipReason = LiteralKit([
 );
 
 /**
- * Fail-closed reason that prevented automatic worktree retirement.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type WorktreeReapSkipReason = typeof WorktreeReapSkipReason.Type;
 
 /**
- * One classified registered worktree and its retirement evidence.
- *
  * **Details**
  *
  * `skipReason` is absent only when the worktree is eligible (dry run) or was
@@ -147,8 +139,6 @@ export class WorktreeReapCandidate extends S.Opaque<WorktreeReapCandidate, { rea
 ) {}
 
 /**
- * Auditable result of one dry-run or applied registered-worktree janitor pass.
- *
  * **Example** (Construct an empty dry-run report)
  *
  * ```ts

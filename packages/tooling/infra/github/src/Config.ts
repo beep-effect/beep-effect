@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $InfraGithubId.create("Config");
 
 /**
- * A pull request merge method a ruleset allows.
- *
  * **Example** (Accept a merge method)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const MergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe(
 );
 
 /**
- * Runtime type for {@link MergeMethod}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -62,8 +58,6 @@ export const BypassActorType = LiteralKit(["RepositoryRole", "Team", "Integratio
 );
 
 /**
- * Runtime type for {@link BypassActorType}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -88,16 +82,12 @@ export const BypassMode = LiteralKit(["always", "pull_request"]).pipe(
 );
 
 /**
- * Runtime type for {@link BypassMode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BypassMode = typeof BypassMode.Type;
 
 /**
- * Enforcement of a ruleset.
- *
  * **Example** (Accept an enforcement)
  *
  * ```ts
@@ -114,8 +104,6 @@ export const RulesetEnforcement = LiteralKit(["disabled", "active", "evaluate"])
 );
 
 /**
- * Runtime type for {@link RulesetEnforcement}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -148,8 +136,6 @@ export const ObjectClass = LiteralKit([
 ]).pipe($I.annoteSchema("ObjectClass", { description: "The class of a live GitHub repository object." }));
 
 /**
- * Runtime type for {@link ObjectClass}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -221,8 +207,6 @@ export class RequiredCheck extends S.Opaque<RequiredCheck, { readonly brand: uni
 ) {}
 
 /**
- * One ruleset bypass entry.
- *
  * **Example** (Let repository admins bypass)
  *
  * ```ts
@@ -244,8 +228,6 @@ export class BypassActor extends S.Opaque<BypassActor, { readonly brand: unique 
 ) {}
 
 /**
- * The pull request rule of a ruleset.
- *
  * **Example** (Read the thread-resolution rule)
  *
  * ```ts

@@ -21,8 +21,6 @@ const FileEditKind = LiteralKit(["edited", "created", "removed"]).pipe(
 );
 
 /**
- * One memory file as the agent left it, discriminated on `edit`.
- *
  * **Details**
  *
  * - `edited`: a file of the base, with its whole new text. An empty text
@@ -71,16 +69,12 @@ export const FileEdit = FileEditKind.toTaggedUnion("edit")({
 );
 
 /**
- * Runtime type for {@link FileEdit}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type FileEdit = typeof FileEdit.Type;
 
 /**
- * Why capture refused a file edit.
- *
  * **Details**
  *
  * - `pathOutsideMemoryFiles`: the path breaks the memory file rule
@@ -117,16 +111,12 @@ export const CaptureEditRefusal = LiteralKit([
 );
 
 /**
- * Runtime type for {@link CaptureEditRefusal}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CaptureEditRefusal = typeof CaptureEditRefusal.Type;
 
 /**
- * Why capture refused the exported base.
- *
  * **Details**
  *
  * - `duplicateFile`: the base lists one path twice.
@@ -160,16 +150,12 @@ export const CaptureBaseRefusal = LiteralKit([
 );
 
 /**
- * Runtime type for {@link CaptureBaseRefusal}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CaptureBaseRefusal = typeof CaptureBaseRefusal.Type;
 
 /**
- * Why the apply helper refused an operation.
- *
  * **Details**
  *
  * - `unknownNode`: a replace or delete names a node that is not live.
@@ -205,16 +191,12 @@ export const ApplyRefusal = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ApplyRefusal}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ApplyRefusal = typeof ApplyRefusal.Type;
 
 /**
- * One node of a file after a batch is applied to its base.
- *
  * **Example** (Construct an applied node)
  *
  * ```ts

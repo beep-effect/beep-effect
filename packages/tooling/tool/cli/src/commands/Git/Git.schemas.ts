@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Git/Git.schemas");
 
 /**
- * Fixed repository paths that are pure generator projections.
- *
  * **Example** (Recognise a projection file)
  *
  * ```ts
@@ -37,8 +35,6 @@ export const MergeDriverProjectionFile = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MergeDriverProjectionFile}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -71,8 +67,6 @@ export const GoalManifestProjectionPath = S.String.check(S.isPattern(/^goals\/.*
 );
 
 /**
- * Runtime type for {@link GoalManifestProjectionPath}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -100,8 +94,6 @@ export const MergeDriverProjectionPath = S.Union([MergeDriverProjectionFile, Goa
 );
 
 /**
- * Runtime type for {@link MergeDriverProjectionPath}.
- *
  * @category models
  * @since 0.0.0
  */

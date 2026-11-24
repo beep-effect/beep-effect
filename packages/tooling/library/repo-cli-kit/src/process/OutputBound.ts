@@ -42,16 +42,12 @@ export const OutputRetention = LiteralKit(["head", "head-tail"]).pipe(
 );
 
 /**
- * Type of {@link OutputRetention}.
- *
  * @category models
  * @since 0.0.0
  */
 export type OutputRetention = typeof OutputRetention.Type;
 
 /**
- * A character cap, truncation notice and output-retention policy.
- *
  * **Details**
  * Head retention is the compatible default. Head-tail retention shares the
  * same character cap between the beginning and the rolling end of the output;
@@ -85,8 +81,6 @@ export class OutputBound extends S.Opaque<OutputBound, { readonly brand: unique 
 ) {}
 
 /**
- * Accumulator produced by the bounded output fold.
- *
  * **Example** (Seed a fold accumulator)
  *
  * ```ts

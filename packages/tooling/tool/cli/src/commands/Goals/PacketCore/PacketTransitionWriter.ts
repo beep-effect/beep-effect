@@ -200,8 +200,6 @@ export class PacketRiskTierOverrideRequest extends S.Opaque<
 ) {}
 
 /**
- * Union of the requests a guarded-writer plan can carry.
- *
  * **Example** (A status transition is a plan request)
  *
  * ```ts
@@ -228,8 +226,6 @@ export const PacketPlanRequest = S.Union([PacketTransitionRequest, PacketRiskTie
 );
 
 /**
- * Request carried by a guarded-writer plan.
- *
  * **Example** (Annotate a plan request)
  *
  * ```ts
@@ -252,8 +248,6 @@ export const PacketPlanRequest = S.Union([PacketTransitionRequest, PacketRiskTie
 export type PacketPlanRequest = typeof PacketPlanRequest.Type;
 
 /**
- * The exact effect of one transition, computed without writing.
- *
  * **Example** (Inspect a plan's shape)
  *
  * ```ts
@@ -297,8 +291,6 @@ export class PacketTransitionPlan extends S.Opaque<PacketTransitionPlan, { reado
 ) {}
 
 /**
- * Result of committing a transition plan.
- *
  * **Example** (Construct a no-stream outcome)
  *
  * ```ts

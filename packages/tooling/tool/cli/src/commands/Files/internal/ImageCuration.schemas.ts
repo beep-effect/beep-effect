@@ -164,8 +164,6 @@ export class ImageCurationManifestEntry extends S.Opaque<
 ) {}
 
 /**
- * Summary counts for a curation run.
- *
  * @category models
  * @since 0.0.0
  */

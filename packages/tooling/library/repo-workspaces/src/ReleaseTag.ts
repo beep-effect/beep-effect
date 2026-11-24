@@ -28,8 +28,6 @@ import * as Str from "effect/String";
 const $I = $RepoWorkspacesId.create("ReleaseTag");
 
 /**
- * Whether one shared tag names a whole release, or one tag names each package.
- *
  * **Details**
  *
  * `single` is the shape of a single-package repo and of a monorepo whose
@@ -105,8 +103,6 @@ export class TagFormatOptions extends S.Opaque<TagFormatOptions, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link TagFormatOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -193,8 +189,6 @@ const versionCore = (version: string): VersionCore | undefined => {
 };
 
 /**
- * Options for {@link TrackingTag.forVersion}.
- *
  * **Example** (Check package-prefixed alias options)
  *
  * ```ts
@@ -245,8 +239,6 @@ export class TrackingTagOptions extends S.Opaque<TrackingTagOptions, { readonly 
 ) {}
 
 /**
- * Companion types for {@link TrackingTagOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -261,9 +253,6 @@ export declare namespace TrackingTagOptions {
 }
 
 /**
- * A floating alias tag — `v1`, `v1.2` — that a repo re-points at its newest
- * matching release.
- *
  * **Details**
  *
  * This is the GitHub Actions distribution convention: a consumer writes
@@ -551,8 +540,6 @@ const aliasFields = (alias: string): O.Option<{ readonly major: number; readonly
 };
 
 /**
- * A git tag naming a release, and the parts it was built from.
- *
  * **Details**
  *
  * `value` is the tag exactly as it appears in git; `version` stays **bare**
@@ -677,8 +664,6 @@ export class ReleaseTag extends S.Opaque<ReleaseTag, { readonly brand: unique sy
 }
 
 /**
- * Companion types for {@link ReleaseTag}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -715,8 +700,6 @@ export class ReleaseTagClassification extends S.Opaque<ReleaseTagClassification,
 ) {}
 
 /**
- * Companion types for {@link ReleaseTagClassification}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -753,8 +736,6 @@ export class TrackingTagClassification extends S.Opaque<TrackingTagClassificatio
 ) {}
 
 /**
- * Companion types for {@link TrackingTagClassification}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -795,8 +776,6 @@ export class UnrecognizedTagClassification extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link UnrecognizedTagClassification}.
- *
  * @category type-level
  * @since 0.0.0
  */
