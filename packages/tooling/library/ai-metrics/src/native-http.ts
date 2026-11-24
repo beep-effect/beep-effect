@@ -284,16 +284,14 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
     request: HttpServerRequest.HttpServerRequest,
     encoding: typeof NativeContentEncoding.Type
   ) {
-    const webAdapterKeepingAnAbsentBodyNullSinceSomeRequestStreamsRejectEmptyProtobuf = yield* HttpServerRequest.toWeb(
-      request
-    ).pipe(Effect.mapError(() => bodyFailure("malformed")));
-    const incoming = O.fromNullishOr(
-      webAdapterKeepingAnAbsentBodyNullSinceSomeRequestStreamsRejectEmptyProtobuf.body
+    const webRequest = yield* HttpServerRequest.toWeb(request).pipe(Effect.mapError(() => bodyFailure("malformed")));
+    const incomingFromTheWebBodyKeptNullWhenAbsentSinceSomeRequestStreamsRejectEmptyProtobuf = O.fromNullishOr(
+      webRequest.body
     ).pipe(
       O.map((body) => Stream.fromReadableStream({ evaluate: () => body, onError: () => bodyFailure("malformed") })),
       O.getOrElse(() => Stream.empty)
     );
-    return yield* boundedBytes(incoming).pipe(
+    return yield* boundedBytes(incomingFromTheWebBodyKeptNullWhenAbsentSinceSomeRequestStreamsRejectEmptyProtobuf).pipe(
       Effect.filterOrElse(() => encoding !== "gzip", expandGzip),
       Effect.timeoutOrElse({
         duration: policy.bodyTimeoutMillis,
