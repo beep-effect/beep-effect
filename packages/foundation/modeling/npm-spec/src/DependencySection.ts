@@ -22,9 +22,6 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 const $I = $NpmSpecId.create("DependencySection");
 
 /**
- * The short dependency kind: which dependency map an entry came from, named the
- * way consumers branch on it.
- *
  * **Example** (Decode a short dependency kind)
  *
  * ```ts
@@ -46,8 +43,6 @@ export const DependencyKind = LiteralKit(["prod", "dev", "peer", "optional"]).pi
 );
 
 /**
- * The union of short dependency kinds.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -55,9 +50,6 @@ export const DependencyKind = LiteralKit(["prod", "dev", "peer", "optional"]).pi
 export type DependencyKind = typeof DependencyKind.Type;
 
 /**
- * The manifest field name a dependency is declared under, matching the
- * `package.json` / `package-lock.json` key exactly.
- *
  * **Example** (Decode a manifest dependency field)
  *
  * ```ts
@@ -84,8 +76,6 @@ export const DependencyField = LiteralKit([
 );
 
 /**
- * The union of manifest dependency-map field names.
- *
  * @public
  * @category type-level
  * @since 0.0.0

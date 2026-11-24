@@ -8,8 +8,6 @@ import * as S from "effect/Schema";
 const $I = $SemverId.create("internal/order");
 
 /**
- * Structural fields of a parsed version, shared by the parser pipeline.
- *
  * **Details**
  *
  * Numeric prerelease identifiers are numbers; alphanumeric prerelease identifiers and all build identifiers are strings. Empty arrays represent absent prerelease or build suffixes.
@@ -54,8 +52,6 @@ export class VersionParts extends S.Opaque<VersionParts, { readonly brand: uniqu
 ) {}
 
 /**
- * Defines the relational operator prefix of a comparator (`=`, `>`, `>=`, `<`, `<=`).
- *
  * **Example** (Validate comparator operator literals)
  *
  * ```ts
@@ -75,16 +71,12 @@ export const ComparatorOperator = LiteralKit(["=", ">", ">=", "<", "<="]).pipe(
   })
 );
 /**
- * The relational operator literals accepted by the comparator operator schema.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ComparatorOperator = typeof ComparatorOperator.Type;
 
 /**
- * Structural fields of a parsed comparator.
- *
  * **Details**
  *
  * Pairs a relational operator with the complete structural version used as its comparison bound.

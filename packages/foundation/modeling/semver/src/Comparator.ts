@@ -18,8 +18,6 @@ import { SemVer } from "./SemVer.ts";
 const $I = $SemverId.create("Comparator");
 
 /**
- * Indicates that a string could not be parsed as a single comparator.
- *
  * **Details**
  *
  * Raised by {@link Comparator.parse}. The decode direction of
@@ -88,8 +86,6 @@ export class InvalidComparatorError extends S.TaggedError<
 }
 
 /**
- * A single version constraint: a comparison operator applied to a version.
- *
  * **Details**
  *
  * Comparator strings accept an optional operator prefix (`=`, `>`, `>=`,

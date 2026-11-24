@@ -54,8 +54,6 @@ export const ContentHash = Sha256PrefixedDigest.pipe(
 );
 
 /**
- * Decoded type of {@link ContentHash}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -105,8 +103,6 @@ export const DomainTag = S.String.check(
 );
 
 /**
- * Decoded type of {@link DomainTag}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -144,8 +140,6 @@ export const ActivityId = ContentHash.pipe(
 );
 
 /**
- * Decoded type of {@link ActivityId}.
- *
  * @category models
  * @since 0.0.0
  */

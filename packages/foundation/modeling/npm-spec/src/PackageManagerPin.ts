@@ -32,9 +32,6 @@ import { CorepackIntegrityHash } from "./IntegrityHash.ts";
 const $I = $NpmSpecId.create("PackageManagerPin");
 
 /**
- * Indicates that a string could not be parsed as a corepack package-manager
- * pin (`<name>@<version>[+<integrity>]`).
- *
  * **Details**
  *
  * Raised by {@link PackageManagerPin.parse} and
@@ -115,8 +112,6 @@ export class InvalidPackageManagerPinError extends S.TaggedError<
 }
 
 /**
- * The four package managers a corepack pin can name.
- *
  * **Details**
  *
  * Structurally identical to `@beep/repo-workspaces`' `PackageManagerName` and
@@ -187,9 +182,6 @@ const pinVersion = SemVer.pipe(
 );
 
 /**
- * A corepack package-manager pin: the `<name>@<version>[+<integrity>]` triple
- * (e.g. `pnpm@11.17.0+sha512.abc…`), independent of any `package.json` field.
- *
  * **Details**
  *
  * `version` is an exact `@beep/semver` `SemVer` — prerelease versions are

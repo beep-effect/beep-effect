@@ -49,11 +49,6 @@ const serializeCanonical: (node: InstanceOrEncodedNode) => string = Match.type<I
 );
 
 /**
- * A simple-license leaf of an SPDX expression: a license identifier with the
- * trailing `+` ("or later") marker. This is the expression-level license node,
- * distinct from the catalog {@link License} class, which validates and resolves
- * an identifier but does not model the `+` operator.
- *
  * **Example** (Construct a LicenseNode expression)
  *
  * ```ts
@@ -110,8 +105,6 @@ export class LicenseNode extends S.TaggedClass<
 }
 
 /**
- * Companion types for {@link LicenseNode}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -130,11 +123,6 @@ export declare namespace LicenseNode {
 }
 
 /**
- * A `LicenseRef`/`DocumentRef` reference leaf. The `LicenseRef-`/`DocumentRef-`
- * prefixes and the `:` separator are structural and are not stored; only the
- * bare idstrings are kept, so the node round-trips to canonical form without
- * duplicating the grammar.
- *
  * **Example** (Construct a LicenseRefNode expression)
  *
  * ```ts
@@ -191,8 +179,6 @@ export class LicenseRefNode extends S.TaggedClass<
 }
 
 /**
- * Companion types for {@link LicenseRefNode}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -211,11 +197,6 @@ export declare namespace LicenseRefNode {
 }
 
 /**
- * A `license WITH exception` node. Per the SPDX grammar, `WITH` binds to a
- * simple expression — a license identifier (optionally `+`) or a
- * `LicenseRef`/`DocumentRef` reference — never a compound expression, so
- * `license` is a {@link LicenseNode} or a {@link LicenseRefNode}.
- *
  * **Example** (Construct a WithExceptionNode expression)
  *
  * ```ts
@@ -283,9 +264,6 @@ export class WithExceptionNode extends S.TaggedClass<
 }
 
 /**
- * The conjunction (`AND`) of two sub-expressions. Recursive: its children are
- * members of {@link (SpdxExpression:type)}, expressed via `Schema.suspend`.
- *
  * **Example** (Construct a AndNode expression)
  *
  * ```ts
@@ -348,9 +326,6 @@ export class AndNode extends S.TaggedClass<
 }
 
 /**
- * The disjunction (`OR`) of two sub-expressions. Recursive: its children are
- * members of {@link (SpdxExpression:type)}, expressed via `Schema.suspend`.
- *
  * **Example** (Construct a OrNode expression)
  *
  * ```ts

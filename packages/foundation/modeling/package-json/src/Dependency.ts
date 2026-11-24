@@ -20,10 +20,6 @@ import type { Range } from "@beep/semver";
 const $I = $PackageJsonId.create("Dependency");
 
 /**
- * A resolved dependency entry pairing a package name with its version
- * specifier and the `kind` of map it came from (`@beep/npm-spec`'s
- * `DependencyKind`). The protocol predicates delegate to `DependencySpecifier`.
- *
  * **Example** (Inspect a production dependency)
  *
  * ```ts

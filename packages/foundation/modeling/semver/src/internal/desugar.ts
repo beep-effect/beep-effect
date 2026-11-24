@@ -49,8 +49,6 @@ export const PartialParts = S.Struct({
 );
 
 /**
- * The partial version data described by {@link PartialParts}.
- *
  * @category type-level
  * @since 0.0.0
  */

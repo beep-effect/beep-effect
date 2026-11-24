@@ -1147,8 +1147,6 @@ export const renderEffectWith: {
 );
 
 /**
- * URL policy options accepted by built-in render adapter factories.
- *
  * **Example** (Creating URL render options)
  *
  * ```ts import.meta.vitest name="Creating URL render options"

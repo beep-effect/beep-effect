@@ -168,8 +168,6 @@ const PortableTsconfigData = S.Struct({
 );
 
 /**
- * Options for {@link (PortableTsconfig:class).make}.
- *
  * **Example** (Enable resolution-dependent type packages)
  *
  * ```ts
@@ -214,8 +212,6 @@ export class PortableTsconfigOptions extends S.Opaque<PortableTsconfigOptions, {
 ) {}
 
 /**
- * Type-only companion namespace for {@link (PortableTsconfigOptions:class)}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

@@ -19,8 +19,6 @@ import type * as Brand from "effect/Brand";
 const $I = $PackageJsonId.create("PackageName");
 
 /**
- * Indicates that a string could not be used as a valid npm package name.
- *
  * **Details**
  *
  * Raised by {@link Package.setName} and the decode direction of
@@ -98,8 +96,6 @@ const isNotReserved = S.makeFilter(
 );
 
 /**
- * A valid npm scoped package name (`@scope/name`).
- *
  * **Example** (Decode a scoped package name)
  *
  * ```ts
@@ -120,8 +116,6 @@ export const ScopedPackageName = S.String.pipe(
 );
 
 /**
- * A valid npm scoped package name.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -129,8 +123,6 @@ export const ScopedPackageName = S.String.pipe(
 export type ScopedPackageName = string & Brand.Brand<"ScopedPackageName">;
 
 /**
- * A valid npm unscoped package name (no `@scope/` prefix).
- *
  * **Example** (Decode an unscoped package name)
  *
  * ```ts
@@ -151,8 +143,6 @@ export const UnscopedPackageName = S.String.pipe(
 );
 
 /**
- * A valid npm unscoped package name.
- *
  * @public
  * @category type-level
  * @since 0.0.0

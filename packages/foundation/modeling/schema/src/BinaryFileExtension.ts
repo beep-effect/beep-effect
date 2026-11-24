@@ -159,9 +159,6 @@ const extractNormalizedExtension = (filePath: string): string =>
 const isNonPrintableByte = (byte: number): boolean => byte < 32 && byte !== 9 && byte !== 10 && byte !== 13;
 
 /**
- * Schema for dotted binary file extensions that should be excluded from
- * text-based processing.
- *
  * **Details**
  *
  * The literal members include the leading `.` so they match normalized path
@@ -187,8 +184,6 @@ export const BinaryFileExtension = LiteralKit(binaryFileExtensionOptions).pipe(
 );
 
 /**
- * Union of literals accepted by {@link BinaryFileExtension}.
- *
  * **Example** (Annotate extension union type)
  *
  * ```ts import.meta.vitest name="Annotate extension union type"

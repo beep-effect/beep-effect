@@ -61,8 +61,6 @@ export const CsvCell = S.String.check(S.isMaxLength(MAX_TEXT_UNITS)).pipe(
 export type CsvCell = typeof CsvCell.Type;
 
 /**
- * One record's cells, never empty: a blank line reads as one empty cell.
- *
  * **Example** (Refuse a record with no cells)
  *
  * ```ts import.meta.vitest name="Refuse a record with no cells"

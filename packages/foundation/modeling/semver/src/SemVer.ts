@@ -28,8 +28,6 @@ import { compareBuild, compareParts, versionConstructor } from "./internal/order
 const $I = $SemverId.create("SemVer");
 
 /**
- * Indicates that a string could not be parsed as a valid SemVer 2.0.0 version.
- *
  * **Details**
  *
  * Raised by {@link SemVer.parse}. The decode direction of
@@ -153,10 +151,6 @@ const buildIdentifier = S.String.check(
 );
 
 /**
- * A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are
- * validated in-schema (non-negative integer components, well-formed
- * identifiers), so `SemVer.make` only produces valid versions.
- *
  * **Details**
  *
  * Instance methods are the canonical API; cross-cutting operations exist as
@@ -1195,8 +1189,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
 }
 
 /**
- * The component whose bump exceeded the safe-integer cap.
- *
  * **Example** (Validate an overflow component)
  *
  * ```ts

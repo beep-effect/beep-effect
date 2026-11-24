@@ -35,8 +35,6 @@ const $I = $NpmSpecId.create("RegistryKind");
 export const DEFAULT_REGISTRY = "https://registry.npmjs.org";
 
 /**
- * Which well-known registry a URL points at.
- *
  * **Details**
  *
  * The distinction is behavioral, not cosmetic: npm's `--provenance` is
