@@ -188,7 +188,7 @@ and the phase order is `PLAN.md`), this file is normative.
   `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, `LocatorMap`, the
   two text normalizations and unit conversion; `TextAnchor` and
   `VerifiedTextAnchor` keep their shapes). P2 created it through
-  `bun run beep create-package` and retired `packages/foundation/modeling/provenance`
+  `bun run beep create-package` and retired the former provenance workspace
   (`@beep/provenance`) per chapter 11, with every consumer migrated in the same PR
   and no alias.
 - `@beep/annotation`, created in P3 through `bun run beep create-package`
@@ -1347,7 +1347,7 @@ bun run beep create-package text --family foundation --kind modeling --type libr
 
 Lane goals/text-knowledge-stack-rebuild-p2-text
 
-Reverse: Re-create packages/foundation/modeling/provenance from the parent commit and invert the import codemod; no stored bytes name the package.
+Reverse: Re-create the @beep/provenance workspace from the parent commit and invert the import codemod; no stored bytes name the package.
 
 ### P2: the party TextSpan case is deleted and replaced by a TextOccurrence case over Anchored; the party OccurrenceId becomes ArtifactOccurrenceId, 2026-11-22
 
