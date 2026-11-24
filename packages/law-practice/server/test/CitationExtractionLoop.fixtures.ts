@@ -104,13 +104,11 @@ const Corpus = S.fromJsonString(
     description: "Original get_citations documents and complete pre/post-filter state with original identity indices.",
   })
 );
-// Construction comparisons also serve the separate legacy shortcut corpus.
-// Pin-cite ranges are compared by the occurrence adapter against the v2 corpus.
-type Expected = Omit<typeof Model.Type, "spanWithPincite">;
+type ExpectedWithPinCiteRangeLeftToOccurrenceAdapter = Omit<typeof Model.Type, "spanWithPincite">;
 const isGenerated = S.is(CitationGeneratedReference);
 export const assertCitationExtractionLoopModel = Effect.fn("ExtractionLoopTest.model")(function* (
   entry: CitationExtractionLoopEntry,
-  expected: Expected,
+  expected: ExpectedWithPinCiteRangeLeftToOccurrenceAdapter,
   id: number
 ) {
   const model = entry.model;

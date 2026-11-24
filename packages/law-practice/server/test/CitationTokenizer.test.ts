@@ -38,7 +38,6 @@ import {
 } from "./CitationTokenizer.fixtures.ts";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationExtractorOrdering = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationExtractorOrdering>[0],
   a1: unknown
@@ -163,13 +162,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       );
       const selected = yield* ordering.ordered(source);
       expect(A.sort(selected.indices, Order.Number)).toEqual([0, 1, 2, 3]);
-      // Two inherited members fit at install, but copying and selecting must still be bounded.
       const boundedOrdering = yield* makeCitationExtractorOrdering(
         { ...limits, patternEvaluations: 3 },
         A.map(extractors, (row) => row.ordering)
       );
       const orderingRefusal = yield* boundedOrdering.ordered(source).pipe(Effect.flip);
-      expect(orderingRefusal).toMatchObject({
+      expect(
+        orderingRefusal,
+        "two inherited members fit at install, but copying and selecting stay bounded"
+      ).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         operation: "extract",
         limit: "patternEvaluations",
@@ -190,11 +191,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const controls = yield* loadCitationTokenizerControls();
       const setup = yield* setupCitationTokenizer("bun", controls.configuration, { producedTextUtf16: 13 });
       const maximum = (yield* defaultCitationEnginePolicy).limits.producedTextUtf16;
-      // The session takes its deadline from the invocation policy. Keep the
-      // fixture's 997 ms controlled deadline when enlarging only the text budget.
+      const enlargedTextBudgetKeepingControlledDeadline = { ...setup.limits, producedTextUtf16: maximum };
       const refused = yield* withCitationTestInvocation(
         setup.tokenizer.port.tokenize({ width: 1, bytes: new TextEncoder().encode("Id. x") }),
-        { ...setup.limits, producedTextUtf16: maximum }
+        enlargedTextBudgetKeepingControlledDeadline
       ).pipe(
         Effect.provideService(Clock.Clock, setup.clock),
         Effect.provideService(ChildProcessSpawner, setup.observed.spawner),
@@ -245,22 +245,24 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       { timeout: 30000 }
     );
   }
-  // The ExtractorIdentity rule ties ordering, recipe and descriptor identity together.
-  it.effect("refuses an extractor whose ordering, recipe and descriptor identities disagree", () =>
-    Effect.gen(function* () {
-      const controls = yield* loadCitationTokenizerControls();
-      const first = A.getUnsafe(controls.configuration.extractors, 0);
-      const isExtractor = S.is(CitationTokenizerExtractor);
-      expect(isExtractor(first)).toBe(true);
-      const recipe = first.recipe;
-      // Each mismatch is shape-valid on its own, so only the cross-field rule refuses it.
-      for (const row of [
-        { ...first, recipe: { ...recipe, id: recipe.id + 1 } },
-        { ...first, descriptor: { ...first.descriptor, patternSha256: Str.repeat(64)("0") } },
-      ]) {
-        expect(isExtractor(row)).toBe(false);
-      }
-    })
+  it.effect(
+    "refuses an extractor whose ordering, recipe and descriptor identities disagree under the ExtractorIdentity rule",
+    () =>
+      Effect.gen(function* () {
+        const controls = yield* loadCitationTokenizerControls();
+        const first = A.getUnsafe(controls.configuration.extractors, 0);
+        const isExtractor = S.is(CitationTokenizerExtractor);
+        expect(isExtractor(first)).toBe(true);
+        const recipe = first.recipe;
+        for (const row of [
+          { ...first, recipe: { ...recipe, id: recipe.id + 1 } },
+          { ...first, descriptor: { ...first.descriptor, patternSha256: Str.repeat(64)("0") } },
+        ]) {
+          expect(isExtractor(row), "each mismatch is shape-valid alone, so only the cross-field rule refuses it").toBe(
+            false
+          );
+        }
+      })
   );
   it.effect("rejects duplicate extractor configuration before execution", () =>
     Effect.gen(function* () {

@@ -84,12 +84,10 @@ export const assertCitationMentionRanges = Effect.fn("OccurrenceProjectionTest.m
     yield* assertCitationNativeRange(source, original[name], component.anchor.anchor);
   }
 });
-// A source model has two validated views. Controls update both views using
-// explicit original IDs from the sealed corpus, without inferring retained IDs.
-const replaceModelAt = Effect.fnUntraced(function* (
+const replaceModelInBothValidatedViewsByExplicitId = Effect.fnUntraced(function* (
   input: unknown,
   position: number,
-  modelId: number,
+  explicitOriginalModelId: number,
   transform: (model: CitationExtractionLoopModel) => unknown
 ) {
   const result = yield* S.decodeUnknownEffect(SemanticExtractionType)(input);
@@ -110,7 +108,7 @@ const replaceModelAt = Effect.fnUntraced(function* (
             ...document.extraction,
             extraction: {
               ...loop,
-              models: A.map(loop.models, (original, id) => (id === modelId ? changed : original)),
+              models: A.map(loop.models, (original, id) => (id === explicitOriginalModelId ? changed : original)),
               citations: A.map(loop.citations, (original, index) => (index === position ? changed : original)),
             },
           },
@@ -128,7 +126,7 @@ const verifyPinOverrides = Effect.fn("OccurrenceProjectionTest.pinOverrides")(fu
   const pointLength = A.fromIterable(source.sourceText).length;
   for (const observation of expected.pinCiteOverrides) {
     const modelId = A.getUnsafe(expected.returned, observation.index);
-    const changed = yield* replaceModelAt(result, observation.index, modelId, (model) =>
+    const changed = yield* replaceModelInBothValidatedViewsByExplicitId(result, observation.index, modelId, (model) =>
       "outcome" in model
         ? {
             ...model,
@@ -247,7 +245,7 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
       const allocationFailure = yield* oneShort.project({ source: proof, result }).pipe(Effect.flip);
       expect(allocationFailure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
       const firstId = A.getUnsafe(expected.returned, 0);
-      const invalidSpan = yield* replaceModelAt(result, 0, firstId, (model) => ({
+      const invalidSpan = yield* replaceModelInBothValidatedViewsByExplicitId(result, 0, firstId, (model) => ({
         ...model,
         token: { ...model.token, start: -1 },
       }));
@@ -255,13 +253,13 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
       expect(retained.mentions).toHaveLength(1);
       expect(retained.unverified).toHaveLength(1);
       expect(A.getUnsafe(retained.unverified, 0)).toMatchObject({ index: 0, reason: "invalid-span" });
-      const badComponents = yield* replaceModelAt(result, 0, firstId, (model) =>
+      const badComponents = yield* replaceModelInBothValidatedViewsByExplicitId(result, 0, firstId, (model) =>
         "outcome" in model ? { ...model, outcome: { ...model.outcome, fullSpanStart: -1 } } : model
       );
       const incomplete = yield* stage.project({ source: proof, result: badComponents });
       expect(incomplete.mentions).toHaveLength(2);
       expect(incomplete.unverifiedComponents).toEqual([{ index: 0, name: "fullSpan", reason: "invalid-span" }]);
-      const invalidPincite = yield* replaceModelAt(result, 0, firstId, (model) =>
+      const invalidPincite = yield* replaceModelInBothValidatedViewsByExplicitId(result, 0, firstId, (model) =>
         "outcome" in model
           ? {
               ...model,
@@ -280,11 +278,14 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
       expect(A.map(A.getUnsafe(missingPincite.mentions, 0).components, (component) => component.name)).toEqual([
         "fullSpan",
       ]);
-      const twoBadComponents = yield* replaceModelAt(invalidPincite, 0, firstId, (model) =>
-        "outcome" in model ? { ...model, outcome: { ...model.outcome, fullSpanStart: -1 } } : model
+      const twoBadComponents = yield* replaceModelInBothValidatedViewsByExplicitId(
+        invalidPincite,
+        0,
+        firstId,
+        (model) => ("outcome" in model ? { ...model, outcome: { ...model.outcome, fullSpanStart: -1 } } : model)
       );
       const secondId = A.getUnsafe(expected.returned, 1);
-      const threeIssues = yield* replaceModelAt(twoBadComponents, 1, secondId, (model) =>
+      const threeIssues = yield* replaceModelInBothValidatedViewsByExplicitId(twoBadComponents, 1, secondId, (model) =>
         "outcome" in model ? { ...model, outcome: { ...model.outcome, fullSpanStart: -1 } } : model
       );
       const boundedIssues = yield* install({ ...setup.limits, candidates: 2 });
@@ -322,10 +323,15 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
       expect(A.map(unverified.unverified, (row) => row.reason)).toEqual(["native-point-layout", "native-point-layout"]);
     }
     if (expected.id === 14) {
-      const invalid = yield* replaceModelAt(result, 0, A.getUnsafe(expected.returned, 0), (model) => ({
-        ...model,
-        token: { ...model.token, start: -1 },
-      }));
+      const invalid = yield* replaceModelInBothValidatedViewsByExplicitId(
+        result,
+        0,
+        A.getUnsafe(expected.returned, 0),
+        (model) => ({
+          ...model,
+          token: { ...model.token, start: -1 },
+        })
+      );
       const retained = yield* stage.project({ source: proof, result: invalid });
       expect(retained.mentions).toHaveLength(1);
       expect(A.getUnsafe(retained.mentions, 0).warnings).toEqual([]);

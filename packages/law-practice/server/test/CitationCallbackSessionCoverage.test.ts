@@ -48,12 +48,11 @@ const prepareControls = Effect.fn("CallbackCoverageTest.prepare")(function* (
   );
   return yield* prepareCitationResolution({ ...input, limits: { ...input.limits, ...limits(input.limits) } });
 });
-// Free steps isolate the dictionary's own slot ceilings from the shared work budget.
-const unmeteredDictionary = Effect.fn("CallbackCoverageTest.unmetered")(function* (iterations: number) {
+const slotCeilingOnlyDictionary = Effect.fn("CallbackCoverageTest.unmetered")(function* (iterations: number) {
   const prepared = yield* prepareControls(() => ({ resolutionIterations: iterations }));
-  const work = CitationResolutionWork.of({ maximum: iterations, step: Effect.void });
+  const freeSteps = CitationResolutionWork.of({ maximum: iterations, step: Effect.void });
   const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
-    Effect.provideService(CitationResolutionWork, work)
+    Effect.provideService(CitationResolutionWork, freeSteps)
   );
   yield* dictionary.start;
   return dictionary;
@@ -62,7 +61,7 @@ const unmeteredDictionary = Effect.fn("CallbackCoverageTest.unmetered")(function
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback session ceilings", (it) => {
   it.effect("bounds detached list allocation by the resolution iteration ceiling", () =>
     Effect.gen(function* () {
-      const dictionary = yield* unmeteredDictionary(2);
+      const dictionary = yield* slotCeilingOnlyDictionary(2);
       yield* dictionary.allocate([]);
       yield* dictionary.allocate([]);
       const refused = yield* dictionary.allocate([]).pipe(Effect.flip);
@@ -75,7 +74,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback session
 
   it.effect("bounds new dictionary keys aliasing one list by the iteration ceiling without publishing them", () =>
     Effect.gen(function* () {
-      const dictionary = yield* unmeteredDictionary(2);
+      const dictionary = yield* slotCeilingOnlyDictionary(2);
       const list = yield* dictionary.allocate([]);
       const first = yield* resource("entry-first");
       const second = yield* resource("entry-second");
@@ -132,8 +131,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback session
       const owned = yield* makeCitationCallbackDictionary(prepared).pipe(
         Effect.provideService(CitationResolutionWork, work)
       );
-      // The owned dictionary stays within budget; its supplied view repeats each group.
-      const inflated = CitationCallbackDictionary.of({
+      const suppliedViewRepeatingEachGroup = CitationCallbackDictionary.of({
         ...owned,
         read: owned.read.pipe(Effect.map((groups) => A.appendAll(groups, groups))),
       });
@@ -157,13 +155,13 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback session
       });
       const refused = yield* runPreparedCitationCallbackSession(prepared).pipe(
         Effect.provideService(CitationResolutionWork, work),
-        Effect.provideService(CitationCallbackDictionary, inflated),
+        Effect.provideService(CitationCallbackDictionary, suppliedViewRepeatingEachGroup),
         Effect.provideService(CitationResolutionCallbacks, callbacks),
         Effect.flip
       );
       deepStrictEqual(refused, exceeded("resolutionEdges"));
       strictEqual(calls, 1);
-      strictEqual(ownedEdges, 2);
+      strictEqual(ownedEdges, 2, "the owned dictionary itself stays within the edge budget");
       const closed = yield* owned.read.pipe(Effect.flip);
       strictEqual(closed.reason, "invalid-input");
     })

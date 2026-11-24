@@ -66,9 +66,12 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
             const worker = yield* makeCitationHtmlWorker(limits, runtime).pipe(services);
             const outcome = yield* worker.clean("<p>Example</p>").pipe(Effect.forkChild, Effect.flatMap(Fiber.await));
             expect(Exit.hasInterrupts(outcome)).toBe(true);
-            // Inspect before the installed cleaner's longer Scope closes.
             const state = yield* worker.snapshot;
-            expect(state).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
+            expect(state, "inspected before the installed cleaner's longer Scope closes").toMatchObject({
+              active: 0,
+              processes: 0,
+              quarantined: 0,
+            });
           } else {
             const worker = yield* makeCitationXmlWorker(limits, runtime).pipe(services);
             yield* withCitationTestInvocation(

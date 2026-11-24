@@ -12,6 +12,10 @@ import { constant } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 
+const raggedTrailingUnitReadingAsABNeverEqual = CitationPythonUnicodeStorage.make({
+  width: 2,
+  bytes: new Uint8Array([0x41, 0x00, 0x42]),
+});
 const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, hash: BigInt(7) });
 const makeTable = Effect.fnUntraced(function* (
   texts: () => HashMap.HashMap<number, string | CitationPythonUnicodeStorage>
@@ -38,9 +42,8 @@ it.effect("compares colliding exact Unicode keys by code point across text and n
         CitationPythonUnicodeStorage.make({ width: 4, bytes: new Uint8Array([0x00, 0xf6, 0x01, 0x00, 0x61, 0, 0, 0]) }),
       ],
       [4, "😀b"],
-      // A ragged trailing unit whose readable byte matches "AB" still never compares equal.
       [5, "AB"],
-      [6, CitationPythonUnicodeStorage.make({ width: 2, bytes: new Uint8Array([0x41, 0x00, 0x42]) })]
+      [6, raggedTrailingUnitReadingAsABNeverEqual]
     );
     const table = yield* makeTable(() => texts);
     yield* table.set(key(1), 10);

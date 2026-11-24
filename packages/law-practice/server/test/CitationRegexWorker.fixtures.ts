@@ -47,7 +47,6 @@ import type { CitationRegexEngine } from "@beep/law-practice-server/internal/Cit
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeExitCounts } from "./CitationNativeSpawner.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const installCitationRegexEvaluator = Effect.fnUntraced(function* (
   a0: Parameters<typeof installOwnedCitationRegexEvaluator>[0],
   a1: unknown,
@@ -368,11 +367,13 @@ export const assertCitationMetadataInstallControls = Effect.fn("MetadataTest.ins
   setup: Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>,
   configuration: C
 ) {
-  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
   const failed = yield* install(setup.limits, setup.runtime, { ...configuration, pattern: changedPattern }).pipe(
     Effect.provideContext(setup.provided),
     Effect.flip
   );
-  expect(failed).toMatchObject({ reason: "invalid-configuration" });
+  expect(
+    failed,
+    "an owned configuration whose fixed pattern fails authentication is refused by the stage"
+  ).toMatchObject({ reason: "invalid-configuration" });
 });

@@ -9,8 +9,10 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
-// A width-4 point beyond U+10FFFF passes the structural schema but not native validation.
-const beyondUnicode = CitationPythonUnicodeStorage.make({ width: 4, bytes: new Uint8Array([0, 0, 17, 0]) });
+const structurallyValidPointBeyondUnicode = CitationPythonUnicodeStorage.make({
+  width: 4,
+  bytes: new Uint8Array([0, 0, 17, 0]),
+});
 const replacement = (before = word("["), after = word("]")) =>
   CitationAnnotationReplacement.make({ start: 0, end: 1, before, after });
 const refusal = (failure: { readonly _tag: string }) => ({
@@ -33,9 +35,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("annotation 
     Effect.gen(function* () {
       const entry = yield* install();
       for (const request of [
-        { plain: beyondUnicode, replacements: [] },
-        { plain: word("abc"), replacements: [replacement(beyondUnicode)] },
-        { plain: word("abc"), replacements: [replacement(word("["), beyondUnicode)] },
+        { plain: structurallyValidPointBeyondUnicode, replacements: [] },
+        { plain: word("abc"), replacements: [replacement(structurallyValidPointBeyondUnicode)] },
+        { plain: word("abc"), replacements: [replacement(word("["), structurallyValidPointBeyondUnicode)] },
       ]) {
         const failure = yield* entry.annotate(request).pipe(Effect.flip);
         deepStrictEqual(refusal(failure), { _tag: "CitationAnnotationEntryFailure", detail: "invalid-input" });

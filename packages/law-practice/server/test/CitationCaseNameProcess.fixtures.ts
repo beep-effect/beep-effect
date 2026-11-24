@@ -196,9 +196,8 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  // Source parity is independent of host scheduling; the lifetime test below
-  // explicitly triggers and verifies this same captured extraction deadline.
-  const setup = yield* install(kind, undefined, false, true);
+  const controlledDeadlineSoParityIgnoresHostScheduling = true;
+  const setup = yield* install(kind, undefined, false, controlledDeadlineSoParityIgnoresHostScheduling);
   const smoke = [13, 55, 137, 185, 197, 201, 239, 243, 251, 293, 301, 305, 313, 321];
   const rows = A.filter(setup.corpus.cases, (row) => full || row.error === "TypeError" || A.contains(smoke, row.id));
   for (const row of rows) yield* assertRow(setup.stage, row);
@@ -254,7 +253,6 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
 export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
-  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const configuration of [
     {
       ...closed.configuration,
@@ -269,7 +267,10 @@ export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessT
       Effect.provideContext(closed.provided),
       Effect.flip
     );
-    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+    expect(
+      rejected,
+      "an owned configuration whose fixed pattern fails authentication is refused by the stage"
+    ).toMatchObject({ reason: "invalid-configuration" });
   }
   const row = A.getUnsafe(closed.corpus.cases, 13);
   const invalid = yield* closed.stage.apply({}).pipe(Effect.flip);

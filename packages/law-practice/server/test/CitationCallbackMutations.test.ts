@@ -430,7 +430,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
     })
   );
   it.effect(
-    "encodes all sixteen source group snapshots including list aliases and detached nodes without claiming callback execution",
+    "encodes all sixteen source group snapshots including list aliases and detached nodes; placeholder decisions prove representability, not resolution inference or live dictionary and list mutation, without claiming callback execution",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -453,14 +453,16 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
             })
           );
           const prepared = yield* prepareCitationResolution(input);
-          // IDs here encode source fixture slots, not a production alias issuer.
-          const listId = (slot: number) => CitationMemberListId.make(`cl1:${Str.padStart(64, "0")(`${slot}`)}`);
-          const detachedId = (slot: number) => CitationDetachedId.make(`cd1:${Str.padStart(64, "0")(`${slot}`)}`);
+          const fixtureSlotListId = (slot: number) =>
+            CitationMemberListId.make(`cl1:${Str.padStart(64, "0")(`${slot}`)}`);
+          const fixtureSlotDetachedId = (slot: number) =>
+            CitationDetachedId.make(`cd1:${Str.padStart(64, "0")(`${slot}`)}`);
           const toMember = (value: typeof Member.Type) =>
             Member.match(value, {
               input: (value) =>
                 CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, value.index).id }),
-              detached: (value) => CitationGroupMember.cases.Detached.make({ detachedId: detachedId(value.slot) }),
+              detached: (value) =>
+                CitationGroupMember.cases.Detached.make({ detachedId: fixtureSlotDetachedId(value.slot) }),
             });
           const detachedCitations = yield* Effect.forEach(
             row.detachedObjects,
@@ -473,7 +475,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
                   components: object.groups,
                   metadata: { ...wire.metadata, plaintiff: object.metadata.plaintiff },
                 });
-                return CitationDetached.make({ id: detachedId(object.slot), citation });
+                return CitationDetached.make({ id: fixtureSlotDetachedId(object.slot), citation });
               }),
             { concurrency: 1 }
           );
@@ -485,7 +487,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
                 const identity = CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
                 const id = yield* makeCitationResourceAuthorityId(identity);
                 const list = CitationMemberList.make({
-                  id: listId(group.listSlot),
+                  id: fixtureSlotListId(group.listSlot),
                   members: A.map(group.members, toMember),
                 });
                 return {
@@ -520,8 +522,6 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               CitationUnresolved.make({ mentionId: mention.id, reason: "unsupported-citation" })
             ),
           });
-          // Decisions are explicit placeholders: this lane proves representability,
-          // not resolution inference or live dictionary/list mutation fidelity.
           const receipt = yield* projectCitationDocumentReceipt({
             document,
             editions: [],

@@ -94,9 +94,10 @@ export const installCitationCanonicalFactory = Effect.fn("CanonicalDefaultFactor
     }
   ) {
     const candidates = A.filter(names, (row) => row.name === profile.reporter);
-    // Every default used here has one exact named edition, so original [0]
-    // selection is unambiguous without borrowing an assertion's edition guess.
-    expect(candidates).toHaveLength(1);
+    expect(
+      candidates,
+      "every default here has one exact named edition, so original [0] selection needs no edition guess"
+    ).toHaveLength(1);
     const { reference, reporter, volume, page } = override ?? {
       reference: A.getUnsafe(candidates, 0).reference,
       reporter: profile.reporter,
@@ -262,9 +263,13 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
       Effect.fnUntraced(function* (reporter) {
         const choices = A.filter(lookup.rows, (row) => row.reporter === reporter);
         expect(choices).toHaveLength(1);
-        // Preserve source lookup order and select [0], including duplicate aliases.
-        const reference = A.getUnsafe(A.getUnsafe(choices, 0).editions, 0);
-        return yield* factory.create(profiles[0], { reporter, reference, volume: "2", page: "4" });
+        const firstEditionInSourceLookupOrderEvenIfAliased = A.getUnsafe(A.getUnsafe(choices, 0).editions, 0);
+        return yield* factory.create(profiles[0], {
+          reporter,
+          reference: firstEditionInSourceLookupOrderEvenIfAliased,
+          volume: "2",
+          page: "4",
+        });
       }),
       { concurrency: 1 }
     );

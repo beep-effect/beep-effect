@@ -18,7 +18,6 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationTokenEditions = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationTokenEditions>[0],
   a1: unknown
@@ -124,7 +123,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const controls = yield* load();
           const limits = { ...(yield* defaultCitationEnginePolicy).limits, candidates: 2 };
           const row = { ...A.getUnsafe(controls.bindings, 0), id: 0 };
-          // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
           const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, limits);
           const editions = yield* makeCitationTokenEditions(owned, [row]);
           row.reporterShortName = "U.S.";
@@ -135,7 +133,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const citationResult6 = yield* editions.deduplicate([0, 0]);
           expect(citationResult6).toEqual([0]);
           const citationResult7 = yield* editions.deduplicate([0, 0, 0]).pipe(Effect.flip);
-          expect(citationResult7).toMatchObject({ limit: "candidates" });
+          expect(citationResult7, "the installed limits ignore a later mutation of the caller's copy").toMatchObject({
+            limit: "candidates",
+          });
           const citationResult8 = yield* editions.deduplicate([1]).pipe(Effect.flip);
           expect(citationResult8).toMatchObject({ reason: "host-failed" });
           const citationResult9 = yield* makeCitationTokenEditions(limits, [row, row]).pipe(Effect.flip);

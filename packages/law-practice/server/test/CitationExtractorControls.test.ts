@@ -61,10 +61,10 @@ const fixture = Effect.fnUntraced(function* (
     readonly resolver?: SourceTextResolver["Service"];
     readonly wrongRuntime?: boolean;
     readonly wrongVocabulary?: boolean;
-    // Boundary tests replace a field of a fresh copy with a malformed value and
-    // observe the spawner themselves, because the Layer refuses to build.
-    readonly tamper?: (configuration: CitationExtractorConfiguration) => CitationExtractorConfiguration;
-    readonly observed?: Effect.Success<ReturnType<typeof makeCitationObservedSpawner>>;
+    readonly replaceFreshCopyFieldWithMalformed?: (
+      configuration: CitationExtractorConfiguration
+    ) => CitationExtractorConfiguration;
+    readonly observedBecauseTheLayerRefusesToBuild?: Effect.Success<ReturnType<typeof makeCitationObservedSpawner>>;
   } = {}
 ) {
   const source = yield* citationFixtureSourceProof(text);
@@ -77,7 +77,7 @@ const fixture = Effect.fnUntraced(function* (
     ),
     cwd
   );
-  const observed = options.observed ?? (yield* makeCitationObservedSpawner());
+  const observed = options.observedBecauseTheLayerRefusesToBuild ?? (yield* makeCitationObservedSpawner());
   const limits = { ...(yield* defaultCitationEnginePolicy).limits, ...options.limits };
   const implementation = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode("extractor-controls"));
   const resolver =
@@ -99,7 +99,9 @@ const fixture = Effect.fnUntraced(function* (
           : Result.getOrThrow(CourtReporterArtifact).artifactVersion,
     },
   });
-  const context = yield* Layer.build(CitationExtractorLive(options.tamper?.(configuration) ?? configuration)).pipe(
+  const context = yield* Layer.build(
+    CitationExtractorLive(options.replaceFreshCopyFieldWithMalformed?.(configuration) ?? configuration)
+  ).pipe(
     Effect.provideService(SourceTextResolver, resolver),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );
@@ -141,12 +143,15 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
           expect(Reflect.set(copy, field, malformed(configuration))).toBe(true);
           return copy;
         };
-      for (const tamper of [
+      for (const replaceFreshCopyFieldWithMalformed of [
         replaced("installation", (c) => ({ ...c.installation, limits: { ...c.installation.limits, sourceUtf16: -1 } })),
         replaced("runtime", (c) => ({ ...c.runtime, kind: "unsupported" })),
         replaced("installation", (c) => ({ ...c.installation, vocabularyVersion: 42 })),
       ]) {
-        const failure = yield* fixture("35 U.S.C. 101", { tamper, observed }).pipe(Effect.flip);
+        const failure = yield* fixture("35 U.S.C. 101", {
+          replaceFreshCopyFieldWithMalformed,
+          observedBecauseTheLayerRefusesToBuild: observed,
+        }).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
         expect(failure).not.toHaveProperty("cause");
       }
@@ -215,8 +220,11 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       Effect.gen(function* () {
         const control = yield* fixture("35 U.S.C. 101; 35 U.S.C. 102", { limits: { [limit]: 1 } });
         const exit = yield* control.extractor.extract(control.input).pipe(Effect.exit);
-        // Effect.fn annotates the Cause with its stack frame, so compare the error, not the whole Cause.
-        assertSome(Exit.findErrorOption(exit), CitationSafetyLimitExceeded.make({ operation: "extract", limit }));
+        const errorAloneSinceEffectFnAnnotatesTheCause = Exit.findErrorOption(exit);
+        assertSome(
+          errorAloneSinceEffectFnAnnotatesTheCause,
+          CitationSafetyLimitExceeded.make({ operation: "extract", limit })
+        );
         yield* expectPhysical(control.snapshot, 1);
       })
     );
@@ -224,8 +232,6 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
   it.effect("refuses aggregate evidence even when every original-source quote fits individually", () =>
     Effect.gen(function* () {
       const text = "35 U.S.C. 101";
-      // Every verified slice is bounded by the original source, so each fits this
-      // ceiling. The primary plus component slices together exceed it.
       const control = yield* fixture(text, { limits: { producedTextUtf16: Str.length(text) } });
       const failure = yield* control.extractor.extract(control.input).pipe(Effect.flip);
       expect(failure).toMatchObject({

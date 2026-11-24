@@ -104,7 +104,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
             });
             const artifact = Sha256Hex.make(Str.repeat(64)("a"));
             const policy = { ...setup.limits };
-            // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
             const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, policy);
             const entry = yield* makeCitationAnnotationOperation(
               owned,
@@ -128,7 +127,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
             const result = yield* closed;
             expect(S.is(CitationEngineAnnotationResult)(result)).toBe(true);
             expect(result.report).toMatchObject({ operation: "annotate", engineArtifact: artifact, extraction: null });
-            expect(result.report.limits.producedTextUtf16).toBe(setup.limits.producedTextUtf16);
+            expect(
+              result.report.limits.producedTextUtf16,
+              "the installed limits ignore a later mutation of the caller's copy"
+            ).toBe(setup.limits.producedTextUtf16);
             expect(result.report.producedTextUtf16).toBeGreaterThan(0);
             expect(result.text).toEqual(word("[foo <i>1 U.S. 1</i> bar]"));
             expect(S.is(VerifiedSourceText)(result.source)).toBe(true);

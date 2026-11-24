@@ -106,8 +106,9 @@ const parentedPipeline = Effect.fn("CleanerCoverageTest.parented")(function* (
   );
   return { parent, pipeline };
 });
-// An unrelated producer holds the parent ledger until `release` completes.
-const holdParent = Effect.fn("CleanerCoverageTest.holdParent")(function* (parent: CitationTextBudget["Service"]) {
+const holdParentLedgerUntilRelease = Effect.fn("CleanerCoverageTest.holdParent")(function* (
+  parent: CitationTextBudget["Service"]
+) {
   const holding = yield* Deferred.make<void>();
   const release = yield* Deferred.make<void>();
   const holder = yield* parent
@@ -128,7 +129,7 @@ it.effect("keeps a reservation that waited on the parent charged in both ledgers
     Effect.gen(function* () {
       const h = yield* setup();
       const { parent, pipeline } = yield* parentedPipeline(h);
-      const { release: releaseParent } = yield* holdParent(parent);
+      const { release: releaseParent } = yield* holdParentLedgerUntilRelease(parent);
       const queued = yield* Deferred.make<void>();
       let late = O.none<Fiber.Fiber<CitationCleanerTextCharge, Failure>>();
       const callback = yield* h.values.retainHost("leaked-work-callback");
@@ -181,7 +182,7 @@ it.effect("rolls the cleaner reservation back when the parent refuses or the wai
         invoke: Effect.fnUntraced(function* (_fn, _current, work) {
           refusal = yield* work.reserveText(4).pipe(Effect.match({ onFailure: O.some, onSuccess: () => O.none() }));
           afterRefusal = (yield* work.snapshot).producedTextUtf16;
-          const { release: releaseParent } = yield* holdParent(parent);
+          const { release: releaseParent } = yield* holdParentLedgerUntilRelease(parent);
           const queued = yield* Deferred.make<void>();
           const waiting = yield* Deferred.succeed(queued, undefined).pipe(
             Effect.andThen(work.reserveText(1)),
