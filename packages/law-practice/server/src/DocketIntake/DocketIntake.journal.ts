@@ -257,8 +257,6 @@ const journalPath = Effect.fnUntraced(function* (directory: string) {
   return path.join(directory, JOURNAL_FILE);
 });
 
-// Cut a final line a crash left without its line break, so the next append starts a line of its
-// own instead of being glued onto the torn one.
 const repairTornTail = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, file: string) {
   if (!(yield* fs.exists(file))) {
     return;
@@ -303,7 +301,6 @@ export const makeDocketFileJournalLayer = (
   Layer.effect(
     DocketIntakeJournal,
     Effect.gen(function* () {
-      // The store is not used here; requiring it means the state lock is held while the journal is open.
       yield* DocketIntakeStore;
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -373,15 +370,12 @@ export const readDocketJournal: (
     return A.empty<DocketJournalEntry>();
   }
   const contents = yield* fs.readFileString(file).pipe(Effect.mapError(journalError("journal-read")));
-  // Every complete line ends with a break, so the last piece is empty or an unfinished line.
-  const complete = A.dropRight(Str.split(LINE_BREAK)(contents), 1);
-  return yield* Effect.forEach(complete, decodeLine, { concurrency: 1 }).pipe(
+  const completeLinesBeforeUnfinishedTail = A.dropRight(Str.split(LINE_BREAK)(contents), 1);
+  return yield* Effect.forEach(completeLinesBeforeUnfinishedTail, decodeLine, { concurrency: 1 }).pipe(
     Effect.mapError(journalError("journal-decode"))
   );
 });
 
-// Record a write that already succeeded. A write the journal cannot record is one an undo could
-// not find, so the failure stops the cycle instead of being swallowed as a port failure.
 const recordWrite = Effect.fnUntraced(function* (
   journal: DocketIntakeJournalShape,
   fields: Omit<Parameters<typeof DocketJournalEntry.make>[0], "at" | "runId">
@@ -394,8 +388,6 @@ const recordWrite = Effect.fnUntraced(function* (
 const isEventLine = (line: DocketJournalEntry) =>
   line.kind === DocketJournalKind.Enum["event-created"] || line.kind === DocketJournalKind.Enum["event-adopted"];
 
-// Journal an event the pipeline found by its key when no line names it yet: a cycle created it
-// and stopped before the create was journaled, so without this line no undo could reach it.
 const adopt = Effect.fnUntraced(function* (journal: DocketIntakeJournalShape, key: string, found: DocketWrittenEntry) {
   const lines = yield* journal.entries.pipe(Effect.orDie);
   const known = A.some(lines, (line) => isEventLine(line) && O.contains(line.eventId, found.eventId));
