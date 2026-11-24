@@ -14,8 +14,6 @@ import { DocumentClass, FilingRootKind, FilingSegment } from "../IntakeTaxonomy/
 const $I = $LawPracticeDomainId.create("values/LibrarianLoop/LibrarianLoop.model");
 
 /**
- * The document metadata one filing decision is projected from.
- *
  * **Example** (Make a librarian input)
  *
  * ```ts
@@ -99,8 +97,6 @@ export class LibrarianOutput extends S.Opaque<LibrarianOutput, { readonly brand:
 ) {}
 
 /**
- * Raised when the concept is absent from the scheme or has no filing in the taxonomy.
- *
  * **Example** (Make a concept-not-found error)
  *
  * ```ts
@@ -124,8 +120,6 @@ export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFou
 ) {}
 
 /**
- * Raised when a concept does not admit the requested document class.
- *
  * **Example** (Make an unsupported-class error)
  *
  * ```ts

@@ -34,8 +34,6 @@ import type { Dataset, NamedNode, ObjectTerm, Quad, Subject } from "./Rdf.ts";
 const $I = $RdfId.create("SourceTextEntity");
 
 /**
- * Why a dataset was refused as a source-text entity.
- *
  * **Details**
  *
  * `integrityMismatch` covers a tampered or malformed kept field and a decode
@@ -65,17 +63,12 @@ export const SourceTextEntityRefusalReason = LiteralKit([
 );
 
 /**
- * Decoded type of {@link SourceTextEntityRefusalReason}.
- *
  * @category errors
  * @since 0.0.0
  */
 export type SourceTextEntityRefusalReason = typeof SourceTextEntityRefusalReason.Type;
 
 /**
- * A dataset is not the projection of a source-text identity under the
- * reader's scope.
- *
  * **Example** (Describe a refusal)
  *
  * ```ts import.meta.vitest name="Describe a refusal"

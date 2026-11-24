@@ -217,15 +217,11 @@ export * from "./LegalScopeContext/index.ts";
  */
 export * from "./LegalVerdictFamily/index.ts";
 /**
- * Legal vocabulary asset pack exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./LegalVocabularyPack/index.ts";
 /**
- * Librarian loop exports.
- *
  * @category value-objects
  * @since 0.0.0
  */

@@ -23,8 +23,6 @@ const isSafeFilingSegment = (segment: string): boolean =>
   P.not(Str.includes("\u0000"))(segment);
 
 /**
- * A single safe path component for projected filing paths.
- *
  * **Details**
  *
  * A segment holds no separator, no dot traversal and no NUL byte, so a path
@@ -58,8 +56,6 @@ export const FilingSegment = S.NonEmptyString.check(
 );
 
 /**
- * Runtime type for {@link FilingSegment}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -109,16 +105,12 @@ export const DocumentClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link DocumentClass}.
- *
  * @category models
  * @since 0.0.0
  */
 export type DocumentClass = typeof DocumentClass.Type;
 
 /**
- * The kind of storage root a filing path is projected under.
- *
  * **Example** (Check the mirror root kind)
  *
  * ```ts import.meta.vitest name="Check the mirror root kind"
@@ -137,8 +129,6 @@ export const FilingRootKind = LiteralKit(["local-vault", "box-mirror"]).pipe(
 );
 
 /**
- * Runtime type for {@link FilingRootKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -172,8 +162,6 @@ export const PathTemplateSegment = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PathTemplateSegment}.
- *
  * @category models
  * @since 0.0.0
  */

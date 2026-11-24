@@ -252,6 +252,11 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
 );
 
 /**
+ * **Details**
+ *
+ * Decoding lowercases the tag, because RDF 1.1 places language tags in a
+ * lowercase value space: `"x"@EN` and `"x"@en` are one literal.
+ *
  * **Example** (Decode language tag)
  *
  * ```ts import.meta.vitest name="Decode language tag"
@@ -261,11 +266,6 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
  * const tag = S.decodeUnknownSync(LanguageTag)("en-US")
  * tag // => "en-us"
  * ```
- *
- * **Details**
- *
- * Decoding lowercases the tag, because RDF 1.1 places language tags in a
- * lowercase value space: `"x"@EN` and `"x"@en` are one literal.
  *
  * @category models
  * @since 0.0.0
@@ -392,8 +392,6 @@ const XSD_STRING_IRI = "http://www.w3.org/2001/XMLSchema#string";
 const RDF_LANG_STRING_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
 
 /**
- * The form of a simple literal, whose datatype is `xsd:string`.
- *
  * **Example** (Decode simple literal form)
  *
  * ```ts import.meta.vitest name="Decode simple literal form"
@@ -413,8 +411,6 @@ export const SimpleLiteralForm = S.TaggedStruct("Simple", {}).pipe(
 );
 
 /**
- * Type for {@link SimpleLiteralForm}.
- *
  * **Example** (Accept simple literal form type)
  *
  * ```ts
@@ -448,9 +444,6 @@ const TypedLiteralFormChecks = S.makeFilterGroup(
 );
 
 /**
- * The form of a typed literal, whose datatype is neither `xsd:string` nor
- * `rdf:langString`.
- *
  * **Example** (Decode typed literal form)
  *
  * ```ts import.meta.vitest name="Decode typed literal form"
@@ -475,8 +468,6 @@ export const TypedLiteralForm = S.TaggedStruct("Typed", { datatype: NamedNode })
 );
 
 /**
- * Type for {@link TypedLiteralForm}.
- *
  * **Example** (Accept typed literal form type)
  *
  * ```ts
@@ -492,8 +483,6 @@ export const TypedLiteralForm = S.TaggedStruct("Typed", { datatype: NamedNode })
 export type TypedLiteralForm = typeof TypedLiteralForm.Type;
 
 /**
- * The form of a language-tagged literal, whose datatype is `rdf:langString`.
- *
  * **Example** (Decode language-tagged literal form)
  *
  * ```ts import.meta.vitest name="Decode language-tagged literal form"
@@ -513,8 +502,6 @@ export const LangTaggedLiteralForm = S.TaggedStruct("LangTagged", { language: La
 );
 
 /**
- * Type for {@link LangTaggedLiteralForm}.
- *
  * **Example** (Accept language-tagged literal form type)
  *
  * ```ts
@@ -555,8 +542,6 @@ export const LiteralForm = S.Union([SimpleLiteralForm, TypedLiteralForm, LangTag
 );
 
 /**
- * Type for {@link LiteralForm}.
- *
  * **Example** (Accept literal form type)
  *
  * ```ts
@@ -572,8 +557,6 @@ export const LiteralForm = S.Union([SimpleLiteralForm, TypedLiteralForm, LangTag
 export type LiteralForm = typeof LiteralForm.Type;
 
 /**
- * A datatype and language pair that names no RDF literal form.
- *
  * **Example** (Construct literal form refusal)
  *
  * ```ts
@@ -671,6 +654,13 @@ const formOfParts = (parts: typeof LiteralParts.Encoded): Result.Result<LiteralF
 const noLanguage = constant(O.none<LanguageTag>());
 
 /**
+ * **Details**
+ *
+ * A simple literal has datatype `xsd:string`, a typed literal names any other
+ * datatype except `rdf:langString`, and a language-tagged literal has datatype
+ * `rdf:langString`. `Literal.datatypeOf` and `Literal.languageOf` derive the
+ * RDF/JS accessors, and `Literal.fromParts` normalizes engine output.
+ *
  * **Example** (Decode RDF literal)
  *
  * ```ts import.meta.vitest name="Decode RDF literal"
@@ -684,13 +674,6 @@ const noLanguage = constant(O.none<LanguageTag>());
  * })
  * literal.form._tag // => "LangTagged"
  * ```
- *
- * **Details**
- *
- * A simple literal has datatype `xsd:string`, a typed literal names any other
- * datatype except `rdf:langString`, and a language-tagged literal has datatype
- * `rdf:langString`. `Literal.datatypeOf` and `Literal.languageOf` derive the
- * RDF/JS accessors, and `Literal.fromParts` normalizes engine output.
  *
  * @category models
  * @since 0.0.0
@@ -1025,6 +1008,12 @@ const QuadSet = Quad.pipe(
 );
 
 /**
+ * **Details**
+ *
+ * The decoded quads are a `HashSet`, so `Equal` on datasets is labelled-set
+ * equality. The encoded quads are deduplicated and sorted by each quad's
+ * canonical N-Quads line, so one quad set has one wire form.
+ *
  * **Example** (Build dataset from quads)
  *
  * ```ts import.meta.vitest name="Build dataset from quads"
@@ -1039,12 +1028,6 @@ const QuadSet = Quad.pipe(
  * const dataset = makeDataset([quad, quad])
  * HashSet.size(dataset.quads) // => 1
  * ```
- *
- * **Details**
- *
- * The decoded quads are a `HashSet`, so `Equal` on datasets is labelled-set
- * equality. The encoded quads are deduplicated and sorted by each quad's
- * canonical N-Quads line, so one quad set has one wire form.
  *
  * @category models
  * @since 0.0.0
@@ -1222,6 +1205,11 @@ export const makeBlankNode = (value: string): BlankNode =>
 /**
  * Build a simple RDF literal, whose datatype is `xsd:string`.
  *
+ * **Details**
+ *
+ * Typed literals use `Literal.typed` and language-tagged literals use
+ * `Literal.langTagged`.
+ *
  * **Example** (Create simple RDF literal)
  *
  * ```ts import.meta.vitest name="Create simple RDF literal"
@@ -1231,11 +1219,6 @@ export const makeBlankNode = (value: string): BlankNode =>
  * lit.form._tag // => "Simple"
  * lit.value // => "hello"
  * ```
- *
- * **Details**
- *
- * Typed literals use `Literal.typed` and language-tagged literals use
- * `Literal.langTagged`.
  *
  * @param value - Lexical form.
  * @returns Simple RDF literal.
@@ -1428,15 +1411,6 @@ const serializeQuadShape = (quad: typeof Quad.Encoded): string =>
 /**
  * Serialize an RDF term in canonical N-Triples form.
  *
- * **Example** (Serialize named node term)
- *
- * ```ts import.meta.vitest name="Serialize named node term"
- * import { makeLiteral, makeNamedNode, serializeTerm } from "@beep/rdf/Rdf"
- *
- * serializeTerm(makeNamedNode("https://example.org/x")) // => "<https://example.org/x>"
- * serializeTerm(makeLiteral("a\tb")) // => "\"a\\tb\""
- * ```
- *
  * **Details**
  *
  * Literals use the RDFC-1.0 escape table: `ECHAR` for backspace, tab, line
@@ -1445,6 +1419,15 @@ const serializeQuadShape = (quad: typeof Quad.Encoded): string =>
  * `^^<xsd:string>`, a language tag prints lowercase, and the default graph
  * prints as the empty string. Blank-node labels outside `[A-Za-z0-9]` are
  * re-encoded into a grammar-safe form.
+ *
+ * **Example** (Serialize named node term)
+ *
+ * ```ts import.meta.vitest name="Serialize named node term"
+ * import { makeLiteral, makeNamedNode, serializeTerm } from "@beep/rdf/Rdf"
+ *
+ * serializeTerm(makeNamedNode("https://example.org/x")) // => "<https://example.org/x>"
+ * serializeTerm(makeLiteral("a\tb")) // => "\"a\\tb\""
+ * ```
  *
  * @param term - RDF term.
  * @returns Canonical term serialization.
@@ -1455,6 +1438,11 @@ export const serializeTerm = (term: Term): string => serializeTermShape(term);
 
 /**
  * Serialize an RDF quad as one canonical N-Quads line without its newline.
+ *
+ * **Details**
+ *
+ * The default graph is omitted, so a default-graph quad prints as an
+ * N-Triples statement.
  *
  * **Example** (Serialize RDF quad)
  *
@@ -1468,11 +1456,6 @@ export const serializeTerm = (term: Term): string => serializeTermShape(term);
  * )
  * serializeQuad(quad) // => "<https://example.org/alice> <https://schema.org/name> \"Alice\" ."
  * ```
- *
- * **Details**
- *
- * The default graph is omitted, so a default-graph quad prints as an
- * N-Triples statement.
  *
  * @param quad - RDF quad.
  * @returns Canonical quad serialization.

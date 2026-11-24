@@ -7,8 +7,6 @@
  */
 
 /**
- * IntakeTaxonomy.model exports.
- *
  * @category value-objects
  * @since 0.0.0
  */

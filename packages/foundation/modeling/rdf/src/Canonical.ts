@@ -103,8 +103,6 @@ export const CanonicalNQuads = S.String.pipe(
 );
 
 /**
- * Decoded type of {@link CanonicalNQuads}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -135,17 +133,12 @@ export const DatasetDigest = ContentHash.pipe(
 );
 
 /**
- * Decoded type of {@link DatasetDigest}.
- *
  * @category identifiers
  * @since 0.0.0
  */
 export type DatasetDigest = typeof DatasetDigest.Type;
 
 /**
- * A dataset's canonical form: its canonical N-Quads and the dataset relabelled
- * with the issued canonical blank-node labels.
- *
  * **Example** (Build a canonical form)
  *
  * ```ts
