@@ -156,11 +156,12 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       const f = yield* fixture();
       const original = yield* f.capture(`${f.directory}/backup`);
       const originalSource = yield* f.fs.readFile(`${f.directory}/source.sqlite`);
-      const olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution = Effect.gen(function* () {
-        const client = yield* SqliteClient.make({ filename: `${f.directory}/backup/journal.sqlite` });
-        yield* client`CREATE TABLE unexpected_historical_table (value TEXT)`;
+      yield* Effect.gen(function* () {
+        const olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution = yield* SqliteClient.make({
+          filename: `${f.directory}/backup/journal.sqlite`,
+        });
+        yield* olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution`CREATE TABLE unexpected_historical_table (value TEXT)`;
       }).pipe(Effect.scoped);
-      yield* olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution;
       const bytes = yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`);
       const manifest = ObservationBackupManifest.make({
         ...original.manifest,
