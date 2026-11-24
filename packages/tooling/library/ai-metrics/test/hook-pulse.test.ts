@@ -756,10 +756,10 @@ describe("HookPulseV1", () => {
         decoded.postToolUseFailure.waitReason,
         "a failed call ends its tool bracket, the one terminal event a call gets instead of PostToolUse, and is not a human wait"
       ).toBe(HookPulseWaitReason.Enum.none);
-      expect(
-        [decoded.postToolUseFailure.toolUseId, decoded.postToolUseFailure.durationMs],
-        "the two-hop join needs both closing fields, or the failed call's wait is unmeasurable"
-      ).toEqual([O.some("tool-failed-1"), O.some(12)]);
+      const twoHopJoinNeedsThisClosingToolUseId = "tool-failed-1";
+      const twoHopJoinNeedsThisClosingDurationOrTheWaitIsUnmeasurable = 12;
+      assertSome(decoded.postToolUseFailure.toolUseId, twoHopJoinNeedsThisClosingToolUseId);
+      assertSome(decoded.postToolUseFailure.durationMs, twoHopJoinNeedsThisClosingDurationOrTheWaitIsUnmeasurable);
     })
   );
 
@@ -1291,17 +1291,13 @@ describe("HookPulseV1", () => {
       const hashPublicTextSha2566 = yield* hashPublicTextSha256("mcp-server:notion");
       assertSome(decoded.mcp.surface, hashPublicTextSha2566);
       assertNone(decoded.sourceRead.surface);
-      const hashPublicTextSha2567 = yield* hashPublicTextSha256("hook:law-pulse.sh");
-      expect(
-        decoded.hookEdit.surface,
-        "a pure codec cannot walk the disk, so the writer stamps the repo root and absence falls back to cwd as the shell walk does"
-      ).toEqual(O.some(hashPublicTextSha2567));
+      const hookSurfaceTheWriterStampsSinceAPureCodecCannotWalkTheDisk =
+        yield* hashPublicTextSha256("hook:law-pulse.sh");
+      assertSome(decoded.hookEdit.surface, hookSurfaceTheWriterStampsSinceAPureCodecCannotWalkTheDisk);
       const claudeMdSymlinkSharesTheAgentsMdDigest = yield* hashPublicTextSha256("agents-md:AGENTS.md");
       assertSome(decoded.claudeMd.surface, claudeMdSymlinkSharesTheAgentsMdDigest);
-      expect(
-        decoded.preToolUse.surface,
-        "PostToolUse owns the field, so the same skill call's PreToolUse carries none"
-      ).toEqual(O.none());
+      const preToolUseCarriesNoSurfaceSincePostToolUseOwnsIt = decoded.preToolUse.surface;
+      assertNone(preToolUseCarriesNoSurfaceSincePostToolUseOwnsIt);
       expect(serialized, "the raw skill name never reaches the row").not.toContain(surfaceSkillName);
       const encodedHook = yield* encodeHookPulse(decoded.hookEdit);
       const serializedHook = yield* encodeUnknownJsonEffect(encodedHook);
@@ -1347,10 +1343,8 @@ describe("HookPulseV1", () => {
 
       assertSome(decoded.stamped.harnessHash, harnessHashStamp);
       expect(decoded.stamped.waitReason).toBe(HookPulseWaitReason.Enum.none);
-      expect(
-        decoded.unstamped.harnessHash,
-        "absence stays absence: the codec has no repo root to recompute a hash from"
-      ).toEqual(O.none());
+      const unstampedHashStaysAbsentWithNoRepoRootToRecomputeFrom = decoded.unstamped.harnessHash;
+      assertNone(unstampedHashStaysAbsentWithNoRepoRootToRecomputeFrom);
       assertNone(decoded.misowned.harnessHash);
       expect(raw.harnessHash).toBe(harnessHashStamp);
       pipe(hookPulseEquivalent(roundTripped, decoded.stamped), assertTrue);
