@@ -13,7 +13,10 @@ import {
 } from "@beep/ontology/Mapping";
 import { annotationMappingSet } from "@beep/ontology/Mapping.annotation";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -234,5 +237,24 @@ describe("mapping sets", () => {
       ]);
       expect(encoded.license).toBe("Apache-2.0");
     })
+  );
+
+  it.effect.prop(
+    "a one-row set of any predicate and justification is coherent and survives its codec",
+    [Arbitrary.schema(MappingPredicate), Arbitrary.schema(MappingJustification)],
+    ([predicate, justification]) =>
+      Effect.gen(function* () {
+        const set = yield* decodeSet({
+          id: "https://example.test/mapping-set",
+          version: "1",
+          license: "Apache-2.0",
+          mappings: [encodedRow(["doco:Figure", predicate, "doco:List"], justification)],
+        });
+        deepStrictEqual(checkMappingCoherence(empty)(set), []);
+        const encoded = yield* S.encodeEffect(MappingSet)(set);
+        const decoded = yield* decodeSet(encoded);
+        assertTrue(S.toEquivalence(MappingSet)(decoded, set));
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });

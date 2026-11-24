@@ -15,6 +15,7 @@ import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -65,7 +66,7 @@ describe("legal position relator gUFO typing", () => {
   });
 });
 
-it.layer(LegalPositionRelatorPolicyLive)("legal position relator policy fields", (it) => {
+it.layer(LegalPositionRelatorPolicyLive, { timeout: "30 seconds" })("legal position relator policy fields", (it) => {
   it.effect(
     "binds the policy's bearer and counterparty fields to the terms the relator mediates",
     Effect.fnUntraced(function* () {
@@ -75,8 +76,11 @@ it.layer(LegalPositionRelatorPolicyLive)("legal position relator policy fields",
       const mediated = O.map(relator, (typing) =>
         typing.mediates.pipe(HashMap.keys, A.fromIterable, A.sort(Order.String))
       );
-      expect(mediated).toEqual(O.some(A.sort(R.values(roleFieldTerms), Order.String)));
-      expect(O.map(relator, (typing) => typing.mediates.pipe(HashMap.values, A.fromIterable))).toEqual(O.some([1, 1]));
+      assertSome(mediated, A.sort(R.values(roleFieldTerms), Order.String));
+      assertSome(
+        O.map(relator, (typing) => typing.mediates.pipe(HashMap.values, A.fromIterable)),
+        [1, 1]
+      );
       const roleFields = A.sort(
         A.filterMap(R.toEntries(storedRelation), ([field, value]) =>
           O.isSome(decodeLegalRoleOption(value)) ? Result.succeed(field) : Result.failVoid

@@ -9,7 +9,7 @@ import { Dataset, makeBlankNode, makeDataset, makeNamedNode, makeQuad, Quad, ser
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
-import { assertEquals } from "@effect/vitest/utils";
+import { assertEquals, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -225,7 +225,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "120 seconds" })(L61, (it) => {
           [Effect.result(canonicalize(original)), Effect.result(canonicalize(relabelled))],
           { concurrency: 1 }
         );
-        expect(Result.isFailure(left)).toBe(Result.isFailure(right));
+        deepStrictEqual(Result.isFailure(left), Result.isFailure(right));
       }),
     runs
   );

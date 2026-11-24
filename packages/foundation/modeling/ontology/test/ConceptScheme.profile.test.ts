@@ -23,7 +23,8 @@ const decodeScheme = S.decodeUnknownEffect(S.fromJsonString(ConceptScheme));
 
 const readScheme = Effect.fnUntraced(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(`${fixtureRoot}/${path}`);
+  const file = yield* fs.realPath(`${fixtureRoot}/${path}`);
+  const text = yield* fs.readFileString(file);
   return yield* decodeScheme(text);
 });
 

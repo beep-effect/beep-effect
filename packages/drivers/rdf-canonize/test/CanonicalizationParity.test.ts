@@ -6,10 +6,12 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { expect } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -101,16 +103,16 @@ it.layer(Layer.mergeAll(CanonicalizationServiceLive, Digest.layerWebCrypto), { t
       ([target]) =>
         Effect.gen(function* () {
           const expected = yield* oracle(target);
-          const actual = yield* Effect.result(canonicalize(target));
-          expect(Result.isSuccess(actual)).toBe(Result.isSuccess(expected));
-          if (Result.isSuccess(actual) && Result.isSuccess(expected)) {
-            expect(actual.success.nquads).toBe(expected.success);
+          const actual = yield* Effect.exit(canonicalize(target));
+          deepStrictEqual(Exit.isSuccess(actual), Result.isSuccess(expected));
+          if (Exit.isSuccess(actual) && Result.isSuccess(expected)) {
+            expect(actual.value.nquads).toBe(expected.success);
             const service = yield* CanonicalizationService;
             const result = yield* service.canonicalize(
               CanonicalizeDatasetRequest.make({ algorithm: "rdfc-1.0", dataset: target })
             );
-            expect(result.canonicalText).toBe(Str.trimEnd(actual.success.nquads));
-            expect(result.dataset).toStrictEqual(actual.success.dataset);
+            expect(result.canonicalText).toBe(Str.trimEnd(actual.value.nquads));
+            expect(result.dataset).toStrictEqual(actual.value.dataset);
           }
         }),
       { arbitrary: fcRuns(200) }

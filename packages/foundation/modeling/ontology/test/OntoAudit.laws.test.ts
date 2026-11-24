@@ -13,7 +13,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -157,18 +157,15 @@ describe("gUFO audit", () => {
       const encodedHierarchy = yield* S.encodeEffect(TypedHierarchy)(typed);
       expect(encodedHierarchy.specializes).toEqual([[term("c"), [term("a"), term("b")]]]);
       const decode = S.decodeUnknownOption(GufoTyping);
-      expect(O.isNone(decode({ classType: "Kind", instanceCategory: "Relator", mediates: [] }))).toBe(true);
-      expect(O.isNone(decode({ classType: "Kind", instanceCategory: "Object", mediates: [[term("a"), 1]] }))).toBe(
-        true
-      );
-      expect(O.isNone(decode({ classType: "Kind", instanceCategory: "Relator", mediates: [[term("a"), 0]] }))).toBe(
-        true
-      );
-      expect(
+      assertNone(decode({ classType: "Kind", instanceCategory: "Relator", mediates: [] }));
+      assertNone(decode({ classType: "Kind", instanceCategory: "Object", mediates: [[term("a"), 1]] }));
+      assertNone(decode({ classType: "Kind", instanceCategory: "Relator", mediates: [[term("a"), 0]] }));
+      assertSome(
         O.map(decode({ classType: "Kind", instanceCategory: "Relator", mediates: [[term("a"), 2]] }), (value) =>
           HashMap.get(value.mediates, term("a"))
-        )
-      ).toEqual(O.some(O.some(2)));
+        ),
+        O.some(2)
+      );
     })
   );
 });

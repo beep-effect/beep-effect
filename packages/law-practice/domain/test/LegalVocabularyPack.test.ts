@@ -14,6 +14,7 @@ import { ConceptSchemePin, checkBroader } from "@beep/ontology/ConceptScheme";
 import { ConceptSchemeVersionMismatch, LoadedPack } from "@beep/ontology/TaxonomyLoader";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -149,8 +150,9 @@ it.layer(legalPackLayer, { timeout: "30 seconds" })("legal vocabulary pack", (it
         Effect.fnUntraced(function* (fixture) {
           const loaded = yield* scheme(pack, fixture.kind);
           expect(loaded.version).toBe(fixture.version);
-          expect(O.map(byNotation(loaded, fixture.notation), (concept) => concept.iri)).toEqual(
-            O.some(fixture.expectedIri)
+          assertSome(
+            O.map(byNotation(loaded, fixture.notation), (concept) => concept.iri),
+            fixture.expectedIri
           );
         }),
         { concurrency: 1 }
@@ -201,7 +203,7 @@ it.layer(legalPackLayer, { timeout: "30 seconds" })("legal vocabulary pack", (it
       const error = yield* pack.schemeFor(latest).pipe(Effect.flip);
       expect(S.is(ConceptSchemeVersionMismatch)(error)).toBe(true);
       const docketing = yield* scheme(pack, "docketing");
-      expect(O.isNone(byNotation(docketing, "OwnerRole"))).toBe(true);
+      assertNone(byNotation(docketing, "OwnerRole"));
     })
   );
 

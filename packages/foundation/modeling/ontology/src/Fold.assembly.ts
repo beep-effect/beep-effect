@@ -66,7 +66,7 @@ type ClassIdentity = SchemaIdentity & {
 };
 
 type ErrorExtras = Partial<{
-  readonly term: string;
+  readonly term: string | undefined;
   readonly field: string;
   readonly identifier: string;
   readonly subjectIri: IRI;
@@ -317,9 +317,7 @@ const XSD_DOUBLE = IRI.make(Registry.iri("xsd:double"));
 const RDF_LANG_STRING = IRI.make(Registry.iri("rdf:langString"));
 
 const invalidLiteral = (literal: TypedLiteral, why: string) =>
-  fail("invalidLiteral", `Invalid literal "${literal.value}": ${why}.`, {
-    ...(literal.datatype === undefined ? {} : { term: literal.datatype }),
-  });
+  fail("invalidLiteral", `Invalid literal "${literal.value}": ${why}.`, { term: literal.datatype });
 
 const numberDatatype = (lexical: string, value: number): IRI => {
   if (Str.includes("e")(lexical)) {

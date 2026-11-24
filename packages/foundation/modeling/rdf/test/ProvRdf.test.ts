@@ -606,9 +606,9 @@ describe("ProvRdf quad claims", () => {
       ProvVocabulary.PROV_WAS_GENERATED_BY,
       makeNamedNode("https://example.test/activity")
     );
-    expect(Result.isSuccess(datasetToProvBundle(makeDataset([typed])))).toBe(true);
-    expect(Result.isFailure(datasetToProvBundle(makeDataset([typed, extra])))).toBe(true);
-    expect(Result.isFailure(datasetToProvBundle(makeDataset([typed, orphan])))).toBe(true);
+    datasetToProvBundle(makeDataset([typed])).pipe(Result.isSuccess, assertTrue);
+    datasetToProvBundle(makeDataset([typed, extra])).pipe(Result.isFailure, assertTrue);
+    datasetToProvBundle(makeDataset([typed, orphan])).pipe(Result.isFailure, assertTrue);
   });
 });
 
@@ -622,7 +622,7 @@ describe("ProvRdf provSlice", () => {
     const planType = makeQuad(plan, RDF_TYPE, makeNamedNode(`${ProvVocabulary.PROV_NAMESPACE}Plan`));
     const sliced = provSlice(makeDataset([typed, value, title, planType]));
     expect(Equal.equals(sliced, makeDataset([typed, value, planType]))).toBe(true);
-    expect(Result.isFailure(datasetToProvBundle(sliced))).toBe(true);
-    expect(Result.isSuccess(datasetToProvBundle(provSlice(makeDataset([typed, value, title]))))).toBe(true);
+    datasetToProvBundle(sliced).pipe(Result.isFailure, assertTrue);
+    datasetToProvBundle(provSlice(makeDataset([typed, value, title]))).pipe(Result.isSuccess, assertTrue);
   });
 });

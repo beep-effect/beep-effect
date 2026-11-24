@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/law-practice-domain",
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P2 L1 text lane)",
-    "reason": "Re-stamp the L1 move recorded in 8aaaff47f51 with a reason that does not spell the retired package name: every consumer task depends on @beep/text#build, and @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md keep the edges P2 adds. No node, edge, command, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P5 L3 and L6 implementation lane)",
+    "reason": "Record the P5 dependency edges of rdf, ontology and law-practice domain and use-cases, plus the inherited P4 root, epistemics and party-server drifts. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p2-l1-reason-cache-review-2026-11-22.md",
-      "sha256": "b2cb02cedd42461aefcd0d3515a12f72b51dce461bfd869ead45290edd6e2e6a"
+      "path": "docs/reports/tksr-p5-l3-l6-cache-review-2026-11-23.md",
+      "sha256": "0c79d5f2e1f8cf3698be95135266b5bd972a96f1e24804cad03c615bb3bc6f47"
     }
   },
   "nodes": [
@@ -17,6 +17,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
+        "@beep/ontology#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -78,6 +79,7 @@
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
         "@beep/md#build",
+        "@beep/ontology#build",
         "@beep/repo-gate-record#transit",
         "@beep/schema#build",
         "@beep/shared-domain#build",
@@ -136,6 +138,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
+        "@beep/ontology#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -267,6 +270,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
+        "@beep/ontology#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
@@ -471,6 +475,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
+        "@beep/ontology#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
@@ -521,6 +526,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
+        "@beep/ontology#transit",
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
@@ -583,6 +589,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
+        "@beep/ontology#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",

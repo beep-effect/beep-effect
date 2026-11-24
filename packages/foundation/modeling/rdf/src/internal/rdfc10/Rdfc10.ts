@@ -60,16 +60,17 @@ const byCodePoint: Order.Order<string> = Order.mapInput(Order.Array(Order.Number
  */
 export const sortByCodePoint = (lines: Iterable<string>): Array<string> => A.sort(lines, byCodePoint);
 
-class Issuer extends S.Class<Issuer, { readonly brand: unique symbol }>($I`Issuer`)(
-  {
+class Issuer extends S.Opaque<Issuer, { readonly brand: unique symbol }>()(
+  S.Struct({
     prefix: S.String,
     counter: S.Int,
     issued: S.HashMap(S.String, S.String),
     order: S.Array(S.String),
-  },
-  $I.annote("Issuer", {
-    description: "An identifier issuer: the prefix, the next counter and the identifiers issued in issue order.",
-  })
+  }).pipe(
+    $I.annoteSchema("Issuer", {
+      description: "An identifier issuer: the prefix, the next counter and the identifiers issued in issue order.",
+    })
+  )
 ) {}
 
 const makeIssuer = (prefix: string): Issuer => Issuer.make({ prefix, counter: 0, issued: HashMap.empty(), order: [] });
@@ -91,27 +92,29 @@ const issue = (issuer: Issuer, old: string): readonly [string, Issuer] =>
     },
   });
 
-class Permutations extends S.Class<Permutations, { readonly brand: unique symbol }>($I`Permutations`)(
-  {
+class Permutations extends S.Opaque<Permutations, { readonly brand: unique symbol }>()(
+  S.Struct({
     current: S.Array(S.String),
     leftward: S.HashSet(S.String),
     done: S.Boolean,
-  },
-  $I.annote("Permutations", {
-    description: "Steinhaus-Johnson-Trotter permutation state: the current order and the elements moving left.",
-  })
+  }).pipe(
+    $I.annoteSchema("Permutations", {
+      description: "Steinhaus-Johnson-Trotter permutation state: the current order and the elements moving left.",
+    })
+  )
 ) {}
 
-class Mobile extends S.Class<Mobile, { readonly brand: unique symbol }>($I`Mobile`)(
-  {
+class Mobile extends S.Opaque<Mobile, { readonly brand: unique symbol }>()(
+  S.Struct({
     element: S.String,
     position: S.Int,
     swap: S.Int,
     neighbour: S.String,
-  },
-  $I.annote("Mobile", {
-    description: "A mobile permutation element, its position and the neighbour it swaps with.",
-  })
+  }).pipe(
+    $I.annoteSchema("Mobile", {
+      description: "A mobile permutation element, its position and the neighbour it swaps with.",
+    })
+  )
 ) {}
 
 const startPermutations = (list: ReadonlyArray<string>): Permutations =>
@@ -211,25 +214,27 @@ const groupBy = <K, V>(entries: ReadonlyArray<readonly [K, V]>): HashMap.HashMap
     HashMap.set(groups, key, A.append(O.getOrElse(HashMap.get(groups, key), A.empty<V>), value))
   );
 
-class HashPath extends S.Class<HashPath, { readonly brand: unique symbol }>($I`HashPath`)(
-  {
+class HashPath extends S.Opaque<HashPath, { readonly brand: unique symbol }>()(
+  S.Struct({
     hash: S.String,
     issuer: Issuer,
-  },
-  $I.annote("HashPath", {
-    description: "A Hash N-Degree Quads result: the hash and the issuer that produced its chosen path.",
-  })
+  }).pipe(
+    $I.annoteSchema("HashPath", {
+      description: "A Hash N-Degree Quads result: the hash and the issuer that produced its chosen path.",
+    })
+  )
 ) {}
 
-class PathAttempt extends S.Class<PathAttempt, { readonly brand: unique symbol }>($I`PathAttempt`)(
-  {
+class PathAttempt extends S.Opaque<PathAttempt, { readonly brand: unique symbol }>()(
+  S.Struct({
     path: S.String,
     issuer: Issuer,
     pruned: S.Boolean,
-  },
-  $I.annote("PathAttempt", {
-    description: "One permutation's path, the issuer copy that built it and whether it was pruned.",
-  })
+  }).pipe(
+    $I.annoteSchema("PathAttempt", {
+      description: "One permutation's path, the issuer copy that built it and whether it was pruned.",
+    })
+  )
 ) {}
 
 /**
@@ -291,14 +296,10 @@ export const issueCanonicalLabels = Effect.fnUntraced(function* <E>(
 
   const hashRelated = Effect.fnUntraced(function* (related: string, quad: Quad, issuer: Issuer, position: string) {
     const issuedCanonical = yield* Ref.get(canonical);
-    const identifier = O.match(HashMap.get(issuedCanonical.issued, related), {
-      onSome: (id) => `_:${id}`,
-      onNone: () =>
-        O.match(HashMap.get(issuer.issued, related), {
-          onSome: (id) => `_:${id}`,
-          onNone: () => firstDegreeOf(related),
-        }),
-    });
+    const identifier = HashMap.get(issuedCanonical.issued, related).pipe(
+      O.orElse(() => HashMap.get(issuer.issued, related)),
+      O.match({ onSome: (id) => `_:${id}`, onNone: () => firstDegreeOf(related) })
+    );
     const predicate = position === "g" ? "" : `<${quad.predicate.value}>`;
     return yield* sha256Hex(`${position}${predicate}${identifier}`);
   });

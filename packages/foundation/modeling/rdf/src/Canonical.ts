@@ -159,14 +159,15 @@ export type DatasetDigest = typeof DatasetDigest.Type;
  * @category models
  * @since 0.0.0
  */
-export class CanonicalForm extends S.Class<CanonicalForm, { readonly brand: unique symbol }>($I`CanonicalForm`)(
-  {
+export class CanonicalForm extends S.Opaque<CanonicalForm, { readonly brand: unique symbol }>()(
+  S.Struct({
     nquads: CanonicalNQuads,
     dataset: Dataset,
-  },
-  $I.annote("CanonicalForm", {
-    description: "RDFC-1.0 canonical N-Quads and the dataset relabelled with canonical blank-node labels.",
-  })
+  }).pipe(
+    $I.annoteSchema("CanonicalForm", {
+      description: "RDFC-1.0 canonical N-Quads and the dataset relabelled with canonical blank-node labels.",
+    })
+  )
 ) {}
 
 const isGround = (dataset: Dataset): boolean =>

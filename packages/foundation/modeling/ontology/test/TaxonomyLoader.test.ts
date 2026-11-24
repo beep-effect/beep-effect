@@ -20,6 +20,7 @@ import {
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -136,9 +137,7 @@ it.layer(Layer.mergeAll(TaxonomyLoader.layer, BunFileSystem.layer, Digest.layerW
       ]);
       expect(A.map(pack.exceptions, (violation) => violation._tag)).toEqual(["BroaderCycle"]);
       expect(O.exists(A.head(pack.exceptions), (violation) => violation.scheme === vendorIri)).toBe(true);
-      expect(O.map(HashMap.get(pack.payloads, "fixture-intake-payload"), A.fromIterable)).toEqual(
-        O.some(A.fromIterable(payload))
-      );
+      assertSome(O.map(HashMap.get(pack.payloads, "fixture-intake-payload"), A.fromIterable), A.fromIterable(payload));
       expect(S.is(BroaderCycle)(pack.exceptions[0])).toBe(true);
     })
   );
@@ -169,7 +168,7 @@ it.layer(Layer.mergeAll(TaxonomyLoader.layer, BunFileSystem.layer, Digest.layerW
         0
       );
       const unknown = yield* loadText('{"id":"unknown","format":"xml","loadKind":"unknown"}').pipe(Effect.flip);
-      expect(O.isNone(skipped)).toBe(true);
+      assertNone(skipped);
       expect(VendorLoadKind.literals).toEqual([
         "concept-scheme",
         "concept-alignment",

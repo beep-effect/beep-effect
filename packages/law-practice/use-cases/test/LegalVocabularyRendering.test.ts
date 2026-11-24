@@ -12,6 +12,7 @@ import { expect } from "@effect/vitest";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -21,10 +22,13 @@ import { skosDataset } from "./support/SkosProjection.ts";
 import type { LoadedPack } from "@beep/ontology/TaxonomyLoader";
 
 const loadPack = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const loader = yield* TaxonomyLoader;
-  const manifest = yield* path.fromFileUrl(legalVocabularyManifestUrl);
-  const root = yield* path.fromFileUrl(legalVocabularyRootUrl);
+  const manifestPath = yield* path.fromFileUrl(legalVocabularyManifestUrl);
+  const rootPath = yield* path.fromFileUrl(legalVocabularyRootUrl);
+  const manifest = yield* fs.realPath(manifestPath);
+  const root = yield* fs.realPath(rootPath);
   return yield* loader.load(manifest, root);
 });
 

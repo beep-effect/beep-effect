@@ -7,6 +7,7 @@ import {
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -26,7 +27,8 @@ it.layer(BunFileSystem.layer)("real exploration manifest", (it) => {
           `absent from this checkout (a trimmed checkout may drop the packet): ${Str.replace(/^(?:\.\.\/)+/u, "")(packet)}`
         );
       }
-      const content = yield* fs.readFileString(path);
+      const manifest = yield* fs.realPath(path);
+      const content = yield* fs.readFileString(manifest);
       const lines = A.filter(Str.split(content, "\n"), Str.isNonEmpty);
       const rows = yield* Effect.forEach(lines, (line, index) => decodeVendorManifestRow(path, line, index), {
         concurrency: 1,
@@ -38,7 +40,7 @@ it.layer(BunFileSystem.layer)("real exploration manifest", (it) => {
       const admitted = A.getSomes(entries);
 
       expect(A.every(units, S.is(VendorDigestUnit))).toBe(true);
-      expect(A.every(rows, (row) => O.isSome(row.sha256))).toBe(true);
+      assertTrue(A.every(rows, (row) => O.isSome(row.sha256)));
       expect(A.map(admitted, (entry) => [entry.id, entry.loadKind])).toEqual([
         ["folio-email-communication", "concept-alignment"],
       ]);

@@ -11,7 +11,7 @@ import { namespace } from "@beep/identity/Registry";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
-import { dual, identity, pipe } from "effect/Function";
+import { constant, dual, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Order from "effect/Order";
@@ -680,6 +680,8 @@ const formOfParts = (parts: typeof LiteralParts.Encoded): Result.Result<LiteralF
     })
   );
 
+const noLanguage = constant(O.none<LanguageTag>());
+
 /**
  * RDF literal value with one of three forms.
  *
@@ -741,8 +743,8 @@ export class Literal extends S.Opaque<Literal, { readonly brand: unique symbol }
 
   static readonly languageOf = (literal: Literal): O.Option<LanguageTag> =>
     LiteralForm.match(literal.form, {
-      Simple: () => O.none<LanguageTag>(),
-      Typed: () => O.none<LanguageTag>(),
+      Simple: noLanguage,
+      Typed: noLanguage,
       LangTagged: (form) => O.some(form.language),
     });
 }
@@ -1408,21 +1410,15 @@ const escapeLiteralLexical: (value: string) => string = Str.replaceAllWith(/[\u0
     Match.when("\r", () => "\\r"),
     Match.when('"', () => '\\"'),
     Match.when("\\", () => "\\\\"),
-    Match.orElse((other) => pipe(Str.charCodeAt(0)(other), O.match({ onNone: () => other, onSome: toUchar })))
+    Match.orElse((other) => pipe(Str.charCodeAt(0)(other), O.map(toUchar), O.getOrElse(constant(other))))
   )
-);
-
-const escapeIri: (value: string) => string = Str.replaceAllWith(/[\u0000-\u0020<>"{}|^`\\]/g, (ch) =>
-  pipe(Str.charCodeAt(0)(ch), O.match({ onNone: () => ch, onSome: toUchar }))
 );
 
 const toBlankNodeEscape = (ch: string): string =>
   pipe(
     Str.codePointAt(0)(ch),
-    O.match({
-      onNone: () => ch,
-      onSome: (code) => `_u${pipe(code.toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`,
-    })
+    O.map((code) => `_u${pipe(code.toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`),
+    O.getOrElse(constant(ch))
   );
 
 const encodeBlankNodeLabel: (value: string) => string = Str.replaceAllWith(/[^A-Za-z0-9]/g, toBlankNodeEscape);
@@ -1431,7 +1427,7 @@ const serializeLiteralShape = (literal: typeof Literal.Encoded): string =>
   Match.value(literal.form).pipe(
     Match.discriminatorsExhaustive("_tag")({
       Simple: () => `"${escapeLiteralLexical(literal.value)}"`,
-      Typed: (form) => `"${escapeLiteralLexical(literal.value)}"^^<${escapeIri(form.datatype.value)}>`,
+      Typed: (form) => `"${escapeLiteralLexical(literal.value)}"^^<${form.datatype.value}>`,
       LangTagged: (form) => `"${escapeLiteralLexical(literal.value)}"@${form.language}`,
     })
   );
@@ -1439,7 +1435,7 @@ const serializeLiteralShape = (literal: typeof Literal.Encoded): string =>
 const serializeTermShape = (term: typeof Term.Encoded): string =>
   Match.value(term).pipe(
     Match.discriminatorsExhaustive("termType")({
-      NamedNode: (node) => `<${escapeIri(node.value)}>`,
+      NamedNode: (node) => `<${node.value}>`,
       BlankNode: (node) => `_:${encodeBlankNodeLabel(node.value)}`,
       Literal: serializeLiteralShape,
       DefaultGraph: () => "",

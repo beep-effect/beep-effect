@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
-    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P5 L3 and L6 implementation lane)",
+    "reason": "Record the P5 dependency edges of rdf, ontology and law-practice domain and use-cases, plus the inherited P4 root, epistemics and party-server drifts. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
-      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
+      "path": "docs/reports/tksr-p5-l3-l6-cache-review-2026-11-23.md",
+      "sha256": "0c79d5f2e1f8cf3698be95135266b5bd972a96f1e24804cad03c615bb3bc6f47"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "845f48af5d8a417e5180ac1cd83702ae6ea29d263895a53014448374b196b4f8"
+      "sha256": "65fb0083f1b4b1bc679c50d12d2a643c08a3192e76f31f34111732919931fb14"
     }
   ],
   "nodes": [
@@ -2235,6 +2235,7 @@
           "packages/foundation/modeling/spdx/package.json",
           "packages/foundation/modeling/spdx/src/**",
           "packages/foundation/modeling/text/package.json",
+          "packages/foundation/modeling/text/src/**",
           "packages/foundation/modeling/toml/package.json",
           "packages/foundation/modeling/tsconfig/package.json",
           "packages/foundation/modeling/tsconfig/src/**",

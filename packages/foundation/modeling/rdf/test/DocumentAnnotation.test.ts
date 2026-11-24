@@ -8,7 +8,10 @@ import { DEO_INTRODUCTION } from "@beep/rdf/Vocab/Deo";
 import { DOCO_TITLE } from "@beep/rdf/Vocab/Doco";
 import { FABIO_REPORT } from "@beep/rdf/Vocab/Fabio";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -78,5 +81,17 @@ describe("SPAR document annotation profile", () => {
       const empty = yield* S.decodeUnknownEffect(DocumentAnnotation)(annotationWire("")).pipe(Effect.exit);
       expect(empty._tag).toBe("Failure");
     })
+  );
+
+  it.effect.prop(
+    "every generated annotation body survives its codec unchanged",
+    [Arbitrary.schema(DocumentAnnotationBody)],
+    ([body]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(DocumentAnnotationBody)(body);
+        const decoded = yield* S.decodeEffect(DocumentAnnotationBody)(encoded);
+        assertTrue(S.toEquivalence(DocumentAnnotationBody)(decoded, body));
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });
