@@ -7,10 +7,12 @@
 
 import { SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { LawPrincipalId } from "@beep/law-practice-domain/values/LawClaim";
 import { MatterGrant, MatterScope } from "@beep/law-practice-domain/values/MatterScope";
 import { GrantedScopes, LawPrincipal, MatterAccess, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -235,6 +237,63 @@ export const MatterAuthorityLayer = (config: MatterAuthorityConfig): Layer.Layer
 export const MatterAuthorityLive: Layer.Layer<MatterAuthority, Config.ConfigError> = Layer.effect(
   MatterAuthority,
   Effect.map(MatterAuthorityConfigFromEnv, makeMatterAuthority)
+);
+
+/**
+ * The principal a single-user host runs as, read from
+ * `BEEP_LAW_PRACTICE_PRINCIPAL`; `None` when the variable is unset.
+ *
+ * **Example** (Read the configured principal)
+ *
+ * ```ts
+ * import { LawPrincipalFromEnv } from "@beep/law-practice-server/MatterAuthority"
+ *
+ * console.log(typeof LawPrincipalFromEnv) // "object"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const LawPrincipalFromEnv = Config.option(
+  Config.schema(S.FiniteFromString.pipe(S.decodeTo(LawPrincipalId)), "BEEP_LAW_PRACTICE_PRINCIPAL")
+);
+
+const unconfiguredPrincipal = LawPrincipalId.make(2_147_483_647);
+
+/**
+ * The matter wall a single-user host provides: its `LawPrincipal` and the
+ * configured `MatterAuthority`.
+ *
+ * **Details**
+ *
+ * A host without `BEEP_LAW_PRACTICE_PRINCIPAL` gets the empty authority
+ * whatever grants are configured, so every walled path is denied rather than
+ * the host failing to start (decision
+ * `p6-an-unconfigured-principal-gets-the-empty-authority`).
+ *
+ * **Example** (Provide the host wall)
+ *
+ * ```ts
+ * import { MatterWallLive } from "@beep/law-practice-server/MatterAuthority"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(MatterWallLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const MatterWallLive: Layer.Layer<MatterAuthority | LawPrincipal, Config.ConfigError> = Layer.effectContext(
+  Effect.gen(function* () {
+    const principal = yield* LawPrincipalFromEnv;
+    const config = yield* O.match(principal, {
+      onNone: () => Effect.succeed(EmptyMatterAuthorityConfig),
+      onSome: () => MatterAuthorityConfigFromEnv,
+    });
+    return Context.make(MatterAuthority, makeMatterAuthority(config)).pipe(
+      Context.add(LawPrincipal, { principal: O.getOrElse(principal, () => unconfiguredPrincipal) })
+    );
+  })
 );
 
 /**

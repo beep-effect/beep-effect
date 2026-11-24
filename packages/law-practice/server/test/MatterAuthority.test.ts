@@ -10,6 +10,7 @@ import {
   MatterAuthorityLayer,
   MatterAuthorityLive,
   MatterDenialReasonAttribute,
+  MatterWallLive,
 } from "@beep/law-practice-server/MatterAuthority";
 import { GrantedScopes, LawPrincipal, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import { PosixPath } from "@beep/schema";
@@ -191,6 +192,25 @@ describe("MatterAuthority", () => {
       expect(configured).toEqual({ _tag: "Granted", matter: matterA });
       const empty = yield* askOver(MatterAuthorityLayer(EmptyMatterAuthorityConfig));
       expect(empty).toEqual({ _tag: "Denied", reason: "unbound-scope" });
+    })
+  );
+
+  it.effect("walls a host by its configured principal and denies every path without one", () =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(S.fromJsonString(MatterAuthorityConfig))(twoMatters);
+      const hostWall = Effect.fn("MatterAuthorityTest.hostWall")(function* (env: Record<string, string>) {
+        const built = MatterWallLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env))));
+        const authority = yield* serviceOf(MatterAuthority)(built);
+        const host = yield* serviceOf(LawPrincipal)(built);
+        return yield* authority.authorize({ principal: host.principal, scope: "matter:a", access: "search" });
+      });
+      const configured = yield* hostWall({
+        BEEP_LAW_PRACTICE_PRINCIPAL: `${fixturePrincipal}`,
+        BEEP_LAW_PRACTICE_MATTER_AUTHORITY: encoded,
+      });
+      const unconfigured = yield* hostWall({ BEEP_LAW_PRACTICE_MATTER_AUTHORITY: encoded });
+      expect(configured).toEqual({ _tag: "Granted", matter: matterA });
+      expect(unconfigured).toEqual({ _tag: "Denied", reason: "unbound-scope" });
     })
   );
 

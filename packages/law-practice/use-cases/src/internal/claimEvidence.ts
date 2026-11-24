@@ -60,7 +60,7 @@ const anchorAt = (sourceText: string, start: number, width: number): O.Option<Te
  * The claim must follow its own number (`"1. "`) at the start of a line inside
  * `[claimsSectionStart, claimsSectionEnd)`. Whitespace runs match any
  * whitespace, so a claim re-wrapped by the normalizer still aligns. The result
- * is a @beep/text `TextAnchor`: the source range and the exact quote sliced from
+ * is a `@beep/text` `TextAnchor`: the source range and the exact quote sliced from
  * the source through its UTF-16 position. It locates text only and carries no
  * authority receipt.
  *

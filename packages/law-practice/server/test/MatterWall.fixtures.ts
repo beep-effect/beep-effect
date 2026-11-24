@@ -41,3 +41,8 @@ export const serviceOf =
 
 export const provideMatterAuthority = (config: MatterAuthorityConfig) =>
   Effect.provideServiceEffect(MatterAuthority, serviceOf(MatterAuthority)(MatterAuthorityLayer(config)));
+
+export const matterWallGrantingEveryScopeLayer = Layer.mergeAll(
+  Layer.succeed(MatterAuthority, matterAuthorityGrantingEveryScope),
+  Layer.succeed(LawPrincipal, { principal: fixturePrincipal })
+);

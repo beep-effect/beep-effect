@@ -34,6 +34,13 @@ bun run apps/practice-kg-mcp/src/claims.ts \
   --bundle-out /path/to/bundle
 ```
 
+The batch runs behind the matter wall. `BEEP_LAW_PRACTICE_PRINCIPAL` names the
+shared user id the host runs as, and `BEEP_LAW_PRACTICE_MATTER_AUTHORITY` holds
+the JSON `MatterAuthorityConfig` (matter scopes and grants). Both default to
+empty: a host without a principal denies every walled path, whatever grants are
+configured. Candidate extraction is not walled, so the batch works under the
+default.
+
 Tests inject a deterministic fake `LanguageModel` and never use this live layer.
 
 ## Distribution

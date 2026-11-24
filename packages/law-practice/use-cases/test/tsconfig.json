@@ -24,9 +24,6 @@
       "path": "../../../epistemic/domain/tsconfig.json"
     },
     {
-      "path": "../../../epistemic/use-cases/tsconfig.json"
-    },
-    {
       "path": "../../../foundation/capability/file-processing/tsconfig.json"
     },
     {
@@ -49,6 +46,9 @@
     },
     {
       "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/jsonc/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/ontology/tsconfig.json"

@@ -102,6 +102,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Tracer from "effect/Tracer";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
+import { matterWallGrantingEveryScopeLayer } from "./MatterWall.fixtures.ts";
 import type { DuckDbShape } from "@beep/duckdb";
 import type { TestContext } from "@effect/vitest";
 
@@ -2453,7 +2454,8 @@ describe("practice KG projections", () => {
           Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })
         ).pipe(
           Layer.provide(fixtureLanguageModel),
-          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" })))
+          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" }))),
+          Layer.provide(matterWallGrantingEveryScopeLayer)
         );
         const summary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
           provideScopedLayer(claimsLayer)
@@ -2605,7 +2607,8 @@ describe("practice KG projections", () => {
           Pglite.makeLayer({ dataDir: path.join(emptyBundleOut, "kg.pglite") })
         ).pipe(
           Layer.provide(fixtureLanguageModel),
-          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" })))
+          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" }))),
+          Layer.provide(matterWallGrantingEveryScopeLayer)
         );
         const zeroClaimsFailure = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({ bundleOut: emptyBundleOut, inputs: emptyInputs })

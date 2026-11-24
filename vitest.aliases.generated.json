@@ -2430,5 +2430,17 @@
   ],
   "@beep/law-practice-use-cases/MatterWall": [
     "./packages/law-practice/use-cases/src/MatterWall/index.ts"
+  ],
+  "@beep/law-practice-server/ClaimStore": [
+    "./packages/law-practice/server/src/ClaimStore/index.ts"
+  ],
+  "@beep/law-practice-use-cases/ClaimProposal": [
+    "./packages/law-practice/use-cases/src/ClaimProposal/index.ts"
+  ],
+  "@beep/law-practice-use-cases/ClaimStore": [
+    "./packages/law-practice/use-cases/src/ClaimStore/index.ts"
+  ],
+  "@beep/law-practice-use-cases/LawAdmission": [
+    "./packages/law-practice/use-cases/src/LawAdmission/index.ts"
   ]
 }

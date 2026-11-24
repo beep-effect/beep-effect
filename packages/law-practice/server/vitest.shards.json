@@ -156,6 +156,7 @@
       "test/LegalPositionRecord.pglite.test.ts",
       "test/MailTagging.matters.test.ts",
       "test/MatterAuthority.test.ts",
+      "test/ClaimStore.memory.test.ts",
       "test/ReviewFiles.test.ts"
     ],
     [
