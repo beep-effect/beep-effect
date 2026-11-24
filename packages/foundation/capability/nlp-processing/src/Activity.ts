@@ -30,6 +30,13 @@ import * as Reducer from "effect/Reducer";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import {
+  ActivityGeneratedCountAttribute,
+  ActivityIdAttribute,
+  ActivityOutcomeAttribute,
+  ActivityUsedCountAttribute,
+  OperationTermAttribute,
+} from "./NlpProcessing.instruments.ts";
 import type { TermIri } from "@beep/identity/Term";
 import type { PreimageMintError } from "@beep/jsonc/Mint";
 import type { ActivityId, ContentHash } from "@beep/schema/ContentHash";
@@ -342,28 +349,27 @@ export const withActivity =
         )
       );
       const ended = yield* stamp;
+      const record = ActivityRecord.make({
+        id,
+        start,
+        generated: Result.match(result, {
+          onFailure: () => HashSet.empty<ContentHash>(),
+          onSuccess: (value) => HashSet.fromIterable(descriptor.generated(value)),
+        }),
+        ended,
+        outcome: Result.isSuccess(result) ? "completed" : "failed",
+      });
+      yield* Effect.annotateCurrentSpan({
+        [OperationTermAttribute]: operation.name,
+        [ActivityIdAttribute]: record.id,
+        [ActivityUsedCountAttribute]: HashSet.size(start.used),
+        [ActivityGeneratedCountAttribute]: HashSet.size(record.generated),
+        [ActivityOutcomeAttribute]: record.outcome,
+      });
+      const activities = HashSet.make(record);
       return yield* Result.match(result, {
-        onFailure: (error) =>
-          Effect.fail<LoggedFailure<E>>({
-            _tag: "LoggedFailure",
-            error,
-            activities: HashSet.make(
-              ActivityRecord.make({ id, start, generated: HashSet.empty(), ended, outcome: "failed" })
-            ),
-          }),
-        onSuccess: (value) =>
-          Effect.succeed<Logged<B>>({
-            value,
-            activities: HashSet.make(
-              ActivityRecord.make({
-                id,
-                start,
-                generated: HashSet.fromIterable(descriptor.generated(value)),
-                ended,
-                outcome: "completed",
-              })
-            ),
-          }),
+        onFailure: (error) => Effect.fail<LoggedFailure<E>>({ _tag: "LoggedFailure", error, activities }),
+        onSuccess: (value) => Effect.succeed<Logged<B>>({ value, activities }),
       });
     }),
   });

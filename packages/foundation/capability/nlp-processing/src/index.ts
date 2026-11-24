@@ -41,6 +41,13 @@ export * as Graph from "./Graph/index.ts";
  */
 export * as NLPService from "./NLPService.ts";
 /**
+ * The `Operation.run` span, activity attributes and `beep.nlp.*` metrics.
+ *
+ * @since 0.0.0
+ * @category observability
+ */
+export * as NlpProcessingInstrumentation from "./NlpProcessing.instruments.ts";
+/**
  * The named effectful arrow and its Kleisli combinators.
  *
  * @since 0.0.0

@@ -390,7 +390,7 @@ const runStrategy: {
         nodes_created: `${fold.metrics.nodesCreated}`,
       });
       return fold;
-    }).pipe(Obs.trackNlpDuration("nlp.graph_executor.run_strategy", attributes));
+    }).pipe(Obs.trackNlpDuration(attributes));
   })
 );
 
@@ -460,7 +460,7 @@ const execute: GraphExecutorShape["execute"] = dual(
         errors: fold.errors,
         metrics: fold.metrics,
       });
-    }).pipe(Obs.observeNlpWorkflow("nlp.graph_executor.execute", attributes));
+    }).pipe(Obs.observeNlpWorkflow("GraphExecutor.execute", attributes));
   })
 );
 

@@ -397,7 +397,7 @@ class AnnotationOptions extends S.Opaque<AnnotationOptions, { readonly brand: un
  * @category constructors
  * @since 0.0.0
  */
-export const fromDocumentAnnotated = Effect.fn("fromDocumentAnnotated")(function* (
+export const fromDocumentAnnotated = Effect.fn("AnnotatedTextGraph.fromDocument")(function* (
   text: string,
   options: (typeof AnnotationOptions)["~type.make.in"] = {}
 ): Effect.fn.Return<AnnotatedTextGraph, Backend.NLPBackendError, Backend.NLPBackend> {
@@ -453,7 +453,7 @@ export const fromDocumentAnnotated = Effect.fn("fromDocumentAnnotated")(function
       sentence_count: `${A.length(sentences)}`,
     });
     return graph;
-  }).pipe(Obs.observeNlpWorkflow("nlp.annotated_text_graph.from_document", attributes));
+  }).pipe(Obs.observeNlpWorkflow("AnnotatedTextGraph.fromDocument", attributes));
 });
 
 // =============================================================================
@@ -537,7 +537,7 @@ const addSentenceAnnotations = Effect.fn("AnnotatedTextGraph.addSentenceAnnotati
       skipped_missing_count: `${skippedMissingCount}`,
     });
     return result;
-  }).pipe(Obs.observeNlpWorkflow("nlp.annotated_text_graph.add_sentence_annotations", attributes));
+  }).pipe(Obs.observeNlpWorkflow("AnnotatedTextGraph.addSentenceAnnotations", attributes));
 });
 
 /**

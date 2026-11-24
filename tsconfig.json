@@ -2610,6 +2610,9 @@
       ],
       "@beep/nlp-processing/Operation": [
         "./packages/foundation/capability/nlp-processing/src/Operation.ts"
+      ],
+      "@beep/nlp-processing/NlpProcessing.instruments": [
+        "./packages/foundation/capability/nlp-processing/src/NlpProcessing.instruments.ts"
       ]
     }
   }
