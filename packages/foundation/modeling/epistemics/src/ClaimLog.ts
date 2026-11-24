@@ -31,11 +31,28 @@ const validOverlap = (left: ClaimLogEntry, right: ClaimLogEntry): boolean =>
 /**
  * Validate one append against its entire already accepted prefix.
  *
- * **Example** (Inspect an empty log)
+ * **Example** (Append a first entry to an empty log)
  *
  * ```ts
- * import { checkClaimLog } from "@beep/epistemics/ClaimLog"
- * console.log(checkClaimLog([]))
+ * import { ClaimId } from "@beep/epistemics/ClaimCore.schema"
+ * import { appendProjection } from "@beep/epistemics/ClaimLog"
+ * import { ClaimLogEntry } from "@beep/epistemics/ClaimLog.schema"
+ * import * as DateTime from "effect/DateTime"
+ * import * as HashSet from "effect/HashSet"
+ * import * as O from "effect/Option"
+ *
+ * const entry = ClaimLogEntry.make({
+ *   claim: ClaimId.make("sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+ *   scope: "fixture",
+ *   logicalKey: "subject:1",
+ *   supersedes: O.none(),
+ *   derivedFrom: HashSet.empty(),
+ *   knowledgeStart: DateTime.makeUnsafe(10),
+ *   generatedAt: DateTime.makeUnsafe(0),
+ *   valid: { _tag: "Unknown" },
+ * })
+ *
+ * console.log(appendProjection([], entry)._tag) // "Appended"
  * ```
  *
  * @category validation
