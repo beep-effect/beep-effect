@@ -29,6 +29,7 @@ import type { GitStubs } from "@beep/git";
 import type { HookInjection } from "@beep/repo-workspaces";
 import type { Tree } from "./support/fixtures.ts";
 
+// ── A scripted `Git` over a per-ref, root-relative content map ──────────────
 //
 // No repository on disk: `show` and `lsTree` read from the map; `Git.layerTest`
 // makes every other method die with a named defect, so a test proves nothing
@@ -165,6 +166,7 @@ describe("WorkspaceSnapshots.at — glob filtering over ls-tree", () => {
   });
 });
 
+// ── at("HEAD") vs worktree() parity on a clean tree ─────────────────────────
 //
 // A pnpm workspace with an inline catalog and no lockfile: worktree assembles
 // catalogs over the live filesystem, at("HEAD") over the same content via git.
@@ -209,6 +211,7 @@ describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tre
   });
 });
 
+// ── bun inline catalogs at a ref with NO bun.lock: at('HEAD') vs worktree() ──
 //
 // A bun-style workspace declares its catalogs in the root `package.json`
 // `workspaces.catalog` block and has NO committed `bun.lock` at the ref.
@@ -311,10 +314,10 @@ describe("WorkspaceStateSnapshot.resolve", () => {
 
   it.effect("an unmatched specifier is Option.none(), never an error", () =>
     Effect.sync(() => {
-      assertNone(resolveSnapshot.resolve("nope", "workspace:*"));
-      assertNone(resolveSnapshot.resolve("effect", "catalog:missing"));
+      assertNone(resolveSnapshot.resolve("nope", "workspace:*")); // not a member
+      assertNone(resolveSnapshot.resolve("effect", "catalog:missing")); // unknown catalog
       assertNone(resolveSnapshot.resolve("effect", "^4.0.0")); // plain range: nothing to resolve
-      assertNone(resolveSnapshot.resolve("effect", "not a specifier"));
+      assertNone(resolveSnapshot.resolve("effect", "not a specifier")); // unparseable
     })
   );
 });
@@ -401,6 +404,7 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
   });
 });
 
+// ── a version-less member at a ref AND in the worktree (#613) ──────────────
 //
 // Both capture paths must omit the key for the same manifest, so a diff of a
 // clean tree reads no change — and neither side may present `""` as a version.
@@ -630,6 +634,7 @@ describe("WorkspaceSnapshots — seedCatalogs", () => {
   );
 });
 
+// ── at(ref) replays the REF's declared config dependencies ─────────────────
 //
 // The defect this pins: `at(ref)` used to skip the hook replay entirely, so a
 // catalog that exists only through a hook resolved identically at both refs

@@ -707,6 +707,8 @@ describe("WorkspaceRoot — no marker anywhere", () => {
 // a directory that is itself a pnpm workspace root. An unbounded ascent adopts
 // that outer workspace and its members; `stopAt: cwd` refuses it.
 const nestedCheckout: Tree = {
+  // ── the layer-bound ceiling: a checkout nested in someone else's workspace ──
+
   "/outer/pnpm-workspace.yaml": "packages:\n  - 'pkgs/*'\n",
   "/outer/package.json": Result.getOrThrowWith(
     S.encodeUnknownResult(UnknownJson)({ name: "outer-root", version: "0.0.0", private: true }),

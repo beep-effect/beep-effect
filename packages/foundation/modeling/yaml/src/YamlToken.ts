@@ -149,6 +149,9 @@ const promoteAll: {
       line++;
       nextStart = lineStarts[line + 1];
     }
+    // Hot path: tokenizing a large document materializes thousands of
+    // instances, so construction uses `new` (the engine's recorded
+    // hot-path exception) rather than the validating `make`.
     return YamlToken.make({
       kind: token.kind,
       text: Str.slice(token.offset, token.offset + token.length)(text),

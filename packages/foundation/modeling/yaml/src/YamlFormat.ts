@@ -728,7 +728,7 @@ function setMapEntry(
   value: unknown
 ): YamlMap {
   if (value === undefined) {
-    return O.isNone(pairIndex) ? node : rebuildMap(node, removeAt(node.items, pairIndex.value));
+    return O.isNone(pairIndex) ? node : rebuildMap(node, removeAt(node.items, pairIndex.value)); // Nothing to remove when absent
   }
   if (O.isSome(pairIndex)) {
     const oldPair = A.getUnsafe(node.items, pairIndex.value);

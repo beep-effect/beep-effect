@@ -54,6 +54,10 @@ export interface FileSystemOptions {
   readonly unreadableStat?: ReadonlyArray<string>;
 }
 
+/**
+ * A `FileSystem` over a virtual tree, implementing exactly the four operations
+ * this package uses: `exists`, `readFileString`, `readDirectory`, `stat`.
+ */
 const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<FileSystem.FileSystem> => {
   const { unreadable = [], unreadableFiles = [], unreadableExists = [], unreadableStat = [] } = options;
 

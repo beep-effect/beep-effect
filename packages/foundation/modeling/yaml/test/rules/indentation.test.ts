@@ -82,6 +82,7 @@ testRule(builtin("indentation"), [
   },
 ]);
 
+// Round-1 regressions: real marker tokens, quoted comments, and compact levels.
 testRule(builtin("indentation"), [
   {
     name: "---key retains its block indentation level",
