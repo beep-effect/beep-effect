@@ -200,8 +200,6 @@ export const yeetCheckRecordInstant = (value: string | null | undefined): O.Opti
   );
 
 /**
- * One check within a watch snapshot: its classified outcome plus its record.
- *
  * **Details**
  *
  * `link`, `workflow`, and the raw `signal` are the check's own record as
@@ -360,8 +358,6 @@ export class YeetWatchThread extends S.Opaque<YeetWatchThread, { readonly brand:
 
 const yeetWatchSnapshotLabelsDefault = A.empty<string>();
 /**
- * Everything one watch poll observed about the pull request.
- *
  * **Details**
  *
  * The snapshot is the unit of comparison: the poller collects one per tick and
@@ -456,8 +452,6 @@ export class YeetWatchStarted extends S.Opaque<YeetWatchStarted, { readonly bran
 ) {}
 
 /**
- * One check moved between outcomes.
- *
  * **Details**
  *
  * `from` is absent for a check's first observation — a lane that registers
@@ -516,8 +510,6 @@ export const yeetWatchThreadOutstanding = (thread: YeetWatchThread): boolean =>
   });
 
 /**
- * What a review thread's transition moved it to.
- *
  * **Details**
  *
  * `opened` is the first observation of a thread that owes something; the other
@@ -544,8 +536,6 @@ export const YeetThreadTransitionTarget = LiteralKit([
 );
 
 /**
- * What a review thread's transition moved it to.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -574,8 +564,6 @@ export class YeetThreadTransition extends S.Opaque<YeetThreadTransition, { reado
 ) {}
 
 /**
- * The PR's mergeability answer changed.
- *
  * @category models
  * @since 0.0.0
  */
@@ -595,8 +583,6 @@ export class YeetMergeabilityChanged extends S.Opaque<YeetMergeabilityChanged, {
 ) {}
 
 /**
- * One truthful merge-readiness criterion flipped between watch polls.
- *
  * **Example** (Describe a required-check recovery)
  *
  * ```ts
@@ -653,8 +639,6 @@ export class YeetHeadChanged extends S.Opaque<YeetHeadChanged, { readonly brand:
 
 const yeetSettleChangedGatedDefault = A.empty<string>();
 /**
- * The settle wait reason changed between polls.
- *
  * **Details**
  *
  * `from`/`to` are `null` when the head was settled with the closeout bound —
@@ -828,8 +812,6 @@ export const yeetWatchCommentEvent: {
 );
 
 /**
- * Reasons a watch stream ends.
- *
  * **Details**
  *
  * `event` is the `--until-event` contract: the stream observed an actionable
@@ -862,8 +844,6 @@ export const YeetWatchEndReason = LiteralKit([
 );
 
 /**
- * Reasons a watch stream ends.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -907,8 +887,6 @@ export class YeetWatchEnded extends S.Opaque<YeetWatchEnded, { readonly brand: u
 ) {}
 
 /**
- * One row of the watch stream.
- *
  * **Details**
  *
  * Every member carries `schemaVersion`, `at`, and a discriminating `kind`, so
@@ -936,8 +914,6 @@ export const YeetWatchEvent = S.Union([
 );
 
 /**
- * One row of the watch stream.
- *
  * @category type-level
  * @since 0.0.0
  */

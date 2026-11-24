@@ -17,8 +17,10 @@ import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { recordedApplication, recordedResponses } from "./UsptoClaims.fixture.ts";
 
-// The real driver over an HTTP client that only replays the recorded responses; nothing leaves the process.
-const replayingHttpClient = (responses: typeof recordedResponses, requests: Array<string>) =>
+const inProcessHttpClientReplayingOnlyRecordedResponses = (
+  responses: typeof recordedResponses,
+  requests: Array<string>
+) =>
   Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -41,7 +43,7 @@ const replayingHttpClient = (responses: typeof recordedResponses, requests: Arra
 const claimsWithResponses = (responses: typeof recordedResponses, requests: Array<string>) =>
   UsptoClaimsLive.pipe(
     Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("synthetic-key") }))),
-    Layer.provide(replayingHttpClient(responses, requests))
+    Layer.provide(inProcessHttpClientReplayingOnlyRecordedResponses(responses, requests))
   );
 const recordedUsptoClaims = claimsWithResponses(recordedResponses, []);
 const tiedResponses = A.map(recordedResponses, ([suffix, body]): (typeof recordedResponses)[number] => [

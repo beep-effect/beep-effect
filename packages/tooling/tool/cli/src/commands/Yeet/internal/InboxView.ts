@@ -410,8 +410,6 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
 });
 
 /**
- * A new inbox wave on one pull request: the rows `yeet job wait` returns on.
- *
  * **Details**
  *
  * A wave is every inbox row on the pull request that still asks for work and
@@ -640,8 +638,6 @@ export const loadYeetInboxRowIds = Effect.fn("Yeet.loadYeetInboxRowIds")(functio
 });
 
 /**
- * Who handed a pull request's inbox wave back to the operator.
- *
  * **Details**
  *
  * `job-wait` is `yeet job wait` on a detached monitor job: the job keeps
@@ -667,8 +663,6 @@ export const YeetPrWaveReturn = LiteralKit(["job-wait", "attached-monitor"]).pip
 );
 
 /**
- * Who handed a pull request's inbox wave back to the operator.
- *
  * @category type-level
  * @since 0.0.0
  */

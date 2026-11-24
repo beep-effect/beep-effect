@@ -70,8 +70,6 @@ export class TraversalFrame extends S.Opaque<TraversalFrame, { readonly brand: u
   }).pipe($I.annoteSchema("TraversalFrame", { description: "A plain directory frame queued by workspace traversal." }))
 ) {}
 /**
- * Companion types for {@link TraversalFrame}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -86,8 +84,6 @@ export declare namespace TraversalFrame {
 }
 
 /**
- * A traversal that stopped at its depth bound.
- *
  * **Example** (Describe a depth stop)
  *
  * ```ts
@@ -111,8 +107,6 @@ export class DepthStop extends S.Opaque<DepthStop, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link DepthStop}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,8 +121,6 @@ export declare namespace DepthStop {
 }
 
 /**
- * A traversal that stopped at its directory-read budget.
- *
  * **Example** (Describe a budget stop)
  *
  * ```ts
@@ -154,8 +146,6 @@ export class BudgetStop extends S.Opaque<BudgetStop, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link BudgetStop}.
- *
  * @category type-level
  * @since 0.0.0
  */

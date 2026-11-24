@@ -17,8 +17,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Architecture/Architecture.schemas");
 
 /**
- * Canonical architecture domain-kind folders.
- *
  * **Example** (Validate aggregates domain kind)
  *
  * ```ts
@@ -38,8 +36,6 @@ export const ArchitectureDomainKind = LiteralKit(["aggregates", "entities", "val
 );
 
 /**
- * Canonical architecture domain-kind folder.
- *
  * **Example** (Type-level domain kind)
  *
  * ```ts
@@ -93,8 +89,6 @@ export const ArchitecturePlanStage = LiteralKit(["core", "persistence", "protoco
 export type ArchitecturePlanStage = typeof ArchitecturePlanStage.Type;
 
 /**
- * Canonical architecture slice roles.
- *
  * **Example** (Validate use-cases slice role)
  *
  * ```ts
@@ -129,8 +123,6 @@ export const ArchitectureSliceRole = LiteralKit([
 );
 
 /**
- * Canonical architecture slice role.
- *
  * **Example** (Type-level slice role)
  *
  * ```ts
@@ -169,8 +161,6 @@ export const ArchitectureContextRole = LiteralKit(["contract", "model", "host", 
 );
 
 /**
- * Package role of a model-first bounded context.
- *
  * **Example** (Assign the model role)
  *
  * ```ts
@@ -208,8 +198,6 @@ export const ArchitectureShape = LiteralKit(["model-first", "legacy"]).pipe(
 );
 
 /**
- * Slice shape an architecture operation plan describes.
- *
  * **Example** (Assign the model-first shape)
  *
  * ```ts
@@ -314,8 +302,6 @@ export const ArchitectureOperationKind = LiteralKit([
 export type ArchitectureOperationKind = typeof ArchitectureOperationKind.Type;
 
 /**
- * Writer families selected from normalized architecture operations.
- *
  * **Example** (Validate package-json writer kind)
  *
  * ```ts
@@ -335,8 +321,6 @@ export const ArchitectureWriterKind = LiteralKit(["template", "json", "jsonc", "
 );
 
 /**
- * Writer family selected from normalized architecture operations.
- *
  * **Example** (Type-level writer kind)
  *
  * ```ts
@@ -352,8 +336,6 @@ export const ArchitectureWriterKind = LiteralKit(["template", "json", "jsonc", "
 export type ArchitectureWriterKind = typeof ArchitectureWriterKind.Type;
 
 /**
- * Write-mode metadata for architecture operations.
- *
  * **Example** (Validate write-if-missing mode)
  *
  * ```ts
@@ -377,8 +359,6 @@ export const ArchitectureOperationWriteMode = LiteralKit([
 );
 
 /**
- * Write-mode metadata for an architecture operation.
- *
  * **Example** (Assign ensure-present write mode)
  *
  * ```ts
@@ -394,8 +374,6 @@ export const ArchitectureOperationWriteMode = LiteralKit([
 export type ArchitectureOperationWriteMode = typeof ArchitectureOperationWriteMode.Type;
 
 /**
- * Conflict policy metadata for architecture operations.
- *
  * **Example** (Validate conflict policy value)
  *
  * ```ts
@@ -419,8 +397,6 @@ export const ArchitectureOperationConflictPolicy = LiteralKit([
 );
 
 /**
- * Conflict policy metadata for an architecture operation.
- *
  * **Example** (Assign require-present policy)
  *
  * ```ts
@@ -436,8 +412,6 @@ export const ArchitectureOperationConflictPolicy = LiteralKit([
 export type ArchitectureOperationConflictPolicy = typeof ArchitectureOperationConflictPolicy.Type;
 
 /**
- * Source metadata for architecture operations.
- *
  * **Example** (Validate accepted-proof source)
  *
  * ```ts
@@ -463,8 +437,6 @@ export const ArchitectureOperationSource = LiteralKit([
 );
 
 /**
- * Source metadata for an architecture operation.
- *
  * **Example** (Assign package-shell source)
  *
  * ```ts
@@ -480,8 +452,6 @@ export const ArchitectureOperationSource = LiteralKit([
 export type ArchitectureOperationSource = typeof ArchitectureOperationSource.Type;
 
 /**
- * Per-operation idempotency status.
- *
  * **Example** (Validate matching check status)
  *
  * ```ts
@@ -507,8 +477,6 @@ export const ArchitectureOperationCheckStatus = LiteralKit([
 );
 
 /**
- * Per-operation idempotency status.
- *
  * **Example** (Assign absent check status)
  *
  * ```ts
@@ -557,8 +525,6 @@ const OperationSource = ArchitectureOperationSource.pipe(
 );
 
 /**
- * Role package entry in a canonical architecture slice operation plan.
- *
  * **Example** (Create slice role plan)
  *
  * ```ts
@@ -590,8 +556,6 @@ export class ArchitectureSliceRolePlan extends S.Opaque<ArchitectureSliceRolePla
 ) {}
 
 /**
- * Normalized architecture creation target.
- *
  * **Example** (Create architecture plan target)
  *
  * ```ts
@@ -666,8 +630,6 @@ export class WriteFileOperation extends S.Opaque<WriteFileOperation, { readonly 
 ) {}
 
 /**
- * Operation that writes a structured package manifest.
- *
  * **Example** (Create package-json operation)
  *
  * ```ts
@@ -787,8 +749,6 @@ export class EnsureAbsentPathOperation extends S.Opaque<EnsureAbsentPathOperatio
 ) {}
 
 /**
- * Canonical operation-plan operation.
- *
  * **Example** (Validate ensure-file as operation)
  *
  * ```ts
@@ -819,8 +779,6 @@ export const ArchitectureOperation = S.Union([
 );
 
 /**
- * Canonical operation-plan operation.
- *
  * **Example** (Type-level architecture operation)
  *
  * ```ts
@@ -872,8 +830,6 @@ export class ArchitectureOperationCheck extends S.Opaque<
 ) {}
 
 /**
- * Schema-versioned canonical architecture slice operation plan.
- *
  * **Example** (Create empty operation plan)
  *
  * ```ts
@@ -981,8 +937,6 @@ export class OperationPlanCheckResult extends S.Opaque<OperationPlanCheckResult,
 ) {}
 
 /**
- * Result of applying a canonical operation plan.
- *
  * **Example** (Create plan apply result)
  *
  * ```ts

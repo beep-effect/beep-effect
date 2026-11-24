@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $RepoConfigsId.create("next/models/Turbopack.schema");
 
 /**
- * JSON-compatible value accepted by Turbopack loader options.
- *
  * **Example** (Make JSON value object)
  *
  * ```ts
@@ -26,8 +24,6 @@ const $I = $RepoConfigsId.create("next/models/Turbopack.schema");
  */
 export type JSONValue = string | number | boolean | Array<JSONValue> | { [key: string]: JSONValue };
 /**
- * JSON-compatible value schema accepted by Turbopack loader options.
- *
  * **Example** (Make JSON value schema)
  *
  * ```ts
@@ -48,8 +44,6 @@ export const JSONValue: S.Codec<JSONValue, JSONValue> = S.suspend(() =>
 );
 
 /**
- * Record of Turbopack loader options.
- *
  * **Example** (Make loader options flag)
  *
  * ```ts
@@ -68,8 +62,6 @@ export const TurbopackLoaderOptions = S.Record(S.String, JSONValue).pipe(
 );
 
 /**
- * Record of Turbopack loader options.
- *
  * **Example** (Annotate loader options type)
  *
  * ```ts
@@ -84,8 +76,6 @@ export const TurbopackLoaderOptions = S.Record(S.String, JSONValue).pipe(
 export type TurbopackLoaderOptions = typeof TurbopackLoaderOptions.Type;
 
 /**
- * Object-form loader entry accepted by a Turbopack rule.
- *
  * **Example** (Load SVGs as React components)
  *
  * ```ts
@@ -111,8 +101,6 @@ export class TurbopackLoaderItemConfig extends S.Opaque<TurbopackLoaderItemConfi
 ) {}
 
 /**
- * Loader entry accepted by a Turbopack rule.
- *
  * **Example** (Make sass-loader item)
  *
  * ```ts
@@ -131,8 +119,6 @@ export const TurbopackLoaderItem = S.Union([S.String, TurbopackLoaderItemConfig]
 );
 
 /**
- * Loader entry accepted by a Turbopack rule.
- *
  * **Example** (Assign string loader item)
  *
  * ```ts
@@ -147,8 +133,6 @@ export const TurbopackLoaderItem = S.Union([S.String, TurbopackLoaderItemConfig]
 export type TurbopackLoaderItem = typeof TurbopackLoaderItem.Type;
 
 /**
- * Built-in Turbopack rule condition.
- *
  * **Example** (Access browser enum condition)
  *
  * ```ts
@@ -174,8 +158,6 @@ export const TurbopackLoaderBuiltinCondition = LiteralKit([
 );
 
 /**
- * Built-in Turbopack rule condition.
- *
  * **Example** (Satisfy browser condition string)
  *
  * ```ts
@@ -190,8 +172,6 @@ export const TurbopackLoaderBuiltinCondition = LiteralKit([
 export type TurbopackLoaderBuiltinCondition = typeof TurbopackLoaderBuiltinCondition.Type;
 
 /**
- * Recursive condition object used by Turbopack rules.
- *
  * **Example** (Make all browser condition)
  *
  * ```ts
@@ -286,8 +266,6 @@ class TurbopackRuleMatcherCondition extends S.Opaque<
 ) {}
 
 /**
- * Recursive condition schema used by Turbopack rules.
- *
  * **Example** (Make recursive rule condition)
  *
  * ```ts
@@ -314,8 +292,6 @@ export const TurbopackRuleCondition: S.Codec<TurbopackRuleCondition, TurbopackRu
 );
 
 /**
- * Module type used by Turbopack for matched files.
- *
  * **Example** (Access ecmascript module enum)
  *
  * ```ts
@@ -346,8 +322,6 @@ export const TurbopackModuleType = LiteralKit([
 );
 
 /**
- * Module type used by Turbopack for matched files.
- *
  * **Example** (Satisfy text module type)
  *
  * ```ts
@@ -362,8 +336,6 @@ export const TurbopackModuleType = LiteralKit([
 export type TurbopackModuleType = typeof TurbopackModuleType.Type;
 
 /**
- * Object-form Turbopack rule configuration.
- *
  * **Example** (Make text type rule)
  *
  * ```ts
@@ -395,8 +367,6 @@ export class TurbopackRuleConfigItem extends S.Opaque<TurbopackRuleConfigItem, {
 ) {}
 
 /**
- * Turbopack rule configuration collection.
- *
  * **Example** (Make sass-loader collection)
  *
  * ```ts
@@ -418,8 +388,6 @@ export const TurbopackRuleConfigCollection = S.Union([
 );
 
 /**
- * Turbopack rule configuration collection.
- *
  * **Example** (Annotate string loader collection)
  *
  * ```ts
@@ -434,8 +402,6 @@ export const TurbopackRuleConfigCollection = S.Union([
 export type TurbopackRuleConfigCollection = typeof TurbopackRuleConfigCollection.Type;
 
 /**
- * Issue filter rule ignored by Turbopack.
- *
  * **Example** (Silence a known warning from a vendored package)
  *
  * ```ts
@@ -462,8 +428,6 @@ export class TurbopackIgnoredIssue extends S.Opaque<TurbopackIgnoredIssue, { rea
 ) {}
 
 /**
- * Options for Turbopack in `next.config.js`.
- *
  * **Example** (Make options with root)
  *
  * ```ts

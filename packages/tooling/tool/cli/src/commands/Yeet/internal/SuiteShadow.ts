@@ -48,9 +48,6 @@ import type { GithubWorkflowRunRecord } from "../../../internal/github/index.ts"
 const $I = $RepoCliId.create("commands/Yeet/internal/SuiteShadow");
 
 /**
- * One Actions workflow run on the head commit and the check suite its check
- * runs report into.
- *
  * **Details**
  *
  * `workflowPath` and `event` key the runs the ruleset compares; the newest
@@ -119,8 +116,6 @@ export const HeadCheckVerdict = LiteralKit(["green", "red", "pending"]).pipe(
 );
 
 /**
- * Type of {@link HeadCheckVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -198,9 +193,6 @@ export class RequiredShadowInput extends S.Opaque<RequiredShadowInput, { readonl
 ) {}
 
 /**
- * How the gates judge a required context the ruleset reads no run of, from
- * its newest hidden copy.
- *
  * **Details**
  *
  * - `red`: the copy completed red. It is judged like a live red, whatever the
@@ -229,17 +221,12 @@ export const HiddenRequiredState = LiteralKit(["red", "shadowed", "pending"]).pi
 );
 
 /**
- * Type of {@link HiddenRequiredState}.
- *
  * @category models
  * @since 0.0.0
  */
 export type HiddenRequiredState = typeof HiddenRequiredState.Type;
 
 /**
- * A required context with no run the ruleset reads, judged by its newest
- * hidden copy.
- *
  * **Details**
  *
  * `copy` is the context's check run in the newest replaced suite that

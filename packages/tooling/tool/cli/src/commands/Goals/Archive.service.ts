@@ -95,8 +95,6 @@ const decodeExplorationManifest = S.decodeUnknownOption(ExplorationManifest);
 const encodePlanEntries = S.encodeUnknownEffect(S.Array(ArchivePlanEntry));
 
 /**
- * Options for one archive plan.
- *
  * **Example** (Plan the first three goals)
  *
  * ```ts

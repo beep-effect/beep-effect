@@ -75,8 +75,6 @@ export const GitHubAppName = LiteralKit([
 );
 
 /**
- * Decoded GitHubAppName value.
- *
  * @category models
  * @since 0.0.0
  */

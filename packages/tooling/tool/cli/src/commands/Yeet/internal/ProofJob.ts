@@ -311,8 +311,6 @@ export const ProofJobPhase = LiteralKit(["submitted", "running", "finished", "te
 );
 
 /**
- * Lifecycle phase of one job record.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -380,8 +378,6 @@ export const ProofJobServiceResult = LiteralKit([
 );
 
 /**
- * systemd's `$SERVICE_RESULT` vocabulary.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -415,8 +411,6 @@ export const ProofJobExitCode = LiteralKit(["exited", "killed", "dumped"]).pipe(
 );
 
 /**
- * systemd's `$EXIT_CODE` vocabulary.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -461,8 +455,6 @@ export const ProofJobTerminationReason = LiteralKit([
 );
 
 /**
- * Why a job ended without a recorded verdict.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -540,8 +532,6 @@ export const ProofJobRowSeverity = LiteralKit(["P1", "P2"]).pipe(
 );
 
 /**
- * Inbox severity a job row may carry.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -575,8 +565,6 @@ export const ProofJobObservedVia = LiteralKit(["job-wait", "job-status", "inbox-
 );
 
 /**
- * Which command observed a job row.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -590,8 +578,6 @@ export const ProofJobObservedVia = LiteralKit(["job-wait", "job-status", "inbox-
 export type ProofJobObservedVia = typeof ProofJobObservedVia.Type;
 
 /**
- * Bounded outcome of `yeet job cancel`.
- *
  * **Example** (A stop was requested)
  *
  * ```ts
@@ -616,8 +602,6 @@ export const ProofJobCancelOutcome = LiteralKit([
 );
 
 /**
- * Bounded outcome of `yeet job cancel`.
- *
  * **Example** (Inspect the companion domain)
  *
  * ```ts
@@ -1217,8 +1201,6 @@ export const readyMonitorArgvKey = (argv: ReadonlyArray<string>): ReadonlyArray<
 const readyMonitorArgvKeyEquivalence = A.makeEquivalence(Str.Equivalence);
 
 /**
- * The runtime cap a detached job submission asks for with `--job-max-runtime`.
- *
  * **Details**
  *
  * `unspecified` is a submission without the flag, `capped` asks systemd to stop
@@ -1252,8 +1234,6 @@ export const ProofJobRuntimeCapRequest = S.TaggedUnion({
 );
 
 /**
- * Type represented by {@link ProofJobRuntimeCapRequest}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1320,8 +1300,6 @@ export const ReadyMonitorRuntimeLeft = S.TaggedUnion({
 );
 
 /**
- * Type represented by {@link ReadyMonitorRuntimeLeft}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1766,8 +1744,6 @@ export class ProofJobSubmission extends S.Opaque<ProofJobSubmission, { readonly 
 ) {}
 
 /**
- * Options of `wait`: an optional overall timeout and the poll interval.
- *
  * **Example** (Wait at most ten minutes)
  *
  * ```ts

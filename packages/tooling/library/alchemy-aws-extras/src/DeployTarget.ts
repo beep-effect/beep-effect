@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $AlchemyAwsExtrasId.create("DeployTarget");
 
 /**
- * A twelve-digit AWS account id.
- *
  * **Example** (Decode an account id)
  *
  * ```ts

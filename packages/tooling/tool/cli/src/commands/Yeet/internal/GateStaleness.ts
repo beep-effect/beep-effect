@@ -75,8 +75,6 @@ import type { YeetCommandError } from "../Yeet.errors.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/GateStaleness");
 
 /**
- * The kinds of cached artifact a verification gate can leave behind.
- *
  * **Details**
  *
  * The kind is what the operator needs to know to judge a stale verdict: a
@@ -102,16 +100,12 @@ export const GateArtifactKind = LiteralKit(["baseline", "inventory", "manifest",
 );
 
 /**
- * The kinds of cached artifact a verification gate can leave behind.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GateArtifactKind = typeof GateArtifactKind.Type;
 
 /**
- * The changed-input family that can invalidate a cached gate artifact.
- *
  * @category models
  * @since 0.0.0
  */
@@ -123,16 +117,12 @@ export const GateInputScope = LiteralKit(["repo-code", "goals-packets"]).pipe(
 );
 
 /**
- * The changed-input family that can invalidate a cached gate artifact.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GateInputScope = typeof GateInputScope.Type;
 
 /**
- * One file observed on disk with the modification time it carried.
- *
  * **Example** (Witness one artifact)
  *
  * ```ts
@@ -157,8 +147,6 @@ export class GateFileWitness extends S.Opaque<GateFileWitness, { readonly brand:
 ) {}
 
 /**
- * A cached gate artifact and the command that regenerates it.
- *
  * **Example** (Describe one gated artifact)
  *
  * ```ts
@@ -210,8 +198,6 @@ export class GateFresh extends S.Opaque<GateFresh, { readonly brand: unique symb
 ) {}
 
 /**
- * A gate artifact that predates a relevant file this branch changed.
- *
  * @category models
  * @since 0.0.0
  */
@@ -258,8 +244,6 @@ export class GateUnproven extends S.Opaque<GateUnproven, { readonly brand: uniqu
 ) {}
 
 /**
- * What the staleness check concluded about one gate artifact.
- *
  * **Example** (Decode a stale verdict)
  *
  * ```ts
@@ -285,8 +269,6 @@ export const GateStalenessVerdict = S.Union([GateFresh, GateStale, GateUnproven]
 );
 
 /**
- * What the staleness check concluded about one gate artifact.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -34,8 +34,6 @@ const $I = $RepoCliId.create("commands/HarnessLedger/HarnessLedger.schemas");
 const WindowSessions = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(1));
 
 /**
- * Dispositions a human may record with `harness-ledger disposition`.
- *
  * **Details**
  *
  * `proposed` is excluded: only `propose` and `prune-proposals` open a chain
@@ -66,8 +64,6 @@ export const HarnessLedgerAdmission = LedgerDisposition.pick([
 );
 
 /**
- * Decoded admission outcome.
- *
  * @category models
  * @since 0.0.0
  */
@@ -94,8 +90,6 @@ export const PrunableSurfaceKind = ContextSurfaceKind.pick(["skill", "hook", "mc
 );
 
 /**
- * Decoded prunable surface kind.
- *
  * @category models
  * @since 0.0.0
  */
@@ -124,8 +118,6 @@ export const prunableSurfaceMechanism: (kind: PrunableSurfaceKind) => MechanismC
 });
 
 /**
- * Ledger month key `YYYY-MM`, the stem of a `harness-ledger/rows/*.jsonl` file.
- *
  * **Example** (Validating a month key)
  *
  * ```ts
@@ -146,8 +138,6 @@ export const HarnessLedgerMonth = S.String.check(S.isPattern(/^\d{4}-(0[1-9]|1[0
 );
 
 /**
- * Decoded ledger month key.
- *
  * @category models
  * @since 0.0.0
  */
@@ -253,8 +243,6 @@ export const parseHarnessSurfaceSpec = Effect.fn("HarnessLedger.parseHarnessSurf
 });
 
 /**
- * Options for `harness-ledger propose`.
- *
  * **Example** (Proposing a pending skill edit)
  *
  * ```ts
@@ -292,8 +280,6 @@ export class HarnessLedgerProposeOptions extends S.Opaque<
 
 const harnessLedgerDispositionOptionsTouchedDefault = A.empty();
 /**
- * Options for `harness-ledger disposition`.
- *
  * **Example** (Rejecting a proposal)
  *
  * ```ts
@@ -334,8 +320,6 @@ export class HarnessLedgerDispositionOptions extends S.Opaque<
 ) {}
 
 /**
- * Options for `harness-ledger list`.
- *
  * **Example** (Listing stale rows)
  *
  * ```ts
@@ -392,8 +376,6 @@ export class HarnessLedgerListEntry extends S.Opaque<HarnessLedgerListEntry, { r
 ) {}
 
 /**
- * Options for `harness-ledger prune-proposals`.
- *
  * **Example** (Dry-running a five-session window)
  *
  * ```ts
@@ -588,8 +570,6 @@ export class ObservedSessionWindow extends S.Opaque<ObservedSessionWindow, { rea
 ) {}
 
 /**
- * Result of one `prune-proposals` scan.
- *
  * **Details**
  *
  * `sessionsObserved` counts only sessions under `harnessHash`, the current
@@ -672,7 +652,6 @@ export const HookPulseNamespaceProjectionState = LiteralKit(["present", "absent"
   })
 );
 /**
- * Decoded HookPulseNamespaceProjectionState value.
  * @category models
  * @since 0.0.0
  */

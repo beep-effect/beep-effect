@@ -148,17 +148,12 @@ export const YeetReadyGateCriterion = LiteralKit(["pr-open", "no-required-red", 
 );
 
 /**
- * A criterion the draft-to-ready flip requires.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetReadyGateCriterion = typeof YeetReadyGateCriterion.Type;
 
 /**
- * A required check whose red is inherited from `main`, attributed by the owner
- * and recorded under S11 before the flip.
- *
  * **Example** (Attribute an inherited red)
  *
  * ```ts
@@ -231,8 +226,6 @@ export class YeetReadyPullRequestRead extends S.Opaque<YeetReadyPullRequestRead,
 ) {}
 
 /**
- * The gate passed on a draft: flip it.
- *
  * **Details**
  *
  * `inherited` holds the S11 attributions the flip applied: those naming a
@@ -369,8 +362,6 @@ export const YeetReadyRefusalBlocker = LiteralKit([...YeetReadyGateCriterion.lit
 );
 
 /**
- * What a `yeet ready` refusal names.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1248,9 +1239,6 @@ const refuseFinalCheck = (detail: string) =>
   });
 
 /**
- * How `yeet ready` judged the gates a worker-profile final-check deferred to
- * hosted CI.
- *
  * **Details**
  *
  * `accepted` lists the gates whose hosted check run is green on the head;

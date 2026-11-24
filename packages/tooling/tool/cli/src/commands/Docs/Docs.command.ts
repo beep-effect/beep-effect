@@ -71,8 +71,6 @@ class DocsSectionPolicies extends S.Opaque<DocsSectionPolicies, { readonly brand
 ) {}
 
 /**
- * Documentation section model.
- *
  * **Example** (Log DocsSection model)
  *
  * ```ts
@@ -92,8 +90,6 @@ export const DocsSection = DocsSectionName.mapMembers(
   })
 );
 /**
- * Documentation section model.
- *
  * **Example** (Log DocsSection type)
  *
  * ```ts

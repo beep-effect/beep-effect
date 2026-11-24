@@ -54,9 +54,6 @@ const importSpecifierPattern = /^#.+$/;
 const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
 
 /**
- * Schema for package names used as dependency and catalog keys and in the
- * `DocgenConfig` package references.
- *
  * **Details**
  *
  * It admits mixed case so existing names keep decoding. A manifest's own
@@ -129,8 +126,6 @@ const ExportConditionKey = S.String.check(S.isPattern(exportConditionPattern)).p
 );
 
 /**
- * Schema for non-empty package metadata strings.
- *
  * **Example** (Validate non-empty string)
  *
  * ```ts
@@ -311,8 +306,6 @@ const BeepPackageFamily = LiteralKit(["foundation", "drivers", "tooling", "ecosy
 );
 
 /**
- * Repo-local package metadata for foundation packages.
- *
  * **Example** (Tag a modeling package in the foundation family)
  *
  * ```ts
@@ -339,8 +332,6 @@ export class BeepFoundationMetadata extends S.Opaque<BeepFoundationMetadata, { r
 ) {}
 
 /**
- * Repo-local package metadata for flat driver packages.
- *
  * **Example** (Tag a flat driver package)
  *
  * ```ts
@@ -367,8 +358,6 @@ export class BeepDriverMetadata extends S.Opaque<BeepDriverMetadata, { readonly 
 ) {}
 
 /**
- * Repo-local package metadata for tooling packages.
- *
  * **Example** (Reject an unknown tooling kind)
  *
  * ```ts
@@ -398,8 +387,6 @@ export class BeepToolingMetadata extends S.Opaque<BeepToolingMetadata, { readonl
 ) {}
 
 /**
- * Repo-local package metadata for flat ecosystem packages.
- *
  * **Example** (Tag an ecosystem package)
  *
  * ```ts
@@ -515,8 +502,6 @@ const PackageExportsSubpathMap = makeStrictStringKeyRecord(
 );
 
 /**
- * Schema for the `exports` field.
- *
  * **Example** (Inspect PackageExports schema)
  *
  * ```ts
@@ -595,8 +580,6 @@ const PackageImportsEntryOrFallback: S.Codec<PackageImportsEntryOrFallback, Pack
 );
 
 /**
- * Schema for the `imports` field.
- *
  * **Example** (Inspect PackageImports schema)
  *
  * ```ts
@@ -643,8 +626,6 @@ const PublishConfigBase = S.Struct({
 );
 
 /**
- * Schema for the `publishConfig` field.
- *
  * **Example** (Inspect PublishConfig schema)
  *
  * ```ts
@@ -981,8 +962,6 @@ export class PackageJson extends PackageManifest.extend<PackageJson>($I`PackageJ
 }
 
 /**
- * Namespace helpers for the repo-aware package-json schema.
- *
  * **Example** (Read typed package name)
  *
  * ```ts
@@ -1012,8 +991,6 @@ export declare namespace PackageJson {
 }
 
 /**
- * Runtime type for {@link RepoPackageName}.
- *
  * **Example** (Accept RepoPackageName type)
  *
  * ```ts
@@ -1027,8 +1004,6 @@ export declare namespace PackageJson {
  */
 export type RepoPackageName = (typeof RepoPackageName)["Type"];
 /**
- * Runtime type for {@link RelativeDotPath}.
- *
  * **Example** (Accept RelativeDotPath type)
  *
  * ```ts
@@ -1042,8 +1017,6 @@ export type RepoPackageName = (typeof RepoPackageName)["Type"];
  */
 export type RelativeDotPath = (typeof RelativeDotPath)["Type"];
 /**
- * Runtime type for {@link NonEmptyStringValue}.
- *
  * **Example** (Accept NonEmptyStringValue type)
  *
  * ```ts
@@ -1057,8 +1030,6 @@ export type RelativeDotPath = (typeof RelativeDotPath)["Type"];
  */
 export type NonEmptyStringValue = (typeof NonEmptyStringValue)["Type"];
 /**
- * Runtime type for {@link PackageExports}.
- *
  * **Example** (Accept PackageExports type)
  *
  * ```ts
@@ -1072,8 +1043,6 @@ export type NonEmptyStringValue = (typeof NonEmptyStringValue)["Type"];
  */
 export type PackageExports = (typeof PackageExports)["Type"];
 /**
- * Runtime type for {@link PackageImports}.
- *
  * **Example** (Accept PackageImports type)
  *
  * ```ts
@@ -1087,8 +1056,6 @@ export type PackageExports = (typeof PackageExports)["Type"];
  */
 export type PackageImports = (typeof PackageImports)["Type"];
 /**
- * Runtime type for {@link PublishConfig}.
- *
  * **Example** (Accept PublishConfig type)
  *
  * ```ts

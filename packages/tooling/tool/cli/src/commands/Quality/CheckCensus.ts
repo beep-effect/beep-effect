@@ -180,9 +180,6 @@ export class CheckCensusProgram extends S.Opaque<CheckCensusProgram, { readonly 
 ) {}
 
 /**
- * Signed per-field difference of the reference-keeping overlay minus the
- * committed check overlay.
- *
  * **Example** (A smaller, faster program)
  *
  * ```ts
@@ -222,8 +219,6 @@ export class CheckCensusDelta extends S.Opaque<CheckCensusDelta, { readonly bran
 ) {}
 
 /**
- * One package's census row.
- *
  * **Details**
  *
  * `overlay` measures the committed `tsconfig.check.json`; `referenceKeeping`
@@ -295,8 +290,6 @@ export class CheckCensusReport extends S.Opaque<CheckCensusReport, { readonly br
 ) {}
 
 /**
- * A workspace package selected for the census.
- *
  * **Example** (Describe a package)
  *
  * ```ts

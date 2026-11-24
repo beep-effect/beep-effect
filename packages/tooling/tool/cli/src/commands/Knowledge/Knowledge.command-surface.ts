@@ -108,8 +108,6 @@ export class KnowledgeStaticCommandFlag extends S.Opaque<
 ) {}
 
 /**
- * One non-executing projection of a CLI command and its ordered descendants.
- *
  * **Example** (Project a nested command tree)
  *
  * ```ts
@@ -147,8 +145,6 @@ export class StaticCommandNode extends S.Opaque<StaticCommandNode, { readonly br
 ) {}
 
 /**
- * Companion types for {@link StaticCommandNode}.
- *
  * @category models
  * @since 0.0.0
  */

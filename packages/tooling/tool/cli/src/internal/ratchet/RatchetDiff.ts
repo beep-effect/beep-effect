@@ -94,8 +94,6 @@ export const diffMembership = <Finding>(input: {
 };
 
 /**
- * Difference for one tracked numeric ratchet total.
- *
  * **Example** (Construct a ratchet total delta)
  *
  * ```ts
@@ -122,8 +120,6 @@ export class RatchetTotalDelta extends S.Opaque<RatchetTotalDelta, { readonly br
 ) {}
 
 /**
- * Difference between current numeric totals and the committed baseline totals.
- *
  * **Details**
  *
  * `increased` (delta &gt; 0) is the failure signal; `decreased` (delta &lt; 0)
@@ -190,8 +186,6 @@ const metricDelta = (
   );
 
 /**
- * Current and committed baseline numeric totals, keyed by metric name.
- *
  * **Example** (Construct a diff totals input)
  *
  * ```ts

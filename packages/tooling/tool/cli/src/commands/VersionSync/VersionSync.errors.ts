@@ -69,8 +69,6 @@ export class VersionSyncError extends S.TaggedError<VersionSyncError, { readonly
 }
 
 /**
- * Network unavailable during upstream version resolution.
- *
  * **Example** (Create NetworkUnavailableError instance)
  *
  * ```ts

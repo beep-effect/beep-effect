@@ -6,8 +6,6 @@
  */
 
 /**
- * Public yeet execution mode model.
- *
  * @category models
  * @since 0.0.0
  */
@@ -26,8 +24,6 @@ export {
   YeetStatusReviewThread,
 } from "./internal/Status.schemas.ts";
 /**
- * Yeet operator status models.
- *
  * @category models
  * @since 0.0.0
  */
@@ -59,8 +55,6 @@ export {
  */
 export { yeetCommand, yeetMonitorCommandRoute } from "./Yeet.command.ts";
 /**
- * Public yeet command error.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -72,8 +66,6 @@ export * from "./Yeet.errors.ts";
  * @since 0.0.0
  */
 /**
- * Yeet quality issue index models and parsers.
- *
  * @category models
  * @since 0.0.0
  */

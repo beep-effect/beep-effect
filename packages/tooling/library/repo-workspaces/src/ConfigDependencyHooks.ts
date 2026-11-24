@@ -143,8 +143,6 @@ export class PeerDependencyRules extends S.Opaque<PeerDependencyRules, { readonl
 ) {}
 
 /**
- * Companion types for {@link PeerDependencyRules}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -312,8 +310,6 @@ export class HookInjection extends S.Opaque<HookInjection, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link HookInjection}.
- *
  * @category type-level
  * @since 0.0.0
  */

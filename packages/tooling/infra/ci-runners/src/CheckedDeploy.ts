@@ -54,8 +54,6 @@ import type { CRUD, Plan } from "alchemy/Plan";
 const $I = $InfraCiRunnersId.create("CheckedDeploy");
 
 /**
- * How a planned row continues a deploy that stopped part-way.
- *
  * **Details**
  *
  * A failed deploy leaves a state row `creating` for every resource it had
@@ -86,8 +84,6 @@ export const ResumeKind = LiteralKit(["none", "create", "empty-replace"]).pipe(
 );
 
 /**
- * Decoded resume kind.
- *
  * @category models
  * @since 0.0.0
  */
@@ -209,8 +205,6 @@ export const PlanExpectation = LiteralKit(["routine", "bootstrap", "default-secu
 );
 
 /**
- * Decoded expectation.
- *
  * @category models
  * @since 0.0.0
  */

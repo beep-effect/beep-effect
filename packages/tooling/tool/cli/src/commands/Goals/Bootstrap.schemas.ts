@@ -27,8 +27,6 @@ import type { GoalDoctorFindingKind } from "./Doctor.ts";
 const $I = $RepoCliId.create("commands/Goals/Bootstrap.schemas");
 
 /**
- * Constrained goal-packet slug grammar.
- *
  * **Details**
  *
  * Reuses the lowercase-segment grammar ratified for capability-slug segments
@@ -74,8 +72,6 @@ export const GoalSlug = S.String.check(
 );
 
 /**
- * Constrained goal-packet slug.
- *
  * **Example** (Annotate a slug value)
  *
  * ```ts
@@ -91,8 +87,6 @@ export const GoalSlug = S.String.check(
 export type GoalSlug = typeof GoalSlug.Type;
 
 /**
- * Which compiler produced a plan.
- *
  * **Example** (Narrow a plan mode)
  *
  * ```ts
@@ -109,8 +103,6 @@ export const PlanMode = LiteralKit(["bootstrap", "adopt"]).pipe(
 );
 
 /**
- * Which compiler produced a plan.
- *
  * **Example** (Annotate a mode value)
  *
  * ```ts
@@ -126,8 +118,6 @@ export const PlanMode = LiteralKit(["bootstrap", "adopt"]).pipe(
 export type PlanMode = typeof PlanMode.Type;
 
 /**
- * Who owns a path's bytes after materialization.
- *
  * **Details**
  *
  * `generated` bytes derive entirely from machine inputs and may be
@@ -152,8 +142,6 @@ export const PlanOwnership = LiteralKit(["generated", "generated-seed", "authore
 );
 
 /**
- * Who owns a path's bytes after materialization.
- *
  * **Example** (Annotate an ownership value)
  *
  * ```ts
@@ -169,8 +157,6 @@ export const PlanOwnership = LiteralKit(["generated", "generated-seed", "authore
 export type PlanOwnership = typeof PlanOwnership.Type;
 
 /**
- * What a later executor would do to one path.
- *
  * **Details**
  *
  * `create` writes new bytes; `retain` leaves a conforming file untouched;
@@ -194,8 +180,6 @@ export const PlanAction = LiteralKit(["create", "retain", "preserve", "report"])
 );
 
 /**
- * What a later executor would do to one path.
- *
  * **Example** (Annotate an action value)
  *
  * ```ts
@@ -211,8 +195,6 @@ export const PlanAction = LiteralKit(["create", "retain", "preserve", "report"])
 export type PlanAction = typeof PlanAction.Type;
 
 /**
- * A check the executor must pass against the prospective overlay before publish.
- *
  * **Example** (Narrow a validation requirement)
  *
  * ```ts
@@ -239,8 +221,6 @@ export const ValidationRequirement = LiteralKit([
 );
 
 /**
- * A check the executor must pass before publish.
- *
  * **Example** (Annotate a validation value)
  *
  * ```ts
@@ -256,8 +236,6 @@ export const ValidationRequirement = LiteralKit([
 export type ValidationRequirement = typeof ValidationRequirement.Type;
 
 /**
- * Why plan compilation failed closed.
- *
  * **Example** (Narrow a conflict reason)
  *
  * ```ts
@@ -276,8 +254,6 @@ export const PlanConflictReason = LiteralKit(["slug-exists", "packet-not-found",
 );
 
 /**
- * Why plan compilation failed closed.
- *
  * **Example** (Annotate a conflict reason)
  *
  * ```ts
@@ -321,8 +297,6 @@ export const PhaseArchetype = LiteralKit(["standard-delivery", "report-first"]).
 );
 
 /**
- * Ordered goal-phase archetype.
- *
  * **Example** (Annotate an archetype value)
  *
  * ```ts
@@ -338,8 +312,6 @@ export const PhaseArchetype = LiteralKit(["standard-delivery", "report-first"]).
 export type PhaseArchetype = typeof PhaseArchetype.Type;
 
 /**
- * Stage artifacts of an exploration packet that a goal ledger may cite.
- *
  * **Details**
  *
  * A packet gains these files stage by stage, so any of them can be absent.
@@ -363,8 +335,6 @@ export const ExplorationPacketFile = LiteralKit(["RESEARCH.md", "DECISIONS.md", 
 );
 
 /**
- * Exploration stage artifact name.
- *
  * **Example** (Annotate a packet file name)
  *
  * ```ts
@@ -410,8 +380,6 @@ export const PlanDigest = S.String.check(
 );
 
 /**
- * Lowercase SHA-256 hex digest.
- *
  * **Example** (Annotate a digest value)
  *
  * ```ts
@@ -427,8 +395,6 @@ export const PlanDigest = S.String.check(
 export type PlanDigest = typeof PlanDigest.Type;
 
 /**
- * Content address of one compiled plan.
- *
  * **Details**
  *
  * The digest half is the SHA-256 of the compact canonical JSON encoding of
@@ -467,8 +433,6 @@ export const MaterializationPlanId = S.String.check(
 );
 
 /**
- * Content address of one compiled plan.
- *
  * **Example** (Annotate a plan id value)
  *
  * ```ts
@@ -485,8 +449,6 @@ export const MaterializationPlanId = S.String.check(
 export type MaterializationPlanId = typeof MaterializationPlanId.Type;
 
 /**
- * One reason plan compilation failed closed.
- *
  * **Example** (Construct a slug-exists conflict)
  *
  * ```ts
@@ -514,8 +476,6 @@ export class PlanConflict extends S.Opaque<PlanConflict, { readonly brand: uniqu
 ) {}
 
 /**
- * One path the plan would create, retain, preserve, or report.
- *
  * **Details**
  *
  * `payload` carries the complete bytes a `create` entry would write, which is
@@ -553,8 +513,6 @@ export class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symb
 ) {}
 
 /**
- * Bytes and unmodeled keys adoption must not lose.
- *
  * **Details**
  *
  * The canonical manifest decoder accepts unknown top-level keys and strips
@@ -590,8 +548,6 @@ export class PlanPreservation extends S.Opaque<PlanPreservation, { readonly bran
 ) {}
 
 /**
- * Deterministic, content-addressed materialization intent.
- *
  * **Details**
  *
  * The plan is the complete description of the intended change: every path with
@@ -633,8 +589,6 @@ export class MaterializationPlan extends S.Opaque<MaterializationPlan, { readonl
 ) {}
 
 /**
- * Everything the pure bootstrap compiler needs; no ambient state.
- *
  * **Details**
  *
  * `today` is an explicit input, not a clock read — a compiler that reads the
@@ -867,8 +821,6 @@ export const validationRequirementsForGoalDoctorFinding = (
 ): ReadonlyArray<ValidationRequirement> => VALIDATION_REQUIREMENTS_BY_FINDING_KIND[kind];
 
 /**
- * One file a materialization write created, with the digest of its bytes.
- *
  * **Example** (Record a written file)
  *
  * ```ts

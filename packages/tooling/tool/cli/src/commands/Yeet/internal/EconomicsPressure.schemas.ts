@@ -31,8 +31,6 @@ const PressureCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const OptionalFinite = S.OptionFromNullOr(S.Finite);
 
 /**
- * Why a joined pressure field is absent for one attempt or lease.
- *
  * **Details**
  *
  * `remote-host`: the attempt ran on another host (a fleet-host journal, or a
@@ -78,8 +76,6 @@ export const EconomicsPressureGap = LiteralKit([
 );
 
 /**
- * Type of {@link EconomicsPressureGap}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -174,8 +170,6 @@ export const EconomicsPressureReadStatus = LiteralKit(["read", "missing", "unrea
 );
 
 /**
- * Type of {@link EconomicsPressureReadStatus}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -211,8 +205,6 @@ export class PsiRecorderRead extends S.Opaque<PsiRecorderRead, { readonly brand:
 ) {}
 
 /**
- * Which admission transition a stamp row records.
- *
  * **Example** (Recognise a release)
  *
  * ```ts
@@ -231,8 +223,6 @@ export const AdmissionStampTransition = LiteralKit(["admitted", "released"]).pip
 );
 
 /**
- * Type of {@link AdmissionStampTransition}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -269,8 +259,6 @@ export class AdmissionStampRow extends S.Opaque<AdmissionStampRow, { readonly br
 ) {}
 
 /**
- * The admission history as read for the join.
- *
  * **Details**
  *
  * `rows` counts the history's distinct rows and `opaqueRows` the ones this
@@ -303,9 +291,6 @@ export class AdmissionStampRead extends S.Opaque<AdmissionStampRead, { readonly 
 ) {}
 
 /**
- * Everything the pressure join reads: this host's label, the PSI recorder and
- * the admission history.
- *
  * **Example** (Nothing read)
  *
  * ```ts
@@ -336,8 +321,6 @@ export class EconomicsPressureRead extends S.Opaque<EconomicsPressureRead, { rea
 ) {}
 
 /**
- * Mean and maximum of one PSI figure over a window's samples.
- *
  * **Example** (A window's CPU figure)
  *
  * ```ts
@@ -404,8 +387,6 @@ export class EconomicsPsiWindow extends S.Opaque<EconomicsPsiWindow, { readonly 
 ) {}
 
 /**
- * An attempt's recorder samples were joined.
- *
  * **Example** (Read the joined window)
  *
  * ```ts
@@ -435,8 +416,6 @@ export class EconomicsSamplesJoined extends S.Opaque<EconomicsSamplesJoined, { r
 ) {}
 
 /**
- * An attempt has no joined recorder samples, and why.
- *
  * **Example** (A remote attempt)
  *
  * ```ts
@@ -455,8 +434,6 @@ export class EconomicsSamplesAbsent extends S.Opaque<EconomicsSamplesAbsent, { r
 ) {}
 
 /**
- * An attempt's recorder samples: joined, or absent with the reason.
- *
  * **Example** (Match a samples join)
  *
  * ```ts
@@ -478,16 +455,12 @@ export const EconomicsSamplesJoin = S.Union([EconomicsSamplesJoined, EconomicsSa
 );
 
 /**
- * Type of {@link EconomicsSamplesJoin}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EconomicsSamplesJoin = typeof EconomicsSamplesJoin.Type;
 
 /**
- * One lease transition's pressure stamp was joined.
- *
  * **Example** (A joined admission stamp)
  *
  * ```ts
@@ -514,8 +487,6 @@ export class EconomicsStampJoined extends S.Opaque<EconomicsStampJoined, { reado
 ) {}
 
 /**
- * One lease transition has no joined pressure stamp, and why.
- *
  * **Example** (A stamp written while the gate was off)
  *
  * ```ts
@@ -534,8 +505,6 @@ export class EconomicsStampAbsent extends S.Opaque<EconomicsStampAbsent, { reado
 ) {}
 
 /**
- * One lease transition's pressure stamp: joined, or absent with the reason.
- *
  * **Example** (Match a stamp join)
  *
  * ```ts
@@ -557,17 +526,12 @@ export const EconomicsStampJoin = S.Union([EconomicsStampJoined, EconomicsStampA
 );
 
 /**
- * Type of {@link EconomicsStampJoin}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EconomicsStampJoin = typeof EconomicsStampJoin.Type;
 
 /**
- * One admission lease of an attempt, keyed by its nonce, with the admitted and
- * released stamps.
- *
  * **Example** (A lease still held)
  *
  * ```ts
@@ -597,8 +561,6 @@ export class EconomicsLeasePressure extends S.Opaque<EconomicsLeasePressure, { r
 ) {}
 
 /**
- * An attempt's admission leases were joined by attempt id.
- *
  * **Example** (One joined lease)
  *
  * ```ts
@@ -623,8 +585,6 @@ export class EconomicsAdmissionsJoined extends S.Opaque<EconomicsAdmissionsJoine
 ) {}
 
 /**
- * An attempt has no joined admission leases, and why.
- *
  * **Example** (No admission row)
  *
  * ```ts
@@ -643,8 +603,6 @@ export class EconomicsAdmissionsAbsent extends S.Opaque<EconomicsAdmissionsAbsen
 ) {}
 
 /**
- * An attempt's admission leases: joined, or absent with the reason.
- *
  * **Example** (Match an admissions join)
  *
  * ```ts
@@ -666,8 +624,6 @@ export const EconomicsAdmissionsJoin = S.Union([EconomicsAdmissionsJoined, Econo
 );
 
 /**
- * Type of {@link EconomicsAdmissionsJoin}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -719,8 +675,6 @@ export class EconomicsAttemptPressure extends S.Opaque<EconomicsAttemptPressure,
 ) {}
 
 /**
- * A source the pressure join reads.
- *
  * **Example** (List the sources)
  *
  * ```ts
@@ -739,16 +693,12 @@ export const EconomicsPressureSourceKind = LiteralKit(["psi-recorder", "admissio
 );
 
 /**
- * Type of {@link EconomicsPressureSourceKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EconomicsPressureSourceKind = typeof EconomicsPressureSourceKind.Type;
 
 /**
- * How many attempts lack a joined field for one reason.
- *
  * **Example** (Three short attempts)
  *
  * ```ts

@@ -32,8 +32,6 @@ export const LibraryStringList = S.Array(S.String).pipe(
   $I.annoteSchema("LibraryStringList", { description: "String list defaulting to empty when omitted." })
 );
 /**
- * Runtime type of LibraryStringList.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -174,8 +172,6 @@ export const LibraryHopNonContentExtensions: ReadonlyArray<string> = [
 ];
 
 /**
- * Typed hop-2 admission policy values.
- *
  * **Details**
  *
  * Policy, not catalog schema: changing a value re-runs `acquire` without touching recorded

@@ -150,8 +150,6 @@ export const CircuitBreakerEventSchemaVersion = LiteralKit(["circuit-breaker-eve
 );
 
 /**
- * Decoded circuit-breaker event version.
- *
  * @see {@link CircuitBreakerEventSchemaVersion} for the runtime schema and supported version.
  * @category type-level
  * @since 0.0.0
@@ -179,8 +177,6 @@ export const CircuitBreakerOpenStateSchemaVersion = LiteralKit(["circuit-breaker
 );
 
 /**
- * Decoded circuit-breaker open-state version.
- *
  * @see {@link CircuitBreakerOpenStateSchemaVersion} for the runtime schema and supported version.
  * @category type-level
  * @since 0.0.0
@@ -188,8 +184,6 @@ export const CircuitBreakerOpenStateSchemaVersion = LiteralKit(["circuit-breaker
 export type CircuitBreakerOpenStateSchemaVersion = typeof CircuitBreakerOpenStateSchemaVersion.Type;
 
 /**
- * The guarded external probe completed successfully.
- *
  * **Example** (Record a probe that went through)
  *
  * ```ts
@@ -216,8 +210,6 @@ export class CircuitBreakerProbeSucceeded extends S.Opaque<
 ) {}
 
 /**
- * A failed external probe atomically opened the machine-wide breaker.
- *
  * **Example** (Open the breaker after a curl timeout)
  *
  * ```ts
@@ -249,8 +241,6 @@ export class CircuitBreakerTripped extends S.Opaque<CircuitBreakerTripped, { rea
 ) {}
 
 /**
- * An identical retry was skipped while the machine-wide breaker remained open.
- *
  * **Example** (Skip an identical retry until the cooldown ends)
  *
  * ```ts
@@ -286,8 +276,6 @@ export class CircuitBreakerRetrySkipped extends S.Opaque<
 ) {}
 
 /**
- * A probe was skipped because another process held the machine-wide coordination lock.
- *
  * **Example** (Back off while another process holds the lock)
  *
  * ```ts
@@ -313,8 +301,6 @@ export class CircuitBreakerCoordinationSkipped extends S.Opaque<
 ) {}
 
 /**
- * An operator explicitly closed one breaker state.
- *
  * **Example** (Record an operator closing the breaker)
  *
  * ```ts

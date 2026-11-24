@@ -27,8 +27,6 @@ const ResidueReapMode = LiteralKit(["dry-run", "apply", "resume", "restore"]);
 const ResidueArchivePhase = LiteralKit(["intent", "moved", "restored", "fenced-live"]);
 
 /**
- * Home-residue families owned by the janitor's closed policy.
- *
  * **Details**
  *
  * `drainable` is the one fleet-level class: whole clones and linked
@@ -70,8 +68,6 @@ export const ResidueReapClass = LiteralKit([
 );
 
 /**
- * Home-residue family recognized by the janitor.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -104,8 +100,6 @@ export const ResidueReapAction = LiteralKit([
 );
 
 /**
- * Filesystem action selected for one candidate.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -182,8 +176,6 @@ export const ResidueReapSkipReason = LiteralKit([
 export type ResidueReapSkipReason = typeof ResidueReapSkipReason.Type;
 
 /**
- * Non-negative finite age threshold measured in days.
- *
  * **Example** (Validate a threshold)
  *
  * ```ts
@@ -204,8 +196,6 @@ export const ResidueReapAgeDays = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pi
 );
 
 /**
- * Non-negative finite age threshold measured in days.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -242,8 +232,6 @@ export const ResidueReapByteCap = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pi
 export type ResidueReapByteCap = typeof ResidueReapByteCap.Type;
 
 /**
- * Non-negative count of newest entries a residue class always retains.
- *
  * **Example** (Validate a keep count)
  *
  * ```ts
@@ -264,8 +252,6 @@ export const ResidueReapKeepCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pip
 );
 
 /**
- * Non-negative count of newest entries a residue class always retains.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -309,8 +295,6 @@ export class QualificationViewReceipt extends S.Opaque<QualificationViewReceipt,
 ) {}
 
 /**
- * Absolute, non-empty home directory accepted as a cleanup root.
- *
  * **Details**
  *
  * A sanitized environment can carry `HOME` as an empty string; resolving that
@@ -341,8 +325,6 @@ export const ResidueReapHomeRoot = S.Trim.check(
 );
 
 /**
- * Absolute, non-empty home directory accepted as a cleanup root.
- *
  * @category type-level
  * @since 0.0.0
  */

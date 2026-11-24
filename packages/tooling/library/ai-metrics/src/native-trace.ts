@@ -73,8 +73,6 @@ const optionalHash = S.OptionFromOptionalKey(Sha256Hex);
 const Rejection = S.Struct({ ordinal: S.Natural, reason: S.tag("invalid-span") });
 
 /**
- * Owned route policy and bounded native request bytes.
- *
  * **Details**
  *
  * Route identity is supplied by the receiver configuration, not asserted by a producer attribute. Only exact approved model names and explicitly enabled finite synthetic fixture labels may survive in plaintext. Fixture labels are ignored by default, and never attest real application activity. At most 256 KiB is decoded; the HTTP adapter must enforce the same limit while streaming, before constructing this value.

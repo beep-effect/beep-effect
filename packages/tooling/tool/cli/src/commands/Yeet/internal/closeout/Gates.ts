@@ -801,8 +801,6 @@ export class CloseoutGateStatesTestComment extends S.Opaque<
 ) {}
 
 /**
- * Inputs a test hands to {@link closeoutGateStatesForTesting}.
- *
  * **Example** (No threads, no advisories)
  *
  * ```ts

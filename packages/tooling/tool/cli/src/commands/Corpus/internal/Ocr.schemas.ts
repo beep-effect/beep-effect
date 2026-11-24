@@ -77,8 +77,6 @@ export class CorpusPageReadRecord extends S.Opaque<CorpusPageReadRecord, { reado
 ) {}
 
 /**
- * Why a page has no reading: the page OCR failure reasons plus a failed render.
- *
  * **Example** (List the page failure reasons)
  *
  * ```ts
@@ -97,8 +95,6 @@ export const CorpusPageFailureReason = LiteralKit([...PageOcrErrorReason.literal
 );
 
 /**
- * Type for {@link CorpusPageFailureReason}.
- *
  * **Example** (Annotate a page failure reason)
  *
  * ```ts
@@ -163,8 +159,6 @@ export const CorpusPageReadingRecord = S.Union([CorpusPageReadRecord, CorpusPage
 );
 
 /**
- * Type for {@link CorpusPageReadingRecord}.
- *
  * **Example** (Annotate a page row)
  *
  * ```ts

@@ -30,8 +30,6 @@ const $I = $RepoCliId.create("commands/Lint/LintDeprecatedApis.schemas");
 export const deprecatedApiSweepRoots: A.NonEmptyReadonlyArray<string> = ["apps", "packages", "infra"];
 
 /**
- * Names of the sequential partitions of the full deprecated-API sweep.
- *
  * **Example** (Check a partition name)
  *
  * ```ts
@@ -50,8 +48,6 @@ export const DeprecatedApiPartitionName = LiteralKit(["foundation-tooling", "dri
 );
 
 /**
- * Name of one sequential partition of the full deprecated-API sweep.
- *
  * **Example** (Annotate a partition name)
  *
  * ```ts

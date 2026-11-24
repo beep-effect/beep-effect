@@ -22,8 +22,6 @@ import {
 const $I = $RepoCliId.create("commands/Goals/CompletionEvidence.schemas");
 
 /**
- * One GitHub check run on a commit, with its head and timing.
- *
  * **Details**
  *
  * This is the shape the completion observation already fetches from
@@ -54,8 +52,6 @@ export class GoalObservedCheckRun extends S.Opaque<GoalObservedCheckRun, { reado
 ) {}
 
 /**
- * The merge facts the completion observation already holds when it asks for merge-time evidence.
- *
  * **Details**
  *
  * The provider takes the pull request's base ref, merge commit, merge time,
@@ -90,8 +86,6 @@ export class GoalMergeTimeEvidenceRequest extends S.Opaque<
 ) {}
 
 /**
- * The merge-time required-check inventory and the head-bound result of every required context.
- *
  * **Details**
  *
  * `requiredChecks` is absent only when no ruleset source could be read at all.
@@ -119,8 +113,6 @@ export class GoalMergeTimeEvidence extends S.Opaque<GoalMergeTimeEvidence, { rea
 ) {}
 
 /**
- * Inputs to the pure completion-evidence verdict.
- *
  * **Details**
  *
  * `redAttributions` holds the claims the verdict may use to attribute a red or
@@ -165,8 +157,6 @@ export class GoalCompletionEvidenceInput extends S.Opaque<
 ) {}
 
 /**
- * GitHub's open or closed state for a pull request.
- *
  * **Details**
  *
  * A merged pull request is `closed`; `merged` on {@link GoalCompletionPull}
@@ -186,8 +176,6 @@ export const GoalCompletionPullState = LiteralKit(["open", "closed"]).pipe(
   $I.annoteSchema("GoalCompletionPullState", { description: "GitHub's open or closed pull-request state." })
 );
 /**
- * GitHub's open or closed pull-request state.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -270,8 +258,6 @@ export const GoalCompletionCheckPages = GoalCompletionCheckPage.pipe(
   $I.annoteSchema("GoalCompletionCheckPages", { description: "Completion CheckPages wire observation." })
 );
 /**
- * Decoded completion CheckPages observation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -302,8 +288,6 @@ export const GoalCompletionTimelinePages = GoalCompletionTimelineEvent.pipe(
   $I.annoteSchema("GoalCompletionTimelinePages", { description: "Completion TimelinePages wire observation." })
 );
 /**
- * Decoded completion TimelinePages observation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -354,8 +338,6 @@ export const GoalCompletionRulesetList = GoalCompletionRulesetListEntry.pipe(
   $I.annoteSchema("GoalCompletionRulesetList", { description: "Completion RulesetList wire observation." })
 );
 /**
- * Decoded completion RulesetList observation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -391,8 +373,6 @@ export const GoalCompletionRulesetHistory = GoalCompletionRulesetHistoryEntry.pi
   $I.annoteSchema("GoalCompletionRulesetHistory", { description: "Completion RulesetHistory wire observation." })
 );
 /**
- * Decoded completion RulesetHistory observation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -457,8 +437,6 @@ export const GoalCompletionRuleSuiteList = GoalCompletionRuleSuiteListEntry.pipe
   $I.annoteSchema("GoalCompletionRuleSuiteList", { description: "Completion RuleSuiteList wire observation." })
 );
 /**
- * Decoded completion RuleSuiteList observation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -523,8 +501,6 @@ export const GoalCompletionSuitePages = GoalCompletionSuitePage.pipe(
   $I.annoteSchema("GoalCompletionSuitePages", { description: "Completion SuitePages wire observation." })
 );
 /**
- * Decoded completion SuitePages observation.
- *
  * @category models
  * @since 0.0.0
  */

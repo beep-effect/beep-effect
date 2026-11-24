@@ -40,8 +40,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Reply.schemas");
 const REVIEW_THREAD_ID_PREFIX = "PRRT_";
 
 /**
- * A GitHub GraphQL pull request review thread id.
- *
  * **Details**
  *
  * GraphQL node ids for review threads are prefixed `PRRT_`; the prefix check is
@@ -68,16 +66,12 @@ export const ReplyThreadId = S.NonEmptyString.check(S.isStartingWith(REVIEW_THRE
 );
 
 /**
- * A GitHub GraphQL pull request review thread id.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ReplyThreadId = typeof ReplyThreadId.Type;
 
 /**
- * A GitHub REST pull request review comment id.
- *
  * @category models
  * @since 0.0.0
  */
@@ -89,8 +83,6 @@ export const ReplyCommentId = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * A GitHub REST pull request review comment id.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -147,8 +139,6 @@ const ReplyTargetPresenceCheck = S.makeFilter(
 );
 
 /**
- * One drafted reply to a pull request review thread.
- *
  * **Details**
  *
  * `resolve` defaults to `true` on both construction and decoding: the reason to
@@ -195,8 +185,6 @@ export class ReplyDraft extends S.Class<ReplyDraft, { readonly brand: unique sym
 ) {}
 
 /**
- * The drafted replies for one pull request.
- *
  * **Example** (Construct an empty drafts artifact)
  *
  * ```ts
@@ -226,8 +214,6 @@ export class ReplyDrafts extends S.Opaque<ReplyDrafts, { readonly brand: unique 
 ) {}
 
 /**
- * What became of one drafted reply.
- *
  * **Details**
  *
  * `posted` means the reply landed but the thread was left open (either the
@@ -264,16 +250,12 @@ export const ReplyOutcomeStatus = LiteralKit(["posted", "resolved", "stale", "fa
 );
 
 /**
- * What became of one drafted reply.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ReplyOutcomeStatus = typeof ReplyOutcomeStatus.Type;
 
 /**
- * One drafted reply paired with what the run did about it.
- *
  * **Details**
  *
  * `disposition` is the draft's declared disposition carried onto the outcome,
@@ -317,8 +299,6 @@ export class ReplyDraftOutcome extends S.Class<ReplyDraftOutcome, { readonly bra
 ) {}
 
 /**
- * The result document for one reply run.
- *
  * **Example** (Construct an empty reply report)
  *
  * ```ts

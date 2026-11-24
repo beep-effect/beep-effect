@@ -69,8 +69,6 @@ const $I = $RepoCliId.create("commands/Ci/CiAdmission");
 export const HeavyAdmissionJson = JsonStringCodec(HeavyAdmission);
 
 /**
- * The resolved inputs of one `ci admission` invocation.
- *
  * **Details**
  *
  * `eventName` and `eventPath` are `None` when neither the flag nor the

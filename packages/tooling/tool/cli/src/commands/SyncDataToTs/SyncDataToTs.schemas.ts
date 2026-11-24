@@ -18,8 +18,6 @@ import type * as Path from "effect/Path";
 import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";
 
 /**
- * Public sync-data-to-ts error exports.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -30,8 +28,6 @@ const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.schemas");
 const SyncDataSourceFormatKit = LiteralKit(["json", "csv", "xml", "bytes", "text"]);
 
 /**
- * Supported source formats for sync-data-to-ts helpers.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -51,8 +47,6 @@ export const SyncDataSourceFormat = SyncDataSourceFormatKit.pipe(
 );
 
 /**
- * Supported source formats for sync-data-to-ts helpers.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -104,8 +98,6 @@ export type SyncDataRunMode = RunModeValue;
 const SyncDataTargetAccessKit = LiteralKit(["public", "authenticated"]);
 
 /**
- * Access class for a checked-in sync target.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -125,8 +117,6 @@ export const SyncDataTargetAccess = SyncDataTargetAccessKit.pipe(
 );
 
 /**
- * Access class for a checked-in sync target.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -142,8 +132,6 @@ export const SyncDataTargetAccess = SyncDataTargetAccessKit.pipe(
 export type SyncDataTargetAccess = typeof SyncDataTargetAccess.Type;
 
 /**
- * Schema-backed metadata shared by every checked-in sync target.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -236,8 +224,6 @@ export class SyncDataOutputFile extends S.Opaque<SyncDataOutputFile, { readonly 
 ) {}
 
 /**
- * Rendered target projection ready to compare or write to disk.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -301,8 +287,6 @@ export interface SyncDataTarget extends SyncDataTargetMetadata {
 }
 
 /**
- * Per-file command result after diffing or writing.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts
@@ -355,8 +339,6 @@ const SyncDataJsonPatch = S.Array(SyncDataJsonPatchOperation).pipe(
 );
 
 /**
- * Per-target command result after diffing or writing.
- *
  * **Example** (Use sync-data schemas)
  *
  * ```ts

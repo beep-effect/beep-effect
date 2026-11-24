@@ -18,8 +18,6 @@ import type { Ordering } from "effect/Ordering";
 const $I = $RepoCliId.create("internal/repo-run/RepoRun.models");
 
 /**
- * Plan phase used by repository run orchestration.
- *
  * **Example** (Check repo plan phase membership)
  *
  * ```ts
@@ -46,16 +44,12 @@ export const RepoPlanPhase = LiteralKit([
 );
 
 /**
- * Plan phase used by repository run orchestration.
- *
  * @category models
  * @since 0.0.0
  */
 export type RepoPlanPhase = typeof RepoPlanPhase.Type;
 
 /**
- * Step mutability classification.
- *
  * **Example** (Check repo plan step mutability membership)
  *
  * ```ts
@@ -74,16 +68,12 @@ export const RepoPlanStepMutability = LiteralKit(["readonly", "write", "publish"
 );
 
 /**
- * Step mutability classification.
- *
  * @category models
  * @since 0.0.0
  */
 export type RepoPlanStepMutability = typeof RepoPlanStepMutability.Type;
 
 /**
- * Step scope classification.
- *
  * **Example** (Check repo plan step scope membership)
  *
  * ```ts
@@ -102,8 +92,6 @@ export const RepoPlanStepScope = LiteralKit(["package", "repo", "git"]).pipe(
 );
 
 /**
- * Step scope classification.
- *
  * @category models
  * @since 0.0.0
  */
@@ -298,8 +286,6 @@ export class RepoRunContext extends S.Opaque<RepoRunContext, { readonly brand: u
 ) {}
 
 /**
- * One named wave rendered inside a repository proof plan.
- *
  * **Example** (Render a preflight wave)
  *
  * ```ts
@@ -373,8 +359,6 @@ export class RepoPlanStep extends S.Opaque<RepoPlanStep, { readonly brand: uniqu
 ) {}
 
 /**
- * Repository run plan.
- *
  * **Example** (Construct a repo run plan)
  *
  * ```ts

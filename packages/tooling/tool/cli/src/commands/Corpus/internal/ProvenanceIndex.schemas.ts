@@ -79,16 +79,12 @@ export const CorpusRelativePath = S.NonEmptyString.check(
 );
 
 /**
- * Type for {@link CorpusRelativePath}.
- *
  * @category schemas
  * @since 0.0.0
  */
 export type CorpusRelativePath = typeof CorpusRelativePath.Type;
 
 /**
- * Label of one pffexport staging tree under `<corpusRoot>/staging/`.
- *
  * **Example** (Name the two mail extraction trees)
  *
  * ```ts
@@ -110,8 +106,6 @@ export const MailExportTreeLabel = S.NonEmptyString.pipe(
 );
 
 /**
- * Recipient class as recorded by pffexport's `Recipients.txt`.
- *
  * **Example** (Classify a recipient)
  *
  * ```ts
@@ -133,8 +127,6 @@ export const MailRecipientKind = LiteralKit(["to", "cc", "bcc", "unknown"]).pipe
 );
 
 /**
- * One recipient of an exported message.
- *
  * **Example** (Build a recipient)
  *
  * ```ts
@@ -269,8 +261,6 @@ export class InternetMessageHeaders extends S.Opaque<
 ) {}
 
 /**
- * Whether an attachment entry is a file or an embedded message item.
- *
  * **Example** (Distinguish embedded messages)
  *
  * ```ts
@@ -292,16 +282,12 @@ export const MailAttachmentKind = LiteralKit(["file", "embedded-message"]).pipe(
 );
 
 /**
- * Attachment kind decoded by {@link MailAttachmentKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MailAttachmentKind = typeof MailAttachmentKind.Type;
 
 /**
- * One attachment of an exported message.
- *
  * **Details**
  *
  * `fileName` is the on-disk name after pffexport, including the `N_` ordinal
@@ -361,16 +347,12 @@ export const MailAttachmentEntry = MailAttachmentKind.mapMembers(([file, embedde
 );
 
 /**
- * File or embedded-message attachment decoded by {@link MailAttachmentEntry}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MailAttachmentEntry = typeof MailAttachmentEntry.Type;
 
 /**
- * Normalized index row for one exported message item.
- *
  * **Details**
  *
  * `messagePath` is relative to the staging tree's `children/` root and encodes
@@ -822,8 +804,6 @@ export class AttachmentRepairSummary extends S.Opaque<
 export const AttachmentRepairSummaryJson = JsonStringCodec(AttachmentRepairSummary);
 
 /**
- * Metadata extraction engine used for the census.
- *
  * **Example** (Validate the engine)
  *
  * ```ts
@@ -1093,8 +1073,6 @@ export class ProvenanceMessagesOptions extends S.Opaque<
 ) {}
 
 /**
- * Mode of the attachment repair program.
- *
  * **Example** (Validate a mode)
  *
  * ```ts
@@ -1115,8 +1093,6 @@ export const AttachmentRepairMode = LiteralKit(["plan", "apply", "undo"]).pipe(
 );
 
 /**
- * Options for the attachment repair program.
- *
  * **Details**
  *
  * `plan` and `apply` scan the given trees; `undo` reads `journalPath` and
@@ -1157,8 +1133,6 @@ export class AttachmentRepairOptions extends S.Opaque<
 ) {}
 
 /**
- * Options for the metadata census program.
- *
  * **Details**
  *
  * `roots` are corpus-root-relative directories to scan (for example `raw`,
@@ -1199,8 +1173,6 @@ export class MetadataCensusOptions extends S.Opaque<
 ) {}
 
 /**
- * Walk-level counters for one exported mail tree.
- *
  * **Example** (Summarize a walk)
  *
  * ```ts
@@ -1237,8 +1209,6 @@ export class MailExportTreeIndexResult extends S.Opaque<
 ) {}
 
 /**
- * Byte-signature verdict for one file from file(1).
- *
  * **Example** (Construct a verdict)
  *
  * ```ts

@@ -393,8 +393,6 @@ export const ImportBinding = S.Union([NamedImportBinding, NamespaceImportBinding
 );
 
 /**
- * A value (non-type) import specifier classified by how it binds a local name.
- *
  * **Example** (Named binding shape)
  *
  * ```ts

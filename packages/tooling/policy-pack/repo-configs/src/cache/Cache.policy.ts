@@ -17,8 +17,6 @@ import * as Str from "effect/String";
 const $I = $RepoConfigsId.create("cache/Cache.policy");
 
 /**
- * States of one evidence-bound reuse claim.
- *
  * **Example** (Recognize unassessed)
  *
  * ```ts
@@ -38,16 +36,12 @@ export const CacheQualificationState = LiteralKit([
   "suspended",
 ]).pipe($I.annoteSchema("CacheQualificationState", { description: "States of one evidence-bound reuse claim." }));
 /**
- * Decoded CacheQualificationState value.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheQualificationState = typeof CacheQualificationState.Type;
 
 /**
- * Distinct reuse authorities; only task results can be qualified here.
- *
  * **Example** (Recognize turbo-task-result)
  *
  * ```ts
@@ -70,16 +64,12 @@ export const CacheReuseLayer = LiteralKit([
   })
 );
 /**
- * Decoded CacheReuseLayer value.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheReuseLayer = typeof CacheReuseLayer.Type;
 
 /**
- * Independent experiment obligations required by task qualification.
- *
  * **Example** (Recognize fresh-fresh)
  *
  * ```ts
@@ -108,16 +98,12 @@ export const CacheEvidenceKind = LiteralKit([
   })
 );
 /**
- * Decoded CacheEvidenceKind value.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheEvidenceKind = typeof CacheEvidenceKind.Type;
 
 /**
- * Exact stable and isolated canary results remain separate.
- *
  * **Example** (Recognize stable)
  *
  * ```ts
@@ -132,16 +118,12 @@ export const CacheClientChannel = LiteralKit(["stable", "canary"]).pipe(
   $I.annoteSchema("CacheClientChannel", { description: "Exact stable and isolated canary results remain separate." })
 );
 /**
- * Decoded CacheClientChannel value.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheClientChannel = typeof CacheClientChannel.Type;
 
 /**
- * Identifies one computation, reuse layer, named environment and epoch.
- *
  * **Example** (Validate CacheQualificationKey)
  *
  * ```ts
@@ -167,8 +149,6 @@ export class CacheQualificationKey extends S.Opaque<CacheQualificationKey, { rea
 ) {}
 
 /**
- * Binds evidence to the reviewed worksheet, config, tools, fixtures and backend.
- *
  * **Example** (Validate CacheQualificationPins)
  *
  * ```ts
@@ -195,8 +175,6 @@ export class CacheQualificationPins extends S.Opaque<CacheQualificationPins, { r
 ) {}
 
 /**
- * Reviewed effective Turbo settings, including dependency and persistence boundaries.
- *
  * **Example** (Validate CacheTaskConfiguration)
  *
  * ```ts
@@ -250,8 +228,6 @@ export class CacheClientPin extends S.Opaque<CacheClientPin, { readonly brand: u
 ) {}
 
 /**
- * Content-addressed portable receipt reference; Cache verifies the referenced bytes.
- *
  * **Example** (Validate CacheEvidenceReference)
  *
  * ```ts
@@ -345,8 +321,6 @@ export class CacheSignedExecutionProfile extends S.Opaque<
 ) {}
 
 /**
- * Complete reviewed obligations for a finite executable computation.
- *
  * **Example** (Validate CacheTaskContract)
  *
  * ```ts
@@ -384,8 +358,6 @@ export class CacheTaskContract extends S.Opaque<CacheTaskContract, { readonly br
 ) {}
 
 /**
- * Validated experiment fact; its receipt remains the operational evidence authority.
- *
  * **Example** (Validate CacheQualificationObservation)
  *
  * ```ts

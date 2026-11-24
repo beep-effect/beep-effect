@@ -269,8 +269,6 @@ export const HookPulseSessionRole = LiteralKit(["primary", "subagent", "unknown"
 );
 
 /**
- * Decoded hook-pulse session role.
- *
  * @see {@link HookPulseSessionRole} for the runtime schema and its matcher.
  * @category models
  * @since 0.0.0
@@ -278,8 +276,6 @@ export const HookPulseSessionRole = LiteralKit(["primary", "subagent", "unknown"
 export type HookPulseSessionRole = typeof HookPulseSessionRole.Type;
 
 /**
- * Collection capability of one client; absence never establishes non-use.
- *
  * **Example** (Inspect the domain)
  *
  * ```ts
@@ -302,15 +298,12 @@ export const HookPulseClientCoverage = LiteralKit([
   })
 );
 /**
- * Decoded HookPulseClientCoverage value.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseClientCoverage = typeof HookPulseClientCoverage.Type;
 
 /**
- * Payload-free reason why the writer could not collect evidence.
- *
  * **Example** (Inspect the domain)
  *
  * ```ts
@@ -342,15 +335,12 @@ export const HookPulseRefusalReason = LiteralKit([
   })
 );
 /**
- * Decoded HookPulseRefusalReason value.
  * @category models
  * @since 0.0.0
  */
 export type HookPulseRefusalReason = typeof HookPulseRefusalReason.Type;
 
 /**
- * Durable collection-switch transition.
- *
  * **Example** (Inspect the domain)
  *
  * ```ts
@@ -365,7 +355,6 @@ export const HookPulseSwitchAction = LiteralKit(["arm", "disarm"]).pipe(
   $I.annoteSchema("HookPulseSwitchAction", { description: "Durable collection-switch transition." })
 );
 /**
- * Decoded HookPulseSwitchAction value.
  * @category models
  * @since 0.0.0
  */
@@ -383,8 +372,6 @@ const HookPulseUtcTimestamp = S.String.check(
 const HookPulseUtcDateTime = HookPulseUtcTimestamp.pipe(S.decodeTo(S.DateTimeUtcFromString));
 
 /**
- * Payload-free writer refusal; unknown client names are normalized to unknown.
- *
  * **Example** (Inspect the row constructor)
  *
  * ```ts
@@ -410,8 +397,6 @@ export class HookPulseRefusal extends S.Opaque<HookPulseRefusal, { readonly bran
 }
 
 /**
- * Payload-free durable arm or disarm transition.
- *
  * **Example** (Inspect the row constructor)
  *
  * ```ts
@@ -592,8 +577,6 @@ export const HookPulseEvidenceTier = LiteralKit([
 export type HookPulseEvidenceTier = typeof HookPulseEvidenceTier.Type;
 
 /**
- * Current disarm state written by the hook-pulse operator switch.
- *
  * **Example** (Create a disarm sentinel)
  *
  * ```ts
@@ -628,8 +611,6 @@ export class HookPulseDisarmSentinel extends S.Opaque<HookPulseDisarmSentinel, {
 }
 
 /**
- * Closed interval during which hook-pulse collection was disarmed.
- *
  * **Example** (Decode a disarm window)
  *
  * ```ts

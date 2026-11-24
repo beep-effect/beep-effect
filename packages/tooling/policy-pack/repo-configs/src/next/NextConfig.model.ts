@@ -70,8 +70,6 @@ const CacheHandlersConfig = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
   })
 );
 /**
- * Development indicator object configuration for Next.js.
- *
  * **Example** (Move the dev indicator out of the way)
  *
  * ```ts
@@ -106,8 +104,6 @@ const DevIndicatorsConfig = S.Union([S.Literal(false), DevIndicatorsConfigOption
   })
 );
 /**
- * Development-time on-demand entries cache configuration.
- *
  * **Example** (Keep compiled pages warm for one minute)
  *
  * ```ts
@@ -132,8 +128,6 @@ export class OnDemandEntriesConfig extends S.Opaque<OnDemandEntriesConfig, { rea
   )
 ) {}
 /**
- * HTTP agent options used by Next.js fetch and server internals.
- *
  * **Example** (Disable keep-alive for upstream fetches)
  *
  * ```ts
@@ -158,8 +152,6 @@ export class HttpAgentOptionsConfig extends S.Opaque<HttpAgentOptionsConfig, { r
   )
 ) {}
 /**
- * Package import modularization rule for one optimized package.
- *
  * **Example** (Rewrite barrel imports to per-icon modules)
  *
  * ```ts
@@ -204,8 +196,6 @@ const OutputFileTracingRules = S.Record(S.String, StringArray).pipe(
   })
 );
 /**
- * File watching options for Next.js.
- *
  * **Example** (Poll for file changes inside a container)
  *
  * ```ts
@@ -255,8 +245,6 @@ const GenerateBuildIdFunction = declaredFunction<NonNullable<NextConfigFromNext[
 );
 
 /**
- * Public Next.js configuration schema.
- *
  * **Details**
  *
  * This schema models user-authored `next.config.js` data from the public

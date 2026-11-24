@@ -45,8 +45,6 @@ export const ObservationHarness = LiteralKit([
   $I.annoteSchema("ObservationHarness", { description: "Harness identity, separate from transport and enrollment." })
 );
 /**
- * Runtime type of {@link ObservationHarness}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -85,8 +83,6 @@ export const ObservationSignal = LiteralKit(["launches", "traces", "metrics", "o
   $I.annoteSchema("ObservationSignal", { description: "Independently qualified signal classes." })
 );
 /**
- * Runtime type of {@link ObservationSignal}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -132,8 +128,6 @@ export const ObservationPopulation = S.TaggedUnion({
   $I.annoteSchema("ObservationPopulation", { description: "Evidence-bounded launch or expected-event denominator." })
 );
 /**
- * Runtime type of {@link ObservationPopulation}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -181,8 +175,6 @@ export const ObservationCapability = S.TaggedUnion({
   })
 );
 /**
- * Runtime type of {@link ObservationCapability}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -221,8 +213,6 @@ export const ObservationPolicy = S.TaggedUnion({ Included: {}, Excluded: { evide
   $I.annoteSchema("ObservationPolicy", { description: "Declared collection inclusion or an evidenced exclusion." })
 );
 /**
- * Runtime type of {@link ObservationPolicy}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -286,8 +276,6 @@ export const ObservationHeartbeat = S.TaggedUnion({
   )
   .pipe($I.annoteSchema("ObservationHeartbeat", { description: "Explicit route health evidence and its expiry." }));
 /**
- * Runtime type of {@link ObservationHeartbeat}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -333,8 +321,6 @@ export const ObservationRootBinding = S.TaggedUnion({
   $I.annoteSchema("ObservationRootBinding", { description: "Source-root evidence independent of collection context." })
 );
 /**
- * Runtime type of {@link ObservationRootBinding}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.
@@ -588,8 +574,6 @@ export const ObservationRouteStatus = LiteralKit([
   })
 );
 /**
- * Runtime type of {@link ObservationRouteStatus}.
- *
  * **Details**
  *
  * Inferred from the canonical runtime schema.

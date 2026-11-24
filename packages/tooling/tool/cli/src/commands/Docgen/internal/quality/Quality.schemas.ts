@@ -33,8 +33,6 @@ export const QUALITY_SCHEMA_VERSION = 2 as const;
 export const QUALITY_RUBRIC_VERSION = "jsdoc-quality-v1" as const;
 
 /**
- * Scope mode supported by `docgen quality`.
- *
  * **Example** (Check affected scope mode)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const DocgenQualityScopeMode = LiteralKit(["affected", "package", "change
 );
 
 /**
- * Scope mode supported by `docgen quality`.
- *
  * **Example** (Assign affected scope mode)
  *
  * ```ts
@@ -70,8 +66,6 @@ export const DocgenQualityScopeMode = LiteralKit(["affected", "package", "change
 export type DocgenQualityScopeMode = typeof DocgenQualityScopeMode.Type;
 
 /**
- * Optional advisory scoring mode for `docgen quality`.
- *
  * **Example** (Check rubric score mode)
  *
  * ```ts
@@ -90,8 +84,6 @@ export const DocgenQualityScoreMode = LiteralKit(["none", "rubric", "codex"]).pi
 );
 
 /**
- * Optional advisory scoring mode for `docgen quality`.
- *
  * **Example** (Assign rubric score mode)
  *
  * ```ts
@@ -107,8 +99,6 @@ export const DocgenQualityScoreMode = LiteralKit(["none", "rubric", "codex"]).pi
 export type DocgenQualityScoreMode = typeof DocgenQualityScoreMode.Type;
 
 /**
- * Quality tier assigned to a JSDoc review subject.
- *
  * **Example** (Check warn quality tier)
  *
  * ```ts
@@ -127,8 +117,6 @@ export const DocgenQualityTier = LiteralKit(["pass", "warn", "fail"]).pipe(
 );
 
 /**
- * Quality tier assigned to a JSDoc review subject.
- *
  * **Example** (Assign warn quality tier)
  *
  * ```ts
@@ -144,8 +132,6 @@ export const DocgenQualityTier = LiteralKit(["pass", "warn", "fail"]).pipe(
 export type DocgenQualityTier = typeof DocgenQualityTier.Type;
 
 /**
- * Completion status for a package-local quality analysis.
- *
  * **Example** (Check completed package status)
  *
  * ```ts
@@ -164,8 +150,6 @@ export const DocgenQualityPackageStatus = LiteralKit(["completed", "partial", "f
 );
 
 /**
- * Completion status for a package-local quality analysis.
- *
  * **Example** (Assign completed package status)
  *
  * ```ts
@@ -181,8 +165,6 @@ export const DocgenQualityPackageStatus = LiteralKit(["completed", "partial", "f
 export type DocgenQualityPackageStatus = typeof DocgenQualityPackageStatus.Type;
 
 /**
- * Typed finding code emitted by the v1 quality rubric.
- *
  * **Example** (Check missing-example finding code)
  *
  * ```ts
@@ -217,8 +199,6 @@ export const DocgenQualityFindingCode = LiteralKit([
 );
 
 /**
- * Typed finding code emitted by the v1 quality rubric.
- *
  * **Example** (Assign missing-example finding code)
  *
  * ```ts
@@ -234,8 +214,6 @@ export const DocgenQualityFindingCode = LiteralKit([
 export type DocgenQualityFindingCode = typeof DocgenQualityFindingCode.Type;
 
 /**
- * Single typed quality finding for one JSDoc subject.
- *
  * **Example** (Make missing-example finding)
  *
  * ```ts
@@ -271,8 +249,6 @@ export class DocgenQualityFinding extends S.Opaque<DocgenQualityFinding, { reado
 ) {}
 
 /**
- * Nearby TypeScript diagnostic carried as quality-review evidence.
- *
  * **Example** (Make TypeScript diagnostic)
  *
  * ```ts
@@ -304,8 +280,6 @@ export class DocgenQualityDiagnostic extends S.Opaque<DocgenQualityDiagnostic, {
 ) {}
 
 /**
- * Nearby exported symbol carried as review context.
- *
  * **Example** (Make related export symbol)
  *
  * ```ts
@@ -337,8 +311,6 @@ export class DocgenRelatedSymbol extends S.Opaque<DocgenRelatedSymbol, { readonl
 ) {}
 
 /**
- * Stable evidence packet for one exported-symbol JSDoc quality review.
- *
  * **Example** (Pick subject export name)
  *
  * ```ts
@@ -382,8 +354,6 @@ export class DocgenQualitySubject extends S.Opaque<DocgenQualitySubject, { reado
 ) {}
 
 /**
- * Rubric outcome for one JSDoc quality subject.
- *
  * **Example** (Make passing quality review)
  *
  * ```ts
@@ -417,8 +387,6 @@ export class DocgenQualityReview extends S.Opaque<DocgenQualityReview, { readonl
 ) {}
 
 /**
- * Aggregate summary for a JSDoc quality run.
- *
  * **Example** (Make aggregate quality summary)
  *
  * ```ts
@@ -454,8 +422,6 @@ export class DocgenQualitySummary extends S.Opaque<DocgenQualitySummary, { reado
 ) {}
 
 /**
- * Package-scoped JSDoc quality report.
- *
  * **Example** (Make package quality report)
  *
  * ```ts
@@ -512,8 +478,6 @@ export class DocgenQualityPackageReport extends S.Opaque<
 ) {}
 
 /**
- * Bounded advisory packet for future Codex remediation.
- *
  * **Example** (Make remediation packet)
  *
  * ```ts
@@ -552,8 +516,6 @@ export class DocgenQualityRemediationPacket extends S.Opaque<
 ) {}
 
 /**
- * Consolidated report emitted by `beep docgen quality`.
- *
  * **Example** (Pick report schema version)
  *
  * ```ts

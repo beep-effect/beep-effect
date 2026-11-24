@@ -112,8 +112,6 @@ export class IdempotentReplayPolicy extends S.Opaque<IdempotentReplayPolicy, { r
   )
 ) {}
 /**
- * Immutable bounded native and reconstructed scheduling policy.
- *
  * **Details**
  *
  * Each pass visits at most 32 durable events. Explicit retryable responses and repeated read-back queries use capped exponential backoff. Query delay starts at reconcileDelayMillis and caps at the greater of reconcileDelayMillis and maxRetryDelayMillis. Accepted and ambiguous attempts are queried before any replay. They remain held unless the owner explicitly qualifies duplicate handling for this target; missing read-back is not proof of non-delivery. The cooperative tick deadline does not replace process limits. This policy does not start a timer or enroll a source.

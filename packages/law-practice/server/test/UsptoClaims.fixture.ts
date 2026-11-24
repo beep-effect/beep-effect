@@ -9,10 +9,8 @@
 /** Application whose documents are recorded. */
 export const recordedApplication = "18900001";
 
-/** Download host the driver accepts: the configured USPTO API origin. */
-const downloadBase = `https://api.uspto.gov/api/v1/download/applications/${recordedApplication}`;
+const downloadBaseOnConfiguredUsptoApiOrigin = `https://api.uspto.gov/api/v1/download/applications/${recordedApplication}`;
 
-/** Documents listing: an older PDF-only claim set, the latest XML claim set, and a later non-claims document. */
 const recordedDocumentsJson = `{
   "count": 3,
   "documentBag": [
@@ -24,7 +22,7 @@ const recordedDocumentsJson = `{
       "documentCodeDescriptionText": "Claims",
       "directionCategory": "INCOMING",
       "downloadOptionBag": [
-        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBase}/SYNTHCLM1.pdf", "pageTotalQuantity": 2 }
+        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBaseOnConfiguredUsptoApiOrigin}/SYNTHCLM1.pdf", "pageTotalQuantity": 2 }
       ]
     },
     {
@@ -35,8 +33,8 @@ const recordedDocumentsJson = `{
       "documentCodeDescriptionText": "Claims",
       "directionCategory": "INCOMING",
       "downloadOptionBag": [
-        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBase}/SYNTHCLM2.pdf" },
-        { "mimeTypeIdentifier": "XML", "downloadUrl": "${downloadBase}/SYNTHCLM2.xml" }
+        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBaseOnConfiguredUsptoApiOrigin}/SYNTHCLM2.pdf" },
+        { "mimeTypeIdentifier": "XML", "downloadUrl": "${downloadBaseOnConfiguredUsptoApiOrigin}/SYNTHCLM2.xml" }
       ]
     },
     {
@@ -47,13 +45,12 @@ const recordedDocumentsJson = `{
       "documentCodeDescriptionText": "Non-Final Rejection",
       "directionCategory": "OUTGOING",
       "downloadOptionBag": [
-        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBase}/SYNTHCTNF1.pdf", "pageTotalQuantity": 9 }
+        { "mimeTypeIdentifier": "PDF", "downloadUrl": "${downloadBaseOnConfiguredUsptoApiOrigin}/SYNTHCTNF1.pdf", "pageTotalQuantity": 9 }
       ]
     }
   ]
 }`;
 
-/** Full-text claims of `SYNTHCLM2`, with nested claim text, a claim reference and an entity. */
 const recordedClaimsXml = `<?xml version="1.0" encoding="UTF-8"?>
 <claims id="claims">
 <claim id="CLM-00001" num="00001">
@@ -69,10 +66,10 @@ const recordedClaimsXml = `<?xml version="1.0" encoding="UTF-8"?>
 </claims>
 `;
 
-/** `SYNTHCLM1` is only a scanned PDF: a PDF header followed by bytes that are not UTF-8. */
-const recordedScannedPdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x0a, 0xff, 0xfe, 0x00]);
+const recordedScannedPdfHeaderThenNonUtf8Bytes = new Uint8Array([
+  0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0x0a, 0xff, 0xfe, 0x00,
+]);
 
-/** A native grant whose claims carry OCR confidence data, which the native source excludes. */
 const recordedOcrGrantXml = `<?xml version="1.0" encoding="UTF-8"?>
 <claims id="claims"><OCRConfidenceData/>
 <claim id="CLM-00001" num="00001"><claim-text>1. A lamp comprising a base.</claim-text></claim>
@@ -120,5 +117,5 @@ export const recordedResponses: ReadonlyArray<readonly [suffix: string, body: st
   ],
   [`/api/v1/patent/applications/${recordedApplication}/documents`, recordedDocumentsJson],
   ["/SYNTHCLM2.xml", recordedClaimsXml],
-  ["/SYNTHCLM1.pdf", recordedScannedPdf],
+  ["/SYNTHCLM1.pdf", recordedScannedPdfHeaderThenNonUtf8Bytes],
 ];

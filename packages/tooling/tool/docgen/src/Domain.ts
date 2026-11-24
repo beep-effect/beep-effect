@@ -42,8 +42,6 @@ const DocgenPathSegments = S.Array(S.NonEmptyString).pipe(
 );
 
 /**
- * Constructor options carrying grouped JSDoc tag values for a normalized Doc.
- *
  * **Example** (Group parsed JSDoc tags into a Doc)
  *
  * ```ts
@@ -82,8 +80,6 @@ export class DocNewOptions extends S.Opaque<DocNewOptions, { readonly brand: uni
 ) {}
 
 /**
- * Represents a one-based source location in a parsed file.
- *
  * **Example** (Creating a Position)
  *
  * ```ts
@@ -130,8 +126,6 @@ export class Position extends S.Opaque<Position, { readonly brand: unique symbol
 }
 
 /**
- * Represents normalized JSDoc metadata for a documented symbol.
- *
  * **Example** (Creating a Doc)
  *
  * ```ts
@@ -230,8 +224,6 @@ export class Doc extends S.Class<Doc, { readonly brand: unique symbol }>($I`Doc`
 }
 
 /**
- * Constructor options carrying declaration text and source position.
- *
  * **Example** (Locate a function signature in its source file)
  *
  * ```ts
@@ -270,8 +262,6 @@ export class SignaturePositionOptions extends S.Opaque<SignaturePositionOptions,
 ) {}
 
 /**
- * Represents a named documented API member with source and signature metadata.
- *
  * **Example** (Creating a DocEntry)
  *
  * ```ts
@@ -345,8 +335,6 @@ export class DocEntry extends S.Opaque<DocEntry, { readonly brand: unique symbol
 }
 
 /**
- * Constructor options carrying class signature and member entries.
- *
  * **Example** (Describe a class with one documented method)
  *
  * ```ts
@@ -394,8 +382,6 @@ export class ClassNewOptions extends S.Opaque<ClassNewOptions, { readonly brand:
 ) {}
 
 /**
- * Represents a documented class and its emitted member structure.
- *
  * **Example** (Creating a Class model)
  *
  * ```ts
@@ -478,8 +464,6 @@ export class Class extends S.Opaque<Class, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Represents a documented interface declaration.
- *
  * **Example** (Creating an Interface model)
  *
  * ```ts
@@ -553,8 +537,6 @@ export class Interface extends S.Opaque<Interface, { readonly brand: unique symb
 }
 
 /**
- * Represents a documented function declaration or function-valued export.
- *
  * **Example** (Creating a Function model)
  *
  * ```ts
@@ -628,8 +610,6 @@ export class Function extends S.Opaque<Function, { readonly brand: unique symbol
 }
 
 /**
- * Represents a documented type alias declaration.
- *
  * **Example** (Creating a TypeAlias model)
  *
  * ```ts
@@ -703,8 +683,6 @@ export class TypeAlias extends S.Opaque<TypeAlias, { readonly brand: unique symb
 }
 
 /**
- * Represents a documented exported constant declaration.
- *
  * **Example** (Creating a Constant model)
  *
  * ```ts
@@ -778,8 +756,6 @@ export class Constant extends S.Opaque<Constant, { readonly brand: unique symbol
 }
 
 /**
- * Constructor options carrying export signature, position, and namespace-export marker.
- *
  * **Example** (Mark a namespace re-export edge)
  *
  * ```ts
@@ -915,8 +891,6 @@ type NamespaceNewOptions = Omit<S.Struct.Type<typeof NamespaceNewOptionsShape.fi
 };
 
 /**
- * Represents a documented namespace and its nested exported members.
- *
  * **Example** (Creating a Namespace model)
  *
  * ```ts
@@ -996,8 +970,6 @@ export class Namespace extends S.TaggedClass<Namespace, { readonly brand: unique
 }
 
 /**
- * Constructor options carrying parsed module documentation and members.
- *
  * **Example** (Assemble a module with one documented constant)
  *
  * ```ts
@@ -1057,8 +1029,6 @@ export class ModuleNewOptions extends S.Opaque<ModuleNewOptions, { readonly bran
 ) {}
 
 /**
- * Represents a fully parsed module ready for validation and printing.
- *
  * **Example** (Creating a Module instance)
  *
  * ```ts
@@ -1325,8 +1295,6 @@ export const DocgenErrorTypeId = Symbol.for("@beep/repo-docgen/DocgenError");
 export type DocgenErrorTypeId = typeof DocgenErrorTypeId;
 
 /**
- * Typed error used throughout docgen parsing and generation operations.
- *
  * **Example** (Creating a DocgenError)
  *
  * ```ts

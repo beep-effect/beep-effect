@@ -122,8 +122,6 @@ const PgExternalSchemaPrefix = S.String.check(
 );
 
 /**
- * PostgreSQL-compatible connection URI accepted by the external SQL test driver.
- *
  * **Example** (Validate postgres connection URI)
  *
  * ```ts
@@ -152,8 +150,6 @@ export const PgExternalConnectionUri = S.NonEmptyString.check(
 );
 
 /**
- * PostgreSQL-compatible connection URI accepted by the external SQL test driver.
- *
  * **Example** (Annotate postgres URI type)
  *
  * ```ts
@@ -169,8 +165,6 @@ export const PgExternalConnectionUri = S.NonEmptyString.check(
 export type PgExternalConnectionUri = typeof PgExternalConnectionUri.Type;
 
 /**
- * Runtime metadata for an ephemeral integration-test database instance.
- *
  * **Example** (Make sqlite test database info)
  *
  * ```ts
@@ -254,8 +248,6 @@ export class TestDatabaseInfoShape extends S.Opaque<TestDatabaseInfoShape, { rea
 ) {}
 
 /**
- * Runtime configuration for the PGLite Testcontainers SQL test driver.
- *
  * **Example** (Make driver config)
  *
  * ```ts
@@ -341,8 +333,6 @@ export class PgliteTestcontainersTestDriverConfig extends S.Opaque<
 export type PgliteTestcontainersTestDriverConfigInput = Partial<PgliteTestcontainersTestDriverConfig> | undefined;
 
 /**
- * Runtime configuration for an externally managed PostgreSQL-compatible SQL test driver.
- *
  * **Example** (Make external driver config)
  *
  * ```ts
@@ -457,8 +447,6 @@ export type PgliteInProcessTestDriverConfigInput =
   | undefined;
 
 /**
- * Mode selector for the public PGLite SQL test layer helper.
- *
  * **Example** (Check auto mode predicate)
  *
  * ```ts
@@ -477,8 +465,6 @@ export const PgliteSqlTestLayerMode = LiteralKit(["auto", "external", "testconta
 );
 
 /**
- * Mode selector for the public PGLite SQL test layer helper.
- *
  * **Example** (Assign auto mode value)
  *
  * ```ts

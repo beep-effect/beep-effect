@@ -112,8 +112,6 @@ const SchemaClassBrand = LiteralKit(["missing", "structural", "nominal"]).pipe(
 type SchemaClassBrand = typeof SchemaClassBrand.Type;
 
 /**
- * Syntactic facts about one schema class declaration in a source file.
- *
  * **Example** (Build declaration facts)
  *
  * ```ts

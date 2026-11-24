@@ -97,8 +97,6 @@ export class CacheAdapterRuntimeObservation extends S.Opaque<
 ) {}
 
 /**
- * The owned writer's live readiness observation.
- *
  * **Example** (Inspect the fixed writer phase)
  * ```ts
  * import { CacheAdapterWriterReady } from "@beep/repo-cli/test/Cache"
@@ -116,8 +114,6 @@ export const CacheAdapterWriterReady = S.Struct({
 }).pipe($I.annoteSchema("CacheAdapterWriterReady", { description: "The owned writer's live readiness observation." }));
 
 /**
- * Decoded writer readiness observation.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -125,8 +121,6 @@ export const CacheAdapterWriterReady = S.Struct({
 export type CacheAdapterWriterReady = typeof CacheAdapterWriterReady.Type;
 
 /**
- * The same owned writer observed after the upload callback.
- *
  * **Example** (Inspect the fixed writer phase)
  * ```ts
  * import { CacheAdapterWriterAfterLoad } from "@beep/repo-cli/test/Cache"
@@ -157,8 +151,6 @@ export const CacheAdapterWriterAfterLoad = S.Struct({
 export type CacheAdapterWriterAfterLoad = typeof CacheAdapterWriterAfterLoad.Type;
 
 /**
- * Private startup input for one owned adapter unit.
- *
  * **Details**
  * The owned host serializes this value only into the anonymous pipe of its
  * transient user unit; it never reaches command arguments, unit properties or

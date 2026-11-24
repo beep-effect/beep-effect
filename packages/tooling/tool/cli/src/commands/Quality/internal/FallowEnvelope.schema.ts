@@ -21,8 +21,6 @@ import * as Tuple from "effect/Tuple";
 const $I = $RepoCliId.create("commands/Quality/internal/FallowEnvelope");
 
 /**
- * Fallow feature family implemented by the quality wrapper.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -90,8 +88,6 @@ export const FindingAttributionKind = LiteralKit(["introduced", "inherited-adjac
 );
 
 /**
- * Status discriminator for Fallow quality envelopes.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -109,8 +105,6 @@ export const FallowEnvelopeStatus = LiteralKit([
 );
 
 /**
- * Failure status discriminator for Fallow quality envelopes.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -127,8 +121,6 @@ export const FallowFailureEnvelopeStatus = LiteralKit([
 );
 
 /**
- * Positive process exit status used by failure Fallow envelopes.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -183,8 +175,6 @@ export const sameFeatureFamily: {
 } = dual(2, S.toEquivalence(FallowFeatureFamily));
 
 /**
- * Count summary for normalized Fallow finding attribution.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -202,8 +192,6 @@ export class FindingAttributionSummary extends S.Opaque<FindingAttributionSummar
 ) {}
 
 /**
- * Normalized Fallow finding inside the repo-cli report envelope.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -225,8 +213,6 @@ export class FallowReportFinding extends S.Opaque<FallowReportFinding, { readonl
 ) {}
 
 /**
- * Normalized report payload carried by successful Fallow envelopes.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -243,8 +229,6 @@ export class FallowReportPayload extends S.Opaque<FallowReportPayload, { readonl
 ) {}
 
 /**
- * Non-empty attribution-kind list emitted by Fallow report envelopes.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -256,8 +240,6 @@ export const FallowAttributionKinds = S.NonEmptyArray(FindingAttributionKind).pi
 );
 
 /**
- * Decoded non-empty attribution-kind list emitted by Fallow report envelopes.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -287,8 +269,6 @@ export const FallowReportBaseFields = {
 };
 
 /**
- * Successful Fallow envelope. The raw tool exit status is preserved separately.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -307,8 +287,6 @@ export class FallowReportOk extends S.Opaque<FallowReportOk, { readonly brand: u
 ) {}
 
 /**
- * Fallow envelope emitted when the tool failed without decodable JSON.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -327,8 +305,6 @@ export class FallowReportToolFailed extends S.Opaque<FallowReportToolFailed, { r
 ) {}
 
 /**
- * Fallow envelope emitted when the tool succeeded but emitted invalid JSON.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -347,8 +323,6 @@ export class FallowReportInvalidJson extends S.Opaque<FallowReportInvalidJson, {
 ) {}
 
 /**
- * Fallow envelope emitted when JSON decodes but does not match the expected feature report shape.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -367,8 +341,6 @@ export class FallowReportInvalidReport extends S.Opaque<FallowReportInvalidRepor
 ) {}
 
 /**
- * Fallow envelope emitted when a diff-aware base ref cannot be resolved.
- *
  * @internal
  * @category schema
  * @since 0.0.0
@@ -403,8 +375,6 @@ export type FallowFailureEnvelope =
   | FallowReportBaseResolutionFailed;
 
 /**
- * Internal decoded Fallow report envelope discriminated by status.
- *
  * @internal
  * @returns Schema union for decoded Fallow report envelopes.
  * @category schema
@@ -426,8 +396,6 @@ export const FallowReportEnvelope = FallowEnvelopeStatus.mapMembers(
 );
 
 /**
- * Decoded Fallow report envelope value.
- *
  * @internal
  * @category schema
  * @since 0.0.0

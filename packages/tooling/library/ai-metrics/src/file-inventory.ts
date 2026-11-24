@@ -21,8 +21,6 @@ const AiMetricsFileInventoryOperation = LiteralKit(["inspect", "read"]).pipe(
 );
 
 /**
- * Failure to inspect a file or read a directory while building an AI metrics file inventory.
- *
  * **Example** (Construct a file inventory error)
  *
  * ```ts

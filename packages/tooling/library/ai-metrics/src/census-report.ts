@@ -60,8 +60,6 @@ export const CensusRepositorySelection = LiteralKit(["reference", "other"]).pipe
 );
 
 /**
- * Runtime type for {@link CensusRepositorySelection}.
- *
  * **Example** (Type a repository selection)
  *
  * ```ts
@@ -136,8 +134,6 @@ export const ClaudeCorpus = S.TaggedUnion({
 }).pipe($I.annoteSchema("ClaudeCorpus", { description: "Selected and active Claude Code contexts." }));
 
 /**
- * Runtime type for {@link ClaudeCorpus}.
- *
  * **Example** (Type an absent Claude corpus)
  *
  * ```ts
@@ -180,8 +176,6 @@ export const CodexCorpus = S.TaggedUnion({
 }).pipe($I.annoteSchema("CodexCorpus", { description: "Selected and matched Codex sessions." }));
 
 /**
- * Runtime type for {@link CodexCorpus}.
- *
  * **Example** (Type an absent Codex corpus)
  *
  * ```ts
@@ -250,8 +244,6 @@ export class ClaudeTotals extends S.Opaque<ClaudeTotals, { readonly brand: uniqu
 ) {}
 
 /**
- * Token and tool-output totals of the Codex sessions.
- *
  * **Details**
  *
  * Token counts are each session's cumulative usage at its last token-count record at or before the window end,
@@ -396,8 +388,6 @@ export class CensusToolOutput extends S.Opaque<CensusToolOutput, { readonly bran
 ) {}
 
 /**
- * Verification output of one kind.
- *
  * **Details**
  *
  * `claudeShareOfVerification` divides by all Claude verification output; `claudeShareOfContextRead` is as in
@@ -500,8 +490,6 @@ export class CensusFilterHabits extends S.Opaque<CensusFilterHabits, { readonly 
 ) {}
 
 /**
- * Claude API calls of one turn class.
- *
  * **Details**
  *
  * `resultChars` counts the results of the calls that earned the class: verification runs, digs and CI fetches.
@@ -581,8 +569,6 @@ export class CensusTurns extends S.Opaque<CensusTurns, { readonly brand: unique 
 ) {}
 
 /**
- * Characters of one line class.
- *
  * **Example** (Construct a line-class share)
  *
  * ```ts
@@ -601,8 +587,6 @@ export class LineClassChars extends S.Opaque<LineClassChars, { readonly brand: u
 ) {}
 
 /**
- * Line classes of one verification kind's output.
- *
  * **Example** (Inspect the row fields)
  *
  * ```ts
@@ -733,8 +717,6 @@ export class VerificationRunSize extends S.Opaque<VerificationRunSize, { readonl
 ) {}
 
 /**
- * The rows other goals cite.
- *
  * **Details**
  *
  * `filteredRunShare` is the share of verification runs not classified `unfiltered`: piped into a text filter,
@@ -762,8 +744,6 @@ export class CensusHeadline extends S.Opaque<CensusHeadline, { readonly brand: u
 ) {}
 
 /**
- * The `agent-output-census/v1` report.
- *
  * **Example** (Check the report version tag)
  *
  * ```ts

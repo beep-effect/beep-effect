@@ -139,8 +139,6 @@ export const PrNumber = S.Int.check(S.isGreaterThan(0)).pipe(
 export type PrNumber = typeof PrNumber.Type;
 
 /**
- * Agent harness that owns a recorded local session.
- *
  * **Example** (Inspect supported harnesses)
  *
  * ```ts
@@ -230,8 +228,6 @@ export const PrProvenanceRole = LiteralKit(["created", "pushed", "monitored"]).p
   $I.annoteSchema("PrProvenanceRole", { description: "PR lifecycle action recorded for a session." })
 );
 /**
- * Lifecycle role decoded by {@link PrProvenanceRole}.
- *
  * **Example** (Type a publishing role)
  *
  * ```ts
@@ -309,8 +305,6 @@ export const PrProvenanceSessionHomeSource = LiteralKit(["transcript", "index", 
   $I.annoteSchema("PrProvenanceSessionHomeSource", { description: "Evidence source for the local session home." })
 );
 /**
- * Session-home evidence source decoded by {@link PrProvenanceSessionHomeSource}.
- *
  * **Example** (Type a transcript source)
  *
  * ```ts
@@ -1046,8 +1040,6 @@ export const renderPrProvenance = (provenance: PublicPrProvenance): string => {
 };
 
 /**
- * Character offsets bounding a replaceable provenance footer in a PR body.
- *
  * **Example** (Describe a footer range)
  *
  * ```ts
@@ -1209,8 +1201,6 @@ export const replacePrBodyKeepingFooter: {
 });
 
 /**
- * Boundary shape of a live Claude session index file.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1226,8 +1216,6 @@ export class ClaudeSessionIndex extends S.Opaque<ClaudeSessionIndex, { readonly 
 ) {}
 const decodeClaudeIndex = S.decodeUnknownOption(S.fromJsonString(ClaudeSessionIndex));
 /**
- * Narrow Claude transcript record used for provenance detection.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1244,8 +1232,6 @@ export class TranscriptRecord extends S.Opaque<TranscriptRecord, { readonly bran
 ) {}
 const decodeTranscriptRecord = S.decodeUnknownOption(S.fromJsonString(TranscriptRecord));
 /**
- * Narrow Codex rollout session header.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1257,8 +1243,6 @@ export class CodexSessionHeader extends S.Opaque<CodexSessionHeader, { readonly 
 ) {}
 const decodeCodexHeader = S.decodeUnknownOption(S.fromJsonString(CodexSessionHeader));
 /**
- * Narrow Codex turn context used for active-model detection.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1272,8 +1256,6 @@ export class CodexTurnContext extends S.Opaque<CodexTurnContext, { readonly bran
 ) {}
 const decodeCodexTurnContext = S.decodeUnknownOption(S.fromJsonString(CodexTurnContext));
 /**
- * Decoded environment inputs used by local provenance detection.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1297,8 +1279,6 @@ export class ProvenanceDetectionEnvironment extends S.Opaque<
   )
 ) {}
 /**
- * Session metadata enriched from local transcript and live-index evidence.
- *
  * @category models
  * @since 0.0.0
  */

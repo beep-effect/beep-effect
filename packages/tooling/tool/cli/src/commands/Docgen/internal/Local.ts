@@ -205,8 +205,6 @@ const collectOptions = <T>(options: ReadonlyArray<O.Option<T>>): ReadonlyArray<T
 };
 
 /**
- * Local docgen execution mode selected by the planner.
- *
  * **Example** (Plan local docgen work)
  *
  * ```ts
@@ -225,8 +223,6 @@ export const DocgenLocalMode = LiteralKit(["scoped", "full", "full-required", "n
 );
 
 /**
- * Local docgen execution mode selected by the planner.
- *
  * **Example** (Plan local docgen work)
  *
  * ```ts
@@ -242,8 +238,6 @@ export const DocgenLocalMode = LiteralKit(["scoped", "full", "full-required", "n
 export type DocgenLocalMode = typeof DocgenLocalMode.Type;
 
 /**
- * Package selected for a local docgen run.
- *
  * **Example** (Plan local docgen work)
  *
  * ```ts
@@ -276,8 +270,6 @@ export class DocgenLocalSelectedPackage extends S.Opaque<
 ) {}
 
 /**
- * Reason local docgen must escalate to the full proof.
- *
  * **Example** (Plan local docgen work)
  *
  * ```ts
@@ -305,8 +297,6 @@ export class DocgenLocalFullReason extends S.Opaque<DocgenLocalFullReason, { rea
 ) {}
 
 /**
- * Planned local docgen proof.
- *
  * **Example** (Plan local docgen work)
  *
  * ```ts
@@ -348,8 +338,6 @@ export class DocgenLocalPlan extends S.Opaque<DocgenLocalPlan, { readonly brand:
 ) {}
 
 /**
- * Turbo dry-run package summary used by local docgen.
- *
  * **Example** (Plan local docgen work)
  *
  * ```ts

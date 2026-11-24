@@ -67,8 +67,6 @@ import type { GoalClaimScope } from "./RedAttribution.ts";
 const $I = $RepoCliId.create("commands/Goals/CloseoutCheck");
 
 /**
- * How one committed closeout classifies online.
- *
  * **Details**
  *
  * - `final-open`: the final PR is still open; no finding.
@@ -102,8 +100,6 @@ export const GoalCloseoutCheckOutcome = LiteralKit([
 );
 
 /**
- * How one committed closeout classifies online.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -132,8 +128,6 @@ export const GoalCloseoutCheckBlocking = GoalCloseoutCheckOutcome.pick(["unverif
 );
 
 /**
- * The online classification of one packet's committed closeout.
- *
  * **Details**
  *
  * `reasons` says why the outcome is what it is (the unknown or unsatisfied

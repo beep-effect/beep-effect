@@ -72,8 +72,6 @@ export const RegisterUnitKind = LiteralKit([
 ]).pipe($I.annoteSchema("RegisterUnitKind", { description: "Kind of unit the orchestrator coordinates." }));
 
 /**
- * Kind of unit the orchestrator coordinates.
- *
  * @category models
  * @since 0.0.0
  */
@@ -104,8 +102,6 @@ export const RegisterUnitState = LiteralKit(["active", "blocked", "unreachable",
 );
 
 /**
- * Coordination state of one registered unit.
- *
  * @category models
  * @since 0.0.0
  */
@@ -323,8 +319,6 @@ export const renderRegisterMarkdown = (rows: ReadonlyArray<RegisterRow>): string
   );
 
 /**
- * Input for one register append before provenance is stamped.
- *
  * **Example** (Describe an append)
  *
  * ```ts
@@ -553,8 +547,6 @@ export const RegisterConvertRefusal = LiteralKit([
 ]).pipe($I.annoteSchema("RegisterConvertRefusal", { description: "Why a register conversion was refused." }));
 
 /**
- * Why a register conversion was refused.
- *
  * @category models
  * @since 0.0.0
  */

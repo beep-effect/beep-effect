@@ -88,8 +88,6 @@ export const CategoryPurity = LiteralKit(["pure", "effectful", "mixed"]).pipe(
 );
 
 /**
- * Inferred type for {@link CategoryPurity}.
- *
  * **Example** (Accepting CategoryPurity type)
  *
  * ```ts
@@ -106,9 +104,6 @@ export const CategoryPurity = LiteralKit(["pure", "effectful", "mixed"]).pipe(
 export type CategoryPurity = typeof CategoryPurity.Type;
 
 /**
- * A single member of the closed taxonomy used to classify
- * TypeScript code elements in the knowledge graph.
- *
  * **Example** (Looking up Utility category)
  *
  * ```ts
@@ -1018,8 +1013,6 @@ const Uncategorized = make("Uncategorized", {
 type Uncategorized = typeof Uncategorized.Type;
 
 /**
- * Strict literal union for all supported TypeDoc `@category` values.
- *
  * **Example** (Use category tag enum)
  *
  * ```ts
@@ -1052,8 +1045,6 @@ export const TSCategoryTag = LiteralKit([
 );
 
 /**
- * Inferred type for {@link TSCategoryTag}.
- *
  * **Example** (Constrain with category type)
  *
  * ```ts
@@ -1442,8 +1433,6 @@ export function getCategoriesForApplicableTo(applicableTo: ApplicableTo): Readon
 }
 
 /**
- * Category signal tuple consumed by candidate resolution.
- *
  * **Example** (Creating validation signal)
  *
  * ```ts
@@ -1471,8 +1460,6 @@ export class CategorySignal extends S.Opaque<CategorySignal, { readonly brand: u
 ) {}
 
 /**
- * Scored category candidate shape produced by candidate resolution.
- *
  * **Example** (Building scored candidate)
  *
  * ```ts
@@ -1662,8 +1649,6 @@ export const resolveContextFallback: {
 );
 
 /**
- * The TypeScript Category Tag
- *
  * **Example** (Decoding Utility category tag)
  *
  * ```ts
@@ -1684,8 +1669,6 @@ export const Category = S.Union(CATEGORY_TAG_SCHEMAS).pipe(
 );
 
 /**
- * Type for {@link Category}.
- *
  * **Example** (Accepting Category type)
  *
  * ```ts

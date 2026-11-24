@@ -84,8 +84,6 @@ export class PackDirectory extends S.Opaque<PackDirectory, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link PackDirectory}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -158,8 +156,6 @@ export const PackSource = S.Union([S.Literal("source"), PackDirectory]).pipe(
 export type PackSource = typeof PackSource.Type;
 
 /**
- * Companion types for {@link PackSource}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -264,8 +260,6 @@ export class PackedInstallClosureOptions extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link PackedInstallClosureOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -432,8 +426,6 @@ export class PackedInstallOptions extends S.Opaque<PackedInstallOptions, { reado
 ) {}
 
 /**
- * Companion types for {@link PackedInstallOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -448,8 +440,6 @@ export declare namespace PackedInstallOptions {
 }
 
 /**
- * Why a packed install could not be proven.
- *
  * **Example** (Inspect a missing-bin failure)
  *
  * ```ts
@@ -558,8 +548,6 @@ export class BinCommandOptions extends S.Opaque<BinCommandOptions, { readonly br
 ) {}
 
 /**
- * Companion types for {@link BinCommandOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -627,8 +615,6 @@ export class RunBinOptions extends S.Opaque<RunBinOptions, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link RunBinOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -687,8 +673,6 @@ export class BinProvenance extends S.Opaque<BinProvenance, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link BinProvenance}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -703,8 +687,6 @@ export declare namespace BinProvenance {
 }
 
 /**
- * One scratch project, outside the workspace, with the carrier installed.
- *
  * **Example** (Locate an installed consumer bin)
  *
  * ```ts
@@ -1131,8 +1113,6 @@ const collectBin: {
 );
 
 /**
- * What a packed install produced.
- *
  * **Example** (Inspect packed tarball locations)
  *
  * ```ts
@@ -1187,8 +1167,6 @@ export class PackedInstallResult extends S.Opaque<PackedInstallResult, { readonl
 ) {}
 
 /**
- * Companion types for {@link PackedInstallResult}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1252,8 +1230,6 @@ export class PackedInstallBudget extends S.Opaque<PackedInstallBudget, { readonl
 ) {}
 
 /**
- * Companion types for {@link PackedInstallBudget}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1309,8 +1285,6 @@ export class PackedInstallPreflightOptions extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link PackedInstallPreflightOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1359,8 +1333,6 @@ export class PackedInstallPreflight extends S.Opaque<PackedInstallPreflight, { r
 ) {}
 
 /**
- * Companion types for {@link PackedInstallPreflight}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1414,8 +1386,6 @@ export class PackedInstallGate extends S.Opaque<PackedInstallGate, { readonly br
 ) {}
 
 /**
- * Companion types for {@link PackedInstallGate}.
- *
  * @category type-level
  * @since 0.0.0
  */

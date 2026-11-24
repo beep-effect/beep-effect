@@ -76,8 +76,6 @@ export const AiMetricsGitRootEvidence = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link AiMetricsGitRootEvidence}.
- *
  * **Details**
  *
  * Inferred from the evidence schema.

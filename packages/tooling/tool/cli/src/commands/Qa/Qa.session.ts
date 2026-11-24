@@ -70,8 +70,6 @@ export const qaRootPath: {
 } = dual(2, (path: Path.Path, cwd: string): string => path.join(cwd, ".beep", "qa"));
 
 /**
- * Workspace family a portless `--app` name resolves under.
- *
  * **Example** (Reading a namespace literal)
  *
  * ```ts
@@ -90,8 +88,6 @@ export const AppNamespace = LiteralKit(["apps", "labs"]).pipe(
 );
 
 /**
- * Decoded {@link AppNamespace} type.
- *
  * **Example** (Typing a namespace value)
  *
  * ```ts
@@ -108,9 +104,6 @@ export const AppNamespace = LiteralKit(["apps", "labs"]).pipe(
 export type AppNamespace = typeof AppNamespace.Type;
 
 /**
- * Decoded portless target: an app name plus the workspace family that fixes
- * its host shape.
- *
  * **Example** (Creating an AppHostTarget)
  *
  * ```ts
@@ -431,8 +424,6 @@ export const resolveExistingRound = Effect.fn("QaSession.resolveExistingRound")(
 });
 
 /**
- * Witness events decoded from one round's NDJSON log.
- *
  * **Example** (Creating empty event log)
  *
  * ```ts
@@ -519,8 +510,6 @@ const capturedText = (command: string, args: ReadonlyArray<string>) =>
   );
 
 /**
- * Commit provenance of the checkout a round was recorded from.
- *
  * **Example** (Creating dirty commit provenance)
  *
  * ```ts

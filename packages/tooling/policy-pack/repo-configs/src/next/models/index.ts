@@ -6,8 +6,6 @@
  */
 
 /**
- * AllowedDevOrigin schema.
- *
  * **Example** (Import AllowedDevOrigin schema)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./AllowedDevOrigin.schema.ts";
 /**
- * Compiler configuration schemas.
- *
  * **Example** (Import CompilerConfig schema)
  *
  * ```ts
@@ -66,8 +62,6 @@ export * from "./ConfigPrimitives.schema.ts";
  */
 export * from "./ExperimentalConfig.schema.ts";
 /**
- * Image configuration schemas.
- *
  * **Example** (Import ImageConfig schema)
  *
  * ```ts
@@ -81,8 +75,6 @@ export * from "./ExperimentalConfig.schema.ts";
  */
 export * from "./ImageConfig.schema.ts";
 /**
- * PrefetchInliningConfig schema.
- *
  * **Example** (Import PrefetchInliningConfig schema)
  *
  * ```ts
@@ -96,8 +88,6 @@ export * from "./ImageConfig.schema.ts";
  */
 export * from "./PrefetchInliningConfig.schema.ts";
 /**
- * Route configuration schemas.
- *
  * **Example** (Import Rewrite schema)
  *
  * ```ts
@@ -126,8 +116,6 @@ export * from "./Routes.schema.ts";
  */
 export * from "./Shared.schema.ts";
 /**
- * Subresource Integrity plugin schemas.
- *
  * **Example** (Import SubresourceIntegrityAlgorithm schema)
  *
  * ```ts
@@ -141,8 +129,6 @@ export * from "./Shared.schema.ts";
  */
 export * from "./SubresourceIntegrityPlugin.schema.ts";
 /**
- * Turbopack configuration schemas.
- *
  * **Example** (Import TurbopackOptions schema)
  *
  * ```ts

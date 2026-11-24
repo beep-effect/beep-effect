@@ -38,8 +38,6 @@ const TYPESCRIPT_LANGUAGE = /^(typescript|tsx|mts|cts|ts)(?![\w-])/iu;
 const SCRIPT_LANGUAGE = /^(typescript|javascript|tsx|jsx|mts|cts|mjs|cjs|ts|js)(?![\w-])/iu;
 
 /**
- * One TypeScript fence found in a Markdown or JSDoc text.
- *
  * **Details**
  *
  * `language` is the lowercased language word; `infoString` is the whole
@@ -82,8 +80,6 @@ export class TypeScriptFence extends S.Opaque<TypeScriptFence, { readonly brand:
 ) {}
 
 /**
- * One TypeScript or JavaScript fence with the source span of its body.
- *
  * **Details**
  *
  * `code` is the body as CommonMark reads it (container prefixes and fence

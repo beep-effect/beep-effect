@@ -58,8 +58,6 @@ export class CacheProducerBundle extends S.Opaque<CacheProducerBundle, { readonl
 ) {}
 
 /**
- * Trusted workflow and live computation identities expected by a receipt verifier.
- *
  * **Example** (Inspect envelope contract fields)
  * ```ts
  * import { CacheProducerBinding } from "@beep/repo-cli/commands/Cache"
@@ -152,8 +150,6 @@ export class CacheProducerEvidenceFragment extends S.Opaque<
 ) {}
 
 /**
- * Versioned identity, payload digest and bounded validity authenticated by an issuer.
- *
  * **Example** (Inspect envelope contract fields)
  * ```ts
  * import { CacheProducerBody } from "@beep/repo-cli/commands/Cache"
@@ -179,8 +175,6 @@ export class CacheProducerBody extends S.Opaque<CacheProducerBody, { readonly br
 ) {}
 
 /**
- * Authenticated producer body requiring a separately trusted issuer to verify.
- *
  * **Example** (Inspect envelope contract fields)
  * ```ts
  * import { CacheProducerEnvelope } from "@beep/repo-cli/commands/Cache"

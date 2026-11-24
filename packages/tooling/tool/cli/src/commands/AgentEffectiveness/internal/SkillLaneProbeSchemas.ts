@@ -26,9 +26,6 @@ const LaneFraction = S.Finite.check(S.isGreaterThanOrEqualTo(0));
 const Relabelings = S.Int.check(S.isGreaterThanOrEqualTo(1));
 
 /**
- * Primary measure a probe report reads: the pass candidates of the first
- * probe, or the lane fraction of the lane probe.
- *
  * **Example** (Check a report primary)
  *
  * ```ts
@@ -48,8 +45,6 @@ export const SkillProbeReportPrimary = LiteralKit(["all-lanes", "law-pass", "lan
 );
 
 /**
- * Report primary type.
- *
  * **Example** (Type a report primary)
  *
  * ```ts
@@ -85,8 +80,6 @@ export const SkillLaneProbeData = LiteralKit(["pilot", "scored"]).pipe(
 );
 
 /**
- * Data label type.
- *
  * **Example** (Type a data label)
  *
  * ```ts
@@ -131,8 +124,6 @@ export class SkillLaneTaskValues extends S.Opaque<SkillLaneTaskValues, { readonl
 ) {}
 
 /**
- * Overall and per-family permutation p-values for lane-fraction differences.
- *
  * **Example** (Make a permutation result)
  *
  * ```ts
@@ -160,8 +151,6 @@ export class SkillLanePermutationResult extends S.Opaque<
 ) {}
 
 /**
- * Options for a lane probe report.
- *
  * **Example** (Make pilot options)
  *
  * ```ts
@@ -187,8 +176,6 @@ export class SkillLaneProbeOptions extends S.Opaque<SkillLaneProbeOptions, { rea
 ) {}
 
 /**
- * One task's lane-fraction difference, C minus B, over its counted runs.
- *
  * **Details**
  *
  * `standardError` is `sqrt(var_C/n_C + var_B/n_B)` with sample variances over
@@ -314,8 +301,6 @@ export const SkillLaneProbeVerdict = S.TaggedUnion({
 );
 
 /**
- * Lane probe verdict type.
- *
  * **Example** (Type a verdict)
  *
  * ```ts
@@ -331,9 +316,6 @@ export const SkillLaneProbeVerdict = S.TaggedUnion({
 export type SkillLaneProbeVerdict = typeof SkillLaneProbeVerdict.Type;
 
 /**
- * The lane probe report: the primary with its test and interval, the
- * secondary measures, and the verdict on scored data.
- *
  * **Details**
  *
  * `difference` is `D` with the fixed-task interval `D ± 1.96 * SE`;

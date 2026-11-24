@@ -139,8 +139,6 @@ const decodeWorktreeRepositoryHash = S.decodeUnknownEffect(WorktreeRepositoryHas
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest, { space: 2 }));
 
 /**
- * One merged pull request of a branch: its number and the head sha GitHub recorded.
- *
  * **Example** (Describe a merged pull request)
  *
  * ```ts

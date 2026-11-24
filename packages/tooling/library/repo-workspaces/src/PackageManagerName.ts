@@ -47,8 +47,6 @@ class PackageManagerDetectorDefect extends S.TaggedError<
 ) {}
 
 /**
- * The four package managers this package understands.
- *
  * **Example** (Validate supported manager names)
  *
  * ```ts
@@ -76,9 +74,6 @@ export const PackageManagerName = LiteralKit(["npm", "pnpm", "yarn", "bun"]).pip
 export type PackageManagerName = typeof PackageManagerName.Type;
 
 /**
- * The markers {@link PackageManagerDetector} probes, in the priority order it
- * probes them.
- *
  * **Details**
  *
  * One vocabulary serves both halves of the detection contract: the failure path
@@ -138,8 +133,6 @@ export const PackageManagerEvidence = LiteralKit([
 export type PackageManagerEvidence = typeof PackageManagerEvidence.Type;
 
 /**
- * The outcome of package-manager detection at a workspace root.
- *
  * **Details**
  *
  * `version` is `Option.none()` unless a manifest field naming the *same* manager
@@ -208,8 +201,6 @@ export class DetectedPackageManager extends S.Opaque<DetectedPackageManager, { r
 ) {}
 
 /**
- * Companion types for {@link DetectedPackageManager}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -268,8 +259,6 @@ export const JsonObject = S.Record(S.String, S.Unknown).pipe(
 );
 
 /**
- * A manifest or policy object with arbitrary field values.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -359,9 +348,6 @@ const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> 
 };
 
 /**
- * Raised when a directory carries no lockfile and no workspace configuration,
- * so no package manager can be attributed to it.
- *
  * **Example** (Report the root and checked marker)
  *
  * ```ts

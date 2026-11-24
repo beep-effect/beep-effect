@@ -34,8 +34,6 @@ export const SessionChildKind = LiteralKit(["agent-tool", "workflow", "t3-child"
 );
 
 /**
- * A child session kind whose messages go through its parent.
- *
  * @category models
  * @since 0.0.0
  */
@@ -67,8 +65,6 @@ export const RouteLiveness = LiteralKit(["live", "dormant", "unreachable", "dead
 );
 
 /**
- * How reachable a session route is when it is read.
- *
  * @category models
  * @since 0.0.0
  */
@@ -261,8 +257,6 @@ export declare namespace SessionRoute {
 }
 
 /**
- * A decoded session route.
- *
  * @category models
  * @since 0.0.0
  */
@@ -338,8 +332,6 @@ export class SessionPresence extends S.Opaque<SessionPresence, { readonly brand:
 export const SessionPresenceJson = JsonStringCodec(SessionPresence);
 
 /**
- * Which field of a ledger row a resolve key matched.
- *
  * **Example** (Narrow a key kind)
  *
  * ```ts
@@ -356,17 +348,12 @@ export const ResolveKeyKind = LiteralKit(["pr", "branch", "lane", "checkout"]).p
 );
 
 /**
- * The ledger field a resolve key matched.
- *
  * @category models
  * @since 0.0.0
  */
 export type ResolveKeyKind = typeof ResolveKeyKind.Type;
 
 /**
- * One checkout's claim on a key: its newest ledger row, and when it last named
- * the key.
- *
  * **Example** (Make a claim)
  *
  * ```ts
@@ -492,8 +479,6 @@ export const FallbackRung = LiteralKit(["send", "wake", "retry", "search-environ
 );
 
 /**
- * One rung of the route fallback ladder.
- *
  * @category models
  * @since 0.0.0
  */

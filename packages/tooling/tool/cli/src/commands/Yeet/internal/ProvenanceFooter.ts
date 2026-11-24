@@ -238,8 +238,6 @@ export class PrBodyEdit extends S.Opaque<PrBodyEdit, { readonly brand: unique sy
 ) {}
 
 /**
- * Raw GitHub pull-request user-content edit node.
- *
  * @category models
  * @since 0.0.0
  */
@@ -252,8 +250,6 @@ export class GhPrBodyEditNode extends S.Opaque<GhPrBodyEditNode, { readonly bran
 ) {}
 
 /**
- * The `data` of the GitHub GraphQL read of a pull request's recent body edits.
- *
  * @category models
  * @since 0.0.0
  */

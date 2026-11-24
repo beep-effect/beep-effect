@@ -40,8 +40,6 @@ import * as Str from "effect/String";
 const $I = $RepoCliId.create("internal/github/JobShape");
 
 /**
- * Infrastructure-failure classes decidable from a job record without its log.
- *
  * **Details**
  *
  * `setup-5xx` is the implicit `Set up job` (or `Set up runner`) step itself
@@ -82,8 +80,6 @@ export const GithubJobShapeClass = LiteralKit(["setup-5xx", "runner-loss", "inst
 );
 
 /**
- * Infrastructure-failure classes decidable from a job record without its log.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -123,8 +119,6 @@ export class GithubJobStepRecord extends S.Opaque<GithubJobStepRecord, { readonl
 
 const githubJobRecordStepsDefault = A.empty();
 /**
- * The fields of a GitHub job record the shape classes are read from.
- *
  * **Details**
  *
  * `steps` defaults to empty so a payload from a `gh` version that omits the

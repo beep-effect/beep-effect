@@ -25,8 +25,6 @@ const $I = $RepoWorkspacesId.create("Publishability");
 const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
 
 /**
- * A resolved publish destination for a workspace package.
- *
  * **Example** (Construct a public npm destination)
  *
  * ```ts
@@ -77,8 +75,6 @@ export class PublishTarget extends S.Opaque<PublishTarget, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link PublishTarget}.
- *
  * @category type-level
  * @since 0.0.0
  */

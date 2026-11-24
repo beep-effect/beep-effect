@@ -24,8 +24,6 @@ import type { BorderDetectionKind, BorderSide } from "../Files.schemas.ts";
 const $I = $RepoCliId.create("commands/Files/internal/BorderDetection");
 
 /**
- * Decoded raw image pixels in channel-interleaved byte order.
- *
  * @category models
  * @since 0.0.0
  */
@@ -43,8 +41,6 @@ export class RawImagePixelData extends S.Opaque<RawImagePixelData, { readonly br
 ) {}
 
 /**
- * Thresholds used while scanning raw image pixels for solid borders.
- *
  * @category models
  * @since 0.0.0
  */

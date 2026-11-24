@@ -97,8 +97,6 @@ const ClaudeLegacyWindow = S.Struct({
 });
 
 /**
- * Claude's plan-limit usage response.
- *
  * **Details**
  *
  * `limits` is the normalized list; `five_hour` and `seven_day` are the older
@@ -209,8 +207,6 @@ const CodexWindow = S.Struct({
 });
 
 /**
- * Codex's plan-limit usage response.
- *
  * **Example** (Decode a response without limits)
  *
  * ```ts
@@ -970,8 +966,6 @@ export const codexSignedInEmail = (auth: CodexCliAuth): O.Option<AccountLabel> =
   );
 
 /**
- * JetBrains account credentials read from Junie secure storage.
- *
  * **Example** (Reject incomplete input)
  *
  * ```ts
@@ -1019,8 +1013,6 @@ export class JunieStoredCredential extends S.Opaque<JunieStoredCredential, { rea
 export const JunieStoredCredentialJson = JsonStringCodec(JunieStoredCredential);
 
 /**
- * An in-memory JetBrains OAuth refresh response.
- *
  * **Example** (Reject incomplete input)
  *
  * ```ts
@@ -1060,8 +1052,6 @@ export class JunieRefreshBody extends S.Opaque<JunieRefreshBody, { readonly bran
 export const JunieRefreshBodyJson = JsonStringCodec(JunieRefreshBody);
 
 /**
- * The direct Junie balance response; absent fields do not imply zero.
- *
  * **Example** (Reject incomplete input)
  *
  * ```ts
@@ -1118,8 +1108,6 @@ const JunieQuotaPool = S.Struct({
 });
 
 /**
- * Enabled JetBrains license options; identifiers remain redacted.
- *
  * **Example** (Reject malformed JSON)
  *
  * ```ts
@@ -1168,8 +1156,6 @@ export class JunieAccessOptionsBody extends S.Opaque<JunieAccessOptionsBody, { r
 export const JunieAccessOptionsBodyJson = JsonStringCodec(JunieAccessOptionsBody);
 
 /**
- * The in-memory Grazie exchange token.
- *
  * **Example** (Reject malformed JSON)
  *
  * ```ts
@@ -1206,8 +1192,6 @@ export class JunieExchangeBody extends S.Opaque<JunieExchangeBody, { readonly br
 export const JunieExchangeBodyJson = JsonStringCodec(JunieExchangeBody);
 
 /**
- * Tariff and top-up quota amounts in JetBrains wire units.
- *
  * **Example** (Reject malformed JSON)
  *
  * ```ts
@@ -1252,8 +1236,6 @@ export class JunieQuotaBody extends S.Opaque<JunieQuotaBody, { readonly brand: u
 export const JunieQuotaBodyJson = JsonStringCodec(JunieQuotaBody);
 
 /**
- * Cycle refill metadata; next is an epoch millisecond timestamp.
- *
  * **Example** (Reject malformed JSON)
  *
  * ```ts

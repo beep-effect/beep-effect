@@ -1477,7 +1477,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 117,
+      "line": 115,
       "owner": "@beep/law-practice-server",
       "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
     },
@@ -1507,7 +1507,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 78,
+      "line": 84,
       "owner": "@beep/law-practice-server",
       "reason": "Owner: @beep/law-practice-server. Fixed public USPTO integration witnesses verify native XML, exact operative-source text, recorded office-action identifiers/date/rejection phrases, and full frozen-tree equality. Generated arbitrary payloads cannot establish those real-record facts. This is intentionally golden/source-integrity coverage, not a new codec-law suite. Exit: retire when the detector recognizes native public-slice regression subjects or equivalent source-integrity property coverage becomes meaningful."
     },
@@ -2447,7 +2447,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 606,
+      "line": 602,
       "owner": "@beep/repo-cli",
       "reason": "Test service factory consumes already modeled ProcessTableEntry rows and returns filesystem-compatible Effect operations; its output is a live service implementation, not a serialized data boundary."
     },
@@ -2457,7 +2457,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 669,
+      "line": 665,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
     },

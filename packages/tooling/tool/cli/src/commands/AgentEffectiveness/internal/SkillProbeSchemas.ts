@@ -39,8 +39,6 @@ export const SkillProbeCell = LiteralKit(["A", "B", "C"]).pipe(
 );
 
 /**
- * Probe cell type.
- *
  * **Example** (Type a cell)
  *
  * ```ts
@@ -76,8 +74,6 @@ export const SkillProbeContrast = LiteralKit(["C-B", "B-A"]).pipe(
 );
 
 /**
- * Paired contrast type.
- *
  * **Example** (Type a contrast)
  *
  * ```ts
@@ -93,8 +89,6 @@ export const SkillProbeContrast = LiteralKit(["C-B", "B-A"]).pipe(
 export type SkillProbeContrast = typeof SkillProbeContrast.Type;
 
 /**
- * Per-run measure reported by the probe.
- *
  * **Example** (Check a measure)
  *
  * ```ts
@@ -114,8 +108,6 @@ export const SkillProbeMeasure = LiteralKit(["all-lanes", "law-pass", "lane-frac
 );
 
 /**
- * Per-run measure type.
- *
  * **Example** (Type a measure)
  *
  * ```ts
@@ -151,8 +143,6 @@ export const SkillProbePrimary = LiteralKit(["all-lanes", "law-pass"]).pipe(
 );
 
 /**
- * Primary measure candidate type.
- *
  * **Example** (Type a primary)
  *
  * ```ts
@@ -168,8 +158,6 @@ export const SkillProbePrimary = LiteralKit(["all-lanes", "law-pass"]).pipe(
 export type SkillProbePrimary = typeof SkillProbePrimary.Type;
 
 /**
- * Primary selection from pooled B and C pilot runs.
- *
  * **Example** (Read a selection field)
  *
  * ```ts
@@ -205,8 +193,6 @@ export class SkillProbePrimarySelection extends S.Opaque<
 ) {}
 
 /**
- * One grader verdict from a `claude plugin eval` run.
- *
  * **Example** (Decode a grader verdict)
  *
  * ```ts
@@ -228,8 +214,6 @@ export class PluginEvalGraderResult extends S.Opaque<PluginEvalGraderResult, { r
 ) {}
 
 /**
- * One agent run in a `claude plugin eval --json` result.
- *
  * **Details**
  *
  * `tracePath` is `<kept dir>/out/trace.jsonl`; it is the only field that ties
@@ -272,8 +256,6 @@ export class PluginEvalRun extends S.Opaque<PluginEvalRun, { readonly brand: uni
 ) {}
 
 /**
- * One case in a `claude plugin eval --json` result with its runs per arm.
- *
  * **Example** (Make a harness case)
  *
  * ```ts
@@ -429,8 +411,6 @@ export const SkillProbeOutcome = S.TaggedUnion({
 );
 
 /**
- * Scored or excluded outcome type.
- *
  * **Example** (Type an outcome)
  *
  * ```ts
@@ -446,8 +426,6 @@ export const SkillProbeOutcome = S.TaggedUnion({
 export type SkillProbeOutcome = typeof SkillProbeOutcome.Type;
 
 /**
- * One probe run tied to its task, cell, harness invocation and kept directory.
- *
  * **Details**
  *
  * `keptDir` is the kept directory's basename, never an absolute path, so
@@ -519,8 +497,6 @@ export class SkillProbeRunRecord extends S.Opaque<SkillProbeRunRecord, { readonl
 ) {}
 
 /**
- * A mean with its standard error and 95% interval.
- *
  * **Example** (Make an estimate)
  *
  * ```ts
@@ -542,8 +518,6 @@ export class SkillProbeEstimate extends S.Opaque<SkillProbeEstimate, { readonly 
 ) {}
 
 /**
- * Per task and cell summary of counted runs.
- *
  * **Example** (Read a cell summary field)
  *
  * ```ts
@@ -576,8 +550,6 @@ export class SkillProbeCellSummary extends S.Opaque<SkillProbeCellSummary, { rea
 ) {}
 
 /**
- * A paired difference at task, family or overall scope.
- *
  * **Details**
  *
  * `scope` is a task id, a family name or `overall`. Overall differences carry
@@ -645,8 +617,6 @@ export const SkillProbeVerdict = S.TaggedUnion({
 );
 
 /**
- * Verdict type.
- *
  * **Example** (Type a verdict)
  *
  * ```ts
@@ -662,8 +632,6 @@ export const SkillProbeVerdict = S.TaggedUnion({
 export type SkillProbeVerdict = typeof SkillProbeVerdict.Type;
 
 /**
- * Share of a task and cell's counted runs that scored 1 on each lane.
- *
  * **Example** (Read a lane census field)
  *
  * ```ts
@@ -695,8 +663,6 @@ export class SkillProbeLaneCensus extends S.Opaque<SkillProbeLaneCensus, { reado
 ) {}
 
 /**
- * The probe report: cell summaries, paired differences and the verdict.
- *
  * **Example** (Read a report field)
  *
  * ```ts
@@ -731,8 +697,6 @@ export class SkillProbeReport extends S.Opaque<SkillProbeReport, { readonly bran
 ) {}
 
 /**
- * Preflight result for one task: the untouched fixture and the known-good solution.
- *
  * **Details**
  *
  * A task passes when the untouched fixture is not all-lanes clean and misses
@@ -766,8 +730,6 @@ export class SkillProbePreflightRow extends S.Opaque<SkillProbePreflightRow, { r
 ) {}
 
 /**
- * Preflight receipt for every staged task.
- *
  * **Example** (Read a preflight field)
  *
  * ```ts

@@ -56,16 +56,12 @@ export const TrackedShellAllowedRoot = LiteralKit([
 );
 
 /**
- * Type-level member of {@link TrackedShellAllowedRoot}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TrackedShellAllowedRoot = typeof TrackedShellAllowedRoot.Type;
 
 /**
- * Exact tracked `.sh` files the law allows outside the allowed roots.
- *
  * **Details**
  *
  * `scripts/cloud/bootstrap.sh` installs the toolchain the compiled CI binary
@@ -94,16 +90,12 @@ export const TrackedShellAllowedFile = LiteralKit([
 );
 
 /**
- * Type-level member of {@link TrackedShellAllowedFile}.
- *
  * @category models
  * @since 0.0.0
  */
 export type TrackedShellAllowedFile = typeof TrackedShellAllowedFile.Type;
 
 /**
- * One tracked shell script outside the allowlist.
- *
  * **Example** (Describe a finding)
  *
  * ```ts
@@ -128,8 +120,6 @@ export class TrackedShellFinding extends S.Opaque<TrackedShellFinding, { readonl
 ) {}
 
 /**
- * Runtime options for the tracked shell allowlist law.
- *
  * **Example** (Configure a strict scan)
  *
  * ```ts
@@ -161,8 +151,6 @@ export class TrackedShellAllowlistOptions extends S.Opaque<
 ) {}
 
 /**
- * Result of one tracked shell allowlist law run.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

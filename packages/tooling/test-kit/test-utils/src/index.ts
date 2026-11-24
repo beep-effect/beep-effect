@@ -43,8 +43,6 @@ export * from "./Registration.ts";
  */
 export * from "./Schema.ts";
 /**
- * SQL test utility exports.
- *
  * @category testing
  * @since 0.0.0
  */

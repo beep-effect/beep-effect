@@ -16,8 +16,6 @@ import type * as PlatformError from "effect/PlatformError";
 const $I = $RepoCliId.create("commands/Session/Session.errors");
 
 /**
- * Failure category for the session ledger.
- *
  * **Example** (Narrow a reason)
  *
  * ```ts
@@ -34,8 +32,6 @@ export const SessionLedgerErrorReason = LiteralKit(["io", "decode", "denied", "g
 );
 
 /**
- * Failure category for session ledger operations.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts
@@ -51,8 +47,6 @@ export const SessionLedgerErrorReason = LiteralKit(["io", "decode", "denied", "g
 export type SessionLedgerErrorReason = typeof SessionLedgerErrorReason.Type;
 
 /**
- * A session ledger operation failed.
- *
  * **Example** (Construct an error)
  *
  * ```ts

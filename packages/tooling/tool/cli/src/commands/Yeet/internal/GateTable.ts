@@ -179,8 +179,6 @@ export const GateTableThreads = S.Union([
 export type GateTableThreads = typeof GateTableThreads.Type;
 
 /**
- * Everything one gate table row is decided from.
- *
  * **Details**
  *
  * `requiredContexts` is `None` when the base branch's ruleset was unreadable
@@ -234,8 +232,6 @@ export class GateTableRead extends S.Opaque<GateTableRead, { readonly brand: uni
 ) {}
 
 /**
- * One decided gate table row.
- *
  * **Details**
  *
  * Every column reads a required context only on the check runs the base

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Corpus/internal/ArchiveMove.schemas");
 
 /**
- * Validated options used by `corpus archive-move`.
- *
  * **Example** (Make archive move options)
  *
  * ```ts
@@ -112,8 +110,6 @@ export class CorpusArchiveMoveManifestRecord extends S.Opaque<
 export const encodeCorpusArchiveMoveManifestRecordJson = JsonStringCodec(CorpusArchiveMoveManifestRecord).encode;
 
 /**
- * Summary counts returned by `corpus archive-move`.
- *
  * **Example** (Make archive move summary)
  *
  * ```ts

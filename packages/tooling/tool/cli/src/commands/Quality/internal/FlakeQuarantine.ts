@@ -117,8 +117,6 @@ export const flakeQuarantineOutputBound = OutputBound.make({
 });
 
 /**
- * One failed Turbo task attributed to the no-location TS2589 signature.
- *
  * **Example** (Create quarantine task)
  *
  * ```ts
@@ -144,8 +142,6 @@ export class FlakeQuarantineTask extends S.Opaque<FlakeQuarantineTask, { readonl
 ) {}
 
 /**
- * One quarantined environment-only flake incident.
- *
  * **Details**
  *
  * Recorded per failed Turbo task after its standalone rerun and the shared

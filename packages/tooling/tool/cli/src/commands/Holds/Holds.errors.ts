@@ -13,8 +13,6 @@ import type * as PlatformError from "effect/PlatformError";
 const $I = $RepoCliId.create("commands/Holds/Holds.errors");
 
 /**
- * Failure category for hold ledger operations.
- *
  * **Example** (Narrow a failure category)
  *
  * ```ts
@@ -31,16 +29,12 @@ export const HoldsErrorReason = LiteralKit(["io", "decode", "not-found", "usage"
 );
 
 /**
- * Decoded type of {@link HoldsErrorReason}.
- *
  * @category errors
  * @since 0.0.0
  */
 export type HoldsErrorReason = typeof HoldsErrorReason.Type;
 
 /**
- * A hold ledger read, write or probe failed.
- *
  * **Example** (Build a usage error)
  *
  * ```ts

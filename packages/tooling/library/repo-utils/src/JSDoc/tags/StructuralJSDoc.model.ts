@@ -560,8 +560,6 @@ export class JSDocYields extends S.Opaque<JSDocYields & JSDocTagMember<"yields">
 ) {}
 
 /**
- * JSDoc tag metadata export.
- *
  * **Example** (Access structural tag metadata)
  *
  * ```ts
@@ -601,8 +599,6 @@ export const StructuralJSDoc = S.Union([
 );
 
 /**
- * Runtime type for {@link StructuralJSDoc}.
- *
  * **Example** (Extract structural tag name)
  *
  * ```ts
@@ -618,8 +614,6 @@ export const StructuralJSDoc = S.Union([
 export type StructuralJSDoc = typeof StructuralJSDoc.Type;
 
 /**
- * JSDoc tag metadata export.
- *
  * **Example** (Read structural tag metadata)
  *
  * ```ts

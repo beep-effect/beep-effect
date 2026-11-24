@@ -9,8 +9,6 @@ import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("JSDoc/models/TagParameters.model");
 /**
- * Structured description of what arguments a tag accepts.
- *
  * **Example** (Make TagParameters instance)
  *
  * ```ts

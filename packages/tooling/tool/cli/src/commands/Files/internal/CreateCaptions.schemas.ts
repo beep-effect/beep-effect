@@ -81,8 +81,6 @@ export class CreateCaptionFilesOptions extends S.Opaque<CreateCaptionFilesOption
 ) {}
 
 /**
- * Planned caption sidecar file creation.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts
@@ -178,8 +176,6 @@ export class CreateCaptionFilesPlan extends S.Opaque<CreateCaptionFilesPlan, { r
 ) {}
 
 /**
- * Summary returned by `createCaptionFiles`.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts

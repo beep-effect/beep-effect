@@ -19,8 +19,6 @@ import * as S from "effect/Schema";
 const $I = $AgentMemoryStoreId.create("Scip.models");
 
 /**
- * Fully qualified SCIP symbol string.
- *
  * **Example** (Brand a SCIP symbol)
  *
  * ```ts
@@ -40,16 +38,12 @@ export const ScipSymbol = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link ScipSymbol}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type ScipSymbol = typeof ScipSymbol.Type;
 
 /**
- * Zero-based line and character range of a SCIP occurrence.
- *
  * **Example** (Construct a one-line range)
  *
  * ```ts
@@ -76,8 +70,6 @@ export class ScipRange extends S.Opaque<ScipRange, { readonly brand: unique symb
 ) {}
 
 /**
- * Liveness verdict for a symbol a note references.
- *
  * **Details**
  *
  * Decision `symbol-resolver-port-scip-driver-p3`: SCIP resolves identity; a
@@ -102,16 +94,12 @@ export const SymbolLiveness = LiteralKit(["live", "reverify", "unresolved"]).pip
 );
 
 /**
- * Runtime type for {@link SymbolLiveness}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type SymbolLiveness = typeof SymbolLiveness.Type;
 
 /**
- * A note's reference to a code symbol with the hash of the span it described.
- *
  * **Example** (Reference a symbol)
  *
  * ```ts
@@ -140,8 +128,6 @@ export class SymbolReference extends S.Opaque<SymbolReference, { readonly brand:
 ) {}
 
 /**
- * Where SCIP says a symbol is defined: the document and the occurrence range.
- *
  * **Example** (Locate a definition)
  *
  * ```ts
@@ -170,8 +156,6 @@ export class ScipDefinition extends S.Opaque<ScipDefinition, { readonly brand: u
 ) {}
 
 /**
- * Resolution of one symbol reference, discriminated on `liveness`.
- *
  * **Details**
  *
  * Decision `symbol-resolver-port-scip-driver-p3`: the resolver returns symbol
@@ -227,8 +211,6 @@ export const SymbolResolution = SymbolLiveness.toTaggedUnion("liveness")({
 );
 
 /**
- * Runtime type for {@link SymbolResolution}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -248,7 +248,75 @@ export const deliveryWindow = (job: FleetJob): { readonly start: number; readonl
   end: job.createdAt + FLEET_THRESHOLDS.deliveryLag,
 });
 
-const isTwoHundred = (statusCode: number): boolean => statusCode >= 200 && statusCode < 300;
+/**
+ * The `queued` deliveries inside a job's window, in listing order.
+ *
+ * **Example** (Only the window's queued deliveries)
+ *
+ * ```ts
+ * import { FleetHookDelivery, FleetJob, deliveryCandidates } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const job = FleetJob.make({
+ *   id: 800,
+ *   runId: 3800,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 600000,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const delivery = (id: string, deliveredAt: number, action: string) =>
+ *   FleetHookDelivery.make({ id, deliveredAt, statusCode: 200, action: O.some(action) })
+ * const candidates = deliveryCandidates(job, [
+ *   delivery("1", 600500, "queued"),
+ *   delivery("2", 600500, "completed"),
+ *   delivery("3", 0, "queued"),
+ * ])
+ * console.log(candidates.map((candidate) => candidate.id)) // ["1"]
+ * ```
+ *
+ * @param job - The queued job.
+ * @param deliveries - The deliveries the walk read.
+ * @returns The job's candidate deliveries.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const deliveryCandidates: {
+  (deliveries: ReadonlyArray<FleetHookDelivery>): (job: FleetJob) => ReadonlyArray<FleetHookDelivery>;
+  (job: FleetJob, deliveries: ReadonlyArray<FleetHookDelivery>): ReadonlyArray<FleetHookDelivery>;
+} = dual(2, (job: FleetJob, deliveries: ReadonlyArray<FleetHookDelivery>): ReadonlyArray<FleetHookDelivery> => {
+  const window = deliveryWindow(job);
+  return A.filter(
+    deliveries,
+    (delivery) =>
+      O.contains(delivery.action, "queued") &&
+      delivery.deliveredAt >= window.start &&
+      delivery.deliveredAt <= window.end
+  );
+});
+
+/**
+ * Whether a delivery reached its endpoint with a 2xx response.
+ *
+ * **Example** (A 502 is not delivered)
+ *
+ * ```ts
+ * import { FleetHookDelivery, isSuccessfulDelivery } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const delivery = FleetHookDelivery.make({ id: "1", deliveredAt: 0, statusCode: 502, action: O.some("queued") })
+ * console.log(isSuccessfulDelivery(delivery)) // false
+ * ```
+ *
+ * @param delivery - A hook delivery.
+ * @returns Whether its status code is 2xx.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isSuccessfulDelivery = (delivery: FleetHookDelivery): boolean =>
+  delivery.statusCode >= 200 && delivery.statusCode < 300;
 
 /**
  * Judge one job's delivery evidence from the deliveries read and their
@@ -311,13 +379,7 @@ export const judgeDeliveryEvidence = (input: {
   readonly details: HashMap.HashMap<string, O.Option<FleetDeliveryDetail>>;
 }): FleetDeliveryEvidence => {
   const window = deliveryWindow(input.job);
-  const candidates = A.filter(
-    input.deliveries,
-    (delivery) =>
-      O.contains(delivery.action, "queued") &&
-      delivery.deliveredAt >= window.start &&
-      delivery.deliveredAt <= window.end
-  );
+  const candidates = deliveryCandidates(input.job, input.deliveries);
   const jobIdOf = (delivery: FleetHookDelivery) =>
     O.flatMap(O.flatten(HashMap.get(input.details, delivery.id)), (detail) => detail.workflowJobId);
   const matches = A.filter(candidates, (delivery) => O.contains(jobIdOf(delivery), `${input.job.id}`));
@@ -329,7 +391,7 @@ export const judgeDeliveryEvidence = (input: {
   const unknown = (reason: string) =>
     FleetDeliveryEvidence.cases.Unreadable.make({ reason, oldestReached: input.oldestReached });
   return pipe(
-    A.findFirst(matches, (delivery) => isTwoHundred(delivery.statusCode)),
+    A.findFirst(matches, isSuccessfulDelivery),
     O.match({
       onSome: (delivery) =>
         FleetDeliveryEvidence.cases.Delivered.make({

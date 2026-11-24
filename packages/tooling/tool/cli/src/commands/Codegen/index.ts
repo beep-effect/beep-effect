@@ -6,8 +6,6 @@
  */
 
 /**
- * Public command module export.
- *
  * @category cli-commands
  * @since 0.0.0
  */

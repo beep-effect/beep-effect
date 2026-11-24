@@ -24,8 +24,6 @@ const $I = $InfraHostsId.create("HostsStage");
 const HostsStageKindBase = LiteralKit(["prod", "rehearsal"]);
 
 /**
- * Stage kinds the host stacks distinguish.
- *
  * **Details**
  *
  * `prod` mutates the real host; `rehearsal` covers every other stage name
@@ -50,8 +48,6 @@ export const HostsStageKind = HostsStageKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link HostsStageKind}.
- *
  * **Example** (Annotate a stage kind)
  * ```ts
  * import type { HostsStageKind } from "@beep/infra-hosts/HostsStage"

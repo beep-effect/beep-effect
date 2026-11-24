@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Corpus/internal/Enrich.schemas");
 
 /**
- * Validated options used by `corpus enrich`.
- *
  * **Example** (Make enrich options)
  *
  * ```ts
@@ -110,8 +108,6 @@ export class CorpusEnrichmentRecord extends S.Opaque<CorpusEnrichmentRecord, { r
 export const encodeCorpusEnrichmentRecordJson = JsonStringCodec(CorpusEnrichmentRecord).encode;
 
 /**
- * Summary counts returned by `corpus enrich`.
- *
  * **Example** (Make enrich summary counts)
  *
  * ```ts

@@ -41,8 +41,6 @@ import { CI_BINARY_PIN_FILE, CiBinaryPin, decodeCiBinaryPinFlags, rewriteCiBinar
 const $I = $RepoCliId.create("commands/Ci/CiBinaryPinSync");
 
 /**
- * What `beep ci binary-pin-sync` decided for the pin-bump branch checkout.
- *
  * **Details**
  *
  * - `stale`: the branch pins an older release than the one resolved, or the
@@ -84,8 +82,6 @@ export const CiBinaryPinSyncOutcome = LiteralKit(["stale", "current", "merged", 
 );
 
 /**
- * Type for {@link CiBinaryPinSyncOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -208,8 +204,6 @@ const isUnmerged = (entry: { readonly x: string; readonly y: string }): boolean 
   isUnmergedCode(`${entry.x}${entry.y}`);
 
 /**
- * The inputs of one pin-bump branch sync.
- *
  * **Example** (Describe a sync request)
  *
  * ```ts

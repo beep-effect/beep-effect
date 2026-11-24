@@ -38,16 +38,12 @@ export const StatusValue = S.NonEmptyString.check(isWellFormedText).pipe(
 );
 
 /**
- * Runtime type for {@link StatusValue}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type StatusValue = typeof StatusValue.Type;
 
 /**
- * Ordered lifecycle of one status field.
- *
  * **Details**
  *
  * `order` lists the field's values from earliest to latest and may not repeat
@@ -92,8 +88,6 @@ export class StatusLifecycle extends S.Opaque<StatusLifecycle, { readonly brand:
 ) {}
 
 /**
- * A requested change of one status field.
- *
  * **Details**
  *
  * `from` is absent when the field has no value yet.

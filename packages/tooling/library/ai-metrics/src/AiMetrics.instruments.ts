@@ -33,8 +33,6 @@ const $I = $RepoAiMetricsId.create("AiMetrics.instruments");
 const owner = PackageName.make("@beep/repo-ai-metrics");
 
 /**
- * Agent harness that ran a session, the value of `beep.harness`.
- *
  * **Example** (Read a harness spelling)
  *
  * ```ts
@@ -63,16 +61,12 @@ export const AgentHarness = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AgentHarness}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AgentHarness = typeof AgentHarness.Type;
 
 /**
- * Model provider that served a request, the value of `beep.provider`.
- *
  * **Example** (Read a provider spelling)
  *
  * ```ts
@@ -91,16 +85,12 @@ export const AgentProvider = LiteralKit(["anthropic", "openai", "xai", "cursor",
 );
 
 /**
- * Runtime type for {@link AgentProvider}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AgentProvider = typeof AgentProvider.Type;
 
 /**
- * Route a request took to its provider, the value of `beep.route`.
- *
  * **Example** (Read a route spelling)
  *
  * ```ts
@@ -119,16 +109,12 @@ export const AgentRoute = LiteralKit(["direct", "proxy", "cursor-seat", "grok-bu
 );
 
 /**
- * Runtime type for {@link AgentRoute}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AgentRoute = typeof AgentRoute.Type;
 
 /**
- * Component that emitted a telemetry record, the value of `beep.emitter`.
- *
  * **Example** (Read an emitter spelling)
  *
  * ```ts
@@ -147,8 +133,6 @@ export const TelemetryEmitter = LiteralKit(["native", "wrapper", "proxy", "hook"
 );
 
 /**
- * Runtime type for {@link TelemetryEmitter}.
- *
  * @category models
  * @since 0.0.0
  */

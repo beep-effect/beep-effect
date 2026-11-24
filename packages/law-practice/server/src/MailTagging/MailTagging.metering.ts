@@ -245,8 +245,7 @@ const makeBoxCallMeter = Effect.gen(function* () {
     yield* ledger.append(`${line}\n`);
   });
 
-  // The count is the diagnostic: a failed flush is logged with it, never with the path.
-  const flush = Effect.flatMap(Ref.get(total), (calls) =>
+  const flushLoggingCountNeverPath = Effect.flatMap(Ref.get(total), (calls) =>
     calls > 0
       ? append(calls).pipe(
           Effect.catchCause(() =>
@@ -258,7 +257,7 @@ const makeBoxCallMeter = Effect.gen(function* () {
       : Effect.void
   );
 
-  yield* Effect.addFinalizer(() => flush);
+  yield* Effect.addFinalizer(() => flushLoggingCountNeverPath);
 
   return ProviderCallMeter.of({
     record: Effect.fn("ProviderCallMeter.record")((calls: ProviderCalls) =>

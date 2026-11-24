@@ -49,8 +49,6 @@ export const GeneratedContextRole = LiteralKit(["contract", "model", "host"]).pi
 );
 
 /**
- * A model-first context role generated today.
- *
  * **Example** (Type a generated role)
  *
  * ```ts
