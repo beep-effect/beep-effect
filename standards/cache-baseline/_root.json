@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P3 annotation lane)",
-    "reason": "Re-record the root after merging the P2 head: turbo.json gains the @beep/annotation package.json input; no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P4 claims lane)",
+    "reason": "Re-record the root, @beep/epistemics and @beep/party-server after the P4 main merges: manifest dependency edges and the regenerated turbo.json root projection changed; no qualification granted.",
     "basis": {
-      "path": "docs/reports/tksr-p3-p2-merge-cache-review-2026-11-23.md",
-      "sha256": "69dc602ea843244db584dfda0b9b03de7d94b4b44860483260e3dff5f31b4a0f"
+      "path": "docs/reports/tksr-p4-main-merge-cache-review-2026-11-24.md",
+      "sha256": "6f9bffb14ffbbb76ca40e85421903f641578edd12dc0fe760d4b8f2c2585ea44"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "6ad9617a073ff2b689271f07f8621be3457e89d9aa51d07066548a479d7a3e1a"
+      "sha256": "a8e054dc69f11a67787dd5d92d6504fb6dfca3162931ea2a7c8f27cbf3b9b50e"
     }
   ],
   "nodes": [
@@ -2277,6 +2277,7 @@
           "packages/foundation/modeling/spdx/package.json",
           "packages/foundation/modeling/spdx/src/**",
           "packages/foundation/modeling/text/package.json",
+          "packages/foundation/modeling/text/src/**",
           "packages/foundation/modeling/toml/package.json",
           "packages/foundation/modeling/tsconfig/package.json",
           "packages/foundation/modeling/tsconfig/src/**",
