@@ -122,8 +122,6 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
   const rows = yield* Effect.forEach(models, adapter.project, { concurrency: 1 });
-  // References carry no year field, a generated reference has no constructor outcome, and a citation
-  // with no parsed year still reports the field as None.
   const references = yield* stage.extract({
     plain: "See Roe v. Wade, 410 U.S. 113 (1973). Id. at 114. Roe, at 115. See supra.",
     markup: null,
@@ -159,9 +157,12 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     })
   );
   expect(generated.kind).toBe("ReferenceCitation");
-  expect(A.map(generated.fields, (field) => field.name)).toEqual(["groups", "metadata"]);
+  expect(
+    A.map(generated.fields, (field) => field.name),
+    "a generated reference has no year field and no constructor outcome"
+  ).toEqual(["groups", "metadata"]);
   const undated = yield* adapter.project({ ...dated.value, outcome: { ...dated.value.outcome, year: null } });
-  expect(A.last(undated.fields)).toMatchObject({
+  expect(A.last(undated.fields), "a citation with no parsed year still reports the year field as None").toMatchObject({
     _tag: "Some",
     value: { _tag: "Scalar", name: "year", value: { _tag: "None" } },
   });
@@ -184,9 +185,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   );
   const rendered = yield* dump.render({ text: ownedPlain.storage, citations: rows });
   const output = yield* unicode.fromStorage(rendered);
-  // The original assertion strips these formatter colors and then trims its
-  // finite ASCII result. General re.sub behavior is not claimed by this view.
-  const plain = pipe(
+  const withOnlyTheFourFormatterColorsStrippedAndTrimmed = pipe(
     output.text,
     Str.replaceAll("\x1b[32m", ""),
     Str.replaceAll("\x1b[94m", ""),
@@ -194,6 +193,6 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     Str.replaceAll("\x1b[0m", ""),
     Str.trim
   );
-  expect(plain).toBe(criterion.operands[1].value);
+  expect(withOnlyTheFourFormatterColorsStrippedAndTrimmed).toBe(criterion.operands[1].value);
   yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
 });

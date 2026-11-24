@@ -10,6 +10,7 @@
     {"file":"apps/docket-intake/src/Digest.ts","symbol":"DigestProgress","kind":"struct-const","owner":"@beep/docket-intake","identity":"DigestProgress","description":"How far the docket intake digests have come."},
     {"file":"apps/docket-intake/src/DryRun.ts","symbol":"DocketDryRunReport","kind":"struct-const","owner":"@beep/docket-intake","identity":"DocketDryRunReport","description":"What a docket intake dry run would have written."},
     {"file":"apps/docket-intake/src/Errors.ts","symbol":"DocketIntakeCommandError","kind":"tagged-error","owner":"@beep/docket-intake","identity":"DocketIntakeCommandError","description":"A docket intake command was refused, throttled or failed."},
+    {"file":"apps/docket-intake/src/Smoke.ts","symbol":"DocketIntakeSmokeFailed","kind":"tagged-error","owner":"@beep/docket-intake","identity":"DocketIntakeSmokeFailed","description":"At least one docket intake smoke step failed."},
     {"file":"apps/docket-intake/src/Undo.ts","symbol":"DocketRunSelector","kind":"union","owner":"@beep/docket-intake","identity":"DocketRunSelector","description":"Run to undo: a run id, or `latest` for the newest run in the journal."}
   ]
 }

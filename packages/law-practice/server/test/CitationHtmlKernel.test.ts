@@ -99,8 +99,6 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
       expect(A.fromIterable(bytes)).toEqual([...A.replicate(0, 16), ...A.replicate(7, 16)]);
     })
   );
-  // Keep every pinned corpus row, but give bounded batches independent watchdogs
-  // and failure identities instead of making all 1,097 rows one timed test.
   it.effect.each([
     { offset: 0, expected: [91, 1, 5, 3] },
     { offset: 100, expected: [99, 0, 1, 0] },
@@ -114,7 +112,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("private HTML kernel
     { offset: 900, expected: [62, 37, 1, 0] },
     { offset: 1000, expected: [86, 5, 6, 0] },
   ])(
-    "matches source cleaner outcomes for corpus batch starting at $offset",
+    "matches source cleaner outcomes for corpus batch starting at $offset, each batch with its own watchdog and failure identity",
     ({ offset, expected }) =>
       Effect.gen(function* () {
         const citationResult2 = yield* FileSystem.FileSystem;

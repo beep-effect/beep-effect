@@ -70,7 +70,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
   it.effect("captures ceilings, allows equality, rejects the next token and owns source bytes", () =>
     Effect.gen(function* () {
       const limits = { ...(yield* defaultCitationEnginePolicy).limits, tokens: 3, sourceUtf16: 4 };
-      // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
       const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, limits);
       const tokenizer = yield* makeCitationTokenText(owned);
       limits.tokens = 100;
@@ -85,7 +84,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
       input.bytes.fill(32);
       expect(result.source.bytes).toEqual(new TextEncoder().encode("a b"));
       const citationResult4 = yield* tokenizer.plan(native("a b ")).pipe(Effect.flip);
-      expect(citationResult4).toMatchObject({ limit: "tokens" });
+      expect(citationResult4, "the installed limits ignore a later mutation of the caller's copy").toMatchObject({
+        limit: "tokens",
+      });
       const citationResult5 = yield* tokenizer.plan(native("12345")).pipe(Effect.flip);
       expect(citationResult5).toMatchObject({ limit: "sourceUtf16" });
       const citationResult6 = yield* tokenizer.plan(native("1234"));

@@ -54,8 +54,7 @@ class MissingReporterOutcome extends S.Opaque<MissingReporterOutcome, { readonly
   )
 ) {}
 
-// These histories have no selected edition; any artifact lookup is a regression.
-const unusedEditions = CitationFrozenEditions.of({
+const editionsForHistoriesWithNoSelectedEditionNeverLookedUp = CitationFrozenEditions.of({
   source: Effect.fn("CaseOnlyTest.unusedEditionSource")(() =>
     Effect.fail(CitationFrozenEditionFailure.make({ reason: "missing-edition" }))
   ),
@@ -159,7 +158,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
           });
           const objects = yield* makeCitationResourceObjects(prepared.limits).pipe(
             Effect.provideService(CitationResourceModels, models),
-            Effect.provideService(CitationFrozenEditions, unusedEditions)
+            Effect.provideService(CitationFrozenEditions, editionsForHistoriesWithNoSelectedEditionNeverLookedUp)
           );
           let comparisons = A.empty<readonly [number, number]>();
           const comparison = CitationRuntimeDictionaryComparison.of({
@@ -278,11 +277,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         });
         const objects = yield* makeCitationResourceObjects(limits).pipe(
           Effect.provideService(CitationResourceModels, models),
-          Effect.provideService(CitationFrozenEditions, unusedEditions)
+          Effect.provideService(CitationFrozenEditions, editionsForHistoriesWithNoSelectedEditionNeverLookedUp)
         );
         const foreign = yield* makeCitationResourceObjects(limits).pipe(
           Effect.provideService(CitationResourceModels, models),
-          Effect.provideService(CitationFrozenEditions, unusedEditions)
+          Effect.provideService(CitationFrozenEditions, editionsForHistoriesWithNoSelectedEditionNeverLookedUp)
         );
         const first = yield* objects.create(ref);
         expect(first.slot).toBe(0);
@@ -325,7 +324,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         const citationResult16 = yield* Effect.flip(
           makeCitationResourceObjects({}).pipe(
             Effect.provideService(CitationResourceModels, models),
-            Effect.provideService(CitationFrozenEditions, unusedEditions)
+            Effect.provideService(CitationFrozenEditions, editionsForHistoriesWithNoSelectedEditionNeverLookedUp)
           )
         );
         expect(citationResult16.reason).toBe("invalid-input");
@@ -345,7 +344,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
       });
       const objects = yield* makeCitationResourceObjects(limits).pipe(
         Effect.provideService(CitationResourceModels, models),
-        Effect.provideService(CitationFrozenEditions, unusedEditions)
+        Effect.provideService(CitationFrozenEditions, editionsForHistoriesWithNoSelectedEditionNeverLookedUp)
       );
       const results = yield* Effect.all([Effect.result(objects.create(ref)), Effect.result(objects.create(ref))], {
         concurrency: "unbounded",

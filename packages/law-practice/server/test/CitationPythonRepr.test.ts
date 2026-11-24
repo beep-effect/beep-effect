@@ -49,9 +49,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             "078f625b97d636e72ce566a836db5e1e3726b4222ef71edb79b57faa53e88ed5"
           );
           const corpus = yield* S.decodeEffect(Corpus)(corpusText);
-          // The Python producer was removed with the repository's Python (goal python-free-repo). Its
-          // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
-          // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-python-repr.py`.
+          // decision: python-oracle-producers-pinned-by-digest
           for (const [i, row] of corpus.cases.entries()) {
             const actual = yield* repr.text({ width: row.input.width, bytes: row.input.hex });
             expect(actual, `native repr case ${i}`).toEqual({ width: row.output.width, bytes: row.output.hex });
@@ -112,8 +110,8 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             text: bind(stage.text),
           }))
         );
-        // Longer than one assembly chunk (1024) and one cooperative yield interval (4096).
-        const bytes = new Uint8Array(5000).fill(97);
+        const pastAssemblyChunk1024AndYieldInterval4096 = 5000;
+        const bytes = new Uint8Array(pastAssemblyChunk1024AndYieldInterval4096).fill(97);
         const output = yield* repr.text({ width: 1, bytes });
         expect(new TextDecoder().decode(output.bytes)).toBe(`'${new TextDecoder().decode(bytes)}'`);
       })
