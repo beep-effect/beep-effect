@@ -795,15 +795,6 @@
       "@beep/schema/test/Markdown": [
         "./packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts"
       ],
-      "@beep/nlp/Algebra": [
-        "./packages/foundation/modeling/nlp/src/Algebra/index.ts"
-      ],
-      "@beep/nlp/Graph": [
-        "./packages/foundation/modeling/nlp/src/Graph/index.ts"
-      ],
-      "@beep/nlp/Operations": [
-        "./packages/foundation/modeling/nlp/src/Operations/index.ts"
-      ],
       "@beep/langextract/Alignment": [
         "./packages/foundation/capability/langextract/src/Alignment/index.ts"
       ],
@@ -1342,13 +1333,6 @@
       ],
       "@beep/nlp-processing/Tools/*": [
         "./packages/foundation/capability/nlp-processing/src/Tools/*"
-      ],
-      "@beep/nlp/Algebra/*": [
-        "./packages/foundation/modeling/nlp/src/Algebra/*"
-      ],
-      "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
-      "@beep/nlp/Operations/*": [
-        "./packages/foundation/modeling/nlp/src/Operations/*"
       ],
       "@beep/repo-cli/commands/*": [
         "./packages/tooling/tool/cli/src/commands/*"

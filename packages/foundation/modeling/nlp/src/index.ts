@@ -7,36 +7,6 @@
  */
 
 /**
- * Algebraic structures (monoids) for NLP aggregation.
- *
- * **Example** (Fold number sum monoid)
- *
- * ```ts import.meta.vitest name="Fold number sum monoid"
- * import * as Algebra from "@beep/nlp/Algebra"
- *
- * Algebra.Monoid.fold(Algebra.Monoid.NumberSum)([1, 2, 3]) // => 6
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export * as Algebra from "./Algebra/index.ts";
-/**
- * Generic categorical operations over `effect/Graph` directed graphs.
- *
- * **Example** (Create empty typed graph)
- *
- * ```ts
- * import * as Graph from "@beep/nlp/Graph"
- *
- * console.log(Graph.GraphOps.empty<string, number>())
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * as Graph from "./Graph/index.ts";
-/**
  * Deterministic identifier tokenization and variant helpers.
  *
  * **Example** (Tokenize identifier text)

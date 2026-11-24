@@ -4,13 +4,12 @@ Schema-first NLP modeling package.
 
 This package owns pure helpers for identifier, path, query and variant text. The
 document, token, pattern, vectorization and similarity models and the graph node
-schemas moved to `@beep/nlp-processing` in the text-knowledge-stack rebuild (P6);
-the remaining modules retire with the package in P7.
+schemas moved to `@beep/nlp-processing`, and the Operations, Algebra and GraphOps
+modules were deleted, in the text-knowledge-stack rebuild (P6); the remaining
+modules retire with the package in P7.
 
 ## Modules
 
-- `@beep/nlp/Graph` exposes pure graph operations over `effect/Graph`.
-- `@beep/nlp/Operations` exposes pure composable operation models.
 - `@beep/annotation` owns standoff annotation documents and their kinds.
 - `@beep/nlp/IdentifierText`, `@beep/nlp/PathText`, `@beep/nlp/QueryText`, and `@beep/nlp/VariantText` expose deterministic text helpers.
 
