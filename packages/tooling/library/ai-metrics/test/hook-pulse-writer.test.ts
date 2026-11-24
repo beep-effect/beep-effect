@@ -841,11 +841,9 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse writer co
         expectation2.toBe(privateDigest2);
         expect(decoded.notifierRev).toBe("log-only-0");
         expect(decoded.waitReason).toBe(waitReason);
-        const privateDigest6 = yield* typeScriptOraclePrivateDigest(baseFields.transcript_path);
-        expect(
-          decoded.transcriptPath,
-          "transcriptPath must be forwarded: HookPulseRawEvent requires it, so a row without it cannot be re-encoded for replay"
-        ).toEqual(O.some(privateDigest6));
+        const transcriptPathForwardedSinceARowWithoutItCannotBeReEncodedForReplay =
+          yield* typeScriptOraclePrivateDigest(baseFields.transcript_path);
+        assertSome(decoded.transcriptPath, transcriptPathForwardedSinceARowWithoutItCannotBeReEncodedForReplay);
         assertSome(decoded.promptId, baseFields.prompt_id);
         expect(
           decoded.permissionMode,
@@ -1623,10 +1621,8 @@ fi
 
       assertSome(decodedEnd.sessionEndReason, "prompt_input_exit");
       assertNone(decodedStop.sessionEndReason);
-      expect(
-        decodedDenied.sessionEndReason,
-        "PermissionDenied's own reason is content, not a sessionEndReason"
-      ).toEqual(O.none());
+      const permissionDeniedReasonIsContentNotASessionEndReason = decodedDenied.sessionEndReason;
+      assertNone(permissionDeniedReasonIsContentNotASessionEndReason);
     })
   );
 
@@ -1794,10 +1790,8 @@ fi
         assertSome(decodedInterrupted.toolUseId, "toolu_writer_1");
         assertSome(decodedInterrupted.durationMs, 12);
         assertSome(decodedInterrupted.isInterrupt, true);
-        expect(
-          decodedErrored.isInterrupt,
-          "false is a value: the tool errored rather than the human hitting escape"
-        ).toEqual(O.some(false));
+        const toolErroredRatherThanTheHumanHittingEscape = false;
+        assertSome(decodedErrored.isInterrupt, toolErroredRatherThanTheHumanHittingEscape);
       })
   );
 
@@ -2275,10 +2269,8 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse kill-swit
 
       expectSwitchOk(run);
       const readSentinel76 = yield* readSentinel(store);
-      const seededSentinelJson88 = yield* seededSentinelJson;
-      expect(readSentinel76, "byte-identical to the seed: reason, timestamp and trailing newline").toEqual(
-        O.some(seededSentinelJson88)
-      );
+      const seedByteIdenticalWithReasonTimestampAndTrailingNewline = yield* seededSentinelJson;
+      assertSome(readSentinel76, seedByteIdenticalWithReasonTimestampAndTrailingNewline);
       expect(run.stdout).toContain(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt);
     })
   );
@@ -2324,8 +2316,8 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse kill-swit
           window.rearmedAt > SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt,
           "fixed-width ISO UTC sorts lexicographically, so a window must close after it opens"
         ).toBe(true);
-        const readSentinel79 = yield* readSentinel(store);
-        expect(readSentinel79, "armed means the sentinel the writer tests for is gone").toEqual(O.none());
+        const sentinelTheWriterTestsForIsGoneOnceArmed = yield* readSentinel(store);
+        assertNone(sentinelTheWriterTestsForIsGoneOnceArmed);
       })
   );
 
@@ -2347,19 +2339,16 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse kill-swit
             disarmed.stderr,
             "jq diagnostics on a mangled sentinel are handled and never reach stderr, so operators are not trained to ignore the channel that reports real trouble"
           ).toBe("");
-          const readSentinel80 = yield* readSentinel(store);
-          expect(readSentinel80, "an unparseable sentinel is still a sentinel and gets no invented start").toEqual(
-            O.some(contents)
-          );
+          const unparseableSentinelIsStillASentinelWithNoInventedStart = yield* readSentinel(store);
+          assertSome(unparseableSentinelIsStillASentinelWithNoInventedStart, contents);
 
           const armed = yield* runSwitch(store, ["arm"]);
           const readWindowRows81 = yield* readWindowRows(store);
           const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows81));
 
           expectSwitchOk(armed);
-          expect(window.disarmedAt, "null, never the rearm instant, which would read as zero-length coverage").toEqual(
-            O.none()
-          );
+          const disarmedAtIsNullNeverTheRearmInstantThatWouldReadAsZeroLengthCoverage = window.disarmedAt;
+          assertNone(disarmedAtIsNullNeverTheRearmInstantThatWouldReadAsZeroLengthCoverage);
           assertNone(window.reason);
           expect(window.rearmedAt).toMatch(isoUtcSecondAsDateUPrintsIt);
           const readSentinel82 = yield* readSentinel(store);
