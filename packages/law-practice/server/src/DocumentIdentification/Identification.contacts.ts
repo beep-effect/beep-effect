@@ -33,21 +33,21 @@ const $I = $LawPracticeServerId.create("DocumentIdentification/Identification.co
 const invalid = () => IdentificationError.make({ operation: "contact-parse", reason: "invalid-input" });
 const opt = (s: string) => (Str.isNonEmpty(Str.trim(s)) ? O.some(Str.trim(s)) : O.none());
 const nonempty = (xs: ReadonlyArray<string>) => A.filter(A.map(xs, Str.trim), Str.isNonEmpty);
-// Outlook writes RFC 4180 with commas. The lenient read keeps what the export tolerates (a byte-order mark, blanks
-// after a closing quote, blank lines, which it skips); a quote inside an unquoted cell or text after a closing quote is
-// refused, and rows of only empty cells are dropped. A read whose warnings passed the cap is refused too: past it the
-// reader only counts quote findings, so a misused quote could hide behind many ragged rows.
-const outlookRead = CsvReadOptions.make({ ...CsvCodecOptions.default.read, blankLines: "skip" });
-const isRefused = (warning: CsvWarning): boolean =>
+const outlookLenientRfc4180CommaRead = CsvReadOptions.make({ ...CsvCodecOptions.default.read, blankLines: "skip" });
+const isQuoteMisuse = (warning: CsvWarning): boolean =>
   CsvWarningFinding.guards.StrayQuote(warning.finding) ||
-  CsvWarningFinding.guards.TextAfterClosingQuote(warning.finding) ||
+  CsvWarningFinding.guards.TextAfterClosingQuote(warning.finding);
+const quoteMisuseCanHidePastTheWarningCap = (warning: CsvWarning): boolean =>
   CsvWarningFinding.guards.WarningsTruncated(warning.finding);
+const isRefused = (warning: CsvWarning): boolean =>
+  isQuoteMisuse(warning) || quoteMisuseCanHidePastTheWarningCap(warning);
+const dropRowsOfOnlyEmptyCells = (records: ReadonlyArray<CsvRecord>) => A.filter(records, A.some(Str.isNonEmpty));
 const readOutlookRows = (text: string): Effect.Effect<ReadonlyArray<CsvRecord>, IdentificationError> =>
-  Csv.parse(text, outlookRead).pipe(
+  Csv.parse(text, outlookLenientRfc4180CommaRead).pipe(
     Effect.filterOrFail((read) => !A.some(CsvRead.warnings(read), isRefused)),
     Effect.mapBoth({
       onFailure: invalid,
-      onSuccess: (read) => A.filter(read.table.records, A.some(Str.isNonEmpty)),
+      onSuccess: (read) => dropRowsOfOnlyEmptyCells(read.table.records),
     })
   );
 
@@ -132,13 +132,13 @@ const cardFrom = (values: CardFields): RawContactCard => {
     source: "vcard",
   });
 };
+const isInlineBinaryWithoutContactText = (prop: string) => /ENCODING=(?:B|BASE64)(?:;|$)/iu.test(prop);
 const addProperty = (values: CardFields, line: string) => {
   const colon = O.getOrElse(constant(-1))(Str.indexOf(":")(line));
   if (colon < 0) throw invalid();
   const prop = Str.slice(0, colon)(line);
   if (/ENCODING=QUOTED-PRINTABLE/iu.test(prop)) throw invalid();
-  // Inline binary (PHOTO, LOGO, KEY, SOUND) never carries contact text; skip it.
-  if (/ENCODING=(?:B|BASE64)(?:;|$)/iu.test(prop)) return;
+  if (isInlineBinaryWithoutContactText(prop)) return;
   const key = Str.toUpperCase(Str.replace(/^[^.]+\./u, "")(Str.split(prop, ";")[0] ?? ""));
   M.set(values, key, [...fieldValues(values, key), Str.slice(colon + 1)(line)]);
 };

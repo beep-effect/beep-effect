@@ -62,7 +62,6 @@ export class QuestionCalendarConfig extends S.Opaque<QuestionCalendarConfig, { r
   )
 ) {}
 
-// Question writes land as docket-intake's provisional due-date entries.
 const WRITE_CATEGORY: DocketCategory = "Docket - unverified";
 const NOT_FOUND = 404;
 
@@ -84,20 +83,17 @@ const refused = (reason: QuestionWriteReason, cause: string): QuestionWriteError
 
 const categoriesOf = (event: GraphEvent): ReadonlyArray<string> => O.getOrElse(event.categories, A.empty<string>);
 
-// Swap the event's docket category, keeping every category other workstreams own.
 const withOnlyDocketCategory = (existing: ReadonlyArray<string>, category: DocketCategory): ReadonlyArray<string> =>
   A.append(
     A.filter(existing, (name) => !isDocketCategory(name)),
     category
   );
 
-// An event the service may change: every docket category it carries is provisional, and it has one.
 const isProvisionalEvent = (event: GraphEvent): boolean => {
   const docket = A.filter(categoriesOf(event), isDocketCategory);
   return A.isReadonlyArrayNonEmpty(docket) && A.every(docket, isProvisionalCategory);
 };
 
-// The event's date, title and docket category: what an update overwrites and a restore puts back.
 const priorOf = (event: GraphEvent): O.Option<CalendarPrior> =>
   O.map(
     O.all({
@@ -144,8 +140,6 @@ const makeQuestionCalendar = (m365: M365Shape, config: QuestionCalendarConfig) =
         .pipe(Effect.mapError(writeError(otherwise)))
     );
 
-  // Rewrite an event the service may still change, keeping its state before the write for undo.
-  // An event the attorney has verified is refused, whichever path found it.
   const rewrite = Effect.fnUntraced(function* (eventId: string, event: GraphEvent, dueOn: LocalDate, title: string) {
     if (!isProvisionalEvent(event)) {
       return yield* refused("event-verified", "The event is no longer a provisional docket entry.");
@@ -166,7 +160,6 @@ const makeQuestionCalendar = (m365: M365Shape, config: QuestionCalendarConfig) =
     return yield* rewrite(eventId, readEvent1, dueOn, title);
   });
 
-  // Create the event under its key, or bring the event an earlier apply created back to the write.
   const createKeyed = Effect.fnUntraced(function* (key: string, dueOn: LocalDate, title: string) {
     const idempotencyKey = yield* S.decodeEffect(M365IdempotencyKey)(key).pipe(
       Effect.mapError(() => refused("calendar-unavailable", "The question write key is not a valid calendar key."))
@@ -206,7 +199,6 @@ const makeQuestionCalendar = (m365: M365Shape, config: QuestionCalendarConfig) =
     })
   );
 
-  // Undo never overrides the attorney: an event moved out of the provisional categories is left alone.
   const restore = Effect.fn("QuestionCalendar.restore")(function* (applied: AppliedWrite) {
     const event = yield* readEvent(applied.eventId, "restore-failed");
     if (!isProvisionalEvent(event)) {

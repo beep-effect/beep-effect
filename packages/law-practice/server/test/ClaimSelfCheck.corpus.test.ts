@@ -92,12 +92,11 @@ const PositiveSample = S.Struct({
 const PositiveSource = S.Struct({ labelClaimNumbers: S.Array(S.Finite) });
 const SourceDigest = S.Struct({ claimsXmlSha256: S.String });
 
-// Integrity of source proposals does not certify operative versions or semantic gold.
 const positiveSampleJson = S.fromJsonString(PositiveSample);
 const positiveSourceJson = S.fromJsonString(PositiveSource);
 const sourceDigestJson = S.fromJsonString(SourceDigest);
 
-describe("Positive source sample integrity", () => {
+describe("Positive source sample integrity, which certifies neither operative versions nor semantic gold", () => {
   it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer, BunPath.layer), { timeout: "30 seconds" })((it) => {
     it.effect("preserves all sixty source slots, CPC quotas, selected scopes and native XML digests", () =>
       Effect.gen(function* () {

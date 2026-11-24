@@ -200,14 +200,16 @@ it.layer(live, { timeout: "30 seconds" })("recurrence grammar through actual pre
   );
   it.effect("keeps unsupported lexical witnesses adverse instead of inventing first-action or nominal proof", () =>
     Effect.gen(function* () {
-      // These exact real-provider failures remain beside the injected normative
-      // positives: neither a NOUN tag nor a competing split compound proves V.
       for (const text of [
         "A method comprising the steps of: detecting a signal; storing a record.",
         "A system comprising a plate or plate-like cover; said plate or plate-like cover is radial.",
       ]) {
         const row = yield* first(text);
-        assert.strictEqual(row.status, "partial");
+        assert.strictEqual(
+          row.status,
+          "partial",
+          "a real-provider failure kept beside the injected positives: neither a NOUN tag nor a competing split compound proves V"
+        );
         if (row.status === "partial")
           assert.strictEqual(
             A.some(row.coverage, (issue) => issue.kind === "policy-uncovered"),

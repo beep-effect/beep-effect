@@ -68,8 +68,7 @@ const stateError = (error: unknown) => {
   return [error.store, error.failure, error.file, O.getOrNull(error.line)];
 };
 
-// The folder id one run resolves; null when the matter has no folder.
-const folderOfRun = (path: string, matterKey: MatterKey, destination: FilingDestination) =>
+const folderIdOfOneRunOrNull = (path: string, matterKey: MatterKey, destination: FilingDestination) =>
   oneRun(
     Effect.flatMap(foldersAt(path), (folders) =>
       folders.folderFor(MatterFolderRequest.make({ matterKey, destination }))
@@ -89,11 +88,11 @@ describe("MailTagging file adapters", () => {
         const temporaryDirectory1 = yield* temporaryDirectory;
         const path = yield* writeText(temporaryDirectory1, "matter-folders.json", folderMap("9001"));
 
-        const folderOfRun2 = yield* folderOfRun(path, acme, "uspto-incoming");
+        const folderOfRun2 = yield* folderIdOfOneRunOrNull(path, acme, "uspto-incoming");
         expect(folderOfRun2).toBe("9001");
-        const folderOfRun3 = yield* folderOfRun(path, acme, "from-client");
+        const folderOfRun3 = yield* folderIdOfOneRunOrNull(path, acme, "from-client");
         expect(folderOfRun3).toBe("9002");
-        const folderOfRun4 = yield* folderOfRun(path, globex, "uspto-incoming");
+        const folderOfRun4 = yield* folderIdOfOneRunOrNull(path, globex, "uspto-incoming");
         expect(folderOfRun4).toBeNull();
       })
     );
@@ -103,10 +102,10 @@ describe("MailTagging file adapters", () => {
       Effect.fnUntraced(function* () {
         const directory = yield* temporaryDirectory;
         const path = yield* writeText(directory, "matter-folders.json", folderMap("9001"));
-        const before = yield* folderOfRun(path, acme, "uspto-incoming");
+        const before = yield* folderIdOfOneRunOrNull(path, acme, "uspto-incoming");
         yield* writeText(directory, "matter-folders.json", folderMap("9777"));
 
-        expect([before, yield* folderOfRun(path, acme, "uspto-incoming")]).toStrictEqual(["9001", "9777"]);
+        expect([before, yield* folderIdOfOneRunOrNull(path, acme, "uspto-incoming")]).toStrictEqual(["9001", "9777"]);
       })
     );
 
@@ -118,9 +117,9 @@ describe("MailTagging file adapters", () => {
         const corrupt = yield* writeText(directory, "matter-folders.json", '[{"familyKey":"1234.10001"}]');
         const missing = path.join(directory, "absent.json");
 
-        const flip5 = yield* Effect.flip(folderOfRun(corrupt, acme, "from-client"));
+        const flip5 = yield* Effect.flip(folderIdOfOneRunOrNull(corrupt, acme, "from-client"));
         expect(stateError(flip5)).toStrictEqual(["matter-folders", "corrupt", "matter-folders.json", null]);
-        const flip6 = yield* Effect.flip(folderOfRun(missing, acme, "from-client"));
+        const flip6 = yield* Effect.flip(folderIdOfOneRunOrNull(missing, acme, "from-client"));
         expect(stateError(flip6)).toStrictEqual(["matter-folders", "unavailable", "absent.json", null]);
       })
     );
