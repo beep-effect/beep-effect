@@ -78,7 +78,10 @@ const checkedGeneration = Effect.fn("PartyLedgerMemory.checkedGeneration")(funct
   record: ClaimRecord,
   generations: ReadonlyArray<ClaimGeneration>
 ) {
-  const matching = A.filter(generations, (row) => Eq.equals(row.claim, record.claim));
+  const matching = A.dedupeWith(
+    A.filter(generations, (row) => Eq.equals(row.claim, record.claim)),
+    sameGeneration
+  );
   if (!A.isReadonlyArrayNonEmpty(matching) || A.length(matching) !== 1)
     return yield* conflict(record.claim, "generation-required");
   const generation = A.headNonEmpty(matching);
@@ -174,9 +177,8 @@ const applyBatch = Effect.fn("PartyLedgerMemory.applyBatch")(function* (
     "conflicting-admission"
   );
   const stances = yield* appendRows(current.stances, batch.stances, timedKey, sameStance, "conflicting-stance");
-  const challenges = A.appendAll(
-    current.challenges,
-    A.filter(batch.challenges, (row) => !A.some(current.challenges, (existing) => sameChallenge(existing, row)))
+  const challenges = A.reduce(batch.challenges, current.challenges, (accepted, row) =>
+    A.some(accepted, (existing) => sameChallenge(existing, row)) ? accepted : A.append(accepted, row)
   );
   return LedgerSnapshot.make({
     observations,

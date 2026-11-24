@@ -481,19 +481,31 @@ const evaluate = (
         ? O.none()
         : O.some(`${A.length(outside)} support(s) not in the version's supportedBy`);
     },
-    KnownAtKnowledgeTime: () =>
-      O.exists(
+    KnownAtKnowledgeTime: () => {
+      const known = O.exists(
         evidence.claim.knowledge,
         (interval) =>
           DateTime.isLessThanOrEqualTo(interval.start, knowledgeTime) &&
           O.match(interval.end, { onNone: () => true, onSome: (end) => DateTime.isLessThan(knowledgeTime, end) })
-      )
-        ? O.none()
-        : O.some(`version ${evidence.claim.record.claim} is not known at ${knowledgeTime}`),
+      );
+      if (!known) return O.some(`version ${evidence.claim.record.claim} is not known at ${knowledgeTime}`);
+      const recordedLater = (event: O.Option<{ readonly at: DateTime.Utc }>) =>
+        O.exists(event, (row) => DateTime.isGreaterThan(row.at, knowledgeTime));
+      return recordedLater(evidence.claim.review) ||
+        recordedLater(evidence.claim.evidence) ||
+        recordedLater(evidence.claim.signals)
+        ? O.some(`version ${evidence.claim.record.claim} carries events recorded after ${knowledgeTime}`)
+        : O.none();
+    },
   });
 
 /**
  * Evaluate a policy and mint an admission or a refusal.
+ *
+ * **Details**
+ *
+ * The joined review, evidence links and signals must all be recorded at or
+ * before `knowledgeTime`; a read taken later refuses `KnownAtKnowledgeTime`.
  *
  * **Example** (Use admit)
  * ```ts

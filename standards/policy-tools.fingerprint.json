@@ -1404,6 +1404,7 @@
         "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
         "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
         "packages/tooling/tool/cli/src/commands/Holds/internal/HoldStore.ts",
+        "packages/tooling/tool/cli/src/internal/claims/AppendLock.ts",
         "packages/tooling/tool/cli/src/internal/claims/ClaimHistory.ts",
         "packages/tooling/tool/cli/src/internal/claims/ClaimRowV1.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts",

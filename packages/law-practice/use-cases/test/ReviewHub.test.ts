@@ -170,7 +170,7 @@ describe("@beep/law-practice-use-cases review hub", () => {
     "an unresolved legacy import",
     (it) => {
       it.effect(
-        "lists the import for repair, refuses an answer and a plain upsert, and stores an explicit repair",
+        "lists the import for repair, refuses an answer, a verdict and a plain upsert, and stores an explicit repair",
         Effect.fnUntraced(function* () {
           const hub = yield* ReviewHub;
           const store = yield* ReviewItemStore;
@@ -181,8 +181,14 @@ describe("@beep/law-practice-use-cases review hub", () => {
           const refused = yield* Effect.flip(hub.recordAnswer(answer("question:legacy-1", "keep-date")));
           expect([refused.code, refused.message]).toStrictEqual([
             "repair-required",
-            "Item question:legacy-1 is a legacy import whose quote must be repaired before it is answered.",
+            "Item question:legacy-1 is a legacy import whose quote must be repaired before it is reviewed.",
           ]);
+          const verdictCode = yield* codeOf(
+            hub.recordVerdict(
+              RecordVerdictInput.make({ itemId: "question:legacy-1", batchId: "sitting-legacy", verdict: "right" })
+            )
+          );
+          expect(verdictCode).toBe("repair-required");
           const repaired = yield* S.decodeEffect(ReviewItem.cases.question)({
             kind: "question",
             itemId: "question:legacy-1",

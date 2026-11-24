@@ -646,7 +646,10 @@ export const makeAdmissionArrows = <
     yield* refuseUnless(
       O.exists(
         generation,
-        (found) => Eq.equals(found.activity, generatedBy) && !DateTime.isGreaterThan(found.at, knowledgeStart)
+        (found) =>
+          Eq.equals(found.activity, generatedBy) &&
+          !DateTime.isGreaterThan(found.at, knowledgeStart) &&
+          !DateTime.isGreaterThan(found.at, options.at)
       ),
       () => F.MissingGeneration.make({ claim: options.record.claim })
     );
@@ -817,20 +820,27 @@ export const makeAdmissionArrows = <
       ? StanceObservation.makeOption({ at: stored.at, stance: "admitted" })
       : O.none<StanceObservation>(),
     fresh: AdmissionResult.guards.Admitted(original) && AdmissionResult.guards.Admitted(verified),
-    unknown: O.orElse(verifiedUnknown(verified), () =>
-      A.some([original, verified], isUnavailableBinding)
-        ? O.some<UnknownReasonValue>("authorization-unavailable")
-        : O.none<UnknownReasonValue>()
+    unknown: verifiedUnknown(verified).pipe(
+      O.orElse(() => verifiedUnknown(original)),
+      O.orElse(() =>
+        A.some([original, verified], isUnavailableBinding)
+          ? O.some<UnknownReasonValue>("authorization-unavailable")
+          : O.none<UnknownReasonValue>()
+      )
     ),
   });
   const noOwnFacts = { observation: O.none<StanceObservation>(), fresh: false, unknown: O.none<UnknownReasonValue>() };
+  const noClearingFacts = { cleared: O.none<ContentHash>(), maybeCleared: O.none<ContentHash>() };
   const clearingFacts = (stored: Admission, original: Revalidated) =>
     O.match(stored.clearsRetraction, {
-      onNone: () => ({ cleared: O.none<ContentHash>(), maybeCleared: O.none<ContentHash>() }),
+      onNone: () => noClearingFacts,
       onSome: (digest) =>
         AdmissionResult.guards.Admitted(original)
           ? { cleared: O.some(digest), maybeCleared: O.none<ContentHash>() }
-          : { cleared: O.none<ContentHash>(), maybeCleared: isUnknown(original.refusal) ? O.some(digest) : O.none() },
+          : {
+              cleared: O.none<ContentHash>(),
+              maybeCleared: isUnknown(original.refusal) || isUnavailableBinding(original) ? O.some(digest) : O.none(),
+            },
     });
   const observeAdmission = Effect.fnUntraced(function* <E, R>(
     stored: Admission,
@@ -845,13 +855,16 @@ export const makeAdmissionArrows = <
   ) {
     const record = O.getOrThrow(HashMap.get(context.records, stored.claim));
     const clears = O.flatMap(stored.clearsRetraction, (digest) => HashMap.get(context.byDigest, digest));
+    const requested = Eq.equals(stored.claim, context.claim);
+    if (!requested && O.isNone(clears)) return { ...noOwnFacts, ...noClearingFacts };
     const request = { record, admission: stored, clears, ports: context.ports };
     const original = yield* revalidateAt({ ...request, ports: context.historicalPorts }, O.some(stored.at));
-    const verified = yield* revalidateAt(request, O.some(context.asOf));
-    return {
-      ...(Eq.equals(stored.claim, context.claim) ? ownAdmissionFacts(stored, original, verified) : noOwnFacts),
-      ...clearingFacts(stored, original),
-    };
+    const own = requested
+      ? yield* revalidateAt(request, O.some(context.asOf)).pipe(
+          Effect.map((verified) => ownAdmissionFacts(stored, original, verified))
+        )
+      : noOwnFacts;
+    return { ...own, ...clearingFacts(stored, original) };
   });
   const viewAt = Effect.fn("ClaimAdmission.viewAt")(function* <E, R>(options: {
     readonly claim: ClaimId;

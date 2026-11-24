@@ -2101,6 +2101,8 @@ Reverse: Add a dedicated prefix with these terms and deprecate the two epistemic
 
 Parent ruling 2026-11-23, amending the hold in 2026-11-23-p4-nanopub-restricted-profile. A NamespacePin vendors no artifact bytes: it records the source location, revision and digests and projects only the curated term names, the np: IRIs needed to speak the vocabulary. The np pin therefore needs no granted license to exist, and it must not claim one. Its license is the SPDX LicenseRef leaf LicenseRef-nanopub-nschema-unstated, not an invented license. Its attribution states that no license is given at commit 8388dd90795b of Nanopublication/Guidelines, that the companion nschema.html grants CC BY-SA 3.0 for that document, and that only term IRIs are projected. nschema.ttl is never copied into the repo; adapter fixtures are minimal synthetic profile data written for this repo.
 
+Superseded by 2026-11-23-p4-nanopub-vendored-under-cc-by-sa: the operator ruled that the nschema.html CC BY-SA 3.0 notice covers the TTL, so nschema.ttl is now vendored with attribution and the license text and the np pin records CC-BY-SA-3.0. This record is kept as history; do not apply its licensing policy.
+
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: When upstream publishes a license for nschema.ttl, or the operator rules that the nschema.html notice covers the TTL, replace LicenseRef-nanopub-nschema-unstated with that SPDX id and regenerate the pin.
@@ -2128,6 +2130,8 @@ Reviewer-provided pinned source provenance (recorded here without a new GitHub a
 - [Companion HTML](https://github.com/Nanopublication/Guidelines/blob/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.html), around line 137, grants Creative Commons ShareAlike Attribution 3.0 for "this document", linked as http://creativecommons.org/licenses/sa-by/3.0/.
 
 The HTML notice does not explicitly cover the TTL. The website repository MIT license does not cover imported TTL bytes. Keep the exact TTL unlicensed/unresolved in the design and hold NamespacePin registration and adapter admission until attributable permission is established; neither source provenance nor the companion notice releases that hold.
+
+The licensing hold above is superseded by 2026-11-23-p4-nanopub-vendored-under-cc-by-sa, which records the operator ruling, the vendored nschema.ttl and the registered np NamespacePin; the hold paragraph is kept as history. The rest of this profile decision stands.
 
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 

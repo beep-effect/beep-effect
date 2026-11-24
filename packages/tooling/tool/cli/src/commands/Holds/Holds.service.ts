@@ -23,6 +23,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { withAppendLock } from "../../internal/claims/AppendLock.ts";
 import { storedLines } from "../../internal/claims/ClaimHistory.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
 import { liveHoldClaims } from "./Holds.inventory.ts";
@@ -155,6 +156,7 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
   const withDigest = Effect.provideService(Digest.Digest, digest);
   const directory = path.join(repoRoot, holdLedgerDirectory);
   const claimsFile = path.join(directory, "claims.jsonl");
+  const claimsLockFile = path.join(directory, "claims.jsonl.lock");
   const runsFile = path.join(directory, "runs.jsonl");
   const heldListFile = path.join(directory, syncpackHeldListFile);
 
@@ -221,14 +223,28 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
     if (A.isReadonlyArrayEmpty(events)) {
       return;
     }
-    const existing = yield* claimLines;
-    const lines = yield* planHoldAppend(existing, events).pipe(
-      withDigest,
-      Effect.mapError((cause) =>
-        cause._tag === "ClaimHistoryRefused" ? refusedError(cause) : encodeFailure("a hold claim event")(cause)
-      )
+    yield* fs
+      .makeDirectory(directory, { recursive: true })
+      .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
+    yield* Effect.gen(function* () {
+      const existing = yield* claimLines;
+      const lines = yield* planHoldAppend(existing, events).pipe(
+        withDigest,
+        Effect.mapError((cause) =>
+          cause._tag === "ClaimHistoryRefused" ? refusedError(cause) : encodeFailure("a hold claim event")(cause)
+        )
+      );
+      yield* appendLines(claimsFile, lines);
+    }).pipe(
+      withAppendLock({
+        platform: { fs, path, digest },
+        lockFile: claimsLockFile,
+        busy: HoldsError.make({
+          reason: "io",
+          message: `${claimsFile} is locked by another running append; retry once it finishes.`,
+        }),
+      })
     );
-    yield* appendLines(claimsFile, lines);
   });
 
   const writeHeldList = Effect.fn("HoldLedger.writeHeldList")(function* (heldList: ReadonlyArray<string>) {

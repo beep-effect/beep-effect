@@ -17,9 +17,10 @@
  *   metadata under `nanopub/v1`; {@link nanopubIris} derives the publication
  *   and its four graph names from that id.
  * - `decode` rechecks the core, re-mints the claim id, recomputes the
- *   publication id and compares all five names byte for byte. Foreign names
- *   are rejected import metadata and failed integrity is a refusal, both with
- *   the original input. Quads outside the profile stay residual.
+ *   publication id and compares all five names byte for byte. A publication
+ *   under foreign names that passes every profile check not tied to native
+ *   names is rejected import metadata, and failed integrity is a refusal, both
+ *   with the original input. Quads outside the profile stay residual.
  * - `normalize` runs only after the same checks and sorts and deduplicates the
  *   accepted profile quads, so `encode(decode(s).accepted)` and
  *   `normalize(s)` are one quad set.
@@ -48,6 +49,7 @@ import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -520,8 +522,15 @@ const quad = (subject: Rdf.Subject, predicate: Rdf.NamedNode, object: Rdf.Object
 const keyOf = (quads: ReadonlyArray<Rdf.Quad>): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.map(quads, Rdf.serializeQuad));
 
-const dedupeQuads = (quads: ReadonlyArray<Rdf.Quad>): ReadonlyArray<Rdf.Quad> =>
-  A.dedupeWith(quads, (left, right) => Rdf.serializeQuad(left) === Rdf.serializeQuad(right));
+const dedupeQuads = (quads: ReadonlyArray<Rdf.Quad>): ReadonlyArray<Rdf.Quad> => {
+  const seen = MutableHashSet.empty<string>();
+  return A.filter(quads, (q) => {
+    const key = Rdf.serializeQuad(q);
+    const fresh = !MutableHashSet.has(seen, key);
+    MutableHashSet.add(seen, key);
+    return fresh;
+  });
+};
 
 const toDataset = (quads: ReadonlyArray<Rdf.Quad>): Rdf.Dataset =>
   pipe(dedupeQuads(quads), Rdf.makeDataset, Rdf.sortDatasetQuads, Rdf.makeDataset);
@@ -709,9 +718,11 @@ const decodeAssertedBy = S.decodeUnknownEffect(AssertedByJson);
  * **Details**
  *
  * `encode` takes a checked claim record and explicit publication metadata and
- * refuses a record whose key does not re-mint from its core. `decode` returns
- * an accepted publication with its residual, a foreign publication or a
- * refusal, each with the original input where it is not accepted. `normalize`
+ * refuses a record whose key does not re-mint from its core. The owner core
+ * must encode to an object with an `assertedBy` field, the asserting agent the
+ * provenance graph names. `decode` returns an accepted publication with its
+ * residual, a well-formed publication under foreign names, or a refusal, each
+ * with the original input where it is not accepted. `normalize`
  * returns the accepted profile quads sorted and deduplicated, or the same
  * foreign or refused value.
  *
@@ -734,7 +745,11 @@ const decodeAssertedBy = S.decodeUnknownEffect(AssertedByJson);
  * @category factories
  * @since 0.0.0
  */
-export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimArrows>[0]["ClaimCore"]>(options: {
+export const makeNanopubCodec = <
+  CoreCodec extends Parameters<typeof makeClaimArrows>[0]["ClaimCore"] & {
+    readonly Encoded: { readonly assertedBy: unknown };
+  },
+>(options: {
   readonly binding: { readonly $I: SchemaIdentity; readonly ClaimCore: CoreCodec };
 }) => {
   const { $I: owner, ClaimCore } = options.binding;
@@ -791,10 +806,10 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
   const readProfile = Effect.fnUntraced(function* (input: Rdf.Dataset) {
     const quads = input.quads;
     const iris = yield* Effect.fromResult(locateIris(quads));
-    const native = instanceHash(iris.publication);
-    if (O.isNone(native)) return NanopubForeign.make({ publication: iris.publication, input });
-    const publicationId = NanopubId.make(native.value);
-    yield* Effect.fromResult(refuseUnless(sameIris(iris, nanopubIris(publicationId)), "wrong-derived-iri"));
+    const native = O.map(instanceHash(iris.publication), NanopubId.make);
+    if (O.isSome(native)) {
+      yield* Effect.fromResult(refuseUnless(sameIris(iris, nanopubIris(native.value)), "wrong-derived-iri"));
+    }
     const { profile, inRole } = yield* Effect.fromResult(placeProfile(quads, iris));
     const assertion = yield* Effect.fromResult(claimAssertion(inRole("assertion")));
     const core = yield* decodeCoreText(assertion.text).pipe(Effect.mapError((): NanopubRefusal => "invalid-core"));
@@ -805,14 +820,18 @@ export const makeNanopubCodec = <CoreCodec extends Parameters<typeof makeClaimAr
         "invalid-core"
       )
     );
-    yield* Effect.fromResult(
-      refuseUnless(O.contains(instanceHash(assertion.node.value), checked.claim), "core-hash-mismatch")
-    );
+    if (O.isSome(native)) {
+      yield* Effect.fromResult(
+        refuseUnless(O.contains(instanceHash(assertion.node.value), checked.claim), "core-hash-mismatch")
+      );
+    }
     const expectedProvenance = provenanceQuads(iris, core.generatedBy, checked.agent);
     yield* Effect.fromResult(
       refuseUnless(Eq.equals(keyOf(inRole("provenance")), keyOf(expectedProvenance)), "provenance-mismatch")
     );
     const metadata = yield* Effect.fromResult(publicationMetadata(iris, inRole("pubinfo")));
+    if (O.isNone(native)) return NanopubForeign.make({ publication: iris.publication, input });
+    const publicationId = native.value;
     const recomputed = yield* mintNanopubId(checked.claim, metadata);
     yield* Effect.fromResult(refuseUnless(Eq.equals(recomputed, publicationId), "stale-publication-id"));
     const consumed = keyOf(profile);

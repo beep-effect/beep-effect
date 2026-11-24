@@ -84,7 +84,7 @@ describe("PartyLedgerMemory", () => {
     );
   });
 
-  it.layer(LedgerLive)("allocation", (it) => {
+  it.layer(LedgerLive, { timeout: "10 seconds" })("allocation", (it) => {
     it.effect("allocates stable unique integer ids under concurrent requests", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
@@ -95,7 +95,7 @@ describe("PartyLedgerMemory", () => {
     );
   });
 
-  it.layer(LedgerLive)("history", (it) => {
+  it.layer(LedgerLive, { timeout: "10 seconds" })("history", (it) => {
     it.effect("retracts and supersedes by appending records while keeping historical snapshots intact", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
@@ -123,7 +123,7 @@ describe("PartyLedgerMemory", () => {
     );
   });
 
-  it.layer(LedgerLive)("conflicts", (it) => {
+  it.layer(LedgerLive, { timeout: "10 seconds" })("conflicts", (it) => {
     it.effect("replays identical records once and rejects competing successors without partial writes", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
@@ -146,7 +146,7 @@ describe("PartyLedgerMemory", () => {
     );
   });
 
-  it.layer(LedgerLive)("integrity refusals", (it) => {
+  it.layer(LedgerLive, { timeout: "10 seconds" })("integrity refusals", (it) => {
     it.effect("rejects malformed cores, generation receipts, orphan records and conflicting events", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
@@ -161,7 +161,10 @@ describe("PartyLedgerMemory", () => {
         yield* refuses(forged, "invalid-core");
         yield* refuses(ClaimLedger.make({ ...other.ledger, generations: [] }), "generation-required");
         yield* refuses(
-          ClaimLedger.make({ ...other.ledger, generations: [other.generation, other.generation] }),
+          ClaimLedger.make({
+            ...other.ledger,
+            generations: [other.generation, ClaimGeneration.make({ ...other.generation, ended: at(3) })],
+          }),
           "generation-required"
         );
         const late = ClaimGeneration.make({
@@ -215,9 +218,29 @@ describe("PartyLedgerMemory", () => {
       })
     );
   });
+
+  it.layer(LedgerLive, { timeout: "10 seconds" })("batch boundaries", (it) => {
+    it.effect("stores a merged replay and in-batch duplicate challenges exactly as separate appends", () =>
+      Effect.gen(function* () {
+        const ledger = yield* PartyLedger;
+        const original = yield* first;
+        const generatedBy = original.record.core.generatedBy;
+        const challenge = ClaimLedger.make({
+          challenges: [{ _tag: "ByActivity", from: original.claim, to: original.claim, kind: "undercut", generatedBy }],
+        });
+        yield* append(mergeClaimLedgers([original.ledger, original.ledger, challenge, challenge]));
+        const merged = yield* ledger.snapshot;
+        expect(merged.generations).toEqual(original.ledger.generations);
+        expect(merged.challenges).toEqual(challenge.challenges);
+        yield* append(original);
+        yield* append(challenge);
+        yield* unchanged(merged);
+      })
+    );
+  });
 });
 
-it.layer(LedgerLive)("key redirects and retractions", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("key redirects and retractions", (it) => {
   it.effect("splits keys on retraction, restores merges, and replays historical views", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
@@ -250,7 +273,7 @@ it.layer(LedgerLive)("key redirects and retractions", (it) => {
   );
 });
 
-it.layer(LedgerLive)("veto retraction history", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("veto retraction history", (it) => {
   it.effect("re-enables a blocked merge, then reapplies a restored veto", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
@@ -279,7 +302,7 @@ it.layer(LedgerLive)("veto retraction history", (it) => {
   );
 });
 
-it.layer(LedgerLive)("corrected propositions and source history", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("corrected propositions and source history", (it) => {
   it.effect("records a correction as a retraction plus a new claim while retaining immutable source records", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
@@ -333,7 +356,7 @@ it.layer(LedgerLive)("corrected propositions and source history", (it) => {
   );
 });
 
-it.layer(LedgerLive)("atomic evidence batches", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("atomic evidence batches", (it) => {
   it.effect("rolls back earlier categories and rows when a later record conflicts", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;

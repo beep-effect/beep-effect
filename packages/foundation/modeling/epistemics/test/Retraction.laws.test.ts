@@ -1,4 +1,4 @@
-import { ClaimViewResult, SourceResolution, TrustedClaimBinding } from "@beep/epistemics/Admission";
+import { AdmissionRefused, ClaimViewResult, SourceResolution, TrustedClaimBinding } from "@beep/epistemics/Admission";
 import { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import { ClaimLogEntry, orphanedDerivations } from "@beep/epistemics/ClaimLog";
 import { it } from "@beep/test-runner";
@@ -62,6 +62,8 @@ it.prop(
 
 const AdmissionJson = S.toCodecJson(Claims.Admission);
 const utc = DateTime.makeUnsafe;
+const stanceOf = (result: ClaimViewResult) =>
+  O.flatMap(O.liftPredicate(ClaimViewResult.guards.Viewed)(result), (viewed) => viewed.stance);
 const accepted = (result: typeof flow.AdmissionResult.Type) =>
   O.getOrThrow(O.liftPredicate(flow.AdmissionResult.guards.Admitted)(result)).admission;
 const viewRequest = (options: {
@@ -268,6 +270,17 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim 
           _tag: "Viewed",
           eligibility: { _tag: "Ineligible", reasons: ["not-admitted"] },
         });
+        assertSome(stanceOf(latest), "proposed");
+        const reversed = yield* flow.viewAt({
+          ...base,
+          admissions: [admitted],
+          stances: [future, other, verbatim, proposed],
+        });
+        expect(reversed).toMatchObject({
+          _tag: "Viewed",
+          eligibility: { _tag: "Ineligible", reasons: ["not-admitted"] },
+        });
+        assertSome(stanceOf(reversed), "proposed");
         const tied = yield* flow.viewAt({
           ...base,
           admissions: [admitted],
@@ -292,7 +305,9 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim 
         const noMembership = yield* flow.viewAt({ ...base, admissions: [malformed] });
         expect(noMembership).toMatchObject({ _tag: "Viewed", eligibility: { reasons: ["unresolved-stance"] } });
         const ascending = yield* flow.viewAt({ ...base, stances: [verbatim, proposed] });
-        expect(ascending._tag).toBe("Viewed");
+        const descending = yield* flow.viewAt({ ...base, stances: [proposed, verbatim] });
+        assertSome(stanceOf(ascending), "proposed");
+        assertSome(stanceOf(descending), "proposed");
         const stale = yield* flow.viewAt({
           ...base,
           admissions: [admitted],
@@ -375,29 +390,34 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim 
         });
         const digest = yield* flow.retractionDigest(prior);
         const token = tokenFor({ action: "readmit-a", revision: "2", issued: 55, nonce: "d" });
+        const early = tokenFor({ action: "readmit-a", revision: "3", issued: 30, nonce: "e" });
         const ports = portsFor({
           fixture: value,
-          tokens: [value.token, token],
+          tokens: [value.token, token, early],
           resolution: SourceResolution.cases.Resolved.make({ source: value.source, text: "fact" }),
           bindings: HashMap.make(
             ["approve-a:1", TrustedClaimBinding.cases.Claim.make({ claim: value.a.claim, clearsRetraction: O.none() })],
             [
               "readmit-a:2",
               TrustedClaimBinding.cases.Claim.make({ claim: value.a.claim, clearsRetraction: O.some(digest) }),
+            ],
+            [
+              "readmit-a:3",
+              TrustedClaimBinding.cases.Claim.make({ claim: value.a.claim, clearsRetraction: O.some(digest) }),
             ]
           ),
         });
-        const readmitted = yield* flow
-          .admit({
-            ...request,
-            token,
-            action: token.action,
-            revision: token.revision,
-            at: utc(60),
-            clears: O.some(prior),
-            ports,
-          })
-          .pipe(Effect.map(accepted));
+        const readmission = {
+          ...request,
+          token,
+          action: token.action,
+          revision: token.revision,
+          at: utc(60),
+          clears: O.some(prior),
+          ports,
+        };
+        const earlyReadmission = { ...readmission, token: early, action: early.action, revision: early.revision };
+        const readmitted = yield* flow.admit(readmission).pipe(Effect.map(accepted));
         const base = viewRequest({
           value,
           claim: value.a.claim,
@@ -452,24 +472,32 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("selected-time claim 
         expect(staleClear).toMatchObject({ _tag: "Viewed", eligibility: { reasons: ["direct-retraction"] } });
         const wrongRetraction = Claims.Retraction.make({ ...prior, claim: value.b.claim });
         const malformedRetraction = Claims.Retraction.make({ ...prior, reason: "\ud800" });
+        const justAfter = yield* flow.admit({ ...earlyReadmission, at: utc(41) });
+        expect(justAfter._tag).toBe("Admitted");
         const failures = yield* Effect.all(
           [
-            flow.admit({ ...request, clears: O.some(prior) }),
-            flow.admit({ ...request, at: utc(40), clears: O.some(prior) }),
-            flow.admit({
-              ...request,
-              at: utc(60),
-              clears: O.some(wrongRetraction),
-            }),
-            flow.admit({
-              ...request,
-              at: utc(60),
-              clears: O.some(malformedRetraction),
-            }),
+            flow.admit({ ...earlyReadmission, at: utc(35) }),
+            flow.admit({ ...earlyReadmission, at: utc(40) }),
+            flow.admit({ ...readmission, clears: O.some(wrongRetraction) }),
+            flow.admit({ ...readmission, clears: O.some(malformedRetraction) }),
           ],
           { concurrency: 1 }
         );
-        expect(A.every(failures, flow.AdmissionResult.guards.Refused)).toBe(true);
+        expect(
+          A.map(failures, (result) => (flow.AdmissionResult.guards.Refused(result) ? result.refusal : result._tag))
+        ).toStrictEqual(
+          A.replicate(
+            AdmissionRefused.cases.InvalidBinding.make({ claim: value.a.claim, reason: "clearing-mismatch" }),
+            4
+          )
+        );
+        const second = Claims.Retraction.make({ ...prior, at: utc(39), reason: "first withdrawal" });
+        const perDigest = yield* flow.viewAt({ ...base, retractions: [second, prior] });
+        expect(perDigest).toMatchObject({
+          _tag: "Viewed",
+          eligibility: { _tag: "Ineligible", reasons: ["direct-retraction"] },
+          directRetraction: true,
+        });
       })
   );
   it.effect(

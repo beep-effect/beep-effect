@@ -1,6 +1,6 @@
 import { ValidTime } from "@beep/epistemics/Claim";
 import { ClaimReference, claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
-import { ActivityStart } from "@beep/jsonc/ActivityStart";
+import { ActivityStart, mintActivityId } from "@beep/jsonc/ActivityStart";
 import {
   HoldAgentRef,
   HoldClaim,
@@ -8,6 +8,7 @@ import {
   HoldId,
   HoldPrincipalId,
   HoldProposition,
+  HoldReviewState,
   holdClaimKey,
   holdProposition,
   ProbeRunId,
@@ -20,11 +21,25 @@ import {
   makeHoldRenewal,
   planHoldAppend,
 } from "@beep/repo-cli/commands/Holds/internal/HoldStore";
-import { KbClaim, KbClaimEvent, KbEvidenceSignals, KbReviewState, kbClaimKey } from "@beep/repo-cli/commands/Kb";
+import {
+  KbAgentRef,
+  KbClaim,
+  KbClaimCore,
+  KbClaimEvent,
+  KbCoreEvent,
+  KbCoreRecord,
+  KbEvidenceSignals,
+  KbReviewState,
+  kbClaimKey,
+  kbClaimLabel,
+  kbLogicalKey,
+  kbProposition,
+} from "@beep/repo-cli/commands/Kb";
 import {
   decodeKbAssertionLine,
   decodeKbClaimLine,
   joinKbClaims,
+  kbArrows,
   planKbAppend,
 } from "@beep/repo-cli/commands/Kb/internal/KbStore";
 import { fcRuns } from "@beep/test-utils";
@@ -51,6 +66,8 @@ const encodeKbViews = S.encodeEffect(S.fromJsonString(S.Array(KbClaim)));
 const encodeHoldViews = S.encodeEffect(S.fromJsonString(S.Array(HoldClaim)));
 const decodeActivity = S.decodeUnknownEffect(ActivityStart);
 const decodeValid = S.decodeUnknownEffect(ValidTime);
+const encodeKbEvent = S.encodeEffect(S.fromJsonString(KbClaimEvent));
+const encodeHoldEvent = S.encodeEffect(S.fromJsonString(HoldClaimEvent));
 const envelopeKeys = ["id", "claimId", "supersedes", "logicalKey", "holdVersionId"] as const;
 
 const fixtureLines = Effect.fnUntraced(function* (name: string) {
@@ -301,6 +318,38 @@ const holdHistory = Effect.fnUntraced(function* () {
   return { lines, before, head, renew };
 });
 
+const kbRenewal = Effect.fnUntraced(function* (predecessor: KbClaim, at: number) {
+  const activity = yield* decodeActivity({
+    operation: "https://example.org/ops/kb-renew",
+    pin: { _tag: "Engine", engine: "beep", edition: "0.0.0" },
+    used: [],
+    started: at,
+  });
+  const proposition = kbProposition(predecessor);
+  const core = KbClaimCore.make({
+    proposition,
+    logicalKey: kbLogicalKey(proposition),
+    supportAtCreation: HashSet.empty(),
+    derivedFrom: HashSet.empty(),
+    supersedes: O.none(),
+    generatedBy: yield* mintActivityId(activity),
+    assertedBy: KbAgentRef.cases.Person.make({ principal: "reviewer/1" }),
+    valid: predecessor.valid,
+    knowledgeStart: DateTime.makeUnsafe(at),
+    scope: "kb",
+  });
+  const claim = yield* kbArrows.mint(core);
+  const events: ReadonlyArray<KbClaimEvent> = [
+    KbCoreEvent.make({ record: KbCoreRecord.make({ claim, core }), activity, generatedAt: DateTime.makeUnsafe(at) }),
+    KbClaimEvent.cases.Succession.make({
+      claim,
+      predecessor: predecessor.reference,
+      at: DateTime.makeUnsafe(at),
+    }),
+  ];
+  return { claim, events };
+});
+
 const replaceOnce = (line: string, search: string, replacement: string): string => {
   expect(line).toContain(search);
   return Str.replace(search, replacement)(line);
@@ -335,6 +384,49 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         const early = yield* renew(head, { generatedAt: 5 });
         const premature = yield* Effect.flip(planHoldAppend(before.decoded, early.events));
         expect(premature).toMatchObject({ reason: "activity-mismatch" });
+      })
+    );
+
+    it.effect("refuses a review appended onto a history whose existing native core was forged", () =>
+      Effect.gen(function* () {
+        const { lines, before, head, renew } = yield* holdHistory();
+        const renewal = yield* renew(head);
+        const [core, ...rest] = yield* planHoldAppend(before.decoded, renewal.events);
+        if (core === undefined) return yield* Effect.die("missing core line");
+        const forged = yield* Effect.forEach(
+          [...lines, replaceOnce(core, '"started":6', '"started":5'), ...rest],
+          decodeHoldClaimLine,
+          { concurrency: 1 }
+        );
+        const review = HoldClaimEvent.cases.Review.make({
+          claim: ClaimReference.cases.Native.make({ claim: renewal.claim }),
+          review: HoldReviewState.cases.Proposed.make({}),
+          at: DateTime.makeUnsafe(8),
+        });
+        const refused = yield* Effect.flip(planHoldAppend(forged, [review]));
+        expect(refused).toMatchObject({ reason: "activity-mismatch" });
+      })
+    );
+
+    it.effect("refuses a versioned line whose version is not the current one instead of reading it as v1", () =>
+      Effect.gen(function* () {
+        const [kbLine] = yield* fixtureLines("kb-claims-v1.jsonl");
+        const [assertionLine] = yield* fixtureLines("kb-assertions-v1.jsonl");
+        const [holdLine] = yield* fixtureLines("hold-claims-v1.jsonl");
+        if (kbLine === undefined || assertionLine === undefined || holdLine === undefined)
+          return yield* Effect.die("empty fixture");
+        const tag = (line: string, version: string) => `{"version":"${version}",${Str.slice(1)(line)}`;
+        const kbClaimLine = (line: string) => Effect.flatMap(decodeJson(line), (json) => decodeKbClaimLine(line, json));
+        const kbClaim = yield* Effect.flip(kbClaimLine(tag(kbLine, "kb-claim-record/v3")));
+        strictEqual(kbClaim._tag, "SchemaError");
+        const assertion = yield* Effect.flip(
+          Effect.flatMap(decodeJson(tag(assertionLine, "kb-assertion/v3")), decodeKbAssertionLine)
+        );
+        strictEqual(assertion._tag, "SchemaError");
+        const hold = yield* Effect.flip(decodeHoldClaimLine(tag(holdLine, "hold-claim-record/v3")));
+        strictEqual(hold._tag, "SchemaError");
+        const untagged = yield* kbClaimLine(kbLine);
+        strictEqual(untagged._tag, "Claim");
       })
     );
 
@@ -417,6 +509,63 @@ layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout: "3
         });
         const mismatch = yield* Effect.flip(planHoldAppend(before.decoded, renamed.events));
         expect(mismatch).toMatchObject({ reason: "predecessor-key-mismatch" });
+      })
+    );
+
+    it.effect("joins a native kb successor under its ClaimId label and its own core proposition", () =>
+      Effect.gen(function* () {
+        const lines = yield* fixtureLines("kb-claims-v1.jsonl");
+        const before = yield* readKb(lines);
+        const imported = before.claims[0];
+        if (imported === undefined) return yield* Effect.die("empty kb fixture");
+        const renewal = yield* kbRenewal(imported, 3);
+        const appended = yield* planKbAppend(before.decoded, renewal.events);
+        const after = yield* readKb(A.appendAll(lines, appended));
+        const native = after.claims[1];
+        if (native === undefined) return yield* Effect.die("missing kb renewal");
+        strictEqual(kbClaimLabel(native), renewal.claim);
+        deepStrictEqual(kbProposition(native), kbProposition(imported));
+        assertSome(native.predecessor, imported.reference);
+        assertSome(O.map(after.claims[0]?.knowledge.end ?? O.none(), DateTime.toEpochMillis), 3);
+      })
+    );
+
+    it.effect("refuses a kb successor that starts before its imported predecessor was recorded", () =>
+      Effect.gen(function* () {
+        const lines = yield* fixtureLines("kb-claims-v1.jsonl");
+        const before = yield* readKb(lines);
+        const imported = before.claims[0];
+        if (imported === undefined) return yield* Effect.die("empty kb fixture");
+        const early = yield* kbRenewal(imported, 0);
+        const expected = { _tag: "ClaimHistoryRefused", reason: "inverted-knowledge", claim: "imported:kb:claim/1" };
+        const appendRefused = yield* Effect.flip(planKbAppend(before.decoded, early.events));
+        expect(appendRefused).toMatchObject(expected);
+        const stored = yield* Effect.forEach(early.events, (event) => encodeKbEvent(event), { concurrency: 1 });
+        const readRefused = yield* Effect.flip(readKb(A.appendAll(lines, stored)));
+        expect(readRefused).toMatchObject(expected);
+      })
+    );
+
+    it.effect("refuses a hold renewal that starts before its imported predecessor was recorded", () =>
+      Effect.gen(function* () {
+        const { lines, renew } = yield* holdHistory();
+        const [first, second] = lines;
+        if (first === undefined || second === undefined) return yield* Effect.die("short hold fixture");
+        const recordedLate = [first, replaceOnce(second, '"recordedAt":5', '"recordedAt":20')];
+        const before = yield* readHolds(recordedLate);
+        const head = before.claims[1];
+        if (head === undefined) return yield* Effect.die("short hold fixture");
+        const early = yield* renew(head);
+        const expected = {
+          _tag: "ClaimHistoryRefused",
+          reason: "inverted-knowledge",
+          claim: "imported:holds:synthetic-hold@2",
+        };
+        const appendRefused = yield* Effect.flip(planHoldAppend(before.decoded, early.events));
+        expect(appendRefused).toMatchObject(expected);
+        const stored = yield* Effect.forEach(early.events, (event) => encodeHoldEvent(event), { concurrency: 1 });
+        const readRefused = yield* Effect.flip(readHolds(A.appendAll(recordedLate, stored)));
+        expect(readRefused).toMatchObject(expected);
       })
     );
 
