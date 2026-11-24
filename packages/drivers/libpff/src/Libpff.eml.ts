@@ -490,8 +490,6 @@ export const InternetHeaderMap = S.Record(S.String, S.Array(S.String)).pipe(
 );
 
 /**
- * Type for {@link InternetHeaderMap}.
- *
  * @category models
  * @since 0.0.0
  */

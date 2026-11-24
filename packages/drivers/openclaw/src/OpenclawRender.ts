@@ -251,8 +251,6 @@ const surfaceReason = (schemaExport: unknown, surface: string): O.Option<Opencla
   });
 
 /**
- * Lowercase 64-character hexadecimal SHA-256 digest.
- *
  * **Details**
  *
  * Identifies rendered config content: the digest of the canonical JSON bytes
@@ -285,8 +283,6 @@ export const OpenclawSha256Hex = S.String.check(
 );
 
 /**
- * Runtime type for {@link OpenclawSha256Hex}.
- *
  * **Example** (Type a SHA-256 hex)
  *
  * ```ts

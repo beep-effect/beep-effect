@@ -107,8 +107,6 @@ export type ReferenceKeyword = typeof ReferenceKeyword.Type;
 export const REFERENCE_KEYWORDS = ReferenceKeyword.literals;
 
 /**
- * Any closing or non-closing keyword accepted by the list dialect.
- *
  * **Example** (Recognize both keyword sets)
  *
  * ```ts
@@ -128,8 +126,6 @@ export const ListKeyword = LiteralKit([...ClosingKeyword.literals, ...ReferenceK
 );
 
 /**
- * The decoded representation accepted by {@link ListKeyword}.
- *
  * @category type-level
  * @since 0.0.0
  */

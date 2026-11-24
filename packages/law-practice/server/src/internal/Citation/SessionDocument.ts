@@ -157,9 +157,8 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             candidates = Chunk.append(candidates, id);
           });
           for (const resource of resources) yield* candidate(resource);
-          // Final descriptors must support distinct authorities. A historical
-          // native count cannot certify distinct final descriptor labels.
-          if (Chunk.size(candidates) < 2) return yield* failed();
+          const finalDescriptorsCertifyDistinctAuthoritiesNotNativeCount = Chunk.size(candidates) >= 2;
+          if (!finalDescriptorsCertifyDistinctAuthoritiesNotNativeCount) return yield* failed();
           for (const [id, position] of A.map(A.fromIterable(candidates), (id, position) => [id, position] as const)) {
             const positions = yield* Effect.fromOption(HashMap.get(candidateSets, id), failed);
             candidateSets = HashMap.set(candidateSets, id, Chunk.append(positions, { mentionId, position }));

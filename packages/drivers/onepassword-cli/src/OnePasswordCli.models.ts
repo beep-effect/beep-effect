@@ -21,8 +21,6 @@ const OnePasswordCliAccountName = S.Trim.pipe(
 );
 
 /**
- * 1Password reference probe status.
- *
  * **Example** (Log probe status object)
  *
  * ```ts
@@ -42,8 +40,6 @@ export const OnePasswordReferenceProbeStatus = OnePasswordReferenceProbeStatusBa
 );
 
 /**
- * Runtime type for {@link OnePasswordReferenceProbeStatus}.
- *
  * **Example** (Check resolved status guard)
  *
  * ```ts
@@ -81,8 +77,6 @@ export const OnePasswordCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxi
 );
 
 /**
- * Runtime type for {@link OnePasswordCliExitCode}.
- *
  * **Example** (Type exit code value)
  *
  * ```ts
@@ -99,8 +93,6 @@ export const OnePasswordCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxi
 export type OnePasswordCliExitCode = typeof OnePasswordCliExitCode.Type;
 
 /**
- * Trim-normalized redacted CLI diagnostic text.
- *
  * **Example** (Decode trimmed diagnostic text)
  *
  * ```ts
@@ -125,8 +117,6 @@ export const OnePasswordCliDiagnosticText = S.Trim.pipe(
 );
 
 /**
- * Runtime type for {@link OnePasswordCliDiagnosticText}.
- *
  * **Example** (Type diagnostic text value)
  *
  * ```ts
@@ -143,8 +133,6 @@ export const OnePasswordCliDiagnosticText = S.Trim.pipe(
 export type OnePasswordCliDiagnosticText = typeof OnePasswordCliDiagnosticText.Type;
 
 /**
- * Process output captured by a 1Password CLI command.
- *
  * **Example** (Log process result schema)
  *
  * ```ts

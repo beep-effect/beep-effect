@@ -15,8 +15,6 @@ const $I = $DiscordId.create("Discord.errors");
 
 const DiscordErrorReasonBase = LiteralKit(["request", "transport", "response-status", "response-decoding"]);
 /**
- * Literal vocabulary for recoverable failures at the Discord REST boundary.
- *
  * **Example** (Check transport reason predicate)
  *
  * ```ts
@@ -37,15 +35,12 @@ export const DiscordErrorReason = DiscordErrorReasonBase.pipe(
 );
 
 /**
- * {@inheritDoc DiscordErrorReason}
  * @category models
  * @since 0.0.0
  */
 export type DiscordErrorReason = typeof DiscordErrorReason.Type;
 
 /**
- * Redacted technical failure raised by the Discord REST driver.
- *
  * **Details**
  *
  * `DiscordError` keeps the recovery reason, HTTP method, path, status, and a

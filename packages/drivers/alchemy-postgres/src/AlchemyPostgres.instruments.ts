@@ -61,8 +61,6 @@ export const DeliveryTargetKind = LiteralKit(["view", "policy", "projection"]).p
 );
 
 /**
- * Runtime type for {@link DeliveryTargetKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,8 +88,6 @@ export const BackfillJobRole = LiteralKit(["node", "run", "scanner", "source", "
 );
 
 /**
- * Runtime type for {@link BackfillJobRole}.
- *
  * @category models
  * @since 0.0.0
  */

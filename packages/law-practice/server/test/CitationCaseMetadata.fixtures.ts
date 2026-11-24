@@ -217,14 +217,14 @@ const assertRow = Effect.fn("CaseMetadataTest.row")(function* (
   expect(result.editionGuess).toBe(after.editionGuess);
   expect(result.usedHtml).toBe(A.some(row.trace, (step) => step.phase === "HtmlName"));
   expect(result.usedPlain).toBe(A.some(row.trace, (step) => step.phase === "PlainName"));
-  // The frozen court lookup replaces source court-normalization substitutions;
-  // every regex in the other source paths executes through the owned worker.
-  const regex = A.reduce(
+  const replacedByFrozenCourtLookup = (call: (typeof row.regexCalls)[number]) =>
+    call.phase === "Post" && call.method === "sub";
+  const ownedWorkerRegexCalls = A.reduce(
     row.regexCalls,
     0,
-    (total, call) => total + (call.phase === "Post" && call.method === "sub" ? 0 : call.count)
+    (total, call) => total + (replacedByFrozenCourtLookup(call) ? 0 : call.count)
   );
-  return (regex > 0 ? 1 : 0) + (document.hasMarkup ? 4 : 0);
+  return (ownedWorkerRegexCalls > 0 ? 1 : 0) + (document.hasMarkup ? 4 : 0);
 });
 /** Assert final original model fields after all five phase families, on both runtimes. */
 export const replayCitationCaseMetadata = Effect.fn("CaseMetadataTest.replay")(function* (

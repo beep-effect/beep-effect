@@ -46,8 +46,6 @@ export const ItemOutcome = LiteralKit(["passed", "failed", "warned", "skipped"])
 );
 
 /**
- * Type of {@link ItemOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +77,6 @@ export const RunReason = LiteralKit(["passed", "failed", "errored", "cancelled"]
 );
 
 /**
- * Type of {@link RunReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -151,8 +147,6 @@ export const RunOutcome = LiteralKit([
 );
 
 /**
- * Type of {@link RunOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -184,16 +178,12 @@ export const RunShape = LiteralKit(["item", "unit", "package", "workspace"]).pip
 );
 
 /**
- * Type of {@link RunShape}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RunShape = typeof RunShape.Type;
 
 /**
- * Why a failed item failed.
- *
  * **Details**
  *
  * `assertion` is an ordinary failure; the other four each keep their own
@@ -217,8 +207,6 @@ export const FailureKind = LiteralKit(["assertion", "timeout", "load", "hook", "
 );
 
 /**
- * Type of {@link FailureKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -250,16 +238,12 @@ export const HistoryLabel = LiteralKit(["introduced-on-lane", "red-on-main", "pe
 );
 
 /**
- * Type of {@link HistoryLabel}.
- *
  * @category models
  * @since 0.0.0
  */
 export type HistoryLabel = typeof HistoryLabel.Type;
 
 /**
- * The kind of item a gate produces.
- *
  * **Example** (Guard an item kind)
  *
  * ```ts
@@ -278,8 +262,6 @@ export const ItemKind = LiteralKit(["test", "diagnostic", "step"]).pipe(
 );
 
 /**
- * Type of {@link ItemKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -306,8 +288,6 @@ export const UnitKind = LiteralKit(["package", "file", "job"]).pipe(
 );
 
 /**
- * Type of {@link UnitKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -334,16 +314,12 @@ export const Severity = LiteralKit(["error", "warning", "note"]).pipe(
 );
 
 /**
- * Type of {@link Severity}.
- *
  * @category models
  * @since 0.0.0
  */
 export type Severity = typeof Severity.Type;
 
 /**
- * The coverage metric a policy breach names.
- *
  * **Example** (Read the coverage metrics)
  *
  * ```ts
@@ -362,16 +338,12 @@ export const CoverageMetric = LiteralKit(["lines", "branches", "functions", "sta
 );
 
 /**
- * Type of {@link CoverageMetric}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CoverageMetric = typeof CoverageMetric.Type;
 
 /**
- * The output stream a stray line was written to.
- *
  * **Example** (Guard a stream)
  *
  * ```ts
@@ -390,8 +362,6 @@ export const OutputStream = LiteralKit(["stdout", "stderr"]).pipe(
 );
 
 /**
- * Type of {@link OutputStream}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -108,8 +108,6 @@ const M365HttpStatus = S.Literals([
 type M365HttpStatus = typeof M365HttpStatus.Type;
 
 /**
- * Technical error reasons emitted by the Microsoft 365 driver.
- *
  * **Example** (Check throttled reason match)
  *
  * ```ts
@@ -138,8 +136,6 @@ export const M365ErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link M365ErrorReason}.
- *
  * **Example** (Assign typed reason value)
  *
  * ```ts
@@ -197,8 +193,6 @@ const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365Error
   });
 
 /**
- * Technical failure raised by the Microsoft 365 driver boundary.
- *
  * **Details**
  *
  * Carries only sanitized, technical context (reason, HTTP status, requested
@@ -355,8 +349,6 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
   );
 
 /**
- * Why an app-only environment setting was refused.
- *
  * **Details**
  *
  * `unresolved-reference` means the value still starts with `op://`: the
@@ -380,8 +372,6 @@ export const M365EnvProblem = LiteralKit(["missing", "unresolved-reference", "un
 );
 
 /**
- * Type for {@link M365EnvProblem}.
- *
  * **Example** (Type a problem)
  *
  * ```ts
@@ -404,8 +394,6 @@ const ENV_PROBLEM_TEXT: Record<M365EnvProblem, string> = {
 };
 
 /**
- * Failure to load the app-only lane settings from the environment.
- *
  * **Details**
  *
  * The message names the setting and never its value, so the error is safe to

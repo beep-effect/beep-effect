@@ -41,8 +41,6 @@ import { PhaseOutcome } from "./PhaseProfiler.ts";
 const $I = $ObservabilityId.create("Metric");
 
 /**
- * Options for the trackDuration metric helper.
- *
  * **Example** (Make options with attributes)
  *
  * ```typescript

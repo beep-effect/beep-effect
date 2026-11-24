@@ -38,10 +38,8 @@ class ReplayTotals extends S.Opaque<ReplayTotals, { readonly brand: unique symbo
   )
 ) {}
 
-// This real-worker qualification belongs to the hosted integration task. The
-// package unit task excludes test/integration; no environment skip can green it.
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })(
-  "native HTML Unicode histories",
+  "native HTML Unicode histories on real workers, never environment-skipped",
   (it) => {
     it.effect(
       "matches every source history, native hash and reference relation and confirms every child exit",
@@ -142,14 +140,11 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
             }
             return ReplayTotals.make({ histories, snapshots, failures, children: expectedChildren });
           });
-          // Histories have no cross-history identity assertions. Each lane owns
-          // its value arena, live registry and sequential worker history. Two
-          // lanes bound the qualification to at most two native children.
-          const lanes = [
+          const twoIndependentHistoryLanes = [
             A.filter(corpus.cases, (_, index) => index % 2 === 0),
             A.filter(corpus.cases, (_, index) => index % 2 === 1),
           ];
-          const results = yield* Effect.forEach(lanes, replay, { concurrency: 2 });
+          const results = yield* Effect.forEach(twoIndependentHistoryLanes, replay, { concurrency: 2 });
           const totals = A.reduce(
             results,
             ReplayTotals.make({ histories: 0, snapshots: 0, failures: 0, children: 0 }),

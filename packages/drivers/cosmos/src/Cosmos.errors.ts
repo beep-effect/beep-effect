@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $CosmosId.create("Cosmos.errors");
 
 /**
- * Cosmos driver failure reason.
- *
  * **Example** (Assign importFailed reason)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvar
 );
 
 /**
- * Type for {@link CosmosDriverErrorReason}.
- *
  * **Example** (Assign renderFailed reason)
  *
  * ```ts
@@ -53,8 +49,6 @@ export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvar
 export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
 
 /**
- * Typed cosmos driver error.
- *
  * **Example** (Create typed driver error)
  *
  * ```ts

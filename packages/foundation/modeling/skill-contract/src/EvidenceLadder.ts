@@ -18,8 +18,6 @@ const $I = $SkillContractId.create("EvidenceLadder");
 const predicateTypeEquivalence = S.toEquivalence(EvidencePredicateType);
 
 /**
- * Digest-bound reference to an evidence receipt used by one ladder rung.
- *
  * **Example** (Inspect receipt reference fields)
  *
  * ```ts import.meta.vitest name="Inspect receipt reference fields"
@@ -44,8 +42,6 @@ export class EvidenceReceiptReference extends S.Opaque<EvidenceReceiptReference,
 ) {}
 
 /**
- * Predicate-type demands for all four evidence-ladder rungs.
- *
  * **Example** (Inspect ladder receipt bindings)
  *
  * ```ts import.meta.vitest name="Inspect ladder receipt bindings"
@@ -101,8 +97,6 @@ export class Accepted extends S.Opaque<Accepted, { readonly brand: unique symbol
 }
 
 /**
- * Evidence rung proving acceptance and persistence.
- *
  * **Example** (Inspect persistence evidence)
  *
  * ```ts import.meta.vitest name="Inspect persistence evidence"
@@ -129,8 +123,6 @@ export class Persisted extends S.Opaque<Persisted, { readonly brand: unique symb
 }
 
 /**
- * Evidence rung proving acceptance, persistence, and delivery.
- *
  * **Example** (Inspect delivery evidence)
  *
  * ```ts import.meta.vitest name="Inspect delivery evidence"
@@ -158,8 +150,6 @@ export class Delivered extends S.Opaque<Delivered, { readonly brand: unique symb
 }
 
 /**
- * Highest evidence rung, proving the delivered result was semantically applied.
- *
  * **Example** (Inspect semantic-application evidence)
  *
  * ```ts import.meta.vitest name="Inspect semantic-application evidence"
@@ -213,8 +203,6 @@ export const EvidenceLadderState = LiteralKit(["Accepted", "Persisted", "Deliver
   );
 
 /**
- * Runtime type decoded by {@link EvidenceLadderState}.
- *
  * @category models
  * @since 0.0.0
  */

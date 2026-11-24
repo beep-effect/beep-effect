@@ -24,8 +24,6 @@ import type { LintContext } from "../../YamlLintRule.ts";
 const $I = $YamlId.create("internal/rules/truthy");
 
 /**
- * Validates allowed boolean spellings and whether mapping keys are checked.
- *
  * **Details**
  *
  * Options for `truthy`: the `allowed` boolean spellings (default

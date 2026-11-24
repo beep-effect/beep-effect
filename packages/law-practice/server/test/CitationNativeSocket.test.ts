@@ -72,9 +72,8 @@ const client = Effect.fnUntraced(function* (child: ChildProcessHandle) {
   const rpc = yield* RpcClient.make(CitationNativeSocketTestRpcs).pipe(
     Effect.provideService(RpcClient.Protocol, protocol)
   );
-  // Allow the supplied protocol's scoped run fiber to register its client
-  // before an immediately failing local stream can broadcast terminal status.
-  yield* Effect.yieldNow;
+  const letRunFiberRegisterClientBeforeTerminalStatus = Effect.yieldNow;
+  yield* letRunFiberRegisterClientBeforeTerminalStatus;
   return rpc;
 });
 
@@ -107,7 +106,10 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
             );
           })
       );
-      expect(returned).toEqual(values);
+      expect(
+        returned,
+        "Effect JSON keeps isolated UTF-16 surrogates before SchemaBinary UTF-8 framing and this protocol adds no private string or frame codec"
+      ).toEqual(values);
       const physical = yield* observed.snapshot;
       const state = yield* admission.snapshot;
       expect(physical).toEqual({ spawned: 1, confirmed: 1 });
@@ -247,54 +249,54 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
       expect(state).toMatchObject({ active: 0, quarantined: 0 });
     })
   );
-  it.effect("physically retires non-cooperative work when its caller cancels", () =>
-    Effect.gen(function* () {
-      const { limits } = yield* defaultCitationEnginePolicy;
-      const admission = yield* makeCitationNativeProcessAdmission(limits);
-      const observed = yield* makeCitationObservedSpawner();
-      const owner = yield* makeCitationNativeProcessOwner<CitationRegexWorkerFailure | CitationSafetyLimitExceeded>(
-        limits,
-        "extract",
-        fail
-      ).pipe(Effect.provideService(ChildProcessSpawner, observed.spawner));
-      const childCommand = yield* command();
-      const ready = yield* Deferred.make<void>();
-      const running = yield* withCitationNativeProcess(
-        owner,
-        acquireCitationNativeLease(admission, "extract", false, fail),
-        () => fail("channel-failed"),
-        (operation) =>
-          Effect.gen(function* () {
-            yield* operation.acquire;
-            const child = yield* operation.start(childCommand);
-            yield* Effect.scoped(
-              Effect.gen(function* () {
-                const rpc = yield* client(child);
-                yield* rpc.Echo({ text: "ready" });
-                const busy = yield* rpc.Busy().pipe(Effect.forkChild);
-                const marker = yield* child.stderr.pipe(
-                  Stream.decodeText(),
-                  Stream.runHead,
-                  Effect.timeout(Duration.seconds(5))
-                );
-                assertSome(marker, "busy");
-                yield* Deferred.succeed(ready, undefined);
-                yield* Fiber.join(busy);
-              })
-            );
-          })
-      ).pipe(Effect.forkChild);
-      // The child's test-only stderr marker confirms entry into the synchronous
-      // handler. Interrupt the owning invocation, then inspect its terminal Exit.
-      yield* Deferred.await(ready);
-      yield* Fiber.interrupt(running);
-      const exit = yield* Fiber.await(running);
-      expect(Exit.hasInterrupts(exit)).toBe(true);
-      const physical = yield* observed.snapshot;
-      const state = yield* admission.snapshot;
-      expect(physical).toEqual({ spawned: 1, confirmed: 1 });
-      expect(state).toMatchObject({ active: 0, quarantined: 0 });
-    })
+  it.effect(
+    "physically retires non-cooperative work when its caller cancels; only physical retirement stops it, and this entry is a qualification control, never production behavior",
+    () =>
+      Effect.gen(function* () {
+        const { limits } = yield* defaultCitationEnginePolicy;
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const observed = yield* makeCitationObservedSpawner();
+        const owner = yield* makeCitationNativeProcessOwner<CitationRegexWorkerFailure | CitationSafetyLimitExceeded>(
+          limits,
+          "extract",
+          fail
+        ).pipe(Effect.provideService(ChildProcessSpawner, observed.spawner));
+        const childCommand = yield* command();
+        const childEnteredSynchronousHandler = yield* Deferred.make<void>();
+        const running = yield* withCitationNativeProcess(
+          owner,
+          acquireCitationNativeLease(admission, "extract", false, fail),
+          () => fail("channel-failed"),
+          (operation) =>
+            Effect.gen(function* () {
+              yield* operation.acquire;
+              const child = yield* operation.start(childCommand);
+              yield* Effect.scoped(
+                Effect.gen(function* () {
+                  const rpc = yield* client(child);
+                  yield* rpc.Echo({ text: "ready" });
+                  const busy = yield* rpc.Busy().pipe(Effect.forkChild);
+                  const marker = yield* child.stderr.pipe(
+                    Stream.decodeText(),
+                    Stream.runHead,
+                    Effect.timeout(Duration.seconds(5))
+                  );
+                  assertSome(marker, "busy");
+                  yield* Deferred.succeed(childEnteredSynchronousHandler, undefined);
+                  yield* Fiber.join(busy);
+                })
+              );
+            })
+        ).pipe(Effect.forkChild);
+        yield* Deferred.await(childEnteredSynchronousHandler);
+        yield* Fiber.interrupt(running);
+        const exit = yield* Fiber.await(running);
+        expect(Exit.hasInterrupts(exit)).toBe(true);
+        const physical = yield* observed.snapshot;
+        const state = yield* admission.snapshot;
+        expect(physical).toEqual({ spawned: 1, confirmed: 1 });
+        expect(state).toMatchObject({ active: 0, quarantined: 0 });
+      })
   );
   it.effect("wakes an independently suspended pull when only its reader scope closes", () =>
     Effect.gen(function* () {
@@ -361,8 +363,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
       const spawner = yield* ChildProcessSpawner;
       const childCommand = yield* command();
       const child = yield* spawner.spawn(childCommand);
-      // Deliberately withhold sink consumption to isolate adapter backpressure.
-      const socket = yield* makeCitationNativeSocket({ ...child, stdin: Sink.never.pipe(Sink.map(() => undefined)) });
+      const withheldSinkIsolatingAdapterBackpressure = Sink.never.pipe(Sink.map(() => undefined));
+      const socket = yield* makeCitationNativeSocket({ ...child, stdin: withheldSinkIsolatingAdapterBackpressure });
       const writerScope = yield* Scope.make();
       const writer = yield* socket.writer.pipe(Effect.provideService(Scope.Scope, writerScope));
       yield* Effect.forEach(A.range(1, 8), () => writer.write("queued"), { concurrency: 1, discard: true });

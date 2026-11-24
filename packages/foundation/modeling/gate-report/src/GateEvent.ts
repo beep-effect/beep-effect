@@ -40,16 +40,12 @@ export const UnitFaultKind = FailureKind.pick(["load", "hook"]).pipe(
 );
 
 /**
- * Type of {@link UnitFaultKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type UnitFaultKind = typeof UnitFaultKind.Type;
 
 /**
- * One event of a gate run.
- *
  * **Details**
  *
  * Widens upstream `RunEvent`: `Module*`, `Test*`, `Suite*` and `Hook*` become
@@ -123,8 +119,6 @@ export const GateEvent = S.TaggedUnion({
 );
 
 /**
- * Type of {@link GateEvent}.
- *
  * @category models
  * @since 0.0.0
  */

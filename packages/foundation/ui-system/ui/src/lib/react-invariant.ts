@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $UiId.create("lib/react-invariant");
 
 /**
- * React context invariant options class.
- *
  * **Example** (Make invariant options)
  *
  * ```ts

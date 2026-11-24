@@ -86,8 +86,6 @@ const $I = $PandocAstId.create("Pandoc.codec");
 type PandocConstructorContext = "block" | "inline" | "meta";
 
 /**
- * Generic Pandoc constructor wire shape.
- *
  * **Example** (Make constructor wire)
  *
  * ```ts import.meta.vitest name="Make constructor wire"
@@ -107,8 +105,6 @@ export const PandocConstructorWire = PandocUnknownConstructorWire.pipe(
 );
 
 /**
- * Companion namespace for {@link PandocConstructorWire}.
- *
  * **Example** (Type constructor wire)
  *
  * ```ts import.meta.vitest name="Type constructor wire"
@@ -124,8 +120,6 @@ export const PandocConstructorWire = PandocUnknownConstructorWire.pipe(
 export type PandocConstructorWire = typeof PandocConstructorWire.Type;
 
 /**
- * Pandoc JSON document wire shape.
- *
  * **Example** (Decode empty document wire)
  *
  * ```ts
@@ -158,8 +152,6 @@ export class PandocJsonWire extends S.Opaque<PandocJsonWire, { readonly brand: u
 ) {}
 
 /**
- * Companion namespace for {@link PandocJsonWire}.
- *
  * **Example** (Make empty document wire)
  *
  * ```ts import.meta.vitest name="Make empty document wire"
@@ -193,8 +185,6 @@ export declare namespace PandocJsonWire {
 }
 
 /**
- * Pandoc JSON string codec.
- *
  * **Example** (Decode JSON string wire)
  *
  * ```ts import.meta.vitest name="Decode JSON string wire"
@@ -216,8 +206,6 @@ export const PandocJsonFromString = S.fromJsonString(PandocJsonWire).pipe(
 );
 
 /**
- * Runtime type for {@link PandocJsonFromString}.
- *
  * **Example** (Annotate wire type)
  *
  * ```ts import.meta.vitest name="Annotate wire type"
@@ -241,8 +229,6 @@ const PandocJsonObject = S.Record(S.String, S.Json);
 const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
 
 /**
- * Typed failure raised by strict or lossless Pandoc JSON decoding.
- *
  * **Example** (Catch decode error tag)
  *
  * ```ts import.meta.vitest name="Catch decode error tag"
@@ -272,8 +258,6 @@ export class PandocDecodeError extends S.TaggedError<PandocDecodeError, { readon
 ) {}
 
 /**
- * A diagnostic produced while inspecting a lossless Pandoc document.
- *
  * **Example** (Make lossless issue)
  *
  * ```ts import.meta.vitest name="Make lossless issue"
@@ -310,8 +294,6 @@ export class PandocLosslessIssue extends S.Class<PandocLosslessIssue, { readonly
 }
 
 /**
- * Exact raw top-level block in a lossless document.
- *
  * **Example** (Check future block shape)
  *
  * ```ts import.meta.vitest name="Check future block shape"
@@ -331,8 +313,6 @@ export const PandocLosslessBlock = S.Json.pipe(
 );
 
 /**
- * Runtime type for {@link PandocLosslessBlock}.
- *
  * **Example** (Annotate lossless block)
  *
  * ```ts
@@ -436,8 +416,6 @@ class PandocLosslessDocumentValue {
 }
 
 /**
- * Module-issued lossless Pandoc envelope.
- *
  * **Details**
  *
  * The public schema has no arbitrary constructor: decoding is the only issuer,
@@ -474,8 +452,6 @@ export const PandocLosslessDocument = S.declare(PandocLosslessDocumentValue.is).
 );
 
 /**
- * Decoded type of {@link PandocLosslessDocument}.
- *
  * **Example** (Type decoded lossless document)
  *
  * ```ts import.meta.vitest name="Type decoded lossless document"

@@ -14,8 +14,6 @@ import { PosInt } from "../internal/PosInt.ts";
 const $I = $FileProcessingId.create("PageOcr");
 
 /**
- * Reasons a page OCR request can fail.
- *
  * **Details**
  *
  * The reasons hide process, HTTP and device detail. `engine-not-found` means
@@ -47,8 +45,6 @@ export const PageOcrErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link PageOcrErrorReason}.
- *
  * **Example** (Type an error reason)
  *
  * ```ts
@@ -64,8 +60,6 @@ export const PageOcrErrorReason = LiteralKit([
 export type PageOcrErrorReason = typeof PageOcrErrorReason.Type;
 
 /**
- * Sanitized failure of one page OCR request.
- *
  * **Example** (Report an unavailable engine)
  *
  * ```ts

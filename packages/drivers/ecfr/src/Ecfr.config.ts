@@ -60,8 +60,6 @@ export const ECFR_RATE_LIMIT = 60;
 export const ECFR_RATE_LIMIT_WINDOW = "1 minute";
 
 /**
- * Runtime configuration accepted by {@link Ecfr.makeLayer}.
- *
  * **Example** (Make config with apiUrl)
  *
  * ```ts

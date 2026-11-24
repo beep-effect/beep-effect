@@ -14,8 +14,6 @@
  */
 export * from "./HostedUrl.schema.ts";
 /**
- * The apex public origin as a literal schema.
- *
  * @category schemas
  * @since 0.0.0
  */

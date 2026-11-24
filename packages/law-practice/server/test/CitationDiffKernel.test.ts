@@ -27,7 +27,6 @@ const request = (before: { readonly width: 1; readonly bytes: Uint8Array }, maxi
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer), { concurrent: false, timeout: "5 seconds" })(
   "private pinned default diff host",
   (it) => {
-    // 1005 corpus rows run in bounded slices so one slow runner cannot push a single case past its budget.
     it.effect("pins the exact source edit corpus size and total step count", () =>
       Effect.gen(function* () {
         const corpus = yield* readCitationDiffCorpus();
@@ -38,7 +37,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer), { concurrent: false,
     for (const slice of A.range(0, Math.ceil(corpusRows / sliceRows) - 1)) {
       const from = slice * sliceRows;
       it.effect(
-        `preserves exact source edit sequences ${from}-${Math.min(from + sliceRows, corpusRows) - 1} through fresh scoped native instances`,
+        `preserves exact source edit sequences ${from}-${Math.min(from + sliceRows, corpusRows) - 1} through fresh scoped native instances, sliced so one slow runner cannot push a case past its budget`,
         () =>
           Effect.gen(function* () {
             const corpus = yield* readCitationDiffCorpus();

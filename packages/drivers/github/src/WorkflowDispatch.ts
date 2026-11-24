@@ -31,8 +31,6 @@ import { PageOptions } from "./Rest.ts";
 const $I = $GithubId.create("WorkflowDispatch");
 
 /**
- * Where a workflow run has got to.
- *
  * **Example** (Inspect a completed workflow run)
  *
  * ```ts
@@ -92,8 +90,6 @@ export class WorkflowRunStatus extends S.Class<WorkflowRunStatus, { readonly bra
 }
 
 /**
- * One workflow defined in the repository.
- *
  * **Details**
  *
  * `state` is GitHub's own value — `active`, `disabled_manually`,
@@ -138,8 +134,6 @@ export class WorkflowInfo extends S.Opaque<WorkflowInfo, { readonly brand: uniqu
 ) {}
 
 /**
- * How often to poll for a dispatched run, and how long to keep polling.
- *
  * **Details**
  *
  * A non-data service option record: both fields are `Duration` values, whose
@@ -177,8 +171,6 @@ export class PollOptions extends S.Opaque<PollOptions, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link PollOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

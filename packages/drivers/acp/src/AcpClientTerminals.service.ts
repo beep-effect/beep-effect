@@ -50,8 +50,6 @@ const positiveIntWithDefault = (value: number, description: string) =>
   PositiveInt.pipe(S.withConstructorDefault(Effect.succeed(value))).annotateKey({ description });
 
 /**
- * Resource bounds of an {@link AcpClientTerminals} service.
- *
  * **Details**
  *
  * - `maxLiveTerminals` (16): running, unreleased terminals.

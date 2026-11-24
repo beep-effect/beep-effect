@@ -319,12 +319,10 @@ const combine = (left: Summary, right: Summary, alternative: boolean) =>
   );
 type ParseFailure = CitationRegexTranslationFailure | CitationSafetyLimitExceeded;
 
-// A render plan measures variable output before constructing it. These closures
-// are local implementation values and never enter a worker request or program.
-const fixedRender = (text: string) => ({ units: Str.length(text), build: () => text });
+const localRenderPlanMeasuredBeforeBuild = (text: string) => ({ units: Str.length(text), build: () => text });
 const openRender = (token: CitationRegexProgramToken, names: MutableHashSet.MutableHashSet<string>) => {
-  if (token.value === 0) return fixedRender("(?:");
-  if (Str.isEmpty(token.name) || MutableHashSet.has(names, token.name)) return fixedRender("(");
+  if (token.value === 0) return localRenderPlanMeasuredBeforeBuild("(?:");
+  if (Str.isEmpty(token.name) || MutableHashSet.has(names, token.name)) return localRenderPlanMeasuredBeforeBuild("(");
   MutableHashSet.add(names, token.name);
   return { units: 4 + Str.length(token.name), build: () => `(?<${token.name}>` };
 };
@@ -360,17 +358,17 @@ const renderToken = (
   cpython: boolean
 ) =>
   Match.value(token.kind).pipe(
-    Match.when("atom", () => renderAtom(alphabet, token).pipe(Effect.map(fixedRender))),
+    Match.when("atom", () => renderAtom(alphabet, token).pipe(Effect.map(localRenderPlanMeasuredBeforeBuild))),
     Match.when("open", () => Effect.succeed(openRender(token, names))),
-    Match.when("lookahead", () => Effect.succeed(fixedRender("(?="))),
-    Match.when("close", () => Effect.succeed(fixedRender(")"))),
-    Match.when("alternative", () => Effect.succeed(fixedRender("|"))),
-    Match.when("begin", () => Effect.succeed(fixedRender("^"))),
-    Match.when("end-strict", () => Effect.succeed(fixedRender("(?![\\s\\S])"))),
+    Match.when("lookahead", () => Effect.succeed(localRenderPlanMeasuredBeforeBuild("(?="))),
+    Match.when("close", () => Effect.succeed(localRenderPlanMeasuredBeforeBuild(")"))),
+    Match.when("alternative", () => Effect.succeed(localRenderPlanMeasuredBeforeBuild("|"))),
+    Match.when("begin", () => Effect.succeed(localRenderPlanMeasuredBeforeBuild("^"))),
+    Match.when("end-strict", () => Effect.succeed(localRenderPlanMeasuredBeforeBuild("(?![\\s\\S])"))),
     Match.when("end", () => renderAtom(alphabet, token).pipe(Effect.map(endRender))),
     Match.whenOr("boundary", "non-boundary", () => {
       if (cpython && alphabet.pythonLength === 0 && token.kind === "non-boundary")
-        return Effect.succeed(fixedRender("(?!)"));
+        return Effect.succeed(localRenderPlanMeasuredBeforeBuild("(?!)"));
       return renderAtom(alphabet, token).pipe(
         Effect.map((atom) => boundaryRender(atom, token.kind === "non-boundary"))
       );
@@ -614,25 +612,22 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       }
       return bounds;
     });
-    // Native optional quantifiers discard captures from an empty iteration.
-    // Ordered alternation preserves Python's participating-empty capture.
-    const optionalCapture = Effect.fn("Citation.lowerNullableOptionalCapture")(function* (
-      start: number,
-      lazy: boolean
-    ) {
-      if (A.length(tokens) + 3 > 4 * limits.patternUtf16) return yield* budget();
-      const structural = (kind: "open" | "alternative") =>
-        CitationRegexProgramToken.make({ kind, value: 0, name: "", maximum: 0, lazy: false });
-      tokens = yield* Effect.fromOption(A.insertAt(tokens, start, structural("open"))).pipe(
-        Effect.mapError(unsupported)
-      );
-      if (lazy) {
-        tokens = yield* Effect.fromOption(A.insertAt(tokens, start + 1, structural("alternative"))).pipe(
+    const optionalCaptureAsOrderedAlternationKeepingEmptyCapture = Effect.fn("Citation.lowerNullableOptionalCapture")(
+      function* (start: number, lazy: boolean) {
+        if (A.length(tokens) + 3 > 4 * limits.patternUtf16) return yield* budget();
+        const structural = (kind: "open" | "alternative") =>
+          CitationRegexProgramToken.make({ kind, value: 0, name: "", maximum: 0, lazy: false });
+        tokens = yield* Effect.fromOption(A.insertAt(tokens, start, structural("open"))).pipe(
           Effect.mapError(unsupported)
         );
-      } else yield* emit("alternative");
-      yield* emit("close");
-    });
+        if (lazy) {
+          tokens = yield* Effect.fromOption(A.insertAt(tokens, start + 1, structural("alternative"))).pipe(
+            Effect.mapError(unsupported)
+          );
+        } else yield* emit("alternative");
+        yield* emit("close");
+      }
+    );
     const repeat = Effect.fn("Citation.parseRegexRepeat")(function* (body: Summary, start = A.length(tokens)) {
       const parsed = yield* repeatBounds();
       if (O.isNone(parsed)) return body;
@@ -644,7 +639,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       if (peek() === 43) return yield* unsupported();
       const maximum = yield* S.decodeEffect(Maximum)(bounds.maximum).pipe(Effect.mapError(unsupported));
       if (body.minimum === 0 && body.captures && bounds.minimum === 0 && maximum === 1)
-        yield* optionalCapture(start, lazy);
+        yield* optionalCaptureAsOrderedAlternationKeepingEmptyCapture(start, lazy);
       else yield* emit("repeat", bounds.minimum, "", maximum, lazy);
       return repeatedSummary(body, bounds);
     });
@@ -665,8 +660,7 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       index++;
       return name;
     });
-    // Case flags affect emitted point sets, never the source pattern identity.
-    const caseFlagSet = Effect.fn("Citation.readRegexCaseFlagSet")(function* () {
+    const caseFlagSetForPointSetsNotPatternIdentity = Effect.fn("Citation.readRegexCaseFlagSet")(function* () {
       const start = index;
       while (peek() === 105) {
         if (index % 256 === 0) yield* Effect.yieldNow;
@@ -675,11 +669,11 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       return index > start;
     });
     const caseFlags = Effect.fn("Citation.readRegexCaseFlags")(function* () {
-      const enabled = yield* caseFlagSet();
+      const enabled = yield* caseFlagSetForPointSetsNotPatternIdentity();
       let disabled = false;
       if (peek() === 45) {
         index++;
-        disabled = yield* caseFlagSet();
+        disabled = yield* caseFlagSetForPointSetsNotPatternIdentity();
         if (!disabled) return yield* unsupported();
       }
       if (enabled === disabled || (peek() !== 58 && peek() !== 41)) return yield* unsupported();
@@ -850,9 +844,8 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
     });
     const profile = yield* expression();
     if (index !== length) return yield* unsupported();
-    // A syntax-only empty program still gets an explicit empty predicate table;
-    // it is not admitted as an execution profile by this compiler.
-    if (atomCount === 0) yield* atom([]);
+    const syntaxOnlyEmptyProgramGetsEmptyPredicateTableNotExecutionProfile = atomCount === 0;
+    if (syntaxOnlyEmptyProgramGetsEmptyPredicateTableNotExecutionProfile) yield* atom([]);
     return CitationRegexProgram.make({
       tokens,
       sets: CitationRegexAtomSets.make({ atoms: atomCount, intervals }),

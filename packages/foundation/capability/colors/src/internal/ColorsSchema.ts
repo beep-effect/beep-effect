@@ -57,8 +57,6 @@ export const Formatter = Fn({
 );
 
 /**
- * Runtime type for {@link Formatter}.
- *
  * **Example** (Format ready string value)
  *
  * ```typescript

@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $GovinfoId.create("domain/values/SearchResult/SearchResult.model");
 
 /**
- * Single GovInfo search hit with package, granule, and download metadata.
- *
  * **Details**
  *
  * Search results may refer to a whole package or a package granule. GovInfo

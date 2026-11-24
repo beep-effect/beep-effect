@@ -69,10 +69,10 @@ const installHost = Effect.fn("CapturedCleanerTest.host")(function* (values: Cit
         const charge = yield* work.reserveText(units);
         charges.push(charge);
       }
-      // The original callback is a literal one-character replacement. Its
-      // implementation never reads a source oracle outcome or expected model.
-      const result = yield* values.sourceText(Str.replaceAll("’", "'")(text.text));
-      return CitationCleanerProduced.make({ value: result, charges });
+      const literalOneCharacterReplacementReadingNoOracle = yield* values.sourceText(
+        Str.replaceAll("’", "'")(text.text)
+      );
+      return CitationCleanerProduced.make({ value: literalOneCharacterReplacementReadingNoOracle, charges });
     }),
     open: Effect.fn("CapturedCleanerTest.open")(function* (name) {
       if (name !== planName) return yield* failed();

@@ -69,8 +69,6 @@ const mapLibpffErrorToOperationError = (
 ): FileProcessingOperationError => libpffOperationError(operation, error, scaffoldErrorWording);
 
 /**
- * Options for the P1 libpff engine scaffold.
- *
  * **Example** (Make options with syntheticExport)
  *
  * ```ts

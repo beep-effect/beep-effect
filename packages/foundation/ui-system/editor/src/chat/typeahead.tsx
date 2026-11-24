@@ -71,8 +71,6 @@ class MentionMenuOption extends MenuOption {
 }
 
 /**
- * Typed failure raised when a mention source rejects or returns invalid candidates.
- *
  * **Example** (Create a mention lookup failure)
  *
  * ```ts

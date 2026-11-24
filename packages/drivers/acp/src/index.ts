@@ -6,8 +6,6 @@
  */
 
 /**
- * ACP driver error exports.
- *
  * **Example** (Create method not found error)
  *
  * ```ts
@@ -37,8 +35,6 @@ export * as Errors from "./Acp.errors.ts";
  */
 export * as Schema from "./Acp.models.ts";
 /**
- * Agent-side ACP service exports.
- *
  * **Example** (Access agent service layer)
  *
  * ```ts
@@ -53,8 +49,6 @@ export * as Schema from "./Acp.models.ts";
  */
 export * as Agent from "./AcpAgent.service.ts";
 /**
- * Client-side ACP service exports.
- *
  * **Example** (Check a protocol generation choice)
  *
  * ```ts
@@ -68,8 +62,6 @@ export * as Agent from "./AcpAgent.service.ts";
  */
 export * as Client from "./AcpClient.service.ts";
 /**
- * Client-side ACP terminal service exports.
- *
  * **Example** (Read the default live-terminal bound)
  *
  * ```ts
@@ -98,8 +90,6 @@ export * as Terminals from "./AcpClientTerminals.service.ts";
  */
 export * as Compat from "./AcpCompat.models.ts";
 /**
- * ACP JSON text codec exports.
- *
  * **Example** (Read a JSON text with an escaped key)
  *
  * ```ts
@@ -114,8 +104,6 @@ export * as Compat from "./AcpCompat.models.ts";
  */
 export * as Json from "./AcpJson.codec.ts";
 /**
- * ACP transport protocol exports.
- *
  * **Example** (Create patched ACP protocol)
  *
  * ```ts
@@ -130,8 +118,6 @@ export * as Json from "./AcpJson.codec.ts";
  */
 export * as Protocol from "./AcpProtocol.service.ts";
 /**
- * ACP RPC descriptor exports.
- *
  * **Example** (Access agent RPC group)
  *
  * ```ts

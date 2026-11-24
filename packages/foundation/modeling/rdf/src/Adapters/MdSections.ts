@@ -46,7 +46,6 @@ export const MdNodeId = S.TemplateLiteral(["md-v1/b/", S.Natural])
   )
   .pipe($I.annoteSchema("MdNodeId", { description: "Zero-based source block path in an immutable Md revision." }));
 /**
- * Runtime source-block path type.
  * @category type-level
  * @since 0.0.0
  */
@@ -180,7 +179,6 @@ export const MdFoldDiagnostic = S.Union([MdHeadingLevelJump]).pipe(
   $I.annoteSchema("MdFoldDiagnostic", { description: "Typed recovery diagnostics accompanying the section fold." })
 );
 /**
- * Runtime fold diagnostic type.
  * @category type-level
  * @since 0.0.0
  */

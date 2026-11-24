@@ -107,8 +107,6 @@ export interface ConfigResolver<R = never> {
 }
 
 /**
- * How a resolver found a config file, not merely where.
- *
  * **Details**
  *
  * `path` is always present; the rest describe the candidate that matched and
@@ -173,8 +171,6 @@ export class ConfigMatch extends S.Opaque<ConfigMatch, { readonly brand: unique 
 ) {}
 
 /**
- * The full report of one resolver lookup: what matched, and what was checked.
- *
  * **Details**
  *
  * `probed` carries the candidate paths the resolver actually asked the

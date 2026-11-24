@@ -47,8 +47,6 @@ export const PdfVersion = PdfVersionBase.pipe(
 );
 
 /**
- * Type for {@link PdfVersion}.
- *
  * **Example** (Annotate a version)
  *
  * ```ts
@@ -64,8 +62,6 @@ export const PdfVersion = PdfVersionBase.pipe(
 export type PdfVersion = typeof PdfVersion.Type;
 
 /**
- * One-based page number.
- *
  * **Example** (Make a page number)
  *
  * ```ts
@@ -93,8 +89,6 @@ export const PageNumber = S.Int.check(
 );
 
 /**
- * Type for {@link PageNumber}.
- *
  * **Example** (Annotate a page number)
  *
  * ```ts
@@ -110,8 +104,6 @@ export const PageNumber = S.Int.check(
 export type PageNumber = typeof PageNumber.Type;
 
 /**
- * Raster resolution in dots per inch.
- *
  * **Example** (Make a dpi)
  *
  * ```ts
@@ -139,8 +131,6 @@ export const Dpi = S.Int.check(
 );
 
 /**
- * Type for {@link Dpi}.
- *
  * **Example** (Annotate a dpi)
  *
  * ```ts
@@ -232,9 +222,6 @@ export class PinnedFonts extends S.Opaque<PinnedFonts, { readonly brand: unique 
 ) {}
 
 /**
- * What a pinned fontconfig file is written from: the pinned fonts and the
- * directory fontconfig may cache in for the run.
- *
  * **Example** (Request a config for one family)
  *
  * ```ts
@@ -339,8 +326,6 @@ export class SvgToPdfRequest extends S.Opaque<SvgToPdfRequest, { readonly brand:
 ) {}
 
 /**
- * Result of an SVG → PDF conversion.
- *
  * **Example** (Make a result)
  *
  * ```ts
@@ -365,8 +350,6 @@ export class SvgToPdfResult extends S.Opaque<SvgToPdfResult, { readonly brand: u
 ) {}
 
 /**
- * Page size in PDF points.
- *
  * **Example** (US Letter)
  *
  * ```ts
@@ -498,8 +481,6 @@ export const StreamCheck = StreamCheckBase.pipe(
 );
 
 /**
- * Type for {@link StreamCheck}.
- *
  * **Example** (Annotate an outcome)
  *
  * ```ts
@@ -691,8 +672,6 @@ export class RasterMetrics extends S.Opaque<RasterMetrics, { readonly brand: uni
 ) {}
 
 /**
- * Request to render one page to a PNG file.
- *
  * **Example** (Preview page 2)
  *
  * ```ts
@@ -718,8 +697,6 @@ export class PngRequest extends S.Opaque<PngRequest, { readonly brand: unique sy
 ) {}
 
 /**
- * Request for the text of one PDF page.
- *
  * **Example** (Page 2)
  *
  * ```ts
@@ -810,8 +787,6 @@ export class TextBlock extends S.Opaque<TextBlock, { readonly brand: unique symb
 ) {}
 
 /**
- * One page of one PDF file.
- *
  * **Example** (Page 3 of a sheet set)
  *
  * ```ts

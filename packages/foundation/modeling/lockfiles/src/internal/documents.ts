@@ -42,8 +42,6 @@ export class SelectedDocument extends S.Opaque<SelectedDocument, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link SelectedDocument}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0
@@ -118,8 +116,6 @@ export class PnpmStream extends S.Opaque<PnpmStream, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link PnpmStream}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0

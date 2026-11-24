@@ -25,8 +25,6 @@ const CstNodeType = LiteralKit([
 ]).pipe($I.annoteSchema("CstNodeType", { description: "The fifteen categories produced by the YAML CST parser." }));
 
 /**
- * The 15 node types produced by the YAML CST parser.
- *
  * @category type-level
  * @since 0.0.0
  */

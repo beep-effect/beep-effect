@@ -30,8 +30,6 @@ import type { PageOptions } from "./Rest.ts";
 const $I = $GithubId.create("PullRequestComment");
 
 /**
- * The hidden marker that makes a comment findable again.
- *
  * **Details**
  *
  * The marker is `<!-- namespace:key -->`, an HTML comment appended to the body.
@@ -112,8 +110,6 @@ export class CommentMarker extends S.Class<CommentMarker, { readonly brand: uniq
 }
 
 /**
- * A comment this package wrote or found: its id, body and web URL.
- *
  * **Example** (Construct a returned comment)
  *
  * ```ts

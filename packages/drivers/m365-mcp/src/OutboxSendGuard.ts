@@ -106,8 +106,6 @@ export const OutboxSendMismatchField = LiteralKit([
 );
 
 /**
- * Type for {@link OutboxSendMismatchField}.
- *
  * **Example** (Type a mismatch field)
  *
  * ```ts
@@ -123,8 +121,6 @@ export const OutboxSendMismatchField = LiteralKit([
 export type OutboxSendMismatchField = typeof OutboxSendMismatchField.Type;
 
 /**
- * The guard's refusal: the fields in which the stored draft differs.
- *
  * **Example** (Construct a mismatch)
  *
  * ```ts

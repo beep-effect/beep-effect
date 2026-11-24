@@ -43,8 +43,6 @@ export const RunpodConfigUrl = S.String.pipe(
 );
 
 /**
- * Type for {@link RunpodConfigUrl}.
- *
  * **Example** (Type annotation for config URL)
  *
  * ```ts
@@ -94,8 +92,6 @@ export const RUNPOD_DOCS_INDEX_URL = "https://docs.runpod.io/llms.txt";
 
 const runpodConfigInputHeadersDefault = R.empty();
 /**
- * Runtime configuration accepted by {@link Runpod.makeLayer}.
- *
  * **Example** (Build runtime config input)
  *
  * ```ts
@@ -131,8 +127,6 @@ export class RunpodConfigInput extends S.Opaque<RunpodConfigInput, { readonly br
 
 const runpodDocsConfigInputHeadersDefault = R.empty();
 /**
- * Runtime configuration accepted by {@link RunpodDocs.makeLayer}.
- *
  * **Example** (Build docs config input)
  *
  * ```ts

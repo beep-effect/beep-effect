@@ -170,17 +170,17 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
           editions: row.kind === "edition" ? O.getOrThrow(A.replace(bundle.editions, 0, altered)) : bundle.editions,
         };
         let authenticatedAlteredPayload = false;
-        // Deliberately authenticate the changed bytes to isolate structural validation
-        // from the independently tested artifact digest check.
-        const digest = makeTestCitationDigest((algorithm, bytes) => {
-          if (new TextDecoder().decode(bytes) === row.payload) {
-            authenticatedAlteredPayload = true;
-            return crypto.digest(algorithm, new TextEncoder().encode(row.original.payload));
+        const digestAuthenticatingAlteredBytesToIsolateStructuralValidation = makeTestCitationDigest(
+          (algorithm, bytes) => {
+            if (new TextDecoder().decode(bytes) === row.payload) {
+              authenticatedAlteredPayload = true;
+              return crypto.digest(algorithm, new TextEncoder().encode(row.original.payload));
+            }
+            return crypto.digest(algorithm, bytes);
           }
-          return crypto.digest(algorithm, bytes);
-        });
+        );
         const failure = yield* makeCitationFrozenEditions(input).pipe(
-          Effect.provideService(Digest.Digest, digest),
+          Effect.provideService(Digest.Digest, digestAuthenticatingAlteredBytesToIsolateStructuralValidation),
           Effect.flip
         );
         expect(authenticatedAlteredPayload).toBe(true);

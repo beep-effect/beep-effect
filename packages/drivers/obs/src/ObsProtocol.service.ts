@@ -78,8 +78,6 @@ type PendingRequests = HashMap.HashMap<
 >;
 
 /**
- * Input for {@link computeObsAuthentication}.
- *
  * **Example** (Make authentication options)
  *
  * ```ts

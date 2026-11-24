@@ -18,8 +18,6 @@ import { AbsolutePosixPath, isAbsolutePosix } from "./Absolute.ts";
 const $I = $XdgId.create("XdgBase");
 
 /**
- * The five XDG base directories: the four `*_HOME` kinds and the runtime directory.
- *
  * **Example** (Validate a base directory kind)
  *
  * ```ts

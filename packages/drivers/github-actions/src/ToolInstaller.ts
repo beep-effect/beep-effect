@@ -39,7 +39,6 @@ import type * as ChildProcess from "effect/process/ChildProcess";
 const $I = $GithubActionsId.create("ToolInstaller");
 
 /**
- * Raised when a tool cannot be downloaded, extracted or cached.
  * **Example** (Inspect a download failure)
  *
  * ```ts
@@ -210,8 +209,6 @@ export class ExtractOptions extends S.Opaque<ExtractOptions, { readonly brand: u
 ) {}
 
 /**
- * The plain-object contract represented by {@link ExtractOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -265,8 +262,6 @@ export class ToolDownloadOptions extends S.Opaque<ToolDownloadOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link ToolDownloadOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -328,8 +323,6 @@ export class ProvisionFileOptions extends S.Opaque<ProvisionFileOptions, { reado
 ) {}
 
 /**
- * The plain-object contract represented by {@link ProvisionFileOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -389,8 +382,6 @@ export class ProvisionedFile extends S.Opaque<ProvisionedFile, { readonly brand:
 ) {}
 
 /**
- * The plain-object contract represented by {@link ProvisionedFile}.
- *
  * @category type-level
  * @since 0.0.0
  */

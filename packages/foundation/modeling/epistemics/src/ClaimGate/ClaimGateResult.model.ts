@@ -45,8 +45,6 @@ export const ClaimGateSeverity = ClaimGateSeverityBase.pipe(
 );
 
 /**
- * Runtime type for {@link ClaimGateSeverity}.
- *
  * **Example** (Satisfy severity type)
  *
  * ```ts
@@ -146,8 +144,6 @@ export const ClaimGateResult = ClaimGateVerdict.toTaggedUnion("verdict")({
 );
 
 /**
- * Runtime type for {@link ClaimGateResult}.
- *
  * **Example** (Type admitted result)
  *
  * ```ts

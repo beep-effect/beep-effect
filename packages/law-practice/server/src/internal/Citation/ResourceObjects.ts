@@ -187,14 +187,13 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
     const current = yield* S.decodeEffect(codec)(citationResult3).pipe(Effect.mapError(() => failure("invalid-input")));
     const citation = current.citation;
     if (citation.type === "case") {
-      // Explicit null pages must not evaluate reporter/edition lookup.
       const [, page] = yield* readCitationResourcePage(
         citation,
         () => failure("invalid-input"),
         () => failure("missing-page")
       );
-      const nullPage = page === null;
-      const selected = nullPage ? O.none() : citation.publication.selectedEdition;
+      const nullPageSkipsReporterEditionLookup = page === null;
+      const selected = nullPageSkipsReporterEditionLookup ? O.none() : citation.publication.selectedEdition;
       const edition = O.isSome(selected)
         ? yield* editions.lookup(selected.value, "case").pipe(
             Effect.mapError(() => failure("artifact-failed")),

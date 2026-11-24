@@ -16,7 +16,6 @@ import * as Fiber from "effect/Fiber";
 import * as S from "effect/Schema";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationRegexDescriptorRegistry = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationRegexDescriptorRegistry>[0],
   a1: unknown,
@@ -26,10 +25,10 @@ const makeCitationRegexDescriptorRegistry = Effect.fnUntraced(function* (
   return yield* makeOwnedCitationRegexDescriptorRegistry(a0, o1, a2);
 });
 
-// Fixed vectors independently computed with Python 3.11.15 hashlib over a width
-// byte and little-endian Python points; no target fingerprint helper is used.
+const python3_11_15HashlibVectorOverWidthByteAndLittleEndianPointsNotATargetFingerprintHelper =
+  "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7";
 const descriptor = () => ({
-  patternSha256: "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7",
+  patternSha256: python3_11_15HashlibVectorOverWidthByteAndLittleEndianPointsNotATargetFingerprintHelper,
   flags: 0,
   profile: {
     groups: 2,
@@ -41,24 +40,26 @@ const descriptor = () => ({
 });
 const pattern = () => ({ width: 1, bytes: new TextEncoder().encode("(?P<maybe>a)?(b)") });
 
-// The ProfileNames rule guards the boundary decode and per-request descriptors.
-it.effect("refuses capture names that are empty, out of range or shared, and drops non-identifier keys", () =>
-  Effect.gen(function* () {
-    const isProfile = S.is(CitationRegexPatternProfile);
-    const profile = descriptor().profile;
-    for (const names of [{ "": 1 }, { a: 0 }, { a: 3 }, { a: 1, b: 1 }]) {
-      expect(isProfile({ ...profile, names })).toBe(false);
-    }
-    expect(isProfile(profile)).toBe(true);
-    expect(isProfile({ ...profile, names: { a: 1, b: 2 } })).toBe(true);
-    // The GroupIdentifier key rule does not refuse: a v4 Record drops a key that
-    // fails its key schema, so the name never reaches the owned profile.
-    const dropped = yield* S.decodeEffect(CitationRegexPatternProfile)({
-      ...profile,
-      names: { "private source": 1 },
-    });
-    expect(dropped.names).toEqual({});
-  })
+it.effect(
+  "refuses capture names that are empty, out of range or shared by the ProfileNames rule, and drops non-identifier keys",
+  () =>
+    Effect.gen(function* () {
+      const isProfile = S.is(CitationRegexPatternProfile);
+      const profile = descriptor().profile;
+      for (const names of [{ "": 1 }, { a: 0 }, { a: 3 }, { a: 1, b: 1 }]) {
+        expect(isProfile({ ...profile, names })).toBe(false);
+      }
+      expect(isProfile(profile)).toBe(true);
+      expect(isProfile({ ...profile, names: { a: 1, b: 2 } })).toBe(true);
+      const dropped = yield* S.decodeEffect(CitationRegexPatternProfile)({
+        ...profile,
+        names: { "private source": 1 },
+      });
+      expect(
+        dropped.names,
+        "the GroupIdentifier key rule does not refuse: a Record drops a key that fails its key schema"
+      ).toEqual({});
+    })
 );
 
 const digestStorageBytes = (width: number, length: number) => {

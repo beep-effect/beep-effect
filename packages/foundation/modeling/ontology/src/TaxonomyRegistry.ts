@@ -94,8 +94,6 @@ export class LibrarianOutput extends S.Opaque<LibrarianOutput, { readonly brand:
 ) {}
 
 /**
- *  Raised when a requested concept is absent from loaded registry data.
- *
  * **Example** (Make concept-not-found error)
  *
  * ```ts
@@ -118,8 +116,6 @@ export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFou
 ) {}
 
 /**
- *  Raised when a concept does not admit the requested document class.
- *
  * **Example** (Make unsupported-class error)
  *
  * ```ts

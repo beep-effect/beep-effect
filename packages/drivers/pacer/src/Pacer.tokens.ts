@@ -20,8 +20,6 @@ const $I = $PacerId.create("pacer/Pacer.tokens");
 const NEXT_GEN_CSO_TOKEN_LENGTH = 128;
 
 /**
- * The opaque 128-character PACER `nextGenCSO` authentication token.
- *
  * **Details**
  *
  * Branded so it can never be confused with an ordinary string; the service
@@ -65,8 +63,6 @@ export const NextGenCsoToken = S.String.pipe(
 );
 
 /**
- * Type for {@link NextGenCsoToken}.
- *
  * **Example** (Annotate token variable type)
  *
  * ```ts
@@ -84,8 +80,6 @@ export const NextGenCsoToken = S.String.pipe(
 export type NextGenCsoToken = typeof NextGenCsoToken.Type;
 
 /**
- * Documented PACER `loginResult` codes from the Authentication API.
- *
  * **Details**
  *
  * `"0"` = a token was issued (note: a non-empty `errorDescription` can still
@@ -112,8 +106,6 @@ export const LoginResult = LiteralKit(["0", "1", "13"]).pipe(
 );
 
 /**
- * Type for {@link LoginResult}.
- *
  * **Example** (Annotate login result type)
  *
  * ```ts
@@ -152,8 +144,6 @@ export const JurisdictionType = LiteralKit(["ap", "bk", "cr", "cv", "mdl"]).pipe
 );
 
 /**
- * Type for {@link JurisdictionType}.
- *
  * **Example** (Annotate jurisdiction type)
  *
  * ```ts
@@ -170,8 +160,6 @@ export const JurisdictionType = LiteralKit(["ap", "bk", "cr", "cv", "mdl"]).pipe
 export type JurisdictionType = typeof JurisdictionType.Type;
 
 /**
- * A PCL "full" case number, e.g. `1:2002bk20340`.
- *
  * **Details**
  *
  * Plain `string` at the type level. Schema-derived generation follows the
@@ -197,8 +185,6 @@ export const CaseNumberFull = S.String.pipe(
 );
 
 /**
- * Type for {@link CaseNumberFull}.
- *
  * **Example** (Annotate case number type)
  *
  * ```ts
@@ -236,8 +222,6 @@ export const PacerEnvironment = LiteralKit(["qa", "prod"]).pipe(
 );
 
 /**
- * Type for {@link PacerEnvironment}.
- *
  * **Example** (Annotate environment type)
  *
  * ```ts
@@ -274,8 +258,6 @@ export const ReportStatus = LiteralKit(["WAITING", "RUNNING", "COMPLETED", "FAIL
 );
 
 /**
- * Type for {@link ReportStatus}.
- *
  * **Example** (Annotate report status type)
  *
  * ```ts

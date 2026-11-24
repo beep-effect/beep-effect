@@ -102,8 +102,6 @@ export class GraphItemReference extends S.Opaque<GraphItemReference, { readonly 
 ) {}
 
 /**
- * Graph `file.hashes` content fingerprints.
- *
  * **Example** (Empty file hashes make)
  *
  * ```ts
@@ -124,8 +122,6 @@ export class GraphFileHashes extends S.Opaque<GraphFileHashes, { readonly brand:
 ) {}
 
 /**
- * The Graph `file` facet of a driveItem.
- *
  * **Example** (Empty file facet make)
  *
  * ```ts
@@ -145,8 +141,6 @@ export class GraphFile extends S.Opaque<GraphFile, { readonly brand: unique symb
 ) {}
 
 /**
- * The Graph `folder` facet of a driveItem.
- *
  * **Example** (Empty folder facet make)
  *
  * ```ts
@@ -165,8 +159,6 @@ export class GraphFolder extends S.Opaque<GraphFolder, { readonly brand: unique 
 ) {}
 
 /**
- * The Graph `deleted` facet, present on delta tombstones.
- *
  * **Example** (Empty deleted facet make)
  *
  * ```ts
@@ -185,8 +177,6 @@ export class GraphDeleted extends S.Opaque<GraphDeleted, { readonly brand: uniqu
 ) {}
 
 /**
- * A drive storage `quota` summary.
- *
  * **Example** (Empty quota make)
  *
  * ```ts
@@ -209,8 +199,6 @@ export class GraphQuota extends S.Opaque<GraphQuota, { readonly brand: unique sy
 ) {}
 
 /**
- * A Graph `siteCollection` descriptor.
- *
  * **Example** (Empty site collection make)
  *
  * ```ts
@@ -335,8 +323,6 @@ export class GraphEmailAddress extends S.Opaque<GraphEmailAddress, { readonly br
 ) {}
 
 /**
- * A Graph mail `recipient` wrapper.
- *
  * **Example** (Empty recipient make)
  *
  * ```ts
@@ -376,8 +362,6 @@ export class GraphItemBody extends S.Opaque<GraphItemBody, { readonly brand: uni
 ) {}
 
 /**
- * A Graph `dateTimeTimeZone` pair.
- *
  * **Example** (Empty dateTimeTimeZone make)
  *
  * ```ts
@@ -397,8 +381,6 @@ export class GraphDateTimeTimeZone extends S.Opaque<GraphDateTimeTimeZone, { rea
 ) {}
 
 /**
- * A Graph event `location` descriptor.
- *
  * **Example** (Empty location make)
  *
  * ```ts
@@ -418,8 +400,6 @@ export class GraphLocation extends S.Opaque<GraphLocation, { readonly brand: uni
 ) {}
 
 /**
- * A Graph `contentTypeInfo` reference on a listItem.
- *
  * **Example** (Empty content type info make)
  *
  * ```ts
@@ -468,8 +448,6 @@ export const GraphCollection = <Item extends S.Top>(item: Item) =>
   });
 
 /**
- * A OneDrive/SharePoint drive (document library).
- *
  * **Example** (Make drive with id)
  *
  * ```ts
@@ -496,8 +474,6 @@ export class GraphDrive extends S.Opaque<GraphDrive, { readonly brand: unique sy
 ) {}
 
 /**
- * A SharePoint site.
- *
  * **Example** (Make site with id)
  *
  * ```ts
@@ -656,8 +632,6 @@ export const GraphBodyContentType = LiteralKit(["text", "html"]).pipe(
 );
 
 /**
- * Type for {@link GraphBodyContentType}.
- *
  * **Example** (Type a content type)
  *
  * ```ts
@@ -673,8 +647,6 @@ export const GraphBodyContentType = LiteralKit(["text", "html"]).pipe(
 export type GraphBodyContentType = typeof GraphBodyContentType.Type;
 
 /**
- * Free/busy states an Outlook event can show.
- *
  * **Example** (Guard a show-as value)
  *
  * ```ts
@@ -691,8 +663,6 @@ export const GraphEventShowAs = LiteralKit(["free", "tentative", "busy", "oof", 
 );
 
 /**
- * Type for {@link GraphEventShowAs}.
- *
  * **Example** (Type a show-as value)
  *
  * ```ts
@@ -708,8 +678,6 @@ export const GraphEventShowAs = LiteralKit(["free", "tentative", "busy", "oof", 
 export type GraphEventShowAs = typeof GraphEventShowAs.Type;
 
 /**
- * Preset colors of an Outlook master category.
- *
  * **Example** (Guard a category color)
  *
  * ```ts
@@ -751,8 +719,6 @@ export const GraphCategoryColor = LiteralKit([
 ]).pipe($I.annoteSchema("GraphCategoryColor", { description: "Outlook master-category preset color." }));
 
 /**
- * Type for {@link GraphCategoryColor}.
- *
  * **Example** (Type a category color)
  *
  * ```ts
@@ -818,8 +784,6 @@ export class GraphAttachment extends S.Opaque<GraphAttachment, { readonly brand:
 ) {}
 
 /**
- * An Outlook mail folder (read subset).
- *
  * **Example** (Make mail folder with id)
  *
  * ```ts
@@ -886,8 +850,6 @@ export class GraphMessage extends S.Opaque<GraphMessage, { readonly brand: uniqu
 ) {}
 
 /**
- * One attendee of a calendar event (read subset).
- *
  * **Details**
  *
  * A host reads this to tell a meeting from an appointment: Graph mails every
@@ -919,8 +881,6 @@ export class GraphEventAttendee extends S.Opaque<GraphEventAttendee, { readonly 
 ) {}
 
 /**
- * An Outlook calendar event (read subset).
- *
  * **Example** (Make event with id)
  *
  * ```ts
@@ -985,8 +945,6 @@ export class GraphContactProperty extends S.Opaque<GraphContactProperty, { reado
 ) {}
 
 /**
- * A personal mailbox contact with null-safe optional Graph fields.
- *
  * **Example** (Construct GraphContact)
  *
  * ```ts
@@ -1021,8 +979,6 @@ export class GraphContact extends S.Opaque<GraphContact, { readonly brand: uniqu
 ) {}
 
 /**
- * A personal contact folder, including nested folders.
- *
  * **Example** (Construct GraphContactFolder)
  *
  * ```ts

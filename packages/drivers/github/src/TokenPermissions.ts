@@ -24,8 +24,6 @@ import * as S from "effect/Schema";
 const $I = $GithubId.create("TokenPermissions");
 
 /**
- * How much access a permission grants.
- *
  * **Example** (Validate a supported permission level)
  *
  * ```ts
@@ -44,8 +42,6 @@ export const PermissionLevel = LiteralKit(["read", "write", "admin"]).pipe(
 );
 
 /**
- * How much access a permission grants.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -58,8 +54,6 @@ const isPermissionLevel = S.is(PermissionLevel);
 const RANK: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
 
 /**
- * A permission the token does not have enough of.
- *
  * **Example** (Record a permission below the required level)
  *
  * ```ts
@@ -89,8 +83,6 @@ export class PermissionGap extends S.Opaque<PermissionGap, { readonly brand: uni
 ) {}
 
 /**
- * A permission the token has and did not need.
- *
  * **Example** (Record an unrequested permission)
  *
  * ```ts
@@ -120,8 +112,6 @@ export class ExtraPermission extends S.Opaque<ExtraPermission, { readonly brand:
 ) {}
 
 /**
- * What comparing a token's permissions against a requirement found.
- *
  * **Example** (Inspect an exact permission match)
  *
  * ```ts
@@ -192,8 +182,6 @@ export class PermissionResult extends S.Class<PermissionResult, { readonly brand
 }
 
 /**
- * A token asked for access it does not have, or has access it did not ask for.
- *
  * **Example** (Describe a missing permission)
  *
  * ```ts
@@ -263,8 +251,6 @@ export class TokenPermissionError extends S.TaggedError<TokenPermissionError, { 
 }
 
 /**
- * The permissions a token was granted, and what they satisfy.
- *
  * **Details**
  *
  * **A pure class, not a service.** It compares permission levels

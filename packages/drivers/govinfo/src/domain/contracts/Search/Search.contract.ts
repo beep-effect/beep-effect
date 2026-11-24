@@ -16,8 +16,6 @@ import { SearchResponse } from "../../values/SearchResponse/index.ts";
 const $I = $GovinfoId.create("domain/contracts/Search/Search.contract");
 
 /**
- * Request body accepted by the GovInfo search endpoint.
- *
  * **Details**
  *
  * GovInfo search is a POST endpoint. `offsetMark` normally starts as `"*"`
@@ -52,8 +50,6 @@ export class Payload extends SearchBody.extend<Payload>($I`Payload`)(
 ) {}
 
 /**
- * Successful GovInfo search response body.
- *
  * **Example** (Decode search success body)
  *
  * ```ts
@@ -94,8 +90,6 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
 ) {}
 
 /**
- * Bad-request failure returned by the GovInfo search endpoint.
- *
  * **Example** (Decode bad-request failure)
  *
  * ```ts
@@ -128,8 +122,6 @@ export class FailureBadRequest extends S.TaggedError<FailureBadRequest, { readon
 ) {}
 
 /**
- * Not-found failure returned by the GovInfo search endpoint.
- *
  * **Example** (Decode not-found failure)
  *
  * ```ts
@@ -197,8 +189,6 @@ export class FailureInternalServerError extends S.TaggedError<
 ) {}
 
 /**
- * Tagged union of GovInfo search endpoint failures.
- *
  * **Example** (Guard Failure union membership)
  *
  * ```ts
@@ -223,8 +213,6 @@ export const Failure = S.Union([
 );
 
 /**
- * Type for {@link Failure}.
- *
  * **Example** (Annotate Failure tag type)
  *
  * ```ts
@@ -240,8 +228,6 @@ export const Failure = S.Union([
 export type Failure = typeof Failure.Type;
 
 /**
- * Companion namespace for {@link Failure}.
- *
  * **Example** (Assign Failure tag literal)
  *
  * ```ts

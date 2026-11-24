@@ -26,8 +26,6 @@ import type * as SchemaAST from "effect/SchemaAST";
 const $I = $PandocAstId.create("Pandoc.model");
 
 /**
- * Pandoc API version tuple carried by Pandoc JSON.
- *
  * **Example** (Making API version tuple)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqu
 );
 
 /**
- * Runtime type for {@link PandocApiVersion}.
- *
  * **Example** (Typing version tuple)
  *
  * ```ts import.meta.vitest name="Typing version tuple"
@@ -79,8 +75,6 @@ export type PandocApiVersion = typeof PandocApiVersion.Type;
 export const DEFAULT_PANDOC_API_VERSION: PandocApiVersion = PandocApiVersion.make([1, 23, 1]);
 
 /**
- * Exact JSON object retained for a future Pandoc constructor.
- *
  * **Details**
  *
  * The `c` payload is genuinely optional because Pandoc nullary constructors
@@ -112,8 +106,6 @@ export const PandocUnknownConstructorWire = S.StructWithRest(
 );
 
 /**
- * Runtime type for {@link PandocUnknownConstructorWire}.
- *
  * **Example** (Typing unknown constructor wire)
  *
  * ```ts import.meta.vitest name="Typing unknown constructor wire"
@@ -145,8 +137,6 @@ const PandocFutureConstructorWire = PandocUnknownConstructorWire.pipe(
 );
 
 /**
- * Pandoc attribute key/value pair.
- *
  * **Example** (Decoding key-value pair)
  *
  * ```ts
@@ -167,8 +157,6 @@ export const PandocKeyValue = S.Tuple([S.String, S.String]).pipe(
 );
 
 /**
- * Runtime type for {@link PandocKeyValue}.
- *
  * **Example** (Typing key-value pair)
  *
  * ```ts import.meta.vitest name="Typing key-value pair"
@@ -184,8 +172,6 @@ export const PandocKeyValue = S.Tuple([S.String, S.String]).pipe(
 export type PandocKeyValue = typeof PandocKeyValue.Type;
 
 /**
- * Pandoc attribute triple represented with named fields.
- *
  * **Example** (Using empty attributes)
  *
  * ```ts import.meta.vitest name="Using empty attributes"
@@ -225,8 +211,6 @@ export class PandocAttr extends S.Opaque<PandocAttr, {}>()(
 }
 
 /**
- * Companion namespace for {@link PandocAttr}.
- *
  * **Example** (Making named attributes)
  *
  * ```ts import.meta.vitest name="Making named attributes"
@@ -256,8 +240,6 @@ export declare namespace PandocAttr {
 }
 
 /**
- * Pandoc link or image target.
- *
  * **Example** (Making link target)
  *
  * ```ts
@@ -286,8 +268,6 @@ export class PandocTarget extends S.Opaque<PandocTarget, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link PandocTarget}.
- *
  * **Example** (Typing link target)
  *
  * ```ts import.meta.vitest name="Typing link target"
@@ -493,16 +473,12 @@ export const PandocFormat = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link PandocFormat}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PandocFormat = typeof PandocFormat.Type;
 
 /**
- * Recursive Pandoc inline child list.
- *
  * **Example** (Checking empty inline children)
  *
  * ```ts import.meta.vitest name="Checking empty inline children"
@@ -525,8 +501,6 @@ export const PandocInlineChildren = S.Array(
 );
 
 /**
- * Runtime type for {@link PandocInlineChildren}.
- *
  * **Example** (Typing empty inline children)
  *
  * ```ts import.meta.vitest name="Typing empty inline children"
@@ -542,8 +516,6 @@ export const PandocInlineChildren = S.Array(
 export type PandocInlineChildren = typeof PandocInlineChildren.Type;
 
 /**
- * Companion namespace for {@link PandocInlineChildren}.
- *
  * **Example** (Using inline children Type)
  *
  * ```ts import.meta.vitest name="Using inline children Type"
@@ -569,8 +541,6 @@ export declare namespace PandocInlineChildren {
 }
 
 /**
- * Recursive Pandoc block child list.
- *
  * **Example** (Checking empty block children)
  *
  * ```ts import.meta.vitest name="Checking empty block children"
@@ -593,8 +563,6 @@ export const PandocBlockChildren = S.Array(
 );
 
 /**
- * Runtime type for {@link PandocBlockChildren}.
- *
  * **Example** (Typing empty block children)
  *
  * ```ts import.meta.vitest name="Typing empty block children"
@@ -610,8 +578,6 @@ export const PandocBlockChildren = S.Array(
 export type PandocBlockChildren = typeof PandocBlockChildren.Type;
 
 /**
- * Companion namespace for {@link PandocBlockChildren}.
- *
  * **Example** (Using block children Type)
  *
  * ```ts import.meta.vitest name="Using block children Type"
@@ -637,8 +603,6 @@ export declare namespace PandocBlockChildren {
 }
 
 /**
- * One Pandoc list item as a list of blocks.
- *
  * **Example** (Checking empty list item)
  *
  * ```ts import.meta.vitest name="Checking empty list item"
@@ -661,8 +625,6 @@ export const PandocListItem = S.Array(
 );
 
 /**
- * Runtime type for {@link PandocListItem}.
- *
  * **Example** (Typing empty list item)
  *
  * ```ts import.meta.vitest name="Typing empty list item"
@@ -678,8 +640,6 @@ export const PandocListItem = S.Array(
 export type PandocListItem = typeof PandocListItem.Type;
 
 /**
- * Pandoc list items.
- *
  * **Example** (Checking empty list items)
  *
  * ```ts import.meta.vitest name="Checking empty list items"
@@ -700,8 +660,6 @@ export const PandocListItems = S.Array(PandocListItem).pipe(
 );
 
 /**
- * Runtime type for {@link PandocListItems}.
- *
  * **Example** (Typing empty list items)
  *
  * ```ts import.meta.vitest name="Typing empty list items"
@@ -717,8 +675,6 @@ export const PandocListItems = S.Array(PandocListItem).pipe(
 export type PandocListItems = typeof PandocListItems.Type;
 
 /**
- * Plain text inline.
- *
  * **Example** (Making plain text inline)
  *
  * ```ts import.meta.vitest name="Making plain text inline"
@@ -745,8 +701,6 @@ export class Str extends S.Opaque<Str, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Str}.
- *
  * **Example** (Typing Str node)
  *
  * ```ts import.meta.vitest name="Typing Str node"
@@ -775,8 +729,6 @@ export declare namespace Str {
 }
 
 /**
- * Pandoc space inline.
- *
  * **Example** (Making space inline)
  *
  * ```ts import.meta.vitest name="Making space inline"
@@ -799,8 +751,6 @@ export class Space extends S.Opaque<Space, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Space}.
- *
  * **Example** (Typing Space node)
  *
  * ```ts import.meta.vitest name="Typing Space node"
@@ -828,8 +778,6 @@ export declare namespace Space {
 }
 
 /**
- * Pandoc soft line break inline.
- *
  * **Example** (Making soft break inline)
  *
  * ```ts import.meta.vitest name="Making soft break inline"
@@ -852,8 +800,6 @@ export class SoftBreak extends S.Opaque<SoftBreak, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link SoftBreak}.
- *
  * **Example** (Typing SoftBreak node)
  *
  * ```ts import.meta.vitest name="Typing SoftBreak node"
@@ -881,8 +827,6 @@ export declare namespace SoftBreak {
 }
 
 /**
- * Pandoc hard line break inline.
- *
  * **Example** (Making hard line break)
  *
  * ```ts import.meta.vitest name="Making hard line break"
@@ -905,8 +849,6 @@ export class LineBreak extends S.Opaque<LineBreak, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link LineBreak}.
- *
  * **Example** (Typing LineBreak node)
  *
  * ```ts import.meta.vitest name="Typing LineBreak node"
@@ -934,8 +876,6 @@ export declare namespace LineBreak {
 }
 
 /**
- * Pandoc emphasis inline.
- *
  * **Example** (Making emphasis inline)
  *
  * ```ts import.meta.vitest name="Making emphasis inline"
@@ -962,8 +902,6 @@ export class Emph extends S.Opaque<Emph, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Emph}.
- *
  * **Example** (Typing Emph node)
  *
  * ```ts import.meta.vitest name="Typing Emph node"
@@ -995,8 +933,6 @@ export declare namespace Emph {
 }
 
 /**
- * Pandoc strong inline.
- *
  * **Example** (Making strong inline)
  *
  * ```ts import.meta.vitest name="Making strong inline"
@@ -1023,8 +959,6 @@ export class Strong extends S.Opaque<Strong, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Strong}.
- *
  * **Example** (Typing Strong node)
  *
  * ```ts import.meta.vitest name="Typing Strong node"
@@ -1056,8 +990,6 @@ export declare namespace Strong {
 }
 
 /**
- * Pandoc strikeout inline.
- *
  * **Example** (Making strikeout inline)
  *
  * ```ts import.meta.vitest name="Making strikeout inline"
@@ -1084,8 +1016,6 @@ export class Strikeout extends S.Opaque<Strikeout, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Strikeout}.
- *
  * **Example** (Typing Strikeout node)
  *
  * ```ts import.meta.vitest name="Typing Strikeout node"
@@ -1117,8 +1047,6 @@ export declare namespace Strikeout {
 }
 
 /**
- * Pandoc underlined inline content.
- *
  * **Example** (Make underlined content)
  *
  * ```ts import.meta.vitest name="Make underlined content"
@@ -1147,8 +1075,6 @@ export class Underline extends S.Opaque<Underline, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Underline}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1167,8 +1093,6 @@ export declare namespace Underline {
 }
 
 /**
- * Pandoc superscript inline content.
- *
  * **Example** (Make superscript content)
  *
  * ```ts import.meta.vitest name="Make superscript content"
@@ -1197,8 +1121,6 @@ export class Superscript extends S.Opaque<Superscript, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Superscript}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1217,8 +1139,6 @@ export declare namespace Superscript {
 }
 
 /**
- * Pandoc subscript inline content.
- *
  * **Example** (Make subscript content)
  *
  * ```ts import.meta.vitest name="Make subscript content"
@@ -1247,8 +1167,6 @@ export class Subscript extends S.Opaque<Subscript, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Subscript}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1267,8 +1185,6 @@ export declare namespace Subscript {
 }
 
 /**
- * Pandoc small-capital inline content.
- *
  * **Example** (Make small-capital content)
  *
  * ```ts import.meta.vitest name="Make small-capital content"
@@ -1297,8 +1213,6 @@ export class SmallCaps extends S.Opaque<SmallCaps, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link SmallCaps}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1317,8 +1231,6 @@ export declare namespace SmallCaps {
 }
 
 /**
- * Pandoc quoted inline content with an explicit quotation style.
- *
  * **Example** (Make double-quoted content)
  *
  * ```ts import.meta.vitest name="Make double-quoted content"
@@ -1350,8 +1262,6 @@ export class Quoted extends S.Opaque<Quoted, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Quoted}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1372,8 +1282,6 @@ export declare namespace Quoted {
 }
 
 /**
- * Structured Pandoc citation record embedded in a `Cite` inline.
- *
  * **Example** (Make a citation record)
  *
  * ```ts import.meta.vitest name="Make a citation record"
@@ -1411,8 +1319,6 @@ export class Citation extends S.Opaque<Citation, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Citation}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1439,8 +1345,6 @@ export declare namespace Citation {
 }
 
 /**
- * Pandoc citation inline with structured citations and rendered fallback content.
- *
  * **Example** (Make cited content)
  *
  * ```ts import.meta.vitest name="Make cited content"
@@ -1476,8 +1380,6 @@ export class Cite extends S.Opaque<Cite, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Cite}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1498,8 +1400,6 @@ export declare namespace Cite {
 }
 
 /**
- * Pandoc raw inline content with an explicit source format.
- *
  * **Example** (Make raw HTML inline)
  *
  * ```ts import.meta.vitest name="Make raw HTML inline"
@@ -1527,8 +1427,6 @@ export class RawInline extends S.Opaque<RawInline, {}>()(
 ) {}
 
 /**
- * Companion representations for {@link RawInline}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1545,8 +1443,6 @@ export declare namespace RawInline {
 }
 
 /**
- * Pandoc code inline.
- *
  * **Example** (Making code inline)
  *
  * ```ts import.meta.vitest name="Making code inline"
@@ -1576,8 +1472,6 @@ export class Code extends S.Opaque<Code, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Code}.
- *
  * **Example** (Typing Code node)
  *
  * ```ts import.meta.vitest name="Typing Code node"
@@ -1611,8 +1505,6 @@ export declare namespace Code {
 }
 
 /**
- * Pandoc link inline.
- *
  * **Example** (Making link inline)
  *
  * ```ts import.meta.vitest name="Making link inline"
@@ -1649,8 +1541,6 @@ export class Link extends S.Opaque<Link, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Link}.
- *
  * **Example** (Typing Link node)
  *
  * ```ts import.meta.vitest name="Typing Link node"
@@ -1690,8 +1580,6 @@ export declare namespace Link {
 }
 
 /**
- * Pandoc image inline.
- *
  * **Example** (Making image inline)
  *
  * ```ts import.meta.vitest name="Making image inline"
@@ -1728,8 +1616,6 @@ export class Image extends S.Opaque<Image, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Image}.
- *
  * **Example** (Typing Image node)
  *
  * ```ts import.meta.vitest name="Typing Image node"
@@ -1769,8 +1655,6 @@ export declare namespace Image {
 }
 
 /**
- * Pandoc span inline.
- *
  * **Example** (Making span inline)
  *
  * ```ts import.meta.vitest name="Making span inline"
@@ -1800,8 +1684,6 @@ export class Span extends S.Opaque<Span, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Span}.
- *
  * **Example** (Typing Span node)
  *
  * ```ts import.meta.vitest name="Typing Span node"
@@ -1835,8 +1717,6 @@ export declare namespace Span {
 }
 
 /**
- * Pandoc footnote or endnote inline.
- *
  * **Example** (Making footnote inline)
  *
  * ```ts import.meta.vitest name="Making footnote inline"
@@ -1863,8 +1743,6 @@ export class Note extends S.Opaque<Note, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Note}.
- *
  * **Example** (Typing Note node)
  *
  * ```ts import.meta.vitest name="Typing Note node"
@@ -1896,8 +1774,6 @@ export declare namespace Note {
 }
 
 /**
- * Pandoc math inline.
- *
  * **Example** (Making math inline)
  *
  * ```ts import.meta.vitest name="Making math inline"
@@ -1927,8 +1803,6 @@ export class Math extends S.Opaque<Math, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Math}.
- *
  * **Example** (Typing Math node)
  *
  * ```ts import.meta.vitest name="Typing Math node"
@@ -1958,8 +1832,6 @@ export declare namespace Math {
 }
 
 /**
- * Future Pandoc inline constructor outside the pinned 1.23.1 registry.
- *
  * **Example** (Making unknown inline)
  *
  * ```ts import.meta.vitest name="Making unknown inline"
@@ -2006,8 +1878,6 @@ export class UnknownInline extends S.TaggedClass<UnknownInline, {}>($I`UnknownIn
 }
 
 /**
- * Companion namespace for {@link UnknownInline}.
- *
  * **Example** (Typing UnknownInline node)
  *
  * ```ts import.meta.vitest name="Typing UnknownInline node"
@@ -2041,8 +1911,6 @@ export declare namespace UnknownInline {
 }
 
 /**
- * Pandoc inline union for the v1 compatibility slice.
- *
  * **Example** (Checking inline union)
  *
  * ```ts import.meta.vitest name="Checking inline union"
@@ -2086,8 +1954,6 @@ export const PandocInline = S.Union([
 );
 
 /**
- * Runtime type for {@link PandocInline}.
- *
  * **Example** (Typing inline union)
  *
  * ```ts import.meta.vitest name="Typing inline union"
@@ -2103,8 +1969,6 @@ export const PandocInline = S.Union([
 export type PandocInline = typeof PandocInline.Type;
 
 /**
- * Companion namespace for {@link PandocInline}.
- *
  * **Example** (Using inline Type alias)
  *
  * ```ts import.meta.vitest name="Using inline Type alias"
@@ -2172,8 +2036,6 @@ export declare namespace PandocInline {
 }
 
 /**
- * Pandoc plain block.
- *
  * **Example** (Making plain block)
  *
  * ```ts import.meta.vitest name="Making plain block"
@@ -2200,8 +2062,6 @@ export class Plain extends S.Opaque<Plain, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Plain}.
- *
  * **Example** (Typing Plain node)
  *
  * ```ts import.meta.vitest name="Typing Plain node"
@@ -2233,8 +2093,6 @@ export declare namespace Plain {
 }
 
 /**
- * Pandoc paragraph block.
- *
  * **Example** (Making paragraph block)
  *
  * ```ts import.meta.vitest name="Making paragraph block"
@@ -2261,8 +2119,6 @@ export class Para extends S.Opaque<Para, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Para}.
- *
  * **Example** (Typing Para node)
  *
  * ```ts import.meta.vitest name="Typing Para node"
@@ -2294,8 +2150,6 @@ export declare namespace Para {
 }
 
 /**
- * Pandoc header block.
- *
  * **Example** (Making header block)
  *
  * ```ts import.meta.vitest name="Making header block"
@@ -2328,8 +2182,6 @@ export class Header extends S.Opaque<Header, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Header}.
- *
  * **Example** (Typing Header node)
  *
  * ```ts import.meta.vitest name="Typing Header node"
@@ -2365,8 +2217,6 @@ export declare namespace Header {
 }
 
 /**
- * Pandoc block quote.
- *
  * **Example** (Making block quote)
  *
  * ```ts import.meta.vitest name="Making block quote"
@@ -2393,8 +2243,6 @@ export class BlockQuote extends S.Opaque<BlockQuote, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link BlockQuote}.
- *
  * **Example** (Typing BlockQuote node)
  *
  * ```ts import.meta.vitest name="Typing BlockQuote node"
@@ -2426,8 +2274,6 @@ export declare namespace BlockQuote {
 }
 
 /**
- * Pandoc fenced code block.
- *
  * **Example** (Making fenced code block)
  *
  * ```ts import.meta.vitest name="Making fenced code block"
@@ -2457,8 +2303,6 @@ export class CodeBlock extends S.Opaque<CodeBlock, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link CodeBlock}.
- *
  * **Example** (Typing CodeBlock node)
  *
  * ```ts import.meta.vitest name="Typing CodeBlock node"
@@ -2492,8 +2336,6 @@ export declare namespace CodeBlock {
 }
 
 /**
- * Pandoc bullet list block.
- *
  * **Example** (Making bullet list)
  *
  * ```ts import.meta.vitest name="Making bullet list"
@@ -2520,8 +2362,6 @@ export class BulletList extends S.Opaque<BulletList, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link BulletList}.
- *
  * **Example** (Typing BulletList node)
  *
  * ```ts import.meta.vitest name="Typing BulletList node"
@@ -2553,8 +2393,6 @@ export declare namespace BulletList {
 }
 
 /**
- * Pandoc ordered list block.
- *
  * **Example** (Making ordered list)
  *
  * ```ts import.meta.vitest name="Making ordered list"
@@ -2595,8 +2433,6 @@ export class OrderedList extends S.Opaque<OrderedList, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link OrderedList}.
- *
  * **Example** (Typing OrderedList node)
  *
  * ```ts import.meta.vitest name="Typing OrderedList node"
@@ -2639,8 +2475,6 @@ export declare namespace OrderedList {
 }
 
 /**
- * Pandoc horizontal rule block.
- *
  * **Example** (Making horizontal rule)
  *
  * ```ts import.meta.vitest name="Making horizontal rule"
@@ -2663,8 +2497,6 @@ export class HorizontalRule extends S.Opaque<HorizontalRule, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link HorizontalRule}.
- *
  * **Example** (Typing HorizontalRule node)
  *
  * ```ts import.meta.vitest name="Typing HorizontalRule node"
@@ -2692,8 +2524,6 @@ export declare namespace HorizontalRule {
 }
 
 /**
- * Pandoc div block, including DOCX custom-style wrappers.
- *
  * **Example** (Making div block)
  *
  * ```ts import.meta.vitest name="Making div block"
@@ -2726,8 +2556,6 @@ export class Div extends S.Opaque<Div, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link Div}.
- *
  * **Example** (Typing Div node)
  *
  * ```ts import.meta.vitest name="Typing Div node"
@@ -2764,8 +2592,6 @@ export declare namespace Div {
 }
 
 /**
- * Pandoc line block containing ordered non-breaking inline lines.
- *
  * **Example** (Make a line block)
  *
  * ```ts import.meta.vitest name="Make a line block"
@@ -2794,8 +2620,6 @@ export class LineBlock extends S.Opaque<LineBlock, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link LineBlock}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -2814,8 +2638,6 @@ export declare namespace LineBlock {
 }
 
 /**
- * Pandoc raw block content with an explicit source format.
- *
  * **Example** (Make a raw HTML block)
  *
  * ```ts import.meta.vitest name="Make a raw HTML block"
@@ -2843,8 +2665,6 @@ export class RawBlock extends S.Opaque<RawBlock, {}>()(
 ) {}
 
 /**
- * Companion representations for {@link RawBlock}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -2887,16 +2707,12 @@ export const PandocDefinitionListItem = S.Tuple([PandocInlineChildren, S.Array(P
 );
 
 /**
- * Runtime type for {@link PandocDefinitionListItem}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PandocDefinitionListItem = typeof PandocDefinitionListItem.Type;
 
 /**
- * Pandoc definition list with structurally typed term/definition pairs.
- *
  * **Example** (Make a definition list)
  *
  * ```ts import.meta.vitest name="Make a definition list"
@@ -2927,8 +2743,6 @@ export class DefinitionList extends S.Opaque<DefinitionList, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link DefinitionList}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -2947,8 +2761,6 @@ export declare namespace DefinitionList {
 }
 
 /**
- * Pandoc table or figure caption with an optional short caption and long block content.
- *
  * **Example** (Make a long-only caption)
  *
  * ```ts import.meta.vitest name="Make a long-only caption"
@@ -2979,8 +2791,6 @@ export class PandocCaption extends S.Opaque<PandocCaption, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link PandocCaption}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -2999,8 +2809,6 @@ export declare namespace PandocCaption {
 }
 
 /**
- * Pandoc figure block with attributes, caption, and block content.
- *
  * **Example** (Make a figure)
  *
  * ```ts import.meta.vitest name="Make a figure"
@@ -3034,8 +2842,6 @@ export class Figure extends S.Opaque<Figure, {}>()(
 ) {}
 
 /**
- * Companion recursive representations for {@link Figure}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -3119,8 +2925,6 @@ export const PandocColumnWidth = S.Union([
 );
 
 /**
- * Runtime type for {@link PandocColumnWidth}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -3285,8 +3089,6 @@ const decodePandocStringOption = S.decodeUnknownOption(S.String);
 const decodePandocTableCaptionPairOption = S.decodeUnknownOption(PandocTableCaptionPair);
 
 /**
- * Canonical validated Pandoc table payload.
- *
  * **Details**
  *
  * Tables remain an explicit compatibility gap, so the complete six-field JSON
@@ -3329,8 +3131,6 @@ export const PandocTablePayload = PandocTablePayloadShape.pipe(
 );
 
 /**
- * Runtime type for {@link PandocTablePayload}.
- *
  * **Example** (Decoding table payload)
  *
  * ```ts import.meta.vitest name="Decoding table payload"
@@ -3391,8 +3191,6 @@ const tableCaptionPlainTextFromPayload = makeTableCaptionPlainTextFromPayload({
 });
 
 /**
- * Pandoc table block captured as an explicit gap node.
- *
  * **Example** (Making table gap node)
  *
  * ```ts import.meta.vitest name="Making table gap node"
@@ -3459,8 +3257,6 @@ export class Table extends S.TaggedClass<Table, {}>($I`Table`)(
 }
 
 /**
- * Companion namespace for {@link Table}.
- *
  * **Example** (Typing Table node)
  *
  * ```ts import.meta.vitest name="Typing Table node"
@@ -3496,8 +3292,6 @@ export declare namespace Table {
 }
 
 /**
- * Future Pandoc block constructor outside the pinned 1.23.1 registry.
- *
  * **Example** (Making unknown block)
  *
  * ```ts import.meta.vitest name="Making unknown block"
@@ -3544,8 +3338,6 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock, {}>($I`UnknownBloc
 }
 
 /**
- * Companion namespace for {@link UnknownBlock}.
- *
  * **Example** (Typing UnknownBlock node)
  *
  * ```ts import.meta.vitest name="Typing UnknownBlock node"
@@ -3579,8 +3371,6 @@ export declare namespace UnknownBlock {
 }
 
 /**
- * Pandoc block union for the v1 compatibility slice.
- *
  * **Example** (Checking block union)
  *
  * ```ts import.meta.vitest name="Checking block union"
@@ -3618,8 +3408,6 @@ export const PandocBlock = S.Union([
 );
 
 /**
- * Runtime type for {@link PandocBlock}.
- *
  * **Example** (Typing block union)
  *
  * ```ts import.meta.vitest name="Typing block union"
@@ -3635,8 +3423,6 @@ export const PandocBlock = S.Union([
 export type PandocBlock = typeof PandocBlock.Type;
 
 /**
- * Companion namespace for {@link PandocBlock}.
- *
  * **Example** (Using block Type alias)
  *
  * ```ts import.meta.vitest name="Using block Type alias"
@@ -3692,8 +3478,6 @@ export declare namespace PandocBlock {
 }
 
 /**
- * Companion recursive type knot for {@link PandocMetaValue}.
- *
  * **Example** (Decoding meta list value)
  *
  * ```ts import.meta.vitest name="Decoding meta list value"
@@ -3843,8 +3627,6 @@ const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Enc
 );
 
 /**
- * Boolean Pandoc metadata value.
- *
  * **Example** (Making boolean meta value)
  *
  * ```ts
@@ -3864,8 +3646,6 @@ export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
 );
 
 /**
- * String Pandoc metadata value.
- *
  * **Example** (Making string meta value)
  *
  * ```ts
@@ -3885,8 +3665,6 @@ export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe
 );
 
 /**
- * Inline-list Pandoc metadata value.
- *
  * **Example** (Making inline-list meta)
  *
  * ```ts
@@ -3906,8 +3684,6 @@ export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlin
 );
 
 /**
- * Block-list Pandoc metadata value.
- *
  * **Example** (Making block-list meta)
  *
  * ```ts
@@ -3927,8 +3703,6 @@ export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockCh
 );
 
 /**
- * Recursive list Pandoc metadata value.
- *
  * **Example** (Making recursive meta list)
  *
  * ```ts
@@ -3948,8 +3722,6 @@ export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaV
 );
 
 /**
- * Recursive mapping Pandoc metadata value.
- *
  * **Example** (Making recursive meta map)
  *
  * ```ts
@@ -3971,8 +3743,6 @@ export const MetaMap = S.TaggedStruct("metaMap", {
 );
 
 /**
- * Future Pandoc metadata constructor outside the supported surface.
- *
  * **Example** (Making unknown meta value)
  *
  * ```ts
@@ -4018,8 +3788,6 @@ export class UnknownMeta extends S.TaggedClass<UnknownMeta, { readonly brand: un
 }
 
 /**
- * Recursive semantic Pandoc metadata-value union.
- *
  * **Example** (Checking meta value union)
  *
  * ```ts
@@ -4048,8 +3816,6 @@ export const PandocMetaValue = S.Union([
 );
 
 /**
- * Decoded boolean metadata payload.
- *
  * **Example** (Typing boolean meta payload)
  *
  * ```ts import.meta.vitest name="Typing boolean meta payload"
@@ -4065,8 +3831,6 @@ export const PandocMetaValue = S.Union([
 export type MetaBool = typeof MetaBool.Type;
 
 /**
- * Decoded string metadata payload.
- *
  * **Example** (Typing string meta payload)
  *
  * ```ts import.meta.vitest name="Typing string meta payload"
@@ -4082,8 +3846,6 @@ export type MetaBool = typeof MetaBool.Type;
 export type MetaString = typeof MetaString.Type;
 
 /**
- * Decoded inline-list metadata payload.
- *
  * **Example** (Typing inline-list meta)
  *
  * ```ts import.meta.vitest name="Typing inline-list meta"
@@ -4116,8 +3878,6 @@ export type MetaInlines = typeof MetaInlines.Type;
 export type MetaInlinesEncoded = typeof MetaInlines.Encoded;
 
 /**
- * Decoded block-list metadata payload.
- *
  * **Example** (Typing block-list meta)
  *
  * ```ts import.meta.vitest name="Typing block-list meta"
@@ -4150,8 +3910,6 @@ export type MetaBlocks = typeof MetaBlocks.Type;
 export type MetaBlocksEncoded = typeof MetaBlocks.Encoded;
 
 /**
- * Decoded recursive metadata-list payload.
- *
  * **Example** (Typing recursive meta list)
  *
  * ```ts import.meta.vitest name="Typing recursive meta list"
@@ -4184,8 +3942,6 @@ export type MetaList = typeof MetaList.Type;
 export type MetaListEncoded = typeof MetaList.Encoded;
 
 /**
- * Decoded recursive metadata-map payload.
- *
  * **Example** (Typing recursive meta map)
  *
  * ```ts import.meta.vitest name="Typing recursive meta map"
@@ -4235,8 +3991,6 @@ export type MetaMapEncoded = typeof MetaMap.Encoded;
 export type UnknownMetaEncoded = typeof UnknownMeta.Encoded;
 
 /**
- * Recursive decoded Pandoc metadata value.
- *
  * **Example** (Typing decoded meta value)
  *
  * ```ts import.meta.vitest name="Typing decoded meta value"
@@ -4270,8 +4024,6 @@ export type PandocMetaValue = typeof PandocMetaValue.Type;
 export type PandocMetaValueEncoded = typeof PandocMetaValue.Encoded;
 
 /**
- * Pandoc document metadata map.
- *
  * **Example** (Decoding document metadata)
  *
  * ```ts import.meta.vitest name="Decoding document metadata"
@@ -4295,8 +4047,6 @@ export const PandocMeta = S.Record(S.String, DeferredPandocMetaValue).pipe(
 );
 
 /**
- * Runtime type for {@link PandocMeta}.
- *
  * **Example** (Typing document metadata)
  *
  * ```ts import.meta.vitest name="Typing document metadata"
@@ -4313,8 +4063,6 @@ export const PandocMeta = S.Record(S.String, DeferredPandocMetaValue).pipe(
 export type PandocMeta = typeof PandocMeta.Type;
 
 /**
- * Root Pandoc JSON document.
- *
  * **Example** (Making root document)
  *
  * ```ts import.meta.vitest name="Making root document"
@@ -4349,8 +4097,6 @@ export class PandocDocument extends S.Opaque<PandocDocument, {}>()(
 ) {}
 
 /**
- * Companion namespace for {@link PandocDocument}.
- *
  * **Example** (Typing PandocDocument node)
  *
  * ```ts import.meta.vitest name="Typing PandocDocument node"

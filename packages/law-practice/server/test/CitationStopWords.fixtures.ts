@@ -138,7 +138,6 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
 export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
-  // An owned configuration whose pattern fails authentication is refused by the stage.
   for (const configuration of [
     {
       ...closed.configuration,
@@ -153,7 +152,9 @@ export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime
       Effect.provideContext(closed.provided),
       Effect.flip
     );
-    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+    expect(rejected, "an owned configuration whose pattern fails authentication is refused by the stage").toMatchObject(
+      { reason: "invalid-configuration" }
+    );
   }
   const row = A.getUnsafe(closed.corpus.strips, 2);
   yield* assertCitationWorkerClosedLifetime(scope, closed.stage.clean(row.source), closed.observed.snapshot);

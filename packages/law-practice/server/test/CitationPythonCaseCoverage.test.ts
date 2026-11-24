@@ -8,7 +8,6 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
-/** Time out one lowercase run on the captured shorter deadline and report its name. */
 const timedOutLimit = Effect.fn("PythonCaseCoverage.timedOutLimit")(function* (
   cleanDeadline: Duration.Duration,
   operationDeadline: Duration.Duration

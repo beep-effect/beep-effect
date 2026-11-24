@@ -19,8 +19,6 @@ import { XlsxSheetName } from "./XlsxWorkbook.schema.ts";
 const $I = $XlsxId.create("XlsxOptions");
 
 /**
- * Read every sheet.
- *
  * **Example** (The starting sheet choice)
  *
  * ```ts import.meta.vitest name="The starting sheet choice"
@@ -81,8 +79,6 @@ export class XlsxNamedSheets extends S.Opaque<XlsxNamedSheets, { readonly brand:
 ) {}
 
 /**
- * Read the first sheet only.
- *
  * **Example** (Choose the first sheet)
  *
  * ```ts import.meta.vitest name="Choose the first sheet"
@@ -226,8 +222,6 @@ export class XlsxLimits extends S.Opaque<XlsxLimits, { readonly brand: unique sy
 }
 
 /**
- * How a workbook is read.
- *
  * **Example** (Read with the starting options)
  *
  * ```ts import.meta.vitest name="Read with the starting options"
@@ -286,8 +280,6 @@ export const XlsxCompression = LiteralKit(["deflate", "store"]).pipe(
 export type XlsxCompression = typeof XlsxCompression.Type;
 
 /**
- * How a workbook is written.
- *
  * **Example** (Store parts without deflating)
  *
  * ```ts import.meta.vitest name="Store parts without deflating"
@@ -325,8 +317,6 @@ export class XlsxWriteOptions extends S.Opaque<XlsxWriteOptions, { readonly bran
 }
 
 /**
- * The options of a codec: how it reads and how it writes.
- *
  * **Example** (A codec that reads only the first sheet)
  *
  * ```ts import.meta.vitest name="A codec that reads only the first sheet"

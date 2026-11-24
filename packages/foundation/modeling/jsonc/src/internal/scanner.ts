@@ -15,8 +15,6 @@ import { accumulation } from "./accumulation.ts";
 const $I = $JsoncId.create("internal/scanner");
 
 /**
- * Token kinds produced by the scanner.
- *
  * **Details**
  *
  * `Trivia` is a run of whitespace, `LineBreak` one line terminator (`\r\n`
@@ -61,8 +59,6 @@ export const SyntaxKind = LiteralKit([
 );
 
 /**
- * The union of scanner token kind literals.
- *
  * @see {@link SyntaxKind} for the runtime kit and its guards.
  * @category type-level
  * @since 0.0.0
@@ -107,8 +103,6 @@ export const ScanError = LiteralKit([
 );
 
 /**
- * The union of scanner error code literals.
- *
  * @see {@link ScanError} for the runtime kit and its guards.
  * @category type-level
  * @since 0.0.0

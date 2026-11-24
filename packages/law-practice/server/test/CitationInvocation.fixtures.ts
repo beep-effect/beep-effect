@@ -1,5 +1,4 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
-/** Direct private-stage tests use the production invocation constructor. */
 import {
   CitationAdmissionFailure,
   CitationOperationAdmission,
@@ -130,11 +129,10 @@ export const makeCitationTestInvocationBinding = Effect.fn("CitationInvocationTe
     run: (...args: Args) => Effect.Effect<A, E, R | CitationInvocation>
   ) =>
     Effect.fnUntraced(function* (...args: Args) {
-      // Test adapters support both standalone calls and explicit shared-ledger requests.
-      // This optional test-only read reuses the latter instead of admitting a second request.
       const current = yield* Effect.serviceOption(CitationInvocation);
       const explicit = yield* CitationTestExplicitInvocation;
-      if (explicit && O.isSome(current)) {
+      const reuseSharedLedgerInsteadOfAdmittingSecondRequest = explicit && O.isSome(current);
+      if (reuseSharedLedgerInsteadOfAdmittingSecondRequest) {
         if (O.isSome(observation)) yield* Ref.set(observation.value.current, current.value.budget);
         return yield* run(...args).pipe(Effect.provideService(CitationInvocation, current.value));
       }

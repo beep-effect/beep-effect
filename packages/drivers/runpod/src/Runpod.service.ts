@@ -52,8 +52,6 @@ const RunpodRawPath = S.String.pipe(
 );
 
 /**
- * Scalar query values accepted by Runpod request models and raw requests.
- *
  * **Example** (Inspect query scalar AST)
  *
  * ```ts
@@ -72,8 +70,6 @@ export const RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]).pipe(
 );
 
 /**
- * Type for {@link RunpodQueryScalar}.
- *
  * **Example** (Assign scalar query value)
  *
  * ```ts
@@ -91,8 +87,6 @@ export type RunpodQueryScalar = typeof RunpodQueryScalar.Type;
 const RunpodQueryScalarArray = S.Array(RunpodQueryScalar);
 
 /**
- * Query value accepted by the raw Runpod request escape hatch.
- *
  * **Example** (Inspect query value AST)
  *
  * ```ts
@@ -111,8 +105,6 @@ export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArr
 );
 
 /**
- * Type for {@link RunpodQueryValue}.
- *
  * **Example** (Assign array query value)
  *
  * ```ts
@@ -130,8 +122,6 @@ export type RunpodQueryValue = typeof RunpodQueryValue.Type;
 const runpodRawRequestHeadersDefault = R.empty();
 const runpodRawRequestQueryDefault = R.empty();
 /**
- * Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.
- *
  * **Details**
  *
  * `path` is relative to the configured base URL (`https://api.runpod.io/v2`
@@ -178,8 +168,6 @@ export class RunpodRawRequest extends S.Opaque<RunpodRawRequest, { readonly bran
 const decodeRunpodRawRequest = S.decodeEffect(RunpodRawRequest);
 
 /**
- * Raw Runpod HTTP response returned by {@link Runpod.raw}.
- *
  * **Example** (Make raw HTTP response)
  *
  * ```ts

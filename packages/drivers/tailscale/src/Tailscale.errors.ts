@@ -85,8 +85,6 @@ export class TailscaleCommandSpawnError extends S.TaggedError<
 }
 
 /**
- * Failure while collecting output from a running Tailscale process.
- *
  * **Example** (Create command output error)
  *
  * ```ts
@@ -250,8 +248,6 @@ export const TailscaleCommandError = S.Union([
 );
 
 /**
- * Runtime type for {@link TailscaleCommandError}.
- *
  * **Example** (Type annotate command error)
  *
  * ```ts
@@ -274,8 +270,6 @@ export const TailscaleCommandError = S.Union([
 export type TailscaleCommandError = typeof TailscaleCommandError.Type;
 
 /**
- * Failure to decode the JSON emitted by `tailscale status`.
- *
  * **Example** (Create status parse error)
  *
  * ```ts

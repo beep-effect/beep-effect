@@ -36,14 +36,15 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
       expect(ids).toEqual(A.map(data.cases, (row) => row.expectedId));
       expect(A.map(ids, (left) => A.map(ids, (right) => left === right))).toEqual(data.equality);
       expect(A.every(ids, S.is(CitationAuthorityId))).toBe(true);
-      // Frozen CIT spellings stay distinct despite the same public reporter ID.
       const first = A.getUnsafe(data.cases, 6).input.citation;
       const second = A.getUnsafe(data.cases, 7).input.citation;
       if (first.type !== "case" || second.type !== "case") throw new Error("case fixture required");
       expect(A.getUnsafe(first.publication.editions, 0).reporterId).toBe(
         A.getUnsafe(second.publication.editions, 0).reporterId
       );
-      expect(A.getUnsafe(ids, 6)).not.toBe(A.getUnsafe(ids, 7));
+      expect(A.getUnsafe(ids, 6), "frozen CIT spellings stay distinct despite the same public reporter ID").not.toBe(
+        A.getUnsafe(ids, 7)
+      );
     })
   );
 

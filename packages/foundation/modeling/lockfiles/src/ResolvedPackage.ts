@@ -19,8 +19,6 @@ const EMPTY_PEER_META: { readonly [name: string]: { readonly optional: boolean }
 const EMPTY_EDGE_NAMES: ReadonlyArray<string> = [];
 
 /**
- * A package resolved from a lockfile.
- *
  * **Details**
  *
  * The common shape every format's entries normalize into:

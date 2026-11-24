@@ -47,8 +47,6 @@ const isBackendNotSupportedDataFirst = (args: IArguments): boolean => args.lengt
 const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.length >= 3;
 
 /**
- * Failure raised when a backend does not support a requested operation.
- *
  * **Example** (Create unsupported backend error)
  *
  * ```ts import.meta.vitest name="Create unsupported backend error"
@@ -93,8 +91,6 @@ export class BackendNotSupported extends S.TaggedError<BackendNotSupported, { re
 }
 
 /**
- * Failure raised when a backend fails to initialize.
- *
  * **Example** (Create backend init error)
  *
  * ```ts import.meta.vitest name="Create backend init error"
@@ -139,8 +135,6 @@ export class BackendInitError extends S.TaggedError<BackendInitError, { readonly
 }
 
 /**
- * Failure raised when a backend operation fails at runtime.
- *
  * **Example** (Create operation failure error)
  *
  * ```ts import.meta.vitest name="Create operation failure error"
@@ -213,8 +207,6 @@ export const NLPBackendError = S.Union([BackendNotSupported, BackendInitError, B
 );
 
 /**
- * Runtime TypeScript type represented by the {@link NLPBackendError} schema.
- *
  * **Example** (Access error tag type)
  *
  * ```ts
