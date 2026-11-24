@@ -10,6 +10,7 @@ import {
   coverageSourceReadsPath,
   planCoverageAffectedScope,
   workspaceCoverageOwnerDrift,
+  workspaceCoverageReaderSources,
 } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
@@ -17,6 +18,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import { rowFixtureOwners, rowFixtureReaders } from "./support/CoverageOwnerRows.ts";
@@ -237,6 +239,31 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })("coverage owner drift check"
       const report = yield* workspaceCoverageOwnerDrift(path.resolve(import.meta.dirname, "../../../../.."));
       expect(report.sourceCount).toBeGreaterThan(1000);
       expect(report.drift).toEqual([]);
+    })
+  );
+});
+
+it.layer(PlatformLayer, { timeout: "60 seconds" })("coverage reader source scan", (it) => {
+  it.effect("never reads git-ignored tmp/ scratch trees that sibling tests create and delete", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-reader-sources-" });
+      const files = [
+        "packages/a/src/A.ts",
+        "packages/a/tmp/model-first-proof/packages/notes/src/Notes.ts",
+        "apps/web/tmp/scratch.ts",
+      ];
+      yield* Effect.forEach(
+        files,
+        (file) =>
+          Effect.andThen(fs.makeDirectory(path.dirname(path.join(root, file)), { recursive: true }), () =>
+            fs.writeFileString(path.join(root, file), '"standards/schema-first.inventory.jsonc"')
+          ),
+        { concurrency: 1, discard: true }
+      );
+      const sources = yield* workspaceCoverageReaderSources(root);
+      expect(A.map(sources, (scanned) => scanned.filePath)).toEqual(["packages/a/src/A.ts"]);
     })
   );
 });
