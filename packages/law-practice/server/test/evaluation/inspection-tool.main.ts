@@ -122,32 +122,30 @@ const treesOf = (value: PublishedClaimInspectionReport) =>
     decomposition.status === "decomposed" ? [decomposition.tree] : []
   );
 
-const verifyEveryRawSourceRecordIncludingFailedNormalization = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(
-  function* (
-    records: PublishedClaimInspectionReport["source"]["input"]["records"],
-    expected: (typeof Canonical.Type)["claims"][number],
-    familyId: string
-  ) {
-    const matches = A.filter(records, (record) =>
-      O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
-    );
-    if (matches.length !== 1) {
-      return yield* StructuralEvaluationError.make({
-        message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
-      });
-    }
-    const actual = O.getOrThrow(A.head(matches));
-    if (
-      actual.kind === "text" &&
-      // decision: canonical-whitespace-is-the-original-normalization-protocol
-      Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText
-    ) {
-      return yield* StructuralEvaluationError.make({
-        message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
-      });
-    }
+const verifyRawSourceRecordOfExpectedClaim = Effect.fn("InspectionEvaluation.verifyCanonicalRecord")(function* (
+  records: PublishedClaimInspectionReport["source"]["input"]["records"],
+  expected: (typeof Canonical.Type)["claims"][number],
+  familyId: string
+) {
+  const matches = A.filter(records, (record) =>
+    O.exists(O.flatMap(record.numberText, decodeSourceNumber), (number) => number === expected.claimNumber)
+  );
+  if (matches.length !== 1) {
+    return yield* StructuralEvaluationError.make({
+      message: `Source identity mismatch: ${familyId}/${expected.claimNumber}`,
+    });
   }
-);
+  const actual = O.getOrThrow(A.head(matches));
+  if (
+    actual.kind === "text" &&
+    // decision: canonical-whitespace-is-the-original-normalization-protocol
+    Str.trim(Str.replace(/\s+/gu, " ")(actual.canonicalText)) !== expected.claimText
+  ) {
+    return yield* StructuralEvaluationError.make({
+      message: `Raw canonical text mismatch: ${familyId}/${expected.claimNumber}`,
+    });
+  }
+});
 
 const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText")(function* (
   report: PublishedClaimInspectionReport,
@@ -160,8 +158,8 @@ const verifyCanonicalText = Effect.fn("InspectionEvaluation.verifyCanonicalText"
       message: `Complete source-record count mismatch: ${familyId}; source=${records.length}, canonical=${canonical.claims.length}`,
     });
   }
-  for (const expected of canonical.claims) {
-    yield* verifyEveryRawSourceRecordIncludingFailedNormalization(records, expected, familyId);
+  for (const expectedClaimEvenWhereNormalizationFailed of canonical.claims) {
+    yield* verifyRawSourceRecordOfExpectedClaim(records, expectedClaimEvenWhereNormalizationFailed, familyId);
   }
 });
 
