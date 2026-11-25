@@ -881,7 +881,7 @@ const ObjectTermUntagged = ObjectTermDefinition.pipe(
  * const object = S.decodeUnknownSync(ObjectTerm)({
  *   termType: "Literal",
  *   value: "Alice",
- *   datatype: { termType: "NamedNode", value: "http://www.w3.org/2001/XMLSchema#string" }
+ *   form: { _tag: "Simple" }
  * })
  * object.termType // => "Literal"
  * ```
@@ -966,7 +966,7 @@ export type GraphTerm = typeof GraphTerm.Type;
  *   object: {
  *     termType: "Literal",
  *     value: "Alice",
- *     datatype: { termType: "NamedNode", value: "http://www.w3.org/2001/XMLSchema#string" }
+ *     form: { _tag: "Simple" }
  *   },
  *   graph: { termType: "DefaultGraph", value: "" }
  * })
