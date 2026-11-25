@@ -70,7 +70,7 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    `standards/architecture/`, the nine rulings of report section 7 plus the
    scoped amendment to the persisted-bytes clause of chapter 11 as dated
    `DECISIONS.md` entries with reversal clauses, the glossary entries of report
-   section 5, and `packages/foundation/modeling/nlp/THEORY.md` absorbed by
+   section 5, and the retired `@beep/nlp` package's `THEORY.md` absorbed by
    section 14 of the knowledge-stack chapter, which links each kept claim to its
    ledger id and lists the withdrawn ones; the file is deleted with its package.
 9. One complete office-action flow runs end to end on synthetic fixtures with
@@ -199,7 +199,7 @@ and the phase order is `PLAN.md`), this file is normative.
   capability negative-gate clauses (`standards/ARCHITECTURE.md`): pure schemas
   belong in `foundation/modeling`; the named consumers are the langextract
   handoff, the semantica projection and the law-practice office-action flow.
-- `packages/foundation/modeling/nlp` (retired in P7 after L2 and L5 absorb it).
+- the retired `@beep/nlp` package (retired in P7 after L2 and L5 absorb it).
 - `packages/foundation/capability/nlp-processing` (existing capability package,
   the L5 home: absorbs `nlp/Operations` and `nlp/Algebra` after the upstream
   census of `effect/Combiner` and `effect/Reducer`; its instrumentation shard
@@ -221,7 +221,7 @@ and the phase order is `PLAN.md`), this file is normative.
   non-empty node. `pandoc-ast`, `lexical-schema` and `html` record no text
   positions; each gains a source map over `@beep/text` when a phase needs one
   (decision `2026-11-22-p2-ast-source-maps-md-only`).
-- `packages/foundation/modeling/schema-org`: retired whole in P7 (census: no consumer).
+- the retired `@beep/schema-org` package: retired whole in P7 (census: no consumer).
 - `packages/foundation/capability/langextract/src/Handoff` (verified receipts
   first, lossless handoff), `apps/labs/semantica/src/layers` (projection and
   the `1` default), `packages/law-practice/use-cases` (`OfficeActionReview`
@@ -234,7 +234,7 @@ and the phase order is `PLAN.md`), this file is normative.
 - `standards/architecture/` (new knowledge-stack chapter, `DECISIONS.md`
   entries including the scoped chapter-11 amendment, `GLOSSARY.md` entries),
   `docs/PROSE_TO_PROOF_VISION.md` (local-first posture, BeepGraph status),
-  `packages/foundation/modeling/nlp/THEORY.md` (its narrative moves into the
+  the retired `@beep/nlp` package's `THEORY.md` (its narrative moves into the
   chapter, then the file is retired with the package), `standards/instrumentation-catalog/` shards for every package
   that gains spans.
 
@@ -3388,7 +3388,7 @@ Reverse: Narrow the test to claim_propose only and move it into the law-practice
 
 ### P7: the typed BackendNotSupported failure becomes acceptance row L5-4, falsified by the wink backend test; only the functor framing of THEORY section 7 is withdrawn, 2026-11-24
 
-`packages/foundation/modeling/nlp/THEORY.md` §7 calls backends a category of functors. The framing predicts no law and is withdrawn. Its still-true structural claim, that an operation a backend does not support fails with the typed `BackendNotSupported` and never throws, is kept. The first draft moved it to the nlp-processing README with no ledger id, arguing that no bug could be named. That was wrong on both counts. Chapter 16 section 13 requires a README or chapter stating a structural property to cite the ledger id (`standards/architecture/16-knowledge-stack.md:756-758`), and the vision ruling keeps each still-true claim tied to one (`standards/architecture/DECISIONS.md:3171-3174`). The bug is nameable: a backend that throws a defect, or returns an empty or partial result, for an operation it does not support.
+the retired `@beep/nlp` package's `THEORY.md` §7 calls backends a category of functors. The framing predicts no law and is withdrawn. Its still-true structural claim, that an operation a backend does not support fails with the typed `BackendNotSupported` and never throws, is kept. The first draft moved it to the nlp-processing README with no ledger id, arguing that no bug could be named. That was wrong on both counts. Chapter 16 section 13 requires a README or chapter stating a structural property to cite the ledger id (`standards/architecture/16-knowledge-stack.md:756-758`), and the vision ruling keeps each still-true claim tied to one (`standards/architecture/DECISIONS.md:3171-3174`). The bug is nameable: a backend that throws a defect, or returns an empty or partial result, for an operation it does not support.
 
 Row 2 adds `L5-4` to `research/law-test-plan.md`: layer L5, kind acceptance, statement "an unsupported backend operation fails with `BackendNotSupported`, never a defect or a partial result", package `@beep/nlp-processing` (the contract, `packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts:300-310`), status green. The test is the production one, `packages/drivers/wink/test/Backend/WinkBackend.test.ts:102-120`: it runs `Effect.flip` over `parseDependencies` and `extractRelations` on the real wink layer, so a success or a defect fails it. The constructor test at `nlp-processing/test/Backend/NLPBackend.test.ts:71-77` only checks a value built by `notSupported` and is not the falsifier. The wink titles gain the `L5-4 ` prefix. The chapter's L5 **Laws** paragraph and the section 14 kept table list `L5-4`, and the nlp-processing README sentence cites it.
 
@@ -3540,7 +3540,7 @@ Reverse: Drop the nlp row from standards/changesets.retired-packages.json and ru
 
 ### P7: each package's turbo.json policy-fingerprint input line is stripped by hand before its delete-package run, and the writer then proves the result, 2026-11-24
 
-Both delete-package dry runs list `turbo.json` as a hard `file-path` hit: one input line each in the `//#lint:policy-fingerprint` task (`turbo.json:210`), `packages/foundation/modeling/nlp/package.json` at `:400` and the schema-org manifest at `:410`. The first draft said `bun run beep lint policy-fingerprint --write` rewrites them before the run. It cannot: the writer derives those inputs from "the manifests that declare policy scripts" and reads every workspace manifest (`packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts:20-22`, `:372`), and both manifests still declare `lint:jsdoc`, `lint:laws` and `lint:deprecated-apis`, so while either tree exists `--write` writes its line back. `delete-package` has no turbo step of its own.
+Both delete-package dry runs list `turbo.json` as a hard `file-path` hit: one input line each in the `//#lint:policy-fingerprint` task (`turbo.json:210`), the retired `@beep/nlp` manifest at `:400` and the schema-org manifest at `:410`. The first draft said `bun run beep lint policy-fingerprint --write` rewrites them before the run. It cannot: the writer derives those inputs from "the manifests that declare policy scripts" and reads every workspace manifest (`packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts:20-22`, `:372`), and both manifests still declare `lint:jsdoc`, `lint:laws` and `lint:deprecated-apis`, so while either tree exists `--write` writes its line back. `delete-package` has no turbo step of its own.
 
 The line is therefore stripped by hand in the deleting commit, before the run, as P2's deleting commit removed the provenance line (`010f21e3934`, `turbo.json` 1 line out). After the run, with the manifest gone, `bun run beep lint policy-fingerprint --write` rewrites `standards/policy-tools.fingerprint.json` and cannot restore the line, and `--check` proves the result.
 
@@ -3570,7 +3570,7 @@ Reverse: Restore the vision and companion wording from history by a new dated DE
 
 ### P7: the THEORY claims chapter 16 did not name are withdrawn, and SPEC criterion 8 reads absorbed and deleted, 2026-11-24
 
-Chapter 16 section 14 (`standards/architecture/16-knowledge-stack.md:771-800`) keeps six claims of `packages/foundation/modeling/nlp/THEORY.md` with ledger ids and withdraws four. Measured at f30c183f20a, four claims are neither kept nor withdrawn, and two sections are stale (maps `research/2026-11-24-p7-map-nlp-residue.md` section 5 and `research/2026-11-24-p7-map-doctrine-and-gates.md` section 1.4):
+Chapter 16 section 14 (`standards/architecture/16-knowledge-stack.md:771-800`) keeps six claims of the retired `@beep/nlp` package's `THEORY.md` with ledger ids and withdraws four. Measured at f30c183f20a, four claims are neither kept nor withdrawn, and two sections are stale (maps `research/2026-11-24-p7-map-nlp-residue.md` section 5 and `research/2026-11-24-p7-map-doctrine-and-gates.md` section 1.4):
 
 - §5 (`THEORY.md:73-86`), `cata` and `ana` as first-class recursion schemes. Both helpers exist in `packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts:560` and `:633`, with example tests at `nlp-processing/test/Graph/EffectGraph.test.ts:80,96`. The doctrine-and-gates map's "no `cata` or `ana` exists" is a search miss; the nlp-residue map has them right. No catalogue row names a defect that a fold law would catch, so the claim is withdrawn as doctrine and the helpers stay as library functions.
 - §6.1 (`:92-99`), the structure-and-projection coherence law ("normalizing tokens you just produced agrees with normalizing the source"). No catalogue row backs it, and lemmatization is the wink engine's behaviour, which chapter section 13 excludes ("Library behaviour is not a law of this repository"). Withdrawn. §6.2 (`:101-110`) names a downstream knowledge-graph initiative that no longer exists and joins the existing triangle-identities withdrawal.
@@ -3605,7 +3605,7 @@ Reverse: Revert the row 17 commit; the coverage, cache and fingerprint files ret
 
 ### P7: delete-package writer outputs keep only the retired package's removals, 2026-11-25
 
-The schema-org apply on the merged P6 head left two outputs outside the design's gate shape. First, `standards/comment-law/pending/beep-schema-org.jsonc` was residue: the comment law reached the lane after the design. `bun run beep laws comments --write` pruned that one stale scope (`--check` named only it) and `--check` then read findings=0; the nlp row prunes its shard the same way. Second, the fallow health baseline writer rewrote the whole file: it added 36 and dropped 4 `target_keys` entries for other packages and dropped 5 improved `finding_counts`, while schema-org had no entry in it. The dead-code baseline changed only its timestamp and sha. Both are S31 or regression inventories, so the rows restore them to the parent commit; `fallow:health:baseline:check` and `fallow:dead-code:check` (BEEP_PROOF_BASE=origin/main) stay green against the restored files, so P7's net delta in them is 0. The schema-first inventory keeps the writer's output: it removes the `Person.email` entry and refreshes line numbers of carried entries, adding none.
+The schema-org apply on the merged P6 head left two outputs outside the design's gate shape. First, the retired schema-org package's comment-law pending shard was residue: the comment law reached the lane after the design. `bun run beep laws comments --write` pruned that one stale scope (`--check` named only it) and `--check` then read findings=0; the nlp row prunes its shard the same way. Second, the fallow health baseline writer rewrote the whole file: it added 36 and dropped 4 `target_keys` entries for other packages and dropped 5 improved `finding_counts`, while schema-org had no entry in it. The dead-code baseline changed only its timestamp and sha. Both are S31 or regression inventories, so the rows restore them to the parent commit; `fallow:health:baseline:check` and `fallow:dead-code:check` (BEEP_PROOF_BASE=origin/main) stay green against the restored files, so P7's net delta in them is 0. The schema-first inventory keeps the writer's output: it removes the `Person.email` entry and refreshes line numbers of carried entries, adding none.
 
 Lane goals/text-knowledge-stack-rebuild-p7-retirement
 

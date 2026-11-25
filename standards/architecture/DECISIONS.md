@@ -3170,7 +3170,7 @@ corrected in P7 of `goals/text-knowledge-stack-rebuild`. Its BeepGraph status
 line is settled in P7 from the code that exists then; no status is chosen
 here.
 
-`packages/foundation/modeling/nlp/THEORY.md` is absorbed by section 14 of
+The retired `@beep/nlp` package's `THEORY.md` is absorbed by section 14 of
 `16-knowledge-stack.md`, which keeps each still-true claim tied to a ledger id
 and lists the withdrawn ones. The file is deleted with `@beep/nlp` in P7.
 
