@@ -3334,6 +3334,7 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3341,6 +3342,7 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3544,7 +3546,6 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3567,7 +3568,6 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3901,7 +3901,6 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3910,7 +3909,6 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/text",
           "@beep/utils"
         ]
       },

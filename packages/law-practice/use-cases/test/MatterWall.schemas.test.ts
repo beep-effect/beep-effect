@@ -1,6 +1,7 @@
 import { LawPrincipalId } from "@beep/law-practice-domain/values/LawClaim";
 import { GrantedScopes, LawPrincipal, MatterAccess, MatterDenialReason } from "@beep/law-practice-use-cases/MatterWall";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -63,5 +64,30 @@ describe("MatterWall schemas", () => {
       const current = yield* LawPrincipal;
       expect(current.principal).toBe(7);
     }).pipe(Effect.provideService(LawPrincipal, { principal: LawPrincipalId.make(7) }))
+  );
+});
+
+describe("MatterWall schema-derived values", () => {
+  it.effect.prop(
+    "round-trips every generated MatterAccess through its encoding",
+    [MatterAccess],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(MatterAccess)(value);
+        const decoded = yield* S.decodeUnknownEffect(MatterAccess)(encoded);
+        expect(S.toEquivalence(MatterAccess)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated GrantedScopes through its encoding",
+    [GrantedScopes],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(GrantedScopes)(value);
+        const decoded = yield* S.decodeUnknownEffect(GrantedScopes)(encoded);
+        expect(S.toEquivalence(GrantedScopes)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 });

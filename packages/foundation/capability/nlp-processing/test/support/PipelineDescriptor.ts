@@ -19,7 +19,7 @@ import type { ContentHash } from "@beep/schema/ContentHash";
 import type * as Clock from "effect/Clock";
 import type * as Digest from "effect/crypto/Digest";
 
-export const Step = S.Struct({
+const Step = S.Struct({
   fanOut: S.Int.check(S.isBetween({ minimum: 1, maximum: 3 })),
   fail: S.Boolean,
 });

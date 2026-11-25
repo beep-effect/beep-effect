@@ -8,6 +8,7 @@ import {
 } from "@beep/law-practice-domain/values/MatterScope";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -85,4 +86,40 @@ describe("MatterScope", () => {
     expect(binding.folderPrefix).toBe("Matters/A");
     expect(MatterAccessKind.literals.length).toBe(9);
   });
+});
+
+describe("MatterScope schema-derived values", () => {
+  it.effect.prop(
+    "round-trips every generated PracticeKgFamilyKey through its encoding",
+    [PracticeKgFamilyKey],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(PracticeKgFamilyKey)(value);
+        const decoded = yield* S.decodeUnknownEffect(PracticeKgFamilyKey)(encoded);
+        expect(S.toEquivalence(PracticeKgFamilyKey)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated MatterGrant through its encoding",
+    [MatterGrant],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(MatterGrant)(value);
+        const decoded = yield* S.decodeUnknownEffect(MatterGrant)(encoded);
+        expect(S.toEquivalence(MatterGrant)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated MailFolderBinding through its encoding",
+    [MailFolderBinding],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(MailFolderBinding)(value);
+        const decoded = yield* S.decodeUnknownEffect(MailFolderBinding)(encoded);
+        expect(S.toEquivalence(MailFolderBinding)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

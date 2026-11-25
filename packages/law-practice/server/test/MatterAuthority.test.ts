@@ -16,6 +16,7 @@ import { GrantedScopes, LawPrincipal, MatterAuthority } from "@beep/law-practice
 import { PosixPath } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -259,5 +260,30 @@ describe("MatterAuthority", () => {
       }
       expect(calls).toBe(1);
     })
+  );
+});
+
+describe("MatterAuthority schema-derived values", () => {
+  it.effect.prop(
+    "round-trips every generated GrantedScopes through its encoding",
+    [GrantedScopes],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(GrantedScopes)(value);
+        const decoded = yield* S.decodeUnknownEffect(GrantedScopes)(encoded);
+        expect(S.toEquivalence(GrantedScopes)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated MatterAuthorityConfig through its encoding",
+    [MatterAuthorityConfig],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(MatterAuthorityConfig)(value);
+        const decoded = yield* S.decodeUnknownEffect(MatterAuthorityConfig)(encoded);
+        expect(S.toEquivalence(MatterAuthorityConfig)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 });

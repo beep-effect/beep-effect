@@ -17,7 +17,7 @@ import {
 } from "@beep/law-practice-server";
 import { GrantedScopes } from "@beep/law-practice-use-cases/MatterWall";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
@@ -80,26 +80,51 @@ type Filing = {
   readonly row: PracticeKgCatalogRow;
 };
 
-const filing = (
-  digest: string,
-  name: string,
-  placement: { readonly client: string; readonly docket: string } | null
-): Filing => ({
+type Placement = { readonly client: string; readonly docket: string };
+
+type PlacementFields = {
+  readonly attributionSource: "filename" | "folder-path";
+  readonly category: "unsorted" | "docket";
+  readonly client: string | null;
+  readonly docket: string | null;
+  readonly docketKey: string | null;
+  readonly familyKey: string | null;
+};
+
+const unplacedFields: PlacementFields = {
+  attributionSource: "filename",
+  category: "unsorted",
+  client: null,
+  docket: null,
+  docketKey: null,
+  familyKey: null,
+};
+
+const placedFields = ({ client, docket }: Placement): PlacementFields => ({
+  attributionSource: "folder-path",
+  category: "docket",
+  client,
+  docket,
+  docketKey: `${client}.${docket}`,
+  familyKey: `${client}.20001`,
+});
+
+const filingWith = (digest: string, name: string, fields: PlacementFields): Filing => ({
   attribution: PracticeKgDocumentAttribution.make({
-    attributionSource: placement === null ? "filename" : "folder-path",
-    client: placement?.client ?? null,
+    attributionSource: fields.attributionSource,
+    client: fields.client,
     digest,
-    docket: placement?.docket ?? null,
-    docketKey: placement === null ? null : `${placement.client}.${placement.docket}`,
+    docket: fields.docket,
+    docketKey: fields.docketKey,
     family: "20001",
-    familyKey: placement === null ? null : `${placement.client}.20001`,
+    familyKey: fields.familyKey,
     recycled: false,
   }),
   row: PracticeKgCatalogRow.make({
-    category: placement === null ? "unsorted" : "docket",
-    client: placement?.client ?? null,
+    category: fields.category,
+    client: fields.client,
     digest,
-    docket: placement?.docket ?? null,
+    docket: fields.docket,
     docketFamily: "20001",
     effectiveName: name,
     mtimeIso: "2026-01-02T03:04:05.000Z",
@@ -112,6 +137,9 @@ const filing = (
     sourceRelativePath: name,
   }),
 });
+
+const filing = (digest: string, name: string, placement: Placement | null): Filing =>
+  filingWith(digest, name, placement === null ? unplacedFields : placedFields(placement));
 
 const alphaFilings = [
   filing(digests.shared, "shared-alpha.txt", { client: "11111", docket: "20001US01" }),
@@ -316,4 +344,51 @@ describe("Practice KG matter wall", () => {
       })
     );
   });
+});
+
+describe("Practice KG matter wall rows schema-derived values", () => {
+  it.effect.prop(
+    "round-trips every generated MailFolderBinding through its encoding",
+    [MailFolderBinding],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(MailFolderBinding)(value);
+        const decoded = yield* S.decodeUnknownEffect(MailFolderBinding)(encoded);
+        expect(S.toEquivalence(MailFolderBinding)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated SearchRow through its encoding",
+    [SearchRow],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(SearchRow)(value);
+        const decoded = yield* S.decodeUnknownEffect(SearchRow)(encoded);
+        expect(S.toEquivalence(SearchRow)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated DocumentKeyRow through its encoding",
+    [DocumentKeyRow],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(DocumentKeyRow)(value);
+        const decoded = yield* S.decodeUnknownEffect(DocumentKeyRow)(encoded);
+        expect(S.toEquivalence(DocumentKeyRow)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated FolderRow through its encoding",
+    [FolderRow],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(FolderRow)(value);
+        const decoded = yield* S.decodeUnknownEffect(FolderRow)(encoded);
+        expect(S.toEquivalence(FolderRow)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

@@ -20,7 +20,7 @@ export const proposition = DistinctionProposition.make({
   detail: { kind: "missing_limitation", limitation: "a hinged lid" },
 });
 
-export const generatedBy = ActivityId.make(`sha256:${Str.repeat(64)("b")}`);
+const generatedBy = ActivityId.make(`sha256:${Str.repeat(64)("b")}`);
 
 export const coreIn = (scope: ScopeRef): LawClaimCore =>
   LawClaimCore.make({

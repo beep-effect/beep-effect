@@ -91,6 +91,29 @@ const recordOf = (activities: HashSet.HashSet<ActivityRecord>, operation: TermIr
     O.getOrThrow
   );
 
+const endsNoEarlierThanItStarts = (record: ActivityRecord): boolean =>
+  DateTime.isLessThanOrEqualTo(record.start.started, record.ended);
+
+const feeds = (producer: ActivityRecord, consumer: ActivityRecord): boolean =>
+  HashSet.size(HashSet.intersection(producer.generated, consumer.start.used)) > 0;
+
+const startsAfterTheProducersOfItsInputs = (log: ReadonlyArray<ActivityRecord>): boolean =>
+  A.every(log, (consumer) =>
+    A.every(
+      A.filter(log, (producer) => feeds(producer, consumer)),
+      (producer) => DateTime.isLessThanOrEqualTo(producer.ended, consumer.start.started)
+    )
+  );
+
+const generatedByAnotherStep = (log: ReadonlyArray<ActivityRecord>, record: ActivityRecord, id: ContentHash) =>
+  A.some(log, (other) => other.id !== record.id && HashSet.has(other.generated, id));
+
+const usesOnlyWhatAnotherStepGenerated = (log: ReadonlyArray<ActivityRecord>, extractId: ActivityRecord["id"]) =>
+  A.every(
+    A.filter(log, (record) => record.id !== extractId),
+    (record) => A.every(A.fromIterable(record.start.used), (used) => generatedByAnotherStep(log, record, used))
+  );
+
 const proposedScenario = Effect.fn("OfficeActionFlow.proposedScenario")(function* (current: string) {
   const scenario = yield* reviewScenario({ principal: fixturePrincipal, current });
   const result = yield* scenario.review.review(scenario.input);
@@ -231,17 +254,10 @@ describe("office-action annotation flow", () => {
         expect(log).toHaveLength(3);
         const verified = yield* Effect.forEach(log, verifyActivityRecord, { concurrency: 1 });
         expect(verified).toHaveLength(3);
-        for (const record of log) expect(DateTime.isLessThanOrEqualTo(record.start.started, record.ended)).toBe(true);
-        for (const producer of log)
-          for (const consumer of log)
-            if (HashSet.size(HashSet.intersection(producer.generated, consumer.start.used)) > 0)
-              expect(DateTime.isLessThanOrEqualTo(producer.ended, consumer.start.started)).toBe(true);
+        expect(A.every(log, endsNoEarlierThanItStarts)).toBe(true);
+        expect(startsAfterTheProducersOfItsInputs(log)).toBe(true);
         const extract = recordOf(result.activities, ExtractTerm);
-        const generatedElsewhere = (record: ActivityRecord, id: ContentHash) =>
-          A.some(log, (other) => other.id !== record.id && HashSet.has(other.generated, id));
-        for (const record of log)
-          if (record.id !== extract.id)
-            for (const used of record.start.used) expect(generatedElsewhere(record, used)).toBe(true);
+        expect(usesOnlyWhatAnotherStepGenerated(log, extract.id)).toBe(true);
         expect(HashSet.has(recordOf(result.activities, ProposeClaimTerm).generated, result.proposed.claim)).toBe(true);
         const annotationAndOccurrenceIds = HashSet.union(
           HashSet.fromIterable<ContentHash>(handoff.document.annotations.pipe(HashMap.keys)),

@@ -15,9 +15,8 @@ const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.che
 
 const listOf = <A>(item: Arbitrary.Arbitrary<A>) => Arbitrary.array(item, { maxLength: 4 });
 
-export const utf16SpanArbitrary = Arbitrary.map(
-  Arbitrary.all([between(0, 10_000), between(1, 500)]),
-  ([start, width]) => Position.make({ unit: "utf16-code-unit", start, end: start + width })
+const utf16SpanArbitrary = Arbitrary.map(Arbitrary.all([between(0, 10_000), between(1, 500)]), ([start, width]) =>
+  Position.make({ unit: "utf16-code-unit", start, end: start + width })
 );
 
 export const tokenArbitrary = Arbitrary.map(

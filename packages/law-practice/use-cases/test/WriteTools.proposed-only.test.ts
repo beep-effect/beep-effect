@@ -70,6 +70,7 @@ import { fromApprovedToolsPolicy, TierGate, TierGatePolicy } from "@beep/mcp-kit
 import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { ActivityId } from "@beep/schema/ContentHash";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { mintCaptureId } from "@beep/text/Capture";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
@@ -646,5 +647,30 @@ describe("write tools emit proposed records only: (e) same schemas", () => {
         expect(proposeListing.outputSchema).toEqual(reference.outputSchema);
         expect(proposeListing.annotations).toMatchObject({ readOnlyHint: false, idempotentHint: true });
       })
+  );
+});
+
+describe("write tools emit proposed records only: (f) generated schema-derived values", () => {
+  it.effect.prop(
+    "round-trips every generated PracticeKgEpistemicStatus through its encoding",
+    [PracticeKgEpistemicStatus],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(PracticeKgEpistemicStatus)(value);
+        const decoded = yield* S.decodeUnknownEffect(PracticeKgEpistemicStatus)(encoded);
+        expect(S.toEquivalence(PracticeKgEpistemicStatus)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
+  it.effect.prop(
+    "round-trips every generated VerdictRow through its encoding",
+    [VerdictRow],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(VerdictRow)(value);
+        const decoded = yield* S.decodeUnknownEffect(VerdictRow)(encoded);
+        expect(S.toEquivalence(VerdictRow)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
   );
 });

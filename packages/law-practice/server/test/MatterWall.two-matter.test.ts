@@ -54,7 +54,7 @@ import * as Pglite from "@beep/pglite";
 import { ActivityId } from "@beep/schema/ContentHash";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { mintCaptureId } from "@beep/text/Capture";
 import {
   SourceTextDigest,
@@ -812,4 +812,18 @@ describe("MatterWall two matters with identical bytes", () => {
       })
     );
   });
+});
+
+describe("MatterWall draft notice schema-derived values", () => {
+  it.effect.prop(
+    "round-trips every generated NoticeMessage through its encoding",
+    [NoticeMessage],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(NoticeMessage)(value);
+        const decoded = yield* S.decodeUnknownEffect(NoticeMessage)(encoded);
+        expect(S.toEquivalence(NoticeMessage)(decoded, value)).toBe(true);
+      }),
+    { arbitrary: fcRuns(25) }
+  );
 });

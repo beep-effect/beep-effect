@@ -16,17 +16,17 @@ export const appendEvent = Effect.fnUntraced(function* (event: number) {
   yield* Ref.update(trace, A.append(event));
 });
 
-export type ExitShape =
+type ExitShape =
   | { readonly _tag: "Succeeded"; readonly value: unknown }
   | { readonly _tag: "Died" }
   | { readonly _tag: "Failed"; readonly error: unknown };
 
-export interface Observation {
+interface Observation {
   readonly exit: ExitShape;
   readonly trace: ReadonlyArray<number>;
 }
 
-export const toExitShape = <B, E>(exit: Exit.Exit<B, E>): ExitShape =>
+const toExitShape = <B, E>(exit: Exit.Exit<B, E>): ExitShape =>
   Exit.isSuccess(exit)
     ? { _tag: "Succeeded", value: exit.value }
     : Cause.hasDies(exit.cause)

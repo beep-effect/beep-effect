@@ -27,9 +27,6 @@
       "path": "../../foundation/capability/nlp-processing/tsconfig.json"
     },
     {
-      "path": "../../foundation/capability/semantic-web/tsconfig.json"
-    },
-    {
       "path": "../../foundation/modeling/annotation/tsconfig.json"
     },
     {
