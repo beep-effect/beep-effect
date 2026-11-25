@@ -30,8 +30,6 @@ const optionalText = (description: string) =>
   S.OptionFromNullOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 /**
- * What kind of submission act a record describes.
- *
  * **Details**
  *
  * Each submission is a distinct act with its own operative date. A
@@ -59,8 +57,6 @@ export const IdsSubmissionKind = IdsSubmissionKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link IdsSubmissionKind}.
- *
  * @see {@link IdsSubmissionKind} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -68,8 +64,6 @@ export const IdsSubmissionKind = IdsSubmissionKindBase.pipe(
 export type IdsSubmissionKind = typeof IdsSubmissionKind.Type;
 
 /**
- * Which 37 CFR 1.97 window a submission is a *candidate* for.
- *
  * **When to use**
  *
  * Use to record an observer's reading of which timing lane the controlling
@@ -102,8 +96,6 @@ export const IdsCandidateWindow = IdsCandidateWindowBase.pipe(
 );
 
 /**
- * Runtime type for {@link IdsCandidateWindow}.
- *
  * @see {@link IdsCandidateWindow} for the runtime schema and the candidate-only rule.
  * @category models
  * @since 0.0.0
@@ -111,8 +103,6 @@ export const IdsCandidateWindow = IdsCandidateWindowBase.pipe(
 export type IdsCandidateWindow = typeof IdsCandidateWindow.Type;
 
 /**
- * Which 37 CFR 1.97(e) statement accompanied a submission.
- *
  * **Details**
  *
  * `e1-foreign-citation` is the 1.97(e)(1) statement about an item first cited
@@ -140,8 +130,6 @@ export const IdsStatementType = IdsStatementTypeBase.pipe(
 );
 
 /**
- * Runtime type for {@link IdsStatementType}.
- *
  * @see {@link IdsStatementType} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -149,8 +137,6 @@ export const IdsStatementType = IdsStatementTypeBase.pipe(
 export type IdsStatementType = typeof IdsStatementType.Type;
 
 /**
- * How the Office marked a submission, as observed.
- *
  * **Gotchas**
  *
  * These members record markings, never conclusions. `not-considered` says the
@@ -176,8 +162,6 @@ export const IdsOfficeTreatmentState = IdsOfficeTreatmentStateBase.pipe(
 );
 
 /**
- * Runtime type for {@link IdsOfficeTreatmentState}.
- *
  * @see {@link IdsOfficeTreatmentState} for the runtime schema and the no-inference rule.
  * @category models
  * @since 0.0.0
@@ -185,8 +169,6 @@ export const IdsOfficeTreatmentState = IdsOfficeTreatmentStateBase.pipe(
 export type IdsOfficeTreatmentState = typeof IdsOfficeTreatmentState.Type;
 
 /**
- * The controlling dates and edge cases behind a candidate window.
- *
  * **Details**
  *
  * The dates are the prosecution events 37 CFR 1.97(b)-(d) select a lane from
@@ -347,8 +329,6 @@ export class IdsStatementFacts extends S.Opaque<IdsStatementFacts, { readonly br
 ) {}
 
 /**
- * Which 37 CFR 1.98 content items were present, as observed.
- *
  * **Details**
  *
  * These mirror the content requirements of 1.98(a)(1)-(3): the list itself with
@@ -405,8 +385,6 @@ export class IdsContentPresenceFacts extends S.Opaque<IdsContentPresenceFacts, {
 ) {}
 
 /**
- * How the Office treated a submission, exactly as observed.
- *
  * **Gotchas**
  *
  * Nothing here may be read as reliance, approval, or materiality. A
@@ -443,8 +421,6 @@ export class IdsOfficeTreatmentFacts extends S.Opaque<IdsOfficeTreatmentFacts, {
 ) {}
 
 /**
- * Which published source version a fact state was modeled from.
- *
  * **When to use**
  *
  * Use with every recorded submission so a reader can tell which text the fact

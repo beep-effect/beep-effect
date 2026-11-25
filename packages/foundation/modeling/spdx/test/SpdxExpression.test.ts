@@ -23,20 +23,15 @@ import * as Str from "effect/String";
 import type { SpdxExpression as SpdxExpressionAst } from "@beep/spdx/SpdxExpression";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
+const typedFailurePreservingTraceAnnotations = (
+  error: InvalidSpdxExpressionError,
+  cause: Cause.Cause<InvalidSpdxExpressionError>
+): Cause.Cause<InvalidSpdxExpressionError> => Cause.annotate(Cause.fail(error), Cause.annotations(cause));
 
-// A generative round-trip arbitrary built from the KNOWN SPDX id set, used
-// instead of `Arbitrary.schema(SpdxExpression.Schema)`. Native derivation runs
-// on the recursive union, but every leaf's `id`/`ref`/`exception` is a bare
-// `Schema.String`, so it emits identifiers that no grammar recognizes
-// (e.g. `"__+ WITH ?.Rf\4aV"`) — decode∘encode can never be identity on those.
-// Constraining the leaves to real ids and well-formed reference idstrings makes
-// the round-trip invariant meaningful: encode yields a canonical SPDX string
-// that re-decodes to an equal AST.
 const KNOWN_LICENSES = ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC", "GPL-2.0-or-later", "MPL-2.0"] as const;
 const KNOWN_EXCEPTIONS = ["Classpath-exception-2.0", "Bison-exception-2.2", "GCC-exception-2.0"] as const;
 const idstring = S.String.check(S.isPattern(/^[A-Za-z0-9.-]{1,12}$/));
-/** A uniform choice between arbitraries — the native module only unions Schemas. */
-const oneOf = <A>(
+const uniformChoiceOfArbitrariesSinceNativeUnionTakesSchemas = <A>(
   first: Arbitrary.Arbitrary<A>,
   ...rest: ReadonlyArray<Arbitrary.Arbitrary<A>>
 ): Arbitrary.Arbitrary<A> =>
@@ -46,32 +41,32 @@ const oneOf = <A>(
 const licenseNode = Arbitrary.schema(S.Struct({ id: S.Literals(KNOWN_LICENSES), plus: S.Boolean })).pipe(
   Arbitrary.map(({ id, plus }) => LicenseNode.make({ id, plus }))
 );
-// `documentRef` is an `optionalKey`, so the generator either draws it or
-// leaves the key absent — the value passes straight to `make` with no
-// explicit `undefined` ever reaching the optional field.
 const licenseRefNode = Arbitrary.schema(S.Struct({ documentRef: S.optionalKey(idstring), ref: idstring })).pipe(
   Arbitrary.map((fields) => LicenseRefNode.make(fields))
 );
-// `WITH` binds to any simple expression — a license id (optionally `+`) OR a
-// `LicenseRef` reference — so the arbitrary generates both license shapes.
 const withExceptionNode = Arbitrary.all({
-  license: oneOf<LicenseNode | LicenseRefNode>(licenseNode, licenseRefNode),
+  license: uniformChoiceOfArbitrariesSinceNativeUnionTakesSchemas<LicenseNode | LicenseRefNode>(
+    licenseNode,
+    licenseRefNode
+  ),
   exception: Arbitrary.schema(S.Literals(KNOWN_EXCEPTIONS)),
 }).pipe(Arbitrary.map(({ license, exception }) => WithExceptionNode.make({ license, exception })));
-const simpleExpression = oneOf<SpdxExpressionAst>(licenseNode, licenseRefNode, withExceptionNode);
-// Compound expressions nest AND/OR at most four levels deep (the old
-// `maxDepth: 4`); below the floor only simple expressions remain, so every
-// generation path is finite.
+const simpleExpression = uniformChoiceOfArbitrariesSinceNativeUnionTakesSchemas<SpdxExpressionAst>(
+  licenseNode,
+  licenseRefNode,
+  withExceptionNode
+);
+const MAX_GENERATED_COMPOUND_NESTING = 4;
 const expressionAt = (depth: number): Arbitrary.Arbitrary<SpdxExpressionAst> => {
   if (depth === 0) return simpleExpression;
   const operand = expressionAt(depth - 1);
-  return oneOf<SpdxExpressionAst>(
+  return uniformChoiceOfArbitrariesSinceNativeUnionTakesSchemas<SpdxExpressionAst>(
     simpleExpression,
     Arbitrary.all([operand, operand]).pipe(Arbitrary.map(([left, right]) => AndNode.make({ left, right }))),
     Arbitrary.all([operand, operand]).pipe(Arbitrary.map(([left, right]) => OrNode.make({ left, right })))
   );
 };
-const spdxExpressionArb = expressionAt(4);
+const knownIdExpressionArb = expressionAt(MAX_GENERATED_COMPOUND_NESTING);
 
 const VALID = [
   "MIT",
@@ -86,16 +81,15 @@ const VALID = [
   "MIT and BSD-3-Clause",
   "(MIT AND (Apache-2.0 OR BSD-3-Clause))",
 ];
+const REFERENCE_NEVER_CARRIES_PLUS = "LicenseRef-Foo+ WITH Bison-exception-2.2";
 const INVALID = [
   "NOPE-1.0",
   "MIT AND",
   "(MIT",
   "MIT OR OR Apache-2.0",
   "",
-  // an unknown exception id after a reference
   "LicenseRef-Foo WITH Bogus-exception",
-  // a reference never carries the `+` marker
-  "LicenseRef-Foo+ WITH Bison-exception-2.2",
+  REFERENCE_NEVER_CARRIES_PLUS,
 ];
 
 describe("SpdxExpression", () => {
@@ -115,13 +109,11 @@ describe("SpdxExpression", () => {
         Effect.gen(function* () {
           const exit = yield* Effect.exit(SpdxExpression.parse(s));
           const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-          // Preserve runtime tracing metadata while checking the expected typed failure.
           assertExitFailure(
             exit,
-            Cause.annotate(Cause.fail(InvalidSpdxExpressionError.make({ input: s })), Cause.annotations(cause))
+            typedFailurePreservingTraceAnnotations(InvalidSpdxExpressionError.make({ input: s }), cause)
           );
-          // discriminate a typed failure from a defect
-          assert.isFalse(Cause.hasDies(exit.cause));
+          assert.isFalse(Cause.hasDies(exit.cause), "a typed failure, not a defect");
         })
     );
     it(`invalidates ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(s), identity)} synchronously`, () =>
@@ -144,13 +136,9 @@ describe("SpdxExpression", () => {
     Effect.gen(function* () {
       const ast = yield* S.decodeEffect(SpdxExpression.FromString)("(MIT OR Apache-2.0)");
       assert.strictEqual(ast._tag, "Or");
-      // the decoded AST is the same tree the sync parser produces
-      assert.strictEqual(ast.toString(), "(MIT OR Apache-2.0)");
+      assert.strictEqual(ast.toString(), "(MIT OR Apache-2.0)", "the decoded AST is the tree the sync parser produces");
     })
   );
-  // A TRUE codec round-trip: encode must yield the canonical SPDX string (the
-  // regression is encode returning "[object Object]"), and decode∘encode must
-  // be identity across a leaf `+`, an OR compound, a WITH, and a nested case.
   for (const s of [
     "(MIT OR Apache-2.0)",
     "Apache-2.0+",
@@ -159,16 +147,14 @@ describe("SpdxExpression", () => {
     "DocumentRef-spdx-tool-1.2:LicenseRef-MIT-Style-2 WITH Classpath-exception-2.0",
     "(MIT AND (Apache-2.0 OR BSD-3-Clause))",
   ]) {
-    it.effect(`FromString encode round-trips ${s}`, () =>
+    it.effect(`FromString encode round-trips ${s} to its canonical string, never "[object Object]"`, () =>
       Effect.gen(function* () {
         const ast = yield* S.decodeEffect(SpdxExpression.FromString)(s);
         const encoded = yield* S.encodeEffect(SpdxExpression.FromString)(ast);
-        // encode emits the canonical string the input already is
-        assert.strictEqual(encoded, s);
-        // decode∘encode is identity: the string re-decodes and re-encodes to itself
+        assert.strictEqual(encoded, s, "encode emits the canonical string the input already is");
         const reAst = yield* S.decodeEffect(SpdxExpression.FromString)(encoded);
         const reEncoded = yield* S.encodeEffect(SpdxExpression.FromString)(reAst);
-        assert.strictEqual(reEncoded, encoded);
+        assert.strictEqual(reEncoded, encoded, "decode∘encode is identity");
       })
     );
   }
@@ -193,14 +179,12 @@ describe("SpdxExpression", () => {
     Effect.gen(function* () {
       const deep = `${Str.repeat(5000)("(")}MIT${Str.repeat(5000)(")")}`;
       const exit = yield* Effect.exit(SpdxExpression.parse(deep));
-      // caps out as a typed failure, never a RangeError defect
       const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-      // Preserve runtime tracing metadata while checking the expected typed failure.
       assertExitFailure(
         exit,
-        Cause.annotate(Cause.fail(InvalidSpdxExpressionError.make({ input: deep })), Cause.annotations(cause))
+        typedFailurePreservingTraceAnnotations(InvalidSpdxExpressionError.make({ input: deep }), cause)
       );
-      assert.isFalse(Cause.hasDies(exit.cause));
+      assert.isFalse(Cause.hasDies(exit.cause), "caps out as a typed failure, never a RangeError defect");
       assert.isTrue(Cause.hasFails(exit.cause));
     })
   );
@@ -209,25 +193,24 @@ describe("SpdxExpression", () => {
       const chain = A.join(A.replicate("MIT", 6000), " AND ");
       const exit = yield* Effect.exit(SpdxExpression.parse(chain));
       const cause = exit.pipe(Exit.filterCause, Result.getOrThrow);
-      // Preserve runtime tracing metadata while checking the expected typed failure.
       assertExitFailure(
         exit,
-        Cause.annotate(Cause.fail(InvalidSpdxExpressionError.make({ input: chain })), Cause.annotations(cause))
+        typedFailurePreservingTraceAnnotations(InvalidSpdxExpressionError.make({ input: chain }), cause)
       );
       assert.isFalse(Cause.hasDies(exit.cause));
     })
   );
-  // FromString round-trips: decode∘encode is identity on generated expressions.
-  // encode serializes the AST to canonical form; decode re-parses it to an
-  // equal AST, and re-encoding that AST reproduces the same string.
-  it.effect.prop("FromString round-trips decode(encode(e))", [spdxExpressionArb], ([e]) =>
-    Effect.gen(function* () {
-      const encoded = yield* S.encodeUnknownEffect(SpdxExpression.FromString)(e);
-      const decoded = yield* S.decodeEffect(SpdxExpression.FromString)(encoded);
-      assert.isTrue(Equal.equals(decoded, e), `expected ${decoded.toString()} to equal ${e.toString()}`);
-      const reEncoded = yield* S.encodeUnknownEffect(SpdxExpression.FromString)(decoded);
-      assert.strictEqual(reEncoded, encoded);
-    })
+  it.effect.prop(
+    "FromString round-trips decode(encode(e)) on ASTs over known ids, since schema-derived leaf strings are not grammatical",
+    [knownIdExpressionArb],
+    ([e]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeUnknownEffect(SpdxExpression.FromString)(e);
+        const decoded = yield* S.decodeEffect(SpdxExpression.FromString)(encoded);
+        assert.isTrue(Equal.equals(decoded, e), `expected ${decoded.toString()} to equal ${e.toString()}`);
+        const reEncoded = yield* S.encodeUnknownEffect(SpdxExpression.FromString)(decoded);
+        assert.strictEqual(reEncoded, encoded);
+      })
   );
 });
 
@@ -248,14 +231,10 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
   });
 
   it("AND has no single license, and says so rather than dropping a term", () => {
-    // The whole reason this returns an Option: a conjunction binds every
-    // term at once, so answering with one of them is a legal claim that is
-    // simply false.
     assertNone(SpdxExpression.primaryLicense(parse("MIT AND Apache-2.0")));
   });
 
-  it("an OR whose left branch is an AND has no primary either", () => {
-    // Recursion must not sidestep the AND rule by descending past it.
+  it("an OR whose left branch is an AND has no primary either: recursion does not sidestep the AND rule", () => {
     assertNone(SpdxExpression.primaryLicense(parse("(MIT AND Apache-2.0) OR GPL-3.0-only")));
   });
 
@@ -297,8 +276,6 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
   });
 
   it("licensesOf answers where primaryLicense declines", () => {
-    // The pairing the API depends on: AND yields none from one accessor and
-    // the full set from the other.
     const expr = parse("MIT AND Apache-2.0");
     assertNone(SpdxExpression.primaryLicense(expr));
     assert.strictEqual(SpdxExpression.licensesOf(expr).length, 2);
@@ -319,6 +296,10 @@ describe("SpdxExpression — collapsing an expression to licenses", () => {
       A.map(SpdxExpression.licensesOf(parse("(Apache-2.0 OR MIT) AND MIT")), (license) => license.id),
       ["Apache-2.0", "MIT"]
     );
+  });
+
+  it("licensesOf skips a hand-built leaf whose id resolves to no license", () => {
+    assert.deepStrictEqual(SpdxExpression.licensesOf(LicenseNode.make({ id: "NOT-A-LICENSE", plus: false })), []);
   });
 
   it("licensesOf of a simple license is that one license", () => {

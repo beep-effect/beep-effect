@@ -32,8 +32,6 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 const $I = $RepoCliId.create("commands/Research/internal/RepoCards");
 
 /**
- * Facts gathered about one cloned repository.
- *
  * @internal
  * @category models
  */
@@ -55,8 +53,6 @@ export class ClonedRepoInfo extends S.Opaque<ClonedRepoInfo, { readonly brand: u
 ) {}
 
 /**
- * One starred repository from the GitHub API.
- *
  * @internal
  * @category models
  */

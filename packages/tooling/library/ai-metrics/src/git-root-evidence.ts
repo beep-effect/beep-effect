@@ -76,8 +76,6 @@ export const AiMetricsGitRootEvidence = S.TaggedUnion({
 );
 
 /**
- * Runtime type of {@link AiMetricsGitRootEvidence}.
- *
  * **Details**
  *
  * Inferred from the evidence schema.
@@ -104,10 +102,9 @@ class GitProbeResult extends S.Opaque<GitProbeResult, { readonly brand: unique s
 const unknown = (reason: typeof UnknownReason.Type): AiMetricsGitRootEvidence =>
   AiMetricsGitRootEvidence.cases.Unknown.make({ reason });
 
-// Git's remote identity excludes transport credentials, query and fragment.
-// SCP-style SSH and ordinary SSH/HTTPS URLs share host/path identity. A custom
-// port remains significant; host aliases are never guessed to be equivalent.
-const remoteIdentity = (remote: string): O.Option<string> => {
+const remoteHostPathIdentityWithoutCredentialsQueryOrFragmentKeepingPortNeverAliases = (
+  remote: string
+): O.Option<string> => {
   const trimmed = Str.trim(remote);
   if (Str.includes("://")(trimmed)) {
     return pipe(
@@ -165,9 +162,7 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
       Effect.scoped(
         Effect.gen(function* () {
           const handle = yield* spawner.value.spawn(
-            // KEEP funnel: `readGit` runs the KEEP (D-22) and KEEP (D-21, X10) reads below; each call site
-            // records its reason.
-            // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
+            // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X10; D-22): the kit cannot pass -c core.fsmonitor=false or a per-call scrubbed GIT_* env, reads env once at make, decodes leniently
             ChildProcess.make("git", args, {
               cwd: root,
               stderr: "ignore",
@@ -193,15 +188,14 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
         })
       );
     const observeIdentity = Effect.fnUntraced(function* (gitDir: string, commonDir: string) {
-      // --local limits this identity to repository configuration, rather than a
-      // globally configured fallback remote. A missing origin is local identity.
-      // KEEP (D-22): evidence probe on the same scrubbed `readGit` as X10 (the `GIT_*` overrides
-      // cleared per call, a 16 KiB cap, strict UTF-8, exit 1 read as "no origin"); the kit reads its
-      // environment once at `make` and decodes leniently.
-      const remote = yield* readGit(["config", "--local", "--get", "remote.origin.url"]);
+      const repositoryLocalOriginIgnoringAGlobalFallbackRemote = ["config", "--local", "--get", "remote.origin.url"];
+      const remote = yield* readGit(repositoryLocalOriginIgnoringAGlobalFallbackRemote);
       if (O.isNone(remote) || (remote.value.exitCode !== 0 && remote.value.exitCode !== 1))
         return unknown("probe-failed");
-      const identity = remote.value.exitCode === 0 ? remoteIdentity(remote.value.output) : O.none<string>();
+      const missingOriginMeansLocalCloneIdentity = remote.value.exitCode === 1;
+      const identity = missingOriginMeansLocalCloneIdentity
+        ? O.none<string>()
+        : remoteHostPathIdentityWithoutCredentialsQueryOrFragmentKeepingPortNeverAliases(remote.value.output);
       const owningCloneIdHash = yield* hashPrivateIdentifier(`owning-clone/v2:${commonDir}`, hashSalt);
       const repositoryIdHash = O.isSome(identity)
         ? yield* hashPublicTextSha256(`repository-remote/v2:${identity.value}`)
@@ -216,8 +210,6 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
         linkedWorktree: gitDir !== commonDir,
       });
     });
-    // KEEP (D-21, X10): the root probe needs `-c core.fsmonitor=false` and the scrubbed per-call
-    // environment, neither of which the kit can pass.
     const paths = yield* readGit([
       "-c",
       "core.fsmonitor=false",

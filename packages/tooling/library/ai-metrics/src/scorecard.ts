@@ -37,8 +37,6 @@ import { hashPublicTextSha256, redactAiMetricsSensitiveText } from "./privacy.ts
 const $I = $RepoAiMetricsId.create("scorecard");
 
 /**
- * Error raised by AI metrics label, benchmark, or scorecard workflows.
- *
  * **Example** (Creating scorecard error)
  *
  * ```ts
@@ -113,8 +111,6 @@ export class AiMetricsLabelQueueItem extends S.Opaque<AiMetricsLabelQueueItem, {
 }
 
 /**
- * Input for reading unlabeled tasks from the label queue.
- *
  * **Example** (Building label queue input)
  *
  * ```ts
@@ -146,8 +142,6 @@ export class AiMetricsLabelQueueInput extends S.Opaque<AiMetricsLabelQueueInput,
 ) {}
 
 /**
- * Result returned by the label queue.
- *
  * **Example** (Building empty queue result)
  *
  * ```ts
@@ -301,8 +295,6 @@ export class AiMetricsBenchmarkCaseListResult extends S.Opaque<
 }
 
 /**
- * Input for recording an observed benchmark result.
- *
  * **Example** (Building benchmark run input)
  *
  * ```ts

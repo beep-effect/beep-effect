@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.repair-errors");
 
 /**
- * Port failure raised when the block-repair adapter cannot complete its repair call.
- *
  * **Example** (Creating a BlockRepairFailed error)
  *
  * ```ts

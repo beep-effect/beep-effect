@@ -18,8 +18,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Yeet/Yeet.errors");
 
 /**
- * What a Yeet handler error refused or failed on, when the handler knows.
- *
  * **Details**
  *
  * The kinds of the handler errors economics used to read as `unlocated`
@@ -55,8 +53,6 @@ export const YeetHandlerErrorKind = LiteralKit([
 );
 
 /**
- * What a Yeet handler error refused or failed on.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -71,8 +67,6 @@ type YeetCommandErrorOptions =
     };
 
 /**
- * Operational error raised by the yeet command.
- *
  * **Details**
  *
  * `handlerErrorKind` names what the error refused or failed on when the raise

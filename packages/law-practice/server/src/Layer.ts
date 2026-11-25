@@ -56,6 +56,9 @@ const OfficeActionReviewLayer = Layer.effect(
   })
 );
 
+// decision: provide-merge-keeps-ir-to-law-without-racing
+const reviewLoopWithIrToLawProvidedAndKeptInOutput = OfficeActionReviewLayer.pipe(Layer.provideMerge(IrToLawLayer));
+
 /**
  * Live law-practice server layer providing the IR-to-law mapping, the
  * in-memory law claim store, the office-action review loop over
@@ -86,8 +89,7 @@ export const LawPracticeServerLive: Layer.Layer<
   OfficeActionReview | ProvenanceTraversal | IrToLaw | LawClaimProposals | LawClaimAdmissions,
   Config.ConfigError,
   LanguageModel.LanguageModel | Model.ProviderName | Model.ModelName | Digest.Digest | MatterAuthority | LawPrincipal
-> = Layer.merge(OfficeActionReviewLayer, ProvenanceTraversalLive).pipe(
-  Layer.provideMerge(IrToLawLayer),
+> = Layer.merge(reviewLoopWithIrToLawProvidedAndKeptInOutput, ProvenanceTraversalLive).pipe(
   Layer.provideMerge(LawClaimStoreMemory),
   Layer.provide(FileProcessingLayer),
   Layer.provide(GuardedLangExtractLayer)

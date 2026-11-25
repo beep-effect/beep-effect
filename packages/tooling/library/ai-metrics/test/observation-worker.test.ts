@@ -184,8 +184,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
   });
   const build1 = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
   const backend = Context.get(build1, HttpServer.HttpServer);
-  // The factory-free test layer binds an ephemeral wildcard address; clients dial loopback.
-  const origin = pipe(
+  const loopbackOriginForTheTestLayersWildcardBind = pipe(
     HttpServer.formatAddress(backend.address),
     Str.replace("[::]", "[::1]"),
     Str.replace("0.0.0.0", "127.0.0.1")
@@ -209,7 +208,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
   const client = Context.get(build2, HttpClient.HttpClient);
   const salt = "synthetic-worker-salt";
   const delivery = NativeDeliveryPolicy.make({
-    endpoint: Redacted.make(`${origin}/v1/traces`),
+    endpoint: Redacted.make(`${loopbackOriginForTheTestLayersWildcardBind}/v1/traces`),
     project: "synthetic-worker",
     timeoutMillis: 5000,
   });
@@ -235,7 +234,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
       bodyTimeoutMillis: 2000,
     }),
     delivery,
-    backend: PhoenixConfigInput.make({ baseUrl: origin }),
+    backend: PhoenixConfigInput.make({ baseUrl: loopbackOriginForTheTestLayersWildcardBind }),
     payloadRetention: PayloadRetentionPolicy.make({
       minAgeMillis: 60000,
       minAttemptQuietMillis: 60000,
@@ -510,8 +509,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   )
 );
 
-// Real filesystem discovery and Git root metadata are the subject, so a memory filesystem
-// changes the observed source. The spawner is limited by the existing discovery implementation.
+const ownNativeBundleMemoMapPreservingThePreviousFreshBuildAndScope = Layer.makeMemoMapUnsafe();
+
 it.layer(
   Layer.mergeAll(
     sqlLayer,
@@ -522,78 +521,82 @@ it.layer(
   {
     timeout: "30 seconds",
     excludeTestServices: true,
-    // Own the full native bundle's cache, preserving the previous fresh build and scope.
-    memoMap: Layer.makeMemoMapUnsafe(),
+    memoMap: ownNativeBundleMemoMapPreservingThePreviousFreshBuildAndScope,
   }
 )((it) =>
-  it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const fs = yield* FileSystem.FileSystem;
-      const dir = yield* fs.makeTempDirectoryScoped();
-      yield* fs.writeFileString(
-        `${dir}/rollout-synthetic.jsonl`,
-        '{"type":"response_item","payload":{"type":"message"}}\n'
-      );
-      const discovery = yield* makeTranscriptDiscovery(
-        TranscriptDiscoveryInput.make({
-          roots: [{ path: dir, source: "codex", retired: false }],
-          hashSalt: f.config.nativeHttp.hashSalt,
-          maxDepth: 2,
-          maxEntries: 1,
-          maxFiles: 32,
-          maxCycleEntries: 128,
-        })
-      );
-      const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
-      const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-      expect(pipe25).toMatchObject({ reason: "paused" });
-      expect((yield* f.worker.stats).pages).toBe(0);
-      yield* f.worker.resume;
-      const result = yield* f.worker.discover(discovery, policy);
-      expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
-      expect(result.discovery.activeHelpers).toBe(1);
-      expect((yield* f.worker.stats).pages).toBe(0);
-      yield* f.worker.pause;
-      const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-      expect(pipe26).toMatchObject({ reason: "paused" });
-      yield* f.worker.resume;
-      const restarted = yield* f.worker.discover(discovery, policy);
-      expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
-      const accepted = yield* f.worker.discover(discovery, policy);
-      expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
-      expect((yield* f.worker.stats).pages).toBe(1);
-      const other = yield* makeTranscriptDiscovery(
-        TranscriptDiscoveryInput.make({
-          roots: [{ path: dir, source: "codex", retired: false }],
-          hashSalt: f.config.nativeHttp.hashSalt,
-          maxDepth: 2,
-          maxEntries: 1,
-          maxFiles: 1,
-          maxCycleEntries: 128,
-        })
-      );
-      const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
-      expect(pipe27).toMatchObject({ reason: "configuration" });
-      yield* f.worker.pause;
-      expect((yield* f.worker.stats).pages).toBe(1);
-      // The scanner observes native canonical paths/inodes. A real symlink must
-      // fail enrollment without changing this worker's already accepted page.
-      const alias = `${dir}/linked-root`;
-      yield* fs.symlink(dir, alias);
-      const linked = yield* makeTranscriptDiscovery(
-        TranscriptDiscoveryInput.make({
-          roots: [{ path: alias, source: "codex", retired: false }],
-          hashSalt: f.config.nativeHttp.hashSalt,
-          maxDepth: 2,
-          maxEntries: 1,
-          maxFiles: 32,
-          maxCycleEntries: 128,
-        })
-      ).pipe(Effect.flip);
-      expect(linked).toMatchObject({ reason: "configuration" });
-      expect((yield* f.worker.stats).pages).toBe(1);
-    })
+  it.effect(
+    "gates real filesystem discovery behind worker admission, because a memory filesystem would change the observed source, and the spawner stays limited to the existing discovery implementation",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(
+          `${dir}/rollout-synthetic.jsonl`,
+          '{"type":"response_item","payload":{"type":"message"}}\n'
+        );
+        const discovery = yield* makeTranscriptDiscovery(
+          TranscriptDiscoveryInput.make({
+            roots: [{ path: dir, source: "codex", retired: false }],
+            hashSalt: f.config.nativeHttp.hashSalt,
+            maxDepth: 2,
+            maxEntries: 1,
+            maxFiles: 32,
+            maxCycleEntries: 128,
+          })
+        );
+        const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
+        const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+        expect(pipe25).toMatchObject({ reason: "paused" });
+        expect((yield* f.worker.stats).pages).toBe(0);
+        yield* f.worker.resume;
+        const result = yield* f.worker.discover(discovery, policy);
+        expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
+        expect(result.discovery.activeHelpers).toBe(1);
+        expect((yield* f.worker.stats).pages).toBe(0);
+        yield* f.worker.pause;
+        const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+        expect(pipe26).toMatchObject({ reason: "paused" });
+        yield* f.worker.resume;
+        const restarted = yield* f.worker.discover(discovery, policy);
+        expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
+        const accepted = yield* f.worker.discover(discovery, policy);
+        expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
+        expect((yield* f.worker.stats).pages).toBe(1);
+        const other = yield* makeTranscriptDiscovery(
+          TranscriptDiscoveryInput.make({
+            roots: [{ path: dir, source: "codex", retired: false }],
+            hashSalt: f.config.nativeHttp.hashSalt,
+            maxDepth: 2,
+            maxEntries: 1,
+            maxFiles: 1,
+            maxCycleEntries: 128,
+          })
+        );
+        const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
+        expect(pipe27).toMatchObject({ reason: "configuration" });
+        yield* f.worker.pause;
+        expect((yield* f.worker.stats).pages).toBe(1);
+        const alias = `${dir}/linked-root`;
+        yield* fs.symlink(dir, alias);
+        const linked = yield* makeTranscriptDiscovery(
+          TranscriptDiscoveryInput.make({
+            roots: [{ path: alias, source: "codex", retired: false }],
+            hashSalt: f.config.nativeHttp.hashSalt,
+            maxDepth: 2,
+            maxEntries: 1,
+            maxFiles: 32,
+            maxCycleEntries: 128,
+          })
+        ).pipe(Effect.flip);
+        expect(
+          linked,
+          "the scanner observes canonical paths and inodes, so a real symlink fails enrollment"
+        ).toMatchObject({
+          reason: "configuration",
+        });
+        expect((yield* f.worker.stats).pages, "the worker's already accepted page is unchanged").toBe(1);
+      })
   )
 );
 

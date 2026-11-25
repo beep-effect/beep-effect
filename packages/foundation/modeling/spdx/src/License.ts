@@ -20,10 +20,6 @@ import { LICENSE_META, META_FLAG_FSF_LIBRE, META_FLAG_OSI_APPROVED } from "./int
 const $I = $SpdxId.create("License");
 
 /**
- * Indicates that a string is not a valid SPDX expression fragment: an
- * unrecognized license or exception identifier, or a malformed
- * `LicenseRef-`/`DocumentRef-` reference.
- *
  * **Details**
  *
  * This is the package's single typed error. Both malformed grammar and an
@@ -94,18 +90,13 @@ export class InvalidSpdxExpressionError extends S.TaggedError<
   }
 }
 
-// A LicenseRef / DocumentRef reference is valid without catalog membership.
-// SPDX Appendix IV grammar:
-//   license-ref = ["DocumentRef-"idstring":"]"LicenseRef-"idstring
-//   idstring    = 1*(ALPHA / DIGIT / "-" / "." )
-// The pattern is anchored and lookahead-free so it stays cheap and its inverse
-// (a malformed ref) fails to match and surfaces as a typed error, not a throw.
 const LICENSE_REF_PATTERN = /^(?:DocumentRef-[A-Za-z0-9.-]+:)?LicenseRef-[A-Za-z0-9.-]+$/;
 const LicenseRefId = S.String.check(
   S.isPattern(
     LICENSE_REF_PATTERN,
     $I.annote("LicenseRefIdPattern", {
-      description: "An SPDX LicenseRef identifier with an optional DocumentRef scope and nonempty idstrings.",
+      description:
+        'An SPDX LicenseRef identifier with an optional DocumentRef scope and nonempty idstrings: the SPDX Appendix IV production license-ref = ["DocumentRef-" idstring ":"] "LicenseRef-" idstring, where idstring = 1*(ALPHA / DIGIT / "-" / "."), as one anchored, lookahead-free pattern so matching stays cheap.',
     })
   )
 ).pipe(
@@ -117,11 +108,6 @@ const LicenseRefId = S.String.check(
 const isLicenseRefId = S.is(LicenseRefId);
 
 /**
- * A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is
- * either a member of the SPDX License List or a well-formed
- * `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema —
- * there is no `*Schema` suffix.
- *
  * **Details**
  *
  * This is the catalog-level model: it validates and resolves an identifier and
@@ -202,8 +188,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
       "A validated SPDX license identifier: an Effect `Schema.Class` whose `id` is either a member of the SPDX License List or a well-formed `LicenseRef-`/`DocumentRef-` reference. The class doubles as its own schema — there is no `*Schema` suffix.",
   })
 ) {
-  // ── Catalog ─────────────────────────────────────────────────────────
-
   /**
    * The full SPDX license catalog keyed by identifier, holding resolved
    * {@link License} domain objects for every active and deprecated id. Built
@@ -289,8 +273,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
   static isLicenseRef(id: string): boolean {
     return isLicenseRefId(id);
   }
-
-  // ── Construction ────────────────────────────────────────────────────
 
   /**
    * Validate a license identifier synchronously, returning a `Result`. The
@@ -382,8 +364,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
     (id: string, deprecated = false): License => License.make({ id, deprecated })
   );
 
-  // ── Catalog metadata ────────────────────────────────────────────────
-
   /**
    * The canonical SPDX web page for this license — for example
    * `https://spdx.org/licenses/MIT.html` — or `Option.none()` when `id` is not
@@ -410,9 +390,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
    * @since 0.0.0
    */
   get referenceUrl(): O.Option<string> {
-    // Templated rather than vendored: every upstream entry's `reference` is
-    // exactly this form, and lib/scripts/generate-data.ts asserts that for every
-    // id on regeneration, so the template is a checked invariant.
     return HashMap.has(LICENSE_META, this.id) ? O.some(`https://spdx.org/licenses/${this.id}.html`) : O.none();
   }
 
@@ -486,8 +463,6 @@ export class License extends S.Class<License, { readonly brand: unique symbol }>
   get fsfLibre(): boolean {
     return O.exists(HashMap.get(LICENSE_META, this.id), (meta) => (meta[2] & META_FLAG_FSF_LIBRE) !== 0);
   }
-
-  // ── Display ─────────────────────────────────────────────────────────
 
   /**
    * Returns the SPDX identifier for display without adding expression operators.

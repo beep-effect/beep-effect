@@ -65,8 +65,6 @@ export const SpanName = S.String.check(
 );
 
 /**
- * Runtime type for {@link SpanName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -111,8 +109,6 @@ export const ProtocolSpanName = S.String.check(
 );
 
 /**
- * Runtime type for {@link ProtocolSpanName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -155,16 +151,12 @@ export const MetricName = S.String.check(
 );
 
 /**
- * Runtime type for {@link MetricName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
 export type MetricName = typeof MetricName.Type;
 
 /**
- * Event name in `Concept.event_happened` form.
- *
  * **Example** (Check event names)
  *
  * ```ts import.meta.vitest name="Check event names"
@@ -195,8 +187,6 @@ export const EventName = S.String.check(
 );
 
 /**
- * Runtime type for {@link EventName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -224,8 +214,6 @@ export const InstrumentName = S.Union([SpanName, MetricName, EventName, Protocol
 );
 
 /**
- * Runtime type for {@link InstrumentName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -264,8 +252,6 @@ export const AttributeKeyName = S.String.check(
 );
 
 /**
- * Runtime type for {@link AttributeKeyName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -303,8 +289,6 @@ export const PackageName = ScopedPackageName.pipe(
 );
 
 /**
- * Runtime type for {@link PackageName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -347,8 +331,6 @@ export const UcumUnit = S.String.check(
 );
 
 /**
- * Runtime type for {@link UcumUnit}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -387,8 +369,6 @@ export const HostName = S.String.check(
 );
 
 /**
- * Runtime type for {@link HostName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -428,8 +408,6 @@ export const CloudProviderName = S.String.check(
 );
 
 /**
- * Runtime type for {@link CloudProviderName}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -468,8 +446,6 @@ export const VcsRevision = S.String.check(
 );
 
 /**
- * Runtime type for {@link VcsRevision}.
- *
  * @category identifiers
  * @since 0.0.0
  */

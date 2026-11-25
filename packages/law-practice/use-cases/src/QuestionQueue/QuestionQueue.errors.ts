@@ -14,8 +14,6 @@ import { DefectCause } from "../internal/DefectCause.ts";
 const $I = $LawPracticeUseCasesId.create("QuestionQueue/QuestionQueue.errors");
 
 /**
- * A `decided` answer names an option its question does not offer.
- *
  * **Details**
  *
  * The answer row schema cannot see the question, so the queue checks the
@@ -53,8 +51,6 @@ export class UnknownQuestionOptionError extends S.TaggedError<
 ) {}
 
 /**
- * An answer was submitted for a question other than the one given with it.
- *
  * **Example** (Report an answer for another question)
  *
  * ```ts
@@ -85,8 +81,6 @@ export class QuestionNotFoundError extends S.TaggedError<QuestionNotFoundError, 
 const AnswerLogOperationBase = LiteralKit(["read", "append"]);
 
 /**
- * Answer-log store operation that failed.
- *
  * **Example** (Guard a store operation)
  *
  * ```ts
@@ -106,8 +100,6 @@ export const AnswerLogOperation = AnswerLogOperationBase.pipe(
 );
 
 /**
- * Runtime type for {@link AnswerLogOperation}.
- *
  * @see {@link AnswerLogOperation} for the operation names.
  * @category errors
  * @since 0.0.0
@@ -115,8 +107,6 @@ export const AnswerLogOperation = AnswerLogOperationBase.pipe(
 export type AnswerLogOperation = typeof AnswerLogOperation.Type;
 
 /**
- * The answer-log store could not read its rows or append one.
- *
  * **Details**
  *
  * A store that cannot answer fails with this error rather than returning an

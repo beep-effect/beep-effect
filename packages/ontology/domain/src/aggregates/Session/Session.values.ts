@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
 
 /**
- * Stable ontology workbench session id.
- *
  * **Example** (Decode SessionId from string)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const SessionId = S.NonEmptyString.pipe(
 );
 
 /**
- * Type for {@link SessionId}.
- *
  * **Example** (Annotate decoded SessionId type)
  *
  * ```ts
@@ -55,8 +51,6 @@ export const SessionId = S.NonEmptyString.pipe(
 export type SessionId = typeof SessionId.Type;
 
 /**
- * Derived named graph partitions owned by an ontology session.
- *
  * **Example** (Build asserted partition IRI)
  *
  * ```ts
@@ -77,8 +71,6 @@ export const GraphPartition = LiteralKit(["asserted", "ontologies", "inferred", 
 );
 
 /**
- * Type for {@link GraphPartition}.
- *
  * **Example** (Type GraphPartition then IRI)
  *
  * ```ts

@@ -37,8 +37,6 @@ const MAKE_NAME = "make";
 const FrozenGrantSetSeverity = LiteralKit(["error"]);
 
 /**
- * Runtime options for the FrozenGrantSet construction law.
- *
  * **Example** (Configure FrozenGrantSet scanning)
  * ```ts
  * import { FrozenGrantSetRulesOptions } from "@beep/repo-cli/commands/Laws/FrozenGrantSet"
@@ -109,8 +107,6 @@ export class FrozenGrantSetDiagnostic extends S.Opaque<FrozenGrantSetDiagnostic,
 ) {}
 
 /**
- * Summary of FrozenGrantSet construction law results.
- *
  * **Example** (Construct a frozen grant set rules summary)
  *
  * ```ts

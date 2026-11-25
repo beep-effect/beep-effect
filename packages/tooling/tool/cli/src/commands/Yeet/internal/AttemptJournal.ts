@@ -41,8 +41,6 @@ const JOURNAL_FILE_NAME = "attempts.ndjson";
 export { YeetAttemptJournalCompacted, YeetAttemptTerminationReason };
 
 /**
- * A durable marker written immediately before a Yeet attempt executes.
- *
  * **Details**
  *
  * `host` and `seat` (PERIL-11 slice 3) name where the attempt ran: the
@@ -93,8 +91,6 @@ export class YeetAttemptStarted extends S.Opaque<YeetAttemptStarted, { readonly 
 ) {}
 
 /**
- * Normal terminal marker embedding the exact verdict written for an attempt.
- *
  * **Details**
  *
  * Successful and failed command completions use this stable event. Abnormal
@@ -170,8 +166,6 @@ export class YeetAttemptTerminated extends S.Opaque<YeetAttemptTerminated, { rea
 ) {}
 
 /**
- * Schema-decoded event stored in a branch-scoped Yeet attempt journal.
- *
  * **Example** (Use YeetAttemptJournalEvent)
  *
  * ```ts
@@ -196,8 +190,6 @@ export const YeetAttemptJournalEvent = S.Union([
 );
 
 /**
- * Decoded type of {@link YeetAttemptJournalEvent}.
- *
  * **Example** (Use YeetAttemptJournalEvent)
  *
  * ```ts

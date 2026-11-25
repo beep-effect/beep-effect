@@ -44,8 +44,6 @@ import type { DocumentUploadResult, MailAttachmentMeta, MailPage } from "./MailT
 const $I = $LawPracticeUseCasesId.create("MailTagging/MailTagging.ports");
 
 /**
- * Service shape of the mailbox port.
- *
  * **Details**
  *
  * The only mutations are `setCategories` and `ensureMasterCategories`. There
@@ -158,9 +156,6 @@ export class MailboxShape extends S.Opaque<MailboxShape, { readonly brand: uniqu
 export class Mailbox extends Context.Service<Mailbox, MailboxShape>()($I`Mailbox`) {}
 
 /**
- * Service shape of the matter directory: one snapshot of every taggable
- * matter.
- *
  * **Example** (Build an empty directory)
  *
  * ```ts
@@ -215,9 +210,6 @@ export class MatterDirectoryShape extends S.Opaque<MatterDirectoryShape, { reado
 export class MatterDirectory extends Context.Service<MatterDirectory, MatterDirectoryShape>()($I`MatterDirectory`) {}
 
 /**
- * Service shape of the matter-folder directory: which document folder one
- * filing destination of a matter is.
- *
  * **Example** (Build a directory without folders)
  *
  * ```ts
@@ -276,8 +268,6 @@ export class MatterFolderDirectory extends Context.Service<MatterFolderDirectory
 ) {}
 
 /**
- * Service shape of the document store.
- *
  * **Details**
  *
  * `upload` creates a new file and answers `DocumentUploaded` with its id. When
@@ -406,8 +396,6 @@ export class KnownDocumentsShape extends S.Opaque<KnownDocumentsShape, { readonl
 export class KnownDocuments extends Context.Service<KnownDocuments, KnownDocumentsShape>()($I`KnownDocuments`) {}
 
 /**
- * Service shape of the append-only tag ledger.
- *
  * **Details**
  *
  * `records` answers every line in append order. A line that does not decode
@@ -468,8 +456,6 @@ export class TagLedgerShape extends S.Opaque<TagLedgerShape, { readonly brand: u
 export class TagLedger extends Context.Service<TagLedger, TagLedgerShape>()($I`TagLedger`) {}
 
 /**
- * Service shape of the append-only filing ledger.
- *
  * **Details**
  *
  * A filing writes two lines: a `FilingIntended` line before the upload and a
@@ -530,8 +516,6 @@ export class FilingLedgerShape extends S.Opaque<FilingLedgerShape, { readonly br
 export class FilingLedger extends Context.Service<FilingLedger, FilingLedgerShape>()($I`FilingLedger`) {}
 
 /**
- * Service shape of the backfill checkpoint store.
- *
  * **Example** (Build a store without a checkpoint)
  *
  * ```ts
@@ -590,8 +574,6 @@ export class BackfillCheckpointStore extends Context.Service<BackfillCheckpointS
 ) {}
 
 /**
- * Service shape of the attachment filer.
- *
  * **Example** (Build a filer that files nothing)
  *
  * ```ts
@@ -643,8 +625,6 @@ export class AttachmentFilerShape extends S.Opaque<AttachmentFilerShape, { reado
 export class AttachmentFiler extends Context.Service<AttachmentFiler, AttachmentFilerShape>()($I`AttachmentFiler`) {}
 
 /**
- * Service shape of the resumable tagging job.
- *
  * **Example** (Build a job that reports nothing)
  *
  * ```ts
@@ -696,8 +676,6 @@ export class MailTaggingJobShape extends S.Opaque<MailTaggingJobShape, { readonl
 export class MailTaggingJob extends Context.Service<MailTaggingJob, MailTaggingJobShape>()($I`MailTaggingJob`) {}
 
 /**
- * Service shape of the ledger-driven undo.
- *
  * **Details**
  *
  * An undone message is settled: the tagging job never decides it again on

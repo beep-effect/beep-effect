@@ -91,8 +91,6 @@ const decodePatternElement = (input: string) =>
   );
 
 /**
- * Decode a POS bracket string into a pattern element.
- *
  * **Example** (Decode POS alternatives)
  *
  * ```ts import.meta.vitest name="Decode POS alternatives"
@@ -121,8 +119,6 @@ export const BracketStringToPOSPatternElement = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link BracketStringToPOSPatternElement}.
- *
  * **Example** (POS element type alias)
  *
  * ```ts import.meta.vitest name="POS element type alias"
@@ -137,8 +133,6 @@ export const BracketStringToPOSPatternElement = S.String.pipe(
 export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternElement.Type;
 
 /**
- * Decode an entity bracket string into a pattern element.
- *
  * **Example** (Decode entity alternatives)
  *
  * ```ts import.meta.vitest name="Decode entity alternatives"
@@ -167,8 +161,6 @@ export const BracketStringToEntityPatternElement = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link BracketStringToEntityPatternElement}.
- *
  * **Example** (Entity element type alias)
  *
  * ```ts import.meta.vitest name="Entity element type alias"
@@ -183,8 +175,6 @@ export const BracketStringToEntityPatternElement = S.String.pipe(
 export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPatternElement.Type;
 
 /**
- * Decode a literal bracket string into a pattern element.
- *
  * **Example** (Decode literal alternatives)
  *
  * ```ts import.meta.vitest name="Decode literal alternatives"
@@ -213,8 +203,6 @@ export const BracketStringToLiteralPatternElement = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link BracketStringToLiteralPatternElement}.
- *
  * **Example** (Literal element type alias)
  *
  * ```ts import.meta.vitest name="Literal element type alias"
@@ -229,8 +217,6 @@ export const BracketStringToLiteralPatternElement = S.String.pipe(
 export type BracketStringToLiteralPatternElement = typeof BracketStringToLiteralPatternElement.Type;
 
 /**
- * Decode any supported bracket string element.
- *
  * **Example** (Decode any bracket element)
  *
  * ```ts import.meta.vitest name="Decode any bracket element"
@@ -255,8 +241,6 @@ export const BracketStringToPatternElement = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link BracketStringToPatternElement}.
- *
  * **Example** (Pattern element type alias)
  *
  * ```ts import.meta.vitest name="Pattern element type alias"
@@ -271,8 +255,6 @@ export const BracketStringToPatternElement = S.String.pipe(
 export type BracketStringToPatternElement = typeof BracketStringToPatternElement.Type;
 
 /**
- * Decode a non-empty string array into ordered pattern elements.
- *
  * **Example** (Parse string array elements)
  *
  * ```ts import.meta.vitest name="Parse string array elements"
@@ -293,8 +275,6 @@ export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternE
 );
 
 /**
- * Runtime type for {@link PatternElementsFromString}.
- *
  * **Example** (Elements from string type)
  *
  * ```ts import.meta.vitest name="Elements from string type"

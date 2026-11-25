@@ -117,7 +117,7 @@ const expectedBinding = (row: MappingRow) => {
     ? { family, edition: row.artifactSha256, reporterId: row.reporterId }
     : { family, edition: row.artifactSha256 };
 };
-const sourceModel = (row: SourceRow) => {
+const sourceModelWithContractOnlyCoordinates = (row: SourceRow) => {
   const metadata = R.mapKeys(row.metadata, (key) => O.getOrElse(R.get(fieldNames, key), () => key));
   const outcome = {
     _tag: row.kind,
@@ -131,7 +131,6 @@ const sourceModel = (row: SourceRow) => {
     usedPlain: false,
     reservedUnits: 0,
   };
-  // Coordinates only satisfy the private model contract, without span proof.
   return row.kind === "ReferenceCitation"
     ? { ...outcome, token: row.token, index: 0, documentAttached: false, spanStart: row.span[0] }
     : { index: row.index, token: row.token, outcome, reservedUnits: 0 };
@@ -256,7 +255,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
           const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(setup.provided));
           const rows = A.flatMap(corpus.cases, (document) => document.before);
           for (const row of rows) {
-            const meaning = yield* stage.project(sourceModel(row));
+            const meaning = yield* stage.project(sourceModelWithContractOnlyCoordinates(row));
             const actual = yield* encodeCitation(meaning);
             yield* assertVocabulary(unicode, [meaning], [row]);
             expect(actual.type).toBe(O.getOrThrow(R.get(sourceTypes, row.kind)));
@@ -271,7 +270,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic ci
                 ? null
                 : CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(label) });
             const changed = { ...original, metadata: { ...original.metadata, court } };
-            const meaning = yield* stage.project(sourceModel(changed));
+            const meaning = yield* stage.project(sourceModelWithContractOnlyCoordinates(changed));
             yield* assertVocabulary(unicode, [meaning], [changed]);
           }
           expect(rows).toHaveLength(80);

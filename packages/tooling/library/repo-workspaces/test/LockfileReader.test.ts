@@ -139,8 +139,6 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
   });
 });
 
-// ── a preamble followed by an empty main document ──────────────────────────
-
 // pnpm 12.7.0's own output, verbatim (`@effected/lockfiles` fixture
 // `pnpm/env-configonly-pnpm12`): an env preamble, then an EMPTY main document.
 // pnpm writes these exact bytes both for a config-dependency-only workspace with
@@ -246,8 +244,6 @@ describe("LockfileReader — the root package.json probe itself fails", () => {
   });
 });
 
-// ── the lockfile is missing ────────────────────────────────────────────────
-
 const noLockfile: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\n",
   "/repo/package.json": Result.getOrThrowWith(
@@ -281,8 +277,6 @@ describe("LockfileReader — no lockfile on disk", () => {
     );
   });
 });
-
-// ── a malformed lockfile ───────────────────────────────────────────────────
 
 const brokenLockfile: Tree = {
   ...noLockfile,

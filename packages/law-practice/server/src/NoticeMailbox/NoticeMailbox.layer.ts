@@ -36,13 +36,9 @@ import type { PlatformError } from "effect/PlatformError";
 
 const $I = $LawPracticeServerId.create("NoticeMailbox/NoticeMailbox.layer");
 
-// A folder segment of . or .., whichever separator the folder is written with.
 const hasDotSegment = flow(Str.split(/[\\/]+/u), A.some(S.is(WindowsDotSegment)));
 
 /**
- * An absolute Windows folder on the attorney's PC, written with `\` or `/`
- * separators.
- *
  * **Details**
  *
  * It is a `WindowsDrivePath` that also starts at the drive's root, so a
@@ -106,8 +102,6 @@ export const NoticeClaudeFolder = WindowsDrivePath.check(
 );
 
 /**
- * Type of {@link NoticeClaudeFolder}.
- *
  * **Example** (Type a review folder)
  *
  * ```ts
@@ -123,7 +117,6 @@ export const NoticeClaudeFolder = WindowsDrivePath.check(
  */
 export type NoticeClaudeFolder = typeof NoticeClaudeFolder.Type;
 
-// The longest request the Claude Code link's q parameter carries.
 const CLAUDE_LINK_PROMPT_MAX_LENGTH = 5_000;
 
 /**
@@ -177,9 +170,6 @@ export class NoticeClaudeLink extends S.Opaque<NoticeClaudeLink, { readonly bran
 ) {}
 
 /**
- * The attorney's mailbox the notice goes from and to, the data directory its
- * day claims are kept in, and an optional Claude Code link.
- *
  * **Details**
  *
  * Without `claudeLink` the notice is plain text. With it, the notice is HTML
@@ -241,8 +231,6 @@ export class NoticeMailboxConfig extends S.Opaque<NoticeMailboxConfig, { readonl
   )
 ) {}
 
-// The link Claude Code opens: the folder, with \ separators, as the working directory and the request as the
-// typed-in prompt. Both are percent-encoded; htmlLink escapes the whole URL for the attribute.
 const windowsFolder = Str.replaceAll("/", "\\");
 const claudeCodeHref = (link: NoticeClaudeLink): string =>
   A.join(
@@ -250,27 +238,23 @@ const claudeCodeHref = (link: NoticeClaudeLink): string =>
     ""
   );
 
-// The HTML notice is put together from fixed tags and escaped text only: htmlText escapes text, htmlLink escapes
-// its URL and label, and htmlParagraph only joins pieces those two produced, so no value is formatted into markup.
-const htmlParagraph = (pieces: ReadonlyArray<string>): string => A.join(["<p>", ...pieces, "</p>"], "");
+const htmlParagraphOfEscapedPiecesOnly = (pieces: ReadonlyArray<string>): string =>
+  A.join(["<p>", ...pieces, "</p>"], "");
 const htmlText = escapeHtml;
 const htmlLink = (href: string, label: string): string =>
   A.join(['<a href="', escapeHtml(href), '">', escapeHtml(label), "</a>"], "");
 
-// The HTML notice: the count sentence first, so an inbox preview still shows only the count, then the link, the
-// check to make before pressing Enter (a forged notice could type in a different request), and what to do when the
-// link does not open.
-const noticeHtml = (message: NoticeMessage, link: NoticeClaudeLink): string =>
+const noticeHtmlCountFirstThenLinkForgeryCheckAndFallback = (message: NoticeMessage, link: NoticeClaudeLink): string =>
   A.join(
     [
-      htmlParagraph([htmlText(message.body)]),
-      htmlParagraph([htmlLink(claudeCodeHref(link), "Answer them in Claude Code")]),
-      htmlParagraph([
+      htmlParagraphOfEscapedPiecesOnly([htmlText(message.body)]),
+      htmlParagraphOfEscapedPiecesOnly([htmlLink(claudeCodeHref(link), "Answer them in Claude Code")]),
+      htmlParagraphOfEscapedPiecesOnly([
         htmlText("The link opens Claude Code with the request typed in. Check that it reads exactly: "),
         htmlText(link.prompt),
         htmlText(" Then press Enter. If it reads anything else, close Claude Code without pressing Enter."),
       ]),
-      htmlParagraph([
+      htmlParagraphOfEscapedPiecesOnly([
         htmlText("If the link does not open, open Claude Code in "),
         htmlText(windowsFolder(link.folder)),
         htmlText(" and type: "),
@@ -280,7 +264,6 @@ const noticeHtml = (message: NoticeMessage, link: NoticeClaudeLink): string =>
     "\n"
   );
 
-// Subdirectory of the data directory that holds one claim file per notice day.
 const NOTICE_CLAIMS_DIRECTORY = "notice-sent";
 
 const isAlreadyExists = (error: PlatformError): boolean => P.isTagged(error.reason, "AlreadyExists");
@@ -306,7 +289,11 @@ const makeNoticeMailbox = (
             subject: message.subject,
             body: O.match(config.claudeLink, {
               onNone: () => M365MailBody.make({ content: message.body, contentType: "text" }),
-              onSome: (link) => M365MailBody.make({ content: noticeHtml(message, link), contentType: "html" }),
+              onSome: (link) =>
+                M365MailBody.make({
+                  content: noticeHtmlCountFirstThenLinkForgeryCheckAndFallback(message, link),
+                  contentType: "html",
+                }),
             }),
             toRecipients: [config.mailbox],
           }),
@@ -319,8 +306,6 @@ const makeNoticeMailbox = (
     Effect.mapError(failed("send"))
   );
 
-  // One file per day, created exclusively: the run whose create succeeds owns the day, and every
-  // other run that day, concurrent or later, finds the file and sends nothing.
   const claims = path.join(config.dataDirectory, NOTICE_CLAIMS_DIRECTORY);
   const claimDay = Effect.fn("NoticeMailbox.claimDay")(
     function* (day: LocalDate) {

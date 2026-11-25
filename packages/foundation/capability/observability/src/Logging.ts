@@ -45,8 +45,6 @@ import * as S from "effect/Schema";
 const $I = $ObservabilityId.create("Logging");
 
 /**
- * Supported console logger formats for shared observability wiring.
- *
  * **Example** (JSON format logger config)
  *
  * ```typescript
@@ -66,8 +64,6 @@ export const LogFormat = LiteralKit(["pretty", "structured", "json", "logfmt", "
 );
 
 /**
- * Runtime type for {@link LogFormat}.
- *
  * **Example** (Assign LogFormat type)
  *
  * ```typescript
@@ -104,8 +100,6 @@ export const PrettyLogTheme = LiteralKit(["ocean", "forest", "sunrise", "mono"])
 );
 
 /**
- * Runtime type for {@link PrettyLogTheme}.
- *
  * **Example** (Assign PrettyLogTheme type)
  *
  * ```typescript
@@ -121,8 +115,6 @@ export const PrettyLogTheme = LiteralKit(["ocean", "forest", "sunrise", "mono"])
 export type PrettyLogTheme = typeof PrettyLogTheme.Type;
 
 /**
- * Banner render modes for startup and phase summaries: `"off"`, `"startup"`, `"phase"`, or `"all"`.
- *
  * **Example** (Startup banner mode config)
  *
  * ```ts import.meta.vitest name="Startup banner mode config"
@@ -142,8 +134,6 @@ export const BannerMode = LiteralKit(["off", "startup", "phase", "all"]).pipe(
 );
 
 /**
- * Runtime type for {@link BannerMode}.
- *
  * **Example** (Assign BannerMode type)
  *
  * ```typescript
@@ -189,8 +179,6 @@ export class PrettyLoggerConfig extends S.Opaque<PrettyLoggerConfig, { readonly 
 ) {}
 
 /**
- * Shared logger configuration for browser-safe and server-safe console logging.
- *
  * **Example** (Structured logging config)
  *
  * ```ts import.meta.vitest name="Structured logging config"
@@ -245,8 +233,6 @@ export const layerMinimumLogLevel = (minLogLevel: LogLevel.LogLevel): Layer.Laye
   Layer.succeed(References.MinimumLogLevel, minLogLevel);
 
 /**
- * Options controlling startup/phase log banner rendering.
- *
  * **Example** (Startup banner options)
  *
  * ```typescript

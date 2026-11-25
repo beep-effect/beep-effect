@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $CosmosId.create("Cosmos.backend");
 
 /**
- * Graph viewport backend selected by the driver.
- *
  * **Example** (Assign cosmos backend value)
  *
  * ```ts
@@ -37,8 +35,6 @@ export const CosmosBackend = LiteralKit(["cosmos", "sigma"]).pipe(
 );
 
 /**
- * Type for {@link CosmosBackend}.
- *
  * **Example** (Assign sigma backend type)
  *
  * ```ts
@@ -55,8 +51,6 @@ export const CosmosBackend = LiteralKit(["cosmos", "sigma"]).pipe(
 export type CosmosBackend = typeof CosmosBackend.Type;
 
 /**
- * Runtime WebGL2 probe result.
- *
  * **Example** (Create failed WebGL2 probe)
  *
  * ```ts
@@ -128,8 +122,6 @@ const HtmlCanvasElementLike = S.declare<HTMLCanvasElement>(isHtmlCanvasElement).
 );
 
 /**
- * Input options for the runtime WebGL2 probe.
- *
  * **Example** (Create empty probe options)
  *
  * ```ts

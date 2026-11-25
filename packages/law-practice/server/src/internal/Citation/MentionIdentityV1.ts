@@ -55,7 +55,6 @@ export const CitationAuthorityIdV1 = S.TemplateLiteral(["ca1:", Sha256Hex]).pipe
 const invalidInput = () => CitationMentionIdentityFailure.make({ reason: "invalid-input" });
 const digestFailed = () => CitationMentionIdentityFailure.make({ reason: "digest-failed" });
 
-// The cm1 protocol, verbatim: an ordered tuple fixes field order independently of object insertion order.
 const IdentityPreimageV1 = S.fromJsonString(
   S.Tuple([
     S.tag("citation-mention/v1"),

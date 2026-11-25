@@ -66,8 +66,6 @@ const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> 
   );
 
 /**
- * Branded identifier for a learned wink custom-entity group.
- *
  * **Example** (Create from unknown string)
  *
  * ```ts

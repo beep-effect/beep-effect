@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist
 
@@ -54,6 +54,12 @@ git diff --check -- goals/jsdoc-lead-single-source
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug jsdoc-lead-single-source`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 done, P1 wave 1 built: lead source in docgen and the inventory, 2026-11-22
+
+Docgen derives a missing lead from the export's $I.annote* description (values, classes, same-name type companions, Encoded namespace members, named re-exports from their target). The inventory stops requiring a lead where one is derived, no longer calls an empty lead leading-blank, and counts restating leads as restating-lead (8,726 measured, ratcheted). Law text: .patterns/jsdoc-documentation.md Lead source, law 15, AGENTS.md, jsdoc-annotation-specialist skill. Next: package sweeps in waves, CI-closure and P5 runner packages last.
+
+Lane goals/jsdoc-lead-single-source-p0
+
+Reverse: Revert the wave-1 PR.
 
 <!-- beep:decisions:end -->

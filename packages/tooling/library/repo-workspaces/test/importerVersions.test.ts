@@ -109,8 +109,6 @@ describe("unanimousVersionOf", () => {
   });
 });
 
-// ── The snapshot resolution surface ─────────────────────────────────────────
-
 /** A snapshot carrying no catalogs at all — the reproduction repo's shape. */
 const snapshot = (importerVersions: Record<string, Record<string, string>>) =>
   WorkspaceStateSnapshot.make({

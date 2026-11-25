@@ -227,8 +227,6 @@ export const GraphPathSegment = S.String.check(
 );
 
 /**
- * Type for {@link GraphPathSegment}.
- *
  * **Example** (Type a Graph id)
  *
  * ```ts
@@ -244,8 +242,6 @@ export const GraphPathSegment = S.String.check(
 export type GraphPathSegment = typeof GraphPathSegment.Type;
 
 /**
- * Decoded Graph drive collection.
- *
  * **Example** (Make empty drive collection)
  *
  * ```ts
@@ -265,8 +261,6 @@ export const M365DriveCollection = GraphCollection(GraphDrive).pipe(
 );
 
 /**
- * Type for {@link M365DriveCollection}.
- *
  * **Example** (Count collection value length)
  *
  * ```ts
@@ -282,8 +276,6 @@ export const M365DriveCollection = GraphCollection(GraphDrive).pipe(
 export type M365DriveCollection = typeof M365DriveCollection.Type;
 
 /**
- * Decoded Graph site collection.
- *
  * **Example** (Make empty site collection)
  *
  * ```ts
@@ -303,8 +295,6 @@ export const M365SiteCollection = GraphCollection(GraphSite).pipe(
 );
 
 /**
- * Type for {@link M365SiteCollection}.
- *
  * **Example** (Count site collection length)
  *
  * ```ts
@@ -320,8 +310,6 @@ export const M365SiteCollection = GraphCollection(GraphSite).pipe(
 export type M365SiteCollection = typeof M365SiteCollection.Type;
 
 /**
- * Decoded Graph drive item collection, including delta envelopes.
- *
  * **Example** (Make empty item collection)
  *
  * ```ts
@@ -341,8 +329,6 @@ export const M365DriveItemCollection = GraphCollection(GraphDriveItem).pipe(
 );
 
 /**
- * Type for {@link M365DriveItemCollection}.
- *
  * **Example** (Count drive item length)
  *
  * ```ts
@@ -358,8 +344,6 @@ export const M365DriveItemCollection = GraphCollection(GraphDriveItem).pipe(
 export type M365DriveItemCollection = typeof M365DriveItemCollection.Type;
 
 /**
- * Decoded Graph drive item version collection.
- *
  * **Example** (Make empty version collection)
  *
  * ```ts
@@ -379,8 +363,6 @@ export const M365DriveItemVersionCollection = GraphCollection(GraphDriveItemVers
 );
 
 /**
- * Type for {@link M365DriveItemVersionCollection}.
- *
  * **Example** (Count version collection length)
  *
  * ```ts
@@ -396,8 +378,6 @@ export const M365DriveItemVersionCollection = GraphCollection(GraphDriveItemVers
 export type M365DriveItemVersionCollection = typeof M365DriveItemVersionCollection.Type;
 
 /**
- * Decoded Graph message collection.
- *
  * **Example** (Make empty message collection)
  *
  * ```ts
@@ -417,8 +397,6 @@ export const M365MessageCollection = GraphCollection(GraphMessage).pipe(
 );
 
 /**
- * Type for {@link M365MessageCollection}.
- *
  * **Example** (Count message collection length)
  *
  * ```ts
@@ -434,8 +412,6 @@ export const M365MessageCollection = GraphCollection(GraphMessage).pipe(
 export type M365MessageCollection = typeof M365MessageCollection.Type;
 
 /**
- * Decoded Graph calendar event collection.
- *
  * **Example** (Make empty event collection)
  *
  * ```ts
@@ -455,8 +431,6 @@ export const M365EventCollection = GraphCollection(GraphEvent).pipe(
 );
 
 /**
- * Type for {@link M365EventCollection}.
- *
  * **Example** (Count event collection length)
  *
  * ```ts
@@ -472,8 +446,6 @@ export const M365EventCollection = GraphCollection(GraphEvent).pipe(
 export type M365EventCollection = typeof M365EventCollection.Type;
 
 /**
- * Request for listing drives visible to the signed-in user or a specific site.
- *
  * **Example** (Request drives for site)
  *
  * ```ts
@@ -500,8 +472,6 @@ export class M365ListDrivesRequest extends S.Opaque<M365ListDrivesRequest, { rea
 ) {}
 
 /**
- * Request for searching SharePoint sites.
- *
  * **Example** (Search sites by keyword)
  *
  * ```ts
@@ -530,8 +500,6 @@ export class M365ListSitesRequest extends S.Opaque<M365ListSitesRequest, { reado
 ) {}
 
 /**
- * Request for reading one SharePoint site by id.
- *
  * **Example** (Get site by id)
  *
  * ```ts
@@ -555,8 +523,6 @@ export class M365GetSiteRequest extends S.Opaque<M365GetSiteRequest, { readonly 
 ) {}
 
 /**
- * Request for drive item delta enumeration.
- *
  * **Example** (Delta request by drive id)
  *
  * ```ts
@@ -588,8 +554,6 @@ export class M365DeltaDriveItemsRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for downloading a drive item's content.
- *
  * **Example** (Download content request)
  *
  * ```ts
@@ -617,8 +581,6 @@ export class M365DownloadDriveItemContentRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for reading a SharePoint list item with expanded fields.
- *
  * **Example** (Get expanded list item)
  *
  * ```ts
@@ -644,8 +606,6 @@ export class M365GetListItemRequest extends S.Opaque<M365GetListItemRequest, { r
 ) {}
 
 /**
- * Request for listing a drive item's immutable versions.
- *
  * **Example** (List item versions request)
  *
  * ```ts
@@ -673,8 +633,6 @@ export class M365ListDriveItemVersionsRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for listing Outlook mail messages.
- *
  * **Example** (List messages with top)
  *
  * ```ts
@@ -723,8 +681,6 @@ export class M365ListMessagesRequest extends S.Opaque<M365ListMessagesRequest, {
 ) {}
 
 /**
- * Request for reading one Outlook mail folder.
- *
  * **Details**
  *
  * `folder` is a folder id or one of Graph's well-known folder names, such as
@@ -758,8 +714,6 @@ export class M365GetMailFolderRequest extends S.Opaque<M365GetMailFolderRequest,
 ) {}
 
 /**
- * Request for reading one Outlook mail message.
- *
  * **Details**
  *
  * `select` is passed to `getMessage` as Graph's `$select`, so a caller that
@@ -808,8 +762,6 @@ export class M365GetMessageRequest extends S.Opaque<M365GetMessageRequest, { rea
 ) {}
 
 /**
- * Request for listing Outlook calendar events.
- *
  * **Example** (List events with top)
  *
  * ```ts
@@ -842,8 +794,6 @@ export class M365ListEventsRequest extends S.Opaque<M365ListEventsRequest, { rea
 ) {}
 
 /**
- * Request for reading one Outlook calendar event.
- *
  * **Example** (Get event by id)
  *
  * ```ts
@@ -870,8 +820,6 @@ export class M365GetEventRequest extends S.Opaque<M365GetEventRequest, { readonl
 ) {}
 
 /**
- * Decoded Graph master-category collection.
- *
  * **Example** (Make empty category collection)
  *
  * ```ts
@@ -891,8 +839,6 @@ export const M365OutlookCategoryCollection = GraphCollection(GraphOutlookCategor
 );
 
 /**
- * Type for {@link M365OutlookCategoryCollection}.
- *
  * **Example** (Count category collection length)
  *
  * ```ts
@@ -908,8 +854,6 @@ export const M365OutlookCategoryCollection = GraphCollection(GraphOutlookCategor
 export type M365OutlookCategoryCollection = typeof M365OutlookCategoryCollection.Type;
 
 /**
- * Decoded Graph message-attachment metadata collection.
- *
  * **Example** (Make empty attachment collection)
  *
  * ```ts
@@ -929,8 +873,6 @@ export const M365AttachmentCollection = GraphCollection(GraphAttachment).pipe(
 );
 
 /**
- * Type for {@link M365AttachmentCollection}.
- *
  * **Example** (Count attachment collection length)
  *
  * ```ts
@@ -946,8 +888,6 @@ export const M365AttachmentCollection = GraphCollection(GraphAttachment).pipe(
 export type M365AttachmentCollection = typeof M365AttachmentCollection.Type;
 
 /**
- * Caller-supplied idempotency key for an event create.
- *
  * **Details**
  *
  * The key is written to the event twice: as Graph's `transactionId`, which
@@ -979,8 +919,6 @@ export const M365IdempotencyKey = S.String.check(
 );
 
 /**
- * Type for {@link M365IdempotencyKey}.
- *
  * **Example** (Type an idempotency key)
  *
  * ```ts
@@ -1014,8 +952,6 @@ export const M365_IDEMPOTENCY_KEY_PROPERTY_ID =
   "String {6f1d2c1e-8a4b-4d5e-9c3f-2b7a1e0d4c59} Name BeepIdempotencyKey" as const;
 
 /**
- * Body written to an Outlook event.
- *
  * **Example** (Make a text body)
  *
  * ```ts
@@ -1036,8 +972,6 @@ export class M365EventBody extends S.Opaque<M365EventBody, { readonly brand: uni
 ) {}
 
 /**
- * Wall-clock date-time and time zone written to an Outlook event.
- *
  * **Example** (Make an event date-time)
  *
  * ```ts
@@ -1097,8 +1031,6 @@ const eventOpt = <Sch extends S.Top>(schema: Sch, description: string) =>
   S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
 
 /**
- * Fields of a new Outlook event.
- *
  * **Example** (Draft an all-day tentative event)
  *
  * ```ts
@@ -1180,8 +1112,6 @@ const mailboxUserId = (description: string) =>
   });
 
 /**
- * Request for creating an Outlook calendar event in the default calendar.
- *
  * **Details**
  *
  * The create is not replayed after an ambiguous failure. Supply an
@@ -1221,8 +1151,6 @@ export class M365CreateEventRequest extends S.Opaque<M365CreateEventRequest, { r
 ) {}
 
 /**
- * Request for updating fields of an Outlook calendar event.
- *
  * **Example** (Update event request)
  *
  * ```ts
@@ -1276,8 +1204,6 @@ export class M365DeleteEventRequest extends S.Opaque<M365DeleteEventRequest, { r
 ) {}
 
 /**
- * Request for finding the events that carry an {@link M365IdempotencyKey}.
- *
  * **Example** (Find events by key)
  *
  * ```ts
@@ -1309,8 +1235,6 @@ export class M365FindEventsByIdempotencyKeyRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for listing a mailbox's Outlook master categories.
- *
  * **Example** (List master categories)
  *
  * ```ts
@@ -1363,8 +1287,6 @@ export class M365MasterCategoryDraft extends S.Opaque<M365MasterCategoryDraft, {
 ) {}
 
 /**
- * Request for creating one Outlook master category.
- *
  * **Example** (Create master category)
  *
  * ```ts
@@ -1462,8 +1384,6 @@ export class M365EnsuredMasterCategories extends S.Opaque<
 ) {}
 
 /**
- * Request for replacing the category list of one mail message.
- *
  * **Gotchas**
  *
  * `categories` replaces the whole list. Read the message first and keep every
@@ -1537,8 +1457,6 @@ export class M365ListMessageAttachmentsRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for downloading the raw bytes of one file attachment.
- *
  * **Example** (Download an attachment)
  *
  * ```ts
@@ -1572,8 +1490,6 @@ export class M365DownloadMessageAttachmentRequest extends S.Opaque<
 ) {}
 
 /**
- * Raw bytes of a downloaded message attachment.
- *
  * **Example** (Construct attachment content)
  *
  * ```ts
@@ -1645,8 +1561,6 @@ export const M365_ATTACHMENT_UPLOAD_CHUNK_BYTES: number = 10 * 320 * 1024;
 export const M365_ATTACHMENT_MAX_BYTES: number = 150 * 1024 * 1024;
 
 /**
- * Recipient address of an outbound mail draft.
- *
  * **Details**
  *
  * The check is deliberately shallow: no whitespace and exactly one `@` with
@@ -1676,8 +1590,6 @@ export const M365MailAddress = S.String.check(
 );
 
 /**
- * Type for {@link M365MailAddress}.
- *
  * **Example** (Type a recipient address)
  *
  * ```ts
@@ -1693,8 +1605,6 @@ export const M365MailAddress = S.String.check(
 export type M365MailAddress = typeof M365MailAddress.Type;
 
 /**
- * Body written to an outbound mail draft.
- *
  * **Example** (Make a text mail body)
  *
  * ```ts
@@ -1720,8 +1630,6 @@ const mailRecipients = (description: string) =>
     .annotateKey({ description });
 
 /**
- * Fields of a new mail draft.
- *
  * **Example** (Draft a message to one recipient)
  *
  * ```ts
@@ -1788,8 +1696,6 @@ export class M365CreateDraftMessageRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for attaching one file to a draft message.
- *
  * **Details**
  *
  * Content of at most {@link M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES} goes in
@@ -1836,8 +1742,6 @@ export class M365AddMessageAttachmentRequest extends S.Opaque<
 ) {}
 
 /**
- * Request for sending an existing draft message.
- *
  * **Gotchas**
  *
  * A send is not idempotent and is replayed only after an explicit 429. After
@@ -1897,8 +1801,6 @@ export class M365DeleteDraftMessageRequest extends S.Opaque<
 ) {}
 
 /**
- * Successfully downloaded drive item content.
- *
  * **Example** (Construct downloaded content)
  *
  * ```ts
@@ -1926,8 +1828,6 @@ export class M365DownloadedContent extends S.Opaque<M365DownloadedContent, { rea
 ) {}
 
 /**
- * Drive item content skipped because it appears protected/encrypted.
- *
  * **Details**
  *
  * Graph `v1.0` does not expose a complete Purview/RMS decrypted-content signal.
@@ -1961,8 +1861,6 @@ export class M365SkippedEncryptedItem extends S.Opaque<M365SkippedEncryptedItem,
 ) {}
 
 /**
- * Download result for a drive item.
- *
  * **Example** (Read download result tag)
  *
  * ```ts
@@ -1984,8 +1882,6 @@ export const M365DriveItemDownload = S.Union([M365DownloadedContent, M365Skipped
 );
 
 /**
- * Type for {@link M365DriveItemDownload}.
- *
  * **Example** (Type download result tag)
  *
  * ```ts
@@ -2001,8 +1897,6 @@ export const M365DriveItemDownload = S.Union([M365DownloadedContent, M365Skipped
 export type M365DriveItemDownload = typeof M365DriveItemDownload.Type;
 
 /**
- * A contact create body; no mailbox contact update is provided.
- *
  * **Example** (Construct M365ContactDraft)
  *
  * ```ts
@@ -2031,8 +1925,6 @@ export class M365ContactDraft extends S.Opaque<M365ContactDraft, { readonly bran
 ) {}
 
 /**
- * Create a contact in the default or an explicit folder.
- *
  * **Example** (Construct M365CreateContactRequest)
  *
  * ```ts
@@ -2056,8 +1948,6 @@ export class M365CreateContactRequest extends S.Opaque<M365CreateContactRequest,
 ) {}
 
 /**
- * List a page of personal contacts with optional marker expansion.
- *
  * **Example** (Construct M365ListContactsRequest)
  *
  * ```ts
@@ -2082,8 +1972,6 @@ export class M365ListContactsRequest extends S.Opaque<M365ListContactsRequest, {
 ) {}
 
 /**
- * Create a dedicated contact folder.
- *
  * **Example** (Construct M365CreateContactFolderRequest)
  *
  * ```ts
@@ -2105,8 +1993,6 @@ export class M365CreateContactFolderRequest extends S.Opaque<
 ) {}
 
 /**
- * List root folders or one folder’s children, with pagination.
- *
  * **Example** (Construct M365ListContactFoldersRequest)
  *
  * ```ts
@@ -2133,8 +2019,6 @@ export class M365ListContactFoldersRequest extends S.Opaque<
 ) {}
 
 /**
- * Delete a contact, optionally conditional on its change key.
- *
  * **Example** (Construct M365DeleteContactRequest)
  *
  * ```ts
@@ -2159,8 +2043,6 @@ export class M365DeleteContactRequest extends S.Opaque<M365DeleteContactRequest,
 ) {}
 
 /**
- * Remove a journal-owned folder after the job proves it empty.
- *
  * **Example** (Construct M365DeleteContactFolderRequest)
  *
  * ```ts

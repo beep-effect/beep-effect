@@ -209,8 +209,6 @@ export const CompletionInvariantReason = LiteralKit([
 );
 
 /**
- * Runtime type decoded by {@link CompletionInvariantReason}.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -250,8 +248,6 @@ export class CompletionInvariantError extends S.TaggedError<
 ) {}
 
 /**
- * Allowed completion evaluation carrying evaluator-only live proof.
- *
  * **Example** (Inspect allowed completion fields)
  *
  * ```ts import.meta.vitest name="Inspect allowed completion fields"
@@ -277,8 +273,6 @@ export class CompletionAllowed extends S.Opaque<CompletionAllowed, { readonly br
 }
 
 /**
- * Denied completion evaluation carrying the audited gate summary as a value.
- *
  * **Example** (Inspect denied completion fields)
  *
  * ```ts import.meta.vitest name="Inspect denied completion fields"
@@ -327,8 +321,6 @@ export const CompletionEvaluation = LiteralKit(["allowed", "denied"])
   );
 
 /**
- * Runtime type decoded by {@link CompletionEvaluation}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -481,8 +473,6 @@ export class LiveVerified extends S.Opaque<LiveVerified, { readonly brand: uniqu
 }
 
 /**
- * Delivered but non-deployable terminal blocked by gate evidence.
- *
  * **Example** (Inspect blocked terminal fields)
  *
  * ```ts import.meta.vitest name="Inspect blocked terminal fields"
@@ -510,8 +500,6 @@ export class DeployableBlocked extends S.Opaque<DeployableBlocked, { readonly br
 }
 
 /**
- * Failed terminal retaining the highest evidence rung and partial effects.
- *
  * **Example** (Inspect partial-failure fields)
  *
  * ```ts import.meta.vitest name="Inspect partial-failure fields"
@@ -562,8 +550,6 @@ export const SkillTerminal = LiteralKit(["LiveVerified", "DeployableBlocked", "F
   );
 
 /**
- * Runtime type decoded by {@link SkillTerminal}.
- *
  * @category models
  * @since 0.0.0
  */

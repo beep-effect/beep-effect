@@ -99,7 +99,6 @@ export const assertCitationVerboseProfiles = Effect.fn("VerboseTest.profiles")(f
   yield* assertCitationRegexProgramProfiles(corpus.patterns);
 });
 type Setup = Effect.Success<ReturnType<typeof setupCitationRegexWorker>>;
-/** Compare complete source capture spans using an existing observed worker. */
 const assertCitationRegexProgramCase = Effect.fn("RegexProgramTest.case")(function* (
   setup: Setup,
   row: CitationRegexProbePattern,

@@ -52,7 +52,6 @@ export const AdmissionTier = LiteralKit(["analyst-lead", "client-facing", "depos
   $I.annoteSchema("AdmissionTier", { description: "Usage tier an admission authorizes." })
 );
 /**
- * Decoded AdmissionTier type.
  * @category models
  * @since 0.0.0
  */
@@ -183,8 +182,6 @@ export class KnownAtKnowledgeTime extends S.Opaque<KnownAtKnowledgeTime, { reado
   )
 ) {}
 /**
- * AdmissionClause public schema for the admission model.
- *
  * **Example** (Decode AdmissionClause)
  * ```ts
  * import { AdmissionClause } from "@beep/party-domain/Admission"
@@ -204,15 +201,12 @@ export const AdmissionClause = S.Union([
   KnownAtKnowledgeTime,
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("AdmissionClause", { description: "One admission requirement." }));
 /**
- * Decoded AdmissionClause type.
  * @category models
  * @since 0.0.0
  */
 export type AdmissionClause = typeof AdmissionClause.Type;
 
 /**
- * Versioned admission policy.
- *
  * **Example** (Decode AdmissionPolicy)
  * ```ts
  * import { AdmissionPolicy } from "@beep/party-domain/Admission"
@@ -268,8 +262,6 @@ export class AdmissionEvidence extends S.Opaque<AdmissionEvidence, { readonly br
 ) {}
 
 /**
- * PolicyReference public schema for the admission model.
- *
  * **Example** (Decode PolicyReference)
  * ```ts
  * import { PolicyReference } from "@beep/party-domain/Admission"
@@ -285,8 +277,6 @@ export class PolicyReference extends S.Opaque<PolicyReference, { readonly brand:
   )
 ) {}
 /**
- * UnmetClause public schema for the admission model.
- *
  * **Example** (Decode UnmetClause)
  * ```ts
  * import { UnmetClause } from "@beep/party-domain/Admission"
@@ -302,8 +292,6 @@ export class UnmetClause extends S.Opaque<UnmetClause, { readonly brand: unique 
   )
 ) {}
 /**
- * SupportCountInput public schema for the admission model.
- *
  * **Example** (Decode SupportCountInput)
  * ```ts
  * import { SupportCountInput } from "@beep/party-domain/Admission"
@@ -493,19 +481,31 @@ const evaluate = (
         ? O.none()
         : O.some(`${A.length(outside)} support(s) not in the version's supportedBy`);
     },
-    KnownAtKnowledgeTime: () =>
-      O.exists(
+    KnownAtKnowledgeTime: () => {
+      const known = O.exists(
         evidence.claim.knowledge,
         (interval) =>
           DateTime.isLessThanOrEqualTo(interval.start, knowledgeTime) &&
           O.match(interval.end, { onNone: () => true, onSome: (end) => DateTime.isLessThan(knowledgeTime, end) })
-      )
-        ? O.none()
-        : O.some(`version ${evidence.claim.record.claim} is not known at ${knowledgeTime}`),
+      );
+      if (!known) return O.some(`version ${evidence.claim.record.claim} is not known at ${knowledgeTime}`);
+      const recordedLater = (event: O.Option<{ readonly at: DateTime.Utc }>) =>
+        O.exists(event, (row) => DateTime.isGreaterThan(row.at, knowledgeTime));
+      return recordedLater(evidence.claim.review) ||
+        recordedLater(evidence.claim.evidence) ||
+        recordedLater(evidence.claim.signals)
+        ? O.some(`version ${evidence.claim.record.claim} carries events recorded after ${knowledgeTime}`)
+        : O.none();
+    },
   });
 
 /**
  * Evaluate a policy and mint an admission or a refusal.
+ *
+ * **Details**
+ *
+ * The joined review, evidence links and signals must all be recorded at or
+ * before `knowledgeTime`; a read taken later refuses `KnownAtKnowledgeTime`.
  *
  * **Example** (Use admit)
  * ```ts
@@ -545,8 +545,6 @@ export const admit = <T extends AdmissionTier>({
 };
 
 /**
- * DepositionEntry public schema for the admission model.
- *
  * **Example** (Decode DepositionEntry)
  * ```ts
  * import { DepositionEntry } from "@beep/party-domain/Admission"

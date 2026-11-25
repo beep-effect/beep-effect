@@ -24,7 +24,10 @@ bun run beep accounts                                           # weekly headroo
 bun .claude/skills/auth-environments/scripts/auth_env.ts status
 ```
 
-`status` lists the account each host is signed in to now. Choose the account
+`status` lists the account each host is signed in to now. A host that cannot
+be reached within the 10 s ssh connect timeout prints `[host] unreachable:
+<reason>`, shows `unreachable` in the summary, and makes the run exit 1; the
+other hosts are still checked. Choose the account
 with the most weekly headroom; if it is not obvious, ask the operator with
 `AskUserQuestion`. Leave the local DankStation login alone unless the operator
 asks: a local switch is plain `claude auth login`.

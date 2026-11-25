@@ -72,8 +72,6 @@ export class ProcessReading extends S.Opaque<ProcessReading, { readonly brand: u
 ) {}
 
 /**
- * A {@link ProcessReading} stamped with the clock time it was taken at.
- *
  * **Example** (Make a sample)
  *
  * ```ts
@@ -125,8 +123,6 @@ export class ProcessWindow extends S.Opaque<ProcessWindow, { readonly brand: uni
 ) {}
 
 /**
- * Running fold of the samples of the open window.
- *
  * **Details**
  *
  * `previous` is the last sample taken; CPU time and wall time accumulate over

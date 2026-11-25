@@ -62,8 +62,6 @@ export const LegalVerdictFamily = LegalVerdictFamilyBase.pipe(
 );
 
 /**
- * Runtime type for {@link LegalVerdictFamily}.
- *
  * @see {@link LegalVerdictFamily} for the runtime schema and the never-derived rule.
  * @category models
  * @since 0.0.0

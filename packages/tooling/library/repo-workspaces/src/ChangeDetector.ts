@@ -33,8 +33,6 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
 const $I = $RepoWorkspacesId.create("ChangeDetector");
 
 /**
- * Which git refs to compare, and whether to fold in the working tree.
- *
  * **Example** (Inspect default and branch comparison refs)
  *
  * ```ts
@@ -95,8 +93,6 @@ export class ChangeDetectionOptions extends S.Opaque<ChangeDetectionOptions, { r
 ) {}
 
 /**
- * Companion types for {@link ChangeDetectionOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -111,10 +107,6 @@ export declare namespace ChangeDetectionOptions {
 }
 
 /**
- * Raised when change detection cannot proceed for a reason that is not one of
- * git's own typed failures — the wrapper for "detection has no ground to stand
- * on".
- *
  * **Details**
  *
  * A git command that merely *fails* surfaces as one of `@beep/git`'s typed

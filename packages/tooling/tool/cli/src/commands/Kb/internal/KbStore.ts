@@ -13,10 +13,10 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
   checkAppend,
-  declaresFormat,
   eventLine,
   legacyMissingFacts,
   lineDigest,
+  namesFormat,
   readClaimHistory,
 } from "../../../internal/claims/ClaimHistory.ts";
 import { makeClaimsV1Row } from "../../../internal/claims/ClaimRowV1.ts";
@@ -57,19 +57,21 @@ export const KbClaimsV1Row = frozen.ClaimsV1Row;
  * @category schemas
  * @since 0.0.0
  */
-export const KbAssertionV1Row = S.Struct({
-  id: fields.id,
-  claimId: fields.id,
-  captureId: fields.captureId,
-  sourceRef: fields.sourceRef,
-  selector: fields.selector,
-  quote: fields.quote,
-  quoteDigest: fields.quoteDigest,
-  audience: fields.audience,
-  derivation: fields.derivation,
-  review: fields.review,
-  outcome: fields.outcome,
-}).pipe($I.annoteSchema("KbAssertionV1Row", { description: "One frozen untagged kb assertion/v1 line." }));
+export class KbAssertionV1Row extends S.Opaque<KbAssertionV1Row, { readonly brand: unique symbol }>()(
+  S.Struct({
+    id: fields.id,
+    claimId: fields.id,
+    captureId: fields.captureId,
+    sourceRef: fields.sourceRef,
+    selector: fields.selector,
+    quote: fields.quote,
+    quoteDigest: fields.quoteDigest,
+    audience: fields.audience,
+    derivation: fields.derivation,
+    review: fields.review,
+    outcome: fields.outcome,
+  }).pipe($I.annoteSchema("KbAssertionV1Row", { description: "One frozen untagged kb assertion/v1 line." }))
+) {}
 
 /**
  * Content-addressed arrows bound to the knowledge claim core.
@@ -87,8 +89,7 @@ export const kbArrows = makeClaimArrows({ $I, ClaimCore: KbClaimCore });
  */
 export type KbClaimLine = ClaimLine<KbLegacyImported, KbCoreEvent, KbReviewState, KbEvidenceSignals>;
 
-const isClaimEvent = declaresFormat({ key: "version", version: "kb-claim-record/v2" });
-const isAssertionV2 = declaresFormat({ key: "version", version: "kb-assertion/v2" });
+const isVersioned = namesFormat("version");
 const decodeEvent = S.decodeUnknownEffect(KbClaimEvent);
 const decodeV1 = S.decodeUnknownEffect(KbClaimsV1Row);
 const decodeAssertion = S.decodeUnknownEffect(Assertion);
@@ -122,13 +123,13 @@ export const importKbClaimRow = Effect.fnUntraced(function* (line: string, row: 
 });
 
 /**
- * Decode one claims.jsonl line by its declared format: v2 events by tag, untagged rows as frozen v1.
+ * Decode one claims.jsonl line by its declared format: versioned lines as exact v2 events, untagged rows as frozen v1.
  *
  * @category parsing
  * @since 0.0.0
  */
 export const decodeKbClaimLine = Effect.fnUntraced(function* (line: string, json: unknown) {
-  if (isClaimEvent(json)) {
+  if (isVersioned(json)) {
     const event = yield* decodeEvent(json);
     return eventLine<KbLegacyImported, KbCoreEvent, KbReviewState, KbEvidenceSignals>(event);
   }
@@ -138,13 +139,13 @@ export const decodeKbClaimLine = Effect.fnUntraced(function* (line: string, json
 });
 
 /**
- * Decode one assertions.jsonl line; a v1 claimId becomes an explicit imported kb reference.
+ * Decode one assertions.jsonl line; a versioned line must be exact v2, an untagged v1 claimId becomes an imported kb reference.
  *
  * @category parsing
  * @since 0.0.0
  */
 export const decodeKbAssertionLine = Effect.fnUntraced(function* (json: unknown) {
-  if (isAssertionV2(json)) return yield* decodeAssertion(json);
+  if (isVersioned(json)) return yield* decodeAssertion(json);
   const { claimId, ...row } = yield* decodeAssertionV1(json);
   return Assertion.make({ ...row, claim: ClaimReference.cases.Imported.make({ ledger: "kb", oldId: claimId }) });
 });

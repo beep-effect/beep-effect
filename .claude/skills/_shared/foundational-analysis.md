@@ -33,6 +33,7 @@ enum-is-taxonomy shortcut).
 | **Kind** | Rigid, supplies identity | Often surfaces as the entity class the system re-identifies — but the identity CRITERION (what makes two individuals the same), never the id column, is what qualifies it | — (this IS the sortal) |
 | **Subkind** | Rigid, inherits identity | A rigid specialization of one identity provider | Inheriting two incompatible identity criteria |
 | **Role** | Anti-rigid, relationally dependent | A projection that exists only while a relation holds (`holder`, `requester`) | Role-as-kind: modeling `Requester` as a rigid class |
+| **RoleMixin** | Anti-rigid, relationally dependent, non-sortal (supplies no identity) | A role played by individuals of different kinds (a `Customer` that may be a person or an organization) | Forcing a cross-kind role under one kind, or giving it its own identity |
 | **Phase** | Anti-rigid, intrinsically conditioned | Often surfaces as a state field over a closed enum — but an enum member may equally be a code, an individual, or nothing; the intrinsic-condition test decides | State-as-kind: `class ActiveGrant extends Grant` |
 | **Relator** | Reifies a relationship; mediates participants | The join entity that carries the relationship's OWN properties (a lease: weight, expiry, holder) | Relator collapse: reducing a lease to a binary property |
 | Plan/Specification vs Execution | Repeatable description vs dated occurrence | `Effect<A>` vs the running fiber; a task definition vs its run | Spec/execution merge: "the BuildPlan consumed CPU" |
@@ -87,9 +88,10 @@ manufactures hallucinated relations.
 ## Provenance
 
 Derived from: (1) an external foundational-ontology adversarial review of the
-beep-ci-operational-ontology exploration packet (2026-08-27; preserved as
-round2-partner-review2.md under that packet's research/reviews/pre-s4/
-directory on its working branch), and (2) the follow-up deep-research report "A Reusable
+beep-ci-operational-ontology exploration packet (2026-08-27; the second-round
+partner review is
+explorations/beep-ci-operational-ontology/research/reviews/pre-s4/round2-partner-review2.md,
+beside the first-round reviews), and (2) the follow-up deep-research report "A Reusable
 Foundational-Ontology Adversary for Software Repositories" (2026-08-28). Primary
 literature: Guizzardi et al. (UFO), Guarino & Welty (OntoClean), OntoUML spec,
 Grüninger & Fox (CQ methodology), OBO Foundry principles, W3C OWL 2 Profiles / SHACL /

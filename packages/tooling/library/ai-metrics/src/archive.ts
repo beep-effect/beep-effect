@@ -38,36 +38,26 @@ const decodedBase64ByteLengthSatisfies = (predicate: (byteLength: number) => boo
     onSuccess: (bytes) => predicate(bytes.byteLength),
   });
 
-const STANDARD_BASE64_PATTERN = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+const STANDARD_BASE64_PATTERN_FOR_GENERATION_METADATA_ONLY =
+  /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
 
-/**
- * Validate standard Base64 with a linear decoder.
- *
- * **Gotchas**
- *
- * `S.isBase64` backtracks per four-character group, rejecting large ciphertext
- * in Bun and overflowing Node's stack. The pattern here is generation metadata only.
- *
- * @param annotations - Filter annotations (identifier, title, description, message) merged over the defaults.
- * @returns A string filter that passes only standard Base64 text.
- */
-const isStandardBase64 = (annotations: S.Annotations.Filter) =>
+const isStandardBase64ByLinearDecodeSinceSIsBase64BacktracksOnLargeInput = (annotations: S.Annotations.Filter) =>
   S.makeFilter<string>((value) => Result.isSuccess(Base64.decode(value)), {
     expected: "a base64 encoded string",
     arbitraryConstraint: {
       patterns: [
         {
-          source: STANDARD_BASE64_PATTERN.source,
+          source: STANDARD_BASE64_PATTERN_FOR_GENERATION_METADATA_ONLY.source,
           flags: "",
         },
       ],
     },
-    toJsonSchema: () => ({ pattern: STANDARD_BASE64_PATTERN.source }),
+    toJsonSchema: () => ({ pattern: STANDARD_BASE64_PATTERN_FOR_GENERATION_METADATA_ONLY.source }),
     ...annotations,
   });
 
 const Aes256KeyBase64 = S.String.check(
-  isStandardBase64(
+  isStandardBase64ByLinearDecodeSinceSIsBase64BacktracksOnLargeInput(
     $I.annote("Aes256KeyBase64ShapeCheck", {
       title: "AES-256 Key Base64 Shape",
       description: "A standard Base64 string containing AES-256 key bytes.",
@@ -97,7 +87,7 @@ const Aes256KeyBase64 = S.String.check(
 );
 
 const AesGcmNonceBase64 = S.String.check(
-  isStandardBase64(
+  isStandardBase64ByLinearDecodeSinceSIsBase64BacktracksOnLargeInput(
     $I.annote("AesGcmNonceBase64ShapeCheck", {
       title: "AES-GCM Nonce Base64 Shape",
       description: "A standard Base64 string containing an AES-GCM nonce.",
@@ -127,7 +117,7 @@ const AesGcmNonceBase64 = S.String.check(
 );
 
 const AesGcmCiphertextBase64 = S.String.check(
-  isStandardBase64(
+  isStandardBase64ByLinearDecodeSinceSIsBase64BacktracksOnLargeInput(
     $I.annote("AesGcmCiphertextBase64ShapeCheck", {
       title: "AES-GCM Ciphertext Base64 Shape",
       description: "A standard Base64 string containing AES-GCM ciphertext and its authentication tag.",
@@ -192,16 +182,12 @@ export const AiMetricsArchiveAlgorithm = LiteralKit(["AES-256-GCM"]).pipe(
 );
 
 /**
- * Runtime type for {@link AiMetricsArchiveAlgorithm}.
- *
  * @category models
  * @since 0.0.0
  */
 export type AiMetricsArchiveAlgorithm = typeof AiMetricsArchiveAlgorithm.Type;
 
 /**
- * Error raised by AI metrics encrypted archive helpers.
- *
  * **Example** (Make archive error instance)
  *
  * ```ts
@@ -320,8 +306,6 @@ export class AiMetricsRawArchiveObject extends S.Opaque<AiMetricsRawArchiveObjec
 ) {}
 
 /**
- * Redacted base64 AES-256-GCM key used for raw archive encryption.
- *
  * **Example** (Create redacted archive key)
  *
  * ```ts
@@ -342,8 +326,6 @@ export const AiMetricsRawArchiveKey = Aes256KeyBase64.pipe(
 );
 
 /**
- * Type for {@link AiMetricsRawArchiveKey}.
- *
  * **Example** (Type redacted archive key)
  *
  * ```ts

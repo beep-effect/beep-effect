@@ -13,9 +13,6 @@ import { ThingFields } from "./Thing.ts";
 const $I = $SchemaOrgId.create("Organization");
 
 /**
- * A schema.org `Organization` — a company, project or team that authors or
- * publishes a work.
- *
  * **Details**
  *
  * Carries only `Thing`-level fields plus the two organization-specific ones,

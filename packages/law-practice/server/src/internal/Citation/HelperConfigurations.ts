@@ -81,7 +81,7 @@ export const loadCitationHelperConfigurations = Effect.fn("Citation.loadHelperCo
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationHelperConfigurations = Effect.fn("Citation.makeHelperConfigurations")(function* (
-  policy: unknown,
+  defaultEngineAssemblyRawPolicy: unknown,
   path: unknown,
   bindings: unknown
 ) {
@@ -89,8 +89,7 @@ export const makeCitationHelperConfigurations = Effect.fn("Citation.makeHelperCo
   const editions = yield* S.decodeUnknownEffect(CitationTokenDispatchBindings)(bindings).pipe(
     Effect.mapError(() => fail("invalid-data"))
   );
-  // Default-engine asset assembly is a raw entry point (see the default-engine stop): decode its policy here.
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+  const limits = yield* decodeCitationRegexPolicy(defaultEngineAssemblyRawPolicy, () =>
     CitationMetadataYearFailure.make({ reason: "invalid-policy" })
   );
   const { highestValidYear } = yield* makeCitationMetadataYear(limits);

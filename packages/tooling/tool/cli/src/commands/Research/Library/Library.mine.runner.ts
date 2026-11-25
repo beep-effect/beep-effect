@@ -45,16 +45,12 @@ export const LibraryMinePromptTransport = LiteralKit(["stdin", "prompt-file"]).p
   $I.annoteSchema("LibraryMinePromptTransport", { description: "How a runner receives its prompt." })
 );
 /**
- * Runtime type of LibraryMinePromptTransport.
- *
  * @category models
  * @since 0.0.0
  */
 export type LibraryMinePromptTransport = typeof LibraryMinePromptTransport.Type;
 
 /**
- * A runner profile: the pool pin and route a tier job launches on.
- *
  * **Example** (Inspect the T1 default)
  * ```ts
  * import { libraryMineProfile } from "@beep/repo-cli/commands/Research"
@@ -179,8 +175,6 @@ const profiles = {
 export const libraryMineProfile = (id: LibraryMineProfileId): LibraryMineProfile => profiles[id];
 
 /**
- * Paths a runner's argv names for one job.
- *
  * **Example** (Inspect launch path fields)
  * ```ts
  * import { LibraryMineLaunchPaths } from "@beep/repo-cli/commands/Research"

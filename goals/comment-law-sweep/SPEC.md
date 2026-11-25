@@ -30,7 +30,7 @@ Higher sources outrank lower sources when they conflict.
 
 - At zero pending scopes the scanner stays as the gate that rejects any directive silencing the rule; only the delta check and shards retire.
 - Starts only after `comment-law-gate` blocks.
-- Every deletion has two agreeing votes or an AST-checked mechanical rule; labels held at kappa 0.65 and T versus N is the soft boundary.
+- Every strip deletion has two agreeing votes or an AST-checked mechanical rule; the T/G-versus-rest split is held at kappa 0.65 (decision 2026-11-22, hard stop 4) and T versus N is the soft boundary. In an absorption PR every removed row has an author and an independent verifier on a different route, and the verifier cites where the information now lives.
 - A stale comment that is true except for one clause is edited, not deleted; a comment that is right where the code is wrong goes to `comment-census-defects`.
 - A decision becomes a file only if it passes the admission test in the exploration's `research/lanes/adr.md`; about 115 are expected from 1,449.
 - Re-baseline schema-first and effect-vitest inventories, re-pin sealed files, and run Biome after each batch (exploration `research/lanes/consumers.md` section 10).
@@ -80,6 +80,36 @@ Operator ruling, align round 1, recorded as the authorised deferral under the AG
 Lane explore/comment-law
 
 Reverse: Close the family issues and fix every site inside the sweep.
+
+### Hard stop 4 is measured over all classified rows, with kappa as the agreement bar, 2026-11-22
+
+The strip gate is agreement on the T/G split, since only T and G are deleted on two votes alone: S, X and D deletions also need opened evidence, an issue or pull request, or a committed decision file that passes the admission test, so those rows are checked one by one.
+
+A wave is discarded and reclassified when either bar fails: T/G disagreements exceed 5% of all classified rows, or Cohen's kappa on the T/G-versus-rest split falls below 0.65. Rows without two agreeing deletable votes go to the absorption pass, where an implementer judges each against the code.
+
+Evidence. Wave 1 (semver, npm-spec, csv, spdx, managed-section; 1,199 rows) round 1 disagreed on 18-51% of the rows either classifier called T or G; both vote sets were discarded. Round 2, with a sharper brief (a T vote names what restates it, blank paragraph lines take the paragraph's code, G only for labels): T/G disagreements 2.8% of all rows, T/G kappa 0.84, all-code kappa 0.78. Wave 2 (tsconfig, md, jsonc, toml, jsonl, glob; 2,909 rows): T/G disagreements 2.5%, T/G kappa 0.72; all-code kappa 0.59, lowered by H-versus-N splits that no longer route anything once absorption is in scope.
+
+Rejected: reading 5% over the T/G-union rows, which no brief reached because shrinking T to the obvious cases shrinks the denominator faster than the disagreements; and an all-code kappa gate, which would discard waves over H-versus-N labels that decide no deletion.
+
+Lane goals/comment-law-sweep-p0
+
+Reverse: Measure the 5% over T/G-union rows only and stop every wave above it until a brief reaches it.
+
+### Absorption verifier moves to Cursor claude-opus-5-5-medium while Sol is at its floor, 2026-11-23
+
+Pool readings 2026-11-23: Codex benoppold@gmail.com 7% left (resets in 1d 16h), near the 5% floor; JetBrains AI (Junie) exhausted ('Insufficient account balance' after a $1.77 gpt-6.1-sol run that edited nothing); Cursor seat 99% left, sandbox healthy (`cursor-agent sandbox run echo ok` printed ok). Ruling by the parent session (owner of the cross-provider fallback): the verifier is Cursor `claude-opus-5-5-medium`, Claude fallback chain step 3, until Codex resets; Grok `grok-4.7 --effort medium` if the seat or its sandbox fails; verification holds if both fail. Authors stay on Opus 5.5 children, so the verifier shares a model family. To compensate it runs as a separate session that gets no author context, only the worklist rows, the diff and the carrier claims; its brief is adversarial: when uncertain it rules the carrier insufficient, and a deletion survives only with a cited carrier. Cursor reads repository files only (inputs are copied into the gitignored .beep/comment-law/verify/ of the lane), runs no git, sudo or pkexec (D11, D21), and the orchestrator stages and commits its output. Argv: `cursor-agent -p --trust --force --sandbox enabled --workspace <lane> --model claude-opus-5-5-medium --output-format stream-json <brief>`, captured per run in the PR body. Rejected: holding verification until the Codex reset, which stalls the sweep for 1d 16h; Grok first, which the chain orders after Cursor.
+
+Lane goals/comment-law-sweep-w3
+
+Reverse: At the Codex reset (about 2026-11-24T12:00Z), verify on Codex gpt-6.1-sol medium again.
+
+### Unblocker #3495 merged over shadowed required contexts, 2026-11-23
+
+Main's red episode: Repo Sanity's lint:comment-law scope lock on root vitest.property-reporter.ts, a semantic interaction between #3458's four-line header and #3483's root-scope lock (failing Check runs 45082130684 and 45083821617). #3495 (head 010ddbd30726) ran every required Heavy context green in run 45091001258 (Check 137420668103, Docgen 137420668101, Doctest 137420668148). The orchestrator cancelled a duplicate pending Heavy Admit run, 45091017948 (same sha, queued 00:49:31Z), at 01:25Z. That left the required contexts required-shadowed (goals/yeet-async-merge-and-stacks/decisions/2026-11-12-shadowed-heavy-suite.md), and yeet's relaxed merge-async requested a rules bypass. Merged 2026-11-23T01:36:00Z as c936743bb33e. CI driver ruling: a bypass over shadowed contexts, not over reds. Lesson: never cancel a duplicate pending run on a PR with required contexts; let it run, or re-apply ready-for-heavy. The episode closes at the first main Check on c936743b or later with Repo Sanity green.
+
+Lane fix/comment-law-property-reporter-header · PR #3495
+
+Reverse: None needed: the required contexts had passed; on a repeat, re-apply ready-for-heavy (strict remedy) instead of cancelling the duplicate run
 
 <!-- beep:decisions:end -->
 

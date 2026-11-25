@@ -139,8 +139,6 @@ const SpanId = LiteralKit(["S1", "S2", "S3", "S4", "S5", "S6"]).pipe(
 );
 
 /**
- * Runtime type for {@link SpanId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -222,8 +220,6 @@ export class SpanRef extends S.Opaque<SpanRef, { readonly brand: unique symbol }
 export const spanRefLabel = (ref: SpanRef): string => `${ref.source}·${ref.span}`;
 
 /**
- * One verbatim span of a source artifact.
- *
  * **Example** (Make a verbatim span)
  *
  * ```ts

@@ -237,7 +237,7 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
     limits,
     Effect.gen(function* () {
       const children = yield* captureCitationExtractionChildren();
-      // Installed once; an install failure surfaces where each request used to install it.
+      // decision: citation-stage-install-once-exit-replay
       const stages = yield* Effect.exit(installChildren(limits, runtime, config).pipe(Effect.provideContext(children)));
       const installed = yield* makeCitationMetadataOperation((raw: unknown) =>
         prepare(limits, stages, raw).pipe(Effect.provideContext(children))
@@ -246,13 +246,11 @@ export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop
         Effect.gen(function* () {
           const [result, reservedUnits] = yield* installed.run(raw);
           const completed = CitationExtractionLoopResult.make({ ...result, reservedUnits });
-          // Struct construction validates each occurrence independently. Reconnect
-          // returned entries to that one validated model list by original ids.
-          const restored: CitationExtractionLoopResult = {
+          const reconnectedToOneValidatedModelListByOriginalId: CitationExtractionLoopResult = {
             ...completed,
             citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)),
           };
-          return restored;
+          return reconnectedToOneValidatedModelListByOriginalId;
         })
       );
       return { extract };

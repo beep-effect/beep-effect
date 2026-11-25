@@ -14,11 +14,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 
-// A realistic multi-field JSONC document — comments and a trailing comma —
-// exercising every top-level field plus nested compilerOptions/watchOptions/
-// typeAcquisition/references, per the task brief (inline, no FileSystem: this
-// module is pure).
-const REALISTIC_TSCONFIG = `{
+const INLINE_JSONC_WITH_EVERY_TOP_LEVEL_AND_NESTED_SECTION = `{
 	// project-wide compiler settings
 	"$schema": "https://json.schemastore.org/tsconfig.json",
 	"compilerOptions": {
@@ -51,9 +47,7 @@ const REALISTIC_TSCONFIG = `{
 	"buildOptions": { "verbose": true },
 }`;
 
-// The repo's own root tsconfig.json content, inlined — the "real JSONC
-// document" fixture per the brief.
-const ROOT_TSCONFIG = `{
+const REAL_UPSTREAM_ROOT_TSCONFIG_EXTENDING_A_PACKAGE = `{
 	"$schema": "https://json.schemastore.org/tsconfig.json",
 	"extends": "@savvy-web/silk/tsconfig/node/root.json"
 }`;
@@ -61,7 +55,9 @@ const ROOT_TSCONFIG = `{
 describe("TsconfigJsonFromString", () => {
   it.effect("decodes a realistic JSONC document with comments and trailing commas", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(REALISTIC_TSCONFIG);
+      const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(
+        INLINE_JSONC_WITH_EVERY_TOP_LEVEL_AND_NESTED_SECTION
+      );
       assert.strictEqual(decoded.$schema, "https://json.schemastore.org/tsconfig.json");
       assert.strictEqual(decoded.compilerOptions?.target, "es2023");
       assert.strictEqual(decoded.compilerOptions?.module, "nodenext");
@@ -83,7 +79,7 @@ describe("TsconfigJsonFromString", () => {
 
   it.effect("decodes this repo's own root tsconfig.json content", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(ROOT_TSCONFIG);
+      const decoded = yield* S.decodeEffect(TsconfigJsonFromString)(REAL_UPSTREAM_ROOT_TSCONFIG_EXTENDING_A_PACKAGE);
       assert.strictEqual(decoded.extends, "@savvy-web/silk/tsconfig/node/root.json");
       assert.strictEqual(decoded.$schema, "https://json.schemastore.org/tsconfig.json");
     })
@@ -257,9 +253,12 @@ describe("ClosedTsconfigJson", () => {
       const closed = yield* S.decodeEffect(ClosedTsconfigJson)(input, { onExcessProperty: "error" });
       const open = yield* S.decodeEffect(TsconfigJson)(input);
       assert.deepStrictEqual(closed, open);
-      // By default an unknown top-level key is dropped rather than kept.
       const dropped = yield* S.decodeUnknownEffect(ClosedTsconfigJson)({ compileOnSave: true, "ts-node": {} });
-      assert.deepStrictEqual(dropped, { compileOnSave: true });
+      assert.deepStrictEqual(
+        dropped,
+        { compileOnSave: true },
+        "by default an unknown top-level key is dropped rather than kept"
+      );
     })
   );
 });

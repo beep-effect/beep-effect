@@ -23,8 +23,6 @@ import { SemVer } from "./SemVer.ts";
 const $I = $SemverId.create("Range");
 
 /**
- * Indicates that a string could not be parsed as a range expression.
- *
  * **Details**
  *
  * Raised by {@link Range.parse} and `VersionCache.resolveString` (which
@@ -103,8 +101,6 @@ export class InvalidRangeError extends S.TaggedError<
  */
 export type ComparatorSet = ReadonlyArray<Comparator>;
 
-// Scans `versions` for satisfying entries, keeping the first one that `replaces`
-// prefers over every earlier pick.
 const pickSatisfying =
   (replaces: (candidate: SemVer, best: SemVer) => boolean) =>
   (versions: ReadonlyArray<SemVer>, range: Range): O.Option<SemVer> => {
@@ -116,8 +112,6 @@ const pickSatisfying =
   };
 
 /**
- * A SemVer range expression: a union (OR) of {@link ComparatorSet}s.
- *
  * **Details**
  *
  * Supports node-semver syntax — hyphen ranges (`1.0.0 - 2.0.0`), X-ranges
@@ -165,8 +159,6 @@ export class Range extends S.Class<
       "A SemVer range expression: a union (OR) of ComparatorSets. Supports node-semver syntax — hyphen ranges (`1.0.0 - 2.0.0`), X-ranges (`1.x`, `*`), tilde (`~1.2.3`), caret (`^1.2.3`) and `||` unions — which parsing desugars into primitive comparators and normalizes.",
   })
 ) {
-  // ── Schema ──────────────────────────────────────────────────────────
-
   /**
    * Schema transformation between the range expression string and
    * {@link Range}: decoding parses, desugars and normalizes; encoding
@@ -215,8 +207,6 @@ export class Range extends S.Class<
       })
     )
   );
-
-  // ── Construction ────────────────────────────────────────────────────
 
   /**
    * Parse a range expression and normalize its comparator sets,
@@ -281,8 +271,6 @@ export class Range extends S.Class<
    * @since 0.0.0
    */
   static readonly parse = Effect.fn("Range.parse")((input: string) => Effect.fromResult(Range.parseResult(input)));
-
-  // ── Matching statics (dual) ─────────────────────────────────────────
 
   /**
    * Test whether a version satisfies a range; see {@link Range.test} for the
@@ -418,8 +406,6 @@ export class Range extends S.Class<
     2,
     pickSatisfying((candidate, best) => candidate.lt(best))
   );
-
-  // ── Algebra statics ─────────────────────────────────────────────────
 
   /**
    * Combine two ranges with OR semantics: the union of their comparator
@@ -618,8 +604,6 @@ export class Range extends S.Class<
     return Range.make({ sets });
   }
 
-  // ── Instance ────────────────────────────────────────────────────────
-
   /**
    * Test whether a version satisfies this range.
    *
@@ -713,8 +697,6 @@ export class Range extends S.Class<
 }
 
 /**
- * Indicates that intersecting ranges produced no satisfiable comparator set.
- *
  * **Details**
  *
  * Raised by {@link Range.intersect} when the constraints are mutually
@@ -781,11 +763,6 @@ export class UnsatisfiableConstraintError extends S.TaggedError<
   }
 }
 
-// ── Matching internals ───────────────────────────────────────────────────
-
-// Prerelease tuple restriction (node-semver semantics): a prerelease version
-// only matches a set when some comparator in the set carries a prerelease on
-// the same major.minor.patch tuple.
 const satisfiesSet: {
   (version: SemVer, set: ComparatorSet): boolean;
   (set: ComparatorSet): (version: SemVer) => boolean;
@@ -807,9 +784,6 @@ const satisfiesSet: {
   return A.every(set, (c) => c.test(version));
 });
 
-// ── Algebra internals ────────────────────────────────────────────────────
-
-// All tuple checks ignore build metadata and prerelease identifiers.
 const sameTuple: {
   (a: SemVer, b: SemVer): boolean;
   (b: SemVer): (a: SemVer) => boolean;
@@ -831,7 +805,6 @@ const prereleaseTuples = (set: ComparatorSet): Array<SemVer> =>
     sameTuple
   );
 
-// Stable tuples form a discrete, bounded lexicographic domain.
 const nextStable = (v: SemVer): O.Option<SemVer> => {
   if (v.patch < Number.MAX_SAFE_INTEGER) return O.some(SemVer.of(v.major, v.minor, v.patch + 1));
   if (v.minor < Number.MAX_SAFE_INTEGER) return O.some(SemVer.of(v.major, v.minor + 1, 0));
@@ -839,15 +812,10 @@ const nextStable = (v: SemVer): O.Option<SemVer> => {
   return O.none();
 };
 
-// Comparators that bound a set from below (`>`, `>=`, `=`).
 const isLowerBound = (c: Comparator): boolean => c.operator === ">" || c.operator === ">=" || c.operator === "=";
 
-// The greater of two versions, keeping `a` on ties.
 const maxVersion = (a: SemVer, b: SemVer): SemVer => (b.gt(a) ? b : a);
 
-// Least stable version a lower bound admits: the next stable tuple above a
-// strict stable bound, otherwise the bound's own tuple. None when the
-// stable domain is exhausted.
 const stableLowerBound = (c: Comparator): O.Option<SemVer> =>
   c.operator === ">" && c.version.isStable
     ? nextStable(c.version)
@@ -863,12 +831,16 @@ const stableWitness = (set: ComparatorSet): O.Option<SemVer> => {
   return satisfiesSet(candidate, set) ? O.some(candidate) : O.none();
 };
 
-// Least prerelease of `tuple` a prerelease lower bound admits.
-const prereleaseLowerBound = (c: Comparator, tuple: SemVer): SemVer =>
-  c.operator === ">" ? SemVer.of(tuple.major, tuple.minor, tuple.patch, [...c.version.prerelease, 0]) : c.version;
+const leastPrereleaseAboveSkippingNone = (prerelease: ReadonlyArray<string | number>): Array<string | number> => [
+  ...prerelease,
+  0,
+];
 
-// Appending numeric zero is the least prerelease strictly above a given
-// prerelease (unlike incrementing its final identifier, it skips no version).
+const prereleaseLowerBound = (c: Comparator, tuple: SemVer): SemVer =>
+  c.operator === ">"
+    ? SemVer.of(tuple.major, tuple.minor, tuple.patch, leastPrereleaseAboveSkippingNone(c.version.prerelease))
+    : c.version;
+
 const prereleaseWitness: {
   (set: ComparatorSet, tuple: SemVer): O.Option<SemVer>;
   (tuple: SemVer): (set: ComparatorSet) => O.Option<SemVer>;
@@ -889,9 +861,7 @@ const isSetSatisfiable = (set: ComparatorSet): boolean => {
   );
 };
 
-// Project every prerelease bound onto the stable domain. The resulting
-// comparators mention no prereleases, so they grant no tuple permission.
-const stableSet = (set: ComparatorSet): O.Option<ComparatorSet> => {
+const projectPrereleaseBoundsOntoStableDomain = (set: ComparatorSet): O.Option<ComparatorSet> => {
   const projected: Array<Comparator> = [];
   for (const c of set) {
     if (c.version.isStable) {
@@ -925,7 +895,7 @@ const intersectSets: {
   )
     return [merged];
   const permitted = A.filter(tuples, (tuple) => admitsTuple(a, tuple) && admitsTuple(b, tuple));
-  const stable = stableSet(merged);
+  const stable = projectPrereleaseBoundsOntoStableDomain(merged);
   return [
     ...O.getOrElse(O.map(stable, A.of), () => []),
     ...A.map(permitted, (tuple) => [
@@ -967,7 +937,6 @@ const isComparatorImplied: {
   return false;
 });
 
-// Every prerelease tuple `sub` can actually reach must be admitted by `sup`.
 const coversPrereleaseTuples = (sub: ComparatorSet, sup: ComparatorSet): boolean =>
   A.every(prereleaseTuples(sub), (tuple) => admitsTuple(sup, tuple) || O.isNone(prereleaseWitness(sub, tuple)));
 
@@ -976,7 +945,7 @@ const isComparatorSetSubset: {
   (sup: ComparatorSet): (sub: ComparatorSet) => boolean;
 } = Fn.dual(2, (sub: ComparatorSet, sup: ComparatorSet): boolean => {
   if (A.isReadonlyArrayEmpty(sup) || !isSetSatisfiable(sub)) return true;
-  // An empty set admits all prerelease tuples; finite nonempty sets cannot.
-  if (A.isReadonlyArrayEmpty(sub)) return false;
+  const subAdmitsEveryPrereleaseTuple = A.isReadonlyArrayEmpty(sub);
+  if (subAdmitsEveryPrereleaseTuple) return false;
   return coversPrereleaseTuples(sub, sup) && A.every(sup, (supComp) => isComparatorImplied(sub, supComp));
 });

@@ -5,7 +5,8 @@
     "src",
     "alchemy.run.ts",
     "plan-check.ts",
-    "deploy-role-policy.ts"
+    "deploy-role-policy.ts",
+    "fleet-pool-caps.ts"
   ],
   "compilerOptions": {
     "types": ["node"],

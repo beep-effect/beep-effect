@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Corpus/internal/RecycleBin.schemas");
 
 /**
- * Recycle-bin metadata format version family.
- *
  * **Example** (Validate format version string)
  *
  * ```ts
@@ -34,8 +32,6 @@ export const RecycleBinFormatVersion = LiteralKit(["v1", "v2"]).pipe(
 );
 
 /**
- * Type for {@link RecycleBinFormatVersion}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -80,8 +76,6 @@ export class RecycleBinOriginal extends S.Opaque<RecycleBinOriginal, { readonly 
 ) {}
 
 /**
- * Matched `$I`/`$R` restoration row.
- *
  * **Example** (Decode matched restoration row)
  *
  * ```ts
@@ -239,8 +233,6 @@ export const CorpusRestorationRecord = S.Union([
 );
 
 /**
- * Type for {@link CorpusRestorationRecord}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -291,8 +283,6 @@ export const RecycleBinEntryKind = LiteralKit(["metadata", "content"]).pipe(
 );
 
 /**
- * Type for {@link RecycleBinEntryKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -330,8 +320,6 @@ export class RecycleBinScanEntry extends S.Opaque<RecycleBinScanEntry, { readonl
 ) {}
 
 /**
- * A `$I`/`$R` pair joined on its shared pair key.
- *
  * **Example** (Make paired entry model)
  *
  * ```ts

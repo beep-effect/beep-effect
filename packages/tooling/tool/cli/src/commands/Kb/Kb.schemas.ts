@@ -19,7 +19,6 @@ const RegistryId = S.String.check(S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._:/@-]*$/)
 );
 
 /**
- * Disclosure audience of a capture and its assertions.
  * **Example** (Recognize public evidence)
  * ```ts
  * import { Audience } from "@beep/repo-cli/commands/Kb"
@@ -38,7 +37,6 @@ export const Audience = LiteralKit(["public", "internal", "personal"]).pipe(
 export type Audience = typeof Audience.Type;
 
 /**
- * Independent basis permitting outward use; none never qualifies.
  * **Example** (Recognize a public basis)
  * ```ts
  * import { DerivationBasis } from "@beep/repo-cli/commands/Kb"
@@ -341,6 +339,55 @@ export class KbCoreEvent extends S.Opaque<KbCoreEvent, { readonly brand: unique 
   }).pipe($I.annoteSchema("KbCoreEvent", { description: "A native core and the end of its generating activity." }))
 ) {}
 
+const KbEvidenceEvent = S.Struct({
+  version: S.tag(kbClaimRecordVersion),
+  event: S.tag("Evidence"),
+  claim: ClaimReference,
+  supportedBy: S.Array(RegistryId),
+  challengedBy: S.Array(RegistryId),
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("KbEvidenceEvent", {
+    description: "A separate kb evidence record listing supporting and challenging refs for one claim.",
+  })
+);
+
+const KbReviewEvent = S.Struct({
+  version: S.tag(kbClaimRecordVersion),
+  event: S.tag("Review"),
+  claim: ClaimReference,
+  review: KbReviewState,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("KbReviewEvent", {
+    description: "A separate kb review record for one claim.",
+  })
+);
+
+const KbSignalsEvent = S.Struct({
+  version: S.tag(kbClaimRecordVersion),
+  event: S.tag("Signals"),
+  claim: ClaimReference,
+  signals: KbEvidenceSignals,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("KbSignalsEvent", {
+    description: "A separate kb evidence-signals record for one claim.",
+  })
+);
+
+const KbSuccessionEvent = S.Struct({
+  version: S.tag(kbClaimRecordVersion),
+  event: S.tag("Succession"),
+  claim: ClaimId,
+  predecessor: ClaimReference,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("KbSuccessionEvent", {
+    description: "A kb succession record linking a native core to the claim it replaces.",
+  })
+);
+
 /**
  * Separate v2 records attached to an explicitly namespaced claim.
  *
@@ -368,42 +415,15 @@ export class KbCoreEvent extends S.Opaque<KbCoreEvent, { readonly brand: unique 
  */
 export const KbClaimEvent = S.Union([
   KbCoreEvent,
-  S.Struct({
-    version: S.tag(kbClaimRecordVersion),
-    event: S.tag("Evidence"),
-    claim: ClaimReference,
-    supportedBy: S.Array(RegistryId),
-    challengedBy: S.Array(RegistryId),
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(kbClaimRecordVersion),
-    event: S.tag("Review"),
-    claim: ClaimReference,
-    review: KbReviewState,
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(kbClaimRecordVersion),
-    event: S.tag("Signals"),
-    claim: ClaimReference,
-    signals: KbEvidenceSignals,
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(kbClaimRecordVersion),
-    event: S.tag("Succession"),
-    claim: ClaimId,
-    predecessor: ClaimReference,
-    at: S.DateTimeUtcFromMillis,
-  }),
+  KbEvidenceEvent,
+  KbReviewEvent,
+  KbSignalsEvent,
+  KbSuccessionEvent,
 ]).pipe(
   S.toTaggedUnion("event"),
   $I.annoteSchema("KbClaimEvent", { description: "One kb-claim-record/v2 line; old envelopes are never written." })
 );
 /**
- * Decoded kb-claim-record/v2 event.
- *
  * @category models
  * @since 0.0.0
  */

@@ -36,8 +36,6 @@ const NonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const Share = S.Finite.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1));
 
 /**
- * A source the cost ledger reads or names as not yet joined.
- *
  * **Details**
  *
  * `hosted-jobs` is the per-attempt jobs listing of each run and `test-plan`
@@ -74,8 +72,6 @@ export const CiLedgerSourceKind = LiteralKit([
 );
 
 /**
- * Type of {@link CiLedgerSourceKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -108,8 +104,6 @@ export const CiLedgerSourceStatus = LiteralKit(["present", "partial", "absent"])
 );
 
 /**
- * Type of {@link CiLedgerSourceStatus}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -154,8 +148,6 @@ export const ciLedgerSourceStatus: {
 );
 
 /**
- * The lanes whose partitions `Test Plan` allocates.
- *
  * **Example** (Guard a planned lane)
  *
  * ```ts
@@ -174,8 +166,6 @@ export const CiLedgerPlannedLane = LiteralKit(["test-unit", "test-integration"])
 );
 
 /**
- * Type of {@link CiLedgerPlannedLane}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -210,16 +200,12 @@ export const CiLedgerLegTasks = LiteralKit(["selected", "empty", "undetermined"]
 );
 
 /**
- * Type of {@link CiLedgerLegTasks}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CiLedgerLegTasks = typeof CiLedgerLegTasks.Type;
 
 /**
- * The grain of one ledger row.
- *
  * **Details**
  *
  * `lane`: a lane's own job, its reporting job or the aggregate that checks
@@ -245,8 +231,6 @@ export const CiLedgerGrain = LiteralKit(["lane", "partition"]).pipe(
 );
 
 /**
- * Type of {@link CiLedgerGrain}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -322,8 +306,6 @@ export class CiLedgerTestPlan extends S.Opaque<CiLedgerTestPlan, { readonly bran
 ) {}
 
 /**
- * One partition job's own selection line.
- *
  * **Details**
  *
  * Every partition job prints a selection line,
@@ -364,9 +346,6 @@ const ledgerPartialReadsDefault: ReadonlyArray<CiWorkflowPartialRead> = [];
 const ledgerPartitionProofsDefault: ReadonlyArray<CiLedgerPartitionProof> = [];
 
 /**
- * One captured workflow run: its per-attempt job union and the Test Plan
- * join.
- *
  * **Details**
  *
  * `testPlan` is absent when the run has no readable `Test Plan` job.
@@ -417,8 +396,6 @@ export class CiLedgerRun extends S.Opaque<CiLedgerRun, { readonly brand: unique 
 ) {}
 
 /**
- * The captured runs one ledger is folded from.
- *
  * **Example** (An empty capture)
  *
  * ```ts
@@ -449,8 +426,6 @@ export class CiLedgerCapture extends S.Opaque<CiLedgerCapture, { readonly brand:
 ) {}
 
 /**
- * One (lane, partition) row of a run's ledger.
- *
  * **Details**
  *
  * `ms` is the machine time of the row's jobs, each job counted once.
@@ -601,8 +576,6 @@ export class CiLedgerSourceRow extends S.Opaque<CiLedgerSourceRow, { readonly br
 ) {}
 
 /**
- * One cost ledger over a set of captured runs.
- *
  * **Example** (Read the source rows)
  *
  * ```ts

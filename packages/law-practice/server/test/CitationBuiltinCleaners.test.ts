@@ -11,7 +11,7 @@ import { CitationCleaner, CitationCleanerFailure, CitationCleanerProduced } from
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
+import { fcRunsCapped } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
@@ -84,7 +84,7 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const native = yield* owned.nativeCounts;
         expect(native).toEqual({ spawned: 0, confirmed: 0 });
       }),
-    { arbitrary: fcRuns(20) }
+    { arbitrary: fcRunsCapped(20) }
   );
 
   it.effect(

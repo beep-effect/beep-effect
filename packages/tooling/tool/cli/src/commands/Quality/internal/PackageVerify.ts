@@ -50,8 +50,6 @@ const PACKAGE_VERIFY_STEP_CONCURRENCY = 3;
 const VERIFY_STEP_NAMES = ["audit", "docgen", "lint", "check"] as const;
 
 /**
- * Verification step names run by `quality package-verify`.
- *
  * **Example** (Check lint step name)
  *
  * ```ts
@@ -71,8 +69,6 @@ export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe(
 );
 
 /**
- * Verification step names run by `quality package-verify`.
- *
  * **Example** (Type a check step)
  *
  * ```ts
@@ -88,8 +84,6 @@ export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe(
 export type PackageVerifyStepName = typeof PackageVerifyStepName.Type;
 
 /**
- * Workspace package candidate used by package verification.
- *
  * **Example** (Create workspace candidate)
  *
  * ```ts
@@ -119,8 +113,6 @@ export class PackageVerifyWorkspace extends S.Opaque<PackageVerifyWorkspace, { r
 ) {}
 
 /**
- * Package verification step specification.
- *
  * **Example** (Create lint step spec)
  *
  * ```ts
@@ -148,8 +140,6 @@ export class PackageVerifyStepSpec extends S.Opaque<PackageVerifyStepSpec, { rea
 ) {}
 
 /**
- * Package verification subprocess result.
- *
  * **Example** (Build successful step result)
  *
  * ```ts
@@ -188,8 +178,6 @@ export class PackageVerifyStepResult extends S.Opaque<PackageVerifyStepResult, {
 ) {}
 
 /**
- * Package verification report.
- *
  * **Example** (Create empty verify report)
  *
  * ```ts

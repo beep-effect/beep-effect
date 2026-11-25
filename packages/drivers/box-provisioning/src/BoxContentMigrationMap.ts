@@ -57,8 +57,6 @@ export const BoxFileName = BoxFolderName.check(
 );
 
 /**
- * Runtime type for {@link BoxFileName}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -95,8 +93,6 @@ export const BoxContentMigrationRuleId = S.String.check(
 );
 
 /**
- * Runtime type for {@link BoxContentMigrationRuleId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -138,8 +134,6 @@ export const BoxContentSourceRelativePath = S.String.check(
 );
 
 /**
- * Runtime type for {@link BoxContentSourceRelativePath}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -167,8 +161,6 @@ export const BoxContentFolderPath = S.NonEmptyArray(BoxFolderName).pipe(
 );
 
 /**
- * Runtime type for {@link BoxContentFolderPath}.
- *
  * @category type-level
  * @since 0.0.0
  */

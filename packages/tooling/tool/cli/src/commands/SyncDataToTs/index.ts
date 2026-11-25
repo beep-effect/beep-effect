@@ -5,8 +5,6 @@
  * @since 0.0.0
  */
 /**
- * Public sync-data-to-ts command export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -19,8 +17,6 @@ export * from "./SyncDataToTs.command.ts";
  */
 export * from "./SyncDataToTs.errors.ts";
 /**
- * Public sync-data-to-ts schemas export.
- *
  * @category cli-commands
  * @since 0.0.0
  */

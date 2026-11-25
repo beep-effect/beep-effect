@@ -131,23 +131,21 @@ const PDF_CONTENT_TYPE = "application/pdf";
 const PDF_EXTENSION = ".pdf";
 const PRECONDITION_FAILED = 412;
 
-// Well-known folders whose mail is never inbound: what the mailbox wrote itself.
-const EXCLUDED_FOLDERS = ["sentitems", "drafts", "outbox"] as const;
+const SELF_WRITTEN_FOLDERS = ["sentitems", "drafts", "outbox"] as const;
 
-// Well-known folders whose mail is still docketed, marked with where it was found: a deadline
-// that a filter or a stray click put away is still a deadline.
 const MARKED_FOLDERS: ReadonlyArray<readonly [folder: string, sourceFolder: DocketSourceFolder]> = [
   ["junkemail", "junk"],
   ["deleteditems", "deleted"],
 ];
 
-// The folder ids of one mailbox, resolved once when the layer is built.
 type MailboxFolders = {
   readonly excluded: HashSet.HashSet<string>;
   readonly marked: HashMap.HashMap<string, DocketSourceFolder>;
 };
 
 const IN_MAILBOX: DocketSourceFolder = "mailbox";
+
+const stringOrderableTimestamp = DateTime.formatIso;
 
 const categoryColor = DocketCategory.match({
   "Docket - digest": (): GraphCategoryColor => "preset12",
@@ -213,8 +211,6 @@ const senderAddress = (message: GraphMessage): O.Option<string> =>
     O.flatMap((emailAddress) => emailAddress.address)
   );
 
-// The listing spans every folder. The folder a message sits in decides whether it is inbound;
-// that holds however the mailbox is addressed (by address or by id).
 const isInExcludedFolder =
   (folders: MailboxFolders) =>
   (message: GraphMessage): boolean =>
@@ -227,8 +223,6 @@ const sourceFolderOf = (folders: MailboxFolders, message: GraphMessage): DocketS
     O.getOrElse(() => IN_MAILBOX)
   );
 
-// Secondary guards for mail outside those folders: drafts, and mail the mailbox sent to itself
-// when it is configured by address.
 const isInbound =
   (mailbox: string) =>
   (message: GraphMessage): boolean =>
@@ -335,8 +329,7 @@ const toDocketMessage =
           conversationId: O.filter(message.conversationId, Str.isNonEmpty),
           internetMessageId: O.filter(message.internetMessageId, Str.isNonEmpty),
           messageId: message.id,
-          // One timestamp format everywhere: the pipeline orders and compares these as strings.
-          receivedAt: DateTime.formatIso(instant),
+          receivedAt: stringOrderableTimestamp(instant),
           receivedDate: docketDayInZone(instant, zone),
           sender: senderAddress(message),
           sourceFolder: sourceFolderOf(folders, message),
@@ -363,9 +356,7 @@ type DocumentBudget<Document> = {
   readonly remainingBytes: number;
 };
 
-// Keep a document when it fits what is left of the budget; one that does not fit is passed over
-// and later, smaller ones are still considered.
-const withinBudget = <Document>(
+const keepIfFitsElseSkip = <Document>(
   budget: DocumentBudget<Document>,
   document: Document,
   bytes: number
@@ -386,7 +377,8 @@ const selectWithinBudget = (
   A.reduce(
     A.getSomes(A.map(attachments, sized)),
     { kept: A.empty<GraphAttachment>(), remainingBytes: totalBytes },
-    (budget: DocumentBudget<GraphAttachment>, candidate) => withinBudget(budget, candidate.attachment, candidate.bytes)
+    (budget: DocumentBudget<GraphAttachment>, candidate) =>
+      keepIfFitsElseSkip(budget, candidate.attachment, candidate.bytes)
   ).kept;
 
 const toWrittenEntry = (event: GraphEvent): O.Option<DocketWrittenEntry> =>
@@ -474,9 +466,7 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, folders: Mailbo
   const userId = O.some(config.mailbox);
   const zone = config.timeZone;
 
-  // Download one selected document and keep it only when its real size fits both the
-  // per-document cap and what is left of the total: metadata sizes are not always exact.
-  const downloadWithinBudget = Effect.fnUntraced(function* (
+  const downloadWithinBudgetByRealSize = Effect.fnUntraced(function* (
     messageId: string,
     budget: DocumentBudget<DocketSourceDocument>,
     attachment: GraphAttachment
@@ -486,7 +476,7 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, folders: Mailbo
     );
     const bytes = content.bytes.length;
     return bytes <= config.maxDocumentBytes
-      ? withinBudget(
+      ? keepIfFitsElseSkip(
           budget,
           DocketSourceDocument.make({ bytes: content.bytes, contentType: PDF_CONTENT_TYPE, name: attachment.name }),
           bytes
@@ -561,7 +551,7 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, folders: Mailbo
           remainingBytes: config.maxTotalDocumentBytes,
         }),
         (budget: DocumentBudget<DocketSourceDocument>, attachment) =>
-          downloadWithinBudget(message.messageId, budget, attachment)
+          downloadWithinBudgetByRealSize(message.messageId, budget, attachment)
       ).pipe(Effect.mapError(mailboxError));
       yield* Effect.annotateCurrentSpan({
         docket_attachments: A.length(attachments.value),
@@ -605,8 +595,6 @@ const makeCalendar = (m365: M365Shape, config: DocketGraphConfig) => {
   });
 };
 
-// Resolve the folder ids of one mailbox once: the folders whose mail is never inbound, and the
-// folders whose mail is docketed with where it was found.
 const resolveFolders = Effect.fnUntraced(function* (
   m365: M365Shape,
   config: DocketGraphConfig
@@ -615,7 +603,7 @@ const resolveFolders = Effect.fnUntraced(function* (
     m365
       .getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) }))
       .pipe(Effect.mapBoth({ onFailure: mailboxError, onSuccess: (resolved) => resolved.id }));
-  const excluded = yield* Effect.forEach(EXCLUDED_FOLDERS, folderId, { concurrency: 1 });
+  const excluded = yield* Effect.forEach(SELF_WRITTEN_FOLDERS, folderId, { concurrency: 1 });
   const marked = yield* Effect.forEach(
     MARKED_FOLDERS,
     ([folder, sourceFolder]) => Effect.map(folderId(folder), (id) => [id, sourceFolder] as const),

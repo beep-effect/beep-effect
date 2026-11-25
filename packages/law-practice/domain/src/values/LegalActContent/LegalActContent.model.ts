@@ -15,8 +15,6 @@ const $I = $LawPracticeDomainId.create("values/LegalActContent/LegalActContent.m
 const LegalActPolarityBase = LiteralKit(["act", "omission"]);
 
 /**
- * Whether a position's content is a doing or a refraining.
- *
  * **When to use**
  *
  * Use as the polarity field inside {@link LegalActContent}. Polarity is never
@@ -48,8 +46,6 @@ export const LegalActPolarity = LegalActPolarityBase.pipe(
 );
 
 /**
- * Runtime type for {@link LegalActPolarity}.
- *
  * @see {@link LegalActPolarity} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -57,8 +53,6 @@ export const LegalActPolarity = LegalActPolarityBase.pipe(
 export type LegalActPolarity = typeof LegalActPolarity.Type;
 
 /**
- * Plain-text description of the act a legal position is about.
- *
  * **Details**
  *
  * The description is structured-but-plain text on purpose. A typed act-verb
@@ -83,8 +77,6 @@ export const LegalActDescription = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link LegalActDescription}.
- *
  * @see {@link LegalActDescription} for the runtime schema and the deferred act-verb vocabulary.
  * @category models
  * @since 0.0.0
@@ -102,8 +94,6 @@ const makeLegalActContentMember = <T extends LegalActPolarity>(literal: S.Litera
   });
 
 /**
- * The act a legal position is about, together with its required polarity.
- *
  * **When to use**
  *
  * Use as the content half of every legal position. Both derivations are defined
@@ -148,8 +138,6 @@ export const LegalActContent = LegalActPolarity.mapMembers(([act, omission]) =>
 );
 
 /**
- * Runtime type for {@link LegalActContent}.
- *
  * @see {@link LegalActContent} for the polarity-tagged content schema.
  * @category models
  * @since 0.0.0

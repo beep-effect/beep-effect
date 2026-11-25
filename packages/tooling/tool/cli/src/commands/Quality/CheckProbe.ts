@@ -28,8 +28,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Quality/CheckProbe");
 
 /**
- * A tsconfig or manifest the probe reads could not be read or resolved.
- *
  * **Example** (Explain an unreadable tsconfig)
  *
  * ```ts
@@ -58,9 +56,6 @@ const readFailure =
     CheckProbeReadError.make({ message, cause });
 
 /**
- * A package check stopped before its compiler: projects the package references
- * have no declaration index on disk.
- *
  * **Details**
  *
  * The probe prints `message`, its one line, before failing, so the error is

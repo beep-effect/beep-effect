@@ -63,8 +63,6 @@ export const CHECK_TSCONFIG_FILENAME = "tsconfig.check.json" as const;
 const CANONICAL_ALIAS_KEY_PATTERN = /^@beep\/[^/*]+(?:\/(?!\*)[^*]+)*(?:\/\*)?$/;
 
 /**
- * Schema for canonical `@beep` tsconfig alias keys.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -86,8 +84,6 @@ export const CanonicalAliasKey = S.String.check(S.isPattern(CANONICAL_ALIAS_KEY_
 );
 
 /**
- * Schema for `@beep`-scoped package names.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -287,8 +283,6 @@ const buildSourceOnlySubpathAliasTargets = (
  */
 const TsconfigSyncModeKit = LiteralKit(["sync", "check", "dry-run"]);
 /**
- * Command execution mode.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -329,8 +323,6 @@ export const TsconfigSyncMode = TsconfigSyncModeKit.pipe(
 export const TsconfigSyncModeMatch = TsconfigSyncModeKit.match;
 
 /**
- * Runtime type for tsconfig-sync execution modes.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -431,8 +423,6 @@ export const isDryRunModeFlags = P.Tuple([P.not(P.isTruthy), P.isTruthy, P.isBoo
 export const isWriteModeFlags = P.Tuple([P.not(P.isTruthy), P.not(P.isTruthy), P.isTruthy]);
 
 /**
- * Runtime options for sync mode execution.
- *
  * **Example** (Build sync-mode options for one package)
  *
  * ```ts
@@ -462,8 +452,6 @@ export class TsconfigSyncRunOptionsSync extends S.Opaque<
 ) {}
 
 /**
- * Runtime options for check mode execution.
- *
  * **Example** (Build check-mode options for the whole repo)
  *
  * ```ts
@@ -494,8 +482,6 @@ export class TsconfigSyncRunOptionsCheck extends S.Opaque<
 ) {}
 
 /**
- * Runtime options for dry-run mode execution.
- *
  * **Example** (Preview changes for one package without writing)
  *
  * ```ts
@@ -526,8 +512,6 @@ export class TsconfigSyncRunOptionsDryRun extends S.Opaque<
 ) {}
 
 /**
- * Runtime options for executing tsconfig sync at a repo root.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -555,8 +539,6 @@ export const TsconfigSyncRunOptions = TsconfigSyncMode.mapMembers(
   S.toTaggedUnion("mode")
 );
 /**
- * Runtime options for executing tsconfig sync at a repo root.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -572,8 +554,6 @@ export const TsconfigSyncRunOptions = TsconfigSyncMode.mapMembers(
 export type TsconfigSyncRunOptions = typeof TsconfigSyncRunOptions.Type;
 
 /**
- * Sync change section categories.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -604,8 +584,6 @@ export const TsconfigSyncSection = LiteralKit([
 );
 
 /**
- * Sync change section categories.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -621,8 +599,6 @@ export const TsconfigSyncSection = LiteralKit([
 export type TsconfigSyncSection = typeof TsconfigSyncSection.Type;
 
 /**
- * Planned change entry for root tsconfig references.
- *
  * **Example** (Report drift in the root project references)
  *
  * ```ts
@@ -653,8 +629,6 @@ export class RootReferencesChange extends S.Opaque<RootReferencesChange, { reado
 ) {}
 
 /**
- * Planned change entry for root tsconfig aliases.
- *
  * **Example** (Report a missing root path alias)
  *
  * ```ts
@@ -684,8 +658,6 @@ export class RootAliasesChange extends S.Opaque<RootAliasesChange, { readonly br
 ) {}
 
 /**
- * Planned change entry for root syncpack config.
- *
  * **Example** (Report a syncpack version-group update)
  *
  * ```ts
@@ -715,8 +687,6 @@ export class RootSyncpackChange extends S.Opaque<RootSyncpackChange, { readonly 
 ) {}
 
 /**
- * Planned change entry for package-level tsconfig references.
- *
  * **Example** (Report a package tsconfig that lost a reference)
  *
  * ```ts
@@ -747,8 +717,6 @@ export class PackageReferencesChange extends S.Opaque<PackageReferencesChange, {
 ) {}
 
 /**
- * Planned change entry for package check and test overlay references.
- *
  * **Example** (Report drift in a package check tsconfig)
  *
  * ```ts
@@ -781,8 +749,6 @@ export class PackageCheckReferencesChange extends S.Opaque<
 ) {}
 
 /**
- * Planned change entry for package docgen configs.
- *
  * **Example** (Report docgen compiler paths that drifted)
  *
  * ```ts
@@ -812,8 +778,6 @@ export class PackageDocgenChange extends S.Opaque<PackageDocgenChange, { readonl
 ) {}
 
 /**
- * Planned change entry for the generated root Vitest alias data.
- *
  * **Example** (Report a missing vitest resolve alias)
  *
  * ```ts
@@ -855,8 +819,6 @@ export class RootVitestAliasesChange extends S.Opaque<RootVitestAliasesChange, {
 ) {}
 
 /**
- * Planned change entry for the generated Fallow boundary config.
- *
  * **Example** (Report a fallow boundary that needs a new zone)
  *
  * ```ts
@@ -889,8 +851,6 @@ export class RootFallowBoundariesChange extends S.Opaque<
 ) {}
 
 /**
- * Generated root manifest projection change summary.
- *
  * **Example** (Construct a projection change)
  *
  * ```ts
@@ -921,8 +881,6 @@ export class RootPackageProjectionChange extends S.Opaque<
 ) {}
 
 /**
- * A single planned file change.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -957,8 +915,6 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
 );
 
 /**
- * A single planned file change.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -974,8 +930,6 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
 export type TsconfigSyncChange = typeof TsconfigSyncChange.Type;
 
 /**
- * Planned file content change for root tsconfig references.
- *
  * **Example** (Order planned writes by file path)
  *
  * ```ts
@@ -1015,8 +969,6 @@ export class RootReferencesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for root tsconfig aliases.
- *
  * **Example** (Carry the rewritten base tsconfig)
  *
  * ```ts
@@ -1052,8 +1004,6 @@ export class RootAliasesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for root syncpack config.
- *
  * **Example** (Carry the rewritten syncpack config)
  *
  * ```ts
@@ -1088,8 +1038,6 @@ export class RootSyncpackPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for package tsconfig references.
- *
  * **Example** (Order two writes to the same file by section)
  *
  * ```ts
@@ -1129,8 +1077,6 @@ export class PackageReferencesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for package check and test overlay references.
- *
  * **Example** (Carry the rewritten check tsconfig)
  *
  * ```ts
@@ -1165,8 +1111,6 @@ export class PackageCheckReferencesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for package docgen configs.
- *
  * **Example** (Carry the rewritten docgen config)
  *
  * ```ts
@@ -1201,8 +1145,6 @@ export class PackageDocgenPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for the generated root Vitest alias data.
- *
  * **Example** (Carry the rewritten vitest alias table)
  *
  * ```ts
@@ -1237,8 +1179,6 @@ export class RootVitestAliasesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Planned file content change for the generated Fallow boundary config.
- *
  * **Example** (Carry the rewritten fallow boundaries)
  *
  * ```ts
@@ -1273,8 +1213,6 @@ export class RootFallowBoundariesPlannedFileChange extends S.Opaque<
 ) {}
 
 /**
- * Generated root manifest projection content.
- *
  * **Example** (Construct a projection change)
  *
  * ```ts
@@ -1360,8 +1298,6 @@ export const PlannedFileChange = TsconfigSyncSection.mapMembers(
 export type PlannedFileChange = typeof PlannedFileChange.Type;
 
 /**
- * Sync mode result payload.
- *
  * **Example** (Summarize an applied sync)
  *
  * ```ts
@@ -1391,8 +1327,6 @@ export class TsconfigSyncResultSync extends S.Opaque<TsconfigSyncResultSync, { r
 ) {}
 
 /**
- * Check mode result payload.
- *
  * **Example** (Fail a check run that found drift)
  *
  * ```ts
@@ -1423,8 +1357,6 @@ export class TsconfigSyncResultCheck extends S.Opaque<TsconfigSyncResultCheck, {
 ) {}
 
 /**
- * Dry-run mode result payload.
- *
  * **Example** (Report a dry run with no drift)
  *
  * ```ts
@@ -1452,8 +1384,6 @@ export class TsconfigSyncResultDryRun extends S.Opaque<TsconfigSyncResultDryRun,
 ) {}
 
 /**
- * Result emitted after a sync run.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -1478,8 +1408,6 @@ export const TsconfigSyncResult = TsconfigSyncMode.mapMembers(
 );
 
 /**
- * Result emitted after a sync run.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -1495,8 +1423,6 @@ export const TsconfigSyncResult = TsconfigSyncMode.mapMembers(
 export type TsconfigSyncResult = typeof TsconfigSyncResult.Type;
 
 /**
- * Workspace package descriptor with metadata for tsconfig synchronization.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -1530,8 +1456,6 @@ export class WorkspaceDescriptor extends S.Opaque<WorkspaceDescriptor, { readonl
 ) {}
 
 /**
- * Generic JSON object schema for parsed config documents.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts
@@ -1552,8 +1476,6 @@ export const JsonObject = S.Record(S.String, S.Unknown).pipe(
 );
 
 /**
- * Generic JSON object document used for parsed docgen configs.
- *
  * **Example** (Use tsconfig-sync schemas)
  *
  * ```ts

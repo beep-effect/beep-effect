@@ -5,7 +5,7 @@
  */
 
 import { QuestionOption } from "@beep/law-practice-domain/values/Question";
-import { ReviewItem } from "@beep/law-practice-domain/values/ReviewItem";
+import { isCurrentReviewItem, ReviewItem } from "@beep/law-practice-domain/values/ReviewItem";
 import { makeReviewFilesLayer, ReviewFilesConfig } from "@beep/law-practice-server/ReviewFiles";
 import { OpenItems, ReviewHubToolError } from "@beep/law-practice-use-cases/ReviewHub";
 import { ReviewItemStore } from "@beep/law-practice-use-cases/ReviewItemStore";
@@ -140,7 +140,9 @@ describe("@beep/practice-review-hub", () => {
         const call = (name: string, args: Readonly<Record<string, unknown>>) =>
           rpc["tools/call"]({ name, arguments: args });
         const openItems = Effect.flatMap(call("review_open_items", { today: "2026-10-14" }), (result) =>
-          Effect.map(decodeOpenItems(result.structuredContent), ({ items }) => A.map(items, ({ kind }) => kind))
+          Effect.map(decodeOpenItems(result.structuredContent), ({ items }) =>
+            A.map(A.filter(items, isCurrentReviewItem), ({ kind }) => kind)
+          )
         );
 
         const tools = yield* rpc["tools/list"]({});

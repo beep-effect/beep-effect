@@ -1,11 +1,5 @@
-// The only CSV parser in the package: a push machine. `Machine.start(config)` begins a read, `feed(chunk)` reads one
-// chunk, `finish()` flushes the last record, and `takeCells()` or `takeSlices()` and `takeDiagnostics()` hand over what it completed.
-// Splitting the input anywhere gives the same records and findings (the chunk-invariance laws in
-// Csv.property.test.ts). One machine lives across the chunks of a read and keeps its state in one mutable record, so a
-// chunk costs time in its own length, not in the width of the record left open across it. The record's fields and
-// their starting values are the `MachineState` schema. Engine code never imports the `Csv` facade: it returns
-// findings as schema values and the facade decides what fails.
-
+// decision: imperative-engine-loops
+// decision: engine-findings-facade-fails
 import { $CsvId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -33,8 +27,6 @@ import type { CsvTextLimit } from "../CsvDiagnostic.schema.ts";
 import type { CsvRecord } from "../CsvTable.schema.ts";
 
 const $I = $CsvId.create("internal/machine");
-
-// ── the state of a read, as schemas ──────────────────────────────────────────────────────────────────────────────────
 
 /** The names of the places the machine can be inside a record. */
 export const MachineModeName = LiteralKit([
@@ -147,10 +139,7 @@ export class MachineState extends S.Opaque<MachineState, { readonly brand: uniqu
   static readonly initial: MachineState = MachineState.make({});
 }
 
-/**
- * A completed record until it is taken. Its span is plain numbers and nothing here is built with `make`, so a whole
- * read, which takes only the cells, pays for no position values; `takeSlices` builds them for a channel.
- */
+// decision: imperative-engine-loops
 interface Completed {
   readonly cells: CsvRecord;
   readonly end: CsvRecordEnd;
@@ -174,9 +163,6 @@ export class MachineConfig extends S.Opaque<MachineConfig, { readonly brand: uni
   }).pipe($I.annoteSchema("MachineConfig", { description: "The rules the machine reads by" }))
 ) {}
 
-// ── the machine ──────────────────────────────────────────────────────────────────────────────────────────────────────
-
-/** Every `MachineState` field, writable, with the open record's cells as an array the machine appends to. */
 type Working = {
   -readonly [K in Exclude<keyof MachineState, "brand" | "cells">]: MachineState[K];
 } & { cells: Array<CsvCell> };
@@ -188,8 +174,7 @@ type Working = {
  */
 export const built = { disableChecks: true } as const;
 
-// crispen: kept as a mutable class — it is one read's working state, mutated per character for speed, and it never
-// leaves the machine.
+// decision: imperative-engine-loops
 /** One read in progress. */
 export class Machine {
   /** Where the machine is inside a record. */
@@ -505,13 +490,16 @@ export class Machine {
     );
   }
 
+  private joinLineFeedToCrAlreadyCountedAsLineBreak(): void {
+    this.s.offset += 1;
+  }
+
   /** Releases a record held at a carriage return, now that the next unit is known not to be a line feed. */
   releaseHeld(lineFeedFollows: boolean): void {
     if (!this.s.held) return;
     this.s.held = false;
     if (lineFeedFollows) {
-      // The CR was already counted as a line break; the LF joins it.
-      this.s.offset += 1;
+      this.joinLineFeedToCrAlreadyCountedAsLineBreak();
       this.endRecord("CRLF");
     } else {
       this.endRecord("CR");
@@ -519,22 +507,17 @@ export class Machine {
   }
 }
 
-// ── one step per mode ────────────────────────────────────────────────────────────────────────────────────────────────
-// Each step reads at `i` and returns where the next step reads. A step that stops the read returns `i`; the loop in
-// `Machine.feed` ends on `stopped`.
+type NextIndexOrSameIndexWhenStopped = number;
 
-type Stepper = (run: Machine, text: string, i: number) => number;
+type Stepper = (run: Machine, text: string, i: number) => NextIndexOrSameIndexWhenStopped;
 
-/** A delimiter ends the field. */
 const delimit = (run: Machine, i: number): number => {
   run.endField();
   run.advance(1);
   return i + 1;
 };
 
-/** A line break outside quotes; a carriage return holds the record to see whether a line feed follows. */
 const plainLineBreak = (run: Machine, c: string, i: number): number => {
-  // A blank line: a record of one empty cell.
   if (run.mode === "fieldStart") run.startRecordIfNeeded();
   run.breakLine(1);
   if (c === "\r") run.s.held = true;
@@ -542,7 +525,6 @@ const plainLineBreak = (run: Machine, c: string, i: number): number => {
   return i + 1;
 };
 
-/** A quote that starts a field opens a quoted field. */
 const openQuote = (run: Machine, i: number): number => {
   run.mode = "quoted";
   run.s.fieldQuoted = true;
@@ -553,7 +535,6 @@ const openQuote = (run: Machine, i: number): number => {
   return i + 1;
 };
 
-/** A quote inside an unquoted field: a finding, and kept as text when the read goes on. */
 const strayQuote = (run: Machine, i: number): number => {
   run.quoteFinding(StrayQuote.make);
   if (run.stopped) return i;
@@ -563,8 +544,7 @@ const strayQuote = (run: Machine, i: number): number => {
   return i + 1;
 };
 
-// crispen: kept as a loop — the hot per-character scan of unquoted text, up to the first unit that ends it.
-/** Where a run of ordinary characters from `i` ends, at `stop` at the latest. */
+// decision: imperative-engine-loops
 const plainRunEnd = (text: string, i: number, stop: number, delimiter: string): number => {
   let j = i + 1;
   while (j < stop) {
@@ -575,7 +555,6 @@ const plainRunEnd = (text: string, i: number, stop: number, delimiter: string): 
   return j;
 };
 
-/** A run of ordinary characters, up to the unit that would pass a cap. */
 const plainRun = (run: Machine, text: string, i: number): number => {
   run.mode = "unquoted";
   const j = plainRunEnd(text, i, Num.min(text.length, i + run.budget()), run.config.delimiter);
@@ -585,7 +564,6 @@ const plainRun = (run: Machine, text: string, i: number): number => {
   return j;
 };
 
-/** Before a field or inside an unquoted one. */
 const stepPlain: Stepper = (run, text, i) => {
   const c = text[i] ?? "";
   if (c === "\r" || c === "\n") return plainLineBreak(run, c, i);
@@ -595,8 +573,7 @@ const stepPlain: Stepper = (run, text, i) => {
   return plainRun(run, text, i);
 };
 
-/** Moves past one unit of quoted text, counting a line for a CR, an LF, or a CRLF once. */
-const passQuotedUnit = (run: Machine, d: string | undefined): void => {
+const passQuotedUnitCountingCrlfAsOneLine = (run: Machine, d: string | undefined): void => {
   const s = run.s;
   if (d === "\r") {
     s.line += 1;
@@ -616,7 +593,6 @@ const passQuotedUnit = (run: Machine, d: string | undefined): void => {
   run.advance(1);
 };
 
-/** Inside a quoted field: everything up to the next quote is text, line breaks included. */
 const stepQuoted: Stepper = (run, text, i) => {
   if (text[i] === '"') {
     run.mode = "quoteInQuoted";
@@ -626,7 +602,7 @@ const stepQuoted: Stepper = (run, text, i) => {
   const stop = Num.min(text.length, i + run.budget());
   let j = i;
   while (j < stop && text[j] !== '"') {
-    passQuotedUnit(run, text[j]);
+    passQuotedUnitCountingCrlfAsOneLine(run, text[j]);
     j += 1;
   }
   run.s.field += Str.slice(i, j)(text);
@@ -634,7 +610,6 @@ const stepQuoted: Stepper = (run, text, i) => {
   return j;
 };
 
-/** Just after a quote inside a quoted field: a doubled quote, the field's end, or text after the closing quote. */
 const stepQuoteInQuoted: Stepper = (run, text, i) => {
   const c = text[i];
   run.s.crInQuotes = false;
@@ -664,7 +639,6 @@ const stepQuoteInQuoted: Stepper = (run, text, i) => {
   return i;
 };
 
-/** A delimiter or line break after the spaces: a finding when strict, else the spaces are dropped. */
 const spacesBeforeEnd = (run: Machine, c: string, i: number): number => {
   if (run.config.quotes === "strict") {
     run.quoteFinding(TextAfterClosingQuote.make);
@@ -675,7 +649,6 @@ const spacesBeforeEnd = (run: Machine, c: string, i: number): number => {
   return i;
 };
 
-/** Text after the spaces: a finding, and the quote and spaces kept as text when the read goes on. */
 const textAfterSpaces = (run: Machine, c: string, i: number): number => {
   run.quoteFinding(TextAfterClosingQuote.make);
   if (run.stopped) return i;
@@ -692,7 +665,6 @@ const textAfterSpaces = (run: Machine, c: string, i: number): number => {
   return i;
 };
 
-/** Spaces after a closing quote: dropped before a delimiter or line break when lenient, else kept as text. */
 const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
   const c = text[i] ?? "";
   if (c === " ") {
@@ -704,7 +676,6 @@ const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
   return textAfterSpaces(run, c, i);
 };
 
-/** The step for each mode, chosen once per character run. */
 const stepFor: (mode: MachineModeName) => Stepper = MachineModeName.match({
   fieldStart: () => stepPlain,
   unquoted: () => stepPlain,
@@ -713,12 +684,10 @@ const stepFor: (mode: MachineModeName) => Stepper = MachineModeName.match({
   afterQuoteSpaces: () => stepAfterQuoteSpaces,
 });
 
-/** A record held at a carriage return: a line feed joins it, anything else releases it and is read next. */
 const stepHeld: Stepper = (run, text, i) => {
   const lineFeedFollows = text[i] === "\n";
   run.releaseHeld(lineFeedFollows);
   return lineFeedFollows ? i + 1 : i;
 };
 
-/** The step for the machine's next unit: the held record first, else its mode's. */
 const nextStep = (run: Machine): Stepper => (run.s.held ? stepHeld : stepFor(run.mode));

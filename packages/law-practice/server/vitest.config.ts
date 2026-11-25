@@ -7,24 +7,7 @@ import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { fcDeepSweepActive, vitestDoctestActive } from "../../../vitest.shared.ts";
 import { LawPracticeSequencer } from "./vitest.integration.sequencer.ts";
 
-/**
- * Test files that keep the #2511 two-worker cap.
- *
- * Unit files: the twelve that spawn real native workers through `CitationNativeSpawner.fixtures.ts`
- * with no manual, sleep or fixed clock in their fixture closure, so a cold worker load under a
- * saturated runner can consume a production deadline. Every other unit file drives its deadlines
- * through `makeCitationNativeManualClock` / `makeCitationNativeSleepClock`
- * (`test/CitationTokenizer.fixtures.ts`) or spawns nothing, so it runs at Vitest's default width.
- *
- * Integration files: all of them. The canonical replays hold `regexDeadline` and `extractDeadline`
- * on the manual clock and give `operationDeadline` the `test/CitationReplayBudget.ts` wall-clock
- * budget; their clean, resolve, queue and cleanup deadlines still run on the real clock, and PR
- * #3007's first heavy run at Vitest's default width (seven workers plus native children on the
- * 8-vCPU runner) failed them with `CitationSafetyLimitExceeded`. The integration lane therefore
- * keeps its proven two-worker shape.
- *
- * Membership of the unit entries is mechanical (`test/vitest-shards-plan.test.ts` re-derives it).
- */
+// decision: native-wallclock-vitest-project
 const nativeWallclockSuites = [
   "test/CitationBuiltinCleaners.test.ts",
   "test/CitationCleanerCustomCorpus.test.ts",
@@ -41,55 +24,33 @@ const nativeWallclockSuites = [
   "test/integration/**/*.test.{ts,tsx}",
 ];
 
-// Replay-group width. Vitest defaults to one worker per core minus one: 63 on a 64-core
-// workstation, where this package alone then peaked at 92.8 GB resident, load 91 and 123 Bun
-// processes (2026-11-17), and a concurrent `turbo test` swapped and stalled native children past
-// the 29.75 s watchdog on tests that take 47 ms alone. Eight workers peaked at 53 GB, load 24 and
-// 32 processes for 7% more wall time. 8-vCPU hosted runners keep their default of 7.
+// decision: replay-project-eight-worker-cap
 const replayMaxWorkers = Num.clamp(NodeOS.availableParallelism() - 1, { minimum: 1, maximum: 8 });
 
-// Vitest 5.1 forwards only a fixed list of CLI options to project configs (`maxWorkers`,
-// `isolate`, `passWithNoTests`, ...); `--exclude` is not among them, so the unit scripts'
-// `--exclude=test/integration/**` and `--exclude=test/PartyContactSource.boundary.test.ts` would
-// stop applying once the files are selected by projects. Read the CLI excludes here (the package
-// scripts use the `--exclude=<glob>` form) and add them to every project so the scripts keep their
-// meaning; hosted shards on PR #3007 ran integration replays inside unit shards before this.
 const cliExcludes = pipe(
   process.argv,
   A.filter(Str.startsWith("--exclude=")),
   A.map(Str.slice(Str.length("--exclude=")))
 );
 
+const privateSubjectTestAlias = {
+  find: /^@beep\/law-practice-server\/internal\/(.+)$/,
+  replacement: NodeURL.fileURLToPath(new URL("./src/internal/$1.ts", import.meta.url)),
+};
+
 const config = mergeConfig(
   shared,
   defineConfig({
-    // Test-only aliases reach private subjects without publishing package exports.
-    resolve: {
-      alias: [
-        {
-          find: /^@beep\/law-practice-server\/internal\/(.+)$/,
-          replacement: NodeURL.fileURLToPath(new URL("./src/internal/$1.ts", import.meta.url)),
-        },
-      ],
-    },
+    resolve: { alias: [privateSubjectTestAlias] },
     test: {
-      // Hosted Test Unit runs `--shard=<i>/<n>` with `n` equal to the unit plan length and the hosted
-      // Test Integration partitions `vitest run test/integration --shard=<i>/<m>` with `m` equal to the
-      // integration plan length; `LawPracticeSequencer` applies whichever committed LPT plan matches
-      // (vitest.integration.sequencer.ts) and falls back to Vitest's hash split otherwise.
-      // `beep ci partitions rebalance` refreshes the unit plan.
       sequence: { sequencer: LawPracticeSequencer },
     },
   })
 );
 
-// Doctest mode collects `src/**` through `includeSource` and the property sweep resolves its own
-// include list, so both keep the single config with the package-wide cap; splitting would re-add
-// `test/**` to the projects and run every doctest twice (repo-cli guards the same way).
+// decision: native-wallclock-vitest-project
 const splitProjects = !vitestDoctestActive && !fcDeepSweepActive;
 
-// Projects that extend the root concatenate `include`, so the root include is cleared after the
-// merge (which would concatenate it back) and each project names its own files.
 export default splitProjects
   ? {
       ...config,
@@ -103,11 +64,6 @@ export default splitProjects
               name: "native-wallclock",
               include: nativeWallclockSuites,
               exclude: cliExcludes,
-              // Real native worker tests include cold module loading. Bound the test runner fan-out
-              // so it does not consume the production deadline itself (#2511). The hosted coverage
-              // producer passes `--maxWorkers=2` to a unit shard and Vitest applies the CLI flag to
-              // every project, so this cap and the hosted one agree. Each native owner still enforces
-              // its configured queue/execution limits.
               maxWorkers: 2,
               maxConcurrency: 2,
               sequence: { groupOrder: 0 },
@@ -120,13 +76,10 @@ export default splitProjects
               include: ["test/**/*.test.{ts,tsx}"],
               exclude: [...nativeWallclockSuites, ...cliExcludes],
               maxWorkers: replayMaxWorkers,
-              // Distinct group order: projects with different worker caps cannot share one group, and
-              // the wall-clock group drains before the replay group widens to its own cap.
               sequence: { groupOrder: 1 },
             },
           },
         ],
       },
     }
-  : // Doctests and the deep property sweep keep the #2511 package-wide cap.
-    mergeConfig(config, { test: { maxWorkers: 2, maxConcurrency: 2 } });
+  : mergeConfig(config, { test: { maxWorkers: 2, maxConcurrency: 2 } });

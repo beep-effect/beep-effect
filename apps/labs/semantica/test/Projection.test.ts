@@ -20,18 +20,22 @@ import * as EmbeddingModel from "effect/ai/EmbeddingModel";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CanaryOptions } from "@/canary/Command";
 import { CorpusPaperId } from "@/corpus/Manifest";
-import { verifyGNeighbors, verifyGSparql } from "@/layers/CanaryC1Live";
+import { CanaryC1Live, verifyGNeighbors, verifyGSparql } from "@/layers/CanaryC1Live";
 import { ActiveEmbeddingIdentityLive, EmbedderRuntimeLive } from "@/layers/EmbedderLive";
 import { RdfProjectionLive, semanticaOntologyIri } from "@/layers/RdfProjectionLive";
 import { VectorProjectionLive } from "@/layers/VectorProjectionLive";
 import { LabConfig } from "@/runtime/Config";
+import { LedgerFailed } from "@/schema/Errors";
 import { ClaimBody, EvidenceBatch, EvidenceClaim, ExtractOutcome, makeBatchId, makeClaimId } from "@/schema/Evidence";
 import { ChunkId, DocumentId, RunId } from "@/schema/Ids";
 import { LedgerSnapshot } from "@/schema/Ledger";
@@ -46,7 +50,9 @@ import {
   SparqlResultWitness,
 } from "@/schema/Projection";
 import { ProviderCacheKey } from "@/schema/ProviderCache";
-import { Embedder } from "@/services/Embedder";
+import { CanaryC0 } from "@/services/CanaryC0";
+import { CanaryC1 } from "@/services/CanaryC1";
+import { ActiveEmbeddingIdentity, Embedder } from "@/services/Embedder";
 import { ProviderCache } from "@/services/ProviderCache";
 import { RdfProjection } from "@/services/RdfProjection";
 import { VectorProjection } from "@/services/VectorProjection";
@@ -139,7 +145,7 @@ describe("C1 vector projection", () => {
 });
 
 describe("C1 committed projection gate", () => {
-  it.effect("fails typed on empty and mismatched G-projection witnesses", () =>
+  it.effect("accepts exact G-projection witnesses and fails typed on empty and mismatched ones", () =>
     Effect.gen(function* () {
       const model = embeddingModel(PosInt.make(3));
       const queryChunk = chunkId("1");
@@ -176,8 +182,72 @@ describe("C1 committed projection gate", () => {
       expect(emptyFailure.reason).toBe("expectation-mismatch");
       expect(mismatchFailure.reason).toBe("expectation-mismatch");
       expect(sparqlFailure.reason).toBe("expectation-mismatch");
+
+      const matchingKnn = KnnQueryResult.make({
+        ...emptyKnn,
+        neighbors: [KnnNeighbor.make({ chunk: neighborChunk, distance: 0.1, rank: PosInt.make(1) })],
+      });
+      const claimRow = { claim: "<urn:claim:1>" };
+      const matchingSparql = [SparqlResultWitness.make({ count: S.Natural.make(1), id: "claims", rows: [claimRow] })];
+      const renamedSparql = [SparqlResultWitness.make({ count: S.Natural.make(1), id: "other", rows: [claimRow] })];
+      const overCountedSparql = [
+        SparqlResultWitness.make({ count: S.Natural.make(2), id: "claims", rows: [claimRow, claimRow] }),
+      ];
+
+      yield* verifyGNeighbors(expectation)(matchingKnn);
+      yield* verifyGSparql(expectation)(matchingSparql);
+      const renamedFailure = yield* verifyGSparql(expectation)(renamedSparql).pipe(Effect.flip);
+      const overCountedFailure = yield* verifyGSparql(expectation)(overCountedSparql).pipe(Effect.flip);
+
+      expect(renamedFailure.reason).toBe("expectation-mismatch");
+      expect(overCountedFailure.reason).toBe("expectation-mismatch");
     })
   );
+});
+
+const c0Failure = LedgerFailed.make({ message: "C0 ledger unavailable.", reason: "database-failed" });
+const c1FailingC0Layer = CanaryC1Live(
+  Layer.mergeAll(
+    Layer.effect(EmbeddingModel.EmbeddingModel, Effect.die("C1 acquired the live provider before C0 succeeded")),
+    Layer.succeed(EmbeddingModel.Dimensions, 3)
+  )
+).pipe(
+  Layer.provide(
+    Layer.mergeAll(
+      config,
+      BunCrypto.layer,
+      FileSystem.layerNoop({}),
+      Path.layer,
+      Layer.succeed(ActiveEmbeddingIdentity, embeddingModel(PosInt.make(3))),
+      Layer.mock(CanaryC0, { runWithSnapshot: () => Effect.fail(c0Failure) }),
+      Layer.mock(ProviderCache, {}),
+      Layer.mock(RdfProjection, {}),
+      Layer.mock(VectorProjection, {})
+    )
+  )
+);
+
+describe("C1 canary layer", () => {
+  it.layer(c1FailingC0Layer, { timeout: "30 seconds" })((it) => {
+    it.effect("surfaces a typed C0 failure before acquiring the embedding provider", () =>
+      Effect.gen(function* () {
+        const canary = yield* CanaryC1;
+        const error = yield* canary
+          .run(
+            CanaryOptions.make({
+              manifest: "fixtures/w1.manifest.json",
+              offline: true,
+              out: Option.some("c1-output"),
+              paper: Option.none(),
+              selection: "f1",
+            })
+          )
+          .pipe(Effect.flip);
+
+        expect(error).toEqual(c0Failure);
+      })
+    );
+  });
 });
 
 describe("C1 embedding cache", () => {

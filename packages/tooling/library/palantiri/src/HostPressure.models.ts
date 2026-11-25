@@ -21,8 +21,6 @@ import { Freshness } from "./Freshness.ts";
 const $I = $PalantiriId.create("HostPressure.models");
 
 /**
- * A resource the kernel reports pressure stall information for.
- *
  * **Example** (Narrow a resource)
  *
  * ```ts
@@ -39,8 +37,6 @@ export const PressureResource = LiteralKit(["cpu", "memory", "io"]).pipe(
 );
 
 /**
- * Runtime type for {@link PressureResource}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -66,8 +62,6 @@ export const PressureScope = LiteralKit(["some", "full"]).pipe(
 );
 
 /**
- * Runtime type for {@link PressureScope}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -78,9 +72,6 @@ const Percent = S.Finite.check(S.isBetween({ minimum: 0, maximum: 100 }));
 const PercentFromString = S.FiniteFromString.pipe(S.decodeTo(Percent));
 
 /**
- * Share of wall time stalled over the last 10, 60 and 300 seconds, in
- * percent, and the total stall time in microseconds.
- *
  * **Example** (Make stall figures)
  *
  * ```ts
@@ -187,9 +178,6 @@ export class PressureFile extends S.Opaque<PressureFile, { readonly brand: uniqu
 ) {}
 
 /**
- * Whether the host has pressure stall information: the files it read, or why
- * it has none.
- *
  * **Example** (A host without pressure files)
  *
  * ```ts
@@ -212,8 +200,6 @@ export const PressureSourceInput = S.TaggedUnion({
 );
 
 /**
- * Runtime type for {@link PressureSourceInput}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -467,8 +453,6 @@ export class AdmissionSlots extends S.Opaque<AdmissionSlots, { readonly brand: u
 ) {}
 
 /**
- * Any host-pressure item, tagged by kind.
- *
  * **Example** (Label an item)
  *
  * ```ts
@@ -490,8 +474,6 @@ export const HostPressureItem = S.Union([PressureStall, HostMemory, AdmissionSlo
 );
 
 /**
- * Runtime type for {@link HostPressureItem}.
- *
  * @category models
  * @since 0.0.0
  */

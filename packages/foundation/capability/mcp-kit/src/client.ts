@@ -236,8 +236,6 @@ export class McpClientOptions extends S.Opaque<McpClientOptions, { readonly bran
 ) {}
 
 /**
- * JSON-RPC error object as it appears on the wire.
- *
  * **Example** (Decode an error object)
  *
  * ```ts
@@ -261,8 +259,6 @@ export class JsonRpcError extends S.Opaque<JsonRpcError, { readonly brand: uniqu
 ) {}
 
 /**
- * JSON-RPC request id.
- *
  * **Example** (Decode a request id)
  *
  * ```ts
@@ -281,8 +277,6 @@ export const JsonRpcId = S.Union([S.String, S.Finite]).pipe(
 );
 
 /**
- * JSON-RPC request id value.
- *
  * @category models
  * @since 0.0.0
  */

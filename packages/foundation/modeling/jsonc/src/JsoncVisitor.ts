@@ -38,8 +38,6 @@ const $I = $JsoncId.create("JsoncVisitor");
 const Span = { offset: S.Finite, length: S.Finite };
 
 /**
- * The discriminated union of JSONC visitor events.
- *
  * **Details**
  *
  * Every variant carries `offset` and `length`; `ObjectBegin`, `ArrayBegin`,
@@ -85,8 +83,6 @@ export const JsoncVisitorEvent = S.TaggedUnion({
 );
 
 /**
- * The decoded shape of {@link JsoncVisitorEvent}.
- *
  * @see {@link JsoncVisitorEvent} for the runtime schema and its case helpers.
  * @category type-level
  * @since 0.0.0
@@ -155,8 +151,6 @@ export abstract class JsoncVisitor {
     (args) => P.isString(args[0]),
     (text: string, options?: JsoncParseOptions): Stream.Stream<JsoncVisitorEvent> => {
       const disallowComments = options?.disallowComments ?? false;
-      // A generator object iterates once; suspending creates a fresh one per
-      // run so the stream stays a re-runnable description (upstream-bug fix).
       return Stream.suspend(() => Stream.fromIterable(visitGen(text, disallowComments)));
     }
   );
@@ -182,16 +176,11 @@ const literalValue: {
 
 type Events = Generator<JsoncVisitorEvent, void>;
 
-// The separator characters, read off the event schema so the two never drift.
 type SeparatorCharacter = Extract<JsoncVisitorEvent, { readonly _tag: "Separator" }>["character"];
 
 function* visitGen(text: string, disallowComments: boolean): Events {
   const scanner = createScanner(text, false);
   let path = A.empty<JsoncSegment>();
-  // Current collection-nesting depth. Deeply nested input would otherwise
-  // overflow the stack through visitObject/visitArray recursion, a defect
-  // when the stream is pulled. At the cap the visitor emits one in-band Error
-  // event and skips the over-deep subtree iteratively.
   let depth = 0;
 
   const span = () => ({
@@ -206,10 +195,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   const separator = (character: SeparatorCharacter): JsoncVisitorEvent =>
     JsoncVisitorEvent.cases.Separator.make({ ...span(), character });
 
-  // Cursor adapter for the shared iterative bracket-balance skip. `advance` is
-  // the raw scanner.scan, not the event-emitting scanNext, so nothing is
-  // emitted while a too-deep container is consumed.
-  const skipCursor: SkipCursor = {
+  const silentSkipCursorEmittingNothing: SkipCursor = {
     getToken: () => scanner.getToken(),
     advance: () => {
       scanner.scan();
@@ -218,9 +204,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
     tokenLength: () => scanner.getTokenLength(),
   };
 
-  // In-band diagnostics for the token just scanned: its scan error, then its
-  // comment event (or InvalidCommentToken when comments are disallowed).
-  function* tokenEvents(kind: SyntaxKind): Events {
+  function* diagnosticEventsForScannedToken(kind: SyntaxKind): Events {
     const code = scanErrorToCode(scanner.getTokenError());
     if (O.isSome(code)) {
       yield error(code.value);
@@ -233,7 +217,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   function* scanNext(): Events {
     for (;;) {
       const kind = scanner.scan();
-      yield* tokenEvents(kind);
+      yield* diagnosticEventsForScannedToken(kind);
       if (!isComment(kind) && !isTrivia(kind)) {
         return;
       }
@@ -243,7 +227,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   function* visitContainer(body: () => Events): Events {
     if (depth >= MAX_NESTING_DEPTH) {
       yield error("NestingDepthExceeded");
-      skipBalancedValue(skipCursor);
+      skipBalancedValue(silentSkipCursorEmittingNothing);
       return;
     }
     depth++;
@@ -269,19 +253,16 @@ function* visitGen(text: string, disallowComments: boolean): Events {
       yield* scanNext();
     } else {
       yield error("ValueExpected");
-      // Consume the offending token so recovery always makes progress:
-      // leaving it in place loops forever on inputs like `[bad]`. Container
-      // closers stay put so the enclosing visit can close normally.
       if (!isNotConsumable(kind)) {
         yield* scanNext();
       }
     }
   }
 
-  // Shared container-loop step: emits the separator before an entry or the
-  // missing-comma error. Returns `false` when a trailing comma closed the
-  // container.
-  function* entrySeparator(closer: SyntaxKind, needsComma: boolean): Generator<JsoncVisitorEvent, boolean> {
+  function* entrySeparatorFalseWhenTrailingCommaCloses(
+    closer: SyntaxKind,
+    needsComma: boolean
+  ): Generator<JsoncVisitorEvent, boolean> {
     if (SyntaxKind.is.Comma(scanner.getToken())) {
       yield separator(",");
       yield* scanNext();
@@ -302,10 +283,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
     }
   }
 
-  // One object member at the cursor. Answers whether a comma is now required:
-  // a non-string key records PropertyNameExpected, skips the token and leaves
-  // the requirement unchanged.
-  function* visitProperty(): Generator<JsoncVisitorEvent, boolean> {
+  function* visitPropertyAnsweringWhetherCommaNowRequired(): Generator<JsoncVisitorEvent, boolean> {
     if (!SyntaxKind.is.String(scanner.getToken())) {
       yield error("PropertyNameExpected");
       yield* scanNext();
@@ -318,7 +296,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
       path,
     });
     path = A.append(path, key);
-    yield* scanNext(); // skip key
+    yield* scanNext();
     yield* visitColon();
     yield* visitValue();
     path = A.dropRight(path, 1);
@@ -328,7 +306,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   function* visitColon(): Events {
     if (SyntaxKind.is.Colon(scanner.getToken())) {
       yield separator(":");
-      yield* scanNext(); // skip colon
+      yield* scanNext();
     } else {
       yield error("ColonExpected");
     }
@@ -336,14 +314,14 @@ function* visitGen(text: string, disallowComments: boolean): Events {
 
   function* visitObject(): Events {
     yield JsoncVisitorEvent.cases.ObjectBegin.make({ ...span(), path });
-    yield* scanNext(); // skip {
+    yield* scanNext();
     let needsComma = false;
     while (
       !SyntaxKind.is.CloseBrace(scanner.getToken()) &&
       !SyntaxKind.is.EOF(scanner.getToken()) &&
-      (yield* entrySeparator("CloseBrace", needsComma))
+      (yield* entrySeparatorFalseWhenTrailingCommaCloses("CloseBrace", needsComma))
     ) {
-      if (yield* visitProperty()) {
+      if (yield* visitPropertyAnsweringWhetherCommaNowRequired()) {
         needsComma = true;
       }
     }
@@ -352,11 +330,11 @@ function* visitGen(text: string, disallowComments: boolean): Events {
 
   function* visitArray(): Events {
     yield JsoncVisitorEvent.cases.ArrayBegin.make({ ...span(), path });
-    yield* scanNext(); // skip [
+    yield* scanNext();
     let index = 0;
     let needsComma = false;
     while (!SyntaxKind.is.CloseBracket(scanner.getToken()) && !SyntaxKind.is.EOF(scanner.getToken())) {
-      if (!(yield* entrySeparator("CloseBracket", needsComma))) {
+      if (!(yield* entrySeparatorFalseWhenTrailingCommaCloses("CloseBracket", needsComma))) {
         break;
       }
       path = A.append(path, index);

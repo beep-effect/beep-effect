@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $RepoConfigsId.create("next/models/Routes.schema");
 
 /**
- * Literal discriminator values supported by Next.js route match predicates.
- *
  * **Example** (Decode header type value)
  *
  * ```ts
@@ -33,8 +31,6 @@ export const RouteHasType = LiteralKit(["header", "cookie", "query", "host"]).pi
 );
 
 /**
- * Literal discriminator values supported by Next.js route match predicates.
- *
  * **Example** (Satisfy header type literal)
  *
  * ```ts
@@ -68,8 +64,6 @@ const RouteHasDefinition = RouteHasType.toTaggedUnion("type")({
 });
 
 /**
- * Match predicate used by Next.js rewrites, headers, redirects, and middleware.
- *
  * **Example** (Decode header match predicate)
  *
  * ```ts
@@ -94,8 +88,6 @@ export const RouteHas = S.make<(typeof RouteHasDefinition)["Rebuild"]>(RouteHasD
 );
 
 /**
- * Match predicate used by Next.js rewrites, headers, redirects, and middleware.
- *
  * **Example** (Type host match predicate)
  *
  * ```ts
@@ -124,8 +116,6 @@ const RouteBaseFields = {
 };
 
 /**
- * HTTP redirect status codes supported by Next.js custom redirects.
- *
  * **Example** (Satisfy temporary redirect code)
  *
  * ```ts
@@ -144,8 +134,6 @@ export const RedirectStatusCodeValue = LiteralKit([301, 302, 303, 307, 308]).pip
 );
 
 /**
- * HTTP redirect status codes supported by Next.js custom redirects.
- *
  * **Example** (Assign permanent redirect code)
  *
  * ```ts
@@ -331,8 +319,6 @@ export const Header = HeaderRoute;
 export type Header = typeof Header.Type;
 
 /**
- * User-facing Next.js redirect route configuration.
- *
  * **Example** (Decode permanent redirect)
  *
  * ```ts
@@ -358,8 +344,6 @@ export const Redirect = S.Union([RedirectPermanent, RedirectStatusCode]).pipe(
 );
 
 /**
- * User-facing Next.js redirect route configuration.
- *
  * **Example** (Type temporary redirect)
  *
  * ```ts

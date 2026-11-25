@@ -180,17 +180,13 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
       )
     );
     it.effect(
-      "creates implicit source maps with actual placeholder and diff workers on Bun and Node",
+      "creates implicit source maps with actual placeholder and diff workers on Bun and Node, one invocation per request so no two requests share an extract deadline",
       () =>
         Effect.gen(function* () {
           const corpus = yield* loadMapping;
           const discovery = yield* readCitationHtmlDiscoveryCorpus();
           const fs = yield* FileSystem.FileSystem;
           const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
-          // Each row is one annotate request, so it opens its own invocation that owns the request's
-          // diff runtime and assembly: one invocation around the whole loop held six requests to a
-          // single real-time extract deadline, which contended runs exceeded. The invocation's scope
-          // releases each request's workers before the runtime's spawn count is checked.
           for (const kind of ["bun", "node"] as const) {
             const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
             for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {

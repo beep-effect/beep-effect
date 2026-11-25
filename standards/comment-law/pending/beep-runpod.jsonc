@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/runpod",
+  "root": "packages/drivers/runpod",
+  "scopes": ["."]
+}

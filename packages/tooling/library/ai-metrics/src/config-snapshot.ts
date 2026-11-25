@@ -30,6 +30,7 @@ import { fileSizeBytes } from "./internal/file-info.ts";
 import { ConfigSnapshot } from "./models.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
 import type { GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $RepoAiMetricsId.create("config-snapshot");
 
@@ -71,8 +72,6 @@ const DEFAULT_MAX_FILE_BYTES = 512 * 1024;
 const DEFAULT_MAX_TOTAL_BYTES = 8 * 1024 * 1024;
 
 /**
- * Whether a snapshotted file is per-root baseline guidance or session-effective configuration.
- *
  * **Details**
  *
  * Session scope is the small fixed set an agent session actually runs under at
@@ -183,8 +182,6 @@ export class AiMetricsConfigSnapshotStageTiming extends S.Opaque<
 ) {}
 
 /**
- * Hard bounds applied to a config snapshot walk.
- *
  * **Details**
  *
  * The defaults sit at roughly four times the measured legitimate surface of a
@@ -237,8 +234,6 @@ export class AiMetricsConfigSnapshotBudget extends S.Opaque<
 const defaultConfigSnapshotBudget = AiMetricsConfigSnapshotBudget.make({});
 
 /**
- * Why a config snapshot walk stopped short of the full tree.
- *
  * **Example** (Naming the bound that fired)
  *
  * ```ts
@@ -635,36 +630,40 @@ const isSessionScopePath = S.is(SessionScopePath);
 const scopeFor = (relativePath: string): AiMetricsConfigScope =>
   isSessionScopePath(relativePath) ? AiMetricsConfigScope.Enum.session : AiMetricsConfigScope.Enum.baseline;
 
-// `git ls-files --stage -z` through `Git.lsFiles`: the stage columns are dropped and the paths
-// are the plain `ls-files -z` answer, an unmerged path once per stage as before. The kit bounds the
-// listing (16 MiB); a run past the bound is an unreadable index, a run git never reached a launch
-// failure, and a run git reported keeps its exit code as the cause (repo-cli-gh-git-consolidation
-// W2b, SPEC D-11).
-const indexEnumerationFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError) => {
-  if (P.isTagged(error, "GitCommandError") && error.kind === "truncated")
-    return configSnapshotFailure("Cannot read Git snapshot index.", error);
-  return O.match(gitExitCode(error), {
+const indexFailureUnreadablePastKitBoundLaunchWhenGitNeverRanElseGitExitCode = (
+  error: GitCommandError | NotARepositoryError | UnknownRefError
+) => {
+  const listingRanPastKitBound = P.isTagged(error, "GitCommandError") && error.kind === "truncated";
+  if (listingRanPastKitBound) return configSnapshotFailure("Cannot read Git snapshot index.", error);
+  return O.match(gitReportedExitCodeNoneWhenGitNeverRan(error), {
     onNone: () => configSnapshotFailure("Cannot start Git index enumeration.", error),
     onSome: (exitCode) => configSnapshotFailure("Git index enumeration failed.", exitCode),
   });
 };
 
-// The exit code git reported, `None` when git never ran; a typed refusal (an unknown ref, a
-// non-repository) is git's own exit 128.
-const gitExitCode = (error: GitCommandError | NotARepositoryError | UnknownRefError): O.Option<number> =>
-  P.isTagged(error, "GitCommandError") ? O.fromUndefinedOr(error.exitCode) : O.some(128);
+const gitOwnExitCodeForTypedRefusalOfUnknownRefOrNonRepository = 128;
+const retainedGitStderrCharsWhileDraining = 2048;
+
+const gitReportedExitCodeNoneWhenGitNeverRan = (
+  error: GitCommandError | NotARepositoryError | UnknownRefError
+): O.Option<number> =>
+  P.isTagged(error, "GitCommandError")
+    ? O.fromUndefinedOr(error.exitCode)
+    : O.some(gitOwnExitCodeForTypedRefusalOfUnknownRefOrNonRepository);
 
 const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")(function* (repoRoot: string) {
   const git = yield* Git;
-  const entries = yield* git.lsFiles(repoRoot).pipe(Effect.mapError(indexEnumerationFailure));
-  return O.some<ReadonlyArray<string>>(A.map(entries, (entry) => entry.path));
+  const entries = yield* git
+    .lsFiles(repoRoot)
+    .pipe(Effect.mapError(indexFailureUnreadablePastKitBoundLaunchWhenGitNeverRanElseGitExitCode));
+  const plainLsFilesPathsUnmergedOncePerStage = A.map(entries, (entry) => entry.path);
+  return O.some<ReadonlyArray<string>>(plainLsFilesPathsUnmergedOncePerStage);
 });
 
-/**
- * Recognizes only a HEAD-bearing directory or a gitdir file, following symlinks.
- * Dangling `.git` symlinks count as absent metadata and permit the bounded walk.
- */
-const hasGitMetadata = Effect.fnUntraced(function* (directory: string) {
+const danglingGitSymlinkIsAbsentMetadataPermittingBoundedWalk = (cause: PlatformError.PlatformError) =>
+  cause.reason._tag === "NotFound";
+
+const hasHeadBearingGitDirectoryOrGitdirFileFollowingSymlinks = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const metadata = path.join(directory, ".git");
@@ -675,23 +674,22 @@ const hasGitMetadata = Effect.fnUntraced(function* (directory: string) {
         return Effect.scoped(
           Effect.gen(function* () {
             const file = yield* fs.open(metadata);
-            // Only the ASCII marker matters; metadata contents may exceed snapshot budgets.
-            const prefix = new Uint8Array(7);
+            const gitdirMarker = "gitdir:";
+            const onlyAsciiMarkerBytesSinceMetadataMayExceedSnapshotBudgets = new Uint8Array(Str.length(gitdirMarker));
             let offset = 0;
-            while (offset < prefix.length) {
-              const count = yield* file.read(prefix.subarray(offset));
+            while (offset < onlyAsciiMarkerBytesSinceMetadataMayExceedSnapshotBudgets.length) {
+              const count = yield* file.read(
+                onlyAsciiMarkerBytesSinceMetadataMayExceedSnapshotBudgets.subarray(offset)
+              );
               if (count === 0) return false;
               offset += count;
             }
-            return new TextDecoder().decode(prefix) === "gitdir:";
+            return new TextDecoder().decode(onlyAsciiMarkerBytesSinceMetadataMayExceedSnapshotBudgets) === gitdirMarker;
           })
         );
       return Effect.succeed(false);
     }),
-    Effect.catchIf(
-      (cause) => cause.reason._tag === "NotFound",
-      () => Effect.succeed(false)
-    ),
+    Effect.catchIf(danglingGitSymlinkIsAbsentMetadataPermittingBoundedWalk, () => Effect.succeed(false)),
     Effect.mapError((cause) => configSnapshotFailure("Cannot inspect Git snapshot metadata.", cause))
   );
 });
@@ -700,13 +698,12 @@ const assertIndexedGitBoundary = Effect.fnUntraced(function* (repoRoot: string) 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const top = yield* spawner
-    // KEEP (W2b, SPEC D-11): `Git.repoRoot` trims its answer, and a checkout whose name ends in whitespace
-    // (`checkout\r`) must keep it; only git's terminating newline is stripped here.
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (W2b, SPEC D-11), reason above
+  const topKeepingTrailingWhitespaceThatGitRepoRootWouldTrim = yield* spawner
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (W2b, SPEC D-11), Git.repoRoot trims a checkout name ending in whitespace
     .string(ChildProcess.make("git", ["rev-parse", "--show-toplevel"], { cwd: repoRoot, stderr: "ignore" }))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed checkout root.", cause)));
-  const indexedTop = Str.replace(/\n$/u, "")(top);
+  const stripOnlyGitTerminatingNewline = Str.replace(/\n$/u, "");
+  const indexedTop = stripOnlyGitTerminatingNewline(topKeepingTrailingWhitespaceThatGitRepoRootWouldTrim);
   if (Str.isEmpty(indexedTop)) return yield* configSnapshotFailure("Git returned no indexed checkout root.", undefined);
   const physicalTop = yield* fs
     .realPath(indexedTop)
@@ -715,7 +712,7 @@ const assertIndexedGitBoundary = Effect.fnUntraced(function* (repoRoot: string) 
     .realPath(path.resolve(repoRoot))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed scan root.", cause)));
   while (directory !== physicalTop) {
-    if (yield* hasGitMetadata(directory))
+    if (yield* hasHeadBearingGitDirectoryOrGitdirFileFollowingSymlinks(directory))
       return yield* configSnapshotFailure("Git skipped unresolved nested metadata.", undefined);
     const parent = path.dirname(directory);
     if (parent === directory)
@@ -731,7 +728,7 @@ const hasAncestorGitMetadata = Effect.fnUntraced(function* (repoRoot: string) {
     .realPath(path.resolve(repoRoot))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve Git snapshot ancestry.", cause)));
   while (true) {
-    if (yield* hasGitMetadata(directory)) return true;
+    if (yield* hasHeadBearingGitDirectoryOrGitdirFileFollowingSymlinks(directory)) return true;
     const parent = path.dirname(directory);
     if (parent === directory) return false;
     directory = parent;
@@ -754,14 +751,10 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  // Non-git fixtures retain the bounded filesystem walk. A real checkout uses
-  // the index, so ignored hook-state/log noise cannot split identical heads.
   const [gitCode, gitStderr] = yield* Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(
-        // KEEP (D-21, X9): the exit code and the capped stderr are the evidence; the kit's
-        // `NotARepositoryError` drops git's own text.
-        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X9), reason above
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X9), exit code and capped stderr are the evidence the kit's NotARepositoryError drops
         ChildProcess.make("git", ["rev-parse", "--git-dir"], {
           cwd: repoRoot,
           stdout: "ignore",
@@ -771,12 +764,11 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       return yield* Effect.all(
         [
           handle.exitCode,
-          // Drain stderr while retaining only its first 2 Ki characters.
           handle.stderr.pipe(
             Stream.decodeText,
             Stream.runFold(
               () => "",
-              (text, chunk) => Str.slice(0, 2048)(text + chunk)
+              (text, chunk) => Str.slice(0, retainedGitStderrCharsWhileDraining)(text + chunk)
             )
           ),
         ],
@@ -790,7 +782,8 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       stderr: gitStderr,
     });
   if (gitCode === 0) yield* assertIndexedGitBoundary(repoRoot);
-  const tracked = yield* gitCode === 0
+  const realCheckoutUsesIndexSoIgnoredNoiseCannotSplitIdenticalHeads = gitCode === 0;
+  const tracked = yield* realCheckoutUsesIndexSoIgnoredNoiseCannotSplitIdenticalHeads
     ? Effect.scoped(readTrackedSnapshotPaths(repoRoot))
     : Effect.succeed(O.none<ReadonlyArray<string>>());
   if (O.isSome(tracked)) {
@@ -900,13 +893,13 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       return;
     }
 
-    // A `File` the filter rejects falls through to the directory guard below, which
-    // returns for any non-`Directory` type — the same early exit the collected branch takes.
-    if (info.value.type === "File" && includeFile(pathApi.basename(currentPath))) {
+    const collectedFile = info.value.type === "File" && includeFile(pathApi.basename(currentPath));
+    if (collectedFile) {
       return yield* Ref.update(pathsRef, A.append(currentPath));
     }
 
-    if (info.value.type !== "Directory") {
+    const rejectedFileOrAnyOtherNonDirectoryExitsHere = info.value.type !== "Directory";
+    if (rejectedFileOrAnyOtherNonDirectoryExitsHere) {
       return;
     }
 
@@ -918,15 +911,17 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       .readDirectory(currentPath)
       .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read fallback snapshot directory.", cause)));
     const entries = pipe(pipe3, A.sort(Order.String));
-    yield* Effect.forEach(entries, (entry) => walkEntry(currentPath, entry, depth, includeFile), {
-      concurrency: 1,
-      discard: true,
-    });
+    yield* Effect.forEach(
+      entries,
+      (entry) => walkEntryWithItsOwnNestingBudget(currentPath, entry, depth, includeFile),
+      {
+        concurrency: 1,
+        discard: true,
+      }
+    );
   });
 
-  // Split out of `walk` so the per-entry decision — excluded name, nested repo root, or
-  // recurse — carries its own nesting budget instead of compounding the loop's.
-  const walkEntry = Effect.fnUntraced(function* (
+  const walkEntryWithItsOwnNestingBudget = Effect.fnUntraced(function* (
     parentPath: string,
     entry: string,
     depth: number,
@@ -946,14 +941,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     return yield* walk(childPath, depth + 1, includeFile);
   });
 
-  // Repo-root agent docs are enumerated before the config roots, and the order is load-bearing.
-  // `walk` short-circuits on `maxFiles` up front and the collected paths are only sorted at the
-  // end, so whatever is walked last is what a full budget drops. A single pathological directory
-  // under a config root — a non-git leftover beneath `.claude/worktrees`, say — could therefore
-  // exhaust the budget and starve `AGENTS.md`/`CLAUDE.md` out of the snapshot entirely. That is
-  // worse than truncation: both are session-scope paths, so losing them silently changes the
-  // session/baseline split and corrupts `sessionHash` rather than merely shrinking the snapshot.
-  yield* Effect.forEach(
+  const walkSessionScopeDocsFirstSinceAFullBudgetDropsWhateverIsWalkedLast = Effect.forEach(
     SessionScopePath.literals,
     Effect.fnUntraced(function* (relative) {
       const parts = Str.split(relative, "/");
@@ -978,6 +966,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
     }),
     { concurrency: 1, discard: true }
   );
+  yield* walkSessionScopeDocsFirstSinceAFullBudgetDropsWhateverIsWalkedLast;
   yield* walk(repoRoot, 0, isAgentDocName);
   yield* Effect.forEach(
     CONFIG_ROOTS,
@@ -1316,6 +1305,13 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
       truncationReason,
     });
 
+    const noWriteStageSinceArtifactWritesAreTimedByWriteAiMetricsConfigSnapshotArtifacts = [
+      stageTiming(AiMetricsConfigSnapshotStage.Enum.enumerate, enumerateMillis, A.length(enumeration.paths), 0),
+      stageTiming(AiMetricsConfigSnapshotStage.Enum.read, readMillis, A.length(read.files), read.totalBytes),
+      stageTiming(AiMetricsConfigSnapshotStage.Enum.hash, hashMillis, A.length(files), read.totalBytes),
+      stageTiming(AiMetricsConfigSnapshotStage.Enum.diff, diffMillis, A.length(files), 0),
+    ];
+
     return AiMetricsConfigSnapshotResult.make({
       baselineHash,
       bounds,
@@ -1333,16 +1329,7 @@ export const makeAiMetricsConfigSnapshot = Effect.fn("AiMetrics.makeAiMetricsCon
         previousSnapshotId,
         snapshotId: `config-${snapshotHash}`,
       }),
-      // The `write` stage is deliberately absent: this function writes nothing.
-      // The artifact writes are measured where they happen, in
-      // `writeAiMetricsConfigSnapshotArtifacts`, which cannot fold its own
-      // duration back into the manifest it is writing.
-      stageTimings: [
-        stageTiming(AiMetricsConfigSnapshotStage.Enum.enumerate, enumerateMillis, A.length(enumeration.paths), 0),
-        stageTiming(AiMetricsConfigSnapshotStage.Enum.read, readMillis, A.length(read.files), read.totalBytes),
-        stageTiming(AiMetricsConfigSnapshotStage.Enum.hash, hashMillis, A.length(files), read.totalBytes),
-        stageTiming(AiMetricsConfigSnapshotStage.Enum.diff, diffMillis, A.length(files), 0),
-      ],
+      stageTimings: noWriteStageSinceArtifactWritesAreTimedByWriteAiMetricsConfigSnapshotArtifacts,
     });
   },
   (effect, input) =>

@@ -16,7 +16,7 @@ import { PracticeKgBundleManifest, PracticeKgSchemaVersions } from "../PracticeK
 import { PracticeKgHostError } from "./PracticeKgHost.errors.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-const supportedStoreVersions = PracticeKgSchemaVersions.make({});
+const storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout = PracticeKgSchemaVersions.make({});
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );
@@ -63,12 +63,12 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
   const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
   if (
     O.isSome(storeVersion) &&
-    (storeVersion.value.schemaVersion.pglite !== supportedStoreVersions.pglite ||
-      storeVersion.value.schemaVersion.duckdb !== supportedStoreVersions.duckdb)
+    (storeVersion.value.schemaVersion.pglite !== storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.pglite ||
+      storeVersion.value.schemaVersion.duckdb !== storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.duckdb)
   ) {
     const found = storeVersion.value.schemaVersion;
     return yield* PracticeKgHostError.make({
-      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${supportedStoreVersions.pglite} / duckdb ${supportedStoreVersions.duckdb}. Install the rebuilt bundle that matches this server.`,
+      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.pglite} / duckdb ${storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout.duckdb}. Install the rebuilt bundle that matches this server.`,
     });
   }
   const manifest = yield* decodeManifest(manifestText).pipe(

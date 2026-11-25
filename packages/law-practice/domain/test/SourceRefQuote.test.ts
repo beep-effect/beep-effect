@@ -11,7 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import { QuoteSelector } from "@beep/text/Selector";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -28,7 +28,7 @@ const unresolved = LegacyQuoteUnresolved.make({
 
 const imported = LegacyReviewItemImported.make({
   itemId: "kg-answer:1",
-  kind: "kg-answer",
+  storedKind: "kg-answer",
   text: "Synthetic answer",
   raw: { kind: "kg-answer", itemId: "kg-answer:1", text: "Synthetic answer", sourceRefs: [] },
   unresolved: [unresolved],
@@ -110,6 +110,8 @@ describe("legacy review item imports", () => {
       assertTrue(isCurrentReviewItem(currentBack));
       expect(isCurrentReviewItem(importedBack)).toBe(false);
       expect(isLegacyReviewItemImported(currentBack)).toBe(false);
+      assertFalse("kind" in importedBack);
+      strictEqual(importedBack._tag === "LegacyReviewItemImported" ? importedBack.storedKind : "", "kg-answer");
     })
   );
 

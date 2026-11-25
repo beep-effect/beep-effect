@@ -6,6 +6,7 @@ import { AbsenceReason } from "@beep/schema/Signal";
 import { it } from "@beep/test-runner";
 import { TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -53,7 +54,7 @@ describe("L4-7 absent signals stay absent", () => {
         const absent = ExtractorConfidence.cases.Absent.make({ reason });
         const decoded = yield* extractorRoundTrip(absent);
         expect(decoded).toEqual(absent);
-        expect(numericReading(decoded)).toEqual(O.none());
+        assertNone(numericReading(decoded));
 
         const position = EvidencePosition.make({ position: anchor, extractorConfidence: absent });
         const reread = yield* positionRoundTrip(position);
@@ -68,6 +69,18 @@ describe("L4-7 absent signals stay absent", () => {
           reviewer: wire,
         };
         const decodedSignals = yield* decodeSignals(signals);
+        expect(
+          A.map(
+            [
+              decodedSignals.sourceTrust,
+              decodedSignals.sourceAssertedConfidence,
+              decodedSignals.extractorConfidence,
+              decodedSignals.validator,
+              decodedSignals.reviewer,
+            ],
+            (field) => (field._tag === "Absent" ? O.some(field.reason) : O.none())
+          )
+        ).toStrictEqual(A.replicate(O.some(reason), 5));
         const encodedSignals = yield* encodeSignals(decodedSignals);
         expect(encodedSignals).toEqual(signals);
       }),
@@ -81,7 +94,7 @@ describe("L4-7 absent signals stay absent", () => {
       Effect.fnUntraced(function* (value) {
         const decoded = yield* extractorRoundTrip(reported(value));
         expect(decoded._tag).toBe("Present");
-        expect(numericReading(decoded)).toEqual(O.some(value));
+        assertSome(numericReading(decoded), value);
         expect(
           A.some(AbsenceReason.literals, (reason) =>
             extractorEquivalent(decoded, ExtractorConfidence.cases.Absent.make({ reason }))
@@ -99,7 +112,7 @@ describe("L4-7 absent signals stay absent", () => {
       Effect.gen(function* () {
         const decoded = yield* extractorRoundTrip(signal);
         expect(extractorEquivalent(decoded, signal)).toBe(true);
-        expect(O.isSome(numericReading(decoded))).toBe(signal._tag === "Present");
+        strictEqual(decoded._tag, signal._tag);
       })
   );
 });

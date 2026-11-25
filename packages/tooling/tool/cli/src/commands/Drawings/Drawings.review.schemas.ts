@@ -37,8 +37,6 @@ const optionalHash = (description: string) =>
   S.OptionFromOptionalKey(Sha256Hex).pipe(S.withConstructorDefault(Effect.succeedNone), S.annotateKey({ description }));
 
 /**
- * One-based FIG. number of a sheet.
- *
  * **Example** (FIG. 3)
  *
  * ```ts
@@ -67,8 +65,6 @@ export const FigureNumber = S.Int.check(
 );
 
 /**
- * Type for {@link FigureNumber}.
- *
  * **Example** (Annotate a figure)
  *
  * ```ts
@@ -84,8 +80,6 @@ export const FigureNumber = S.Int.check(
 export type FigureNumber = typeof FigureNumber.Type;
 
 /**
- * Branded `A<round>-<nn>` identifier of one attorney review finding.
- *
  * **Details**
  *
  * Unique inside one round's files only: rounds of other matters, and later
@@ -112,8 +106,6 @@ export const ReviewFindingId = S.TemplateLiteral(["A", RoundNumber, "-", QaFindi
 );
 
 /**
- * Type for {@link ReviewFindingId}.
- *
  * **Example** (Make an id)
  *
  * ```ts
@@ -170,8 +162,6 @@ export const ReviewFindingRef = S.String.check(
 );
 
 /**
- * Type for {@link ReviewFindingRef}.
- *
  * **Example** (Make a reference)
  *
  * ```ts
@@ -212,8 +202,6 @@ export const MarkupNoteOrigin = MarkupNoteOriginBase.pipe(
 );
 
 /**
- * Type for {@link MarkupNoteOrigin}.
- *
  * **Example** (Annotate an origin)
  *
  * ```ts
@@ -306,8 +294,6 @@ export const SheetMatchBasis = SheetMatchBasisBase.pipe(
 );
 
 /**
- * Type for {@link SheetMatchBasis}.
- *
  * **Example** (Annotate a basis)
  *
  * ```ts
@@ -381,8 +367,6 @@ export const FindingScope = FindingScopeBase.pipe(
 );
 
 /**
- * Type for {@link FindingScope}.
- *
  * **Example** (Annotate a scope)
  *
  * ```ts
@@ -425,8 +409,6 @@ export const ReviewFindingStatus = ReviewFindingStatusBase.pipe(
 );
 
 /**
- * Type for {@link ReviewFindingStatus}.
- *
  * **Example** (Annotate a status)
  *
  * ```ts
@@ -444,8 +426,6 @@ export type ReviewFindingStatus = typeof ReviewFindingStatus.Type;
 const DispositionKindBase = LiteralKit(["spec-change", "code-change", "decision", "clarify", "decline"]);
 
 /**
- * Kinds of disposition a finding can receive.
- *
  * **Example** (Read the kinds)
  *
  * ```ts
@@ -463,8 +443,6 @@ export const DispositionKind = DispositionKindBase.pipe(
 );
 
 /**
- * Type for {@link DispositionKind}.
- *
  * **Example** (Annotate a kind)
  *
  * ```ts
@@ -526,8 +504,6 @@ export const Disposition = DispositionKind.toTaggedUnion("kind")({
 );
 
 /**
- * Type for {@link Disposition}.
- *
  * **Example** (A clarification)
  *
  * ```ts
@@ -651,8 +627,6 @@ export const ReviewRoundStatus = ReviewRoundStatusBase.pipe(
 );
 
 /**
- * Type for {@link ReviewRoundStatus}.
- *
  * **Example** (Annotate a status)
  *
  * ```ts
@@ -752,8 +726,6 @@ export class ReviewedPage extends S.Opaque<ReviewedPage, { readonly brand: uniqu
 ) {}
 
 /**
- * `intake.json` of a review round: every reviewer page and what was read.
- *
  * **Example** (An empty intake)
  *
  * ```ts
@@ -843,8 +815,6 @@ export class DispositionEntry extends S.Opaque<DispositionEntry, { readonly bran
 ) {}
 
 /**
- * `dispositions.json` of a review round: one entry for every finding.
- *
  * **Example** (An empty file)
  *
  * ```ts
@@ -1120,8 +1090,6 @@ export class ReviewIngestRequest extends S.Opaque<ReviewIngestRequest, { readonl
 ) {}
 
 /**
- * Plan a review round from a dispositions file.
- *
  * **Example** (Plan round 1)
  *
  * ```ts

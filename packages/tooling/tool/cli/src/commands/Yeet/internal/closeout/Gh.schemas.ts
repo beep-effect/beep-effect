@@ -42,8 +42,6 @@ export class GhRepoOwner extends S.Opaque<GhRepoOwner, { readonly brand: unique 
 ) {}
 
 /**
- * Repository metadata returned by `gh repo view`.
- *
  * **Example** (Make repo with owner)
  *
  * ```ts
@@ -177,8 +175,6 @@ export class GhReviewThreadCommentConnection extends S.Opaque<
 ) {}
 
 /**
- * One review-thread comment reduced to its author and timestamp.
- *
  * **Details**
  *
  * What a `comments(last: 1)` selection returns: the two structural facts the
@@ -223,8 +219,6 @@ export class GhReviewThreadLatestComment extends S.Opaque<
 
 const ghReviewThreadLatestConnectionNodesDefault = A.empty<GhReviewThreadLatestComment>();
 /**
- * The newest-comment connection of one review thread.
- *
  * **Example** (Empty newest-comment connection)
  *
  * ```ts
@@ -254,8 +248,6 @@ export class GhReviewThreadLatestConnection extends S.Opaque<
 ) {}
 
 /**
- * Pull request review thread returned by GitHub GraphQL.
- *
  * **Details**
  *
  * `resolvedBy` is optional because only the queries that classify thread state
@@ -342,8 +334,6 @@ export class GhReviewThreadConnection extends S.Opaque<GhReviewThreadConnection,
 ) {}
 
 /**
- * Paginated top-level pull request comments.
- *
  * **Example** (Empty PR comments page)
  *
  * ```ts
@@ -376,8 +366,6 @@ export class GhPullRequestCommentConnection extends S.Opaque<
 ) {}
 
 /**
- * Pull request review returned by GitHub GraphQL.
- *
  * **Example** (Make changes-requested review)
  *
  * ```ts
@@ -418,8 +406,6 @@ export class GhReview extends S.Opaque<GhReview, { readonly brand: unique symbol
 ) {}
 
 /**
- * Paginated pull request reviews.
- *
  * **Example** (Empty reviews connection page)
  *
  * ```ts
@@ -620,8 +606,6 @@ export class GhReviewsRepository extends S.Opaque<GhReviewsRepository, { readonl
 ) {}
 
 /**
- * GraphQL `data` wrapper for pull request comment pages.
- *
  * **Example** (Comments GraphQL data wrapper)
  *
  * ```ts
@@ -656,8 +640,6 @@ export class GhCommentsData extends S.Opaque<GhCommentsData, { readonly brand: u
 ) {}
 
 /**
- * GraphQL `data` wrapper for pull request review pages.
- *
  * **Example** (Reviews GraphQL data wrapper)
  *
  * ```ts
@@ -692,8 +674,6 @@ export class GhReviewsData extends S.Opaque<GhReviewsData, { readonly brand: uni
 ) {}
 
 /**
- * Complete GraphQL response document for pull request comment pages.
- *
  * **Example** (Full comments response document)
  *
  * ```ts
@@ -736,8 +716,6 @@ export class GhCommentsDocument extends S.Opaque<GhCommentsDocument, { readonly 
 ) {}
 
 /**
- * Complete GraphQL response document for pull request review pages.
- *
  * **Example** (Full reviews response document)
  *
  * ```ts

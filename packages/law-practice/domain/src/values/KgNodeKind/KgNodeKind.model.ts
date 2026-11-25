@@ -51,8 +51,6 @@ export const KgNodeKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link KgNodeKind}.
- *
  * **Example** (Type prosecution spine kinds)
  *
  * ```ts

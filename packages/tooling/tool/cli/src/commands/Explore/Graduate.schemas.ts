@@ -100,8 +100,6 @@ export class GraduationRequest extends S.Opaque<GraduationRequest, { readonly br
 ) {}
 
 /**
- * One packet already under `goals/`, with the exploration its manifest names.
- *
  * **Details**
  *
  * `provenanceExploration` is the raw `provenance.exploration` value
@@ -181,8 +179,6 @@ export class ExplorationSnapshot extends S.Opaque<ExplorationSnapshot, { readonl
 ) {}
 
 /**
- * Why a graduation plan failed closed.
- *
  * **Example** (Recognize a foreign slug conflict)
  *
  * ```ts
@@ -209,8 +205,6 @@ export const GraduationConflictReason = LiteralKit([
 );
 
 /**
- * Decoded graduation conflict reason.
- *
  * @see {@link GraduationConflictReason} for the runtime schema and membership helpers.
  * @category type-level
  * @since 0.0.0
@@ -314,8 +308,6 @@ export class GraduationPublishedChild extends S.Opaque<GraduationPublishedChild,
 ) {}
 
 /**
- * Content address of one compiled graduation plan.
- *
  * **Example** (Validate a graduation plan id)
  *
  * ```ts
@@ -344,8 +336,6 @@ export const GraduationPlanId = S.String.check(
 ).pipe($I.annoteSchema("GraduationPlanId", { description: "Content address of one compiled graduation plan." }));
 
 /**
- * Decoded graduation plan id.
- *
  * @see {@link GraduationPlanId} for the runtime schema.
  * @category type-level
  * @since 0.0.0
@@ -411,8 +401,6 @@ export const GraduationChildOutcome = LiteralKit(["published", "already-publishe
 );
 
 /**
- * Decoded graduation child outcome.
- *
  * @see {@link GraduationChildOutcome} for the runtime schema and membership helpers.
  * @category type-level
  * @since 0.0.0
@@ -420,8 +408,6 @@ export const GraduationChildOutcome = LiteralKit(["published", "already-publishe
 export type GraduationChildOutcome = typeof GraduationChildOutcome.Type;
 
 /**
- * One child row of a graduation receipt.
- *
  * **Example** (Record an already-published child)
  *
  * ```ts
@@ -500,8 +486,6 @@ export class GraduationReceipt extends S.Opaque<GraduationReceipt, { readonly br
 export const GRADUATION_PENDING_SEGMENTS = ["ops", ".graduation-pending.json"] as const;
 
 /**
- * `graduation-pending/v1`: stream events a graduation owes an opted-in exploration.
- *
  * **Details**
  *
  * Written atomically to `ops/.graduation-pending.json` before the manifest

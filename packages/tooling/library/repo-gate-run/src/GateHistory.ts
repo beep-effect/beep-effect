@@ -56,8 +56,6 @@ export class HistoryAnswer extends S.Opaque<HistoryAnswer, { readonly brand: uni
 ) {}
 
 /**
- * Reading history failed.
- *
  * **Example** (Build the error)
  *
  * ```ts

@@ -44,8 +44,6 @@ export const SkillSourceType = LiteralKit(["github"]).pipe(
   })
 );
 /**
- * Upstream source kind decoded by {@link SkillSourceType}.
- *
  * @see {@link SkillSourceType} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -78,8 +76,6 @@ export const SkillSnapshotAlgorithm = LiteralKit(["sha256"]).pipe(
   })
 );
 /**
- * Digest algorithm decoded by {@link SkillSnapshotAlgorithm}.
- *
  * @see {@link SkillSnapshotAlgorithm} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -115,8 +111,6 @@ export const SkillTreeMode = LiteralKit(["100644", "100755", "120000"]).pipe(
   })
 );
 /**
- * Git tree mode decoded by {@link SkillTreeMode}.
- *
  * @see {@link SkillTreeMode} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -152,8 +146,6 @@ export const SkillProvenanceStatus = LiteralKit(["exact", "inferred", "unresolve
   })
 );
 /**
- * Provenance status decoded by {@link SkillProvenanceStatus}.
- *
  * @see {@link SkillProvenanceStatus} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -161,8 +153,6 @@ export const SkillProvenanceStatus = LiteralKit(["exact", "inferred", "unresolve
 export type SkillProvenanceStatus = typeof SkillProvenanceStatus.Type;
 
 /**
- * Audited confidence attached to an upstream provenance claim.
- *
  * **Details**
  *
  * Confidence is graded separately from {@link SkillProvenanceStatus} because a
@@ -188,8 +178,6 @@ export const SkillProvenanceConfidence = LiteralKit(["high", "medium", "low", "u
   })
 );
 /**
- * Provenance confidence decoded by {@link SkillProvenanceConfidence}.
- *
  * @see {@link SkillProvenanceConfidence} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -229,8 +217,6 @@ export const SkillProvenanceEvidence = LiteralKit([
   })
 );
 /**
- * Provenance evidence class decoded by {@link SkillProvenanceEvidence}.
- *
  * @see {@link SkillProvenanceEvidence} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -265,8 +251,6 @@ export const SkillPatchLabel = LiteralKit(["policy", "repo-adaptation", "tempora
   })
 );
 /**
- * Patch review label decoded by {@link SkillPatchLabel}.
- *
  * @see {@link SkillPatchLabel} for the runtime literal schema and its guards.
  * @category type-level
  * @since 0.0.0
@@ -651,8 +635,6 @@ export class SkillLicense extends S.Opaque<SkillLicense, { readonly brand: uniqu
 ) {}
 
 /**
- * Audited evidence and epistemic state for an upstream provenance claim.
- *
  * **Details**
  *
  * `matchedFileCount` and `upstreamFileCount` are what make a `high` confidence

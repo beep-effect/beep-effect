@@ -29,7 +29,6 @@ import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.f
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 import type { CitationTokenCaptureObservation } from "./CitationTokenObjects.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationTokenObjects = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationTokenObjects>[0],
   a1: unknown

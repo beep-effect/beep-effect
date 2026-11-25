@@ -26,7 +26,6 @@ const binding = IdentityRdfBinding.make({
   fiberPaths: { displayName: requiredFiberPath },
 });
 const policy = IdentityShapePolicy.make({ requiredFibers: ["displayName"] });
-// Identity entries come from registry bindings; any bound code identity serves the projection.
 const entry = IdentityEntry.fromBinding(
   "@beep/test-runner/Vitest/TestHang",
   { curie: "vitest:TestHang", iri: iri("vitest:TestHang") },

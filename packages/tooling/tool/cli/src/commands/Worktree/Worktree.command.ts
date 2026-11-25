@@ -212,8 +212,6 @@ export const WORKTREE_LOCAL_FILE_ENTRIES = [
 export const defaultWorktreeBranch = (name: string): string => `feat/${name}`;
 
 /**
- * Resolved worktree layout for the invoking repository.
- *
  * **Details**
  *
  * `currentRoot` is the checkout the command was invoked from, which is the
@@ -250,8 +248,6 @@ export class WorktreeContext extends S.Opaque<WorktreeContext, { readonly brand:
 ) {}
 
 /**
- * Outcome of copying one local-only file into a fresh worktree.
- *
  * **Details**
  *
  * `reason` is present only for `skipped` outcomes; a `copied` outcome carries
@@ -289,8 +285,6 @@ export class WorktreeCopyOutcome extends S.Opaque<WorktreeCopyOutcome, { readonl
 ) {}
 
 /**
- * Per-worktree diagnostic row emitted by `worktree doctor`.
- *
  * **Details**
  *
  * `branch` is `null` for a detached checkout. `hasEnv` and `hasNodeModules`
@@ -343,8 +337,6 @@ export class WorktreeDoctorEntry extends S.Opaque<WorktreeDoctorEntry, { readonl
 ) {}
 
 /**
- * Read-only report produced by `worktree doctor`.
- *
  * **Details**
  *
  * `entries` covers only worktrees under the worktrees root; checkouts living

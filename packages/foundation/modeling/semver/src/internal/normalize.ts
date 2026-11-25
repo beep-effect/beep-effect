@@ -1,7 +1,3 @@
-// Comparator-set normalization: a stable sort by operator weight and version
-// precedence, plus semantic deduplication. Comparators that differ only in
-// build metadata are duplicate constraints (SemVer §10) and collapse to one.
-
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
@@ -34,11 +30,9 @@ const removeDuplicates = (set: ReadonlyArray<ComparatorShape>): ReadonlyArray<Co
   return A.filter(set, (c) => {
     const v = c.version;
     const pre = v.prerelease.length > 0 ? `-${pipe(v.prerelease, A.map(String), A.join("."))}` : "";
-    // Build metadata is ignored per SemVer §10 — comparators differing
-    // only in build metadata are semantically identical constraints.
-    const key = `${c.operator}${v.major}.${v.minor}.${v.patch}${pre}`;
-    if (MutableHashSet.has(seen, key)) return false;
-    MutableHashSet.add(seen, key);
+    const keyIgnoringBuild = `${c.operator}${v.major}.${v.minor}.${v.patch}${pre}`;
+    if (MutableHashSet.has(seen, keyIgnoringBuild)) return false;
+    MutableHashSet.add(seen, keyIgnoringBuild);
     return true;
   });
 };

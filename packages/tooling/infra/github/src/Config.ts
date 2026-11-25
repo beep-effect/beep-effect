@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $InfraGithubId.create("Config");
 
 /**
- * A pull request merge method a ruleset allows.
- *
  * **Example** (Accept a merge method)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const MergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe(
 );
 
 /**
- * Runtime type for {@link MergeMethod}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -62,8 +58,6 @@ export const BypassActorType = LiteralKit(["RepositoryRole", "Team", "Integratio
 );
 
 /**
- * Runtime type for {@link BypassActorType}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -88,16 +82,12 @@ export const BypassMode = LiteralKit(["always", "pull_request"]).pipe(
 );
 
 /**
- * Runtime type for {@link BypassMode}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BypassMode = typeof BypassMode.Type;
 
 /**
- * Enforcement of a ruleset.
- *
  * **Example** (Accept an enforcement)
  *
  * ```ts
@@ -114,8 +104,6 @@ export const RulesetEnforcement = LiteralKit(["disabled", "active", "evaluate"])
 );
 
 /**
- * Runtime type for {@link RulesetEnforcement}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -148,8 +136,6 @@ export const ObjectClass = LiteralKit([
 ]).pipe($I.annoteSchema("ObjectClass", { description: "The class of a live GitHub repository object." }));
 
 /**
- * Runtime type for {@link ObjectClass}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -221,8 +207,6 @@ export class RequiredCheck extends S.Opaque<RequiredCheck, { readonly brand: uni
 ) {}
 
 /**
- * One ruleset bypass entry.
- *
  * **Example** (Let repository admins bypass)
  *
  * ```ts
@@ -244,8 +228,6 @@ export class BypassActor extends S.Opaque<BypassActor, { readonly brand: unique 
 ) {}
 
 /**
- * The pull request rule of a ruleset.
- *
  * **Example** (Read the thread-resolution rule)
  *
  * ```ts
@@ -351,6 +333,86 @@ export class EnvironmentSpec extends S.Opaque<EnvironmentSpec, { readonly brand:
   }).pipe(
     $I.annoteSchema("EnvironmentSpec", {
       description: "A deployment environment with its branch policy and variables.",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Accept a reference)
+ *
+ * ```ts
+ * import { OpReference } from "@beep/infra-github/Config"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(OpReference)("op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OpReference = S.String.check(S.isPattern(/^op:\/\/[^/]+\/[^/]+\/[^/]+$/u)).pipe(
+  $I.annoteSchema("OpReference", {
+    description: "A 1Password secret reference, op://<vault>/<item>/<field>; the reference, never the value.",
+  })
+);
+
+/**
+ * A pattern-checked string that only `op run` resolves; the repository never holds the value it names.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpReference = typeof OpReference.Type;
+
+/**
+ * **Example** (Declare the fleet-watch App key)
+ *
+ * ```ts
+ * import { SecretSpec } from "@beep/infra-github/Config"
+ *
+ * const secret = SecretSpec.make({
+ *   environment: "fleet-watch",
+ *   name: "FLEET_WATCH_APP_PRIVATE_KEY",
+ *   reference: "op://BEEP_SECRETS/beep-fleet-watch GitHub App/private_key",
+ * })
+ * console.log(secret.environment) // "fleet-watch"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SecretSpec extends S.Opaque<SecretSpec, { readonly brand: unique symbol }>()(
+  S.Struct({
+    environment: Name,
+    name: Name,
+    reference: OpReference,
+  }).pipe(
+    $I.annoteSchema("SecretSpec", {
+      description: "An environment secret and the 1Password reference its value is read from at deploy time.",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Count the declared secrets)
+ *
+ * ```ts
+ * import { productionSecretsConfig } from "@beep/infra-github/Production"
+ *
+ * console.log(productionSecretsConfig.secrets.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SecretsConfig extends S.Opaque<SecretsConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    owner: Name,
+    repository: Name,
+    secrets: S.Array(SecretSpec),
+  }).pipe(
+    $I.annoteSchema("SecretsConfig", {
+      description: "What the workstation-only InfraGithubSecrets stack owns: environment secrets read from 1Password.",
     })
   )
 ) {}

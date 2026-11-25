@@ -22,8 +22,6 @@ import type { ResourceClass, ResourceLike } from "alchemy/Resource";
 const $I = $InfraGithubId.create("ReadOnlyProviders");
 
 /**
- * A lifecycle operation that writes to GitHub.
- *
  * **Example** (Narrow a mutating operation)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const MutatingOperation = LiteralKit(["precreate", "reconcile", "delete"]
 );
 
 /**
- * Runtime type for {@link MutatingOperation}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -94,8 +90,8 @@ const readOnly = <R extends ResourceLike, E, RIn>(
   ).pipe(Layer.provide(shipped));
 
 /**
- * The read-only providers for every resource type the stack declares
- * (`Repository`, `Ruleset`, `Environment`, `Variable`, `Label`). Registered
+ * The read-only providers for every resource type either stack declares
+ * (`Repository`, `Ruleset`, `Environment`, `Variable`, `Label`, `Secret`). Registered
  * for each type directly, they take precedence over the same types in the
  * `GitHub.providers()` collection, so layering them over the collection is enough.
  *
@@ -119,5 +115,6 @@ export const readOnlyGitHubProviders = (stage: string) =>
     readOnly(GitHub.Ruleset, GitHub.RulesetProvider(), stage),
     readOnly(GitHub.Environment, GitHub.EnvironmentProvider(), stage),
     readOnly(GitHub.Variable, GitHub.VariableProvider(), stage),
-    readOnly(GitHub.Label, GitHub.LabelProvider(), stage)
+    readOnly(GitHub.Label, GitHub.LabelProvider(), stage),
+    readOnly(GitHub.Secret, GitHub.SecretProvider(), stage)
   );

@@ -43,9 +43,8 @@ const Extractors = S.fromJsonString(
   })
 );
 
-// Bun only; the sole replay of controls.canonical.cases (kept 2026-11-09, deletion-addendum review).
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
-  "source extractor selection",
+  "source extractor selection, the sole replay of controls.canonical.cases",
   (it) => {
     it.effect(
       "installs all 6805 source extractors and reproduces every independent membership vector",

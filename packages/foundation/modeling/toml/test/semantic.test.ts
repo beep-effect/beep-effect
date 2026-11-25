@@ -10,12 +10,10 @@ import * as R from "effect/Record";
 import type { TomlSemanticErrorCodeRaw } from "@beep/toml/internal/diagnostics";
 import type { TomlArrayTableHeader, TomlKeyValue, TomlTableHeader } from "@beep/toml/TomlNode";
 
-/** Parse and analyze, expecting success. */
 function analyzeSrc(src: string): void {
   analyze(parseExpressions(src));
 }
 
-/** Parse and build the plain value, expecting success. */
 function build(src: string): Record<string, unknown> {
   const value = buildValue(parseExpressions(src));
   if (!P.isObject(value)) {
@@ -24,7 +22,6 @@ function build(src: string): Record<string, unknown> {
   return value;
 }
 
-/** Assert analysis throws a RawTomlError with `code` (and `offset`, when given). */
 function assertSemanticError(src: string, code: TomlSemanticErrorCodeRaw, offset?: number): void {
   try {
     analyze(parseExpressions(src));
@@ -52,16 +49,13 @@ describe("semantic", () => {
     it("rejects a duplicate key inside a table section", () => {
       assertSemanticError("[t]\nx=1\nx=2", "DuplicateKey");
     });
-    it("rejects assigning over a dotted-created table", () => {
-      // corpus: invalid/table/append-with-dotted-keys-05
+    it("rejects assigning over a dotted-created table [invalid/table/append-with-dotted-keys-05]", () => {
       assertSemanticError("a.b.c=1\na.b=2", "DuplicateKey");
     });
-    it("rejects overwriting a dotted-created table with an inline table", () => {
-      // corpus: invalid/inline-table/overwrite-01
+    it("rejects overwriting a dotted-created table with an inline table [invalid/inline-table/overwrite-01]", () => {
       assertSemanticError("a.b=0\na={}", "DuplicateKey");
     });
-    it("rejects assigning over an array-of-tables name from its parent section", () => {
-      // corpus: invalid/table/overwrite-array-in-parent
+    it("rejects assigning over an array-of-tables name from its parent section [invalid/table/overwrite-array-in-parent]", () => {
       assertSemanticError("[[p.arr]]\n[p]\narr=2", "DuplicateKey");
     });
     it("allows the same key name in different tables", () => {
@@ -79,15 +73,13 @@ describe("semantic", () => {
     it("rejects a table header over an existing value", () => {
       assertSemanticError("a=1\n[a]", "TableRedefined");
     });
-    it("rejects promoting the implicit super-table twice", () => {
-      // corpus: invalid/table/super-twice
+    it("rejects promoting the implicit super-table twice [invalid/table/super-twice]", () => {
       assertSemanticError("[a.b]\n[a]\n[a]", "TableRedefined");
     });
     it("rejects reopening an explicitly defined sub-table", () => {
       assertSemanticError("[a.b]\n[a]\n[a.b]", "TableRedefined");
     });
-    it("rejects a header over a key defined in the parent table", () => {
-      // corpus: invalid/table/redefine-01
+    it("rejects a header over a key defined in the parent table [invalid/table/redefine-01]", () => {
       assertSemanticError("[a]\nb=1\n[a.b]", "TableRedefined");
     });
     it("rejects header navigation through a value", () => {
@@ -102,34 +94,26 @@ describe("semantic", () => {
     it("allows same-section dotted reuse", () => {
       assert.deepStrictEqual(build("[a]\nb.c=1\nb.d=2"), { a: { b: { c: 1, d: 2 } } });
     });
-    it("rejects a header landing on a dotted-created table", () => {
-      // corpus: invalid/table/redefine-02
+    it("rejects a header landing on a dotted-created table [invalid/table/redefine-02]", () => {
       assertSemanticError("[a]\nb.c=1\n[a.b]", "TableRedefined");
     });
-    it("rejects a header landing on a dotted-created value", () => {
-      // corpus: invalid/table/redefine-03 (final segment is the dotted-created t3)
+    it("rejects a header landing on a dotted-created value [invalid/table/redefine-03 (final segment is the dotted-created t3)]", () => {
       assertSemanticError("[t1]\nt2.t3.v=0\n[t1.t2.t3]", "TableRedefined");
     });
-    it("allows a header to define a new sub-table inside a dotted-created table", () => {
-      // corpus: valid/spec-1.0.0/table-9 — G8 deviation: header navigation
-      // PASSES THROUGH table-dotted intermediates; only landing the final
-      // segment on an existing table-dotted is an error.
+    it("allows a header to define a new sub-table inside a dotted-created table [valid/spec-1.0.0/table-9]", () => {
       assert.deepStrictEqual(build('[fruit]\napple.color="red"\n[fruit.apple.texture]\nsmooth=true'), {
         fruit: { apple: { color: "red", texture: { smooth: true } } },
       });
     });
-    it("allows an array-table header inside a dotted-created table", () => {
-      // corpus: valid/table/array-within-dotted
+    it("allows an array-table header inside a dotted-created table [valid/table/array-within-dotted]", () => {
       assert.deepStrictEqual(build('[fruit]\napple.color="red"\n[[fruit.apple.seeds]]\nsize=2'), {
         fruit: { apple: { color: "red", seeds: [{ size: 2 }] } },
       });
     });
-    it("rejects dotted extension of a header-implicit table", () => {
-      // corpus: invalid/table/append-with-dotted-keys-01 (shape)
+    it("rejects dotted extension of a header-implicit table [invalid/table/append-with-dotted-keys-01 (shape)]", () => {
       assertSemanticError("[a.b.c]\n[a]\nb.d=1", "DottedKeyConflict");
     });
-    it("rejects dotted extension of an explicitly defined table", () => {
-      // corpus: invalid/inline-table/overwrite-09 (shape)
+    it("rejects dotted extension of an explicitly defined table [invalid/inline-table/overwrite-09 (shape)]", () => {
       assertSemanticError("[a.b]\nx.y=1\n[a]\nb.z=1", "DottedKeyConflict");
     });
     it("rejects dotted keys through a value", () => {
@@ -150,12 +134,10 @@ describe("semantic", () => {
     it("keeps earlier-element sub-tables when a new element is appended", () => {
       assert.deepStrictEqual(build("[[a]]\n[a.b]\n[[a]]"), { a: [{ b: {} }, {}] });
     });
-    it("allows promoting the implicit parent of an array table", () => {
-      // corpus: valid/table/array-implicit-and-explicit-after
+    it("allows promoting the implicit parent of an array table [valid/table/array-implicit-and-explicit-after]", () => {
       assert.deepStrictEqual(build("[[a.b]]\nx=1\n[a]\ny=2"), { a: { b: [{ x: 1 }], y: 2 } });
     });
-    it("scopes dotted keys to each array element", () => {
-      // corpus: valid/key/dotted-04
+    it("scopes dotted keys to each array element [valid/key/dotted-04]", () => {
       assert.deepStrictEqual(build("[[arr]]\na.b.c=1\na.b.d=2\n[[arr]]\na.b.c=3"), {
         arr: [{ a: { b: { c: 1, d: 2 } } }, { a: { b: { c: 3 } } }],
       });
@@ -163,38 +145,31 @@ describe("semantic", () => {
     it("rejects [[t]] over an explicit table", () => {
       assertSemanticError("[t]\n[[t]]", "ArrayOfTablesConflict");
     });
-    it("rejects [[t]] over a static array", () => {
-      // corpus: invalid/array/tables-01
+    it("rejects [[t]] over a static array [invalid/array/tables-01]", () => {
       assertSemanticError("t=[1]\n[[t]]", "ArrayOfTablesConflict");
     });
     it("rejects [t] over an array of tables", () => {
       assertSemanticError("[[t]]\n[t]", "TableRedefined");
     });
-    it("rejects reopening an array-of-tables name as a plain table", () => {
-      // corpus: invalid/array/tables-02
+    it("rejects reopening an array-of-tables name as a plain table [invalid/array/tables-02]", () => {
       assertSemanticError("[[f]]\n[[f.v]]\n[f.v]", "TableRedefined");
     });
-    it("rejects dotted keys through an array-of-tables name", () => {
-      // corpus: invalid/table/append-with-dotted-keys-03
+    it("rejects dotted keys through an array-of-tables name [invalid/table/append-with-dotted-keys-03]", () => {
       assertSemanticError("[[a.b]]\n[a]\nb.y=2", "DottedKeyConflict");
     });
-    it("rejects a dotted key landing on an array-of-tables name", () => {
-      // corpus: invalid/array/extend-defined-aot
+    it("rejects a dotted key landing on an array-of-tables name [invalid/array/extend-defined-aot]", () => {
       assertSemanticError("[[tab.arr]]\n[tab]\narr.val1=1", "DottedKeyConflict");
     });
-    it("rejects header navigation into a static array", () => {
-      // corpus: invalid/array/extending-table
+    it("rejects header navigation into a static array [invalid/array/extending-table]", () => {
       assertSemanticError("a=[{b=1}]\n[a.c]", "ArrayOfTablesConflict");
     });
   });
 
   describe("inline tables", () => {
-    it("accepts dotted keys scoped to one inline table", () => {
-      // corpus: valid/inline-table/key-dotted-02 (shape)
+    it("accepts dotted keys scoped to one inline table [valid/inline-table/key-dotted-02 (shape)]", () => {
       assert.deepStrictEqual(build("t={a.b.c=1, a.b.d=2}"), { t: { a: { b: { c: 1, d: 2 } } } });
     });
-    it("accepts repeated inline-table shapes across array elements", () => {
-      // corpus: valid/inline-table/key-dotted-05
+    it("accepts repeated inline-table shapes across array elements [valid/inline-table/key-dotted-05]", () => {
       assert.deepStrictEqual(build("arr=[{a.b=1}, {a.b=2}]"), { arr: [{ a: { b: 1 } }, { a: { b: 2 } }] });
     });
     it("rejects extending an inline table with a header", () => {
@@ -203,39 +178,31 @@ describe("semantic", () => {
     it("rejects extending an inline table with a dotted key", () => {
       assertSemanticError("a={b=1}\na.c=2", "InlineTableExtended", 8);
     });
-    it("rejects a header reopening a sub-key of an inline table", () => {
-      // corpus: invalid/inline-table/overwrite-02
+    it("rejects a header reopening a sub-key of an inline table [invalid/inline-table/overwrite-02]", () => {
       assertSemanticError("a={}\n[a.b]", "InlineTableExtended");
     });
     it("rejects redefining an inline table name with a header", () => {
       assertSemanticError("a={}\n[a]", "TableRedefined");
     });
-    it("rejects [[...]] through an inline table", () => {
-      // corpus: invalid/inline-table/overwrite-04
+    it("rejects [[...]] through an inline table [invalid/inline-table/overwrite-04]", () => {
       assertSemanticError("i={n={}}\n[[i.n]]", "InlineTableExtended");
     });
-    it("rejects duplicate keys inside an inline table", () => {
-      // corpus: invalid/inline-table/duplicate-key-01
+    it("rejects duplicate keys inside an inline table [invalid/inline-table/duplicate-key-01]", () => {
       assertSemanticError("a={b=1, b=2}", "DuplicateKey");
     });
-    it("rejects dotted duplicates inside an inline table", () => {
-      // corpus: invalid/inline-table/duplicate-key-02
+    it("rejects dotted duplicates inside an inline table [invalid/inline-table/duplicate-key-02]", () => {
       assertSemanticError("t={a.dupe=1, a.dupe=2}", "DuplicateKey");
     });
-    it("rejects overwriting a dotted-created inline sub-table", () => {
-      // corpus: invalid/inline-table/overwrite-10
+    it("rejects overwriting a dotted-created inline sub-table [invalid/inline-table/overwrite-10]", () => {
       assertSemanticError("a={b.a=1, b=2}", "DuplicateKey");
     });
-    it("rejects extending a closed nested inline table", () => {
-      // corpus: invalid/inline-table/duplicate-key-03 / overwrite-08
+    it("rejects extending a closed nested inline table [invalid/inline-table/duplicate-key-03 / overwrite-08]", () => {
       assertSemanticError('t={f={a.c="red"}, f.a.t=1}', "InlineTableExtended");
     });
-    it("rejects dotted keys through an inline value", () => {
-      // corpus: invalid/inline-table/duplicate-key-04
+    it("rejects dotted keys through an inline value [invalid/inline-table/duplicate-key-04]", () => {
       assertSemanticError('t={a.b=1, a.b.c="x"}', "DottedKeyConflict");
     });
-    it("rejects dotted extension of an inline scalar entry", () => {
-      // corpus: invalid/table/append-with-dotted-keys-07
+    it("rejects dotted extension of an inline scalar entry [invalid/table/append-with-dotted-keys-07]", () => {
       assertSemanticError('a={k1=1, k1.name="joe"}', "DottedKeyConflict");
     });
     it("validates inline tables nested inside arrays", () => {

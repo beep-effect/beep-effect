@@ -157,8 +157,6 @@ export const ArchiveObjectKind = LiteralKit(["directory", "file", "root-archive"
 );
 
 /**
- * Decoded archive object kind.
- *
  * @see {@link ArchiveObjectKind} for the runtime schema and helper surface.
  * @category models
  * @since 0.0.0
@@ -323,8 +321,6 @@ export class RestorationVerifyOptions extends S.Opaque<RestorationVerifyOptions,
 ) {}
 
 /**
- * Mail restoration run scope.
- *
  * **Example** (Select the vertical-slice scope)
  *
  * ```ts
@@ -631,8 +627,6 @@ export class RestorationLegacyWordOptions extends S.Opaque<
 ) {}
 
 /**
- * Inherited collector success row for a newly copied destination.
- *
  * @category models
  * @since 0.0.0
  */
@@ -653,8 +647,6 @@ export class CollectorCopiedManifestRecord extends S.Opaque<
 ) {}
 
 /**
- * Inherited collector success row for a destination resumed from prior work.
- *
  * @category models
  * @since 0.0.0
  */
@@ -675,8 +667,6 @@ export class CollectorResumedManifestRecord extends S.Opaque<
 ) {}
 
 /**
- * Inherited collector failure row that records a source and non-empty reason without a destination.
- *
  * @category models
  * @since 0.0.0
  */
@@ -696,8 +686,6 @@ export class CollectorErrorManifestRecord extends S.Opaque<
 ) {}
 
 /**
- * Inherited collector exclusion row whose source was deliberately omitted as secret material.
- *
  * @category models
  * @since 0.0.0
  */
@@ -716,8 +704,6 @@ export class CollectorExcludedSecretManifestRecord extends S.Opaque<
 ) {}
 
 /**
- * One row from the inherited collector manifest.
- *
  * **Example** (Decode a collector row)
  *
  * ```ts
@@ -773,8 +759,6 @@ export type CollectorManifestRecord = typeof CollectorManifestRecord.Type;
 export const decodeCollectorManifestRecordJson = JsonStringCodec(CollectorManifestRecord).decode;
 
 /**
- * Source size and modification time observed before or after a streaming copy attempt.
- *
  * @category models
  * @since 0.0.0
  */
@@ -790,8 +774,6 @@ export class SourceStat extends S.Opaque<SourceStat, { readonly brand: unique sy
 ) {}
 
 /**
- * Capacity and object-count preflight that must pass before preservation writes payload bytes.
- *
  * @category models
  * @since 0.0.0
  */
@@ -816,8 +798,6 @@ export class ArchivePreflightRecord extends S.Opaque<ArchivePreflightRecord, { r
 ) {}
 
 /**
- * Durably synced archive directory occurrence.
- *
  * @category models
  * @since 0.0.0
  */
@@ -843,8 +823,6 @@ export class ArchiveDirectoryPassRecord extends S.Opaque<
 ) {}
 
 /**
- * Terminal PASS for one stable source file after payload fsync, atomic promotion, independent destination hashing, and manifest fsync.
- *
  * @category models
  * @since 0.0.0
  */
@@ -874,8 +852,6 @@ export class ArchiveFilePassRecord extends S.Opaque<ArchiveFilePassRecord, { rea
 ) {}
 
 /**
- * Rejected copy attempt whose source size or modification time changed while bytes were streaming.
- *
  * @category models
  * @since 0.0.0
  */
@@ -915,8 +891,6 @@ const ArchiveFailureKind = LiteralKit([
 );
 
 /**
- * Terminal preservation failure with explicit approval state.
- *
  * @category models
  * @since 0.0.0
  */
@@ -952,8 +926,6 @@ const InheritedLossCategory = LiteralKit([
 );
 
 /**
- * Operator-ratified inherited-loss opening balance recorded without claiming byte recovery.
- *
  * @category models
  * @since 0.0.0
  */
@@ -974,8 +946,6 @@ export class InheritedLossRecord extends S.Opaque<InheritedLossRecord, { readonl
 ) {}
 
 /**
- * Digest and row count covering the exact manifest bytes before this terminal seal row.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1078,8 +1048,6 @@ const VerificationFailureKind = LiteralKit([
 );
 
 /**
- * Fresh-process destination byte verification PASS for one terminal archive object.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1101,8 +1069,6 @@ export class ArchiveVerificationPassRecord extends S.Opaque<
 ) {}
 
 /**
- * Fresh-process archive verification failure for one object or manifest invariant.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1123,8 +1089,6 @@ export class ArchiveVerificationFailureRecord extends S.Opaque<
 ) {}
 
 /**
- * Independent archive verification result row.
- *
  * **Example** (Inspect verification cases)
  *
  * ```ts
@@ -1356,8 +1320,6 @@ const MailDisposition = LiteralKit(["defer", "process", "quarantine"]).pipe(
 );
 
 /**
- * Durable family clock, denominator, and resource contract reused unchanged by every restart of one transformation run.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1381,8 +1343,6 @@ export class FamilyRunStartRecord extends S.Class<FamilyRunStartRecord, { readon
 ) {}
 
 /**
- * Durable source-bound checkpoint written before one transformation candidate may create retained output.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1407,8 +1367,6 @@ export class FamilyAttemptStartRecord extends S.Class<FamilyAttemptStartRecord, 
 ) {}
 
 /**
- * Immutable ownership row for canonical interrupted output retained before the same source is retried under a new attempt generation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1436,8 +1394,6 @@ export class FamilyAttemptInterruptedRecord extends S.Class<
 ) {}
 
 /**
- * Terminal mail-store PASS with zero unaccounted children and measured amplification.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1521,8 +1477,6 @@ export const MailFailureCause = S.TaggedUnion({
 export type MailFailureCause = typeof MailFailureCause.Type;
 
 /**
- * Terminal mail-store exception with explicit approval state and a digest covering every retained partial and final output byte.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1552,8 +1506,6 @@ export class MailStoreExceptionRecord extends S.Class<MailStoreExceptionRecord, 
 ) {}
 
 /**
- * Bounded engine warning persisted for one mail restoration attempt.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1575,8 +1527,6 @@ export class MailWarningRecord extends S.Class<MailWarningRecord, { readonly bra
 ) {}
 
 /**
- * Per-child digest and size accounting row for one mail export attempt.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1601,8 +1551,6 @@ export class MailChildPassRecord extends S.Class<MailChildPassRecord, { readonly
 ) {}
 
 /**
- * Byte-signature attachment disposition and non-destructive derived path for second-pass extraction.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1635,8 +1583,6 @@ const RecycleJoinClass = LiteralKit(["duplicate", "missing-content", "orphan-con
 );
 
 /**
- * Aggregate four-class join count for one recycle volume surface.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1658,8 +1604,6 @@ export class RecycleJoinRecord extends S.Class<RecycleJoinRecord, { readonly bra
 ) {}
 
 /**
- * Original path, content digest, restored path, occurrence, and volume identity mapping.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1684,8 +1628,6 @@ export class RecycleMappingRecord extends S.Class<RecycleMappingRecord, { readon
 ) {}
 
 /**
- * Distinct-digest legacy-Word conversion PASS with pinned engine and declared text, pagination, and visual measures.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1712,8 +1654,6 @@ export class LegacyWordPassRecord extends S.Class<LegacyWordPassRecord, { readon
 ) {}
 
 /**
- * Terminal distinct-digest legacy-Word exception with explicit approval state.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1736,8 +1676,6 @@ export class LegacyWordExceptionRecord extends S.Class<LegacyWordExceptionRecord
 ) {}
 
 /**
- * Reconciled family acceptance record with a complete denominator and zero unapproved rows.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1763,8 +1701,6 @@ export class FamilyAcceptancePassRecord extends S.Class<FamilyAcceptancePassReco
 ) {}
 
 /**
- * Fail-closed family acceptance record for an incomplete denominator or unapproved terminal row.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1792,8 +1728,6 @@ export class FamilyAcceptanceFailureRecord extends S.Class<
 ) {}
 
 /**
- * Measured aggregate summary paired with one transformation-family acceptance row.
- *
  * @category models
  * @since 0.0.0
  */

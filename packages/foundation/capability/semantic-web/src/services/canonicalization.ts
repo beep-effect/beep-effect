@@ -32,8 +32,6 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
   });
 
 /**
- * Canonicalization algorithm name.
- *
  * **Example** (Decode rdfc-1.0 algorithm)
  *
  * ```ts
@@ -55,8 +53,6 @@ export const CanonicalizationAlgorithm = LiteralKit(["rdfc-1.0", "lexical-sort-v
 );
 
 /**
- * Type for {@link CanonicalizationAlgorithm}.
- *
  * **Example** (Check algorithm type guard)
  *
  * ```ts
@@ -73,8 +69,6 @@ export const CanonicalizationAlgorithm = LiteralKit(["rdfc-1.0", "lexical-sort-v
 export type CanonicalizationAlgorithm = typeof CanonicalizationAlgorithm.Type;
 
 /**
- * Canonicalization error reason.
- *
  * **Example** (Decode unsupportedAlgorithm reason)
  *
  * ```ts
@@ -102,8 +96,6 @@ export const CanonicalizationErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link CanonicalizationErrorReason}.
- *
  * **Example** (Check reason type guard)
  *
  * ```ts
@@ -120,8 +112,6 @@ export const CanonicalizationErrorReason = LiteralKit([
 export type CanonicalizationErrorReason = typeof CanonicalizationErrorReason.Type;
 
 /**
- * Typed canonicalization error.
- *
  * **Example** (Create unsupported algorithm error)
  *
  * ```ts
@@ -153,8 +143,6 @@ export class CanonicalizationError extends S.TaggedError<CanonicalizationError, 
 ) {}
 
 /**
- * Dataset canonicalization request.
- *
  * **Example** (Decode empty dataset request)
  *
  * ```ts
@@ -192,8 +180,6 @@ export class CanonicalizeDatasetRequest extends S.Opaque<
 ) {}
 
 /**
- * Dataset fingerprint request.
- *
  * **Example** (Decode fingerprint request)
  *
  * ```ts
@@ -229,8 +215,6 @@ export class FingerprintDatasetRequest extends S.Opaque<FingerprintDatasetReques
 ) {}
 
 /**
- * Canonical dataset output.
- *
  * **Example** (Decode empty canonical result)
  *
  * ```ts
@@ -261,8 +245,6 @@ export class CanonicalDatasetResult extends S.Opaque<CanonicalDatasetResult, { r
 ) {}
 
 /**
- * Dataset fingerprint output.
- *
  * **Example** (Decode fingerprint result)
  *
  * ```ts

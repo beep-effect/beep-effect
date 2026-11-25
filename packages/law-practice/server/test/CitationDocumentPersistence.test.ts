@@ -242,11 +242,12 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
       expect("resourceBindings" in receipt).toBe(false);
       const citationResult1 = yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt, editions: [] }));
       expect(citationResult1.reason).toBe("authority-key-unavailable");
-      // A receipt cannot authorize itself by carrying an extra binding field.
       const citationResult2 = yield* Effect.flip(
         restoreCitationDocument({ ...data.restore, receipt: { ...receipt, resourceBindings }, editions: [] })
       );
-      expect(citationResult2.reason).toBe("authority-key-unavailable");
+      expect(citationResult2.reason, "a receipt cannot authorize itself by carrying an extra binding field").toBe(
+        "authority-key-unavailable"
+      );
     })
   );
 
@@ -529,7 +530,6 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           resourceBindings: [absentBinding],
         });
         expect(citationResult14.groups).toEqual([]);
-        // Canonical identity checks alone cannot authorize a changed final list.
         const defaultChanged = CitationDocument.make({
           ...data.document,
           memberLists: A.map(data.document.memberLists, (list) =>
@@ -539,7 +539,9 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         const citationResult15 = yield* Effect.flip(
           projectCitationDocumentReceipt({ document: defaultChanged, editions: data.editions })
         );
-        expect(citationResult15.reason).toBe("stale-authority");
+        expect(citationResult15.reason, "canonical identity checks alone cannot authorize a changed final list").toBe(
+          "stale-authority"
+        );
       })
   );
 
@@ -629,7 +631,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           )
         )
       );
-      expect(hashes).toBe(9); // One source, three mentions at two digests each, two resolved full keys.
+      expect(hashes, "one source, three mentions at two digests each, two resolved full keys").toBe(9);
       const citationResult21 = yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions });
       const citationResult22 = yield* S.encodeEffect(Json)(citationResult21);
       expect(citationResult22).toBe(captured);

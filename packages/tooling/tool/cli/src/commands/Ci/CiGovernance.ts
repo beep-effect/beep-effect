@@ -94,8 +94,6 @@ class Ruleset extends S.Opaque<Ruleset, { readonly brand: unique symbol }>()(
   )
 ) {}
 /**
- * Desktop environment reviewer rules without secret values.
- *
  * **Example** (Require a named reviewer on the desktop environment)
  *
  * ```ts
@@ -121,8 +119,6 @@ export class SettingsEnvironment extends S.Opaque<SettingsEnvironment, { readonl
   )
 ) {}
 /**
- * Main Check run fields required to detect a held concurrency group.
- *
  * **Example** (Find the stale main run holding the concurrency group)
  *
  * ```ts

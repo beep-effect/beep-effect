@@ -85,7 +85,8 @@ it.layer(Layer.mergeAll(NodeFileSystem.layer, Digest.layerWebCrypto), { timeout:
       ([[assertion, extra]]) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const text = yield* fs.readFileString("test/fixtures/hold-claims-v1.jsonl");
+          const fixture = yield* fs.realPath("test/fixtures/hold-claims-v1.jsonl");
+          const text = yield* fs.readFileString(fixture);
           const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
           const decoded = yield* Effect.forEach(lines, decodeHoldClaimLine, { concurrency: 1 });
           const claims = yield* joinHoldClaims(decoded);

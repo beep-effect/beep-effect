@@ -6,6 +6,9 @@ node_modules/
 .DS_Store
 tmp/
 dist/
+# @beep/mcpb-kit packaging output (apps/<app>/.mcpb), kept out of dist/ so build
+# caches never archive bundles.
+.mcpb/
 build/
 .direnv/
 .envrc.local
@@ -187,3 +190,5 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 # Alchemy local state and TanStack Start build cache
 .alchemy/
 .tanstack/
+# Claim-ledger append locks (hold-ledger and any kb ledger root) and their stage/reap/adopt/tombstone sidecars
+claims.jsonl.lock*

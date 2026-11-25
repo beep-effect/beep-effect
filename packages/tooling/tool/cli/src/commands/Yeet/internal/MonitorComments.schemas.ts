@@ -68,8 +68,6 @@ export class YeetMonitorReviewComment extends S.Opaque<YeetMonitorReviewComment,
 ) {}
 
 /**
- * Normalized pull request conversation comment emitted by Yeet monitor.
- *
  * **Example** (Describe a conversation comment)
  *
  * ```ts

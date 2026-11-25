@@ -28,6 +28,7 @@ import * as HttpApiBuilder from "effect/http-api/HttpApiBuilder";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -88,8 +89,6 @@ const decodeEventLine = S.decodeUnknownEffect(EventLine);
 const encodeEventLine = S.encodeUnknownEffect(EventLine);
 
 /**
- * TCP port a collector may bind, including `0` for an ephemeral port.
- *
  * **Example** (Make ephemeral bind port)
  *
  * ```ts
@@ -133,8 +132,6 @@ export const CollectorBindPort = S.Int.check(
 );
 
 /**
- * TCP port a collector may bind, including `0` for an ephemeral port.
- *
  * **Example** (Type annotated bind port)
  *
  * ```ts
@@ -151,8 +148,6 @@ export type CollectorBindPort = typeof CollectorBindPort.Type;
 
 const collectorServeOptionsAllowedOriginsDefault = ["*"];
 /**
- * Options accepted by {@link Collector} `serve`.
- *
  * **Example** (Make collector serve options)
  *
  * ```ts
@@ -277,8 +272,9 @@ const portOfServer = (server: HttpServer.HttpServer["Service"], fallback: number
     Match.orElse(() => fallback)
   );
 
-// `process.kill(pid, 0)` probes liveness without signalling; a throw means
-// the pid is gone and its handle file is reclaimable.
+// `process.kill(pid, 0)` probes liveness without signalling. Only a throw
+// other than EPERM means the pid is gone and its handle file is reclaimable:
+// EPERM is a live process owned by another user that this one may not signal.
 const isPidAlive = (pid: number): Effect.Effect<boolean> =>
   Effect.try({
     try: () => {
@@ -286,7 +282,7 @@ const isPidAlive = (pid: number): Effect.Effect<boolean> =>
       return true;
     },
     catch: (cause) => CollectorServiceOperationError.make({ cause }),
-  }).pipe(Effect.orElseSucceed(() => false));
+  }).pipe(Effect.catch(({ cause }) => Effect.succeed(P.hasProperty(cause, "code") && cause.code === "EPERM")));
 
 const makeService = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;

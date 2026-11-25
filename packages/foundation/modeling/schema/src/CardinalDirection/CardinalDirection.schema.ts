@@ -10,8 +10,6 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 const $I = $SchemaId.create("person/CardinalDirection");
 
 /**
- * Cardinal direction literal schema.
- *
  * **Example** (Check Options includes north)
  *
  * ```ts
@@ -31,15 +29,12 @@ export const CardinalDirection = LiteralKit(["north", "south", "east", "west"]).
   })
 );
 /**
- * {@inheritDoc CardinalDirection}
  * @category validation
  * @since 0.0.0
  */
 export type CardinalDirection = typeof CardinalDirection.Type;
 
 /**
- * CardinalDirectionAbbrev - The abbreviated version of the {@link CardinalDirection}
- *
  * **Example** (Check Options includes N)
  *
  * ```ts
@@ -58,7 +53,6 @@ export const CardinalDirectionAbbrev = LiteralKit(["N", "S", "E", "W"]).pipe(
 );
 
 /**
- * {@inheritDoc CardinalDirectionAbbrev}
  * @category validation
  * @since 0.0.0
  */

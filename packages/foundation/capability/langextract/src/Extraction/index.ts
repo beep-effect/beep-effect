@@ -25,7 +25,6 @@ export * from "./Extraction.errors.ts";
  */
 export * from "./Extraction.model.ts";
 /**
- * Extraction result exports.
  * @category models
  * @since 0.0.0
  */

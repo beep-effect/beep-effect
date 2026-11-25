@@ -81,8 +81,6 @@ export const TelemetryRefusalTag = LiteralKit([
 );
 
 /**
- * Runtime type for {@link TelemetryRefusalTag}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -144,8 +142,6 @@ export const TelemetryDurationBucket = LiteralKit([
 );
 
 /**
- * Runtime type for {@link TelemetryDurationBucket}.
- *
  * @category models
  * @since 0.0.0
  */

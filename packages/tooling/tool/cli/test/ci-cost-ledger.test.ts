@@ -193,7 +193,7 @@ describe("ci ledger fold", () => {
           job(4, "Test Integration (lps-int-1)", 0, 300, { attempt: 2 }),
           // A caller with no runner, spanning the job it called on the overflow pool.
           job(5, "Test Unit (unit-a)", 0, 400, { labels: [] }),
-          job(6, "Test Unit (unit-a) / Overflow", 20, 380, { labels: ["beep-shard-overflow"] }),
+          job(6, "Test Unit (unit-a) / Overflow", 20, 380, { labels: ["beep-fleet-overflow"] }),
           job(7, "Test Plan", 0, 60),
           job(8, "Knip", 0, 30),
           job(9, "Lint", 0, 0, { conclusion: "skipped" }),

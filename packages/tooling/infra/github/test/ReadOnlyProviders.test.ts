@@ -1,6 +1,7 @@
 import * as Test from "@alchemy.run/test/Vitest";
-import { productionConfig } from "@beep/infra-github/Production";
+import { productionConfig, productionSecretsConfig } from "@beep/infra-github/Production";
 import { readOnlyGitHubProviders } from "@beep/infra-github/ReadOnlyProviders";
+import { declareSecrets } from "@beep/infra-github/Secrets";
 import { declareStack } from "@beep/infra-github/Stack";
 import { expect } from "@effect/vitest";
 import * as Cause from "effect/Cause";
@@ -8,6 +9,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { FakeRepository, fakeProviders } from "./support/FakeGitHub.ts";
 import { typed } from "./support/Scratch.ts";
@@ -24,6 +26,18 @@ test.provider("a preview stage plans, but its deploy fails before any mutating r
     expect(plan._tag).toBe("Success");
 
     const deployed = yield* Effect.exit(stack.deploy(declareStack(productionConfig, O.none())));
+    const message = Exit.match(deployed, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+    expect(Str.includes("PreviewStageIsReadOnly")(message)).toBe(true);
+    expect(fake.writes()).toEqual([]);
+  })
+);
+
+test.provider("a preview stage cannot upload a secret", (scratch) =>
+  Effect.gen(function* () {
+    const stack = typed(scratch);
+    const deployed = yield* Effect.exit(
+      stack.deploy(declareSecrets(productionSecretsConfig, () => Redacted.make("preview-placeholder")))
+    );
     const message = Exit.match(deployed, { onSuccess: () => "deployed", onFailure: Cause.pretty });
     expect(Str.includes("PreviewStageIsReadOnly")(message)).toBe(true);
     expect(fake.writes()).toEqual([]);

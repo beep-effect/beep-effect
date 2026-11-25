@@ -36,8 +36,6 @@ import type { CommitLogEntry } from "@beep/git/Git";
 const $I = $RepoCliId.create("commands/Yeet/internal/PacketProvenance");
 
 /**
- * Evidence linking a pull request to a packet.
- *
  * **Details**
  *
  * `branch` means the branch name carries the packet slug, `commit` means a
@@ -77,8 +75,6 @@ export const PrProvenancePacketSource = LiteralKit(["branch", "commit", "diff"])
 export type PrProvenancePacketSource = typeof PrProvenancePacketSource.Type;
 
 /**
- * An active goal or exploration packet a pull request is for, with its evidence.
- *
  * **Details**
  *
  * The root and slug name a public repository directory, so the value may

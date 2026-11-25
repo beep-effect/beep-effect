@@ -18,9 +18,6 @@ const ExecutionRecordConverterOperation = LiteralKit([
 ]);
 
 /**
- * Schema conversion failed while projecting an execution ledger record across
- * the persistence boundary.
- *
  * **Example** (Construct converter error)
  *
  * ```ts

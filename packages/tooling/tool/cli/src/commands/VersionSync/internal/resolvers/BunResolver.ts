@@ -216,8 +216,6 @@ const selectLatestLocalBunVersion = (
 // ── Public API ──────────────────────────────────────────────────────────────
 
 /**
- * Resolved Bun version state.
- *
  * @category models
  * @since 0.0.0
  */

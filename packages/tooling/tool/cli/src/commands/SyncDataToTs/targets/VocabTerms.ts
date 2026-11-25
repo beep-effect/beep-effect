@@ -38,8 +38,6 @@ type TermModule = {
   readonly constant: string;
 };
 
-// The registry namespaces projected into `@beep/rdf` term modules. nif, gufo and as stay
-// registry-only until a consumer needs their named nodes.
 const termModules = {
   cito: { module: "Cito", display: "CiTO", constant: "CITO" },
   dcat: { module: "Dcat", display: "DCAT", constant: "DCAT" },
@@ -129,6 +127,11 @@ const canonicalDocument = (): Record<string, { readonly iri: string; readonly te
 
 /**
  * Vocabulary term-module sync target.
+ *
+ * **Details**
+ *
+ * Projects registry namespaces into RDF term modules. nif, gufo and as remain
+ * registry-only until a consumer needs their named nodes.
  *
  * **Example** (Inspect the vocab-terms sync target)
  *

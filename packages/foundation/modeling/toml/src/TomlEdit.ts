@@ -63,10 +63,6 @@ export type TomlSegment = string | number;
 export type TomlPath = ReadonlyArray<TomlSegment>;
 
 /**
- * A range within a TOML document, expressed as a zero-based character
- * `offset` and a `length` in UTF-16 code units. Pass to `TomlFormat.format`
- * to restrict formatting to the expressions intersecting a region.
- *
  * **Example** (Select a formatting region)
  *
  * ```ts
@@ -99,9 +95,6 @@ export class TomlRange extends S.Opaque<TomlRange, { readonly brand: unique symb
 ) {}
 
 /**
- * A non-mutating text edit: replace the span `[offset, offset + length)` with
- * `content`. Set `length` to `0` to insert, `content` to `""` to delete.
- *
  * **Details**
  *
  * Structurally identical to the edit shapes of `@beep/jsonc`,

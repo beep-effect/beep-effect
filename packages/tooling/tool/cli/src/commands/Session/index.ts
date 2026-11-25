@@ -5,8 +5,6 @@
  * @since 0.0.0
  */
 /**
- * Public session command exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -15,8 +13,6 @@ export * from "./Continuity.command.ts";
 export * from "./Continuity.schemas.ts";
 export * from "./Continuity.service.ts";
 /**
- * Public orchestrator handoff command exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -37,15 +33,11 @@ export * from "./Handoff.ts";
 export * from "./Presence.service.ts";
 export * from "./Register.command.ts";
 /**
- * Public orchestrator register schema exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./Register.schemas.ts";
 /**
- * Public orchestrator register service exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -61,8 +53,6 @@ export * from "./Resolve.service.ts";
 export * from "./Route.schemas.ts";
 export * from "./RouteProbe.service.ts";
 /**
- * Public orchestrator rulings command exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -74,8 +64,6 @@ export * from "./Rulings.command.ts";
  * @since 0.0.0
  */
 /**
- * Public orchestrator rulings schema exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -83,22 +71,16 @@ export * from "./Rulings.schemas.ts";
 export * from "./Rulings.service.ts";
 export * from "./Session.command.ts";
 /**
- * Public session error exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./Session.errors.ts";
 /**
- * Public session schema exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./Session.schemas.ts";
 /**
- * Public session ledger service exports.
- *
  * @category cli-commands
  * @since 0.0.0
  */

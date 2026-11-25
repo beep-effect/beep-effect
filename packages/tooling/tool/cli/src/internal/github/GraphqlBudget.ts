@@ -49,8 +49,6 @@ import type { BucketReading } from "./GithubLedger.schemas.ts";
 const $I = $RepoCliId.create("internal/github/GraphqlBudget");
 
 /**
- * Where a budget snapshot came from.
- *
  * @category models
  * @since 0.0.0
  */
@@ -59,8 +57,6 @@ export const GraphqlBudgetSource = LiteralKit(["graphql-probe", "rest-fallback",
 );
 
 /**
- * The remaining GraphQL points and when the window resets.
- *
  * **Example** (A nearly spent budget)
  *
  * ```ts
@@ -84,8 +80,6 @@ export class GraphqlBudgetSnapshot extends S.Opaque<GraphqlBudgetSnapshot, { rea
 ) {}
 
 /**
- * How the guard treats a low budget.
- *
  * **Details**
  *
  * `threshold` is the fewest points an operation may start with. With `wait`

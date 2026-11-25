@@ -6,8 +6,6 @@
  */
 
 /**
- * Thread model exports.
- *
  * **Example** (Import Thread module)
  *
  * ```ts

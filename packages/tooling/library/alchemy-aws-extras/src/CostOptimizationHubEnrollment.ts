@@ -40,8 +40,6 @@ const $I = $AlchemyAwsExtrasId.create("CostOptimizationHubEnrollment");
 export const CostOptimizationHubEnrollmentType = "BeepAWS.CostOptimizationHub.Enrollment" as const;
 
 /**
- * Props of a {@link CostOptimizationHubEnrollment}.
- *
  * **Details**
  *
  * `status` defaults to `"Active"`; `includeMemberAccounts` defaults to
@@ -75,8 +73,6 @@ export class CostOptimizationHubEnrollmentProps extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link CostOptimizationHubEnrollmentProps}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -91,8 +87,6 @@ export declare namespace CostOptimizationHubEnrollmentProps {
 }
 
 /**
- * Attributes Cost Optimization Hub reports for the account enrollment.
- *
  * **Example** (Decode observed attributes)
  *
  * ```ts
@@ -124,8 +118,6 @@ export class CostOptimizationHubEnrollmentAttributes extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link CostOptimizationHubEnrollmentAttributes}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -29,8 +29,15 @@ these conventions.
   unambiguous in context (e.g., `title`, `url`, `publishedDate`). Avoid bare
   names that collide with OWL/RDFS keywords — e.g., use `siteDomain` instead
   of `domain` to avoid confusion with `rdfs:domain`.
-- **Inverse naming**: Use symmetric pairs — `hasPart` / `partOf`,
-  `produces` / `producedBy`
+- **Inverse pairs**: Declare one direction of a relation unless a
+  competency question or an axiom needs both. A query can walk the other
+  way with a SPARQL inverse path (`^ex:partOf`), and a class expression
+  can use `inverse(ex:partOf)` (Manchester `inverse partOf`), so walking
+  the other way does not by itself need a second named property. When
+  both are declared, name them as an inverse pair — `hasPart` / `partOf`,
+  `produces` / `producedBy` — and link them with `owl:inverseOf`. An
+  inverse pair is not `owl:SymmetricProperty`, which is one property that
+  holds in both directions.
 
 ### Property Naming Anti-Patterns
 
@@ -84,8 +91,16 @@ Every entity MUST have:
 | Annotation | Property | Requirement |
 |-----------|----------|-------------|
 | Label | `rdfs:label` | Exactly one per language tag |
-| Definition | `skos:definition` | Required for classes and properties |
+| Definition | `skos:definition`, or `obo:IAO_0000115` in an OBO-aligned ontology | Required for classes and properties |
 | Definition source | `dcterms:source` or `obo:IAO_0000119` | Required when definition is sourced |
+
+Use one definition property per project and record it in the scope
+document. ROBOT's `report` reads only `obo:IAO_0000115` for definitions, so
+an ontology on `skos:definition` checks definitions with a SPARQL or SHACL
+check instead (`quality-checklist.md` §2). Take the source and synonym
+properties from the same family: `dcterms:source` and `skos:altLabel` with
+`skos:definition`, `obo:IAO_0000119` and the `oio:` synonyms with
+`obo:IAO_0000115`.
 
 ### Label Rules
 
@@ -96,7 +111,8 @@ Every entity MUST have:
 
 ## Synonyms
 
-Use OBO-in-OWL synonym properties:
+In an OBO-aligned ontology, use OBO-in-OWL synonym properties (otherwise
+`skos:altLabel`, as above):
 
 | Property | Use When |
 |----------|----------|
@@ -134,8 +150,9 @@ Examples:
 
 Use this two-tier approach:
 
-- **Minimum required**: `rdfs:label`, `skos:definition`; when the definition
-  is sourced, also `dcterms:source` or `obo:IAO_0000119`, as in the table above
+- **Minimum required**: `rdfs:label` and a definition in the project's
+  definition property; when the definition is sourced, also
+  `dcterms:source` or `obo:IAO_0000119`, as in the table above
 - **Recommended for production**: extended annotation set below
 
 | Field | Suggested Annotation Property |
@@ -154,7 +171,7 @@ Use this two-tier approach:
 ## Namespace Usage
 
 - Always use prefixed CURIEs in human-readable contexts (e.g., `BFO:0000001`)
-- Always declare prefixes — see `_shared/namespaces.json` for canonical map
+- Always declare prefixes — see `namespaces.json` for canonical map
 - Never use bare IRIs in documentation or KGCL patches
 - Project-specific prefixes must be registered in the ontology header and
   in `namespaces.json`

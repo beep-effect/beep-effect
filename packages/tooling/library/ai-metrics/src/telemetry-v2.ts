@@ -14,8 +14,6 @@ import * as Order from "effect/Order";
 const $I = $RepoAiMetricsId.create("telemetry-v2");
 
 /**
- * Orthogonal lifecycle state of a coding-agent session.
- *
  * **Example** (Represent a blocked session without changing its phase)
  *
  * ```ts
@@ -218,8 +216,6 @@ export const EvidenceTier = LiteralKit(["observed", "derived", "reconstructed", 
 );
 
 /**
- * Decoded telemetry-v2 evidence tier.
- *
  * @see {@link EvidenceTier} for the runtime schema and strongest-to-weakest order.
  * @category models
  * @since 0.0.0
@@ -262,8 +258,6 @@ export const weakestEvidenceTier = (tiers: ReadonlyArray<EvidenceTier>): Evidenc
   A.reduce(tiers, EvidenceTier.Enum.observed, Order.max(evidenceTierOrder));
 
 /**
- * Bounded policy reason an enumerated ingest subject was intentionally skipped.
- *
  * **Details**
  *
  * The initial vocabulary contains only the reason exercised by the first real
@@ -347,8 +341,6 @@ export const OipTaint = LiteralKit(["clear", "tainted", "unknown"]).pipe(
 );
 
 /**
- * Decoded telemetry-v2 OIP confidentiality taint.
- *
  * @see {@link OipTaint} for the runtime schema.
  * @category models
  * @since 0.0.0

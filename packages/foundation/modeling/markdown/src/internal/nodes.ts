@@ -44,9 +44,6 @@ import { FrontmatterFormat as InternalFrontmatterFormat } from "./blocks/frontma
 const $I = $MarkdownId.create("MarkdownNode");
 
 /**
- * A single point in a source document: 1-based `line` and `column`, 0-based
- * `offset`.
- *
  * **Details**
  *
  * `offset` is the index into the source string, which is what the edit layer
@@ -105,8 +102,6 @@ export declare namespace Point {
 }
 
 /**
- * The source span of a node: `start` inclusive, `end` exclusive.
- *
  * **Example** (Construct an exclusive source span)
  *
  * ```ts
@@ -199,8 +194,6 @@ export declare namespace Position {
 const NodePosition = Position.pipe(S.withConstructorDefault(Effect.succeed(Position.synthetic)));
 
 /**
- * The explicitness of a reference, per mdast's `referenceType` enum.
- *
  * **Details**
  *
  * - `shortcut` — implicit, identifier inferred from the content (`[foo]`).
@@ -227,8 +220,6 @@ export const ReferenceType = LiteralKit(["shortcut", "collapsed", "full"]).pipe(
 );
 
 /**
- * The union of all reference-type string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -236,9 +227,6 @@ export const ReferenceType = LiteralKit(["shortcut", "collapsed", "full"]).pipe(
 export type ReferenceType = typeof ReferenceType.Type;
 
 /**
- * The two ways CommonMark spells a heading: `atx` (`# Title`) and `setext`
- * (a title underlined with `=` or `-`).
- *
  * **Example** (Validate HeadingStyle syntax)
  *
  * ```ts
@@ -260,8 +248,6 @@ export const HeadingStyle = LiteralKit(["atx", "setext"]).pipe(
 );
 
 /**
- * The union of all heading-style string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -269,9 +255,6 @@ export const HeadingStyle = LiteralKit(["atx", "setext"]).pipe(
 export type HeadingStyle = typeof HeadingStyle.Type;
 
 /**
- * The two ways CommonMark spells a hard line break: a trailing backslash or
- * two-or-more trailing spaces.
- *
  * **Example** (Validate BreakStyle syntax)
  *
  * ```ts
@@ -293,8 +276,6 @@ export const BreakStyle = LiteralKit(["backslash", "spaces"]).pipe(
 );
 
 /**
- * The union of all break-style string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -302,8 +283,6 @@ export const BreakStyle = LiteralKit(["backslash", "spaces"]).pipe(
 export type BreakStyle = typeof BreakStyle.Type;
 
 /**
- * The two fence characters a fenced code block may use.
- *
  * **Example** (Validate FenceChar syntax)
  *
  * ```ts
@@ -322,8 +301,6 @@ export const FenceChar = LiteralKit(["`", "~"]).pipe(
 );
 
 /**
- * The union of all fence-character literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -331,8 +308,6 @@ export const FenceChar = LiteralKit(["`", "~"]).pipe(
 export type FenceChar = typeof FenceChar.Type;
 
 /**
- * The three bullet characters an unordered list may use.
- *
  * **Example** (Validate BulletChar syntax)
  *
  * ```ts
@@ -351,8 +326,6 @@ export const BulletChar = LiteralKit(["-", "*", "+"]).pipe(
 );
 
 /**
- * The union of all bullet-character literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -360,8 +333,6 @@ export const BulletChar = LiteralKit(["-", "*", "+"]).pipe(
 export type BulletChar = typeof BulletChar.Type;
 
 /**
- * The two delimiters an ordered list marker may use (`1.` or `1)`).
- *
  * **Example** (Validate ListDelimiter syntax)
  *
  * ```ts
@@ -380,8 +351,6 @@ export const ListDelimiter = LiteralKit([".", ")"]).pipe(
 );
 
 /**
- * The union of all ordered-list delimiter literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -389,8 +358,6 @@ export const ListDelimiter = LiteralKit([".", ")"]).pipe(
 export type ListDelimiter = typeof ListDelimiter.Type;
 
 /**
- * The three characters a thematic break may be drawn with.
- *
  * **Example** (Validate ThematicBreakChar syntax)
  *
  * ```ts
@@ -409,8 +376,6 @@ export const ThematicBreakChar = LiteralKit(["-", "_", "*"]).pipe(
 );
 
 /**
- * The union of all thematic-break character literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -418,8 +383,6 @@ export const ThematicBreakChar = LiteralKit(["-", "_", "*"]).pipe(
 export type ThematicBreakChar = typeof ThematicBreakChar.Type;
 
 /**
- * The two characters emphasis and strong emphasis may be marked with.
- *
  * **Example** (Validate EmphasisChar syntax)
  *
  * ```ts
@@ -440,8 +403,6 @@ export const EmphasisChar = LiteralKit(["*", "_"]).pipe(
 );
 
 /**
- * The union of all emphasis-marker character literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -449,8 +410,6 @@ export const EmphasisChar = LiteralKit(["*", "_"]).pipe(
 export type EmphasisChar = typeof EmphasisChar.Type;
 
 /**
- * The six legal ATX/setext heading depths.
- *
  * **Example** (Validate HeadingDepth syntax)
  *
  * ```ts
@@ -469,8 +428,6 @@ export const HeadingDepth = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
 );
 
 /**
- * The union of all legal heading depths.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -478,9 +435,6 @@ export const HeadingDepth = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
 export type HeadingDepth = typeof HeadingDepth.Type;
 
 /**
- * The three alignments a GFM table column may declare. A `null` entry in a
- * {@link Table}'s `align` array means the column carries no alignment.
- *
  * **Example** (Validate TableAlign syntax)
  *
  * ```ts
@@ -502,8 +456,6 @@ export const TableAlign = LiteralKit(["left", "right", "center"]).pipe(
 );
 
 /**
- * The union of all table-alignment string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -513,9 +465,6 @@ export type TableAlign = typeof TableAlign.Type;
 // --- Phrasing content -------------------------------------------------------
 
 /**
- * Text — a run of literal characters, with entity references and backslash
- * escapes already resolved into `value`.
- *
  * **Gotchas**
  *
  * `escapeStyle` is an opt-in emitter extra, the one fidelity field the
@@ -629,10 +578,6 @@ export declare namespace Text {
 }
 
 /**
- * InlineCode — a code span: `foo` written between backtick fences in the
- * source. `value` holds the span's content with the backtick fence stripped
- * and the spec's space-stripping applied.
- *
  * **Example** (Construct InlineCode content)
  *
  * ```ts
@@ -690,10 +635,6 @@ export declare namespace InlineCode {
 }
 
 /**
- * Html — a fragment of raw HTML, kept verbatim. Used for both HTML blocks
- * (flow) and inline raw HTML (phrasing); the same node type serves both, as
- * mdast specifies.
- *
  * **Example** (Construct Html content)
  *
  * ```ts
@@ -729,8 +670,6 @@ export class Html extends S.Opaque<Html, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
- * The encoded (wire) shape of {@link Html}: the same fields as plain data.
- *
  * @category models
  * @since 0.0.0
  */
@@ -749,8 +688,6 @@ export declare namespace Html {
 }
 
 /**
- * Break — a hard line break.
- *
  * **Details**
  *
  * `breakStyle` is a fidelity extra recording which of the two CommonMark
@@ -808,8 +745,6 @@ export declare namespace Break {
 }
 
 /**
- * Image — an inline image (`![alt](url "title")`).
- *
  * **Example** (Construct Image content)
  *
  * ```ts
@@ -874,9 +809,6 @@ export declare namespace Image {
 }
 
 /**
- * ImageReference — an image referring to a {@link Definition} by identifier
- * (`![alt][ref]`).
- *
  * **Details**
  *
  * The parser emits these unresolved, whether or not a matching definition
@@ -960,8 +892,6 @@ export declare namespace ImageReference {
 }
 
 /**
- * Emphasis — `*foo*` or `_foo_`.
- *
  * **Details**
  *
  * `markerChar` is a fidelity extra recording which marker produced it.
@@ -1024,8 +954,6 @@ export declare namespace Emphasis {
 }
 
 /**
- * Strong — `**foo**` or `__foo__`.
- *
  * **Details**
  *
  * `markerChar` is a fidelity extra recording which marker produced it.
@@ -1090,9 +1018,6 @@ export declare namespace Strong {
 }
 
 /**
- * Delete — GFM strikethrough (`~~foo~~`). Content that is no longer accurate
- * or relevant.
- *
  * **Details**
  *
  * `~~` is the only marker `~~foo~~` renders through, so unlike
@@ -1155,8 +1080,6 @@ export declare namespace Delete {
 }
 
 /**
- * Link — an inline link (`[text](url "title")`), including autolinks.
- *
  * **Example** (Construct Link content)
  *
  * ```ts
@@ -1223,9 +1146,6 @@ export declare namespace Link {
 }
 
 /**
- * LinkReference — a link referring to a {@link Definition} by identifier
- * (`[text][ref]`).
- *
  * **Details**
  *
  * Emitted unresolved, on the same terms as {@link ImageReference}.
@@ -1307,9 +1227,6 @@ export declare namespace LinkReference {
 }
 
 /**
- * FootnoteReference — a GFM footnote marker (`[^alpha]`), associating this
- * point in the text with a {@link FootnoteDefinition} by identifier.
- *
  * **Details**
  *
  * Has no content model of its own — the marker carries no children, only the
@@ -1456,8 +1373,6 @@ export type PhrasingContent =
 // --- Flow content -----------------------------------------------------------
 
 /**
- * ThematicBreak — a horizontal rule (`---`, `***`, `___`).
- *
  * **Details**
  *
  * `markerChar` is a fidelity extra recording which character drew it.
@@ -1516,8 +1431,6 @@ export declare namespace ThematicBreak {
 }
 
 /**
- * Code — a code block, fenced or indented.
- *
  * **Details**
  *
  * `lang` and `meta` split the fence's info string at the first run of
@@ -1615,8 +1528,6 @@ export declare namespace Code {
 }
 
 /**
- * Definition — a link reference definition (`[ref]: /url "title"`).
- *
  * **Details**
  *
  * Kept in the tree at its source position rather than stripped, which is the
@@ -1698,9 +1609,6 @@ export declare namespace Definition {
 }
 
 /**
- * FootnoteDefinition — a GFM footnote definition (`[^alpha]: bravo.`), the
- * content a {@link FootnoteReference} points at.
- *
  * **Details**
  *
  * Kept in the tree at its source position, on the same terms as
@@ -1779,8 +1687,6 @@ export declare namespace FootnoteDefinition {
 }
 
 /**
- * Paragraph — a run of phrasing content.
- *
  * **Example** (Construct Paragraph content)
  *
  * ```ts
@@ -1833,8 +1739,6 @@ export declare namespace Paragraph {
 }
 
 /**
- * Heading — an ATX or setext heading of depth 1 to 6.
- *
  * **Details**
  *
  * `headingStyle` is a fidelity extra recording which spelling produced it;
@@ -1900,8 +1804,6 @@ export declare namespace Heading {
 }
 
 /**
- * ListItem — one item of a {@link List}.
- *
  * **Details**
  *
  * `spread` follows mdast in being optional: absent means "not known", which a
@@ -1974,8 +1876,6 @@ export declare namespace ListItem {
 }
 
 /**
- * List — an ordered or unordered list.
- *
  * **Details**
  *
  * `ordered`, `start` and `spread` are all optional per mdast (absent meaning
@@ -2066,8 +1966,6 @@ export declare namespace List {
 }
 
 /**
- * Blockquote — a section quoted from somewhere else.
- *
  * **Example** (Construct Blockquote content)
  *
  * ```ts
@@ -2120,9 +2018,6 @@ export declare namespace Blockquote {
 }
 
 /**
- * TableCell — one cell of a {@link TableRow}: a header cell if its
- * grandparent {@link Table}'s first row, a data cell otherwise.
- *
  * **Details**
  *
  * mdast's content model for `TableCell` is phrasing content **excluding**
@@ -2224,8 +2119,6 @@ export const RowContent: S.Codec<RowContent, RowContentEncoded> = S.suspend(() =
 );
 
 /**
- * The union of all row-content node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -2233,9 +2126,6 @@ export const RowContent: S.Codec<RowContent, RowContentEncoded> = S.suspend(() =
 export type RowContent = TableCell;
 
 /**
- * TableRow — one row of a {@link Table}: the labels of the columns if it is
- * the table's first row, a data row otherwise.
- *
  * **Example** (Construct TableRow content)
  *
  * ```ts
@@ -2317,8 +2207,6 @@ export const TableContent: S.Codec<TableContent, TableContentEncoded> = S.suspen
 );
 
 /**
- * The union of all table-content node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -2326,8 +2214,6 @@ export const TableContent: S.Codec<TableContent, TableContentEncoded> = S.suspen
 export type TableContent = TableRow;
 
 /**
- * Table — GFM two-dimensional data.
- *
  * **Details**
  *
  * `align` is optional per mdast: absent means "not known" — which the parser
@@ -2494,8 +2380,6 @@ export const ListContent: S.Codec<ListContent, ListContentEncoded> = S.suspend((
 );
 
 /**
- * The union of all list-content node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -2517,10 +2401,6 @@ export type ListContent = ListItem;
 // it silently the way it drops every foreign `data` field.
 
 /**
- * MdxJsxAttributeValueExpression — a JSX attribute value written as an
- * expression (`<a b={c} />`); `value` holds the expression source text
- * between the braces, never evaluated or parsed.
- *
  * **Details**
  *
  * The primary construction path is a JSON-encoded prop:
@@ -2596,12 +2476,6 @@ const MdxJsxName = S.NonEmptyString.pipe(
 );
 
 /**
- * MdxJsxAttribute — a named JSX attribute (`<a b="c" />`). `value` is a
- * string literal, a {@link MdxJsxAttributeValueExpression}, or — for a
- * boolean attribute (`<a b />`) — absent or `null`, both of which the
- * mdast-util-mdx-jsx contract spells (its parser writes `null`; absence is
- * the constructed-tree spelling). The serializer treats the two identically.
- *
  * **Details**
  *
  * `name` must be non-empty — an attribute without a name has no MDX spelling,
@@ -2675,10 +2549,6 @@ export declare namespace MdxJsxAttribute {
 }
 
 /**
- * MdxJsxExpressionAttribute — a JSX attribute written whole as an expression
- * (`<a {...b} />`); `value` holds the expression source text between the
- * braces.
- *
  * **Example** (Construct MdxJsxExpressionAttribute content)
  *
  * ```ts
@@ -2741,9 +2611,6 @@ export declare namespace MdxJsxExpressionAttribute {
 }
 
 /**
- * The union of every node that may appear in a JSX element's `attributes`
- * array. A real `Schema.Union`, as documented on `RowContent`.
- *
  * **Details**
  *
  * Attribute carriers are node-shaped values — they carry `type` and
@@ -2777,8 +2644,6 @@ export const MdxJsxAttributeContent: S.Codec<MdxJsxAttributeContent, MdxJsxAttri
 );
 
 /**
- * The union of all JSX attribute node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -2795,10 +2660,6 @@ const mdxFragmentAttributes = S.makeFilter(
 );
 
 /**
- * MdxJsxFlowElement — a JSX element in flow (block) position (`<Component />`
- * on its own lines). `name` is `null` for a fragment (`<></>`); children are
- * flow content, per the oracle's `BlockContent | DefinitionContent` model.
- *
  * **Details**
  *
  * A fragment cannot carry attributes — that shape has no MDX spelling — so
@@ -2880,11 +2741,6 @@ export declare namespace MdxJsxFlowElement {
 }
 
 /**
- * MdxJsxTextElement — a JSX element in text (phrasing) position
- * (`a <b>c</b> d`). `name` is `null` for a fragment; children are phrasing
- * content. Refuses attributes on a fragment and an empty-string name, on the
- * same terms as {@link MdxJsxFlowElement}.
- *
  * **Example** (Construct MdxJsxTextElement content)
  *
  * ```ts
@@ -2936,8 +2792,6 @@ export class MdxJsxTextElement extends S.Opaque<MdxJsxTextElement, { readonly br
 ) {}
 
 /**
- * The encoded (wire) shape of {@link MdxJsxTextElement}: the same fields as plain data.
- *
  * @category models
  * @since 0.0.0
  */
@@ -2958,10 +2812,6 @@ export declare namespace MdxJsxTextElement {
 }
 
 /**
- * MdxFlowExpression — an expression in flow (block) position (`{a + b}` on
- * its own lines); `value` holds the expression source text between the
- * braces.
- *
  * **Example** (Construct MdxFlowExpression content)
  *
  * ```ts
@@ -3021,9 +2871,6 @@ export declare namespace MdxFlowExpression {
 }
 
 /**
- * MdxTextExpression — an expression in text (phrasing) position
- * (`a {b} c`); `value` holds the expression source text between the braces.
- *
  * **Example** (Construct MdxTextExpression content)
  *
  * ```ts
@@ -3083,9 +2930,6 @@ export declare namespace MdxTextExpression {
 }
 
 /**
- * MdxjsEsm — an MDX ESM block (`import`/`export` statements); `value` holds
- * the statement source verbatim.
- *
  * **Details**
  *
  * Only ever a child of {@link Root}, per the mdast-util-mdxjs-esm content
@@ -3152,9 +2996,6 @@ export declare namespace MdxjsEsm {
 // --- Frontmatter ------------------------------------------------------------
 
 /**
- * The frontmatter formats the capture recognizes, keyed by their opening
- * fence: `---` is yaml, `+++` is toml and `---json` is json.
- *
  * **Example** (Validate FrontmatterFormat syntax)
  *
  * ```ts
@@ -3176,8 +3017,6 @@ export const FrontmatterFormat = InternalFrontmatterFormat.pipe(
 );
 
 /**
- * The union of all frontmatter format string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -3185,11 +3024,6 @@ export const FrontmatterFormat = InternalFrontmatterFormat.pipe(
 export type FrontmatterFormat = typeof FrontmatterFormat.Type;
 
 /**
- * Frontmatter — the raw, fidelity-preserving capture of a document's metadata
- * block. `value` is the source text between the fences, exactly as written
- * (never inline-parsed, never decoded); `format` records which fence captured
- * it. The position spans the whole block including both fence lines.
- *
  * **Details**
  *
  * mdast has no single frontmatter node: it names `yaml` in the readme and
@@ -3295,8 +3129,6 @@ export const FrontmatterContent: S.Codec<FrontmatterContent, FrontmatterContentE
 );
 
 /**
- * The union of all frontmatter-content node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -3306,8 +3138,6 @@ export type FrontmatterContent = Frontmatter;
 // --- Root -------------------------------------------------------------------
 
 /**
- * Root — a whole document, and the only node that is never a child.
- *
  * **Details**
  *
  * mdast leaves a root's content model open; a parsed markdown document is

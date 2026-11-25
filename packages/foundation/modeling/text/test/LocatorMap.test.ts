@@ -34,8 +34,7 @@ const kept = (from: Position, to: Position) => AlignedSegment.cases.Kept.make({ 
 const rewritten = (from: Position, to: Position) => AlignedSegment.cases.Rewritten.make({ from, to });
 
 const isLocatorMap = S.is(LocatorMap);
-// The same fields without the map check, to encode segment lists the check refuses.
-const encodeUnchecked = S.encodeEffect(
+const encodeWithoutLocatorMapCheck = S.encodeEffect(
   S.Struct({ from: SourceTextIdentity, to: SourceTextIdentity, segments: S.Array(AlignedSegment) })
 );
 const decodeLocatorMap = S.decodeEffect(LocatorMap);
@@ -68,7 +67,7 @@ describe("@beep/text LocatorMap", () => {
         [kept(at(2, 4), at(2, 4)), kept(at(0, 2), at(0, 2))],
         [kept(at(0, 2), at(0, 3))],
       ]) {
-        const encoded = yield* encodeUnchecked({ from: a, to: b, segments });
+        const encoded = yield* encodeWithoutLocatorMapCheck({ from: a, to: b, segments });
         const refused = yield* Effect.flip(decodeLocatorMap(encoded));
         expect(refused.message).toContain("Expected UTF-16 segments, ordered and disjoint on both sides");
       }
@@ -89,49 +88,47 @@ describe("@beep/text LocatorMap", () => {
   });
 
   it("composes kept pieces pointwise and rewritten chains as one segment", () => {
-    // NFKC then de-hyphenation of "ﬁ-\nne": the ligature, the break and the letter after it become one rewrite.
     const nfkc = normalizeText("ﬁ-\nne", "nfkc");
     const dehyphenated = normalizeText(nfkc.text, "dehyphenate");
     expect(dehyphenated.text).toBe("fine");
-    expect(composed(nfkc.segments, dehyphenated.segments)).toEqual([
-      rewritten(at(0, 4), at(0, 3)),
-      kept(at(4, 5), at(3, 4)),
-    ]);
-    // A cut of the second map inside a kept segment of the first splits it; both pieces stay kept.
-    expect(composed([kept(at(0, 4), at(0, 4))], [kept(at(0, 2), at(0, 2)), kept(at(2, 4), at(3, 5))])).toEqual([
-      kept(at(0, 2), at(0, 2)),
-      kept(at(2, 4), at(3, 5)),
-    ]);
-    // A kept segment of one map over a rewritten one of the other is rewritten, with the kept cut mapped pointwise.
     expect(
-      composed([rewritten(at(0, 1), at(0, 2)), kept(at(1, 3), at(2, 4))], [rewritten(at(0, 3), at(0, 1))])
+      composed(nfkc.segments, dehyphenated.segments),
+      "NFKC then de-hyphenation of ﬁ-\\nne: the ligature, the break and the letter after it become one rewrite"
+    ).toEqual([rewritten(at(0, 4), at(0, 3)), kept(at(4, 5), at(3, 4))]);
+    expect(
+      composed([kept(at(0, 4), at(0, 4))], [kept(at(0, 2), at(0, 2)), kept(at(2, 4), at(3, 5))]),
+      "a cut of the second map inside a kept segment of the first splits it; both pieces stay kept"
+    ).toEqual([kept(at(0, 2), at(0, 2)), kept(at(2, 4), at(3, 5))]);
+    expect(
+      composed([rewritten(at(0, 1), at(0, 2)), kept(at(1, 3), at(2, 4))], [rewritten(at(0, 3), at(0, 1))]),
+      "a kept segment of one map over a rewritten one of the other is rewritten, the kept cut mapped pointwise"
     ).toEqual([rewritten(at(0, 2), at(0, 1))]);
   });
 
   it("drops a piece that touches a gap of either map", () => {
-    // The first map leaves 1..2 of the middle text uncovered; the second leaves 3..4 uncovered.
-    const first = [kept(at(0, 1), at(0, 1)), kept(at(1, 4), at(2, 5))];
-    const second = [kept(at(0, 3), at(0, 3)), kept(at(4, 5), at(4, 5))];
-    expect(composed(first, second)).toEqual([
+    const firstLeavesMiddleOneToTwoUncovered = [kept(at(0, 1), at(0, 1)), kept(at(1, 4), at(2, 5))];
+    const secondLeavesMiddleThreeToFourUncovered = [kept(at(0, 3), at(0, 3)), kept(at(4, 5), at(4, 5))];
+    expect(composed(firstLeavesMiddleOneToTwoUncovered, secondLeavesMiddleThreeToFourUncovered)).toEqual([
       kept(at(0, 1), at(0, 1)),
       kept(at(1, 2), at(2, 3)),
       kept(at(3, 4), at(4, 5)),
     ]);
-    expect(composed([], second)).toEqual([]);
-    // A rewrite of the first map hides the cuts of the second inside it, so the one piece spans the second map's gap
-    // between two segments and is dropped.
-    expect(composed([rewritten(at(0, 1), at(0, 3))], [kept(at(0, 1), at(0, 1)), kept(at(2, 3), at(1, 2))])).toEqual([]);
-    // The same piece over two second-map segments that meet is kept, as one rewrite.
-    expect(composed([rewritten(at(0, 1), at(0, 3))], [kept(at(0, 1), at(0, 1)), kept(at(1, 3), at(2, 4))])).toEqual([
-      rewritten(at(0, 1), at(0, 4)),
-    ]);
+    expect(composed([], secondLeavesMiddleThreeToFourUncovered)).toEqual([]);
+    expect(
+      composed([rewritten(at(0, 1), at(0, 3))], [kept(at(0, 1), at(0, 1)), kept(at(2, 3), at(1, 2))]),
+      "a rewrite of the first map hides the second map's cuts, so its one piece spans the second map's gap and drops"
+    ).toEqual([]);
+    expect(
+      composed([rewritten(at(0, 1), at(0, 3))], [kept(at(0, 1), at(0, 1)), kept(at(1, 3), at(2, 4))]),
+      "the same piece over two second-map segments that meet is kept, as one rewrite"
+    ).toEqual([rewritten(at(0, 1), at(0, 4))]);
   });
 
   it("absorbs into a rewrite the text the second map inserts inside a rewrite of the first", () => {
-    // ab to xy as a whole, then _ inserted between x and y: the middle offset 1 has no preimage, so one rewrite.
-    expect(composed([rewritten(at(0, 2), at(0, 2))], [kept(at(0, 1), at(0, 1)), kept(at(1, 2), at(2, 3))])).toEqual([
-      rewritten(at(0, 2), at(0, 3)),
-    ]);
+    expect(
+      composed([rewritten(at(0, 2), at(0, 2))], [kept(at(0, 1), at(0, 1)), kept(at(1, 2), at(2, 3))]),
+      "ab to xy as a whole, then _ inserted between x and y: the middle offset 1 has no preimage, so one rewrite"
+    ).toEqual([rewritten(at(0, 2), at(0, 3))]);
   });
 
   it.effect.prop(

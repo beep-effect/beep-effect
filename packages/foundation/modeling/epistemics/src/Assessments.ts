@@ -8,11 +8,11 @@ import { $EpistemicsId } from "@beep/identity/packages";
 import { AbsenceReason } from "@beep/schema/Signal";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import type * as HashSet from "effect/HashSet";
 import type * as Order from "effect/Order";
 import type { FieldSchema, SchemaIdentity } from "./Factory/index.ts";
 
@@ -174,7 +174,11 @@ export const makeAssessmentArrows = <const Coords extends R.ReadonlyRecord<strin
     }
     const candidate: unknown = { ...record, [coordinate]: { _tag: "Assessed", value: decoded.success } };
     const next = yield* decodeState(candidate).pipe(Effect.orDie);
-    if (!A.every(R.values(next), isAssessed) || !gate.passes(next)) {
+    if (
+      !HashSet.every(gate.requiredCoordinates, (required) => R.has(options.coordinates, required)) ||
+      !A.every(R.values(next), isAssessed) ||
+      !gate.passes(next)
+    ) {
       return { _tag: "Refused", record };
     }
     return { _tag: "Updated", record: next };

@@ -1,8 +1,3 @@
-// Task 4, the engine compliance gate (part 2): the hostile-input suite.
-// Every case asserts a typed guard trip or total boolean AND completes inside
-// the default test timeout — the timeout is the hang detector. Malformed or
-// hostile input must never surface as a stack overflow, an OOM, or a hang.
-
 import { expand } from "@beep/glob/internal/braceExpansion";
 import { GuardExceeded, InvalidCap } from "@beep/glob/internal/limits";
 import { braceExpand, Minimatch } from "@beep/glob/internal/minimatch";
@@ -91,10 +86,10 @@ describe("hostility: brace expansion", () => {
   });
 
   it("fails typed on an expansion bomb, never truncating silently", () => {
-    // 2^17 = 131_072 > 100_000
     assert.strictEqual(
       reasonOf(() => new Minimatch(Str.repeat(17)("{a,b}"))),
-      "ExpansionBudgetExceeded"
+      "ExpansionBudgetExceeded",
+      "2^17 = 131_072 > 100_000"
     );
   });
 
@@ -108,7 +103,10 @@ describe("hostility: brace expansion", () => {
 
   it("survives the exponential-blowup shape (lazy post preserved)", () => {
     const m = new Minimatch(`a${Str.repeat(60)("{},")}b`);
-    assert.isNotNull(m);
+    assert.isNotNull(
+      m,
+      "the default test timeout is this suite's hang detector: hostile input never surfaces as a stack overflow, an OOM or a hang"
+    );
   });
 
   it("fails typed past the sequential comma-group cap, never a stack overflow", () => {
@@ -119,10 +117,12 @@ describe("hostility: brace expansion", () => {
   });
 
   it("shortcuts the CVE-2022-3517 non-closing brace prefix fast", () => {
-    // No closing brace: the ReDoS-safe pre-check regex must reject expansion
-    // in linear time and treat the pattern as literal.
     const p = `${Str.repeat(20_000)("{")}a`;
-    assert.deepStrictEqual(braceExpand(p), [p]);
+    assert.deepStrictEqual(
+      braceExpand(p),
+      [p],
+      "no closing brace: the ReDoS-safe pre-check regex rejects expansion in linear time and treats the pattern as literal"
+    );
   });
 });
 
@@ -153,13 +153,13 @@ describe("hostility: extglobs", () => {
 
 describe("hostility: globstar backtracking", () => {
   it("keeps match total under a long globstar chain (documented false negative)", () => {
-    // 500 non-adjacent ** sections exceed maxGlobstarRecursion (200): the
-    // engine returns a boolean — upstream's intentional false negative,
-    // an acceptable break in correctness for security — and never throws.
     const pattern = A.join(A.replicate("**/x", 500), "/");
     const candidate = A.join(A.replicate("x", 60), "/");
     const m = new Minimatch(pattern);
-    assert.isBoolean(m.match(candidate));
+    assert.isBoolean(
+      m.match(candidate),
+      "500 non-adjacent ** sections exceed maxGlobstarRecursion (200): upstream's intentional false negative, an acceptable break in correctness for security, returns a boolean and never throws"
+    );
   });
 
   it("matches a 10k-segment path against a simple globstar pattern fast", () => {
@@ -232,33 +232,32 @@ const underWatchdog = Effect.fnUntraced(
   Effect.timeout("2 seconds")
 );
 
-// The watchdog only needs a live ChildProcessSpawner. It spawns without a cwd,
-// so the spawner never consults FileSystem; the no-op layer states that the
-// subject touches no filesystem, and Path is the pure in-memory service.
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provide([FileSystem.layerNoop({}), Path.layer]));
 
-it.layer(SpawnerLayer, { timeout: "2 seconds" })((it) => {
-  it.effect("preserves 4,096 level-two alternatives under a subprocess watchdog", () =>
-    underWatchdog(`
+it.layer(SpawnerLayer, { timeout: "2 seconds" })(
+  "subprocess watchdog: needs only a live ChildProcessSpawner spawning without a cwd, so FileSystem is the no-op layer (the subject touches no filesystem) and Path the pure in-memory service",
+  (it) => {
+    it.effect("preserves 4,096 level-two alternatives under a subprocess watchdog", () =>
+      underWatchdog(`
       import { Minimatch } from "@beep/glob/internal/minimatch";
       const matcher = new Minimatch("{a,b}".repeat(12), { optimizationLevel: 2 });
       if (matcher.globParts.length !== 4096) throw new Error("alternatives were lost");
       if (!matcher.match("a".repeat(12)) || !matcher.match("b".repeat(12))) throw new Error("missing match");
       if (matcher.match("x".repeat(12))) throw new Error("unexpected match");
     `)
-  );
+    );
 
-  it.effect("rejects a long ambiguous repetition without exponential backtracking under a subprocess watchdog", () =>
-    underWatchdog(`
+    it.effect("rejects a long ambiguous repetition without exponential backtracking under a subprocess watchdog", () =>
+      underWatchdog(`
 			import { Minimatch } from "@beep/glob/internal/minimatch";
 			const matcher = new Minimatch("*(a|aa)b");
 			if (matcher.match("a".repeat(1000) + "c")) throw new Error("unexpected match");
 			if (!matcher.match("a".repeat(1000) + "b")) throw new Error("missing match");
 		`)
-  );
+    );
 
-  it.effect("rejects sibling expansion at the first excess member under a subprocess watchdog", () =>
-    underWatchdog(`
+    it.effect("rejects sibling expansion at the first excess member under a subprocess watchdog", () =>
+      underWatchdog(`
 			import { expand } from "@beep/glob/internal/braceExpansion";
 			import { GuardExceeded } from "@beep/glob/internal/limits";
 			const source = "{" + Array.from({ length: 128 }, () => "{1..1000}").join(",") + "}";
@@ -267,5 +266,6 @@ it.layer(SpawnerLayer, { timeout: "2 seconds" })((it) => {
 				if (!(error instanceof GuardExceeded) || error.reason !== "ExpansionBudgetExceeded" || error.actual !== 1001) throw error;
 			}
 		`)
-  );
-});
+    );
+  }
+);

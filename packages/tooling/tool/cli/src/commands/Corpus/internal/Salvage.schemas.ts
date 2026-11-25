@@ -54,8 +54,6 @@ export const CorpusCopyMode = LiteralKit(["copied", "provenance-only"]).pipe(
 export type CorpusCopyMode = typeof CorpusCopyMode.Type;
 
 /**
- * Digest-to-raw-path row loaded from the corpus catalog or provenance manifests.
- *
  * **Example** (Build catalog digest row)
  *
  * ```ts
@@ -219,8 +217,6 @@ export class CorpusSalvageSourceSpec extends S.Opaque<CorpusSalvageSourceSpec, {
 ) {}
 
 /**
- * One source file selected for a corpus salvage copy run.
- *
  * **Example** (Build salvage origin file)
  *
  * ```ts
@@ -258,8 +254,6 @@ export class CorpusSalvageOriginFile extends S.Opaque<CorpusSalvageOriginFile, {
 ) {}
 
 /**
- * Validated options used by `corpus salvage`.
- *
  * **Example** (Create salvage options)
  *
  * ```ts
@@ -288,8 +282,6 @@ export class CorpusSalvageOptions extends S.Opaque<CorpusSalvageOptions, { reado
 ) {}
 
 /**
- * Summary counts returned by `corpus salvage`.
- *
  * **Example** (Build salvage summary counts)
  *
  * ```ts

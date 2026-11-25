@@ -6,8 +6,6 @@
  */
 
 /**
- * Bounded SHACL validation layer exports.
- *
  * @since 0.0.0
  */
 export * from "./BoundedShaclValidator.layer.ts";

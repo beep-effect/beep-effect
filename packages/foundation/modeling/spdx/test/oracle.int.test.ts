@@ -17,6 +17,7 @@ const oracleAccepts = (s: string): boolean => {
   }
 };
 
+const REFERENCE_WITH_EXCEPTION_ACCEPTED_SINCE_ORACLE_V5 = "LicenseRef-Foo WITH Bison-exception-2.2";
 const CORPUS = [
   "MIT",
   "Apache-2.0+",
@@ -33,9 +34,7 @@ const CORPUS = [
   "GPL-3.0",
   "Apache-2.0 WITH Bogus-exception",
   "DocumentRef-spdx-tool-1.2:LicenseRef-MIT-Style-2",
-  // LicenseRef + WITH: accepted since spdx-expression-parse v5, matching the
-  // SPDX ABNF (`with-expression = simple-expression "WITH" license-exception-id`).
-  "LicenseRef-Foo WITH Bison-exception-2.2",
+  REFERENCE_WITH_EXCEPTION_ACCEPTED_SINCE_ORACLE_V5,
   "DocumentRef-spdx-tool-1.2:LicenseRef-MIT-Style-2 WITH Classpath-exception-2.0",
   "LicenseRef-Foo WITH Bogus-exception",
   "LicenseRef-Foo+ WITH Bison-exception-2.2",

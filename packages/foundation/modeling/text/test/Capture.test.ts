@@ -37,37 +37,37 @@ type Fields = Partial<{ -readonly [K in keyof SourceTextIdentity]: SourceTextIde
 const withFields = (source: SourceTextIdentity, fields: Fields): SourceTextIdentity =>
   SourceTextIdentity.make({ ...source, ...fields });
 
-// Each of the eight preimage fields, changed alone.
-const fieldChanges: ReadonlyArray<readonly [string, (source: SourceTextIdentity, salt: string) => SourceTextIdentity]> =
+const singlePreimageFieldChanges: ReadonlyArray<
+  readonly [string, (source: SourceTextIdentity, salt: string) => SourceTextIdentity]
+> = [
+  ["scopeRef", (source, salt) => withFields(source, { scopeRef: `${source.scopeRef}${salt}` })],
+  ["sourceRef", (source, salt) => withFields(source, { sourceRef: `${source.sourceRef}${salt}` })],
   [
-    ["scopeRef", (source, salt) => withFields(source, { scopeRef: `${source.scopeRef}${salt}` })],
-    ["sourceRef", (source, salt) => withFields(source, { sourceRef: `${source.sourceRef}${salt}` })],
-    [
-      "locator",
-      (source, salt) =>
-        withFields(source, { locator: SourceTextLocator.make(`${source.locator}/${Str.replaceAll("\\", "/")(salt)}`) }),
-    ],
-    ["sourceDigest", (source, salt) => withFields(source, { sourceDigest: digestOf(`${source.sourceDigest}${salt}`) })],
-    ["textDigest", (source, salt) => withFields(source, { textDigest: digestOf(`${source.textDigest}${salt}`) })],
-    [
-      "extractor name",
-      (source, salt) =>
-        withFields(source, {
-          extractor: SourceTextExtractor.make({ ...source.extractor, name: `${source.extractor.name}${salt}` }),
-        }),
-    ],
-    [
-      "extractor version",
-      (source, salt) =>
-        withFields(source, {
-          extractor: SourceTextExtractor.make({ ...source.extractor, version: `${source.extractor.version}${salt}` }),
-        }),
-    ],
-    [
-      "normalizationVersion",
-      (source, salt) => withFields(source, { normalizationVersion: `${source.normalizationVersion}${salt}` }),
-    ],
-  ];
+    "locator",
+    (source, salt) =>
+      withFields(source, { locator: SourceTextLocator.make(`${source.locator}/${Str.replaceAll("\\", "/")(salt)}`) }),
+  ],
+  ["sourceDigest", (source, salt) => withFields(source, { sourceDigest: digestOf(`${source.sourceDigest}${salt}`) })],
+  ["textDigest", (source, salt) => withFields(source, { textDigest: digestOf(`${source.textDigest}${salt}`) })],
+  [
+    "extractor name",
+    (source, salt) =>
+      withFields(source, {
+        extractor: SourceTextExtractor.make({ ...source.extractor, name: `${source.extractor.name}${salt}` }),
+      }),
+  ],
+  [
+    "extractor version",
+    (source, salt) =>
+      withFields(source, {
+        extractor: SourceTextExtractor.make({ ...source.extractor, version: `${source.extractor.version}${salt}` }),
+      }),
+  ],
+  [
+    "normalizationVersion",
+    (source, salt) => withFields(source, { normalizationVersion: `${source.normalizationVersion}${salt}` }),
+  ],
+];
 
 describe("@beep/text CaptureId", () => {
   it("accepts only sha256-prefixed capture ids", () => {
@@ -122,7 +122,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text capture m
     ([source, salt]) =>
       Effect.gen(function* () {
         const id = yield* mintCaptureId(source);
-        for (const [field, change] of fieldChanges) {
+        for (const [field, change] of singlePreimageFieldChanges) {
           const changed = yield* mintCaptureId(change(source, salt));
           expect(changed, field).not.toBe(id);
         }

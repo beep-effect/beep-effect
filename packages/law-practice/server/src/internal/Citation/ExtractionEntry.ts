@@ -91,10 +91,11 @@ export class CitationExtractionEntryResult extends S.Opaque<
   )
 ) {}
 const Input = CitationExtractionEntryInput;
-const isShortcutRequest = S.is(S.Struct({ plain: S.Literals(["eyecite"]) }));
+const isOriginalShortcutReadingOnlyPlain = S.is(S.Struct({ plain: S.Literals(["eyecite"]) }));
 const shortcut = O.map(getCitationExtractionShortcut("eyecite"), (citations): CitationExtractionEntryOutcome => {
   const validated = CitationExtractionEntryOutcome.cases.Shortcut.make({ citations });
-  return { ...validated, citations };
+  const shortcutKeepingEveryOtherValidatedField = { ...validated, citations };
+  return shortcutKeepingEveryOtherValidatedField;
 });
 const own = Effect.fn("Citation.ownExtractionEntry")(function* (
   limits: CitationEngineLimits,
@@ -104,7 +105,7 @@ const own = Effect.fn("Citation.ownExtractionEntry")(function* (
   const document = yield* ownCitationDocumentExtraction(limits, configuration);
   const containers = yield* CitationDocumentStepContainers;
   const plans = yield* Effect.serviceOption(CitationExtractionCleanerPlans);
-  // Installed once; an install failure surfaces where each request used to install it.
+  // decision: citation-stage-install-once-exit-replay
   const stage = yield* Effect.exit(
     makeCitationDocumentExtraction(limits, runtime, document.config).pipe(Effect.provideContext(document.children))
   );
@@ -129,8 +130,7 @@ const prepare = Effect.fn("Citation.extractRawPrimitiveRequest")(function* (
   owned: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
-  // Other fields must remain untouched on this original early return.
-  if (isShortcutRequest(raw)) {
+  if (isOriginalShortcutReadingOnlyPlain(raw)) {
     if (Str.length(raw.plain) > limits.sourceUtf16)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "sourceUtf16" });
     return yield* Effect.fromOption(shortcut, () => fail("invalid-configuration"));

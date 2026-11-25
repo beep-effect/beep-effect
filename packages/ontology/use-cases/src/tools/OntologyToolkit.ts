@@ -33,8 +33,6 @@ const OptionalSessionHandle = S.OptionFromOptionalKey(S.NonEmptyString).pipe(
 const OptionalBaseIri = S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone));
 
 /**
- * Semantic rdfc-1.0 fingerprint used by stateless ontology CAS.
- *
  * **Example** (Usage)
  * ```ts
  * import { OntologyFingerprint } from "@beep/ontology-use-cases/tools"

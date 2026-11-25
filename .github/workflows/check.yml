@@ -129,12 +129,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
@@ -260,19 +254,32 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         env:
           DOCS_ONLY: ${{ needs.change-profile.outputs.docs_only }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # Checkout removed its credentials, and an anonymous fetch can be
+          # throttled (403). GH_TOKEN is step-scoped: every command in this step
+          # sees it, and this step runs only git, jq and grep; never add repo code
+          # here. git receives the token through GIT_CONFIG_* entries on each
+          # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
+          authenticated_fetch() {
+            local attempt
+            for attempt in 1 2 3; do
+              if GIT_CONFIG_COUNT=1 \
+                GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+                GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+                git fetch "$@"; then
+                return 0
+              fi
+              case "$attempt" in 1) sleep 5 ;; 2) sleep 15 ;; esac
+            done
+            return 1
+          }
           should_run=true
           docs_path=false
           skills_lock=true
@@ -292,7 +299,7 @@ jobs:
               codegen|ecosystem)
                 base_ref="origin/${GITHUB_BASE_REF:-main}"
                 if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
-                  git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+                  authenticated_fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
                 fi
                 pattern="$(jq -r --arg lane "${{ env.BEEP_CI_LANE_ID }}" '.lanes[$lane] // empty' \
                   packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
@@ -398,32 +405,35 @@ jobs:
               ;;
             repo-sanity)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then
-                run_lane ci lane repo-sanity --changeset-status --skip-skills-lock
+                run_lane ci lane repo-sanity --event-base --changeset-status --skip-skills-lock
               elif [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                run_lane ci lane repo-sanity --changeset-status
+                run_lane ci lane repo-sanity --event-base --changeset-status
               else
-                run_lane ci lane repo-sanity
+                run_lane ci lane repo-sanity --event-base
               fi
               ;;
           esac
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
-        if: steps.lane-gate.outputs.should_run == 'true' && always()
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always() && (steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true')
         continue-on-error: true
-        env:
-          JOB_NAME: ${{ env.BEEP_CI_LANE_NAME }}
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: ${{ env.BEEP_CI_LANE_NAME }}
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
 
-      - name: Upload Turbo task outcomes
-        if: steps.lane-gate.outputs.should_run == 'true' && always()
+      - name: Upload gate reports and task outcomes
+        if: always() && (steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true')
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -475,12 +485,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       # Tracked files and git history only: no disk cleanup, no application secrets.
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
@@ -496,6 +500,29 @@ jobs:
           # mint App's pull request (C8 condition i), as in Heavy / Lint Policy.
           KNOWLEDGE_MINT_APP_SLUG: ${{ vars.KNOWLEDGE_MINT_APP_SLUG }}
         run: bun run beep ci lane docs-policy --base "origin/${GITHUB_BASE_REF:-main}"
+
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Docs Policy
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
 
   ecosystem:
     name: Ecosystem Contracts
@@ -543,12 +570,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -649,23 +670,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Labs
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Labs
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -710,12 +734,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -776,23 +794,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Lint (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Lint (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -900,12 +921,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Fetch beep CI binary
         if: github.event_name == 'pull_request' || vars.BEEP_SHARD_OVERFLOW == 'on'
         uses: ./.github/actions/fetch-beep-ci
@@ -1011,6 +1026,29 @@ jobs:
           echo "test_unit_hosted=$(jq --compact-output . <<<"$hosted")" >> "$GITHUB_OUTPUT"
           echo "test_unit_overflow=$(jq --compact-output . <<<"$overflow")" >> "$GITHUB_OUTPUT"
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always() && github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Test Plan
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: always() && github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
   # The hosted half of the plan. Every partition the overflow step did not
   # route runs here; PLANNED_PARTITIONS stays the whole plan, so each shard's
   # unplanned-partition check still sees every partition of the run.
@@ -1034,12 +1072,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -1162,23 +1194,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Test Unit (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Test Unit (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -1203,13 +1238,14 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
-  # The overflow half of the plan: the same shard on a `beep-shard-overflow`
-  # VM, through shard-overflow.yml at main (as heavy.yml@main: the runner
-  # group admits that definition only, so a pull request cannot replace it),
-  # reported as `Test Unit (<partition>) / Overflow`. Empty unless Test Plan
-  # routed partitions, which it never does for a fork's pull request; the
-  # condition repeats that guard and shard-overflow.yml repeats it again at
-  # main. Every artifact a hosted shard uploads is uploaded under the same name.
+  # The overflow half of the plan: the same shard on a `beep-fleet-overflow`
+  # VM (runner group `beep-shard-overflow`), through shard-overflow.yml at main
+  # (as heavy.yml@main: the runner group admits that definition only, so a pull
+  # request cannot replace it), reported as `Test Unit (<partition>) / Overflow`.
+  # Empty unless Test Plan routed partitions, which it never does for a fork's
+  # pull request; the condition repeats that guard and shard-overflow.yml
+  # repeats it again at main. Every artifact a hosted shard uploads is uploaded
+  # under the same name.
   test-unit-overflow:
     name: Test Unit (${{ matrix.partition }})
     needs: [change-profile, test-plan]
@@ -1305,12 +1341,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -1382,23 +1412,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Test Integration (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Test Integration (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -1475,12 +1508,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
         uses: ./.github/actions/fetch-beep-ci
@@ -1657,6 +1684,29 @@ jobs:
           fi
           bun run beep ci lane coverage --compare-only --coverage-input .beep/ci-coverage-inputs "${shape_args[@]}"
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip comparison
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Coverage comparison passes without work for this change set."
@@ -1676,11 +1726,29 @@ jobs:
           fetch-depth: 100
           persist-credentials: false
 
+      # A depth-100 checkout fetches only the merge ref, so the base is fetched
+      # here. Checkout removed its credentials, and an anonymous fetch can be
+      # throttled (403): the token reaches git through the environment of the
+      # fetch alone, never argv or .git/config. Three attempts, 5 s then 15 s.
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+          set -euo pipefail
+          base="${GITHUB_BASE_REF:-main}"
+          for attempt in 1 2 3; do
+            if GIT_CONFIG_COUNT=1 \
+              GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+              GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+              git fetch --quiet --no-tags --depth=100 origin "${base}:refs/remotes/origin/${base}"; then
+              exit 0
+            fi
+            case "$attempt" in 1) sleep 5 ;; 2) sleep 15 ;; esac
+          done
+          echo "::error::Fetching ${base} failed after 3 attempts"
+          exit 1
 
       - name: Fetch beep CI binary
         uses: ./.github/actions/fetch-beep-ci
@@ -1770,6 +1838,29 @@ jobs:
         working-directory: apps/professional-desktop/src-tauri
         run: cargo clippy --locked -- -D warnings
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Professional Desktop IPC Stdio
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping desktop IPC stdio proof for this change set."
@@ -1813,12 +1904,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -1879,23 +1964,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Property Laws (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Property Laws (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -1961,16 +2049,35 @@ jobs:
         shell: bash
         env:
           BEFORE_SHA: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # Checkout removed its credentials, and an anonymous fetch can be
+          # throttled (403). GH_TOKEN is step-scoped: every command in this step
+          # sees it, and this step runs only git; never add repo code
+          # here. git receives the token through GIT_CONFIG_* entries on each
+          # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
+          authenticated_fetch() {
+            local attempt
+            for attempt in 1 2 3; do
+              if GIT_CONFIG_COUNT=1 \
+                GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+                GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+                git fetch "$@"; then
+                return 0
+              fi
+              case "$attempt" in 1) sleep 5 ;; 2) sleep 15 ;; esac
+            done
+            return 1
+          }
 
           fetch_status=0
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
-            git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}" || fetch_status=$?
+            authenticated_fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}" || fetch_status=$?
           elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
             base_ref="$BEFORE_SHA"
-            git rev-parse --verify "${base_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=100 origin "$base_ref" || fetch_status=$?
+            git rev-parse --verify "${base_ref}^{commit}" >/dev/null 2>&1 || authenticated_fetch --quiet --no-tags --depth=100 origin "$base_ref" || fetch_status=$?
           else
             base_ref="HEAD~1"
           fi
@@ -2072,6 +2179,29 @@ jobs:
           path: .beep/fallow/**
           if-no-files-found: error
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Fallow Advisory Envelopes
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Fallow Advisory Envelopes for this change set."
@@ -2100,12 +2230,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
         uses: ./.github/actions/fetch-beep-ci
@@ -2147,6 +2271,29 @@ jobs:
             echo "- command: \`bun run beep ci lane jsdoc-ratchet\` (inventory + ratchet)"
             echo "- total wall time: \`${total_seconds}s\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: JSDoc Ratchet
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
@@ -2195,7 +2342,6 @@ jobs:
             # since — including the bodies GitHub generates for squash merges.
             to_ref="${PR_HEAD_SHA:?missing pull request head sha}"
             base_branch="${PR_BASE_REF:-main}"
-            git fetch --quiet --no-tags origin "+refs/heads/${base_branch}:refs/remotes/origin/${base_branch}"
             git rev-parse --verify "${to_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags origin "$to_ref"
             from_ref="$(git merge-base "refs/remotes/origin/${base_branch}" "$to_ref")"
           elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
@@ -2293,12 +2439,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Authenticate Docker Hub when configured
         shell: bash
@@ -2485,12 +2625,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       # `nix flake check` and `nix develop` evaluate the flake alone (flake.nix
       # reads no repository file), so a pull request proves them only when the
       # flake, this workflow or the lane body changes. Every main push runs.
@@ -2531,6 +2665,29 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         run: bun run beep ci lane nix
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Nix Shell
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Nix Shell for this change set."
@@ -2554,12 +2711,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       # The repo CLI only dispatches Docker Semgrep, so it needs Bun and a
       # script-free install: no Node, lifecycle scripts, Turbo or secrets.
@@ -2589,3 +2740,26 @@ jobs:
           # — no SEMGREP_APP_TOKEN, which would only exist in CI and break that
           # parity. See goals/one-round-loop/history/p0-parity-evidence.md §2.
           bun run beep ci lane sast
+
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: SAST
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn

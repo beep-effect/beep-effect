@@ -86,8 +86,6 @@ export const DocumentSafetyPathSegment = S.Union([S.String, S.Int.check(S.isGrea
 );
 
 /**
- * Type for {@link DocumentSafetyPathSegment}.
- *
  * **Example** (Use DocumentSafetyPathSegment)
  *
  * ```ts import.meta.vitest name="Use DocumentSafetyPathSegment"
@@ -129,8 +127,6 @@ export class RawNodeSafetyViolation extends S.Opaque<RawNodeSafetyViolation, { r
 ) {}
 
 /**
- * Destination family for a URL-bearing Markdown node.
- *
  * **Example** (Check a link destination kind)
  *
  * ```ts
@@ -149,8 +145,6 @@ export const DestinationKind = LiteralKit(["link", "image"]).pipe(
 );
 
 /**
- * Runtime type for {@link DestinationKind}.
- *
  * **Example** (Type a destination kind)
  *
  * ```ts
@@ -166,8 +160,6 @@ export const DestinationKind = LiteralKit(["link", "image"]).pipe(
 export type DestinationKind = typeof DestinationKind.Type;
 
 /**
- * HTML tag names that can carry a URL destination.
- *
  * **Example** (Check an anchor tag)
  *
  * ```ts
@@ -186,8 +178,6 @@ export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
 );
 
 /**
- * Runtime type for {@link UrlNodeTag}.
- *
  * **Example** (Type a URL node tag)
  *
  * ```ts
@@ -303,8 +293,6 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<
 ) {}
 
 /**
- * An HTML conformance issue produced by the canonical Markdown projection.
- *
  * **Details**
  *
  * `path` addresses the projected `@beep/html` tree using the HTML
@@ -405,8 +393,6 @@ export const DocumentSafetyViolation = S.Union([
 );
 
 /**
- * Type for {@link DocumentSafetyViolation}.
- *
  * **Example** (Use DocumentSafetyViolation)
  *
  * ```ts import.meta.vitest name="Use DocumentSafetyViolation"
@@ -702,6 +688,10 @@ const blockFootnoteDefinitionOccurrences = (
     hr: () => A.emptyReadonly(),
   });
 
+const makeDuplicateFootnoteViolationWithBoundClassReceiver = (
+  fields: FootnoteDefinitionOccurrence
+): DocumentSafetyViolation => DuplicateFootnoteDefinitionSafetyViolation.make(fields);
+
 const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> =>
   pipe(
     pipeChildren(document.children, (block, index) => blockFootnoteDefinitionOccurrences(block, ["children", index])),
@@ -712,13 +702,7 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
         length: N.isGreaterThan(1),
       })
     ),
-    // `make` on a class schema calls `new this(...)`, so it cannot be passed as
-    // a detached reference — the lambda is what keeps the receiver bound.
-    A.flatMap(
-      A.map(
-        flow(Struct.pick(["identifier", "path"]), (fields) => DuplicateFootnoteDefinitionSafetyViolation.make(fields))
-      )
-    )
+    A.flatMap(A.map(flow(Struct.pick(["identifier", "path"]), makeDuplicateFootnoteViolationWithBoundClassReceiver)))
   );
 
 const htmlProjectionSafetyIssues = flow(
@@ -826,8 +810,6 @@ export const SafeInline = Inline.pipe(
 );
 
 /**
- * Type for {@link SafeInline}.
- *
  * **Example** (Use SafeInline)
  *
  * ```ts import.meta.vitest name="Use SafeInline"
@@ -845,6 +827,8 @@ export const SafeInline = Inline.pipe(
  * @since 0.0.0
  */
 export type SafeInline = typeof SafeInline.Type;
+
+const documentCodecKeepingNominalTypeThroughCheckAndBrand = S.make<S.Codec<Document, Document.Encoded>>(Document.ast);
 
 /**
  * Branded user-content document refinement with the same wire representation
@@ -866,8 +850,7 @@ export type SafeInline = typeof SafeInline.Type;
  * @category validation
  * @since 0.0.0
  */
-// Keep the nominal decoded Document type when checks and branding rebuild the schema.
-export const SafeDocument = S.make<S.Codec<Document, Document.Encoded>>(Document.ast).pipe(
+export const SafeDocument = documentCodecKeepingNominalTypeThroughCheckAndBrand.pipe(
   S.check(SafeDocumentCheck),
   S.brand("SafeDocument"),
   $I.annoteSchema("SafeDocument", {
@@ -876,8 +859,6 @@ export const SafeDocument = S.make<S.Codec<Document, Document.Encoded>>(Document
 );
 
 /**
- * Type for {@link SafeDocument}.
- *
  * **Example** (Use SafeDocument)
  *
  * ```ts import.meta.vitest name="Use SafeDocument"

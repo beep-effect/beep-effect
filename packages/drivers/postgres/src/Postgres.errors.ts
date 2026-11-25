@@ -53,8 +53,6 @@ const PostgresDiagnosticFields = {
 } satisfies S.Struct.Fields;
 
 /**
- * Optional diagnostic context captured while normalizing Postgres-adjacent failures.
- *
  * **Example** (Make context with options)
  *
  * ```ts

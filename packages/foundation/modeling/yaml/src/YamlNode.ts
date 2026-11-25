@@ -29,8 +29,6 @@ import type { YamlPath } from "./YamlEdit.ts";
 const $I = $YamlId.create("YamlNode");
 
 /**
- * YAML scalar presentation styles.
- *
  * **Example** (Decode ScalarStyle vocabulary)
  *
  * ```ts
@@ -53,8 +51,6 @@ export const ScalarStyle = LiteralKit([
 ]).pipe($I.annoteSchema("ScalarStyle", { description: "YAML scalar presentation styles." }));
 
 /**
- * The union of all scalar style string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -62,8 +58,6 @@ export const ScalarStyle = LiteralKit([
 export type ScalarStyle = typeof ScalarStyle.Type;
 
 /**
- * YAML collection presentation styles.
- *
  * **Example** (Decode CollectionStyle vocabulary)
  *
  * ```ts
@@ -82,8 +76,6 @@ export const CollectionStyle = LiteralKit(["block", "flow"]).pipe(
 );
 
 /**
- * The union of all collection style string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -91,12 +83,6 @@ export const CollectionStyle = LiteralKit(["block", "flow"]).pipe(
 export type CollectionStyle = typeof CollectionStyle.Type;
 
 /**
- * Quote characters available to the stringifier's plain-scalar fallback: the
- * style a `plain`-styled scalar is rendered in when it turns out to require
- * quoting. Referenced by the `quoteStyle` field of `YamlStringifyOptions`;
- * unlike `ScalarStyle` it is a stringify-option vocabulary, never a property
- * of a composed node.
- *
  * **Details**
  *
  * `"single"` and `"double"` name one quote character for every scalar.
@@ -128,8 +114,6 @@ export const QuoteStyle = LiteralKit(["single", "double", "auto"]).pipe(
 );
 
 /**
- * The union of all fallback quote style string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -137,17 +121,6 @@ export const QuoteStyle = LiteralKit(["single", "double", "auto"]).pipe(
 export type QuoteStyle = typeof QuoteStyle.Type;
 
 /**
- * Foreign resolution dialects the stringifier's plain-scalar fallback can
- * defend against: setting the `quoteCompat` field of `YamlStringifyOptions`
- * to `"yaml-1.1"` additionally quotes every plain scalar a YAML 1.1 parser
- * (js-yaml, PyYAML, libyaml, and the `yaml` npm package's YAML 1.1 schema,
- * whose lenient resolvers set the outer bound) would implicitly resolve to a
- * non-string —
- * `yes`/`no`/`on`/`off` booleans, ISO 8601 and space-separated timestamps,
- * sexagesimal `1:30`, underscored `1_000` and base-2/8/16 numbers. Like
- * `QuoteStyle` it is a stringify-option vocabulary, never a property of a
- * composed node.
- *
  * **Example** (Decode QuoteCompat vocabulary)
  *
  * ```ts
@@ -169,8 +142,6 @@ export const QuoteCompat = LiteralKit(["yaml-1.1"]).pipe(
 );
 
 /**
- * The union of all quote-compat dialect string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -178,9 +149,6 @@ export const QuoteCompat = LiteralKit(["yaml-1.1"]).pipe(
 export type QuoteCompat = typeof QuoteCompat.Type;
 
 /**
- * Block-scalar chomping indicators (`-` strip, default clip, `+` keep).
- * Referenced by the {@link YamlScalar} `chomp` field schema.
- *
  * **Example** (Decode ScalarChomp vocabulary)
  *
  * ```ts
@@ -202,8 +170,6 @@ export const ScalarChomp = LiteralKit(["strip", "clip", "keep"]).pipe(
 );
 
 /**
- * The union of all block-scalar chomping indicator string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -333,9 +299,6 @@ export class YamlNodeBase extends S.Class<YamlNodeBase, { readonly yamlNode: uni
 }
 
 /**
- * A YAML scalar AST node, representing a leaf value such as a string,
- * number, boolean, or null.
- *
  * **Details**
  *
  * - `value` — the resolved JavaScript value (null, boolean, number, bigint or
@@ -452,9 +415,6 @@ export class YamlScalar extends YamlNodeBase.extend<YamlScalar, {}, { readonly b
 ) {}
 
 /**
- * A YAML alias AST node, referencing a previously defined anchor by name
- * (without the leading `*`).
- *
  * **Details**
  *
  * Carries the same comment triple as every other node class — see
@@ -563,8 +523,6 @@ export class YamlAlias extends YamlNodeBase.extend<YamlAlias, {}, { readonly bra
 type YamlScalarEncodedFields = typeof YamlScalar.Encoded;
 
 /**
- * Companion namespace for {@link YamlScalar}.
- *
  * **Example** (Type the encoded YamlScalar form)
  *
  * ```ts
@@ -594,8 +552,6 @@ export declare namespace YamlScalar {
 type YamlMapEncodedFields = typeof YamlMap.Encoded;
 
 /**
- * Companion namespace for {@link YamlMap}.
- *
  * **Example** (Type the encoded YamlMap form)
  *
  * ```ts
@@ -624,8 +580,6 @@ export declare namespace YamlMap {
 type YamlSeqEncodedFields = typeof YamlSeq.Encoded;
 
 /**
- * Companion namespace for {@link YamlSeq}.
- *
  * **Example** (Type the encoded YamlSeq form)
  *
  * ```ts
@@ -654,8 +608,6 @@ export declare namespace YamlSeq {
 type YamlAliasEncodedFields = typeof YamlAlias.Encoded;
 
 /**
- * Companion namespace for {@link YamlAlias}.
- *
  * **Example** (Type the encoded YamlAlias form)
  *
  * ```ts
@@ -717,8 +669,6 @@ export const YamlNode: S.Codec<
 );
 
 /**
- * The union of all YAML AST value node types.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -726,9 +676,6 @@ export const YamlNode: S.Codec<
 export type YamlNode = YamlScalar | YamlMap | YamlSeq | YamlAlias;
 
 /**
- * A YAML key-value pair AST node, representing one entry within a mapping.
- * `value` is `null` when absent (e.g. `key:` with no value).
- *
  * **Details**
  *
  * A pair carries **no comment fields**. Comments belong to the pair's `key`
@@ -768,9 +715,6 @@ export class YamlPair extends S.Opaque<YamlPair, { readonly brand: unique symbol
 ) {}
 
 /**
- * A YAML mapping AST node, representing a collection of {@link YamlPair}
- * entries.
- *
  * **Details**
  *
  * - `style` — the presentation style: `"block"` or `"flow"`.
@@ -854,9 +798,6 @@ export class YamlMap extends YamlNodeBase.extend<YamlMap, {}, { readonly brand: 
 ) {}
 
 /**
- * A YAML sequence AST node, representing an ordered list of
- * {@link (YamlNode:type)} values.
- *
  * **Details**
  *
  * - `commentBefore` — own-line comment text directly above the sequence.

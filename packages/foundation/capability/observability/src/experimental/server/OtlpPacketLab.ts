@@ -24,8 +24,6 @@ const $I = $ObservabilityId.create("experimental/server/OtlpPacketLab");
 const textDecoder = new TextDecoder();
 
 /**
- * OTLP packet families captured by the packet lab.
- *
  * **Example** (Enum traces kind value)
  *
  * ```ts import.meta.vitest name="Enum traces kind value"
@@ -45,8 +43,6 @@ export const OtlpPacketKind = LiteralKit(["logs", "metrics", "traces"]).pipe(
 );
 
 /**
- * Runtime type for {@link OtlpPacketKind}.
- *
  * **Example** (Type alias string assignment)
  *
  * ```typescript
@@ -62,8 +58,6 @@ export const OtlpPacketKind = LiteralKit(["logs", "metrics", "traces"]).pipe(
 export type OtlpPacketKind = typeof OtlpPacketKind.Type;
 
 /**
- * OTLP body encodings captured by the packet lab.
- *
  * **Example** (Enum json encoding value)
  *
  * ```ts import.meta.vitest name="Enum json encoding value"
@@ -83,8 +77,6 @@ export const OtlpPacketEncoding = LiteralKit(["json", "protobuf"]).pipe(
 );
 
 /**
- * Runtime type for {@link OtlpPacketEncoding}.
- *
  * **Example** (Type alias string assignment)
  *
  * ```typescript
@@ -100,8 +92,6 @@ export const OtlpPacketEncoding = LiteralKit(["json", "protobuf"]).pipe(
 export type OtlpPacketEncoding = typeof OtlpPacketEncoding.Type;
 
 /**
- * One captured OTLP packet.
- *
  * **Example** (Make packet with fields)
  *
  * ```ts import.meta.vitest name="Make packet with fields"

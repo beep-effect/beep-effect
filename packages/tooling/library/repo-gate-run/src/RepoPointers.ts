@@ -39,8 +39,6 @@ const $I = $RepoGateRunId.create("RepoPointers");
 export const REPO_CLI_PREFIX = "bun run beep ";
 
 /**
- * Whether a command exists in the repo CLI today or is planned.
- *
  * **Details**
  *
  * The `gate show` and `gate item` queries are live: the repo CLI's tests
@@ -65,16 +63,12 @@ export const CommandStatus = LiteralKit(["live", "planned"]).pipe(
 );
 
 /**
- * Type of {@link CommandStatus}.
- *
  * @category models
  * @since 0.0.0
  */
 export type CommandStatus = typeof CommandStatus.Type;
 
 /**
- * One repo CLI command: its words after the prefix and its status.
- *
  * **Example** (Build a command)
  *
  * ```ts
@@ -116,9 +110,6 @@ export class RepoCommand extends S.Opaque<RepoCommand, { readonly brand: unique 
 export const commandText = (command: RepoCommand): string => `${REPO_CLI_PREFIX}${A.join(command.words, " ")}`;
 
 /**
- * The two queries of one gate: show a run's record, and show one item of it
- * in full.
- *
  * **Example** (Build a gate's queries)
  *
  * ```ts
@@ -173,8 +164,6 @@ export const ContractGate = LiteralKit(["test", "check"]).pipe(
 );
 
 /**
- * Type of {@link ContractGate}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -316,16 +305,12 @@ export const PointerViolation = LiteralKit(["mcp-tool", "bare-tool", "documentat
 );
 
 /**
- * Type of {@link PointerViolation}.
- *
  * @category models
  * @since 0.0.0
  */
 export type PointerViolation = typeof PointerViolation.Type;
 
 /**
- * A pointer line named something other than a repo CLI command in the table.
- *
  * **Example** (Build the error)
  *
  * ```ts

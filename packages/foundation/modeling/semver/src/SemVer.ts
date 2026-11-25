@@ -28,8 +28,6 @@ import { compareBuild, compareParts, versionConstructor } from "./internal/order
 const $I = $SemverId.create("SemVer");
 
 /**
- * Indicates that a string could not be parsed as a valid SemVer 2.0.0 version.
- *
  * **Details**
  *
  * Raised by {@link SemVer.parse}. The decode direction of
@@ -91,8 +89,6 @@ export class InvalidVersionError extends S.TaggedError<InvalidVersionError, { re
   }
 }
 
-// Non-negative safe integer schema shared by the `major`/`minor`/`patch`
-// fields.
 const nonNegativeInteger = S.Finite.check(
   S.makeFilterGroup([
     S.isInt(
@@ -113,10 +109,7 @@ const nonNegativeInteger = S.Finite.check(
   })
 );
 
-// The SemVer 2.0.0 grammar as a pattern, without lookahead, so `Arbitrary`
-// derives a generator for the version-string schemas instead of discarding
-// random strings against their predicate. The predicate stays the authority
-// (it also bounds components to safe integers).
+// decision: lookahead-free-version-patterns
 const versionCore = String.raw`(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)`;
 const prereleasePart = "(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)";
 const prereleaseSuffix = String.raw`(-${prereleasePart}(\.${prereleasePart})*)?`;
@@ -124,10 +117,7 @@ const buildSuffix = String.raw`(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?`;
 const pinnableVersionPattern = new RegExp(`^${versionCore}${prereleaseSuffix}$`, "u");
 const exactVersionPattern = new RegExp(`^${versionCore}${prereleaseSuffix}${buildSuffix}$`, "u");
 
-// String prerelease identifiers must contain at least one non-digit:
-// all-numeric identifiers are numbers (the grammar parses them as such), so
-// requiring a non-digit keeps decode/encode round-trips canonical. Written
-// without lookahead so `Arbitrary.schema` can derive a generator.
+// decision: lookahead-free-version-patterns
 const prereleaseIdentifier = S.Union([
   S.String.check(
     S.isPattern(
@@ -145,7 +135,6 @@ const prereleaseIdentifier = S.Union([
   })
 );
 
-// Build identifiers allow leading zeros and all-digit tokens (SemVer §10).
 const buildIdentifier = S.String.check(
   S.makeFilterGroup([
     S.isPattern(
@@ -162,10 +151,6 @@ const buildIdentifier = S.String.check(
 );
 
 /**
- * A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are
- * validated in-schema (non-negative integer components, well-formed
- * identifiers), so `SemVer.make` only produces valid versions.
- *
  * **Details**
  *
  * Instance methods are the canonical API; cross-cutting operations exist as
@@ -224,8 +209,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
       "A parsed SemVer 2.0.0 version: an Effect `Schema.Class` whose fields are validated in-schema (non-negative integer components, well-formed identifiers), so `SemVer.make` only produces valid versions.",
   })
 ) {
-  // ── Schema ──────────────────────────────────────────────────────────
-
   /**
    * Schema transformation between the canonical version string and
    * {@link SemVer}: decoding parses with the strict grammar, encoding
@@ -369,8 +352,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     })
   );
 
-  // ── Construction ────────────────────────────────────────────────────
-
   /**
    * Parse a strict SemVer 2.0.0 version string, synchronously, returning a
    * `Result` instead of an `Effect`.
@@ -445,8 +426,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
    * @since 0.0.0
    */
   static readonly parse = Effect.fn("SemVer.parse")((input: string) => Effect.fromResult(SemVer.parseResult(input)));
-
-  // ── Validation ──────────────────────────────────────────────────────
 
   /**
    * Whether `input` is a valid SemVer 2.0.0 version string, exactly as
@@ -555,8 +534,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     ): (major: number) => SemVer;
   } = versionConstructor((fields): SemVer => SemVer.make(fields));
 
-  // ── Ordering ────────────────────────────────────────────────────────
-
   /**
    * `Order` instance following SemVer 2.0.0 precedence (§11); build
    * metadata is ignored (§10).
@@ -595,8 +572,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     const base = a.compare(b);
     return base !== 0 ? base : compareBuild(a.build, b.build);
   });
-
-  // ── Comparison statics (dual) ───────────────────────────────────────
 
   /**
    * Compare two versions. Returns `-1`, `0`, or `1`. Dual API.
@@ -765,8 +740,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
             build: [],
           })
   );
-
-  // ── Collection statics ──────────────────────────────────────────────
 
   /**
    * Sort versions ascending by SemVer precedence. Returns a new array.
@@ -939,8 +912,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     return latest.pipe(MutableHashMap.values, A.fromIterable);
   }
 
-  // ── Instance: comparison ────────────────────────────────────────────
-
   /**
    * Compare `this` to `that` per SemVer 2.0.0 precedence. Returns `-1`, `0`, or `1`.
    *
@@ -1067,8 +1038,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     return this.compare(that) !== 0;
   }
 
-  // ── Instance: predicates ────────────────────────────────────────────
-
   /**
    * Whether this is a prerelease version.
    *
@@ -1105,8 +1074,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     return this.prerelease.length === 0;
   }
 
-  // ── Instance: bump ──────────────────────────────────────────────────
-
   /**
    * Version bumping operations, grouped for discoverability.
    *
@@ -1124,12 +1091,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
   get bump(): SemVerBump {
     return new SemVerBump(this);
   }
-
-  // ── Equality & hashing ──────────────────────────────────────────────
-
-  // Structural equality deliberately ignores build metadata (SemVer §10)
-  // while including exact prerelease identifiers (§11). Hash must agree:
-  // Equal.equals short-circuits on hash mismatch.
 
   /**
    * Supports Effect structural equality using exact prerelease identifiers while ignoring build metadata.
@@ -1188,8 +1149,6 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
     );
   }
 
-  // ── Display ─────────────────────────────────────────────────────────
-
   /**
    * The canonical `major.minor.patch[-prerelease][+build]` string.
    *
@@ -1229,16 +1188,7 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
   }
 }
 
-// Raised in place of `SemVer.make`'s raw schema failure when a bump would
-// increment a component past `Number.MAX_SAFE_INTEGER`. This is an arithmetic
-// invariant, not malformed input — `SemVerBump` only ever increments
-// components already validated on the receiver — so it stays a thrown defect
-// rather than a typed `Effect` failure, matching every other
-// `SemVer`/`SemVerBump` method's synchronous, non-`Effect` signature. The
-// original `SemVer.make` schema failure rides as `cause`.
 /**
- * The component whose bump exceeded the safe-integer cap.
- *
  * **Example** (Validate an overflow component)
  *
  * ```ts
@@ -1315,6 +1265,7 @@ export class SemVerBumpOverflowError extends S.TaggedError<SemVerBumpOverflowErr
   }
 }
 
+// decision: semver-bump-overflow-defect
 const overflow: {
   (cause: unknown, component: SemVerBumpComponent): never;
   (component: SemVerBumpComponent): (cause: unknown) => never;

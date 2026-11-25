@@ -36,8 +36,6 @@ const NOTION_API_URL = "https://api.notion.com";
 const NOTION_VERSION = "2022-06-28";
 
 /**
- * One saved link extracted from a Notion database page.
- *
  * @internal
  * @category models
  */

@@ -22,8 +22,6 @@
  */
 export * from "./Phoenix.config.ts";
 /**
- * Error exports for the Phoenix driver.
- *
  * **Example** (Create operation Phoenix error)
  *
  * ```ts
@@ -38,8 +36,6 @@ export * from "./Phoenix.config.ts";
  */
 export * from "./Phoenix.errors.ts";
 /**
- * Model exports for the Phoenix driver.
- *
  * **Example** (Make dataset name selector)
  *
  * ```ts
@@ -54,8 +50,6 @@ export * from "./Phoenix.errors.ts";
  */
 export * from "./Phoenix.models.ts";
 /**
- * Service exports for the Phoenix driver.
- *
  * **Example** (Access Phoenix service layer)
  *
  * ```ts

@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $DocumentsDomainId.create("aggregates/IntakeBatch/IntakeBatch.model");
 
 /**
- * Stable intake batch identifier supplied by the intake boundary.
- *
  * **Example** (Decode IntakeBatchId value)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const IntakeBatchId = S.NonEmptyString.pipe(
 );
 
 /**
- * Stable intake batch identifier supplied by the intake boundary.
- *
  * **Example** (Typed IntakeBatchId decode)
  *
  * ```ts
@@ -53,8 +49,6 @@ export const IntakeBatchId = S.NonEmptyString.pipe(
 export type IntakeBatchId = typeof IntakeBatchId.Type;
 
 /**
- * Deterministic local intake batch metadata.
- *
  * **Example** (Decode IntakeBatch metadata)
  *
  * ```ts

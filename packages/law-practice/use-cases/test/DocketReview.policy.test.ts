@@ -45,16 +45,16 @@ import { LocalDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as P4Digest from "effect/crypto/Digest";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as P4FileSystem from "effect/FileSystem";
+import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
-import * as P4Layer from "effect/Layer";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -749,31 +749,41 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       ["response-period", ["The value of this field does not appear in the text you quoted for it."]],
     ]);
   });
+
+  it.effect("refuses to write a check back in the docket-check/v1 form", () =>
+    Effect.gen(function* () {
+      const [, fromV1] = StoredDeterministicCheck.members;
+      const historical = yield* S.decodeEffect(fromV1)({ check: "cited-span-exists", passed: true });
+      strictEqual(historical.provenance, "docket-check/v1");
+      const refusal = yield* Effect.flip(S.encodeEffect(fromV1)(historical));
+      expect(Str.includes("docket-check/v1 is read only")(refusal.message)).toBe(true);
+    })
+  );
 });
 
-const p4docketchecksv1json = S.fromJsonString(S.Array(StoredDeterministicCheck), { space: 2 });
+const docketChecksV1Json = S.fromJsonString(S.Array(StoredDeterministicCheck), { space: 2 });
 
-it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+it.layer(Layer.merge(NodeFileSystem.layer, Digest.layerWebCrypto), {
   timeout: "10 seconds",
   excludeTestServices: true,
 })("P4 frozen formats", (it) => {
   it.effect("P4 format freeze: docket-checks-v1.json keeps its raw digest and reads only as history", () =>
     Effect.gen(function* () {
-      const fs = yield* P4FileSystem.FileSystem;
+      const fs = yield* FileSystem.FileSystem;
       const fixtureRoot = yield* fs.realPath(".");
       const fixturePath = yield* fs.realPath("test/fixtures/docket-checks-v1.json");
       expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/docket-checks-v1.json`);
       const text = yield* fs.readFileString(fixturePath);
-      const digest = yield* P4Digest.Digest;
-      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      const digest = yield* Digest.Digest;
+      const rawDigest = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(text));
       expect(rawDigest).toBe("55f1f403e941d40e483327be62b5eb33180e32d369ab12ba18e5f4373a3bd01e");
-      const rows = yield* S.decodeEffect(p4docketchecksv1json)(text);
+      const rows = yield* S.decodeEffect(docketChecksV1Json)(text);
       expect(A.map(rows, (row) => [row.check, row.provenance, row.result._tag, row.side])).toStrictEqual([
         ["cited-span-exists", "docket-check/v1", "Passed", "extractor"],
         ["cited-span-exists", "docket-check/v1", "Failed", "extractor"],
       ]);
       assertTrue(!reviewGatePassed(A.take(rows, 1)));
-      const reencoded = yield* S.encodeEffect(p4docketchecksv1json)(rows);
+      const reencoded = yield* S.encodeEffect(docketChecksV1Json)(rows);
       expect(Str.includes('"passed"')(reencoded)).toBe(false);
       expect(Str.includes('"provenance": "docket-check/v1"')(reencoded)).toBe(true);
     })

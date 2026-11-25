@@ -29,7 +29,6 @@ const encodeGeneration = flow(S.encodeResult(Generation), Result.getOrThrow);
 const generationsOf = (document: TextDocument): ReadonlyArray<Generation> =>
   A.flatMap(document.attribution.pipe(HashMap.values, A.fromIterable), A.fromIterable);
 
-// Every annotation is attributed, and no activity generates one content twice.
 const expectAttributed = (document: TextDocument): void => {
   for (const id of HashMap.keys(document.annotations)) {
     const generations = document.attribution.pipe(HashMap.get(id), O.getOrThrow, A.fromIterable);
@@ -43,7 +42,6 @@ const close = closure(DocumentKinds);
 
 const restrictTo = restrict(DocumentKinds);
 
-// The least annotation key of a document, so a modification is a function of the document alone.
 const leastKey = (document: TextDocument): AnnotationId =>
   document.annotations.pipe(HashMap.keys, A.fromIterable, A.sort(Order.String), A.head, O.getOrThrow);
 
@@ -62,18 +60,15 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation gen
         yield* codec.decode(encoded);
         const key = leastKey(document);
         const generation = document.attribution.pipe(HashMap.get(key), O.getOrThrow, A.fromIterable, A.getUnsafe(0));
-        // The annotation with no generation: its attribution row removed.
         const unattributed = { ...encoded, attribution: A.filter(encoded.attribution, ([id]) => id !== key) };
-        // A second generation for one (content, activity) pair, at another time: one millisecond toward the epoch, so
-        // it stays inside the range a DateTime holds.
-        const other = generation.at.pipe(
+        const oneMillisecondTowardEpochStaysInRange = generation.at.pipe(
           O.map(DateTime.toEpochMillis),
           O.match({ onNone: () => 0, onSome: (millis) => (millis > 0 ? millis - 1 : millis + 1) })
         );
         const second = generationOf({
           content: key,
           activity: generation.activity,
-          at: O.some(DateTime.makeUnsafe(other)),
+          at: O.some(DateTime.makeUnsafe(oneMillisecondTowardEpochStaysInRange)),
         });
         const twice = {
           ...encoded,
@@ -137,7 +132,6 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation gen
         expectAttributed(document);
         expectAttributed(restrictTo(close(keep))(document).pipe(Result.getOrThrow));
       }
-      // A refused merge names a pair the union would have given two times.
       for (const [left, right] of [
         [a, b],
         [b, c],
@@ -154,7 +148,9 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation gen
                 ),
                 (generation) => generation.at
               );
-              expect(A.dedupe(times)).toHaveLength(2);
+              expect(A.dedupe(times), "a refused merge names a pair the union would have given two times").toHaveLength(
+                2
+              );
             }
           },
         });

@@ -16,7 +16,7 @@ const text = S.Literals(["a", "é", "?", "*", "(", ")", "[", "]", "{", "}", ",",
 );
 describe("escape property floor", () => {
   it.effect.prop(
-    "escape/unescape fidelity and canonical escaped rendering idempotence",
+    "escape/unescape fidelity and canonical escaped rendering idempotence, leaving +@! bare like the oracle: the escaped parens disarm extglobs and [!] would open a negated class",
     [text, Arbitrary.schema(S.Boolean), Arbitrary.schema(S.Boolean)],
     ([input, windowsPathsNoEscape, magicalBraces]) =>
       Effect.sync(() => {

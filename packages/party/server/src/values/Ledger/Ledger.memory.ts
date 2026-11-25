@@ -74,6 +74,34 @@ const appendRows = Effect.fn("PartyLedgerMemory.appendRows")(function* <R>(
   return rows;
 });
 
+const checkedGeneration = Effect.fn("PartyLedgerMemory.checkedGeneration")(function* (
+  record: ClaimRecord,
+  generations: ReadonlyArray<ClaimGeneration>
+) {
+  const matching = A.dedupeWith(
+    A.filter(generations, (row) => Eq.equals(row.claim, record.claim)),
+    sameGeneration
+  );
+  if (!A.isReadonlyArrayNonEmpty(matching) || A.length(matching) !== 1)
+    return yield* conflict(record.claim, "generation-required");
+  const generation = A.headNonEmpty(matching);
+  if (!DateTime.isLessThanOrEqualTo(generation.activity.started, generation.ended))
+    return yield* conflict(record.claim, "generation-order");
+  const activity = yield* mintActivityId(generation.activity).pipe(Effect.orDie);
+  if (!Eq.equals(activity, record.core.generatedBy)) return yield* conflict(record.claim, "generation-mismatch");
+  return { activity, at: generation.ended };
+});
+
+const appendNewClaim = Effect.fn("PartyLedgerMemory.appendNewClaim")(function* (
+  log: ReturnType<typeof claimLog>,
+  record: ClaimRecord,
+  minted: { readonly activity: ClaimRecord["core"]["generatedBy"]; readonly at: DateTime.Utc }
+) {
+  const appended = yield* arrows.appendClaim(log, record, minted).pipe(Effect.orDie);
+  if (appended._tag === "Refused") return yield* conflict(record.claim, A.headNonEmpty(appended.violations)._tag);
+  return appended.log;
+});
+
 const appendClaims = Effect.fn("PartyLedgerMemory.appendClaims")(function* (
   current: LedgerSnapshot,
   batch: LedgerSnapshot
@@ -82,27 +110,12 @@ const appendClaims = Effect.fn("PartyLedgerMemory.appendClaims")(function* (
   let claims = current.claims;
   for (const record of batch.claims) {
     yield* arrows.encodeClaimRecord(record).pipe(Effect.mapError(() => conflict(record.claim, "invalid-core")));
-    const generations = A.filter(batch.generations, (row) => Eq.equals(row.claim, record.claim));
-    if (!A.isReadonlyArrayNonEmpty(generations) || A.length(generations) !== 1)
-      return yield* conflict(record.claim, "generation-required");
-    const generation = A.headNonEmpty(generations);
-    if (!DateTime.isLessThanOrEqualTo(generation.activity.started, generation.ended))
-      return yield* conflict(record.claim, "generation-order");
-    const activity = yield* mintActivityId(generation.activity).pipe(
-      Effect.mapError(() => conflict(record.claim, "invalid-generation"))
-    );
-    if (!Eq.equals(activity, record.core.generatedBy)) return yield* conflict(record.claim, "generation-mismatch");
+    const minted = yield* checkedGeneration(record, batch.generations);
     const existing = A.findFirst(claims, (row) => Eq.equals(row.claim, record.claim));
-    if (O.isSome(existing)) {
-      if (!sameClaim(existing.value, record)) return yield* conflict(record.claim, "conflicting-core");
-    } else {
-      const appended = yield* arrows
-        .appendClaim(log, record, { activity, at: generation.ended })
-        .pipe(Effect.mapError(() => conflict(record.claim, "invalid-core")));
-      if (appended._tag === "Refused") return yield* conflict(record.claim, A.headNonEmpty(appended.violations)._tag);
-      log = appended.log;
+    if (O.isNone(existing)) {
+      log = yield* appendNewClaim(log, record, minted);
       claims = A.append(claims, record);
-    }
+    } else if (!sameClaim(existing.value, record)) return yield* conflict(record.claim, "conflicting-core");
   }
   return claims;
 });
@@ -164,9 +177,8 @@ const applyBatch = Effect.fn("PartyLedgerMemory.applyBatch")(function* (
     "conflicting-admission"
   );
   const stances = yield* appendRows(current.stances, batch.stances, timedKey, sameStance, "conflicting-stance");
-  const challenges = A.appendAll(
-    current.challenges,
-    A.filter(batch.challenges, (row) => !A.some(current.challenges, (existing) => sameChallenge(existing, row)))
+  const challenges = A.reduce(batch.challenges, current.challenges, (accepted, row) =>
+    A.some(accepted, (existing) => sameChallenge(existing, row)) ? accepted : A.append(accepted, row)
   );
   return LedgerSnapshot.make({
     observations,

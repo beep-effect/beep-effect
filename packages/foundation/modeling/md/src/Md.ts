@@ -337,19 +337,12 @@ const blockTemplateFormattingLinePattern = /[\r\n]/;
 const isTemplateStringsArray = (input: unknown): input is TemplateStringsArray =>
   A.isArray(input) && P.hasProperty(input, "raw");
 
-// Constructor content is always a string, an array of children, or a tagged
-// node; the trailing options object of the same constructors never is. That
-// gap is what makes the data-first / data-last dispatch below decidable.
-const isContentArgument = (input: unknown): boolean =>
+const isContentNeverAnOptionsObject = (input: unknown): boolean =>
   P.isString(input) || A.isArray(input) || P.hasProperty(input, "_tag");
 
-// Data-first when the leading argument carries the content, e.g. `pre(value)`
-// and `pre(value, options)` against the data-last `pre(options)`.
-const isLeadingContentCall = (args: IArguments): boolean => isContentArgument(args[0]);
+const isLeadingContentCall = (args: IArguments): boolean => isContentNeverAnOptionsObject(args[0]);
 
-// Data-first when the content follows a keying argument (href, kind), e.g.
-// `a(href, children)` against the data-last `a(children, options)`.
-const isKeyedContentCall = (args: IArguments): boolean => args.length >= 2 && isContentArgument(args[1]);
+const isKeyedContentCall = (args: IArguments): boolean => args.length >= 2 && isContentNeverAnOptionsObject(args[1]);
 
 const isInlineInputArray = (input: InlineContent): input is ReadonlyArray<InlineInput> => A.isArray(input);
 
@@ -364,8 +357,6 @@ const isListItemContentBlockValue = (input: ListItemContent): boolean =>
 const isBlockTemplateFormattingChunk = (chunk: string): boolean =>
   Str.isEmpty(Str.trim(chunk)) && blockTemplateFormattingLinePattern.test(chunk);
 
-// A template chunk is rendered unless it is whitespace-only formatting sitting
-// next to a block interpolation (where it is just source-layout indentation).
 const shouldAppendTemplateChunk = (chunk: string, hasBlockNeighbor: boolean): boolean =>
   Str.isNonEmpty(chunk) && !(hasBlockNeighbor && isBlockTemplateFormattingChunk(chunk));
 

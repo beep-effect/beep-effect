@@ -58,10 +58,13 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-t
     () =>
       Effect.gen(function* () {
         const { configuration, corpus, make, limits } = yield* install();
-        // The pin pattern is the longest raw pattern; its wrapped context form is
-        // five units longer. One unit of headroom passes every installation check.
-        const pin = configuration.pin.pattern;
-        const stage = yield* make(configuration, { ...limits, patternUtf16: pin.bytes.length / pin.width + 1 });
+        const longestRawPinPattern = configuration.pin.pattern;
+        const oneUnitOverLongestRawPinBecauseEitherWrapAddsFive =
+          longestRawPinPattern.bytes.length / longestRawPinPattern.width + 1;
+        const stage = yield* make(configuration, {
+          ...limits,
+          patternUtf16: oneUnitOverLongestRawPinBecauseEitherWrapAddsFive,
+        });
         const row = (kind: string) =>
           Effect.fromOption(A.findFirst(corpus.cases, (row) => row.expected.kind === kind && row.markup === null));
         const section = yield* row("UnknownCitation");

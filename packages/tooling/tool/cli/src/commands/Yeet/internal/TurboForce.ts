@@ -109,8 +109,6 @@ export const TurboForceReason = LiteralKit(["lockfile-changed", "patches-changed
 );
 
 /**
- * Type of {@link TurboForceReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -125,8 +123,6 @@ const TurboForceDecidingMode = YeetRunMode.pick(["repair", "verify", "publish"])
 const isTurboForceDecidingMode = S.is(TurboForceDecidingMode);
 
 /**
- * One package whose installed-tree digest differs between the merge base and `HEAD`.
- *
  * **Details**
  *
  * A digest is absent on the side where the package does not exist: `base` for
@@ -166,8 +162,6 @@ export class PackageInstalledTreeChange extends S.Opaque<
 ) {}
 
 /**
- * `bun.lock` is unchanged, so every package's installed tree equals the base's.
- *
  * **Example** (An unchanged lockfile)
  *
  * ```ts
@@ -193,8 +187,6 @@ export class InstalledTreesLockfileUnchanged extends S.Opaque<
 ) {}
 
 /**
- * The installed-tree digests of the merge base and `HEAD`, compared package by package.
- *
  * **Details**
  *
  * `packages` counts every package on either side, the root
@@ -265,16 +257,12 @@ export const InstalledTreeComparison = S.Union([InstalledTreesLockfileUnchanged,
 );
 
 /**
- * {@inheritDoc InstalledTreeComparison}
- *
  * @category type-level
  * @since 0.0.0
  */
 export type InstalledTreeComparison = typeof InstalledTreeComparison.Type;
 
 /**
- * The narrowed force decision, computed in shadow.
- *
  * **Details**
  *
  * `reasons` is the narrowed decision: the actual reasons without
@@ -340,8 +328,6 @@ export class TurboForceShadowUnavailable extends S.Opaque<
 ) {}
 
 /**
- * The narrowed force decision, or why it could not be computed.
- *
  * **Example** (Match on the shadow)
  *
  * ```ts
@@ -365,8 +351,6 @@ export const TurboForceShadow = S.Union([TurboForceShadowComputed, TurboForceSha
 );
 
 /**
- * {@inheritDoc TurboForceShadow}
- *
  * @category type-level
  * @since 0.0.0
  */

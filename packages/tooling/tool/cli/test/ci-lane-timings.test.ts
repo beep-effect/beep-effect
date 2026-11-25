@@ -717,6 +717,9 @@ describe("ci lane timings derivations", () => {
   it("classifies runner pools from labels and refuses to guess", () => {
     expect(ciRunnerClassForLabels(["self-hosted", "linux"])).toBe("managed");
     expect(ciRunnerClassForLabels(["beep-ec2-heavy"])).toBe("managed");
+    // The workflows moved to the beep-fleet-* labels; history on either side stays managed.
+    expect(ciRunnerClassForLabels(["beep-fleet-heavy"])).toBe("managed");
+    expect(ciRunnerClassForLabels(["beep-fleet-overflow"])).toBe("managed");
     expect(ciRunnerClassForLabels(["ubuntu-latest"])).toBe("github-hosted");
     // An unlabelled job is excluded from the rate rather than bucketed into
     // whichever side would look better.
@@ -1321,7 +1324,7 @@ describe("ci lane timing admission window", () => {
         const routed = job({
           completed_at: "2026-11-10T00:12:00Z",
           id: 4504,
-          labels: ["beep-shard-overflow"],
+          labels: ["beep-fleet-overflow"],
           name: "Test Unit (repo-cli-7) / Overflow",
           run_id: run.id,
           started_at: "2026-11-10T00:01:30Z",
@@ -1368,7 +1371,7 @@ describe("ci lane timing admission window", () => {
             completed_at: "2026-11-10T00:12:00Z",
             conclusion,
             id: id * 10 + 4,
-            labels: ["beep-shard-overflow"],
+            labels: ["beep-fleet-overflow"],
             name: "Test Unit (repo-cli-7) / Overflow",
             run_id: run.id,
             started_at: "2026-11-10T00:01:30Z",

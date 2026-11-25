@@ -59,8 +59,6 @@ export class YeetRetirePlan extends S.Opaque<YeetRetirePlan, { readonly brand: u
 ) {}
 
 /**
- * A detached job a retirement asked to stop before fencing its lane, and how the stop went.
- *
  * **Example** (Record a stopped monitor)
  *
  * ```ts
@@ -128,8 +126,6 @@ export const YeetRetireVerdict = S.TaggedUnion({
 );
 
 /**
- * Decoded retirement verdict union.
- *
  * @see {@link YeetRetireVerdict} for the runtime schema.
  * @category type-level
  * @since 0.0.0
@@ -137,8 +133,6 @@ export const YeetRetireVerdict = S.TaggedUnion({
 export type YeetRetireVerdict = typeof YeetRetireVerdict.Type;
 
 /**
- * The `--plan --json` document of `yeet sweep --retire`: the retirement, its gate, and the clone sweep plan.
- *
  * **Example** (Encode a plan document)
  *
  * ```ts
@@ -174,8 +168,6 @@ export class YeetRetireSweepPlan extends S.Opaque<YeetRetireSweepPlan, { readonl
 export const YeetRetireSweepPlanJson = JsonStringCodec(YeetRetireSweepPlan);
 
 /**
- * The `--json` document of an executed `yeet sweep --retire`: the retirement receipt and the clone sweep report.
- *
  * **Details**
  *
  * `closeoutChecks` holds the online classification of every touched packet

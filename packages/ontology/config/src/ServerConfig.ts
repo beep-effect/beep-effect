@@ -38,8 +38,6 @@ const $I = $OntologyConfigId.create("ServerConfig");
 export const OntologyWorkspaceRootConfig = Config.NonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
 
 /**
- * Server-only ontology filesystem authority settings.
- *
  * **Example** (Make server config)
  *
  * ```ts

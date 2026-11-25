@@ -92,8 +92,6 @@ export const MAX_SERIAL = 2_958_465.999_988_43;
 export const maxSerial = (system: XlsxDateSystem): number => (system === "1904" ? MAX_SERIAL - DAYS_1904 : MAX_SERIAL);
 
 /**
- * A date or time as a count of days, the time of day its fraction.
- *
  * **Example** (Serials in range)
  *
  * ```ts import.meta.vitest name="Serials in range"

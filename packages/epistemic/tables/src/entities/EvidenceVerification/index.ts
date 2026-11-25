@@ -6,8 +6,6 @@
  */
 
 /**
- * EvidenceVerification row converter exports.
- *
  * **Example** (Import converter export type)
  *
  * ```ts
@@ -22,8 +20,6 @@
  */
 export * from "./EvidenceVerification.converters.ts";
 /**
- * EvidenceVerification table metadata exports.
- *
  * **Example** (Access table entity name)
  *
  * ```ts

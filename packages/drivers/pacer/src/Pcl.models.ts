@@ -25,8 +25,6 @@ const $I = $PacerId.create("pacer/pcl/Pcl.models");
 const NumberOrString = S.Union([S.Finite, S.String]);
 
 /**
- * `CourtCaseSearchDto` — request body for `/cases/find` (pragmatic subset).
- *
  * **Example** (Search by full case number)
  *
  * ```ts
@@ -58,8 +56,6 @@ export class CourtCaseSearchDto extends S.Opaque<CourtCaseSearchDto, { readonly 
 ) {}
 
 /**
- * `PartySearchDto` — request body for `/parties/find` (pragmatic subset).
- *
  * **Example** (Search by party last name)
  *
  * ```ts
@@ -231,8 +227,6 @@ export class PartyResult extends S.Opaque<PartyResult, { readonly brand: unique 
 ) {}
 
 /**
- * `/cases/find` response envelope.
- *
  * **Example** (Wrap case results list)
  *
  * ```ts
@@ -259,8 +253,6 @@ export class CaseReportList extends S.Opaque<CaseReportList, { readonly brand: u
 ) {}
 
 /**
- * `/parties/find` response envelope.
- *
  * **Example** (Wrap party results list)
  *
  * ```ts

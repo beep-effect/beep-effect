@@ -14,8 +14,6 @@ const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.model");
 const pg = ProductEntity.pg;
 
 /**
- * Rejection entity raised against a claim by an office action.
- *
  * **Details**
  *
  * Stores the statutory {@link RejectionGround} as JSONB so the per-statute

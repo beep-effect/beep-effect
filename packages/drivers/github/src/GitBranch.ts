@@ -49,8 +49,6 @@ const CreateLinkedBranch = GraphQLDocument.make({
 }>();
 
 /**
- * What {@link GitBranchShape.upsert} did.
- *
  * **Example** (Validate an upsert outcome)
  *
  * ```ts
@@ -69,8 +67,6 @@ export const BranchOutcome = LiteralKit(["created", "reset"]).pipe(
 );
 
 /**
- * The values accepted by {@link BranchOutcome}.
- *
  * @public
  * @category type-level
  * @since 0.0.0

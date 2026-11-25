@@ -29,8 +29,6 @@ const $I = $MdId.create("Md.model");
 const codeFenceLanguagePattern = /^[A-Za-z0-9][A-Za-z0-9_+.-]*$/u;
 const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
-// This check never rejects a document. Effect's arbitrary compiler alone reads
-// the maxLength hint, keeping recursive child-list breadth bounded.
 const MarkdownArbitraryArraySizeHint = S.makeFilter<ReadonlyArray<unknown>>(
   () => true,
   $I.annote("MarkdownArbitraryArraySizeHint", {
@@ -41,8 +39,6 @@ const MarkdownArbitraryArraySizeHint = S.makeFilter<ReadonlyArray<unknown>>(
 );
 
 /**
- * Single safe Markdown fenced-code info-string token.
- *
  * **Example** (Decode language token)
  *
  * ```ts import.meta.vitest name="Decode language token"
@@ -73,8 +69,6 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
 );
 
 /**
- * Type for {@link CodeFenceLanguage}.
- *
  * **Example** (Type decoded language)
  *
  * ```ts
@@ -94,8 +88,6 @@ export type CodeFenceLanguage = typeof CodeFenceLanguage.Type;
 const decodeCodeFenceLanguageOption = S.decodeUnknownOption(CodeFenceLanguage);
 
 /**
- * Bare 11-character YouTube video id used by {@link YouTube} embeds.
- *
  * **Details**
  *
  * Constraining the id to the safe character class rejects malformed UTF-16
@@ -132,8 +124,6 @@ export const YouTubeVideoId = S.String.check(
 );
 
 /**
- * Safe Markdown footnote identifier.
- *
  * **Example** (Parse footnote identifier)
  *
  * ```ts
@@ -164,8 +154,6 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
 );
 
 /**
- * Type for {@link FootnoteIdentifier}.
- *
  * **Example** (Type footnote identifier)
  *
  * ```ts
@@ -183,8 +171,6 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
 export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
 
 /**
- * Markdown table column alignment.
- *
  * **Example** (Decode center alignment)
  *
  * ```ts import.meta.vitest name="Decode center alignment"
@@ -206,8 +192,6 @@ export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pi
 );
 
 /**
- * Type for {@link TableAlignment}.
- *
  * **Example** (Assign right alignment)
  *
  * ```ts
@@ -223,8 +207,6 @@ export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pi
 export type TableAlignment = typeof TableAlignment.Type;
 
 /**
- * Common typed admonition kinds.
- *
  * **Example** (Decode warning kind)
  *
  * ```ts import.meta.vitest name="Decode warning kind"
@@ -246,8 +228,6 @@ export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning",
 );
 
 /**
- * Type for {@link AdmonitionKind}.
- *
  * **Example** (Assign tip kind)
  *
  * ```ts
@@ -263,8 +243,6 @@ export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning",
 export type AdmonitionKind = typeof AdmonitionKind.Type;
 
 /**
- * Generic block embed kind.
- *
  * **Example** (Decode video kind)
  *
  * ```ts import.meta.vitest name="Decode video kind"
@@ -286,8 +264,6 @@ export const EmbedKind = LiteralKit(["link", "image", "video", "audio", "unknown
 );
 
 /**
- * Type for {@link EmbedKind}.
- *
  * **Example** (Assign image kind)
  *
  * ```ts
@@ -329,8 +305,6 @@ export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.
   );
 
 /**
- * Type for {@link InlineChildren}.
- *
  * **Example** (Type text children)
  *
  * ```ts import.meta.vitest name="Type text children"
@@ -347,8 +321,6 @@ export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.
 export type InlineChildren = typeof InlineChildren.Type;
 
 /**
- * Companion namespace for {@link InlineChildren}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -375,8 +347,6 @@ export declare namespace InlineChildren {
 }
 
 /**
- * Plain escaped inline text.
- *
  * **Example** (Make text node)
  *
  * ```ts import.meta.vitest name="Make text node"
@@ -407,8 +377,6 @@ export class Text extends S.Opaque<Text, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Text}.
- *
  * **Example** (Type text node)
  *
  * ```ts import.meta.vitest name="Type text node"
@@ -437,8 +405,6 @@ export declare namespace Text {
 }
 
 /**
- * Trusted raw Markdown inline content.
- *
  * **Example** (Make raw markdown)
  *
  * ```ts import.meta.vitest name="Make raw markdown"
@@ -469,8 +435,6 @@ export class RawMarkdown extends S.Opaque<RawMarkdown, { readonly brand: unique 
 }
 
 /**
- * Companion namespace for {@link RawMarkdown}.
- *
  * **Example** (Type raw markdown)
  *
  * ```ts import.meta.vitest name="Type raw markdown"
@@ -499,8 +463,6 @@ export declare namespace RawMarkdown {
 }
 
 /**
- * Raw HTML inline content for adapters that opt into trusted HTML rendering.
- *
  * **Details**
  *
  * The built-in HTML adapter escapes this value by default.
@@ -536,8 +498,6 @@ export class RawHtml extends S.Opaque<RawHtml, { readonly brand: unique symbol }
 }
 
 /**
- * Companion namespace for {@link RawHtml}.
- *
  * **Example** (Type raw HTML)
  *
  * ```ts
@@ -566,8 +526,6 @@ export declare namespace RawHtml {
 }
 
 /**
- * Strong inline content.
- *
  * **Example** (Make strong node)
  *
  * ```ts import.meta.vitest name="Make strong node"
@@ -602,8 +560,6 @@ export class Strong extends S.Opaque<Strong, { readonly brand: unique symbol }>(
 }
 
 /**
- * Companion namespace for {@link Strong}.
- *
  * **Example** (Type strong node)
  *
  * ```ts import.meta.vitest name="Type strong node"
@@ -635,8 +591,6 @@ export declare namespace Strong {
 }
 
 /**
- * Emphasized inline content.
- *
  * **Example** (Make emphasis node)
  *
  * ```ts import.meta.vitest name="Make emphasis node"
@@ -671,8 +625,6 @@ export class Em extends S.Opaque<Em, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Em}.
- *
  * **Example** (Type emphasis node)
  *
  * ```ts import.meta.vitest name="Type emphasis node"
@@ -704,8 +656,6 @@ export declare namespace Em {
 }
 
 /**
- * Deleted inline content.
- *
  * **Example** (Make deleted node)
  *
  * ```ts import.meta.vitest name="Make deleted node"
@@ -740,8 +690,6 @@ export class Del extends S.Opaque<Del, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Del}.
- *
  * **Example** (Type deleted node)
  *
  * ```ts import.meta.vitest name="Type deleted node"
@@ -773,8 +721,6 @@ export declare namespace Del {
 }
 
 /**
- * Inline code span.
- *
  * **Example** (Make inline code)
  *
  * ```ts import.meta.vitest name="Make inline code"
@@ -806,8 +752,6 @@ export class Code extends S.Opaque<Code, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Code}.
- *
  * **Example** (Type inline code)
  *
  * ```ts import.meta.vitest name="Type inline code"
@@ -836,8 +780,6 @@ export declare namespace Code {
 }
 
 /**
- * Inline hyperlink.
- *
  * **Example** (Make hyperlink node)
  *
  * ```ts import.meta.vitest name="Make hyperlink node"
@@ -882,8 +824,6 @@ export class A extends S.Opaque<A, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link A}.
- *
  * **Example** (Type hyperlink node)
  *
  * ```ts import.meta.vitest name="Type hyperlink node"
@@ -919,8 +859,6 @@ export declare namespace A {
 }
 
 /**
- * Inline image.
- *
  * **Example** (Make image node)
  *
  * ```ts import.meta.vitest name="Make image node"
@@ -962,8 +900,6 @@ export class Img extends S.Opaque<Img, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Img}.
- *
  * **Example** (Type image node)
  *
  * ```ts import.meta.vitest name="Type image node"
@@ -999,8 +935,6 @@ export declare namespace Img {
 }
 
 /**
- * Inline line break.
- *
  * **Example** (Make line break)
  *
  * ```ts import.meta.vitest name="Make line break"
@@ -1027,8 +961,6 @@ export class Br extends S.Opaque<Br, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Br}.
- *
  * **Example** (Type line break)
  *
  * ```ts import.meta.vitest name="Type line break"
@@ -1056,8 +988,6 @@ export declare namespace Br {
 }
 
 /**
- * Inline TeX math content.
- *
  * **Example** (Make inline math)
  *
  * ```ts import.meta.vitest name="Make inline math"
@@ -1089,8 +1019,6 @@ export class InlineMath extends S.Opaque<InlineMath, { readonly brand: unique sy
 }
 
 /**
- * Companion namespace for {@link InlineMath}.
- *
  * **Example** (Encode inline math)
  *
  * ```ts
@@ -1119,8 +1047,6 @@ export declare namespace InlineMath {
 }
 
 /**
- * Inline footnote reference.
- *
  * **Example** (Make footnote reference)
  *
  * ```ts import.meta.vitest name="Make footnote reference"
@@ -1159,8 +1085,6 @@ export class FootnoteReference extends S.Opaque<FootnoteReference, { readonly br
 }
 
 /**
- * Companion namespace for {@link FootnoteReference}.
- *
  * **Example** (Encode footnote reference)
  *
  * ```ts
@@ -1192,8 +1116,6 @@ export declare namespace FootnoteReference {
 }
 
 /**
- * Discriminated union of inline Markdown AST nodes.
- *
  * **Example** (Decode and project inline union)
  *
  * ```ts import.meta.vitest name="Decode and project inline union"
@@ -1272,8 +1194,6 @@ export const Inline = S.Union([
 );
 
 /**
- * Runtime type for {@link Inline}.
- *
  * **Example** (Type inline node)
  *
  * ```ts import.meta.vitest name="Type inline node"
@@ -1290,8 +1210,6 @@ export const Inline = S.Union([
 export type Inline = typeof Inline.Type;
 
 /**
- * Companion namespace for {@link Inline}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -1369,8 +1287,6 @@ export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Enc
   );
 
 /**
- * Type for {@link BlockChildren}.
- *
  * **Example** (Type block children)
  *
  * ```ts import.meta.vitest name="Type block children"
@@ -1387,8 +1303,6 @@ export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Enc
 export type BlockChildren = typeof BlockChildren.Type;
 
 /**
- * Companion namespace for {@link BlockChildren}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -1477,8 +1391,6 @@ export const ListItemChild: S.suspend<S.Codec<ListItemChild.Type, ListItemChild.
   );
 
 /**
- * Runtime type for {@link ListItemChild}.
- *
  * **Example** (Type list item child)
  *
  * ```ts import.meta.vitest name="Type list item child"
@@ -1495,8 +1407,6 @@ export const ListItemChild: S.suspend<S.Codec<ListItemChild.Type, ListItemChild.
 export type ListItemChild = typeof ListItemChild.Type;
 
 /**
- * Companion namespace for {@link ListItemChild}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -1560,8 +1470,6 @@ export const ListItemChildren = S.Array(ListItemChild)
   );
 
 /**
- * Type for {@link ListItemChildren}.
- *
  * **Example** (Type list item children)
  *
  * ```ts import.meta.vitest name="Type list item children"
@@ -1578,8 +1486,6 @@ export const ListItemChildren = S.Array(ListItemChild)
 export type ListItemChildren = typeof ListItemChildren.Type;
 
 /**
- * Companion namespace for {@link ListItemChildren}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -1606,8 +1512,6 @@ export declare namespace ListItemChildren {
 }
 
 /**
- * Paragraph block.
- *
  * **Example** (Make paragraph node)
  *
  * ```ts import.meta.vitest name="Make paragraph node"
@@ -1638,8 +1542,6 @@ export class P extends S.Opaque<P, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link P}.
- *
  * **Example** (Type paragraph node)
  *
  * ```ts import.meta.vitest name="Type paragraph node"
@@ -1671,8 +1573,6 @@ export declare namespace P {
 }
 
 /**
- * Heading level from one (largest) to six (smallest).
- *
  * **Example** (Decode heading level)
  *
  * ```ts import.meta.vitest name="Decode heading level"
@@ -1694,8 +1594,6 @@ export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
 );
 
 /**
- * Type for {@link HeadingLevel}.
- *
  * **Example** (Type heading level)
  *
  * ```ts
@@ -1721,8 +1619,6 @@ const makeHeadingValueMember = <Level extends HeadingLevel>({ literal }: S.Liter
   });
 
 /**
- * Flat discriminated union of heading payloads keyed by their semantic level.
- *
  * **Details**
  *
  * The union retains the public `{ level, children }` shape while exposing
@@ -1770,8 +1666,6 @@ export const HeadingValue = HeadingLevel.mapMembers(([h1, h2, h3, h4, h5, h6]) =
 );
 
 /**
- * Runtime heading payload represented by {@link HeadingValue}.
- *
  * @see {@link HeadingValue} for case constructors, guards, and exhaustive matching.
  * @category models
  * @since 0.0.0
@@ -1795,8 +1689,6 @@ export declare namespace HeadingValue {
 }
 
 /**
- * Heading block carrying its level alongside inline content.
- *
  * **Example** (Make heading node)
  *
  * ```ts import.meta.vitest name="Make heading node"
@@ -1847,8 +1739,6 @@ export class Heading extends S.Opaque<Heading, { readonly brand: unique symbol }
 }
 
 /**
- * Companion namespace for {@link Heading}.
- *
  * **Example** (Type heading node)
  *
  * ```ts import.meta.vitest name="Type heading node"
@@ -1882,8 +1772,6 @@ export declare namespace Heading {
 }
 
 /**
- * List item node used by ordered, unordered, and task lists.
- *
  * **Example** (Make list item)
  *
  * ```ts import.meta.vitest name="Make list item"
@@ -1917,8 +1805,6 @@ export class Li extends S.Opaque<Li, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Li}.
- *
  * **Example** (Type list item)
  *
  * ```ts import.meta.vitest name="Type list item"
@@ -1950,8 +1836,6 @@ export declare namespace Li {
 }
 
 /**
- * List children used by ordered and unordered list blocks.
- *
  * **Example** (Decode list children)
  *
  * ```ts import.meta.vitest name="Decode list children"
@@ -1977,8 +1861,6 @@ export const ListChildren = S.Array(Li)
   );
 
 /**
- * Type for {@link ListChildren}.
- *
  * **Example** (Type list children)
  *
  * ```ts import.meta.vitest name="Type list children"
@@ -1995,8 +1877,6 @@ export const ListChildren = S.Array(Li)
 export type ListChildren = typeof ListChildren.Type;
 
 /**
- * Companion namespace for {@link ListChildren}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -2023,8 +1903,6 @@ export declare namespace ListChildren {
 }
 
 /**
- * Unordered list block.
- *
  * **Example** (Make unordered list)
  *
  * ```ts import.meta.vitest name="Make unordered list"
@@ -2056,8 +1934,6 @@ export class Ul extends S.Opaque<Ul, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Ul}.
- *
  * **Example** (Type unordered list)
  *
  * ```ts import.meta.vitest name="Type unordered list"
@@ -2089,8 +1965,6 @@ export declare namespace Ul {
 }
 
 /**
- * Ordered-list start value retained by the broad Markdown AST.
- *
  * **Details**
  *
  * Zero is representable because CommonMark ordered-list markers may begin at
@@ -2121,23 +1995,18 @@ export const OrderedListStart = S.Union([S.Literal(0), PosInt]).pipe(
 );
 
 /**
- * Runtime ordered-list start represented by {@link OrderedListStart}.
- *
  * @see {@link OrderedListStart} for decoding and validation helpers.
  * @category models
  * @since 0.0.0
  */
 export type OrderedListStart = typeof OrderedListStart.Type;
 
-// Share the nominal identity without recursing through the class base type.
-interface OlBrand {
+interface OlBrandSharedWithoutClassBaseRecursion {
   readonly brand: unique symbol;
 }
 
 const olStartDefault = PosInt.make(1);
 /**
- * Ordered list block.
- *
  * **Example** (Make ordered list)
  *
  * ```ts import.meta.vitest name="Make ordered list"
@@ -2150,7 +2019,7 @@ const olStartDefault = PosInt.make(1);
  * @category models
  * @since 0.0.0
  */
-export class Ol extends S.Opaque<Ol, OlBrand>()(
+export class Ol extends S.Opaque<Ol, OlBrandSharedWithoutClassBaseRecursion>()(
   S.TaggedStruct("ol", {
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
@@ -2175,8 +2044,6 @@ export class Ol extends S.Opaque<Ol, OlBrand>()(
 }
 
 /**
- * Companion namespace for {@link Ol}.
- *
  * **Example** (Type ordered list)
  *
  * ```ts import.meta.vitest name="Type ordered list"
@@ -2193,7 +2060,7 @@ export declare namespace Ol {
   /**
    * @since 0.0.0
    */
-  export interface Type extends OlBrand {
+  export interface Type extends OlBrandSharedWithoutClassBaseRecursion {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
     readonly start: OrderedListStart;
@@ -2210,8 +2077,6 @@ export declare namespace Ol {
 }
 
 /**
- * GFM task list item.
- *
  * **Example** (Make task item)
  *
  * ```ts import.meta.vitest name="Make task item"
@@ -2250,8 +2115,6 @@ export class TaskItem extends S.Opaque<TaskItem, { readonly brand: unique symbol
 }
 
 /**
- * Companion namespace for {@link TaskItem}.
- *
  * **Example** (Type task item)
  *
  * ```ts import.meta.vitest name="Type task item"
@@ -2311,8 +2174,6 @@ export const TaskListItemSpec = TaskItem.pipe(
 );
 
 /**
- * Type for {@link TaskListItemSpec}.
- *
  * **Example** (Type task item spec)
  *
  * ```ts import.meta.vitest name="Type task item spec"
@@ -2329,8 +2190,6 @@ export const TaskListItemSpec = TaskItem.pipe(
 export type TaskListItemSpec = typeof TaskListItemSpec.Type;
 
 /**
- * Task item children used by GFM task list blocks.
- *
  * **Example** (Decode task item children)
  *
  * ```ts import.meta.vitest name="Decode task item children"
@@ -2356,8 +2215,6 @@ export const TaskItemChildren = S.Array(TaskItem)
   );
 
 /**
- * Type for {@link TaskItemChildren}.
- *
  * **Example** (Type task item children)
  *
  * ```ts import.meta.vitest name="Type task item children"
@@ -2374,8 +2231,6 @@ export const TaskItemChildren = S.Array(TaskItem)
 export type TaskItemChildren = typeof TaskItemChildren.Type;
 
 /**
- * Companion namespace for {@link TaskItemChildren}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -2402,8 +2257,6 @@ export declare namespace TaskItemChildren {
 }
 
 /**
- * GFM task list block.
- *
  * **Example** (Make task list)
  *
  * ```ts import.meta.vitest name="Make task list"
@@ -2436,8 +2289,6 @@ export class TaskList extends S.Opaque<TaskList, { readonly brand: unique symbol
 }
 
 /**
- * Companion namespace for {@link TaskList}.
- *
  * **Example** (Type task list)
  *
  * ```ts import.meta.vitest name="Type task list"
@@ -2471,8 +2322,6 @@ export declare namespace TaskList {
 }
 
 /**
- * Block quote container.
- *
  * **Example** (Make block quote)
  *
  * ```ts import.meta.vitest name="Make block quote"
@@ -2507,8 +2356,6 @@ export class BlockQuote extends S.Opaque<BlockQuote, { readonly brand: unique sy
 }
 
 /**
- * Companion namespace for {@link BlockQuote}.
- *
  * **Example** (Type block quote)
  *
  * ```ts import.meta.vitest name="Type block quote"
@@ -2540,8 +2387,6 @@ export declare namespace BlockQuote {
 }
 
 /**
- * Fenced code block.
- *
  * **Example** (Make fenced code)
  *
  * ```ts import.meta.vitest name="Make fenced code"
@@ -2557,12 +2402,6 @@ export declare namespace BlockQuote {
  */
 export class Pre extends S.Opaque<Pre, { readonly brand: unique symbol }>()(
   S.TaggedStruct("pre", {
-    // Encoded form must survive a JSON boundary (jsonb columns, rpc/ndjson
-    // wire): S.Option(S.String) encodes to a real Option instance that does not
-    // round-trip through JSON, so persisted/transported documents stay
-    // `string | null` on the wire. Decoding folds legacy free-form info strings
-    // through CodeFenceLanguage, dropping non-conforming tokens to None so the
-    // rendered language is always a single safe token.
     language: S.OptionFromNullOr(S.String)
       .pipe(
         S.decodeTo(S.Option(CodeFenceLanguage), {
@@ -2571,7 +2410,8 @@ export class Pre extends S.Opaque<Pre, { readonly brand: unique symbol }>()(
         })
       )
       .annotateKey({
-        description: "Optional safe language hint for fenced code rendering.",
+        description:
+          "Optional safe language hint for fenced code rendering, `string | null` on the wire so it survives JSON; decoding drops a legacy info string that is not one CodeFenceLanguage token to None.",
       }),
     value: S.String.annotateKey({
       description: "Literal code block contents.",
@@ -2592,8 +2432,6 @@ export class Pre extends S.Opaque<Pre, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Pre}.
- *
  * **Example** (Type fenced code)
  *
  * ```ts import.meta.vitest name="Type fenced code"
@@ -2632,8 +2470,6 @@ export declare namespace Pre {
 }
 
 /**
- * Table cell containing inline Markdown content.
- *
  * **Example** (Make table cell)
  *
  * ```ts import.meta.vitest name="Make table cell"
@@ -2669,8 +2505,6 @@ export class TableCell extends S.Opaque<TableCell, { readonly brand: unique symb
 }
 
 /**
- * Companion namespace for {@link TableCell}.
- *
  * **Example** (Type table cell)
  *
  * ```ts import.meta.vitest name="Type table cell"
@@ -2702,8 +2536,6 @@ export declare namespace TableCell {
 }
 
 /**
- * Table row containing cells in column order.
- *
  * **Example** (Make table row)
  *
  * ```ts import.meta.vitest name="Make table row"
@@ -2737,8 +2569,6 @@ export class TableRow extends S.Opaque<TableRow, { readonly brand: unique symbol
 }
 
 /**
- * Companion namespace for {@link TableRow}.
- *
  * **Example** (Type table row)
  *
  * ```ts import.meta.vitest name="Type table row"
@@ -2771,8 +2601,6 @@ export declare namespace TableRow {
 
 const tableAlignDefault = Arr.empty<TableAlignment>();
 /**
- * Markdown table block.
- *
  * **Example** (Make table block)
  *
  * ```ts import.meta.vitest name="Make table block"
@@ -2828,8 +2656,6 @@ export class Table extends S.Opaque<Table, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Table}.
- *
  * **Example** (Type table block)
  *
  * ```ts import.meta.vitest name="Type table block"
@@ -2868,8 +2694,6 @@ export declare namespace Table {
 }
 
 /**
- * YouTube video embed block.
- *
  * **Example** (Make YouTube embed)
  *
  * ```ts import.meta.vitest name="Make YouTube embed"
@@ -2908,8 +2732,6 @@ export class YouTube extends S.Opaque<YouTube, { readonly brand: unique symbol }
 }
 
 /**
- * Companion namespace for {@link YouTube}.
- *
  * **Example** (Type YouTube embed)
  *
  * ```ts import.meta.vitest name="Type YouTube embed"
@@ -2938,8 +2760,6 @@ export declare namespace YouTube {
 }
 
 /**
- * Display TeX math block.
- *
  * **Example** (Make math block)
  *
  * ```ts import.meta.vitest name="Make math block"
@@ -2973,8 +2793,6 @@ export class MathBlock extends S.Opaque<MathBlock, { readonly brand: unique symb
 }
 
 /**
- * Companion namespace for {@link MathBlock}.
- *
  * **Example** (Encode math block)
  *
  * ```ts
@@ -3003,8 +2821,6 @@ export declare namespace MathBlock {
 }
 
 /**
- * Footnote definition block.
- *
  * **Example** (Make footnote definition)
  *
  * ```ts import.meta.vitest name="Make footnote definition"
@@ -3051,8 +2867,6 @@ export class FootnoteDefinition extends S.Opaque<FootnoteDefinition, { readonly 
 }
 
 /**
- * Companion namespace for {@link FootnoteDefinition}.
- *
  * **Example** (Encode footnote definition)
  *
  * ```ts
@@ -3090,8 +2904,6 @@ export declare namespace FootnoteDefinition {
 }
 
 /**
- * Typed admonition block.
- *
  * **Example** (Make admonition block)
  *
  * ```ts import.meta.vitest name="Make admonition block"
@@ -3145,8 +2957,6 @@ export class Admonition extends S.Opaque<Admonition, { readonly brand: unique sy
 }
 
 /**
- * Companion namespace for {@link Admonition}.
- *
  * **Example** (Encode admonition block)
  *
  * ```ts
@@ -3182,8 +2992,6 @@ export declare namespace Admonition {
 }
 
 /**
- * Safe generalized block embed.
- *
  * **Example** (Make embed block)
  *
  * ```ts import.meta.vitest name="Make embed block"
@@ -3247,8 +3055,6 @@ export class Embed extends S.Opaque<Embed, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Embed}.
- *
  * **Example** (Encode embed block)
  *
  * ```ts
@@ -3286,8 +3092,6 @@ export declare namespace Embed {
 }
 
 /**
- * Horizontal rule block.
- *
  * **Example** (Make horizontal rule)
  *
  * ```ts import.meta.vitest name="Make horizontal rule"
@@ -3314,8 +3118,6 @@ export class Hr extends S.Opaque<Hr, { readonly brand: unique symbol }>()(
 }
 
 /**
- * Companion namespace for {@link Hr}.
- *
  * **Example** (Type horizontal rule)
  *
  * ```ts import.meta.vitest name="Type horizontal rule"
@@ -3343,8 +3145,6 @@ export declare namespace Hr {
 }
 
 /**
- * Discriminated union of block Markdown AST nodes.
- *
  * **Example** (Decode and project block union)
  *
  * ```ts import.meta.vitest name="Decode and project block union"
@@ -3426,8 +3226,6 @@ export const Block = S.Union([
 );
 
 /**
- * Runtime type for {@link Block}.
- *
  * **Example** (Type block node)
  *
  * ```ts import.meta.vitest name="Type block node"
@@ -3444,8 +3242,6 @@ export const Block = S.Union([
 export type Block = typeof Block.Type;
 
 /**
- * Companion namespace for {@link Block}.
- *
  * **Example** (Use namespace Type)
  *
  * ```ts import.meta.vitest name="Use namespace Type"
@@ -3500,8 +3296,6 @@ export declare namespace Block {
 }
 
 /**
- * Root Markdown document AST.
- *
  * **Example** (Make document root)
  *
  * ```ts import.meta.vitest name="Make document root"
@@ -3541,8 +3335,6 @@ export class Document extends S.Opaque<Document, { readonly brand: unique symbol
 }
 
 /**
- * Companion namespace for {@link Document}.
- *
  * **Example** (Type document root)
  *
  * ```ts import.meta.vitest name="Type document root"

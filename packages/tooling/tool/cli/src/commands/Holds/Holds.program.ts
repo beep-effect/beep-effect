@@ -84,8 +84,6 @@ export const runHoldsList = Effect.gen(function* () {
 });
 
 /**
- * Inputs for {@link runHoldsProbe}.
- *
  * **Example** (Probe input)
  *
  * ```ts
@@ -288,8 +286,6 @@ export const runHoldsLint = Effect.fn("Holds.lintProgram")(function* (write: boo
 });
 
 /**
- * Inputs for {@link runHoldsUpdate}.
- *
  * **Example** (Plan an update without recording)
  *
  * ```ts

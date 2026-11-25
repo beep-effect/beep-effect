@@ -46,8 +46,7 @@ const graphEvent = (id: string, date: string, subject: string, categories: Reado
     categories: O.some(categories),
   });
 
-// A Graph calendar over a map of events: creates keyed events, applies patches, deletes.
-const fakeM365 = (store: Ref.Ref<HashMap.HashMap<string, StoredEvent>>) =>
+const fakeGraphCalendarOverEventMap = (store: Ref.Ref<HashMap.HashMap<string, StoredEvent>>) =>
   makeM365Stub({
     createEvent: (request) =>
       Ref.modify(store, (events) => {
@@ -108,14 +107,13 @@ const fakeM365 = (store: Ref.Ref<HashMap.HashMap<string, StoredEvent>>) =>
       ),
   });
 
-/** The fake calendar's events, so a test can read what the adapter did. */
 class FakeEvents extends Context.Service<FakeEvents, Ref.Ref<HashMap.HashMap<string, StoredEvent>>>()(
   "@beep/law-practice-server/test/QuestionCalendar.test/FakeEvents"
 ) {}
 
 const calendarWith = (seed: ReadonlyArray<readonly [string, StoredEvent]>) =>
   makeQuestionCalendarLayer(config).pipe(
-    Layer.provide(Layer.unwrap(Effect.map(FakeEvents, fakeM365))),
+    Layer.provide(Layer.unwrap(Effect.map(FakeEvents, fakeGraphCalendarOverEventMap))),
     Layer.provideMerge(Layer.effect(FakeEvents, Ref.make(HashMap.fromIterable(seed))))
   );
 
@@ -146,10 +144,9 @@ const provisionalEvent = (categories: ReadonlyArray<string>): readonly [string, 
   { event: graphEvent("evt-docket-1", "2026-10-02", "Response due", categories), key: O.none() },
 ];
 
-// An event an earlier apply created under the write's key, as the calendar now holds it.
 const KEYED_EVENT = "evt-keyed-1";
 const keyedWrite = write(day(11, 2), "Response due (moved)");
-const keyedEvent = (categories: ReadonlyArray<string>): readonly [string, StoredEvent] => [
+const eventAnEarlierApplyCreatedUnderTheKey = (categories: ReadonlyArray<string>): readonly [string, StoredEvent] => [
   KEYED_EVENT,
   {
     event: graphEvent(KEYED_EVENT, "2026-10-02", "Response due", categories),
@@ -282,7 +279,7 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
     );
   });
 
-  it.layer(calendarWith([keyedEvent(["Docket - verified"])]), { timeout: "10 seconds" })(
+  it.layer(calendarWith([eventAnEarlierApplyCreatedUnderTheKey(["Docket - verified"])]), { timeout: "10 seconds" })(
     "a keyed event the attorney verified",
     (it) => {
       it.effect("refuses to re-apply the write and changes nothing", () =>
@@ -302,40 +299,39 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
     }
   );
 
-  it.layer(calendarWith([keyedEvent(["M: 90001", "Docket - needs review"])]), { timeout: "10 seconds" })(
-    "a provisional keyed event",
-    (it) => {
-      it.effect("re-applies the write, records the event's prior state, and undo restores it", () =>
-        Effect.gen(function* () {
-          const store = yield* FakeEvents;
-          const calendar = yield* QuestionCalendar;
+  it.layer(calendarWith([eventAnEarlierApplyCreatedUnderTheKey(["M: 90001", "Docket - needs review"])]), {
+    timeout: "10 seconds",
+  })("a provisional keyed event", (it) => {
+    it.effect("re-applies the write, records the event's prior state, and undo restores it", () =>
+      Effect.gen(function* () {
+        const store = yield* FakeEvents;
+        const calendar = yield* QuestionCalendar;
 
-          const result = yield* calendar.upsert({ key: questionWriteKey(keyedWrite), write: keyedWrite.write });
-          const written = yield* stored(store, KEYED_EVENT);
-          yield* calendar.restore(
-            AppliedWrite.make({ proposal: keyedWrite, eventId: result.eventId, prior: result.prior })
-          );
+        const result = yield* calendar.upsert({ key: questionWriteKey(keyedWrite), write: keyedWrite.write });
+        const written = yield* stored(store, KEYED_EVENT);
+        yield* calendar.restore(
+          AppliedWrite.make({ proposal: keyedWrite, eventId: result.eventId, prior: result.prior })
+        );
 
-          expect(result.eventId).toBe(KEYED_EVENT);
-          assertSome(
-            result.prior,
-            CalendarPrior.make({ date: day(10, 2), title: "Response due", category: "Docket - needs review" })
-          );
-          assertSome(written, {
-            date: O.some("2026-11-02"),
-            subject: O.some("Response due (moved)"),
-            categories: O.some(["M: 90001", "Docket - unverified"]),
-          });
-          const stored6 = yield* stored(store, KEYED_EVENT);
-          assertSome(stored6, {
-            date: O.some("2026-10-02"),
-            subject: O.some("Response due"),
-            categories: O.some(["M: 90001", "Docket - needs review"]),
-          });
-        })
-      );
-    }
-  );
+        expect(result.eventId).toBe(KEYED_EVENT);
+        assertSome(
+          result.prior,
+          CalendarPrior.make({ date: day(10, 2), title: "Response due", category: "Docket - needs review" })
+        );
+        assertSome(written, {
+          date: O.some("2026-11-02"),
+          subject: O.some("Response due (moved)"),
+          categories: O.some(["M: 90001", "Docket - unverified"]),
+        });
+        const stored6 = yield* stored(store, KEYED_EVENT);
+        assertSome(stored6, {
+          date: O.some("2026-10-02"),
+          subject: O.some("Response due"),
+          categories: O.some(["M: 90001", "Docket - needs review"]),
+        });
+      })
+    );
+  });
 
   it.layer(calendarWith([provisionalEvent(["Docket - verified"])]), { timeout: "10 seconds" })(
     "a verified event",

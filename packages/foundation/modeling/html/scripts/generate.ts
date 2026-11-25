@@ -334,8 +334,6 @@ const buildLanguageTagRegistryModule = (registry: LanguageTagRegistryData): stri
  * @since 0.0.0
  */
 
-// Raw registered IANA subtags are authoritative data, not prose.
-
 type GeneratedLanguageTagRegistry = Readonly<{
   fileDate: string;
   languages: ReadonlyArray<string>;
@@ -371,16 +369,7 @@ export const IANA_LANGUAGE_TAG_REGISTRY: GeneratedLanguageTagRegistry = Object.f
 });
 `;
 
-// ---------------------------------------------------------------------------
-// reserved identifiers / naming
-// ---------------------------------------------------------------------------
-
-// Identifiers a generated element class must not collide with: JS restricted
-// globals, the module-level bindings the generated file introduces, and the
-// exports it imports from `Html.attributes` / `Html.nodes`. Collisions get an
-// `Element` suffix (`<s>` -> `SElement`, `<dir>` -> `DirElement`,
-// `<object>` -> `ObjectElement`); the `_tag` value is always the real tag name.
-const RESERVED = MutableHashSet.fromIterable([
+const JS_GLOBALS_AND_GENERATED_MODULE_BINDINGS_AND_IMPORTS = MutableHashSet.fromIterable([
   "Object",
   "Function",
   "Array",
@@ -460,7 +449,7 @@ const className = (tag: string): string => {
     O.getOrElse(() => "")
   );
   const pascal = Str.concat(Str.toUpperCase(first), pipe(tag, Str.slice(1)));
-  return MutableHashSet.has(RESERVED, pascal) ? `${pascal}Element` : pascal;
+  return MutableHashSet.has(JS_GLOBALS_AND_GENERATED_MODULE_BINDINGS_AND_IMPORTS, pascal) ? `${pascal}Element` : pascal;
 };
 
 const CATEGORIES: ReadonlyArray<readonly [string, string]> = [
@@ -500,7 +489,6 @@ const AttributeSpec = S.Struct({
 );
 type AttributeSpec = typeof AttributeSpec.Type;
 
-/** A single webref definition entry from `ed/dfns/html.json`. */
 class Dfn extends S.Opaque<Dfn, { readonly brand: unique symbol }>()(
   S.Struct({
     access: S.Unknown.pipe(S.optionalKey),
@@ -514,7 +502,7 @@ class Dfn extends S.Opaque<Dfn, { readonly brand: unique symbol }>()(
     linkingText: S.Array(S.String),
     localLinkingText: S.Unknown.pipe(S.optionalKey),
     type: S.String,
-  }).pipe($I.annoteSchema("Dfn", { description: "A single webref definition entry from ed/dfns/html.json." }))
+  }).pipe($I.annoteSchema("Dfn", { description: "A single webref HTML definition entry." }))
 ) {}
 
 class WebrefElement extends S.Opaque<WebrefElement, { readonly brand: unique symbol }>()(
@@ -816,10 +804,6 @@ const RawData = S.Struct({
 );
 type RawData = typeof RawData.Type;
 
-// ---------------------------------------------------------------------------
-// pure build
-// ---------------------------------------------------------------------------
-
 const optionalRuntime = (schema: string): string =>
   `S.OptionFromOptionalKey(${schema}).pipe(S.withConstructorDefault(Effect.succeedNone))`;
 
@@ -858,8 +842,7 @@ export const assertReviewedCurrentAttributeGap = (input: ReviewedCurrentAttribut
   }
 };
 
-// A dfn's first linking text is its canonical name; dfns without one cannot name anything.
-const linkingName = (dfn: Dfn): O.Option<string> => A.head(dfn.linkingText);
+const canonicalNameOf = (dfn: Dfn): O.Option<string> => A.head(dfn.linkingText);
 
 const buildModel = (
   data: RawData
@@ -872,36 +855,31 @@ const buildModel = (
   const { classification, contentModel, dfns, elements: elementsData, obsoleteInterfaces } = data;
 
   const elementDfns = A.filter(dfns, (d) => d.type === "element");
-  const elementNames: ReadonlyArray<string> = pipe(elementDfns, A.map(linkingName), A.getSomes);
+  const elementNames: ReadonlyArray<string> = pipe(elementDfns, A.map(canonicalNameOf), A.getSomes);
   const elementNameSet = MutableHashSet.fromIterable(elementNames);
   const isObsolete = (d: Dfn | undefined): boolean => d !== undefined && /\/obsolete\.html/.test(d.href);
   const findElementDfn = (tag: string): Dfn | undefined =>
     pipe(
       elementDfns,
-      A.findFirst((entry) => O.contains(linkingName(entry), tag)),
+      A.findFirst((entry) => O.contains(canonicalNameOf(entry), tag)),
       O.getOrUndefined
     );
 
-  // element -> specific attribute names (webref `for` arrays already expand
-  // groups to concrete element names; the only non-element `for` tokens are the
-  // global groups, which we skip).
   const elemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
   for (const name of elementNames) MutableHashMap.set(elemAttrs, name, MutableHashSet.empty<string>());
   for (const ea of A.filter(dfns, (d) => d.type === "element-attr")) {
-    const attr = linkingName(ea);
+    const attr = canonicalNameOf(ea);
     if (O.isNone(attr)) continue;
-    for (const f of ea.for ?? []) {
-      if (MutableHashSet.has(elementNameSet, f)) {
-        const bucket = MutableHashMap.get(elemAttrs, f);
-        if (O.isSome(bucket)) MutableHashSet.add(bucket.value, attr.value);
-      }
+    const forTokensThatAreElementNames = A.filter(ea.for ?? [], (token) => MutableHashSet.has(elementNameSet, token));
+    for (const f of forTokensThatAreElementNames) {
+      const bucket = MutableHashMap.get(elemAttrs, f);
+      if (O.isSome(bucket)) MutableHashSet.add(bucket.value, attr.value);
     }
   }
 
-  // "element/attr" (or "group/attr") -> permitted value keywords
   const enumValues = MutableHashMap.empty<string, Array<string>>();
   for (const av of A.filter(dfns, (d) => d.type === "attr-value")) {
-    const value = linkingName(av);
+    const value = canonicalNameOf(av);
     if (O.isNone(value)) continue;
     for (const f of av.for ?? []) {
       const arr = MutableHashMap.get(enumValues, f).pipe(O.getOrElse(A.empty<string>));
@@ -2257,9 +2235,7 @@ const buildModel = (
     return failGeneration(`HTML generator has no attribute classification for ${el}/${attr}`);
   };
 
-  // Generated runtime field body + TS type bodies for an element's specific
-  // attributes (globals/`_tag`/children excluded).
-  const specificBodies = (
+  const elementSpecificAttributeBodies = (
     el: string
   ): {
     encoded: string;
@@ -2315,7 +2291,7 @@ const buildModel = (
           : MutableHashSet.has(rawTextEls, tag)
             ? "raw-text"
             : "normal";
-      const { encoded, runtime, type } = specificBodies(tag);
+      const { encoded, runtime, type } = elementSpecificAttributeBodies(tag);
       const currentAttributes = pipe(
         MutableHashMap.get(currentElemAttrs, tag),
         O.getOrElse(() => MutableHashSet.empty<string>()),
@@ -2362,12 +2338,10 @@ const buildModel = (
         ? "    readonly content: string;"
         : `    readonly children: HtmlChildren.${encoded ? "Encoded" : "Type"};`;
 
-  // `.make()` call argument body for a class example, driven by element `kind`.
-  const exampleArgs = (kind: Kind): string =>
+  const classExampleMakeArgs = (kind: Kind): string =>
     kind === "void" ? "{}" : kind === "text" ? '{ content: "" }' : "{ children: [] }";
 
-  // `Encoded`-literal body for a companion-namespace example, driven by element `kind`.
-  const exampleEncoded = (tag: string, kind: Kind): string =>
+  const namespaceExampleEncodedLiteral = (tag: string, kind: Kind): string =>
     kind === "void"
       ? `{ _tag: "${tag}" }`
       : kind === "text"
@@ -2399,7 +2373,7 @@ const buildModel = (
  * \`\`\`ts
  * import { ${e.cls} } from "@beep/html/Html.model"
  *
- * const node = ${e.cls}.make(${exampleArgs(e.kind)})
+ * const node = ${e.cls}.make(${classExampleMakeArgs(e.kind)})
  * node._tag // => "${e.tag}"
  * \`\`\`
  *
@@ -2421,7 +2395,7 @@ ${runtimeFields}
  * \`\`\`ts
  * import { ${e.cls} } from "@beep/html/Html.model"
  *
- * const encoded: ${e.cls}.Encoded = ${exampleEncoded(e.tag, e.kind)}
+ * const encoded: ${e.cls}.Encoded = ${namespaceExampleEncodedLiteral(e.tag, e.kind)}
  * encoded._tag // => "${e.tag}"
  * \`\`\`
  *
@@ -2449,7 +2423,7 @@ ${typeFields(true)}
  * \`\`\`ts
  * import { ${cls} } from "@beep/html/Html.model"
  *
- * const node = ${cls}.make(${exampleArgs("normal")})
+ * const node = ${cls}.make(${classExampleMakeArgs("normal")})
  * node._tag // => "${tag}"
  * \`\`\`
  *
@@ -2469,7 +2443,7 @@ export class ${cls} extends S.TaggedClass<${cls}, { readonly brand: unique symbo
  * \`\`\`ts
  * import { ${cls} } from "@beep/html/Html.model"
  *
- * const encoded: ${cls}.Encoded = ${exampleEncoded(tag, "normal")}
+ * const encoded: ${cls}.Encoded = ${namespaceExampleEncodedLiteral(tag, "normal")}
  * encoded._tag // => "${tag}"
  * \`\`\`
  *
@@ -2681,7 +2655,7 @@ export declare namespace ForeignElement {
  * import { ${representative.cls}, ${name} } from "@beep/html/Html.model"
  * import * as S from "effect/Schema"
  *
- * S.is(${name})(${representative.cls}.make(${exampleArgs(representative.kind)})) // => true
+ * S.is(${name})(${representative.cls}.make(${classExampleMakeArgs(representative.kind)})) // => true
  * \`\`\`
  *
  * @category schemas
@@ -2713,8 +2687,6 @@ import { $HtmlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-
-// WHATWG's lowercase global event handler names are normative.
 
 import {
   AutocompleteAttribute,
@@ -2758,13 +2730,6 @@ type TaggedMembers<A extends Tagged, E extends Tagged> = readonly [
   ...ReadonlyArray<TaggedSchema<A, E>>,
 ];
 
-/**
- * Build a large \`_tag\`-discriminated union without erasing member Type or
- * Encoded information.
- *
- * @category models
- * @since 0.0.0
- */
 const taggedUnion = <A extends Tagged, E extends Tagged>(
   id: string,
   description: string,
@@ -3095,8 +3060,6 @@ import { flow } from "effect/Function";
 import * as Result from "effect/Result";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-
-// WHATWG's tokenizer-lowercased attribute and event names are normative.
 
 const $I = $HtmlId.create("Html.meta");
 
@@ -4128,10 +4091,6 @@ export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = Object.f
     total: A.length(els),
   };
 };
-
-// ---------------------------------------------------------------------------
-// IO program
-// ---------------------------------------------------------------------------
 
 const program = Command.make(
   "generate",

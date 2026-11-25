@@ -3,13 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// The `@effected/jsonl` error taxonomy.
-//
-// Every tag names a distinct recovery a caller would actually make, and every
-// cause is carried structurally rather than stringified. Core's `PlatformError`
-// passes through untranslated rather than being wrapped.
-// Message fields initialize after schema fields: Bun may inspect Error.message
-// during base construction, before a derived getter can safely read those fields.
+// decision: jsonlerror-message-field-initializer
 
 import { $JsonlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -20,25 +14,13 @@ import * as S from "effect/Schema";
 import { ByteCount, LineSlice } from "./LineSlice.ts";
 
 const $I = $JsonlId.create("JsonlError");
-const encodeString = S.encodeResult(S.fromJsonString(S.String));
-// JSON encoding is total for strings, including isolated UTF-16 surrogates.
-const quote = (value: string): string => Result.getOrThrow(encodeString(value));
+const encodeStringTotally = S.encodeResult(S.fromJsonString(S.String));
+const quote = (value: string): string => Result.getOrThrow(encodeStringTotally(value));
 
-/**
- * `S.SchemaError` as a schema of itself.
- *
- * **Details**
- *
- * A schema issue tree is a live object graph, not something with a wire form,
- * so it is declared by its type guard rather than given an encoding. That is
- * what lets {@link InvalidData} be an ordinary schema-backed tagged error while
- * still carrying the failure **structurally** — `error.issue` keeps its paths
- * and expected types — instead of flattening it to a string at the boundary.
- */
+const issueTreesEqualOnlyByIdentity = (self: S.SchemaError, that: S.SchemaError): boolean => self === that;
+
 const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
-  // An issue tree has no structural equality; two failures are the same
-  // failure only when they are the same object, so equivalence is identity.
-  S.overrideToEquivalence(() => (self, that) => self === that),
+  S.overrideToEquivalence(() => issueTreesEqualOnlyByIdentity),
   $I.annoteSchema("SchemaErrorFromSelf", {
     description: "`S.SchemaError` as a schema of itself.",
     documentation:
@@ -47,8 +29,6 @@ const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
 );
 
 /**
- * A textual line that is not valid JSON.
- *
  * **Details**
  *
  * A terminated malformed line is a permanent hole in history and fails through
@@ -104,8 +84,6 @@ export class MalformedLine extends S.TaggedError<MalformedLine, { readonly brand
 }
 
 /**
- * A line whose `event` tag is not in the registry.
- *
  * **Details**
  *
  * Typed rather than a defect on purpose: a journal written by an older or newer
@@ -175,8 +153,6 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent, { readonly brand: 
 }
 
 /**
- * A line whose envelope or payload failed schema validation.
- *
  * **Details**
  *
  * Covers both stages of the two-stage decode, distinguished by `event`: the
@@ -378,8 +354,6 @@ export class JournalNotFound extends S.TaggedError<JournalNotFound, { readonly b
 }
 
 /**
- * A payload that validated against its schema but cannot be serialized to JSON.
- *
  * **Details**
  *
  * A payload codec can accept values that JSON cannot represent, such as a
@@ -449,14 +423,11 @@ export class UnserializableData extends S.TaggedError<UnserializableData, { read
    * @category error-handling
    * @since 0.0.0
    */
-  // A non-Error cause may itself be cyclic; do not render it.
   override readonly message =
     `cannot serialize payload for event ${quote(this.event)}: ${P.isError(this.cause) ? this.cause.message : "value is not JSON-serializable"}`;
 }
 
 /**
- * An append refused because the journal's scope has closed.
- *
  * **Details**
  *
  * Its own tag rather than a flavour of {@link TerminalViolation}, because the
@@ -511,8 +482,6 @@ export class JournalClosed extends S.TaggedError<JournalClosed, { readonly brand
 }
 
 /**
- * The append-only contract breach that requires reader reconciliation.
- *
  * **Example** (Select a resync reason)
  * ```ts import.meta.vitest name="Select a resync reason"
  * import { JournalResyncReason } from "@beep/jsonl/JsonlError";
@@ -529,15 +498,12 @@ export const JournalResyncReason = LiteralKit(["truncated", "replaced"]).pipe(
 );
 
 /**
- * The schema-derived reason for a journal resync.
  * @category type-level
  * @since 0.0.0
  */
 export type JournalResyncReason = typeof JournalResyncReason.Type;
 
 /**
- * The journal file was truncated or replaced beneath a reader.
- *
  * **Details**
  *
  * The cooperative-writer contract is append-only: a journal only ever grows,
@@ -786,8 +752,6 @@ export class JournalWriteConflict extends S.TaggedError<JournalWriteConflict, { 
 }
 
 /**
- * Bytes in a decoded file range are not valid UTF-8.
- *
  * **Details**
  *
  * The offset is the physical start of the range supplied to the decoder,

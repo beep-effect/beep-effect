@@ -98,16 +98,19 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
   spawner?: ChildProcessSpawner.ChildProcessSpawner["Service"]
 ) {
   let events = A.empty<S.Json>();
-  // Construction seeds registry identities without invoking builtins. The
-  // observer executes only after the serializer below has captured the owner.
-  const observe = yield* makeCitationBuiltinObservation(
+  const observerRunningOnlyAfterSerializerCapturesOwner = yield* makeCitationBuiltinObservation(
     (value) => present(value),
     (event) =>
       Effect.sync(() => {
         events = A.append(events, event);
       })
   );
-  const h = yield* makeCitationCleanerRegistryHarness(undefined, undefined, spawner, observe);
+  const h = yield* makeCitationCleanerRegistryHarness(
+    undefined,
+    undefined,
+    spawner,
+    observerRunningOnlyAfterSerializerCapturesOwner
+  );
   let callbacks = HashMap.empty<number, Body>();
   let names = HashMap.empty<number, string>();
   let counts = HashMap.empty<number, number>();
@@ -287,7 +290,6 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
                 if (input !== value) {
                   return Effect.fail(fail());
                 }
-                // This source callback mutates the retained host list in place.
                 items.push("B");
                 return emit(input, work);
               }),
@@ -417,8 +419,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         (candidate: string) => candidate === "builtin-function-step" || candidate === "registry-function-key",
         () =>
           Effect.gen(function* () {
-            // The real builtin handle is captured under the first operation's work.
-            steps = [];
+            const realBuiltinHandleCapturedUnderTheFirstOperationWork = A.empty<CitationCleanerObject>();
+            steps = realBuiltinHandleCapturedUnderTheFirstOperationWork;
           })
       ),
       Match.when(

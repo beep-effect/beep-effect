@@ -176,8 +176,6 @@ export class WorkItemActionFailed extends S.TaggedError<WorkItemActionFailed, { 
 ) {}
 
 /**
- * Public WorkItem use-case failure schema.
- *
  * **Example** (Guard with ActionError.is)
  *
  * ```ts
@@ -209,8 +207,6 @@ export const WorkItemActionError = S.Union([
 );
 
 /**
- * Runtime type for {@link WorkItemActionError}.
- *
  * **Example** (Type WorkItemActionError value)
  *
  * ```ts

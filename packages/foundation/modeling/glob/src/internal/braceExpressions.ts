@@ -53,11 +53,9 @@ export class BraceExpressionError extends S.TaggedError<BraceExpressionError, { 
   })
 ) {}
 
-// translate the various posix character classes into unicode properties
-// this works across all unicode locales
-
-// { <posix class>: [<translation>, /u flag required, negated]
-const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
+const posixClassesAsLocaleIndependentUnicodeProperties: {
+  [posixClass: string]: [translation: string, uFlagRequired: boolean, negated?: boolean];
+} = {
   "[:alnum:]": ["\\p{L}\\p{Nl}\\p{Nd}", true],
   "[:alpha:]": ["\\p{L}\\p{Nl}", true],
   "[:ascii:]": ["\\x00-\\x7f", false],
@@ -74,14 +72,10 @@ const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
   "[:xdigit:]": ["A-Fa-f0-9", false],
 };
 
-// only need to escape a few things inside of brace expressions
-// escapes: [ \ ] -
-const braceEscape = Str.replace(/[[\]\\-]/g, "\\$&");
-// escape all regexp magic characters
+const escapeOnlyTheFewMetacharsBracketsNeed = Str.replace(/[[\]\\-]/g, "\\$&");
 const regexpEscape = Str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
-// everything has already been escaped, we just have to join
-const rangesToString = (ranges: Array<string>): string => A.join(ranges, "");
+const joinAlreadyEscapedRanges = (ranges: Array<string>): string => A.join(ranges, "");
 
 /**
  * Describes a parsed character class through its regular-expression source,
@@ -92,12 +86,6 @@ const rangesToString = (ranges: Array<string>): string => A.join(ranges, "");
  */
 export type ParseClassResult = [src: string, uFlag: boolean, consumed: number, hasMagic: boolean];
 
-// takes a glob string at a posix brace expression, and returns
-// an equivalent regular expression source, and boolean indicating
-// whether the /u flag needs to be applied, and the number of chars
-// consumed to parse the character class.
-// This also removes out of order ranges, and returns ($.) if the
-// entire class just no good.
 /**
  * Parses a glob character class at the supplied position into equivalent
  * regular-expression source.
@@ -149,19 +137,17 @@ export const parseClass: {
     negate: false,
     endPos: pos,
     rangeStart: "",
-    poisoned: false,
+    posixClassInsideRangePoisonsGlob: false,
   };
   while (scan.i < glob.length && classStep(scan));
   return finishClass(scan);
 });
 
-const posixClassEntries = A.map(R.toEntries(posixClasses), (entry) => ({
+const posixClassEntries = A.map(R.toEntries(posixClassesAsLocaleIndependentUnicodeProperties), (entry) => ({
   entry,
   regexp: new RegExp(RE.escape(entry[0]), "y"),
 }));
 
-// Mutable cursor state of one [...] class scan. `poisoned` marks an invalid
-// posix class inside a range ([a-[:alpha:]]), which poisons the whole glob.
 interface ClassScan {
   endPos: number;
   escaping: boolean;
@@ -169,21 +155,19 @@ interface ClassScan {
   i: number;
   negate: boolean;
   readonly negs: Array<string>;
-  poisoned: boolean;
   readonly pos: number;
+  posixClassInsideRangePoisonsGlob: boolean;
   rangeStart: string;
   readonly ranges: Array<string>;
   sawStart: boolean;
   uflag: boolean;
 }
 
-// One scan step; false ends the scan (closing bracket or poison).
 const classStep = (scan: ClassScan): boolean => {
   const c = String(scan.glob[scan.i]);
   const control = classControlStep(scan, c);
   if (control !== undefined) return control;
   if (c === "[" && !scan.escaping) {
-    // either a posix class, a collation equivalent, or just a [
     const posix = consumePosixClass(scan);
     if (posix !== undefined) return posix;
   }
@@ -191,8 +175,6 @@ const classStep = (scan: ClassScan): boolean => {
   return true;
 };
 
-// Negation marker, closing bracket and escape introducer; undefined when `c`
-// is none of them.
 const classControlStep = (scan: ClassScan, c: string): boolean | undefined => {
   if ((c === "!" || c === "^") && scan.i === scan.pos + 1) {
     scan.negate = true;
@@ -209,12 +191,9 @@ const classControlStep = (scan: ClassScan, c: string): boolean | undefined => {
     scan.i++;
     return true;
   }
-  // escaped \ char, fall through and treat like normal char
   return undefined;
 };
 
-// Consumes a posix class at the cursor: true when consumed, false when it
-// poisons the class, undefined when none starts here.
 const consumePosixClass = (scan: ClassScan): boolean | undefined => {
   for (const { entry, regexp } of posixClassEntries) {
     regexp.lastIndex = scan.i;
@@ -225,11 +204,10 @@ const consumePosixClass = (scan: ClassScan): boolean | undefined => {
 
 const applyPosixClass = (
   scan: ClassScan,
-  [cls, [unip, u, neg]]: readonly [string, readonly [e: string, u: boolean, n?: boolean]]
+  [cls, [unip, u, neg]]: readonly [string, readonly [translation: string, uFlagRequired: boolean, negated?: boolean]]
 ): boolean => {
-  // invalid, [a-[] is fine, but not [a-[:alpha]]
   if (scan.rangeStart !== "") {
-    scan.poisoned = true;
+    scan.posixClassInsideRangePoisonsGlob = true;
     return false;
   }
   scan.i += cls.length;
@@ -239,17 +217,14 @@ const applyPosixClass = (
   return true;
 };
 
-// now it's just a normal character, effectively
 const classCharacter = (scan: ClassScan, c: string): void => {
   scan.escaping = false;
   if (scan.rangeStart !== "") {
     closeRange(scan, c);
     return;
   }
-  // now might be the start of a range.
-  // can be either c-d or c-] or c<more...>] or c] at this point
   if (scan.glob[scan.i + 1] === "-" && scan.glob[scan.i + 2] === "]") {
-    scan.ranges.push(braceEscape(`${c}-`));
+    scan.ranges.push(escapeOnlyTheFewMetacharsBracketsNeed(`${c}-`));
     scan.i += 2;
     return;
   }
@@ -258,17 +233,17 @@ const classCharacter = (scan: ClassScan, c: string): void => {
     scan.i += 2;
     return;
   }
-  // not the start of a range, just a single character
-  scan.ranges.push(braceEscape(c));
+  scan.ranges.push(escapeOnlyTheFewMetacharsBracketsNeed(c));
   scan.i++;
 };
 
-// throw this range away if it's not valid, but others can still match.
 const closeRange = (scan: ClassScan, c: string): void => {
   if (c > scan.rangeStart) {
-    scan.ranges.push(`${braceEscape(scan.rangeStart)}-${braceEscape(c)}`);
+    scan.ranges.push(
+      `${escapeOnlyTheFewMetacharsBracketsNeed(scan.rangeStart)}-${escapeOnlyTheFewMetacharsBracketsNeed(c)}`
+    );
   } else if (c === scan.rangeStart) {
-    scan.ranges.push(braceEscape(c));
+    scan.ranges.push(escapeOnlyTheFewMetacharsBracketsNeed(c));
   }
   scan.rangeStart = "";
   scan.i++;
@@ -276,25 +251,17 @@ const closeRange = (scan: ClassScan, c: string): void => {
 
 const finishClass = (scan: ClassScan): ParseClassResult => {
   const { glob, pos, ranges, negs, endPos } = scan;
-  if (scan.poisoned) return ["$.", false, glob.length - pos, true];
+  if (scan.posixClassInsideRangePoisonsGlob) return ["$.", false, glob.length - pos, true];
   if (endPos < scan.i) {
-    // didn't see the end of the class, not a valid class,
-    // but might still be valid as a literal match.
     return ["", false, 0, false];
   }
-  // if we got no ranges and no negates, then we have a range that
-  // cannot possibly match anything, and that poisons the whole glob
   if (ranges.length === 0 && negs.length === 0) {
     return ["$.", false, glob.length - pos, true];
   }
-  return literalClass(scan) ?? [combinedClass(scan), scan.uflag, endPos - pos, true];
+  return singleLiteralCharClassIsAnEscapeNotMagic(scan) ?? [combinedClass(scan), scan.uflag, endPos - pos, true];
 };
 
-// if we got one positive range, and it's a single character, then that's
-// not actually a magic pattern, it's just that one literal character.
-// we should not treat that as "magic", we should just return the literal
-// character. [_] is a perfectly valid way to escape glob magic chars.
-const literalClass = (scan: ClassScan): ParseClassResult | undefined => {
+const singleLiteralCharClassIsAnEscapeNotMagic = (scan: ClassScan): ParseClassResult | undefined => {
   const { ranges, negs } = scan;
   const soleRange = ranges[0];
   if (negs.length !== 0 || ranges.length !== 1 || soleRange === undefined || scan.negate) return undefined;
@@ -305,8 +272,8 @@ const literalClass = (scan: ClassScan): ParseClassResult | undefined => {
 
 const combinedClass = (scan: ClassScan): string => {
   const { ranges, negs, negate } = scan;
-  const sranges = `[${negate ? "^" : ""}${rangesToString(ranges)}]`;
-  const snegs = `[${negate ? "" : "^"}${rangesToString(negs)}]`;
+  const sranges = `[${negate ? "^" : ""}${joinAlreadyEscapedRanges(ranges)}]`;
+  const snegs = `[${negate ? "" : "^"}${joinAlreadyEscapedRanges(negs)}]`;
   if (ranges.length !== 0 && negs.length !== 0) return `(${sranges}|${snegs})`;
   return ranges.length !== 0 ? sranges : snegs;
 };

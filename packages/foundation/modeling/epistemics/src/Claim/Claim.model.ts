@@ -42,8 +42,6 @@ export const BasisDigest = S.String.check(
 ).pipe($I.annoteSchema("BasisDigest", { description: "SHA-256 digest of a sealed evidence basis." }));
 
 /**
- * Decoded type of {@link BasisDigest}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -83,8 +81,6 @@ export const ValidTime = S.TaggedUnion({
   .pipe($I.annoteSchema("ValidTime", { description: "Valid time: unknown, or a half-open interval." }));
 
 /**
- * Decoded type of {@link ValidTime}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -192,7 +188,6 @@ export const ReviewTag = LiteralKit([
 ]).pipe($I.annoteSchema("ReviewTag", { description: "Read-only projection of the review union discriminants." }));
 
 /**
- * A projected review discriminant.
  * @category models
  * @since 0.0.0
  */

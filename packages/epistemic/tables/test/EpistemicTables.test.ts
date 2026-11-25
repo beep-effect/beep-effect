@@ -117,8 +117,6 @@ const evidenceInput = (id: number) => ({
   spanFixtureKey: "span:oa-1:12-57",
 });
 
-// One stored row, exactly as `toEvidenceInsert` wrote `evidenceInput(10)` before the anchor schemas changed
-// package. Rows on disk keep these bytes: the literal is never regenerated.
 const frozenEvidenceRow =
   '{"createdAt":10,"rowVersion":1,"updatedAt":11,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"artifactFixtureKey":"artifact:oa-1","spanFixtureKey":"span:oa-1:12-57","span":{"startChar":12,"endChar":57,"quote":"a processor configured to receive sensor data","confidence":0.92},"entityType":"EpistemicEvidence","publicId":"epistemic_evidence_a10","id":10}';
 const FrozenEvidenceColumns = EvidenceModel.select.mapFields(({ id, publicId, ...fields }) => ({
@@ -526,9 +524,13 @@ describe("EpistemicTables", () => {
   );
 
   it.effect(
-    "reads frozen Evidence bytes and writes only the versioned position format",
+    "reads frozen Evidence bytes (written by toEvidenceInsert before the anchor schemas moved package; never regenerated) and writes only the versioned position format",
     Effect.fnUntraced(function* () {
       const columns = yield* S.decodeEffect(EvidenceColumnsJson)(frozenEvidenceRow);
+      assertTrue(
+        Result.isFailure(decodeUnknownEvidenceModelResult(columns)),
+        "the strict model refuses the frozen unversioned span; only the legacy row read keeps it alive"
+      );
       const read = yield* Effect.fromResult(
         Evidence.fromEvidenceRow({
           ...columns,

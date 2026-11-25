@@ -94,9 +94,6 @@ const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
   );
 const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 
-// One stored row, exactly as `toEvidenceVerificationInsert` wrote `input` before the anchor schemas changed
-// package, and the manifestation key it holds (a public digest of synthetic data). Rows on disk keep these bytes:
-// neither literal is regenerated.
 const frozenManifestationDigest = "c6365048617fc9931cb0232ec17fce6d8a2c87d153a4e590bdcfedd4c44570b3";
 const frozenRow = `{"createdAt":7,"rowVersion":1,"updatedAt":8,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"evidenceId":4,"manifestationKey":"${frozenManifestationDigest}","verifiedAnchor":{"anchor":{"startChar":0,"endChar":16,"quote":"controlling fact"},"source":{"scopeRef":"matter:example","sourceRef":"source:office-action","locator":"sources/office-action.txt","sourceDigest":"sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7","textDigest":"sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7","extractor":{"name":"utf8","version":"1"},"normalizationVersion":"1"}},"entityType":"EpistemicEvidenceVerification","publicId":"epistemic_evidence_verification_a7","id":7}`;
 
@@ -301,7 +298,7 @@ describe("EvidenceVerificationTable", () => {
     );
   });
 
-  it("reads and rewrites the frozen verified-anchor row and its manifestation key without changing a byte", () => {
+  it("reads and rewrites the frozen verified-anchor row and its manifestation key without changing a byte (both written by toEvidenceVerificationInsert before the anchor schemas moved package; never regenerated)", () => {
     const written = pipe(
       decodeUnknownEvidenceVerificationModelResult(input),
       Result.flatMap(EvidenceVerification.toEvidenceVerificationInsert(evidence)),

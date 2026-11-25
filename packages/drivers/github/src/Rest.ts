@@ -45,9 +45,6 @@ const RequestHeadersSchema = S.declare((u: unknown): u is RequestHeaders => P.is
 );
 
 /**
- * Transport knobs octokit accepts on any route, narrowed to the three this
- * package allows.
- *
  * **Details**
  *
  * octokit's own `RequestParameters` carries an `[parameter: string]: unknown`
@@ -102,8 +99,6 @@ export class RequestExtras extends S.Opaque<RequestExtras, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link RequestExtras}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -192,8 +187,6 @@ export type Item<R extends PaginatingRoute> =
       : never;
 
 /**
- * How far a paginated read should go.
- *
  * **Gotchas**
  *
  * Both fields are honored by every paginating method in this package. Unset,

@@ -124,6 +124,59 @@ const readDownload = Effect.fn("McpbPackage.readDownload")(function* (file: stri
 });
 
 /**
+ * Fill one cache entry atomically and return its directory, reusing an entry
+ * another run already completed.
+ *
+ * **Details**
+ *
+ * The cache is shared by every app and checkout on the machine, so `fill`
+ * downloads and unpacks into `<staging>/<entry>` inside a fresh temporary
+ * directory under the cache. A complete entry is then renamed into place,
+ * and the temporary directory is always removed. When a concurrent run wins
+ * the rename, its complete entry is used; an incomplete leftover from an
+ * interrupted older run is replaced.
+ *
+ * @since 0.0.0
+ */
+const fillCacheEntry = Effect.fnUntraced(function* <E, R>(
+  cacheDir: string,
+  entry: string,
+  marker: string,
+  fill: (staging: string, entryDir: string) => Effect.Effect<void, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entryDir = path.join(cacheDir, entry);
+  const complete = fs.exists(path.join(entryDir, marker));
+  if (yield* complete) {
+    return entryDir;
+  }
+  yield* fs.makeDirectory(cacheDir, { recursive: true });
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const staging = yield* fs.makeTempDirectoryScoped({ directory: cacheDir, prefix: `.${entry}-` });
+      const unpacked = path.join(staging, entry);
+      yield* fs.makeDirectory(unpacked);
+      yield* fill(staging, unpacked);
+      yield* fs
+        .rename(unpacked, entryDir)
+        .pipe(
+          Effect.catch(() =>
+            Effect.flatMap(complete, (won) =>
+              won
+                ? Effect.void
+                : fs
+                    .remove(entryDir, { recursive: true, force: true })
+                    .pipe(Effect.andThen(fs.rename(unpacked, entryDir)))
+            )
+          )
+        );
+    })
+  );
+  return entryDir;
+});
+
+/**
  * Download, verify and unpack the pinned win32 DuckDB bindings into the cache,
  * reusing an earlier unpack.
  *
@@ -150,23 +203,23 @@ export const ensureWindowsBindings = Effect.fn("McpbPackage.ensureWindowsBinding
     });
   }
   // Keyed by the pinned version, so an unpack left by an older pin is never reused.
-  const packageDir = path.join(cacheDir, `node-bindings-win32-x64-${DuckDbVersion}`);
-  if (yield* fs.exists(path.join(packageDir, "duckdb.node"))) {
-    return packageDir;
-  }
-  const tarball = path.join(cacheDir, `node-bindings-win32-x64-${DuckDbVersion}.tgz`);
-  yield* fs.makeDirectory(packageDir, { recursive: true });
-  yield* run(["curl", "--fail", "--location", "--silent", "--show-error", WindowsBindingsUrl, "--output", tarball]);
-  const tarballBytes = yield* readDownload(tarball, "bindings tarball");
-  const digestBase64 = yield* Effect.map(digest.digest(Digest.sha512, tarballBytes), Base64.encode);
-  if (digestBase64 !== WindowsBindingsSha512) {
-    yield* fs.remove(tarball, { force: true });
-    return yield* McpbPackageFailure.make({
-      message: `DuckDB win32 bindings tarball failed sha512 verification (got ${digestBase64}).`,
-    });
-  }
-  yield* run(["tar", "-xzf", tarball, "--strip-components=1", "-C", packageDir]);
-  return packageDir;
+  return yield* fillCacheEntry(
+    cacheDir,
+    `node-bindings-win32-x64-${DuckDbVersion}`,
+    "duckdb.node",
+    Effect.fnUntraced(function* (staging, packageDir) {
+      const tarball = path.join(staging, `node-bindings-win32-x64-${DuckDbVersion}.tgz`);
+      yield* run(["curl", "--fail", "--location", "--silent", "--show-error", WindowsBindingsUrl, "--output", tarball]);
+      const tarballBytes = yield* readDownload(tarball, "bindings tarball");
+      const digestBase64 = yield* Effect.map(digest.digest(Digest.sha512, tarballBytes), Base64.encode);
+      if (digestBase64 !== WindowsBindingsSha512) {
+        return yield* McpbPackageFailure.make({
+          message: `DuckDB win32 bindings tarball failed sha512 verification (got ${digestBase64}).`,
+        });
+      }
+      yield* run(["tar", "-xzf", tarball, "--strip-components=1", "-C", packageDir]);
+    })
+  );
 });
 
 /**
@@ -202,33 +255,33 @@ export const ensureRuntime = Effect.fn("McpbPackage.ensureRuntime")(function* (
     });
   }
   // Keyed by the pinned version, so an unpack left by an older pin is never reused.
-  const runtimeDir = path.join(cacheDir, `${pin.asset}-${pin.version}`);
-  const runtime = path.join(runtimeDir, pin.executable);
-  if (yield* fs.exists(runtime)) {
-    return runtime;
-  }
-  const archive = path.join(cacheDir, `${pin.asset}-${pin.version}.zip`);
-  yield* fs.makeDirectory(runtimeDir, { recursive: true });
-  yield* run([
-    "curl",
-    "--fail",
-    "--location",
-    "--silent",
-    "--show-error",
-    `https://github.com/oven-sh/bun/releases/download/bun-v${pin.version}/${pin.asset}.zip`,
-    "--output",
-    archive,
-  ]);
-  const archiveBytes = yield* readDownload(archive, "Bun runtime archive");
-  const archiveSha256 = yield* digest.digestHex(Digest.sha256, archiveBytes);
-  if (archiveSha256 !== pin.sha256) {
-    yield* fs.remove(archive, { force: true });
-    return yield* McpbPackageFailure.make({
-      message: `Bun runtime archive ${pin.asset}.zip failed sha256 verification (got ${archiveSha256}).`,
-    });
-  }
-  yield* run(["unzip", "-q", "-j", "-o", archive, `${pin.asset}/${pin.executable}`, "-d", runtimeDir]);
-  return runtime;
+  const runtimeDir = yield* fillCacheEntry(
+    cacheDir,
+    `${pin.asset}-${pin.version}`,
+    pin.executable,
+    Effect.fnUntraced(function* (staging, unpacked) {
+      const archive = path.join(staging, `${pin.asset}-${pin.version}.zip`);
+      yield* run([
+        "curl",
+        "--fail",
+        "--location",
+        "--silent",
+        "--show-error",
+        `https://github.com/oven-sh/bun/releases/download/bun-v${pin.version}/${pin.asset}.zip`,
+        "--output",
+        archive,
+      ]);
+      const archiveBytes = yield* readDownload(archive, "Bun runtime archive");
+      const archiveSha256 = yield* digest.digestHex(Digest.sha256, archiveBytes);
+      if (archiveSha256 !== pin.sha256) {
+        return yield* McpbPackageFailure.make({
+          message: `Bun runtime archive ${pin.asset}.zip failed sha256 verification (got ${archiveSha256}).`,
+        });
+      }
+      yield* run(["unzip", "-q", "-j", "-o", archive, `${pin.asset}/${pin.executable}`, "-d", unpacked]);
+    })
+  );
+  return path.join(runtimeDir, pin.executable);
 });
 
 // Portable Executable layout: the DOS header holds the PE header offset at

@@ -108,8 +108,6 @@ export const OaProfileClass = LiteralKit([
 ]).pipe($I.annoteSchema("OaProfileClass", { description: "The classes of the declared OA profile." }));
 
 /**
- * Type for {@link OaProfileClass}.
- *
  * **Example** (Name a profile class)
  *
  * ```ts
@@ -125,8 +123,6 @@ export const OaProfileClass = LiteralKit([
 export type OaProfileClass = typeof OaProfileClass.Type;
 
 /**
- * The properties of the declared OA profile.
- *
  * **Example** (Check a profile property)
  *
  * ```ts import.meta.vitest name="Check a profile property"
@@ -160,8 +156,6 @@ export const OaProfileProperty = LiteralKit([
 ]).pipe($I.annoteSchema("OaProfileProperty", { description: "The properties of the declared OA profile." }));
 
 /**
- * Type for {@link OaProfileProperty}.
- *
  * **Example** (Name a profile property)
  *
  * ```ts
@@ -205,8 +199,6 @@ export const NifExportTerm = LiteralKit([
 ]).pipe($I.annoteSchema("NifExportTerm", { description: "The export-only NIF vocabulary of the OA codec." }));
 
 /**
- * Type for {@link NifExportTerm}.
- *
  * **Example** (Name a NIF export term)
  *
  * ```ts
@@ -256,8 +248,6 @@ export const ImportedActivity = S.TaggedUnion({
 );
 
 /**
- * Type for {@link ImportedActivity}.
- *
  * **Example** (Make an imported activity)
  *
  * ```ts
@@ -416,8 +406,6 @@ export const mintImportActivityId = Effect.fn("ImportActivity.mint")(function* (
 });
 
 /**
- * Why the decoder rejected one third-party annotation.
- *
  * **Details**
  *
  * - `other-source`: a target names another `oa:hasSource`.
@@ -449,8 +437,6 @@ export const OaAnnotationRefusal = LiteralKit([
 ]).pipe($I.annoteSchema("OaAnnotationRefusal", { description: "Why one third-party annotation was rejected." }));
 
 /**
- * Type for {@link OaAnnotationRefusal}.
- *
  * **Example** (Name a rejection reason)
  *
  * ```ts
@@ -493,8 +479,6 @@ export class OaRejection extends S.Opaque<OaRejection, { readonly brand: unique 
 ) {}
 
 /**
- * Why the encoder refused a document.
- *
  * **Details**
  *
  * `capture-mismatch` when the given text is not the document's capture, or
@@ -522,8 +506,6 @@ export const OaEncodeRefusal = LiteralKit([
 ]).pipe($I.annoteSchema("OaEncodeRefusal", { description: "Why the OA encoder refused a document." }));
 
 /**
- * Type for {@link OaEncodeRefusal}.
- *
  * **Example** (Name an encode refusal)
  *
  * ```ts
@@ -539,8 +521,6 @@ export const OaEncodeRefusal = LiteralKit([
 export type OaEncodeRefusal = typeof OaEncodeRefusal.Type;
 
 /**
- * The encoder's refusal.
- *
  * **Example** (Make an encode refusal)
  *
  * ```ts import.meta.vitest name="Make an encode refusal"
@@ -671,8 +651,7 @@ const integerLiteral = (value: number): Rdf.Literal => Rdf.Literal.typed(`${valu
 
 const stringLiteral = (value: string): Rdf.Literal => Rdf.makeLiteral(value);
 
-// `toISOString` writes a year outside 0000..9999 with a sign and six digits (`+010000`, `-000001`), which the
-// xsd:dateTime lexical space does not admit: drop the `+` and every leading zero past four digits.
+// decision: oa-xsd-datetime-years
 const ExpandedIsoYear = /^\+?(-?)0*(\d{4,}-)/;
 
 const timeLiteral = (at: DateTime.Utc): Rdf.Literal =>
@@ -698,7 +677,6 @@ type EncodeInput = {
   readonly importedActivities: HashMap.HashMap<ActivityId, ImportedActivity>;
 };
 
-// The two activity forms a run entity is written with.
 const generatedBy = (run: Rdf.NamedNode, activity: Rdf.NamedNode): ReadonlyArray<Rdf.Quad> => [
   quad(run, V.wasGeneratedBy, activity),
   quad(activity, V.type, V.Activity),
@@ -748,7 +726,6 @@ const encodeRefused = (reason: OaEncodeRefusal): OaEncodeRefused => OaEncodeRefu
 
 const isEncodeRefusal = S.is(OaEncodeRefusal);
 
-// A quote that is not the slice it ranges over means the receipts are not over this text: a capture mismatch.
 const fromAnchorRefused = (refused: WebAnnotationAnchorRefused): OaEncodeRefused =>
   encodeRefused(isEncodeRefusal(refused.reason) ? refused.reason : "capture-mismatch");
 
@@ -773,6 +750,9 @@ const isQuote = WebAnnotationSelector.guards.TextQuoteSelector;
  * its `ActivityId`, the import activity included.
  *
  * **Gotchas**
+ *
+ * A target whose quote is not the slice it ranges over is refused as
+ * `capture-mismatch`: its receipts are not over this text.
  *
  * An anchors row no annotation targets is not written, so
  * `decode(encode(d)) = d` holds for documents whose every row is a target,
@@ -821,7 +801,6 @@ export const encodeOa =
       )
     ).pipe(
       Result.map((targets) => {
-        // Each target's one code-point position and quote, as the adapter wrote them.
         const wireOf = HashMap.fromIterable(
           A.map(
             targets,
@@ -884,11 +863,6 @@ export const encodeOa =
     );
   };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Reading. One pass over the input reads every annotation the shared rule admits; the decoder assembles a document
-// from what it read, and `normalize` writes it in the encoder's form by its own rules.
-// ---------------------------------------------------------------------------------------------------------------------
-
 type Index = {
   readonly bySubject: Readonly<Record<string, ReadonlyArray<Rdf.Quad>>>;
   readonly runsOf: Readonly<Record<string, ReadonlyArray<Rdf.Quad>>>;
@@ -906,7 +880,6 @@ const isNode =
 
 const bySubjectKey = Order.mapInput(Order.String, keyOf);
 
-// Default-graph quads deduplicated, grouped by subject, and the runs that specialize each annotation.
 const indexOf = (dataset: Rdf.Dataset): Index => {
   const quads = pipe(
     A.map(A.filter(dataset.quads, isDefaultGraph), (q) => [Rdf.serializeQuad(q), q] as const),
@@ -958,19 +931,14 @@ const naturalOf = (q: Rdf.Quad): O.Option<number> =>
 
 const decodeNonEmpty = S.decodeUnknownOption(S.NonEmptyString);
 
-// The xsd:dateTime lexical form: a year of four or more digits with no leading zero past four, the date, the clock,
-// an optional fraction and an optional zone.
+// decision: oa-xsd-datetime-years
 const DateTimeLexical = /^(-?)([1-9]\d{3,}|0\d{3})(-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/;
 
-// The ECMAScript year of an xsd:dateTime year: four digits inside 0000..9999, else a sign and six digits.
 const ecmaYear = (year: number): string =>
   year >= 0 && year <= 9999
     ? Str.padStart(4, "0")(`${year}`)
     : `${year < 0 ? "-" : "+"}${Str.padStart(6, "0")(`${Math.abs(year)}`)}`;
 
-// The instant an xsd:dateTime lexical form names, read through its ECMAScript form with the fraction truncated to
-// milliseconds and a missing zone read as UTC. A calendar date that does not exist (`2024-02-30`), or an instant
-// outside the range a DateTime holds, is no instant.
 const instantOf = (lexical: string): O.Option<DateTime.Utc> =>
   O.flatMap(
     Str.match(DateTimeLexical)(lexical),
@@ -995,7 +963,6 @@ type StatedTime = {
   readonly quads: ReadonlyArray<Rdf.Quad>;
 };
 
-// A subject's stated time: its `prov:generatedAtTime`, else its `dcterms:created`; two values are a conflict.
 const statedTime = (index: Index, subject: string): StatedTime => {
   const read = (predicate: Rdf.NamedNode) =>
     A.flatMap(statementsAbout(index, subject, predicate), (q) =>
@@ -1040,8 +1007,6 @@ const importedStatement = (activity: ImportedActivity, at: O.Option<DateTime.Utc
     (id): Statement => ({ generation: { activity: id, imported: O.some(activity), at }, quads })
   );
 
-// Each prov:wasGeneratedBy, dcterms:creator and as:generator statement of one subject with an IRI object, at the
-// subject's time. An instance-form activity IRI is the native activity id it prints.
 const readStatements = Effect.fnUntraced(function* (index: Index, subject: string, at: O.Option<DateTime.Utc>) {
   const activities = yield* Effect.forEach(
     namedObjects(index, subject, V.wasGeneratedBy),
@@ -1095,7 +1060,6 @@ type ReadSelector = {
 
 type Build = (targets: HashSet.HashSet<OccurrenceId>) => OaAnnotation;
 
-/** One annotation the shared rule admitted, with every input quad it carries. */
 type Candidate = {
   readonly subject: Rdf.Subject;
   readonly content: AnnotationId;
@@ -1112,7 +1076,6 @@ const emptyBody =
   (bodies: ReadonlyArray<Rdf.Quad>): O.Option<Build> =>
     A.isReadonlyArrayEmpty(bodies) ? O.some(build) : O.none();
 
-// The body each OA kind reads: a Mention's one class IRI, nothing for the four others.
 const bodyReaders = (
   kinds: typeof OaKinds
 ): { readonly [K in OaKindName]: (bodies: ReadonlyArray<Rdf.Quad>) => O.Option<Build> } => ({
@@ -1133,7 +1096,6 @@ const bodyReaders = (
   Word: emptyBody((targets) => kinds.Word.case.make({ targets, body: Word.make({}) })),
 });
 
-// One selector node: a position or a quote selector with its values, none for a selector outside the profile.
 const readSelector = (index: Index, link: Rdf.Quad): Result.Result<O.Option<ReadSelector>, Rejected> => {
   const subject = keyOf(link.object);
   const types = statementsAbout(index, subject, V.type);
@@ -1191,7 +1153,6 @@ const timeKey = (at: O.Option<DateTime.Utc>): string =>
 
 const generationKey = (generation: ReadGeneration): string => `${generation.activity} ${timeKey(generation.at)}`;
 
-// Every (content, activity) pair the candidates give two different times, `None` against `Some` included.
 const conflictingPairs = (candidates: ReadonlyArray<Candidate>): HashSet.HashSet<string> => {
   const pairs = A.flatMap(candidates, (candidate) =>
     A.map(
@@ -1212,9 +1173,6 @@ type Profile = {
   readonly retained: ReadonlyArray<Rdf.Quad>;
 };
 
-// Every quad a rejected annotation reaches through the profile: the quads about the annotation, its targets, their
-// selectors and the runs that specialize it, and the typing of each activity it or one of its runs names. An
-// accepted annotation that shares a target or an activity carries some of them too; they stay in the residual.
 const reachedQuads = (index: Index, subject: Rdf.Term): ReadonlyArray<Rdf.Quad> => {
   const about = (node: string) => O.getOrElse(R.get(index.bySubject, node), A.empty<Rdf.Quad>);
   const objects = (nodes: ReadonlyArray<string>, predicate: Rdf.NamedNode) =>
@@ -1230,7 +1188,6 @@ const reachedQuads = (index: Index, subject: Rdf.Term): ReadonlyArray<Rdf.Quad> 
   ];
 };
 
-// The shared rule of section 8.4 of the P3 design: what decodeOa and normalize both admit.
 const readProfile = (kinds: typeof OaKinds) => {
   const readers = bodyReaders(kinds);
   const kindEntries = R.toEntries(kinds);
@@ -1267,7 +1224,7 @@ const readProfile = (kinds: typeof OaKinds) => {
           options.text.sourceText
         )
       ).pipe(Effect.mapError(refuseTarget));
-      // The adapter's anchor is the slice of the text over two well-formed boundaries, so verification holds.
+      // decision: oa-decode-invariant-defects
       const verified = yield* Effect.orDie(
         verifyTextAnchorAgainstVerifiedSource(
           VerifyTextAnchorAgainstVerifiedSourceInput.make({ anchor, verifiedSource: options.text })
@@ -1412,6 +1369,14 @@ const readProfile = (kinds: typeof OaKinds) => {
  * generation of the import activity. The document is the merge of one
  * `assemble` per distinct (activity, time).
  *
+ * **Gotchas**
+ *
+ * What the document carries leaves the residual, except what a rejected
+ * annotation reaches: the quads about it, its targets, their selectors and
+ * the runs that specialize it, and the typing of each activity it or one of
+ * its runs names. An accepted annotation that shares a target or an activity
+ * carries some of those quads too; they stay in the residual.
+ *
  * **Example** (Decode input)
  *
  * ```ts
@@ -1440,7 +1405,6 @@ export const decodeOa = (kinds: typeof OaKinds) => {
     options: DecodeOptions
   ): Effect.fn.Return<OaImport, PreimageMintError | CanonicalizationLimitExceeded, Digest.Digest> {
     const { accepted, rejected, retained } = yield* read(input, options);
-    // What the document carries leaves the residual, except what a rejected annotation reaches.
     const consumed = HashSet.difference(
       HashSet.fromIterable(A.flatMap(accepted, (candidate) => A.map(candidate.consumed, Rdf.serializeQuad))),
       HashSet.fromIterable(A.map(retained, Rdf.serializeQuad))
@@ -1457,7 +1421,7 @@ export const decodeOa = (kinds: typeof OaKinds) => {
       ),
       ({ generation }) => generationKey(generation)
     );
-    // With verified anchors, no body references and the time conflicts rejected, neither step can refuse.
+    // decision: oa-decode-invariant-defects
     const parts = yield* Effect.forEach(
       R.values(groups),
       (members) =>
@@ -1495,7 +1459,6 @@ export const decodeOa = (kinds: typeof OaKinds) => {
   });
 };
 
-// The encoder's form of one admitted annotation, written from what the input stated rather than from a document.
 const normalizedQuads = (kinds: typeof OaKinds, source: Rdf.NamedNode, sourceText: string) =>
   Effect.fnUntraced(function* (candidate: Candidate) {
     const subject = instanceNode(candidate.content);

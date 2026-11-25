@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $PracticeClaudeModId.create("PracticeMod.values");
 
 /**
- * The practice-kg tools whose calls the mod redraws in plain language.
- *
  * **Example** (List the redrawn tools)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const PracticeKgToolName = LiteralKit([
 );
 
 /**
- * Type-level union produced by {@link PracticeKgToolName}.
- *
  * **Example** (Name a redrawn tool)
  *
  * ```ts

@@ -32,8 +32,6 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/FilingDecision");
 export const FILING_TEXT_EXCERPT_MAX_LENGTH = 8000;
 
 /**
- * Bounded extracted-text excerpt used by content-aware filing decisions.
- *
  * **Example** (Decode filing text excerpt)
  *
  * ```ts
@@ -54,8 +52,6 @@ export const FilingTextExcerpt = S.NonEmptyString.check(S.isMaxLength(FILING_TEX
 );
 
 /**
- * Type for {@link FilingTextExcerpt}.
- *
  * **Example** (Type annotated excerpt decode)
  *
  * ```ts
@@ -72,8 +68,6 @@ export const FilingTextExcerpt = S.NonEmptyString.check(S.isMaxLength(FILING_TEX
 export type FilingTextExcerpt = typeof FilingTextExcerpt.Type;
 
 /**
- * Input supplied to the FilingDecision port.
- *
  * **Example** (Make filing decision input)
  *
  * ```ts

@@ -113,8 +113,6 @@ export const Route = S.TaggedUnion({
 }).pipe($I.annoteSchema("Route", { description: "The cache protocol endpoint a request addresses." }));
 
 /**
- * Runtime type for {@link Route}.
- *
  * @category models
  * @since 0.0.0
  */

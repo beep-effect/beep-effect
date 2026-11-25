@@ -6,24 +6,17 @@
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-// UTF-8 byte accounting.
-//
-// Keep this leaf independent of the line splitter and error taxonomy so both
-// can measure bytes without importing each other.
-
 const codeUnitAt = (text: string, index: number): number => O.getOrThrow(Str.charCodeAt(text, index));
 
 const isHighSurrogate = (code: number): boolean => code >= 0xd800 && code <= 0xdbff;
 
 const isLowSurrogate = (code: number): boolean => code >= 0xdc00 && code <= 0xdfff;
 
-// Whether the code unit after `index` completes a surrogate pair.
 const pairsWithNext = (text: string, index: number): boolean =>
   index + 1 < Str.length(text) && isLowSurrogate(codeUnitAt(text, index + 1));
 
-// Bytes for one code unit that is not the start of a valid surrogate pair.
-// Unpaired surrogates (high or low) encode as U+FFFD, which is 3 bytes, the
-// same width as every other code unit at or above U+0800.
+const SURROGATE_PAIR_CODE_POINT_BYTES = 4;
+
 const unitBytes = (code: number): number => {
   if (code < 0x80) return 1;
   return code < 0x800 ? 2 : 3;
@@ -58,9 +51,9 @@ export const utf8Length = (text: string): number => {
   let bytes = 0;
   for (let index = 0; index < Str.length(text); index++) {
     const code = codeUnitAt(text, index);
-    // A high surrogate followed by a low one is a single 4-byte code point.
-    if (isHighSurrogate(code) && pairsWithNext(text, index)) {
-      bytes += 4;
+    const startsSurrogatePair = isHighSurrogate(code) && pairsWithNext(text, index);
+    if (startsSurrogatePair) {
+      bytes += SURROGATE_PAIR_CODE_POINT_BYTES;
       index++;
     } else {
       bytes += unitBytes(code);

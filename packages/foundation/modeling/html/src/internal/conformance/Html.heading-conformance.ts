@@ -55,8 +55,6 @@ export const HtmlComputedHeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6, 7, 8, 9]).
 );
 
 /**
- * Type for {@link HtmlComputedHeadingLevel}.
- *
  * **Example** (Annotate a computed heading level)
  *
  * ```ts
@@ -141,8 +139,6 @@ export const HtmlBestPracticeRule = LiteralKit(["headingLevelOne"]).pipe(
 );
 
 /**
- * Type for {@link HtmlBestPracticeRule}.
- *
  * **Example** (Annotate an advisory rule)
  *
  * ```ts
@@ -158,8 +154,6 @@ export const HtmlBestPracticeRule = LiteralKit(["headingLevelOne"]).pipe(
 export type HtmlBestPracticeRule = typeof HtmlBestPracticeRule.Type;
 
 /**
- * One non-fatal HTML authoring recommendation.
- *
  * **Example** (Construct a best-practice issue)
  *
  * ```ts import.meta.vitest name="Construct a best-practice issue"
@@ -224,8 +218,7 @@ const collectHeadingOutline = (
         N.min(declaredHeadingLevel(tag) + effectiveOffset, 9),
         decodeUnknownHtmlComputedHeadingLevelResult,
         Result.match({
-          // A schema-valid root and HeadingOffset guard make this branch unreachable;
-          // retaining it keeps outline inspection total for defensive foreign calls.
+          // decision: heading-outline-total-on-unreachable-level
           onFailure: A.emptyReadonly,
           onSuccess: (level) => [HtmlHeadingOutlineEntry.make({ path, tag, level })],
         })

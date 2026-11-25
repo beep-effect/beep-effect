@@ -25,8 +25,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketCore.schemas");
 
 /**
- * Known packet-event schema versions (`packet-event/v1` is current).
- *
  * **Details**
  *
  * Event evolution is versioned: a future `packet-event/v2` joins this kit and
@@ -50,8 +48,6 @@ export const PacketEventSchemaVersion = LiteralKit(["packet-event/v1"]).pipe(
 );
 
 /**
- * Known packet-event schema version.
- *
  * **Example** (Annotate an event version)
  *
  * ```ts
@@ -67,8 +63,6 @@ export const PacketEventSchemaVersion = LiteralKit(["packet-event/v1"]).pipe(
 export type PacketEventSchemaVersion = typeof PacketEventSchemaVersion.Type;
 
 /**
- * Packet roots that may carry an event stream.
- *
  * **Example** (Enumerate packet roots)
  *
  * ```ts
@@ -87,8 +81,6 @@ export const PacketRoot = LiteralKit(["goals", "explorations"]).pipe(
 );
 
 /**
- * Packet root that may carry an event stream.
- *
  * **Example** (Annotate a packet root)
  *
  * ```ts
@@ -104,8 +96,6 @@ export const PacketRoot = LiteralKit(["goals", "explorations"]).pipe(
 export type PacketRoot = typeof PacketRoot.Type;
 
 /**
- * Packet-event types in the v1 vocabulary.
- *
  * **Details**
  *
  * `packet-created` is the genesis event a stream starts with (recording where
@@ -137,8 +127,6 @@ export const PacketEventType = LiteralKit([
 );
 
 /**
- * Packet-event type in the v1 vocabulary.
- *
  * **Example** (Annotate an event type)
  *
  * ```ts
@@ -186,8 +174,6 @@ export const PacketEventId = S.String.check(
 );
 
 /**
- * Content-addressed packet-event identity.
- *
  * **Example** (Annotate an event id)
  *
  * ```ts
@@ -242,8 +228,6 @@ export const PacketSlug = S.String.check(
 );
 
 /**
- * Packet slug token.
- *
  * **Example** (Annotate a packet slug)
  *
  * ```ts
@@ -276,8 +260,6 @@ export type PacketSlug = typeof PacketSlug.Type;
 export const isPacketSlug = S.is(PacketSlug);
 
 /**
- * One stage token inside a packet's own stage vocabulary.
- *
  * **Details**
  *
  * The fold does not own any stage vocabulary: goals declare phases (`P0`,
@@ -322,8 +304,6 @@ export const PacketStage = S.String.check(
 );
 
 /**
- * Stage token inside a packet's own vocabulary.
- *
  * **Example** (Annotate a stage token)
  *
  * ```ts
@@ -356,8 +336,6 @@ export type PacketStage = typeof PacketStage.Type;
 export const isPacketStage = S.is(PacketStage);
 
 /**
- * Lifecycle-status token recorded by packet events.
- *
  * **Details**
  *
  * The event store is packet-kind-generic, so the event schema constrains the
@@ -402,8 +380,6 @@ export const PacketStatusToken = S.String.check(
 );
 
 /**
- * Lifecycle-status token recorded by packet events.
- *
  * **Example** (Annotate a status token)
  *
  * ```ts
@@ -419,8 +395,6 @@ export const PacketStatusToken = S.String.check(
 export type PacketStatusToken = typeof PacketStatusToken.Type;
 
 /**
- * Stream revision: the number of events on the linear chain (0 = empty).
- *
  * **Example** (Validate a revision)
  *
  * ```ts
@@ -450,8 +424,6 @@ export const PacketRevision = S.Int.check(
 );
 
 /**
- * Stream revision value.
- *
  * **Example** (Annotate a revision)
  *
  * ```ts
@@ -467,8 +439,6 @@ export const PacketRevision = S.Int.check(
 export type PacketRevision = typeof PacketRevision.Type;
 
 /**
- * Stage ordinal inside a packet's declared stage order.
- *
  * **Example** (Validate a stage ordinal)
  *
  * ```ts
@@ -497,8 +467,6 @@ export const PacketStageOrdinal = S.Int.check(
 );
 
 /**
- * Stage ordinal value.
- *
  * **Example** (Annotate a stage ordinal)
  *
  * ```ts
@@ -514,8 +482,6 @@ export const PacketStageOrdinal = S.Int.check(
 export type PacketStageOrdinal = typeof PacketStageOrdinal.Type;
 
 /**
- * Packet risk tiers in the ratified Light/Standard/Full routing vocabulary.
- *
  * **Details**
  *
  * The tier decides how much design/approval ceremony a packet's changes
@@ -541,8 +507,6 @@ export const PacketRiskTier = LiteralKit(["light", "standard", "full"]).pipe(
 );
 
 /**
- * Packet risk tier value.
- *
  * **Example** (Annotate a risk tier)
  *
  * ```ts
@@ -621,8 +585,6 @@ export class PacketCreatedBody extends S.Opaque<PacketCreatedBody, { readonly br
 ) {}
 
 /**
- * Stage-transition event body.
- *
  * **Example** (Construct a stage-entered body)
  *
  * ```ts
@@ -648,8 +610,6 @@ export class StageEnteredBody extends S.Opaque<StageEnteredBody, { readonly bran
 ) {}
 
 /**
- * Status-transition event body.
- *
  * **Example** (Construct a status-set body)
  *
  * ```ts
@@ -712,8 +672,6 @@ export const RiskTierOverrideReason = S.String.check(
 );
 
 /**
- * Operator risk-tier override event body.
- *
  * **Details**
  *
  * Overrides are operator-only, recorded, and challengeable: the body carries
@@ -752,8 +710,6 @@ export class RiskTierOverriddenBody extends S.Opaque<RiskTierOverriddenBody, { r
 ) {}
 
 /**
- * Typed union of packet-event v1 bodies, discriminated by `type`.
- *
  * **Example** (Decode a body from its wire shape)
  *
  * ```ts
@@ -779,8 +735,6 @@ export const PacketEventBody = S.Union([
 );
 
 /**
- * Typed packet-event v1 body.
- *
  * **Example** (Annotate a body value)
  *
  * ```ts
@@ -797,8 +751,6 @@ export const PacketEventBody = S.Union([
 export type PacketEventBody = typeof PacketEventBody.Type;
 
 /**
- * ISO-8601 timestamp recorded on packet events and writer requests.
- *
  * **Example** (Reject a timestamp that is not ISO-8601)
  *
  * ```ts
@@ -828,8 +780,6 @@ export const PacketEventTimestamp = S.String.check(
 );
 
 /**
- * Non-empty actor recorded on packet events and writer requests.
- *
  * **Example** (Reject an empty actor)
  *
  * ```ts
@@ -859,16 +809,12 @@ export const PacketEventActor = S.String.check(
 );
 
 /**
- * Decoded packet-event timestamp.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type PacketEventTimestamp = typeof PacketEventTimestamp.Type;
 
 /**
- * Decoded packet-event actor.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -894,8 +840,6 @@ const PacketEventCasRevisionCheck = S.makeFilter(
 );
 
 /**
- * One versioned CAS packet event.
- *
  * **Details**
  *
  * The stored file content is exactly this encoded shape; the event's identity
@@ -976,9 +920,6 @@ export const decodePacketEvent: {
 } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(PacketEvent));
 
 /**
- * One packet event as stored on disk: the decoded event plus its verified
- * content digest and file name.
- *
  * **Example** (Construct a stored event record)
  *
  * ```ts
@@ -1017,8 +958,6 @@ export class StoredPacketEvent extends S.Opaque<StoredPacketEvent, { readonly br
 ) {}
 
 /**
- * Current head of a packet stream's linear chain.
- *
  * **Example** (Construct a tip)
  *
  * ```ts
@@ -1052,8 +991,6 @@ export class PacketTip extends S.Opaque<PacketTip, { readonly brand: unique symb
 ) {}
 
 /**
- * First-class fork verdict: one parent with two or more children.
- *
  * **Details**
  *
  * `parent` is absent for a genesis fork (two seq-1 events). Fork repair is a
@@ -1141,8 +1078,6 @@ export class PacketForkRepairPlan extends S.Opaque<PacketForkRepairPlan, { reado
 ) {}
 
 /**
- * Chain-integrity issue kinds a stream read or fold can report.
- *
  * **Example** (Check issue-kind membership)
  *
  * ```ts
@@ -1169,8 +1104,6 @@ export const PacketChainIssueKind = LiteralKit([
 );
 
 /**
- * Chain-integrity issue kind.
- *
  * **Example** (Annotate an issue kind)
  *
  * ```ts
@@ -1186,8 +1119,6 @@ export const PacketChainIssueKind = LiteralKit([
 export type PacketChainIssueKind = typeof PacketChainIssueKind.Type;
 
 /**
- * One chain-integrity issue with the file it anchors to.
- *
  * **Example** (Construct a chain issue)
  *
  * ```ts
@@ -1259,8 +1190,6 @@ export class PacketRiskTierOverrideState extends S.Opaque<
 ) {}
 
 /**
- * Deterministic derived state of one packet stream.
- *
  * **Details**
  *
  * Derivations follow D3: `furthestStage` is the monotonic high-water mark by
@@ -1337,8 +1266,6 @@ export class PacketDerivedState extends S.Opaque<PacketDerivedState, { readonly 
 export const PACKET_PROJECTOR_VERSION = 2;
 
 /**
- * One event on the projected timeline of a packet trace.
- *
  * **Details**
  *
  * Timeline entries cover the unambiguous linear prefix only — events past a

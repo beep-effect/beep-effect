@@ -85,6 +85,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:private-home-paths",
   "//#lint:tracked-shell-allowlist",
   "//#lint:no-tracked-python",
+  "//#lint:comment-law",
   "//#lint:schema-tag-idioms",
   "//#lint:holds",
   "//#lint:ecosystem-polarity",
@@ -138,8 +139,6 @@ export const TurboConfigProofTaskName = LiteralKit(TURBO_CONFIG_PROOF_TASK_VALUE
 export type TurboConfigProofTaskName = typeof TurboConfigProofTaskName.Type;
 
 /**
- * Selector mode used for Turbo dry-run proof.
- *
  * **Example** (Prove Turbo configuration)
  *
  * ```ts
@@ -157,8 +156,6 @@ export const TurboConfigProofSelectorMode = LiteralKit(TURBO_CONFIG_PROOF_SELECT
 );
 
 /**
- * Selector mode used for Turbo dry-run proof.
- *
  * **Example** (Prove Turbo configuration)
  *
  * ```ts
@@ -223,8 +220,6 @@ export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError, 
 }
 
 /**
- * Count summary for a Turbo proof probe.
- *
  * @category models
  * @since 0.0.0
  */
@@ -246,8 +241,6 @@ export class TurboConfigProofCountSummary extends S.Opaque<
 ) {}
 
 /**
- * Per-task dry-run proof summary.
- *
  * @category models
  * @since 0.0.0
  */
@@ -268,8 +261,6 @@ export class TurboConfigProofDryRunSummary extends S.Opaque<
 ) {}
 
 /**
- * Complete scoped-config proof report.
- *
  * @category models
  * @since 0.0.0
  */

@@ -10,7 +10,6 @@ import { Audience, KbView } from "./Kb.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Kb/KbGraph.schemas");
 /**
- * Viewer entity categories.
  * **Example** (Access the KbGraphNodeType contract)
  * ```ts
  * import { KbGraphNodeType } from "@beep/repo-cli/commands/Kb"
@@ -43,7 +42,6 @@ export const KbGraphNodeType = LiteralKit([
  */
 export type KbGraphNodeType = typeof KbGraphNodeType.Type;
 /**
- * Viewer review dispositions.
  * **Example** (Access the KbGraphReview contract)
  * ```ts
  * import { KbGraphReview } from "@beep/repo-cli/commands/Kb"
@@ -62,7 +60,6 @@ export const KbGraphReview = LiteralKit(["proposed", "accepted", "disputed", "re
  */
 export type KbGraphReview = typeof KbGraphReview.Type;
 /**
- * Viewer confidence categories, independent of review.
  * **Example** (Access the KbGraphConfidence contract)
  * ```ts
  * import { KbGraphConfidence } from "@beep/repo-cli/commands/Kb"
@@ -81,7 +78,6 @@ export const KbGraphConfidence = LiteralKit(["verified", "reported", "inferred"]
  */
 export type KbGraphConfidence = typeof KbGraphConfidence.Type;
 /**
- * Registry metadata for one opaque entity id.
  * **Example** (Access the KbRegistryNode contract)
  * ```ts
  * import { KbRegistryNode } from "@beep/repo-cli/commands/Kb"
@@ -101,7 +97,6 @@ export class KbRegistryNode extends S.Opaque<KbRegistryNode, { readonly brand: u
   }).pipe($I.annoteSchema("KbRegistryNode", { description: "Registry metadata for one opaque entity id." }))
 ) {}
 /**
- * Entity with the strictest audience of its visible claims.
  * **Example** (Access the KbGraphNode contract)
  * ```ts
  * import { KbGraphNode } from "@beep/repo-cli/commands/Kb"
@@ -123,7 +118,6 @@ export class KbGraphNode extends S.Opaque<KbGraphNode, { readonly brand: unique 
   }).pipe($I.annoteSchema("KbGraphNode", { description: "Entity with the strictest audience of its visible claims." }))
 ) {}
 /**
- * Visible evidence without source text or internal derivation metadata.
  * **Example** (Access the KbGraphAssertion contract)
  * ```ts
  * import { KbGraphAssertion } from "@beep/repo-cli/commands/Kb"
@@ -148,7 +142,6 @@ export class KbGraphAssertion extends S.Opaque<KbGraphAssertion, { readonly bran
   )
 ) {}
 /**
- * Reviewed proposition and its filtered assertions.
  * **Example** (Access the KbGraphClaim contract)
  * ```ts
  * import { KbGraphClaim } from "@beep/repo-cli/commands/Kb"
@@ -167,7 +160,6 @@ export class KbGraphClaim extends S.Opaque<KbGraphClaim, { readonly brand: uniqu
   }).pipe($I.annoteSchema("KbGraphClaim", { description: "Reviewed proposition and its filtered assertions." }))
 ) {}
 /**
- * Binary proposition linked to exactly one claim.
  * **Example** (Access the KbGraphLink contract)
  * ```ts
  * import { KbGraphLink } from "@beep/repo-cli/commands/Kb"
@@ -193,7 +185,6 @@ export class KbGraphLink extends S.Opaque<KbGraphLink, { readonly brand: unique 
   }).pipe($I.annoteSchema("KbGraphLink", { description: "Binary proposition linked to exactly one claim." }))
 ) {}
 /**
- * Complete viewer JSON contract, encoded through Effect Schema.
  * **Example** (Access the KbGraph contract)
  * ```ts
  * import { KbGraph } from "@beep/repo-cli/commands/Kb"

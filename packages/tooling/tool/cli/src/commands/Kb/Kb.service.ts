@@ -22,9 +22,18 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { withAppendLock } from "../../internal/claims/AppendLock.ts";
 import { decodeKbAssertionLine, decodeKbClaimLine, joinKbClaims, planKbAppend } from "./internal/KbStore.ts";
 import { KbError } from "./Kb.errors.ts";
-import { KbReport, KbSnapshot, kbClaimKey, kbClaimLabel, kbLogicalKey, kbProposition } from "./Kb.schemas.ts";
+import {
+  KbReport,
+  KbSnapshot,
+  kbClaimKey,
+  kbClaimLabel,
+  kbLogicalKey,
+  kbProposition,
+  kbReferenceLabel,
+} from "./Kb.schemas.ts";
 import { KbRegistryNode } from "./KbGraph.schemas.ts";
 import type { ClaimHistoryRefused } from "../../internal/claims/ClaimHistory.ts";
 import type { Assertion, KbClaim, KbClaimEvent, KbView } from "./Kb.schemas.ts";
@@ -262,6 +271,26 @@ export class KbLedger extends Context.Service<
 const refusedMessage = (refused: ClaimHistoryRefused): string =>
   `Claim history refused (${refused.reason}): ${refused.claim}`;
 
+const evidenceLinkViolations = (
+  events: ReadonlyArray<KbClaimEvent>,
+  assertions: ReadonlyArray<Assertion>
+): ReadonlyArray<string> => {
+  const assertionIndex = HashMap.fromIterable(A.map(assertions, (a) => Tuple.make(a.id, a)));
+  return A.flatMap(events, (event) =>
+    event.event === "Evidence"
+      ? A.flatMap(A.flatten([event.supportedBy, event.challengedBy]), (id) =>
+          flag(
+            !O.exists(
+              HashMap.get(assertionIndex, id),
+              (a) => claimReferenceKey(a.claim) === claimReferenceKey(event.claim)
+            ),
+            `Evidence for ${kbReferenceLabel(event.claim)}: missing or mismatched assertion ${id}`
+          )
+        )
+      : A.empty<string>()
+  );
+};
+
 /**
  * Capture platform dependencies inside the ledger implementation.
  * **Example** (Construct the service effect)
@@ -282,11 +311,11 @@ export const makeKbLedger = Effect.gen(function* () {
     fs
       .readFileString(file)
       .pipe(Effect.mapError(() => KbError.make({ message: `Cannot read ${path.basename(file)}` })));
-  const readRows = Effect.fn("Kb.readRows")(function* <Row, E>(
+  const decodeRows = Effect.fn("Kb.decodeRows")(function* <Row, E>(
     file: string,
+    text: string,
     decode: (text: string, json: unknown) => Effect.Effect<Row, E, Digest.Digest>
   ) {
-    const text = yield* readText(file);
     return yield* Effect.forEach(
       A.filter(Line.split(text), (line) => !Line.isBlank(line)),
       Effect.fnUntraced(function* (line) {
@@ -302,14 +331,41 @@ export const makeKbLedger = Effect.gen(function* () {
       { concurrency: 1 }
     ).pipe(withDigest);
   });
+  const readRows = <Row, E>(
+    file: string,
+    decode: (text: string, json: unknown) => Effect.Effect<Row, E, Digest.Digest>
+  ) => Effect.flatMap(readText(file), (text) => decodeRows(file, text, decode));
   const readClaimLines = (root: string) => readRows(path.join(root, "claims.jsonl"), decodeKbClaimLine);
+  const readAssertions = (root: string) =>
+    readRows(path.join(root, "assertions.jsonl"), (_text, json) => decodeKbAssertionLine(json));
+  const inspect = (file: string) =>
+    fs.exists(file).pipe(Effect.mapError(() => KbError.make({ message: `Cannot inspect ${path.basename(file)}` })));
+  const appendUnlocked = Effect.fnUntraced(function* (root: string, events: ReadonlyArray<KbClaimEvent>) {
+    const file = path.join(root, "claims.jsonl");
+    const text = (yield* inspect(file)) ? yield* readText(file) : "";
+    const existing = yield* decodeRows(file, text, decodeKbClaimLine);
+    const lines = yield* planKbAppend(existing, events).pipe(
+      withDigest,
+      Effect.mapError((cause) =>
+        KbError.make({
+          message: cause._tag === "ClaimHistoryRefused" ? refusedMessage(cause) : "Cannot encode claim records",
+        })
+      )
+    );
+    const assertions = (yield* inspect(path.join(root, "assertions.jsonl"))) ? yield* readAssertions(root) : [];
+    const broken = evidenceLinkViolations(events, assertions);
+    if (A.isReadonlyArrayNonEmpty(broken)) return yield* KbError.make({ message: A.join(broken, "; ") });
+    const separator = Str.isEmpty(text) || Str.endsWith("\n")(text) ? "" : "\n";
+    yield* fs
+      .writeFileString(file, `${separator}${A.join(lines, "\n")}\n`, { flag: "a" })
+      .pipe(Effect.mapError(() => KbError.make({ message: "Cannot append to claims.jsonl" })));
+  });
   return KbLedger.of({
     readRegistry: Effect.fn("KbLedger.readRegistry")(function* (root) {
       const file = path.join(root, "registry.jsonl");
-      const exists = yield* fs
-        .exists(file)
-        .pipe(Effect.mapError(() => KbError.make({ message: "Cannot inspect registry.jsonl" })));
-      const rows = exists ? yield* readRows(file, (_text, json) => S.decodeUnknownEffect(KbRegistryNode)(json)) : [];
+      const rows = (yield* inspect(file))
+        ? yield* readRows(file, (_text, json) => S.decodeUnknownEffect(KbRegistryNode)(json))
+        : [];
       if (HashSet.size(HashSet.fromIterable(A.map(rows, (row) => row.id))) !== A.length(rows))
         return yield* KbError.make({ message: "Duplicate registry ids" });
       return rows;
@@ -320,31 +376,19 @@ export const makeKbLedger = Effect.gen(function* () {
         withDigest,
         Effect.mapError((refused) => KbError.make({ message: refusedMessage(refused) }))
       );
-      const assertions = yield* readRows(path.join(root, "assertions.jsonl"), (_text, json) =>
-        decodeKbAssertionLine(json)
-      );
+      const assertions = yield* readAssertions(root);
       return KbSnapshot.make({ claims, assertions, report: validateKb(claims, assertions) });
     }),
     append: Effect.fn("KbLedger.append")(function* (root, events) {
       if (A.isReadonlyArrayEmpty(events)) return;
-      const file = path.join(root, "claims.jsonl");
-      const exists = yield* fs
-        .exists(file)
-        .pipe(Effect.mapError(() => KbError.make({ message: "Cannot inspect claims.jsonl" })));
-      const existing = exists ? yield* readClaimLines(root) : [];
-      const lines = yield* planKbAppend(existing, events).pipe(
-        withDigest,
-        Effect.mapError((cause) =>
-          KbError.make({
-            message: cause._tag === "ClaimHistoryRefused" ? refusedMessage(cause) : "Cannot encode claim records",
-          })
-        )
+      if (!(yield* inspect(root))) return yield* KbError.make({ message: "Ledger root does not exist" });
+      yield* appendUnlocked(root, events).pipe(
+        withAppendLock({
+          platform: { fs, path, digest },
+          lockFile: path.join(root, "claims.jsonl.lock"),
+          busy: KbError.make({ message: "claims.jsonl is locked by another running append; retry once it finishes" }),
+        })
       );
-      const text = exists ? yield* readText(file) : "";
-      const separator = Str.isEmpty(text) || Str.endsWith("\n")(text) ? "" : "\n";
-      yield* fs
-        .writeFileString(file, `${separator}${A.join(lines, "\n")}\n`, { flag: "a" })
-        .pipe(Effect.mapError(() => KbError.make({ message: "Cannot append to claims.jsonl" })));
     }),
   });
 });

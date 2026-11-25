@@ -56,8 +56,6 @@ export const MappingPredicate = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MappingPredicate}.
- *
  * **Example** (Type a mapping predicate)
  *
  * ```ts
@@ -116,8 +114,6 @@ export const MappingJustification = LiteralKit([
 );
 
 /**
- * Runtime type for {@link MappingJustification}.
- *
  * **Example** (Type a justification)
  *
  * ```ts
@@ -133,8 +129,6 @@ export const MappingJustification = LiteralKit([
 export type MappingJustification = typeof MappingJustification.Type;
 
 /**
- * The confidence of a mapping row: a measurement, or absent with a reason.
- *
  * **Example** (Record a curated row's confidence)
  *
  * ```ts
@@ -154,8 +148,6 @@ export const MappingConfidence = makeSignal(Measurement).pipe(
 );
 
 /**
- * Runtime type for {@link MappingConfidence}.
- *
  * **Example** (Type a confidence)
  *
  * ```ts
@@ -174,8 +166,6 @@ export type MappingConfidence = typeof MappingConfidence.Type;
 const isRegistryTerm = (iri: string): boolean => O.isSome(Registry.contract(iri));
 
 /**
- * One SSSOM mapping row between two registry terms.
- *
  * **Example** (Map an annotation kind to DoCO)
  *
  * ```ts
@@ -398,8 +388,6 @@ export const MappingIncoherence = S.Union([DisjointUpperTypes, ConflictingPredic
 );
 
 /**
- * Runtime type for {@link MappingIncoherence}.
- *
  * **Example** (Type a finding)
  *
  * ```ts

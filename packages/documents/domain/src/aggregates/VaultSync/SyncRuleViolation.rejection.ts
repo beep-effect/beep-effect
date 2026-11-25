@@ -50,8 +50,6 @@ export const SyncRule = LiteralKit([
   "wrong-key",
 ]).pipe($I.annoteSchema("SyncRule", { description: "A named vault sync rule that refused a command." }));
 /**
- * Runtime value accepted by {@link SyncRule}.
- *
  * @category aggregates
  * @since 0.0.0
  */

@@ -15,6 +15,8 @@ import * as Str from "effect/String";
 import type * as Ordering from "effect/Ordering";
 
 const $I = $RepoAiMetricsId.create("internal/source-event-time");
+const OTLP_UINT64_NANOS_MAX_WHOLE_SECONDS = 18_446_744_073;
+const OTLP_UINT64_NANOS_MAX_REMAINDER_NANOS = 709_551_615;
 const SourceTimestampText = S.String.check(
   S.isPattern(
     /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/u
@@ -87,8 +89,10 @@ export const parseSourceEventTime = (input: string): O.Option<SourceEventTime> =
       O.flatMap(S.decodeUnknownOption(S.FiniteFromString)),
       O.getOrElse(() => 0)
     );
-    // OTLP uses an unsigned 64-bit nanosecond count, not the full JavaScript Date range.
-    if (seconds > 18_446_744_073 || (seconds === 18_446_744_073 && nanoseconds > 709_551_615)) return yield* O.none();
+    const exceedsOtlpUnsigned64BitNanosecondRange =
+      seconds > OTLP_UINT64_NANOS_MAX_WHOLE_SECONDS ||
+      (seconds === OTLP_UINT64_NANOS_MAX_WHOLE_SECONDS && nanoseconds > OTLP_UINT64_NANOS_MAX_REMAINDER_NANOS);
+    if (exceedsOtlpUnsigned64BitNanosecondRange) return yield* O.none();
     return SourceEventTime.make({ text, seconds, nanoseconds });
   });
 

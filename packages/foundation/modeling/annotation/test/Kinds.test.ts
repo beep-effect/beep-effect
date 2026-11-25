@@ -33,8 +33,7 @@ import { fixtureAnnotations, fixtureMentions, fixtureParts } from "./support/fix
 import { annotationIdOf } from "./support/generators.ts";
 import type { ClosedKindRegistry, KindRegistry } from "@beep/annotation/Kind";
 
-// The registries are closed at the type level too.
-const closed: ReadonlyArray<ClosedKindRegistry<KindRegistry>> = [
+const closedAtTypeLevel: ReadonlyArray<ClosedKindRegistry<KindRegistry>> = [
   ExtractionKinds satisfies ClosedKindRegistry<typeof ExtractionKinds>,
   StructureKinds satisfies ClosedKindRegistry<typeof StructureKinds>,
   DocumentKinds satisfies ClosedKindRegistry<typeof DocumentKinds>,
@@ -67,7 +66,7 @@ const encodeCase = flow(
 
 describe("@beep/annotation kinds", () => {
   it("keeps every registry closed: each name is its key and every reference is registered", () => {
-    expect(closed).toHaveLength(4);
+    expect(closedAtTypeLevel).toHaveLength(4);
     const registries: ReadonlyArray<KindRegistry> = [ExtractionKinds, StructureKinds, DocumentKinds, OaKinds];
     for (const kinds of registries) {
       for (const [key, kind] of R.toEntries(kinds)) {
@@ -135,8 +134,10 @@ describe("@beep/annotation kinds", () => {
     [bodiesCase],
     ([bodies]) => {
       const reread = S.encodeResult(BodiesJson)(bodies).pipe(Result.flatMap(S.decodeUnknownResult(BodiesJson)));
-      // Arbitrary.schema draws null-prototype objects, so compare structurally.
-      expect(Result.getOrThrow(reread)).toEqual(bodies);
+      expect(
+        Result.getOrThrow(reread),
+        "Arbitrary.schema draws null-prototype objects, so compare structurally"
+      ).toEqual(bodies);
     },
     { arbitrary: fcRuns(100) }
   );

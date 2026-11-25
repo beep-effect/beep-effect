@@ -137,8 +137,6 @@ export const RedactionChannel = LiteralKit(["client", "diagnostic"]).pipe(
 );
 
 /**
- * Runtime type for {@link RedactionChannel}.
- *
  * **Example** (Assign redaction channel type)
  *
  * ```typescript
@@ -270,8 +268,6 @@ export class RedactedCause extends S.Opaque<RedactedCause, { readonly brand: uni
 ) {}
 
 /**
- * Options controlling how a cause is redacted.
- *
  * **Example** (Make client channel options)
  *
  * ```ts import.meta.vitest name="Make client channel options"
@@ -525,8 +521,6 @@ export const redactCauseEffect: {
 );
 
 /**
- * Runtime-controlled levels supported by redacted boundary logging.
- *
  * **Example** (Read log level enum value)
  *
  * ```ts import.meta.vitest name="Read log level enum value"
@@ -545,8 +539,6 @@ export const RedactedCauseLogLevel = LiteralKit(["Info", "Warn", "Error"]).pipe(
 );
 
 /**
- * Runtime type for {@link RedactedCauseLogLevel}.
- *
  * **Example** (Assign log level type)
  *
  * ```typescript

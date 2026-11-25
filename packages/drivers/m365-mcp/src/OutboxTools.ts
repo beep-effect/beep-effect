@@ -44,8 +44,6 @@ const additiveWriteToolHints = FourHintAnnotations.make({
 });
 
 /**
- * Structured failure returned by the outbox tools.
- *
  * **Example** (Construct a tool failure)
  *
  * ```ts
@@ -84,8 +82,6 @@ export class OutboxToolError extends S.Opaque<OutboxToolError, { readonly brand:
 ) {}
 
 /**
- * Parameters of `m365_outbox_create_draft`.
- *
  * **Example** (Prepare a draft with one attachment)
  *
  * ```ts
@@ -230,8 +226,6 @@ export class OutboxDraftView extends S.Opaque<OutboxDraftView, { readonly brand:
 ) {}
 
 /**
- * Parameters of `m365_outbox_send_draft`.
- *
  * **Example** (Send a draft with its expectation)
  *
  * ```ts
@@ -402,8 +396,6 @@ export class OutboxEventUpdated extends S.Opaque<OutboxEventUpdated, { readonly 
 export const OUTBOX_BASIS_STALE_CATEGORY = "Draft - recheck before sending";
 
 /**
- * What `check_drafts` did to the stale-basis category of one draft.
- *
  * **Details**
  *
  * `set`: the category was added. `cleared`: the category this server added
@@ -440,8 +432,6 @@ export const OutboxDraftMarkOutcome = LiteralKit([
 );
 
 /**
- * Type for {@link OutboxDraftMarkOutcome}.
- *
  * **Example** (Type a mark outcome)
  *
  * ```ts
@@ -466,8 +456,6 @@ const recordedSubject = S.String.annotateKey({
 });
 
 /**
- * One open draft as `check_drafts` found it.
- *
  * **Example** (Read a checked draft)
  *
  * ```ts

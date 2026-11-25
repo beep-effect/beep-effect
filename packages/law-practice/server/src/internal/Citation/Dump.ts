@@ -31,6 +31,7 @@ import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy
 import type { CitationEngineLimits, CitationEngineOperation } from "@beep/law-practice-use-cases/server";
 import type { CitationInvocation } from "./Invocation.ts";
 
+const encodeAlreadyDecodedIntTotally = S.encodeEffect(S.FiniteFromString);
 const $I = $LawPracticeServerId.create("internal/Citation/Dump");
 /** Closed builtin formatting failure without input data or parser causes.
  * @internal @category errors @since 0.0.0
@@ -212,9 +213,7 @@ const renderFields = Effect.fn("Citation.dumpFields")(function* (
   const scalar = (value: CitationDumpScalar) =>
     CitationDumpScalar.match(value, {
       Text: ({ value }) => repr.text(value).pipe(Effect.map((output) => parts.range(output))),
-      // Input owns a decoded S.Int value before rendering; finite encoding is total here.
-      Integer: ({ value }) =>
-        S.encodeEffect(S.FiniteFromString)(value).pipe(Effect.orDie, Effect.flatMap(parts.literal)),
+      Integer: ({ value }) => encodeAlreadyDecodedIntTotally(value).pipe(Effect.orDie, Effect.flatMap(parts.literal)),
       Boolean: ({ value }) => parts.literal(value ? "True" : "False"),
       None: () => parts.literal("None"),
     });
@@ -248,9 +247,11 @@ const renderFields = Effect.fn("Citation.dumpFields")(function* (
  * General citation.dump callbacks, dictionary subclasses and repr hooks stay separate.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationDump = Effect.fn("Citation.makeDump")(function* (policy: unknown, printability: unknown) {
-  // A separately callable raw entry point: decode its policy here.
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
+export const makeCitationDump = Effect.fn("Citation.makeDump")(function* (
+  separatelyCallableRawPolicy: unknown,
+  printability: unknown
+) {
+  const limits = yield* decodeCitationRegexPolicy(separatelyCallableRawPolicy, () => fail("invalid-policy"));
   const context = yield* makeCitationNativeRendering(limits);
   const { timing, unicode } = context;
   const table = yield* S.decodeUnknownEffect(S.String)(printability).pipe(

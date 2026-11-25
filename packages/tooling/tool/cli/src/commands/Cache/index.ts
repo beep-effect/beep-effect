@@ -18,8 +18,6 @@ export {
   resolveCacheTurboBinary,
 } from "./Cache.census.ts";
 /**
- * Cache execution and policy commands.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -229,8 +227,6 @@ export {
  */
 export { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 /**
- * Public cache command error.
- *
  * @category errors
  * @since 0.0.0
  */

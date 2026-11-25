@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $DocumentsDomainId.create("entities/SyncCursor/SyncCursor.values");
 
 /**
- * Health status for a remote-event stream cursor.
- *
  * **Example** (Assert active SyncCursorStatus)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const SyncCursorStatus = LiteralKit(["active", "error"]).pipe(
 );
 
 /**
- * Runtime type for {@link SyncCursorStatus}.
- *
  * @category value-objects
  * @since 0.0.0
  */

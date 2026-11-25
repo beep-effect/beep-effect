@@ -17,8 +17,6 @@ import type { PoolName } from "./Config.ts";
 const $I = $InfraCiRunnersId.create("Names");
 
 /**
- * Every name the stack pins, for one stage.
- *
  * **Details**
  *
  * `fleet` is the `RunnerFleet` name: each pool's `ghr:environment` is

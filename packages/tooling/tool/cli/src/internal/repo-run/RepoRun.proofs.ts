@@ -38,8 +38,6 @@ export const GITHUB_CHECK_MODE_VALUES = [
 ] as const;
 
 /**
- * GitHub check mode handled by `beep quality github-checks`.
- *
  * @category models
  * @since 0.0.0
  */
@@ -50,8 +48,6 @@ export const GithubCheckMode = LiteralKit(GITHUB_CHECK_MODE_VALUES).pipe(
 );
 
 /**
- * GitHub check mode handled by `beep quality github-checks`.
- *
  * @category models
  * @since 0.0.0
  */
@@ -86,8 +82,6 @@ export const RepoProofSurface = LiteralKit(["cheap-gates", "quality", "review-fi
 export type RepoProofSurface = typeof RepoProofSurface.Type;
 
 /**
- * Planned command metadata for a repository proof surface.
- *
  * **Example** (Read pre-push step args)
  *
  * ```ts

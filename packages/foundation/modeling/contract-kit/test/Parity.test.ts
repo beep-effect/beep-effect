@@ -10,7 +10,6 @@ import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 
-// Two middlewares with the same key whose failures disagree on the wire.
 class RateLimitedText extends RpcMiddleware.Service<RateLimitedText>()("RateLimited", {
   error: S.Struct({ retryAfter: S.String }),
 }) {}
@@ -65,10 +64,8 @@ describe("Parity.schemaSignatureOf", () => {
   });
 
   it("tells apart string-to-number codecs decoding to S.Number and to S.Finite", () => {
-    // The lenient side is the point of the case: its target is the bare number
-    // AST, which accepts "Infinity".
-    const lenientNumber = S.make<S.Codec<number>>(SchemaAST.number);
-    const lenient = S.String.pipe(S.decodeTo(lenientNumber, SchemaTransformation.numberFromString));
+    const bareNumberAstAcceptingInfinity = S.make<S.Codec<number>>(SchemaAST.number);
+    const lenient = S.String.pipe(S.decodeTo(bareNumberAstAcceptingInfinity, SchemaTransformation.numberFromString));
     expect(same(lenient, toFinite)).toBe(false);
   });
 
@@ -114,10 +111,15 @@ describe("Parity.schemaSignatureOf", () => {
     expect(same(Tree, Tree)).toBe(true);
     expect(same(Tree, Tagged)).toBe(false);
   });
+
+  it("leaves annotations other than representation out of the signature, because they are not part of the wire", () => {
+    const titled = S.String.pipe(S.annotate({ title: "not on the wire" }));
+    expect(same(S.String, titled)).toBe(true);
+  });
 });
 
 describe("Parity.shapeOf", () => {
-  it("compares middleware failures through the reply exit codec", () => {
+  it("compares middleware failures through the reply exit codec: one key, failures that disagree on the wire", () => {
     const text = Rpc.make("Ping").middleware(RateLimitedText);
     const number = Rpc.make("Ping").middleware(RateLimitedNumber);
     expect(shapeOf(text).middleware).toEqual(shapeOf(number).middleware);

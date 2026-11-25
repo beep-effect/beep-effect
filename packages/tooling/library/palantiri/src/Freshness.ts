@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $PalantiriId.create("Freshness");
 
 /**
- * Why a parcel's freshness is unknown.
- *
  * **Details**
  *
  * `stale`: the oldest reading is older than the bound. `unreachable`: the
@@ -41,8 +39,6 @@ export const UnknownReason = LiteralKit(["stale", "unreachable", "attribution-in
 );
 
 /**
- * Runtime type for {@link UnknownReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +75,6 @@ export const Freshness = S.TaggedUnion({
 }).pipe($I.annoteSchema("Freshness", { description: "Whether a parcel's source readings are within its bound." }));
 
 /**
- * Runtime type for {@link Freshness}.
- *
  * @category models
  * @since 0.0.0
  */

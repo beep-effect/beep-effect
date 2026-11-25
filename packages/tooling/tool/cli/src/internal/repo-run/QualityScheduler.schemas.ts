@@ -30,8 +30,6 @@ import { RunScopeRecord } from "./RunScope.schemas.ts";
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
 
 /**
- * Kind of heavy repository work admitted through the machine-wide scheduler.
- *
  * **Details**
  *
  * `cache` is the work `beep cache` admits: dependency materialization, the
@@ -59,8 +57,6 @@ export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "re
 );
 
 /**
- * Class of heavyweight repository work admitted through the scheduler.
- *
  * @category models
  * @since 0.0.0
  */
@@ -109,8 +105,6 @@ export const UnrecognizedAdmissionWorkKind = S.NonEmptyString.check(
 );
 
 /**
- * An admission work kind written by a newer revision and kept verbatim.
- *
  * @category models
  * @since 0.0.0
  */
@@ -149,8 +143,6 @@ export const RecordedAdmissionWorkKind = S.Union([AdmissionWorkKind, Unrecognize
 );
 
 /**
- * Admission work kind recorded in shared scheduler state.
- *
  * @category models
  * @since 0.0.0
  */
@@ -181,8 +173,6 @@ export const AdmissionPriority = LiteralKit(["publish", "verify"]).pipe(
 );
 
 /**
- * Queue ordering class for one admission request.
- *
  * @category models
  * @since 0.0.0
  */
@@ -220,8 +210,6 @@ export const AdmissionCoordinationProtocol = LiteralKit([
 );
 
 /**
- * Mixed-version coordination protocol used by one scheduler ticket or lease.
- *
  * @category models
  * @since 0.0.0
  */
@@ -248,8 +236,6 @@ export const YeetProofTier = LiteralKit(["full", "cheap-gates", "review-fix"]).p
 );
 
 /**
- * Local proof tier selected for a Yeet verification attempt.
- *
  * @category models
  * @since 0.0.0
  */
@@ -304,8 +290,6 @@ export const ProofStage = LiteralKit(["repair-loop", "pre-push", "merged-preview
 );
 
 /**
- * Verification stage that produced an attempt fact.
- *
  * @category models
  * @since 0.0.0
  */
@@ -395,8 +379,6 @@ const admissionOwnerFields = {
 };
 
 /**
- * The work one admission charges for: a whole tier, one lane or one package task.
- *
  * **Details**
  *
  * `tier` is the whole work kind as one unit, the grain every admission has
@@ -429,16 +411,12 @@ export const AdmissionUnit = S.TaggedUnion({
 );
 
 /**
- * The work one admission charges for.
- *
  * @category models
  * @since 0.0.0
  */
 export type AdmissionUnit = typeof AdmissionUnit.Type;
 
 /**
- * Where an admission's token weight came from.
- *
  * **Details**
  *
  * `static-seed` is the per-kind table ({@link admissionTokenWeight}), which
@@ -472,16 +450,12 @@ export const AdmissionWeightSource = S.TaggedUnion({
 );
 
 /**
- * Where an admission's token weight came from.
- *
  * @category models
  * @since 0.0.0
  */
 export type AdmissionWeightSource = typeof AdmissionWeightSource.Type;
 
 /**
- * The proof that owns an admitted unit.
- *
  * **Details**
  *
  * `proofNonce` names the proof the unit belongs to; for a whole-tier unit it
@@ -522,8 +496,6 @@ export class AdmissionOwner extends S.Opaque<AdmissionOwner, { readonly brand: u
 ) {}
 
 /**
- * Encoded form of {@link AdmissionOwner}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -715,8 +687,6 @@ export class AdmissionPressureStamp extends S.Opaque<AdmissionPressureStamp, { r
 ) {}
 
 /**
- * Encoded form of {@link AdmissionPressureStamp}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -826,8 +796,6 @@ export class YeetAdmissionLease extends S.Opaque<YeetAdmissionLease, { readonly 
 ) {}
 
 /**
- * Encoded form of {@link YeetAdmissionLease}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -841,8 +809,6 @@ export declare namespace YeetAdmissionLease {
 }
 
 /**
- * One durable queue ticket: a contender waiting for admission.
- *
  * **Details**
  *
  * The unit, weight source and owner ({@link admissionUnitFields}) are optional
@@ -896,8 +862,6 @@ export class YeetAdmissionTicket extends S.Opaque<YeetAdmissionTicket, { readonl
 ) {}
 
 /**
- * Encoded form of {@link YeetAdmissionTicket}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -911,8 +875,6 @@ export declare namespace YeetAdmissionTicket {
 }
 
 /**
- * Durable acknowledgement state for one admission-reap output sink.
- *
  * **Example** (Recognize a protocol-deferred sink)
  *
  * ```ts
@@ -931,8 +893,6 @@ export const AdmissionClaimSinkState = LiteralKit(["pending", "pending-protocol-
 );
 
 /**
- * Durable acknowledgement state for one admission-reap output sink.
- *
  * @category models
  * @since 0.0.0
  */
@@ -948,8 +908,6 @@ const admissionReapClaimFields = {
 };
 
 /**
- * Recoverable outbox for one dead admission lease lifecycle.
- *
  * **Example** (Construct a lease reap claim)
  *
  * ```ts
@@ -1001,8 +959,6 @@ export class AdmissionLeaseReapClaim extends S.Opaque<AdmissionLeaseReapClaim, {
 ) {}
 
 /**
- * Recoverable outbox for one dead admission queue-ticket lifecycle.
- *
  * **Example** (Reference the ticket claim class)
  *
  * ```ts
@@ -1027,8 +983,6 @@ export class AdmissionTicketReapClaim extends S.Opaque<AdmissionTicketReapClaim,
 ) {}
 
 /**
- * Recoverable outbox for one claimed dead admission lifecycle.
- *
  * **Example** (Recognize a lease claim)
  *
  * ```ts
@@ -1048,16 +1002,12 @@ export const AdmissionReapClaim = S.Union([AdmissionLeaseReapClaim, AdmissionTic
 );
 
 /**
- * Recoverable outbox for one claimed dead admission lifecycle.
- *
  * @category models
  * @since 0.0.0
  */
 export type AdmissionReapClaim = typeof AdmissionReapClaim.Type;
 
 /**
- * Durable phase of a ticket-to-lease promotion transition.
- *
  * **Example** (Recognize a published lease phase)
  *
  * ```ts
@@ -1081,8 +1031,6 @@ export const AdmissionPromotionPhase = LiteralKit([
 );
 
 /**
- * Durable recovery phase of one ticket-to-lease promotion transition.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1225,8 +1173,6 @@ export class AdmissionRequest extends S.Opaque<AdmissionRequest, { readonly bran
 ) {}
 
 /**
- * Point-in-time view of the machine-wide admission state.
- *
  * **Example** (Construct an empty snapshot)
  *
  * ```ts
@@ -1266,8 +1212,6 @@ export class AdmissionSnapshot extends S.Opaque<AdmissionSnapshot, { readonly br
 ) {}
 
 /**
- * Encoded form of {@link AdmissionSnapshot}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1378,8 +1322,6 @@ export const AdmissionRouteOutcome = LiteralKit(["bypass", "refusal"]).pipe(
 export type AdmissionRouteOutcome = typeof AdmissionRouteOutcome.Type;
 
 /**
- * One routing decision a `worker` host made without the ticket queue.
- *
  * **Details**
  *
  * A worker never waits on admission: the scheduler bypasses the queue or
@@ -1430,8 +1372,6 @@ export class AdmissionRoute extends S.Opaque<AdmissionRoute, { readonly brand: u
 ) {}
 
 /**
- * Refusal to run a hosted-only gate locally on a `worker` compute profile (D4).
- *
  * **Details**
  *
  * The message names the gate, the probe ceiling, the admission envelope and
@@ -1476,8 +1416,6 @@ export class ComputeProfileRefusal extends S.TaggedError<ComputeProfileRefusal, 
 type QualitySchedulerErrorReason = typeof QualitySchedulerErrorReason.Type;
 
 /**
- * Failure raised while coordinating machine-wide admission.
- *
  * **Example** (Construct a scheduler error)
  *
  * ```ts
@@ -1560,16 +1498,12 @@ export const AdmissionBackfillMode = LiteralKit(["off", "easy"]).pipe(
 );
 
 /**
- * Whether a waiting ticket may pass a capacity-blocked head.
- *
  * @category models
  * @since 0.0.0
  */
 export type AdmissionBackfillMode = typeof AdmissionBackfillMode.Type;
 
 /**
- * Whether unprotected tickets are ordered by recent origin, then checkout, usage (SCHE-06).
- *
  * **Details**
  *
  * `origin-checkout` orders tickets that have not yet waited the protection
@@ -1595,8 +1529,6 @@ export const AdmissionFairnessMode = LiteralKit(["off", "origin-checkout"]).pipe
 );
 
 /**
- * Whether unprotected tickets are ordered by recent origin, then checkout, usage.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1653,8 +1585,6 @@ export class AdmissionBackfillPolicy extends S.Opaque<AdmissionBackfillPolicy, {
 ) {}
 
 /**
- * One released lease interval the fairness window counts.
- *
  * **Example** (A one-token interval)
  *
  * ```ts
@@ -1750,8 +1680,6 @@ export const AdmissionAttemptRoute = LiteralKit(["head", "backfill"]).pipe(
 export type AdmissionAttemptRoute = typeof AdmissionAttemptRoute.Type;
 
 /**
- * Why a contender stays queued on one scan.
- *
  * **Example** (Recognize an unknown ETA)
  *
  * ```ts
@@ -1778,16 +1706,12 @@ export const AdmissionWaitReason = LiteralKit([
 );
 
 /**
- * Why a contender stays queued on one scan.
- *
  * @category models
  * @since 0.0.0
  */
 export type AdmissionWaitReason = typeof AdmissionWaitReason.Type;
 
 /**
- * Whether one contender may attempt admission now, and by which route, or why it waits.
- *
  * **Example** (A head attempt)
  *
  * ```ts
@@ -1810,8 +1734,6 @@ export const AdmissionAttemptVerdict = S.TaggedUnion({
 );
 
 /**
- * Whether one contender may attempt admission now.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1851,8 +1773,6 @@ export class AdmissionEtaEstimator extends S.Opaque<AdmissionEtaEstimator, { rea
 ) {}
 
 /**
- * What one scan's SCHE-06 verdict reads beyond the scan: its policy and the windowed released leases.
- *
  * **Example** (A context with nothing in the window)
  *
  * ```ts

@@ -6,29 +6,21 @@
  */
 
 /**
- * Public Postgres error exports.
- *
  * @since 0.0.0
  * @category errors
  */
 export * from "./Postgres.errors.ts";
 /**
- * Public Postgres client service exports.
- *
  * @since 0.0.0
  * @category clients
  */
 export * from "./PostgresClient.service.ts";
 /**
- * Public Postgres formatting exports.
- *
  * @since 0.0.0
  * @category formatting
  */
 export * from "./PostgresDiagnostics.service.ts";
 /**
- * Public Postgres Drizzle composition exports.
- *
  * @since 0.0.0
  * @category services
  */
@@ -41,8 +33,6 @@ export * from "./PostgresDrizzle.service.ts";
  */
 export * from "./PostgresInterop.models.ts";
 /**
- * Public PostgreSQL SQLSTATE exports.
- *
  * @since 0.0.0
  * @category models
  */

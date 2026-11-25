@@ -30,8 +30,6 @@ const WorkerCommandKind = LiteralKit([
 ]);
 
 /**
- * Worker command envelope.
- *
  * **Example** (Construct a parseTurtle worker command)
  *
  * ```ts
@@ -99,8 +97,6 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
 );
 
 /**
- * Type for {@link WorkerCommand}.
- *
  * **Example** (Construct a parseTurtle worker command)
  *
  * ```ts
@@ -122,8 +118,6 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
 export type WorkerCommand = typeof WorkerCommand.Type;
 
 /**
- * Diff worker result.
- *
  * **Example** (Construct a diff worker result)
  *
  * ```ts
@@ -158,8 +152,6 @@ const WorkerResultKind = LiteralKit([
 ]);
 
 /**
- * Worker result envelope.
- *
  * **Example** (Construct a parseTurtleSucceeded worker result)
  *
  * ```ts
@@ -228,8 +220,6 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
 );
 
 /**
- * Type for {@link WorkerResult}.
- *
  * **Example** (Construct a diffDatasetsSucceeded worker result)
  *
  * ```ts
@@ -351,8 +341,6 @@ export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult,
   S.decodeUnknownResult(WorkerResult);
 
 /**
- * A command the graph worker could not decode.
- *
  * **Details**
  *
  * Dropping such a command is what made the graph inexplicable: the worker was alive

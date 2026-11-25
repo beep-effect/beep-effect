@@ -65,8 +65,6 @@ const overlaySearchRoots = ["apps", "infra", "packages"] as const;
 const renderedViolationLimit = 40;
 
 /**
- * Top-level keys a `tsconfig.check.json` overlay may set.
- *
  * **Details**
  * `$schema` is editor metadata, not a compiler input, so it is tolerated.
  * `references` is allowed because `extends` does not inherit it and the
@@ -100,8 +98,6 @@ export const TsconfigOverlayDocumentKey = LiteralKit([
 );
 
 /**
- * Top-level key a `tsconfig.check.json` overlay may set.
- *
  * **Example** (Annotate a value as TsconfigOverlayDocumentKey)
  *
  * ```ts
@@ -117,8 +113,6 @@ export const TsconfigOverlayDocumentKey = LiteralKit([
 export type TsconfigOverlayDocumentKey = typeof TsconfigOverlayDocumentKey.Type;
 
 /**
- * Compiler options a `tsconfig.check.json` overlay may set.
- *
  * **Details**
  * These are the options that turn emit and project-reference machinery off
  * (`composite`, `incremental`, `declaration`, `declarationMap`,
@@ -155,8 +149,6 @@ export const TsconfigOverlayCompilerOptionKey = LiteralKit([
 );
 
 /**
- * Compiler option a `tsconfig.check.json` overlay may set.
- *
  * **Example** (Annotate a value as TsconfigOverlayCompilerOptionKey)
  *
  * ```ts

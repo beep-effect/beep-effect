@@ -1,6 +1,4 @@
-// Retargets upstream packages/engine/__test__/failure-signature.test.ts
-// (vitest-agent 1cf1ab94). The signature hash is FNV-1a 64 instead of a
-// SHA-256 prefix; every equality and inequality case holds unchanged.
+// Ported from vitest-agent 1cf1ab94 packages/engine/__test__/failure-signature.test.ts (MIT).
 import { FailureSignatureInput, failureSignature, normalizeAssertionShape } from "@beep/gate-report/FailureSignature";
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -62,7 +60,7 @@ const sign = (input: Partial<Parameters<typeof FailureSignatureInput.make>[0]>) 
     })
   );
 
-describe("failureSignature", () => {
+describe("failureSignature: FNV-1a 64 where upstream took a SHA-256 prefix; the local equality and inequality cases hold", () => {
   it("is 16 lowercase hex digits", () => {
     assert.match(sign({}), /^[0-9a-f]{16}$/u);
   });

@@ -16,8 +16,6 @@ import { QualityIssue } from "../../Yeet.schemas.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Closeout.schemas");
 
 /**
- * Runtime closeout gates accepted by Yeet.
- *
  * @category models
  * @since 0.0.0
  */
@@ -86,8 +84,6 @@ const PrCloseoutGateStatus = LiteralKit(["passed", "blocked", "unknown", "writte
 );
 
 /**
- * Durable PR closeout gate state.
- *
  * **Example** (Create passed gate state)
  *
  * ```ts
@@ -126,8 +122,6 @@ export class PrCloseoutGateState extends S.Opaque<PrCloseoutGateState, { readonl
  * @since 0.0.0
  */
 /**
- * One review-thread write action performed during closeout.
- *
  * **Example** (Create reply write action)
  *
  * ```ts

@@ -34,8 +34,6 @@ export const WinkIntrinsicSourceWork = S.Int.check(S.isBetween({ minimum: 0, max
   })
 );
 /**
- * Runtime value accepted by {@link WinkIntrinsicSourceWork}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -106,8 +104,6 @@ export const WinkIntrinsicNounResult = LiteralKit(["known", "work-limit"])
     })
   );
 /**
- * Runtime value described by {@link WinkIntrinsicNounResult}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -16,8 +16,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Files/Files.errors");
 
 /**
- * Options for platform errors, including a cause.
- *
  * **Example** (Wrap a permission failure from a rename)
  *
  * ```ts
@@ -43,8 +41,6 @@ export class PlatformErrorOptions extends S.Opaque<PlatformErrorOptions, { reado
 ) {}
 
 /**
- * Error raised by file curation commands.
- *
  * **Example** (Create FilesCommandError instance)
  *
  * ```ts

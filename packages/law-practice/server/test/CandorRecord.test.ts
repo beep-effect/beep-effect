@@ -43,9 +43,6 @@ const decodeUnknownCandorDisposition = S.decodeUnknownEffect(CandorDisposition);
 const decodeUnknownIdsSubmissionFact = S.decodeUnknownEffect(IdsSubmissionFact);
 const decodeUnknownPatentCitationEvent = S.decodeUnknownEffect(PatentCitationEvent);
 
-// The two filings are deliberately different representations, not just
-// different numbers: scoping a read to one of them also proves the port's rule
-// that nothing matches across representations.
 const FILING_A: CitingApplicationIdentity.Encoded = { applicationNumber: "16138242", kind: "UsptoNormalized" };
 const FILING_B: CitingApplicationIdentity.Encoded = {
   applicationNumber: "102014000345678",
@@ -53,20 +50,18 @@ const FILING_B: CitingApplicationIdentity.Encoded = {
   officeCode: "EP",
 };
 
-type Source = {
+type FixtureDigestIsTrueSha256OfTextNotReverifiedHere = {
   readonly digest: string;
   readonly name: string;
   readonly text: string;
 };
 
-// Real digests of the fixture text, so the recorded observation is a plausible
-// one even though nothing in this proof re-verifies an anchor.
-const SOURCE_A: Source = {
+const SOURCE_A: FixtureDigestIsTrueSha256OfTextNotReverifiedHere = {
   digest: "sha256:a04772355ef288ca617fbb35bf5e6f8987c38321cff61151b20e8a52ff95281c",
   name: "smith",
   text: "Smith discloses a hinge assembly.",
 };
-const SOURCE_B: Source = {
+const SOURCE_B: FixtureDigestIsTrueSha256OfTextNotReverifiedHere = {
   digest: "sha256:7ea8c349c033bd438ca72b7bf6b7bfa17d58db85b7b5d08c5814af9c100e3da2",
   name: "jones",
   text: "Jones discloses a latch.",
@@ -74,13 +69,15 @@ const SOURCE_B: Source = {
 
 const decodeCitingApplication = S.decodeUnknownEffect(CitingApplicationIdentity);
 
-/** Scope a filing to a tenant; `productEntityFixtureInput` writes every row under org 1. */
-const decodeFiling = Effect.fnUntraced(function* (encoded: CitingApplicationIdentity.Encoded, org = 1) {
+const scopeFilingToTenantDefaultingToFixtureOrg = Effect.fnUntraced(function* (
+  encoded: CitingApplicationIdentity.Encoded,
+  org = 1
+) {
   const citingApplication = yield* decodeCitingApplication(encoded);
   return CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(org) });
 });
 
-const groundingOf = (source: Source) => ({
+const groundingOf = (source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere) => ({
   anchor: { endChar: Str.length(source.text), quote: source.text, startChar: 0 },
   source: {
     extractor: { name: "utf8", version: "1" },
@@ -93,7 +90,12 @@ const groundingOf = (source: Source) => ({
   },
 });
 
-const eventFixture = (id: number, citingApplication: CitingApplicationIdentity.Encoded, source: Source, org = 1) =>
+const eventFixture = (
+  id: number,
+  citingApplication: CitingApplicationIdentity.Encoded,
+  source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere,
+  org = 1
+) =>
   decodeUnknownPatentCitationEvent({
     ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
     orgId: org,
@@ -112,7 +114,7 @@ const dispositionFixture = (
   id: number,
   citingApplication: CitingApplicationIdentity.Encoded,
   eventId: number,
-  source: Source,
+  source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere,
   org = 1
 ) =>
   decodeUnknownCandorDisposition({
@@ -168,15 +170,11 @@ const submissionFactFixture = (id: number, citingApplication: CitingApplicationI
     submissionKind: "initial",
   });
 
-/**
- * Append one record of each kind for a filing, seeded so the three ids are
- * distinguishable in the assertions: `seed`, `seed + 100`, `seed + 200`.
- */
-const appendFiling = Effect.fnUntraced(function* (
+const appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable = Effect.fnUntraced(function* (
   repository: CandorRecordRepositoryShape,
   citingApplication: CitingApplicationIdentity.Encoded,
   seed: number,
-  source: Source,
+  source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere,
   org = 1
 ) {
   const eventFixture1 = yield* eventFixture(seed, citingApplication, source, org);
@@ -192,31 +190,31 @@ const ids = <Entity extends { readonly id: number }>(records: ReadonlyArray<Enti
 
 describe("@beep/law-practice-server candor record repository", () => {
   it.layer(Layer.fresh(CandorRecordRepositoryInMemory), { timeout: "10 seconds" })("tenant isolation", (it) => {
-    it.effect("never returns another organization's records for the same filing", () =>
-      Effect.gen(function* () {
-        const repository = yield* CandorRecordRepository;
-        // Same application number, two tenants — the case a filing-only filter
-        // silently merges, letting a foreign disposition release the gate.
-        yield* appendFiling(repository, FILING_A, 1, SOURCE_A, 1);
-        yield* appendFiling(repository, FILING_A, 2, SOURCE_B, 2);
+    it.effect(
+      "never returns another organization's records for the same filing, so no foreign disposition releases the gate",
+      () =>
+        Effect.gen(function* () {
+          const repository = yield* CandorRecordRepository;
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A, 1);
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 2, SOURCE_B, 2);
 
-        const tenantOne = yield* decodeFiling(FILING_A, 1);
-        const tenantTwo = yield* decodeFiling(FILING_A, 2);
+          const tenantOne = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A, 1);
+          const tenantTwo = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A, 2);
 
-        const listEvents4 = yield* repository.listEvents(tenantOne);
-        expect(ids(listEvents4)).toEqual([1]);
-        const listDispositions5 = yield* repository.listDispositions(tenantOne);
-        expect(ids(listDispositions5)).toEqual([101]);
-        const listSubmissionFacts6 = yield* repository.listSubmissionFacts(tenantOne);
-        expect(ids(listSubmissionFacts6)).toEqual([201]);
+          const listEvents4 = yield* repository.listEvents(tenantOne);
+          expect(ids(listEvents4)).toEqual([1]);
+          const listDispositions5 = yield* repository.listDispositions(tenantOne);
+          expect(ids(listDispositions5)).toEqual([101]);
+          const listSubmissionFacts6 = yield* repository.listSubmissionFacts(tenantOne);
+          expect(ids(listSubmissionFacts6)).toEqual([201]);
 
-        const listEvents7 = yield* repository.listEvents(tenantTwo);
-        expect(ids(listEvents7)).toEqual([2]);
-        const listDispositions8 = yield* repository.listDispositions(tenantTwo);
-        expect(ids(listDispositions8)).toEqual([102]);
-        const listSubmissionFacts9 = yield* repository.listSubmissionFacts(tenantTwo);
-        expect(ids(listSubmissionFacts9)).toEqual([202]);
-      })
+          const listEvents7 = yield* repository.listEvents(tenantTwo);
+          expect(ids(listEvents7)).toEqual([2]);
+          const listDispositions8 = yield* repository.listDispositions(tenantTwo);
+          expect(ids(listDispositions8)).toEqual([102]);
+          const listSubmissionFacts9 = yield* repository.listSubmissionFacts(tenantTwo);
+          expect(ids(listSubmissionFacts9)).toEqual([202]);
+        })
     );
   });
 
@@ -227,9 +225,9 @@ describe("@beep/law-practice-server candor record repository", () => {
         "reads every appended kind back scoped to the filing it was recorded for",
         Effect.fnUntraced(function* () {
           const repository = yield* CandorRecordRepository;
-          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A);
 
-          const filing = yield* decodeFiling(FILING_A);
+          const filing = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A);
           const events = yield* repository.listEvents(filing);
           const dispositions = yield* repository.listDispositions(filing);
           const submissionFacts = yield* repository.listSubmissionFacts(filing);
@@ -241,9 +239,10 @@ describe("@beep/law-practice-server candor record repository", () => {
           expect(ids(snapshot.events)).toEqual([1]);
           expect(ids(snapshot.dispositions)).toEqual([101]);
 
-          // Round-tripping the recorded surface, not just the row count: the
-          // disposition must still name the exact observation it answers.
-          expect(A.map(dispositions, (disposition) => disposition.disposes.eventId)).toEqual([1]);
+          expect(
+            A.map(dispositions, (disposition) => disposition.disposes.eventId),
+            "the disposition still names the exact observation it answers"
+          ).toEqual([1]);
           expect(A.map(events, (event) => event.grounding.source.textDigest)).toEqual([SOURCE_A.digest]);
         })
       );
@@ -254,14 +253,14 @@ describe("@beep/law-practice-server candor record repository", () => {
     "scoping reads by citing application",
     (it) => {
       it.effect(
-        "never returns a second filing's records",
+        "never returns a second filing's records, and nothing matches across identity representations",
         Effect.fnUntraced(function* () {
           const repository = yield* CandorRecordRepository;
-          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
-          yield* appendFiling(repository, FILING_B, 2, SOURCE_B);
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A);
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_B, 2, SOURCE_B);
 
-          const filingA = yield* decodeFiling(FILING_A);
-          const filingB = yield* decodeFiling(FILING_B);
+          const filingA = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A);
+          const filingB = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_B);
 
           const listEvents10 = yield* repository.listEvents(filingA);
           expect(ids(listEvents10)).toEqual([1]);
@@ -285,16 +284,14 @@ describe("@beep/law-practice-server candor record repository", () => {
     "ordering reads of one filing",
     (it) => {
       it.effect(
-        "returns each kind by id ascending whatever order it was appended in",
+        "returns each kind by id ascending, not in append order, when the highest id is appended first",
         Effect.fnUntraced(function* () {
           const repository = yield* CandorRecordRepository;
 
-          // Appended highest id first, so append order and id order disagree and
-          // a store that simply replayed insertions would fail here.
-          yield* appendFiling(repository, FILING_A, 3, SOURCE_B);
-          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 3, SOURCE_B);
+          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A);
 
-          const filing = yield* decodeFiling(FILING_A);
+          const filing = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A);
 
           const listEvents16 = yield* repository.listEvents(filing);
           expect(ids(listEvents16)).toEqual([1, 3]);

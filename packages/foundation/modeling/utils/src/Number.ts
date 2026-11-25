@@ -45,8 +45,6 @@ export const isPositive: (u: unknown) => u is number = (u: unknown): u is number
   N.isNumber(u) && N.isGreaterThanOrEqualTo(0)(u);
 
 /**
- * Re-export of all helpers from `effect/Number`.
- *
  * **Example** (Import Number helpers)
  *
  * ```ts

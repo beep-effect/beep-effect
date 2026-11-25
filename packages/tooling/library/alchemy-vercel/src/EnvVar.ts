@@ -32,8 +32,6 @@ import type { Providers } from "./Providers.ts";
 const $I = $AlchemyVercelId.create("EnvVar");
 
 /**
- * Deployment environment an environment variable applies to.
- *
  * **Example** (Guard a target)
  *
  * ```ts
@@ -52,16 +50,12 @@ export const EnvTarget = LiteralKit(["production", "preview", "development"]).pi
 );
 
 /**
- * Type-level member of {@link EnvTarget}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EnvTarget = typeof EnvTarget.Type;
 
 /**
- * Storage type of an environment variable.
- *
  * **Details**
  *
  * `encrypted` values can be read back by team members; `sensitive` values
@@ -86,16 +80,12 @@ export const EnvVarType = LiteralKit(["plain", "encrypted", "sensitive"]).pipe(
 );
 
 /**
- * Type-level member of {@link EnvVarType}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EnvVarType = typeof EnvVarType.Type;
 
 /**
- * Environment variable name.
- *
  * **Example** (Validate a key)
  *
  * ```ts
@@ -122,8 +112,6 @@ export const EnvKey = S.String.check(
 );
 
 /**
- * Type-level member of {@link EnvKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -160,16 +148,12 @@ export const EnvVarValueSource = S.Struct({
 );
 
 /**
- * Type-level member of {@link EnvVarValueSource}.
- *
  * @category models
  * @since 0.0.0
  */
 export type EnvVarValueSource = typeof EnvVarValueSource.Type;
 
 /**
- * Props of {@link EnvVar}.
- *
  * **Details**
  *
  * Give exactly one of `value` and `valueFrom`. `value` is `Redacted` in logs,
@@ -230,8 +214,6 @@ export const EnvVarProps = S.Struct({
 );
 
 /**
- * Type-level member of {@link EnvVarProps}.
- *
  * @category models
  * @since 0.0.0
  */

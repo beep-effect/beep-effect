@@ -18,11 +18,11 @@ import { worstReason } from "./Vocabulary.ts";
 import type { Unit } from "./GateReport.ts";
 import type { Item } from "./Item.ts";
 
-// Each id once, the first run's unit kept: both runs declare the package unit.
-const mergeUnits = (earlier: ReadonlyArray<Unit>, later: ReadonlyArray<Unit>): ReadonlyArray<Unit> =>
-  A.dedupeWith(A.appendAll(earlier, later), (left, right) => left.id === right.id);
+const mergeUnitsKeepingFirstRunsCopyOfTheSharedPackageUnit = (
+  earlier: ReadonlyArray<Unit>,
+  later: ReadonlyArray<Unit>
+): ReadonlyArray<Unit> => A.dedupeWith(A.appendAll(earlier, later), (left, right) => left.id === right.id);
 
-// Each key once: a key both runs report keeps the later run's result, in the earlier run's place.
 const mergeItems = (earlier: ReadonlyArray<Item>, later: ReadonlyArray<Item>): ReadonlyArray<Item> => {
   const laterOf = (item: Item) => A.findFirst(later, (next) => fingerprint(next.key) === fingerprint(item.key));
   const replaced = A.map(earlier, (item) => O.getOrElse(laterOf(item), () => item));
@@ -73,7 +73,7 @@ const merge = (earlier: GateReport, later: GateReport): GateReport => {
     durationMs,
     reason,
     outcome: classifyOutcome({ reason, totals, policy }),
-    units: mergeUnits(earlier.units, later.units),
+    units: mergeUnitsKeepingFirstRunsCopyOfTheSharedPackageUnit(earlier.units, later.units),
     items,
     totals,
     policy,

@@ -251,9 +251,10 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         const pipe16 = yield* f.native.acceptBatch(secondBatch).pipe(Effect.flip);
         expect(pipe16).toMatchObject({ reason: "capacity" });
         expect((yield* f.native.stats).pages).toBe(0);
-        // Exact acknowledged retries remain available at the reservation ceiling.
         const acceptBatch17 = yield* f.native.acceptBatch(batch);
-        expect(acceptBatch17).toEqual(receipt);
+        expect(acceptBatch17, "exact acknowledged retries remain available at the reservation ceiling").toEqual(
+          receipt
+        );
         yield* sql`UPDATE observation_page_dispositions SET payload=payload || ' ' WHERE receipt_id=${receipt.page.receiptId}`;
         expect((yield* f.native.acceptBatch(batch).pipe(Effect.flip)).reason).toBe("storage");
       })
@@ -377,20 +378,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
           );
           return DeliveryVisibility.make({ eventId: span.eventId, attemptId, payloadDigest: id("e"), observedAt: 0 });
         });
-        // The first event stays pending; the remaining four share this same page.
         const acceptedAttempt = yield* prepare(1);
         yield* f.ledger.recordOutcome(acceptedAttempt.attemptId, DeliveryOutcome.cases.Accepted.make({}));
         const visible = yield* prepare(2);
         yield* f.ledger.recordVisibility(visible);
         const rejected = yield* prepare(3);
         yield* f.ledger.recordOutcome(rejected.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
-        yield* prepare(4); // Unresolved: prepared without a terminal outcome.
+        yield* prepare(4);
         const states = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId), { concurrency: 1 });
         const expire23 = yield* f.reclaimer.expire(receipt.page.receiptId);
         assertNone(expire23);
         yield* TestClock.adjust("24 hours");
         const disposition = yield* f.reclaimer.expire(receipt.page.receiptId);
-        expect(disposition).toMatchObject({
+        expect(
+          disposition,
+          "the first event stays pending and the other four share this page; unresolved means prepared with no terminal outcome"
+        ).toMatchObject({
           _tag: "Some",
           value: {
             reason: "retention-expired",
@@ -717,8 +720,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const batch58 = yield* f.batch("2");
       yield* f.native.acceptBatch(batch58);
       const sql = yield* SqlClient.SqlClient;
-      // Simulate a standalone journal that never installed a retention policy.
-      yield* sql`DROP TABLE observation_reclamation_config`;
+      const standaloneJournalThatNeverInstalledARetentionPolicy = sql`DROP TABLE observation_reclamation_config`;
+      yield* standaloneJournalThatNeverInstalledARetentionPolicy;
       const pipe59 = yield* makePayloadReclaimer(
         f.intakeConfig,
         f.ledgerConfig,

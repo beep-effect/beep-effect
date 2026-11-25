@@ -31,8 +31,10 @@ import {
 import { LocalDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -239,11 +241,9 @@ describe("@beep/law-practice-use-cases docket checks with unavailable document t
         passed: true,
         side: "critic",
       });
-      expect([historical.provenance, historical.result._tag, historical.side]).toStrictEqual([
-        "docket-check/v1",
-        "Passed",
-        "critic",
-      ]);
+      strictEqual(historical.provenance, "docket-check/v1");
+      strictEqual(historical.result._tag, "Passed");
+      strictEqual(historical.side, "critic");
       assertSome(historical.field, "mail-date");
       assertTrue(!reviewGatePassed([historical]));
       const current = yield* S.encodeEffect(StoredDeterministicCheck)(historical);
@@ -258,5 +258,21 @@ describe("@beep/law-practice-use-cases docket checks with unavailable document t
       const rewritten = yield* S.encodeEffect(fromV1)(historical).pipe(Effect.exit);
       rewritten.pipe(Exit.isFailure, assertTrue);
     })
+  );
+});
+
+describe("three-valued docket check properties", () => {
+  const json = S.fromJsonString(StoredDeterministicCheck);
+  const equivalent = S.toEquivalence(StoredDeterministicCheck);
+  it.effect.prop(
+    "every generated stored check survives its JSON codec unchanged",
+    [Arbitrary.schema(StoredDeterministicCheck)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(json)(value);
+        const decoded = yield* S.decodeEffect(json)(encoded);
+        assertTrue(equivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });

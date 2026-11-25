@@ -133,7 +133,7 @@ const projectV1 = Effect.fnUntraced(function* (raw: S.JsonObject): Effect.fn.Ret
   return A.match([...top.unresolved, ...A.flatMap(facts, ({ unresolved }) => unresolved)], {
     onEmpty: (): StoredReviewItem => current,
     onNonEmpty: (unresolved): StoredReviewItem =>
-      LegacyReviewItemImported.make({ itemId: v1.itemId, kind: v1.kind, text: v1.text, raw, unresolved }),
+      LegacyReviewItemImported.make({ itemId: v1.itemId, storedKind: v1.kind, text: v1.text, raw, unresolved }),
   });
 });
 

@@ -101,8 +101,6 @@ export class HistoryEntry extends S.Opaque<HistoryEntry, { readonly brand: uniqu
 ) {}
 
 /**
- * One run as the store records it.
- *
  * **Details**
  *
  * `units` are the units the run checked; `failed` are its finally failed
@@ -247,8 +245,6 @@ export class PreviousRunQuery extends S.Opaque<PreviousRunQuery, { readonly bran
 ) {}
 
 /**
- * The answer a replay reuses: the run's id and the branch it is answered on.
- *
  * **Example** (A restored run)
  *
  * ```ts
@@ -272,8 +268,6 @@ export class RecordedRunQuery extends S.Opaque<RecordedRunQuery, { readonly bran
 ) {}
 
 /**
- * Which runs to list: a gate and subject, optionally one branch.
- *
  * **Example** (Every branch)
  *
  * ```ts
@@ -336,9 +330,6 @@ export class HistoryRunView extends S.Opaque<HistoryRunView, { readonly brand: u
 ) {}
 
 /**
- * Which item's series to show: a gate, a subject, and the item's key
- * fingerprint or text in its title.
- *
  * **Example** (By title)
  *
  * ```ts

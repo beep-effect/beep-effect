@@ -50,8 +50,6 @@ const CliLogOptionsExtraLoggersItem = S.declare<Logger.Logger<unknown, unknown>>
 );
 
 /**
- * Options for `CliLog.status`.
- *
  * **Example** (Validate plain status options)
  *
  * ```ts
@@ -103,8 +101,6 @@ export class CliLogStatusOptions extends S.Opaque<CliLogStatusOptions, { readonl
 ) {}
 
 /**
- * Companion types for {@link CliLogStatusOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -139,8 +135,6 @@ const indentOf = (indent: number | string | undefined): string => {
 };
 
 /**
- * Options for `CliLog.layer`.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -281,8 +275,6 @@ export class CliLogOptions extends S.Opaque<CliLogOptions, { readonly brand: uni
   }).pipe($I.annoteSchema("CliLogOptions", { description: "Plain CliLogOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliLogOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -393,8 +385,6 @@ export class CliLogFileOptions extends S.Opaque<CliLogFileOptions, { readonly br
   }).pipe($I.annoteSchema("CliLogFileOptions", { description: "Plain CliLogFileOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliLogFileOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

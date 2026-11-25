@@ -19,8 +19,6 @@ const JsonValue = S.fromJsonString(S.Unknown);
 /** The full workspaces stack over a virtual tree, rooted at `/repo`. */
 const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(tree)));
 
-// ── CatalogSet.fromManifestWorkspaces: the hard-fail package.json reader ─────
-
 describe("CatalogSet.fromManifestWorkspaces", () => {
   it.effect("reads Bun top-level default and named catalogs with array workspaces", () =>
     Effect.gen(function* () {
@@ -130,8 +128,6 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
   );
 });
 
-// ── CatalogSet.fromLockfile: PM-aware lockfile catalogs ──────────────────────
-
 describe("CatalogSet.fromLockfile", () => {
   it.effect("assembles a bun lockfile's BunExtension catalogs", () =>
     Effect.gen(function* () {
@@ -166,8 +162,6 @@ describe("CatalogSet.fromLockfile", () => {
     })
   );
 });
-
-// ── Through the stack: a malformed package.json workspaces fails set() ────────
 
 const doubleDefaultTree: Tree = {
   "/repo/package.json": Result.getOrThrowWith(
@@ -224,8 +218,6 @@ describe("WorkspaceCatalogs.set — a malformed workspaces shape through the sta
     );
   });
 });
-
-// ── Through the stack: a bun workspace — PM-aware inline AND lockfile ─────────
 
 const bunWorkspace: Tree = {
   "/repo/package.json": Result.getOrThrowWith(

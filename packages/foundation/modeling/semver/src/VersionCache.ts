@@ -22,8 +22,6 @@ import type { InvalidRangeError } from "./Range.ts";
 const $I = $SemverId.create("VersionCache");
 
 /**
- * Indicates that an extremum (`latest`/`oldest`) was requested from an empty
- * cache.
  * **Example** (Inspect an empty cache failure)
  *
  * ```ts
@@ -64,8 +62,6 @@ export class EmptyCacheError extends S.TaggedError<EmptyCacheError, { readonly b
 }
 
 /**
- * Indicates that a navigation operation (`diff`/`next`/`prev`) referenced a
- * version that is not in the cache.
  * **Example** (Identify the missing version)
  *
  * ```ts
@@ -116,9 +112,6 @@ export class VersionNotFoundError extends S.TaggedError<VersionNotFoundError, { 
 }
 
 /**
- * Indicates that the cache contains versions but none satisfies the
- * requested range. Carries the range and the versions that were available,
- * and is fully serializable — both payload fields are schema classes.
  * **Example** (Inspect an unmatched range)
  *
  * ```ts
@@ -226,9 +219,6 @@ export interface VersionCacheShape {
   /** All cached versions in ascending order; `[]` when empty. */
   readonly versions: Effect.Effect<ReadonlyArray<SemVer>>;
 }
-
-// Membership and ordering follow SemVer precedence (build metadata ignored):
-// versions differing only in build metadata occupy one slot.
 
 const search: {
   (arr: ReadonlyArray<SemVer>, target: SemVer): { readonly found: boolean; readonly index: number };

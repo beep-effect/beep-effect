@@ -67,8 +67,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MonitorChecks");
 export const NO_CHECKS_REPORTED = /no (?:required )?checks reported/iu;
 
 /**
- * Whether a check watch found checks to watch.
- *
  * **Details**
  *
  * `awaiting-registration` is deliberately narrow: it means the watch found
@@ -95,8 +93,6 @@ export const YeetCheckRegistration = LiteralKit(["registered", "awaiting-registr
 );
 
 /**
- * Whether a check watch found checks to watch.
- *
  * @category type-level
  * @since 0.0.0
  */

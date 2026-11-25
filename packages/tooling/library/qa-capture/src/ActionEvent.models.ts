@@ -20,8 +20,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $QaCaptureId.create("ActionEvent.models");
 
 /**
- * Monotonically increasing witness event sequence number.
- *
  * **Example** (Make sequence number)
  *
  * ```ts
@@ -49,8 +47,6 @@ export const SequenceNumber = S.Int.check(
 );
 
 /**
- * Monotonically increasing witness event sequence number.
- *
  * **Example** (Type sequence number value)
  *
  * ```ts
@@ -66,8 +62,6 @@ export const SequenceNumber = S.Int.check(
 export type SequenceNumber = typeof SequenceNumber.Type;
 
 /**
- * Non-negative wall-clock timestamp in epoch milliseconds.
- *
  * **Details**
  *
  * Witness timestamps are `performance.timeOrigin + performance.now()`, so
@@ -100,8 +94,6 @@ export const EpochMilliseconds = S.Finite.check(
 );
 
 /**
- * Non-negative wall-clock timestamp in epoch milliseconds.
- *
  * **Example** (Type epoch milliseconds value)
  *
  * ```ts
@@ -117,8 +109,6 @@ export const EpochMilliseconds = S.Finite.check(
 export type EpochMilliseconds = typeof EpochMilliseconds.Type;
 
 /**
- * Finite CSS-pixel coordinate inside the viewport coordinate space.
- *
  * **Example** (Make pixel position)
  *
  * ```ts
@@ -137,8 +127,6 @@ export const PixelPosition = S.Finite.pipe(
 );
 
 /**
- * Finite CSS-pixel coordinate inside the viewport coordinate space.
- *
  * **Example** (Type pixel position value)
  *
  * ```ts
@@ -154,8 +142,6 @@ export const PixelPosition = S.Finite.pipe(
 export type PixelPosition = typeof PixelPosition.Type;
 
 /**
- * Non-negative finite duration in milliseconds.
- *
  * **Example** (Make duration milliseconds)
  *
  * ```ts
@@ -183,8 +169,6 @@ export const DurationMilliseconds = S.Finite.check(
 );
 
 /**
- * Non-negative finite duration in milliseconds.
- *
  * **Example** (Type duration milliseconds value)
  *
  * ```ts
@@ -246,8 +230,6 @@ export const NonNegativePixels = S.Finite.check(
 export type NonNegativePixels = typeof NonNegativePixels.Type;
 
 /**
- * Deterministic selector path produced by the witness selector builder.
- *
  * **Example** (Make selector path)
  *
  * ```ts
@@ -275,8 +257,6 @@ export const SelectorPath = S.String.check(
 );
 
 /**
- * Deterministic selector path produced by the witness selector builder.
- *
  * **Example** (Type selector path value)
  *
  * ```ts
@@ -343,8 +323,6 @@ export const NonPrintableKey = S.String.check(
 export type NonPrintableKey = typeof NonPrintableKey.Type;
 
 /**
- * Witness action-event kind identifiers.
- *
  * **Example** (Read pointer-down kind)
  *
  * ```ts
@@ -377,8 +355,6 @@ export const ActionEventKind = LiteralKit([
 );
 
 /**
- * Witness action-event kind identifiers.
- *
  * **Example** (Type marker kind value)
  *
  * ```ts
@@ -394,8 +370,6 @@ export const ActionEventKind = LiteralKit([
 export type ActionEventKind = typeof ActionEventKind.Type;
 
 /**
- * CSS transition/animation lifecycle phases observed by the witness.
- *
  * **Example** (Read start phase)
  *
  * ```ts
@@ -413,8 +387,6 @@ export const TransitionPhase = LiteralKit(["cancel", "end", "start"]).pipe(
 );
 
 /**
- * CSS transition/animation lifecycle phases observed by the witness.
- *
  * **Example** (Type end phase value)
  *
  * ```ts
@@ -430,8 +402,6 @@ export const TransitionPhase = LiteralKit(["cancel", "end", "start"]).pipe(
 export type TransitionPhase = typeof TransitionPhase.Type;
 
 /**
- * Bounding rectangle of the event target in viewport CSS pixels.
- *
  * **Example** (Make bounding rectangle)
  *
  * ```ts
@@ -473,8 +443,6 @@ export class DomRect extends S.Opaque<DomRect, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Pointer pressed on an element.
- *
  * **Example** (Make pointer-down event)
  *
  * ```ts
@@ -551,8 +519,6 @@ export class PointerDownEvent extends S.Opaque<PointerDownEvent, { readonly bran
 ) {}
 
 /**
- * Pointer released after a press.
- *
  * **Example** (Make pointer-up event)
  *
  * ```ts
@@ -762,8 +728,6 @@ export class PointerMoveEvent extends S.Opaque<PointerMoveEvent, { readonly bran
 ) {}
 
 /**
- * Pointer entered an interactive element.
- *
  * **Example** (Make pointer-enter event)
  *
  * ```ts
@@ -816,8 +780,6 @@ export class PointerEnterEvent extends S.Opaque<PointerEnterEvent, { readonly br
 ) {}
 
 /**
- * Pointer left an interactive element.
- *
  * **Example** (Make pointer-leave event)
  *
  * ```ts
@@ -864,8 +826,6 @@ export class PointerLeaveEvent extends S.Opaque<PointerLeaveEvent, { readonly br
 ) {}
 
 /**
- * Focus entered an element.
- *
  * **Example** (Make focus-in event)
  *
  * ```ts
@@ -912,8 +872,6 @@ export class FocusInEvent extends S.Opaque<FocusInEvent, { readonly brand: uniqu
 ) {}
 
 /**
- * Focus left an element.
- *
  * **Example** (Make focus-out event)
  *
  * ```ts
@@ -1020,8 +978,6 @@ export class KeyDownEvent extends S.Opaque<KeyDownEvent, { readonly brand: uniqu
 ) {}
 
 /**
- * CSS transition lifecycle observation with its computed duration.
- *
  * **Example** (Make transition start event)
  *
  * ```ts
@@ -1086,8 +1042,6 @@ export class CssTransitionEvent extends S.Opaque<CssTransitionEvent, { readonly 
 ) {}
 
 /**
- * CSS animation lifecycle observation with its computed duration.
- *
  * **Example** (Make animation start event)
  *
  * ```ts
@@ -1152,8 +1106,6 @@ export class CssAnimationEvent extends S.Opaque<CssAnimationEvent, { readonly br
 ) {}
 
 /**
- * Throttled scroll position sample.
- *
  * **Example** (Make scroll event)
  *
  * ```ts
@@ -1214,8 +1166,6 @@ export class ScrollEvent extends S.Opaque<ScrollEvent, { readonly brand: unique 
 ) {}
 
 /**
- * Semantic marker injected by the harness or `beep qa mark`.
- *
  * **Example** (Make marker event)
  *
  * ```ts
@@ -1271,8 +1221,6 @@ export class MarkerEvent extends S.Opaque<MarkerEvent, { readonly brand: unique 
 ) {}
 
 /**
- * One flip of the visual clock-sync beacon overlay.
- *
  * **Details**
  *
  * `tPaintEpochMs` is sampled inside the flip's `requestAnimationFrame`
@@ -1345,8 +1293,6 @@ export class BeaconEvent extends S.Opaque<BeaconEvent, { readonly brand: unique 
 ) {}
 
 /**
- * Union of all witness action events, discriminated by `kind`.
- *
  * **Example** (Read event kind helper)
  *
  * ```ts
@@ -1383,8 +1329,6 @@ export const ActionEvent = S.Union([
 );
 
 /**
- * Union of all witness action events, discriminated by `kind`.
- *
  * **Example** (Read event sequence helper)
  *
  * ```ts

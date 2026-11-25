@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/acp",
+  "root": "packages/drivers/acp",
+  "scopes": ["."]
+}

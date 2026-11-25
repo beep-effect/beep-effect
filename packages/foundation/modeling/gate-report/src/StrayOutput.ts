@@ -15,8 +15,6 @@ import { OutputStream } from "./Vocabulary.ts";
 const $I = $GateReportId.create("StrayOutput");
 
 /**
- * One sampled stray line and the stream it went to.
- *
  * **Example** (Build a sample)
  *
  * ```ts

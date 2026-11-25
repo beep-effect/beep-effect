@@ -48,7 +48,6 @@ type FromReasonOptions = {
 };
 
 /**
- * {@inheritDoc LangExtractErrorReason}
  * @category errors
  * @since 0.0.0
  */
@@ -60,8 +59,6 @@ type LangExtractErrorFromReason = {
 };
 
 /**
- * Sanitized LangExtract capability error.
- *
  * **Example** (Create error from reason)
  *
  * ```ts

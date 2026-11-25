@@ -30,6 +30,7 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { GATES_DIR } from "@beep/repo-gate-record/GatePaths";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -59,7 +60,7 @@ import {
 } from "../../internal/github/GithubIdentity.ts";
 import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
-import { TaskOutcomeRecord, taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
+import { AnyTaskOutcomeRecord, taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
 import { HostedJob, HostedRun, HostedStep, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
 import { makeRouteReadBudget, RouteReadBudget } from "./RouteBudget.ts";
@@ -164,8 +165,6 @@ export type RouteGhRunner = (
 ) => Effect.Effect<string, RouteError | RouteGhRateLimited>;
 
 /**
- * A `gh` call GitHub refused because the API rate limit was exhausted.
- *
  * **Details**
  *
  * A {@link RouteGhRunner} fails with this error so the corpus can look up the
@@ -323,7 +322,7 @@ const hostedRunOf = (view: GhRunView): HostedRun =>
     jobs: A.map(view.jobs, hostedJobOf),
   });
 
-const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) }).pipe(
+const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(AnyTaskOutcomeRecord) }).pipe(
   $I.annoteSchema("TaskOutcomeRead", {
     description: "The task-outcome records of one run attempt and the GitHub requests spent reading them.",
   })
@@ -341,11 +340,11 @@ const isFailedJob = (job: HostedJob): boolean => O.exists(job.conclusion, (value
 
 // A record names its job as GitHub lists it; a job reached through a reusable workflow is listed as
 // `<caller> / <job>` (the overflow shard), so a record also joins a job whose name starts with `<job> / `.
-const recordFor = (records: ReadonlyArray<TaskOutcomeRecord>, job: HostedJob): O.Option<TaskOutcomeRecord> =>
+const recordFor = (records: ReadonlyArray<AnyTaskOutcomeRecord>, job: HostedJob): O.Option<AnyTaskOutcomeRecord> =>
   A.findFirst(records, (record) => record.job === job.name || Str.startsWith(`${record.job} / `)(job.name));
 
 // Tasks are kept on the jobs that keep steps: the failed ones.
-const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<TaskOutcomeRecord>): HostedRun =>
+const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<AnyTaskOutcomeRecord>): HostedRun =>
   HostedRun.make({
     ...run,
     jobs: A.map(run.jobs, (job) =>
@@ -431,18 +430,21 @@ const ArtifactPage = S.Struct({ total_count: S.Int, artifacts: S.Array(ArtifactW
 const ArchiveBytes = S.instanceOf(ArrayBuffer);
 const decodeRecordJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const ARTIFACT_PAGE = 100;
-// A record is one small JSON file (a few hundred bytes per task). Any artifact or archive entry above this bound is
-// not a record a lane wrote: it is skipped unread, so a crafted archive cannot make the capture inflate it.
-const RECORD_BYTES_MAX = 1024 * 1024;
+const ENTRY_INFLATE_BYTES_MAX = 1024 * 1024;
+const ARTIFACT_DOWNLOAD_BYTES_MAX = 64 * 1024 * 1024;
 
-// The JSON files of one record artifact, parsed but not yet decoded: the capture decodes them as
-// `task-outcomes/v1` records, so a malformed one fails there with the run it came from.
+const isIndexedGateFile = (file: string): boolean =>
+  Str.startsWith(`${GATES_DIR}/`)(file) || pipe(file, Str.includes(`/${GATES_DIR}/`));
+
 const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
   const entries = yield* Effect.try({
     // Only small JSON entries are inflated; every other entry is skipped before it expands.
     try: () =>
       unzipSync(new Uint8Array(bytes), {
-        filter: (file) => Str.endsWith(".json")(file.name) && file.originalSize <= RECORD_BYTES_MAX,
+        filter: (file) =>
+          Str.endsWith(".json")(file.name) &&
+          !isIndexedGateFile(file.name) &&
+          file.originalSize <= ENTRY_INFLATE_BYTES_MAX,
       }),
     catch: RouteError.mapError("corpus-fetch", `Artifact ${name} is not a zip archive.`),
   });
@@ -478,6 +480,13 @@ const ghRun = (run: typeof RunWire.Type) => ({
  * Display names resolve against every workflow page; numeric ids and workflow
  * filenames go directly to the runs endpoint. The compatibility protocol keeps
  * the corpus decoder and its error wording stable without spawning `gh`.
+ *
+ * A task-outcome artifact is downloaded only up to 64 MiB, since a
+ * `task-outcomes/v2` artifact also carries the job's gate records and raw
+ * logs. Inside it, only JSON entries up to 1 MiB inflate, so a crafted
+ * archive cannot make the capture expand an entry; the gate records under
+ * `.beep/gates/` are skipped, and every other JSON entry is decoded as a
+ * `task-outcomes/v1` or `v2` record, so a malformed one fails with its run.
  *
  * **Example** (Inspect the REST runner)
  *
@@ -562,7 +571,9 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
           const wanted = A.filter(
             artifacts,
             (artifact) =>
-              !artifact.expired && Str.startsWith(prefix)(artifact.name) && artifact.size_in_bytes <= RECORD_BYTES_MAX
+              !artifact.expired &&
+              Str.startsWith(prefix)(artifact.name) &&
+              artifact.size_in_bytes <= ARTIFACT_DOWNLOAD_BYTES_MAX
           );
           const records = yield* Effect.forEach(
             wanted,

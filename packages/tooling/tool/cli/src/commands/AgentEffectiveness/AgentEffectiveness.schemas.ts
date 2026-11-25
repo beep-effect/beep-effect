@@ -16,8 +16,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.schemas");
 
 /**
- * Source of a scorer violation.
- *
  * **Example** (Check is.tsgo predicate)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const AgentEffectivenessEvalViolationSource = LiteralKit(["schema-first",
 );
 
 /**
- * Source of a scorer violation.
- *
  * **Example** (Type completion source value)
  *
  * ```ts
@@ -170,8 +166,6 @@ export class AgentEffectivenessEvalViolation extends S.Opaque<
 ) {}
 
 /**
- * Law lane the scorer runs over a staged fixture.
- *
  * **Example** (Check the tsgo lane literal)
  *
  * ```ts
@@ -190,8 +184,6 @@ export const AgentEffectivenessEvalLawLane = LiteralKit(["schema-first", "tsgo",
 );
 
 /**
- * Law lane the scorer runs over a staged fixture.
- *
  * **Example** (Type a lane name)
  *
  * ```ts
@@ -328,8 +320,6 @@ export const AgentEffectivenessEvalReportStatus = LiteralKit(["scored", "environ
 export type AgentEffectivenessEvalReportStatus = typeof AgentEffectivenessEvalReportStatus.Type;
 
 /**
- * Fixed scorer output breakdown.
- *
  * **Example** (Verify breakdown is defined)
  *
  * ```ts

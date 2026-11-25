@@ -1,7 +1,3 @@
-// The OA codec stays behind its own subpath: no module outside `src/rdf/` reaches `@beep/rdf` in its runtime import
-// closure, the package root does not re-export the adapter, and the manifest declares no rdf-only export (decision
-// p3-oa-adapter-subpath). A barrel run that adds the adapter to `index.ts` fails here.
-
 import * as AnnotationRoot from "@beep/annotation";
 import { it } from "@beep/test-runner";
 import * as ImportGraph from "@beep/test-utils/ImportGraph";
@@ -23,8 +19,6 @@ declare global {
   }
 }
 
-// Every package source module's text, keyed by its path under `src/`. Vite inlines the raw text at transform time,
-// so the walk needs no filesystem.
 const SOURCES = ImportGraph.fromGlob(
   import.meta.glob<string>("../src/**/*.ts", { query: "?raw", import: "default", eager: true }),
   { prefix: "../src/" }
@@ -39,13 +33,12 @@ const isAdapterModule = Str.startsWith("rdf/");
 const isRdfSpecifier = (specifier: string): boolean =>
   specifier === "@beep/rdf" || Str.startsWith("@beep/rdf/")(specifier);
 
-// Every public module outside the adapter subpath and the internals.
 const BASE_ENTRIES = A.filter(
   SOURCES.pipe(HashMap.keys, sorted),
   (module) => !isAdapterModule(module) && !Str.startsWith("internal/")(module)
 );
 
-describe("@beep/annotation import boundary", () => {
+describe("@beep/annotation import boundary: the OA codec stays behind its rdf/ subpath (p3-oa-adapter-subpath)", () => {
   it.effect("keeps @beep/rdf and the adapter out of every base module's runtime closure", () =>
     Effect.gen(function* () {
       expect(A.contains(BASE_ENTRIES, "index.ts")).toBe(true);

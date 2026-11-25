@@ -3,8 +3,9 @@
  *
  * **Details**
  *
- * Every rule here is the rule that produced the 2026-11-18 transcript audit, under the rule version
- * {@link CensusRuleVersion}. Shell commands land in the first {@link ShellClassRules} entry whose pattern
+ * The rules started as the ones that produced the 2026-11-18 transcript audit; rule version
+ * `census-rules/2026-11-23` adds `beep ci failures` to the `ci-logs` class. Each report carries the
+ * {@link CensusRuleVersion} it ran under. Shell commands land in the first {@link ShellClassRules} entry whose pattern
  * matches, then `other-shell`; output lines land in the first {@link LineClassRules} entry that matches.
  * Changing any rule here changes what the census measures and needs a new rule version.
  *
@@ -26,26 +27,24 @@ const $I = $RepoAiMetricsId.create("census-rules");
  *
  * ```ts
  * import { CensusRuleVersion } from "@beep/repo-ai-metrics/census-rules"
- * console.log(CensusRuleVersion.literals[0]) // "census-rules/2026-11-18"
+ * console.log(CensusRuleVersion.literals) // ["census-rules/2026-11-18", "census-rules/2026-11-23"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CensusRuleVersion = LiteralKit(["census-rules/2026-11-18"]).pipe(
+export const CensusRuleVersion = LiteralKit(["census-rules/2026-11-18", "census-rules/2026-11-23"]).pipe(
   $I.annoteSchema("CensusRuleVersion", {
     description: "Version of the census class domains, matching rules and corpus selection rules.",
   })
 );
 
 /**
- * Runtime type for {@link CensusRuleVersion}.
- *
  * **Example** (Type a rule version)
  *
  * ```ts
  * import type { CensusRuleVersion } from "@beep/repo-ai-metrics/census-rules"
- * const version: CensusRuleVersion = "census-rules/2026-11-18"
+ * const version: CensusRuleVersion = "census-rules/2026-11-23"
  * console.log(version)
  * ```
  *
@@ -61,13 +60,13 @@ export type CensusRuleVersion = typeof CensusRuleVersion.Type;
  *
  * ```ts
  * import { currentCensusRuleVersion } from "@beep/repo-ai-metrics/census-rules"
- * console.log(currentCensusRuleVersion) // "census-rules/2026-11-18"
+ * console.log(currentCensusRuleVersion) // "census-rules/2026-11-23"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const currentCensusRuleVersion: CensusRuleVersion = "census-rules/2026-11-18";
+export const currentCensusRuleVersion: CensusRuleVersion = "census-rules/2026-11-23";
 
 /**
  * The transcript populations the census reports separately.
@@ -89,8 +88,6 @@ export const CensusHarness = LiteralKit(["claude-session", "claude-subagent", "c
 );
 
 /**
- * Runtime type for {@link CensusHarness}.
- *
  * **Example** (Type a harness population)
  *
  * ```ts
@@ -105,8 +102,6 @@ export const CensusHarness = LiteralKit(["claude-session", "claude-subagent", "c
 export type CensusHarness = typeof CensusHarness.Type;
 
 /**
- * Classes a shell command lands in, in first-match order; `other-shell` is the remainder.
- *
  * **Example** (Check a shell class)
  *
  * ```ts
@@ -141,8 +136,6 @@ export const ShellClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ShellClass}.
- *
  * **Example** (Type a shell class)
  *
  * ```ts
@@ -188,8 +181,6 @@ export const ToolOutputClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link ToolOutputClass}.
- *
  * **Example** (Type a tool-output class)
  *
  * ```ts
@@ -204,8 +195,6 @@ export const ToolOutputClass = LiteralKit([
 export type ToolOutputClass = typeof ToolOutputClass.Type;
 
 /**
- * The shell classes that count as verification output.
- *
  * **Example** (Check a verification kind)
  *
  * ```ts
@@ -235,8 +224,6 @@ export const VerificationKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link VerificationKind}.
- *
  * **Example** (Type a verification kind)
  *
  * ```ts
@@ -289,7 +276,7 @@ export const ShellClassRules: ReadonlyArray<ShellClassRule> = A.map(
   [
     [
       "ci-logs",
-      /gh run view[^|;&]*--log|actions\/(jobs|runs)\/\d+\/(attempts\/\d+\/)?logs|\/logs\b.*gh api|gh api[^|;&]*\/logs|yeet gh[^|;&]*log|job-logs|run-logs/,
+      /gh run view[^|;&]*--log|actions\/(jobs|runs)\/\d+\/(attempts\/\d+\/)?logs|\/logs\b.*gh api|gh api[^|;&]*\/logs|yeet gh[^|;&]*log|job-logs|run-logs|beep(\.ts)? ci failures\b/,
     ],
     [
       "yeet",
@@ -367,8 +354,6 @@ export const YeetSubcommand = LiteralKit([
 );
 
 /**
- * Runtime type for {@link YeetSubcommand}.
- *
  * **Example** (Type a Yeet sub-command)
  *
  * ```ts
@@ -423,8 +408,6 @@ export const FilterHabit = LiteralKit(["tail", "head", "grep", "unfiltered", "re
 );
 
 /**
- * Runtime type for {@link FilterHabit}.
- *
  * **Example** (Type a filter habit)
  *
  * ```ts
@@ -526,8 +509,6 @@ export const TurnClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link TurnClass}.
- *
  * **Example** (Type a turn class)
  *
  * ```ts
@@ -561,8 +542,6 @@ export const EditToolName = LiteralKit(["Edit", "Write", "NotebookEdit", "Agent"
 );
 
 /**
- * Runtime type for {@link EditToolName}.
- *
  * **Example** (Type an edit tool)
  *
  * ```ts
@@ -608,8 +587,6 @@ export const TurnCommandPatterns = {
 } as const;
 
 /**
- * Classes of one line of verification output.
- *
  * **Details**
  *
  * `turbo-prefix` (a Turbo task prefix, measured then stripped) and `ansi` (escape sequences) are measured
@@ -649,8 +626,6 @@ export const LineClass = LiteralKit([
 );
 
 /**
- * Runtime type for {@link LineClass}.
- *
  * **Example** (Type a line class)
  *
  * ```ts
@@ -689,8 +664,6 @@ export const LineMatch = S.TaggedUnion({
 }).pipe($I.annoteSchema("LineMatch", { description: "One line-class matching rule." }));
 
 /**
- * Runtime type for {@link LineMatch}.
- *
  * **Example** (Type a line rule)
  *
  * ```ts
@@ -705,8 +678,6 @@ export const LineMatch = S.TaggedUnion({
 export type LineMatch = typeof LineMatch.Type;
 
 /**
- * A line class and the rule that claims a line for it.
- *
  * **Example** (Read the first line rule)
  *
  * ```ts
@@ -825,8 +796,6 @@ export const CensusOffender = LiteralKit([
 );
 
 /**
- * Runtime type for {@link CensusOffender}.
- *
  * **Example** (Type an offender)
  *
  * ```ts
@@ -866,8 +835,6 @@ export const OffenderMatch = S.TaggedUnion({
 }).pipe($I.annoteSchema("OffenderMatch", { description: "One offender matching rule." }));
 
 /**
- * Runtime type for {@link OffenderMatch}.
- *
  * **Example** (Type an offender rule)
  *
  * ```ts
@@ -960,8 +927,6 @@ export const CalibrationBin = LiteralKit(["3k-6k", "6k-12k", "12k-20k", "20k-plu
 );
 
 /**
- * Runtime type for {@link CalibrationBin}.
- *
  * **Example** (Type a calibration bin)
  *
  * ```ts

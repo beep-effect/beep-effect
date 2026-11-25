@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Files/internal/Process.schemas");
 
 /**
- * Failure policy for `files process`.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts
@@ -34,16 +32,12 @@ export const ProcessFilesFailurePolicy = LiteralKit(["continue", "fail-on-error"
 );
 
 /**
- * Failure policy for `files process`.
- *
  * @category models
  * @since 0.0.0
  */
 export type ProcessFilesFailurePolicy = typeof ProcessFilesFailurePolicy.Type;
 
 /**
- * Validated options used by `files process`.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts
@@ -77,8 +71,6 @@ export class ProcessFilesOptions extends S.Opaque<ProcessFilesOptions, { readonl
 ) {}
 
 /**
- * Summary counts returned by `files process`.
- *
  * **Example** (Check schema accepts undefined)
  *
  * ```ts

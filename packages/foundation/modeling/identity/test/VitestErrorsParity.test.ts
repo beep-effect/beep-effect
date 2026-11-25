@@ -8,10 +8,6 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// @beep/test-runner cannot depend on @beep/identity, so the registry generator projects the
-// `vitest` shard into it as literals. This parity test keeps every projected annotation equal to
-// the registry binding of its code identity, so a shard edit cannot leave the runner behind.
-
 const ProjectedIdentity = S.Struct({
   identifier: S.String,
   iri: S.String,

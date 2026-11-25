@@ -22,8 +22,6 @@ const PrefixMapWithEmptyDefault = PrefixMap.pipe(
 );
 
 /**
- * Filesystem path for sidecar ontology documents.
- *
  * **Example** (Decode ontology file path)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const OntologyFilePath = S.NonEmptyString.pipe(
 );
 
 /**
- * Type for {@link OntologyFilePath}.
- *
  * **Example** (Annotate decoded path type)
  *
  * ```ts
@@ -65,8 +61,6 @@ export const OntologyFilePath = S.NonEmptyString.pipe(
 export type OntologyFilePath = typeof OntologyFilePath.Type;
 
 /**
- * Turtle source text.
- *
  * **Example** (Decode Turtle source text)
  *
  * ```ts
@@ -88,8 +82,6 @@ export const TurtleDocumentText = S.String.pipe(
 );
 
 /**
- * Type for {@link TurtleDocumentText}.
- *
  * **Example** (Annotate Turtle source type)
  *
  * ```ts
@@ -106,8 +98,6 @@ export const TurtleDocumentText = S.String.pipe(
 export type TurtleDocumentText = typeof TurtleDocumentText.Type;
 
 /**
- * Turtle codec failure reason.
- *
  * **Example** (Decode parse failure reason)
  *
  * ```ts
@@ -134,8 +124,6 @@ export const TurtleCodecErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link TurtleCodecErrorReason}.
- *
  * **Example** (Annotate unsupported graph reason)
  *
  * ```ts
@@ -152,8 +140,6 @@ export const TurtleCodecErrorReason = LiteralKit([
 export type TurtleCodecErrorReason = typeof TurtleCodecErrorReason.Type;
 
 /**
- * Typed Turtle codec error exposed at the use-case boundary.
- *
  * **Example** (Make parse failed error)
  *
  * ```ts
@@ -184,8 +170,6 @@ export class TurtleCodecError extends S.TaggedError<TurtleCodecError, { readonly
 ) {}
 
 /**
- * Turtle parse request.
- *
  * **Example** (Make Turtle parse request)
  *
  * ```ts
@@ -213,8 +197,6 @@ export class ParseTurtleRequest extends S.Opaque<ParseTurtleRequest, { readonly 
 ) {}
 
 /**
- * Turtle parse result.
- *
  * **Example** (Make empty dataset result)
  *
  * ```ts
@@ -244,8 +226,6 @@ export class ParseTurtleResult extends S.Opaque<ParseTurtleResult, { readonly br
 ) {}
 
 /**
- * Turtle serialize request.
- *
  * **Example** (Make serialize dataset request)
  *
  * ```ts
@@ -275,8 +255,6 @@ export class SerializeTurtleRequest extends S.Opaque<SerializeTurtleRequest, { r
 ) {}
 
 /**
- * Turtle serialize result.
- *
  * **Example** (Make serialized Turtle result)
  *
  * ```ts
@@ -335,8 +313,6 @@ interface TurtleCodecShape {
 export class TurtleCodec extends Context.Service<TurtleCodec, TurtleCodecShape>()($I`TurtleCodec`) {}
 
 /**
- * Ontology sidecar file-store failure reason.
- *
  * **Example** (Decode read failed reason)
  *
  * ```ts
@@ -359,8 +335,6 @@ export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed"
 );
 
 /**
- * Type for {@link OntologyFileStoreErrorReason}.
- *
  * **Example** (Annotate write failed reason)
  *
  * ```ts
@@ -377,8 +351,6 @@ export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed"
 export type OntologyFileStoreErrorReason = typeof OntologyFileStoreErrorReason.Type;
 
 /**
- * Typed sidecar file-store error.
- *
  * **Example** (Make read failed store error)
  *
  * ```ts
@@ -412,8 +384,6 @@ export class OntologyFileStoreError extends S.TaggedError<OntologyFileStoreError
 ) {}
 
 /**
- * Read ontology file request.
- *
  * **Example** (Make read file request)
  *
  * ```ts
@@ -441,8 +411,6 @@ export class ReadOntologyFileRequest extends S.Opaque<ReadOntologyFileRequest, {
 ) {}
 
 /**
- * Read ontology file result.
- *
  * **Example** (Make read file result)
  *
  * ```ts
@@ -472,8 +440,6 @@ export class ReadOntologyFileResult extends S.Opaque<ReadOntologyFileResult, { r
 ) {}
 
 /**
- * Write ontology file request.
- *
  * **Example** (Make write file request)
  *
  * ```ts

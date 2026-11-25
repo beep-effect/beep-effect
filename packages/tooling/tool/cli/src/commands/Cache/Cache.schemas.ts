@@ -52,8 +52,6 @@ export class CacheRemoteReadsRequest extends S.Opaque<CacheRemoteReadsRequest, {
 ) {}
 
 /**
- * Cache posture inferred for one Turbo run.
- *
  * **Example** (Recognize a remote-eligible run)
  *
  * ```ts
@@ -70,8 +68,6 @@ export const CacheRunMode = LiteralKit(["remote-eligible", "local-only", "forced
 );
 
 /**
- * Cache posture inferred for one Turbo run.
- *
  * @category models
  * @since 0.0.0
  */
@@ -231,8 +227,6 @@ export class CacheLambdaSummary extends S.Opaque<CacheLambdaSummary, { readonly 
 ) {}
 
 /**
- * Versioned remote-cache dashboard report.
- *
  * **Example** (Inspect the dashboard schema)
  *
  * ```ts
@@ -264,8 +258,6 @@ export class CacheDashboardReport extends S.Opaque<CacheDashboardReport, { reado
 ) {}
 
 /**
- * One lane executed by cache warming.
- *
  * **Example** (Validate a warm-lane receipt)
  *
  * ```ts
@@ -347,8 +339,6 @@ export const CacheDashboardReportJson = JsonStringCodec(CacheDashboardReport);
 export const CacheWarmReceiptJson = JsonStringCodec(CacheWarmReceipt);
 
 /**
- * All declared scripts of one actual workspace, including nested wrappers.
- *
  * **Example** (Inspect CacheCensusWorkspace)
  *
  * ```ts
@@ -373,8 +363,6 @@ export class CacheCensusWorkspace extends S.Opaque<CacheCensusWorkspace, { reado
 ) {}
 
 /**
- * A configured graph node joined to manifest script presence and effective Turbo settings.
- *
  * **Example** (Inspect CacheCensusNode)
  *
  * ```ts
@@ -405,8 +393,6 @@ export class CacheCensusNode extends S.Opaque<CacheCensusNode, { readonly brand:
 ) {}
 
 /**
- * Portable source file and its exact digest, without captured source or environment contents.
- *
  * **Example** (Inspect CacheCensusSource)
  *
  * ```ts
@@ -430,8 +416,6 @@ export class CacheCensusSource extends S.Opaque<CacheCensusSource, { readonly br
 ) {}
 
 /**
- * Reproducible configured/executable census with explicit outstanding entrypoint review.
- *
  * **Example** (Inspect CacheCensusReport)
  *
  * ```ts
@@ -842,8 +826,6 @@ export class CacheLiveIdentity extends S.Opaque<CacheLiveIdentity, { readonly br
 export const cacheBaselineDirectory = "standards/cache-baseline";
 
 /**
- * Workspace package subject whose name is safe to use as a relative file path.
- *
  * **Details**
  *
  * A package subject is a scoped or unscoped npm package name. npm names never
@@ -871,8 +853,6 @@ export const CacheBaselinePackageSubject = CacheBaselineSubject.check(
 );
 
 /**
- * Root subject file: root tasks plus the global posture every package shares.
- *
  * **Details**
  *
  * The root file carries the baseline's scope, profile, epoch, global Turbo
@@ -909,8 +889,6 @@ export class CacheBaselineRootFile extends S.Opaque<CacheBaselineRootFile, { rea
 ) {}
 
 /**
- * Package subject file: one package's review and its executable computations.
- *
  * **Example** (Inspect the package file contract)
  *
  * ```ts
@@ -935,8 +913,6 @@ export class CacheBaselinePackageFile extends S.Opaque<CacheBaselinePackageFile,
 ) {}
 
 /**
- * One committed baseline file, discriminated by its schema version.
- *
  * **Example** (Recognise a package file)
  *
  * ```ts
@@ -955,16 +931,12 @@ export const CacheBaselineSubjectFile = S.Union([CacheBaselineRootFile, CacheBas
 );
 
 /**
- * Decoded committed baseline file.
- *
  * @category models
  * @since 0.0.0
  */
 export type CacheBaselineSubjectFile = typeof CacheBaselineSubjectFile.Type;
 
 /**
- * Expected digests of the subject files a re-record replaces or deletes.
- *
  * **Details**
  *
  * Keys are review subjects; values are the sha256 of that subject's committed
@@ -991,8 +963,6 @@ export const CacheBaselinePreviousDigests = S.Record(CacheBaselineSubject, Sha25
 );
 
 /**
- * Decoded expected subject-file digests.
- *
  * @category models
  * @since 0.0.0
  */
@@ -1017,8 +987,6 @@ export const CacheBaselinePreviousField = CacheBaselinePreviousDigests.pipe(
 );
 
 /**
- * Encoded text of one subject file at its repository-relative path.
- *
  * **Example** (Inspect the file text contract)
  *
  * ```ts
@@ -1038,8 +1006,6 @@ export class CacheBaselineFileText extends S.Opaque<CacheBaselineFileText, { rea
 ) {}
 
 /**
- * A committed subject file with the digest a re-record request must name to replace it.
- *
  * **Example** (Inspect the committed file contract)
  *
  * ```ts
@@ -1062,8 +1028,6 @@ export class CacheBaselineCommittedFile extends S.Opaque<
 ) {}
 
 /**
- * The files one re-record rewrites and the files of subjects it drops.
- *
  * **Example** (Inspect the replacement contract)
  *
  * ```ts

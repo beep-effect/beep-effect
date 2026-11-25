@@ -33,8 +33,6 @@ const defaultForceKillAfterMillis = 10_000;
 
 const tikaAppEngineConfigTimeoutMillisDefault = PosInt.make(defaultTimeoutMillis);
 /**
- * Configuration for the tika-app subprocess engine.
- *
  * **Example** (Usage)
  * ```ts
  * import { TikaAppEngineConfig } from "@beep/tika"

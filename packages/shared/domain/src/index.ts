@@ -103,8 +103,6 @@ export * as ProductEntity from "./entity/ProductEntity.ts";
  */
 export * as PublicEntityId from "./entity/PublicEntityId.ts";
 /**
- * Canonical source-kind namespace.
- *
  * **Example** (Log SourceKind schema)
  *
  * ```ts

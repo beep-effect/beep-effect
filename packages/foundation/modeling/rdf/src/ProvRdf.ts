@@ -88,8 +88,6 @@ const RELATION_IRI_PREFIX = "urn:beep:rdf:prov:relation:";
 const defaultGraph = DefaultGraph.make({ termType: "DefaultGraph", value: "" });
 
 /**
- * Typed failure returned when a PROV bundle cannot be projected without loss.
- *
  * **Example** (Inspect a codec failure)
  *
  * ```ts import.meta.vitest name="Inspect a codec failure"
@@ -113,8 +111,6 @@ export class ProvRdfCodecError extends S.TaggedError<ProvRdfCodecError, { readon
 ) {}
 
 /**
- * Selects the RDF graph that owns the projected provenance quads.
- *
  * **Example** (Select a named audit graph)
  *
  * ```ts import.meta.vitest name="Select a named audit graph"

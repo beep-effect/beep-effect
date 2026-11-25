@@ -60,8 +60,6 @@ export class FleetRootEntry extends S.Opaque<FleetRootEntry, { readonly brand: u
 ) {}
 
 /**
- * The authored `roots.json` document.
- *
  * **Example** (A three-root fleet)
  *
  * ```ts
@@ -121,16 +119,12 @@ export const FleetRootsSource = LiteralKit(["option", "env", "file", "derived"])
 );
 
 /**
- * Origin of a resolved fleet roots list.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type FleetRootsSource = typeof FleetRootsSource.Type;
 
 /**
- * A configured roots list together with its source.
- *
  * **Example** (A list read from the environment)
  *
  * ```ts

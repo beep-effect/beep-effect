@@ -35,8 +35,6 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
 const $I = $RepoWorkspacesId.create("WorkspaceLayering");
 
 /**
- * One dependency edge between two workspace packages, in one field.
- *
  * **Example** (Describe a workspace dependency edge)
  *
  * ```ts
@@ -118,8 +116,6 @@ export class LayeringGraph extends S.Opaque<LayeringGraph, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link LayeringGraph}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -151,8 +147,6 @@ const OffenceReason = LiteralKit([
 type OffenceReason = typeof OffenceReason.Type;
 
 /**
- * What a layering check found.
- *
  * **Example** (Detect a vacuous layering check)
  *
  * ```ts

@@ -30,8 +30,6 @@ const RedactedSqlParams = S.Array(RedactedSqlParameter).pipe(
 );
 
 /**
- * Driver operation names surfaced in {@link DrizzleError} diagnostics.
- *
  * **Example** (Log execute operation enum)
  *
  * ```ts
@@ -50,8 +48,6 @@ export const DrizzleOperation = LiteralKit(["decodeRows", "execute", "withTransa
 );
 
 /**
- * Runtime type for {@link DrizzleOperation}.
- *
  * **Example** (Assign typed operation value)
  *
  * ```ts

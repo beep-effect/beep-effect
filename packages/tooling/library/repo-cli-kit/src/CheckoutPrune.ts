@@ -138,8 +138,6 @@ const CheckoutPrunePathspecChecks = S.makeFilterGroup(
 );
 
 /**
- * A repository-relative git `:(glob)` pathspec.
- *
  * **Details**
  *
  * `*` and `?` match within one path segment, `**` (only as a whole segment)
@@ -174,8 +172,6 @@ export const CheckoutPrunePathspec = S.String.check(CheckoutPrunePathspecChecks)
 );
 
 /**
- * A repository-relative git `:(glob)` pathspec.
- *
  * @category models
  * @since 0.0.0
  */
@@ -302,8 +298,6 @@ const Entries = S.Array(CheckoutPruneEntry).pipe(
 );
 
 /**
- * A checkout's prune declaration: what it removed, replaced and keeps.
- *
  * **Details**
  *
  * `prune` names paths the checkout removed, `owned` paths it replaced with
@@ -358,8 +352,6 @@ export class CheckoutPruneDeclaration extends S.Opaque<CheckoutPruneDeclaration,
 export const emptyCheckoutPruneDeclaration: CheckoutPruneDeclaration = CheckoutPruneDeclaration.make({});
 
 /**
- * A checkout prune declaration that cannot be read, parsed or decoded.
- *
  * **Example** (Describe an invalid declaration)
  *
  * ```ts
@@ -428,9 +420,6 @@ const renderFinding = (finding: CheckoutPruneFinding): string =>
     : `prune entry "${finding.path}" names ${finding.packageName}, a workspace the checkout still holds`;
 
 /**
- * A checkout prune declaration whose prune entries name paths the checkout
- * still holds.
- *
  * **Example** (Report a stale prune entry)
  *
  * ```ts

@@ -18,8 +18,6 @@ const OptionalCause = S.optionalKey(
 );
 
 /**
- * The saved practice profile could not be read or written.
- *
  * **Example** (Report an unreadable profile)
  *
  * ```ts
@@ -46,8 +44,6 @@ export class ProfileStoreFailure extends S.TaggedError<ProfileStoreFailure, { re
 ) {}
 
 /**
- * A Windows host query could not run.
- *
  * **Details**
  *
  * Distinct from a query that ran and found nothing: a missing registry value
@@ -116,8 +112,6 @@ export class SelfCheckFailure extends S.TaggedError<SelfCheckFailure, { readonly
 }
 
 /**
- * A provider's code or native resources could not be loaded on this machine.
- *
  * **Details**
  *
  * Providers load lazily, so a missing or broken sidecar (for example the
@@ -184,8 +178,6 @@ export class M365SignInFailure extends S.TaggedError<M365SignInFailure, { readon
 ) {}
 
 /**
- * The system web browser could not be opened.
- *
  * **Example** (Report a missing browser)
  *
  * ```ts

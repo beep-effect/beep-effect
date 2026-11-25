@@ -203,8 +203,6 @@ export class InvalidUtf8 extends S.Opaque<InvalidUtf8, { readonly brand: unique 
 ) {}
 
 /**
- * A heading with no text, in the header view.
- *
  * **Example** (Describe an empty heading)
  *
  * ```ts import.meta.vitest name="Describe an empty heading"
@@ -223,8 +221,6 @@ export class EmptyHeader extends S.Opaque<EmptyHeader, { readonly brand: unique 
 ) {}
 
 /**
- * A heading used twice, in the header view.
- *
  * **Example** (Describe a repeated heading)
  *
  * ```ts import.meta.vitest name="Describe a repeated heading"
@@ -305,8 +301,6 @@ export class LimitExceeded extends S.Opaque<LimitExceeded, { readonly brand: uni
 ) {}
 
 /**
- * The input had more bytes than its cap allows.
- *
  * **Example** (Describe oversized input)
  *
  * ```ts import.meta.vitest name="Describe oversized input"
@@ -443,8 +437,6 @@ export class CsvWarning extends S.Opaque<CsvWarning, { readonly brand: unique sy
 ) {}
 
 /**
- * A problem that stopped the read.
- *
  * **Example** (Wrap a finding as fatal)
  *
  * ```ts import.meta.vitest name="Wrap a finding as fatal"

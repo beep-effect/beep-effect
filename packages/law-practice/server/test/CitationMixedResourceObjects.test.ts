@@ -338,10 +338,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
         const codec = S.fromJsonString(CitationResourceModelInput);
         const encoded = yield* S.encodeEffect(codec)(model);
         const malformed = yield* S.decodeEffect(codec)(encoded);
-        // A provider can retain and mutate its own publication object after construction.
         if (malformed.citation.type !== "case") return yield* modelFailure();
-        const publication: { vocabularyVersion: string } = malformed.citation.publication;
-        publication.vocabularyVersion = "";
+        const providerRetainedPublication: { vocabularyVersion: string } = malformed.citation.publication;
+        providerRetainedPublication.vocabularyVersion = "";
         const malformedModels = CitationResourceModels.of({
           ...models,
           read: Effect.fn("ResourceServiceFailureTest.malformedRead")(() => Effect.succeed(malformed)),

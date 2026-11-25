@@ -16,16 +16,16 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Header form must consume the complete value. A quoted local part can contain
-// angle brackets without making its substring the sender's actual address.
-const bracketedAddressPattern = /^[^<>@]*<([^<>]*)>$/u;
+const headerFormConsumingWholeValueSoQuotedLocalBracketsAreNotTheAddress = /^[^<>@]*<([^<>]*)>$/u;
 const surroundingQuotesPattern = /^['"\s]+|['"\s]+$/gu;
 
 const decodeAddress = S.decodeUnknownOption(EmailString);
 
-// `Name <addr>` keeps the bracketed part; any other entry is read whole.
 const bracketedOrWhole = (raw: string): string =>
-  O.getOrElse(O.flatMap(Str.match(bracketedAddressPattern)(raw), A.get(1)), () => raw);
+  O.getOrElse(
+    O.flatMap(Str.match(headerFormConsumingWholeValueSoQuotedLocalBracketsAreNotTheAddress)(raw), A.get(1)),
+    () => raw
+  );
 
 /**
  * Reads one mail address out of a bare address, a quoted address, or one

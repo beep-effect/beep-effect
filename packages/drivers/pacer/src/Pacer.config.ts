@@ -87,8 +87,6 @@ export const PACER_ENV = {
 };
 
 /**
- * Resolved PACER configuration consumed by the auth + PCL services.
- *
  * **Example** (Make base PACER config)
  *
  * ```ts
@@ -119,8 +117,6 @@ export class PacerConfigBase extends S.Class<PacerConfigBase, { readonly brand: 
 ) {}
 
 /**
- * QA PACER configuration.
- *
  * **Example** (Make QA PACER config)
  *
  * ```ts
@@ -145,8 +141,6 @@ export class PacerConfigQA extends PacerConfigBase.extend<PacerConfigQA>($I`Pace
 ) {}
 
 /**
- * Production PACER configuration.
- *
  * **Example** (Make prod PACER config)
  *
  * ```ts
@@ -171,8 +165,6 @@ export class PacerConfigProd extends PacerConfigBase.extend<PacerConfigProd>($I`
 ) {}
 
 /**
- * Resolved PACER configuration consumed by the auth + PCL services.
- *
  * **Example** (Validate mock PACER config)
  *
  * ```ts
@@ -193,8 +185,6 @@ export const PacerConfig = S.Union([PacerConfigQA, PacerConfigProd]).pipe(
 );
 
 /**
- * Type for {@link PacerConfig}.
- *
  * **Example** (Type mock PACER config)
  *
  * ```ts
@@ -211,8 +201,6 @@ export const PacerConfig = S.Union([PacerConfigQA, PacerConfigProd]).pipe(
 export type PacerConfig = typeof PacerConfig.Type;
 
 /**
- * Options used when loading PACER config from an Effect `ConfigProvider`.
- *
  * **Example** (Make load options)
  *
  * ```ts

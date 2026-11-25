@@ -38,8 +38,7 @@ type Calls = {
   readonly sends: ReadonlyArray<M365SendDraftMessageRequest>;
 };
 
-// Records every draft and send; each draft gets the next id.
-const fakeMailbox = (calls: Ref.Ref<Calls>) =>
+const recordingMailboxWithSequentialDraftIds = (calls: Ref.Ref<Calls>) =>
   makeM365Stub({
     createDraftMessage: (request) =>
       Ref.modify(calls, (current) => {
@@ -51,23 +50,24 @@ const fakeMailbox = (calls: Ref.Ref<Calls>) =>
       Ref.update(calls, (current) => ({ ...current, sends: A.append(current.sends, request) })),
   });
 
-// Without a link the config is made with no claudeLink key at all, as configs written before the link are.
-const mailboxConfig = (dataDirectory: string, claudeLink: O.Option<NoticeClaudeLink>) =>
+const mailboxConfigOmittingLinkKeyWhenNoneLikePreLinkConfigs = (
+  dataDirectory: string,
+  claudeLink: O.Option<NoticeClaudeLink>
+) =>
   O.match(claudeLink, {
     onNone: () => NoticeMailboxConfig.make({ mailbox: MAILBOX, dataDirectory }),
     onSome: (link) => NoticeMailboxConfig.make({ mailbox: MAILBOX, dataDirectory, claudeLink: O.some(link) }),
   });
 
 const mailboxLayer = (dataDirectory: string, calls: Ref.Ref<Calls>, claudeLink = O.none<NoticeClaudeLink>()) =>
-  makeNoticeMailboxLayer(mailboxConfig(dataDirectory, claudeLink)).pipe(Layer.provide(fakeMailbox(calls)));
+  makeNoticeMailboxLayer(mailboxConfigOmittingLinkKeyWhenNoneLikePreLinkConfigs(dataDirectory, claudeLink)).pipe(
+    Layer.provide(recordingMailboxWithSequentialDraftIds(calls))
+  );
 
-// A folder and a request with every character the HTML body must escape: &, ', < and >.
 const LINK_FOLDER = "C:/Users/attorney/Review & Notes";
 const LINK_PROMPT = "Walk me through the examiner's <b>office action</b> & dates.";
 
-// The exact HTML body for LINK_FOLDER and LINK_PROMPT. In the href, & between the parameters and the ' that
-// encodeURIComponent leaves alone are escaped; the folder is shown and linked with \ separators.
-const LINK_HTML = A.join(
+const EXACT_ESCAPED_LINK_HTML = A.join(
   [
     "<p>2 questions are waiting in Claude.</p>",
     '<p><a href="claude-cli://open?cwd=C%3A%5CUsers%5Cattorney%5CReview%20%26%20Notes&amp;q=Walk%20me%20through%20the%20examiner&#39;s%20%3Cb%3Eoffice%20action%3C%2Fb%3E%20%26%20dates.">Answer them in Claude Code</a></p>',
@@ -77,7 +77,6 @@ const LINK_HTML = A.join(
   "\n"
 );
 
-// Reverses escapeHtml, so the href can be read back the way a mail client reads the attribute.
 const unescapeHtml = flow(
   Str.replaceAll("&#39;", "'"),
   Str.replaceAll("&quot;", '"'),
@@ -156,7 +155,10 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
             "html",
             [MAILBOX],
           ]);
-          expect(draft.body.content).toBe(LINK_HTML);
+          expect(
+            draft.body.content,
+            "count first for the inbox preview, then the link, the check against a forged request, and the fallback"
+          ).toBe(EXACT_ESCAPED_LINK_HTML);
           expect(Str.includes("<b>")(draft.body.content)).toBe(false);
           expect([url.protocol, url.host, url.searchParams.get("cwd"), url.searchParams.get("q")]).toStrictEqual([
             "claude-cli:",

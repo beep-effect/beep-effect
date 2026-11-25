@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/professional-desktop",
+  "root": "apps/professional-desktop",
+  "scopes": ["."]
+}

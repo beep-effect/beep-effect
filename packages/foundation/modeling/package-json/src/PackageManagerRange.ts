@@ -90,8 +90,6 @@ export class DevEnginePackageManagerEntry extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link DevEnginePackageManagerEntry}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -140,9 +138,6 @@ const SemVerRangeString: S.String = S.String.pipe(
 );
 
 /**
- * Indicates that a `packageManager` value, or a `devEngines.packageManager`
- * entry, could not be read as a {@link PackageManagerRange}.
- *
  * **Details**
  *
  * Raised by {@link PackageManagerRange.parse},
@@ -269,10 +264,6 @@ const fromParts: {
 );
 
 /**
- * A structured `packageManager` value whose version position is a semver
- * **range**, carried verbatim: `name`, `range` and an optional `integrity`
- * hash.
- *
  * **Details**
  *
  * The range-tolerant sibling of {@link PackageManager}. The strict class

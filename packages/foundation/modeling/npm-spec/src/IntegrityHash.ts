@@ -48,8 +48,6 @@ import type * as Brand from "effect/Brand";
 const $I = $NpmSpecId.create("IntegrityHash");
 
 /**
- * A supported integrity hash algorithm.
- *
  * **Details**
  * `sha224` appears only in the corepack form — corepack's own transparent
  * default pins emit it (e.g. `yarn@4.x+sha224.<hex>`) — and never in SRI,
@@ -76,7 +74,6 @@ export const IntegrityAlgorithm = LiteralKit(["sha1", "sha224", "sha256", "sha38
 );
 
 /**
- * The decoded supported integrity algorithm.
  * @category type-level
  * @since 0.0.0
  */
@@ -84,14 +81,8 @@ export type IntegrityAlgorithm = typeof IntegrityAlgorithm.Type;
 
 const isIntegrityAlgorithm = S.is(IntegrityAlgorithm);
 
-// SRI: `<algo>-<base64>` (optional `=` padding). No sha224 — the SRI spec
-// does not include it.
 const SRI_RE = /^(sha1|sha256|sha384|sha512)-[A-Za-z0-9+/]+={0,2}$/;
-// Corepack: `<algo>.<lowercase-hex>`. sha224 is real and corepack-emitted:
-// the transparent default pin for yarn Berry hashes with it.
 const COREPACK_RE = /^(sha1|sha224|sha256|sha384|sha512)\.[0-9a-f]+$/;
-// Yarn Berry: `<cachekey>/<lowercase-hex>`, e.g. `10c0/<hex>`. The cache key is
-// a version marker (`<digits>c<digits>`), not an algorithm token.
 const YARN_RE = /^[0-9]+(c[0-9]+)?\/[0-9a-f]+$/;
 
 const SriString = S.String.pipe(
@@ -123,7 +114,8 @@ const YarnChecksumString = S.String.pipe(
     YARN_RE,
     $I.annote("YarnChecksumStringCheck", {
       message: "Yarn checksum shape",
-      description: "A numeric cache key followed by a lowercase hexadecimal digest.",
+      description:
+        "A numeric cache key (a cache-version marker `<digits>c<digits>` such as `10c0`, not an algorithm token) followed by a lowercase hexadecimal digest.",
     })
   )
 );
@@ -153,8 +145,6 @@ const isYarnChecksum: (value: string) => boolean = S.is(YarnChecksumString);
  */
 export const isValidIntegrityHash = S.is(IntegrityString);
 
-// The algorithm is the prefix before the first `-` (SRI) or `.` (corepack). The
-// yarn form does not name its algorithm, so it has none to read.
 const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
   const separatorIndex = isSri(value)
     ? Str.indexOf("-")(value)
@@ -168,8 +158,6 @@ const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
 };
 
 /**
- * Indicates that a string could not be parsed as a valid integrity hash.
- *
  * **Details**
  *
  * Raised by {@link IntegrityHash.decode}. The offending string is preserved on
@@ -253,12 +241,16 @@ const decode = Effect.fn("IntegrityHash.decode")(
     S.decodeEffect(IntegrityHash)(input).pipe(Effect.mapError(() => InvalidIntegrityHashError.make({ input })))
 );
 
-// Widen only Opaque's unused constructor to string members: TypeScript cannot
-// extend a primitive. Its schema Type and runtime decoder remain branded strings.
-const IntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof brandedIntegrity, {}>, never> &
+type OpaqueWithCtorWidenedSoAClassCanExtendABrandedString<Schema extends S.Top> = Omit<
+  S.Opaque<IntegrityHashBrand, Schema, {}>,
+  never
+> &
   (new (
     _: never
-  ) => Pick<IntegrityHashBrand, keyof IntegrityHashBrand>) = S.Opaque<IntegrityHashBrand>()(brandedIntegrity);
+  ) => Pick<IntegrityHashBrand, keyof IntegrityHashBrand>);
+
+const IntegrityHashBase: OpaqueWithCtorWidenedSoAClassCanExtendABrandedString<typeof brandedIntegrity> =
+  S.Opaque<IntegrityHashBrand>()(brandedIntegrity);
 
 /**
  * A subresource-integrity hash, covering the SRI (`sha512-<base64>`), corepack
@@ -458,66 +450,33 @@ export const SriIntegrityHash = sriRestricted;
  */
 export type SriIntegrityHash = typeof SriIntegrityHash.Type;
 
-// --- The SRI → corepack bridge ---------------------------------------------
-//
-// npm's registry (and every lockfile) speaks the SRI form `sha512-<base64>`;
-// a `packageManager` pin speaks corepack's `sha512.<hex>`. The conversion is
-// mechanical — base64 → lowercase hex, `-` → `.` — but every consumer that
-// hand-rolls it re-decides the same edge cases (quoted JSON tokens, non-sha512
-// algorithms, sloppy base64), so the bridge lives here, once, as a codec.
-
-// Why this is hand-rolled rather than core's `effect/encoding/Base64`, which this package
-// already uses elsewhere (`PackageTarball`, `RegistryCredential`): the two
-// disagree in both directions, and for an integrity value the disagreement is
-// load-bearing:
-//
-//   Base64.decode("QQ==")     -> [65]
-//   Base64.decode("QR==")     -> [65]   non-zero trailing bits
-//   Base64.decode("QV==")     -> [65]   ditto
-//   Base64.decode("QQ=\r\n=") -> [65]   CRLF stripped silently
-//   Base64.decode("QQ")       -> fail  "Length must be a multiple of 4"
-//
-// Core accepts three spellings of one digest and tolerates embedded CRLF, so
-// two `integrity` strings that differ as text can decode to identical bytes —
-// precisely the ambiguity an integrity check exists to deny. Core is also
-// *stricter* where this codec is deliberately lenient: it rejects the unpadded
-// form. Neither direction is a drop-in. Do not "fix" this to `Base64`.
-//
-// Canonical base64 alphabet; index = 6-bit value.
 const BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-const BASE64_INDEX: Readonly<Record<string, number>> = R.fromEntries(
+const SEXTET_BY_BASE64_CHAR: Readonly<Record<string, number>> = R.fromEntries(
   A.map(Str.split("")(BASE64_ALPHABET), (char, index): readonly [string, number] => [char, index])
 );
 
-// The unpadded body of a base64 value whose shape is canonical: a nonempty body
-// whose length some base64 output can have (remainder 1 cannot), followed by
-// either no padding or exactly the padding that body length needs. An
-// interior `=` leaves non-`=` characters in the padding, which never matches.
-const canonicalBody = (value: string): O.Option<string> => {
+const canonicalUnpaddedBody = (value: string): O.Option<string> => {
   const firstPad = O.getOrElse(Str.indexOf("=")(value), () => value.length);
   const body = Str.slice(0, firstPad)(value);
   const padding = Str.slice(firstPad)(value);
   const remainder = body.length % 4;
   const expectedPadding = Str.slice(0, (4 - remainder) % 4)("==");
-  return body.length > 0 && remainder !== 1 && (padding === "" || padding === expectedPadding)
-    ? O.some(body)
-    : O.none();
+  const lengthSomeBase64OutputHas = remainder !== 1;
+  const paddingFitsBodyLength = padding === "" || padding === expectedPadding;
+  return body.length > 0 && lengthSomeBase64OutputHas && paddingFitsBodyLength ? O.some(body) : O.none();
 };
 
-// The 6-bit value of one base64 character, `None` outside the alphabet.
-const sextetOf = (char: string): O.Option<number> => {
-  const sextet = BASE64_INDEX[char];
+const sextetOfBase64Char = (char: string): O.Option<number> => {
+  const sextet = SEXTET_BY_BASE64_CHAR[char];
   return sextet === undefined ? O.none() : O.some(sextet);
 };
 
-// Pack the body's sextets into bytes; `None` for a character outside the
-// alphabet or for non-zero trailing bits (a second spelling of the same bytes).
 const packSextets = (body: string): O.Option<ReadonlyArray<number>> => {
   let buffer = 0;
   let bits = 0;
   const bytes: Array<number> = [];
   for (let index = 0; index < body.length; index += 1) {
-    const sextet = sextetOf(Str.slice(index, index + 1)(body));
+    const sextet = sextetOfBase64Char(Str.slice(index, index + 1)(body));
     if (O.isNone(sextet)) return O.none();
     buffer = (buffer << 6) | sextet.value;
     bits += 6;
@@ -526,20 +485,14 @@ const packSextets = (body: string): O.Option<ReadonlyArray<number>> => {
       bytes.push((buffer >>> bits) & 0xff);
     }
   }
-  return (buffer & ((1 << bits) - 1)) === 0 ? O.some(bytes) : O.none();
+  const trailingBitsZeroSoSpellingIsCanonical = (buffer & ((1 << bits) - 1)) === 0;
+  return trailingBitsZeroSoSpellingIsCanonical ? O.some(bytes) : O.none();
 };
 
-// Decode canonical base64 to bytes without a runtime dependency. `Buffer` is
-// Node-only AND lenient — it silently drops invalid characters and truncates —
-// and lenience is exactly what an integrity conversion must not have.
-// `None` for anything non-canonical: a length no base64 output has
-// (remainder 1), padding that does not match the body length, a character
-// outside the alphabet, an interior `=`, or non-zero trailing bits (npm emits
-// only the canonical spelling).
-const decodeBase64 = (value: string): O.Option<ReadonlyArray<number>> => O.flatMap(canonicalBody(value), packSextets);
+// decision: integrity-base64-hand-rolled
+const decodeBase64 = (value: string): O.Option<ReadonlyArray<number>> =>
+  O.flatMap(canonicalUnpaddedBody(value), packSextets);
 
-// Canonical (padded) base64 of a byte sequence — the exact inverse of
-// `decodeBase64`, used by the codec's encode direction.
 const encodeBase64 = (bytes: ReadonlyArray<number>): string => {
   let out = "";
   for (let index = 0; index < bytes.length; index += 3) {
@@ -567,9 +520,6 @@ const bytesOfHex = (hex: string): ReadonlyArray<number> => {
 
 const SHA512_SRI_PREFIX = "sha512-";
 const SHA512_COREPACK_PREFIX = "sha512.";
-// A sha512 digest is always 64 bytes. An SRI value with any other payload
-// length cannot be a sha512 digest, and converting it would mint a pin
-// corepack rejects at install time — fail typed here instead.
 const SHA512_DIGEST_BYTES = 64;
 const CorepackSha512String = S.String.pipe(
   $I.annoteSchema("CorepackSha512String", { description: "A complete corepack SHA-512 integrity string." })
@@ -584,18 +534,11 @@ const CorepackSha512String = S.String.pipe(
 );
 const isCorepackSha512 = S.is(CorepackSha512String);
 
-// One layer of surrounding double quotes is tolerated and unwrapped:
-// registry-adjacent tooling sometimes hands over the raw JSON token
-// (`"sha512-…"`) rather than the decoded string.
-const unwrapJsonQuotes = (value: string): string =>
+const unwrapRawJsonTokenQuotes = (value: string): string =>
   value.length >= 2 && Str.startsWith('"')(value) && Str.endsWith('"')(value) ? Str.slice(1, -1)(value) : value;
 
-// SRI `sha512-<base64>` → corepack `sha512.<hex>`; `undefined` when the input
-// is not a canonical sha512 SRI hash carrying a 64-byte digest. Deliberately
-// one-way: an already-corepack-form input does NOT pass through — silently
-// accepting it would let a caller feed pins back in and mask a wiring bug.
 const corepackOfSri = (input: string): string | undefined => {
-  const value = unwrapJsonQuotes(input);
+  const value = unwrapRawJsonTokenQuotes(input);
   if (!Str.startsWith(SHA512_SRI_PREFIX)(value)) return undefined;
   return decodeBase64(Str.slice(SHA512_SRI_PREFIX.length)(value)).pipe(
     O.filter((bytes) => bytes.length === SHA512_DIGEST_BYTES),
@@ -604,16 +547,11 @@ const corepackOfSri = (input: string): string | undefined => {
   );
 };
 
-// corepack `sha512.<128-hex>` → canonical SRI `sha512-<base64>`. `undefined`
-// for the corepack forms SRI cannot carry (sha224, a truncated digest).
 const sriOfCorepack = (value: string): string | undefined =>
   isCorepackSha512(value)
     ? `${SHA512_SRI_PREFIX}${encodeBase64(bytesOfHex(Str.slice(SHA512_COREPACK_PREFIX.length)(value)))}`
     : undefined;
 
-// The codec: decode converts and then validates through the corepack-restricted
-// schema, so the result carries the same brand every other integrity field
-// uses; encode is the exact inverse (canonical padded base64, no re-quoting).
 const corepackFromSri: S.Codec<IntegrityHashBrand, string> = S.String.pipe(
   S.decodeTo(
     S.suspend(() => CorepackIntegrityHash),
@@ -645,9 +583,6 @@ const corepackFromSri: S.Codec<IntegrityHashBrand, string> = S.String.pipe(
 );
 
 /**
- * Indicates that a string could not be converted from npm's SRI form to the
- * corepack integrity form.
- *
  * **Details**
  *
  * Raised by {@link (CorepackIntegrityHash:variable)}'s `fromSri`. The offending
@@ -713,12 +648,8 @@ const fromSri = Effect.fn("CorepackIntegrityHash.fromSri")(
     )
 );
 
-// Widen only Opaque's unused constructor to string members: TypeScript cannot
-// extend a primitive. Its schema Type and runtime decoder remain branded strings.
-const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepackRestricted, {}>, never> &
-  (new (
-    _: never
-  ) => Pick<IntegrityHashBrand, keyof IntegrityHashBrand>) = S.Opaque<IntegrityHashBrand>()(corepackRestricted);
+const CorepackIntegrityHashBase: OpaqueWithCtorWidenedSoAClassCanExtendABrandedString<typeof corepackRestricted> =
+  S.Opaque<IntegrityHashBrand>()(corepackRestricted);
 
 /**
  * A subresource-integrity hash in the corepack `<algo>.<hex>` form only —

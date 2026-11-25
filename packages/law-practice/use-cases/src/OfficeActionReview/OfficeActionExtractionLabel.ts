@@ -37,8 +37,6 @@ export const OfficeActionExtractionLabel = LiteralKit([
 );
 
 /**
- * Type for {@link OfficeActionExtractionLabel}.
- *
  * **Example** (Type claim label value)
  *
  * ```ts

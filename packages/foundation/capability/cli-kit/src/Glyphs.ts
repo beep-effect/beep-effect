@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $CliKitId.create("Glyphs");
 
 /**
- * The symbols a theme draws with.
- *
  * **Example** (Validate a built-in glyph set)
  *
  * ```ts
@@ -67,8 +65,6 @@ export class GlyphSet extends S.Opaque<GlyphSet, { readonly brand: unique symbol
   }).pipe($I.annoteSchema("GlyphSet", { description: "The symbols and spinner timing a CLI theme draws with." }))
 ) {}
 /**
- * Companion types for {@link GlyphSet}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -90,8 +86,6 @@ export declare namespace GlyphSet {
 }
 
 /**
- * Options for {@link Glyphs.select}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -124,8 +118,6 @@ export class GlyphSelectOptions extends S.Opaque<GlyphSelectOptions, { readonly 
   }).pipe($I.annoteSchema("GlyphSelectOptions", { description: "Plain GlyphSelectOptions data." }))
 ) {}
 /**
- * Companion types for {@link GlyphSelectOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

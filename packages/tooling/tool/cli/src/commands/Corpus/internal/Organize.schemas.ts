@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Corpus/internal/Organize.schemas");
 
 /**
- * Validated options used by `corpus organize`.
- *
  * **Example** (Make organize options)
  *
  * ```ts
@@ -69,8 +67,6 @@ export const CorpusOrganizeCategory = LiteralKit([
 );
 
 /**
- * Type for {@link CorpusOrganizeCategory}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -150,8 +146,6 @@ export class CorpusOrganizeRecord extends S.Opaque<CorpusOrganizeRecord, { reado
 export const encodeCorpusOrganizeRecordJson = JsonStringCodec(CorpusOrganizeRecord).encode;
 
 /**
- * Summary counts returned by `corpus organize`.
- *
  * **Example** (Make organize summary)
  *
  * ```ts

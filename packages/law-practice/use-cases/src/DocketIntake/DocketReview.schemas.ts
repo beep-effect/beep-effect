@@ -21,8 +21,6 @@ const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
   schema.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone), S.annotateKey({ description }));
 
 /**
- * Severity of a critic finding. `P0` and `P1` are material.
- *
  * **Example** (Guard a severity)
  *
  * ```ts
@@ -41,8 +39,6 @@ export const ReviewFindingSeverity = LiteralKit(["P0", "P1", "P2", "P3"]).pipe(
 );
 
 /**
- * Type for {@link ReviewFindingSeverity}.
- *
  * **Example** (Type a severity)
  *
  * ```ts
@@ -58,8 +54,6 @@ export const ReviewFindingSeverity = LiteralKit(["P0", "P1", "P2", "P3"]).pipe(
 export type ReviewFindingSeverity = typeof ReviewFindingSeverity.Type;
 
 /**
- * The fields of a docket entry a review can dispute.
- *
  * **Example** (Guard a field)
  *
  * ```ts
@@ -83,8 +77,6 @@ export const ReviewField = LiteralKit([
 ]).pipe($I.annoteSchema("ReviewField", { description: "A field of a docket entry that a review can dispute." }));
 
 /**
- * Type for {@link ReviewField}.
- *
  * **Example** (Type a field)
  *
  * ```ts
@@ -100,8 +92,6 @@ export const ReviewField = LiteralKit([
 export type ReviewField = typeof ReviewField.Type;
 
 /**
- * One problem the critic found with the extractor's entry.
- *
  * **Example** (Make a finding)
  *
  * ```ts
@@ -148,8 +138,6 @@ export const DeterministicCheckName = LiteralKit([
 );
 
 /**
- * Type for {@link DeterministicCheckName}.
- *
  * **Example** (Type a check name)
  *
  * ```ts
@@ -165,8 +153,6 @@ export const DeterministicCheckName = LiteralKit([
 export type DeterministicCheckName = typeof DeterministicCheckName.Type;
 
 /**
- * Whose reading a deterministic check was run on.
- *
  * **Example** (Guard a side)
  *
  * ```ts
@@ -183,8 +169,6 @@ export const ReviewSide = LiteralKit(["extractor", "critic"]).pipe(
 );
 
 /**
- * Type for {@link ReviewSide}.
- *
  * **Example** (Type a side)
  *
  * ```ts
@@ -200,8 +184,6 @@ export const ReviewSide = LiteralKit(["extractor", "critic"]).pipe(
 export type ReviewSide = typeof ReviewSide.Type;
 
 /**
- * Why a deterministic check could not be decided.
- *
  * **Example** (Read the unknown reasons)
  *
  * ```ts
@@ -221,8 +203,6 @@ export const DeterministicCheckUnknownReason = LiteralKit(["document-text-unavai
 );
 
 /**
- * Type for {@link DeterministicCheckUnknownReason}.
- *
  * **Example** (Type an unknown reason)
  *
  * ```ts
@@ -334,8 +314,6 @@ export const DeterministicCheckResult = S.Union([
 );
 
 /**
- * Type for {@link DeterministicCheckResult}.
- *
  * **Example** (Type a result)
  *
  * ```ts
@@ -372,8 +350,6 @@ export const DeterministicCheckProvenance = LiteralKit(["current", "docket-check
 );
 
 /**
- * Type for {@link DeterministicCheckProvenance}.
- *
  * **Example** (Type a provenance)
  *
  * ```ts
@@ -392,8 +368,6 @@ const deterministicCheckSideDefault: ReviewSide = "extractor";
 const deterministicCheckProvenanceDefault: DeterministicCheckProvenance = "current";
 
 /**
- * Result of one deterministic check.
- *
  * **Details**
  *
  * `side` says whose reading was checked. The citation checks run on the
@@ -491,8 +465,21 @@ export const StoredDeterministicCheck = S.Union([DeterministicCheck, Determinist
 );
 
 /**
- * Whether the two independent readings agree on one field.
+ * **Example** (Type a stored check)
  *
+ * ```ts
+ * import type { StoredDeterministicCheck } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const read = (check: StoredDeterministicCheck) => check.result._tag;
+ * console.log(typeof read);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StoredDeterministicCheck = typeof StoredDeterministicCheck.Type;
+
+/**
  * **Example** (Make a field agreement)
  *
  * ```ts
@@ -532,8 +519,6 @@ export const ExtractorFieldAction = LiteralKit(["revised", "defended"]).pipe(
 );
 
 /**
- * Type for {@link ExtractorFieldAction}.
- *
  * **Example** (Type an action)
  *
  * ```ts
@@ -600,8 +585,6 @@ export class ReviewDispute extends S.Opaque<ReviewDispute, { readonly brand: uni
 ) {}
 
 /**
- * The text a citation is checked against.
- *
  * **Details**
  *
  * `documentText` is the text of the attached documents when the adapter can
@@ -655,8 +638,6 @@ export class ReviewEvidence extends S.Opaque<ReviewEvidence, { readonly brand: u
 ) {}
 
 /**
- * How a review ended.
- *
  * **Details**
  *
  * - `accepted`: the checks passed and the score reached the threshold.
@@ -686,8 +667,6 @@ export const ReviewTerminalStatus = LiteralKit([
 ]).pipe($I.annoteSchema("ReviewTerminalStatus", { description: "How a docket review ended." }));
 
 /**
- * Type for {@link ReviewTerminalStatus}.
- *
  * **Example** (Type a status)
  *
  * ```ts
@@ -703,8 +682,6 @@ export const ReviewTerminalStatus = LiteralKit([
 export type ReviewTerminalStatus = typeof ReviewTerminalStatus.Type;
 
 /**
- * Number of rounds a review may run: a whole number from 1 to 10.
- *
  * **Example** (Guard a round limit)
  *
  * ```ts
@@ -722,8 +699,6 @@ export const ReviewMaxRounds = S.Int.check(S.isBetween({ maximum: 10, minimum: 1
 );
 
 /**
- * Type for {@link ReviewMaxRounds}.
- *
  * **Example** (Type a round limit)
  *
  * ```ts
@@ -868,8 +843,6 @@ const docketReviewConfigMaxRoundsDefault = 3;
 const docketReviewConfigAcceptThresholdDefault = UnitInterval.make(0.85);
 
 /**
- * Settings of the review loop.
- *
  * **Example** (Read the defaults)
  *
  * ```ts

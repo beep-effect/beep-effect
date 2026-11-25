@@ -47,8 +47,6 @@ export class FenceLocation extends S.Opaque<FenceLocation, { readonly brand: uni
 ) {}
 
 /**
- * One TypeScript fence of a JSDoc block as the doctest scan reads it.
- *
  * **Details**
  *
  * `code` is the fence body with the JSDoc `*` frame removed and the ends
@@ -275,8 +273,6 @@ export const PurityVerdict = S.Union([PureFence, ImpureFence, TypeOnlyFence]).pi
 );
 
 /**
- * Classification produced by the {@link PurityVerdict} runtime schema.
- *
  * @see {@link PurityVerdict} for the runtime schema and union members.
  * @category type-level
  * @since 0.0.0

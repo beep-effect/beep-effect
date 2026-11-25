@@ -28,8 +28,6 @@ import type { PracticeCapability, PracticeProfile, PracticeProvider } from "@bee
 const $I = $PracticeGatewayId.create("Requirements");
 
 /**
- * Identifiers of every requirement the slice 1 gateway can check.
- *
  * **Example** (Check a requirement id)
  *
  * ```ts
@@ -60,8 +58,6 @@ export const GatewayRequirementId = LiteralKit([
 );
 
 /**
- * Decoded type of {@link GatewayRequirementId}.
- *
  * **Example** (Type a requirement id)
  *
  * ```ts

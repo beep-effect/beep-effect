@@ -129,8 +129,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as TestClock from "effect/testing/TestClock";
 
-// `Git` rides over the platform spawner: the snapshot reads the index through the kit (W2b).
-const GitNodeServices = Layer.provideMerge(Git.layer, NodeServices.layer);
+const GitKitOverPlatformSpawnerForSnapshotIndexReads = Layer.provideMerge(Git.layer, NodeServices.layer);
 
 const ForwarderStampScenario = LiteralKit([
   "qualified",
@@ -231,10 +230,7 @@ const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: str
 const sqlString = (value: string): string => `'${pipe(value, Str.replace(/'/gu, "''"))}'`;
 const AI_METRICS_LONG_TEST_TIMEOUT = 90_000;
 
-// Delivery is injected so the export path can be driven without a live collector, and
-// so a rejected delivery can be reproduced deterministically. Pointing the real proto
-// exporter at a dead port would work but costs ~3s of retry backoff per assertion.
-const recordingSpanSender = (
+const injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff = (
   delivered: Ref.Ref<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>
 ): Layer.Layer<AiMetricsOtlpSpanSender> =>
   Layer.succeed(AiMetricsOtlpSpanSender)(
@@ -246,7 +242,9 @@ const recordingSpanSender = (
     })
   );
 
-const rejectingSpanSender: Layer.Layer<AiMetricsOtlpSpanSender> = Layer.succeed(AiMetricsOtlpSpanSender)(
+const injectedDeterministicRejectingSpanSender: Layer.Layer<AiMetricsOtlpSpanSender> = Layer.succeed(
+  AiMetricsOtlpSpanSender
+)(
   AiMetricsOtlpSpanSender.of({
     send: Effect.fn("AiMetricsOtlpSpanSender.send")(() =>
       Effect.fail(
@@ -434,9 +432,6 @@ it("rejects impossible line and measurement values at construction", () => {
   ).toThrow();
 });
 
-// Session-stamp binding fixtures. Each ForwarderStampScenario runs as its own case against
-// its own temp directory, repo root, hook root and DuckDB file, so no case reads state that
-// another case wrote.
 type StampScenario = typeof ForwarderStampScenario.Type;
 const fixtureStamp = Sha256Hex.make(Str.repeat(64)("b"));
 const fixtureOtherStamp = Sha256Hex.make(Str.repeat(64)("c"));
@@ -445,12 +440,15 @@ const encodeHookPulseRows = Effect.fnUntraced(function* (rows: ReadonlyArray<Hoo
   const forEach2 = yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row), { concurrency: 1 });
   return A.join(forEach2, "\n");
 });
-// Scenarios whose stamp survives the join; every other scenario stores no stamp.
-const stampKeepingScenarios = ["qualified", "closed-before-refusal", "corrupt", "unreadable", "rejected-refusal"];
-// Sessions whose gap evidence failed to load while their own evidence contradicts nothing.
-const unevaluableScenarios = ["empty-sentinel", "custom-sentinel"];
-// The completeness/qualification pair each scenario reaches, pinned per scenario.
-const expectedStampVerdict = (scenario: StampScenario): string =>
+const scenariosWhoseStampSurvivesTheJoin = [
+  "qualified",
+  "closed-before-refusal",
+  "corrupt",
+  "unreadable",
+  "rejected-refusal",
+];
+const scenariosWhoseGapEvidenceFailedToLoadWithNoOwnContradiction = ["empty-sentinel", "custom-sentinel"];
+const pinnedCompletenessQualificationVerdict = (scenario: StampScenario): string =>
   ForwarderStampScenario.match(scenario, {
     qualified: () => "complete/qualified",
     "mixed-refusal": () => "partial/unqualified",
@@ -594,15 +592,16 @@ const assertScenarioCollection = (
     expect(status.stampGapRejectedRecords).toBe(1);
   }
 };
-// Completeness follows collection only; qualification follows the join only.
-const assertScenarioVerdict = Effect.fnUntraced(function* (
+const assertCompletenessFromCollectionOnlyAndQualificationFromJoinOnly = Effect.fnUntraced(function* (
   scenario: StampScenario,
   result: AiMetricsForwarderRunResult,
   expected: string | null
 ) {
   const db = yield* DuckDb;
   const completeness = result.hookCollectionComplete && result.stampGapCollectionComplete ? "complete" : "partial";
-  const unresolved = A.contains(unevaluableScenarios, scenario) ? "unknown" : "unqualified";
+  const unresolved = A.contains(scenariosWhoseGapEvidenceFailedToLoadWithNoOwnContradiction, scenario)
+    ? "unknown"
+    : "unqualified";
   const qualification = expected === null ? unresolved : "qualified";
   for (const table of ["ai_metrics_sessions", "ai_metrics_source_files"]) {
     const query5 = yield* db.query(
@@ -642,8 +641,7 @@ const readLatestSourceVerdict = Effect.fnUntraced(function* () {
   );
 });
 const verifiedStampVerdict = { stamp: fixtureStamp, completeness: "complete", qualification: "qualified" };
-// Ordered sequence over one stored stamp: every step reads the state the previous step left.
-const assertStoredStampLifecycle = Effect.fnUntraced(function* (
+const assertStoredStampLifecycleInOrderEachStepReadingThePreviousState = Effect.fnUntraced(function* (
   forwarderInput: AiMetricsForwarderInput,
   hookDir: string,
   mixedShard: string
@@ -652,36 +650,40 @@ const assertStoredStampLifecycle = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const ownShard = path.join(hookDir, "fixture.ndjson");
   const unrelatedShard = path.join(hookDir, "unrelated.ndjson");
-  // (b) One undecodable line in an unrelated shard while this session has no evidence of
-  // its own in the run: the gates cannot evaluate it, so the stored stamp stays.
   yield* fs.rename(ownShard, `${ownShard}.parked`);
   yield* writeText(unrelatedShard, "not JSON\n");
   expect((yield* runAiMetricsForwarder(forwarderInput)).hookCollectionComplete).toBe(false);
   const readSessionVerdict5 = yield* readSessionVerdict();
-  expect(readSessionVerdict5).toEqual([verifiedStampVerdict]);
+  expect(
+    readSessionVerdict5,
+    "(b) an undecodable unrelated line with no own evidence in the run is unevaluable, so the stored stamp stays"
+  ).toEqual([verifiedStampVerdict]);
   const readLatestSourceVerdict6 = yield* readLatestSourceVerdict();
   expect(readLatestSourceVerdict6).toEqual([{ completeness: "partial", qualification: "unknown" }]);
-  // (c) hook-events offline: also unevaluable, the stored stamp stays.
   yield* fs.remove(unrelatedShard);
   yield* fs.rename(`${ownShard}.parked`, ownShard);
   yield* fs.rename(hookDir, `${hookDir}.offline`);
   expect((yield* runAiMetricsForwarder(forwarderInput)).hookCollectionComplete).toBe(false);
   const readSessionVerdict7 = yield* readSessionVerdict();
-  expect(readSessionVerdict7).toEqual([verifiedStampVerdict]);
+  expect(readSessionVerdict7, "(c) hook-events offline is also unevaluable, so the stored stamp stays").toEqual([
+    verifiedStampVerdict,
+  ]);
   const readLatestSourceVerdict8 = yield* readLatestSourceVerdict();
   expect(readLatestSourceVerdict8).toEqual([{ completeness: "partial", qualification: "unknown" }]);
-  // Restored, complete evidence re-qualifies the same stamp.
   yield* fs.rename(`${hookDir}.offline`, hookDir);
   yield* runAiMetricsForwarder(forwarderInput);
   const readSessionVerdict9 = yield* readSessionVerdict();
-  expect(readSessionVerdict9).toEqual([verifiedStampVerdict]);
-  // (a) The same undecodable unrelated line, but this session's own shard now carries a
-  // second stamp: its own evidence disqualifies, so a partial run still clears the stamp.
+  expect(readSessionVerdict9, "restored, complete evidence re-qualifies the same stamp").toEqual([
+    verifiedStampVerdict,
+  ]);
   yield* writeText(unrelatedShard, "not JSON\n");
   yield* writeText(ownShard, mixedShard);
   expect((yield* runAiMetricsForwarder(forwarderInput)).hookCollectionComplete).toBe(false);
   const readSessionVerdict10 = yield* readSessionVerdict();
-  expect(readSessionVerdict10).toEqual([{ stamp: null, completeness: "partial", qualification: "unqualified" }]);
+  expect(
+    readSessionVerdict10,
+    "(a) a second stamp in the session's own shard disqualifies, so a partial run still clears the stamp"
+  ).toEqual([{ stamp: null, completeness: "partial", qualification: "unqualified" }]);
 });
 const writeScenarioTranscript = Effect.fnUntraced(function* (scenario: StampScenario, sourcePath: string) {
   yield* writeText(
@@ -728,8 +730,9 @@ const makeScenarioPulses = Effect.fnUntraced(function* (scenario: StampScenario,
   });
   return { start, tool };
 });
-// Runs one scenario end to end and returns the completeness/qualification verdict it reached.
-const runStampScenario = Effect.fnUntraced(function* (scenario: StampScenario) {
+const runStampScenarioInItsOwnTempRepoHookRootAndDuckDbToItsVerdict = Effect.fnUntraced(function* (
+  scenario: StampScenario
+) {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
   const tmpDir = yield* fs.makeTempDirectoryScoped();
@@ -770,15 +773,19 @@ const runStampScenario = Effect.fnUntraced(function* (scenario: StampScenario) {
     const forwarderRunResultToJson11 = yield* forwarderRunResultToJson(result);
     const status = yield* decodeForwarderRunResult(forwarderRunResultToJson11);
     assertScenarioCollection(scenario, result, status);
-    const expected = A.contains(stampKeepingScenarios, scenario) ? fixtureStamp : null;
-    const verdict = yield* assertScenarioVerdict(scenario, result, expected);
+    const expected = A.contains(scenariosWhoseStampSurvivesTheJoin, scenario) ? fixtureStamp : null;
+    const verdict = yield* assertCompletenessFromCollectionOnlyAndQualificationFromJoinOnly(scenario, result, expected);
     yield* assertScenarioStampStorage(expected);
     if (scenario === "qualified") {
       const encodedHookPulseRows6 = yield* encodeHookPulseRows([
         start,
         HookPulseV1.make({ ...start, harnessHash: O.some(fixtureOtherStamp) }),
       ]);
-      yield* assertStoredStampLifecycle(forwarderInput, hookDir, encodedHookPulseRows6);
+      yield* assertStoredStampLifecycleInOrderEachStepReadingThePreviousState(
+        forwarderInput,
+        hookDir,
+        encodedHookPulseRows6
+      );
     }
     return verdict;
   }).pipe(
@@ -791,14 +798,12 @@ const runStampScenario = Effect.fnUntraced(function* (scenario: StampScenario) {
   );
 });
 
-// Partial collection reaches qualified, unqualified and unknown, and complete collection
-// reaches qualified and unqualified, so neither field determines the other. Each per-scenario
-// case below asserts that its run reaches exactly its pinned verdict, so the pinned table's
-// coverage is the coverage the runs reach.
-it("pins stamp verdicts so neither completeness nor qualification determines the other", () => {
+it("pins stamp verdicts that each scenario run reaches exactly, so neither completeness nor qualification determines the other", () => {
   expect(
     A.sort(
-      A.fromIterable(HashSet.fromIterable(A.map(ForwarderStampScenario.literals, expectedStampVerdict))),
+      A.fromIterable(
+        HashSet.fromIterable(A.map(ForwarderStampScenario.literals, pinnedCompletenessQualificationVerdict))
+      ),
       Order.String
     )
   ).toEqual([
@@ -810,7 +815,7 @@ it("pins stamp verdicts so neither completeness nor qualification determines the
   ]);
 });
 
-it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (it) => {
+it.layer(GitKitOverPlatformSpawnerForSnapshotIndexReads, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {
@@ -1135,8 +1140,8 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
     it.effect(
       `binds session stamps through hook namespace, storage and OTLP without borrowing ambiguous identities: ${scenario}`,
       Effect.fnUntraced(function* () {
-        const resultStampScenario = yield* runStampScenario(scenario);
-        expect(resultStampScenario).toBe(expectedStampVerdict(scenario));
+        const resultStampScenario = yield* runStampScenarioInItsOwnTempRepoHookRootAndDuckDbToItsVerdict(scenario);
+        expect(resultStampScenario).toBe(pinnedCompletenessQualificationVerdict(scenario));
       })
     );
   }
@@ -1281,12 +1286,13 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
             databasePath: path.join(dataRoot, "derived/ai-metrics.duckdb"),
           })
         );
-        // Close/reopen the driver between runs: scheduler progress must survive
-        // even though the failed run never committed any derived source rows.
         const failed = yield* runAiMetricsForwarder(input).pipe(provideScopedLayer(databaseLayer), Effect.flip);
         expect(failed.message).toContain("Failed to read AI metrics codex source file");
         const successful = yield* runAiMetricsForwarder(input).pipe(provideScopedLayer(databaseLayer));
-        expect(successful.sourceFileCount).toBe(1);
+        expect(
+          successful.sourceFileCount,
+          "scheduler progress survives a driver close/reopen though the failed run committed no derived source rows"
+        ).toBe(1);
         yield* Effect.gen(function* () {
           const database = yield* DuckDb;
           const query24 = yield* database.query(
@@ -1294,10 +1300,11 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
           );
           expect(query24).toEqual([{ count: 1 }]);
         }).pipe(provideScopedLayer(databaseLayer));
-        // The unreadable source comes back next round; no failure was promoted to
-        // an ingestion watermark simply because its scheduling cursor advanced.
         const retried = yield* runAiMetricsForwarder(input).pipe(provideScopedLayer(databaseLayer), Effect.flip);
-        expect(retried.message).toContain("Failed to read AI metrics codex source file");
+        expect(
+          retried.message,
+          "the unreadable source comes back next round: an advanced scheduling cursor is never an ingestion watermark"
+        ).toContain("Failed to read AI metrics codex source file");
         yield* fs.chmod(unreadablePath, 0o600);
       })
     )
@@ -1368,20 +1375,22 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
                 }),
               ])
             );
-            // A bounded scan must advance between runs, not repeatedly select
-            // the same newest file while older sessions remain invisible.
             yield* runAiMetricsForwarder(input);
             const database = yield* DuckDb;
             const coverage = yield* database.query(
               'SELECT CAST(COUNT(DISTINCT source_path_hash) AS INTEGER) AS "count" FROM ai_metrics_source_files'
             );
-            expect(coverage).toEqual([{ count: 4 }]);
-            // These global transcripts carry no verified repository identity.
-            // The checkout running collection must not become their source.
+            expect(
+              coverage,
+              "a bounded scan advances between runs instead of reselecting the newest file while older sessions stay invisible"
+            ).toEqual([{ count: 4 }]);
             const query25 = yield* database.query(
               'SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_agent_tasks WHERE repo_root_hash IS NULL'
             );
-            expect(query25).toEqual([{ count: 4 }]);
+            expect(
+              query25,
+              "global transcripts carry no verified repository identity, so the collecting checkout never becomes their source"
+            ).toEqual([{ count: 4 }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
@@ -1505,30 +1514,22 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
               { archiveObjectCount: 0 },
               { archiveObjectCount: 0 },
             ]);
-            expect(sourceRows).toEqual([{ count: "3" }]);
-            expect(archiveRows).toEqual([{ count: "3" }]);
+            expect(sourceRows, "source file ids still embed the run id by design").toEqual([{ count: "3" }]);
+            expect(archiveRows, "archive object ids still embed the run id by design").toEqual([{ count: "3" }]);
             expect(agentTaskRows).toEqual([{ configSnapshotCount: 2, count: "2" }]);
-            // Sessions collapse for the same reason turns do: `agent_session_id` is
-            // content-addressed now, so three runs over one transcript own one row, not
-            // three. Note sourceRows/archiveRows below stay at 3 -- those ids still embed
-            // the run id by design, and if they moved this change hit more than intended.
-            expect(sessionRows).toEqual([{ count: "1" }]);
-            // Three runs over two byte-identical turns must yield TWO rows. The old
-            // per-run identity duplicated each turn and grew the store to 5.43M rows
-            // over ~516K distinct raw_event_hash across 1,222 runs.
-            expect(turnRows).toEqual([{ count: "2" }]);
-            // ...and it must retain the FIRST run's id. The OTLP export selects
-            // `WHERE ingest_run_id = <this run>`, so if a re-ingest rewrote this to the
-            // current run, every previously-seen turn would be re-exported to Phoenix
-            // on every run even though the table had stopped growing. Retaining
-            // first-seen lineage is what makes the export incremental.
-            expect(turnLineage).toEqual([{ ingestRunId: "forwarder-1" }]);
+            expect(
+              sessionRows,
+              "agent_session_id is content-addressed, so three runs over one transcript own one session row"
+            ).toEqual([{ count: "1" }]);
+            expect(
+              turnRows,
+              "three runs over two byte-identical turns yield two rows; per-run identity duplicated every turn"
+            ).toEqual([{ count: "2" }]);
+            expect(
+              turnLineage,
+              "a re-ingest keeps the first run's id, so previously seen turns are not re-exported on every run"
+            ).toEqual([{ ingestRunId: "forwarder-1" }]);
 
-            // A run can commit turns and then die before its OTLP export. Because
-            // ingestion is idempotent, the retry no longer re-mints those rows under a
-            // new run id -- so if the exporter scoped itself to "this run", the
-            // committed turns would be stranded and never reach Phoenix. Export state
-            // is tracked on its own watermark for exactly that reason.
             const phoenix = phoenixService(installSpec);
             pipe(phoenix, O.isSome, assertTrue);
             if (O.isNone(phoenix)) {
@@ -1540,25 +1541,21 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
               target: AiMetricsDeployTarget.Enum.local,
             });
 
-            // Un-exported turns are visible even though they belong to forwarder-1 and
-            // the latest run is forwarder-3.
             const pending = yield* readAiMetricsOtlpSpanProjections;
-            expect(pending.turnIds.length).toBe(2);
+            expect(
+              pending.turnIds.length,
+              "the export watermark, not the latest run (forwarder-3), selects forwarder-1's committed turns, so a run that died before export strands nothing"
+            ).toBe(2);
 
-            // Span identity is content-addressed, so re-reading identical content yields
-            // byte-identical ids. That is what lets Phoenix's uq_spans_span_id collapse a
-            // redelivery instead of storing a second copy -- and it is why correctness no
-            // longer depends on the watermark being perfectly accurate.
             const rereadPending = yield* readAiMetricsOtlpSpanProjections;
-            expect(spanIdsByName(rereadPending.projections, "ai_metrics.agent.turn")).toEqual(
-              spanIdsByName(pending.projections, "ai_metrics.agent.turn")
-            );
+            expect(
+              spanIdsByName(rereadPending.projections, "ai_metrics.agent.turn"),
+              "content-addressed span ids let Phoenix's uq_spans_span_id collapse a redelivery, so correctness does not hang on the watermark"
+            ).toEqual(spanIdsByName(pending.projections, "ai_metrics.agent.turn"));
             expect(spanIdsByName(rereadPending.projections, "ai_metrics.agent.session")).toEqual(
               spanIdsByName(pending.projections, "ai_metrics.agent.session")
             );
 
-            // Ids are hex of the right width, never the all-zero id the OTLP wire format
-            // reads as "absent" -- a span carrying one is dropped rather than stored.
             const turnProjections = pipe(
               pending.projections,
               A.filter((projection) => projection.spanName === "ai_metrics.agent.turn")
@@ -1573,30 +1570,30 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
             const sessionSpan = pipe(sessionProjections, A.head, O.getOrThrow);
             expect(turnSpan.traceId).toMatch(/^[0-9a-f]{32}$/u);
             expect(turnSpan.spanId).toMatch(/^[0-9a-f]{16}$/u);
-            expect(turnSpan.traceId).not.toBe(Str.repeat(32)("0"));
-            expect(turnSpan.spanId).not.toBe(Str.repeat(16)("0"));
-            // Turns hang off their session span and share its trace, so one agent session
-            // reads as one trace in Phoenix rather than as unrelated roots.
-            expect(turnSpan.traceId).toBe(sessionSpan.traceId);
+            expect(turnSpan.traceId, "the all-zero id reads as absent on the OTLP wire and is dropped").not.toBe(
+              Str.repeat(32)("0")
+            );
+            expect(turnSpan.spanId, "the all-zero id reads as absent on the OTLP wire and is dropped").not.toBe(
+              Str.repeat(16)("0")
+            );
+            expect(
+              turnSpan.traceId,
+              "turns share their session span's trace, so one agent session reads as one trace in Phoenix"
+            ).toBe(sessionSpan.traceId);
             expect(O.getOrThrow(turnSpan.parentSpanId)).toBe(sessionSpan.spanId);
             assertNone(sessionSpan.parentSpanId);
 
-            // A rejected delivery must leave the watermark open. Without the failure
-            // short-circuiting the mark, these turns would be recorded as exported after
-            // never reaching the collector -- silently lost, which is the failure mode a
-            // watermark is supposed to prevent.
             const rejectedExit = yield* runAiMetricsOtlpExport(exportInput).pipe(
-              provideScopedLayer(rejectingSpanSender),
+              provideScopedLayer(injectedDeterministicRejectingSpanSender),
               Effect.exit
             );
             pipe(rejectedExit, Exit.isFailure, assertTrue);
             const afterRejectedExport = yield* readAiMetricsOtlpSpanProjections;
-            expect(afterRejectedExport.turnIds).toEqual(pending.turnIds);
+            expect(
+              afterRejectedExport.turnIds,
+              "a rejected delivery leaves the watermark open instead of marking turns that never reached the collector"
+            ).toEqual(pending.turnIds);
 
-            // Reproduce the review-found boundary exactly: more than 512 distinct
-            // sessions used to put an entire session-only prefix on the wire. An
-            // accepted first request then marked zero turns, so the next retry rebuilt
-            // and resent the identical prefix forever.
             yield* duckdb.run(
               `INSERT INTO ai_metrics_sessions
                  (agent_session_id, agent_task_id, ingest_run_id, source_kind,
@@ -1623,11 +1620,11 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
                FROM (SELECT * FROM ai_metrics_turns LIMIT 1), range(512)`
             );
             const beforePartialExport = yield* readAiMetricsOtlpSpanProjections;
-            expect(beforePartialExport.turnIds.length, "production-shaped pending turn count").toBe(514);
+            expect(
+              beforePartialExport.turnIds.length,
+              "more than 512 sessions, the boundary where a session-only first request marked zero turns and every retry resent it"
+            ).toBe(514);
 
-            // A later chunk can fail after Phoenix has acknowledged an earlier one. The
-            // acknowledged prefix must stay closed or every retry refills the collector
-            // queue with that prefix and permanently starves the remaining turns.
             const senderCalls = yield* Ref.make(0);
             const partialExit = yield* runAiMetricsOtlpExport(exportInput).pipe(
               provideScopedLayer(succeedingThenRejectingSpanSender(senderCalls)),
@@ -1635,37 +1632,40 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
             );
             pipe(partialExit, Exit.isFailure, assertTrue);
             const afterPartialExport = yield* readAiMetricsOtlpSpanProjections;
-            expect(afterPartialExport.turnIds.length, "partial checkpoint turn count").toBe(258);
+            expect(
+              afterPartialExport.turnIds.length,
+              "a chunk acknowledged before a later one failed stays closed, so retries do not starve the remaining turns"
+            ).toBe(258);
             const remainingTurnSpanIds = spanIdsByName(afterPartialExport.projections, "ai_metrics.agent.turn");
 
-            // The forwarder exports through runAiMetricsOtlpExport, which reads and
-            // delivers as one unit, so that entry point must close the watermark itself.
-            // With marking only in the standalone export command, nothing would ever be
-            // marked and every forwarder run would re-emit the whole store.
             const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
             const exported = yield* runAiMetricsOtlpExport(exportInput).pipe(
-              provideScopedLayer(recordingSpanSender(delivered))
+              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
             );
             expect(exported.turnSpanCount, "remaining export turn count").toBe(258);
 
             const afterSuccessfulExport = yield* readAiMetricsOtlpSpanProjections;
-            expect(afterSuccessfulExport.turnIds).toEqual([]);
+            expect(
+              afterSuccessfulExport.turnIds,
+              "runAiMetricsOtlpExport, the forwarder's export path, closes the watermark itself"
+            ).toEqual([]);
             expect(afterSuccessfulExport.projections).toEqual([]);
 
-            // A second forwarder run over unchanged content therefore delivers nothing.
             const secondExport = yield* runAiMetricsOtlpExport(exportInput).pipe(
-              provideScopedLayer(recordingSpanSender(delivered))
+              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
             );
-            expect(secondExport.turnSpanCount).toBe(0);
+            expect(secondExport.turnSpanCount, "a second run over unchanged content delivers nothing").toBe(0);
             expect(secondExport.spanCount).toBe(0);
 
-            // Exactly one delivery carried spans, and it carried the ids read before it.
             const deliveries = yield* Ref.get(delivered);
             expect(A.map(deliveries, (batch) => batch.length)).toEqual([512, 3]);
-            expect(spanIdsByName(A.flatten(deliveries), "ai_metrics.agent.turn")).toEqual(remainingTurnSpanIds);
+            expect(
+              spanIdsByName(A.flatten(deliveries), "ai_metrics.agent.turn"),
+              "only the first export delivered spans, carrying the ids read before it"
+            ).toEqual(remainingTurnSpanIds);
 
-            // Marking is safe to call with an empty batch.
-            yield* markAiMetricsOtlpTurnsExported([]);
+            const markingAnEmptyBatchIsSafe = markAiMetricsOtlpTurnsExported([]);
+            yield* markingAnEmptyBatchIsSafe;
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
@@ -1836,14 +1836,13 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
           expect.stringContaining("ai-metrics report weekly --target dankserver --data-root /srv/data/ai-metrics"),
         ])
       );
-      // Every planned command an operator copy-pastes must survive the CLI's
-      // absolute-path gate; `forwarder timer` rejects a relative root outright.
       expect(
         pipe(
           spec.plannedCommands,
           A.filter(Str.includes("--data-root")),
           A.filter(P.not(Str.includes("--data-root /")))
-        )
+        ),
+        "every copy-pasted planned command passes the CLI's absolute-path gate; forwarder timer rejects a relative root"
       ).toEqual([]);
     })
   );
@@ -1986,8 +1985,10 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (i
       expect(plan.serviceUnit).not.toContain("\nEnvironment=OWNED=1");
       expect(plan.serviceUnit).toContain("--data-root");
       expect(plan.serviceUnit).toContain("/tmp/metrics; touch /tmp/pwn");
-      // Fixed argv witness through the command quoting and outer bash -lc quoting.
-      expect(plan.serviceUnit).toContain(
+      expect(
+        plan.serviceUnit,
+        "fixed argv witness through the command quoting and the outer bash -lc quoting"
+      ).toContain(
         String.raw`'\''/bin/bun'\'' '\''run'\'' '\''beep'\'' '\''--data-root'\'' '\''/tmp/metrics; touch /tmp/pwn'\'' '\''agent'\''\'\'''\''s data'\''`
       );
     })
@@ -2150,12 +2151,12 @@ volumes:
             const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
             const batch = yield* readAiMetricsOtlpSpanProjections;
             const result = yield* runAiMetricsOtlpExport(input).pipe(
-              provideScopedLayer(recordingSpanSender(delivered))
+              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
             );
             const pipeableResult = yield* pipe(
               input,
               runAiMetricsOtlpProjectionBatchExport(batch),
-              provideScopedLayer(recordingSpanSender(delivered))
+              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
             );
             const json = yield* otlpExportResultToJson(result);
 
@@ -2190,11 +2191,11 @@ volumes:
             );
             expect(result.spanCount).toBe(4);
             expect(pipeableResult).toEqual(result);
-            // The result no longer carries an ingest run id -- the export drains every
-            // pending turn regardless of which run committed it, so a run id would have
-            // described the request rather than the batch. Counts are what it reports now.
             expect(json).toContain('"spanCount":4');
-            expect(json).not.toContain("forwarder-otlp");
+            expect(
+              json,
+              "the result reports counts, not an ingest run id: the drain spans every pending turn whichever run committed it"
+            ).not.toContain("forwarder-otlp");
             expect(json).not.toContain("private-input");
             expect(json).not.toContain("private-model-output");
             expect(json).not.toContain("private-output");
@@ -2268,9 +2269,8 @@ volumes:
       );
 
       expect(error.message).toContain("Cannot resolve hook evidence root");
-      // No identity registry, config snapshot or raw archive object was written.
       const exists26 = yield* fs.exists(dataRoot);
-      assertFalse(exists26);
+      assertFalse(exists26, "no identity registry, config snapshot or raw archive object was written");
     })
   );
 
@@ -2511,12 +2511,13 @@ volumes:
           const query27 = yield* database.query(`SELECT agent_task_id AS "id", repo_root_hash AS "sourceRoot",
           collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`);
           expect(query27).toEqual([{ id: "legacy-task", sourceRoot: null, collectorRoot: "collector-checkout-hash" }]);
-          // A later evidence-based attribution must survive repeated schema ensure.
           yield* database.run("UPDATE ai_metrics_agent_tasks SET repo_root_hash = 'verified-source-root'");
           yield* ensureAiMetricsDerivedStorage;
           const query28 = yield* database.query(`SELECT repo_root_hash AS "sourceRoot",
           collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`);
-          expect(query28).toEqual([{ sourceRoot: "verified-source-root", collectorRoot: "collector-checkout-hash" }]);
+          expect(query28, "a later evidence-based attribution survives repeated schema ensure").toEqual([
+            { sourceRoot: "verified-source-root", collectorRoot: "collector-checkout-hash" },
+          ]);
         }).pipe(
           provideScopedLayer(
             DuckDb.makeNodeLayer(
@@ -2736,7 +2737,7 @@ volumes:
   );
 
   it.effect(
-    "backfills the OTLP export watermark without burying the last turn-bearing run",
+    "backfills the OTLP export watermark on a store whose turns predate the column, without burying the last turn-bearing run",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -2745,8 +2746,6 @@ volumes:
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
-            // A store written under the old duplicating scheme: turns carry no watermark
-            // column at all, so the column migration adds it as NULL and the backfill runs.
             yield* duckdb.run(
               `CREATE TABLE ai_metrics_turns (
                 turn_id VARCHAR PRIMARY KEY,
@@ -2778,8 +2777,6 @@ volumes:
               [
                 { ingestRunId: "run-old", startedAt: 1 },
                 { ingestRunId: "run-last-with-turns", startedAt: 2 },
-                // A discovery pass that found nothing new. It is the newest run, but it
-                // committed no turns, so it must not shadow run-last-with-turns.
                 { ingestRunId: "run-empty-latest", startedAt: 3 },
               ],
               Effect.fnUntraced(function* (run) {
@@ -2816,12 +2813,10 @@ volumes:
                ORDER BY turn_id`
             );
 
-            // run-old was rescued under the old scheme by the runs that followed it, so
-            // marking it costs nothing. run-last-with-turns had no such rescue -- if it
-            // died before exporting, nothing came after it -- so its turns stay pending.
-            // v1 buries it, because run-empty-latest shadows it; v2 reopens it. The net
-            // effect on a fresh store is the corrected behaviour.
-            expect(watermarks).toEqual([
+            expect(
+              watermarks,
+              "run-old, rescued by later runs, is marked; run-last-with-turns stays pending because the newer zero-turn run-empty-latest does not shadow it"
+            ).toEqual([
               { exportedAt: null, turnId: "turn-at-risk" },
               { exportedAt: 0, turnId: "turn-old" },
             ]);
@@ -2852,21 +2847,17 @@ volumes:
               readonly body: string;
               readonly contentType: string;
             }> = [];
+            const captureByteAddressableLatin1BodyThenAnswerWithoutAsyncFunction = (request: Request) =>
+              request.arrayBuffer().then((buffer) => {
+                A.appendInPlace(requests, {
+                  body: Buffer.from(buffer).toString("latin1"),
+                  contentType: request.headers.get("content-type") ?? "",
+                });
+                const rejecting = Str.includes("reject")(new URL(request.url).pathname);
+                return new Response(null, { status: rejecting ? 415 : 200 });
+              });
             const server = Bun.serve({
-              // Continuation-passing rather than `async`/`await`: this repo represents async
-              // control flow with Effect, and a bare `async function` here trips the
-              // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
-              // either way. Body is captured as latin1 so protobuf's length-delimited string
-              // fields stay byte-addressable for the resource assertion below.
-              fetch: (request) =>
-                request.arrayBuffer().then((buffer) => {
-                  A.appendInPlace(requests, {
-                    body: Buffer.from(buffer).toString("latin1"),
-                    contentType: request.headers.get("content-type") ?? "",
-                  });
-                  const rejecting = Str.includes("reject")(new URL(request.url).pathname);
-                  return new Response(null, { status: rejecting ? 415 : 200 });
-                }),
+              fetch: captureByteAddressableLatin1BodyThenAnswerWithoutAsyncFunction,
               hostname: "127.0.0.1",
               port: 0,
             });
@@ -2887,10 +2878,8 @@ volumes:
                 endpoint: endpointFor(path),
                 target: AiMetricsDeployTarget.Enum.local,
               });
-            // 1200 spans crosses the 512-span chunk boundary twice. A drain can carry tens of
-            // thousands of turns, and one request that large is the backpressure collapse this
-            // work exists to prevent -- the retired BatchSpanProcessor used to chunk for us.
-            const projections = A.makeBy(1200, (index) =>
+            const spansCrossingThe512SpanChunkBoundaryTwice = 1200;
+            const projections = A.makeBy(spansCrossingThe512SpanChunkBoundaryTwice, (index) =>
               AiMetricsOtlpSpanProjection.make({
                 attributes: {
                   "ai_metrics.line_number": index + 1,
@@ -2910,18 +2899,15 @@ volumes:
               turnSpanCount: projections.length,
             });
 
-            // The live sender, not a stub: real ReadableSpan construction through the real
-            // protobuf exporter. Protobuf is not a preference -- Phoenix answers OTLP/JSON
-            // with HTTP 415, which is also what the rejection path below asserts.
             const exported = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces"), batch).pipe(
               provideScopedLayer(AiMetricsOtlpSpanSender.layer)
             );
 
-            expect(exported.spanCount).toBe(1200);
-            expect(requests.length).toBe(3);
-            // OTLP Span fields 7/8 are fixed64 nanoseconds, not attribute strings.
-            // This catches a sender that preserves the timestamp only as metadata
-            // but silently replaces actual event time with its export clock.
+            expect(exported.spanCount).toBe(spansCrossingThe512SpanChunkBoundaryTwice);
+            expect(
+              requests.length,
+              "a large drain is chunked per 512 spans, never one backpressure-collapsing request"
+            ).toBe(3);
             const eventStart = Buffer.alloc(9);
             eventStart[0] = 0x39;
             eventStart.writeBigUInt64LE(1_577_836_800_000_000_000n, 1);
@@ -2929,27 +2915,29 @@ volumes:
             eventEnd[0] = 0x41;
             const countWireField = (field: Buffer) =>
               A.map(requests, (request) => Str.split(request.body, field.toString("latin1")).length - 1);
-            expect(countWireField(eventStart)).toEqual([512, 512, 176]);
-            expect(countWireField(eventEnd)).toEqual([512, 512, 176]);
+            expect(
+              countWireField(eventStart),
+              "OTLP Span field 7 carries event time as fixed64 nanoseconds, not the export clock"
+            ).toEqual([512, 512, 176]);
+            expect(
+              countWireField(eventEnd),
+              "OTLP Span field 8 carries event time as fixed64 nanoseconds, not the export clock"
+            ).toEqual([512, 512, 176]);
             expect(A.every(requests, (request) => Str.includes("ai_metrics.duration_known")(request.body))).toBe(true);
-            pipe(
+            assertTrue(
               A.every(requests, (request) => request.contentType === "application/x-protobuf"),
-              assertTrue
+              "the live protobuf exporter, since Phoenix answers OTLP/JSON with HTTP 415"
             );
 
-            // Phoenix routes spans into a project by this resource attribute. Without it every
-            // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
-            // named a project that never existed. Asserted on the wire, and pinned to the constant
-            // the reader queries for, so the two cannot drift apart silently.
             expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
-            pipe(
+            assertTrue(
               A.every(
                 requests,
                 (request) =>
                   Str.includes("openinference.project.name")(request.body) &&
                   Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
               ),
-              assertTrue
+              "Phoenix routes spans by this resource attribute, pinned on the wire to the project the reader queries, or every writer lands in default"
             );
 
             const timestampCases = [
@@ -3011,15 +2999,15 @@ volumes:
             const got = yield* Ref.get(retryCalls);
             expect(got).toBe(2);
 
-            // A collector that rejects the batch must surface as a typed failure, never a
-            // silent success. That confirmation is the whole reason delivery moved off
-            // fire-and-forget span emission.
             const rejected = yield* runAiMetricsOtlpProjectionBatchExport(inputFor("/v1/traces-reject"), batch).pipe(
               provideScopedLayer(AiMetricsOtlpSpanSender.layer),
               Effect.flip
             );
 
-            expect(rejected.message).toContain("did not accept the exported spans");
+            expect(
+              rejected.message,
+              "a rejecting collector surfaces as a typed failure, the confirmation fire-and-forget span emission lacked"
+            ).toContain("did not accept the exported spans");
           }),
           ({ server }) => Effect.promise(() => server.stop(true))
         );
@@ -3029,7 +3017,7 @@ volumes:
   });
 
   it.effect(
-    "keeps a session row whose turns outlive the run that last touched it",
+    "keeps a session row whose turns outlive the run that last touched it, even when an out-of-order ingest left an early run as its last writer",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3045,11 +3033,6 @@ volumes:
             const duckdb = yield* DuckDb;
             yield* ensureAiMetricsDerivedStorage;
 
-            // A content-addressed session row carries the run that LAST wrote it, which is
-            // not necessarily the newest run: an out-of-order ingest (a backfill, or clock
-            // skew between hosts) can leave an early-completing run as the last writer.
-            // Once that happens, "this session belongs to that run" stops being true, and
-            // pruning by run id alone would delete the row while its other turns live on.
             yield* Effect.forEach(
               [
                 { completedAt: 100, ingestRunId: "run-late" },
@@ -3095,10 +3078,10 @@ volumes:
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
-          // Prune only run-early.
+          const betweenRunEarlyAndRunLate = 50;
           yield* runAiMetricsRetentionDelete(
             AiMetricsRetentionSelector.make({
-              beforeEpochMillis: O.some(50),
+              beforeEpochMillis: O.some(betweenRunEarlyAndRunLate),
               dataRoot,
             }),
             false
@@ -3111,17 +3094,13 @@ volumes:
             );
             const turns = yield* duckdb.query(`SELECT turn_id AS "turnId" FROM ai_metrics_turns ORDER BY turn_id`);
 
-            // turn-late survives the prune, so its session must survive with it. The
-            // exporter joins ai_metrics_sessions INNER: drop the row and turn-late leaves
-            // every future export silently, with its watermark still open forever.
             expect(turns).toEqual([{ turnId: "turn-late" }]);
-            expect(sessions).toEqual([{ agentSessionId: "session-shared" }]);
+            expect(
+              sessions,
+              "turn-late's session survives with it, or the exporter's INNER join drops turn-late from every future export"
+            ).toEqual([{ agentSessionId: "session-shared" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
-          // ...and the row must not then leak. It is still tagged with run-early, which is
-          // already gone, so a prune scoped to the current run set would never match it
-          // again once its last turn goes -- an empty session row surviving forever and
-          // pinning its agent task alive through the task GC.
           yield* runAiMetricsRetentionDelete(
             AiMetricsRetentionSelector.make({
               beforeEpochMillis: O.some(200),
@@ -3138,7 +3117,10 @@ volumes:
             );
 
             expect(turns).toEqual([]);
-            expect(sessions).toEqual([]);
+            expect(
+              sessions,
+              "the row still tagged with the gone run-early does not leak once its last turn goes, so it cannot pin its agent task through the task GC"
+            ).toEqual([]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
@@ -3146,7 +3128,7 @@ volumes:
   );
 
   it.effect(
-    "collapses a legacy session row onto one that already carries the content id",
+    "collapses a legacy per-run session row onto one a post-upgrade ingest already minted under the content id",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3164,10 +3146,6 @@ volumes:
               "session\u0000run-old\u0000codex\u0000mixed-transcript"
             ).pipe(Effect.map((digest) => `session-${digest}`));
 
-            // A store caught mid-transition: one row already minted under the new content
-            // key by a post-upgrade ingest, and one still holding the old per-run key. The
-            // migration's other collision branch -- legacy sibling versus legacy sibling --
-            // never reaches this shape, and getting it wrong violates the primary key.
             yield* Effect.forEach(
               [
                 {
@@ -3219,11 +3197,10 @@ volumes:
                FROM ai_metrics_turns ORDER BY turn_id`
             );
 
-            // The legacy row loses to the row that already holds the content id, and its
-            // turn follows -- no primary-key violation, and nothing orphaned behind the
-            // exporter's INNER join.
-            expect(sessions).toEqual([{ agentSessionId: contentSessionId }]);
-            expect(turns).toEqual([
+            expect(sessions, "the legacy row loses to the content-id row without a primary-key violation").toEqual([
+              { agentSessionId: contentSessionId },
+            ]);
+            expect(turns, "its turn follows, so nothing is orphaned behind the exporter's INNER join").toEqual([
               { agentSessionId: contentSessionId, turnId: "turn-new" },
               { agentSessionId: contentSessionId, turnId: "turn-old" },
             ]);
@@ -3234,7 +3211,7 @@ volumes:
   );
 
   it.effect(
-    "collapses per-run session rows and repoints their turns",
+    "collapses the per-run session rows of one transcript grown across three runs and repoints their first-seen turns",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3245,9 +3222,7 @@ volumes:
             const duckdb = yield* DuckDb;
             yield* ensureAiMetricsDerivedStorage;
 
-            // Ids exactly as the previous release minted them: rowId("session", [runId,
-            // kind, pathHash]) => `session-${sha256("session\0<parts joined by \0>")}`.
-            const legacySessionId = (ingestRunId: string) =>
+            const previousReleaseRowIdOfSessionRunKindPathHash = (ingestRunId: string) =>
               hashPublicTextSha256(`session\u0000${ingestRunId}\u0000codex\u0000grown-transcript`).pipe(
                 Effect.map((digest) => `session-${digest}`)
               );
@@ -3255,8 +3230,6 @@ volumes:
               Effect.map((digest) => `session-${digest}`)
             );
 
-            // One transcript, ingested across three runs as it grew. Turns are INSERT OR
-            // IGNORE, so each turn froze onto whichever run first saw its line.
             yield* Effect.forEach(
               [
                 { ingestRunId: "run-1", lineNumber: 1, turnId: "turn-1" },
@@ -3264,7 +3237,7 @@ volumes:
                 { ingestRunId: "run-3", lineNumber: 3, turnId: "turn-3" },
               ],
               Effect.fnUntraced(function* (row) {
-                const agentSessionId = yield* legacySessionId(row.ingestRunId);
+                const agentSessionId = yield* previousReleaseRowIdOfSessionRunKindPathHash(row.ingestRunId);
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_sessions (
                      agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
@@ -3289,7 +3262,6 @@ volumes:
               }),
               { concurrency: 1, discard: true }
             );
-            // A different transcript must be left alone.
             yield* duckdb.run(
               `INSERT INTO ai_metrics_sessions (
                  agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
@@ -3310,11 +3282,14 @@ volumes:
                FROM ai_metrics_turns ORDER BY turn_id`
             );
 
-            // Three rows collapse to one, and every turn follows it. Repointing the turns
-            // before deleting the losers is what keeps them reachable: the exporter joins
-            // ai_metrics_sessions INNER, so an orphaned turn is dropped silently forever.
-            expect(sessions).toEqual([{ agentSessionId: expectedSessionId }, { agentSessionId: "session-untouched" }]);
-            expect(turns).toEqual([
+            expect(
+              sessions,
+              "three rows collapse to one and the session of a different transcript is left alone"
+            ).toEqual([{ agentSessionId: expectedSessionId }, { agentSessionId: "session-untouched" }]);
+            expect(
+              turns,
+              "turns are repointed before the losers are deleted, so none is orphaned behind the exporter's INNER join"
+            ).toEqual([
               { agentSessionId: expectedSessionId, turnId: "turn-1" },
               { agentSessionId: expectedSessionId, turnId: "turn-2" },
               { agentSessionId: expectedSessionId, turnId: "turn-3" },
@@ -3326,7 +3301,7 @@ volumes:
   );
 
   it.effect(
-    "reopens turns a store already buried under the shipped watermark backfill",
+    "reopens turns the shipped v1 watermark backfill buried, through a v2 id because the ledger skips v1 by id whatever its SQL",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3337,10 +3312,6 @@ volumes:
             const duckdb = yield* DuckDb;
             yield* ensureAiMetricsDerivedStorage;
 
-            // A store that already ran the watermark backfill as it shipped, and was left
-            // holding the bug: the newest turn-bearing run was marked because a zero-turn
-            // discovery pass shadowed it. The ledger records migration ids, not their SQL,
-            // so rewriting v1 in place could never reach this store -- only a new id can.
             yield* Effect.forEach(
               [
                 { ingestRunId: "run-old", startedAt: 1 },
@@ -3357,13 +3328,12 @@ volumes:
               }),
               { concurrency: 1, discard: true }
             );
-            // Both already marked with the backfill sentinel, exactly as the shipped v1
-            // would have left them.
+            const turnsMarkedWithTheBackfillSentinelAsShippedV1LeftThem = [
+              { ingestRunId: "run-old", turnId: "turn-old" },
+              { ingestRunId: "run-last-with-turns", turnId: "turn-buried" },
+            ];
             yield* Effect.forEach(
-              [
-                { ingestRunId: "run-old", turnId: "turn-old" },
-                { ingestRunId: "run-last-with-turns", turnId: "turn-buried" },
-              ],
+              turnsMarkedWithTheBackfillSentinelAsShippedV1LeftThem,
               Effect.fnUntraced(function* (turn) {
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_turns (
@@ -3379,9 +3349,6 @@ volumes:
               }),
               { concurrency: 1, discard: true }
             );
-            // v1 stays on the ledger and v2 comes off it: a store upgraded from the
-            // release that shipped v1 alone. v1 is skipped by id from here on no matter
-            // what its SQL says, which is the whole reason a second migration is needed.
             yield* duckdb.run(
               `DELETE FROM ai_metrics_schema_migrations
                WHERE migration_id = 'ai-metrics-otlp-export-watermark-v2'`
@@ -3391,7 +3358,9 @@ volumes:
                FROM ai_metrics_schema_migrations
                WHERE migration_id LIKE 'ai-metrics-otlp-export-watermark-%'`
             );
-            expect(beforeUpgrade).toEqual([{ migrationId: "ai-metrics-otlp-export-watermark-v1" }]);
+            expect(beforeUpgrade, "a store upgraded from the release that shipped v1 alone").toEqual([
+              { migrationId: "ai-metrics-otlp-export-watermark-v1" },
+            ]);
 
             yield* ensureAiMetricsDerivedStorage;
 
@@ -3401,9 +3370,10 @@ volumes:
                ORDER BY turn_id`
             );
 
-            // v2 reopens only the newest backfilled run. run-old stays marked: it was
-            // rescued under the old duplicating scheme, so its content did reach Phoenix.
-            expect(watermarks).toEqual([
+            expect(
+              watermarks,
+              "v2 reopens only the newest backfilled run; run-old was rescued under the old scheme and stays marked"
+            ).toEqual([
               { exportedAt: null, turnId: "turn-buried" },
               { exportedAt: 0, turnId: "turn-old" },
             ]);
@@ -3414,7 +3384,7 @@ volumes:
   );
 
   it.effect(
-    "exports from a store that predates the watermark column without an intervening ingest",
+    "exports from a store that predates the watermark column without an intervening ingest, migrating the store itself",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3423,10 +3393,6 @@ volumes:
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
-            // `ai_metrics_turns` as written by the previous release: no
-            // `otlp_exported_at_epoch_ms`. The export query filters on that column, so
-            // the standalone `ai-metrics otlp export` command has to migrate the store
-            // itself -- the forwarder only migrates as a side effect of ingesting.
             yield* duckdb.run(
               `CREATE TABLE ai_metrics_turns (
                 turn_id VARCHAR PRIMARY KEY,
@@ -3457,9 +3423,9 @@ volumes:
                 agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
               ) VALUES ('session-1', 'run-1', 'codex', 'source-hash', 'primary', 'snapshot')`
             );
-            // Re-open on a store whose turns column set is current but whose watermark is
-            // still NULL, then drop the column again to reproduce the true legacy shape.
-            yield* duckdb.run("ALTER TABLE ai_metrics_turns DROP COLUMN otlp_exported_at_epoch_ms");
+            const dropWatermarkColumnBackToThePreviousReleaseTurnsShape =
+              "ALTER TABLE ai_metrics_turns DROP COLUMN otlp_exported_at_epoch_ms";
+            yield* duckdb.run(dropWatermarkColumnBackToThePreviousReleaseTurnsShape);
             yield* duckdb.run("DELETE FROM ai_metrics_schema_migrations");
 
             const installSpec = yield* makeAiMetricsInstallSpec(
@@ -3481,7 +3447,7 @@ volumes:
                 endpoint: phoenix.value.otlp,
                 target: AiMetricsDeployTarget.Enum.local,
               })
-            ).pipe(provideScopedLayer(recordingSpanSender(delivered)));
+            ).pipe(provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered)));
 
             expect(exported.turnSpanCount).toBe(1);
             expect(exported.sessionSpanCount).toBe(1);
@@ -3501,14 +3467,9 @@ volumes:
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
-            // Schema first, so the one-time watermark backfill is already recorded and
-            // the rows inserted below stay pending.
-            yield* ensureAiMetricsDerivedStorage;
+            const recordTheWatermarkBackfillSoRowsInsertedAfterStayPending = ensureAiMetricsDerivedStorage;
+            yield* recordTheWatermarkBackfillSoRowsInsertedAfterStayPending;
 
-            // One transcript, ingested twice as it grew. `agent_session_id` embeds the
-            // ingest run, so the same file owns two session rows -- the exact shape that
-            // fragmented a session into one trace per run when identity was seeded from
-            // that column.
             yield* Effect.forEach(
               [
                 {
@@ -3568,19 +3529,21 @@ volumes:
 
             const batch = yield* readAiMetricsOtlpSpanProjections;
 
-            // Both turns land on one trace under one session span, even though they were
-            // ingested under different runs and carry different `agent_session_id`s.
             const traceIds = pipe(
               batch.projections,
               A.map((projection) => projection.traceId),
               A.dedupe
             );
-            expect(traceIds.length).toBe(1);
+            expect(
+              traceIds.length,
+              "two run-embedding agent_session_ids of one transcript share one trace; seeding from that column fragmented it per run"
+            ).toBe(1);
             expect(batch.turnSpanCount).toBe(2);
 
-            // And exactly one session span. Emitting one per session row would put two
-            // spans carrying the same content-addressed span id in a single OTLP request.
-            expect(batch.sessionSpanCount).toBe(1);
+            expect(
+              batch.sessionSpanCount,
+              "one session span, since one per session row would put a content-addressed span id twice in one request"
+            ).toBe(1);
             const sessionSpanIds = spanIdsByName(batch.projections, "ai_metrics.agent.session");
             expect(sessionSpanIds.length).toBe(1);
             const turnParents = pipe(
@@ -3682,7 +3645,7 @@ volumes:
           const path = yield* Path.Path;
           yield* writeText(path.join(tmpDir, "AGENTS.md"), "current agent guide\n");
           const argument4 = path.join(tmpDir, ".beep/ai-metrics/config-snapshots/latest.json");
-          const encodedUnknownJsonEffect = yield* encodeUnknownJsonEffect({
+          const legacySnapshotWithoutDiffFieldJson = yield* encodeUnknownJsonEffect({
             excludedDirectoryNames: [],
             fileCount: 1,
             files: [
@@ -3700,11 +3663,7 @@ volumes:
               snapshotId: "config-legacy",
             },
           });
-          yield* writeText(
-            argument4,
-            // TODO(effect-native-migration): model schema
-            encodedUnknownJsonEffect
-          );
+          yield* writeText(argument4, legacySnapshotWithoutDiffFieldJson);
 
           const result = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({
@@ -4294,10 +4253,20 @@ volumes:
           yield* writeText(path.join(parquetRoot, "forwarder-3/ai_metrics_turns.parquet"), "three\n");
           yield* writeText(path.join(parquetRoot, "latest/ai_metrics_turns.parquet"), "latest\n");
 
-          // Deliberately disagree with filename order and avoid clock-resolution ties.
-          yield* fs.utimes(path.join(parquetRoot, "forwarder-1"), 1_700_000_300, 1_700_000_300);
-          yield* fs.utimes(path.join(parquetRoot, "forwarder-2"), 1_700_000_100, 1_700_000_100);
-          yield* fs.utimes(path.join(parquetRoot, "forwarder-3"), 1_700_000_200, 1_700_000_200);
+          const forwarder1NewestMtimeAgainstFilenameOrder = 1_700_000_300;
+          const forwarder2OldestMtime = 1_700_000_100;
+          const forwarder3MtimeHundredSecondsApartAgainstClockTies = 1_700_000_200;
+          yield* fs.utimes(
+            path.join(parquetRoot, "forwarder-1"),
+            forwarder1NewestMtimeAgainstFilenameOrder,
+            forwarder1NewestMtimeAgainstFilenameOrder
+          );
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-2"), forwarder2OldestMtime, forwarder2OldestMtime);
+          yield* fs.utimes(
+            path.join(parquetRoot, "forwarder-3"),
+            forwarder3MtimeHundredSecondsApartAgainstClockTies,
+            forwarder3MtimeHundredSecondsApartAgainstClockTies
+          );
 
           const dryRun = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({

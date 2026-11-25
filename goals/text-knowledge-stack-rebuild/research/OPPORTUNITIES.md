@@ -679,3 +679,23 @@ The P6 design lane wrote three maps and the design under `research/` without run
 `bun run beep goals manifest --write`, so `researchReports` drifted by four files until the
 implementation lane's row 0 ran it (`researchReports drifts from research/: +4 unlisted`). A design
 lane that adds research files should run the manifest writer before it hands off.
+## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
+
+- **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.
+- **Evidence:** the new request was copied from the earlier one and kept
+  `"profile": "local-linux-x64-bun1.4.4"`. `.bun-version` and main's root both say 1.4.5.
+  `beep cache baseline --request` accepted the stale profile and wrote it, and `cache audit` passed.
+  beep-reviewer caught it on the PR ("Merge re-record reverts main's root baseline profile").
+- **Prevention:** `cache baseline` could refuse a request whose profile is not the one the
+  checkout's `.bun-version` yields, or derive the profile itself when the request omits it.
+
+## 2026-11-23: the goal Stop hook re-fired every few seconds while P3 waited on P2's merge slot
+
+- **Doing:** holding the P3 lane (#3516) until the orchestrator merged P2 (#3511) in a slot the
+  CI goals driver ruled on (pin-PR hour, runner burst until 14:39Z).
+- **Evidence:** P2 was CLEAN and MERGEABLE with 73 passing checks. The goal Stop hook re-fired more
+  than 60 times between 13:48Z and 13:52Z with the same "P2 is OPEN" judgment. The repo forbids
+  polling loops for PR waits, and `gh event listen` returned HTTP 403 (event subscriptions not
+  enabled), so the only wake signal was the PR watch.
+- **Prevention:** the goal hook could accept a recorded external blocker (owner, wake signal,
+  earliest time) and stay quiet until that signal fires, instead of judging each idle turn.

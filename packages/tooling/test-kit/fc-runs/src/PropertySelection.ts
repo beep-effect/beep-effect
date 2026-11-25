@@ -21,6 +21,31 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
+/**
+ * Matches the source of a test file that draws from an arbitrary, so the deep sweep runs it.
+ *
+ * **Details**
+ *
+ * Property files import `effect/Arbitrary` and call `it.prop`, `it.effect.prop`,
+ * `Arbitrary.checkEffect` or `Arbitrary.sampleEffect`, or use the shared assertion helper, which
+ * runs a native property without a direct import at the call site. The legacy FastCheck and `fc`
+ * shapes stay matched so an unmigrated straggler is swept rather than silently dropped.
+ *
+ * **Example** (Recognise a property file)
+ *
+ * ```ts
+ * import { propertyTestMarker } from "@beep/fc-runs/PropertySelection"
+ *
+ * console.log(propertyTestMarker.test('it.effect.prop("law", [arb], f)')) // true
+ * console.log(propertyTestMarker.test('it("adds", f)')) // false
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const propertyTestMarker: RegExp =
+  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
+
 // Calls that execute a property (or draw samples) wherever they appear, including inside the
 // body of a plain `it.effect(...)` registration. `assertSchemaArbitraryDecodesToSelf` is the
 // shared `@beep/test-utils` helper that runs `Arbitrary.checkEffect` with `fcRuns`.

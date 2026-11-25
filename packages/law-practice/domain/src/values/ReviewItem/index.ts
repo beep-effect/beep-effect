@@ -7,8 +7,6 @@
  */
 
 /**
- * Read-side legacy import records and the stored-item union.
- *
  * **Example** (Import the stored-item union)
  *
  * ```ts
@@ -20,8 +18,6 @@
  */
 export * from "./LegacyReviewItemImported.model.ts";
 /**
- * ReviewItem model exports.
- *
  * **Example** (Import ReviewItem)
  *
  * ```ts

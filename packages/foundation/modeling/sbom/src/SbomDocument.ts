@@ -59,8 +59,6 @@ export const BOM_FORMAT = "CycloneDX" as const;
 export const SPEC_VERSION = "1.6" as const;
 
 /**
- * The CycloneDX component types this package emits.
- *
  * **Details**
  *
  * A deliberate subset of the specification's fourteen: an npm SBOM describes
@@ -94,8 +92,6 @@ export const ComponentType = LiteralKit(["library", "application", "framework"])
 export type ComponentType = typeof ComponentType.Type;
 
 /**
- * An external reference's kind.
- *
  * **Details**
  *
  * The four the manifest mapping produces, out of the specification's 43. Each
@@ -129,8 +125,6 @@ export const ExternalReferenceType = LiteralKit(["vcs", "issue-tracker", "websit
 export type ExternalReferenceType = typeof ExternalReferenceType.Type;
 
 /**
- * A link from a component to something outside the BOM.
- *
  * **Example** (Preserve an external reference URL)
  *
  * ```ts
@@ -163,8 +157,6 @@ export class ExternalReference extends S.Opaque<ExternalReference, { readonly br
 ) {}
 
 /**
- * Companion types for {@link ExternalReference}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -189,8 +181,6 @@ const ContactEmail = S.String.pipe(
 );
 
 /**
- * A point of contact — a person at a supplier, or an author of the BOM.
- *
  * **Example** (Construct an author contact)
  *
  * ```ts
@@ -218,8 +208,6 @@ export class Contact extends S.Opaque<Contact, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Companion types for {@link Contact}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -234,8 +222,6 @@ export declare namespace Contact {
 }
 
 /**
- * The organization that supplied a component.
- *
  * **Details**
  *
  * `name` is required because `metadata.supplier.name` is **NTIA minimum
@@ -270,8 +256,6 @@ export class Supplier extends S.Opaque<Supplier, { readonly brand: unique symbol
 ) {}
 
 /**
- * Companion types for {@link Supplier}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -286,8 +270,6 @@ export declare namespace Supplier {
 }
 
 /**
- * One component in the BOM — the root, or a dependency.
- *
  * **Gotchas**
  *
  * `bomRef` is spelled **`bom-ref`** in the emitted JSON; the rename happens in
@@ -381,8 +363,6 @@ export class Component extends S.Opaque<Component, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link Component}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -397,8 +377,6 @@ export declare namespace Component {
 }
 
 /**
- * Document-level metadata: who made the BOM, when, and about what.
- *
  * **Example** (Record the BOM assembly time)
  *
  * ```ts
@@ -438,8 +416,6 @@ export class SbomMetadata extends S.Opaque<SbomMetadata, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link SbomMetadata}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -454,8 +430,6 @@ export declare namespace SbomMetadata {
 }
 
 /**
- * A CycloneDX 1.6 bill of materials.
- *
  * **Details**
  *
  * Constructed by `Sbom.generate` and serialized by `Sbom.toJson`; both are
@@ -502,8 +476,6 @@ export class SbomDocument extends S.Opaque<SbomDocument, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link SbomDocument}.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -121,23 +121,20 @@ const firstCount = (rows: A.NonEmptyReadonlyArray<CountRow>) => A.headNonEmpty(r
 
 const isString = S.is(S.String);
 const lineBreaks = /\s*[\r\n]+\s*/g;
-const MAX_CAUSE_DEPTH = 5;
+const MAX_CAUSE_DEPTH_SO_A_CYCLIC_CHAIN_CANNOT_SPIN = 5;
 
-// Driver errors carry `message` and `cause` either bare or as an `Option`
-// (`PgliteError` holds both as options, `DuckDbError` its cause).
-const fieldOf = (error: unknown, key: "cause" | "message"): unknown => {
+const bareOrOptionDriverErrorFieldOf = (error: unknown, key: "cause" | "message"): unknown => {
   const value = P.hasProperty(error, key) ? error[key] : undefined;
   return O.isOption(value) ? O.getOrUndefined(value) : value;
 };
 
-// The messages down an error's cause chain as one line: the driver's own words
-// ("Could not set lock on file", "not a valid DuckDB database file") without a
-// stack trace. A link without a message is passed through, and the walk is
-// depth-bounded so a cyclic chain cannot spin.
 type CauseStep = readonly [cause: unknown, depth: number];
 const nextLink = ([current, depth]: CauseStep): O.Option<readonly [O.Option<string>, CauseStep]> =>
-  depth < MAX_CAUSE_DEPTH && P.isObject(current)
-    ? O.some([O.liftPredicate(fieldOf(current, "message"), isString), [fieldOf(current, "cause"), depth + 1]])
+  depth < MAX_CAUSE_DEPTH_SO_A_CYCLIC_CHAIN_CANNOT_SPIN && P.isObject(current)
+    ? O.some([
+        O.liftPredicate(bareOrOptionDriverErrorFieldOf(current, "message"), isString),
+        [bareOrOptionDriverErrorFieldOf(current, "cause"), depth + 1],
+      ])
     : O.none();
 
 const causeLine = (cause: unknown): O.Option<string> =>
@@ -179,19 +176,12 @@ export const makePracticeKgSelfCheckRefusal = (error: PracticeKgHostError): Prac
     ...OptionUtils.getSomesStruct({ cause: causeLine(error.cause) }),
   });
 
-// Opening and reading fail for different reasons and call for different fixes,
-// so each store is opened with a trivial statement before its columns are
-// probed. A lock held by a running host, a corrupt file or a permission error
-// stops at the open and is never reported as a bundle to replace.
 const openFailure = (store: string, bundleDir: string) => (cause: unknown) =>
   PracticeKgHostError.make({
     cause,
     message: `Practice KG ${store} at "${bundleDir}" could not be opened; check that no other process holds the bundle (close Claude Desktop) and that the store is readable and not corrupt.`,
   });
 
-// A manifest can say store format 3 over tables built for an older format, and a
-// bare COUNT would still pass. Each opened store is therefore probed for the
-// columns the tools read, so a missing column fails here instead of in a chat.
 const SELF_CHECK_REFERENCE = "practice-kg-self-check";
 
 const storeFailure = (store: string, bundleDir: string) => (cause: unknown) =>
@@ -200,15 +190,14 @@ const storeFailure = (store: string, bundleDir: string) => (cause: unknown) =>
     message: `Practice KG ${store} at "${bundleDir}" does not answer the queries this server's tools run; install the bundle that matches this server.`,
   });
 
-const matterColumnsProbe = `
+const kgMatterLookupEveryColumnProbe = `
 SELECT m.family_key, m.family, m.client, m.client_name, m.attribution_source, m.epistemic_status,
   m.docket_count, m.document_count, d.docket_key, d.docket, d.epistemic_status, d.document_count,
   d.application_numbers, d.patent_numbers
 FROM matters m LEFT JOIN matter_dockets d USING (family_key)
 LIMIT 1`;
 
-// The three tables `kg_correspondent_lookup` reads, every column it selects.
-const correspondentColumnsProbe = `
+const kgCorrespondentLookupTablesEveryColumnProbe = `
 SELECT c.family_key, c.address, c.contact_id, c.display_name, c.role_address, c.is_practice_address,
   c.message_count, c.from_count, c.to_count, c.cc_count, c.first_at, c.last_at, c.epistemic_status,
   a.contact_id, a.display_name, a.organization, a.role_address, a.is_practice_address,
@@ -225,7 +214,6 @@ const MATTER_STORE = "matter store (practice.duckdb)";
 const readGraphStore = Effect.fn("PracticeKgSelfCheck.readGraphStore")(function* (bundleDir: string) {
   const sql = (yield* SqlClient).withoutTransforms();
   yield* sql.unsafe("SELECT 1").pipe(Effect.mapError(openFailure(GRAPH_STORE, bundleDir)));
-  // `kg_find` text: selects every graph column the tools project, attribution_source included.
   return yield* sql
     .unsafe(PracticeKgQueries.find(selfCheckScope), [SELF_CHECK_REFERENCE])
     .pipe(
@@ -237,15 +225,12 @@ const readGraphStore = Effect.fn("PracticeKgSelfCheck.readGraphStore")(function*
 
 const readMatterStore = Effect.fn("PracticeKgSelfCheck.readMatterStore")(function* (bundleDir: string) {
   const duckdb = yield* DuckDb;
-  // DuckDB opens the file on its first statement, so this is where a lock or a damaged file shows.
-  yield* duckdb.query("SELECT 1").pipe(Effect.mapError(openFailure(MATTER_STORE, bundleDir)));
-  // Every column `kg_matter_lookup` reads from both matter tables, `client_name`
-  // included, and every column `kg_correspondent_lookup` reads: an older store
-  // that lacks one fails here, not in a tool call.
+  const duckDbOpensFileOnFirstStatement = duckdb.query("SELECT 1");
+  yield* duckDbOpensFileOnFirstStatement.pipe(Effect.mapError(openFailure(MATTER_STORE, bundleDir)));
   return yield* duckdb
-    .query(matterColumnsProbe)
+    .query(kgMatterLookupEveryColumnProbe)
     .pipe(
-      Effect.andThen(duckdb.query(correspondentColumnsProbe)),
+      Effect.andThen(duckdb.query(kgCorrespondentLookupTablesEveryColumnProbe)),
       Effect.andThen(duckdb.query(PracticeKgQueries.getDocument(selfCheckScope), [SELF_CHECK_REFERENCE, null, 1, 1])),
       Effect.andThen(duckdb.query(PracticeKgQueries.searchText(selfCheckScope), [SELF_CHECK_REFERENCE, null, 1])),
       Effect.andThen(duckdb.query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")),
@@ -260,10 +245,6 @@ const readStoreCounts = Effect.fn("PracticeKgSelfCheck.readStoreCounts")(functio
   return { matters, nodes };
 });
 
-// PGlite initialises a fresh cluster in a folder without `PG_VERSION` (the marker
-// it checks itself), and DuckDB treats a zero-byte file as a new database. Either
-// would put an empty store inside the bundle, so both are refused before opening;
-// a store that cannot even be inspected is reported as one that will not open.
 const STORE_MARKERS = {
   graph: { store: GRAPH_STORE, name: "kg.pglite", marker: O.some("PG_VERSION") },
   matter: { store: MATTER_STORE, name: "practice.duckdb", marker: O.none<string>() },
@@ -335,8 +316,8 @@ export const runPracticeKgSelfCheck = Effect.fn("PracticeKgSelfCheck.run")(funct
   const context = yield* loadPracticeKgBundleContext(bundleDir, input.corpusRoot);
   yield* requireStore(bundleDir, STORE_MARKERS.graph);
   yield* requireStore(bundleDir, STORE_MARKERS.matter);
-  const counts = yield* Layer.build(makePracticeKgHostResourcesLayer(context)).pipe(
-    // PGlite opens `kg.pglite` while the layer builds; DuckDB opens on its first statement.
+  const pgliteOpensWhileLayerBuilds = Layer.build(makePracticeKgHostResourcesLayer(context));
+  const counts = yield* pgliteOpensWhileLayerBuilds.pipe(
     Effect.mapError(openFailure(GRAPH_STORE, bundleDir)),
     Effect.flatMap((resources) => readStoreCounts(bundleDir).pipe(Effect.provide(resources))),
     Effect.scoped

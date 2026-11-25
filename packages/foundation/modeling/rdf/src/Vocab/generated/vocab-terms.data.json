@@ -408,6 +408,7 @@
       "anyURI",
       "boolean",
       "dateTime",
+      "decimal",
       "double",
       "integer",
       "string"

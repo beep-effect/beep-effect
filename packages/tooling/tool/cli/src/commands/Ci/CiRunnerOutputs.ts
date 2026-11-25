@@ -18,11 +18,13 @@ import { ActionEnvironment } from "@beep/github-actions/ActionEnvironment";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { CiCommandError } from "./Ci.errors.ts";
 import type * as FileSystem from "effect/FileSystem";
 
 /** The variables `ActionOutputs` reads: the three runner files and the line-ending host fact. */
@@ -64,3 +66,48 @@ const runnerEnvironment = Effect.map(
 export const CiRunnerOutputsLive: Layer.Layer<ActionOutputs, never, FileSystem.FileSystem> = ActionOutputs.layer.pipe(
   Layer.provide(Layer.unwrap(Effect.map(runnerEnvironment, ActionEnvironment.layerFrom)))
 );
+
+/**
+ * Append Markdown to the job's step summary, or print it off a runner.
+ *
+ * **Details**
+ *
+ * With no `GITHUB_STEP_SUMMARY` (or an empty one) the Markdown goes to stdout
+ * instead, so a local run shows what a runner would append. A failed append
+ * fails with `failure(path)` as the {@link CiCommandError} message.
+ *
+ * **Example** (Print a summary off a runner)
+ *
+ * ```ts
+ * import { appendStepSummary, CiRunnerOutputsLive } from "@beep/repo-cli/commands/Ci"
+ * import { NodeServices } from "@effect/platform-node"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * const program = appendStepSummary("### Ready", (path) => `Failed to append the summary to ${path}.`).pipe(
+ *   Effect.provide(CiRunnerOutputsLive.pipe(Layer.provideMerge(NodeServices.layer)))
+ * )
+ * Effect.runPromise(program).then(() => console.log("appended"))
+ * ```
+ *
+ * @param rendered - The Markdown to append.
+ * @param failure - The error message when the append to the named file fails.
+ * @returns An effect that appends or prints the Markdown.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const appendStepSummary = Effect.fn("Ci.appendStepSummary")(function* (
+  rendered: string,
+  failure: (summaryPath: string) => string
+): Effect.fn.Return<void, CiCommandError, ActionOutputs> {
+  const summaryPath = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(
+    Effect.orElseSucceed(O.none<string>),
+    Effect.map(O.filter(Str.isNonEmpty))
+  );
+  if (O.isNone(summaryPath)) {
+    yield* Console.log(rendered);
+    return;
+  }
+  const outputs = yield* ActionOutputs;
+  yield* outputs.summary(rendered).pipe(CiCommandError.mapError(failure(summaryPath.value)));
+});

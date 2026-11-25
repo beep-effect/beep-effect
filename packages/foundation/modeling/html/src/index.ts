@@ -27,8 +27,6 @@
  */
 
 /**
- * HTML microsyntax and attribute schemas.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -159,8 +157,6 @@ export {
  */
 export * as HtmlModel from "./Html.model.ts";
 /**
- * Stable HTML root and node schemas.
- *
  * @category models
  * @since 0.0.0
  */
@@ -244,8 +240,6 @@ export {
   ScriptState,
 } from "./Html.script.ts";
 /**
- * Deterministic HTML serialization.
- *
  * @category serialization
  * @since 0.0.0
  */

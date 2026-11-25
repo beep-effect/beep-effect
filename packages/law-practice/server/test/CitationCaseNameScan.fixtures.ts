@@ -148,11 +148,8 @@ const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
   const result = yield* stage.apply(row.request);
   expect(result.state, `source initialized scan ${row.id}`).toEqual(row.state);
 });
-// Canonical controls retain connectors, digit rejection, combining marks, v/plaintiff boundaries,
-// punctuation, native years/parentheses, special token branches and scalar/surrogate distinctions.
-const smokeBoundaryRows = [
-  5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58,
-];
+const smokeRowsRetainingConnectorsDigitRejectionCombiningMarksPlaintiffBoundariesPunctuationNativeYearsParenthesesSpecialTokensAndScalarSurrogateDistinctions =
+  [5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58];
 /** Smoke includes source branch controls, failures and no-call paths; the full original replay retired 2026-11-09. */
 export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -161,7 +158,15 @@ export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(f
   const setup = yield* install(kind);
   const rows = A.filter(
     setup.corpus.cases,
-    (row) => full || row.smoke || A.contains(smokeBoundaryRows, row.id) || row.error !== null || row.calls.length === 0
+    (row) =>
+      full ||
+      row.smoke ||
+      A.contains(
+        smokeRowsRetainingConnectorsDigitRejectionCombiningMarksPlaintiffBoundariesPunctuationNativeYearsParenthesesSpecialTokensAndScalarSurrogateDistinctions,
+        row.id
+      ) ||
+      row.error !== null ||
+      row.calls.length === 0
   );
   yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { concurrency: 1, discard: true });
   expect(rows).toHaveLength(full ? 64 : 54);
@@ -220,7 +225,6 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
   const corpus = yield* readCitationCaseNameScanCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
-  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const configuration of [
     {
       ...corpus.configuration,
@@ -235,7 +239,10 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
       Effect.provideContext(setup.provided),
       Effect.flip
     );
-    expect(rejected).toMatchObject({ reason: "invalid-configuration" });
+    expect(
+      rejected,
+      "an owned configuration whose fixed pattern fails authentication is refused by the stage"
+    ).toMatchObject({ reason: "invalid-configuration" });
   }
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, corpus.configuration).pipe(
     Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({

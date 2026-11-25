@@ -43,8 +43,6 @@ import type { ProfileStoreFailure } from "./PracticeGateway.errors.ts";
 const $I = $PracticeGatewayId.create("SetupTools");
 
 /**
- * Why a setup tool call failed.
- *
  * **Example** (Check a failure reason)
  *
  * ```ts
@@ -73,8 +71,6 @@ export const SetupToolFailureReason = LiteralKit([
 );
 
 /**
- * Decoded type of {@link SetupToolFailureReason}.
- *
  * **Example** (Type a reason)
  *
  * ```ts
@@ -90,8 +86,6 @@ export const SetupToolFailureReason = LiteralKit([
 export type SetupToolFailureReason = typeof SetupToolFailureReason.Type;
 
 /**
- * Failure returned to the agent by a setup tool, in plain language.
- *
  * **Example** (A declined repair)
  *
  * ```ts
@@ -144,8 +138,6 @@ export class SetupProfileView extends S.Opaque<SetupProfileView, { readonly bran
 ) {}
 
 /**
- * Result of `setup_status`: the doctor's report and a plain-language summary.
- *
  * **Example** (Read a status summary)
  *
  * ```ts
@@ -179,8 +171,6 @@ export class SetupStatus extends S.Opaque<SetupStatus, { readonly brand: unique 
 ) {}
 
 /**
- * Input of `setup_repair`.
- *
  * **Example** (Ask for the Box Drive install)
  *
  * ```ts
@@ -269,9 +259,6 @@ const plainOrJson = <Schema extends S.Codec<unknown, unknown, never, never>>(sch
   S.Union([schema, S.fromJsonString(schema)]);
 
 /**
- * Input of `setup_profile_save`: the {@link PracticeProfile} fields, each
- * accepted plain or JSON-encoded.
- *
  * **Example** (Decode a profile whose IT limits arrive as a JSON string)
  *
  * ```ts
@@ -369,8 +356,6 @@ export const SetupRepairTool = setupTool(
 );
 
 /**
- * Result of `setup_onboarding_guide`.
- *
  * **Example** (Wrap a guide)
  *
  * ```ts

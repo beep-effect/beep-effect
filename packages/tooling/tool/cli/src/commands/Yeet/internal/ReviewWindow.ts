@@ -110,8 +110,6 @@ export const YeetReviewWindowDuration: Config.Config<Duration.Duration> = Config
 );
 
 /**
- * Which instant the review window is counted from.
- *
  * **Details**
  *
  * `ready-for-review` is the latest "marked ready for review" event, `pr-opened`
@@ -137,8 +135,6 @@ export const YeetReviewWindowAnchor = LiteralKit(["ready-for-review", "pr-opened
 );
 
 /**
- * Which instant the review window is counted from.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -207,8 +203,6 @@ class WindowCarryEvidence extends S.Opaque<WindowCarryEvidence, { readonly brand
 ) {}
 
 /**
- * The review window is still running: the merge gate holds.
- *
  * **Example** (Describe an open window)
  *
  * ```ts
@@ -238,8 +232,6 @@ export class YeetReviewWindowOpen extends S.Opaque<YeetReviewWindowOpen, { reado
 ) {}
 
 /**
- * The review window has run its full length on the current head.
- *
  * **Example** (Describe an elapsed window)
  *
  * ```ts
@@ -268,8 +260,6 @@ export class YeetReviewWindowElapsed extends S.Opaque<YeetReviewWindowElapsed, {
 ) {}
 
 /**
- * The review window could not be established, so it does not satisfy the gate.
- *
  * **Example** (Describe an unknown window)
  *
  * ```ts

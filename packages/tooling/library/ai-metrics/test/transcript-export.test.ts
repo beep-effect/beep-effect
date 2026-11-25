@@ -241,11 +241,11 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
     offset: 0,
     limit: 512,
   });
-  // Ticks run under a TestClock seeded at the current time, so only the test moves the delay
-  // windows and the tick deadline, never host load.
-  const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
+  const testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline = yield* TestClock.make({
+    warningDelay: "30 seconds",
+  });
   const currentTimeMillis4 = yield* Clock.currentTimeMillis;
-  yield* clock.setTime(currentTimeMillis4);
+  yield* testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline.setTime(currentTimeMillis4);
   const reopen = () =>
     Effect.map(
       makeNativeDeliveryScheduler(
@@ -261,9 +261,28 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
         sender,
         reader
       ),
-      (scheduler) => ({ tick: Effect.provideService(scheduler.tick, Clock.Clock, clock) })
+      (scheduler) => ({
+        tick: Effect.provideService(
+          scheduler.tick,
+          Clock.Clock,
+          testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline
+        ),
+      })
     );
-  return { input, page, frames, receipt, sender, reader, selection, posts, mode, sql, clock, reopen };
+  return {
+    input,
+    page,
+    frames,
+    receipt,
+    sender,
+    reader,
+    selection,
+    posts,
+    mode,
+    sql,
+    clock: testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline,
+    reopen,
+  };
 });
 
 it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>

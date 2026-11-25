@@ -30,7 +30,6 @@ export const TransportKind = LiteralKit(["http", "cli", "mcp", "sidecar"]).pipe(
   $I.annoteSchema("TransportKind", { description: "Verified vault-sync transport." })
 );
 /**
- * Transport provenance value.
  * @category aggregates
  * @since 0.0.0
  */
@@ -57,8 +56,6 @@ export const PrincipalKey = S.String.check(
   S.isPattern(/^(User|ServiceAccount|Agent|ConnectorAccount|System):[A-Za-z0-9_-]{1,64}$/)
 ).pipe($I.annoteSchema("PrincipalKey", { description: "Principal kind and id as one provenance string." }));
 /**
- * Runtime value accepted by {@link PrincipalKey}.
- *
  * @category aggregates
  * @since 0.0.0
  */

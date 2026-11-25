@@ -19,8 +19,6 @@ import type * as DevToolsSchema from "effect/devtools/DevToolsSchema";
 const $I = $ObservabilityId.create("server/DevTools");
 
 /**
- * Predicate used to decide whether a span should be mirrored to Effect devtools.
- *
  * **Example** (HTTP prefix span filter)
  *
  * ```typescript
@@ -44,8 +42,6 @@ export const DevToolsSpanFilter = Fn({
 );
 
 /**
- * Runtime type for {@link DevToolsSpanFilter}.
- *
  * **Example** (Typed HTTP span filter)
  *
  * ```typescript
@@ -63,8 +59,6 @@ export const DevToolsSpanFilter = Fn({
 export type DevToolsSpanFilter = typeof DevToolsSpanFilter.Type;
 
 /**
- * Options for mirroring selected spans to the Effect devtools websocket.
- *
  * **Example** (Make filtered options)
  *
  * ```typescript

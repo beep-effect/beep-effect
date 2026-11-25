@@ -50,8 +50,6 @@ export * from "./Assessments.ts";
  */
 export * from "./Claim/index.ts";
 /**
- * Immutable claim core schemas and checked identity arrows.
- *
  * **Example** (Read claim stances)
  *
  * ```ts
@@ -64,8 +62,6 @@ export * from "./Claim/index.ts";
  */
 export * from "./ClaimCore.ts";
 /**
- * Claim disposition status value exports.
- *
  * **Example** (Log rejected disposition status)
  *
  * ```ts
@@ -100,8 +96,6 @@ export * from "./ClaimDispositionStatus/index.ts";
  */
 export * from "./ClaimEvidenceReview/index.ts";
 /**
- * Claim gate verdict value exports.
- *
  * **Example** (Decode gate severity value)
  *
  * ```ts
@@ -122,7 +116,7 @@ export * from "./ClaimGate/index.ts";
  * **Example** (Index an imported claim reference)
  *
  * ```ts
- * import { ClaimReference, claimReferenceKey } from "@beep/epistemics"
+ * import { ClaimReference, claimReferenceKey } from "@beep/epistemics/ClaimImport.schema"
  * console.log(claimReferenceKey(ClaimReference.cases.Imported.make({ ledger: "kb", oldId: "claim-1" })))
  * ```
  *
@@ -223,8 +217,6 @@ export * from "./ContradictionDetection/index.ts";
  */
 export * from "./EdgeEndpoint/index.ts";
 /**
- * Edge relation vocabulary exports.
- *
  * **Example** (Log supports edge relation)
  *
  * ```ts
@@ -238,12 +230,10 @@ export * from "./EdgeEndpoint/index.ts";
  */
 export * from "./EdgeRelation/index.ts";
 /**
- * Current evidence positions and their independent extraction observations.
- *
  * **Example** (Inspect the current format)
  *
  * ```ts
- * import { EvidencePosition } from "@beep/epistemics"
+ * import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema"
  * console.log(EvidencePosition.fields.version)
  * ```
  *
@@ -313,8 +303,6 @@ export * from "./KnowledgeInterval/index.ts";
  */
 export * from "./LogicalEdgeIdentity/index.ts";
 /**
- * Valid-time interval exports.
- *
  * **Example** (Check whether a fact holds)
  *
  * ```ts

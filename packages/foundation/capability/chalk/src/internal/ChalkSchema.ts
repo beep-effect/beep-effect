@@ -225,8 +225,6 @@ export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
 );
 
 /**
- * Runtime type for {@link ColorSupportLevel}.
- *
  * **Example** (Annotate color support level)
  *
  * ```ts
@@ -242,8 +240,6 @@ export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
 export type ColorSupportLevel = typeof ColorSupportLevel.Type;
 
 /**
- * Color support metadata for an enabled Chalk output stream.
- *
  * **Example** (Create color support metadata)
  *
  * ```ts
@@ -270,8 +266,6 @@ export class ColorSupport extends S.Opaque<ColorSupport, { readonly brand: uniqu
 ) {}
 
 /**
- * Schema for exported Chalk color support info values.
- *
  * **Example** (Decode disabled color info)
  *
  * ```ts
@@ -292,8 +286,6 @@ export const ColorInfo = S.Union([ColorSupport, S.Literal(false)]).pipe(
 );
 
 /**
- * Runtime type for {@link ColorInfo}.
- *
  * **Example** (Annotate disabled color info)
  *
  * ```ts
@@ -309,8 +301,6 @@ export const ColorInfo = S.Union([ColorSupport, S.Literal(false)]).pipe(
 export type ColorInfo = typeof ColorInfo.Type;
 
 /**
- * Constructor options for isolated Chalk instances.
- *
  * **Example** (Create chalk options)
  *
  * ```ts
@@ -359,8 +349,6 @@ export const ModifierName = S.Literals(modifierNameValues).pipe(
 );
 
 /**
- * Runtime type for {@link ModifierName}.
- *
  * **Example** (Annotate italic modifier name)
  *
  * ```ts
@@ -401,8 +389,6 @@ export const ForegroundColorName = S.Literals(foregroundColorNameValues).pipe(
 );
 
 /**
- * Runtime type for {@link ForegroundColorName}.
- *
  * **Example** (Annotate cyan foreground name)
  *
  * ```ts
@@ -443,8 +429,6 @@ export const BackgroundColorName = S.Literals(backgroundColorNameValues).pipe(
 );
 
 /**
- * Runtime type for {@link BackgroundColorName}.
- *
  * **Example** (Annotate magenta background name)
  *
  * ```ts
@@ -485,8 +469,6 @@ export const ColorName = S.Literals(colorNameValues).pipe(
 );
 
 /**
- * Runtime type for {@link ColorName}.
- *
  * **Example** (Annotate yellow background name)
  *
  * ```ts
@@ -517,8 +499,6 @@ export const StyleName = S.Literals(styleNameValues).pipe(
 );
 
 /**
- * Runtime type for {@link StyleName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -540,8 +520,6 @@ export const ColorModelName = S.Literals(colorModelNameValues).pipe(
 );
 
 /**
- * Runtime type for {@link ColorModelName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -563,8 +541,6 @@ export const AnsiRenderLevel = S.Literals(ansiRenderLevelValues).pipe(
 );
 
 /**
- * Runtime type for {@link AnsiRenderLevel}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -586,8 +562,6 @@ export const StyleChannel = S.Literals(styleChannelValues).pipe(
 );
 
 /**
- * Runtime type for {@link StyleChannel}.
- *
  * @category models
  * @since 0.0.0
  */

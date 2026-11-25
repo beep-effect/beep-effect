@@ -32,8 +32,6 @@ type Dual4<Self, First, Second, Third, Result> = {
 const PanelViewKind = LiteralKit(["component", "text"]);
 
 /**
- * Persistence policy for rendering inactive panels.
- *
  * **Example** (Make always render mode)
  *
  * ```ts
@@ -52,8 +50,6 @@ export const PanelRenderMode = LiteralKit(["onlyWhenVisible", "always"]).pipe(
   })
 );
 /**
- * Decoded inactive-panel rendering policy.
- *
  * **Example** (Type onlyWhenVisible mode)
  *
  * ```ts
@@ -69,8 +65,6 @@ export const PanelRenderMode = LiteralKit(["onlyWhenVisible", "always"]).pipe(
 export type PanelRenderMode = typeof PanelRenderMode.Type;
 
 /**
- * Codec for JSON-safe renderer parameter scalars.
- *
  * **Example** (Make string parameter value)
  *
  * ```ts
@@ -89,8 +83,6 @@ export const PanelParameterValue = S.Union([S.String, S.Finite, S.Boolean]).pipe
   })
 );
 /**
- * Decoded renderer parameter scalar.
- *
  * **Example** (Type boolean parameter value)
  *
  * ```ts
@@ -106,8 +98,6 @@ export const PanelParameterValue = S.Union([S.String, S.Finite, S.Boolean]).pipe
 export type PanelParameterValue = typeof PanelParameterValue.Type;
 
 /**
- * Codec for renderer-neutral panel parameter records.
- *
  * **Example** (Make theme parameter record)
  *
  * ```ts
@@ -126,8 +116,6 @@ export const PanelParameters = S.Record(S.String, PanelParameterValue).pipe(
   })
 );
 /**
- * Decoded renderer parameter record.
- *
  * **Example** (Type count parameter record)
  *
  * ```ts
@@ -143,8 +131,6 @@ export const PanelParameters = S.Record(S.String, PanelParameterValue).pipe(
 export type PanelParameters = typeof PanelParameters.Type;
 
 /**
- * Renderer-backed panel content resolved by a host registry.
- *
  * **Example** (Make markdown component view)
  *
  * ```ts
@@ -171,8 +157,6 @@ export class ComponentPanelView extends S.Opaque<ComponentPanelView, { readonly 
 ) {}
 
 /**
- * Serializable renderer-independent text panel content.
- *
  * **Example** (Make text panel view)
  *
  * ```ts
@@ -241,8 +225,6 @@ const PositiveFiniteExtent = S.Finite.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Optional minimum and maximum pixel extents for one panel.
- *
  * **Gotchas**
  *
  * A missing facet leaves that axis bound unconstrained. When a
@@ -275,8 +257,6 @@ export class PanelConstraints extends S.Opaque<PanelConstraints, { readonly bran
 ) {}
 
 /**
- * One persistable renderer-neutral panel instance.
- *
  * **Example** (Make text panel instance)
  *
  * ```ts
@@ -361,8 +341,6 @@ export class PanelPatch extends S.Opaque<PanelPatch, { readonly brand: unique sy
 ) {}
 
 /**
- * Persisted locking policy for a tab group.
- *
  * **Example** (Make locked group mode)
  *
  * ```ts
@@ -396,8 +374,6 @@ export const GroupLockedMode = LiteralKit(["unlocked", "locked", "no-drop-target
 export type GroupLockedMode = typeof GroupLockedMode.Type;
 
 /**
- * Persisted edge used to render a tab-group header.
- *
  * **Example** (Make bottom header position)
  *
  * ```ts
@@ -414,8 +390,6 @@ export const GroupHeaderPosition = LiteralKit(["top", "bottom"]).pipe(
   $I.annoteSchema("GroupHeaderPosition", { description: "Persisted tab-group header edge." })
 );
 /**
- * Decoded tab-group header edge.
- *
  * **Example** (Type top header position)
  *
  * ```ts
@@ -499,8 +473,6 @@ export class GroupPatch extends S.Opaque<GroupPatch, { readonly brand: unique sy
 type SplitPosition = Pick<SplitPlacement, "side" | "splitId" | "newGroupRatio">;
 
 /**
- * Non-empty tab zipper with the active panel stored structurally.
- *
  * **Example** (Make single-panel tabs node)
  *
  * ```ts
@@ -814,8 +786,6 @@ export const SplitLayout = S.Union([HorizontalSplitLayout, VerticalSplitLayout])
 export type SplitLayout = typeof SplitLayout.Type;
 
 /**
- * Recursive binary split node with exactly two children.
- *
  * **Example** (Make horizontal split node)
  *
  * ```ts
@@ -1226,8 +1196,6 @@ export class EmptyWorkspace extends S.Opaque<EmptyWorkspace, { readonly brand: u
 ) {}
 
 /**
- * Workspace state containing a non-empty dock tree.
- *
  * **Example** (Make populated workspace)
  *
  * ```ts
@@ -1311,8 +1279,6 @@ const DockWorkspaceGlobalIdentityCheck = S.makeFilter<typeof DockWorkspaceBase.T
 );
 
 /**
- * Validated codec for complete empty or populated dock state.
- *
  * **Example** (Use empty dock workspace)
  *
  * ```ts
@@ -1529,8 +1495,6 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
   })
 );
 /**
- * Decoded complete dock workspace state.
- *
  * **Example** (Type empty dock workspace)
  *
  * ```ts
@@ -1546,8 +1510,6 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
 export type DockWorkspace = typeof DockWorkspace.Type;
 
 /**
- * Versioned persisted envelope for one complete dock workspace.
- *
  * **Example** (Make versioned dock snapshot)
  *
  * ```ts

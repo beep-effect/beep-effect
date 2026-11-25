@@ -17,9 +17,6 @@ import * as S from "effect/Schema";
 const $I = $RepoGateRunId.create("Omission");
 
 /**
- * The part of a run that was left out: the raw log, the record, the
- * history read, or the main baseline the history labels compare against.
- *
  * **Example** (Match an omitted part)
  *
  * ```ts
@@ -39,16 +36,12 @@ export const OmittedPart = LiteralKit(["log", "record", "history", "baseline"]).
 );
 
 /**
- * Type of {@link OmittedPart}.
- *
  * @category models
  * @since 0.0.0
  */
 export type OmittedPart = typeof OmittedPart.Type;
 
 /**
- * One part of a run that was not written or read, and why.
- *
  * **Example** (Build an omission)
  *
  * ```ts

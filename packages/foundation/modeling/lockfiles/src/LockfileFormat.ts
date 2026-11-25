@@ -12,10 +12,6 @@ import * as O from "effect/Option";
 const $I = $LockfilesId.create("LockfileFormat");
 
 /**
- * The lockfile formats this package parses: bun's `bun.lock` (JSONC), npm's
- * `package-lock.json` (JSON), pnpm's `pnpm-lock.yaml` and yarn Berry's
- * `yarn.lock` (both YAML).
- *
  * **Details**
  *
  * The literal names the *lockfile format*, not the package manager that

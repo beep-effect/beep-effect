@@ -106,8 +106,6 @@ export const ExecutionAuthorityPolicyRevisionConfig = Config.schema(
 ).pipe(Config.withDefault(defaultPolicyRevision));
 
 /**
- * Server-only execution-authority settings.
- *
  * **Example** (Make server config instance)
  *
  * ```ts

@@ -28,8 +28,6 @@ import {
 const $I = $TomlId.create("TomlDiagnostic");
 
 /**
- * Error codes emitted by the lexer stage.
- *
  * **Example** (Recognize a lexical error code)
  *
  * ```ts
@@ -48,8 +46,6 @@ export const TomlLexErrorCode = LiteralKit(TOML_LEX_ERROR_CODES).pipe(
 );
 
 /**
- * The union of all lexer-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -57,8 +53,6 @@ export const TomlLexErrorCode = LiteralKit(TOML_LEX_ERROR_CODES).pipe(
 export type TomlLexErrorCode = typeof TomlLexErrorCode.Type;
 
 /**
- * Error codes emitted by the parser stage.
- *
  * **Example** (Recognize a syntax error code)
  *
  * ```ts
@@ -77,8 +71,6 @@ export const TomlParseErrorCode = LiteralKit(TOML_PARSE_ERROR_CODES).pipe(
 );
 
 /**
- * The union of all parser-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -86,8 +78,6 @@ export const TomlParseErrorCode = LiteralKit(TOML_PARSE_ERROR_CODES).pipe(
 export type TomlParseErrorCode = typeof TomlParseErrorCode.Type;
 
 /**
- * Error codes emitted by the semantic (table/key conflict) stage.
- *
  * **Example** (Recognize a key conflict code)
  *
  * ```ts
@@ -108,8 +98,6 @@ export const TomlSemanticErrorCode = LiteralKit(TOML_SEMANTIC_ERROR_CODES).pipe(
 );
 
 /**
- * The union of all semantic-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -117,8 +105,6 @@ export const TomlSemanticErrorCode = LiteralKit(TOML_SEMANTIC_ERROR_CODES).pipe(
 export type TomlSemanticErrorCode = typeof TomlSemanticErrorCode.Type;
 
 /**
- * Error codes emitted by the stringifier stage.
- *
  * **Example** (Recognize a serialization error code)
  *
  * ```ts
@@ -137,8 +123,6 @@ export const TomlStringifyErrorCode = LiteralKit(TOML_STRINGIFY_ERROR_CODES).pip
 );
 
 /**
- * The union of all stringifier-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -146,9 +130,6 @@ export const TomlStringifyErrorCode = LiteralKit(TOML_STRINGIFY_ERROR_CODES).pip
 export type TomlStringifyErrorCode = typeof TomlStringifyErrorCode.Type;
 
 /**
- * Union of all TOML error codes across all pipeline stages. Stage
- * discrimination lives here (in the code), not in separate error classes.
- *
  * **Example** (Recognize a code across pipeline stages)
  *
  * ```ts
@@ -175,8 +156,6 @@ export const TomlErrorCode = S.Union([
 );
 
 /**
- * The union of all TOML error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -184,10 +163,6 @@ export const TomlErrorCode = S.Union([
 export type TomlErrorCode = typeof TomlErrorCode.Type;
 
 /**
- * One structured diagnostic: its {@link (TomlErrorCode:type)}, a
- * human-readable `message`, and its exact position (`offset`/`length`, plus
- * zero-based `line`/`character`).
- *
  * **Details**
  *
  * The five-field positional core (`code`/`offset`/`length`/`line`/`character`)

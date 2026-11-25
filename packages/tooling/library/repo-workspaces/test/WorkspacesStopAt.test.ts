@@ -248,8 +248,6 @@ for (const [name, composite] of R.toEntries(gitComposites)) {
   });
 }
 
-// ── the localExecLayer ceiling ─────────────────────────────────────────────
-
 describe("stopAt — Workspaces.localExecLayer reads a refused root as None", () => {
   class UnboundedLocalExec extends Context.Service<UnboundedLocalExec, LocalExecShape>()($I`UnboundedLocalExec`) {}
   const unboundedLocal = Layer.effect(UnboundedLocalExec, LocalExec).pipe(

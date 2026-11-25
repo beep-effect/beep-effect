@@ -1,19 +1,26 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { ClaimId } from "@beep/epistemics/ClaimCore.schema";
+import { ClaimReference } from "@beep/epistemics/ClaimImport.schema";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
+  HoldClaimEvent,
   HoldLedger,
   HoldProbe,
   HoldProbeRequest,
+  HoldReviewState,
   HoldsError,
   HoldsProbeInput,
   HoldsUpdateInput,
   holdClaimLabel,
   holdProposition,
+  holdReferenceLabel,
   holdsCommand,
   holdsPlatformError,
+  layerHoldLedger,
+  layerHoldProbe,
   makeHoldLedger,
-  makeHoldProbe,
+  ProbeRunId,
   runHoldsList,
   runHoldsProbe,
   runHoldsUpdate,
@@ -25,6 +32,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -124,10 +132,9 @@ const platformFor = (files: Readonly<Record<string, string>>, spawner: ScriptedS
   );
 
 const layerFor = (files: Readonly<Record<string, string>>, spawner: ScriptedSpawner = statelyaiSpawner) =>
-  Layer.mergeAll(
-    Layer.effect(HoldLedger, makeHoldLedger(root)),
-    Layer.effect(HoldProbe, makeHoldProbe(scratchRoot))
-  ).pipe(Layer.provideMerge(Layer.provideMerge(Git.layer, platformFor(files, spawner))));
+  Layer.mergeAll(layerHoldLedger(root), layerHoldProbe(scratchRoot)).pipe(
+    Layer.provideMerge(Layer.provideMerge(Git.layer, platformFor(files, spawner)))
+  );
 
 const probeInput = (holdId: string, dryRun: boolean) => HoldsProbeInput.make({ holdId, dryRun, commitSha });
 
@@ -719,4 +726,141 @@ layer(layerFor({ "hold-ledger/claims.jsonl": `${A.join([rewriteHold, unknownLeas
       expect(A.some(unknown, Str.includes("live, unknown lease"))).toBe(true);
     })
   );
+});
+
+const statelyaiImported = ClaimReference.cases.Imported.make({
+  ledger: "holds",
+  oldId: "statelyai-model-testing-404@2",
+});
+
+layer(layerFor({ "hold-ledger/claims.jsonl": `${currentClaim}\n${currentClaim}\n` }), { timeout: "30 seconds" })(
+  "a ledger that repeats one old hold",
+  (it) => {
+    it.effect("refuses the history with a decode error naming the refusal", () =>
+      Effect.gen(function* () {
+        const ledger = yield* HoldLedger;
+        const error = yield* Effect.flip(ledger.allClaims);
+        expect(error.reason).toBe("decode");
+        expect(error.message).toContain(
+          "hold history refused (duplicate-claim): imported:holds:statelyai-model-testing-404@2"
+        );
+      })
+    );
+  }
+);
+
+layer(layerFor(ledgerFiles), { timeout: "30 seconds" })("appending claim events", (it) => {
+  it.effect("refuses a review of a hold the ledger does not hold", () =>
+    Effect.gen(function* () {
+      const ledger = yield* HoldLedger;
+      const at = DateTime.makeUnsafe(1);
+      const error = yield* Effect.flip(
+        ledger.appendEvents([
+          HoldClaimEvent.cases.Review.make({
+            claim: ClaimReference.cases.Imported.make({ ledger: "holds", oldId: "no-such-hold@1" }),
+            review: HoldReviewState.cases.Proposed.make({}),
+            at,
+          }),
+        ])
+      );
+      expect(error.reason).toBe("decode");
+      expect(error.message).toContain("hold history refused (unknown-target)");
+    })
+  );
+
+  it.effect("reports an event that cannot be encoded", () =>
+    Effect.gen(function* () {
+      const ledger = yield* HoldLedger;
+      const evidence = HoldClaimEvent.cases.Evidence.make({
+        claim: statelyaiImported,
+        supportedBy: [ProbeRunId.make("run@1")],
+        challengedBy: [],
+        at: DateTime.makeUnsafe(1),
+      });
+      const error = yield* Effect.flip(
+        ledger.appendEvents([{ ...evidence, supportedBy: [""] } as unknown as typeof evidence])
+      );
+      expect(error.message).toBe("Could not encode a hold claim event.");
+    })
+  );
+
+  it.effect("refuses an append while a live append holds the claims lock and reclaims a dead one", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const ledger = yield* HoldLedger;
+      const claimsFile = `${root}/hold-ledger/claims.jsonl`;
+      const lockFile = `${claimsFile}.lock`;
+      const before = yield* fs.readFileString(claimsFile);
+      const review = HoldClaimEvent.cases.Review.make({
+        claim: statelyaiImported,
+        review: HoldReviewState.cases.Proposed.make({}),
+        at: DateTime.makeUnsafe(1),
+      });
+      yield* fs.writeFileString(lockFile, `${process.pid}:live-append`);
+      const locked = yield* Effect.flip(ledger.appendEvents([review]));
+      expect(locked.reason).toBe("io");
+      expect(locked.message).toBe(`${claimsFile} is locked by another running append; retry once it finishes.`);
+      const afterLocked = yield* fs.readFileString(claimsFile);
+      expect(afterLocked).toBe(before);
+      const heldLock = yield* fs.readFileString(lockFile);
+      expect(heldLock).toBe(`${process.pid}:live-append`);
+      yield* fs.writeFileString(lockFile, "2147483646:killed-append");
+      yield* ledger.appendEvents([review]);
+      const after = yield* fs.readFileString(claimsFile);
+      expect(Str.startsWith(before)(after)).toBe(true);
+      const lockLeft = yield* fs.exists(lockFile);
+      expect(lockLeft).toBe(false);
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("appends nothing for an empty batch", () =>
+    Effect.gen(function* () {
+      const ledger = yield* HoldLedger;
+      yield* ledger.appendEvents([]);
+      const claims = yield* ledger.allClaims;
+      expect(A.map(claims, holdClaimLabel)).toEqual(["statelyai-model-testing-404@2"]);
+    })
+  );
+});
+
+const installedManifestPlatform = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.map(FileSystem.FileSystem, (fs) =>
+    FileSystem.FileSystem.of({
+      ...fs,
+      readFileString: Effect.fnUntraced(function* (path: string, encoding?: string) {
+        return Str.endsWith("/node_modules/statelyai/package.json")(path)
+          ? '{"version":"0.19.2"}'
+          : yield* fs.readFileString(path, encoding);
+      }),
+    })
+  )
+);
+
+layer(
+  Layer.mergeAll(
+    layerHoldLedger(root),
+    layerHoldProbe(scratchRoot).pipe(Layer.provide(installedManifestPlatform))
+  ).pipe(Layer.provideMerge(platformFor(ledgerFiles, statelyaiSpawner))),
+  { timeout: "30 seconds" }
+)("a probe whose install records a resolved version", (it) => {
+  it.effect("reports the installed version instead of the requested one", () =>
+    Effect.gen(function* () {
+      const probe = yield* HoldProbe;
+      const ledger = yield* HoldLedger;
+      const [claim] = yield* ledger.currentClaims;
+      const run = yield* probe.probe(
+        HoldProbeRequest.make({ proposition: holdProposition(claim!), claim: claim!.reference, commitSha })
+      );
+      expect([run.controlVersion, run.candidateVersion]).toEqual(["0.19.2", "0.19.2"]);
+    })
+  );
+});
+
+describe("holdReferenceLabel", () => {
+  it("names an imported hold by its old id and a native hold by its ClaimId", () => {
+    const claim = ClaimId.make(`sha256:${Str.repeat(64)("a")}`);
+    expect(holdReferenceLabel(statelyaiImported)).toBe("statelyai-model-testing-404@2");
+    expect(holdReferenceLabel(ClaimReference.cases.Native.make({ claim }))).toBe(claim);
+  });
 });

@@ -200,7 +200,8 @@ const groupedStatus = (groups: ReadonlyArray<ReadonlyArray<PartyId>>): ReviewSta
 /**
  * Apply current decisions, retaining stale, invalid and conflicting cases in the queue.
  * **Details**
- * Uses numeric review time within the query's knowledge scope. Distinct
+ * Uses numeric review time within the query's knowledge scope; a decision
+ * whose claims are not yet known at `asOf` is not a candidate. Distinct
  * decisions tied at the latest instant are conflicts. Invalid partitions
  * never enter resolution. Conflicting cases are removed monotonically and
  * resolution repeats until no settled case relies on a removed claim.
@@ -221,7 +222,8 @@ export const applyReviews = Effect.fn("PartyReview.applyReviews")(function* (inp
         input.decisions,
         (decision) =>
           decision.name === current.evidence.name &&
-          DateTime.toEpochMillis(decision.reviewedAt) <= DateTime.toEpochMillis(input.scope.asOf)
+          DateTime.isLessThanOrEqualTo(decision.reviewedAt, input.scope.asOf) &&
+          DateTime.isLessThanOrEqualTo(decision.creation.knowledgeStart, input.scope.asOf)
       );
       const row = (status: ReviewStatus, decision: O.Option<CollisionDecision>, evidence = emptyEvidence()) =>
         ReviewApplication.make({ case: current, status, decision, evidence });

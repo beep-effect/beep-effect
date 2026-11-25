@@ -203,8 +203,6 @@ export const POSPatternOption = S.NonEmptyArray(S.Union([UniversalPOSTag, EmptyP
   );
 
 /**
- * Runtime type for {@link POSPatternOption}.
- *
  * **Example** (Aliasing POSPatternOption type)
  *
  * ```ts import.meta.vitest name="Aliasing POSPatternOption type"
@@ -242,8 +240,6 @@ export const EntityPatternOption = S.NonEmptyArray(S.Union([NamedEntityType, Emp
   );
 
 /**
- * Runtime type for {@link EntityPatternOption}.
- *
  * **Example** (Aliasing EntityPatternOption type)
  *
  * ```ts import.meta.vitest name="Aliasing EntityPatternOption type"
@@ -287,8 +283,6 @@ export const LiteralPatternOption = S.NonEmptyArray(S.Union([S.NonEmptyString, E
   );
 
 /**
- * Runtime type for {@link LiteralPatternOption}.
- *
  * **Example** (Aliasing LiteralPatternOption type)
  *
  * ```ts import.meta.vitest name="Aliasing LiteralPatternOption type"
@@ -409,8 +403,6 @@ export const PatternElement = S.Union([POSPatternElement, EntityPatternElement, 
 );
 
 /**
- * Runtime type for {@link PatternElement}.
- *
  * **Example** (Aliasing PatternElement type)
  *
  * ```ts import.meta.vitest name="Aliasing PatternElement type"
@@ -447,8 +439,6 @@ export const PatternId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link PatternId}.
- *
  * **Example** (Aliasing PatternId type)
  *
  * ```ts import.meta.vitest name="Aliasing PatternId type"
@@ -490,8 +480,6 @@ export const MarkRange = S.Tuple([S.Natural, S.Natural]).pipe(
 );
 
 /**
- * Runtime type for {@link MarkRange}.
- *
  * **Example** (Aliasing MarkRange type)
  *
  * ```ts import.meta.vitest name="Aliasing MarkRange type"

@@ -144,8 +144,6 @@ const PROVENANCE_KEY = "ontology-provenance" as const;
 const NO_SHAPES_DETECTED_MESSAGE = "No SHACL shapes detected in this document.";
 
 /**
- * Open ontology document payload for the client atom.
- *
  * **Example** (Make open document input)
  *
  * ```ts
@@ -178,8 +176,6 @@ export class OpenOntologyDocumentInput extends S.Opaque<OpenOntologyDocumentInpu
 ) {}
 
 /**
- * Save ontology document payload for the client atom.
- *
  * **Example** (Make save document input)
  *
  * ```ts
@@ -208,8 +204,6 @@ export class SaveOntologyDocumentInput extends S.Opaque<SaveOntologyDocumentInpu
 ) {}
 
 /**
- * Batch operation payload for the client mutation atom.
- *
  * **Example** (Make batch operations input)
  *
  * ```ts
@@ -317,8 +311,6 @@ export const OntologyInspectorResource = OntologyResourceSummary;
 export type OntologyInspectorResource = typeof OntologyInspectorResource.Type;
 
 /**
- * RDF object term variants supported by the inspector form.
- *
  * **Example** (Guard iri object kind)
  *
  * ```ts
@@ -337,8 +329,6 @@ export const OntologyInspectorObjectKind = LiteralKit(["iri", "literal"]).pipe(
 );
 
 /**
- * Runtime type for {@link OntologyInspectorObjectKind}.
- *
  * **Example** (Type literal object kind)
  *
  * ```ts
@@ -374,8 +364,6 @@ export const OntologyInspectorAction = LiteralKit(["addTriple", "connect", "dele
 );
 
 /**
- * Runtime type for {@link OntologyInspectorAction}.
- *
  * **Example** (Type expand action value)
  *
  * ```ts
@@ -612,8 +600,6 @@ export const OntologyInspectorInputField = LiteralKit(["subject", "predicate", "
 );
 
 /**
- * Runtime type for {@link OntologyInspectorInputField}.
- *
  * **Example** (Type predicate input field)
  *
  * ```ts
@@ -1251,8 +1237,6 @@ export const ontologySearchQueryAtom = Atom.make("");
 export const selectedOntologyResourceIriAtom = Atom.make<O.Option<string>>(O.none());
 
 /**
- * Supported ontology graph renderers.
- *
  * **Example** (Guard cosmos renderer kind)
  *
  * ```ts
@@ -1271,8 +1255,6 @@ export const OntologyGraphRenderer = LiteralKit(["cosmos", "graph3d"]).pipe(
 );
 
 /**
- * Runtime type for {@link OntologyGraphRenderer}.
- *
  * **Example** (Type graph3d renderer)
  *
  * ```ts

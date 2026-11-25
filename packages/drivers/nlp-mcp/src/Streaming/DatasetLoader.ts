@@ -17,6 +17,7 @@
 
 import { $NlpMcpId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { isBlockedRemoteHost } from "@beep/schema/SafeRemoteHost";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -37,8 +38,6 @@ const PositiveInteger = S.Int.check(S.isGreaterThan(0));
 const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
 
 /**
- * Dataset formats supported by the file and URL loaders.
- *
  * **Example** (Decoding a dataset format)
  *
  * ```ts
@@ -63,8 +62,6 @@ export const DatasetFormat = DatasetFormatBase.pipe(
 );
 
 /**
- * Type for {@link DatasetFormat}.
- *
  * **Example** (Typing a dataset format)
  *
  * ```ts
@@ -82,8 +79,6 @@ export type DatasetFormat = typeof DatasetFormat.Type;
 const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
 
 /**
- * Provenance source channels supported by dataset loaders.
- *
  * **Example** (Decoding a source type)
  *
  * ```ts
@@ -108,8 +103,6 @@ export const DatasetSourceType = DatasetSourceTypeBase.pipe(
 );
 
 /**
- * Type for {@link DatasetSourceType}.
- *
  * **Example** (Typing a source type)
  *
  * ```ts
@@ -125,8 +118,6 @@ export const DatasetSourceType = DatasetSourceTypeBase.pipe(
 export type DatasetSourceType = typeof DatasetSourceType.Type;
 
 /**
- * Provenance metadata returned alongside every loaded dataset.
- *
  * **Example** (Reading dataset provenance)
  *
  * ```ts
@@ -176,8 +167,6 @@ export class DatasetMeta extends S.Opaque<DatasetMeta, { readonly brand: unique 
 ) {}
 
 /**
- * A loaded dataset payload paired with its {@link DatasetMeta}.
- *
  * **Example** (Wrapping a loaded payload)
  *
  * ```ts
@@ -214,8 +203,6 @@ export const DatasetResult = <Data extends S.Top>(data: Data) =>
   );
 
 /**
- * Options for loading a dataset as raw text.
- *
  * **Example** (Configuring a text load)
  *
  * ```ts
@@ -250,8 +237,6 @@ export class DatasetLoadTextOptions extends S.Opaque<DatasetLoadTextOptions, { r
 ) {}
 
 /**
- * Options for loading a dataset as text lines.
- *
  * **Example** (Configuring a line load)
  *
  * ```ts
@@ -286,8 +271,6 @@ export class DatasetLoadLinesOptions extends S.Opaque<DatasetLoadLinesOptions, {
 ) {}
 
 /**
- * Options for loading a dataset as JSONL records.
- *
  * **Example** (Configuring a JSONL load)
  *
  * ```ts
@@ -319,8 +302,6 @@ export class DatasetLoadJsonlOptions extends S.Opaque<DatasetLoadJsonlOptions, {
 ) {}
 
 /**
- * Options for loading a dataset as a single JSON document.
- *
  * **Example** (Configuring a JSON load)
  *
  * ```ts
@@ -349,8 +330,6 @@ export class DatasetLoadJsonOptions extends S.Opaque<DatasetLoadJsonOptions, { r
 ) {}
 
 /**
- * Type for {@link DatasetResult}.
- *
  * **Example** (Typing a load result)
  *
  * ```ts
@@ -377,8 +356,6 @@ export class DatasetLoadJsonOptions extends S.Opaque<DatasetLoadJsonOptions, { r
 export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.Schema<A>>>>;
 
 /**
- * Structured failure raised when a remote fetch or JSON decode fails.
- *
  * **Example** (Handling a load failure)
  *
  * ```ts
@@ -441,68 +418,9 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
 export const isUrl = (location: string): boolean =>
   Str.startsWith("http://")(location) || Str.startsWith("https://")(location);
 
-/**
- * Reject hostnames that resolve to the local host or to private/internal
- * network space. This bounds the SSRF surface of the URL-backed loaders: the
- * `location` is attacker-controllable through the MCP tool parameters, so a
- * prompt-injected agent must not be able to reach loopback services, link-local
- * addresses, RFC1918/ULA private network space, or the cloud metadata endpoint
- * (`169.254.169.254`).
- */
-const isPrivate172 = (host: string): boolean =>
-  pipe(
-    Str.match(/^172\.(\d{1,3})\./)(host),
-    O.flatMap(A.get(1)),
-    O.map((octet) => Number.parseInt(octet, 10)),
-    O.filter((n) => !Number.isNaN(n)),
-    O.exists((n) => n >= 16 && n <= 31)
-  );
-
-const isInternalIpv4 = (host: string): boolean =>
-  Str.startsWith("127.")(host) ||
-  Str.startsWith("169.254.")(host) ||
-  Str.startsWith("10.")(host) ||
-  Str.startsWith("192.168.")(host) ||
-  isPrivate172(host);
-
-// Decode the IPv4 embedded in an IPv4-mapped IPv6 host. `new URL(...).hostname`
-// normalizes mapped addresses to compressed hex (::ffff:c0a8:101), so the dotted
-// prefixes never fire for URL input; decode hex and dotted suffixes back to IPv4
-// so mapped private ranges classify like their bare form. None for non-mapped.
-const extractMappedIpv4 = (host: string): O.Option<string> =>
-  pipe(
-    Str.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/)(host),
-    O.flatMap((groups) => O.all([A.get(groups, 1), A.get(groups, 2)])),
-    O.map(([hi, lo]) => {
-      const high = Number.parseInt(hi, 16);
-      const low = Number.parseInt(lo, 16);
-      return `${(high >> 8) & 0xff}.${high & 0xff}.${(low >> 8) & 0xff}.${low & 0xff}`;
-    }),
-    O.orElse(() => pipe(Str.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/)(host), O.flatMap(A.get(1))))
-  );
-
-const isBlockedRemoteHost = (hostname: string): boolean => {
-  const host = pipe(Str.toLowerCase(hostname), Str.replace(/^\[|\]$/g, ""));
-  // SSRF guard duplicated with @beep/schema SafeRemoteHost.isInternalHost by
-  // design: each slice owns a self-contained, independently auditable blocklist
-  // rather than coupling this driver to a foundation schema's internals.
-  // IPv4-mapped IPv6 is decoded back to its IPv4 form so mapped private ranges
-  // classify through the same isInternalIpv4 checks.
-  // fallow-ignore-next-line code-duplication -- the SSRF blocklist mirrors @beep/schema SafeRemoteHost so each security boundary audits independently. Owner: @beep/nlp-mcp. Exit: import SafeRemoteHost from @beep/schema, then delete both directives.
-  return (
-    host === "localhost" ||
-    Str.endsWith(".localhost")(host) ||
-    host === "0.0.0.0" ||
-    host === "::" ||
-    host === "::1" ||
-    Str.startsWith("fe80:")(host) ||
-    Str.startsWith("fc")(host) ||
-    Str.startsWith("fd")(host) ||
-    isInternalIpv4(host) ||
-    O.exists(extractMappedIpv4(host), isInternalIpv4)
-  );
-};
-
+// SSRF guard: the remote `location` is attacker-controllable through the MCP tool
+// parameters, so loopback, link-local, private, and cloud-metadata hosts are
+// refused before any request is issued.
 const assertAllowedRemote = (location: string): Effect.Effect<void, DatasetLoadError> =>
   Effect.try({
     catch: () => DatasetLoadError.make({ location, message: `Invalid URL: ${location}` }),

@@ -30,6 +30,7 @@ import {
   resolveCollisions,
 } from "@beep/party-server/IdentityEvidence";
 import { AliasPairing } from "@beep/party-server/MailIndex";
+import { PartyLedger } from "@beep/party-use-cases/Ledger";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
@@ -44,7 +45,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { creation } from "./fixtures/claims.ts";
+import { creation, LedgerLive } from "./fixtures/claims.ts";
 import type { ClaimLedger } from "@beep/party-domain/Claim";
 
 const dn = IdentifierId.make("party-ident:dn");
@@ -369,6 +370,67 @@ it.layer(Digest.layerWebCrypto)("pairing claim projection", (it) => {
       const missing = AssertionId.make("party-asrt:missing");
       const failure = yield* build([PairingSupport.make({ ...support, assertions: [a, missing] })]).pipe(Effect.flip);
       expect(failure).toMatchObject({ _tag: "LedgerConflict", recordId: missing, reason: "source-assertion-missing" });
+    })
+  );
+});
+
+const project = (supports: ReadonlyArray<PairingSupport>, sourceAssertions: ReadonlyArray<SourceAssertion>) =>
+  pairingClaims(
+    PairingClaimsInput.make({ supports, creation: creation({ operation: "pairing", at: 100 }), sourceAssertions })
+  );
+const windowOf = (valid: ValidTime) =>
+  ValidTime.guards.Interval(valid)
+    ? [DateTime.toEpochMillis(valid.validFrom), O.getOrUndefined(O.map(valid.validTo, DateTime.toEpochMillis))]
+    : [];
+
+it.layer(LedgerLive, { timeout: "10 seconds" })("pairing windows across Exchange DNs", (it) => {
+  it.effect("coalesces overlapping windows of one proposition so the batch appends", () =>
+    Effect.gen(function* () {
+      const supports = [
+        PairingSupport.make({ ...timedSupport("x", 2, 9), assertions: [a] }),
+        PairingSupport.make({ ...timedSupport("y", 5, 20), assertions: [b] }),
+        PairingSupport.make({ ...timedSupport("z", 30, 40), assertions: [a] }),
+        PairingSupport.make({ ...support, exchangeDn: IdentifierId.make("party-ident:x"), assertions: [a] }),
+        PairingSupport.make({ ...support, exchangeDn: IdentifierId.make("party-ident:y"), assertions: [b] }),
+      ];
+      const ledger = yield* project(supports, sources);
+      const reversed = yield* project(A.reverse(supports), sources);
+      expect(reversed).toEqual(ledger);
+      expect(A.map(ledger.claims, (record) => windowOf(record.core.valid))).toEqual([[2, 21], [30, 41], []]);
+      expect(A.map(ledger.evidence, (row) => row.supportedBy)).toEqual([[a, b], [a], [a, b]]);
+      const store = yield* PartyLedger;
+      yield* store.append(ledger);
+      expect((yield* store.snapshot).claims).toEqual(ledger.claims);
+    })
+  );
+});
+
+it.layer(Digest.layerWebCrypto)("pairing source assertion payloads", (it) => {
+  it.effect("accepts equal duplicate payloads and refuses conflicting ones in either order", () =>
+    Effect.gen(function* () {
+      const backed = [PairingSupport.make({ ...support, assertions: [a] })];
+      const single = yield* project(backed, [sourceAssertion(a)]);
+      const duplicated = yield* project(backed, [sourceAssertion(a), sourceAssertion(a)]);
+      expect(duplicated).toEqual(single);
+      const relocated = SourceAssertion.make({ ...sourceAssertion(a), recordedAt: DateTime.makeUnsafe(2) });
+      const forward = yield* project(backed, [sourceAssertion(a), relocated]).pipe(Effect.flip);
+      const backward = yield* project(backed, [relocated, sourceAssertion(a)]).pipe(Effect.flip);
+      expect(forward).toMatchObject({ _tag: "LedgerConflict", recordId: a, reason: "conflicting-assertion" });
+      expect(backward).toEqual(forward);
+    })
+  );
+  it.effect("refuses assertions for another proposition or a denial", () =>
+    Effect.gen(function* () {
+      const backed = [PairingSupport.make({ ...support, assertions: [a] })];
+      const elsewhere = SourceAssertion.make({
+        ...sourceAssertion(a),
+        proposition: Proposition.cases.AccountIdentifier.make({ account: support.mailbox, identifier: other }),
+      });
+      const denial = SourceAssertion.make({ ...sourceAssertion(a), stance: "denies" });
+      for (const assertion of [elsewhere, denial]) {
+        const failure = yield* project(backed, [assertion]).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "LedgerConflict", recordId: a, reason: "source-assertion-mismatch" });
+      }
     })
   );
 });

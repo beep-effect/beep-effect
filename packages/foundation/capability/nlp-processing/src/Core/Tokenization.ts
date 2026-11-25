@@ -24,8 +24,6 @@ type TokenizationShape = {
 };
 
 /**
- * Tokenization error.
- *
  * **Example** (Make tokenization error)
  *
  * ```ts import.meta.vitest name="Make tokenization error"

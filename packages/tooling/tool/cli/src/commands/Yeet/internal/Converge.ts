@@ -104,8 +104,6 @@ import type { YeetMonitorComment } from "./MonitorComments.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/Converge");
 
 /**
- * The part of one pull-request observation that inbox convergence reads.
- *
  * **Details**
  *
  * `checks` are whole check records, never names to re-resolve, because a

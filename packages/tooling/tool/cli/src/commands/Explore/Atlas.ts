@@ -84,8 +84,6 @@ export const ExplorationStatus = LiteralKit(["active", "parked", "graduated", "k
 );
 
 /**
- * Decoded exploration lifecycle status.
- *
  * @see {@link ExplorationStatus} for the runtime schema and membership helpers.
  * @category type-level
  * @since 0.0.0
@@ -111,8 +109,6 @@ export const ExplorationStage = LiteralKit(["capture", "research", "align", "sha
 );
 
 /**
- * Decoded exploration stage.
- *
  * @see {@link ExplorationStage} for the runtime schema and membership helpers.
  * @category type-level
  * @since 0.0.0
@@ -120,8 +116,6 @@ export const ExplorationStage = LiteralKit(["capture", "research", "align", "sha
 export type ExplorationStage = typeof ExplorationStage.Type;
 
 /**
- * Authority used to normalize one exploration into D3 state.
- *
  * **Details**
  *
  * `manifest-adoption` is the ratified transitional boundary for packets that
@@ -147,8 +141,6 @@ export const ExplorationProjectionAuthority = LiteralKit(["event-stream", "manif
 );
 
 /**
- * Decoded exploration projection authority.
- *
  * @see {@link ExplorationProjectionAuthority} for the runtime schema and membership helpers.
  * @category type-level
  * @since 0.0.0
@@ -156,8 +148,6 @@ export const ExplorationProjectionAuthority = LiteralKit(["event-stream", "manif
 export type ExplorationProjectionAuthority = typeof ExplorationProjectionAuthority.Type;
 
 /**
- * Packet links an exploration manifest records.
- *
  * **Details**
  *
  * Only `goals` is modeled: graduation appends its children there. Other link
@@ -298,8 +288,6 @@ export class ExplorationProjectionState extends S.Opaque<
 ) {}
 
 /**
- * One normalized row in the generated exploration Atlas.
- *
  * **Example** (Validate an Atlas row)
  *
  * ```ts

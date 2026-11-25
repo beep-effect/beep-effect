@@ -5,6 +5,7 @@ import {
   buildKb,
   DerivationBasis,
   hasKbCanary,
+  KbClaimEvent,
   KbGraph,
   KbGraphExport,
   KbLedger,
@@ -50,6 +51,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { KbClaim } from "@beep/repo-cli/commands/Kb";
 
@@ -61,6 +63,7 @@ const decodeGraph = S.decodeEffect(S.fromJsonString(KbGraph));
 const decodeClaim = S.decodeUnknownEffect(S.toType(KbClaimsV1Row));
 const decodeAssertion = S.decodeUnknownEffect(S.toType(Assertion));
 const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeEvent = S.decodeUnknownEffect(KbClaimEvent);
 const importedKb = (oldId: string) => ClaimReference.cases.Imported.make({ ledger: "kb", oldId });
 const views = Effect.fnUntraced(function* (rows: ReadonlyArray<KbClaimRow>) {
   const lines = yield* Effect.forEach(
@@ -485,6 +488,116 @@ layer(live, { timeout: "30 seconds" })("knowledge ledger filesystem", (it) => {
       const outcome2 = yield* Effect.flip(ledger.read(f.root));
       expect(outcome2.message).toContain("Malformed JSON in assertions.jsonl");
     })
+  );
+  it.effect("appends evidence only to existing assertions of the same claim, under an exclusive lock", () =>
+    Effect.gen(function* () {
+      const f = yield* withLedger({ public: true });
+      const fs = yield* FileSystem.FileSystem;
+      const ledger = yield* KbLedger;
+      const claimsFile = `${f.root}/claims.jsonl`;
+      const lockFile = `${f.root}/claims.jsonl.lock`;
+      const evidence = (oldId: string, supportedBy: ReadonlyArray<string>) =>
+        decodeEvent({
+          version: "kb-claim-record/v2",
+          event: "Evidence",
+          claim: { _tag: "Imported", ledger: "kb", oldId },
+          supportedBy,
+          challengedBy: [],
+          at: 9,
+        });
+      const appendEvidence = (
+        root: string,
+        oldId: string,
+        supportedBy: ReadonlyArray<string>,
+        target: typeof ledger = ledger
+      ) => Effect.flatMap(evidence(oldId, supportedBy), (event) => target.append(root, [event]));
+      const before = yield* fs.readFileString(claimsFile);
+      yield* ledger.append(f.root, []);
+      const missing = yield* Effect.flip(appendEvidence(f.root, "claim/1", ["assertion/absent"]));
+      expect(missing.message).toBe("Evidence for claim/1: missing or mismatched assertion assertion/absent");
+      const afterMissing = yield* fs.readFileString(claimsFile);
+      expect(afterMissing).toBe(before);
+      const assertionsBefore = yield* fs.readFileString(`${f.root}/assertions.jsonl`);
+      const other = yield* fixture({ id: "claim/2", public: true });
+      const otherLines = yield* Effect.forEach(other.assertions, (assertion) => encodeAssertion(assertion), {
+        concurrency: 1,
+      });
+      yield* fs.writeFileString(`${f.root}/assertions.jsonl`, `${assertionsBefore}${A.join(otherLines, "\n")}\n`);
+      const mismatched = yield* Effect.flip(appendEvidence(f.root, "claim/1", ["claim/2/public"]));
+      expect(mismatched.message).toBe("Evidence for claim/1: missing or mismatched assertion claim/2/public");
+      const afterMismatched = yield* fs.readFileString(claimsFile);
+      expect(afterMismatched).toBe(before);
+      yield* fs.writeFileString(`${f.root}/assertions.jsonl`, assertionsBefore);
+      const unknown = yield* Effect.flip(appendEvidence(f.root, "claim/missing", []));
+      expect(unknown.message).toBe("Claim history refused (unknown-target): imported:kb:claim/missing");
+      yield* fs.writeFileString(lockFile, `${process.pid}:live-append`);
+      const locked = yield* Effect.flip(appendEvidence(f.root, "claim/1", ["claim/1/public"]));
+      expect(locked.message).toBe("claims.jsonl is locked by another running append; retry once it finishes");
+      const afterLocked = yield* fs.readFileString(claimsFile);
+      expect(afterLocked).toBe(before);
+      const heldLock = yield* fs.readFileString(lockFile);
+      expect(heldLock).toBe(`${process.pid}:live-append`);
+      yield* fs.writeFileString(lockFile, "2147483646:killed-append");
+      const row = Str.trimEnd(before);
+      yield* fs.writeFileString(claimsFile, row);
+      yield* appendEvidence(f.root, "claim/1", ["claim/1/public"]);
+      const after = yield* fs.readFileString(claimsFile);
+      expect(Str.startsWith(`${row}\n`)(after)).toBe(true);
+      const lockLeft = yield* fs.exists(lockFile);
+      expect(lockLeft).toBe(false);
+      const snapshot = yield* ledger.read(f.root);
+      expect(snapshot.claims[0]?.evidence.supportedBy).toEqual(["claim/1/internal", "claim/1/public"]);
+      const review = yield* decodeEvent({
+        version: "kb-claim-record/v2",
+        event: "Review",
+        claim: { _tag: "Imported", ledger: "kb", oldId: "claim/1" },
+        review: { _tag: "Proposed" },
+        at: 9,
+      });
+      yield* ledger.append(f.root, [review]);
+      const reviewed = yield* ledger.read(f.root);
+      expect(reviewed.claims[0]?.review._tag).toBe("Proposed");
+      const valid = yield* evidence("claim/1", []);
+      const unencodable = yield* Effect.flip(
+        ledger.append(f.root, [{ ...valid, supportedBy: [""] } as unknown as KbClaimEvent])
+      );
+      expect(unencodable.message).toBe("Cannot encode claim records");
+      const rootless = yield* Effect.flip(appendEvidence(`${f.root}/absent`, "claim/1", []));
+      expect(rootless.message).toBe("Ledger root does not exist");
+      yield* fs.remove(`${f.root}/assertions.jsonl`);
+      const unsupported = yield* Effect.flip(appendEvidence(f.root, "claim/1", ["claim/1/public"]));
+      expect(unsupported.message).toBe("Evidence for claim/1: missing or mismatched assertion claim/1/public");
+      yield* appendEvidence(f.root, "claim/1", []);
+      const fresh = `${f.out}-fresh`;
+      yield* fs.makeDirectory(fresh);
+      const orphan = yield* Effect.flip(appendEvidence(fresh, "claim/1", []));
+      expect(orphan.message).toBe("Claim history refused (unknown-target): imported:kb:claim/1");
+      const freshClaims = yield* fs.exists(`${fresh}/claims.jsonl`);
+      expect(freshClaims).toBe(false);
+      const readOnly = yield* makeKbLedger.pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          writeFileString: (path, data, options) =>
+            options?.flag === "a"
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "PermissionDenied",
+                    module: "FileSystem",
+                    method: "writeFileString",
+                    description: "append denied",
+                  })
+                )
+              : fs.writeFileString(path, data, options),
+        })
+      );
+      const denied = yield* Effect.flip(appendEvidence(f.root, "claim/1", [], readOnly));
+      expect(denied.message).toBe("Cannot append to claims.jsonl");
+      const lockAfterDenied = yield* fs.exists(lockFile);
+      expect(lockAfterDenied).toBe(false);
+      yield* fs.writeFileString(claimsFile, `${row}\n${row}\n`);
+      const duplicated = yield* Effect.flip(ledger.read(f.root));
+      expect(duplicated.message).toBe("Claim history refused (duplicate-claim): imported:kb:claim/1");
+    }).pipe(TestClock.withLive)
   );
 });
 

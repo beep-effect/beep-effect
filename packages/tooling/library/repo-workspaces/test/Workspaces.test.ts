@@ -134,8 +134,6 @@ describe("Workspaces.resolverLayer", () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// The publishability seam.
 //
 // `Workspaces.layer()` deliberately does NOT provide a `PublishabilityDetector`;
 // it requires one. The reason is a silent-revert hazard rather than taste: when
@@ -149,7 +147,6 @@ describe("Workspaces.resolverLayer", () => {
 // These tests pin the fix from the outside: a caller's detector is the one
 // observed through the composite, in BOTH merge orders, because there is no
 // default left to shadow it.
-// ─────────────────────────────────────────────────────────────────────────────
 const CUSTOM_REGISTRY = "https://npm.internal.test/";
 
 /** A detector nothing in this package would ever produce by accident. */

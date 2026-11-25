@@ -12,9 +12,6 @@ import * as S from "effect/Schema";
 const $I = $LockfilesId.create("WorkspaceDependency");
 
 /**
- * A directed dependency edge between two workspace packages as recorded in
- * the lockfile.
- *
  * **Details**
  *
  * - `from` — the workspace package declaring the dependency. For pnpm this

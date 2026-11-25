@@ -30,8 +30,6 @@ import type { Stdio } from "effect/Stdio";
 const $I = $UsptoMcpId.create("Server");
 
 /**
- * Configuration for the MCP server identity advertised to clients.
- *
  * **Example** (Make a server config)
  *
  * ```ts

@@ -65,7 +65,7 @@ Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`
   Email, Slug, Semver, Sha256, CurrencyCode, URL, Int/PosInt/NonNegativeInt,
   UnitInterval, Percentage, LocalDate, crypto VOs.
 - **Provenance:** `TextAnchor` (half-open `[startChar,endChar)` + quoted substring) —
-  `packages/foundation/modeling/provenance/src/TextAnchor.ts`; slices wrap it
+  `packages/foundation/modeling/text/src/TextAnchor.ts`; slices wrap it
   (`EvidenceSpan = TextAnchor + Confidence`).
 - **Actor/audit on BaseEntity:** `createdAt`/`updatedAt`, `createdByPrincipal`/
   `updatedByPrincipal` (`Principal` union), `orgId`, `rowVersion` (optimistic

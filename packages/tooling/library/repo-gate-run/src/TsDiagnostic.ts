@@ -46,8 +46,6 @@ const plainDiagnosticPattern =
 const globalDiagnosticPattern = /^(?<severity>error|warning)\s+TS(?<code>\d+):\s+(?<message>.+)$/u;
 
 /**
- * A diagnostic's severity as the compiler prints it.
- *
  * **Example** (Match a severity)
  *
  * ```ts
@@ -66,8 +64,6 @@ export const DiagnosticSeverity = LiteralKit(["error", "warning"]).pipe(
 );
 
 /**
- * Type of {@link DiagnosticSeverity}.
- *
  * @category models
  * @since 0.0.0
  */

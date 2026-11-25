@@ -109,8 +109,6 @@ export const OBSERVABILITY_STANDARD_PATH = "standards/architecture/12-observabil
 export const INSTRUMENTATION_CATALOG_GENERATED_BY = "bun run beep observability catalog --write" as const;
 
 /**
- * Effect call that names a span.
- *
  * **Example** (List span callees)
  *
  * ```ts
@@ -129,8 +127,6 @@ export const SpanCallee = LiteralKit(["Effect.fn", "Effect.fnUntraced", "Effect.
 );
 
 /**
- * Runtime type for {@link SpanCallee}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -163,16 +159,12 @@ export const SpanNameFindingKind = LiteralKit(["interpolated", "non-literal"]).p
 );
 
 /**
- * Runtime type for {@link SpanNameFindingKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type SpanNameFindingKind = typeof SpanNameFindingKind.Type;
 
 /**
- * One literal span name found in source.
- *
  * **Example** (Construct a span site)
  *
  * ```ts
@@ -210,8 +202,6 @@ export class SpanSite extends S.Opaque<SpanSite, { readonly brand: unique symbol
 ) {}
 
 /**
- * A span-name argument that is not a static literal.
- *
  * **Example** (Construct an interpolation finding)
  *
  * ```ts
@@ -271,8 +261,6 @@ export class SpanHarvest extends S.Opaque<SpanHarvest, { readonly brand: unique 
 ) {}
 
 /**
- * One package's `*.instruments.ts` file and the declarations it exports.
- *
  * **Example** (Construct an empty declarations file)
  *
  * ```ts
@@ -378,8 +366,6 @@ export class InstrumentationCatalogDocument extends S.Opaque<
 ) {}
 
 /**
- * The committed catalog slice for one owning package.
- *
  * **Details**
  *
  * One shard per package lives at
@@ -454,8 +440,6 @@ export class CatalogBuild extends S.Opaque<CatalogBuild, { readonly brand: uniqu
 ) {}
 
 /**
- * Span counts for one package family.
- *
  * **Example** (Construct a family count)
  *
  * ```ts
@@ -480,8 +464,6 @@ export class FamilySpanCount extends S.Opaque<FamilySpanCount, { readonly brand:
 ) {}
 
 /**
- * Mode the catalog command ran in.
- *
  * **Example** (Read a run mode)
  *
  * ```ts
@@ -500,8 +482,6 @@ export const CatalogRunMode = LiteralKit(["write", "check"]).pipe(
 );
 
 /**
- * Runtime type for {@link CatalogRunMode}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -542,8 +522,6 @@ export const GeneratedFileStatus = LiteralKit([
 );
 
 /**
- * Runtime type for {@link GeneratedFileStatus}.
- *
  * @category models
  * @since 0.0.0
  */

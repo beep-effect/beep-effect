@@ -367,8 +367,6 @@ const EVENT_FILE_NAME_PATTERN = /^(\d{5})-([a-z-]+)-([0-9a-f]{64})\.json$/;
 const isPacketEventType = S.is(PacketEventType);
 
 /**
- * Parsed identity segments of a packet-event file name.
- *
  * **Example** (Construct parsed segments)
  *
  * ```ts

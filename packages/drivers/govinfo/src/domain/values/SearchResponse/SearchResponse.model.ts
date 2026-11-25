@@ -11,8 +11,6 @@ import { SearchResult } from "../SearchResult/index.ts";
 const $I = $GovinfoId.create("domain/values/SearchResponse/SearchResponse.model");
 
 /**
- * GovInfo search response with a result count, cursor, and hits.
- *
  * **Example** (Decode response with hits)
  *
  * ```ts

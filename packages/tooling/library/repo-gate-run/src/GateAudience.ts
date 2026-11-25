@@ -39,8 +39,6 @@ export const ProjectionKind = LiteralKit(["agent", "terminal"]).pipe(
 );
 
 /**
- * Type of {@link ProjectionKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -69,8 +67,6 @@ export const projectionFor: (kind: AudienceKind) => ProjectionKind = AudienceKin
 });
 
 /**
- * More than one audience flag was given.
- *
  * **Example** (Build the error)
  *
  * ```ts

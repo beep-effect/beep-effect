@@ -37,8 +37,6 @@ export const LegalVocabularyKind = LiteralKit(["docketing", "party-kinds", "lega
 );
 
 /**
- * Runtime type for {@link LegalVocabularyKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -111,6 +109,14 @@ export const legalIntakePin = pin("taxonomy/legal-intake");
 /**
  * The manifest id of the intake taxonomy payload.
  *
+ * **Example** (Read the payload id)
+ *
+ * ```ts
+ * import { intakeTaxonomyPayloadId } from "@beep/law-practice-domain/values/LegalVocabularyPack"
+ *
+ * console.log(intakeTaxonomyPayloadId) // "intake-taxonomy"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -141,14 +147,20 @@ export const legalVocabularyManifestUrl = new URL("../../../assets/vocabulary/ma
 /**
  * The directory the pack manifest's row paths are relative to.
  *
+ * **Example** (Read the pack root directory)
+ *
+ * ```ts
+ * import { legalVocabularyRootUrl } from "@beep/law-practice-domain/values/LegalVocabularyPack"
+ *
+ * console.log(legalVocabularyRootUrl.pathname.endsWith("/assets/vocabulary/"))
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
 export const legalVocabularyRootUrl = new URL("../../../assets/vocabulary/", import.meta.url);
 
 /**
- * Raised when a loaded pack holds no intake taxonomy payload.
- *
  * **Example** (Make a missing-payload error)
  *
  * ```ts

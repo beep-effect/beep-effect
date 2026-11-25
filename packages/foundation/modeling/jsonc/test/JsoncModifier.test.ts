@@ -66,15 +66,14 @@ describe("JsoncModifier", () => {
       assert.strictEqual(JsoncModificationError.fields.expected, NavigateContainer);
     });
 
-    // Upstream parity: `offset` is an optional key, named in the message only
-    // when present (byte-identical to upstream's rendering, offset 0 included).
     it("JsoncModificationError carries an optional offset into its message", () => {
       const error = JsoncModificationError.make({ path: ["a", 0], expected: "array", depth: 2, offset: 7 });
       assert.strictEqual(error.offset, 7);
       assert.strictEqual(error.message, "Modification failed at path [a, 0] (offset 7): expected array at depth 2");
       assert.strictEqual(
         JsoncModificationError.make({ path: [], expected: "object", depth: 1, offset: 0 }).message,
-        "Modification failed at path [] (offset 0): expected object at depth 1"
+        "Modification failed at path [] (offset 0): expected object at depth 1",
+        "upstream parity: a present offset, 0 included, renders byte-identical to upstream"
       );
       const decode = S.decodeUnknownResult(JsoncModificationError);
       const decoded = Result.map(
@@ -84,12 +83,10 @@ describe("JsoncModifier", () => {
       assertSuccess(decoded, 3);
     });
 
-    // Port deviation (law:schema-first-precision): upstream types `offset` as
-    // `Schema.Number`; the lab narrows it to `S.Finite`, so a non-finite offset
-    // is rejected at decode instead of rendering "(offset Infinity)".
     it("JsoncModificationError rejects a non-finite offset", () => {
       const decode = S.decodeUnknownResult(JsoncModificationError);
-      for (const offset of [Number.POSITIVE_INFINITY, Number.NaN]) {
+      const offsetsUpstreamSchemaNumberWouldRenderAsOffsetInfinity = [Number.POSITIVE_INFINITY, Number.NaN];
+      for (const offset of offsetsUpstreamSchemaNumberWouldRenderAsOffsetInfinity) {
         const decoded = decode({ _tag: "JsoncModificationError", path: ["a"], expected: "object", depth: 1, offset });
         assertFailure(
           Result.mapError(decoded, (error) => error._tag),
@@ -126,19 +123,19 @@ describe("JsoncModifier", () => {
   });
 
   describe("insert", () => {
-    // Upstream parity (internal/navigate.ts NoOp): an index the scan passes
-    // without reaching it, negative or fractional, yields no edits.
-    // Port deviation (upstream-bug): upstream inserts after a trailing comma's
-    // closer, producing text outside the container or unparseable output.
     it.effect("inserts inside a container that ends with a trailing comma", () =>
       Effect.gen(function* () {
         const object = '{ "a": 1, }';
         const modify45 = yield* JsoncModifier.modify(object, ["delta"], []);
         const parsed4 = yield* Jsonc.parse(apply(object, modify45));
-        assert.deepStrictEqual(parsed4, {
-          a: 1,
-          delta: [],
-        });
+        assert.deepStrictEqual(
+          parsed4,
+          {
+            a: 1,
+            delta: [],
+          },
+          "port deviation (upstream-bug): upstream inserts after a trailing comma's closer, outside the container or unparseable"
+        );
         const nested = '{ "a": { "b": 1, } }';
         const modify46 = yield* JsoncModifier.modify(nested, ["a", "c"], 2);
         const parsed5 = yield* Jsonc.parse(apply(nested, modify46));
@@ -307,31 +304,33 @@ describe("JsoncModifier", () => {
       })
     );
 
-    // Upstream parity: a multi-line value keeps JSON.stringify's "\n" bytes;
-    // `eol` applies only to the wrapper around the inserted entry. The deeper
-    // columns are README deviation 2 (re-indentation to the insertion depth).
-    it.effect("keeps LF inside a re-indented multi-line value when eol is CRLF", () =>
-      Effect.gen(function* () {
-        const text = '{\r\n  "a": 1\r\n}';
-        const crlf = { formattingOptions: { eol: "\r\n" } };
-        const edits = yield* JsoncModifier.modify(text, ["b"], { c: { d: 1 } }, crlf);
-        assertDefined(edits[0]);
-        assert.strictEqual(edits[0].content, ',\r\n  "b": {\n    "c": {\n      "d": 1\n    }\n  }');
-        assert.strictEqual(apply(text, edits), '{\r\n  "a": 1,\r\n  "b": {\n    "c": {\n      "d": 1\n    }\n  }\r\n}');
-        const first = yield* JsoncModifier.modify("[]", [0], [1], { formattingOptions: { eol: "\r\n", tabSize: 4 } });
-        assertDefined(first[0]);
-        assert.strictEqual(first[0].content, "\r\n    [\n        1\n    ]\r\n");
-        const tabs = yield* JsoncModifier.modify(
-          '{ "x": { "y": 1 } }',
-          ["x", "z"],
-          { q: 1 },
-          {
-            formattingOptions: { eol: "\r\n", insertSpaces: false },
-          }
-        );
-        assertDefined(tabs[0]);
-        assert.strictEqual(tabs[0].content, ',\r\n\t\t"z": {\n\t\t\t"q": 1\n\t\t}');
-      })
+    it.effect(
+      "keeps LF inside a re-indented multi-line value when eol is CRLF, applying eol only to the wrapper around the inserted entry",
+      () =>
+        Effect.gen(function* () {
+          const text = '{\r\n  "a": 1\r\n}';
+          const crlf = { formattingOptions: { eol: "\r\n" } };
+          const edits = yield* JsoncModifier.modify(text, ["b"], { c: { d: 1 } }, crlf);
+          assertDefined(edits[0]);
+          assert.strictEqual(edits[0].content, ',\r\n  "b": {\n    "c": {\n      "d": 1\n    }\n  }');
+          assert.strictEqual(
+            apply(text, edits),
+            '{\r\n  "a": 1,\r\n  "b": {\n    "c": {\n      "d": 1\n    }\n  }\r\n}'
+          );
+          const first = yield* JsoncModifier.modify("[]", [0], [1], { formattingOptions: { eol: "\r\n", tabSize: 4 } });
+          assertDefined(first[0]);
+          assert.strictEqual(first[0].content, "\r\n    [\n        1\n    ]\r\n");
+          const tabs = yield* JsoncModifier.modify(
+            '{ "x": { "y": 1 } }',
+            ["x", "z"],
+            { q: 1 },
+            {
+              formattingOptions: { eol: "\r\n", insertSpaces: false },
+            }
+          );
+          assertDefined(tabs[0]);
+          assert.strictEqual(tabs[0].content, ',\r\n\t\t"z": {\n\t\t\t"q": 1\n\t\t}');
+        })
     );
 
     it.effect("honors insertSpaces, tabSize and eol from an instance or a plain literal", () =>
@@ -362,10 +361,6 @@ describe("JsoncModifier", () => {
   });
 
   describe("errors", () => {
-    // Port deviation (law:7): upstream `modify` serializes with JSON.stringify,
-    // so a bigint, a cycle or a throwing toJSON escapes as a defect; the lab
-    // fails typed with JsoncStringifyError on every path (whole document,
-    // replace and insert).
     it.effect("reports serialization failures when replacing or inserting values", () =>
       Effect.gen(function* () {
         const circular: Record<string, unknown> = {};
@@ -375,11 +370,16 @@ describe("JsoncModifier", () => {
             throw new RangeError("toJSON refused");
           },
         };
-        for (const path of [[], ["a"], ["b"]]) {
+        const wholeDocumentReplaceAndInsertPaths = [[], ["a"], ["b"]];
+        for (const path of wholeDocumentReplaceAndInsertPaths) {
           for (const text of ["{}", '{"a":0}']) {
             const bigint = yield* Effect.flip(JsoncModifier.modify(text, path, 1n));
             assertInstanceOf(bigint, JsoncStringifyError);
-            assert.strictEqual(bigint.code, "BigIntValue");
+            assert.strictEqual(
+              bigint.code,
+              "BigIntValue",
+              "port deviation (law:7): upstream modify serializes with JSON.stringify, so a bigint, cycle or throwing toJSON escapes as a defect"
+            );
             const cycle = yield* Effect.flip(JsoncModifier.modify(text, path, circular));
             assertInstanceOf(cycle, JsoncStringifyError);
             assert.strictEqual(cycle.code, "CircularReference");
@@ -437,15 +437,11 @@ describe("JsoncModifier", () => {
     );
   });
 
-  // Review round 2 pins. They sit at the end of the file so every test above
-  // keeps the line number the README and the ledger cite.
   describe("tabSize", () => {
     const width = (tabSize: number, insertSpaces = true) => ({ formattingOptions: { tabSize, insertSpaces } });
     const contents = (edits: ReadonlyArray<JsoncEdit>): ReadonlyArray<string> => A.map(edits, (edit) => edit.content);
     const isModifyOptions = S.is(JsoncModifyOptions);
 
-    // Upstream parity: `tabSize` is any number. The indent unit truncates it
-    // toward zero, and JSON.stringify truncates it and clamps it to 0..10.
     it.effect("accepts a fractional width, truncated toward zero", () =>
       Effect.gen(function* () {
         const modify33 = yield* JsoncModifier.modify("{}", ["a"], 1, width(1.5));
@@ -453,7 +449,11 @@ describe("JsoncModifier", () => {
         const modify34 = yield* JsoncModifier.modify("{}", ["a"], 1, width(2.9));
         assert.deepStrictEqual(contents(modify34), ['\n  "a": 1\n']);
         const modify35 = yield* JsoncModifier.modify('{"a":0}', ["a"], { b: [1] }, width(1.5));
-        assert.deepStrictEqual(contents(modify35), ['{\n "b": [\n  1\n ]\n}']);
+        assert.deepStrictEqual(
+          contents(modify35),
+          ['{\n "b": [\n  1\n ]\n}'],
+          "upstream parity: tabSize is any number; the indent unit truncates it toward zero, JSON.stringify truncates and clamps it to 0..10"
+        );
         for (const tabSize of [0.5, -0.5]) {
           assert.isTrue(isModifyOptions(width(tabSize)));
           const modify36 = yield* JsoncModifier.modify("{}", ["a"], 1, width(tabSize));
@@ -473,16 +473,15 @@ describe("JsoncModifier", () => {
       })
     );
 
-    // Port deviation (upstream-bug): upstream builds the indent unit with
-    // `" ".repeat(tabSize)`, which throws a RangeError for a width of -1 or
-    // below, so every call dies whatever the path; the lab clamps the unit to
-    // no indent and the value serializes compactly, as JSON.stringify reads a
-    // negative width.
     it.effect("stays total for a width of -1 or below, with no indent", () =>
       Effect.gen(function* () {
         for (const tabSize of [-1, -1.5, -100]) {
           const modify39 = yield* JsoncModifier.modify("{}", ["a"], { b: [1] }, width(tabSize));
-          assert.deepStrictEqual(contents(modify39), ['\n"a": {"b":[1]}\n']);
+          assert.deepStrictEqual(
+            contents(modify39),
+            ['\n"a": {"b":[1]}\n'],
+            'port deviation (upstream-bug): upstream\'s " ".repeat(tabSize) throws a RangeError for a width of -1 or below on every path; the value serializes compactly as JSON.stringify reads a negative width'
+          );
           const modify40 = yield* JsoncModifier.modify("[1]", [1], 2, width(tabSize));
           assert.deepStrictEqual(contents(modify40), [",\n2"]);
           const modify41 = yield* JsoncModifier.modify('{"a":0}', ["a"], undefined, width(tabSize));
@@ -491,23 +490,20 @@ describe("JsoncModifier", () => {
       })
     );
 
-    // Port deviation (law: the schemaNumber Effect rule): upstream types
-    // `tabSize` as Schema.Number and reads its options without validating them,
-    // so NaN formats with no indent; the lab's S.Finite rejects NaN and the
-    // infinities when the options are constructed or decoded.
     it("rejects a non-finite width", () => {
       for (const tabSize of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
-        assert.isFalse(isModifyOptions(width(tabSize)));
+        assert.isFalse(
+          isModifyOptions(width(tabSize)),
+          "port deviation (schemaNumber rule): upstream's unvalidated Schema.Number tabSize formats NaN with no indent; S.Finite rejects NaN and the infinities at construction or decode"
+        );
         assert.throws(() => JsoncFormattingOptions.make({ tabSize }));
       }
     });
   });
 
   describe("properties", () => {
-    // The empty path never parses the text: it replaces the whole document
-    // with the default rendering of the value, or clears it for `undefined`.
     it.effect.prop(
-      "the empty path replaces any document with the rendered value",
+      "the empty path never parses the text: it replaces any document with the rendered value, or clears it for undefined",
       [S.String, S.Json],
       ([text, value]) =>
         Effect.gen(function* () {

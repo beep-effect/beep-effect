@@ -1,0 +1,73 @@
+name: Gate reports
+description: >-
+  Render this job's gate reports into its log, annotations and step summary,
+  write its `task-outcomes/v2` record, and stage both for the caller's upload
+  (goals/ci-gate-reports, decision `report-carrier`). The record and every gate
+  record and raw log are staged in `$RUNNER_TEMP/gate-reports` at their
+  repo-relative paths: `.beep/ci-task-outcomes/record.json`,
+  `<package>/.beep/gates/<gate>/report.{json,log}` and the root's
+  `.beep/gates/<gate>/<run-id>.{json,log}`. This action never uploads: the
+  caller uploads that directory as `task-outcomes-<run>-<attempt>-<job>-<partition>`
+  with `include-hidden-files: true` and `retention-days: 30`, in the workflow
+  file where the workflow lint and tests can see the retention. Every step
+  continues on error: a report is a measurement and never decides the job.
+
+inputs:
+  job-name:
+    description: The job's name as GitHub lists it; the record's `job`.
+    required: true
+  artifact:
+    description: >-
+      The artifact name the caller uploads the staged directory under, named in
+      the rendered summary so a reader can fetch the full records.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # The projection reads only the gate records the job wrote, never its raw
+    # stream (which stays in the job log above and in the uploaded raw logs).
+    - name: Render gate reports
+      continue-on-error: true
+      shell: bash
+      env:
+        GATE_ARTIFACT: ${{ inputs.artifact }}
+      run: bun run beep ci append-gate-reports --artifact "$GATE_ARTIFACT"
+
+    # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+    # ROUT-05 slice 2b) plus the index of the job's gate records, read by the
+    # route corpus capture and the main feed lookup.
+    - name: Record task outcomes
+      continue-on-error: true
+      shell: bash
+      env:
+        JOB_NAME: ${{ inputs.job-name }}
+      run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+    # A glob upload of `**/.beep/gates/**` would walk every node_modules tree
+    # (upload-artifact's negated patterns filter matches but never prune the
+    # walk), so the directories are found here with pruning and copied beside
+    # the record. Staging outside the checkout keeps a later record search from
+    # finding the copies; the directory is emptied first because a reused
+    # self-hosted runner keeps RUNNER_TEMP between jobs.
+    - name: Stage gate reports
+      continue-on-error: true
+      shell: bash
+      run: |
+        set -euo pipefail
+        stage="${RUNNER_TEMP}/gate-reports"
+        rm -rf "$stage"
+        mkdir -p "$stage"
+        if [[ -f .beep/ci-task-outcomes/record.json ]]; then
+          mkdir -p "$stage/.beep/ci-task-outcomes"
+          cp .beep/ci-task-outcomes/record.json "$stage/.beep/ci-task-outcomes/record.json"
+        fi
+        count=0
+        while IFS= read -r -d '' dir; do
+          rel="${dir#./}"
+          mkdir -p "$stage/$(dirname "$rel")"
+          cp -R "$rel" "$stage/$rel"
+          count=$((count + 1))
+        done < <(find . \( -name node_modules -o -name .git -o -name .turbo -o -path ./.beep/ci-task-outcomes \) -prune \
+          -o -type d -path '*/.beep/gates' -print0)
+        echo "[ci] staged ${count} gate record director$([[ $count -eq 1 ]] && echo y || echo ies) in ${stage}"

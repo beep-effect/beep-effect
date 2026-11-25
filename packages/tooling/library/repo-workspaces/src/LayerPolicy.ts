@@ -44,8 +44,6 @@ const withoutKeys: {
 });
 
 /**
- * Raised when a layer policy cannot be read, parsed or decoded.
- *
  * **Example** (Describe invalid policy JSON)
  *
  * ```ts
@@ -115,8 +113,6 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError, { readonly
 }
 
 /**
- * A committed dependency-layering policy (`layers.json`).
- *
  * **Details**
  *
  * `layers` is top-down: an edge may only point from a layer to one BELOW it

@@ -41,8 +41,6 @@ export class FilingDecisionUnavailable extends S.TaggedError<
 ) {}
 
 /**
- * Raised when workspace vault materialization fails.
- *
  * **Example** (Make materialization failed error)
  *
  * ```ts
@@ -69,8 +67,6 @@ export class DocumentMaterializationFailed extends S.TaggedError<
 ) {}
 
 /**
- * Internal typed failure raised by document intake.
- *
  * **Example** (Decode DocumentIntakeError schema)
  *
  * ```ts
@@ -94,8 +90,6 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
 );
 
 /**
- * Internal typed failure raised by document intake.
- *
  * **Example** (Type annotate DocumentIntakeError)
  *
  * ```ts
@@ -112,8 +106,6 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
 export type DocumentIntakeError = typeof DocumentIntakeError.Type;
 
 /**
- * Client-safe failure raised when dropped-file intake cannot complete.
- *
  * **Example** (Create action error message)
  *
  * ```ts

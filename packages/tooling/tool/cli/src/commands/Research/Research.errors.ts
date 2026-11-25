@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Research/Research.errors");
 
 /**
- * Error raised by research knowledge-vault commands.
- *
  * **Example** (Create research command error)
  *
  * ```ts

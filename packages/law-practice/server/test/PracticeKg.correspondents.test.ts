@@ -162,14 +162,13 @@ describe("practice KG correspondents", () => {
       messageId: "1@example.com",
       participants: [participant("pat@example.com", "from"), participant("sam@other.test", "to")],
     });
-    // The archive copy of the same message, and one more message that has no Message-ID.
-    const archived = PracticeKgEmailMessage.make({
+    const archiveCopyOfSameMessage = PracticeKgEmailMessage.make({
       createdAt: "2026-02-01T10:00:00.000Z",
       digest: "mail:1@example.com",
       messageId: " <1@example.com> ",
       participants: [participant("pat@example.com", "from"), participant("sam@other.test", "to")],
     });
-    const other = PracticeKgEmailMessage.make({
+    const otherMessageWithoutMessageId = PracticeKgEmailMessage.make({
       createdAt: null,
       digest: "sha256:f2",
       participants: [participant("pat@example.com", "to")],
@@ -182,7 +181,7 @@ describe("practice KG correspondents", () => {
           attribution("sha256:f2", "11111.20001"),
         ],
         contacts: [],
-        messages: [filed, archived, other],
+        messages: [filed, archiveCopyOfSameMessage, otherMessageWithoutMessageId],
         practiceDomains: [],
       })
     );
@@ -247,9 +246,11 @@ describe("practice KG correspondents", () => {
     Effect.fnUntraced(function* () {
       const parsedPracticeKgCorrespondentAddress = yield* parsePracticeKgCorrespondentAddress(" Pat@Example.com ");
       expect(parsedPracticeKgCorrespondentAddress).toBe("pat@example.com");
-      // An apostrophe is legal in a local part; it must not cut the address short.
       const parsedPracticeKgCorrespondentAddress1 = yield* parsePracticeKgCorrespondentAddress("O'Brien@Example.com");
-      expect(parsedPracticeKgCorrespondentAddress1).toBe("o'brien@example.com");
+      expect(
+        parsedPracticeKgCorrespondentAddress1,
+        "an apostrophe is legal in a local part and must not cut the address short"
+      ).toBe("o'brien@example.com");
       const parsedPracticeKgCorrespondentAddress2 = yield* parsePracticeKgCorrespondentAddress(
         "Pat O'Brien <o'brien@example.com>"
       );
@@ -258,13 +259,17 @@ describe("practice KG correspondents", () => {
         '"Example, Pat" <Pat@Example.com>'
       );
       expect(parsedPracticeKgCorrespondentAddress3).toBe("pat@example.com");
-      // A bare address wrapped in single quotes loses the quotes, in a lookup input and inside a header.
       const parsedPracticeKgCorrespondentAddress4 = yield* parsePracticeKgCorrespondentAddress("'pat@example.com'");
-      expect(parsedPracticeKgCorrespondentAddress4).toBe("pat@example.com");
+      expect(parsedPracticeKgCorrespondentAddress4, "a bare address wrapped in single quotes loses the quotes").toBe(
+        "pat@example.com"
+      );
       const parsedPracticeKgCorrespondentAddress5 = yield* parsePracticeKgCorrespondentAddress(
         "'pat@example.com', Pat <PAT@example.com>"
       );
-      expect(parsedPracticeKgCorrespondentAddress5).toBe("pat@example.com");
+      expect(
+        parsedPracticeKgCorrespondentAddress5,
+        "a single-quoted bare address inside a header loses the quotes too"
+      ).toBe("pat@example.com");
       const parsedPracticeKgCorrespondentAddress6 = yield* parsePracticeKgCorrespondentAddress(
         "pat@example.com, Pat <PAT@example.com>"
       );
@@ -343,9 +348,9 @@ describe("practice KG correspondents", () => {
         const databasePath = path.join(directory, "practice.duckdb");
         const extractRoot = path.join(directory, "extract");
         yield* fs.makeDirectory(path.join(extractRoot, "metadata"), { recursive: true });
-        // Six filed emails: three spellings of the header name, one unusable value, one message without the header,
-        // and one whose list of values opens with empty entries.
-        const metadata: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
+        const threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries: ReadonlyArray<
+          readonly [string, Record<string, unknown>]
+        > = [
           ["a", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-Id": "<a@example.com>" }],
           ["b", { "MESSAGE:RAW-HEADER:MESSAGE-ID": [" <b@example.com> "], "Message-From": "pat@example.com" }],
           ["c", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": "<c@example.com>" }],
@@ -354,7 +359,7 @@ describe("practice KG correspondents", () => {
           ["f", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": ["", " ", "<f@example.com>"] }],
         ];
         yield* Effect.forEach(
-          metadata,
+          threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries,
           ([name, fields]) =>
             Effect.flatMap(encodeJson(fields), (json) =>
               fs.writeFileString(path.join(extractRoot, "metadata", `operation:op-${name}.json`), json)
@@ -362,7 +367,7 @@ describe("practice KG correspondents", () => {
           { concurrency: 1 }
         );
         const sourceLines = yield* Effect.forEach(
-          metadata,
+          threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries,
           ([name]) => encodeJson({ digest: `sha256:${name}`, operationId: `operation:op-${name}` }),
           { concurrency: 1 }
         );
@@ -372,7 +377,7 @@ describe("practice KG correspondents", () => {
           const db = yield* DuckDb;
           yield* db.run("CREATE TABLE documents (digest VARCHAR PRIMARY KEY, effective_name VARCHAR NOT NULL)");
           yield* Effect.forEach(
-            metadata,
+            threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries,
             ([name]) => db.run("INSERT INTO documents VALUES ($1, $2)", [`sha256:${name}`, `${name}.eml`]),
             { concurrency: 1 }
           );

@@ -95,8 +95,6 @@ export const YeetAttemptTerminationReason = LiteralKit([
 );
 
 /**
- * Abnormal reason a Yeet attempt ended without an ordinary finished row.
- *
  * **Example** (Name a terminal reason)
  *
  * ```ts
@@ -113,8 +111,6 @@ export const YeetAttemptTerminationReason = LiteralKit([
 export type YeetAttemptTerminationReason = typeof YeetAttemptTerminationReason.Type;
 
 /**
- * Receipt proving that bounded journal retention evicted older rows.
- *
  * **Example** (Reference a compaction receipt)
  *
  * ```ts

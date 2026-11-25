@@ -80,8 +80,6 @@ export const GufoClassType = LiteralKit([
 );
 
 /**
- * Runtime type for {@link GufoClassType}.
- *
  * **Example** (Type a class type)
  *
  * ```ts
@@ -123,8 +121,6 @@ export const GufoInstanceCategory = LiteralKit(["Object", "Relator", "Event", "Q
 );
 
 /**
- * Runtime type for {@link GufoInstanceCategory}.
- *
  * **Example** (Type an instance category)
  *
  * ```ts
@@ -140,8 +136,6 @@ export const GufoInstanceCategory = LiteralKit(["Object", "Relator", "Event", "Q
 export type GufoInstanceCategory = typeof GufoInstanceCategory.Type;
 
 /**
- * The minimum number of individuals of one mediated type a relator connects.
- *
  * **Example** (Check a cardinality)
  *
  * ```ts import.meta.vitest name="Check a cardinality"
@@ -162,8 +156,6 @@ export const MediationCardinality = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Runtime type for {@link MediationCardinality}.
- *
  * **Example** (Type a cardinality)
  *
  * ```ts
@@ -236,8 +228,6 @@ export class GufoTyping extends S.Opaque<GufoTyping, { readonly brand: unique sy
 ) {}
 
 /**
- * gUFO typings keyed by term IRI.
- *
  * **Example** (Encode typings in IRI order)
  *
  * ```ts import.meta.vitest name="Encode typings in IRI order"
@@ -273,8 +263,6 @@ export const GufoTypings = S.Tuple([S.toEncoded(TermIri), S.toEncoded(GufoTyping
 );
 
 /**
- * Runtime type for {@link GufoTypings}.
- *
  * **Example** (Type typings)
  *
  * ```ts
@@ -291,8 +279,6 @@ export const GufoTypings = S.Tuple([S.toEncoded(TermIri), S.toEncoded(GufoTyping
 export type GufoTypings = typeof GufoTypings.Type;
 
 /**
- * A specialization hierarchy over term IRIs with a partial gUFO typing.
- *
  * **Details**
  *
  * `specializes` maps each term to its direct supertypes. A term absent from
@@ -435,8 +421,6 @@ export const OntoViolation = S.Union([RoleWithoutKind, RigidSpecializesAntiRigid
 );
 
 /**
- * Runtime type for {@link OntoViolation}.
- *
  * **Example** (Type a violation)
  *
  * ```ts

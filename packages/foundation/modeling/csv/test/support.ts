@@ -1,7 +1,3 @@
-// Shared test pieces: read options, the generators of hostile text and raw bytes, a splitter that cuts input at
-// arbitrary points, the outcome of a read reduced to what the laws compare (records, or the fatal findings), and a
-// stream that fails after its values.
-
 import { Csv } from "@beep/csv/Csv.codec";
 import {
   CsvDetectDelimiter,
@@ -70,15 +66,13 @@ export const byteConfigs = {
   detectDefault: CsvDetectEncoding.make({}),
 };
 
-// Text over the characters that matter to CSV, so quotes, delimiters, line breaks, byte-order marks and multi-byte
-// characters meet often, after a start that may be a BOM, a `sep=` line, or both.
-const MessyChar = S.Literals(['"', ",", ";", "\r", "\n", " ", "a", "é", "😀", "\uFEFF"]);
-const MessyStart = S.Literals(["", "\uFEFF", "sep=;\n", "\uFEFFsep=;\r\n", "sep=|\r", "sep=,", "se"]);
+const CsvSignificantCharSoTheyMeetOften = S.Literals(['"', ",", ";", "\r", "\n", " ", "a", "é", "😀", "\uFEFF"]);
+const BomOrSepLineStart = S.Literals(["", "\uFEFF", "sep=;\n", "\uFEFFsep=;\r\n", "sep=|\r", "sep=,", "se"]);
 
 /** Hostile text: an optional BOM or `sep=` start, then any mix of the characters CSV cares about. */
-export const messyText = Arbitrary.schema(S.Tuple([MessyStart, S.Array(MessyChar)])).pipe(
-  Arbitrary.map(([start, chars]) => `${start}${A.join(chars, "")}`)
-);
+export const messyText = Arbitrary.schema(
+  S.Tuple([BomOrSepLineStart, S.Array(CsvSignificantCharSoTheyMeetOften)])
+).pipe(Arbitrary.map(([start, chars]) => `${start}${A.join(chars, "")}`));
 
 /** Cut lengths, zero included, so empty chunks arrive too. */
 export const cuts = S.Int.check(S.isBetween({ minimum: 0, maximum: 9 })).pipe(S.Array, Arbitrary.schema);
@@ -151,12 +145,12 @@ export const findingsOfFatals = A.map((fatal: CsvFatal) => fatal.finding);
 /** An outcome with its fatal findings in place of the diagnostics that carry them. */
 export const fatalFindings = Result.mapError(findingsOfFatals);
 
-// Bytes over ASCII CSV characters, UTF-8 lead and continuation bytes, a UTF-8 BOM and bytes that UTF-8 never uses, so
-// inputs end inside a sequence, hold a Windows-1252 accent, or are valid UTF-8, all often.
-const RawByte = S.Literals([0x61, 0x2c, 0x0a, 0x22, 0xc3, 0xa9, 0xe2, 0x82, 0xf0, 0x9f, 0xff, 0xef, 0xbb, 0xbf]);
+const OftenUnfinishedAccentedOrValidUtf8Byte = S.Literals([
+  0x61, 0x2c, 0x0a, 0x22, 0xc3, 0xa9, 0xe2, 0x82, 0xf0, 0x9f, 0xff, 0xef, 0xbb, 0xbf,
+]);
 
 /** Raw bytes, valid UTF-8 or not. */
-export const rawBytes = RawByte.pipe(
+export const rawBytes = OftenUnfinishedAccentedOrValidUtf8Byte.pipe(
   S.Array,
   Arbitrary.schema,
   Arbitrary.map((bytes) => Uint8Array.from(bytes))

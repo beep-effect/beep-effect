@@ -32,8 +32,6 @@ import type {
 const $I = $OntologyId.create("Fold/markdown");
 
 /**
- * Link rendering modes for the Markdown projection.
- *
  * **Example** (Guard a link mode literal)
  *
  * ```ts import.meta.vitest name="Guard a link mode literal"
@@ -53,8 +51,6 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
 );
 
 /**
- * Runtime type for {@link MarkdownLinkMode}.
- *
  * **Example** (Annotate a link mode value)
  *
  * ```ts
@@ -70,8 +66,6 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
 export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
 
 /**
- * Normalized options accepted by {@link toMarkdown}.
- *
  * **Example** (Construct portable link options)
  *
  * ```ts
@@ -120,7 +114,6 @@ const compactOwnedLabel = (ontology: AssembledOntology, iri: string): O.Option<s
     O.map((local) => `${ontology.prefix}:${local}`)
   );
 
-// The owned prefix labels only IRIs under the base: the generated registry may bind it to another namespace.
 const compactLabel = (ontology: AssembledOntology, iri: string): string =>
   pipe(
     O.filter(contract(iri), P.not(Str.startsWith(`${ontology.prefix}:`))),
@@ -261,6 +254,11 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
 
 /**
  * Project an assembled ontology into deterministic Markdown.
+ *
+ * **Gotchas**
+ *
+ * The owned prefix labels only IRIs under the ontology base. The generated registry may
+ * bind that prefix to another namespace.
  *
  * **Example** (Render a folded ontology as Markdown)
  *

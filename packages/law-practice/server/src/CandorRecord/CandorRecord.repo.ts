@@ -50,9 +50,7 @@ const dispositionTable = DbSchema.candorDisposition;
 const eventTable = DbSchema.patentCitationEvent;
 const submissionFactTable = DbSchema.idsSubmissionFact;
 
-// Named per operation rather than per adapter so a dropped driver failure says
-// which physical table refused the request, whichever direction it was going.
-const tableNameFor: Record<CandorRecordOperation, string> = {
+const refusingTableByOperation: Record<CandorRecordOperation, string> = {
   listDispositions: "law_practice_candor_disposition",
   listEvents: "law_practice_patent_citation_event",
   listSubmissionFacts: "law_practice_ids_submission_fact",
@@ -71,28 +69,22 @@ const repositoryUnavailable =
           Effect.annotateLogs({
             cause,
             operation,
-            table: tableNameFor[operation],
+            table: refusingTableByOperation[operation],
           })
         )
       ),
       Effect.mapError((cause) =>
         CandorRecordRepositoryUnavailable.during(
           operation,
-          `${operation} failed against ${tableNameFor[operation]}`,
+          `${operation} failed against ${refusingTableByOperation[operation]}`,
           cause
         )
       )
     );
 
-// Both decoders are shared with the legal position record adapter, which reads
-// rows back with identical semantics; only the combinator above is this
-// repository's own.
 const { decodeAppended, decodeRows } = makeRowDecoders(repositoryUnavailable);
 
-// A read is scoped by organization FIRST and filing second. Records of two
-// tenants can carry the same application number, so a filing-only filter would
-// let one tenant's disposition release another tenant's promotion block.
-const filedUnder = <
+const filedUnderTenantThenFiling = <
   Entity extends {
     readonly citingApplication: CitingApplicationIdentity;
     readonly id: number;
@@ -166,13 +158,13 @@ export const makeInMemoryCandorRecordRepository = Effect.fn("CandorRecord.makeIn
 
   return CandorRecordRepositoryShape.make({
     listDispositions: Effect.fn("CandorRecord.listDispositions")(function* (scope: CandorFilingScope) {
-      return filedUnder((yield* Ref.get(state)).dispositions, scope);
+      return filedUnderTenantThenFiling((yield* Ref.get(state)).dispositions, scope);
     }),
     listEvents: Effect.fn("CandorRecord.listEvents")(function* (scope: CandorFilingScope) {
-      return filedUnder((yield* Ref.get(state)).events, scope);
+      return filedUnderTenantThenFiling((yield* Ref.get(state)).events, scope);
     }),
     listSubmissionFacts: Effect.fn("CandorRecord.listSubmissionFacts")(function* (scope: CandorFilingScope) {
-      return filedUnder((yield* Ref.get(state)).submissionFacts, scope);
+      return filedUnderTenantThenFiling((yield* Ref.get(state)).submissionFacts, scope);
     }),
     recordDisposition: Effect.fn("CandorRecord.recordDisposition")(function* (disposition: CandorDisposition) {
       yield* Ref.update(state, (current) => ({
@@ -198,8 +190,8 @@ export const makeInMemoryCandorRecordRepository = Effect.fn("CandorRecord.makeIn
     readSnapshot: Effect.fn("CandorRecord.readSnapshot")(function* (scope: CandorFilingScope) {
       const current = yield* Ref.get(state);
       return CandorRecordSnapshot.make({
-        dispositions: filedUnder(current.dispositions, scope),
-        events: filedUnder(current.events, scope),
+        dispositions: filedUnderTenantThenFiling(current.dispositions, scope),
+        events: filedUnderTenantThenFiling(current.events, scope),
       });
     }),
   });

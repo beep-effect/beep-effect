@@ -6,8 +6,6 @@
  */
 
 /**
- * Public Fallow quality command export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -27,8 +25,6 @@ export * from "./internal/TurboConfigProof.ts";
  */
 export * from "./internal/TurboLaneDigest.ts";
 /**
- * Public quality command export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -62,8 +58,6 @@ export {
   scaleQualityWidthByAdmission,
 } from "./Quality.plan.ts";
 /**
- * Public Quality schema role exports.
- *
  * @category models
  * @since 0.0.0
  */

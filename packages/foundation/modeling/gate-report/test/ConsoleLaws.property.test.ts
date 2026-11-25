@@ -1,5 +1,3 @@
-// AC-L1, AC-L2 and AC-L3 as properties over inputs generated from the report
-// schema's arbitrary: verdict first and last, silent on success, bounded.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { verdictWord } from "@beep/gate-report/Classify";
 import {
@@ -28,8 +26,11 @@ const runs = { arbitrary: fcRuns(100) };
 
 const size = (lines: ReadonlyArray<string>): number => A.reduce(lines, 0, (total, line) => total + line.length + 1);
 
-/** Project one failure entry alone and count its projected lines and the diff lines among them. */
-const projectEntry = (document: ConsoleDocument, entry: FailureEntry, budget: ConsoleBudget) => {
+const projectOneEntryAloneCountingItsLines = (
+  document: ConsoleDocument,
+  entry: FailureEntry,
+  budget: ConsoleBudget
+) => {
   const single = ConsoleDocument.make({ ...document, entries: [entry], folds: [], cap: O.none() });
   const kept = fitDocument({ document: single, budget }).entries.length === 1;
   const lines = projectLines({ document: single, budget });
@@ -44,11 +45,9 @@ const inputs = Arbitrary.schema(ConsoleInput);
 const budgets = Arbitrary.schema(ConsoleBudget);
 const documents = Arbitrary.schema(ConsoleDocument);
 
-// Note-only documents with no tail: the frame renders as the verdict alone, so a kept note must
-// bring its closing verdict inside the budget.
-const noteOnly = S.Struct({ verdict: VerdictLine, notes: S.Array(NoteEntry) }).pipe(Arbitrary.schema);
+const noteOnlyTaillessDocuments = S.Struct({ verdict: VerdictLine, notes: S.Array(NoteEntry) }).pipe(Arbitrary.schema);
 
-describe("console laws", () => {
+describe("console laws as properties over the report schema's arbitrary", () => {
   it.effect.prop(
     "AC-L1: the first and last lines are both the verdict line",
     [inputs, budgets],
@@ -99,8 +98,8 @@ describe("console laws", () => {
   );
 
   it.effect.prop(
-    "AC-L3: a note-only document with no tail fits the budget and opens and closes on its verdict",
-    [noteOnly, budgets],
+    "AC-L3: a note-only document with no tail fits the budget and opens and closes on its verdict, so a kept note brings the closing verdict back inside the budget",
+    [noteOnlyTaillessDocuments, budgets],
     ([{ verdict, notes }, budget]) =>
       Effect.sync(() => {
         const document = ConsoleDocument.make({ verdict, entries: notes, folds: [] });
@@ -151,7 +150,7 @@ describe("console laws", () => {
     ([document, budget]) =>
       Effect.sync(() => {
         for (const entry of A.filter(document.entries, ConsoleEntry.guards.FailureEntry)) {
-          const projected = projectEntry(document, entry, budget);
+          const projected = projectOneEntryAloneCountingItsLines(document, entry, budget);
           assert.isAtMost(projected.entryLines, 2 + budget.maxDiffLines);
           assert.isAtMost(projected.diffLines, budget.maxDiffLines);
           assert.strictEqual(

@@ -7,8 +7,6 @@
  */
 
 /**
- * Document server aggregate exports.
- *
  * @category handlers
  * @since 0.0.0
  */
@@ -21,8 +19,6 @@ export * from "./aggregates/Document/index.ts";
  */
 export * from "./aggregates/Sync/index.ts";
 /**
- * Server layer exports.
- *
  * @category layers
  * @since 0.0.0
  */

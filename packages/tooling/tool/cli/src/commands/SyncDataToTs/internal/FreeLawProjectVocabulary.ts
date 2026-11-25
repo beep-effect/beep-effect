@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/SyncDataToTs/internal/FreeLawProjectVocabulary");
 
 /**
- * Context-bearing alias retained in a generated court or reporter vocabulary.
- *
  * **Example** (Build a contextual alias)
  *
  * ```ts

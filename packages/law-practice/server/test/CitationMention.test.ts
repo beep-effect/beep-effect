@@ -288,7 +288,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
         expectedEngineArtifact: artifact,
         sourceText: text,
       }).pipe(Effect.provideService(Digest.Digest, mutating));
-      expect(calls).toBe(3); // raw source digest + occurrence id digest + mention id digest
+      expect(calls, "raw source digest + occurrence id digest + mention id digest").toBe(3);
       expect(restored.id).toBe(mention.id);
       expect(restored.anchor.anchor.quote).toBe("1 U.S. 1");
       expect(restored.anchor.source.scopeRef).toBe("matter:example");

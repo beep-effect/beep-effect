@@ -71,8 +71,6 @@ export const SLSA_PROVENANCE_V1 = "https://slsa.dev/provenance/v1" as const;
 export const GITHUB_BUILD_TYPE = "https://actions.github.io/buildtypes/workflow/v1" as const;
 
 /**
- * How the build was invoked, and what it was invoked from.
- *
  * **Example** (Record the workflow and consumed commit)
  *
  * ```ts
@@ -206,8 +204,6 @@ export class SlsaBuildDefinition extends S.Opaque<SlsaBuildDefinition, { readonl
 ) {}
 
 /**
- * Companion types for {@link SlsaBuildDefinition}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -222,8 +218,6 @@ export declare namespace SlsaBuildDefinition {
 }
 
 /**
- * Who ran the build, and the record of that run.
- *
  * **Example** (Locate the workflow run attempt)
  *
  * ```ts
@@ -264,8 +258,6 @@ export class SlsaRunDetails extends S.Opaque<SlsaRunDetails, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link SlsaRunDetails}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -280,9 +272,6 @@ export declare namespace SlsaRunDetails {
 }
 
 /**
- * The claims and runner facts a GitHub Actions provenance predicate is built
- * from.
- *
  * **Details**
  *
  * A plain input record, **not** a service. There is nothing to swap and no IO
@@ -375,8 +364,6 @@ export class GitHubWorkflowProvenance extends S.Opaque<GitHubWorkflowProvenance,
 ) {}
 
 /**
- * Companion types for {@link GitHubWorkflowProvenance}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -403,8 +390,6 @@ const workflowPathOf = (input: GitHubWorkflowProvenance.Encoded): string =>
   Str.replace(/@[\s\S]*$/, "")(Str.replace(`${input.repository}/`, "")(input.workflowRef));
 
 /**
- * A SLSA Provenance v1 predicate.
- *
  * **Example** (Create provenance for a GitHub Actions workflow)
  *
  * ```ts
@@ -547,8 +532,6 @@ export class SlsaProvenance extends S.Opaque<SlsaProvenance, { readonly brand: u
 }
 
 /**
- * Companion types for {@link SlsaProvenance}.
- *
  * @category type-level
  * @since 0.0.0
  */

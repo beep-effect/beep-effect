@@ -33,8 +33,6 @@ const NonNegativeCount = S.Int.check(
 );
 
 /**
- * Collector health snapshot returned by `GET /health`.
- *
  * **Example** (Make health snapshot)
  *
  * ```ts
@@ -87,8 +85,6 @@ export class CollectorHealth extends S.Opaque<CollectorHealth, { readonly brand:
 ) {}
 
 /**
- * Batch acknowledgement returned by `POST /events`.
- *
  * **Example** (Make events accepted)
  *
  * ```ts
@@ -120,8 +116,6 @@ export class EventsAccepted extends S.Opaque<EventsAccepted, { readonly brand: u
 ) {}
 
 /**
- * Marker request accepted by `POST /mark`.
- *
  * **Example** (Make mark request)
  *
  * ```ts
@@ -157,8 +151,6 @@ export class MarkRequest extends S.Opaque<MarkRequest, { readonly brand: unique 
 ) {}
 
 /**
- * Marker acknowledgement returned by `POST /mark`.
- *
  * **Example** (Make mark accepted)
  *
  * ```ts
@@ -185,8 +177,6 @@ export class MarkAccepted extends S.Opaque<MarkAccepted, { readonly brand: uniqu
 ) {}
 
 /**
- * Stop acknowledgement returned by `POST /stop`.
- *
  * **Example** (Make stop accepted)
  *
  * ```ts
@@ -213,8 +203,6 @@ export class StopAccepted extends S.Opaque<StopAccepted, { readonly brand: uniqu
 ) {}
 
 /**
- * `text/plain` NDJSON payload accepted by `POST /events`.
- *
  * **Example** (Decode NDJSON payload)
  *
  * ```ts
@@ -235,8 +223,6 @@ export const NdjsonPayload = S.String.pipe(
 );
 
 /**
- * `text/plain` NDJSON payload accepted by `POST /events`.
- *
  * **Example** (Type NDJSON body)
  *
  * ```ts
@@ -251,8 +237,6 @@ export const NdjsonPayload = S.String.pipe(
 export type NdjsonPayload = typeof NdjsonPayload.Type;
 
 /**
- * JavaScript response body served by `GET /witness.js`.
- *
  * **Example** (Decode witness script)
  *
  * ```ts
@@ -273,8 +257,6 @@ export const WitnessScriptBody = S.String.pipe(
 );
 
 /**
- * JavaScript response body served by `GET /witness.js`.
- *
  * **Example** (Type witness script body)
  *
  * ```ts

@@ -33,8 +33,6 @@ export const CitationRegexInputRole = LiteralKit(["source", "pattern"]).pipe(
     description: "Captured server preparation purpose selecting the schema-owned text budget.",
   })
 );
-// Existing adapter-owned input is measured before copying. Effective policy
-// produces the safety error even when the caller's existing value is too large.
 const NativeInput = S.Struct({ width: CitationPythonUnicodeStorage.fields.width, bytes: S.Uint8Array }).pipe(
   $I.annoteSchema("NativeInput", {
     description:
@@ -213,16 +211,19 @@ export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(funct
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;
   const sourceLimit = role === "pattern" ? "patternUtf16" : "sourceUtf16";
   const producedLimit = role === "pattern" ? "patternUtf16" : "producedTextUtf16";
-  const { operation, deadlineLimit, timed } = yield* makeCitationRegexTiming(limits, true);
+  const {
+    operation: selectedOperationSharedByUnicodeAndTimers,
+    deadlineLimit,
+    timed,
+  } = yield* makeCitationRegexTiming(limits, true);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
-    CitationSafetyLimitExceeded.make({ operation, limit });
-  // Unicode and all preparation timers capture the same selected operation.
+    CitationSafetyLimitExceeded.make({ operation: selectedOperationSharedByUnicodeAndTimers, limit });
   const unicode = yield* makeCitationPythonUnicode(
     {
       ...limits,
       producedTextUtf16: producedMaximum,
     },
-    operation
+    selectedOperationSharedByUnicodeAndTimers
   ).pipe(Effect.mapError(() => fail("invalid-policy")));
   const finish = Effect.fn("Citation.finishRegexInput")(function* (
     value: CitationPythonUnicodeValue,

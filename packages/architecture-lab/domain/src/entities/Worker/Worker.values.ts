@@ -66,8 +66,6 @@ export const WorkerStatus = LiteralKit(["active", "inactive"]).pipe(
 );
 
 /**
- * Runtime type for {@link WorkerStatus}.
- *
  * @category value-objects
  * @since 0.0.0
  */

@@ -14,8 +14,6 @@ const $I = $LawPracticeDomainId.create("entities/Claim/Claim.model");
 const pg = ProductEntity.pg;
 
 /**
- * Patent claim entity for a single numbered claim under a patent asset.
- *
  * **Details**
  *
  * Carries the claim number, full claim text, and independent/dependent marker

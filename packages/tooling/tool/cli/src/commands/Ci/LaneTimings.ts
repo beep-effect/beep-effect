@@ -90,8 +90,6 @@ import type { PartitionedCiLane } from "./CiLanePartitions.ts";
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
 
 /**
- * Where a job ran, as far as its runner labels can prove.
- *
  * **Details**
  *
  * `managed` means a runner this repository operates — the self-hosted burst
@@ -120,8 +118,6 @@ export const CiRunnerClass = LiteralKit(["managed", "github-hosted", "unknown"])
 );
 
 /**
- * Where a job ran, as far as its runner labels can prove.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -130,8 +126,6 @@ export type CiRunnerClass = typeof CiRunnerClass.Type;
 const ciWorkflowJobLabelsDefault = A.empty();
 const ciWorkflowJobStepsDefault = A.empty();
 /**
- * One hosted job as returned by the Actions jobs REST endpoint.
- *
  * **Details**
  *
  * Field names are the wire names on purpose: this is the decode boundary, and
@@ -203,8 +197,6 @@ export class CiWorkflowJob extends S.Opaque<CiWorkflowJob, { readonly brand: uni
 ) {}
 
 /**
- * One job attempt read that failed after every transient retry.
- *
  * **Details**
  *
  * The per-attempt jobs read records the failure instead of dropping the run,
@@ -238,8 +230,6 @@ export class CiWorkflowPartialRead extends S.Opaque<CiWorkflowPartialRead, { rea
 const partialReadsDefault: ReadonlyArray<CiWorkflowPartialRead> = [];
 
 /**
- * One workflow run's jobs, read attempt by attempt.
- *
  * **Details**
  *
  * `jobs` is the union of every attempt's listing, de-duplicated by
@@ -287,8 +277,6 @@ type CiWorkflowAttemptOneJob = typeof CiWorkflowAttemptOneJob.Type;
 const isCiWorkflowAttemptOneJob = S.is(CiWorkflowAttemptOneJob);
 
 /**
- * One page of the Actions jobs REST endpoint.
- *
  * **Example** (Describe an empty page)
  *
  * ```ts
@@ -367,8 +355,6 @@ export class CiLaneTimingRow extends S.Opaque<CiLaneTimingRow, { readonly brand:
 ) {}
 
 /**
- * Aggregates over one collected set of lane timing rows.
- *
  * **Example** (Read an empty report)
  *
  * ```ts
@@ -1571,8 +1557,6 @@ export class CiWorkflowWindowRun extends S.Opaque<CiWorkflowWindowRun, { readonl
 ) {}
 
 /**
- * One ordered workflow run paired with its isolated jobs buffer.
- *
  * **Example** (Pair a run with an empty jobs buffer)
  *
  * ```ts
@@ -1689,8 +1673,6 @@ const CiLaneTimingWindowRow = S.Union([
 type CiLaneTimingWindowRow = typeof CiLaneTimingWindowRow.Type;
 
 /**
- * A p95 the 20-minute charter judges for each required lane.
- *
  * **Details**
  *
  * `duration` is the lane's own span: a single job's `started_at` to
@@ -1719,8 +1701,6 @@ export const CiLaneTimingCharterMeasure = LiteralKit(["duration", "wait"]).pipe(
 );
 
 /**
- * A p95 the 20-minute charter judges for each required lane.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1837,9 +1817,6 @@ export class CiLaneTimingAttributionStat extends S.Opaque<
 ) {}
 
 /**
- * Shard pickup statistics judged against the queue tripwire in force for the
- * window.
- *
  * **Details**
  *
  * `tripwireSeconds` is the limit the window was judged against, chosen by the

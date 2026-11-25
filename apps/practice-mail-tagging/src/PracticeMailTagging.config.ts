@@ -34,8 +34,6 @@ const PageSize = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive 
 );
 
 /**
- * Every setting of the mail-tagging job that this app owns.
- *
  * **Details**
  *
  * The paths are private operator state. None has a default except the state

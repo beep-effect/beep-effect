@@ -17,8 +17,6 @@ import { ConfiguredFleetRoots } from "./FleetRoots.schemas.ts";
 const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReapDrain.schemas");
 
 /**
- * One condition of the drain predicate.
- *
  * **Details**
  *
  * `seat-role` admits only `legacy` and `adopted` checkouts; authored seats
@@ -62,8 +60,6 @@ export const ResidueDrainCheck = LiteralKit([
 );
 
 /**
- * One condition of the drain predicate.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -112,8 +108,6 @@ export const ResidueDrainOutcome = LiteralKit([
 export type ResidueDrainOutcome = typeof ResidueDrainOutcome.Type;
 
 /**
- * One evaluated drain check and the fact behind it.
- *
  * **Example** (A refused check)
  *
  * ```ts

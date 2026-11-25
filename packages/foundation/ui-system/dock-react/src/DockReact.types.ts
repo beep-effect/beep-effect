@@ -36,8 +36,6 @@ export type DockAtomGraph = Effect.Success<ReturnType<typeof makeDockAtoms>>;
 const $I = $DockReactId.create("DockReact.types");
 
 /**
- * Renderer-facing API for one dock panel.
- *
  * **Example** (Make panel API)
  *
  * ```ts

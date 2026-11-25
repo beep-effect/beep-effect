@@ -5,13 +5,10 @@
  * @since 0.0.0
  */
 
-import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
-import * as Config from "effect/Config";
-import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -33,18 +30,22 @@ import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
 import { writeCacheLocalSummary } from "./CiCacheLocalSummary.ts";
 import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
 import { ciCompileBinaryCommand } from "./CiCompileBinary.ts";
+import { ciFailuresCommand } from "./CiFailures.ts";
+import { ciAppendGateReportsCommand } from "./CiGateProjection.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 import { ciPartitionsCommand } from "./CiPartitions.command.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
-import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
+import { appendStepSummary, CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { ciShardOverflowPreflightCommand } from "./CiShardOverflowPreflight.ts";
 import { ciTaskOutcomesCommand } from "./CiTaskOutcomes.ts";
 import { ciUnitTimingsCommand } from "./CiUnitTimings.ts";
 import { ciLedgerCommand } from "./CostLedger.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
+import { ciFleetMissedEventCheckCommand } from "./FleetMissedEvent.command.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 import { ciRouteCommand } from "./Route.command.ts";
+import type { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.command");
 
@@ -163,24 +164,6 @@ const turboSummaryTasks = (tasks: TurboSummary["tasks"]): ReadonlyArray<TurboSum
   }
   return R.values((tasks ?? {}) as Readonly<Record<string, TurboSummaryTask>>);
 };
-
-// Off a runner (no `GITHUB_STEP_SUMMARY`) the summary goes to stdout instead.
-const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
-  renderedSummary: string
-): Effect.fn.Return<void, CiCommandError, ActionOutputs> {
-  const pipe1 = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>));
-  const summaryPath = pipe(pipe1, O.getOrUndefined);
-
-  if (summaryPath === undefined || Str.isEmpty(summaryPath)) {
-    yield* Console.log(renderedSummary);
-    return;
-  }
-
-  const outputs = yield* ActionOutputs;
-  yield* outputs
-    .summary(renderedSummary)
-    .pipe(CiCommandError.mapError(`Failed to append Turbo summary to ${summaryPath}.`));
-});
 
 const resolveSummaryPaths = Effect.fn("Ci.resolveSummaryPaths")(function* (
   repoRoot: string,
@@ -335,7 +318,10 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
     return;
   }
 
-  yield* appendToSummary(A.join(rendered, "\n"));
+  yield* appendStepSummary(
+    A.join(rendered, "\n"),
+    (summaryPath) => `Failed to append Turbo summary to ${summaryPath}.`
+  );
 });
 
 const appendTurboSummaryCommand = Command.make(
@@ -400,6 +386,7 @@ export const ciCommand = Command.make("ci", {}, () =>
   printLines([
     "CI commands:",
     "- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]",
+    "- bun run beep ci append-gate-reports --artifact <name> [--annotations-used n]",
     "- bun run beep ci append-turbo-summary",
     "- bun run beep ci change-profile [base] [head] (BEEP_CI_PR_BASE_SHA/BEEP_CI_PR_HEAD_SHA win)",
     "- bun run beep ci binary-closure [--out <path>] [--list]",
@@ -407,8 +394,10 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci binary-pin-sync --cwd <checkout> --tag <beep-ci-...> --sha256 <hex> --releases <json> [--base <ref>] [--output <file>]",
     "- bun run beep ci compile-binary --outfile <path> [--target bun-linux-x64]",
     "- bun run beep ci dependency-review --base <sha> --head <sha>",
+    "- bun run beep ci failures --run <id> | --pr <number>",
     "- bun run beep ci ruleset [--capture|--check]",
     "- bun run beep ci settings [--check]",
+    "- bun run beep ci fleet-missed-event-check [--repository owner/name] [--workflow-file file]",
     "- bun run beep ci held-group",
     "- bun run beep ci job-env",
     "- bun run beep ci partitions rebalance [--check] [--write --run <id> [--run <id>...]] [--prune]",
@@ -441,7 +430,10 @@ export const ciCommand = Command.make("ci", {}, () =>
     ...ciGovernanceCommands,
     ciAdmissionCommand,
     appendTurboSummaryCommand,
+    ciAppendGateReportsCommand,
     ciDependencyReviewCommand,
+    ciFailuresCommand,
+    ciFleetMissedEventCheckCommand,
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciCertaintyCommand,

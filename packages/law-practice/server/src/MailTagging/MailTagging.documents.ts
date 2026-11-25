@@ -38,8 +38,7 @@ const tooManyRequests = 429;
 const conflictStatus = 409;
 const nameInUseCode = "item_name_in_use";
 const conflictingFileType = "file";
-// Box names its rate and storage refusals `rate_limit_exceeded`, `storage_limit_exceeded`, and the like.
-const quotaCodePattern = /limit|quota/u;
+const boxRateOrStorageLimitCodePattern = /limit|quota/u;
 
 const oneUploadCall = ProviderCalls.make({ provider: "box", calls: 1 });
 const decodeFileId = S.decodeUnknownOption(DocumentFileId);
@@ -54,10 +53,9 @@ const statusText = (error: BoxError): string =>
 const hasStatus = (error: BoxError, status: number): boolean => O.exists(error.status, (actual) => actual === status);
 
 const isThrottled = (error: BoxError): boolean =>
-  hasStatus(error, tooManyRequests) || O.isSome(O.flatMap(error.code, Str.match(quotaCodePattern)));
+  hasStatus(error, tooManyRequests) || O.isSome(O.flatMap(error.code, Str.match(boxRateOrStorageLimitCodePattern)));
 
-// A 409 is a taken name unless Box names another kind of conflict.
-const isNameTaken = (error: BoxError): boolean =>
+const isNameTakenUnlessBoxNamesAnotherConflict = (error: BoxError): boolean =>
   hasStatus(error, conflictStatus) && O.getOrElse(error.code, () => nameInUseCode) === nameInUseCode;
 
 /**
@@ -115,24 +113,21 @@ export const boxConflictingFile = (error: BoxError): O.Option<ExistingDocument> 
     )
   );
 
-// The one place the conflicting file becomes the port's outcome.
-const nameTaken = (error: BoxError): DocumentNameTaken =>
+const onlyPlaceConflictingFileBecomesPortOutcome = (error: BoxError): DocumentNameTaken =>
   DocumentNameTaken.make({ existing: boxConflictingFile(error) });
 
 const failureKind = (error: BoxError) =>
   hasStatus(error, conflictStatus) ? MailTaggingPortError.conflict : MailTaggingPortError.during;
 
-// Status and reason only: a Box error never carries a file name, and neither does this.
-const portFailure = (error: BoxError): MailTaggingPortError =>
+const portFailureOfStatusAndReasonOnly = (error: BoxError): MailTaggingPortError =>
   isThrottled(error)
     ? MailTaggingPortError.throttled("DocumentStore", "upload", statusText(error))
     : failureKind(error)("DocumentStore", "upload", statusText(error));
 
-// A taken name is an answer; every other driver failure stays a failure.
-const refused = (error: BoxError): Effect.Effect<DocumentUploadResult, MailTaggingPortError> =>
-  isNameTaken(error) && !isThrottled(error)
-    ? error.pipe(nameTaken, Effect.succeed)
-    : error.pipe(portFailure, Effect.fail);
+const answerTakenNameElseFail = (error: BoxError): Effect.Effect<DocumentUploadResult, MailTaggingPortError> =>
+  isNameTakenUnlessBoxNamesAnotherConflict(error) && !isThrottled(error)
+    ? error.pipe(onlyPlaceConflictingFileBecomesPortOutcome, Effect.succeed)
+    : error.pipe(portFailureOfStatusAndReasonOnly, Effect.fail);
 
 const payloadOf = (request: UploadDocumentRequest): BoxUploadFilePayload =>
   BoxUploadFilePayload.make({
@@ -165,7 +160,7 @@ const makeDocumentStore = Effect.gen(function* () {
       yield* meter.record(oneUploadCall);
       return yield* box.uploads.uploadFile(payloadOf(request)).pipe(
         Effect.matchEffect({
-          onFailure: refused,
+          onFailure: answerTakenNameElseFail,
           onSuccess: (files) => Effect.map(fileIdOf(files), (fileId) => DocumentUploaded.make({ fileId })),
         })
       );

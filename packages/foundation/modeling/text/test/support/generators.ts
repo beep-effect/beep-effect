@@ -1,8 +1,3 @@
-// The `@beep/text` law generators that only its own tests use. Text, scalar ranges, captures and anchors rows
-// come from `@beep/text/Arbitrary` (decision p3-text-arbitraries-in-src); this file adds the narrow alphabet, the
-// normalization pieces, the generated locator steps and the platform SHA-256 the tests pass to those generators.
-// Every boundary is computed from the code points themselves and every range sits on scalar boundaries (decision
-// p0-law-generators-well-formed-text). Split surrogates stay negative fixtures.
 import {
   anchoredOn,
   rangeIn,
@@ -25,8 +20,7 @@ const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.che
 const at = (values: A.NonEmptyReadonlyArray<number>, index: number): number =>
   O.getOrElse(A.get(values, index), () => A.headNonEmpty(values));
 
-// One BMP letter and one astral scalar. Over two scalars a passage overlaps itself often, which the wide alphabet
-// almost never produces, so the KMP fallback step and surrogate pairs inside a repeated passage both get exercised.
+// decision: law-generators-well-formed-text
 const narrowAlphabet: A.NonEmptyReadonlyArray<number> = [0x61, 0x1f600];
 
 const narrowCodePoints = (options: { readonly minLength: number; readonly maxLength: number }) =>
@@ -63,9 +57,6 @@ export const oneOf = <Value>(arbitraries: A.NonEmptyReadonlyArray<Arbitrary.Arbi
     O.getOrElse(A.get(arbitraries, index), () => A.headNonEmpty(arbitraries))
   );
 
-// The pieces the normalizations of section 1.7 rewrite: hyphen breaks of every kind, letters on both sides of them,
-// compatibility forms, combining marks, Hangul compatibility jamo, and the four letters whose NFKC form starts
-// with a mark.
 const normalizationPieces: A.NonEmptyReadonlyArray<string> = [
   "-\n",
   "-\r\n",
@@ -109,12 +100,12 @@ export const normalizationText = Arbitrary.map(
 /** Generated well-formed, non-empty text of at most 80 scalars. */
 export const wellFormedText = wellFormedTextWith({ minLength: 1, maxLength: 80 });
 
-// A synchronous SHA-256 from the platform: the digest callback the preimage Result twins and the
-// `@beep/text/Arbitrary` generators take, and an oracle for the text digests that is independent of the `Digest`
-// service the minting functions use.
 const { createHash } = process.getBuiltinModule("node:crypto");
 
-/** The raw SHA-256 of bytes in memory. */
+/**
+ * The raw SHA-256 of bytes in memory, synchronous from the platform: the digest callback the preimage Result twins
+ * take, and an oracle for text digests independent of the `Digest` service the minting functions use.
+ */
 export const sha256: JsoncDigest = (bytes) => new Uint8Array(createHash("sha256").update(bytes).digest());
 
 /** Generated text, a scalar range in it, a capture of the text, and the anchors row of the range. */
@@ -130,8 +121,6 @@ export const anchoredCase = Arbitrary.flatMap(wellFormedText, (generated) =>
   )
 );
 
-// One run of scalars in a generated locator step: where the run ends, what the step does with it, and the text it
-// becomes or the target inserts before it.
 const StepPick = Arbitrary.all({
   ends: between(0, 2),
   kind: between(0, 9),

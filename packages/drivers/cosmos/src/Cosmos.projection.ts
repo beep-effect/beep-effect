@@ -75,8 +75,6 @@ export class CosmosGraphProjection extends S.Opaque<CosmosGraphProjection, { rea
 ) {}
 
 /**
- * Options for deterministic synthetic ontology graph generation.
- *
  * **Example** (Make synthetic graph options)
  *
  * ```ts

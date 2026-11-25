@@ -20,8 +20,6 @@ import type { FieldSchema, IdCodec, SchemaIdentity } from "./Factory/index.ts";
 const $I = $EpistemicsId.create("ClaimCore.schema");
 
 /**
- * The content address of an immutable claim core.
- *
  * **Example** (Check a content address)
  *
  * ```ts
@@ -41,8 +39,6 @@ export const ClaimId = ContentHash.pipe(
 );
 
 /**
- * Decoded content address.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -95,8 +91,6 @@ export const ChallengeKind = LiteralKit(["rebut", "undercut", "undermine"]).pipe
 );
 
 /**
- * Decoded attack kind.
- *
  * @category models
  * @since 0.0.0
  */

@@ -16,9 +16,6 @@ import type { YamlToken } from "../../YamlToken.ts";
 const $I = $YamlId.create("internal/rules/colon-spacing");
 
 /**
- * Options for `colon-spacing`: `maxSpacesBefore` (default 0) and
- * `maxSpacesAfter` (default 1) around the `:` indicator.
- *
  * **Gotchas**
  *
  * `maxSpacesBefore: 0` is legal (`key:` needs no space before the colon),

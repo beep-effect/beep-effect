@@ -23,8 +23,6 @@ const QuestionWriteReasonBase = LiteralKit([
 ]);
 
 /**
- * Why a question write or its undo failed.
- *
  * **Details**
  *
  * - `calendar-unavailable`: the calendar could not be reached or answered
@@ -57,8 +55,6 @@ export const QuestionWriteReason = QuestionWriteReasonBase.pipe(
 );
 
 /**
- * Runtime type for {@link QuestionWriteReason}.
- *
  * @see {@link QuestionWriteReason} for the reasons.
  * @category errors
  * @since 0.0.0
@@ -66,8 +62,6 @@ export const QuestionWriteReason = QuestionWriteReasonBase.pipe(
 export type QuestionWriteReason = typeof QuestionWriteReason.Type;
 
 /**
- * A question write, or the undo of one, failed at the calendar.
- *
  * **Details**
  *
  * `itemId` names the question whose write failed when the failure belongs to

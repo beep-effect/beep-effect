@@ -57,8 +57,6 @@ export class PopplerConfig extends S.Opaque<PopplerConfig, { readonly brand: uni
 ) {}
 
 /**
- * Failure reasons of the Poppler rasterizer, free of process detail.
- *
  * **Example** (List the failure reasons)
  *
  * ```ts
@@ -82,8 +80,6 @@ export const PopplerErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link PopplerErrorReason}.
- *
  * **Example** (Annotate a failure reason)
  *
  * ```ts
@@ -99,8 +95,6 @@ export const PopplerErrorReason = LiteralKit([
 export type PopplerErrorReason = typeof PopplerErrorReason.Type;
 
 /**
- * Sanitized failure of one Poppler call.
- *
  * **Example** (Build a rasterizer failure)
  *
  * ```ts

@@ -71,9 +71,6 @@ export const SectionKey = S.String.check(
 export type SectionKey = typeof SectionKey.Type;
 
 /**
- * What identifies a managed section inside a document: its key and the
- * comment style its markers are written in.
- *
  * **Gotchas**
  *
  * `commentStyle` is **required, with no default**. A defaulted style is how a
@@ -141,20 +138,17 @@ export class SectionId extends S.Class<SectionId, { readonly brand: unique symbo
    * @since 0.0.0
    */
   section(content: string, attributes?: Readonly<Record<string, string>>): Section {
+    const absentAttributesOmittedForDefault = O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) });
     return Section.make({
       key: this.key,
       commentStyle: this.commentStyle,
       content,
-      // An absent optional argument must be OMITTED, not passed as undefined.
-      ...O.getSomesStruct({ attributes: O.fromUndefinedOr(attributes) }),
+      ...absentAttributesOmittedForDefault,
     });
   }
 }
 
 /**
- * A managed section: an identity plus the content its owner wants between the
- * markers.
- *
  * **Details**
  *
  * Equality is **structural and whitespace-significant**: a template change that
@@ -279,8 +273,6 @@ export class Section extends S.Class<Section, { readonly brand: unique symbol }>
 }
 
 /**
- * A managed section as found in a document, carrying the span it occupies.
- *
  * **Details**
  *
  * `start` and `end` bound the **whole** block, from the first character of

@@ -6,6 +6,8 @@
  */
 import { $EpistemicsId } from "@beep/identity/packages";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
+import * as DateTime from "effect/DateTime";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ValidTime } from "./Claim/index.ts";
 import { ClaimId } from "./ClaimCore.schema.ts";
@@ -74,8 +76,6 @@ export const ClaimLogViolation = S.TaggedUnion({
 );
 
 /**
- * Decoded append violation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -102,8 +102,6 @@ export const AppendResult = S.TaggedUnion({
 );
 
 /**
- * Decoded append result.
- *
  * @category models
  * @since 0.0.0
  */
@@ -125,9 +123,20 @@ export type AppendResult = typeof AppendResult.Type;
  * @since 0.0.0
  */
 export class ClaimKnowledgeInterval extends S.Opaque<ClaimKnowledgeInterval, { readonly brand: unique symbol }>()(
-  S.Struct({ start: S.DateTimeUtcFromMillis, end: S.OptionFromOptionalKey(S.DateTimeUtcFromMillis) }).pipe(
-    $I.annoteSchema("ClaimKnowledgeInterval", {
-      description: "A claim's half-open knowledge interval ending at its explicit superseder.",
-    })
-  )
+  S.Struct({ start: S.DateTimeUtcFromMillis, end: S.OptionFromOptionalKey(S.DateTimeUtcFromMillis) })
+    .check(
+      S.makeFilter(
+        ({ start, end }: { readonly start: DateTime.Utc; readonly end: O.Option<DateTime.Utc> }) =>
+          !O.exists(end, (upper) => DateTime.isLessThan(upper, start)),
+        $I.annote("ClaimKnowledgeIntervalOrder", {
+          description: "Knowledge order: an explicit end never precedes the start; equal bounds stay legal.",
+          message: "Expected the knowledge end to be no earlier than its start.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("ClaimKnowledgeInterval", {
+        description: "A claim's half-open knowledge interval ending at its explicit superseder.",
+      })
+    )
 ) {}

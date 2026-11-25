@@ -61,8 +61,11 @@ describe("CommentStyle", () => {
     });
 
     it("derives a stable id that separates prefix from suffix unambiguously", () => {
-      // Without a separator, {prefix:"ab"} and {prefix:"a",suffix:"b"} would collide.
-      assert.notStrictEqual(CommentStyle.make({ prefix: "ab" }).id, CommentStyle.make({ prefix: "a", suffix: "b" }).id);
+      assert.notStrictEqual(
+        CommentStyle.make({ prefix: "ab" }).id,
+        CommentStyle.make({ prefix: "a", suffix: "b" }).id,
+        'without a separator, {prefix:"ab"} and {prefix:"a",suffix:"b"} would collide'
+      );
       assert.strictEqual(CommentStyle.make({ prefix: "#" }).id, CommentStyle.hash.id);
     });
   });

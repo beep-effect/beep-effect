@@ -45,8 +45,6 @@ export const WorktreeRemovalRootKind = LiteralKit(["managed", "nested", "t3", "f
 );
 
 /**
- * Origin of a worktree removal root.
- *
  * @category type-level
  * @since 0.0.0
  */

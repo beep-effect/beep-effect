@@ -21,8 +21,6 @@ const applicationNumberPattern = /^\d{8}$/;
 const patentNumberPattern = /^(?:RE|PP|D|H|T)?\d{5,8}$/;
 
 /**
- * Normalized eight-digit USPTO application number.
- *
  * **Example** (Log application number schema)
  *
  * ```ts
@@ -51,8 +49,6 @@ export const UsptoApplicationNumber = S.String.check(
 );
 
 /**
- * Type for {@link UsptoApplicationNumber}.
- *
  * **Example** (Decode application number)
  *
  * ```ts
@@ -112,8 +108,6 @@ export const UsptoApplicationNumberFromText = S.String.pipe(
 );
 
 /**
- * Type for {@link UsptoApplicationNumberFromText}.
- *
  * **Example** (Type free-text application number)
  *
  * ```ts
@@ -160,8 +154,6 @@ export const UsptoPatentNumber = S.String.check(
 );
 
 /**
- * Type for {@link UsptoPatentNumber}.
- *
  * **Example** (Decode patent number)
  *
  * ```ts
@@ -224,8 +216,6 @@ export const UsptoPatentNumberFromText = S.String.pipe(
 );
 
 /**
- * Type for {@link UsptoPatentNumberFromText}.
- *
  * **Example** (Type free-text patent number)
  *
  * ```ts
@@ -414,8 +404,6 @@ export class UsptoApplicationMetadata extends S.Opaque<UsptoApplicationMetadata,
 }
 
 /**
- * Parent and child continuity application numbers for one application.
- *
  * **Example** (Create empty continuity)
  *
  * ```ts
@@ -478,8 +466,6 @@ export class UsptoDocumentDownloadOption extends S.Opaque<
 ) {}
 
 /**
- * Reference to one document in an application file wrapper.
- *
  * **Example** (Log document reference schema)
  *
  * ```ts import.meta.vitest name="Log document reference schema"

@@ -176,9 +176,13 @@ describe("@beep/docket-intake review hub questions", () => {
         const items = yield* store.list;
 
         expect([first.entered, first.needsReview]).toStrictEqual([1, 0]);
-        expect(A.map(items, ({ itemId, kind }) => [kind, Str.replace(/:[0-9a-f]{32}$/u, "")(itemId)])).toStrictEqual([
-          ["question", "docket-intake:agents-disagree"],
-        ]);
+        expect(A.every(items, isCurrentReviewItem)).toBe(true);
+        expect(
+          A.map(A.filter(items, isCurrentReviewItem), ({ itemId, kind }) => [
+            kind,
+            Str.replace(/:[0-9a-f]{32}$/u, "")(itemId),
+          ])
+        ).toStrictEqual([["question", "docket-intake:agents-disagree"]]);
         expect(lineCount(once)).toBe(1);
         const readFileString4 = yield* fs.readFileString(`${directory}/items.jsonl`);
         expect(readFileString4).toBe(once);

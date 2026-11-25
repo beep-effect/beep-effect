@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("entities/LegalPositionRelator/LegalPositionRelator.values");
 
 /**
- * The exercise lineage a stored legal position rests on.
- *
  * **When to use**
  *
  * Use as a relator's grounding. Every stored relation carries one, and it is a

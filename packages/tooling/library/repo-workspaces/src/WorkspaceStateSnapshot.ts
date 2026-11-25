@@ -58,10 +58,6 @@ const SnapshotVersion = S.optionalKey(S.String).pipe(
 );
 
 /**
- * One workspace member as captured in a {@link WorkspaceStateSnapshot} — the
- * serializable slice a snapshot diff reads: identity, version, location, and the
- * four dependency records.
- *
  * **Details**
  *
  * Deliberately narrower than {@link WorkspacePackage}: a snapshot is a value to
@@ -192,9 +188,6 @@ const versionIndexOf = (
 };
 
 /**
- * The state of a whole workspace at one moment — its packages and its assembled
- * catalog set — as a serializable value.
- *
  * **Details**
  *
  * Produced by `WorkspaceSnapshots.at` (a git ref, read with no checkout)

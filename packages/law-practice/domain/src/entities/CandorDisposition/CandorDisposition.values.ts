@@ -14,8 +14,6 @@ const CandorJudgmentBase = LiteralKit(["Submit", "DoNotSubmit"]);
 const CandorDispositionLifecycleBase = LiteralKit(["active", "superseded", "withdrawn"]);
 
 /**
- * What an attorney decided to do about one recorded occurrence.
- *
  * **When to use**
  *
  * Use to record a decision a human made. Never derive a member of this
@@ -53,8 +51,6 @@ export const CandorJudgment = CandorJudgmentBase.pipe(
 );
 
 /**
- * Runtime type for {@link CandorJudgment}.
- *
  * @see {@link CandorJudgment} for the runtime schema and the no-computed-judgment rule.
  * @category models
  * @since 0.0.0
@@ -97,8 +93,6 @@ export const CandorDispositionLifecycle = CandorDispositionLifecycleBase.pipe(
 );
 
 /**
- * Runtime type for {@link CandorDispositionLifecycle}.
- *
  * @see {@link CandorDispositionLifecycle} for the runtime schema and derivation rule.
  * @category models
  * @since 0.0.0

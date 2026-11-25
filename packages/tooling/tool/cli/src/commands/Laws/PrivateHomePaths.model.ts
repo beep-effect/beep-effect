@@ -35,8 +35,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/PrivateHomePaths.model");
 
 /**
- * Rule that produced a private home path finding.
- *
  * **Details**
  *
  * `private-home-path` marks a home directory whose user is not a placeholder.
@@ -62,16 +60,12 @@ export const PrivateHomePathRule = LiteralKit(["private-home-path", "exemption-c
 );
 
 /**
- * Type-level member of {@link PrivateHomePathRule}.
- *
  * @category models
  * @since 0.0.0
  */
 export type PrivateHomePathRule = typeof PrivateHomePathRule.Type;
 
 /**
- * Home directory user names that tracked text may record.
- *
  * **Details**
  *
  * Fixture, documentation and example users (`ada`, `alice`, `dev`, `example`,
@@ -172,8 +166,6 @@ export const PlaceholderHomeUser = LiteralKit([
 );
 
 /**
- * Type-level member of {@link PlaceholderHomeUser}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -230,8 +222,6 @@ export const HomeRouteSegment = LiteralKit([
 );
 
 /**
- * Type-level member of {@link HomeRouteSegment}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -307,8 +297,6 @@ export const privateHomePathScopedUsers: ReadonlyArray<PrivateHomePathScopedUser
 ];
 
 /**
- * One sealed archive allowed to keep a fixed number of recorded home paths.
- *
  * **Details**
  *
  * `count` is the exact number of non-placeholder home paths the file records.
@@ -439,8 +427,6 @@ export const privateHomePathExemptions: ReadonlyArray<PrivateHomePathExemption> 
 );
 
 /**
- * One home path that tracked text must not record.
- *
  * **Example** (Construct a finding)
  *
  * ```ts
@@ -477,8 +463,6 @@ export class PrivateHomePathFinding extends S.Opaque<PrivateHomePathFinding, { r
 ) {}
 
 /**
- * Runtime options for the private home path law.
- *
  * **Details**
  *
  * `exemptions` defaults to {@link privateHomePathExemptions}; tests pass their
@@ -524,8 +508,6 @@ export class PrivateHomePathsOptions extends S.Opaque<PrivateHomePathsOptions, {
 ) {}
 
 /**
- * Result of one private home path law run.
- *
  * **Details**
  *
  * `skippedExemptions` lists the exemption files the run did not check because

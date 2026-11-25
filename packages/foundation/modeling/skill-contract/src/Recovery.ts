@@ -25,11 +25,6 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 
 const $I = $SkillContractId.create("Recovery");
 
-// A budget duration travels as a JSON number of whole milliseconds. The check
-// pins that representation on the Duration itself: infinities and negative
-// values aside, a sub-millisecond nanosecond value or a magnitude past the
-// safe-integer range encodes to a number that decodes to a different Duration
-// (or to no JSON number at all), so such values never round-trip.
 const isWholeMillisDuration = (duration: Duration.Duration): boolean => {
   const millis = Duration.toMillis(duration);
   return Number.isSafeInteger(millis) && millis >= 0 && Duration.Equivalence(Duration.millis(millis), duration);
@@ -45,8 +40,6 @@ const BudgetDurationCheck = S.makeFilter(
 );
 
 /**
- * Whole non-negative millisecond duration encoded as a JSON number.
- *
  * **Details**
  *
  * The encoded form is the millisecond count, so the decoded `Duration` is
@@ -73,16 +66,12 @@ export const BudgetDuration = S.DurationFromMillis.check(BudgetDurationCheck).pi
 );
 
 /**
- * Runtime type decoded by {@link BudgetDuration}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BudgetDuration = typeof BudgetDuration.Type;
 
 /**
- * Hard attempt, operation, and time limits for bounded recovery.
- *
  * **Example** (Inspect recovery budget fields)
  *
  * ```ts import.meta.vitest name="Inspect recovery budget fields"
@@ -134,8 +123,6 @@ export class RecoveryBudgetConsumed extends S.Opaque<RecoveryBudgetConsumed, { r
 ) {}
 
 /**
- * Closed outcome vocabulary for one recovery attempt.
- *
  * **Example** (Inspect attempt outcomes)
  *
  * ```ts import.meta.vitest name="Inspect attempt outcomes"
@@ -154,16 +141,12 @@ export const RecoveryAttemptOutcome = LiteralKit(["succeeded", "failed", "aborte
 );
 
 /**
- * Runtime type decoded by {@link RecoveryAttemptOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RecoveryAttemptOutcome = typeof RecoveryAttemptOutcome.Type;
 
 /**
- * Auditable outcome and observations for one recovery attempt.
- *
  * **Example** (Inspect recovery attempt fields)
  *
  * ```ts import.meta.vitest name="Inspect recovery attempt fields"
@@ -192,8 +175,6 @@ export class RecoveryAttemptReceipt extends S.Opaque<RecoveryAttemptReceipt, { r
 ) {}
 
 /**
- * Closed reason vocabulary for terminal recovery failure.
- *
  * **Example** (Inspect terminal failure reasons)
  *
  * ```ts
@@ -218,8 +199,6 @@ export const FailureTerminalReason = LiteralKit([
 );
 
 /**
- * Runtime type decoded by {@link FailureTerminalReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -303,8 +282,6 @@ const RecoveryBudgetCoherenceCheck = S.makeFilter(
 );
 
 /**
- * Predicate recording a bounded-recovery terminal failure and partial effects.
- *
  * **Example** (Inspect failure predicate fields)
  *
  * ```ts import.meta.vitest name="Inspect failure predicate fields"
@@ -365,8 +342,6 @@ export const FailureReceipt = EvidenceReceipt(FailurePredicateType, FailureRecei
 export type FailureReceipt = typeof FailureReceipt.Type;
 
 /**
- * Explicit policy value disabling recovery.
- *
  * **Example** (Disable recovery)
  *
  * ```ts import.meta.vitest name="Disable recovery"
@@ -444,8 +419,6 @@ export const RecoveryPolicy = LiteralKit(["none", "bounded"])
   );
 
 /**
- * Runtime type decoded by {@link RecoveryPolicy}.
- *
  * @category models
  * @since 0.0.0
  */

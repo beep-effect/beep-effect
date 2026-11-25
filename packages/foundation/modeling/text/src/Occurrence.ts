@@ -191,8 +191,7 @@ export const OccurrenceId = ContentHash.pipe(
  */
 export type OccurrenceId = typeof OccurrenceId.Type;
 
-// The twelve elements after the domain tag, in the order decision p0-rq4 fixes. The unit is a literal: one range
-// spelled in two units must not be two ids (decision p2-occurrence-id-minting-and-proof-gate).
+// decision: occurrence-preimage-elements
 const OccurrenceElements = S.Tuple([
   WellFormedText,
   WellFormedText,
@@ -210,8 +209,7 @@ const OccurrenceElements = S.Tuple([
 
 const decodeAnchored = S.decodeUnknownEffect(Anchored);
 
-// The preimage schema runs between an anchors row and its elements. Decoding builds the row through its own
-// schema, so a golden whose width disagrees with its quote is a schema issue; encoding reads the row's fields.
+// decision: occurrence-preimage-elements
 const OccurrenceSchema = OccurrenceElements.pipe(
   S.decodeTo(S.toType(Anchored), {
     decode: SchemaGetter.transformEffect(
