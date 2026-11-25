@@ -290,7 +290,7 @@ const assertAppTokenPush = (steps: ReadonlyArray<WorkflowStep>, pushStep: string
   expect(stepIndexByName(steps, "Check the push App credential")).toBe(mint - 1);
   expect(stepIndexByName(steps, pushStep)).toBe(mint + 1);
   expect(stepByName(steps, APP_TOKEN_STEP).uses).toBe(
-    "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
+    "actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc"
   );
   expect(stepInputs(stepByName(steps, APP_TOKEN_STEP))).toEqual({
     "client-id": "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
@@ -2982,7 +2982,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         APP_CLIENT_ID: "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
       });
       expect(stepByName(steps, "Create pin-bump App token").uses).toBe(
-        "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
+        "actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc"
       );
       expect(stepInputs(stepByName(steps, "Create pin-bump App token"))).toEqual({
         "client-id": "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",

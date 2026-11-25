@@ -1927,7 +1927,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
         );
         assertSome(
           O.map(mint, (step) => yamlAt(step, ["uses"])),
-          "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
+          "actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc"
         );
         expect(text).toContain("run: bun run beep ci fleet-missed-event-check");
         expect(text).not.toContain("beep-fleet");
