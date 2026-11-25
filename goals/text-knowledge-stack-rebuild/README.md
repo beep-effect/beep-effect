@@ -67,14 +67,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P6 L5 and L7, content-complete in its lane. P0 merged as `dcf6b16a77d`
-(PR #3420); P1 to P5 ran in their own lanes (see `PLAN.md`). P6 follows
-`research/2026-11-24-p6-design.md` and its decisions
-(`decisions/2026-11-24-p6-*.md`) and ships as one PR stacked on P5. The
+P7 cut-over and retirement, content-complete in its lane. P0 merged as
+`dcf6b16a77d` (PR #3420); P1 to P6 ran in their own lanes (see `PLAN.md`).
+P7 follows `research/2026-11-24-p7-design.md` and its decisions
+(`decisions/2026-11-24-p7-*.md`) and ships as one PR stacked on P6, which
+follows `research/2026-11-24-p6-design.md`. The
 Practice KG bundle rebuild over the corpus and the operator grants
 configuration run in the operational environment, outside the repo.
 
 ## Latest Evidence
+
+2026-11-25: P7 deletes `@beep/schema-org` (cb2ac027907) and `@beep/nlp`
+(66a3513e3d6) through `delete-package`, with both names reserved in the
+retired-name registry. Section 14 of the knowledge-stack chapter absorbed the
+remaining `THEORY.md` claims, the vision document and its companions are
+corrected, one `standards/architecture/DECISIONS.md` entry records the landings
+and amends the split ruling, the consumer census records every disposition and
+the S31 counts, and the cli Kb `Selector` text-quote case is kept by decision.
 
 2026-11-24: P6 rows 0 to 15 committed in the P6 lane. L5-1 to L5-3 are green
 (`research/law-test-plan.md`); `@beep/nlp-processing` owns Core, the graph node

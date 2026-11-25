@@ -169,8 +169,8 @@ lines in the 9 langextract and semantica files that construct a member.
 | Core `CharPosition` | 6 / 3 (wink 2, nlp-processing 2, law-practice use-cases 2) | none; target `@beep/text` position | 0 | 0 | 6 / 3 | (in Core) | deleted in P6 in favour of the text position; `Token.span` is a `@beep/text` position [D] | `CharPosition` is a fourth offset type |
 | Core `Similarity`, `Vectorization` | 68 / 10 (wink 61 / 5, nlp-processing 7 / 5) | none | 0 | 47 | 21 / 4 | (in Core) | adapted in P6: moved to `@beep/nlp-processing` with Core [D] | none |
 | Core `Pattern*` | 8 / 3 (wink 7 / 2, nlp-processing 1 / 1) | none | 0 | 8 | 0 | (in Core) | adapted in P6: moved to `@beep/nlp-processing` with Core [D] | none |
-| `IdentifierText`, `PathText`, `QueryText`, `VariantText` | 0 / 0 | none | 0 | 0 | 0 | 341 / 4 | retire in P7 (no consumer) [D] | none |
-| `THEORY.md` | 0 inbound links outside this packet | n/a | n/a | n/a | n/a | 194 / 1 | retire: absorbed by the chapter and deleted with the package [D] | `:72` cites `src/Graph/TypeClass.ts`, which is in `nlp-processing` |
+| `IdentifierText`, `PathText`, `QueryText`, `VariantText` | 0 / 0 | none | 0 | 0 | 0 | 341 / 4 | deleted in P7 with the package (66a3513e3d6; no consumer) [D] | none |
+| `THEORY.md` | 0 inbound links outside this packet | n/a | n/a | n/a | n/a | 194 / 1 | deleted in P7 with the package, after section 14 of the knowledge-stack chapter absorbed it (9f64252ca95) [D] | `:72` cites `src/Graph/TypeClass.ts`, which is in `nlp-processing` |
 
 Facet totals: facet usage sums 428 (404 unique usage lines in 45 files; a line naming
 two facets counts in both); construction 168; covered 3; uncovered 257 (Core 126,
@@ -213,12 +213,12 @@ each facet unless a consumer is named before the PR.
 
 | Facet | Consumed surface | Upstream / kept-package coverage | Covered | Uncovered | Construction | Owner lines / files | Disposition | Semantic loss |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Typed graph construction (`JsonLdDocument`, `JsonLdNode`, `buildResult`) | 0 | partial: `@beep/rdf/JsonLd` (`JsonLdContext`, `JsonLdNodeIdentifier`, `JsonLdReferenceValue`); no typed schema.org node union | 0 | 0 | 0 | `JsonLdDocument.ts` 653 | retire in P7 with the whole package [D] | none (no consumer) |
-| Node classes (`Thing`, `CreativeWork`, `Person`, `Organization`, `SoftwareSourceCode`, `TechArticle`, `APIReference`) | 0 | none | 0 | 0 | 0 | 696 / 7 | retire in P7 [D] | none |
-| `NodeRef` (`NodeId`, `InvalidNodeIdError`, `HasNodeId`) | 0 | partial: `@beep/rdf` `IRIReference`, `JsonLdReferenceValue` | 0 | 0 | 0 | 324 / 1 | retire in P7 [D] | none |
-| Serialization (`toScriptBody`, `JsonLdDocument.ts:553-640`) | 0 | partial: `@beep/html/Html.script` (`ScriptDataBlockMimeType` admits `application/ld+json`); escaping parity unmeasured (no shared test) | 0 | 0 | 0 | in `JsonLdDocument.ts` | retire in P7 [D] | none |
-| Conformance entrypoint (`Conformance.ts`, `conformance-entry.ts`) | 0 | none | 0 | 0 | 0 | 926 / 2 | retire in P7 [D] | none |
-| Vocabulary tables (`Vocabulary.ts`, `internal/vocabulary.ts`, `internal/rows.ts`) | 0 | partial: `@beep/rdf/Vocab/SchemaOrg` (`SCHEMA_ORG_NAMESPACE`, `SCHEMA_ORG_TERMS`) and `@beep/identity` `CoreVocab.schema` (`identity/src/Vocab.ts:393`) | 0 | 0 | 0 | 5,245 / 3 | retire in P7 (third copy of schema.org terms) [D] | none |
+| Typed graph construction (`JsonLdDocument`, `JsonLdNode`, `buildResult`) | 0 | partial: `@beep/rdf/JsonLd` (`JsonLdContext`, `JsonLdNodeIdentifier`, `JsonLdReferenceValue`); no typed schema.org node union | 0 | 0 | 0 | `JsonLdDocument.ts` 653 | retired in P7 with the whole package (cb2ac027907) [D] | none (no consumer) |
+| Node classes (`Thing`, `CreativeWork`, `Person`, `Organization`, `SoftwareSourceCode`, `TechArticle`, `APIReference`) | 0 | none | 0 | 0 | 0 | 696 / 7 | retired in P7 (cb2ac027907) [D] | none |
+| `NodeRef` (`NodeId`, `InvalidNodeIdError`, `HasNodeId`) | 0 | partial: `@beep/rdf` `IRIReference`, `JsonLdReferenceValue` | 0 | 0 | 0 | 324 / 1 | retired in P7 (cb2ac027907) [D] | none |
+| Serialization (`toScriptBody`, `JsonLdDocument.ts:553-640`) | 0 | partial: `@beep/html/Html.script` (`ScriptDataBlockMimeType` admits `application/ld+json`); escaping parity unmeasured (no shared test) | 0 | 0 | 0 | in `JsonLdDocument.ts` | retired in P7 (cb2ac027907) [D] | none |
+| Conformance entrypoint (`Conformance.ts`, `conformance-entry.ts`) | 0 | none | 0 | 0 | 0 | 926 / 2 | retired in P7 (cb2ac027907) [D] | none |
+| Vocabulary tables (`Vocabulary.ts`, `internal/vocabulary.ts`, `internal/rows.ts`) | 0 | partial: `@beep/rdf/Vocab/SchemaOrg` (`SCHEMA_ORG_NAMESPACE`, `SCHEMA_ORG_TERMS`) and `@beep/identity` `CoreVocab.schema` (`identity/src/Vocab.ts:393`) | 0 | 0 | 0 | 5,245 / 3 | retired in P7 (cb2ac027907; third copy of schema.org terms). The package vendored schema.org v30.0 while the pinned artifact is v30.1; no consumer read either table, so the skew retires with it [D] | none |
 
 Candidate consumer that does not use the package: `apps/oip-web/src/content/OipSeo.ts:40-70`
 hand-writes schema.org JSON-LD (`Person`, `LegalService`, `WebSite`) rendered at
@@ -343,7 +343,7 @@ Further encodings the tree has that the five do not cover:
 | law-practice `TextQuote`, `SourceRef` | `packages/law-practice/domain/src/values/SourceRef/TextQuote.model.ts:39`, `SourceRef.model.ts:226` | 4 lines / 2 files (`use-cases/src/ClaimSelfCheck.tools.ts`, `DocketIntake/DocketQuestions.schemas.ts`); in-domain `ReviewItem.model.ts`, `Question.model.ts` | report L1: projections of an occurrence; `SourceRef` also carries Box file, page and crop (non-text locator) | adapt: projections of an occurrence in P2 and P3 [D] |
 | law-practice `SourceQuote` | `packages/law-practice/use-cases/src/internal/claimEvidence.ts:41` (`readonly [startChar, quote]`, `@internal`) | 10 lines, 1 file (itself) | tuple without `endChar` | adapt: projection of an occurrence in P2 and P3 [D] |
 | agent-memory-store `OccurrenceAnchor`, `TextUnit` | `packages/tooling/library/agent-memory-store/src/SpanAnchor.models.ts:35,86` | 20 lines / 7 files inside the package | a second occurrence preimage (`SourceTextIdentity` + unit + `TextAnchor`); stored: the node events (`src/NodeEvent.events.ts`) persist an `OccurrenceAnchor` whose unit literal is `utf16` (`SpanAnchor.models.ts:35`) | adapt in P2: the stored events keep their bytes and P2 derives `OccurrenceId` from the stored anchor at read time, mapping `utf16` to `utf16-code-unit` [Q4] |
-| cli Kb `Selector` (`TextQuote { exact, prefix, suffix, start, end }` + media interval) | `packages/tooling/tool/cli/src/commands/Kb/Kb.schemas.ts:110` | `Kb.service.ts` | quote-and-position in one case; the `TextQuote` case is a text anchor | keep: repo tooling with no consumer in the stack; P7 re-checks it [D] |
+| cli Kb `Selector` (`TextQuote { exact, prefix, suffix, start, end }` + media interval) | `packages/tooling/tool/cli/src/commands/Kb/Kb.schemas.ts:110` | `Kb.service.ts` | quote-and-position in one case; the `TextQuote` case is a text anchor | kept after the P7 re-check: no stack package consumes it, its stored rows carry the case, it mints no identity and it validates through `@beep/text` (decision `2026-11-24-p7-the-kb-selector-text-quote-case-is-kept`) [D] |
 | rdf `WebAnnotation*Selector` wire classes | `rdf/src/Adapters/WebAnnotation.ts:60,100,138,174` | in rdf only | the `oa:` codec target | keep [D]; P2 (commit 9) made `WebAnnotationTarget.selector` one or many (`S.ArrayEnsure`, at least one; a single-selector annotation keeps its wire bytes) and added `textAnchorToWebAnnotationTarget` and `webAnnotationTargetToTextAnchor` with the typed `WebAnnotationAnchorRefused` (decision `2026-11-22-p2-text-anchor-oa-codec`) |
 
 ---
@@ -727,3 +727,19 @@ Operations, Algebra and `GraphOps` are deleted from `@beep/nlp` with zero consum
 deleted with it. `@beep/nlp` keeps only the four P7 text brands
 (`IdentifierText`, `PathText`, `QueryText`, `VariantText`) and `THEORY.md`, which P7
 retires with the package.
+
+P7 outcome (2026-11-25): `@beep/schema-org` (cb2ac027907) and `@beep/nlp` (66a3513e3d6)
+are deleted through `bun run beep delete-package`, one commit each, with no consumer
+left; recover the sources from 8bdd55d39f4 and cb2ac027907. Both names are reserved in
+`standards/changesets.retired-packages.json`. Every group b and c facet is now deleted,
+replaced or adapted, and the cli Kb `Selector` row of group f is kept by decision. S31
+per package after P7, against the base counts of the table above: nlp coverage baseline
+29 to 0, schema-first 1 to 0, boundary provenance 1 to 0, the test-runtime allowance 3 to
+0, and `.gitleaks.toml` 1 to 1 (a recorded hash inside a frozen boolean-creep data file,
+not a live path); schema-org coverage baseline 15 to 0, schema-first 1 to 0, `_typos.toml`
+excludes 1 to 0 and in-package suppressions 3 to 0; nlp-processing in-package suppressions
+2 to 2. The nlp-processing coverage rows (50 at the base, 63 at the merged P6 head) grew in
+P6, outside P7's diff. The lexical nlp exit is scoped to live files, because the
+retired-name registry is history the doctor already reads:
+`rg -l '@beep/nlp["/]' packages apps standards tsconfig.json --glob '!standards/changesets.retired-packages.json'`
+(decision `2026-11-24-p7-the-nlp-exit-excludes-the-retired-name-registry-and-row-3-defers-cache-baselines`).
