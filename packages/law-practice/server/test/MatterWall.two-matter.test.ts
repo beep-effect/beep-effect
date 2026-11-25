@@ -62,9 +62,11 @@ import {
   SourceTextIdentity,
   SourceTextLocator,
 } from "@beep/text/SourceTextIdentity";
-import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { McpServerClient } from "effect/ai/McpSchema";
@@ -310,7 +312,9 @@ const catalogFiles = (withBeta: boolean): ReadonlyArray<CatalogFile> => [
 const writeCorpus = Effect.fn("TwoMatterTest.writeCorpus")(function* (withBeta: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "two-matter-corpus-" });
+  const corpusRoot = yield* fs
+    .makeTempDirectoryScoped({ prefix: "two-matter-corpus-" })
+    .pipe(Effect.flatMap(fs.realPath));
   const catalogRoot = path.join(corpusRoot, "catalog");
   yield* fs.makeDirectory(catalogRoot, { recursive: true });
   const files = catalogFiles(withBeta);
@@ -494,7 +498,7 @@ class TwoMatterBundles extends Context.Service<
   }
 >()("@beep/law-practice-server/test/MatterWall.two-matter.test/TwoMatterBundles") {}
 
-const testServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const fileServices = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 
 const bundlesLayer = Layer.effect(
   TwoMatterBundles,
@@ -503,7 +507,13 @@ const bundlesLayer = Layer.effect(
     const withoutBeta = yield* buildBundle(false);
     return TwoMatterBundles.of({ withBeta, withoutBeta });
   })
-).pipe(Layer.provide(testServices));
+).pipe(Layer.provide(fileServices));
+
+const committedCitationFixtures = Effect.fn("TwoMatterTest.committedCitationFixtures")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.realPath(import.meta.dirname);
+  return yield* loadCitationFrozenEditionFixtures();
+});
 
 const stubClientInfo = { name: "two-matter-test", version: "0.0.0" };
 
@@ -591,16 +601,22 @@ const searchReads = Effect.fn("TwoMatterTest.searchReads")(function* () {
 });
 
 describe("MatterWall two matters with identical bytes", () => {
-  it.effect("MatterWall 0 identity mints two claim ids for cores that differ only by matter scope", () =>
-    Effect.gen(function* () {
-      const [underA, underB, againA] = yield* Effect.all(
-        [LawClaimArrows.mint(coreIn(scopeA)), LawClaimArrows.mint(coreIn(scopeB)), LawClaimArrows.mint(coreIn(scopeA))],
-        { concurrency: 1 }
-      );
-      expect(underA).not.toBe(underB);
-      expect(underA).toBe(againA);
-    }).pipe(provideScopedLayer(NodeCrypto.layer))
-  );
+  it.layer(NodeCrypto.layer)("identity", (it) => {
+    it.effect("MatterWall 0 identity mints two claim ids for cores that differ only by matter scope", () =>
+      Effect.gen(function* () {
+        const [underA, underB, againA] = yield* Effect.all(
+          [
+            LawClaimArrows.mint(coreIn(scopeA)),
+            LawClaimArrows.mint(coreIn(scopeB)),
+            LawClaimArrows.mint(coreIn(scopeA)),
+          ],
+          { concurrency: 1 }
+        );
+        expect(underA).not.toBe(underB);
+        expect(underA).toBe(againA);
+      })
+    );
+  });
 
   it.effect("MatterWall 1 source retrieval returns A's capture and refuses B's identical bytes to pA", () =>
     Effect.gen(function* () {
@@ -618,10 +634,10 @@ describe("MatterWall two matters with identical bytes", () => {
     })
   );
 
-  it.layer(testServices, { timeout: "2 minutes" })("citation anchors", (it) => {
+  it.layer(fileServices, { timeout: "2 minutes" })("citation anchors", (it) => {
     it.effect("MatterWall 2 anchor resolution never yields a proof under pA for bytes bound to B", () =>
       Effect.gen(function* () {
-        const fixtures = yield* loadCitationFrozenEditionFixtures();
+        const fixtures = yield* committedCitationFixtures();
         const frozen = yield* makeCitationFrozenEditions(fixtures.bundle);
         const input = yield* prepareCallbackObservation(
           CitationCallbackObservation.make({
@@ -699,7 +715,7 @@ describe("MatterWall two matters with identical bytes", () => {
     })
   );
 
-  it.layer(testServices, { timeout: "1 minute" })("provenance through the composed server", (it) => {
+  it.layer(NodeCrypto.layer, { timeout: "1 minute" })("provenance through the composed server", (it) => {
     it.effect("MatterWall 7 provenance traversal omits B's capture under pA and returns it under pAB", () =>
       Effect.gen(function* () {
         const captureA = yield* mintCaptureId(officeActionIn(scopeA));
@@ -729,17 +745,33 @@ describe("MatterWall two matters with identical bytes", () => {
           });
         const underA = yield* traverseAs(principalA);
         const underAB = yield* traverseAs(principalAB);
-        expect(summary(underA.ofA)).toEqual(O.some({ activities: [propose.id], captures: [captureA] }));
+        assertSome(summary(underA.ofA), { activities: [propose.id], captures: [captureA] });
         expect(underA.ofB).toEqual(ProvenanceResult.cases.Missing.make({}));
-        expect(summary(underAB.ofA)).toEqual(
-          O.some({ activities: sortedIds([extract.id, propose.id]), captures: sortedIds([captureA, captureB]) })
-        );
-        expect(O.isSome(summary(underAB.ofB))).toBe(true);
+        assertSome(summary(underAB.ofA), {
+          activities: sortedIds([extract.id, propose.id]),
+          captures: sortedIds([captureA, captureB]),
+        });
+        summary(underAB.ofB).pipe(O.isSome, assertTrue);
       })
     );
   });
 
-  it.layer(Layer.merge(testServices, bundlesLayer), { timeout: "3 minutes" })("the Practice KG bundle", (it) => {
+  it.layer(Layer.merge(fileServices, bundlesLayer), { timeout: "3 minutes" })("the Practice KG bundle", (it) => {
+    it.effect("builds both bundles on disk, each with its own claims store", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { withBeta, withoutBeta } = yield* TwoMatterBundles;
+        const stores = yield* Effect.forEach(
+          [withBeta, withoutBeta],
+          (bundle) => Effect.flatMap(fs.realPath(path.join(bundle.bundleDir, "kg.pglite")), fs.exists),
+          { concurrency: 1 }
+        );
+        expect(stores).toEqual([true, true]);
+        expect(withBeta.bundleDir).not.toBe(withoutBeta.bundleDir);
+      })
+    );
+
     it.effect("MatterWall 3 graph query returns A's rows and A's own document node to pA, and no B row", () =>
       Effect.gen(function* () {
         const { withBeta } = yield* TwoMatterBundles;

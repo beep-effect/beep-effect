@@ -2,6 +2,7 @@ import { LawPrincipalId } from "@beep/law-practice-domain/values/LawClaim";
 import { GrantedScopes, LawPrincipal, MatterAccess, MatterDenialReason } from "@beep/law-practice-use-cases/MatterWall";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
@@ -30,7 +31,7 @@ describe("MatterWall schemas", () => {
   it.effect("refuses a denial without a declared reason", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(decodeAccess({ _tag: "Denied", reason: "hidden" }));
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 

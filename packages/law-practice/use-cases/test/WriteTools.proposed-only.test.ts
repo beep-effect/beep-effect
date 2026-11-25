@@ -2,6 +2,7 @@ import { ExtractionDocument } from "@beep/annotation/Kinds";
 import { SourceTextResolver } from "@beep/file-processing/SourceText";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import { ActivityRecord } from "@beep/jsonc/ActivityRecord";
 import { AnswerRow, VerdictRow } from "@beep/law-practice-domain";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
@@ -67,9 +68,11 @@ import {
 import { sanitizedToolkit } from "@beep/mcp-kit/SanitizedSpan";
 import { fromApprovedToolsPolicy, TierGate, TierGatePolicy } from "@beep/mcp-kit/TierGate";
 import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
+import { ActivityId } from "@beep/schema/ContentHash";
 import { it } from "@beep/test-runner";
 import { mintCaptureId } from "@beep/text/Capture";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Tool from "effect/ai/Tool";
 import * as Toolkit from "effect/ai/Toolkit";
@@ -489,7 +492,28 @@ describe("write tools emit proposed records only", () => {
         const absent = yield* scenario.provenance(`sha256:${Str.repeat(64)("0")}`);
         const foundClaim = S.is(ClaimProvenance)(found.result) ? O.some(found.result.claim) : O.none();
         expect(found.isFailure).toBe(false);
-        expect(foundClaim).toEqual(O.some(record.claim));
+        assertSome(foundClaim, record.claim);
+        const stored = yield* S.decodeUnknownEffect(S.toType(ClaimProvenance))(found.result);
+        const earliest = ActivityId.make(`sha256:${Str.repeat(64)("0")}`);
+        const provenance = ClaimProvenance.make({
+          ...stored,
+          activities: HashSet.fromIterable(
+            A.flatMap(A.fromIterable(stored.activities), (activity) => [
+              activity,
+              ActivityRecord.make({ ...activity, id: earliest }),
+            ])
+          ),
+        });
+        const encoded = yield* S.encodeEffect(ClaimProvenance)(provenance);
+        const decoded = yield* S.decodeEffect(ClaimProvenance)(encoded);
+        expect(A.map(encoded.activities, (activity) => activity.id)).toEqual(
+          A.sort(
+            A.map(encoded.activities, (activity) => activity.id),
+            Order.String
+          )
+        );
+        assertSome(A.head(encoded.activities).pipe(O.map((activity) => activity.id)), earliest);
+        expect(HashSet.size(decoded.activities)).toBe(HashSet.size(provenance.activities));
         expect(absent.isFailure).toBe(true);
         expect(S.is(ClaimProvenanceMissing)(absent.result)).toBe(true);
       })

@@ -14,6 +14,7 @@
  */
 
 import { observeWorkflow, redactCauseSummary, summarizeCause, trackDuration } from "@beep/observability";
+import { O as OptionUtils } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Metric from "effect/Metric";
@@ -54,14 +55,11 @@ const causeMetricAttributes = <E>(cause: Cause.Cause<E>): Record<string, string>
 
 const causeLogAttributes = <E>(cause: Cause.Cause<E>): Record<string, string> => {
   const redacted = pipe(cause, summarizeCause, (summary) => redactCauseSummary(summary));
-  const base: Record<string, string> = {
-    cause_classification: redacted.tag,
-    cause_fingerprint: redacted.fingerprint,
-    cause_message: redacted.message,
-  };
-  return O.match(redacted.detail, {
-    onNone: () => base,
-    onSome: (detail) => ({ ...base, cause_detail: detail }),
+  return OptionUtils.getSomesStruct({
+    cause_classification: O.some(redacted.tag),
+    cause_fingerprint: O.some(redacted.fingerprint),
+    cause_message: O.some(redacted.message),
+    cause_detail: redacted.detail,
   });
 };
 

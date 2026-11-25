@@ -18,7 +18,7 @@ import {
   LawProposedClaimRecord,
   logicalKey,
 } from "@beep/law-practice-domain/values/LawClaim";
-import { ActivityFloor, CurrentActivity, withActivity } from "@beep/nlp-processing/Activity";
+import { ActivityFacts, ActivityFloor, CurrentActivity, withActivity } from "@beep/nlp-processing/Activity";
 import { mintCaptureId } from "@beep/text/Capture";
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
@@ -78,11 +78,11 @@ const supportOf = (
 const proposeClaim = withActivity<Supported, Proposed, PreimageMintError, Digest.Digest>({
   facts: Effect.fnUntraced(function* (supported: Supported) {
     const capture = yield* mintCaptureId(supported.document.text);
-    return {
+    return ActivityFacts.make({
       pin: proposalPin,
       promptDigest: O.none(),
       used: HashSet.make<ReadonlyArray<ContentHash>>(capture, ...supported.candidates, ...supported.support),
-    };
+    });
   }),
   generated: (proposed) => [proposed.record.claim],
 })<never, Digest.Digest | CurrentActivity>({

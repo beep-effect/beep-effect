@@ -59,7 +59,7 @@ const memoizedOwner = /\bEffect\.cached\b/;
 const citationModules = Effect.fn("CitationCacheScope.modules")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = path.join(import.meta.dirname, "..", "src", "internal", "Citation");
+  const directory = yield* fs.realPath(path.join(import.meta.dirname, "..", "src", "internal", "Citation"));
   const names = yield* fs.readDirectory(directory);
   return yield* Effect.forEach(
     A.filter(names, Str.endsWith(".ts")),

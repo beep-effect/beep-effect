@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/ontology-use-cases",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Record the P6 dependency edges of nlp-processing, wink, semantica, ontology server and use-cases, and law-practice domain, use-cases and server, plus the root policy fingerprint input. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p6-l5-l7-cache-review-2026-11-25.md",
+      "sha256": "fed2485257df7c6782354a329423d188df8b644718f2b7c37083d744e4967dcd"
     }
   },
   "nodes": [
@@ -17,6 +17,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/rdf#build",
         "@beep/schema#build",
@@ -79,6 +80,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/ontology-use-cases#build",
         "@beep/rdf#build",
@@ -140,6 +142,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/rdf#build",
         "@beep/schema#build",
@@ -273,6 +276,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -479,6 +483,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/schema#transit",
@@ -531,6 +536,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/repo-gate-vitest#transit",
@@ -595,6 +601,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/rdf#build",
         "@beep/schema#build",
@@ -644,6 +651,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/schema#transit",

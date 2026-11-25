@@ -18,6 +18,7 @@ import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -163,7 +164,7 @@ describe("MatterAuthority", () => {
       ];
       for (const config of refused) {
         const exit = yield* Effect.exit(decodeConfig(config));
-        expect(Exit.isFailure(exit)).toBe(true);
+        exit.pipe(Exit.isFailure, assertTrue);
       }
       const accepted = yield* decodeConfig({
         scopes: [

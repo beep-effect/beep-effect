@@ -1,6 +1,7 @@
 import { verifyActivityRecord } from "@beep/jsonc/ActivityRecord";
 import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import {
+  ActivityFacts,
   ActivityFloor,
   ActivityLogReducer,
   CurrentActivity,
@@ -187,11 +188,13 @@ describe("Activity", () => {
       Effect.gen(function* () {
         const stamping = withActivity<Entities, DateTime.Utc>({
           facts: (used) =>
-            Effect.succeed({
-              pin: ActivityPin.cases.Engine.make({ engine: "l5-3-pipeline", edition: "stamp" }),
-              promptDigest: O.none(),
-              used,
-            }),
+            Effect.succeed(
+              ActivityFacts.make({
+                pin: ActivityPin.cases.Engine.make({ engine: "l5-3-pipeline", edition: "stamp" }),
+                promptDigest: O.none(),
+                used,
+              })
+            ),
           generated: () => [],
         })({
           name: stepTerm,

@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (P5 L3 and L6 implementation lane)",
-    "reason": "Record the P5 dependency edges of rdf, ontology and law-practice domain and use-cases, plus the inherited P4 root, epistemics and party-server drifts. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Record the P6 dependency edges of nlp-processing, wink, semantica, ontology server and use-cases, and law-practice domain, use-cases and server, plus the root policy fingerprint input. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p5-l3-l6-cache-review-2026-11-23.md",
-      "sha256": "0c79d5f2e1f8cf3698be95135266b5bd972a96f1e24804cad03c615bb3bc6f47"
+      "path": "docs/reports/tksr-p6-l5-l7-cache-review-2026-11-25.md",
+      "sha256": "fed2485257df7c6782354a329423d188df8b644718f2b7c37083d744e4967dcd"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "65fb0083f1b4b1bc679c50d12d2a643c08a3192e76f31f34111732919931fb14"
+      "sha256": "450579305657f8fb7b1620242a67962ce3db5dbc4acb930d6e61b0bda62a8b6f"
     }
   ],
   "nodes": [

@@ -76,7 +76,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
@@ -1570,9 +1570,11 @@ describe("practice KG projections", () => {
           const naturalKeyColumn = O.getOrThrow(
             A.findFirstIndex(sharedDigestProvenance.data.columns, (column) => column === "naturalKey")
           );
-          expect(A.map(sharedDigestProvenance.data.rows, (row) => A.get(row, naturalKeyColumn))).toStrictEqual([
-            O.some(`${fixtureDigests.beta}@${fixtureClients.beta}.20001US02`),
-          ]);
+          expect(sharedDigestProvenance.data.rows).toHaveLength(1);
+          assertSome(
+            A.head(sharedDigestProvenance.data.rows).pipe(O.flatMap(A.get(naturalKeyColumn))),
+            `${fixtureDigests.beta}@${fixtureClients.beta}.20001US02`
+          );
           expect(searchRow.snippet).toContain(`alpha docket ${fixtureClients.alpha}.20001US01`);
           const familyKeysOf = (result: PracticeKgToolResult): ReadonlyArray<unknown> => {
             const familyColumn = O.getOrThrow(A.findFirstIndex(result.data.columns, (column) => column === "family"));

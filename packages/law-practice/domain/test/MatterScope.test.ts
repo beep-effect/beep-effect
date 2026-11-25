@@ -9,6 +9,7 @@ import {
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
@@ -33,7 +34,7 @@ describe("MatterScope", () => {
     Effect.gen(function* () {
       for (const spelled of ["acme", ".US-2024-001", "acme.", ""]) {
         const exit = yield* Effect.exit(decodeKey(spelled));
-        expect(Exit.isFailure(exit)).toBe(true);
+        exit.pipe(Exit.isFailure, assertTrue);
       }
     })
   );
@@ -41,7 +42,7 @@ describe("MatterScope", () => {
   it.effect("refuses a matter scope that binds no key", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(decodeScope({ matter: 1, scopeRefs: [], familyKeys: [], mailFolders: [] }));
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
