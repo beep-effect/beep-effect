@@ -386,6 +386,74 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
         );
       })
     );
+
+    it.effect(
+      "expands a directory argument to the scanned files under it and counts the shards it changed",
+      Effect.fn("CatalogShardScopeTest.incrementalDirectory")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* runLint(["schema-catalog", "--write"]);
+            const fullA = yield* readProjectFile(schemaShard("@beep/a"));
+            const fullB = yield* readProjectFile(schemaShard("@beep/b"));
+            yield* writeProjectFile(sourceA2, schemaModule("A2"));
+
+            yield* runLint(["schema-catalog", "--write", "packages/a/src"]);
+            const added = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(added).toContain(`"file":"${sourceA2}","symbol":"A2Model"`);
+            yield* expectFullParity("@beep/a");
+            const addedLogs = yield* TestConsole.logLines;
+            expect(addedLogs).toContain("[schema-catalog] 1 shard(s) changed for @beep/a");
+
+            yield* removeProjectFile(sourceA2);
+            yield* removeProjectFile(schemaShard("@beep/b"));
+            yield* runLint(["schema-catalog", "--write", "packages"]);
+            const restoredA = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(restoredA).toBe(fullA);
+            const restoredB = yield* readProjectFile(schemaShard("@beep/b"));
+            expect(restoredB).toBe(fullB);
+            const spanningLogs = yield* TestConsole.logLines;
+            expect(spanningLogs).toContain("[schema-catalog] 2 shard(s) changed for @beep/a, @beep/b");
+
+            yield* runLint(["schema-catalog", "--write", "packages/a"]);
+            const currentLogs = yield* TestConsole.logLines;
+            expect(currentLogs).toContain("[schema-catalog] 0 shard(s) changed for @beep/a");
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "drops a deleted directory's entries and reports a directory with no scanned file",
+      Effect.fn("CatalogShardScopeTest.incrementalDeletedDirectory")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* writeFixture();
+            yield* writeProjectFile("packages/a/src/nested/Deep.ts", schemaModule("Deep"));
+            yield* runLint(["schema-catalog", "--write"]);
+            const before = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(before).toContain(`"symbol":"DeepModel"`);
+
+            yield* fs.remove(path.resolve(process.cwd(), "packages/a/src/nested"), { recursive: true });
+            yield* runLint(["schema-catalog", "--write", "packages/a/src/nested"]);
+            const after = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(after).not.toContain(`"symbol":"DeepModel"`);
+            expect(after).toContain(`"symbol":"AModel"`);
+            yield* expectFullParity("@beep/a");
+
+            yield* fs.makeDirectory(path.resolve(process.cwd(), "packages/a/empty"), { recursive: true });
+            yield* runLint(["schema-catalog", "--write", "packages/a/empty"]);
+            const emptyLogs = yield* TestConsole.logLines;
+            expect(emptyLogs).toContain("[schema-catalog] directory packages/a/empty holds no scanned source file");
+            expect(emptyLogs).toContain(
+              "[schema-catalog] no owning package for the given paths; nothing to regenerate"
+            );
+          })
+        );
+      })
+    );
   });
 
   describe("instrumentation catalog", () => {
