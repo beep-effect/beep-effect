@@ -57,10 +57,11 @@ import {
   EdgeAuthorityError,
   SupersedeEdgeFact,
 } from "@beep/epistemic-use-cases/server";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import { PostgresDrizzle } from "@beep/postgres";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import { A, O } from "@beep/utils";
 import { and, count, desc, eq, getColumns, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
@@ -84,6 +85,9 @@ import type {
   ListContradictionCandidates,
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
+
+const sameAnchor = S.toEquivalence(TextAnchor);
+const isCurrentPosition = S.is(EvidencePosition);
 
 const candidateTable = DbSchema.contradictionCandidate;
 const dispositionTable = DbSchema.contradictionDisposition;
@@ -616,8 +620,8 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
             inArray(evidenceVerificationTable.evidenceId, verificationEvidenceIds),
             lte(evidenceVerificationTable.createdAt, knownAt),
             sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'source' ->> 'scopeRef' = ${query.sourceScopeRef}`,
-            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'startChar' = ${evidenceTable.span} ->> 'startChar'`,
-            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'quote' = ${evidenceTable.span} ->> 'quote'`
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'startChar' = coalesce(${evidenceTable.span} -> 'position' ->> 'startChar', ${evidenceTable.span} ->> 'startChar')`,
+            sql<boolean>`${evidenceVerificationTable.verifiedAnchor} -> 'anchor' ->> 'quote' = coalesce(${evidenceTable.span} -> 'position' ->> 'quote', ${evidenceTable.span} ->> 'quote')`
           )
         )
         .orderBy(
@@ -642,7 +646,8 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 verifications,
                 (verification) =>
                   Eq.equals(verification.evidenceId, evidenceId) &&
-                  EvidenceSpan.matchesAnchor(EvidenceSpan.make(row.span), verification.verifiedAnchor.anchor)
+                  isCurrentPosition(row.span) &&
+                  sameAnchor(row.span.position, verification.verifiedAnchor.anchor)
               ),
             })
           )

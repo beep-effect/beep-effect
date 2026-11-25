@@ -5,6 +5,7 @@ import {
   makeReviewStatusFor,
 } from "@beep/epistemics/ClaimEvidenceReview";
 import { makeClaimProjectionView, makeClaimStateCounts } from "@beep/epistemics/ClaimProjection";
+import { ReportedConfidence } from "@beep/epistemics/Confidence";
 import {
   makeBeliefVersionRef,
   makeContradictionArbitraries,
@@ -27,7 +28,7 @@ import {
   makeDetectionProposalId,
 } from "@beep/epistemics/ContradictionDetection";
 import { encodeEdgeEndpointKey, makeEdgeEndpoint } from "@beep/epistemics/EdgeEndpoint";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { EvidencePosition, ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import {
   makeEvidenceVerification,
   makeEvidenceVerificationManifestationKey,
@@ -198,11 +199,15 @@ describe("second binding of the evidence factories", () => {
       claimRef: PartyClaimId.make("c-1"),
       assertion: "The source states fact.",
       subject: "Example source",
-      evidence: EvidenceSpan.make({
-        startChar: S.Natural.make(0),
-        endChar: S.Natural.make(4),
-        quote: "fact",
-        confidence: UnitInterval.make(0.82),
+      evidence: EvidencePosition.make({
+        position: TextAnchor.make({ startChar: S.Natural.make(0), endChar: S.Natural.make(4), quote: "fact" }),
+        extractorConfidence: ExtractorConfidence.cases.Present.make({
+          value: ReportedConfidence.make({
+            value: UnitInterval.make(0.82),
+            method: "synthetic-fixture",
+            producer: O.none(),
+          }),
+        }),
       }),
       source,
     });

@@ -126,6 +126,7 @@ const gSnapshot = (snapshot: LedgerSnapshot, expectation: GProjectionExpectation
     batches: A.filter(snapshot.batches, (outcome) => HashSet.has(documentIds, outcomeDocument(outcome))),
     documents,
     events: [],
+    legacyConfidence: A.filter(snapshot.legacyConfidence, (legacy) => HashSet.has(documentIds, legacy.document)),
     run: snapshot.run,
   });
 };

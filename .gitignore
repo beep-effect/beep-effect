@@ -190,3 +190,5 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 # Alchemy local state and TanStack Start build cache
 .alchemy/
 .tanstack/
+# Claim-ledger append locks (hold-ledger and any kb ledger root) and their stage/reap/adopt/tombstone sidecars
+claims.jsonl.lock*

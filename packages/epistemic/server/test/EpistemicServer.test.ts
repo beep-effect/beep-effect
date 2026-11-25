@@ -22,7 +22,14 @@ const evidenceInput = {
   ...productEntityFixtureInput("EpistemicEvidence", 2),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
-  span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.9 },
+  span: {
+    version: "evidence-position/v2",
+    position: { startChar: 0, endChar: 14, quote: "a claimed fact" },
+    extractorConfidence: {
+      _tag: "Present",
+      value: { _tag: "ReportedConfidence", value: 0.9, method: "synthetic-fixture" },
+    },
+  },
 };
 
 describe("@beep/epistemic-server", () => {

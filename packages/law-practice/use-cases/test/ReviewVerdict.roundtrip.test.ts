@@ -61,7 +61,7 @@ const encodedItem = (kind: string, itemId: string) => ({
   kind,
   itemId,
   text: "Claim 1 element (b) is disclosed by the cited reference.",
-  sourceRefs: [{ boxFileId: "1234567890", quote: { exact: "a hinge coupling the lid to the base" } }],
+  sourceRefs: [{ boxFileId: "1234567890", quote: { _tag: "Quote", exact: "a hinge coupling the lid to the base" } }],
   ...(kind === "claim-finding" ? { claimId: CLAIM_ID } : {}),
 });
 

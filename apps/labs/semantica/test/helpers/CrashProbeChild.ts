@@ -1,5 +1,5 @@
 // fallow-ignore-file unused-file -- tests spawn this crash-probe child process by file path, so no import reaches it. Owner: @beep/semantica. Exit: remove when the probe runs in-process or fallow learns spawned entries.
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import {
@@ -49,7 +49,7 @@ const makeExtraction = (documentHash: string, chunkHash: string, textHash: strin
     body,
     cacheKey: Option.none(),
     chunk,
-    confidence: Confidence.make(1),
+    confidence: ExtractorConfidence.cases.Absent.make({ reason: "not-assessed" }),
     document,
     id: Result.getOrThrow(makeClaimId({ body, chunk, document, method: "hosted-langextract", model })),
     method: "hosted-langextract",

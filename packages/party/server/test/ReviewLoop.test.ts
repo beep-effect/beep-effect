@@ -1,7 +1,7 @@
+import { ClaimLedger } from "@beep/party-domain/Claim";
 import { ActivityId, ArtifactOccurrenceId, IdentifierId, PrincipalId } from "@beep/party-domain/Ids";
 import { RecordRow } from "@beep/party-domain/Provenance";
 import { ResolutionScope } from "@beep/party-domain/Resolution";
-import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import {
   applyReviews,
   CaseEvidence,
@@ -22,12 +22,14 @@ import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { creation, LedgerLive } from "./fixtures/claims.ts";
 
 const at = (time: number) => DateTime.makeUnsafe(time);
 const mailbox = (party: number) =>
@@ -53,6 +55,7 @@ const decision = (
 ) =>
   CollisionDecision.make({
     name: current.evidence.name,
+    creation: creation({ operation: `review-${current.evidence.name}-${time}`, at: time }),
     basis: current.basis,
     verdict: ReviewVerdict.cases.Grouped.make({
       groups: A.map(groups, (group) => A.map(group, (party) => PartyId.make(party))),
@@ -74,7 +77,11 @@ const apply = (
   validAt = 50
 ) =>
   applyReviews(
-    ReviewInput.make({ cases, decisions, scope: ResolutionScope.make({ asOf: at(asOf), validAt: at(validAt) }) })
+    ReviewInput.make({
+      cases,
+      decisions,
+      scope: ResolutionScope.make({ scope: "synthetic", asOf: at(asOf), validAt: at(validAt) }),
+    })
   );
 
 describe("review schemas and evidence sealing", () => {
@@ -110,24 +117,26 @@ describe("review schemas and evidence sealing", () => {
   );
 });
 
-describe("guarded reviewer claims", () => {
+it.layer(Digest.layerWebCrypto)("guarded reviewer claims", (it) => {
   it.effect("builds sourced accepted claims within and across groups", () =>
     Effect.gen(function* () {
       const current = yield* seal("Alex", [1, 2, 3]);
       const choice = decision(current, [[2, 1], [3]]);
       const result = yield* decisionClaims(DecisionClaimsInput.make({ case: current, decision: choice }));
-      expect(A.map(result.versions, (version) => version.proposition._tag)).toEqual([
+      expect(A.map(result.claimLedger.claims, (record) => record.core.proposition._tag)).toEqual([
         "SameParty",
         "DistinctParty",
         "DistinctParty",
       ]);
-      A.forEach(result.versions, (version) => {
-        expect(version.review._tag).toBe("Accepted");
-        expect(version.validTime._tag).toBe("Interval");
+      A.forEach(result.claimLedger.claims, (record) => {
+        const review = O.getOrThrow(A.findFirst(result.claimLedger.reviews, (row) => row.claim === record.claim));
+        expect(review.review._tag).toBe("Accepted");
+        expect(record.core.valid._tag).toBe("Interval");
+        const links = O.getOrThrow(A.findFirst(result.claimLedger.evidence, (row) => row.claim === record.claim));
         const source = O.getOrThrow(
-          A.findFirst(result.assertions, (assertion) => A.contains(version.supportedBy, assertion.id))
+          A.findFirst(result.assertions, (assertion) => A.contains(links.supportedBy, assertion.id))
         );
-        expect(source.proposition).toEqual(version.proposition);
+        expect(source.proposition).toEqual(record.core.proposition);
         expect(source.anchors).toEqual([choice.anchor]);
       });
       const reordered = yield* decisionClaims(
@@ -137,8 +146,8 @@ describe("guarded reviewer claims", () => {
       const later = yield* decisionClaims(
         DecisionClaimsInput.make({ case: current, decision: decision(current, [[1, 2], [3]], 11) })
       );
-      expect(A.map(later.versions, (version) => version.id)).not.toEqual(
-        A.map(result.versions, (version) => version.id)
+      expect(A.map(later.claimLedger.claims, (record) => record.claim)).not.toEqual(
+        A.map(result.claimLedger.claims, (record) => record.claim)
       );
     })
   );
@@ -163,7 +172,7 @@ describe("guarded reviewer claims", () => {
   );
 });
 
-describe("scoped review application", () => {
+it.layer(Digest.layerWebCrypto)("scoped review application", (it) => {
   it.effect("settles valid partitions while preserving all queue statuses", () =>
     Effect.gen(function* () {
       const same = yield* seal("same", [1, 2]);
@@ -196,7 +205,7 @@ describe("scoped review application", () => {
       ]);
       A.forEach(
         A.filter(rows, (row) => !isSettled(row.status)),
-        (row) => expect(row.evidence).toEqual({ assertions: [], versions: [] })
+        (row) => expect(row.evidence).toEqual({ assertions: [], claimLedger: ClaimLedger.make({}) })
       );
     })
   );
@@ -206,7 +215,7 @@ describe("scoped review application", () => {
       const alias = yield* seal("A", [1, 2]);
       const rows = yield* apply([name, alias], [decision(name, [[1], [2]]), decision(alias, [[1, 2]], 20)]);
       expect(A.map(rows, (row) => row.status)).toEqual(["reviewed-distinct", "conflicting-review"]);
-      expect(O.getOrThrow(A.last(rows)).evidence.versions).toEqual([]);
+      expect(O.getOrThrow(A.last(rows)).evidence.claimLedger.claims).toEqual([]);
     })
   );
   it.effect("prevents a foreign-party invalid partition from poisoning a valid review", () =>
@@ -232,6 +241,24 @@ describe("scoped review application", () => {
       expect(A.map(resolved4, (row) => row.status)).toEqual(["unreviewed"]);
     })
   );
+  it.effect("selects only decisions whose claims are known at the query time", () =>
+    Effect.gen(function* () {
+      const current = yield* seal("Alex", [1, 2]);
+      const earlier = decision(current, [[1], [2]], 9);
+      const unknown = CollisionDecision.make({
+        ...decision(current, [[1, 2]], 10),
+        creation: creation({ operation: "review-Alex-known-late", at: 200 }),
+      });
+      const rows = yield* apply([current], [unknown, earlier]);
+      expect(A.map(rows, (row) => row.status)).toEqual(["reviewed-distinct"]);
+      TestUtils.assertSome(
+        O.map(O.getOrThrow(A.head(rows)).decision, (chosen) => chosen.reviewedAt),
+        earlier.reviewedAt
+      );
+      const known = yield* apply([current], [unknown, earlier], 200);
+      expect(A.map(known, (row) => row.status)).toEqual(["reviewed-same"]);
+    })
+  );
   it.effect("keeps an explicit expired validity interval out of the current view", () =>
     Effect.gen(function* () {
       const current = yield* seal("Alex", [1, 2]);
@@ -247,7 +274,7 @@ describe("scoped review application", () => {
   );
 });
 
-it.layer(PartyLedgerMemory)("integer mailbox anchors", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("integer mailbox anchors", (it) => {
   it.effect("reuses an anchor regardless of identifier order without asserting identity", () =>
     Effect.gen(function* () {
       const a = IdentifierId.make("party-ident:a");
@@ -257,7 +284,7 @@ it.layer(PartyLedgerMemory)("integer mailbox anchors", (it) => {
       expect(second).toBe(first);
       expect(Number.isInteger(first)).toBe(true);
       const ledger = yield* PartyLedger;
-      expect((yield* ledger.snapshot).versions).toEqual([]);
+      expect((yield* ledger.snapshot).claims).toEqual([]);
       expect((yield* ledger.snapshot).assertions).toEqual([]);
     })
   );

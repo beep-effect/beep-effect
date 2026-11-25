@@ -174,7 +174,7 @@ const findingCandidate = Effect.fn("ClaimSelfCheck.findingCandidate")(function* 
 ): Effect.fn.Return<ClaimFindingCandidate, ClaimSelfCheckError> {
   const claimNumber = claimNumberOfPath(finding.referring.path);
   const { startChar: termStart, quote: termQuote } = finding.referring.anchor;
-  const [startChar, quote] = yield* Effect.fromOption(
+  const anchor = yield* Effect.fromOption(
     pipe(
       A.findFirst(input.document.claims, (claim) => claim.claimNumber === claimNumber),
       O.flatMap((claim) =>
@@ -200,7 +200,7 @@ const findingCandidate = Effect.fn("ClaimSelfCheck.findingCandidate")(function* 
       evidenceFixtureKey,
       fixtureKey: `antecedent:${input.identityDigest}:${findingKey}`,
       identityKey: `p${Str.slice(7)(input.identityDigest)}${findingKey}`,
-      quote,
+      anchor,
       snapshot: {
         activityKind: "claim-self-check",
         activityOperation: input.operationId,
@@ -216,7 +216,6 @@ const findingCandidate = Effect.fn("ClaimSelfCheck.findingCandidate")(function* 
         sourceDocumentDigest: input.sourceDocumentDigest ?? null,
         sourceFile: input.sourceFile,
       },
-      startChar,
     })
   ).pipe(
     Effect.mapError((cause) =>

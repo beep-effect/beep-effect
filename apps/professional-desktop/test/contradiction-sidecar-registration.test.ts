@@ -147,10 +147,12 @@ const makeEvidence = (id: number) =>
     ...productEntityFixtureInput("EpistemicEvidence", id),
     artifactFixtureKey: `artifact:source-${id}`,
     span: {
-      confidence: 0.95,
-      endChar: 4,
-      quote: "fact",
-      startChar: 0,
+      version: "evidence-position/v2",
+      position: { endChar: 4, quote: "fact", startChar: 0 },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.95, method: "synthetic-fixture" },
+      },
     },
     spanFixtureKey: `span:source-${id}`,
   });

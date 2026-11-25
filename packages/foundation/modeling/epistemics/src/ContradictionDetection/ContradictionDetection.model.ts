@@ -10,8 +10,8 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
+import { Confidence } from "../Confidence.ts";
 import { makeValidIntervalCheck } from "../Contradiction/index.ts";
-import { Confidence } from "../EvidenceSpan/index.ts";
 import type { ContradictionVocabulary } from "../Contradiction/index.ts";
 import type { FieldSchema, IdentityConfig, SchemaIdentity } from "../Factory/index.ts";
 

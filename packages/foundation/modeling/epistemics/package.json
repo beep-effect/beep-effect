@@ -1,7 +1,7 @@
 {
   "name": "@beep/epistemics",
   "version": "0.0.0",
-  "description": "Tenant-free epistemic vocabulary: evidence spans, claim gates, edge identity, contradictions, intervals and claim envelopes.",
+  "description": "Tenant-free epistemic vocabulary: evidence positions, claim records, claim gates, edge identity, contradictions and intervals.",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -48,7 +48,6 @@
     "./ContradictionDetection": "./src/ContradictionDetection/index.ts",
     "./EdgeEndpoint": "./src/EdgeEndpoint/index.ts",
     "./EdgeRelation": "./src/EdgeRelation/index.ts",
-    "./EvidenceSpan": "./src/EvidenceSpan/index.ts",
     "./EvidenceVerification": "./src/EvidenceVerification/index.ts",
     "./Factory": "./src/Factory/index.ts",
     "./KnowledgeInterval": "./src/KnowledgeInterval/index.ts",
@@ -80,7 +79,6 @@
       "./ContradictionDetection": "./dist/ContradictionDetection/index.js",
       "./EdgeEndpoint": "./dist/EdgeEndpoint/index.js",
       "./EdgeRelation": "./dist/EdgeRelation/index.js",
-      "./EvidenceSpan": "./dist/EvidenceSpan/index.js",
       "./EvidenceVerification": "./dist/EvidenceVerification/index.js",
       "./Factory": "./dist/Factory/index.js",
       "./KnowledgeInterval": "./dist/KnowledgeInterval/index.js",
@@ -92,8 +90,10 @@
     }
   },
   "dependencies": {
+    "@beep/annotation": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/jsonc": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
@@ -102,6 +102,7 @@
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

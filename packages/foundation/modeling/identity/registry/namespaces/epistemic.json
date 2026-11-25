@@ -3,7 +3,7 @@
     "prefix": "epistemic",
     "iri": "https://beep-effect.com/ns/epistemic/"
   },
-  "terms": ["Claim", "claim", "hasEvidenceQuote"],
+  "terms": ["Claim", "claim", "coreJson", "hasEvidenceQuote", "sourceDigest"],
   "bindings": [],
   "deprecations": []
 }

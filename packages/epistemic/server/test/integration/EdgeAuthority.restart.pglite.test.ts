@@ -120,7 +120,14 @@ const writeHistory = Effect.fnUntraced(function* () {
   const decodedEvidence = yield* decodeEvidence({
     ...productEntityFixtureInput("EpistemicEvidence", 1),
     artifactFixtureKey: "artifact.restart",
-    span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+    span: {
+      version: "evidence-position/v2",
+      position: { endChar: 14, quote: "a claimed fact", startChar: 0 },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.9, method: "synthetic-fixture" },
+      },
+    },
     spanFixtureKey: "span.restart",
   });
   const fromResult2 = yield* Effect.fromResult(toEvidenceInsert(decodedEvidence));

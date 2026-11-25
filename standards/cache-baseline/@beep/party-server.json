@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/party-server",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P4 claims lane)",
+    "reason": "Re-record the root, @beep/epistemics and @beep/party-server after the P4 main merges: manifest dependency edges and the regenerated turbo.json root projection changed; no qualification granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p4-main-merge-cache-review-2026-11-24.md",
+      "sha256": "6f9bffb14ffbbb76ca40e85421903f641578edd12dc0fe760d4b8f2c2585ea44"
     }
   },
   "nodes": [
@@ -17,11 +17,13 @@
       "dependencies": [
         "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/m365#build",
         "@beep/party-domain#build",
         "@beep/party-use-cases#build",
         "@beep/schema#build",
-        "@beep/shared-domain#build"
+        "@beep/shared-domain#build",
+        "@beep/text#build"
       ],
       "configuration": {
         "cache": true,
@@ -76,13 +78,15 @@
       "dependencies": [
         "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/m365#build",
         "@beep/party-domain#build",
         "@beep/party-server#build",
         "@beep/party-use-cases#build",
         "@beep/repo-gate-record#transit",
         "@beep/schema#build",
-        "@beep/shared-domain#build"
+        "@beep/shared-domain#build",
+        "@beep/text#build"
       ],
       "configuration": {
         "cache": true,
@@ -134,11 +138,13 @@
       "dependencies": [
         "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/m365#build",
         "@beep/party-domain#build",
         "@beep/party-use-cases#build",
         "@beep/schema#build",
-        "@beep/shared-domain#build"
+        "@beep/shared-domain#build",
+        "@beep/text#build"
       ],
       "configuration": {
         "cache": false,
@@ -264,12 +270,14 @@
       "dependencies": [
         "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/m365#transit",
         "@beep/party-domain#transit",
         "@beep/party-use-cases#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
-        "@beep/shared-domain#transit"
+        "@beep/shared-domain#transit",
+        "@beep/text#transit"
       ],
       "configuration": {
         "cache": true,
@@ -467,11 +475,13 @@
       "dependencies": [
         "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/m365#transit",
         "@beep/party-domain#transit",
         "@beep/party-use-cases#transit",
         "@beep/schema#transit",
-        "@beep/shared-domain#transit"
+        "@beep/shared-domain#transit",
+        "@beep/text#transit"
       ],
       "configuration": {
         "cache": false,
@@ -516,12 +526,14 @@
       "dependencies": [
         "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/m365#transit",
         "@beep/party-domain#transit",
         "@beep/party-use-cases#transit",
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
+        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -577,11 +589,13 @@
       "dependencies": [
         "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/m365#build",
         "@beep/party-domain#build",
         "@beep/party-use-cases#build",
         "@beep/schema#build",
-        "@beep/shared-domain#build"
+        "@beep/shared-domain#build",
+        "@beep/text#build"
       ],
       "configuration": {
         "cache": false,

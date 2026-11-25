@@ -1,3 +1,4 @@
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain/values/CitingApplicationIdentity";
 import { AntecedentFinding, claimNumberOfPath } from "@beep/law-practice-domain/values/ClaimElement";
@@ -246,11 +247,11 @@ describe("ClaimSelfCheck", () => {
             )
           );
           assert.deepStrictEqual(
-            A.map(mapped, ({ evidence }) => evidence.span.quote),
+            A.map(mapped, ({ evidence }) => Result.getOrThrow(decodeCurrentPosition(evidence.span)).position.quote),
             ["the lens", "the\nshutter"]
           );
           for (const { candidate, evidence, finding } of mapped) {
-            const { endChar, quote, startChar } = evidence.span;
+            const { endChar, quote, startChar } = Result.getOrThrow(decodeCurrentPosition(evidence.span)).position;
             assert.strictEqual(Str.slice(startChar, endChar)(sourceText), quote);
             assert.strictEqual(candidate.lifecycle, "candidate");
             assert.strictEqual(candidate.snapshot.activityKind, "claim-self-check");
@@ -413,3 +414,5 @@ describe("ClaimSelfCheck read-only review items", () => {
     );
   });
 });
+
+const decodeCurrentPosition = S.decodeUnknownResult(S.toType(EvidencePosition));

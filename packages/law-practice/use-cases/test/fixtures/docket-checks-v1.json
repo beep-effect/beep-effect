@@ -1,0 +1,12 @@
+[
+  {
+    "check": "cited-span-exists",
+    "passed": true,
+    "side": "extractor"
+  },
+  {
+    "check": "cited-span-exists",
+    "passed": false,
+    "side": "extractor"
+  }
+]

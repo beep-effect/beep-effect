@@ -250,3 +250,47 @@ it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks cache baseline request
     })
   );
 });
+
+const FROZEN_LEDGER = "apps/labs/semantica/test/fixtures/ledger-evidence-v1.json";
+const FROZEN_REQUEST_DIGEST = "4b59be808b1bc422a3828d2d4949cfe5035c09d509673177ec19f04626a9db72";
+
+it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks frozen semantica ledger boundary", (it) => {
+  it.effect("retains exact public request digests only in the three frozen baseline paths", () =>
+    Effect.gen(function* () {
+      const config = yield* loadConfig();
+      const matches = A.filter(config.allowlists, (item) =>
+        A.some(
+          item.paths ?? [],
+          (allowedPath) => Str.includes("ledger")(allowedPath) && Str.includes("semantica")(allowedPath)
+        )
+      );
+      expect(matches).toHaveLength(1);
+      const exception = O.getOrThrow(A.head(matches));
+      expect(exception.targetRules).toEqual(["generic-api-key"]);
+      expect(exception.condition).toBe("AND");
+      expect(exception.regexTarget).toBe("match");
+      expect(exception.paths).toHaveLength(3);
+      expect(exception.regexes).toHaveLength(6);
+      const acceptsPath = (path: string) => A.some(exception.paths ?? [], (pattern) => fullMatch(pattern, path));
+      expect(acceptsPath(FROZEN_LEDGER)).toBe(true);
+      expect(acceptsPath(`/repo/${FROZEN_LEDGER}`)).toBe(true);
+      expect(acceptsPath(`outside/${FROZEN_LEDGER}`)).toBe(false);
+      expect(acceptsPath(`${FROZEN_LEDGER}.bak`)).toBe(false);
+    })
+  );
+
+  it.effect.skipIf(!gitleaksOnPath)("preserves the ledger hash while detecting changed values, paths and tokens", () =>
+    Effect.gen(function* () {
+      const line = `"cacheKey": "${FROZEN_REQUEST_DIGEST}"`;
+      const accepted = yield* scan(FROZEN_LEDGER, document(line));
+      expect(accepted).toEqual([]);
+      const elsewhere = yield* scan("outside/ledger.json", document(line));
+      expect(elsewhere).toContain("generic-api-key");
+      const synthetic = yield* syntheticValue;
+      const changed = yield* scan(FROZEN_LEDGER, document(`"cacheKey": "${synthetic}"`));
+      expect(changed).toContain("generic-api-key");
+      const other = yield* scan(FROZEN_LEDGER, document(line, `"github_token": "${SYNTHETIC_GITHUB_VALUE}"`));
+      expect(other).toContain("github-pat");
+    })
+  );
+});

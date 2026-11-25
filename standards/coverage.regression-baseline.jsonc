@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-22T23:28:34.744Z",
-  "git_sha": "53b2d03038b8c02732ed5bb5d857af8060f4555d",
-  "command": "bun run coverage -- --filter=@beep/annotation --filter=@beep/text --filter=@beep/langextract --filter=@beep/nlp --filter=@beep/law-practice-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-23T20:37:19.441Z",
+  "git_sha": "b7b1be6dbbaf1221dcf3529fd064160dca5ec121",
+  "command": "bun run coverage -- --filter=@beep/semantica --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -12776,30 +12776,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/epistemics/src/EvidenceSpan/EvidenceSpan.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/epistemics/src/EvidenceSpan/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/epistemics/src/EvidenceVerification/EvidenceVerification.model.ts": {
           "lines": 100,
           "statements": 100,
@@ -12957,6 +12933,126 @@
           }
         },
         "packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/Confidence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/Assessments.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/ClaimCore.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/ClaimCore.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/ClaimLog.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/ClaimLog.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/Admission.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/rdf/NanopubCodec.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/EvidencePosition.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/epistemics/src/ClaimImport.schema.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -20322,18 +20418,6 @@
           }
         },
         "packages/law-practice/domain/src/values/SourceRef/SourceRef.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/law-practice/domain/src/values/SourceRef/TextQuote.model.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -33336,6 +33420,390 @@
           }
         },
         "packages/party/domain/src/values/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Admission.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Claim.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Communication.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Hierarchy.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Ids.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Party.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Projection.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Proposition.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Provenance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/Resolution.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Claim/Claim.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Claim/Claim.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Claim/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Communication/Communication.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Communication/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Hierarchy/Hierarchy.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Hierarchy/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Party/Party.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Party/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Provenance/Provenance.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/Provenance/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/entities/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/policies/Admission/Admission.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/policies/Admission/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/policies/Projection/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/policies/Resolution/Resolution.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/policies/Resolution/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/policies/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Ids/Ids.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Ids/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Proposition/Proposition.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/party/domain/src/values/Proposition/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -53812,6 +54280,54 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/foundation/modeling/schema/src/CanonicalHashSet.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/ContentHash.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/Signal.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/WellFormedText.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
         }
       }
     },
@@ -54963,6 +55479,18 @@
           }
         },
         "apps/labs/semantica/src/services/VectorProjection.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/labs/semantica/src/schema/LedgerEvidence.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

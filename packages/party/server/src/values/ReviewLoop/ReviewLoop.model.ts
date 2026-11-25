@@ -5,7 +5,7 @@
  */
 import { ValidInterval } from "@beep/epistemics/ValidInterval";
 import { $PartyServerId } from "@beep/identity/packages";
-import { ClaimVersion, SourceAssertion } from "@beep/party-domain/Claim";
+import { ClaimCreation, ClaimLedger, SourceAssertion } from "@beep/party-domain/Claim";
 import { ActivityId, Digest, IdentifierId, PrincipalId } from "@beep/party-domain/Ids";
 import { EvidenceAnchor } from "@beep/party-domain/Provenance";
 import { ResolutionScope } from "@beep/party-domain/Resolution";
@@ -125,6 +125,7 @@ export type ReviewVerdict = typeof ReviewVerdict.Type;
 export class CollisionDecision extends S.Opaque<CollisionDecision, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.NonEmptyString,
+    creation: ClaimCreation,
     verdict: ReviewVerdict,
     basis: Digest,
     reviewer: PrincipalId,
@@ -195,7 +196,7 @@ export class DecisionClaimsInput extends S.Opaque<DecisionClaimsInput, { readonl
  * @since 0.0.0
  */
 export class ReviewEvidence extends S.Opaque<ReviewEvidence, { readonly brand: unique symbol }>()(
-  S.Struct({ assertions: S.Array(SourceAssertion), versions: S.Array(ClaimVersion) }).pipe(
+  S.Struct({ assertions: S.Array(SourceAssertion), claimLedger: ClaimLedger }).pipe(
     $I.annoteSchema("ReviewEvidence", {
       description: "Source assertions and accepted versions from a validated reviewer decision.",
     })

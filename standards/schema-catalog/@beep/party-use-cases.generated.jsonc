@@ -9,6 +9,6 @@
     {"file":"packages/party/use-cases/src/values/ContactSource/ContactSource.ports.ts","symbol":"ContactEmailInput","kind":"struct-const","owner":"@beep/party-use-cases","identity":"ContactEmailInput","description":"Raw email evidence, before shared normalization."},
     {"file":"packages/party/use-cases/src/values/ContactSource/ContactSource.ports.ts","symbol":"ContactSourceError","kind":"tagged-error","owner":"@beep/party-use-cases","identity":"ContactSourceError"},
     {"file":"packages/party/use-cases/src/values/Ledger/Ledger.ports.ts","symbol":"LedgerConflict","kind":"tagged-error","owner":"@beep/party-use-cases","identity":"LedgerConflict"},
-    {"file":"packages/party/use-cases/src/values/Ledger/Ledger.ports.ts","symbol":"LedgerSnapshot","kind":"struct-const","owner":"@beep/party-use-cases","identity":"LedgerSnapshot","description":"Effective immutable claim-version snapshot."}
+    {"file":"packages/party/use-cases/src/values/Ledger/Ledger.ports.ts","symbol":"LedgerSnapshot","kind":"struct-const","owner":"@beep/party-use-cases","identity":"LedgerSnapshot","description":"Append-only source evidence and separate claim record streams."}
   ]
 }

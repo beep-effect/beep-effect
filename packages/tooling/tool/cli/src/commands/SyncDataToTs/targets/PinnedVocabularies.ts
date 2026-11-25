@@ -170,7 +170,10 @@ const w3cAttribution = (title: string): string =>
  * target, never typed in. The W3C artifacts carry no SPDX-identifiable notice
  * of their own, so they are pinned under `LicenseRef-W3C-Document`, except
  * ActivityStreams, whose repository licenses its documents under the W3C
- * Software and Document License (`W3C-20150513`).
+ * Software and Document License (`W3C-20150513`). The nanopublication schema
+ * is pinned under `CC-BY-SA-3.0` by operator ruling: the CC BY-SA 3.0 notice of
+ * its companion nschema.html covers it, and its bytes are vendored with that
+ * license in `@beep/rdf` `data/vocab/nanopub-nschema`; only its term IRIs are projected.
  *
  * Web Annotation binds as: to the HTTP namespace in anno.jsonld, whereas
  * the AS2 artifact writes its HTTPS form.
@@ -179,7 +182,7 @@ const w3cAttribution = (title: string): string =>
  *
  * ```ts
  * import { pinnedVocabularyRows } from "@beep/repo-cli/commands/SyncDataToTs/targets/PinnedVocabularies"
- * console.log(pinnedVocabularyRows.length) // 11
+ * console.log(pinnedVocabularyRows.length) // 12
  * ```
  *
  * @category configuration
@@ -311,6 +314,25 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
     ],
     declaration: turtle("nif:"),
     terms: ["Context", "Sentence", "Word", "anchorOf", "beginIndex", "endIndex", "isString", "referenceContext"],
+  },
+  {
+    prefix: "np",
+    namespace: "http://www.nanopub.org/nschema#",
+    location:
+      "https://raw.githubusercontent.com/Nanopublication/Guidelines/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.ttl",
+    revision: {
+      kind: "gitCommit",
+      repository: "https://github.com/Nanopublication/Guidelines",
+      commit: "8388dd90795b264f4b01c64d0f7218babcae4871",
+    },
+    license: "CC-BY-SA-3.0",
+    attribution:
+      "Nanopublication schema, Nanopublication Guidelines (github.com/Nanopublication/Guidelines, nschema.ttl at commit 8388dd90795b); editors and authors as named in its nschema.html. Licensed CC BY-SA 3.0 under the nschema.html notice, which the operator ruling of 2026-11-23 treats as covering nschema.ttl. The file is vendored at packages/foundation/modeling/rdf/data/vocab/nanopub-nschema; the vendored file and anything derived from it stay under CC BY-SA 3.0.",
+    version: "2013-10-23",
+    sha256: "1275f6a00121f54248899b9a4c39b2511fdbb65b2925a4dc6f4a13174059f649",
+    markers: ["@prefix np: <http://www.nanopub.org/nschema#>.", 'dc:modified "2013-10-23"^^xsd:date'],
+    declaration: turtle("np:"),
+    terms: ["Nanopublication", "hasAssertion", "hasProvenance", "hasPublicationInfo"],
   },
   {
     prefix: "oa",
@@ -458,7 +480,7 @@ export const pinnedVocabularyRows: ReadonlyArray<typeof VocabularyPin.Encoded> =
 ];
 
 const declarationTypes =
-  "owl:(?:Class|ObjectProperty|DatatypeProperty|AnnotationProperty)|rdfs:(?:Class|Datatype)|rdf:Property";
+  "owl:(?:Class|ObjectProperty|DatatypeProperty|AnnotationProperty|FunctionalProperty)|rdfs:(?:Class|Datatype)|rdf:Property";
 const rdfXmlDeclarationTypes =
   "http://www\\.w3\\.org/(?:2002/07/owl#(?:Class|ObjectProperty|DatatypeProperty|AnnotationProperty)|1999/02/22-rdf-syntax-ns#Property)";
 
@@ -650,7 +672,7 @@ const validateProjections = Effect.fn("SyncDataToTs.PinnedVocabularies.validate"
  *   pinnedVocabularyRows
  * } from "@beep/repo-cli/commands/SyncDataToTs/targets/PinnedVocabularies"
  *
- * console.log(makePinnedVocabulariesTarget(pinnedVocabularyRows).sourceUrls.length) // 11
+ * console.log(makePinnedVocabulariesTarget(pinnedVocabularyRows).sourceUrls.length) // 12
  * ```
  *
  * @param pinRowsInput - The encoded acquisition pins the target fetches and proves.

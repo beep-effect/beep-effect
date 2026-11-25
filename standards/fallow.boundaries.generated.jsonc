@@ -2697,20 +2697,26 @@
       {
         "from": "@beep/epistemics",
         "allow": [
+          "@beep/annotation",
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/test-runner",
+          "@beep/test-utils",
           "@beep/text",
           "@beep/utils"
         ]
@@ -4455,22 +4461,26 @@
         "allow": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/m365",
           "@beep/party-domain",
           "@beep/party-server",
           "@beep/party-use-cases",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/text"
         ],
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/m365",
           "@beep/party-domain",
           "@beep/party-server",
           "@beep/party-use-cases",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/text"
         ]
       },
       {

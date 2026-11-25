@@ -238,7 +238,8 @@ The `pinned-vocabularies` target of `bun run beep sync-data-to-ts` projects
 curated term names from the vocabularies below into the identity registry
 shards (`packages/foundation/modeling/identity/registry/namespaces/`) and the
 `@beep/rdf` term modules. No ontology axioms, labels or definitions are
-redistributed. Changes: curated term selection and TypeScript representation.
+redistributed, except the nanopublication schema, which is vendored under its
+license as listed below. Changes: curated term selection and TypeScript representation.
 No upstream endorsement is implied. The SPAR vocabularies (CiTO, DEO, DoCO,
 FaBiO) are pinned by the same target and listed in the section above; the
 sidecar `packages/foundation/modeling/rdf/src/Vocab/generated/namespace-pins.data.json`
@@ -246,6 +247,7 @@ records each pin's digest.
 
 - **gUFO** — gUFO: A Lightweight Implementation of the Unified Foundational Ontology (UFO), by J. P. A. Almeida, G. Guizzardi, T. P. Sales and R. A. Falbo. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/. Commit `12b098158a9244179c5e0e2534cd85254a2d3b7e`; artifact `gufo.ttl`; version `1.0.0`. [Pinned artifact](https://raw.githubusercontent.com/nemo-ufes/gufo/12b098158a9244179c5e0e2534cd85254a2d3b7e/gufo.ttl).
 - **NIF Core** — NIF 2.1 Core Ontology, NLP2RDF project. Dual-licensed under the Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0) and Creative Commons Attribution 3.0 (CC BY 3.0, https://creativecommons.org/licenses/by/3.0/); used under either. Commit `225301dd65a24578e8b26fa276690f5c0623dcce`; artifact `nif-core/nif-core.ttl`; version `2.1.0`. [Pinned artifact](https://raw.githubusercontent.com/NLP2RDF/ontologies/225301dd65a24578e8b26fa276690f5c0623dcce/nif-core/nif-core.ttl).
+- **Nanopublication schema** — Nanopublication schema, Nanopublication Guidelines. Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0), https://creativecommons.org/licenses/by-sa/3.0/: the notice in the companion `nschema.html` at the same commit, accepted for `nschema.ttl` by operator ruling of 2026-11-23. Commit `8388dd90795b264f4b01c64d0f7218babcae4871`; artifact `nschema.ttl`; version `2013-10-23`. [Pinned artifact](https://raw.githubusercontent.com/Nanopublication/Guidelines/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.ttl). The file is vendored byte-for-byte at `packages/foundation/modeling/rdf/data/vocab/nanopub-nschema/nschema.ttl` with the CC BY-SA 3.0 legal code and an attribution file (`VENDORED.md`) naming its editors and authors; the vendored file and anything derived from it stay under CC BY-SA 3.0, apart from the MIT-licensed source.
 - **Activity Streams 2.0** — Activity Streams 2.0 Vocabulary, W3C Social Web Working Group, W3C Recommendation 2017-05-23. W3C Software and Document License (`W3C-20150513`), https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document. Commit `258bce0cd50ec9683b1417adfa1af926d447cda5`; artifact `vocabulary/activitystreams2.owl`. [Pinned artifact](https://raw.githubusercontent.com/w3c/activitystreams/258bce0cd50ec9683b1417adfa1af926d447cda5/vocabulary/activitystreams2.owl).
 - **Web Annotation (OA)** — Web Annotation Vocabulary, W3C Recommendation 2017-02-23. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/ns/oa.ttl retrieved 2026-11-19; `owl:versionInfo` `2016-11-12T21:28:11Z`.
 - **PROV-O** — PROV-O: The PROV Ontology, W3C Recommendation 2013-04-30. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/ns/prov-o-20130430.

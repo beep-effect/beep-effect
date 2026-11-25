@@ -1,6 +1,6 @@
 # @beep/epistemics
 
-Tenant-free epistemic vocabulary: evidence spans, claim gates, edge identity, contradictions, intervals and claim envelopes.
+Tenant-free epistemic vocabulary: evidence positions, claim records, claim gates, edge identity, contradictions and intervals.
 
 ## Installation
 
@@ -13,6 +13,21 @@ bun add @beep/epistemics
 ```ts
 import * as Package from "@beep/epistemics"
 ```
+
+The nanopublication adapter is its own subpath, so the base package never loads `@beep/rdf`:
+
+```ts
+import { makeNanopubCodec } from "@beep/epistemics/rdf/NanopubCodec"
+```
+
+`makeNanopubCodec({ binding })` writes a checked claim record and explicit publication metadata as a four-graph
+nanopublication: the head links the assertion, provenance and publication-info graphs, the assertion carries the
+canonical encoded core as one `rdf:JSON` literal, and all five names derive from the `nanopub/v1` publication id.
+`decode` re-mints the claim id, recomputes the publication id and compares every derived name; a foreign name is
+rejected import metadata and a failed check is a refusal, both with the original input, and quads outside the
+profile stay residual. `normalize` runs the same checks and then sorts and deduplicates the profile quads, so
+`encode(decode(s).accepted)` and `normalize(s)` are one quad set (`test/NanopubAdapter.test.ts`).
+`test/Epistemics.import-boundary.test.ts` keeps `@beep/rdf` out of every module outside `src/rdf/`.
 
 ## Development
 

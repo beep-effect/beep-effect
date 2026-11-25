@@ -1,4 +1,4 @@
-import { StructuralVerdict } from "@beep/epistemics/Claim";
+import { ClaimGateResult } from "@beep/epistemics/ClaimGate";
 import {
   AdmissionClause,
   AdmissionEvidence,
@@ -8,10 +8,10 @@ import {
   depositionOutlineEntry,
   SupportFacts,
 } from "@beep/party-domain/Admission";
-import { ClaimVersion, ReviewState } from "@beep/party-domain/Claim";
+import { mergeClaimLedgers, ReviewState, readClaims } from "@beep/party-domain/Claim";
 import { CommunicationEvent, isDelegated, Voice, voiceOf } from "@beep/party-domain/Communication";
 import { AttributedEvent, assessOperational, divergences } from "@beep/party-domain/Hierarchy";
-import { AccountId, ActivityId, AssertionId, ClaimVersionId, EventId } from "@beep/party-domain/Ids";
+import { AccountId, ActivityId, AssertionId, EventId } from "@beep/party-domain/Ids";
 import {
   attributeEvents,
   chainOfCommand,
@@ -24,7 +24,7 @@ import {
   selectorGraph,
   selectorReach,
 } from "@beep/party-domain/Projection";
-import { logicalKey, Proposition, partiesOf } from "@beep/party-domain/Proposition";
+import { Proposition, partiesOf } from "@beep/party-domain/Proposition";
 import { EvidenceAnchor } from "@beep/party-domain/Provenance";
 import { describe, expect, it } from "@effect/vitest";
 import * as TestUtils from "@effect/vitest/utils";
@@ -40,9 +40,10 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AcmeFixture, AcmeFixtureLive, at, email, ids } from "./fixtures/acme.ts";
+import { partyClaim } from "./fixtures/claims.ts";
 
 const scope = (asOf = 20, validAt = 100) =>
-  ProjectionScope.make({ asOf: at(asOf), validAt: at(validAt), states: ["Accepted"] });
+  ProjectionScope.make({ scope: "synthetic", asOf: at(asOf), validAt: at(validAt), states: ["Accepted"] });
 
 const syntheticDigest = (fill: string) => `sha256:${Str.repeat(64)(fill)}`;
 
@@ -119,8 +120,21 @@ describe("party model competency questions", () => {
     );
   });
 
-  it("distinguishes structural gates from reviewer acceptance and rejects self-reporting", () => {
-    pipe(S.decodeResult(StructuralVerdict)({ _tag: "Admitted" }), Result.isSuccess, TestUtils.assertTrue);
+  it("distinguishes typed claim-gate verdicts from reviewer acceptance and rejects self-reporting", () => {
+    const decodeGate = S.decodeUnknownResult(ClaimGateResult);
+    pipe(decodeGate({ verdict: "admitted" }), Result.isSuccess, TestUtils.assertTrue);
+    const violation = { focusNode: "party:claim", path: "proposition", message: "Self-report", severity: "violation" };
+    const rejected = Result.getOrThrow(decodeGate({ verdict: "rejected", violations: [violation] }));
+    expect(rejected.verdict).toBe("rejected");
+    if (rejected.verdict === "rejected")
+      expect(A.map(rejected.violations, (row) => row.severity)).toEqual(["violation"]);
+    pipe(decodeGate({ verdict: "rejected" }), Result.isFailure, TestUtils.assertTrue);
+    pipe(
+      decodeGate({ verdict: "rejected", violations: [{ ...violation, severity: "fatal" }] }),
+      Result.isFailure,
+      TestUtils.assertTrue
+    );
+    pipe(decodeGate({ _tag: "Admitted" }), Result.isFailure, TestUtils.assertTrue);
     pipe(S.decodeUnknownResult(ReviewState)({ _tag: "Admitted" }), Result.isFailure, TestUtils.assertTrue);
     pipe(S.decodeUnknownResult(ReviewState)({ _tag: "Accepted" }), Result.isFailure, TestUtils.assertTrue);
     pipe(
@@ -197,7 +211,7 @@ describe("party model competency questions", () => {
         const view = identityView({ ledger: fx.ledger, scope: scope() });
         expect(view.representative(ids.chrisDuplicate)).toBe(ids.chrisA);
         expect(view.representative(ids.chrisB)).toBe(ids.chrisB);
-        expect(A.flatMap(view.reviewCases, (row) => row.vetoClaims)).toEqual(["party-cv:distinct:chris-a-b"]);
+        expect(A.flatMap(view.reviewCases, (row) => row.vetoClaims)).toEqual([fx.vetoChris.claim]);
       })
     );
 
@@ -209,13 +223,15 @@ describe("party model competency questions", () => {
           party: ids.riley,
           relation: "used-by",
         });
-        const alternative = ClaimVersion.make({
-          ...fx.financeV1,
-          id: fx.financeV2.id,
+        const alternative = yield* partyClaim({
           proposition: replacement,
-          logicalKey: logicalKey(replacement),
+          knowledgeStart: 12,
+          operation: "finance:alt",
         });
-        const view = identityView({ ledger: [fx.financeV1, alternative], scope: scope(18) });
+        const view = identityView({
+          ledger: mergeClaimLedgers([fx.financeV1.ledger, alternative.ledger]),
+          scope: scope(18),
+        });
         TestUtils.assertNone(HashMap.get(view.partyOfIdentifier, email("finance")));
       })
     );
@@ -306,19 +322,14 @@ describe("party model competency questions", () => {
 
     it.effect("projects organizational membership without creating reporting authority", () =>
       Effect.gen(function* () {
-        const fx = yield* AcmeFixture;
         const proposition = Proposition.cases.Membership.make({
           member: ids.maya,
           organization: ids.acme,
           role: O.none(),
           title: O.none(),
         });
-        const membership = ClaimVersion.make({
-          ...fx.averyAuthorship,
-          proposition,
-          logicalKey: logicalKey(proposition),
-        });
-        const ledger = [membership];
+        const membership = yield* partyClaim({ proposition, knowledgeStart: 10, operation: "membership" });
+        const ledger = membership.ledger;
         const view = identityView({ ledger, scope: scope() });
         expect(view.representative(ids.pat)).toBe(ids.pat);
         const org = orgGraph({ ledger, scope: scope(), view });
@@ -357,13 +368,14 @@ describe("party model competency questions", () => {
           superior: ids.sam,
           organization: O.some(ids.acme),
         });
-        const contradiction = ClaimVersion.make({
-          ...fx.averyAuthorship,
-          id: ClaimVersionId.make("party-cv:contradictory-hierarchy"),
+        const contradiction = yield* partyClaim({
           proposition,
-          logicalKey: logicalKey(proposition),
+          knowledgeStart: 10,
+          operation: "contradictory-hierarchy",
         });
-        const cycle = declaredHierarchyCycle(orgGraph({ ledger: [...fx.ledger, contradiction], scope: scope(), view }));
+        const cycle = declaredHierarchyCycle(
+          orgGraph({ ledger: mergeClaimLedgers([fx.ledger, contradiction.ledger]), scope: scope(), view })
+        );
         TestUtils.assertSome(
           O.map(cycle, (parties) => A.contains(parties, ids.sam)),
           true
@@ -388,7 +400,9 @@ describe("party model competency questions", () => {
           tier: AdmissionTier.Enum["deposition-ready"],
         };
         const evidence = AdmissionEvidence.make({
-          version: fx.averyAuthorship,
+          claim: O.getOrThrow(
+            A.findFirst(readClaims(fx.ledger, at(20)), (row) => row.record.claim === fx.averyAuthorship.claim)
+          ),
           supports: [
             SupportFacts.make({ assertion: fx.assertion.id, side: "client-file", kind: "distinctive-behavior" }),
           ],
@@ -397,8 +411,8 @@ describe("party model competency questions", () => {
         const accepted = admit({ policy, evidence, knowledgeTime: at(20) });
         pipe(accepted, Result.isSuccess, TestUtils.assertTrue);
         if (Result.isSuccess(accepted))
-          expect(depositionOutlineEntry({ admitted: accepted.success, note: "Synthetic evidence" }).claimVersion).toBe(
-            fx.averyAuthorship.id
+          expect(depositionOutlineEntry({ admitted: accepted.success, note: "Synthetic evidence" }).claim).toBe(
+            fx.averyAuthorship.claim
           );
         const weak = AdmissionEvidence.make({
           ...evidence,

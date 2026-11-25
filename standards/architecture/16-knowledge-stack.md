@@ -55,7 +55,7 @@ lands in the phase of its layer.
 | L1 | Text identity and anchoring | `@beep/text` | P2 |
 | L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | Implemented in P3 lane |
 | L3 | Taxonomy and alignments | `@beep/ontology` | Pending P5 |
-| L4 | Claims | `@beep/epistemics` | Pending P4 |
+| L4 | Claims | `@beep/epistemics` | Implemented in P4 lane |
 | L5 | Operations | `@beep/nlp-processing` (capability) | Pending P6 |
 | L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Pending P5 |
 | L7 | Agent surface | a contract, not a package | Pending P6 |
@@ -106,7 +106,7 @@ ids the run used, and its start time (`@beep/jsonc/ActivityStart`). What the
 run generated and when it ended are fields of the activity record, outside the
 id, because an output id that contains the activity id cannot also be inside
 it. `OccurrenceId` landed with L1 in P2; each other domain brand lands with
-its layer. Capture, annotation and run-entity brands are implemented in P3; ClaimId remains Pending P4.
+its layer. Capture, annotation and run-entity brands are implemented in P3; `ClaimId` in P4.
 
 **Arrows.** CURIE expansion and contraction over every namespace the repo
 speaks (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); code id to term
@@ -236,7 +236,7 @@ annotation layer: document structure, segmentation, mentions, chunks and
 extractor candidates. Content is kept apart from attribution.
 
 **Objects.** `makeAnnotationDocument`, a builder over a caller-supplied kind
-registry (the pattern `makeClaimEnvelope` set), whose document holds the text
+registry (the pattern `makeClaimCore` also follows), whose document holds the text
 capture, an `anchors` table from `OccurrenceId` to `Anchored`, an
 `annotations` map from `AnnotationId` to content, and an `attribution` map from
 `AnnotationId` to a set of `Generation` records. An annotation's content is its
@@ -312,16 +312,15 @@ untyped terms), `L3-4` (acceptance: a pinned edition is immutable).
 
 ### L4 · Claims
 
-**Owner.** `@beep/epistemics`, with a nanopublication codec in an adapter
-subpath. The epistemic slice keeps its product records, tables and
+**Owner.** `@beep/epistemics`, with a nanopublication codec in the adapter
+subpath `@beep/epistemics/rdf/NanopubCodec`. The epistemic slice keeps its product records, tables and
 `ClaimLifecycle.advance`; `ClaimLifecycle` stays in `shared/domain`.
 
 **Denotes.** Tenant-free vocabulary for what someone asserts, on what evidence,
 with what stance and when: an immutable hashed core plus records that point at
 it.
 
-**Objects.** `makeClaimCore`, a builder that takes one options object (as
-`makeClaimEnvelope` does today) with a slice-supplied proposition and id schemas,
+**Objects.** `makeClaimCore`, a builder that takes one options object with a slice-supplied proposition and id schemas,
 whose core holds the proposition, the logical key, the set of `OccurrenceId`
 supporting it at creation, the set of `ClaimId` it was derived from, an
 optional `supersedes` naming the `ClaimId` it supersedes, the generating
@@ -336,22 +335,22 @@ decoded, a deduplicated array sorted by the encoded string when encoded.
 Records that point at a core: `Stance`, `Challenge` (cycles allowed),
 `Admission`, and a retraction record (claim, actor, reason, time). The actor
 of an admission, of a challenge by a person and of a retraction is the
-slice-supplied principal id, not an `AgentRef`. `makeClaimEnvelope` and its
-`ClaimVersion` retire in P4, with every consumer migrated to `makeClaimCore`
-plus the separate records; rows that store a `ClaimVersion` keep their bytes
-behind a declared read-time transform. `EvidenceSignals` (built by
-`makeClaimEnvelope`), the five typed signals, each present or
-`Absent{reason}`, hold today; the present-or-absent
-carrier and its reasons (`makeSignal`, `AbsenceReason`, `Measurement`) move
-from `@beep/epistemics` to `@beep/schema` in P4, so `@beep/ontology` can type a
-mapping confidence without depending on the claims layer. `makeAssessments`
-builds the owner-declared coordinate carrier (section 9). Pending P4 except
-`EvidenceSignals`.
+slice-supplied principal id, not an `AgentRef`. `makeClaimEnvelope` and its `ClaimVersion` were deleted in P4: the party,
+knowledge-base and holds ledgers store a `makeClaimCore` core plus the separate
+records, and rows that store a `ClaimVersion` keep their bytes behind private,
+format-named read-time readers that return a `LegacyClaimImported` record
+(`@beep/epistemics/ClaimImport.schema`). `makeClaimReview` builds the review
+vocabulary: `ReviewState`, `ReviewerDisposition`, `DependenceAssessment` and
+`EvidenceSignals`, the five typed signals, each present or `Absent{reason}`.
+The present-or-absent carrier and its reasons (`makeSignal`, `AbsenceReason`,
+`Measurement`) ship from `@beep/schema/Signal` since P4, so `@beep/ontology`
+can type a mapping confidence without depending on the claims layer.
+`makeAssessments` builds the owner-declared coordinate carrier (section 9).
 
 **Arrows.** `promote` from candidate annotations, verified anchors, a
 proposition and an activity to a core with stance `proposed`; `admit` from a
-core, a grounding witness and a human token to an `Admission`; the nanopub
-codec; a pure checker over a log for the partition clauses below. The Postgres
+core, a grounding witness and a human token to an `Admission`; the nanopub codec (`makeNanopubCodec`: encode, decode and normalize over a
+restricted four-graph profile); a pure checker over a log for the partition clauses below. The Postgres
 exclusion constraint in the epistemic server remains the enforcement of
 valid-time overlap.
 
@@ -466,9 +465,9 @@ Forbidden edges: `@beep/identity` to anything but `effect`, including
 with a `@beep/schema` primitive; any base entry of
 `@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
 `@beep/rdf` to `@beep/md` (Pending P5); any `foundation/modeling` package to a
-capability; a slice's `domain` or model package to a capability. These hold
-for `@beep/text` since P2 and the annotation base since P3, and are Pending P4 to P6 for the packages that have
-not landed.
+capability; a slice's `domain` or model package to a capability. These hold for `@beep/text` since P2, the annotation base since P3 and the
+epistemics base since P4 (its import-boundary test), and are Pending P5 to P6
+for the packages that have not landed.
 
 ## 4. Identity regimes
 
@@ -513,7 +512,8 @@ Identity has two regimes joined by minting.
   `occurrence/v1` and `quote-key/v1` in `@beep/text` and `citation-mention/v2`
   in the law-practice server, each declared with `definePreimage` and a golden
   vector. P3 adds capture/v1, annotation/v1, generation/v1 and the two OA import
-  preimages with goldens; the claim brands remain Pending P4.
+  preimages with goldens; P4 adds the claim core preimage, `nanopub/v1` and
+`nanopub-agent/v1`, each with a golden.
 - **One digest format** binds identifiers minted by the eight layers:
   `sha256:` plus 64 lowercase hex, one brand per domain. The bare hex primitive
   used elsewhere in the repository is out of scope for this rule.
@@ -528,10 +528,11 @@ Identity has two regimes joined by minting.
   document receipts take that route: since P2 a v3 receipt converts to v4 on
   read, after its stored `cm1:` id is recomputed and checked, and v3 is never
   written. So do the stored anchor columns and the stored node events:
-  `epistemic_evidence.span` stores an `EvidenceSpan` (anchor fields plus
-  confidence) and keeps its bytes, and the epistemic tables package keeps a
-  read-time transform from its current and legacy shapes to the text position
-  plus an extractor-confidence signal (Pending P4); the
+  `epistemic_evidence.span` stored an `EvidenceSpan` (anchor fields plus
+  confidence) and keeps those bytes: since P4 the epistemic domain `EvidenceRow`
+  reads the current and legacy shapes and returns an `EvidencePosition`, a text
+  position plus an extractor-confidence signal, and new rows are written only in
+  the `evidence-position/v2` shape; the
   `@beep/agent-memory-store` node events store an `OccurrenceAnchor` and keep
   their bytes, and since P2 `occurrenceIdOf` derives `OccurrenceId` from it at
   read time, mapping its `utf16` unit literal to `utf16-code-unit`. Three
@@ -550,7 +551,7 @@ end and quote. It is the only text-occurrence identity in the repository. The
 five non-canonical anchor encodings are deleted in the phase that owns each:
 the `@beep/rdf` selector schemas and the `TextSpan` case of the party-domain
 `EvidenceAnchor` were deleted in P2, and the `@beep/nlp` Handoff and Graph spans
-were deleted in P3; `EvidenceSpan` remains Pending P4. The party union keeps its three non-text
+were deleted in P3, and the epistemics `EvidenceSpan` in P4. The party union keeps its three non-text
 cases and points at text through a `TextOccurrence` case that holds an
 `Anchored`, and its record identifier is `ArtifactOccurrenceId`, so the name
 `OccurrenceId` belongs to `@beep/text` alone. The cli knowledge-base `Selector`
@@ -599,7 +600,7 @@ What a record says and who produced it are kept apart.
   admissions and retractions are separate records that point at the core
   (`L4-1`). What a record supersedes is known at creation, so `supersedes`
   is in the hashed core and the knowledge interval it closes is derived, never
-  stored. Pending P4.
+  stored. Implemented in P4.
 
 ## 7. Stance and admission
 
@@ -607,7 +608,7 @@ What a record says and who produced it are kept apart.
 (what the source says), `proposed` (what a machine or a person put forward)
 and `admitted`. It is not the epistemic `SemanticStance` stem of the verdict
 law, and it does not decide whether two claims may be compared; that question
-belongs to `explorations/citation-grounding-hallucination-guard`. Pending P4.
+belongs to `explorations/citation-grounding-hallucination-guard`. Implemented in P4.
 
 An admission is approval for a stated use, not truth. Its actor is the
 slice-supplied principal id. It is bound to that actor, the action, the
@@ -620,14 +621,15 @@ revision and the scope, and it exists only with both witnesses:
 Admission is the governance half of the boundary with the grounding half as a
 required argument. A refused admission and a failed re-verification are typed
 values, not errors. Proposed and admitted worlds are produced on export as
-views over the records; they are not the storage model. Pending P4.
+views over the records; they are not the storage model. Implemented in P4.
 
 ## 8. Signals and triage policies
 
 The five typed evidence signals stay as they are, each present or
 `Absent{reason}`. Absence is information: it never coerces to a number, and no
-signal has a default (`L4-7`, Pending P4 for the regression guards on the lab
-`1` and the office-action `0.9`). There is no algebra across signals: no
+signal has a default (`L4-7`; since P4 the semantica extractor and the
+office-action review record `Absent` where they wrote `1` and `0.9`, and old
+semantica rows import their stored number as `legacy-unknown`). There is no algebra across signals: no
 blended score, no default combination, and no provenance semiring outside a
 bounded derivation query with a stored provenance term.
 
@@ -644,14 +646,14 @@ every coordinate is present, as `Assessed` with a value or `Unassessed` with a
 reason. A missing coordinate is a decode failure; unassessed is a value a gate
 must handle. A gate is an owner-defined predicate over the carrier. The
 foundation supplies the law harness (`L4-6`); each owner supplies its
-coordinates, value schemas, order per coordinate and transitions. Pending P4.
+coordinates, value schemas, order per coordinate and transitions. Implemented in P4.
 
 The status census covers eight sites. `ReviewState`,
 `ClaimDispositionStatus`, `ClaimEvidenceReviewStatus` and `ClaimLifecycle` are
 coordinates; `ReviewTag` is a projection of `ReviewState`; `StructuralVerdict`
-duplicates `ClaimGateResult` and folds into it under the verdict law;
+duplicated `ClaimGateResult` and was deleted in P4 under the verdict law;
 `ReviewerDisposition` is the value schema of the reviewer signal, not a status.
-The packet's status census at P4 is final. `ClaimLifecycle` stays in
+The packet's status census (`research/status-census.md`) is final as of P4. `ClaimLifecycle` stays in
 `shared/domain`, its transitions stay in the epistemic slice, and
 `ClaimDispositionStatus` keeps its bytes.
 

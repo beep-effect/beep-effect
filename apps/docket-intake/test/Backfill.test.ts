@@ -5,6 +5,7 @@
  * temporary directory on the tests' in-memory file system; every message,
  * address and link is synthetic.
  */
+import { isCurrentReviewItem } from "@beep/law-practice-domain";
 import { DocketJournalEntry, DocketRunId } from "@beep/law-practice-server/DocketIntake";
 import { makeReviewFilesLayer, ReviewFilesConfig } from "@beep/law-practice-server/ReviewFiles";
 import {
@@ -167,7 +168,10 @@ describe("@beep/docket-intake backfill-questions", () => {
         const second = yield* backfill(store, true);
         const items = yield* store.list;
         const rewritten = yield* Effect.fromOption(
-          A.findFirst(items, (item) => item.itemId === original.itemId && item.kind === "question")
+          A.findFirst(
+            A.filter(items, isCurrentReviewItem),
+            (item) => item.itemId === original.itemId && item.kind === "question"
+          )
         );
 
         expect([first.report.applied, first.report.enriched, first.report.found]).toStrictEqual([true, 1, 4]);

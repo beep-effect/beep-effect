@@ -26,7 +26,7 @@ import {
   contradictionProposalDigest,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity";
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";

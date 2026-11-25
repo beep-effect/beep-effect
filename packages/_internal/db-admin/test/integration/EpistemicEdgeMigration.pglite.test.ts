@@ -167,10 +167,12 @@ if (!shouldRunPgliteIntegration) {
             ...productEntityFixtureInput("EpistemicEvidence", 1),
             artifactFixtureKey: "artifact:oa-1",
             span: {
-              confidence: 0.92,
-              endChar: 57,
-              quote: "a processor configured to receive sensor data",
-              startChar: 12,
+              version: "evidence-position/v2",
+              position: { endChar: 57, quote: "a processor configured to receive sensor data", startChar: 12 },
+              extractorConfidence: {
+                _tag: "Present",
+                value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+              },
             },
             spanFixtureKey: "span:oa-1:12-48",
           });

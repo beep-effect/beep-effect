@@ -6,23 +6,61 @@
  */
 
 /**
- * Claim envelope exports: the bitemporal claim version, review state and
- * evidence signals bound to a slice's proposition and ids.
+ * Scoped admission verification and historical claim eligibility.
  *
- * **Example** (Read the current accepted view)
+ * **Example** (Inspect source resolution cases)
  *
  * ```ts
- * import { versionsAt } from "@beep/epistemics/Claim"
+ * import { SourceResolution } from "@beep/epistemics/Admission"
+ * console.log(SourceResolution.cases.Missing.make({}))
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./Admission.ts";
+/**
+ * Total owner coordinates and codec-checked update arrows.
+ *
+ * **Example** (Inspect a refusal coordinate)
+ *
+ * ```ts
+ * import { InvalidAssessment } from "@beep/epistemics/Assessments"
+ * console.log(InvalidAssessment.make({ coordinate: "review", issue: "Invalid input" }).coordinate)
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./Assessments.ts";
+/**
+ * Review coordinates, evidence signals and valid-time vocabulary for claim owners.
+ *
+ * **Example** (Unknown valid time is never selected)
+ *
+ * ```ts
+ * import { ValidTime, validAt } from "@beep/epistemics/Claim"
  * import * as DateTime from "effect/DateTime"
  *
- * const now = DateTime.makeUnsafe(1_000)
- * console.log(versionsAt([], { asOf: now, validAt: now, states: ["Accepted"] }))
+ * console.log(validAt(ValidTime.cases.Unknown.make({}), DateTime.makeUnsafe(1_000)))
  * ```
  *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./Claim/index.ts";
+/**
+ * **Example** (Read claim stances)
+ *
+ * ```ts
+ * import { Stance } from "@beep/epistemics/ClaimCore"
+ * console.log(Stance.literals)
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./ClaimCore.ts";
 /**
  * **Example** (Log rejected disposition status)
  *
@@ -73,6 +111,34 @@ export * from "./ClaimEvidenceReview/index.ts";
  */
 export * from "./ClaimGate/index.ts";
 /**
+ * Historical claim imports and explicit identifier namespaces.
+ *
+ * **Example** (Index an imported claim reference)
+ *
+ * ```ts
+ * import { ClaimReference, claimReferenceKey } from "@beep/epistemics/ClaimImport.schema"
+ * console.log(claimReferenceKey(ClaimReference.cases.Imported.make({ ledger: "kb", oldId: "claim-1" })))
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./ClaimImport.schema.ts";
+/**
+ * Lawful immutable append projections and derivation closure.
+ *
+ * **Example** (Check an empty log)
+ *
+ * ```ts
+ * import { checkClaimLog } from "@beep/epistemics/ClaimLog"
+ * console.log(checkClaimLog([]))
+ * ```
+ *
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./ClaimLog.ts";
+/**
  * Claim projection read-model schema factories.
  *
  * **Example** (Bind claim state counts)
@@ -89,6 +155,20 @@ export * from "./ClaimGate/index.ts";
  * @since 0.0.0
  */
 export * from "./ClaimProjection/index.ts";
+/**
+ * Reported confidence scalar for measurement payloads.
+ *
+ * **Example** (Read a reported confidence)
+ *
+ * ```ts
+ * import { Confidence } from "@beep/epistemics/Confidence"
+ * console.log(Confidence.make(1))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Confidence.ts";
 /**
  * Contradiction-candidate schema factories, seals and arbitraries.
  *
@@ -150,20 +230,17 @@ export * from "./EdgeEndpoint/index.ts";
  */
 export * from "./EdgeRelation/index.ts";
 /**
- * **Example** (Decode confidence value)
+ * **Example** (Inspect the current format)
  *
  * ```ts
- * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import * as S from "effect/Schema"
- *
- * const confidence = S.decodeUnknownSync(Confidence)(0.88)
- * console.log(confidence)
+ * import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema"
+ * console.log(EvidencePosition.fields.version)
  * ```
  *
- * @category value-objects
+ * @category schemas
  * @since 0.0.0
  */
-export * from "./EvidenceSpan/index.ts";
+export * from "./EvidencePosition.schema.ts";
 /**
  * Evidence-verification manifestation schema factory and digest.
  *

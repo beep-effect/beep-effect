@@ -265,7 +265,14 @@ const runFirstScope = Effect.fnUntraced(function* () {
         decodeEvidence({
           ...productEntityFixtureInput("EpistemicEvidence", 801),
           artifactFixtureKey: "contradiction-p0.source-a",
-          span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
+          span: {
+            version: "evidence-position/v2",
+            position: { endChar: 8, quote: "amount A", startChar: 0 },
+            extractorConfidence: {
+              _tag: "Present",
+              value: { _tag: "ReportedConfidence", value: 0.95, method: "synthetic-fixture" },
+            },
+          },
           spanFixtureKey: "span-a",
         })
       ),
@@ -273,7 +280,14 @@ const runFirstScope = Effect.fnUntraced(function* () {
         decodeEvidence({
           ...productEntityFixtureInput("EpistemicEvidence", 802),
           artifactFixtureKey: "contradiction-p0.source-b",
-          span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
+          span: {
+            version: "evidence-position/v2",
+            position: { endChar: 8, quote: "amount B", startChar: 0 },
+            extractorConfidence: {
+              _tag: "Present",
+              value: { _tag: "ReportedConfidence", value: 0.94, method: "synthetic-fixture" },
+            },
+          },
           spanFixtureKey: "span-b",
         })
       ),

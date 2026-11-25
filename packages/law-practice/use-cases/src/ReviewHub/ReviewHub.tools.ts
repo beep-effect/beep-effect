@@ -120,7 +120,7 @@ export const LockBatchTool = annotateFourHints(
 export const RecordAnswerTool = annotateFourHints(
   Tool.make("review_record_answer", {
     description:
-      "Record the attorney's answer to one stored question. Fails with code not-found when no such question is stored and unknown-option when the answer names an option the question does not offer.",
+      "Record the attorney's answer to one stored question. Fails with code not-found when no such question is stored, repair-required when the stored question is a legacy import whose quote must be repaired first, and unknown-option when the answer names an option the question does not offer.",
     failure: ReviewHubToolError,
     failureMode: "return",
     parameters: RecordAnswerRequest,

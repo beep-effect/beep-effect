@@ -10,6 +10,7 @@ import {
   ClaimEvidenceReviewStatus,
   ClaimEvidenceVerification,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { Badge } from "@beep/ui/components/badge";
 import { Button } from "@beep/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@beep/ui/components/card";
@@ -17,6 +18,11 @@ import { VerifiedSourceTextViewer } from "@beep/ui/components/verified-source-te
 import * as DateTime from "effect/DateTime";
 import type { ClaimEvidenceExplanation } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import type { JSX } from "react";
+
+const extractorConfidenceReading = ExtractorConfidence.match({
+  Present: ({ value }) => `${value.value}`,
+  Absent: ({ reason }) => reason,
+});
 
 /**
  * Controlled presentation of an already resolved evidence explanation.
@@ -108,10 +114,10 @@ export function ClaimEvidenceReviewPanel({
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            <blockquote className="border-l-2 pl-4 text-lg">“{basis.evidence.quote}”</blockquote>
+            <blockquote className="border-l-2 pl-4 text-lg">“{basis.evidence.position.quote}”</blockquote>
             <p className="text-sm text-muted-foreground">
-              Extractor confidence: {basis.evidence.confidence} / 1. This is an extraction score; a matching quote still
-              needs interpretation.
+              Extractor confidence: {extractorConfidenceReading(basis.evidence.extractorConfidence)}. A reported value
+              describes extraction; a matching quote still needs interpretation.
             </p>
           </div>
         </CardContent>
@@ -156,8 +162,8 @@ export function ClaimEvidenceReviewPanel({
                 className="h-52"
                 pageText={sourceText}
                 pageStartOffset={0}
-                anchorStartOffset={basis.evidence.startChar}
-                anchorEndOffset={basis.evidence.endChar}
+                anchorStartOffset={basis.evidence.position.startChar}
+                anchorEndOffset={basis.evidence.position.endChar}
                 autoScrollToAnchor={false}
               />
             ) : (
@@ -199,7 +205,7 @@ export function ClaimEvidenceReviewPanel({
                 <div>
                   <dt className="text-muted-foreground">UTF-16 evidence offsets</dt>
                   <dd>
-                    {basis.evidence.startChar}–{basis.evidence.endChar}
+                    {basis.evidence.position.startChar}–{basis.evidence.position.endChar}
                   </dd>
                 </div>
                 <div>

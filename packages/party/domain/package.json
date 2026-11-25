@@ -60,6 +60,7 @@
   "dependencies": {
     "@beep/epistemics": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/text": "workspace:^",
@@ -70,7 +71,6 @@
     "tr46": "catalog:"
   },
   "devDependencies": {
-    "@beep/jsonc": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

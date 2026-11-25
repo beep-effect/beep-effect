@@ -30,7 +30,7 @@ const prefixed = (prefix: string) =>
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.IdentifierId)("party-ident:1")
  * ```
  *
  * @category identifiers
@@ -54,7 +54,7 @@ export type IdentifierId = typeof IdentifierId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.AccountId)("party-acct:1")
  * ```
  *
  * @category identifiers
@@ -78,7 +78,7 @@ export type AccountId = typeof AccountId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.VoiceId)("party-voice:1")
  * ```
  *
  * @category identifiers
@@ -102,7 +102,7 @@ export type VoiceId = typeof VoiceId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ContentId)("party-sha256:1")
  * ```
  *
  * @category identifiers
@@ -158,7 +158,7 @@ export type ArtifactOccurrenceId = typeof ArtifactOccurrenceId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ActivityId)("party-act:1")
  * ```
  *
  * @category identifiers
@@ -182,7 +182,7 @@ export type ActivityId = typeof ActivityId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ObservationId)("party-obs:1")
  * ```
  *
  * @category identifiers
@@ -206,7 +206,7 @@ export type ObservationId = typeof ObservationId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.EventId)("party-evt:1")
  * ```
  *
  * @category identifiers
@@ -230,7 +230,7 @@ export type EventId = typeof EventId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.AssertionId)("party-asrt:1")
  * ```
  *
  * @category identifiers
@@ -247,30 +247,6 @@ export const AssertionId = prefixed("party-asrt").pipe(
 export type AssertionId = typeof AssertionId.Type;
 
 /**
- * An immutable bitemporal claim version in the authority ledger.
- *
- * **Example** (Decode a slice-owned identifier)
- *
- * ```ts
- * import * as Ids from "@beep/party-domain/Ids"
- * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
- * ```
- *
- * @category identifiers
- * @since 0.0.0
- */
-export const ClaimVersionId = prefixed("party-cv").pipe(
-  S.brand("ClaimVersionId"),
-  $I.annoteSchema("ClaimVersionId", { description: "Identifier with the cv: scheme." })
-);
-/**
- * @category models
- * @since 0.0.0
- */
-export type ClaimVersionId = typeof ClaimVersionId.Type;
-
-/**
  * A derived assessment (operational hierarchy signal, evidence-kind classification).
  *
  * **Example** (Decode a slice-owned identifier)
@@ -278,7 +254,7 @@ export type ClaimVersionId = typeof ClaimVersionId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.AssessmentId)("party-asmt:1")
  * ```
  *
  * @category identifiers
@@ -302,7 +278,7 @@ export type AssessmentId = typeof AssessmentId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.PrincipalId)("party-user:1")
  * ```
  *
  * @category identifiers
@@ -326,7 +302,7 @@ export type PrincipalId = typeof PrincipalId.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ContextRef)("party-ctx:1")
  * ```
  *
  * @category identifiers
@@ -350,7 +326,7 @@ export type ContextRef = typeof ContextRef.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.ConceptIri)("https://example.test/role")
  * ```
  *
  * @category identifiers
@@ -376,7 +352,7 @@ export type ConceptIri = typeof ConceptIri.Type;
  * ```ts
  * import * as Ids from "@beep/party-domain/Ids"
  * import * as S from "effect/Schema"
- * S.decodeUnknownOption(Ids.ClaimVersionId)("party-cv:1")
+ * S.decodeUnknownOption(Ids.Digest)("feedface")
  * ```
  *
  * @category identifiers

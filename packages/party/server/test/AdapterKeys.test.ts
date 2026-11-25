@@ -1,7 +1,6 @@
 import { ActivityId } from "@beep/party-domain/Ids";
 import { canonicalBytes, identifierBasis } from "@beep/party-domain/PartyKey";
 import { ContactIngestInput, ingestContact } from "@beep/party-server/ContactEvidence";
-import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { adaptMailRecord, MailIndexInput } from "@beep/party-server/MailIndex";
 import { ContactCard, ContactEmailInput } from "@beep/party-use-cases/ContactSource";
 import { expect, it } from "@effect/vitest";
@@ -11,6 +10,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { creation, LedgerLive } from "./fixtures/claims.ts";
 
 const pairs = [
   Tuple.make("Dana Example <Dana@EXAMPLE.test>", " dana@example.test "),
@@ -18,7 +18,7 @@ const pairs = [
   Tuple.make("E\u0301lodie@example.test", "élodie@example.test"),
   Tuple.make("dana@bücher.example", "dana@xn--bcher-kva.example"),
 ];
-it.layer(PartyLedgerMemory)("mail/contact key equality", (it) => {
+it.layer(LedgerLive)("mail/contact key equality", (it) => {
   it.effect("uses identical normalized values, canonical bytes and keys across actual adapters", () =>
     Effect.gen(function* () {
       for (const [index, pair] of A.map(pairs, (pair, index) => Tuple.make(index, pair))) {
@@ -50,6 +50,7 @@ it.layer(PartyLedgerMemory)("mail/contact key equality", (it) => {
         const contact = yield* ingestContact(
           ContactIngestInput.make({
             card,
+            creation: creation({ operation: `key-card-${index}`, at: 5 }),
             activity: ActivityId.make(`party-act:key-card-${index}`),
             recordedAt: DateTime.makeUnsafe(5),
           })

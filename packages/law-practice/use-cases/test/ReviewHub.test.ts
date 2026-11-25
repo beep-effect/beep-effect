@@ -4,7 +4,14 @@
  * maps to. Every item, option and batch here is synthetic.
  */
 
-import { ReviewItem } from "@beep/law-practice-domain/values/ReviewItem";
+import {
+  isCurrentReviewItem,
+  isLegacyReviewItemImported,
+  LegacyQuoteUnresolved,
+  LegacyReviewItemImported,
+  LegacySourceLocator,
+  ReviewItem,
+} from "@beep/law-practice-domain/values/ReviewItem";
 import { QuestionQueueLive, RecordAnswerInput } from "@beep/law-practice-use-cases/QuestionQueue";
 import {
   LockBatchRequest,
@@ -15,15 +22,21 @@ import {
 } from "@beep/law-practice-use-cases/ReviewHub";
 import { ReviewItemStore, ReviewItemStoreError } from "@beep/law-practice-use-cases/ReviewItemStore";
 import { RecordVerdictInput, ReviewQueueLive } from "@beep/law-practice-use-cases/ReviewQueue";
-import { AnswerLogMemory, ReviewItemStoreMemory, VerdictLogMemory } from "@beep/law-practice-use-cases/test";
+import {
+  AnswerLogMemory,
+  ReviewItemStoreMemory,
+  reviewItemStoreMemoryFrom,
+  VerdictLogMemory,
+} from "@beep/law-practice-use-cases/test";
 import { LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ReviewHubToolError } from "@beep/law-practice-use-cases/ReviewHub";
 import type { ReviewItemStoreShape } from "@beep/law-practice-use-cases/ReviewItemStore";
@@ -36,8 +49,27 @@ const hubOver = (store: Layer.Layer<ReviewItemStore>) =>
 
 const unreadable: ReviewItemStoreShape = {
   list: Effect.fail(ReviewItemStoreError.make({ operation: "read", reason: "items.jsonl cannot be read" })),
-  upsert: () => Effect.void,
+  repair: () => Effect.void,
+  upsert: () => Effect.succeed([]),
 };
+
+const importedQuestion = LegacyReviewItemImported.make({
+  itemId: "question:legacy-1",
+  storedKind: "question",
+  text: "Should the synthetic response date stay on November 2?",
+  raw: { kind: "question", itemId: "question:legacy-1" },
+  unresolved: [
+    LegacyQuoteUnresolved.make({
+      reason: "empty-legacy-quote",
+      itemId: "question:legacy-1",
+      fieldPath: "facts[0].sourceRefs[0].quote",
+      exact: "",
+      prefix: O.none(),
+      suffix: O.none(),
+      locator: LegacySourceLocator.make({ boxFileId: "1234567890", page: O.some(1), crop: O.none() }),
+    }),
+  ],
+});
 
 const today = OpenItemsRequest.make({ today: LocalDate.make({ year: 2026, month: 10, day: 14 }) });
 
@@ -130,6 +162,55 @@ describe("@beep/law-practice-use-cases review hub", () => {
 
           expect(failure.code).toBe("store-unavailable");
           expect(failure.message).toBe("The review store failed to read (ReviewItemStoreError).");
+        })
+      );
+    }
+  );
+  it.layer(hubOver(reviewItemStoreMemoryFrom([importedQuestion])), { timeout: "10 seconds" })(
+    "an unresolved legacy import",
+    (it) => {
+      it.effect(
+        "lists the import for repair, refuses an answer, a verdict and a plain upsert, and stores an explicit repair",
+        Effect.fnUntraced(function* () {
+          const hub = yield* ReviewHub;
+          const store = yield* ReviewItemStore;
+          const listed = yield* hub.openItems(today);
+          expect(A.map(listed.items, (item) => [item.itemId, isLegacyReviewItemImported(item)])).toStrictEqual([
+            ["question:legacy-1", true],
+          ]);
+          const refused = yield* Effect.flip(hub.recordAnswer(answer("question:legacy-1", "keep-date")));
+          expect([refused.code, refused.message]).toStrictEqual([
+            "repair-required",
+            "Item question:legacy-1 is a legacy import whose quote must be repaired before it is reviewed.",
+          ]);
+          const verdictCode = yield* codeOf(
+            hub.recordVerdict(
+              RecordVerdictInput.make({ itemId: "question:legacy-1", batchId: "sitting-legacy", verdict: "right" })
+            )
+          );
+          expect(verdictCode).toBe("repair-required");
+          const repaired = yield* S.decodeEffect(ReviewItem.cases.question)({
+            kind: "question",
+            itemId: "question:legacy-1",
+            text: "Should the synthetic response date stay on November 2?",
+            sourceRefs: [],
+            facts: [],
+            options: [
+              { optionId: "keep-date", label: "Keep the date" },
+              { optionId: "handle-myself", label: "I will handle it" },
+            ],
+          });
+          const held = yield* store.upsert([repaired]);
+          expect(held).toStrictEqual(["question:legacy-1"]);
+          const stillImported = yield* store.list;
+          assertTrue(A.every(stillImported, isLegacyReviewItemImported));
+          yield* store.repair([repaired]);
+          yield* store.repair([repaired]);
+          const afterRepair = yield* store.list;
+          expect(A.map(afterRepair, isCurrentReviewItem)).toStrictEqual([true]);
+          yield* hub.recordAnswer(answer("question:legacy-1", "keep-date"));
+          const open = yield* openIds;
+          expect(open).toStrictEqual([]);
         })
       );
     }

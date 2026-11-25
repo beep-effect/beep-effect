@@ -6,7 +6,7 @@
  */
 
 import { toPgTable } from "@beep/effect-drizzle/pg";
-import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
+import { EvidenceRow } from "@beep/epistemic-domain/entities/Evidence";
 
 /**
  * PGLite/Postgres Drizzle table for the epistemic Evidence entity.
@@ -23,4 +23,4 @@ import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
  * @category tables
  * @since 0.0.0
  */
-export const Table = toPgTable(Evidence);
+export const Table = toPgTable(EvidenceRow);

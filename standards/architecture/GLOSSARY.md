@@ -171,8 +171,8 @@ and the scope. Its knowledge interval ends at the knowledge start of the
 record that supersedes it, so several unsuperseded records of one partition
 may be current, with disjoint valid intervals. Stance,
 challenges, admissions and retractions are separate records that point at the
-core. The core is built by `makeClaimCore` in `@beep/epistemics` (Pending
-P4), which replaces `makeClaimEnvelope` and its `ClaimVersion` in P4; a patent
+core. The core is built by `makeClaimCore` in `@beep/epistemics`, which
+replaced `makeClaimEnvelope` and its `ClaimVersion` in P4; a patent
 claim, a Hohfeld legal position and a review verdict are not claims in this
 sense.
 
@@ -659,7 +659,8 @@ quoted substring, re-sliceable as `text.slice(startChar, endChar)`. It is pure
 provenance substrate — no confidence, claim, or domain semantics — and lives in
 `foundation/modeling` so any slice's `domain` can ground knowledge in a source
 span without depending on another slice. Consuming slices wrap it (e.g.
-epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`). Beside it,
+epistemics `EvidencePosition` = a `TextAnchor` + an extractor-confidence
+signal). Beside it,
 `@beep/text` holds the [`Selector`](#selector) union and
 [`OccurrenceId`](#occurrence), the one text-occurrence identity, which P2 of
 `goals/text-knowledge-stack-rebuild` added when it retired the former

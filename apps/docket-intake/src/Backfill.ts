@@ -8,7 +8,7 @@
  */
 
 import { $DocketIntakeId } from "@beep/identity/packages";
-import { ReviewItem } from "@beep/law-practice-domain";
+import { isCurrentReviewItem, ReviewItem } from "@beep/law-practice-domain";
 import {
   DocketJournalKind,
   docketQuestionEmailOf,
@@ -167,7 +167,7 @@ export const backfillQuestions = Effect.fn("DocketIntakeApp.backfillQuestions")(
 }) {
   const store = yield* ReviewItemStore;
   const list1 = yield* store.list;
-  const found = A.getSomes(A.map(list1, unnamedOf));
+  const found = A.getSomes(A.map(A.filter(list1, isCurrentReviewItem), unnamedOf));
   const digestPairs2 = yield* digestPairs(publishedMessageIds(input.state));
   const published = HashSet.fromIterable(A.map(digestPairs2, ([digest]) => digest));
   const digestPairs3 = yield* digestPairs(markedMessageIds(input.journal));

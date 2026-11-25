@@ -1,6 +1,13 @@
-import { ClaimVersion, SourceAssertion } from "@beep/party-domain/Claim";
+import {
+  ClaimGeneration,
+  ClaimLedger,
+  ClaimRecord,
+  ClaimReviewRecord,
+  mergeClaimLedgers,
+  ReviewState,
+  SourceAssertion,
+} from "@beep/party-domain/Claim";
 import { HeaderParticipant } from "@beep/party-domain/Communication";
-import { ClaimVersionId } from "@beep/party-domain/Ids";
 import { PartyKey } from "@beep/party-domain/PartyKey";
 import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
 import { ResolutionScope, resolveParties } from "@beep/party-domain/Resolution";
@@ -8,67 +15,76 @@ import { PartyLedgerMemory } from "@beep/party-server/Ledger";
 import { LedgerSnapshot, PartyLedger } from "@beep/party-use-cases/Ledger";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { describe, expect, it } from "@effect/vitest";
-import * as TestUtils from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { activityStart, at, LedgerLive, partyClaim, retraction } from "./fixtures/claims.ts";
+import type { ClaimId } from "@beep/epistemics/ClaimCore.schema";
+import type { ClaimLedgerData } from "@beep/party-domain/Claim";
+import type { PartyClaim } from "./fixtures/claims.ts";
 
-const absent = { _tag: "Absent", reason: "not-assessed" };
-const proposition = Proposition.cases.SameParty.make({ left: PartyId.make(1), right: PartyId.make(2) });
-const first = S.decodeUnknownEffect(ClaimVersion)({
-  id: "party-cv:first",
-  proposition,
-  logicalKey: logicalKey(proposition),
-  supportedBy: ["party-asrt:synthetic"],
-  challengedBy: [],
-  supersedes: null,
-  knowledge: { recordedAt: 1, expiredAt: null },
-  validTime: { _tag: "Interval", validFrom: 0, validTo: null },
-  review: {
-    _tag: "Accepted",
-    disposition: {
-      disposition: "accepted",
-      reviewer: "party-user:test",
-      basis: "1234567812345678123456781234567812345678123456781234567812345678",
-      reviewedAt: 1,
-      reason: "Synthetic review",
-    },
-  },
-  signals: {
-    sourceTrust: absent,
-    sourceAssertedConfidence: absent,
-    extractorConfidence: absent,
-    validator: absent,
-    reviewer: absent,
-  },
-});
 const scope = (asOf: number) =>
-  ResolutionScope.make({ asOf: DateTime.makeUnsafe(asOf), validAt: DateTime.makeUnsafe(0) });
+  ResolutionScope.make({ scope: "synthetic", asOf: DateTime.makeUnsafe(asOf), validAt: DateTime.makeUnsafe(0) });
+const pair = (tag: "SameParty" | "DistinctParty", left: number, right: number) =>
+  Proposition.cases[tag].make({ left: PartyId.make(left), right: PartyId.make(right) });
+const key = (token: string) => PartyKey.make(`pk:v1:${Str.repeat(64)(token)}`);
+const assignment = (party: number, token: string) =>
+  Proposition.cases.KeyAssignment.make({ party: PartyId.make(party), key: key(token) });
+const merge12 = pair("SameParty", 1, 2);
+const first = partyClaim({ proposition: merge12, knowledgeStart: 1 });
+const change = (proposition: Proposition, knowledgeStart: number, supersedes?: ClaimId) =>
+  partyClaim({ proposition, knowledgeStart, supersedes, operation: `change-${knowledgeStart}` });
+const survivorsOf = (ledger: ClaimLedgerData, asOf: number) =>
+  A.map(resolveParties(ledger, scope(asOf)).representatives, (row) => row.survivor);
+const append = Effect.fnUntraced(function* (row: PartyClaim | ClaimLedger) {
+  const ledger = yield* PartyLedger;
+  yield* ledger.append("ledger" in row ? row.ledger : row);
+});
+const refuses = Effect.fnUntraced(function* (row: ClaimLedger, reason: string) {
+  const ledger = yield* PartyLedger;
+  const failure = yield* ledger.append(row).pipe(Effect.flip);
+  expect(failure.reason).toBe(reason);
+});
+const unchanged = Effect.fnUntraced(function* (expected: LedgerSnapshot) {
+  const ledger = yield* PartyLedger;
+  const current = yield* ledger.snapshot;
+  expect(current).toEqual(expected);
+});
+const resolvedAt = Effect.fnUntraced(function* (asOf: number) {
+  const ledger = yield* PartyLedger;
+  const current = yield* ledger.snapshot;
+  return resolveParties(current, scope(asOf));
+});
 
 describe("PartyLedgerMemory", () => {
-  it.effect.prop(
-    "keeps generated claim identities intact through append and snapshot",
-    [Proposition.cases.SameParty],
-    ([proposition]) =>
-      Effect.gen(function* () {
-        const context = yield* Layer.build(PartyLedgerMemory);
-        const ledger = Context.get(context, PartyLedger);
-        const original = yield* first;
-        const claim = ClaimVersion.make({ ...original, proposition, logicalKey: logicalKey(proposition) });
-        yield* ledger.append(claim);
-        const snapshot = yield* ledger.snapshot;
-        return snapshot.versions.length === 1 && snapshot.versions[0]?.logicalKey === logicalKey(proposition);
-      }),
-    { arbitrary: { runs: 100, seed: "party-ledger-endpoints" } }
-  );
+  it.layer(Digest.layerWebCrypto)("generated identities", (it) => {
+    it.effect.prop(
+      "keeps generated claim identities intact through append and snapshot",
+      [Proposition.cases.SameParty],
+      ([proposition]) =>
+        Effect.gen(function* () {
+          const context = yield* Layer.build(PartyLedgerMemory);
+          const ledger = Context.get(context, PartyLedger);
+          const claim = yield* partyClaim({ proposition, knowledgeStart: 1 });
+          yield* ledger.append(claim.ledger);
+          const snapshot = yield* ledger.snapshot;
+          return (
+            snapshot.claims.length === 1 &&
+            snapshot.claims[0]?.claim === claim.claim &&
+            snapshot.claims[0]?.core.logicalKey === logicalKey(proposition)
+          );
+        }),
+      { arbitrary: { runs: 100, seed: "party-ledger-endpoints" } }
+    );
+  });
 
-  it.layer(PartyLedgerMemory)("allocation", (it) => {
+  it.layer(LedgerLive, { timeout: "10 seconds" })("allocation", (it) => {
     it.effect("allocates stable unique integer ids under concurrent requests", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
@@ -79,170 +95,224 @@ describe("PartyLedgerMemory", () => {
     );
   });
 
-  it.layer(PartyLedgerMemory)("history", (it) => {
-    it.effect("supersedes by appending and keeps historical snapshots intact", () =>
+  it.layer(LedgerLive, { timeout: "10 seconds" })("history", (it) => {
+    it.effect("retracts and supersedes by appending records while keeping historical snapshots intact", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
         const original = yield* first;
-        yield* ledger.append(original);
+        yield* append(original);
         const before = yield* ledger.snapshot;
-        const retraction = ClaimVersion.make({
-          ...original,
-          id: ClaimVersionId.make("party-cv:retracted"),
-          supersedes: O.some(original.id),
-          knowledge: { recordedAt: DateTime.makeUnsafe(5), expiredAt: O.none() },
-          review: { _tag: "Retracted", at: DateTime.makeUnsafe(5), reason: "Mistaken match" },
-        });
-        yield* ledger.append(retraction);
+        expect(before.claims).toEqual([original.record]);
+        yield* append(retraction({ claim: original.claim, at: 5 }));
         const after = yield* ledger.snapshot;
-        TestUtils.assertNone(original.knowledge.expiredAt);
-        expect(before.versions).toEqual([original]);
-        expect(resolveParties(after.versions, scope(4)).representatives).toHaveLength(2);
-        expect(resolveParties(after.versions, scope(5)).reviewCases).toEqual([]);
-        expect(
-          A.map(resolveParties(after.versions, scope(5)).representatives, (row) => [row.party, row.survivor])
-        ).toEqual([
+        expect(after.claims).toEqual([original.record]);
+        expect(resolveParties(after, scope(4)).representatives).toHaveLength(2);
+        expect(survivorsOf(after, 4)).toEqual([1, 1]);
+        expect(resolveParties(after, scope(5)).reviewCases).toEqual([]);
+        expect(A.map(resolveParties(after, scope(5)).representatives, (row) => [row.party, row.survivor])).toEqual([
           [1, 1],
           [2, 2],
         ]);
-        const restored = ClaimVersion.make({
-          ...original,
-          id: ClaimVersionId.make("party-cv:restored"),
-          supersedes: O.some(retraction.id),
-          knowledge: { recordedAt: DateTime.makeUnsafe(9), expiredAt: O.none() },
-        });
-        yield* ledger.append(restored);
+        const restored = yield* change(merge12, 9, original.claim);
+        yield* append(restored);
         const final = yield* ledger.snapshot;
-        expect(resolveParties(final.versions, scope(9)).representatives).toHaveLength(2);
-        expect(resolveParties(final.versions, scope(5))).toEqual(resolveParties(after.versions, scope(5)));
+        expect(survivorsOf(final, 9)).toEqual([1, 1]);
+        expect(resolveParties(final, scope(5))).toEqual(resolveParties(after, scope(5)));
+        expect(A.map(final.claims, (row) => row.claim)).toEqual([original.claim, restored.claim]);
       })
     );
   });
 
-  it.layer(PartyLedgerMemory)("conflicts", (it) => {
-    it.effect("rejects duplicates and competing successors without partial writes", () =>
+  it.layer(LedgerLive, { timeout: "10 seconds" })("conflicts", (it) => {
+    it.effect("replays identical records once and rejects competing successors without partial writes", () =>
       Effect.gen(function* () {
         const ledger = yield* PartyLedger;
         const original = yield* first;
-        yield* ledger.append(original);
-        expect((yield* ledger.append(original).pipe(Effect.flip)).reason).toBe("duplicate-version");
-        const next = ClaimVersion.make({
-          ...original,
-          id: ClaimVersionId.make("party-cv:next"),
-          supersedes: O.some(original.id),
-          knowledge: { recordedAt: DateTime.makeUnsafe(5), expiredAt: O.none() },
+        yield* append(original);
+        const once = yield* ledger.snapshot;
+        yield* append(original);
+        yield* unchanged(once);
+        const next = yield* change(merge12, 5, original.claim);
+        yield* append(next);
+        const competing = yield* partyClaim({
+          proposition: merge12,
+          knowledgeStart: 5,
+          supersedes: original.claim,
+          operation: "competing",
         });
-        yield* ledger.append(next);
-        const competing = ClaimVersion.make({ ...next, id: ClaimVersionId.make("party-cv:competing") });
-        expect((yield* ledger.append(competing).pipe(Effect.flip)).reason).toBe("predecessor-already-superseded");
-        expect((yield* ledger.snapshot).versions).toHaveLength(2);
+        yield* refuses(competing.ledger, "SupersessionFork");
+        expect((yield* ledger.snapshot).claims).toHaveLength(2);
+      })
+    );
+  });
+
+  it.layer(LedgerLive, { timeout: "10 seconds" })("integrity refusals", (it) => {
+    it.effect("rejects malformed cores, generation receipts, orphan records and conflicting events", () =>
+      Effect.gen(function* () {
+        const ledger = yield* PartyLedger;
+        const original = yield* first;
+        yield* append(original);
+        const before = yield* ledger.snapshot;
+        const other = yield* change(pair("SameParty", 3, 4), 2);
+        const forged = ClaimLedger.make({
+          ...original.ledger,
+          claims: [ClaimRecord.make({ claim: other.claim, core: original.record.core })],
+        });
+        yield* refuses(forged, "invalid-core");
+        yield* refuses(ClaimLedger.make({ ...other.ledger, generations: [] }), "generation-required");
+        yield* refuses(
+          ClaimLedger.make({
+            ...other.ledger,
+            generations: [other.generation, ClaimGeneration.make({ ...other.generation, ended: at(3) })],
+          }),
+          "generation-required"
+        );
+        const late = ClaimGeneration.make({
+          claim: other.claim,
+          activity: activityStart({ operation: "late", started: 3 }),
+          ended: at(2),
+        });
+        yield* refuses(ClaimLedger.make({ ...other.ledger, generations: [late] }), "generation-order");
+        const foreign = ClaimGeneration.make({
+          claim: other.claim,
+          activity: activityStart({ operation: "foreign", started: 2 }),
+          ended: at(2),
+        });
+        yield* refuses(ClaimLedger.make({ ...other.ledger, generations: [foreign] }), "generation-mismatch");
+        const crossPartition = yield* change(pair("DistinctParty", 1, 2), 3, original.claim);
+        yield* refuses(crossPartition.ledger, "SupersededAcrossPartitions");
+        yield* refuses(
+          ClaimLedger.make({
+            reviews: [
+              ClaimReviewRecord.make({ claim: other.claim, at: at(2), review: ReviewState.cases.Proposed.make({}) }),
+            ],
+          }),
+          "unknown-claim"
+        );
+        const generatedBy = original.record.core.generatedBy;
+        yield* refuses(
+          ClaimLedger.make({
+            challenges: [{ _tag: "ByActivity", from: other.claim, to: original.claim, kind: "rebut", generatedBy }],
+          }),
+          "unknown-claim"
+        );
+        yield* refuses(
+          ClaimLedger.make({
+            reviews: [
+              ClaimReviewRecord.make({
+                claim: original.claim,
+                at: at(1),
+                review: ReviewState.cases.Proposed.make({}),
+              }),
+            ],
+          }),
+          "conflicting-review"
+        );
+        yield* unchanged(before);
+        const challenge = ClaimLedger.make({
+          challenges: [{ _tag: "ByActivity", from: original.claim, to: original.claim, kind: "undercut", generatedBy }],
+        });
+        yield* append(challenge);
+        yield* append(challenge);
+        expect((yield* ledger.snapshot).challenges).toEqual(challenge.challenges);
+      })
+    );
+  });
+
+  it.layer(LedgerLive, { timeout: "10 seconds" })("batch boundaries", (it) => {
+    it.effect("stores a merged replay and in-batch duplicate challenges exactly as separate appends", () =>
+      Effect.gen(function* () {
+        const ledger = yield* PartyLedger;
+        const original = yield* first;
+        const generatedBy = original.record.core.generatedBy;
+        const challenge = ClaimLedger.make({
+          challenges: [{ _tag: "ByActivity", from: original.claim, to: original.claim, kind: "undercut", generatedBy }],
+        });
+        yield* append(mergeClaimLedgers([original.ledger, original.ledger, challenge, challenge]));
+        const merged = yield* ledger.snapshot;
+        expect(merged.generations).toEqual(original.ledger.generations);
+        expect(merged.challenges).toEqual(challenge.challenges);
+        yield* append(original);
+        yield* append(challenge);
+        yield* unchanged(merged);
       })
     );
   });
 });
 
-const change = (
-  original: ClaimVersion,
-  id: string,
-  proposition: Proposition,
-  at: number,
-  supersedes = O.none<ClaimVersionId>()
-) =>
-  ClaimVersion.make({
-    ...original,
-    id: ClaimVersionId.make(`party-cv:${id}`),
-    proposition,
-    logicalKey: logicalKey(proposition),
-    supersedes,
-    knowledge: { recordedAt: DateTime.makeUnsafe(at), expiredAt: O.none() },
-  });
-const retract = (original: ClaimVersion, id: string, at: number) =>
-  ClaimVersion.make({
-    ...change(original, id, original.proposition, at, O.some(original.id)),
-    review: { _tag: "Retracted", at: DateTime.makeUnsafe(at), reason: "Synthetic correction" },
-  });
-const key = (token: string) => PartyKey.make(`pk:v1:${Str.repeat(64)(token)}`);
-const assignment = (party: number, token: string) =>
-  Proposition.cases.KeyAssignment.make({ party: PartyId.make(party), key: key(token) });
-const pair = (tag: "SameParty" | "DistinctParty", left: number, right: number) =>
-  Proposition.cases[tag].make({ left: PartyId.make(left), right: PartyId.make(right) });
-
-it.layer(PartyLedgerMemory)("key redirects and retractions", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("key redirects and retractions", (it) => {
   it.effect("splits keys on retraction, restores merges, and replays historical views", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
+      const keyA = yield* partyClaim({ proposition: assignment(1, "a"), knowledgeStart: 0, operation: "key-a" });
+      const keyB = yield* partyClaim({ proposition: assignment(2, "b"), knowledgeStart: 0, operation: "key-b" });
       const original = yield* first;
-      yield* ledger.append(change(original, "key-a", assignment(1, "a"), 0));
-      yield* ledger.append(change(original, "key-b", assignment(2, "b"), 0));
-      yield* ledger.append(original);
-      const merged = resolveParties((yield* ledger.snapshot).versions, scope(1));
+      yield* append(keyA);
+      yield* append(keyB);
+      yield* append(original);
+      const merged = yield* resolvedAt(1);
       expect(A.map(merged.keys, (row) => [row.party, row.survivor])).toEqual([
         [1, 1],
         [2, 1],
       ]);
-      const retracted = retract(original, "split", 5);
-      yield* ledger.append(retracted);
-      const split = resolveParties((yield* ledger.snapshot).versions, scope(5));
+      yield* append(retraction({ claim: original.claim, at: 5 }));
+      const split = yield* resolvedAt(5);
       expect(A.map(split.keys, (row) => [row.party, row.survivor])).toEqual([
         [1, 1],
         [2, 2],
       ]);
-      yield* ledger.append(change(original, "restore", original.proposition, 9, O.some(retracted.id)));
-      const rows = (yield* ledger.snapshot).versions;
+      const restored = yield* change(merge12, 9, original.claim);
+      yield* append(restored);
+      const rows = yield* ledger.snapshot;
       expect(resolveParties(rows, scope(1))).toEqual(merged);
       expect(resolveParties(rows, scope(5))).toEqual(split);
       expect(A.map(resolveParties(rows, scope(9)).keys, (row) => row.survivor)).toEqual([1, 1]);
-      expect(resolveParties(A.reverse(rows), scope(9))).toEqual(resolveParties(rows, scope(9)));
+      const reversed = LedgerSnapshot.make({ ...rows, claims: A.reverse(rows.claims) });
+      expect(resolveParties(reversed, scope(9))).toEqual(resolveParties(rows, scope(9)));
     })
   );
 });
 
-it.layer(PartyLedgerMemory)("veto retraction history", (it) => {
+it.layer(LedgerLive, { timeout: "10 seconds" })("veto retraction history", (it) => {
   it.effect("re-enables a blocked merge, then reapplies a restored veto", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
       const original = yield* first;
-      const later = change(original, "later", pair("SameParty", 2, 3), 2);
-      const veto = change(original, "veto", pair("DistinctParty", 1, 3), 3);
-      yield* ledger.append(original);
-      yield* ledger.append(later);
-      yield* ledger.append(veto);
-      const blocked = resolveParties((yield* ledger.snapshot).versions, scope(3));
+      const later = yield* change(pair("SameParty", 2, 3), 2);
+      const veto = yield* change(pair("DistinctParty", 1, 3), 3);
+      yield* append(original);
+      yield* append(later);
+      yield* append(veto);
+      const blocked = yield* resolvedAt(3);
       expect(A.map(blocked.representatives, (row) => row.survivor)).toEqual([1, 1, 3]);
-      expect(blocked.reviewCases[0]?.blockedClaim).toBe(later.id);
-      expect(blocked.reviewCases[0]?.vetoClaims).toEqual([veto.id]);
-      const withdrawn = retract(veto, "veto-withdrawn", 5);
-      yield* ledger.append(withdrawn);
-      const enabled = resolveParties((yield* ledger.snapshot).versions, scope(5));
+      expect(blocked.reviewCases[0]?.blockedClaim).toBe(later.claim);
+      expect(blocked.reviewCases[0]?.vetoClaims).toEqual([veto.claim]);
+      yield* append(retraction({ claim: veto.claim, at: 5 }));
+      const enabled = yield* resolvedAt(5);
       expect(A.map(enabled.representatives, (row) => row.survivor)).toEqual([1, 1, 1]);
       expect(enabled.reviewCases).toEqual([]);
-      yield* ledger.append(change(veto, "veto-restored", veto.proposition, 7, O.some(withdrawn.id)));
-      const rows = (yield* ledger.snapshot).versions;
+      const restored = yield* change(pair("DistinctParty", 1, 3), 7, veto.claim);
+      yield* append(restored);
+      const rows = yield* ledger.snapshot;
       expect(resolveParties(rows, scope(3))).toEqual(blocked);
       expect(resolveParties(rows, scope(5))).toEqual(enabled);
       expect(A.map(resolveParties(rows, scope(7)).representatives, (row) => row.survivor)).toEqual([1, 1, 3]);
-      expect(resolveParties(rows, scope(7)).reviewCases[0]?.vetoClaims).toEqual(["party-cv:veto-restored"]);
+      expect(resolveParties(rows, scope(7)).reviewCases[0]?.vetoClaims).toEqual([restored.claim]);
     })
   );
 });
 
-it.layer(PartyLedgerMemory)("corrected propositions and source history", (it) => {
-  it.effect("allows a correction to change proposition while retaining immutable source records", () =>
+it.layer(LedgerLive, { timeout: "10 seconds" })("corrected propositions and source history", (it) => {
+  it.effect("records a correction as a retraction plus a new claim while retaining immutable source records", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
       const original = yield* first;
-      yield* ledger.append(original);
-      const replacement = change(
-        original,
-        "different-proposition",
-        pair("DistinctParty", 1, 2),
-        5,
-        O.some(original.id)
-      );
-      yield* ledger.append(replacement);
-      const rows = (yield* ledger.snapshot).versions;
-      expect(A.map(resolveParties(rows, scope(4)).representatives, (row) => row.survivor)).toEqual([1, 1]);
-      expect(A.map(resolveParties(rows, scope(5)).representatives, (row) => row.survivor)).toEqual([1, 2]);
+      yield* append(original);
+      const replacement = yield* change(pair("DistinctParty", 1, 2), 5);
+      yield* append(mergeClaimLedgers([retraction({ claim: original.claim, at: 5 }), replacement.ledger]));
+      const rows = yield* ledger.snapshot;
+      expect(survivorsOf(rows, 4)).toEqual([1, 1]);
+      expect(survivorsOf(rows, 5)).toEqual([1, 2]);
       const anchor = { _tag: "HeaderField", occurrence: "party-occ:synthetic", namespace: "rfc5322", field: "From" };
       const observation = yield* S.decodeUnknownEffect(HeaderParticipant)({
         _tag: "HeaderParticipant",
@@ -257,7 +327,7 @@ it.layer(PartyLedgerMemory)("corrected propositions and source history", (it) =>
       });
       const assertion = yield* S.decodeUnknownEffect(SourceAssertion)({
         id: "party-asrt:synthetic",
-        proposition: original.proposition,
+        proposition: original.record.core.proposition,
         stance: "asserts",
         anchors: [anchor],
         producedBy: "party-act:ingest",
@@ -267,8 +337,17 @@ it.layer(PartyLedgerMemory)("corrected propositions and source history", (it) =>
       yield* ledger.recordObservation(observation);
       yield* ledger.recordAssertion(assertion);
       const before = yield* ledger.snapshot;
-      expect((yield* ledger.recordObservation(observation).pipe(Effect.flip)).reason).toBe("duplicate-observation");
-      expect((yield* ledger.recordAssertion(assertion).pipe(Effect.flip)).reason).toBe("duplicate-assertion");
+      yield* ledger.recordObservation(observation);
+      yield* ledger.recordAssertion(assertion);
+      yield* unchanged(before);
+      const conflictingObservation = yield* ledger
+        .recordObservation(HeaderParticipant.make({ ...observation, observedAt: at(9) }))
+        .pipe(Effect.flip);
+      expect(conflictingObservation.reason).toBe("conflicting-observation");
+      const conflictingAssertion = yield* ledger
+        .recordAssertion(SourceAssertion.make({ ...assertion, stance: "denies" }))
+        .pipe(Effect.flip);
+      expect(conflictingAssertion.reason).toBe("conflicting-assertion");
       const resolved1 = yield* ledger.snapshot;
       expect(resolved1).toEqual(before);
       expect(before.observations).toEqual([observation]);
@@ -277,12 +356,12 @@ it.layer(PartyLedgerMemory)("corrected propositions and source history", (it) =>
   );
 });
 
-it.layer(PartyLedgerMemory)("atomic evidence batches", (it) => {
-  it.effect("rolls back earlier categories and rows when a later version conflicts", () =>
+it.layer(LedgerLive, { timeout: "10 seconds" })("atomic evidence batches", (it) => {
+  it.effect("rolls back earlier categories and rows when a later record conflicts", () =>
     Effect.gen(function* () {
       const ledger = yield* PartyLedger;
       const original = yield* first;
-      yield* ledger.append(original);
+      yield* append(original);
       const observation = yield* S.decodeEffect(HeaderParticipant)({
         _tag: "HeaderParticipant",
         id: "party-obs:batch",
@@ -295,28 +374,41 @@ it.layer(PartyLedgerMemory)("atomic evidence batches", (it) => {
         anchor: { _tag: "HeaderField", occurrence: "party-occ:batch", namespace: "rfc5322", field: "From" },
       });
       const before = yield* ledger.snapshot;
-      const fresh = change(original, "batch-fresh", pair("SameParty", 2, 3), 2);
+      const fresh = yield* change(pair("SameParty", 2, 3), 2);
+      const fork = yield* partyClaim({ proposition: merge12, knowledgeStart: 3, supersedes: original.claim });
+      const forkTwin = yield* partyClaim({
+        proposition: merge12,
+        knowledgeStart: 3,
+        supersedes: original.claim,
+        operation: "twin",
+      });
       const failed = yield* ledger
         .appendEvidence(
-          LedgerSnapshot.make({ observations: [observation], assertions: [], versions: [fresh, original] })
+          LedgerSnapshot.make({
+            ...mergeClaimLedgers([fresh.ledger, fork.ledger, forkTwin.ledger]),
+            observations: [observation],
+            assertions: [],
+          })
         )
         .pipe(Effect.flip);
-      expect(failed.reason).toBe("duplicate-version");
-      const resolved2 = yield* ledger.snapshot;
-      expect(resolved2).toEqual(before);
+      expect(failed.reason).toBe("SupersessionFork");
+      yield* unchanged(before);
       const repeated = yield* ledger
         .appendEvidence(
-          LedgerSnapshot.make({ observations: [observation, observation], assertions: [], versions: [fresh] })
+          LedgerSnapshot.make({
+            ...fresh.ledger,
+            observations: [observation, HeaderParticipant.make({ ...observation, observedAt: at(1) })],
+            assertions: [],
+          })
         )
         .pipe(Effect.flip);
-      expect(repeated.reason).toBe("duplicate-observation");
-      const resolved3 = yield* ledger.snapshot;
-      expect(resolved3).toEqual(before);
+      expect(repeated.reason).toBe("conflicting-observation");
+      yield* unchanged(before);
       yield* ledger.appendEvidence(
-        LedgerSnapshot.make({ observations: [observation], assertions: [], versions: [fresh] })
+        LedgerSnapshot.make({ ...fresh.ledger, observations: [observation, observation], assertions: [] })
       );
       expect((yield* ledger.snapshot).observations).toHaveLength(1);
-      expect((yield* ledger.snapshot).versions).toHaveLength(2);
+      expect((yield* ledger.snapshot).claims).toHaveLength(2);
     })
   );
 });
