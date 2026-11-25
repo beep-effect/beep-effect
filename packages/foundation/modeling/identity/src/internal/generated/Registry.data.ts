@@ -250,7 +250,9 @@ export const RegistryVocab = {
     terms: [
       "Claim",
       "claim",
+      "coreJson",
       "hasEvidenceQuote",
+      "sourceDigest",
     ],
   },
   fabio: {
@@ -307,6 +309,15 @@ export const RegistryVocab = {
       "endIndex",
       "isString",
       "referenceContext",
+    ],
+  },
+  np: {
+    iri: "http://www.nanopub.org/nschema#",
+    terms: [
+      "Nanopublication",
+      "hasAssertion",
+      "hasProvenance",
+      "hasPublicationInfo",
     ],
   },
   oa: {
@@ -449,6 +460,7 @@ export const RegistryVocab = {
       "Alt",
       "Bag",
       "HTML",
+      "JSON",
       "List",
       "Property",
       "Seq",

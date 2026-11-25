@@ -7,6 +7,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -22,7 +23,7 @@ import { KbGraphExport, makeKbGraphExport } from "./KbGraph.service.ts";
 import type { KbView } from "./Kb.schemas.ts";
 
 const encodeReport = S.encodeEffect(S.fromJsonString(KbReport, { space: 2 }));
-const ledgerLive = Layer.effect(KbLedger, makeKbLedger);
+const ledgerLive = Layer.effect(KbLedger, makeKbLedger).pipe(Layer.provide(Digest.layerWebCrypto));
 const printReport = Effect.fn("Kb.printReport")(function* (report: KbReport) {
   const json = yield* encodeReport(report).pipe(Effect.orDie);
   yield* Console.log(json);

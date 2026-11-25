@@ -20,10 +20,6 @@ import { InvalidSpdxExpressionError } from "./License.ts";
 const $I = $SpdxId.create("LicenseException");
 
 /**
- * A validated SPDX license-exception identifier: an Effect `Schema.Class` whose
- * `id` is a member of the SPDX exception list. The class doubles as its own
- * schema.
- *
  * **Details**
  *
  * Unlike {@link License}, an exception has no reference grammar — an exception

@@ -15,10 +15,16 @@
   },
   "references": [
     {
+      "path": "../annotation/tsconfig.json"
+    },
+    {
       "path": "../identity/tsconfig.json"
     },
     {
       "path": "../jsonc/tsconfig.json"
+    },
+    {
+      "path": "../rdf/tsconfig.json"
     },
     {
       "path": "../schema/tsconfig.json"
@@ -31,6 +37,9 @@
     },
     {
       "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

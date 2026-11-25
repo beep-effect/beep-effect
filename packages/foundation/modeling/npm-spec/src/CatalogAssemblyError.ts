@@ -133,12 +133,6 @@ const CatalogAssemblyFailureFromPayload = CatalogAssemblyErrorPayload.pipe(
 const catalogAssemblyFailure = flow(S.decodeUnknownResult(CatalogAssemblyFailureFromPayload), Result.getOrThrow);
 
 /**
- * Raised when a workspace's catalogs cannot be assembled — a `pnpm-workspace.yaml`
- * that is unreadable or not valid YAML, a root `package.json` `workspaces` field
- * whose shape or catalog blocks are malformed in a way pnpm itself rejects
- * (including the default catalog declared twice), or a config dependency whose
- * `pnpmfile.cjs` cannot be loaded or replayed.
- *
  * **Details**
  *
  * A *missing* `pnpm-workspace.yaml`, an *absent* `workspaces` field, or one

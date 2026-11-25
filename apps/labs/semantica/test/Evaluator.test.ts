@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { Confidence } from "@beep/epistemics/EvidenceSpan";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -192,7 +192,7 @@ const hostedOutcome = (
       body,
       cacheKey: O.none(),
       chunk,
-      confidence: Confidence.make(1),
+      confidence: ExtractorConfidence.cases.Absent.make({ reason: "not-assessed" }),
       document: source.id,
       id,
       method: "hosted-langextract",
@@ -219,7 +219,7 @@ const hostedOutcome = (
     body: relationBody,
     cacheKey: O.none(),
     chunk,
-    confidence: Confidence.make(1),
+    confidence: ExtractorConfidence.cases.Absent.make({ reason: "not-assessed" }),
     document: source.id,
     id: relationId,
     method: "hosted-langextract",

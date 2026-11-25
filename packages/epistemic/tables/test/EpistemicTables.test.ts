@@ -9,19 +9,34 @@ import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposit
 import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion";
 import * as Evidence from "@beep/epistemic-tables/entities/Evidence";
 import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord";
-import { EVIDENCE_SPAN_QUOTE_MAX_LENGTH } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
+import { TextAnchorWidthCheck } from "@beep/text/TextAnchor";
+
+const evidenceQuoteMaximum = 65_536;
+const FrozenStrictPosition = S.Struct({
+  startChar: S.Natural,
+  endChar: S.Natural,
+  quote: S.NonEmptyString.check(S.isMaxLength(65_536)),
+  confidence: Confidence,
+}).check(TextAnchorWidthCheck);
+
 import { $EpistemicId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
+import * as P4NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as P4Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as P4FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as P4Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -31,7 +46,7 @@ import * as Str from "effect/String";
 // Optional on insert: the column's SQL default supplies the first version.
 const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
 
-const decodeEvidenceModelResult = S.decodeResult(EvidenceModel);
+const decodeEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
 const decodeUnknownEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
 const decodeUnknownCandidateClaimModel = S.decodeUnknownEffect(CandidateClaimModel);
 const decodeUnknownClaimDispositionModel = S.decodeUnknownEffect(ClaimDispositionModel);
@@ -92,18 +107,26 @@ const evidenceInput = (id: number) => ({
   ...productEntityFixtureInput("EpistemicEvidence", id),
   artifactFixtureKey: "artifact:oa-1",
   span: {
-    confidence: 0.92,
-    endChar: 57,
-    quote: "a processor configured to receive sensor data",
-    startChar: 12,
+    version: "evidence-position/v2",
+    position: { endChar: 57, quote: "a processor configured to receive sensor data", startChar: 12 },
+    extractorConfidence: {
+      _tag: "Present",
+      value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+    },
   },
   spanFixtureKey: "span:oa-1:12-57",
 });
 
 const frozenEvidenceRow =
   '{"createdAt":10,"rowVersion":1,"updatedAt":11,"createdByPrincipal":{"component":"Runtime","kind":"System"},"deletedAt":null,"deletedByPrincipal":null,"schemaVersion":"0.0.0","source":"System","updatedByPrincipal":{"component":"Runtime","kind":"System"},"orgId":1,"artifactFixtureKey":"artifact:oa-1","spanFixtureKey":"span:oa-1:12-57","span":{"startChar":12,"endChar":57,"quote":"a processor configured to receive sensor data","confidence":0.92},"entityType":"EpistemicEvidence","publicId":"epistemic_evidence_a10","id":10}';
-const RowJson = S.fromJsonString(S.Unknown);
-const EvidenceColumnsJson = S.toEncoded(EvidenceModel).pipe(S.fromJsonString);
+const FrozenEvidenceColumns = EvidenceModel.select.mapFields(({ id, publicId, ...fields }) => ({
+  ...fields,
+  span: FrozenStrictPosition,
+  publicId,
+  id,
+}));
+const EvidenceColumnsJson = S.toEncoded(FrozenEvidenceColumns).pipe(S.fromJsonString);
+const decodeCurrentPosition = S.decodeUnknownResult(S.toType(EvidencePosition));
 
 // Exactly the decode input documented on EdgeVersion.model.ts: both temporal
 // axes arrive as epoch millis and every open bound as null.
@@ -481,12 +504,7 @@ describe("EpistemicTables", () => {
       expect(insert.entityType).toBe("EpistemicEvidence");
       expect(insert.artifactFixtureKey).toBe("artifact:oa-1");
       expect(insert.spanFixtureKey).toBe("span:oa-1:12-57");
-      expect(insert.span).toStrictEqual({
-        confidence: 0.92,
-        endChar: 57,
-        quote: "a processor configured to receive sensor data",
-        startChar: 12,
-      });
+      expect(insert.span).toStrictEqual(evidenceInput(10).span);
 
       const decoded = yield* Effect.fromResult(
         Evidence.fromEvidenceRow({
@@ -498,23 +516,20 @@ describe("EpistemicTables", () => {
         })
       );
       expect(decoded.id).toBe(10);
-      expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
-      expect(decoded.span.confidence).toBe(0.92);
+      expect(Result.getOrThrow(decodeCurrentPosition(decoded.span)).position.quote).toBe(
+        "a processor configured to receive sensor data"
+      );
+      expect(decoded.span).toMatchObject({ extractorConfidence: { _tag: "Present", value: { value: 0.92 } } });
     })
   );
 
   it.effect(
-    "reads and rewrites the frozen Evidence span row without changing a byte (written by toEvidenceInsert before the anchor schemas moved package; never regenerated)",
+    "reads frozen Evidence bytes (written by toEvidenceInsert before the anchor schemas moved package; never regenerated) and writes only the versioned position format",
     Effect.fnUntraced(function* () {
-      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
-      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
-      const written = yield* S.encodeEffect(RowJson)({ ...insert, id: 10 });
-      expect(written).toBe(frozenEvidenceRow);
-
       const columns = yield* S.decodeEffect(EvidenceColumnsJson)(frozenEvidenceRow);
       assertTrue(
-        Result.isSuccess(decodeUnknownEvidenceModelResult(columns)),
-        "the strict model reads the frozen row; the legacy span read is not what keeps it alive"
+        Result.isFailure(decodeUnknownEvidenceModelResult(columns)),
+        "the strict model refuses the frozen unversioned span; only the legacy row read keeps it alive"
       );
       const read = yield* Effect.fromResult(
         Evidence.fromEvidenceRow({
@@ -523,10 +538,15 @@ describe("EpistemicTables", () => {
           deletedByPrincipal: absentAsNull(columns.deletedByPrincipal),
         })
       );
-      expect(read.span).toStrictEqual(evidence.span);
+      expect(read.span).toMatchObject({
+        version: "evidence-position/v2",
+        position: { startChar: columns.span.startChar, endChar: columns.span.endChar, quote: columns.span.quote },
+        extractorConfidence: { _tag: "Present", value: { value: 0.92, method: "legacy-reported" } },
+      });
       const reinsert = yield* Effect.fromResult(Evidence.toEvidenceInsert(read));
-      const rewritten = yield* S.encodeEffect(RowJson)({ ...reinsert, id: 10 });
-      expect(rewritten).toBe(frozenEvidenceRow);
+      expect(reinsert.span).toMatchObject({ version: "evidence-position/v2" });
+      const unchanged = yield* S.encodeEffect(EvidenceColumnsJson)(columns);
+      expect(unchanged).toBe(frozenEvidenceRow);
     })
   );
 
@@ -542,7 +562,9 @@ describe("EpistemicTables", () => {
         rowVersion: insertedRowVersion(insert.rowVersion),
         id: 10,
         span: {
-          ...insert.span,
+          confidence: 0.92,
+          startChar: 12,
+          quote: "a processor configured to receive sensor data",
           endChar: 48,
         },
         spanFixtureKey: "span:oa-1:12-48",
@@ -553,11 +575,15 @@ describe("EpistemicTables", () => {
       const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
       const canonicalInsert = yield* Effect.fromResult(Evidence.toEvidenceInsert(decoded));
 
-      expect(decoded.span.startChar).toBe(12);
-      expect(decoded.span.endChar).toBe(57);
-      expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
+      expect(Result.getOrThrow(decodeCurrentPosition(decoded.span)).position.startChar).toBe(12);
+      expect(Result.getOrThrow(decodeCurrentPosition(decoded.span)).position.endChar).toBe(57);
+      expect(Result.getOrThrow(decodeCurrentPosition(decoded.span)).position.quote).toBe(
+        "a processor configured to receive sensor data"
+      );
       expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
-      expect(canonicalInsert.span.endChar).toBe(57);
+      expect(Result.getOrThrow(S.decodeUnknownResult(EvidencePosition)(canonicalInsert.span)).position.endChar).toBe(
+        57
+      );
     })
   );
 
@@ -566,7 +592,7 @@ describe("EpistemicTables", () => {
     Effect.fnUntraced(function* () {
       const evidence = yield* Effect.fromResult(decodeUnknownEvidenceModelResult(evidenceInput(10)));
       const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
-      const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
+      const quote = Str.repeat(evidenceQuoteMaximum + 1)("a");
       const legacyRow = {
         ...insert,
         deletedAt: absentAsNull(insert.deletedAt),
@@ -574,7 +600,8 @@ describe("EpistemicTables", () => {
         rowVersion: insertedRowVersion(insert.rowVersion),
         id: 10,
         span: {
-          ...insert.span,
+          confidence: 0.92,
+          startChar: 12,
           endChar: 12 + Str.length(quote),
           quote,
         },
@@ -584,8 +611,8 @@ describe("EpistemicTables", () => {
 
       const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
 
-      expect(decoded.span.quote).toBe(quote);
-      expect(decoded.span.endChar).toBe(12 + Str.length(quote));
+      expect(decoded.span).toMatchObject({ _tag: "LegacyEvidenceUnresolved", quote });
+      expect(decoded.span).toMatchObject({ endChar: 12 + Str.length(quote) });
 
       const reencoded = Evidence.toEvidenceInsert(decoded);
       pipe(reencoded, Result.isFailure, assertTrue);
@@ -850,5 +877,117 @@ describe("EpistemicTables", () => {
         expect(converterError.reason).toBe("schema conversion failed");
       })
     )
+  );
+});
+
+const p4V2Json = EvidencePosition.pipe(S.Array, S.fromJsonString);
+const encodePosition = S.encodeEffect(EvidencePosition);
+const p4CurrentJson = S.fromJsonString(S.Array(FrozenStrictPosition), { space: 2 });
+
+const p4LegacyJson = S.fromJsonString(
+  S.Array(
+    S.Struct({
+      confidence: Confidence,
+      endChar: S.Natural,
+      quote: S.String,
+      startChar: S.Natural,
+    })
+  ),
+  { space: 2 }
+);
+
+it.layer(P4Layer.merge(P4NodeFileSystem.layer, P4Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("reads versioned evidence positions through the same table reader", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const text = yield* fs.readFileString("test/fixtures/evidence-position-v2.json");
+      const positions = yield* S.decodeEffect(p4V2Json)(text);
+      const current = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(current));
+      for (const position of positions) {
+        const span = yield* encodePosition(position);
+        const read = yield* Effect.fromResult(
+          Evidence.fromEvidenceRow({
+            ...insert,
+            id: 10,
+            span,
+            deletedAt: absentAsNull(insert.deletedAt),
+            deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+            rowVersion: insertedRowVersion(insert.rowVersion),
+          })
+        );
+        expect(read.span).toEqual(position);
+      }
+    })
+  );
+  it.effect("P4 format freeze: evidence-span-current-v1.json retains raw bytes and current reader behavior", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/evidence-span-current-v1.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/evidence-span-current-v1.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("260d742bda99924b64af8103a9f5f687b3eb94cdb6a7260fb868c8bffed1c4b2");
+      const spans = yield* S.decodeEffect(p4CurrentJson)(text);
+      const encoded = yield* S.encodeEffect(p4CurrentJson)(spans);
+      expect(encoded).toBe(Str.slice(0, -1)(text));
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const decoded = A.map(spans, (span) =>
+        Evidence.fromEvidenceRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          rowVersion: insertedRowVersion(insert.rowVersion),
+          id: 10,
+          span,
+        })
+      );
+      expect(A.map(decoded, Result.isSuccess)).toEqual([true, true]);
+      const accepted = A.getSomes(A.map(decoded, Result.getSuccess));
+      expect(A.map(accepted, ({ span }) => Result.getOrThrow(decodeCurrentPosition(span)).position.endChar)).toEqual([
+        5, 4,
+      ]);
+    })
+  );
+
+  it.effect("P4 format freeze: evidence-span-legacy-v0.json retains raw bytes and current reader behavior", () =>
+    Effect.gen(function* () {
+      const fs = yield* P4FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/evidence-span-legacy-v0.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/evidence-span-legacy-v0.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* P4Digest.Digest;
+      const rawDigest = yield* digest.digestHex(P4Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("0644f5fd5939478b0493cc8a097db2cc7f6024a4c8b5f4cd0d8831c4f576379d");
+      const spans = yield* S.decodeEffect(p4LegacyJson)(text);
+      const encoded = yield* S.encodeEffect(p4LegacyJson)(spans);
+      expect(encoded).toBe(Str.slice(0, -1)(text));
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const decoded = A.map(spans, (span) =>
+        Evidence.fromEvidenceRow({
+          ...insert,
+          deletedAt: absentAsNull(insert.deletedAt),
+          deletedByPrincipal: absentAsNull(insert.deletedByPrincipal),
+          rowVersion: insertedRowVersion(insert.rowVersion),
+          id: 10,
+          span,
+        })
+      );
+      expect(A.map(decoded, Result.isSuccess)).toEqual([true, true, true]);
+      const accepted = A.getSomes(A.map(decoded, Result.getSuccess));
+      expect(A.map(accepted, ({ span }) => ("_tag" in span ? span._tag : span.version))).toEqual([
+        "evidence-position/v2",
+        "LegacyEvidenceUnresolved",
+        "LegacyEvidenceUnresolved",
+      ]);
+    })
   );
 });

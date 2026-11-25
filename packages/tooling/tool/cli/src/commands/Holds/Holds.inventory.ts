@@ -5,6 +5,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { claimReferenceKey } from "@beep/epistemics/ClaimImport.schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual, pipe } from "effect/Function";
@@ -12,8 +13,8 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
-import { HoldAnchor, HoldLintFinding } from "./Holds.schemas.ts";
-import type { HoldClaimVersion, HoldSiteSnapshot } from "./Holds.schemas.ts";
+import { HoldAnchor, HoldLintFinding, holdClaimKey, holdProposition } from "./Holds.schemas.ts";
+import type { HoldClaim, HoldProposition, HoldSiteSnapshot } from "./Holds.schemas.ts";
 
 /**
  * Stable text key of an anchor, used to compare ledger anchors with config sites.
@@ -43,10 +44,10 @@ export const anchorKey = (anchor: HoldAnchor): string =>
     OsvIgnoredVuln: ({ id }) => `osv-ignore:${id}`,
   });
 
-const byHoldId = Order.mapInput(Order.String, (version: HoldClaimVersion) => version.proposition.holdId);
+const byHoldId = Order.mapInput(Order.String, (claim: HoldClaim) => holdProposition(claim).holdId);
 
 /**
- * The live hold versions in a ledger: not superseded, not retracted and not expired.
+ * The live holds in a ledger: not superseded, not retracted and not expired.
  *
  * **Details**
  *
@@ -56,29 +57,30 @@ const byHoldId = Order.mapInput(Order.String, (version: HoldClaimVersion) => ver
  * **Example** (An empty ledger)
  *
  * ```ts
- * import { liveHoldVersions } from "@beep/repo-cli/commands/Holds"
+ * import { liveHoldClaims } from "@beep/repo-cli/commands/Holds"
  *
- * console.log(liveHoldVersions([]).length) // 0
+ * console.log(liveHoldClaims([]).length) // 0
  * ```
  *
- * @param rows - Every claim version in the ledger, in file order.
- * @returns The live versions, ordered by hold id.
+ * @param rows - Every stored hold in the ledger, in file order.
+ * @returns The live holds, ordered by hold id.
  * @category policies
  * @since 0.0.0
  */
-export const liveHoldVersions = (rows: ReadonlyArray<HoldClaimVersion>): ReadonlyArray<HoldClaimVersion> => {
-  const superseded = HashSet.fromIterable(A.getSomes(A.map(rows, (row) => row.supersedes)));
+export const liveHoldClaims = (rows: ReadonlyArray<HoldClaim>): ReadonlyArray<HoldClaim> => {
+  const superseded = HashSet.fromIterable(A.getSomes(A.map(rows, (row) => O.map(row.predecessor, claimReferenceKey))));
   return pipe(
     rows,
     A.filter(
-      (row) => !HashSet.has(superseded, row.id) && row.review._tag !== "Retracted" && O.isNone(row.knowledge.expiredAt)
+      (row) =>
+        !HashSet.has(superseded, holdClaimKey(row)) && row.review._tag !== "Retracted" && O.isNone(row.knowledge.end)
     ),
     A.sort(byHoldId)
   );
 };
 
 /**
- * The syncpack held list implied by live hold versions, sorted and deduplicated.
+ * The syncpack held list implied by live holds, sorted and deduplicated.
  *
  * **Example** (No holds)
  *
@@ -88,12 +90,12 @@ export const liveHoldVersions = (rows: ReadonlyArray<HoldClaimVersion>): Readonl
  * console.log(heldListFor([])) // []
  * ```
  *
- * @param live - Live hold versions.
+ * @param live - The holds that are neither superseded, retracted nor expired.
  * @returns The dependency patterns syncpack must not update.
  * @category policies
  * @since 0.0.0
  */
-export const heldListFor = (live: ReadonlyArray<HoldClaimVersion>): ReadonlyArray<string> =>
+export const heldListFor = (live: ReadonlyArray<HoldClaim>): ReadonlyArray<string> =>
   pipe(
     liveAnchorValues((anchor) => (anchor._tag === "SyncpackHeld" ? O.some(anchor.dependency) : O.none()))(live),
     A.dedupe,
@@ -101,7 +103,7 @@ export const heldListFor = (live: ReadonlyArray<HoldClaimVersion>): ReadonlyArra
   );
 
 /**
- * Collect one value from every anchor of the given hold versions that `pick` selects.
+ * Collect one value from every anchor of the given holds that `pick` selects.
  *
  * **Example** (Every manifest a hold names)
  *
@@ -116,22 +118,22 @@ export const heldListFor = (live: ReadonlyArray<HoldClaimVersion>): ReadonlyArra
  * ```
  *
  * @param pick - Selects a value from an anchor, or `None` to skip it.
- * @returns A function from hold versions to the selected values, in anchor order.
+ * @returns A function from holds to the selected values, in anchor order.
  * @category utilities
  * @since 0.0.0
  */
 export const liveAnchorValues =
   <B>(pick: (anchor: HoldAnchor) => O.Option<B>) =>
-  (live: ReadonlyArray<HoldClaimVersion>): Array<B> =>
+  (live: ReadonlyArray<HoldClaim>): Array<B> =>
     pipe(
       live,
-      A.flatMap((version) => version.proposition.subject.anchors),
+      A.flatMap((version) => holdProposition(version).subject.anchors),
       A.map(pick),
       A.getSomes
     );
 
 /**
- * Compare live hold versions with the hold-shaped sites in a checkout.
+ * Compare live holds with the hold-shaped sites in a checkout.
  *
  * **Details**
  *
@@ -150,18 +152,18 @@ export const liveAnchorValues =
  * ```
  *
  * @param snapshot - The checkout's hold-shaped sites.
- * @param live - Live hold versions.
+ * @param live - The holds that are neither superseded, retracted nor expired.
  * @returns Every disagreement, unrecorded sites first.
  * @category policies
  * @since 0.0.0
  */
 export const lintHolds: {
-  (live: ReadonlyArray<HoldClaimVersion>): (snapshot: HoldSiteSnapshot) => ReadonlyArray<HoldLintFinding>;
-  (snapshot: HoldSiteSnapshot, live: ReadonlyArray<HoldClaimVersion>): ReadonlyArray<HoldLintFinding>;
-} = dual(2, (snapshot: HoldSiteSnapshot, live: ReadonlyArray<HoldClaimVersion>): ReadonlyArray<HoldLintFinding> => {
+  (live: ReadonlyArray<HoldClaim>): (snapshot: HoldSiteSnapshot) => ReadonlyArray<HoldLintFinding>;
+  (snapshot: HoldSiteSnapshot, live: ReadonlyArray<HoldClaim>): ReadonlyArray<HoldLintFinding>;
+} = dual(2, (snapshot: HoldSiteSnapshot, live: ReadonlyArray<HoldClaim>): ReadonlyArray<HoldLintFinding> => {
   const anchored = pipe(
     live,
-    A.flatMap((version) => A.map(version.proposition.subject.anchors, (anchor) => [version, anchor] as const))
+    A.flatMap((version) => A.map(holdProposition(version).subject.anchors, (anchor) => [version, anchor] as const))
   );
   const recordedKeys = HashSet.fromIterable(A.map(anchored, ([, anchor]) => anchorKey(anchor)));
   const presentKeys = HashSet.fromIterable(A.map(snapshot.present, anchorKey));
@@ -173,7 +175,9 @@ export const lintHolds: {
   const orphaned = pipe(
     anchored,
     A.filter(([, anchor]) => anchor._tag !== "SyncpackHeld" && !HashSet.has(presentKeys, anchorKey(anchor))),
-    A.map(([version, anchor]) => HoldLintFinding.cases.Orphaned.make({ holdId: version.proposition.holdId, anchor }))
+    A.map(([version, anchor]) =>
+      HoldLintFinding.cases.Orphaned.make({ holdId: holdProposition(version).holdId, anchor })
+    )
   );
   const expected = heldListFor(live);
   const stale = A.makeEquivalence(Str.Equivalence)(expected, snapshot.heldList)
@@ -228,17 +232,17 @@ export const holdLintFindingText = (finding: HoldLintFinding): string =>
  * console.log(typeof isProbeDue) // "function"
  * ```
  *
- * @param version - The live hold version.
+ * @param version - The live hold.
  * @param now - The current time.
  * @returns `true` once the probe should run again.
  * @category policies
  * @since 0.0.0
  */
 export const isProbeDue: {
-  (now: DateTime.Utc): (version: HoldClaimVersion) => boolean;
-  (version: HoldClaimVersion, now: DateTime.Utc): boolean;
-} = dual(2, (version: HoldClaimVersion, now: DateTime.Utc): boolean => {
-  const lease = version.validTime;
+  (now: DateTime.Utc): (version: HoldClaim) => boolean;
+  (version: HoldClaim, now: DateTime.Utc): boolean;
+} = dual(2, (version: HoldClaim, now: DateTime.Utc): boolean => {
+  const lease = version.valid;
   return lease._tag === "Interval"
     ? O.match(lease.validTo, {
         onNone: () => true,
@@ -270,21 +274,18 @@ export const isProbeDue: {
  * console.log(typeof isUnpinnedByCatalogBump) // "function"
  * ```
  *
- * @param version - The flipped hold version.
+ * @param proposition - The flipped hold's proposition.
  * @returns `true` when the catalog bump alone ends the hold.
  * @category policies
  * @since 0.0.0
  */
-export const isUnpinnedByCatalogBump = (version: HoldClaimVersion): boolean =>
-  version.proposition.exitAction._tag === "Unpin" &&
-  version.proposition.falsifier._tag === "Scripted" &&
-  version.proposition.falsifier.candidate === "latest" &&
+export const isUnpinnedByCatalogBump = (proposition: HoldProposition): boolean =>
+  proposition.exitAction._tag === "Unpin" &&
+  proposition.falsifier._tag === "Scripted" &&
+  proposition.falsifier.candidate === "latest" &&
   // The catalog bump only moves packages that resolve through the catalog.
-  A.some(version.proposition.subject.anchors, (anchor) => anchor._tag === "CatalogEntry") &&
-  A.every(
-    version.proposition.subject.anchors,
-    (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "SyncpackHeld"
-  );
+  A.some(proposition.subject.anchors, (anchor) => anchor._tag === "CatalogEntry") &&
+  A.every(proposition.subject.anchors, (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "SyncpackHeld");
 
 /**
  * Whether a hold governs a package, directly or through a `scope/**` group pattern.

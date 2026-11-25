@@ -211,8 +211,6 @@ const isFaithfulBugs: {
 );
 
 /**
- * Where a package's source lives.
- *
  * **Details**
  *
  * `url` is **verbatim** — exactly the string the manifest carried, shorthand
@@ -472,8 +470,6 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
 }
 
 /**
- * Where to report problems with a package.
- *
  * **Details**
  *
  * npm permits a bare URL string, or an object with `url`, `email`, or both —

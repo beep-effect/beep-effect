@@ -18,10 +18,12 @@ import { LedgerFailed } from "@/schema/Errors";
 import { EvidenceClaim, ExtractOutcome } from "@/schema/Evidence";
 import { RunId } from "@/schema/Ids";
 import { LedgerDocumentSnapshot, LedgerSnapshot } from "@/schema/Ledger";
+import { LedgerBatchPayload, LedgerClaimPayload, readStoredBatch, readStoredClaim } from "@/schema/LedgerEvidence";
 import { ProvenanceEvent } from "@/schema/Provenance";
 import { Chunk } from "@/schema/Text";
 import { Ledger } from "@/services/Ledger";
 import type * as SqlError from "effect/sql/SqlError";
+import type { StoredEvidenceRow } from "@/schema/LedgerEvidence";
 
 const $I = $SemanticaId.create("layers/LedgerLive");
 
@@ -80,6 +82,31 @@ const ensureStoredDigest = (rows: ReadonlyArray<StoredRow>, expected: string): E
       onSome: () => Effect.void,
     })
   );
+
+const immutablePayloadConflict = (): LedgerFailed =>
+  LedgerFailed.make({
+    message: "A stored evidence payload cannot be proved equal to the appended reading.",
+    reason: "immutable-payload-conflict",
+  });
+
+const ensureImmutableEvidence = <Stored>(
+  rows: ReadonlyArray<StoredEvidenceRow>,
+  fresh: { readonly digest: string; readonly payload: string },
+  read: (row: StoredEvidenceRow) => Effect.Effect<Stored, LedgerFailed>,
+  same: (stored: Stored) => boolean
+): Effect.Effect<void, LedgerFailed> =>
+  O.match(A.head(rows), {
+    onNone: () => Effect.fail(databaseFailed()),
+    onSome: (row) =>
+      Str.Equivalence(row.digest, fresh.digest) && Str.Equivalence(row.payload, fresh.payload)
+        ? Effect.void
+        : read(row).pipe(
+            Effect.flatMap((stored) => (same(stored) ? Effect.void : Effect.fail(immutablePayloadConflict())))
+          ),
+  });
+
+const sameOutcome = S.toEquivalence(ExtractOutcome);
+const sameClaim = S.toEquivalence(EvidenceClaim);
 
 const recoverSql = <Value, Error, Requirements>(
   effect: Effect.Effect<Value, Error | SqlError.SqlError, Requirements>
@@ -158,10 +185,11 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
 
     appendBatch: Effect.fn("Ledger.appendBatch")(function* (outcome, events) {
       const transaction = Effect.gen(function* () {
-        const stored = yield* encodePayload(ExtractOutcome, outcome);
+        const stored = yield* encodePayload(LedgerBatchPayload, LedgerBatchPayload.make({ outcome }));
+        const outcomeDigest = (yield* encodePayload(ExtractOutcome, outcome)).digest;
         const batchId = ExtractOutcome.match(outcome, {
           Extracted: ({ batch }) => batch.id,
-          Degraded: () => stored.digest,
+          Degraded: () => outcomeDigest,
         });
         const document = ExtractOutcome.match(outcome, {
           Extracted: ({ batch }) => batch.document,
@@ -174,19 +202,21 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
         yield* sql`INSERT INTO batches (id, document, lane, digest, payload)
             VALUES (${batchId}, ${document}, ${lane}, ${stored.digest}, ${stored.payload})
             ON CONFLICT (id) DO NOTHING`;
-        const value4 = yield* sql<StoredRow>`SELECT digest, payload FROM batches WHERE id = ${batchId}`;
-        yield* ensureStoredDigest(value4, stored.digest);
+        const value4 = yield* sql<StoredEvidenceRow>`SELECT digest, payload FROM batches WHERE id = ${batchId}`;
+        yield* ensureImmutableEvidence(value4, stored, readStoredBatch, (read) => sameOutcome(read.outcome, outcome));
 
         if (outcome.outcome === "Extracted") {
           yield* Effect.forEach(
             outcome.batch.claims,
             Effect.fnUntraced(function* (claim) {
-              const claimStored = yield* encodePayload(EvidenceClaim, claim);
+              const claimStored = yield* encodePayload(LedgerClaimPayload, LedgerClaimPayload.make({ claim }));
               yield* sql`INSERT INTO claims (id, batch, document, lane, digest, payload)
                   VALUES (${claim.id}, ${outcome.batch.id}, ${claim.document}, ${lane}, ${claimStored.digest}, ${claimStored.payload})
                   ON CONFLICT (id) DO NOTHING`;
-              const value5 = yield* sql<StoredRow>`SELECT digest, payload FROM claims WHERE id = ${claim.id}`;
-              yield* ensureStoredDigest(value5, claimStored.digest);
+              const value5 = yield* sql<StoredEvidenceRow>`SELECT digest, payload FROM claims WHERE id = ${claim.id}`;
+              yield* ensureImmutableEvidence(value5, claimStored, readStoredClaim, (read) =>
+                sameClaim(read.claim, claim)
+              );
             }),
             { concurrency: 1, discard: true }
           );
@@ -209,7 +239,7 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
       const readRows = yield* recoverSql(
         Effect.all(
           {
-            batches: sql<StoredRow>`SELECT digest, payload FROM batches ORDER BY id`,
+            batches: sql<StoredEvidenceRow>`SELECT digest, payload FROM batches ORDER BY id`,
             documents: sql<StoredRow>`SELECT digest, payload FROM parse_outcomes ORDER BY document`,
             events: sql<StoredRow>`SELECT digest, payload FROM events ORDER BY recorded_at, id`,
           },
@@ -223,16 +253,15 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
           concurrency: 1,
         }
       );
-      const batches = yield* Effect.forEach(readRows.batches, (row) => decodePayload(ExtractOutcome, row.payload), {
-        concurrency: 1,
-      });
+      const batches = yield* Effect.forEach(readRows.batches, readStoredBatch, { concurrency: 1 });
       const events = yield* Effect.forEach(readRows.events, (row) => decodePayload(ProvenanceEvent, row.payload), {
         concurrency: 1,
       });
       return LedgerSnapshot.make({
-        batches,
+        batches: A.map(batches, (stored) => stored.outcome),
         documents,
         events,
+        legacyConfidence: A.flatMap(batches, (stored) => stored.legacy),
         run: requestedRun,
       });
     }),

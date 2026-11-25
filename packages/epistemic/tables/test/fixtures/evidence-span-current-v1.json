@@ -1,0 +1,14 @@
+[
+  {
+    "startChar": 2,
+    "endChar": 5,
+    "quote": "A😀",
+    "confidence": 0
+  },
+  {
+    "startChar": 0,
+    "endChar": 4,
+    "quote": "text",
+    "confidence": 1
+  }
+]

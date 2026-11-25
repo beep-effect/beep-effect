@@ -1,29 +1,31 @@
 /** Fully synthetic Acme competency fixture. No production or corpus data. */
-import { BasisDigest, ValidTime } from "@beep/epistemics/Claim";
-import { ClaimVersion, EvidenceSignals, ReviewState, SourceAssertion } from "@beep/party-domain/Claim";
+import { ValidTime } from "@beep/epistemics/Claim";
+import { mergeClaimLedgers, SourceAssertion } from "@beep/party-domain/Claim";
 import { CommunicationEvent, Observation, Participant, voiceOf } from "@beep/party-domain/Communication";
 import {
   ActivityId,
   ArtifactOccurrenceId,
   AssertionId,
-  ClaimVersionId,
   EventId,
   IdentifierId,
   ObservationId,
-  PrincipalId,
 } from "@beep/party-domain/Ids";
 import { Party } from "@beep/party-domain/Party";
-import { logicalKey, Proposition } from "@beep/party-domain/Proposition";
+import { Proposition } from "@beep/party-domain/Proposition";
 import { EvidenceAnchor } from "@beep/party-domain/Provenance";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as DateTime from "effect/DateTime";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import { at, interval, partyClaim, retraction, signals } from "./claims.ts";
+import type { ClaimId } from "@beep/epistemics/ClaimCore.schema";
+import type * as DateTime from "effect/DateTime";
 
-export const at = DateTime.makeUnsafe;
+export { at, signals };
+
 export const ids = {
   maya: PartyId.make(1),
   jordan: PartyId.make(2),
@@ -40,40 +42,21 @@ export const ids = {
   finance: PartyId.make(13),
 };
 export const email = (name: string) => IdentifierId.make(`party-ident:email:${name}@acme.example`);
-export const signals = EvidenceSignals.make({
-  sourceTrust: { _tag: "Absent", reason: "not-assessed" },
-  sourceAssertedConfidence: { _tag: "Absent", reason: "not-assessed" },
-  extractorConfidence: { _tag: "Absent", reason: "not-assessed" },
-  validator: { _tag: "Absent", reason: "not-assessed" },
-  reviewer: { _tag: "Absent", reason: "not-assessed" },
-});
 const claim = (
-  id: string,
+  operation: string,
   proposition: Proposition,
-  recordedAt = 10,
-  expiredAt: O.Option<DateTime.Utc> = O.none(),
+  knowledgeStart = 10,
   validFrom = 0,
-  validTo: O.Option<DateTime.Utc> = O.none()
+  validTo: O.Option<DateTime.Utc> = O.none(),
+  supersedes?: ClaimId
 ) =>
-  ClaimVersion.make({
-    id: ClaimVersionId.make(`party-cv:${id}`),
+  partyClaim({
     proposition,
-    logicalKey: logicalKey(proposition),
-    supportedBy: [AssertionId.make(`party-asrt:${id}`)],
-    challengedBy: [],
-    supersedes: O.none(),
-    validTime: ValidTime.cases.Interval.make({ validFrom: at(validFrom), validTo }),
-    knowledge: { recordedAt: at(recordedAt), expiredAt },
-    review: ReviewState.cases.Accepted.make({
-      disposition: {
-        disposition: "accepted",
-        reviewer: PrincipalId.make("party-user:analyst"),
-        basis: BasisDigest.make("1234567812345678123456781234567812345678123456781234567812345678"),
-        reviewedAt: at(recordedAt),
-        reason: "Synthetic reviewed evidence",
-      },
-    }),
-    signals,
+    knowledgeStart,
+    validTime: interval({ from: validFrom, to: validTo }),
+    operation,
+    supersedes,
+    supportedBy: [AssertionId.make(`party-asrt:${operation}`)],
   });
 const header = (n: number, role: Participant["role"], name: string) =>
   Participant.make({
@@ -91,7 +74,7 @@ const event = (n: number, participants: ReadonlyArray<Participant>) =>
     conversationKey: O.none(),
     participants: [O.getOrThrow(A.head(participants)), ...A.drop(participants, 1)],
   });
-const makeFixture = Effect.sync(() => {
+const makeFixture = Effect.gen(function* () {
   const parties = [
     Party.cases.Person.make({ id: ids.maya, keys: [], label: "Maya Patel" }),
     Party.cases.Person.make({ id: ids.chrisA, keys: [], label: "Chris Morgan" }),
@@ -147,64 +130,67 @@ const makeFixture = Effect.sync(() => {
       `reports:${subordinate}`,
       Proposition.cases.ReportsTo.make({ subordinate, superior, organization: O.some(ids.acme) })
     );
-  const financeV1 = claim(
+  const financeV1 = yield* claim(
     "finance:1",
     Proposition.cases.IdentifierOf.make({ identifier: email("finance"), party: ids.maya, relation: "used-by" }),
     12
   );
-  const financeV2 = ClaimVersion.make({
-    ...claim(
-      "finance:2",
-      Proposition.cases.IdentifierOf.make({ identifier: email("finance"), party: ids.finance, relation: "represents" }),
-      19
-    ),
-    supersedes: O.some(financeV1.id),
-  });
+  const financeV2 = yield* claim(
+    "finance:2",
+    Proposition.cases.IdentifierOf.make({ identifier: email("finance"), party: ids.finance, relation: "represents" }),
+    19
+  );
   const phone = IdentifierId.make("party-ident:tel:+15155550100");
-  const averyAuthorship = author(2, ids.avery);
-  const ledger = [
-    identifier("maya", ids.maya),
-    identifier("jordan", ids.jordan),
-    identifier("avery", ids.avery),
-    identifier("dana", ids.dana),
-    identifier("sam", ids.sam),
-    identifier("riley", ids.riley),
-    identifier("quinn", ids.quinn),
-    identifier("pat", ids.pat),
-    ClaimVersion.make({ ...financeV1, knowledge: { ...financeV1.knowledge, expiredAt: O.some(at(19)) } }),
-    financeV2,
-    claim(
-      "phone:jordan",
-      Proposition.cases.IdentifierOf.make({ identifier: phone, party: ids.jordan, relation: "used-by" }),
-      10,
-      O.none(),
-      0,
-      O.some(at(40))
-    ),
-    claim(
-      "phone:riley",
-      Proposition.cases.IdentifierOf.make({ identifier: phone, party: ids.riley, relation: "used-by" }),
-      10,
-      O.none(),
-      60
-    ),
-    claim("same:chris-a-dup", Proposition.cases.SameParty.make({ left: ids.chrisA, right: ids.chrisDuplicate })),
-    claim("same:chris-dup-b", Proposition.cases.SameParty.make({ left: ids.chrisDuplicate, right: ids.chrisB })),
-    claim("distinct:chris-a-b", Proposition.cases.DistinctParty.make({ left: ids.chrisA, right: ids.chrisB })),
-    averyAuthorship,
-    author(3, ids.riley),
-    author(4, ids.sam),
-    author(5, ids.quinn),
-    author(8, ids.dana),
-    reportsTo(ids.sam, ids.dana),
-    reportsTo(ids.riley, ids.dana),
-    reportsTo(ids.quinn, ids.dana),
-    reportsTo(ids.dana, ids.pat),
-    reportsTo(ids.maya, ids.pat),
-  ];
+  const averyAuthorship = yield* author(2, ids.avery);
+  const rows = yield* Effect.all(
+    [
+      identifier("maya", ids.maya),
+      identifier("jordan", ids.jordan),
+      identifier("avery", ids.avery),
+      identifier("dana", ids.dana),
+      identifier("sam", ids.sam),
+      identifier("riley", ids.riley),
+      identifier("quinn", ids.quinn),
+      identifier("pat", ids.pat),
+      claim(
+        "phone:jordan",
+        Proposition.cases.IdentifierOf.make({ identifier: phone, party: ids.jordan, relation: "used-by" }),
+        10,
+        0,
+        O.some(at(40))
+      ),
+      claim(
+        "phone:riley",
+        Proposition.cases.IdentifierOf.make({ identifier: phone, party: ids.riley, relation: "used-by" }),
+        10,
+        60
+      ),
+      claim("same:chris-a-dup", Proposition.cases.SameParty.make({ left: ids.chrisA, right: ids.chrisDuplicate })),
+      claim("same:chris-dup-b", Proposition.cases.SameParty.make({ left: ids.chrisDuplicate, right: ids.chrisB }), 11),
+      claim("distinct:chris-a-b", Proposition.cases.DistinctParty.make({ left: ids.chrisA, right: ids.chrisB })),
+      author(3, ids.riley),
+      author(4, ids.sam),
+      author(5, ids.quinn),
+      author(8, ids.dana),
+      reportsTo(ids.sam, ids.dana),
+      reportsTo(ids.riley, ids.dana),
+      reportsTo(ids.quinn, ids.dana),
+      reportsTo(ids.dana, ids.pat),
+      reportsTo(ids.maya, ids.pat),
+    ],
+    { concurrency: 1 }
+  );
+  const vetoChris = O.getOrThrow(A.findFirst(rows, (row) => row.record.core.proposition._tag === "DistinctParty"));
+  const ledger = mergeClaimLedgers([
+    ...A.map(rows, (row) => row.ledger),
+    averyAuthorship.ledger,
+    financeV1.ledger,
+    retraction({ claim: financeV1.claim, at: 19 }),
+    financeV2.ledger,
+  ]);
   const assertion = SourceAssertion.make({
-    id: O.getOrThrow(A.head(averyAuthorship.supportedBy)),
-    proposition: averyAuthorship.proposition,
+    id: AssertionId.make("party-asrt:voice:2"),
+    proposition: averyAuthorship.record.core.proposition,
     stance: "asserts",
     anchors: [
       EvidenceAnchor.cases.HeaderField.make({
@@ -217,9 +203,21 @@ const makeFixture = Effect.sync(() => {
     validTime: ValidTime.cases.Unknown.make({}),
     recordedAt: at(10),
   });
-  return { parties, events, eventNo, observations, ledger, phone, financeV1, financeV2, averyAuthorship, assertion };
+  return {
+    parties,
+    events,
+    eventNo,
+    observations,
+    ledger,
+    phone,
+    financeV1,
+    financeV2,
+    averyAuthorship,
+    vetoChris,
+    assertion,
+  };
 });
 export class AcmeFixture extends Context.Service<AcmeFixture, Effect.Success<typeof makeFixture>>()(
   "@beep/party-domain/test/fixtures/acme/AcmeFixture"
 ) {}
-export const AcmeFixtureLive = Layer.effect(AcmeFixture, makeFixture);
+export const AcmeFixtureLive = Layer.effect(AcmeFixture, makeFixture).pipe(Layer.provideMerge(Digest.layerWebCrypto));

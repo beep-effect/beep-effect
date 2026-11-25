@@ -86,8 +86,6 @@ export const DocumentSafetyPathSegment = S.Union([S.String, S.Int.check(S.isGrea
 );
 
 /**
- * Type for {@link DocumentSafetyPathSegment}.
- *
  * **Example** (Use DocumentSafetyPathSegment)
  *
  * ```ts import.meta.vitest name="Use DocumentSafetyPathSegment"
@@ -129,8 +127,6 @@ export class RawNodeSafetyViolation extends S.Opaque<RawNodeSafetyViolation, { r
 ) {}
 
 /**
- * Destination family for a URL-bearing Markdown node.
- *
  * **Example** (Check a link destination kind)
  *
  * ```ts
@@ -149,8 +145,6 @@ export const DestinationKind = LiteralKit(["link", "image"]).pipe(
 );
 
 /**
- * Runtime type for {@link DestinationKind}.
- *
  * **Example** (Type a destination kind)
  *
  * ```ts
@@ -166,8 +160,6 @@ export const DestinationKind = LiteralKit(["link", "image"]).pipe(
 export type DestinationKind = typeof DestinationKind.Type;
 
 /**
- * HTML tag names that can carry a URL destination.
- *
  * **Example** (Check an anchor tag)
  *
  * ```ts
@@ -186,8 +178,6 @@ export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
 );
 
 /**
- * Runtime type for {@link UrlNodeTag}.
- *
  * **Example** (Type a URL node tag)
  *
  * ```ts
@@ -303,8 +293,6 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<
 ) {}
 
 /**
- * An HTML conformance issue produced by the canonical Markdown projection.
- *
  * **Details**
  *
  * `path` addresses the projected `@beep/html` tree using the HTML
@@ -405,8 +393,6 @@ export const DocumentSafetyViolation = S.Union([
 );
 
 /**
- * Type for {@link DocumentSafetyViolation}.
- *
  * **Example** (Use DocumentSafetyViolation)
  *
  * ```ts import.meta.vitest name="Use DocumentSafetyViolation"
@@ -824,8 +810,6 @@ export const SafeInline = Inline.pipe(
 );
 
 /**
- * Type for {@link SafeInline}.
- *
  * **Example** (Use SafeInline)
  *
  * ```ts import.meta.vitest name="Use SafeInline"
@@ -875,8 +859,6 @@ export const SafeDocument = documentCodecKeepingNominalTypeThroughCheckAndBrand.
 );
 
 /**
- * Type for {@link SafeDocument}.
- *
  * **Example** (Use SafeDocument)
  *
  * ```ts import.meta.vitest name="Use SafeDocument"

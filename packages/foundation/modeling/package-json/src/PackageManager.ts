@@ -55,9 +55,6 @@ const invalid: {
 );
 
 /**
- * A structured `packageManager` value with `name`, `version` and an optional
- * `integrity` hash.
- *
  * **Details**
  *
  * The same `<name>@<version>[+<integrity>]` triple `@beep/npm-spec`'s

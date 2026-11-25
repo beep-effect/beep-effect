@@ -36,8 +36,6 @@ import type { DependencyResolutionError } from "./WorkspaceResolver.ts";
 const $I = $NpmSpecId.create("Manifest");
 
 /**
- * Indicates that an unknown value could not be decoded into a {@link Manifest}.
- *
  * **Details**
  *
  * Raised by {@link Manifest.decode}. Only the four dependency fields are
@@ -95,13 +93,6 @@ export class ManifestDecodeError extends S.TaggedError<ManifestDecodeError, { re
 }
 
 /**
- * Raised when a `catalog:` or `workspace:` specifier in a manifest resolves
- * to nothing: the catalog has no entry for the dependency, or no workspace
- * package carries its name. Distinct from `DependencyResolutionError` — the
- * resolution *mechanism* worked; the answer was `Option.none()`, which at
- * the manifest level means the manifest cannot be projected to concrete
- * ranges.
- *
  * **Example** (Describe a missing catalog entry)
  *
  * ```ts
@@ -210,9 +201,6 @@ const makeOpenRecordWireCodecMirroringPackageJsonWithoutDependingOnIt = (
 };
 
 /**
- * A tolerant manifest as a domain model: the four dependency fields typed as
- * string→string records, everything else preserved verbatim in `rest`.
- *
  * **Details**
  *
  * This is deliberately NOT a strict package.json model — the input to

@@ -3,6 +3,15 @@
 Receipts recorded at the moment the friction happened. Redact secrets, replace
 home paths with `~`, drop session and machine ids.
 
+## 2026-11-23 — P4 historical admission refusal boundaries
+
+- **Doing:** reviewing selected-time admission views before commit 4. **Evidence:**
+  GroundingInvalid occurs before occurrence membership can be established, while stale
+  source resolution occurs after membership. Treating both as historical admitted stance
+  would let a malformed receipt claim a stance it never earned. Remove the former from
+  the stance-preserving refusal set and assert unresolved stance for a malformed receipt.
+  **Would have prevented it:** a refusal-stage distinction in the selected-view test table.
+
 ## 2026-11-08 — packet bootstrap
 
 - **Doing:** scaffolding this packet with `bun run beep goals bootstrap`.
@@ -479,6 +488,190 @@ home paths with `~`, drop session and machine ids.
   and all complexity thresholds remain in force for changed files.
   **Would have prevented it:** a health argument-contract assertion that the
   envelope's declared base also reaches the native command.
+
+
+### P4 design inventory buffer, 2026-11-22
+
+While enumerating test existence for the P4 maps, the Node child-process default buffer
+refused `rg --files packages apps` with `ENOBUFS`. No data was changed. Restricting the
+search to `--glob '*.test.ts'` and setting an explicit bounded output buffer completed
+the inventory. A test-file-only discovery recipe would have prevented the interruption.
+
+## 2026-11-23 — P4 frozen format construction
+
+- **Doing:** freezing the evidence and ledger encodings with today's codecs before P4 changes.
+  **Evidence:** the current evidence converter rejects an empty quote, repairs a mismatched UTF-16
+  width, and retains an oversized nonempty quote through its legacy fallback. A first fixture
+  assertion incorrectly expected all three reads to succeed. The frozen test now asserts each
+  actual result. **Would have prevented it:** an explicit accepted/refused matrix beside the legacy
+  stored-span schema and fixture generation through the exact encoded-side schema.
+- **Doing:** constructing semantica frozen nested ledger payloads from the existing hosted batches.
+  **Evidence:** decoding a decoded batch as wire input fails at model.dimension because its optional
+  fields are Options in memory. Encoding through EvidenceBatch/ExtractOutcome first preserves the
+  wire shape. **Would have prevented it:** a reusable fixture-writing boundary that takes decoded
+  schema values and always uses their declared codec.
+- **Doing:** running the P4 commit-1 package test gates serially at nice 19.
+  **Evidence:** one use-cases test process ended with exit 143 before reporting results; its direct
+  retry passed 419 tests. No cause is established. Full law-practice server tests then passed
+  298 files (1,719 tests, one skip) plus four boundary tests in about 280 seconds.
+  **Would have prevented it:** durable per-command exit and termination-attribution receipts.
+- **Doing:** running the full semantica test gate after adding the frozen ledger codec test.
+  **Evidence:** 169 tests passed, including the new freeze test; the unchanged C0Slice live-to-replay
+  test hit its 29,750 ms watchdog. Retrying the package at one worker attributes shared-resource
+  contention without changing production code or the test's deadline.
+  **Would have prevented it:** scheduling the native live-to-replay case within a measured worker
+  budget rather than the default package fan-out.
+- **Doing:** applying S31 to the frozen-format test harnesses.
+  **Evidence:** effect-vitest initially reported per-test layer provisions and native filesystem
+  candidates. The tests now share bounded it.layer hooks and assert that each fixture's real path
+  remains inside the owning checkout before hashing its raw bytes. Scoped detection reports
+  introduced=0. Two existing KB filesystem layer hooks also needed explicit timeout budgets.
+  **Would have prevented it:** a canonical frozen-byte fixture test recipe with layer lifetime,
+  package dependency and on-disk provenance assertions included from the start.
+- **Doing:** running the blocking pre-commit comment-law gate on the assigned revised-design base.
+  **Evidence:** `bun run beep laws comments --check --base 6a3805a8767` exits 1 with
+  `Unknown subcommand "comments" for "beep-cli laws"`. No comment-law implementation is present in
+  this lane's Laws command tree. The required introduced=0 receipt cannot be produced on this base.
+  **Would have prevented it:** carrying the comment-law prerequisite into the supplied stack base
+  before assigning a blocking gate. No substitute receipt or gate bypass is claimed.
+  **Owning-lane ruling:** the P3/P2/PR-C base predates the comment-law tool and policy. Use the
+  staged zero-context diff proxy before each P4 commit; it must print no added line comment or
+  non-JSDoc block comment. Do not import the tool. The owning lane runs the authoritative gate
+  after merging main and before publication. The proxy does not claim an authoritative receipt.
+- **Doing:** reading every package test-typecheck result rather than trusting the command exit.
+  **Evidence:** the wrapper returned zero while its JSON receipt recorded exitCode=1, including
+  Effect diagnostics for a node:crypto import, broad S.Number, typed-input unknown decoding and
+  yielding inside an assertion argument. Direct Schema codec callbacks also accepted an optional
+  parser-options argument where Effect.forEach supplies a numeric index. These were corrected to
+  Effect Digest, existing field schemas, typed codecs, bound values and unary callbacks.
+  **Would have prevented it:** making package-test-typecheck propagate its recorded exit code and
+  providing a checked codec/forEach example in the fixture recipe.
+- **Doing:** committing the P4 frozen semantica ledger payloads without changing their source bytes.
+  **Evidence:** the pre-commit secret scanner flagged nine cacheKey occurrences that are the same
+  public content digests already permitted for the P3 frozen baseline. The existing exact-value,
+  exact-field, exact-detector policy now also names the P4 ledger fixture. Its six values stay fixed;
+  a scanner boundary test checks changed values, wrong paths and another token detector.
+  **Would have prevented it:** treating nested frozen ledger payloads as part of the original
+  synthetic cache-digest fixture closure. No standards exception inventory changes.
+
+## 2026-11-23 — P4 signal declaration boundary
+
+- **Doing:** re-proving commit 2 after moving Measurement to schema. **Evidence:**
+  seven-package verification reproduced TS2527 at Claim.model.ts:189 because the
+  exported union referenced private nominal measurement cases. Downstream audits
+  failed at the same declaration boundary. **Would have prevented it:** declaration
+  emit on the new shared leaf before the importer package fan-out. Export the
+  documented nominal cases so generated declarations can name their brands.
+
+## 2026-11-23 — P4 generic codecs and no-op identity
+
+- **Doing:** implementing immutable claim arrows and assessment updates. **Evidence:**
+  the first test-typecheck receipt exposed inference loss through a whole generic
+  factory return type; infer the core codec directly and reuse the record ingredients.
+  Runtime refusal tests also showed schema case constructors copy nested records.
+  Return typed refusal values with the original record reference, retaining the
+  schema-derived union contract. **Would have prevented it:** a generic encoded-id
+  binding fixture plus an identity assertion in the canonical update recipe.
+
+- **Doing:** running the P4 commit-3 docgen gate. **Evidence:** one wrapper
+  failed to spawn docgen and another attempt exited 130 without a diagnostic.
+  A direct docgen run then exposed two example type errors: concatenated hash
+  strings widened past the required template-literal type. Explicit synthetic
+  hash literals fix the examples; the earlier interruption causes remain unknown.
+  **Would have prevented it:** preserving subprocess causes and compiling examples
+  during the first local edit loop.
+
+### P4 review repair: prefix validation and historical stance proof
+
+- Doing: reproduce the independent review of commits 2–4 and repair all three findings.
+- Evidence: the original L4-3 suite passed all five tests after replacing the production parent
+  traversal with an empty traversal. The revised production-path suite rejects that mutant.
+  New L4-1 and L4-4 regressions reproduced invalid-prefix acceptance and selected-source denial
+  erasing admitted stance. Their corresponding mutants now fail.
+- Prevention: generate graphs from minted records and append through the public arrow; keep
+  historical admission verification separate from selected eligibility. Historical binding
+  evidence requires explicit trusted ports and cannot be reconstructed by schema decoding.
+- Gate friction: the first package audit caught TS2322 because negating the empty-array guard did
+  not narrow violations to a nonempty tuple. Use the positive nonempty guard before constructing
+  the refusal. The inbox rejected `--observed` for that audit row; acknowledge the repaired row
+  with the fix commit after successful package verification.
+- Additional gate feedback: the Effect diagnostic rejected yielded codec calls nested as arguments;
+  named the encoded value first. Oxlint rejected inline admission codec construction; hoisted it
+  to module scope. Effect-vitest rejected checking Option internals; used assertNone. No inventory
+  or allowlist was expanded.
+- Final focused proof: all 85 tests in 12 files passed under Node/V8. ClaimCore.ts and Admission.ts
+  each have 100 percent statements, branches, functions and lines (297 statements, 158 branches,
+  55 functions and 264 lines combined). Full package verification passed lint, audit and docgen;
+  the package-test-typecheck result records exitCode 0 with empty diagnostics.
+- Mutation receipts: the original five-test L4-3 suite survived deleting parent traversal (exit 0).
+  The revised six-test suite fails that mutant (exit 1); deleting prefix validation fails L4-1
+  (exit 1); coupling historical stance back to selected verification fails three L4-4 tests
+  (exit 1). Each temporary mutation was restored before the final package and coverage runs.
+
+### P4 evidence retirement implementation friction
+
+- Doing: locating package decisions before the evidence retirement wave. Evidence: the requested
+  `beep decisions for` command exits 1 with `Unknown subcommand decisions` on this layer. Read the
+  relevant packet decisions and search package decision paths directly. Prevention: keep the
+  always-loaded command recipe synchronized with the checkout's available commands.
+- Doing: running focused package tests. Evidence: Bun's misplaced `--cwd` form printed script usage
+  with exit 0; an invocation from the repository root entered the root test wrapper instead.
+  The owned root invocation was cancelled with exit 130 before tests ran. Prevention: use the tool's
+  explicit package working directory and require a Vitest test count, not only process exit 0.
+- Doing: migrating evidence fixtures. Evidence: the frozen reader initially changed JSON field order;
+  the domain identifier snapshot also changed as expected. Preserve original field ordering in the
+  private frozen codecs and update only the derived identifier snapshot, never frozen wire fixtures.
+- Gate feedback during row 5: Effect-vitest rejected six boolean Result assertions in new tests.
+  Use assertSuccess/assertFailure so the assertions preserve the library's failure information.
+  No detector baseline or exception row was added. The schema-first writer removed the retired
+  span-generator exception and updated two existing advisory line numbers; its entry count shrank.
+- Broad server proof exposed an introduced indirect consumer omitted by the lexical symbol map:
+  `PracticeKg.queries.ts` projected root span offsets and quote directly from JSON. Three practice-KG
+  tests failed with `Expected number at [0][endChar]` after v2 writes. Apply the same declared
+  legacy/v2 SQL coalescing rule to this reader. Prevention: inventory JSON-path readers alongside
+  symbol importers before retiring a stored shape.
+- The v4 Result assertion helpers compare an expected payload; using them as tag-only assertions
+  failed the first broader foundation run. Replaced them with the established Result predicate
+  piped to assertTrue. A subsequent syntax error in that test edit was corrected before rerunning.
+- Boundary review during row 5 found that decoder fallback could reinterpret a malformed versioned
+  payload as untagged legacy data when both field sets were supplied. Version presence now selects
+  the current decoder exclusively; malformed/unknown versions refuse instead of being repaired.
+  A planted mixed-shape regression covers current-invalid, future and non-string versions.
+- The command tool briefly returned repeated runtime-replacement errors. Before restarting the
+  audit script, checked owned processes and its expected log files; neither existed, so no audit
+  was duplicated. A short retry restored the command route without changing permissions.
+- The first tables audit exposed five introduced test-check errors: widened entity/schema-version
+  fixture literals, nullable insert fields spread into a selected row, and a missed pipeable codec
+  construction. Kept the fixture constrained by EvidenceRow, supplied the required row fields and
+  used the schema's pipe form. The exact check then reported 0 errors/0 warnings and five fixed;
+  all 50 table tests and the corrective lint/check package verification passed.
+- The use-case package audit passed, but docgen exited 130 during example typechecking. The earlyoom
+  journal identifies that exact docgen process at the matching failure time. Standalone docgen passed
+  without edits; the environment-only inbox acknowledgment records that evidence. Do not disable
+  memory protection or restart other agents to make a proof pass.
+- Earlyoom also sent SIGTERM to the epistemic-server integration Vitest process; the package audit
+  returned 143 after its build, check and 34 regular tests had passed. Package lint/docgen passed.
+  The complete integration set passed with one worker (30 tests; two external-Postgres files skipped).
+  The environment-only acknowledgment cites the matching journal evidence. Reduced this proof's own
+  worker count without changing assertions, services, memory protection or another agent's process.
+
+# P4 row 5: desktop audit closure
+
+The complete desktop audit found a sidecar-registration fixture still using the legacy span shape;
+the symbol-only retirement search had not located its inline JSON. Converting that fixture to v2
+restored all 300 regular tests. A first corrective fixture omitted the ReportedConfidence tag;
+the decoder caught it, and the corrected tagged fixture passed. Future migration inventories should
+include inline decoder inputs in the owning package's full suite.
+
+The same audit's integration Vitest process received earlyoom SIGTERM, confirmed by its exact
+command in the journal. Retry the failed integration component with one worker, retaining the
+already successful lint, build, check and docgen results; do not repeat the full package audit.
+
+The law-practice server audit took roughly 29 minutes and completed 92 integration tests before
+reporting six extractDeadline failures in unchanged citation-regex boundary/case-flag batches.
+An exact-case retry in the same Bun runtime passed all six with one worker and unchanged 30-second
+extraction and 60-second operation limits. Preserve the successful audit components and retry only
+failed batches under lower contention; do not weaken production safety deadlines to green a gate.
 ## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
 
 - **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.

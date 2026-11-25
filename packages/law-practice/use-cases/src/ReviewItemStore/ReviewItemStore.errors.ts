@@ -6,13 +6,14 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { ReviewItemId } from "@beep/law-practice-domain";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { DefectCause } from "../internal/DefectCause.ts";
 
 const $I = $LawPracticeUseCasesId.create("ReviewItemStore/ReviewItemStore.errors");
 
-const ReviewItemStoreOperationBase = LiteralKit(["read", "upsert"]);
+const ReviewItemStoreOperationBase = LiteralKit(["read", "upsert", "repair"]);
 
 /**
  * **Example** (Guard a store operation)
@@ -28,7 +29,8 @@ const ReviewItemStoreOperationBase = LiteralKit(["read", "upsert"]);
  */
 export const ReviewItemStoreOperation = ReviewItemStoreOperationBase.pipe(
   $I.annoteSchema("ReviewItemStoreOperation", {
-    description: "Review-item store operation that failed: reading the items or storing some.",
+    description:
+      "Review-item store operation that failed: reading the items, storing some, or storing an explicit repair.",
   }),
   SchemaUtils.withLiteralKitStatics(ReviewItemStoreOperationBase)
 );
@@ -78,5 +80,40 @@ export class ReviewItemStoreError extends S.TaggedError<ReviewItemStoreError, { 
   $I.annoteError<ReviewItemStoreError>("ReviewItemStoreError", {
     title: "Review-item store unavailable",
     description: "The review-item store could not read its items or store some.",
+  })
+) {}
+
+/**
+ * **Details**
+ *
+ * The item stays listed as a `LegacyReviewItemImported`. Recording an answer
+ * for it, or admitting a verdict on it, waits for an explicit repair through
+ * `ReviewItemStore.repair`.
+ *
+ * **Example** (Report an item awaiting repair)
+ *
+ * ```ts
+ * import { ReviewItemRepairRequiredError } from "@beep/law-practice-use-cases/ReviewItemStore"
+ *
+ * const error = ReviewItemRepairRequiredError.make({ itemId: "question:1" })
+ * console.log(error.itemId) // "question:1"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ReviewItemRepairRequiredError extends S.TaggedError<
+  ReviewItemRepairRequiredError,
+  { readonly brand: unique symbol }
+>($I`ReviewItemRepairRequiredError`)(
+  "ReviewItemRepairRequiredError",
+  {
+    itemId: ReviewItemId.annotateKey({
+      description: "Stored item whose legacy quote could not become a selector.",
+    }),
+  },
+  $I.annoteError<ReviewItemRepairRequiredError>("ReviewItemRepairRequiredError", {
+    title: "Review item awaiting repair",
+    description: "A stored item is an unresolved legacy import, so an executable write to it is refused.",
   })
 ) {}

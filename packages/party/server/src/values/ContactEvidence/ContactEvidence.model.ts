@@ -6,7 +6,7 @@
 
 import { $PartyServerId } from "@beep/identity/packages";
 import { GraphContact } from "@beep/m365/M365.schemas";
-import { ClaimVersion, SourceAssertion } from "@beep/party-domain/Claim";
+import { ClaimCreation, ClaimLedger, SourceAssertion } from "@beep/party-domain/Claim";
 import { DirectoryRow } from "@beep/party-domain/Communication";
 import { Identifier, IdentifierIssueField, IdentifierIssueReason } from "@beep/party-domain/Identifier";
 import { ActivityId, IdentifierId } from "@beep/party-domain/Ids";
@@ -62,9 +62,12 @@ export class IngestIssue extends S.Opaque<IngestIssue, { readonly brand: unique 
  * @since 0.0.0
  */
 export class ContactIngestInput extends S.Opaque<ContactIngestInput, { readonly brand: unique symbol }>()(
-  S.Struct({ card: ContactCard, activity: ActivityId, recordedAt: S.DateTimeUtcFromMillis }).pipe(
-    $I.annoteSchema("ContactIngestInput", { description: "One source card extraction." })
-  )
+  S.Struct({
+    card: ContactCard,
+    creation: ClaimCreation,
+    activity: ActivityId,
+    recordedAt: S.DateTimeUtcFromMillis,
+  }).pipe($I.annoteSchema("ContactIngestInput", { description: "One source card extraction." }))
 ) {}
 
 /**
@@ -84,7 +87,7 @@ export class ContactIngest extends S.Opaque<ContactIngest, { readonly brand: uni
     identifiers: S.Array(IngestIdentifier),
     observations: S.Array(DirectoryRow),
     assertions: S.Array(SourceAssertion),
-    versions: S.Array(ClaimVersion),
+    claimLedger: ClaimLedger,
     issues: S.Array(IngestIssue),
   }).pipe($I.annoteSchema("ContactIngest", { description: "Contact ingestion evidence and issues." }))
 ) {}
@@ -101,7 +104,7 @@ export class ContactIngest extends S.Opaque<ContactIngest, { readonly brand: uni
  * @since 0.0.0
  */
 export class ContactSourceIngestInput extends S.Opaque<ContactSourceIngestInput, { readonly brand: unique symbol }>()(
-  S.Struct({ activity: ActivityId, recordedAt: S.DateTimeUtcFromMillis }).pipe(
+  S.Struct({ creation: ClaimCreation, activity: ActivityId, recordedAt: S.DateTimeUtcFromMillis }).pipe(
     $I.annoteSchema("ContactSourceIngestInput", { description: "Provenance for a contact source extraction." })
   )
 ) {}

@@ -11,7 +11,8 @@
  * @since 0.0.0
  */
 
-import { ReviewTag, versionsAt } from "@beep/epistemics/Claim";
+import { ReviewTag } from "@beep/epistemics/Claim";
+import { ClaimId } from "@beep/epistemics/ClaimCore.schema";
 import { $PartyDomainId } from "@beep/identity/packages";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import { thunkEmptyArray, thunkEmptyReadonlyArray, thunkUndefined } from "@beep/utils";
@@ -24,12 +25,13 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { claimsAtScope } from "../../Claim.ts";
 import { voiceOf } from "../../Communication.ts";
 import { AttributedEvent, DeclaredLine } from "../../Hierarchy.ts";
-import { ClaimVersionId, EventId, IdentifierId, VoiceId } from "../../Ids.ts";
+import { EventId, IdentifierId, VoiceId } from "../../Ids.ts";
 import { Proposition } from "../../Proposition.ts";
 import { ConflictingReview, ResolutionScope, resolveParties } from "../../Resolution.ts";
-import type { ClaimVersion } from "../../Claim.ts";
+import type { ClaimLedgerData } from "../../Claim.ts";
 import type { CommunicationEvent, Observation } from "../../Communication.ts";
 
 const $I = $PartyDomainId.create("policies/Projection/Projection.behavior");
@@ -47,9 +49,12 @@ const $I = $PartyDomainId.create("policies/Projection/Projection.behavior");
  * @since 0.0.0
  */
 export class ProjectionScope extends S.Opaque<ProjectionScope, { readonly brand: unique symbol }>()(
-  S.Struct({ asOf: S.DateTimeUtcFromMillis, validAt: S.DateTimeUtcFromMillis, states: S.Array(ReviewTag) }).pipe(
-    $I.annoteSchema("ProjectionScope", { description: "Bitemporal scope and allowed review states." })
-  )
+  S.Struct({
+    scope: S.NonEmptyString,
+    asOf: S.DateTimeUtcFromMillis,
+    validAt: S.DateTimeUtcFromMillis,
+    states: S.Array(ReviewTag),
+  }).pipe($I.annoteSchema("ProjectionScope", { description: "Bitemporal scope and allowed review states." }))
 ) {}
 
 const RepresentativeLookup = S.declare<(party: PartyId) => PartyId>((value): value is (party: PartyId) => PartyId =>
@@ -97,11 +102,14 @@ export const identityView = ({
   ledger,
   scope,
 }: {
-  readonly ledger: ReadonlyArray<ClaimVersion>;
+  readonly ledger: ClaimLedgerData;
   readonly scope: ProjectionScope;
 }): IdentityView => {
-  const inScope = versionsAt(ledger, scope);
-  const resolved = resolveParties(ledger, ResolutionScope.make({ asOf: scope.asOf, validAt: scope.validAt }));
+  const inScope = claimsAtScope(ledger, scope);
+  const resolved = resolveParties(
+    ledger,
+    ResolutionScope.make({ scope: scope.scope, asOf: scope.asOf, validAt: scope.validAt })
+  );
   const representative = (party: PartyId) =>
     O.getOrElse(
       O.map(
@@ -126,14 +134,16 @@ export const identityView = ({
     reviewCases: resolved.reviewCases,
     partyOfIdentifier: unique(
       A.flatMap(inScope, (v) =>
-        v.proposition._tag === "IdentifierOf" && v.proposition.relation !== "represents"
-          ? [Tuple.make(v.proposition.identifier, v.proposition.party)]
+        v.record.core.proposition._tag === "IdentifierOf" && v.record.core.proposition.relation !== "represents"
+          ? [Tuple.make(v.record.core.proposition.identifier, v.record.core.proposition.party)]
           : []
       )
     ),
     authorOfVoice: unique(
       A.flatMap(inScope, (v) =>
-        Proposition.guards.VoiceAuthor(v.proposition) ? [Tuple.make(v.proposition.voice, v.proposition.author)] : []
+        Proposition.guards.VoiceAuthor(v.record.core.proposition)
+          ? [Tuple.make(v.record.core.proposition.voice, v.record.core.proposition.author)]
+          : []
       )
     ),
   });
@@ -192,16 +202,16 @@ export const declaredLines = ({
   scope,
   view,
 }: {
-  readonly ledger: ReadonlyArray<ClaimVersion>;
+  readonly ledger: ClaimLedgerData;
   readonly scope: ProjectionScope;
   readonly view: IdentityView;
 }): ReadonlyArray<DeclaredLine> =>
-  A.flatMap(versionsAt(ledger, scope), (v) =>
-    Proposition.guards.ReportsTo(v.proposition)
+  A.flatMap(claimsAtScope(ledger, scope), (v) =>
+    Proposition.guards.ReportsTo(v.record.core.proposition)
       ? [
           DeclaredLine.make({
-            subordinate: view.representative(v.proposition.subordinate),
-            superior: view.representative(v.proposition.superior),
+            subordinate: view.representative(v.record.core.proposition.subordinate),
+            superior: view.representative(v.record.core.proposition.superior),
           }),
         ]
       : []
@@ -235,7 +245,7 @@ export class OrgNode extends S.Opaque<OrgNode, { readonly brand: unique symbol }
  * @since 0.0.0
  */
 export class OrgEdge extends S.Opaque<OrgEdge, { readonly brand: unique symbol }>()(
-  S.Struct({ relation: S.Literals(["reports-to", "member-of"]), claimVersion: ClaimVersionId }).pipe(
+  S.Struct({ relation: S.Literals(["reports-to", "member-of"]), claim: ClaimId }).pipe(
     $I.annoteSchema("OrgEdge", { description: "An evidence-backed organizational relation." })
   )
 ) {}
@@ -256,7 +266,7 @@ export const orgGraph = ({
   scope,
   view,
 }: {
-  readonly ledger: ReadonlyArray<ClaimVersion>;
+  readonly ledger: ClaimLedgerData;
   readonly scope: ProjectionScope;
   readonly view: IdentityView;
 }) => {
@@ -268,21 +278,21 @@ export const orgGraph = ({
         index = HashMap.set(index, p, i);
         return i;
       });
-    A.forEach(versionsAt(ledger, scope), (v) => {
-      if (v.proposition._tag === "ReportsTo") {
-        const edge = OrgEdge.make({ relation: "reports-to", claimVersion: v.id });
+    A.forEach(claimsAtScope(ledger, scope), (v) => {
+      if (v.record.core.proposition._tag === "ReportsTo") {
+        const edge = OrgEdge.make({ relation: "reports-to", claim: v.record.claim });
         Graph.addEdge(
           g,
-          node(view.representative(v.proposition.subordinate)),
-          node(view.representative(v.proposition.superior)),
+          node(view.representative(v.record.core.proposition.subordinate)),
+          node(view.representative(v.record.core.proposition.superior)),
           edge
         );
-      } else if (v.proposition._tag === "Membership") {
-        const edge = OrgEdge.make({ relation: "member-of", claimVersion: v.id });
+      } else if (v.record.core.proposition._tag === "Membership") {
+        const edge = OrgEdge.make({ relation: "member-of", claim: v.record.claim });
         Graph.addEdge(
           g,
-          node(view.representative(v.proposition.member)),
-          node(view.representative(v.proposition.organization)),
+          node(view.representative(v.record.core.proposition.member)),
+          node(view.representative(v.record.core.proposition.organization)),
           edge
         );
       }

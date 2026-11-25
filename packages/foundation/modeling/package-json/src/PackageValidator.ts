@@ -25,8 +25,6 @@ import type { Package } from "./Package.ts";
 const $I = $PackageJsonId.create("PackageValidator");
 
 /**
- * A single validation-rule failure.
- *
  * **Example** (Constructing a rule failure)
  *
  * ```ts
@@ -60,8 +58,6 @@ export class RuleFailure extends S.Opaque<RuleFailure, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link RuleFailure}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -86,9 +82,6 @@ const RuleCheck = S.declare((u: unknown): u is RuleCheck => P.isFunction(u)).pip
 );
 
 /**
- * A single validation rule: a name and a check that fails with a
- * {@link RuleFailure}.
- *
  * **Example** (Define a custom rule)
  *
  * ```ts
@@ -126,8 +119,6 @@ export class ValidationRule extends S.Opaque<ValidationRule, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link ValidationRule}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -143,8 +134,6 @@ export declare namespace ValidationRule {
 }
 
 /**
- * Indicates that a {@link Package} failed one or more validation rules.
- *
  * **Details**
  *
  * Raised by {@link PackageValidator}. Every rule failure is aggregated on

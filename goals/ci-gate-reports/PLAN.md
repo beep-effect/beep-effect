@@ -5,9 +5,10 @@
 Status: `active`. P0, P1, P3 and P4 are complete (decision `report-carrier` and the P1, P3 and
 P4 checkpoints): the `task-outcomes/v2` feed record, the CI projection, `beep ci append-gate-reports`,
 the main-feed lookup, the CI-job adapter and `beep ci failures` are built, and the guidance names
-the command. P2 (workflow wiring) is open: its workflow PRs wait for the driver's window. The
-seven-day census runs a week after the guidance merges, under census rules `2026-11-23`, which count
-`beep ci failures` as a CI-log read (P4 checkpoint).
+the command. P2 (workflow wiring) is in progress: part 1 (PR 3, `check.yml` and the four smaller
+workflows) is built (P2 part 1 checkpoint); PR 4 wires `heavy.yml`, and P2 completes on the hosted
+`main`-run proof. The seven-day census runs a week after the guidance merges, under census rules
+`2026-11-23`, which count `beep ci failures` as a CI-log read (P4 checkpoint).
 
 ## Phases
 
@@ -15,7 +16,7 @@ seven-day census runs a week after the guidance merges, under census rules `2026
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the workflow census, choose the report carrier against the six criteria in `SPEC.md`, and fix the feed's record schema. | One decision file names the carrier with each criterion answered by evidence; the census table in `SPEC.md` matches the workflows at that head. |
 | P1 Projection and feed record | complete | The CI renderer (summary, grouped log, annotations) from gate reports, the planned CI subcommand that appends it, and the feed record schema. | The renderer, limit and neutralization tests pass. |
-| P2 Workflow wiring | pending | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
+| P2 Workflow wiring | in-progress | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
 | P3 Lookup, adapter and failing-region command | complete | The main-feed lookup, the CI-job adapter, the extracted log route and the failing-region command. | The lookup, adapter and command fixture tests pass; the monitor's tests pass unchanged; the ledger shows REST only. |
 | P4 Guidance and measurement | complete | Replace the raw `gh api` log recipe in `AGENTS.md` and the yeet skill; record the census or fixture numbers. | `bun run beep skills update --check` passes; the measurement is recorded as a checkpoint. |
 | P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -108,6 +109,18 @@ P1 is complete. `beep ci task-outcomes` writes `task-outcomes/v2` (`TaskOutcomeR
 Lane goals/ci-gate-reports-p0
 
 Reverse: Revert the P1 commit; task-outcomes writes v1 again and the append-gate-reports command is removed
+
+### P2 part 1 built: check.yml and the four smaller workflows upload gate reports, 2026-11-22
+
+P2 part 1 (PR 3) is built; P2 stays in progress until PR 4 wires `heavy.yml` and the first `main` run after each PR shows the projection in every gate job, cited by run id.
+
+A composite action, `.github/actions/gate-reports`, runs in every gate job red or green (`always()`, `continue-on-error`): `beep ci append-gate-reports --artifact <name>` renders the projection, `beep ci task-outcomes` writes the `task-outcomes/v2` record, and a pruned `find` stages the record and every `.beep/gates/` directory at repo-relative paths under `$RUNNER_TEMP/gate-reports`. The upload of that directory as `task-outcomes-<run>-<attempt>-<job>-<partition>` (`include-hidden-files: true`, `retention-days: 30`) stays in each workflow file, where `beep ci workflow-lint` sees the retention. The record keeps its existing name, so `Ci/RouteCorpus.ts` finds it; the artifact layout is the one its route-corpus fixture reads (`.beep/ci-task-outcomes/record.json` beside `<package>/.beep/gates/<gate>/report.{json,log}`). Staging replaces a `**/.beep/gates/**` upload glob because upload-artifact walks every `node_modules` tree before filtering negated patterns.
+
+Wired: `check.yml` Repo Sanity, Ecosystem Contracts and Codegen Drift (the shared verification steps), Docs Policy, Labs, Lint, Test Plan, Test Unit, Test Integration, Coverage Regression, Professional Desktop IPC Stdio, Property Laws, Fallow Advisory Envelopes, JSDoc Ratchet, Nix Shell and SAST; `shard-overflow.yml` Test Unit overflow (kept identical to the hosted shard); `storybook.yml` Storybook; `property-laws-nightly.yml` Property Laws Sweep; `fleet-lane-probe.yml` Lane Probe. Not wired: Commitlint, Secret Scanning and Security, which run no `ci lane`. The workflow upload-coverage test is package source and lands in a later code PR.
+
+Lane goals/ci-gate-reports-p2-check
+
+Reverse: Revert the PR 3 workflow commit; the jobs upload the record-only task-outcomes artifact again and the gate-reports composite action is removed
 
 ### P3 complete: main-feed lookup, CI-job adapter, shared log route and `beep ci failures`, 2026-11-22
 

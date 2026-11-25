@@ -171,7 +171,12 @@ export { EffectOutput } from "./internal/effectOutput.ts";
  * @category testing
  * @since 0.0.0
  */
-export { AnswerLogMemory, ReviewItemStoreMemory, VerdictLogMemory } from "./internal/logMemory.ts";
+export {
+  AnswerLogMemory,
+  ReviewItemStoreMemory,
+  reviewItemStoreMemoryFrom,
+  VerdictLogMemory,
+} from "./internal/logMemory.ts";
 /**
  * Decodes a one-page fixture OCR result with fixed engine, digest and timing
  * metadata around the given text.

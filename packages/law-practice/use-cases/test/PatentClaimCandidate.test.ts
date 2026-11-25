@@ -1,3 +1,4 @@
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { PatentClaimCandidateInput, patentClaimCandidateFrom } from "@beep/law-practice-use-cases/PatentClaimCandidate";
@@ -6,6 +7,7 @@ import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -79,9 +81,16 @@ describe("PatentClaimCandidate", () => {
       );
       const claimsHeadingStart = O.getOrThrow(Str.indexOf("CLAIMS (CONTINUED)")(sourceText));
 
-      expect(first.evidence.span.quote).toBe(evidenceQuote);
-      expect(Str.slice(first.evidence.span.startChar, first.evidence.span.endChar)(sourceText)).toBe(evidenceQuote);
-      expect(first.evidence.span.startChar).toBeGreaterThan(claimsHeadingStart);
+      expect(Result.getOrThrow(decodeCurrentPosition(first.evidence.span)).position.quote).toBe(evidenceQuote);
+      expect(
+        Str.slice(
+          Result.getOrThrow(decodeCurrentPosition(first.evidence.span)).position.startChar,
+          Result.getOrThrow(decodeCurrentPosition(first.evidence.span)).position.endChar
+        )(sourceText)
+      ).toBe(evidenceQuote);
+      expect(Result.getOrThrow(decodeCurrentPosition(first.evidence.span)).position.startChar).toBeGreaterThan(
+        claimsHeadingStart
+      );
       expect(first.candidate.publicId).toContain(`p${Str.repeat(64)("1")}c1`);
       expect(first.evidence.publicId).toContain(`p${Str.repeat(64)("1")}c1`);
       expect(second.candidate.publicId).not.toBe(first.candidate.publicId);
@@ -109,10 +118,15 @@ describe("PatentClaimCandidate", () => {
       );
       const actualClaimsHeading = O.getOrThrow(Str.lastIndexOf("CLAIMS (CONTINUED)")(duplicateHeadingSource));
 
-      expect(mapped.evidence.span.startChar).toBeGreaterThan(actualClaimsHeading);
-      expect(Str.slice(mapped.evidence.span.startChar, mapped.evidence.span.endChar)(duplicateHeadingSource)).toBe(
-        evidenceQuote
+      expect(Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.startChar).toBeGreaterThan(
+        actualClaimsHeading
       );
+      expect(
+        Str.slice(
+          Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.startChar,
+          Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.endChar
+        )(duplicateHeadingSource)
+      ).toBe(evidenceQuote);
     })
   );
 
@@ -126,11 +140,20 @@ describe("PatentClaimCandidate", () => {
         input(Str.repeat(64)("6"), "CLAIMS (CONTINUED)", claim, laterDuplicate, actualStart, sourceText.length)
       );
 
-      expect(mapped.evidence.span.startChar).toBeGreaterThan(actualHeading);
-      expect(Str.slice(mapped.evidence.span.startChar, mapped.evidence.span.endChar)(laterDuplicate)).toBe(
-        evidenceQuote
+      expect(Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.startChar).toBeGreaterThan(
+        actualHeading
       );
-      expect(mapped.evidence.span.endChar).toBeLessThanOrEqual(sourceText.length);
+      expect(
+        Str.slice(
+          Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.startChar,
+          Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.endChar
+        )(laterDuplicate)
+      ).toBe(evidenceQuote);
+      expect(Result.getOrThrow(decodeCurrentPosition(mapped.evidence.span)).position.endChar).toBeLessThanOrEqual(
+        sourceText.length
+      );
     })
   );
 });
+
+const decodeCurrentPosition = S.decodeUnknownResult(S.toType(EvidencePosition));

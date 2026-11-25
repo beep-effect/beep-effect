@@ -6,10 +6,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { makeClaimEnvelope } from "@beep/epistemics/Claim";
+import { makeClaimReview, ValidTime } from "@beep/epistemics/Claim";
+import { ClaimId, makeClaimCore, makeClaimRecords } from "@beep/epistemics/ClaimCore.schema";
+import { ClaimReference, claimReferenceKey, makeClaimImport } from "@beep/epistemics/ClaimImport.schema";
+import { ClaimKnowledgeInterval } from "@beep/epistemics/ClaimLog.schema";
 import { $RepoCliId } from "@beep/identity/packages";
+import { ActivityStart } from "@beep/jsonc/ActivityStart";
 import { LiteralKit } from "@beep/schema";
+import { WellFormedText } from "@beep/schema/WellFormedText";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.schemas");
 
@@ -301,24 +307,6 @@ export const HoldProposition = S.TaggedStruct("Hold", {
 export type HoldProposition = typeof HoldProposition.Type;
 
 /**
- * **Example** (Check a version id)
- *
- * ```ts
- * import { HoldVersionId } from "@beep/repo-cli/commands/Holds"
- * import * as S from "effect/Schema"
- *
- * console.log(S.is(HoldVersionId)("statelyai-model-testing-404@1")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const HoldVersionId = S.NonEmptyString.pipe(
-  S.brand("HoldVersionId"),
-  $I.annoteSchema("HoldVersionId", { description: "Identifier of one hold claim version." })
-);
-
-/**
  * Identifier of one recorded probe run, cited by a version's `supportedBy`.
  *
  * **Example** (Check a probe run id)
@@ -382,43 +370,379 @@ export const HoldPrincipalId = S.NonEmptyString.pipe(
   $I.annoteSchema("HoldPrincipalId", { description: "Agent or person responsible for a hold version." })
 );
 
-const HoldEnvelope = makeClaimEnvelope({
-  $I: $RepoCliId.create("commands/Holds/HoldClaim"),
-  proposition: HoldProposition,
-  logicalKey: (proposition) => `hold:${proposition.holdId}`,
+/**
+ * Keep a hold's logical subject stable across changes to its lease, wording or evidence.
+ * **Example** (Use the owner key)
+ * ```ts
+ * import { holdLogicalKey } from "@beep/repo-cli/commands/Holds"
+ * console.log(typeof holdLogicalKey)
+ * ```
+ * @param proposition - The hold proposition to key.
+ * @returns The logical key shared by every claim about the same hold id.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const holdLogicalKey = (proposition: HoldProposition): string => `hold:${proposition.holdId}`;
+
+const NativeHoldProposition = HoldProposition.mapFields(Struct.assign({ assertion: WellFormedText })).pipe(
+  $I.annoteSchema("NativeHoldProposition", {
+    description: "A hold proposition a native core asserts: its assertion is well-formed Unicode text.",
+  })
+);
+
+const claimVocabulary = makeClaimCore({
+  $I,
+  proposition: NativeHoldProposition,
   ids: {
-    claimVersion: HoldVersionId,
-    assertion: ProbeRunId,
-    activity: HoldActivityId,
+    logicalKey: holdLogicalKey,
+    scope: S.NonEmptyString,
     principal: HoldPrincipalId,
+    action: S.NonEmptyString,
+    revision: S.NonEmptyString,
   },
+});
+const reviewVocabulary = makeClaimReview({
+  $I,
+  ids: { assertion: ProbeRunId, activity: HoldActivityId, principal: HoldPrincipalId },
+});
+const holdClaimRecordVersion = "hold-claim-record/v2";
+
+/**
+ * Native creation facts of one hold; a renewal is a new core with a new ClaimId.
+ *
+ * **Example** (Inspect the core codec)
+ *
+ * ```ts
+ * import { HoldClaimCore } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldClaimCore.fields.logicalKey !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class HoldClaimCore extends S.Opaque<HoldClaimCore, { readonly brand: unique symbol }>()(
+  claimVocabulary.ClaimCore
+) {}
+
+/**
+ * The explicit agent that asserted a native hold.
+ *
+ * **Example** (Name the asserting person)
+ *
+ * ```ts
+ * import { HoldAgentRef, HoldPrincipalId } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldAgentRef.cases.Person.make({ principal: HoldPrincipalId.make("maintainer") })._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HoldAgentRef = claimVocabulary.AgentRef;
+
+const records = makeClaimRecords({ $I, core: HoldClaimCore });
+
+/**
+ * A native hold keyed by the content address of its core.
+ *
+ * **Example** (Inspect the keyed record)
+ *
+ * ```ts
+ * import { HoldCoreRecord } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldCoreRecord.fields.claim !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class HoldCoreRecord extends S.Opaque<HoldCoreRecord, { readonly brand: unique symbol }>()(
+  records.ClaimRecord
+) {}
+
+/**
+ * Review payload of a hold, held outside its immutable core.
+ *
+ * **Example** (Build a proposed review)
+ *
+ * ```ts
+ * import { HoldReviewState } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldReviewState.cases.Proposed.make({})._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HoldReviewState = reviewVocabulary.ReviewState;
+/**
+ * Decoded hold review payload.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HoldReviewState = typeof HoldReviewState.Type;
+
+/**
+ * Five independent observations about a hold's evidence; no combined score.
+ *
+ * **Example** (Inspect the validator signal)
+ *
+ * ```ts
+ * import { HoldEvidenceSignals } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldEvidenceSignals.fields.validator !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class HoldEvidenceSignals extends S.Opaque<HoldEvidenceSignals, { readonly brand: unique symbol }>()(
+  reviewVocabulary.EvidenceSignals
+) {}
+
+/**
+ * A v2 event that appends one minted native hold core with its generating activity.
+ *
+ * **Example** (Inspect the event version)
+ *
+ * ```ts
+ * import { HoldCoreEvent } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldCoreEvent.fields.version !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class HoldCoreEvent extends S.Opaque<HoldCoreEvent, { readonly brand: unique symbol }>()(
+  S.Struct({
+    version: S.tag(holdClaimRecordVersion),
+    event: S.tag("Core"),
+    record: HoldCoreRecord,
+    activity: ActivityStart,
+    generatedAt: S.DateTimeUtcFromMillis,
+  }).pipe($I.annoteSchema("HoldCoreEvent", { description: "A native hold core and the end of its activity." }))
+) {}
+
+const HoldEvidenceEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Evidence"),
+  claim: ClaimReference,
+  supportedBy: S.Array(ProbeRunId),
+  challengedBy: S.Array(ProbeRunId),
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldEvidenceEvent", {
+    description: "A separate hold evidence record listing supporting and challenging refs for one claim.",
+  })
+);
+
+const HoldReviewEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Review"),
+  claim: ClaimReference,
+  review: HoldReviewState,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldReviewEvent", {
+    description: "A separate hold review record for one claim.",
+  })
+);
+
+const HoldSignalsEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Signals"),
+  claim: ClaimReference,
+  signals: HoldEvidenceSignals,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldSignalsEvent", {
+    description: "A separate hold evidence-signals record for one claim.",
+  })
+);
+
+const HoldSuccessionEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Succession"),
+  claim: ClaimId,
+  predecessor: ClaimReference,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldSuccessionEvent", {
+    description: "A hold succession record linking a native core to the claim it replaces.",
+  })
+);
+
+/**
+ * Separate v2 hold records attached to an explicitly namespaced claim.
+ *
+ * **Details**
+ * A retirement is a review record, not a new core. A succession links a native renewal to the
+ * imported hold it replaces, because a core's own predecessor field accepts only a ClaimId.
+ *
+ * **Example** (Retire an imported hold)
+ *
+ * ```ts
+ * import { HoldClaimEvent } from "@beep/repo-cli/commands/Holds"
+ * import { ClaimReference } from "@beep/epistemics/ClaimImport.schema"
+ * import * as DateTime from "effect/DateTime"
+ * const at = DateTime.makeUnsafe(1)
+ * const event = HoldClaimEvent.cases.Review.make({
+ *   claim: ClaimReference.cases.Imported.make({ ledger: "holds", oldId: "synthetic-hold@1" }),
+ *   review: { _tag: "Retracted", reason: "Anchor gone.", at },
+ *   at
+ * })
+ * console.log(event.event)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HoldClaimEvent = S.Union([
+  HoldCoreEvent,
+  HoldEvidenceEvent,
+  HoldReviewEvent,
+  HoldSignalsEvent,
+  HoldSuccessionEvent,
+]).pipe(
+  S.toTaggedUnion("event"),
+  $I.annoteSchema("HoldClaimEvent", { description: "One hold-claim-record/v2 line; old envelopes are never written." })
+);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type HoldClaimEvent = typeof HoldClaimEvent.Type;
+
+/**
+ * Historical facts read from a frozen v1 hold row; never a native core or an admission.
+ *
+ * **Example** (Inspect the retained old identifier)
+ *
+ * ```ts
+ * import { HoldLegacyImported } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldLegacyImported.fields.oldId !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class HoldLegacyImported extends S.Opaque<HoldLegacyImported, { readonly brand: unique symbol }>()(
+  makeClaimImport({
+    $I,
+    ledger: "holds",
+    proposition: HoldProposition,
+    review: HoldReviewState,
+    signals: HoldEvidenceSignals,
+  })
+) {}
+
+const HoldClaimSource = S.Union([HoldLegacyImported, HoldCoreEvent]).pipe(
+  S.toTaggedUnion("version"),
+  $I.annoteSchema("HoldClaimSource", { description: "Imported history or a verified native hold core event." })
+);
+
+/**
+ * Read-time join of one stored hold with its separate evidence, review and signal records.
+ *
+ * **Details**
+ * The join is a projection for listing, linting and probing; it is never written back.
+ *
+ * **Example** (Inspect the join's reference)
+ *
+ * ```ts
+ * import { HoldClaim } from "@beep/repo-cli/commands/Holds"
+ * console.log(HoldClaim.fields.reference !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class HoldClaim extends S.Opaque<HoldClaim, { readonly brand: unique symbol }>()(
+  S.Struct({
+    source: HoldClaimSource,
+    reference: ClaimReference,
+    predecessor: S.OptionFromOptionalKey(ClaimReference),
+    logicalKey: S.NonEmptyString,
+    evidence: S.Struct({ supportedBy: S.Array(S.String), challengedBy: S.Array(S.String) }),
+    review: HoldReviewState,
+    signals: S.OptionFromOptionalKey(HoldEvidenceSignals),
+    knowledge: ClaimKnowledgeInterval,
+    valid: ValidTime,
+  }).pipe(
+    $I.annoteSchema("HoldClaim", { description: "Imported history or a native core joined with its separate records." })
+  )
+) {}
+
+/**
+ * Namespace-aware index key; equal-looking old and native identifiers never merge.
+ *
+ * **Example** (Key a hold)
+ *
+ * ```ts
+ * import { holdClaimKey } from "@beep/repo-cli/commands/Holds"
+ * console.log(typeof holdClaimKey)
+ * ```
+ *
+ * @param claim - A stored or imported hold claim.
+ * @returns The namespaced reference key of the claim.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const holdClaimKey = (claim: HoldClaim): string => claimReferenceKey(claim.reference);
+
+/**
+ * Rendered hold name: the old version id of an imported hold, the ClaimId of a native one.
+ *
+ * **Example** (Render an imported reference)
+ *
+ * ```ts
+ * import { holdReferenceLabel } from "@beep/repo-cli/commands/Holds"
+ * import { ClaimReference } from "@beep/epistemics/ClaimImport.schema"
+ * console.log(holdReferenceLabel(ClaimReference.cases.Imported.make({ ledger: "holds", oldId: "x@1" })))
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const holdReferenceLabel: (reference: ClaimReference) => string = ClaimReference.match({
+  Imported: ({ oldId }) => oldId,
+  Native: ({ claim }) => claim,
 });
 
 /**
- * One immutable hold claim version. A renewal appends a new version whose
- * `supersedes` names the previous one; `validTime.validTo` is the lease end.
+ * Rendered name of a joined hold.
  *
- * **Example** (Reject an empty row)
+ * **Example** (Render a joined hold)
  *
  * ```ts
- * import { HoldClaimVersion } from "@beep/repo-cli/commands/Holds"
- * import * as S from "effect/Schema"
- *
- * console.log(S.is(HoldClaimVersion)({})) // false
+ * import { holdClaimLabel } from "@beep/repo-cli/commands/Holds"
+ * console.log(typeof holdClaimLabel)
  * ```
  *
- * @category models
+ * @param claim - A stored or imported hold claim.
+ * @returns A short human-readable label for the claim reference.
+ * @category projections
  * @since 0.0.0
  */
-export const HoldClaimVersion = HoldEnvelope.ClaimVersion;
+export const holdClaimLabel = (claim: HoldClaim): string => holdReferenceLabel(claim.reference);
 
 /**
- * Decoded type of {@link HoldClaimVersion}.
+ * The hold proposition, read from imported history or a native core.
  *
- * @category models
+ * **Example** (Read the proposition)
+ *
+ * ```ts
+ * import { holdProposition } from "@beep/repo-cli/commands/Holds"
+ * console.log(typeof holdProposition)
+ * ```
+ *
+ * @param claim - A stored or imported hold claim.
+ * @returns The hold proposition the claim asserts.
+ * @category projections
  * @since 0.0.0
  */
-export type HoldClaimVersion = typeof HoldClaimVersion.Type;
+export const holdProposition = (claim: HoldClaim): HoldProposition =>
+  HoldClaimSource.match(claim.source, {
+    "legacy-claim-import/v1": (imported) => imported.proposition,
+    [holdClaimRecordVersion]: (event) => event.record.core.proposition,
+  });
 
 /**
  * Result of running the probe command against one version.
@@ -495,10 +819,10 @@ export type ProbeRunVerdict = typeof ProbeRunVerdict.Type;
  */
 export class ProbeRun extends S.Opaque<ProbeRun, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.tag("hold-probe-run/v1"),
+    schemaVersion: S.tag("hold-probe-run/v2"),
     id: ProbeRunId,
     holdId: HoldId,
-    holdVersionId: HoldVersionId,
+    claim: ClaimReference,
     ranAt: S.DateTimeUtcFromMillis,
     commitSha: S.String.check(S.isPattern(/^[0-9a-f]{40}$/)),
     runtime: ProbeRuntime,

@@ -60,11 +60,13 @@
   "dependencies": {
     "@beep/epistemics": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/m365": "workspace:^",
     "@beep/party-domain": "workspace:^",
     "@beep/party-use-cases": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/text": "workspace:^",
     "@noble/hashes": "catalog:",
     "effect": "catalog:"
   },

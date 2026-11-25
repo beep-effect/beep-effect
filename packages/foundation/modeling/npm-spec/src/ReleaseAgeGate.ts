@@ -40,12 +40,6 @@ const MS_PER_MINUTE = 60_000;
 const decodePublishDateNativelyIncludingZonelessLocalTime = S.decodeOption(S.DateFromString);
 
 /**
- * A source's partial contribution to a {@link ReleaseAgeGate}: the effective
- * gate is assembled from more than one place (inline `pnpm-workspace.yaml`
- * keys, replayed `updateConfig` hooks, `pnpm config get` output), and each
- * source may set the age, the exclude list, both, or neither. Absent fields
- * contribute nothing to the combination.
- *
  * **Details**
  *
  * Deliberately permissive: unlike {@link ReleaseAgeGate} it does not constrain
@@ -100,8 +94,6 @@ export class PartialReleaseAgeGate extends S.Opaque<PartialReleaseAgeGate, { rea
 ) {}
 
 /**
- * Companion types for {@link PartialReleaseAgeGate}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -168,12 +160,6 @@ const matchesExclude: {
 );
 
 /**
- * pnpm's publish-time release-age gate: the number of minutes a published
- * version must age before it is eligible, and the set of package-name patterns
- * exempt from the gate. Mirrors pnpm's `minimumReleaseAge` /
- * `minimumReleaseAgeExclude` config so a resolver can drop too-young candidate
- * versions before picking, avoiding `ERR_PNPM_NO_MATURE_MATCHING_VERSION`.
- *
  * **Details**
  *
  * `ageMinutes` is constrained non-negative and finite; a `ReleaseAgeGate` with

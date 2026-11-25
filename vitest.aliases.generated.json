@@ -2027,9 +2027,6 @@
   "@beep/epistemics/EdgeRelation": [
     "./packages/foundation/modeling/epistemics/src/EdgeRelation/index.ts"
   ],
-  "@beep/epistemics/EvidenceSpan": [
-    "./packages/foundation/modeling/epistemics/src/EvidenceSpan/index.ts"
-  ],
   "@beep/epistemics/EvidenceVerification": [
     "./packages/foundation/modeling/epistemics/src/EvidenceVerification/index.ts"
   ],
@@ -2417,5 +2414,6 @@
   ],
   "@beep/repo-cli/commands/Decisions": [
     "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
-  ]
+  ],
+  "@beep/schema/Signal": ["./packages/foundation/modeling/schema/src/Signal.ts"]
 }

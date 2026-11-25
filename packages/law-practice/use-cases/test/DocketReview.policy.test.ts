@@ -5,6 +5,7 @@
  * Every fixture is synthetic: invented reference numbers and placeholder
  * text. No real mail, sender, matter or client appears here.
  */
+
 import { DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import {
   assessReviewRound,
@@ -12,7 +13,9 @@ import {
   criticComputedDueDate,
   criticDueDate,
   DeterministicCheck,
+  DeterministicCheckFailed,
   DeterministicCheckName,
+  DeterministicCheckPassed,
   DocketReviewConfig,
   ExtractorFieldResponse,
   extractorDueDate,
@@ -34,6 +37,7 @@ import {
   runCriticChecks,
   runDeterministicChecks,
   SecretaryReview,
+  StoredDeterministicCheck,
   scoreRound,
   terminalStatus,
 } from "@beep/law-practice-use-cases/DocketIntake";
@@ -41,14 +45,20 @@ import { LocalDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { ParalegalEntry, ReviewField } from "@beep/law-practice-use-cases/DocketIntake";
+import * as Str from "effect/String";
+import type { DeterministicCheckResult, ParalegalEntry, ReviewField } from "@beep/law-practice-use-cases/DocketIntake";
 
 const BODY = A.join(
   [
@@ -112,10 +122,16 @@ const statedReading = (date: LocalDate) =>
     statedDueDate: O.some(date),
   });
 
-const passedOf = (entry: ParalegalEntry, text: ReviewSourceText, check: DeterministicCheckName): O.Option<boolean> =>
+const isPassed = (check: DeterministicCheck): boolean => check.result._tag === "Passed";
+
+const resultOf = (
+  entry: ParalegalEntry,
+  text: ReviewSourceText,
+  check: DeterministicCheckName
+): O.Option<DeterministicCheckResult["_tag"]> =>
   O.map(
     A.findFirst(runDeterministicChecks(entry, text), (result) => result.check === check),
-    (result) => result.passed
+    (result) => result.result._tag
   );
 
 const agreedOn = (entry: ParalegalEntry, reading: SecretaryReview, field: ReviewField): O.Option<boolean> =>
@@ -189,37 +205,37 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
 
   it("finds a date in any common written form and never inside a longer number", () => {
     const cites = (citedText: string) =>
-      passedOf(entryOf({ citedText: O.some(citedText) }), source, "values-appear-in-cited-text");
+      resultOf(entryOf({ citedText: O.some(citedText) }), source, "values-appear-in-cited-text");
 
     for (const form of ["2030-01-08", "1/8/2030", "01/08/2030", "January 8, 2030", "8 january 2030"]) {
-      assertSome(cites(`Mailed ${form}; three months to respond.`), true);
+      assertSome(cites(`Mailed ${form}; three months to respond.`), "Passed");
     }
-    assertSome(cites("Mailed 18 January 2030; three months to respond."), false);
-    assertSome(cites("Mailed 11/8/2030; three months to respond."), false);
-    assertSome(cites("Three months to respond."), false);
-    assertSome(passedOf(entryOf({ citedText: O.none() }), source, "values-appear-in-cited-text"), false);
+    assertSome(cites("Mailed 18 January 2030; three months to respond."), "Failed");
+    assertSome(cites("Mailed 11/8/2030; three months to respond."), "Failed");
+    assertSome(cites("Three months to respond."), "Failed");
+    assertSome(resultOf(entryOf({ citedText: O.none() }), source, "values-appear-in-cited-text"), "Failed");
   });
 
   it("finds a period as digits or as a number word, with its unit", () => {
     const cites = (citedText: string, responsePeriod: DocketResponsePeriod) =>
-      passedOf(
+      resultOf(
         entryOf({ citedText: O.some(`Mailed January 8, 2030. ${citedText}`), responsePeriod: O.some(responsePeriod) }),
         source,
         "values-appear-in-cited-text"
       );
 
-    assertSome(cites("Respond within 3 months.", threeMonths), true);
-    assertSome(cites("Respond within three months.", threeMonths), true);
-    assertSome(cites("Respond within 45 days.", fortyFiveDays), true);
-    assertSome(cites("Respond within 3 days.", threeMonths), false);
-    assertSome(cites("Respond within 13 months.", threeMonths), false);
-    assertSome(cites("Respond within forty-five days.", fortyFiveDays), true);
+    assertSome(cites("Respond within 3 months.", threeMonths), "Passed");
+    assertSome(cites("Respond within three months.", threeMonths), "Passed");
+    assertSome(cites("Respond within 45 days.", fortyFiveDays), "Passed");
+    assertSome(cites("Respond within 3 days.", threeMonths), "Failed");
+    assertSome(cites("Respond within 13 months.", threeMonths), "Failed");
+    assertSome(cites("Respond within forty-five days.", fortyFiveDays), "Passed");
   });
 
   it("finds a period only as one phrase of its number and its unit word", () => {
     const periodOf = (amount: number, unit: "days" | "months") => DocketResponsePeriod.make({ amount, unit });
     const cites = (citedText: string, responsePeriod: DocketResponsePeriod) =>
-      passedOf(
+      resultOf(
         entryOf({ citedText: O.some(citedText), mailDate: O.none(), responsePeriod: O.some(responsePeriod) }),
         source,
         "values-appear-in-cited-text"
@@ -227,42 +243,42 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const notice = "Mailed January 8, 2030. A response is due within 30 days.";
 
     // The number and the unit only occur apart: 8 is part of the date.
-    assertSome(cites(notice, periodOf(8, "days")), false);
-    assertSome(cites(notice, periodOf(30, "days")), true);
-    assertSome(cites("Respond within thirty days.", periodOf(30, "days")), true);
-    assertSome(cites("A three-month period applies.", threeMonths), true);
-    assertSome(cites("RESPOND WITHIN THREE MONTHS.", threeMonths), true);
-    assertSome(cites("Respond within a month.", periodOf(1, "months")), false);
-    assertSome(cites("Respond within one month.", periodOf(1, "months")), true);
-    assertSome(cites("Due 8 January; extensions are counted in days.", periodOf(8, "days")), false);
+    assertSome(cites(notice, periodOf(8, "days")), "Failed");
+    assertSome(cites(notice, periodOf(30, "days")), "Passed");
+    assertSome(cites("Respond within thirty days.", periodOf(30, "days")), "Passed");
+    assertSome(cites("A three-month period applies.", threeMonths), "Passed");
+    assertSome(cites("RESPOND WITHIN THREE MONTHS.", threeMonths), "Passed");
+    assertSome(cites("Respond within a month.", periodOf(1, "months")), "Failed");
+    assertSome(cites("Respond within one month.", periodOf(1, "months")), "Passed");
+    assertSome(cites("Due 8 January; extensions are counted in days.", periodOf(8, "days")), "Failed");
     // "monday" and "yesterday" never count as the unit.
-    assertSome(cites("Filed 3 monday.", periodOf(3, "days")), false);
-    assertSome(cites("Filed 3 yesterday.", periodOf(3, "days")), false);
-    assertSome(cites("Respond within 3 daysx.", periodOf(3, "days")), false);
-    assertSome(cites("Respond within twenty one days.", periodOf(21, "days")), true);
+    assertSome(cites("Filed 3 monday.", periodOf(3, "days")), "Failed");
+    assertSome(cites("Filed 3 yesterday.", periodOf(3, "days")), "Failed");
+    assertSome(cites("Respond within 3 daysx.", periodOf(3, "days")), "Failed");
+    assertSome(cites("Respond within twenty one days.", periodOf(21, "days")), "Passed");
   });
 
   it("fails a due date that is not mail plus period, and one before the mail date", () => {
     const wrongDue = LocalDate.make({ year: 2030, month: 4, day: 9 });
     const earlyDue = LocalDate.make({ year: 2030, month: 1, day: 2 });
 
-    assertSome(passedOf(entryOf({ statedDueDate: O.some(wrongDue) }), source, "due-equals-mail-plus-period"), false);
+    assertSome(resultOf(entryOf({ statedDueDate: O.some(wrongDue) }), source, "due-equals-mail-plus-period"), "Failed");
     assertSome(
-      passedOf(
+      resultOf(
         entryOf({ statedDueDate: LocalDate.makeOption({ year: 2030, month: 4, day: 8 }) }),
         source,
         "due-equals-mail-plus-period"
       ),
-      true
+      "Passed"
     );
     assertSome(
-      passedOf(entryOf({ responsePeriod: O.none(), statedDueDate: O.some(earlyDue) }), source, "due-not-before-mail"),
-      false
+      resultOf(entryOf({ responsePeriod: O.none(), statedDueDate: O.some(earlyDue) }), source, "due-not-before-mail"),
+      "Failed"
     );
-    assertSome(passedOf(entryOf({ mailDate: O.none() }), source, "due-not-before-mail"), true);
+    assertSome(resultOf(entryOf({ mailDate: O.none() }), source, "due-not-before-mail"), "Passed");
   });
 
-  it("looks a citation up in the message, then in the document text, and cannot fail one it has no text for", () => {
+  it("looks a citation up in the message, then in the document text, and leaves one it has no text for unknown", () => {
     const quoted = entryOf({
       citedText: O.some("Mailed January 8, 2030.\n\nThree months, per the attached fixture action."),
     });
@@ -273,10 +289,11 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     });
     const withoutText = ReviewSourceText.make({ hasDocuments: true, messageText: BODY });
 
-    assertSome(passedOf(quoted, source, "cited-span-exists"), false);
-    assertSome(passedOf(quoted, withText, "cited-span-exists"), true);
-    assertSome(passedOf(quoted, withoutText, "cited-span-exists"), true);
-    assertSome(passedOf(entryOf({ citedText: O.none() }), source, "cited-span-exists"), true);
+    assertSome(resultOf(quoted, source, "cited-span-exists"), "Failed");
+    assertSome(resultOf(quoted, withText, "cited-span-exists"), "Passed");
+    assertSome(resultOf(quoted, withoutText, "cited-span-exists"), "Unknown");
+    assertSome(resultOf(entryOf(), withoutText, "cited-span-exists"), "Passed");
+    assertSome(resultOf(entryOf({ citedText: O.none() }), source, "cited-span-exists"), "Passed");
   });
 
   it("compares only the fields at least one side read, and references as sets", () => {
@@ -480,7 +497,9 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
   it("disputes disagreeing fields, material findings and failed checks with reasons only", () => {
     const round = roundOf({
       agreement: [disagreeing("mail-date"), FieldAgreement.make({ agreed: true, field: "classification" })],
-      checks: A.map(DeterministicCheckName.literals, (check) => DeterministicCheck.make({ check, passed: false })),
+      checks: A.map(DeterministicCheckName.literals, (check) =>
+        DeterministicCheck.make({ check, result: DeterministicCheckFailed.make({}) })
+      ),
       findings: [
         material,
         minor,
@@ -500,13 +519,25 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     expect(
       A.map(
         reviewDisputes(
-          roundOf({ checks: [DeterministicCheck.make({ check: "cited-span-exists", passed: false, side: "critic" })] })
+          roundOf({
+            checks: [
+              DeterministicCheck.make({
+                check: "cited-span-exists",
+                result: DeterministicCheckFailed.make({}),
+                side: "critic",
+              }),
+            ],
+          })
         ),
         (dispute) => dispute.field
       )
     ).toStrictEqual(["due-date"]);
     expect(
-      reviewDisputes(roundOf({ checks: [DeterministicCheck.make({ check: "cited-span-exists", passed: true })] }))
+      reviewDisputes(
+        roundOf({
+          checks: [DeterministicCheck.make({ check: "cited-span-exists", result: DeterministicCheckPassed.make({}) })],
+        })
+      )
     ).toStrictEqual([]);
     expect(rereadFields(disputes)).toStrictEqual(["mail-date", "matter-references", "stated-due-date"]);
     expect(rereadFields([ReviewDispute.make({ field: "title", reasons: ["Fixture."] })])).toStrictEqual([]);
@@ -571,23 +602,22 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
 
   it("holds a critic that cites text to it, and lets one that cites nothing pass", () => {
     const passed = (reading: SecretaryReview, text: ReviewSourceText) =>
-      A.map(runCriticChecks(reading, text), (check) => [check.side, check.check, check.passed]);
+      A.map(runCriticChecks(reading, text), (check) => [check.side, check.check, isPassed(check)]);
 
     expect(passed(statedReading(statedDue), statedSource)).toStrictEqual([
       ["critic", "values-appear-in-cited-text", true],
       ["critic", "cited-span-exists", true],
     ]);
     // The date it reports is not in the text it cites.
-    expect(A.map(pipe(statedReading(otherDue), runCriticChecks(statedSource)), (check) => check.passed)).toStrictEqual([
-      false,
-      true,
-    ]);
+    expect(
+      A.map(pipe(statedReading(otherDue), runCriticChecks(statedSource)), (check) => isPassed(check))
+    ).toStrictEqual([false, true]);
     // The text it cites is not in the source.
-    expect(A.map(runCriticChecks(statedReading(statedDue), source), (check) => check.passed)).toStrictEqual([
+    expect(A.map(runCriticChecks(statedReading(statedDue), source), (check) => isPassed(check))).toStrictEqual([
       true,
       false,
     ]);
-    expect(A.map(runCriticChecks(readingOf(), source), (check) => check.passed)).toStrictEqual([true, true]);
+    expect(A.map(runCriticChecks(readingOf(), source), (check) => isPassed(check))).toStrictEqual([true, true]);
   });
 
   it("accepts a stated-date-only item both sides read alike, and not one they read differently", () => {
@@ -649,12 +679,11 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const partial = merged(["mail-date", "stated-due-date"]);
 
     assertSome(partial.citedText, `${PERIOD}\n${STATED}\n${MAILED}`);
-    expect(A.map(runCriticChecks(partial, withStated), (check) => check.passed)).toStrictEqual([true, true]);
+    expect(A.map(runCriticChecks(partial, withStated), (check) => isPassed(check))).toStrictEqual([true, true]);
     // The period was kept from the earlier reading, so the re-read citation alone would not hold it.
     expect(
-      A.map(
-        runCriticChecks(readingOf({ citedText: reread.citedText, statedDueDate: stated }), withStated),
-        (check) => check.passed
+      A.map(runCriticChecks(readingOf({ citedText: reread.citedText, statedDueDate: stated }), withStated), (check) =>
+        isPassed(check)
       )
     ).toStrictEqual([false, true]);
     assertSome(merged(["mail-date", "response-period", "stated-due-date"]).citedText, `${MAILED}\n${STATED}`);
@@ -699,7 +728,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const wrongValue = assess([quoted("response-period", "A shorter period of 45 days applies")]);
     const rows = (round: ReviewRound) =>
       A.flatMap(round.checks, (check) =>
-        O.isSome(check.field) ? [[O.getOrElse(check.field, () => "none"), check.check, check.passed]] : []
+        O.isSome(check.field) ? [[O.getOrElse(check.field, () => "none"), check.check, isPassed(check)]] : []
       );
 
     assertTrue(reviewGatePassed(good.checks));
@@ -720,4 +749,43 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       ["response-period", ["The value of this field does not appear in the text you quoted for it."]],
     ]);
   });
+
+  it.effect("refuses to write a check back in the docket-check/v1 form", () =>
+    Effect.gen(function* () {
+      const [, fromV1] = StoredDeterministicCheck.members;
+      const historical = yield* S.decodeEffect(fromV1)({ check: "cited-span-exists", passed: true });
+      strictEqual(historical.provenance, "docket-check/v1");
+      const refusal = yield* Effect.flip(S.encodeEffect(fromV1)(historical));
+      expect(Str.includes("docket-check/v1 is read only")(refusal.message)).toBe(true);
+    })
+  );
+});
+
+const docketChecksV1Json = S.fromJsonString(S.Array(StoredDeterministicCheck), { space: 2 });
+
+it.layer(Layer.merge(NodeFileSystem.layer, Digest.layerWebCrypto), {
+  timeout: "10 seconds",
+  excludeTestServices: true,
+})("P4 frozen formats", (it) => {
+  it.effect("P4 format freeze: docket-checks-v1.json keeps its raw digest and reads only as history", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const fixtureRoot = yield* fs.realPath(".");
+      const fixturePath = yield* fs.realPath("test/fixtures/docket-checks-v1.json");
+      expect(fixturePath).toBe(`${fixtureRoot}/test/fixtures/docket-checks-v1.json`);
+      const text = yield* fs.readFileString(fixturePath);
+      const digest = yield* Digest.Digest;
+      const rawDigest = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(text));
+      expect(rawDigest).toBe("55f1f403e941d40e483327be62b5eb33180e32d369ab12ba18e5f4373a3bd01e");
+      const rows = yield* S.decodeEffect(docketChecksV1Json)(text);
+      expect(A.map(rows, (row) => [row.check, row.provenance, row.result._tag, row.side])).toStrictEqual([
+        ["cited-span-exists", "docket-check/v1", "Passed", "extractor"],
+        ["cited-span-exists", "docket-check/v1", "Failed", "extractor"],
+      ]);
+      assertTrue(!reviewGatePassed(A.take(rows, 1)));
+      const reencoded = yield* S.encodeEffect(docketChecksV1Json)(rows);
+      expect(Str.includes('"passed"')(reencoded)).toBe(false);
+      expect(Str.includes('"provenance": "docket-check/v1"')(reencoded)).toBe(true);
+    })
+  );
 });

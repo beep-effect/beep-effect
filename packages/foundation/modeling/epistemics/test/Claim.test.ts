@@ -1,205 +1,129 @@
-import { makeClaimEnvelope, validAt, versionsAt } from "@beep/epistemics/Claim";
+import { makeClaimReview, ReviewTag, ValidTime, validAt } from "@beep/epistemics/Claim";
 import { $EpistemicsId } from "@beep/identity/packages";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
-import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-
-const Knows = S.TaggedStruct("Knows", { left: S.String, right: S.String });
-
-const logicalKeyOfKnows = (p: typeof Knows.Type) =>
-  `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`;
+import * as Struct from "effect/Struct";
 
 const bind = (path: string) =>
-  makeClaimEnvelope({
+  makeClaimReview({
     $I: $EpistemicsId.create(path),
-    proposition: Knows,
-    logicalKey: logicalKeyOfKnows,
     ids: {
-      claimVersion: S.String.pipe(S.brand("TestClaimVersionId")),
       assertion: S.String.pipe(S.brand("TestAssertionId")),
       activity: S.String.pipe(S.brand("TestActivityId")),
       principal: S.String.pipe(S.brand("TestPrincipalId")),
     },
   });
 
-const { ClaimVersion } = bind("test/ClaimA");
+const review = bind("test/ClaimReviewA");
 const absent = { _tag: "Absent", reason: "not-assessed" } as const;
-
-const encoded = (
-  id: string,
-  validTime: unknown,
-  recordedAt: number,
-  expiredAt: number | null,
-  review = "Proposed"
-) => ({
-  id,
-  logicalKey: "Knows|1:a|1:b",
-  proposition: { _tag: "Knows", left: "a", right: "b" },
-  supportedBy: ["asrt-1"],
-  challengedBy: [],
-  validTime,
-  knowledge: { recordedAt, expiredAt },
-  supersedes: null,
-  review: { _tag: review },
-  signals: {
-    sourceTrust: absent,
-    sourceAssertedConfidence: absent,
-    extractorConfidence: absent,
-    validator: absent,
-    reviewer: absent,
-  },
+const basis = Str.repeat(64)("b");
+const disposition = (value: string) => ({
+  disposition: value,
+  reviewer: "reviewer-1",
+  basis,
+  reviewedAt: 2,
+  reason: "Synthetic review",
 });
 
-const decode = S.decodeUnknownEffect(ClaimVersion);
-const encode = S.encodeEffect(ClaimVersion);
-const at = DateTime.makeUnsafe;
-
-describe("Claim envelope", () => {
-  it.effect("round-trips an encoded claim version unchanged", () =>
-    Effect.gen(function* () {
-      const row = encoded("cv-1", { _tag: "Interval", validFrom: 100, validTo: null }, 50, null);
-      const decoded3 = yield* decode(row);
-      const encoded1 = yield* encode(decoded3);
-      expect(encoded1).toEqual(row);
-    })
-  );
-
-  it.effect("rejects a logical key that disagrees with the proposition", () =>
-    Effect.gen(function* () {
-      const row = encoded("cv-wrong-key", { _tag: "Unknown" }, 50, null);
-      const mismatched = yield* Effect.exit(decode({ ...row, logicalKey: "Knows|other|key" }));
-      mismatched.pipe(Exit.isFailure, assertTrue);
-      const valid = yield* decode(row);
-      const mismatchedEncoding = yield* Effect.exit(encode({ ...valid, logicalKey: "Knows|other|key" }));
-      mismatchedEncoding.pipe(Exit.isFailure, assertTrue);
-    })
-  );
-
-  it.effect("keeps propositions containing separators distinct", () =>
-    Effect.gen(function* () {
-      const row = encoded("cv-separators", { _tag: "Unknown" }, 50, null);
-      const first = {
-        ...row,
-        logicalKey: "Knows|3:a|b|1:c",
-        proposition: { _tag: "Knows", left: "a|b", right: "c" },
-      };
-      const second = {
-        ...row,
-        logicalKey: "Knows|1:a|3:b|c",
-        proposition: { _tag: "Knows", left: "a", right: "b|c" },
-      };
-      const a = yield* decode(first);
-      const b = yield* decode(second);
-      expect(a.logicalKey).not.toEqual(b.logicalKey);
-      const borrowedKey = yield* Effect.exit(decode({ ...first, logicalKey: second.logicalKey }));
-      borrowedKey.pipe(Exit.isFailure, assertTrue);
-    })
-  );
-
-  it.effect("derives keys from decoded propositions in both codec directions", () =>
-    Effect.gen(function* () {
-      const { ClaimVersion: NumericClaim } = makeClaimEnvelope({
-        $I: $EpistemicsId.create("test/DecodedPropositionKey"),
-        proposition: S.Struct({ value: S.FiniteFromString }),
-        logicalKey: (p) => `${p.value + 1}`,
-        ids: { claimVersion: S.String, assertion: S.String, activity: S.String, principal: S.String },
-      });
-      const decodeNumeric = S.decodeUnknownEffect(NumericClaim);
-      const encodeNumeric = S.encodeEffect(NumericClaim);
-      const row = {
-        ...encoded("cv-transformed", { _tag: "Unknown" }, 50, null),
-        logicalKey: "2",
-        proposition: { value: "1" },
-      };
-      const decoded = yield* decodeNumeric(row);
-      expect(decoded.proposition.value).toEqual(1);
-      const encodedNumeric = yield* encodeNumeric(decoded);
-      expect(encodedNumeric).toEqual(row);
-      // Applying the key function to the encoded string would concatenate to "11".
-      const wrongDecode = yield* Effect.exit(decodeNumeric({ ...row, logicalKey: "11" }));
-      const wrongEncode = yield* Effect.exit(encodeNumeric({ ...decoded, logicalKey: "11" }));
-      wrongDecode.pipe(Exit.isFailure, assertTrue);
-      wrongEncode.pipe(Exit.isFailure, assertTrue);
-    })
-  );
-
-  it.effect.prop(
-    "round-trips schema-derived arbitrary propositions with their keys",
-    [Arbitrary.schema(Knows)],
-    ([proposition]) =>
-      Effect.gen(function* () {
-        const row = {
-          ...encoded("cv-generated", { _tag: "Unknown" }, 50, null),
-          proposition,
-          logicalKey: logicalKeyOfKnows(proposition),
-        };
-        const decoded4 = yield* decode(row);
-        const encoded2 = yield* encode(decoded4);
-        expect(encoded2).toEqual(row);
-      })
-  );
+describe("Claim review vocabulary", () => {
+  it("derives every review tag from the review-state union", () => {
+    expect([...ReviewTag.literals].sort()).toEqual([...Struct.keys(review.ReviewState.cases)].sort());
+  });
 
   it("gives each binding its own schema identifiers", () => {
-    const other = bind("test/ClaimB").ClaimVersion;
-    expect(SchemaAST.resolveIdentifier(ClaimVersion.ast)).not.toEqual(SchemaAST.resolveIdentifier(other.ast));
+    const other = bind("test/ClaimReviewB");
+    expect(SchemaAST.resolveIdentifier(review.ReviewState.ast)).not.toBe(
+      SchemaAST.resolveIdentifier(other.ReviewState.ast)
+    );
   });
 
   it.effect("rejects a review state whose disposition contradicts its tag", () =>
     Effect.gen(function* () {
-      const disposition = (value: string) => ({
-        disposition: value,
-        reviewer: "reviewer-1",
-        basis: Str.repeat(64)("a"),
-        reviewedAt: 100,
-        reason: "checked the basis",
-      });
-      const row = (review: unknown) => ({
-        ...encoded("cv-review", { _tag: "Unknown" }, 50, null),
-        review,
-      });
-      const accepted = yield* Effect.exit(decode(row({ _tag: "Accepted", disposition: disposition("accepted") })));
-      const mismatched = yield* Effect.exit(decode(row({ _tag: "Accepted", disposition: disposition("rejected") })));
+      const decode = S.decodeUnknownEffect(review.ReviewState);
+      const accepted = yield* Effect.exit(decode({ _tag: "Accepted", disposition: disposition("accepted") }));
+      const mismatched = yield* Effect.exit(decode({ _tag: "Accepted", disposition: disposition("rejected") }));
       accepted.pipe(Exit.isSuccess, assertTrue);
       mismatched.pipe(Exit.isFailure, assertTrue);
     })
   );
 
+  it.effect("keeps five independent signals and accepts reported extractor confidence", () =>
+    Effect.gen(function* () {
+      const codec = review.EvidenceSignals;
+      const reported = {
+        sourceTrust: absent,
+        sourceAssertedConfidence: absent,
+        extractorConfidence: {
+          _tag: "Present",
+          value: { _tag: "ReportedConfidence", value: 0, method: "synthetic-report" },
+        },
+        validator: absent,
+        reviewer: { _tag: "Present", value: disposition("abstained") },
+      };
+      const decoded = yield* S.decodeUnknownEffect(codec)(reported);
+      const encoded = yield* S.encodeEffect(codec)(decoded);
+      expect(encoded).toEqual(reported);
+      const missing = yield* Effect.exit(S.decodeUnknownEffect(codec)({ ...reported, validator: undefined }));
+      missing.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("records source dependence without assuming independence", () =>
+    Effect.gen(function* () {
+      const row = {
+        left: "a",
+        right: "b",
+        dependence: "unknown" as const,
+        basis: "same newsroom",
+        producedBy: "act-1",
+      };
+      const decoded = yield* S.decodeEffect(review.DependenceAssessment)(row);
+      expect(decoded.dependence).toBe("unknown");
+    })
+  );
+});
+
+describe("ValidTime", () => {
   it.effect("rejects an inverted Interval valid time", () =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(
-        decode(encoded("cv-inverted", { _tag: "Interval", validFrom: 200, validTo: 100 }, 50, null))
-      );
+      const exit = yield* Effect.exit(S.decodeEffect(ValidTime)({ _tag: "Interval", validFrom: 10, validTo: 5 }));
       exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
   it("never selects unknown valid time", () => {
-    expect(validAt({ _tag: "Unknown" }, at(0))).toBe(false);
+    assertFalse(validAt(ValidTime.cases.Unknown.make({}), DateTime.makeUnsafe(0)));
   });
 
-  it.effect("reads bitemporally: knowledge interval, valid interval and review state", () =>
+  it.effect("selects instants inside a half-open interval", () =>
     Effect.gen(function* () {
-      const ledger = yield* Effect.forEach(
-        [
-          encoded("cv-old", { _tag: "Interval", validFrom: 0, validTo: null }, 10, 200),
-          encoded("cv-new", { _tag: "Interval", validFrom: 0, validTo: null }, 200, null),
-          encoded("cv-unknown", { _tag: "Unknown" }, 10, null),
-        ],
-        (row) => decode(row),
-        { concurrency: 1 }
-      );
-      const ids = (asOf: number) =>
-        A.map(versionsAt(ledger, { asOf: at(asOf), validAt: at(50), states: ["Proposed"] }), (v) => v.id);
-      expect(ids(100)).toEqual(["cv-old"]);
-      expect(ids(200)).toEqual(["cv-new"]);
-      expect(versionsAt(ledger, { asOf: at(200), validAt: at(50), states: ["Accepted"] })).toEqual([]);
+      const interval = yield* S.decodeEffect(ValidTime)({ _tag: "Interval", validFrom: 10, validTo: 20 });
+      assertTrue(validAt(interval, DateTime.makeUnsafe(10)));
+      assertFalse(validAt(DateTime.makeUnsafe(20))(interval));
     })
+  );
+});
+
+describe("Claim review vocabulary properties", () => {
+  const json = S.fromJsonString(review.EvidenceSignals);
+  const equivalent = S.toEquivalence(review.EvidenceSignals);
+  it.effect.prop(
+    "every generated evidence-signal set survives its JSON codec unchanged",
+    [Arbitrary.schema(review.EvidenceSignals)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(json)(value);
+        const decoded = yield* S.decodeEffect(json)(encoded);
+        assertTrue(equivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(50) }
   );
 });

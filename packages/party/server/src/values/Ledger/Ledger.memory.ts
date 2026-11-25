@@ -1,96 +1,221 @@
 /**
- * Memory-backed append-only party claim ledger.
+ * Atomic in-memory storage for source evidence and independently checked claim records.
  * @packageDocumentation
  * @since 0.0.0
  */
-
-import { ClaimVersion } from "@beep/party-domain/Claim";
+import { makeClaimArrows } from "@beep/epistemics/ClaimCore";
+import { $PartyServerId } from "@beep/identity/packages";
+import { mintActivityId } from "@beep/jsonc/ActivityStart";
+import {
+  ClaimAdmission,
+  ClaimChallenge,
+  ClaimCore,
+  ClaimEvidenceLinks,
+  ClaimGeneration,
+  ClaimRecord,
+  ClaimRetraction,
+  ClaimReviewRecord,
+  ClaimSignalRecord,
+  ClaimStance,
+  claimLog,
+  SourceAssertion,
+} from "@beep/party-domain/Claim";
+import { Observation } from "@beep/party-domain/Communication";
 import { LedgerConflict, LedgerSnapshot, PartyLedger } from "@beep/party-use-cases/Ledger";
 import { PartyId } from "@beep/shared-domain/identity/Party";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Eq from "effect/Equal";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 import * as Tuple from "effect/Tuple";
-import type { SourceAssertion } from "@beep/party-domain/Claim";
-import type { Observation } from "@beep/party-domain/Communication";
+import type { ClaimLedger } from "@beep/party-domain/Claim";
 import type { PartyKey } from "@beep/party-domain/PartyKey";
+import type * as Equivalence from "effect/Equivalence";
 
-const conflict = (recordId: string, reason: string) => Effect.fail(LedgerConflict.make({ recordId, reason }));
-const appendUnique = Effect.fn("PartyLedgerMemory.appendUnique")(function* <Row extends { readonly id: string }>(
-  current: ReadonlyArray<Row>,
-  incoming: ReadonlyArray<Row>,
+const arrows = makeClaimArrows({ $I: $PartyServerId.create("values/Ledger/Ledger.memory"), ClaimCore });
+const sameClaim = S.toEquivalence(ClaimRecord);
+const sameGeneration = S.toEquivalence(ClaimGeneration);
+const sameAssertion = S.toEquivalence(SourceAssertion);
+const sameObservation = S.toEquivalence(Observation);
+const sameEvidence = S.toEquivalence(ClaimEvidenceLinks);
+const sameReview = S.toEquivalence(ClaimReviewRecord);
+const sameSignal = S.toEquivalence(ClaimSignalRecord);
+const sameChallenge = S.toEquivalence(ClaimChallenge);
+const sameRetraction = S.toEquivalence(ClaimRetraction);
+const sameAdmission = S.toEquivalence(ClaimAdmission);
+const sameStance = S.toEquivalence(ClaimStance);
+const conflict = (recordId: string, reason: string) => LedgerConflict.make({ recordId, reason });
+const byId = (row: { readonly id: string }) => row.id;
+const byClaim = (row: { readonly claim: string }) => row.claim;
+const timedKey = (row: { readonly claim: string; readonly at: DateTime.Utc }) =>
+  `${row.claim}:${DateTime.toEpochMillis(row.at)}`;
+
+const appendRows = Effect.fn("PartyLedgerMemory.appendRows")(function* <R>(
+  current: ReadonlyArray<R>,
+  incoming: ReadonlyArray<R>,
+  key: (row: R) => string,
+  same: Equivalence.Equivalence<R>,
   reason: string
 ) {
   let rows = current;
   for (const row of incoming) {
-    if (A.some(rows, (existing) => existing.id === row.id)) return yield* conflict(row.id, reason);
-    rows = A.append(rows, row);
+    const existing = A.findFirst(rows, (value) => key(value) === key(row));
+    if (O.isSome(existing)) {
+      if (!same(existing.value, row)) return yield* conflict(key(row), reason);
+    } else rows = A.append(rows, row);
   }
   return rows;
 });
-const validateSuccessor = Effect.fn("PartyLedgerMemory.validateSuccessor")(function* (
-  versions: ReadonlyArray<ClaimVersion>,
-  version: ClaimVersion
+
+const checkedGeneration = Effect.fn("PartyLedgerMemory.checkedGeneration")(function* (
+  record: ClaimRecord,
+  generations: ReadonlyArray<ClaimGeneration>
 ) {
-  if (O.isNone(version.supersedes)) return;
-  const predecessorId = version.supersedes.value;
-  const previous = A.findFirst(versions, (row) => row.id === predecessorId);
-  if (O.isNone(previous)) return yield* conflict(version.id, "unknown-predecessor");
-  if (A.some(versions, (row) => O.contains(row.supersedes, predecessorId)))
-    return yield* conflict(version.id, "predecessor-already-superseded");
-  if (!DateTime.isGreaterThan(version.knowledge.recordedAt, previous.value.knowledge.recordedAt))
-    return yield* conflict(version.id, "non-increasing-knowledge-time");
+  const matching = A.dedupeWith(
+    A.filter(generations, (row) => Eq.equals(row.claim, record.claim)),
+    sameGeneration
+  );
+  if (!A.isReadonlyArrayNonEmpty(matching) || A.length(matching) !== 1)
+    return yield* conflict(record.claim, "generation-required");
+  const generation = A.headNonEmpty(matching);
+  if (!DateTime.isLessThanOrEqualTo(generation.activity.started, generation.ended))
+    return yield* conflict(record.claim, "generation-order");
+  const activity = yield* mintActivityId(generation.activity).pipe(Effect.orDie);
+  if (!Eq.equals(activity, record.core.generatedBy)) return yield* conflict(record.claim, "generation-mismatch");
+  return { activity, at: generation.ended };
 });
-const appendVersions = Effect.fn("PartyLedgerMemory.appendVersions")(function* (
-  current: ReadonlyArray<ClaimVersion>,
-  incoming: ReadonlyArray<ClaimVersion>
+
+const appendNewClaim = Effect.fn("PartyLedgerMemory.appendNewClaim")(function* (
+  log: ReturnType<typeof claimLog>,
+  record: ClaimRecord,
+  minted: { readonly activity: ClaimRecord["core"]["generatedBy"]; readonly at: DateTime.Utc }
 ) {
-  let versions = current;
-  for (const version of incoming) {
-    if (A.some(versions, (row) => row.id === version.id)) return yield* conflict(version.id, "duplicate-version");
-    if (O.isSome(version.knowledge.expiredAt)) return yield* conflict(version.id, "new-version-already-expired");
-    yield* validateSuccessor(versions, version);
-    versions = A.append(versions, version);
+  const appended = yield* arrows.appendClaim(log, record, minted).pipe(Effect.orDie);
+  if (appended._tag === "Refused") return yield* conflict(record.claim, A.headNonEmpty(appended.violations)._tag);
+  return appended.log;
+});
+
+const appendClaims = Effect.fn("PartyLedgerMemory.appendClaims")(function* (
+  current: LedgerSnapshot,
+  batch: LedgerSnapshot
+) {
+  let log = claimLog(current);
+  let claims = current.claims;
+  for (const record of batch.claims) {
+    yield* arrows.encodeClaimRecord(record).pipe(Effect.mapError(() => conflict(record.claim, "invalid-core")));
+    const minted = yield* checkedGeneration(record, batch.generations);
+    const existing = A.findFirst(claims, (row) => Eq.equals(row.claim, record.claim));
+    if (O.isNone(existing)) {
+      log = yield* appendNewClaim(log, record, minted);
+      claims = A.append(claims, record);
+    } else if (!sameClaim(existing.value, record)) return yield* conflict(record.claim, "conflicting-core");
   }
-  return versions;
+  return claims;
 });
+
 const applyBatch = Effect.fn("PartyLedgerMemory.applyBatch")(function* (
   current: LedgerSnapshot,
   batch: LedgerSnapshot
 ) {
-  const observations = yield* appendUnique(current.observations, batch.observations, "duplicate-observation");
-  const assertions = yield* appendUnique(current.assertions, batch.assertions, "duplicate-assertion");
-  const versions = yield* appendVersions(current.versions, batch.versions);
-  return LedgerSnapshot.make({ observations, assertions, versions });
+  const claims = yield* appendClaims(current, batch);
+  for (const row of [
+    ...batch.generations,
+    ...batch.evidence,
+    ...batch.reviews,
+    ...batch.signals,
+    ...batch.retractions,
+    ...batch.admissions,
+    ...batch.stances,
+    ...A.flatMap(batch.challenges, (row) => [{ claim: row.from }, { claim: row.to }]),
+  ]) {
+    if (!A.some(claims, (record) => Eq.equals(record.claim, row.claim)))
+      return yield* conflict(row.claim, "unknown-claim");
+  }
+  const observations = yield* appendRows(
+    current.observations,
+    batch.observations,
+    byId,
+    sameObservation,
+    "conflicting-observation"
+  );
+  const assertions = yield* appendRows(
+    current.assertions,
+    batch.assertions,
+    byId,
+    sameAssertion,
+    "conflicting-assertion"
+  );
+  const generations = yield* appendRows(
+    current.generations,
+    batch.generations,
+    byClaim,
+    sameGeneration,
+    "conflicting-generation"
+  );
+  const evidence = yield* appendRows(current.evidence, batch.evidence, timedKey, sameEvidence, "conflicting-evidence");
+  const reviews = yield* appendRows(current.reviews, batch.reviews, timedKey, sameReview, "conflicting-review");
+  const signals = yield* appendRows(current.signals, batch.signals, timedKey, sameSignal, "conflicting-signals");
+  const retractions = yield* appendRows(
+    current.retractions,
+    batch.retractions,
+    timedKey,
+    sameRetraction,
+    "conflicting-retraction"
+  );
+  const admissions = yield* appendRows(
+    current.admissions,
+    batch.admissions,
+    timedKey,
+    sameAdmission,
+    "conflicting-admission"
+  );
+  const stances = yield* appendRows(current.stances, batch.stances, timedKey, sameStance, "conflicting-stance");
+  const challenges = A.reduce(batch.challenges, current.challenges, (accepted, row) =>
+    A.some(accepted, (existing) => sameChallenge(existing, row)) ? accepted : A.append(accepted, row)
+  );
+  return LedgerSnapshot.make({
+    observations,
+    assertions,
+    claims,
+    generations,
+    evidence,
+    reviews,
+    signals,
+    challenges,
+    retractions,
+    admissions,
+    stances,
+  });
 });
 
 /**
- * Isolated in-memory ledger with atomic writes and derived expiration bounds.
+ * Capture hashing infrastructure once and reject a whole batch before replacing ledger state.
  *
- * **Details**
- * Each evidence batch validates before one atomic state replacement. A successor
- * must name a current version at a later knowledge
- * time. Expiration is computed on reads; no previously appended row is modified.
+ * **Example** (Supply digest infrastructure at composition)
  *
- * **Example** (Allocate an identity)
  * ```ts
  * import { PartyLedgerMemory } from "@beep/party-server/Ledger"
- * import { PartyLedger } from "@beep/party-use-cases/Ledger"
- * import * as Effect from "effect/Effect"
- * const allocated = Effect.gen(function* () { return yield* (yield* PartyLedger).allocatePartyId }).pipe(Effect.provide(PartyLedgerMemory))
+ * import * as Digest from "effect/crypto/Digest"
+ * import * as Layer from "effect/Layer"
+ * const ledger = PartyLedgerMemory.pipe(Layer.provide(Digest.layerWebCrypto))
+ * console.log(ledger)
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
 export const PartyLedgerMemory = Layer.effect(
   PartyLedger,
   Effect.gen(function* () {
-    const rows = yield* SynchronizedRef.make(LedgerSnapshot.make({ observations: [], assertions: [], versions: [] }));
+    const digest = yield* Digest.Digest;
+    const rows = yield* SynchronizedRef.make(LedgerSnapshot.make({ observations: [], assertions: [] }));
     const nextId = yield* Ref.make(1);
     const anchors = yield* SynchronizedRef.make(HashMap.empty<PartyKey, PartyId>());
     const allocatePartyId = Ref.getAndUpdate(nextId, (id) => id + 1).pipe(Effect.map(PartyId.make));
@@ -105,40 +230,25 @@ export const PartyLedgerMemory = Layer.effect(
         })
       )
     );
-    const appendEvidence = Effect.fn("PartyLedgerMemory.appendEvidence")(function* (batch: LedgerSnapshot) {
-      yield* SynchronizedRef.updateEffect(rows, (current) => applyBatch(current, batch));
-    });
+    const appendEvidence = Effect.fn("PartyLedgerMemory.appendEvidence")((batch: LedgerSnapshot) =>
+      SynchronizedRef.updateEffect(rows, (current) => applyBatch(current, batch)).pipe(
+        Effect.provideService(Digest.Digest, digest)
+      )
+    );
     return PartyLedger.of({
       allocatePartyId,
       allocateAnchorParty,
       appendEvidence,
-      append: Effect.fn("PartyLedgerMemory.append")((version: ClaimVersion) =>
-        appendEvidence(LedgerSnapshot.make({ observations: [], assertions: [], versions: [version] }))
+      append: Effect.fn("PartyLedgerMemory.append")((batch: ClaimLedger) =>
+        appendEvidence(LedgerSnapshot.make({ ...batch, observations: [], assertions: [] }))
       ),
       recordObservation: Effect.fn("PartyLedgerMemory.recordObservation")((observation: Observation) =>
-        appendEvidence(LedgerSnapshot.make({ observations: [observation], assertions: [], versions: [] }))
+        appendEvidence(LedgerSnapshot.make({ observations: [observation], assertions: [] }))
       ),
       recordAssertion: Effect.fn("PartyLedgerMemory.recordAssertion")((assertion: SourceAssertion) =>
-        appendEvidence(LedgerSnapshot.make({ observations: [], assertions: [assertion], versions: [] }))
+        appendEvidence(LedgerSnapshot.make({ observations: [], assertions: [assertion] }))
       ),
-      snapshot: SynchronizedRef.get(rows).pipe(
-        Effect.map((current) =>
-          LedgerSnapshot.make({
-            ...current,
-            versions: A.map(current.versions, (version) => {
-              const successor = A.findFirst(current.versions, (row) => O.contains(row.supersedes, version.id));
-              return O.match(successor, {
-                onNone: () => version,
-                onSome: (next) =>
-                  ClaimVersion.make({
-                    ...version,
-                    knowledge: { ...version.knowledge, expiredAt: O.some(next.knowledge.recordedAt) },
-                  }),
-              });
-            }),
-          })
-        )
-      ),
+      snapshot: SynchronizedRef.get(rows),
     });
   })
 );

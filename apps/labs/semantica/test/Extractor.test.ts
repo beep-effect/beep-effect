@@ -25,8 +25,12 @@ import { DocumentSource } from "@/services/DocumentSource";
 import { Parser } from "@/services/Parser";
 import indexFixture from "../fixtures/f1/index.json";
 import manifestFixture from "../fixtures/w1.manifest.json";
+
 // @vitest-environment node
 
+import { Confidence, ReportedConfidence } from "@beep/epistemics/Confidence";
+import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
+import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import {
   GroundedExtraction,
   LangExtractDiagnostics,
@@ -39,9 +43,11 @@ import { EntityNode } from "@beep/nlp/Graph/Schema";
 import { notSupported } from "@beep/nlp-processing/Backend/NLPBackend";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256Hex } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { SourceTextExtractor, TextAnchor } from "@beep/text";
 import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Model from "effect/ai/Model";
@@ -52,6 +58,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Struct from "effect/Struct";
 import { F1FixtureId } from "@/fixtures/F1";
 import { CanonicalizerLive } from "@/layers/CanonicalizerLive";
 import { ChunkerLive } from "@/layers/ChunkerLive";
@@ -216,7 +223,10 @@ const lastStartOf = (surface: string, text: string) => O.getOrElse(constant(-1))
 const relationAttributes = O.some({ object: "Engine", predicate: "selected", subject: "Ada" });
 
 const clusterCase = hostedCase("coreference cluster", "Ada wrote notes.", () => [
-  grounded("person", "Ada", 0, O.some({ cluster: "person-ada" })),
+  GroundedExtraction.cases.match_exact.make({
+    ...grounded("person", "Ada", 0, O.some({ cluster: "person-ada" })),
+    confidence: UnitInterval.makeOption(1),
+  }),
 ]);
 
 const synthesizedEndpointsCase = hostedCase(
@@ -266,6 +276,40 @@ class FrozenHostedBatch extends S.Opaque<FrozenHostedBatch, { readonly brand: un
 ) {}
 
 const FrozenHostedBatchesJson = S.fromJsonString(S.Array(FrozenHostedBatch), { space: 2 });
+const OpenFields = S.Record(S.String, S.Unknown);
+const V1HostedClaim = S.StructWithRest(S.Struct({ confidence: S.Finite }), [OpenFields]);
+const FreshHostedClaim = S.StructWithRest(S.Struct({ confidence: ExtractorConfidence }), [OpenFields]);
+const V1HostedBatchesJson = S.Struct({
+  name: S.String,
+  batch: S.StructWithRest(S.Struct({ claims: S.Array(V1HostedClaim) }), [OpenFields]),
+}).pipe(S.Array, S.fromJsonString);
+const FreshHostedBatchesJson = S.Struct({
+  name: S.String,
+  batch: S.StructWithRest(S.Struct({ claims: S.Array(FreshHostedClaim) }), [OpenFields]),
+}).pipe(S.Array, S.fromJsonString);
+const withoutConfidence = <Claim extends { readonly confidence: unknown }>(
+  batches: ReadonlyArray<{
+    readonly name: string;
+    readonly batch: { readonly claims: ReadonlyArray<Claim> } & { readonly [key: string]: unknown };
+  }>
+) =>
+  A.map(batches, ({ name, batch }) => ({
+    name,
+    batch: { ...batch, claims: A.map(batch.claims, Struct.omit(["confidence"])) },
+  }));
+const confidencePairs = (v1: typeof V1HostedBatchesJson.Type, fresh: typeof FreshHostedBatchesJson.Type) =>
+  A.flatMap(A.zip(v1, fresh), ([old, current]) =>
+    A.map(
+      A.zip<typeof V1HostedClaim.Type, typeof FreshHostedClaim.Type>(old.batch.claims, current.batch.claims),
+      ([oldClaim, freshClaim]) => ({
+        name: current.name,
+        v1: oldClaim.confidence,
+        fresh: freshClaim.confidence,
+      })
+    )
+  );
+const hostedPin = ActivityPin.cases.Model.make({ model: model.name, version: model.revision });
+const sameSignal = S.toEquivalence(ExtractorConfidence);
 
 const hostedBatch = Effect.fn("ExtractorTest.hostedBatch")(function* (hosted: (typeof hostedCases)[number]) {
   const outcome = yield* provideScopedLayer(Layer.merge(baseLayer, hostedLayer(hosted.extractions)))(
@@ -281,14 +325,46 @@ const hostedBatch = Effect.fn("ExtractorTest.hostedBatch")(function* (hosted: (t
   return FrozenHostedBatch.make({ batch: outcome.batch, name: hosted.name });
 });
 
-describe("C0 hosted extractor frozen batch", () => {
+it.layer(BunFileSystem.layer, { timeout: 60_000 })("C0 hosted extractor frozen batch", (it) => {
   it.effect(
     "keeps the bytes of the hosted evidence batches over this file's model outputs",
-    (context) =>
+    () =>
       Effect.gen(function* () {
         const batches = yield* Effect.forEach(hostedCases, hostedBatch, { concurrency: 1 });
         const json = yield* S.encodeEffect(FrozenHostedBatchesJson)(batches);
-        yield* Effect.promise(() => context.expect(`${json}\n`).toMatchFileSnapshot("./fixtures/hosted-batch-v1.json"));
+        const fs = yield* FileSystem.FileSystem;
+        const v1Path = yield* fs.realPath("test/fixtures/hosted-batch-v1.json");
+        const v1Text = yield* fs.readFileString(v1Path);
+        const v1 = yield* S.decodeEffect(V1HostedBatchesJson)(v1Text);
+        const fresh = yield* S.decodeEffect(FreshHostedBatchesJson)(`${json}\n`);
+        expect(withoutConfidence(fresh)).toEqual(withoutConfidence(v1));
+
+        const pairs = confidencePairs(v1, fresh);
+        const reportedPairs = A.filter(pairs, (pair) => pair.fresh._tag === "Present");
+        const absentPairs = A.filter(pairs, (pair) => pair.fresh._tag === "Absent");
+        expect(A.map(reportedPairs, (pair) => pair.name)).toEqual(["coreference cluster"]);
+        expect(
+          A.every(reportedPairs, (pair) =>
+            sameSignal(
+              pair.fresh,
+              ExtractorConfidence.cases.Present.make({
+                value: ReportedConfidence.make({
+                  value: Confidence.make(pair.v1),
+                  method: "hosted-langextract",
+                  producer: O.some(hostedPin),
+                }),
+              })
+            )
+          )
+        ).toBe(true);
+        expect(A.length(absentPairs)).toBe(8);
+        expect(
+          A.every(
+            absentPairs,
+            (pair) =>
+              pair.v1 === 1 && sameSignal(pair.fresh, ExtractorConfidence.cases.Absent.make({ reason: "not-assessed" }))
+          )
+        ).toBe(true);
       }),
     { timeout: 60_000 }
   );
@@ -776,7 +852,14 @@ describe("pattern extractor boundary outcomes", () => {
           } else {
             expect(outcome).toMatchObject({
               outcome: "Extracted",
-              batch: { claims: [{ confidence: 1, body: { entityType: "UNKNOWN", quote: "Alice" } }] },
+              batch: {
+                claims: [
+                  {
+                    confidence: { _tag: "Absent", reason: "not-assessed" },
+                    body: { entityType: "UNKNOWN", quote: "Alice" },
+                  },
+                ],
+              },
             });
           }
         })

@@ -6,6 +6,7 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -85,6 +86,18 @@ describe("C0 ledger", () => {
           expect(afterConflict.documents[0]?.outcome).toEqual(degraded("invalid-utf8"));
           expect(afterConflict.events).toEqual([ingested]);
         }).pipe(provideScopedLayer(LedgerLive(LedgerLiveOptions.make({ ledgerRoot, mode: "replay", runId }))));
+      })
+    );
+  });
+
+  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+    it.effect("fails typed when the ledger directory cannot be created", () =>
+      Effect.gen(function* () {
+        const error = yield* Layer.build(
+          LedgerLive(LedgerLiveOptions.make({ ledgerRoot: "/dev/null/semantica-ledger", mode: "replay", runId }))
+        ).pipe(Effect.scoped, Effect.flip);
+
+        expect(error).toMatchObject({ _tag: "LedgerFailed", reason: "database-failed" });
       })
     );
   });

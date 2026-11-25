@@ -7,7 +7,7 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { ReviewBatchId, ReviewItem, ReviewItemId } from "@beep/law-practice-domain";
+import { ReviewBatchId, ReviewItemId, StoredReviewItem } from "@beep/law-practice-domain";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
 import * as S from "effect/Schema";
 import { RecordAnswerInput } from "../QuestionQueue/QuestionQueue.schemas.ts";
@@ -44,7 +44,9 @@ export class OpenItemsRequest extends S.Opaque<OpenItemsRequest, { readonly bran
  * **Details**
  *
  * Verdict items appear while they lack a final verdict; questions appear
- * while the daily digest selects them.
+ * while the daily digest selects them. A stored legacy item whose quote could
+ * not become a selector always appears, as a `LegacyReviewItemImported`
+ * awaiting repair.
  *
  * **Example** (List the open-items fields)
  *
@@ -59,8 +61,8 @@ export class OpenItemsRequest extends S.Opaque<OpenItemsRequest, { readonly bran
  */
 export class OpenItems extends S.Opaque<OpenItems, { readonly brand: unique symbol }>()(
   S.Struct({
-    items: S.Array(ReviewItem).annotateKey({
-      description: "Open verdict items and the question digest, in store order.",
+    items: S.Array(StoredReviewItem).annotateKey({
+      description: "Open verdict items, the question digest and imported items awaiting repair, in store order.",
     }),
   }).pipe(
     $I.annoteSchema("OpenItems", {

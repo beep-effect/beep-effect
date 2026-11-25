@@ -5,13 +5,15 @@ import {
   ExplainClaimEvidence,
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { ReportedConfidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition, ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -29,11 +31,15 @@ const makeBasis = () =>
     claimRef: "claim:fact",
     assertion: "The source states fact.",
     subject: "Example source",
-    evidence: EvidenceSpan.make({
-      startChar: S.Natural.make(0),
-      endChar: S.Natural.make(4),
-      quote: "fact",
-      confidence: UnitInterval.make(0.82),
+    evidence: EvidencePosition.make({
+      position: TextAnchor.make({ startChar: S.Natural.make(0), endChar: S.Natural.make(4), quote: "fact" }),
+      extractorConfidence: ExtractorConfidence.cases.Present.make({
+        value: ReportedConfidence.make({
+          value: UnitInterval.make(0.82),
+          method: "synthetic-fixture",
+          producer: O.none(),
+        }),
+      }),
     }),
     source: SourceTextIdentity.make({
       scopeRef: "project:example",
@@ -137,7 +143,10 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation 
       expect(crossScope.verification).toEqual({ _tag: "Unverified", reason: "cross-scope" });
       const wrongQuote = ClaimEvidenceBasis.make({
         ...basis,
-        evidence: EvidenceSpan.make({ ...basis.evidence, quote: "fake" }),
+        evidence: EvidencePosition.make({
+          ...basis.evidence,
+          position: TextAnchor.make({ ...basis.evidence.position, quote: "fake" }),
+        }),
       });
       const mismatch = yield* explainClaimEvidence(
         ExplainClaimEvidence.make({

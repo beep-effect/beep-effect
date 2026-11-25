@@ -43,10 +43,6 @@ import type { PackageFormatOptions } from "./Package.ts";
 const $I = $PackageJsonId.create("PackageManifest");
 
 /**
- * A package.json document as it exists on disk, publishable or not: every
- * field of {@link Package} with `name` and `version` optional and
- * `packageManager` accepting the range spelling.
- *
  * **Details**
  *
  * **Lenient about absence, strict about shape.** npm requires `name` and

@@ -911,7 +911,7 @@ export class ContradictionCandidateContent extends S.Opaque<
  *   contradictionCandidateDigest,
  *   contradictionEvidenceDigest,
  * } from "@beep/epistemic-domain/values/Contradiction"
- * import { Confidence } from "@beep/epistemics/EvidenceSpan"
+ * import { Confidence } from "@beep/epistemics/Confidence"
  * import { LogicalEdgeKey } from "@beep/epistemic-domain/values/LogicalEdgeIdentity"
  * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import * as DateTime from "effect/DateTime";

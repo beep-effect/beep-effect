@@ -91,10 +91,12 @@ if (!shouldRunPgliteIntegration) {
             ...productEntityFixtureInput("EpistemicEvidence", 41),
             artifactFixtureKey: "artifact:contradiction-migration",
             span: {
-              confidence: 0.95,
-              endChar: 8,
-              quote: "amount A",
-              startChar: 0,
+              version: "evidence-position/v2",
+              position: { endChar: 8, quote: "amount A", startChar: 0 },
+              extractorConfidence: {
+                _tag: "Present",
+                value: { _tag: "ReportedConfidence", value: 0.95, method: "synthetic-fixture" },
+              },
             },
             spanFixtureKey: "span:contradiction-migration",
           });

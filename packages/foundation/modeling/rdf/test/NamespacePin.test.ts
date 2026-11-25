@@ -39,7 +39,7 @@ it.layer(Digest.layerWebCrypto)("namespace pin digests", (it) => {
 });
 
 describe("namespace pins", () => {
-  it("pins exactly the P1 namespaces, each a registry namespace with the same IRI", () => {
+  it("pins exactly the P1 namespaces and the P4 nanopublication schema, each under its registry IRI", () => {
     expect(A.map(pins, (pin) => pin.prefix)).toStrictEqual([
       "as",
       "cito",
@@ -48,6 +48,7 @@ describe("namespace pins", () => {
       "fabio",
       "gufo",
       "nif",
+      "np",
       "oa",
       "prov",
       "skos",

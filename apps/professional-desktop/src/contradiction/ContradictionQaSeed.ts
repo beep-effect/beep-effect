@@ -42,7 +42,8 @@ import {
   RecordEdgeFact,
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
-import { Confidence, EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { Confidence } from "@beep/epistemics/Confidence";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
 import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import {
   SOURCE_TEXT_PAGE_CODE_UNITS,
@@ -294,7 +295,7 @@ const evidenceSpecificationFields = {
   artifactFixtureKey: S.String,
   createdAt: S.Finite,
   publicIdSuffix: Cuid,
-  span: S.toEncoded(EvidenceSpan),
+  span: S.toEncoded(EvidencePosition),
   spanFixtureKey: S.String,
 };
 
@@ -308,10 +309,16 @@ class EvidenceSpecification extends S.Opaque<EvidenceSpecification, { readonly b
           createdAt: 1,
           publicIdSuffix: Cuid.make("a123"),
           span: {
-            confidence: 0.99,
-            endChar: Str.length("The renewal notice lists 15 July 2027."),
-            quote: "The renewal notice lists 15 July 2027.",
-            startChar: 0,
+            version: "evidence-position/v2",
+            position: {
+              endChar: Str.length("The renewal notice lists 15 July 2027."),
+              quote: "The renewal notice lists 15 July 2027.",
+              startChar: 0,
+            },
+            extractorConfidence: {
+              _tag: "Present",
+              value: { _tag: "ReportedConfidence", value: 0.99, method: "synthetic-fixture" },
+            },
           },
           spanFixtureKey: "",
         },
@@ -324,10 +331,16 @@ class EvidenceSpecification extends S.Opaque<EvidenceSpecification, { readonly b
     createdAt: 1_767_225_600_100,
     publicIdSuffix: Cuid.make("deadline"),
     span: {
-      confidence: 0.99,
-      endChar: CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE),
-      quote: CONTRADICTION_QA_ANCHOR_QUOTE,
-      startChar: CONTRADICTION_QA_ANCHOR_START,
+      version: "evidence-position/v2",
+      position: {
+        endChar: CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE),
+        quote: CONTRADICTION_QA_ANCHOR_QUOTE,
+        startChar: CONTRADICTION_QA_ANCHOR_START,
+      },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.99, method: "synthetic-fixture" },
+      },
     },
     spanFixtureKey: "qa.contradiction.deadline.executed-amendment.anchor",
   });
@@ -337,10 +350,16 @@ class EvidenceSpecification extends S.Opaque<EvidenceSpecification, { readonly b
     createdAt: 1_767_225_600_200,
     publicIdSuffix: Cuid.make("notice"),
     span: {
-      confidence: 0.91,
-      endChar: Str.length("The renewal notice lists 15 July 2027."),
-      quote: "The renewal notice lists 15 July 2027.",
-      startChar: 0,
+      version: "evidence-position/v2",
+      position: {
+        endChar: Str.length("The renewal notice lists 15 July 2027."),
+        quote: "The renewal notice lists 15 July 2027.",
+        startChar: 0,
+      },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.91, method: "synthetic-fixture" },
+      },
     },
     spanFixtureKey: "qa.contradiction.deadline.renewal-notice.anchor",
   });
@@ -350,10 +369,16 @@ class EvidenceSpecification extends S.Opaque<EvidenceSpecification, { readonly b
     createdAt: 1_767_225_601_100,
     publicIdSuffix: Cuid.make("agreement"),
     span: {
-      confidence: 0.97,
-      endChar: Str.length("Liability is capped at USD 1,000,000."),
-      quote: "Liability is capped at USD 1,000,000.",
-      startChar: 0,
+      version: "evidence-position/v2",
+      position: {
+        endChar: Str.length("Liability is capped at USD 1,000,000."),
+        quote: "Liability is capped at USD 1,000,000.",
+        startChar: 0,
+      },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.97, method: "synthetic-fixture" },
+      },
     },
     spanFixtureKey: "qa.contradiction.liability-cap.executed-agreement.anchor",
   });
@@ -363,10 +388,16 @@ class EvidenceSpecification extends S.Opaque<EvidenceSpecification, { readonly b
     createdAt: 1_767_225_601_200,
     publicIdSuffix: Cuid.make("email"),
     span: {
-      confidence: 0.88,
-      endChar: Str.length("The negotiated cap is USD 750,000."),
-      quote: "The negotiated cap is USD 750,000.",
-      startChar: 0,
+      version: "evidence-position/v2",
+      position: {
+        endChar: Str.length("The negotiated cap is USD 750,000."),
+        quote: "The negotiated cap is USD 750,000.",
+        startChar: 0,
+      },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.88, method: "synthetic-fixture" },
+      },
     },
     spanFixtureKey: "qa.contradiction.liability-cap.negotiation-email.anchor",
   });
@@ -539,7 +570,8 @@ const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeSourceTextDigest = S.decodeUnknownEffect(SourceTextDigest);
 const decodeEvidenceIds = S.decodeUnknownEffect(S.NonEmptyArray(EpistemicIdentity.EvidenceId));
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
-const evidenceSpanEquivalent = S.toEquivalence(EvidenceSpan);
+const evidencePositionEquivalent = S.toEquivalence(EvidencePosition);
+const isCurrentPosition = S.is(EvidencePosition);
 const sourceBytes = new TextEncoder().encode(CONTRADICTION_QA_SOURCE_TEXT);
 
 const fixtureValidFrom = instant(1_767_225_600_000);
@@ -580,7 +612,9 @@ const evidenceMatches = (actual: Evidence, expected: Evidence): boolean =>
   Eq.equals(actual.orgId, expected.orgId) &&
   Eq.equals(actual.artifactFixtureKey, expected.artifactFixtureKey) &&
   Eq.equals(actual.spanFixtureKey, expected.spanFixtureKey) &&
-  evidenceSpanEquivalent(actual.span, expected.span) &&
+  isCurrentPosition(actual.span) &&
+  isCurrentPosition(expected.span) &&
+  evidencePositionEquivalent(actual.span, expected.span) &&
   Eq.equals(actual.createdAt, expected.createdAt) &&
   Eq.equals(actual.source, expected.source);
 

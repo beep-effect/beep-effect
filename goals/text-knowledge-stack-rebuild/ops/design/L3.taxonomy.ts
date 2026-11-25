@@ -6,19 +6,17 @@
  * Owner package: `@beep/ontology` (foundation/modeling). The gUFO class
  * typing lives here as a table keyed by term IRI (decision
  * p0-l0-split-by-dependency), where the L3-3 audit reads it. The confidence signal
- * reuses `makeSignal` and `Measurement` from `@beep/epistemics`, an
- * ontology -> epistemics edge the report's DAG does not list (see the index
- * header).
+ * reuses `makeSignal` and `Measurement` from `@beep/schema/Signal`.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-// Decision 2026-11-19-p0-census-dispositions: makeSignal and Measurement move to @beep/schema in P4; until then they are read from epistemics.
-import { Measurement, makeSignal } from "@beep/epistemics/Claim";
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { Term, TermIri } from "@beep/identity/Term";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { Measurement, makeSignal } from "@beep/schema/Signal";
 import { SpdxExpression } from "@beep/spdx/SpdxExpression";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -1,109 +1,25 @@
 /**
- * Bitemporal claim envelope over a slice-owned proposition.
- *
- * **Details**
- *
- * A claim version is one immutable ledger row: a proposition, the assertions
- * that support or challenge it, when it holds (valid time), when the system
- * knew it (knowledge time), its review state and five separate evidence
- * signals. The proposition and every id are supplied by the binding slice, so
- * this module carries no product identity.
+ * Independent review coordinates and valid-time vocabulary for claim owners.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 import { $EpistemicsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Measurement, makeSignal } from "@beep/schema/Signal";
 import * as S from "effect/Schema";
-import { KnowledgeInterval } from "../KnowledgeInterval/index.ts";
+import * as Struct from "effect/Struct";
+import { ReportedConfidence } from "../Confidence.ts";
 import { ValidInterval, ValidIntervalFields } from "../ValidInterval/index.ts";
-import type { FieldSchema, IdCodec, SchemaIdentity } from "../Factory/index.ts";
+import type { IdCodec, SchemaIdentity } from "../Factory/index.ts";
 
 const $I = $EpistemicsId.create("Claim/Claim.model");
-
-/**
- * Why an evidence signal is absent. Absence is never zero.
- *
- * **Example** (Decode an absence reason)
- *
- * ```ts
- * import { AbsenceReason } from "@beep/epistemics/Claim"
- * import * as S from "effect/Schema"
- *
- * console.log(S.decodeUnknownSync(AbsenceReason)("not-assessed"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const AbsenceReason = LiteralKit(["not-assessed", "unavailable", "not-applicable", "legacy-unknown"]).pipe(
-  $I.annoteSchema("AbsenceReason", { description: "Why an evidence signal is absent." })
+const DispositionKind = LiteralKit(["accepted", "rejected", "abstained"]);
+const SourceTrust = LiteralKit(["low", "moderate", "high"]);
+const SourceDependence = LiteralKit(["independent", "dependent", "unknown"]);
+const ExtractorObservation = S.Union([Measurement, ReportedConfidence]).pipe(
+  $I.annoteSchema("ExtractorObservation", { description: "A typed measurement or an explicitly reported confidence." })
 );
-
-/**
- * @category models
- * @since 0.0.0
- */
-export type AbsenceReason = typeof AbsenceReason.Type;
-
-/**
- * Wrap a value schema as a signal that is either present or absent with a
- * reason.
- *
- * **Example** (A present trust signal)
- *
- * ```ts
- * import { makeSignal } from "@beep/epistemics/Claim"
- * import { LiteralKit } from "@beep/schema/LiteralKit"
- * import * as S from "effect/Schema"
- *
- * const Trust = makeSignal(LiteralKit(["low", "high"]))
- * S.decodeUnknownSync(Trust)({ _tag: "Absent", reason: "not-assessed" })
- * ```
- *
- * @category factories
- * @since 0.0.0
- */
-export const makeSignal = <A extends S.Top>(value: A) =>
-  S.TaggedUnion({ Present: { value }, Absent: { reason: AbsenceReason } });
-
-/**
- * A typed measurement. A detector score, a cosine similarity and a calibrated
- * probability are different contracts and never share a field.
- *
- * **Example** (Decode a calibrated classifier probability)
- *
- * ```ts
- * import { Measurement } from "@beep/epistemics/Claim"
- * import * as S from "effect/Schema"
- *
- * const m = S.decodeUnknownSync(Measurement)({
- *   _tag: "ClassifierProbability",
- *   value: 0.82,
- *   model: "detector-v1",
- *   calibrated: true,
- * })
- * console.log(m._tag)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const Measurement = S.TaggedUnion({
-  Similarity: { value: S.Finite, metric: S.NonEmptyString, model: S.NonEmptyString },
-  ClassifierProbability: {
-    value: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })),
-    model: S.NonEmptyString,
-    calibrated: S.Boolean,
-  },
-  OrdinalJudgment: { level: LiteralKit(["low", "moderate", "high"]) },
-}).pipe($I.annoteSchema("Measurement", { description: "Typed measurement; never a blended score." }));
-
-/**
- * @category models
- * @since 0.0.0
- */
-export type Measurement = typeof Measurement.Type;
 
 /**
  * Lowercase SHA-256 hex digest of the evidence basis a reviewer looked at.
@@ -131,61 +47,6 @@ export const BasisDigest = S.String.check(
  */
 export type BasisDigest = typeof BasisDigest.Type;
 
-/**
- * Structural verdict. `Admitted` means the candidate satisfied the shape
- * contract. It does not mean the claim is true.
- *
- * **Example** (Record a shape rejection)
- *
- * ```ts
- * import { StructuralVerdict } from "@beep/epistemics/Claim"
- * import * as S from "effect/Schema"
- *
- * const verdict = S.decodeUnknownSync(StructuralVerdict)({ _tag: "ShapeRejected", violations: ["missing subject"] })
- * console.log(verdict._tag)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const StructuralVerdict = S.TaggedUnion({
-  Admitted: {},
-  ShapeRejected: { violations: S.NonEmptyArray(S.String) },
-}).pipe($I.annoteSchema("StructuralVerdict", { description: "Shape verdict only." }));
-
-/**
- * @category models
- * @since 0.0.0
- */
-export type StructuralVerdict = typeof StructuralVerdict.Type;
-
-/**
- * Review-state tags a projection may select.
- *
- * **Example** (Select accepted versions only)
- *
- * ```ts
- * import { ReviewTag } from "@beep/epistemics/Claim"
- * import * as S from "effect/Schema"
- *
- * const states = S.decodeUnknownSync(S.Array(ReviewTag))(["Accepted"])
- * console.log(states)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ReviewTag = LiteralKit(["Proposed", "Accepted", "Rejected", "Disputed", "Retracted"]).pipe(
-  $I.annoteSchema("ReviewTag", { description: "Review-state tag." })
-);
-
-/**
- * @category models
- * @since 0.0.0
- */
-export type ReviewTag = typeof ReviewTag.Type;
-
-// Compiled once: ValidInterval already carries ValidIntervalOrderCheck.
 const isOrderedValidInterval = S.is(ValidInterval);
 
 /**
@@ -226,53 +87,29 @@ export const ValidTime = S.TaggedUnion({
 export type ValidTime = typeof ValidTime.Type;
 
 /**
- * Bind the claim envelope to a slice's proposition schema and id brands.
+ * Bind independent evidence observations and review payloads to owner identifiers.
  *
- * **Details**
- *
- * The returned schemas carry identifiers from the caller's `$I`, so two slices
- * binding the envelope get distinct schema identities. `logicalKey` is the
- * slice's own stable key for the proposition (two versions of the same fact
- * share it). The binding supplies its key function; decoding and encoding
- * reject a key that disagrees with the decoded proposition.
- *
- * **Example** (Bind the envelope for a tiny proposition)
+ * **Example** (Keep an unreviewed proposal separate from its core)
  *
  * ```ts
- * import { makeClaimEnvelope } from "@beep/epistemics/Claim"
+ * import { makeClaimReview } from "@beep/epistemics/Claim"
  * import { $ScratchpadId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
- * import * as Str from "effect/String"
- *
- * const { ClaimVersion } = makeClaimEnvelope({
- *   $I: $ScratchpadId.create("example/Claim"),
- *   proposition: S.TaggedStruct("Knows", { left: S.String, right: S.String }),
- *   logicalKey: (p) => `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`,
- *   ids: {
- *     claimVersion: S.String.pipe(S.brand("ClaimVersionId")),
- *     assertion: S.String.pipe(S.brand("AssertionId")),
- *     activity: S.String.pipe(S.brand("ActivityId")),
- *     principal: S.String.pipe(S.brand("PrincipalId")),
- *   },
- * })
- * ClaimVersion.fields.logicalKey
+ * const review = makeClaimReview({ $I: $ScratchpadId.create("Review"),
+ *   ids: { assertion: S.NonEmptyString, activity: S.NonEmptyString, principal: S.NonEmptyString } })
+ * console.log(review.ReviewState.cases.Proposed.make({})._tag)
  * ```
  *
  * @category factories
  * @since 0.0.0
  */
-export const makeClaimEnvelope = <
-  P extends S.Top,
-  ClaimVersionId extends IdCodec,
+export const makeClaimReview = <
   AssertionId extends IdCodec,
   ActivityId extends IdCodec,
   PrincipalId extends IdCodec,
 >(config: {
   readonly $I: SchemaIdentity;
-  readonly proposition: P;
-  readonly logicalKey: (proposition: P["Type"]) => string;
   readonly ids: {
-    readonly claimVersion: ClaimVersionId;
     readonly assertion: AssertionId;
     readonly activity: ActivityId;
     readonly principal: PrincipalId;
@@ -289,7 +126,7 @@ export const makeClaimEnvelope = <
       reason: S.NonEmptyString,
     });
 
-  const ReviewerDisposition = LiteralKit(["accepted", "rejected", "abstained"]).pipe(
+  const ReviewerDisposition = DispositionKind.pipe(
     dispositionStruct,
     $C.annoteSchema("ReviewerDisposition", {
       description: "A human disposition bound to the exact evidence basis it reviewed.",
@@ -297,9 +134,9 @@ export const makeClaimEnvelope = <
   );
 
   const EvidenceSignals = S.Struct({
-    sourceTrust: makeSignal(LiteralKit(["low", "moderate", "high"])),
+    sourceTrust: makeSignal(SourceTrust),
     sourceAssertedConfidence: makeSignal(Measurement),
-    extractorConfidence: makeSignal(Measurement),
+    extractorConfidence: makeSignal(ExtractorObservation),
     validator: makeSignal(S.TaggedUnion({ Conforms: {}, Violations: { messages: S.NonEmptyArray(S.String) } })),
     reviewer: makeSignal(ReviewerDisposition),
   }).pipe($C.annoteSchema("EvidenceSignals", { description: "evidence-signals/v1: five separate signals, no score." }));
@@ -307,7 +144,7 @@ export const makeClaimEnvelope = <
   const DependenceAssessment = S.Struct({
     left: ids.assertion,
     right: ids.assertion,
-    dependence: LiteralKit(["independent", "dependent", "unknown"]),
+    dependence: SourceDependence,
     basis: S.NonEmptyString,
     producedBy: ids.activity,
   }).pipe(
@@ -318,84 +155,40 @@ export const makeClaimEnvelope = <
 
   const ReviewState = S.TaggedUnion({
     Proposed: {},
-    // Each case carries its own disposition literal, so an Accepted state cannot hold a rejection.
-    Accepted: { disposition: S.Literal("accepted").pipe(dispositionStruct) },
-    Rejected: { disposition: S.Literal("rejected").pipe(dispositionStruct) },
+    Accepted: { disposition: S.tag("accepted").pipe(dispositionStruct) },
+    Rejected: { disposition: S.tag("rejected").pipe(dispositionStruct) },
     Disputed: { challengedBy: S.NonEmptyArray(ids.assertion), openedAt: S.DateTimeUtcFromMillis },
     Retracted: { reason: S.NonEmptyString, at: S.DateTimeUtcFromMillis },
   }).pipe($C.annoteSchema("ReviewState", { description: "Epistemic review state." }));
 
-  const proposition: FieldSchema<P["Type"]> = S.toType(config.proposition);
-  const hasClaimKey = S.is(S.Struct({ logicalKey: S.NonEmptyString, proposition }));
-
-  const ClaimVersion = S.Struct({
-    id: ids.claimVersion,
-    logicalKey: S.NonEmptyString,
-    proposition: config.proposition,
-    supportedBy: S.NonEmptyArray(ids.assertion),
-    challengedBy: S.Array(ids.assertion),
-    validTime: ValidTime,
-    knowledge: KnowledgeInterval,
-    supersedes: S.OptionFromNullOr(ids.claimVersion),
-    review: ReviewState,
-    signals: EvidenceSignals,
-  })
-    .check(
-      S.makeFilter(
-        (claim: unknown) => hasClaimKey(claim) && claim.logicalKey === config.logicalKey(claim.proposition),
-        $C.annote("ClaimLogicalKeyCheck", {
-          description: "The logical key matches the slice-owned proposition key function.",
-          message: "Expected logicalKey to match the proposition key.",
-        })
-      )
-    )
-    .pipe(
-      $C.annoteSchema("ClaimVersion", {
-        description: "One immutable bitemporal claim version; corrections append and expire, never update.",
-      })
-    );
-
-  return { ReviewerDisposition, EvidenceSignals, DependenceAssessment, ReviewState, ClaimVersion };
+  return { ReviewerDisposition, EvidenceSignals, DependenceAssessment, ReviewState };
 };
 
-/**
- * The fields a bitemporal read needs from a claim version. Every binding's
- * `ClaimVersion` satisfies it.
- *
- * @category models
- * @since 0.0.0
- */
-const BitemporalVersionSchema = S.Struct({
-  knowledge: KnowledgeInterval,
-  review: S.Struct({ _tag: ReviewTag }),
-  validTime: ValidTime,
-}).pipe($I.annoteSchema("BitemporalVersion", { description: "Fields a bitemporal read selects on." }));
+const ReviewVocabulary = makeClaimReview({
+  $I,
+  ids: { assertion: S.NonEmptyString, activity: S.NonEmptyString, principal: S.NonEmptyString },
+});
 
 /**
- * Decoded type of {@link BitemporalVersion}.
+ * Discriminants projected from the review-state union for read-scope selection.
  *
- * @category models
+ * **Example** (Select accepted review records)
+ *
+ * ```ts
+ * import { ReviewTag } from "@beep/epistemics/Claim"
+ * console.log(ReviewTag.is.Accepted("Accepted"))
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export type BitemporalVersion = typeof BitemporalVersionSchema.Type;
+export const ReviewTag = LiteralKit([
+  ReviewVocabulary.ReviewState.cases.Proposed.fields._tag.schema.literal,
+  ...Struct.keys(Struct.omit(ReviewVocabulary.ReviewState.cases, ["Proposed"])),
+]).pipe($I.annoteSchema("ReviewTag", { description: "Read-only projection of the review union discriminants." }));
 
 /**
- * A bitemporal read scope: what the system knew at `asOf`, about what held at
- * `validAt`, in the review states a consumer accepts.
- *
  * @category models
  * @since 0.0.0
  */
-const BitemporalScopeSchema = S.Struct({
-  asOf: S.DateTimeUtc,
-  states: S.Array(ReviewTag),
-  validAt: S.DateTimeUtc,
-}).pipe($I.annoteSchema("BitemporalScope", { description: "Knowledge time, valid time and accepted review states." }));
-
-/**
- * Decoded type of {@link BitemporalScope}.
- *
- * @category models
- * @since 0.0.0
- */
-export type BitemporalScope = typeof BitemporalScopeSchema.Type;
+export type ReviewTag = typeof ReviewTag.Type;

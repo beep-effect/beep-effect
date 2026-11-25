@@ -485,7 +485,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 95,
+      "line": 96,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
@@ -644,14 +644,6 @@
       "status": "exception",
       "owner": "@beep/nlp-processing",
       "reason": "Integration descriptor intentionally couples an Effectful handler with generated JSON-schema objects; the owning Effect AI Tool schemas remain the executable parameter and success truth."
-    },
-    {
-      "file": "packages/foundation/modeling/epistemics/src/EvidenceSpan/EvidenceSpan.model.ts",
-      "symbol": "EvidenceSpanArbitrary",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/epistemics",
-      "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) colocated with its S.Class model for cross-field generation; it is a generator value, not an object schema."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -1595,7 +1587,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 344,
+      "line": 345,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },

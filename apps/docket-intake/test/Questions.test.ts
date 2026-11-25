@@ -5,6 +5,7 @@
  * data directory is a temporary directory on the tests' in-memory file
  * system; every message is synthetic.
  */
+import { isCurrentReviewItem } from "@beep/law-practice-domain";
 import { makeReviewFilesLayer, ReviewFilesConfig } from "@beep/law-practice-server/ReviewFiles";
 import {
   DocketCandidateDate,
@@ -120,7 +121,8 @@ describe("@beep/docket-intake review hub questions", () => {
         const store = Context.get(build2, ReviewItemStore);
 
         yield* publisher.publish(DocketIntakeState.make({ ledger: { "m-named": identified } }));
-        const [item] = yield* store.list;
+        const listed = yield* store.list;
+        const [item] = A.filter(listed, isCurrentReviewItem);
 
         expect(item?.kind).toBe("question");
         expect(item?.text).toBe(
@@ -174,9 +176,13 @@ describe("@beep/docket-intake review hub questions", () => {
         const items = yield* store.list;
 
         expect([first.entered, first.needsReview]).toStrictEqual([1, 0]);
-        expect(A.map(items, ({ itemId, kind }) => [kind, Str.replace(/:[0-9a-f]{32}$/u, "")(itemId)])).toStrictEqual([
-          ["question", "docket-intake:agents-disagree"],
-        ]);
+        expect(A.every(items, isCurrentReviewItem)).toBe(true);
+        expect(
+          A.map(A.filter(items, isCurrentReviewItem), ({ itemId, kind }) => [
+            kind,
+            Str.replace(/:[0-9a-f]{32}$/u, "")(itemId),
+          ])
+        ).toStrictEqual([["question", "docket-intake:agents-disagree"]]);
         expect(lineCount(once)).toBe(1);
         const readFileString4 = yield* fs.readFileString(`${directory}/items.jsonl`);
         expect(readFileString4).toBe(once);

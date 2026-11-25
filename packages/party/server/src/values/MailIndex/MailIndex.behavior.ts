@@ -382,7 +382,7 @@ export const ingestMailRecord = Effect.fn("PartyMail.ingestMailRecord")(function
   const ledger = yield* PartyLedger;
   const result = yield* adaptMailRecord(input);
   yield* ledger.appendEvidence(
-    LedgerSnapshot.make({ observations: result.observations, assertions: result.assertions, versions: [] })
+    LedgerSnapshot.make({ observations: result.observations, assertions: result.assertions, claims: [] })
   );
   return result;
 });

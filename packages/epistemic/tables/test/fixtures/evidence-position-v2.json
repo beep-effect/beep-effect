@@ -1,0 +1,19 @@
+[
+  {
+    "version": "evidence-position/v2",
+    "position": { "startChar": 0, "endChar": 4, "quote": "fact" },
+    "extractorConfidence": { "_tag": "Absent", "reason": "not-assessed" }
+  },
+  {
+    "version": "evidence-position/v2",
+    "position": { "startChar": 2, "endChar": 5, "quote": "A😀" },
+    "extractorConfidence": {
+      "_tag": "Present",
+      "value": {
+        "_tag": "ReportedConfidence",
+        "value": 0,
+        "method": "synthetic-fixture"
+      }
+    }
+  }
+]

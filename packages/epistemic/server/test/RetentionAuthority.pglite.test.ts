@@ -100,7 +100,14 @@ const seedScenario = Effect.fnUntraced(function* (scenario: number) {
   const evidence = yield* decodeEvidence({
     ...productEntityFixtureInput("EpistemicEvidence", scenario),
     artifactFixtureKey: `artifact.scenario-${scenario}`,
-    span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+    span: {
+      version: "evidence-position/v2",
+      position: { endChar: 14, quote: "a claimed fact", startChar: 0 },
+      extractorConfidence: {
+        _tag: "Present",
+        value: { _tag: "ReportedConfidence", value: 0.9, method: "synthetic-fixture" },
+      },
+    },
     spanFixtureKey: `span.scenario-${scenario}`,
   });
 

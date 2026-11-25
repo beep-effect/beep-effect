@@ -92,6 +92,7 @@ import {
   terminalStatus,
 } from "./DocketReview.policy.ts";
 import {
+  DeterministicCheckResult,
   DocketReviewConfig,
   ReviewFindingTrace,
   ReviewRoundTrace,
@@ -121,6 +122,7 @@ import type {
   TrackedDate,
 } from "./DocketIntake.schemas.ts";
 import type {
+  DeterministicCheck,
   ExtractorFieldAction,
   ExtractorFieldResponse,
   FieldAgreement,
@@ -294,7 +296,8 @@ export interface DocketIntakeShape {
   /**
    * Process one message to its typed outcome. A failed step becomes `IntakeFailed`, never a thrown error.
    * Each completed review round is saved in the message's ledger record as it goes, and rounds already
-   * there are read back instead of asking the agents again.
+   * there are read back instead of asking the agents again. Their deterministic checks run again against
+   * the current source text before any gate, so a stored result is never taken as a fresh verification.
    */
   readonly processMessage: (message: DocketMessage, today: LocalDate) => Effect.Effect<DocketIntakeOutcome>;
   /** Write the digest entry for one day and record that the day is digested. */
@@ -1169,17 +1172,25 @@ const score = (value: number): string => `${Num.round(value, 2)}`;
 
 const findingLine = (finding: ReviewFinding): string => `- ${finding.severity} ${finding.field}: ${finding.reason}`;
 
+const notPassed = (check: DeterministicCheck): boolean => !DeterministicCheckResult.guards.Passed(check.result);
+
+const checkSubject = (check: DeterministicCheck): string =>
+  `(${check.side}): ${check.check}${O.getOrElse(
+    O.map(check.field, (field) => ` for ${field}`),
+    () => ""
+  )}`;
+
+const checkLine = (check: DeterministicCheck): O.Option<string> =>
+  DeterministicCheckResult.match(check.result, {
+    Failed: () => O.some(`- failed check ${checkSubject(check)}`),
+    Passed: () => O.none(),
+    Unknown: ({ reason }) => O.some(`- unknown check ${checkSubject(check)}: ${reason}`),
+  });
+
 // What is still open after the last round: failed checks, fields the two readings differ on, and
 // the critic's findings.
 const openLines = (round: ReviewRound): ReadonlyArray<string> => [
-  ...A.map(
-    A.filter(round.checks, (check) => !check.passed),
-    (check) =>
-      `- failed check (${check.side}): ${check.check}${O.getOrElse(
-        O.map(check.field, (field) => ` for ${field}`),
-        () => ""
-      )}`
-  ),
+  ...A.getSomes(A.map(round.checks, checkLine)),
   ...A.map(
     A.filter(round.agreement, (field) => !field.agreed),
     (field) => `- the two readings differ on: ${field.field}`
@@ -1277,7 +1288,7 @@ const traceOf = (round: ReviewRound): ReviewRoundTrace =>
     defendedFields: fieldsWithAction(round.extractorResponse, "defended"),
     disagreedFields: fieldsWhere(round.agreement, false),
     extractorDocketItem: isDocketEntry(round.entry),
-    failedChecks: A.filter(round.checks, (check) => !check.passed),
+    failedChecks: A.filter(round.checks, notPassed),
     findings: A.map(round.findings, (finding) =>
       ReviewFindingTrace.make({ field: finding.field, severity: finding.severity })
     ),
@@ -1354,6 +1365,21 @@ const startReview = Effect.fnUntraced(function* (
   return yield* runReview(context, rounds);
 });
 
+const reassessed =
+  (source: ReviewSourceText) =>
+  (round: ReviewRound): ReviewRound =>
+    assessReviewRound(
+      ReviewRoundDraft.make({
+        entry: round.entry,
+        extractorConfidence: round.extractorConfidence,
+        extractorResponse: round.extractorResponse,
+        findings: round.findings,
+        index: round.index,
+        reading: round.reading,
+        source,
+      })
+    );
+
 // Rounds already in the ledger are read back, not run again: the agents are asked only for the
 // rounds that are still missing.
 const processOrFail = Effect.fnUntraced(function* (
@@ -1365,7 +1391,9 @@ const processOrFail = Effect.fnUntraced(function* (
   return yield* A.match(stored, {
     onEmpty: () => startReview(ports, message, today),
     onNonEmpty: (rounds) =>
-      contextOf(ports, message, today).pipe(Effect.flatMap((context) => runReview(context, rounds))),
+      contextOf(ports, message, today).pipe(
+        Effect.flatMap((context) => runReview(context, A.map(rounds, reassessed(context.source))))
+      ),
   });
 });
 

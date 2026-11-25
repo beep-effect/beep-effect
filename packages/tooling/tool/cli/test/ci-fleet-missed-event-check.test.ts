@@ -1899,7 +1899,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
         const text = yield* fs.readFileString(path.join(root, ".github/workflows/fleet-missed-event-check.yml"));
         const workflow = parseWorkflowYaml(text);
         const job = (segments: ReadonlyArray<string | number>) => yamlAt(workflow, ["jobs", "check", ...segments]);
-        expect(yamlAt(workflow, ["on", "schedule"])).toEqual([{ cron: "*/10 * * * *" }]);
+        expect(yamlAt(workflow, ["on", "schedule"])).toEqual([{ cron: "3-59/10 * * * *" }]);
         expect(yamlAt(workflow, ["on"])).toHaveProperty("workflow_dispatch");
         expect(yamlAt(workflow, ["permissions"])).toEqual({});
         expect(job(["runs-on"])).toBe("ubuntu-latest");

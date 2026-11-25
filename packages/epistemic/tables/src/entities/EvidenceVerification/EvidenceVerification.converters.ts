@@ -5,7 +5,8 @@
  * @since 0.0.0
  */
 import { EvidenceVerification, hasValidManifestationKey } from "@beep/epistemic-domain/entities/EvidenceVerification";
-import { EvidenceSpan } from "@beep/epistemics/EvidenceSpan";
+import { EvidencePosition } from "@beep/epistemics/EvidencePosition.schema";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as DateTime from "effect/DateTime";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
@@ -49,6 +50,9 @@ export type EvidenceVerificationRow = typeof Table.$inferSelect;
  */
 export type EvidenceVerificationInsert = typeof Table.$inferInsert;
 
+const sameAnchor = S.toEquivalence(TextAnchor);
+const isCurrentPosition = S.is(EvidencePosition);
+
 const encodeEvidenceVerification = S.encodeResult(EvidenceVerification);
 const decodeEvidenceVerificationRow = S.decodeUnknownResult(EvidenceVerification);
 
@@ -74,7 +78,8 @@ const validateEvidenceAssociation = (
   Eq.equals(verification.orgId, evidence.orgId) &&
   Eq.equals(verification.evidenceId, evidence.id) &&
   !DateTime.isLessThan(verification.createdAt, evidence.createdAt) &&
-  EvidenceSpan.matchesAnchor(EvidenceSpan.make(evidence.span), verification.verifiedAnchor.anchor)
+  isCurrentPosition(evidence.span) &&
+  sameAnchor(evidence.span.position, verification.verifiedAnchor.anchor)
     ? Result.succeed(verification)
     : Result.fail(
         new S.SchemaError(

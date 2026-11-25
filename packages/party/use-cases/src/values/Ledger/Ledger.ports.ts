@@ -4,7 +4,7 @@
  * @since 0.0.0
  */
 import { $PartyUseCasesId } from "@beep/identity/packages";
-import { ClaimVersion, SourceAssertion } from "@beep/party-domain/Claim";
+import { ClaimLedger, SourceAssertion } from "@beep/party-domain/Claim";
 import { Observation } from "@beep/party-domain/Communication";
 import * as Context from "effect/Context";
 import * as S from "effect/Schema";
@@ -33,11 +33,11 @@ export class LedgerConflict extends S.TaggedError<LedgerConflict, { readonly bra
 ) {}
 
 /**
- * Effective versions with derived knowledge bounds; stored writes remain immutable.
+ * Immutable core history with independently recorded evidence and review streams.
  * **Example** (An empty snapshot)
  * ```ts
  * import { LedgerSnapshot } from "@beep/party-use-cases/Ledger"
- * LedgerSnapshot.make({ observations: [], assertions: [], versions: [] })
+ * LedgerSnapshot.make({ observations: [], assertions: [], claims: [] })
  * ```
  * @category models
  * @since 0.0.0
@@ -46,8 +46,10 @@ export class LedgerSnapshot extends S.Opaque<LedgerSnapshot, { readonly brand: u
   S.Struct({
     observations: S.Array(Observation),
     assertions: S.Array(SourceAssertion),
-    versions: S.Array(ClaimVersion),
-  }).pipe($I.annoteSchema("LedgerSnapshot", { description: "Effective immutable claim-version snapshot." }))
+    ...ClaimLedger.fields,
+  }).pipe(
+    $I.annoteSchema("LedgerSnapshot", { description: "Append-only source evidence and separate claim record streams." })
+  )
 ) {}
 
 /**
@@ -58,7 +60,7 @@ export class LedgerSnapshot extends S.Opaque<LedgerSnapshot, { readonly brand: u
 export interface PartyLedgerShape {
   readonly allocateAnchorParty: (key: PartyKey) => Effect.Effect<PartyId>;
   readonly allocatePartyId: Effect.Effect<PartyId>;
-  readonly append: (version: ClaimVersion) => Effect.Effect<void, LedgerConflict>;
+  readonly append: (batch: ClaimLedger) => Effect.Effect<void, LedgerConflict>;
   readonly appendEvidence: (batch: LedgerSnapshot) => Effect.Effect<void, LedgerConflict>;
   readonly recordAssertion: (assertion: SourceAssertion) => Effect.Effect<void, LedgerConflict>;
   readonly recordObservation: (observation: Observation) => Effect.Effect<void, LedgerConflict>;

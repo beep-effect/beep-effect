@@ -28,8 +28,6 @@ import * as S from "effect/Schema";
 const $I = $NpmSpecId.create("PackageManagerCache");
 
 /**
- * The package managers the default-cache table has a row for.
- *
  * **Details**
  *
  * yarn is **two** rows — `yarn-classic` (v1) and `yarn-berry` (v2+) — because
@@ -58,8 +56,6 @@ export const CachingPackageManager = LiteralKit(["npm", "pnpm", "yarn-classic", 
 );
 
 /**
- * The union of managers the default-cache table covers.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -118,8 +114,6 @@ export class DefaultCacheDirectoryOptions extends S.Opaque<
 ) {}
 
 /**
- * Companion types for {@link DefaultCacheDirectoryOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

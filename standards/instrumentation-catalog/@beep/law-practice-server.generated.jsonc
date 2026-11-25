@@ -1169,6 +1169,7 @@
     {"name":"ReviewFiles.listItems","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ReviewFiles.readAnswers","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ReviewFiles.readVerdicts","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"ReviewFiles.repairItems","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ReviewFiles.upsertItems","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"UsptoClaimInputs.inputs","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"UsptoClaims.applicationClaims","owner":"@beep/law-practice-server","family":"slice","conforms":true},

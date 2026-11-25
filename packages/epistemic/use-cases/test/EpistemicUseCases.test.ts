@@ -37,7 +37,28 @@ const decodeEvidence = S.decodeUnknownEffect(Evidence)({
   ...productEntityFixtureInput("EpistemicEvidence", 10),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
-  span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },
+  span: {
+    version: "evidence-position/v2",
+    position: { startChar: 0, endChar: 14, quote: "a claimed fact" },
+    extractorConfidence: {
+      _tag: "Present",
+      value: { _tag: "ReportedConfidence", value: 0.92, method: "synthetic-fixture" },
+    },
+  },
+});
+
+const decodeLegacyEvidence = S.decodeUnknownEffect(Evidence)({
+  ...productEntityFixtureInput("EpistemicEvidence", 11),
+  artifactFixtureKey: "artifact.office-action",
+  spanFixtureKey: "span.claim-legacy",
+  span: {
+    _tag: "LegacyEvidenceUnresolved",
+    startChar: 0,
+    endChar: 0,
+    quote: "",
+    confidence: 1,
+    reason: "invalid-legacy-position",
+  },
 });
 
 const decodeAdmittedVerdict = S.decodeEffect(ClaimGateResult)({ verdict: "admitted" });
@@ -106,6 +127,19 @@ describe("@beep/epistemic-use-cases", () => {
 
         const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
         expect(blocked.lifecycle).toBe("candidate");
+      })
+    );
+
+    it.effect(
+      "projects no evidence quote from an unresolved legacy span and rejects the claim",
+      Effect.fnUntraced(function* () {
+        const candidate = yield* makeCandidate(1, "claim.patentability", "candidate");
+        const legacyEvidence = yield* decodeLegacyEvidence;
+        const shacl = yield* ShaclValidationService;
+        const gate = ClaimGateUC.makeClaimGate(shacl);
+
+        const verdict = yield* gate.evaluate(candidate, [legacyEvidence]);
+        expect(verdict.verdict).toBe("rejected");
       })
     );
   });

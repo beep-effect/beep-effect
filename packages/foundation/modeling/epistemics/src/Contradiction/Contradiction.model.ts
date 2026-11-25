@@ -33,7 +33,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import { Confidence } from "../EvidenceSpan/index.ts";
+import { Confidence } from "../Confidence.ts";
 import { canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import type { FieldSchema, IdentityConfig, KeyedFieldSchema, SchemaIdentity } from "../Factory/index.ts";
 

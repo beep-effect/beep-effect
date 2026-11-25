@@ -225,8 +225,6 @@ const BeepMarkdownDocumentCheck = S.makeFilter<Document>(
 );
 
 /**
- * Branded document satisfying every implemented CommonMark semantic-tree check.
- *
  * **Details**
  *
  * Its conformance annotation publishes the full CommonMark profile registry,
@@ -271,8 +269,6 @@ export const CommonMarkDocument = S.make<S.Codec<Document, Document.Encoded>>(Do
 export type CommonMarkDocument = typeof CommonMarkDocument.Type;
 
 /**
- * Branded document satisfying every implemented pinned-GFM semantic-tree check.
- *
  * **Details**
  *
  * Its conformance annotation publishes the full GFM profile registry, including
