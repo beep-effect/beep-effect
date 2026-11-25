@@ -497,10 +497,12 @@ export const getChildren: {
  * @since 0.0.0
  */
 export const getRoots = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
-  A.getSomes(
-    A.map(A.fromIterable(Graph.indices(Graph.externals(graph.graph, { direction: "incoming" }))), (idx) =>
-      Graph.getNode(graph.graph, idx)
-    )
+  graph.graph.pipe(
+    Graph.externals({ direction: "incoming" }),
+    Graph.indices,
+    A.fromIterable,
+    A.map((idx) => Graph.getNode(graph.graph, idx)),
+    A.getSomes
   );
 
 // =============================================================================

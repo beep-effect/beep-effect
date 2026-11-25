@@ -94,7 +94,7 @@ export const makeInMemoryWorkerRepository = Effect.fn("ArchitectureLab.WorkerRep
     }),
     list: Effect.gen(function* () {
       const workers = yield* Ref.get(store);
-      return A.fromIterable(HashMap.values(workers));
+      return workers.pipe(HashMap.values, A.fromIterable);
     }).pipe(Effect.withSpan("ArchitectureLab.WorkerRepository.list")),
   });
 });

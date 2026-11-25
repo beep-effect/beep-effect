@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
-import { flow, pipe } from "effect/Function";
+import { flow } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -405,8 +405,9 @@ const normalizeIso4217Document = Effect.fn("SyncDataToTs.Iso4217.normalizeIso421
     );
   }
 
-  const values = pipe(
-    A.fromIterable(MutableHashMap.values(grouped)),
+  const values = grouped.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
     A.map((entry) =>
       Iso4217CurrencyEntry.make({
         ...entry,

@@ -217,10 +217,14 @@ export const ordinalOfRecordId = (recordId: string): O.Option<number> => {
  * @since 0.0.0
  */
 const highestReservedOrdinal = (priorIds: HashMap.HashMap<string, string>): number =>
-  A.reduce(A.fromIterable(HashMap.values(priorIds)), 0, (highest, recordId) =>
-    Math.max(
-      highest,
-      O.getOrElse(ordinalOfRecordId(recordId), () => 0)
+  priorIds.pipe(
+    HashMap.values,
+    A.fromIterable,
+    A.reduce(0, (highest, recordId) =>
+      Math.max(
+        highest,
+        O.getOrElse(ordinalOfRecordId(recordId), () => 0)
+      )
     )
   );
 

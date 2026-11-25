@@ -631,7 +631,7 @@ export const makeContext = (deps: HostDeps) => {
   /** One pass: claim, deliver; another pass follows while every claimed row was delivered. */
   const deliveryPass = Effect.gen(function* () {
     const at = yield* now;
-    const hosted = A.fromIterable(MutableHashMap.keys(delivers));
+    const hosted = delivers.pipe(MutableHashMap.keys, A.fromIterable);
     // The claim is uninterruptible, so an interrupted pass always knows which rows it holds.
     return yield* Effect.acquireUseRelease(
       A.isReadonlyArrayNonEmpty(hosted) ? claim(at, hosted) : Effect.succeed(A.empty<DeliveryRow>()),

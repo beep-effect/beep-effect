@@ -397,7 +397,11 @@ const grewVerdicts = (context: ShardScopeContext, scope: string): ReadonlyArray<
 const movedFrom = (input: CommentLockInput, candidate: CommentLawPending, shard: CommentLawPending): boolean =>
   candidate.package === shard.package &&
   !A.some(input.headShards, (head) => head.root === candidate.root) &&
-  !A.some(A.fromIterable(HashMap.keys(input.bannedCounts)), (file) => Str.startsWith(`${candidate.root}/`)(file));
+  !input.bannedCounts.pipe(
+    HashMap.keys,
+    A.fromIterable,
+    A.some((file) => Str.startsWith(`${candidate.root}/`)(file))
+  );
 
 const shardVerdicts = (
   input: CommentLockInput,
