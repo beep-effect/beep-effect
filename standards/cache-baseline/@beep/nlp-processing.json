@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/nlp-processing",
   "review": {
-    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
-    "reason": "Record the P6 dependency edges of nlp-processing, wink, semantica, ontology server and use-cases, and law-practice domain, use-cases and server, plus the root policy fingerprint input. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
+    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p6-l5-l7-cache-review-2026-11-25.md",
-      "sha256": "fed2485257df7c6782354a329423d188df8b644718f2b7c37083d744e4967dcd"
+      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
+      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
     }
   },
   "nodes": [
