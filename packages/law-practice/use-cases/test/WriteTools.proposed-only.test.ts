@@ -122,6 +122,8 @@ const strictDecode = { onExcessProperty: "error" } as const;
 
 const encodeRequest = S.encodeEffect(S.toCodecJson(ClaimProposalRequest));
 
+const decodeStoredProvenance = S.decodeUnknownEffect(S.toType(ClaimProvenance));
+
 const SmuggledRequest = S.Struct({ ...ClaimProposalRequest.fields, token: LawHumanAdmissionToken });
 
 const encodeSmuggled = S.encodeEffect(S.toCodecJson(SmuggledRequest));
@@ -495,7 +497,7 @@ describe("write tools emit proposed records only", () => {
         const foundClaim = S.is(ClaimProvenance)(found.result) ? O.some(found.result.claim) : O.none();
         expect(found.isFailure).toBe(false);
         assertSome(foundClaim, record.claim);
-        const stored = yield* S.decodeUnknownEffect(S.toType(ClaimProvenance))(found.result);
+        const stored = yield* decodeStoredProvenance(found.result);
         const earliest = ActivityId.make(`sha256:${Str.repeat(64)("0")}`);
         const provenance = ClaimProvenance.make({
           ...stored,
@@ -651,25 +653,23 @@ describe("write tools emit proposed records only: (e) same schemas", () => {
   );
 });
 
-const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      S.encodeEffect(schema)(value).pipe(
-        Effect.flatMap(S.decodeEffect(schema)),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("write tools emit proposed records only: (f) generated schema-derived values", () => {
-  it.effect("round-trips every generated PracticeKgEpistemicStatus through its encoding", () =>
-    roundTripsEveryGeneratedValue(PracticeKgEpistemicStatus)
+  it.effect.prop(
+    "round-trips every generated PracticeKgEpistemicStatus through its encoding",
+    [Arbitrary.schema(PracticeKgEpistemicStatus)],
+    ([value]) => roundTrips(PracticeKgEpistemicStatus, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated VerdictRow through its encoding", () =>
-    roundTripsEveryGeneratedValue(VerdictRow)
+  it.effect.prop(
+    "round-trips every generated VerdictRow through its encoding",
+    [Arbitrary.schema(VerdictRow)],
+    ([value]) => roundTrips(VerdictRow, value),
+    { arbitrary: fcRuns(25) }
   );
 });

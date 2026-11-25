@@ -59,6 +59,8 @@ const twoMatters = MatterAuthorityConfig.make({
 
 const decodeConfig = S.decodeUnknownEffect(MatterAuthorityConfig);
 
+const encodeConfigJson = S.encodeEffect(S.fromJsonString(MatterAuthorityConfig));
+
 const mail = (archive: string, folderPrefix: string) => ({ archive, folderPrefix });
 
 const recordingTracer = () => {
@@ -190,7 +192,7 @@ describe("MatterAuthority", () => {
         askOver(MatterAuthorityLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))));
       const unset = yield* fromEnv({});
       expect(unset).toEqual({ _tag: "Denied", reason: "unbound-scope" });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(MatterAuthorityConfig))(twoMatters);
+      const encoded = yield* encodeConfigJson(twoMatters);
       const configured = yield* fromEnv({ BEEP_LAW_PRACTICE_MATTER_AUTHORITY: encoded });
       expect(configured).toEqual({ _tag: "Granted", matter: matterA });
       const empty = yield* askOver(MatterAuthorityLayer(EmptyMatterAuthorityConfig));
@@ -200,7 +202,7 @@ describe("MatterAuthority", () => {
 
   it.effect("walls a host by its configured principal and denies every path without one", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(S.fromJsonString(MatterAuthorityConfig))(twoMatters);
+      const encoded = yield* encodeConfigJson(twoMatters);
       const hostWall = Effect.fn("MatterAuthorityTest.hostWall")(function* (env: Record<string, string>) {
         const built = MatterWallLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env))));
         const authority = yield* serviceOf(MatterAuthority)(built);
@@ -264,25 +266,23 @@ describe("MatterAuthority", () => {
   );
 });
 
-const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      S.encodeEffect(schema)(value).pipe(
-        Effect.flatMap(S.decodeEffect(schema)),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("MatterAuthority schema-derived values", () => {
-  it.effect("round-trips every generated GrantedScopes through its encoding", () =>
-    roundTripsEveryGeneratedValue(GrantedScopes)
+  it.effect.prop(
+    "round-trips every generated GrantedScopes through its encoding",
+    [Arbitrary.schema(GrantedScopes)],
+    ([value]) => roundTrips(GrantedScopes, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated MatterAuthorityConfig through its encoding", () =>
-    roundTripsEveryGeneratedValue(MatterAuthorityConfig)
+  it.effect.prop(
+    "round-trips every generated MatterAuthorityConfig through its encoding",
+    [Arbitrary.schema(MatterAuthorityConfig)],
+    ([value]) => roundTrips(MatterAuthorityConfig, value),
+    { arbitrary: fcRuns(25) }
   );
 });
