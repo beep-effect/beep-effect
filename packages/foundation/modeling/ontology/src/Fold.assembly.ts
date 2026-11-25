@@ -14,7 +14,7 @@
 
 import { IRI } from "@beep/identity/Iri";
 import * as Registry from "@beep/identity/Registry";
-import { LanguageTag } from "@beep/rdf/Rdf";
+import { Literal } from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
@@ -30,8 +30,6 @@ import {
   AssembledFact,
   AssembledOntology,
   AssembledPredicate,
-  FactLiteral,
-  isFactLiteral,
   isSchemaHandle,
   OntologyAssemblyError,
   OntologyValidationWarning,
@@ -40,8 +38,10 @@ import {
 import { coreNamespaces, rebindsCorePrefix } from "./internal/CoreNamespaces.ts";
 import type { SkosClassification as SkosClassificationMarker } from "@beep/identity";
 import type { Namespace } from "@beep/identity/Term";
+import type { LiteralParts } from "@beep/rdf/Rdf";
 import type {
   FactObject,
+  LiteralScalar,
   OntologyFoldInput,
   SchemaHandle,
   Subject,
@@ -64,7 +64,7 @@ type ClassIdentity = SchemaIdentity & {
 };
 
 type ErrorExtras = Partial<{
-  readonly term: string;
+  readonly term: string | undefined;
   readonly field: string;
   readonly identifier: string;
   readonly subjectIri: IRI;
@@ -307,19 +307,63 @@ const isLiteralScalar = (value: unknown): value is string | number | boolean =>
 
 const isTypedLiteral = (value: unknown): value is TypedLiteral =>
   P.isObject(value) && P.hasProperty(value, "value") && isLiteralScalar(value.value);
-const decodeLanguageTag = S.decodeUnknownOption(LanguageTag);
+const XSD_STRING = IRI.make(Registry.iri("xsd:string"));
+const XSD_BOOLEAN = IRI.make(Registry.iri("xsd:boolean"));
+const XSD_INTEGER = IRI.make(Registry.iri("xsd:integer"));
+const XSD_DECIMAL = IRI.make(Registry.iri("xsd:decimal"));
+const XSD_DOUBLE = IRI.make(Registry.iri("xsd:double"));
+const RDF_LANG_STRING = IRI.make(Registry.iri("rdf:langString"));
+
+const invalidLiteral = (literal: TypedLiteral, why: string) =>
+  fail("invalidLiteral", `Invalid literal "${literal.value}": ${why}.`, { term: literal.datatype });
+
+const numberDatatype = (lexical: string, value: number): IRI => {
+  if (Str.includes("e")(lexical)) {
+    return XSD_DOUBLE;
+  }
+
+  return Number.isInteger(value) ? XSD_INTEGER : XSD_DECIMAL;
+};
+
+const impliedDatatype = (value: LiteralScalar, lexical: string): IRI => {
+  if (P.isString(value)) {
+    return XSD_STRING;
+  }
+
+  return P.isBoolean(value) ? XSD_BOOLEAN : numberDatatype(lexical, value);
+};
+
+const literalOfParts = (literal: TypedLiteral, parts: typeof LiteralParts.Encoded, why: string) =>
+  pipe(
+    Literal.fromParts(parts),
+    Effect.fromResult,
+    Effect.catch(() => invalidLiteral(literal, why))
+  );
 
 const resolveTypedLiteral = Effect.fnUntraced(function* (registry: Registry.RegistryView, literal: TypedLiteral) {
-  const datatypeIri =
+  const lexical = `${literal.value}`;
+  const datatype =
     literal.datatype === undefined
       ? O.none<IRI>()
       : yield* Effect.asSome(resolveStringTerm(registry, literal.datatype));
 
-  return FactLiteral.make({
-    value: literal.value,
-    datatypeIri,
-    language: O.flatMap(O.fromUndefinedOr(literal.language), decodeLanguageTag),
-  });
+  if (literal.language === undefined) {
+    return yield* literalOfParts(
+      literal,
+      { value: lexical, datatype: O.getOrElse(datatype, () => impliedDatatype(literal.value, lexical)) },
+      "its datatype names no literal form"
+    );
+  }
+
+  if (O.exists(datatype, (iri) => iri !== RDF_LANG_STRING)) {
+    return yield* invalidLiteral(literal, "a language tag takes no datatype other than rdf:langString");
+  }
+
+  return yield* literalOfParts(
+    literal,
+    { value: lexical, datatype: RDF_LANG_STRING, language: literal.language },
+    "its language tag is not well formed"
+  );
 });
 
 const resolveObject = (
@@ -500,6 +544,9 @@ const invalidTripleTerm = (registry: Registry.RegistryView, triple: Triple): O.O
 
 const decodeTripleEffect = S.decodeUnknownEffect(TripleValue);
 
+const isNonFiniteLiteral = (object: TupleObject): object is TypedLiteral =>
+  isTypedLiteral(object) && P.isNumber(object.value) && !Number.isFinite(object.value);
+
 const validateTriple = (
   registry: Registry.RegistryView,
   triple: Triple
@@ -511,7 +558,10 @@ const validateTriple = (
       pipe(
         invalidTripleTerm(registry, triple),
         O.match({
-          onNone: () => assemblyError("invalidTriple", "Invalid ontology triple tuple."),
+          onNone: () =>
+            isNonFiniteLiteral(triple[2])
+              ? assemblyError("invalidLiteral", `Invalid literal "${triple[2].value}": a number must be finite.`)
+              : assemblyError("invalidTriple", "Invalid ontology triple tuple."),
           onSome: (term) => assemblyError("unknownTerm", `Unknown term in ontology triple: ${term}`, { term }),
         })
       )
@@ -528,7 +578,7 @@ const assembleFact = Effect.fnUntraced(function* (
   const resolvedPredicate = yield* resolvePredicate(registry, predicate);
   const resolvedObject = yield* resolveObject(registry, classes, object);
 
-  if (resolvedPredicate.reverse && isFactLiteral(resolvedObject)) {
+  if (resolvedPredicate.reverse && Literal.is(resolvedObject)) {
     return yield* fail(
       "invalidTriple",
       `Reverse predicate ${resolvedPredicate.term} cannot take a literal object: literals are not RDF subjects.`,
@@ -591,13 +641,13 @@ const labelFacts: (facts: ReadonlyArray<AssembledFact>) => ReadonlyArray<LabelFa
       pipe(
         labelBucket(fact.predicateIri),
         O.flatMap((bucket) =>
-          isFactLiteral(fact.object) && P.isString(fact.object.value)
+          Literal.is(fact.object) && fact.object.form._tag !== "Typed"
             ? O.some({
                 subjectIri: fact.subjectIri,
                 bucket,
                 value: fact.object.value,
                 language: pipe(
-                  fact.object.language,
+                  Literal.languageOf(fact.object),
                   O.getOrElse(() => "")
                 ),
               })

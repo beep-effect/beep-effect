@@ -14,6 +14,7 @@ import { ClassificationRegistry } from "@beep/ontology/ClassificationRegistry";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -76,7 +77,43 @@ const fixtureLayer = Layer.effect(
   })
 );
 
-it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30 seconds" })(
+const zeroDigest = Str.repeat(64)("0");
+
+const digestBlind = Digest.Digest.of({
+  digest: Effect.fnUntraced(function* () {
+    return new Uint8Array(32);
+  }),
+  digestHex: Effect.fnUntraced(function* () {
+    return zeroDigest;
+  }),
+});
+
+const asClassificationError = Effect.flatMap((error: unknown) =>
+  S.is(ClassificationError)(error) ? Effect.succeed(error) : Effect.die(error)
+);
+
+const sourcesOf =
+  (fs: FileSystem.FileSystem, overrides: Pick<FileSystem.FileSystem, "readFileString">) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>) => {
+    const readFileString: FileSystem.FileSystem["readFileString"] = (path, encoding) =>
+      overrides
+        .readFileString(path, encoding)
+        .pipe(
+          Effect.map((content) =>
+            Str.endsWith(".jsonl")(path) ? Str.replaceAll(/[a-f0-9]{64}/g, zeroDigest)(content) : content
+          )
+        );
+    return self.pipe(
+      Effect.provideService(FileSystem.FileSystem, {
+        ...fs,
+        readFileString,
+        readFile: (path) => readFileString(path).pipe(Effect.map((content) => new TextEncoder().encode(content))),
+      }),
+      Effect.provideService(Digest.Digest, digestBlind)
+    );
+  };
+
+it.layer(Layer.mergeAll(ClassificationRegistry.layer, fixtureLayer, Digest.layerWebCrypto), { timeout: "30 seconds" })(
   "classification registry",
   (it) => {
     it.effect(
@@ -109,8 +146,12 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         expect(ipcConcept.iri).not.toBe(cpcConcept.iri);
         expect((yield* registry.resolve(cpc, cpcPin, "Y02A10/00")).kind).toBe("cpc");
         expect((yield* registry.resolve(cpc, cpcPin, "A01B2001/00")).kind).toBe("cpc");
-        expect((yield* registry.resolve(ipc, ipcPin, "Y02A10/00").pipe(Effect.flip)).reason).toBe("symbol-not-found");
-        expect((yield* registry.resolve(cpc, ipcPin, "A01B1/02").pipe(Effect.flip)).reason).toBe("scheme-mismatch");
+        expect(
+          (yield* registry.resolve(ipc, ipcPin, "Y02A10/00").pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("symbol-not-found");
+        expect((yield* registry.resolve(cpc, ipcPin, "A01B1/02").pipe(Effect.flip, asClassificationError)).reason).toBe(
+          "scheme-mismatch"
+        );
         expect(A.every(cpc.concepts, (concept) => !Str.includes("Forbidden")(concept.prefLabel))).toBe(true);
         const broader5 = yield* registry.broader(cpc, cpcPin, "A01B1/02");
         expect(A.map(broader5, (value) => value.notation)).toEqual(["A01B1/00", "A01B", "A01", "A"]);
@@ -145,9 +186,9 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
             concept.notation === "A01B1/00" ? ClassificationConcept.make({ ...concept, broader: [child.iri] }) : concept
           ),
         });
-        expect((yield* registry.resolve(reversed, ipcPin, child.notation).pipe(Effect.flip)).reason).toBe(
-          "hierarchy-invalid"
-        );
+        expect(
+          (yield* registry.resolve(reversed, ipcPin, child.notation).pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("hierarchy-invalid");
       })
     );
 
@@ -176,15 +217,15 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         yield* Effect.forEach(
           corruptions,
           Effect.fnUntraced(function* (corrupted) {
-            expect((yield* registry.resolve(corrupted, ipcPin, "A").pipe(Effect.flip)).reason).toBe(
-              "hierarchy-invalid"
-            );
+            expect(
+              (yield* registry.resolve(corrupted, ipcPin, "A").pipe(Effect.flip, asClassificationError)).reason
+            ).toBe("hierarchy-invalid");
           }),
           { concurrency: 1 }
         );
-        expect((yield* registry.broader(snapshot, ipcPin, "A01B999/00").pipe(Effect.flip)).reason).toBe(
-          "symbol-not-found"
-        );
+        expect(
+          (yield* registry.broader(snapshot, ipcPin, "A01B999/00").pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("symbol-not-found");
       })
     );
 
@@ -193,18 +234,26 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
       Effect.fnUntraced(function* () {
         const registry = yield* ClassificationRegistry;
         const unknown = ClassificationPin.make({ kind: "ipc", edition: "2099.01" });
-        expect((yield* registry.load(manifest, vendor, { kind: "ipc", edition: "" }).pipe(Effect.flip)).reason).toBe(
+        expect(
+          (yield* registry
+            .load(manifest, vendor, { kind: "ipc", edition: "" })
+            .pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("edition-unpinned");
+        expect(
+          (yield* registry
+            .load(manifest, vendor, { kind: "ipc", edition: "13-2026" })
+            .pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("edition-unpinned");
+        expect((yield* registry.load(manifest, vendor, unknown).pipe(Effect.flip, asClassificationError)).reason).toBe(
+          "edition-unpinned"
+        );
+        const snapshot = yield* registry.load(manifest, vendor, ipcPin);
+        expect((yield* registry.resolve(snapshot, unknown, "A").pipe(Effect.flip, asClassificationError)).reason).toBe(
           "edition-unpinned"
         );
         expect(
-          (yield* registry.load(manifest, vendor, { kind: "ipc", edition: "13-2026" }).pipe(Effect.flip)).reason
-        ).toBe("edition-unpinned");
-        expect((yield* registry.load(manifest, vendor, unknown).pipe(Effect.flip)).reason).toBe("edition-unpinned");
-        const snapshot = yield* registry.load(manifest, vendor, ipcPin);
-        expect((yield* registry.resolve(snapshot, unknown, "A").pipe(Effect.flip)).reason).toBe("edition-unpinned");
-        expect((yield* registry.resolve(snapshot, ipcPin, "A01B999/00").pipe(Effect.flip)).reason).toBe(
-          "symbol-not-found"
-        );
+          (yield* registry.resolve(snapshot, ipcPin, "A01B999/00").pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("symbol-not-found");
       })
     );
 
@@ -217,12 +266,12 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
           [ipcPin, cpcPin, nicePin],
           Effect.fnUntraced(function* (pin) {
             const error = yield* registry.load(manifest, vendor, pin).pipe(
-              Effect.provideService(FileSystem.FileSystem, {
-                ...fs,
+              sourcesOf(fs, {
                 readFileString: (path) =>
                   path === manifest ? fs.readFileString(path) : Effect.succeed("<damaged><archive>"),
               }),
-              Effect.flip
+              Effect.flip,
+              asClassificationError
             );
             expect(S.is(ClassificationError)(error)).toBe(true);
             expect(error.reason).toBe("source-parse");
@@ -255,7 +304,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
                   FileSystem.FileSystem,
                   FileSystem.makeNoop({ readFileString: () => Effect.succeed(content), realPath: Effect.succeed })
                 ),
-                Effect.flip
+                Effect.flip,
+                asClassificationError
               );
             expect(S.is(ClassificationError)(error)).toBe(true);
             expect(error.reason).toBe(expected);
@@ -270,7 +320,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
               realPath: (path) => Effect.succeed(path === vendor ? "/fixture/vendor" : "/outside/escape.xml"),
             })
           ),
-          Effect.flip
+          Effect.flip,
+          asClassificationError
         );
         expect(escaped.reason).toBe("path-escape");
       })
@@ -303,8 +354,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
           cases,
           Effect.fnUntraced(function* ([pin, suffix, before, after]) {
             const error = yield* registry.load(manifest, vendor, pin).pipe(
-              Effect.provideService(FileSystem.FileSystem, {
-                ...fs,
+              sourcesOf(fs, {
                 readFileString: (path) =>
                   fs
                     .readFileString(path)
@@ -314,7 +364,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
                       )
                     ),
               }),
-              Effect.flip
+              Effect.flip,
+              asClassificationError
             );
             expect(error.reason).toBe("source-parse");
           }),
@@ -328,16 +379,17 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
       Effect.fnUntraced(function* () {
         const registry = yield* ClassificationRegistry;
         const fs = yield* FileSystem.FileSystem;
-        expect((yield* registry.load("missing-manifest", vendor, ipcPin).pipe(Effect.flip)).reason).toBe(
-          "manifest-invalid"
-        );
+        expect(
+          (yield* registry.load("missing-manifest", vendor, ipcPin).pipe(Effect.flip, asClassificationError)).reason
+        ).toBe("manifest-invalid");
         for (const pin of [ipcPin, cpcPin]) {
           const error = yield* registry.load(manifest, vendor, pin).pipe(
             Effect.provideService(FileSystem.FileSystem, {
               ...fs,
               realPath: (path) => (path === vendor ? fs.realPath(path) : fs.realPath("missing-archive")),
             }),
-            Effect.flip
+            Effect.flip,
+            asClassificationError
           );
           expect(error.reason).toBe("source-parse");
         }
@@ -345,7 +397,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
           .load(manifest, vendor, cpcPin)
           .pipe(
             Effect.provideService(FileSystem.FileSystem, { ...fs, readDirectory: () => Effect.succeed([]) }),
-            Effect.flip
+            Effect.flip,
+            asClassificationError
           );
         expect(noFiles.detail).toBe("CPC scheme files missing");
         const noDirectory = yield* registry.load(manifest, vendor, cpcPin).pipe(
@@ -353,14 +406,14 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
             ...fs,
             readDirectory: () => fs.readDirectory("missing-directory"),
           }),
-          Effect.flip
+          Effect.flip,
+          asClassificationError
         );
         expect(noDirectory.reason).toBe("source-parse");
         const content = yield* fs.readFileString(manifest);
         for (const archive of ["structure", "texts"]) {
           const error = yield* registry.load(manifest, vendor, nicePin).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
+            sourcesOf(fs, {
               readFileString: (path) =>
                 path === manifest
                   ? Effect.succeed(
@@ -371,19 +424,20 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
                     )
                   : fs.readFileString(path),
             }),
-            Effect.flip
+            Effect.flip,
+            asClassificationError
           );
           expect(error.reason).toBe("manifest-invalid");
         }
         const invalidAsset = yield* registry.load(manifest, vendor, ipcPin).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
+          sourcesOf(fs, {
             readFileString: (path) =>
               path === manifest
                 ? Effect.succeed(Str.replaceAll('"schemeKind": "ipc"', '"schemeKind": "other"')(content))
                 : fs.readFileString(path),
           }),
-          Effect.flip
+          Effect.flip,
+          asClassificationError
         );
         expect(invalidAsset.reason).toBe("manifest-invalid");
       })
@@ -395,8 +449,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         const registry = yield* ClassificationRegistry;
         const fs = yield* FileSystem.FileSystem;
         const snapshot = yield* registry.load(manifest, vendor, ipcPin).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
+          sourcesOf(fs, {
             readFileString: (path) =>
               fs
                 .readFileString(path)
@@ -409,8 +462,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         );
         expect((yield* registry.resolve(snapshot, ipcPin, "A")).prefLabel).toBe("Synthetic IPC section");
         const cpc = yield* registry.load(manifest, vendor, cpcPin).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
+          sourcesOf(fs, {
             readFileString: (path) =>
               fs
                 .readFileString(path)
@@ -435,8 +487,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         const registry = yield* ClassificationRegistry;
         const fs = yield* FileSystem.FileSystem;
         const snapshot = yield* registry.load(manifest, vendor, cpcPin).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
+          sourcesOf(fs, {
             readFileString: (path) =>
               fs
                 .readFileString(path)
@@ -463,8 +514,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         const registry = yield* ClassificationRegistry;
         const fs = yield* FileSystem.FileSystem;
         const snapshot = yield* registry.load(manifest, vendor, cpcPin).pipe(
-          Effect.provideService(FileSystem.FileSystem, {
-            ...fs,
+          sourcesOf(fs, {
             readFileString: (path) =>
               fs
                 .readFileString(path)
@@ -488,8 +538,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
         const fs = yield* FileSystem.FileSystem;
         for (const replacement of ['<titlePart marker="synthetic"/>', '<titlePart><text language="en"/></titlePart>']) {
           const snapshot = yield* registry.load(manifest, vendor, ipcPin).pipe(
-            Effect.provideService(FileSystem.FileSystem, {
-              ...fs,
+            sourcesOf(fs, {
               readFileString: (path) =>
                 fs
                   .readFileString(path)
@@ -503,7 +552,9 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
             })
           );
           expect(snapshot.concepts).toHaveLength(4);
-          expect((yield* registry.resolve(snapshot, ipcPin, "A").pipe(Effect.flip)).reason).toBe("symbol-not-found");
+          expect((yield* registry.resolve(snapshot, ipcPin, "A").pipe(Effect.flip, asClassificationError)).reason).toBe(
+            "symbol-not-found"
+          );
         }
       })
     );
@@ -583,8 +634,7 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
           cases,
           Effect.fnUntraced(function* ([pin, suffix, before, after, notation, expected]) {
             const snapshot = yield* registry.load(manifest, vendor, pin).pipe(
-              Effect.provideService(FileSystem.FileSystem, {
-                ...fs,
+              sourcesOf(fs, {
                 readFileString: (path) =>
                   fs
                     .readFileString(path)

@@ -334,7 +334,7 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
     reference: "explorations/legal-ontology-landscape/assets/manifest.jsonl",
     consumers: ["@beep/ontology"],
     modes: ["read"],
-    evidence: ["packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts"],
+    evidence: ["packages/foundation/modeling/ontology/test/TaxonomyLoader.manifest.test.ts"],
   }),
   CiGoalDataConsumer.make({
     pattern: "^goals/[^/]+/ops/.+\\.ts$",

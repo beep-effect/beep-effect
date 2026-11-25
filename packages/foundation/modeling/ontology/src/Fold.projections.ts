@@ -1,388 +1,119 @@
 /**
- * Pure JSON-LD, JSON-LD context, and Turtle projections over an assembled
- * ontology.
+ * The RDF projection of an assembled ontology.
  *
  * **Details**
  *
- * Projections are catamorphisms over the assembled value: they never fail,
- * and repeated projection of the same assembly is byte-identical.
+ * `toDataset` is the fold's only RDF arrow: a pure, ground catamorphism over
+ * the assembled value. Serializations such as Turtle are a driver's job over
+ * the returned dataset.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { prefixedNameOrIri } from "@beep/identity";
-import { contract } from "@beep/identity/Registry";
-import { O as OU } from "@beep/utils";
+import { IRI } from "@beep/identity/Iri";
+import * as Registry from "@beep/identity/Registry";
+import * as Rdf from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
-import { flow, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { coreNamespaces } from "./internal/CoreNamespaces.ts";
 import type {
   AssembledClass,
   AssembledFact,
   AssembledOntology,
   AssembledPredicate,
-  FactLiteral,
-  FactObject,
+  SkosClassification,
 } from "./Fold.models.ts";
 
-/**
- * JSON-LD term binding emitted into projected contexts.
- *
- * **Example** (Typed term binding)
- *
- * ```ts
- * import type { JsonLdTerm } from "@beep/ontology/Fold.projections"
- *
- * const term: JsonLdTerm = { "@id": "http://www.w3.org/2004/02/skos/core#related", "@type": "@id" }
- * console.log(term)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type JsonLdTerm =
-  | string
-  | {
-      readonly "@id"?: string;
-      readonly "@reverse"?: string;
-      readonly "@type"?: "@id";
-      readonly "@prefix"?: true;
-    };
+const term = (curie: Registry.RegistryCurie): Rdf.NamedNode => Rdf.makeNamedNode(IRI.make(Registry.iri(curie)));
 
-/**
- * JSON-LD context record emitted by {@link toContext}.
- *
- * **Example** (Vocab context record)
- *
- * ```ts
- * import { $I } from "@beep/identity/packages"
- * import type { JsonLdContext } from "@beep/ontology/Fold.projections"
- *
- * const context: JsonLdContext = { "@vocab": $I.create("patent").iri }
- * console.log(context)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type JsonLdContext = R.ReadonlyRecord<string, JsonLdTerm>;
+const RDF_TYPE = term("rdf:type");
+const RDFS_CLASS = term("rdfs:Class");
+const RDFS_LABEL = term("rdfs:label");
+const RDFS_COMMENT = term("rdfs:comment");
+const RDFS_DOMAIN = term("rdfs:domain");
+const RDFS_RANGE = term("rdfs:range");
+const RDFS_LITERAL = term("rdfs:Literal");
+const OWL_DATATYPE_PROPERTY = term("owl:DatatypeProperty");
+const OWL_OBJECT_PROPERTY = term("owl:ObjectProperty");
+const SKOS_CONCEPT = term("skos:Concept");
+const SKOS_CONCEPT_SCHEME = term("skos:ConceptScheme");
 
-/**
- * JSON-LD node value: an `@id` reference or a typed `@value` literal.
- *
- * **Example** (Id reference value)
- *
- * ```ts
- * import type { JsonLdNodeValue } from "@beep/ontology/Fold.projections"
- *
- * const value: JsonLdNodeValue = { "@id": "https://schema.org/CreativeWork" }
- * console.log(value)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type JsonLdNodeValue =
-  | { readonly "@id": string }
-  | {
-      readonly "@value": string | number | boolean;
-      readonly "@type"?: string;
-      readonly "@language"?: string;
-    };
+const skosType = (marker: SkosClassification): Rdf.NamedNode =>
+  marker === "concept" ? SKOS_CONCEPT : SKOS_CONCEPT_SCHEME;
 
-/**
- * JSON-LD graph node emitted by {@link toJsonLd}.
- *
- * **Example** (Graph node shape)
- *
- * ```ts
- * import { $I } from "@beep/identity/packages"
- * import type { JsonLdNode } from "@beep/ontology/Fold.projections"
- *
- * const node: JsonLdNode = { "@id": $I.create("patent/Claim").iri }
- * console.log(node["@id"])
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type JsonLdNode = {
-  readonly "@id": string;
-  readonly "@type"?: string | ReadonlyArray<string>;
-  readonly "@reverse"?: R.ReadonlyRecord<string, ReadonlyArray<JsonLdNodeValue>>;
-} & R.ReadonlyRecord<string, unknown>;
+const commentQuads = (subject: Rdf.NamedNode, description: O.Option<string>): ReadonlyArray<Rdf.Quad> =>
+  O.match(description, {
+    onNone: A.empty,
+    onSome: (text) => [Rdf.makeQuad(subject, RDFS_COMMENT, Rdf.makeLiteral(text))],
+  });
 
-/**
- * JSON-LD document emitted by {@link toJsonLd}.
- *
- * **Example** (Empty document shell)
- *
- * ```ts
- * import type { JsonLdDocument } from "@beep/ontology/Fold.projections"
- *
- * const document: JsonLdDocument = { "@context": {}, "@graph": [] }
- * console.log(document["@graph"].length)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type JsonLdDocument = {
-  readonly "@context": JsonLdContext;
-  readonly "@graph": ReadonlyArray<JsonLdNode>;
+const classQuads = (assembled: AssembledClass): ReadonlyArray<Rdf.Quad> => {
+  const subject = Rdf.makeNamedNode(assembled.iri);
+
+  return [
+    Rdf.makeQuad(subject, RDF_TYPE, RDFS_CLASS),
+    ...O.match(assembled.skos, {
+      onNone: A.empty,
+      onSome: (marker) => [Rdf.makeQuad(subject, RDF_TYPE, skosType(marker))],
+    }),
+    Rdf.makeQuad(subject, RDFS_LABEL, Rdf.makeLiteral(assembled.name)),
+    ...commentQuads(subject, assembled.description),
+  ];
 };
-
-const RDFS_CLASS = "http://www.w3.org/2000/01/rdf-schema#Class";
-const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label";
-const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
-const RDFS_DOMAIN = "http://www.w3.org/2000/01/rdf-schema#domain";
-const RDFS_RANGE = "http://www.w3.org/2000/01/rdf-schema#range";
-const RDFS_LITERAL = "http://www.w3.org/2000/01/rdf-schema#Literal";
-const OWL_DATATYPE_PROPERTY = "http://www.w3.org/2002/07/owl#DatatypeProperty";
-const OWL_OBJECT_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
-const SKOS_CONCEPT = "http://www.w3.org/2004/02/skos/core#Concept";
-const SKOS_CONCEPT_SCHEME = "http://www.w3.org/2004/02/skos/core#ConceptScheme";
-
-const localFromNamespace = (namespace: string, iri: string): O.Option<string> =>
-  pipe(iri, Str.startsWith(namespace)) ? O.some(pipe(iri, Str.slice(Str.length(namespace)))) : O.none();
-
-const compactCore = (iri: string): O.Option<string> =>
-  O.filter(contract(iri), (curie) => A.some(coreNamespaces, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
-
-const compactOwned = (ontology: AssembledOntology, iri: string): O.Option<string> =>
-  pipe(
-    localFromNamespace(ontology.baseIri, iri),
-    O.map((local) => `${ontology.prefix}:${local}`)
-  );
-
-const compactIri = (ontology: AssembledOntology, iri: string): string =>
-  pipe(
-    compactCore(iri),
-    O.orElse(() => compactOwned(ontology, iri)),
-    O.getOrElse(() => iri)
-  );
 
 const isOwnedPredicate = (ontology: AssembledOntology, predicate: AssembledPredicate): boolean =>
-  O.isSome(localFromNamespace(ontology.baseIri, predicate.termIri));
+  Str.startsWith(ontology.baseIri)(predicate.termIri);
 
-const predicateContextTerm = (predicate: AssembledPredicate): JsonLdTerm => {
-  if (predicate.reverse) {
-    return predicate.kind === "object"
-      ? { "@reverse": predicate.termIri, "@type": "@id" }
-      : { "@reverse": predicate.termIri };
+const predicateQuads = (assembled: AssembledClass, predicate: AssembledPredicate): ReadonlyArray<Rdf.Quad> => {
+  const subject = Rdf.makeNamedNode(predicate.termIri);
+
+  return [
+    Rdf.makeQuad(subject, RDF_TYPE, predicate.kind === "object" ? OWL_OBJECT_PROPERTY : OWL_DATATYPE_PROPERTY),
+    Rdf.makeQuad(subject, RDFS_LABEL, Rdf.makeLiteral(predicate.key)),
+    Rdf.makeQuad(subject, RDFS_DOMAIN, Rdf.makeNamedNode(assembled.iri)),
+    Rdf.makeQuad(
+      subject,
+      RDFS_RANGE,
+      O.match(predicate.rangeIri, { onNone: () => RDFS_LITERAL, onSome: Rdf.makeNamedNode })
+    ),
+    ...commentQuads(subject, predicate.description),
+  ];
+};
+
+const factQuad = (fact: AssembledFact): Rdf.Quad => {
+  const predicate = Rdf.makeNamedNode(fact.predicateIri);
+
+  if (P.isString(fact.object)) {
+    const [subject, object] = fact.reverse ? [fact.object, fact.subjectIri] : [fact.subjectIri, fact.object];
+    return Rdf.makeQuad(Rdf.makeNamedNode(subject), predicate, Rdf.makeNamedNode(object));
   }
 
-  return predicate.kind === "object" ? { "@id": predicate.termIri, "@type": "@id" } : predicate.termIri;
+  return Rdf.makeQuad(Rdf.makeNamedNode(fact.subjectIri), predicate, fact.object);
 };
 
-const classContextEntries: (classes: ReadonlyArray<AssembledClass>) => ReadonlyArray<readonly [string, JsonLdTerm]> =
-  A.map((assembled) => [assembled.name, { "@id": assembled.iri }] as const);
-
-const predicateContextEntries: (
-  classes: ReadonlyArray<AssembledClass>
-) => ReadonlyArray<readonly [string, JsonLdTerm]> = A.flatMap((assembled) =>
-  pipe(
-    assembled.predicates,
-    A.map((predicate) => [predicate.key, predicateContextTerm(predicate)] as const)
-  )
-);
-
-const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true });
-
 /**
- * Project the JSON-LD `@context` for an assembled ontology.
+ * Project an assembled ontology into a ground RDF dataset.
  *
  * **Details**
  *
- * The context derives entirely from assembled annotations: every class name
- * and predicate key becomes a term entry, and core prefixes are always bound.
+ * Every class is typed `rdfs:Class` (and its SKOS marker), labelled and
+ * commented; every owned predicate is typed, labelled, domained and ranged;
+ * every fact is one quad, with a reverse fact's endpoints swapped. The
+ * dataset is a quad set, so repeated projection is `Equal`.
  *
- * **Example** (Context from folded ontology)
+ * **Example** (Dataset from folded ontology)
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
  * import { view } from "@beep/identity/Registry"
  * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
  * import { foldWith } from "@beep/ontology/Fold.assembly"
- * import { toContext } from "@beep/ontology/Fold.projections"
+ * import { toDataset } from "@beep/ontology/Fold.projections"
  * import * as Effect from "effect/Effect"
- * import * as Result from "effect/Result"
- * import * as S from "effect/Schema"
- *
- * const $I = $BeepId.create("patent")
- *
- * class Claim extends S.Class<Claim>($I`Claim`)(
- *   { prefLabel: S.String.pipe($I.key("skos:prefLabel")) },
- *   $I.class("Claim", { description: "A patent claim." })
- * ) {}
- * const patent = S.decodeUnknownSync(RegistryShard)({
- *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
- *   terms: ["Claim", "prefLabel"],
- *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
- *   deprecations: []
- * })
- * const skos = S.decodeUnknownSync(RegistryShard)({
- *   namespace: { prefix: "skos", iri: "http://www.w3.org/2004/02/skos/core#" },
- *   terms: ["prefLabel"],
- *   bindings: [],
- *   deprecations: []
- * })
- * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent, skos])))
- *
- * const context = toContext(
- *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
- * )
- * console.log(context.prefLabel) // "http://www.w3.org/2004/02/skos/core#prefLabel"
- * ```
- *
- * @category projections
- * @since 0.0.0
- */
-export const toContext = (ontology: AssembledOntology): JsonLdContext =>
-  R.fromEntries([
-    ["@vocab", ontology.baseIri],
-    [ontology.prefix, prefixTerm(ontology.baseIri)],
-    ...pipe(
-      coreNamespaces,
-      A.map(({ iri, prefix }) => [prefix, prefixTerm(iri)] as const)
-    ),
-    ...classContextEntries(ontology.classes),
-    ...predicateContextEntries(ontology.classes),
-  ]);
-
-const literalNodeValue = (literal: FactLiteral): JsonLdNodeValue => ({
-  "@value": literal.value,
-  ...OU.getSomesStruct({ "@type": literal.datatypeIri, "@language": literal.language }),
-});
-
-const jsonLdValue = (object: FactObject): JsonLdNodeValue =>
-  P.isString(object) ? { "@id": object } : literalNodeValue(object);
-
-const valuesFor = (
-  ontology: AssembledOntology,
-  subjectIri: string,
-  reverse: boolean
-): ReadonlyArray<readonly [string, ReadonlyArray<JsonLdNodeValue>]> =>
-  pipe(
-    ontology.facts,
-    A.filter((fact) => fact.subjectIri === subjectIri && fact.reverse === reverse),
-    A.reduce([] as Array<readonly [string, Array<JsonLdNodeValue>]>, (entries, fact) => {
-      const key = compactIri(ontology, fact.predicateIri);
-      const existing = pipe(
-        entries,
-        A.findFirst(([entryKey]) => entryKey === key)
-      );
-
-      if (O.isSome(existing)) {
-        existing.value[1].push(jsonLdValue(fact.object));
-        return entries;
-      }
-
-      entries.push([key, [jsonLdValue(fact.object)]]);
-      return entries;
-    })
-  );
-
-const classTypes = (assembled: AssembledClass): string | ReadonlyArray<string> =>
-  pipe(
-    assembled.skos,
-    O.match({
-      onNone: () => "rdfs:Class",
-      onSome: (marker) => ["rdfs:Class", marker === "concept" ? "skos:Concept" : "skos:ConceptScheme"],
-    })
-  );
-
-const classNode = (ontology: AssembledOntology, assembled: AssembledClass): JsonLdNode => {
-  const facts = valuesFor(ontology, assembled.iri, false);
-  const reverseFacts = valuesFor(ontology, assembled.iri, true);
-  const factProperties: R.ReadonlyRecord<string, ReadonlyArray<JsonLdNodeValue>> = R.fromEntries(facts);
-  const label = pipe(
-    R.get(factProperties, "rdfs:label"),
-    O.match({
-      onNone: () => assembled.name,
-      onSome: (values) => [assembled.name, ...values],
-    })
-  );
-  const comment = pipe(
-    assembled.description,
-    O.map((description) =>
-      pipe(
-        R.get(factProperties, "rdfs:comment"),
-        O.match({
-          onNone: () => description,
-          onSome: (values) => [description, ...values],
-        })
-      )
-    )
-  );
-
-  return {
-    "@id": assembled.iri,
-    "@type": classTypes(assembled),
-    ...factProperties,
-    "rdfs:label": label,
-    ...OU.getSomesStruct({ "rdfs:comment": comment }),
-    ...(A.isReadonlyArrayNonEmpty(reverseFacts) ? { "@reverse": R.fromEntries(reverseFacts) } : {}),
-  };
-};
-
-const factSubjectNode = (ontology: AssembledOntology, subjectIri: string): JsonLdNode => {
-  const facts = valuesFor(ontology, subjectIri, false);
-  const reverseFacts = valuesFor(ontology, subjectIri, true);
-
-  return {
-    "@id": subjectIri,
-    ...R.fromEntries(facts),
-    ...(A.isReadonlyArrayNonEmpty(reverseFacts) ? { "@reverse": R.fromEntries(reverseFacts) } : {}),
-  };
-};
-
-const externalFactSubjects = (ontology: AssembledOntology): ReadonlyArray<string> =>
-  pipe(
-    ontology.facts,
-    A.map((fact) => fact.subjectIri),
-    A.dedupe,
-    A.filter((subjectIri) => !pipe(ontology.classes, A.some(P.Struct({ iri: Eq.equals(subjectIri) }))))
-  );
-
-const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate): JsonLdNode => ({
-  "@id": predicate.termIri,
-  "@type": predicate.kind === "object" ? "owl:ObjectProperty" : "owl:DatatypeProperty",
-  "rdfs:label": predicate.key,
-  "rdfs:domain": { "@id": assembled.iri },
-  "rdfs:range": {
-    "@id": pipe(
-      predicate.rangeIri,
-      O.getOrElse(() => RDFS_LITERAL)
-    ),
-  },
-  ...OU.getSomesStruct({ "rdfs:comment": predicate.description }),
-});
-
-/**
- * Project an assembled ontology into a bounded JSON-LD document.
- *
- * **Details**
- *
- * Reverse-marked predicates emit under `@reverse`; class nodes carry their
- * SKOS classification beside `rdfs:Class` when marked.
- *
- * **Example** (Document from folded ontology)
- *
- * ```ts
- * import { $I as $BeepId } from "@beep/identity/packages"
- * import { view } from "@beep/identity/Registry"
- * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
- * import { foldWith } from "@beep/ontology/Fold.assembly"
- * import { toJsonLd } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
@@ -400,296 +131,24 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  * })
  * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
  *
- * const document = toJsonLd(
+ * const dataset = toDataset(
  *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
- * console.log(document["@graph"][0]?.["@id"]) // "https://example.test/patent/Claim"
+ * console.log(HashSet.size(dataset.quads) > 0) // true
  * ```
  *
  * @category projections
  * @since 0.0.0
  */
-export const toJsonLd = (ontology: AssembledOntology): JsonLdDocument => ({
-  "@context": toContext(ontology),
-  "@graph": [
-    ...pipe(
-      ontology.classes,
-      A.map((assembled) => classNode(ontology, assembled))
-    ),
-    ...pipe(
-      ontology.classes,
-      A.flatMap((assembled) =>
-        pipe(
-          assembled.predicates,
-          A.filter((predicate) => isOwnedPredicate(ontology, predicate)),
-          A.map((predicate) => predicateNode(assembled, predicate))
-        )
-      )
-    ),
-    ...pipe(
-      externalFactSubjects(ontology),
-      A.map((subjectIri) => factSubjectNode(ontology, subjectIri))
-    ),
-  ],
-});
-
-const iriRef = (iri: string): string => `<${iri}>`;
-
-const turtleTerm = (ontology: AssembledOntology, iri: string): string => {
-  const owned = pipe(
-    localFromNamespace(ontology.baseIri, iri),
-    O.map(prefixedNameOrIri({ prefix: ontology.prefix, fullIri: iri }))
-  );
-
-  if (O.isSome(owned)) {
-    return owned.value;
-  }
-
-  return pipe(
-    coreNamespaces,
-    A.findFirst(({ iri: namespace }) => pipe(iri, Str.startsWith(namespace))),
-    O.map(({ iri: namespace, prefix }) =>
-      prefixedNameOrIri(pipe(iri, Str.slice(Str.length(namespace))), { prefix, fullIri: iri })
-    ),
-    O.getOrElse(() => iriRef(iri))
-  );
-};
-
-const escapeTurtleLiteral: (value: string) => string = flow(
-  Str.replaceAll("\\", "\\\\"),
-  Str.replaceAll('"', '\\"'),
-  Str.replaceAll("\n", "\\n"),
-  Str.replaceAll("\t", "\\t"),
-  Str.replaceAll("\r", "\\r")
-);
-
-const quotedLiteral = (value: string | number | boolean): string => `"${escapeTurtleLiteral(`${value}`)}"`;
-
-const literalValue = (value: string | number | boolean): string =>
-  P.isString(value) ? quotedLiteral(value) : `${value}`;
-
-const turtleObject = (ontology: AssembledOntology, object: FactObject): string => {
-  if (P.isString(object)) {
-    return turtleTerm(ontology, object);
-  }
-
-  const quoted = quotedLiteral(object.value);
-
-  return pipe(
-    O.map(object.language, (language) => `${quoted}@${language}`),
-    O.orElse(() => O.map(object.datatypeIri, (datatypeIri) => `${quoted}^^${turtleTerm(ontology, datatypeIri)}`)),
-    O.getOrElse(() => literalValue(object.value))
-  );
-};
-
-const statementBlock = (subject: string, statements: ReadonlyArray<string>): string =>
-  pipe(
-    statements,
-    A.match({
-      onEmpty: () => `${subject} .`,
-      onNonEmpty: (items) =>
-        `${subject} ${A.headNonEmpty(items)}${pipe(
-          A.tailNonEmpty(items),
-          A.map((statement) => ` ;\n  ${statement}`),
-          A.join("")
-        )} .`,
-    })
-  );
-
-const classTypeStatement = (ontology: AssembledOntology, assembled: AssembledClass): string =>
-  pipe(
-    assembled.skos,
-    O.match({
-      onNone: () => `a ${turtleTerm(ontology, RDFS_CLASS)}`,
-      onSome: (marker) =>
-        `a ${turtleTerm(ontology, RDFS_CLASS)}, ${turtleTerm(
-          ontology,
-          marker === "concept" ? SKOS_CONCEPT : SKOS_CONCEPT_SCHEME
-        )}`,
-    })
-  );
-
-const classBlock = (ontology: AssembledOntology, assembled: AssembledClass): string =>
-  statementBlock(turtleTerm(ontology, assembled.iri), [
-    classTypeStatement(ontology, assembled),
-    `${turtleTerm(ontology, RDFS_LABEL)} ${literalValue(assembled.name)}`,
-    ...pipe(
-      assembled.description,
-      O.match({
-        onNone: A.empty,
-        onSome: (description) => [`${turtleTerm(ontology, RDFS_COMMENT)} ${literalValue(description)}`],
-      })
-    ),
-  ]);
-
-const predicateBlock = (
-  ontology: AssembledOntology,
-  assembled: AssembledClass,
-  predicate: AssembledPredicate
-): string =>
-  statementBlock(turtleTerm(ontology, predicate.termIri), [
-    `a ${turtleTerm(ontology, predicate.kind === "object" ? OWL_OBJECT_PROPERTY : OWL_DATATYPE_PROPERTY)}`,
-    `${turtleTerm(ontology, RDFS_LABEL)} ${literalValue(predicate.key)}`,
-    `${turtleTerm(ontology, RDFS_DOMAIN)} ${turtleTerm(ontology, assembled.iri)}`,
-    `${turtleTerm(ontology, RDFS_RANGE)} ${turtleTerm(
-      ontology,
-      pipe(
-        predicate.rangeIri,
-        O.getOrElse(() => RDFS_LITERAL)
-      )
-    )}`,
-    ...pipe(
-      predicate.description,
-      O.match({
-        onNone: () => [],
-        onSome: (description) => [`${turtleTerm(ontology, RDFS_COMMENT)} ${literalValue(description)}`],
-      })
-    ),
-  ]);
-
-const factStatement = (ontology: AssembledOntology, fact: AssembledFact): string => {
-  const swap = fact.reverse && P.isString(fact.object);
-  const subject = swap && P.isString(fact.object) ? fact.object : fact.subjectIri;
-  const object: FactObject = swap ? fact.subjectIri : fact.object;
-
-  return `${turtleTerm(ontology, subject)} ${turtleTerm(ontology, fact.predicateIri)} ${turtleObject(
-    ontology,
-    object
-  )} .`;
-};
-
-const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly [string, string]> => {
-  const usedIris = [
-    RDFS_CLASS,
-    RDFS_LABEL,
-    RDFS_COMMENT,
-    RDFS_DOMAIN,
-    RDFS_RANGE,
-    RDFS_LITERAL,
-    OWL_DATATYPE_PROPERTY,
-    OWL_OBJECT_PROPERTY,
-    ...pipe(
-      ontology.classes,
-      A.flatMap((assembled) => [
-        assembled.iri,
-        ...pipe(
-          assembled.skos,
-          O.match({
-            onNone: () => [],
-            onSome: (marker) => [marker === "concept" ? SKOS_CONCEPT : SKOS_CONCEPT_SCHEME],
-          })
-        ),
-      ])
-    ),
-    ...pipe(
-      ontology.classes,
-      A.flatMap((assembled) =>
-        pipe(
-          assembled.predicates,
-          A.flatMap((predicate) => [
-            predicate.termIri,
-            ...pipe(predicate.rangeIri, O.match({ onNone: () => [], onSome: (rangeIri) => [rangeIri] })),
-          ])
-        )
-      )
-    ),
-    ...pipe(
-      ontology.facts,
-      A.flatMap((fact) => [
-        fact.subjectIri,
-        fact.predicateIri,
-        ...(P.isString(fact.object)
-          ? [fact.object]
-          : pipe(fact.object.datatypeIri, O.match({ onNone: A.empty, onSome: (datatypeIri) => [datatypeIri] }))),
-      ])
-    ),
-  ];
-
-  const entries: ReadonlyArray<readonly [string, string]> = [
-    [ontology.prefix, ontology.baseIri] as const,
-    ...pipe(
-      coreNamespaces,
-      A.filter(({ iri, prefix }) => prefix !== ontology.prefix && pipe(usedIris, A.some(Str.startsWith(iri)))),
-      A.map(({ iri, prefix }) => [prefix, iri] as const)
-    ),
-  ];
-
-  return pipe(entries, A.sort(Order.mapInput(Order.String, (entry: readonly [string, string]) => entry[0])));
-};
-
-/**
- * Project an assembled ontology into deterministic Turtle.
- *
- * **Details**
- *
- * Owned locals emit as prefixed names only when PN_LOCAL-safe, otherwise the
- * writer falls back to full IRI references; literals are escaped. Only namespaces
- * declared in the Turtle header compact, so every printed prefixed name resolves.
- *
- * **Gotchas**
- *
- * Language tags and datatypes follow quoted Turtle strings, including when the value is
- * numeric or boolean. An ontology owned by a core prefix declares its core namespace
- * through the owned entry.
- *
- * **Example** (Turtle from folded ontology)
- *
- * ```ts
- * import { $I as $BeepId } from "@beep/identity/packages"
- * import { view } from "@beep/identity/Registry"
- * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
- * import { foldWith } from "@beep/ontology/Fold.assembly"
- * import { toTurtle } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect"
- * import * as Result from "effect/Result"
- * import * as S from "effect/Schema"
- *
- * const $I = $BeepId.create("patent")
- *
- * class Claim extends S.Class<Claim>($I`Claim`)(
- *   { text: S.String },
- *   $I.class("Claim", { description: "A patent claim." })
- * ) {}
- * const patent = S.decodeUnknownSync(RegistryShard)({
- *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
- *   terms: ["Claim", "text"],
- *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
- *   deprecations: []
- * })
- * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
- *
- * const turtle = toTurtle(
- *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
- * )
- * console.log(turtle.includes("patent:Claim")) // true
- * ```
- *
- * @category projections
- * @since 0.0.0
- */
-export const toTurtle = (ontology: AssembledOntology): string => {
-  const prefixes = pipe(
-    prefixDefinitions(ontology),
-    A.map(([prefix, iri]) => `@prefix ${prefix}: ${iriRef(iri)} .`)
-  );
-  const classes = pipe(
-    ontology.classes,
-    A.map((assembled) => classBlock(ontology, assembled))
-  );
-  const predicates = pipe(
-    ontology.classes,
-    A.flatMap((assembled) =>
+export const toDataset = (ontology: AssembledOntology): Rdf.Dataset =>
+  Rdf.makeDataset([
+    ...A.flatMap(ontology.classes, classQuads),
+    ...A.flatMap(ontology.classes, (assembled) =>
       pipe(
         assembled.predicates,
         A.filter((predicate) => isOwnedPredicate(ontology, predicate)),
-        A.map((predicate) => predicateBlock(ontology, assembled, predicate))
+        A.flatMap((predicate) => predicateQuads(assembled, predicate))
       )
-    )
-  );
-  const facts = pipe(
-    ontology.facts,
-    A.map((fact) => factStatement(ontology, fact))
-  );
-
-  return pipe([...prefixes, "", ...classes, ...predicates, ...facts], A.join("\n\n"));
-};
+    ),
+    ...A.map(ontology.facts, factQuad),
+  ]);

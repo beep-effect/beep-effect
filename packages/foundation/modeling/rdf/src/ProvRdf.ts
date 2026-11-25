@@ -13,8 +13,11 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Base64Url from "effect/encoding/Base64Url";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -34,7 +37,7 @@ import {
   SoftwareAgent,
   Usage,
 } from "./Prov.ts";
-import { Dataset, DefaultGraph, Literal, NamedNode, Quad, serializeTerm } from "./Rdf.ts";
+import { Dataset, DefaultGraph, Literal, makeDataset, NamedNode, Quad, serializeQuad, serializeTerm } from "./Rdf.ts";
 import {
   PROV_ACTIVITY,
   PROV_ACTIVITY_PROPERTY,
@@ -162,8 +165,7 @@ const recordNode = (index: number): Result.Result<NamedNode, ProvRdfCodecError> 
 const relationNode = (index: number): Result.Result<NamedNode, ProvRdfCodecError> =>
   makeNamedNodeResult(`${RELATION_IRI_PREFIX}${index}`);
 
-const literal = (value: string, datatype: NamedNode): Literal =>
-  Literal.make({ termType: "Literal", value, language: O.none(), datatype });
+const literal = (value: string, datatype: NamedNode): Literal => Literal.typed(value, datatype.value);
 
 const quad = (subject: Subject, predicate: NamedNode, object: ObjectTerm, graph: GraphTerm): Quad =>
   Quad.make({ subject, predicate, object, graph });
@@ -525,7 +527,7 @@ const provBundleToDatasetInternal = (
           A.map((record, index) => encodeRecord(record)(index, selectGraph(options))),
           Result.all,
           Result.flatMap(ensureUniqueRecordSubjects),
-          Result.map((parts) => Dataset.make({ quads: A.dedupeWith(A.flatten(parts), sameQuad) }))
+          Result.map((parts) => makeDataset(A.flatten(parts)))
         ),
       onSome: () =>
         Result.fail(codecError("ProvBundle lifecycle adjuncts are not part of the core PROV-O RDF projection")),
@@ -575,11 +577,7 @@ const inSelectedGraph =
 const sameTerm = (left: Subject | ObjectTerm, right: Subject | ObjectTerm): boolean =>
   serializeTerm(left) === serializeTerm(right);
 const samePredicate = (left: NamedNode, right: NamedNode): boolean => left.value === right.value;
-const sameQuad = (left: Quad, right: Quad): boolean =>
-  serializeTerm(left.subject) === serializeTerm(right.subject) &&
-  samePredicate(left.predicate, right.predicate) &&
-  sameTerm(left.object, right.object) &&
-  serializeTerm(left.graph) === serializeTerm(right.graph);
+const byQuadLine: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
 
 const objects = (quads: ReadonlyArray<Quad>, subject: Subject, predicate: NamedNode): ReadonlyArray<ObjectTerm> =>
   pipe(
@@ -647,11 +645,11 @@ const decodeRefs: (
 const decodeFiniteFromStringResult = S.decodeResult(S.FiniteFromString);
 const decodePlainLiteralScalar = Match.type<Literal>().pipe(
   Match.when(
-    (term) => term.datatype.value === XSD_STRING.value,
+    (term) => Literal.datatypeOf(term).value === XSD_STRING.value,
     (term) => Result.succeed<string | number | boolean>(term.value)
   ),
   Match.when(
-    (term) => term.datatype.value === XSD_DOUBLE.value,
+    (term) => Literal.datatypeOf(term).value === XSD_DOUBLE.value,
     (term) =>
       pipe(
         decodeFiniteFromStringResult(term.value),
@@ -659,18 +657,18 @@ const decodePlainLiteralScalar = Match.type<Literal>().pipe(
       )
   ),
   Match.when(
-    (term) => term.datatype.value === XSD_BOOLEAN.value && term.value === "true",
+    (term) => Literal.datatypeOf(term).value === XSD_BOOLEAN.value && term.value === "true",
     () => Result.succeed(true)
   ),
   Match.when(
-    (term) => term.datatype.value === XSD_BOOLEAN.value && term.value === "false",
+    (term) => Literal.datatypeOf(term).value === XSD_BOOLEAN.value && term.value === "false",
     () => Result.succeed(false)
   ),
-  Match.orElse((term) => Result.fail(codecError(`Unsupported prov:value datatype: ${term.datatype.value}`)))
+  Match.orElse((term) => Result.fail(codecError(`Unsupported prov:value datatype: ${Literal.datatypeOf(term).value}`)))
 );
 
 const decodeLiteralScalar = (term: Literal): Result.Result<string | number | boolean, ProvRdfCodecError> =>
-  O.isNone(term.language)
+  O.isNone(Literal.languageOf(term))
     ? decodePlainLiteralScalar(term)
     : Result.fail(codecError("Language-tagged prov:value literals are not supported"));
 
@@ -689,7 +687,7 @@ const decodeTimestamp = (value: O.Option<ObjectTerm>): Result.Result<O.Option<Pr
   O.match(value, {
     onNone: () => Result.succeed(O.none()),
     onSome: (term) =>
-      Literal.is(term) && term.datatype.value === XSD_DATE_TIME.value && O.isNone(term.language)
+      Literal.is(term) && Literal.datatypeOf(term).value === XSD_DATE_TIME.value && O.isNone(Literal.languageOf(term))
         ? pipe(
             S.decodeResult(ProvDateTime)(term.value),
             Result.map(O.some),
@@ -698,7 +696,7 @@ const decodeTimestamp = (value: O.Option<ObjectTerm>): Result.Result<O.Option<Pr
         : Result.fail(
             codecError(
               Literal.is(term)
-                ? `Expected an xsd:dateTime literal for a PROV timestamp, received ${term.datatype.value}`
+                ? `Expected an xsd:dateTime literal for a PROV timestamp, received ${Literal.datatypeOf(term).value}`
                 : "Expected an RDF literal for a PROV timestamp"
             )
           ),
@@ -714,7 +712,7 @@ const decodeName = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Result
       O.match({
         onNone: () => Result.succeed(O.none()),
         onSome: (term) =>
-          Literal.is(term) && term.datatype.value === XSD_STRING.value && O.isNone(term.language)
+          Literal.is(term) && Literal.datatypeOf(term).value === XSD_STRING.value && O.isNone(Literal.languageOf(term))
             ? Result.succeed(O.some(term.value))
             : Result.fail(codecError("Expected a plain xsd:string RDF literal for rdfs:label")),
       })
@@ -934,6 +932,108 @@ const decodeRecord = (
 ): Result.Result<ProvRecordType, ProvRdfCodecError> =>
   decodeRecordByType(typeQuad.object.value)(quads, typeQuad.subject);
 
+const recordPredicates = HashMap.make(
+  [
+    PROV_ENTITY.value,
+    [
+      PROV_WAS_GENERATED_BY,
+      PROV_WAS_ATTRIBUTED_TO,
+      PROV_HAD_PRIMARY_SOURCE,
+      PROV_WAS_QUOTED_FROM,
+      PROV_WAS_REVISION_OF,
+      PROV_WAS_DERIVED_FROM,
+      PROV_GENERATED_AT_TIME,
+      PROV_INVALIDATED_AT_TIME,
+      PROV_VALUE,
+    ],
+  ],
+  [PROV_ACTIVITY.value, [PROV_USED, PROV_WAS_ASSOCIATED_WITH, PROV_STARTED_AT_TIME, PROV_ENDED_AT_TIME]],
+  [PROV_AGENT.value, [RDFS_LABEL]],
+  [PROV_SOFTWARE_AGENT.value, [RDFS_LABEL]],
+  [PROV_USAGE.value, [PROV_ENTITY_PROPERTY, PROV_AT_TIME]],
+  [PROV_GENERATION.value, [PROV_ACTIVITY_PROPERTY, PROV_AT_TIME]],
+  [PROV_ASSOCIATION.value, [PROV_AGENT_PROPERTY, PROV_HAD_PLAN]],
+  [PROV_ATTRIBUTION.value, [PROV_AGENT_PROPERTY]],
+  [PROV_DERIVATION.value, [PROV_ENTITY_PROPERTY]],
+  [PROV_PRIMARY_SOURCE.value, [PROV_ENTITY_PROPERTY]]
+);
+
+const relationPredicates = HashMap.make(
+  [PROV_USAGE.value, { qualified: PROV_QUALIFIED_USAGE, direct: PROV_USED, target: PROV_ENTITY_PROPERTY }],
+  [
+    PROV_GENERATION.value,
+    { qualified: PROV_QUALIFIED_GENERATION, direct: PROV_WAS_GENERATED_BY, target: PROV_ACTIVITY_PROPERTY },
+  ],
+  [
+    PROV_ASSOCIATION.value,
+    { qualified: PROV_QUALIFIED_ASSOCIATION, direct: PROV_WAS_ASSOCIATED_WITH, target: PROV_AGENT_PROPERTY },
+  ],
+  [
+    PROV_ATTRIBUTION.value,
+    { qualified: PROV_QUALIFIED_ATTRIBUTION, direct: PROV_WAS_ATTRIBUTED_TO, target: PROV_AGENT_PROPERTY },
+  ],
+  [
+    PROV_DERIVATION.value,
+    { qualified: PROV_QUALIFIED_DERIVATION, direct: PROV_WAS_DERIVED_FROM, target: PROV_ENTITY_PROPERTY },
+  ],
+  [
+    PROV_PRIMARY_SOURCE.value,
+    { qualified: PROV_QUALIFIED_PRIMARY_SOURCE, direct: PROV_HAD_PRIMARY_SOURCE, target: PROV_ENTITY_PROPERTY },
+  ]
+);
+
+const relationClaims = (
+  quads: ReadonlyArray<Quad>,
+  node: Subject,
+  {
+    qualified,
+    direct,
+    target,
+  }: { readonly qualified: NamedNode; readonly direct: NamedNode; readonly target: NamedNode }
+): ReadonlyArray<Quad> => {
+  const parents = parentSubjects(quads, qualified, node);
+  const targets = objects(quads, node, target);
+  return A.filter(
+    quads,
+    (value) =>
+      (samePredicate(value.predicate, qualified) && sameTerm(value.object, node)) ||
+      (samePredicate(value.predicate, direct) &&
+        A.some(parents, (parent) => sameTerm(value.subject, parent)) &&
+        A.some(targets, (object) => sameTerm(value.object, object)))
+  );
+};
+
+const recordClaims =
+  (quads: ReadonlyArray<Quad>) =>
+  (typeQuad: Quad & { readonly object: NamedNode }): ReadonlyArray<Quad> => {
+    const predicates = O.getOrElse(HashMap.get(recordPredicates, typeQuad.object.value), A.empty<NamedNode>);
+    const own = A.filter(
+      quads,
+      (value) =>
+        sameTerm(value.subject, typeQuad.subject) &&
+        A.some(predicates, (predicate) => samePredicate(value.predicate, predicate))
+    );
+    const relation = O.match(HashMap.get(relationPredicates, typeQuad.object.value), {
+      onNone: A.empty<Quad>,
+      onSome: (shape) => relationClaims(quads, typeQuad.subject, shape),
+    });
+    return [typeQuad, ...own, ...relation];
+  };
+
+const ensureEveryQuadClaimed = (
+  quads: ReadonlyArray<Quad>,
+  typeQuads: ReadonlyArray<Quad & { readonly object: NamedNode }>
+): Result.Result<void, ProvRdfCodecError> => {
+  const claimed = HashSet.fromIterable(A.map(A.flatMap(typeQuads, recordClaims(quads)), serializeQuad));
+  return O.match(
+    A.findFirst(quads, (value) => !HashSet.has(claimed, serializeQuad(value))),
+    {
+      onNone: () => Result.void,
+      onSome: (value) => Result.fail(codecError(`Quad outside every supported PROV record: ${serializeQuad(value)}`)),
+    }
+  );
+};
+
 const ensureUniqueTypeSubjects = <TypeQuad extends Quad>(
   typeQuads: ReadonlyArray<TypeQuad>
 ): Result.Result<ReadonlyArray<TypeQuad>, ProvRdfCodecError> =>
@@ -962,7 +1062,7 @@ const datasetToProvBundleInternal = (
   dataset: Dataset,
   options: ProvRdfCodecOptions = defaultOptions
 ): Result.Result<ProvBundle, ProvRdfCodecError> => {
-  const quads = A.filter(dataset.quads, inSelectedGraph(selectGraph(options)));
+  const quads = A.filter(A.sort(dataset.quads, byQuadLine), inSelectedGraph(selectGraph(options)));
   const typeQuads = A.filter(quads, isProvTypeQuad);
   return pipe(
     typeQuads,
@@ -973,7 +1073,12 @@ const datasetToProvBundleInternal = (
         Result.all
       )
     ),
-    Result.map((records) => ProvBundle.make({ records }))
+    Result.flatMap((records) =>
+      pipe(
+        ensureEveryQuadClaimed(quads, typeQuads),
+        Result.map(() => ProvBundle.make({ records }))
+      )
+    )
   );
 };
 
@@ -1001,3 +1106,42 @@ export const datasetToProvBundle: {
   (dataset: Dataset, options: ProvRdfCodecOptions): Result.Result<ProvBundle, ProvRdfCodecError>;
   (options: ProvRdfCodecOptions): (dataset: Dataset) => Result.Result<ProvBundle, ProvRdfCodecError>;
 } = dual(isDatasetDataFirst, datasetToProvBundleInternal);
+
+const provSliceInternal = (dataset: Dataset, options: ProvRdfCodecOptions = defaultOptions): Dataset => {
+  const quads = A.filter(A.sort(dataset.quads, byQuadLine), inSelectedGraph(selectGraph(options)));
+  return makeDataset(A.flatMap(A.filter(quads, isProvTypeQuad), recordClaims(quads)));
+};
+
+/**
+ * Selects the quads of one graph that a supported PROV record reads.
+ *
+ * **Details**
+ *
+ * {@link datasetToProvBundle} refuses a quad no supported record reads, so a
+ * dataset that mixes provenance with other statements is sliced first.
+ *
+ * **Example** (Slice provenance out of a mixed dataset)
+ *
+ * ```ts import.meta.vitest name="Slice provenance out of a mixed dataset"
+ * import * as HashSet from "effect/HashSet"
+ * import { provSlice } from "@beep/rdf/ProvRdf"
+ * import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import { PROV_ENTITY } from "@beep/rdf/Vocab/Prov"
+ * import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf"
+ *
+ * const subject = makeNamedNode("https://example.test/report")
+ * const mixed = makeDataset([
+ *   makeQuad(subject, RDF_TYPE, PROV_ENTITY),
+ *   makeQuad(subject, makeNamedNode("https://example.test/title"), makeLiteral("Report"))
+ * ])
+ * HashSet.size(provSlice(mixed).quads) // => 1
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const provSlice: {
+  (dataset: Dataset): Dataset;
+  (dataset: Dataset, options: ProvRdfCodecOptions): Dataset;
+  (options: ProvRdfCodecOptions): (dataset: Dataset) => Dataset;
+} = dual(isDatasetDataFirst, provSliceInternal);

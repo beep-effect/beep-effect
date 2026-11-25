@@ -1,0 +1,14 @@
+{
+  "namespace": {
+    "prefix": "law-practice",
+    "iri": "https://beep-effect.com/ns/law-practice/"
+  },
+  "terms": [
+    "LegalPositionRelator",
+    "Party",
+    "PositionBearer",
+    "PositionCounterparty"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

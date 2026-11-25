@@ -15,7 +15,6 @@ import {
 } from "@beep/rdf/JsonLd";
 import { ProvBundle } from "@beep/rdf/Prov";
 import {
-  areDatasetsEquivalent,
   BlankNode,
   DefaultGraph,
   GraphTerm,
@@ -37,7 +36,6 @@ import {
   Subject,
   serializeQuad,
   serializeTerm,
-  sortDatasetQuads,
   Term,
 } from "@beep/rdf/Rdf";
 import {
@@ -107,6 +105,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -220,19 +219,19 @@ describe("@beep/rdf RDF term and dataset models", () => {
   const person = makeNamedNode("https://schema.org/Person");
   const graph = makeNamedNode("https://example.com/graphs/main");
   const blank = makeBlankNode("b0");
-  const label = makeLiteral("Alice", XSD_STRING.value, { language: "EN" });
-  const typed = makeLiteral(XSD_STRING.value)("Alice");
+  const label = Literal.langTagged("Alice", "EN");
+  const typed = makeLiteral("Alice");
 
   it.effect("decodes scalar RDF helpers and rejects malformed labels", () =>
     Effect.gen(function* () {
       expect(Result.getOrThrow(S.decodeResult(PrefixLabel)("schema"))).toBe("schema");
       expect(Result.getOrThrow(S.decodeResult(PrefixLabel)(""))).toBe("");
-      expect(Result.getOrThrow(S.decodeResult(LanguageTag)("en-US"))).toBe("en-US");
+      expect(Result.getOrThrow(S.decodeResult(LanguageTag)("en-US"))).toBe("en-us");
       expect(() => Result.getOrThrow(S.decodeResult(PrefixLabel)("bad prefix"))).toThrow(
         "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
       );
       expect(() => Result.getOrThrow(S.decodeResult(LanguageTag)("en_US"))).toThrow(
-        "Language tags must use alphanumeric subtags"
+        "Language tags must use lowercase alphanumeric subtags"
       );
       expect(() => makeBlankNode("")).toThrow("Blank node labels must not be empty");
       const emptyBlank = yield* Effect.exit(decodeBlankNode({ termType: "BlankNode", value: "" }));
@@ -261,7 +260,7 @@ describe("@beep/rdf RDF term and dataset models", () => {
       Literal.decodeUnknownResult({
         termType: "Literal",
         value: "Alice",
-        datatype: NamedNode.make({ termType: "NamedNode", value: XSD_STRING.value }),
+        form: { _tag: "Simple" },
       }),
       Result.getOrThrow
     );
@@ -270,8 +269,9 @@ describe("@beep/rdf RDF term and dataset models", () => {
     expect(decodedNamedNode).toEqual(alice);
     expect(decodedLiteral).toEqual(typed);
     expect(blank).toEqual(BlankNode.make({ termType: "BlankNode", value: "b0" }));
-    assertSome<string>(label.language, "EN");
-    assertNone(typed.language);
+    assertSome<string>(Literal.languageOf(label), "en");
+    assertNone(Literal.languageOf(typed));
+    expect(Literal.datatypeOf(typed).value).toBe(XSD_STRING.value);
     expect(quad.graph).toEqual(graph);
     pipe(S.is(Term)(alice), assertTrue);
     pipe(S.is(Term)(blank), assertTrue);
@@ -289,43 +289,45 @@ describe("@beep/rdf RDF term and dataset models", () => {
   });
 
   it("supports direct and curried literal, quad, and dataset helpers", () => {
-    const languageLiteral = makeLiteral(XSD_STRING.value, { language: "EN" })("Alice");
-    const directLanguageLiteral = makeLiteral("Alice", XSD_STRING.value, { language: "EN" });
+    const languageLiteral = Literal.langTagged("Alice", "EN");
+    const directLanguageLiteral = Literal.langTagged("Alice", "en");
     const defaultGraphQuad = makeQuad(alice, RDF_TYPE, typed);
     const curriedQuad = makeQuad(RDF_TYPE, MakeQuadOptionsInput.make({ object: person, graph }))(alice);
     const directOptionsQuad = makeQuad(alice, RDF_TYPE, MakeQuadOptionsInput.make({ object: blank }));
     const directDataset = makeDataset([curriedQuad, defaultGraphQuad]);
     const reorderedDataset = makeDataset([defaultGraphQuad, curriedQuad]);
 
-    assertSome<string>(languageLiteral.language, "EN");
-    assertSome<string>(directLanguageLiteral.language, "EN");
+    assertSome<string>(Literal.languageOf(languageLiteral), "en");
+    expect(languageLiteral).toEqual(directLanguageLiteral);
     expect(serializeTerm(alice)).toBe("<https://example.com/people/alice>");
     expect(serializeTerm(blank)).toBe("_:b0");
     expect(serializeTerm(languageLiteral)).toBe('"Alice"@en');
-    expect(serializeTerm(typed)).toBe('"Alice"^^<http://www.w3.org/2001/XMLSchema#string>');
-    expect(serializeTerm(defaultGraphQuad.graph)).toBe("default");
+    expect(serializeTerm(typed)).toBe('"Alice"');
+    expect(serializeTerm(Literal.typed("1", XSD_INTEGER.value))).toBe(
+      '"1"^^<http://www.w3.org/2001/XMLSchema#integer>'
+    );
+    expect(serializeTerm(defaultGraphQuad.graph)).toBe("");
     expect(serializeQuad(defaultGraphQuad)).toBe(
-      '<https://example.com/people/alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "Alice"^^<http://www.w3.org/2001/XMLSchema#string> default .'
+      '<https://example.com/people/alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "Alice" .'
+    );
+    expect(serializeQuad(curriedQuad)).toBe(
+      "<https://example.com/people/alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Person> <https://example.com/graphs/main> ."
     );
     expect(directOptionsQuad.graph).toEqual(DefaultGraph.make({ termType: "DefaultGraph", value: "" }));
-    expect(A.map(sortDatasetQuads(directDataset), serializeQuad)).toEqual(
-      A.map(sortDatasetQuads(reorderedDataset), serializeQuad)
-    );
-    pipe(areDatasetsEquivalent(directDataset, reorderedDataset), assertTrue);
-    pipe(areDatasetsEquivalent(reorderedDataset)(directDataset), assertTrue);
-    pipe(areDatasetsEquivalent(directDataset, makeDataset([makeQuad(bob, RDF_TYPE, person)])), assertFalse);
+    pipe(Equal.equals(directDataset, reorderedDataset), assertTrue);
+    pipe(Equal.equals(directDataset, makeDataset([curriedQuad, defaultGraphQuad, curriedQuad])), assertTrue);
+    pipe(Equal.equals(directDataset, makeDataset([makeQuad(bob, RDF_TYPE, person)])), assertFalse);
+    expect(HashSet.size(makeDataset([curriedQuad, curriedQuad]).quads)).toBe(1);
   });
 
   it("escapes every STRING_LITERAL_QUOTE control character in serialized literals", () => {
-    const hostile = 'a\\b"c\nd\re\tf\bg\fh';
-    const escaped = 'a\\\\b\\"c\\nd\\re\\tf\\bg\\fh';
+    const hostile = 'a\\b"c\nd\re\tf\bg\fh\u0000i\u007Fj\u001Fk';
+    const escaped = 'a\\\\b\\"c\\nd\\re\\tf\\bg\\fh\\u0000i\\u007Fj\\u001Fk';
 
-    expect(serializeTerm(makeLiteral(hostile, XSD_STRING.value))).toBe(
-      `"${escaped}"^^<http://www.w3.org/2001/XMLSchema#string>`
-    );
-    expect(serializeTerm(makeLiteral(hostile, XSD_STRING.value, { language: "EN" }))).toBe(`"${escaped}"@en`);
-    expect(serializeQuad(makeQuad(alice, RDF_TYPE, makeLiteral(hostile, XSD_STRING.value)))).toBe(
-      `<https://example.com/people/alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "${escaped}"^^<http://www.w3.org/2001/XMLSchema#string> default .`
+    expect(serializeTerm(makeLiteral(hostile))).toBe(`"${escaped}"`);
+    expect(serializeTerm(Literal.langTagged(hostile, "EN"))).toBe(`"${escaped}"@en`);
+    expect(serializeQuad(makeQuad(alice, RDF_TYPE, makeLiteral(hostile)))).toBe(
+      `<https://example.com/people/alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "${escaped}" .`
     );
   });
 
@@ -502,8 +504,7 @@ describe("@beep/rdf semantic metadata", () => {
 describe("@beep/rdf crispening parity", () => {
   it.effect("keeps constructor-defaulted encoded shapes byte-identical", () =>
     Effect.gen(function* () {
-      const datatype = makeNamedNode(XSD_STRING.value);
-      const literal = Literal.make({ termType: "Literal", value: "Alice", datatype });
+      const literal = makeLiteral("Alice");
       const specification = SemanticSchemaSpecification.make({
         name: "RDF 1.1 Concepts",
         disposition: "informative",
@@ -512,13 +513,13 @@ describe("@beep/rdf crispening parity", () => {
       const frame = JsonLdFrame.make({});
       const bundle = ProvBundle.make({ records: [] });
 
-      assertNone(literal.language);
+      assertNone(Literal.languageOf(literal));
 
       const encodedLiteral = yield* encodeLiteral(literal);
       expect(encodedLiteral).toEqual({
         termType: "Literal",
         value: "Alice",
-        datatype: { termType: "NamedNode", value: XSD_STRING.value },
+        form: { _tag: "Simple" },
       });
       const encodedSemanticSchemaSpecification = yield* encodeSemanticSchemaSpecification(specification);
       expect(encodedSemanticSchemaSpecification).toEqual({

@@ -21,13 +21,13 @@
  * under the package each layer moves to, so each phase re-annotates with that
  * package's composer when it moves the layer.
  *
- * Bodies written as `declare const` are signatures only (the L3 audit and
- * coherence check, dataset canonicalization and isomorphism). Annotation
+ * Bodies written as `declare const` are signatures only. Annotation
  * operations, the OA codec, claim cores, the claim log checker, retraction
- * closure, admissions, assessments and the nanopublication codec live in
+ * closure, admissions, assessments, the nanopublication codec, the gUFO audit,
+ * the mapping-set coherence check and dataset canonicalization live in
  * production.
  *
- * Layer edges used here: L3 -> `@beep/epistemics`; L5 -> none.
+ * Layer edges used here: L5 -> none.
  * L2 and the OA codec moved to `@beep/annotation` in P3.
  * L4 left the design module in P4: `@beep/epistemics` owns `makeClaimCore`,
  * the claim log and its checker, `Admission`, `makeAssessments`, retraction
@@ -50,14 +50,18 @@
  * the target capture's `Anchored`, not a second id (decision
  * 2026-11-22-p2-reanchoring-shape-and-lax-direction). The citation mention
  * preimage went to the law-practice server, not to `@beep/text`.
+ * L3 and L6 left the design module in P5. `@beep/ontology` owns the SSSOM
+ * mapping sets (`Mapping.ts`) and the gUFO typing and audit (`Gufo.ts`);
+ * `@beep/rdf` owns the literal cases, the dataset quotient, its canonical
+ * digest and isomorphism, and `NamespacePin`. The shapes changed on the way:
+ * `GufoInstanceCategory` has no `Mode`, `TypedHierarchy` drops `terms`,
+ * `PinnedSource` and `NamespacePin` are the live `NamespacePin`, literal cases
+ * nest under `form` with `termType` kept, `Dataset.quads` is a set with a
+ * sorted encoding, and `canonicalDigest` and `isIsomorphic` are effectful.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-/** L3 taxonomy: SSSOM mapping sets, gUFO audit and coherence signatures. */
-export * as L3 from "./L3.taxonomy.ts";
 /** L5 operations: operations, activities, composition, provenance wrapper. */
 export * as L5 from "./L5.operations.ts";
-/** L6 interchange: three-case literal, dataset quotient and digest. */
-export * as L6 from "./L6.interchange.ts";

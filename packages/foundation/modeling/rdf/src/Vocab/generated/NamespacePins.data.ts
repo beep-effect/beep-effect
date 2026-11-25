@@ -58,6 +58,38 @@ export const NamespacePinRows = [
     termsDigest: "sha256:7b748150bdc75159bc015a93e17523e93158d7421422bce8a36547e4f1b81669"
   },
   {
+    prefix: "dcat",
+    namespace: "http://www.w3.org/ns/dcat#",
+    source: {
+      location: "https://www.w3.org/ns/dcat3.ttl",
+      revision: {
+        kind: "retrievedSnapshot",
+        retrievedOn: "2026-11-23"
+      }
+    },
+    license: "CC-BY-4.0",
+    attribution: "Data Catalog Vocabulary (DCAT) - Version 3, World Wide Web Consortium. CC BY 4.0. Curated term names projected to TypeScript.",
+    version: "3",
+    digest: "sha256:d1624d3bbf364f6fc1d43b9a188bbb9e67639b1a7d46a5cb7ea3f5d47d02b62f",
+    termsDigest: "sha256:adda3a091338b87061a5fc5e0e426ae01baac218125ab9e2dfcf9cf39511a7be"
+  },
+  {
+    prefix: "dcterms",
+    namespace: "http://purl.org/dc/terms/",
+    source: {
+      location: "https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl",
+      revision: {
+        kind: "retrievedSnapshot",
+        retrievedOn: "2026-11-23"
+      }
+    },
+    license: "CC-BY-4.0",
+    attribution: "DCMI Metadata Terms. Copyright 2012 Dublin Core Metadata Initiative, http://dublincore.org/about/copyright/. CC BY 4.0, https://creativecommons.org/licenses/by/4.0/. Curated term names projected to TypeScript.",
+    version: "2012-06-14",
+    digest: "sha256:13df401072dd7015bf9d75162f3e41c8138075304b7b9cc1aa1e9c16db976797",
+    termsDigest: "sha256:febca52a2400b4a1a84505a5d04499952f4609489d96ce90a4abc80783e15529"
+  },
+  {
     prefix: "deo",
     namespace: "http://purl.org/spar/deo/",
     source: {
@@ -176,6 +208,22 @@ export const NamespacePinRows = [
     termsDigest: "sha256:549b21dbfed2d09cfee7aa77553c889214934a7388f2d2851bcc9b3a8095d116"
   },
   {
+    prefix: "owl",
+    namespace: "http://www.w3.org/2002/07/owl#",
+    source: {
+      location: "https://www.w3.org/2002/07/owl.ttl",
+      revision: {
+        kind: "retrievedSnapshot",
+        retrievedOn: "2026-11-23"
+      }
+    },
+    license: "LicenseRef-W3C-Document",
+    attribution: "The OWL 2 Schema vocabulary (OWL 2). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    version: "$Date: 2009/11/15 10:54:12 $",
+    digest: "sha256:718fa1db7840d3315bfce94398543f91437ef6fe933054fd93f5471d19262fc5",
+    termsDigest: "sha256:7e04356e61303196415c547b275e939be7bedb3e67daf86c3a81a42a976a4c80"
+  },
+  {
     prefix: "prov",
     namespace: "http://www.w3.org/ns/prov#",
     source: {
@@ -190,6 +238,88 @@ export const NamespacePinRows = [
     version: "Recommendation version 2013-04-30",
     digest: "sha256:3d03c8e15753178541fb8cd59fbefecaf1861f9c37ef75190c6e938b85fb0c3d",
     termsDigest: "sha256:2659bd8c21a22435e47694ac638446107153b50e2d758f4774e25b75199ab94c"
+  },
+  {
+    prefix: "rdf",
+    namespace: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    source: {
+      location: "https://www.w3.org/1999/02/22-rdf-syntax-ns.ttl",
+      revision: {
+        kind: "retrievedSnapshot",
+        retrievedOn: "2026-11-23"
+      }
+    },
+    license: "LicenseRef-W3C-Document",
+    attribution: "The RDF Concepts Vocabulary (RDF). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    version: "2019-12-16",
+    digest: "sha256:93d52b1a5824c7dd6504ca79c16205c0b740a0ba68b7a14952780f52561186a2",
+    termsDigest: "sha256:865853cfe24e058bd661febcb058778a086d27932bd5e895d4baa935d193a06f"
+  },
+  {
+    prefix: "rdfs",
+    namespace: "http://www.w3.org/2000/01/rdf-schema#",
+    source: {
+      location: "https://www.w3.org/2000/01/rdf-schema.ttl",
+      revision: {
+        kind: "retrievedSnapshot",
+        retrievedOn: "2026-11-23"
+      }
+    },
+    license: "LicenseRef-W3C-Document",
+    attribution: "The RDF Schema vocabulary (RDFS). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    version: "unversioned, retrieved 2026-11-23",
+    digest: "sha256:ecee3a011b7c13ea2a7e40b0a208bfe6be53d69fdd53ee035e09e9f9e5108ad6",
+    termsDigest: "sha256:5b538672f0dcac63ff26922ee3b0c8185726c6d40ef386e9062826edc995e21b"
+  },
+  {
+    prefix: "schema",
+    namespace: "https://schema.org/",
+    source: {
+      location: "https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-current-https.ttl",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/schemaorg/schemaorg",
+        commit: "5f2d8cdec99b7329459ef6584e94b6a840f88471"
+      }
+    },
+    license: "CC-BY-SA-3.0",
+    attribution: "Schema.org vocabulary, release 30.1. Schema.org schemas are made available under CC BY-SA 3.0, https://schema.org/docs/terms.html. Curated term names projected to TypeScript.",
+    version: "30.1",
+    digest: "sha256:7f15ca89398c4f235f478a4b3b8d1f975d63c5a860b77c8a8fce01f791b7ae2f",
+    termsDigest: "sha256:bcb5a2fdc3a98055fd973fc1dc057d732c909514f667fd4221fbf81b1e887dad"
+  },
+  {
+    prefix: "semapv",
+    namespace: "https://w3id.org/semapv/vocab/",
+    source: {
+      location: "https://raw.githubusercontent.com/mapping-commons/semantic-mapping-vocabulary/0db5676d4ce4854543281a6c983a55fd9a6ef521/semapv.owl",
+      revision: {
+        kind: "gitCommit",
+        repository: "https://github.com/mapping-commons/semantic-mapping-vocabulary",
+        commit: "0db5676d4ce4854543281a6c983a55fd9a6ef521"
+      }
+    },
+    license: "CC0-1.0",
+    attribution: "Semantic Mapping Vocabulary (SEMAPV), mapping-commons, release 2026-06-10. CC0 1.0. Curated term names projected to TypeScript.",
+    version: "2026-06-10",
+    digest: "sha256:f072f1472767530231f045a67f717066754b1e83301f02ec030381cdb4045c6b",
+    termsDigest: "sha256:3bc262ce52b18b0209c5fc2b2fc95154490675f1c133001781c393f1cbf2d52d"
+  },
+  {
+    prefix: "sh",
+    namespace: "http://www.w3.org/ns/shacl#",
+    source: {
+      location: "https://www.w3.org/ns/shacl.ttl",
+      revision: {
+        kind: "retrievedSnapshot",
+        retrievedOn: "2026-11-23"
+      }
+    },
+    license: "LicenseRef-W3C-Document",
+    attribution: "W3C Shapes Constraint Language (SHACL) Vocabulary. Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    version: "unversioned, retrieved 2026-11-23",
+    digest: "sha256:0e5d8aea0eab98a072d4a02faaee1ee914ec99eab2ca473429726faed4a13f69",
+    termsDigest: "sha256:fd05464446a2997ce868586a2f9bb3eeecde7b12802d8a73229f48d5f6289f38"
   },
   {
     prefix: "skos",
@@ -208,6 +338,22 @@ export const NamespacePinRows = [
     termsDigest: "sha256:5616e4e69f5d9881c90545c86992a7cd120f9a8fffd8c7a7194c65eaab0eb5eb"
   },
   {
+    prefix: "void",
+    namespace: "http://rdfs.org/ns/void#",
+    source: {
+      location: "https://www.w3.org/TR/2011/NOTE-void-20110303/",
+      revision: {
+        kind: "datedSnapshot",
+        date: "2011-03-03"
+      }
+    },
+    license: "LicenseRef-W3C-Document",
+    attribution: "Describing Linked Datasets with the VoID Vocabulary, W3C Interest Group Note 2011-03-03, section 8 (Index of VoID classes and properties). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
+    version: "W3C Interest Group Note 2011-03-03",
+    digest: "sha256:54e5a4fcd28ea26b77e54402a944774d6de1af528e8ca8ad21b3d8601b8051ce",
+    termsDigest: "sha256:365cf7d430769d53bcf166817078d6560dd3fffaa4f99b6de38f0386e6a96583"
+  },
+  {
     prefix: "xsd",
     namespace: "http://www.w3.org/2001/XMLSchema#",
     source: {
@@ -221,6 +367,6 @@ export const NamespacePinRows = [
     attribution: "RDF 1.1 Concepts and Abstract Syntax, W3C Recommendation 2014-02-25, section 5.1 (RDF-compatible XSD datatypes). Copyright World Wide Web Consortium; W3C liability, trademark and document use rules apply. Curated term names projected to TypeScript.",
     version: "W3C Recommendation 2014-02-25",
     digest: "sha256:3838c992097f72ee8784b6c96194d9879f86f2e08f53ced5a05aa4031750c5ac",
-    termsDigest: "sha256:3f6ecf7e5a97a3358394c5c2e23332cc2116faa81d6121767bd999a67cf77afa"
+    termsDigest: "sha256:02915c76db800291f2e56b20c5cfbdfb3838cf081134ef58be459cc733f9fd1e"
   }
 ] as const;

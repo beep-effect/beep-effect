@@ -1,0 +1,15 @@
+{
+  "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/outside",
+  "version": "1",
+  "prefLabel": "Out-of-scheme scheme",
+  "concepts": [
+    {
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/outside/a",
+      "prefLabel": "A",
+      "broader": [
+        "https://beep-effect.com/ns/ontology/semantic-foundation/fixture/elsewhere/z"
+      ],
+      "alignments": []
+    }
+  ]
+}

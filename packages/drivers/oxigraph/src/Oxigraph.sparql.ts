@@ -21,6 +21,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { OxigraphSparqlError } from "./Oxigraph.errors.ts";
 import type { SparqlQueryRequest, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
@@ -97,10 +98,10 @@ const toOxigraphLiteral = (value: Rdf.Literal): Oxigraph.Literal => {
   const literal: Oxigraph.Literal = {
     termType: "Literal",
     value: value.value,
-    datatype: oxigraphNamedNode(value.datatype.value),
+    datatype: oxigraphNamedNode(Rdf.Literal.datatypeOf(value).value),
   };
   return pipe(
-    value.language,
+    Rdf.Literal.languageOf(value),
     O.match({
       onNone: () => literal,
       onSome: (language) => ({
@@ -139,17 +140,27 @@ const fromOxigraphSubject = (subject: Oxigraph.Subject): Rdf.Subject =>
     Match.exhaustive
   );
 
-const fromOxigraphObject = (object: Oxigraph.Object): Rdf.ObjectTerm =>
+const refusedLiteral = (refused: Rdf.LiteralFormRefused): OxigraphSparqlError =>
+  unsupportedResult(`Oxigraph returned a literal with no RDF literal form: datatype ${refused.datatype}.`);
+
+const fromOxigraphLiteral = (value: Oxigraph.Literal): Result.Result<Rdf.Literal, OxigraphSparqlError> =>
+  pipe(
+    Rdf.Literal.fromParts({
+      value: value.value,
+      datatype: value.datatype.value,
+      ...O.getSomesStruct({
+        language: pipe(value.language, O.fromUndefinedOr, O.filter(Str.isNonEmpty)),
+      }),
+    }),
+    Result.mapError(refusedLiteral)
+  );
+
+const fromOxigraphObject = (object: Oxigraph.Object): Result.Result<Rdf.ObjectTerm, OxigraphSparqlError> =>
   Match.value(object).pipe(
-    Match.discriminator("termType")("NamedNode", (value) => Rdf.makeNamedNode(value.value)),
-    Match.discriminator("termType")("BlankNode", (value) => Rdf.makeBlankNode(value.value)),
-    Match.discriminator("termType")("Literal", (value) =>
-      Rdf.makeLiteral(value.value, value.datatype.value, {
-        ...O.getSomesStruct({
-          language: pipe(value.language, O.fromUndefinedOr, O.filter(Str.isNonEmpty)),
-        }),
-      })
-    ),
+    Match.withReturnType<Result.Result<Rdf.ObjectTerm, OxigraphSparqlError>>(),
+    Match.discriminator("termType")("NamedNode", (value) => Result.succeed(Rdf.makeNamedNode(value.value))),
+    Match.discriminator("termType")("BlankNode", (value) => Result.succeed(Rdf.makeBlankNode(value.value))),
+    Match.discriminator("termType")("Literal", fromOxigraphLiteral),
     Match.exhaustive
   );
 
@@ -163,25 +174,25 @@ const fromOxigraphGraph = (graph: Oxigraph.Graph): Rdf.GraphTerm =>
     Match.exhaustive
   );
 
-const fromOxigraphTerm = (term: Oxigraph.Term): Rdf.Term =>
+const fromOxigraphTerm = (term: Oxigraph.Term): Result.Result<Rdf.Term, OxigraphSparqlError> =>
   Match.value(term).pipe(
-    Match.discriminator("termType")("NamedNode", (value) => Rdf.makeNamedNode(value.value)),
-    Match.discriminator("termType")("BlankNode", (value) => Rdf.makeBlankNode(value.value)),
-    Match.discriminator("termType")("Literal", fromOxigraphObject),
+    Match.withReturnType<Result.Result<Rdf.Term, OxigraphSparqlError>>(),
     Match.discriminator("termType")("DefaultGraph", () =>
-      Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" })
+      Result.succeed(Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" }))
     ),
-    Match.exhaustive
+    Match.orElse(fromOxigraphObject)
   );
 
-const fromOxigraphQuad = (quad: Oxigraph.Quad): Rdf.Quad =>
-  Rdf.makeQuad(
-    fromOxigraphSubject(quad.subject),
-    Rdf.makeNamedNode(quad.predicate.value),
-    MakeQuadOptionsInput.make({
-      object: fromOxigraphObject(quad.object),
-      graph: fromOxigraphGraph(quad.graph),
-    })
+const fromOxigraphQuad = (quad: Oxigraph.Quad): Result.Result<Rdf.Quad, OxigraphSparqlError> =>
+  Result.map(fromOxigraphObject(quad.object), (object) =>
+    Rdf.makeQuad(
+      fromOxigraphSubject(quad.subject),
+      Rdf.makeNamedNode(quad.predicate.value),
+      MakeQuadOptionsInput.make({
+        object,
+        graph: fromOxigraphGraph(quad.graph),
+      })
+    )
   );
 
 const makeStore = Effect.fn("Oxigraph.makeStore")(function* (
@@ -231,37 +242,33 @@ const selectResult = (result: unknown): Effect.Effect<SparqlSelectResult, Oxigra
     return Effect.fail(unsupportedResult("Oxigraph did not return SELECT bindings."));
   }
 
-  const rows = A.map(result, (binding) => {
+  const rows = A.map(result, (binding): Result.Result<Record<string, Rdf.Term>, OxigraphSparqlError> => {
     if (!(binding instanceof Map)) {
-      return O.none<Record<string, Rdf.Term>>();
+      return Result.fail(unsupportedResult("Oxigraph returned an invalid SELECT binding row."));
     }
-    return O.some(
-      R.fromEntries(
-        pipe(
-          A.fromIterable(binding.entries()),
-          A.map(([key, value]) => [key, fromOxigraphTerm(value)] as const)
-        )
-      )
+    return pipe(
+      A.fromIterable(binding.entries()),
+      A.map(([key, value]) => Result.map(fromOxigraphTerm(value), (term) => [key, term] as const)),
+      Result.all,
+      Result.map(R.fromEntries)
     );
   });
 
   return pipe(
     rows,
-    O.all,
-    O.match({
-      onNone: () => Effect.fail(unsupportedResult("Oxigraph returned an invalid SELECT binding row.")),
-      onSome: (validRows) => Effect.succeed(SparqlSelectResult.make({ profile: "select", rows: validRows })),
-    })
+    Result.all,
+    Result.map((validRows) => SparqlSelectResult.make({ profile: "select", rows: validRows })),
+    Effect.fromResult
   );
 };
 
 const constructResult = (result: unknown): Effect.Effect<SparqlConstructResult, OxigraphSparqlError> =>
   A.isArray(result)
-    ? Effect.succeed(
-        SparqlConstructResult.make({
-          profile: "construct",
-          dataset: Rdf.makeDataset(A.map(result, (quad) => fromOxigraphQuad(quad as Oxigraph.Quad))),
-        })
+    ? pipe(
+        A.map(result, (quad) => fromOxigraphQuad(quad as Oxigraph.Quad)),
+        Result.all,
+        Result.map((quads) => SparqlConstructResult.make({ profile: "construct", dataset: Rdf.makeDataset(quads) })),
+        Effect.fromResult
       )
     : Effect.fail(unsupportedResult("Oxigraph did not return CONSTRUCT quads."));
 

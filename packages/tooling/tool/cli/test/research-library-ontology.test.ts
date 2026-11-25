@@ -3,7 +3,7 @@ import * as Registry from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { MemoryFileSystem } from "@beep/memfs";
 import { N3ParseTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
-import { toTurtle } from "@beep/ontology";
+import { toDataset } from "@beep/ontology";
 import * as Rdf from "@beep/rdf/Rdf";
 import {
   LibraryAgentLabel,
@@ -22,6 +22,7 @@ import {
   libraryShapes,
   libraryShapesDataset,
   libraryShapesTurtle,
+  libraryTboxTurtle,
   renderLibraryOntology,
 } from "@beep/repo-cli/commands/Research/Library/Library.ontology";
 import {
@@ -36,8 +37,10 @@ import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -270,9 +273,9 @@ describe("research library instance keys", () => {
             Effect.sync(() => expect(isAgentLabel(model) && isAgentLabel(effort) && isTopicId(topicId)).toBe(false)),
           onSuccess: (catalog) =>
             Effect.map(catalogDataset(catalog), (dataset) =>
-              expect(A.some(dataset.quads, (quad) => quad.object.value === libraryAgentIri({ model, effort }))).toBe(
-                true
-              )
+              expect(
+                HashSet.some(dataset.quads, (quad) => quad.object.value === libraryAgentIri({ model, effort }))
+              ).toBe(true)
             ),
         }
       ),
@@ -314,11 +317,13 @@ describe("research library ontology", () => {
       Effect.fnUntraced(function* () {
         const assembled = yield* assembleLibraryOntology();
         const codec = yield* N3TurtleCodec;
-        const parsed = yield* codec.parse(N3ParseTurtleRequest.make({ source: toTurtle(assembled) }));
-        expect(parsed.dataset.quads.length).toBeGreaterThan(50);
+        const tbox = yield* libraryTboxTurtle(assembled);
+        const parsed = yield* codec.parse(N3ParseTurtleRequest.make({ source: tbox }));
+        expect(Equal.equals(parsed.dataset, toDataset(assembled))).toBe(true);
+        expect(HashSet.size(parsed.dataset.quads)).toBeGreaterThan(50);
         const cls = (name: string) => O.getOrThrow(A.findFirst(assembled.classes, (c) => c.name === name));
         const subclass = (name: string, target: string) =>
-          A.some(
+          HashSet.some(
             parsed.dataset.quads,
             (q) =>
               q.subject.value === cls(name).iri &&
@@ -330,7 +335,7 @@ describe("research library ontology", () => {
         expect(subclass("SourceVersion", cls("Source").iri)).toBe(false);
         for (const status of LibraryCaptureStatus.literals) {
           expect(
-            A.some(
+            HashSet.some(
               parsed.dataset.quads,
               (q) =>
                 Str.endsWith(`/${status}`)(q.subject.value) && q.object.value === "http://www.w3.org/2002/07/owl#Class"
@@ -342,7 +347,8 @@ describe("research library ontology", () => {
         const again = yield* assembleLibraryOntology();
         const second = yield* libraryShapesTurtle(libraryShapes(again));
         expect(second).toBe(first);
-        expect(toTurtle(again)).toBe(toTurtle(assembled));
+        const tboxAgain = yield* libraryTboxTurtle(again);
+        expect(tboxAgain).toBe(tbox);
         const turtle = yield* codec.parse(N3ParseTurtleRequest.make({ source: first }));
         const capture = O.getOrThrow(
           A.findFirst(
@@ -358,7 +364,7 @@ describe("research library ontology", () => {
           )
         );
         expect(
-          A.some(
+          HashSet.some(
             turtle.dataset.quads,
             (q) => q.subject.value === pathQuad.subject.value && q.predicate.value === "http://www.w3.org/ns/shacl#in"
           )
@@ -389,7 +395,7 @@ describe("research library ontology", () => {
         expect(result.violations).toEqual([]);
         expect(result.conforms).toBe(true);
         expect(
-          A.some(
+          HashSet.some(
             dataset.quads,
             (q) =>
               q.predicate.value === "http://www.w3.org/2004/02/skos/core#related" &&
@@ -397,14 +403,14 @@ describe("research library ontology", () => {
           )
         ).toBe(true);
         expect(
-          A.some(
+          HashSet.some(
             dataset.quads,
             (q) =>
               Str.endsWith("/intakeId")(q.predicate.value) && q.object.termType === "Literal" && q.object.value === "s1"
           )
         ).toBe(true);
         expect(
-          A.some(
+          HashSet.some(
             dataset.quads,
             (q) =>
               Str.endsWith("/Occurrence/o1")(q.subject.value) &&
@@ -413,7 +419,7 @@ describe("research library ontology", () => {
           )
         ).toBe(true);
         expect(
-          A.some(
+          HashSet.some(
             dataset.quads,
             (q) =>
               Str.endsWith("/Derivation/d3")(q.subject.value) &&
@@ -422,21 +428,21 @@ describe("research library ontology", () => {
           )
         ).toBe(true);
         const missing = yield* validate(
-          Rdf.makeDataset(A.filter(dataset.quads, (q) => !Str.endsWith("/summary")(q.predicate.value)))
+          dataset.quads.pipe(
+            HashSet.filter((q) => !Str.endsWith("/summary")(q.predicate.value)),
+            Rdf.makeDataset
+          )
         );
         expect(missing.conforms).toBe(false);
         expect(missing.violations.length).toBeGreaterThan(0);
         const invalid = yield* validate(
-          Rdf.makeDataset(
-            A.map(dataset.quads, (q) =>
+          dataset.quads.pipe(
+            HashSet.map((q) =>
               Str.endsWith("/status")(q.predicate.value)
-                ? Rdf.makeQuad(
-                    q.subject,
-                    q.predicate,
-                    Rdf.makeLiteral("not-a-status", "http://www.w3.org/2001/XMLSchema#string")
-                  )
+                ? Rdf.makeQuad(q.subject, q.predicate, Rdf.makeLiteral("not-a-status"))
                 : q
-            )
+            ),
+            Rdf.makeDataset
           )
         );
         expect(invalid.conforms).toBe(false);
@@ -455,7 +461,7 @@ describe("research library ontology", () => {
         expect(legacyResult.violations).toEqual([]);
         expect(legacyResult.conforms).toBe(true);
         expect(
-          A.some(
+          HashSet.some(
             dataset.quads,
             (q) =>
               q.predicate.value === "http://www.w3.org/ns/prov#specializationOf" &&
@@ -463,7 +469,7 @@ describe("research library ontology", () => {
           )
         ).toBe(true);
         expect(
-          A.some(
+          HashSet.some(
             dataset.quads,
             (q) =>
               Str.endsWith("/intakeId")(q.predicate.value) &&

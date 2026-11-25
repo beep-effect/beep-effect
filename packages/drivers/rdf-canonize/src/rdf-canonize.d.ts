@@ -45,6 +45,7 @@ declare module "rdf-canonize" {
       readonly inputFormat?: "application/n-quads";
       readonly format?: "application/n-quads";
       readonly maxWorkFactor?: number;
+      readonly maxDeepIterations?: number;
       readonly rejectURDNA2015?: boolean;
       readonly signal?: AbortSignal;
     }

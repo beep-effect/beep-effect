@@ -1,0 +1,15 @@
+{
+  "namespace": {
+    "prefix": "semapv",
+    "iri": "https://w3id.org/semapv/vocab/"
+  },
+  "terms": [
+    "LexicalMatching",
+    "LogicalReasoning",
+    "ManualMappingCuration",
+    "SemanticSimilarityThresholdMatching",
+    "UnspecifiedMatching"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

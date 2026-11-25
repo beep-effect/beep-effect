@@ -16,6 +16,7 @@
     "check": "beep-cli gate run check",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run beep:docgen",
+    "doctest": "bun run beep:doctest",
     "lint": "bun run beep:lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
     "lint:fix": "bun run beep:lint:fix",
@@ -27,6 +28,7 @@
     "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
     "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
+    "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
@@ -73,6 +75,9 @@
     "./values/DocStructure": "./src/values/DocStructure/index.ts",
     "./values/PracticeProfile": "./src/values/PracticeProfile/index.ts",
     "./values/SetupRequirement": "./src/values/SetupRequirement/index.ts",
+    "./values/IntakeTaxonomy": "./src/values/IntakeTaxonomy/index.ts",
+    "./values/LegalVocabularyPack": "./src/values/LegalVocabularyPack/index.ts",
+    "./values/LibrarianLoop": "./src/values/LibrarianLoop/index.ts",
     "./test": "./src/test.ts",
     "./package.json": "./package.json"
   },
@@ -81,12 +86,14 @@
     "dist/**/*.js",
     "dist/**/*.js.map",
     "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map"
+    "dist/**/*.d.ts.map",
+    "assets/vocabulary/**"
   ],
   "sideEffects": [],
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
+    "@beep/ontology": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/text": "workspace:^",
@@ -96,6 +103,7 @@
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

@@ -6,7 +6,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import * as Registry from "@beep/identity/Registry";
 import * as Rdf from "@beep/rdf/Rdf";
-import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
@@ -407,7 +407,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
   );
   const addMetadata = (node: Rdf.NamedNode, metadata: Readonly<Record<string, string>>) =>
     A.forEach(R.toEntries(metadata), ([key, value]) =>
-      quads.push(Rdf.makeQuad(node, Rdf.makeNamedNode(viewKey(key)), Rdf.makeLiteral(value, XSD_STRING.value)))
+      quads.push(Rdf.makeQuad(node, Rdf.makeNamedNode(viewKey(key)), Rdf.makeLiteral(value)))
     );
   let sequence = 0;
   const add = <T, I>(
@@ -429,7 +429,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
           Rdf.makeQuad(
             node,
             Rdf.makeNamedNode(Registry.iri("research-library:catalogIndex")),
-            Rdf.makeLiteral(meta.order ?? `${order}`, XSD_INTEGER.value)
+            Rdf.Literal.typed(meta.order ?? `${order}`, XSD_INTEGER.value)
           )
         );
         const { nodeId: _nodeId, order: _order, ...annotations } = meta;
@@ -487,7 +487,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
       Rdf.makeQuad(
         entity("Finding", finding.id),
         Rdf.makeNamedNode(viewKey("private")),
-        Rdf.makeLiteral(`${HashSet.has(privateSources, finding.sourceId)}`, XSD_STRING.value)
+        Rdf.makeLiteral(`${HashSet.has(privateSources, finding.sourceId)}`)
       )
     );
   // Claims include legacy sources with no explicit versions array.

@@ -17,6 +17,7 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
@@ -72,7 +73,7 @@ const StubShaclValidation = Layer.succeed(
   ShaclValidationService.of({
     validate: Effect.fn((request) =>
       Effect.succeed(
-        request.dataset.quads.length > 1
+        HashSet.size(request.dataset.quads) > 1
           ? ShaclValidationResult.make({ conforms: true, violations: [], truncated: false })
           : ShaclValidationResult.make({
               conforms: false,

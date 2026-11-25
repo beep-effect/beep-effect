@@ -10,7 +10,6 @@ import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { A } from "@beep/utils";
 import { pipe } from "effect/Function";
 
@@ -72,7 +71,7 @@ const labelOperation = (resource: TutorialResourceSeed) =>
   ChangeOperation.make({
     kind: "addQuad",
     partition: "asserted",
-    quad: makeQuad(makeNamedNode(resource.iri), RDFS_LABEL, makeLiteral(resource.label, XSD_STRING.value)),
+    quad: makeQuad(makeNamedNode(resource.iri), RDFS_LABEL, makeLiteral(resource.label)),
   });
 
 const resourceOperations = (resource: TutorialResourceSeed): ReadonlyArray<ChangeOperation> => [

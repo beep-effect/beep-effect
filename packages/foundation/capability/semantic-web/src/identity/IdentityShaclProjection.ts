@@ -7,7 +7,6 @@
 
 import { $SemanticWebId } from "@beep/identity/packages";
 import { makeLiteral } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -66,7 +65,7 @@ const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<Sh
   ShaclPropertyShape.make({
     path,
     minCount: S.Natural.makeOption(1),
-    hasValue: O.some(makeLiteral(value, XSD_STRING.value)),
+    hasValue: O.some(makeLiteral(value)),
   }),
 ];
 

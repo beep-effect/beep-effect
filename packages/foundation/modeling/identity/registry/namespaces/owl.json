@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "owl", "iri": "http://www.w3.org/2002/07/owl#" },
+  "namespace": {
+    "prefix": "owl",
+    "iri": "http://www.w3.org/2002/07/owl#"
+  },
   "terms": [
     "AnnotationProperty",
     "AsymmetricProperty",

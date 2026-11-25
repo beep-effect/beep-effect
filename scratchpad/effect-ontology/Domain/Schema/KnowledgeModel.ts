@@ -373,10 +373,8 @@ export class Evidence extends S.Opaque<Evidence, { readonly brand: unique symbol
  * import { makeLiteral } from "@beep/rdf"
  * import { RdfObject } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const literal = makeLiteral(
- *   "Alice",
- *   "https://www.w3.org/2001/XMLSchema#string"
- * )
+ * const literal = Literal.typed(*   "Alice", *   "https://www.w3.org/2001/XMLSchema#string"
+ *)
  * console.log(RdfObject.is(literal)) // true
  * ```
  *

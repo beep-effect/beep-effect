@@ -1101,6 +1101,13 @@ ex:related
     a owl:AnnotationProperty, owl:ObjectProperty ;
   rdfs:domain ex:Thing .
 ex:functional a owl:FunctionalProperty .
+ex:block
+  rdfs:label "Block" ;
+  a ex:Custom .
+ex:inverse owl:inverseOf ex:related .
+ex:untyped rdfs:label "Untyped" ;
+  rdfs:comment "Not typed" .
+ex:later a owl:Class .
 `;
 const fixtureRdfXml = `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <rdf:Description rdf:about="#Concept">
@@ -1109,16 +1116,28 @@ const fixtureRdfXml = `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-synt
   <rdf:Description rdf:about="#broader">
     <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
   </rdf:Description>
+  <rdf:Description rdf:about="#untyped">
+    <rdfs:label>untyped</rdfs:label>
+  </rdf:Description>
+  <owl:Class rdf:about="https://example.test/sk#Scheme"/>
 </rdf:RDF>
 `;
 const fixtureSpec = `<html><title>Fixture Datatypes</title>
 <section id="datatypes"><table><tr><td><code>dt:string</code></td></tr></table></section>
-<section id="other"><code>dt:integer</code></section></html>
+<section id="other"><code>dt:integer</code></section>
+<h2 id="index">Index</h2><table><tr><td><code><a href="#boolean">dt:boolean</a></code></td></tr></table>
+<h2 id="after"><code>dt:date</code></h2></html>
 `;
+const fixtureOpenTurtle = `@prefix ex: <https://example.test/ns#> .
+ex:open a owl:Class`;
+const fixtureOpenSpec = `<html><title>Fixture Datatypes</title>
+<section id="open"><code>dt:open</code>`;
 const fixtureTexts: Record<string, string> = {
   "https://example.test/ex.ttl": fixtureTurtle,
   "https://example.test/sk.rdf": fixtureRdfXml,
   "https://example.test/dt.html": fixtureSpec,
+  "https://example.test/open.ttl": fixtureOpenTurtle,
+  "https://example.test/open.html": fixtureOpenSpec,
 };
 
 const fixtureSha256 = Effect.fn("fixtureSha256")(function* (text: string) {
@@ -1180,12 +1199,14 @@ const acquireFixture = (rows: ReadonlyArray<typeof VocabularyPin.Encoded>) =>
 const exShardPath = "packages/foundation/modeling/identity/registry/namespaces/ex.json";
 
 it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisition", (it) => {
-  it.effect("pins the twelve namespaces at immutable sources and rejects byte drift", () =>
+  it.effect("pins the twenty-one namespaces at digest-held sources and rejects byte drift", () =>
     Effect.gen(function* () {
       const target = O.getOrThrow(A.findFirst(syncDataTargets, (entry) => entry.id === "pinned-vocabularies"));
       expect(A.map(pinnedVocabularyRows, (row) => row.prefix)).toStrictEqual([
         "as",
         "cito",
+        "dcat",
+        "dcterms",
         "deo",
         "doco",
         "fabio",
@@ -1193,13 +1214,22 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
         "nif",
         "np",
         "oa",
+        "owl",
         "prov",
+        "rdf",
+        "rdfs",
+        "schema",
+        "semapv",
+        "sh",
         "skos",
+        "void",
         "xsd",
       ]);
-      expect(target.sourceUrls).toHaveLength(12);
+      expect(target.sourceUrls).toHaveLength(21);
       for (const url of target.sourceUrls) {
-        expect(url).toMatch(/^https:\/\/(?:raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\/|www\.w3\.org\/)/u);
+        expect(url).toMatch(
+          /^https:\/\/(?:raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\/|www\.w3\.org\/|www\.dublincore\.org\/)/u
+        );
       }
       const error = yield* target.acquire.pipe(
         Effect.provideService(
@@ -1263,6 +1293,56 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
         { ...dt, declaration: { _tag: "SpecDocument", section: "absent", curiePrefix: "dt" } },
       ]).pipe(Effect.flip);
       expect(absentSection.message).toContain("dt: curated terms have no declaration in the artifact: string");
+    })
+  );
+
+  it.effect("accepts a typed statement block, an inverse property, a typed node and a heading section", () =>
+    Effect.gen(function* () {
+      const { dt, ex, sk } = yield* fixturePins();
+      const projection = yield* acquireFixture([
+        { ...dt, declaration: { _tag: "SpecDocument", section: "index", curiePrefix: "dt" }, terms: ["boolean"] },
+        { ...ex, terms: ["block", "inverse", "later"] },
+        { ...sk, terms: ["Concept", "Scheme"] },
+      ]);
+      const shards = A.map(A.take(projection.files, 3), (file) => file.content);
+      expect(shards[0]).toContain('"terms": ["boolean"]');
+      expect(shards[1]).toContain('"terms": ["block", "inverse", "later"]');
+      expect(shards[2]).toContain('"terms": ["Concept", "Scheme"]');
+    })
+  );
+
+  it.effect("refuses an untyped subject and a term past the section's heading", () =>
+    Effect.gen(function* () {
+      const { dt, ex, sk } = yield* fixturePins();
+      const turtle = yield* acquireFixture([{ ...ex, terms: ["untyped"] }]).pipe(Effect.flip);
+      expect(turtle.message).toContain("ex: curated terms have no declaration in the artifact: untyped");
+      const rdfXml = yield* acquireFixture([{ ...sk, terms: ["untyped"] }]).pipe(Effect.flip);
+      expect(rdfXml.message).toContain("sk: curated terms have no declaration in the artifact: untyped");
+      const spec = yield* acquireFixture([
+        { ...dt, declaration: { _tag: "SpecDocument", section: "index", curiePrefix: "dt" }, terms: ["date"] },
+      ]).pipe(Effect.flip);
+      expect(spec.message).toContain("dt: curated terms have no declaration in the artifact: date");
+    })
+  );
+
+  it.effect("reads an unterminated last Turtle block and an unclosed last section to the artifact's end", () =>
+    Effect.gen(function* () {
+      const { dt, ex } = yield* fixturePins();
+      const openSpecDigest = yield* fixtureSha256(fixtureOpenSpec);
+      const openTurtleDigest = yield* fixtureSha256(fixtureOpenTurtle);
+      const projection = yield* acquireFixture([
+        {
+          ...dt,
+          location: "https://example.test/open.html",
+          sha256: openSpecDigest,
+          declaration: { _tag: "SpecDocument", section: "open", curiePrefix: "dt" },
+          terms: ["open"],
+        },
+        { ...ex, location: "https://example.test/open.ttl", sha256: openTurtleDigest, terms: ["open"] },
+      ]);
+      const shards = A.map(A.take(projection.files, 2), (file) => file.content);
+      expect(shards[0]).toContain('"terms": ["open"]');
+      expect(shards[1]).toContain('"terms": ["open"]');
     })
   );
 
@@ -1364,8 +1444,11 @@ it.layer(CommandTestLayer)("registry term modules", (it) => {
       expect(prov.content).toContain(
         "Pinned source: https://www.w3.org/ns/prov-o-20130430 (datedSnapshot:2013-04-30)."
       );
-      const shacl = O.getOrThrow(A.findFirst(projection.files, (file) => Str.endsWith("/Shacl.terms.ts")(file.path)));
-      expect(shacl.content).not.toContain("Pinned source:");
+      const unpinned = A.filter(
+        projection.files,
+        (file) => Str.endsWith(".terms.ts")(file.path) && !Str.includes("Pinned source:")(file.content)
+      );
+      expect(A.map(unpinned, (file) => file.path)).toStrictEqual([]);
       expect(A.length(projection.files)).toBe(17);
       expect(projection.canonicalPath).toBe(
         "packages/foundation/modeling/rdf/src/Vocab/generated/vocab-terms.data.json"

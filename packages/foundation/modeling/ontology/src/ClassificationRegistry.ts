@@ -6,6 +6,7 @@
 
 import { IRIReference } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -25,14 +26,21 @@ import {
   classificationSchemeIri,
 } from "./Classification.models.ts";
 import { parseCpc, parseIpc, parseNice } from "./internal/ClassificationXml.ts";
+import { sha256Hex, treeDigest } from "./internal/ContentDigest.ts";
 import {
+  decodeUtf8,
   decodeVendorManifestRow,
-  readVendorContent,
+  readVendorBytes,
   resolveVendorPath,
+  VendorDigestUnit,
   VendorLoadStatus,
   VendorSlicePath,
+  vendorDigestUnit,
+  verifyRowDigest,
 } from "./TaxonomyLoader.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type { ClassificationConcept } from "./Classification.models.ts";
+import type { VendorContentDigestMissing, VendorSliceDigestMismatch } from "./TaxonomyLoader.ts";
 
 const $I = $OntologyId.create("ClassificationRegistry");
 
@@ -47,16 +55,22 @@ class ClassificationAsset extends S.Opaque<ClassificationAsset, { readonly brand
     loadStatus: VendorLoadStatus,
     path: VendorSlicePath,
     entryPath: S.OptionFromOptionalKey(VendorSlicePath),
-    sha256: S.String.check(S.isPattern(/^[a-f0-9]{64}$/)),
+    archivePath: S.OptionFromOptionalKey(S.NonEmptyString),
+    digestUnit: S.OptionFromOptionalKey(VendorDigestUnit),
+    sha256: Sha256Hex,
+    contentSha256: S.OptionFromOptionalKey(Sha256Hex),
   }).pipe($I.annoteSchema("ClassificationAsset"))
 ) {}
+
+type ClassificationLoadError = ClassificationError | VendorContentDigestMissing | VendorSliceDigestMismatch;
 
 /**
  * Edition-pinned classification loading and SKOS hierarchy lookup.
  * **Details**
  * Every lookup takes the caller's pin and a snapshot. An IPC request cannot
  * consume a CPC snapshot even when the notations happen to be identical.
- * Loading needs only the portable FileSystem service, and admits no latest alias.
+ * Loading needs the portable FileSystem and Digest services, checks every
+ * row's bytes against its manifest digest, and admits no latest alias.
  * **Example** (Access the classification service)
  * ```ts
  * import { ClassificationRegistry } from "@beep/ontology/ClassificationRegistry"
@@ -72,7 +86,7 @@ export class ClassificationRegistry extends Context.Service<
       manifestPath: string,
       vendorRoot: string,
       pin: typeof ClassificationPin.Encoded
-    ) => Effect.Effect<ClassificationSnapshot, ClassificationError, FileSystem.FileSystem>;
+    ) => Effect.Effect<ClassificationSnapshot, ClassificationLoadError, FileSystem.FileSystem | Digest.Digest>;
     readonly resolve: (
       snapshot: ClassificationSnapshot,
       pin: typeof ClassificationPin.Encoded,
@@ -234,16 +248,53 @@ const decodeAssets = Effect.fnUntraced(function* (manifestPath: string, content:
   return A.getSomes(forEach1);
 });
 
+const readFailure =
+  (detail: string) =>
+  (error: { readonly _tag: "VendorSlicePathEscape" | "VendorSliceReadError" }): ClassificationError =>
+    failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", detail);
+
+const readBytes = (asset: ClassificationAsset, relativePath: string, vendorRoot: string) =>
+  readVendorBytes(asset.id, relativePath, vendorRoot).pipe(Effect.mapError(readFailure(asset.id)));
+
+const readText = (asset: ClassificationAsset, path: string, bytes: Uint8Array) =>
+  decodeUtf8(asset.id, path, bytes).pipe(Effect.mapError(() => failure("source-parse", asset.id)));
+
 const readAsset = Effect.fnUntraced(function* (asset: ClassificationAsset, vendorRoot: string) {
   const relativePath = O.match(asset.entryPath, {
     onNone: () => asset.path,
     onSome: (entry) => A.join([asset.path, entry], "/"),
   });
-  return yield* readVendorContent(asset.id, relativePath, vendorRoot).pipe(
-    Effect.mapError((error) =>
-      failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", asset.id)
-    )
+  const bytes = yield* readBytes(asset, relativePath, vendorRoot);
+  const actual = yield* sha256Hex(bytes);
+  yield* verifyRowDigest(asset, vendorDigestUnit(asset), actual);
+  return yield* readText(asset, relativePath, bytes);
+});
+
+const readTree = Effect.fnUntraced(function* (asset: ClassificationAsset, vendorRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const directory = yield* resolveVendorPath(asset.id, asset.path, vendorRoot).pipe(
+    Effect.mapError(readFailure(asset.id))
   );
+  const listing = yield* fs.readDirectory(directory).pipe(Effect.mapError(() => failure("source-parse", asset.id)));
+  const files = A.filter(listing, (file) => Str.startsWith("cpc-scheme-")(file) && Str.endsWith(".xml")(file));
+  yield* Effect.filterOrFail(Effect.succeed(files), A.isReadonlyArrayNonEmpty, () =>
+    failure("source-parse", "CPC scheme files missing")
+  );
+  const entries = yield* Effect.forEach(
+    files,
+    Effect.fnUntraced(function* (file) {
+      const path = yield* S.decodeEffect(VendorSlicePath)(A.join([asset.path, file], "/")).pipe(
+        Effect.mapError(() => failure("path-escape", file))
+      );
+      const bytes = yield* readBytes(asset, path, vendorRoot);
+      const hex = yield* sha256Hex(bytes);
+      return { file, path, bytes, hex };
+    }),
+    { concurrency: 1 }
+  );
+  const actual = yield* treeDigest(A.map(entries, ({ file, hex }) => [file, hex] as const));
+  yield* verifyRowDigest(asset, "tree", actual);
+  return yield* Effect.forEach(entries, ({ path, bytes }) => readText(asset, path, bytes), { concurrency: 1 });
 });
 
 const load = Effect.fn("ClassificationRegistry.load")(function* (
@@ -272,6 +323,16 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
       ),
     { concurrency: 1 }
   );
+  yield* Effect.forEach(
+    assets,
+    (asset) =>
+      Effect.filterOrFail(
+        Effect.succeed(asset),
+        (row) => VendorDigestUnit.is.tree(vendorDigestUnit(row)) === (row.schemeKind === "cpc"),
+        () => failure("manifest-invalid", `${asset.id} digest unit`)
+      ),
+    { concurrency: 1 }
+  );
   const concepts = yield* ClassificationSchemeKind.match(pin.kind, {
     ipc: Effect.fnUntraced(function* () {
       const asset = A.headNonEmpty(assets);
@@ -279,33 +340,9 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
       return yield* parseIpc(readAsset2, pin);
     }),
     cpc: Effect.fnUntraced(function* () {
-      const asset = A.headNonEmpty(assets);
-      const directory = yield* resolveVendorPath(asset.id, asset.path, vendorRoot).pipe(
-        Effect.mapError((error) =>
-          failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", asset.id)
-        )
-      );
-      const pipe3 = yield* fs.readDirectory(directory).pipe(Effect.mapError(() => failure("source-parse", asset.id)));
-      const files = A.filter(pipe3, (file) => Str.startsWith("cpc-scheme-")(file) && Str.endsWith(".xml")(file));
-      yield* Effect.filterOrFail(Effect.succeed(files), A.isReadonlyArrayNonEmpty, () =>
-        failure("source-parse", "CPC scheme files missing")
-      );
-      const forEach4 = yield* Effect.forEach(
-        files,
-        Effect.fnUntraced(function* (file) {
-          const path = yield* S.decodeEffect(VendorSlicePath)(A.join([asset.path, file], "/")).pipe(
-            Effect.mapError(() => failure("path-escape", file))
-          );
-          const text = yield* readVendorContent(asset.id, path, vendorRoot).pipe(
-            Effect.mapError((error) =>
-              failure(error._tag === "VendorSlicePathEscape" ? "path-escape" : "source-parse", file)
-            )
-          );
-          return yield* parseCpc(text, pin);
-        }),
-        { concurrency: 1 }
-      );
-      return A.flatten(forEach4);
+      const texts = yield* readTree(A.headNonEmpty(assets), vendorRoot);
+      const parsed = yield* Effect.forEach(texts, (text) => parseCpc(text, pin), { concurrency: 1 });
+      return A.flatten(parsed);
     }),
     nice: Effect.fnUntraced(function* () {
       const structure = yield* Effect.fromOption(

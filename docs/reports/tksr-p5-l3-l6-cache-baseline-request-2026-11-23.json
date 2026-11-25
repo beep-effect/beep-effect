@@ -1,0 +1,31 @@
+{
+  "previous": {
+    "//": "a4d7fa45dfd5ba37b176cc0403bcc9aa06f508821c464a558da2bdd01fab81c9",
+    "@beep/epistemics": "20b3edfe8b4abcfafffe92992195748db2cf247b8e1a2ad37db10ec0d7e2e60c",
+    "@beep/law-practice-domain": "abe0187085f1e55617bec77a0c013e251a453d7856759786028a97f6dd4cd77b",
+    "@beep/law-practice-use-cases": "6100e24f90a24fb52c81364c35ffc82b7fdef6d412a9c638520df1278fcbe9a5",
+    "@beep/ontology": "b80d89f84809d8734c16143bd0f4d799f29fb9ce4d8b0c0cd46dc0b42406b401",
+    "@beep/party-server": "b5d865c015cb41b7f91483b64514e3cce6f454b443c56c9ce498b1e8c8e645c8",
+    "@beep/rdf": "140055ccce039607154a4f3579fe24fc1bbc747770e3f9d81febe01941457f31"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (P5 L3 and L6 implementation lane)",
+    "reason": "Record the P5 dependency edges of rdf, ontology and law-practice domain and use-cases, plus the inherited P4 root, epistemics and party-server drifts. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p5-l3-l6-cache-review-2026-11-23.md",
+      "sha256": "0c79d5f2e1f8cf3698be95135266b5bd972a96f1e24804cad03c615bb3bc6f47"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/epistemics",
+    "@beep/law-practice-domain",
+    "@beep/law-practice-use-cases",
+    "@beep/ontology",
+    "@beep/party-server",
+    "@beep/rdf"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

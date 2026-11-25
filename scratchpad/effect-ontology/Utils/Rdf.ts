@@ -1,4 +1,4 @@
-import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
+import { Literal as CanonicalLiteral, MakeQuadOptionsInput } from "@beep/rdf/Rdf";
 /**
  * Pure RDF term and quad construction helpers.
  *
@@ -9,7 +9,7 @@ import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
 import type { IRI as IriValue } from "@beep/identity/Iri";
 import { IRI } from "@beep/identity/Iri";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { makeNamedNode, makeQuad } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -84,7 +84,9 @@ export const canonicalLiteral = (input: {
 }): Literal => {
   const datatype = O.getOrElse(input.datatype ?? O.none(), () => XSD_STRING);
   const language = O.getOrUndefined(input.language ?? O.none());
-  return makeLiteral(input.value, canonicalNamedNode(datatype).value, P.isUndefined(language) ? {} : { language });
+  return P.isUndefined(language)
+    ? CanonicalLiteral.typed(input.value, canonicalNamedNode(datatype).value)
+    : CanonicalLiteral.langTagged(input.value, language);
 };
 
 /**

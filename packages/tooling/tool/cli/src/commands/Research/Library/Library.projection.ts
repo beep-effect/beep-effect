@@ -10,12 +10,11 @@ import * as Dcat from "@beep/rdf/Vocab/Dcat";
 import * as Prov from "@beep/rdf/Vocab/Prov";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import * as Skos from "@beep/rdf/Vocab/Skos";
-import { XSD_BOOLEAN, XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_BOOLEAN, XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -190,9 +189,9 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
   );
   const literal = (value: unknown): Rdf.Literal =>
     Match.value(value).pipe(
-      Match.when(P.isBoolean, (v) => Rdf.makeLiteral(`${v}`, XSD_BOOLEAN.value)),
-      Match.when(P.isNumber, (v) => Rdf.makeLiteral(`${v}`, XSD_INTEGER.value)),
-      Match.orElse((v) => Rdf.makeLiteral(P.isString(v) ? v : "", XSD_STRING.value))
+      Match.when(P.isBoolean, (v) => Rdf.Literal.typed(`${v}`, XSD_BOOLEAN.value)),
+      Match.when(P.isNumber, (v) => Rdf.Literal.typed(`${v}`, XSD_INTEGER.value)),
+      Match.orElse((v) => Rdf.makeLiteral(P.isString(v) ? v : ""))
     );
   const recordId = (name: string, record: unknown, fallback: string, owner: string) =>
     Match.value(name).pipe(
@@ -297,12 +296,5 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
       );
     });
   A.forEach(catalog.findings, findingTopics);
-  let seen = HashSet.empty<string>();
-  const unique = A.filter(quads, (quad) => {
-    const key = Rdf.serializeQuad(quad);
-    if (HashSet.has(seen, key)) return false;
-    seen = HashSet.add(seen, key);
-    return true;
-  });
-  return Rdf.makeDataset(Rdf.sortDatasetQuads(Rdf.makeDataset(unique)));
+  return Rdf.makeDataset(quads);
 });

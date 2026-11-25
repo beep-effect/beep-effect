@@ -21,7 +21,6 @@ import {
   PublishProvenanceTool,
 } from "@beep/ontology-use-cases/tools";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -148,7 +147,7 @@ const addName = (person: string, name: string) =>
     quad: makeQuad(
       makeNamedNode(`https://example.test/${person}`),
       makeNamedNode("https://example.test/name"),
-      makeLiteral(name, XSD_STRING.value)
+      makeLiteral(name)
     ),
   });
 

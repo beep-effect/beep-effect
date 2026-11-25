@@ -13,20 +13,17 @@
     {"name":"ClassificationRegistry.validateSnapshot","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"Ontology.fold","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"Ontology.foldWith","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"TaxonomyLoader.applyAlignments","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.decodeLoadManifestEntry","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"TaxonomyLoader.decodeUtf8","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.decodeVendorManifestRow","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"TaxonomyLoader.indexSchemes","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.load","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.mergeAlignment","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.mergeSlices","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.parseManifest","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.readAlignmentSlice","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.readSlice","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.readTaxonomySeedSlice","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.readVendorContent","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyLoader.readVettedSlice","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"TaxonomyLoader.readRow","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"TaxonomyLoader.readVendorBytes","owner":"@beep/ontology","family":"foundation","conforms":true},
+    {"name":"TaxonomyLoader.readVerifiedFile","owner":"@beep/ontology","family":"foundation","conforms":true},
     {"name":"TaxonomyLoader.resolveVendorPath","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"TaxonomyRegistry.runLibrarianLoop","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"VocabularyRegistry.load","owner":"@beep/ontology","family":"foundation","conforms":true},
-    {"name":"VocabularyRegistry.resolve","owner":"@beep/ontology","family":"foundation","conforms":true}
+    {"name":"TaxonomyLoader.verifyRowDigest","owner":"@beep/ontology","family":"foundation","conforms":true}
   ]
 }

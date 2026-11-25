@@ -54,10 +54,10 @@ lands in the phase of its layer.
 | L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | P1 |
 | L1 | Text identity and anchoring | `@beep/text` | P2 |
 | L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | Implemented in P3 lane |
-| L3 | Taxonomy and alignments | `@beep/ontology` | Pending P5 |
+| L3 | Taxonomy and alignments | `@beep/ontology` | Implemented in P5 lane |
 | L4 | Claims | `@beep/epistemics` | Implemented in P4 lane |
 | L5 | Operations | `@beep/nlp-processing` (capability) | Pending P6 |
-| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Pending P5 |
+| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Implemented in P5 lane |
 | L7 | Agent surface | a contract, not a package | Pending P6 |
 
 ### L0 · Identity
@@ -241,7 +241,7 @@ capture, an `anchors` table from `OccurrenceId` to `Anchored`, an
 `annotations` map from `AnnotationId` to content, and an `attribution` map from
 `AnnotationId` to a set of `Generation` records. An annotation's content is its
 deduplicated sorted targets, its kind and its body. Kinds come in groups:
-structure (`Section`, `Paragraph`, `Title`, `Figure`; DoCO alignments land through SSSOM in P5),
+structure (`Section`, `Paragraph`, `Title`, `Figure`; aligned to DoCO by the SSSOM set in `@beep/ontology`),
 segmentation (`Sentence`, `Word`, bound to NIF terms for export), and
 extraction (`Mention`, `Chunk`, `RelationCandidate`, `CorefCandidate`). Each
 kind declares the kinds its body may reference and a function from a body to
@@ -293,17 +293,20 @@ subject, predicate, object, justification, and confidence as a typed field);
 the optional gUFO class typing, a record keyed by term IRI with three fields:
 the type of type (`Kind`, `SubKind`, `Role`, `Phase`, `Category`, `Mixin`,
 `RoleMixin`, `PhaseMixin`), the category of its instances (`Object`,
-`Relator`, `Mode`, `Quality`, `Event`), and, for a `Relator`, the set of role
-terms it mediates. The audit rules of `L3-3` read it, and an untyped term is
-skipped. `MappingSet` and the gUFO typing are Pending P5.
+`Relator`, `Quality`, `Event`; gUFO 1.0.0 declares no `Mode`), and, for a
+`Relator`, the role terms it mediates, each with the minimum number of
+individuals it connects. The audit rules of `L3-3` read it, and an untyped term
+is skipped. `MappingSet` (`Mapping.ts`) and the gUFO typing (`Gufo.ts`)
+landed in P5; the pilot types `LegalPositionRelator` in the law-practice
+domain, under the `law-practice` registry namespace.
 
-**Arrows.** The fold to an RDF `Dataset` as the only serialization path
-(Pending P5); `align` from two terms to a mapping set with a coherence check
-(Pending P5); `audit` over the typed subset of terms, run as a lint on any
-term an agent proposes (Pending P5). The legal seeds and their seed data files
-move to the law-practice asset pack and
-load through `packages/foundation/modeling/ontology/src/TaxonomyLoader.ts`; the
-FOLIO HTTP DTOs and their data are deleted (Pending P5).
+**Arrows.** The fold to an RDF `Dataset` as the only serialization path;
+`checkMappingCoherence` over a mapping set's SKOS closure against a gUFO
+typing; `audit` over the typed subset of terms, a function since P5 and run as
+a lint on any term an agent proposes from P6. The legal seeds and their seed
+data files moved to the law-practice asset pack and load through
+`packages/foundation/modeling/ontology/src/TaxonomyLoader.ts`; the FOLIO HTTP
+DTOs and their data are deleted.
 
 **Laws.** `L3-1` (profile: `skos:broader` is acyclic in repo-owned schemes, and
 an imported cycle is recorded), `L3-2` (profile: mapping sets are coherent and
@@ -421,7 +424,9 @@ isomorphism and a digest on the canonical form; `Literal` with the cases
 `SourceTextIdentity` through `packages/foundation/modeling/rdf/src/Prov.ts`;
 `NamespacePin` (source, license, version, digest), keyed by prefix, beside the
 vendored vocabularies it describes. The `@beep/rdf` to `@beep/md` edge is
-removed. Pending P5, except `NamespacePin`, which P1 landed.
+removed. These landed in P5, except `NamespacePin`, which P1 landed. The
+semantica gold projection's dataset digest (`g-projection/v2`) waits on an
+operational C1 measure run checked against the `rdf-canonize` oracle.
 
 **Laws.** `L6-1` (dataset equality up to blank-node isomorphism; digest on the
 canonical form), `L6-2` (a projection is deterministic and its kept fields
@@ -464,10 +469,10 @@ Forbidden edges: `@beep/identity` to anything but `effect`, including
 `@beep/schema` (which depends on it), so no identity-owned object is typed
 with a `@beep/schema` primitive; any base entry of
 `@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
-`@beep/rdf` to `@beep/md` (Pending P5); any `foundation/modeling` package to a
+`@beep/rdf` to `@beep/md`; any `foundation/modeling` package to a
 capability; a slice's `domain` or model package to a capability. These hold for `@beep/text` since P2, the annotation base since P3 and the
-epistemics base since P4 (its import-boundary test), and are Pending P5 to P6
-for the packages that have not landed.
+epistemics base since P4 (its import-boundary test) and `@beep/rdf` since P5,
+and are Pending P6 for the packages that have not landed.
 
 ## 4. Identity regimes
 
@@ -675,7 +680,7 @@ terms the repo uses, and every SHACL and VoID constant imports
 `@beep/rdf/Vocab/Shacl` or `@beep/rdf/Vocab/Void`. LKIF and ELI are candidate
 entries with no commitment, like OntoLex `lexicog`, and enter when a decision
 names their first consumer. The license and digest test over every external
-namespace in `@beep/rdf` is Pending P5.
+namespace is `NamespacePin.test.ts` in `@beep/rdf`.
 
 The annotation codec supports one declared OA profile and nothing else.
 Decoding third-party input returns the annotation document, a table of
@@ -727,7 +732,7 @@ assertion per path. Pending P6.
   emit proposed records lives in the law-practice use-cases tests. The
   `TierGate` in `@beep/mcp-kit` stays the dispatch gate (Pending P6).
 - **Proposed terms are linted.** The L3 audit runs on any term an agent
-  proposes (Pending P5).
+  proposes (Pending P6; P5 ships the audit as a function).
 - **Attorney-facing output.** Every emitted quotation and citation has
   verified source evidence; every attributed factual assertion has evidence or
   a visible unresolved flag; original argument is labelled as proposed with

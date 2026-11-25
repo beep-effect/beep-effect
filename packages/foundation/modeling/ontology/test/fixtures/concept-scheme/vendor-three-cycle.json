@@ -1,0 +1,31 @@
+{
+  "iri": "https://vendor.example.test/scheme",
+  "version": "2026-01",
+  "prefLabel": "Vendor scheme with a three-cycle",
+  "concepts": [
+    {
+      "iri": "https://vendor.example.test/scheme/a",
+      "prefLabel": "A",
+      "broader": ["https://vendor.example.test/scheme/b"],
+      "alignments": []
+    },
+    {
+      "iri": "https://vendor.example.test/scheme/b",
+      "prefLabel": "B",
+      "broader": ["https://vendor.example.test/scheme/c"],
+      "alignments": []
+    },
+    {
+      "iri": "https://vendor.example.test/scheme/c",
+      "prefLabel": "C",
+      "broader": ["https://vendor.example.test/scheme/a"],
+      "alignments": []
+    },
+    {
+      "iri": "https://vendor.example.test/scheme/d",
+      "prefLabel": "D",
+      "broader": [],
+      "alignments": []
+    }
+  ]
+}

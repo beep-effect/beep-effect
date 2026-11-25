@@ -1,7 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Rdf from "@beep/rdf/Rdf";
 import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -59,7 +58,7 @@ const failed = (message: string): ProjectionFailed => ProjectionFailed.make({ me
 const claimNode = (id: string) => Rdf.makeNamedNode(`${BASE}claim/${id}`);
 const chunkNode = (id: string) => Rdf.makeNamedNode(`${BASE}chunk/${id}`);
 const graphNode = (id: string) => Rdf.makeNamedNode(`${BASE}provenance/batch/${id}`);
-const stringLiteral = (value: string) => Rdf.makeLiteral(value, XSD_STRING.value);
+const stringLiteral = (value: string) => Rdf.makeLiteral(value);
 const quad = (claim: EvidenceClaim, graph: Rdf.NamedNode, predicate: Rdf.NamedNode, object: Rdf.ObjectTerm) =>
   Rdf.makeQuad(claimNode(claim.id), predicate, MakeQuadOptionsInput.make({ graph, object }));
 
@@ -102,6 +101,8 @@ const canonicalRows = (rows: ReadonlyArray<Record<string, Rdf.Term>>) =>
     rowOrder
   );
 
+const byQuadLine: Order.Order<Rdf.Quad> = Order.mapInput(Order.String, Rdf.serializeQuad);
+
 const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
   const config = yield* LabConfig;
   const sparql = yield* SparqlQueryService;
@@ -111,9 +112,9 @@ const makeRdfProjection = Effect.fn("RdfProjection.make")(function* () {
     rebuild: Effect.fn("RdfProjection.rebuild")((snapshot) =>
       Effect.sync(() => {
         const dataset = Rdf.makeDataset(snapshotQuads(snapshot));
-        const sorted = Rdf.sortDatasetQuads(dataset);
+        const sorted = A.sort(dataset.quads, byQuadLine);
         return {
-          dataset: Rdf.makeDataset(sorted),
+          dataset,
           serializedQuads: A.map(sorted, Rdf.serializeQuad),
           serializedTriples: A.map(sorted, (quad) => ({
             object: Rdf.serializeTerm(quad.object),

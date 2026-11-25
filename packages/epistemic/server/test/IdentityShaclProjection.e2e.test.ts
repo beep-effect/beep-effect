@@ -3,7 +3,6 @@ import { IdentityEntry } from "@beep/identity";
 import { $EpistemicServerId } from "@beep/identity/packages";
 import { iri } from "@beep/identity/Registry";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import {
   DefaultIdentityRdfBinding,
   entriesToDataset,
@@ -54,7 +53,7 @@ describe("identity SHACL projection end to end", () => {
               makeQuad(
                 makeNamedNode(entry.iri),
                 binding.identifierPath,
-                makeLiteral("@beep/epistemic-server/UnexpectedIdentity", XSD_STRING.value)
+                makeLiteral("@beep/epistemic-server/UnexpectedIdentity")
               )
             )
           )

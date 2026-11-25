@@ -1,33 +1,33 @@
-import { Dataset, MakeQuadOptionsInput, makeDataset, makeLiteral, makeNamedNode, makeQuad, Quad } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { CanonicalWorkBound } from "@beep/rdf/Canonical";
+import {
+  Dataset,
+  MakeQuadOptionsInput,
+  makeBlankNode,
+  makeDataset,
+  makeLiteral,
+  makeNamedNode,
+  makeQuad,
+  Quad,
+} from "@beep/rdf/Rdf";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import {
   CanonicalDatasetResult,
   CanonicalizationService,
   CanonicalizeDatasetRequest,
+  FingerprintDatasetRequest,
 } from "@beep/semantic-web/services/canonicalization";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { afterEach, describe, expect } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { vi } from "vitest";
+import * as Str from "effect/String";
 
 const decodeCanonicalizeDatasetRequest = S.decodeEffect(CanonicalizeDatasetRequest);
 const encodeCanonicalizeDatasetRequest = S.encodeEffect(CanonicalizeDatasetRequest);
 const encodeDataset = S.encodeEffect(Dataset);
-
-const { canonizeMock } = vi.hoisted(() => ({
-  canonizeMock: vi.fn(),
-}));
-
-vi.mock("rdf-canonize", (importOriginal) =>
-  importOriginal<typeof import("rdf-canonize")>().then((actual) => ({
-    ...actual,
-    canonize: canonizeMock,
-  }))
-);
 
 const expectEncodedRoundTrip = Effect.fnUntraced(function* <
   Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>,
@@ -41,18 +41,22 @@ const expectEncodedRoundTrip = Effect.fnUntraced(function* <
 const BoundedDataset = S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) });
 const CanonicalDatasetResultArbitrary = Arbitrary.schema(
   S.Struct({ ...CanonicalDatasetResult.fields, dataset: BoundedDataset })
-).pipe(Arbitrary.map((result) => CanonicalDatasetResult.make({ ...result, dataset: Dataset.make(result.dataset) })));
+).pipe(
+  Arbitrary.map((result) => CanonicalDatasetResult.make({ ...result, dataset: makeDataset(result.dataset.quads) }))
+);
 const CanonicalizeDatasetRequestArbitrary = Arbitrary.schema(
   S.Struct({ ...CanonicalizeDatasetRequest.fields, dataset: BoundedDataset })
 ).pipe(
-  Arbitrary.map((request) => CanonicalizeDatasetRequest.make({ ...request, dataset: Dataset.make(request.dataset) }))
+  Arbitrary.map((request) =>
+    CanonicalizeDatasetRequest.make({ ...request, dataset: makeDataset(request.dataset.quads) })
+  )
 );
 
 const dataset = makeDataset([
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
     makeNamedNode("https://schema.org/name"),
-    makeLiteral("Alice", XSD_STRING.value)
+    makeLiteral("Alice")
   ),
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
@@ -63,67 +67,49 @@ const dataset = makeDataset([
   ),
 ]);
 
-const expectSemanticBudgetFailure = Effect.fnUntraced(function* (error: Error) {
-  canonizeMock.mockRejectedValueOnce(error);
-  const service = yield* CanonicalizationService;
-  const request = yield* decodeCanonicalizeDatasetRequest({
-    algorithm: "rdfc-1.0",
-    dataset: yield* encodeDataset(dataset),
-  });
-  const failure = yield* service.canonicalize(request).pipe(Effect.flip);
-  expect(failure).toMatchObject({
-    message: expect.stringContaining("configured resource budget"),
-    reason: "workLimitExceeded",
-  });
-});
+const cliqueLabels = ["k0", "k1", "k2", "k3", "k4", "k5"];
 
-afterEach(() => {
-  canonizeMock.mockReset();
-});
+const clique = makeDataset(
+  A.flatMap(cliqueLabels, (from) =>
+    A.map(
+      A.filter(cliqueLabels, (to) => to !== from),
+      (to) => makeQuad(makeBlankNode(from), makeNamedNode("https://example.test/p"), makeBlankNode(to))
+    )
+  )
+);
 
-// `vitest.shared.ts` sets `sequence.concurrent`, and every case here drives the
-// same module-level `canonizeMock`: they queue `mockRejectedValueOnce`, assert
-// call counts, and share one `afterEach` reset. Run concurrently they would
-// consume each other's queued rejections and assert against foreign call
-// history. That was latent while these cases returned an Effect nobody ran.
-describe("Canonicalization security hardening", { concurrent: false }, () => {
+const refusedAtBound = {
+  message: `Semantic canonicalization exceeded its bound of ${CanonicalWorkBound} Hash N-Degree Quads calls.`,
+  reason: "workLimitExceeded",
+};
+
+describe("Canonicalization security hardening", () => {
   it.layer(CanonicalizationServiceLive, { timeout: "30 seconds" })((it) => {
-    it.effect("passes explicit resource controls to rdf-canonize for semantic canonicalization", () =>
+    it.effect("refuses a blank-node clique past the bound as a work-limit error", () =>
       Effect.gen(function* () {
-        const actual = yield* Effect.promise(() =>
-          Promise.resolve(vi.importActual<typeof import("rdf-canonize")>("rdf-canonize"))
-        );
-        canonizeMock.mockImplementation(actual.canonize);
         const service = yield* CanonicalizationService;
-        const decodedCanonicalizeDatasetRequest = yield* decodeCanonicalizeDatasetRequest({
-          algorithm: "rdfc-1.0",
-          dataset: yield* encodeDataset(dataset),
-        });
-        yield* service.canonicalize(decodedCanonicalizeDatasetRequest);
-        expect(canonizeMock).toHaveBeenCalledTimes(1);
-        const call = canonizeMock.mock.calls[0];
-        expect(call).toBeDefined();
-        if (call === undefined) {
-          return;
-        }
-        const [, options] = call;
-        expect(options.algorithm).toBe("RDFC-1.0");
-        expect(options.format).toBe("application/n-quads");
-        expect(options.maxWorkFactor).toBe(1);
-        expect(options.signal).toBeInstanceOf(AbortSignal);
+        const failure = yield* service
+          .canonicalize(CanonicalizeDatasetRequest.make({ algorithm: "rdfc-1.0", dataset: clique }))
+          .pipe(Effect.flip);
+        expect(failure).toMatchObject(refusedAtBound);
       })
     );
-    it.effect("maps semantic resource-budget failures to work-limit errors", () =>
-      expectSemanticBudgetFailure(new Error("Maximum deep iterations exceeded (8)."))
-    );
-    it.effect("maps abort-signal budget failures to work-limit errors", () =>
-      expectSemanticBudgetFailure(new Error("Abort signal received"))
-    );
-    it.effect("maps timeout-style budget failures to work-limit errors", () =>
+    it.effect("refuses to fingerprint a blank-node clique past the bound", () =>
       Effect.gen(function* () {
-        const timeoutError = new Error("signal timed out");
-        timeoutError.name = "TimeoutError";
-        yield* expectSemanticBudgetFailure(timeoutError);
+        const service = yield* CanonicalizationService;
+        const failure = yield* service
+          .fingerprint(FingerprintDatasetRequest.make({ algorithm: "rdfc-1.0", dataset: clique }))
+          .pipe(Effect.flip);
+        expect(failure).toMatchObject(refusedAtBound);
+      })
+    );
+    it.effect("canonicalizes the clique lexically, which has no blank-node work", () =>
+      Effect.gen(function* () {
+        const service = yield* CanonicalizationService;
+        const result = yield* service.canonicalize(
+          CanonicalizeDatasetRequest.make({ algorithm: "lexical-sort-v1", dataset: clique })
+        );
+        expect(Str.split("\n")(result.canonicalText).length).toBe(30);
       })
     );
     it.effect("canonicalizes lexical requests without changing result encoded shape", () =>

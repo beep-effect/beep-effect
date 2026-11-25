@@ -18,6 +18,9 @@
   },
   "references": [
     {
+      "path": "../../../drivers/n3/tsconfig.json"
+    },
+    {
       "path": "../../../epistemic/domain/tsconfig.json"
     },
     {
@@ -49,6 +52,12 @@
     },
     {
       "path": "../../../foundation/modeling/nlp/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/ontology/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/schema/tsconfig.json"

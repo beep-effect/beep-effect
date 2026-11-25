@@ -8,7 +8,7 @@ import { ClaimFilter } from "../Repository/Claim.ts";
 
 import { DrizzleError } from "@beep/drizzle";
 import { IRI } from "@beep/identity/Iri";
-import { makeLiteral, makeNamedNode } from "@beep/rdf";
+import { Literal, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as A from "effect/Array";
@@ -249,12 +249,12 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
   const source = yield* articleRowToArticleSummary(article);
   const object = yield* claim.objectType === "iri"
     ? S.decodeEffect(IRI)(claim.objectValue).pipe(Effect.map(makeNamedNode))
-    : Effect.succeed(
-        makeLiteral(
-          claim.objectValue,
-          claim.objectDatatype ?? XSD_STRING.value,
-          P.isNull(claim.objectLanguage) ? {} : { language: claim.objectLanguage }
-        )
+    : Effect.fromResult(
+        Literal.fromParts({
+          value: claim.objectValue,
+          datatype: claim.objectDatatype ?? XSD_STRING.value,
+          ...(P.isNull(claim.objectLanguage) ? {} : { language: claim.objectLanguage }),
+        })
       );
   const validTime =
     P.isNotNull(claim.validFrom) && P.isNotNull(claim.validTo)

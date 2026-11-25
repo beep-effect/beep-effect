@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "ab788ef7eb867d09fe7ab22fb4f8dea0359ad16622394b6ad2ee80e35387cd18",
+    "@beep/law-practice-domain": "f31272e61f5ad6c8132a617cd092fc204ca2008d5ec435eab5e66a33daabd332"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P5 taxonomy lane)",
+    "reason": "Re-record the law-practice domain package after P5 regenerated its doctest script pair, and the root turbo.json source digest after the main merges; configuration review only, no qualification granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p5-doctest-pair-cache-review-2026-11-25.md",
+      "sha256": "12d4345ce40fed245239f306767e7b0513de9c4e93ab12913091a219e0b36c86"
+    }
+  },
+  "subjects": ["//", "@beep/law-practice-domain"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

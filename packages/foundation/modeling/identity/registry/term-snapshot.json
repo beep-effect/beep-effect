@@ -1,6 +1,6 @@
 {
   "version": "term-snapshot/v1",
-  "release": "2.2.0",
+  "release": "2.3.0",
   "namespaces": [
     {
       "prefix": "annotation",
@@ -65,6 +65,10 @@
     {
       "prefix": "instance",
       "iri": "https://beep-effect.com/ns/instance/"
+    },
+    {
+      "prefix": "law-practice",
+      "iri": "https://beep-effect.com/ns/law-practice/"
     },
     {
       "prefix": "lejeune",
@@ -135,6 +139,10 @@
       "iri": "https://beep-effect.com/ns/semantica/"
     },
     {
+      "prefix": "semapv",
+      "iri": "https://w3id.org/semapv/vocab/"
+    },
+    {
       "prefix": "sh",
       "iri": "http://www.w3.org/ns/shacl#"
     },
@@ -145,6 +153,10 @@
     {
       "prefix": "skos",
       "iri": "http://www.w3.org/2004/02/skos/core#"
+    },
+    {
+      "prefix": "text",
+      "iri": "https://beep-effect.com/ns/text/"
     },
     {
       "prefix": "vitest",
@@ -344,6 +356,7 @@
     "http://www.w3.org/2001/XMLSchema#anyURI",
     "http://www.w3.org/2001/XMLSchema#boolean",
     "http://www.w3.org/2001/XMLSchema#dateTime",
+    "http://www.w3.org/2001/XMLSchema#decimal",
     "http://www.w3.org/2001/XMLSchema#double",
     "http://www.w3.org/2001/XMLSchema#integer",
     "http://www.w3.org/2001/XMLSchema#string",
@@ -552,6 +565,11 @@
     "https://beep-effect.com/ns/epistemic/hasEvidenceQuote",
     "https://beep-effect.com/ns/epistemic/sourceDigest",
     "https://beep-effect.com/ns/instance/",
+    "https://beep-effect.com/ns/law-practice/",
+    "https://beep-effect.com/ns/law-practice/LegalPositionRelator",
+    "https://beep-effect.com/ns/law-practice/Party",
+    "https://beep-effect.com/ns/law-practice/PositionBearer",
+    "https://beep-effect.com/ns/law-practice/PositionCounterparty",
     "https://beep-effect.com/ns/lejeune/ontology/",
     "https://beep-effect.com/ns/lejeune/ontology/delivery_date",
     "https://beep-effect.com/ns/lejeune/ontology/finish",
@@ -728,6 +746,15 @@
     "https://beep-effect.com/ns/skill-contract/evidence/failure/v2",
     "https://beep-effect.com/ns/skill-contract/evidence/gate-certificate/v1",
     "https://beep-effect.com/ns/skill-contract/evidence/gate-summary/v2",
+    "https://beep-effect.com/ns/text/",
+    "https://beep-effect.com/ns/text/SourceTextCapture",
+    "https://beep-effect.com/ns/text/extractorName",
+    "https://beep-effect.com/ns/text/extractorVersion",
+    "https://beep-effect.com/ns/text/locator",
+    "https://beep-effect.com/ns/text/normalizationVersion",
+    "https://beep-effect.com/ns/text/sourceDigest",
+    "https://beep-effect.com/ns/text/sourceRef",
+    "https://beep-effect.com/ns/text/textDigest",
     "https://beep-effect.com/ns/vitest/",
     "https://beep-effect.com/ns/vitest/PositiveTimeoutMillis",
     "https://beep-effect.com/ns/vitest/TestContextUnavailable",
@@ -748,7 +775,13 @@
     "https://schema.org/knows",
     "https://schema.org/memberOf",
     "https://schema.org/name",
-    "https://schema.org/url"
+    "https://schema.org/url",
+    "https://w3id.org/semapv/vocab/",
+    "https://w3id.org/semapv/vocab/LexicalMatching",
+    "https://w3id.org/semapv/vocab/LogicalReasoning",
+    "https://w3id.org/semapv/vocab/ManualMappingCuration",
+    "https://w3id.org/semapv/vocab/SemanticSimilarityThresholdMatching",
+    "https://w3id.org/semapv/vocab/UnspecifiedMatching"
   ],
   "bindings": [
     {

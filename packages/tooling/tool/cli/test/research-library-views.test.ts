@@ -32,6 +32,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { fixture, LibraryIntakeJson, LibraryProbeEvidenceJson, services } from "./support/ResearchLibraryViews.ts";
@@ -103,7 +104,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
           Effect.provideService(ShaclValidationService, {
             validate: Effect.fnUntraced(function* (request) {
               calls++;
-              expect(request.dataset.quads.length).toBeGreaterThan(0);
+              expect(HashSet.size(request.dataset.quads)).toBeGreaterThan(0);
               expect(request.shapes.length).toBeGreaterThan(0);
               expect(request.shapesDataset._tag).toBe("Some");
               const actual = yield* validator.validate(request);

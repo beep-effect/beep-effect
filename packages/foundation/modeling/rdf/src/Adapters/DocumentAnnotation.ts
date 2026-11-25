@@ -18,7 +18,6 @@ import { DOCO_NAMESPACE, DOCO_TERMS } from "../Vocab/Doco.ts";
 import { FABIO_NAMESPACE, FABIO_TERMS } from "../Vocab/Fabio.ts";
 import { PROV_NAMESPACE } from "../Vocab/Prov.ts";
 import { RDF_NAMESPACE } from "../Vocab/Rdf.ts";
-import { MdNodeId } from "./MdSections.ts";
 import { WebAnnotationFragmentSelector, WebAnnotationTarget } from "./WebAnnotation.ts";
 
 const documentPatternIri = iri("document:pattern");
@@ -137,15 +136,19 @@ export class DocumentAnnotationBody extends S.Opaque<DocumentAnnotationBody, { r
   )
 ) {}
 
-const NodeSelector = S.Struct({ ...WebAnnotationFragmentSelector.fields, value: MdNodeId });
-const NodeTarget = S.Struct({ ...WebAnnotationTarget.fields, type: S.tag("SpecificResource"), selector: NodeSelector });
+const NodeTarget = S.Struct({
+  ...WebAnnotationTarget.fields,
+  type: S.tag("SpecificResource"),
+  selector: WebAnnotationFragmentSelector,
+});
 
 /**
  * OA JSON-LD profile selecting a stable source-node id within an immutable revision.
  *
  * **Details**
- * Use the revision resource IRI as target source and the fold's node id as
- * FragmentSelector value. The context pins the OA context and defines SPAR,
+ * Use the revision resource IRI as target source and an Md section-fold node id
+ * (`md-v1/b/N`) as the FragmentSelector value; the Markdown package checks the
+ * block-path grammar where the selector resolves to an Md node. The context pins the OA context and defines SPAR,
  * RDF statement and PROV properties explicitly. The encoded type is derived
  * from this class; codecs preserve the whole annotation in one channel.
  *

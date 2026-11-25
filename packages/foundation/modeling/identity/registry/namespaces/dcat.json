@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "dcat", "iri": "http://www.w3.org/ns/dcat#" },
+  "namespace": {
+    "prefix": "dcat",
+    "iri": "http://www.w3.org/ns/dcat#"
+  },
   "terms": [
     "Catalog",
     "CatalogRecord",

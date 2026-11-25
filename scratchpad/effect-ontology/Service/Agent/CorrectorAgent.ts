@@ -22,7 +22,6 @@ import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import * as A from "effect/Array";
@@ -927,7 +926,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
         );
         rdfStoreRemoveQuads(store, oldQuads);
       }
-      const newObject = makeLiteral(`${correction.newValue}`, XSD_STRING.value);
+      const newObject = makeLiteral(`${correction.newValue}`);
       rdfStoreAddQuad(store, makeQuad(focusNode, predicate, newObject));
       yield* Effect.logInfo("CorrectorAgent: Applied value correction", {
         focusNode: correction.focusNode,

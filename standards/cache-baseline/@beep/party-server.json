@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/party-server",
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P4 claims lane)",
-    "reason": "Re-record the root, @beep/epistemics and @beep/party-server after the P4 main merges: manifest dependency edges and the regenerated turbo.json root projection changed; no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (P5 L3 and L6 implementation lane)",
+    "reason": "Record the P5 dependency edges of rdf, ontology and law-practice domain and use-cases, plus the inherited P4 root, epistemics and party-server drifts. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p4-main-merge-cache-review-2026-11-24.md",
-      "sha256": "6f9bffb14ffbbb76ca40e85421903f641578edd12dc0fe760d4b8f2c2585ea44"
+      "path": "docs/reports/tksr-p5-l3-l6-cache-review-2026-11-23.md",
+      "sha256": "0c79d5f2e1f8cf3698be95135266b5bd972a96f1e24804cad03c615bb3bc6f47"
     }
   },
   "nodes": [

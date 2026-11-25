@@ -188,8 +188,8 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
 
 - `packages/tooling/tool/cli/**` (all seams) and any `packages/tooling/library/*`
   home for the presence helper.
-- `packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts`
-  (seam 1).
+- The ontology classification tests (seam 1; the `SemanticFoundation` test
+  was retired by the text-knowledge-stack-rebuild P5 phase).
 - A new workspace package for the legal CLI command groups, created with
   `bun run beep create-package` (seam 2).
 - The import-boundary rule's host in the existing boundary tooling

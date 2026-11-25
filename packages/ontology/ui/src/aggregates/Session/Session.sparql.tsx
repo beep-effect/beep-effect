@@ -25,6 +25,7 @@ import { Textarea } from "@beep/ui/components/textarea";
 import { A, O, R, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session";
@@ -57,7 +58,7 @@ const sparqlResultPreview = (result: RunOntologySparqlResult): JSX.Element => {
   if (result.result.profile === "construct") {
     return (
       <div className="space-y-2">
-        {result.result.dataset.quads.length === 0 ? (
+        {HashSet.size(result.result.dataset.quads) === 0 ? (
           <p className="text-sm text-muted-foreground">No quads.</p>
         ) : (
           A.map(A.take(result.result.dataset.quads, 8), (quad, index) => (

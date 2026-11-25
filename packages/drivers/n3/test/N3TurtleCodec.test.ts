@@ -1,5 +1,6 @@
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import {
+  Literal,
   MakeQuadOptionsInput,
   makeBlankNode,
   makeDataset,
@@ -9,10 +10,12 @@ import {
   PrefixMap,
 } from "@beep/rdf/Rdf";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
-import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_DOUBLE } from "@beep/rdf/Vocab/Xsd";
 import { it } from "@beep/test-runner";
 import { expect, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { Writer } from "n3";
 import type * as N3 from "n3";
@@ -33,11 +36,62 @@ it.layer(N3TurtleCodecLive)("N3TurtleCodec", (it) => {
         N3SerializeTurtleRequest.make({ dataset: parsed.dataset, prefixes: parsed.prefixes })
       );
 
-      expect(parsed.dataset.quads).toHaveLength(1);
+      expect(HashSet.size(parsed.dataset.quads)).toBe(1);
       expect(parsed.prefixes).toEqual({ ex: "https://example.test/" });
       expect(serialized.source).toContain("@prefix ex:");
       expect(serialized.source).toContain("ex:alice");
       expect(serialized.source).toContain("Alice");
+    })
+  );
+
+  it.effect(
+    "serializes one quad set byte-identically whatever its insertion order",
+    Effect.fnUntraced(function* () {
+      const alice = makeNamedNode("https://example.test/alice");
+      const bob = makeNamedNode("https://example.test/bob");
+      const name = makeNamedNode("https://example.test/name");
+      const quads = [
+        makeQuad(alice, name, makeLiteral("Alice")),
+        makeQuad(bob, name, Literal.langTagged("Bob", "EN")),
+        makeQuad(alice, makeNamedNode("https://example.test/knows"), bob),
+      ];
+      const codec = yield* N3TurtleCodec;
+      const prefixes = yield* decodePrefixMap({ ex: "https://example.test/" });
+      const forward = yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset: makeDataset(quads), prefixes }));
+      const backward = yield* codec.serialize(
+        N3SerializeTurtleRequest.make({ dataset: makeDataset([...quads].reverse()), prefixes })
+      );
+      const reparsed = yield* codec.parse(N3ParseTurtleRequest.make({ source: forward.source }));
+
+      expect(backward.source).toBe(forward.source);
+      expect(Equal.equals(reparsed.dataset, makeDataset(quads))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "lowercases language tags and refuses a direction-tagged literal",
+    Effect.fnUntraced(function* () {
+      const codec = yield* N3TurtleCodec;
+      const tagged = yield* codec.parse(
+        N3ParseTurtleRequest.make({ source: '<https://example.test/a> <https://example.test/p> "x"@EN .' })
+      );
+      const directed = yield* codec
+        .parse(N3ParseTurtleRequest.make({ source: '<https://example.test/a> <https://example.test/p> "x"@en--ltr .' }))
+        .pipe(Effect.flip);
+
+      expect(
+        Equal.equals(
+          tagged.dataset,
+          makeDataset([
+            makeQuad(
+              makeNamedNode("https://example.test/a"),
+              makeNamedNode("https://example.test/p"),
+              Literal.langTagged("x", "en")
+            ),
+          ])
+        )
+      ).toBe(true);
+      expect(directed.reason).toBe("parseFailed");
     })
   );
 
@@ -65,7 +119,7 @@ it.layer(N3TurtleCodecLive)("N3TurtleCodec", (it) => {
     Effect.fnUntraced(function* () {
       const subject = makeNamedNode("https://example.test/alice");
       const predicate = makeNamedNode("https://example.test/name");
-      const object = makeLiteral("Alice", XSD_STRING.value);
+      const object = makeLiteral("Alice");
       const statement = makeBlankNode("confidence-statement");
       const dataset = makeDataset([
         makeQuad(subject, predicate, object),
@@ -73,7 +127,7 @@ it.layer(N3TurtleCodecLive)("N3TurtleCodec", (it) => {
         makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}subject`), subject),
         makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}predicate`), predicate),
         makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}object`), object),
-        makeQuad(statement, makeNamedNode("https://example.test/confidence"), makeLiteral("0.8", XSD_DOUBLE.value)),
+        makeQuad(statement, makeNamedNode("https://example.test/confidence"), Literal.typed("0.8", XSD_DOUBLE.value)),
       ]);
       const codec = yield* N3TurtleCodec;
       const prefixes = yield* decodePrefixMap({ rdf: RDF_NAMESPACE });
@@ -93,7 +147,7 @@ it.layer(N3TurtleCodecLive)("N3TurtleCodec", (it) => {
           makeNamedNode("https://example.test/alice"),
           makeNamedNode("https://example.test/name"),
           MakeQuadOptionsInput.make({
-            object: makeLiteral("Alice", XSD_STRING.value),
+            object: makeLiteral("Alice"),
             graph: makeNamedNode("https://example.test/graph"),
           })
         ),

@@ -15,6 +15,9 @@
   },
   "references": [
     {
+      "path": "../annotation/tsconfig.json"
+    },
+    {
       "path": "../identity/tsconfig.json"
     },
     {
@@ -22,6 +25,9 @@
     },
     {
       "path": "../schema/tsconfig.json"
+    },
+    {
+      "path": "../spdx/tsconfig.json"
     },
     {
       "path": "../utils/tsconfig.json"

@@ -256,7 +256,7 @@ const isSafePnPrefix = S.is(SafePnPrefix);
  * import { isSafeLocal } from "@beep/identity/PnLocal"
  *
  * isSafeLocal("prefLabel") // => true
- * isSafeLocal("Ontology.models/HttpUrl") // => false
+ * isSafeLocal("Classification.models/ClassificationPin") // => false
  * ```
  *
  * @category predicates
@@ -366,7 +366,7 @@ const acceptsEscapedLocalInternal = (local: string): boolean =>
  * import * as S from "effect/Schema"
  * import { EscapedPnLocal } from "@beep/identity/PnLocal"
  *
- * S.is(EscapedPnLocal)("Ontology.models\\/HttpUrl") // => true
+ * S.is(EscapedPnLocal)("Classification.models\\/ClassificationPin") // => true
  * ```
  *
  * @category predicates
@@ -394,7 +394,7 @@ export const EscapedPnLocal = S.declare<string>(
  * ```ts
  * import type { EscapedPnLocal } from "@beep/identity/PnLocal"
  *
- * const local: EscapedPnLocal = "Ontology.models\\/HttpUrl"
+ * const local: EscapedPnLocal = "Classification.models\\/ClassificationPin"
  * console.log(local)
  * ```
  *
@@ -413,7 +413,7 @@ const isEscapedPnLocal = S.is(EscapedPnLocal);
  * ```ts import.meta.vitest name="Accept escaped local name"
  * import { acceptsEscapedLocal } from "@beep/identity/PnLocal"
  *
- * acceptsEscapedLocal("Ontology.models\\/HttpUrl") // => true
+ * acceptsEscapedLocal("Classification.models\\/ClassificationPin") // => true
  * ```
  *
  * @category predicates
@@ -429,7 +429,7 @@ export const acceptsEscapedLocal = (local: string): boolean => isEscapedPnLocal(
  * ```ts import.meta.vitest name="Unescape local name"
  * import { unescapeLocal } from "@beep/identity/PnLocal"
  *
- * unescapeLocal("Ontology.models\\/HttpUrl") // => "Ontology.models/HttpUrl"
+ * unescapeLocal("Classification.models\\/ClassificationPin") // => "Classification.models/ClassificationPin"
  * ```
  *
  * @category codecs
@@ -451,7 +451,7 @@ export const unescapeLocal = (local: string): string => Str.replace(/\\([_~.\-!$
  * ```ts import.meta.vitest name="Escape local name"
  * import { escapeLocal } from "@beep/identity/PnLocal"
  *
- * escapeLocal("Ontology.models/HttpUrl") // => "Ontology\\.models\\/HttpUrl"
+ * escapeLocal("Classification.models/ClassificationPin") // => "Classification\\.models\\/ClassificationPin"
  * ```
  *
  * @category codecs
@@ -467,11 +467,11 @@ export const escapeLocal = (local: string): string => Str.replace(/[_~.\-!$&'()*
  * ```ts
  * import { prefixedNameOrIri } from "@beep/identity/PnLocal"
  *
- * const rendered = prefixedNameOrIri("Ontology.models/HttpUrl", {
+ * const rendered = prefixedNameOrIri("Classification.models/ClassificationPin", {
  *   prefix: "beep",
- *   fullIri: "https://beep-effect.com/ns/Ontology.models/HttpUrl"
+ *   fullIri: "https://beep-effect.com/ns/Classification.models/ClassificationPin"
  * })
- * console.log(rendered) // "<https://beep-effect.com/ns/Ontology.models/HttpUrl>"
+ * console.log(rendered) // "<https://beep-effect.com/ns/Classification.models/ClassificationPin>"
  * ```
  *
  * @category formatting

@@ -80,24 +80,27 @@ Unit tests stay outside `test/integration`; package integration tests live under
 
 MIT
 
-## Versioned docketing and party-role vocabulary
+## Concept schemes and the asset pack
 
-`VocabularyRegistry` loads the committed `docketing`, `party-kinds` and
-`legal-roles` schemes at version `1.0.0`. The seeds contain 25, 6 and 11
-concepts, respectively. TTL, JSON-LD and TS data share stable IRIs; party
-holders and contextual roles share no concept or hierarchy edge.
+`TaxonomyLoader` reads a manifest of digest-pinned rows into a `LoadedPack`:
+`ConceptScheme` values, vetted alignments, the broader-profile exceptions of
+vendor schemes and verified payload bytes. `LoadedPack.schemeFor` takes an
+exact `ConceptSchemePin`; there is no latest version. The legal vocabularies
+(docketing, party kinds, legal roles and legal intake) live in the
+`@beep/law-practice-domain` asset pack, not in this package.
 
-```ts
-import { VocabularyRegistry } from "@beep/ontology/VocabularyRegistry"
-import * as Effect from "effect/Effect"
+## gUFO typing and mapping sets
 
-const lookup = VocabularyRegistry.use((registry) =>
-  registry.resolve({ kind: "docketing", version: "1.0.0" }, "StatementOfUseDeadline")
-).pipe(Effect.provide(VocabularyRegistry.layer))
-```
+`Gufo.ts` types a term with its gUFO class type, the category of its instances
+and, for a relator, the role terms it mediates with their cardinalities.
+`audit(hierarchy)(term)` reports a role with no kind above it, a rigid type
+under an anti-rigid one and an undermediated relator; an untyped term yields
+no finding.
 
-Missing versions and unknown notations return `VocabularyError`. Definitions
-are descriptive; consumers own jurisdiction, authority evidence, date
-computation, entities and role assignments. See the goal's
-`research/2026-10-09-m3-vocabulary-contract.md` for the frozen IRI table and
-deprecation rule.
+`Mapping.ts` holds SSSOM mapping sets: one row per `(subject, predicate,
+object)` triple, each with a semapv justification and a confidence that may be
+absent with a reason. `checkMappingCoherence(hierarchy)(set)` reports
+predicates that contradict over the set's SKOS closure and exact or close
+matches that join terms with disjoint upper types. `Mapping.annotation.ts`
+ships the repository's mapping set from the annotation structure kinds to
+DoCO and NIF.

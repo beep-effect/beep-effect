@@ -55,7 +55,6 @@ import { OWL_CLASS, OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { SH_NODE_SHAPE, SH_PATH, SH_PROPERTY } from "@beep/rdf/Vocab/Shacl";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { SparqlAskResult, SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -67,9 +66,15 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import type { Quad } from "@beep/rdf/Rdf";
+
+const quadLines = (quads: Iterable<Quad>): ReadonlyArray<string> =>
+  A.sort(A.map(A.fromIterable(quads), serializeQuad), Order.String);
 
 const decodeOntologyGraphProjectionOptionsResult = S.decodeResult(OntologyGraphProjectionOptions);
 const decodePrefixMap = S.decodeUnknownEffect(PrefixMap);
@@ -80,7 +85,7 @@ const fixturePath = OntologyFilePath.make("fixtures/demo.ttl");
 const aliceNameQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),
-  makeLiteral("Alice", XSD_STRING.value)
+  makeLiteral("Alice")
 );
 const dataset = makeDataset([aliceNameQuad]);
 describe("Session use-cases", () => {
@@ -121,7 +126,7 @@ describe("Session use-cases", () => {
 
       const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
 
-      expect(opened.session.baseDataset.quads).toHaveLength(1);
+      expect(HashSet.size(opened.session.baseDataset.quads)).toBe(1);
       expect(opened.path).toBe(fixturePath);
       expect(opened.source).toBe("@prefix ex: <https://example.test/> .");
     })
@@ -200,7 +205,7 @@ describe("Session use-cases", () => {
         ),
         serialize: Effect.fn("TurtleCodec.serialize")((request) =>
           Effect.sync(() => {
-            serializedQuads = A.map(request.dataset.quads, serializeQuad);
+            serializedQuads = quadLines(request.dataset.quads);
             return SerializeTurtleResult.make({ source: "serialized turtle" });
           })
         ),
@@ -336,10 +341,10 @@ describe("Session use-cases", () => {
         const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
         const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session: opened.session }));
 
-        const initialQuads = A.map(initial.inferredDataset.quads, serializeQuad);
+        const initialQuads = quadLines(initial.inferredDataset.quads);
         pipe(initial.fullRecompute, assertTrue);
         expect(initial.processedChangeCount).toBe(0);
-        expect(initial.inferredDataset.quads).toHaveLength(3);
+        expect(HashSet.size(initial.inferredDataset.quads)).toBe(3);
         expect(initialQuads).toEqual(
           expect.arrayContaining([
             inferredQuad(neapolitanMargherita, subClassOf, pizza),
@@ -363,7 +368,7 @@ describe("Session use-cases", () => {
             previous: O.some(initial),
           })
         );
-        const addedQuads = A.map(addedInference.inferredDataset.quads, serializeQuad);
+        const addedQuads = quadLines(addedInference.inferredDataset.quads);
 
         expect(added.delta.added).toHaveLength(1);
         pipe(addedInference.fullRecompute, assertFalse);
@@ -375,7 +380,7 @@ describe("Session use-cases", () => {
           ),
           "incremental"
         );
-        expect(addedInference.inferredDataset.quads).toHaveLength(6);
+        expect(HashSet.size(addedInference.inferredDataset.quads)).toBe(6);
         expect(addedQuads).toEqual(
           expect.arrayContaining([
             inferredQuad(margherita, subClassOf, food),
@@ -398,7 +403,7 @@ describe("Session use-cases", () => {
             previous: O.some(addedInference),
           })
         );
-        const removedQuads = A.map(removedInference.inferredDataset.quads, serializeQuad);
+        const removedQuads = quadLines(removedInference.inferredDataset.quads);
 
         expect(removed.delta.removed).toHaveLength(1);
         pipe(removedInference.fullRecompute, assertFalse);
@@ -410,7 +415,7 @@ describe("Session use-cases", () => {
           ),
           "incremental"
         );
-        expect(removedInference.inferredDataset.quads).toHaveLength(3);
+        expect(HashSet.size(removedInference.inferredDataset.quads)).toBe(3);
         expect(removedQuads).toEqual(
           expect.arrayContaining([
             inferredQuad(neapolitanMargherita, subClassOf, pizza),
@@ -691,9 +696,9 @@ describe("Session use-cases", () => {
           id: sessionId,
           baseDataset: makeDataset([
             makeQuad(pizzaClass, RDF_TYPE, OWL_CLASS),
-            makeQuad(pizzaClass, RDFS_LABEL, makeLiteral("Pizza", XSD_STRING.value)),
+            makeQuad(pizzaClass, RDFS_LABEL, makeLiteral("Pizza")),
             makeQuad(margherita, RDF_TYPE, pizzaClass),
-            makeQuad(margherita, RDFS_LABEL, makeLiteral("Margherita", XSD_STRING.value)),
+            makeQuad(margherita, RDFS_LABEL, makeLiteral("Margherita")),
           ]),
         })
       );

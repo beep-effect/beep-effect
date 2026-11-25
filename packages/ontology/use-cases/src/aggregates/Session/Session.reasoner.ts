@@ -263,6 +263,7 @@ export class OntologyDisjointnessViolation extends S.Opaque<
  * import * as S from "effect/Schema"
  * import { OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const result = OntologyInferenceResult.make({
  *   processedChangeCount: 0,
@@ -275,7 +276,7 @@ export class OntologyDisjointnessViolation extends S.Opaque<
  *   inferredDataset: makeDataset([])
  * })
  *
- * console.log(result.inferredDataset.quads.length)
+ * console.log(HashSet.size(result.inferredDataset.quads))
  * ```
  *
  * @category read-models
@@ -871,6 +872,7 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
  * import { inferredSessionGraphPartitions, OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
  * import * as S from "effect/Schema"
+ * import * as HashSet from "effect/HashSet"
  *
  * const session = createSession(
  *   CreateSessionInput.make({
@@ -889,7 +891,7 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
  *   inferredDataset: makeDataset([])
  * })
  *
- * console.log(inferredSessionGraphPartitions(session, result).inferred.quads.length)
+ * console.log(HashSet.size(inferredSessionGraphPartitions(session, result).inferred.quads))
  * ```
  *
  * @category read-models

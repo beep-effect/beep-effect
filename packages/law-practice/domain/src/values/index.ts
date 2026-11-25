@@ -139,6 +139,13 @@ export * from "./HohfeldPosition/index.ts";
  */
 export * from "./HohfeldPositionKind/index.ts";
 /**
+ * Legal-intake filing model exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./IntakeTaxonomy/index.ts";
+/**
  * Practice knowledge-graph attribution-source exports.
  *
  * @category value-objects
@@ -209,6 +216,16 @@ export * from "./LegalScopeContext/index.ts";
  * @since 0.0.0
  */
 export * from "./LegalVerdictFamily/index.ts";
+/**
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LegalVocabularyPack/index.ts";
+/**
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LibrarianLoop/index.ts";
 /**
  * Mail-tagging taxonomy, matching, ledger, and report value-object exports.
  *

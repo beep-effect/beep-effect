@@ -7,7 +7,7 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, graphPartitionIri, Session } from "@beep/ontology-domain/aggregates/Session";
-import { MakeQuadOptionsInput, makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { MakeQuadOptionsInput, makeDataset, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema";
 import {
   SparqlConstructResult,
@@ -20,6 +20,7 @@ import { A, O, R, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Order from "effect/Order";
@@ -510,9 +511,11 @@ const injectLimit = (query: string, limit: number): { readonly query: string; re
         injected: true,
       };
 
-const partitionDataset = (partition: GraphPartition, quads: ReadonlyArray<Quad>): ReadonlyArray<Quad> => {
+const byQuadLine: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
+
+const partitionDataset = (partition: GraphPartition, quads: Iterable<Quad>): ReadonlyArray<Quad> => {
   const graph = makeNamedNode(graphPartitionIri(partition));
-  return A.map(quads, (quad) =>
+  return A.map(A.fromIterable(quads), (quad) =>
     makeQuad(
       quad.subject,
       quad.predicate,
@@ -566,12 +569,12 @@ const truncateResult = (
     }),
     Match.when("construct", () => {
       const construct = result as SparqlConstructResult;
-      const quads = A.take(construct.dataset.quads, maxResultCount);
+      const quads = A.take(A.sort(construct.dataset.quads, byQuadLine), maxResultCount);
       return {
         result: SparqlConstructResult.make({ profile: "construct", dataset: makeDataset(quads) }),
-        rawResultCount: construct.dataset.quads.length,
+        rawResultCount: HashSet.size(construct.dataset.quads),
         displayedResultCount: quads.length,
-        truncated: construct.dataset.quads.length > quads.length,
+        truncated: HashSet.size(construct.dataset.quads) > quads.length,
       };
     }),
     // An ASK answers with a single boolean. There is nothing to take the first N of,

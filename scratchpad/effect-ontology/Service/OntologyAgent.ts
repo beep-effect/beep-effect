@@ -220,7 +220,7 @@ const makeOntologyAgent = Effect.gen(function* () {
       )
     ),
     Match.discriminator("profile")("construct", ({ dataset }) =>
-      A.map(dataset.quads, (quad) => ({
+      A.map(A.fromIterable(dataset.quads), (quad) => ({
         subject: extractLocalNameFromIri(quad.subject.value),
         predicate: extractLocalNameFromIri(quad.predicate.value),
         object: quad.object.termType === "Literal" ? quad.object.value : extractLocalNameFromIri(quad.object.value),

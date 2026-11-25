@@ -1,17 +1,17 @@
 import { make } from "@beep/identity";
-import { IdentityAuthority } from "@beep/identity/Authority";
-import { IRI } from "@beep/identity/Iri";
 import { RegistryVocab, view } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable } from "@beep/identity/Term";
-import { foldWith, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
-import { AssembledOntology, FactLiteral } from "@beep/ontology/Fold.models";
-import { OWLClass } from "@beep/ontology/Ontology.models";
+import { foldWith, toDataset, toMarkdown } from "@beep/ontology";
+import { AssembledOntology } from "@beep/ontology/Fold.models";
+import * as Rdf from "@beep/rdf/Rdf";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
@@ -20,7 +20,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
-import type { AssembledClass, AssembledPredicate, OntologyFoldInput, Triple } from "@beep/ontology";
+import type { AssembledClass, AssembledPredicate, OntologyFoldInput, Triple, TupleObject } from "@beep/ontology";
 
 const decodeShard = flow(S.decodeResult(RegistryShard), Result.getOrThrow);
 const ascending = (values: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(A.dedupe(values), Order.String);
@@ -98,7 +98,7 @@ class Spec extends S.Opaque<Spec, { readonly brand: unique symbol }>()(
 class UnsafeLocal extends S.Opaque<UnsafeLocal, { readonly brand: unique symbol }>()(
   S.Struct({
     label: S.String,
-  }).pipe($I.annoteSchema("Ontology.models/HttpUrl", { description: "Unsafe local." }))
+  }).pipe($I.annoteSchema("Classification.models/ClassificationPin", { description: "Unsafe local." }))
 ) {}
 
 const triples = [
@@ -126,18 +126,95 @@ const findPredicate = (assembled: AssembledClass, keyName: string): O.Option<Ass
     A.findFirst((item) => item.key === keyName)
   );
 
+const XSD = "http://www.w3.org/2001/XMLSchema#";
+const RDFS = "http://www.w3.org/2000/01/rdf-schema#";
+const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+const SKOS = "http://www.w3.org/2004/02/skos/core#";
+const OWL = "http://www.w3.org/2002/07/owl#";
+const PATENT = "https://beep-effect.com/ns/patent/";
+
+const holds = (dataset: Rdf.Dataset, subject: string, predicate: string, object: Rdf.ObjectTerm): boolean =>
+  HashSet.has(dataset.quads, Rdf.makeQuad(Rdf.makeNamedNode(subject), Rdf.makeNamedNode(predicate), object));
+
+const subjectsTyped = (dataset: Rdf.Dataset, type: string): ReadonlyArray<string> =>
+  A.sort(
+    A.filterMap(A.fromIterable(dataset.quads), (quad) =>
+      quad.predicate.value === RDF_TYPE && quad.object.value === type
+        ? Result.succeed(quad.subject.value)
+        : Result.failVoid
+    ),
+    Order.String
+  );
+
+const literalFact = (object: TupleObject) =>
+  Effect.map(
+    foldPatent({ label: "Literal", schemas: [Claim], triples: [[Claim, "rdfs:comment", object]] }),
+    (assembled) => O.getOrThrow(A.head(assembled.facts)).object
+  );
+
 describe("Ontology.fold", () => {
   it.effect("resolves an explicit literal datatype without losing its value", () =>
     Effect.gen(function* () {
       const assembled = yield* foldPatent({
         label: "Typed literal",
         schemas: [Claim],
-        triples: [[Claim, "rdfs:label", { value: 42, datatype: "http://www.w3.org/2001/XMLSchema#integer" }]],
+        triples: [[Claim, "rdfs:label", { value: 42, datatype: `${XSD}integer` }]],
       });
       const fact = O.getOrThrow(A.head(assembled.facts));
-      assertTrue(S.is(FactLiteral)(fact.object));
-      expect(fact.object).toMatchObject({ value: 42 });
-      assertSome(fact.object.datatypeIri, IRI.make("http://www.w3.org/2001/XMLSchema#integer"));
+      assertTrue(Rdf.Literal.is(fact.object));
+      expect(fact.object).toStrictEqual(Rdf.Literal.typed("42", `${XSD}integer`));
+    })
+  );
+
+  it.effect("maps authoring literals to the simple, typed and language-tagged cases", () =>
+    Effect.gen(function* () {
+      const authored: ReadonlyArray<TupleObject> = [
+        { value: "plain" },
+        { value: "plain", datatype: "xsd:string" },
+        { value: "Tagged", language: "EN-gb" },
+        { value: "Tagged", datatype: "rdf:langString", language: "en" },
+        { value: 42 },
+        { value: 2 ** 53 },
+        { value: -0.5 },
+        { value: 1e21 },
+        { value: 1e-7 },
+        { value: false },
+        { value: "2026-11-23T00:00:00Z", datatype: "xsd:dateTime" },
+      ];
+      const objects = yield* Effect.forEach(authored, literalFact, { concurrency: 1 });
+
+      expect(objects).toStrictEqual([
+        Rdf.makeLiteral("plain"),
+        Rdf.makeLiteral("plain"),
+        Rdf.Literal.langTagged("Tagged", "en-gb"),
+        Rdf.Literal.langTagged("Tagged", "en"),
+        Rdf.Literal.typed("42", `${XSD}integer`),
+        Rdf.Literal.typed("9007199254740992", `${XSD}integer`),
+        Rdf.Literal.typed("-0.5", `${XSD}decimal`),
+        Rdf.Literal.typed("1e+21", `${XSD}double`),
+        Rdf.Literal.typed("1e-7", `${XSD}double`),
+        Rdf.Literal.typed("false", `${XSD}boolean`),
+        Rdf.Literal.typed("2026-11-23T00:00:00Z", `${XSD}dateTime`),
+      ]);
+    })
+  );
+
+  it.effect("refuses an ill-formed literal with invalidLiteral", () =>
+    Effect.gen(function* () {
+      const refusals = yield* Effect.forEach(
+        [
+          { value: "x", datatype: "xsd:integer", language: "en" },
+          { value: "x", language: "not a tag" },
+          { value: "x", language: "" },
+          { value: "x", datatype: "rdf:langString" },
+          { value: Number.NaN },
+          { value: Number.POSITIVE_INFINITY },
+        ] as unknown as ReadonlyArray<TupleObject>,
+        (object) => Effect.map(Effect.flip(literalFact(object)), (error) => error.reason),
+        { concurrency: 1 }
+      );
+
+      expect(refusals).toStrictEqual(A.replicate("invalidLiteral" as const, 6));
     })
   );
 
@@ -248,38 +325,34 @@ describe("Ontology.fold", () => {
 });
 
 describe("Ontology.fold projections", () => {
-  it.effect("projects JSON-LD context terms from class and predicate annotations", () =>
+  it.effect("projects classes, owned predicates and facts, swapping a reverse fact's endpoints", () =>
     Effect.gen(function* () {
-      const assemble1 = yield* assemble;
-      const context = toContext(assemble1);
+      const assembled = yield* assemble;
+      const dataset = toDataset(assembled);
+      const claim = `${PATENT}Claim`;
+      const spec = `${PATENT}Spec`;
 
-      expect(context.prefLabel).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
-      expect(context.children).toEqual({ "@reverse": "http://www.w3.org/2000/01/rdf-schema#subClassOf" });
-      expect(context.claim).toMatchObject({ "@type": "@id" });
+      assertTrue(holds(dataset, claim, RDF_TYPE, Rdf.makeNamedNode(`${RDFS}Class`)));
+      assertTrue(holds(dataset, claim, `${RDFS}label`, Rdf.makeLiteral("Claim")));
+      assertTrue(holds(dataset, claim, `${RDFS}comment`, Rdf.makeLiteral("Patent claim\nwith escaped text.")));
+      assertTrue(holds(dataset, claim, `${OWL}sameAs`, Rdf.makeNamedNode("https://schema.org/CreativeWork")));
+      assertTrue(holds(dataset, spec, `${RDFS}subClassOf`, Rdf.makeNamedNode(claim)));
+      assertFalse(holds(dataset, claim, `${RDFS}subClassOf`, Rdf.makeNamedNode(spec)));
+      assertTrue(holds(dataset, `${PATENT}text`, `${RDFS}domain`, Rdf.makeNamedNode(claim)));
+      assertTrue(holds(dataset, `${PATENT}text`, `${RDFS}range`, Rdf.makeNamedNode(`${RDFS}Literal`)));
+      assertTrue(holds(dataset, `${PATENT}text`, `${RDFS}comment`, Rdf.makeLiteral("Claim text.")));
+      assertTrue(holds(dataset, `${PATENT}claim`, `${RDFS}range`, Rdf.makeNamedNode(claim)));
+      expect(subjectsTyped(dataset, `${OWL}ObjectProperty`)).toStrictEqual([`${PATENT}claim`]);
+      expect(subjectsTyped(dataset, `${OWL}DatatypeProperty`)).toStrictEqual([`${PATENT}label`, `${PATENT}text`]);
+      expect(subjectsTyped(dataset, `${RDFS}Class`)).toStrictEqual([
+        claim,
+        `${PATENT}Classification.models/ClassificationPin`,
+        spec,
+      ]);
     })
   );
 
-  it.effect("projects bounded JSON-LD graph nodes and reverse facts", () =>
-    Effect.gen(function* () {
-      const assemble2 = yield* assemble;
-      const jsonLd = toJsonLd(assemble2);
-      const claimNode = pipe(
-        jsonLd["@graph"],
-        A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/patent/Claim"),
-        O.getOrUndefined
-      );
-
-      expect(claimNode).toMatchObject({
-        "@id": "https://beep-effect.com/ns/patent/Claim",
-        "owl:sameAs": [{ "@id": "https://schema.org/CreativeWork" }],
-        "@reverse": {
-          "rdfs:subClassOf": [{ "@id": "https://beep-effect.com/ns/patent/Spec" }],
-        },
-      });
-    })
-  );
-
-  it.effect("preserves fact subjects that are not assembled classes in JSON-LD", () =>
+  it.effect("keeps fact subjects that are not assembled classes", () =>
     Effect.gen(function* () {
       const externalSubject = "https://example.test/resources/external";
       const assembled = yield* foldPatent({
@@ -287,34 +360,8 @@ describe("Ontology.fold projections", () => {
         schemas: [Claim],
         triples: [[externalSubject, "rdfs:seeAlso", Claim]],
       });
-      const externalNode = pipe(
-        toJsonLd(assembled)["@graph"],
-        A.findFirst((node) => node["@id"] === externalSubject),
-        O.getOrUndefined
-      );
 
-      expect(externalNode).toMatchObject({
-        "@id": externalSubject,
-        "rdfs:seeAlso": [{ "@id": "https://beep-effect.com/ns/patent/Claim" }],
-      });
-    })
-  );
-
-  it.effect("does not redefine borrowed predicates as owned properties", () =>
-    Effect.gen(function* () {
-      const assembled = yield* assemble;
-      const jsonLd = toJsonLd(assembled);
-      const turtle = toTurtle(assembled);
-
-      pipe(
-        A.some(
-          jsonLd["@graph"],
-          (node) => node["@id"] === "http://www.w3.org/2004/02/skos/core#prefLabel" && node["@type"] !== undefined
-        ),
-        assertFalse
-      );
-      expect(turtle).not.toContain("skos:prefLabel a owl:DatatypeProperty");
-      expect(turtle).not.toContain("rdfs:subClassOf a owl:DatatypeProperty");
+      assertTrue(holds(toDataset(assembled), externalSubject, `${RDFS}seeAlso`, Rdf.makeNamedNode(`${PATENT}Claim`)));
     })
   );
 
@@ -328,33 +375,13 @@ describe("Ontology.fold projections", () => {
           [Claim, "rdfs:comment", { value: "Authored comment" }],
         ],
       });
-      const claimNode = pipe(
-        toJsonLd(assembled)["@graph"],
-        A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/patent/Claim"),
-        O.getOrUndefined
-      );
+      const dataset = toDataset(assembled);
+      const claim = `${PATENT}Claim`;
 
-      expect(claimNode?.["rdfs:label"]).toEqual(["Claim", { "@value": "Authored claim", "@language": "en" }]);
-      expect(claimNode?.["rdfs:comment"]).toEqual([
-        "Patent claim\nwith escaped text.",
-        { "@value": "Authored comment" },
-      ]);
-    })
-  );
-
-  it.effect("projects deterministic Turtle with safe prefix fallback and escaped literals", () =>
-    Effect.gen(function* () {
-      const first = yield* assemble;
-      const second = yield* assemble;
-      const turtle = toTurtle(first);
-
-      expect(turtle).toContain("@prefix beep: <https://beep-effect.com/ns/patent/> .");
-      expect(turtle).toContain("a rdfs:Class");
-      expect(turtle).toContain("beep:Claim owl:sameAs <https://schema.org/CreativeWork> .");
-      expect(turtle).toContain("<https://beep-effect.com/ns/patent/Ontology.models/HttpUrl> a rdfs:Class");
-      expect(turtle).toContain('rdfs:comment "Patent claim\\nwith escaped text."');
-      expect(toTurtle(first)).toBe(toTurtle(first));
-      expect(toTurtle(first)).toBe(toTurtle(second));
+      assertTrue(holds(dataset, claim, `${RDFS}label`, Rdf.makeLiteral("Claim")));
+      assertTrue(holds(dataset, claim, `${RDFS}label`, Rdf.Literal.langTagged("Authored claim", "en")));
+      assertTrue(holds(dataset, claim, `${RDFS}comment`, Rdf.makeLiteral("Patent claim\nwith escaped text.")));
+      assertTrue(holds(dataset, claim, `${RDFS}comment`, Rdf.makeLiteral("Authored comment")));
     })
   );
 
@@ -394,44 +421,34 @@ describe("Ontology.fold SKOS gate", () => {
 
   it.effect("prints literal facts and SKOS warnings in every projection that carries them", () =>
     Effect.gen(function* () {
-      const integer = "http://www.w3.org/2001/XMLSchema#integer";
+      const concept = "https://beep-effect.com/ns/vocab/Concept";
       const assembled = yield* foldVocab({
         label: "Literals",
         schemas: [Concept],
         triples: [
           [Concept, "rdfs:comment", { value: "Idea", language: "en" }],
-          [Concept, "rdfs:comment", { value: 42, datatype: integer }],
-          [Concept, "rdfs:comment", { value: true }],
+          [Concept, "rdfs:comment", { value: 42, datatype: `${XSD}integer` }],
+          [Concept, "rdfs:comment", { value: "loose" }],
         ],
       });
       const markdown = toMarkdown(assembled);
-      const turtle = toTurtle(assembled);
-      const concept = pipe(
-        toJsonLd(assembled)["@graph"],
-        A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/vocab/Concept"),
-        O.getOrThrow
-      );
+      const dataset = toDataset(assembled);
 
       expect(markdown).toContain("`Idea`@en");
       expect(markdown).toContain("`42` (`xsd:integer`)");
-      expect(markdown).toContain("`true`");
+      expect(markdown).toContain("`loose`");
       expect(markdown).toContain("SKOS: `skos:Concept`");
       expect(markdown).toContain(
         "SKOS concept has no concept\\-scheme membership\\. (<https://beep-effect.com/ns/vocab/Concept>)"
       );
-      expect(turtle).toContain('rdfs:comment "Idea"@en');
-      expect(turtle).toContain(`rdfs:comment "42"^^<${integer}>`);
-      expect(turtle).toContain("rdfs:comment true");
-      expect(concept["rdfs:comment"]).toStrictEqual([
-        "A concept.",
-        { "@value": "Idea", "@language": "en" },
-        { "@value": 42, "@type": integer },
-        { "@value": true },
-      ]);
+      assertTrue(holds(dataset, concept, `${RDFS}comment`, Rdf.makeLiteral("A concept.")));
+      assertTrue(holds(dataset, concept, `${RDFS}comment`, Rdf.Literal.langTagged("Idea", "en")));
+      assertTrue(holds(dataset, concept, `${RDFS}comment`, Rdf.Literal.typed("42", `${XSD}integer`)));
+      assertTrue(holds(dataset, concept, `${RDFS}comment`, Rdf.makeLiteral("loose")));
     })
   );
 
-  it.effect("emits SKOS classification beside rdfs:Class in JSON-LD and Turtle", () =>
+  it.effect("types SKOS-marked classes beside rdfs:Class", () =>
     Effect.gen(function* () {
       const assembled = yield* foldVocab({
         label: "Vocab",
@@ -441,17 +458,12 @@ describe("Ontology.fold SKOS gate", () => {
           [Concept, "skos:prefLabel", { value: "Concept", language: "en" }],
         ],
       });
-      const jsonLd = toJsonLd(assembled);
-      const conceptNode = pipe(
-        jsonLd["@graph"],
-        A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/vocab/Concept"),
-        O.getOrUndefined
-      );
-      const turtle = toTurtle(assembled);
+      const dataset = toDataset(assembled);
+      const vocab = "https://beep-effect.com/ns/vocab/";
 
-      expect(conceptNode?.["@type"]).toEqual(["rdfs:Class", "skos:Concept"]);
-      expect(turtle).toContain("a rdfs:Class, skos:Concept");
-      expect(turtle).toContain("a rdfs:Class, skos:ConceptScheme");
+      expect(subjectsTyped(dataset, `${RDFS}Class`)).toStrictEqual([`${vocab}Concept`, `${vocab}Scheme`]);
+      expect(subjectsTyped(dataset, `${SKOS}Concept`)).toStrictEqual([`${vocab}Concept`]);
+      expect(subjectsTyped(dataset, `${SKOS}ConceptScheme`)).toStrictEqual([`${vocab}Scheme`]);
       expect(assembled.warnings).toEqual([]);
     })
   );
@@ -669,12 +681,12 @@ describe("Ontology.fold negative fixtures", () => {
     })
   );
 
-  it.effect("rejects typed literals carrying both a datatype and a language", () =>
+  it.effect("refuses a language tag on a datatype other than rdf:langString", () =>
     Effect.gen(function* () {
       const invalid = [
         LeftDocument,
         "rdfs:label",
-        { value: "Document", datatype: "rdf:langString", language: "en" },
+        { value: "Document", datatype: "xsd:string", language: "en" },
       ] as unknown as Triple;
       const error = yield* Effect.flip(
         foldNegative({
@@ -684,7 +696,7 @@ describe("Ontology.fold negative fixtures", () => {
         })
       );
 
-      expect(error.reason).toBe("invalidTriple");
+      expect(error.reason).toBe("invalidLiteral");
     })
   );
 
@@ -703,7 +715,7 @@ describe("Ontology.fold negative fixtures", () => {
         })
       );
 
-      expect(error.reason).toBe("invalidTriple");
+      expect(error.reason).toBe("invalidLiteral");
     })
   );
 
@@ -808,7 +820,7 @@ describe("Ontology.fold negative fixtures", () => {
     })
   );
 
-  it.effect("folds an ontology owned by a core namespace, declaring its prefix once", () =>
+  it.effect("folds an ontology owned by a core namespace under that namespace", () =>
     Effect.gen(function* () {
       const assembled = yield* foldWith(registryFor("ex", "https://example.test/ns#", []))("skos", {
         label: "SKOS",
@@ -816,13 +828,10 @@ describe("Ontology.fold negative fixtures", () => {
         triples: [["skos:Concept", "rdfs:seeAlso", "skos:ConceptScheme"]],
       });
 
-      expect(toContext(assembled).skos).toStrictEqual({
-        "@id": "http://www.w3.org/2004/02/skos/core#",
-        "@prefix": true,
-      });
-      expect(A.filter(Str.split("\n")(toTurtle(assembled)), Str.startsWith("@prefix skos:"))).toStrictEqual([
-        "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .",
-      ]);
+      expect(assembled.baseIri).toBe(SKOS);
+      assertTrue(
+        holds(toDataset(assembled), `${SKOS}Concept`, `${RDFS}seeAlso`, Rdf.makeNamedNode(`${SKOS}ConceptScheme`))
+      );
     })
   );
 
@@ -862,21 +871,19 @@ describe("Ontology.fold negative fixtures", () => {
     })
   );
 
-  it.effect("is byte-identical across repeated assembly and every projection", () =>
+  it.effect("projects an equal dataset and identical Markdown across repeated assembly", () =>
     Effect.gen(function* () {
       const first = yield* assemble;
       const second = yield* assemble;
 
-      expect(toJsonLd(first)).toEqual(toJsonLd(second));
-      expect(toContext(first)).toEqual(toContext(second));
-      expect(toTurtle(first)).toBe(toTurtle(second));
+      assertTrue(Equal.equals(toDataset(first), toDataset(second)));
       expect(toMarkdown(first)).toBe(toMarkdown(second));
     })
   );
 });
 
 describe("Ontology.fold hash namespace", () => {
-  it.effect("renders a hash-namespace vocabulary with prefixed names in every projection", () =>
+  it.effect("folds a hash-namespace vocabulary and labels it with its prefix in Markdown", () =>
     Effect.gen(function* () {
       const $Patent = make("beep").$BeepId.create("ontology").create("patent");
 
@@ -896,16 +903,18 @@ describe("Ontology.fold hash namespace", () => {
         schemas: [PublishedClaim],
         triples: [[PublishedClaim, "rdfs:subClassOf", "owl:Thing"]],
       });
-      const turtle = toTurtle(assembled);
-      const context = toContext(assembled);
 
       expect(assembled.baseIri).toBe("https://opip.law/ns/patent#");
       expect(assembled.prefix).toBe("patent");
-      expect(turtle).toContain("@prefix patent: <https://opip.law/ns/patent#");
-      expect(turtle).toContain("patent:");
-      expect(context.patent).toMatchObject({ "@prefix": true });
+      assertTrue(
+        holds(
+          toDataset(assembled),
+          "https://opip.law/ns/patent#PublishedClaim",
+          `${RDFS}subClassOf`,
+          Rdf.makeNamedNode(`${OWL}Thing`)
+        )
+      );
       expect(toMarkdown(assembled)).toContain("[patent:PublishedClaim](");
-      expect(toTurtle(assembled)).toBe(toTurtle(assembled));
     })
   );
 });
@@ -944,28 +953,48 @@ describe("Ontology.fold extended vocabulary", () => {
   );
 });
 
-describe("Ontology.fold FOLIO-derived module", () => {
-  it.effect("renders the migrated OWLClass module through all four projections byte-identically", () =>
+class FoldedConcept extends S.Opaque<FoldedConcept, { readonly brand: unique symbol }>()(
+  S.Struct({
+    iri: S.NonEmptyString,
+    label: S.String.pipe(
+      S.OptionFromOptionalNullOr,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.key({ term: "rdfs:label", title: "Label" })
+    ),
+    sub_class_of: S.NonEmptyString.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.key({ term: "rdfs:subClassOf", title: "Sub Class Of" })
+    ),
+    parent_class_of: S.NonEmptyString.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.key({ term: "^rdfs:subClassOf", title: "Parent Class Of" })
+    ),
+  }).pipe($I.annoteSchema("FoldedConcept", { description: "Test-declared class with forward and reverse keys." }))
+) {}
+
+describe("Ontology.fold of a class with forward and reverse keys", () => {
+  it.effect("projects a test-declared class to an equal dataset and identical Markdown", () =>
     Effect.gen(function* () {
-      const foldFolio = foldUnder("folio", `${IdentityAuthority}ontology/Ontology.models/`);
       const input = {
-        label: "FOLIO Class Vocabulary",
-        schemas: [OWLClass],
-        triples: [[OWLClass, "rdfs:seeAlso", "https://folio.openlegalstandard.org/"]],
+        label: "Folded Concept Vocabulary",
+        schemas: [FoldedConcept],
+        triples: [[FoldedConcept, "rdfs:seeAlso", "https://example.test/concepts"]],
       } satisfies OntologyFoldInput;
 
-      const assembled = yield* foldFolio(input);
-      const second = yield* foldFolio(input);
+      const assembled = yield* foldPatent(input);
+      const second = yield* foldPatent(input);
 
-      expect(toJsonLd(assembled)).toEqual(toJsonLd(second));
-      expect(toTurtle(assembled)).toBe(toTurtle(second));
+      assertTrue(Equal.equals(toDataset(assembled), toDataset(second)));
       expect(toMarkdown(assembled)).toBe(toMarkdown(second));
-      expect(toContext(assembled)).toEqual(toContext(second));
 
-      const claimClass = O.getOrThrow(A.head(assembled.classes));
-      expect(claimClass.iri).toBe("https://beep-effect.com/ns/ontology/Ontology.models/OWLClass");
+      const conceptClass = O.getOrThrow(A.head(assembled.classes));
+      expect(conceptClass.iri).toBe("https://beep-effect.com/ns/patent/FoldedConcept");
       const predicate = (key: string) =>
-        O.getOrThrow(A.findFirst(claimClass.predicates, (candidate) => candidate.key === key));
+        O.getOrThrow(A.findFirst(conceptClass.predicates, (candidate) => candidate.key === key));
       const subClassOf = predicate("sub_class_of");
       const parentClassOf = predicate("parent_class_of");
       strictEqual(subClassOf.termIri, "http://www.w3.org/2000/01/rdf-schema#subClassOf");

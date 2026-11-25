@@ -212,22 +212,25 @@ describe("@beep/identity", () => {
   });
 
   it("composes full annotation identifiers for nested schema composers", () => {
-    const $I = $OntologyId.create("Ontology.models");
+    const $I = $OntologyId.create("Classification.models");
 
-    class RegressionOWLClass extends S.Opaque<RegressionOWLClass, { readonly brand: unique symbol }>()(
+    class RegressionClassificationPin extends S.Opaque<
+      RegressionClassificationPin,
+      { readonly brand: unique symbol }
+    >()(
       S.Struct({
         iri: S.String,
       }).pipe(
-        $I.annoteSchema("OWLClass", {
-          description: "Regression model for ontology class annotations.",
+        $I.annoteSchema("ClassificationPin", {
+          description: "Regression model for classification pin annotations.",
         })
       )
     ) {}
 
-    const classAnnotations = S.resolveAnnotations(RegressionOWLClass);
+    const classAnnotations = S.resolveAnnotations(RegressionClassificationPin);
     const schemaAnnotations = S.resolveAnnotations(
       S.String.pipe(
-        $I.annoteSchema("OWLClassLabel", {
+        $I.annoteSchema("ClassificationPinLabel", {
           description: "Regression schema annotation.",
         })
       )
@@ -235,7 +238,7 @@ describe("@beep/identity", () => {
     const keyAnnotations = getKeyAnnotations(
       S.Struct({
         iri: S.String.pipe(
-          $I.annoteKey<{ readonly iri: string }>()("OWLClass.iri", {
+          $I.annoteKey<{ readonly iri: string }>()("ClassificationPin.iri", {
             description: "Regression key annotation.",
           })
         ),
@@ -243,19 +246,21 @@ describe("@beep/identity", () => {
     );
     const httpAnnotations = S.resolveAnnotations(
       S.String.pipe(
-        $I.annoteHttp("OWLClassResponse", {
+        $I.annoteHttp("ClassificationPinResponse", {
           description: "Regression HTTP annotation.",
           httpApiStatus: 200,
         })
       )
     );
 
-    expect(classAnnotations?.identifier).toBe("@beep/ontology/Ontology.models/OWLClass");
-    expect(classAnnotations?.schemaId).toBe(Symbol.for("@beep/ontology/Ontology.models/OWLClass"));
-    expect(classAnnotations?.title).toBe("OWLClass");
-    expect(schemaAnnotations?.identifier).toBe("@beep/ontology/Ontology.models/OWLClassLabel");
-    expect(getProperty(keyAnnotations, "identifier")).toBe("@beep/ontology/Ontology.models/OWLClass.iri");
-    expect(httpAnnotations?.identifier).toBe("@beep/ontology/Ontology.models/OWLClassResponse");
+    expect(classAnnotations?.identifier).toBe("@beep/ontology/Classification.models/ClassificationPin");
+    expect(classAnnotations?.schemaId).toBe(Symbol.for("@beep/ontology/Classification.models/ClassificationPin"));
+    expect(classAnnotations?.title).toBe("ClassificationPin");
+    expect(schemaAnnotations?.identifier).toBe("@beep/ontology/Classification.models/ClassificationPinLabel");
+    expect(getProperty(keyAnnotations, "identifier")).toBe(
+      "@beep/ontology/Classification.models/ClassificationPin.iri"
+    );
+    expect(httpAnnotations?.identifier).toBe("@beep/ontology/Classification.models/ClassificationPinResponse");
   });
 
   it("preserves tagged-union statics when applying annoteSchema", () => {

@@ -13,6 +13,7 @@ import {
   Session,
 } from "@beep/ontology-domain/aggregates/Session";
 import {
+  Literal,
   makeDataset,
   makeLiteral,
   makeNamedNode,
@@ -50,7 +51,7 @@ import {
   SH_TARGET_NODE,
 } from "@beep/rdf/Vocab/Shacl";
 import { VOID_DATASET, VOID_NAMESPACE, VOID_TRIPLES } from "@beep/rdf/Vocab/Void";
-import { XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import {
   ShaclNodeShape,
@@ -63,6 +64,7 @@ import { A, O } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -552,9 +554,9 @@ const literalWithDatatype = (value: ObjectTerm, datatype: NamedNode): O.Option<O
     BlankNode: O.none<ObjectTerm>,
     Literal: (literalValue) =>
       pipe(
-        literalValue.language,
+        Literal.languageOf(literalValue),
         O.match({
-          onNone: () => O.some(makeLiteral(literalValue.value, datatype.value)),
+          onNone: () => O.some(Literal.typed(literalValue.value, datatype.value)),
           onSome: O.none<ObjectTerm>,
         })
       ),
@@ -740,13 +742,13 @@ const runOntologyValidation = Effect.fn("Ontology.Validation.run")(function* (in
     validation,
     repairs,
     shapeCount: shapes.length,
-    dataQuadCount: validationDataset(partitions).quads.length,
-    inferredQuadCount: partitions.inferred.quads.length,
+    dataQuadCount: HashSet.size(validationDataset(partitions).quads),
+    inferredQuadCount: HashSet.size(partitions.inferred.quads),
   });
 });
 
-const literal = (value: string) => makeLiteral(value, XSD_STRING.value);
-const integer = (value: number) => makeLiteral(`${value}`, XSD_INTEGER.value);
+const literal = (value: string) => makeLiteral(value);
+const integer = (value: number) => Literal.typed(`${value}`, XSD_INTEGER.value);
 const sessionIri = (session: Session, suffix: string): NamedNode =>
   makeNamedNode(`urn:beep:ontology:session:${encodeURIComponent(session.id)}:${suffix}`);
 
@@ -799,7 +801,7 @@ const datasetDescriptionDataset = (session: Session): Dataset => {
   const partitions = deriveSessionGraphPartitions(session);
   const dataset = sessionIri(session, "dataset");
   const distribution = sessionIri(session, "dataset:distribution");
-  const assertedCount = partitions.asserted.quads.length;
+  const assertedCount = HashSet.size(partitions.asserted.quads);
   return makeDataset([
     makeQuad(dataset, RDF_TYPE, VOID_DATASET),
     makeQuad(dataset, RDF_TYPE, DCAT_DATASET),

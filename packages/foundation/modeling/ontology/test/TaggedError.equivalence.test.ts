@@ -1,10 +1,8 @@
 import { IRIReference } from "@beep/identity/Iri";
 import {
   OntologyAssemblyError,
-  TaxonomyConceptNotFound,
   TaxonomyManifestParseError,
   TaxonomyManifestReadError,
-  UnsupportedDocumentClass,
   VendorAlignmentTargetNotFound,
   VendorSliceConceptMismatch,
   VendorSliceParseError,
@@ -143,25 +141,6 @@ describe("ontology modeling tagged-error declared equivalence", () => {
     const first = VendorAlignmentTargetNotFound.make({ id: "folio", localConceptIri });
     const second = VendorAlignmentTargetNotFound.make({ id: "folio", localConceptIri });
     const different = VendorAlignmentTargetNotFound.make({ id: "other", localConceptIri });
-
-    expectDeclaredEquivalence(same, first, second, different);
-  });
-
-  it("compares TaxonomyConceptNotFound by declared fields", () => {
-    const same = S.toEquivalence(TaxonomyConceptNotFound);
-    const first = TaxonomyConceptNotFound.make({ conceptIri: IRIReference.make("https://example.test/missing") });
-    const second = TaxonomyConceptNotFound.make({ conceptIri: IRIReference.make("https://example.test/missing") });
-    const different = TaxonomyConceptNotFound.make({ conceptIri: IRIReference.make("https://example.test/other") });
-
-    expectDeclaredEquivalence(same, first, second, different);
-  });
-
-  it("compares UnsupportedDocumentClass by declared fields", () => {
-    const same = S.toEquivalence(UnsupportedDocumentClass);
-    const conceptIri = IRIReference.make("https://example.test/example");
-    const first = UnsupportedDocumentClass.make({ conceptIri, documentClass: "filed" });
-    const second = UnsupportedDocumentClass.make({ conceptIri, documentClass: "filed" });
-    const different = UnsupportedDocumentClass.make({ conceptIri, documentClass: "received" });
 
     expectDeclaredEquivalence(same, first, second, different);
   });

@@ -67,7 +67,7 @@ const dataset = makeDataset([
   makeQuad(
     makeNamedNode("https://example.com/people/alice"),
     makeNamedNode("https://schema.org/name"),
-    makeLiteral("Alice", XSD_STRING.value)
+    makeLiteral("Alice")
   ),
   makeQuad(makeNamedNode("https://example.com/people/alice"), RDF_TYPE, makeNamedNode("https://schema.org/Person")),
 ]);
@@ -229,7 +229,7 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
               properties: [
                 {
                   hasValue: {
-                    datatype: makeNamedNode(XSD_STRING.value),
+                    form: { _tag: "Simple" },
                     termType: "Literal",
                     value: "Bob",
                   },

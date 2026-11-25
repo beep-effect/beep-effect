@@ -3,6 +3,7 @@ import { IRI } from "@beep/identity/Iri";
 import { assert, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { isRdfStore, RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
@@ -43,7 +44,7 @@ describe("RdfBuilder", () => {
         assert.strictEqual(rdfStoreSize(reparsed), 1);
         assert.isFalse("_store" in reparsed);
         const dataset = yield* rdfStoreToDataset(reparsed);
-        assert.strictEqual(dataset.quads.length, 1);
+        assert.strictEqual(HashSet.size(dataset.quads), 1);
       })
     );
 

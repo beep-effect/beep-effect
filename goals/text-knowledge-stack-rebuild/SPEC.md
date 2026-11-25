@@ -1955,6 +1955,14 @@ Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Replace the pin with the real Tika server version when the app/server path becomes the text engine
 
+### P5: concept-scheme, payload and alignment rows use the file digest unit; cpc must state tree; a pin for an unloaded scheme fails ConceptSchemeNotLoaded, 2026-11-23
+
+Decision the-manifest-protocol-verifies-digests-and-loads-concept-schemes and decision manifest-digests-are-defined-per-row-shape-and-pinned-by-a-frozen-golden leave five calls open; row 10 settles them. (1) TaxonomyLoader rows (concept-scheme, concept-alignment, payload) are single files: their schemas carry no archivePath or digestUnit, the loader hashes the file and checks sha256, and a directory path fails the read as VendorSliceReadError. Archive and tree units stay a ClassificationRegistry concern, where they occur. (2) ClassificationRegistry refuses with manifest-invalid a cpc row whose derived unit is not tree and any other row whose unit is tree, so the tree digest is computed exactly where the loader reads a directory. (3) LoadedPack.schemeFor(pin) fails ConceptSchemeNotLoaded when the pack holds no scheme with the pin's IRI, beside ConceptSchemeVersionMismatch for another version; the design named only the second. (4) BroaderCycle values are ordered by their members sorted and joined with a space; IRIs hold no space, so this is the least-member order the design states, extended to a total order without an unreachable empty-cycle default. (5) The Classification.test.ts XML-parser cases inject edited XML; they now run under a constant Digest service with the manifest digests zeroed, so they keep testing the parsers, while ClassificationEdition.test.ts proves the digest protocol with the real WebCrypto digest. The legacy vendor-manifest.jsonl fixture becomes the committed pack fixture (a repo-owned scheme, a vendor scheme with a planted three-cycle, the FOLIO alignment over fixture-slice.jsonld, a payload, a classification row and a reference row).
+
+Lane p5
+
+Reverse: Admit archive-entry and tree units for taxonomy-loader rows, drop the cpc tree rule and ConceptSchemeNotLoaded, and restore the XML parser tests' direct readFileString interception by a decision file
+
 ### P1 bootstrap identities use generated literals without importing the registry, 2026-11-23
 
 The test runner is a bootstrap dependency and cannot import @beep/identity. The registry generator projects the vitest shard into the runner as literals; parity tests verify the annotations against the registry. Rejected: a runtime dependency from the runner to identity, which would reverse the bootstrap dependency boundary.
@@ -2272,6 +2280,425 @@ Use claim-set/v1 for canonical trusted claim-set membership and claim-retraction
 Lane goals/text-knowledge-stack-rebuild-p4-claims
 
 Reverse: Version the binding and retraction preimages together and migrate explicit verification ports while preserving old event records.
+
+### P5: a frozen legacy dataset reader in the trustgraph verify script keeps the committed history artifact readable across the Literal and Dataset change, 2026-11-23
+
+Independent review of the P5 design, finding on a stored reader the maps missed. `goals/trustgraph-doc-ontology/history/outputs/beep-effect-documentation-seed.dataset.json` is a committed, immutable history artifact holding 303 literals in today's wire shape `{ datatype, termType, value }`. `goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts` decodes it with the live `Dataset` schema (`:11`, `:129`), hands the raw JSON to `ShaclValidationRequest` (`:138-139`) and reads `dataset.quads.length` (`:179`); the packet's verify command runs it (`goals/trustgraph-doc-ontology/ops/manifest.json:40`). Adding `Literal.form` and making `quads` a set breaks that read.
+
+1. The artifact's bytes never change.
+2. In the commit that changes `Literal` and `Dataset`, the script declares a frozen legacy dataset schema beside `FrozenEvidenceProjection` (`:13-14`), the precedent it already set for its evidence file. It decodes the artifact with the frozen schema, converts each literal through `Literal.fromParts` (Simple for `xsd:string` with no language, LangTagged with a language, Typed otherwise), builds the live `Dataset`, passes that to the SHACL request, and counts with `HashSet.size`.
+3. The live `Literal` decoder does not learn the legacy shape: no table stores a `Literal`, and one script is the only legacy reader.
+4. That commit's gate runs `bun goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts`.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Teach the live Literal decoder the legacy datatype and language encoding as a read transform, by a decision file before the Literal commit lands
+
+### P5: a pinned term is declared when its artifact types it; VoID pins the W3C Note and dcterms a DCMI snapshot, 2026-11-23
+
+Row 7 pins the eight held namespaces and semapv. Four artifacts declare registry terms in layouts the P1 matcher did not read: dcterms writes the subject on its own line and the typing several predicates later; dcat 3 declares inCatalog and next only through owl:inverseOf; sh, rdf and owl type individuals as sh:Severity, sh:ConstraintComponent, rdf:List and owl:OntologyProperty; semapv is RDF/XML with typed node elements about full IRIs. The declaration check therefore reads 'the artifact types the term': a Turtle subject whose statement, up to its closing dot, carries a or rdf:type of any class, or owl:inverseOf (which entails owl:ObjectProperty); an RDF/XML typed node element or rdf:Description with rdf:type about #term or the namespace IRI plus the term; and a SpecDocument section that may be an h2-delimited heading, with the CURIE optionally wrapped in a link. Narrowing to a type allowlist would have meant curating a list per vocabulary without improving the proof, which is the byte digest plus a term the artifact itself types. Sources: VoID's RDFS file (vocab.deri.ie is down; the cygri/void copy) states no license, so void is pinned at the W3C Interest Group Note 2011-03-03 term index (section 8, id cheatsheet) under LicenseRef-W3C-Document. DCMI publishes no immutable or versioned copy of dublin_core_terms.ttl, so dcterms is a retrievedSnapshot from www.dublincore.org held to its sha256 under DCMI's CC BY 4.0 document notice (dublincore.org/about/copyright). schema.org is pinned at release 30.1 (commit 5f2d8cdec99b) under CC BY-SA 3.0 (schema.org/docs/terms.html), semapv at commit 0db5676d4ce4 (release 2026-06-10) under the CC0 1.0 its artifact states, dcat 3 under the CC BY 4.0 its artifact states, and owl, rdf, rdfs and sh as W3C retrieved snapshots under LicenseRef-W3C-Document. The repo-cli source-URL test admits www.dublincore.org beside GitHub commits and www.w3.org.
+
+Lane p5
+
+Reverse: Restore the class/property type allowlist in declaresTerm (PinnedVocabularies.ts), drop the h2 and typed-node cases, and re-pin void from the cygri/void RDFS under an unstated-license LicenseRef
+
+### P5: Dataset is a quad HashSet with a sorted canonical encoding; Equal is labelled equality and the quotient is isIsomorphic and DatasetDigest, 2026-11-23
+
+Map questions I2, I3, I15, S8 and S9. The decoded `Dataset.quads` becomes `HashSet<Quad>`. `Quad` and the terms are plain structural values, so `Equal` and `Hash` dedupe them structurally (`effect/Equal.ts:117-132`, `Hash.ts:108`). The encoded form is a deduplicated array sorted by each quad's canonical N-Quads line. It is built like `CanonicalHashSet` (`packages/foundation/modeling/schema/src/CanonicalHashSet.ts:64`, `S.decodeTo` plus `SchemaTransformation.transform`), because `S.HashSet` encodes in iteration order (`effect/Schema.ts:16162` and the link at `:16120-16127`). The schema stays private to `Rdf.ts`. `makeDataset` takes any `Iterable<Quad>`.
+
+`Equal` on `Dataset` is labelled-set equality. On ground datasets it coincides with the isomorphism quotient. Every producer in the stack emits ground datasets: OA (decision `2026-11-22-p3-oa-instance-iris-and-ground-datasets`), `ProvRdf` (`rdf/src/ProvRdf.ts:162-167`) and the fold. The quotient on datasets with blank nodes is `isIsomorphic` and `DatasetDigest`, both computed from the RDFC-1.0 canonical form, which needs `Digest`. A synchronous `Equal` cannot run RDFC-1.0. Making construction canonicalize would make every `makeDataset` (169 lines) effectful.
+
+`DatasetDigest` is a `ContentHash` brand: `sha256:` plus the hex digest of the canonical N-Quads UTF-8 bytes. That is the one identifier digest format of the SPEC Constraints. Semantic-web's `DatasetFingerprint.fingerprint` (`Sha256Hex`, `canonicalization.ts:283-286`) is a transient CAS token. It keeps its bytes, the hash of the `trimEnd`-ed canonical text, so it does not equal the hex of `DatasetDigest`, which hashes the newline-terminated canonical N-Quads; the driver test asserts `canonicalText = trimEnd(nquads)` instead (amended after review, decision `2026-11-23-p5-the-canonicalization-driver-keeps-rdf-canonize-for-lexical-sort-and-the-oracle`).
+
+`serializeTerm` and `serializeQuad` keep their names and print canonical N-Triples/N-Quads with the RDFC-1.0 escape table (`rdf-canonize/lib/NQuads.js:322-357`). The default graph is omitted rather than printed as `default`. A Simple literal prints without `^^<xsd:string>`, and a tag prints lowercase. The encoding of non-canonical blank labels (`Rdf.ts:1126-1145`) stays. `areDatasetsEquivalent` and `sortDatasetQuads` retire with their sites (census rows 270-271), all in the same commit, including the production sites in semantica (`RdfProjectionLive.ts:114-122`) and the cli research library (`Library.ontology.ts:357`, `Library.projection.ts:308`): ground comparisons use `Equal`, and the rest use `isIsomorphic`. A writer whose output order is visible sorts by `serializeQuad` explicitly: the n3 Turtle serializer does so before `addQuads`, so a saved user workspace does not reorder on every save. No table stores a `Dataset` (decision `2026-11-19-p0-chapter-11-amendment-yields-to-the-stored-format-law`), so the wire encodings change in place.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Make construction canonicalize (effectful makeDataset with Equal as the quotient) by a decision file naming the 169 construction sites it changes
+
+### P5: the eight held namespaces and semapv are pinned and the NamespacePin test covers every external namespace; sssom is not registered, 2026-11-23
+
+Map questions I11, S6 and T10. The P5 pin set is the eight namespaces decision `2026-11-19-p1-pin-scope-eight-namespaces` held back (dcat, dcterms, owl, rdf, rdfs, schema, sh, void), plus `semapv`. `semapv` is registered in the same commit as a new external shard holding the five justification terms the SSSOM `MappingSet` uses, so `MappingJustification` names declared, pinned terms. `sssom:` is not registered: P5 writes no SSSOM RDF or TSV, because no consumer reads one, and a namespace enters with its first consumer (RQ3). The `pinned-vocabularies` sync target (`packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/PinnedVocabularies.ts`) acquires each artifact over the network and records location, revision, SPDX license, attribution, version, byte digest and terms digest.
+
+Licenses are recorded from the artifact, never invented. The rule follows decision `2026-11-20-p1-namespace-pins-live-tree-calls` point 3: a W3C artifact with no SPDX-identifiable notice is `LicenseRef-W3C-Document`. An artifact whose license cannot be attributed holds its pin, and with it the commit, until a source is found, as the nanopub license did in P4. `rdf/test/NamespacePin.test.ts` deletes `unpinnedUntilP5` (`:20`, `:72`). It asserts that the set of pinned prefixes equals the set of registry namespaces whose IRI is outside `IdentityAuthority`, each with an SPDX license and a `sha256:` digest. Any namespace P5 adds, internal or external, is in its shard and in this check in the same commit. The term snapshot takes the minor release the writer computes against `origin/main` over a stack that has merged a publishing base (decisions `2026-11-22-p1-the-snapshot-release-is-a-property-of-the-change-against-its-base-ref` and `2026-11-23-p5-stack-layers-write-the-term-snapshot-against-origin-main`).
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Register sssom (with its pin) by a decision file naming the SSSOM RDF or TSV consumer that needs it
+
+### P5: the FOLIO DTOs are deleted with a test-owned fold fixture, a scratchpad-local http URL refinement and identity test paths rewritten to a live module, 2026-11-23
+
+Map questions T6, S13 and S16, and census row 244. `Ontology.models.ts` and `Ontology.models.test.ts` are deleted, with the barrel's `Ontology` namespace export (`ontology/src/index.ts:53`) and the 14 schema-catalog rows.
+
+`Fold.test.ts`'s "FOLIO-derived module" case (`:947-976`) used `OWLClass` only as a convenient class to fold. It is rewritten over a schema the test declares, bound to a declared term of a test namespace the fold tests already use, so its "byte-identical through all projections" claim becomes a `toDataset` determinism assertion.
+
+The two tracked `@beep/scratchpad` files that import `HttpUrl` (`scratchpad/effect-ontology/Domain/Schema/LinkIngestion.ts:8`, `test/Domain/Schema/PublicSchemas.test.ts:1`) switch to a refinement declared in `LinkIngestion.ts`: `URLStr` from `@beep/schema/URL` (`schema/src/URL.ts:52`), restricted by a filter to the http and https schemes, which the test already imports through the file's re-export (`:21`). `@beep/schema` has `HttpsUrl` but no http-or-https schema, and a scratchpad consumer does not justify widening the shared package.
+
+The identity tests that build the composer path `$OntologyId.create("Ontology.models")` (`identity/test/IriBinding.test.ts:53-71,97-120`, `Identity.test.ts:215,253-258`, `shape-stable.test.ts:416-442`) and the `Ontology.models/HttpUrl` strings (`identity/test/PnLocal.test.ts:57,74,142-146`, `identity/src/PnLocal.ts:259-474`) import nothing. They would stay green, but they would name a deleted module. The paths are rewritten to `Classification.models/ClassificationPin`, a live module and symbol with the same lexical shape (a dot and a slash), in the deletion commit. `identity/src/Id.ts:403,1422` is left untouched (amended after review): `Id.ts` is one of the five identity sources inside the CiRunners handler bundles (`packages/tooling/infra/ci-runners/test/HandlerBundles.test.ts:21-31` on `origin/main`), whose source maps embed module text, so a JSDoc edit would redeploy every handler; its strings are lexical examples of slug shape that the deletion does not make wrong. The FOLIO vendor-alignment rows and their `SemanticFoundation.test.ts` cases are a separate facet and stay.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Keep HttpUrl in a foundation package by a decision file naming a production consumer
+
+### P5: L6-2 instances are partial lenses with a fixed complement and effectful get and put; PutGet is tested on perturbed and foreign candidates; ProvBundle compares records as a set, 2026-11-23
+
+Independent review of the P5 design, findings on L6-2. Refines decision `2026-11-23-p5-source-text-identity-projects-to-prov-entity-under-its-capture-id`.
+
+The first statement of PutGet, "for every v in the image of get", was false for `SourceTextEntity`: `put(o(s))` refuses `get(s')` when `s'` differs from `s` only in the omitted `scopeRef`, because the subject is the instance IRI of `mintCaptureId(s')` and `scopeRef` is element 1 of the `capture/v1` preimage (`packages/foundation/modeling/text/src/Capture.ts:87-99`, `:140-156`). Restricted to `get(s)`, PutGet followed from GetPut and could not fail. Both directions also need `Digest` and can fail (`mintCaptureId`, `Capture.ts:184-190`; `provBundleToDataset` returns a `Result`, `rdf/src/ProvRdf.ts:569-573`), and Effect 4.1.5 has no `Either` module.
+
+1. L6-2 is stated for partial lenses with a fixed complement. GetPut: `put(o(s))(get(s))` succeeds with `s'` and `s' ~ s` under the instance's declared quotient. PutGet: if `put(o(s))(v)` succeeds with `s'`, then `get(s')` is `Equal` to `v`.
+2. Candidates `v` come from `get(s)`, `get(t)` for independent `t` (other scopes included), and perturbations of `get(s)`: an extra quad about the subject, a dropped kept quad, a duplicated kept predicate. The harness asserts the `get(s)` pool is always accepted.
+3. `SourceTextEntity.fromDataset` refuses unknown quads about the subject (`unknownQuad`) and repeated kept predicates (`duplicateField`); PutGet fails otherwise. Row 5 measures whether `datasetToProvBundle` accepts a perturbation and, if so, makes it refuse in the same commit.
+4. `SourceTextEntity.toDataset` and `fromDataset` are `Effect.fn` with `Digest.Digest` in R and `SourceTextEntityRefused | PreimageMintError | ProvRdfCodecError` in E. Pure helpers return `effect/Result`. The harness `rdf/test/support/lensLaws.ts` takes effectful `get` and `put` and runs under `it.effect` with `Digest.layerWebCrypto`.
+5. The `ProvBundle <-> Dataset` instance declares record order and record multiplicity omitted and compares bundles with records as a set. `ProvBundle.records` is an ordered array (`rdf/src/Prov.ts:1091`) and `datasetToProvBundle` rebuilds it in quad iteration order (`ProvRdf.ts:969-980`), which is hash order once `Dataset.quads` is a set. The generator draws distinct record ids. Production behaviour of the codec does not change for this.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Restate L6-2 over total pure lenses by removing the minted subject from the projection, by a decision file before the projection commit lands
+
+### P5: generic SKOS models stay in @beep/ontology; the legal vocabulary kinds, intake filing model and librarian loop move to law-practice; VocabularyRegistry is deleted, 2026-11-23
+
+Map questions T3 and T4. "Legal semantics in foundation" is a non-goal (SPEC Non-Goals), so moving only the data is not enough.
+
+These parts stay in `@beep/ontology`, generic:
+- a new `ConceptScheme` leaf with `ConceptScheme`, `Concept` (iri, prefLabel, optional notation, definition, source and scopeNote, broader as a canonical IRI set, alignments), `ConceptAlignment`, now over `MappingPredicate`, `ConceptSchemePin { scheme, version }` and the broader profile;
+- `TaxonomyLoader`;
+- the classification editions;
+- the fold;
+- the new mapping and gUFO leaves.
+
+These leave for `@beep/law-practice-domain`, routed by `bun run beep architecture`:
+- `VocabularySchemeKind` (docketing, party-kinds, legal-roles) as `LegalVocabularyKind`, keyed to the pack pins;
+- the intake filing model: `DocumentClass` with `privileged`, `FilingSegment`, `FilingRoot`, `FilingRootKind`, and each concept's document classes and filing segment, as an `IntakeTaxonomy` record over generic concept IRIs, with the seed's ordered `pathTemplateSegments` (`SemanticFoundation.seed.ts:142`), stored as a fifth pack JSON file;
+- the librarian loop (`TaxonomyRegistry.ts:169`), re-typed over `ConceptScheme` plus `IntakeTaxonomy` in a new file that owes 100 percent coverage, covered by `law-practice/domain/test/LibrarianLoop.test.ts`; `TaxonomySeed` is deleted in the same commit.
+
+`ConceptAlignment` keeps the live `sourceIri` as `source: Option<IRI>`, and `LoadedPack.schemeFor(pin)` refuses a version mismatch with `ConceptSchemeVersionMismatch`, so no field the current models carry is dropped silently.
+
+`VocabularyRegistry`, whose job was a `Match` over the three legal kinds (`VocabularyRegistry.ts:66-80`), is deleted. Lookup by pin is a pure function over a `LoadedPack`. `Vocabulary.models.ts`, `SemanticFoundation.models.ts` and `TaxonomyRegistry.ts` are deleted once their parts have moved. Every one of these surfaces has 0 consumers outside the package (map, taxonomy section 3), and their tests move with them.
+
+Census row 247 ("Classification and registries keep") is restated in the P5 design commit. The registries split: the classification registry keeps, `VocabularyRegistry` retires with 0 consumers, and the intake parts adapt by moving to law-practice with 0 consumers. Those rows precede the implementing commit.
+
+T4: the slice's `PartyKind` (two literals, `packages/law-practice/domain/src/values/PartyKind/PartyKind.model.ts:12`) and the party-kinds scheme (six concepts, `ontology/src/seed/party-roles.ttl`) are not aligned in P5. A `Mapping` needs a declared term IRI on both sides, and `PartyKind`'s literals have none. Their granularity also differs: natural and juristic person against Party, NaturalPersonParty, OrganizationParty, LawFirm, PatentOffice and TrademarkOffice. Both now live in the slice, beside each other.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Keep the intake model and registries in @beep/ontology by a decision file that amends the legal-semantics non-goal
+
+### P5: the three Literal cases are a form union under one termType Literal member; language tags lowercase on decode; dirLangString is refused, 2026-11-23
+
+Map questions I6 and I13. `Effect.Schema.toTaggedUnion` walks nested unions and throws on a repeated discriminant (`effect/Schema.ts:6498-6530`). So the three literal cases cannot be three `termType: "Literal"` members of `Term`, `ObjectTerm` or `Subject`. Those unions keep `toTaggedUnion("termType")` and their `.match` sites: ten outside rdf, in `Shacl.validation.ts`, `Oxigraph.sparql.ts`, `N3.service.ts`, `canonicalization.ts` and the ontology slice.
+
+`Literal` stays one term member: `{ termType: "Literal", value, form }`. `form` is a `_tag` union: `Simple {}` (datatype xsd:string), `Typed { datatype }`, whose filter refuses xsd:string and rdf:langString as the L6 sketch does, and `LangTagged { language }` (datatype rdf:langString). Each literal term has exactly one decoded and encoded form. `Literal.datatypeOf` and `Literal.languageOf` derive the RDF/JS accessors for the drivers. `Literal.fromParts({ value, datatype, language })` is the one normalizing constructor for engine output: xsd:string with no tag gives Simple; rdf:langString with a tag gives LangTagged; any other datatype with no tag gives Typed. A tag on another datatype, or rdf:langString with no tag, is a typed `LiteralFormRefused`. The four pass-through decoders (n3, oxigraph, rdf-canonize, shacl) return it as their existing decode failure.
+
+`LanguageTag` lowercases on decode. RDF 1.1 Concepts puts language tags in a lowercase value space, so `"x"@EN` and `"x"@en` become one literal. `serializeTerm` already assumes this (`Rdf.ts:1172`). The RDF 1.2 `rdf:dirLangString` that `n3@2.13.12` produces (`node_modules/n3/src/N3DataFactory.js:147-148`) is refused by the n3 decoder: the SPEC names three cases, and a fourth needs its own decision.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Flatten the cases into the term unions under a new discriminator by a decision file that also rewrites every Term, Subject and ObjectTerm match site
+
+### P5: manifest digests are defined per row shape (file, archive-entry, tree) with contentSha256 for loaded bytes, and pinned editions are held by a frozen test-owned golden, 2026-11-23
+
+Independent review of the P5 design, findings on L3-4. Refines decision `2026-11-23-p5-the-manifest-protocol-verifies-digests-and-loads-concept-schemes` item 1 and its L3-4 paragraph.
+
+"Hash every admitted row's bytes" had no defined byte string for two row shapes. The `cpc` fixture row's `path` is a directory the registry walks (`packages/foundation/modeling/ontology/test/fixtures/classification/manifest.jsonl:3`, `ClassificationRegistry.ts:283-288`). The real classification rows carry an `archivePath`, and their `sha256` is the digest of the downloaded archive (`explorations/legal-ontology-landscape/assets/fetch.sh:38-56`), which the registry never reads; it reads `path`/`entryPath` (`ClassificationRegistry.ts:238-241`).
+
+1. A row's digest unit is `file`, `archive-entry` or `tree` (`VendorDigestUnit`, a `LiteralKit`). It is the row's optional `digestUnit`, defaulting on decode to `archive-entry` when `archivePath` is present and `file` otherwise. A directory row states `tree`. The loader refuses a `tree` row whose path is a file and a `file` row whose path is a directory.
+2. `sha256` keeps the meaning `fetch.sh` gives it: the digest of the fetched artifact. A new optional field, `contentSha256`, is the digest of the bytes the loader reads. A `file` row is checked against `sha256`. An `archive-entry` row is checked against `contentSha256` over the entry bytes. A `tree` row is checked against `contentSha256`, the SHA-256 of the UTF-8 bytes of the lines `<relative-path>\t<sha256-hex>\n`, one per file the loader reads under the directory, `/`-separated and sorted in code point order. A row with no fetched artifact (the fixtures) has `sha256` equal to `contentSha256`.
+3. An `archive-entry` or `tree` row with no `contentSha256` decodes, and is refused at load with `VendorContentDigestMissing { id, unit }`. The four real exploration rows therefore keep decoding; `fetch.sh` learns to compute `contentSha256` after extraction, and no test loads a real edition.
+4. A test-owned frozen golden, `ontology/test/fixtures/classification/pins.golden.json`, maps each `ClassificationPin { kind, edition }` and row id to its content digest. No tooling writes it. `ClassificationEdition.test.ts` asserts each manifest row's verified digest equals the golden, so changing an edition's bytes and refreshing its manifest row in one commit still fails; a changed edition needs a new edition string (a new pin) or a visible golden edit. `ClassificationPin` stays `{ kind, edition }`.
+5. `TaxonomyLoader.manifest.test.ts` decodes the real exploration manifest and asserts every row derives a digest unit.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Make ClassificationPin carry its content digest and drop the golden, by a decision file before the loader commit lands
+
+### P5: SSSOM mapping sets use declared CURIE predicates, a sorted canonical encoding and a gUFO-derived coherence check; the structure-kind set is the first repo-owned data, 2026-11-23
+
+Map questions T9, T11, T14, S5, S15 and S18.
+
+`MappingPredicate` is the sketch's `LiteralKit` of `skos:` CURIEs (`ops/design/L3.taxonomy.ts:36-44`), the SSSOM `predicate_id` lexical form. A test asserts that each literal expands through `@beep/identity/Registry` `expand` (`Registry.ts:366`) to a declared term. `MappingJustification` works the same way over `semapv:`, pinned by decision `2026-11-23-p5-every-external-namespace-is-pinned-with-semapv`.
+
+The committed exploration row `explorations/legal-ontology-landscape/assets/manifest.jsonl:17` (`"mappingKind":"closeMatch"`) is repo data, not a stored row. No caller outside the ontology tests runs the loader, so it is rewritten to `"mappingPredicate":"skos:closeMatch"` in the same commit as `SemanticFoundation.test.ts`'s inline manifests. There is no read transform.
+
+`Mapping { subject, predicate, object, justification, confidence }` takes subject and object as `TermIri`, with a filter requiring `Registry.contract` to know them. `MappingSet { id: IRI, version, license: SpdxExpression.FromString, mappings }` encodes `mappings` as a deduplicated array sorted by (subject, predicate, object), the `CanonicalHashSet` construction over a struct. A filter makes (subject, predicate, object) unique, so the sort key is total: one justification and confidence per triple, a narrowing of SSSOM, which allows several. `S.HashSet` alone encodes in iteration order. `@beep/ontology` gains `@beep/spdx`, the edge rdf already has. No SSSOM TSV or RDF writer lands, because no consumer reads one.
+
+Closure (amended after independent review). Both checks run on the SKOS closure, because `exactMatch` is transitive and symmetric and `broadMatch` is a sub-property of `broader`, whose closure is `broaderTransitive`. With `effect/Graph`: exact classes are the `connectedComponents` (`Graph.ts:6745`) of an undirected graph of exact edges; a directed graph over classes carries broad edges and reversed narrow edges, and `broaderTransitive` is reachability (`dfs`, `:10330`).
+
+Consistency (`ConflictingPredicates`). An exact class with a related pair inside it, or that reaches itself through broader edges, violates S46 (`exactMatch` disjoint from `broadMatch` and `relatedMatch`). A related pair whose classes are related by `broaderTransitive` either way violates S27 (`related` disjoint from `broaderTransitive`; the earlier text cited S46 for this, which was wrong, see `explorations/identity-as-iri/DECISIONS.md:205`). A broader cycle across two or more classes, which includes broad with narrow in the same direction on one pair, is refused as a repo rule.
+
+Coherence (`DisjointUpperTypes`). The comparison group of an exact class is the class plus every class one close, broad or narrow edge away, and every two typed members of a group are compared, so a chain of untyped exact matches cannot hide two typed ends. Two typed targets conflict when their gUFO instance categories differ, or when both reach exactly one `Kind` through `specializes` and the Kinds differ. Untyped terms never conflict. Disjointness is derived from the typing, so `TypedHierarchy` needs no disjointness field.
+
+The repo-owned set is the annotation structure kinds: `annotation:{Section,Paragraph,Title,Figure}` `skos:exactMatch` the DoCO terms, and `annotation:{Sentence,Word}` `skos:exactMatch` `nif:{Sentence,Word}`, the classes the OA codec already writes for those kinds (`annotation/src/rdf/OaCodec.ts:640-645`). Justification is `semapv:ManualMappingCuration`, and confidence is `Absent{not-assessed}`. The set is data in `@beep/ontology`, so the L3-2 profile test reads it in-package. Annotation cannot hold it, because the test would then need a dependency cycle. Its id is minted under the `annotation` namespace. None of its terms is gUFO-typed, so on the repo set the L3-2 test proves consistency only, and coherence rests on planted fixtures (including the three closure counterexamples). An ontology test, with `@beep/annotation` as a devDependency, asserts the `Sentence` and `Word` rows equal the NIF classes `OaCodec` writes, read from a `nifClassOf` table the codec exports, so the two cannot drift. This closes the DoCO deferral of decision `2026-11-22-p3-oa-adapter-subpath`.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Model mapping predicates as term IRIs, or add a declared disjointness field, by a decision file before the mapping-set commit lands
+
+### P5: the OA import activity is minted under import-activity/v2 over the canonical DatasetDigest the codec computes, 2026-11-23
+
+Map questions I12 and S14. Decision `2026-11-22-p3-oa-codec-signatures-and-profile` let P5 switch the import activity's source digest to the canonical dataset digest. P5 takes that option. `ImportActivity` (`annotation/src/rdf/OaCodec.ts:326-336`) drops the caller-supplied `sourceDigest`. The codec computes `canonicalDigest` of the dataset it receives and mints the import activity id under `import-activity/v2`, whose preimage is `S.Tuple([DatasetDigest])` alone, with a new golden over a `DatasetDigest` (`ImportActivityPreimage`, `:351-358`). `importedAt` stays a record field outside the id (`:330`, SPEC P0 item 7), so two imports of one dataset share one id. `CanonicalizationLimitExceeded` joins the error channel of `decodeOa` and `normalize` beside `PreimageMintError`, so a hostile blank-node clique in third-party input is a typed refusal. The meaning of the hashed field changes from "bytes the caller parsed" to "the dataset up to isomorphism", so the domain tag bumps (SPEC Constraints). Two serializations of one dataset now give one import activity. A caller can no longer supply a digest that disagrees with the dataset. `@beep/annotation/rdf` has no consumer outside the annotation package, and no stored row holds an import activity id. L2-6 is re-proved on the quotient: its tests compare with `Equal` on ground outputs, and they add a case where third-party input with relabelled blank nodes normalizes to the same dataset and the same import activity, a case where two `importedAt` times give one id, and a case where a clique past the bound fails decode with `CanonicalizationLimitExceeded`. The encoder and `normalize` still emit ground datasets (decision `2026-11-22-p3-oa-instance-iris-and-ground-datasets` stands).
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Restore the caller-supplied byte digest under import-activity/v1 by a decision file; no stored row holds an import activity id
+
+### P5: one PR stacked on the P4 claims branch, commit rows as boundaries, two rows hold on external acquisition, 2026-11-23
+
+P5 lands as one PR stacked on the P4 claims branch, opened by its implementation lane at content-final through Yeet, never by the design lane. The packet stays within three concurrently open PRs (SPEC Delivery). The commit table in `research/2026-11-23-p5-design.md` section 10 is the boundary list. Each row compiles and passes its gate before the next starts. A consumer migration ships in the same commit as the surface it changes, and generated registrations ship with the commit that needs them. P3 and P4 used the same shape (decisions `2026-11-22-p3-one-pr-stacked-on-p2`, P4 design section 10). One commit needs network acquisition (the namespace pins), and one needs an operational semantica C1 run (the gold digest). Each holds its row and reports the blocker rather than inventing a value.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Split P5 into an L6 PR and an L3 PR by a decision file, within the three-open-PR limit
+
+### P5: pack files the generic loader cannot decode are payload rows, digest-checked and returned as verified bytes, 2026-11-23
+
+Follows decisions `2026-11-23-p5-the-law-practice-asset-pack-and-its-json-scheme-sources`, `2026-11-23-p5-the-manifest-protocol-verifies-digests-and-loads-concept-schemes` and `2026-11-23-p5-legal-vocabulary-and-intake-models-move-to-law-practice`. Those decisions leave one gap. The pack holds files the generic loader must not decode: the six published TTL and JSON-LD renderings, and the `IntakeTaxonomy` JSON, whose schema lives in `@beep/law-practice-domain` and which a foundation package cannot import.
+
+`VendorLoadKind` gains a second new case, `payload`. A payload row carries the same approval fields and `sha256` as every other row. The loader hashes its bytes through `effect/crypto/Digest` and refuses a mismatch with `VendorSliceDigestMismatch`, exactly as for decoded rows. It returns the verified bytes, undecoded, in `LoadedPack.payloads`, a `HashMap` keyed by the row id. The law-practice domain decodes the intake payload with its own `IntakeTaxonomy` schema in a pure function, `LegalVocabularyPack.intakeTaxonomy(pack)`, which fails with the schema's own decode error. The six renderings are payload rows that no production code reads. The pack test compares their bytes with the frozen digests.
+
+Why not the alternatives. A law-practice manifest load kind would put a product schema into the foundation loader. A second loader in law-practice would duplicate the digest protocol and need `FileSystem` in a domain package. Skipping the intake file from the manifest would leave one pack file unpinned.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Remove the payload load kind and give law-practice its own digest-checked reader by a decision file
+
+### P5: datasetToProvBundle refuses any quad no supported record reads; provSlice selects the PROV quads of a mixed dataset, 2026-11-23
+
+Row 5 measured the open question of decision 2026-11-23-p5-l6-2-instances-are-partial-lenses-with-a-fixed-complement-and-effectful-put point 3. Before the change, datasetToProvBundle accepted a dataset with an extra quad about an entity record (an unknown predicate) and a dataset with orphaned link quads whose subject had lost its prov:Entity type quad; both decode, and the re-projection drops the quad, so PutGet failed. The decoder now computes the quads each decoded record reads (its type quad, its own predicates, and for a qualified influence the parent's qualified and direct-shortcut quads) and fails with ProvRdfCodecError on the first quad of the selected graph that no record reads. A caller holding provenance mixed with other statements, the scratchpad effect-ontology storeToKnowledgeGraph, now slices first with the new provSlice, which keeps exactly those claimed quads (and the type quad of an unsupported PROV class, so the decode still names it). The ProvBundle instance's quotient also normalizes each record's link lists to a sorted, deduplicated set with an empty list as absent, because the projection writes one quad per distinct link and the decoder rebuilds lists in quad order; record order and multiplicity were already declared omitted. SourceTextEntity.fromDataset reports a missing prov:Entity record quad as missingField and any quad its own projection would not write as unknownQuad, comparing the input with toDataset of the decoded identity.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Drop the claim check and provSlice from ProvRdf.ts and restate the ProvBundle L6-2 instance without the dropped-type and extra-quad perturbations, by a decision file
+
+### P5: RDFC-1.0 is ported into @beep/rdf with attribution and a deterministic work bound; the driver delegates and becomes the parity oracle, 2026-11-23
+
+Map question I1. `@beep/rdf` owns RDFC-1.0. The algorithm is ported from `rdf-canonize@5.0.0` (BSD-3-Clause, `node_modules/rdf-canonize/package.json:22`; `lib/RDFC10.js`, `IdentifierIssuer.js`, `Permuter.js` and the N-Quads writer, about 760 lines) into a private module of `packages/foundation/modeling/rdf/src/internal/`. The upstream license text and an attribution notice ship with the package. Hashing goes through `effect/crypto/Digest` (`Digest.ts:85` `sha256`, service `:135`, `layerWebCrypto` `:159`), so canonicalization is an `Effect.fn` that requires `Digest.Digest`. The work bound is a deterministic count of n-degree hash calls, the constant `CanonicalWorkBound = 1024`. Measured against `rdf-canonize` 5.0.0 with a counting wrapper on `hashNDegreeQuads`, the L6-1 generator domain (at most four blank labels, twelve quads) peaks at K4 with 76 calls (a 3-cycle needs 9, a 4-cycle 16, two 2-cycles 8), so 1024 covers it with margin; the npm default (`maxWorkFactor = 1`, `lib/RDFC10.js:17-18`, `:103-119`) refuses all four. Exceeding it returns the typed `CanonicalizationLimitExceeded`, never a timer: the driver's `AbortSignal.timeout` (`packages/drivers/rdf-canonize/src/adapters/canonicalization.ts:197-221`) makes the same input pass or fail by machine load, and a law cannot be stated over that.
+
+Why not the alternatives. A `Context.Service` contract in rdf implemented by `@beep/rdf-canonize` puts the L6-1 test in `rdf/test` behind a devDependency on a package that depends on rdf, which is a workspace cycle. A direct `rdf-canonize` dependency in foundation breaks the drivers rule (`standards/ARCHITECTURE.md:61`). The repo-owned port is domain-agnostic substrate, which the routing table assigns to foundation.
+
+Sort order. The port sorts first-degree N-Quads and the canonical output lines in Unicode code point order, the order the W3C RDFC-1.0 Recommendation states, where `rdf-canonize` uses the default UTF-16 `sort()` (`RDFC10.js:191`, `:227`). The two differ only when a supplementary-plane character and a character in U+E000-U+FFFF meet; the parity generator never draws both into one case, and a vendored W3C RDFC-1.0 test-suite subset in `rdf/test/fixtures/rdfc10/` (license and revision recorded) holds the mixed cases and carries the port's branch coverage. The hash-string sorts compare hex and need no change.
+
+Consequences (amended by decision `2026-11-23-p5-the-canonicalization-driver-keeps-rdf-canonize-for-lexical-sort-and-the-oracle`). `CanonicalizationServiceLive`'s `rdfc-1.0` branch delegates to the rdf canonicalizer, which returns the canonical N-Quads and the relabelled dataset, so production has one implementation. `rdf-canonize` stays a runtime dependency of the driver for `lexical-sort-v1`, and the driver's property test checks the rdf canonical N-Quads against `canonize(..., { algorithm: "RDFC-1.0", maxDeepIterations: 1024 })` byte for byte over generated datasets. The driver's security tests are restated over the typed refusal. `lexical-sort-v1` stays in the semantic-web contract (`packages/foundation/capability/semantic-web/src/services/canonicalization.ts:51`). Its bytes follow the redefined `serializeQuad`, and no persisted reader exists.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Put canonicalization behind a CanonicalizationService contract implemented by @beep/rdf-canonize and move L6-1 to the driver's tests, by a decision file before the canonicalization commit lands
+
+### P5: SourceTextIdentity projects to prov:Entity at its CaptureId instance IRI with text: predicates; scopeRef is omitted and supplied on decode; L6-2 instances are rdf-owned, 2026-11-23
+
+Map questions I7, I8, I9 and I10, and the open item of decision `2026-11-22-p3-capture-id-in-text`, which is confirmed rather than amended.
+
+The `prov:Entity` subject is the instance IRI of the `CaptureId` (`text/src/Capture.ts:46`, `mintCaptureId` `:184`). The printer `instanceIri` and its parser move from `@beep/annotation/rdf/OaCodec` (`OaCodec.ts:650-681`) to a new leaf, `@beep/rdf/InstanceIri`, and annotation imports it. Their only dependencies, `ContentHash` and `Registry.mint`, are already rdf dependencies.
+
+Kept fields are `sourceRef`, `locator`, `sourceDigest`, `textDigest`, `extractor.name`, `extractor.version` and `normalizationVersion`. They are written as Simple literals on predicates declared in a new internal registry namespace, `text` (`https://beep-effect.com/ns/text/`), together with the class `text:SourceTextCapture`. No external vocabulary has digest or extractor-pin predicates: PROV-O has only `prov:value` (`identity/registry/namespaces/prov.json`), and NIF has no digest term (`nif.json`). `scopeRef` is omitted. A matter or tenant reference never enters an interchange dataset (chapter 16 section 11). The decoder takes the scope from the reader's context, as the OA decoder takes its import activity. It re-mints `CaptureId` and compares it with the subject IRI, so a tampered field and a decode under the wrong scope both fail integrity. Minting needs `Digest` and can fail, so both directions are `Effect.fn` with `Digest.Digest` in R and `SourceTextEntityRefused | PreimageMintError | ProvRdfCodecError` in E; the decoder also refuses any unknown quad about the subject and any repeated kept predicate (decision `2026-11-23-p5-l6-2-instances-are-partial-lenses-with-a-fixed-complement-and-effectful-put`). The entity record itself is a `Prov.Entity` (`rdf/src/Prov.ts:298`) encoded through `provBundleToDataset` (`ProvRdf.ts:569`), and the kept quads go beside it.
+
+L6-2 instances live in `rdf/test/Projection.laws.test.ts` with a lens-law harness in `rdf/test/support`: the `SourceTextIdentity` projection, and `ProvBundle <-> Dataset` restricted to bundles whose records all carry ids and whose lifecycle is empty. Index-minted subjects (`ProvRdf.ts:162-167`), the refused lifecycle (`:535`), and record order and multiplicity are declared omitted, and that instance compares records as a set. Both instances are partial lenses with a fixed complement. The OA codec keeps its own L2-6 law. The fold is one-way and its determinism is tested in ontology. A harness exported from rdf `src` would ship test code at 100 percent coverage for no production caller.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Keep scopeRef in the interchange projection, or project through other predicates, by a decision file before the projection commit lands
+
+### P5: registry writes in the stacked P5 layer run against origin/main over a base that publishes, with the identity-registry lint in each row gate and a re-stamp after each parent merge, 2026-11-23
+
+Independent review of the P5 design, finding on registry writes in a stacked layer. Applies decisions `2026-11-22-p1-over-a-base-commit-that-publishes-no-term-set-the-writers-keep-the-release` and `2026-11-22-p1-the-snapshot-release-is-a-property-of-the-change-against-its-base-ref` to P5.
+
+At design time the lane's merge base with `origin/main` (9a4f7b0258d) publishes no `identity/registry/term-snapshot.json`, so the writers keep 2.0.0 and the lint skips its exact-release checks locally. `origin/main` publishes 2.0.0, and the stack already adds namespaces at 2.0.0. A hosted lint, or the lane after a main merge, would demand the next minor release and restamp each since.
+
+1. Before row 5, the lane takes a base that publishes: it merges the P4 branch once P4 has merged `origin/main`, or merges `origin/main` directly if P4 has not.
+2. Every registry write in rows 5, 7 and 12 runs `bun run beep identity registry --write --base origin/main`, the base the hosted lint computes by default (the P5 PR's GitHub base is the P4 branch). Each of those gates runs `bun run beep lint identity-registry --base origin/main`.
+3. After each parent layer merges, the lane merges it, reruns the writer with `--base origin/main`, and fixes each row the lint reports as since-misstated in its source shard.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Write against the P4 branch as base by a decision file naming why the hosted lint's default base does not apply
+
+### P5: L3-1 refuses a broader cycle in a repo-owned scheme, records one in a vendor scheme without rewriting it, and runs on fixtures and on the pack, 2026-11-23
+
+Map questions T7 and T8, and the reading of L3-1. The named bug is "an import silently rewrites hierarchy" (`research/2026-11-08-rebuild-report.md:356`). `checkBroader(scheme)` builds an `effect/Graph` directed graph over the scheme's concepts with one edge per `broader` link (`Graph.directed` `Graph.ts:642`, `addNode` `:1741`, `addEdge` `:2614`). It reports each strongly connected component with more than one member, and each self-loop, as a `BroaderCycle` (`stronglyConnectedComponents` `:5747`), plus each `broader` target outside the scheme. Graph algorithms are never hand-rolled.
+
+The loader applies it by origin. A `repo-owned` scheme with a cycle or an out-of-scheme target fails the load with `RepoSchemeBroaderViolation`. A `vendor` scheme with a cycle is admitted, the cycle is recorded in `LoadedPack.exceptions`, and the decoded scheme is `Equal` to the bytes' decode, so no edge is dropped or reversed. Classification editions keep their stricter refusal (`ClassificationRegistry.ts:155-171`), which never rewrites either.
+
+`ontology/test/ConceptScheme.profile.test.ts` holds the L3-1 row over fixtures in `ontology/test/fixtures`: an acyclic repo-owned scheme, repo-owned schemes with a planted two-cycle, a self-loop and an out-of-scheme target, and a vendor scheme with a planted three-cycle. A foundation test reading a product slice's files would put product data into a foundation package's inputs. The repo-owned legal schemes are covered by `packages/law-practice/domain/test/LegalVocabularyPack.test.ts`, which loads the real pack through the real loader and asserts the same profile with no exception. The law ledger names both files.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Read the law-practice pack from the ontology test by a decision file that declares the cross-package test input
+
+### P5: the rdf-canonize driver keeps rdf-canonize at runtime for lexical-sort-v1 and as the oracle, delegates rdfc-1.0 to the rdf port, and keeps its fingerprint bytes, 2026-11-23
+
+Independent review of the P5 design, findings on the driver's fate. Supersedes the consequences paragraph of decision `2026-11-23-p5-rdfc-1-0-is-ported-into-rdf` where they differ.
+
+The driver's source still uses `rdf-canonize` at runtime in two places the port does not replace: `lexical-sort-v1` serializes through its `NQuads.serialize` (`packages/drivers/rdf-canonize/src/adapters/canonicalization.ts:100-101`), and the `rdfc-1.0` path parses the canonical text back with `NQuads.parse` to build the `dataset` that `CanonicalDatasetResult` returns (`:212-219`; `packages/foundation/capability/semantic-web/src/services/canonicalization.ts:250-253`). `@beep/ontology-server` depends on the driver at runtime. Moving `rdf-canonize` to devDependencies would break both.
+
+1. `@beep/rdf-canonize` keeps `rdf-canonize` as a runtime dependency. It still wraps an external engine (`standards/ARCHITECTURE.md:60`), for `lexical-sort-v1`, and the same package is the parity oracle in its tests.
+2. `canonicalize` in `@beep/rdf` returns `CanonicalForm { nquads, dataset }`, where `dataset` is the input relabelled with the issued `c14n` identifiers. The driver's `rdfc-1.0` branch delegates to it and builds `CanonicalDatasetResult` from it, so production has one RDFC-1.0 implementation and no `NQuads.parse` round trip.
+3. The CAS fingerprint keeps its bytes: it hashes the `trimEnd`-ed canonical text (`:218`, `:267`), while `DatasetDigest` hashes the canonical N-Quads, which end in a newline. The design no longer claims the fingerprint equals the hex of `DatasetDigest`. A driver test asserts `canonicalText = trimEnd(CanonicalForm.nquads)` for `rdfc-1.0`.
+4. The parity oracle passes `{ algorithm: "RDFC-1.0", maxDeepIterations: 1024 }`, the port's bound, because the npm default (`maxWorkFactor = 1`) refuses a 3-cycle.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Retire @beep/rdf-canonize with delete-package after re-expressing lexical-sort-v1 over rdf serializeQuad, by a decision file before the canonicalization commit lands
+
+### P5: the fold emits a Dataset as its only RDF arrow, maps authoring literals to the three cases and refuses ill-formed ones; toTurtle, toJsonLd and toContext are deleted, 2026-11-23
+
+Map questions I5, I14 and S10. The fold gets one RDF arrow, `toDataset(assembled): Rdf.Dataset`, which is pure and ground. Its assembled fact literal is `Rdf.Literal`, so the fold-local `FactLiteral` (`ontology/src/Fold.models.ts:411`) is deleted. The authoring `TypedLiteral` maps once, at assembly:
+
+- a string with no datatype and no language becomes Simple;
+- a language with no datatype, or with rdf:langString, becomes LangTagged;
+- a finite number with `Number.isInteger(n)` and no exponent in `String(n)` becomes Typed xsd:integer (amended after review: `2**53` prints as `9007199254740992`, a Turtle integer, which the earlier safe-integer rule would have made xsd:decimal);
+- any other finite number with no datatype becomes Typed xsd:decimal when `String(n)` has no exponent, and xsd:double otherwise. This is exactly the datatype Turtle gave the bare number `toTurtle` printed (`Fold.projections.ts:470-485`), so no fact changes meaning, and `2**53` is a fold test case;
+- a boolean becomes Typed xsd:boolean;
+- an explicit datatype applies to the lexical form, and xsd:string yields Simple.
+
+A language on any other datatype, an invalid language tag, and a non-finite number are refused with a new `OntologyAssemblyErrorReason` case, `invalidLiteral`. Today `toTurtle` silently drops the datatype when a tag is present (`:481`), and assembly silently drops an invalid tag (`Fold.assembly.ts:323`).
+
+`toTurtle`, `toJsonLd` and `toContext` are deleted. Their only consumers are the cli research library (`Library.ontology.ts:8,405`) and the package's own tests. The cli writes Turtle from `toDataset(assembled)` through `@beep/n3`'s `N3SerializeTurtleRequest` with the fold's prefix map. That path already exists for the SHACL shapes (`Library.ontology.ts:370-385`). The library test (`research-library-ontology.test.ts:345`) asserts that two serializations are byte-identical and that the reparse is `Equal` to the fold dataset. `research-library.ttl` is untracked and the writer is its only reader. `toMarkdown` stays: it is documentation, not an RDF serialization. The schema-first inventory row for `JsonLdDocument` leaves with `toJsonLd`, and the `TypedLiteral` row keeps its exemption (S31: no growth).
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Restore a fold-owned Turtle writer over the Dataset by a decision file naming the consumer that cannot use the n3 driver
+
+### P5: the vetted FOLIO alignment lives inline in the law-practice legal-intake scheme, and a concept-alignment row resolves only against concept-scheme rows of its own manifest, 2026-11-23
+
+Independent review of the P5 design, finding on the FOLIO alignment. Refines decisions `2026-11-23-p5-the-manifest-protocol-verifies-digests-and-loads-concept-schemes` item 4 and `2026-11-23-p5-the-law-practice-asset-pack-and-its-json-scheme-sources`.
+
+Removing the base seed from `mergeSlices` (`packages/foundation/modeling/ontology/src/TaxonomyLoader.ts:914-931`) leaves the vetted FOLIO alignment (`explorations/legal-ontology-landscape/assets/manifest.jsonl:17`) with nothing to resolve against: its local concept, `semantic-foundation/concept/email-message`, is a legal-intake concept that moves to the law-practice pack, and the exploration manifest has no concept-scheme row, so `mergeAlignment` would fail `VendorAlignmentTargetNotFound` (`:892-903`).
+
+1. A `concept-alignment` row resolves only against the `concept-scheme` rows of the same manifest. A target outside them fails `VendorAlignmentTargetNotFound`, as today.
+2. The FOLIO alignment is a legal alignment of a legal concept, so it lives in the law-practice pack, inline in `legal-intake.json` on the email-message concept as `ConceptAlignment { predicate: skos:closeMatch, target, source: Some(fetchUrl) }`, written once in the move commit. It is not a pack `concept-alignment` row, because the vendor slice bytes are gitignored (`explorations/legal-ontology-landscape/assets/.gitignore:1`), absent from every checkout measured, and a dated API response that a re-fetch need not reproduce; a pack that needed them could not load in CI.
+3. Exploration row 17 stays the vetting record carrying the approval metadata. It is rewritten from `"mappingKind":"closeMatch"` to `"mappingPredicate":"skos:closeMatch"` with `explorations/legal-ontology-landscape/assets/README.md:38` in the loader commit.
+4. The ontology loader's alignment cases (`ontology/test/SemanticFoundation.test.ts:184-338`) move onto a test-owned repo scheme plus alignment fixture in `ontology/test/fixtures/concept-scheme/`, with the existing `fixture-slice.jsonld` as the vendor slice.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Commit the FOLIO slice bytes into the law-practice pack and load the alignment as a pack concept-alignment row, by a decision file before the pack commit lands
+
+### P5: g-projection/v2 adds the canonical digest of the G-subset projection, measured by an operational C1 run; v1 is replaced, 2026-11-23
+
+Map questions I4 and S7. `apps/labs/semantica/fixtures/gold/v1/g-projection.json` holds a model identity, a kNN witness and two SPARQL counts (577 and 22), but no quad and no digest. Its bytes therefore cannot follow the `Dataset` change by itself. Oxigraph already dedupes, and the projection emits no blank nodes, so the counts cannot move. "Regenerated" means that the fixture starts pinning the projection's content. `GProjectionExpectation` (`apps/labs/semantica/src/schema/Projection.ts:78-90`) moves to `g-projection/v2`, which adds `datasetDigest: DatasetDigest`, the canonical digest of the G-subset projection C1 builds (`src/layers/CanaryC1Live.ts:122`). C1 checks it next to the counts, before rebuild identity. `quadDelta` (`:89`, `:338-355`) becomes `HashSet.difference` over the two quad sets. C2 (`CanaryC2Live.ts:293`) and the runtime probe (`RuntimeProbeChild.ts:103`) digest with `canonicalDigest` instead of `contentDigest` over `serializeQuad` strings.
+
+The file keeps its path, `fixtures/gold/v1/g-projection.json`, and its `schemaVersion` tag carries `g-projection/v2`; the decoder refuses v1 by tag. One `goldDirectory` (`src/runtime/Config.ts:104`, default `fixtures/gold/v1`) feeds C0, C1 and C2, and three tests read the v1 path (`test/ProjectionExpectation.test.ts:22`, `test/Projection.test.ts:90,218`), so moving the file would split that wiring for no gain. The lab ledger is outside the stored-format law (decision `2026-11-22-p3-semantica-reads-the-handoff`). C1 decodes the expectation before it builds anything (`CanaryC1Live.ts:239-245`), so a v2 expectation cannot be produced by a normal run. C1 gains a measure mode that decodes the expectation without its digest, builds the projection, and reports the computed value. The C1 report moves to `c1-eval-report/v2` with `datasetDigest` and `oracleDigest`, and the run writes the projected dataset's canonical N-Quads as `canonical.nq` beside the report. In the measure run, the digest is recomputed with the rdf-canonize driver oracle (`canonize(..., { algorithm: "RDFC-1.0", maxDeepIterations: 1024 })`) over the same quads, and both values must match before the v2 fixture is written; the commit records both values and the run id. The digest is never computed by hand. If that run cannot execute, the commit row holds with the blocker reported, and no placeholder digest is written. `g-entailment-rdfs.json` holds IRI-only `serializeTerm` strings (map: 0 literals) and keeps its bytes. Its reader test proves that.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Keep g-projection/v1 unchanged by a decision file that drops the fixture regeneration from the P5 exit
+
+### P5: the gUFO schemas live in @beep/ontology and the LegalPositionRelator typing rows in law-practice under a new law-practice namespace; Mode leaves the instance categories, 2026-11-23
+
+Map questions T12, T13 and S12. `LegalPositionRelator` (`packages/law-practice/domain/src/entities/LegalPositionRelator/LegalPositionRelator.model.ts`) is confirmed as the pilot. It is the one relator whose role pair drives a check: `LegalPositionRelatorPolicy.screenForOpposition` (`packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.service.ts:24-40`, `:59-80`, `:183-217`).
+
+The schemas live in `@beep/ontology`: `GufoClassType`, `GufoInstanceCategory`, `GufoTyping`, `GufoTypings` (an `S.HashMap` keyed by `TermIri`), `TypedHierarchy`, `OntoViolation` and `audit`. That satisfies "a record keyed by term IRI in @beep/ontology" (PLAN P5) without legal names in foundation. The pilot's rows are law-practice data. A new internal registry shard, `law-practice` (`https://beep-effect.com/ns/law-practice/`), declares four terms:
+- `LegalPositionRelator`: Kind, instance category Relator, mediating the two roles;
+- `PositionBearer` and `PositionCounterparty`: RoleMixin, each specializing `Party`;
+- `Party`: Category.
+
+The roles are mixins because natural and juristic persons, which are different kinds, both play them (`LegalRole` admits both party kinds). A typed `Kind` is therefore not owed, and the audit is sound on that shape. The rows and specialization edges are exported by a typing leaf beside the relator in the domain package. A use-cases test audits them and binds the policy's two role fields to the mediated terms.
+
+`GufoInstanceCategory` drops `Mode`. gUFO 1.0.0 declares no `Mode` class, only IntrinsicMode and ExtrinsicMode (decision `2026-11-20-p1-namespace-pins-live-tree-calls` point 5), the pilot needs none, and every literal must name a declared `gufo:` term (`identity/registry/namespaces/gufo.json`). Chapter 16's list follows. `TypedHierarchy` is `{ typing, specializes }`, and the sketch's `terms` map is dropped as redundant. `audit(hierarchy)(term: TermIri)` reports `RoleWithoutKind` only when the reflexive-transitive supertypes contain no `Kind` and no untyped term, because an untyped supertype could be a Kind and soundness forbids guessing. `RigidSpecializesAntiRigid` covers typed pairs only, and `Mixin` is semi-rigid. `RelatorUndermediated` covers a relator whose mediation cardinalities sum to less than two. `GufoTyping.mediates` is a `HashMap<TermIri, MediationCardinality>` (a positive integer), because a set of type IRIs cannot record that a marriage mediates two spouses of one role type; that model is planted as a no-violation example. The pilot mediates each of its two roles with cardinality 1. `GufoTypings` encodes its entries sorted by term IRI. The typing leaf builds its term IRIs through the identity `Registry`, never as spelled strings, which keeps the public-origin rule (`bun run beep laws retired-iri-authorities --check`) green. The audit runs as a function in P5. Running it as a lint over agent-proposed terms is L7 work for P6.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Type a different relator, or restore Mode with gUFO IntrinsicMode and ExtrinsicMode terms, by a decision file before the gUFO commit lands
+
+### P5: the legal asset pack lives in law-practice domain assets with canonical JSON scheme sources and byte-preserved renderings, 2026-11-23
+
+Map questions T1, S2, S3 and S4. The pack lives at `packages/law-practice/domain/assets/vocabulary/`, which keeps the P0 ownership by the domain package (decision `2026-11-19-p0-routing-annotation-asset-pack-and-write-tool-host`). The domain does no IO. It exports a pure descriptor module whose manifest location is `new URL("../../../assets/vocabulary/manifest.jsonl", import.meta.url)`, the same addressing the law-practice server uses for its sealed assets (`packages/law-practice/server/src/internal/Citation/DiffWorker.ts:122`). The descriptor also exports the four `ConceptSchemePin`s of the pack. Any reader composes `TaxonomyLoader.layer` with a platform `FileSystem`. The domain `package.json` `files` gains `assets/vocabulary/**`, and its dependencies gain `@beep/ontology`, a product-slice-to-foundation edge.
+
+The loadable source of truth is four JSON files: docketing, party-kinds, legal-roles and legal-intake. Each is the RFC 8785 canonical JSON encoding of the generic `ConceptScheme` schema, written once from the TypeScript seeds in the move commit. The six TTL and JSON-LD files move byte for byte as published renderings, so their committed SHA-256 values hold (map, stored-and-consumers section 10). They become digest-pinned reference rows that the loader does not decode. No repo code processes JSON-LD, and the three JSON-LD dialects in the files differ: `@graph` with `dct:` in the vocabularies, and a top-level scheme with `dcterms:` and `beep:` compact IRIs in legal-intake.
+
+Seed IRIs stay the literal strings the composer `$SemanticFoundationId` printed (`identity/src/packages.ts:529`). They are instances under the declared `semantic-foundation` namespace (decision `2026-11-19-p1-instances-minted-under-a-declared-namespace`) and get no new terms, so `Registry.data.ts` does not move for them. They are spelled only in the JSON assets: TypeScript in `packages/law-practice/*/src` derives scheme IRIs through `$SemanticFoundationId.create(...)`, because the public-origin rule scans `packages/**/src/*.ts` and exempts only identity and public-site (`cli/src/commands/Laws/RetiredIriAuthorities.model.ts:249-253`). `legal-intake.json` carries the vetted FOLIO alignment inline (decision `2026-11-23-p5-the-folio-alignment-lives-in-the-legal-intake-scheme-and-alignments-resolve-within-one-manifest`). Approval metadata lives in the pack manifest rows: `verified`, `loadStatus`, `license`, `licenseEvidenceUrl`, `reuseVerdict`, `verdictRationale`, `maintenanceStatus` and `sha256`, the same fields the exploration pack carries. A frozen fixture, taken before the move, lists every scheme and concept IRI with its notation, plus the six file digests. The pack test proves that the loaded pack matches it. It also replaces the rendering parity test the move deletes (`ontology/test/Vocabulary.test.ts:84-96`): each TTL payload is parsed through the n3 driver into a `Dataset` and compared, with `Equal`, to a test-support SKOS projection of the matching JSON scheme or schemes (`party-roles.ttl` holds two). `legal-intake` parity is measured before the move. The competency fixture `vocabulary-competency.json` moves to `law-practice/domain/test/fixtures/`, re-keyed by `LegalVocabularyKind`. The domain's devDependencies gain `@effect/platform-bun` and `@beep/n3` for these tests.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Move the pack to law-practice server assets, or make the TTL the decoded source, by a decision file before the move commit lands
+
+### P5: the legal-intake TTL rendering does not parse as Turtle, so row 1 records its parity as a refusal, 2026-11-23
+
+Row 1 measured the `legal-intake` rendering parity that design section 5.1 asked for. The n3 driver refuses `packages/law-practice/domain/assets/vocabulary/legal-intake.ttl` at line 5 (`Unexpected "beep:taxonomy/legal-intake"`): Turtle `PN_LOCAL` forbids an unescaped `/`, and every local name in the file has one. `docketing.ttl` and `party-roles.ttl` parse. The file is a published rendering whose bytes the move keeps (decision `2026-11-23-p5-the-law-practice-asset-pack-and-its-json-scheme-sources`), so row 1 does not repair it. The frozen fixture `ontology/test/fixtures/legal-seed-freeze.json` records `turtleParses` per rendering and `legalIntakeParity` as `Refused` with the parser message, and `LegalSeedFreeze.test.ts` asserts both. The row 11 pack test therefore compares only the two parseable TTL renderings with their SKOS projections and asserts that `legal-intake.ttl` still refuses with the same message, so a silent repair or a further break shows up as a test failure.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Rewrite legal-intake.ttl with full IRIs or escaped local names in a later commit that refreshes the frozen digest and the parity record, by a decision file
+
+### P5: TaxonomyLoader verifies every row's sha256, loads concept-scheme rows by origin, drops the legacy TaxonomySeed route and returns a LoadedPack, 2026-11-23
+
+Map questions T2, T5, T15, S1 and S17. `TaxonomyLoader` stays the one manifested loader (`ontology/src/TaxonomyLoader.ts:946`), and its protocol changes in five ways.
+
+(1) Every admitted row, of every load kind, has its loaded bytes hashed through `effect/crypto/Digest` in the row's digest unit and compared with the row's `sha256` or `contentSha256` (decision `2026-11-23-p5-manifest-digests-are-defined-per-row-shape-and-pinned-by-a-frozen-golden`). A mismatch fails with a new `VendorSliceDigestMismatch { id, expected, actual }`, and `ClassificationRegistry` gets the same check. Today no TypeScript path hashes a byte (`ClassificationRegistry.ts:50` decodes the field and never compares it). The classification fixture manifest's sixty-four-zero digests (`ontology/test/fixtures/classification/manifest.jsonl:2-5`) are replaced by the real values. The row format keeps bare hex, the committed vendor-pack format; the SPEC scopes bare `Sha256Hex` out of the identifier rule.
+(2) `VendorLoadKind` gains `concept-scheme`, whose row also states `origin: repo-owned | vendor` and decodes a `ConceptScheme` JSON file.
+(3) The legacy route, a `loadStatus` row with no `loadKind` decoded as `TaxonomySeed` (`:172-187`, `:767-781`), is deleted. Its one fixture becomes a vendor `concept-scheme` row. `TaxonomySeed` itself stays until the pack commit, because `runLibrarianLoop` (`TaxonomyRegistry.ts:15`, `:170`) and its tests still take it; the pack commit moves the loop, re-typed, and deletes `TaxonomySeed`.
+(4) `mergeSlices` no longer starts from `SemanticFoundationSeed` (`:914-931`). `load` returns a `LoadedPack`: the schemes keyed by IRI, the applied alignments and the recorded exceptions. The caller chooses the scheme it needs by pin. A `concept-alignment` row resolves only against `concept-scheme` rows of the same manifest (decision `2026-11-23-p5-the-folio-alignment-lives-in-the-legal-intake-scheme-and-alignments-resolve-within-one-manifest`).
+(5) The layer requires `FileSystem` and `Digest`.
+
+L3-4 immutability means a digest in the row's unit checked on load, a frozen test-owned pin-to-digest golden the manifest must match, and `Equal` across two loads of one pin (decision `2026-11-23-p5-manifest-digests-are-defined-per-row-shape-and-pinned-by-a-frozen-golden`). `ClassificationPin` keeps `{ kind, edition }` with no `latest`. The real-manifest decode case moves from `SemanticFoundation.test.ts:105-128` to `ontology/test/TaxonomyLoader.manifest.test.ts`, keeping the manifest path text, and the goal-data consumer row's evidence path (`packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts:332-337`, reference rule `:185`) follows in the same commit.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Restore the hard-coded base seed and the legacy slice route by a decision file; no caller outside the ontology tests runs the loader
+
+### P5: the Markdown section fold and MdNodeId move to @beep/md; DocumentAnnotation's node selector carries the plain fragment string, 2026-11-23
+
+Map question S11 and the exit grep. `rdf/src/Adapters/MdSections.ts` (280 lines), `MdNodeId` and `mdNodeId` included, moves to `@beep/md` as a new leaf with its tests. It reads the DoCO namespace through `@beep/identity/Registry` `namespace("doco").iri` (`identity/src/Registry.ts:526`). `@beep/md` already depends on `@beep/identity` (`md/package.json`), so no `md -> rdf` edge appears. `rdf/src/Adapters/DocumentAnnotation.ts` uses `MdNodeId` only as the value schema of its fragment selector (`:21`, `:140`). That value becomes the OA fragment string the selector already carries. The md-v1 block-path grammar is owned by `@beep/md` and checked where a selector is resolved to an Md node. Keeping a copy of the grammar in rdf would give one wire grammar two owners. `DocumentAnnotation` has no consumer outside rdf. Its test splits: fold cases move to `md/test`, and annotation cases stay in `rdf/test`, built from a literal path string. rdf drops the `@beep/md` dependency (`rdf/package.json:73`), the barrel export (`src/index.ts:19`) and the three tsconfig references. The coverage baseline row for `MdSections.ts` moves with the file (decision `2026-11-19-p1-s31-rows-move-with-the-file`). The transitive `@beep/md` edge that annotation reached through rdf disappears.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Keep a copy of the md-v1 path grammar in rdf by a decision file that names its single owner
+
+### P5: the RDFC-1.0 fixture subset is read through Vite raw imports and leaves out two W3C cases, 2026-11-23
+
+Row 3 vendors 24 W3C RDFC-1.0 cases (revision 5ffaaa13c0e19a2a2f9e60d0ecd9efaf3edab633, recorded in packages/foundation/modeling/rdf/test/fixtures/rdfc10/SOURCE.json with the W3C test licence in LICENSE beside it). Two cases stay out. test060 has an IRI ending in a no-break space, which the IRI schema refuses as trailing whitespace, so the dataset cannot be built. test075 is a SHA-384 case, and the port hashes with SHA-256 only. The code point ordering that test060 would have exercised is a planted case in Rdfc10.fixtures.test.ts instead, beside two planted branch cases: a blank graph name related to a non-unique blank node, and K4. The fixtures load through Vite's eager raw import.meta.glob (test/support/vite-env.d.ts, after the law-practice-server precedent), so @beep/rdf gains no FileSystem devDependency. The code point order compares UTF-8 bytes, which order the same way as code points.
+
+Lane goals/text-knowledge-stack-rebuild-p5-taxonomy
+
+Reverse: Add @effect/platform-bun as an rdf devDependency, read the fixtures through FileSystem, and vendor test060 once the IRI schema admits a no-break space
+
+### P5: the L3-3 arbitrary builds partial typings from the GufoTyping part schemas, because the struct filter discards whole samples, 2026-11-23
+
+Design section 3.6 says the L3-3 test draws its partial typing with Arbitrary.schema(GufoTyping). Run that way, the property exhausted after 18 runs and 1001 discards. The GufoTyping filter (mediates non-empty exactly for a Relator) rejects about 30 percent of draws, Effect's Arbitrary turns a rejected filter into a discard of the whole sample, and a ten-term hierarchy passes only about 0.7^10 of the time. test/support/TypedHierarchy.arbitrary.ts therefore draws classType, instanceCategory and mediated pairs from Arbitrary.schema(GufoClassType), Arbitrary.schema(GufoInstanceCategory) and Arbitrary.schema(MediationCardinality), and builds each typing with GufoTyping.makeOption, giving mediation only to relators. Completions still come from Arbitrary.schema(GufoClassType) per untyped term. Every typing the filter admits whose mediated types lie in the fixed test namespace can be generated, with cardinalities over the whole positive range; mediated types outside the hierarchy never change an audit result.
+
+Lane p5
+
+Reverse: Draw partial typings with Arbitrary.schema(GufoTyping) again once Effect's Arbitrary retries a filtered struct per element instead of discarding the run
+
+### The legal pack move: routing, intake version, filing roots and the path template, 2026-11-23
+
+Row 11 settles seven calls that design sections 5.1 and 5.3 left open, and corrects one.
+
+1. Routing. `bun run beep architecture add concept law-practice <Concept> --domain-kind values --stage core --dry-run` routes each concept to `packages/law-practice/domain/src/values/<Concept>/` with `<Concept>.model.ts`, `<Concept>.behavior.ts`, `index.ts` and a `./values/<Concept>` export. Its `apply` writes the accepted-proof template (a `WorkPriority` placeholder) and carries legacy-cleanup operations that remove other paths, so the three concepts (`IntakeTaxonomy`, `LibrarianLoop`, `LegalVocabularyPack`) follow that routing by hand.
+2. `legal-intake.json` is version `1.0.0`: `ConceptScheme` requires a version and the TypeScript seed had none. The two filing roots are not concepts of the scheme (a `Concept` needs a `prefLabel` they lack); they live in `IntakeTaxonomy.filingRoots`, and the pack test compares the frozen intake row with the scheme concepts plus the filing-root IRIs.
+3. `pathTemplateSegments` becomes a `PathTemplateSegment` literal list, and the librarian loop builds each path from it in order; the old loop ignored the list and hard-coded the same order.
+4. The loop refuses a taxonomy whose `scheme` pin differs from the given scheme with `IntakeTaxonomySchemeMismatch`; a scheme concept with no filing fails `TaxonomyConceptNotFound`, like an absent concept. `LibrarianInput.conceptIri` is an `IRI`, the type `ConceptScheme` uses.
+5. The six renderings are `payload` rows (verified bytes, never decoded). The four schemes and `intake-taxonomy.json` keep their RFC 8785 bytes, so `biome.jsonc` excludes `packages/law-practice/domain/assets/vocabulary/*.json`.
+6. The Turtle parity case runs in `packages/law-practice/use-cases/test/LegalVocabularyRendering.test.ts`, not in the domain. The `doctrine:domain-deny-drivers-tables-server` boundary refuses any domain manifest edge to a driver, devDependencies included, so the domain cannot take the `@beep/n3` devDependency the design named. The use-cases devDependencies gain `@beep/n3`, `@beep/rdf` (for the test-support SKOS projection) and `@beep/ontology`. The domain gains only `@effect/platform-bun`, and its pack test asserts the frozen parity record. `@beep/ontology` drops the `@beep/n3` devDependency row 1 added, since the freeze test moved.
+7. `VendorSlicePath` checks its components with a private safe-segment predicate, because `FilingSegment` moved to law-practice.
+
+Lane p5
+
+Reverse: Restore the ontology seed modules from the parent commit and delete the law-practice pack, values and tests
+
+### P5: the mapping-set commit fixes the finding shapes, the repo set's license and loader, and the supertype export the design left open, 2026-11-23
+
+Six calls the design (section 3.5 and the decision mapping-sets-predicates-and-coherence) did not settle. (1) Finding shapes. An S46 finding inside one exact class names that class as both subject and object, and its predicates are skos:exactMatch plus the related or broader predicates that produced it. An S27 finding names the two related classes and carries skos:relatedMatch plus the predicates of every broader edge on a path between them, found as the edges leaving the set reachable from one class and entering the set that reaches the other. A broader cycle across two or more classes names its two least class IRIs and carries the predicates of its internal edges. Consistency findings are sorted and deduplicated by (subject, object, sorted predicates). (2) DisjointUpperTypes is reported once per unordered pair of typed terms, under the least exact-class name whose comparison group holds both, so a close match does not report one pair from both ends. (3) The repo set is version 1.0.0, licensed Apache-2.0 (the repository's own LICENSE), with id Registry.mint(annotation, mapping-set, doco-nif, 1.0.0). (4) Mapping.annotation.ts keeps its rows in encoded form and exports annotationMappingSet(): Result<MappingSet, SchemaError>, the NamespacePin namespacePins() pattern, so no synchronous decode runs at module load. (5) Gufo.ts exports supertypes(hierarchy)(term), the reflexive-transitive closure sorted by IRI, because the coherence check reads each typed term's Kinds through the same specialization graph the audit walks. (6) OaCodec exports its NIF table as nifClassOf with the same Record<string, NamedNode> type; its one-line free comment became the JSDoc lead.
+
+Lane p5
+
+Reverse: Change the finding subject/object/predicate rules, the set's license or loader shape, or move supertypes back inside Gufo.ts, by a decision file before the P5 PR merges
+
+### P5: xsd:decimal is declared in the pinned xsd shard so the fold's number mapping names only registry terms, 2026-11-23
+
+Decision the-fold-emits-a-dataset-and-checks-its-literals maps a finite non-integer number without an exponent to xsd:decimal, but the xsd shard declared only anyURI, boolean, dateTime, double, integer and string. The fold resolves every datatype through Registry.iri, so decimal is added to the xsd pin's curated terms in PinnedVocabularies.ts; the sync proved it against the pinned RDF 1.1 Concepts section 5.1 bytes (digest unchanged), wrote the shard, and identity registry --write added the term to the snapshot under release 2.1.0. The fold also refuses a non-finite number as invalidLiteral at tuple validation, because the TypedLiteralValue schema keeps S.Finite (the schemaNumber law) and the validation error mapping names the reason.
+
+Lane p5
+
+Reverse: Remove decimal from the xsd pin terms, re-run sync-data-to-ts pinned-vocabularies and identity registry --write, and map non-integer numbers to xsd:double
+
+### The P5 registration commit clears its own lint debt and re-records the inherited cache drift, 2026-11-24
+
+Row 16 found P5-introduced findings the design did not foresee and fixed them in place rather than growing an inventory (S31). Rdf.ts coverage had fallen in row 2 (lines 97.43 to 95, branches 100 to 87.5): Literal.fromParts gains refusal tests and the escapeIri helper is deleted, because RFC 3987 IRIs cannot contain a character it escapes and the encoded-quad order only ever sees encoded valid IRIs or input that fails decoding. Twenty-four effect-vitest findings in P5 tests become @effect/vitest/utils assertions, an Exit in the parity property, an explicit layer timeout and realPath resolution of committed fixtures. Six plain-data S.Class schemas in Canonical.ts and Rdfc10.ts become S.Opaque over annotated structs. MappingSet.profile and DocumentAnnotation (whose property moved to md in row 6) gain schema-derived properties. Three terse-effect advisories in rdf and ontology are rewritten. The cache re-record names all seven drifted subjects because the tool refuses a partial set; root, epistemics and party-server drifted in P4 (2ced3e0a632, 97b2de8a43b) and the review report says so. Full docgen is not run locally: docgen:local demands it because global inputs differ from origin/main on this stale stack base, and every edited package passed its own docgen through package-verify.
+
+Lane p5
+
+Reverse: Revert the row 16 commit; the coverage rows, cache re-record and test rewrites return together, and escapeIri can be restored from 34c34d8bdba.
 
 <!-- beep:decisions:end -->
 

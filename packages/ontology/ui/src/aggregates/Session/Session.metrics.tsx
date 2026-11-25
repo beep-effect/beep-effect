@@ -16,6 +16,7 @@ import { Badge } from "@beep/ui/components/badge";
 import { A, O } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import type {
   OntologyInferenceResult,
   OntologySnapshot,
@@ -47,7 +48,7 @@ const inferenceErrorView = (error: string): JSX.Element => <p className="text-de
 
 const inferenceResultView = (result: OntologyInferenceResult): JSX.Element => (
   <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono">
-    <span>quads {result.inferredDataset.quads.length}</span>
+    <span>quads {HashSet.size(result.inferredDataset.quads)}</span>
     <span>drift {result.drifted ? "full" : "ok"}</span>
     <span>changes {result.processedChangeCount}</span>
     <span>violations {result.disjointnessViolations.length}</span>

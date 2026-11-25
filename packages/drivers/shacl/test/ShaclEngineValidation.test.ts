@@ -1,4 +1,4 @@
-import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { Literal, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import {
@@ -32,7 +32,7 @@ const shapesDataset = makeDataset([
   makeQuad(shape, SH_PROPERTY, property),
   makeQuad(property, SH_PATH, RDF_TYPE),
   makeQuad(property, SH_HAS_VALUE, OWL_CLASS),
-  makeQuad(property, SH_MIN_COUNT, makeLiteral("1", XSD_INTEGER.value)),
+  makeQuad(property, SH_MIN_COUNT, Literal.typed("1", XSD_INTEGER.value)),
 ]);
 
 const violatingDataset = makeDataset([makeQuad(material, marker, markerValue)]);
@@ -52,7 +52,7 @@ const labelProperty = makeBlankNode("shape-string-label-property");
 // One xsd:string-typed label on `material`, checked against sh:datatype xsd:string.
 const labelRequest = (text: string): ShaclValidationRequest =>
   ShaclValidationRequest.make({
-    dataset: makeDataset([makeQuad(material, label, makeLiteral(text, XSD_STRING.value))]),
+    dataset: makeDataset([makeQuad(material, label, makeLiteral(text))]),
     shapes: [],
     shapesDataset: O.some(
       makeDataset([

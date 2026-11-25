@@ -6,7 +6,7 @@
  */
 
 import { $EpistemicServerId } from "@beep/identity/packages";
-import { serializeTerm } from "@beep/rdf/Rdf";
+import { Literal, serializeTerm } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import {
   ShaclValidationResult,
@@ -221,7 +221,9 @@ const datatypeViolations = (
     O.map((datatype) =>
       pipe(
         propertyQuads,
-        A.filter((quad) => quad.object.termType !== "Literal" || quad.object.datatype.value !== datatype.value),
+        A.filter(
+          (quad) => quad.object.termType !== "Literal" || Literal.datatypeOf(quad.object).value !== datatype.value
+        ),
         A.map(() =>
           makeViolation(
             focusNode,

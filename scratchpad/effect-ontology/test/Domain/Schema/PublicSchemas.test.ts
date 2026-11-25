@@ -1,4 +1,3 @@
-import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -63,8 +62,14 @@ const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
 );
 
 describe("effect-ontology public schema surface", () => {
-  it("uses the canonical ontology HTTP URL schema at link-ingestion boundaries", () => {
-    expect(LinkIngestion.HttpUrl).toBe(CanonicalHttpUrl);
+  it("accepts http and https links and refuses other schemes at link-ingestion boundaries", () => {
+    const accepts = S.is(LinkIngestion.HttpUrl);
+    expect([
+      accepts("https://example.com/page"),
+      accepts("http://example.com/page"),
+      accepts("ftp://example.com/file"),
+      accepts("not a url"),
+    ]).toStrictEqual([true, true, false, false]);
   });
 
   it("derives arbitraries whose samples satisfy every exported schema", () => {

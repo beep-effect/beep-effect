@@ -1,5 +1,7 @@
 import { fileURLToPath } from "node:url";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { BoundedShaclValidationServiceLive } from "../../../packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts";
 import {
@@ -8,7 +10,7 @@ import {
   ShaclValidationService,
 } from "../../../packages/foundation/capability/semantic-web/src/services/shacl-validation.ts";
 import { ProvBundle } from "../../../packages/foundation/modeling/rdf/src/Prov.ts";
-import { Dataset } from "../../../packages/foundation/modeling/rdf/src/Rdf.ts";
+import { Dataset, Literal, LiteralParts } from "../../../packages/foundation/modeling/rdf/src/Rdf.ts";
 
 // The frozen shape of `beep-effect-documentation-seed.evidence.json`. The rdf evidence module that wrote it was
 // deleted with the move to `@beep/text`; this script keeps the artifact readable on its own.
@@ -96,10 +98,51 @@ const requiredDatatypePropertyIds = [
   "stable-provenance-id",
 ];
 
+const FrozenLegacyLiteral = S.Struct({
+  termType: S.tag("Literal"),
+  value: S.String,
+  datatype: S.Struct({ termType: S.tag("NamedNode"), value: S.String }),
+});
+
+const FrozenLegacyResource = S.Struct({
+  termType: S.Literals(["NamedNode", "BlankNode"]),
+  value: S.String,
+});
+
+const FrozenLegacyDataset = S.Struct({
+  quads: S.Array(
+    S.Struct({
+      subject: S.Unknown,
+      predicate: S.Unknown,
+      graph: S.Unknown,
+      object: S.Union([FrozenLegacyLiteral, FrozenLegacyResource]),
+    })
+  ),
+});
+
+const encodeLiteral = S.encodeSync(Literal);
+
+const toLiveDatasetEncoding = (frozen: typeof FrozenLegacyDataset.Type) => ({
+  quads: frozen.quads.map((quad) =>
+    quad.object.termType === "Literal"
+      ? {
+          ...quad,
+          object: encodeLiteral(
+            Result.getOrThrow(
+              Literal.fromParts(LiteralParts.make({ value: quad.object.value, datatype: quad.object.datatype.value }))
+            )
+          ),
+        }
+      : quad
+  ),
+});
+
 const run = async () => {
   const ontology = (await readJson("beep-effect-documentation-ontology.json")) as Record<string, unknown>;
   const scaffold = (await readJson("beep-effect-documentation-tag-scaffold.json")) as Record<string, unknown>;
-  const rawDataset = await readJson("beep-effect-documentation-seed.dataset.json");
+  const rawDataset = toLiveDatasetEncoding(
+    S.decodeUnknownSync(FrozenLegacyDataset)(await readJson("beep-effect-documentation-seed.dataset.json"))
+  );
   const rawProvenance = await readJson("beep-effect-documentation-seed.provenance.json");
   const rawEvidence = await readJson("beep-effect-documentation-seed.evidence.json");
   const rawShapes = await readJson("beep-effect-documentation-shapes.json");
@@ -176,7 +219,7 @@ const run = async () => {
       governingRules: scaffoldCounts.governingRules,
     },
     localValidation: {
-      datasetQuads: dataset.quads.length,
+      datasetQuads: HashSet.size(dataset.quads),
       provenanceRecords: provenance.records.length,
       evidenceAnchors: evidence.anchors.length,
       shaclConforms: shaclResult.conforms,

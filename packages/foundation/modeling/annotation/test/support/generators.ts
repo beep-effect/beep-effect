@@ -16,18 +16,14 @@ import {
   Word,
 } from "@beep/annotation/Kinds";
 import { restrictToOa } from "@beep/annotation/Restrict";
-import {
-  ImportActivityPreimage,
-  ImportedActivity,
-  ImportedActivityPreimage,
-  instanceIri,
-} from "@beep/annotation/rdf/OaCodec";
+import { ImportActivityPreimage, ImportedActivity, ImportedActivityPreimage } from "@beep/annotation/rdf/OaCodec";
 import { IRI } from "@beep/identity/Iri";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import { DatasetDigest } from "@beep/rdf/Canonical";
+import { instanceIri } from "@beep/rdf/InstanceIri";
 import * as Rdf from "@beep/rdf/Rdf";
-import { ActivityId } from "@beep/schema/ContentHash";
-import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
+import { ActivityId, ContentHash } from "@beep/schema/ContentHash";
 import { anchoredOn, rangeIn, scalarRangeIn, sourceFor, wellFormedTextWith } from "@beep/text/Arbitrary";
 import { OccurrenceId, OccurrencePreimage } from "@beep/text/Occurrence";
 import * as Arbitrary from "effect/Arbitrary";
@@ -519,12 +515,11 @@ export const kindSetCase: Arbitrary.Arbitrary<HashSet.HashSet<DocumentKindName>>
 export const kindSet = (...names: ReadonlyArray<DocumentKindName>): HashSet.HashSet<DocumentKindName> =>
   HashSet.fromIterable(names);
 
-/** One generated OA document with its imported activities, the text its anchors slice and its import digest. */
+/** One generated OA document with its imported activities and the text its anchors slice. */
 export type GeneratedOaDocument = {
   readonly text: string;
   readonly document: OaDocument;
   readonly importedActivities: HashMap.HashMap<ActivityId, ImportedActivity>;
-  readonly sourceDigest: Sha256PrefixedDigest;
 };
 
 const activityHex = (activity: ActivityId): string => Str.slice(7, 23)(activity);
@@ -549,9 +544,9 @@ const importedForms: A.NonEmptyReadonlyArray<(activity: ActivityId) => O.Option<
 export const importedActivityIdOf = (activity: ImportedActivity): ActivityId =>
   ActivityId.make(Result.getOrThrow(ImportedActivityPreimage.mintResult(sha256)([activity])));
 
-/** The id of the import activity of a source digest, through the `import-activity/v1` twin. */
-export const importActivityIdOf = (sourceDigest: Sha256PrefixedDigest): ActivityId =>
-  ActivityId.make(Result.getOrThrow(ImportActivityPreimage.mintResult(sha256)([sourceDigest])));
+/** The id of the import activity of a dataset digest, through the `import-activity/v2` twin. */
+export const importActivityIdOf = (datasetDigest: DatasetDigest): ActivityId =>
+  ActivityId.make(Result.getOrThrow(ImportActivityPreimage.mintResult(sha256)([datasetDigest])));
 
 /**
  * Generated OA documents: a generated text document narrowed by `restrictToOa`, so every anchors row is a target,
@@ -571,8 +566,9 @@ export const oaDocumentCase: Arbitrary.Arbitrary<GeneratedOaDocument> = Arbitrar
       }),
       (drawn) => {
         const restricted = restrictToOa(document);
-        const sourceDigest = Sha256PrefixedDigest.make(hashOf(`import:${drawn.digestSeed}`));
-        const importActivity = importActivityIdOf(sourceDigest);
+        const importActivity = importActivityIdOf(
+          DatasetDigest.make(ContentHash.make(hashOf(`import:${drawn.digestSeed}`)))
+        );
         const activities = A.sort(
           A.dedupe(
             A.flatMap(restricted.attribution.pipe(HashMap.values, A.fromIterable), (generations) =>
@@ -608,7 +604,6 @@ export const oaDocumentCase: Arbitrary.Arbitrary<GeneratedOaDocument> = Arbitrar
         });
         return {
           text,
-          sourceDigest,
           importedActivities: HashMap.fromIterable(
             A.flatMap(replaced, ({ to, imported }) =>
               A.map(A.fromOption(imported), (activity) => [to, activity] as const)
@@ -638,10 +633,11 @@ export const oaQuads = {
   quad: (subject: Rdf.Subject, predicate: string, object: Rdf.ObjectTerm): Rdf.Quad =>
     Rdf.makeQuad(subject, rdfNode(predicate), object),
   type: (subject: Rdf.Subject, klass: string): Rdf.Quad => Rdf.makeQuad(subject, rdfNode(rdfType), rdfNode(klass)),
-  integer: (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}`, xsd.integer),
-  string: (value: string): Rdf.Literal => Rdf.makeLiteral(value, xsd.string),
-  time: (millis: number): Rdf.Literal => Rdf.makeLiteral(DateTime.formatIso(DateTime.makeUnsafe(millis)), xsd.dateTime),
-  lexicalTime: (lexical: string): Rdf.Literal => Rdf.makeLiteral(lexical, xsd.dateTime),
+  integer: (value: number): Rdf.Literal => Rdf.Literal.typed(`${value}`, xsd.integer),
+  string: (value: string): Rdf.Literal => Rdf.makeLiteral(value),
+  time: (millis: number): Rdf.Literal =>
+    Rdf.Literal.typed(DateTime.formatIso(DateTime.makeUnsafe(millis)), xsd.dateTime),
+  lexicalTime: (lexical: string): Rdf.Literal => Rdf.Literal.typed(lexical, xsd.dateTime),
 };
 
 const Q = oaQuads;

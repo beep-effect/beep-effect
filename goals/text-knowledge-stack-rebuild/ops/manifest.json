@@ -6,7 +6,7 @@
     "title": "Text-Knowledge Stack Rebuild",
     "status": "active",
     "created": "2026-11-08",
-    "updated": "2026-11-19",
+    "updated": "2026-11-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/text-knowledge-stack-rebuild",
@@ -65,6 +65,10 @@
     "research/2026-11-23-p4-map-model.md",
     "research/2026-11-23-p4-map-stored-and-consumers.md",
     "research/2026-11-23-p4-row5-proof.md",
+    "research/2026-11-23-p5-design.md",
+    "research/2026-11-23-p5-map-interchange.md",
+    "research/2026-11-23-p5-map-stored-and-consumers.md",
+    "research/2026-11-23-p5-map-taxonomy.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/consumer-census.md",
@@ -167,19 +171,11 @@
   "opsScripts": [
     {
       "path": "ops/design/index.ts",
-      "purpose": "Design index for L3, L5 and L6; L0, L1, L2, L4, the OA adapter and the nanopublication codec are production packages."
-    },
-    {
-      "path": "ops/design/L3.taxonomy.ts",
-      "purpose": "L3 design: SSSOM MappingSet with a typed confidence signal, OntoViolation, audit and coherence-check signatures."
+      "purpose": "Design index for L5; L0 to L4, L6, the OA adapter, the nanopublication codec, the gUFO audit and the mapping sets are production packages."
     },
     {
       "path": "ops/design/L5.operations.ts",
       "purpose": "L5 design: Operation, Activity, Association, mintActivityId, pure, compose and withActivity."
-    },
-    {
-      "path": "ops/design/L6.interchange.ts",
-      "purpose": "L6 design: three-case Literal, Dataset quotient and DatasetDigest; OA moved to annotation."
     }
   ]
 }

@@ -19,7 +19,6 @@ import {
   NamedNode,
   PrefixMap,
   Quad,
-  serializeQuad,
   serializeTerm,
 } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
@@ -28,6 +27,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { GraphPartition, graphPartitionIri, isExcludedFromReasoning, SessionId } from "./Session.values.ts";
 import type { Subject } from "@beep/rdf/Rdf";
@@ -189,10 +189,11 @@ export type ChangeOperation = typeof ChangeOperation.Type;
  *
  * ```ts
  * import { emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ * import * as HashSet from "effect/HashSet"
  *
  * const partitions = emptySessionGraphPartitions()
  *
- * console.log(partitions.asserted.quads.length)
+ * console.log(HashSet.size(partitions.asserted.quads))
  * ```
  *
  * @category models
@@ -359,13 +360,14 @@ export class SessionChangeApplication extends S.Opaque<SessionChangeApplication,
  * import { CreateSessionInput, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
  * import * as S from "effect/Schema"
+ * import * as HashSet from "effect/HashSet"
  *
  * const input = CreateSessionInput.make({
  *   id: S.decodeUnknownSync(SessionId)("session-1"),
  *   baseDataset: makeDataset([])
  * })
  *
- * console.log(input.baseDataset.quads.length)
+ * console.log(HashSet.size(input.baseDataset.quads))
  * ```
  *
  * @category models
@@ -414,10 +416,11 @@ export const emptySessionChangeDelta = (): SessionChangeDelta =>
  *
  * ```ts
  * import { emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ * import * as HashSet from "effect/HashSet"
  *
  * const partitions = emptySessionGraphPartitions()
  *
- * console.log(partitions.inferred.quads.length)
+ * console.log(HashSet.size(partitions.inferred.quads))
  * ```
  *
  * @category utilities
@@ -432,24 +435,11 @@ export const emptySessionGraphPartitions = (): SessionGraphPartitions =>
     provenance: emptyDataset(),
   });
 
-const sameQuad = (left: Quad, right: Quad): boolean => serializeQuad(left) === serializeQuad(right);
+const hasQuad = (dataset: Dataset, candidate: Quad): boolean => HashSet.has(dataset.quads, candidate);
 
-const hasQuad = (quads: ReadonlyArray<Quad>, candidate: Quad): boolean =>
-  pipe(
-    quads,
-    A.some((quad) => sameQuad(quad, candidate))
-  );
+const addQuad = (dataset: Dataset, quad: Quad): Dataset => makeDataset(HashSet.add(dataset.quads, quad));
 
-const addQuad = (dataset: Dataset, quad: Quad): Dataset =>
-  hasQuad(dataset.quads, quad) ? dataset : makeDataset(pipe(dataset.quads, A.append(quad)));
-
-const removeQuad = (dataset: Dataset, target: Quad): Dataset =>
-  makeDataset(
-    pipe(
-      dataset.quads,
-      A.filter((quad) => !sameQuad(quad, target))
-    )
-  );
+const removeQuad = (dataset: Dataset, target: Quad): Dataset => makeDataset(HashSet.remove(dataset.quads, target));
 
 const subjectKey = (subject: Subject): string => serializeTerm(subject);
 const quadSubjectKey = (quad: Quad): string => subjectKey(quad.subject);
@@ -521,9 +511,10 @@ const baseShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> => {
  * ```ts
  * import { classifySessionDatasetPartitions } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const partitions = classifySessionDatasetPartitions(makeDataset([]))
- * console.log(partitions.asserted.quads.length) // 0
+ * console.log(HashSet.size(partitions.asserted.quads)) // 0
  * ```
  *
  * @category utilities
@@ -556,10 +547,11 @@ export const classifySessionDatasetPartitions = (
  *
  * ```ts
  * import { datasetForPartition, emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ * import * as HashSet from "effect/HashSet"
  *
  * const asserted = datasetForPartition(emptySessionGraphPartitions(), "asserted")
  *
- * console.log(asserted.quads.length)
+ * console.log(HashSet.size(asserted.quads))
  * ```
  *
  * @category utilities
@@ -665,14 +657,14 @@ export const changeDeltaForOperation: {
   const dataset = datasetForPartition(partitions, change.partition);
   return ChangeOperation.match(change, {
     addQuad: ({ quad }) =>
-      hasQuad(dataset.quads, quad)
+      hasQuad(dataset, quad)
         ? emptySessionChangeDelta()
         : SessionChangeDelta.make({
             added: [quad],
             removed: [],
           }),
     removeQuad: ({ quad }) =>
-      hasQuad(dataset.quads, quad)
+      hasQuad(dataset, quad)
         ? SessionChangeDelta.make({
             added: [],
             removed: [quad],
@@ -689,6 +681,7 @@ export const changeDeltaForOperation: {
  * ```ts
  * import { applyChangeToPartitions, ChangeOperation, emptySessionGraphPartitions, graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
  * import { MakeQuadOptionsInput, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import * as HashSet from "effect/HashSet"
  *
  * const next = applyChangeToPartitions(
  *   emptySessionGraphPartitions(),
@@ -706,7 +699,7 @@ export const changeDeltaForOperation: {
  *   })
  * )
  *
- * console.log(next.ontologies.quads.length)
+ * console.log(HashSet.size(next.ontologies.quads))
  * ```
  *
  * @category utilities
@@ -903,6 +896,7 @@ export const invertChangeOperation = (change: ChangeOperation): ChangeOperation 
  * import { CreateSessionInput, createSession, deriveSessionGraphPartitions, SessionId } from "@beep/ontology-domain/aggregates/Session"
  * import { makeDataset } from "@beep/rdf/Rdf"
  * import * as S from "effect/Schema"
+ * import * as HashSet from "effect/HashSet"
  *
  * const session = createSession(
  *   CreateSessionInput.make({
@@ -912,7 +906,7 @@ export const invertChangeOperation = (change: ChangeOperation): ChangeOperation 
  * )
  * const partitions = deriveSessionGraphPartitions(session)
  *
- * console.log(partitions.asserted.quads.length)
+ * console.log(HashSet.size(partitions.asserted.quads))
  * ```
  *
  * @category utilities

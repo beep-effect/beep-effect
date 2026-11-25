@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "schema", "iri": "https://schema.org/" },
+  "namespace": {
+    "prefix": "schema",
+    "iri": "https://schema.org/"
+  },
   "terms": [
     "CreativeWork",
     "Event",

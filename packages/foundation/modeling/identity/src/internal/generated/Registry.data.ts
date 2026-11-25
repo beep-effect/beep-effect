@@ -290,6 +290,15 @@ export const RegistryVocab = {
     iri: `${IdentityAuthority}instance/`,
     terms: [],
   },
+  "law-practice": {
+    iri: `${IdentityAuthority}law-practice/`,
+    terms: [
+      "LegalPositionRelator",
+      "Party",
+      "PositionBearer",
+      "PositionCounterparty",
+    ],
+  },
   lejeune: {
     iri: `${IdentityAuthority}lejeune/ontology/`,
     terms: [
@@ -658,6 +667,16 @@ export const RegistryVocab = {
       "title",
     ],
   },
+  semapv: {
+    iri: "https://w3id.org/semapv/vocab/",
+    terms: [
+      "LexicalMatching",
+      "LogicalReasoning",
+      "ManualMappingCuration",
+      "SemanticSimilarityThresholdMatching",
+      "UnspecifiedMatching",
+    ],
+  },
   sh: {
     iri: "http://www.w3.org/ns/shacl#",
     terms: [
@@ -727,6 +746,19 @@ export const RegistryVocab = {
       "topConceptOf",
     ],
   },
+  text: {
+    iri: `${IdentityAuthority}text/`,
+    terms: [
+      "SourceTextCapture",
+      "extractorName",
+      "extractorVersion",
+      "locator",
+      "normalizationVersion",
+      "sourceDigest",
+      "sourceRef",
+      "textDigest",
+    ],
+  },
   vitest: {
     iri: `${IdentityAuthority}vitest/`,
     terms: [
@@ -752,6 +784,7 @@ export const RegistryVocab = {
       "anyURI",
       "boolean",
       "dateTime",
+      "decimal",
       "double",
       "integer",
       "string",

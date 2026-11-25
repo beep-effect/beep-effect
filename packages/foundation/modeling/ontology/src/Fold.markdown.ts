@@ -13,6 +13,7 @@
 
 import { $OntologyId } from "@beep/identity/packages";
 import { contract } from "@beep/identity/Registry";
+import { LiteralForm } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
@@ -130,18 +131,13 @@ const factObjectText = (ontology: AssembledOntology, object: FactObject, linkMod
     return markdownLink(compactLabel(ontology, object), object, linkMode);
   }
 
-  const literal = markdownText(`${object.value}`);
+  const literal = markdownText(object.value);
 
-  return pipe(
-    O.map(object.language, (language) => `\`${literal}\`@${markdownText(language)}`),
-    O.orElse(() =>
-      O.map(
-        object.datatypeIri,
-        (datatypeIri) => `\`${literal}\` (\`${markdownText(compactLabel(ontology, datatypeIri))}\`)`
-      )
-    ),
-    O.getOrElse(() => `\`${literal}\``)
-  );
+  return LiteralForm.match(object.form, {
+    Simple: () => `\`${literal}\``,
+    LangTagged: ({ language }) => `\`${literal}\`@${markdownText(language)}`,
+    Typed: ({ datatype }) => `\`${literal}\` (\`${markdownText(compactLabel(ontology, datatype.value))}\`)`,
+  });
 };
 
 const predicateLine = (

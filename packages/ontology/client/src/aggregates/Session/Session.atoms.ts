@@ -48,13 +48,13 @@ import {
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import { A, O, P, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
@@ -1006,7 +1006,7 @@ const setValidationFailure = (ctx: Atom.FnContext, label: string, cause: Cause.C
 };
 
 const hasValidationShapes = (session: Session): boolean =>
-  deriveSessionGraphPartitions(session).shapes.quads.length > 0;
+  HashSet.size(deriveSessionGraphPartitions(session).shapes.quads) > 0;
 
 const ensureOntologyInference = Effect.fn("ensureOntologyInference")(function* (
   client: OntologyClient["Service"],
@@ -3276,7 +3276,7 @@ export const applyOntologyInspectorActionAtom = OntologyClient.runtime.fn<Ontolo
                 pipe(
                   Str.trim(form.object),
                   O.liftPredicate(Str.isNonEmpty),
-                  O.map(() => makeLiteral(form.object, XSD_STRING.value))
+                  O.map(() => makeLiteral(form.object))
                 ),
             }),
           }),

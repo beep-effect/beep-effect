@@ -19,6 +19,13 @@ export * from "./Classification.models.ts";
  */
 export * from "./ClassificationRegistry.ts";
 /**
+ * Generic SKOS concept schemes, edition pins and the broader profile.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./ConceptScheme.ts";
+/**
  * Assembly walk and fold entrypoint for the identity-backed ontology fold.
  *
  * @category constructors
@@ -40,31 +47,33 @@ export * from "./Fold.markdown.ts";
  */
 export * from "./Fold.models.ts";
 /**
- * Pure JSON-LD, context, and Turtle projections over assembled ontologies.
+ * The ground RDF dataset projection of an assembled ontology.
  *
  * @category projections
  * @since 0.0.0
  */
 export * from "./Fold.projections.ts";
 /**
- * @since 0.0.0
- * @category configuration
- */
-export * as Ontology from "./Ontology.models.ts";
-/**
- * Intake-serving semantic-foundation models and services.
+ * gUFO typing of registry terms and the audit of a typed specialization hierarchy.
  *
  * @category models
  * @since 0.0.0
  */
-export * from "./SemanticFoundation.models.ts";
+export * from "./Gufo.ts";
 /**
- * Committed repository-owned taxonomy seed.
+ * The repository-owned annotation-to-DoCO and NIF mapping set.
  *
- * @category constants
+ * @category constructors
  * @since 0.0.0
  */
-export * from "./SemanticFoundation.seed.ts";
+export * from "./Mapping.annotation.ts";
+/**
+ * SKOS mapping predicates and their registry expansion.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Mapping.ts";
 /**
  * Fail-closed taxonomy manifest loader.
  *
@@ -72,13 +81,3 @@ export * from "./SemanticFoundation.seed.ts";
  * @since 0.0.0
  */
 export * from "./TaxonomyLoader.ts";
-/**
- * Pure registry-backed librarian projections.
- *
- * @category workflows
- * @since 0.0.0
- */
-export * from "./TaxonomyRegistry.ts";
-export * from "./Vocabulary.models.ts";
-export * from "./Vocabulary.seed.ts";
-export * from "./VocabularyRegistry.ts";

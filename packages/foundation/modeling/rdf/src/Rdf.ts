@@ -11,12 +11,14 @@ import { namespace } from "@beep/identity/Registry";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { constant, dual, identity, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 import type { RegistryPrefix } from "@beep/identity/Registry";
 
@@ -136,11 +138,11 @@ const PrefixLabelChecks = S.makeFilterGroup(
 const LanguageTagChecks = S.makeFilterGroup(
   [
     S.isPattern(
-      /^[A-Za-z]+(?:-[A-Za-z0-9]+)*$/,
+      /^[a-z]+(?:-[a-z0-9]+)*$/,
       $I.annote("LanguageTagPatternCheck", {
         title: "Language Tag Pattern",
-        description: "A simple BCP 47-style language tag.",
-        message: "Language tags must use alphanumeric subtags separated by hyphens",
+        description: "A simple BCP 47-style language tag in the lowercase RDF value space.",
+        message: "Language tags must use lowercase alphanumeric subtags separated by hyphens",
       })
     ),
   ],
@@ -250,6 +252,11 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
 );
 
 /**
+ * **Details**
+ *
+ * Decoding lowercases the tag, because RDF 1.1 places language tags in a
+ * lowercase value space: `"x"@EN` and `"x"@en` are one literal.
+ *
  * **Example** (Decode language tag)
  *
  * ```ts import.meta.vitest name="Decode language tag"
@@ -257,16 +264,19 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
  * import { LanguageTag } from "@beep/rdf/Rdf"
  *
  * const tag = S.decodeUnknownSync(LanguageTag)("en-US")
- * tag // => "en-US"
+ * tag // => "en-us"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
-  S.brand("LanguageTag"),
+export const LanguageTag = S.String.pipe(
+  S.decodeTo(
+    S.String.check(LanguageTagChecks).pipe(S.brand("LanguageTag")),
+    SchemaTransformation.transform({ decode: Str.toLowerCase, encode: identity })
+  ),
   $I.annoteSchema("LanguageTag", {
-    description: "RDF literal language tag.",
+    description: "RDF literal language tag, lowercased on decode.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
       kind: "rdfConstruct",
       canonicalName: "LanguageTag",
@@ -378,7 +388,279 @@ export class BlankNode extends S.Opaque<BlankNode, { readonly brand: unique symb
   )
 ) {}
 
+const XSD_STRING_IRI = "http://www.w3.org/2001/XMLSchema#string";
+const RDF_LANG_STRING_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
+
 /**
+ * **Example** (Decode simple literal form)
+ *
+ * ```ts import.meta.vitest name="Decode simple literal form"
+ * import * as S from "effect/Schema"
+ * import { SimpleLiteralForm } from "@beep/rdf/Rdf"
+ *
+ * S.decodeUnknownSync(SimpleLiteralForm)({ _tag: "Simple" })._tag // => "Simple"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SimpleLiteralForm = S.TaggedStruct("Simple", {}).pipe(
+  $I.annoteSchema("SimpleLiteralForm", {
+    description: "Form of a simple literal, whose datatype is xsd:string.",
+  })
+);
+
+/**
+ * **Example** (Accept simple literal form type)
+ *
+ * ```ts
+ * import type { SimpleLiteralForm } from "@beep/rdf/Rdf"
+ *
+ * const form: SimpleLiteralForm = { _tag: "Simple" }
+ * console.log(form._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SimpleLiteralForm = typeof SimpleLiteralForm.Type;
+
+const TypedLiteralFormChecks = S.makeFilterGroup(
+  [
+    S.makeFilter(
+      (form: { readonly datatype: { readonly value: string } }) =>
+        form.datatype.value !== XSD_STRING_IRI && form.datatype.value !== RDF_LANG_STRING_IRI,
+      $I.annote("TypedLiteralFormDatatypeCheck", {
+        title: "Typed Literal Datatype",
+        description: "A typed literal names neither xsd:string nor rdf:langString.",
+        message: "Typed literals must not use xsd:string or rdf:langString; use the Simple or LangTagged form",
+      })
+    ),
+  ],
+  $I.annote("TypedLiteralFormChecks", {
+    title: "Typed Literal Form",
+    description: "Checks for typed literal forms.",
+  })
+);
+
+/**
+ * **Example** (Decode typed literal form)
+ *
+ * ```ts import.meta.vitest name="Decode typed literal form"
+ * import * as S from "effect/Schema"
+ * import { TypedLiteralForm } from "@beep/rdf/Rdf"
+ *
+ * const form = S.decodeUnknownSync(TypedLiteralForm)({
+ *   _tag: "Typed",
+ *   datatype: { termType: "NamedNode", value: "http://www.w3.org/2001/XMLSchema#integer" }
+ * })
+ * form.datatype.value // => "http://www.w3.org/2001/XMLSchema#integer"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TypedLiteralForm = S.TaggedStruct("Typed", { datatype: NamedNode }).pipe(
+  S.check(TypedLiteralFormChecks),
+  $I.annoteSchema("TypedLiteralForm", {
+    description: "Form of a typed literal, whose datatype is neither xsd:string nor rdf:langString.",
+  })
+);
+
+/**
+ * **Example** (Accept typed literal form type)
+ *
+ * ```ts
+ * import type { TypedLiteralForm } from "@beep/rdf/Rdf"
+ *
+ * const tagOf = (form: TypedLiteralForm) => form._tag
+ * console.log(tagOf)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TypedLiteralForm = typeof TypedLiteralForm.Type;
+
+/**
+ * **Example** (Decode language-tagged literal form)
+ *
+ * ```ts import.meta.vitest name="Decode language-tagged literal form"
+ * import * as S from "effect/Schema"
+ * import { LangTaggedLiteralForm } from "@beep/rdf/Rdf"
+ *
+ * S.decodeUnknownSync(LangTaggedLiteralForm)({ _tag: "LangTagged", language: "EN" }).language // => "en"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LangTaggedLiteralForm = S.TaggedStruct("LangTagged", { language: LanguageTag }).pipe(
+  $I.annoteSchema("LangTaggedLiteralForm", {
+    description: "Form of a language-tagged literal, whose datatype is rdf:langString.",
+  })
+);
+
+/**
+ * **Example** (Accept language-tagged literal form type)
+ *
+ * ```ts
+ * import type { LangTaggedLiteralForm } from "@beep/rdf/Rdf"
+ *
+ * const languageOf = (form: LangTaggedLiteralForm) => form.language
+ * console.log(languageOf)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LangTaggedLiteralForm = typeof LangTaggedLiteralForm.Type;
+
+/**
+ * The three cases of an RDF literal: simple, typed and language-tagged.
+ *
+ * **Example** (Match a literal form)
+ *
+ * ```ts import.meta.vitest name="Match a literal form"
+ * import { LiteralForm } from "@beep/rdf/Rdf"
+ *
+ * LiteralForm.match({ _tag: "Simple" }, {
+ *   Simple: () => "simple",
+ *   Typed: () => "typed",
+ *   LangTagged: () => "tagged"
+ * }) // => "simple"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LiteralForm = S.Union([SimpleLiteralForm, TypedLiteralForm, LangTaggedLiteralForm]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("LiteralForm", {
+    description: "The simple, typed or language-tagged form of an RDF literal.",
+  })
+);
+
+/**
+ * **Example** (Accept literal form type)
+ *
+ * ```ts
+ * import type { LiteralForm } from "@beep/rdf/Rdf"
+ *
+ * const form: LiteralForm = { _tag: "Simple" }
+ * console.log(form._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LiteralForm = typeof LiteralForm.Type;
+
+/**
+ * **Example** (Construct literal form refusal)
+ *
+ * ```ts
+ * import { LiteralFormRefused } from "@beep/rdf/Rdf"
+ * import * as O from "effect/Option"
+ *
+ * const error = LiteralFormRefused.make({
+ *   value: "x",
+ *   datatype: "http://www.w3.org/2001/XMLSchema#integer",
+ *   language: O.some("en")
+ * })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LiteralFormRefused extends S.TaggedError<LiteralFormRefused, { readonly brand: unique symbol }>(
+  $I`LiteralFormRefused`
+)(
+  "LiteralFormRefused",
+  {
+    value: S.String,
+    datatype: S.String,
+    language: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annoteError<LiteralFormRefused>("LiteralFormRefused", {
+    description: "A literal whose datatype and language tag name no RDF literal form.",
+  })
+) {}
+
+/**
+ * Engine-shaped literal parts accepted by {@link Literal.fromParts}.
+ *
+ * **Example** (Construct literal parts)
+ *
+ * ```ts
+ * import { LiteralParts } from "@beep/rdf/Rdf"
+ *
+ * const parts = LiteralParts.make({ value: "1", datatype: "http://www.w3.org/2001/XMLSchema#integer" })
+ * console.log(parts.value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LiteralParts extends S.Opaque<LiteralParts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    value: S.String,
+    datatype: S.String,
+    language: S.optionalKey(S.String),
+  }).pipe(
+    $I.annoteSchema("LiteralParts", {
+      description: "Lexical form, datatype IRI and optional language tag of a literal as an RDF engine reports them.",
+    })
+  )
+) {}
+
+const refuseParts = (parts: typeof LiteralParts.Encoded): LiteralFormRefused =>
+  LiteralFormRefused.make({
+    value: parts.value,
+    datatype: parts.datatype,
+    language: O.fromUndefinedOr(parts.language),
+  });
+
+const formOfParts = (parts: typeof LiteralParts.Encoded): Result.Result<LiteralForm, LiteralFormRefused> =>
+  pipe(
+    O.fromUndefinedOr(parts.language),
+    O.filter(Str.isNonEmpty),
+    O.match({
+      onNone: () =>
+        Match.value(parts.datatype).pipe(
+          Match.when(XSD_STRING_IRI, () => Result.succeed<LiteralForm>({ _tag: "Simple" })),
+          Match.when(RDF_LANG_STRING_IRI, () => Result.fail(refuseParts(parts))),
+          Match.orElse((datatype) =>
+            pipe(
+              S.decodeResult(TypedLiteralForm)({
+                _tag: "Typed",
+                datatype: { termType: "NamedNode", value: datatype },
+              }),
+              Result.mapError(() => refuseParts(parts))
+            )
+          )
+        ),
+      onSome: (language) =>
+        parts.datatype === RDF_LANG_STRING_IRI
+          ? pipe(
+              S.decodeResult(LangTaggedLiteralForm)({ _tag: "LangTagged", language }),
+              Result.mapError(() => refuseParts(parts))
+            )
+          : Result.fail(refuseParts(parts)),
+    })
+  );
+
+const noLanguage = constant(O.none<LanguageTag>());
+
+/**
+ * **Details**
+ *
+ * A simple literal has datatype `xsd:string`, a typed literal names any other
+ * datatype except `rdf:langString`, and a language-tagged literal has datatype
+ * `rdf:langString`. `Literal.datatypeOf` and `Literal.languageOf` derive the
+ * RDF/JS accessors, and `Literal.fromParts` normalizes engine output.
+ *
  * **Example** (Decode RDF literal)
  *
  * ```ts import.meta.vitest name="Decode RDF literal"
@@ -388,10 +670,9 @@ export class BlankNode extends S.Opaque<BlankNode, { readonly brand: unique symb
  * const literal = S.decodeUnknownSync(Literal)({
  *   termType: "Literal",
  *   value: "Alice",
- *   language: "en",
- *   datatype: { termType: "NamedNode", value: "http://www.w3.org/2001/XMLSchema#string" }
+ *   form: { _tag: "LangTagged", language: "en" }
  * })
- * literal.termType // => "Literal"
+ * literal.form._tag // => "LangTagged"
  * ```
  *
  * @category models
@@ -401,11 +682,10 @@ export class Literal extends S.Opaque<Literal, { readonly brand: unique symbol }
   S.Struct({
     termType: S.tag("Literal"),
     value: S.String,
-    language: S.OptionFromOptionalKey(LanguageTag).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    datatype: NamedNode,
+    form: LiteralForm,
   }).pipe(
     $I.annoteSchema("Literal", {
-      description: "RDF literal value aligned with RDF/JS.",
+      description: "RDF literal value aligned with RDF/JS, with a simple, typed or language-tagged form.",
       semanticSchemaMetadata: literalMetadata,
     })
   )
@@ -413,6 +693,29 @@ export class Literal extends S.Opaque<Literal, { readonly brand: unique symbol }
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
 
   static readonly is = S.is(Literal);
+
+  static readonly fromParts = (parts: typeof LiteralParts.Encoded): Result.Result<Literal, LiteralFormRefused> =>
+    Result.map(formOfParts(parts), (form) => Literal.make({ termType: "Literal", value: parts.value, form }));
+
+  static readonly typed = (value: string, datatype: string): Literal =>
+    Result.getOrThrow(Literal.fromParts({ value, datatype }));
+
+  static readonly langTagged = (value: string, language: string): Literal =>
+    Result.getOrThrow(Literal.fromParts({ value, datatype: RDF_LANG_STRING_IRI, language }));
+
+  static readonly datatypeOf = (literal: Literal): NamedNode =>
+    LiteralForm.match(literal.form, {
+      Simple: () => NamedNode.make({ termType: "NamedNode", value: IRI.make(XSD_STRING_IRI) }),
+      Typed: (form) => form.datatype,
+      LangTagged: () => NamedNode.make({ termType: "NamedNode", value: IRI.make(RDF_LANG_STRING_IRI) }),
+    });
+
+  static readonly languageOf = (literal: Literal): O.Option<LanguageTag> =>
+    LiteralForm.match(literal.form, {
+      Simple: noLanguage,
+      Typed: noLanguage,
+      LangTagged: (form) => O.some(form.language),
+    });
 }
 
 /**
@@ -578,7 +881,7 @@ const ObjectTermUntagged = ObjectTermDefinition.pipe(
  * const object = S.decodeUnknownSync(ObjectTerm)({
  *   termType: "Literal",
  *   value: "Alice",
- *   datatype: { termType: "NamedNode", value: "http://www.w3.org/2001/XMLSchema#string" }
+ *   form: { _tag: "Simple" }
  * })
  * object.termType // => "Literal"
  * ```
@@ -663,7 +966,7 @@ export type GraphTerm = typeof GraphTerm.Type;
  *   object: {
  *     termType: "Literal",
  *     value: "Alice",
- *     datatype: { termType: "NamedNode", value: "http://www.w3.org/2001/XMLSchema#string" }
+ *     form: { _tag: "Simple" }
  *   },
  *   graph: { termType: "DefaultGraph", value: "" }
  * })
@@ -687,19 +990,43 @@ export class Quad extends S.Opaque<Quad, { readonly brand: unique symbol }>()(
   )
 ) {}
 
+const byEncodedQuadLine: Order.Order<typeof Quad.Encoded> = Order.mapInput(Order.String, (quad) =>
+  serializeQuadShape(quad)
+);
+
+const QuadSet = Quad.pipe(
+  S.toEncoded,
+  S.Array,
+  S.decodeTo(
+    S.HashSet(Quad),
+    SchemaTransformation.transform({
+      decode: HashSet.fromIterable,
+      encode: (quads: HashSet.HashSet<typeof Quad.Encoded>): ReadonlyArray<typeof Quad.Encoded> =>
+        A.sort(A.fromIterable(quads), byEncodedQuadLine),
+    })
+  )
+);
+
 /**
+ * **Details**
+ *
+ * The decoded quads are a `HashSet`, so `Equal` on datasets is labelled-set
+ * equality. The encoded quads are deduplicated and sorted by each quad's
+ * canonical N-Quads line, so one quad set has one wire form.
+ *
  * **Example** (Build dataset from quads)
  *
  * ```ts import.meta.vitest name="Build dataset from quads"
+ * import * as HashSet from "effect/HashSet"
  * import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
  *
  * const quad = makeQuad(
  *   makeNamedNode("https://example.org/person/alice"),
  *   makeNamedNode("https://schema.org/name"),
- *   makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string")
+ *   makeLiteral("Alice")
  * )
- * const dataset = makeDataset([quad])
- * dataset.quads.length // => 1
+ * const dataset = makeDataset([quad, quad])
+ * HashSet.size(dataset.quads) // => 1
  * ```
  *
  * @category models
@@ -707,10 +1034,10 @@ export class Quad extends S.Opaque<Quad, { readonly brand: unique symbol }>()(
  */
 export class Dataset extends S.Opaque<Dataset, { readonly brand: unique symbol }>()(
   S.Struct({
-    quads: S.Array(Quad),
+    quads: QuadSet,
   }).pipe(
     $I.annoteSchema("Dataset", {
-      description: "Dataset wrapper for RDF quads.",
+      description: "Set of RDF quads whose encoded form is sorted by canonical N-Quads line.",
       semanticSchemaMetadata: datasetMetadata,
     })
   )
@@ -876,86 +1203,30 @@ export const makeBlankNode = (value: string): BlankNode =>
   });
 
 /**
- * **Example** (Literal language options)
+ * Build a simple RDF literal, whose datatype is `xsd:string`.
  *
- * ```ts
- * import { MakeLiteralOptions } from "@beep/rdf/Rdf"
- * import * as O from "effect/Option"
+ * **Details**
  *
- * const options = MakeLiteralOptions.make({ language: O.some("en") })
- * console.log(options)
- * ```
+ * Typed literals use `Literal.typed` and language-tagged literals use
+ * `Literal.langTagged`.
  *
- * @category utilities
- * @since 0.0.0
- */
-export class MakeLiteralOptions extends S.Opaque<MakeLiteralOptions, { readonly brand: unique symbol }>()(
-  S.Struct({
-    language: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe(
-    $I.annoteSchema("MakeLiteralOptions", {
-      description: "Optional language settings for makeLiteral.",
-    })
-  )
-) {}
-
-/**
- * Constructor input accepted by {@link makeLiteral}.
+ * **Example** (Create simple RDF literal)
  *
- * **Example** (Type literal options input)
- *
- * ```ts
- * import type { MakeLiteralOptionsInput } from "@beep/rdf/Rdf"
- *
- * const options: MakeLiteralOptionsInput = { language: "en" }
- * console.log(options.language)
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export type MakeLiteralOptionsInput = typeof MakeLiteralOptions.Encoded;
-
-const isMakeLiteralDataFirst = (args: IArguments): boolean => args.length >= 2 && P.isString(args[1]);
-
-const makeLiteralInternal = (value: string, datatype: string, options: MakeLiteralOptionsInput = {}): Literal =>
-  pipe(
-    Literal.decodeUnknownResult({
-      termType: "Literal",
-      value,
-      datatype: makeNamedNode(datatype),
-      ...O.getSomesStruct({ language: O.fromUndefinedOr(options.language) }),
-    }),
-    Result.getOrThrow
-  );
-
-/**
- * Build an RDF literal.
- *
- * **Example** (Create RDF literal)
- *
- * ```ts import.meta.vitest name="Create RDF literal"
+ * ```ts import.meta.vitest name="Create simple RDF literal"
  * import { makeLiteral } from "@beep/rdf/Rdf"
  *
- * const lit = makeLiteral("hello", "http://www.w3.org/2001/XMLSchema#string", { language: "en" })
- * lit.termType // => "Literal"
+ * const lit = makeLiteral("hello")
+ * lit.form._tag // => "Simple"
  * lit.value // => "hello"
  * ```
  *
  * @param value - Lexical form.
- * @param datatype - Datatype IRI.
- * @param options - Optional literal settings; pass the language tag as
- * `{ language }` rather than a bare string.
- * @returns Decoded RDF literal.
+ * @returns Simple RDF literal.
  * @category utilities
  * @since 0.0.0
  */
-export const makeLiteral: {
-  (value: string, datatype: string): Literal;
-  (value: string, datatype: string, options: MakeLiteralOptionsInput): Literal;
-  (datatype: string): (value: string) => Literal;
-  (datatype: string, options: MakeLiteralOptionsInput): (value: string) => Literal;
-} = dual(isMakeLiteralDataFirst, makeLiteralInternal);
+export const makeLiteral = (value: string): Literal =>
+  Literal.make({ termType: "Literal", value, form: { _tag: "Simple" } });
 
 /**
  * **Example** (Accept MakeQuadOptions type)
@@ -1026,7 +1297,7 @@ const makeDefaultGraph = (): DefaultGraph =>
  *
  * const subject = makeNamedNode("https://example.org/alice")
  * const predicate = makeNamedNode("https://schema.org/name")
- * const object = makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string")
+ * const object = makeLiteral("Alice")
  * const quad = makeQuad(subject, predicate, object)
  * quad.subject.value // => "https://example.org/alice"
  * ```
@@ -1062,88 +1333,116 @@ export const makeQuad: {
  * **Example** (Create dataset from quads)
  *
  * ```ts import.meta.vitest name="Create dataset from quads"
+ * import * as HashSet from "effect/HashSet"
  * import { makeNamedNode, makeLiteral, makeQuad, makeDataset } from "@beep/rdf/Rdf"
  *
  * const quad = makeQuad(
  *   makeNamedNode("https://example.org/alice"),
  *   makeNamedNode("https://schema.org/name"),
- *   makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string")
+ *   makeLiteral("Alice")
  * )
  * const dataset = makeDataset([quad])
- * dataset.quads.length // => 1
+ * HashSet.size(dataset.quads) // => 1
  * ```
  *
- * @param quads - Input quads.
- * @returns Decoded dataset.
+ * @param quads - Input quads; repeated quads collapse.
+ * @returns Dataset over the distinct quads.
  * @category utilities
  * @since 0.0.0
  */
-export const makeDataset = (quads: ReadonlyArray<Quad>): Dataset => Dataset.make({ quads: A.fromIterable(quads) });
+export const makeDataset = (quads: Iterable<Quad>): Dataset => Dataset.make({ quads: HashSet.fromIterable(quads) });
 
-// Escape an RDF literal lexical form for the N-Triples/N-Quads `STRING_LITERAL_QUOTE`
-// production so attacker-controlled quotes, backslashes, or control characters cannot
-// close the quoted string and inject additional statements. A single pass keeps the
-// mapping order-independent (the backslash branch never re-matches its own output).
-const escapeLiteralLexical: (value: string) => string = Str.replaceAllWith(/[\\"\n\r\t\b\f]/g, (ch) =>
+const toUchar = (code: number): string => `\\u${pipe(code.toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`;
+
+const escapeLiteralLexical: (value: string) => string = Str.replaceAllWith(/[\u0000-\u001F\u007F"\\]/g, (ch) =>
   Match.value(ch).pipe(
-    Match.when("\\", () => "\\\\"),
-    Match.when('"', () => '\\"'),
-    Match.when("\n", () => "\\n"),
-    Match.when("\r", () => "\\r"),
-    Match.when("\t", () => "\\t"),
     Match.when("\b", () => "\\b"),
+    Match.when("\t", () => "\\t"),
+    Match.when("\n", () => "\\n"),
     Match.when("\f", () => "\\f"),
-    Match.orElse(() => ch)
+    Match.when("\r", () => "\\r"),
+    Match.when('"', () => '\\"'),
+    Match.when("\\", () => "\\\\"),
+    Match.orElse((other) => pipe(Str.charCodeAt(0)(other), O.map(toUchar), O.getOrElse(constant(other))))
   )
 );
 
-// Encode a single out-of-grammar character into a `_uXXXX` escape. The output only ever
-// contains `[A-Za-z0-9_]`, all of which are valid in an N-Triples `BLANK_NODE_LABEL`.
 const toBlankNodeEscape = (ch: string): string =>
   pipe(
     Str.codePointAt(0)(ch),
-    O.match({
-      onNone: () => ch,
-      onSome: (code) => `_u${pipe(code.toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`,
+    O.map((code) => `_u${pipe(code.toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`),
+    O.getOrElse(constant(ch))
+  );
+
+const encodeBlankNodeLabel: (value: string) => string = Str.replaceAllWith(/[^A-Za-z0-9]/g, toBlankNodeEscape);
+
+const serializeLiteralShape = (literal: typeof Literal.Encoded): string =>
+  Match.value(literal.form).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      Simple: () => `"${escapeLiteralLexical(literal.value)}"`,
+      Typed: (form) => `"${escapeLiteralLexical(literal.value)}"^^<${form.datatype.value}>`,
+      LangTagged: (form) => `"${escapeLiteralLexical(literal.value)}"@${form.language}`,
     })
   );
 
-// Encode an RDF blank-node label into a deterministic, grammar-safe form. Blank-node
-// labels have no in-grammar escape mechanism, so any character outside `[A-Za-z0-9]`
-// (including statement delimiters and whitespace) is percent-style encoded, preventing
-// raw-label injection while preserving ordinary alphanumeric labels unchanged.
-const encodeBlankNodeLabel: (value: string) => string = Str.replaceAllWith(/[^A-Za-z0-9]/g, toBlankNodeEscape);
+const serializeTermShape = (term: typeof Term.Encoded): string =>
+  Match.value(term).pipe(
+    Match.discriminatorsExhaustive("termType")({
+      NamedNode: (node) => `<${node.value}>`,
+      BlankNode: (node) => `_:${encodeBlankNodeLabel(node.value)}`,
+      Literal: serializeLiteralShape,
+      DefaultGraph: () => "",
+    })
+  );
+
+const serializeQuadShape = (quad: typeof Quad.Encoded): string =>
+  pipe(
+    [
+      serializeTermShape(quad.subject),
+      serializeTermShape(quad.predicate),
+      serializeTermShape(quad.object),
+      serializeTermShape(quad.graph),
+    ],
+    A.filter(Str.isNonEmpty),
+    A.join(" "),
+    (line) => `${line} .`
+  );
 
 /**
- * Serialize an RDF term to a deterministic lexical form.
+ * Serialize an RDF term in canonical N-Triples form.
+ *
+ * **Details**
+ *
+ * Literals use the RDFC-1.0 escape table: `ECHAR` for backspace, tab, line
+ * feed, form feed, carriage return, quote and backslash, and `\uXXXX` for the
+ * other control characters and DEL. A simple literal prints without
+ * `^^<xsd:string>`, a language tag prints lowercase, and the default graph
+ * prints as the empty string. Blank-node labels outside `[A-Za-z0-9]` are
+ * re-encoded into a grammar-safe form.
  *
  * **Example** (Serialize named node term)
  *
- * ```ts
- * import { makeNamedNode, serializeTerm } from "@beep/rdf/Rdf"
+ * ```ts import.meta.vitest name="Serialize named node term"
+ * import { makeLiteral, makeNamedNode, serializeTerm } from "@beep/rdf/Rdf"
  *
- * const serialized = serializeTerm(makeNamedNode("https://example.org/x"))
- * console.log(serialized) // "<https://example.org/x>"
+ * serializeTerm(makeNamedNode("https://example.org/x")) // => "<https://example.org/x>"
+ * serializeTerm(makeLiteral("a\tb")) // => "\"a\\tb\""
  * ```
  *
  * @param term - RDF term.
- * @returns Deterministic term serialization.
+ * @returns Canonical term serialization.
  * @category utilities
  * @since 0.0.0
  */
-export const serializeTerm = (term: Term): string =>
-  Term.match(term, {
-    NamedNode: (value) => `<${value.value}>`,
-    BlankNode: (value) => `_:${encodeBlankNodeLabel(value.value)}`,
-    Literal: (value) =>
-      O.isSome(value.language)
-        ? `"${escapeLiteralLexical(value.value)}"@${Str.toLowerCase(value.language.value)}`
-        : `"${escapeLiteralLexical(value.value)}"^^<${value.datatype.value}>`,
-    DefaultGraph: () => "default",
-  });
+export const serializeTerm = (term: Term): string => serializeTermShape(term);
 
 /**
- * Serialize an RDF quad to a deterministic lexical form.
+ * Serialize an RDF quad as one canonical N-Quads line without its newline.
+ *
+ * **Details**
+ *
+ * The default graph is omitted, so a default-graph quad prints as an
+ * N-Triples statement.
  *
  * **Example** (Serialize RDF quad)
  *
@@ -1153,67 +1452,14 @@ export const serializeTerm = (term: Term): string =>
  * const quad = makeQuad(
  *   makeNamedNode("https://example.org/alice"),
  *   makeNamedNode("https://schema.org/name"),
- *   makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string")
+ *   makeLiteral("Alice")
  * )
- * typeof serializeQuad(quad) // => "string"
+ * serializeQuad(quad) // => "<https://example.org/alice> <https://schema.org/name> \"Alice\" ."
  * ```
  *
  * @param quad - RDF quad.
- * @returns Deterministic quad serialization.
+ * @returns Canonical quad serialization.
  * @category utilities
  * @since 0.0.0
  */
-export const serializeQuad = (quad: Quad): string =>
-  `${serializeTerm(quad.subject)} ${serializeTerm(quad.predicate)} ${serializeTerm(quad.object)} ${serializeTerm(quad.graph)} .`;
-
-const byQuadLexicalAscending: Order.Order<Quad> = Order.mapInput(Order.String, serializeQuad);
-
-/**
- * Sort dataset quads by deterministic quad serialization.
- *
- * **Example** (Sort empty dataset quads)
- *
- * ```ts import.meta.vitest name="Sort empty dataset quads"
- * import { makeDataset, sortDatasetQuads } from "@beep/rdf/Rdf"
- *
- * const dataset = makeDataset([])
- * const sorted = sortDatasetQuads(dataset)
- * sorted.length // => 0
- * ```
- *
- * @param dataset - RDF dataset.
- * @returns Sorted quad array.
- * @category utilities
- * @since 0.0.0
- */
-export const sortDatasetQuads = (dataset: Dataset): ReadonlyArray<Quad> =>
-  A.sort(dataset.quads, byQuadLexicalAscending);
-
-/**
- * Compare datasets by sorted quad serialization.
- *
- * **Example** (Compare empty datasets)
- *
- * ```ts import.meta.vitest name="Compare empty datasets"
- * import { makeDataset, areDatasetsEquivalent } from "@beep/rdf/Rdf"
- *
- * const a = makeDataset([])
- * const b = makeDataset([])
- * areDatasetsEquivalent(a, b) // => true
- * ```
- *
- * @param left - Left dataset.
- * @param right - Right dataset.
- * @returns `true` when both datasets share the same sorted quad serialization.
- * @category utilities
- * @since 0.0.0
- */
-export const areDatasetsEquivalent: {
-  (right: Dataset): (left: Dataset) => boolean;
-  (left: Dataset, right: Dataset): boolean;
-} = dual(
-  2,
-  (left: Dataset, right: Dataset): boolean =>
-    pipe(sortDatasetQuads(left), A.map(serializeQuad), A.join("\n")) ===
-    pipe(sortDatasetQuads(right), A.map(serializeQuad), A.join("\n"))
-);
+export const serializeQuad = (quad: Quad): string => serializeQuadShape(quad);
