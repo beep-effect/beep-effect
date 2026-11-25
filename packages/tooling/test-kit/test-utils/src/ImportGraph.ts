@@ -149,8 +149,6 @@ export const fromGlob: {
 );
 
 /**
- * A module the walk reached has no text in the {@link Sources} map.
- *
  * **Example** (Construct a missing-source error)
  *
  * ```ts
@@ -216,8 +214,6 @@ export const moduleImportsOf: {
 );
 
 /**
- * What one entry module reaches at runtime.
- *
  * **Example** (Construct a closure value)
  *
  * ```ts

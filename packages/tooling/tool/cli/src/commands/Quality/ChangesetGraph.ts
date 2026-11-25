@@ -34,8 +34,6 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /**
- * Public changeset graph error export.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -72,8 +70,6 @@ class RetiredChangesetPackages extends S.Opaque<RetiredChangesetPackages, { read
 ) {}
 
 /**
- * A package name referenced by a changeset file.
- *
  * **Example** (Make package reference)
  *
  * ```ts
@@ -104,8 +100,6 @@ export class ChangesetGraphPackageReference extends S.Opaque<
 ) {}
 
 /**
- * Summary emitted by the changeset package graph guard.
- *
  * **Example** (Make graph summary)
  *
  * ```ts

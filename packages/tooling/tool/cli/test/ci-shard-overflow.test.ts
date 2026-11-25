@@ -166,7 +166,7 @@ describe("shard overflow helpers", () => {
         ShardOverflowJob.make({ status: "queued", labels: ["windows-latest"] }),
         ShardOverflowJob.make({ status: "in_progress", labels: ["ubuntu-24.04"] }),
         ShardOverflowJob.make({ status: "completed", labels: ["ubuntu-24.04"] }),
-        ShardOverflowJob.make({ status: "queued", labels: ["beep-ec2-heavy"] }),
+        ShardOverflowJob.make({ status: "queued", labels: ["beep-fleet-heavy"] }),
         ShardOverflowJob.make({ status: "queued", labels: [SHARD_OVERFLOW_RUNNER_LABEL] }),
         ShardOverflowJob.make({ status: "in_progress", labels: [SHARD_OVERFLOW_RUNNER_LABEL] }),
         ShardOverflowJob.make({ status: "completed", labels: [SHARD_OVERFLOW_RUNNER_LABEL] }),
@@ -192,11 +192,11 @@ describe("shard overflow helpers", () => {
         })
       )
     ).toBe(
-      "shard-overflow: routed; 1 of 2 Test Unit partitions to beep-shard-overflow (predicted hosted wait 11m00s; 1 overflow VMs free)"
+      "shard-overflow: routed; 1 of 2 Test Unit partitions to beep-fleet-overflow (predicted hosted wait 11m00s; 1 overflow VMs free)"
     );
     expect(
       renderShardOverflowSummary(ShardOverflowDecision.make({ reason: "disabled", hosted: ["unit-a"], overflow: [] }))
-    ).toBe("shard-overflow: disabled; 0 of 1 Test Unit partitions to beep-shard-overflow");
+    ).toBe("shard-overflow: disabled; 0 of 1 Test Unit partitions to beep-fleet-overflow");
   });
 });
 
@@ -281,11 +281,11 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
           "repos/{owner}/{repo}/actions/runs?status=queued": runsAnswer([12, 13]),
           "repos/{owner}/{repo}/actions/runs/11/jobs": jobsAnswer([
             ...queuedHosted(70),
-            ["in_progress", "beep-shard-overflow"],
+            ["in_progress", "beep-fleet-overflow"],
           ]),
           "repos/{owner}/{repo}/actions/runs/12/jobs": jobsAnswer(queuedHosted(50)),
           "repos/{owner}/{repo}/actions/runs/13/jobs": jobsAnswer(
-            A.replicate(["queued", "beep-shard-overflow"] as const, 45)
+            A.replicate(["queued", "beep-fleet-overflow"] as const, 45)
           ),
         })
       );
@@ -467,18 +467,18 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
       // Every runner that is not a GitHub-hosted image, by file, job and label. A new self-hosted job
       // must be added here on purpose; check.yml reaches the overflow pool only through shard-overflow.yml.
       expect(selfHosted).toStrictEqual([
-        "cache-warm.yml:warm:beep-ec2-heavy",
+        "cache-warm.yml:warm:beep-fleet-heavy",
         "fleet-lane-probe.yml:lane-probe:${{ inputs.target_label }}",
-        "fleet-shadow-check.yml:shadow-probe:beep-ec2-heavy",
-        "heavy.yml:verify:beep-ec2-heavy",
-        "heavy.yml:check:beep-ec2-heavy",
-        "heavy.yml:docgen:beep-ec2-heavy",
-        "heavy.yml:doctest:beep-ec2-heavy",
-        "heavy.yml:build:beep-ec2-heavy",
-        "heavy.yml:producer-inspect:beep-ec2-heavy",
-        "heavy.yml:producer-prepare:beep-ec2-heavy",
-        "heavy.yml:producer-execute:beep-ec2-heavy",
-        "heavy.yml:local-pilot-observe:beep-ec2-heavy",
+        "fleet-shadow-check.yml:shadow-probe:beep-fleet-heavy",
+        "heavy.yml:verify:beep-fleet-heavy",
+        "heavy.yml:check:beep-fleet-heavy",
+        "heavy.yml:docgen:beep-fleet-heavy",
+        "heavy.yml:doctest:beep-fleet-heavy",
+        "heavy.yml:build:beep-fleet-heavy",
+        "heavy.yml:producer-inspect:beep-fleet-heavy",
+        "heavy.yml:producer-prepare:beep-fleet-heavy",
+        "heavy.yml:producer-execute:beep-fleet-heavy",
+        "heavy.yml:local-pilot-observe:beep-fleet-heavy",
         "release-desktop.yml:release-desktop:${{ matrix.os }}",
         `shard-overflow.yml:test-unit-shard:${SHARD_OVERFLOW_RUNNER_LABEL}`,
       ]);

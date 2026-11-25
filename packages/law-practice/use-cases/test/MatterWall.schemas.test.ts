@@ -1,7 +1,10 @@
 import { LawPrincipalId } from "@beep/law-practice-domain/values/LawClaim";
 import { GrantedScopes, LawPrincipal, MatterAccess, MatterDenialReason } from "@beep/law-practice-use-cases/MatterWall";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
@@ -30,7 +33,7 @@ describe("MatterWall schemas", () => {
   it.effect("refuses a denial without a declared reason", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(decodeAccess({ _tag: "Denied", reason: "hidden" }));
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -62,5 +65,28 @@ describe("MatterWall schemas", () => {
       const current = yield* LawPrincipal;
       expect(current.principal).toBe(7);
     }).pipe(Effect.provideService(LawPrincipal, { principal: LawPrincipalId.make(7) }))
+  );
+});
+
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
+
+describe("MatterWall schema-derived values", () => {
+  it.effect("round-trips every generated MatterAccess through its encoding", () =>
+    roundTripsEveryGeneratedValue(MatterAccess)
+  );
+  it.effect("round-trips every generated GrantedScopes through its encoding", () =>
+    roundTripsEveryGeneratedValue(GrantedScopes)
   );
 });

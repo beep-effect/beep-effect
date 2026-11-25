@@ -97,8 +97,6 @@ export class Totals extends S.Opaque<Totals, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * One gate run as a typed report.
- *
  * **Details**
  *
  * `inputFingerprint` is opaque: the Turbo task hash or a digest of the head

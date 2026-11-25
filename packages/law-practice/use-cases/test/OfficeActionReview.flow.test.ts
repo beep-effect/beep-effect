@@ -1,21 +1,34 @@
+import {
+  ArchiveExportProcessFileResult,
+  ArchiveExportResult,
+  ExtractedProcessFileResult,
+  ExtractionResult,
+  ProcessFileResult,
+  SkippedProcessFileResult,
+} from "@beep/file-processing/Extraction";
+import { FileProcessingService } from "@beep/file-processing/Service";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { verifyActivityRecord } from "@beep/jsonc/ActivityRecord";
 import { decodeExtractionHandoff, encodeExtractionHandoff } from "@beep/langextract/Handoff";
+import { LangExtractService } from "@beep/langextract/Service";
 import {
   LawClaimArrows,
   mintDistinctionId,
   OfficeActionDistinctionGate,
 } from "@beep/law-practice-domain/values/LawClaim";
-import { distinctionPropositionOf } from "@beep/law-practice-use-cases/OfficeActionReview";
+import { makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw";
+import { distinctionPropositionOf, makeOfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { it } from "@beep/test-runner";
 import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableRef from "effect/MutableRef";
@@ -23,12 +36,21 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { missingOutput, modelOutput, text, unalignedOutput } from "./fixtures/office-action-review/fixture.ts";
 import {
+  missingOutput,
+  modelOutput,
+  overCapOutput,
+  text,
+  unalignedOutput,
+} from "./fixtures/office-action-review/fixture.ts";
+import {
+  authorityStaffing,
+  fixtureInput,
   fixturePrincipal,
   fixtureRevision,
   issueToken,
   makeLayer,
+  makeMemoryClaimStore,
   reviewScenario,
   secondRevision,
   unstaffedPrincipal,
@@ -69,6 +91,29 @@ const recordOf = (activities: HashSet.HashSet<ActivityRecord>, operation: TermIr
     O.getOrThrow
   );
 
+const endsNoEarlierThanItStarts = (record: ActivityRecord): boolean =>
+  DateTime.isLessThanOrEqualTo(record.start.started, record.ended);
+
+const feeds = (producer: ActivityRecord, consumer: ActivityRecord): boolean =>
+  HashSet.size(HashSet.intersection(producer.generated, consumer.start.used)) > 0;
+
+const startsAfterTheProducersOfItsInputs = (log: ReadonlyArray<ActivityRecord>): boolean =>
+  A.every(log, (consumer) =>
+    A.every(
+      A.filter(log, (producer) => feeds(producer, consumer)),
+      (producer) => DateTime.isLessThanOrEqualTo(producer.ended, consumer.start.started)
+    )
+  );
+
+const generatedByAnotherStep = (log: ReadonlyArray<ActivityRecord>, record: ActivityRecord, id: ContentHash) =>
+  A.some(log, (other) => other.id !== record.id && HashSet.has(other.generated, id));
+
+const usesOnlyWhatAnotherStepGenerated = (log: ReadonlyArray<ActivityRecord>, extractId: ActivityRecord["id"]) =>
+  A.every(
+    A.filter(log, (record) => record.id !== extractId),
+    (record) => A.every(A.fromIterable(record.start.used), (used) => generatedByAnotherStep(log, record, used))
+  );
+
 const proposedScenario = Effect.fn("OfficeActionFlow.proposedScenario")(function* (current: string) {
   const scenario = yield* reviewScenario({ principal: fixturePrincipal, current });
   const result = yield* scenario.review.review(scenario.input);
@@ -78,6 +123,72 @@ const proposedScenario = Effect.fn("OfficeActionFlow.proposedScenario")(function
     TextAnchorVerificationReceipt.make(HashMap.getUnsafe(handoff.document.anchors, occurrence).receipt),
   ];
   return { ...scenario, result, handoff, occurrence, grounding };
+});
+
+const skipped = (processed: ProcessFileResult): ProcessFileResult =>
+  SkippedProcessFileResult.make({
+    engine: processed.engine,
+    format: processed.format,
+    operationId: processed.operationId,
+    resultKind: "skipped",
+    skipReason: "format-out-of-scope",
+    sourceArtifactId: processed.sourceArtifactId,
+    warnings: [],
+  });
+const archived = (processed: ProcessFileResult): ProcessFileResult =>
+  ArchiveExportProcessFileResult.make({
+    archiveExport: ArchiveExportResult.make({
+      children: [],
+      engine: processed.engine,
+      operationId: processed.operationId,
+      sourceArtifactId: processed.sourceArtifactId,
+      warnings: [],
+    }),
+    engine: processed.engine,
+    format: processed.format,
+    operationId: processed.operationId,
+    resultKind: "archive-exported",
+    sourceArtifactId: processed.sourceArtifactId,
+    warnings: [],
+  });
+const extractedWith =
+  (fields: { readonly engineVersion?: string; readonly text?: string }) =>
+  (processed: ProcessFileResult): ProcessFileResult =>
+    ProcessFileResult.match(processed, {
+      "archive-exported": (archive): ProcessFileResult => archive,
+      extracted: (extracted) =>
+        ExtractedProcessFileResult.make({
+          ...extracted,
+          extraction: ExtractionResult.make({
+            engine: extracted.extraction.engine,
+            format: extracted.extraction.format,
+            metadata: extracted.extraction.metadata,
+            operationId: extracted.extraction.operationId,
+            sourceArtifactId: extracted.extraction.sourceArtifactId,
+            warnings: extracted.extraction.warnings,
+            ...fields,
+          }),
+        }),
+      skipped: (skip): ProcessFileResult => skip,
+    });
+const refusedBy = Effect.fn("OfficeActionFlow.refusedBy")(function* (
+  reshape: (processed: ProcessFileResult) => ProcessFileResult
+) {
+  const digest = yield* Digest.Digest;
+  const fileProcessing = yield* FileProcessingService;
+  const langExtract = yield* LangExtractService;
+  const store = yield* makeMemoryClaimStore();
+  const review = makeOfficeActionReview({
+    authority: authorityStaffing(fixturePrincipal),
+    digest,
+    fileProcessing: { ...fileProcessing, process: flow(fileProcessing.process, Effect.map(reshape)) },
+    irToLaw: makeIrToLaw(),
+    principal: fixturePrincipal,
+    proposals: store.proposals,
+    langExtract,
+  });
+  const input = yield* fixtureInput();
+  return yield* review.review(input).pipe(Effect.flip);
 });
 
 describe("office-action annotation flow", () => {
@@ -143,17 +254,10 @@ describe("office-action annotation flow", () => {
         expect(log).toHaveLength(3);
         const verified = yield* Effect.forEach(log, verifyActivityRecord, { concurrency: 1 });
         expect(verified).toHaveLength(3);
-        for (const record of log) expect(DateTime.isLessThanOrEqualTo(record.start.started, record.ended)).toBe(true);
-        for (const producer of log)
-          for (const consumer of log)
-            if (HashSet.size(HashSet.intersection(producer.generated, consumer.start.used)) > 0)
-              expect(DateTime.isLessThanOrEqualTo(producer.ended, consumer.start.started)).toBe(true);
+        expect(A.every(log, endsNoEarlierThanItStarts)).toBe(true);
+        expect(startsAfterTheProducersOfItsInputs(log)).toBe(true);
         const extract = recordOf(result.activities, ExtractTerm);
-        const generatedElsewhere = (record: ActivityRecord, id: ContentHash) =>
-          A.some(log, (other) => other.id !== record.id && HashSet.has(other.generated, id));
-        for (const record of log)
-          if (record.id !== extract.id)
-            for (const used of record.start.used) expect(generatedElsewhere(record, used)).toBe(true);
+        expect(usesOnlyWhatAnotherStepGenerated(log, extract.id)).toBe(true);
         expect(HashSet.has(recordOf(result.activities, ProposeClaimTerm).generated, result.proposed.claim)).toBe(true);
         const annotationAndOccurrenceIds = HashSet.union(
           HashSet.fromIterable<ContentHash>(handoff.document.annotations.pipe(HashMap.keys)),
@@ -242,6 +346,32 @@ describe("office-action annotation flow", () => {
     );
   });
 
+  it.layer(makeLayer(modelOutput), { timeout: "10 seconds" })("unusable extraction results", (it) => {
+    it.effect(
+      "office-action review refuses a skipped, archived, textless or unversioned extraction before the model",
+      Effect.fnUntraced(function* () {
+        const refusals = yield* Effect.forEach(
+          [skipped, archived, extractedWith({ engineVersion: "1" }), extractedWith({ text })],
+          refusedBy,
+          { concurrency: 1 }
+        );
+        expect(A.map(refusals, (refusal) => refusal._tag)).toStrictEqual(
+          A.replicate("FileProcessingOperationError", 4)
+        );
+        expect(
+          A.map(refusals, (refusal) =>
+            refusal._tag === "FileProcessingOperationError" ? refusal.message : refusal._tag
+          )
+        ).toStrictEqual([
+          "Office-action review requires extracted text, received skipped.",
+          "Office-action review requires extracted text, received archive-exported.",
+          "Office-action review requires text extraction output.",
+          "Office-action review requires a versioned extractor.",
+        ]);
+      })
+    );
+  });
+
   it.layer(makeLayer(missingOutput), { timeout: "10 seconds" })("missing label", (it) => {
     it.effect(
       "office-action flow refuses a missing or unaligned label before the gate",
@@ -263,6 +393,22 @@ describe("office-action annotation flow", () => {
         if (unaligned._tag === "IrToLawExtractionError") {
           expect(unaligned.reason).toBe("required-extraction-unaligned");
           assertSome(unaligned.alignmentStatus, "unaligned");
+          assertSome(unaligned.residualReason, "unaligned");
+        }
+      })
+    );
+  });
+  it.layer(makeLayer(overCapOutput), { timeout: "10 seconds" })("over-cap label", (it) => {
+    it.effect(
+      "office-action flow reports a required label past the extraction cap as residual, not unaligned",
+      Effect.fnUntraced(function* () {
+        const { review, input } = yield* reviewScenario({ principal: fixturePrincipal, current: text });
+        const capped = yield* review.review(input).pipe(Effect.flip);
+        expect(capped._tag).toBe("IrToLawExtractionError");
+        if (capped._tag === "IrToLawExtractionError") {
+          expect(capped.reason).toBe("required-extraction-residual");
+          expect(capped.label).toBe("distinction");
+          assertSome(capped.residualReason, "over-extraction-cap");
         }
       })
     );

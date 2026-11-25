@@ -46,9 +46,6 @@ import type { CapturedRun } from "./GateRuntime.ts";
 const $I = $RepoCliId.create("commands/Gate/GateRoot");
 
 /**
- * One task of a Turbo run summary: the task name, its package, the package
- * directory, whether the cache served it, and its exit code.
- *
  * **Example** (Describe a summary task)
  *
  * ```ts
@@ -123,9 +120,6 @@ const readSummaryTasks = Effect.fnUntraced(function* (output: string, gate: stri
 });
 
 /**
- * A package that ran under the root task, with its report when it has a
- * current record.
- *
  * **Example** (Describe a package without a record)
  *
  * ```ts
@@ -154,9 +148,6 @@ export class PackageRun extends S.Opaque<PackageRun, { readonly brand: unique sy
 ) {}
 
 /**
- * What a workspace report is folded from: the root run's gate, id, start,
- * input fingerprint and Turbo exit code, and the package runs.
- *
  * **Example** (Describe an empty fold)
  *
  * ```ts

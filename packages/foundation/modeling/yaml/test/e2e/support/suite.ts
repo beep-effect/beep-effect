@@ -79,7 +79,6 @@ function skipWhitespace(src: string, i: number): number {
   return j;
 }
 
-/** Advance the scanner over one character inside a JSON string. */
 function stepInString(state: CompositeScan, c: string | undefined): void {
   if (state.isEscaped) state.isEscaped = false;
   else if (c === "\\") state.isEscaped = true;

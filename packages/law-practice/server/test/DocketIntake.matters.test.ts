@@ -98,12 +98,8 @@ type KgScript = {
 const asked = Ref.makeUnsafe<ReadonlyArray<string>>([]);
 const mentionAsked = Ref.makeUnsafe<ReadonlyArray<string>>([]);
 
-// The combining rules over a scripted practice KG: a reference not in the script resolves to none,
-// and the failing reference fails the lookup.
 const script = Ref.makeUnsafe<KgScript>({ matters: {} });
 
-// The combining rules over a scripted practice KG: a reference not in the script resolves to none,
-// and the failing reference fails the lookup.
 const scriptedLookup = DocketMatterLookupPracticeKg.pipe(
   Layer.provide(
     Layer.merge(
@@ -170,7 +166,7 @@ const keysOf = (result: MatterLookupResult) =>
 const US01 = "0000.00001US01";
 
 describe("@beep/law-practice-server DocketIntake matter lookup", () => {
-  it.layer(scriptedLookup, { timeout: "5 seconds" })("combining", (it) => {
+  it.layer(scriptedLookup, { timeout: "5 seconds" })("combining; an unscripted reference resolves to none", (it) => {
     it.effect(
       "answers a verified unique matter with its client name, dockets, matched docket and numbers",
       Effect.fnUntraced(function* () {
@@ -254,9 +250,8 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
           ["0000.00001", false],
           ["0000.00001", true],
         ]);
-        // A docket match settles it: the citing documents are not searched.
         const got2 = yield* Ref.get(mentionAsked);
-        expect(got2).toStrictEqual([]);
+        expect(got2, "a docket match settles membership without searching the citing documents").toStrictEqual([]);
       })
     );
 
@@ -435,10 +430,7 @@ const tables = PracticeKgMatterTables.make({
   matters: [matterRow("0000.00001", "0000"), matterRow("0000.00002", "0000"), matterRow("0001.00003", "0001")],
 });
 
-// Only the columns the mention query reads. The second matter's document cites an application in
-// its text and the third's names a patent in its file name; the email row and the family that is
-// no matter never count.
-const documentStatements = [
+const mentionQueryColumnsOnlyDocumentStatements = [
   `CREATE TABLE documents (digest VARCHAR, category VARCHAR, client VARCHAR, docket_family VARCHAR,
     effective_name VARCHAR, source_relative_path VARCHAR)`,
   "CREATE TABLE document_text (digest VARCHAR, text VARCHAR)",
@@ -472,7 +464,7 @@ const bundleDirectory = Effect.fnUntraced(function* (options: {
     if (options.documents) {
       yield* Effect.gen(function* () {
         const db = yield* DuckDb;
-        yield* db.runMany(documentStatements);
+        yield* db.runMany(mentionQueryColumnsOnlyDocumentStatements);
       }).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
     }
   }
@@ -484,8 +476,7 @@ const bundleDirectory = Effect.fnUntraced(function* (options: {
   return directory;
 });
 
-// A synthetic bundle in a temporary directory, removed when the layer's scope closes.
-const syntheticLookup = (documents: boolean) =>
+const syntheticScopedTempBundleLookup = (documents: boolean) =>
   Layer.unwrap(
     Effect.gen(function* () {
       const fixtureManifest6 = yield* fixtureManifest;
@@ -508,7 +499,7 @@ const bundleFailure = Effect.fnUntraced(function* (bundleDir: string) {
 });
 
 describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
-  it.layer(syntheticLookup(true), { timeout: "60 seconds" })("over a synthetic bundle", (it) => {
+  it.layer(syntheticScopedTempBundleLookup(true), { timeout: "60 seconds" })("over a synthetic bundle", (it) => {
     it.effect(
       "resolves a docket and an owned application, and suggests the matters whose documents cite an unowned number",
       Effect.fnUntraced(function* () {
@@ -526,23 +517,29 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
           ["0000.00001US01"],
         ]);
         expect(A.take(uniqueOf(application), 1)).toStrictEqual(["0000.00001"]);
-        expect(keysOf(cited)).toStrictEqual(["MatterSuggested", ["0000.00002", "0001.00003"]]);
+        expect(
+          keysOf(cited),
+          "0000.00002 cites the application in its text and 0001.00003 names the patent in its file name; the email row and the family that is no matter never count"
+        ).toStrictEqual(["MatterSuggested", ["0000.00002", "0001.00003"]]);
         expect(keysOf(uncited)).toStrictEqual(["MatterNotFound"]);
       })
     );
   });
 
-  it.layer(syntheticLookup(false), { timeout: "60 seconds" })("over a bundle without document tables", (it) => {
-    it.effect(
-      "fails at stage lookup when there is nothing to search for mentions",
-      Effect.fnUntraced(function* () {
-        const error = yield* Effect.flip(lookupOf(["00/000,009"]));
+  it.layer(syntheticScopedTempBundleLookup(false), { timeout: "60 seconds" })(
+    "over a bundle without document tables",
+    (it) => {
+      it.effect(
+        "fails at stage lookup when there is nothing to search for mentions",
+        Effect.fnUntraced(function* () {
+          const error = yield* Effect.flip(lookupOf(["00/000,009"]));
 
-        assertInstanceOf(error, DocketIntakeError);
-        expect([error.stage, error.cause]).toStrictEqual(["lookup", "practice-kg-mentions"]);
-      })
-    );
-  });
+          assertInstanceOf(error, DocketIntakeError);
+          expect([error.stage, error.cause]).toStrictEqual(["lookup", "practice-kg-mentions"]);
+        })
+      );
+    }
+  );
 
   it.layer(Platform, { timeout: "60 seconds" })("bundle checks", (it) => {
     it.effect(

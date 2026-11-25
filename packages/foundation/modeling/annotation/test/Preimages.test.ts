@@ -13,8 +13,6 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { sha256 } from "./support/generators.ts";
 
-// The canonical bytes each golden hashes, written out by hand. A plain SHA-256 of these strings gives the recorded
-// hashes (sections 1.4 and 8.2 of the P3 design), independently of the minting code.
 const annotationBytes =
   '["annotation/v1",["sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48"],' +
   '"https://beep-effect.com/ns/annotation/Mention",{"class":"https://beep-effect.com/ns/office-action/distinction"}]';
@@ -46,7 +44,7 @@ describe("@beep/annotation preimages", () => {
     );
   });
 
-  it("hashes the hand-written canonical bytes of each golden", () => {
+  it("hashes the hand-written canonical bytes of each golden: their plain SHA-256 is the recorded hash of P3 design sections 1.4 and 8.2, independently of the minting code", () => {
     for (const [preimage, bytes] of [
       [AnnotationPreimage, annotationBytes],
       [GenerationPreimage, generationBytes],

@@ -30,8 +30,6 @@ import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 
 /**
- * Program used for a full policy sweep.
- *
  * **Example** (Select the bounded Oxlint program)
  * ```ts
  * import { PolicySweepProgram } from "@beep/repo-cli/commands/Quality"
@@ -46,8 +44,6 @@ export const PolicySweepProgram = LiteralKit(["oxlint", "turbo"]).pipe(
 );
 
 /**
- * Decoded full-sweep program.
- *
  * @see {@link PolicySweepProgram} for the literal domain this type decodes from.
  * @category configuration
  * @since 0.0.0
@@ -55,8 +51,6 @@ export const PolicySweepProgram = LiteralKit(["oxlint", "turbo"]).pipe(
 export type PolicySweepProgram = typeof PolicySweepProgram.Type;
 
 /**
- * Versioned repository policy sweep selection.
- *
  * **Example** (Keep the bounded Oxlint sweep)
  * ```ts
  * import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality"
@@ -91,8 +85,6 @@ export const QualityCheckConcurrency = LiteralKit(["2", "3"]).pipe(
 );
 
 /**
- * Decoded hosted Check worker count.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -143,8 +135,6 @@ export const QualityLocalConcurrencyOverride = LiteralKit([
 );
 
 /**
- * Decoded local quality concurrency override.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -241,8 +231,6 @@ export const QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV = "BEEP_YEET_INNER_LANE_REP
 export const QUALITY_TASK_LANE_RUN_PARENT_ID_ENV = "BEEP_YEET_INNER_LANE_PARENT_ID";
 
 /**
- * Canonical quality task name.
- *
  * **Example** (Check quality task name membership)
  *
  * ```ts
@@ -261,8 +249,6 @@ export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "au
 );
 
 /**
- * Canonical quality task name.
- *
  * **Example** (Annotate a value as QualityTaskName)
  *
  * ```ts
@@ -278,8 +264,6 @@ export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "au
 export type QualityTaskName = typeof QualityTaskName.Type;
 
 /**
- * Root CLI flags that bypass the quality task fast path.
- *
  * **Example** (Check quality task bypass arg name membership)
  *
  * ```ts
@@ -305,8 +289,6 @@ export const QualityTaskBypassArgName = LiteralKit([
 );
 
 /**
- * Root CLI flag name that bypasses the quality task fast path.
- *
  * **Example** (Annotate a value as QualityTaskBypassArgName)
  *
  * ```ts
@@ -322,8 +304,6 @@ export const QualityTaskBypassArgName = LiteralKit([
 export type QualityTaskBypassArgName = typeof QualityTaskBypassArgName.Type;
 
 /**
- * Lint policy subcommands owned by the full command tree.
- *
  * **Example** (Check lint policy subcommand membership)
  *
  * ```ts
@@ -342,8 +322,6 @@ export const LintPolicySubcommand = LiteralKit(LINT_POLICY_SUBCOMMANDS).pipe(
 );
 
 /**
- * Lint policy subcommand owned by the full command tree.
- *
  * **Example** (Annotate a value as LintPolicySubcommand)
  *
  * ```ts
@@ -359,8 +337,6 @@ export const LintPolicySubcommand = LiteralKit(LINT_POLICY_SUBCOMMANDS).pipe(
 export type LintPolicySubcommand = typeof LintPolicySubcommand.Type;
 
 /**
- * Root audit mode names supported by the quality task adapter.
- *
  * **Example** (Check root audit mode membership)
  *
  * ```ts
@@ -379,8 +355,6 @@ export const RootAuditMode = LiteralKit(["packages", "github"]).pipe(
 );
 
 /**
- * Root audit mode name.
- *
  * **Example** (Annotate a value as RootAuditMode)
  *
  * ```ts
@@ -396,8 +370,6 @@ export const RootAuditMode = LiteralKit(["packages", "github"]).pipe(
 export type RootAuditMode = typeof RootAuditMode.Type;
 
 /**
- * Package-local script profile used by the quality task adapter.
- *
  * **Example** (Construct a package task profile)
  *
  * ```ts
@@ -427,8 +399,6 @@ export class PackageTaskProfile extends S.Opaque<PackageTaskProfile, { readonly 
 ) {}
 
 /**
- * Result of parsing a quality command invocation.
- *
  * **Example** (Construct a quality task invocation)
  *
  * ```ts
@@ -495,8 +465,6 @@ export const QualityHardwareProfile = LiteralKit(["current", "workstation", "ci"
 export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
 
 /**
- * Static quality scheduling settings for a hardware profile.
- *
  * **Details**
  *
  * `turboConcurrency` bounds the root `build`, `check`, `test` and `lint`
@@ -549,8 +517,6 @@ export class QualityProfileConfig extends S.Opaque<QualityProfileConfig, { reado
 ) {}
 
 /**
- * Detected quality profile plus host facts.
- *
  * **Example** (Construct a quality profile detection)
  *
  * ```ts
@@ -593,8 +559,6 @@ export class QualityProfileDetection extends S.Opaque<QualityProfileDetection, {
 ) {}
 
 /**
- * Host facts used when selecting a quality profile.
- *
  * **Example** (Describe a detection input)
  *
  * ```ts
@@ -649,8 +613,6 @@ export class QualityAdmissionLoad extends S.Opaque<QualityAdmissionLoad, { reado
 ) {}
 
 /**
- * Resolved concurrency widths for one local quality invocation.
- *
  * **Details**
  *
  * The plan is the single source every local quality command reads its widths
@@ -749,8 +711,6 @@ export const githubCheckModeFlagChoices: ReadonlyArray<readonly [GithubCheckMode
 );
 
 /**
- * Fallow feature-family row tracked by the quality-enforcement matrix.
- *
  * **Example** (Check fallow quality feature family membership)
  *
  * ```ts
@@ -779,8 +739,6 @@ export const FallowQualityFeatureFamily = LiteralKit([
 );
 
 /**
- * Fallow feature-family row tracked by the quality-enforcement matrix.
- *
  * **Example** (Annotate a value as FallowQualityFeatureFamily)
  *
  * ```ts
@@ -796,8 +754,6 @@ export const FallowQualityFeatureFamily = LiteralKit([
 export type FallowQualityFeatureFamily = typeof FallowQualityFeatureFamily.Type;
 
 /**
- * CI posture for a Fallow feature-family matrix row.
- *
  * **Example** (Check fallow quality ci mode membership)
  *
  * ```ts
@@ -816,8 +772,6 @@ export const FallowQualityCiMode = LiteralKit(["none", "advisory-artifact", "war
 );
 
 /**
- * CI posture for a Fallow feature-family matrix row.
- *
  * **Example** (Annotate a value as FallowQualityCiMode)
  *
  * ```ts
@@ -833,8 +787,6 @@ export const FallowQualityCiMode = LiteralKit(["none", "advisory-artifact", "war
 export type FallowQualityCiMode = typeof FallowQualityCiMode.Type;
 
 /**
- * Promotion posture for a Fallow feature-family matrix row.
- *
  * **Example** (Check fallow quality promotion status membership)
  *
  * ```ts
@@ -860,8 +812,6 @@ export const FallowQualityPromotionStatus = LiteralKit([
 );
 
 /**
- * Promotion posture for a Fallow feature-family matrix row.
- *
  * **Example** (Annotate a value as FallowQualityPromotionStatus)
  *
  * ```ts
@@ -877,8 +827,6 @@ export const FallowQualityPromotionStatus = LiteralKit([
 export type FallowQualityPromotionStatus = typeof FallowQualityPromotionStatus.Type;
 
 /**
- * Minimal Fallow feature-matrix row used by GitHub check plan validation.
- *
  * **Example** (Construct a github checks fallow feature matrix row)
  *
  * ```ts
@@ -911,8 +859,6 @@ export class GithubChecksFallowFeatureMatrixRow extends S.Opaque<
 ) {}
 
 /**
- * Minimal Fallow feature matrix used by GitHub check plan contract validation.
- *
  * **Example** (Construct a github checks fallow feature matrix)
  *
  * ```ts
@@ -959,8 +905,6 @@ export const decodeGithubChecksFallowFeatureMatrix: {
 } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(GithubChecksFallowFeatureMatrix));
 
 /**
- * Stage label for a GitHub check collector lane.
- *
  * **Example** (Check github check lane stage membership)
  *
  * ```ts
@@ -979,8 +923,6 @@ export const GithubCheckLaneStage = LiteralKit(["repo-quality", "repo-sanity", "
 );
 
 /**
- * Stage label for a GitHub check collector lane.
- *
  * **Example** (Annotate a value as GithubCheckLaneStage)
  *
  * ```ts
@@ -1025,8 +967,6 @@ export const GithubCheckFailurePolicy = LiteralKit(["fail-fast", "collect-all"])
 export type GithubCheckFailurePolicy = typeof GithubCheckFailurePolicy.Type;
 
 /**
- * Static cost-ordered wave assigned to a local GitHub-check lane.
- *
  * **Example** (Inspect the preflight wave)
  *
  * ```ts
@@ -1045,8 +985,6 @@ export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "do
 );
 
 /**
- * Decoded static execution wave for a local GitHub-check lane.
- *
  * @see {@link GithubCheckLaneWave} for the runtime schema and literal helpers.
  * @category models
  * @since 0.0.0
@@ -1054,8 +992,6 @@ export const GithubCheckLaneWave = LiteralKit(["preflight", "heavy", "test", "do
 export type GithubCheckLaneWave = typeof GithubCheckLaneWave.Type;
 
 /**
- * Local proof tier that schedules a GitHub-check lane.
- *
  * **Details**
  *
  * A lane id names the command it runs and nothing else (TTC ruling 28), so the
@@ -1082,8 +1018,6 @@ export const GithubCheckLaneTier = LiteralKit(["cheap-gates", "pre-push"]).pipe(
 );
 
 /**
- * Decoded local proof tier for a GitHub-check lane.
- *
  * @see {@link GithubCheckLaneTier} for the runtime schema and literal helpers.
  * @category models
  * @since 0.0.0
@@ -1091,8 +1025,6 @@ export const GithubCheckLaneTier = LiteralKit(["cheap-gates", "pre-push"]).pipe(
 export type GithubCheckLaneTier = typeof GithubCheckLaneTier.Type;
 
 /**
- * Whether a GitHub-check lane may share its wave chunk with other lanes.
- *
  * **Details**
  *
  * `shared` lanes run beside one another up to the tier's lane width.
@@ -1309,8 +1241,6 @@ export class GateOrderSeed extends S.Opaque<GateOrderSeed, { readonly brand: uni
 ) {}
 
 /**
- * Named D1 ordering rule applied to the gate-order seed.
- *
  * **Details**
  *
  * `gate-order-lexicographic/v1` is B3's key over the seed: seeded lanes first,
@@ -1336,8 +1266,6 @@ export const GateOrderRule = LiteralKit(["gate-order-lexicographic/v1"]).pipe(
 );
 
 /**
- * Named D1 ordering rule applied to the gate-order seed.
- *
  * @see {@link GateOrderRule} for the runtime schema and literal helpers.
  * @category policies
  * @since 0.0.0
@@ -1345,8 +1273,6 @@ export const GateOrderRule = LiteralKit(["gate-order-lexicographic/v1"]).pipe(
 export type GateOrderRule = typeof GateOrderRule.Type;
 
 /**
- * Component of the D1 key that separated a lane from its predecessor.
- *
  * **Details**
  *
  * The six literals name the six comparison components of the wave order, in
@@ -1377,8 +1303,6 @@ export const GateOrderSortKey = LiteralKit([
 );
 
 /**
- * Component of the D1 key that separated a lane from its predecessor.
- *
  * @see {@link GateOrderSortKey} for the runtime schema and literal helpers.
  * @category policies
  * @since 0.0.0
@@ -1386,8 +1310,6 @@ export const GateOrderSortKey = LiteralKit([
 export type GateOrderSortKey = typeof GateOrderSortKey.Type;
 
 /**
- * Plan a gate-order handoff covers.
- *
  * **Gotchas**
  *
  * The only scope is the full pre-push tier on a non-main branch; on `main`
@@ -1411,8 +1333,6 @@ export const GateOrderHandoffScope = LiteralKit(["pre-push:non-main"]).pipe(
 );
 
 /**
- * Plan a gate-order handoff covers.
- *
  * @see {@link GateOrderHandoffScope} for the runtime schema and literal helpers.
  * @category policies
  * @since 0.0.0
@@ -1420,8 +1340,6 @@ export const GateOrderHandoffScope = LiteralKit(["pre-push:non-main"]).pipe(
 export type GateOrderHandoffScope = typeof GateOrderHandoffScope.Type;
 
 /**
- * Closed set of JSON pointer shapes a gate-order seed row may carry.
- *
  * **Details**
  *
  * `hosted-lane-row` and `local-wrapper-row` address one A1 duration row;
@@ -1454,8 +1372,6 @@ export const GateOrderPointerKind = LiteralKit([
 );
 
 /**
- * Closed set of JSON pointer shapes a gate-order seed row may carry.
- *
  * @see {@link GateOrderPointerKind} for the runtime schema and literal helpers.
  * @category policies
  * @since 0.0.0
@@ -1507,8 +1423,6 @@ export const classifyGateOrderPointer = (
   );
 
 /**
- * Where a seeded lane's cost P50 comes from.
- *
  * **Details**
  *
  * `a1-lane-row` is the A1 row of the lane's own hosted context, `a1-proxy-row`
@@ -1538,8 +1452,6 @@ export const GateOrderCostBasis = LiteralKit(["a1-lane-row", "a1-proxy-row", "ex
 );
 
 /**
- * Where a seeded lane's cost P50 comes from.
- *
  * @see {@link GateOrderCostBasis} for the runtime schema and literal helpers.
  * @category policies
  * @since 0.0.0
@@ -1547,8 +1459,6 @@ export const GateOrderCostBasis = LiteralKit(["a1-lane-row", "a1-proxy-row", "ex
 export type GateOrderCostBasis = typeof GateOrderCostBasis.Type;
 
 /**
- * Kinds of disagreement between the gate-order seed, the plan and the pinned A1 document.
- *
  * **Details**
  *
  * Coverage kinds (`unseeded-lane`, `orphan-seed-row`, `cost-basis-unmapped`,
@@ -1591,8 +1501,6 @@ export const GateOrderSeedFindingKind = LiteralKit([
 );
 
 /**
- * Kinds of disagreement between the gate-order seed, the plan and the pinned A1 document.
- *
  * @see {@link GateOrderSeedFindingKind} for the runtime schema and literal helpers.
  * @category policies
  * @since 0.0.0
@@ -1602,8 +1510,6 @@ export type GateOrderSeedFindingKind = typeof GateOrderSeedFindingKind.Type;
 const A1DurationMs = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 /**
- * The subset of the A1 economics document the gate-order seed points into.
- *
  * **Details**
  *
  * Decodes only the fields seed pointers resolve: hosted lane rows, local
@@ -1672,8 +1578,6 @@ export class EconomicsSeedSourceView extends S.Opaque<EconomicsSeedSourceView, {
 export const EconomicsSeedSourceViewJson = JsonStringCodec(EconomicsSeedSourceView);
 
 /**
- * The A1 row, by context or wrapper id, a seeded lane's cost P50 is read from, and why.
- *
  * **Details**
  *
  * `sourceKey` is the A1 hosted `context` or local wrapper `id` the seed row's
@@ -1705,8 +1609,6 @@ export class GateOrderCostSource extends S.Opaque<GateOrderCostSource, { readonl
 ) {}
 
 /**
- * One disagreement between the gate-order seed, the declared plan and the pinned A1 document.
- *
  * **Details**
  *
  * `expected` and `actual` are in the pointer's unit: milliseconds, a count or
@@ -1748,8 +1650,6 @@ export class GateOrderSeedFinding extends S.Opaque<GateOrderSeedFinding, { reado
 ) {}
 
 /**
- * The pinned A1 document the handoff's seed was verified against.
- *
  * **Details**
  *
  * `firstFailurePopulation` is A1's
@@ -1795,8 +1695,6 @@ export class GateOrderHandoffSource extends S.Opaque<GateOrderHandoffSource, { r
 ) {}
 
 /**
- * One lane of the D1 pre-push order with the key that placed it and its resolved A1 sources.
- *
  * **Details**
  *
  * `rank` is the 0-based execution position; `decidedBy` is the key component
@@ -1936,8 +1834,6 @@ const GateOrderHandoffCoherence = S.makeFilter(
 );
 
 /**
- * SPEC D1 handoff: the A1/A4 gate-order seed, its pinned source, and the pre-push order it produces.
- *
  * **Details**
  *
  * The document carries the `gate-order/v1` seed verbatim, the named order
@@ -2011,8 +1907,6 @@ const OptionalGateOrderSeedRow = GateOrderSeedRow.pipe(
 );
 
 /**
- * Executable lane specification for GitHub check collectors.
- *
  * **Example** (Construct a github check lane spec)
  *
  * ```ts
@@ -2054,8 +1948,6 @@ export class GithubCheckLaneSpec extends S.Opaque<GithubCheckLaneSpec, { readonl
 ) {}
 
 /**
- * One ordered execution wave of local GitHub-check lanes.
- *
  * **Example** (Build a documentation wave)
  *
  * ```ts
@@ -2080,8 +1972,6 @@ export class GithubCheckLaneWaveSpec extends S.Opaque<GithubCheckLaneWaveSpec, {
 ) {}
 
 /**
- * Source-only cheap lanes qualified for a clean report-only branch diff.
- *
  * **Details**
  *
  * The dependency-closure contract test must be reviewed before expanding this
@@ -2105,16 +1995,12 @@ export const ReportOnlyInertLaneId = LiteralKit(["quality:jsdoc-ratchet:regenera
 );
 
 /**
- * Lane ids qualified for clean report-only diffs.
- *
  * @category models
  * @since 0.0.0
  */
 export type ReportOnlyInertLaneId = typeof ReportOnlyInertLaneId.Type;
 
 /**
- * Execution status recorded for one GitHub-check lane.
- *
  * **Example** (Identify an early stop)
  *
  * ```ts
@@ -2139,8 +2025,6 @@ export const GithubCheckLaneRunStatus = LiteralKit([
 );
 
 /**
- * Decoded terminal status for one local GitHub-check lane.
- *
  * @see {@link GithubCheckLaneRunStatus} for the runtime schema and literal helpers.
  * @category models
  * @since 0.0.0
@@ -2175,8 +2059,6 @@ const LaneInputsCacheable = S.Boolean.pipe(
 );
 
 /**
- * Timing and outcome facts for one lane executed inside a wrapper command.
- *
  * **Details**
  *
  * `inputDigest` encodes absence as `null`; callers supply a digest only when it
@@ -2250,8 +2132,6 @@ export class QualityTaskLaneRun extends S.Opaque<QualityTaskLaneRun, { readonly 
 ) {}
 
 /**
- * Machine-readable execution facts emitted by a lane wrapper.
- *
  * **Example** (Build an empty lane report)
  *
  * ```ts
@@ -2280,8 +2160,6 @@ export class QualityTaskLaneRunReport extends S.Opaque<QualityTaskLaneRunReport,
 ) {}
 
 /**
- * One lane outcome in a local GitHub-check wave report.
- *
  * **Example** (Record an early-stopped lane)
  *
  * ```ts
@@ -2314,8 +2192,6 @@ export class GithubCheckLaneRun extends S.Opaque<GithubCheckLaneRun, { readonly 
 ) {}
 
 /**
- * Machine-readable report emitted after a local GitHub-check wave run.
- *
  * **Example** (Record a fail-fast run)
  *
  * ```ts

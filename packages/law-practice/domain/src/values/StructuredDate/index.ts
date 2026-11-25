@@ -7,8 +7,6 @@
  */
 
 /**
- * StructuredDate model exports.
- *
  * **Example** (Import StructuredDate export)
  *
  * ```ts

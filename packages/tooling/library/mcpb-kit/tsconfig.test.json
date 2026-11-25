@@ -15,6 +15,9 @@
   },
   "references": [
     {
+      "path": "../../../foundation/capability/xdg/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/identity/tsconfig.json"
     },
     {

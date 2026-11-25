@@ -37,8 +37,6 @@ const PositiveCount = S.Int.check(S.isBetween({ maximum: 3660, minimum: 1 })).pi
 );
 
 /**
- * Units a source document states a response period in.
- *
  * **Example** (Guard a unit)
  *
  * ```ts
@@ -57,8 +55,6 @@ export const DocketResponsePeriodUnit = LiteralKit(["days", "months"]).pipe(
 );
 
 /**
- * Type for {@link DocketResponsePeriodUnit}.
- *
  * **Example** (Type a unit)
  *
  * ```ts
@@ -137,8 +133,6 @@ export const addDocketResponsePeriod: {
 );
 
 /**
- * How a docket due date was arrived at.
- *
  * **Details**
  *
  * - `stated`: only the message stated a date.
@@ -164,8 +158,6 @@ export const DocketDueDateBasis = LiteralKit(["stated", "computed", "agreed", "e
 );
 
 /**
- * Type for {@link DocketDueDateBasis}.
- *
  * **Example** (Type a basis)
  *
  * ```ts
@@ -216,8 +208,6 @@ export class DocketDueDate extends S.Opaque<DocketDueDate, { readonly brand: uni
 ) {}
 
 /**
- * The two candidate dates a docket due date is resolved from.
- *
  * **Example** (Make candidates)
  *
  * ```ts
@@ -359,8 +349,6 @@ export class DocketReminderRung extends S.Opaque<DocketReminderRung, { readonly 
 ) {}
 
 /**
- * The reminders placed ahead of one due date.
- *
  * **Example** (Count the rungs)
  *
  * ```ts
@@ -473,8 +461,6 @@ export const DocketCategory = LiteralKit([
 );
 
 /**
- * Type for {@link DocketCategory}.
- *
  * **Example** (Type a category)
  *
  * ```ts

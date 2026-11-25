@@ -7,8 +7,6 @@
  */
 
 /**
- * SourceRef model exports.
- *
  * **Example** (Import SourceRef)
  *
  * ```ts

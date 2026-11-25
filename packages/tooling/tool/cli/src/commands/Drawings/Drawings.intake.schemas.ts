@@ -74,8 +74,6 @@ export const IntakeAttachmentOutcome = LiteralKit([
 );
 
 /**
- * Type for {@link IntakeAttachmentOutcome}.
- *
  * **Example** (Type an outcome)
  *
  * ```ts
@@ -113,8 +111,6 @@ export const IntakePick = S.Union([S.Literal("latest"), PositiveInt]).pipe(
 );
 
 /**
- * Type for {@link IntakePick}.
- *
  * **Example** (Type a pick)
  *
  * ```ts
@@ -139,8 +135,6 @@ const decodePick = (text: string): Effect.Effect<IntakePick, SchemaIssue.Issue> 
 };
 
 /**
- * Codec from the `--pick` flag text to an {@link IntakePick}.
- *
  * **Example** (Decode the default)
  *
  * ```ts
@@ -162,8 +156,6 @@ export const IntakePickFromString = S.String.pipe(
 );
 
 /**
- * Type for {@link IntakePickFromString}.
- *
  * **Example** (Annotate a decoded pick)
  *
  * ```ts
@@ -179,8 +171,6 @@ export const IntakePickFromString = S.String.pipe(
 export type IntakePickFromString = typeof IntakePickFromString.Type;
 
 /**
- * Request to pull one message's attachments into a directory under the corpus root.
- *
  * **Example** (Pull the newest message of a conversation)
  *
  * ```ts
@@ -222,8 +212,6 @@ export class IntakeRequest extends S.Opaque<IntakeRequest, { readonly brand: uni
 ) {}
 
 /**
- * One attachment of the pulled message and what the intake did with it.
- *
  * **Example** (A saved attachment)
  *
  * ```ts
@@ -270,8 +258,6 @@ export class IntakeAttachment extends S.Opaque<IntakeAttachment, { readonly bran
 ) {}
 
 /**
- * Provenance facts of the pulled message.
- *
  * **Details**
  *
  * Every field Graph may leave out is optional and written as `null`, so a

@@ -81,6 +81,8 @@ const marked = (runId: DocketRunId, messageId: string, minute: number) =>
     runId,
   });
 
+const markedLineWithoutMessageId = DocketJournalEntry.make({ at, kind: "message-marked", runId: RUN });
+
 const journal = [
   created(RUN, "e-provisional"),
   created(RUN, "e-provisional"),
@@ -95,8 +97,7 @@ const journal = [
   marked(RUN, "m4", 55),
   marked(RUN, "m5", 58),
   marked(OTHER_RUN, "m-other", 1),
-  // A message line without a message id names nothing to undo.
-  DocketJournalEntry.make({ at, kind: "message-marked", runId: RUN }),
+  markedLineWithoutMessageId,
 ];
 
 const undoLine = (
@@ -137,8 +138,7 @@ const ledger = {
     "2030-01-09T09:30:00.000Z"
   ),
   m2: record(needsReview("m2", "e-verified"), "2030-01-09T09:40:00.000Z"),
-  // Its mark failed, so only the event it got ties it to the run.
-  "m-unmarked": record(needsReview("m-unmarked", "e-recategorised"), "2030-01-09T09:20:00.000Z"),
+  "m-mark-failed": record(needsReview("m-mark-failed", "e-recategorised"), "2030-01-09T09:20:00.000Z"),
   "m-quiet": record(NotDocketItem.make({ messageId: "m-quiet" }), "2030-01-09T09:10:00.000Z"),
   "m-failing": record(IntakeFailed.make({ messageId: "m-failing", stage: "review" }), "2030-01-09T09:59:00.000Z"),
   "m-other": record(needsReview("m-other", "e-other"), "2030-01-09T09:01:00.000Z"),
@@ -150,8 +150,7 @@ const savedState = DocketIntakeState.make({
   ledger,
 });
 
-// The mailbox and calendar as the attorney left them after the run.
-const seed = Effect.gen(function* () {
+const seedAsAttorneyLeftIt = Effect.gen(function* () {
   const fake = yield* FakeGraph;
   const store = yield* DocketIntakeStore;
   const journalService = yield* DocketIntakeJournal;
@@ -278,7 +277,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
       Effect.fnUntraced(function* () {
         const fake = yield* FakeGraph;
         const store = yield* DocketIntakeStore;
-        yield* seed;
+        yield* seedAsAttorneyLeftIt;
 
         const planned = yield* plan;
         const loaded = yield* store.load;
@@ -324,20 +323,21 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
       Effect.fnUntraced(function* () {
         const fake = yield* FakeGraph;
         const store = yield* DocketIntakeStore;
-        yield* seed;
+        yield* seedAsAttorneyLeftIt;
         const planned = yield* plan;
-        // Between the plan and the undo, one event and one message disappear, and one message
-        // changes, so its first write is refused as stale.
         yield* Ref.update(fake.events, HashMap.remove("e-raced"));
         yield* Ref.update(fake.messages, HashMap.remove("m5"));
-        yield* Ref.set(fake.staleWrites, 1);
+        yield* Ref.set(fake.staleCategoryWritesLeft, 1);
 
         const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
         const state = yield* store.load;
         const readDocketJournal6 = yield* readDocketJournal(DIRECTORY);
         const undoLines = A.filter(readDocketJournal6, (line) => Str.startsWith("undo-")(line.kind));
 
-        expect(report).toMatchObject({
+        expect(
+          report,
+          "between the plan and the undo, e-raced and m5 disappear and one message write is refused as stale"
+        ).toMatchObject({
           deleted: 1,
           dryRun: false,
           gone: 2,
@@ -360,8 +360,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         const categoriesOf10 = yield* categoriesOf("m-other");
         assertSome(categoriesOf10, ["Docket - entered"]);
         expect(A.sort(R.keys(state.ledger), Str.Order)).toStrictEqual(["m-failing", "m-other", "m-quiet"]);
-        // The cursor moves back to the earliest message the run touched, so it is listed again.
-        assertSome(state.cursor, "2030-01-09T09:20:00.000Z");
+        const cursorBackAtEarliestTouchedMessage = "2030-01-09T09:20:00.000Z";
+        assertSome(state.cursor, cursorBackAtEarliestTouchedMessage);
         assertSome(
           O.map(state.digestedThrough, (day) => day.toISOString()),
           "2030-01-09"
@@ -389,8 +389,8 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
       "fails with the Graph reason when the mailbox throttles",
       Effect.fnUntraced(function* () {
         const fake = yield* FakeGraph;
-        yield* seed;
-        yield* Ref.set(fake.failing, HashMap.make(["getEvent", throttled]));
+        yield* seedAsAttorneyLeftIt;
+        yield* Ref.set(fake.failingFromNowOnByVerb, HashMap.make(["getEvent", throttled]));
 
         const exit = yield* Effect.exit(plan);
 
@@ -455,7 +455,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
 
   it.layer(UndoLayer, { timeout: "10 seconds" })((it) => {
     it.effect(
-      "keeps a calendar event verified after planning",
+      "keeps a calendar event verified after planning, because the delete rechecks it and binds to that version",
       Effect.fnUntraced(function* () {
         const fake = yield* FakeGraph;
         const journalService = yield* DocketIntakeJournal;
@@ -506,16 +506,15 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
             ledger: { m1: ledger.m1, m2: ledger.m2 },
           })
         );
-        // The first undo deleted e-provisional, unmarked m1 and stopped before anything else,
-        // so the ledger still holds both messages.
-        yield* journalService.append([
+        const journalOfFirstUndoStoppedAfterUnmarkingM1 = [
           created(RUN, "e-provisional"),
           created(RUN, "e-left"),
           marked(RUN, "m1", 30),
           marked(RUN, "m2", 40),
           undoLine(RUN, "undo-event-deleted", { eventId: "e-provisional" }),
           undoLine(RUN, "undo-message-unmarked", { messageId: "m1" }),
-        ]);
+        ];
+        yield* journalService.append(journalOfFirstUndoStoppedAfterUnmarkingM1);
 
         const planned = yield* plan;
         const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
@@ -567,8 +566,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         yield* journalService.append([created(RUN, "e-provisional"), marked(RUN, "m1", 30)]);
         const first = yield* applyDocketUndo({ mailbox: MAILBOX, plan: yield* plan });
 
-        // The later run reads m1 again, enters it under a new event and marks it.
-        const laterRecord = record(needsReview("m1", "e-later"), "2030-01-09T09:30:00.000Z");
+        const laterRunReentryOfM1 = record(needsReview("m1", "e-later"), "2030-01-09T09:30:00.000Z");
         yield* Ref.update(
           fake.events,
           HashMap.set("e-later", event({ categories: ["Docket - needs review"], id: "e-later" }))
@@ -578,7 +576,7 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           HashMap.set("m1", mailMessage({ categories: ["Docket - entered"], id: "m1" }))
         );
         yield* store.save(
-          DocketIntakeState.make({ cursor: O.some("2030-01-09T12:00:00.000Z"), ledger: { m1: laterRecord } })
+          DocketIntakeState.make({ cursor: O.some("2030-01-09T12:00:00.000Z"), ledger: { m1: laterRunReentryOfM1 } })
         );
         yield* journalService.append([created(OTHER_RUN, "e-later"), marked(OTHER_RUN, "m1", 30)]);
         const readDocketJournal16 = yield* readDocketJournal(DIRECTORY);
@@ -619,8 +617,6 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         const fake = yield* FakeGraph;
         const store = yield* DocketIntakeStore;
         const journalService = yield* DocketIntakeJournal;
-        // Run A created e-found-later and marked m-found-later, but its ledger record was lost; the later run found
-        // e-found-later by key (already journaled, so no adopted line), marked m-found-later and saved a record naming it.
         yield* Ref.set(
           fake.events,
           HashMap.make(["e-found-later", event({ categories: ["Docket - unverified"], id: "e-found-later" })])
@@ -646,9 +642,10 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         const planned = yield* plan;
         const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
 
-        expect(A.map(planned.events, (target) => [target.eventId, target.action])).toStrictEqual([
-          ["e-found-later", "keep"],
-        ]);
+        expect(
+          A.map(planned.events, (target) => [target.eventId, target.action]),
+          "run A lost its record; the later run found e-found-later by key, marked m-found-later and saved a record naming it"
+        ).toStrictEqual([["e-found-later", "keep"]]);
         expect(report).toMatchObject({ deleted: 0, kept: 1, ledgerCleared: 0, messagesKept: 1 });
         const got21 = yield* Ref.get(fake.events);
         expect(HashMap.has(got21, "e-found-later")).toBe(true);

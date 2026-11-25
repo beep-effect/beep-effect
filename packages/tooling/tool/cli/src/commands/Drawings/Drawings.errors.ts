@@ -78,8 +78,6 @@ export class DrawingsCommandError extends S.TaggedError<DrawingsCommandError, { 
 }
 
 /**
- * Why `drawings intake` stopped.
- *
  * **Example** (Check a reason)
  *
  * ```ts
@@ -98,8 +96,6 @@ export const DrawingIntakeReason = LiteralKit(["refused", "not-found", "mail", "
 );
 
 /**
- * Type for {@link DrawingIntakeReason}.
- *
  * **Example** (Type a reason)
  *
  * ```ts
@@ -115,8 +111,6 @@ export const DrawingIntakeReason = LiteralKit(["refused", "not-found", "mail", "
 export type DrawingIntakeReason = typeof DrawingIntakeReason.Type;
 
 /**
- * Failure raised by the `DrawingIntake` service.
- *
  * **Details**
  *
  * Messages name paths, ids and counts; they never carry message bodies or

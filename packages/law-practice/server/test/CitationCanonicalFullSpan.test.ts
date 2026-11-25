@@ -13,16 +13,11 @@ import {
 } from "./CitationCanonicalFullSpan.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-// Bun replays the whole cohort; node replays the first call so the node parity
-// scene stays while the full family runs once (deletion addendum U2, 2026-11-09).
-// Each original call is its own test over one shared Bun installation: a call is a
-// full production extraction, so ten of them under one watchdog sat near its limit
-// on contended runners (ep66, ep81).
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original full-span assertions",
   (it) => {
     it.layer(citationCanonicalFullSpanReplayLayer("bun"), { concurrent: false, timeout: "120 seconds" })(
-      "recomputes all thirteen original full-span equalities on bun",
+      "recomputes all thirteen original full-span equalities on bun, one test per call so each full extraction gets its own watchdog",
       (it) => {
         it.effect("installs the stage tree once at engine construction", () =>
           CitationCanonicalFullSpanReplay.use(checkCitationCanonicalFullSpanConstruction)
@@ -38,7 +33,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       }
     );
     it.effect(
-      "recomputes the first original full-span call on node",
+      "recomputes the first original full-span call on node, the one node parity scene of this family",
       () =>
         prepareCitationCanonicalFullSpanReplay("node").pipe(
           Effect.flatMap((prepared) => replayCitationCanonicalFullSpanCall(prepared, 0))

@@ -64,8 +64,6 @@ export class SourceLiteral extends S.Opaque<SourceLiteral, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link SourceLiteral}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -127,8 +125,6 @@ export class LexedSource extends S.Opaque<LexedSource, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link LexedSource}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -742,7 +738,6 @@ const isPropertyKey = (code: string, before: number, after: number): boolean => 
   return unitAt(code, k) === ":";
 };
 
-/** Whether the raw identifier `raw` cooks to `name`. */
 const cooksTo = (raw: string, name: string): boolean => O.contains(cookIdentifier(raw), name);
 
 /** Whether the identifier token is a free, global-member or spread reference to `name`. */

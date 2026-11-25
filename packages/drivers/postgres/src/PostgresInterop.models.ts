@@ -26,8 +26,6 @@ import type { SqlError } from "effect/sql/SqlError";
 export type NativeMigrationError = EffectDrizzleQueryError | MigratorInitError | SqlError;
 
 /**
- * Native Effect Postgres client namespace.
- *
  * **Example** (Access native PgClient tag)
  *
  * ```ts
@@ -42,8 +40,6 @@ export type NativeMigrationError = EffectDrizzleQueryError | MigratorInitError |
  */
 export * as NativePgClient from "@effect/sql-pg/PgClient";
 /**
- * Native Drizzle Effect Postgres database and logger types.
- *
  * **Example** (Type database and logger)
  *
  * ```ts

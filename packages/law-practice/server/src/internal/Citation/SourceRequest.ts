@@ -47,8 +47,7 @@ export const CitationPreparedSourceRequest = S.TaggedUnion({
 );
 /** @internal @category models @since 0.0.0 */
 export type CitationPreparedSourceRequest = typeof CitationPreparedSourceRequest.Type;
-// Inspect text type/length without copying or hashing an over-limit source.
-const Probe = S.Struct({
+const ProbeTypeAndLengthWithoutCopyingOrHashing = S.Struct({
   source: SourceTextIdentity,
   sourceText: S.String,
   role: CitationEngineSourceInput.fields.role,
@@ -57,9 +56,12 @@ const Shortcut = S.Struct({ role: S.tag("plain"), sourceText: S.tag("eyecite") }
   $I.annoteSchema("Shortcut", { description: "Original shortcut condition over already captured source fields only." })
 );
 const isShortcut = S.is(Shortcut);
-const Slot = S.NullOr(S.Struct({ source: Probe.fields.source, sourceText: Probe.fields.sourceText })).pipe(
-  $I.annoteSchema("Slot", { description: "An optional primitive source before effective-size preflight." })
-);
+const Slot = S.NullOr(
+  S.Struct({
+    source: ProbeTypeAndLengthWithoutCopyingOrHashing.fields.source,
+    sourceText: ProbeTypeAndLengthWithoutCopyingOrHashing.fields.sourceText,
+  })
+).pipe($I.annoteSchema("Slot", { description: "An optional primitive source before effective-size preflight." }));
 const PlainProbe = S.Struct({ plain: Slot.pipe(S.withDecodingDefaultKey(Effect.succeed(null))) }).pipe(
   $I.annoteSchema("PlainProbe", { description: "Plain slot inspected before shortcut-ignored fields." })
 );
@@ -105,7 +107,9 @@ export const makeCitationSourceRequestAdapter = Effect.fn("Citation.makeSourceRe
   const prepare: (raw: unknown) => Effect.Effect<CitationPreparedSourceRequest, CitationEngineFailure> = Effect.fn(
     "Citation.prepareSourceRequest"
   )(function* (raw: unknown) {
-    const input = yield* S.decodeUnknownEffect(Probe)(raw).pipe(Effect.mapError(inputFailure));
+    const input = yield* S.decodeUnknownEffect(ProbeTypeAndLengthWithoutCopyingOrHashing)(raw).pipe(
+      Effect.mapError(inputFailure)
+    );
     if (Str.length(input.sourceText) > limits.sourceUtf16) return yield* safety("sourceUtf16");
     const source = yield* snapshotCitationValue(SourceJson, input.source, inputFailure);
     const shortcut = isShortcut(input);
@@ -127,9 +131,8 @@ export const makeCitationSourceRequestAdapter = Effect.fn("Citation.makeSourceRe
   )(function* (raw: unknown) {
     const first = yield* S.decodeUnknownEffect(PlainProbe)(raw).pipe(Effect.mapError(inputFailure));
     const plain = yield* captureSlot(first.plain);
-    // Read only the plain slot before the original shortcut. Markup and all
-    // option getters stay unread on that path.
-    if (plain !== null && plain.sourceText === "eyecite") {
+    const originalShortcutReadsOnlyPlainSlotNotMarkupOrOptions = plain !== null && plain.sourceText === "eyecite";
+    if (originalShortcutReadsOnlyPlainSlotNotMarkupOrOptions) {
       const source = yield* resolve(plain.source, plain.sourceText);
       return CitationPreparedSourceRequest.cases.Shortcut.make({ source });
     }

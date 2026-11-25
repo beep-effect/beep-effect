@@ -31,8 +31,6 @@ const $I = $AiSyncId.create("schemas");
 const normalizeInstructionText = flow(Str.split("\n"), A.map(Str.trimEnd), A.join("\n"), Str.trim);
 
 /**
- * Agent instruction markdown document.
- *
  * **Example** (Decode agent instruction document)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const AgentInstructionDocument = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link AgentInstructionDocument}.
- *
  * **Example** (Annotate instruction document type)
  *
  * ```ts
@@ -72,8 +68,6 @@ export const AgentInstructionDocument = S.NonEmptyString.pipe(
 export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
 
 /**
- * Normalized agent instruction markdown document.
- *
  * **Example** (Decode normalized document with Effect)
  *
  * ```ts
@@ -102,8 +96,6 @@ export const NormalizedAgentInstructionDocument = S.String.pipe(
 );
 
 /**
- * Runtime type for {@link NormalizedAgentInstructionDocument}.
- *
  * **Example** (Annotate normalized document type)
  *
  * ```ts
@@ -119,9 +111,6 @@ export const NormalizedAgentInstructionDocument = S.String.pipe(
 export type NormalizedAgentInstructionDocument = typeof NormalizedAgentInstructionDocument.Type;
 
 /**
- * Agent Skills `name`: 1-64 lowercase ASCII letters, digits, and single
- * hyphens, the grammar fixed by the Agent Skills specification.
- *
  * **Details**
  *
  * The specification also requires the name to match the skill's directory
@@ -151,8 +140,6 @@ export const AgentSkillName = S.NonEmptyString.check(
 );
 
 /**
- * Runtime type for {@link AgentSkillName}.
- *
  * **Example** (Annotate a skill name)
  *
  * ```ts
@@ -168,8 +155,6 @@ export const AgentSkillName = S.NonEmptyString.check(
 export type AgentSkillName = typeof AgentSkillName.Type;
 
 /**
- * Agent Skills `description`: non-blank, at most 1024 characters.
- *
  * **Example** (Reject a blank description)
  *
  * ```ts
@@ -194,8 +179,6 @@ export const AgentSkillDescription = S.String.check(
 );
 
 /**
- * Runtime type for {@link AgentSkillDescription}.
- *
  * **Example** (Annotate a description)
  *
  * ```ts
@@ -211,8 +194,6 @@ export const AgentSkillDescription = S.String.check(
 export type AgentSkillDescription = typeof AgentSkillDescription.Type;
 
 /**
- * Agent Skills `compatibility`: environment requirements, 1-500 characters.
- *
  * **Example** (Bound the compatibility note)
  *
  * ```ts
@@ -235,8 +216,6 @@ export const AgentSkillCompatibility = S.NonEmptyString.check(
 );
 
 /**
- * Runtime type for {@link AgentSkillCompatibility}.
- *
  * **Example** (Annotate a compatibility note)
  *
  * ```ts
@@ -280,8 +259,6 @@ export const AgentSkillMetadata = S.Record(S.String, S.String).pipe(
 );
 
 /**
- * Runtime type for {@link AgentSkillMetadata}.
- *
  * **Example** (Annotate a metadata map)
  *
  * ```ts
@@ -297,9 +274,6 @@ export const AgentSkillMetadata = S.Record(S.String, S.String).pipe(
 export type AgentSkillMetadata = typeof AgentSkillMetadata.Type;
 
 /**
- * A frontmatter value that is either one space- or comma-separated string or a
- * YAML list of strings.
- *
  * **Details**
  *
  * The specification types `allowed-tools` as a space-separated string; Claude
@@ -326,8 +300,6 @@ export const AgentSkillStringList = S.Union([S.String, S.Array(S.String)]).pipe(
 );
 
 /**
- * Runtime type for {@link AgentSkillStringList}.
- *
  * **Example** (Annotate a tool list)
  *
  * ```ts
@@ -364,8 +336,6 @@ export const ClaudeCodeSkillEffort = LiteralKit(["low", "medium", "high", "xhigh
 );
 
 /**
- * Runtime type for {@link ClaudeCodeSkillEffort}.
- *
  * **Example** (Annotate an effort level)
  *
  * ```ts
@@ -381,8 +351,6 @@ export const ClaudeCodeSkillEffort = LiteralKit(["low", "medium", "high", "xhigh
 export type ClaudeCodeSkillEffort = typeof ClaudeCodeSkillEffort.Type;
 
 /**
- * Shells Claude Code accepts for a skill's inline command blocks.
- *
  * **Example** (Check a shell)
  *
  * ```ts
@@ -402,8 +370,6 @@ export const ClaudeCodeSkillShell = LiteralKit(["bash", "powershell"]).pipe(
 );
 
 /**
- * Runtime type for {@link ClaudeCodeSkillShell}.
- *
  * **Example** (Annotate a shell)
  *
  * ```ts
@@ -419,9 +385,6 @@ export const ClaudeCodeSkillShell = LiteralKit(["bash", "powershell"]).pipe(
 export type ClaudeCodeSkillShell = typeof ClaudeCodeSkillShell.Type;
 
 /**
- * `SKILL.md` frontmatter: the Agent Skills specification's fields plus the
- * keys Claude Code reads natively.
- *
  * **Details**
  *
  * Specification fields: `name`, `description`, `license`, `compatibility`,

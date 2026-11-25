@@ -34,8 +34,6 @@ import type { PageOptions } from "./Rest.ts";
 const $I = $GithubId.create("GitHubIssue");
 
 /**
- * An issue, projected to what callers read.
- *
  * **Example** (Construct a readable issue projection)
  *
  * ```ts
@@ -76,8 +74,6 @@ export class IssueInfo extends S.Opaque<IssueInfo, { readonly brand: unique symb
 ) {}
 
 /**
- * An issue a pull request closes.
- *
  * **Example** (Identify a manually linked issue)
  *
  * ```ts
@@ -139,8 +135,6 @@ export class LinkedIssue extends S.Opaque<LinkedIssue, { readonly brand: unique 
 ) {}
 
 /**
- * What {@link GitHubIssueShape.commentOnce} found or wrote.
- *
  * **Details**
  *
  * `wrote` is the field the caller branches on: `true` means this call created

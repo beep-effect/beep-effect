@@ -8,8 +8,6 @@
 
 export * from "./LegalOppositionCandidate.model.ts";
 /**
- * Legal opposition candidate value objects.
- *
  * @category value-objects
  * @since 0.0.0
  */

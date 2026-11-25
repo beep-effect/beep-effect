@@ -25,8 +25,6 @@ import type { LangExtractOptions, LangExtractRequest } from "@beep/langextract/E
 const $I = $LangExtractId.create("Alignment");
 
 /**
- * Alignment status of a successfully matched candidate.
- *
  * **Details**
  *
  * Derived from {@link AlignmentStatus} minus `unaligned`: an absent match is
@@ -57,15 +55,12 @@ export const AlignedStatus = AlignmentStatus.pick([
 );
 
 /**
- * {@inheritDoc AlignedStatus}
  * @category models
  * @since 0.0.0
  */
 export type AlignedStatus = typeof AlignedStatus.Type;
 
 /**
- * A raw source slice located by one match attempt.
- *
  * **Example** (Type a matched slice)
  *
  * ```ts
@@ -97,7 +92,6 @@ export const MatchedText = S.Tuple([
 );
 
 /**
- * {@inheritDoc MatchedText}
  * @category models
  * @since 0.0.0
  */
@@ -143,15 +137,12 @@ export const ScoredMatch = S.Tuple([
 );
 
 /**
- * {@inheritDoc ScoredMatch}
  * @category models
  * @since 0.0.0
  */
 export type ScoredMatch = typeof ScoredMatch.Type;
 
 /**
- * A successful match tagged with the alignment tier that produced it.
- *
  * **Example** (Type an aligned match)
  *
  * ```ts
@@ -188,15 +179,12 @@ export const AlignedMatch = S.Tuple([
 );
 
 /**
- * {@inheritDoc AlignedMatch}
  * @category models
  * @since 0.0.0
  */
 export type AlignedMatch = typeof AlignedMatch.Type;
 
 /**
- * Encoded companion type for the {@link AlignedMatch} runtime schema.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -211,8 +199,6 @@ export declare namespace AlignedMatch {
 }
 
 /**
- * The source text plus resolved alignment options one alignment run reads.
- *
  * **Details**
  *
  * Both options resolve at construction time through schema constructor
@@ -302,8 +288,6 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
 ) {}
 
 /**
- * Codec from a matched slice to the text anchor it covers.
- *
  * **Details**
  *
  * Decoding is pure: `[start, text]` becomes the anchor whose range covers the
@@ -427,8 +411,6 @@ const candidateFromGrounded = (grounded: GroundedExtraction): ExtractionCandidat
   });
 
 /**
- * Codec from a model-emitted candidate to a source-grounded extraction.
- *
  * **Details**
  *
  * Decoding aligns the candidate against {@link CurrentAlignmentSource} and
@@ -469,8 +451,6 @@ export const GroundedExtractionFromCandidate: S.Codec<
 );
 
 /**
- * Codec from a candidate batch to source-grounded extractions.
- *
  * **Details**
  *
  * Decoding caps the batch at the already-resolved `maxExtractions` of
@@ -511,7 +491,6 @@ export const GroundedExtractionsFromCandidates: S.Codec<
 );
 
 /**
- * {@inheritDoc GroundedExtractionsFromCandidates}
  * @category models
  * @since 0.0.0
  */

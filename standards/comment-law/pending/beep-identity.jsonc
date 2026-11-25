@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/identity",
+  "root": "packages/foundation/modeling/identity",
+  "scopes": ["."]
+}

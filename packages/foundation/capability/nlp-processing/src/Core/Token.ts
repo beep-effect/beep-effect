@@ -73,8 +73,6 @@ export const isTokenIndex = (u: unknown): u is TokenIndex => S.is(TokenIndex)(u)
 export const tokenIndex: Brand.Constructor<TokenIndex> = Brand.check<TokenIndex>(S.makeFilter(S.is(S.Natural)));
 
 /**
- * Schema that decodes non-negative numbers into {@link TokenIndex} values.
- *
  * **Example** (Make schema token index)
  *
  * ```ts import.meta.vitest name="Make schema token index"

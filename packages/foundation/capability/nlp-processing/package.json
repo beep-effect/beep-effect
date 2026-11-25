@@ -96,6 +96,7 @@
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@beep/text": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:"

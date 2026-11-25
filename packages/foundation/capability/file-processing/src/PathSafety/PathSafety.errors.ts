@@ -43,8 +43,6 @@ export const PathSafetyViolationReason = LiteralKit([
 );
 
 /**
- * Type for {@link PathSafetyViolationReason}.
- *
  * **Example** (Check escapes-root reason type)
  *
  * ```ts import.meta.vitest name="Check escapes-root reason type"
@@ -60,8 +58,6 @@ export const PathSafetyViolationReason = LiteralKit([
 export type PathSafetyViolationReason = typeof PathSafetyViolationReason.Type;
 
 /**
- * Typed, fail-closed path-safety violation.
- *
  * **Details**
  *
  * Carries the sanitized allowed root, the original candidate path, and (when

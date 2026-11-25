@@ -193,8 +193,6 @@ export const OfficeActionReviewError = S.Union([
 );
 
 /**
- * Type for {@link OfficeActionReviewError}.
- *
  * **Example** (Assign typed review error)
  *
  * ```ts

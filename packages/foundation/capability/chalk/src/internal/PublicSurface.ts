@@ -32,8 +32,6 @@ const ColorSupportLevelInputChecks = S.makeFilterGroup(
 );
 
 /**
- * Numeric Chalk color support level input accepted by constructor and setter boundaries.
- *
  * **Details**
  *
  * The schema keeps the public constructor input broad as `number` while

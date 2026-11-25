@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $PackageJsonId.create("DevEngines");
 
 /**
- * A single `devEngines` constraint with a name and optional `version` / `onFail`.
- *
  * **Example** (Construct a runtime constraint)
  *
  * ```ts
@@ -102,8 +100,6 @@ export class DevEngine extends S.Opaque<DevEngine, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link DevEngine}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -118,8 +114,6 @@ export declare namespace DevEngine {
 }
 
 /**
- * A `devEngines` constraint slot: a single {@link DevEngine} or an array of them.
- *
  * **Example** (Decode single and multiple engine constraints)
  *
  * ```ts
@@ -144,9 +138,6 @@ export const DevEngineOrArray: S.Union<[typeof DevEngine, S.$Array<typeof DevEng
 );
 
 /**
- * The `devEngines` field schema, modeling runtime and package-manager
- * constraints as optional {@link DevEngine} slots.
- *
  * **Example** (Decode development engine slots)
  *
  * ```ts
@@ -198,8 +189,6 @@ export class DevEnginesSchema extends S.Opaque<DevEnginesSchema, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link DevEnginesSchema}.
- *
  * @category type-level
  * @since 0.0.0
  */

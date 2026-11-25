@@ -25,8 +25,6 @@ import { CodeFenceLanguage } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.escape");
 const trimBlock = Str.replace(/^\n+|\n+$/g, "");
-// Only active script protocols are blocked by default.
-// file:, blob:, and filesystem: are intentionally not treated as execution sinks in this boundary.
 const unsafeUrlProtocolPattern = /^(?:javascript|vbscript|data):/i;
 const urlProtocolDetectionIgnoredPattern = /[\u0000-\u001f\u007f\s]+/g;
 const urlSchemePrefixPattern = /^([A-Za-z][A-Za-z0-9+.-]*):/u;
@@ -103,8 +101,6 @@ export class CompatibilityUrlPolicy extends S.Opaque<CompatibilityUrlPolicy, { r
 ) {}
 
 /**
- * Explicit allow-list URL policy.
- *
  * **Details**
  *
  * Schemes decode to lowercase once at the schema boundary. Relative,
@@ -170,8 +166,6 @@ export const UrlPolicySpec = S.Union([CompatibilityUrlPolicy, AllowListUrlPolicy
 );
 
 /**
- * Type for {@link UrlPolicySpec}.
- *
  * **Example** (Assign compatibility policy type)
  *
  * ```ts import.meta.vitest name="Assign compatibility policy type"
@@ -365,16 +359,13 @@ const decodePercentEncodedByte: (value: string) => string = Str.replaceAllWith(
   (match, hex) => (P.isString(hex) ? codePointToString(parseCodePoint(hex, 16)) : match)
 );
 
-// Repeatedly decode percent-encoded bytes until the value stabilizes or the
-// pass budget is exhausted, defeating multiply-encoded protocol obfuscation
-// (e.g. `%256a` -> `%6a` -> `j`) without an imperative mutable loop.
-const decodePercentEncodedBytesFrom = (current: string, pass: number): string => {
+const decodePercentEncodedBytesUntilStableOrBudget = (current: string, pass: number): string => {
   const next = pass >= maxUrlDecodePasses ? current : decodePercentEncodedByte(current);
 
-  return next === current ? next : decodePercentEncodedBytesFrom(next, pass + 1);
+  return next === current ? next : decodePercentEncodedBytesUntilStableOrBudget(next, pass + 1);
 };
 
-const decodePercentEncodedBytes = (value: string): string => decodePercentEncodedBytesFrom(value, 0);
+const decodePercentEncodedBytes = (value: string): string => decodePercentEncodedBytesUntilStableOrBudget(value, 0);
 
 const normalizeUrlProtocolCandidate = flow(
   Str.trim,
@@ -425,9 +416,6 @@ const isAllowedByPolicy = (policy: UrlPolicySpec, destination: string): boolean 
   return pipe(
     destinationProtocol(normalized),
     O.match({
-      // URL parsers discard embedded ASCII whitespace before interpreting
-      // special-scheme slashes. Apply the relative-destination flags to that
-      // same canonical candidate so `/\n/host` cannot become `//host` later.
       onNone: () => isAllowedRelativeDestination(policy, normalized),
       onSome: (protocol) => hasAllowedProtocol(policy, protocol),
     })
@@ -591,7 +579,6 @@ export const sanitizeUrlDestinationWithPolicy: {
   (destination: string, policy: UrlPolicySpec): string;
   (policy: UrlPolicySpec): (destination: string) => string;
 } = dual(2, (destination: string, policy: UrlPolicySpec): string =>
-  // Evaluate normalized/decoded candidates, but preserve the original destination when safe.
   isUrlDestinationAllowedWithPolicy(destination, policy) ? destination : "#"
 );
 
@@ -747,13 +734,10 @@ export const maxBackticks: (text: string) => number = flow(
  */
 export const renderInlineCode = (text: string): string => {
   if (text === "" || lineBreakPattern.test(text)) {
-    // Preserve exact payload for empty/multiline spans instead of lossy Markdown normalization.
     return `<code>${Html.escapeHtml(text)}</code>`;
   }
 
   const backticks = pipe("`", Str.repeat(maxBackticks(text) + 1));
-  // A parser strips one space from each side only when the content is not
-  // all spaces, so an all-space payload is written bare.
   const needsPadding =
     Str.startsWith("`")(text) ||
     Str.endsWith("`")(text) ||

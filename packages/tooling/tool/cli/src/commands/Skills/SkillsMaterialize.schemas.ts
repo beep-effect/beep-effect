@@ -61,8 +61,6 @@ export const SkillMaterializeMode = LiteralKit(["write", "check"]).pipe(
 export type SkillMaterializeMode = typeof SkillMaterializeMode.Type;
 
 /**
- * One install target's state against the verified tree.
- *
  * **Details**
  *
  * `matches`: the target hashes to the verified tree. `differs`: it exists with
@@ -86,8 +84,6 @@ export const SkillMaterializeTargetState = LiteralKit(["matches", "differs", "mi
 );
 
 /**
- * One install target's state against the verified tree.
- *
  * **Example** (Annotate a target state)
  *
  * ```ts
@@ -175,8 +171,6 @@ export class SkillMaterializeTarget extends S.Opaque<SkillMaterializeTarget, { r
 ) {}
 
 /**
- * The materialize outcome for one lock entry.
- *
  * **Details**
  *
  * `patches` counts the replayed patch series (zero for a local entry or an
@@ -216,8 +210,6 @@ export class SkillMaterializeRow extends S.Opaque<SkillMaterializeRow, { readonl
 ) {}
 
 /**
- * The full `skills materialize` report.
- *
  * **Example** (Build an empty check report)
  *
  * ```ts

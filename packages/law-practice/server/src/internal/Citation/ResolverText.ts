@@ -21,6 +21,7 @@ import * as Str from "effect/String";
 import { citationPythonDecimalValues as decimalValues } from "./PythonDecimal.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 
+const FROZEN_PYTHON_INT_MAX_STR_DIGITS_COUNTING_LEADING_ZEROES = 4300;
 const $I = $LawPracticeServerId.create("internal/Citation/ResolverText");
 const digitSet = HashSet.fromIterable(citationPythonTextData.digits);
 const Input = S.Struct({ fullCitation: Citation, idCitation: IdCitation });
@@ -97,8 +98,8 @@ export const stripCitationAntecedentPunctuation = (text: string): string =>
   );
 
 const decimalInteger = Effect.fn("Citation.parseResolverDecimal")(function* (characters: ReadonlyArray<string>) {
-  // Match the frozen Python integer conversion limit, including leading zeroes.
-  if (A.length(characters) > 4300) return yield* CitationResolverTextFailure.make({ reason: "integer-conversion" });
+  if (A.length(characters) > FROZEN_PYTHON_INT_MAX_STR_DIGITS_COUNTING_LEADING_ZEROES)
+    return yield* CitationResolverTextFailure.make({ reason: "integer-conversion" });
   const values = A.map(characters, (char) => HashMap.get(decimalValues, char));
   const digits = A.map(A.getSomes(values), (digit) => `${digit}`);
   if (A.length(digits) !== A.length(characters))

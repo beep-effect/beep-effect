@@ -1,6 +1,6 @@
 {
   "version": "term-snapshot/v1",
-  "release": "2.2.0",
+  "release": "2.3.0",
   "namespaces": [
     {
       "prefix": "annotation",

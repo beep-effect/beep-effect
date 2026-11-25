@@ -41,8 +41,6 @@ export const WorkItemId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link WorkItemId}.
- *
  * **Example** (Collect WorkItem ids array)
  *
  * ```ts
@@ -90,8 +88,6 @@ export const WorkItemTitle = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link WorkItemTitle}.
- *
  * **Example** (Embed title in label)
  *
  * ```ts
@@ -140,8 +136,6 @@ export const WorkItemStatus = LiteralKit(["open", "assigned", "completed", "arch
 );
 
 /**
- * Runtime type for {@link WorkItemStatus}.
- *
  * **Example** (Type terminal archived status)
  *
  * ```ts

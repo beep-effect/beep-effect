@@ -45,8 +45,6 @@ const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
 // =============================================================================
 
 /**
- * Union of all node types (structural + linguistic annotations).
- *
  * **Example** (Create TextNode as AnnotatedNode)
  *
  * ```ts import.meta.vitest name="Create TextNode as AnnotatedNode"

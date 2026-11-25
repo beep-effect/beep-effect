@@ -31,8 +31,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Goals/Goals.schemas");
 
 /**
- * Canonical goal-packet lifecycle states.
- *
  * **Details**
  *
  * `active` packets are executing (and must carry a `GOAL.md` launcher),
@@ -60,8 +58,6 @@ export const GoalStatus = LiteralKit(["active", "paused", "completed-retained", 
 );
 
 /**
- * Canonical goal-packet lifecycle state.
- *
  * **Example** (Annotate a lifecycle value)
  *
  * ```ts
@@ -121,8 +117,6 @@ export const GoalPhaseStatus = LiteralKit(["pending", "in-progress", "complete",
 );
 
 /**
- * Canonical normalized goal-phase status.
- *
  * **Example** (Annotate a phase status value)
  *
  * ```ts
@@ -155,8 +149,6 @@ export type GoalPhaseStatus = typeof GoalPhaseStatus.Type;
 export const isGoalPhaseStatus = S.is(GoalPhaseStatus);
 
 /**
- * Known goal-manifest schema versions.
- *
  * **Details**
  *
  * `initiative-manifest/v2` is canonical; `initiative-manifest/v1` and `1.0.0`
@@ -181,8 +173,6 @@ export const GoalManifestSchemaVersion = LiteralKit(["initiative-manifest/v2", "
 );
 
 /**
- * Known goal-manifest schema version.
- *
  * **Example** (Annotate a manifest schema version)
  *
  * ```ts
@@ -198,8 +188,6 @@ export const GoalManifestSchemaVersion = LiteralKit(["initiative-manifest/v2", "
 export type GoalManifestSchemaVersion = typeof GoalManifestSchemaVersion.Type;
 
 /**
- * Distinguishes the final delivery PR from supporting work.
- *
  * **Example** (GoalPullRequestRole boundary)
  *
  * ```ts
@@ -214,16 +202,12 @@ export const GoalPullRequestRole = LiteralKit(["final", "supporting"]).pipe(
   $I.annoteSchema("GoalPullRequestRole", { description: "Distinguishes the final delivery PR from supporting work." })
 );
 /**
- * Distinguishes the final delivery PR from supporting work.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalPullRequestRole = typeof GoalPullRequestRole.Type;
 
 /**
- * Names the evidence provider used to accept a goal.
- *
  * **Details**
  *
  * Only the hosted kinds ({@link GoalHostedEvidenceKind}) can gate completion:
@@ -252,16 +236,12 @@ export const GoalAcceptanceEvidenceKind = LiteralKit([
   $I.annoteSchema("GoalAcceptanceEvidenceKind", { description: "Names the evidence provider used to accept a goal." })
 );
 /**
- * Names the evidence provider used to accept a goal.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalAcceptanceEvidenceKind = typeof GoalAcceptanceEvidenceKind.Type;
 
 /**
- * The evidence kinds that may gate goal completion: hosted facts read from GitHub.
- *
  * **Details**
  *
  * Completion gates only on evidence whose ref is `gating` and whose kind is one
@@ -289,16 +269,12 @@ export const GoalHostedEvidenceKind = GoalAcceptanceEvidenceKind.pick([
   })
 );
 /**
- * An evidence kind that may gate goal completion.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalHostedEvidenceKind = typeof GoalHostedEvidenceKind.Type;
 
 /**
- * Names the independently observed GitHub merge workflow.
- *
  * **Example** (GoalMergeMethod boundary)
  *
  * ```ts
@@ -313,16 +289,12 @@ export const GoalMergeMethod = LiteralKit(["squash", "merge", "rebase"]).pipe(
   $I.annoteSchema("GoalMergeMethod", { description: "Names the independently observed GitHub merge workflow." })
 );
 /**
- * Names the independently observed GitHub merge workflow.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalMergeMethod = typeof GoalMergeMethod.Type;
 
 /**
- * Separates affirmative completion, contrary facts, and missing observations.
- *
  * **Example** (GoalCompletionOutcome boundary)
  *
  * ```ts
@@ -339,16 +311,12 @@ export const GoalCompletionOutcome = LiteralKit(["verified", "unsatisfied", "unk
   })
 );
 /**
- * Separates affirmative completion, contrary facts, and missing observations.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalCompletionOutcome = typeof GoalCompletionOutcome.Type;
 
 /**
- * Attributes non-required failures without treating their conclusion as a waiver.
- *
  * **Example** (GoalRedAttribution boundary)
  *
  * ```ts
@@ -365,16 +333,12 @@ export const GoalRedAttribution = LiteralKit(["inherited", "introduced", "mixed"
   })
 );
 /**
- * Attributes non-required failures without treating their conclusion as a waiver.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalRedAttribution = typeof GoalRedAttribution.Type;
 
 /**
- * Names why a required check was red at a goal's final merge; `unknown` cannot attribute.
- *
  * **Example** (Reject an unknown cause)
  *
  * ```ts
@@ -394,8 +358,6 @@ export const GoalAttributedRedCause = GoalRedAttribution.pick(["inherited", "int
   })
 );
 /**
- * Why a required check was red at a goal's final merge.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -458,8 +420,6 @@ const GoalRedAttributionFixIsNotFinal = S.makeFilter(
 );
 
 /**
- * The `redAttribution` decision-file block: the reds one final merged over.
- *
  * **Details**
  *
  * One block per final. Contexts are unique within the block, and no fix PR may
@@ -519,8 +479,6 @@ export class GoalOperatorRuling extends S.Opaque<GoalOperatorRuling, { readonly 
 ) {}
 
 /**
- * Where a decision file carrying a claim was found.
- *
  * **Details**
  *
  * `origin-main` is `origin/main`'s tree and `head` the checkout's `HEAD`
@@ -543,8 +501,6 @@ export const GoalClaimSource = LiteralKit(["origin-main", "head", "working-tree"
   })
 );
 /**
- * Where a decision file carrying a claim was found.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -603,16 +559,12 @@ export const GoalCommittedClaimSource = GoalClaimSource.pick(["origin-main", "he
   })
 );
 /**
- * A claim source that counts toward a stored completion receipt.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalCommittedClaimSource = typeof GoalCommittedClaimSource.Type;
 
 /**
- * One attributed red as read from a decision file, with the file and its source.
- *
  * **Details**
  *
  * The one claim shape the reader, the observation, the receipt and the
@@ -652,8 +604,6 @@ export class GoalRedAttributionClaim extends S.Opaque<GoalRedAttributionClaim, {
 ) {}
 
 /**
- * One operator ruling as read from a decision file, with the file and its source.
- *
  * **Example** (Construct a ruling claim)
  *
  * ```ts
@@ -712,8 +662,6 @@ export class GoalAttributionConflict extends S.Opaque<GoalAttributionConflict, {
 ) {}
 
 /**
- * The claims for one final from one set of sources: attributed reds, rulings and conflicts.
- *
  * **Details**
  *
  * Every array defaults to empty, so `GoalClaimSet.make({})` is the empty set.
@@ -778,8 +726,6 @@ export class GoalCompletionClaims extends S.Opaque<GoalCompletionClaims, { reado
 ) {}
 
 /**
- * Declares one pull request by number and delivery role.
- *
  * **Example** (GoalPullRequestRef boundary)
  *
  * ```ts
@@ -797,8 +743,6 @@ export class GoalPullRequestRef extends S.Opaque<GoalPullRequestRef, { readonly 
 ) {}
 
 /**
- * Points to acceptance evidence bound to a commit, with an explicit gating policy.
- *
  * **Example** (GoalAcceptanceEvidenceRef boundary)
  *
  * ```ts
@@ -822,8 +766,6 @@ export class GoalAcceptanceEvidenceRef extends S.Opaque<GoalAcceptanceEvidenceRe
 ) {}
 
 /**
- * Records GitHub merge identity and tree without requiring squash-head ancestry.
- *
  * **Example** (GoalMergeResult boundary)
  *
  * ```ts
@@ -849,8 +791,6 @@ export class GoalMergeResult extends S.Opaque<GoalMergeResult, { readonly brand:
 ) {}
 
 /**
- * Records the outcome and observed head of one acceptance reference.
- *
  * **Example** (GoalEvidenceCheck boundary)
  *
  * ```ts
@@ -905,16 +845,12 @@ export const GoalCheckConclusion = LiteralKit([
   })
 );
 /**
- * A GitHub conclusion or explicit pending/unknown observation.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalCheckConclusion = typeof GoalCheckConclusion.Type;
 
 /**
- * Names the GitHub record that supplied one merge-time completion fact.
- *
  * **Details**
  *
  * `rule-suite` is GitHub's evaluation of every rule source at the merge push,
@@ -937,8 +873,6 @@ export const GoalEvidenceFactSource = LiteralKit(["rule-suite", "ruleset-version
   })
 );
 /**
- * GitHub record that supplied one merge-time completion fact.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -980,16 +914,12 @@ export const GoalCompletionEvidenceGap = LiteralKit([
   })
 );
 /**
- * Reason merge-time completion evidence is incomplete and therefore unknown.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalCompletionEvidenceGap = typeof GoalCompletionEvidenceGap.Type;
 
 /**
- * Names GitHub's overall rule-suite result for one push.
- *
  * **Example** (Recognize a bypassed push)
  *
  * ```ts
@@ -1004,16 +934,12 @@ export const GoalRuleSuiteResult = LiteralKit(["pass", "fail", "bypass"]).pipe(
   $I.annoteSchema("GoalRuleSuiteResult", { description: "GitHub's overall rule-suite result for one push." })
 );
 /**
- * GitHub's overall rule-suite result for one push.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalRuleSuiteResult = typeof GoalRuleSuiteResult.Type;
 
 /**
- * Names GitHub's result for one evaluated rule.
- *
  * **Example** (Recognize a failed rule)
  *
  * ```ts
@@ -1028,16 +954,12 @@ export const GoalRuleEvaluationResult = LiteralKit(["pass", "fail"]).pipe(
   $I.annoteSchema("GoalRuleEvaluationResult", { description: "GitHub's result for one evaluated rule." })
 );
 /**
- * GitHub's result for one evaluated rule.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalRuleEvaluationResult = typeof GoalRuleEvaluationResult.Type;
 
 /**
- * Names how GitHub enforced one evaluated rule source.
- *
  * **Details**
  *
  * GitHub reports `deleted ruleset` for an evaluation whose ruleset was later deleted.
@@ -1056,16 +978,12 @@ export const GoalRuleEnforcement = LiteralKit(["active", "evaluate", "deleted ru
   $I.annoteSchema("GoalRuleEnforcement", { description: "How GitHub enforced one evaluated rule source." })
 );
 /**
- * How GitHub enforced one evaluated rule source.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalRuleEnforcement = typeof GoalRuleEnforcement.Type;
 
 /**
- * Names what recovered ruleset history says about a rule source at merge.
- *
  * **Details**
  *
  * `unread` means no history was read (or none could be recovered). `gating`
@@ -1091,16 +1009,12 @@ export const GoalRuleSourceHistory = LiteralKit(["unread", "gating", "not-gating
   })
 );
 /**
- * What recovered ruleset history says about a rule source at merge.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalRuleSourceHistory = typeof GoalRuleSourceHistory.Type;
 
 /**
- * Records one rule source GitHub evaluated at the merge push and the history version read for it.
- *
  * **Details**
  *
  * `requiredStatusChecks` is GitHub's own merge-time result for the source's
@@ -1194,8 +1108,6 @@ export const GoalMergeTimeRuleSourceRecord = GoalMergeTimeRuleSourceWire.pipe(
 );
 
 /**
- * Records GitHub's rule suite for the merge push: the complete rule-source inventory at merge.
- *
  * **Details**
  *
  * The rule suite lists every rule source GitHub evaluated for the push that
@@ -1229,8 +1141,6 @@ export class GoalMergeTimeInventory extends S.Opaque<GoalMergeTimeInventory, { r
 ) {}
 
 /**
- * Records one required context's result bound to the accepted head, with its source.
- *
  * **Details**
  *
  * `checkRunId` is the newest run for the context on `head` that started before
@@ -1263,8 +1173,6 @@ export class GoalRequiredCheckFact extends S.Opaque<GoalRequiredCheckFact, { rea
 ) {}
 
 /**
- * Whether an attributed required context was red at the head or never reported a run.
- *
  * **Details**
  *
  * `missing` is a required context with no run on the accepted head (GitHub's
@@ -1286,8 +1194,6 @@ export const GoalAttributedRedObservation = LiteralKit(["red", "missing"]).pipe(
   })
 );
 /**
- * Whether an attributed required context was red or never reported a run.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1400,8 +1306,6 @@ export class GoalReviewThreadTally extends S.Opaque<GoalReviewThreadTally, { rea
 ) {}
 
 /**
- * Completion evidence whose every required context is green, or attributed, at the accepted head.
- *
  * **Details**
  *
  * `facts` holds every relevant required fact, attributed reds included, so it
@@ -1439,8 +1343,6 @@ export class GoalCompletionEvidenceVerified extends S.Opaque<
 ) {}
 
 /**
- * Completion evidence holding a known required red.
- *
  * **Details**
  *
  * `reds` are head-bound required check failures that no committed
@@ -1470,8 +1372,6 @@ export class GoalCompletionEvidenceUnsatisfied extends S.Opaque<
 ) {}
 
 /**
- * Completion evidence that is missing or partial.
- *
  * **Example** (Inspect the unknown case)
  *
  * ```ts
@@ -1494,8 +1394,6 @@ export class GoalCompletionEvidenceUnknown extends S.Opaque<
 ) {}
 
 /**
- * The merge-time completion evidence verdict: verified, unsatisfied or unknown.
- *
  * **Example** (Discriminate a verdict)
  *
  * ```ts
@@ -1518,8 +1416,6 @@ export const GoalCompletionEvidenceVerdict = S.Union([
   })
 );
 /**
- * The merge-time completion evidence verdict.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1573,8 +1469,6 @@ export class GoalRequiredCheckSnapshot extends S.Opaque<GoalRequiredCheckSnapsho
 ) {}
 
 /**
- * Retains merge-time and final conclusions alongside independently attributed failures.
- *
  * **Example** (GoalNonRequiredRed boundary)
  *
  * ```ts
@@ -1599,8 +1493,6 @@ export class GoalNonRequiredRed extends S.Opaque<GoalNonRequiredRed, { readonly 
 ) {}
 
 /**
- * Known completion-receipt schema versions.
- *
  * **Details**
  *
  * `goal-completion-receipt/v2` is written by the hosted-only rules and adds
@@ -1626,16 +1518,12 @@ export const GoalCompletionReceiptVersion = LiteralKit([
   })
 );
 /**
- * A known goal completion-receipt schema version.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type GoalCompletionReceiptVersion = typeof GoalCompletionReceiptVersion.Type;
 
 /**
- * Binds a derived completion observation to the repository, packet, declaration and accepted head.
- *
  * **Details**
  *
  * `schemaVersion` defaults to `goal-completion-receipt/v2`. `merged` tells an
@@ -1693,8 +1581,6 @@ export class GoalCompletionReceipt extends S.Opaque<GoalCompletionReceipt, { rea
 ) {}
 
 /**
- * The declared completion gate of a goal packet.
- *
  * **Details**
  *
  * Uniform across every manifest in the census: a goal is not achieved until
@@ -1748,8 +1634,6 @@ export class GoalCompletionGate extends S.Opaque<GoalCompletionGate, { readonly 
 ) {}
 
 /**
- * The identity block of a goal manifest.
- *
  * **Details**
  *
  * `id` and `status` are the required core; every other field is optional so
@@ -1785,8 +1669,6 @@ export class GoalInitiative extends S.Opaque<GoalInitiative, { readonly brand: u
 ) {}
 
 /**
- * One phase entry inside a goal manifest.
- *
  * **Details**
  *
  * Phases appear both as arrays and as records keyed by phase name in legacy
@@ -1934,8 +1816,6 @@ const GoalManifestCapabilitySelfCycleCheck = S.makeFilter(
 );
 
 /**
- * Commits a closeout naming the goal's final delivery PR.
- *
  * **Details**
  *
  * `goals set-status <slug> completed-retained` writes this record with the
@@ -2162,8 +2042,6 @@ export const renderGoalCloseoutRecord = (record: GoalCloseoutRecord): string =>
   `${record.status} via #${record.finalPullRequest}`;
 
 /**
- * Packet-relative path of one registered goal ops script.
- *
  * **Details**
  *
  * The path starts with `ops/` and every segment starts with a letter, digit,
@@ -2199,8 +2077,6 @@ export const GoalOpsScriptPath = S.String.check(
 );
 
 /**
- * One registered goal ops script: its packet-relative path and purpose.
- *
  * **Details**
  *
  * `opsScripts` on {@link GoalManifest} lists every script a packet keeps under
@@ -2238,8 +2114,6 @@ export class GoalOpsScript extends S.Opaque<GoalOpsScript, { readonly brand: uni
 ) {}
 
 /**
- * Packet-relative path of one projected research report, always inside `research/`.
- *
  * **Details**
  *
  * `researchReports` on {@link GoalManifest} is a generated projection of the

@@ -110,8 +110,6 @@ export const GOVINFO_CACHE_TTL = "5 minutes";
 
 const govinfoConfigInputApiUrlDefault = URLStr.make(GOVINFO_API_URL);
 /**
- * Runtime configuration accepted by {@link Govinfo.makeLayer}.
- *
  * **Example** (Make config with API URL)
  *
  * ```ts

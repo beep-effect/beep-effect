@@ -32,9 +32,6 @@ import { CorepackIntegrityHash } from "./IntegrityHash.ts";
 const $I = $NpmSpecId.create("PackageManagerPin");
 
 /**
- * Indicates that a string could not be parsed as a corepack package-manager
- * pin (`<name>@<version>[+<integrity>]`).
- *
  * **Details**
  *
  * Raised by {@link PackageManagerPin.parse} and
@@ -115,8 +112,6 @@ export class InvalidPackageManagerPinError extends S.TaggedError<
 }
 
 /**
- * The four package managers a corepack pin can name.
- *
  * **Details**
  *
  * Structurally identical to `@beep/repo-workspaces`' `PackageManagerName` and
@@ -173,13 +168,8 @@ export type PackageManagerPinName = typeof PackageManagerPinName.Type;
 
 const isPinName = S.is(PackageManagerPinName);
 
-// A pin's version is an exact SemVer version with NO build metadata: the pin
-// grammar cannot express it (the first `+` always begins the integrity), so a
-// constructed version carrying build identifiers would encode to a string that
-// re-parses differently. Rejecting it at the field keeps decode/encode sound.
 const pinVersion = SemVer.pipe(
   S.check(
-    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
       (version: SemVer) => version.build.length === 0,
       $I.annote("PinVersionCheck", {
@@ -192,9 +182,6 @@ const pinVersion = SemVer.pipe(
 );
 
 /**
- * A corepack package-manager pin: the `<name>@<version>[+<integrity>]` triple
- * (e.g. `pnpm@11.17.0+sha512.abc…`), independent of any `package.json` field.
- *
  * **Details**
  *
  * `version` is an exact `@beep/semver` `SemVer` — prerelease versions are
@@ -357,22 +344,16 @@ export class PackageManagerPin extends S.Class<PackageManagerPin, { readonly bra
       return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "name" }));
     }
     const rest = Str.slice(at + 1)(input);
-    // The first `+` begins the integrity component, unconditionally — the
-    // version part of a pin never carries build metadata.
-    const plus = O.getOrElse(Str.indexOf("+")(rest), () => -1);
-    const candidate = plus === -1 ? rest : Str.slice(0, plus)(rest);
-    // The string-level ruling is `SemVer.isPinnable` — the same export
-    // `@beep/package-json`'s field model consumes — and it is stricter
-    // than the trimming parse: a padded version substring (`pnpm@ 11.17.0`)
-    // fails typed here rather than being silently canonicalized.
+    const firstPlusBeginsIntegrity = O.getOrElse(Str.indexOf("+")(rest), () => -1);
+    const candidate = firstPlusBeginsIntegrity === -1 ? rest : Str.slice(0, firstPlusBeginsIntegrity)(rest);
     const version = SemVer.parseResult(candidate);
     if (Result.isFailure(version) || !SemVer.isPinnable(candidate)) {
       return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "version" }));
     }
-    if (plus === -1) {
+    if (firstPlusBeginsIntegrity === -1) {
       return Result.succeed(PackageManagerPin.make({ name, version: version.success }));
     }
-    const integrity = S.decodeExit(CorepackIntegrityHash)(Str.slice(plus + 1)(rest));
+    const integrity = S.decodeExit(CorepackIntegrityHash)(Str.slice(firstPlusBeginsIntegrity + 1)(rest));
     if (Exit.isFailure(integrity)) {
       return Result.fail(InvalidPackageManagerPinError.make({ input, reason: "integrity" }));
     }

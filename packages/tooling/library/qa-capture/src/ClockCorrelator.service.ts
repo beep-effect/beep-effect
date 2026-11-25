@@ -64,8 +64,6 @@ const BEACON_MIN_PAIRS = 3;
 const BEACON_HIGH_MIN_PAIRS = 4;
 
 /**
- * One luma transition detected in the beacon corner region.
- *
  * **Example** (Create beacon edge model)
  *
  * ```ts
@@ -232,8 +230,6 @@ export const fitBeaconClockSync: {
 
 const correlateClockRequestBeaconEventsDefault = A.empty();
 /**
- * Request accepted by {@link ClockCorrelator} `correlate`.
- *
  * **Example** (Build correlate clock request)
  *
  * ```ts

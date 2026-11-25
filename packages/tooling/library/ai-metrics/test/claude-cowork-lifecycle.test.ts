@@ -366,9 +366,7 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             let releases = 0;
             const response = yield* syntheticCoworkOutput(fault, f.policy);
             const output = policySeen.pipe(Deferred.await, Stream.fromEffect, Stream.drain, Stream.concat(response));
-            // Own double: reads the helper's stdin stream to release the scripted output only after the
-            // policy frame and counts acknowledgements and releases; `ScriptedSpawner` answers statically.
-            // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
+            // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: releases scripted output only after the policy frame on stdin and counts acks and releases
             const spawner = ChildProcessSpawner.make((command) =>
               Effect.gen(function* () {
                 const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -493,8 +491,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
           ),
         });
         const output = Stream.make(new TextEncoder().encode("not-json\n"));
-        // Own double: decorates the real platform spawner, stubbing only the second (helper) spawn.
-        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: decorates the real platform spawner, stubbing only the second (helper) spawn
         const spawner = ChildProcessSpawner.make((command) => {
           calls++;
           if (calls === 1) return original.spawn(command);
@@ -554,33 +551,34 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
       })
     );
     for (const kind of ["valid", "malformed", "oversized"]) {
-      it.effect(`production Cowork preparation projects metadata and validates ${kind} synthetic ACK`, () =>
-        Effect.gen(function* () {
-          const good = yield* encode({ receiptId: id, accepted: 1, rejected: 0 });
-          const reply = kind === "valid" ? good : kind === "malformed" ? "{malformed" : Str.repeat(1025)("x");
-          const server = yield* makeLifecycleAckServer(reply, false);
-          const body = yield* encode(start);
-          const prepared = yield* prepareCoworkLifecycleFixtureHook(
-            server.path,
-            body,
-            "local-agent",
-            "synthetic-ack-occurrence"
-          );
-          const result = yield* prepared.send.pipe(Effect.result);
-          if (kind === "valid") assertSuccess(result, { receiptId: id, accepted: 1, rejected: 0 });
-          else assertFailure(result, CoworkLifecycleError.make({ reason: "transport" }));
-          const forwarded = yield* server.received;
-          for (const marker of [
-            "PRIVATE-prompt",
-            "PRIVATE-title",
-            "/PRIVATE/transcript",
-            "forged-root",
-            "PRIVATE-secret",
-          ])
-            expect(Str.includes(marker)(forwarded)).toBe(false);
-          expect(Str.includes("synthetic-ack-occurrence")(forwarded)).toBe(true);
-          // This server observes transport only; it creates no journal or durable ACK.
-        })
+      it.effect(
+        `production Cowork preparation projects metadata and validates ${kind} synthetic ACK from a transport-only server with no journal`,
+        () =>
+          Effect.gen(function* () {
+            const good = yield* encode({ receiptId: id, accepted: 1, rejected: 0 });
+            const reply = kind === "valid" ? good : kind === "malformed" ? "{malformed" : Str.repeat(1025)("x");
+            const server = yield* makeLifecycleAckServer(reply, false);
+            const body = yield* encode(start);
+            const prepared = yield* prepareCoworkLifecycleFixtureHook(
+              server.path,
+              body,
+              "local-agent",
+              "synthetic-ack-occurrence"
+            );
+            const result = yield* prepared.send.pipe(Effect.result);
+            if (kind === "valid") assertSuccess(result, { receiptId: id, accepted: 1, rejected: 0 });
+            else assertFailure(result, CoworkLifecycleError.make({ reason: "transport" }));
+            const forwarded = yield* server.received;
+            for (const marker of [
+              "PRIVATE-prompt",
+              "PRIVATE-title",
+              "/PRIVATE/transcript",
+              "forged-root",
+              "PRIVATE-secret",
+            ])
+              expect(Str.includes(marker)(forwarded)).toBe(false);
+            expect(Str.includes("synthetic-ack-occurrence")(forwarded)).toBe(true);
+          })
       );
     }
     it.effect("production Cowork preparation refuses absent transport and oversized input without admission", () =>
@@ -1126,10 +1124,7 @@ for (const selector of ["cli", "local-agent"]) {
     )
   );
 }
-// Runs the real helper's guarded serve() with a stand-in that fails after binding, and signals the
-// helper on the os.lstat call inside its socket cleanup. The parent closes stdin just before SIGTERM,
-// so a real helper can already be in that cleanup when the signal lands.
-const cleanupSignalHarness = `import ast, json, os, signal, socket, sys
+const guardedServeFailingAfterBindSignalledOnLstatInsideSocketCleanupHarness = `import ast, json, os, signal, socket, sys
 config = json.load(sys.stdin)
 tree = ast.parse(config["source"])
 guarded = [node for node in tree.body if isinstance(node, ast.Try)]
@@ -1158,11 +1153,15 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
       const f = yield* fixture();
       const fs = yield* FileSystem.FileSystem;
       const body = yield* encode({ source: coworkPeerSource, socketPath: f.policy.socketPath });
-      const child = yield* ChildProcess.make(f.policy.pythonExecutable, ["-I", "-B", "-c", cleanupSignalHarness], {
-        extendEnv: false,
-        stdin: Stream.make(new TextEncoder().encode(body)),
-        stderr: "ignore",
-      });
+      const child = yield* ChildProcess.make(
+        f.policy.pythonExecutable,
+        ["-I", "-B", "-c", guardedServeFailingAfterBindSignalledOnLstatInsideSocketCleanupHarness],
+        {
+          extendEnv: false,
+          stdin: Stream.make(new TextEncoder().encode(body)),
+          stderr: "ignore",
+        }
+      );
       const exitCode = yield* child.exitCode;
       expect(exitCode).toBe(2);
       const present = yield* fs.exists(f.policy.socketPath);
@@ -1209,8 +1208,11 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
       const output = yield* child.stdout.pipe(Stream.decodeText(), Stream.mkString, Effect.timeout("10 seconds"));
       const exitCode = yield* child.exitCode;
       expect(exitCode).toBe(2);
-      // A rejected policy also exits 2 with no socket, so require proof the signal landed after bind.
-      deepStrictEqual(output, "signalled\n");
+      deepStrictEqual(
+        output,
+        "signalled\n",
+        "a rejected policy also exits 2 with no socket, so the signal must be proven to land after bind"
+      );
       const present = yield* fs.exists(f.policy.socketPath);
       assertFalse(present);
     })

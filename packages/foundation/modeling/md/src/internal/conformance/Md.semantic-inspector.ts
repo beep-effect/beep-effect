@@ -26,8 +26,6 @@ const gfmDisallowedRawHtmlPattern =
   /<\/?(?:title|textarea|style|xmp|iframe|noembed|noframes|script|plaintext)(?:[\t\n\f\r />]|$)/iu;
 
 /**
- * Specification profile selected for semantic Markdown AST validation.
- *
  * **Details**
  *
  * GFM includes the CommonMark structural rules plus the pinned table,
@@ -59,8 +57,6 @@ export const MarkdownConformanceProfile = LiteralKit([
 );
 
 /**
- * Runtime profile accepted by {@link MarkdownConformanceProfile}.
- *
  * @see {@link MarkdownConformanceProfile} for named values and guards.
  * @category specifications
  * @since 0.0.0
@@ -100,8 +96,6 @@ export const MarkdownExtensionNodeTag = LiteralKit([
 );
 
 /**
- * Runtime extension tag represented by {@link MarkdownExtensionNodeTag}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -114,8 +108,6 @@ const MarkdownConformancePath = S.Array(DocumentSafetyPathSegment).pipe(
 );
 
 /**
- * Link node nested below another link node.
- *
  * @category models
  * @since 0.0.0
  */
@@ -131,8 +123,6 @@ export class NestedLinkIssue extends S.Opaque<NestedLinkIssue, { readonly brand:
 ) {}
 
 /**
- * Extension node used outside the profile that defines it.
- *
  * @category models
  * @since 0.0.0
  */
@@ -150,8 +140,6 @@ export class UnsupportedNodeIssue extends S.Opaque<UnsupportedNodeIssue, { reado
 ) {}
 
 /**
- * List block without any list items.
- *
  * @category models
  * @since 0.0.0
  */
@@ -168,8 +156,6 @@ export class EmptyListIssue extends S.Opaque<EmptyListIssue, { readonly brand: u
 ) {}
 
 /**
- * Ordered-list start outside CommonMark's one-to-nine digit marker range.
- *
  * @category models
  * @since 0.0.0
  */
@@ -186,8 +172,6 @@ export class OrderedListStartIssue extends S.Opaque<OrderedListStartIssue, { rea
 ) {}
 
 /**
- * GFM table without a non-empty header row.
- *
  * @category models
  * @since 0.0.0
  */
@@ -203,8 +187,6 @@ export class GfmTableHeaderIssue extends S.Opaque<GfmTableHeaderIssue, { readonl
 ) {}
 
 /**
- * Noncanonical GFM semantic table row whose cell count differs from the header width.
- *
  * @category models
  * @since 0.0.0
  */
@@ -222,8 +204,6 @@ export class GfmTableRowWidthIssue extends S.Opaque<GfmTableRowWidthIssue, { rea
 ) {}
 
 /**
- * Non-empty GFM alignment metadata whose length differs from the header width.
- *
  * @category models
  * @since 0.0.0
  */
@@ -244,8 +224,6 @@ export class GfmTableAlignmentWidthIssue extends S.Opaque<
 ) {}
 
 /**
- * Raw HTML containing a tag filtered by the GFM disallowed-raw-HTML extension.
- *
  * @category models
  * @since 0.0.0
  */
@@ -261,8 +239,6 @@ export class GfmDisallowedRawHtmlIssue extends S.Opaque<GfmDisallowedRawHtmlIssu
 ) {}
 
 /**
- * Repeated Beep footnote definition identifier.
- *
  * @category models
  * @since 0.0.0
  */
@@ -282,8 +258,6 @@ export class DuplicateFootnoteDefinitionIssue extends S.Opaque<
 ) {}
 
 /**
- * Beep footnote reference without a matching definition.
- *
  * @category models
  * @since 0.0.0
  */
@@ -303,8 +277,6 @@ export class UndefinedFootnoteReferenceIssue extends S.Opaque<
 ) {}
 
 /**
- * Exhaustive path-located semantic Markdown conformance issue.
- *
  * **Example** (Construct and match an issue)
  *
  * ```ts import.meta.vitest name="Construct and match an issue"
@@ -349,8 +321,6 @@ export const MarkdownConformanceIssue = S.Union([
 );
 
 /**
- * Runtime issue represented by {@link MarkdownConformanceIssue}.
- *
  * @see {@link MarkdownConformanceIssue} for constructors, guards, and exhaustive matching.
  * @category diagnostics
  * @since 0.0.0
@@ -358,8 +328,6 @@ export const MarkdownConformanceIssue = S.Union([
 export type MarkdownConformanceIssue = typeof MarkdownConformanceIssue.Type;
 
 /**
- * Lossless profile inspection result retaining the exact supplied document.
- *
  * **Example** (Inspect without rejecting)
  *
  * ```ts import.meta.vitest name="Inspect without rejecting"

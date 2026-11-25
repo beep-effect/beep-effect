@@ -26,8 +26,6 @@ const PhoenixCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * Driver health states returned by {@link Phoenix.doctor}.
- *
  * **Example** (Access passed status enum)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const PhoenixDoctorStatus = LiteralKit(["passed", "unavailable"]).pipe(
 );
 
 /**
- * Type for {@link PhoenixDoctorStatus}.
- *
  * **Example** (Type-check passed status)
  *
  * ```ts
@@ -64,8 +60,6 @@ export const PhoenixDoctorStatus = LiteralKit(["passed", "unavailable"]).pipe(
 export type PhoenixDoctorStatus = typeof PhoenixDoctorStatus.Type;
 
 /**
- * Selector kinds used when addressing Phoenix datasets.
- *
  * **Example** (Access dataset-name kind enum)
  *
  * ```ts
@@ -84,8 +78,6 @@ export const PhoenixDatasetSelectorKind = LiteralKit(["dataset-id", "dataset-nam
 );
 
 /**
- * Type for {@link PhoenixDatasetSelectorKind}.
- *
  * **Example** (Type-check dataset-name kind)
  *
  * ```ts
@@ -102,8 +94,6 @@ export const PhoenixDatasetSelectorKind = LiteralKit(["dataset-id", "dataset-nam
 export type PhoenixDatasetSelectorKind = typeof PhoenixDatasetSelectorKind.Type;
 
 /**
- * Phoenix annotation target kind.
- *
  * **Example** (Access trace target kind)
  *
  * ```ts
@@ -122,8 +112,6 @@ export const PhoenixAnnotationTargetKind = LiteralKit(["span", "session", "trace
 );
 
 /**
- * Type for {@link PhoenixAnnotationTargetKind}.
- *
  * **Example** (Type-check trace target kind)
  *
  * ```ts
@@ -140,8 +128,6 @@ export const PhoenixAnnotationTargetKind = LiteralKit(["span", "session", "trace
 export type PhoenixAnnotationTargetKind = typeof PhoenixAnnotationTargetKind.Type;
 
 /**
- * Phoenix annotator kind.
- *
  * **Example** (Access CODE annotator kind)
  *
  * ```ts
@@ -160,8 +146,6 @@ export const PhoenixAnnotatorKind = LiteralKit(["CODE", "HUMAN", "LLM"]).pipe(
 );
 
 /**
- * Type for {@link PhoenixAnnotatorKind}.
- *
  * **Example** (Type-check CODE annotator kind)
  *
  * ```ts
@@ -178,8 +162,6 @@ export const PhoenixAnnotatorKind = LiteralKit(["CODE", "HUMAN", "LLM"]).pipe(
 export type PhoenixAnnotatorKind = typeof PhoenixAnnotatorKind.Type;
 
 /**
- * Primitive annotation value accepted by repo-owned Phoenix annotations.
- *
  * **Example** (Log annotation value schema)
  *
  * ```ts
@@ -198,8 +180,6 @@ export const PhoenixAnnotationValue = S.Union([S.Boolean, S.Finite, S.String]).p
 );
 
 /**
- * Type for {@link PhoenixAnnotationValue}.
- *
  * **Example** (Decode string annotation value)
  *
  * ```ts
@@ -217,8 +197,6 @@ export const PhoenixAnnotationValue = S.Union([S.Boolean, S.Finite, S.String]).p
 export type PhoenixAnnotationValue = typeof PhoenixAnnotationValue.Type;
 
 /**
- * Prompt chat roles accepted by repo-owned Phoenix prompt templates.
- *
  * **Example** (Access system chat role)
  *
  * ```ts
@@ -245,8 +223,6 @@ export const PhoenixPromptChatRole = LiteralKit([
 );
 
 /**
- * Type for {@link PhoenixPromptChatRole}.
- *
  * **Example** (Type-check system chat role)
  *
  * ```ts
@@ -263,8 +239,6 @@ export const PhoenixPromptChatRole = LiteralKit([
 export type PhoenixPromptChatRole = typeof PhoenixPromptChatRole.Type;
 
 /**
- * Prompt template format accepted by repo-owned Phoenix prompt templates.
- *
  * **Example** (Access MUSTACHE format enum)
  *
  * ```ts
@@ -283,8 +257,6 @@ export const PhoenixPromptTemplateFormat = LiteralKit(["F_STRING", "MUSTACHE"]).
 );
 
 /**
- * Type for {@link PhoenixPromptTemplateFormat}.
- *
  * **Example** (Type-check MUSTACHE format)
  *
  * ```ts
@@ -329,8 +301,6 @@ export const PhoenixPromptModelProvider = LiteralKit([
 );
 
 /**
- * Type for {@link PhoenixPromptModelProvider}.
- *
  * **Example** (Type-check GOOGLE provider)
  *
  * ```ts
@@ -347,8 +317,6 @@ export const PhoenixPromptModelProvider = LiteralKit([
 export type PhoenixPromptModelProvider = typeof PhoenixPromptModelProvider.Type;
 
 /**
- * Phoenix driver doctor result.
- *
  * **Example** (Build doctor result object)
  *
  * ```ts
@@ -388,8 +356,6 @@ export class PhoenixDoctorResult extends S.Opaque<PhoenixDoctorResult, { readonl
 ) {}
 
 /**
- * Phoenix dataset selector.
- *
  * **Example** (Build dataset name selector)
  *
  * ```ts
@@ -424,8 +390,6 @@ export class PhoenixDatasetSelector extends S.Opaque<PhoenixDatasetSelector, { r
 ) {}
 
 /**
- * Phoenix dataset example.
- *
  * **Example** (Build dataset example object)
  *
  * ```ts
@@ -473,8 +437,6 @@ export class PhoenixDatasetExample extends S.Opaque<PhoenixDatasetExample, { rea
 ) {}
 
 /**
- * Input for creating or replacing a Phoenix dataset.
- *
  * **Example** (Build dataset create input)
  *
  * ```ts
@@ -510,8 +472,6 @@ export class PhoenixDatasetCreateInput extends S.Opaque<PhoenixDatasetCreateInpu
 ) {}
 
 /**
- * Result from creating a Phoenix dataset.
- *
  * **Example** (Build dataset create result)
  *
  * ```ts
@@ -540,8 +500,6 @@ export class PhoenixDatasetCreateResult extends S.Opaque<
 ) {}
 
 /**
- * Input for appending examples to a Phoenix dataset.
- *
  * **Example** (Build dataset append input)
  *
  * ```ts
@@ -573,8 +531,6 @@ export class PhoenixDatasetAppendInput extends S.Opaque<PhoenixDatasetAppendInpu
 ) {}
 
 /**
- * Result from appending Phoenix dataset examples.
- *
  * **Example** (Build dataset append result)
  *
  * ```ts
@@ -607,8 +563,6 @@ export class PhoenixDatasetAppendResult extends S.Opaque<
 
 const phoenixDatasetInfoResultMetadataDefault = R.empty();
 /**
- * Readback summary for a Phoenix dataset.
- *
  * **Example** (Build dataset info result)
  *
  * ```ts
@@ -650,8 +604,6 @@ export class PhoenixDatasetInfoResult extends S.Opaque<PhoenixDatasetInfoResult,
 ) {}
 
 /**
- * Readback result for Phoenix dataset examples.
- *
  * **Example** (Build dataset examples result)
  *
  * ```ts
@@ -683,8 +635,6 @@ export class PhoenixDatasetExamplesResult extends S.Opaque<
 ) {}
 
 /**
- * Phoenix prompt chat message.
- *
  * **Example** (Build prompt chat message)
  *
  * ```ts
@@ -714,8 +664,6 @@ export class PhoenixPromptChatMessage extends S.Opaque<PhoenixPromptChatMessage,
 
 const phoenixPromptCreateInputMetadataDefault = R.empty();
 /**
- * Input for creating a repo-owned Phoenix prompt version.
- *
  * **Example** (Build prompt create input)
  *
  * ```ts
@@ -778,8 +726,6 @@ export class PhoenixPromptCreateInput extends S.Opaque<PhoenixPromptCreateInput,
 ) {}
 
 /**
- * Result from creating a Phoenix prompt version.
- *
  * **Example** (Build prompt write result)
  *
  * ```ts
@@ -808,8 +754,6 @@ export class PhoenixPromptWriteResult extends S.Opaque<PhoenixPromptWriteResult,
 ) {}
 
 /**
- * Phoenix prompt selector by name, id, version id, or tag.
- *
  * **Example** (Build prompt name selector)
  *
  * ```ts
@@ -844,8 +788,6 @@ export class PhoenixPromptSelector extends S.Opaque<PhoenixPromptSelector, { rea
 ) {}
 
 /**
- * Readback result for a Phoenix prompt selector.
- *
  * **Example** (Build prompt read result)
  *
  * ```ts
@@ -875,8 +817,6 @@ export class PhoenixPromptReadResult extends S.Opaque<PhoenixPromptReadResult, {
 
 const phoenixExperimentCreateInputExperimentMetadataDefault = R.empty();
 /**
- * Input for creating a Phoenix experiment record.
- *
  * **Example** (Build experiment create input)
  *
  * ```ts
@@ -935,8 +875,6 @@ export class PhoenixExperimentCreateInput extends S.Opaque<
 
 const phoenixExperimentInfoResultMetadataDefault = R.empty();
 /**
- * Readback summary for a Phoenix experiment.
- *
  * **Example** (Build experiment info result)
  *
  * ```ts
@@ -1009,8 +947,6 @@ export class PhoenixExperimentInfoResult extends S.Opaque<
 
 const phoenixAnnotationInputMetadataDefault = R.empty();
 /**
- * Input for writing one Phoenix annotation.
- *
  * **Example** (Build annotation write input)
  *
  * ```ts
@@ -1079,8 +1015,6 @@ export class PhoenixAnnotationInput extends S.Opaque<PhoenixAnnotationInput, { r
 ) {}
 
 /**
- * Result from writing one Phoenix annotation.
- *
  * **Example** (Build annotation write result)
  *
  * ```ts

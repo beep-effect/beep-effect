@@ -412,7 +412,7 @@ describe("verified handoff", () => {
       })
     );
     it.effect(
-      "P3-H the checked wire refuses a correctly minted generation of another activity",
+      "P3-H the checked wire refuses a correctly minted generation of another activity in an otherwise valid document",
       Effect.fnUntraced(function* () {
         const h = yield* build();
         const wire = yield* encodeExtractionHandoff(h);
@@ -432,7 +432,6 @@ describe("verified handoff", () => {
           { concurrency: 1 }
         );
         const malformed = { ...wire, document: { ...wire.document, attribution } };
-        // The document is valid on its own: only the handoff's activity check may refuse it.
         yield* extractionDocumentCodec.decode(malformed.document);
         const rejected = yield* decodeExtractionHandoff(malformed).pipe(Effect.isFailure);
         expect(rejected).toBe(true);

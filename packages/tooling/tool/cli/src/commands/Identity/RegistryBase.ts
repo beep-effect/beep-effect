@@ -38,8 +38,6 @@ class IdentityManifest extends S.Opaque<IdentityManifest, { readonly brand: uniq
 ) {}
 const decodeIdentityManifest = S.decodeUnknownOption(S.fromJsonString(IdentityManifest));
 
-// Where the tree at `commit` has the term snapshot of its @beep/identity package; `shown` names it in a failure. The head's own path says nothing
-// about the base: a change may move the package. A tree with more than one such package is read at the head's path.
 const locateBaseSnapshot = Effect.fn("IdentityRegistryBase.locate")(function* (
   repoRoot: string,
   commit: string,
@@ -117,6 +115,12 @@ export const baseFlag = Flag.String("base").pipe(
  * than the tree that located it. The finding and the remedies still name the
  * ref as it was given.
  *
+ * **Gotchas**
+ *
+ * A package move may place the base snapshot at a different path from the checkout. The
+ * reader locates the identity package in the base tree. With multiple identity packages,
+ * only the checkout path disambiguates the base.
+ *
  * **Example** (Read the default base)
  *
  * ```ts
@@ -154,7 +158,6 @@ export const readBaseSnapshot = Effect.fn("IdentityRegistryBase.read")(function*
     );
     return Result.succeed(BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref, resolved: false }));
   }
-  // Logs name the ref as it was given; every read names the commit it resolved to.
   const shown = O.getOrElse(ref, () => commit.value);
   const located = yield* locateBaseSnapshot(repoRoot, commit.value, layout.snapshot, shown);
   if (O.isNone(located)) {

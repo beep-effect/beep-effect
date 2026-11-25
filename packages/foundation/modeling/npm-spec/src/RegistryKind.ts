@@ -35,8 +35,6 @@ const $I = $NpmSpecId.create("RegistryKind");
 export const DEFAULT_REGISTRY = "https://registry.npmjs.org";
 
 /**
- * Which well-known registry a URL points at.
- *
  * **Details**
  *
  * The distinction is behavioral, not cosmetic: npm's `--provenance` is
@@ -72,28 +70,15 @@ export const RegistryKind = LiteralKit(["npm", "github-packages", "jsr", "custom
  */
 export type RegistryKind = typeof RegistryKind.Type;
 
-// `new URL` throws on input it cannot parse; lift it into an Option.
 const parseUrl = O.liftThrowable((value: string): URL => new URL(value));
 
-// The lower-cased hostname of a registry URL, `None` when it does not parse. A
-// bare host (`registry.npmjs.org/`) is not a URL, so it is retried with a scheme
-// before giving up, because npm config values are written both ways.
-const hostnameOf = (registry: string): O.Option<string> =>
+const lowerCasedHostnameRetryingABareHostWithAScheme = (registry: string): O.Option<string> =>
   parseUrl(registry).pipe(
     O.orElse(() => parseUrl(`https://${registry}`)),
     O.map((url) => Str.toLowerCase(url.hostname))
   );
 
-/**
- * Whether `hostname` is `domain` or a subdomain of it.
- *
- * **Gotchas**
- *
- * The leading dot is load-bearing: a bare `endsWith(domain)` would classify
- * `evil-npmjs.org` as the public npm registry, and that classification decides
- * whether a token is sent and whether provenance is requested.
- */
-const matchesDomain: {
+const isDomainOrADotGuardedSubdomain: {
   (hostname: O.Option<string>, domain: string): boolean;
   (domain: string): (hostname: O.Option<string>) => boolean;
 } = dual(2, (hostname: O.Option<string>, domain: string): boolean =>
@@ -133,14 +118,13 @@ const matchesDomain: {
  */
 export const classifyRegistry = (registry: string | undefined): RegistryKind => {
   if (registry === undefined || registry === "") return "npm";
-  const hostname = hostnameOf(registry);
-  if (matchesDomain(hostname, "npmjs.org")) return "npm";
-  if (matchesDomain(hostname, "pkg.github.com")) return "github-packages";
-  if (matchesDomain(hostname, "jsr.io")) return "jsr";
+  const hostname = lowerCasedHostnameRetryingABareHostWithAScheme(registry);
+  if (isDomainOrADotGuardedSubdomain(hostname, "npmjs.org")) return "npm";
+  if (isDomainOrADotGuardedSubdomain(hostname, "pkg.github.com")) return "github-packages";
+  if (isDomainOrADotGuardedSubdomain(hostname, "jsr.io")) return "jsr";
   return "custom";
 };
 
-// Strip a leading `https://` or `http://`, leaving any other value unchanged.
 const withoutScheme = (registry: string): string =>
   Str.startsWith("https://")(registry)
     ? Str.slice(8)(registry)
@@ -148,11 +132,7 @@ const withoutScheme = (registry: string): string =>
       ? Str.slice(7)(registry)
       : registry;
 
-// The text before the first `/`. Scanned rather than matched: the obvious
-// `.replace(/\/.*$/, "")` is a polynomial-backtracking regex over a value this
-// package does not control, and CodeQL flags it; `indexOf` is linear and says
-// the same thing.
-const beforeFirstSlash = (value: string): string =>
+const beforeFirstSlashScannedNotRegexMatched = (value: string): string =>
   O.match(Str.indexOf("/")(value), {
     onNone: () => value,
     onSome: (slash) => Str.slice(0, slash)(value),
@@ -189,7 +169,7 @@ const beforeFirstSlash = (value: string): string =>
 export const registryHost = (registry: string): string =>
   parseUrl(registry).pipe(
     O.map((url) => url.host),
-    O.getOrElse(() => beforeFirstSlash(withoutScheme(registry)))
+    O.getOrElse(() => beforeFirstSlashScannedNotRegexMatched(withoutScheme(registry)))
   );
 
 /**

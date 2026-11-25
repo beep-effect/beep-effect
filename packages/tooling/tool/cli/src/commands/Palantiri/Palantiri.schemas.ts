@@ -14,8 +14,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Palantiri/Palantiri.schemas");
 
 /**
- * Arguments of a parcel tool: the most items to return.
- *
  * **Example** (Ask for five items)
  *
  * ```ts
@@ -36,9 +34,6 @@ export class ParcelToolInput extends S.Opaque<ParcelToolInput, { readonly brand:
 ) {}
 
 /**
- * Arguments of the since-last-check tool: the budget and the session whose
- * read cursor moves.
- *
  * **Example** (Name the session)
  *
  * ```ts
@@ -78,9 +73,6 @@ export class NoToolInput extends S.Opaque<NoToolInput, { readonly brand: unique 
 ) {}
 
 /**
- * One parcel as the list tool describes it: id, key, freshness bound, sources
- * and the tool that reads it.
- *
  * **Example** (Describe the account-headroom parcel)
  *
  * ```ts
@@ -114,8 +106,6 @@ export class ParcelListing extends S.Opaque<ParcelListing, { readonly brand: uni
 ) {}
 
 /**
- * Every parcel the MCP host serves.
- *
  * **Example** (An empty catalog)
  *
  * ```ts
@@ -153,8 +143,6 @@ export const HotParcelId = LiteralKit(["account-headroom", "lane-reds", "host-pr
 );
 
 /**
- * A parcel `beep session open` prints.
- *
  * @category models
  * @since 0.0.0
  */
@@ -178,9 +166,6 @@ export type HotParcelId = typeof HotParcelId.Type;
 export const MAX_HOT_LINE_CARRIES = 3;
 
 /**
- * How a hot parcel's line came about: read now, timed out, failed, or
- * carried over from an earlier read because this one timed out or failed.
- *
  * **Example** (Narrow a state)
  *
  * ```ts
@@ -199,8 +184,6 @@ export const HotLineState = LiteralKit(["read", "timed-out", "failed", "carried"
 );
 
 /**
- * How a hot parcel's line came about.
- *
  * @category models
  * @since 0.0.0
  */

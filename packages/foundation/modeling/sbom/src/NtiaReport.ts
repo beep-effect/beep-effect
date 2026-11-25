@@ -33,8 +33,6 @@ import type { SbomDocument } from "./SbomDocument.ts";
 const $I = $SbomId.create("NtiaReport");
 
 /**
- * The seven NTIA minimum elements, by stable identifier.
- *
  * **Details**
  *
  * A literal union rather than free text: this is what a consumer branches on,
@@ -73,8 +71,6 @@ export const NtiaElementId = LiteralKit([
 export type NtiaElementId = typeof NtiaElementId.Type;
 
 /**
- * One element's verdict.
- *
  * **Example** (Record a satisfied component name)
  *
  * ```ts
@@ -104,8 +100,6 @@ export class NtiaElement extends S.Opaque<NtiaElement, { readonly brand: unique 
 ) {}
 
 /**
- * Companion types for {@link NtiaElement}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -235,8 +229,6 @@ const timestamp = (document: SbomDocument): NtiaElement.Encoded => {
 };
 
 /**
- * A document's standing against the NTIA minimum elements.
- *
  * **Example** (Check an SBOM for missing NTIA elements)
  *
  * ```ts

@@ -22,8 +22,6 @@ import {
 const $I = $RepoCliId.create("commands/Research/Library/Library.mine.schemas");
 
 /**
- * Mining tier: T1 triage, T2 deep read, T3 session synthesis.
- *
  * **Example** (Inspect LibraryMineTier)
  * ```ts
  * import { LibraryMineTier } from "@beep/repo-cli/commands/Research"
@@ -37,15 +35,12 @@ export const LibraryMineTier = LiteralKit(["t1", "t2", "t3"]).pipe(
   $I.annoteSchema("LibraryMineTier", { description: "Mining tier: T1 triage, T2 deep read, T3 session synthesis." })
 );
 /**
- * Runtime values of LibraryMineTier.
  * @category models
  * @since 0.0.0
  */
 export type LibraryMineTier = typeof LibraryMineTier.Type;
 
 /**
- * T1 triage decision for one readable artifact.
- *
  * **Example** (Inspect LibraryTriageDecision)
  * ```ts
  * import { LibraryTriageDecision } from "@beep/repo-cli/commands/Research"
@@ -59,7 +54,6 @@ export const LibraryTriageDecision = LiteralKit(["select", "skip", "defer"]).pip
   $I.annoteSchema("LibraryTriageDecision", { description: "T1 triage decision for one readable artifact." })
 );
 /**
- * Runtime values of LibraryTriageDecision.
  * @category models
  * @since 0.0.0
  */
@@ -86,7 +80,6 @@ export const LibraryReadingCoverage = LiteralKit(["complete", "partial", "unread
   $I.annoteSchema("LibraryReadingCoverage", { description: "How much of the bound capture text a reader read." })
 );
 /**
- * Runtime values of LibraryReadingCoverage.
  * @category models
  * @since 0.0.0
  */
@@ -117,16 +110,12 @@ export const LibraryAffirmativeCitoRelation = LiteralKit([
   })
 );
 /**
- * Runtime type of LibraryAffirmativeCitoRelation.
- *
  * @category models
  * @since 0.0.0
  */
 export type LibraryAffirmativeCitoRelation = typeof LibraryAffirmativeCitoRelation.Type;
 
 /**
- * Runner profile that launches a tier job.
- *
  * **Details**
  *
  * `codex-luna` is the T1 default. `junie`, `claude` and `cursor` run T2; `junie` and
@@ -151,15 +140,12 @@ export const LibraryMineProfileId = LiteralKit([
   "cursor",
 ]).pipe($I.annoteSchema("LibraryMineProfileId", { description: "Runner profile that launches a tier job." }));
 /**
- * Runtime values of LibraryMineProfileId.
  * @category models
  * @since 0.0.0
  */
 export type LibraryMineProfileId = typeof LibraryMineProfileId.Type;
 
 /**
- * Outcome recorded on a mining receipt.
- *
  * **Example** (Inspect LibraryMineOutcome)
  * ```ts
  * import { LibraryMineOutcome } from "@beep/repo-cli/commands/Research"
@@ -173,7 +159,6 @@ export const LibraryMineOutcome = LiteralKit(["completed", "rejected", "failed",
   $I.annoteSchema("LibraryMineOutcome", { description: "Outcome recorded on a mining receipt." })
 );
 /**
- * Runtime values of LibraryMineOutcome.
  * @category models
  * @since 0.0.0
  */
@@ -248,8 +233,6 @@ export class LibraryReadingOutput extends S.Opaque<LibraryReadingOutput, { reado
 ) {}
 
 /**
- * What a mining job reads: a source capture's text or a hop-0 intake document snapshot.
- *
  * **Example** (Inspect LibraryMineJobKind)
  * ```ts
  * import { LibraryMineJobKind } from "@beep/repo-cli/commands/Research"
@@ -265,7 +248,6 @@ export const LibraryMineJobKind = LiteralKit(["source", "document"]).pipe(
   })
 );
 /**
- * Runtime values of LibraryMineJobKind.
  * @category models
  * @since 0.0.0
  */
@@ -277,8 +259,6 @@ const emptyString = S.String.pipe(
 );
 
 /**
- * Where a mining job's bound text comes from: a stored text artifact, or text derived from a PDF.
- *
  * **Example** (Inspect LibraryMineTextSource)
  * ```ts
  * import { LibraryMineTextSource } from "@beep/repo-cli/commands/Research"
@@ -294,7 +274,6 @@ export const LibraryMineTextSource = LiteralKit(["text", "pdf"]).pipe(
   })
 );
 /**
- * Runtime values of LibraryMineTextSource.
  * @category models
  * @since 0.0.0
  */
@@ -318,7 +297,6 @@ export const LibraryMineTextOutcome = LiteralKit(["text", "no-text"]).pipe(
   })
 );
 /**
- * Runtime values of LibraryMineTextOutcome.
  * @category models
  * @since 0.0.0
  */
@@ -468,8 +446,6 @@ export class LibraryReadingRecord extends S.Opaque<LibraryReadingRecord, { reado
 ) {}
 
 /**
- * The orchestrator that authored a T3 synthesis.
- *
  * **Example** (Decode an orchestrator)
  * ```ts
  * import { LibrarySynthesisAuthor } from "@beep/repo-cli/commands/Research"
@@ -565,8 +541,6 @@ export class LibraryMineReceipt extends S.Opaque<LibraryMineReceipt, { readonly 
 ) {}
 
 /**
- * Options shared by `mine triage` and `mine read`.
- *
  * **Example** (Make options)
  * ```ts
  * import { LibraryMineOptions } from "@beep/repo-cli/commands/Research"

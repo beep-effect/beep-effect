@@ -21,8 +21,6 @@ import * as Str from "effect/String";
 const $I = $NpmSpecId.create("RegistryCredential");
 
 /**
- * A basic-auth username contains the credential separator.
- *
  * **Example** (Inspecting a rejected username)
  * ```ts
  * import { InvalidBasicAuthUsernameError } from "@beep/npm-spec/RegistryCredential";
@@ -201,8 +199,8 @@ export const basicCredentialFromPair: {
       password: Redacted.Redacted<string>
     ): Effect.Effect<BasicCredential, InvalidBasicAuthUsernameError> =>
       Effect.suspend(() => {
-        if (Str.includes(":")(username)) {
-          // The separator is positional and unescapable: refuse a mis-split pair.
+        const colonWouldMisSplitThePositionalUnescapableSeparator = Str.includes(":")(username);
+        if (colonWouldMisSplitThePositionalUnescapableSeparator) {
           return Effect.fail(
             InvalidBasicAuthUsernameError.make({ message: "A basic-auth username cannot contain a colon" })
           );

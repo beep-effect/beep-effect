@@ -11,8 +11,6 @@ import { LiteralKit } from "@beep/schema";
 const $I = $AgentsDomainId.create("entities/Agent/Agent.values");
 
 /**
- * Closed vocabulary of execution modes supported by fixture-backed agents.
- *
  * **Example** (Check deterministic fixture mode)
  *
  * ```ts
@@ -31,8 +29,6 @@ export const AgentMode = LiteralKit(["deterministic_fixture"]).pipe(
 );
 
 /**
- * Type accepted by the {@link AgentMode} schema.
- *
  * **Example** (Satisfy AgentMode type)
  *
  * ```ts

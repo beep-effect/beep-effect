@@ -40,8 +40,6 @@ import { decodeNonNegativeInt } from "./internal/decode.ts";
 const $I = $ObservabilityId.create("CauseDiagnostics");
 
 /**
- * High-level classification for a full Effect cause.
- *
  * **Details**
  *
  * One of `"empty"`, `"failure"`, `"defect"`, `"interrupted"`, or `"mixed"`.
@@ -67,8 +65,6 @@ export const CauseClassification = LiteralKit(["empty", "failure", "defect", "in
 );
 
 /**
- * Runtime type for {@link CauseClassification}.
- *
  * **Example** (Assign classification type)
  *
  * ```typescript
@@ -106,8 +102,6 @@ export const ExitOutcome = LiteralKit(["success", "failure"]).pipe(
 );
 
 /**
- * Runtime type for {@link ExitOutcome}.
- *
  * **Example** (Assign exit outcome type)
  *
  * ```typescript
@@ -191,8 +185,6 @@ const CauseSummary = CauseSummaryTagged.pipe(
 );
 
 /**
- * Type of {@link CauseSummary}
- *
  * **Example** (Read summary classification)
  *
  * ```typescript
@@ -283,8 +275,6 @@ export const ObservedExitSummary = ObservedExitSummaryTagged.pipe(
 );
 
 /**
- * Type of {@link ObservedExitSummary}
- *
  * **Example** (Read summary outcome field)
  *
  * ```typescript

@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/nlp",
   "review": {
-    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
-    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Re-record the subjects the P5 merge and the P6 writer-check fixes changed: law-practice domain and use-cases, nlp, jsonc and the root turbo.json digest. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
-      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
+      "path": "docs/reports/tksr-p6-p5-merge-cache-review-2026-11-25.md",
+      "sha256": "0911b2a5937b3dc19753404ad33841bfcbfcf18fa5d434608025ff5d16a71b11"
     }
   },
   "nodes": [
@@ -19,7 +19,6 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -79,7 +78,6 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -134,7 +132,6 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -229,7 +226,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -318,7 +314,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -519,7 +514,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -568,7 +562,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -627,7 +620,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],

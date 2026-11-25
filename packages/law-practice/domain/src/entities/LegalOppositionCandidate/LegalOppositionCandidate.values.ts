@@ -13,8 +13,6 @@ import { LegalVerdictFamily } from "../../values/LegalVerdictFamily/index.ts";
 const $I = $LawPracticeDomainId.create("entities/LegalOppositionCandidate/LegalOppositionCandidate.values");
 
 /**
- * One attorney's assignment of a verdict family to a candidate.
- *
  * **When to use**
  *
  * Use when a verdict family is recorded. The family never travels without

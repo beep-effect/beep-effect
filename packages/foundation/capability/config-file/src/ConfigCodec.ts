@@ -12,8 +12,6 @@ import type * as Effect from "effect/Effect";
 const $I = $ConfigFileId.create("ConfigCodec");
 
 /**
- * Indicates that a codec failed to parse or stringify configuration content.
- *
  * **Details**
  *
  * The underlying failure is preserved structurally in `cause` — it is never

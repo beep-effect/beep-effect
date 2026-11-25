@@ -13,7 +13,9 @@ import { ClaimKnowledgeInterval } from "@beep/epistemics/ClaimLog.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActivityStart } from "@beep/jsonc/ActivityStart";
 import { LiteralKit } from "@beep/schema";
+import { WellFormedText } from "@beep/schema/WellFormedText";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.schemas");
 
@@ -38,8 +40,6 @@ export const HoldId = S.String.check(S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).
 );
 
 /**
- * Decoded type of {@link HoldId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -69,8 +69,6 @@ export const HoldKind = LiteralKit([
 ]).pipe($I.annoteSchema("HoldKind", { description: "The config surface that enforces a dependency-shaped hold." }));
 
 /**
- * Decoded type of {@link HoldKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -114,8 +112,6 @@ export const HoldAnchor = S.TaggedUnion({
 );
 
 /**
- * Decoded type of {@link HoldAnchor}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -169,8 +165,6 @@ export const ProbeRuntime = LiteralKit(["bun", "node", "vitest-bun", "vitest-nod
 );
 
 /**
- * Decoded type of {@link ProbeRuntime}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -219,8 +213,6 @@ export const HoldFalsifier = S.TaggedUnion({
 }).pipe($I.annoteSchema("HoldFalsifier", { description: "The probe that would disprove a hold." }));
 
 /**
- * Decoded type of {@link HoldFalsifier}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -248,8 +240,6 @@ export const HoldWatchTarget = S.TaggedUnion({
 }).pipe($I.annoteSchema("HoldWatchTarget", { description: "Upstream signal that wakes a hold re-check." }));
 
 /**
- * Decoded type of {@link HoldWatchTarget}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -276,8 +266,6 @@ export const HoldExitAction = S.TaggedUnion({
 }).pipe($I.annoteSchema("HoldExitAction", { description: "The change made when a hold ends." }));
 
 /**
- * Decoded type of {@link HoldExitAction}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -313,8 +301,6 @@ export const HoldProposition = S.TaggedStruct("Hold", {
 );
 
 /**
- * Decoded type of {@link HoldProposition}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -341,8 +327,6 @@ export const ProbeRunId = S.NonEmptyString.pipe(
 );
 
 /**
- * Decoded type of {@link ProbeRunId}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -369,8 +353,6 @@ export const HoldActivityId = S.NonEmptyString.pipe(
 );
 
 /**
- * Identifier of the agent or person responsible for a version.
- *
  * **Example** (Check a principal id)
  *
  * ```ts
@@ -402,9 +384,15 @@ export const HoldPrincipalId = S.NonEmptyString.pipe(
  */
 export const holdLogicalKey = (proposition: HoldProposition): string => `hold:${proposition.holdId}`;
 
+const NativeHoldProposition = HoldProposition.mapFields(Struct.assign({ assertion: WellFormedText })).pipe(
+  $I.annoteSchema("NativeHoldProposition", {
+    description: "A hold proposition a native core asserts: its assertion is well-formed Unicode text.",
+  })
+);
+
 const claimVocabulary = makeClaimCore({
   $I,
-  proposition: HoldProposition,
+  proposition: NativeHoldProposition,
   ids: {
     logicalKey: holdLogicalKey,
     scope: S.NonEmptyString,
@@ -532,6 +520,55 @@ export class HoldCoreEvent extends S.Opaque<HoldCoreEvent, { readonly brand: uni
   }).pipe($I.annoteSchema("HoldCoreEvent", { description: "A native hold core and the end of its activity." }))
 ) {}
 
+const HoldEvidenceEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Evidence"),
+  claim: ClaimReference,
+  supportedBy: S.Array(ProbeRunId),
+  challengedBy: S.Array(ProbeRunId),
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldEvidenceEvent", {
+    description: "A separate hold evidence record listing supporting and challenging refs for one claim.",
+  })
+);
+
+const HoldReviewEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Review"),
+  claim: ClaimReference,
+  review: HoldReviewState,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldReviewEvent", {
+    description: "A separate hold review record for one claim.",
+  })
+);
+
+const HoldSignalsEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Signals"),
+  claim: ClaimReference,
+  signals: HoldEvidenceSignals,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldSignalsEvent", {
+    description: "A separate hold evidence-signals record for one claim.",
+  })
+);
+
+const HoldSuccessionEvent = S.Struct({
+  version: S.tag(holdClaimRecordVersion),
+  event: S.tag("Succession"),
+  claim: ClaimId,
+  predecessor: ClaimReference,
+  at: S.DateTimeUtcFromMillis,
+}).pipe(
+  $I.annoteSchema("HoldSuccessionEvent", {
+    description: "A hold succession record linking a native core to the claim it replaces.",
+  })
+);
+
 /**
  * Separate v2 hold records attached to an explicitly namespaced claim.
  *
@@ -559,42 +596,15 @@ export class HoldCoreEvent extends S.Opaque<HoldCoreEvent, { readonly brand: uni
  */
 export const HoldClaimEvent = S.Union([
   HoldCoreEvent,
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Evidence"),
-    claim: ClaimReference,
-    supportedBy: S.Array(ProbeRunId),
-    challengedBy: S.Array(ProbeRunId),
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Review"),
-    claim: ClaimReference,
-    review: HoldReviewState,
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Signals"),
-    claim: ClaimReference,
-    signals: HoldEvidenceSignals,
-    at: S.DateTimeUtcFromMillis,
-  }),
-  S.Struct({
-    version: S.tag(holdClaimRecordVersion),
-    event: S.tag("Succession"),
-    claim: ClaimId,
-    predecessor: ClaimReference,
-    at: S.DateTimeUtcFromMillis,
-  }),
+  HoldEvidenceEvent,
+  HoldReviewEvent,
+  HoldSignalsEvent,
+  HoldSuccessionEvent,
 ]).pipe(
   S.toTaggedUnion("event"),
   $I.annoteSchema("HoldClaimEvent", { description: "One hold-claim-record/v2 line; old envelopes are never written." })
 );
 /**
- * Decoded hold-claim-record/v2 event.
- *
  * @category models
  * @since 0.0.0
  */
@@ -762,8 +772,6 @@ export const ProbeOutcome = S.TaggedUnion({
 }).pipe($I.annoteSchema("ProbeOutcome", { description: "Result of one probe command run." }));
 
 /**
- * Decoded type of {@link ProbeOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -788,8 +796,6 @@ export const ProbeRunVerdict = LiteralKit(["still-holds", "candidate-passed", "p
 );
 
 /**
- * Decoded type of {@link ProbeRunVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -857,16 +863,12 @@ export const HoldVerdict = LiteralKit(["StillHolds", "Unconfirmed", "Flipped", "
 );
 
 /**
- * Decoded type of {@link HoldVerdict}.
- *
  * @category models
  * @since 0.0.0
  */
 export type HoldVerdict = typeof HoldVerdict.Type;
 
 /**
- * The hold-shaped config sites found in one checkout.
- *
  * **Details**
  *
  * `required` lists the sites that must each be covered by a live hold record
@@ -926,8 +928,6 @@ export const HoldLintFinding = S.TaggedUnion({
 );
 
 /**
- * Decoded type of {@link HoldLintFinding}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -11,23 +11,11 @@ import * as S from "effect/Schema";
 
 const $I = $JsonlId.create("test/merge");
 
-/**
- * `shallowMerge` is tested directly, at its own level, and that is the point.
- *
- * An end-to-end `appendPatch` test cannot see this: the merged object is
- * transient — it is immediately encoded by the payload schema and re-decoded,
- * so a hijacked prototype is discarded before any envelope assertion runs. A
- * mutation swapping this function for `Object.assign({}, base, patch)` passed
- * the whole end-to-end suite while genuinely reintroducing the pollution. The
- * invariant lives here, so the test lives here.
- */
-
-/** A patch carrying an OWN `__proto__` key, as `JSON.parse` produces. */
 const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
 const decodeRecord = S.decodeResult(JsonRecord);
-const hostile = (json: string): Record<string, unknown> => Result.getOrThrow(decodeRecord(json));
+const hostileParsedRecord = (json: string): Record<string, unknown> => Result.getOrThrow(decodeRecord(json));
 
-describe("shallowMerge", () => {
+describe("shallowMerge, tested at its own level: appendPatch re-encodes the merged object, so an end-to-end test never sees a hijacked prototype", () => {
   it("merges patch over base, patch winning", () => {
     const merged = shallowMerge({ round: 1, phase: "a" }, { round: 2 });
     assert.deepStrictEqual({ ...merged }, { round: 2, phase: "a" });
@@ -39,8 +27,8 @@ describe("shallowMerge", () => {
   });
 
   it("does not hijack the result's prototype via __proto__ in the PATCH", () => {
-    const patch = hostile('{"round":5,"__proto__":{"polluted":true}}');
-    assert.include(Object.getOwnPropertyNames(patch), "__proto__", "the fixture is genuinely hostile");
+    const patch = hostileParsedRecord('{"round":5,"__proto__":{"polluted":true}}');
+    assert.include(Object.getOwnPropertyNames(patch), "__proto__", "the parsed fixture has an own __proto__ key");
 
     const merged = shallowMerge({ round: 1, phase: "p" }, patch);
 
@@ -50,10 +38,8 @@ describe("shallowMerge", () => {
     assert.notInclude(R.keys(merged), "__proto__");
   });
 
-  it("does not hijack the result's prototype via __proto__ in the BASE", () => {
-    // The base is decoded journal data — an external writer controls it just
-    // as directly as the patch, so filtering only one side is not enough.
-    const base = hostile('{"round":1,"phase":"p","__proto__":{"polluted":true}}');
+  it("does not hijack the result's prototype via __proto__ in the BASE, decoded journal data an external writer controls", () => {
+    const base = hostileParsedRecord('{"round":1,"phase":"p","__proto__":{"polluted":true}}');
     const merged = shallowMerge(base, { round: 2 });
 
     assert.strictEqual(Object.getPrototypeOf(merged), Object.prototype, "prototype intact");
@@ -62,7 +48,10 @@ describe("shallowMerge", () => {
   });
 
   it("drops constructor and prototype keys from both sides", () => {
-    const merged = shallowMerge(hostile('{"constructor":"base"}'), hostile('{"prototype":"patch","ok":1}'));
+    const merged = shallowMerge(
+      hostileParsedRecord('{"constructor":"base"}'),
+      hostileParsedRecord('{"prototype":"patch","ok":1}')
+    );
     assert.notInclude(R.keys(merged), "constructor");
     assert.notInclude(R.keys(merged), "prototype");
     assert.strictEqual(merged.ok, 1, "ordinary keys still merge");
@@ -70,10 +59,8 @@ describe("shallowMerge", () => {
   });
 
   it("copies as own DATA properties, never through a setter", () => {
-    // A base whose prototype defines a throwing setter: an [[Set]] copy would
-    // invoke it, a defineProperty copy cannot.
-    const proto = {};
-    Object.defineProperty(proto, "trapped", {
+    const prototypeWithThrowingSetter = {};
+    Object.defineProperty(prototypeWithThrowingSetter, "trapped", {
       set() {
         throw new Error("setter invoked — [[Set]] semantics leaked in");
       },
@@ -82,8 +69,11 @@ describe("shallowMerge", () => {
       },
       configurable: true,
     });
-    const base: Record<string, unknown> = Object.create(proto);
-    assert.doesNotThrow(() => shallowMerge(base, { trapped: "value" }));
+    const base: Record<string, unknown> = Object.create(prototypeWithThrowingSetter);
+    assert.doesNotThrow(
+      () => shallowMerge(base, { trapped: "value" }),
+      "a defineProperty copy never invokes the prototype's setter; an [[Set]] copy would"
+    );
     const merged = shallowMerge(base, { trapped: "value" });
     assert.isTrue(R.has(merged, "trapped"), "an own data property, not a setter call");
     assert.strictEqual(merged.trapped, "value");
@@ -127,10 +117,7 @@ describe("canMerge", () => {
     assert.isTrue(canMerge({ a: 1 }, { b: 2 }));
   });
 
-  it("MERGES a class-instance base with a plain partial patch", () => {
-    // The kit's dominant payload idiom. A symmetric same-prototype test would
-    // reject this — the patch is a caller-written literal, not a peer document
-    // — and fall back to replacement, silently dropping the base's fields.
+  it("MERGES a class-instance base with a plain partial patch, the dominant payload idiom a same-prototype test would replace", () => {
     assert.isTrue(canMerge(new Payload(1, 2), { a: 9 }));
   });
 

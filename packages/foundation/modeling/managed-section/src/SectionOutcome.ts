@@ -45,12 +45,10 @@ const syncVariants = S.TaggedUnion({
 export type SyncOutcome = typeof syncVariants.Type;
 const syncConstructors = Data.taggedEnum<SyncOutcome>();
 
-// Widen only the unused construct signature: TypeScript cannot extend a union-valued
-// constructor. The codec still carries the full tagged union and its wire type.
-const syncBase: S.Codec<SyncOutcome, typeof syncVariants.Encoded> = S.Opaque<SyncOutcome>()(syncVariants);
+const syncCodecWidenedPastUnionConstructor: S.Codec<SyncOutcome, typeof syncVariants.Encoded> =
+  S.Opaque<SyncOutcome>()(syncVariants);
 
-/** Schema authority with the existing Data constructors and matchers. */
-class SyncOutcomeStatics extends syncBase {
+class SyncOutcomeStatics extends syncCodecWidenedPastUnionConstructor {
   static readonly Created = syncConstructors.Created;
   static readonly Updated = syncConstructors.Updated;
   static readonly Unchanged = syncConstructors.Unchanged;
@@ -106,10 +104,10 @@ const checkVariants = S.TaggedUnion({
 export type CheckOutcome = typeof checkVariants.Type;
 const checkConstructors = Data.taggedEnum<CheckOutcome>();
 
-const checkBase: S.Codec<CheckOutcome, typeof checkVariants.Encoded> = S.Opaque<CheckOutcome>()(checkVariants);
+const checkCodecWidenedPastUnionConstructor: S.Codec<CheckOutcome, typeof checkVariants.Encoded> =
+  S.Opaque<CheckOutcome>()(checkVariants);
 
-/** Schema authority with the existing Data constructors and matchers. */
-class CheckOutcomeStatics extends checkBase {
+class CheckOutcomeStatics extends checkCodecWidenedPastUnionConstructor {
   static readonly Absent = checkConstructors.Absent;
   static readonly UpToDate = checkConstructors.UpToDate;
   static readonly Drifted = checkConstructors.Drifted;

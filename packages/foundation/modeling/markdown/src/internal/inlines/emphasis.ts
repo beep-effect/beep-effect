@@ -77,8 +77,6 @@ export class DelimiterRun extends S.Opaque<DelimiterRun, { readonly brand: uniqu
 ) {}
 
 /**
- * The encoded (plain) shape of {@link DelimiterRun}.
- *
  * @category models
  * @since 0.0.0
  */

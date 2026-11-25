@@ -30,6 +30,7 @@ import {
   SourceTextLocator,
 } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -184,9 +185,7 @@ describe("ProvenanceTraversal", () => {
         const fixture = yield* seeded();
         const traversal = yield* fixture.traverseAs(principalA);
         const result = yield* traversal.fromClaim(fixture.claimA.record.claim);
-        expect(foundOf(result)).toEqual(
-          O.some({ activities: [fixture.propose.id], captures: [fixture.captureA], admissions: 0 })
-        );
+        assertSome(foundOf(result), { activities: [fixture.propose.id], captures: [fixture.captureA], admissions: 0 });
       })
     );
 
@@ -195,13 +194,11 @@ describe("ProvenanceTraversal", () => {
         const fixture = yield* seeded();
         const traversal = yield* fixture.traverseAs(principalAB);
         const result = yield* traversal.fromClaim(fixture.claimA.record.claim);
-        expect(foundOf(result)).toEqual(
-          O.some({
-            activities: sortedIds([fixture.extract.id, fixture.propose.id]),
-            captures: sortedIds([fixture.captureA, fixture.captureB]),
-            admissions: 0,
-          })
-        );
+        assertSome(foundOf(result), {
+          activities: sortedIds([fixture.extract.id, fixture.propose.id]),
+          captures: sortedIds([fixture.captureA, fixture.captureB]),
+          admissions: 0,
+        });
       })
     );
 

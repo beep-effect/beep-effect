@@ -18,6 +18,7 @@ import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { OccurrenceId } from "@beep/text/Occurrence";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
@@ -349,6 +350,43 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
     })
   );
 
+  it.effect("refuses a foreign-named dataset that fails a profile check, in decode and normalize", () =>
+    Effect.gen(function* () {
+      const { dataset, iris } = yield* publish(baseCore(), metadataAt(1000));
+      const foreign = A.reduce(
+        [
+          [iris.publication, "https://example.org/np/1"],
+          [iris.head, "https://example.org/np/1/head"],
+          [iris.assertion, "https://example.org/np/1/assertion"],
+          [iris.provenance, "https://example.org/np/1/provenance"],
+          [iris.pubinfo, "https://example.org/np/1/pubinfo"],
+        ] as const,
+        dataset,
+        (current, [from, to]) => rename(current, from, to)
+      );
+      const headOnly = datasetOf(A.filter(foreign.quads, (q) => q.graph.value === "https://example.org/np/1/head"));
+      const cases = [
+        [headOnly, "invalid-core"],
+        [without(foreign, P.wasAttributedTo), "provenance-mismatch"],
+        [without(foreign, P.created), "invalid-publication-metadata"],
+      ] as const;
+      for (const [input, reason] of cases) {
+        const got = yield* outcomes(input);
+        expect([reason, got]).toStrictEqual([reason, [reason, reason]]);
+        const decoded = yield* codec.decode(input);
+        expect(S.is(NanopubRefused)(decoded) && decoded.input.quads).toStrictEqual(input.quads);
+      }
+    })
+  );
+
+  it.effect("requires an owner core that encodes to an object carrying assertedBy", () =>
+    Effect.sync(() => {
+      const stringCore = { ...Claims, ClaimCore: S.fromJsonString(Claims.ClaimCore) };
+      // @ts-expect-error -- a core encoded as a JSON string has no assertedBy field to name the agent. Owner: @beep/epistemics. Exit: remove if the codec binds the agent encoder itself.
+      expect(typeof makeNanopubCodec({ binding: stringCore }).encode).toBe("function");
+    })
+  );
+
   it.effect("refuses a stale publication id after publisher and time edits, in decode and normalize", () =>
     Effect.gen(function* () {
       const { dataset } = yield* publish(baseCore(), metadataAt(1000));
@@ -517,6 +555,15 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       expect(doubledOutcome).toStrictEqual(["invalid-publication-metadata", "invalid-publication-metadata"]);
       const dropped = yield* outcomes(without(twoDigests.dataset, P.sourceDigest));
       expect(dropped).toStrictEqual(["stale-publication-id", "stale-publication-id"]);
+      const otherDigest = Sha256PrefixedDigest.make(`sha256:${Str.repeat(64)("0")}`);
+      const swapped = replaceObject(twoDigests.dataset, P.sourceDigest, Rdf.Literal.typed(otherDigest, xsdString));
+      const swappedOutcome = yield* outcomes(swapped);
+      expect(swappedOutcome).toStrictEqual(["stale-publication-id", "stale-publication-id"]);
+      const republished = yield* publish(baseCore(), metadataAt(1000, O.some(otherDigest)));
+      expect(republished.id).not.toBe(twoDigests.id);
+      const reread = yield* accepted(republished.dataset);
+      expect(reread.publication).toBe(republished.id);
+      assertSome(reread.accepted.metadata.sourceDigest, otherDigest);
     })
   );
 

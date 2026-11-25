@@ -476,8 +476,6 @@ export const LibraryHopGateReason = LiteralKit([
 ]).pipe($I.annoteSchema("LibraryHopGateReason", { description: "Why the hop-2 gate admitted or refused a source." }));
 
 /**
- * Runtime type of {@link LibraryHopGateReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -643,8 +641,6 @@ const isArxiv = (source: LibrarySource) =>
   Str.startsWith("arxiv:")(source.identity) || hostMatches(urlHost(source.canonicalUrl), ["arxiv.org"]);
 
 /**
- * Inputs of {@link libraryHopGate}: packet concepts, policy and explicit on-demand selections.
- *
  * **Example** (Build gate inputs)
  *
  * ```ts

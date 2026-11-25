@@ -1,5 +1,5 @@
 import { ActivityPin } from "@beep/jsonc/ActivityStart";
-import { withActivity } from "@beep/nlp-processing/Activity";
+import { ActivityFacts, withActivity } from "@beep/nlp-processing/Activity";
 import * as Composition from "@beep/nlp-processing/Backend/Composition";
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import {
@@ -63,11 +63,13 @@ const counted = (name: string, attributes: Record<string, string>) =>
 const spanCapturing = (captured: Ref.Ref<O.Option<Tracer.Span>>, fail: boolean) =>
   withActivity<Entities, Entities, never>({
     facts: (used) =>
-      Effect.succeed({
-        pin: ActivityPin.cases.Engine.make({ engine: "telemetry", edition: "1" }),
-        promptDigest: O.none(),
-        used,
-      }),
+      Effect.succeed(
+        ActivityFacts.make({
+          pin: ActivityPin.cases.Engine.make({ engine: "telemetry", edition: "1" }),
+          promptDigest: O.none(),
+          used,
+        })
+      ),
     generated: (output) => output,
   })({
     name: stepTerm,

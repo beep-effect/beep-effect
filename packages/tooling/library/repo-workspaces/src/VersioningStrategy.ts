@@ -30,8 +30,6 @@ import type { TagFormatOptions, TagStyle } from "./ReleaseTag.ts";
 const $I = $RepoWorkspacesId.create("VersioningStrategy");
 
 /**
- * How a workspace assigns versions across its publishable packages.
- *
  * **Details**
  *
  * - `single` — zero or one publishable package, so one tag names the release.
@@ -119,8 +117,6 @@ export class ClassifyOptions extends S.Opaque<ClassifyOptions, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link ClassifyOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -200,8 +196,6 @@ export class PackageRelease extends S.Opaque<PackageRelease, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link PackageRelease}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -216,8 +210,6 @@ export declare namespace PackageRelease {
 }
 
 /**
- * How a workspace versions, and the tagging that follows from it.
- *
  * **Details**
  *
  * Built either purely with {@link VersioningStrategy.classify}, or from a live

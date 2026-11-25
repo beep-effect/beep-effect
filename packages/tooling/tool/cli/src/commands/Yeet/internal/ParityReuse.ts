@@ -58,8 +58,6 @@ const UNSET = "unset";
 const SET = "set";
 
 /**
- * The environment one proof step ran its lanes under.
- *
  * **Details**
  *
  * `posture` holds each {@link CI_PARITY_POSTURE_ENV} key: its value for the
@@ -146,8 +144,6 @@ export class ParityLaneDecision extends S.Opaque<ParityLaneDecision, { readonly 
 ) {}
 
 /**
- * A lane the parity battery would run.
- *
  * @category models
  * @since 0.0.0
  */

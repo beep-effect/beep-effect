@@ -86,8 +86,6 @@ const ComposerNoticeKind = LiteralKit(["decode-error", "error", "info"]).pipe(
 );
 
 /**
- * Typed notification commands emitted by the composer state machine.
- *
  * **Example** (Build an informational notice)
  *
  * ```ts
@@ -110,8 +108,6 @@ export const ComposerNotice = ComposerNoticeKind.mapMembers(
 );
 
 /**
- * Runtime type for {@link ComposerNotice}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -321,8 +317,6 @@ export const ComposerSendDecision = LiteralKit(["gated", "refuse", "send", "unsa
   );
 
 /**
- * Runtime type for {@link ComposerSendDecision}.
- *
  * @category models
  * @since 0.0.0
  */

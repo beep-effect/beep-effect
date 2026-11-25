@@ -26,8 +26,6 @@ const $I = $ObservabilityId.create("experimental/server/DevToolsRelay");
 const maxSpanEvents = 200;
 
 /**
- * Summary of the in-memory relay state.
- *
  * **Example** (Make zero-count snapshot)
  *
  * ```ts import.meta.vitest name="Make zero-count snapshot"

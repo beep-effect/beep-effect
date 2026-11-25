@@ -94,8 +94,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Status");
 const threadExcerptLength = 140;
 
 /**
- * Local Git worktree counts used by `yeet status`.
- *
  * **Example** (Construct a yeet status worktree)
  *
  * ```ts
@@ -124,8 +122,6 @@ export class YeetStatusWorktree extends S.Opaque<YeetStatusWorktree, { readonly 
 const yeetStatusSnapshotStaleGatesDefault = A.empty();
 const yeetStatusSnapshotUnprovenGatesDefault = A.empty();
 /**
- * Machine-readable status snapshot emitted by `yeet status`.
- *
  * **Example** (Construct a yeet status snapshot)
  *
  * ```ts

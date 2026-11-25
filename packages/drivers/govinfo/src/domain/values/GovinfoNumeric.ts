@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $GovinfoId.create("domain/values/GovinfoNumeric");
 
 /**
- * Non-negative signed 64-bit integer reported by GovInfo count fields.
- *
  * **Details**
  *
  * A `bigint` held to the signed int64 range, then to zero or more.
@@ -49,8 +47,6 @@ export const NonNegativeInt64 = S.BigInt.check(
 );
 
 /**
- * Type for {@link NonNegativeInt64}.
- *
  * **Example** (Type-annotated NonNegativeInt64 decode)
  *
  * ```ts

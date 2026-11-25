@@ -111,8 +111,6 @@ export class Style extends S.Opaque<Style, { readonly brand: unique symbol }>()(
   }).pipe($I.annoteSchema("Style", { description: "A readonly terminal foreground and text attributes." }))
 ) {}
 /**
- * Companion types for {@link Style}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

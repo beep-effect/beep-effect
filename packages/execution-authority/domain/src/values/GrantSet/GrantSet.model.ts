@@ -74,8 +74,6 @@ export const GrantSetDigest = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link GrantSetDigest}.
- *
  * **Example** (Usage)
  * ```ts
  * import { GrantSetDigest } from "@beep/execution-authority-domain"
@@ -204,8 +202,6 @@ export const GrantSet = GrantSetState.mapMembers(Tuple.evolve([() => DraftGrantS
 );
 
 /**
- * Runtime type for {@link GrantSet}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { GrantSet } from "@beep/execution-authority-domain"
@@ -428,8 +424,6 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
   );
 
 /**
- * Time and policy context used to evaluate one execution request.
- *
  * **Example** (Usage)
  * ```ts
  * import { ExecutionRequestEvaluationOptions, PolicyRevision } from "@beep/execution-authority-domain"

@@ -130,7 +130,6 @@ export const practiceKgClaimsPhysicalColumns = {
   epistemic_evidence: Struct.omit(getColumns(EvidenceTable.Table), ["deletedAt", "deletedByPrincipal"]),
 };
 
-// External physical schema: deliberately independent of the db-admin schema.
 const createClaimsTables = [
   `CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (
   created_at BIGINT NOT NULL,
@@ -185,8 +184,6 @@ INSERT INTO epistemic_evidence (
 ON CONFLICT (public_id) DO NOTHING`;
 
 /**
- * Inputs for one candidate-claims batch.
- *
  * **Example** (Usage)
  * ```ts
  * import { PracticeKgClaimsOptions } from "@beep/law-practice-server"
@@ -215,8 +212,6 @@ export class PracticeKgClaimsOptions extends S.Opaque<PracticeKgClaimsOptions, {
 ) {}
 
 /**
- * Deterministic claims-batch summary.
- *
  * **Example** (Usage)
  * ```ts
  * import * as S from "effect/Schema"
@@ -280,15 +275,9 @@ class SourceDocumentDigestRow extends S.Opaque<SourceDocumentDigestRow, { readon
 const decodeSourceDocumentDigestRows = S.decodeUnknownEffect(S.Array(SourceDocumentDigestRow));
 const batchOrdinalPrefix = /^\d+_/u;
 const extensionSuffix = /\.[^.]+$/u;
+const seedBoundKeepingShimSerialTimesTenPlusOneInInt32 = 214_748_363;
 
-/*
- * Claims inputs are extraction copies named after the catalogued document with
- * an optional `<n>_` batch ordinal in front; their bytes never match the
- * corpus extraction, so the join is by file-name stem. Only a unique stem
- * match resolves — an ambiguous or absent one leaves the digest null rather
- * than guessing.
- */
-const sourceDocumentStem = (filename: string): string =>
+const extractionCopyStemJoinKey = (filename: string): string =>
   Str.toLowerCase(Str.replace(extensionSuffix, "")(Str.replace(batchOrdinalPrefix, "")(filename)));
 
 const sourceDocumentDigestsSql = `
@@ -305,9 +294,10 @@ const resolveSourceDocumentDigest = Effect.fn("PracticeKgClaims.resolveSourceDoc
   const lookup = Effect.gen(function* () {
     const db = yield* DuckDb;
     const rows = yield* db
-      .query(sourceDocumentDigestsSql, [sourceDocumentStem(filename)])
+      .query(sourceDocumentDigestsSql, [extractionCopyStemJoinKey(filename)])
       .pipe(Effect.flatMap(decodeSourceDocumentDigestRows));
-    return A.length(rows) === 1 ? A.head(rows).pipe(O.map((row) => row.digest)) : O.none<string>();
+    const onlyUniqueStemMatchResolves = A.length(rows) === 1;
+    return onlyUniqueStemMatchResolves ? A.head(rows).pipe(O.map((row) => row.digest)) : O.none<string>();
   });
   return yield* O.match(existing, {
     onNone: () =>
@@ -472,12 +462,12 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       const digest = yield* decodeContentDigest(`sha256:${digestHex}`);
       const operationId = yield* decodeOperationId(`operation:${digestHex}`);
       const relativePath = yield* decodePosixPath(filename);
-      // Identity derives from content, not loop position, so re-runs are stable (B2).
-      // Bounded so the shim's `seed * 10 + 1` stays inside the int32 serial range.
-      const entitySeed = PosInt.make((Number.parseInt(Str.slice(0, 8)(digestHex), 16) % 214_748_363) + 1);
+      const contentDerivedEntitySeed = PosInt.make(
+        (Number.parseInt(Str.slice(0, 8)(digestHex), 16) % seedBoundKeepingShimSerialTimesTenPlusOneInInt32) + 1
+      );
       const extracted = yield* review.extractCandidate(
         OfficeActionReviewInput.make({
-          entitySeed,
+          entitySeed: contentDerivedEntitySeed,
           matterFixtureKey: `matter:${docket}`,
           officeActionFixtureKey: `office-action:${digest}`,
           operationId,
@@ -550,11 +540,12 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
       const identityDigest = yield* decodeContentDigest(`sha256:${identityHex}`);
       const operationId = yield* decodeOperationId(`operation:${digestHex}`);
       const baseSeed = (Number.parseInt(Str.slice(0, 8)(identityHex), 16) % 20_000_000) + 1;
-      // PatentApplicationDocument's coherence schema guarantees this section.
-      const claimsSectionIndex = O.getOrThrow(
+      const claimsSectionIndexThatPatentApplicationDocumentCoherenceGuarantees = O.getOrThrow(
         A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims"))
       );
-      const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
+      const claimsHeading = O.getOrThrow(
+        A.get(input.document.sections, claimsSectionIndexThatPatentApplicationDocumentCoherenceGuarantees)
+      );
       const sourceDocumentDigest =
         input.sourceDocumentDigest ?? (yield* Effect.map(sourceDocumentDigestFor(input.sourceFile), O.getOrUndefined));
       yield* Effect.forEach(
@@ -684,8 +675,6 @@ export class PracticeKgClaimsCarry extends S.Opaque<PracticeKgClaimsCarry, { rea
 ) {}
 
 /**
- * Destination bundle and rows for one claims carry.
- *
  * **Example** (Make a carry write request)
  *
  * ```ts
@@ -716,8 +705,6 @@ export class PracticeKgClaimsCarryWrite extends S.Opaque<
 ) {}
 
 /**
- * Counts from one claims carry.
- *
  * **Example** (Make a carry summary)
  *
  * ```ts

@@ -848,8 +848,6 @@ export const parseHarvestLedgerText = Effect.fn("Harvest.parseHarvestLedgerText"
 });
 
 /**
- * Options for one harvest collection.
- *
  * **Example** (Collect every root)
  *
  * ```ts

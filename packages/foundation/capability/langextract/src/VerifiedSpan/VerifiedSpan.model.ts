@@ -24,8 +24,6 @@ import { normalizeTextLocator } from "./VerifiedSpan.normalization.ts";
 const $I = $LangExtractId.create("VerifiedSpan");
 
 /**
- * One raw source chunk at an explicit global UTF-16 offset.
- *
  * **Details**
  *
  * Separators are part of `text`; reconstruction never inserts one.
@@ -83,8 +81,6 @@ export const VerifiedSpanAttemptId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptId}.
- *
  * @category identifiers
  * @since 0.0.0
  */
@@ -143,8 +139,6 @@ export const VerifiedSpanAttemptKind = LiteralKit(["verification", "re-anchor"])
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -171,8 +165,6 @@ export const VerifiedSpanAttemptFailureStage = LiteralKit(["source", "location",
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptFailureStage}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -200,8 +192,6 @@ export const VerifiedSpanAttemptFailureReason = S.Union([VerifiedSpanErrorReason
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptFailureReason}.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -380,8 +370,6 @@ export const VerifiedSpanAttemptOutcome = VerifiedSpanAttemptOutcomeStatus.mapMe
 );
 
 /**
- * Runtime type decoded by {@link VerifiedSpanAttemptOutcome}.
- *
  * @category models
  * @since 0.0.0
  */

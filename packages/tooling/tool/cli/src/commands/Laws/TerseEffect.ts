@@ -26,8 +26,6 @@ import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralE
 const $I = $RepoCliId.create("commands/Laws/TerseEffect");
 
 /**
- * Runtime options for terse Effect style migration checks.
- *
  * **Example** (Configure terse Effect scanning)
  * ```ts
  * console.log("TerseEffectRulesOptions")
@@ -50,8 +48,6 @@ export class TerseEffectRulesOptions extends S.Opaque<TerseEffectRulesOptions, {
 ) {}
 
 /**
- * Summary of terse Effect style migration results.
- *
  * **Example** (Reference the terse-effect rules summary)
  *
  * ```ts

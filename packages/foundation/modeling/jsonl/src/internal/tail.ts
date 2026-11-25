@@ -3,19 +3,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// The bounded tail read.
-//
-// `latest` and every `lastValid`-backed read go through this: `Line.lastValid`
-// takes whole text, so "just read the file" is the easy wrong move — it makes
-// the cost of answering "what is the current state" grow with the age of the
-// journal, which is the thing this package exists to avoid.
-//
-// Historical reads capture an absolute range, open the journal once, and read
-// every bounded page of that range through `readSampledWindow` on the one
-// handle. Growth past the sampled end is never read, a replacement after the
-// sample cannot reach the pinned handle, and a page shorter than the sampled
-// range fails `JournalResync` instead of ending the read early.
-
 import { $JsonlId } from "@beep/identity/packages";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
@@ -32,10 +19,8 @@ import type * as Scope from "effect/Scope";
 
 const $I = $JsonlId.create("internal/tail");
 
-/** UTF-8 BOM, as bytes. `U+FEFF` encodes to these three. */
-const BOM = Tuple.make(0xef, 0xbb, 0xbf);
+const UTF8_BOM_BYTES = Tuple.make(0xef, 0xbb, 0xbf);
 
-/** Byte value of `\n`. Cannot occur inside a UTF-8 multi-byte sequence. */
 const LF = 0x0a;
 
 /**
@@ -61,8 +46,6 @@ const LF = 0x0a;
 export const DEFAULT_WINDOW = 8192;
 
 /**
- * A decoded tail window.
- *
  * **Example** (Describe a complete tail window)
  *
  * ```ts import.meta.vitest name="Describe a complete tail window"
@@ -83,12 +66,13 @@ export class TailWindow extends S.Opaque<TailWindow, { readonly brand: unique sy
   )
 ) {}
 
-/** Does the buffer begin with a UTF-8 BOM? */
 const hasBom = (bytes: Uint8Array): boolean =>
-  bytes.length >= 3 && bytes[0] === BOM[0] && bytes[1] === BOM[1] && bytes[2] === BOM[2];
+  bytes.length >= 3 &&
+  bytes[0] === UTF8_BOM_BYTES[0] &&
+  bytes[1] === UTF8_BOM_BYTES[1] &&
+  bytes[2] === UTF8_BOM_BYTES[2];
 
-/** Read up to the bounded byte count, tolerating successful short reads. */
-const readBytes: {
+const readAtMost: {
   (file: FileSystem.File, length: number): Effect.Effect<Uint8Array, PlatformError.PlatformError>;
   (length: number): (file: FileSystem.File) => Effect.Effect<Uint8Array, PlatformError.PlatformError>;
 } = dual(
@@ -97,7 +81,7 @@ const readBytes: {
     const bytes = new Uint8Array(length);
     let offset = 0;
     while (offset < length) {
-      const chunk = yield* file.readAlloc(Math.min(length - offset, CHUNK));
+      const chunk = yield* file.readAlloc(Math.min(length - offset, READ_CHUNK_BYTES));
       if (O.isNone(chunk) || chunk.value.length === 0) break;
       bytes.set(chunk.value, offset);
       offset += chunk.value.length;
@@ -106,14 +90,12 @@ const readBytes: {
   })
 );
 
-/** Index just past the first newline, or the buffer length when it holds none. */
-const afterFirstNewline = (bytes: Uint8Array): number => {
+const afterFirstNewlineOrEnd = (bytes: Uint8Array): number => {
   const newline = bytes.indexOf(LF);
   return newline === -1 ? bytes.length : newline + 1;
 };
 
-/** Decode the bytes read at `from` into a window with logical offsets. */
-const windowOf: {
+const decodeLogicalWindow: {
   (
     path: string,
     bytes: Uint8Array,
@@ -139,14 +121,9 @@ const windowOf: {
     skipPartialLine: boolean,
     completeOnly: boolean
   ): Effect.fn.Return<TailWindow, InvalidUtf8> {
-    // Both scans use the typed-array natives, as upstream does: they search the
-    // bytes in place, where an Array helper first copies the whole window into a
-    // Number array. `lastIndexOf` returns -1 for a window without a newline, so
-    // `end` is then 0 and nothing of the unfinished line is decoded.
-    const cursor = skipPartialLine ? afterFirstNewline(bytes) : 0;
+    // decision: tail-typed-array-byte-scans
+    const cursor = skipPartialLine ? afterFirstNewlineOrEnd(bytes) : 0;
     const end = completeOnly ? bytes.lastIndexOf(LF) + 1 : bytes.length;
-    // Discard byte fragments before decoding. A cursor can point into a UTF-8
-    // sequence, and an unfinished suffix can contain a pending multi-byte code point.
     const text = yield* Effect.try({
       try: () =>
         new TextDecoder("utf-8", {
@@ -195,8 +172,8 @@ const readWindow: {
   ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
     const file = yield* fs.open(path, { flag: "r" });
     yield* file.seek(BigInt(from), "start");
-    const bytes = yield* readBytes(file, length);
-    return yield* windowOf(path, bytes, from, bomBytes, skipPartialLine, completeOnly);
+    const bytes = yield* readAtMost(file, length);
+    return yield* decodeLogicalWindow(path, bytes, from, bomBytes, skipPartialLine, completeOnly);
   }, Effect.scoped)
 );
 
@@ -259,9 +236,6 @@ export const readRangeWindow: {
 );
 
 /**
- * One bounded page of a historical range, read through the handle a reader
- * opened when it sampled the range.
- *
  * **Details**
  *
  * `from` is the page's physical offset and `length` the bytes it must cover;
@@ -350,7 +324,7 @@ export const readSampledWindow: {
     page: SampledRange
   ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8 | JournalResync> {
     yield* file.seek(BigInt(page.from), "start");
-    const bytes = yield* readBytes(file, page.length);
+    const bytes = yield* readAtMost(file, page.length);
     if (bytes.length < page.length) {
       const info = yield* file.stat;
       return yield* JournalResync.make({
@@ -360,7 +334,7 @@ export const readSampledWindow: {
         actual: Math.max(0, ByteSize.toNumberUnsafe(info.size) - page.bomBytes),
       });
     }
-    return yield* windowOf(page.path, bytes, page.from, page.bomBytes, page.skipPartialLine, true);
+    return yield* decodeLogicalWindow(page.path, bytes, page.from, page.bomBytes, page.skipPartialLine, true);
   })
 );
 
@@ -401,8 +375,8 @@ export const handleBomBytes: (file: FileSystem.File) => Effect.Effect<number, Pl
   "Jsonl.handleBomBytes"
 )(function* (file: FileSystem.File) {
   yield* file.seek(BigInt(0), "start");
-  const bytes = yield* readBytes(file, BOM.length);
-  return hasBom(bytes) ? BOM.length : 0;
+  const bytes = yield* readAtMost(file, UTF8_BOM_BYTES.length);
+  return hasBom(bytes) ? UTF8_BOM_BYTES.length : 0;
 });
 
 /**
@@ -522,8 +496,6 @@ export const readTail: {
   ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8> {
     const info = yield* fs.stat(path);
     const physicalSize = ByteSize.toNumberUnsafe(info.size);
-    // Every offset below is LOGICAL — post-BOM — on every path, whether or not
-    // this particular window happens to reach the start of the file.
     const contentStart = Math.min(bomBytes, physicalSize);
     const from = Math.min(physicalSize, Math.max(contentStart, physicalSize - window));
     return yield* readWindow(fs, path, from, physicalSize - from, contentStart, from !== contentStart, completeOnly);
@@ -595,7 +567,6 @@ export const readTailUntil: {
         return found;
       }
       if (tail.atFileStart) {
-        // The window already covered the whole file; widening cannot help.
         return O.none<A>();
       }
       window *= 4;
@@ -603,5 +574,4 @@ export const readTailUntil: {
   })
 );
 
-/** Read granularity for incremental tail reads. */
-const CHUNK = 64 * 1024;
+const READ_CHUNK_BYTES = 64 * 1024;

@@ -24,9 +24,6 @@ import type * as Path from "effect/Path";
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.known");
 
 /**
- * One line of the known-documents index: content the document system holds
- * for a matter.
- *
  * **Details**
  *
  * The index also records the file's id and path; the adapter reads only the
@@ -77,8 +74,6 @@ export class KnownDocument extends S.Opaque<KnownDocument, { readonly brand: uni
 ) {}
 
 /**
- * JSON codec of one known-documents index line.
- *
  * **Example** (Guard a decoded line)
  *
  * ```ts
@@ -98,8 +93,6 @@ export const KnownDocumentJsonLine = S.fromJsonString(KnownDocument).pipe(
 );
 
 /**
- * Runtime type for {@link KnownDocumentJsonLine}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -157,8 +150,8 @@ export class KnownDocumentsLocation extends Context.Service<KnownDocumentsLocati
 
 const decodeKnownDocument = S.decodeUnknownEffect(KnownDocumentJsonLine);
 
-// A hash is 64 hexadecimal characters, so a space cannot collide with either half.
-const knownKey = (sha256: string, familyKey: string): string => `${Str.toLowerCase(sha256)} ${familyKey}`;
+const lowerHexSha256SpaceFamilyKeyBecauseSpaceCollidesWithNeitherHalf = (sha256: string, familyKey: string): string =>
+  `${Str.toLowerCase(sha256)} ${familyKey}`;
 
 const makeKnownDocuments = Effect.gen(function* () {
   const location = yield* KnownDocumentsLocation;
@@ -167,13 +160,22 @@ const makeKnownDocuments = Effect.gen(function* () {
   const documents = yield* decodeLines({ decode: decodeKnownDocument, corrupt: file.corrupt })(text);
   const known = HashSet.fromIterable(
     A.getSomes(
-      A.map(documents, (document) => O.map(document.familyKey, (familyKey) => knownKey(document.sha256, familyKey)))
+      A.map(documents, (document) =>
+        O.map(document.familyKey, (familyKey) =>
+          lowerHexSha256SpaceFamilyKeyBecauseSpaceCollidesWithNeitherHalf(document.sha256, familyKey)
+        )
+      )
     )
   );
 
   return KnownDocumentsShape.make({
     has: (request: KnownDocumentRequest) =>
-      Effect.succeed(HashSet.has(known, knownKey(request.contentSha256, request.matterKey))),
+      Effect.succeed(
+        HashSet.has(
+          known,
+          lowerHexSha256SpaceFamilyKeyBecauseSpaceCollidesWithNeitherHalf(request.contentSha256, request.matterKey)
+        )
+      ),
   });
 });
 

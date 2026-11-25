@@ -29,8 +29,6 @@ const Receipt = S.Struct({
   unresolved: S.Array(S.Struct({ claimNumber: S.Finite, reason: S.String })),
 });
 const encodeReferenceEdge = ClaimElementEdge.pipe(S.fromJsonString, S.encodeEffect);
-// Source/schema integrity only. Semantic approval and corpus completeness are separate.
-// The test never imports the decomposer, policy, or checker predictions.
 const manifestJson = S.fromJsonString(Manifest);
 const sourceJson = S.fromJsonString(Source);
 const receiptJson = S.fromJsonString(Receipt);
@@ -105,7 +103,7 @@ const assertReferenceTree = Effect.fn("ReferenceIntegrity.assertTree")(function*
   });
 });
 
-describe("Independent semantic reference integrity", () => {
+describe("Independent semantic reference integrity: source and schema only, importing no decomposer, policy or checker prediction", () => {
   it.layer(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))((it) => {
     it.effect("preserves selected coverage and every local/cross-claim source anchor", () =>
       Effect.gen(function* () {

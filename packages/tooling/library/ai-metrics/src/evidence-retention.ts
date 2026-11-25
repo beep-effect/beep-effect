@@ -93,9 +93,12 @@ const encodeEvidenceRetentionPolicyJson = S.encodeEffect(S.fromJsonString(Eviden
 const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String })]));
 const decodeArguments2 = S.decodeUnknownEffect(S.Tuple([S.Struct({ latest: S.NullOr(S.Natural) })]));
 const decodeIdRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ id: Sha256Hex })));
-// The two readers below supply ordered, bounded keyset queries. This visitor
-// stays in the caller's transaction and never stores a cursor independently.
-const visitRetirementIds = Effect.fnUntraced(function* <E1, R1, E2, R2>(
+const visitOrderedBoundedKeysetPagesInCallerTransactionWithoutStoredCursor = Effect.fnUntraced(function* <
+  E1,
+  R1,
+  E2,
+  R2,
+>(
   read: (after: string) => Effect.Effect<Effect.Success<ReturnType<typeof decodeIdRecordRows>>, E1, R1>,
   visit: (id: Sha256Hex) => Effect.Effect<void, E2, R2>
 ) {
@@ -172,8 +175,6 @@ export const makeEvidenceRetention = Effect.fn("AiMetrics.makeEvidenceRetention"
         );
         const recovery = yield* makeEvidenceRecovery(policy.maxRecoveryRows, policy.maxRecoveryBytes);
 
-        // These phases run only inside seal's existing transaction. No helper
-        // commits independently; every validation still precedes recovery/deletion.
         const collectLaunch = Effect.fnUntraced(function* (
           id: Sha256Hex,
           epoch: number,
@@ -212,9 +213,10 @@ export const makeEvidenceRetention = Effect.fn("AiMetrics.makeEvidenceRetention"
           return true;
         });
         const verifyEnrolledOwnership = Effect.fnUntraced(function* (id: Sha256Hex, page: PageDisposition) {
-          // Earlier dispositions remain readable, but cannot prove that
-          // pending membership survived disposal. Preserve them for migration.
-          if (page.enrolledOwnership === undefined) return yield* failure("configuration");
+          const legacyDispositionKeptForMigrationCannotProvePendingMembershipSurvived =
+            page.enrolledOwnership === undefined;
+          if (legacyDispositionKeptForMigrationCannotProvePendingMembershipSurvived)
+            return yield* failure("configuration");
           const owned = yield* readEnrolledOwnership(id).pipe(Effect.provideService(SqlClient.SqlClient, sql));
           if (owned.count !== page.enrolledOwnership.count || owned.digest !== page.enrolledOwnership.digest)
             return yield* failure("storage");
@@ -269,7 +271,7 @@ export const makeEvidenceRetention = Effect.fn("AiMetrics.makeEvidenceRetention"
           epoch: number,
           totals: ReturnType<typeof emptyTotals>
         ) {
-          yield* visitRetirementIds(
+          yield* visitOrderedBoundedKeysetPagesInCallerTransactionWithoutStoredCursor(
             (after) =>
               sql`SELECT receipt_id AS id FROM observation_page_dispositions WHERE receipt_id>${after} ORDER BY receipt_id LIMIT 32`.pipe(
                 Effect.flatMap(decodeIdRecordRows)
@@ -284,7 +286,7 @@ export const makeEvidenceRetention = Effect.fn("AiMetrics.makeEvidenceRetention"
           totals[eventCountKey(state.value.state)] += 1;
         });
         const collectEventEvidence = Effect.fnUntraced(function* (totals: ReturnType<typeof emptyTotals>) {
-          yield* visitRetirementIds(
+          yield* visitOrderedBoundedKeysetPagesInCallerTransactionWithoutStoredCursor(
             (after) =>
               sql`SELECT event_id AS id FROM observation_delivery_events WHERE event_id>${after} ORDER BY event_id LIMIT 32`.pipe(
                 Effect.flatMap(decodeIdRecordRows)
@@ -366,6 +368,7 @@ export const makeEvidenceRetention = Effect.fn("AiMetrics.makeEvidenceRetention"
           ) AS n`.pipe(Effect.flatMap(S.decodeUnknownEffect(Count)));
           if (orphan[0].n !== 0) return yield* failure("storage");
         });
+        // decision: evidence-seal-phases-share-the-seal-transaction
         const seal = Effect.fn("AiMetrics.evidence.seal")((expectedEpoch: number) =>
           safe(
             sql

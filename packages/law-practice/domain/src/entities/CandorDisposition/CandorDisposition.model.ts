@@ -17,8 +17,6 @@ const $I = $LawPracticeDomainId.create("entities/CandorDisposition/CandorDisposi
 const pg = ProductEntity.pg;
 
 /**
- * One dated attorney judgment about one exact patent citation observation.
- *
  * **When to use**
  *
  * Use to record that a human decided something about a specific occurrence.

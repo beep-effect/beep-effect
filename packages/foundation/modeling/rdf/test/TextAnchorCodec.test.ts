@@ -50,16 +50,14 @@ const quote = (exact: string, context: { readonly prefix?: string; readonly suff
 
 const FRAGMENT = { type: "FragmentSelector", value: "section-1" } as const;
 
-// Well-formed text by construction: printable BMP scalars below the surrogate block plus 64 astral emoji, and a
-// non-empty scalar range in it. Offsets in both units come from the code points, independently of the codec.
-const CodePointPick = S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x2fff + 64 }));
+const PrintableBmpOrAstralEmojiPick = S.Int.check(S.isBetween({ minimum: 0x20, maximum: 0x2fff + 64 }));
 
 const toCodePoint = (pick: number): number => (pick > 0x2fff ? 0x1f600 + (pick - 0x3000) : pick);
 
 const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.check(S.isBetween({ minimum, maximum })));
 
 const anchorCase = Arbitrary.flatMap(
-  Arbitrary.array(Arbitrary.schema(CodePointPick), { minLength: 1, maxLength: 40 }),
+  Arbitrary.array(Arbitrary.schema(PrintableBmpOrAstralEmojiPick), { minLength: 1, maxLength: 40 }),
   (picks) => {
     const codePoints = A.map(picks, toCodePoint);
     const utf16 = A.scan(codePoints, 0, (offset, codePoint) => offset + (codePoint > 0xffff ? 2 : 1));
@@ -157,13 +155,19 @@ describe("@beep/rdf TextAnchor and Web Annotation codec", () => {
       const before = Str.slice(0, anchor.startChar)(text);
       const after = Str.slice(anchor.endChar)(text);
       const wirePosition = position(points.start, points.end);
+      const positionOnlyGainsQuote = targetOf(wirePosition);
+      const quoteUniqueByWholeTextContextDropsContext = targetOf(
+        quote(anchor.quote, { prefix: before, suffix: after })
+      );
+      const fragmentAndContextBesidePositionAreDropped = targetOf(
+        FRAGMENT,
+        wirePosition,
+        quote(anchor.quote, { prefix: before, suffix: after })
+      );
       const targets = [
-        // context-free position only: the codec adds the quote
-        targetOf(wirePosition),
-        // the whole text as context makes the quote unique; context is not carried
-        targetOf(quote(anchor.quote, { prefix: before, suffix: after })),
-        // context and a fragment beside a position are dropped
-        targetOf(FRAGMENT, wirePosition, quote(anchor.quote, { prefix: before, suffix: after })),
+        positionOnlyGainsQuote,
+        quoteUniqueByWholeTextContextDropsContext,
+        fragmentAndContextBesidePositionAreDropped,
       ];
       for (const target of targets) {
         const decoded = Result.getOrThrow(webAnnotationTargetToTextAnchor(target, text));

@@ -56,8 +56,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MonitorRateLimit");
 export const YEET_MONITOR_RATE_LIMIT_BUDGET = 8;
 
 /**
- * Which GitHub rate limit a failed poll hit.
- *
  * **Details**
  *
  * `primary` is the hourly REST or GraphQL quota; `secondary` is GitHub's
@@ -83,16 +81,12 @@ export const YeetGithubRateLimitKind = LiteralKit(["primary", "secondary"]).pipe
 );
 
 /**
- * Which GitHub rate limit a failed poll hit.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetGithubRateLimitKind = typeof YeetGithubRateLimitKind.Type;
 
 /**
- * The `GET /rate_limit` buckets the merge loop reads.
- *
  * **Example** (List the buckets)
  *
  * ```ts
@@ -112,8 +106,6 @@ export const YeetGithubRateLimitBucketName = LiteralKit(["core", "graphql"]).pip
 );
 
 /**
- * A `GET /rate_limit` bucket the merge loop reads.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -216,8 +208,6 @@ export class YeetGithubRateLimitResources extends S.Opaque<
 ) {}
 
 /**
- * The decoded `GET /rate_limit` response the merge loop reads.
- *
  * **Example** (Decode a rate-limit read)
  *
  * ```ts
@@ -345,8 +335,6 @@ export const readYeetGithubRateLimit = Effect.gen(function* () {
 });
 
 /**
- * A pause until the latest reset of the exhausted buckets.
- *
  * **Example** (Construct a reset pause)
  *
  * ```ts
@@ -416,8 +404,6 @@ export class YeetGithubRateLimitBackoffPause extends S.Opaque<
 ) {}
 
 /**
- * How long a rate-limited poll sleeps, and why.
- *
  * **Example** (Match a pause)
  *
  * ```ts
@@ -439,8 +425,6 @@ export const YeetGithubRateLimitPause = S.Union([YeetGithubRateLimitResetPause, 
 );
 
 /**
- * How long a rate-limited poll sleeps, and why.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -452,8 +436,6 @@ const backoffFloor = Duration.minutes(1);
 const backoffCeiling = Duration.minutes(15);
 
 /**
- * The inputs one rate-limit pause is decided from.
- *
  * **Details**
  *
  * `attempt` is the 1-based count of consecutive rate-limited polls, this one
@@ -599,8 +581,6 @@ export const renderYeetGithubRateLimitPause = (pause: YeetGithubRateLimitPause):
   });
 
 /**
- * How one merge-loop poll counts against the loop's budgets.
- *
  * **Details**
  *
  * `rate-limited` is a failure the loop sleeps through without spending the
@@ -625,16 +605,12 @@ export const YeetMonitorPollOutcome = LiteralKit(["succeeded", "failed", "rate-l
 );
 
 /**
- * How one merge-loop poll counts against the loop's budgets.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YeetMonitorPollOutcome = typeof YeetMonitorPollOutcome.Type;
 
 /**
- * The merge loop's consecutive-failure counters.
- *
  * **Details**
  *
  * `failures` counts consecutive ordinary failures (the poll-error budget);

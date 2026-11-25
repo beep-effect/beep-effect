@@ -1,9 +1,3 @@
-// TomlDocument: the lossless document class. The headline contract is the
-// byte-exact round-trip — stringify() reconstructs the source by
-// concatenating expression spans in order, proven byte-for-byte across every
-// valid corpus fixture (CRLF files included). Semantic violations surface as
-// diagnostics data on a successful parse; only lex/parse errors fail typed.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Toml, TomlParseError } from "@beep/toml/Toml";
 import { TomlDocument } from "@beep/toml/TomlDocument";
@@ -17,7 +11,6 @@ import * as Str from "effect/String";
 import { readValid, validCases } from "./corpus.ts";
 import { expectFailure } from "./expectFailure.ts";
 
-// Count recorded in the fixture README — guards against a silently-empty walk.
 const README_VALID_COUNT = 214;
 
 const MIXED = A.join(
@@ -56,14 +49,12 @@ describe("TomlDocument", () => {
       })
     );
 
-    it.effect("a semantically invalid document parses with the violation as data", () =>
+    it.effect("semantic violations preserve lossless text but make toValue fail with the stored diagnostics", () =>
       Effect.gen(function* () {
         const doc = yield* TomlDocument.parse("a=1\na=2\n");
         assert.strictEqual(doc.diagnostics.length, 1);
         assert.strictEqual(doc.diagnostics[0]?.code, "DuplicateKey");
-        // The document is still lossless and editable.
         assert.strictEqual(doc.stringify(), "a=1\na=2\n");
-        // toValue refuses: it fails with the stored diagnostics.
         const error = yield* expectFailure(doc.toValue());
         assert.instanceOf(error, TomlParseError);
         assert.deepStrictEqual(error.diagnostics, doc.diagnostics);
@@ -88,10 +79,7 @@ describe("TomlDocument", () => {
   });
 
   describe("stringify", () => {
-    it("concatenates expression spans rather than echoing the source", () => {
-      // A synthetic document whose single expression span deliberately does
-      // NOT tile the whole source: only span concatenation can produce
-      // "a=1\n" — a `return this.source` cheat would leak the GARBAGE tail.
+    it("concatenates only expression spans and excludes an unspanned source tail", () => {
       const doc = TomlDocument.make({
         source: "a=1\nGARBAGE",
         expressions: [
@@ -161,7 +149,7 @@ describe("TomlDocument", () => {
 
   describe("corpus round-trip", () => {
     it("discovers the full valid corpus", () => {
-      assert.isAtLeast(validCases.length, README_VALID_COUNT, "valid corpus walk came up short");
+      assert.isAtLeast(validCases.length, README_VALID_COUNT, "valid corpus walk must reach the fixture README count");
     });
 
     for (const relPath of validCases) {

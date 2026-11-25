@@ -59,8 +59,6 @@ export type ModelsRunMode = RunModeValue;
 const DriftKindKit = LiteralKit(["stale", "missing-file", "missing-locator", "invalid-effort", "unknown-model"]);
 
 /**
- * Why one locator did not match the manifest.
- *
  * **Details**
  *
  * The five kinds are deliberately distinct repairs, not severities. `stale` is
@@ -90,8 +88,6 @@ export const DriftKind = DriftKindKit.pipe(
 );
 
 /**
- * Why one locator did not match the manifest.
- *
  * @see {@link DriftKind} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -205,8 +201,6 @@ export const CatalogDiffScopeIs = CatalogDiffScopeKit.is;
 export const CatalogDiffScopeOptions = CatalogDiffScopeKit.literals;
 
 /**
- * One locator whose file value does not match the manifest.
- *
  * **Details**
  *
  * `current` is `None` when there is nothing to compare — a missing file or a

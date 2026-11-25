@@ -306,7 +306,6 @@ export class PracticeKgMailIndexInput extends S.Opaque<PracticeKgMailIndexInput,
 const nonEmpty = (value: string | undefined): O.Option<string> =>
   pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
 
-// The RFC 5322 subject first; the MAPI subject and conversation topic only stand in for it.
 const subjectOf = (row: PracticeKgMailIndexRow): string =>
   pipe(
     nonEmpty(row.internet?.subject),
@@ -342,16 +341,10 @@ const internetParticipants = (headers: PracticeKgMailIndexInternetHeaders): Read
 const rfcParticipantsOf = (row: PracticeKgMailIndexRow): ReadonlyArray<PracticeKgEmailParticipant> =>
   pipe(O.fromUndefinedOr(row.internet), O.map(internetParticipants), O.getOrElse(A.empty<PracticeKgEmailParticipant>));
 
-// A blind copy is tallied as a copy; any other kind is a direct recipient.
 const recipientRole = (kind: string): "cc" | "to" => (kind === "cc" || kind === "bcc" ? "cc" : "to");
 
 const fieldSeparator = "\u0000";
 
-// A message without a Message-ID is its MAPI submit (else delivery) time, sender,
-// subject and recipients (each with its role), then its RFC 5322 From, To and Cc addresses: the same
-// item exported twice carries the same values, whatever the export tree and
-// artifact, and two items that differ in any participant stay apart. Only an
-// item with no time at all falls back to its place in one export.
 const mapiKeyOf = (row: PracticeKgMailIndexRow): O.Option<string> =>
   O.map(outlookTimeOf(row), (time) =>
     A.join(
@@ -407,8 +400,6 @@ type ParsedParticipants = {
 
 const hasAddress = Str.includes("@");
 
-// Without RFC 5322 headers, the MAPI sender and the export's recipients stand in;
-// an Exchange legacy address carries no mailbox and is dropped, counted.
 const outlookParticipants = (row: PracticeKgMailIndexRow): ParsedParticipants => {
   const sender = O.map(outlookSenderOf(row), (address) => [address, "from"] as const);
   const recipients = A.getSomes(
@@ -470,7 +461,6 @@ type Attributed = Placed & { readonly familyKey: string };
 
 const byKey = Order.mapInput(Order.String, (placed: Attributed) => placed.key);
 
-// Only a subject naming exactly one matter places a message.
 const attributedOf = (placed: Placed): O.Option<Attributed> =>
   A.length(placed.familyKeys) === 1
     ? O.map(A.head(placed.familyKeys), (familyKey) => ({ ...placed, familyKey }))

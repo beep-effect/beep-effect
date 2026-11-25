@@ -23,8 +23,6 @@ const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 // ---------------------------------------------------------------------------
 
 /**
- * A run of styled text.
- *
  * **Example** (Decode bold text inline)
  *
  * ```ts
@@ -61,8 +59,6 @@ export class TextInline extends S.Opaque<TextInline, { readonly brand: unique sy
 ) {}
 
 /**
- * A hyperlink inline.
- *
  * **Example** (Decode hyperlink inline)
  *
  * ```ts
@@ -145,8 +141,6 @@ const TableCellBlockInlineNode = InlineNode.pipe($I.annoteSchema("TableCellBlock
 // ---------------------------------------------------------------------------
 
 /**
- * Heading tags supported by assistant-content heading blocks.
- *
  * **Example** (Access heading tag enum)
  *
  * ```ts
@@ -166,8 +160,6 @@ export const AssistantHeadingTag = LiteralKit(["h1", "h2", "h3"]).pipe(
 );
 
 /**
- * Type accepted by the {@link AssistantHeadingTag} schema.
- *
  * **Example** (Satisfy heading tag type)
  *
  * ```ts
@@ -183,8 +175,6 @@ export const AssistantHeadingTag = LiteralKit(["h1", "h2", "h3"]).pipe(
 export type AssistantHeadingTag = typeof AssistantHeadingTag.Type;
 
 /**
- * A paragraph of inline content.
- *
  * **Example** (Decode paragraph block)
  *
  * ```ts
@@ -213,8 +203,6 @@ export class ParagraphBlock extends S.Opaque<ParagraphBlock, { readonly brand: u
 ) {}
 
 /**
- * A section heading.
- *
  * **Example** (Decode heading block)
  *
  * ```ts
@@ -245,8 +233,6 @@ export class HeadingBlock extends S.Opaque<HeadingBlock, { readonly brand: uniqu
 ) {}
 
 /**
- * A block quotation.
- *
  * **Example** (Decode quote block)
  *
  * ```ts
@@ -275,8 +261,6 @@ export class QuoteBlock extends S.Opaque<QuoteBlock, { readonly brand: unique sy
 ) {}
 
 /**
- * List markers supported by assistant-content list blocks.
- *
  * **Example** (Access list type enum)
  *
  * ```ts
@@ -296,8 +280,6 @@ export const AssistantListType = LiteralKit(["bullet", "number"]).pipe(
 );
 
 /**
- * Type accepted by the {@link AssistantListType} schema.
- *
  * **Example** (Satisfy list type)
  *
  * ```ts
@@ -313,8 +295,6 @@ export const AssistantListType = LiteralKit(["bullet", "number"]).pipe(
 export type AssistantListType = typeof AssistantListType.Type;
 
 /**
- * A single item within a {@link ListBlock}.
- *
  * **Example** (Make list item)
  *
  * ```ts
@@ -338,8 +318,6 @@ export class ListItem extends S.Opaque<ListItem, { readonly brand: unique symbol
 ) {}
 
 /**
- * A flat list of items.
- *
  * **Example** (Decode bullet list block)
  *
  * ```ts
@@ -370,8 +348,6 @@ export class ListBlock extends S.Opaque<ListBlock, { readonly brand: unique symb
 ) {}
 
 /**
- * A fenced code block.
- *
  * **Example** (Decode TypeScript code block)
  *
  * ```ts
@@ -404,8 +380,6 @@ export class CodeBlock extends S.Opaque<CodeBlock, { readonly brand: unique symb
 ) {}
 
 /**
- * A single table cell in an assistant-generated table.
- *
  * **Example** (Decode table cell)
  *
  * ```ts
@@ -432,8 +406,6 @@ export class TableCellBlock extends S.Opaque<TableCellBlock, { readonly brand: u
 ) {}
 
 /**
- * A single row in an assistant-generated table.
- *
  * **Example** (Decode table row)
  *
  * ```ts
@@ -506,8 +478,6 @@ const YouTubeVideoId = S.String.check(
 );
 
 /**
- * A rectangular data table.
- *
  * **Example** (Decode table with header)
  *
  * ```ts
@@ -542,8 +512,6 @@ export class TableBlock extends S.Opaque<TableBlock, { readonly brand: unique sy
 ) {}
 
 /**
- * An embedded YouTube video.
- *
  * **Example** (Decode YouTube video block)
  *
  * ```ts
@@ -571,8 +539,6 @@ export class YouTubeBlock extends S.Opaque<YouTubeBlock, { readonly brand: uniqu
 ) {}
 
 /**
- * A single block of an assistant turn.
- *
  * **Example** (Decode paragraph assistant block)
  *
  * ```ts
@@ -598,8 +564,6 @@ export const AssistantBlock = pipe(
 );
 
 /**
- * Type accepted by the {@link AssistantBlock} schema.
- *
  * **Example** (Annotate a constructed AssistantBlock)
  *
  * ```ts

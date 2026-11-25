@@ -8,6 +8,9 @@ it to MINDS or to deleted history. What a green gate does NOT prove:
   `blinded: true`, and `first_run: true` are booleans the operator writes; no
   script can prove two invocations shared no context or that a run is truly
   the first. Process discipline + the manifest record are the mechanism.
+  The seat command copies only a seat's allowed inputs into a fresh
+  directory, but an agent sandbox that can read the disk can still reach
+  the primary records by absolute path.
 - **Steward identity is a string, and a batch utterance can be scribed as N
   named sentences.** The validator forces per-proposal named verbatims,
   distinct wording, one decision per proposal, and byte-fresh

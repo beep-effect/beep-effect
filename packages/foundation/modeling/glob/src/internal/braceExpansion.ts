@@ -24,7 +24,7 @@
 //    descends one frame per level; the guard throws GuardExceeded
 //    ("NestingDepthExceeded") instead of overflowing the stack. The upstream
 //    {a},b} for-loop rewrite and the lazy post evaluation (both load-bearing
-//    DoS fixes; their upstream comments are preserved below) are kept exactly.
+//    DoS fixes) are kept exactly.
 // 2. Depth guard on parseCommaParts — self-recursive on the post side;
 //    upstream relies only on the 64KB pattern-length cap.
 // 3. Budget exhaustion THROWS GuardExceeded("ExpansionBudgetExceeded") where
@@ -88,11 +88,9 @@ const unescapeBraces = (str: string): string =>
     Str.replace(escPeriodPattern, ".")
   );
 
-/**
- * Basically just str.split(","), but handling cases where we have nested
- * braced sections, which should be treated as individual members, like
- * `{a,{b,c},d}`.
- */
+const escapeLeadingEmptyBracesAtTopLevelLikeBash43 = (str: string): string =>
+  Str.slice(0, 2)(str) === "{}" ? `\\{\\}${Str.slice(2)(str)}` : str;
+
 const parseCommaParts: {
   (str: string, depth: number): Array<string>;
   (depth: number): (str: string) => Array<string>;
@@ -127,8 +125,6 @@ const parseCommaParts: {
 });
 
 /**
- * Configures the maximum number of alternatives produced by brace expansion.
- *
  * **Gotchas**
  *
  * An invalid `max` raises a `TypeError`; exhausting a valid budget raises
@@ -195,16 +191,7 @@ export const expand: {
 
     const max = assertCap("braceExpandMax", options.max ?? EXPANSION_MAX);
 
-    // I don't know why Bash 4.3 does this, but it does.
-    // Anything starting with {} will have the first two bytes preserved
-    // but *only* at the top level, so {},a}b will not expand to anything,
-    // but a{},b}c will be expanded to [a}c,abc].
-    // One could argue that this is a bug in Bash, but since the goal of
-    // this module is to match Bash's rules, we escape a leading {}
-    let input = str;
-    if (Str.slice(0, 2)(input) === "{}") {
-      input = `\\{\\}${Str.slice(2)(input)}`;
-    }
+    const input = escapeLeadingEmptyBracesAtTopLevelLikeBash43(str);
 
     const result: Array<string> = [];
     for (const member of expand_(escapeBraces(input), max, true, 0)) {
@@ -231,9 +218,6 @@ const gte: {
   (y: number): (i: number) => boolean;
 } = dual(2, (i: number, y: number): boolean => i >= y);
 
-// What the leftmost balanced brace set of a string calls for: emit the string
-// unchanged, emit a `${...}` set verbatim, expand the set, or restart on the
-// `{a},b}` rewrite.
 type BraceStep =
   | { readonly _tag: "Literal" }
   | { readonly _tag: "Dollar"; readonly m: BalancedResult }
@@ -250,14 +234,16 @@ const braceKind = (body: string): BraceKind | undefined => {
   return Str.includes(",")(body) ? "options" : undefined;
 };
 
+const closesEarlyLikeACloseCommaB = /,(?!,).*}/;
+
 const classifyBrace = (current: string): BraceStep => {
   const m = balanced("{", "}", current);
   if (m === false) return LITERAL_STEP;
   if (/\$$/.test(m.pre)) return { _tag: "Dollar", m };
   const kind = braceKind(m.body);
   if (kind !== undefined) return { _tag: "Expand", m, kind };
-  // {a},b}
-  if (/,(?!,).*}/.test(m.post)) return { _tag: "Rewrite", current: `${m.pre}{${m.body}${escClose}${m.post}` };
+  if (closesEarlyLikeACloseCommaB.test(m.post))
+    return { _tag: "Rewrite", current: `${m.pre}{${m.body}${escClose}${m.post}` };
   return LITERAL_STEP;
 };
 
@@ -269,9 +255,6 @@ function* expand_(str: string, max: number, isTopInput: boolean, depth: number):
   let current = str;
   let isTop = isTopInput;
 
-  // The `{a},b}` rewrite restarts expansion on a rewritten string with the
-  // same `max` and `isTop = true`. Loop instead of recursing so a long run of
-  // non-expanding `{}` groups can't exhaust the call stack.
   let step = classifyBrace(current);
   while (step._tag === "Rewrite") {
     current = step.current;
@@ -289,18 +272,14 @@ const runBraceStep = (step: BraceStep, current: string, max: number, isTop: bool
     Expand: ({ m, kind }) => expandBraceSet(m, kind, max, isTop, depth),
   });
 
-// no need to expand pre, since it is guaranteed to be free of brace-sets
 function* expandDollarBrace(m: BalancedResult, max: number, depth: number): Generator<string> {
-  for (const p of postOf(m, max, depth)()) yield `${m.pre}{${m.body}}${p}`;
+  const preLeftOfLeftmostSetIsFreeOfBraceSets = m.pre;
+  for (const p of lazyPostOf(m, max, depth)()) yield `${preLeftOfLeftmostSetIsFreeOfBraceSets}{${m.body}}${p}`;
 }
 
-// Only expand post once we know this brace set actually expands. Computing it
-// before the early returns expanded post a second time on every non-expanding
-// `{}`, which is what made inputs like `a{},{},{}...` blow up exponentially.
-const postOf = (m: BalancedResult, max: number, depth: number) => (): Iterable<string> =>
+const lazyPostOf = (m: BalancedResult, max: number, depth: number) => (): Iterable<string> =>
   m.post.length !== 0 ? expand_(m.post, max, false, depth + 1) : [""];
 
-// The per-set context every member emission shares.
 interface BraceSet {
   readonly depth: number;
   readonly isSequence: boolean;
@@ -327,7 +306,7 @@ function* expandBraceSet(
   depth: number
 ): Generator<string> {
   const isSequence = kind !== "options";
-  const set: BraceSet = { pre: m.pre, post: postOf(m, max, depth), isTop, isSequence, max, depth };
+  const set: BraceSet = { pre: m.pre, post: lazyPostOf(m, max, depth), isTop, isSequence, max, depth };
   const n = isSequence ? Str.split(/\.\./)(m.body) : parseCommaParts(m.body, depth + 1);
   const n0 = n[0];
   const n1 = n[1];
@@ -340,7 +319,6 @@ function* expandBraceSet(
   }
 }
 
-// The validated arithmetic of one `{x..y[..incr]}` sequence.
 interface SequencePlan {
   readonly incr: number;
   readonly pad: boolean;
@@ -361,14 +339,12 @@ const sequencePlan = (n: ReadonlyArray<string>, n0: string, n1: string, max: num
   const incr = reverse ? step * -1 : step;
   const pad = A.some(n, isPadded);
 
-  // Validate the count before generating members. Overflow can produce
-  // Infinity or NaN; both exceed the budget, measured as positive infinity.
   const count = Math.floor(Math.abs(y - x) / Math.abs(incr)) + 1;
-  const total = S.is(S.Finite)(count) ? count : Number.POSITIVE_INFINITY;
-  if (total > max) {
-    throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, total);
+  const countWithNaNOrOverflowMeasuredAsInfinity = S.is(S.Finite)(count) ? count : Number.POSITIVE_INFINITY;
+  if (countWithNaNOrOverflowMeasuredAsInfinity > max) {
+    throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, countWithNaNOrOverflowMeasuredAsInfinity);
   }
-  return { x, y, incr, test: reverse ? gte : lte, width, pad, total };
+  return { x, y, incr, test: reverse ? gte : lte, width, pad, total: countWithNaNOrOverflowMeasuredAsInfinity };
 };
 
 const alphaMember = (i: number): string => {
@@ -392,19 +368,15 @@ function* expandSequence(
   isAlphaSequence: boolean
 ): Generator<string> {
   const plan = sequencePlan(n, n0, n1, set.max);
-  // Advancing arithmetic follows the endpoint, even when rounding makes
-  // the actual increment smaller than the declared step. A stalled
-  // addition retains the round-2 bounded duplicate-member behavior.
   for (let i = plan.x, member = 0; plan.test(i, plan.y); member++) {
     yield* emitMembers(set, [isAlphaSequence ? alphaMember(i) : numericMember(i, plan)]);
     const next = i + plan.incr;
-    if (next === i && member + 1 >= plan.total) break;
+    const stalledAdditionStopsAtPlannedCount = next === i && member + 1 >= plan.total;
+    if (stalledAdditionStopsAtPlannedCount) break;
     i = next;
   }
 }
 
-// The doubled-brace form wraps each expanded inner alternative. Its
-// singleton form bypasses top-level empty-member filtering upstream.
 function* expandDoubled(set: BraceSet, inner: string): Generator<string> {
   let first = "";
   let count = 0;
@@ -413,7 +385,8 @@ function* expandDoubled(set: BraceSet, inner: string): Generator<string> {
     else yield* emitDoubledMember(set, first, member, count);
     count++;
   }
-  if (count === 1) {
+  const singletonBypassesTopLevelEmptyMemberFilter = count === 1;
+  if (singletonBypassesTopLevelEmptyMemberFilter) {
     for (const suffix of set.post()) yield set.pre + embrace(first) + suffix;
   }
 }

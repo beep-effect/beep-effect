@@ -205,8 +205,6 @@ export type YamlStringifyStageErrorCode = (typeof YAML_STRINGIFY_ERROR_CODES)[nu
 export type YamlModifyStageErrorCode = (typeof YAML_MODIFY_ERROR_CODES)[number];
 
 /**
- * Union of all error codes across all pipeline stages.
- *
  * **Example** (Validate a pipeline error code)
  *
  * ```ts
@@ -228,16 +226,12 @@ export const YamlErrorCode = LiteralKit([
 ]).pipe($I.annoteSchema("YamlErrorCode", { description: "All raw diagnostic codes emitted by YAML pipeline stages." }));
 
 /**
- * The error-code union described by {@link YamlErrorCode}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type YamlErrorCode = typeof YamlErrorCode.Type;
 
 /**
- * A raw diagnostic record emitted by the engine.
- *
  * **Details**
  *
  * Position is offset-based only; the facade computes `line`/`character`

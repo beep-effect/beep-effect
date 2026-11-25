@@ -104,8 +104,6 @@ export class Evidence extends ProductEntity.Entity<Evidence>()(Epistemic.Evidenc
 ) {}
 
 /**
- * Frozen pre-v2 evidence position bytes, retaining inconsistent widths and empty quotes.
- *
  * **Example** (Decode a frozen position row)
  *
  * ```ts

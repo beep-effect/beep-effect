@@ -53,8 +53,7 @@ const docket = (
 const diff = (base: PracticeKgMatterTables, next: PracticeKgMatterTables) =>
   diffPracticeKgMatterTables(PracticeKgMatterTablesComparison.make({ base, next }));
 
-// Rows in key order, as the reader returns them.
-const base = PracticeKgMatterTables.make({
+const baseRowsInReaderKeyOrder = PracticeKgMatterTables.make({
   dockets: [
     docket("11111.12345EP", "12345EP", "11111.12345", ["EP20000001"]),
     docket("11111.12345US", "12345US", "11111.12345", ["16/000,001"], ["10,000,001"]),
@@ -74,16 +73,16 @@ const fullerWithOneLoss = PracticeKgMatterTables.make({
 
 const additionsOnly = PracticeKgMatterTables.make({
   dockets: [
-    ...base.dockets,
+    ...baseRowsInReaderKeyOrder.dockets,
     docket("11111.23456EP", "23456EP", "11111.23456", ["EP20000002"]),
     docket("11111.34567US", "34567US", "11111.34567", ["16/000,004"], ["10,000,004"]),
   ],
-  matters: [...base.matters, matter("11111.34567", "34567", 1)],
+  matters: [...baseRowsInReaderKeyOrder.matters, matter("11111.34567", "34567", 1)],
 });
 
 describe("practice KG bundle compare", () => {
   it("reports nothing when the tables are the same", () => {
-    const same = diff(base, base);
+    const same = diff(baseRowsInReaderKeyOrder, baseRowsInReaderKeyOrder);
     expect(same).toStrictEqual(
       PracticeKgBundleDiff.make({
         docketsAdded: [],
@@ -98,7 +97,7 @@ describe("practice KG bundle compare", () => {
   });
 
   it("names the matter, the docket, and the patent a fuller rebuild lost, beside what it gained", () => {
-    const lossy = diff(base, fullerWithOneLoss);
+    const lossy = diff(baseRowsInReaderKeyOrder, fullerWithOneLoss);
     expect(lossy).toStrictEqual(
       PracticeKgBundleDiff.make({
         docketsAdded: ["11111.34567US"],
@@ -122,7 +121,7 @@ describe("practice KG bundle compare", () => {
   });
 
   it("does not count additions as a loss, and reports a withdrawn number even when every key survives", () => {
-    const gained = diff(base, additionsOnly);
+    const gained = diff(baseRowsInReaderKeyOrder, additionsOnly);
     expect([gained.lost, gained.mattersAdded, gained.docketsAdded, gained.numbersChanged]).toStrictEqual([
       false,
       ["11111.34567"],
@@ -136,9 +135,9 @@ describe("practice KG bundle compare", () => {
         docket("11111.12345US", "12345US", "11111.12345", ["16/000,001"]),
         docket("11111.23456US", "23456US", "11111.23456", ["16/000,002"]),
       ],
-      matters: base.matters,
+      matters: baseRowsInReaderKeyOrder.matters,
     });
-    const withdrawn = diff(base, renumbered);
+    const withdrawn = diff(baseRowsInReaderKeyOrder, renumbered);
     expect([withdrawn.lost, withdrawn.mattersRemoved, withdrawn.docketsRemoved]).toStrictEqual([true, [], []]);
     expect(A.map(withdrawn.numbersChanged, (change) => [change.docketKey, change.patentNumbersRemoved])).toStrictEqual([
       ["11111.12345US", ["10,000,001"]],
@@ -152,9 +151,9 @@ describe("practice KG bundle compare", () => {
         docket("11111.12345US", "12345US", "11111.12345", ["16/000,001"], ["10,000,001"]),
         docket("11111.12345EP", "12345EP", "11111.12345", ["EP20000001", "EP20000009"]),
       ],
-      matters: base.matters,
+      matters: baseRowsInReaderKeyOrder.matters,
     });
-    const renumbered = diff(base, shuffled);
+    const renumbered = diff(baseRowsInReaderKeyOrder, shuffled);
     expect(A.map(renumbered.numbersChanged, (change) => change.docketKey)).toStrictEqual([
       "11111.12345EP",
       "11111.23456US",
@@ -177,13 +176,15 @@ describe("practice KG bundle compare", () => {
         const directory = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-compare-" });
         const databasePath = path.join(directory, "practice.duckdb");
 
-        yield* writeMatterTables(base).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
+        yield* writeMatterTables(baseRowsInReaderKeyOrder).pipe(
+          withDuckDb(DuckDbConnectionOptions.make({ databasePath }))
+        );
         const read = yield* readPracticeKgMatterTables.pipe(
           withDuckDb(DuckDbConnectionOptions.make({ databaseOptions: { access_mode: "READ_ONLY" }, databasePath }))
         );
 
-        expect(read).toStrictEqual(base);
-        assertFalse(diff(read, base).lost);
+        expect(read).toStrictEqual(baseRowsInReaderKeyOrder);
+        assertFalse(diff(read, baseRowsInReaderKeyOrder).lost);
         expect(diff(read, fullerWithOneLoss).mattersRemoved).toStrictEqual(["11111.23456"]);
       })
     );

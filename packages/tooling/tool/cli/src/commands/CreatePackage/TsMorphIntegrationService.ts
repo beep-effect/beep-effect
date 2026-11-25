@@ -18,8 +18,6 @@ import type { DomainError } from "@beep/repo-utils";
 const $I = $RepoCliId.create("commands/CreatePackage/TsMorphIntegrationService");
 
 /**
- * Supported AST mutation categories required by create-package.
- *
  * **Example** (Validate mutation kind value)
  *
  * ```ts
@@ -44,8 +42,6 @@ export const TsMorphMutationKind = LiteralKit([
   })
 );
 /**
- * Supported AST mutation categories required by create-package.
- *
  * @category models
  * @since 0.0.0
  */
@@ -128,8 +124,6 @@ class TsMorphMutationWireDataAccess extends S.Opaque<
 }
 
 /**
- * Input descriptor for one AST mutation.
- *
  * **Example** (Validate mutation input schema)
  *
  * ```ts
@@ -159,8 +153,6 @@ export const TsMorphMutation = TsMorphMutationKind.mapMembers(
 );
 
 /**
- * Input descriptor for one AST mutation.
- *
  * @category models
  * @since 0.0.0
  */
@@ -217,16 +209,12 @@ const TsMorphMutationOutcome = LiteralKit(["applied", "skipped"])
   );
 
 /**
- * Outcome for one mutation.
- *
  * @category models
  * @since 0.0.0
  */
 export type TsMorphMutationOutcome = typeof TsMorphMutationOutcome.Type;
 
 /**
- * Batch mutation result.
- *
  * **Example** (Validate batch mutation result)
  *
  * ```ts

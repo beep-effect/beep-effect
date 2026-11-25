@@ -12,6 +12,7 @@ import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import { CitationAssetSeal, readCitationAssetBytes } from "./Asset.ts";
 
+const libcNoreturnExitTrapsAfterThisImportReturns = () => {};
 const $I = $LawPracticeServerId.create("internal/Citation/NativeWasm");
 const WorkerArguments = S.Tuple([S.String.check(S.isMaxLength(32768))]).pipe(
   $I.annoteSchema("WorkerArguments", {
@@ -242,8 +243,7 @@ export const makeCitationClosedNativeWasi = Effect.fn("Citation.makeClosedNative
         fd_write: deny,
         path_filestat_get: deny,
         path_open: deny,
-        // libc's noreturn exit path traps after this import returns.
-        proc_exit: () => {},
+        proc_exit: libcNoreturnExitTrapsAfterThisImportReturns,
       },
     };
   })

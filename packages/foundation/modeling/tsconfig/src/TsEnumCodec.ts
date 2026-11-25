@@ -90,17 +90,11 @@ const EnumFamily = LiteralKit([
  */
 export type EnumFamily = typeof EnumFamily.Type;
 
-/** One family's forward (string→number, aliases included) and reverse (number→canonical string) maps. */
 interface FamilyTable {
   readonly forward: MutableHashMap.MutableHashMap<string, number>;
   readonly reverse: MutableHashMap.MutableHashMap<number, string>;
 }
 
-/**
- * Builds a family's forward/reverse maps from its row order. The
- * reverse map overwrites on every duplicate value, so the last-listed name
- * for a value is canonical.
- */
 const buildTable = (rows: ReadonlyArray<readonly [name: string, value: number]>): FamilyTable => {
   const forward = MutableHashMap.empty<string, number>();
   const reverse = MutableHashMap.empty<number, string>();
@@ -111,9 +105,6 @@ const buildTable = (rows: ReadonlyArray<readonly [name: string, value: number]>)
   return { forward, reverse };
 };
 
-// ── Tables, transcribed verbatim in row order ───────────────────────
-
-/** ScriptTarget. Decode-only 0=es3 and 100=JSON have no forward string and are deliberately omitted. */
 const TARGET = buildTable([
   ["es5", 1],
   ["es6", 2],
@@ -131,7 +122,6 @@ const TARGET = buildTable([
   ["esnext", 99],
 ]);
 
-/** ModuleKind. */
 const MODULE = buildTable([
   ["none", 0],
   ["commonjs", 1],
@@ -150,7 +140,6 @@ const MODULE = buildTable([
   ["preserve", 200],
 ]);
 
-/** ModuleResolutionKind. */
 const MODULE_RESOLUTION = buildTable([
   ["classic", 1],
   ["node", 2],
@@ -160,7 +149,6 @@ const MODULE_RESOLUTION = buildTable([
   ["bundler", 100],
 ]);
 
-/** JsxEmit. 0=none exists numerically but has no tsconfig string, so it is omitted. */
 const JSX = buildTable([
   ["preserve", 1],
   ["react", 2],
@@ -169,20 +157,17 @@ const JSX = buildTable([
   ["react-jsxdev", 5],
 ]);
 
-/** NewLineKind. */
 const NEW_LINE = buildTable([
   ["crlf", 0],
   ["lf", 1],
 ]);
 
-/** ModuleDetectionKind. */
 const MODULE_DETECTION = buildTable([
   ["legacy", 1],
   ["auto", 2],
   ["force", 3],
 ]);
 
-/** WatchFileKind. */
 const WATCH_FILE = buildTable([
   ["fixedpollinginterval", 0],
   ["prioritypollinginterval", 1],
@@ -192,7 +177,6 @@ const WATCH_FILE = buildTable([
   ["usefseventsonparentdirectory", 5],
 ]);
 
-/** WatchDirectoryKind. */
 const WATCH_DIRECTORY = buildTable([
   ["usefsevents", 0],
   ["fixedpollinginterval", 1],
@@ -200,7 +184,6 @@ const WATCH_DIRECTORY = buildTable([
   ["fixedchunksizepolling", 3],
 ]);
 
-/** PollingWatchKind (compilerOptions/watchOptions key `fallbackPolling`). */
 const FALLBACK_POLLING = buildTable([
   ["fixedinterval", 0],
   ["priorityinterval", 1],
@@ -220,26 +203,22 @@ const TABLES: Record<EnumFamily, FamilyTable> = {
   fallbackPolling: FALLBACK_POLLING,
 };
 
-// Implementation of TsEnumCodec.encode; the public contract lives on the static.
 const encode: {
   (value: string): (family: EnumFamily) => O.Option<number>;
   (family: EnumFamily, value: string): O.Option<number>;
 } = dual(2, (family: EnumFamily, value: string): O.Option<number> => MutableHashMap.get(TABLES[family].forward, value));
 
-// Implementation of TsEnumCodec.decode; the public contract lives on the static.
 const decode: {
   (value: number): (family: EnumFamily) => O.Option<string>;
   (family: EnumFamily, value: number): O.Option<string>;
 } = dual(2, (family: EnumFamily, value: number): O.Option<string> => MutableHashMap.get(TABLES[family].reverse, value));
 
-// Implementation of TsEnumCodec.normalizeLibReference; the public contract lives on the static.
 const normalizeLibReference = (lib: string): string => {
   const base = Str.toLowerCase(Str.slice(O.getOrElse(Str.lastIndexOf("/")(lib), constant(-1)) + 1)(lib));
   const withoutPrefix = Str.startsWith("lib.")(base) ? Str.slice(4)(base) : base;
   return Str.endsWith(".d.ts")(withoutPrefix) ? Str.slice(0, -5)(withoutPrefix) : withoutPrefix;
 };
 
-/** `compilerOptions` keys whose values are one of the enum families. */
 const COMPILER_OPTION_ENUM_KEYS: ReadonlyArray<readonly [key: string, family: EnumFamily]> = [
   ["target", "target"],
   ["module", "module"],
@@ -303,7 +282,6 @@ export type ProgrammaticCompilerOptionsValue =
   | null
   | undefined;
 
-// The known fields; unknown keys ride the passthrough record below.
 const ProgrammaticCompilerOptionsFields = S.Struct({
   target: S.optionalKey(S.Finite).pipe(
     $I.annoteKey("ProgrammaticCompilerOptions.target", { description: "The numeric TypeScript target enum value." })
@@ -375,15 +353,12 @@ export const ProgrammaticCompilerOptions = S.StructWithRest(ProgrammaticCompiler
 );
 
 /**
- * Programmatic compiler options with unknown passthrough values.
- *
  * @public
  * @category type-level
  * @since 0.0.0
  */
 export type ProgrammaticCompilerOptions = typeof ProgrammaticCompilerOptions.Type;
 
-// Implementation of TsEnumCodec.encodeCompilerOptions; the public contract lives on the static.
 const encodeCompilerOptions = (options: CompilerOptions.Type): ProgrammaticCompilerOptions => {
   const source: Readonly<Record<string, unknown>> = options;
   const result: Record<string, unknown> = { ...source };
@@ -404,7 +379,6 @@ const encodeCompilerOptions = (options: CompilerOptions.Type): ProgrammaticCompi
   return result;
 };
 
-// Implementation of TsEnumCodec.decodeCompilerOptions; the public contract lives on the static.
 const decodeCompilerOptions = (numeric: Readonly<Record<string, unknown>>): Record<string, unknown> => {
   const result: Record<string, unknown> = { ...numeric };
 

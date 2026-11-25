@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/repo-ai-metrics",
+  "root": "packages/tooling/library/ai-metrics",
+  "scopes": ["."]
+}

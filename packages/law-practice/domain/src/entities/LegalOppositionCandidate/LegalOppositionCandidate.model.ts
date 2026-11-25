@@ -17,9 +17,6 @@ const $I = $LawPracticeDomainId.create("entities/LegalOppositionCandidate/LegalO
 const pg = ProductEntity.pg;
 
 /**
- * One appended law-side record that two stored relations were screened as
- * prima facie opposed.
- *
  * **When to use**
  *
  * Use to keep a screened pair on the record together with whatever an attorney

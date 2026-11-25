@@ -18,8 +18,6 @@ import { SemVer } from "./SemVer.ts";
 const $I = $SemverId.create("Comparator");
 
 /**
- * Indicates that a string could not be parsed as a single comparator.
- *
  * **Details**
  *
  * Raised by {@link Comparator.parse}. The decode direction of
@@ -88,8 +86,6 @@ export class InvalidComparatorError extends S.TaggedError<
 }
 
 /**
- * A single version constraint: a comparison operator applied to a version.
- *
  * **Details**
  *
  * Comparator strings accept an optional operator prefix (`=`, `>`, `>=`,
@@ -139,8 +135,6 @@ export class Comparator extends S.Class<
       "A single version constraint: a comparison operator applied to a version. Comparator strings accept an optional operator prefix (`=`, `>`, `>=`, `<`, `<=`) followed by a complete version; a missing operator means `=`. Wildcards and range sugar are not allowed — those belong to `Range`.",
   })
 ) {
-  // ── Schema ──────────────────────────────────────────────────────────
-
   /**
    * Schema transformation between the comparator string (e.g. `">=1.2.3"`)
    * and {@link Comparator}.
@@ -177,8 +171,6 @@ export class Comparator extends S.Class<
       })
     )
   );
-
-  // ── Construction ────────────────────────────────────────────────────
 
   /**
    * Parse a comparator string (e.g. `">=1.2.3"`), synchronously, returning a
@@ -249,8 +241,6 @@ export class Comparator extends S.Class<
   static readonly parse = Effect.fn("Comparator.parse")((input: string) =>
     Effect.fromResult(Comparator.parseResult(input))
   );
-
-  // ── Instance ────────────────────────────────────────────────────────
 
   /**
    * Test whether a version satisfies this comparator.

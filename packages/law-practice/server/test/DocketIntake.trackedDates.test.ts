@@ -16,8 +16,7 @@ import type { TrackedDate } from "@beep/law-practice-use-cases/DocketIntake";
 
 const SHEET_PATH = "/fixture/docket-sheet.csv";
 
-// A modification time after the in-memory file system's clock, as an edit and a new export give.
-const MODIFIED_LATER = 60_000;
+const MTIME_AFTER_MEMORY_FS_CLOCK = 60_000;
 
 const HEADER =
   "Billing File #,File #,Client Name,Title,Tracked Date Name,Date Type,Tracked Date,Matter Status,Country,Application #,Activity Comments,Matter Type,Foreign Agent,Status";
@@ -25,9 +24,7 @@ const HEADER =
 const sheetRow = (fileNumber: string, name: string, dateType: string, date: string): string =>
   `0000.01234,${fileNumber},Fixture Client,"Fixture title, with a comma",${name},${dateType},${date},Open,US,"00/000,001","Said ""see below""\non two lines",Utility,,Active`;
 
-// A byte-order mark and CRLF line ends, as a spreadsheet's "CSV UTF-8" export writes them, with a blank line and a
-// row of blank cells before the header that the read drops.
-const SHEET = `\uFEFF${A.join(
+const CSV_UTF8_EXPORT_WITH_BOM_CRLF_AND_BLANK_LEADING_ROWS = `\uFEFF${A.join(
   [
     "",
     " , ,",
@@ -73,7 +70,7 @@ describe("@beep/law-practice-server DocketIntake docket sheet", () => {
     it.effect(
       "reads every date form, quoted cells, a national-stage docket and a foreign agent's reference, and skips what is not a date",
       Effect.fnUntraced(function* () {
-        yield* writeSheet(SHEET);
+        yield* writeSheet(CSV_UTF8_EXPORT_WITH_BOM_CRLF_AND_BLANK_LEADING_ROWS);
 
         const rows = yield* forDockets([" 0000.00001US01", "0000.00001wo01-ca1", "0000.00001EP02", "fa-77"]);
 
@@ -100,18 +97,15 @@ describe("@beep/law-practice-server DocketIntake docket sheet", () => {
         yield* writeSheet(original);
 
         const first = yield* forDockets(["0000.00001US01"]);
-        // Same modification time: the cached sheet answers.
         yield* writeSheet(edited);
-        const cached = yield* forDockets(["0000.00001US01"]);
+        const cachedAtSameModificationTime = yield* forDockets(["0000.00001US01"]);
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.utimes(SHEET_PATH, MODIFIED_LATER, MODIFIED_LATER);
+        yield* fs.utimes(SHEET_PATH, MTIME_AFTER_MEMORY_FS_CLOCK, MTIME_AFTER_MEMORY_FS_CLOCK);
         const reread = yield* forDockets(["0000.00001US01"]);
 
-        expect(A.map([first, cached, reread], (rows) => A.map(rows, (row) => row.date.toISOString()))).toStrictEqual([
-          ["2030-04-08"],
-          ["2030-04-08"],
-          ["2030-04-02"],
-        ]);
+        expect(
+          A.map([first, cachedAtSameModificationTime, reread], (rows) => A.map(rows, (row) => row.date.toISOString()))
+        ).toStrictEqual([["2030-04-08"], ["2030-04-08"], ["2030-04-02"]]);
       })
     );
   });

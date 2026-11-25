@@ -51,6 +51,17 @@ const decodeEnvelopeStatus = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ advisory: S.Boolean, status: S.String, exitStatus: S.Finite }))
 );
 
+const decodeOkEnvelope = S.decodeUnknownEffect(
+  S.fromJsonString(
+    S.Struct({
+      advisory: S.Boolean,
+      status: S.String,
+      exitStatus: S.Finite,
+      report: S.Struct({ findingCount: S.Finite }),
+    })
+  )
+);
+
 // `github-checks` scales its widths by the admission state under the runtime root. An
 // empty root keeps live leases from other sessions, and the systemd scope probes they
 // trigger, out of the recorded process list.
@@ -204,6 +215,37 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       const readFileString7 = yield* fs.readFileString(out);
       const envelope = yield* decodeEnvelopeStatus(readFileString7);
       expect(envelope).toEqual({ advisory: true, status: "tool-failed", exitStatus: 2 });
+    }).pipe(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make));
+  });
+
+  it.effect("passes the health check with an ok envelope when the diff has no analyzable source file", () => {
+    const isFallowHealth = Str.includes("fallow -- health");
+    const sourcelessHealthReport = A.join(
+      [
+        '{"kind":"health","schema_version":12,"version":"3.34.1","elapsed_ms":1,"findings":[],',
+        '"summary":{"files_analyzed":0,"functions_analyzed":0,"functions_above_threshold":0,"files_scored":0,',
+        '"severity_critical_count":0,"severity_high_count":0,"severity_moderate_count":0}}',
+      ],
+      ""
+    );
+    const spawner = ScriptedSpawner.make((command, args) =>
+      isFallowHealth(A.join([command, ...args], " ")) ? { stdout: sourcelessHealthReport, exit: 0 } : {}
+    );
+
+    return Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped({ prefix: "fallow-health-sourceless-" });
+      const out = path.join(madeTempDirectoryScoped, "health.json");
+
+      const exit = yield* runQualityCommand(["fallow", "health", "--check", "--base", "HEAD", "--out", out]).pipe(
+        Effect.exit
+      );
+
+      exit.pipe(Exit.isSuccess, assertTrue);
+      const envelopeText = yield* fs.readFileString(out);
+      const envelope = yield* decodeOkEnvelope(envelopeText);
+      expect(envelope).toEqual({ advisory: false, status: "ok", exitStatus: 0, report: { findingCount: 0 } });
     }).pipe(provideSpawner(spawner), Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
 

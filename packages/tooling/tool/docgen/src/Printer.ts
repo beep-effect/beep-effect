@@ -26,8 +26,6 @@ import type { Block, Inline } from "@beep/md";
 const $I = $RepoDocgenId.create("Printer");
 
 /**
- * Union of documented entities that the markdown printer can render.
- *
  * **Example** (Import Printable type alias)
  *
  * ```ts
@@ -55,8 +53,6 @@ export const Printable = S.Union([
 );
 
 /**
- * Companion type for {@link Printable}
- *
  * **Example** (Use companion Printable type)
  *
  * ```ts

@@ -5,9 +5,11 @@ import { ExtractorConfidence } from "@beep/epistemics/EvidencePosition.schema";
 import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import * as Pglite from "@beep/pglite";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -26,8 +28,11 @@ import {
   LedgerBatchPayload,
   LedgerClaimPayload,
   LedgerEvidenceV1Outcome,
+  LegacyConfidenceImport,
   readStoredBatch,
   readStoredClaim,
+  StoredBatch,
+  StoredClaim,
   StoredEvidenceRow,
 } from "@/schema/LedgerEvidence";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
@@ -96,7 +101,8 @@ const batchIdOf = (outcome: ExtractOutcome): string =>
 
 const loadFixture = Effect.fn("LedgerEvidenceTest.loadFixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString("test/fixtures/ledger-evidence-v1.json");
+  const fixture = yield* fs.realPath("test/fixtures/ledger-evidence-v1.json");
+  const text = yield* fs.readFileString(fixture);
   const json = yield* S.decodeEffect(FixtureJson)(text);
   const decoded = yield* S.decodeEffect(V1OutcomesJson)(text);
   const projected = yield* Effect.forEach(json, (value) => readStoredBatch(rowOf(value)), { concurrency: 1 });
@@ -285,6 +291,7 @@ describe("semantica ledger evidence formats", () => {
         const path = yield* Path.Path;
         const ledgerRoot = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-ledger-tamper-" });
         const ledgerLayer = LedgerLive(LedgerLiveOptions.make({ ledgerRoot, mode: "replay", runId }));
+        const pgliteLayer = Pglite.makeLayer({ dataDir: path.join(ledgerRoot, runId, "replay") });
         const { json, decoded } = yield* loadFixture();
         const original = rowOf(A.getUnsafe(json, 0));
         const outcome = A.getUnsafe(decoded, 0);
@@ -298,13 +305,15 @@ describe("semantica ledger evidence formats", () => {
             digest: original.digest,
             payload: Str.replace('"confidence":1', '"confidence":0')(original.payload),
           },
-        ]).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(ledgerRoot, runId, "replay") })));
+        ]).pipe(provideScopedLayer(pgliteLayer));
         const error = yield* Effect.gen(function* () {
           const ledger = yield* Ledger;
           return yield* ledger.read(runId).pipe(Effect.flip);
         }).pipe(provideScopedLayer(ledgerLayer));
 
         expect(error.reason).toBe("digest-mismatch");
+        const kept = yield* rawRows().pipe(provideScopedLayer(pgliteLayer));
+        expect(A.map(kept, (row) => `${row.table}:${row.digest}`)).toEqual([`batches:${original.digest}`]);
       })
     );
 
@@ -344,6 +353,8 @@ describe("semantica stored evidence readers", () => {
         const row = rowOf(A.getUnsafe(raw.batch.claims, 0));
         const stored = yield* readStoredClaim(row);
 
+        assertTrue(S.is(StoredClaim)(stored));
+
         expect(stored.claim.confidence).toEqual(ExtractorConfidence.cases.Absent.make({ reason: "legacy-unknown" }));
         expect(stored.legacy).toMatchObject([
           { format: "ledger-evidence/v1", rawConfidence: 1, storedDigest: row.digest },
@@ -359,6 +370,7 @@ describe("semantica stored evidence readers", () => {
     it.effect("keep a v1 degraded outcome without legacy metadata and decode a v2 batch payload", () =>
       Effect.gen(function* () {
         const degraded = yield* readStoredBatch(rowOf(degradedV1));
+        assertTrue(S.is(StoredBatch)(degraded));
         expect(degraded.outcome.outcome).toBe("Degraded");
         expect(degraded.legacy).toEqual([]);
         const v2Payload = yield* S.encodeEffect(LedgerBatchPayload)(
@@ -398,4 +410,20 @@ describe("semantica stored evidence readers", () => {
       })
     );
   });
+});
+
+describe("ledger-evidence legacy confidence properties", () => {
+  const json = S.fromJsonString(LegacyConfidenceImport);
+  const equivalent = S.toEquivalence(LegacyConfidenceImport);
+  it.effect.prop(
+    "every generated retained v1 scalar survives its JSON codec unchanged",
+    [Arbitrary.schema(LegacyConfidenceImport)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(json)(value);
+        const decoded = yield* S.decodeEffect(json)(encoded);
+        assertTrue(equivalent(decoded, value));
+      }),
+    { arbitrary: fcRuns(50) }
+  );
 });

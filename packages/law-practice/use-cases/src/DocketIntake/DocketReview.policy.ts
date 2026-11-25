@@ -696,8 +696,6 @@ export const assessReviewRound = (draft: ReviewRoundDraft): ReviewRound => {
 };
 
 /**
- * What the decision at the end of a round is taken from.
- *
  * **Details**
  *
  * `earlier` holds the rounds before `round`, oldest first. They are needed

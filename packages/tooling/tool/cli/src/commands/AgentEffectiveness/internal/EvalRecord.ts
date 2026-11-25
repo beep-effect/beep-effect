@@ -50,8 +50,6 @@ const recordNote = (report: AgentEffectivenessEvalScoreReport): string =>
   `skillopt scorer score=${report.score} completion=${report.breakdown.completion} schemaFirst=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`;
 
 /**
- * Options for recording an agent effectiveness eval score.
- *
  * @category models
  * @since 0.0.0
  */

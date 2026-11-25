@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $SqliteId.create("Sqlite.errors");
 
 /**
- * Failure of one `@beep/sqlite` driver operation.
- *
  * **Details**
  *
  * `operation` names the step that failed: `connect`, `loadExtension` or

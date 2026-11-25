@@ -6,8 +6,6 @@
  */
 
 /**
- * Epistemic fixture-key value exports.
- *
  * **Example** (Make a fixture key)
  *
  * ```ts

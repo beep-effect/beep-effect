@@ -10,6 +10,35 @@
  * @category models
  * @since 0.0.0
  */
+
+/**
+ * Comment law schemas: policy, pending shards, findings and summaries.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CommentLaw.model.ts";
+/**
+ * Comment law: merge-base growth check, pending-scope lock and census.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CommentLaw.ts";
+/**
+ * Comment-law strip schemas: ledger rows, votes, refusals and summaries.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CommentStrip.model.ts";
+/**
+ * Comment-law strip: ledger census and vote-gated apply with an AST-identity proof.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CommentStrip.ts";
 export * from "./EntityKitFreeze.model.ts";
 /**
  * Entity kit freeze law: pure scanner, baseline comparison, and repository runner.
@@ -26,8 +55,6 @@ export * from "./EntityKitFreeze.ts";
  */
 export { LawScanProject } from "./internal/LawScan.ts";
 /**
- * Public laws command export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -110,8 +137,6 @@ export * from "./RetiredIriAuthorities.model.ts";
  */
 export * from "./RetiredIriAuthorities.ts";
 /**
- * Schema tag idiom law schemas.
- *
  * @category models
  * @since 0.0.0
  */

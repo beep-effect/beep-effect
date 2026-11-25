@@ -61,8 +61,6 @@ export class ClaimInvalidTransition extends S.TaggedError<ClaimInvalidTransition
 }
 
 /**
- * Union of every claim lifecycle error.
- *
  * **Example** (Decode lifecycle error union)
  *
  * ```ts
@@ -86,8 +84,6 @@ export const ClaimLifecycleError = S.Union([ClaimInvalidTransition]).pipe(
 );
 
 /**
- * Runtime type for {@link ClaimLifecycleError}.
- *
  * **Example** (Annotate with error type)
  *
  * ```ts

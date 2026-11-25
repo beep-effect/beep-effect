@@ -14,8 +14,6 @@ import { FileFormatFamily, StrategyPreference } from "../Strategy/Strategy.schem
 const $I = $FileProcessingId.create("Operation");
 
 /**
- * Operation request for format detection.
- *
  * **Example** (Decode detect operation request)
  *
  * ```ts
@@ -59,8 +57,6 @@ export class DetectFileOperation extends S.Opaque<DetectFileOperation, { readonl
 ) {}
 
 /**
- * Result emitted by format detection.
- *
  * **Example** (Decode detection result payload)
  *
  * ```ts
@@ -97,8 +93,6 @@ export class DetectionResult extends S.Opaque<DetectionResult, { readonly brand:
 ) {}
 
 /**
- * Operation request for text and metadata extraction.
- *
  * **Example** (Decode extract operation request)
  *
  * ```ts
@@ -145,8 +139,6 @@ export class ExtractFileOperation extends S.Opaque<ExtractFileOperation, { reado
 ) {}
 
 /**
- * Operation request for archive child export.
- *
  * **Example** (Decode export-archive request)
  *
  * ```ts

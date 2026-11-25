@@ -35,8 +35,6 @@ import type * as P from "effect/Predicate";
 const $I = $RepoCliId.create("commands/Quality/internal/LintPolicyScope");
 
 /**
- * Change classes that widen a changed-scope policy run to the full sweep.
- *
  * **Details**
  *
  * - `deleted-path`: a removed or renamed path can break an unchanged importer.
@@ -80,8 +78,6 @@ export const LintPolicyEscalationTrigger = LiteralKit([
 );
 
 /**
- * Change class that widens a changed-scope lint policy run to the full sweep.
- *
  * @see {@link LintPolicyEscalationTrigger} for the literal domain this type decodes from.
  * @category models
  * @since 0.0.0
@@ -111,8 +107,6 @@ export class LintPolicyEscalation extends S.Opaque<LintPolicyEscalation, { reado
 ) {}
 
 /**
- * Full-sweep policy scope: requested by the caller (no escalations) or widened by the change set.
- *
  * @category models
  * @since 0.0.0
  */
@@ -126,8 +120,6 @@ export class LintPolicyFullScope extends S.Opaque<LintPolicyFullScope, { readonl
 ) {}
 
 /**
- * Changed-scope policy run against a base ref: Turbo selects the tasks whose inputs changed.
- *
  * @category models
  * @since 0.0.0
  */
@@ -140,8 +132,6 @@ export class LintPolicyAffectedScope extends S.Opaque<LintPolicyAffectedScope, {
 ) {}
 
 /**
- * Lint policy execution scope: the full sweep or Turbo's changed scope.
- *
  * **Example** (Decode a requested full sweep)
  *
  * ```ts
@@ -163,8 +153,6 @@ export const LintPolicyScope = S.Union([LintPolicyFullScope, LintPolicyAffectedS
 );
 
 /**
- * Lint policy execution scope: the full sweep or Turbo's changed scope.
- *
  * @see {@link LintPolicyScope} for the schema.
  * @category schemas
  * @since 0.0.0
@@ -172,8 +160,6 @@ export const LintPolicyScope = S.Union([LintPolicyFullScope, LintPolicyAffectedS
 export type LintPolicyScope = typeof LintPolicyScope.Type;
 
 /**
- * The change set facts the scope planner reads.
- *
  * **Example** (Describe a one-file change set)
  *
  * ```ts

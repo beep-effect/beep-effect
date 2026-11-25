@@ -27,8 +27,6 @@ import type { YeetCommandError } from "../Yeet.errors.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/LocalShardPoison");
 
 /**
- * Result coordinates for one named local proof shard.
- *
  * **Example** (Describe a failed package check)
  *
  * ```ts

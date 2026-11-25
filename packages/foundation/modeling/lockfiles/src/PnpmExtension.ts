@@ -47,8 +47,6 @@ export class PnpmCatalogPin extends S.Opaque<PnpmCatalogPin, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link PnpmCatalogPin}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -96,8 +94,6 @@ export const PnpmCatalogs = S.Record(
 );
 
 /**
- * Catalog records described by {@link PnpmCatalogs}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -105,9 +101,6 @@ export const PnpmCatalogs = S.Record(
 export type PnpmCatalogs = typeof PnpmCatalogs.Type;
 
 /**
- * Extension data specific to pnpm lockfiles, attached to `Lockfile.extension`
- * when the format is `"pnpm"`.
- *
  * **Details**
  *
  * - `catalogs` — pnpm catalog definitions ({@link PnpmCatalogs}).
@@ -165,8 +158,6 @@ export class PnpmExtension extends S.Opaque<PnpmExtension, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link PnpmExtension}.
- *
  * @category type-level
  * @since 0.0.0
  */

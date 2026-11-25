@@ -35,6 +35,7 @@
     {"name":"Git.hashObject","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.isAncestor","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.isShallow","owner":"@beep/git","family":"driver","conforms":true},
+    {"name":"Git.localOnlyCommitCount","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.log","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.lsFiles","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.lsRemote","owner":"@beep/git","family":"driver","conforms":true},

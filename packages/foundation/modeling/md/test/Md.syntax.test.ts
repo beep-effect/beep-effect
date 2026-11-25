@@ -163,7 +163,7 @@ describe("@beep/md/Md.syntax flow mapping", () => {
     expect(lossOf(result, "htmlDropped").nodeKind).toBe("html");
   });
 
-  it("applies the html policy to raw HTML in an admonition title", () => {
+  it("applies the html policy to raw HTML in an admonition title, whose plain-string title cannot carry raw HTML, so only escapeAsText keeps the markup and rawHtml drops it like drop", () => {
     const source = "> [!NOTE] Title <b>x</b>\n> body";
     const titleOf = (result: MdFromSyntax) => Result.getOrThrow(Document.encodeResult(result.document)).children[0];
     const details = (result: MdFromSyntax) =>
@@ -214,7 +214,7 @@ describe("@beep/md/Md.syntax flow mapping", () => {
     expect(reasons(result)).toEqual(["admonitionTitleFlattened", "htmlDropped"]);
   });
 
-  it("ends an admonition head line at a <br> tag the way a hard break does", () => {
+  it("ends an admonition head line at a <br> tag the way a hard break does, since breakTag recognizes it before any HTML policy", () => {
     const source = "> [!NOTE] Title<br>more\n> body";
     const recognized = bridge(source);
     expect(Result.getOrThrow(Document.encodeResult(recognized.document)).children[0]).toMatchObject({
@@ -230,7 +230,7 @@ describe("@beep/md/Md.syntax flow mapping", () => {
     expect(reasons(literal)).toEqual(["htmlDropped"]);
   });
 
-  it("maps fenced and indented code to pre", () => {
+  it("maps fenced and indented code to pre without the newline CommonMark keeps after the last line, which Md.render writes back", () => {
     expect(encoded("```ts\nlet a = 1\n```\n\n    indented").children).toEqual([
       { _tag: "pre", language: "ts", value: "let a = 1" },
       { _tag: "pre", language: null, value: "indented" },
@@ -272,7 +272,7 @@ describe("@beep/md/Md.syntax flow mapping", () => {
     expect(reasons(bridge("<!-- note -->", { htmlComments: "asHtml" }))).toEqual(["htmlEscapedAsText"]);
   });
 
-  it("treats HTML between two comments as HTML, not as one comment", () => {
+  it("treats HTML between two comments as HTML, not as one comment, since a comment body may not contain `-->` and a lazy match would stretch to the last one", () => {
     const block = bridge("<!-- a --><div>kept</div><!-- b -->");
     expect(reasons(block)).toEqual(["htmlEscapedAsText"]);
     expect(Result.getOrThrow(Document.encodeResult(block.document)).children).toEqual([
@@ -586,8 +586,6 @@ describe("@beep/md/Md.syntax phrasing mapping", () => {
   });
 });
 
-// The pandoc `tex_math_dollars` rules, written as the direct quadratic scan
-// the recognizer replaced: the oracle the linear scan must agree with.
 const isMathSpace = (char: string | undefined): boolean => char === " " || char === "\t" || char === "\n";
 const isMathDigit = (char: string | undefined): boolean => char !== undefined && char >= "0" && char <= "9";
 
@@ -599,7 +597,6 @@ const opensMathAt = (text: string, index: number): boolean =>
 const closesMathAt = (text: string, probe: number): boolean =>
   text[probe] === "$" && !isMathSpace(text[probe - 1]) && !isMathDigit(text[probe + 1]);
 
-// The direct scan: from every opener, walk right to the first valid closer.
 const oracleCloser = (text: string, index: number): number => {
   if (!opensMathAt(text, index)) {
     return -1;
@@ -647,22 +644,18 @@ const oracleInlineMath = (text: string): ReadonlyArray<OraclePiece> => {
   return A.some(pieces, (piece) => piece._tag === "inlineMath") ? pieces : [{ _tag: "text", value: text }];
 };
 
-// Every string over the alphabet up to a length, so the parity check is
-// exhaustive and deterministic instead of sampled.
-const stringsUpTo = (alphabet: ReadonlyArray<string>, length: number): ReadonlyArray<string> =>
+const everyStringUpTo = (alphabet: ReadonlyArray<string>, length: number): ReadonlyArray<string> =>
   length === 0
     ? [""]
     : [
-        ...stringsUpTo(alphabet, length - 1),
+        ...everyStringUpTo(alphabet, length - 1),
         ...A.flatMap(
-          A.filter(stringsUpTo(alphabet, length - 1), (prefix) => Str.length(prefix) === length - 1),
+          A.filter(everyStringUpTo(alphabet, length - 1), (prefix) => Str.length(prefix) === length - 1),
           (prefix) => A.map(alphabet, (char) => `${prefix}${char}`)
         ),
       ];
 
-// The scan's work, counted instead of timed: the number of characters the
-// metered scan reads over `count` copies of `unit`.
-const linearScanSteps = (unit: string, count: number): number => {
+const meteredScanCharacterReads = (unit: string, count: number): number => {
   let steps = 0;
   scanInlineMathMetered(Str.repeat(count)(unit), () => {
     steps += 1;
@@ -670,8 +663,6 @@ const linearScanSteps = (unit: string, count: number): number => {
   return steps;
 };
 
-// A deliberately quadratic scan counted the same way: one read per position,
-// plus one per character the oracle's forward walk probes from each opener.
 const forwardProbes = (text: string, index: number): number => {
   if (!opensMathAt(text, index)) {
     return 0;
@@ -690,9 +681,7 @@ const quadraticScanSteps = (unit: string, count: number): number => {
 
 const SCAN_SIZES = [1_000, 2_000, 4_000, 8_000];
 
-// Exact linear growth: every increment of the size series adds the same
-// number of steps per added unit, so steps(n) = a * n + b on the whole series.
-const growsLinearly = (counts: ReadonlyArray<number>): boolean => {
+const growsWithOneSlopeAcrossSizes = (counts: ReadonlyArray<number>): boolean => {
   const slopes = A.map(A.range(1, counts.length - 1), (at) => {
     const added = (counts[at] ?? 0) - (counts[at - 1] ?? 0);
     return added / ((SCAN_SIZES[at] ?? 0) - (SCAN_SIZES[at - 1] ?? 0));
@@ -701,8 +690,8 @@ const growsLinearly = (counts: ReadonlyArray<number>): boolean => {
 };
 
 describe("@beep/md/Md.syntax inline math scan", () => {
-  it("agrees with the direct pandoc-rule scan on every short string", () => {
-    for (const body of stringsUpTo(["$", "a", "1", " "], 6)) {
+  it("agrees with the direct quadratic pandoc tex_math_dollars scan it replaced, exhaustively on every short string", () => {
+    for (const body of everyStringUpTo(["$", "a", "1", " "], 6)) {
       const text = `x${body}x`;
       const children = encoded(text, { math: true }).children;
       expect([text, children]).toEqual([text, [{ _tag: "p", children: oracleInlineMath(text) }]]);
@@ -710,24 +699,29 @@ describe("@beep/md/Md.syntax inline math scan", () => {
   });
 
   it("reads exactly 17 characters per unit over openers that never close", () => {
-    const counts = A.map(SCAN_SIZES, (count) => linearScanSteps("$a ", count));
-    // Escape table 3n reads, closer table 4n + 1, scan loop 10n (6 per opener, 2 per other character).
-    expect(counts).toEqual(A.map(SCAN_SIZES, (count) => 17 * count + 1));
-    expect(growsLinearly(counts)).toBe(true);
+    const counts = A.map(SCAN_SIZES, (count) => meteredScanCharacterReads("$a ", count));
+    expect(
+      counts,
+      "escape table 3n reads, closer table 4n + 1, scan loop 10n (6 per opener, 2 per other character)"
+    ).toEqual(A.map(SCAN_SIZES, (count) => 17 * count + 1));
+    expect(growsWithOneSlopeAcrossSizes(counts)).toBe(true);
   });
 
   it("reads exactly 17 characters per unit over many closed inline math spans", () => {
-    const counts = A.map(SCAN_SIZES, (count) => linearScanSteps("$a$ ", count));
-    // Escape table 4n reads, closer table 7n + 1, scan loop 6n (4 per opener that jumps its span, 2 per space).
-    expect(counts).toEqual(A.map(SCAN_SIZES, (count) => 17 * count + 1));
-    expect(growsLinearly(counts)).toBe(true);
+    const counts = A.map(SCAN_SIZES, (count) => meteredScanCharacterReads("$a$ ", count));
+    expect(
+      counts,
+      "escape table 4n reads, closer table 7n + 1, scan loop 6n (4 per opener that jumps its span, 2 per space)"
+    ).toEqual(A.map(SCAN_SIZES, (count) => 17 * count + 1));
+    expect(growsWithOneSlopeAcrossSizes(counts)).toBe(true);
   });
 
   it("rejects the oracle's quadratic forward scan with the same growth check", () => {
     const counts = A.map(SCAN_SIZES, (count) => quadraticScanSteps("$a ", count));
-    // 3n positions plus 3(n - k) - 2 probes from the opener of unit k.
-    expect(counts).toEqual(A.map(SCAN_SIZES, (count) => count + (3 * count * (count + 1)) / 2));
-    expect(growsLinearly(counts)).toBe(false);
+    expect(counts, "3n positions plus 3(n - k) - 2 probes from the opener of unit k").toEqual(
+      A.map(SCAN_SIZES, (count) => count + (3 * count * (count + 1)) / 2)
+    );
+    expect(growsWithOneSlopeAcrossSizes(counts)).toBe(false);
   });
 });
 
@@ -751,7 +745,7 @@ describe("@beep/md/Md.syntax recognizers", () => {
     ]);
   });
 
-  it("reads inline math across backslash escapes and never from an escaped dollar", () => {
+  it("reads inline math from the raw slice, so a backslash-escaped dollar never delimits, a math piece keeps its raw TeX and a text piece drops its backslash escapes", () => {
     expect(encoded("a \\* $b$ \\$c$", { math: true }).children).toEqual([
       {
         _tag: "p",
@@ -782,7 +776,7 @@ describe("@beep/md/Md.syntax recognizers", () => {
     expect(encoded(`<${url}>`, { youtube: true }).children).toEqual([{ _tag: "youtube", videoId: "dQw4w9WgXcQ" }]);
   });
 
-  it("keeps a YouTube link with its own text or title as a link", () => {
+  it("keeps a YouTube link with its own text or title as a link, since a YouTube block carries only the video id and would lose them", () => {
     const url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
     for (const text of [`[My video](${url})`, `[${url}](${url} "Title")`]) {
       const result = bridge(text, { youtube: true });

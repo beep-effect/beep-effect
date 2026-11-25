@@ -33,8 +33,6 @@ import type { RawDiagnostic, RawEntry, RawParse, RawSection } from "./internal/c
 const $I = $GitId.create("GitConfig");
 
 /**
- * One structural problem found while parsing git-config text.
- *
  * **Details**
  *
  * Carries the kit's shared diagnostic core: a `code` from the
@@ -90,8 +88,6 @@ export class GitConfigDiagnostic extends S.Opaque<GitConfigDiagnostic, { readonl
 ) {}
 
 /**
- * The document could not be parsed as git-config text.
- *
  * **Details**
  *
  * Malformed input always fails through this typed error, never as a defect.
@@ -172,8 +168,6 @@ const EDIT_ERROR_DETAILS: {
 };
 
 /**
- * A surgical edit could not be applied to a {@link GitConfig} document.
- *
  * **Example** (Describe a missing variable)
  *
  * ```ts
@@ -245,8 +239,6 @@ export class GitConfigEditError extends S.TaggedError<GitConfigEditError, { read
 }
 
 /**
- * One variable line of a git-config document.
- *
  * **Details**
  *
  * `value` is the DECODED value (quotes removed, escapes resolved, unquoted
@@ -296,8 +288,6 @@ export class GitConfigEntry extends S.Opaque<GitConfigEntry, { readonly brand: u
 ) {}
 
 /**
- * One section of a git-config document.
- *
  * **Details**
  *
  * `name` preserves the raw spelling (section names compare
@@ -349,8 +339,6 @@ export class GitConfigSection extends S.Opaque<GitConfigSection, { readonly bran
 ) {}
 
 /**
- * One `include` / `includeIf` directive found in the document.
- *
  * **Details**
  *
  * Recognized and surfaced, deliberately NOT resolved — following an include
@@ -606,9 +594,6 @@ const appendAtEof: {
 });
 
 /**
- * A lossless git-config document: the source text plus the structural index
- * scanned from it.
- *
  * **Details**
  *
  * The model is text-first: `stringify` returns the stored text, so an

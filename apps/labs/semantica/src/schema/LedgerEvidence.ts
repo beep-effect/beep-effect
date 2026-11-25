@@ -117,6 +117,12 @@ const LedgerEvidenceV1Batch = S.Struct({ ...EvidenceBatch.fields, claims: S.Arra
   })
 );
 
+const LedgerEvidenceV1Extracted = S.Struct({ outcome: S.tag("Extracted"), batch: LedgerEvidenceV1Batch }).pipe(
+  $I.annoteSchema("LedgerEvidenceV1Extracted", {
+    description: "Frozen ledger-evidence/v1 extracted outcome carrying a v1 batch.",
+  })
+);
+
 /**
  * Frozen `ledger-evidence/v1` batch payload codec, used only to read old rows.
  *
@@ -144,10 +150,7 @@ const LedgerEvidenceV1Batch = S.Struct({ ...EvidenceBatch.fields, claims: S.Arra
  * @category schemas
  * @since 0.0.0
  */
-export const LedgerEvidenceV1Outcome = S.Union([
-  S.Struct({ outcome: S.tag("Extracted"), batch: LedgerEvidenceV1Batch }),
-  ExtractOutcome.cases.Degraded,
-]).pipe(
+export const LedgerEvidenceV1Outcome = S.Union([LedgerEvidenceV1Extracted, ExtractOutcome.cases.Degraded]).pipe(
   $I.annoteSchema("LedgerEvidenceV1Outcome", {
     description: "Frozen ledger-evidence/v1 extraction outcome read before projection to the current outcome.",
   })

@@ -35,8 +35,6 @@ export * from "./ReviewHub.schemas.ts";
  */
 export * from "./ReviewHub.service.ts";
 /**
- * Review hub MCP tools.
- *
  * @category tools
  * @since 0.0.0
  */

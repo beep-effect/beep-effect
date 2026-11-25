@@ -72,8 +72,6 @@ export const FrontmatterFormat = LiteralKit(["yaml", "toml", "json"]).pipe(
   })
 );
 /**
- * The schema-derived FrontmatterFormat value type.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -151,8 +149,6 @@ export class FrontmatterCapture extends S.Opaque<FrontmatterCapture, { readonly 
 ) {}
 
 /**
- * Companion types for {@link FrontmatterCapture}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -238,8 +234,6 @@ export const scanFrontmatter: {
 });
 
 /**
- * The three raw line terminators recognized by the frontmatter scanners.
- *
  * **Example** (Read the accepted terminators)
  *
  * ```ts
@@ -314,8 +308,6 @@ export class RawFrontmatterCapture extends S.Opaque<RawFrontmatterCapture, { rea
 ) {}
 
 /**
- * Companion types for {@link RawFrontmatterCapture}.
- *
  * @category type-level
  * @since 0.0.0
  */

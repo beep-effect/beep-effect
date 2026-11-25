@@ -25,8 +25,6 @@ import { PhysicalNames, SingletonIds } from "./CostControls.ts";
 const $I = $InfraCostControlsId.create("PlanCheck");
 
 /**
- * Every action `alchemy plan` prints for a resource.
- *
  * **Example** (Read an action)
  *
  * ```ts
@@ -43,8 +41,6 @@ export const PlanAction = LiteralKit(["create", "update", "adopted", "replace", 
 );
 
 /**
- * Decoded plan action.
- *
  * @category models
  * @since 0.0.0
  */
@@ -262,8 +258,6 @@ export const liveSettingsFromAws = (raw: AwsSettingsOutputs): LiveSettings =>
   });
 
 /**
- * Why the gate refuses a plan.
- *
  * **Example** (Read a reason)
  *
  * ```ts
@@ -286,8 +280,6 @@ export const ViolationReason = LiteralKit([
 ]).pipe($I.annoteSchema("ViolationReason", { description: "Why the pre-deploy gate refuses a plan." }));
 
 /**
- * Decoded violation reason.
- *
  * @category models
  * @since 0.0.0
  */

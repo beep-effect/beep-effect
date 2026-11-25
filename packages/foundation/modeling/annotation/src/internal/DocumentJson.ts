@@ -24,7 +24,6 @@ const GenerationJson = S.StructWithRest(S.Struct({ run: S.String }), Rest);
 
 const AttributionEntry = S.Tuple([S.String, S.Array(GenerationJson)]);
 
-// The document JSON as far as key handling needs it: every other field passes through unread.
 const documentEnvelope = S.StructWithRest(
   S.Struct({
     anchors: S.Array(TableEntry),
@@ -73,8 +72,7 @@ export const canonicalDocumentJson = (envelope: DocumentEnvelope): DocumentEnvel
   attribution: A.map(A.sort(envelope.attribution, byKey), ([key, generations]) => [key, A.sort(generations, byRun)]),
 });
 
-// The least key that appears twice, by sorting and comparing neighbours.
-const repeatedIn = (entries: ReadonlyArray<readonly [string, unknown]>): O.Option<string> => {
+const leastRepeatedKey = (entries: ReadonlyArray<readonly [string, unknown]>): O.Option<string> => {
   const keys = A.sort(
     A.map(entries, ([key]) => key),
     Order.String
@@ -94,4 +92,4 @@ const tables: ReadonlyArray<DocumentTable> = ["anchors", "annotations", "attribu
 export const refuseRepeatedKeys = (
   envelope: DocumentEnvelope
 ): O.Option<{ readonly table: DocumentTable; readonly key: string }> =>
-  A.findFirst(tables, (table) => O.map(repeatedIn(envelope[table]), (key) => ({ table, key })));
+  A.findFirst(tables, (table) => O.map(leastRepeatedKey(envelope[table]), (key) => ({ table, key })));

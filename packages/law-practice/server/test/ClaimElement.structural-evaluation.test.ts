@@ -141,10 +141,9 @@ describe("strict source-anchored structural measurement", () => {
   );
 });
 
-// A positive control on the complete frozen corpus guards against an always-false scorer.
 const referenceFamiliesJson = S.fromJsonString(S.Struct({ families: S.Array(S.Struct({ familyId: S.String })) }));
 
-describe("frozen corpus scorer control", () => {
+describe("frozen corpus positive control against an always-false scorer", () => {
   it.layer(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))((it) => {
     it.effect("accepts every reference against itself without invoking production decomposition", () =>
       Effect.gen(function* () {

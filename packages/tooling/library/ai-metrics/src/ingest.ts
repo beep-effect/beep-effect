@@ -28,8 +28,6 @@ import { hashPrivateIdentifier } from "./privacy.ts";
 const $I = $RepoAiMetricsId.create("ingest");
 
 /**
- * Error raised by AI metrics ingest helpers.
- *
  * **Example** (Make ingest error)
  *
  * ```ts

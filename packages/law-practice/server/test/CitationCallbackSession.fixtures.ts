@@ -73,9 +73,13 @@ export const callbackNoneResource = () => CitationCallbackResource.cases.None.ma
 export const callbackResourcePresentation = (resource: CitationCallbackResource): S.Json =>
   resource._tag === "None" ? { kind: "NoneType", value: null } : resource.value;
 const nonEmptyFixtureList = (value: S.Json) => A.isArray(value) && A.isReadonlyArrayNonEmpty(value);
-// Focused fixture adapter, not a production Python hashable implementation.
 /**
  * Normalize only the finite primitive values used in these source fixtures.
+ *
+ * **Gotchas**
+ *
+ * Focused fixture adapter, not a production Python hashable implementation.
+ *
  * @internal
  * @category testing
  * @since 0.0.0

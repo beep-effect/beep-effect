@@ -25,8 +25,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Planner.schemas");
 export const DEFAULT_YEET_PACKET_DIR = ".beep/yeet" as const;
 
 /**
- * Yeet execution modes.
- *
  * **Example** (Plan a Yeet run)
  *
  * ```ts
@@ -45,16 +43,12 @@ export const YeetRunMode = LiteralKit(["repair", "verify", "publish", "monitor",
 );
 
 /**
- * Yeet execution modes.
- *
  * @category models
  * @since 0.0.0
  */
 export type YeetRunMode = typeof YeetRunMode.Type;
 
 /**
- * How a publish opens the pull request it creates.
- *
  * **Details**
  *
  * `ready` is the default: the pull request opens ready for review, labelled
@@ -87,8 +81,6 @@ export const YeetPullRequestOpenMode = LiteralKit(["ready", "draft", "draft-heav
 );
 
 /**
- * How a publish opens the pull request it creates.
- *
  * @category models
  * @since 0.0.0
  */

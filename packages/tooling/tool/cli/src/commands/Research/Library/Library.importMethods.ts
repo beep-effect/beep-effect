@@ -88,8 +88,6 @@ export class LibraryVidbeeImportPayload extends S.Opaque<
 ) {}
 
 /**
- * One reference from an alphaXiv paper's bibliography.
- *
  * **Example** (Describe an arXiv reference)
  *
  * ```ts

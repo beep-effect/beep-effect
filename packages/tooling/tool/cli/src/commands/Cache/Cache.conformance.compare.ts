@@ -79,8 +79,6 @@ export const CacheConformanceGateStatus = LiteralKit(["pass", "fail", "unproven"
 export type CacheConformanceGateStatus = typeof CacheConformanceGateStatus.Type;
 
 /**
- * One (case, dimension) verdict that evidences a gate.
- *
  * **Example** (Inspect evidence fields)
  * ```ts
  * import { CacheConformanceGateEvidence } from "@beep/repo-cli/commands/Cache"
@@ -227,8 +225,6 @@ export const CacheConformanceEvidenceVerdict = LiteralKit(["pass", "fail"]).pipe
   })
 );
 /**
- * Executed outcome of an external check.
- *
  * @category models
  * @since 0.0.0
  */

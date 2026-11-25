@@ -46,9 +46,9 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] Each listed defect is fixed with a failing-then-passing test, or recorded as not reproducible with evidence.
-- [ ] The comment that hid each defect is corrected or removed.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Each listed defect is fixed with a failing-then-passing test, or recorded as not reproducible with evidence.
+- [x] The comment that hid each defect is corrected or removed.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

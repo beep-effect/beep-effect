@@ -133,8 +133,6 @@ export const CHECK_CENSUS_PROBE_SOURCE = A.join(
 );
 
 /**
- * Incremental state a build program started from.
- *
  * **Details**
  *
  * `warm` follows an earlier build of the same package and `cold` follows the
@@ -161,16 +159,12 @@ export const BuildEquivalenceState = LiteralKit(["restored", "warm", "cold"]).pi
 );
 
 /**
- * Runtime type of {@link BuildEquivalenceState}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BuildEquivalenceState = typeof BuildEquivalenceState.Type;
 
 /**
- * Caller-declared label of the state each package's first build finds.
- *
  * **Example** (Guard a restored label)
  *
  * ```ts
@@ -190,16 +184,12 @@ export const BuildEquivalenceInitialState = BuildEquivalenceState.pick(["restore
 );
 
 /**
- * Runtime type of {@link BuildEquivalenceInitialState}.
- *
  * @category models
  * @since 0.0.0
  */
 export type BuildEquivalenceInitialState = typeof BuildEquivalenceInitialState.Type;
 
 /**
- * Source state of one comparison.
- *
  * **Details**
  *
  * `clean` is the package's own source, `seeded` adds the census probe, and
@@ -225,8 +215,6 @@ export const BuildEquivalenceSeed = LiteralKit(["clean", "seeded", "recovered"])
 );
 
 /**
- * Runtime type of {@link BuildEquivalenceSeed}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -253,8 +241,6 @@ export const BuildEquivalenceMode = LiteralKit(["clean", "seeded"]).pipe(
 );
 
 /**
- * Runtime type of {@link BuildEquivalenceMode}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -267,9 +253,6 @@ const BuildEquivalenceCount = S.Natural.pipe(
 );
 
 /**
- * One compiler run: exit code, wall time, and its trimmed non-empty output
- * lines sorted with `String.Order`.
- *
  * **Details**
  *
  * A non-zero exit is data, not a failure. Sorting makes the comparison
@@ -394,8 +377,6 @@ export class BuildEquivalenceRow extends S.Opaque<BuildEquivalenceRow, { readonl
 ) {}
 
 /**
- * Totals of one build-equivalence run.
- *
  * **Details**
  *
  * `widerChecks` counts rows with a non-empty `checkOnlyFiles`, and
@@ -532,8 +513,6 @@ export class BuildEquivalencePackage extends S.Opaque<BuildEquivalencePackage, {
 ) {}
 
 /**
- * Inputs of one build-equivalence run.
- *
  * **Example** (Seed two packages from a restored state)
  *
  * ```ts

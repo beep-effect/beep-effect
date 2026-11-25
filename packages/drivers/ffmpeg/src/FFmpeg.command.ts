@@ -23,8 +23,6 @@ import type { ProbeVideoRequest } from "./FFmpeg.models.ts";
 const $I = $FfmpegId.create("FFmpeg.command");
 
 /**
- * Options for formatting one generated PNG frame filename.
- *
  * **Example** (Make filename options)
  *
  * ```ts
@@ -122,8 +120,6 @@ export const buildFfprobeArgs = (request: ProbeVideoRequest): ReadonlyArray<stri
 ];
 
 /**
- * Options for building native ffmpeg frame extraction arguments.
- *
  * **Example** (Make extract frames options)
  *
  * ```ts
@@ -215,8 +211,6 @@ export const buildExtractFramesArgs: (options: BuildExtractFramesArgsOptions) =>
   ]);
 
 /**
- * Options for building single-frame timestamp extraction arguments.
- *
  * **Example** (Make frame-at options)
  *
  * ```ts
@@ -329,8 +323,6 @@ const clipCodecArgs: Record<ClipCodec, ReadonlyArray<string>> = {
 };
 
 /**
- * Options for building clip extraction arguments.
- *
  * **Example** (Make extract clip options)
  *
  * ```ts
@@ -445,8 +437,6 @@ const gifDitherFragment = (dither: GifDither): string =>
   dither === GifDither.Enum.bayer ? "dither=bayer:bayer_scale=5" : `dither=${dither}`;
 
 /**
- * Options for building palette-optimized GIF rendering arguments.
- *
  * **Example** (Make render GIF options)
  *
  * ```ts
@@ -567,8 +557,6 @@ export const buildRenderGifArgs: (options: BuildRenderGifArgsOptions) => Readonl
   ]);
 
 /**
- * Options for building contact-sheet rendering arguments.
- *
  * **Example** (Make contact sheet options)
  *
  * ```ts
@@ -685,8 +673,6 @@ export const buildRenderContactSheetArgs: (options: BuildRenderContactSheetArgsO
   ]);
 
 /**
- * Options for building container metadata remux arguments.
- *
  * **Example** (Make metadata remux options)
  *
  * ```ts
@@ -788,8 +774,6 @@ export const buildWriteContainerMetadataArgs: (
 ]);
 
 /**
- * Options for building region luminance probe arguments.
- *
  * **Example** (Make luminance probe options)
  *
  * ```ts

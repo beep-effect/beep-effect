@@ -53,8 +53,7 @@ const setYear = Effect.fn("MetadataYearTest.setYear")(function* (year: number) {
   const epoch = DateTime.toEpochMillis(date);
   yield* TestClock.setTime(epoch);
 });
-// The clock-computed year ceiling is decoded where it is computed; the range is the guard.
-it.effect("bounds the computed year ceiling to 2 through 10000", () =>
+it.effect("bounds the clock-computed year ceiling to 2 through 10000 where it is decoded", () =>
   Effect.sync(() => {
     const isBound = S.is(CitationMetadataYearBound);
     for (const bound of [1, 10001, 2.5]) expect(isBound(bound)).toBe(false);

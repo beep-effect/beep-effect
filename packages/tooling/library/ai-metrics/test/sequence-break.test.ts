@@ -39,8 +39,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
-// Writes the capture to a temporary file and renames it, so a reader that polls for opened.txt never sees it empty.
-const fakeXdgOpenAtomicScript =
+const fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty =
   '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n';
 
 const decodeUnknownSequenceBreakDampingV1Result = S.decodeUnknownResult(SequenceBreakDampingV1);
@@ -277,6 +276,9 @@ const runNotifier = Effect.fnUntraced(function* (
   return { exitCode, stderr, stdout };
 });
 
+const foregroundLeavesHookPulseToDisableTheCloseWatch = "";
+const nonCloudDesktopHostSoAnAmbientCloudHostCannotTripTheD3NotifierGuard = "";
+
 const runWriter = Effect.fnUntraced(function* (
   store: NotifierStore,
   stdin: string,
@@ -301,8 +303,8 @@ const runWriter = Effect.fnUntraced(function* (
       BEEP_SEQUENCE_BREAK_DESKTOP_ENABLED: "1",
       BEEP_SEQUENCE_BREAK_FOREGROUND: foreground === false ? "0" : "1",
       BEEP_SEQUENCE_BREAK_MAX_STAGE: "initial",
-      // Foreground runs prove hook-pulse disables the close watch itself.
-      BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS: foreground === false ? "0" : "",
+      BEEP_SEQUENCE_BREAK_CLOSE_WATCH_SECONDS:
+        foreground === false ? "0" : foregroundLeavesHookPulseToDisableTheCloseWatch,
       BEEP_SEQUENCE_BREAK_NTFY_TOPIC: "",
       BEEP_SEQUENCE_BREAK_OPEN_URI: "",
       CLAUDE_CODE_HOST_SESSION_ID: "",
@@ -310,10 +312,7 @@ const runWriter = Effect.fnUntraced(function* (
       CODEX_INTERNAL_ORIGINATOR_OVERRIDE: "",
       CODEX_THREAD_ID: "",
       TERM_PROGRAM: "",
-      // These cases prove the desktop launch path, so they name a non-cloud host;
-      // an ambient cloud container's `BEEP_AGENT_HOST=cloud` would otherwise
-      // suppress the notifier under the D3 guard.
-      BEEP_AGENT_HOST: "",
+      BEEP_AGENT_HOST: nonCloudDesktopHostSoAnAmbientCloudHostCannotTripTheD3NotifierGuard,
       ...hostEnv,
     },
     stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },
@@ -648,7 +647,10 @@ esac
         `${store.fakeBin}/notify-send`,
         '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
       );
-      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/xdg-open`,
+        fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
+      );
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       const resultNotifier18 = yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri);
       expectSilentSuccess(resultNotifier18);
@@ -746,7 +748,10 @@ esac
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
             );
-            yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
+            yield* fs.writeFileString(
+              `${store.fakeBin}/xdg-open`,
+              fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
+            );
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             const resultNotifier25 = yield* runNotifier(
               store,
@@ -851,7 +856,10 @@ esac
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
             );
-            yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
+            yield* fs.writeFileString(
+              `${store.fakeBin}/xdg-open`,
+              fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
+            );
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             const argument1 = { ...store, hookPath: prePath };
             const writerPermissionRequestInput1 = yield* writerPermissionRequestInput(rawSessionId, rawCwd);
@@ -898,9 +906,9 @@ printf '77\\n'
       const store = yield* makeNotifierStore();
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
-      // The operator answers as soon as the card appears.
+      const notifySendWhoseOperatorAnswersAsSoonAsTheCardAppears = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        `${store.fakeBin}/notify-send`,
+        notifySendWhoseOperatorAnswersAsSoonAsTheCardAppears,
         `#!/usr/bin/env bash\ncat "$HOME/resolve.ndjson" >>'${store.hookPath}'\nprintf '77\\n'\n`
       );
       yield* fs.writeFileString(
@@ -1033,9 +1041,9 @@ done
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-      // Each listener reports its card and ends at once, as a timed-out one would.
+      const notifySendListenerEndingAtOnceAsATimedOutOneWould = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        `${store.fakeBin}/notify-send`,
+        notifySendListenerEndingAtOnceAsATimedOutOneWould,
         `#!/usr/bin/env bash
 case " $* " in *" --replace-id=42 "*) echo replace ;; *) echo new ;; esac >>"$HOME/listeners.txt"
 printf '42\\n'
@@ -1071,9 +1079,9 @@ printf '42\\n'
       const store = yield* makeNotifierStore();
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
-      // A slow notify-send: the operator answers before the card ID is known.
+      const slowNotifySendWhoseOperatorAnswersBeforeTheCardIdIsKnown = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        `${store.fakeBin}/notify-send`,
+        slowNotifySendWhoseOperatorAnswersBeforeTheCardIdIsKnown,
         `#!/usr/bin/env bash
 cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
 sleep 2
@@ -1114,17 +1122,16 @@ done
       const store = yield* makeNotifierStore();
       const uri = "codex://threads/12345678-1234-1234-1234-123456789abc";
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-      // Refuse only the OSC 777 write; every other bounded command still runs.
+      const timeoutRefusingOnlyTheOsc777Write = `${store.fakeBin}/timeout`;
       yield* fs.writeFileString(
-        `${store.fakeBin}/timeout`,
+        timeoutRefusingOnlyTheOsc777Write,
         `#!/usr/bin/env bash\ncase "$*" in *']777;'*) exit 1 ;; esac\nexec /usr/bin/timeout "$@"\n`
       );
       yield* fs.chmod(`${store.fakeBin}/timeout`, 0o755);
       yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
-      // The terminal harness ends the session when the worker exits, so the
-      // click lands first and the wait resolves afterwards, ending the watch.
+      const notifySendWhoseClickLandsBeforeTheWaitResolvesSinceTheHarnessEndsOnWorkerExit = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        `${store.fakeBin}/notify-send`,
+        notifySendWhoseClickLandsBeforeTheWaitResolvesSinceTheHarnessEndsOnWorkerExit,
         `#!/usr/bin/env bash
 printf "%s\\n" "$@" >"$HOME/desktop.txt"
 printf "42\\ndefault\\n"
@@ -1132,7 +1139,10 @@ sleep 0.5
 cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
 `
       );
-      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/xdg-open`,
+        fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
+      );
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       yield* fs.writeFileString(`${store.fakeBin}/gdbus`, "#!/usr/bin/env bash\nexit 0\n");
       yield* fs.chmod(`${store.fakeBin}/gdbus`, 0o755);

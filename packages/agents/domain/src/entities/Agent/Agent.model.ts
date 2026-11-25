@@ -16,9 +16,6 @@ const $I = $AgentsDomainId.create("entities/Agent/Agent.model");
 const pg = ProductEntity.pg;
 
 /**
- * Persisted agent record that binds a fixture key to one skill fixture and
- * execution mode.
- *
  * **Example** (Log entity type)
  *
  * ```ts

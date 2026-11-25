@@ -54,7 +54,6 @@ import type {
 const $I = $RepoCliKitId.create("package-scripts/PackageScriptsPolicy");
 
 /**
- * Filesystem or decoding failure while evaluating the workspace policy.
  * **Example** (Describe a policy failure)
  * ```ts
  * import { PackageScriptsPolicyError } from "@beep/repo-cli-kit/package-scripts/PackageScriptsPolicy"

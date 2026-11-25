@@ -118,7 +118,6 @@ export const TwirpFailure = TwirpFailureKind.mapMembers(([transport, status, mal
 );
 
 /**
- * The failure variants accepted by {@link TwirpFailure}.
  * @category type-level
  * @since 0.0.0
  */
@@ -227,8 +226,6 @@ export class TwirpCall extends S.Opaque<TwirpCall, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link TwirpCall}.
- *
  * @internal
  * @category type-level
  * @since 0.0.0

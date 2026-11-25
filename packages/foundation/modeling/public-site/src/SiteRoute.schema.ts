@@ -10,8 +10,6 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 const $I = $PublicSiteId.create("SiteRoute");
 
 /**
- * Schema for the reserved v1 route slugs on the public origin.
- *
  * **Details**
  *
  * `ns` is reserved for identity dereference and must stay equal to the
@@ -51,8 +49,6 @@ export const SiteRoute = LiteralKit([
 );
 
 /**
- * Union of the reserved route slugs decoded by {@link SiteRoute}.
- *
  * @category models
  * @since 0.0.0
  */

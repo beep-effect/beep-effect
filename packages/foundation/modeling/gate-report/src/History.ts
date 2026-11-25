@@ -35,8 +35,6 @@ import type { HistoryLabel, ItemOutcome } from "./Vocabulary.ts";
 const $I = $GateReportId.create("History");
 
 /**
- * Where an observation was made: a local run, or a hosted CI run.
- *
  * **Example** (Check an origin)
  *
  * ```ts
@@ -55,16 +53,12 @@ export const ObservationOrigin = LiteralKit(["local", "hosted"]).pipe(
 );
 
 /**
- * Type of {@link ObservationOrigin}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ObservationOrigin = typeof ObservationOrigin.Type;
 
 /**
- * The outcome history records for an item: it passed or it failed.
- *
  * **Details**
  *
  * A warned or skipped item is no observation.
@@ -87,16 +81,12 @@ export const ObservedOutcome = LiteralKit(["passed", "failed"]).pipe(
 );
 
 /**
- * Type of {@link ObservedOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ObservedOutcome = typeof ObservedOutcome.Type;
 
 /**
- * One outcome of one item in one run.
- *
  * **Details**
  *
  * Each attempt of a runner retry is its own observation on the run's input
@@ -142,8 +132,6 @@ export class Observation extends S.Opaque<Observation, { readonly brand: unique 
 ) {}
 
 /**
- * What one item's label is decided from.
- *
  * **Details**
  *
  * `current` holds the report's own attempts of the item. `lane` is the
@@ -179,9 +167,6 @@ export class SeriesEvidence extends S.Opaque<SeriesEvidence, { readonly brand: u
 const PositiveInt = S.Int.check(S.isGreaterThanOrEqualTo(1));
 
 /**
- * The history configuration: the window, the run retention, the read
- * deadline and the open retry schedule.
- *
  * **Details**
  *
  * `window` is `W`, the observations per series per branch the reader uses
@@ -219,8 +204,6 @@ export class HistoryConfig extends S.Opaque<HistoryConfig, { readonly brand: uni
 ) {}
 
 /**
- * Why a history store operation failed.
- *
  * **Example** (Check a reason)
  *
  * ```ts
@@ -246,16 +229,12 @@ export const GateHistoryErrorReason = LiteralKit([
 );
 
 /**
- * Type of {@link GateHistoryErrorReason}.
- *
  * @category models
  * @since 0.0.0
  */
 export type GateHistoryErrorReason = typeof GateHistoryErrorReason.Type;
 
 /**
- * A history store operation failed.
- *
  * **Details**
  *
  * The driver's own error never crosses a history store's port: the store
@@ -456,9 +435,6 @@ export class DeltaFailure extends S.Opaque<DeltaFailure, { readonly brand: uniqu
 ) {}
 
 /**
- * What the delta reads from one run: the units it checked, its failed items,
- * and the items it reported without deciding them.
- *
  * **Details**
  *
  * `unobserved` holds the fingerprints of the items that neither passed nor

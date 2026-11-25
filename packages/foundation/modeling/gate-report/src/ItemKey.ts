@@ -19,8 +19,6 @@ import { FailureKind } from "./Vocabulary.ts";
 const $I = $GateReportId.create("ItemKey");
 
 /**
- * The ordinal of a repeated diagnostic occurrence within one run, from 2.
- *
  * **Details**
  *
  * The first occurrence of a diagnostic key carries no ordinal, so a key and
@@ -46,8 +44,6 @@ export const Occurrence = S.Int.check(S.isGreaterThanOrEqualTo(2)).pipe(
 );
 
 /**
- * Type of {@link Occurrence}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -89,8 +85,6 @@ export const ItemKey = S.TaggedUnion({
 );
 
 /**
- * Type of {@link ItemKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -123,9 +117,6 @@ export const messageShape: (message: string) => string = flow(
 );
 
 /**
- * What a diagnostic key is built from: the file, the TS code or lint rule,
- * and the message.
- *
  * **Example** (Build an input)
  *
  * ```ts
@@ -212,8 +203,6 @@ export const fingerprint: (key: ItemKey) => string = ItemKey.match({
 });
 
 /**
- * The history series an item belongs to: gate, subject, item key and branch.
- *
  * **Details**
  *
  * Widens upstream's `test_history` key (project, module path, full name) with

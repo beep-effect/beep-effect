@@ -22,8 +22,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Codex/Findings.capture.schemas");
 
 /**
- * Severity domain of a Codex Cloud security finding.
- *
  * **Details**
  *
  * Declaration order is the packet sort rank: findings are ordered most severe
@@ -59,8 +57,6 @@ export const CodexFindingSeverity = LiteralKit(["Critical", "High", "Medium", "L
 export type CodexFindingSeverity = typeof CodexFindingSeverity.Type;
 
 /**
- * Lifecycle status a finding carries on the Codex Cloud dashboard.
- *
  * **Example** (Checking a captured status)
  *
  * ```ts
@@ -97,8 +93,6 @@ export const CodexFindingStatus = LiteralKit([
 export type CodexFindingStatus = typeof CodexFindingStatus.Type;
 
 /**
- * Session state observed while producing the capture.
- *
  * **Details**
  *
  * A capture is `expired` when the export came back as a signed-out shell rather
@@ -153,8 +147,6 @@ const CodexFindingIdChecks = S.makeFilterGroup([
 ]);
 
 /**
- * Opaque 32-character identifier Codex Cloud assigns to a finding.
- *
  * **Gotchas**
  *
  * This value is never used to build a filesystem path. Packet files are named
@@ -189,8 +181,6 @@ export const CodexFindingId = S.String.check(CodexFindingIdChecks).pipe(
 export type CodexFindingId = typeof CodexFindingId.Type;
 
 /**
- * Source-qualified commit finding identity exported by Security Cloud.
- *
  * **Details**
  *
  * Keep the provider's namespace intact. A legacy bare ID is not automatically
@@ -275,8 +265,6 @@ export const CodexCaptureSource = LiteralKit(["cloud-csv", "security-cloud-csv",
   $I.annoteSchema("CodexCaptureSource", { description: "Discriminates cloud exports from local sealed bundles." })
 );
 /**
- * Capture source contract.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -376,16 +364,12 @@ export const CaptureDate = S.String.check(
 );
 
 /**
- * Capture date used to derive a packet slug.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CaptureDate = typeof CaptureDate.Type;
 
 /**
- * GitHub `owner/repo` slug the findings were scoped to.
- *
  * **Example** (Validating a repository slug)
  *
  * ```ts
@@ -492,16 +476,12 @@ export const CodexFindingTitle = S.String.check(CodexFindingTitleChecks).pipe(
 );
 
 /**
- * Title of one captured finding.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type CodexFindingTitle = typeof CodexFindingTitle.Type;
 
 /**
- * One normalized finding row decoded from the findings export.
- *
  * **Details**
  *
  * This is deliberately the list-level projection only. The decoder never carries
@@ -563,8 +543,6 @@ export class CodexCaptureFinding extends S.Opaque<CodexCaptureFinding, { readonl
 ) {}
 
 /**
- * Provenance describing a single capture run.
- *
  * **Gotchas**
  *
  * `expectedCount` is the dashboard's own reported total, not the number of rows
@@ -674,8 +652,6 @@ const CodexCaptureFindingListChecks = S.makeFilterGroup([
 ]);
 
 /**
- * Complete `codex-findings-capture/v1` document decoded from an export.
- *
  * **When to use**
  *
  * Use as the only entry point for untrusted capture data. Ingest decodes through

@@ -119,9 +119,7 @@ it.effect("cursor replay and live appends form one projection", () =>
   })
 );
 
-// One read barrier decorates the shared filesystem. It does not duplicate storage,
-// file metadata, append semantics or watcher behavior from MemoryFileSystem.
-const gateRead = Effect.fn("JsonlTest.gateRead")(function* (fs: FileSystem.FileSystem) {
+const readBarrierOverSharedStorage = Effect.fn("JsonlTest.gateRead")(function* (fs: FileSystem.FileSystem) {
   const entered = yield* Deferred.make<void>();
   const release = yield* Deferred.make<void>();
   let armed = false;
@@ -165,7 +163,7 @@ it.effect("a query reads only the size it statted even if an append lands during
   Effect.gen(function* () {
     const fs = yield* memory();
     yield* fs.writeFileString(path, line(1));
-    const gate = yield* gateRead(fs);
+    const gate = yield* readBarrierOverSharedStorage(fs);
     const journal = yield* open(gate.fs);
     yield* gate.arm;
     const reading = yield* journal
@@ -190,7 +188,7 @@ it.effect("an append during replay is delivered exactly once at the live join", 
   Effect.gen(function* () {
     const fs = yield* memory();
     yield* fs.writeFileString(path, line(1));
-    const gate = yield* gateRead(fs);
+    const gate = yield* readBarrierOverSharedStorage(fs);
     const journal = yield* open(gate.fs);
     yield* gate.arm;
     const reading = yield* journal

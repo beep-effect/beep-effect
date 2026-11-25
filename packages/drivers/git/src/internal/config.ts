@@ -81,8 +81,6 @@ const RawOffset = S.Finite.pipe(
 );
 
 /**
- * One raw scanner diagnostic, positions in character offsets.
- *
  * **Example** (Make a raw scanner diagnostic)
  *
  * ```ts
@@ -113,8 +111,6 @@ export class RawDiagnostic extends S.Opaque<RawDiagnostic, { readonly brand: uni
 ) {}
 
 /**
- * One raw variable line (possibly continued across lines).
- *
  * **Example** (Make a raw bare-key entry)
  *
  * ```ts
@@ -172,8 +168,6 @@ export class RawEntry extends S.Opaque<RawEntry, { readonly brand: unique symbol
 ) {}
 
 /**
- * One raw section: header spans plus the entries scanned under it.
- *
  * **Example** (Read a scanned raw section)
  *
  * ```ts
@@ -225,8 +219,6 @@ export class RawSection extends S.Opaque<RawSection, { readonly brand: unique sy
 ) {}
 
 /**
- * The scanner's result: sections in order plus every diagnostic found.
- *
  * **Example** (Read the scanner result)
  *
  * ```ts
@@ -885,8 +877,6 @@ export const serializeHeader: {
 );
 
 /**
- * One text splice: replace `length` characters at `offset` with `content`.
- *
  * **Example** (Make a text splice)
  *
  * ```ts

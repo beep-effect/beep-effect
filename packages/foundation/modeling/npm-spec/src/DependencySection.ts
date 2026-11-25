@@ -22,9 +22,6 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 const $I = $NpmSpecId.create("DependencySection");
 
 /**
- * The short dependency kind: which dependency map an entry came from, named the
- * way consumers branch on it.
- *
  * **Example** (Decode a short dependency kind)
  *
  * ```ts
@@ -46,8 +43,6 @@ export const DependencyKind = LiteralKit(["prod", "dev", "peer", "optional"]).pi
 );
 
 /**
- * The union of short dependency kinds.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -55,9 +50,6 @@ export const DependencyKind = LiteralKit(["prod", "dev", "peer", "optional"]).pi
 export type DependencyKind = typeof DependencyKind.Type;
 
 /**
- * The manifest field name a dependency is declared under, matching the
- * `package.json` / `package-lock.json` key exactly.
- *
  * **Example** (Decode a manifest dependency field)
  *
  * ```ts
@@ -84,15 +76,12 @@ export const DependencyField = LiteralKit([
 );
 
 /**
- * The union of manifest dependency-map field names.
- *
  * @public
  * @category type-level
  * @since 0.0.0
  */
 export type DependencyField = typeof DependencyField.Type;
 
-// Single source of truth for the kind <-> field correspondence.
 const KIND_TO_FIELD = {
   prod: "dependencies",
   dev: "devDependencies",
@@ -100,8 +89,7 @@ const KIND_TO_FIELD = {
   optional: "optionalDependencies",
 } as const satisfies Record<DependencyKind, DependencyField>;
 
-// Inverse, derived from KIND_TO_FIELD so the mapping is written once.
-const FIELD_TO_KIND = {
+const FIELD_TO_KIND_DERIVED_SO_THE_MAPPING_IS_WRITTEN_ONCE = {
   [KIND_TO_FIELD.prod]: "prod",
   [KIND_TO_FIELD.dev]: "dev",
   [KIND_TO_FIELD.peer]: "peer",
@@ -187,5 +175,6 @@ export abstract class DependencySection {
    *
    * @since 0.0.0
    */
-  static readonly kindOf = (field: DependencyField): DependencyKind => FIELD_TO_KIND[field];
+  static readonly kindOf = (field: DependencyField): DependencyKind =>
+    FIELD_TO_KIND_DERIVED_SO_THE_MAPPING_IS_WRITTEN_ONCE[field];
 }

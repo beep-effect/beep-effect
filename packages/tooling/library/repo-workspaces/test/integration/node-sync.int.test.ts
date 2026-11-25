@@ -18,14 +18,25 @@ import * as Str from "effect/String";
 import { makeNodeFixture, nodeHost } from "./utils/nodeFixture.ts";
 import type { SyncFileSystem } from "@beep/repo-workspaces";
 
-/** A sibling package's directory — the repo root is somewhere above it. */
-const cwd = resolve(import.meta.dirname, "..", "..", "..", "..", "..", "packages", "foundation", "modeling", "utils");
+/** This package's directory: `test/integration` sits two levels below it. */
+const packageRoot = resolve(import.meta.dirname, "..", "..");
+
+/** The repository root: this package lives at `packages/tooling/library/repo-workspaces`. */
+const repoRoot = resolve(packageRoot, "..", "..", "..", "..");
+
+/** `@beep/utils`, a sibling package directory with the repo root somewhere above it. */
+const cwd = resolve(repoRoot, "packages", "foundation", "modeling", "utils");
 
 describe("the node-sync preset against the real repository", () => {
+  it("starts from a real sibling package directory", () => {
+    assert.isTrue(nodeFileSystem.exists(nodePath.join(cwd, "package.json")), `expected a package at ${cwd}`);
+  });
+
   it("findWorkspaceRootSync finds the workspace root from a packages/ subdir", () => {
     const root = findWorkspaceRootSync(cwd, nodeSyncOps);
     assert.isNotNull(root);
     if (root === null) return assert.fail("expected a workspace root");
+    assert.strictEqual(root, repoRoot);
     assert.isTrue(nodeFileSystem.exists(nodePath.join(root, "bun.lock")));
   });
 

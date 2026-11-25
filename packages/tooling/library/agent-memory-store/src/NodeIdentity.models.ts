@@ -83,16 +83,12 @@ export const NodeId = S.String.check(S.isUUID()).pipe(
 );
 
 /**
- * Runtime type for {@link NodeId}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type NodeId = typeof NodeId.Type;
 
 /**
- * SHA-256 hex digest of a node's normalized text.
- *
  * **Details**
  *
  * Two nodes with the same `ContentHash` hold the same normalized text; exact
@@ -118,8 +114,6 @@ export const ContentHash = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link ContentHash}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -181,16 +175,12 @@ export const RevisionId = Sha256Hex.pipe(
 );
 
 /**
- * Runtime type for {@link RevisionId}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type RevisionId = typeof RevisionId.Type;
 
 /**
- * Encoded companion types for {@link RevisionId}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -209,8 +199,6 @@ export declare namespace RevisionId {
 const MEMORY_FILE_PATH_PATTERN = /^(?:[^/.][^/]*\/)*[^/.][^/]*\.md$/;
 
 /**
- * POSIX path of a memory file, relative to the imported memory folder.
- *
  * **Details**
  *
  * Decision `memory-files-are-md-files-outside-dot-segments`: the path is
@@ -246,8 +234,6 @@ export const MemoryFilePath = PosixPath.check(
 );
 
 /**
- * Runtime type for {@link MemoryFilePath}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -292,16 +278,12 @@ export const LogCursor = S.Natural.pipe(
 );
 
 /**
- * Runtime type for {@link LogCursor}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type LogCursor = typeof LogCursor.Type;
 
 /**
- * Markdown construct a memory node is cut from.
- *
  * **Details**
  *
  * Decision `granularity-row-and-list-item`: list items and table rows are
@@ -339,16 +321,12 @@ export const NodeKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link NodeKind}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type NodeKind = typeof NodeKind.Type;
 
 /**
- * Canonical preimage record hashed into a {@link RevisionId}.
- *
  * **Details**
  *
  * Field order is fixed (`nodeId`, `parents`, `contentHash`) and `parents` is

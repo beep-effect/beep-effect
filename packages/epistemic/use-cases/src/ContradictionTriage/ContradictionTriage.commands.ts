@@ -95,8 +95,6 @@ const SubmitContradictionCandidateSchema = SubmitContradictionCandidateStruct.ma
 );
 
 /**
- * Submit one evidence-backed contradiction proposal.
- *
  * **Details**
  *
  * Repeated candidate identity is duplicate-suppressed, while `receiptKey`
@@ -150,8 +148,6 @@ export const ContradictionDispositionFilter = ContradictionDispositionFilterBase
 );
 
 /**
- * Runtime type for {@link ContradictionDispositionFilter}.
- *
  * **Example** (Type open disposition filter)
  *
  * ```ts
@@ -170,8 +166,6 @@ export const ContradictionDispositionFilter = ContradictionDispositionFilterBase
 export type ContradictionDispositionFilter = typeof ContradictionDispositionFilter.Type;
 
 /**
- * Positive contradiction-candidate page size capped at 100 rows.
- *
  * **Example** (Validate page limit bounds)
  *
  * ```ts
@@ -201,8 +195,6 @@ export const ContradictionCandidatePageLimit = PosInt.check(
 );
 
 /**
- * Runtime type for {@link ContradictionCandidatePageLimit}.
- *
  * **Example** (Make typed page limit)
  *
  * ```ts
@@ -221,8 +213,6 @@ export const ContradictionCandidatePageLimit = PosInt.check(
 export type ContradictionCandidatePageLimit = typeof ContradictionCandidatePageLimit.Type;
 
 /**
- * Paginated two-axis contradiction-candidate list query.
- *
  * **Example** (Build list candidates query)
  *
  * ```ts
@@ -424,8 +414,6 @@ export const ContradictionReviewDecision = ContradictionReviewDecisionBase.pipe(
 );
 
 /**
- * Runtime type for {@link ContradictionReviewDecision}.
- *
  * **Example** (Type reject review decision)
  *
  * ```ts
@@ -441,8 +429,6 @@ export const ContradictionReviewDecision = ContradictionReviewDecisionBase.pipe(
 export type ContradictionReviewDecision = typeof ContradictionReviewDecision.Type;
 
 /**
- * Review one persisted contradiction candidate.
- *
  * **Details**
  *
  * The caller supplies no reviewer identity, source facet, replacement fact,

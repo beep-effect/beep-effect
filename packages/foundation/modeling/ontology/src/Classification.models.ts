@@ -30,8 +30,6 @@ export const ClassificationSchemeKind = LiteralKit(["ipc", "cpc", "nice"]).pipe(
 );
 
 /**
- * Runtime value admitted by {@link ClassificationSchemeKind}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -46,7 +44,6 @@ export const ClassificationSchemeKind = LiteralKit(["ipc", "cpc", "nice"]).pipe(
 export type ClassificationSchemeKind = typeof ClassificationSchemeKind.Type;
 
 /**
- * An IPC edition identifier in year and month form.
  * **Example** (Name an IPC edition)
  * ```ts
  * import { IpcEdition } from "@beep/ontology/Classification.models"
@@ -60,8 +57,6 @@ export const IpcEdition = S.String.check(S.isPattern(/^\d{4}\.(?:0[1-9]|1[0-2])$
 );
 
 /**
- * Runtime value admitted by {@link IpcEdition}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -76,7 +71,6 @@ export const IpcEdition = S.String.check(S.isPattern(/^\d{4}\.(?:0[1-9]|1[0-2])$
 export type IpcEdition = typeof IpcEdition.Type;
 
 /**
- * A CPC publication edition identifier in year and month form.
  * **Example** (Name a CPC edition)
  * ```ts
  * import { CpcEdition } from "@beep/ontology/Classification.models"
@@ -90,8 +84,6 @@ export const CpcEdition = S.String.check(S.isPattern(/^\d{4}\.(?:0[1-9]|1[0-2])$
 );
 
 /**
- * Runtime value admitted by {@link CpcEdition}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -120,8 +112,6 @@ export const NiceEdition = S.String.check(S.isPattern(/^[1-9]\d*-\d{4}$/)).pipe(
 );
 
 /**
- * Runtime value admitted by {@link NiceEdition}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -152,8 +142,6 @@ export const IpcSymbol = S.String.check(
 );
 
 /**
- * Runtime value admitted by {@link IpcSymbol}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -182,8 +170,6 @@ export const CpcSymbol = S.String.check(
 ).pipe($I.annoteSchema("CpcSymbol", { description: "Canonical CPC notation including Y and indexing groups." }));
 
 /**
- * Runtime value admitted by {@link CpcSymbol}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -212,8 +198,6 @@ export const NiceClassNumber = S.String.check(S.isPattern(/^(?:[1-9]|[1-3]\d|4[0
 );
 
 /**
- * Runtime value admitted by {@link NiceClassNumber}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts
@@ -242,8 +226,6 @@ export const NiceBasicNumber = S.String.check(S.isPattern(/^(?:0[1-9]|[1-3]\d|4[
 );
 
 /**
- * Runtime value admitted by {@link NiceBasicNumber}.
- *
  * **Example** (Type a classification value)
  *
  * ```ts

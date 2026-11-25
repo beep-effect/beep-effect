@@ -54,8 +54,6 @@ const GlyphCommand = S.Union([
 type GlyphCommand = typeof GlyphCommand.Type;
 
 /**
- * Ink box `[xMin, yMin, xMax, yMax]` in font units, y up.
- *
  * @internal
  * @since 0.0.0
  */
@@ -66,8 +64,6 @@ export const InkBox = S.Tuple([S.Finite, S.Finite, S.Finite, S.Finite]).pipe(
 );
 
 /**
- * Type for {@link InkBox}.
- *
  * @internal
  * @since 0.0.0
  */

@@ -70,7 +70,6 @@ export const OwnerCheckpointPublishOutcome = S.TaggedUnion({
 );
 
 /**
- * Runtime type of the finite publication outcome.
  * @category type-level
  * @since 0.0.0
  */

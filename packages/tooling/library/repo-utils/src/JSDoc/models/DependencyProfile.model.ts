@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $RepoUtilsId.create("JSDoc/models/DependencyProfile.model");
 
 /**
- * Fan-in / fan-out intensity classification.
- *
  * **Example** (Check high fan value)
  *
  * ```ts
@@ -33,8 +31,6 @@ export const FanValue = LiteralKit(["low", "medium", "high"]).pipe(
 );
 
 /**
- * Inferred type for {@link FanValue}.
- *
  * **Example** (Accept FanValue type)
  *
  * ```ts
@@ -51,10 +47,6 @@ export const FanValue = LiteralKit(["low", "medium", "high"]).pipe(
 export type FanValue = typeof FanValue.Type;
 
 /**
- * Dependency direction profile. Used to validate classifications:
- * if something classified as domain logic has high fan-out, that is a
- * misclassification signal.
- *
  * **Example** (Make dependency profile)
  *
  * ```ts

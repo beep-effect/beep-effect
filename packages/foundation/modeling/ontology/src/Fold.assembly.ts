@@ -50,7 +50,6 @@ import type {
   TypedLiteral,
 } from "./Fold.models.ts";
 
-// The identity annotations of a schema: its code identity and display metadata, no IRI.
 type SchemaIdentity = {
   readonly schema: SchemaHandle;
   readonly identifier: string;
@@ -59,7 +58,6 @@ type SchemaIdentity = {
   readonly skos: O.Option<SkosClassificationMarker>;
 };
 
-// A schema identity bound in the registry: the term IRI and CURIE its code identity is bound to.
 type ClassIdentity = SchemaIdentity & {
   readonly iri: IRI;
   readonly curie: string;
@@ -895,7 +893,6 @@ const skosWarnings = (
   return [...missingScheme, ...missingPrefLabel, ...relatedDuplicates];
 };
 
-// The projections bind the core prefixes themselves, so a registry must bind each to the same namespace or not at all.
 const requireCorePrefixes = (registry: Registry.RegistryView): Effect.Effect<void, OntologyAssemblyError> =>
   pipe(
     coreNamespaces,
@@ -970,6 +967,11 @@ const assembleWith = (registry: Registry.RegistryView) =>
  * channel. An unknown namespace fails with `unknownTerm`, and a registry that
  * binds a core prefix (`dcterms`, `owl`, `rdf`, `rdfs`, `skos`) to another
  * namespace than the core one fails with `reservedPrefix`.
+ *
+ * **Gotchas**
+ *
+ * Projections bind the core prefixes themselves. A supplied registry must leave each
+ * core prefix absent or bind it to that same core namespace.
  *
  * **Example** (Fold over a fixture registry)
  * ```ts

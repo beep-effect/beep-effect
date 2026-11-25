@@ -62,8 +62,6 @@ const RoutingRoleKit = LiteralKit([
 ]);
 
 /**
- * The job a model is pinned to do, independent of which file names it.
- *
  * **Details**
  *
  * Roles are the stable vocabulary prose refers to; ids live only inside
@@ -99,8 +97,6 @@ export const RoutingRole = RoutingRoleKit.pipe(
 );
 
 /**
- * The job a model is pinned to do, independent of which file names it.
- *
  * @see {@link RoutingRole} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -151,8 +147,6 @@ const RoutingSurfaceKit = LiteralKit([
 ]);
 
 /**
- * The client that actually sends the request.
- *
  * **Details**
  *
  * Surfaces exist because effort vocabulary is per-client, not per-model:
@@ -180,8 +174,6 @@ export const RoutingSurface = RoutingSurfaceKit.pipe(
 );
 
 /**
- * The client that sends the request and so decides the effort vocabulary.
- *
  * @see {@link RoutingSurface} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -320,8 +312,6 @@ export const isEffortAllowedOnSurface: {
 // ── Bindings ────────────────────────────────────────────────────────────────
 
 /**
- * One `role x surface` pin: which model, at which effort.
- *
  * **Details**
  *
  * `supersedes` is the retired-id ledger for this binding, which is how a
@@ -402,8 +392,6 @@ export const TargetRoot = TargetRootKit.pipe(
 );
 
 /**
- * Whether a projection target resolves against the repo checkout or home.
- *
  * @see {@link TargetRoot} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -427,8 +415,6 @@ export type TargetRoot = typeof TargetRoot.Type;
 export const TargetRootIs = TargetRootKit.is;
 
 /**
- * Stable identifier for one projection target.
- *
  * **Example** (Guard a target id)
  *
  * ```ts
@@ -449,8 +435,6 @@ export const TargetId = S.NonEmptyString.pipe(
 );
 
 /**
- * Stable identifier for one projection target.
- *
  * @see {@link TargetId} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -460,8 +444,6 @@ export type TargetId = typeof TargetId.Type;
 const LocatorFieldKit = LiteralKit(["model", "effort", "model-effort-suffix"]);
 
 /**
- * Which of a binding's values one locator writes.
- *
  * **Details**
  *
  * A binding carries a model and, on most surfaces, an effort; a locator writes
@@ -491,8 +473,6 @@ export const LocatorField = LocatorFieldKit.pipe(
 );
 
 /**
- * Which of a binding's values one locator writes.
- *
  * @see {@link LocatorField} for runtime decoding and guards.
  * @category type-level
  * @since 0.0.0
@@ -517,8 +497,6 @@ export type LocatorField = typeof LocatorField.Type;
 export const LocatorFieldIs = LocatorFieldKit.is;
 
 /**
- * Which binding, and which of its values, a locator projects.
- *
  * **Gotchas**
  *
  * A `field` of `effort` or `model-effort-suffix` is only renderable when the
@@ -554,8 +532,6 @@ export class LocatorBinding extends S.Opaque<LocatorBinding, { readonly brand: u
 ) {}
 
 /**
- * Which bindings a generated block renders, by role and surface.
- *
  * **Details**
  *
  * A generated block renders a *table*, not one value, so it selects a set
@@ -650,8 +626,6 @@ export const LocatorRender = LiteralKit(["verbatim", "effort-display-label"])
   );
 
 /**
- * How a locator spells a resolved value.
- *
  * @see {@link LocatorRender} for runtime decoding and tag discrimination.
  * @category type-level
  * @since 0.0.0
@@ -659,8 +633,6 @@ export const LocatorRender = LiteralKit(["verbatim", "effort-display-label"])
 export type LocatorRender = typeof LocatorRender.Type;
 
 /**
- * Where inside a target file one binding's value lives.
- *
  * **Details**
  *
  * The tag is the file grammar, not the file format, because the same format
@@ -787,8 +759,6 @@ export const Locator = LiteralKit([
   );
 
 /**
- * Where inside a target file one binding's value lives.
- *
  * @see {@link Locator} for runtime decoding and tag discrimination.
  * @category type-level
  * @since 0.0.0
@@ -925,8 +895,6 @@ export class ModelsApplyJournal extends S.Opaque<ModelsApplyJournal, { readonly 
 ) {}
 
 /**
- * One file the projection writes, and every locator inside it.
- *
  * **Details**
  *
  * `optional` marks a target that may legitimately be absent on a given box —
@@ -967,8 +935,6 @@ export class ModelSyncTarget extends S.Opaque<ModelSyncTarget, { readonly brand:
 ) {}
 
 /**
- * A retired model id and what replaced it.
- *
  * **Details**
  *
  * The upstream catalog hard-deletes retired ids, so this ledger is the only
@@ -1090,8 +1056,6 @@ const ActiveTargets = S.Array(S.Unknown).pipe(
 );
 
 /**
- * The operator's whole routing manifest.
- *
  * **Details**
  *
  * One manifest at `$HOME/.config/beep/models.yaml` is the single place an

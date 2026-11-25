@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $SkillContractId.create("SchemaReference");
 
 /**
- * Stable identity of a versioned runtime schema binding.
- *
  * **Example** (Construct a schema reference id)
  *
  * ```ts
@@ -32,16 +30,12 @@ export const SchemaReferenceId = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type decoded by {@link SchemaReferenceId}.
- *
  * @category identifiers
  * @since 0.0.0
  */
 export type SchemaReferenceId = typeof SchemaReferenceId.Type;
 
 /**
- * Persisted reference to a runtime-bound schema.
- *
  * **Details**
  *
  * Contract values persist only this identity. Consumer modules own the

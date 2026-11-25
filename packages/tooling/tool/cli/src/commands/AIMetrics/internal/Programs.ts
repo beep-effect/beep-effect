@@ -834,8 +834,6 @@ const defaultServiceEndpoint = Effect.fn("AIMetrics.defaultServiceEndpoint")(fun
 });
 
 /**
- * Option schema for the MakeInstallPreviewProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeInstallPreviewProgramOptions schema)
  *
  * ```ts
@@ -886,8 +884,6 @@ const makeInstallPreviewProgram = Effect.fn("AIMetrics.makeInstallPreviewProgram
 });
 
 /**
- * Option schema for the MakeInstallComposeProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeInstallComposeProgramOptions schema)
  *
  * ```ts
@@ -962,8 +958,6 @@ const renderInstallPlan = Effect.fn("AIMetrics.renderInstallPlan")(function* (
 });
 
 /**
- * Option schema for the MakeInstallPlanProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeInstallPlanProgramOptions schema)
  *
  * ```ts
@@ -1029,8 +1023,6 @@ const renderInstallDoctor = Effect.fn("AIMetrics.renderInstallDoctor")(function*
 });
 
 /**
- * Option schema for the MakeInstallDoctorProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeInstallDoctorProgramOptions schema)
  *
  * ```ts
@@ -1121,8 +1113,6 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
 });
 
 /**
- * Option schema for the MakeInstallApplyProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeInstallApplyProgramOptions schema)
  *
  * ```ts
@@ -1192,8 +1182,6 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
 });
 
 /**
- * Option schema for the MakeIngestProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeIngestProgramOptions schema)
  *
  * ```ts
@@ -1331,8 +1319,6 @@ const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (inpu
 });
 
 /**
- * Option schema for the MakeSourcesDiscoverProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeSourcesDiscoverProgramOptions schema)
  *
  * ```ts
@@ -1418,8 +1404,6 @@ const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgr
 });
 
 /**
- * Option schema for the MakeConfigSnapshotProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeConfigSnapshotProgramOptions schema)
  *
  * ```ts
@@ -1469,8 +1453,6 @@ const makeConfigSnapshotProgram = Effect.fn("AIMetrics.makeConfigSnapshotProgram
 });
 
 /**
- * Option schema for the MakePrivacyCheckProgram AI metrics helper.
- *
  * **Example** (Inspect the MakePrivacyCheckProgramOptions schema)
  *
  * ```ts
@@ -1817,8 +1799,6 @@ const renderForwarderRunResult = Effect.fn("AIMetrics.renderForwarderRunResult")
 });
 
 /**
- * Option schema for the MakeForwarderRunProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeForwarderRunProgramOptions schema)
  *
  * ```ts
@@ -1929,8 +1909,6 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
 });
 
 /**
- * Option schema for the MakeForwarderTimerProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeForwarderTimerProgramOptions schema)
  *
  * ```ts
@@ -2094,8 +2072,6 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
 });
 
 /**
- * Option schema for the MakeOtlpExportProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeOtlpExportProgramOptions schema)
  *
  * ```ts
@@ -2172,8 +2148,6 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
 });
 
 /**
- * Option schema for the MakeBenchmarkRunProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeBenchmarkRunProgramOptions schema)
  *
  * ```ts
@@ -2308,8 +2282,6 @@ const makeWindowedCommandSpec = Effect.fnUntraced(function* ({
 });
 
 /**
- * Option schema for the MakeLabelQueueProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeLabelQueueProgramOptions schema)
  *
  * ```ts
@@ -2379,8 +2351,6 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
 });
 
 /**
- * Option schema for the MakeLabelAddProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeLabelAddProgramOptions schema)
  *
  * ```ts
@@ -2476,8 +2446,6 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
 });
 
 /**
- * Option schema for the MakeBenchmarkCaseAddProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeBenchmarkCaseAddProgramOptions schema)
  *
  * ```ts
@@ -2554,8 +2522,6 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
 });
 
 /**
- * Option schema for the MakeBenchmarkCaseListProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeBenchmarkCaseListProgramOptions schema)
  *
  * ```ts
@@ -2614,8 +2580,6 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
 });
 
 /**
- * Option schema for the MakeWeeklyReportProgram AI metrics helper.
- *
  * **Example** (Inspect the MakeWeeklyReportProgramOptions schema)
  *
  * ```ts
@@ -2928,8 +2892,6 @@ const makeMirrorBuildProgram = Effect.fn("AIMetrics.makeMirrorBuildProgram")(fun
 });
 
 /**
- * Options for syncing a local AI metrics mirror bundle to a remote host.
- *
  * **Details**
  *
  * `bundle` names the local mirror bundle (resolved under `dataRoot` when
@@ -3049,8 +3011,6 @@ const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(funct
 });
 
 /**
- * Parameters for the `ai-metrics mirror status` command.
- *
  * @category models
  * @since 0.0.0
  */
@@ -3153,8 +3113,6 @@ const confirmRetentionMutation = Effect.fn("AIMetrics.confirmRetentionMutation")
 });
 
 /**
- * Parameters for the `ai-metrics retention list` command.
- *
  * @category models
  * @since 0.0.0
  */
@@ -3205,8 +3163,6 @@ const makeRetentionListProgram = Effect.fn("AIMetrics.makeRetentionListProgram")
 });
 
 /**
- * Parameters for the `ai-metrics retention mutation` command.
- *
  * @category models
  * @since 0.0.0
  */

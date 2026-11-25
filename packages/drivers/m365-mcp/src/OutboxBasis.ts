@@ -36,8 +36,6 @@ import type { GraphDateTimeTimeZone, GraphEvent, GraphMessage } from "@beep/m365
 const $I = $M365McpId.create("OutboxBasis");
 
 /**
- * One end of an event, exactly as Graph returned it.
- *
  * **Details**
  *
  * The basis read never asks Graph for a time zone, so Graph returns both ends
@@ -65,8 +63,6 @@ export class OutboxEventInstant extends S.Opaque<OutboxEventInstant, { readonly 
 ) {}
 
 /**
- * The fields of an event a draft can rest on.
- *
  * **Example** (Describe an all-day event)
  *
  * ```ts
@@ -97,8 +93,6 @@ export class OutboxEventView extends S.Opaque<OutboxEventView, { readonly brand:
 ) {}
 
 /**
- * The fields of a message a draft can rest on.
- *
  * **Details**
  *
  * `newestOtherReply` is the RFC 5322 message id of the newest message in the
@@ -129,8 +123,6 @@ export class OutboxMessageView extends S.Opaque<OutboxMessageView, { readonly br
 ) {}
 
 /**
- * The kinds of Graph item a draft can rest on.
- *
  * **Example** (Guard a pin kind)
  *
  * ```ts
@@ -148,8 +140,6 @@ export const OutboxBasisKind = LiteralKit(["event", "message"]).pipe(
 );
 
 /**
- * Type for {@link OutboxBasisKind}.
- *
  * **Example** (Type a pin kind)
  *
  * ```ts
@@ -169,9 +159,6 @@ const refId = GraphPathSegment.annotateKey({
 });
 
 /**
- * What a caller supplies to pin a draft to one Graph item: its kind, its id,
- * and the named view the caller composed the draft from.
- *
  * **Details**
  *
  * The server reads the item itself and stores its own read, never the
@@ -221,8 +208,6 @@ export const OutboxBasisPinRef = OutboxBasisKind.toTaggedUnion("kind")({
 );
 
 /**
- * Type for {@link OutboxBasisPinRef}.
- *
  * **Example** (Read a pin reference's kind)
  *
  * ```ts
@@ -271,8 +256,6 @@ export const OutboxBasisObservation = OutboxBasisKind.toTaggedUnion("kind")({
 }).pipe($I.annoteSchema("OutboxBasisObservation", { description: "The named view of one Graph item, by kind." }));
 
 /**
- * Type for {@link OutboxBasisObservation}.
- *
  * **Example** (Read an observation's kind)
  *
  * ```ts
@@ -289,9 +272,6 @@ export const OutboxBasisObservation = OutboxBasisKind.toTaggedUnion("kind")({
 export type OutboxBasisObservation = typeof OutboxBasisObservation.Type;
 
 /**
- * One Graph item a draft rested on, with the view observed when the draft was
- * created.
- *
  * **Details**
  *
  * A message pin also stores the message's `conversationId`. Like the id, it
@@ -339,8 +319,6 @@ export const OutboxBasisPin = OutboxBasisKind.toTaggedUnion("kind")({
 );
 
 /**
- * Type for {@link OutboxBasisPin}.
- *
  * **Example** (Read a pin's id)
  *
  * ```ts
@@ -357,8 +335,6 @@ export const OutboxBasisPin = OutboxBasisKind.toTaggedUnion("kind")({
 export type OutboxBasisPin = typeof OutboxBasisPin.Type;
 
 /**
- * A named view field that differs now.
- *
  * **Example** (Guard a changed field)
  *
  * ```ts
@@ -382,8 +358,6 @@ export const OutboxBasisChangedField = LiteralKit([
 ]).pipe($I.annoteSchema("OutboxBasisChangedField", { description: "A named view field that differs now." }));
 
 /**
- * Type for {@link OutboxBasisChangedField}.
- *
  * **Example** (Type a changed field)
  *
  * ```ts
@@ -399,8 +373,6 @@ export const OutboxBasisChangedField = LiteralKit([
 export type OutboxBasisChangedField = typeof OutboxBasisChangedField.Type;
 
 /**
- * What a fresh read says about one pin.
- *
  * **Details**
  *
  * `Current`: every named field is as pinned. `Changed`: the named fields that
@@ -435,8 +407,6 @@ export const OutboxBasisStatus = S.TaggedUnion({
 }).pipe($I.annoteSchema("OutboxBasisStatus", { description: "What a fresh read says about one pin." }));
 
 /**
- * Type for {@link OutboxBasisStatus}.
- *
  * **Example** (Read a status tag)
  *
  * ```ts
@@ -453,8 +423,6 @@ export const OutboxBasisStatus = S.TaggedUnion({
 export type OutboxBasisStatus = typeof OutboxBasisStatus.Type;
 
 /**
- * Overall basis verdict of one draft.
- *
  * **Details**
  *
  * `unpinned`: the draft has no pin. `pinned-stale`: a pin changed or is gone.
@@ -478,8 +446,6 @@ export const OutboxBasisVerdict = LiteralKit(["unpinned", "pinned-current", "pin
 );
 
 /**
- * Type for {@link OutboxBasisVerdict}.
- *
  * **Example** (Type a verdict)
  *
  * ```ts
@@ -573,8 +539,6 @@ export const OutboxBasisErrorReason = LiteralKit(["basis-unreadable", "basis-ser
 );
 
 /**
- * Type for {@link OutboxBasisErrorReason}.
- *
  * **Example** (Type a basis failure reason)
  *
  * ```ts
@@ -590,8 +554,6 @@ export const OutboxBasisErrorReason = LiteralKit(["basis-unreadable", "basis-ser
 export type OutboxBasisErrorReason = typeof OutboxBasisErrorReason.Type;
 
 /**
- * Typed failure of observing a pin.
- *
  * **Details**
  *
  * `fields` names the view fields that differ when the reason is

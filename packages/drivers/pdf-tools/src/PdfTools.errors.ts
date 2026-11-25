@@ -36,8 +36,6 @@ export const PdfToolsErrorReason = PdfToolsErrorReasonBase.pipe(
 );
 
 /**
- * Type for {@link PdfToolsErrorReason}.
- *
  * **Example** (Annotate a reason)
  *
  * ```ts

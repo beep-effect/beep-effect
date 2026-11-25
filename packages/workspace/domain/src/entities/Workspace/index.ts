@@ -6,8 +6,6 @@
  */
 
 /**
- * Module exports.
- *
  * **Example** (Import Workspace module)
  *
  * ```ts
@@ -21,8 +19,6 @@
  */
 export * from "./Workspace.model.ts";
 /**
- * Module exports.
- *
  * **Example** (Import Workspace module)
  *
  * ```ts

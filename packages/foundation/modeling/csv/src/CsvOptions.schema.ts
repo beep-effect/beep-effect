@@ -384,7 +384,6 @@ export const CsvTrimRule = LiteralKit(["none", "unquoted", "all"]).pipe(
  */
 export type CsvTrimRule = typeof CsvTrimRule.Type;
 
-/** A cap field: an integer from 1 to `cap.maximum`, set to `cap.fallback` when the key or constructor input is missing. */
 const count = (cap: { readonly maximum: number; readonly fallback: number; readonly description: string }) => {
   const fallback = Effect.succeed(cap.fallback);
   return S.Int.check(S.isBetween({ minimum: 1, maximum: cap.maximum })).pipe(

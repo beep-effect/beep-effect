@@ -7,8 +7,6 @@
  */
 
 /**
- * Document server use-case namespace exports.
- *
  * @category repositories
  * @since 0.0.0
  */

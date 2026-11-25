@@ -129,8 +129,6 @@ const EntryValue = S.Union([S.Record(S.String, S.Unknown), S.String]);
 const FieldValue = S.Union([EntryValue, S.Array(EntryValue)]);
 
 /**
- * Where to send money for a package: one funding entry.
- *
  * **Details**
  *
  * npm's `funding` field accepts a bare URL string, this object form, or an

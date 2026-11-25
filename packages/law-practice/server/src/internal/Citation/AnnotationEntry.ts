@@ -129,7 +129,7 @@ export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry
   runtime: CitationNativeProcessRuntime
 ) {
   const geometry = yield* verifyCitationHtmlGeometryConfiguration(limits, ownedField(configuration, "geometry"));
-  // Installed once; an install failure surfaces where each request used to install it.
+  // decision: citation-stage-install-once-exit-replay
   const html = yield* Effect.exit(installCitationHtmlGeometry(limits, runtime, geometry));
   const wrap = yield* Effect.exit(makeCitationAnnotationWrap(limits, runtime));
   const callback = yield* Effect.serviceOption(CitationAnnotationAnnotator);

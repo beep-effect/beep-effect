@@ -16,8 +16,6 @@ const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model")
 const pg = ProductEntity.pg;
 
 /**
- * Distinction entity asserted to overcome a rejection against a claim.
- *
  * **Details**
  *
  * Stores the argued {@link DistinctionDetail}, a source {@link TextAnchor}, and

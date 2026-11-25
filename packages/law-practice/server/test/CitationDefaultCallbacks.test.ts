@@ -560,7 +560,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         )
       );
       expect(A.length(result.groups)).toBe(1);
-      expect(hashes).toBe(3); // One mention id at two digests (occurrence, then mention) and one authority key.
+      expect(hashes, "one mention id at two digests (occurrence, then mention) and one authority key").toBe(3);
     })
   );
 });

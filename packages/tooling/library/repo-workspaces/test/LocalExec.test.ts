@@ -43,7 +43,6 @@ const detects = (name: PackageManagerName, runtime: "node" | "bun" = "node") =>
     ),
   });
 
-/** A detector that fails the way `failure` says. */
 const detectorFailing = (failure: PackageManagerDetectionError | WorkspaceManifestError) =>
   Layer.succeed(PackageManagerDetector, {
     detect: Effect.fn("PackageManagerDetector.detect")(() => Effect.fail(failure)),

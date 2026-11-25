@@ -1,5 +1,3 @@
-// Segment lookup shared by `LocatorMap.compose` and `reanchor`. The segments of a `LocatorMap` are ordered and
-// disjoint on both sides, so the segment holding an offset is found by binary search over one side.
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -15,9 +13,7 @@ export const fromSide: Side = (segment) => segment.from;
 /** The `to` side of a segment. */
 export const toSide: Side = (segment) => segment.to;
 
-// Performance boundary (binary search): a lookup runs once per boundary of every re-anchored range and every cut
-// of a composition, over maps with one segment per rewrite of a whole text, so it halves an index range in local
-// state instead of scanning. Nothing mutable escapes a call.
+// decision: native-scan-hot-paths
 const firstEndingAfter = (segments: ReadonlyArray<AlignedSegment>, side: Side, offset: number): number => {
   let low = 0;
   let high = segments.length;

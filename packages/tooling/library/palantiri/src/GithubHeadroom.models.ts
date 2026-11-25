@@ -50,8 +50,6 @@ export const GithubIdentityName = S.String.check(
 ).pipe($I.annoteSchema("GithubIdentityName", { description: "Owner label of one GitHub rate-limit bucket." }));
 
 /**
- * Runtime type for {@link GithubIdentityName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -85,8 +83,6 @@ export const GithubBucketName = S.String.check(
 ).pipe($I.annoteSchema("GithubBucketName", { description: "GitHub rate-limit resource name." }));
 
 /**
- * Runtime type for {@link GithubBucketName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -120,8 +116,6 @@ export const GithubReserveName = LiteralKit(["clear", "below", "unknown"]).pipe(
 );
 
 /**
- * Runtime type for {@link GithubReserveName}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -149,8 +143,6 @@ export const GithubReadingBasis = LiteralKit(["transport", "sample"]).pipe(
 );
 
 /**
- * Runtime type for {@link GithubReadingBasis}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -180,9 +172,6 @@ export class GithubSpender extends S.Opaque<GithubSpender, { readonly brand: uni
 ) {}
 
 /**
- * The newest reading of one identity × resource bucket, with the reserve
- * state the ledger computed for it.
- *
  * **Details**
  *
  * `used` is GitHub's `used` header, or `limit − remaining` when absent.
@@ -236,9 +225,6 @@ export class GithubHeadroomBucketInput extends S.Opaque<GithubHeadroomBucketInpu
 ) {}
 
 /**
- * What the github-headroom parcel reduces: this host's GitHub budget ledger,
- * or its absence.
- *
  * **Details**
  *
  * `Missing` means the host has no ledger to read (no ledger directory, or
@@ -273,8 +259,6 @@ export const GithubHeadroomInput = S.TaggedUnion({
 );
 
 /**
- * Runtime type for {@link GithubHeadroomInput}.
- *
  * @category models
  * @since 0.0.0
  */

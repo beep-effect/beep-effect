@@ -303,8 +303,6 @@ export const BroaderViolation = S.Union([BroaderCycle, BroaderOutsideScheme]).pi
 );
 
 /**
- * Runtime type for {@link BroaderViolation}.
- *
  * **Example** (Type a violation)
  *
  * ```ts

@@ -1,7 +1,3 @@
-// The bridge-corpus inputs, imported from the `@beep/markdown/conformance/*`
-// JSON subpaths (the package's vitest config aliases them past the source
-// alias). Vite inlines the JSON at transform time, so no test reads a file.
-
 import commonmarkSpec from "@beep/markdown/conformance/commonmark/spec" with { type: "json" };
 import gfmExtensions from "@beep/markdown/conformance/gfm/extensions" with { type: "json" };
 import gfmSpecExtensions from "@beep/markdown/conformance/gfm/spec-extensions" with { type: "json" };
@@ -38,7 +34,6 @@ import mdastParagraph from "@beep/markdown/conformance/mdast/paragraph" with { t
 import mdastThematicBreak from "@beep/markdown/conformance/mdast/thematic-break" with { type: "json" };
 import { MdastFixture, mdastInputs, SpecCorpus, specInputs } from "./bridgeCorpus.ts";
 
-/** The vendored mdast fixtures, one reference tree each. */
 const MDAST_FIXTURES: ReadonlyArray<MdastFixture> = [
   MdastFixture.make({ name: "attention", tree: mdastAttention }),
   MdastFixture.make({ name: "autolink", tree: mdastAutolink }),

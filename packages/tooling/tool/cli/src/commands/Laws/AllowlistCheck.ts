@@ -116,8 +116,6 @@ class EffectLawsAllowlistDocument extends S.Opaque<EffectLawsAllowlistDocument, 
 const decodeEffectLawsAllowlist = S.decodeUnknownEffect(EffectLawsAllowlistDocument);
 
 /**
- * Runtime options for allowlist integrity checks.
- *
  * **Example** (Log options type label)
  *
  * ```ts
@@ -138,8 +136,6 @@ export class AllowlistCheckOptions extends S.Opaque<AllowlistCheckOptions, { rea
 ) {}
 
 /**
- * Result of an allowlist integrity check.
- *
  * **Example** (Log summary type label)
  *
  * ```ts

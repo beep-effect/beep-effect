@@ -60,7 +60,6 @@ export const CitationOracleJson = <Value, Encoded>(schema: S.Codec<Value, Encode
 };
 
 /**
- * Pinned tokenizer configuration with its exact source payload.
  * @category testing
  * @since 0.0.0
  */
@@ -76,7 +75,6 @@ export class TokenizerExtractorsArtifact extends S.Opaque<
 ) {}
 
 /**
- * Pinned model or vocabulary object with its exact source payload.
  * @category testing
  * @since 0.0.0
  */

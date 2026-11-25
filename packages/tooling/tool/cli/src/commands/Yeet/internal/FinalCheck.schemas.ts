@@ -55,8 +55,6 @@ export const FinalCheckGate = LiteralKit([
 );
 
 /**
- * A hosted gate family replayed by `yeet final-check`.
- *
  * @category models
  * @since 0.0.0
  */
@@ -90,8 +88,6 @@ export const FinalCheckReceiptVersion = LiteralKit(["yeet-final-check/v1", "yeet
 );
 
 /**
- * A final-check receipt schema version.
- *
  * @category models
  * @since 0.0.0
  */
@@ -130,8 +126,6 @@ export const FINAL_CHECK_RECEIPT_VERSION = "yeet-final-check/v2" satisfies Final
 export const FINAL_CHECK_GATE_SET_DIGEST: string = A.join(A.sort(FinalCheckGate.literals, Order.String), ",");
 
 /**
- * Outcome of one final-check step.
- *
  * **Example** (Check a step status)
  *
  * ```ts
@@ -150,16 +144,12 @@ export const FinalCheckStepStatus = LiteralKit(["passed", "failed", "skipped"]).
 );
 
 /**
- * Outcome of one final-check step.
- *
  * @category models
  * @since 0.0.0
  */
 export type FinalCheckStepStatus = typeof FinalCheckStepStatus.Type;
 
 /**
- * One executed (or skipped) final-check step and the hosted context it covers.
- *
  * **Example** (Record a passed step)
  *
  * ```ts
@@ -300,8 +290,6 @@ export class ExpectationRewriteVerdict extends S.Opaque<ExpectationRewriteVerdic
 ) {}
 
 /**
- * Overall final-check verdict.
- *
  * **Example** (Check a verdict)
  *
  * ```ts
@@ -321,8 +309,6 @@ export const FinalCheckVerdict = LiteralKit(["pass", "fail"]).pipe(
 );
 
 /**
- * Overall final-check verdict.
- *
  * @category models
  * @since 0.0.0
  */
@@ -344,8 +330,6 @@ export const FinalCheckRouteLane = LiteralKit([...CI_LANE_ID_VALUES, "none"]).pi
 );
 
 /**
- * Type of the lane recorded in route evidence.
- *
  * @category models
  * @since 0.0.0
  */
@@ -504,8 +488,6 @@ export class FinalCheckSkip extends S.Opaque<FinalCheckSkip, { readonly brand: u
 ) {}
 
 /**
- * Options accepted by `yeet final-check`.
- *
  * **Example** (Build options)
  *
  * ```ts
@@ -541,8 +523,6 @@ export class YeetFinalCheckOptions extends S.Opaque<YeetFinalCheckOptions, { rea
 ) {}
 
 /**
- * One subprocess a final-check gate runs, with the hosted context it replays.
- *
  * **Example** (Plan a step)
  *
  * ```ts

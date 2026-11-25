@@ -14,8 +14,6 @@ import { LegalScopeValue } from "../LegalScopeContext/index.ts";
 const $I = $LawPracticeDomainId.create("values/PriorityBasis/PriorityBasis.model");
 
 /**
- * One recorded designation on a priority basis, written as the asserter put it.
- *
  * **Details**
  *
  * Every argumentative axis of a priority claim is recorded as a designation
@@ -41,8 +39,6 @@ export const PriorityBasisDesignation = S.NonEmptyString.pipe(
 );
 
 /**
- * Runtime type for {@link PriorityBasisDesignation}.
- *
  * @see {@link PriorityBasisDesignation} for the runtime schema and why the axes are untyped designations.
  * @category models
  * @since 0.0.0

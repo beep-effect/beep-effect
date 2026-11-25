@@ -42,7 +42,6 @@ export const CitationHostComparisonOperand = S.TaggedUnion({
   })
 );
 /**
- * Schema-derived comparison operand.
  * @internal
  * @category models
  * @since 0.0.0

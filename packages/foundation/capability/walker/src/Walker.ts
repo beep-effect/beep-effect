@@ -65,16 +65,12 @@ export const DepthCap = S.Finite.check(
   )
 ).pipe($I.annoteSchema("DepthCap", { description: "A positive finite integer traversal cap." }));
 /**
- * Positive finite integer accepted as a traversal depth cap.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type DepthCap = typeof DepthCap.Type;
 
 /**
- * Options for {@link Walker.ascend}.
- *
  * **Example** (Decode an ascent ceiling)
  *
  * ```ts
@@ -153,8 +149,6 @@ export class AscendOptions extends S.Opaque<AscendOptions, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link AscendOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

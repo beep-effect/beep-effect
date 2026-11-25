@@ -17,7 +17,6 @@ import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.f
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationExtractorSelection = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationExtractorSelection>[0],
   a1: unknown
@@ -59,11 +58,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
           expect(result.indices, `case ${row.id}`).toEqual(row.selected);
           expect(result.insertions, `case ${row.id}`).toEqual(row.insertions);
           expect(result.matchedKeys).toBeLessThanOrEqual(20);
-          // Two source scans, at most one extra prefix lookup per newly seen key;
-          // lowercase may expand dotted I but these controls stay below 2x points.
-          expect(result.prefixQueries).toBeLessThanOrEqual(
-            (3 * row.source.bytes.length) / row.source.width + result.matchedKeys
-          );
+          expect(
+            result.prefixQueries,
+            "two source scans plus at most one prefix lookup per new key; dotted-I lowercasing stays below 2x points here"
+          ).toBeLessThanOrEqual((3 * row.source.bytes.length) / row.source.width + result.matchedKeys);
         }
       })
     );

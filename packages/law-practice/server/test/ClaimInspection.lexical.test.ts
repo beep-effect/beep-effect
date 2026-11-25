@@ -703,9 +703,12 @@ const exerciseLifetimeBudgets = Effect.fn("LifetimeFamily.budgets")(function* (
     const report = yield* service.inspect(family.input);
     assert.deepStrictEqual(report.input, family.input);
     assert.isTrue(A.every(report.records, (record) => record.status !== "complete"));
-    // The same 1MiB admission allowance is spent anew on each input call.
     const observedCount1 = yield* Ref.get(calls);
-    assert.strictEqual(observedCount1, before + count * 38);
+    assert.strictEqual(
+      observedCount1,
+      before + count * 38,
+      "the same 1MiB admission allowance is spent anew on each input call"
+    );
   }
   const oversized = lifetimeFamily(5, [`A system comprising a ${Str.repeat(33_000)("x")}.`]);
   const report = yield* service.inspect(oversized.input);

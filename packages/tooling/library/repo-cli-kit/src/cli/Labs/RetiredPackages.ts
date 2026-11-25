@@ -62,8 +62,6 @@ export class RetiredPackageRecord extends S.Opaque<RetiredPackageRecord, { reado
 ) {}
 
 /**
- * The retired-packages registry document.
- *
  * **Example** (Construct an empty registry)
  *
  * ```ts

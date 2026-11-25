@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 const $I = $CodegenKitId.create("CodegenKit.models");
 
 /**
- * Policies for validating a remote source pin before replacing its cache.
- *
  * **Example** (Require an OpenAPI version pin)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const SpecPinPolicy = LiteralKit(["url-embedded", "info-version"]).pipe(
 );
 
 /**
- * Runtime source pin policy represented by {@link SpecPinPolicy}.
- *
  * @see {@link SpecPinPolicy} for the supported values.
  * @category configuration
  * @since 0.0.0
@@ -82,8 +78,6 @@ export const SpecSource = S.TaggedUnion({
 );
 
 /**
- * Runtime source configuration represented by {@link SpecSource}.
- *
  * @see {@link SpecSource} for the runtime schema and source variants.
  * @category configuration
  * @since 0.0.0
@@ -111,8 +105,6 @@ export const SpecDialect = LiteralKit(["json-schema-2020-12", "openapi-3.0", "op
 );
 
 /**
- * Runtime dialect represented by {@link SpecDialect}.
- *
  * @see {@link SpecDialect} for the supported values.
  * @category configuration
  * @since 0.0.0
@@ -140,8 +132,6 @@ export const OutputFormat = LiteralKit(["schemas", "httpclient", "httpapi", "typ
 );
 
 /**
- * Runtime output format represented by {@link OutputFormat}.
- *
  * @see {@link OutputFormat} for the supported values.
  * @category configuration
  * @since 0.0.0
@@ -194,8 +184,6 @@ export const NamedTransform = LiteralKit([
 );
 
 /**
- * Runtime transform name represented by {@link NamedTransform}.
- *
  * @see {@link NamedTransform} for the registered transform names.
  * @category configuration
  * @since 0.0.0
@@ -223,8 +211,6 @@ export const NumberPolicy = LiteralKit(["finite", "number"]).pipe(
 );
 
 /**
- * Runtime number policy represented by {@link NumberPolicy}.
- *
  * @see {@link NumberPolicy} for the supported values.
  * @category configuration
  * @since 0.0.0
@@ -232,8 +218,6 @@ export const NumberPolicy = LiteralKit(["finite", "number"]).pipe(
 export type NumberPolicy = typeof NumberPolicy.Type;
 
 /**
- * Rendering styles for generated object schemas.
- *
  * **Example** (Choose class models)
  *
  * ```ts
@@ -252,8 +236,6 @@ export const SchemaStyle = LiteralKit(["struct", "class"]).pipe(
 );
 
 /**
- * Runtime schema rendering style represented by {@link SchemaStyle}.
- *
  * @see {@link SchemaStyle} for the supported values.
  * @category configuration
  * @since 0.0.0
@@ -281,8 +263,6 @@ export const WarningPolicy = LiteralKit(["fail", "log"]).pipe(
 );
 
 /**
- * Runtime warning policy represented by {@link WarningPolicy}.
- *
  * @see {@link WarningPolicy} for the supported values.
  * @category configuration
  * @since 0.0.0
@@ -290,8 +270,6 @@ export const WarningPolicy = LiteralKit(["fail", "log"]).pipe(
 export type WarningPolicy = typeof WarningPolicy.Type;
 
 /**
- * Identity composer symbol and module segment emitted into generated schemas.
- *
  * **Example** (Name the identity composer for generated schemas)
  *
  * ```ts
@@ -317,8 +295,6 @@ export class GenerateIdentity extends S.Opaque<GenerateIdentity, { readonly bran
 ) {}
 
 /**
- * Named RFC 6902 patch document applied before generation.
- *
  * **Example** (Drop an internal path before generation)
  *
  * ```ts
@@ -347,8 +323,6 @@ export class GeneratePatch extends S.Opaque<GeneratePatch, { readonly brand: uni
 ) {}
 
 /**
- * Primary generated module path and optional package-specific header.
- *
  * **Details**
  *
  * `exampleImport` replaces the module specifier used by generated `**Example**` blocks in every output
@@ -398,8 +372,6 @@ export class GenerateOutput extends S.Opaque<GenerateOutput, { readonly brand: u
 ) {}
 
 /**
- * Registered renderer name and destination for a package-specific generated module.
- *
  * **Example** (Register an operations module beside the models)
  *
  * ```ts
@@ -529,8 +501,6 @@ export class GeneratedModule extends S.Opaque<GeneratedModule, { readonly brand:
 ) {}
 
 /**
- * Drift status for one generated destination.
- *
  * **Example** (Inspect a changed status)
  *
  * ```ts
@@ -549,8 +519,6 @@ export const DriftStatus = LiteralKit(["clean", "changed", "missing"]).pipe(
 );
 
 /**
- * Runtime drift status represented by {@link DriftStatus}.
- *
  * @see {@link DriftStatus} for the supported values.
  * @category diagnostics
  * @since 0.0.0

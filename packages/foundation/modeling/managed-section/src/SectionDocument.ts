@@ -25,10 +25,9 @@ import type { SectionRenderError } from "./SectionDialect.ts";
 
 const $I = $ManagedSectionId.create("SectionDocument");
 
+const optionalKeyOmittedWhenAbsent = (key: string | undefined) => O.getSomesStruct({ key: O.fromUndefinedOr(key) });
+
 /**
- * Raised when a document's managed-section structure cannot be read without
- * guessing.
- *
  * **Gotchas**
  *
  * Every reason names an ambiguity whose silent resolution corrupts a file.
@@ -145,8 +144,7 @@ export class SectionParseError extends S.TaggedError<SectionParseError, { readon
       SectionParseError.make({
         reason: error.reason,
         line: error.line,
-        // An `optionalKey` field must be OMITTED rather than set to undefined.
-        ...O.getSomesStruct({ key: O.fromUndefinedOr(error.key) }),
+        ...optionalKeyOmittedWhenAbsent(error.key),
         path,
       })
   );
@@ -184,9 +182,6 @@ export const SectionReconciliation = ReconcileOutput;
 export type SectionReconciliation = typeof SectionReconciliation.Type;
 
 /**
- * A parsed document: its text, the dialect it was read with, and every
- * managed section found in it.
- *
  * **Details**
  *
  * This is the package's pure core. Parsing, inspection, reconciliation and

@@ -28,8 +28,7 @@ const optionalText = Arbitrary.map(
   ([present, text]) => (present ? O.some(text) : O.none())
 );
 
-// Leaves are coherent by construction: a position's end is its start plus a positive width.
-const positionArbitrary = Arbitrary.map(
+const positionWithPositiveWidthArbitrary = Arbitrary.map(
   Arbitrary.all([Arbitrary.schema(OffsetUnit), between(0, 10_000), between(1, 500)]),
   ([unit, start, width]) => Position.make({ unit, start, end: start + width })
 );
@@ -47,20 +46,21 @@ const fragmentArbitrary = Arbitrary.map(
 const leafArbitrary: Arbitrary.Arbitrary<Selector> = Arbitrary.flatMap(
   between(0, 2),
   (kind): Arbitrary.Arbitrary<Selector> =>
-    kind === 0 ? positionArbitrary : kind === 1 ? quoteArbitrary : fragmentArbitrary
+    kind === 0 ? positionWithPositiveWidthArbitrary : kind === 1 ? quoteArbitrary : fragmentArbitrary
 );
 
-// A selector tree of at most `depth` composite levels; every branch is a valid selector.
-const selectorAt = (depth: number): Arbitrary.Arbitrary<Selector> =>
-  depth === 0
+const selectorAt = (maxCompositeDepth: number): Arbitrary.Arbitrary<Selector> =>
+  maxCompositeDepth === 0
     ? leafArbitrary
     : Arbitrary.flatMap(between(0, 2), (kind) =>
         kind === 0
           ? leafArbitrary
-          : Arbitrary.map(Arbitrary.all([selectorAt(depth - 1), selectorAt(depth - 1)]), ([left, right]) =>
-              kind === 1
-                ? RefinedSelector.make({ base: left, by: right })
-                : RangeSelector.make({ from: left, to: right })
+          : Arbitrary.map(
+              Arbitrary.all([selectorAt(maxCompositeDepth - 1), selectorAt(maxCompositeDepth - 1)]),
+              ([left, right]) =>
+                kind === 1
+                  ? RefinedSelector.make({ base: left, by: right })
+                  : RangeSelector.make({ from: left, to: right })
             )
       );
 

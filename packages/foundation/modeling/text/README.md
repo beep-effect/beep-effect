@@ -7,8 +7,9 @@ of one exact extracted text (`SourceTextIdentity`), a half-open UTF-16 range wit
 its exact quote (`TextAnchor`), and the fail-closed proof that an anchor slices its
 source to that quote (`VerifiedTextAnchor`). It is a `foundation/modeling` package
 so any slice's `domain` can ground knowledge in a source span without coupling to
-another slice. Consuming slices wrap a `TextAnchor` in their own value objects
-(e.g. epistemic `EvidenceSpan` adds a `Confidence`).
+another slice. Consuming slices wrap a `TextAnchor` in their own value objects:
+epistemic `EvidencePosition` pairs one with an `ExtractorConfidence` signal, and claim
+admission grounds a claim only on anchors that pass `verifyTextAnchor`.
 
 ## Canonical Imports
 

@@ -253,10 +253,11 @@ export class CitationResolutionCallbacks extends Context.Service<
     readonly id: (input: CitationIdCallbackInput) => Effect.Effect<CitationCallbackResult, CitationCallbackFailure>;
   }
 >()($I`CitationResolutionCallbacks`) {}
+const resolutionFieldsWithoutStrictSixFormLinkingExclusions = Struct.omit(PreparedCitationResolution.fields, [
+  "excludedAnchors",
+]);
 const SessionState = S.Struct({
-  // Excluded observations belong to strict six-form linking; retained callback
-  // sessions preserve their existing fields and serialization.
-  ...Struct.omit(PreparedCitationResolution.fields, ["excludedAnchors"]),
+  ...resolutionFieldsWithoutStrictSixFormLinkingExclusions,
   fulls: S.Array(CitationCallbackFull),
   groups: S.Array(CitationCallbackEntry),
   decisions: S.Array(CitationCallbackDecision),
@@ -619,16 +620,14 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   };
   const allocate = Effect.fn("Citation.dictionaryAllocate")(function* (members: ReadonlyArray<CitationGroupMember>) {
     const snapshot = yield* membersSnapshot(members);
-    // Retained detached lists consume the same bounded edge/node budget.
-    if (nextSlot + nextPairSlot >= limits.resolutionIterations) return yield* limit("resolutionIterations");
-    if (
-      A.reduce(
-        lists.pipe(HashMap.values, A.fromIterable),
-        A.length(snapshot),
-        (count, list) => count + A.length(list)
-      ) > limits.resolutionEdges
-    )
-      return yield* limit("resolutionEdges");
+    const nodesIncludingRetainedDetachedLists = nextSlot + nextPairSlot;
+    if (nodesIncludingRetainedDetachedLists >= limits.resolutionIterations) return yield* limit("resolutionIterations");
+    const edgesIncludingRetainedDetachedLists = A.reduce(
+      lists.pipe(HashMap.values, A.fromIterable),
+      A.length(snapshot),
+      (count, list) => count + A.length(list)
+    );
+    if (edgesIncludingRetainedDetachedLists > limits.resolutionEdges) return yield* limit("resolutionEdges");
     const slot = nextSlot;
     nextSlot += 1;
     lists = HashMap.set(lists, slot, snapshot);
@@ -834,9 +833,12 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const pair = CitationCallbackFull.make({ pairSlot: nextPairSlot, citation: reference, resource: snapshot });
     nextPairSlot += 1;
     pairs = HashMap.set(pairs, pair.pairSlot, pair);
-    // The returned data cannot mutate the registered immutable pair.
-    const citationResult12 = yield* S.encodeEffect(CitationCallbackFullJson)(pair).pipe(Effect.mapError(invalid));
-    return yield* S.decodeEffect(CitationCallbackFullJson)(citationResult12).pipe(Effect.mapError(invalid));
+    const encodedSoReturnedCopyCannotMutatePair = yield* S.encodeEffect(CitationCallbackFullJson)(pair).pipe(
+      Effect.mapError(invalid)
+    );
+    return yield* S.decodeEffect(CitationCallbackFullJson)(encodedSoReturnedCopyCannotMutatePair).pipe(
+      Effect.mapError(invalid)
+    );
   });
   const writeFulls = Effect.fn("Citation.writeFulls")(function* (input: ReadonlyArray<CitationCallbackFull>) {
     yield* alive;
@@ -863,8 +865,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const citationResult15 = yield* S.encodeEffect(CitationJson)(input).pipe(Effect.mapError(invalid));
     const citation = yield* S.decodeEffect(CitationJson)(citationResult15).pipe(Effect.mapError(invalid));
     if (target._tag === "Mention") {
-      // cm2 includes the semantic discriminant; no stale ID or fake proof.
-      if (citation.type !== current.type) return yield* invalid();
+      const keepsSemanticKindMintedIntoCm2Id = citation.type === current.type;
+      if (!keepsSemanticKindMintedIntoCm2Id) return yield* invalid();
       known = HashMap.set(known, target.mentionId, citation);
     } else {
       const object = CitationDetached.make({ id: target.detachedId, citation });

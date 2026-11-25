@@ -39,9 +39,6 @@ import type { ItemView, RunView } from "@beep/repo-gate-run/GateQueries";
 const $I = $RepoCliId.create("commands/Gate/GateQuery");
 
 /**
- * Where a query looks: the package directory given with `--dir`, and the root
- * run given with `--run`, each when given.
- *
  * **Example** (Look at the newest root run)
  *
  * ```ts
@@ -66,8 +63,6 @@ export class QueryWhere extends S.Opaque<QueryWhere, { readonly brand: unique sy
 ) {}
 
 /**
- * A resolved query: the repository root to read under and the run to show.
- *
  * **Example** (Describe a package query)
  *
  * ```ts

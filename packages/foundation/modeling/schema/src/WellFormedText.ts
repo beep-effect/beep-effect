@@ -57,8 +57,6 @@ export const WellFormedText = S.NonEmptyString.check(
 );
 
 /**
- * Decoded type of {@link WellFormedText}.
- *
  * @category models
  * @since 0.0.0
  */

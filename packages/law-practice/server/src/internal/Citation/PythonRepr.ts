@@ -17,6 +17,7 @@ import { citationPythonPointAt, makeCitationPythonUnicode } from "./PythonUnicod
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 
+const RETAINED_CHUNKS_PLUS_JOINED_TEXT = 2;
 const $I = $LawPracticeServerId.create("internal/Citation/PythonRepr");
 const Reason = LiteralKit(["invalid-policy", "invalid-table"]);
 /** Closed construction failure without retaining table contents or nested causes.
@@ -137,12 +138,10 @@ export const makeCitationPythonRepr = Effect.fn("Citation.makePythonRepr")(funct
     const value = yield* unicode.fromStorageReserved(input, budget.reserve);
     const quote = yield* chooseQuote(value.storage);
     const units = yield* measureRepr(value.storage, quote, ranges);
-    // Reserve retained chunks and the joined JS text before either allocation;
-    // native output reserves its separate representation below.
-    yield* budget.reserve(2 * units);
+    yield* budget.reserve(RETAINED_CHUNKS_PLUS_JOINED_TEXT * units);
     const assembled = yield* assembleRepr(value.storage, quote, ranges);
-    const output = yield* unicode.fromTextReserved(assembled, budget.reserve);
-    return output.storage;
+    const nativeOutputReservingItsSeparateRepresentation = yield* unicode.fromTextReserved(assembled, budget.reserve);
+    return nativeOutputReservingItsSeparateRepresentation.storage;
   }, timing.timed);
   const repr = (input: unknown) =>
     text(input).pipe(

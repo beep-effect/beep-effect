@@ -286,7 +286,6 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
         expect("cause" in failure).toBe(false);
         expect(failure.message).not.toContain("1 U.S.");
       }
-      // The occurrence id digest succeeds and the mention id digest is malformed: both digests ran, no token.
       let second = 0;
       const lateFailure = yield* makeCitationMentionId(input).pipe(
         Effect.provideService(
@@ -300,7 +299,7 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
         ),
         Effect.flip
       );
-      expect(second).toBe(2);
+      expect(second, "the occurrence id digest succeeds and the malformed mention id digest still ran").toBe(2);
       expect(lateFailure).toMatchObject({ _tag: "CitationMentionIdentityFailure", reason: "digest-failed" });
       const recovered = yield* makeCitationMentionId(input);
       expect(recovered).toBe("cm2:7ece8d5655b197d8063442248a8f630cd05fee535fe5ae550f2b15754425cd44");

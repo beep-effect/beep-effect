@@ -220,4 +220,44 @@ it.layer(Digest.layerWebCrypto)("joined admission coordinates", (it) => {
         ]);
     })
   );
+  it.effect("refuses review and evidence links recorded after the knowledge time", () =>
+    Effect.gen(function* () {
+      const proposition = Proposition.cases.SameParty.make({ left: PartyId.make(1), right: PartyId.make(2) });
+      const original = yield* partyClaim({ proposition, knowledgeStart: 1, supportedBy: [a] });
+      const policy = AdmissionPolicy.make({
+        id: "known-events",
+        version: "1",
+        tier: "client-facing",
+        clauses: [AdmissionClause.cases.RequireReviewerAcceptance.make({})],
+      });
+      const later = (ledger: ClaimLedger) =>
+        AdmissionEvidence.make({
+          claim: readAt(mergeClaimLedgers([original.ledger, ledger]), original.claim, 20),
+          supports: [SupportFacts.make({ assertion: a, side: "client-file", kind: "distinctive-behavior" })],
+          dependence: [],
+        });
+      const sawAt = (evidence: AdmissionEvidence, knowledgeTime: number) =>
+        Result.match(admit({ policy, evidence, knowledgeTime: at(knowledgeTime) }), {
+          onFailure: (refused) => A.map(refused.unmet, (row) => [row.clause._tag, row.saw]),
+          onSuccess: () => [],
+        });
+      const reviewed = later(
+        ClaimLedger.make({
+          reviews: [
+            ClaimReviewRecord.make({
+              claim: original.claim,
+              at: at(15),
+              review: O.getOrThrow(A.head(original.ledger.reviews)).review,
+            }),
+          ],
+        })
+      );
+      const expected = [["KnownAtKnowledgeTime", `version ${original.claim} carries events recorded after ${at(10)}`]];
+      expect(sawAt(reviewed, 10)).toEqual(expected);
+      expect(sawAt(reviewed, 15)).toEqual([]);
+      const linked = later(linksAt(original.claim, 15, [a], []));
+      expect(sawAt(linked, 10)).toEqual(expected);
+      expect(sawAt(later(ClaimLedger.make({})), 10)).toEqual([]);
+    })
+  );
 });

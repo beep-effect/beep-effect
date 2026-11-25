@@ -238,7 +238,8 @@ The `pinned-vocabularies` target of `bun run beep sync-data-to-ts` projects
 curated term names from the vocabularies below into the identity registry
 shards (`packages/foundation/modeling/identity/registry/namespaces/`) and the
 `@beep/rdf` term modules. No ontology axioms, labels or definitions are
-redistributed. Changes: curated term selection and TypeScript representation.
+redistributed, except the nanopublication schema, which is vendored under its
+license as listed below. Changes: curated term selection and TypeScript representation.
 No upstream endorsement is implied. The SPAR vocabularies (CiTO, DEO, DoCO,
 FaBiO) are pinned by the same target and listed in the section above; the
 sidecar `packages/foundation/modeling/rdf/src/Vocab/generated/namespace-pins.data.json`
@@ -246,14 +247,25 @@ records each pin's digest.
 
 - **gUFO** — gUFO: A Lightweight Implementation of the Unified Foundational Ontology (UFO), by J. P. A. Almeida, G. Guizzardi, T. P. Sales and R. A. Falbo. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/. Commit `12b098158a9244179c5e0e2534cd85254a2d3b7e`; artifact `gufo.ttl`; version `1.0.0`. [Pinned artifact](https://raw.githubusercontent.com/nemo-ufes/gufo/12b098158a9244179c5e0e2534cd85254a2d3b7e/gufo.ttl).
 - **NIF Core** — NIF 2.1 Core Ontology, NLP2RDF project. Dual-licensed under the Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0) and Creative Commons Attribution 3.0 (CC BY 3.0, https://creativecommons.org/licenses/by/3.0/); used under either. Commit `225301dd65a24578e8b26fa276690f5c0623dcce`; artifact `nif-core/nif-core.ttl`; version `2.1.0`. [Pinned artifact](https://raw.githubusercontent.com/NLP2RDF/ontologies/225301dd65a24578e8b26fa276690f5c0623dcce/nif-core/nif-core.ttl).
+- **Nanopublication schema** — Nanopublication schema, Nanopublication Guidelines. Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0), https://creativecommons.org/licenses/by-sa/3.0/: the notice in the companion `nschema.html` at the same commit, accepted for `nschema.ttl` by operator ruling of 2026-11-23. Commit `8388dd90795b264f4b01c64d0f7218babcae4871`; artifact `nschema.ttl`; version `2013-10-23`. [Pinned artifact](https://raw.githubusercontent.com/Nanopublication/Guidelines/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.ttl). The file is vendored byte-for-byte at `packages/foundation/modeling/rdf/data/vocab/nanopub-nschema/nschema.ttl` with the CC BY-SA 3.0 legal code and an attribution file (`VENDORED.md`) naming its editors and authors; the vendored file and anything derived from it stay under CC BY-SA 3.0, apart from the MIT-licensed source.
 - **Activity Streams 2.0** — Activity Streams 2.0 Vocabulary, W3C Social Web Working Group, W3C Recommendation 2017-05-23. W3C Software and Document License (`W3C-20150513`), https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document. Commit `258bce0cd50ec9683b1417adfa1af926d447cda5`; artifact `vocabulary/activitystreams2.owl`. [Pinned artifact](https://raw.githubusercontent.com/w3c/activitystreams/258bce0cd50ec9683b1417adfa1af926d447cda5/vocabulary/activitystreams2.owl).
 - **Web Annotation (OA)** — Web Annotation Vocabulary, W3C Recommendation 2017-02-23. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/ns/oa.ttl retrieved 2026-11-19; `owl:versionInfo` `2016-11-12T21:28:11Z`.
 - **PROV-O** — PROV-O: The PROV Ontology, W3C Recommendation 2013-04-30. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/ns/prov-o-20130430.
 - **SKOS** — SKOS Simple Knowledge Organization System Reference, W3C Recommendation 2009-08-18. Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/2009/08/skos-reference/skos.rdf.
 - **XSD datatypes** — RDF 1.1 Concepts and Abstract Syntax, W3C Recommendation 2014-02-25, section 5.1 (RDF-compatible XSD datatypes). Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/.
+- **DCAT 3** — Data Catalog Vocabulary (DCAT) - Version 3, World Wide Web Consortium. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/, as the artifact's `dcterms:license` states. Snapshot of https://www.w3.org/ns/dcat3.ttl retrieved 2026-11-23; version `3`.
+- **DCMI Metadata Terms** — DCMI Metadata Terms. Copyright 2012 Dublin Core Metadata Initiative, http://dublincore.org/about/copyright/. Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/. Snapshot of https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl retrieved 2026-11-23; `dcterms:modified` `2012-06-14`.
+- **OWL 2** — The OWL 2 Schema vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/2002/07/owl.ttl retrieved 2026-11-23; version `$Date: 2009/11/15 10:54:12 $`.
+- **RDF** — The RDF Concepts Vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/1999/02/22-rdf-syntax-ns.ttl retrieved 2026-11-23; version `2019-12-16`.
+- **RDFS** — The RDF Schema vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/2000/01/rdf-schema.ttl retrieved 2026-11-23; unversioned.
+- **Schema.org** — Schema.org vocabulary, release 30.1. Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0), https://creativecommons.org/licenses/by-sa/3.0/, under which Schema.org makes its schemas available (https://schema.org/docs/terms.html). Commit `5f2d8cdec99b7329459ef6584e94b6a840f88471`; artifact `data/releases/30.1/schemaorg-current-https.ttl`; version `30.1`. [Pinned artifact](https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-current-https.ttl).
+- **SEMAPV** — Semantic Mapping Vocabulary (SEMAPV), mapping-commons. Creative Commons Zero 1.0 Universal (CC0 1.0), https://creativecommons.org/publicdomain/zero/1.0/, as the artifact's `dcterms:license` states. Commit `0db5676d4ce4854543281a6c983a55fd9a6ef521`; artifact `semapv.owl`; version `2026-06-10`. [Pinned artifact](https://raw.githubusercontent.com/mapping-commons/semantic-mapping-vocabulary/0db5676d4ce4854543281a6c983a55fd9a6ef521/semapv.owl).
+- **SHACL** — W3C Shapes Constraint Language (SHACL) Vocabulary. Copyright World Wide Web Consortium. Snapshot of https://www.w3.org/ns/shacl.ttl retrieved 2026-11-23; unversioned.
+- **VoID** — Describing Linked Datasets with the VoID Vocabulary, W3C Interest Group Note 2011-03-03, section 8 (Index of VoID classes and properties). Copyright World Wide Web Consortium. Dated artifact https://www.w3.org/TR/2011/NOTE-void-20110303/; its RDFS file states no license, so the term index of the Note is pinned instead.
 
-The four W3C artifacts above carry no SPDX-identifiable notice of their own and
-are recorded as `LicenseRef-W3C-Document`: W3C liability, trademark and
+The W3C artifacts above other than Activity Streams 2.0 and DCAT 3 (Web
+Annotation, PROV-O, SKOS, XSD datatypes, OWL 2, RDF, RDFS, SHACL and VoID) carry
+no SPDX-identifiable notice of their own and are recorded as `LicenseRef-W3C-Document`: W3C liability, trademark and
 document use rules apply (https://www.w3.org/Consortium/Legal/2015/doc-license).
 
 ## T3 Tools Inc. (t3code) — MIT material

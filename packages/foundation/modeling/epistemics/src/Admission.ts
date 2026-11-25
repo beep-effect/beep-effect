@@ -112,8 +112,6 @@ export const TrustedClaimBinding = S.TaggedUnion({
   })
 );
 /**
- * Decoded TrustedClaimBinding value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -144,8 +142,6 @@ export const SourceResolution = S.TaggedUnion({
   })
 );
 /**
- * Decoded SourceResolution value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -203,8 +199,6 @@ export const AdmissionRefused = S.TaggedUnion({
   })
 );
 /**
- * Decoded AdmissionRefused value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -347,8 +341,6 @@ export const ClaimEligibility = S.TaggedUnion({
   })
 );
 /**
- * Decoded ClaimEligibility value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -384,8 +376,6 @@ export const ClaimViewResult = S.TaggedUnion({
   })
 );
 /**
- * Decoded ClaimViewResult value.
- *
  * @category models
  * @since 0.0.0
  */
@@ -417,6 +407,123 @@ const isBindingUnavailable = S.is(BindingUnavailable);
 const F = AdmissionRefused.cases;
 const isUnknown = (refusal: AdmissionRefused): boolean =>
   AdmissionRefused.guards.GroundingUnavailable(refusal) || AdmissionRefused.guards.GroundingAmbiguous(refusal);
+type UnknownReasonValue = typeof UnknownReason.Type;
+type IneligibleReasonValue = typeof IneligibleReason.Type;
+const emptySelection = StanceSelection.make({ at: O.none(), stances: HashSet.empty() });
+const observeStance = (state: StanceSelection, observation: StanceObservation): StanceSelection => {
+  const reset = () =>
+    StanceSelection.make({
+      at: O.some(observation.at),
+      stances: HashSet.fromIterable<Stance>([observation.stance]),
+    });
+  return O.match(state.at, {
+    onNone: reset,
+    onSome: (at) =>
+      Match.value(DateTime.Order(observation.at, at)).pipe(
+        Match.when(1, reset),
+        Match.when(0, () =>
+          StanceSelection.make({ at: state.at, stances: HashSet.add(state.stances, observation.stance) })
+        ),
+        Match.orElse(() => state)
+      ),
+  });
+};
+const selectStance = (observations: ReadonlyArray<StanceObservation>): StanceSelection =>
+  A.reduce(observations, emptySelection, observeStance);
+const retractedClaims = (
+  byDigest: HashMap.HashMap<ContentHash, { readonly claim: ClaimId }>,
+  kept: (digest: ContentHash) => boolean
+): HashSet.HashSet<ClaimId> =>
+  byDigest.pipe(
+    HashMap.toEntries,
+    A.filter(([digest]) => kept(digest)),
+    A.map(([, record]) => record.claim),
+    HashSet.fromIterable
+  );
+const stanceReasons = (
+  stance: O.Option<Stance>,
+  unknown: O.Option<UnknownReasonValue>
+): ReadonlyArray<IneligibleReasonValue> =>
+  O.match(stance, {
+    onNone: () => (O.isNone(unknown) ? ["unresolved-stance"] : []),
+    onSome: (value) => (value === "admitted" ? [] : ["not-admitted"]),
+  });
+const unresolvedEligibility = (facts: {
+  readonly maybeDead: boolean;
+  readonly fresh: boolean;
+  readonly unknown: O.Option<UnknownReasonValue>;
+}): ClaimEligibility => {
+  if (facts.maybeDead) return ClaimEligibility.cases.Unknown.make({ reason: "uncertain-retraction" });
+  if (facts.fresh) return ClaimEligibility.cases.Eligible.make({});
+  return O.match(facts.unknown, {
+    onSome: (reason) => ClaimEligibility.cases.Unknown.make({ reason }),
+    onNone: () => ClaimEligibility.cases.Ineligible.make({ reasons: ["unverified-admission"] }),
+  });
+};
+const eligibilityOf = (facts: {
+  readonly stance: O.Option<Stance>;
+  readonly unknown: O.Option<UnknownReasonValue>;
+  readonly directRetraction: boolean;
+  readonly orphan: boolean;
+  readonly maybeDead: boolean;
+  readonly fresh: boolean;
+}): ClaimEligibility =>
+  A.match(
+    [
+      ...stanceReasons(facts.stance, facts.unknown),
+      ...(facts.directRetraction ? ["direct-retraction" as const] : []),
+      ...(facts.orphan ? ["derived-orphan" as const] : []),
+    ],
+    {
+      onNonEmpty: (reasons) => ClaimEligibility.cases.Ineligible.make({ reasons }),
+      onEmpty: () => unresolvedEligibility(facts),
+    }
+  );
+const isAdmissionRefused = S.is(AdmissionRefused);
+const refuse = (refusal: AdmissionRefused): Effect.Effect<never, AdmissionRefused> => Effect.fail(refusal);
+const refuseUnless = (ok: boolean, refusal: () => AdmissionRefused): Effect.Effect<void, AdmissionRefused> =>
+  ok ? Effect.void : Effect.fail(refusal());
+const tokenBound = (options: {
+  readonly token: {
+    readonly actor: unknown;
+    readonly action: unknown;
+    readonly revision: unknown;
+    readonly scope: unknown;
+  };
+  readonly actor: unknown;
+  readonly action: unknown;
+  readonly revision: unknown;
+  readonly scope: unknown;
+}): boolean =>
+  Eq.equals(options.token.actor, options.actor) &&
+  Eq.equals(options.token.action, options.action) &&
+  Eq.equals(options.token.revision, options.revision) &&
+  Eq.equals(options.token.scope, options.scope);
+const groundingVerdict = (
+  claim: ClaimId,
+  receipt: TextAnchorVerificationReceipt,
+  index: number,
+  resolved: SourceResolution
+): Effect.Effect<void, AdmissionRefused, Digest.Digest> =>
+  SourceResolution.match(resolved, {
+    Resolved: (current) =>
+      verifyTextAnchor(
+        VerifyTextAnchorInput.make({
+          expectedSource: receipt.source,
+          source: current.source,
+          sourceText: current.text,
+          anchor: receipt.anchor,
+        })
+      ).pipe(
+        Effect.asVoid,
+        Effect.mapError((): AdmissionRefused => F.GroundingStale.make({ claim, index }))
+      ),
+    Missing: () => refuse(F.GroundingMissing.make({ claim, index })),
+    Stale: () => refuse(F.GroundingStale.make({ claim, index })),
+    Ambiguous: () => refuse(F.GroundingAmbiguous.make({ claim, index })),
+    Denied: () => refuse(F.DeniedScope.make({ claim })),
+    Unavailable: () => refuse(F.GroundingUnavailable.make({ claim, index })),
+  });
 /**
  * Bind admission, revalidation and selected-time views to actual owner codecs and explicit ports.
  *
@@ -486,106 +593,133 @@ export const makeAdmissionArrows = <
     readonly clears: O.Option<Retraction>;
     readonly ports: AdmissionPorts<Admission, E, R>;
   };
-  const check = Effect.fn("ClaimAdmission.check")(function* <E, R>(
-    options: Request<E, R>,
-    resolve: (receipt: TextAnchorVerificationReceipt) => Effect.Effect<SourceResolution, E, R>
-  ): Effect.fn.Return<typeof CheckResult.Type, E, R | Digest.Digest> {
-    const { record, token, ports, at } = options;
-    const claim = record.claim;
-    yield* Effect.annotateCurrentSpan({ "claim.id": claim, "claim.grounding_count": options.grounding.length });
-    const refuse = (refusal: AdmissionRefused) => CheckResult.cases.Refused.make({ refusal });
-    if (!A.isReadonlyArrayNonEmpty(options.grounding)) return refuse(F.EmptyGrounding.make({ claim }));
-    const identity = yield* core.encodeClaimRecord(record).pipe(Effect.result);
-    if (Result.isFailure(identity)) return refuse(F.InvalidClaim.make({ claim }));
-    if (!Eq.equals(record.core.scope, options.scope)) return refuse(F.DeniedScope.make({ claim }));
-    const authenticated = yield* ports.authenticate(options.scope);
-    if (O.isNone(authenticated)) return refuse(F.DeniedScope.make({ claim }));
-    if (!Eq.equals(authenticated.value, options.actor))
-      return refuse(F.InvalidToken.make({ claim, reason: "principal" }));
-    if (
-      !Eq.equals(token.actor, options.actor) ||
-      !Eq.equals(token.action, options.action) ||
-      !Eq.equals(token.revision, options.revision) ||
-      !Eq.equals(token.scope, options.scope)
-    )
-      return refuse(F.InvalidToken.make({ claim, reason: "binding" }));
-    if (DateTime.isGreaterThan(token.issuedAt, at)) return refuse(F.InvalidToken.make({ claim, reason: "future" }));
-    if (!(yield* ports.verifyToken(token))) return refuse(F.InvalidToken.make({ claim, reason: "unauthenticated" }));
-    const trusted = yield* ports.resolveBinding({
+  const verifyRecord = Effect.fnUntraced(function* <E, R>(options: Request<E, R>) {
+    const claim = options.record.claim;
+    yield* refuseUnless(A.isReadonlyArrayNonEmpty(options.grounding), () => F.EmptyGrounding.make({ claim }));
+    yield* core
+      .encodeClaimRecord(options.record)
+      .pipe(Effect.mapError((): AdmissionRefused => F.InvalidClaim.make({ claim })));
+    yield* refuseUnless(Eq.equals(options.record.core.scope, options.scope), () => F.DeniedScope.make({ claim }));
+  });
+  const verifyActor = Effect.fnUntraced(function* <E, R>(options: Request<E, R>) {
+    const { token } = options;
+    const claim = options.record.claim;
+    const authenticated = yield* options.ports.authenticate(options.scope);
+    if (O.isNone(authenticated)) return yield* refuse(F.DeniedScope.make({ claim }));
+    yield* refuseUnless(Eq.equals(authenticated.value, options.actor), () =>
+      F.InvalidToken.make({ claim, reason: "principal" })
+    );
+    yield* refuseUnless(tokenBound(options), () => F.InvalidToken.make({ claim, reason: "binding" }));
+    yield* refuseUnless(!DateTime.isGreaterThan(token.issuedAt, options.at), () =>
+      F.InvalidToken.make({ claim, reason: "future" })
+    );
+    const authentic = yield* options.ports.verifyToken(token);
+    yield* refuseUnless(authentic, () => F.InvalidToken.make({ claim, reason: "unauthenticated" }));
+  });
+  const verifyBinding = Effect.fnUntraced(function* <E, R>(options: Request<E, R>) {
+    const claim = options.record.claim;
+    const trusted = yield* options.ports.resolveBinding({
       actor: options.actor,
       action: options.action,
       revision: options.revision,
       scope: options.scope,
     });
     if (TrustedClaimBinding.guards.Unavailable(trusted))
-      return refuse(F.InvalidBinding.make({ claim, reason: trusted.reason }));
-    if (TrustedClaimBinding.guards.Claim(trusted) && !Eq.equals(trusted.claim, claim))
-      return refuse(F.InvalidBinding.make({ claim, reason: "claim-mismatch" }));
+      return yield* refuse(F.InvalidBinding.make({ claim, reason: trusted.reason }));
+    yield* refuseUnless(!TrustedClaimBinding.guards.Claim(trusted) || Eq.equals(trusted.claim, claim), () =>
+      F.InvalidBinding.make({ claim, reason: "claim-mismatch" })
+    );
     if (TrustedClaimBinding.guards.ClaimSet(trusted)) {
-      const digest = yield* ClaimSetPreimage.mint([trusted.members]).pipe(Effect.result);
-      if (Result.isFailure(digest) || !Eq.equals(digest.success, trusted.digest))
-        return refuse(F.InvalidBinding.make({ claim, reason: "set-digest-mismatch" }));
-      if (!HashSet.has(trusted.members, claim))
-        return refuse(F.InvalidBinding.make({ claim, reason: "claim-mismatch" }));
+      const digest = yield* ClaimSetPreimage.mint([trusted.members]).pipe(Effect.option);
+      yield* refuseUnless(O.contains(digest, trusted.digest), () =>
+        F.InvalidBinding.make({ claim, reason: "set-digest-mismatch" })
+      );
+      yield* refuseUnless(HashSet.has(trusted.members, claim), () =>
+        F.InvalidBinding.make({ claim, reason: "claim-mismatch" })
+      );
     }
-    const generation = yield* ports.generation(record.core.generatedBy);
-    if (
-      O.isNone(generation) ||
-      !Eq.equals(generation.value.activity, record.core.generatedBy) ||
-      DateTime.isGreaterThan(generation.value.at, record.core.knowledgeStart)
-    )
-      return refuse(F.MissingGeneration.make({ claim }));
-    let clearsRetraction = O.none<ContentHash>();
-    if (O.isSome(options.clears)) {
-      const prior = options.clears.value;
-      if (!Eq.equals(prior.claim, claim) || !DateTime.isLessThan(prior.at, at))
-        return refuse(F.InvalidBinding.make({ claim, reason: "clearing-mismatch" }));
-      const digest = yield* retractionDigest(prior).pipe(Effect.result);
-      if (Result.isFailure(digest) || !O.contains(trusted.clearsRetraction, digest.success))
-        return refuse(F.InvalidBinding.make({ claim, reason: "clearing-mismatch" }));
-      clearsRetraction = O.some(digest.success);
+    return trusted;
+  });
+  const verifyGeneration = Effect.fnUntraced(function* <E, R>(options: Request<E, R>) {
+    const { generatedBy, knowledgeStart } = options.record.core;
+    const generation = yield* options.ports.generation(generatedBy);
+    yield* refuseUnless(
+      O.exists(
+        generation,
+        (found) =>
+          Eq.equals(found.activity, generatedBy) &&
+          !DateTime.isGreaterThan(found.at, knowledgeStart) &&
+          !DateTime.isGreaterThan(found.at, options.at)
+      ),
+      () => F.MissingGeneration.make({ claim: options.record.claim })
+    );
+  });
+  const verifyClearing = Effect.fnUntraced(function* <E, R>(
+    options: Request<E, R>,
+    trusted: { readonly clearsRetraction: O.Option<ContentHash> }
+  ) {
+    const claim = options.record.claim;
+    const mismatch = (): AdmissionRefused => F.InvalidBinding.make({ claim, reason: "clearing-mismatch" });
+    if (O.isNone(options.clears)) return O.none<ContentHash>();
+    const prior = options.clears.value;
+    yield* refuseUnless(Eq.equals(prior.claim, claim) && DateTime.isLessThan(prior.at, options.at), mismatch);
+    const digest = yield* retractionDigest(prior).pipe(Effect.mapError(mismatch));
+    yield* refuseUnless(O.contains(trusted.clearsRetraction, digest), mismatch);
+    return O.some(digest);
+  });
+  const verifyOccurrences = Effect.fnUntraced(function* <E, R>(
+    options: Request<E, R>,
+    indexed: ReadonlyArray<readonly [TextAnchorVerificationReceipt, number]>
+  ) {
+    const claim = options.record.claim;
+    for (const [receipt, index] of indexed) {
+      const occurrence = yield* mintOccurrenceId(Anchored.make({ receipt })).pipe(
+        Effect.mapError((): AdmissionRefused => F.GroundingInvalid.make({ claim, index }))
+      );
+      yield* refuseUnless(HashSet.has(options.record.core.supportAtCreation, occurrence), () =>
+        F.WrongClaimOccurrence.make({ claim, index, occurrence })
+      );
     }
+  });
+  const verifyGrounding = Effect.fnUntraced(function* <E, R>(
+    claim: ClaimId,
+    indexed: ReadonlyArray<readonly [TextAnchorVerificationReceipt, number]>,
+    resolve: (receipt: TextAnchorVerificationReceipt) => Effect.Effect<SourceResolution, E, R>
+  ) {
+    for (const [receipt, index] of indexed) {
+      const resolved = yield* resolve(receipt);
+      yield* groundingVerdict(claim, receipt, index, resolved);
+    }
+  });
+  const verifyRequest = Effect.fnUntraced(function* <E, R>(
+    options: Request<E, R>,
+    resolve: (receipt: TextAnchorVerificationReceipt) => Effect.Effect<SourceResolution, E, R>
+  ) {
+    yield* verifyRecord(options);
+    yield* verifyActor(options);
+    const trusted = yield* verifyBinding(options);
+    yield* verifyGeneration(options);
+    const clearsRetraction = yield* verifyClearing(options, trusted);
     const indexed = A.map(options.grounding, (receipt, index): readonly [TextAnchorVerificationReceipt, number] => [
       receipt,
       index,
     ]);
-    for (const [receipt, index] of indexed) {
-      const occurrence = yield* mintOccurrenceId(Anchored.make({ receipt })).pipe(Effect.result);
-      if (Result.isFailure(occurrence)) return refuse(F.GroundingInvalid.make({ claim, index }));
-      if (!HashSet.has(record.core.supportAtCreation, occurrence.success))
-        return refuse(F.WrongClaimOccurrence.make({ claim, index, occurrence: occurrence.success }));
-    }
-    for (const [receipt, index] of indexed) {
-      const resolved = yield* resolve(receipt);
-      const verified: Effect.Effect<
-        Result.Result<void, AdmissionRefused>,
-        never,
-        Digest.Digest
-      > = SourceResolution.match(resolved, {
-        Resolved: (current) =>
-          verifyTextAnchor(
-            VerifyTextAnchorInput.make({
-              expectedSource: receipt.source,
-              source: current.source,
-              sourceText: current.text,
-              anchor: receipt.anchor,
-            })
-          ).pipe(
-            Effect.match({
-              onFailure: () => Result.fail(F.GroundingStale.make({ claim, index })),
-              onSuccess: () => Result.void,
-            })
-          ),
-        Missing: () => Effect.succeed(Result.fail(F.GroundingMissing.make({ claim, index }))),
-        Stale: () => Effect.succeed(Result.fail(F.GroundingStale.make({ claim, index }))),
-        Ambiguous: () => Effect.succeed(Result.fail(F.GroundingAmbiguous.make({ claim, index }))),
-        Denied: () => Effect.succeed(Result.fail(F.DeniedScope.make({ claim }))),
-        Unavailable: () => Effect.succeed(Result.fail(F.GroundingUnavailable.make({ claim, index }))),
-      });
-      const failure = yield* verified;
-      if (Result.isFailure(failure)) return refuse(failure.failure);
-    }
-    return CheckResult.cases.Verified.make({ clearsRetraction });
+    yield* verifyOccurrences(options, indexed);
+    yield* verifyGrounding(options.record.claim, indexed, resolve);
+    return clearsRetraction;
+  });
+  const check = Effect.fn("ClaimAdmission.check")(function* <E, R>(
+    options: Request<E, R>,
+    resolve: (receipt: TextAnchorVerificationReceipt) => Effect.Effect<SourceResolution, E, R>
+  ): Effect.fn.Return<typeof CheckResult.Type, E, R | Digest.Digest> {
+    yield* Effect.annotateCurrentSpan({
+      "claim.id": options.record.claim,
+      "claim.grounding_count": options.grounding.length,
+    });
+    return yield* verifyRequest(options, resolve).pipe(
+      Effect.map((clearsRetraction) => CheckResult.cases.Verified.make({ clearsRetraction })),
+      Effect.catchIf(isAdmissionRefused, (refusal) => Effect.succeed(CheckResult.cases.Refused.make({ refusal })))
+    );
   });
   const admit = Effect.fn("ClaimAdmission.admit")(function* <E, R>(
     options: Request<E, R>
@@ -653,6 +787,85 @@ export const makeAdmissionArrows = <
   }) {
     return yield* revalidateAt(options, O.none());
   });
+  const verifyLogRecords = Effect.fnUntraced(function* (
+    log: ReadonlyArray<ClaimLogEntry>,
+    records: HashMap.HashMap<ClaimId, Record>
+  ) {
+    for (const entry of log) {
+      const model = HashMap.get(records, entry.claim);
+      if (O.isNone(model)) return false;
+      const identity = yield* core.encodeClaimRecord(model.value).pipe(Effect.result);
+      const projected = ClaimLogEntry.make({
+        ...model.value.core,
+        claim: model.value.claim,
+        generatedAt: entry.generatedAt,
+      });
+      if (Result.isFailure(identity) || !sameProjection(projected, entry)) return false;
+    }
+    return true;
+  });
+  type Revalidated = typeof AdmissionResult.Type;
+  const isUnavailableBinding = (result: Revalidated): boolean =>
+    AdmissionResult.guards.Refused(result) &&
+    AdmissionRefused.guards.InvalidBinding(result.refusal) &&
+    isBindingUnavailable(result.refusal.reason);
+  const verifiedUnknown = (verified: Revalidated): O.Option<UnknownReasonValue> =>
+    AdmissionResult.guards.Refused(verified) && isUnknown(verified.refusal)
+      ? O.some(
+          AdmissionRefused.guards.GroundingAmbiguous(verified.refusal) ? "ambiguous-grounding" : "snapshot-unavailable"
+        )
+      : O.none();
+  const ownAdmissionFacts = (stored: Admission, original: Revalidated, verified: Revalidated) => ({
+    observation: AdmissionResult.guards.Admitted(original)
+      ? StanceObservation.makeOption({ at: stored.at, stance: "admitted" })
+      : O.none<StanceObservation>(),
+    fresh: AdmissionResult.guards.Admitted(original) && AdmissionResult.guards.Admitted(verified),
+    unknown: verifiedUnknown(verified).pipe(
+      O.orElse(() => verifiedUnknown(original)),
+      O.orElse(() =>
+        A.some([original, verified], isUnavailableBinding)
+          ? O.some<UnknownReasonValue>("authorization-unavailable")
+          : O.none<UnknownReasonValue>()
+      )
+    ),
+  });
+  const noOwnFacts = { observation: O.none<StanceObservation>(), fresh: false, unknown: O.none<UnknownReasonValue>() };
+  const noClearingFacts = { cleared: O.none<ContentHash>(), maybeCleared: O.none<ContentHash>() };
+  const clearingFacts = (stored: Admission, original: Revalidated) =>
+    O.match(stored.clearsRetraction, {
+      onNone: () => noClearingFacts,
+      onSome: (digest) =>
+        AdmissionResult.guards.Admitted(original)
+          ? { cleared: O.some(digest), maybeCleared: O.none<ContentHash>() }
+          : {
+              cleared: O.none<ContentHash>(),
+              maybeCleared: isUnknown(original.refusal) || isUnavailableBinding(original) ? O.some(digest) : O.none(),
+            },
+    });
+  const observeAdmission = Effect.fnUntraced(function* <E, R>(
+    stored: Admission,
+    context: {
+      readonly claim: ClaimId;
+      readonly records: HashMap.HashMap<ClaimId, Record>;
+      readonly byDigest: HashMap.HashMap<ContentHash, Retraction>;
+      readonly asOf: DateTime.Utc;
+      readonly ports: AdmissionPorts<Admission, E, R>;
+      readonly historicalPorts: AdmissionPorts<Admission, E, R>;
+    }
+  ) {
+    const record = O.getOrThrow(HashMap.get(context.records, stored.claim));
+    const clears = O.flatMap(stored.clearsRetraction, (digest) => HashMap.get(context.byDigest, digest));
+    const requested = Eq.equals(stored.claim, context.claim);
+    if (!requested && O.isNone(clears)) return { ...noOwnFacts, ...noClearingFacts };
+    const request = { record, admission: stored, clears, ports: context.ports };
+    const original = yield* revalidateAt({ ...request, ports: context.historicalPorts }, O.some(stored.at));
+    const own = requested
+      ? yield* revalidateAt(request, O.some(context.asOf)).pipe(
+          Effect.map((verified) => ownAdmissionFacts(stored, original, verified))
+        )
+      : noOwnFacts;
+    return { ...own, ...clearingFacts(stored, original) };
+  });
   const viewAt = Effect.fn("ClaimAdmission.viewAt")(function* <E, R>(options: {
     readonly claim: ClaimId;
     readonly log: ReadonlyArray<ClaimLogEntry>;
@@ -680,129 +893,60 @@ export const makeAdmissionArrows = <
         directRetraction: false,
         orphan: false,
       });
-    for (const entry of log) {
-      const model = HashMap.get(options.records, entry.claim);
-      if (O.isNone(model)) return ClaimViewResult.cases.InvalidLog.make({ claim });
-      const identity = yield* core.encodeClaimRecord(model.value).pipe(Effect.result);
-      if (
-        Result.isFailure(identity) ||
-        !sameProjection(
-          ClaimLogEntry.make({ ...model.value.core, claim: model.value.claim, generatedAt: entry.generatedAt }),
-          entry
-        )
-      )
-        return ClaimViewResult.cases.InvalidLog.make({ claim });
-    }
+    const consistent = yield* verifyLogRecords(log, options.records);
+    if (!consistent) return ClaimViewResult.cases.InvalidLog.make({ claim });
     const retractions = A.filter(options.retractions, (record) => !DateTime.isGreaterThan(record.at, asOf));
     const digests = yield* Effect.forEach(retractions, retractionDigest, { concurrency: 1 }).pipe(Effect.result);
     if (Result.isFailure(digests)) return ClaimViewResult.cases.InvalidLog.make({ claim });
     const byDigest = HashMap.fromIterable(A.zip(digests.success, retractions));
-    let cleared = HashSet.empty<ContentHash>();
-    let maybeCleared = HashSet.empty<ContentHash>();
-    let fresh = false;
-    let unknown = O.none<typeof UnknownReason.Type>();
-    let observations: ReadonlyArray<StanceObservation> = A.map(
-      A.filter(options.stances, (event) => Eq.equals(event.claim, claim) && !DateTime.isGreaterThan(event.at, asOf)),
-      (event) => StanceObservation.make({ at: event.at, stance: event.stance })
-    );
     const known = HashSet.fromIterable(A.map(log, (entry) => entry.claim));
-    for (const stored of A.filter(
-      options.admissions,
-      (record) => HashSet.has(known, record.claim) && !DateTime.isGreaterThan(record.at, asOf)
-    )) {
-      const record = O.getOrThrow(HashMap.get(options.records, stored.claim));
-      const clears = O.flatMap(stored.clearsRetraction, (digest) => HashMap.get(byDigest, digest));
-      const request = { record, admission: stored, clears, ports };
-      const original = yield* revalidateAt({ ...request, ports: options.historicalPorts ?? ports }, O.some(stored.at));
-      const verified = yield* revalidateAt(request, O.some(asOf));
-      if (Eq.equals(stored.claim, claim)) {
-        if (
-          A.some(
-            [original, verified],
-            (result) =>
-              AdmissionResult.guards.Refused(result) &&
-              AdmissionRefused.guards.InvalidBinding(result.refusal) &&
-              isBindingUnavailable(result.refusal.reason)
-          )
-        )
-          unknown = O.some("authorization-unavailable");
-        if (AdmissionResult.guards.Admitted(original))
-          observations = A.append(observations, StanceObservation.make({ at: stored.at, stance: "admitted" }));
-        if (AdmissionResult.guards.Admitted(original) && AdmissionResult.guards.Admitted(verified)) {
-          fresh = true;
-        } else if (AdmissionResult.guards.Refused(verified)) {
-          if (isUnknown(verified.refusal))
-            unknown = O.some(
-              AdmissionRefused.guards.GroundingAmbiguous(verified.refusal)
-                ? "ambiguous-grounding"
-                : "snapshot-unavailable"
-            );
-        }
-      }
-      if (O.isSome(stored.clearsRetraction)) {
-        if (AdmissionResult.guards.Admitted(original)) cleared = HashSet.add(cleared, stored.clearsRetraction.value);
-        else if (isUnknown(original.refusal)) maybeCleared = HashSet.add(maybeCleared, stored.clearsRetraction.value);
-      }
-    }
-    const selection = A.reduce(
-      observations,
-      StanceSelection.make({ at: O.none(), stances: HashSet.empty() }),
-      (state, observation) => {
-        const reset = () =>
-          StanceSelection.make({
-            at: O.some(observation.at),
-            stances: HashSet.fromIterable<Stance>([observation.stance]),
-          });
-        return O.match(state.at, {
-          onNone: reset,
-          onSome: (at) =>
-            Match.value(DateTime.Order(observation.at, at)).pipe(
-              Match.when(1, reset),
-              Match.when(0, () =>
-                StanceSelection.make({ at: state.at, stances: HashSet.add(state.stances, observation.stance) })
-              ),
-              Match.orElse(() => state)
-            ),
-        });
-      }
+    const facts = yield* Effect.forEach(
+      A.filter(
+        options.admissions,
+        (record) => HashSet.has(known, record.claim) && !DateTime.isGreaterThan(record.at, asOf)
+      ),
+      (stored) =>
+        observeAdmission(stored, {
+          claim,
+          records: options.records,
+          byDigest,
+          asOf,
+          ports,
+          historicalPorts: options.historicalPorts ?? ports,
+        }),
+      { concurrency: 1 }
     );
+    const stanceEvents = A.filter(
+      options.stances,
+      (event) => Eq.equals(event.claim, claim) && !DateTime.isGreaterThan(event.at, asOf)
+    );
+    const selection = selectStance([
+      ...A.map(stanceEvents, (event) => StanceObservation.make({ at: event.at, stance: event.stance })),
+      ...A.getSomes(A.map(facts, (fact) => fact.observation)),
+    ]);
     if (HashSet.size(selection.stances) > 1)
       return ClaimViewResult.cases.AmbiguousStance.make({ claim, at: O.getOrThrow(selection.at) });
     const stance = selection.stances.pipe(A.fromIterable, A.head);
-    const possiblyRetracted = byDigest.pipe(
-      HashMap.toEntries,
-      A.filter(([digest]) => !HashSet.has(cleared, digest)),
-      A.map(([, record]) => record.claim),
-      HashSet.fromIterable
-    );
-    const definitelyRetracted = byDigest.pipe(
-      HashMap.toEntries,
-      A.filter(([digest]) => !HashSet.has(cleared, digest) && !HashSet.has(maybeCleared, digest)),
-      A.map(([, record]) => record.claim),
-      HashSet.fromIterable
+    const cleared = HashSet.fromIterable(A.getSomes(A.map(facts, (fact) => fact.cleared)));
+    const maybeCleared = HashSet.fromIterable(A.getSomes(A.map(facts, (fact) => fact.maybeCleared)));
+    const possiblyRetracted = retractedClaims(byDigest, (digest) => !HashSet.has(cleared, digest));
+    const definitelyRetracted = retractedClaims(
+      byDigest,
+      (digest) => !HashSet.has(cleared, digest) && !HashSet.has(maybeCleared, digest)
     );
     const parents = HashMap.fromIterable(
       A.map(log, (entry): readonly [ClaimId, HashSet.HashSet<ClaimId>] => [entry.claim, entry.derivedFrom])
     );
     const directRetraction = HashSet.has(definitelyRetracted, claim);
     const orphan = HashSet.has(orphanedDerivations(parents, definitelyRetracted), claim);
-    const maybeDead =
-      HashSet.has(possiblyRetracted, claim) || HashSet.has(orphanedDerivations(parents, possiblyRetracted), claim);
-    let reasons: ReadonlyArray<typeof IneligibleReason.Type> = [];
-    if (O.isNone(stance) && O.isNone(unknown)) reasons = A.append(reasons, "unresolved-stance");
-    else if (O.isSome(stance) && stance.value !== "admitted") reasons = A.append(reasons, "not-admitted");
-    if (directRetraction) reasons = A.append(reasons, "direct-retraction");
-    if (orphan) reasons = A.append(reasons, "derived-orphan");
-    const eligibility = A.match(reasons, {
-      onNonEmpty: (reasons) => ClaimEligibility.cases.Ineligible.make({ reasons }),
-      onEmpty: (): ClaimEligibility => {
-        if (maybeDead) return ClaimEligibility.cases.Unknown.make({ reason: "uncertain-retraction" });
-        if (fresh) return ClaimEligibility.cases.Eligible.make({});
-        return O.match(unknown, {
-          onSome: (reason) => ClaimEligibility.cases.Unknown.make({ reason }),
-          onNone: () => ClaimEligibility.cases.Ineligible.make({ reasons: ["unverified-admission"] }),
-        });
-      },
+    const eligibility = eligibilityOf({
+      stance,
+      unknown: A.reduce(facts, O.none<UnknownReasonValue>(), (unknown, fact) => O.orElse(fact.unknown, () => unknown)),
+      directRetraction,
+      orphan,
+      maybeDead:
+        HashSet.has(possiblyRetracted, claim) || HashSet.has(orphanedDerivations(parents, possiblyRetracted), claim),
+      fresh: A.some(facts, (fact) => fact.fresh),
     });
     return ClaimViewResult.cases.Viewed.make({ claim, asOf, stance, eligibility, directRetraction, orphan });
   });

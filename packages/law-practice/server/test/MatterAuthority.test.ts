@@ -16,8 +16,11 @@ import { GrantedScopes, LawPrincipal, MatterAuthority } from "@beep/law-practice
 import { PosixPath } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -163,7 +166,7 @@ describe("MatterAuthority", () => {
       ];
       for (const config of refused) {
         const exit = yield* Effect.exit(decodeConfig(config));
-        expect(Exit.isFailure(exit)).toBe(true);
+        exit.pipe(Exit.isFailure, assertTrue);
       }
       const accepted = yield* decodeConfig({
         scopes: [
@@ -258,5 +261,28 @@ describe("MatterAuthority", () => {
       }
       expect(calls).toBe(1);
     })
+  );
+});
+
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
+
+describe("MatterAuthority schema-derived values", () => {
+  it.effect("round-trips every generated GrantedScopes through its encoding", () =>
+    roundTripsEveryGeneratedValue(GrantedScopes)
+  );
+  it.effect("round-trips every generated MatterAuthorityConfig through its encoding", () =>
+    roundTripsEveryGeneratedValue(MatterAuthorityConfig)
   );
 });

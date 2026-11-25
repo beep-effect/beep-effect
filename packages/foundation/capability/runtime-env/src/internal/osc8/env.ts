@@ -19,8 +19,6 @@ import * as Str from "effect/String";
 const $I = $RuntimeEnvId.create("internal/osc8/env");
 
 /**
- * Selects truthy semantics for env-var detection.
- *
  * **Details**
  *
  * - "default": Unset, empty, "0", "false", "off", "no" → false. Anything else → true.

@@ -352,8 +352,6 @@ export const decideYeetRemediation = (input: YeetRemediationInput): YeetRemediat
 };
 
 /**
- * The supersession input: the observed head plus the persisted wave.
- *
  * **Example** (Build a supersession input)
  *
  * ```ts

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,11 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P4 Close — six waves merged or final (#3496, #3506, #3512, #3514, #3532, #3535); the closeout rides #3535.
 
 ## Latest Evidence
 
-Not started.
+After wave 6 (#3535) the inventory measures 507 restating leads, down from 8,726. The remainder sits in CI binary closure and runner handler files, `infra/src`, `@beep/text` and guard-kept rows (`decisions/2026-11-24-wave-6-deferred-packages.md`). Reflection: [`history/reflections/2026-11-24-claude.md`](./history/reflections/2026-11-24-claude.md).
+
+Before any sweep the JSDoc inventory measures 8,726 restating leads
+(`restating-lead` in `standards/jsdoc-totals.regression-baseline.jsonc`): 3,283 on
+schema classes, 1,686 on schema constants, 2,529 on type companions, 400 on
+companion namespaces and 828 on barrels. The sampled estimate was about 25,000
+exported blocks of tautological prose of every kind. Run over the same 1,046 sampled
+blocks, the detector flags 25%, about 10,500 extrapolated; the rest have no annotation to
+derive a lead from or sit outside the inventory
+(`decisions/2026-11-23-estimate-reconciliation.md`).
 
 ## Notes
 

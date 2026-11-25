@@ -12,12 +12,10 @@ import * as S from "effect/Schema";
 import frozen from "./fixtures/node-created-v0.json" with { type: "json" };
 import { anchor, author, contentHash, filePath, nodeId, otherNodeId, revisionA } from "./fixtures.ts";
 
-// `fixtures/node-created-v0.json` holds the journal bytes of the two payloads below, in hex, exactly as
-// `NodeCreatedEvent.payloadSchemaBinary` wrote them before the anchor schemas changed package. Journals on
-// disk hold these bytes: the fixture is never regenerated.
 const codec = NodeCreatedEvent.payloadSchemaBinary;
-// The section 6 golden of the P2 design, asserted from the equivalent receipt in `L1-4` as well.
-const memoryNoteId = OccurrenceId.make("sha256:654d949fc9259fd7b3b3d90ef96c270b444cfece9feb03f15dfe29013001a06d");
+const p2DesignSection6GoldenOccurrenceId = OccurrenceId.make(
+  "sha256:654d949fc9259fd7b3b3d90ef96c270b444cfece9feb03f15dfe29013001a06d"
+);
 const Hex = S.Uint8ArrayFromHex;
 
 const anchored = NodeCreated.make({
@@ -45,7 +43,10 @@ const unanchored = NodeCreated.make({
 
 const expectFrozen = Effect.fnUntraced(function* (hex: string, payload: NodeCreated) {
   const written = yield* S.encodeEffect(codec)(payload).pipe(Effect.flatMap(S.encodeEffect(Hex)));
-  expect(written).toBe(hex);
+  expect(
+    written,
+    "the journal bytes payloadSchemaBinary wrote before the anchor schemas moved package; never regenerated"
+  ).toBe(hex);
 
   const read = yield* S.decodeEffect(Hex)(hex).pipe(Effect.flatMap(S.decodeUnknownEffect(codec)));
   expect(read).toEqual(payload);
@@ -62,12 +63,11 @@ it.layer(Digest.layerWebCrypto)("stored node event occurrence ids", (it) => {
       const read = yield* S.decodeEffect(Hex)(frozen.anchored).pipe(Effect.flatMap(S.decodeUnknownEffect(codec)));
       const stored = yield* Effect.fromOption(read.anchor);
       const id = yield* occurrenceIdOf(stored);
-      expect(id).toBe(memoryNoteId);
-      // The same id comes from the equivalent anchors-table receipt, the route of `L1-4`.
+      expect(id).toBe(p2DesignSection6GoldenOccurrenceId);
       const fromReceipt = yield* mintOccurrenceId(
         Anchored.make({ receipt: TextAnchorVerificationReceipt.make({ source: stored.source, anchor: stored.anchor }) })
       );
-      expect(fromReceipt).toBe(id);
+      expect(fromReceipt, "the equivalent anchors-table receipt, the route of L1-4, mints the same id").toBe(id);
     })
   );
 
@@ -103,9 +103,8 @@ describe("stored node events", () => {
   );
 
   it.effect(
-    "a stored event string never holds a lone surrogate",
+    "a stored event string never holds a lone surrogate: text and author refuse one, the binary codec replaces one in a quote",
     Effect.fnUntraced(function* () {
-      // `text` and `author` refuse one at construction; a quote admits one and the binary codec replaces it.
       const payload = NodeCreated.make({
         ...anchored,
         anchor: OccurrenceAnchor.makeOption({

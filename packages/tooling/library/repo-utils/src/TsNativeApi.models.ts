@@ -97,8 +97,6 @@ export class TsNativeDiagnostic extends S.Opaque<TsNativeDiagnostic, { readonly 
 ) {}
 
 /**
- * The selected native compiler executable could not be resolved or accessed.
- *
  * **Example** (Import TsNativeBinaryNotFound)
  *
  * ```ts
@@ -120,8 +118,6 @@ export class TsNativeBinaryNotFound extends S.TaggedError<TsNativeBinaryNotFound
 ) {}
 
 /**
- * A native API request or response failed.
- *
  * **Example** (Import TsNativeProtocolFailure)
  *
  * ```ts
@@ -143,8 +139,6 @@ export class TsNativeProtocolFailure extends S.TaggedError<TsNativeProtocolFailu
 ) {}
 
 /**
- * The requested source file was absent from the selected native project.
- *
  * **Example** (Import TsNativeFileNotInProgram)
  *
  * ```ts

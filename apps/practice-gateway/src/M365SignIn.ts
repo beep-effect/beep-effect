@@ -115,8 +115,6 @@ export const M365_SIGN_IN_WAIT = Duration.seconds(45);
 export const M365_SIGN_IN_TIMEOUT = Duration.minutes(10);
 
 /**
- * Query parameters Microsoft sends to the loopback redirect.
- *
  * **Example** (Decode a successful redirect)
  *
  * ```ts
@@ -144,8 +142,6 @@ export class LoopbackCallback extends S.Opaque<LoopbackCallback, { readonly bran
 ) {}
 
 /**
- * What a sign-in request came to.
- *
  * **Details**
  *
  * `waiting-for-browser` means the sign-in page is open and the lawyer has not
@@ -169,8 +165,6 @@ export const M365SignInOutcome = LiteralKit(["connected", "waiting-for-browser"]
 );
 
 /**
- * Decoded type of {@link M365SignInOutcome}.
- *
  * **Example** (Type an outcome)
  *
  * ```ts

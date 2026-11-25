@@ -40,8 +40,6 @@ export const SheetFormat = SheetFormatBase.pipe(
 );
 
 /**
- * Type for {@link SheetFormat}.
- *
  * **Example** (Annotate a format)
  *
  * ```ts
@@ -100,8 +98,6 @@ export const PT_PER_CM = 72 / 2.54;
 export const PT_PER_MM = PT_PER_CM / 10;
 
 /**
- * Page size in points.
- *
  * **Example** (Letter)
  *
  * ```ts
@@ -219,8 +215,6 @@ export const MarginStandard = MarginStandardBase.pipe(
 );
 
 /**
- * Type for {@link MarginStandard}.
- *
  * **Example** (Annotate a standard)
  *
  * ```ts
@@ -236,8 +230,6 @@ export const MarginStandard = MarginStandardBase.pipe(
 export type MarginStandard = typeof MarginStandard.Type;
 
 /**
- * Page margins of a sheet, in centimetres.
- *
  * **Example** (The centimetre minimums)
  *
  * ```ts
@@ -304,8 +296,6 @@ export const marginsCm: (standard: MarginStandard) => SheetMargins = MarginsCm.i
 const LabelTypefaceBase = LiteralKit(["stroke", "sans", "serif"]);
 
 /**
- * Typeface of a sheet label.
- *
  * **Details**
  *
  * `stroke` is the single-stroke glyph set the sheets were first lettered
@@ -335,8 +325,6 @@ export const LabelTypeface = LabelTypefaceBase.pipe(
 );
 
 /**
- * Type for {@link LabelTypeface}.
- *
  * **Example** (Annotate a typeface)
  *
  * ```ts
@@ -421,8 +409,6 @@ export const LabelRender = LabelRenderBase.pipe(
 );
 
 /**
- * Type for {@link LabelRender}.
- *
  * **Example** (Annotate a route)
  *
  * ```ts
@@ -461,8 +447,6 @@ const AbsoluteFontFile = S.NonEmptyString.check(
 );
 
 /**
- * Typeface and size of one sheet label, with an optional operator font file.
- *
  * **Details**
  *
  * `sizePt` is the font size in points. Its cap height (from the vendored
@@ -588,8 +572,6 @@ export const labelFontFamily = (style: LabelStyle): string =>
   );
 
 /**
- * Label faces resolved by the caller for `fontFile` label styles.
- *
  * **Details**
  *
  * A style whose `fontFile` is set needs its outlines loaded first (the
@@ -687,10 +669,6 @@ export class SheetFonts extends S.Opaque<SheetFonts, { readonly brand: unique sy
 ) {}
 
 /**
- * Sheet options of a render: format, margin standard, line weight, lettering,
- * label gap and label styles, inner safety gap, shading pitches, the
- * broken-line dash pattern, and the emphasis line weight.
- *
  * **Gotchas**
  *
  * Round caps eat half the line weight from each end of a dash. When

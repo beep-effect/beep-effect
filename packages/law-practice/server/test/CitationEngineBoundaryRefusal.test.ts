@@ -13,9 +13,12 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 const unused = SourceTextResolver.of({
   resolve: Effect.fn("EngineBoundaryRefusalTest.resolve")(() => Effect.die("a refused engine resolves nothing")),
 });
-// A fresh, valid copy with one field replaced by a malformed value: the real
-// boundary must refuse it, whatever the stage below would have done.
-const replaced = <A extends object>(make: (value: A) => A, value: A, field: keyof A, malformed: unknown) => {
+const freshValidCopyWithOneMalformedField = <A extends object>(
+  make: (value: A) => A,
+  value: A,
+  field: keyof A,
+  malformed: unknown
+) => {
   const copy = make({ ...value });
   expect(Reflect.set(copy, field, malformed)).toBe(true);
   return copy;
@@ -23,7 +26,7 @@ const replaced = <A extends object>(make: (value: A) => A, value: A, field: keyo
 
 const privateName = "private_source_name";
 const encodeFailureJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const incoherentDescriptor = (c: CitationEngineConfiguration) => {
+const captureNameOutsideProfileGroupRange = (c: CitationEngineConfiguration) => {
   const discovery = c.annotation.geometry.discovery;
   const [first, ...rest] = discovery.bindings;
   const binding =
@@ -49,17 +52,22 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             ["limits", (c) => ({ ...c.limits, sourceUtf16: -1 })],
             ["runtime", (c) => ({ ...c.runtime, kind: "unsupported" })],
             ["extraction", (c) => ({ ...c.extraction, engineArtifact: "not-a-digest" })],
-            // A capture name outside its profile's group range breaks the ProfileNames rule.
-            ["annotation", incoherentDescriptor],
+            ["annotation", captureNameOutsideProfileGroupRange],
           ];
           for (const [field, malformed] of cases) {
             const failure = yield* buildCitationEngineFixture(installed, unused, (configuration) =>
-              replaced(CitationEngineConfiguration.make, configuration, field, malformed(configuration))
+              freshValidCopyWithOneMalformedField(
+                CitationEngineConfiguration.make,
+                configuration,
+                field,
+                malformed(configuration)
+              )
             ).pipe(Effect.flip);
             expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
-            // The refusal is closed: no capture name, pattern or source text rides on it.
             const encoded = yield* encodeFailureJson(failure);
-            expect(encoded).not.toContain(privateName);
+            expect(encoded, "the refusal is closed: no capture name, pattern or source text rides on it").not.toContain(
+              privateName
+            );
             expect(String(failure)).not.toContain(privateName);
           }
           const after = yield* installed.setup.observed.snapshot;
@@ -82,7 +90,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             ["assets", (c) => ({ ...c.assets, parserCatalog: "" })],
           ];
           for (const [field, malformed] of cases) {
-            const configuration = replaced(
+            const configuration = freshValidCopyWithOneMalformedField(
               CitationEngineDefaultConfiguration.make,
               built.configuration,
               field,

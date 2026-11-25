@@ -35,8 +35,6 @@ const workspacesOver = (tree: Tree) => {
   return Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(base));
 };
 
-// ── CatalogSet as a pure value ─────────────────────────────────────────────
-
 describe("CatalogSet", () => {
   it("empty has no catalogs", () => {
     assert.isTrue(CatalogSet.empty().isEmpty);
@@ -146,8 +144,6 @@ describe("CatalogSet", () => {
     assert.isTrue(R.has(entries, "__proto__"));
   });
 });
-
-// ── WorkspaceCatalogs: assembly precedence ─────────────────────────────────
 
 const withLockfileAndInline: Tree = {
   "/repo/pnpm-workspace.yaml": A.join(
@@ -509,8 +505,6 @@ describe("WorkspaceCatalogs — the pnpm inline path hard-fails, like the bun pa
     );
   });
 });
-
-// ── the effective release-age gate, inline source (no-op hooks) ─────────────
 
 const inlineGateTree: Tree = {
   "/repo/pnpm-workspace.yaml": A.join(

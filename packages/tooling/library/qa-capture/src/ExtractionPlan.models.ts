@@ -21,8 +21,6 @@ import type * as AST from "effect/SchemaAST";
 const $I = $QaCaptureId.create("ExtractionPlan.models");
 
 /**
- * Extraction priorities from must-keep (`P0`) to first-dropped (`P2`).
- *
  * **Example** (Log P0 priority enum)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const ExtractionPriority = LiteralKit(["P0", "P1", "P2"]).pipe(
 );
 
 /**
- * Extraction priorities from must-keep (`P0`) to first-dropped (`P2`).
- *
  * **Example** (Assign typed priority value)
  *
  * ```ts
@@ -57,8 +53,6 @@ export const ExtractionPriority = LiteralKit(["P0", "P1", "P2"]).pipe(
 export type ExtractionPriority = typeof ExtractionPriority.Type;
 
 /**
- * Kinds of extraction rules the planner understands.
- *
  * **Example** (Log drag rule kind)
  *
  * ```ts
@@ -76,8 +70,6 @@ export const ExtractionRuleKind = LiteralKit(["animation", "click", "drag", "hov
 );
 
 /**
- * Kinds of extraction rules the planner understands.
- *
  * **Example** (Assign typed rule kind)
  *
  * ```ts
@@ -93,8 +85,6 @@ export const ExtractionRuleKind = LiteralKit(["animation", "click", "drag", "hov
 export type ExtractionRuleKind = typeof ExtractionRuleKind.Type;
 
 /**
- * Reasons a window was merged, degraded, or dropped by the planner.
- *
  * **Example** (Log budget-dropped reason)
  *
  * ```ts
@@ -120,8 +110,6 @@ export const DropReason = LiteralKit([
 );
 
 /**
- * Reasons a window was merged, degraded, or dropped by the planner.
- *
  * **Example** (Assign typed drop reason)
  *
  * ```ts
@@ -137,8 +125,6 @@ export const DropReason = LiteralKit([
 export type DropReason = typeof DropReason.Type;
 
 /**
- * One extraction rule with its priority, pads, and thresholds.
- *
  * **Details**
  *
  * The default rule set ({@link defaultExtractionRules}) encodes the planner
@@ -416,8 +402,6 @@ export const defaultExtractionRules: ExtractionRuleSet = [
 ];
 
 /**
- * Byte and duration budget applied to one extraction round.
- *
  * **Example** (Make default artifact budget)
  *
  * ```ts
@@ -473,8 +457,6 @@ export class ArtifactBudget extends S.Opaque<ArtifactBudget, { readonly brand: u
 }
 
 /**
- * GIF rendering parameters attached to a window.
- *
  * **Example** (Make a GIF spec)
  *
  * ```ts
@@ -524,8 +506,6 @@ export class GifSpec extends S.Opaque<GifSpec, { readonly brand: unique symbol }
 ) {}
 
 /**
- * One planned extraction window in the witness wall-clock domain.
- *
  * **Example** (Make a drag window)
  *
  * ```ts
@@ -598,8 +578,6 @@ export class ExtractionWindow extends S.Opaque<ExtractionWindow, { readonly bran
 ) {}
 
 /**
- * Record of a window that was merged, degraded, or dropped.
- *
  * **Example** (Make a dropped window)
  *
  * ```ts
@@ -660,8 +638,6 @@ export class DroppedWindow extends S.Opaque<DroppedWindow, { readonly brand: uni
 ) {}
 
 /**
- * Complete extraction plan for one round.
- *
  * **Example** (Make an empty plan)
  *
  * ```ts
@@ -723,8 +699,6 @@ export class ExtractionPlan extends S.Opaque<ExtractionPlan, { readonly brand: u
 ) {}
 
 /**
- * Planned frame-strip extraction wrapping an ffmpeg request.
- *
  * **Example** (Make planned frame extraction)
  *
  * ```ts
@@ -768,8 +742,6 @@ export class ExtractFramesAtPlanned extends S.Opaque<ExtractFramesAtPlanned, { r
 ) {}
 
 /**
- * Planned GIF rendering wrapping an ffmpeg request.
- *
  * **Example** (Make planned GIF render)
  *
  * ```ts
@@ -810,8 +782,6 @@ export class RenderGifPlanned extends S.Opaque<RenderGifPlanned, { readonly bran
 ) {}
 
 /**
- * Planned contact-sheet rendering wrapping an ffmpeg request.
- *
  * **Example** (Make planned contact sheet)
  *
  * ```ts
@@ -850,8 +820,6 @@ export class RenderContactSheetPlanned extends S.Opaque<RenderContactSheetPlanne
 ) {}
 
 /**
- * Planned clip extraction wrapping an ffmpeg request.
- *
  * **Example** (Make planned clip extraction)
  *
  * ```ts
@@ -893,8 +861,6 @@ export class ExtractClipPlanned extends S.Opaque<ExtractClipPlanned, { readonly 
 ) {}
 
 /**
- * Tagged union of `@beep/ffmpeg` driver requests emitted by the planner.
- *
  * **Example** (Inspect driver request kind)
  *
  * ```ts
@@ -921,8 +887,6 @@ export const QaDriverRequest = S.Union([
 );
 
 /**
- * Tagged union of `@beep/ffmpeg` driver requests emitted by the planner.
- *
  * **Example** (Type a driver request)
  *
  * ```ts

@@ -33,9 +33,6 @@ import { splitConfigDependencySpec } from "./internal/configDependencySpecGramma
 const $I = $RepoWorkspacesId.create("ConfigDependencySpec");
 
 /**
- * Indicates that a string could not be parsed as a pnpm `configDependencies`
- * spec (`<version>[+<integrity>]`).
- *
  * **Details**
  *
  * Raised by {@link ConfigDependencySpec.parse} and
@@ -130,9 +127,6 @@ const specVersion = SemVer.pipe(
 );
 
 /**
- * A pnpm `configDependencies` spec from `pnpm-workspace.yaml`: an exact
- * `version` and, on the legacy inline form only, an SRI `integrity`.
- *
  * **Details**
  *
  * pnpm 11 and later write the **bare** form — `pnpm add --config` records

@@ -58,8 +58,6 @@ export const DenialReason = LiteralKit([
 );
 
 /**
- * Runtime type for {@link DenialReason}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { DenialReason } from "@beep/execution-authority-domain"
@@ -233,8 +231,6 @@ export const ExecutionVerdict = ExecutionVerdictTag.toTaggedUnion("verdict")({
 );
 
 /**
- * Runtime type for {@link ExecutionVerdict}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { ExecutionVerdict } from "@beep/execution-authority-domain"
@@ -277,8 +273,6 @@ export const EgressClassification = LiteralKit([
 );
 
 /**
- * Runtime type for {@link EgressClassification}.
- *
  * **Example** (Usage)
  * ```ts
  * import type { EgressClassification } from "@beep/execution-authority-domain"

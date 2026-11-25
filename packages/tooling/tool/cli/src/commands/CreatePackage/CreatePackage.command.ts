@@ -773,8 +773,6 @@ const fileGenerationPlanService = createFileGenerationPlanService();
 // ── Template context ──────────────────────────────────────────────────────────
 
 /**
- * Variables passed into every template during package scaffolding.
- *
  * **Example** (Run the create-package command)
  *
  * ```ts

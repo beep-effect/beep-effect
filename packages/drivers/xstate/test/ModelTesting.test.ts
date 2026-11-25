@@ -43,7 +43,7 @@ describe("schema generators", () => {
     Effect.gen(function* () {
       const Reviewer = S.Struct({ reviewer: S.NonEmptyString });
       const arbitrary = yield* arbitraryFromSchema(Reviewer, { count: 8, seed: 7 });
-      const samples = fc.sample(arbitrary, 16);
+      const samples = fc.sample(arbitrary, { numRuns: 16, seed: 7 });
       assertTrue(A.every(samples, S.is(Reviewer)));
     })
   );
@@ -52,7 +52,7 @@ describe("schema generators", () => {
     Effect.gen(function* () {
       const events = yield* pipe(ReleaseEvents, eventsFromSchemas({ count: 4 }));
       expect(R.keys(events).sort()).toEqual(["APPROVE", "CANCEL", "RETRY"]);
-      assertTrue(A.every(fc.sample(events.APPROVE, 4), S.is(ReleaseEvents.APPROVE)));
+      assertTrue(A.every(fc.sample(events.APPROVE, { numRuns: 4, seed: 7 }), S.is(ReleaseEvents.APPROVE)));
     })
   );
 });

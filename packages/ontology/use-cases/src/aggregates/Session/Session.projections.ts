@@ -27,8 +27,6 @@ import type { OntologyInferenceResult } from "./Session.reasoner.ts";
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.projections");
 
 /**
- * Explorer/editor ontology view mode.
- *
  * **Example** (Resource visibility by view mode)
  *
  * ```ts
@@ -60,8 +58,6 @@ export const OntologyViewMode = LiteralKit(["all", "tbox", "abox"]).pipe(
 );
 
 /**
- * Type for {@link OntologyViewMode}.
- *
  * **Example** (Assign abox view mode)
  *
  * ```ts
@@ -100,8 +96,6 @@ export const OntologyResourceClassification = LiteralKit(["tbox", "abox"]).pipe(
 );
 
 /**
- * Type for {@link OntologyResourceClassification}.
- *
  * **Example** (Assign tbox classification)
  *
  * ```ts
@@ -147,8 +141,6 @@ export const OntologyResourceKind = LiteralKit([
 );
 
 /**
- * Type for {@link OntologyResourceKind}.
- *
  * **Example** (Assign objectProperty kind)
  *
  * ```ts
@@ -165,8 +157,6 @@ export const OntologyResourceKind = LiteralKit([
 export type OntologyResourceKind = typeof OntologyResourceKind.Type;
 
 /**
- * Ontology workbench metrics computed from the authoring graph.
- *
  * **Example** (Construct ontology metrics)
  *
  * ```ts
@@ -209,8 +199,6 @@ export class OntologyMetrics extends S.Opaque<OntologyMetrics, { readonly brand:
 ) {}
 
 /**
- * Resource summary shared by hierarchy explorer, inspector, and search.
- *
  * **Example** (Construct resource summary)
  *
  * ```ts
@@ -249,8 +237,6 @@ export class OntologyResourceSummary extends S.Opaque<OntologyResourceSummary, {
 ) {}
 
 /**
- * Flat hierarchy row used to build MUI Tree View items.
- *
  * **Example** (Construct hierarchy entry)
  *
  * ```ts
@@ -327,8 +313,6 @@ const RelationshipSummariesWithEmptyDefault = S.Array(OntologyRelationshipSummar
 );
 
 /**
- * Complete ontology read model for explorer/editor surfaces.
- *
  * **Example** (Construct empty ontology snapshot)
  *
  * ```ts

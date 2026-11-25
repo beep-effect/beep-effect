@@ -278,14 +278,7 @@ const phoenixRuntimeLayer = (duckDbPath: string) =>
     DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))
   );
 
-// Inventory answers; the per-project aggregate query does not. This is the shape a
-// large store actually presents -- identity is cheap, aggregates over the spans
-// table are not -- and the doctor must still report Phoenix as reachable with the
-// counts marked unmeasured rather than collapsing the whole section. The aggregate
-// outcome is supplied per test so each can pick which way that query fails --
-// rejected, undecodable, or unreachable -- because the section's message has to
-// name the mode it actually hit rather than blaming all three on a timeout.
-const phoenixAggregatesUnavailableHttpLayer = (aggregateOutcome: PhoenixAggregateOutcome) =>
+const cheapInventoryWithPerTestAggregateFailureModeHttpLayer = (aggregateOutcome: PhoenixAggregateOutcome) =>
   Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -341,8 +334,7 @@ const phoenixAggregatesUnavailableHttpLayer = (aggregateOutcome: PhoenixAggregat
     )
   );
 
-// Phoenix rejects the aggregate query outright.
-const phoenixAggregateRejected: PhoenixAggregateOutcome = (request) =>
+const phoenixRejectsAggregateQueryWithHttp500: PhoenixAggregateOutcome = (request) =>
   Effect.succeed(
     HttpClientResponse.fromWeb(
       request,
@@ -350,9 +342,7 @@ const phoenixAggregateRejected: PhoenixAggregateOutcome = (request) =>
     )
   );
 
-// Phoenix answers 200 with a body the aggregate schema cannot decode: the node is
-// missing every count field the query asked for.
-const phoenixAggregateUndecodable: PhoenixAggregateOutcome = (request) =>
+const phoenixAnswers200WithNodeMissingEveryCountField: PhoenixAggregateOutcome = (request) =>
   Effect.succeed(
     HttpClientResponse.fromWeb(
       request,
@@ -360,8 +350,7 @@ const phoenixAggregateUndecodable: PhoenixAggregateOutcome = (request) =>
     )
   );
 
-// The aggregate request never reaches Phoenix at all.
-const phoenixAggregateUnreachable: PhoenixAggregateOutcome = (request) =>
+const aggregateRequestNeverReachesPhoenix: PhoenixAggregateOutcome = (request) =>
   Effect.fail(
     new HttpClientError.HttpClientError({
       reason: new HttpClientError.TransportError({ description: "connection refused", request }),
@@ -371,7 +360,7 @@ const phoenixAggregateUnreachable: PhoenixAggregateOutcome = (request) =>
 const phoenixAggregatesUnavailableRuntimeLayer = (duckDbPath: string, aggregateOutcome: PhoenixAggregateOutcome) =>
   Layer.mergeAll(
     NodeServices.layer,
-    phoenixAggregatesUnavailableHttpLayer(aggregateOutcome),
+    cheapInventoryWithPerTestAggregateFailureModeHttpLayer(aggregateOutcome),
     DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))
   );
 
@@ -568,19 +557,21 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
               })
             );
 
-            // Reachable, not `unavailable`: one slow aggregate must not take the section down.
-            expect(report.phoenix.projectCount).toBe(1);
+            expect(
+              report.phoenix.projectCount,
+              "reachable, not unavailable: one slow aggregate must not take the section down"
+            ).toBe(1);
             expect(O.getOrUndefined(report.phoenix.version)).toBe("9.9.9-test");
             expect(report.phoenix.projects[0]?.name).toBe("beep-jsdoc-worker-eval");
-            // Cheap identity fields still populate.
-            expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
-            // Aggregates report as not-measured rather than as zero or false, so the
-            // report cannot be misread as "Phoenix has no traces".
+            expect(report.phoenix.projects[0]?.traceAnnotationNames, "cheap identity fields still populate").toEqual([
+              "agent.outcome",
+            ]);
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.hasTraces),
               O.isNone,
-              assertTrue
+              (unmeasured) =>
+                assertTrue(unmeasured, "aggregates are not-measured, never zero or false that would read as no traces")
             );
             pipe(
               A.head(report.phoenix.projects),
@@ -595,16 +586,19 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
               assertTrue
             );
             pipe(Str.includes("unmeasured")(report.phoenix.message), assertTrue);
-            // The message must name the mode it actually hit. Reporting a rejected
-            // query as a timeout sends an operator after store size instead of the
-            // server's own refusal.
-            pipe(Str.includes("HTTP 500")(report.phoenix.message), assertTrue);
-            pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
+            assertTrue(
+              Str.includes("HTTP 500")(report.phoenix.message),
+              "the message names the server's own refusal, the mode it actually hit"
+            );
+            assertFalse(
+              Str.includes("budget")(report.phoenix.message),
+              "a rejected query is never reported as a timeout that sends an operator after store size"
+            );
           }).pipe(
             provideScopedLayer(
               phoenixAggregatesUnavailableRuntimeLayer(
                 path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-                phoenixAggregateRejected
+                phoenixRejectsAggregateQueryWithHttp500
               )
             )
           );
@@ -637,14 +631,19 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
               assertTrue
             );
             pipe(Str.includes("could not be decoded")(report.phoenix.message), assertTrue);
-            // A 200 carrying an unreadable body is not a rejection and not a timeout.
-            pipe(Str.includes("HTTP")(report.phoenix.message), assertFalse);
-            pipe(Str.includes("budget")(report.phoenix.message), assertFalse);
+            assertFalse(
+              Str.includes("HTTP")(report.phoenix.message),
+              "a 200 with an unreadable body is not a rejection"
+            );
+            assertFalse(
+              Str.includes("budget")(report.phoenix.message),
+              "a 200 with an unreadable body is not a timeout"
+            );
           }).pipe(
             provideScopedLayer(
               phoenixAggregatesUnavailableRuntimeLayer(
                 path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-                phoenixAggregateUndecodable
+                phoenixAnswers200WithNodeMissingEveryCountField
               )
             )
           );
@@ -669,9 +668,10 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
               })
             );
 
-            // The inventory still answered, so the section stays readable rather
-            // than collapsing to `unavailable`.
-            expect(report.phoenix.projectCount).toBe(1);
+            expect(
+              report.phoenix.projectCount,
+              "the inventory still answered, so the section stays readable instead of unavailable"
+            ).toBe(1);
             pipe(
               A.head(report.phoenix.projects),
               O.flatMap((project) => project.traceCount),
@@ -685,7 +685,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
             provideScopedLayer(
               phoenixAggregatesUnavailableRuntimeLayer(
                 path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-                phoenixAggregateUnreachable
+                aggregateRequestNeverReachesPhoenix
               )
             )
           );

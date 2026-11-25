@@ -246,8 +246,8 @@ export const installCitationCaseNameScan = Effect.fn("Citation.installCaseNameSc
       if (word.data === null) return yield* fail("invalid-token-length");
       const current = yield* Ref.get(state);
       yield* update({ offset: current.offset + word.source.value.pythonLength });
-      // Python compares the original word: dataclass token objects do not equal a bare comma string.
-      if (word.kind === "Text" && word.source.value.text === ",") return Step.Enum.continue;
+      const originalTextWordIsBareComma = word.kind === "Text" && word.source.value.text === ",";
+      if (originalTextWordIsBareComma) return Step.Enum.continue;
       const plaintiff = current.vTokenIndex !== null && (yield* predicates.isNonblank(word.source.value));
       yield* update({
         caseNameLength: current.caseNameLength + 1,

@@ -25,12 +25,10 @@ import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixture
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-// The original callback case observes ASCII lowercasing. Refuse broader inputs
-// instead of claiming a general Python Unicode str.lower adapter.
 const isAscii = (value: CitationPythonUnicodeStorage) =>
   value.width === 1 && A.every(A.fromIterable(value.bytes), (byte) => byte <= 127);
 const lowerAscii = (byte: number) => (byte >= 65 && byte <= 90 ? byte + 32 : byte);
-const lower = CitationAnnotationAnnotator.of({
+const lowerAsciiOnlyRefusingBroaderInput = CitationAnnotationAnnotator.of({
   annotate: Effect.fn("CanonicalAnnotationTest.lower")(function* (before, span, after, work) {
     if (!A.every([before, span, after], isAscii))
       return yield* CitationAnnotationCallbackFailure.make({ reason: "invalid-result" });
@@ -75,7 +73,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             });
             const normal = yield* buildCitationDefaultEngineFixture(installed, resolver);
             const callback = yield* buildCitationDefaultEngineFixture(installed, resolver).pipe(
-              Effect.provideService(CitationAnnotationAnnotator, lower)
+              Effect.provideService(CitationAnnotationAnnotator, lowerAsciiOnlyRefusingBroaderInput)
             );
             for (const row of rows) {
               plain = yield* citationFixtureSourceProof(row.input.document.fields.plain_text);

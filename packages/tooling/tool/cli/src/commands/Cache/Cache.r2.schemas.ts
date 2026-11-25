@@ -17,8 +17,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Cache/Cache.r2.schemas");
 
 /**
- * Qualification probe mode.
- *
  * **Example** (Check a mode)
  * ```ts
  * import { CacheR2ProbeMode } from "@beep/repo-cli/test/Cache"
@@ -36,8 +34,6 @@ export const CacheR2ProbeMode = LiteralKit(["seed", "ci", "restore"]).pipe(
 );
 
 /**
- * Decoded probe mode.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -63,8 +59,6 @@ export const CacheR2Marker = S.String.check(S.isPattern(/^[a-f0-9]{16}$/)).pipe(
 );
 
 /**
- * Decoded probe marker.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -125,8 +119,6 @@ export class CacheR2TaskExecution extends S.Opaque<CacheR2TaskExecution, { reado
 ) {}
 
 /**
- * One qualification task row.
- *
  * **Example** (Inspect the exact-hash field)
  * ```ts
  * import { CacheR2TaskRow } from "@beep/repo-cli/test/Cache"
@@ -207,8 +199,6 @@ export class CacheR2StoredReceipt extends S.Opaque<CacheR2StoredReceipt, { reado
 ) {}
 
 /**
- * Sanitized receipt of one probe mode.
- *
  * **Details**
  * Contains no environment values. The restore mode nests the CI receipt it
  * verified under `ci`.
@@ -251,8 +241,6 @@ export const CacheR2FleetStatus = LiteralKit(["planned", "legacy-use-beep-turbo"
 );
 
 /**
- * Decoded {@link CacheR2FleetStatus} value.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -325,8 +313,6 @@ export const CacheR2Method = LiteralKit(["GET", "PUT", "HEAD"]).pipe(
 );
 
 /**
- * Decoded {@link CacheR2Method} value.
- *
  * @internal
  * @category models
  * @since 0.0.0
@@ -334,8 +320,6 @@ export const CacheR2Method = LiteralKit(["GET", "PUT", "HEAD"]).pipe(
 export type CacheR2Method = typeof CacheR2Method.Type;
 
 /**
- * One artifact API request issued by the probe.
- *
  * **Details**
  * Without `api` the request targets the resolved Turbo API; the reader proof
  * names the reader adapter's loopback API instead.

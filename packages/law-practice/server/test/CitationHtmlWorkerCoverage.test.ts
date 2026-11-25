@@ -12,7 +12,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
-// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationHtmlWorker = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationHtmlWorker>[0],
   a1: unknown

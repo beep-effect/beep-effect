@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $CliKitId.create("LinkTarget");
 
 /**
- * A URL link target.
- *
  * **Example** (Validate a URL target)
  *
  * ```ts
@@ -32,8 +30,6 @@ export class UrlTarget extends S.Opaque<UrlTarget, { readonly brand: unique symb
 ) {}
 
 /**
- * Companion types for {@link UrlTarget}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -48,8 +44,6 @@ export declare namespace UrlTarget {
 }
 
 /**
- * A file link target with an optional position.
- *
  * **Example** (Validate a file position)
  *
  * ```ts
@@ -71,8 +65,6 @@ export class FileTarget extends S.Opaque<FileTarget, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link FileTarget}.
- *
  * @category type-level
  * @since 0.0.0
  */

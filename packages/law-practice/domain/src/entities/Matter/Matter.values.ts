@@ -12,8 +12,6 @@ const $I = $LawPracticeDomainId.create("entities/Matter/Matter.values");
 const MatterTypeBase = LiteralKit(["patent_application"]);
 
 /**
- * Matter type accepted by the law-practice proof fixtures.
- *
  * **Example** (Decode MatterType with Schema)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const MatterType = MatterTypeBase.pipe(
 );
 
 /**
- * Type-level literal union produced by {@link MatterType}.
- *
  * **Example** (Satisfy MatterType literal type)
  *
  * ```ts

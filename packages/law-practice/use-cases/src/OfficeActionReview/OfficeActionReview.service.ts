@@ -33,7 +33,13 @@ import {
   OfficeActionAssessmentArrows,
   OfficeActionDistinctionGate,
 } from "@beep/law-practice-domain/values/LawClaim";
-import { ActivityFloor, CurrentActivity, composeLogged, withActivity } from "@beep/nlp-processing/Activity";
+import {
+  ActivityFacts,
+  ActivityFloor,
+  CurrentActivity,
+  composeLogged,
+  withActivity,
+} from "@beep/nlp-processing/Activity";
 import {
   SourceTextDigest,
   SourceTextExtractor,
@@ -159,9 +165,12 @@ const failFileExtraction = (
     })
   );
 
-const sourceTextFrom = Effect.fn("OfficeActionReview.sourceTextFrom")(function* (
+const extractedSourceFrom = Effect.fn("OfficeActionReview.extractedSourceFrom")(function* (
   result: ProcessFileResult
-): Effect.fn.Return<string, FileProcessingOperationError> {
+): Effect.fn.Return<
+  { readonly extractor: SourceTextExtractor; readonly sourceText: string },
+  FileProcessingOperationError
+> {
   return yield* ProcessFileResult.match(result, {
     "archive-exported": (archiveExported) =>
       failFileExtraction(
@@ -171,7 +180,15 @@ const sourceTextFrom = Effect.fn("OfficeActionReview.sourceTextFrom")(function* 
     extracted: (extracted) =>
       O.match(O.fromUndefinedOr(extracted.extraction.text), {
         onNone: () => failFileExtraction(extracted, "Office-action review requires text extraction output."),
-        onSome: Effect.succeed,
+        onSome: (sourceText) =>
+          O.match(O.fromUndefinedOr(extracted.extraction.engineVersion), {
+            onNone: () => failFileExtraction(extracted, "Office-action review requires a versioned extractor."),
+            onSome: (version) =>
+              Effect.succeed({
+                extractor: SourceTextExtractor.make({ name: extracted.engine, version }),
+                sourceText,
+              }),
+          }),
       }),
     skipped: (skipped) =>
       failFileExtraction(skipped, `Office-action review requires extracted text, received ${skipped.resultKind}.`),
@@ -181,28 +198,20 @@ const sourceTextFrom = Effect.fn("OfficeActionReview.sourceTextFrom")(function* 
 const utf8 = new TextEncoder();
 const extractionRequestFrom = Effect.fn("OfficeActionReview.extractionRequestFrom")(function* (
   input: OfficeActionReviewInput,
-  sourceText: string,
-  processed: ProcessFileResult
+  extracted: { readonly extractor: SourceTextExtractor; readonly sourceText: string }
 ) {
-  const version = yield* O.match(
-    O.fromUndefinedOr(processed.resultKind === "extracted" ? processed.extraction.engineVersion : undefined),
-    {
-      onNone: () => failFileExtraction(processed, "Office-action review requires a versioned extractor."),
-      onSome: Effect.succeed,
-    }
-  );
   const digest = yield* Digest.Digest;
-  const textDigest = yield* digest.digestHex(Digest.sha256, utf8.encode(sourceText));
+  const textDigest = yield* digest.digestHex(Digest.sha256, utf8.encode(extracted.sourceText));
   const source = SourceTextIdentity.make({
     scopeRef: input.matterFixtureKey,
     sourceRef: input.sourceArtifact.id,
     locator: SourceTextLocator.make(input.sourceArtifact.relativePath),
     sourceDigest: SourceTextDigest.make(input.sourceArtifact.digest),
     textDigest: SourceTextDigest.make(`sha256:${textDigest}`),
-    extractor: SourceTextExtractor.make({ name: processed.engine, version }),
+    extractor: extracted.extractor,
     normalizationVersion: "raw/1",
   });
-  return LangExtractRequest.make({ source, targets: officeActionExtractionTargets, text: sourceText });
+  return LangExtractRequest.make({ source, targets: officeActionExtractionTargets, text: extracted.sourceText });
 });
 
 const reviewPin = ActivityPin.cases.Engine.make({ engine: "law-practice-office-action-review", edition: "1" });
@@ -210,8 +219,13 @@ const ExtractTerm = TermIri.make(iri("operation:Extract"));
 const MapToLawTerm = TermIri.make(iri("operation:MapToLaw"));
 const ProposeClaimTerm = TermIri.make(iri("operation:ProposeClaim"));
 
-const alignmentOf = (status: AlignmentStatus): AlignmentAssessment =>
-  status === "match_exact" ? "exact" : status === "match_lesser" ? "lesser" : "fuzzy";
+const alignmentOf: Readonly<Record<AlignmentStatus, AlignmentAssessment>> = {
+  match_exact: "exact",
+  match_lesser: "lesser",
+  match_minimal_fold: "fuzzy",
+  match_fuzzy: "fuzzy",
+  unaligned: "fuzzy",
+};
 
 const isMintFailure = (error: { readonly _tag: string }): error is PreimageMintError =>
   error._tag === "SchemaError" || error._tag === "JsoncCanonicalizeError";
@@ -338,10 +352,8 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
         source: input.sourceArtifact,
       })
     );
-    const sourceText = yield* sourceTextFrom(processed);
-    return yield* extractionRequestFrom(input, sourceText, processed).pipe(
-      Effect.provideService(Digest.Digest, deps.digest)
-    );
+    const extracted = yield* extractedSourceFrom(processed);
+    return yield* extractionRequestFrom(input, extracted).pipe(Effect.provideService(Digest.Digest, deps.digest));
   });
   const extractCandidate = Effect.fn("OfficeActionReview.extractCandidate")(function* (input: OfficeActionReviewInput) {
     const request = yield* prepare(input);
@@ -395,11 +407,13 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
   };
   const mapToLaw = withActivity<Extracted, Mapped>({
     facts: (extracted) =>
-      Effect.succeed({
-        pin: reviewPin,
-        promptDigest: O.none(),
-        used: HashSet.fromIterable<ContentHash>(extracted.handoff.document.annotations.pipe(HashMap.keys)),
-      }),
+      Effect.succeed(
+        ActivityFacts.make({
+          pin: reviewPin,
+          promptDigest: O.none(),
+          used: HashSet.fromIterable<ContentHash>(extracted.handoff.document.annotations.pipe(HashMap.keys)),
+        })
+      ),
     generated: (mapped) => [mapped.distinction],
   })<ReviewStepError, Digest.Digest>({
     name: MapToLawTerm,
@@ -413,15 +427,17 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
   });
   const proposeClaim = withActivity<Mapped, Proposed>({
     facts: (mapped) =>
-      Effect.succeed({
-        pin: reviewPin,
-        promptDigest: O.none(),
-        used: HashSet.make<ReadonlyArray<ContentHash>>(
-          mapped.distinction,
-          mapped.support.id,
-          mapped.support.occurrence
-        ),
-      }),
+      Effect.succeed(
+        ActivityFacts.make({
+          pin: reviewPin,
+          promptDigest: O.none(),
+          used: HashSet.make<ReadonlyArray<ContentHash>>(
+            mapped.distinction,
+            mapped.support.id,
+            mapped.support.occurrence
+          ),
+        })
+      ),
     generated: (proposed) => [proposed.record.claim],
   })<ReviewStepError, Digest.Digest | CurrentActivity>({
     name: ProposeClaimTerm,
@@ -463,7 +479,7 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
   const assess = Effect.fn("OfficeActionReview.assess")(function* (proposed: Proposed) {
     const partial: OfficeActionAssessments = {
       support: { _tag: "Unassessed", reason: "not-assessed" },
-      alignment: { _tag: "Assessed", value: alignmentOf(proposed.support.alignment) },
+      alignment: { _tag: "Assessed", value: alignmentOf[proposed.support.alignment] },
       reference: { _tag: "Assessed", value: "identified" },
     };
     const updated = yield* OfficeActionAssessmentArrows.updateAssessment({
@@ -475,7 +491,7 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
     return updated.record;
   });
   const failReview = (failure: LoggedFailure<ReviewStepError>) =>
-    isMintFailure(failure.error) ? Effect.die(failure.error) : Effect.fail(failure.error);
+    Effect.fail(failure.error).pipe(Effect.catchIf(isMintFailure, Effect.die));
   return {
     extractCandidate,
     review: Effect.fn("OfficeActionReview.review")(function* (input) {

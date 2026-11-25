@@ -18,3 +18,5 @@ Reviewer-provided pinned source provenance (recorded here without a new GitHub a
 - [Companion HTML](https://github.com/Nanopublication/Guidelines/blob/8388dd90795b264f4b01c64d0f7218babcae4871/nschema.html), around line 137, grants Creative Commons ShareAlike Attribution 3.0 for "this document", linked as http://creativecommons.org/licenses/sa-by/3.0/.
 
 The HTML notice does not explicitly cover the TTL. The website repository MIT license does not cover imported TTL bytes. Keep the exact TTL unlicensed/unresolved in the design and hold NamespacePin registration and adapter admission until attributable permission is established; neither source provenance nor the companion notice releases that hold.
+
+The licensing hold above is superseded by 2026-11-23-p4-nanopub-vendored-under-cc-by-sa, which records the operator ruling, the vendored nschema.ttl and the registered np NamespacePin; the hold paragraph is kept as history. The rest of this profile decision stands.

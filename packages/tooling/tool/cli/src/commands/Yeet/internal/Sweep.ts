@@ -159,8 +159,6 @@ const permissionDenialMarkers = [
 ] as const;
 
 /**
- * The git and GitHub facts one sweep is planned from.
- *
  * **Details**
  *
  * This record is the seam between the world and the planner: everything

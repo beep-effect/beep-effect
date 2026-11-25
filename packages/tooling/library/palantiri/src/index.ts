@@ -33,15 +33,11 @@ export * from "./AccountHeadroom.ts";
  */
 export * from "./AppErrorClasses.ts";
 /**
- * Freshness model and check exports.
- *
  * @category models
  * @since 0.0.0
  */
 export * from "./Freshness.ts";
 /**
- * Gauge series replacement exports.
- *
  * @category observability
  * @since 0.0.0
  */
@@ -89,8 +85,6 @@ export * from "./LaneReds.models.ts";
  */
 export * from "./LaneReds.ts";
 /**
- * Palantiri instrument declaration exports.
- *
  * @category observability
  * @since 0.0.0
  */
@@ -103,8 +97,6 @@ export * from "./Palantiri.instruments.ts";
  */
 export * from "./Parcel.models.ts";
 /**
- * Parcel envelope exports.
- *
  * @category models
  * @since 0.0.0
  */
@@ -117,8 +109,6 @@ export * from "./ParcelEnvelope.models.ts";
  */
 export * from "./Parcels.api.ts";
 /**
- * Parcel error exports.
- *
  * @category errors
  * @since 0.0.0
  */

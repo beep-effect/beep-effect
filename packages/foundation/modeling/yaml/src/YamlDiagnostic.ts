@@ -38,8 +38,6 @@ import type { RawDiagnostic } from "./internal/diagnostics.ts";
 const $I = $YamlId.create("YamlDiagnostic");
 
 /**
- * Error codes emitted by the lexer stage.
- *
  * **Example** (Validate a lexer diagnostic code)
  *
  * ```ts
@@ -58,8 +56,6 @@ export const YamlLexErrorCode = LiteralKit(YAML_LEX_ERROR_CODES).pipe(
 );
 
 /**
- * The union of all lexer-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -67,8 +63,6 @@ export const YamlLexErrorCode = LiteralKit(YAML_LEX_ERROR_CODES).pipe(
 export type YamlLexErrorCode = typeof YamlLexErrorCode.Type;
 
 /**
- * Error codes emitted by the CST-parser stage.
- *
  * **Example** (Validate a parser diagnostic code)
  *
  * ```ts
@@ -87,8 +81,6 @@ export const YamlParseErrorCode = LiteralKit(YAML_PARSE_ERROR_CODES).pipe(
 );
 
 /**
- * The union of all parser-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -96,8 +88,6 @@ export const YamlParseErrorCode = LiteralKit(YAML_PARSE_ERROR_CODES).pipe(
 export type YamlParseErrorCode = typeof YamlParseErrorCode.Type;
 
 /**
- * Error codes emitted by the composer stage.
- *
  * **Example** (Validate a composer diagnostic code)
  *
  * ```ts
@@ -116,8 +106,6 @@ export const YamlComposerErrorCode = LiteralKit(YAML_COMPOSE_ERROR_CODES).pipe(
 );
 
 /**
- * The union of all composer-stage error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -125,8 +113,6 @@ export const YamlComposerErrorCode = LiteralKit(YAML_COMPOSE_ERROR_CODES).pipe(
 export type YamlComposerErrorCode = typeof YamlComposerErrorCode.Type;
 
 /**
- * Error codes emitted by the stringifier (the circular-reference guard).
- *
  * **Example** (Validate a stringifier diagnostic code)
  *
  * ```ts
@@ -156,9 +142,6 @@ export const YamlStringifyErrorCode = LiteralKit(YAML_STRINGIFY_ERROR_CODES).pip
 export type YamlStringifyErrorCode = typeof YamlStringifyErrorCode.Type;
 
 /**
- * Error codes emitted by `YamlFormat.modify`'s path navigation against an
- * already-composed AST — not raised by the parser/composer/stringifier.
- *
  * **Example** (Validate a modify diagnostic code)
  *
  * ```ts
@@ -189,9 +172,6 @@ export const YamlModifyErrorCode = LiteralKit(YAML_MODIFY_ERROR_CODES).pipe(
 export type YamlModifyErrorCode = typeof YamlModifyErrorCode.Type;
 
 /**
- * Union of all YAML error codes across all pipeline stages. Stage
- * discrimination lives here (in the code), not in separate error classes.
- *
  * **Example** (Validate a pipeline diagnostic code)
  *
  * ```ts
@@ -219,8 +199,6 @@ export const YamlErrorCode = S.Union([
 );
 
 /**
- * The union of all YAML error code string literals.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -228,11 +206,6 @@ export const YamlErrorCode = S.Union([
 export type YamlErrorCode = typeof YamlErrorCode.Type;
 
 /**
- * One structured diagnostic: its {@link (YamlErrorCode:type)}, a
- * human-readable `message`, and its exact position (`offset`/`length`, plus
- * zero-based `line`/`character`). Used for both errors and warnings-as-data;
- * fatality is a property of the code — see {@link YamlDiagnostic.isFatal}.
- *
  * **Details**
  *
  * The five-field positional core (`code`/`offset`/`length`/`line`/`character`)

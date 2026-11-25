@@ -62,8 +62,6 @@ export const YEET_FEEDBACK_TASKS = ["build", "check", "lint", "test"] as const;
 type YeetFeedbackTask = (typeof YEET_FEEDBACK_TASKS)[number];
 
 /**
- * Options for building a Yeet run plan in a specific mode.
- *
  * **Example** (Plan a Yeet run)
  *
  * ```ts
@@ -1174,16 +1172,12 @@ export const YeetPublishPosture = LiteralKit(["publish", "open"]).pipe(
 );
 
 /**
- * Which route a `yeet publish` takes.
- *
  * @category models
  * @since 0.0.0
  */
 export type YeetPublishPosture = typeof YeetPublishPosture.Type;
 
 /**
- * Inputs of {@link yeetPublishPostureFor}.
- *
  * **Example** (Describe a plain publish on a worker)
  *
  * ```ts

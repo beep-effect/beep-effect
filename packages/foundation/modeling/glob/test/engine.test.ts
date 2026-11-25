@@ -1,7 +1,3 @@
-// Task 3 unit tests for the minimatch core port: escape/unescape, character
-// classes, the pattern-length assertion, Minimatch smoke behavior, the
-// platform deviation, and reachability of the new AST depth guards.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { assertValidPattern, InvalidPattern } from "@beep/glob/internal/assertValidPattern";
 import { expand } from "@beep/glob/internal/braceExpansion";
@@ -195,8 +191,7 @@ describe("character classes", () => {
   });
 
   it("treats a single-character class as a literal escape", () => {
-    // [_] is a valid way to escape glob magic
-    assert.isTrue(new Minimatch("[*]").match("*"));
+    assert.isTrue(new Minimatch("[*]").match("*"), "[_] is a valid way to escape glob magic");
     assert.isFalse(new Minimatch("[*]").match("x"));
   });
 
@@ -219,7 +214,8 @@ describe("assertValidPattern", () => {
       reasonOf(() => assertValidPattern(Str.repeat(65537)("a"))),
       "PatternTooLong"
     );
-    assertValidPattern(Str.repeat(65536)("a")); // exactly at the cap: fine
+    const exactlyAtTheCapIsFine = Str.repeat(65536)("a");
+    assertValidPattern(exactlyAtTheCapIsFine);
   });
 
   it("dies on a non-string, programmer error", () => {
@@ -246,6 +242,11 @@ describe("Minimatch smoke", () => {
     assert.isFalse(new Minimatch("").match("a"));
   });
 
+  it("leaves a trailing-slash candidate's empty last segment unmatched by a star, yet lets it trail a pattern that ran out", () => {
+    assert.isFalse(new Minimatch("a/b/*").match("a/b/"));
+    assert.isTrue(new Minimatch("a/*").match("a/b/"));
+  });
+
   it("negates whole patterns with a leading bang", () => {
     assert.isTrue(new Minimatch("!a/*").match("b/x"));
     assert.isFalse(new Minimatch("!a/*").match("a/x"));
@@ -253,8 +254,10 @@ describe("Minimatch smoke", () => {
 
   it("splits backslashes only under platform win32, never ambiently", () => {
     assert.isTrue(new Minimatch("a/b", { platform: "win32" }).match("a\\b"));
-    // no ambient process.platform read: default is posix, backslash is an escape
-    assert.isFalse(new Minimatch("a/b").match("a\\b"));
+    assert.isFalse(
+      new Minimatch("a/b").match("a\\b"),
+      "no ambient process.platform read: default is posix, backslash is an escape"
+    );
   });
 
   it("dies on a NaN globstar cap, programmer error", () => {
@@ -280,13 +283,11 @@ describe("extglob depth behavior", () => {
   });
 
   it("caps the adoption-chain recursion upstream leaves unbounded", () => {
-    // Coalescible types recurse without incrementing extDepth upstream:
-    // the real minimatch 10.2.5 dies with RangeError (stack overflow) on this
-    // input at DEFAULT options (verified 2026-07-09). The port fails typed.
     const chain = `${Str.repeat(20000)("@(")}a${Str.repeat(20000)(")")}`;
     assert.strictEqual(
       reasonOf(() => new Minimatch(chain)),
-      "NestingDepthExceeded"
+      "NestingDepthExceeded",
+      "coalescible types recurse without incrementing extDepth upstream: the real minimatch 10.2.5 dies with RangeError (stack overflow) on this input at DEFAULT options (verified 2026-07-09); the port fails typed"
     );
   });
 

@@ -4,9 +4,11 @@ import { Position } from "@beep/text/OffsetUnit";
 import { WinkTokenizationLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 describe("WinkTokenization", () => {
   it.layer(WinkTokenizationLive, { timeout: "30 seconds" })("tokenizes text with lemma and position metadata", (it) => {
@@ -51,4 +53,18 @@ describe("WinkTokenization", () => {
       );
     }
   );
+
+  it.layer(WinkTokenizationLive, { timeout: "30 seconds" })("takes token offsets from the original text", (it) => {
+    it.effect("takes token offsets from the original text", () =>
+      Effect.gen(function* () {
+        // wink caps a token's stored preceding spaces at 65,534, so offsets rebuilt from them drift.
+        const text = `${Str.repeat(65_535)(" ")}Ada`;
+        const tokens = yield* tokenize(text);
+
+        expect(A.map(tokens, (token) => [token.text, token.span.start, token.span.end])).toEqual([
+          ["Ada", 65_535, 65_538],
+        ]);
+      })
+    );
+  });
 });

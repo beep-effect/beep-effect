@@ -40,8 +40,6 @@ export const PartyKey = S.String.check(
 ).pipe(S.brand("PartyKey"), $I.annoteSchema("PartyKey", { description: "Deterministic PartyKey v1." }));
 
 /**
- * {@inheritDoc PartyKey}
- *
  * @category models
  * @since 0.0.0
  */
@@ -69,8 +67,6 @@ export const IdentifierScheme = LiteralKit(["email", "tel", "x500", "user", "nat
 );
 
 /**
- * {@inheritDoc IdentifierScheme}
- *
  * @category models
  * @since 0.0.0
  */
@@ -79,8 +75,6 @@ export type IdentifierScheme = typeof IdentifierScheme.Type;
 const globallyScopedScheme = IdentifierScheme.pick(["email", "tel", "x500"]);
 
 /**
- * A basis authority: empty for a globally scoped scheme, otherwise a namespace.
- *
  * **Example** (Allow empty or trimmed authorities)
  *
  * ```ts
@@ -99,8 +93,6 @@ export const BasisAuthority = S.Union([S.Literal(""), IdentifierNamespace]).pipe
 );
 
 /**
- * {@inheritDoc BasisAuthority}
- *
  * @category models
  * @since 0.0.0
  */
@@ -211,8 +203,6 @@ export const PartyKeyBasis = S.Union([IdentifierBasis, SourceRecordBasis]).pipe(
 );
 
 /**
- * {@inheritDoc PartyKeyBasis}
- *
  * @category models
  * @since 0.0.0
  */

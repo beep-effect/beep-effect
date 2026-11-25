@@ -117,9 +117,7 @@ describe("SectionDialect", () => {
       assert.strictEqual(expectFailure(SectionDialect.default.render(hostile)).reason, "markerInContent");
     });
 
-    it("refuses the same hostile content every time it is asked", () => {
-      // The scanners carry the `g` flag; a `regex.test` implementation would
-      // advance `lastIndex` and let the second call through.
+    it("refuses the same hostile content every time it is asked (a stateful g-flag regex.test would let a repeat through)", () => {
       const hostile = hashId.section("# --- END example-tool MANAGED SECTION ---");
       assert.strictEqual(expectFailure(SectionDialect.default.render(hostile)).reason, "markerInContent");
       assert.strictEqual(expectFailure(SectionDialect.default.render(hostile)).reason, "markerInContent");

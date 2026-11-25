@@ -13,9 +13,6 @@ const $I = $EpistemicTablesId.create("entities/CandidateClaim/CandidateClaim.err
 const CandidateClaimConverterOperation = LiteralKit(["toInsert", "fromRow"]);
 
 /**
- * Schema conversion failed while projecting a CandidateClaim across the
- * persistence boundary.
- *
  * **Example** (Construct converter error)
  *
  * ```ts

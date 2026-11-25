@@ -25,8 +25,6 @@ const FirecrawlErrorReasonKit = LiteralKit([
 ]);
 
 /**
- * Technical Firecrawl driver failure reasons.
- *
  * **Example** (List failure reasons)
  *
  * ```ts
@@ -46,8 +44,6 @@ export const FirecrawlErrorReason = FirecrawlErrorReasonKit.pipe(
 );
 
 /**
- * Type for {@link FirecrawlErrorReason}.
- *
  * **Example** (Assign a transport reason)
  *
  * ```ts
@@ -63,8 +59,6 @@ export const FirecrawlErrorReason = FirecrawlErrorReasonKit.pipe(
 export type FirecrawlErrorReason = typeof FirecrawlErrorReason.Type;
 
 /**
- * Technical failure raised inside the Firecrawl driver boundary.
- *
  * **Details**
  *
  * `message` is a sanitized description; the API key never appears in it. `status` carries the

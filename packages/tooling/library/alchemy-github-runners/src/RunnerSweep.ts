@@ -68,8 +68,6 @@ const deregisterIdle = (input: Parameters<typeof deregisterRunner>[0]) =>
 export const sweptInstanceStates: ReadonlyArray<string> = ["pending", "running", "stopping", "stopped"];
 
 /**
- * What one sweep did.
- *
  * **Example** (An empty fleet)
  *
  * ```ts
@@ -165,8 +163,6 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
 });
 
 /**
- * Props of {@link RunnerSweep}.
- *
  * **Details**
  *
  * `dependsOn` lists everything the sweep reads or races at delete time: the
@@ -200,8 +196,6 @@ export class RunnerSweepProps extends S.Opaque<RunnerSweepProps, { readonly bran
 ) {}
 
 /**
- * Encoded side of {@link RunnerSweepProps}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -216,8 +210,6 @@ export declare namespace RunnerSweepProps {
 }
 
 /**
- * Attributes of {@link RunnerSweep}: the props echoed back.
- *
  * **Example** (Read the echoed token paths)
  *
  * ```ts
@@ -240,8 +232,6 @@ export class RunnerSweepAttributes extends S.Opaque<RunnerSweepAttributes, { rea
 ) {}
 
 /**
- * Encoded side of {@link RunnerSweepAttributes}.
- *
  * @category models
  * @since 0.0.0
  */

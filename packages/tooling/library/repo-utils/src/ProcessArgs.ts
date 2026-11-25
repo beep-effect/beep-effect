@@ -38,8 +38,6 @@ import { OptionInjectionError } from "./errors/OptionInjectionError.ts";
 const $I = $RepoUtilsId.create("ProcessArgs");
 
 /**
- * Public option-injection guard error export.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -245,9 +243,6 @@ export const guardLiteralArgs: (
 });
 
 /**
- * Schema for a child-process argument value that is guaranteed not to be shaped
- * like a command-line option.
- *
  * **Details**
  *
  * Decoding rejects option-like inputs (non-empty values beginning with `-`),

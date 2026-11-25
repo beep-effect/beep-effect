@@ -2,28 +2,13 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
 import { defineConfig, mergeConfig } from "vitest/config";
-import shared, { vitestCoverageReportOnly } from "../../../../vitest.shared.ts";
+import shared from "../../../../vitest.shared.ts";
 
 const instrumentedFixture = Config.String("BEEP_INSTRUMENTED_IT_FIXTURE").pipe(
   Config.withDefault(""),
   Effect.map(Str.isNonEmpty),
   Effect.runSync
 );
-
-const coverageThresholds = vitestCoverageReportOnly
-  ? {}
-  : {
-      thresholds: {
-        // Calibrated to CI-measured coverage (quality-gate-ratchets,
-        // 2026-07-06): environment-conditional tests (PGLite/docker-gated)
-        // skip on CI, so CI measures lower than local (56/37/55/16 vs
-        // local ~60+). The repo coverage ratchet guards regressions.
-        branches: 16,
-        functions: 37,
-        lines: 56,
-        statements: 55,
-      },
-    };
 
 export default mergeConfig(
   shared,
@@ -32,7 +17,6 @@ export default mergeConfig(
       // Tests here mock modules, stub globals, or change the working directory; keep every file in
       // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
       isolate: true,
-      coverage: coverageThresholds,
       globals: true,
       // Runtime harnesses opt in when launching their fixture subprocesses.
       exclude: instrumentedFixture ? [] : ["test/fixtures/**"],

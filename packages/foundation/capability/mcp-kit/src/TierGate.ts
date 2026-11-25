@@ -71,8 +71,6 @@ export const TierGateSettlement = LiteralKit(["completed", "failed", "interrupte
 );
 
 /**
- * Runtime type for {@link TierGateSettlement}.
- *
  * **Example** (Type interrupted settlement)
  *
  * ```ts
@@ -113,8 +111,6 @@ export const TierGateOutcome = TierGateOutcomeTag.pipe(
 );
 
 /**
- * Runtime type for {@link TierGateOutcome}.
- *
  * **Example** (Type refused outcome)
  *
  * ```ts
@@ -230,8 +226,6 @@ export const TierGateVerdict = TierGateOutcomeTag.toTaggedUnion("verdict")({
 );
 
 /**
- * Runtime type for {@link TierGateVerdict}.
- *
  * **Example** (Type approved verdict)
  *
  * ```ts

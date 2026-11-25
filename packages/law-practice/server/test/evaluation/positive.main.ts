@@ -109,7 +109,7 @@ const program = Effect.gen(function* () {
     }
     return text;
   });
-  // Verify the entire baseline before any prediction, not just the next family.
+  // decision: evaluation-scripts-verify-whole-freeze-before-prediction
   for (const file of implementation.files) {
     yield* verifiedText(file.path, file.sha256);
   }
@@ -152,8 +152,7 @@ const program = Effect.gen(function* () {
     inputs,
     ({ family, source, gold, canonical, xml }, index) =>
       Effect.gen(function* () {
-        // This URL is an explicit replay alias, never evidence of a live download.
-        const alias = `https://api.uspto.gov/evaluation-replay/${source.applicationNumber}.xml`;
+        const replayAliasNeverLiveDownload = `https://api.uspto.gov/evaluation-replay/${source.applicationNumber}.xml`;
         const metadata = yield* encode({
           patentFileWrapperDataBag: [
             {
@@ -162,7 +161,7 @@ const program = Effect.gen(function* () {
               pgpubDocumentMetaData: {
                 productIdentifier: "APPXML",
                 xmlFileName: "recorded-native-claims.xml",
-                fileLocationURI: alias,
+                fileLocationURI: replayAliasNeverLiveDownload,
               },
             },
           ],
@@ -175,7 +174,7 @@ const program = Effect.gen(function* () {
                 request,
                 Str.includes("/applications/search?")(request.url)
                   ? new Response(metadata)
-                  : request.url === alias
+                  : request.url === replayAliasNeverLiveDownload
                     ? new Response(xml)
                     : new Response("", { status: 404 })
               )
@@ -221,7 +220,7 @@ const program = Effect.gen(function* () {
             determinerGroups: A.dedupe(
               A.flatMap(tree.elements, (element) => A.map(element.terms, (term) => term.determiner))
             ),
-            // Nested means containment below a top-level limitation, not an ordinary root limitation.
+            // decision: nested-score-means-containment-below-top-level-limitation
             nested: A.some(tree.edges, (edge) => edge.kind === "part-of" && edge.parent !== `${tree.claimNumber}`),
             functional: A.some(tree.edges, (edge) => edge.kind === "functional"),
             rules: A.dedupe(A.map(findings, (finding) => finding.rule)),

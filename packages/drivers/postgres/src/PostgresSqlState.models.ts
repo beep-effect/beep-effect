@@ -305,8 +305,6 @@ const PgErrorNameValues = Struct.keysNonEmpty(PostgresErrorCodeByName);
 const PgErrorCodeValues = A.dedupe(A.map(PgErrorNameValues, (name) => PostgresErrorCodeByName[name]));
 
 /**
- * PostgreSQL SQLSTATE name.
- *
  * **Example** (Assign unique violation name)
  *
  * ```ts
@@ -322,8 +320,6 @@ const PgErrorCodeValues = A.dedupe(A.map(PgErrorNameValues, (name) => PostgresEr
 export type PgErrorName = typeof PgErrorName.Type;
 
 /**
- * PostgreSQL SQLSTATE code.
- *
  * **Example** (Assign unique violation code)
  *
  * ```ts
@@ -421,8 +417,6 @@ const PgErrorAliasesLookup: Readonly<Record<string, A.NonEmptyReadonlyArray<PgEr
   PgErrorAliasesByCode;
 
 /**
- * Schema for PostgreSQL SQLSTATE codes.
- *
  * **Example** (Decode SQLSTATE code schema)
  *
  * ```ts
@@ -444,8 +438,6 @@ export const PgErrorCode = LiteralKit(PgErrorCodeValues).pipe(
 );
 
 /**
- * Schema for PostgreSQL SQLSTATE names.
- *
  * **Example** (Decode SQLSTATE name schema)
  *
  * ```ts

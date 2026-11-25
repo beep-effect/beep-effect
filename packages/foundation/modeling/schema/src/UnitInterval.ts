@@ -18,8 +18,6 @@ import { $SchemaId } from "./internal/SchemaId.ts";
 const $I = $SchemaId.create("UnitInterval");
 
 /**
- * Schema for a real number in the closed unit interval `[0, 1]` (inclusive).
- *
  * **Example** (Decode unit interval value)
  *
  * ```ts import.meta.vitest name="Decode unit interval value"
@@ -44,7 +42,6 @@ export const UnitInterval = S.Finite.check(
 );
 
 /**
- * {@inheritDoc UnitInterval}
  * @category models
  * @since 0.0.0
  */

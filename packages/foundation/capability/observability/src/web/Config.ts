@@ -11,8 +11,6 @@ import * as S from "effect/Schema";
 const $I = $ObservabilityId.create("web/Config");
 
 /**
- * Browser-only observability configuration.
- *
  * **Example** (Creating browser observability config)
  *
  * ```ts import.meta.vitest name="Creating browser observability config"

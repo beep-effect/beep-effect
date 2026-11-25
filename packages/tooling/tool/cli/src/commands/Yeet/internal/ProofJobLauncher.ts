@@ -106,8 +106,6 @@ const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
 
 /**
- * `wait` returned because the job settled.
- *
  * @category models
  * @since 0.0.0
  */
@@ -119,8 +117,6 @@ export class ProofJobWaitSettled extends S.Opaque<ProofJobWaitSettled, { readonl
 ) {}
 
 /**
- * `wait` returned on a new inbox wave while the job keeps running.
- *
  * @category models
  * @since 0.0.0
  */
@@ -138,9 +134,6 @@ export class ProofJobWaitWave extends S.Opaque<ProofJobWaitWave, { readonly bran
 ) {}
 
 /**
- * How `wait` returned: the job settled, or a new inbox wave landed on the
- * pull request a monitor job follows.
- *
  * **Details**
  *
  * The wave return never acknowledges the wave rows: they stay in the inbox so
@@ -166,8 +159,6 @@ export const ProofJobWaitResult = S.Union([ProofJobWaitSettled, ProofJobWaitWave
 );
 
 /**
- * How `wait` returned.
- *
  * @category type-level
  * @since 0.0.0
  */

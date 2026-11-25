@@ -21,6 +21,7 @@ describe("PolicyData", () => {
       "packages/tooling/policy-pack/repo-configs/data/github-apps/beep-reviewer.manifest.json",
       "packages/tooling/policy-pack/repo-configs/data/github-apps/beep-knowledge-mint.manifest.json",
       "packages/tooling/policy-pack/repo-configs/data/github-apps/beep-infra-github.manifest.json",
+      "packages/tooling/policy-pack/repo-configs/data/github-apps/beep-fleet-watch.manifest.json",
     ]);
   });
 
@@ -28,5 +29,6 @@ describe("PolicyData", () => {
     expect(GitHubAppName.is["beep-knowledge-mint"]("beep-knowledge-mint")).toBe(true);
     expect(GitHubAppName.is["beep-reviewer"]("beep-knowledge-mint")).toBe(false);
     expect(GitHubAppName.is["beep-infra-github"]("beep-infra-github")).toBe(true);
+    expect(GitHubAppName.is["beep-fleet-watch"]("beep-fleet-watch")).toBe(true);
   });
 });

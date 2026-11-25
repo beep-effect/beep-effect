@@ -121,8 +121,6 @@ const KnowledgePublicDetail = S.String.check(
 type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
 
 /**
- * Stable finding classes owned by knowledge-surface evaluators.
- *
  * **Details**
  *
  * The Stage-1 semantic delta emits only `broken-tracked-path`, `unknown-beep-command`, `index-drift`,
@@ -241,8 +239,6 @@ export const KnowledgeFindingSeverity = LiteralKit(["blocking", "advisory"]).pip
 );
 
 /**
- * Enforcement severity of a knowledge finding.
- *
  * @see {@link KnowledgeFindingSeverity} for the runtime schema and the Stage-1 severity rule.
  * @category type-level
  * @since 0.0.0
@@ -314,8 +310,6 @@ export const KnowledgeProbePolicy = LiteralKit([
 );
 
 /**
- * Whether current-checkout probes ran against archive data for a comparison.
- *
  * @see {@link KnowledgeProbePolicy} for the runtime schema and the fork-pull-request rule.
  * @category type-level
  * @since 0.0.0
@@ -367,8 +361,6 @@ export const KNOWLEDGE_PROBE_DEPENDENT_KINDS: ReadonlyArray<KnowledgeFindingKind
 ];
 
 /**
- * Versioned SHA-256 identity of one normalized finding instance.
- *
  * **Details**
  *
  * The digest covers the length-prefixed normalization version, kind, document id, subject, and
@@ -791,8 +783,6 @@ export const KnowledgeCommandProbeResult = S.Union([KnowledgeCommandResolved, Kn
 export type KnowledgeCommandProbeResult = typeof KnowledgeCommandProbeResult.Type;
 
 /**
- * Expected and archived bytes of the generated goals index for one side of a comparison.
- *
  * **Details**
  *
  * The comparison is byte-exact: `expected` is produced by running the current-checkout index
@@ -919,8 +909,6 @@ export class KnowledgeCommandOccurrence extends S.Opaque<
 ) {}
 
 /**
- * The paired-archive semantic delta between merge-base and HEAD.
- *
  * **Details**
  *
  * Each bucket is sorted by `findingId`, so the report is byte-stable across runs. Only `introduced`

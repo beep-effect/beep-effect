@@ -36,16 +36,12 @@ export const Count = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * Type of {@link Count}.
- *
  * @category models
  * @since 0.0.0
  */
 export type Count = typeof Count.Type;
 
 /**
- * A non-negative, finite duration in milliseconds.
- *
  * **Example** (Check a duration)
  *
  * ```ts
@@ -65,16 +61,12 @@ export const DurationMs = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * Type of {@link DurationMs}.
- *
  * @category models
  * @since 0.0.0
  */
 export type DurationMs = typeof DurationMs.Type;
 
 /**
- * A one-based line or column number in a source file.
- *
  * **Example** (Check a line number)
  *
  * ```ts
@@ -95,8 +87,6 @@ export const Position = S.Int.check(S.isGreaterThanOrEqualTo(1)).pipe(
 );
 
 /**
- * Type of {@link Position}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -125,16 +115,12 @@ export const Text = S.NonEmptyString.pipe(
 );
 
 /**
- * Type of {@link Text}.
- *
  * @category models
  * @since 0.0.0
  */
 export type Text = typeof Text.Type;
 
 /**
- * An ISO-8601 instant with a `Z` or numeric offset, decoded to a UTC date-time.
- *
  * **Details**
  *
  * The encoded side must match the ISO-8601 instant pattern before the date
@@ -178,8 +164,6 @@ export const IsoInstant = S.String.check(
 );
 
 /**
- * Type of {@link IsoInstant}.
- *
  * @category models
  * @since 0.0.0
  */

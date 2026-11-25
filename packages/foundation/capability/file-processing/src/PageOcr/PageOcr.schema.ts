@@ -14,8 +14,6 @@ import { PosInt } from "../internal/PosInt.ts";
 const $I = $FileProcessingId.create("PageOcr");
 
 /**
- * Runtime families a page OCR engine can belong to.
- *
  * **Details**
  *
  * `tesseract` is the CPU baseline. `llama-server` is a vision model served
@@ -40,8 +38,6 @@ export const PageOcrEngineFamily = LiteralKit(["tesseract", "llama-server", "tra
 );
 
 /**
- * Type for {@link PageOcrEngineFamily}.
- *
  * **Example** (Type an engine family)
  *
  * ```ts
@@ -77,8 +73,6 @@ export const PageOcrTextFormat = LiteralKit(["plain-text", "markdown"]).pipe(
 );
 
 /**
- * Type for {@link PageOcrTextFormat}.
- *
  * **Example** (Type a text format)
  *
  * ```ts
@@ -94,8 +88,6 @@ export const PageOcrTextFormat = LiteralKit(["plain-text", "markdown"]).pipe(
 export type PageOcrTextFormat = typeof PageOcrTextFormat.Type;
 
 /**
- * Raster encodings accepted for a page image.
- *
  * **Example** (Check png media type option)
  *
  * ```ts
@@ -114,8 +106,6 @@ export const PageImageMediaType = LiteralKit(["image/png", "image/jpeg", "image/
 );
 
 /**
- * Type for {@link PageImageMediaType}.
- *
  * **Example** (Type a page image media type)
  *
  * ```ts
@@ -163,8 +153,6 @@ export const PageOcrWarning = LiteralKit([
 );
 
 /**
- * Type for {@link PageOcrWarning}.
- *
  * **Example** (Type a page warning)
  *
  * ```ts
@@ -184,8 +172,6 @@ const NonNegativeMillis = S.Finite.check(S.isGreaterThanOrEqualTo(0));
 const UnitInterval = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 }));
 
 /**
- * Identity of the model weights an OCR engine ran.
- *
  * **Details**
  *
  * `weightsDigest` is the SHA-256 of the weights file, so two runs under the
@@ -225,8 +211,6 @@ export class PageOcrModelIdentity extends S.Opaque<PageOcrModelIdentity, { reado
 ) {}
 
 /**
- * Identity of the engine that produced a page text.
- *
  * **Details**
  *
  * `engineId` names one configured engine (for example a served model), and

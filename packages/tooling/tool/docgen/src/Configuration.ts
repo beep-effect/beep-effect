@@ -81,8 +81,6 @@ export const CompilerOptionsShape = S.toEncoded(ClosedCompilerOptions).pipe(
 );
 
 /**
- * Schema for accepted CLI or config-file compiler options input.
- *
  * **Example** (Validate tsconfig path input)
  *
  * ```ts
@@ -112,8 +110,6 @@ const booleanKeyDefault = (value: boolean) =>
 const stringArrayKeyDefault = ArrayKeyDefaultEmpty(S.String);
 
 /**
- * Schema for the optional package-local `docgen.json` document.
- *
  * **Example** (Decode docgen.json config)
  *
  * ```ts
@@ -241,8 +237,6 @@ export const configurationJsonSchema = (): JsonSchema.JsonSchema => {
 };
 
 /**
- * Fully resolved configuration values used by the parser, example checker, and printer.
- *
  * **Example** (Build resolved configuration)
  *
  * ```ts
@@ -388,8 +382,6 @@ export class Configuration extends Context.Service<Configuration, ConfigurationS
 }
 
 /**
- * Accepted CLI or config-file input for compiler options.
- *
  * **Example** (Inline and path options)
  *
  * ```ts
@@ -484,8 +476,6 @@ const readJsoncFile = Effect.fn("readJsonCFile")(function* <A, I>(
 });
 
 /**
- * The `name` and `homepage` docgen reads from its package's `package.json`.
- *
  * **Example** (Construct a package identity)
  *
  * ```ts

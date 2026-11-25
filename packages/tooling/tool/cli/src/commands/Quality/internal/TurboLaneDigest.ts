@@ -18,8 +18,6 @@ import type * as PlatformError from "effect/PlatformError";
 const $I = $RepoCliId.create("commands/Quality/internal/TurboLaneDigest");
 
 /**
- * Cache verdict Turbo records for one task in a run summary.
- *
  * **Example** (Check a cache status)
  *
  * ```ts
@@ -158,8 +156,6 @@ export class TurboLaneTaskHash extends S.Opaque<TurboLaneTaskHash, { readonly br
 ) {}
 
 /**
- * A lane's Turbo-derived input digest: the summaries it came from and the task hashes it folds.
- *
  * **Details**
  *
  * The digest is the SHA-256 of the sorted `taskId=hash` lines, so it does not depend on Turbo's
@@ -556,8 +552,6 @@ export const TurboLaneLedgerRow = S.Union([
 );
 
 /**
- * The decoded shape of {@link TurboLaneLedgerRow}.
- *
  * @category models
  * @since 0.0.0
  */

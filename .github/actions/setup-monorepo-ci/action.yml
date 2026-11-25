@@ -166,6 +166,8 @@ runs:
       uses: ./.github/actions/apt-install
       with:
         packages: poppler-utils
+        install-timeout-seconds: "300"
+        budget-seconds: "600"
 
     - name: Install native PDF text extraction (dnf)
       if: inputs.native-pdf-tools == 'true' && steps.pdf-tools.outputs.installer == 'dnf'

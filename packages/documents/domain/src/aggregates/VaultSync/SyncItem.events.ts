@@ -12,8 +12,6 @@ import * as V from "./Values.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/VaultSync/SyncItem.command");
 /**
- * ItemObservation vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { ItemObservation } from "@beep/documents-domain/aggregates/VaultSync";
@@ -38,8 +36,6 @@ export class ItemObservation extends S.Opaque<ItemObservation, { readonly brand:
 ) {}
 
 /**
- * Persisted non-empty state of the ItemState aggregate.
- *
  * **Example** (Inspect persisted state fields)
  * ```ts
  * import { ItemRecord } from "@beep/documents-domain/aggregates/VaultSync";
@@ -57,8 +53,6 @@ export class ItemRecord extends S.Opaque<ItemRecord, { readonly brand: unique sy
   }).pipe($I.annoteSchema("ItemRecord", { description: "Persisted non-empty vault sync state." }))
 ) {}
 /**
- * ItemState vault sync contract.
- *
  * **Example** (Inspect contract)
  * ```ts
  * import { ItemState } from "@beep/documents-domain/aggregates/VaultSync";
@@ -71,8 +65,6 @@ export const ItemState = S.NullOr(ItemRecord).pipe(
   $I.annoteSchema("ItemState", { description: "ItemState persisted vault sync value." })
 );
 /**
- * Runtime value accepted by {@link ItemState}.
- *
  * @category aggregates
  * @since 0.0.0
  */

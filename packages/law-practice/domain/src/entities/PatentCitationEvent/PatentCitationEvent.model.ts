@@ -23,8 +23,6 @@ const $I = $LawPracticeDomainId.create("entities/PatentCitationEvent/PatentCitat
 const pg = ProductEntity.pg;
 
 /**
- * One observed occurrence of a patent reference cited against a filing.
- *
  * **When to use**
  *
  * Use to record an occurrence exactly as observed, so an attorney can later

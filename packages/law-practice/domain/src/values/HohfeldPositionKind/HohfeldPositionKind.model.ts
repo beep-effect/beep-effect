@@ -22,8 +22,6 @@ const HohfeldPositionKindBase = LiteralKit([
 ]);
 
 /**
- * The eight Hohfeldian legal position kinds, closed at eight.
- *
  * **When to use**
  *
  * Use when a position kind is read or derived. Only the advantage side is
@@ -66,8 +64,6 @@ export const HohfeldPositionKind = HohfeldPositionKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link HohfeldPositionKind}.
- *
  * @see {@link HohfeldPositionKind} for the runtime schema and member meanings.
  * @category models
  * @since 0.0.0
@@ -118,8 +114,6 @@ export const AdvantagePositionKind = AdvantagePositionKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link AdvantagePositionKind}.
- *
  * @see {@link AdvantagePositionKind} for the runtime schema and the canonicalisation rule.
  * @category models
  * @since 0.0.0
@@ -177,8 +171,6 @@ export const DeonticPositionKind = DeonticPositionKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link DeonticPositionKind}.
- *
  * @see {@link DeonticPositionKind} for the runtime schema and the orbit rule.
  * @category models
  * @since 0.0.0
@@ -235,8 +227,6 @@ export const PotestativePositionKind = PotestativePositionKindBase.pipe(
 );
 
 /**
- * Runtime type for {@link PotestativePositionKind}.
- *
  * @see {@link PotestativePositionKind} for the runtime schema and the orbit rule.
  * @category models
  * @since 0.0.0

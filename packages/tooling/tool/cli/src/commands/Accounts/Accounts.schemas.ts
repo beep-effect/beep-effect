@@ -18,8 +18,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Accounts/Accounts.schemas");
 
 /**
- * The subscription provider an account belongs to.
- *
  * **Example** (Narrow a provider)
  *
  * ```ts
@@ -36,8 +34,6 @@ export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok", "j
 );
 
 /**
- * Subscription provider whose plan limits are polled.
- *
  * @category models
  * @since 0.0.0
  */
@@ -70,8 +66,6 @@ export const AccountProviderName = S.String.check(
 ).pipe($I.annoteSchema("AccountProviderName", { description: "Provider name shown on a report row." }));
 
 /**
- * Provider name shown on a report row.
- *
  * @category models
  * @since 0.0.0
  */
@@ -104,8 +98,6 @@ export const AccountLabel = S.String.check(
 ).pipe($I.annoteSchema("AccountLabel", { description: "Directory-safe operator name for one account." }));
 
 /**
- * Directory-safe operator name for one account.
- *
  * @category models
  * @since 0.0.0
  */
@@ -137,8 +129,6 @@ export class AccountRef extends S.Opaque<AccountRef, { readonly brand: unique sy
 ) {}
 
 /**
- * Which limit a usage window measures.
- *
  * **Example** (Narrow a kind)
  *
  * ```ts
@@ -158,9 +148,6 @@ export const UsageWindowKind = LiteralKit(["session", "weekly", "weekly-scoped",
 );
 
 /**
- * Short session limit; account-wide weekly or billing-cycle limit; or one of
- * those scoped to a model group.
- *
  * @category models
  * @since 0.0.0
  */
@@ -215,8 +202,6 @@ export const CreditUnit = LiteralKit(["usd", "credits"]).pipe(
 );
 
 /**
- * Dollars, or the provider's own credit points.
- *
  * @category models
  * @since 0.0.0
  */
@@ -290,16 +275,12 @@ export const AccountUsageOutcome = S.TaggedUnion({
 }).pipe($I.annoteSchema("AccountUsageOutcome", { description: "Result of polling one account's plan limits." }));
 
 /**
- * Result of polling one account's plan limits.
- *
  * @category models
  * @since 0.0.0
  */
 export type AccountUsageOutcome = typeof AccountUsageOutcome.Type;
 
 /**
- * One account and the outcome of polling it.
- *
  * **Example** (Make a usage row)
  *
  * ```ts
@@ -350,8 +331,6 @@ export const AccountSection = LiteralKit(["claude", "codex", "supergrok", "muse"
 );
 
 /**
- * The provider panel an account is ranked in.
- *
  * @category models
  * @since 0.0.0
  */
@@ -428,9 +407,6 @@ export const AccountAvailability = LiteralKit(["ready", "session-capped", "weekl
 );
 
 /**
- * Ready for work, waiting on the session window, out of weekly quota, or not
- * readable.
- *
  * @category models
  * @since 0.0.0
  */

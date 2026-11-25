@@ -47,8 +47,6 @@ export const InboxRowKind = LiteralKit([
 ]).pipe($I.annoteSchema("InboxRowKind", { description: "Kind of one yeet inbox row." }));
 
 /**
- * Runtime type for {@link InboxRowKind}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -74,8 +72,6 @@ export const InboxSeverity = LiteralKit(["P0", "P1", "P2"]).pipe(
 );
 
 /**
- * Runtime type for {@link InboxSeverity}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -170,8 +166,6 @@ export class ProofJobInput extends S.Opaque<ProofJobInput, { readonly brand: uni
 ) {}
 
 /**
- * One checkout's inbox and proof jobs.
- *
  * **Details**
  *
  * `inboxReadable` is `false` when the inbox file exists but could not be
@@ -234,9 +228,6 @@ export class LaneRedsInput extends S.Opaque<LaneRedsInput, { readonly brand: uni
 ) {}
 
 /**
- * What a lane red is: an inbox row kind that asks for work, or a failed
- * proof job.
- *
  * **Details**
  *
  * Base drift (always P2) and the observation rows (`pr-merge-ready`,
@@ -268,16 +259,12 @@ export const LaneRedKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link LaneRedKind}.
- *
  * @category models
  * @since 0.0.0
  */
 export type LaneRedKind = typeof LaneRedKind.Type;
 
 /**
- * Lane-reds parcel item: one open P0 or P1 red in one lane.
- *
  * **Details**
  *
  * `freshness` is the item's own: `Fresh` when it was observed within the

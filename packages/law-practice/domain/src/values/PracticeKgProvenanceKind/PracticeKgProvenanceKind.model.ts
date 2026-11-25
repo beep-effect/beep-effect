@@ -51,8 +51,6 @@ export const PracticeKgProvenanceKind = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PracticeKgProvenanceKind}.
- *
  * **Example** (Map kind to ref label)
  *
  * ```ts

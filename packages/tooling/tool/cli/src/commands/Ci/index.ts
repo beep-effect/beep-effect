@@ -12,8 +12,6 @@
  */
 
 /**
- * Public certainty scorecard schemas.
- *
  * @category models
  * @since 0.0.0
  */
@@ -41,6 +39,13 @@ export * from "./Ci.errors.ts";
  */
 export * from "./CiAdmission.ts";
 /**
+ * The annotation workflow commands a job's lane steps wrote.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiAnnotationsUsed.ts";
+/**
  * Slim CI binary program export.
  *
  * @category cli-commands
@@ -49,15 +54,11 @@ export * from "./CiAdmission.ts";
 export * from "./CiBinary.ts";
 export * from "./CiBootstrap.command.ts";
 /**
- * Public local cache observation summary export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./CiCacheLocalSummary.ts";
 /**
- * Public cache pilot literal domain export.
- *
  * @category models
  * @since 0.0.0
  */
@@ -70,8 +71,6 @@ export * from "./CiCachePilot.schemas.ts";
  */
 export * from "./CiCachePilotHost.ts";
 /**
- * Public cache pilot input preparation export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -85,6 +84,34 @@ export * from "./CiCompileBinary.ts";
  */
 export * from "./CiEventBase.ts";
 /**
+ * `beep ci failures`: each failed job's verdict and failures by run or PR.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiFailures.ts";
+/**
+ * The reader of a hosted job's feed artifact: its task-outcome record and gate records.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiFeedArtifact.ts";
+/**
+ * The CI projection of gate reports: step summary, grouped log and annotations.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiGateProjection.ts";
+/**
+ * The search for the gate records a job's checkout holds.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiGateRecordSearch.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands
@@ -92,8 +119,13 @@ export * from "./CiEventBase.ts";
  */
 export * from "./CiGovernance.ts";
 /**
- * Public CI lane definitions export.
+ * The CI-job adapter: a workflow run read as a gate report.
  *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiJobAdapter.ts";
+/**
  * @category cli-commands
  * @since 0.0.0
  */
@@ -106,12 +138,24 @@ export * from "./CiLane.ts";
  */
 export * from "./CiLaneJobs.ts";
 /**
- * Public CI lane partition definitions export.
- *
  * @category cli-commands
  * @since 0.0.0
  */
 export * from "./CiLanePartitions.ts";
+/**
+ * The gate record of a hosted `ci lane` step.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiLaneRecording.ts";
+/**
+ * The main feed lookup: main's newest gate reports at a merge base.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiMainFeed.ts";
 /**
  * Operational CI schemas and platform service.
  *
@@ -148,8 +192,13 @@ export * from "./CiPartitions.schemas.ts";
  */
 export * from "./CiPartitions.service.ts";
 /**
- * Public runner-loss rerun subcommand export.
+ * Public property sweep census and verdict (the nightly's second property step).
  *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./CiPropertySweep.ts";
+/**
  * @category cli-commands
  * @since 0.0.0
  */
@@ -239,8 +288,48 @@ export * from "./DependencyReviewSchemas.ts";
  */
 export * from "./DocsPolicy.ts";
 /**
- * Public heavy-admission decision export.
+ * The standing fleet missed-event check subcommand.
  *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.command.ts";
+/**
+ * The live GitHub reads of the fleet missed-event check.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.live.ts";
+/**
+ * The GitHub shapes, verdicts and run report the missed-event check decodes and emits.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.schemas.ts";
+/**
+ * Service contracts and fakes of the fleet missed-event check.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.service.ts";
+/**
+ * The standing fleet missed-event check: its decisions and summary.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./FleetMissedEvent.ts";
+/**
+ * The generated runner pool caps projected from the production fleet configuration.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./FleetPoolCaps.generated.ts";
+/**
  * @category cli-commands
  * @since 0.0.0
  */
@@ -302,8 +391,6 @@ export * from "./RouteCorpus.ts";
  */
 export * from "./RouteFootprints.ts";
 /**
- * Public runner-loss rerun decision export.
- *
  * @category cli-commands
  * @since 0.0.0
  */

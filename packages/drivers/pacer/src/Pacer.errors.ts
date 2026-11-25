@@ -50,8 +50,6 @@ export const PacerAuthErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link PacerAuthErrorReason}.
- *
  * **Example** (Type alias for auth reason)
  *
  * ```ts
@@ -164,8 +162,6 @@ export const PacerPclErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link PacerPclErrorReason}.
- *
  * **Example** (Type alias for PCL reason)
  *
  * ```ts

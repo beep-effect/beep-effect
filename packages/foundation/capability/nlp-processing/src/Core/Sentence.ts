@@ -57,8 +57,6 @@ export const sentenceIndex: Brand.Constructor<SentenceIndex> = Brand.check<Sente
 );
 
 /**
- * Schema that decodes non-negative numbers into {@link SentenceIndex} values.
- *
  * **Example** (Decode non-negative index)
  *
  * ```ts import.meta.vitest name="Decode non-negative index"

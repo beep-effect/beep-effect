@@ -177,8 +177,6 @@ const heredocLines = (input: {
 ];
 
 /**
- * Filesystem mode a rendered generation file is materialized with.
- *
  * **Example** (List the file mode literals)
  * ```ts
  * import { OpenClawFileMode } from "@beep/infra-hosts/OpenClawGeneration"
@@ -197,8 +195,6 @@ export const OpenClawFileMode = OpenClawFileModeBase.pipe(
 );
 
 /**
- * Runtime type for {@link OpenClawFileMode}.
- *
  * **Example** (Annotate a file mode value)
  * ```ts
  * import type { OpenClawFileMode } from "@beep/infra-hosts/OpenClawGeneration"
@@ -268,8 +264,6 @@ export class OpenClawExpectedIdentity extends S.Opaque<OpenClawExpectedIdentity,
 ) {}
 
 /**
- * Filesystem layout the workstation applicator owns.
- *
  * **Example** (Read the default config root)
  * ```ts
  * import { OpenClawWorkstationPaths } from "@beep/infra-hosts/OpenClawGeneration"
@@ -359,8 +353,6 @@ export class OpenClawHostedProviderConfig extends S.Opaque<
 ) {}
 
 /**
- * Local loopback OpenAI-compatible fallback provider.
- *
  * **Example** (Configure a local Ollama provider)
  * ```ts
  * import { OpenClawLocalProviderConfig } from "@beep/infra-hosts/OpenClawGeneration"
@@ -395,8 +387,6 @@ export class OpenClawLocalProviderConfig extends S.Opaque<
 
 const openClawDeploymentConfigGatewayAuthTokenRefDefault = OpenclawSecretReference.make(defaultGatewayAuthTokenRef);
 /**
- * Deployment inputs the stack turns into an OpenClaw deployment intent.
- *
  * **Details**
  *
  * Secret material never appears here: `gatewayAuthTokenRef` is an `op://`
@@ -657,8 +647,6 @@ export const makeOpenClawDeploymentIntent: {
 );
 
 /**
- * Backup shipping inputs for encrypted generation snapshots.
- *
  * **Details**
  *
  * The remote host is dumb storage: the ship script only creates the target
@@ -709,8 +697,6 @@ export class OpenClawBackupConfig extends S.Opaque<OpenClawBackupConfig, { reado
 ) {}
 
 /**
- * One immutable, content-addressed OpenClaw generation.
- *
  * **Details**
  *
  * `generationId` is the length-delimited SHA-256 bundle of the config,
@@ -820,8 +806,6 @@ export class OpenClawGeneration extends S.Opaque<OpenClawGeneration, { readonly 
 ) {}
 
 /**
- * Content hashes that form an immutable OpenClaw generation identity.
- *
  * **Example** (Build bundle hash inputs)
  * ```ts
  * import { OpenClawBundleHashInput } from "@beep/infra-hosts/OpenClawGeneration"
@@ -858,9 +842,6 @@ export class OpenClawBundleHashInput extends S.Opaque<OpenClawBundleHashInput, {
 ) {}
 
 /**
- * Shared input for rendered scripts that bind a generation to its expected
- * workstation identity.
- *
  * **Example** (Reference the identity script input schema)
  * ```ts
  * import { OpenClawGenerationIdentityScriptInput } from "@beep/infra-hosts/OpenClawGeneration"
@@ -890,8 +871,6 @@ export class OpenClawGenerationIdentityScriptInput extends S.Opaque<
 ) {}
 
 /**
- * Input for rendering an encrypted OpenClaw backup shipping script.
- *
  * **Example** (Reference the backup script input schema)
  * ```ts
  * import { OpenClawBackupShipScriptInput } from "@beep/infra-hosts/OpenClawGeneration"
@@ -1342,8 +1321,6 @@ export const renderOpenClawRunScript = (generation: OpenClawGeneration): string 
   )}\n`;
 
 /**
- * Render one generation file with its content and materialization mode.
- *
  * **Example** (Build a generation file)
  * ```ts
  * import { OpenClawGenerationFile } from "@beep/infra-hosts/OpenClawGeneration"
@@ -2364,8 +2341,6 @@ export const renderOpenClawBackupShipScript = ({ backup, generation }: OpenClawB
 };
 
 /**
- * Typed arguments for the OpenClaw workstation stack.
- *
  * **Details**
  *
  * `identity` has no default on purpose — the stack must be told which machine

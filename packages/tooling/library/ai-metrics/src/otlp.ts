@@ -46,8 +46,6 @@ const $I = $RepoAiMetricsId.create("otlp");
 type ReadableSpan = Parameters<OTLPTraceExporter["export"]>[0][number];
 
 /**
- * OTLP attributes approved for redacted AI metrics span export.
- *
  * **Example** (Use AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST)
  *
  * ```ts
@@ -95,8 +93,6 @@ export const AiMetricsOtlpAttributeKey = LiteralKit([
 );
 
 /**
- * Runtime type for {@link AiMetricsOtlpAttributeKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -150,8 +146,6 @@ export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolea
 );
 
 /**
- * Runtime type for {@link AiMetricsOtlpAttributeValue}.
- *
  * **Example** (Type a value as AiMetricsOtlpAttributeValue)
  *
  * ```ts
@@ -166,8 +160,6 @@ export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolea
 export type AiMetricsOtlpAttributeValue = typeof AiMetricsOtlpAttributeValue.Type;
 
 /**
- * Error raised by AI metrics OTLP projection or export.
- *
  * **Example** (Construct AiMetricsOtlpExportError)
  *
  * ```ts
@@ -300,8 +292,6 @@ export class AiMetricsOtlpSpanProjection extends S.Opaque<
 }
 
 /**
- * Span projections for every derived turn still awaiting OTLP export.
- *
  * **Example** (Construct AiMetricsOtlpSpanProjectionBatch)
  *
  * ```ts
@@ -351,8 +341,6 @@ export class AiMetricsOtlpSpanProjectionBatch extends S.Opaque<
 ) {}
 
 /**
- * Result of a redacted AI metrics OTLP export attempt.
- *
  * **Example** (Construct AiMetricsOtlpExportResult)
  *
  * ```ts
@@ -489,12 +477,8 @@ const openInferenceSpanKindFor = (row: AiMetricsOtlpTurnExportRow): string => {
     : OpenInferenceSpanKind.Enum.CHAIN;
 };
 
-// Selects every turn that has not yet been exported, rather than the turns belonging
-// to one ingest run. Run-scoping silently dropped work: a run that committed turns and
-// then died before exporting left them attached to a run the exporter would never
-// revisit. Draining on the watermark instead makes a failed export self-healing --
-// the next run simply picks the turns up.
-const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* () {
+// decision: otlp-export-drains-an-explicit-watermark
+const readUnexportedTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* () {
   const duckdb = yield* DuckDb;
   const rows = yield* duckdb
     .query(
@@ -539,11 +523,7 @@ const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* () {
 const OTLP_TRACE_ID_HEX_LENGTH = 32;
 const OTLP_SPAN_ID_HEX_LENGTH = 16;
 
-// The OTLP wire format spells "no id" as all zero bytes, so a span carrying an
-// all-zero trace or span id is discarded by the collector rather than stored. A
-// SHA-256 prefix will not realistically be all zeros, but a span that vanishes
-// without an error is not a failure mode worth leaving open.
-const otlpIdFrom = (digest: string, hexLength: number): string => {
+const otlpIdNeverAllZerosWhichTheWireReadsAsNoId = (digest: string, hexLength: number): string => {
   const candidate = Str.takeLeft(digest, hexLength);
   return candidate === Str.repeat(hexLength)("0") ? `${Str.repeat(hexLength - 1)("0")}1` : candidate;
 };
@@ -553,29 +533,20 @@ const otlpIdFor = Effect.fnUntraced(function* (seed: string, hexLength: number) 
     Effect.mapError((cause) => exportFailure("Failed to derive a deterministic AI metrics OTLP span id.", cause))
   );
 
-  return otlpIdFrom(digest, hexLength);
+  return otlpIdNeverAllZerosWhichTheWireReadsAsNoId(digest, hexLength);
 });
 
-// Seeded from the transcript, NOT read off `agent_session_id`. That column is now
-// content-addressed too, but a store migrated in place is not guaranteed to be uniform:
-// until `ai-metrics-agent-session-id-v2` has run, rows still carry per-run ids. Deriving
-// trace identity from the transcript keeps a half-migrated store tracing correctly, and
-// keeps trace ids stable across the migration itself.
-//
-// This seed also carries `sourceRole`, which the session row key deliberately does not.
-// They are allowed to diverge: dropping it here would change the trace id of every
-// transcript and detach future spans from traces Phoenix already holds, which costs far
-// more than the rare role flip it would tidy up.
+// decision: trace-identity-seeds-from-transcript
 const sessionSeed = (row: AiMetricsOtlpTurnExportRow): string =>
   `${row.sourceKind}\u0000${row.sourceRole}\u0000${row.sourcePathHash}`;
 
-// Seeds are prefixed so a session seed and a turn id that happen to share text cannot
-// collide across id kinds, and so a trace id is never the same digest as a span id.
+const domainSeparatedSeed = (idKind: "trace" | "session" | "turn", seed: string) => `${idKind}:${seed}`;
+
 const traceIdFor = (row: AiMetricsOtlpTurnExportRow) =>
-  otlpIdFor(`trace:${sessionSeed(row)}`, OTLP_TRACE_ID_HEX_LENGTH);
+  otlpIdFor(domainSeparatedSeed("trace", sessionSeed(row)), OTLP_TRACE_ID_HEX_LENGTH);
 const sessionSpanIdFor = (row: AiMetricsOtlpTurnExportRow) =>
-  otlpIdFor(`session:${sessionSeed(row)}`, OTLP_SPAN_ID_HEX_LENGTH);
-const turnSpanIdFor = (turnId: string) => otlpIdFor(`turn:${turnId}`, OTLP_SPAN_ID_HEX_LENGTH);
+  otlpIdFor(domainSeparatedSeed("session", sessionSeed(row)), OTLP_SPAN_ID_HEX_LENGTH);
+const turnSpanIdFor = (turnId: string) => otlpIdFor(domainSeparatedSeed("turn", turnId), OTLP_SPAN_ID_HEX_LENGTH);
 
 type AiMetricsOtlpSessionIdentity = {
   readonly sessionSpanId: string;
@@ -668,28 +639,21 @@ const sessionGroupProjections = Effect.fnUntraced(function* (
   };
 });
 
-// Grouped by transcript rather than mapped row-by-row so each session's trace and span
-// ids are digested once and shared by every turn beneath it. A run can carry tens of
-// thousands of turns, and `crypto.subtle` is not free.
-//
-// The key is the content seed, not `agent_session_id`. Grouping must not depend on that
-// column, because a store migrated in place can still hold legacy per-run ids alongside
-// content-addressed ones until `ai-metrics-agent-session-id-v2` has run. On such a store,
-// grouping by the column would emit one session projection per legacy row, all carrying
-// the same content-addressed span id -- and a single OTLP request containing a duplicate
-// span id is one the collector may reject outright rather than deduplicate.
+// decision: trace-identity-seeds-from-transcript
 const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMetricsOtlpTurnExportRow>) {
-  const groups = yield* Effect.forEach(R.values(A.groupBy(rows, sessionSeed)), sessionGroupProjections, {
-    concurrency: 1,
-  });
-  const sessionProjections = A.map(groups, (group) => group.session);
-  const turnProjections = A.flatMap(groups, (group) => group.turns);
+  const sessionGroupsDigestingIdsOncePerSession = yield* Effect.forEach(
+    R.values(A.groupBy(rows, sessionSeed)),
+    sessionGroupProjections,
+    { concurrency: 1 }
+  );
+  const sessionProjections = A.map(sessionGroupsDigestingIdsOncePerSession, (group) => group.session);
+  const turnProjections = A.flatMap(sessionGroupsDigestingIdsOncePerSession, (group) => group.turns);
+  const eachSessionBesideItsTurnsSoNoChunkIsSessionOnly = A.flatMap(sessionGroupsDigestingIdsOncePerSession, (group) =>
+    A.prepend(group.turns, group.session)
+  );
 
   return AiMetricsOtlpSpanProjectionBatch.make({
-    // Keep each session next to its turns. If all session roots lead the array, a
-    // backlog with 512+ sessions can acknowledge a session-only chunk without closing
-    // a single turn watermark, so every retry starts from the same prefix.
-    projections: A.flatMap(groups, (group) => A.prepend(group.turns, group.session)),
+    projections: eachSessionBesideItsTurnsSoNoChunkIsSessionOnly,
     sessionSpanCount: A.length(sessionProjections),
     turnIds: A.map(rows, (row) => row.turnId),
     turnSpanCount: A.length(turnProjections),
@@ -724,12 +688,7 @@ export const readAiMetricsOtlpSpanProjections: Effect.Effect<
   AiMetricsOtlpExportError,
   DuckDb
 > = Effect.gen(function* () {
-  // The export path has to migrate the store itself. It reads
-  // `otlp_exported_at_epoch_ms`, a column added by the schema migration rather than by
-  // the base DDL, and the only other caller of the migration is the ingest write. A
-  // store written by an earlier release therefore fails this query with a bare DuckDB
-  // binder error until some unrelated forwarder run happens to migrate it.
-  yield* ensureAiMetricsDerivedStorage.pipe(
+  const migrateTheStoreSoTheWatermarkColumnExistsWithoutWaitingForAnIngest = ensureAiMetricsDerivedStorage.pipe(
     Effect.mapError((cause) =>
       exportFailure(
         "Failed to prepare the AI metrics derived DuckDB store for OTLP export; run an ingest first if it does not exist yet.",
@@ -737,10 +696,13 @@ export const readAiMetricsOtlpSpanProjections: Effect.Effect<
       )
     )
   );
-  const rows = yield* readTurnRows();
+  yield* migrateTheStoreSoTheWatermarkColumnExistsWithoutWaitingForAnIngest;
+  const rows = yield* readUnexportedTurnRows();
 
   return yield* spanProjectionsFor(rows);
 });
+
+const MAX_SCALAR_TURN_ID_BINDINGS_PER_STATEMENT = 500;
 
 /**
  * Close the OTLP export watermark on the turns a batch successfully emitted.
@@ -779,19 +741,16 @@ export const markAiMetricsOtlpTurnsExported: (
     }
     const duckdb = yield* DuckDb;
     const exportedAtEpochMillis = yield* Clock.currentTimeMillis;
-    // DuckDB parameters are scalars, so the id list becomes numbered placeholders.
-    // Chunked because a run can carry tens of thousands of turns and a single
-    // statement with that many bindings is not worth risking.
     yield* Effect.forEach(
-      A.chunksOf(turnIds, 500),
+      A.chunksOf(turnIds, MAX_SCALAR_TURN_ID_BINDINGS_PER_STATEMENT),
       Effect.fnUntraced(function* (chunk) {
-        const placeholders = A.map(chunk, (_, index) => `$turnId${index}`);
+        const numberedScalarPlaceholders = A.map(chunk, (_, index) => `$turnId${index}`);
         const bindings = R.fromEntries(A.map(chunk, (turnId, index) => [`turnId${index}`, turnId] as const));
         yield* duckdb
           .run(
             `UPDATE ai_metrics_turns
              SET otlp_exported_at_epoch_ms = $exportedAtEpochMillis
-             WHERE turn_id IN (${A.join(placeholders, ", ")})`,
+             WHERE turn_id IN (${A.join(numberedScalarPlaceholders, ", ")})`,
             { exportedAtEpochMillis, ...bindings }
           )
           .pipe(
@@ -811,29 +770,14 @@ export const markAiMetricsOtlpTurnsExported: (
 const AI_METRICS_OTLP_SCOPE_NAME = "@beep/repo-ai-metrics";
 const AI_METRICS_OTLP_SERVICE_NAME = "beep-ai-metrics";
 
-// Kept in lockstep with AGENT_EFFECTIVENESS_PHOENIX_PROJECT in agent-effectiveness.ts,
-// which is the name the doctor and the dataset/prompt bundles look for. Duplicated
-// rather than imported to keep the export path free of a dependency on the reporting
-// module; the pairing is asserted in test/ingest.test.ts.
-const AI_METRICS_OTLP_PHOENIX_PROJECT = "beep-agent-effectiveness";
+const PHOENIX_PROJECT_MIRRORING_AGENT_EFFECTIVENESS_WITHOUT_IMPORTING_THE_REPORTING_MODULE = "beep-agent-effectiveness";
 const AI_METRICS_OTLP_SERVICE_VERSION = "0.0.0";
-// The OpenTelemetry SDK's own default batch size. Nothing here needs a different one,
-// and matching it keeps request sizes in territory collectors are tuned for.
-const AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE = 512;
+const OTEL_SDK_DEFAULT_MAX_EXPORT_BATCH_SIZE = 512;
 
-// Phoenix routes spans into a project by this resource attribute, and nothing was
-// setting it -- so forwarder spans landed in `default` alongside every other writer
-// reaching the same server (the coding-harness OTel fan-out, and previously Codex
-// CLI internals). Sharing one project means neither writer can be queried, counted,
-// or retained independently, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT named
-// a project that never existed and the read side found nothing.
-//
-// Callers can override it through `endpoint.resourceAttributes`; the default below
-// matches the constant the agent-effectiveness reader already queries for.
-const resourceFor = (input: AiMetricsOtlpExportInput): Resource =>
+const resourceRoutingSpansIntoTheirOwnPhoenixProjectUnlessOverridden = (input: AiMetricsOtlpExportInput): Resource =>
   resourceFromAttributes({
     deployment_environment: input.target,
-    "openinference.project.name": AI_METRICS_OTLP_PHOENIX_PROJECT,
+    "openinference.project.name": PHOENIX_PROJECT_MIRRORING_AGENT_EFFECTIVENESS_WITHOUT_IMPORTING_THE_REPORTING_MODULE,
     ...input.endpoint.resourceAttributes,
     "service.name": AI_METRICS_OTLP_SERVICE_NAME,
     "service.version": AI_METRICS_OTLP_SERVICE_VERSION,
@@ -853,15 +797,13 @@ const readableSpanFor =
       O.flatMap(parseSourceEventTime),
       O.map((value): HrTime => [value.seconds, value.nanoseconds])
     );
-    const timestamp = O.getOrElse(eventTime, () => observedAt);
+    const pointInstantSinceTranscriptRecordsAreNotMeasuredOperations = O.getOrElse(eventTime, () => observedAt);
     return {
       attributes: {
         ...R.remove(projection.attributes, "ai_metrics.timestamp"),
         ...O.getSomesStruct({
           "ai_metrics.timestamp": O.isSome(eventTime) ? sourceTimestamp : O.none(),
         }),
-        // Transcript records are points, not measured operations. OTLP requires
-        // start/end times; equal endpoints encode the point without inventing latency.
         "ai_metrics.duration_known": false,
         "ai_metrics.time_basis": O.isSome(eventTime) ? "source_event" : "export_observation",
       },
@@ -870,7 +812,7 @@ const readableSpanFor =
       droppedLinksCount: 0,
       duration: [0, 0],
       ended: true,
-      endTime: timestamp,
+      endTime: pointInstantSinceTranscriptRecordsAreNotMeasuredOperations,
       events: [],
       instrumentationScope: {
         name: AI_METRICS_OTLP_SCOPE_NAME,
@@ -895,15 +837,12 @@ const readableSpanFor =
         traceFlags: TraceFlags.SAMPLED,
         traceId: projection.traceId,
       }),
-      startTime: timestamp,
+      startTime: pointInstantSinceTranscriptRecordsAreNotMeasuredOperations,
       status: { code: SpanStatusCode.UNSET },
     };
   };
 
-// The exporter callback is the only real delivery confirmation available. Effect
-// tracing cannot supply one: span emission there is asynchronous and fire-and-forget,
-// so a batch the collector rejected is indistinguishable from one it stored.
-const deliverSpans = (
+const deliverSpansConfirmedByTheExporterCallbackNotFireAndForgetTracing = (
   exporter: OTLPTraceExporter,
   spans: ReadonlyArray<ReadableSpan>
 ): Effect.Effect<void, AiMetricsOtlpExportError> =>
@@ -926,6 +865,8 @@ const deliverSpans = (
     );
   });
 
+const protobufExporterSincePhoenixAnswersOtlpJsonWith415 = (url: string) => new OTLPTraceExporter({ url });
+
 const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
   input: AiMetricsOtlpExportInput,
   projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
@@ -934,16 +875,15 @@ const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
     return;
   }
 
-  const resource = resourceFor(input);
+  const resource = resourceRoutingSpansIntoTheirOwnPhoenixProjectUnlessOverridden(input);
   const currentTimeMillis1 = yield* Clock.currentTimeMillis;
   const timestamp = hrTimeFrom(currentTimeMillis1);
   const toReadableSpan = readableSpanFor(resource, timestamp);
 
   yield* Effect.acquireUseRelease(
-    // Protobuf, not JSON: Phoenix answers OTLP/JSON with HTTP 415
-    // ("Unsupported content type: application/json").
-    Effect.sync(() => new OTLPTraceExporter({ url: input.endpoint.traceUrl })),
-    (exporter) => deliverSpans(exporter, A.map(projections, toReadableSpan)),
+    Effect.sync(() => protobufExporterSincePhoenixAnswersOtlpJsonWith415(input.endpoint.traceUrl)),
+    (exporter) =>
+      deliverSpansConfirmedByTheExporterCallbackNotFireAndForgetTracing(exporter, A.map(projections, toReadableSpan)),
     (exporter) => Effect.promise(() => exporter.shutdown()).pipe(Effect.ignore)
   );
 });
@@ -1044,24 +984,22 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
   "AiMetrics.runAiMetricsOtlpProjectionBatchExport.untraced"
 )(function* (input, batch, onChunkDelivered) {
   const sender = yield* AiMetricsOtlpSpanSender;
-  // The orchestrator owns both the chunk boundary and its durable acknowledgement.
-  // A pluggable sender therefore cannot report success while silently ignoring the
-  // checkpoint callback: successful delivery returns here before the watermark closes.
+  const senderDeliversThenTheOrchestratorCheckpointsNeverTheSender = Effect.fnUntraced(function* (
+    chunk: ReadonlyArray<AiMetricsOtlpSpanProjection>
+  ) {
+    const retryTheUncheckpointedChunkPastTheSdkDeadlineWhilePhoenixQueueIsFull = {
+      schedule: otlpDeliveryRetrySchedule,
+      times: 5,
+      while: isRetryableOtlpExportError,
+    };
+    yield* sender
+      .send(input, chunk)
+      .pipe(Effect.retry(retryTheUncheckpointedChunkPastTheSdkDeadlineWhilePhoenixQueueIsFull));
+    yield* onChunkDelivered(chunk);
+  });
   yield* Effect.forEach(
-    A.chunksOf(batch.projections, AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE),
-    Effect.fnUntraced(function* (chunk) {
-      // The SDK retries only inside one short request deadline. Phoenix reports a
-      // full ingest queue as retryable 503; retry the same uncheckpointed chunk
-      // with bounded exponential backoff after that deadline closes.
-      yield* sender.send(input, chunk).pipe(
-        Effect.retry({
-          schedule: otlpDeliveryRetrySchedule,
-          times: 5,
-          while: isRetryableOtlpExportError,
-        })
-      );
-      yield* onChunkDelivered(chunk);
-    }),
+    A.chunksOf(batch.projections, OTEL_SDK_DEFAULT_MAX_EXPORT_BATCH_SIZE),
+    senderDeliversThenTheOrchestratorCheckpointsNeverTheSender,
     { concurrency: 1, discard: true }
   );
 
@@ -1193,13 +1131,16 @@ export const runAiMetricsOtlpExport: (
   function* (input) {
     const batch = yield* readAiMetricsOtlpSpanProjections;
     const duckdb = yield* DuckDb;
-    // Ordering is the whole point: each chunk is delivered first, then only that
-    // acknowledged chunk reaches the mark. A rejected chunk fails before its checkpoint,
-    // while earlier chunks stay closed so a retry resumes instead of replaying the prefix.
-    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, (projections) =>
+    const markOnlyTheChunkJustAcknowledgedSoARetryResumesAfterIt = (
+      projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
+    ) =>
       markAiMetricsOtlpTurnsExported(AiMetricsOtlpSpanProjection.turnIdsFor(projections)).pipe(
         Effect.provideService(DuckDb, duckdb)
-      )
+      );
+    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(
+      input,
+      batch,
+      markOnlyTheChunkJustAcknowledgedSoARetryResumesAfterIt
     );
   },
   (effect, input) => effect.pipe(withOtlpExportSpan(input))

@@ -3334,6 +3334,7 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3341,6 +3342,7 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3544,7 +3546,6 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3567,7 +3568,6 @@
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3818,14 +3818,16 @@
           "@beep/mcpb-kit",
           "@beep/memfs",
           "@beep/schema",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcpb-kit",
           "@beep/memfs",
           "@beep/schema",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ]
       },
       {
@@ -3899,7 +3901,6 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3908,7 +3909,6 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -5110,6 +5110,7 @@
           "@beep/jsonc",
           "@beep/jsonl",
           "@beep/libpff",
+          "@beep/lint-rules",
           "@beep/lockfiles",
           "@beep/m365",
           "@beep/managed-section",
@@ -5189,6 +5190,7 @@
           "@beep/jsonc",
           "@beep/jsonl",
           "@beep/libpff",
+          "@beep/lint-rules",
           "@beep/lockfiles",
           "@beep/m365",
           "@beep/managed-section",

@@ -44,8 +44,6 @@ import { StatusTransition } from "./StatusLifecycle.models.ts";
 const $I = $AgentMemoryStoreId.create("NodeEvent.events");
 
 /**
- * Payload of the event that admits a new node.
- *
  * **Details**
  *
  * `after` places the node in its file: it follows the named node, or opens
@@ -91,8 +89,6 @@ export class NodeCreated extends S.Opaque<NodeCreated, { readonly brand: unique 
 ) {}
 
 /**
- * Payload of the event that records a new revision of a node's text.
- *
  * **Example** (Read the fields of a node revision)
  *
  * ```ts
@@ -120,8 +116,6 @@ export class NodeRevised extends S.Opaque<NodeRevised, { readonly brand: unique 
 ) {}
 
 /**
- * Payload of the event that moves a node's typed status field.
- *
  * **Details**
  *
  * A typed status field is part of the node text (a frontmatter key, a table
@@ -159,8 +153,6 @@ export class NodeStatusChanged extends S.Opaque<NodeStatusChanged, { readonly br
 ) {}
 
 /**
- * Payload of the event that retires a node.
- *
  * **Details**
  *
  * A retirement writes a tombstone revision. It has no text, so its revision
@@ -192,8 +184,6 @@ export class NodeRetired extends S.Opaque<NodeRetired, { readonly brand: unique 
 ) {}
 
 /**
- * Payload of the bootstrap event recorded when a memory folder is imported.
- *
  * **Details**
  *
  * AC-8: the projector refuses to write over a folder whose digest the log has
@@ -231,8 +221,6 @@ export class FolderImported extends S.Opaque<FolderImported, { readonly brand: u
 ) {}
 
 /**
- * Payload of the event recorded for each file of an imported memory folder.
- *
  * **Details**
  *
  * The file's bytes are not stored here: they are the concatenation of the
@@ -272,8 +260,6 @@ export class FileImported extends S.Opaque<FileImported, { readonly brand: uniqu
 ) {}
 
 /**
- * Payload of the event that records a held write.
- *
  * **Details**
  *
  * Decision `held-writes-are-log-events`: the log is the sole authority, so a
@@ -310,8 +296,6 @@ export class WriteHeld extends S.Opaque<WriteHeld, { readonly brand: unique symb
 ) {}
 
 /**
- * Payload of the event that settles a held write.
- *
  * **Details**
  *
  * `revisionId` names the revision the resolution produced, written in the

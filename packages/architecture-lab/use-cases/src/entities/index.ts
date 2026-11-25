@@ -7,8 +7,6 @@
  */
 
 /**
- * Worker use-case namespace.
- *
  * @category use-cases
  * @since 0.0.0
  */

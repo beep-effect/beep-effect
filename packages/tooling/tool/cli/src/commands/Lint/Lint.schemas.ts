@@ -91,8 +91,6 @@ export const SchemaFirstIncludedGlobs: ReadonlyArray<string> = A.fromIterable(IN
 export const SchemaFirstSourceFileGlobs: ReadonlyArray<string> = A.fromIterable(SOURCE_FILE_GLOBS);
 
 /**
- * Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.
- *
  * **Example** (Import policy rule identifiers)
  *
  * ```ts
@@ -129,8 +127,6 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
 );
 
 /**
- * Stable schema-first policy rule identifier emitted for lint and Yeet issue routing.
- *
  * **Example** (Type inventory rule identifier)
  *
  * ```ts
@@ -146,8 +142,6 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
 export type SchemaFirstPolicyRuleId = typeof SchemaFirstPolicyRuleId.Type;
 
 /**
- * Upstream-parity rules whose findings ratchet on occurrence membership.
- *
  * **Details**
  *
  * These rules gate the Effect Schema parity backlog: every live occurrence is
@@ -181,8 +175,6 @@ export const SchemaFirstParityRuleId = SchemaFirstPolicyRuleId.pick([
 );
 
 /**
- * Upstream-parity schema-first rule identifier.
- *
  * **Example** (Type an opaque-wrapper rule id)
  *
  * ```ts
@@ -254,8 +246,6 @@ export const SchemaFirstOccurrenceAnchor = S.String.check(
 export type SchemaFirstOccurrenceAnchor = typeof SchemaFirstOccurrenceAnchor.Type;
 
 /**
- * Committed parity-backlog membership for one source file and rule.
- *
  * **Details**
  *
  * Rows group occurrence anchors by file so the baseline stays compact; each
@@ -291,8 +281,6 @@ export class SchemaFirstBacklogRow extends S.Opaque<SchemaFirstBacklogRow, { rea
 ) {}
 
 /**
- * Kinds of schema-first inventory findings.
- *
  * **Example** (Import entry kind enum)
  *
  * ```ts
@@ -319,8 +307,6 @@ export const SchemaFirstEntryKind = LiteralKit([
 );
 
 /**
- * Kind of schema-first inventory finding.
- *
  * **Example** (Type exported interface kind)
  *
  * ```ts
@@ -336,8 +322,6 @@ export const SchemaFirstEntryKind = LiteralKit([
 export type SchemaFirstEntryKind = typeof SchemaFirstEntryKind.Type;
 
 /**
- * Tracked status for a schema-first inventory finding.
- *
  * **Example** (Import entry status enum)
  *
  * ```ts
@@ -357,8 +341,6 @@ export const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "adv
 );
 
 /**
- * Tracked status for a schema-first inventory finding.
- *
  * **Example** (Type advisory entry status)
  *
  * ```ts
@@ -374,8 +356,6 @@ export const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "adv
 export type SchemaFirstEntryStatus = typeof SchemaFirstEntryStatus.Type;
 
 /**
- * Single tracked schema-first inventory finding for a source file symbol.
- *
  * **Example** (Validate inventory entry candidate)
  *
  * ```ts
@@ -416,8 +396,6 @@ export class SchemaFirstInventoryEntry extends S.Opaque<SchemaFirstInventoryEntr
 ) {}
 
 /**
- * Namespace for {@link SchemaFirstInventoryEntry} companion types.
- *
  * **Example** (Log companion namespace name)
  *
  * ```ts
@@ -444,8 +422,6 @@ export declare namespace SchemaFirstInventoryEntry {
 }
 
 /**
- * Committed schema-first inventory baseline for repo-wide lint enforcement.
- *
  * **Example** (Validate inventory document)
  *
  * ```ts
@@ -480,8 +456,6 @@ export class SchemaFirstInventoryDocument extends S.Opaque<
 ) {}
 
 /**
- * CLI options for schema-first inventory verification.
- *
  * **Details**
  *
  * `write` refreshes the committed inventory; for the parity backlog it only
@@ -524,8 +498,6 @@ export class SchemaFirstLintOptions extends S.Opaque<SchemaFirstLintOptions, { r
 ) {}
 
 /**
- * Occurrence-membership counts for one upstream-parity rule.
- *
  * **Details**
  *
  * `live` counts current occurrences and `baseline` counts committed backlog
@@ -609,8 +581,6 @@ export class SchemaFirstParityFindings extends S.Opaque<SchemaFirstParityFinding
 ) {}
 
 /**
- * Summary of schema-first inventory verification results.
- *
  * **Example** (Validate lint summary)
  *
  * ```ts
@@ -654,9 +624,6 @@ export class SchemaFirstLintSummary extends S.Opaque<SchemaFirstLintSummary, { r
 ) {}
 
 /**
- * Wave-family keys used to resolve the schema-crispening policy blocking flag
- * by path prefix.
- *
  * **Example** (Import crispening family enum)
  *
  * ```ts
@@ -676,8 +643,6 @@ export const SchemaCrispeningFamily = LiteralKit(["foundation", "drivers", "tool
 );
 
 /**
- * Wave-family key used to resolve the schema-crispening policy blocking flag by path prefix.
- *
  * **Example** (Type tooling family key)
  *
  * ```ts
@@ -693,8 +658,6 @@ export const SchemaCrispeningFamily = LiteralKit(["foundation", "drivers", "tool
 export type SchemaCrispeningFamily = typeof SchemaCrispeningFamily.Type;
 
 /**
- * Blocking flag for a schema-crispening wave family or per-owner policy override.
- *
  * **Example** (Validate family policy)
  *
  * ```ts
@@ -762,8 +725,6 @@ export class SchemaCrispeningPolicyDocument extends S.Opaque<
 ) {}
 
 /**
- * Direct LiteralKit call argument that redundantly asserts an inline array as const.
- *
  * **Example** (Validate const assertion violation)
  *
  * ```ts
@@ -863,9 +824,6 @@ export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): strin
   );
 
 /**
- * Line-independent identity of a schema-first inventory entry: the file,
- * symbol, kind and rule id it reports.
- *
  * **Details**
  *
  * `--write` regeneration matches committed entries to live findings by this
@@ -1129,8 +1087,6 @@ export const EffectVitestFindingRuleId = S.Union([EffectVitestRuleId, EffectVite
   })
 );
 /**
- * Decoded finding rule identifier accepted by {@link EffectVitestFindingRuleId}.
- *
  * @category type-level
  * @since 0.0.0
  */

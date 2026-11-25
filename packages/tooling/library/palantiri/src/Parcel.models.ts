@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $PalantiriId.create("Parcel.models");
 
 /**
- * What a parcel is keyed by.
- *
  * **Example** (Narrow a parcel key)
  *
  * ```ts
@@ -31,16 +29,12 @@ export const ParcelKey = LiteralKit(["session", "lane", "host", "pr", "app", "ac
 );
 
 /**
- * Runtime type for {@link ParcelKey}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ParcelKey = typeof ParcelKey.Type;
 
 /**
- * The parcels Palantiri serves.
- *
  * **Example** (Narrow a parcel id)
  *
  * ```ts
@@ -62,16 +56,12 @@ export const ParcelId = LiteralKit([
 ]).pipe($I.annoteSchema("ParcelId", { description: "Identifier of a parcel Palantiri serves." }));
 
 /**
- * Runtime type for {@link ParcelId}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ParcelId = typeof ParcelId.Type;
 
 /**
- * A source a parcel reads from.
- *
  * **Details**
  *
  * `accounts-poll` is a live poll of an account; `accounts-retained` is an
@@ -113,8 +103,6 @@ export const ParcelSource = LiteralKit([
 ]).pipe($I.annoteSchema("ParcelSource", { description: "A source a parcel reads from." }));
 
 /**
- * Runtime type for {@link ParcelSource}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -156,8 +144,6 @@ export class ParcelSpec extends S.Opaque<ParcelSpec, { readonly brand: unique sy
 ) {}
 
 /**
- * The most items one parcel response carries, at least 1.
- *
  * **Example** (Guard a budget)
  *
  * ```ts
@@ -176,8 +162,6 @@ export const ParcelBudget = S.Int.check(S.isBetween({ minimum: 1, maximum: 500 }
 );
 
 /**
- * Runtime type for {@link ParcelBudget}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -212,8 +196,6 @@ export const SessionKey = S.String.check(
 ).pipe($I.annoteSchema("SessionKey", { description: "A harness session id, safe to use as a file name." }));
 
 /**
- * Runtime type for {@link SessionKey}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -248,8 +230,6 @@ export class ParcelReadOptions extends S.Opaque<ParcelReadOptions, { readonly br
 ) {}
 
 /**
- * How many items a response shows of how many the parcel holds.
- *
  * **Example** (Make a receipt)
  *
  * ```ts

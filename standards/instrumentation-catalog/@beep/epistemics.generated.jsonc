@@ -18,9 +18,7 @@
     {"name":"ClaimCore.encodeChecked","owner":"@beep/epistemics","family":"foundation","conforms":true},
     {"name":"ClaimCore.mint","owner":"@beep/epistemics","family":"foundation","conforms":true},
     {"name":"ClaimCore.promote","owner":"@beep/epistemics","family":"foundation","conforms":true},
-    {"name":"NanopubCodec.decode","owner":"@beep/epistemics","family":"foundation","conforms":true},
     {"name":"NanopubCodec.encode","owner":"@beep/epistemics","family":"foundation","conforms":true},
-    {"name":"NanopubCodec.mintNanopubId","owner":"@beep/epistemics","family":"foundation","conforms":true},
-    {"name":"NanopubCodec.normalize","owner":"@beep/epistemics","family":"foundation","conforms":true}
+    {"name":"NanopubCodec.mintNanopubId","owner":"@beep/epistemics","family":"foundation","conforms":true}
   ]
 }

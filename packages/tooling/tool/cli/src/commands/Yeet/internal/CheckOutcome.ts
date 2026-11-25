@@ -102,8 +102,6 @@ export const YeetSettleReason = LiteralKit([
 );
 
 /**
- * Why a merge loop is still waiting on a head.
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -1590,10 +1590,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const laneRun = stepRun(verifySteps, "Run verification lane");
       assert.include(
         laneRun,
-        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --changeset-status --skip-skills-lock'
+        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --event-base --changeset-status --skip-skills-lock'
       );
       // A push never passes the skip.
-      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity\n    fi");
+      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity --event-base\n    fi");
       // Codegen and Ecosystem read their path gates from the change-profile pattern data.
       assert.include(verifyGate, "'.lanes[$lane] // empty'");
       assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
@@ -1688,11 +1688,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const setupSteps = yield* decodeWorkflowSteps(yamlAt(setup, ["runs", "steps"]));
       assertUsesAptInstall(stepByName(setupSteps, "Install native PDF text extraction (apt)"), ["poppler-utils"]);
 
-      const runCase = Effect.fnUntraced(function* (failUpdates: number, failInstalls: number, recommends: string) {
+      const runCase = Effect.fnUntraced(function* (
+        failUpdates: number,
+        failInstalls: number,
+        recommends: string,
+        fallbackAttempt = "2",
+        budgetSeconds = "1500"
+      ) {
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
         const stubs = `${work}/bin`;
         yield* fs.makeDirectory(stubs, { recursive: true });
+        yield* fs.makeDirectory(`${work}/sources.list.d`, { recursive: true });
+        yield* fs.writeFileString(
+          `${work}/sources.list`,
+          "deb http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble main\n"
+        );
+        yield* fs.writeFileString(
+          `${work}/sources.list.d/ubuntu.sources`,
+          "URIs: mirror+file:/etc/apt/apt-mirrors.txt\nSuites: noble\n\nURIs: http://security.ubuntu.com/ubuntu/\n"
+        );
         const stub = (name: string, body: string) =>
           Effect.andThen(fs.writeFileString(`${stubs}/${name}`, `#!/usr/bin/bash\n${body}\n`), () =>
             fs.chmod(`${stubs}/${name}`, 0o755)
@@ -1700,6 +1715,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* stub("beep", 'echo "beep $*" >> "$APT_LOG"');
         yield* stub("sudo", '[[ "$1" == "-n" ]] && shift\nexec "$@"');
         yield* stub("sleep", 'echo "sleep $*" >> "$APT_LOG"');
+        yield* stub("timeout", 'echo "timeout $*" >> "$APT_LOG"\nshift 3\nexec "$@"');
+        yield* stub(
+          "apt-config",
+          "echo \"source_list='$APT_STATE/sources.list' source_parts='$APT_STATE/sources.list.d/'\""
+        );
         yield* stub(
           "apt-get",
           A.join(
@@ -1726,8 +1746,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               APT_FAIL_INSTALLS: String(failInstalls),
               APT_INSTALL_PACKAGES: "  poppler-utils\n  libssl-dev\n",
               APT_INSTALL_NO_RECOMMENDS: recommends,
-              APT_INSTALL_ATTEMPTS: "3",
+              APT_INSTALL_ATTEMPTS: "5",
               APT_INSTALL_BACKOFF_SECONDS: "15",
+              APT_INSTALL_TIMEOUT_SECONDS: "900",
+              APT_INSTALL_BUDGET_SECONDS: budgetSeconds,
+              APT_INSTALL_FALLBACK_ATTEMPT: fallbackAttempt,
             },
             extendEnv: false,
             stdout: "pipe",
@@ -1740,10 +1763,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         );
         const logText = yield* fs.readFileString(`${work}/log`);
         const log = A.filter(Str.split(logText, "\n"), Str.isNonEmpty);
-        return { status: Number(status), stdout, log };
+        const sourcesList = yield* fs.readFileString(`${work}/sources.list`);
+        const ubuntuSources = yield* fs.readFileString(`${work}/sources.list.d/ubuntu.sources`);
+        return { status: Number(status), stdout, log, sourcesList, ubuntuSources };
       });
-      const updates = (log: ReadonlyArray<string>) => A.filter(log, Str.endsWith(" update")).length;
-      const installs = (log: ReadonlyArray<string>) => A.filter(log, Str.includes(" install ")).length;
+      const aptCalls = (log: ReadonlyArray<string>) => A.filter(log, Str.startsWith("apt-get "));
+      const updates = (log: ReadonlyArray<string>) => A.filter(aptCalls(log), Str.endsWith(" update")).length;
+      const installs = (log: ReadonlyArray<string>) => A.filter(aptCalls(log), Str.includes(" install ")).length;
+      const timeouts = (log: ReadonlyArray<string>) =>
+        A.map(A.filter(log, Str.startsWith("timeout ")), (line) => A.join(A.take(Str.split(line, " "), 5), " "));
       const sleeps = (log: ReadonlyArray<string>) => A.filter(log, Str.startsWith("sleep "));
 
       // Two mirror failures on update, then success: three updates, one install, doubling pauses.
@@ -1754,19 +1782,36 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(installs(recovered.log), 1);
       assert.deepStrictEqual(sleeps(recovered.log), ["sleep 15", "sleep 30"]);
       assert.include(
-        A.findFirst(recovered.log, Str.includes(" install ")).pipe(O.getOrElse(constant(""))),
+        A.findFirst(aptCalls(recovered.log), Str.includes(" install ")).pipe(O.getOrElse(constant(""))),
         "install -y --no-install-recommends poppler-utils libssl-dev"
       );
-      assert.include(recovered.stdout, "::warning::apt-install: attempt 2 of 3 failed");
+      assert.include(recovered.stdout, "::warning::apt-install: attempt 2 of 5 failed");
+      assert.include(
+        recovered.stdout,
+        "::warning::apt-install: attempt 2 of 5 falls back from the regional mirror to http://archive.ubuntu.com/ubuntu/"
+      );
+      assert.strictEqual(recovered.sourcesList, "deb http://archive.ubuntu.com/ubuntu/ noble main\n");
+      assert.strictEqual(
+        recovered.ubuntuSources,
+        "URIs: http://archive.ubuntu.com/ubuntu/\nSuites: noble\n\nURIs: http://security.ubuntu.com/ubuntu/\n"
+      );
+      assert.deepStrictEqual(timeouts(recovered.log), [
+        "timeout --signal=TERM --kill-after=15s 180s apt-get",
+        "timeout --signal=TERM --kill-after=15s 180s apt-get",
+        "timeout --signal=TERM --kill-after=15s 180s apt-get",
+        "timeout --signal=TERM --kill-after=15s 900s apt-get",
+      ]);
 
       // A failed install starts the next attempt from update, and the recommends flag is optional.
-      const reinstalled = yield* runCase(0, 1, "false");
+      const reinstalled = yield* runCase(0, 1, "false", "0");
       assert.strictEqual(reinstalled.status, 0);
+      assert.notInclude(reinstalled.stdout, "falls back");
+      assert.strictEqual(reinstalled.sourcesList, "deb http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble main\n");
       assert.strictEqual(updates(reinstalled.log), 2);
       assert.strictEqual(installs(reinstalled.log), 2);
       assertTrue(
         A.every(
-          A.filter(reinstalled.log, Str.includes(" install ")),
+          A.filter(aptCalls(reinstalled.log), Str.includes(" install ")),
           (line) => !Str.includes("--no-install-recommends")(line)
         )
       );
@@ -1774,10 +1819,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // A mirror that never recovers fails the step after exactly three attempts, with an error annotation.
       const exhausted = yield* runCase(99, 0, "true");
       assert.strictEqual(exhausted.status, 1);
-      assert.strictEqual(updates(exhausted.log), 3);
+      assert.strictEqual(updates(exhausted.log), 5);
       assert.strictEqual(installs(exhausted.log), 0);
-      assert.deepStrictEqual(sleeps(exhausted.log), ["sleep 15", "sleep 30"]);
-      assert.include(exhausted.stdout, "::error::apt-install: apt-get update and install failed after 3 attempts");
+      assert.deepStrictEqual(sleeps(exhausted.log), ["sleep 15", "sleep 30", "sleep 60", "sleep 120"]);
+      assert.include(exhausted.stdout, "::error::apt-install: apt-get update and install failed after 5 attempts");
+
+      const outOfBudget = yield* runCase(99, 0, "true", "2", "70");
+      assert.strictEqual(outOfBudget.status, 1);
+      assert.strictEqual(updates(outOfBudget.log), 1);
+      assert.deepStrictEqual(sleeps(outOfBudget.log), []);
+      assert.match(
+        O.getOrElse(A.head(timeouts(outOfBudget.log)), constant("")),
+        /^timeout --signal=TERM --kill-after=15s (?:69|70)s apt-get$/u
+      );
+      assert.include(outOfBudget.stdout, "::error::apt-install: the 70s budget leaves no room for attempt 2");
     })
   );
 
@@ -2698,6 +2753,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Prod deploy of the CiRunners Alchemy stack; environment-gated and disarmed by a variable.
         "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+        "fleet-missed-event-check.yml:Fleet Missed-Event Check",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",
@@ -3852,6 +3908,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         A.join("\n")
       );
       expect(code).not.toContain("secrets.");
+      expect(code).not.toContain("beep-fleet-heavy");
       expect(code).not.toContain("beep-ec2-heavy");
       // An uncertified report must fail the run, and the captured corpus names branches.
       expect(code).not.toContain("--preview");
@@ -4116,7 +4173,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           " "
         )
       );
-      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "env"])).toEqual({
@@ -4259,7 +4316,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           " "
         )
       );
-      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "timeout-minutes"])).toBe(20);
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "environment"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "secrets"])).toBeUndefined();
@@ -4984,7 +5041,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "local_pilot_observation", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "environment"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "timeout-minutes"])).toBe(20);
-      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "if"])).toContain(
         "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'"
       );

@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeDomainId.create("values/CourtReporterVocabulary/CourtReporterVocabulary.model");
 
 /**
- * Stable public identity issued to one courts-db court.
- *
  * **Details**
  *
  * The current issuance preserves the pinned courts-db identifier. Compatibility
@@ -40,8 +38,6 @@ export const CourtId = S.NonEmptyString.pipe(
 );
 
 /**
- * Decoded stable court identity.
- *
  * @see {@link CourtId} for runtime validation and identity semantics.
  * @category type-level
  * @since 0.0.0
@@ -49,8 +45,6 @@ export const CourtId = S.NonEmptyString.pipe(
 export type CourtId = typeof CourtId.Type;
 
 /**
- * Stable public identity issued to one reporters-db record.
- *
  * **Details**
  *
  * The opaque value is derived from the initial source identity tuple. Future
@@ -76,8 +70,6 @@ export const ReporterId = S.NonEmptyString.pipe(
 );
 
 /**
- * Decoded stable reporter identity.
- *
  * @see {@link ReporterId} for runtime validation and identity semantics.
  * @category type-level
  * @since 0.0.0
@@ -85,8 +77,6 @@ export const ReporterId = S.NonEmptyString.pipe(
 export type ReporterId = typeof ReporterId.Type;
 
 /**
- * Exact identifier for one combined pinned court/reporter artifact.
- *
  * **Example** (Validate an artifact identifier)
  *
  * ```ts
@@ -107,8 +97,6 @@ export const CourtReporterArtifactVersion = S.NonEmptyString.pipe(
 );
 
 /**
- * Decoded combined artifact identifier.
- *
  * @see {@link CourtReporterArtifactVersion} for runtime validation.
  * @category type-level
  * @since 0.0.0
@@ -127,8 +115,6 @@ const CourtSystemBase = LiteralKit([
 ]);
 
 /**
- * Source-faithful courts-db `system` vocabulary at the pinned commit.
- *
  * **Gotchas**
  *
  * The empty string is an upstream value and remains distinct from a missing
@@ -154,8 +140,6 @@ export const CourtSystem = CourtSystemBase.pipe(
 );
 
 /**
- * Decoded courts-db system literal.
- *
  * @see {@link CourtSystem} for the exact pinned domain.
  * @category type-level
  * @since 0.0.0
@@ -174,8 +158,6 @@ const CourtTypeBase = LiteralKit([
 ]);
 
 /**
- * Source-faithful non-null courts-db `type` vocabulary at the pinned commit.
- *
  * **Example** (Inspect the appellate source value)
  *
  * ```ts
@@ -195,8 +177,6 @@ export const CourtType = CourtTypeBase.pipe(
 );
 
 /**
- * Decoded non-null courts-db court type.
- *
  * @see {@link CourtType} for the exact pinned domain.
  * @category type-level
  * @since 0.0.0
@@ -206,8 +186,6 @@ export type CourtType = typeof CourtType.Type;
 const CourtHierarchyLevelBase = LiteralKit(["", "colr", "gjc", "gjc & iac", "iac", "ljc", "trial"]);
 
 /**
- * Source-faithful non-null courts-db `level` vocabulary.
- *
  * **Details**
  *
  * The collision-free name keeps this richer upstream dimension separate from
@@ -232,8 +210,6 @@ export const CourtHierarchyLevel = CourtHierarchyLevelBase.pipe(
 );
 
 /**
- * Decoded non-null courts-db hierarchy level.
- *
  * @see {@link CourtHierarchyLevel} for the collision-free source vocabulary.
  * @category type-level
  * @since 0.0.0
@@ -252,8 +228,6 @@ const ReporterCiteTypeBase = LiteralKit([
 ]);
 
 /**
- * Canonical reporters-db string `cite_type` vocabulary.
- *
  * **Gotchas**
  *
  * CourtListener integer citation types are not decode authority for this
@@ -289,8 +263,6 @@ export type ReporterCiteType = typeof ReporterCiteType.Type;
 const VocabularyEntryStatusBase = LiteralKit(["active", "tombstone"]);
 
 /**
- * Lifecycle state retained on every issued vocabulary identity.
- *
  * **Example** (Identify a tombstone)
  *
  * ```ts
@@ -310,8 +282,6 @@ export const VocabularyEntryStatus = VocabularyEntryStatusBase.pipe(
 );
 
 /**
- * Decoded vocabulary identity lifecycle state.
- *
  * @see {@link VocabularyEntryStatus} for the active and tombstone states.
  * @category type-level
  * @since 0.0.0
@@ -321,8 +291,6 @@ export type VocabularyEntryStatus = typeof VocabularyEntryStatus.Type;
 const ArtifactCompatibilityStatusBase = LiteralKit(["compatible", "incompatible"]);
 
 /**
- * Compatibility verdict between two court/reporter artifacts.
- *
  * **Example** (Inspect an incompatible verdict)
  *
  * ```ts
@@ -342,8 +310,6 @@ export const ArtifactCompatibilityStatus = ArtifactCompatibilityStatusBase.pipe(
 );
 
 /**
- * Decoded artifact compatibility verdict.
- *
  * @see {@link ArtifactCompatibilityStatus} for the finite verdict domain.
  * @category type-level
  * @since 0.0.0
@@ -368,8 +334,6 @@ const ArtifactDriftChangeKindBase = LiteralKit([
 ]);
 
 /**
- * Exhaustive change classes emitted by the compatibility classifier.
- *
  * **Example** (Inspect the date-split class)
  *
  * ```ts
@@ -389,8 +353,6 @@ export const ArtifactDriftChangeKind = ArtifactDriftChangeKindBase.pipe(
 );
 
 /**
- * Decoded artifact drift change class.
- *
  * @see {@link ArtifactDriftChangeKind} for every reviewable change class.
  * @category type-level
  * @since 0.0.0
@@ -404,8 +366,6 @@ const ArtifactSubjectKind = LiteralKit(["artifact", "court", "reporter"]).pipe(
 );
 
 /**
- * An alias whose text maps to more than one stable identity.
- *
  * **Example** (Keep abbreviation context)
  *
  * ```ts
@@ -429,8 +389,6 @@ export class ContextualAlias extends S.Opaque<ContextualAlias, { readonly brand:
 ) {}
 
 /**
- * Inclusive source effective range with independently optional endpoints.
- *
  * **Example** (Represent an open-ended range)
  *
  * ```ts
@@ -497,8 +455,6 @@ export class CourtVocabularyRecord extends S.Opaque<CourtVocabularyRecord, { rea
 ) {}
 
 /**
- * One named reporters-db edition and its effective range.
- *
  * **Example** (Inspect the reporter edition schema)
  *
  * ```ts
@@ -523,8 +479,6 @@ export class ReporterEdition extends S.Opaque<ReporterEdition, { readonly brand:
 ) {}
 
 /**
- * Public reporters-db vocabulary record with a stable identity.
- *
  * **Example** (Inspect the reporter record schema)
  *
  * ```ts
@@ -565,8 +519,6 @@ const SourceRepository = LiteralKit(["courts-db", "reporters-db"]).pipe(
 );
 
 /**
- * Pinned source identity and regeneration metadata for one projection.
- *
  * **Example** (Inspect provenance fields)
  *
  * ```ts
@@ -602,8 +554,6 @@ const schemaVersion = S.tag("court-reporter-vocabulary/v1");
 const projectionVersion = S.tag(1);
 
 /**
- * Machine-readable courts-db vocabulary projection.
- *
  * **Example** (Inspect stable-ID count field)
  *
  * ```ts
@@ -631,8 +581,6 @@ export class CourtVocabularyArtifact extends S.Opaque<CourtVocabularyArtifact, {
 ) {}
 
 /**
- * Machine-readable reporters-db vocabulary projection.
- *
  * **Example** (Inspect stable-ID count field)
  *
  * ```ts
@@ -706,8 +654,6 @@ const CourtReporterArtifactVersionCoherenceCheck = S.makeFilter(
 );
 
 /**
- * One combined versioned court/reporter compatibility contract.
- *
  * **Example** (Inspect contract fields)
  *
  * ```ts
@@ -826,8 +772,6 @@ export class CourtReporterArtifactComparison extends S.Opaque<
 ) {}
 
 /**
- * One reviewable lifecycle or compatibility change.
- *
  * **Example** (Construct an addition row)
  *
  * ```ts
@@ -861,8 +805,6 @@ export class ArtifactDriftChange extends S.Opaque<ArtifactDriftChange, { readonl
 ) {}
 
 /**
- * Complete compatibility report between two exact artifact versions.
- *
  * **Example** (Inspect report fields)
  *
  * ```ts

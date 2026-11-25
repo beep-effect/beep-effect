@@ -15,8 +15,10 @@ export const approval = {
   maintenanceStatus: "active",
 } as const;
 
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+
 export const encodeJson = Effect.fnUntraced(function* (row: Record<string, unknown>) {
-  return yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(row);
+  return yield* encodeUnknownJson(row);
 });
 
 export const zeros = Str.repeat(64)("0");

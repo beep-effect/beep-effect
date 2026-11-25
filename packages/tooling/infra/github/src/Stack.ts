@@ -49,8 +49,6 @@ const variableId = (name: string) => `Variable-${name}`;
 const labelId = (name: string) => `Label-${idFragment(name)}`;
 
 /**
- * The kind of a declaration whose logical id is derived from a config name.
- *
  * **Example** (Narrow a declaration kind)
  *
  * ```ts
@@ -67,8 +65,6 @@ export const DeclarationKind = LiteralKit(["environment", "environment variable"
 );
 
 /**
- * Decoded declaration kind.
- *
  * @category models
  * @since 0.0.0
  */

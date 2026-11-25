@@ -72,8 +72,6 @@ export class Span extends S.Opaque<Span, { readonly brand: unique symbol }>()(
   }).pipe($I.annoteSchema("Span", { description: "Plain Span data." }))
 ) {}
 /**
- * Companion types for {@link Span}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -389,8 +387,6 @@ const wordRun = (cells: ReadonlyArray<Cell>, start: number) => {
 };
 
 /**
- * Options for {@link wrapSpans}.
- *
  * **Example** (Validate plain options)
  *
  * ```ts
@@ -413,8 +409,6 @@ export class WrapOptions extends S.Opaque<WrapOptions, { readonly brand: unique 
   }).pipe($I.annoteSchema("WrapOptions", { description: "Plain WrapOptions data." }))
 ) {}
 /**
- * Companion types for {@link WrapOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

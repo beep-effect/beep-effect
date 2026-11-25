@@ -49,8 +49,6 @@ export * from "./BoxProvisioning.ts";
  */
 export * from "./BoxProvisioningArtifacts.ts";
 /**
- * Typed Box provisioning errors.
- *
  * @category errors
  * @since 0.0.0
  */

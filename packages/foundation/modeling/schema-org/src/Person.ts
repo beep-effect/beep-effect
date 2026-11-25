@@ -14,8 +14,6 @@ import { ThingFields } from "./Thing.ts";
 const $I = $SchemaOrgId.create("Person");
 
 /**
- * A schema.org `Person` — an author, maintainer or contributor.
- *
  * **Details**
  *
  * Carries only `Thing`-level fields plus the two person-specific ones. The

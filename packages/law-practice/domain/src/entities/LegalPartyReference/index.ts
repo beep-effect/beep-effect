@@ -8,8 +8,6 @@
 
 export * from "./LegalPartyReference.model.ts";
 /**
- * Party value objects.
- *
  * @category value-objects
  * @since 0.0.0
  */

@@ -35,6 +35,12 @@ export const ClaimImportLedger = LiteralKit(["kb", "holds"]).pipe(
 );
 
 /**
+ * @category models
+ * @since 0.0.0
+ */
+export type ClaimImportLedger = typeof ClaimImportLedger.Type;
+
+/**
  * Creation facts that an old envelope cannot establish merely by decoding.
  *
  * **Example** (Recognize missing native generation)
@@ -50,6 +56,12 @@ export const ClaimImportLedger = LiteralKit(["kb", "holds"]).pipe(
 export const MissingClaimCreationFact = LiteralKit(["scope", "generatedBy", "assertedBy", "supportAtCreation"]).pipe(
   $I.annoteSchema("MissingClaimCreationFact", { description: "Unproved core provenance in a historical import." })
 );
+
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type MissingClaimCreationFact = typeof MissingClaimCreationFact.Type;
 
 /**
  * References distinguish historical namespaces even when an old identifier resembles a hash.
@@ -138,7 +150,7 @@ export class ClaimImportLink extends S.Opaque<ClaimImportLink, { readonly brand:
  * @since 0.0.0
  */
 export const makeClaimImport = <
-  const Ledger extends typeof ClaimImportLedger.Type,
+  const Ledger extends ClaimImportLedger,
   P extends FieldSchema<unknown, unknown>,
   R extends FieldSchema<unknown, unknown>,
   Signals extends FieldSchema<unknown, unknown>,

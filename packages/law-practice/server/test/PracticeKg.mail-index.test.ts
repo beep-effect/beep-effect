@@ -58,8 +58,7 @@ const docket = (
     patentNumbers,
   });
 
-// Two clients share the bare docket code 23456US; 34567 is a matter without a client.
-const tables = PracticeKgMatterTables.make({
+const tablesWhereTwoClientsShare23456USAnd34567HasNoClient = PracticeKgMatterTables.make({
   dockets: [
     docket("11111.12345EP", "12345EP", "11111.12345"),
     docket("11111.12345US", "12345US", "11111.12345", ["16000001"], ["10000001"]),
@@ -97,15 +96,58 @@ const row = (
 const exchangeAddress = "/O=EXCHANGE/OU=FIRST ADMINISTRATIVE GROUP/CN=RECIPIENTS/CN=COUNSEL";
 const exchangeLower = "/o=exchange/ou=first administrative group/cn=recipients/cn=counsel";
 
-// The identity of an item without a Message-ID: MAPI time, sender, subject, sorted recipients.
-const mapiKey = (...parts: ReadonlyArray<string>) => `mail:mapi:${A.join(parts, "\u0000")}`;
-const sentItemKey = mapiKey(
+const identityWithoutMessageIdFromMapiTimeSenderSubjectSortedRecipients = (...parts: ReadonlyArray<string>) =>
+  `mail:mapi:${A.join(parts, "\u0000")}`;
+const sentItemKey = identityWithoutMessageIdFromMapiTimeSenderSubjectSortedRecipients(
   "Jan 02, 2026 03:04:05.000000000 UTC",
   exchangeLower,
   "11111.23456US",
   `cc:${exchangeLower}`,
   "to:client@example.com",
   "rfc"
+);
+
+const sameMessageReexportedInNewerTreeFirstRowWins = row(
+  "extract-2026-07-refresh",
+  "artifact:bbbb.export/Top of Outlook data file/Inbox/Message00009",
+  {
+    cc: [],
+    from: "pat@example.com",
+    messageId: "<1@example.com>",
+    subject: "RE: 11111.12345US office action",
+    to: ["counsel@practice.test"],
+  }
+);
+const bareDocketTwoClientsShareAmbiguousLeftOut = row(
+  "extract",
+  "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00002",
+  undefined,
+  {
+    subject: "23456US status",
+  }
+);
+const noRfc5322HeadersTopicPlacesItExchangeAddressesDropped = row(
+  "extract",
+  "artifact:aaaa.export/Top of Outlook data file/Sent Items/Message00003",
+  undefined,
+  {
+    clientSubmitTime: "Jan 02, 2026 03:04:05.000000000 UTC",
+    conversationTopic: "11111.23456US",
+    senderEmailAddress: exchangeAddress,
+  },
+  [{ emailAddress: "client@example.com", kind: "to" }, { emailAddress: exchangeAddress, kind: "cc" }, { kind: "bcc" }]
+);
+const placedButNoAddressAnywhere = row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00005", {
+  cc: [],
+  subject: "12345US",
+  to: [],
+});
+const matterWithoutClient = row(
+  "extract",
+  "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00006",
+  undefined,
+  { senderEmailAddress: "Sam@Other.test", subject: "34567US drawings" },
+  [{ emailAddress: "counsel@practice.test", kind: "unknown" }]
 );
 
 const rows = [
@@ -117,55 +159,22 @@ const rows = [
     subject: "RE: 11111.12345US office action",
     to: ["counsel@practice.test", "'pat@example.com'"],
   }),
-  // The same message exported again in the newer tree: one message, the first row wins.
-  row("extract-2026-07-refresh", "artifact:bbbb.export/Top of Outlook data file/Inbox/Message00009", {
-    cc: [],
-    from: "pat@example.com",
-    messageId: "<1@example.com>",
-    subject: "RE: 11111.12345US office action",
-    to: ["counsel@practice.test"],
-  }),
-  // A bare docket code two clients share: ambiguous, left out.
-  row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00002", undefined, {
-    subject: "23456US status",
-  }),
-  // No RFC 5322 headers: the conversation topic places it; Exchange addresses are dropped.
-  row(
-    "extract",
-    "artifact:aaaa.export/Top of Outlook data file/Sent Items/Message00003",
-    undefined,
-    {
-      clientSubmitTime: "Jan 02, 2026 03:04:05.000000000 UTC",
-      conversationTopic: "11111.23456US",
-      senderEmailAddress: exchangeAddress,
-    },
-    [{ emailAddress: "client@example.com", kind: "to" }, { emailAddress: exchangeAddress, kind: "cc" }, { kind: "bcc" }]
-  ),
+  sameMessageReexportedInNewerTreeFirstRowWins,
+  bareDocketTwoClientsShareAmbiguousLeftOut,
+  noRfc5322HeadersTopicPlacesItExchangeAddressesDropped,
   row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00004", {
     cc: [],
     from: "x@y.test",
     subject: "lunch",
     to: [],
   }),
-  // Placed, but no address anywhere.
-  row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00005", {
-    cc: [],
-    subject: "12345US",
-    to: [],
-  }),
-  // A matter without a client.
-  row(
-    "extract",
-    "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00006",
-    undefined,
-    { senderEmailAddress: "Sam@Other.test", subject: "34567US drawings" },
-    [{ emailAddress: "counsel@practice.test", kind: "unknown" }]
-  ),
+  placedButNoAddressAnywhere,
+  matterWithoutClient,
 ];
 
 describe("practice KG mail index", () => {
   it("resolves subject references the way the lookup does, minus client and bare family", () => {
-    const match = matchPracticeKgMatterReferences(tables);
+    const match = matchPracticeKgMatterReferences(tablesWhereTwoClientsShare23456USAnd34567HasNoClient);
     const hits = (text: string) =>
       A.map(match(extractPracticeKgReferences(text)), (hit) => [hit.familyKey, hit.matchedOn]);
     expect(hits("RE: 11111.12345US office action")).toStrictEqual([["11111.12345", "docket-key"]]);
@@ -179,8 +188,7 @@ describe("practice KG mail index", () => {
     expect(hits("US 10,000,001 B2")).toStrictEqual([["11111.12345", "patent"]]);
     expect(hits("34567US")).toStrictEqual([["34567", "docket"]]);
     expect(hits("client 11111 and family 12345")).toStrictEqual([]);
-    // Text that is not a reference at all resolves to nothing.
-    expect(match(["not a reference", ""])).toStrictEqual([]);
+    expect(match(["not a reference", ""]), "text that is not a reference at all resolves to nothing").toStrictEqual([]);
     expect(hits("12345US and 11111.12345US")).toStrictEqual([
       ["11111.12345", "docket"],
       ["11111.12345", "docket-key"],
@@ -188,7 +196,7 @@ describe("practice KG mail index", () => {
   });
 
   it("places distinct messages by subject, reads participants from either header set, and counts the rest", () => {
-    const result = attributePracticeKgMailIndexRows(tables)(rows);
+    const result = attributePracticeKgMailIndexRows(tablesWhereTwoClientsShare23456USAnd34567HasNoClient)(rows);
     expect(result.counts).toStrictEqual(
       PracticeKgMailIndexCounts.make({
         ambiguousMessages: 1,
@@ -270,23 +278,26 @@ describe("practice KG mail index", () => {
         },
         [{ emailAddress: "Blind@Example.com", kind: "bcc" }]
       );
-    const result = attributePracticeKgMailIndexRows(tables)([
+    const sameItemInLaterExportOtherTreeArtifactAndPath = filingReceipt(
+      "extract-2026-07-refresh",
+      "artifact:bbbb.export/Inbox/Message00077"
+    );
+    const noSubjectAnywhereNothingToResolve = row(
+      "extract",
+      "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00011",
+      { cc: [], from: "a@b.test", to: [] }
+    );
+    const timeButNoSenderAndRfc5322RecipientsWithoutFrom = row(
+      "extract",
+      "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00012",
+      { cc: [], subject: "11111.23456US", to: ["Client@Example.com"] },
+      { clientSubmitTime: "Jan 04, 2026 05:06:07.000000000 UTC" }
+    );
+    const result = attributePracticeKgMailIndexRows(tablesWhereTwoClientsShare23456USAnd34567HasNoClient)([
       filingReceipt("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00010"),
-      // The same item in the later export: another tree, another artifact, another path.
-      filingReceipt("extract-2026-07-refresh", "artifact:bbbb.export/Inbox/Message00077"),
-      // No subject anywhere: nothing to resolve.
-      row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00011", {
-        cc: [],
-        from: "a@b.test",
-        to: [],
-      }),
-      // A time but no sender, and RFC 5322 recipients without a From header.
-      row(
-        "extract",
-        "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00012",
-        { cc: [], subject: "11111.23456US", to: ["Client@Example.com"] },
-        { clientSubmitTime: "Jan 04, 2026 05:06:07.000000000 UTC" }
-      ),
+      sameItemInLaterExportOtherTreeArtifactAndPath,
+      noSubjectAnywhereNothingToResolve,
+      timeButNoSenderAndRfc5322RecipientsWithoutFrom,
     ]);
     expect(result.counts).toStrictEqual(
       PracticeKgMailIndexCounts.make({
@@ -307,7 +318,7 @@ describe("practice KG mail index", () => {
       ])
     ).toStrictEqual([
       [
-        mapiKey(
+        identityWithoutMessageIdFromMapiTimeSenderSubjectSortedRecipients(
           "Jan 03, 2026 04:05:06.000000000 UTC",
           "rep@example.com",
           "12345US filing receipt",
@@ -318,7 +329,13 @@ describe("practice KG mail index", () => {
         ["from:rep@example.com", "cc:blind@example.com"],
       ],
       [
-        mapiKey("Jan 04, 2026 05:06:07.000000000 UTC", "", "11111.23456US", "rfc", "to:client@example.com"),
+        identityWithoutMessageIdFromMapiTimeSenderSubjectSortedRecipients(
+          "Jan 04, 2026 05:06:07.000000000 UTC",
+          "",
+          "11111.23456US",
+          "rfc",
+          "to:client@example.com"
+        ),
         "2026-01-04T05:06:07.000Z",
         ["to:client@example.com"],
       ],
@@ -333,11 +350,15 @@ describe("practice KG mail index", () => {
         { cc: [], from, subject: "11111.12345US", to: [to] },
         { clientSubmitTime: "Jan 05, 2026 06:07:08.000000000 UTC" }
       );
-    const result = attributePracticeKgMailIndexRows(tables)([
+    const firstItemAgainFromLaterExportStillOneMessage = sameMoment(
+      "artifact:bbbb.export/Inbox/Message00099",
+      "Alice <ALICE@a.test>",
+      "x@c.test"
+    );
+    const result = attributePracticeKgMailIndexRows(tablesWhereTwoClientsShare23456USAnd34567HasNoClient)([
       sameMoment("artifact:aaaa.export/Inbox/Message00020", "alice@a.test", "x@c.test"),
       sameMoment("artifact:aaaa.export/Inbox/Message00021", "bob@b.test", "y@c.test"),
-      // The first item again, from the later export: still one message.
-      sameMoment("artifact:bbbb.export/Inbox/Message00099", "Alice <ALICE@a.test>", "x@c.test"),
+      firstItemAgainFromLaterExportStillOneMessage,
     ]);
     expect([result.counts.rows, result.counts.distinctMessages, result.counts.attributedMessages]).toStrictEqual([
       3, 2, 2,
@@ -361,11 +382,11 @@ describe("practice KG mail index", () => {
         { clientSubmitTime: "Jan 06, 2026 07:08:09.000000000 UTC", subject: "11111.12345US" },
         [{ emailAddress: "Client@Example.com", kind }]
       );
-    const result = attributePracticeKgMailIndexRows(tables)([
+    const blindCopyIsTheSameItemAsTheCcOne = withRecipient("artifact:bbbb.export/Inbox/Message00032", "bcc");
+    const result = attributePracticeKgMailIndexRows(tablesWhereTwoClientsShare23456USAnd34567HasNoClient)([
       withRecipient("artifact:aaaa.export/Inbox/Message00030", "to"),
       withRecipient("artifact:aaaa.export/Inbox/Message00031", "cc"),
-      // A blind copy is a copy: the same item as the one before.
-      withRecipient("artifact:bbbb.export/Inbox/Message00032", "bcc"),
+      blindCopyIsTheSameItemAsTheCcOne,
     ]);
     expect([result.counts.rows, result.counts.distinctMessages]).toStrictEqual([3, 2]);
     expect(
@@ -384,8 +405,7 @@ describe("practice KG mail index", () => {
         const directory = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-mail-index-" });
         const first = path.join(directory, "messages-extract.jsonl");
         const second = path.join(directory, "messages-extract-refresh.jsonl");
-        // Full index rows carry attachments, body, and folder fields the build never reads.
-        const fullRow = {
+        const fullRowWithAttachmentBodyAndFolderFieldsTheBuildNeverReads = {
           attachments: [
             { fileName: "Attachment00001.pdf", kind: "file", ordinal: 1, relativePath: "x", sizeBytes: 12 },
           ],
@@ -412,16 +432,19 @@ describe("practice KG mail index", () => {
           sourceArtifactId: "artifact:aaaa",
           tree: "extract",
         };
-        const fullLine = yield* encodeJson(fullRow);
+        const fullLine = yield* encodeJson(fullRowWithAttachmentBodyAndFolderFieldsTheBuildNeverReads);
         yield* fs.writeFileString(first, `${fullLine}\n\n`);
         const refreshLine = yield* encodeJson({
-          ...fullRow,
+          ...fullRowWithAttachmentBodyAndFolderFieldsTheBuildNeverReads,
           messagePath: "artifact:bbbb.export/Inbox/Message00007",
           tree: "extract-2026-07-refresh",
         });
         yield* fs.writeFileString(second, `${refreshLine}\n`);
         const result = yield* readPracticeKgMailIndex(
-          PracticeKgMailIndexInput.make({ paths: [first, second], tables })
+          PracticeKgMailIndexInput.make({
+            paths: [first, second],
+            tables: tablesWhereTwoClientsShare23456USAnd34567HasNoClient,
+          })
         );
         expect([result.counts.rows, result.counts.distinctMessages, result.counts.attributedMessages]).toStrictEqual([
           2, 1, 1,
@@ -430,18 +453,30 @@ describe("practice KG mail index", () => {
 
         yield* fs.writeFileString(first, `${fullLine}\n{"tree":"extract"}\n`);
         const bad = yield* Effect.flip(
-          readPracticeKgMailIndex(PracticeKgMailIndexInput.make({ paths: [first], tables }))
+          readPracticeKgMailIndex(
+            PracticeKgMailIndexInput.make({
+              paths: [first],
+              tables: tablesWhereTwoClientsShare23456USAnd34567HasNoClient,
+            })
+          )
         );
         assertInstanceOf(bad, PracticeKgProjectionError);
         expect(bad.message).toBe(`Mail index "${first}" line 2 is not a message row.`);
 
         const missing = path.join(directory, "missing.jsonl");
         const unreadable = yield* Effect.flip(
-          readPracticeKgMailIndex(PracticeKgMailIndexInput.make({ paths: [missing], tables }))
+          readPracticeKgMailIndex(
+            PracticeKgMailIndexInput.make({
+              paths: [missing],
+              tables: tablesWhereTwoClientsShare23456USAnd34567HasNoClient,
+            })
+          )
         );
         expect(unreadable.message).toBe(`Failed reading mail index "${missing}".`);
 
-        const none = yield* readPracticeKgMailIndex(PracticeKgMailIndexInput.make({ paths: [], tables }));
+        const none = yield* readPracticeKgMailIndex(
+          PracticeKgMailIndexInput.make({ paths: [], tables: tablesWhereTwoClientsShare23456USAnd34567HasNoClient })
+        );
         expect(none.counts.rows).toBe(0);
       })
     );

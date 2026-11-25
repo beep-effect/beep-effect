@@ -78,8 +78,6 @@ export const SkillHunkStatus = LiteralKit(["applied", "fuzz-applied", "conflicte
 export type SkillHunkStatus = typeof SkillHunkStatus.Type;
 
 /**
- * The verdict for a whole skill's replay.
- *
  * **Details**
  *
  * `clean`: every hunk applied exactly, so the strict applier reproduces the
@@ -106,8 +104,6 @@ export const SkillReplayStatus = LiteralKit(["clean", "fuzz-only", "conflicted"]
 );
 
 /**
- * The verdict for a whole skill's replay.
- *
  * **Example** (Annotate a replay status)
  *
  * ```ts
@@ -123,8 +119,6 @@ export const SkillReplayStatus = LiteralKit(["clean", "fuzz-only", "conflicted"]
 export type SkillReplayStatus = typeof SkillReplayStatus.Type;
 
 /**
- * One hunk's replay outcome, keyed by its identity.
- *
  * **Details**
  *
  * `hunkHash` is the hunk's position-free identity: the file path and every
@@ -176,8 +170,6 @@ export class SkillHunkReport extends S.Opaque<SkillHunkReport, { readonly brand:
 ) {}
 
 /**
- * One vendored skill's replay at its current lock pin.
- *
  * **Details**
  *
  * `sourceRevision` is the pin the replay loaded. `pristineTreeHash` is that
@@ -427,8 +419,6 @@ export class SkillTrainPullRequest extends S.Opaque<SkillTrainPullRequest, { rea
 ) {}
 
 /**
- * The open skill-update pull requests `gh pr list --json` returned.
- *
  * **Example** (Decode an empty list)
  *
  * ```ts
@@ -448,8 +438,6 @@ export const SkillTrainPullRequests = S.Array(SkillTrainPullRequest).pipe(
 );
 
 /**
- * The open skill-update pull requests `gh pr list --json` returned.
- *
  * **Example** (Annotate a list)
  *
  * ```ts
@@ -465,8 +453,6 @@ export const SkillTrainPullRequests = S.Array(SkillTrainPullRequest).pipe(
 export type SkillTrainPullRequests = typeof SkillTrainPullRequests.Type;
 
 /**
- * The parent tracking issue for one scheduled batch of skill updates.
- *
  * **Details**
  *
  * `title` is stable per batch (`Skills update train <batch>`), so a re-run

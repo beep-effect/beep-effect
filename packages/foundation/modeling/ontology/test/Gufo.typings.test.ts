@@ -4,6 +4,7 @@ import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -52,26 +53,31 @@ describe("typingsFromDataset", () => {
 
   it("leaves a term with no or several gUFO class types untyped", () => {
     const quads = [typed("Both", "Kind"), typed("Both", "Role"), makeQuad(named("Plain"), RDF_TYPE, owl("Class"))];
-    expect(O.isNone(typingOf(quads, "Both"))).toBe(true);
-    expect(O.isNone(typingOf(quads, "Plain"))).toBe(true);
+    assertNone(typingOf(quads, "Both"));
+    assertNone(typingOf(quads, "Plain"));
     expect(tagsOf(quads, "Both")).toEqual([]);
   });
 
   it("reads the instance category from the subclass closure", () => {
     const quads = [typed("Talk", "Kind"), sub("Talk", "Happening"), subGufo("Happening", "Event")];
-    expect(O.map(typingOf(quads, "Talk"), (typing) => typing.instanceCategory)).toEqual(O.some("Event"));
-    expect(
-      O.map(typingOf([typed("Mass", "Kind"), subGufo("Mass", "Quality")], "Mass"), (typing) => typing.instanceCategory)
-    ).toEqual(O.some("Quality"));
+    assertSome(
+      O.map(typingOf(quads, "Talk"), (typing) => typing.instanceCategory),
+      "Event"
+    );
+    assertSome(
+      O.map(typingOf([typed("Mass", "Kind"), subGufo("Mass", "Quality")], "Mass"), (typing) => typing.instanceCategory),
+      "Quality"
+    );
   });
 
   it("states only named non-gUFO specializations", () => {
     const stated = typingsFromDataset(
       makeDataset([typed("Student", "Role"), sub("Student", "Person"), subGufo("Student", "Object")])
     );
-    expect(
-      O.map(HashMap.get(stated.hierarchy.specializes, term("Student")), (supertypes) => A.fromIterable(supertypes))
-    ).toEqual(O.some([term("Person")]));
+    assertSome(
+      O.map(HashMap.get(stated.hierarchy.specializes, term("Student")), (supertypes) => A.fromIterable(supertypes)),
+      [term("Person")]
+    );
   });
 
   it("reports a role without a kind and accepts a role under a kind", () => {
@@ -96,10 +102,21 @@ describe("typingsFromDataset", () => {
       ...mediation("Marriage", "r1", [makeQuad(named("x"), owl("qualifiedCardinality"), makeLiteral("2"))]),
       ...mediation("Marriage", "r2", [makeQuad(named("x"), owl("someValuesFrom"), named("Spouse"))]),
     ];
-    expect(O.map(typingOf(quads, "Marriage"), (typing) => HashMap.get(typing.mediates, term("Spouse")))).toEqual(
-      O.some(O.some(2))
+    assertSome(
+      O.flatMap(typingOf(quads, "Marriage"), (typing) => HashMap.get(typing.mediates, term("Spouse"))),
+      2
     );
     expect(tagsOf(quads, "Marriage")).toEqual([]);
+  });
+
+  it("ignores a qualified cardinality stated as a non-literal", () => {
+    const quads = [
+      typed("Lease", "Kind"),
+      subGufo("Lease", "Relator"),
+      ...mediation("Lease", "r", [makeQuad(named("x"), owl("onClass"), named("Tenant"))]),
+      ...mediation("Lease", "r", [makeQuad(named("x"), owl("qualifiedCardinality"), named("Two"))]),
+    ];
+    assertNone(O.flatMap(typingOf(quads, "Lease"), (typing) => HashMap.get(typing.mediates, term("Tenant"))));
   });
 
   it("inherits mediations through the subclass closure", () => {

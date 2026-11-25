@@ -27,13 +27,7 @@ const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $LawPracticeServerId.create("PracticeKg.schemas");
 
-/*
- * Constructor-only default: these projection classes are written exclusively
- * by the deterministic spine (SPEC D-2a), so the settled label is the
- * invariant, not a guess — candidate rows live in the epistemic tables and
- * must never be written through kg_node/kg_edge.
- */
-const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
+const settledStatusDefaultForDeterministicSpineOnlyWrites = PracticeKgEpistemicStatus.pipe(
   S.withConstructorDefault(Effect.succeed<PracticeKgEpistemicStatus>("derived-from-official-records"))
 );
 
@@ -84,8 +78,6 @@ export const PracticeKgRunLabel = S.String.check(
 );
 
 /**
- * Runtime type for {@link PracticeKgRunLabel}.
- *
  * **Example** (Type a run label)
  *
  * ```ts
@@ -119,8 +111,6 @@ export const PRACTICE_KG_REFRESH_RUN = "2026-07-refresh";
 const emptyStringList = Effect.succeed(A.empty<string>());
 
 /**
- * Validated options used by `corpus graph`.
- *
  * **Gotchas**
  *
  * Omitting `bundleOut` puts the bundle under
@@ -288,8 +278,6 @@ export type PracticeKgIncludedRunsInput = Pick<PracticeKgOptions, "includeRefres
 export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "corpusRoot">;
 
 /**
- * One persisted `kg_node` row.
- *
  * **Details**
  *
  * `iri` is the node's identity across the whole graph and the join target for
@@ -331,7 +319,7 @@ export class PracticeKgNodeRow extends S.Opaque<PracticeKgNodeRow, { readonly br
     attributionSource: KgAttributionSource,
     client: S.optionalKey(S.String),
     docketFamily: S.optionalKey(S.String),
-    epistemicStatus: spineEpistemicStatus,
+    epistemicStatus: settledStatusDefaultForDeterministicSpineOnlyWrites,
     iri: S.NonEmptyString,
     kind: KgNodeKind,
     label: S.String,
@@ -347,8 +335,6 @@ export class PracticeKgNodeRow extends S.Opaque<PracticeKgNodeRow, { readonly br
 ) {}
 
 /**
- * One persisted `kg_edge` row.
- *
  * **Details**
  *
  * The `(subjectIri, predicate, objectIri)` triple is the row's identity, so the
@@ -378,7 +364,7 @@ export class PracticeKgNodeRow extends S.Opaque<PracticeKgNodeRow, { readonly br
  */
 export class PracticeKgEdgeRow extends S.Opaque<PracticeKgEdgeRow, { readonly brand: unique symbol }>()(
   S.Struct({
-    epistemicStatus: spineEpistemicStatus,
+    epistemicStatus: settledStatusDefaultForDeterministicSpineOnlyWrites,
     objectIri: S.NonEmptyString,
     predicate: KgEdgePredicate,
     provenanceKind: PracticeKgProvenanceKind,
@@ -392,8 +378,6 @@ export class PracticeKgEdgeRow extends S.Opaque<PracticeKgEdgeRow, { readonly br
 ) {}
 
 /**
- * One parsed pffexport email-header row.
- *
  * **Details**
  *
  * Headers only — no message body is ever read. `messageOrd` is the ordinal
@@ -556,8 +540,6 @@ export class PracticeKgCounts extends S.Opaque<PracticeKgCounts, { readonly bran
 ) {}
 
 /**
- * Portable practice knowledge-graph bundle manifest.
- *
  * **Details**
  *
  * Written as `bundle.manifest.json` at the bundle root and read first by any

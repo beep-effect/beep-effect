@@ -7,8 +7,6 @@
  */
 
 /**
- * Curated ontology workbench exports.
- *
  * @category components
  * @since 0.0.0
  */

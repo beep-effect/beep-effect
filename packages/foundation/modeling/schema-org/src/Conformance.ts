@@ -30,8 +30,6 @@ const $I = $SchemaOrgId.create("Conformance");
 const JsonString = S.fromJsonString(S.String);
 
 /**
- * Which kind of term a {@link UnknownTerm} issue is about.
- *
  * **Example** (Decode a property term kind)
  *
  * ```ts
@@ -50,8 +48,6 @@ export const TermKind = LiteralKit(["type", "property"]).pipe(
 );
 
 /**
- * Which kind of term a {@link UnknownTerm} issue is about.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -59,8 +55,6 @@ export const TermKind = LiteralKit(["type", "property"]).pipe(
 export type TermKind = typeof TermKind.Type;
 
 /**
- * A term the vendored schema.org vocabulary does not define at all.
- *
  * **Details**
  *
  * This is a typo or an invention, and it is **always reported, never silently
@@ -128,8 +122,6 @@ export class UnknownTerm extends S.TaggedClass<UnknownTerm, { readonly brand: un
 }
 
 /**
- * A property schema.org defines, used on a type it is not legal on.
- *
  * **Details**
  *
  * This is the issue that pays for the package. The authentic example is
@@ -195,8 +187,6 @@ export class PropertyNotOnType extends S.TaggedClass<PropertyNotOnType, { readon
 }
 
 /**
- * A node whose `@type` schema.org has deprecated.
- *
  * **Details**
  *
  * Deprecated terms are **valid but flagged, never rejected**. The default gate
@@ -252,9 +242,6 @@ export class DeprecatedType extends S.TaggedClass<DeprecatedType, { readonly bra
 }
 
 /**
- * A property schema.org has deprecated. Valid but flagged, exactly as
- * {@link DeprecatedType} is.
- *
  * **Example** (Construct DeprecatedProperty issue)
  *
  * ```ts
@@ -313,8 +300,6 @@ export class DeprecatedProperty extends S.TaggedClass<DeprecatedProperty, { read
 }
 
 /**
- * A reference to an `@id` no node in the graph defines.
- *
  * **Details**
  *
  * Not an error, and reported rather than failed by default: pointing at an
@@ -379,8 +364,6 @@ export class DanglingReference extends S.TaggedClass<DanglingReference, { readon
 }
 
 /**
- * Anything {@link Conformance.check} can report.
- *
  * **Details**
  *
  * Issues carry **no severity field**. Severity is the consumer's policy, not a
@@ -411,8 +394,6 @@ export const ConformanceIssue = S.Union([
 ]).pipe($I.annoteSchema("ConformanceIssue", { description: "Anything Conformance.check can report." }));
 
 /**
- * Anything {@link Conformance.check} can report.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -420,9 +401,6 @@ export const ConformanceIssue = S.Union([
 export type ConformanceIssue = typeof ConformanceIssue.Type;
 
 /**
- * Indicates that a graph carries at least one conformance issue of a kind the
- * gate was configured to fail on.
- *
  * **Details**
  *
  * The error carries **every** issue the check found, not only the failing
@@ -552,8 +530,6 @@ export class ConformanceOptions extends S.Opaque<ConformanceOptions, { readonly 
 ) {}
 
 /**
- * Companion types for {@link ConformanceOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */

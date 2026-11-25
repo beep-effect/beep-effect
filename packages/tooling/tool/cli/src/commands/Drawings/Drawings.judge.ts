@@ -34,8 +34,6 @@ const SHEET_DPI = 110;
 const PHOTO_EXTENSIONS = HashSet.fromIterable([".jpg", ".jpeg", ".png", ".webp"]);
 
 /**
- * One file the judge must open.
- *
  * **Example** (A sheet)
  *
  * ```ts
@@ -57,8 +55,6 @@ export class DrawingJudgeFile extends S.Opaque<DrawingJudgeFile, { readonly bran
 ) {}
 
 /**
- * The judge pack's file manifest.
- *
  * **Example** (An empty pack)
  *
  * ```ts

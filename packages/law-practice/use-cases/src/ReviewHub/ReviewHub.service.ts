@@ -9,7 +9,6 @@
 import { isCurrentReviewItem, isLegacyReviewItemImported, ReviewItem } from "@beep/law-practice-domain";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -24,6 +23,7 @@ import { ReviewQueue } from "../ReviewQueue/ReviewQueue.ports.ts";
 import { ReviewHubToolError } from "./ReviewHub.errors.ts";
 import { ReviewHub } from "./ReviewHub.ports.ts";
 import { OpenItems } from "./ReviewHub.schemas.ts";
+import type { ReviewItemId } from "@beep/law-practice-domain";
 import type { AnswerLogError, UnknownQuestionOptionError } from "../QuestionQueue/QuestionQueue.errors.ts";
 import type { QuestionQueueShape } from "../QuestionQueue/QuestionQueue.ports.ts";
 import type { ReviewItemStoreError } from "../ReviewItemStore/ReviewItemStore.errors.ts";
@@ -58,7 +58,7 @@ const toolError = (failure: HubFailure): ReviewHubToolError =>
     ReviewItemRepairRequiredError: ({ itemId }) =>
       ReviewHubToolError.make({
         code: "repair-required",
-        message: `Item ${itemId} is a legacy import whose quote must be repaired before it is answered.`,
+        message: `Item ${itemId} is a legacy import whose quote must be repaired before it is reviewed.`,
       }),
     ReviewItemStoreError: storeUnavailable,
     UnknownQuestionOptionError: ({ itemId, optionId }) =>
@@ -70,8 +70,16 @@ const toolError = (failure: HubFailure): ReviewHubToolError =>
     VerdictLogError: storeUnavailable,
   });
 
-const makeReviewHub = (store: ReviewItemStoreShape, reviews: ReviewQueueShape, questions: QuestionQueueShape) =>
-  ReviewHub.of({
+const makeReviewHub = (store: ReviewItemStoreShape, reviews: ReviewQueueShape, questions: QuestionQueueShape) => {
+  const storedUnlessImported = Effect.fnUntraced(function* (itemId: ReviewItemId) {
+    const items = yield* store.list;
+    const stored = A.findFirst(items, (candidate) => candidate.itemId === itemId);
+    if (O.exists(stored, isLegacyReviewItemImported)) {
+      return yield* ReviewItemRepairRequiredError.make({ itemId });
+    }
+    return O.filter(stored, isCurrentReviewItem);
+  });
+  return ReviewHub.of({
     lockBatch: Effect.fn("ReviewHub.lockBatch")(
       (request: LockBatchRequest) => reviews.lockBatch(request.batchId),
       Effect.mapError(toolError)
@@ -89,22 +97,18 @@ const makeReviewHub = (store: ReviewItemStoreShape, reviews: ReviewQueueShape, q
       });
     }, Effect.mapError(toolError)),
     recordAnswer: Effect.fn("ReviewHub.recordAnswer")(function* ({ itemId, answer }: RecordAnswerRequest) {
-      const list1 = yield* store.list;
-      const stored = A.findFirst(list1, (candidate) => candidate.itemId === itemId);
-      if (O.exists(stored, isLegacyReviewItemImported)) {
-        return yield* ReviewItemRepairRequiredError.make({ itemId });
-      }
-      const item = yield* Effect.fromOption(
-        pipe(stored, O.filter(isCurrentReviewItem), O.filter(ReviewItem.guards.question)),
-        () => QuestionNotFoundError.make({ itemId })
+      const stored = yield* storedUnlessImported(itemId);
+      const item = yield* Effect.fromOption(O.filter(stored, ReviewItem.guards.question), () =>
+        QuestionNotFoundError.make({ itemId })
       );
       return yield* questions.recordAnswer({ item, answer });
     }, Effect.mapError(toolError)),
-    recordVerdict: Effect.fn("ReviewHub.recordVerdict")(
-      (input: RecordVerdictInput) => reviews.recordVerdict(input),
-      Effect.mapError(toolError)
-    ),
+    recordVerdict: Effect.fn("ReviewHub.recordVerdict")(function* (input: RecordVerdictInput) {
+      yield* storedUnlessImported(input.itemId);
+      return yield* reviews.recordVerdict(input);
+    }, Effect.mapError(toolError)),
   });
+};
 
 /**
  * Layer providing the review hub over the review queue, the question queue
@@ -116,7 +120,8 @@ const makeReviewHub = (store: ReviewItemStoreShape, reviews: ReviewQueueShape, q
  * `ReviewQueue.openItems` and the questions to `QuestionQueue.digest`, and
  * keeps the store's order; an imported legacy item awaiting repair is always
  * listed. `recordAnswer` answers only a stored current `question` item and
- * refuses an imported one with `repair-required`. Every failure is mapped to its code: a missing question or an empty
+ * refuses an imported one with `repair-required`; `recordVerdict` refuses a
+ * verdict on an imported item the same way before the batch lock is checked. Every failure is mapped to its code: a missing question or an empty
  * batch to `not-found`, a locked batch to `locked`, an option the question
  * does not offer to `unknown-option`, and any store failure to
  * `store-unavailable`. The hub never writes the calendar.

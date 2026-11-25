@@ -29,8 +29,6 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Laws/RetiredIriAuthorities.model");
 
 /**
- * Rule that detected a retired IRI authority or a hand-written public origin.
- *
  * **Details**
  *
  * `retired-authority` matches any host form of a retired identity authority in
@@ -56,16 +54,12 @@ export const RetiredIriAuthorityRule = LiteralKit(["retired-authority", "public-
 );
 
 /**
- * Type-level member of {@link RetiredIriAuthorityRule}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RetiredIriAuthorityRule = typeof RetiredIriAuthorityRule.Type;
 
 /**
- * One retired identity authority host, stored as its DNS labels.
- *
  * **Example** (Describe a retired host)
  *
  * ```ts
@@ -137,8 +131,6 @@ export const retiredIriAuthorities: ReadonlyArray<RetiredIriAuthority> = A.map(
 export const publicOriginHostLabels: readonly [string, ...Array<string>] = ["beep-effect", "com"];
 
 /**
- * One file the public-origin rule never reports, with the reason.
- *
  * **Example** (Describe an allowlist entry)
  *
  * ```ts
@@ -262,8 +254,6 @@ export const retiredIriAuthoritiesScope: RetiredIriAuthoritiesScope = RetiredIri
 });
 
 /**
- * One retired authority or public-origin literal found in a repository file.
- *
  * **Example** (Construct a finding)
  *
  * ```ts
@@ -303,8 +293,6 @@ export class RetiredIriAuthorityFinding extends S.Opaque<
 ) {}
 
 /**
- * Runtime options for the retired IRI authority law.
- *
  * **Example** (Configure a strict scan)
  *
  * ```ts
@@ -336,8 +324,6 @@ export class RetiredIriAuthoritiesOptions extends S.Opaque<
 ) {}
 
 /**
- * Result of one retired IRI authority law run.
- *
  * **Example** (Construct a clean summary)
  *
  * ```ts

@@ -24,8 +24,6 @@ import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 const $I = $InfraCiRunnersId.create("Config");
 
 /**
- * The region the fleet runs in.
- *
  * **Example** (Read the pinned region)
  *
  * ```ts
@@ -42,8 +40,6 @@ export const FleetRegion = LiteralKit(["us-east-1"]).pipe(
 );
 
 /**
- * Decoded region.
- *
  * @category models
  * @since 0.0.0
  */
@@ -82,8 +78,6 @@ export const RunnerInstanceType = LiteralKit([
 ]).pipe($I.annoteSchema("RunnerInstanceType", { description: "An EC2 instance type a runner pool may launch." }));
 
 /**
- * Decoded instance type.
- *
  * @category models
  * @since 0.0.0
  */
@@ -142,16 +136,12 @@ export const FleetPhase = LiteralKit(["overlap", "primary"]).pipe(
 );
 
 /**
- * Decoded phase.
- *
  * @category models
  * @since 0.0.0
  */
 export type FleetPhase = typeof FleetPhase.Type;
 
 /**
- * The two pools of the fleet.
- *
  * **Example** (Read the pool names)
  *
  * ```ts
@@ -168,8 +158,6 @@ export const PoolName = LiteralKit(["heavy", "overflow"]).pipe(
 );
 
 /**
- * Decoded pool name.
- *
  * @category models
  * @since 0.0.0
  */
@@ -317,8 +305,6 @@ export class NetworkSettings extends S.Opaque<NetworkSettings, { readonly brand:
 ) {}
 
 /**
- * The runner image and its root disk.
- *
  * **Details**
  *
  * `amiId` is the baked Amazon Linux 2023 image `beep runners bake` last
@@ -365,7 +351,10 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
  * `overlapMaximumCount` is the cap while the live fleet still runs. Labels
  * are new (`beep-fleet-heavy`, `beep-fleet-overflow`) so a job reaches this
  * fleet only once its workflow asks for it; the runner groups are the live
- * org groups.
+ * org groups. `jobQueuedCheck` makes scale-up ask GitHub before it launches
+ * and drop a message whose job is already `in_progress` or `completed`;
+ * production turns it on so a served job's redelivered message launches no
+ * idle runner.
  *
  * **Example** (Decode a pool)
  *
@@ -382,6 +371,7 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
  *   runnerGroup: "beep-shard-overflow",
  *   runnerNamePrefix: "beep-fleet-ovf-",
  *   jobRetry: false,
+ *   jobQueuedCheck: true,
  * })
  * console.log(pool.maximumCount) // 48
  * ```
@@ -399,6 +389,7 @@ export class PoolSettings extends S.Opaque<PoolSettings, { readonly brand: uniqu
     runnerGroup: S.String.check(S.isPattern(/^[A-Za-z0-9_-]{1,64}$/u)),
     runnerNamePrefix: S.String.check(S.isPattern(/^[a-z0-9-]{1,32}$/u)),
     jobRetry: S.Boolean,
+    jobQueuedCheck: S.Boolean,
   }).pipe($I.annoteSchema("PoolSettings", { description: "Instance types, caps, label and group of one pool." }))
 ) {}
 
@@ -498,8 +489,6 @@ export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number 
   FleetPhase.match(config.phase, { overlap: () => config.liveFleetReserveVcpu, primary: () => 0 });
 
 /**
- * Configuration of one stage of the `CiRunners` stack.
- *
  * **Details**
  *
  * Every field is tracked source. App credentials are not here; see
@@ -515,7 +504,7 @@ export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number 
  * import * as Effect from "effect/Effect"
  *
  * const config = Effect.runSync(decodeCiRunnersConfig(productionConfig))
- * console.log(config.phase) // "overlap"
+ * console.log(config.phase) // "primary"
  * ```
  *
  * @category configuration
@@ -553,8 +542,6 @@ export class CiRunnersConfig extends S.Opaque<CiRunnersConfig, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link CiRunnersConfig}.
- *
  * @category configuration
  * @since 0.0.0
  */
@@ -602,7 +589,8 @@ export const productionRepository = "beep-effect/beep-effect";
 
 /**
  * Configuration input of the `prod` stage: the live fleet's values, in the
- * `overlap` phase.
+ * `primary` phase (cutover step 4b; the `overlap` caps stay declared for the
+ * step 4 rollback, which reverts the phase).
  *
  * **Details**
  *
@@ -630,7 +618,7 @@ export const productionRepository = "beep-effect/beep-effect";
 export const productionConfig: CiRunnersConfig.Encoded = {
   expectedAccountId: "832907639880",
   region: "us-east-1",
-  phase: "overlap",
+  phase: "primary",
   spotQuotaVcpu: 512,
   liveFleetReserveVcpu: 480,
   network: {
@@ -654,6 +642,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
     runnerGroup: "beep-ec2-heavy",
     runnerNamePrefix: "beep-fleet-heavy-",
     jobRetry: true,
+    jobQueuedCheck: true,
   },
   overflow: {
     name: "overflow",
@@ -664,6 +653,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
     runnerGroup: "beep-shard-overflow",
     runnerNamePrefix: "beep-fleet-ovf-",
     jobRetry: true,
+    jobQueuedCheck: true,
   },
   reaperTtlMinutes: 90,
   runnerType: "Org",

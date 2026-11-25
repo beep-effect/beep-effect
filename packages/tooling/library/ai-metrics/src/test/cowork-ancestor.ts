@@ -57,9 +57,7 @@ export interface CoworkAncestorFixture {
   readonly runtime: Effect.Success<ReturnType<typeof makeSealedRuntimeFixture>>;
   readonly send: (path: string, body: string, drop?: boolean) => Effect.Effect<string, CursorLifecycleError>;
 }
-// The real application wrapper owns the real persistent callback child. Only its own
-// PID/start ticks and bounded child replies cross stdout; no process argv/env is read.
-const appSource = String.raw`
+const realAppWrapperOwningTheCallbackChildEmittingOnlyPidTicksAndBoundedReplies = String.raw`
 const {spawn} = require("node:child_process");
 const fs = require("node:fs");
 const readline = require("node:readline");
@@ -122,14 +120,18 @@ export const coworkAncestorFixture: Effect.Effect<
   const close = Scope.close(owned, Exit.void).pipe(Effect.andThen(runtime.close));
   return yield* Effect.gen(function* () {
     const commands = yield* Effect.acquireRelease(Queue.bounded<Uint8Array>(1), Queue.shutdown);
-    const child = yield* ChildProcess.make(runtime.executable, ["--eval", appSource], {
-      extendEnv: false,
-      cwd: process.cwd(),
-      stdin: Stream.fromQueue(commands),
-      stderr: "ignore",
-      killSignal: "SIGTERM",
-      forceKillAfter: "500 millis",
-    });
+    const child = yield* ChildProcess.make(
+      runtime.executable,
+      ["--eval", realAppWrapperOwningTheCallbackChildEmittingOnlyPidTicksAndBoundedReplies],
+      {
+        extendEnv: false,
+        cwd: process.cwd(),
+        stdin: Stream.fromQueue(commands),
+        stderr: "ignore",
+        killSignal: "SIGTERM",
+        forceKillAfter: "500 millis",
+      }
+    );
     const next = yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.rechunk(1), Stream.toPull);
     const initialization = yield* encode({ peer: sealedRuntimeSocketPeerSource });
     yield* Queue.offer(commands, new TextEncoder().encode(`${initialization}\n`));

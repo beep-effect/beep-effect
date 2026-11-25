@@ -94,8 +94,6 @@ export const VendorLoadStatus = LiteralKit(["VETTED", "UNVETTED"]).pipe(
 );
 
 /**
- *  Runtime type for {@link VendorLoadStatus}.
- *
  * **Example** (Assign UNVETTED status)
  *
  * ```ts
@@ -171,8 +169,6 @@ export const VendorDigestUnit = LiteralKit(["file", "archive-entry", "tree"]).pi
 );
 
 /**
- * Runtime type for {@link VendorDigestUnit}.
- *
  * **Example** (Type a digest unit)
  *
  * ```ts
@@ -207,8 +203,6 @@ export const ConceptSchemeOrigin = LiteralKit(["repo-owned", "vendor"]).pipe(
 );
 
 /**
- * Runtime type for {@link ConceptSchemeOrigin}.
- *
  * **Example** (Type an origin)
  *
  * ```ts
@@ -257,8 +251,6 @@ const approvalFields = {
 };
 
 /**
- * Manifest row admitting one `ConceptScheme` JSON file.
- *
  * **Example** (Describe a repo-owned scheme row)
  *
  * ```ts
@@ -766,8 +758,6 @@ export class RepoSchemeBroaderViolation extends S.TaggedError<
 ) {}
 
 /**
- * Raised when two rows of one manifest load concept schemes with one IRI.
- *
  * **Example** (Make a duplicate scheme refusal)
  *
  * ```ts

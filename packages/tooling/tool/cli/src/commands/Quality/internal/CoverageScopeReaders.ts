@@ -263,8 +263,6 @@ export const coverageReaderOwners: {
 );
 
 /**
- * One scanned repository path whose owner rows disagree with the reader scan.
- *
  * **Example** (Describe one drift row)
  *
  * ```ts
@@ -383,6 +381,7 @@ const COVERAGE_READER_SOURCE_IGNORES = [
   "**/build/**",
   "**/.turbo/**",
   "**/coverage/**",
+  "**/tmp/**",
 ] as const;
 
 /**

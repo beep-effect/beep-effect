@@ -45,7 +45,6 @@ export const CollectiveKind = LiteralKit(["household", "team", "committee", "joi
   $I.annoteSchema("CollectiveKind", { description: "Kinds of collective agent with their own identity." })
 );
 /**
- * Decoded CollectiveKind type.
  * @category models
  * @since 0.0.0
  */
@@ -115,8 +114,6 @@ export class CollectiveAgent extends S.Opaque<CollectiveAgent, { readonly brand:
   }).pipe($I.annoteSchema("CollectiveAgent", { description: "CollectiveAgent data." }))
 ) {}
 /**
- * Party public schema for the party model.
- *
  * **Example** (Decode Party)
  * ```ts
  * import { Party } from "@beep/party-domain/Party"
@@ -131,7 +128,6 @@ export const Party = S.Union([Person, Organization, CollectiveAgent]).pipe(
   $I.annoteSchema("Party", { description: "Canonical person, organization, or collective agent." })
 );
 /**
- * Decoded Party type.
  * @category models
  * @since 0.0.0
  */
@@ -142,8 +138,6 @@ export type Party = typeof Party.Type;
 // ---------------------------------------------------------------------------
 
 /**
- * Mail system hosting a mailbox.
- *
  * **Example** (Decode MailSystem)
  * ```ts
  * import { MailSystem } from "@beep/party-domain/Party"
@@ -235,8 +229,6 @@ export class ChatAccount extends S.Opaque<ChatAccount, { readonly brand: unique 
   )
 ) {}
 /**
- * Account public schema for the party model.
- *
  * **Example** (Decode Account)
  * ```ts
  * import { Account } from "@beep/party-domain/Party"
@@ -251,7 +243,6 @@ export const Account = S.Union([Mailbox, SocialAccount, PhoneLine, ChatAccount])
   $I.annoteSchema("Account", { description: "Account on some system; never a party." })
 );
 /**
- * Decoded Account type.
  * @category models
  * @since 0.0.0
  */

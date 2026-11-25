@@ -34,10 +34,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const $I = $GlobId.create("GlobPattern");
 
 /**
- * Typed failure raised when a glob pattern trips a compile-time guard:
- * over-length, brace-expansion budget exhaustion, or nesting past the depth
- * cap.
- *
  * **Details**
  *
  * Malformed input is never a defect — this is the only failure the
@@ -93,7 +89,6 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly
      *
      * @since 0.0.0
      */
-    // Expansion arithmetic intentionally overflows to Infinity; preserve the typed failure boundary.
     actual: GuardMeasurement.pipe(
       $I.annoteKey("GlobPatternError.actual", {
         description: "The measured value that exceeded `limit`, including Infinity for an overflowing expansion count.",
@@ -133,9 +128,6 @@ export class GlobPatternError extends S.TaggedError<GlobPatternError, { readonly
 }
 
 /**
- * Matching options for a glob pattern: the full minimatch options surface,
- * schema-validated.
- *
  * **Details**
  *
  * `platform` is explicit and defaults to `"posix"`: the engine never reads
@@ -366,9 +358,6 @@ export class GlobPatternOptions extends S.Opaque<GlobPatternOptions, { readonly 
   )
 ) {}
 
-// Defined-only bridge: a present-but-undefined optionalKey never happens
-// through the schema, but the engine bag must not carry explicit undefined
-// either (exactOptionalPropertyTypes), so only defined options are copied.
 type EngineOptionKey = keyof GlobPatternOptions & keyof EngineOptionsInput;
 
 const ENGINE_OPTION_KEYS: ReadonlyArray<EngineOptionKey> = [
@@ -397,11 +386,11 @@ const ENGINE_OPTION_KEYS: ReadonlyArray<EngineOptionKey> = [
 const toEngineOptions = (o?: GlobPatternOptions): EngineOptionsInput => {
   const engineOptions: { -readonly [K in EngineOptionKey]?: EngineOptionsInput[K] } = {};
   if (o === undefined) return engineOptions;
-  for (const key of ENGINE_OPTION_KEYS) copyDefinedOption(engineOptions, o, key);
+  for (const key of ENGINE_OPTION_KEYS) copyOnlyDefinedSoExactOptionalBagNeverHoldsUndefined(engineOptions, o, key);
   return engineOptions;
 };
 
-const copyDefinedOption = <K extends EngineOptionKey>(
+const copyOnlyDefinedSoExactOptionalBagNeverHoldsUndefined = <K extends EngineOptionKey>(
   target: { -readonly [P in K]?: EngineOptionsInput[P] },
   source: GlobPatternOptions,
   key: K
@@ -410,8 +399,7 @@ const copyDefinedOption = <K extends EngineOptionKey>(
   if (value !== undefined) target[key] = value;
 };
 
-// The literal (plain-string) segments of a row before its first magic part.
-const leadingLiterals = (row: ReadonlyArray<ParseReturnFiltered>): Array<string> => {
+const plainStringSegmentsBeforeFirstMagicPart = (row: ReadonlyArray<ParseReturnFiltered>): Array<string> => {
   const literals: Array<string> = [];
   for (const part of row) {
     if (!P.isString(part)) break;
@@ -420,18 +408,15 @@ const leadingLiterals = (row: ReadonlyArray<ParseReturnFiltered>): Array<string>
   return literals;
 };
 
-// The longest common leading run of two literal segment lists.
-const sharedPrefix = (common: Array<string>, literals: Array<string>): Array<string> => {
+const longestCommonLeadingRun = (common: Array<string>, literals: Array<string>): Array<string> => {
   let i = 0;
   while (i < common.length && i < literals.length && common[i] === literals[i]) i++;
   return common.slice(0, i);
 };
 
-// The schema check: compilability under DEFAULT options. Returning the guard
-// message string makes it the thrown validation message (a bare false would
-// render as "Expected <filter>"). A non-guard throw is programmer error and
-// stays a defect.
-const compilesUnderDefaults = (source: string): true | string =>
+const compileUnderDefaultsFirstForTheValueInvariant = (source: string): Minimatch => new Minimatch(source, {});
+
+const compilesUnderDefaultsElseGuardMessageAsValidationMessageNotBareFalse = (source: string): true | string =>
   Result.match(
     Result.try({
       try: () => new Minimatch(source, {}),
@@ -444,9 +429,6 @@ const compilesUnderDefaults = (source: string): true | string =>
   );
 
 /**
- * A compiled glob pattern with a total `matches(candidate)` predicate, plus the
- * metadata a directory walker needs.
- *
  * **Details**
  *
  * The schema IS the domain class. One encoded field, `source`; the compiled
@@ -478,7 +460,7 @@ export class GlobPattern extends S.Class<GlobPattern, { readonly brand: unique s
     ),
   }).check(
     S.makeFilter(
-      (v) => compilesUnderDefaults(v.source),
+      (v) => compilesUnderDefaultsElseGuardMessageAsValidationMessageNotBareFalse(v.source),
       $I.annote("CompilesUnderDefaults", {
         message: "compilable glob pattern",
         description: "Requires the pattern source to compile within the default length, expansion and nesting caps.",
@@ -526,9 +508,6 @@ export class GlobPattern extends S.Class<GlobPattern, { readonly brand: unique s
    */
   #engineOptions: EngineOptionsInput = {};
 
-  // Lazy for make/decode-built instances. The schema check guarantees this
-  // cannot throw for them (defaults are the stored options); a throw here is
-  // an invariant violation and correctly dies as a defect.
   /**
    * Returns the cached matcher, compiling it lazily for schema-constructed instances.
    *
@@ -599,8 +578,7 @@ export class GlobPattern extends S.Class<GlobPattern, { readonly brand: unique s
       const engineOptions = toEngineOptions(options);
       return Result.try({
         try: () => {
-          // Defaults first (the value invariant), then the effective engine.
-          new Minimatch(source, {});
+          compileUnderDefaultsFirstForTheValueInvariant(source);
           const engine = new Minimatch(source, engineOptions);
           const pattern = GlobPattern.make({ source });
           pattern.#engine = engine;
@@ -815,8 +793,8 @@ export class GlobPattern extends S.Class<GlobPattern, { readonly brand: unique s
     const set = this.#engineOf().set;
     let common: Array<string> | undefined;
     for (const row of set) {
-      const literals = leadingLiterals(row);
-      common = common === undefined ? literals : sharedPrefix(common, literals);
+      const literals = plainStringSegmentsBeforeFirstMagicPart(row);
+      common = common === undefined ? literals : longestCommonLeadingRun(common, literals);
     }
     if (common === undefined || common.length === 0) return "";
     return `${A.join(common, "/")}/`;
@@ -927,9 +905,6 @@ export class GlobPattern extends S.Class<GlobPattern, { readonly brand: unique s
   static readonly FromString: S.Codec<GlobPattern, string> = S.String.pipe(
     S.decodeTo(
       GlobPattern,
-      // The transformation bridges string <-> GlobPattern's ENCODED side;
-      // the class decode then runs the compilability check and constructs
-      // the instance, so uncompilable input fails as SchemaError there.
       SchemaTransformation.transform({
         decode: (input: string) => ({ source: input }),
         encode: (encoded: { readonly source: string }) => encoded.source,

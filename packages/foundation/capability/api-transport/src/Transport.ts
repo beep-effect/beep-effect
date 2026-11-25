@@ -99,8 +99,6 @@ export const ApiAuth = S.TaggedUnion({
 );
 
 /**
- * Runtime authentication strategy represented by {@link ApiAuth}.
- *
  * **Example** (Type NoAuth as ApiAuth)
  *
  * ```ts
@@ -156,8 +154,6 @@ const fromRateLimitHeaders = (headers: Headers.Headers): O.Option<RateLimitSnaps
 };
 
 /**
- * Observable snapshot of the latest parsed `X-RateLimit-*` response headers.
- *
  * **Details**
  *
  * The shared transformer records this after every completed response so callers

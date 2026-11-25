@@ -128,7 +128,7 @@ jobs:
     # is skipped here before a Spot VM boots; the skipped literal-named job
     # still reports its exact `Heavy / <lane>` context.
     if: ${{ !cancelled() && inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',lint-policy,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',lint-policy,')) }}
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 50
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
     permissions:
@@ -147,12 +147,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: inputs.admitted && github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
         if: inputs.admitted
@@ -331,7 +325,7 @@ jobs:
   check:
     name: Check
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',check,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',check,')) }}
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 120
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
     permissions:
@@ -351,7 +345,7 @@ jobs:
   docgen:
     name: Docgen
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',docgen,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',docgen,')) }}
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
     permissions:
@@ -367,7 +361,7 @@ jobs:
   doctest:
     name: Doctest
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',doctest,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',doctest,')) }}
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
     permissions:
@@ -385,7 +379,7 @@ jobs:
   build:
     name: Build
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',build,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',build,')) }}
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 40
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
     permissions:
@@ -409,7 +403,7 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
       github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer-inspect.yml@refs/heads/main'
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 10
     environment: turbo-cache-write
     env:
@@ -510,7 +504,7 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
       github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer-prepare.yml@refs/heads/main'
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 20
     # No protected environment or secrets: this only builds a candidate.
     env:
@@ -738,7 +732,7 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
       github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer.yml@refs/heads/main'
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 60
     environment: turbo-cache-write
     permissions:
@@ -936,7 +930,7 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
       github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 20
     # No protected environment and no cache, application or issuer secret inputs.
     env:

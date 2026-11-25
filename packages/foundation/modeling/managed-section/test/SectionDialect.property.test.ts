@@ -33,8 +33,6 @@ describe("SectionDialect schema properties", () => {
   roundTrips("SectionRenderError", SectionRenderError);
 });
 
-// Content lines are prefixed so arbitrary text cannot become a boundary marker.
-
 const StyleIndex = S.Literals([0, 1, 2, 3, 4, 5]);
 const styles = [
   CommentStyle.hash,
@@ -51,8 +49,8 @@ it.effect.prop(
   ([key, value, eol, index]) =>
     Effect.gen(function* () {
       const id = SectionId.make({ key, commentStyle: styles[index] });
-      const content = `data:${Str.replace(/\n/g, "\ndata:")(Str.replace(/\r/g, "")(value))}`;
-      const section = id.section(content, { origin: "property", key });
+      const contentNoLineOfWhichCanFormAMarker = `data:${Str.replace(/\n/g, "\ndata:")(Str.replace(/\r/g, "")(value))}`;
+      const section = id.section(contentNoLineOfWhichCanFormAMarker, { origin: "property", key });
       const dialect = SectionDialect.default;
       const rendered = yield* Effect.fromResult(dialect.render(section, eol));
       const parsed = yield* SectionDocument.parse(rendered, dialect);

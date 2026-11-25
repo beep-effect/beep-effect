@@ -233,7 +233,6 @@ export const privatePartition = `${prefixes} SELECT ?kind (COUNT(*) AS ?count) W
   ?record a ?class; v:private "true" .
 } GROUP BY ?kind`;
 /**
- * Schema-encoded record payload and optional capture presentation metadata.
  * **Example** (Inspect LibraryViewRow)
  * ```ts
  * import { LibraryViewRow } from "@beep/repo-cli/commands/Research/Library/Library.views"
@@ -250,7 +249,6 @@ export class LibraryViewRow extends S.Opaque<LibraryViewRow, { readonly brand: u
   )
 ) {}
 /**
- * Decoded non-negative grouped count.
  * **Example** (Inspect LibraryCountRow)
  * ```ts
  * import { LibraryCountRow } from "@beep/repo-cli/commands/Research/Library/Library.views"

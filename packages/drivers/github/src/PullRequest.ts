@@ -36,8 +36,6 @@ import type { GitHubGraphQLError } from "./GraphQL.ts";
 const $I = $GithubId.create("PullRequest");
 
 /**
- * How a pull request is merged.
- *
  * **Example** (Validate a squash merge method)
  *
  * ```ts
@@ -56,8 +54,6 @@ export const MergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe(
 );
 
 /**
- * The values accepted by {@link MergeMethod}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -65,8 +61,6 @@ export const MergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe(
 export type MergeMethod = typeof MergeMethod.Type;
 
 /**
- * A pull request, projected to what callers read.
- *
  * **Details**
  *
  * This is the **domain** shape, and the only pull-request type this package
@@ -164,8 +158,6 @@ export class PullRequestInfo extends S.Opaque<PullRequestInfo, { readonly brand:
 ) {}
 
 /**
- * What {@link PullRequestShape.upsert} did.
- *
  * **Example** (Validate the upsert result)
  *
  * ```ts
@@ -227,8 +219,6 @@ const DisableAutoMerge = GraphQLDocument.make({
 const GRAPHQL_MERGE_METHOD = { merge: "MERGE", squash: "SQUASH", rebase: "REBASE" } as const;
 
 /**
- * Where a pull request stands in a merge queue.
- *
  * **Details**
  *
  * GitHub's `MergeQueueEntryState`. An entry is `QUEUED` until the queue builds
@@ -258,8 +248,6 @@ export const MergeQueueEntryState = LiteralKit([
 ]).pipe($I.annoteSchema("MergeQueueEntryState", { description: "Where a pull request stands in a merge queue." }));
 
 /**
- * The values accepted by {@link MergeQueueEntryState}.
- *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -267,8 +255,6 @@ export const MergeQueueEntryState = LiteralKit([
 export type MergeQueueEntryState = typeof MergeQueueEntryState.Type;
 
 /**
- * A pull request's entry in a merge queue, projected to what callers read.
- *
  * **Details**
  *
  * `headOid` and `baseOid` are the merge group's commits. GitHub leaves them

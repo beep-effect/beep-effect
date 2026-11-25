@@ -11,9 +11,6 @@ import * as S from "effect/Schema";
 const $I = $RepoUtilsId.create("JSDoc/models/ASTSignal.model");
 
 /**
- * Deterministic heuristic for auto-classifying code elements
- * from the AST without LLM inference.
- *
  * **Example** (Build signal with confidence)
  *
  * ```ts

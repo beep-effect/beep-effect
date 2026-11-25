@@ -130,8 +130,6 @@ const ensureContainedPurgeTarget = Effect.fn(function* (rootDir: string, target:
 });
 
 /**
- * Summary statistics returned after a purge run.
- *
  * **Example** (Log PurgeSummary value)
  *
  * ```ts

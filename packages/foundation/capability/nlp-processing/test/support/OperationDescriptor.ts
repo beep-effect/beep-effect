@@ -9,9 +9,9 @@ import type { Trace } from "./OperationObservation.ts";
 
 const SmallInt = S.Int.check(S.isBetween({ minimum: -1_000, maximum: 1_000 }));
 
-export const Succeed = S.TaggedStruct("Succeed", { scale: SmallInt, shift: SmallInt });
+const Succeed = S.TaggedStruct("Succeed", { scale: SmallInt, shift: SmallInt });
 
-export const Fail = S.TaggedStruct("Fail", { code: SmallInt });
+const Fail = S.TaggedStruct("Fail", { code: SmallInt });
 
 export const OperationDescriptor = S.Struct({ event: SmallInt, outcome: S.Union([Succeed, Fail]) });
 

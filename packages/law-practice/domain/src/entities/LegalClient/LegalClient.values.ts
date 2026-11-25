@@ -12,8 +12,6 @@ const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.values"
 const LegalClientStatusBase = LiteralKit(["active_client"]);
 
 /**
- * Legal client lifecycle status accepted by the law-practice proof fixtures.
- *
  * **Example** (Decode active client status)
  *
  * ```ts
@@ -35,8 +33,6 @@ export const LegalClientStatus = LegalClientStatusBase.pipe(
 );
 
 /**
- * Type-level literal union produced by {@link LegalClientStatus}.
- *
  * **Example** (Satisfy LegalClientStatus type)
  *
  * ```ts

@@ -70,19 +70,13 @@ const $I = $NlpProcessingId.create("Activity");
  * @category models
  * @since 0.0.0
  */
-export const ActivityFacts = S.Struct({
-  pin: ActivityStartFields.pin,
-  promptDigest: ActivityStartFields.promptDigest,
-  used: ActivityStartFields.used,
-}).pipe($I.annoteSchema("ActivityFacts", { description: "The start-time facts an attributed run states." }));
-
-/**
- * Type of {@link ActivityFacts}.
- *
- * @category models
- * @since 0.0.0
- */
-export type ActivityFacts = typeof ActivityFacts.Type;
+export class ActivityFacts extends S.Opaque<ActivityFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    pin: ActivityStartFields.pin,
+    promptDigest: ActivityStartFields.promptDigest,
+    used: ActivityStartFields.used,
+  }).pipe($I.annoteSchema("ActivityFacts", { description: "The start-time facts an attributed run states." }))
+) {}
 
 /**
  * How {@link withActivity} reads an operation's facts and the entities its
@@ -95,15 +89,17 @@ export type ActivityFacts = typeof ActivityFacts.Type;
  * import * as HashSet from "effect/HashSet"
  * import * as O from "effect/Option"
  * import { ActivityPin } from "@beep/jsonc/ActivityStart"
- * import type { ActivityDescriptor } from "@beep/nlp-processing/Activity"
+ * import { ActivityFacts, type ActivityDescriptor } from "@beep/nlp-processing/Activity"
  *
  * const descriptor: ActivityDescriptor<string, number> = {
  *   facts: () =>
- *     Effect.succeed({
- *       pin: ActivityPin.cases.Engine.make({ engine: "wink", edition: "1.0.0" }),
- *       promptDigest: O.none(),
- *       used: HashSet.empty(),
- *     }),
+ *     Effect.succeed(
+ *       ActivityFacts.make({
+ *         pin: ActivityPin.cases.Engine.make({ engine: "wink", edition: "1.0.0" }),
+ *         promptDigest: O.none(),
+ *         used: HashSet.empty(),
+ *       })
+ *     ),
  *   generated: () => [],
  * }
  *
@@ -119,36 +115,14 @@ export interface ActivityDescriptor<A, B, EF = never, RF = never> {
 }
 
 /**
- * The activity a wrapped run executes under.
+ * Service tag for the activity a wrapped run executes under; only
+ * {@link withActivity} provides it.
  *
  * **Details**
  *
  * `stamp` reads the clock and returns a time no earlier than the activity's
  * start or any earlier stamp, recording it, so stamps within one activity
  * never decrease. A run reads its generation times through `stamp`.
- *
- * **Example** (Read the current activity shape)
- *
- * ```ts
- * import type { CurrentActivityShape } from "@beep/nlp-processing/Activity"
- *
- * const idOf = (activity: CurrentActivityShape) => activity.id
- *
- * console.log(idOf)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface CurrentActivityShape {
-  readonly id: ActivityId;
-  readonly stamp: Effect.Effect<DateTime.Utc>;
-  readonly start: ActivityStart;
-}
-
-/**
- * Service tag for the activity a wrapped run executes under; only
- * {@link withActivity} provides it.
  *
  * **Example** (Log the service key)
  *
@@ -161,7 +135,14 @@ export interface CurrentActivityShape {
  * @category services
  * @since 0.0.0
  */
-export class CurrentActivity extends Context.Service<CurrentActivity, CurrentActivityShape>()($I`CurrentActivity`) {}
+export class CurrentActivity extends Context.Service<
+  CurrentActivity,
+  {
+    readonly id: ActivityId;
+    readonly stamp: Effect.Effect<DateTime.Utc>;
+    readonly start: ActivityStart;
+  }
+>()($I`CurrentActivity`) {}
 
 /**
  * The earliest time the next attributed run may start; `None` by default.
@@ -294,17 +275,19 @@ const latestEnd = (activities: HashSet.HashSet<ActivityRecord>): O.Option<DateTi
  * import { TermIri } from "@beep/identity/Term"
  * import { iri } from "@beep/identity/Registry"
  * import { ActivityPin } from "@beep/jsonc/ActivityStart"
- * import { withActivity } from "@beep/nlp-processing/Activity"
+ * import { ActivityFacts, withActivity } from "@beep/nlp-processing/Activity"
  * import { pure } from "@beep/nlp-processing/Operation"
  *
  * const trim = pure({ name: TermIri.make(iri("operation:Trim")), f: (text: string) => text.trim() })
  * const attributed = withActivity<string, string>({
  *   facts: () =>
- *     Effect.succeed({
- *       pin: ActivityPin.cases.Engine.make({ engine: "wink", edition: "1.0.0" }),
- *       promptDigest: O.none(),
- *       used: HashSet.empty(),
- *     }),
+ *     Effect.succeed(
+ *       ActivityFacts.make({
+ *         pin: ActivityPin.cases.Engine.make({ engine: "wink", edition: "1.0.0" }),
+ *         promptDigest: O.none(),
+ *         used: HashSet.empty(),
+ *       })
+ *     ),
  *   generated: () => [],
  * })(trim)
  *

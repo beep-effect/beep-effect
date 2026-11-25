@@ -13,8 +13,6 @@ import * as S from "effect/Schema";
 const $I = $Graph3dId.create("Graph3D.errors");
 
 /**
- * Graph-3d driver failure reason.
- *
  * **Example** (Assign webglUnavailable reason)
  *
  * ```ts
@@ -40,8 +38,6 @@ export const Graph3DDriverErrorReason = LiteralKit([
 );
 
 /**
- * Type for {@link Graph3DDriverErrorReason}.
- *
  * **Example** (Assign renderFailed reason)
  *
  * ```ts
@@ -58,8 +54,6 @@ export const Graph3DDriverErrorReason = LiteralKit([
 export type Graph3DDriverErrorReason = typeof Graph3DDriverErrorReason.Type;
 
 /**
- * Typed graph-3d driver error.
- *
  * **Example** (Make Graph3DDriverError instance)
  *
  * ```ts

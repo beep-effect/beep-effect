@@ -40,8 +40,6 @@ import type * as Brand from "effect/Brand";
 const $I = $NpmSpecId.create("DependencySpecifier");
 
 /**
- * Indicates that a string could not be parsed as a valid dependency specifier.
- *
  * **Details**
  *
  * Raised by {@link DependencySpecifier.decode}. The offending string is
@@ -98,8 +96,6 @@ export class InvalidDependencySpecifierError extends S.TaggedError<
 }
 
 /**
- * The classification of a dependency specifier's protocol.
- *
  * **Example** (Recognizing a dependency protocol)
  *
  * ```ts
@@ -277,9 +273,7 @@ const isUrl: (value: string) => boolean = S.is(UrlSource);
 const isNpm: (value: string) => boolean = S.is(NpmSource);
 const isBareTag: (value: string) => boolean = S.is(BareTag);
 
-// Pure Option-returning range parse: decode `Range.FromString` synchronously via
-// an Exit, never running an Effect inside a getter.
-const parseRange = (value: string): O.Option<Range> => {
+const parseRangeViaExitWithoutRunningAnEffect = (value: string): O.Option<Range> => {
   const exit = S.decodeExit(Range.FromString)(value);
   return Exit.isSuccess(exit) ? O.some(exit.value) : O.none();
 };
@@ -288,7 +282,7 @@ const RangeString = S.String.pipe(
   $I.annoteSchema("RangeString", { description: "A parseable semver range or exact version." })
 ).check(
   S.makeFilter(
-    (value) => O.isSome(parseRange(value)),
+    (value) => O.isSome(parseRangeViaExitWithoutRunningAnEffect(value)),
     $I.annote("RangeStringCheck", {
       message: "Semver range",
       description: "A string accepted by the shared semver Range.FromString codec.",
@@ -306,9 +300,9 @@ const TagString = BareTag.check(
   )
 ).pipe($I.annoteSchema("TagString", { description: "A dist-tag after applying semver range precedence." }));
 
-// Ordered protocol probes: the first match wins, so prefixed protocols are
-// tested before the bare forms (a range, then a dist-tag) they could resemble.
-const PROTOCOL_PROBES: ReadonlyArray<readonly [DependencyProtocol, (value: string) => boolean]> = [
+const PROTOCOL_PROBES_FIRST_MATCH_WINS_PREFIXED_BEFORE_BARE: ReadonlyArray<
+  readonly [DependencyProtocol, (value: string) => boolean]
+> = [
   ["catalog", isCatalog],
   ["workspace", isWorkspace],
   ["link", isLink],
@@ -322,25 +316,19 @@ const PROTOCOL_PROBES: ReadonlyArray<readonly [DependencyProtocol, (value: strin
 ];
 
 const protocolOf = (value: string): DependencyProtocol =>
-  A.findFirst(PROTOCOL_PROBES, ([, matches]) => matches(value)).pipe(
+  A.findFirst(PROTOCOL_PROBES_FIRST_MATCH_WINS_PREFIXED_BEFORE_BARE, ([, matches]) => matches(value)).pipe(
     O.map(([protocol]) => protocol),
     O.getOrElse((): DependencyProtocol => "unknown")
   );
 
 const isTag: (value: string) => boolean = S.is(TagString);
 
-// The one catalog-name extraction: shared by `classify` and the public
-// `catalogNameOf` static so the two can never disagree. Empty (after
-// trimming) selects the default catalog.
 const catalogNameOf = (specifier: string): O.Option<string> => {
   if (!isCatalog(specifier)) return O.none();
   const rest = Str.trim(Str.slice(CATALOG_PREFIX.length)(specifier));
   return rest.length === 0 ? O.none() : O.some(rest);
 };
 
-// The range-modifier projection pnpm applies at publish time: `*` (or an
-// empty modifier) pins to the version, `~`/`^` prefix it, anything else — a
-// pinned or concrete range — passes through as-is.
 const projectRangeModifier: {
   (range: string, version: string): string;
   (version: string): (range: string) => string;
@@ -348,22 +336,14 @@ const projectRangeModifier: {
   range === "*" || range === "" ? version : range === "~" ? `~${version}` : range === "^" ? `^${version}` : range
 );
 
-// Split the part after `workspace:` into pnpm's alias form (`<name>@<range>`,
-// e.g. `foo@^` or `@scope/charts@1.2.3`) and the plain form. The LAST `@` at
-// an index past 0 separates the target package name from the range modifier,
-// so scoped names keep their leading `@`; a lone scoped name with no second
-// `@` is not the alias form.
 const splitWorkspaceRest = (rest: string): { readonly target: string | undefined; readonly range: string } => {
-  const at = O.getOrElse(Str.lastIndexOf("@")(rest), () => -1);
-  return at > 0
-    ? { target: Str.slice(0, at)(rest), range: Str.slice(at + 1)(rest) }
+  const lastAt = O.getOrElse(Str.lastIndexOf("@")(rest), () => -1);
+  const lastAtPastScopePrefixSplitsAlias = lastAt > 0;
+  return lastAtPastScopePrefixSplitsAlias
+    ? { target: Str.slice(0, lastAt)(rest), range: Str.slice(lastAt + 1)(rest) }
     : { target: undefined, range: rest };
 };
 
-// The one workspace-range projection: shared by the `resolveWorkspace` static
-// and `WorkspaceSpecifier#resolve`. `rest` is the part after `workspace:`.
-// Plain forms project the modifier directly; the alias form becomes pnpm's
-// publish-time aliased dependency `npm:<name>@<projected>`.
 const projectWorkspaceRange: {
   (rest: string, version: string): string;
   (version: string): (rest: string) => string;
@@ -380,10 +360,6 @@ const resolveWorkspace: {
   isWorkspace(specifier) ? projectWorkspaceRange(Str.slice(WORKSPACE_PREFIX.length)(specifier), version) : specifier
 );
 
-// The target package name of an alias-form `workspace:` specifier, `None` for
-// the plain form and for non-workspace input. Shared by `Manifest.resolve`
-// and `@beep/package-json`'s `Package.resolve`, which must look up the
-// TARGET's version before projecting.
 const workspaceTargetOf = (specifier: string): O.Option<string> => {
   if (!isWorkspace(specifier)) return O.none();
   const { target } = splitWorkspaceRest(Str.slice(WORKSPACE_PREFIX.length)(specifier));
@@ -434,9 +410,6 @@ const RecognizedSpecifier = S.Union([
 export const isValidDependencySpecifier = S.is(RecognizedSpecifier);
 
 /**
- * A `catalog:` reference. `name` carries the catalog name, or `Option.none()`
- * for the default catalog (`catalog:`).
- *
  * **Example** (Represent the default catalog)
  *
  * ```ts
@@ -470,9 +443,6 @@ export class CatalogSpecifier extends S.Opaque<CatalogSpecifier, { readonly bran
 ) {}
 
 /**
- * A `workspace:` reference. `range` carries the part after `workspace:` — a
- * range modifier (`*`, `^`, `~`), a concrete range, or an alias form.
- *
  * **Example** (Represent a workspace range)
  *
  * ```ts
@@ -543,8 +513,6 @@ export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier, { read
 }
 
 /**
- * A plain semver range or exact version (e.g. `^1.2.3`, `1.x`, `>=1 <2`).
- *
  * **Example** (Preserve a semver range)
  *
  * ```ts
@@ -570,8 +538,6 @@ export class RangeSpecifier extends S.Opaque<RangeSpecifier, { readonly brand: u
 ) {}
 
 /**
- * A bare dist-tag (e.g. `latest`, `next`).
- *
  * **Example** (Preserve a distribution tag)
  *
  * ```ts
@@ -595,9 +561,6 @@ export class DistTagSpecifier extends S.Opaque<DistTagSpecifier, { readonly bran
 ) {}
 
 /**
- * The honest fallback for `file:` / `link:` / `portal:` / git / URL / `npm:`
- * forms this concept does not further interpret.
- *
  * **Example** (Preserve a local dependency)
  *
  * ```ts
@@ -640,12 +603,9 @@ export type ClassifiedSpecifier =
   | RawSpecifier;
 
 const Classified = S.Union([CatalogSpecifier, WorkspaceSpecifier, RangeSpecifier, DistTagSpecifier, RawSpecifier]);
+type ClassifiedEncodedBecauseInferenceRejectsInstanceMethods = (typeof Classified)["Encoded"];
 
-// Group a *valid* specifier into one of the five coarse cases, reusing the
-// taxonomy predicates above. Order matters: catalog/workspace prefixes first,
-// then a parseable range, then a bare tag, with everything else (git, url,
-// file, link, portal, npm) preserved as `raw`.
-const classify = (value: string): ClassifiedSpecifier => {
+const classifyPrefixedThenRangeThenTagElseRaw = (value: string): ClassifiedSpecifier => {
   if (isCatalog(value)) {
     return CatalogSpecifier.make({ raw: value, name: catalogNameOf(value) });
   }
@@ -660,16 +620,13 @@ const classify = (value: string): ClassifiedSpecifier => {
 const fromString: S.Codec<ClassifiedSpecifier, string> = S.String.pipe(
   S.decodeTo(
     Classified,
-    // Pinned to the union's ENCODED side (plain records, without instance
-    // methods like WorkspaceSpecifier#resolve): letting inference unify the
-    // transformation's target from decode/encode rejects the instance methods.
-    SchemaTransformation.transformEffect<(typeof Classified)["Encoded"], string>({
+    SchemaTransformation.transformEffect<ClassifiedEncodedBecauseInferenceRejectsInstanceMethods, string>({
       decode: (input) =>
         S.decodeEffect(DependencySpecifier)(input).pipe(
           Effect.mapBoth({
             onFailure: () =>
               new SchemaIssue.InvalidValue({ message: `Invalid dependency specifier: "${input}"` }, input),
-            onSuccess: classify,
+            onSuccess: classifyPrefixedThenRangeThenTagElseRaw,
           })
         ),
       encode: (classified) => Effect.succeed(classified.raw),
@@ -692,7 +649,6 @@ const brandedSpecifier = S.String.pipe(
     description: "A branded dependency specifier accepted by the shared protocol taxonomy.",
   }),
   S.check(
-    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
       isValidDependencySpecifier,
       $I.annote("DependencySpecifierCheck", {
@@ -712,11 +668,15 @@ const decode = Effect.fn("DependencySpecifier.decode")(
     )
 );
 
-// Widen only the unused constructor: schema Type and decoded values stay branded strings.
-const DependencySpecifierBase: Omit<S.Opaque<DependencySpecifierBrand, typeof brandedSpecifier, {}>, never> &
+type OpaqueWithCtorWidenedSoAClassCanExtendABrandedString<Schema extends S.Top> = Omit<
+  S.Opaque<DependencySpecifierBrand, Schema, {}>,
+  never
+> &
   (new (
     _: never
-  ) => Pick<DependencySpecifierBrand, keyof DependencySpecifierBrand>) =
+  ) => Pick<DependencySpecifierBrand, keyof DependencySpecifierBrand>);
+
+const DependencySpecifierBase: OpaqueWithCtorWidenedSoAClassCanExtendABrandedString<typeof brandedSpecifier> =
   S.Opaque<DependencySpecifierBrand>()(brandedSpecifier);
 
 /**
@@ -785,7 +745,7 @@ export class DependencySpecifier extends DependencySpecifierBase {
    * @category parsing
    * @since 0.0.0
    */
-  static readonly parseRange = parseRange;
+  static readonly parseRange = parseRangeViaExitWithoutRunningAnEffect;
   /**
    * Whether the specifier is a parseable semver range.
    *

@@ -74,7 +74,6 @@ export const CitationCourt = S.Union([CitationKnownCourt, CitationUnmappedCourt]
   })
 );
 /**
- * Schema-derived court reference.
  * @category models
  * @since 0.0.0
  */
@@ -197,7 +196,6 @@ export class CitationShortCaseMetadata extends S.Opaque<CitationShortCaseMetadat
 ) {}
 
 /**
- * Supra locator semantics, including textual volume and antecedent label.
  * **Example** (Inspect volume precision)
  * ```ts
  * import { CitationSupraMetadata } from "@beep/law-practice-domain/values"
@@ -243,8 +241,6 @@ export class CitationReferenceMetadata extends S.Opaque<CitationReferenceMetadat
 ) {}
 
 /**
- * Full case authority semantics without occurrence state.
- *
  * **Example** (Inspect the semantic model)
  * ```ts
  * import { FullCaseCitation } from "@beep/law-practice-domain/values"
@@ -265,8 +261,6 @@ export class FullCaseCitation extends S.Opaque<FullCaseCitation, { readonly bran
 ) {}
 
 /**
- * Canonical ShortCaseCitation semantics, retaining the existing repo semantic name.
- *
  * **Example** (Inspect the semantic model)
  * ```ts
  * import { ShortFormCaseCitation } from "@beep/law-practice-domain/values"
@@ -289,8 +283,6 @@ export class ShortFormCaseCitation extends S.Opaque<ShortFormCaseCitation, { rea
 ) {}
 
 /**
- * Id/ibid reference semantics; occurrence uniqueness and antecedent resolution stay outside this value.
- *
  * **Example** (Inspect the semantic model)
  * ```ts
  * import { IdCitation } from "@beep/law-practice-domain/values"
@@ -313,8 +305,6 @@ export class IdCitation extends S.Opaque<IdCitation, { readonly brand: unique sy
 ) {}
 
 /**
- * Supra reference semantics without an embedded antecedent citation.
- *
  * **Example** (Inspect the semantic model)
  * ```ts
  * import { SupraCitation } from "@beep/law-practice-domain/values"
@@ -336,8 +326,6 @@ export class SupraCitation extends S.Opaque<SupraCitation, { readonly brand: uni
 ) {}
 
 /**
- * Named reference citation semantics; unresolved names remain data.
- *
  * **Example** (Inspect the semantic model)
  * ```ts
  * import { ReferenceCitation } from "@beep/law-practice-domain/values"
@@ -359,8 +347,6 @@ export class ReferenceCitation extends S.Opaque<ReferenceCitation, { readonly br
 ) {}
 
 /**
- * Unknown citation semantics; exact source spelling belongs to its verified mention.
- *
  * **Example** (Inspect the semantic model)
  * ```ts
  * import { UnknownCitation } from "@beep/law-practice-domain/values"

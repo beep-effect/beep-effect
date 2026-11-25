@@ -54,8 +54,6 @@ const DrizzleMigrationSchema = S.Unknown.pipe(
 );
 
 /**
- * db-admin migration target metadata.
- *
  * **Example** (Make target with tables)
  *
  * ```ts

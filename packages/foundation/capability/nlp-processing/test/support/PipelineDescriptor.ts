@@ -2,7 +2,7 @@ import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import { mintContentHash } from "@beep/jsonc/Mint";
-import { composeLogged, withActivity } from "@beep/nlp-processing/Activity";
+import { ActivityFacts, composeLogged, withActivity } from "@beep/nlp-processing/Activity";
 import { DomainTag } from "@beep/schema/ContentHash";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -19,7 +19,7 @@ import type { ContentHash } from "@beep/schema/ContentHash";
 import type * as Clock from "effect/Clock";
 import type * as Digest from "effect/crypto/Digest";
 
-export const Step = S.Struct({
+const Step = S.Struct({
   fanOut: S.Int.check(S.isBetween({ minimum: 1, maximum: 3 })),
   fail: S.Boolean,
 });
@@ -84,11 +84,13 @@ export const loggedStep =
   (step: Step): LoggedStep =>
     withActivity<Entities, Entities>({
       facts: (used) =>
-        Effect.succeed({
-          pin: ActivityPin.cases.Engine.make({ engine: "l5-3-pipeline", edition: stepEdition(index) }),
-          promptDigest: O.none(),
-          used,
-        }),
+        Effect.succeed(
+          ActivityFacts.make({
+            pin: ActivityPin.cases.Engine.make({ engine: "l5-3-pipeline", edition: stepEdition(index) }),
+            promptDigest: O.none(),
+            used,
+          })
+        ),
       generated: (output) => output,
     })(stepOperation(index, step));
 

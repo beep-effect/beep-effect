@@ -6,7 +6,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { Dataset, GraphTerm, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 
-export const blankPool = ["x0", "x1", "x2", "x3"];
+const blankPool = ["x0", "x1", "x2", "x3"];
 
 const poolIndex = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 3 })));
 
@@ -52,7 +52,7 @@ export const datasetWithBlankEdge: Arbitrary.Arbitrary<Dataset> = Arbitrary.map(
   ([edge, rest]) => makeDataset(A.prepend(rest, edge))
 );
 
-export const relabelWith = (labels: HashMap.HashMap<string, string>) => {
+const relabelWith = (labels: HashMap.HashMap<string, string>) => {
   const rename = <T extends Subject | ObjectTerm | GraphTerm>(term: T): T =>
     term.termType === "BlankNode"
       ? (BlankNode.make({

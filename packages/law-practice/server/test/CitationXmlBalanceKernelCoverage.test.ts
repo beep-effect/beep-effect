@@ -35,11 +35,14 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("XML balance
       const kernel = yield* loadKernel;
       const malformed = yield* kernel.balance({ width: 3, bytes: "x" }).pipe(Effect.flip);
       deepStrictEqual(refusal(malformed), { _tag: "CitationXmlKernelFailure", detail: "invalid-input" });
-      // Width 2 storage whose only point fits Latin-1 is not Python's canonical layout.
       const widened = yield* kernel
         .balance(CitationPythonUnicodeStorage.make({ width: 2, bytes: new Uint8Array([0x41, 0]) }))
         .pipe(Effect.flip);
-      deepStrictEqual(refusal(widened), { _tag: "CitationXmlKernelFailure", detail: "invalid-input" });
+      deepStrictEqual(
+        refusal(widened),
+        { _tag: "CitationXmlKernelFailure", detail: "invalid-input" },
+        "width 2 storage whose only point fits Latin-1 is not Python's canonical layout"
+      );
     })
   );
   it.effect("refuses sources beyond the absolute point count or UTF-16 ceiling before native evaluation", () =>
@@ -49,14 +52,17 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("XML balance
         .balance(CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array(1_000_001).fill(0x61) }))
         .pipe(Effect.flip);
       deepStrictEqual(refusal(points), { _tag: "CitationSafetyLimitExceeded", detail: "sourceUtf16" });
-      // 600000 astral points stay under the point ceiling but need 1.2M UTF-16 units.
       const astral = new Uint8Array(4 * 600_000);
       const view = new DataView(astral.buffer);
       for (let index = 0; index < 600_000; index++) view.setUint32(index * 4, 0x1f600, true);
       const units = yield* kernel
         .balance(CitationPythonUnicodeStorage.make({ width: 4, bytes: astral }))
         .pipe(Effect.flip);
-      deepStrictEqual(refusal(units), { _tag: "CitationSafetyLimitExceeded", detail: "sourceUtf16" });
+      deepStrictEqual(
+        refusal(units),
+        { _tag: "CitationSafetyLimitExceeded", detail: "sourceUtf16" },
+        "600000 astral points stay under the point ceiling but need 1.2M UTF-16 units"
+      );
     })
   );
 });

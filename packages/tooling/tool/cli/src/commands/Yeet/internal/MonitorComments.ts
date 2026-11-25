@@ -109,8 +109,6 @@ export class YeetMonitorCommentCursor extends S.Opaque<YeetMonitorCommentCursor,
 ) {}
 
 /**
- * Normalized pull request review *body* emitted by Yeet monitor.
- *
  * **Details**
  *
  * The prose a reviewer submits alongside their inline comments. It is carried
@@ -167,8 +165,6 @@ const isYeetMonitorIssueComment = S.is(YeetMonitorIssueComment);
 const isYeetMonitorReviewBody = S.is(YeetMonitorReviewBody);
 
 /**
- * Comment variants surfaced by a Yeet monitor session.
- *
  * **Example** (Decode a conversation comment)
  *
  * ```ts
@@ -505,8 +501,6 @@ const YeetMonitorCommentStateStoredJson = JsonStringCodec(YeetMonitorCommentStat
 export const YEET_MONITOR_COMMENT_STATE_FILE_NAME = "monitor-comments.json";
 
 /**
- * The comment consumers that keep their own position on one branch.
- *
  * **Details**
  *
  * The artifact directory is keyed by branch alone, so one shared position let
@@ -538,8 +532,6 @@ export const YeetMonitorCommentConsumer = LiteralKit(["shared", "until-ready", "
 );
 
 /**
- * The comment consumers that keep their own position on one branch.
- *
  * @category type-level
  * @since 0.0.0
  */

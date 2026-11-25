@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $PopplerId.create("internal/PosInt");
 
 /**
- * Integer greater than zero.
- *
  * @category schemas
  * @since 0.0.0
  */
@@ -24,8 +22,6 @@ export const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a posi
 );
 
 /**
- * Type for {@link PosInt}.
- *
  * @category models
  * @since 0.0.0
  */

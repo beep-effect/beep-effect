@@ -9,11 +9,11 @@ const Subject = S.Int.check(S.isBetween({ minimum: -100, maximum: 100 }));
 
 it.prop(
   "L4-5 owner proposition equivalence agrees exactly with logical key equality",
-  [S.Tuple([Subject, S.NonEmptyString, S.Boolean])],
-  ([[subject, text, same]]) => {
+  [S.Tuple([Subject, Subject, S.NonEmptyString, S.Boolean])],
+  ([[subject, other, text, same]]) => {
     const left = { subject, text };
-    const right = { subject: same ? subject : subject + 1, text: "a different assertion about this subject" };
+    const right = { subject: same ? subject : other, text: "a different assertion about this subject" };
     expect(equivalent(left, right)).toBe(Claims.logicalKey(left) === Claims.logicalKey(right));
-    expect(equivalent(left, right)).toBe(same);
+    expect(equivalent(left, right)).toBe(right.subject === subject);
   }
 );

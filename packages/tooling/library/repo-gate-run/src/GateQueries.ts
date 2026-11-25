@@ -36,9 +36,6 @@ import type { GateRecordStoreShape } from "@beep/repo-gate-record/GateRecordStor
 const $I = $RepoGateRunId.create("GateQueries");
 
 /**
- * Which run of a gate: a package's latest run, or a root run by id, the
- * newest when no id is given.
- *
  * **Example** (Address the newest root run)
  *
  * ```ts
@@ -60,16 +57,12 @@ export const RunScope = S.TaggedUnion({
 );
 
 /**
- * Type of {@link RunScope}.
- *
  * @category models
  * @since 0.0.0
  */
 export type RunScope = typeof RunScope.Type;
 
 /**
- * A run to show: the gate and the run's scope.
- *
  * **Example** (Ask for a package's test run)
  *
  * ```ts
@@ -118,16 +111,12 @@ export const ItemSelector = S.TaggedUnion({
 );
 
 /**
- * Type of {@link ItemSelector}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ItemSelector = typeof ItemSelector.Type;
 
 /**
- * An item to show: the run and the selector.
- *
  * **Example** (Ask for the first item of a run)
  *
  * ```ts
@@ -155,8 +144,6 @@ export class ItemQuery extends S.Opaque<ItemQuery, { readonly brand: unique symb
 ) {}
 
 /**
- * A run as shown: where its record and log are, and the record.
- *
  * **Example** (Build a run view)
  *
  * ```ts
@@ -193,8 +180,6 @@ export class RunView extends S.Opaque<RunView, { readonly brand: unique symbol }
 ) {}
 
 /**
- * An item as shown: its run's location and id, the item, and its full text.
- *
  * **Example** (Build an item view)
  *
  * ```ts
@@ -233,8 +218,6 @@ export class ItemView extends S.Opaque<ItemView, { readonly brand: unique symbol
 ) {}
 
 /**
- * Why a query found nothing: the gate has no root runs, or no item matches.
- *
  * **Example** (Match a reason)
  *
  * ```ts
@@ -253,16 +236,12 @@ export const QueryMiss = LiteralKit(["no-runs", "no-item"]).pipe(
 );
 
 /**
- * Type of {@link QueryMiss}.
- *
  * @category models
  * @since 0.0.0
  */
 export type QueryMiss = typeof QueryMiss.Type;
 
 /**
- * A gate query found nothing to show.
- *
  * **Example** (Build the error)
  *
  * ```ts

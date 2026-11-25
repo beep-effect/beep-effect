@@ -93,8 +93,7 @@ const eventOrder = Order.Struct({
   rank: Order.Number,
 });
 const fail = (reason: typeof Reason.Type) => CitationExtractorSelectionFailure.make({ reason });
-// Owned configuration: check the string budgets, retain the bindings as they are.
-const checkSelectionBindingBudgets = Effect.fn("Citation.checkSelectionBindingBudgets")(function* (
+const checkOwnedBindingStringBudgetsKeepingBindings = Effect.fn("Citation.checkSelectionBindingBudgets")(function* (
   bindings: ReadonlyArray<Pick<CitationExtractorSelectionBinding, "id" | "flags" | "strings">>,
   maximumBytes: number,
   maximumPoints: number
@@ -110,9 +109,9 @@ const checkSelectionBindingBudgets = Effect.fn("Citation.checkSelectionBindingBu
   return bindings;
 });
 
-// Fixed two-unit words cannot collide with scalar/surrogate projections. The
-// first unit is 0..16, so no encoded pair forms an accidental surrogate pair.
-const encode = Effect.fn("Citation.encodeSelectionWords")(function* (storage: CitationPythonUnicodeStorage) {
+const encodeTwoUnitWordsHighUnitBelowSurrogates = Effect.fn("Citation.encodeSelectionWords")(function* (
+  storage: CitationPythonUnicodeStorage
+) {
   const { bytes, width } = storage;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let result = "";
@@ -137,7 +136,7 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
   const timing = yield* makeCitationRegexTiming(limits, true);
   if (decodedBindings.length > limits.patterns)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patterns" });
-  const bindings = yield* checkSelectionBindingBudgets(
+  const bindings = yield* checkOwnedBindingStringBudgetsKeepingBindings(
     decodedBindings,
     4 * limits.patterns * limits.patternUtf16,
     limits.patternUtf16
@@ -159,7 +158,9 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
     if (value.utf16Units === 0) return yield* fail("invalid-bindings");
     if (value.utf16Units > limits.patternUtf16)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
-    return yield* encode(flags === 2 ? yield* lowercase.lower(value.storage) : value.storage);
+    return yield* encodeTwoUnitWordsHighUnitBelowSurrogates(
+      flags === 2 ? yield* lowercase.lower(value.storage) : value.storage
+    );
   });
   const install = Effect.fn("Citation.installSelectionBinding")(function* (
     binding: Pick<CitationExtractorSelectionBinding, "id" | "flags" | "strings">
@@ -193,7 +194,7 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
         phase: 0 | 1
       ) {
         if (Trie.isEmpty(tree)) return;
-        const text = yield* encode(storage);
+        const text = yield* encodeTwoUnitWordsHighUnitBelowSurrogates(storage);
         let seen = HashSet.empty<string>();
         const recordFirst = Effect.fn("Citation.recordExtractorIntroduction")(function* (
           offset: number,

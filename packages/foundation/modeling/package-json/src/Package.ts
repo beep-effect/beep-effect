@@ -87,8 +87,6 @@ export const DependencyMapField = S.Record(S.String, S.String).pipe(
 );
 
 /**
- * Decoded value produced by {@link DependencyMapField}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -121,17 +119,12 @@ export const StringMapField = S.Record(S.String, S.String).pipe(
 );
 
 /**
- * Decoded value produced by {@link StringMapField}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type StringMapField = typeof StringMapField.Type;
 
 /**
- * The `bin` field: a single string path or a name→path map. Not meant to be
- * referenced directly.
- *
  * **Example** (Decode a single executable path)
  *
  * ```ts
@@ -160,9 +153,6 @@ export const BinField = S.Union([S.String, StringMapField]).pipe(
 export type BinField = typeof BinField.Type;
 
 /**
- * The `exports` field: a single string entry point or an open object of
- * conditional exports. Not meant to be referenced directly.
- *
  * **Example** (Decode a root entry point)
  *
  * ```ts
@@ -224,8 +214,6 @@ export const PublishConfigField = S.Record(S.String, S.Unknown).pipe(
 export type PublishConfigField = typeof PublishConfigField.Type;
 
 /**
- * One `peerDependenciesMeta` entry: metadata for a single peer dependency.
- *
  * **Example** (Construct optional peer metadata)
  *
  * ```ts
@@ -287,8 +275,6 @@ export type PeerDependenciesMetaField = typeof PeerDependenciesMetaField.Type;
 // ── Errors ──────────────────────────────────────────────────────────────────
 
 /**
- * Indicates that a JSON value could not be decoded into a valid {@link Package}.
- *
  * **Details**
  *
  * Raised by {@link Package.decode}. The underlying `SchemaError` is preserved on
@@ -386,8 +372,6 @@ const PackageIndentSchema = S.Union([S.Finite, S.Literals(["tab", "preserve"])])
 export type PackageIndent = typeof PackageIndentSchema.Type;
 
 /**
- * Options for {@link Package.toJsonString} and `PackageJsonFile.write`.
- *
  * **Details**
  *
  * `sourceText` backs `indent: "preserve"`: its indentation (tab vs N spaces,
@@ -442,8 +426,6 @@ export class PackageFormatOptions extends S.Opaque<PackageFormatOptions, { reado
 ) {}
 
 /**
- * Companion types for {@link PackageFormatOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -495,10 +477,6 @@ const mapEntryRemover = (
 } => Fn.dual(2, (pkg: Package, name: string) => pkg.copyWith(R.singleton(key, HashMap.remove(pkg[key], name))));
 
 /**
- * A package.json document as a rich `Schema.Class`: typed known fields, a
- * `rest` catch-all preserving unknown top-level fields across a read/edit/write
- * cycle, computed getters, and immutable mutation statics.
- *
  * **Example** (Update a package version and serialize the result)
  *
  * ```ts

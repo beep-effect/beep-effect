@@ -39,6 +39,7 @@
     "explorations/**"
   ],
   "rules": {
+    "beep/no-comments": "warn",
     "beep/no-js-extension-imports": "error",
     "beep/no-opaque-instance-fields": "error",
     "beep/no-manual-effect-runtime-in-tests": "warn",

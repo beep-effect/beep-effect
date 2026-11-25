@@ -49,8 +49,6 @@ export const GeneratedContextRole = LiteralKit(["contract", "model", "host"]).pi
 );
 
 /**
- * A model-first context role generated today.
- *
  * **Example** (Type a generated role)
  *
  * ```ts
@@ -417,9 +415,7 @@ import shared from "../../../vitest.shared.ts";
 export default mergeConfig(
   shared,
   defineConfig({
-    test: {
-      // Package-specific overrides
-    },
+    test: {},
   })
 );
 `;

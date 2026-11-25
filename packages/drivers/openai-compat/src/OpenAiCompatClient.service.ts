@@ -35,8 +35,6 @@ const $I = $OpenaiCompatId.create("OpenAiCompatClient.service");
 const moduleName = "OpenAiCompatClient";
 
 /**
- * Runtime configuration accepted by {@link OpenAiCompatClient.makeLayer}.
- *
  * **Example** (Make client options)
  *
  * ```ts

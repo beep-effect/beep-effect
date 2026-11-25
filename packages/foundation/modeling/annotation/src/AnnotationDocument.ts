@@ -43,8 +43,6 @@ const $I = $AnnotationId.create("AnnotationDocument");
 
 const sameCapture = S.toEquivalence(SourceTextIdentity);
 
-// The kind-independent view of every document: annotations read as { _tag, targets, body } with the body unread.
-// Only its type is exported: a branded schema would be nominal, and no caller-owned document would satisfy it.
 const annotationDocumentView = S.Struct({
   text: SourceTextIdentity,
   anchors: S.HashMap(OccurrenceId, Anchored),
@@ -60,6 +58,11 @@ const annotationDocumentView = S.Struct({
  * The kind-independent view every document built from
  * {@link makeAnnotationDocument} satisfies: annotations are read as
  * `{ _tag, targets, body }` with the body unread.
+ *
+ * **Gotchas**
+ *
+ * Only the type is exported, not a schema: a branded schema would be
+ * nominal, and no caller-owned document would satisfy it.
  *
  * **Example** (Read the capture of a document)
  *
@@ -251,8 +254,6 @@ export const makeAnnotationDocument = <const Kinds extends KindRegistry & Closed
 };
 
 /**
- * The keyed tables of an annotation document.
- *
  * **Example** (Check a table name)
  *
  * ```ts import.meta.vitest name="Check a table name"
@@ -271,8 +272,6 @@ export const DocumentTable = LiteralKit(["anchors", "annotations", "attribution"
 );
 
 /**
- * Type for {@link DocumentTable}.
- *
  * **Example** (Name a table)
  *
  * ```ts
@@ -370,8 +369,6 @@ export const DocumentAssemblyRefusal = LiteralKit([
 );
 
 /**
- * Type for {@link DocumentAssemblyRefusal}.
- *
  * **Example** (Name a refusal)
  *
  * ```ts
@@ -412,7 +409,6 @@ export class DocumentAssemblyRefused extends S.TaggedError<DocumentAssemblyRefus
   })
 ) {}
 
-// The kind-independent shape every content case of every registry has.
 type AnnotationShape =
   AnnotationDocumentView["annotations"] extends HashMap.HashMap<AnnotationId, infer Value> ? Value : never;
 

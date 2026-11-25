@@ -142,8 +142,6 @@ export const XlsxHiddenColumns = S.Array(XlsxColumn)
   .pipe($I.annoteSchema("XlsxHiddenColumns", { description: "A sheet's hidden columns, each once" }));
 
 /**
- * A sheet's hidden columns, each once; the type {@link XlsxHiddenColumns} decodes to.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -691,8 +689,6 @@ export const XlsxHeading = S.String.check(S.isMinLength(1), S.isMaxLength(MAX_CE
 );
 
 /**
- * A heading of a header row; the type {@link XlsxHeading} decodes to.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -743,8 +739,6 @@ export const XlsxRecord = S.Record(XlsxHeading, XlsxValue)
   .pipe($I.annoteSchema("XlsxRecord", { description: "One row of a sheet under its first row's headings" }));
 
 /**
- * One row as records under headings; the type {@link XlsxRecord} decodes to.
- *
  * @category type-level
  * @since 0.0.0
  */

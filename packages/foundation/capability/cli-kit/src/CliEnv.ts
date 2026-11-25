@@ -174,8 +174,6 @@ export class CliEnvOptions extends S.Opaque<CliEnvOptions, { readonly brand: uni
   }).pipe($I.annoteSchema("CliEnvOptions", { description: "Plain CliEnvOptions data." }))
 ) {}
 /**
- * Companion types for {@link CliEnvOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts
@@ -261,8 +259,6 @@ export class CliEnvTestOptions extends S.Opaque<CliEnvTestOptions, { readonly br
 ) {}
 
 /**
- * Companion types for {@link CliEnvTestOptions}.
- *
  * **Example** (Refer to the plain input)
  *
  * ```ts

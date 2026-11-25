@@ -954,8 +954,6 @@ export const videoSecondsToEpochMs =
     Math.round((videoSeconds * 1000 - clockSync.offsetMs) / clockSync.slope);
 
 /**
- * Input options for {@link planDriverRequests}.
- *
  * **Example** (Construct driver request options)
  *
  * ```ts

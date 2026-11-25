@@ -38,9 +38,7 @@ const hashSaltNamespaceMarker = "ai-metrics-hash-salt-namespace/v1";
 const identityDirName = "identity";
 const registryFileName = "registry.json";
 const lockFileName = "registry.lock";
-// ~1s of total patience: long enough to outlast a healthy writer's
-// read-merge-write, short enough that a lock left by a dead holder surfaces as a
-// loud failure rather than a hang.
+// decision: identity-registry-local-exclusive-lock
 const lockMaxRetries = 50;
 const lockRetryDelay = Duration.millis(20);
 const absolutePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/u;
@@ -50,8 +48,6 @@ const commitShaPattern = /^[0-9a-f]{40}$/u;
 const originUrlPattern = /\[remote\s+"origin"\][^[]*?^[ \t]*url[ \t]*=[ \t]*([^\n]+)$/mu;
 
 /**
- * Whether a canonical root is a primary clone or a linked git worktree.
- *
  * **Details**
  *
  * The distinction is load-bearing for snapshot bounding: a linked worktree
@@ -143,8 +139,6 @@ export class AiMetricsCanonicalRoot extends S.Opaque<AiMetricsCanonicalRoot, { r
 ) {}
 
 /**
- * A machine, root, and agent-brand triple: the source instance producing transcripts.
- *
  * **Details**
  *
  * Hostname is deliberately absent. Reading it would require a `node:` builtin
@@ -186,8 +180,6 @@ export class AiMetricsSourceInstance extends S.Opaque<AiMetricsSourceInstance, {
 ) {}
 
 /**
- * The persisted registry of canonical roots and source instances.
- *
  * **Details**
  *
  * `hashSaltStatus` and a salted namespace fingerprint are stamped so a store
@@ -235,8 +227,6 @@ export class AiMetricsIdentityRegistry extends S.Opaque<AiMetricsIdentityRegistr
 }
 
 /**
- * Input for deriving one canonical root's identity.
- *
  * **Example** (Deriving identity for the current clone)
  *
  * ```ts
@@ -311,8 +301,6 @@ export class AiMetricsIdentityRegistryUpsertInput extends S.Opaque<
 ) {}
 
 /**
- * Typed failure raised by identity registry helpers.
- *
  * **Example** (Constructing the failure)
  *
  * ```ts
@@ -372,12 +360,7 @@ const firstMatch = (pattern: RegExp, content: string): O.Option<string> =>
 
 const isNotFound = (error: PlatformError.PlatformError): boolean => Eq.equals(error.reason._tag, "NotFound");
 
-// Absence is the only read outcome that honestly means "no file". `Effect.option` would also
-// swallow `PermissionDenied` and `BadResource` (what reading a directory yields), so an existing
-// but unreadable `registry.json` would decode as an empty registry and the next upsert would
-// overwrite it — silently discarding every other canonical root and its `firstSeen` history.
-// A decode failure on an existing file already fails loudly; these now agree.
-const readFileOption = Effect.fn("AiMetrics.identityRegistry.readFileOption")(function* (
+const readFileNoneOnlyWhenAbsentNeverWhenUnreadable = Effect.fn("AiMetrics.identityRegistry.readFileOption")(function* (
   filePath: string
 ): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
@@ -421,7 +404,7 @@ const probeGitRoot = Effect.fn("AiMetrics.identityRegistry.probeGitRoot")(functi
     });
   }
 
-  const readFileOption1 = yield* readFileOption(gitPath);
+  const readFileOption1 = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(gitPath);
   const pointer = pipe(
     readFileOption1,
     O.flatMap((content) => firstMatch(gitDirPointerPattern, content)),
@@ -470,7 +453,7 @@ const resolveRepositoryIdHash = Effect.fn("AiMetrics.identityRegistry.resolveRep
   hashSalt: string | undefined
 ): Effect.fn.Return<string, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
   const pathApi = yield* Path.Path;
-  const config = yield* readFileOption(pathApi.join(commonGitDir, "config"));
+  const config = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(commonGitDir, "config"));
   const originUrl = pipe(
     config,
     O.flatMap((content) => firstMatch(originUrlPattern, content)),
@@ -492,7 +475,7 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
   commonGitDir: string
 ): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
   const pathApi = yield* Path.Path;
-  const readFileOption2 = yield* readFileOption(pathApi.join(gitDir, "HEAD"));
+  const readFileOption2 = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(gitDir, "HEAD"));
   const head = pipe(readFileOption2, O.map(Str.trim));
 
   if (O.isNone(head)) {
@@ -508,13 +491,13 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
     return O.none<string>();
   }
 
-  const readFileOption3 = yield* readFileOption(pathApi.join(commonGitDir, ref.value));
+  const readFileOption3 = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(commonGitDir, ref.value));
   const loose = pipe(readFileOption3, O.map(Str.trim));
   if (O.isSome(loose) && commitShaPattern.test(loose.value)) {
     return loose;
   }
 
-  const packed = yield* readFileOption(pathApi.join(commonGitDir, "packed-refs"));
+  const packed = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(commonGitDir, "packed-refs"));
 
   return pipe(
     packed,
@@ -651,30 +634,17 @@ const identityRegistryPath = (pathApi: Path.Path, dataRoot: string): string =>
 const identityRegistryLockPath = (pathApi: Path.Path, dataRoot: string): string =>
   pathApi.join(dataRoot, identityDirName, lockFileName);
 
-/**
- * Token that makes one writer's temporary file and lock claim distinguishable from another's.
- *
- * **Details**
- *
- * A clock reading alone is not enough: two processes starting inside the same
- * millisecond would derive the same name. The random suffix comes from
- * `Random.nextIntBetween`, which resolves through the Effect `Random` service —
- * so a test can seed it, and no `Math.random` or `node:crypto` import is needed
- * (the latter is barred from typechecked `src` by the node-builtin gate).
- */
-const writerToken = Effect.fnUntraced(function* () {
+const writerTokenDistinguishingTempFileAndLockClaim = Effect.fnUntraced(function* () {
   const nowEpochMillis = yield* Clock.currentTimeMillis;
-  const entropy = yield* Random.nextIntBetween(0, 0xffffffff);
-  return `${nowEpochMillis}-${entropy.toString(16)}`;
+  const seedableEffectRandomSuffixNotMathRandomOrNodeCrypto = yield* Random.nextIntBetween(0, 0xffffffff);
+  return `${nowEpochMillis}-${seedableEffectRandomSuffixNotMathRandomOrNodeCrypto.toString(16)}`;
 });
 
-// Exclusive create: `flag: "wx"` is O_CREAT | O_EXCL, so exactly one writer can
-// observe the lock as absent and go on to create it. This is the same idiom the
-// Yeet proof lock uses; it lives here rather than being imported because
-// `@beep/repo-cli` depends on this package, not the other way round.
+// decision: identity-registry-local-exclusive-lock
 const claimRegistryLock = Effect.fnUntraced(function* (lockPath: string, token: string) {
   const fs = yield* FileSystem.FileSystem;
-  return yield* fs.writeFileString(lockPath, token, { flag: "wx" }).pipe(
+  const exclusiveCreateSoExactlyOneWriterSeesTheLockAbsent = { flag: "wx" } as const;
+  return yield* fs.writeFileString(lockPath, token, exclusiveCreateSoExactlyOneWriterSeesTheLockAbsent).pipe(
     Effect.as(true),
     Effect.catchTag("PlatformError", (error) =>
       Eq.equals(error.reason._tag, "AlreadyExists")
@@ -686,38 +656,21 @@ const claimRegistryLock = Effect.fnUntraced(function* (lockPath: string, token: 
 
 const lockRetrySchedule = Schedule.recurs(lockMaxRetries).pipe(Schedule.addDelay(() => Effect.succeed(lockRetryDelay)));
 
-/**
- * Run `use` while holding the registry's advisory lock, releasing it on every exit path.
- *
- * **Details**
- *
- * The lock spans the whole read-merge-write. Holding it only across the write
- * would not help: the lost-update window opens at the *read*, because two
- * writers that both read the pre-merge snapshot each compute a merge missing the
- * other's roots, and whichever renames last wins.
- *
- * **Gotchas**
- *
- * Retries are bounded. A holder that died without releasing leaves the file
- * behind, and waiting on it forever would hang every later run; instead the wait
- * expires and the upsert fails with {@link AiMetricsIdentityRegistryError}
- * naming the lock path, so an operator can remove it deliberately. Failing is
- * the only honest option — skipping the upsert would leave a store whose
- * provenance silently does not match its data.
- */
 const acquireRegistryLock = Effect.fn("AiMetrics.identityRegistry.acquireRegistryLock")(function* (lockPath: string) {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
-  const token = yield* writerToken();
+  const token = yield* writerTokenDistinguishingTempFileAndLockClaim();
 
   yield* fs
     .makeDirectory(pathApi.dirname(lockPath), { recursive: true })
     .pipe(Effect.mapError(identityRegistryFailure("Failed to create the AI metrics identity registry directory.")));
 
+  const retryContentionOnlySinceRepeatStopsAtTheFirstIoFailure = {
+    schedule: lockRetrySchedule,
+    until: (claimed: boolean) => claimed,
+  };
   const claimed = yield* claimRegistryLock(lockPath, token).pipe(
-    // `repeat` re-runs only on success, so a real IO failure surfaces at once
-    // instead of being retried as if it were contention.
-    Effect.repeat({ schedule: lockRetrySchedule, until: (claimed: boolean) => claimed })
+    Effect.repeat(retryContentionOnlySinceRepeatStopsAtTheFirstIoFailure)
   );
 
   if (!claimed) {
@@ -773,7 +726,7 @@ export const readAiMetricsIdentityRegistry: (
   Effect.fn("AiMetrics.readAiMetricsIdentityRegistry")(function* (dataRoot) {
     const pathApi = yield* Path.Path;
     const nowEpochMillis = yield* Clock.currentTimeMillis;
-    const content = yield* readFileOption(identityRegistryPath(pathApi, dataRoot));
+    const content = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(identityRegistryPath(pathApi, dataRoot));
 
     if (O.isNone(content)) {
       return AiMetricsIdentityRegistry.make({
@@ -846,25 +799,7 @@ export const identityRegistryToJson: (
   }
 );
 
-/**
- * Read, merge, and promote the registry. Callers must already hold the registry lock.
- *
- * **Gotchas**
- *
- * The temporary file is named per writer. A single fixed `registry.json.tmp`
- * would let one writer promote another's half-written bytes, or lose the rename
- * outright — a failure mode the lock alone does not close, since a stale lock
- * that an operator clears by hand can leave two writers briefly overlapping.
- *
- * A populated registry whose persisted `hashSaltStatus` or namespace fingerprint
- * differs from the current run's is refused, not merged: its digests live in a
- * different pseudonym namespace, so merging would silently break later joins.
- * A legacy populated registry has no fingerprint. It is migrated only when its
- * root, worktree, or home-directory digests match a freshly derived identity;
- * because those digests are salt-dependent, a match proves namespace
- * continuity without persisting or exposing the salt. An unprovable legacy file
- * remains a hard failure and must be rebuilt deliberately.
- */
+// decision: identity-registry-refuses-foreign-namespace
 const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   readonly input: AiMetricsIdentityRegistryUpsertInput;
   readonly instances: ReadonlyArray<AiMetricsSourceInstance>;
@@ -927,7 +862,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
 
   const content = yield* identityRegistryToJson(registry);
   const registryPath = identityRegistryPath(pathApi, input.dataRoot);
-  const registryTmpPath = `${registryPath}.${yield* writerToken()}.tmp`;
+  const registryTmpPath = `${registryPath}.${yield* writerTokenDistinguishingTempFileAndLockClaim()}.tmp`;
   yield* fs
     .makeDirectory(pathApi.dirname(registryPath), { recursive: true })
     .pipe(Effect.mapError(identityRegistryFailure("Failed to create the AI metrics identity registry directory.")));
@@ -1009,30 +944,30 @@ export const upsertAiMetricsIdentityRegistry: (
         rootPath: input.rootPath,
       })
     );
-    // Resolved before hashing, exactly as `makeAiMetricsSourceDiscoveryResult` does. The two
-    // digests are joined across the registry and a discovery result, so `/home/dev` and
-    // `/home/dev/` have to reach the hash as the same bytes or the join silently finds nothing.
-    const homeDir = pathApi.resolve(input.homeDir);
-    const homeDirHash = yield* hashPrivate(homeDir, input.hashSalt);
+    const homeDirResolvedAsDiscoveryResultDoesSoTheirDigestsJoin = pathApi.resolve(input.homeDir);
+    const homeDirHash = yield* hashPrivate(homeDirResolvedAsDiscoveryResultDoesSoTheirDigestsJoin, input.hashSalt);
     const rootPath = pathApi.resolve(input.rootPath);
     const instances = yield* Effect.forEach(
       input.sourceKinds,
       (sourceKind) =>
-        Effect.map(hashPrivate(`${homeDir} ${rootPath} ${sourceKind}`, input.hashSalt), (instanceIdHash) =>
-          AiMetricsSourceInstance.make({
-            homeDirHash,
-            instanceIdHash,
-            lastSeenAtEpochMillis: nowEpochMillis,
-            rootId: root.rootId,
-            sourceKind,
-          })
+        Effect.map(
+          hashPrivate(
+            `${homeDirResolvedAsDiscoveryResultDoesSoTheirDigestsJoin} ${rootPath} ${sourceKind}`,
+            input.hashSalt
+          ),
+          (instanceIdHash) =>
+            AiMetricsSourceInstance.make({
+              homeDirHash,
+              instanceIdHash,
+              lastSeenAtEpochMillis: nowEpochMillis,
+              rootId: root.rootId,
+              sourceKind,
+            })
         ),
       { concurrency: 1 }
     );
 
-    // Read, merge, and promote under the lock. The read has to be inside it: two
-    // writers that both read the pre-merge snapshot each compute a merge missing
-    // the other's roots, and the later rename silently discards the earlier one.
+    // decision: identity-registry-local-exclusive-lock
     return yield* withRegistryLock(
       identityRegistryLockPath(pathApi, input.dataRoot),
       mergeAndPersistRegistry({ input, instances, nowEpochMillis, root })

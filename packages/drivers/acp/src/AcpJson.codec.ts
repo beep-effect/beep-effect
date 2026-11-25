@@ -65,8 +65,6 @@ const describeCharacter = (code: string): string =>
   `U+${pipe(O.getOrElse(Str.charCodeAt(0)(code), constant(0)).toString(16), Str.toUpperCase, Str.padStart(4, "0"))}`;
 
 /**
- * Failure raised when a JSON text does not satisfy the JSON grammar.
- *
  * **Example** (Describe a syntax failure)
  *
  * ```ts

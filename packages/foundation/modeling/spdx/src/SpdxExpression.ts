@@ -21,13 +21,7 @@ import type { RawExpression, RawSimpleLicense } from "./internal/parser.ts";
 
 const $I = $SpdxId.create("SpdxExpression");
 
-/**
- * The structural shape the AST instances and their encoded POJOs share: every
- * variant carries `_tag` plus its own field names. Because the class instances
- * and the encoded form produced by {@link (SpdxExpression:variable).FromString}'s encode
- * side are structurally identical, ONE serializer walks either representation.
- */
-type SpdxNode = Data.TaggedEnum<{
+type InstanceOrEncodedNode = Data.TaggedEnum<{
   License: { readonly id: string; readonly plus: boolean };
   LicenseRef: {
     readonly documentRef?: string;
@@ -37,36 +31,24 @@ type SpdxNode = Data.TaggedEnum<{
     readonly license: typeof LicenseNode.Encoded | typeof LicenseRefNode.Encoded;
     readonly exception: string;
   };
-  And: { readonly left: SpdxNode; readonly right: SpdxNode };
-  Or: { readonly left: SpdxNode; readonly right: SpdxNode };
+  And: { readonly left: InstanceOrEncodedNode; readonly right: InstanceOrEncodedNode };
+  Or: { readonly left: InstanceOrEncodedNode; readonly right: InstanceOrEncodedNode };
 }>;
 
-/**
- * Serialize a tagged SPDX AST node — a class instance OR its encoded POJO — to
- * the canonical, fully-parenthesized SPDX string. This is the single source of
- * truth for canonical form: every node's `toString` and the codec encode side
- * both route through it, so the instance method and
- * {@link (SpdxExpression:variable).FromString}'s encode can never drift.
- */
-const serialize: (node: SpdxNode) => string = Match.type<SpdxNode>().pipe(
+const serializeCanonical: (node: InstanceOrEncodedNode) => string = Match.type<InstanceOrEncodedNode>().pipe(
   Match.tagsExhaustive({
     License: (node) => (node.plus ? `${node.id}+` : node.id),
     LicenseRef: (node) => {
       const prefix = node.documentRef !== undefined ? `DocumentRef-${node.documentRef}:` : "";
       return `${prefix}LicenseRef-${node.ref}`;
     },
-    WithException: (node) => `${serialize(node.license)} WITH ${node.exception}`,
-    And: (node) => `(${serialize(node.left)} AND ${serialize(node.right)})`,
-    Or: (node) => `(${serialize(node.left)} OR ${serialize(node.right)})`,
+    WithException: (node) => `${serializeCanonical(node.license)} WITH ${node.exception}`,
+    And: (node) => `(${serializeCanonical(node.left)} AND ${serializeCanonical(node.right)})`,
+    Or: (node) => `(${serializeCanonical(node.left)} OR ${serializeCanonical(node.right)})`,
   })
 );
 
 /**
- * A simple-license leaf of an SPDX expression: a license identifier with the
- * trailing `+` ("or later") marker. This is the expression-level license node,
- * distinct from the catalog {@link License} class, which validates and resolves
- * an identifier but does not model the `+` operator.
- *
  * **Example** (Construct a LicenseNode expression)
  *
  * ```ts
@@ -118,13 +100,11 @@ export class LicenseNode extends S.TaggedClass<
    * @since 0.0.0
    */
   override toString(): string {
-    return serialize(this);
+    return serializeCanonical(this);
   }
 }
 
 /**
- * Companion types for {@link LicenseNode}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -143,11 +123,6 @@ export declare namespace LicenseNode {
 }
 
 /**
- * A `LicenseRef`/`DocumentRef` reference leaf. The `LicenseRef-`/`DocumentRef-`
- * prefixes and the `:` separator are structural and are not stored; only the
- * bare idstrings are kept, so the node round-trips to canonical form without
- * duplicating the grammar.
- *
  * **Example** (Construct a LicenseRefNode expression)
  *
  * ```ts
@@ -199,13 +174,11 @@ export class LicenseRefNode extends S.TaggedClass<
    * @since 0.0.0
    */
   override toString(): string {
-    return serialize(this);
+    return serializeCanonical(this);
   }
 }
 
 /**
- * Companion types for {@link LicenseRefNode}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -224,11 +197,6 @@ export declare namespace LicenseRefNode {
 }
 
 /**
- * A `license WITH exception` node. Per the SPDX grammar, `WITH` binds to a
- * simple expression — a license identifier (optionally `+`) or a
- * `LicenseRef`/`DocumentRef` reference — never a compound expression, so
- * `license` is a {@link LicenseNode} or a {@link LicenseRefNode}.
- *
  * **Example** (Construct a WithExceptionNode expression)
  *
  * ```ts
@@ -291,14 +259,11 @@ export class WithExceptionNode extends S.TaggedClass<
    * @since 0.0.0
    */
   override toString(): string {
-    return serialize(this);
+    return serializeCanonical(this);
   }
 }
 
 /**
- * The conjunction (`AND`) of two sub-expressions. Recursive: its children are
- * members of {@link (SpdxExpression:type)}, expressed via `Schema.suspend`.
- *
  * **Example** (Construct a AndNode expression)
  *
  * ```ts
@@ -325,11 +290,11 @@ export class AndNode extends S.TaggedClass<
   {
     /** The left operand. */
     left: $I.annoteKey("AndNode.left", { description: "The left operand." })(
-      S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion)
+      S.suspend((): S.Codec<SpdxExpression, InstanceOrEncodedNode> => SpdxExpressionUnion)
     ),
     /** The right operand. */
     right: $I.annoteKey("AndNode.right", { description: "The right operand." })(
-      S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion)
+      S.suspend((): S.Codec<SpdxExpression, InstanceOrEncodedNode> => SpdxExpressionUnion)
     ),
   },
   $I.annote("AndNode", {
@@ -356,14 +321,11 @@ export class AndNode extends S.TaggedClass<
    * @since 0.0.0
    */
   override toString(): string {
-    return serialize(this);
+    return serializeCanonical(this);
   }
 }
 
 /**
- * The disjunction (`OR`) of two sub-expressions. Recursive: its children are
- * members of {@link (SpdxExpression:type)}, expressed via `Schema.suspend`.
- *
  * **Example** (Construct a OrNode expression)
  *
  * ```ts
@@ -390,11 +352,11 @@ export class OrNode extends S.TaggedClass<
   {
     /** The left operand. */
     left: $I.annoteKey("OrNode.left", { description: "The left operand." })(
-      S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion)
+      S.suspend((): S.Codec<SpdxExpression, InstanceOrEncodedNode> => SpdxExpressionUnion)
     ),
     /** The right operand. */
     right: $I.annoteKey("OrNode.right", { description: "The right operand." })(
-      S.suspend((): S.Codec<SpdxExpression, SpdxNode> => SpdxExpressionUnion)
+      S.suspend((): S.Codec<SpdxExpression, InstanceOrEncodedNode> => SpdxExpressionUnion)
     ),
   },
   $I.annote("OrNode", {
@@ -421,7 +383,7 @@ export class OrNode extends S.TaggedClass<
    * @since 0.0.0
    */
   override toString(): string {
-    return serialize(this);
+    return serializeCanonical(this);
   }
 }
 
@@ -436,19 +398,13 @@ export class OrNode extends S.TaggedClass<
  */
 export type SpdxExpression = LicenseNode | LicenseRefNode | WithExceptionNode | AndNode | OrNode;
 
-// The union schema. Declared after the member classes it names, and referenced
-// from `AndNode`/`OrNode` only through a `Schema.suspend` thunk, so no member's
-// static initializer touches it before it is defined.
 const SpdxExpressionUnion = S.Union([LicenseNode, LicenseRefNode, WithExceptionNode, AndNode, OrNode]).pipe(
   $I.annoteSchema("SpdxExpressionUnion", {
     description:
-      "The recursive SPDX expression AST: decoded schema-class license, reference, exception, conjunction and disjunction nodes, encoded as structurally equivalent tagged POJOs. Direct AST decoding has no string-parser depth cap.",
+      "The recursive SPDX expression AST: decoded schema-class license, reference, exception, conjunction and disjunction nodes, encoded as structurally equivalent tagged POJOs. Direct AST decoding has no string-parser depth cap. The union is declared after its member classes; AndNode and OrNode defer access through S.suspend so their static initializers never read the union before it is initialized.",
   })
 );
 
-// Materialize a raw simple-expression leaf — the shape a `WITH` clause binds
-// to — into its typed node. The `licenseRef` arm uses a conditional spread:
-// never pass an explicit `undefined` for the `optionalKey` documentRef field.
 function materializeSimple(raw: RawSimpleLicense): LicenseNode | LicenseRefNode {
   return raw.kind === "license"
     ? LicenseNode.make({ id: raw.id, plus: raw.plus })
@@ -462,11 +418,7 @@ function materializeSimple(raw: RawSimpleLicense): LicenseNode | LicenseRefNode 
       );
 }
 
-// Materialize the parser's raw record tree into the typed AST. Recursive, but
-// only over a tree the parser already bounded to MAX_NESTING_DEPTH, so it
-// cannot overflow. `.make` validates each node; construction is linear in the
-// node count on this Schema class family.
-const materialize: (raw: RawExpression) => SpdxExpression = Match.type<RawExpression>().pipe(
+const materializeWithOneMakePerRawNode: (raw: RawExpression) => SpdxExpression = Match.type<RawExpression>().pipe(
   Match.discriminatorsExhaustive("kind")({
     license: materializeSimple,
     licenseRef: materializeSimple,
@@ -477,39 +429,22 @@ const materialize: (raw: RawExpression) => SpdxExpression = Match.type<RawExpres
       }),
     and: (raw) =>
       AndNode.make({
-        left: materialize(raw.left),
-        right: materialize(raw.right),
+        left: materializeWithOneMakePerRawNode(raw.left),
+        right: materializeWithOneMakePerRawNode(raw.right),
       }),
     or: (raw) =>
       OrNode.make({
-        left: materialize(raw.left),
-        right: materialize(raw.right),
+        left: materializeWithOneMakePerRawNode(raw.left),
+        right: materializeWithOneMakePerRawNode(raw.right),
       }),
   })
 );
 
-/**
- * Validate and parse an SPDX license expression synchronously, returning a
- * `Result`. This is the package's sync primitive: {@link isValidExpression},
- * the Effect {@link (SpdxExpression:variable).parse}, and {@link (SpdxExpression:variable).FromString}
- * all derive from it, so the four surfaces can never disagree.
- *
- * **Details**
- *
- * Every malformation — a bad token, an unbalanced parenthesis, a dangling
- * `AND`/`OR`, an unknown identifier or exception, or nesting past the parser's
- * depth cap — fails with {@link InvalidSpdxExpressionError} on the failure
- * channel; the parser never throws.
- */
-// A `const` arrow rather than a hoisted `function` declaration: as the
-// `SpdxExpression.parseResult` facade member, the const's structural type
-// inlines into the facade's emitted `.d.ts` (like `parse` and `FromString`),
-// whereas a named `function` would be referenced as `typeof parseResult` and
-// leak an un-exported symbol (ae-forgotten-export) onto the `@public` surface.
+// decision: facade-members-const-bound
 const parseResult = (input: string): Result.Result<SpdxExpression, InvalidSpdxExpressionError> =>
   O.match(parseRaw(input), {
     onNone: () => Result.fail(InvalidSpdxExpressionError.make({ input })),
-    onSome: (raw) => Result.succeed(materialize(raw)),
+    onSome: (raw) => Result.succeed(materializeWithOneMakePerRawNode(raw)),
   });
 
 /**
@@ -549,12 +484,8 @@ const FromString: S.Codec<SpdxExpression, string> = S.String.pipe(
           ? Effect.succeed(result.success)
           : Effect.fail(new SchemaIssue.InvalidValue({ message: result.failure.message }, input));
       },
-      // `decodeTo`'s encode runs the union's encode FIRST, so `expression` is
-      // the tagged POJO (a plain `Object`, not a class instance) — calling
-      // `.toString()` on it would hit `Object.prototype.toString`. The
-      // structural `serialize` walks that POJO by `_tag`, the same routine the
-      // instance `toString` uses, so encode round-trips to canonical form.
-      encode: (expression: typeof SpdxExpressionUnion.Encoded) => Effect.succeed(serialize(expression)),
+      encode: (unionEncodedTaggedPojo: typeof SpdxExpressionUnion.Encoded) =>
+        Effect.succeed(serializeCanonical(unionEncodedTaggedPojo)),
     })
   ),
   $I.annoteSchema("FromString", {
@@ -563,45 +494,33 @@ const FromString: S.Codec<SpdxExpression, string> = S.String.pipe(
   })
 );
 
-/**
- * Resolve one simple-license leaf to its catalog {@link License}.
- *
- * **Details**
- *
- * The `+` ("or later") marker is dropped: it qualifies a catalog entry rather
- * than naming a different one, and `License` models identifiers, not operators.
- * A leaf whose id is neither a catalog member nor a well-formed reference
- * yields none — unreachable for a parser-built AST, whose ids are already
- * validated, but a hand-built node can carry anything.
- */
-const licenseOfLeaf = (leaf: LicenseNode | LicenseRefNode): O.Option<License> =>
-  Result.getSuccess(License.parseResult(leaf._tag === "License" ? leaf.id : serialize(leaf)));
+const catalogLicenseOfLeafDroppingPlus = (leaf: LicenseNode | LicenseRefNode): O.Option<License> =>
+  Result.getSuccess(License.parseResult(leaf._tag === "License" ? leaf.id : serializeCanonical(leaf)));
 
-/** Append every license leaf, left to right, skipping ids that do not resolve. */
-const collectLicenses: (expr: SpdxExpression) => (into: Array<License>) => void = Match.type<SpdxExpression>().pipe(
-  Match.tagsExhaustive({
-    License: (expr) => (into: Array<License>) => {
-      const license = licenseOfLeaf(expr);
-      if (O.isSome(license)) into.push(license.value);
-    },
-    LicenseRef: (expr) => (into: Array<License>) => {
-      const license = licenseOfLeaf(expr);
-      if (O.isSome(license)) into.push(license.value);
-    },
-    WithException: (expr) => (into: Array<License>) => {
-      // The exception qualifies the license; the license is what is carried.
-      collectLicenses(expr.license)(into);
-    },
-    And: (expr) => (into: Array<License>) => {
-      collectLicenses(expr.left)(into);
-      collectLicenses(expr.right)(into);
-    },
-    Or: (expr) => (into: Array<License>) => {
-      collectLicenses(expr.left)(into);
-      collectLicenses(expr.right)(into);
-    },
-  })
-);
+const appendResolvedLicensesInWrittenOrder: (expr: SpdxExpression) => (into: Array<License>) => void =
+  Match.type<SpdxExpression>().pipe(
+    Match.tagsExhaustive({
+      License: (expr) => (into: Array<License>) => {
+        const license = catalogLicenseOfLeafDroppingPlus(expr);
+        if (O.isSome(license)) into.push(license.value);
+      },
+      LicenseRef: (expr) => (into: Array<License>) => {
+        const license = catalogLicenseOfLeafDroppingPlus(expr);
+        if (O.isSome(license)) into.push(license.value);
+      },
+      WithException: (expr) => (into: Array<License>) => {
+        appendResolvedLicensesInWrittenOrder(expr.license)(into);
+      },
+      And: (expr) => (into: Array<License>) => {
+        appendResolvedLicensesInWrittenOrder(expr.left)(into);
+        appendResolvedLicensesInWrittenOrder(expr.right)(into);
+      },
+      Or: (expr) => (into: Array<License>) => {
+        appendResolvedLicensesInWrittenOrder(expr.left)(into);
+        appendResolvedLicensesInWrittenOrder(expr.right)(into);
+      },
+    })
+  );
 
 /**
  * Every license named by an expression, in the order it is written, without
@@ -632,7 +551,7 @@ const collectLicenses: (expr: SpdxExpression) => (into: Array<License>) => void 
  */
 const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
   const collected: Array<License> = [];
-  collectLicenses(expr)(collected);
+  appendResolvedLicensesInWrittenOrder(expr)(collected);
   const seen = MutableHashSet.empty<string>();
   return A.filter(collected, (license) => {
     if (MutableHashSet.has(seen, license.id)) return false;
@@ -679,9 +598,9 @@ const licensesOf = (expr: SpdxExpression): ReadonlyArray<License> => {
  */
 const primaryLicense: (expr: SpdxExpression) => O.Option<License> = Match.type<SpdxExpression>().pipe(
   Match.tagsExhaustive({
-    License: licenseOfLeaf,
-    LicenseRef: licenseOfLeaf,
-    WithException: (expr) => licenseOfLeaf(expr.license),
+    License: catalogLicenseOfLeafDroppingPlus,
+    LicenseRef: catalogLicenseOfLeafDroppingPlus,
+    WithException: (expr) => catalogLicenseOfLeafDroppingPlus(expr.license),
     Or: (expr) => primaryLicense(expr.left),
     And: O.none,
   })

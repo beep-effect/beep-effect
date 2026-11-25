@@ -17,9 +17,11 @@ import {
 } from "@beep/law-practice-server";
 import { GrantedScopes } from "@beep/law-practice-use-cases/MatterWall";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -79,26 +81,51 @@ type Filing = {
   readonly row: PracticeKgCatalogRow;
 };
 
-const filing = (
-  digest: string,
-  name: string,
-  placement: { readonly client: string; readonly docket: string } | null
-): Filing => ({
+type Placement = { readonly client: string; readonly docket: string };
+
+type PlacementFields = {
+  readonly attributionSource: "filename" | "folder-path";
+  readonly category: "unsorted" | "docket";
+  readonly client: string | null;
+  readonly docket: string | null;
+  readonly docketKey: string | null;
+  readonly familyKey: string | null;
+};
+
+const unplacedFields: PlacementFields = {
+  attributionSource: "filename",
+  category: "unsorted",
+  client: null,
+  docket: null,
+  docketKey: null,
+  familyKey: null,
+};
+
+const placedFields = ({ client, docket }: Placement): PlacementFields => ({
+  attributionSource: "folder-path",
+  category: "docket",
+  client,
+  docket,
+  docketKey: `${client}.${docket}`,
+  familyKey: `${client}.20001`,
+});
+
+const filingWith = (digest: string, name: string, fields: PlacementFields): Filing => ({
   attribution: PracticeKgDocumentAttribution.make({
-    attributionSource: placement === null ? "filename" : "folder-path",
-    client: placement?.client ?? null,
+    attributionSource: fields.attributionSource,
+    client: fields.client,
     digest,
-    docket: placement?.docket ?? null,
-    docketKey: placement === null ? null : `${placement.client}.${placement.docket}`,
+    docket: fields.docket,
+    docketKey: fields.docketKey,
     family: "20001",
-    familyKey: placement === null ? null : `${placement.client}.20001`,
+    familyKey: fields.familyKey,
     recycled: false,
   }),
   row: PracticeKgCatalogRow.make({
-    category: placement === null ? "unsorted" : "docket",
-    client: placement?.client ?? null,
+    category: fields.category,
+    client: fields.client,
     digest,
-    docket: placement?.docket ?? null,
+    docket: fields.docket,
     docketFamily: "20001",
     effectiveName: name,
     mtimeIso: "2026-01-02T03:04:05.000Z",
@@ -111,6 +138,9 @@ const filing = (
     sourceRelativePath: name,
   }),
 });
+
+const filing = (digest: string, name: string, placement: Placement | null): Filing =>
+  filingWith(digest, name, placement === null ? unplacedFields : placedFields(placement));
 
 const alphaFilings = [
   filing(digests.shared, "shared-alpha.txt", { client: "11111", docket: "20001US01" }),
@@ -145,10 +175,9 @@ const emails = A.map(
     })
 );
 
-const writeExtract = Effect.fnUntraced(function* () {
+const writeExtract = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-wall-" });
   const textRoot = path.join(root, "text");
   yield* fs.makeDirectory(textRoot, { recursive: true });
   const lines = yield* Effect.forEach(
@@ -179,7 +208,10 @@ const withBundle =
   (filings: ReadonlyArray<Filing>) =>
   <Out, E, R>(read: Effect.Effect<Out, E, R>) =>
     Effect.gen(function* () {
-      const spec = yield* writeExtract();
+      const fs = yield* FileSystem.FileSystem;
+      const scratch = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-wall-" });
+      const root = yield* fs.realPath(scratch);
+      const spec = yield* writeExtract(root);
       yield* buildDuckDb(
         A.map(filings, (entry) => entry.row),
         [],
@@ -191,12 +223,7 @@ const withBundle =
       return yield* read;
     }).pipe(
       Effect.scoped,
-      provideScopedLayer(
-        Layer.merge(
-          DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })),
-          NodeServices.layer
-        )
-      )
+      provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })))
     );
 
 const search = Effect.fn("PracticeKgWallTest.search")(function* (scope: PracticeKgReadScope) {
@@ -215,94 +242,136 @@ const folders = Effect.fn("PracticeKgWallTest.folders")(function* (scope: Practi
 });
 
 describe("Practice KG matter wall", () => {
-  it.effect(
-    "spells granted family keys in a stable order and denies everything when nothing is granted",
-    Effect.fnUntraced(function* () {
-      const scope = practiceKgReadScopeOf(
-        GrantedScopes.make({
-          scopeRefs: HashSet.empty(),
-          familyKeys: HashSet.make(betaKey, alphaKey),
-          mailFolders: HashSet.empty(),
-        })
-      );
-      expect(practiceKgFamilyKeyFilter(scope, "k")).toBe("(k) IN ('11111.20001', '22222.20001')");
-      expect(practiceKgClientFilter(scope, "c")).toBe("(c) IN ('11111', '22222')");
-      expect(practiceKgMailFolderFilter(scope, "a", "f")).toBe("FALSE");
-      expect(practiceKgFamilyKeyFilter(walledNothing, "k")).toBe("FALSE");
-      expect(practiceKgClientFilter(walledNothing, "c")).toBe("FALSE");
-      expect(practiceKgFamilyKeyFilter(unwalled, "k")).toBe("TRUE");
-      expect(practiceKgMailFolderFilter(unwalled, "a", "f")).toBe("TRUE");
-      expect(practiceKgMailFolderFilter(walledAlpha, "a", "f")).toBe(
-        `((a = '${archive}' AND starts_with(f, 'Inbox/Alpha')))`
-      );
-      expect(A.map(["11111.20001", "22222.20001", "20001"], practiceKgGrantsFamily(walledAlpha))).toStrictEqual([
-        true,
-        false,
-        false,
-      ]);
-    })
-  );
+  it.layer(Layer.merge(NodeFileSystem.layer, NodePath.layer))("over a staged bundle", (it) => {
+    it.effect("stages one extract text per operation under a resolved temporary root", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const scratch = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-wall-" });
+        const root = yield* fs.realPath(scratch);
+        yield* writeExtract(root);
+        const staged = yield* fs.readDirectory(`${root}/text`);
+        expect(A.length(staged)).toBe(A.length(texts));
+      })
+    );
 
-  it.effect(
-    "keys identical bytes filed in two matters as two documents, and leaves an unfiled one without a family key",
-    Effect.fnUntraced(function* () {
-      const rows = yield* Effect.gen(function* () {
-        const db = yield* DuckDb;
-        return yield* db
-          .query(
-            'SELECT d.document_key AS "documentKey", s.family_key AS "familyKey" FROM documents d JOIN fts_docstats s ON s.doc_id = \'document:\' || d.document_key ORDER BY d.document_key'
-          )
-          .pipe(Effect.flatMap(decodeDocumentKeyRows));
-      }).pipe(withBundle([...alphaFilings, ...betaFilings]));
-      expect(A.map(rows, (row) => [row.documentKey, row.familyKey])).toStrictEqual([
-        [`${digests.shared}@11111.20001US01`, "11111.20001"],
-        [`${digests.shared}@22222.20001US02`, "22222.20001"],
-        [`${digests.alphaOnly}@11111.20001US01`, "11111.20001"],
-        [`${digests.betaOnly}@22222.20001US02`, "22222.20001"],
-        [digests.unfiled, null],
-      ]);
-    })
-  );
-
-  it.effect(
-    "scores a matter's search over its granted documents only, identically with and without the other matter",
-    Effect.fnUntraced(function* () {
-      const withBeta = yield* Effect.all([search(walledAlpha), search(unwalled)], { concurrency: 1 }).pipe(
-        withBundle([...alphaFilings, ...betaFilings])
-      );
-      const withoutBeta = yield* Effect.all([search(walledAlpha), search(unwalled)], { concurrency: 1 }).pipe(
-        withBundle(alphaFilings)
-      );
-      const [alphaWithBeta, everyoneWithBeta] = withBeta;
-      const [alphaWithoutBeta, everyoneWithoutBeta] = withoutBeta;
-      expect(A.map(alphaWithBeta, (row) => [row.digest, row.docket])).toStrictEqual(
-        A.map(alphaWithoutBeta, (row) => [row.digest, row.docket])
-      );
-      expect(A.dedupe(A.map(alphaWithBeta, (row) => row.docket))).toStrictEqual(["20001US01"]);
-      expect(A.map(alphaWithBeta, (row) => row.score)).toStrictEqual(A.map(alphaWithoutBeta, (row) => row.score));
-      expect(A.length(alphaWithBeta)).toBe(2);
-      const alphaOnlyScore = (rows: ReadonlyArray<SearchRow>) =>
-        A.map(
-          A.filter(rows, (row) => row.digest === digests.alphaOnly),
-          (row) => row.score
+    it.effect(
+      "spells granted family keys in a stable order and denies everything when nothing is granted",
+      Effect.fnUntraced(function* () {
+        const scope = practiceKgReadScopeOf(
+          GrantedScopes.make({
+            scopeRefs: HashSet.empty(),
+            familyKeys: HashSet.make(betaKey, alphaKey),
+            mailFolders: HashSet.empty(),
+          })
         );
-      expect(alphaOnlyScore(everyoneWithBeta)).not.toStrictEqual(alphaOnlyScore(everyoneWithoutBeta));
-      const denied = yield* search(walledNothing).pipe(withBundle([...alphaFilings, ...betaFilings]));
-      expect(denied).toStrictEqual([]);
-    }),
-    { timeout: 60_000 }
-  );
+        expect(practiceKgFamilyKeyFilter(scope, "k")).toBe("(k) IN ('11111.20001', '22222.20001')");
+        expect(practiceKgClientFilter(scope, "c")).toBe("(c) IN ('11111', '22222')");
+        expect(practiceKgMailFolderFilter(scope, "a", "f")).toBe("FALSE");
+        expect(practiceKgFamilyKeyFilter(walledNothing, "k")).toBe("FALSE");
+        expect(practiceKgClientFilter(walledNothing, "c")).toBe("FALSE");
+        expect(practiceKgFamilyKeyFilter(unwalled, "k")).toBe("TRUE");
+        expect(practiceKgMailFolderFilter(unwalled, "a", "f")).toBe("TRUE");
+        expect(practiceKgMailFolderFilter(walledAlpha, "a", "f")).toBe(
+          `((a = '${archive}' AND starts_with(f, 'Inbox/Alpha')))`
+        );
+        expect(A.map(["11111.20001", "22222.20001", "20001"], practiceKgGrantsFamily(walledAlpha))).toStrictEqual([
+          true,
+          false,
+          false,
+        ]);
+      })
+    );
 
-  it.effect(
-    "returns only messages under a granted mail folder binding",
-    Effect.fnUntraced(function* () {
-      const [alpha, nothing, everyone] = yield* Effect.all(
-        [folders(walledAlpha), folders(walledNothing), folders(unwalled)],
-        { concurrency: 1 }
-      ).pipe(withBundle(alphaFilings));
-      expect(alpha).toStrictEqual(["Inbox/Alpha/2026"]);
-      expect(nothing).toStrictEqual([]);
-      expect(everyone).toStrictEqual(["Inbox/Alpha/2026", "Inbox/Beta/2026"]);
-    })
+    it.effect(
+      "keys identical bytes filed in two matters as two documents, and leaves an unfiled one without a family key",
+      Effect.fnUntraced(function* () {
+        const rows = yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          return yield* db
+            .query(
+              'SELECT d.document_key AS "documentKey", s.family_key AS "familyKey" FROM documents d JOIN fts_docstats s ON s.doc_id = \'document:\' || d.document_key ORDER BY d.document_key'
+            )
+            .pipe(Effect.flatMap(decodeDocumentKeyRows));
+        }).pipe(withBundle([...alphaFilings, ...betaFilings]));
+        expect(A.map(rows, (row) => [row.documentKey, row.familyKey])).toStrictEqual([
+          [`${digests.shared}@11111.20001US01`, "11111.20001"],
+          [`${digests.shared}@22222.20001US02`, "22222.20001"],
+          [`${digests.alphaOnly}@11111.20001US01`, "11111.20001"],
+          [`${digests.betaOnly}@22222.20001US02`, "22222.20001"],
+          [digests.unfiled, null],
+        ]);
+      })
+    );
+
+    it.effect(
+      "scores a matter's search over its granted documents only, identically with and without the other matter",
+      Effect.fnUntraced(function* () {
+        const withBeta = yield* Effect.all([search(walledAlpha), search(unwalled)], { concurrency: 1 }).pipe(
+          withBundle([...alphaFilings, ...betaFilings])
+        );
+        const withoutBeta = yield* Effect.all([search(walledAlpha), search(unwalled)], { concurrency: 1 }).pipe(
+          withBundle(alphaFilings)
+        );
+        const [alphaWithBeta, everyoneWithBeta] = withBeta;
+        const [alphaWithoutBeta, everyoneWithoutBeta] = withoutBeta;
+        expect(A.map(alphaWithBeta, (row) => [row.digest, row.docket])).toStrictEqual(
+          A.map(alphaWithoutBeta, (row) => [row.digest, row.docket])
+        );
+        expect(A.dedupe(A.map(alphaWithBeta, (row) => row.docket))).toStrictEqual(["20001US01"]);
+        expect(A.map(alphaWithBeta, (row) => row.score)).toStrictEqual(A.map(alphaWithoutBeta, (row) => row.score));
+        expect(A.length(alphaWithBeta)).toBe(2);
+        const alphaOnlyScore = (rows: ReadonlyArray<SearchRow>) =>
+          A.map(
+            A.filter(rows, (row) => row.digest === digests.alphaOnly),
+            (row) => row.score
+          );
+        expect(alphaOnlyScore(everyoneWithBeta)).not.toStrictEqual(alphaOnlyScore(everyoneWithoutBeta));
+        const denied = yield* search(walledNothing).pipe(withBundle([...alphaFilings, ...betaFilings]));
+        expect(denied).toStrictEqual([]);
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
+      "returns only messages under a granted mail folder binding",
+      Effect.fnUntraced(function* () {
+        const [alpha, nothing, everyone] = yield* Effect.all(
+          [folders(walledAlpha), folders(walledNothing), folders(unwalled)],
+          { concurrency: 1 }
+        ).pipe(withBundle(alphaFilings));
+        expect(alpha).toStrictEqual(["Inbox/Alpha/2026"]);
+        expect(nothing).toStrictEqual([]);
+        expect(everyone).toStrictEqual(["Inbox/Alpha/2026", "Inbox/Beta/2026"]);
+      })
+    );
+  });
+});
+
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
+
+describe("Practice KG matter wall rows schema-derived values", () => {
+  it.effect("round-trips every generated MailFolderBinding through its encoding", () =>
+    roundTripsEveryGeneratedValue(MailFolderBinding)
+  );
+  it.effect("round-trips every generated SearchRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(SearchRow)
+  );
+  it.effect("round-trips every generated DocumentKeyRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(DocumentKeyRow)
+  );
+  it.effect("round-trips every generated FolderRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(FolderRow)
   );
 });

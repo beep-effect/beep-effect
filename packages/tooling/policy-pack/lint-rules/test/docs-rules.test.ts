@@ -119,6 +119,34 @@ const cases: ReadonlyArray<{ readonly args: readonly [DocsRuleId, string, string
     count: 1,
   },
   { args: ["require-description", "/** @category utilities */\nexport function value() {}"], count: 1 },
+  {
+    args: [
+      "require-description",
+      '/** @category models */\nexport const Port = S.Number.pipe($I.annoteSchema("Port", { description: "A TCP port." }));\n/** @category models */\nexport type Port = typeof Port.Type;\nexport declare namespace Port {\n  /** @category models */\n  export type Encoded = number;\n}',
+    ],
+    count: 0,
+  },
+  {
+    args: [
+      "require-description",
+      '/** @category models */\nexport class Job extends S.Class<Job>($I`Job`)({}, $I.annote("models/Job", { description: "A queued job." })) {}',
+    ],
+    count: 0,
+  },
+  {
+    args: [
+      "require-description",
+      '/** @category models */\nexport const Port = S.Number.pipe($I.annoteSchema("Host", { description: "A host." }));\n/** @category models */\nexport type Port = typeof Port.Type;',
+    ],
+    count: 1,
+  },
+  {
+    args: [
+      "require-description",
+      '/** @category models */\nexport const Port = S.Number.pipe($I.annoteSchema("Port", { title: "Port" }));\n/** @category models */\nexport type Port = typeof Port.Type;',
+    ],
+    count: 1,
+  },
   { args: ["match-description", "/** Value. */\nfunction value() {}"], count: 1 },
   { args: ["require-file-overview", "export const value = 1;", "src/index.ts"], count: 1 },
   {

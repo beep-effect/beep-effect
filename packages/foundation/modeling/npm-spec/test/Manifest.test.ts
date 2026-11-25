@@ -136,8 +136,6 @@ describe("Manifest.needsResolution", () => {
   });
 });
 
-// Stub resolvers over fixed maps — the pattern real consumers follow. Provided
-// via Layer.succeed on the service classes; no platform layer is needed.
 const catalogs = HashMap.make(
   ["default", HashMap.make(["effect", "^4.0.0"])],
   ["build", HashMap.make(["typescript", "^6.0.0"])]
@@ -149,7 +147,7 @@ const versions = HashMap.make(
   ["@x/d", "4.5.6"],
   ["charts", "5.0.0"]
 );
-const StubResolvers = Layer.mergeAll(
+const StubResolversOverFixedMapsViaLayerSucceedLikeRealConsumersNoPlatformLayer = Layer.mergeAll(
   Layer.succeed(CatalogResolver, {
     rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) =>
       Effect.succeed(
@@ -214,7 +212,7 @@ describe("Manifest.resolve", () => {
     }
   });
 
-  layer(StubResolvers)((it) => {
+  layer(StubResolversOverFixedMapsViaLayerSucceedLikeRealConsumersNoPlatformLayer)((it) => {
     it.effect("projects a mixed manifest and preserves everything else", () =>
       Effect.gen(function* () {
         const manifest = yield* Manifest.decode({
@@ -239,11 +237,9 @@ describe("Manifest.resolve", () => {
           peerDependencies: { "@x/c": "~3.1.0" },
           optionalDependencies: { "@x/d": "4.0.0" },
         });
-        // A fresh instance: the input is not mutated, and the result is not it.
         assert.notStrictEqual(resolved, manifest);
         assert.notStrictEqual(resolved.dependencies, manifest.dependencies);
         assert.deepStrictEqual(manifest.toRecord(), snapshot);
-        // rest rides through resolution unchanged.
         assert.deepStrictEqual(resolved.rest, manifest.rest);
       })
     );
@@ -278,24 +274,23 @@ describe("Manifest.resolve", () => {
       })
     );
 
-    // pnpm publish semantics for the alias form: the dep key is the alias,
-    // the specifier names the TARGET workspace package, and the published
-    // form is `npm:<target>@<projected>` against the TARGET's version.
-    it.effect("an alias-form workspace: specifier resolves the target's version into an npm: alias", () =>
-      Effect.gen(function* () {
-        const resolved = yield* Manifest.make({
-          dependencies: { viz: "workspace:@x/a@*", plot: "workspace:charts@^" },
-          devDependencies: { graph: "workspace:@x/b@~", pinned: "workspace:charts@2.0.0" },
-        }).resolve();
-        assert.deepStrictEqual(resolved.dependencies, {
-          viz: "npm:@x/a@1.2.3",
-          plot: "npm:charts@^5.0.0",
-        });
-        assert.deepStrictEqual(resolved.devDependencies, {
-          graph: "npm:@x/b@~2.0.0",
-          pinned: "npm:charts@2.0.0",
-        });
-      })
+    it.effect(
+      "an alias-form workspace: specifier (dep key = alias, specifier names the TARGET) resolves the TARGET's version into an npm:<target>@<projected> alias",
+      () =>
+        Effect.gen(function* () {
+          const resolved = yield* Manifest.make({
+            dependencies: { viz: "workspace:@x/a@*", plot: "workspace:charts@^" },
+            devDependencies: { graph: "workspace:@x/b@~", pinned: "workspace:charts@2.0.0" },
+          }).resolve();
+          assert.deepStrictEqual(resolved.dependencies, {
+            viz: "npm:@x/a@1.2.3",
+            plot: "npm:charts@^5.0.0",
+          });
+          assert.deepStrictEqual(resolved.devDependencies, {
+            graph: "npm:@x/b@~2.0.0",
+            pinned: "npm:charts@2.0.0",
+          });
+        })
     );
 
     it.effect("an alias form whose target is missing fails typed naming the TARGET package", () =>
@@ -303,10 +298,8 @@ describe("Manifest.resolve", () => {
         const error = yield* Effect.flip(Manifest.make({ dependencies: { viz: "workspace:@x/nope@*" } }).resolve());
         assert.instanceOf(error, UnresolvedDependencyError);
         assert.strictEqual(error.field, "dependencies");
-        // The missing package is the alias TARGET, not the map key…
-        assert.strictEqual(error.dependency, "@x/nope");
-        // …and the original specifier is preserved verbatim.
-        assert.strictEqual(error.specifier, "workspace:@x/nope@*");
+        assert.strictEqual(error.dependency, "@x/nope", "the missing package is the alias TARGET, not the map key");
+        assert.strictEqual(error.specifier, "workspace:@x/nope@*", "the original specifier is preserved verbatim");
         assert.strictEqual(error.reason, "workspace-package-missing");
       })
     );
@@ -327,14 +320,12 @@ describe("Manifest.resolve", () => {
     );
   });
 
-  // A CatalogResolver whose assembly failed: the typed CatalogAssemblyError
-  // must pass through resolve untouched — never re-wrapped or defected.
   const assemblyFailure = CatalogAssemblyError.make({
     source: "manifest",
     path: "pnpm-workspace.yaml",
     cause: new Error("unreadable"),
   });
-  const FailingResolvers = Layer.mergeAll(
+  const FailingResolversWhoseTypedErrorsMustPassThroughNeverRewrappedOrDefected = Layer.mergeAll(
     Layer.succeed(CatalogResolver, {
       rangeOf: Effect.fn("CatalogResolver.rangeOf")(() => Effect.fail(assemblyFailure)),
     }),
@@ -345,7 +336,7 @@ describe("Manifest.resolve", () => {
     })
   );
 
-  layer(FailingResolvers)((it) => {
+  layer(FailingResolversWhoseTypedErrorsMustPassThroughNeverRewrappedOrDefected)((it) => {
     it.effect("a CatalogAssemblyError from the resolver passes through typed", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(Manifest.make({ dependencies: { effect: "catalog:" } }).resolve());

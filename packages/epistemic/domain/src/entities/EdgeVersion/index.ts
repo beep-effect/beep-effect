@@ -6,8 +6,6 @@
  */
 
 /**
- * Bitemporal edge-version behavior exports.
- *
  * @category entities
  * @since 0.0.0
  */

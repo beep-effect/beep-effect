@@ -53,8 +53,6 @@ export const HarvestSource = LiteralKit([
 );
 
 /**
- * Origin of a harvested provenance row.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -82,17 +80,12 @@ export const HarvestKind = LiteralKit(["goals", "explorations", "all"]).pipe(
 );
 
 /**
- * Packet roots a harvest run reads.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type HarvestKind = typeof HarvestKind.Type;
 
 /**
- * Content address of a harvest row: the sha-256 of the canonical JSON of its
- * packet root, slug, source, file, line and text.
- *
  * **Details**
  *
  * The read commit is deliberately excluded, so a row keeps its id across
@@ -126,8 +119,6 @@ export const HarvestRowId = Sha256Hex.pipe(
 export type HarvestRowId = typeof HarvestRowId.Type;
 
 /**
- * The packet a harvested row belongs to.
- *
  * **Example** (Reference a goal packet)
  *
  * ```ts
@@ -183,8 +174,6 @@ export class HarvestRowDraft extends S.Opaque<HarvestRowDraft, { readonly brand:
 ) {}
 
 /**
- * One harvested provenance row.
- *
  * **Details**
  *
  * `packet` is `null` for rows read from a ledger outside any packet (for
@@ -271,8 +260,6 @@ export class HarvestLedgerHeader extends S.Opaque<HarvestLedgerHeader, { readonl
 ) {}
 
 /**
- * A complete harvest provenance ledger.
- *
  * **Details**
  *
  * On disk the ledger is JSON Lines: the {@link HarvestLedgerHeader} fields on

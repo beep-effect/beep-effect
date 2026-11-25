@@ -7,15 +7,11 @@
  */
 
 /**
- * Act frame element reference value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./ActFrameElementRef/index.ts";
 /**
- * Answer-row value-object exports.
- *
  * **Example** (Import the answer-row value objects)
  *
  * ```ts
@@ -27,15 +23,11 @@ export * from "./ActFrameElementRef/index.ts";
  */
 export * from "./AnswerRow/index.ts";
 /**
- * Patent application number value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./ApplicationNumber/index.ts";
 /**
- * Calendar-date value-object exports.
- *
  * **Example** (Import the calendar-date schema)
  *
  * ```ts
@@ -61,8 +53,6 @@ export * from "./CalendarDate/index.ts";
  */
 export * from "./Citation/index.ts";
 /**
- * Citation-signal value-object exports.
- *
  * **Example** (Import the citation-signal value objects)
  *
  * ```ts
@@ -74,8 +64,6 @@ export * from "./Citation/index.ts";
  */
 export * from "./CitationSignal/index.ts";
 /**
- * Citing-application identity value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -88,8 +76,6 @@ export * from "./CitingApplicationIdentity/index.ts";
  */
 export * from "./ClaimElement/index.ts";
 /**
- * Constitution-outcome vocabulary exports.
- *
  * **Example** (Import the constitution-outcome vocabulary)
  *
  * ```ts
@@ -116,8 +102,6 @@ export * from "./DocketDeadline/index.ts";
 /** Atomic office-action evidence exports. @category services @since 0.0.0 */
 export * from "./DocStructure/index.ts";
 /**
- * History-signal value-object exports.
- *
  * **Example** (Import the history-signal value objects)
  *
  * ```ts
@@ -198,8 +182,6 @@ export * from "./KindCode/index.ts";
  */
 export * from "./LawClaim/index.ts";
 /**
- * Legal act content value-object exports.
- *
  * **Example** (Import the legal act content value objects)
  *
  * ```ts
@@ -211,15 +193,11 @@ export * from "./LawClaim/index.ts";
  */
 export * from "./LegalActContent/index.ts";
 /**
- * Legal opposition candidate input value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./LegalOppositionCandidateInput/index.ts";
 /**
- * Legal role value-object exports.
- *
  * **Example** (Import the legal role value objects)
  *
  * ```ts
@@ -231,8 +209,6 @@ export * from "./LegalOppositionCandidateInput/index.ts";
  */
 export * from "./LegalRole/index.ts";
 /**
- * Legal scope context value-object exports.
- *
  * **Example** (Import the legal scope context value objects)
  *
  * ```ts
@@ -244,22 +220,16 @@ export * from "./LegalRole/index.ts";
  */
 export * from "./LegalScopeContext/index.ts";
 /**
- * Legal verdict family value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./LegalVerdictFamily/index.ts";
 /**
- * Legal vocabulary asset pack exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./LegalVocabularyPack/index.ts";
 /**
- * Librarian loop exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -279,15 +249,11 @@ export * from "./MailTagging/index.ts";
  */
 export * from "./MatterScope/index.ts";
 /**
- * Norm source reference value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./NormSourceReference/index.ts";
 /**
- * Observation version reference value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -300,8 +266,6 @@ export * from "./ObservationVersionRef/index.ts";
  */
 export * from "./OfficeCode/index.ts";
 /**
- * Party kind vocabulary exports.
- *
  * **Example** (Import the party kind vocabulary)
  *
  * ```ts
@@ -320,15 +284,11 @@ export * from "./PartyKind/index.ts";
  */
 export * from "./PatentDocument/index.ts";
 /**
- * Canonical patent document triplet value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./PatentDocumentTriplet/index.ts";
 /**
- * Patent metadata value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -341,15 +301,11 @@ export * from "./PatentMetadata/index.ts";
  */
 export * from "./PatentNumber/index.ts";
 /**
- * Patent office metadata value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./PatentOffice/index.ts";
 /**
- * Permission-status vocabulary exports.
- *
  * **Example** (Import the permission-status vocabulary)
  *
  * ```ts
@@ -382,15 +338,11 @@ export * from "./PracticeKgProvenanceKind/index.ts";
  */
 export * from "./PracticeProfile/index.ts";
 /**
- * Priority basis value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./PriorityBasis/index.ts";
 /**
- * Question value-object exports.
- *
  * **Example** (Import the question value objects)
  *
  * ```ts
@@ -402,8 +354,6 @@ export * from "./PriorityBasis/index.ts";
  */
 export * from "./Question/index.ts";
 /**
- * Review-item value-object exports.
- *
  * **Example** (Import the review-item value objects)
  *
  * ```ts
@@ -415,8 +365,6 @@ export * from "./Question/index.ts";
  */
 export * from "./ReviewItem/index.ts";
 /**
- * Lawyer seniority tier value-object exports.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -429,8 +377,6 @@ export * from "./SeniorityTier/index.ts";
  */
 export * from "./SetupRequirement/index.ts";
 /**
- * Source norm reference value-object exports.
- *
  * **Example** (Import the source norm reference value objects)
  *
  * ```ts
@@ -455,8 +401,6 @@ export * from "./SourceNormRef/index.ts";
  */
 export * from "./SourceRef/index.ts";
 /**
- * Structured-date value-object exports.
- *
  * **Example** (Import the structured-date value objects)
  *
  * ```ts
@@ -468,8 +412,6 @@ export * from "./SourceRef/index.ts";
  */
 export * from "./StructuredDate/index.ts";
 /**
- * Verdict-row value-object exports.
- *
  * **Example** (Import the verdict-row value objects)
  *
  * ```ts

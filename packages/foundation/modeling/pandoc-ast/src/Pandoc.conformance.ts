@@ -26,8 +26,6 @@ import { PandocDocument } from "./Pandoc.model.ts";
 const $I = $PandocAstId.create("Pandoc.conformance");
 
 /**
- * Stable identifiers for the invariants checked by Pandoc conformance inspection.
- *
  * **Example** (Recognize semantic-subset invariant)
  *
  * ```ts import.meta.vitest name="Recognize semantic-subset invariant"
@@ -51,8 +49,6 @@ export const PandocConformanceInvariantId = LiteralKit([
 );
 
 /**
- * Runtime type for {@link PandocConformanceInvariantId}.
- *
  * @see {@link PandocConformanceInvariantId} for the complete literal domain.
  * @category diagnostics
  * @since 0.0.0
@@ -60,8 +56,6 @@ export const PandocConformanceInvariantId = LiteralKit([
 export type PandocConformanceInvariantId = typeof PandocConformanceInvariantId.Type;
 
 /**
- * Complete ordered invariant set checked by the Pandoc conformance facade.
- *
  * **Example** (Make the checked invariant tuple)
  *
  * ```ts import.meta.vitest name="Make the checked invariant tuple"
@@ -86,8 +80,6 @@ export const PandocCheckedInvariantIds = S.Tuple(PandocConformanceInvariantId.me
 );
 
 /**
- * Runtime type for {@link PandocCheckedInvariantIds}.
- *
  * @category diagnostics
  * @since 0.0.0
  */
@@ -151,8 +143,6 @@ export const PandocConformanceIssue = S.Union([FuturePandocConstructorIssue, Non
 );
 
 /**
- * Runtime issue represented by {@link PandocConformanceIssue}.
- *
  * @category diagnostics
  * @since 0.0.0
  */
@@ -197,8 +187,6 @@ class InvalidPandocDocument extends S.Opaque<InvalidPandocDocument, { readonly b
 ) {}
 
 /**
- * Exhaustive result of Pandoc JSON conformance inspection.
- *
  * **Details**
  *
  * `compatible` means the input is accepted by the pinned current semantic
@@ -247,8 +235,6 @@ export const PandocConformanceResult = S.Union([
 );
 
 /**
- * Runtime result represented by {@link PandocConformanceResult}.
- *
  * @see {@link PandocConformanceResult} for constructors, guards, and exhaustive matching.
  * @category diagnostics
  * @since 0.0.0

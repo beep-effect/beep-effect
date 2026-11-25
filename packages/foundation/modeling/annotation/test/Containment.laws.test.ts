@@ -14,7 +14,6 @@ const runs = { arbitrary: fcRuns(200) };
 
 const within = contains(DocumentKinds);
 
-// Irreflexive, asymmetric and transitive over every annotation of a document, pairs and triples included.
 const expectTransitive = (
   document: TextDocument,
   outer: AnnotationId,
@@ -62,24 +61,25 @@ describe("@beep/annotation containment", () => {
     ([{ document, roles }]) => {
       expectStrictOrder(document);
       const holds = (outer: AnnotationId, inner: AnnotationId) => within(document, outer, inner);
-      // Strict inclusion with a non-decreasing level.
-      expect(holds(roles.section, roles.sentence)).toBe(true);
-      expect(holds(roles.title, roles.word)).toBe(true);
-      // Equal spans: the lower level contains, an equal level does not.
-      expect(holds(roles.paragraph, roles.sentence)).toBe(true);
-      expect(holds(roles.sentence, roles.word)).toBe(true);
-      expect(holds(roles.section, roles.title)).toBe(true);
-      expect([holds(roles.title, roles.figure), holds(roles.figure, roles.title)]).toEqual([false, false]);
-      expect(holds(roles.sentence, roles.paragraph)).toBe(false);
-      // A word whose range includes a sentence does not contain it, and the sentence does not cover the word.
-      expect([holds(roles.wordOverWhole, roles.sentence), holds(roles.sentence, roles.wordOverWhole)]).toEqual([
-        false,
-        false,
-      ]);
-      // A Mention and a two-target annotation take no part.
+      const strictInclusion = "strict inclusion with a non-decreasing level contains";
+      expect(holds(roles.section, roles.sentence), strictInclusion).toBe(true);
+      expect(holds(roles.title, roles.word), strictInclusion).toBe(true);
+      const equalSpans = "on equal spans the lower level contains and an equal level does not";
+      expect(holds(roles.paragraph, roles.sentence), equalSpans).toBe(true);
+      expect(holds(roles.sentence, roles.word), equalSpans).toBe(true);
+      expect(holds(roles.section, roles.title), equalSpans).toBe(true);
+      expect([holds(roles.title, roles.figure), holds(roles.figure, roles.title)], equalSpans).toEqual([false, false]);
+      expect(holds(roles.sentence, roles.paragraph), equalSpans).toBe(false);
+      expect(
+        [holds(roles.wordOverWhole, roles.sentence), holds(roles.sentence, roles.wordOverWhole)],
+        "a word whose range includes a sentence does not contain it, and the sentence does not cover the word"
+      ).toEqual([false, false]);
       for (const other of [roles.section, roles.paragraph, roles.sentence, roles.word]) {
         for (const outsider of [roles.mention, roles.twoTargets]) {
-          expect([holds(other, outsider), holds(outsider, other)]).toEqual([false, false]);
+          expect(
+            [holds(other, outsider), holds(outsider, other)],
+            "a Mention and a two-target annotation take no part"
+          ).toEqual([false, false]);
         }
       }
     },
@@ -95,8 +95,10 @@ describe("@beep/annotation containment", () => {
         false,
         false,
       ]);
-      // The OA kinds hold no Section, so a Section has no level there.
-      expect(contains(OaKinds)(document, roles.section, roles.sentence)).toBe(false);
+      expect(
+        contains(OaKinds)(document, roles.section, roles.sentence),
+        "the OA kinds hold no Section, so a Section has no level there"
+      ).toBe(false);
       expect(contains(OaKinds)(document, roles.paragraph, roles.sentence)).toBe(true);
     },
     runs

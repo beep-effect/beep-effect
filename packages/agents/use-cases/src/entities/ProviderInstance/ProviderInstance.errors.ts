@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.errors");
 
 /**
- *  Requested provider instance does not exist.
- *
  * **Example** (Make not-found error)
  *
  * ```ts
@@ -37,8 +35,6 @@ export class ProviderInstanceNotFound extends S.TaggedError<
 ) {}
 
 /**
- *  Provider instance changed after it was read, so the stale save was rejected.
- *
  * **Details**
  *
  * `save` treats the instance's `rowVersion` as the version it was read at. A
@@ -131,8 +127,6 @@ export class ProviderProbeUnavailable extends S.TaggedError<
 ) {}
 
 /**
- *  Tagged union of client-safe provider-instance failures.
- *
  * **Example** (Check action error membership)
  *
  * ```ts
@@ -155,8 +149,6 @@ export const ProviderActionError = S.Union([
 );
 
 /**
- *  Runtime type for {@link ProviderActionError}.
- *
  * **Example** (Type action error value)
  *
  * ```ts

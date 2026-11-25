@@ -93,8 +93,6 @@ const prov = (name: string): NamedNode => makeNamedNode(`${PROV_NAMESPACE}${name
 const dcat = (name: string): NamedNode => makeNamedNode(`${DCAT_NAMESPACE}${name}`);
 
 /**
- * Verified ontology repair proposal generated from a SHACL violation.
- *
  * **Example** (Make verified repair proposal)
  *
  * ```ts
@@ -146,8 +144,6 @@ export class OntologyRepairProposal extends S.Opaque<OntologyRepairProposal, { r
 ) {}
 
 /**
- * Validation request for an ontology session.
- *
  * **Example** (Make validation input with session)
  *
  * ```ts
@@ -190,8 +186,6 @@ export class RunOntologyValidationInput extends S.Opaque<
 ) {}
 
 /**
- * Validation result with verified repair proposals.
- *
  * **Example** (Make conforming validation result)
  *
  * ```ts
@@ -230,8 +224,6 @@ export class RunOntologyValidationResult extends S.Opaque<
 ) {}
 
 /**
- * Provenance and dataset-description export command.
- *
  * **Example** (Make provenance export command)
  *
  * ```ts
@@ -273,8 +265,6 @@ export class ExportOntologyProvenanceCommand extends S.Opaque<
 ) {}
 
 /**
- * Provenance and dataset-description export result.
- *
  * **Example** (Make provenance export result)
  *
  * ```ts
@@ -311,8 +301,6 @@ export class ExportOntologyProvenanceResult extends S.Opaque<
 ) {}
 
 /**
- * Ontology validation failure.
- *
  * **Example** (Make SHACL validation error)
  *
  * ```ts

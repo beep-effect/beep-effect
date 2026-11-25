@@ -72,8 +72,6 @@ export class LineColumn extends S.Opaque<LineColumn, { readonly brand: unique sy
 ) {}
 
 /**
- * Companion types for {@link LineColumn}.
- *
  * @category type-level
  * @since 0.0.0
  */

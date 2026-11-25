@@ -114,9 +114,11 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       const readFileString7 = yield* f.fs.readFileString(`${f.directory}/existing/keep`);
       expect(readFileString7).toBe("preserve");
       yield* f.fs.makeDirectory(`${f.directory}/exposed`, { mode: 0o755 });
-      // Make the hostile fixture explicit even under a private service umask.
       yield* f.fs.chmod(`${f.directory}/exposed`, 0o755);
-      expect((yield* f.capture(`${f.directory}/exposed/backup`).pipe(Effect.flip)).reason).toBe("destination");
+      expect(
+        (yield* f.capture(`${f.directory}/exposed/backup`).pipe(Effect.flip)).reason,
+        "the exposed mode is set explicitly so a private service umask cannot hide the hostile fixture"
+      ).toBe("destination");
       yield* f.sql`CREATE TABLE foreign_data (payload TEXT)`;
       expect((yield* f.capture(`${f.directory}/foreign`).pipe(Effect.flip)).reason).toBe("configuration");
       const exists8 = yield* f.fs.exists(`${f.directory}/foreign`);
@@ -154,11 +156,11 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       const f = yield* fixture();
       const original = yield* f.capture(`${f.directory}/backup`);
       const originalSource = yield* f.fs.readFile(`${f.directory}/source.sqlite`);
-      // Model a correctly checksummed receipt created by an older permissive
-      // capture implementation, rather than an untrusted receipt substitution.
       yield* Effect.gen(function* () {
-        const client = yield* SqliteClient.make({ filename: `${f.directory}/backup/journal.sqlite` });
-        yield* client`CREATE TABLE unexpected_historical_table (value TEXT)`;
+        const olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution = yield* SqliteClient.make({
+          filename: `${f.directory}/backup/journal.sqlite`,
+        });
+        yield* olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution`CREATE TABLE unexpected_historical_table (value TEXT)`;
       }).pipe(Effect.scoped);
       const bytes = yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`);
       const manifest = ObservationBackupManifest.make({
