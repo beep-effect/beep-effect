@@ -114,8 +114,6 @@ export type JournalWriteError =
 export type JournalReadError = JournalNotFound | InvalidSlice | InvalidUtf8 | PlatformError.PlatformError;
 
 /**
- * Options for one append.
- *
  * **Example** (Select an append partition)
  * ```ts import.meta.vitest name="Select an append partition"
  * import { AppendOptions } from "@beep/jsonl/Journal";
@@ -389,8 +387,6 @@ const Capacity = S.Int.check(S.isGreaterThan(0)).pipe(
 );
 
 /**
- * Configuration for one journal layer.
- *
  * **Details**
  *
  * Optional keys are exact (EF-40, kept deviation 24): omit a key rather than

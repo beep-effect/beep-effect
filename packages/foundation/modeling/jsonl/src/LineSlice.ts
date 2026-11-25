@@ -10,8 +10,6 @@ import * as S from "effect/Schema";
 const $I = $JsonlId.create("LineSlice");
 
 /**
- * A non-negative integer UTF-8 byte count or offset.
- *
  * **Details**
  *
  * The owning field specifies whether an offset is physical or post-BOM logical.
@@ -39,8 +37,6 @@ export const ByteCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
 export type ByteCount = typeof ByteCount.Type;
 
 /**
- * A single candidate line: its text, and where it lives in the source **in bytes**.
- *
  * **Details**
  *
  * Every offset on this class is a UTF-8 byte offset, never a UTF-16 code-unit

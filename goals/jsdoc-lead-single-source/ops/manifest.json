@@ -4,13 +4,13 @@
     "id": "jsdoc-lead-single-source",
     "packetId": "goal-packet/v1:1d045d51847d24b1d337deab7f0a355e7fd41ced96e8349a3bbc1c545eeef141",
     "title": "JSDoc Lead Single Source",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-22",
-    "updated": "2026-11-22",
+    "updated": "2026-11-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/jsdoc-lead-single-source",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Single-source JSDoc leads from $I.annote descriptions and stop requiring restating leads on type companions and barrels.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3535,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -55,22 +61,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -84,5 +90,10 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3535
+  },
+  "retentionReason": "Documents a live system: the lead-source law (docgen derives a missing JSDoc lead from the $I.annote* description), the restating-lead ratchet in the JSDoc inventory, and the derived-lead rule in beep/require-description. The 507 restating leads left in fenced and lane-owned files are named in decisions/2026-11-24-wave-6-deferred-packages.md for a later deploy-worded wave."
 }

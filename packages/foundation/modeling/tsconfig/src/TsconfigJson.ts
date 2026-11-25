@@ -330,8 +330,6 @@ const TypeAcquisitionFields = S.Struct({
 });
 
 /**
- * `typeAcquisition` — the automatic type-acquisition settings, with unknown keys preserved.
- *
  * **Example** (Decode automatic type acquisition settings)
  *
  * ```ts
@@ -652,8 +650,6 @@ export const TsconfigJsonFromString: S.Codec<TsconfigJson, string> = Jsonc.fromS
 export type TsconfigJsonFromString = typeof TsconfigJsonFromString.Type;
 
 /**
- * Raised when a tsconfig.json document fails to parse or decode.
- *
  * **Details**
  *
  * `path` is

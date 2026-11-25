@@ -108,8 +108,6 @@ export class MdParseOptions extends S.Opaque<MdParseOptions, { readonly brand: u
 ) {}
 
 /**
- * Companion types for {@link MdParseOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -148,8 +146,6 @@ export const MdParseFailure = S.Union([MdParseError, MdFrontmatterError]).pipe(
 );
 
 /**
- * Type for {@link MdParseFailure}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -184,8 +180,6 @@ export const MdParseSafeFailure = S.Union([MdParseError, MdFrontmatterError, MdU
 );
 
 /**
- * Type for {@link MdParseSafeFailure}.
- *
  * @category type-level
  * @since 0.0.0
  */

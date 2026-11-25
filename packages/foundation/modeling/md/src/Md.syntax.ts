@@ -69,8 +69,6 @@ import type { SafeDocument } from "./Md.safe.ts";
 const $I = $MdId.create("Md.syntax");
 
 /**
- * Why the bridge could not carry a piece of the syntax tree unchanged.
- *
  * **Details**
  *
  * One reason per lossy or unsupported construct. Trivia is never a loss.
@@ -118,8 +116,6 @@ export const MdLossReason = LiteralKit([
 );
 
 /**
- * Type for {@link MdLossReason}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -148,8 +144,6 @@ export const MdLossSeverity = LiteralKit(["lossy", "unsupported"]).pipe(
 );
 
 /**
- * Type for {@link MdLossSeverity}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -182,8 +176,6 @@ const severityOf = MdLossReason.match({
 });
 
 /**
- * One construct the bridge could not carry unchanged.
- *
  * **Details**
  *
  * `nodeKind` is the syntax-tree `type` of the source node and `position` its
@@ -238,8 +230,6 @@ export class MdLoss extends S.Opaque<MdLoss, { readonly brand: unique symbol }>(
 ) {}
 
 /**
- * Companion types for {@link MdLoss}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -302,16 +292,12 @@ export const MdSourceOrigin = LiteralKit(["parsed", "recognized", "merged", "syn
 );
 
 /**
- * Type for {@link MdSourceOrigin}.
- *
  * @category type-level
  * @since 0.0.0
  */
 export type MdSourceOrigin = typeof MdSourceOrigin.Type;
 
 /**
- * The source span of one Md node, stored at the node's pre-order ordinal.
- *
  * **Details**
  *
  * `descendants` counts the node's Md descendants, so a walk skips a whole
@@ -363,8 +349,6 @@ export class MdSourceEntry extends S.Opaque<MdSourceEntry, { readonly brand: uni
 ) {}
 
 /**
- * Companion types for {@link MdSourceEntry}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -379,8 +363,6 @@ export declare namespace MdSourceEntry {
 }
 
 /**
- * Pre-order source map from Md nodes to syntax-tree positions.
- *
  * **Details**
  *
  * Entry 0 is the document, then every Md node in pre-order. The map is keyed
@@ -430,8 +412,6 @@ export class MdSourceMap extends S.Opaque<MdSourceMap, { readonly brand: unique 
 }
 
 /**
- * Companion types for {@link MdSourceMap}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -607,8 +587,6 @@ export const MdHtmlPolicy = LiteralKit(["escapeAsText", "rawHtml", "drop"]).pipe
 );
 
 /**
- * Type for {@link MdHtmlPolicy}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -636,8 +614,6 @@ export const MdHtmlCommentPolicy = LiteralKit(["drop", "asHtml"]).pipe(
 );
 
 /**
- * Type for {@link MdHtmlCommentPolicy}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -664,8 +640,6 @@ export const MdAutolinkLiteralPolicy = LiteralKit(["link", "text"]).pipe(
 );
 
 /**
- * Type for {@link MdAutolinkLiteralPolicy}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -692,8 +666,6 @@ export const MdSoftBreak = LiteralKit(["space", "newline"]).pipe(
 );
 
 /**
- * Type for {@link MdSoftBreak}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -720,8 +692,6 @@ export const MdFrontmatterPolicy = LiteralKit(["decode", "drop"]).pipe(
 );
 
 /**
- * Type for {@link MdFrontmatterPolicy}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -748,8 +718,6 @@ export const MdFrontmatterFailure = LiteralKit(["loss", "fail"]).pipe(
 );
 
 /**
- * Type for {@link MdFrontmatterFailure}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -861,8 +829,6 @@ export class MdSyntaxOptions extends S.Opaque<MdSyntaxOptions, { readonly brand:
 ) {}
 
 /**
- * Companion types for {@link MdSyntaxOptions}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -910,8 +876,6 @@ export class MdFromSyntax extends S.Opaque<MdFromSyntax, { readonly brand: uniqu
 ) {}
 
 /**
- * Companion types for {@link MdFromSyntax}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -946,8 +910,6 @@ export const MdFrontmatterErrorReason = LiteralKit(["invalid", "notObject"]).pip
 );
 
 /**
- * Type for {@link MdFrontmatterErrorReason}.
- *
  * @category type-level
  * @since 0.0.0
  */

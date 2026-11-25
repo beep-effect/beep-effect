@@ -34,10 +34,6 @@ const classifyDiff: {
 });
 
 /**
- * The difference between two {@link SemVer} versions: the classification of
- * the change plus signed numeric deltas. A `Schema.TaggedClass`, so a serialized
- * diff carries a `_tag` discriminator.
- *
  * **Details**
  *
  * The `type` field is the highest-precedence field that differs: `"major"`,

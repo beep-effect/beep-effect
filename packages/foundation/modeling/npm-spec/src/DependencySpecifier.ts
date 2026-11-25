@@ -40,8 +40,6 @@ import type * as Brand from "effect/Brand";
 const $I = $NpmSpecId.create("DependencySpecifier");
 
 /**
- * Indicates that a string could not be parsed as a valid dependency specifier.
- *
  * **Details**
  *
  * Raised by {@link DependencySpecifier.decode}. The offending string is
@@ -98,8 +96,6 @@ export class InvalidDependencySpecifierError extends S.TaggedError<
 }
 
 /**
- * The classification of a dependency specifier's protocol.
- *
  * **Example** (Recognizing a dependency protocol)
  *
  * ```ts
@@ -414,9 +410,6 @@ const RecognizedSpecifier = S.Union([
 export const isValidDependencySpecifier = S.is(RecognizedSpecifier);
 
 /**
- * A `catalog:` reference. `name` carries the catalog name, or `Option.none()`
- * for the default catalog (`catalog:`).
- *
  * **Example** (Represent the default catalog)
  *
  * ```ts
@@ -450,9 +443,6 @@ export class CatalogSpecifier extends S.Opaque<CatalogSpecifier, { readonly bran
 ) {}
 
 /**
- * A `workspace:` reference. `range` carries the part after `workspace:` — a
- * range modifier (`*`, `^`, `~`), a concrete range, or an alias form.
- *
  * **Example** (Represent a workspace range)
  *
  * ```ts
@@ -523,8 +513,6 @@ export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier, { read
 }
 
 /**
- * A plain semver range or exact version (e.g. `^1.2.3`, `1.x`, `>=1 <2`).
- *
  * **Example** (Preserve a semver range)
  *
  * ```ts
@@ -550,8 +538,6 @@ export class RangeSpecifier extends S.Opaque<RangeSpecifier, { readonly brand: u
 ) {}
 
 /**
- * A bare dist-tag (e.g. `latest`, `next`).
- *
  * **Example** (Preserve a distribution tag)
  *
  * ```ts
@@ -575,9 +561,6 @@ export class DistTagSpecifier extends S.Opaque<DistTagSpecifier, { readonly bran
 ) {}
 
 /**
- * The honest fallback for `file:` / `link:` / `portal:` / git / URL / `npm:`
- * forms this concept does not further interpret.
- *
  * **Example** (Preserve a local dependency)
  *
  * ```ts

@@ -123,9 +123,6 @@ export const OpenRecordField = S.Record(S.String, S.Unknown).pipe(
 export type OpenRecordField = typeof OpenRecordField.Type;
 
 /**
- * The `browser` field: a replacement entry-point path, or a map of module
- * replacements where `false` blocks a module.
- *
  * **Example** (Block a Node module in the browser build)
  *
  * ```ts
@@ -154,8 +151,6 @@ export const BrowserField = S.Union([S.String, S.Record(S.String, S.Union([S.Str
 export type BrowserField = typeof BrowserField.Type;
 
 /**
- * The `man` field: one man page path or a list of them.
- *
  * **Example** (Decode a single man page)
  *
  * ```ts
@@ -250,9 +245,6 @@ export const OverrideValue = S.suspend(
 export type OverrideValue = string | { readonly [key: string]: OverrideValue };
 
 /**
- * The npm `overrides` field: dependency names mapped to a replacement
- * specifier or a nested object of scoped overrides.
- *
  * **Example** (Override a transitive dependency under a parent)
  *
  * ```ts
@@ -281,9 +273,6 @@ export const OverridesField = S.Record(S.String, OverrideValue).pipe(
 export type OverridesField = typeof OverridesField.Type;
 
 /**
- * The TypeScript `typesVersions` field: version ranges mapped to path
- * patterns and their redirect lists.
- *
  * **Example** (Redirect declarations for older compilers)
  *
  * ```ts
@@ -379,8 +368,6 @@ export class WorkspacesConfig extends S.Opaque<WorkspacesConfig, { readonly bran
 ) {}
 
 /**
- * Companion types for {@link WorkspacesConfig}.
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -395,9 +382,6 @@ export declare namespace WorkspacesConfig {
 }
 
 /**
- * The `workspaces` field: a list of package globs, or the object form
- * ({@link WorkspacesConfig}).
- *
  * **Example** (Decode workspace globs)
  *
  * ```ts

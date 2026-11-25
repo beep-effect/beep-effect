@@ -21,8 +21,6 @@ import * as Str from "effect/String";
 const $I = $NpmSpecId.create("RegistryCredential");
 
 /**
- * A basic-auth username contains the credential separator.
- *
  * **Example** (Inspecting a rejected username)
  * ```ts
  * import { InvalidBasicAuthUsernameError } from "@beep/npm-spec/RegistryCredential";

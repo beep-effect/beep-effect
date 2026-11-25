@@ -23,8 +23,6 @@ import { SemVer } from "./SemVer.ts";
 const $I = $SemverId.create("Range");
 
 /**
- * Indicates that a string could not be parsed as a range expression.
- *
  * **Details**
  *
  * Raised by {@link Range.parse} and `VersionCache.resolveString` (which
@@ -114,8 +112,6 @@ const pickSatisfying =
   };
 
 /**
- * A SemVer range expression: a union (OR) of {@link ComparatorSet}s.
- *
  * **Details**
  *
  * Supports node-semver syntax — hyphen ranges (`1.0.0 - 2.0.0`), X-ranges
@@ -701,8 +697,6 @@ export class Range extends S.Class<
 }
 
 /**
- * Indicates that intersecting ranges produced no satisfiable comparator set.
- *
  * **Details**
  *
  * Raised by {@link Range.intersect} when the constraints are mutually

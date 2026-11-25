@@ -46,8 +46,6 @@ const LF = 0x0a;
 export const DEFAULT_WINDOW = 8192;
 
 /**
- * A decoded tail window.
- *
  * **Example** (Describe a complete tail window)
  *
  * ```ts import.meta.vitest name="Describe a complete tail window"
@@ -238,9 +236,6 @@ export const readRangeWindow: {
 );
 
 /**
- * One bounded page of a historical range, read through the handle a reader
- * opened when it sampled the range.
- *
  * **Details**
  *
  * `from` is the page's physical offset and `length` the bytes it must cover;

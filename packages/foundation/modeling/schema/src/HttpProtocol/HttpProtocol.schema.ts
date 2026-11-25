@@ -10,8 +10,6 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 const $I = $SchemaId.create("HttpProtocol");
 
 /**
- * An HTTP protocol ("http" or "https")
- *
  * **Example** (Check https in options)
  *
  * ```ts
@@ -30,7 +28,6 @@ export const HttpProtocol = LiteralKit(["http", "https"]).pipe(
 );
 
 /**
- * {@inheritDoc HttpProtocol}
  * @category validation
  * @since 0.0.0
  */

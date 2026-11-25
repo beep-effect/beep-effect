@@ -10,8 +10,6 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 const $I = $SchemaId.create("Sex");
 
 /**
- * The sex of a person ("male" or "female").
- *
  * **Example** (Check female in Options)
  *
  * ```ts
@@ -29,7 +27,6 @@ export const Sex = LiteralKit(["male", "female"]).pipe(
   })
 );
 /**
- * {@inheritDoc Sex}
  * @category validation
  * @since 0.0.0
  */
