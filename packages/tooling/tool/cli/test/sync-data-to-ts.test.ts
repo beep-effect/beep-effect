@@ -1128,10 +1128,16 @@ const fixtureSpec = `<html><title>Fixture Datatypes</title>
 <h2 id="index">Index</h2><table><tr><td><code><a href="#boolean">dt:boolean</a></code></td></tr></table>
 <h2 id="after"><code>dt:date</code></h2></html>
 `;
+const fixtureOpenTurtle = `@prefix ex: <https://example.test/ns#> .
+ex:open a owl:Class`;
+const fixtureOpenSpec = `<html><title>Fixture Datatypes</title>
+<section id="open"><code>dt:open</code>`;
 const fixtureTexts: Record<string, string> = {
   "https://example.test/ex.ttl": fixtureTurtle,
   "https://example.test/sk.rdf": fixtureRdfXml,
   "https://example.test/dt.html": fixtureSpec,
+  "https://example.test/open.ttl": fixtureOpenTurtle,
+  "https://example.test/open.html": fixtureOpenSpec,
 };
 
 const fixtureSha256 = Effect.fn("fixtureSha256")(function* (text: string) {
@@ -1316,6 +1322,27 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
         { ...dt, declaration: { _tag: "SpecDocument", section: "index", curiePrefix: "dt" }, terms: ["date"] },
       ]).pipe(Effect.flip);
       expect(spec.message).toContain("dt: curated terms have no declaration in the artifact: date");
+    })
+  );
+
+  it.effect("reads an unterminated last Turtle block and an unclosed last section to the artifact's end", () =>
+    Effect.gen(function* () {
+      const { dt, ex } = yield* fixturePins();
+      const openSpecDigest = yield* fixtureSha256(fixtureOpenSpec);
+      const openTurtleDigest = yield* fixtureSha256(fixtureOpenTurtle);
+      const projection = yield* acquireFixture([
+        {
+          ...dt,
+          location: "https://example.test/open.html",
+          sha256: openSpecDigest,
+          declaration: { _tag: "SpecDocument", section: "open", curiePrefix: "dt" },
+          terms: ["open"],
+        },
+        { ...ex, location: "https://example.test/open.ttl", sha256: openTurtleDigest, terms: ["open"] },
+      ]);
+      const shards = A.map(A.take(projection.files, 2), (file) => file.content);
+      expect(shards[0]).toContain('"terms": ["open"]');
+      expect(shards[1]).toContain('"terms": ["open"]');
     })
   );
 
