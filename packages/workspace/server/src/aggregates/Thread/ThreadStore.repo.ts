@@ -140,12 +140,12 @@ const makePublicIdGenerators = Effect.fn("Workspace.ThreadStore.makePublicIdGene
   return {
     appendTurn: Effect.all(
       {
-        messagePublicId: PublicEntityId.generate(WorkspaceIdentity.MessageId),
-        turnPublicId: PublicEntityId.generate(WorkspaceIdentity.TurnId),
+        messagePublicId: PublicEntityId.generate(WorkspaceIdentity.MessageId).pipe(Effect.provide(context)),
+        turnPublicId: PublicEntityId.generate(WorkspaceIdentity.TurnId).pipe(Effect.provide(context)),
         now: Clock.currentTimeMillis,
       },
       { concurrency: 1 }
-    ).pipe(Effect.provide(context)),
+    ),
     thread: PublicEntityId.generate(WorkspaceIdentity.ThreadId).pipe(Effect.provide(context)),
   };
 });
