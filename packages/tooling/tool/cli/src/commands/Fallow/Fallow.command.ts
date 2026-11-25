@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { workspaceDependencyGraph, workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
@@ -387,7 +387,7 @@ const runFallowBoundaryReport = Effect.fn("Fallow.runFallowBoundaryReport")(func
   const jsonText = yield* pipe(
     extractJsonDocumentText(output),
     O.match({
-      onNone: () => failWithReportedExit("fallow boundaries: Fallow did not emit a JSON boundary report."),
+      onNone: () => failWithPrintedExit("fallow boundaries: Fallow did not emit a JSON boundary report."),
       onSome: Effect.succeed,
     })
   );

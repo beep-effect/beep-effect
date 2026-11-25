@@ -7,7 +7,7 @@
  * @since 0.0.0
  */
 
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { jsonFlag } from "@beep/repo-cli-kit/cli/Flags";
 import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
@@ -81,7 +81,7 @@ const catalogCommand = Command.make(
   },
   Effect.fn(function* ({ write, check, stage, json, paths }) {
     if (write && check) {
-      return yield* failWithReportedExit("observability catalog: pass --write or --check, not both.");
+      return yield* failWithPrintedExit("observability catalog: pass --write or --check, not both.");
     }
     const report = yield* InstrumentationCatalog.use((catalog) =>
       catalog.run(write ? "write" : "check", A.filter(paths, P.isString))

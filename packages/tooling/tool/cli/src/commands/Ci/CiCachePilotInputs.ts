@@ -15,7 +15,7 @@
 
 import * as NodeBuffer from "node:buffer";
 import * as NodeZlib from "node:zlib";
-import { CliReportedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { CliReportedExit, failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -528,7 +528,7 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
     // `$(git rev-parse HEAD)` drops trailing newlines before the comparison.
     const revision = yield* variable("GITHUB_SHA");
     if (Str.replace(/\n+$/u, "")(head.output) !== revision)
-      return yield* failWithReportedExit("Checkout is not at GITHUB_SHA.");
+      return yield* failWithPrintedExit("Checkout is not at GITHUB_SHA.");
     // KEEP (D-22): the clean-checkout guard reads `diff --quiet`'s exit status as the step's own exit code;
     // the kit has no exit-status member.
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above

@@ -6,7 +6,7 @@
  */
 
 import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { isLabsWorkspaceDir } from "@beep/repo-cli-kit/cli/Labs/index";
 import { qualityStepOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -279,7 +279,7 @@ const runDeprecatedApiLintTargets = Effect.fn("Lint.deprecatedApiTargets")(funct
   scoped: boolean
 ) {
   if (scoped) {
-    return yield* failWithReportedExit("lint deprecated-apis: --target cannot be combined with --package or --full.");
+    return yield* failWithPrintedExit("lint deprecated-apis: --target cannot be combined with --package or --full.");
   }
   const root = yield* findRepoRoot();
   const resolved = yield* Effect.forEach(targets, (entry) => resolveLintPackage(root, entry), { concurrency: 1 });

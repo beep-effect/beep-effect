@@ -12,7 +12,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
@@ -79,7 +79,7 @@ const runnerResourcesCommand = Command.make(
     args: Argument.String("args").pipe(Argument.variadic),
   },
   Effect.fn("Ci.runRunnerResources")(function* ({ lane, command, args }) {
-    if (!isResourceLane(lane)) return yield* failWithReportedExit("Invalid resource lane name", 64);
+    if (!isResourceLane(lane)) return yield* failWithPrintedExit("Invalid resource lane name", 64);
     const values = yield* decodeCiRuntimeArguments(args).pipe(
       CiCommandError.mapError("Runtime arguments must be strings.")
     );

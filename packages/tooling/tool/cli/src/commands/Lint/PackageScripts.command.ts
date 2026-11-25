@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { PackageScriptsReportFromWire } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { PackageScriptsPolicy } from "@beep/repo-cli-kit/package-scripts/PackageScriptsPolicy";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
@@ -68,7 +68,7 @@ export const lintPackageScriptsCommand = Command.make(
     implDrift: Flag.Boolean("impl-drift").pipe(Flag.withDefault(false)),
   },
   Effect.fn("lintPackageScripts")(function* ({ check, write, json, implDrift }) {
-    if (check && write) return yield* failWithReportedExit("Choose --check or --write, not both.");
+    if (check && write) return yield* failWithPrintedExit("Choose --check or --write, not both.");
     const root = yield* findRepoRoot();
     const policy = yield* PackageScriptsPolicy.make(root);
     const report = yield* write ? policy.write(root) : policy.check(root);

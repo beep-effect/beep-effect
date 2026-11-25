@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -66,11 +66,11 @@ const runIdentityRegistry = Effect.fn("IdentityRegistry.run")(function* (options
   readonly base: O.Option<string>;
 }) {
   if (options.write && options.check) {
-    return yield* failWithReportedExit("identity registry: pass --write or --check, not both.");
+    return yield* failWithPrintedExit("identity registry: pass --write or --check, not both.");
   }
   if (!options.write && O.isSome(options.base)) {
-    return yield* failWithReportedExit(
-      "identity registry: --base applies to --write; compare with a base ref through `bun run beep lint identity-registry --base <ref>`."
+    return yield* failWithPrintedExit(
+      "identity registry: --base applies only to --write; --check compares the artifacts with the shards and reads no git state. Check against a base ref with `bun run beep lint identity-registry --base <ref>`."
     );
   }
   const repoRoot = yield* findRepoRoot().pipe(
