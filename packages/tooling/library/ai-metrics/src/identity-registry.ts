@@ -856,8 +856,8 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
     generatedAtEpochMillis: nowEpochMillis,
     hashSaltNamespaceId: O.some(hashSaltNamespaceId),
     hashSaltStatus,
-    roots: pipe(A.fromIterable(MutableHashMap.values(rootsById)), A.sort(byRootId)),
-    sourceInstances: pipe(A.fromIterable(MutableHashMap.values(instancesById)), A.sort(byInstanceIdHash)),
+    roots: rootsById.pipe(MutableHashMap.values, A.fromIterable, A.sort(byRootId)),
+    sourceInstances: instancesById.pipe(MutableHashMap.values, A.fromIterable, A.sort(byInstanceIdHash)),
   });
 
   const content = yield* identityRegistryToJson(registry);

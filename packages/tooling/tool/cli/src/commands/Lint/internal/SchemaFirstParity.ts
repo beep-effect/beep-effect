@@ -147,8 +147,8 @@ export const diffSchemaFirstParity: {
     )
   );
   const membership = diffMembership({
-    current: A.fromIterable(HashMap.keys(liveByKey)),
-    baseline: A.fromIterable(HashMap.keys(baselineByKey)),
+    current: liveByKey.pipe(HashMap.keys, A.fromIterable),
+    baseline: baselineByKey.pipe(HashMap.keys, A.fromIterable),
     equivalence: Str.Equivalence,
     order: Order.String,
   });

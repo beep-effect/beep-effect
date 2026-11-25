@@ -423,8 +423,9 @@ export const diffEffectSchemaInventoryFiles: {
         })
       )
     );
-    const unexpected = pipe(
-      A.fromIterable(HashMap.keys(actual)),
+    const unexpected = actual.pipe(
+      HashMap.keys,
+      A.fromIterable,
       A.filter((name) => !HashSet.has(expectedNames, name)),
       A.sort(Order.String),
       A.map((file) => EffectSchemaInventoryDrift.cases.unexpected.make({ file }))

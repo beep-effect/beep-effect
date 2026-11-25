@@ -256,8 +256,9 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
     }),
     listThreads: Effect.fn("Workspace.ThreadStore.listThreads")(function* (workspaceId) {
       const state = yield* Ref.get(store);
-      return pipe(
-        A.fromIterable(HashMap.values(state.threads)),
+      return state.threads.pipe(
+        HashMap.values,
+        A.fromIterable,
         A.filter((thread) => WorkspaceIdentity.WorkspaceId.equivalence(thread.workspaceId, workspaceId))
       );
     }),
@@ -300,8 +301,9 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
       const turnPublicId = yield* publicIds.turn;
       const now = yield* Clock.currentTimeMillis;
       return yield* Ref.modify(store, (current) => {
-        const existingTurns = pipe(
-          A.fromIterable(HashMap.values(current.turns)),
+        const existingTurns = current.turns.pipe(
+          HashMap.values,
+          A.fromIterable,
           A.filter((turn) => WorkspaceIdentity.ThreadId.equivalence(turn.threadId, input.threadId))
         );
         const turnIndex = S.Natural.make(existingTurns.length);
@@ -339,8 +341,9 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
       if (O.isNone(HashMap.get(state.threads, threadId))) {
         return yield* ThreadStoreServer.Thread.ThreadStoreNotFound.make({ threadId });
       }
-      const turns = pipe(
-        A.fromIterable(HashMap.values(state.turns)),
+      const turns = state.turns.pipe(
+        HashMap.values,
+        A.fromIterable,
         A.filter((turn) => WorkspaceIdentity.ThreadId.equivalence(turn.threadId, threadId))
       );
       return projectTimeline(threadId, turns, (messageId) => HashMap.get(state.messages, messageId));

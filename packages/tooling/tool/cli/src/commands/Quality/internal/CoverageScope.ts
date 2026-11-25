@@ -599,8 +599,9 @@ export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCo
   );
   const workspaceNames = packageMap.pipe(MutableHashMap.keys, MutableHashSet.fromIterable);
 
-  return pipe(
-    A.fromIterable(MutableHashMap.values(packageMap)),
+  return packageMap.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
     // The repository root declares a `coverage` script (the aggregate runner)
     // and depends on workspace packages, so it would otherwise be selected as
     // a dependent of nearly everything and recurse into the root task.

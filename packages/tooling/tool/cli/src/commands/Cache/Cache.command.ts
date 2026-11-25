@@ -602,7 +602,7 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
   };
   for (const run of runs) observeCacheRun(aggregation, run, changedFiles);
 
-  const observations = A.fromIterable(MutableHashMap.values(aggregation.firstTouches));
+  const observations = aggregation.firstTouches.pipe(MutableHashMap.values, A.fromIterable);
   const remoteHits = A.filter(observations, (row) => row.source === "REMOTE").length;
   const lambda = yield* parseLambdaLogs(lambdaLogs);
   const now3 = yield* DateTime.now;
@@ -1188,7 +1188,7 @@ const readProducerEnvironment = Effect.fn("Cache.readProducerEnvironment")(funct
   const encoded = yield* Config.Redacted("BEEP_CACHE_PRODUCER_ISSUER_MATERIAL_BASE64").pipe(
     Effect.mapError(() => CacheCommandError.new("Independently transferred producer issuer material is required."))
   );
-  if (Str.length(Redacted.value(encoded)) > 128)
+  if (encoded.pipe(Redacted.value, Str.length) > 128)
     return yield* CacheCommandError.new("Producer issuer transport exceeds its fixed encoded bound.");
   const material = yield* encoded.pipe(
     Redacted.value,

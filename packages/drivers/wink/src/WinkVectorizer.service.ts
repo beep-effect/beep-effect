@@ -233,7 +233,7 @@ const makeWinkVectorizer = Effect.gen(function* () {
     Bool.match(document.tokenCount > 0, {
       onFalse: () => readNormalizedTokensFromWink(engine, document, its),
       onTrue: () =>
-        Effect.succeed(A.fromIterable(pipe(Chunk.toReadonlyArray(document.tokens), A.map(normalizeTokenText)))),
+        document.tokens.pipe(Chunk.toReadonlyArray, A.map(normalizeTokenText), A.fromIterable, Effect.succeed),
     });
 
   const getTerms = (vectorizer: BM25VectorizerInstance): Effect.Effect<ReadonlyArray<string>, VectorizerError> =>
