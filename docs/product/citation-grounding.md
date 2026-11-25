@@ -53,15 +53,14 @@ history, and closed failures. `NO_CITATION` is a persisted negative extraction
 attempt, not a citation entity. Derived display and grouping views are
 recomputed rather than treated as source truth.
 
-## 3. Privileged text stays local
+## 3. Grounding is exact source equality
 
-The v1 path is local-only. Privileged source text never leaves the device, and
-no hosted parser or lookup result can substitute for exact equality against the
-local identified source.
+The v1 requirement is exact equality against the identified source. No hosted
+parser or lookup result can substitute for that equality.
 
 A later CourtListener lane is separately gated. It is opt-in, accepts only
 explicitly non-privileged text, carries managed authentication and audit
-metadata, and verifies or enriches after the local path is proven. It is never
+metadata, and verifies or enriches after the exact-equality path is proven. It is never
 the parser and never the grounding truth.
 
 ## 4. Three lanes, three gates

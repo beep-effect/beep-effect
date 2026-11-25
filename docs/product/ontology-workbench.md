@@ -3,7 +3,7 @@
 > Status: P6 hardening implemented locally; host verification and reflection
 > remain open. Product target: `apps/professional-desktop`.
 
-The ontology workbench is a local-first Turtle authoring surface for user
+The ontology workbench is a desktop Turtle authoring surface for user
 ontology documents. It adds an `ontology` vertical slice with RDF-backed
 sessions, typed change operations, Turtle open/save, hierarchy/search/editing,
 GPU-oriented graph projection, SPARQL querying, bounded structural inference,

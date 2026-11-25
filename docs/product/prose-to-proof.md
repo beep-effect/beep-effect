@@ -18,7 +18,7 @@
 
 ## 1. Summary
 
-Prose-to-Proof is a **local-first, provenance-grounded knowledge workbench for a solo IP
+Prose-to-Proof is a **provenance-grounded, IP-specialized knowledge workbench for a solo IP
 practice**. A document comes in; the system reads it, proposes structured claims grounded
 to the exact source text, surfaces them in a document-portal editor, and admits nothing to
 the practice's memory until the attorney approves. This PRD specs the **MVP**: extend the
@@ -44,7 +44,7 @@ Existing tooling forces a bad trade:
 - **Patent-specific tools** (Rowan Patents, PatentPal, Patlytics, Solve Intelligence,
   LexisNexis) are all cloud SaaS, and source-grounding is uneven. [7][8][9]
 
-**The gap:** *local-first **and** every-assertion-grounded **and** IP-specialized* is
+**The gap:** *every-assertion-grounded **and** IP-specialized **and** built for one practice* is
 essentially unoccupied. That intersection is the product wedge.
 
 ## 3. Goals & non-goals
@@ -53,7 +53,7 @@ essentially unoccupied. That intersection is the product wedge.
 - G1. Ingest a real matter's documents on the local machine and produce **candidate claims grounded to source spans**.
 - G2. Surface those claims in the **document-portal editor** with hover-card subgraph links (`artifact-ref`).
 - G3. Gate everything behind **attorney approval**; accepted claims persist with provenance.
-- G4. Keep it **local-first**: no client data leaves the device by default; embeddings on-device.
+- G4. Keep client content inside the practice: it leaves only through a configured provider or backend the attorney chose.
 - G5. Prove the **dogfooding loop** on one real matter end to end.
 
 **Non-goals (this increment)** — deferred, not rejected
@@ -128,9 +128,9 @@ to the exact text.*
 
 ## 8. Non-functional requirements
 
-- NFR-1 **Local-first:** on-device by default; no client content egress without an explicit backend choice; embeddings computed locally.
+- NFR-1 **Attorney-chosen egress:** client content leaves the practice only through a configured provider or backend the attorney chose.
 - NFR-2 **Provenance-complete:** 100% of accepted claims carry a resolvable evidence span; the validator rejects a claim whose span doesn't exist in the source.
-- NFR-3 **Walled matters:** matter = named subgraph = confidentiality boundary; joinable for conflict checks, sealed for substantive reads.
+- NFR-3 **Walled matters:** a matter wall is authorization at every access path; conflict checks run only under an explicit cross-matter grant, and substantive reads stay sealed.
 - NFR-4 **Storage-neutral domain:** PGlite is the first adapter; domain language must not depend on it.
 - NFR-5 **Determinism for tests:** fixture path produces snapshot-stable output independent of model nondeterminism.
 - NFR-6 **Effect-native & typed:** schema-first, typed errors, slice isolation per `standards/ARCHITECTURE.md`.
@@ -169,7 +169,7 @@ certification. (Mirrors `SPEC.md` and `runtime-data-loop.md` non-goals.)
 | Harvey / CoCounsel / Robin AI | Legal AI assistants | Cloud (some private-cloud) | **Yes**, strong inline citations | BigLaw / enterprise [1][2][3] |
 | Rowan / PatentPal / Patlytics / Solve | Patent drafting & prosecution AI | Cloud SaaS | Uneven; strongest in search/analysis | Patent practitioners [7][8][9] |
 | Elephas / GPT4All | Local/offline AI | **Local** | Weak; not legal-grade | Privacy-minded solos [6] |
-| **Prose-to-Proof** | Local IP workbench | **Local-first** | **Yes — every assertion, by hard guarantee** | **Solo IP practice** |
+| **Prose-to-Proof** | IP workbench | **One practice; providers the attorney configures** | **Yes — every assertion, by hard guarantee** | **Solo IP practice** |
 
 **Wedge:** none of the above occupy *local + every-assertion-grounded + IP-specialized*. The
 UX bar for "click a claim → jump to the highlighted source span" is set by Hebbia and Glean;

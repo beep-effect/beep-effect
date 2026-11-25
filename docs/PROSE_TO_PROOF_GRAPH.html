@@ -121,14 +121,14 @@
       <a class="tab on" href="PROSE_TO_PROOF_GRAPH.html">Graph</a>
       <a class="tab" href="PROSE_TO_PROOF_CHAT.html">Chat</a>
     </div>
-    <span class="conn">local · on device</span>
+    <span class="conn">one practice · one workbench</span>
   </nav>
 
   <div class="wrap">
     <header>
       <div class="eyebrow">the <b>logic</b> family · one graph, walled by matter</div>
       <h1>The knowledge <span class="b">graph</span></h1>
-      <p class="thesis">Everything the practice has proven, in one place. A document is a provenance-coloured set of edges; a matter is a named subgraph — joinable for conflict checks, sealed for substantive reads. <b>Green is proven, amber is proposed, grey is context.</b> Drag a node, scroll to zoom, search to focus, click for its edges. This is a dummy of the live Graph-RAG view.</p>
+      <p class="thesis">Everything the practice has proven, in one place. A document is a provenance-coloured set of edges; a matter is walled by authorization — joinable for conflict checks only under an explicit grant, sealed for substantive reads. <b>Green is proven, amber is proposed, grey is context.</b> Drag a node, scroll to zoom, search to focus, click for its edges. This is a dummy of the live Graph-RAG view.</p>
     </header>
 
     <div class="toolbar">
@@ -160,7 +160,7 @@
       one logical graph · the Aanstoot matter sits in a cluster with the practice's other matters · the attorney node connects them all — which is exactly how a conflict check becomes a single query
     </div>
 
-    <footer>green proves · amber proposes · grey grounds · one graph, walled by matter · everything on device · <a href="PROSE_TO_PROOF_CHAT.html" style="color:var(--logic-soft)">see it ground an answer →</a></footer>
+    <footer>green proves · amber proposes · grey grounds · signals route to review · admission needs a grounding witness and a human token · every matter walled by authorization · <a href="PROSE_TO_PROOF_CHAT.html" style="color:var(--logic-soft)">see it ground an answer →</a></footer>
   </div>
 
   <div class="gtip" id="gtip"></div>
@@ -480,7 +480,7 @@ document.getElementById('ecount').textContent=c.e;
 function showDetail(n,edges){
   if(!n){ detail.classList.remove('show'); return; }
   const col = n.type==='matter'?COL.matter:COL[n.type];
-  const kind = n.type==='matter'?'matter · named subgraph':n.type==='entity'?'proven entity':n.type==='claim'?'proposed / claim':n.type==='artifact'?'evidence / artifact':'external context';
+  const kind = n.type==='matter'?'matter · walled':n.type==='entity'?'proven entity':n.type==='claim'?'proposed / claim':n.type==='artifact'?'evidence / artifact':'external context';
   const rows = (arr,dir)=>arr.map(e=>`<div class="erow" data-id="${e.node.id}"><span class="dir">${dir}</span><span class="rel">${e.label}</span><span>${e.node.label}</span></div>`).join('') || `<div class="erow" style="color:var(--ink-faint)">— none —</div>`;
   detail.innerHTML =
     `<div class="dh"><i style="background:${col}"></i><div><div class="dt">${n.label}</div><div class="dk">${kind} · ${n.degree} edges</div></div><span class="dx" id="dclose">✕</span></div>`+
