@@ -439,9 +439,6 @@
       "path": "packages/foundation/modeling/schema"
     },
     {
-      "path": "packages/foundation/modeling/schema-org"
-    },
-    {
       "path": "packages/foundation/modeling/semver"
     },
     {

@@ -449,7 +449,6 @@ const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
   "@beep/sanity": 2.4,
   "@beep/sbom": 4,
   "@beep/schema": 5.1,
-  "@beep/schema-org": 3,
   "@beep/semantic-web": 2.5,
   "@beep/semantica": 23,
   "@beep/semver": 5.7,

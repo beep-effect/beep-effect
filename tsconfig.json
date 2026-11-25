@@ -2056,13 +2056,6 @@
       "@beep/jsonl/internal/*": [
         "./packages/foundation/modeling/jsonl/src/internal/*"
       ],
-      "@beep/schema-org": [
-        "./packages/foundation/modeling/schema-org/src/index.ts"
-      ],
-      "@beep/schema-org/*": ["./packages/foundation/modeling/schema-org/src/*"],
-      "@beep/schema-org/internal/*": [
-        "./packages/foundation/modeling/schema-org/src/internal/*"
-      ],
       "@beep/semver": ["./packages/foundation/modeling/semver/src/index.ts"],
       "@beep/semver/*": ["./packages/foundation/modeling/semver/src/*"],
       "@beep/semver/internal/*": [

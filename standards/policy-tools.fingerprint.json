@@ -653,7 +653,6 @@
     "packages/foundation/modeling/public-site/package.json",
     "packages/foundation/modeling/rdf/package.json",
     "packages/foundation/modeling/sbom/package.json",
-    "packages/foundation/modeling/schema-org/package.json",
     "packages/foundation/modeling/schema/package.json",
     "packages/foundation/modeling/schema/src/**",
     "packages/foundation/modeling/semver/package.json",

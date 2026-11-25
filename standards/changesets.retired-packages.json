@@ -39,6 +39,10 @@
     {
       "name": "@beep/provenance",
       "rationale": "Retired by goals/text-knowledge-stack-rebuild P2: its three modules moved to @beep/text with every consumer in the same commit and no alias. Name-reuse guard; recover the source from commit 79469596a0."
+    },
+    {
+      "name": "@beep/schema-org",
+      "rationale": "Retired by goals/text-knowledge-stack-rebuild P7: no importer or dependent, deleted whole with no successor. Name-reuse guard; recover the source from commit 8bdd55d39f4."
     }
   ]
 }

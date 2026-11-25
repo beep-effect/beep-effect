@@ -492,7 +492,7 @@ describe("CI lane partitions", () => {
       { id: "law-practice-6", packages: 1, weightSeconds: 364 },
       { id: "law-practice-7", packages: 1, weightSeconds: 364 },
       { id: "law-practice-8", packages: 1, weightSeconds: 364 },
-      { id: "unit-a", packages: 26, weightSeconds: 594 },
+      { id: "unit-a", packages: 25, weightSeconds: 594 },
       { id: "unit-b", packages: 28, weightSeconds: 593 },
       { id: "unit-c", packages: 27, weightSeconds: 594 },
       { id: "unit-d", packages: 27, weightSeconds: 594 },

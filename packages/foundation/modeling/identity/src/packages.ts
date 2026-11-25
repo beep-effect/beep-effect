@@ -217,7 +217,6 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "jsonl",
   "semver",
   "spdx",
-  "schema-org",
   "github-references",
   "github-commands",
   "commands",
@@ -3205,24 +3204,6 @@ export const $SemverId: Identity.IdentityComposer<"@beep/semver"> = /*#__PURE__*
  * @since 0.0.0
  */
 export const $SpdxId: Identity.IdentityComposer<"@beep/spdx"> = /*#__PURE__*/ $I.create("spdx");
-
-/**
- * Identity composer for `@beep/schema-org`.
- *
- * **Example** (Make package ID)
- *
- * ```ts import.meta.vitest name="Make package ID"
- * import { $SchemaOrgId } from "@beep/identity/packages"
- *
- * const id = $SchemaOrgId.make("SchemaOrg")
- * console.log(id)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $SchemaOrgId: Identity.IdentityComposer<"@beep/schema-org"> = /*#__PURE__*/ $I.create("schema-org");
-
 /**
  * Identity composer for `@beep/github-references`.
  *

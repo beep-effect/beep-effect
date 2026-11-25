@@ -695,11 +695,6 @@
       "classification": "production"
     },
     {
-      "path": "packages/foundation/modeling/schema-org/package.json",
-      "source": "dependency-graph",
-      "classification": "production"
-    },
-    {
       "path": "packages/foundation/modeling/schema/package.json",
       "source": "dependency-graph",
       "classification": "production"

@@ -604,7 +604,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/palantiri",
       "@beep/practice-claude-mod",
       "@beep/repo-tsconfig",
-      "@beep/schema-org",
       "@beep/skill-contract",
       "@beep/spdx",
       "@beep/ui",

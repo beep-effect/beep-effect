@@ -3274,22 +3274,6 @@
         "fast-xml-builder": "catalog:",
       },
     },
-    "packages/foundation/modeling/schema-org": {
-      "name": "@beep/schema-org",
-      "version": "0.0.0",
-      "dependencies": {
-        "@beep/identity": "workspace:^",
-        "@beep/schema": "workspace:^",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@beep/fc-runs": "workspace:^",
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
-        "vitest": "catalog:",
-      },
-    },
     "packages/foundation/modeling/semver": {
       "name": "@beep/semver",
       "version": "0.0.0",
@@ -5738,8 +5722,6 @@
     "@beep/sbom": ["@beep/sbom@workspace:packages/foundation/modeling/sbom"],
 
     "@beep/schema": ["@beep/schema@workspace:packages/foundation/modeling/schema"],
-
-    "@beep/schema-org": ["@beep/schema-org@workspace:packages/foundation/modeling/schema-org"],
 
     "@beep/scratchpad": ["@beep/scratchpad@workspace:scratchpad"],
 
