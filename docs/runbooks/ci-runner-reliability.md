@@ -379,6 +379,44 @@ Overflow routing reads its pool size from `BEEP_SHARD_OVERFLOW_POOL_SIZE`
 `webhookUrl` and finds the group by its name, `beep-shard-overflow`, not by the
 label.
 
+### Webhook delivery and the 6b switch
+
+`workflow_job` events reach the fleet through repository webhook 714397446 on
+the function URL. The Pulumi controllers have two more, 663255260 (heavy) and
+711445970 (overflow), on `execute-api` URLs. Cutover step 6b, at
+2026-11-26T16:00Z, deletes those two and keeps 714397446 as the only fleet
+path. The runner App's webhook is not moved to the function URL. The
+missed-event check reads repository hook deliveries, but an App's deliveries
+need its JWT.
+
+Before the switch:
+
+- the CI goals driver's word;
+- one green missed-event check run on a `main` commit that contains #3539;
+- an hour of its own, overlapping no other CI-behaviour change;
+- no busy `beep-ci-*` runner at T-5 min (step 6(a)).
+
+The runner App's webhook (`beep-ci-fleet-controller`) still delivers
+`workflow_job` to the Pulumi heavy controller's `execute-api` URL. At T it is
+set inactive: untick Active on the App's settings page, which needs GitHub's
+sudo-mode re-authentication. This stops its deliveries and leaves the App's
+installation tokens and JIT configs working. `beep github app` only mints an
+App, so the change goes through the settings page.
+
+At T, the operator:
+
+1. Deletes repository webhooks 663255260 and 711445970 and sets the App
+   webhook inactive.
+2. Checks that `gh api repos/beep-effect/beep-effect/hooks` lists only
+   714397446 and that the App's settings page shows its webhook inactive.
+3. Checks that the next fleet job's queued delivery on 714397446 returns 2xx
+   and a `beep-fleet-*` runner picks the job up.
+4. Checks that the next missed-event check run reports `Delivered` evidence.
+
+To roll back, re-create the two hooks on the controllers' recorded URLs and
+tick Active on the App webhook again. The plan is
+`goals/infra-alchemy-rebuild/decisions/2026-11-25-ci-runners-6b-delete-execute-api-hooks.md`.
+
 The Pulumi fleet (`infra/ci-runners`, stack `beep-ci-runners/production`),
 idle after step 4 and destroyed at step 6:
 
