@@ -70,15 +70,18 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    `standards/architecture/`, the nine rulings of report section 7 plus the
    scoped amendment to the persisted-bytes clause of chapter 11 as dated
    `DECISIONS.md` entries with reversal clauses, the glossary entries of report
-   section 5, and `packages/foundation/modeling/nlp/THEORY.md` rewritten as a
-   narrative that links each structural claim to its test.
+   section 5, and `packages/foundation/modeling/nlp/THEORY.md` absorbed by
+   section 14 of the knowledge-stack chapter, which links each kept claim to its
+   ledger id and lists the withdrawn ones; the file is deleted with its package.
 9. One complete office-action flow runs end to end on synthetic fixtures with
    law-owned claim structure, per-authority-type assessment profiles and an
    attorney admission bound to actor, action and revision, and it stays green
    at every phase exit from P3 on.
 10. Package topology is executed, not deferred: `@beep/text` replaces
     `@beep/provenance`, `@beep/annotation` exists, `@beep/nlp-processing`
-    absorbs `nlp/Operations` and `nlp/Algebra`, `@beep/nlp` is retired, and
+    replaces `nlp/Operations` and `nlp/Algebra` with `Operation` and
+    `ActivityLogReducer` after the census, and takes `Core` and the graph node
+    schemas, `@beep/nlp` is retired, and
     `@beep/schema-org` is retired whole (census: no consumer), each through
     `bun run beep create-package` and the retirement procedure with the
     consumer migration in the same PR.
