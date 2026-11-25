@@ -89,14 +89,13 @@
     "@beep/jsonc": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
-    "effect": "catalog:",
-    "@beep/text": "workspace:^"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
-    "@beep/text": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:"
