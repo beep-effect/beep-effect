@@ -52,6 +52,12 @@ projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is n
 
 ## Latest Evidence
 
+2026-11-25: P2 part 2 built: the shared `heavy.yml` lane steps render the gate-report projection
+and upload `task-outcomes-<run>-<attempt>-<job>-<lane>` for Lint Policy, Check, Docgen, Doctest
+and Build, with the record's job named `Heavy / <lane>` (decision
+`p2-part-2-built-heavy-yml-lanes-upload-gate-reports`). `heavy.yml` runs from `main`, so the
+first `main` run after the merge is the proof.
+
 2026-11-23: P2 gaps closed in code, no workflow change: a hosted `ci lane` step that writes no
 gate record now records a `lane` root run from its exit code and log, and counts the annotations
 its output wrote for `append-gate-reports` (decisions `lane-step-gate-records`,
