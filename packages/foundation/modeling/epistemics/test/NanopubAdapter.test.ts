@@ -556,7 +556,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
       const dropped = yield* outcomes(without(twoDigests.dataset, P.sourceDigest));
       expect(dropped).toStrictEqual(["stale-publication-id", "stale-publication-id"]);
       const otherDigest = Sha256PrefixedDigest.make(`sha256:${Str.repeat(64)("0")}`);
-      const swapped = replaceObject(twoDigests.dataset, P.sourceDigest, Rdf.makeLiteral(otherDigest, xsdString));
+      const swapped = replaceObject(twoDigests.dataset, P.sourceDigest, Rdf.Literal.typed(otherDigest, xsdString));
       const swappedOutcome = yield* outcomes(swapped);
       expect(swappedOutcome).toStrictEqual(["stale-publication-id", "stale-publication-id"]);
       const republished = yield* publish(baseCore(), metadataAt(1000, O.some(otherDigest)));

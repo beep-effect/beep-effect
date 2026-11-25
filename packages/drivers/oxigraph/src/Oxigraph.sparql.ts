@@ -177,13 +177,10 @@ const fromOxigraphGraph = (graph: Oxigraph.Graph): Rdf.GraphTerm =>
 const fromOxigraphTerm = (term: Oxigraph.Term): Result.Result<Rdf.Term, OxigraphSparqlError> =>
   Match.value(term).pipe(
     Match.withReturnType<Result.Result<Rdf.Term, OxigraphSparqlError>>(),
-    Match.discriminator("termType")("NamedNode", (value) => Result.succeed(Rdf.makeNamedNode(value.value))),
-    Match.discriminator("termType")("BlankNode", (value) => Result.succeed(Rdf.makeBlankNode(value.value))),
-    Match.discriminator("termType")("Literal", fromOxigraphLiteral),
     Match.discriminator("termType")("DefaultGraph", () =>
       Result.succeed(Rdf.DefaultGraph.make({ termType: "DefaultGraph", value: "" }))
     ),
-    Match.exhaustive
+    Match.orElse(fromOxigraphObject)
   );
 
 const fromOxigraphQuad = (quad: Oxigraph.Quad): Result.Result<Rdf.Quad, OxigraphSparqlError> =>

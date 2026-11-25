@@ -237,6 +237,37 @@ class PathAttempt extends S.Opaque<PathAttempt, { readonly brand: unique symbol 
   )
 ) {}
 
+class PermutationWalk extends S.Opaque<PermutationWalk, { readonly brand: unique symbol }>()(
+  S.Struct({
+    path: S.String,
+    issuer: Issuer,
+    recursion: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("PermutationWalk", {
+      description:
+        "A permutation walk so far: the path, the issuer copy and the related labels still to hash recursively.",
+    })
+  )
+) {}
+
+const walkRelated = (
+  canonicalIssued: HashMap.HashMap<string, string>,
+  walk: PermutationWalk,
+  related: string
+): PermutationWalk =>
+  O.match(HashMap.get(canonicalIssued, related), {
+    onSome: (id) =>
+      PermutationWalk.make({ path: `${walk.path}_:${id}`, issuer: walk.issuer, recursion: walk.recursion }),
+    onNone: () => {
+      const [id, issuer] = issue(walk.issuer, related);
+      return PermutationWalk.make({
+        path: `${walk.path}_:${id}`,
+        issuer,
+        recursion: HashMap.has(walk.issuer.issued, related) ? walk.recursion : A.append(walk.recursion, related),
+      });
+    },
+  });
+
 /**
  * Issue the RDFC-1.0 canonical label of every blank node in a quad list.
  *
@@ -371,26 +402,16 @@ export const issueCanonicalLabels = Effect.fnUntraced(function* <E>(
     bound: O.Option<string>
   ) {
     const issuedCanonical = yield* Ref.get(canonical);
-    let copy = issuer;
-    let path = "";
-    let recursion = A.empty<string>();
+    let walk = PermutationWalk.make({ path: "", issuer, recursion: A.empty() });
     for (const related of permutation) {
-      const canonicalId = HashMap.get(issuedCanonical.issued, related);
-      if (O.isSome(canonicalId)) {
-        path += `_:${canonicalId.value}`;
-      } else {
-        if (!HashMap.has(copy.issued, related)) {
-          recursion = A.append(recursion, related);
-        }
-        const [id, next] = issue(copy, related);
-        copy = next;
-        path += `_:${id}`;
-      }
-      if (exceeds(path, bound)) {
-        return PathAttempt.make({ path, issuer: copy, pruned: true });
+      walk = walkRelated(issuedCanonical.issued, walk, related);
+      if (exceeds(walk.path, bound)) {
+        return PathAttempt.make({ path: walk.path, issuer: walk.issuer, pruned: true });
       }
     }
-    for (const related of recursion) {
+    let copy = walk.issuer;
+    let path = walk.path;
+    for (const related of walk.recursion) {
       const result = yield* hashNDegree(related, copy);
       const [id] = issue(copy, related);
       path += `_:${id}<${result.hash}>`;
