@@ -17,13 +17,15 @@ Cutover step 6b (`2026-11-14-ci-runners-cutover-from-pulumi`, step 6 (b)) takes 
 - This PR merged by 2026-11-26T15:00Z, in a slot of its own. The infra-github README is in `deploy-infra-github.yml`'s push paths, so the merge opens a deploy first hour, which must end before T.
 - One green `fleet-missed-event-check` run at a `main` commit that contains #3539, within its request budget and with its token revoked. A scheduled run counts. If none has run by 2026-11-26T12:00Z, the driver may word one read-only `workflow_dispatch` on `main`.
 - An hour of its own: nothing merges, and the hour overlaps no other CI-behaviour change.
-- The Pulumi fleet idle (step 6 (a)): no busy `beep-ci-*` runner at T-5 min.
+- The Pulumi fleet idle (step 6 (a)), checked at T-5 min: `aws ec2 describe-instances --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf Name=instance-state-name,Values=pending,running` returns none, and `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` or `beep-ovf-` runner.
+- The `deploy-infra-github.yml` run that this PR's merge starts has finished, and its first hour has ended.
+- Each deleted hook's configuration (`gh api repos/beep-effect/beep-effect/hooks/<id>`: URL, events, content type, active; no secret is returned) is captured into the 6b log before the deletion, so a rollback uses the exact configuration.
 
 **Proof, in the hour after T.**
 
 - The next fleet job's queued delivery on 714397446 returns 2xx, and a `beep-fleet-*` runner picks the job up.
 - `gh api repos/beep-effect/beep-effect/hooks` lists only 714397446.
 - The App's settings page shows its webhook inactive.
-- The next missed-event check run reports `Delivered` evidence for the jobs it reads.
+- Delivery on 714397446 for a fleet job queued after T: the hook's recent deliveries show a 2xx `queued` delivery whose payload names that job. If a job stays queued for five minutes or more, the next missed-event check prints `delivery <id> (2xx)` for it; a run with no such job prints no delivery line, so the hook's delivery list is the proof.
 
-**Rollback.** Re-create the deleted hooks on the Pulumi controllers' recorded URLs, with the same events and secrets, and tick Active on the App webhook again.
+**Rollback.** Before the Pulumi destroy (step 6 (d)): re-create the deleted hooks from the configuration captured at T, with the same secrets, and tick Active on the App webhook again. After the destroy the recorded `execute-api` URLs no longer reach anything: follow the cutover decision's "Rollback after (d)" (restore the stack from the archived export, read the recreated `controllerWebhook` and `shardOverflowWebhook` outputs), then re-create the hooks on those fresh URLs and re-activate the App webhook on `controllerWebhook`.

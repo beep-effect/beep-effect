@@ -394,7 +394,13 @@ Before the switch:
 - the CI goals driver's word;
 - one green missed-event check run on a `main` commit that contains #3539;
 - an hour of its own, overlapping no other CI-behaviour change;
-- no busy `beep-ci-*` runner at T-5 min (step 6(a)).
+- the 6b PR merged by 2026-11-26T15:00Z, and the `deploy-infra-github.yml`
+  run its merge started finished with its first hour over;
+- the Pulumi fleet idle at T-5 min (step 6(a)): `aws ec2 describe-instances
+  --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf
+  Name=instance-state-name,Values=pending,running` returns none, and
+  `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` or `beep-ovf-`
+  runner.
 
 The runner App's webhook (`beep-ci-fleet-controller`) still delivers
 `workflow_job` to the Pulumi heavy controller's `execute-api` URL. At T it is
@@ -405,16 +411,22 @@ App, so the change goes through the settings page.
 
 At T, the operator:
 
-1. Deletes repository webhooks 663255260 and 711445970 and sets the App
-   webhook inactive.
-2. Checks that `gh api repos/beep-effect/beep-effect/hooks` lists only
+1. Captures `gh api repos/beep-effect/beep-effect/hooks/<id>` for 663255260
+   and 711445970 into the 6b log (URL, events, content type, active; no secret
+   is returned).
+2. Deletes both hooks and sets the App webhook inactive.
+3. Checks that `gh api repos/beep-effect/beep-effect/hooks` lists only
    714397446 and that the App's settings page shows its webhook inactive.
-3. Checks that the next fleet job's queued delivery on 714397446 returns 2xx
-   and a `beep-fleet-*` runner picks the job up.
-4. Checks that the next missed-event check run reports `Delivered` evidence.
+4. Checks that the next fleet job's `queued` delivery on 714397446 returns 2xx
+   and a `beep-fleet-*` runner picks the job up. A job queued for five minutes
+   or more also shows in the next missed-event check as `delivery <id> (2xx)`;
+   with no such job, the hook's delivery list is the proof.
 
-To roll back, re-create the two hooks on the controllers' recorded URLs and
-tick Active on the App webhook again. The plan is
+To roll back before the Pulumi destroy, re-create the two hooks from the
+configuration captured at T and tick Active on the App webhook again. After
+the destroy the recorded URLs are dead: restore the stack first, as the
+cutover decision's "Rollback after (d)" says, and use the fresh
+`controllerWebhook` and `shardOverflowWebhook` outputs. The plan is
 `goals/infra-alchemy-rebuild/decisions/2026-11-25-ci-runners-6b-delete-execute-api-hooks.md`.
 
 The Pulumi fleet (`infra/ci-runners`, stack `beep-ci-runners/production`),
