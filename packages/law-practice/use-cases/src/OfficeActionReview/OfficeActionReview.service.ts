@@ -55,11 +55,10 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ClaimProposalRefused } from "../ClaimProposal/index.ts";
+import { authorizeClaimProposal, ClaimProposalRefused } from "../ClaimProposal/index.ts";
 import { ProposedClaimEntry } from "../ClaimStore/index.ts";
 import { requiredExtraction } from "../IrToLaw/index.ts";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
-import { MatterAccess } from "../MatterWall/index.ts";
 import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.ts";
 import { OfficeActionCandidateExtraction, OfficeActionReviewResult } from "./OfficeActionReview.ports.ts";
 import type { ClaimCoreInvalid } from "@beep/epistemics/ClaimCore";
@@ -497,10 +496,7 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
     review: Effect.fn("OfficeActionReview.review")(function* (input) {
       const request = yield* prepare(input);
       const scope = request.source.scopeRef;
-      const access = yield* deps.authority.authorize({ principal: deps.principal, scope, access: "claim-proposal" });
-      yield* Effect.annotateCurrentSpan({ "beep.law_practice.matter_outcome": access._tag });
-      if (MatterAccess.guards.Denied(access))
-        return yield* Effect.fail(ClaimProposalRefused.cases.DeniedScope.make({}));
+      yield* authorizeClaimProposal(deps.authority, deps.principal, scope);
       const logged = yield* deps.proposals
         .withPartition(scope, (last) => {
           const pipeline = composeLogged(

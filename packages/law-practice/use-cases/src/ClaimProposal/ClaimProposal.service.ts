@@ -35,13 +35,49 @@ import { ClaimProposal } from "./ClaimProposal.ports.ts";
 import type { AnnotationId } from "@beep/annotation/AnnotationId";
 import type { ExtractionDocument } from "@beep/annotation/Kinds";
 import type { PreimageMintError } from "@beep/jsonc/Mint";
+import type { ScopeRef } from "@beep/law-practice-domain/values/LawClaim";
 import type { ContentHash } from "@beep/schema/ContentHash";
+import type * as Shared from "@beep/shared-domain/identity/Shared";
 import type { OccurrenceId } from "@beep/text/Occurrence";
 import type { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
+import type { MatterAuthorityShape } from "../MatterWall/index.ts";
 import type { ClaimProposalRequest } from "./ClaimProposal.values.ts";
 
 const proposalPin = ActivityPin.cases.Engine.make({ engine: "law-practice-claim-proposal", edition: "1" });
 const ProposeClaimTerm = TermIri.make(iri("operation:ProposeClaim"));
+
+/**
+ * Asks the matter wall for `claim-proposal` on one capture scope and refuses
+ * a denied scope.
+ *
+ * **Details**
+ *
+ * The matter outcome is recorded on the caller's current span as
+ * `beep.law_practice.matter_outcome`. A `Denied` access fails with the
+ * `DeniedScope` refusal; a `Granted` access is returned unchanged. Both the
+ * claim proposal path and the office-action review gate on it.
+ *
+ * **Example** (Reference the proposal gate)
+ *
+ * ```ts
+ * import { authorizeClaimProposal } from "@beep/law-practice-use-cases/ClaimProposal"
+ *
+ * console.log(typeof authorizeClaimProposal) // "function"
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const authorizeClaimProposal = Effect.fnUntraced(function* (
+  authority: MatterAuthorityShape,
+  principal: Shared.UserId,
+  scope: ScopeRef
+) {
+  const access = yield* authority.authorize({ principal, scope, access: "claim-proposal" });
+  yield* Effect.annotateCurrentSpan({ "beep.law_practice.matter_outcome": access._tag });
+  if (MatterAccess.guards.Denied(access)) return yield* Effect.fail(ClaimProposalRefused.cases.DeniedScope.make({}));
+  return access;
+});
 
 const invalidDocument = (): ClaimProposalRefused => ClaimProposalRefused.cases.InvalidDocument.make({});
 
@@ -162,10 +198,7 @@ export const ClaimProposalLayer: Layer.Layer<
           .encode(request.document)
           .pipe(Effect.flatMap(extractionDocumentCodec.decode), Effect.mapError(invalidDocument));
         const scope = document.text.scopeRef;
-        const access = yield* authority.authorize({ principal, scope, access: "claim-proposal" });
-        yield* Effect.annotateCurrentSpan({ "beep.law_practice.matter_outcome": access._tag });
-        if (MatterAccess.guards.Denied(access))
-          return yield* Effect.fail(ClaimProposalRefused.cases.DeniedScope.make({}));
+        yield* authorizeClaimProposal(authority, principal, scope);
         const support = yield* Effect.fromOption(supportOf(document, request.candidates)).pipe(
           Effect.mapError(unverifiedSupport)
         );
