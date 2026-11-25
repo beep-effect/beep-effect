@@ -3611,6 +3611,30 @@ Lane goals/text-knowledge-stack-rebuild-p7-retirement
 
 Reverse: Re-run the fallow health and dead-code baseline writers and commit their full output; restore a pruned comment-law shard from the parent commit.
 
+### P8: attributed-multi-claim-span's retention is lifted, so the packet becomes archivable, 2026-11-25
+
+SPEC Relationships keeps `goals/attributed-multi-claim-span` retained on `main` until P4's acceptance item `ClaimGate.two-claims-one-occurrence.test.ts` is green, and archives it only then. That test is on `main` at `packages/foundation/modeling/epistemics/test/ClaimGate.two-claims-one-occurrence.test.ts`, landed by #3540 (`b288d08e014`), and hosted CI ran it green at the merge. Its manifest's `retentionReason` is the one thing that keeps `goals archive` from selecting a `superseded` packet (`Archive.service.ts` selects `completed-retained` or `superseded` goals with no `archive` block and no `retentionReason`), so the final PR removes it. Moving the packet to the archive repository is the routine `goals archive --plan` / `--write --expect` batch, which moves packets across repositories in planned batches; this packet does not run it on its own.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Restore the retentionReason in goals/attributed-multi-claim-span/ops/manifest.json
+
+### P8 SPEC amendment: the L0 exit's 'path-derived IRIs are gone' reads 'no published IRI is path-derived', 2026-11-25
+
+SPEC.md:398-404 (L0) says path-derived IRIs are gone. Decision 2026-11-20-p1-composer-stays-registry-free kept the composer deriving its IRI, because `@beep/identity` is bundled into the CI runner Lambda handlers and removing `.iri` from `Id.ts` changes every handler code hash. It deferred the deletion and did not amend the SPEC; the closeout acceptance check found the contradiction. What L0 delivers is the property the clause protects: every published IRI comes from a registry binding. The kept read sites read `@beep/identity/Registry`, `IdentityEntry.fromComposer` is deleted so an entry is built only from a binding, the test runner and research library read the registry, and `TermStability.test.ts` (L0-3) proves a module rename changes no published IRI. The clause therefore reads: no published IRI is path-derived; the composer's derived IRI stays as an internal, unpublished surface until a decision accepts the handler redeploy. The other L0 subclauses are unchanged.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Restore the SPEC wording and delete the composer IRI surface from Id.ts by a decision that accepts one CiRunners handler redeploy, as decision 2026-11-20-p1-composer-stays-registry-free names
+
+### P8 SPEC amendment: the L3/L6 exit's semantica gold fixture regeneration moves to operational follow-up #3554, 2026-11-25
+
+The L3/L6 exit (SPEC.md:450-460) includes "the semantica gold fixture is regenerated". P5 held that row (row 14, checkpoint `2026-11-23-p5-l3-l6-exits-recorded`): the gold projection is pinned by its canonical dataset digest, and the digest comes from an operational C1 measure run over a C0 ledger. That ledger needs the out-of-repo corpus and hosted embeddings that bill, so it is blocked on the operator and on money, which the autonomy charter escalates rather than decides. No placeholder digest was written. The code it needs is on `main`: `Dataset` equality is a quotient with an RDFC-1.0 canonical digest (`@beep/rdf` `Canonical`). The subclause leaves the PR completion proof and becomes operational follow-up issue #3554, which names its done condition. The other L3/L6 subclauses are unchanged. The P6 operational step (the Practice KG bundle rebuild and the matter-wall grants) is in no acceptance clause; it is tracked as issue #3555.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Restore the subclause to the L3/L6 exit and hold the goal open until the C1 measure has run
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
