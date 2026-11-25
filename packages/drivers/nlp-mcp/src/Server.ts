@@ -1,11 +1,11 @@
 /**
- * MCP server wiring for the `@beep/nlp` MCP driver.
+ * MCP server wiring for the `@beep/nlp-mcp` driver.
  *
  * **Details**
  *
  * Mounts two toolkits into a single stdio-transport MCP server:
  *
- * - the canonical {@link NlpToolkit} from `@beep/nlp`, backed by the wink-nlp
+ * - the canonical {@link NlpToolkit} from `@beep/nlp-processing`, backed by the wink-nlp
  *   handler layer ({@link WinkNlpToolkitLive}) from `@beep/wink`; and
  * - the {@link StreamingToolkit} streaming/file-IO toolkit, backed by its
  *   {@link StreamingToolkitHandlersLive} handler layer.

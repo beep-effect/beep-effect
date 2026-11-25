@@ -7,15 +7,9 @@
  * expensive operations are not recomputed. The default implementation is an
  * in-memory `Ref<HashMap>`.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - `Context.GenericTag` becomes the `Context.Service` class form.
- * - keyed cache storage becomes `Ref<HashMap<...>>`; cache operations use `HashMap`.
- * - `Date.now()` becomes `Clock.currentTimeMillis`.
- * - the heterogeneous store value is `unknown`-typed and SOUND: results are stored
- *   as {@link AnyOperationResult} (`OperationResult<unknown, unknown>`) and read back
- *   as such (callers decode at their known types), so there are no type assertions.
- *   The in-memory implementation is total, so {@link StorageError} appears only on the
- *   interface for future fallible backends.
+ * Results are stored and read back as {@link AnyOperationResult}, and callers
+ * decode at their known types. The in-memory implementation is total, so {@link
+ * StorageError} appears only on the interface for fallible backends.
  *
  * @since 0.0.0
  * @packageDocumentation

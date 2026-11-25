@@ -9,18 +9,8 @@
  * {@link ResultStore.ResultStore}. Sequential and parallel strategies are
  * implemented; batch/streaming fall back to sequential.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - `Context.GenericTag` becomes the `Context.Service` class form; service methods
- *   use `Effect.fn` so they appear in traces.
- * - `Date.now()` becomes `Clock.currentTimeMillis`; keyed collection / array mutation
- *   becomes `HashMap`/`effect/Array`/`Effect.forEach`.
- * - `Effect.either` (returning `Either`) becomes `Effect.result` (returning
- *   `Result`); the `result._tag === "Left"`/`as E` casts become `Result.match`.
- * - the `opts.strategy._tag` switch becomes `Match.valueTags`; the `as any` strategy
- *   access and the `mapError` tag-sniffing block are gone (errors are typed).
- * - results are type-erased ({@link ResultStore.AnyOperationResult}): fresh
- *   `GraphNode<B>`/`E` values widen covariantly into `OperationResult<unknown, unknown>`
- *   and cached values are already erased, so caching round-trips with no assertions.
+ * Results are type-erased to {@link ResultStore.AnyOperationResult}, so caching
+ * round-trips without assertions.
  *
  * @since 0.0.0
  * @packageDocumentation

@@ -246,7 +246,7 @@ export const filter = <A>(config: {
   });
 
 /**
- * Read an operation's morphism category.
+ * Read an operation's shape category.
  *
  * **Example** (Read transform category)
  *

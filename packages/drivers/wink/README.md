@@ -1,6 +1,6 @@
 # @beep/wink
 
-Driver-level wink-nlp runtime for the product-neutral `@beep/nlp` contracts.
+Driver-level wink-nlp runtime for the product-neutral `@beep/nlp-processing` contracts.
 
 ## Installation
 

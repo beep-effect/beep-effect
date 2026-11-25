@@ -1,4 +1,4 @@
-# @beep/nlp
+# @beep/nlp-processing
 
 ## 0.0.2
 

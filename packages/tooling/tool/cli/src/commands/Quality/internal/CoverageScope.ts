@@ -391,7 +391,6 @@ const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
   "@beep/md": 33.6,
   "@beep/memfs": 4.2,
   "@beep/n3": 2.6,
-  "@beep/nlp": 3.4,
   "@beep/nlp-mcp": 3.3,
   "@beep/nlp-processing": 4,
   "@beep/npm-spec": 4.1,

@@ -1,8 +1,9 @@
 # Agent Guide
 
 `@beep/wink` is the driver-level wink-nlp runtime for the product-neutral
-`@beep/nlp` / `@beep/nlp-processing` contracts. Keep reusable NLP schemas and
-contracts in `@beep/nlp`; keep wink model loading, FFI, and live handler
+`@beep/nlp-processing` contracts. Keep reusable NLP schemas and contracts in
+`@beep/nlp-processing`, and standoff annotation kinds in `@beep/annotation`;
+keep wink model loading, FFI, and live handler
 layers (`WinkBackendLive`, `WinkNlpToolkitLive`) here. Keep driver code free
 of product-domain vocabulary.
 

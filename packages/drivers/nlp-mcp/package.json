@@ -1,7 +1,7 @@
 {
   "name": "@beep/nlp-mcp",
   "version": "0.0.0",
-  "description": "Model Context Protocol server exposing @beep/nlp operations and the generic IR handoff contract as MCP tools.",
+  "description": "Model Context Protocol server exposing @beep/nlp-processing operations as MCP tools.",
   "license": "MIT",
   "private": true,
   "type": "module",

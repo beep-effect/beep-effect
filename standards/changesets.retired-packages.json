@@ -43,6 +43,10 @@
     {
       "name": "@beep/schema-org",
       "rationale": "Retired by goals/text-knowledge-stack-rebuild P7: no importer or dependent, deleted whole with no successor. Name-reuse guard; recover the source from commit 8bdd55d39f4."
+    },
+    {
+      "name": "@beep/nlp",
+      "rationale": "Retired by goals/text-knowledge-stack-rebuild P7: its facets were rehomed to @beep/annotation and @beep/nlp-processing in P3 and P6, and its four text helpers had no consumer. Name-reuse guard; recover the source from commit cb2ac027907."
     }
   ]
 }

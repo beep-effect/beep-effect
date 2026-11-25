@@ -62,7 +62,6 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "identity",
   "langextract",
   "md",
-  "nlp",
   "nlp-processing",
   "observability",
   "ontology",
@@ -785,23 +784,6 @@ export const $SharedTablesId: Identity.IdentityComposer<"@beep/shared-tables"> =
  * @since 0.0.0
  */
 export const $SemanticWebId: Identity.IdentityComposer<"@beep/semantic-web"> = /*#__PURE__*/ $I.create("semantic-web");
-
-/**
- * Identity composer for the `@beep/nlp` package.
- *
- * **Example** (Make NLP package ID)
- *
- * ```ts import.meta.vitest name="Make NLP package ID"
- * import { $NlpId } from "@beep/identity/packages"
- *
- * const id = $NlpId.make("Tokenizer")
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $NlpId: Identity.IdentityComposer<"@beep/nlp"> = /*#__PURE__*/ $I.create("nlp");
-
 /**
  * Identity composer for the `@beep/nlp-processing` package.
  *

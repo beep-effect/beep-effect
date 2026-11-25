@@ -118,7 +118,7 @@ extraction, and emits candidate claims into the authority spine.
 
 | Status | Items |
 |---|---|
-| **Have today** | `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical-schema` (+`artifact-ref`), `@beep/langextract` (spans), `@beep/nlp-mcp`/`@beep/nlp`/`@beep/wink`, `@beep/epistemic-domain` (claims/evidence/provenance/usage) + `@beep/epistemic-tables`, `@beep/semantic-web` (PROV-O + bounded SHACL), `@beep/rdf`, `@beep/agents-*` chat kernel, `@beep/workspace-*`, the Tauri+React+Bun desktop chat app with local PGlite |
+| **Have today** | `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical-schema` (+`artifact-ref`), `@beep/langextract` (spans), `@beep/nlp-mcp`/`@beep/wink`, `@beep/epistemic-domain` (claims/evidence/provenance/usage) + `@beep/epistemic-tables`, `@beep/semantic-web` (PROV-O + bounded SHACL), `@beep/rdf`, `@beep/agents-*` chat kernel, `@beep/workspace-*`, the Tauri+React+Bun desktop chat app with local PGlite |
 | **Specced** | `ip-law-knowledge-graph` (7-ontology TBox, typed entities, FalkorDB projection, seed pipeline), the document-portal product slice, the runtime data loop (`runtime-data-loop.md`), approval policy, `trustgraph-port` extraction kernel, GraphRAG ask-and-check |
 | **Build (net-new)** | OWL 2 EL/RL reasoner integration, the AI librarian/ingestion lane over the corpus, the sync engine (FS ↔ backends, Box Events → ingest), embeddings from a configured provider, matter walls as authorization at every access path, bitemporal instance store |
 

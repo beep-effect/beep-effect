@@ -412,9 +412,6 @@
       "path": "packages/foundation/modeling/md"
     },
     {
-      "path": "packages/foundation/modeling/nlp"
-    },
-    {
       "path": "packages/foundation/modeling/npm-spec"
     },
     {

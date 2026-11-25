@@ -702,12 +702,6 @@
         ]
       },
       {
-        "name": "@beep/nlp",
-        "patterns": [
-          "packages/foundation/modeling/nlp/src/**"
-        ]
-      },
-      {
         "name": "@beep/nlp-mcp",
         "patterns": [
           "packages/drivers/nlp-mcp/src/**"
@@ -3884,25 +3878,6 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/utils"
-        ]
-      },
-      {
-        "from": "@beep/nlp",
-        "allow": [
-          "@beep/identity",
-          "@beep/nlp",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/nlp",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },

@@ -9,16 +9,10 @@
  * require it in their context `R` and fail with {@link Backend.NLPBackendError});
  * the pure string operations are context-free transformations.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - operations are backed by {@link Backend.NLPBackend} (the granular linguistic
- *   contract); the thin facade `NLPService` delegates to the same backend.
- * - node creation is EFFECTFUL (`EffectGraph.makeNode` reads `Clock`/`Random`), so
- *   `apply` uses `Effect.forEach`.
- * - text-utility operations (paragraphize/normalizeWhitespace/
- *   removePunctuation/removeStopWords/stem/ngrams) are NOT backend operations; they
- *   live on the existing Core, driver, and tool layers.
- * - `Object.keys` becomes `Struct.keys`; the cast-based `getOperation(name)` lookup
- *   is dropped (it required `as any`).
+ * Node creation is effectful (`EffectGraph.makeNode` reads `Clock` and
+ * `effect/Random`), so `apply` runs through `Effect.forEach`. Text utilities such
+ * as paragraphing, whitespace normalization and stemming are not backend
+ * operations; they live on the Core, driver and tool layers.
  *
  * @since 0.0.0
  * @packageDocumentation

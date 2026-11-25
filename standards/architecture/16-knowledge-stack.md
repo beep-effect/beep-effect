@@ -562,7 +562,7 @@ digest, extractor name and version, normalization version, offset unit, start,
 end and quote. It is the only text-occurrence identity in the repository. The
 five non-canonical anchor encodings are deleted in the phase that owns each:
 the `@beep/rdf` selector schemas and the `TextSpan` case of the party-domain
-`EvidenceAnchor` were deleted in P2, and the `@beep/nlp` Handoff and Graph spans
+`EvidenceAnchor` were deleted in P2, and the former nlp package's Handoff and Graph spans
 were deleted in P3, and the epistemics `EvidenceSpan` in P4. The party union keeps its three non-text
 cases and points at text through a `TextOccurrence` case that holds an
 `Anchored`, and its record identifier is `ArtifactOccurrenceId`, so the name
@@ -792,10 +792,10 @@ Rules:
 
 ## 14. The categorical narrative
 
-`packages/foundation/modeling/nlp/THEORY.md` described `@beep/nlp` as algebra
-over a typed text graph and claimed "full categorical fidelity". The stack
-keeps category theory only where it predicts a law a test can falsify. That
-file is deleted with its package in P7; what stays true of it is below, and
+The former nlp package's `THEORY.md` described that package as algebra over a
+typed text graph and claimed "full categorical fidelity". The stack keeps
+category theory only where it predicts a law a test can falsify. That file was
+deleted with its package in P7; what stays true of it is below, and
 the claims it made that no law backs are withdrawn after the table.
 
 | Kept claim | Restated as | Ledger |

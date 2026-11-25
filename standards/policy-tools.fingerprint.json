@@ -643,7 +643,6 @@
     "packages/foundation/modeling/markdown/src/**",
     "packages/foundation/modeling/md/package.json",
     "packages/foundation/modeling/md/src/**",
-    "packages/foundation/modeling/nlp/package.json",
     "packages/foundation/modeling/npm-spec/package.json",
     "packages/foundation/modeling/npm-spec/src/**",
     "packages/foundation/modeling/ontology/package.json",
