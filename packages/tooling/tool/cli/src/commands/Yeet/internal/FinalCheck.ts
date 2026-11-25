@@ -281,6 +281,7 @@ const gateLane = {
   "repo-sanity": "repo-sanity",
   check: "check",
   docgen: "docgen",
+  doctest: "doctest",
   fallow: "fallow",
   coverage: "coverage",
 } as const satisfies Record<FinalCheckGate, CiLaneId | "none">;
@@ -390,7 +391,9 @@ const EXPECTATION_REWRITE_CONTEXT = "Test Unit (expectations edited to match new
  * pass over the diff's changed files, because package `lint` tasks never see
  * paths outside a workspace package (#2187 landed an EF-40 GritQL violation in
  * `goals/` that no hosted lane flagged and lefthook then rejected on every
- * later commit staging the file). Coverage runs the per-file
+ * later commit staging the file). Doctest runs the affected packages' Turbo
+ * `doctest` tasks; hosted `Heavy / Doctest` runs the whole fleet, so an
+ * unaffected package's doctest is a cache hit there. Coverage runs the per-file
  * ratchet (`beep-cli coverage --affected`), which also runs the affected
  * packages' unit tests.
  *
@@ -510,6 +513,13 @@ export const planFinalCheckSteps: {
       lane("repo-sanity", "Repo Sanity", "repo-sanity"),
       lane("check", "Heavy / Check", "check"),
       lane("docgen", "Heavy / Docgen", "docgen"),
+      command(
+        "doctest",
+        "Heavy / Doctest (affected packages)",
+        "doctest",
+        ["bunx", "turbo", "run", "doctest", "--affected", "--concurrency=4"],
+        { TURBO_SCM_BASE: mergeBase }
+      ),
       lane("fallow", "Fallow Advisory Envelopes", "fallow"),
       command(
         "coverage",
@@ -1162,7 +1172,15 @@ const runStep = Effect.fn("Yeet.runFinalCheckStep")(function* (planned: FinalChe
 
 // Composite sanity/cheap gates include live external checks, which cannot be reused.
 // Expectation rewrites remain an in-process replay and never enter this path.
-const reusableFinalCheckGate = FinalCheckGate.pick(["lint-policy", "lint", "check", "docgen", "fallow", "coverage"]);
+const reusableFinalCheckGate = FinalCheckGate.pick([
+  "lint-policy",
+  "lint",
+  "check",
+  "docgen",
+  "doctest",
+  "fallow",
+  "coverage",
+]);
 
 const finalCheckProofLane = (planned: FinalCheckPlannedStep) =>
   GithubCheckLaneSpec.make({

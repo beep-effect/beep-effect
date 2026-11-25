@@ -48,6 +48,7 @@ export const GateRouteId = LiteralKit([
   "repo-sanity",
   "check",
   "docgen",
+  "doctest",
   "fallow",
   "coverage",
   "effect-vitest-files",
@@ -127,6 +128,7 @@ const gateRouteRecord: Record<GateRouteId, GateRouteModes> = {
   "repo-sanity": everywhereLocal,
   check: hostedOnlyOnWorker,
   docgen: hostedOnlyOnWorker,
+  doctest: hostedOnlyOnWorker,
   fallow: hostedOnlyOnWorker,
   coverage: hostedOnlyOnWorker,
   // One syntax-only parse per test file of the diff (0.5 s, 166 MB on dankserver, 2026-11-13):
@@ -252,6 +254,7 @@ const workerForcedRouteEntries: ReadonlyArray<readonly [GateRouteId, WorkerForce
   ["repo-sanity", forcedRefused(`only its changeset status check runs here; ${schemaScanReason}`)],
   ["check", forcedRefused(testTypeCheckReason)],
   ["docgen", forcedRefused(NO_MEASURED_BUDGET)],
+  ["doctest", forcedRefused(NO_MEASURED_BUDGET)],
   [
     "fallow",
     forcedRefused(
@@ -367,6 +370,7 @@ const gateHostedContextEntries: ReadonlyArray<readonly [GateRouteId, string]> = 
   ["lint-policy", "Heavy / Lint Policy"],
   ["check", "Heavy / Check"],
   ["docgen", "Heavy / Docgen"],
+  ["doctest", "Heavy / Doctest"],
   ["fallow", "Fallow Advisory Envelopes"],
   ["coverage", "Heavy / Coverage Regression"],
   ["hook:schema-catalog", "Repo Sanity"],

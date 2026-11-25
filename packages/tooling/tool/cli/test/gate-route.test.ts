@@ -23,6 +23,7 @@ const workerHostedOnly = [
   "lint-policy",
   "check",
   "docgen",
+  "doctest",
   "fallow",
   "coverage",
   "hook:schema-catalog",
@@ -78,6 +79,7 @@ describe("worker --force-local routes", () => {
       ["repo-sanity", "Refused"],
       ["check", "Refused"],
       ["docgen", "Refused"],
+      ["doctest", "Refused"],
       ["fallow", "Refused"],
       ["coverage", "Serial"],
       ["effect-vitest-files", undefined],
@@ -98,6 +100,7 @@ describe("worker --force-local routes", () => {
     expect(reason("check")).toContain("(2026-11-13-worker-host-acceptance.md)");
     expect(reason("repo-sanity")).toMatch(/^only its changeset status check runs here; .*5\.2 GB/);
     expect(reason("docgen")).toBe("no measured worker budget on dankserver");
+    expect(reason("doctest")).toBe("no measured worker budget on dankserver");
     expect(fallow).toContain("2.15 GB aggregate");
     expect(fallow).toContain("523 s (2026-11-13-worker-host-acceptance-repeat.md)");
     expect(fallow).toContain("3.06 GB");

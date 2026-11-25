@@ -382,6 +382,17 @@ describe("planFinalCheckSteps", () => {
       BASE,
       "--validate-envelopes",
     ]);
+    const doctest = O.getOrThrow(A.findFirst(steps, (step) => step.step.label === "final-check:doctest"));
+    expect(doctest.hostedContext).toBe("Heavy / Doctest (affected packages)");
+    expect([doctest.step.command, ...doctest.step.args]).toEqual([
+      "bunx",
+      "turbo",
+      "run",
+      "doctest",
+      "--affected",
+      "--concurrency=4",
+    ]);
+    expect(doctest.step.env).toEqual({ TURBO_SCM_BASE: BASE });
     expect(argv("final-check:repo-sanity")).toEqual(["run", "beep", "ci", "lane", "repo-sanity", "--changeset-status"]);
     expect(argv("final-check:lint-policy:laws")).toEqual(["run", "beep", "lint", "policy", "--base", BASE]);
     expect(argv("final-check:lint-policy:docs")).toEqual([
@@ -545,7 +556,14 @@ describe("forced final-check on a worker", () => {
     const forced = computeProfileFinalCheckSkips(forcedRouting());
     const lines = forcedWorkerFinalCheckLines(forcedRouting());
     const refusals = A.dropRight(lines, 1);
-    expect(A.map(forced, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen", "fallow"]);
+    expect(A.map(forced, (skip) => skip.gate)).toEqual([
+      "cheap-gates",
+      "lint-policy",
+      "check",
+      "docgen",
+      "doctest",
+      "fallow",
+    ]);
     expect(A.every(forced, (skip) => skip.reason === "compute-profile=worker")).toBe(true);
     expect(A.map(refusals, (line) => Str.split(line, " ")[4])).toEqual([
       "cheap-gates",
@@ -553,6 +571,7 @@ describe("forced final-check on a worker", () => {
       "repo-sanity",
       "check",
       "docgen",
+      "doctest",
       "fallow",
     ]);
     expect(A.every(refusals, Str.startsWith("[yeet] final-check --force-local refused "))).toBe(true);
@@ -560,8 +579,10 @@ describe("forced final-check on a worker", () => {
     expect(lines[0]).toContain("5.2 GB");
     expect(lines[3]).toContain("2.59 GB");
     expect(lines[4]).toContain("no measured worker budget");
-    expect(lines[5]).toContain("523 s");
-    expect(lines[6]).toBe(
+    expect(lines[5]).toContain("refused doctest");
+    expect(lines[5]).toContain("no measured worker budget");
+    expect(lines[6]).toContain("523 s");
+    expect(lines[7]).toBe(
       "[yeet] final-check --force-local on the worker profile runs coverage one task at a time (concurrency 1)"
     );
   });
@@ -612,7 +633,14 @@ describe("forced final-check on a worker", () => {
     const skips = computeProfileFinalCheckSkips(routing);
     expect(gates).toEqual([]);
     expect(A.filter(lines, Str.includes("coverage"))).toEqual([]);
-    expect(A.map(skips, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen", "fallow"]);
+    expect(A.map(skips, (skip) => skip.gate)).toEqual([
+      "cheap-gates",
+      "lint-policy",
+      "check",
+      "docgen",
+      "doctest",
+      "fallow",
+    ]);
   });
 
   it("forces nothing unforced or off worker", () => {
@@ -745,7 +773,10 @@ describe("finalCheckRefusal", () => {
       const smaller = FinalCheckReceipt.make({ ...receiptOf(), gateSetDigest: "cheap-gates,check,retired-gate" });
       const refusal = O.getOrThrow(finalCheckRefusal(O.some(smaller), HEAD));
       assertInclude(refusal, "written under another gate set");
-      assertInclude(refusal, "added expectation-rewrite, lint-policy, lint, repo-sanity, docgen, fallow, coverage");
+      assertInclude(
+        refusal,
+        "added expectation-rewrite, lint-policy, lint, repo-sanity, docgen, doctest, fallow, coverage"
+      );
       assertInclude(refusal, "removed retired-gate");
       assertInclude(refusal, "re-run `bun run beep yeet final-check`");
       const unrecorded = yield* decodeReceiptJson(legacyV1ReceiptJson(HEAD, FINAL_CHECK_RECEIPT_VERSION));
@@ -1463,7 +1494,7 @@ describe("final-check compute-profile skips", () => {
       expect(computeProfile).toBe("worker");
       expect(skipLines(profileSkips)).toStrictEqual(
         A.map(
-          ["cheap-gates", "lint-policy", "check", "docgen", "fallow", "coverage"],
+          ["cheap-gates", "lint-policy", "check", "docgen", "doctest", "fallow", "coverage"],
           (gate) => `${gate}=${COMPUTE_PROFILE_WORKER_SKIP_REASON}`
         )
       );
@@ -1475,7 +1506,7 @@ describe("final-check compute-profile skips", () => {
       const { profileSkips } = yield* resolveFinalCheckProfileSkips(FinalCheckGate.literals, [], true);
       expect(skipLines(profileSkips)).toStrictEqual(
         A.map(
-          ["cheap-gates", "lint-policy", "check", "docgen", "fallow"],
+          ["cheap-gates", "lint-policy", "check", "docgen", "doctest", "fallow"],
           (gate) => `${gate}=${COMPUTE_PROFILE_WORKER_SKIP_REASON}`
         )
       );
