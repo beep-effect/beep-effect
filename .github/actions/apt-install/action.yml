@@ -1,17 +1,24 @@
 name: Apt install with retries
 description: >-
   Keep only the Ubuntu archive, then run apt-get update and apt-get install as
-  one bounded, retried unit so a transient mirror failure does not fail the job.
+  one bounded, retried unit so a transient or slow mirror does not fail the job.
 
 # Hosted Ubuntu mirrors fail for minutes at a time: `503 Service Unavailable`
 # and `Connection failed` on InRelease, or `File has unexpected size ...
-# Mirror sync in progress?` while a mirror resyncs. apt's own
-# Acquire::Retries re-fetches single files inside one run; it does not retry a
-# failed update as a whole. Each attempt here runs update (with
+# Mirror sync in progress?` while a mirror resyncs. The EC2 regional mirror can
+# also serve at about 50 KB/s, so one large install outlives any short timeout.
+# apt's own Acquire::Retries re-fetches single files inside one run; it does
+# not retry a failed update as a whole. Each attempt here runs update (with
 # APT::Update::Error-Mode=any, so any failed index fails the attempt instead of
-# installing against a stale or partial index) and then install. A failed
-# attempt waits and starts again from update; after the last attempt the step
-# fails with an error annotation. Requires the beep CI binary on PATH
+# installing against a stale or partial index) and then install. Downloaded
+# archives stay in apt's cache, so a later attempt only fetches what is still
+# missing. From attempt `fallback-attempt` on, the Ubuntu sources point at
+# http://archive.ubuntu.com/ubuntu instead of the regional mirror. Every
+# command's timeout is clamped to what is left of `budget-seconds`, so the
+# step ends within that budget (plus one 15 s kill grace) whatever the
+# attempt count. A failed attempt waits and starts again from update; after
+# the last attempt, or when the budget cannot fit another one, the step fails
+# with an error annotation. Requires the beep CI binary on PATH
 # (./.github/actions/fetch-beep-ci) for `beep ci prune-apt`.
 
 inputs:
@@ -23,13 +30,27 @@ inputs:
     required: false
     default: "true"
   attempts:
-    description: Total update-and-install attempts before the step fails.
+    description: Most update-and-install attempts before the step fails.
     required: false
-    default: "3"
+    default: "5"
   backoff-seconds:
     description: Pause before the second attempt; each later pause doubles it.
     required: false
     default: "15"
+  install-timeout-seconds:
+    description: Longest one apt-get install may run, before the budget clamp.
+    required: false
+    default: "900"
+  budget-seconds:
+    description: Wall-clock budget for every attempt and pause together.
+    required: false
+    default: "1500"
+  fallback-attempt:
+    description: >-
+      First attempt that uses http://archive.ubuntu.com/ubuntu instead of the
+      regional mirror; 0 never falls back.
+    required: false
+    default: "2"
 
 runs:
   using: composite
@@ -41,6 +62,9 @@ runs:
         APT_INSTALL_NO_RECOMMENDS: ${{ inputs.no-install-recommends }}
         APT_INSTALL_ATTEMPTS: ${{ inputs.attempts }}
         APT_INSTALL_BACKOFF_SECONDS: ${{ inputs.backoff-seconds }}
+        APT_INSTALL_TIMEOUT_SECONDS: ${{ inputs.install-timeout-seconds }}
+        APT_INSTALL_BUDGET_SECONDS: ${{ inputs.budget-seconds }}
+        APT_INSTALL_FALLBACK_ATTEMPT: ${{ inputs.fallback-attempt }}
       run: |
         set -euo pipefail
         # -d '' reads every line, so a block-scalar package list works too.
@@ -49,8 +73,12 @@ runs:
           echo "::error::apt-install: no packages were given."
           exit 1
         fi
-        if [[ ! "$APT_INSTALL_ATTEMPTS" =~ ^[1-9][0-9]*$ || ! "$APT_INSTALL_BACKOFF_SECONDS" =~ ^[0-9]+$ ]]; then
-          echo "::error::apt-install: attempts must be a positive integer and backoff-seconds a non-negative integer."
+        positive='^[1-9][0-9]*$'
+        natural='^[0-9]+$'
+        if [[ ! "$APT_INSTALL_ATTEMPTS" =~ $positive || ! "$APT_INSTALL_BACKOFF_SECONDS" =~ $natural \
+          || ! "$APT_INSTALL_TIMEOUT_SECONDS" =~ $positive || ! "$APT_INSTALL_BUDGET_SECONDS" =~ $positive \
+          || ! "$APT_INSTALL_FALLBACK_ATTEMPT" =~ $natural ]]; then
+          echo "::error::apt-install: attempts, install-timeout-seconds and budget-seconds must be positive integers; backoff-seconds and fallback-attempt non-negative integers."
           exit 1
         fi
         privilege=()
@@ -74,21 +102,57 @@ runs:
           -o Acquire::https::Timeout=20
           -o DPkg::Lock::Timeout=30
         )
+        deadline=$(( SECONDS + APT_INSTALL_BUDGET_SECONDS ))
+        bounded() {
+          local limit="$1" left=$(( deadline - SECONDS ))
+          shift
+          if (( left < limit )); then
+            limit="$left"
+          fi
+          if (( limit <= 0 )); then
+            return 124
+          fi
+          "${privilege[@]}" timeout --signal=TERM --kill-after=15s "${limit}s" "$@"
+        }
         apt_update() {
-          "${privilege[@]}" timeout --signal=TERM --kill-after=15s 180s \
-            apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
+          bounded 180 apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
         }
         apt_install() {
-          "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
+          bounded "$APT_INSTALL_TIMEOUT_SECONDS" \
             apt-get "${apt_options[@]}" install "${install_flags[@]}" "${packages[@]}"
+        }
+        fallback_mirror=http://archive.ubuntu.com/ubuntu/
+        use_fallback_mirror() {
+          local source_list="" source_parts="" sources=() source
+          eval "$(apt-config shell source_list Dir::Etc::sourcelist/f source_parts Dir::Etc::sourceparts/d)"
+          for source in "$source_list" "${source_parts%/}/ubuntu.sources"; do
+            if [[ -f "$source" ]]; then
+              sources+=("$source")
+            fi
+          done
+          if (( ${#sources[@]} == 0 )); then
+            echo "::warning::apt-install: attempt ${attempt} found no Ubuntu sources to point at ${fallback_mirror}; keeping the current mirror."
+            return 0
+          fi
+          "${privilege[@]}" sed -E -i \
+            "s#(mirror\\+file:[^[:space:]]+|https?://[A-Za-z0-9.-]+\\.archive\\.ubuntu\\.com/ubuntu/?)#${fallback_mirror}#g" \
+            "${sources[@]}"
+          echo "::warning::apt-install: attempt ${attempt} of ${APT_INSTALL_ATTEMPTS} falls back from the regional mirror to ${fallback_mirror} (${sources[*]})."
         }
         backoff="$APT_INSTALL_BACKOFF_SECONDS"
         for (( attempt = 1; attempt <= APT_INSTALL_ATTEMPTS; attempt++ )); do
+          if (( attempt == APT_INSTALL_FALLBACK_ATTEMPT )); then
+            use_fallback_mirror
+          fi
           if apt_update && apt_install; then
             exit 0
           fi
           if (( attempt == APT_INSTALL_ATTEMPTS )); then
             break
+          fi
+          if (( deadline - SECONDS - backoff < 60 )); then
+            echo "::error::apt-install: the ${APT_INSTALL_BUDGET_SECONDS}s budget leaves no room for attempt $(( attempt + 1 )) (packages: ${packages[*]})."
+            exit 1
           fi
           echo "::warning::apt-install: attempt ${attempt} of ${APT_INSTALL_ATTEMPTS} failed; retrying update and install in ${backoff}s."
           sleep "$backoff"
