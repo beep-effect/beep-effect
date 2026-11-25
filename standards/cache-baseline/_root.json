@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P5 taxonomy lane)",
-    "reason": "Re-record the law-practice domain package after P5 regenerated its doctest script pair, and the root turbo.json source digest after the main merges; configuration review only, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Re-record the subjects the P5 merge and the P6 writer-check fixes changed: law-practice domain and use-cases, nlp, jsonc and the root turbo.json digest. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p5-doctest-pair-cache-review-2026-11-25.md",
-      "sha256": "12d4345ce40fed245239f306767e7b0513de9c4e93ab12913091a219e0b36c86"
+      "path": "docs/reports/tksr-p6-p5-merge-cache-review-2026-11-25.md",
+      "sha256": "0911b2a5937b3dc19753404ad33841bfcbfcf18fa5d434608025ff5d16a71b11"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "90887c4880b517add96cf01b766a2448c339ba8f5941f4acd8943176971ca1ea"
+      "sha256": "ad383713ab39f7102eff83b0b453009aa2c5eb57f60f45d43861f5087875c1a4"
     }
   ],
   "nodes": [

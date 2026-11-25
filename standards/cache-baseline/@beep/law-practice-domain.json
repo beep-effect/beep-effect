@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/law-practice-domain",
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P5 taxonomy lane)",
-    "reason": "Re-record the law-practice domain package after P5 regenerated its doctest script pair, and the root turbo.json source digest after the main merges; configuration review only, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Re-record the subjects the P5 merge and the P6 writer-check fixes changed: law-practice domain and use-cases, nlp, jsonc and the root turbo.json digest. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p5-doctest-pair-cache-review-2026-11-25.md",
-      "sha256": "12d4345ce40fed245239f306767e7b0513de9c4e93ab12913091a219e0b36c86"
+      "path": "docs/reports/tksr-p6-p5-merge-cache-review-2026-11-25.md",
+      "sha256": "0911b2a5937b3dc19753404ad33841bfcbfcf18fa5d434608025ff5d16a71b11"
     }
   },
   "nodes": [
@@ -15,7 +15,9 @@
       "command": "bun run beep:build",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/md#build",
         "@beep/ontology#build",
         "@beep/schema#build",
@@ -76,7 +78,9 @@
       "command": "beep-cli gate run check",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/law-practice-domain#build",
         "@beep/md#build",
         "@beep/ontology#build",
@@ -136,7 +140,9 @@
       "command": "bunx vitest run --coverage",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/md#build",
         "@beep/ontology#build",
         "@beep/schema#build",
@@ -234,7 +240,9 @@
       "command": "bun run beep:doctest",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/schema#transit",
@@ -325,7 +333,9 @@
       "command": "beep-cli lint deprecated-apis --package .",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -530,7 +540,9 @@
       "command": "beep-cli quality test-tsgo-package",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/schema#transit",
@@ -581,7 +593,9 @@
       "command": "bun run beep:test",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/repo-gate-vitest#transit",
@@ -644,7 +658,9 @@
       "command": "bun run beep:test",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/schema#transit",
