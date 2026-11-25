@@ -19,6 +19,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -28,6 +29,8 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  FLEET_CHECK_JOB_NAME,
+  FleetCheckJob,
   FleetDeliveryDetail,
   FleetDeliveryId,
   FleetHookDeliveriesPage,
@@ -38,7 +41,7 @@ import {
   FleetRunnersPage,
   FleetRunsPage,
   FleetRunsQuery,
-  FleetScheduledRun,
+  FleetWorkflowRun,
 } from "./FleetMissedEvent.schemas.ts";
 import {
   FleetGithubReads,
@@ -50,6 +53,7 @@ import {
 const $I = $RepoCliId.create("commands/Ci/FleetMissedEvent.live");
 
 const PER_PAGE = 100;
+const WORKFLOW_RUNS_PER_PAGE = 30;
 
 const IsoTime = S.DateTimeUtcFromString;
 
@@ -86,6 +90,22 @@ const JobsWire = S.Struct({
     })
   ),
 }).pipe($I.annoteSchema("FleetJobsWire", { description: "A workflow run's jobs listing." }));
+
+const CheckJobsWire = S.Struct({
+  jobs: S.Array(
+    S.Struct({
+      name: S.String,
+      status: S.String,
+      conclusion: S.String.pipe(S.NullOr, S.optionalKey),
+      started_at: S.NullOr(IsoTime),
+    })
+  ),
+}).pipe(
+  $I.annoteSchema("FleetCheckJobsWire", { description: "A check workflow run's jobs, as the guard reads them." })
+);
+
+const NOT_RAN_CONCLUSIONS = HashSet.make("skipped", "cancelled");
+const RAN_STATUSES = HashSet.make("in_progress", "completed");
 
 const DeliveriesWire = S.Array(
   S.Struct({
@@ -284,12 +304,35 @@ const makeLiveReads = Effect.fnUntraced(function* (repository: string) {
         );
       }
     ),
-    scheduledRuns: Effect.fn("FleetGithubReads.scheduledRuns")((workflowFile: string) =>
-      read(`repos/${repository}/actions/workflows/${workflowFile}/runs?event=schedule&per_page=5`, RunsWire).pipe(
+    workflowRuns: Effect.fn("FleetGithubReads.workflowRuns")((workflowFile: string) =>
+      read(
+        `repos/${repository}/actions/workflows/${workflowFile}/runs?per_page=${WORKFLOW_RUNS_PER_PAGE}`,
+        RunsWire
+      ).pipe(
         Effect.map(
           flow(
             (wire) => wire.workflow_runs,
-            A.map((run) => FleetScheduledRun.make({ id: run.id, createdAt: millis(run.created_at) }))
+            A.map((run) => FleetWorkflowRun.make({ id: run.id, createdAt: millis(run.created_at) }))
+          )
+        )
+      )
+    ),
+    checkJob: Effect.fn("FleetGithubReads.checkJob")((runId: number) =>
+      read(`repos/${repository}/actions/runs/${runId}/jobs?filter=latest&per_page=${PER_PAGE}`, CheckJobsWire).pipe(
+        Effect.map((wire) =>
+          pipe(
+            A.findFirst(
+              wire.jobs,
+              (job) =>
+                job.name === FLEET_CHECK_JOB_NAME &&
+                HashSet.has(RAN_STATUSES, job.status) &&
+                !O.exists(nullable(job.conclusion), (conclusion) => HashSet.has(NOT_RAN_CONCLUSIONS, conclusion))
+            ),
+            O.flatMap((job) => nullable(job.started_at)),
+            O.match({
+              onNone: () => FleetCheckJob.cases.NotRan.make({}),
+              onSome: (startedAt) => FleetCheckJob.cases.Ran.make({ startedAt: millis(startedAt) }),
+            })
           )
         )
       )

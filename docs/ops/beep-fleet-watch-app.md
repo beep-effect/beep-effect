@@ -1,9 +1,12 @@
 # beep-fleet-watch GitHub App
 
-The identity behind `.github/workflows/fleet-missed-event-check.yml`. Every ten minutes the
-workflow runs `beep ci fleet-missed-event-check`, which compares the jobs the runner fleet
-was asked to serve with the deliveries its `workflow_job` webhook received and with the
-organization's self-hosted runners (goal `infra-alchemy-rebuild`, P5). It only reads.
+The identity behind `.github/workflows/fleet-missed-event-check.yml`. On its cron (which
+GitHub throttles to a few runs a day) and whenever `Check`, `Heavy Admit` or `Cache Warm` is
+requested, the workflow runs `beep ci fleet-missed-event-check`, unless its guard job (job token,
+`actions: read`, no App token) finds a check that started less than eight minutes ago. The check
+compares the jobs the runner fleet was asked to serve with the deliveries its `workflow_job`
+webhook received and with the organization's self-hosted runners (goal `infra-alchemy-rebuild`,
+P5). It only reads.
 
 ## Shape
 

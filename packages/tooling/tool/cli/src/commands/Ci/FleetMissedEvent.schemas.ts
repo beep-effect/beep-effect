@@ -52,6 +52,10 @@ export const FLEET_RUNNER_READ_GAP = Duration.seconds(300);
  *   queued this long below cap is `NoLaunch` whatever its rank.
  * - `deliveryLead` and `deliveryLag`: a job's delivery lands between its
  *   creation minus the lead and its creation plus the lag.
+ * - `guardWindow`: a run requested this soon after an earlier run's check
+ *   job started skips its own check job.
+ * - `cadenceGap`: a gap longer than this between two checking runs, with a
+ *   fleet job created inside it, is a finding for the gate.
  *
  * **Example** (Read the NoLaunch threshold)
  *
@@ -72,6 +76,8 @@ export const FLEET_THRESHOLDS = {
   lookback: Duration.toMillis(Duration.hours(2)),
   deliveryLead: Duration.toMillis(Duration.minutes(2)),
   deliveryLag: Duration.toMillis(Duration.minutes(5)),
+  guardWindow: Duration.toMillis(Duration.minutes(8)),
+  cadenceGap: Duration.toMillis(Duration.minutes(30)),
 } as const;
 
 /**
@@ -446,24 +452,124 @@ export class FleetDeliveryDetail extends S.Opaque<FleetDeliveryDetail, { readonl
 ) {}
 
 /**
- * One scheduled run of the check's own workflow.
+ * One run of the check's own workflow, whatever event started it.
  *
- * **Example** (One scheduled run)
+ * **Example** (One run)
  *
  * ```ts
- * import { FleetScheduledRun } from "@beep/repo-cli/commands/Ci"
+ * import { FleetWorkflowRun } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(FleetScheduledRun.make({ id: 5, createdAt: 0 }).id) // 5
+ * console.log(FleetWorkflowRun.make({ id: 5, createdAt: 0 }).id) // 5
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class FleetScheduledRun extends S.Opaque<FleetScheduledRun, { readonly brand: unique symbol }>()(
+export class FleetWorkflowRun extends S.Opaque<FleetWorkflowRun, { readonly brand: unique symbol }>()(
   S.Struct({ id: S.Finite, createdAt: EpochMillis }).pipe(
-    $I.annoteSchema("FleetScheduledRun", { description: "One scheduled run's id and creation time." })
+    $I.annoteSchema("FleetWorkflowRun", { description: "One run of the check's workflow: its id and creation time." })
   )
 ) {}
+
+/**
+ * The name of the job that runs the check in its workflow.
+ *
+ * **Example** (Read the job name)
+ *
+ * ```ts
+ * import { FLEET_CHECK_JOB_NAME } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FLEET_CHECK_JOB_NAME) // "Fleet Missed-Event Check"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const FLEET_CHECK_JOB_NAME = "Fleet Missed-Event Check";
+
+/**
+ * Whether one run of the check's workflow ran its check job.
+ *
+ * **Details**
+ *
+ * `Ran` is a check job that started and was neither skipped nor cancelled,
+ * with its start time. `NotRan` covers a check job the guard skipped, one
+ * cancelled while pending behind the concurrency group, one still queued, and
+ * a run with no check job at all.
+ *
+ * **Example** (A run the guard skipped)
+ *
+ * ```ts
+ * import { FleetCheckJob } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetCheckJob.cases.NotRan.make({})._tag) // "NotRan"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const FleetCheckJob = S.TaggedUnion({
+  Ran: { startedAt: EpochMillis },
+  NotRan: {},
+}).pipe($I.annoteSchema("FleetCheckJob", { description: "A run's check job that ran, or none that ran." }));
+
+/**
+ * `Ran` carries the check job's start; `NotRan` carries nothing.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FleetCheckJob = typeof FleetCheckJob.Type;
+
+/**
+ * **Example** (A checking run)
+ *
+ * ```ts
+ * import { FleetCheckingRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetCheckingRun.make({ runId: 5, startedAt: 0 }).runId) // 5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetCheckingRun extends S.Opaque<FleetCheckingRun, { readonly brand: unique symbol }>()(
+  S.Struct({ runId: S.Finite, startedAt: EpochMillis }).pipe(
+    $I.annoteSchema("FleetCheckingRun", { description: "A run that ran its check job, and the job's start." })
+  )
+) {}
+
+/**
+ * The guard's decision for one run of the check's workflow.
+ *
+ * **Details**
+ *
+ * `Run` lets the check job run and says why. `Skip` names the earlier
+ * checking run whose check job started inside the guard window.
+ *
+ * **Example** (A dispatch always runs)
+ *
+ * ```ts
+ * import { FleetGuardDecision } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FleetGuardDecision.cases.Run.make({ reason: "workflow_dispatch always runs" })._tag) // "Run"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const FleetGuardDecision = S.TaggedUnion({
+  Run: { reason: S.String },
+  Skip: { runId: S.Finite, startedAt: EpochMillis },
+}).pipe($I.annoteSchema("FleetGuardDecision", { description: "Run the check job, or skip it behind a recent check." }));
+
+/**
+ * `Run` carries its reason; `Skip` names the recent checking run.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FleetGuardDecision = typeof FleetGuardDecision.Type;
 
 /**
  * Where a job's `queued` delivery is read from: a repository hook, or no
@@ -888,12 +994,16 @@ export class FleetJobFinding extends S.Opaque<FleetJobFinding, { readonly brand:
 ) {}
 
 /**
- * The check's own previous scheduled run, as far as it could be read.
+ * The check's previous checking run, as far as it could be read: the newest
+ * earlier run of its workflow, from any event, that ran its check job.
  *
  * **Details**
  *
- * `Found.currentCreatedAt` is this run's own creation when it is a scheduled
- * run, so the cadence gap runs from scheduled run to scheduled run.
+ * `Found.startedAt` is that run's check-job start. `Found.currentStartedAt`
+ * is this run's own check-job start when it runs in Actions, so the cadence
+ * gap runs from check start to check start. `Found.fleetJobsInGap` counts the
+ * fleet jobs this run read that were created inside the gap; the jobs come
+ * from the two-hour lookback, so for a longer gap it is a lower bound.
  *
  * **Example** (No previous run)
  *
@@ -907,13 +1017,18 @@ export class FleetJobFinding extends S.Opaque<FleetJobFinding, { readonly brand:
  * @since 0.0.0
  */
 export const FleetPreviousRun = S.TaggedUnion({
-  Found: { runId: S.Finite, createdAt: EpochMillis, currentCreatedAt: S.Option(EpochMillis) },
+  Found: {
+    runId: S.Finite,
+    startedAt: EpochMillis,
+    currentStartedAt: S.Option(EpochMillis),
+    fleetJobsInGap: S.Finite,
+  },
   NoneFound: {},
   Unreadable: { reason: S.String },
-}).pipe($I.annoteSchema("FleetPreviousRun", { description: "The previous scheduled run, none, or unreadable." }));
+}).pipe($I.annoteSchema("FleetPreviousRun", { description: "The previous checking run, none, or unreadable." }));
 
 /**
- * `Found` carries the run id and creation times; `NoneFound` and `Unreadable` say why there is none.
+ * `Found` carries the run id, check starts and fleet jobs in the gap; `NoneFound` and `Unreadable` say why there is none.
  *
  * @category models
  * @since 0.0.0
@@ -994,6 +1109,45 @@ export class FleetMissedEventInput extends S.Opaque<FleetMissedEventInput, { rea
   }).pipe(
     $I.annoteSchema("FleetMissedEventInput", {
       description: "Repository, workflow, pools and hook sources of one missed-event check run.",
+    })
+  )
+) {}
+
+/**
+ * **Details**
+ *
+ * `event` is the event that started the workflow run (`GITHUB_EVENT_NAME`).
+ * `githubOutput` writes `run=true` or `run=false` to `$GITHUB_OUTPUT`.
+ *
+ * **Example** (A guard run started by a requested workflow run)
+ *
+ * ```ts
+ * import { FleetGuardInput } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const input = FleetGuardInput.make({
+ *   repository: "beep-effect/beep-effect",
+ *   workflowFile: "fleet-missed-event-check.yml",
+ *   currentRunId: O.some(12),
+ *   event: "workflow_run",
+ *   githubOutput: false,
+ * })
+ * console.log(input.event) // "workflow_run"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetGuardInput extends S.Opaque<FleetGuardInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    repository: S.String.check(S.isPattern(/^[\w.-]+\/[\w.-]+$/u)),
+    workflowFile: S.String,
+    currentRunId: S.Option(S.Finite),
+    event: S.String,
+    githubOutput: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("FleetGuardInput", {
+      description: "Repository, workflow, run id and starting event of one missed-event check guard run.",
     })
   )
 ) {}

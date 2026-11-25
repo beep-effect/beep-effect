@@ -18,18 +18,21 @@
 
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as Duration from "effect/Duration";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import {
   FLEET_THRESHOLDS,
+  FleetCheckingRun,
+  FleetCheckJob,
   FleetCheckReport,
   FleetClassification,
   FleetDeliveryEvidence,
+  FleetGuardDecision,
   FleetHookSource,
   FleetJobFinding,
   FleetPoolCap,
@@ -49,7 +52,7 @@ import type {
   FleetNoLaunchReason,
   FleetPoolCapsInput,
   FleetRunner,
-  FleetScheduledRun,
+  FleetWorkflowRun,
 } from "./FleetMissedEvent.schemas.ts";
 
 type FleetHookSources = readonly [FleetHookSourceEntry, ...Array<FleetHookSourceEntry>];
@@ -983,7 +986,7 @@ export const fleetCheckReport = (input: {
  * console.log(fleetAlerts(report).length) // 0
  * ```
  *
- * @param report - One run's observations, findings and previous scheduled run.
+ * @param report - One run's observations, findings and previous check run.
  * @returns Its findings whose verdict alerts.
  * @category use-cases
  * @since 0.0.0
@@ -993,19 +996,22 @@ export const fleetAlerts = (report: FleetCheckReport): ReadonlyArray<FleetJobFin
 
 const previousRunLabel = (report: FleetCheckReport): string =>
   FleetPreviousRun.match(report.previousRun, {
-    Found: ({ runId, createdAt, currentCreatedAt }) =>
-      O.match(currentCreatedAt, {
+    Found: (found) =>
+      O.match(found.currentStartedAt, {
         onNone: () =>
-          `previous scheduled run ${runId} at ${formatTime(createdAt)}, ${formatAge(report.checkedAt - createdAt)} before this check`,
+          `previous check run ${found.runId} started ${formatTime(found.startedAt)}, ${formatAge(report.checkedAt - found.startedAt)} before this check`,
         onSome: (current) => {
-          const gap = current - createdAt;
-          const late =
-            gap > Duration.toMillis(Duration.minutes(30)) ? " (more than 30 minutes: a finding for the gate)" : "";
-          return `previous scheduled run ${runId} at ${formatTime(createdAt)}, ${formatAge(gap)} before this scheduled run${late}`;
+          const gap = current - found.startedAt;
+          const note = isCadenceGapFinding(report.previousRun)
+            ? ` (more than 30 minutes with ${found.fleetJobsInGap} fleet job(s) created inside it: a finding for the gate)`
+            : gap > FLEET_THRESHOLDS.cadenceGap
+              ? " (more than 30 minutes, no fleet job created inside it: information only)"
+              : "";
+          return `previous check run ${found.runId} started ${formatTime(found.startedAt)}, ${formatAge(gap)} before this check run started${note}`;
         },
       }),
-    NoneFound: () => "previous scheduled run: none found",
-    Unreadable: ({ reason }) => `previous scheduled run: unreadable (${reason})`,
+    NoneFound: () => "previous check run: none found",
+    Unreadable: ({ reason }) => `previous check run: unreadable (${reason})`,
   });
 
 const verdictCounts = (report: FleetCheckReport): string => {
@@ -1048,7 +1054,7 @@ const p95Label = (report: FleetCheckReport): string =>
  * console.log(renderFleetCheckSummary(report).startsWith("fleet missed-event check: green")) // true
  * ```
  *
- * @param report - One run's observations, findings and previous scheduled run.
+ * @param report - One run's observations, findings and previous check run.
  * @returns The Markdown summary.
  * @category use-cases
  * @since 0.0.0
@@ -1097,53 +1103,243 @@ export const renderFleetCheckSummary = (report: FleetCheckReport): string => {
 };
 
 /**
- * The previous scheduled run among the check's recent scheduled runs.
+ * The runs of the check's workflow earlier than this one, newest first.
  *
  * **Details**
  *
- * When this run is itself among the scheduled runs, the previous run is the
- * newest created before it, so a newer scheduled run pending behind this one
- * is skipped, and this run's creation time is kept: the summary measures the
- * cadence gap from scheduled run to scheduled run, not to the end of this
- * run's reads. Otherwise, as for a manual dispatch, it is the newest run.
+ * Run ids grow with creation, so an earlier run has a smaller id: a newer
+ * run pending behind this one is left out. Without a run id, as for a local
+ * run, every run is earlier.
  *
- * **Example** (Skip this run)
+ * **Example** (Leave out this run and a newer one)
  *
  * ```ts
- * import { FleetScheduledRun, previousScheduledRun } from "@beep/repo-cli/commands/Ci"
+ * import { FleetWorkflowRun, earlierFleetRuns } from "@beep/repo-cli/commands/Ci"
  * import * as O from "effect/Option"
  *
- * const previous = previousScheduledRun(
- *   [FleetScheduledRun.make({ id: 6, createdAt: 2000 }), FleetScheduledRun.make({ id: 5, createdAt: 1000 })],
- *   O.some(6)
- * )
- * console.log(previous._tag) // "Found"
+ * const runs = [
+ *   FleetWorkflowRun.make({ id: 7, createdAt: 3000 }),
+ *   FleetWorkflowRun.make({ id: 6, createdAt: 2000 }),
+ *   FleetWorkflowRun.make({ id: 5, createdAt: 1000 }),
+ * ]
+ * console.log(earlierFleetRuns(runs, O.some(6)).map((run) => run.id)) // [5]
  * ```
  *
- * @param runs - The scheduled runs, newest first.
+ * @param runs - The workflow's recent runs.
  * @param currentRunId - This run's id, when it runs in Actions.
- * @returns The previous run, or none.
+ * @returns The earlier runs, newest first.
  * @category use-cases
  * @since 0.0.0
  */
-export const previousScheduledRun: {
-  (currentRunId: O.Option<number>): (runs: ReadonlyArray<FleetScheduledRun>) => FleetPreviousRun;
-  (runs: ReadonlyArray<FleetScheduledRun>, currentRunId: O.Option<number>): FleetPreviousRun;
-} = dual(2, (runs: ReadonlyArray<FleetScheduledRun>, currentRunId: O.Option<number>): FleetPreviousRun => {
-  const current = A.findFirst(runs, (run) => O.contains(currentRunId, run.id));
-  return pipe(
-    O.match(current, {
-      onNone: () => A.head(runs),
-      onSome: (self) => A.findFirst(runs, (run) => run.createdAt < self.createdAt),
-    }),
-    O.match({
-      onNone: () => FleetPreviousRun.cases.NoneFound.make({}),
-      onSome: (run) =>
-        FleetPreviousRun.cases.Found.make({
-          runId: run.id,
-          createdAt: run.createdAt,
-          currentCreatedAt: O.map(current, (self) => self.createdAt),
-        }),
+export const earlierFleetRuns: {
+  (currentRunId: O.Option<number>): (runs: ReadonlyArray<FleetWorkflowRun>) => ReadonlyArray<FleetWorkflowRun>;
+  (runs: ReadonlyArray<FleetWorkflowRun>, currentRunId: O.Option<number>): ReadonlyArray<FleetWorkflowRun>;
+} = dual(
+  2,
+  (runs: ReadonlyArray<FleetWorkflowRun>, currentRunId: O.Option<number>): ReadonlyArray<FleetWorkflowRun> =>
+    pipe(
+      runs,
+      A.filter((run) => O.match(currentRunId, { onNone: () => true, onSome: (current) => run.id < current })),
+      A.sort(Order.flip(Order.mapInput(Order.Number, (run: FleetWorkflowRun) => run.id)))
+    )
+);
+
+/**
+ * The checking run a workflow run and its check job make, when the check job
+ * ran.
+ *
+ * **Example** (A guard-skipped run is no checking run)
+ *
+ * ```ts
+ * import { FleetCheckJob, FleetWorkflowRun, checkingRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * const run = FleetWorkflowRun.make({ id: 5, createdAt: 0 })
+ * console.log(checkingRun(run, FleetCheckJob.cases.NotRan.make({}))._tag) // "None"
+ * console.log(checkingRun(run, FleetCheckJob.cases.Ran.make({ startedAt: 60000 }))._tag) // "Some"
+ * ```
+ *
+ * @param run - The workflow run.
+ * @param job - Its check job's state.
+ * @returns The checking run, or none.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const checkingRun: {
+  (job: FleetCheckJob): (run: FleetWorkflowRun) => O.Option<FleetCheckingRun>;
+  (run: FleetWorkflowRun, job: FleetCheckJob): O.Option<FleetCheckingRun>;
+} = dual(
+  2,
+  (run: FleetWorkflowRun, job: FleetCheckJob): O.Option<FleetCheckingRun> =>
+    FleetCheckJob.match(job, {
+      Ran: ({ startedAt }) => FleetCheckingRun.makeOption({ runId: run.id, startedAt }),
+      NotRan: () => O.none(),
     })
-  );
-});
+);
+
+/**
+ * The guard's decision: skip the check job when the previous checking run's
+ * check job started inside the guard window, run it otherwise.
+ *
+ * **Details**
+ *
+ * A `workflow_dispatch` always runs. A previous run that could not be read
+ * runs too: the guard fails open. No previous checking run runs.
+ *
+ * **Example** (A check started three minutes ago)
+ *
+ * ```ts
+ * import { FleetCheckingRun, fleetGuardDecision } from "@beep/repo-cli/commands/Ci"
+ * import * as Result from "effect/Result"
+ *
+ * const decision = fleetGuardDecision({
+ *   event: "workflow_run",
+ *   now: 600000,
+ *   previous: Result.succeed(FleetCheckingRun.makeOption({ runId: 5, startedAt: 420000 })),
+ * })
+ * console.log(decision._tag) // "Skip"
+ * ```
+ *
+ * @param input - The starting event, the time and the previous checking run or why it is unreadable.
+ * @returns Run or skip.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const fleetGuardDecision = (input: {
+  readonly event: string;
+  readonly now: number;
+  readonly previous: Result.Result<O.Option<FleetCheckingRun>, string>;
+}): FleetGuardDecision =>
+  input.event === "workflow_dispatch"
+    ? FleetGuardDecision.cases.Run.make({ reason: "workflow_dispatch always runs" })
+    : Result.match(input.previous, {
+        onFailure: (reason) =>
+          FleetGuardDecision.cases.Run.make({ reason: `previous check run unreadable, failing open (${reason})` }),
+        onSuccess: O.match({
+          onNone: () => FleetGuardDecision.cases.Run.make({ reason: "no previous check run found" }),
+          onSome: ({ runId, startedAt }) =>
+            input.now - startedAt < FLEET_THRESHOLDS.guardWindow
+              ? FleetGuardDecision.cases.Skip.make({ runId, startedAt })
+              : FleetGuardDecision.cases.Run.make({
+                  reason: `previous check run ${runId} started ${formatAge(input.now - startedAt)} ago`,
+                }),
+        }),
+      });
+
+/**
+ * The guard's one-line verdict for the log.
+ *
+ * **Example** (A skip)
+ *
+ * ```ts
+ * import { FleetGuardDecision, renderFleetGuardDecision } from "@beep/repo-cli/commands/Ci"
+ *
+ * const skip = FleetGuardDecision.cases.Skip.make({ runId: 5, startedAt: 0 })
+ * console.log(renderFleetGuardDecision(skip, 180000))
+ * // fleet missed-event guard: skip; check run 5 started 3m00s ago, inside the 8m00s window
+ * ```
+ *
+ * @param decision - Run with its reason, or Skip with the checking run it found.
+ * @param now - Epoch milliseconds the guard decided at, for the skipped run's age.
+ * @returns `fleet missed-event guard: run; <reason>` or the skip line naming the run and window.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const renderFleetGuardDecision: {
+  (now: number): (decision: FleetGuardDecision) => string;
+  (decision: FleetGuardDecision, now: number): string;
+} = dual(2, (decision: FleetGuardDecision, now: number): string =>
+  FleetGuardDecision.match(decision, {
+    Run: ({ reason }) => `fleet missed-event guard: run; ${reason}`,
+    Skip: ({ runId, startedAt }) =>
+      `fleet missed-event guard: skip; check run ${runId} started ${formatAge(now - startedAt)} ago, inside the ${formatAge(FLEET_THRESHOLDS.guardWindow)} window`,
+  })
+);
+
+/**
+ * The previous run a report names, from the previous checking run, this
+ * run's own check start and the fleet jobs it read.
+ *
+ * **Details**
+ *
+ * The gap ends at this run's check start, or at `checkedAt` when that is
+ * unknown. A job counts when it was created after the previous check
+ * started and no later than the gap's end.
+ *
+ * **Example** (A gap with one fleet job)
+ *
+ * ```ts
+ * import { FleetCheckingRun, FleetJob, fleetPreviousRun } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const job = FleetJob.make({
+ *   id: 1,
+ *   runId: 2,
+ *   name: "Heavy",
+ *   status: "queued",
+ *   labels: ["beep-fleet-heavy"],
+ *   createdAt: 1000,
+ *   startedAt: O.none(),
+ *   runnerName: O.none(),
+ * })
+ * const previous = fleetPreviousRun({
+ *   previous: FleetCheckingRun.makeOption({ runId: 5, startedAt: 0 }),
+ *   currentStartedAt: O.some(2000),
+ *   jobs: [job],
+ *   checkedAt: 3000,
+ * })
+ * console.log(previous._tag) // "Found"
+ * ```
+ *
+ * @param input - The previous checking run, this run's check start, the fleet jobs read and the check time.
+ * @returns The report's previous run.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const fleetPreviousRun = (input: {
+  readonly previous: O.Option<FleetCheckingRun>;
+  readonly currentStartedAt: O.Option<number>;
+  readonly jobs: ReadonlyArray<FleetJob>;
+  readonly checkedAt: number;
+}): FleetPreviousRun =>
+  O.match(input.previous, {
+    onNone: () => FleetPreviousRun.cases.NoneFound.make({}),
+    onSome: ({ runId, startedAt }) => {
+      const end = O.getOrElse(input.currentStartedAt, () => input.checkedAt);
+      return FleetPreviousRun.cases.Found.make({
+        runId,
+        startedAt,
+        currentStartedAt: input.currentStartedAt,
+        fleetJobsInGap: A.length(A.filter(input.jobs, (job) => job.createdAt > startedAt && job.createdAt <= end)),
+      });
+    },
+  });
+
+/**
+ * Whether a report's previous run is a cadence-gap finding for the gate: a
+ * gap from check start to check start longer than 30 minutes with at least
+ * one fleet job created inside it.
+ *
+ * **Example** (A quiet hour is information only)
+ *
+ * ```ts
+ * import { FleetPreviousRun, isCadenceGapFinding } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const quiet = FleetPreviousRun.cases.Found.make({
+ *   runId: 5,
+ *   startedAt: 0,
+ *   currentStartedAt: O.some(3600000),
+ *   fleetJobsInGap: 0,
+ * })
+ * console.log(isCadenceGapFinding(quiet)) // false
+ * ```
+ *
+ * @param previousRun - The report's previous run.
+ * @returns `true` for a finding.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const isCadenceGapFinding = (previousRun: FleetPreviousRun): boolean =>
+  FleetPreviousRun.guards.Found(previousRun) &&
+  previousRun.fleetJobsInGap > 0 &&
+  O.exists(previousRun.currentStartedAt, (current) => current - previousRun.startedAt > FLEET_THRESHOLDS.cadenceGap);
